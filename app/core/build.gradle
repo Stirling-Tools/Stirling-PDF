@@ -42,8 +42,8 @@ dependencies {
         || (project.hasProperty('STIRLING_PDF_DESKTOP_UI')
         && project.getProperty('STIRLING_PDF_DESKTOP_UI') != 'false')) {
         implementation 'me.friwi:jcefmaven:132.3.1'
-        implementation 'org.openjfx:javafx-controls:21'
-        implementation 'org.openjfx:javafx-swing:21'
+        implementation 'org.openjfx:javafx-controls:25'
+        implementation 'org.openjfx:javafx-swing:25'
     }
 
     if (System.getenv('DISABLE_ADDITIONAL_FEATURES') != 'true'
