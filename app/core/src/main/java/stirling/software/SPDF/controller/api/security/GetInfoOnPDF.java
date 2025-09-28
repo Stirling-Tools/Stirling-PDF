@@ -3,7 +3,9 @@ package stirling.software.SPDF.controller.api.security;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.text.SimpleDateFormat;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 import org.apache.pdfbox.cos.COSInputStream;
@@ -64,6 +66,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
+import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.common.util.WebResponseUtils;
 
 @RestController
@@ -222,9 +225,13 @@ public class GetInfoOnPDF {
 
             // Number of words, paragraphs, and images in the entire document
             String fullText = new PDFTextStripper().getText(pdfBoxDoc);
-            String[] words = fullText.split("\\s+");
+            String[] words = RegexPatternUtils.getInstance().getWhitespacePattern().split(fullText);
             int wordCount = words.length;
-            int paragraphCount = fullText.split("\r\n|\r|\n").length;
+            int paragraphCount =
+                    RegexPatternUtils.getInstance()
+                            .getMultiFormatNewlinePattern()
+                            .split(fullText)
+                            .length;
             basicInfo.put("WordCount", wordCount);
             basicInfo.put("ParagraphCount", paragraphCount);
             // Number of characters in the entire document (including spaces and special characters)
@@ -816,8 +823,10 @@ public class GetInfoOnPDF {
 
     private String formatDate(Calendar calendar) {
         if (calendar != null) {
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-            return sdf.format(calendar.getTime());
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            ZonedDateTime zonedDateTime =
+                    ZonedDateTime.ofInstant(calendar.toInstant(), ZoneId.systemDefault());
+            return zonedDateTime.format(formatter);
         } else {
             return null;
         }

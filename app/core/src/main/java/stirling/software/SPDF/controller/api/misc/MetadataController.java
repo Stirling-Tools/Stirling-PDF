@@ -1,8 +1,6 @@
 package stirling.software.SPDF.controller.api.misc;
 
 import java.io.IOException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -25,6 +23,9 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.misc.MetadataRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.RegexPatternUtils;
+import stirling.software.common.service.PdfMetadataService;
 import stirling.software.common.util.WebResponseUtils;
 import stirling.software.common.util.propertyeditor.StringToMapPropertyEditor;
 
@@ -137,37 +138,25 @@ public class MetadataController {
                         && !key.contains("customValue")) {
                     info.setCustomMetadataValue(key, entry.getValue());
                 } else if (key.contains("customKey")) {
-                    int number = Integer.parseInt(key.replaceAll("\\D", ""));
+                    int number =
+                            Integer.parseInt(
+                                    RegexPatternUtils.getInstance()
+                                            .getNumericExtractionPattern()
+                                            .matcher(key)
+                                            .replaceAll(""));
                     String customKey = entry.getValue();
                     String customValue = allRequestParams.get("customValue" + number);
                     info.setCustomMetadataValue(customKey, customValue);
                 }
             }
         }
-        if (creationDate != null && !creationDate.isEmpty()) {
-            Calendar creationDateCal = Calendar.getInstance();
-            try {
-                creationDateCal.setTime(
-                        new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").parse(creationDate));
-            } catch (ParseException e) {
-                log.error("exception", e);
-            }
-            info.setCreationDate(creationDateCal);
-        } else {
-            info.setCreationDate(null);
-        }
-        if (modificationDate != null && !modificationDate.isEmpty()) {
-            Calendar modificationDateCal = Calendar.getInstance();
-            try {
-                modificationDateCal.setTime(
-                        new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").parse(modificationDate));
-            } catch (ParseException e) {
-                log.error("exception", e);
-            }
-            info.setModificationDate(modificationDateCal);
-        } else {
-            info.setModificationDate(null);
-        }
+        // Set creation date using utility method
+        Calendar creationDateCal = PdfMetadataService.parseToCalendar(creationDate);
+        info.setCreationDate(creationDateCal);
+
+        // Set modification date using utility method
+        Calendar modificationDateCal = PdfMetadataService.parseToCalendar(modificationDate);
+        info.setModificationDate(modificationDateCal);
         info.setCreator(creator);
         info.setKeywords(keywords);
         info.setAuthor(author);
@@ -179,8 +168,8 @@ public class MetadataController {
         document.setDocumentInformation(info);
         return WebResponseUtils.pdfDocToWebResponse(
                 document,
-                Filenames.toSimpleFileName(pdfFile.getOriginalFilename())
-                                .replaceFirst("[.][^.]+$", "")
+                GeneralUtils.removeExtension(
+                                Filenames.toSimpleFileName(pdfFile.getOriginalFilename()))
                         + "_metadata.pdf");
     }
 }
