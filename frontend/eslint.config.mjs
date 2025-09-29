@@ -8,7 +8,33 @@ import reactPlugin from 'eslint-plugin-react';
 import tseslint from 'typescript-eslint';
 import { fileURLToPath } from 'node:url';
 
-const ignorePatterns = ["__tests/**", "**/dist/**", "**/build/**", "**/node_modules/**", "**/public/**"];
+const ignorePatterns = [
+  "__tests/**",
+  "dist/**",
+  "./dist/**",
+  "dist/**/*",
+  "./dist/**/*",
+  "**/dist/**",
+  "**/dist/**/*",
+  "build/**",
+  "./build/**",
+  "build/**/*",
+  "./build/**/*",
+  "**/build/**",
+  "**/build/**/*",
+  "node_modules/**",
+  "./node_modules/**",
+  "node_modules/**/*",
+  "./node_modules/**/*",
+  "**/node_modules/**",
+  "**/node_modules/**/*",
+  "public/**",
+  "./public/**",
+  "public/**/*",
+  "./public/**/*",
+  "**/public/**",
+  "**/public/**/*"
+];
 const jsGlobs = ['{src,frontend/src}/**/*.{js,jsx}'];
 const srcGlobs = ['{src,frontend/src}/**/*.{ts,tsx}'];
 const nodeGlobs = [
