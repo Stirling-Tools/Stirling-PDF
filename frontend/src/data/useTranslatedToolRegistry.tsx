@@ -12,6 +12,8 @@ import RemoveBlanks from "../tools/RemoveBlanks";
 import RemovePages from "../tools/RemovePages";
 import RemovePassword from "../tools/RemovePassword";
 import { SubcategoryId, ToolCategoryId, ToolRegistry } from "./toolsTaxonomy";
+import AdjustContrast from "../tools/AdjustContrast";
+import { adjustContrastOperationConfig } from "../hooks/tools/adjustContrast/useAdjustContrastOperation";
 import { getSynonyms } from "../utils/toolSynonyms";
 import AddWatermark from "../tools/AddWatermark";
 import AddStamp from "../tools/AddStamp";
@@ -74,6 +76,7 @@ import { adjustPageScaleOperationConfig } from "../hooks/tools/adjustPageScale/u
 import AdjustPageScaleSettings from "../components/tools/adjustPageScale/AdjustPageScaleSettings";
 import ChangeMetadataSingleStep from "../components/tools/changeMetadata/ChangeMetadataSingleStep";
 import CropSettings from "../components/tools/crop/CropSettings";
+import AdjustContrastSettings from "../components/tools/adjustContrast/AdjustContrastSettings";
 
 const showPlaceholderTools = true; // Show all tools; grey out unavailable ones in UI
 
@@ -602,10 +605,12 @@ export function useFlatToolRegistry(): ToolRegistry {
       adjustContrast: {
         icon: <LocalIcon icon="palette" width="1.5rem" height="1.5rem" />,
         name: t("home.adjustContrast.title", "Adjust Colors/Contrast"),
-        component: null,
+        component: AdjustContrast,
         description: t("home.adjustContrast.desc", "Adjust colors and contrast of PDF documents"),
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.ADVANCED_FORMATTING,
+        operationConfig: adjustContrastOperationConfig,
+        settingsComponent: AdjustContrastSettings,
         synonyms: getSynonyms(t, "adjustContrast"),
       },
       repair: {
