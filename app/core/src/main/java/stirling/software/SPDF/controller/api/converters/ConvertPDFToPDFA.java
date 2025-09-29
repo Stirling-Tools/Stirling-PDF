@@ -125,7 +125,7 @@ public class ConvertPDFToPDFA {
                 preProcessedFile = preProcessHighlights(tempInputFile.toFile());
             }
             Set<String> missingFonts = new HashSet<>();
-            boolean needImgs = false;
+            boolean needImgs;
             try (PDDocument doc = Loader.loadPDF(preProcessedFile)) {
                 missingFonts = findUnembeddedFontNames(doc);
                 needImgs = (pdfaPart == 1) && hasTransparentImages(doc);
@@ -287,7 +287,7 @@ public class ConvertPDFToPDFA {
                 if (fontStream == null) continue;
 
                 try (InputStream in = fontStream.createInputStream()) {
-                    PDFont newFont = null;
+                    PDFont newFont;
                     try {
                         newFont = PDType0Font.load(baseDoc, in, false);
                     } catch (IOException e1) {
