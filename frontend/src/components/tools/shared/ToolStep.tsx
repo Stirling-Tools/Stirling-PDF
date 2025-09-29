@@ -164,13 +164,16 @@ export function createToolSteps() {
     const isVisible = props.isVisible !== false;
     const currentStepNumber = isVisible ? stepNumber++ : undefined;
 
-    const step = React.createElement(ToolStep, {
-      ...props,
-      title,
-      _stepNumber: currentStepNumber,
-      children,
-      key: `step-${title.toLowerCase().replace(/\s+/g, '-')}`
-    });
+    const step = React.createElement(
+      ToolStep,
+      {
+        ...props,
+        title,
+        _stepNumber: currentStepNumber,
+        key: `step-${title.toLowerCase().replace(/\s+/g, '-')}`
+      },
+      children
+    );
 
     steps.push(step);
     return step;
@@ -186,9 +189,9 @@ export function createToolSteps() {
 
   const getVisibleCount = () => {
     return steps.filter(step => {
-      const props = step.props as ToolStepProps;
-      const isVisible = props.isVisible !== false;
-      const excludeFromCount = props._excludeFromCount === true;
+      const stepProps = step.props as ToolStepProps;
+      const isVisible = stepProps.isVisible !== false;
+      const excludeFromCount = stepProps._excludeFromCount === true;
       return isVisible && !excludeFromCount;
     }).length;
   };
@@ -203,9 +206,9 @@ export function ToolStepProvider({ children, forceStepNumbers }: { children: Rea
     let count = 0;
     React.Children.forEach(children, (child) => {
       if (React.isValidElement(child) && child.type === ToolStep) {
-        const props = child.props as ToolStepProps;
-        const isVisible = props.isVisible !== false;
-        const excludeFromCount = props._excludeFromCount === true;
+        const stepProps = child.props as ToolStepProps;
+        const isVisible = stepProps.isVisible !== false;
+        const excludeFromCount = stepProps._excludeFromCount === true;
         if (isVisible && !excludeFromCount) count++;
       }
     });
