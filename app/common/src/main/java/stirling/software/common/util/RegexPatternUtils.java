@@ -1,5 +1,6 @@
 package stirling.software.common.util;
 
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -11,6 +12,9 @@ public final class RegexPatternUtils {
 
     private static final RegexPatternUtils INSTANCE = new RegexPatternUtils();
     private final ConcurrentHashMap<PatternKey, Pattern> patternCache = new ConcurrentHashMap<>();
+
+    private final Set<String> SUPPORTED_NEW_FIELD_TYPES =
+            Set.of("text", "checkbox", "combobox", "listbox");
 
     private static final String WHITESPACE_REGEX = "\\s++";
     private static final String EXTENSION_REGEX = "\\.(?:[^.]*+)?$";
@@ -469,6 +473,13 @@ public final class RegexPatternUtils {
         getPattern("Output:(\\w+)"); // precompiled single-escaped for runtime regex \w
         getPattern("Input:(\\w+)");
         getPattern("Type:(\\w+)");
+
+        getPattern(
+                "(?i)^(field|form|text|textbox|checkbox|check|radio|combo|list|untitled|input|question|subform|page|control)[\\s_\\-]*[0-9]*$");
+        getPattern("(?i)^t?\\d{1,3}$");
+        getPattern("(?i)^(text|field|form)[\\s_-]*\\d+$");
+        getPattern("[\\p{Punct}]+");
+        getPattern("(?<=[a-z])(?=[A-Z])");
         log.debug("Pre-compiled {} common regex patterns", patternCache.size());
     }
 
@@ -498,6 +509,37 @@ public final class RegexPatternUtils {
     /* Pattern for validating file extensions (2-4 alphanumeric, case-insensitive) */
     public Pattern getFileExtensionValidationPattern() {
         return getPattern("^[a-zA-Z0-9]{2,4}$", Pattern.CASE_INSENSITIVE);
+    }
+
+    /** Pattern for generic field names */
+    public Pattern getGenericFieldNamePattern() {
+        return getPattern(
+                "(?i)^(field|form|text|textbox|checkbox|check|radio|combo|list|untitled|input|question|subform|page|control)[\\s_\\-]*[0-9]*$");
+    }
+
+    /** Pattern for optional T numeric */
+    public Pattern getOptionalTNumericPattern() {
+        return getPattern("(?i)^t?\\d{1,3}$");
+    }
+
+    /** Pattern for simple form fields */
+    public Pattern getSimpleFormFieldPattern() {
+        return getPattern("(?i)^(text|field|form)[\\s_-]*\\d+$");
+    }
+
+    /** Pattern for punctuation */
+    public Pattern getPunctuationPattern() {
+        return getPattern("[\\p{Punct}]+");
+    }
+
+    /** Supported new field types */
+    public Set<String> getSupportedNewFieldTypes() {
+        return SUPPORTED_NEW_FIELD_TYPES;
+    }
+
+    /** Pattern for camel case boundaries */
+    public Pattern getCamelCaseBoundaryPattern() {
+        return getPattern("(?<=[a-z])(?=[A-Z])");
     }
 
     private record PatternKey(String regex, int flags) {

@@ -14,7 +14,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.regex.Pattern;
 
 import org.apache.pdfbox.cos.COSArray;
 import org.apache.pdfbox.cos.COSName;
@@ -37,18 +36,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @UtilityClass
 public class FormUtils {
-
-    private final Pattern GENERIC_FIELD_NAME_PATTERN =
-            Pattern.compile(
-                    "(?i)^(field|form|text|textbox|checkbox|check|radio|combo|list|untitled|input|question|subform|page|control)[\\s_\\-]*[0-9]*$");
-    private final Pattern WHITESPACE_PATTERN = Pattern.compile("\\s+");
-    private final Pattern OPTIONAL_T_NUMERIC_PATTERN = Pattern.compile("(?i)^t?\\d{1,3}$");
-    private final Pattern SIMPLE_FORM_FIELD_PATTERN =
-            Pattern.compile("(?i)^(text|field|form)[\\s_-]*\\d+$");
-    private final Pattern PUNCTUATION_PATTERN = Pattern.compile("[\\p{Punct}]+");
-    private final Set<String> SUPPORTED_NEW_FIELD_TYPES =
-            Set.of("text", "checkbox", "combobox", "listbox");
-    private final Pattern CAMEL_CASE_BOUNDARY_PATTERN = Pattern.compile("(?<=[a-z])(?=[A-Z])");
 
     public boolean hasAnyRotatedPage(PDDocument document) {
         try {
@@ -1178,17 +1165,31 @@ public class FormUtils {
     }
 
     private boolean looksGeneric(String value) {
-        String simplified = PUNCTUATION_PATTERN.matcher(value).replaceAll(" ").trim();
+        String simplified =
+                RegexPatternUtils.getInstance()
+                        .getPunctuationPattern()
+                        .matcher(value)
+                        .replaceAll(" ")
+                        .trim();
         if (simplified.isEmpty()) {
             return true;
         }
-        if (GENERIC_FIELD_NAME_PATTERN.matcher(simplified).matches()) {
+        if (RegexPatternUtils.getInstance()
+                .getGenericFieldNamePattern()
+                .matcher(simplified)
+                .matches()) {
             return true;
         }
-        if (SIMPLE_FORM_FIELD_PATTERN.matcher(simplified).matches()) {
+        if (RegexPatternUtils.getInstance()
+                .getSimpleFormFieldPattern()
+                .matcher(simplified)
+                .matches()) {
             return true;
         }
-        return OPTIONAL_T_NUMERIC_PATTERN.matcher(simplified).matches();
+        return RegexPatternUtils.getInstance()
+                .getOptionalTNumericPattern()
+                .matcher(simplified)
+                .matches();
     }
 
     private String humanizeName(String name) {
@@ -1196,9 +1197,11 @@ public class FormUtils {
             return null;
         }
         String cleaned =
-                WHITESPACE_PATTERN
+                RegexPatternUtils.getInstance()
+                        .getWhitespacePattern()
                         .matcher(
-                                CAMEL_CASE_BOUNDARY_PATTERN
+                                RegexPatternUtils.getInstance()
+                                        .getCamelCaseBoundaryPattern()
                                         .matcher(
                                                 name.replaceAll("[#\\[\\]]", " ")
                                                         .replace('.', ' ')
@@ -1378,7 +1381,9 @@ public class FormUtils {
                             .map(FormUtils::normalizeFieldType)
                             .orElseGet(() -> detectFieldType(originalField));
 
-            if (!SUPPORTED_NEW_FIELD_TYPES.contains(resolvedType)) {
+            if (!RegexPatternUtils.getInstance()
+                    .getSupportedNewFieldTypes()
+                    .contains(resolvedType)) {
                 log.warn("Unsupported target type '{}' for field '{}'", resolvedType, lookupName);
                 continue;
             }
