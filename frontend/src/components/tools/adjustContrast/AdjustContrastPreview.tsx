@@ -31,7 +31,7 @@ export default function AdjustContrastPreview({ file, parameters }: Props) {
   }, [file, requestThumbnail]);
 
   useEffect(() => {
-    let revoked: string | null = null;
+    const revoked: string | null = null;
     const render = async () => {
       if (!thumb || !canvasRef.current) return;
       const img = new Image();

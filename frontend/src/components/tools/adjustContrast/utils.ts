@@ -38,7 +38,8 @@ export function applyAdjustmentsToCanvas(src: HTMLCanvasElement, params: AdjustC
     // Saturation via HSL
     const rn = r / 255, gn = g / 255, bn = b / 255;
     const max = Math.max(rn, gn, bn); const min = Math.min(rn, gn, bn);
-    let h = 0, s = 0, l = (max + min) / 2;
+    let h = 0, s = 0;
+    const l = (max + min) / 2;
     if (max !== min) {
       const d = max - min;
       s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
