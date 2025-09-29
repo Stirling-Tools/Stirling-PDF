@@ -1,4 +1,3 @@
-import React from 'react';
 import { useToast } from './ToastContext';
 import { ToastInstance, ToastLocation } from './types';
 import { LocalIcon } from '../shared/LocalIcon';
@@ -66,7 +65,7 @@ export default function ToastRenderer() {
                       <LocalIcon icon={`material-symbols:${getDefaultIconName(t)}`} width={20} height={20} />
                     )}
                   </div>
-                  
+
                   {/* Title + count badge */}
                   <div className="toast-title-container">
                     <span>{t.title}</span>
@@ -74,7 +73,7 @@ export default function ToastRenderer() {
                       <span className="toast-count-badge">{t.count}</span>
                     )}
                   </div>
-                  
+
                   {/* Controls */}
                   <div className="toast-controls">
                     {t.expandable && (
@@ -101,20 +100,20 @@ export default function ToastRenderer() {
                 {/* Progress bar - always show when present */}
                 {typeof t.progress === 'number' && (
                   <div className="toast-progress-container">
-                    <div 
+                    <div
                       className={getProgressBarClass(t)}
                       style={{ width: `${t.progress}%` }}
                     />
                   </div>
                 )}
-                
+
                 {/* Body content - only show when expanded */}
                 {(t.isExpanded || !t.expandable) && (
                   <div className="toast-body">
                     {t.body}
                   </div>
                 )}
-                
+
                 {/* Button - always show when present, positioned below body */}
                 {t.buttonText && t.buttonCallback && (
                   <div className="toast-action-container">

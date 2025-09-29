@@ -1,4 +1,3 @@
-import React from 'react';
 import { Stack, Text } from '@mantine/core';
 import { formatFileSize, getFileDate } from '../../../utils/fileUtils';
 

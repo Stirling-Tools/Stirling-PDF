@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Button, Paper, Group, NumberInput } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { useViewer } from '../../contexts/ViewerContext';
@@ -14,11 +14,11 @@ interface PdfViewerToolbarProps {
   currentPage?: number;
   totalPages?: number;
   onPageChange?: (page: number) => void;
-  
+
   // Dual page toggle (placeholder for now)
   dualPage?: boolean;
   onDualPageToggle?: () => void;
-  
+
   // Zoom controls (connected via ViewerContext)
   currentZoom?: number;
 }
@@ -33,7 +33,7 @@ export function PdfViewerToolbar({
 }: PdfViewerToolbarProps) {
   const { t } = useTranslation();
   const { getScrollState, getZoomState, scrollActions, zoomActions, registerImmediateZoomUpdate, registerImmediateScrollUpdate } = useViewer();
-  
+
   const scrollState = getScrollState();
   const zoomState = getZoomState();
   const [pageInput, setPageInput] = useState(scrollState.currentPage || currentPage);
@@ -151,7 +151,7 @@ export function PdfViewerToolbar({
             input: { width: 48, textAlign: "center", fontWeight: 500, fontSize: 16 },
           }}
         />
-        
+
         <span style={{ fontWeight: 500, fontSize: 16 }}>
           / {scrollState.totalPages}
         </span>

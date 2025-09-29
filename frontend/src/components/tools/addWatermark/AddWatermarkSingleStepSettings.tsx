@@ -1,12 +1,11 @@
 /**
  * AddWatermarkSingleStepSettings - Used for automation only
- * 
+ *
  * This component combines all watermark settings into a single step interface
  * for use in the automation system. It includes type selection and all relevant
  * settings in one unified component.
  */
 
-import React from "react";
 import { Stack } from "@mantine/core";
 import { AddWatermarkParameters } from "../../../hooks/tools/addWatermark/useAddWatermarkParameters";
 import WatermarkTypeSettings from "./WatermarkTypeSettings";

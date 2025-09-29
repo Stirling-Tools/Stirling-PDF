@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { Stack, Button, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import LocalIcon from '../../shared/LocalIcon';

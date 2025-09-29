@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import { useRef } from "react";
 import { FileButton, Button } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 

@@ -1,4 +1,3 @@
-import React from 'react';
 import { Divider, Select, Stack, Switch } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { PageLayoutParameters } from '../../../hooks/tools/pageLayout/usePageLayoutParameters';

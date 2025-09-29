@@ -1,4 +1,4 @@
-import React, { createContext, useContext, ReactNode } from 'react';
+import { createContext, useContext, ReactNode } from 'react';
 import { MantineProvider } from '@mantine/core';
 import { useRainbowTheme } from '../../hooks/useRainbowTheme';
 import { mantineTheme } from '../../theme/mantineTheme';

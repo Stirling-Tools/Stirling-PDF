@@ -1,4 +1,3 @@
-import React from "react";
 import { useTranslation } from "react-i18next";
 import { Title, Stack, Divider } from "@mantine/core";
 import AddCircleOutline from "@mui/icons-material/AddCircleOutline";
@@ -19,11 +18,11 @@ interface AutomationSelectionProps {
   toolRegistry: Record<string, ToolRegistryEntry>;
 }
 
-export default function AutomationSelection({ 
+export default function AutomationSelection({
   savedAutomations,
-  onCreateNew, 
-  onRun, 
-  onEdit, 
+  onCreateNew,
+  onRun,
+  onEdit,
   onDelete,
   onCopyFromSuggested,
   toolRegistry

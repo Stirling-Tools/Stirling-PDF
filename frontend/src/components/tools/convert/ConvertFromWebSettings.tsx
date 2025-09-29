@@ -1,4 +1,3 @@
-import React from 'react';
 import { Stack, Text, NumberInput, Slider } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { ConvertParameters } from '../../../hooks/tools/convert/useConvertParameters';

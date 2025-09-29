@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Stack, Text, NumberInput, Select, Divider } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { CompressParameters } from "../../../hooks/tools/compress/useCompressParameters";

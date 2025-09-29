@@ -1,4 +1,4 @@
-import React, { Suspense } from "react";
+import { Suspense } from "react";
 import { RainbowThemeProvider } from "./components/shared/RainbowThemeProvider";
 import { FileContextProvider } from "./contexts/FileContext";
 import { NavigationProvider } from "./contexts/NavigationContext";

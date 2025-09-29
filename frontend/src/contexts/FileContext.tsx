@@ -12,7 +12,7 @@
  * Memory management handled by FileLifecycleManager (PDF.js cleanup, blob URL revocation).
  */
 
-import React, { useReducer, useCallback, useEffect, useRef, useMemo } from 'react';
+import { useReducer, useCallback, useEffect, useRef, useMemo } from 'react';
 import {
   FileContextProviderProps,
   FileContextSelectors,
