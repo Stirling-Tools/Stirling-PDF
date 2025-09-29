@@ -3,7 +3,6 @@ package stirling.software.SPDF.controller.api;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -20,7 +19,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -30,6 +28,9 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.model.api.PDFWithPageNums;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
+import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.TempFile;
+import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @RestController
@@ -40,8 +41,9 @@ import stirling.software.common.util.WebResponseUtils;
 public class SplitPDFController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final TempFileManager tempFileManager;
 
-    @PostMapping(consumes = "multipart/form-data", value = "/split-pages")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/split-pages")
     @Operation(
             summary = "Split a PDF file into separate documents",
             description =
@@ -53,17 +55,15 @@ public class SplitPDFController {
             throws IOException {
 
         PDDocument document = null;
-        Path zipFile = null;
         List<ByteArrayOutputStream> splitDocumentsBoas = new ArrayList<>();
+        TempFile outputTempFile = null;
 
         try {
+            outputTempFile = new TempFile(tempFileManager, ".zip");
 
             MultipartFile file = request.getFileInput();
-            String pages = request.getPageNumbers();
-            // open the pdf document
-
             document = pdfDocumentFactory.load(file);
-            // PdfMetadata metadata = PdfMetadataService.extractMetadataFromPdf(document);
+
             int totalPages = document.getNumberOfPages();
             List<Integer> pageNumbers = request.getPageNumbersList(document, false);
             if (!pageNumbers.contains(totalPages - 1)) {
@@ -76,8 +76,7 @@ public class SplitPDFController {
                     "Splitting PDF into pages: {}",
                     pageNumbers.stream().map(String::valueOf).collect(Collectors.joining(",")));
 
-            // split the document
-            splitDocumentsBoas = new ArrayList<>();
+            splitDocumentsBoas = new ArrayList<>(pageNumbers.size());
             int previousPageNumber = 0;
             for (int splitPoint : pageNumbers) {
                 try (PDDocument splitDocument =
@@ -94,7 +93,6 @@ public class SplitPDFController {
 
                     ByteArrayOutputStream baos = new ByteArrayOutputStream();
                     splitDocument.save(baos);
-
                     splitDocumentsBoas.add(baos);
                 } catch (Exception e) {
                     ExceptionUtils.logException("document splitting and saving", e);
@@ -102,22 +100,21 @@ public class SplitPDFController {
                 }
             }
 
-            // closing the original document
             document.close();
 
-            zipFile = Files.createTempFile("split_documents", ".zip");
+            String baseFilename = GeneralUtils.removeExtension(file.getOriginalFilename());
 
-            String filename =
-                    Filenames.toSimpleFileName(file.getOriginalFilename())
-                            .replaceFirst("[.][^.]+$", "");
-            try (ZipOutputStream zipOut = new ZipOutputStream(Files.newOutputStream(zipFile))) {
-                // loop through the split documents and write them to the zip file
-                for (int i = 0; i < splitDocumentsBoas.size(); i++) {
-                    String fileName = filename + "_" + (i + 1) + ".pdf";
+            try (ZipOutputStream zipOut =
+                    new ZipOutputStream(Files.newOutputStream(outputTempFile.getPath()))) {
+                int splitDocumentsSize = splitDocumentsBoas.size();
+                for (int i = 0; i < splitDocumentsSize; i++) {
+                    StringBuilder sb = new StringBuilder(baseFilename.length() + 10);
+                    sb.append(baseFilename).append('_').append(i + 1).append(".pdf");
+                    String fileName = sb.toString();
+
                     ByteArrayOutputStream baos = splitDocumentsBoas.get(i);
                     byte[] pdf = baos.toByteArray();
 
-                    // Add PDF file to the zip
                     ZipEntry pdfEntry = new ZipEntry(fileName);
                     zipOut.putNextEntry(pdfEntry);
                     zipOut.write(pdf);
@@ -125,18 +122,17 @@ public class SplitPDFController {
 
                     log.debug("Wrote split document {} to zip file", fileName);
                 }
-            } catch (Exception e) {
-                log.error("Failed writing to zip", e);
-                throw e;
             }
 
-            log.debug("Successfully created zip file with split documents: {}", zipFile.toString());
-            byte[] data = Files.readAllBytes(zipFile);
-            Files.deleteIfExists(zipFile);
+            log.debug(
+                    "Successfully created zip file with split documents: {}",
+                    outputTempFile.getPath().toString());
+            byte[] data = Files.readAllBytes(outputTempFile.getPath());
 
-            // return the Resource in the response
+            String zipFilename =
+                    GeneralUtils.generateFilename(file.getOriginalFilename(), "_split.zip");
             return WebResponseUtils.bytesToWebResponse(
-                    data, filename + ".zip", MediaType.APPLICATION_OCTET_STREAM);
+                    data, zipFilename, MediaType.APPLICATION_OCTET_STREAM);
 
         } finally {
             try {
@@ -152,9 +148,9 @@ public class SplitPDFController {
                     }
                 }
 
-                // Delete temporary zip file
-                if (zipFile != null) {
-                    Files.deleteIfExists(zipFile);
+                // Close the output temporary file
+                if (outputTempFile != null) {
+                    outputTempFile.close();
                 }
             } catch (Exception e) {
                 log.error("Error while cleaning up resources", e);

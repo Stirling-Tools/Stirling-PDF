@@ -41,6 +41,7 @@ import stirling.software.common.model.oauth2.GitHubProvider;
 import stirling.software.common.model.oauth2.GoogleProvider;
 import stirling.software.common.model.oauth2.KeycloakProvider;
 import stirling.software.common.model.oauth2.Provider;
+import stirling.software.common.service.SsrfProtectionService.SsrfProtectionLevel;
 import stirling.software.common.util.ValidationUtils;
 
 @Data
@@ -72,11 +73,11 @@ public class ApplicationProperties {
     public PropertySource<?> dynamicYamlPropertySource(ConfigurableEnvironment environment)
             throws IOException {
         String configPath = InstallationPathConfig.getSettingsPath();
-        log.debug("Attempting to load settings from: " + configPath);
+        log.debug("Attempting to load settings from: {}", configPath);
 
         File file = new File(configPath);
         if (!file.exists()) {
-            log.error("Warning: Settings file does not exist at: " + configPath);
+            log.error("Warning: Settings file does not exist at: {}", configPath);
         }
 
         Resource resource = new FileSystemResource(configPath);
@@ -89,7 +90,7 @@ public class ApplicationProperties {
                 new YamlPropertySourceFactory().createPropertySource(null, encodedResource);
         environment.getPropertySources().addFirst(propertySource);
 
-        log.debug("Loaded properties: " + propertySource.getSource());
+        log.debug("Loaded properties: {}", propertySource.getSource());
 
         return propertySource;
     }
@@ -119,6 +120,7 @@ public class ApplicationProperties {
         private long loginResetTimeMinutes;
         private String loginMethod = "all";
         private String customGlobalAPIKey;
+        private Jwt jwt = new Jwt();
 
         public Boolean isAltLogin() {
             return saml2.getEnabled() || oauth2.getEnabled();
@@ -197,7 +199,7 @@ public class ApplicationProperties {
             @JsonIgnore
             public InputStream getIdpMetadataUri() throws IOException {
                 if (idpMetadataUri.startsWith("classpath:")) {
-                    return new ClassPathResource(idpMetadataUri.substring("classpath".length()))
+                    return new ClassPathResource(idpMetadataUri.substring("classpath:".length()))
                             .getInputStream();
                 }
                 try {
@@ -233,6 +235,7 @@ public class ApplicationProperties {
 
             @JsonIgnore
             public Resource getPrivateKey() {
+                if (privateKey == null) return null;
                 if (privateKey.startsWith("classpath:")) {
                     return new ClassPathResource(privateKey.substring("classpath:".length()));
                 } else {
@@ -297,6 +300,15 @@ public class ApplicationProperties {
                 }
             }
         }
+
+        @Data
+        public static class Jwt {
+            private boolean enableKeystore = true;
+            private boolean enableKeyRotation = false;
+            private boolean enableKeyCleanup = true;
+            private int keyRetentionDays = 7;
+            private boolean secureCookie;
+        }
     }
 
     @Data
@@ -317,10 +329,16 @@ public class ApplicationProperties {
         private CustomPaths customPaths = new CustomPaths();
         private String fileUploadLimit;
         private TempFileManagement tempFileManagement = new TempFileManagement();
+        private DatabaseBackup databaseBackup = new DatabaseBackup();
 
         public boolean isAnalyticsEnabled() {
             return this.getEnableAnalytics() != null && this.getEnableAnalytics();
         }
+    }
+
+    @Data
+    public static class DatabaseBackup {
+        private String cron = "0 0 0 * * ?"; // daily at midnight
     }
 
     @Data
@@ -379,7 +397,7 @@ public class ApplicationProperties {
         @Data
         public static class UrlSecurity {
             private boolean enabled = true;
-            private String level = "MEDIUM"; // MAX, MEDIUM, OFF
+            private SsrfProtectionLevel level = SsrfProtectionLevel.MEDIUM; // MAX, MEDIUM, OFF
             private List<String> allowedDomains = new ArrayList<>();
             private List<String> blockedDomains = new ArrayList<>();
             private List<String> internalTlds =
@@ -434,19 +452,17 @@ public class ApplicationProperties {
         private List<String> languages;
 
         public String getAppName() {
-            return appName != null && appName.trim().length() > 0 ? appName : null;
+            return appName != null && !appName.trim().isEmpty() ? appName : null;
         }
 
         public String getHomeDescription() {
-            return homeDescription != null && homeDescription.trim().length() > 0
+            return homeDescription != null && !homeDescription.trim().isEmpty()
                     ? homeDescription
                     : null;
         }
 
         public String getAppNameNavbar() {
-            return appNameNavbar != null && appNameNavbar.trim().length() > 0
-                    ? appNameNavbar
-                    : null;
+            return appNameNavbar != null && !appNameNavbar.trim().isEmpty() ? appNameNavbar : null;
         }
     }
 

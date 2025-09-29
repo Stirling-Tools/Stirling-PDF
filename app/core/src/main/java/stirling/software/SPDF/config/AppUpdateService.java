@@ -26,7 +26,7 @@ class AppUpdateService {
     @Scope("request")
     public boolean shouldShow() {
         boolean showUpdate = applicationProperties.getSystem().isShowUpdate();
-        boolean showAdminResult = (showAdmin != null) ? showAdmin.getShowUpdateOnlyAdmins() : true;
+        boolean showAdminResult = showAdmin == null || showAdmin.getShowUpdateOnlyAdmins();
         return showUpdate && showAdminResult;
     }
 }

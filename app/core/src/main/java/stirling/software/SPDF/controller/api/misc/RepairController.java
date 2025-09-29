@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -11,7 +12,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -21,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.common.util.TempFile;
@@ -46,7 +47,7 @@ public class RepairController {
         return endpointConfiguration.isGroupEnabled("qpdf");
     }
 
-    @PostMapping(consumes = "multipart/form-data", value = "/repair")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/repair")
     @Operation(
             summary = "Repair a PDF file",
             description =
@@ -123,11 +124,10 @@ public class RepairController {
             byte[] pdfBytes = pdfDocumentFactory.loadToBytes(tempOutputFile.getFile());
 
             // Return the repaired PDF as a response
-            String outputFilename =
-                    Filenames.toSimpleFileName(inputFile.getOriginalFilename())
-                                    .replaceFirst("[.][^.]+$", "")
-                            + "_repaired.pdf";
-            return WebResponseUtils.bytesToWebResponse(pdfBytes, outputFilename);
+            return WebResponseUtils.bytesToWebResponse(
+                    pdfBytes,
+                    GeneralUtils.generateFilename(
+                            inputFile.getOriginalFilename(), "_repaired.pdf"));
         }
     }
 }

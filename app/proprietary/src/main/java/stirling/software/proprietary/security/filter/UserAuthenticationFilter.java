@@ -9,7 +9,6 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.session.SessionInformation;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -64,6 +63,7 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
         String requestURI = request.getRequestURI();
+
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         // Check for session expiration (unsure if needed)
@@ -92,14 +92,9 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
                         response.getWriter().write("Invalid API Key.");
                         return;
                     }
-                    List<SimpleGrantedAuthority> authorities =
-                            user.get().getAuthorities().stream()
-                                    .map(
-                                            authority ->
-                                                    new SimpleGrantedAuthority(
-                                                            authority.getAuthority()))
-                                    .toList();
-                    authentication = new ApiKeyAuthenticationToken(user.get(), apiKey, authorities);
+                    authentication =
+                            new ApiKeyAuthenticationToken(
+                                    user.get(), apiKey, user.get().getAuthorities());
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 } catch (AuthenticationException e) {
                     // If API key authentication fails, deny the request
@@ -115,26 +110,25 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
             String method = request.getMethod();
             String contextPath = request.getContextPath();
 
-            if ("GET".equalsIgnoreCase(method) && !(contextPath + "/login").equals(requestURI)) {
+            if ("GET".equalsIgnoreCase(method) && !requestURI.startsWith(contextPath + "/login")) {
                 response.sendRedirect(contextPath + "/login"); // redirect to the login page
-                return;
             } else {
                 response.setStatus(HttpStatus.UNAUTHORIZED.value());
                 response.getWriter()
                         .write(
-                                "Authentication required. Please provide a X-API-KEY in request"
-                                        + " header.\n"
-                                        + "This is found in Settings -> Account Settings -> API Key\n"
-                                        + "Alternatively you can disable authentication if this is"
-                                        + " unexpected");
-                return;
+                                """
+                                Authentication required. Please provide a X-API-KEY in request header.
+                                This is found in Settings -> Account Settings -> API Key
+                                Alternatively you can disable authentication if this is unexpected.
+                                """);
             }
+            return;
         }
 
         // Check if the authenticated user is disabled and invalidate their session if so
         if (authentication != null && authentication.isAuthenticated()) {
 
-            LoginMethod loginMethod = LoginMethod.UNKNOWN;
+            UserLoginType loginMethod = UserLoginType.UNKNOWN;
 
             boolean blockRegistration = false;
 
@@ -143,20 +137,20 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
             String username = null;
             if (principal instanceof UserDetails detailsUser) {
                 username = detailsUser.getUsername();
-                loginMethod = LoginMethod.USERDETAILS;
+                loginMethod = UserLoginType.USERDETAILS;
             } else if (principal instanceof OAuth2User oAuth2User) {
                 username = oAuth2User.getName();
-                loginMethod = LoginMethod.OAUTH2USER;
+                loginMethod = UserLoginType.OAUTH2USER;
                 OAUTH2 oAuth = securityProp.getOauth2();
                 blockRegistration = oAuth != null && oAuth.getBlockRegistration();
             } else if (principal instanceof CustomSaml2AuthenticatedPrincipal saml2User) {
                 username = saml2User.name();
-                loginMethod = LoginMethod.SAML2USER;
+                loginMethod = UserLoginType.SAML2USER;
                 SAML2 saml2 = securityProp.getSaml2();
                 blockRegistration = saml2 != null && saml2.getBlockRegistration();
             } else if (principal instanceof String stringUser) {
                 username = stringUser;
-                loginMethod = LoginMethod.STRINGUSER;
+                loginMethod = UserLoginType.STRINGUSER;
             }
 
             // Retrieve all active sessions for the user
@@ -170,8 +164,8 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
                 boolean isUserDisabled = userService.isUserDisabled(username);
 
                 boolean notSsoLogin =
-                        !LoginMethod.OAUTH2USER.equals(loginMethod)
-                                && !LoginMethod.SAML2USER.equals(loginMethod);
+                        !UserLoginType.OAUTH2USER.equals(loginMethod)
+                                && !UserLoginType.SAML2USER.equals(loginMethod);
 
                 // Block user registration if not allowed by configuration
                 if (blockRegistration && !isUserExists) {
@@ -206,7 +200,7 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    private enum LoginMethod {
+    private enum UserLoginType {
         USERDETAILS("UserDetails"),
         OAUTH2USER("OAuth2User"),
         STRINGUSER("StringUser"),
@@ -215,7 +209,7 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
 
         private String method;
 
-        LoginMethod(String method) {
+        UserLoginType(String method) {
             this.method = method;
         }
 
@@ -226,11 +220,12 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+    protected boolean shouldNotFilter(HttpServletRequest request) {
         String uri = request.getRequestURI();
         String contextPath = request.getContextPath();
         String[] permitAllPatterns = {
             contextPath + "/login",
+            contextPath + "/signup",
             contextPath + "/register",
             contextPath + "/error",
             contextPath + "/images/",
@@ -247,6 +242,7 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
         for (String pattern : permitAllPatterns) {
             if (uri.startsWith(pattern)
                     || uri.endsWith(".svg")
+                    || uri.endsWith(".mjs")
                     || uri.endsWith(".png")
                     || uri.endsWith(".ico")) {
                 return true;

@@ -5,8 +5,11 @@ import java.awt.image.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.util.Iterator;
 
 import javax.imageio.ImageIO;
+import javax.imageio.ImageReader;
+import javax.imageio.stream.ImageInputStream;
 
 import org.springframework.web.multipart.MultipartFile;
 
@@ -82,19 +85,16 @@ public class ImageProcessingUtils {
                 return 0;
             }
             int orientationTag = directory.getInt(ExifSubIFDDirectory.TAG_ORIENTATION);
-            switch (orientationTag) {
-                case 1:
-                    return 0;
-                case 6:
-                    return 90;
-                case 3:
-                    return 180;
-                case 8:
-                    return 270;
-                default:
+            return switch (orientationTag) {
+                case 1 -> 0;
+                case 6 -> 90;
+                case 3 -> 180;
+                case 8 -> 270;
+                default -> {
                     log.warn("Unknown orientation tag: {}", orientationTag);
-                    return 0;
-            }
+                    yield 0;
+                }
+            };
         } catch (ImageProcessingException | MetadataException e) {
             return 0;
         }
@@ -115,7 +115,36 @@ public class ImageProcessingUtils {
 
     public static BufferedImage loadImageWithExifOrientation(MultipartFile file)
             throws IOException {
-        BufferedImage image = ImageIO.read(file.getInputStream());
+        BufferedImage image = null;
+        String filename = file.getOriginalFilename();
+
+        if (filename != null && filename.toLowerCase().endsWith(".psd")) {
+            // For PSD files, try explicit ImageReader
+            Iterator<ImageReader> readers = ImageIO.getImageReadersByFormatName("PSD");
+            if (readers.hasNext()) {
+                ImageReader reader = readers.next();
+                try (ImageInputStream iis = ImageIO.createImageInputStream(file.getInputStream())) {
+                    reader.setInput(iis);
+                    image = reader.read(0);
+                } finally {
+                    reader.dispose();
+                }
+            }
+            if (image == null) {
+                throw new IOException(
+                        "Unable to read image from file: "
+                                + filename
+                                + ". Supported PSD formats: RGB/CMYK/Gray 8-32 bit, RLE/ZIP compression");
+            }
+        } else {
+            // For non-PSD files, use standard ImageIO
+            image = ImageIO.read(file.getInputStream());
+        }
+
+        if (image == null) {
+            throw new IOException("Unable to read image from file: " + filename);
+        }
+
         double orientation = extractImageOrientation(file.getInputStream());
         return applyOrientation(image, orientation);
     }

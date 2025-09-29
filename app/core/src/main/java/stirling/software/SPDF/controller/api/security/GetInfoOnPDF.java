@@ -3,7 +3,9 @@ package stirling.software.SPDF.controller.api.security;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.text.SimpleDateFormat;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 import org.apache.pdfbox.cos.COSInputStream;
@@ -64,6 +66,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
+import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.common.util.WebResponseUtils;
 
 @RestController
@@ -119,7 +122,7 @@ public class GetInfoOnPDF {
         if (!ap.canModifyAnnotations()) restrictedPermissions.add("annotation modification");
         if (!ap.canPrint()) restrictedPermissions.add("printing");
 
-        if (restrictedPermissions.size() > 0) {
+        if (!restrictedPermissions.isEmpty()) {
             summaryData.set("restrictedPermissions", restrictedPermissions);
             summaryData.put("restrictedPermissionsCount", restrictedPermissions.size());
         }
@@ -188,12 +191,12 @@ public class GetInfoOnPDF {
         return false;
     }
 
-    @PostMapping(consumes = "multipart/form-data", value = "/get-info-on-pdf")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/get-info-on-pdf")
     @Operation(summary = "Summary here", description = "desc. Input:PDF Output:JSON Type:SISO")
     public ResponseEntity<byte[]> getPdfInfo(@ModelAttribute PDFFile request) throws IOException {
         MultipartFile inputFile = request.getFileInput();
         boolean readonly = true;
-        try (PDDocument pdfBoxDoc = pdfDocumentFactory.load(inputFile, readonly); ) {
+        try (PDDocument pdfBoxDoc = pdfDocumentFactory.load(inputFile, readonly)) {
             ObjectMapper objectMapper = new ObjectMapper();
             ObjectNode jsonOutput = objectMapper.createObjectNode();
 
@@ -222,9 +225,13 @@ public class GetInfoOnPDF {
 
             // Number of words, paragraphs, and images in the entire document
             String fullText = new PDFTextStripper().getText(pdfBoxDoc);
-            String[] words = fullText.split("\\s+");
+            String[] words = RegexPatternUtils.getInstance().getWhitespacePattern().split(fullText);
             int wordCount = words.length;
-            int paragraphCount = fullText.split("\r\n|\r|\n").length;
+            int paragraphCount =
+                    RegexPatternUtils.getInstance()
+                            .getMultiFormatNewlinePattern()
+                            .split(fullText)
+                            .length;
             basicInfo.put("WordCount", wordCount);
             basicInfo.put("ParagraphCount", paragraphCount);
             // Number of characters in the entire document (including spaces and special characters)
@@ -249,7 +256,6 @@ public class GetInfoOnPDF {
             docInfoNode.put("PDF version", pdfBoxDoc.getVersion());
             docInfoNode.put("Trapped", info.getTrapped());
             docInfoNode.put("Page Mode", getPageModeDescription(pageMode));
-            ;
 
             PDAcroForm acroForm = pdfBoxDoc.getDocumentCatalog().getAcroForm();
 
@@ -263,7 +269,7 @@ public class GetInfoOnPDF {
 
             // Generate structured summary data about PDF characteristics
             ObjectNode summaryData = generatePDFSummaryData(pdfBoxDoc);
-            if (summaryData != null && summaryData.size() > 0) {
+            if (summaryData != null && !summaryData.isEmpty()) {
                 jsonOutput.set("SummaryData", summaryData);
             }
 
@@ -788,7 +794,7 @@ public class GetInfoOnPDF {
 
                         // Recursively explore child elements
                         ArrayNode childElements = exploreStructureTree(structureElement.getKids());
-                        if (childElements.size() > 0) {
+                        if (!childElements.isEmpty()) {
                             elementNode.set("Children", childElements);
                         }
                     }
@@ -817,8 +823,10 @@ public class GetInfoOnPDF {
 
     private String formatDate(Calendar calendar) {
         if (calendar != null) {
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-            return sdf.format(calendar.getTime());
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            ZonedDateTime zonedDateTime =
+                    ZonedDateTime.ofInstant(calendar.toInstant(), ZoneId.systemDefault());
+            return zonedDateTime.format(formatter);
         } else {
             return null;
         }

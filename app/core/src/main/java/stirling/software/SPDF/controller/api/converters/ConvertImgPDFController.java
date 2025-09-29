@@ -1,7 +1,6 @@
 package stirling.software.SPDF.controller.api.converters;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URLConnection;
@@ -9,6 +8,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
+import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -16,6 +17,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.rendering.ImageType;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -24,22 +26,27 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.SPDF.model.api.converters.ConvertCbzToPdfRequest;
+import stirling.software.SPDF.model.api.converters.ConvertPdfToCbzRequest;
 import stirling.software.SPDF.model.api.converters.ConvertToImageRequest;
 import stirling.software.SPDF.model.api.converters.ConvertToPdfRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.CbzUtils;
 import stirling.software.common.util.CheckProgramInstall;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.PdfToCbzUtils;
 import stirling.software.common.util.PdfUtils;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
+import stirling.software.common.util.RegexPatternUtils;
+import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @RestController
@@ -50,8 +57,12 @@ import stirling.software.common.util.WebResponseUtils;
 public class ConvertImgPDFController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final TempFileManager tempFileManager;
+    private static final Pattern EXTENSION_PATTERN =
+            RegexPatternUtils.getInstance().getPattern(RegexPatternUtils.getExtensionRegex());
+    private static final String DEFAULT_COMIC_NAME = "comic";
 
-    @PostMapping(consumes = "multipart/form-data", value = "/pdf/img")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/img")
     @Operation(
             summary = "Convert PDF to image(s)",
             description =
@@ -66,6 +77,7 @@ public class ConvertImgPDFController {
         String colorType = request.getColorType();
         int dpi = request.getDpi();
         String pageNumbers = request.getPageNumbers();
+        boolean includeAnnotations = Boolean.TRUE.equals(request.getIncludeAnnotations());
         Path tempFile = null;
         Path tempOutputDir = null;
         Path tempPdfPath = null;
@@ -87,9 +99,7 @@ public class ConvertImgPDFController {
             }
             // returns bytes for image
             boolean singleImage = "single".equals(singleOrMultiple);
-            String filename =
-                    Filenames.toSimpleFileName(new File(file.getOriginalFilename()).getName())
-                            .replaceFirst("[.][^.]+$", "");
+            String filename = GeneralUtils.generateFilename(file.getOriginalFilename(), "");
 
             result =
                     PdfUtils.convertFromPdf(
@@ -101,7 +111,8 @@ public class ConvertImgPDFController {
                             colorTypeResult,
                             singleImage,
                             dpi,
-                            filename);
+                            filename,
+                            includeAnnotations);
             if (result == null || result.length == 0) {
                 log.error("resultant bytes for {} is null, error converting ", filename);
             }
@@ -148,10 +159,11 @@ public class ConvertImgPDFController {
                                 .runCommandWithOutputHandling(command);
 
                 // Find all WebP files in the output directory
-                List<Path> webpFiles =
-                        Files.walk(tempOutputDir)
-                                .filter(path -> path.toString().endsWith(".webp"))
-                                .toList();
+                List<Path> webpFiles;
+                try (Stream<Path> walkStream = Files.walk(tempOutputDir)) {
+                    webpFiles =
+                            walkStream.filter(path -> path.toString().endsWith(".webp")).toList();
+                }
 
                 if (webpFiles.isEmpty()) {
                     log.error("No WebP files were created in: {}", tempOutputDir.toString());
@@ -211,7 +223,7 @@ public class ConvertImgPDFController {
         }
     }
 
-    @PostMapping(consumes = "multipart/form-data", value = "/img/pdf")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/img/pdf")
     @Operation(
             summary = "Convert images to a PDF file",
             description =
@@ -236,13 +248,80 @@ public class ConvertImgPDFController {
                 PdfUtils.imageToPdf(file, fitOption, autoRotate, colorType, pdfDocumentFactory);
         return WebResponseUtils.bytesToWebResponse(
                 bytes,
-                new File(file[0].getOriginalFilename()).getName().replaceFirst("[.][^.]+$", "")
-                        + "_converted.pdf");
+                GeneralUtils.generateFilename(file[0].getOriginalFilename(), "_converted.pdf"));
+    }
+
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/cbz/pdf")
+    @Operation(
+            summary = "Convert CBZ comic book archive to PDF",
+            description =
+                    "This endpoint converts a CBZ (ZIP) comic book archive to a PDF file. "
+                            + "Input:CBZ Output:PDF Type:SISO")
+    public ResponseEntity<byte[]> convertCbzToPdf(@ModelAttribute ConvertCbzToPdfRequest request)
+            throws IOException {
+        MultipartFile file = request.getFileInput();
+        byte[] pdfBytes;
+        try {
+            pdfBytes = CbzUtils.convertCbzToPdf(file, pdfDocumentFactory, tempFileManager);
+        } catch (IllegalArgumentException ex) {
+            String message = ex.getMessage() == null ? "Invalid CBZ file" : ex.getMessage();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .contentType(MediaType.TEXT_PLAIN)
+                    .body(message.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        }
+
+        String filename = createConvertedFilename(file.getOriginalFilename(), "_converted.pdf");
+
+        return WebResponseUtils.bytesToWebResponse(pdfBytes, filename);
+    }
+
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/cbz")
+    @Operation(
+            summary = "Convert PDF to CBZ comic book archive",
+            description =
+                    "This endpoint converts a PDF file to a CBZ (ZIP) comic book archive. "
+                            + "Input:PDF Output:CBZ Type:SISO")
+    public ResponseEntity<byte[]> convertPdfToCbz(@ModelAttribute ConvertPdfToCbzRequest request)
+            throws IOException {
+        MultipartFile file = request.getFileInput();
+        Integer dpi = request.getDpi();
+
+        if (dpi == null || dpi <= 0) {
+            dpi = 300;
+        }
+
+        byte[] cbzBytes;
+        try {
+            cbzBytes = PdfToCbzUtils.convertPdfToCbz(file, dpi, pdfDocumentFactory);
+        } catch (IllegalArgumentException ex) {
+            String message = ex.getMessage() == null ? "Invalid PDF file" : ex.getMessage();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .contentType(MediaType.TEXT_PLAIN)
+                    .body(message.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        }
+
+        String filename = createConvertedFilename(file.getOriginalFilename(), "_converted.cbz");
+
+        return WebResponseUtils.bytesToWebResponse(
+                cbzBytes, filename, MediaType.APPLICATION_OCTET_STREAM);
+    }
+
+    private String createConvertedFilename(String originalFilename, String suffix) {
+        if (originalFilename == null) {
+            return GeneralUtils.generateFilename(DEFAULT_COMIC_NAME, suffix);
+        }
+
+        String baseName = EXTENSION_PATTERN.matcher(originalFilename).replaceFirst("");
+        if (baseName.isBlank()) {
+            baseName = DEFAULT_COMIC_NAME;
+        }
+
+        return GeneralUtils.generateFilename(baseName, suffix);
     }
 
     private String getMediaType(String imageFormat) {
         String mimeType = URLConnection.guessContentTypeFromName("." + imageFormat);
-        return "null".equals(mimeType) ? "application/octet-stream" : mimeType;
+        return "null".equals(mimeType) ? MediaType.APPLICATION_OCTET_STREAM_VALUE : mimeType;
     }
 
     /**

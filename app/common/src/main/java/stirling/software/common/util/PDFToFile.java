@@ -36,7 +36,7 @@ public class PDFToFile {
 
     public ResponseEntity<byte[]> processPdfToMarkdown(MultipartFile inputFile)
             throws IOException, InterruptedException {
-        if (!"application/pdf".equals(inputFile.getContentType())) {
+        if (!MediaType.APPLICATION_PDF_VALUE.equals(inputFile.getContentType())) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
 
@@ -74,7 +74,7 @@ public class PDFToFile {
         Path tempInputFile = null;
         Path tempOutputDir = null;
         byte[] fileBytes;
-        String fileName = "temp.file";
+        String fileName;
 
         try {
             tempInputFile = Files.createTempFile("input_", ".pdf");
@@ -153,7 +153,7 @@ public class PDFToFile {
 
     public ResponseEntity<byte[]> processPdfToHtml(MultipartFile inputFile)
             throws IOException, InterruptedException {
-        if (!"application/pdf".equals(inputFile.getContentType())) {
+        if (!MediaType.APPLICATION_PDF_VALUE.equals(inputFile.getContentType())) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
 
@@ -167,7 +167,7 @@ public class PDFToFile {
         Path tempInputFile = null;
         Path tempOutputDir = null;
         byte[] fileBytes;
-        String fileName = "temp.file";
+        String fileName;
 
         try {
             // Save the uploaded file to a temporary location
@@ -223,14 +223,14 @@ public class PDFToFile {
             MultipartFile inputFile, String outputFormat, String libreOfficeFilter)
             throws IOException, InterruptedException {
 
-        if (!"application/pdf".equals(inputFile.getContentType())) {
+        if (!MediaType.APPLICATION_PDF_VALUE.equals(inputFile.getContentType())) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
 
         // Get the original PDF file name without the extension
         String originalPdfFileName = Filenames.toSimpleFileName(inputFile.getOriginalFilename());
 
-        if (originalPdfFileName == null || "".equals(originalPdfFileName.trim())) {
+        if (originalPdfFileName == null || originalPdfFileName.trim().isEmpty()) {
             originalPdfFileName = "output.pdf";
         }
         // Assume file is pdf if no extension
@@ -248,7 +248,7 @@ public class PDFToFile {
         Path tempInputFile = null;
         Path tempOutputDir = null;
         byte[] fileBytes;
-        String fileName = "temp.file";
+        String fileName;
 
         try {
             // Save the uploaded file to a temporary location

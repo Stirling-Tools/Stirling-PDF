@@ -31,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.model.api.PDFWithPageNums;
 import stirling.software.SPDF.pdf.FlexibleCSVWriter;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.GeneralUtils;
 
 import technology.tabula.ObjectExtractor;
 import technology.tabula.Page;
@@ -46,7 +47,7 @@ public class ExtractCSVController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @PostMapping(value = "/pdf/csv", consumes = "multipart/form-data")
+    @PostMapping(value = "/pdf/csv", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "Extracts a CSV document from a PDF",
             description =
@@ -127,7 +128,7 @@ public class ExtractCSVController {
     }
 
     private String getBaseName(String filename) {
-        return filename.replaceFirst("[.][^.]+$", "");
+        return GeneralUtils.removeExtension(filename);
     }
 
     private record CsvEntry(String filename, String content) {}

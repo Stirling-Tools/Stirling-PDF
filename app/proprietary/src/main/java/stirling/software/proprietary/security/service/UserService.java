@@ -15,7 +15,6 @@ import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.session.SessionInformation;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -32,6 +31,7 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.enumeration.Role;
 import stirling.software.common.model.exception.UnsupportedProviderException;
 import stirling.software.common.service.UserServiceInterface;
+import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.security.database.repository.AuthorityRepository;
 import stirling.software.proprietary.security.database.repository.UserRepository;
@@ -61,19 +61,9 @@ public class UserService implements UserServiceInterface {
 
     private final ApplicationProperties.Security.OAUTH2 oAuth2;
 
-    @Transactional
-    public void migrateOauth2ToSSO() {
-        userRepository
-                .findByAuthenticationTypeIgnoreCase("OAUTH2")
-                .forEach(
-                        user -> {
-                            user.setAuthenticationType(AuthenticationType.SSO);
-                            userRepository.save(user);
-                        });
-    }
-
     // Handle OAUTH2 login and user auto creation.
-    public void processSSOPostLogin(String username, boolean autoCreateUser)
+    public void processSSOPostLogin(
+            String username, boolean autoCreateUser, AuthenticationType type)
             throws IllegalArgumentException, SQLException, UnsupportedProviderException {
         if (!isUsernameValid(username)) {
             return;
@@ -83,7 +73,7 @@ public class UserService implements UserServiceInterface {
             return;
         }
         if (autoCreateUser) {
-            saveUser(username, AuthenticationType.SSO);
+            saveUser(username, type);
         }
     }
 
@@ -100,10 +90,7 @@ public class UserService implements UserServiceInterface {
     }
 
     private Collection<? extends GrantedAuthority> getAuthorities(User user) {
-        // Convert each Authority object into a SimpleGrantedAuthority object.
-        return user.getAuthorities().stream()
-                .map((Authority authority) -> new SimpleGrantedAuthority(authority.getAuthority()))
-                .toList();
+        return user.getAuthorities();
     }
 
     private String generateApiKey() {
@@ -494,13 +481,18 @@ public class UserService implements UserServiceInterface {
         // Checks whether the simple username is formatted correctly
         // Regular expression for user name: Min. 3 characters, max. 50 characters
         boolean isValidSimpleUsername =
-                username.matches("^[a-zA-Z0-9](?!.*[-@._+]{2,})[a-zA-Z0-9@._+-]{1,48}[a-zA-Z0-9]$");
+                RegexPatternUtils.getInstance()
+                        .getUsernameValidationPattern()
+                        .matcher(username)
+                        .matches();
 
         // Checks whether the email address is formatted correctly
         // Regular expression for email addresses: Max. 320 characters, with RFC-like validation
         boolean isValidEmail =
-                username.matches(
-                        "^(?=.{1,320}$)(?=.{1,64}@)[A-Za-z0-9](?:[A-Za-z0-9_.+-]*[A-Za-z0-9])?@[^-][A-Za-z0-9-]+(?:\\\\.[A-Za-z0-9-]+)*(?:\\\\.[A-Za-z]{2,})$");
+                RegexPatternUtils.getInstance()
+                        .getEmailValidationPattern()
+                        .matcher(username)
+                        .matches();
 
         List<String> notAllowedUserList = new ArrayList<>();
         notAllowedUserList.add("ALL_USERS".toLowerCase());

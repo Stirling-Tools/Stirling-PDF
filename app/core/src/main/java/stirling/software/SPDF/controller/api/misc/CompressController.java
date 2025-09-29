@@ -10,12 +10,8 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Iterator;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 
 import javax.imageio.IIOImage;
@@ -32,6 +28,7 @@ import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.graphics.PDXObject;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -39,15 +36,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
+import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.EndpointConfiguration;
@@ -658,7 +650,7 @@ public class CompressController {
         };
     }
 
-    @PostMapping(consumes = "multipart/form-data", value = "/compress-pdf")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/compress-pdf")
     @Operation(
             summary = "Optimize PDF file",
             description =
@@ -782,11 +774,8 @@ public class CompressController {
 
                     // Check if we can't increase the level further
                     if (newOptimizeLevel == optimizeLevel) {
-                        if (autoMode) {
-                            log.info(
-                                    "Maximum optimization level reached without meeting target size.");
-                            sizeMet = true;
-                        }
+                        log.info("Maximum optimization level reached without meeting target size.");
+                        sizeMet = true;
                     } else {
                         // Reset flags for next iteration with higher optimization level
                         imageCompressionApplied = false;
@@ -805,9 +794,8 @@ public class CompressController {
             }
 
             String outputFilename =
-                    Filenames.toSimpleFileName(inputFile.getOriginalFilename())
-                                    .replaceFirst("[.][^.]+$", "")
-                            + "_Optimized.pdf";
+                    GeneralUtils.generateFilename(
+                            inputFile.getOriginalFilename(), "_Optimized.pdf");
 
             return WebResponseUtils.pdfDocToWebResponse(
                     pdfDocumentFactory.load(currentFile.toFile()), outputFilename);
@@ -818,7 +806,7 @@ public class CompressController {
                 try {
                     Files.deleteIfExists(tempFile);
                 } catch (IOException e) {
-                    log.warn("Failed to delete temporary file: " + tempFile, e);
+                    log.warn("Failed to delete temporary file: {}", tempFile, e);
                 }
             }
         }
@@ -888,7 +876,7 @@ public class CompressController {
         command.add("-sOutputFile=" + gsOutputFile.toString());
         command.add(currentFile.toString());
 
-        ProcessExecutorResult returnCode = null;
+        ProcessExecutorResult returnCode;
         try {
             returnCode =
                     ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT)

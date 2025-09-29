@@ -1,5 +1,6 @@
 package stirling.software.SPDF.controller.api.converters;
 
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,11 +17,7 @@ import lombok.RequiredArgsConstructor;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.api.converters.HTMLToPdfRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
-import stirling.software.common.util.CustomHtmlSanitizer;
-import stirling.software.common.util.ExceptionUtils;
-import stirling.software.common.util.FileToPdf;
-import stirling.software.common.util.TempFileManager;
-import stirling.software.common.util.WebResponseUtils;
+import stirling.software.common.util.*;
 
 @RestController
 @Tag(name = "Convert", description = "Convert APIs")
@@ -36,7 +33,7 @@ public class ConvertHtmlToPDF {
 
     private final CustomHtmlSanitizer customHtmlSanitizer;
 
-    @PostMapping(consumes = "multipart/form-data", value = "/html/pdf")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/html/pdf")
     @Operation(
             summary = "Convert an HTML or ZIP (containing HTML and CSS) to PDF",
             description =
@@ -68,9 +65,7 @@ public class ConvertHtmlToPDF {
 
         pdfBytes = pdfDocumentFactory.createNewBytesBasedOnOldDocument(pdfBytes);
 
-        String outputFilename =
-                originalFilename.replaceFirst("[.][^.]+$", "")
-                        + ".pdf"; // Remove file extension and append .pdf
+        String outputFilename = GeneralUtils.generateFilename(originalFilename, ".pdf");
 
         return WebResponseUtils.bytesToWebResponse(pdfBytes, outputFilename);
     }

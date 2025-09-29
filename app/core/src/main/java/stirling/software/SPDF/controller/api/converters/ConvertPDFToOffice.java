@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -23,6 +22,7 @@ import stirling.software.SPDF.model.api.converters.PdfToTextOrRTFRequest;
 import stirling.software.SPDF.model.api.converters.PdfToWordRequest;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.PDFToFile;
 import stirling.software.common.util.WebResponseUtils;
 
@@ -34,7 +34,7 @@ public class ConvertPDFToOffice {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @PostMapping(consumes = "multipart/form-data", value = "/pdf/presentation")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/presentation")
     @Operation(
             summary = "Convert PDF to Presentation format",
             description =
@@ -49,7 +49,7 @@ public class ConvertPDFToOffice {
         return pdfToFile.processPdfToOfficeFormat(inputFile, outputFormat, "impress_pdf_import");
     }
 
-    @PostMapping(consumes = "multipart/form-data", value = "/pdf/text")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/text")
     @Operation(
             summary = "Convert PDF to Text or RTF format",
             description =
@@ -66,9 +66,7 @@ public class ConvertPDFToOffice {
                 String text = stripper.getText(document);
                 return WebResponseUtils.bytesToWebResponse(
                         text.getBytes(),
-                        Filenames.toSimpleFileName(inputFile.getOriginalFilename())
-                                        .replaceFirst("[.][^.]+$", "")
-                                + ".txt",
+                        GeneralUtils.generateFilename(inputFile.getOriginalFilename(), ".txt"),
                         MediaType.TEXT_PLAIN);
             }
         } else {
@@ -77,7 +75,7 @@ public class ConvertPDFToOffice {
         }
     }
 
-    @PostMapping(consumes = "multipart/form-data", value = "/pdf/word")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/word")
     @Operation(
             summary = "Convert PDF to Word document",
             description =
@@ -91,7 +89,7 @@ public class ConvertPDFToOffice {
         return pdfToFile.processPdfToOfficeFormat(inputFile, outputFormat, "writer_pdf_import");
     }
 
-    @PostMapping(consumes = "multipart/form-data", value = "/pdf/xml")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/xml")
     @Operation(
             summary = "Convert PDF to XML",
             description =
