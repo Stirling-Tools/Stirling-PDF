@@ -277,7 +277,7 @@ public class FormUtils {
         }
     }
 
-    static void setTextValue(PDTextField textField, String value) throws IOException {
+    void setTextValue(PDTextField textField, String value) throws IOException {
         try {
             textField.setValue(value != null ? value : "");
             return;
@@ -330,8 +330,8 @@ public class FormUtils {
         }
     }
 
-    static String filterSingleChoiceSelection(
-            String selection, List<String> allowedOptions, String fieldName) {
+    String filterSingleChoiceSelection(
+        String selection, List<String> allowedOptions, String fieldName) {
         if (selection == null || selection.trim().isEmpty()) {
             return null;
         }
@@ -340,8 +340,8 @@ public class FormUtils {
         return filtered.isEmpty() ? null : filtered.get(0);
     }
 
-    static List<String> filterChoiceSelections(
-            List<String> selections, List<String> allowedOptions, String fieldName) {
+    List<String> filterChoiceSelections(
+        List<String> selections, List<String> allowedOptions, String fieldName) {
         if (selections == null || selections.isEmpty()) {
             return Collections.emptyList();
         }
@@ -389,7 +389,7 @@ public class FormUtils {
         return validSelections;
     }
 
-    static List<String> collectChoiceAllowedValues(PDChoice choiceField) {
+    List<String> collectChoiceAllowedValues(PDChoice choiceField) {
         if (choiceField == null) {
             return Collections.emptyList();
         }
@@ -443,7 +443,7 @@ public class FormUtils {
         return new ArrayList<>(allowed);
     }
 
-    static List<String> parseMultiChoiceSelections(String raw) {
+    List<String> parseMultiChoiceSelections(String raw) {
         if (raw == null || raw.isBlank()) {
             return Collections.emptyList();
         }
@@ -453,7 +453,7 @@ public class FormUtils {
                 .collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
     }
 
-    static boolean isChecked(String value) {
+    boolean isChecked(String value) {
         if (value == null) {
             return false;
         }
@@ -477,7 +477,7 @@ public class FormUtils {
         }
     }
 
-    static List<String> resolveOptions(PDTerminalField field) {
+    List<String> resolveOptions(PDTerminalField field) {
         try {
             if (field instanceof PDChoice choice) {
                 List<String> display = choice.getOptionsDisplayValues();
@@ -559,7 +559,7 @@ public class FormUtils {
                 } else if (normal.isStream()) {
                     COSName appearanceState = widget.getAppearanceState();
                     String state = appearanceState != null ? appearanceState.getName() : null;
-                    if (state != null && isSettableCheckBoxState(state)) {
+                    if (isSettableCheckBoxState(state)) {
                         states.add(state.trim());
                     }
                 }
@@ -1226,7 +1226,7 @@ public class FormUtils {
      * @return one of: signature, button, text, checkbox, combobox, listbox, radio (defaults to
      *     text)
      */
-    public static String detectFieldType(PDField field) {
+    public String detectFieldType(PDField field) {
         if (field instanceof PDSignatureField) {
             return "signature";
         }
