@@ -699,7 +699,24 @@ public class FormUtils {
                 continue;
             }
 
-            String type = resolveFieldType(terminalField);
+            String type;
+            if (terminalField instanceof PDTextField) {
+                type = "text";
+            } else if (terminalField instanceof PDCheckBox) {
+                type = "checkbox";
+            } else if (terminalField instanceof PDRadioButton) {
+                type = "radio";
+            } else if (terminalField instanceof PDComboBox) {
+                type = "combobox";
+            } else if (terminalField instanceof PDListBox) {
+                type = "listbox";
+            } else if (terminalField instanceof PDSignatureField) {
+                type = "signature";
+            } else if (terminalField instanceof PDPushButton) {
+                type = "button";
+            } else {
+                type = "field";
+            }
 
             String name =
                     Optional.ofNullable(field.getFullyQualifiedName())
@@ -798,8 +815,6 @@ public class FormUtils {
             return;
         }
 
-        ensureFontResources(acroForm);
-
         Map<String, PDField> lookup = new LinkedHashMap<>();
         for (PDField field : acroForm.getFieldTree()) {
             String fqName = field.getFullyQualifiedName();
@@ -875,36 +890,6 @@ public class FormUtils {
                     acroForm.getCOSObject().setBoolean(COSName.NEED_APPEARANCES, false);
                 }
             }
-        }
-    }
-
-    private void ensureFontResources(PDAcroForm acroForm) {
-        try {
-            PDResources resources = acroForm.getDefaultResources();
-            if (resources == null) {
-                resources = new PDResources();
-                acroForm.setDefaultResources(resources);
-            }
-
-            registerFontIfMissing(resources, "Helvetica", Standard14Fonts.FontName.HELVETICA);
-            registerFontIfMissing(resources, "Helv", Standard14Fonts.FontName.HELVETICA);
-            registerFontIfMissing(resources, "ZaDb", Standard14Fonts.FontName.ZAPF_DINGBATS);
-
-            String appearance = acroForm.getDefaultAppearance();
-            if (appearance == null || appearance.isBlank()) {
-                acroForm.setDefaultAppearance("/Helvetica 12 Tf 0 g");
-            }
-        } catch (Exception e) {
-            log.debug("Unable to ensure font resources for form: {}", e.getMessage());
-        }
-    }
-
-    private void registerFontIfMissing(
-            PDResources resources, String alias, Standard14Fonts.FontName fontName)
-            throws IOException {
-        COSName name = COSName.getPDFName(alias);
-        if (resources.getFont(name) == null) {
-            resources.put(name, new PDType1Font(fontName));
         }
     }
 
@@ -991,8 +976,6 @@ public class FormUtils {
                     initial.getMessage());
         }
 
-        PDAcroForm acroForm = textField.getAcroForm();
-        ensureFontResources(acroForm);
         try {
             textField.setDefaultAppearance("/Helvetica 12 Tf 0 g");
         } catch (Exception e) {
@@ -1011,20 +994,151 @@ public class FormUtils {
             return;
         }
 
+        List<String> allowedOptions = collectChoiceAllowedValues(choiceField);
+
         if (choiceField.isMultiSelect()) {
-            List<String> selections =
-                    Arrays.stream(value.split(","))
-                            .map(String::trim)
-                            .filter(s -> !s.isEmpty())
-                            .toList();
-            if (selections.isEmpty()) {
+            List<String> selections = parseMultiChoiceSelections(value);
+            List<String> filteredSelections =
+                    filterChoiceSelections(
+                            selections, allowedOptions, choiceField.getFullyQualifiedName());
+            if (filteredSelections.isEmpty()) {
                 choiceField.setValue(Collections.emptyList());
             } else {
-                choiceField.setValue(selections);
+                choiceField.setValue(filteredSelections);
             }
         } else {
-            choiceField.setValue(value);
+            String selected =
+                    filterSingleChoiceSelection(
+                            value, allowedOptions, choiceField.getFullyQualifiedName());
+            if (selected == null) {
+                choiceField.setValue("");
+            } else {
+                choiceField.setValue(selected);
+            }
         }
+    }
+
+    private String filterSingleChoiceSelection(
+            String selection, List<String> allowedOptions, String fieldName) {
+        if (selection == null || selection.trim().isEmpty()) {
+            return null;
+        }
+        List<String> filtered =
+                filterChoiceSelections(List.of(selection), allowedOptions, fieldName);
+        return filtered.isEmpty() ? null : filtered.get(0);
+    }
+
+    private List<String> filterChoiceSelections(
+            List<String> selections, List<String> allowedOptions, String fieldName) {
+        if (selections == null || selections.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<String> sanitizedSelections =
+                selections.stream()
+                        .filter(Objects::nonNull)
+                        .map(String::trim)
+                        .filter(s -> !s.isEmpty())
+                        .toList();
+
+        if (sanitizedSelections.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        if (allowedOptions == null || allowedOptions.isEmpty()) {
+            return new ArrayList<>(sanitizedSelections);
+        }
+
+        Map<String, String> allowedLookup = new LinkedHashMap<>();
+        for (String option : allowedOptions) {
+            if (option == null) {
+                continue;
+            }
+            String normalized = option.trim();
+            if (!normalized.isEmpty()) {
+                allowedLookup.putIfAbsent(normalized.toLowerCase(Locale.ROOT), option);
+            }
+        }
+
+        List<String> validSelections = new ArrayList<>();
+        for (String selection : sanitizedSelections) {
+            String normalized = selection.toLowerCase(Locale.ROOT);
+            String resolved = allowedLookup.get(normalized);
+            if (resolved != null) {
+                validSelections.add(resolved);
+            } else {
+                log.debug(
+                        "Ignoring unsupported option '{}' for choice field '{}'",
+                        selection,
+                        fieldName);
+            }
+        }
+
+        return validSelections;
+    }
+
+    private List<String> collectChoiceAllowedValues(PDChoice choiceField) {
+        if (choiceField == null) {
+            return Collections.emptyList();
+        }
+
+        LinkedHashSet<String> allowed = new LinkedHashSet<>();
+
+        try {
+            List<String> exports = choiceField.getOptionsExportValues();
+            if (exports != null) {
+                exports.stream()
+                        .filter(Objects::nonNull)
+                        .forEach(
+                                option -> {
+                                    String cleaned = option.trim();
+                                    if (!cleaned.isEmpty()) {
+                                        allowed.add(option);
+                                    }
+                                });
+            }
+        } catch (Exception e) {
+            log.debug(
+                    "Unable to read export values for choice field '{}': {}",
+                    choiceField.getFullyQualifiedName(),
+                    e.getMessage());
+        }
+
+        try {
+            List<String> display = choiceField.getOptionsDisplayValues();
+            if (display != null) {
+                display.stream()
+                        .filter(Objects::nonNull)
+                        .forEach(
+                                option -> {
+                                    String cleaned = option.trim();
+                                    if (!cleaned.isEmpty()) {
+                                        allowed.add(option);
+                                    }
+                                });
+            }
+        } catch (Exception e) {
+            log.debug(
+                    "Unable to read display values for choice field '{}': {}",
+                    choiceField.getFullyQualifiedName(),
+                    e.getMessage());
+        }
+
+        if (allowed.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        return new ArrayList<>(allowed);
+    }
+
+    private List<String> parseMultiChoiceSelections(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return Collections.emptyList();
+        }
+        return Arrays.stream(raw.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
     }
 
     private boolean isChecked(String value) {
@@ -1037,31 +1151,6 @@ public class FormUtils {
                 || "yes".equals(normalized)
                 || "on".equals(normalized)
                 || "checked".equals(normalized);
-    }
-
-    private String resolveFieldType(PDTerminalField field) {
-        if (field instanceof PDTextField) {
-            return "text";
-        }
-        if (field instanceof PDCheckBox) {
-            return "checkbox";
-        }
-        if (field instanceof PDRadioButton) {
-            return "radio";
-        }
-        if (field instanceof PDComboBox) {
-            return "combobox";
-        }
-        if (field instanceof PDListBox) {
-            return "listbox";
-        }
-        if (field instanceof PDSignatureField) {
-            return "signature";
-        }
-        if (field instanceof PDPushButton) {
-            return "button";
-        }
-        return "field";
     }
 
     private String safeValue(PDTerminalField field) {
@@ -1337,19 +1426,13 @@ public class FormUtils {
         if (name == null) {
             return null;
         }
-        String cleaned =
-                RegexPatternUtils.getInstance()
-                        .getWhitespacePattern()
-                        .matcher(
-                                RegexPatternUtils.getInstance()
-                                        .getCamelCaseBoundaryPattern()
-                                        .matcher(
-                                                name.replaceAll("[#\\[\\]]", " ")
-                                                        .replace('.', ' ')
-                                                        .replaceAll("[_-]+", " "))
-                                        .replaceAll(" "))
-                        .replaceAll(" ")
-                        .trim();
+        RegexPatternUtils patterns = RegexPatternUtils.getInstance();
+
+        String cleaned = patterns.getFormFieldBracketPattern().matcher(name).replaceAll(" ");
+        cleaned = cleaned.replace('.', ' ');
+        cleaned = patterns.getUnderscoreHyphenPattern().matcher(cleaned).replaceAll(" ");
+        cleaned = patterns.getCamelCaseBoundaryPattern().matcher(cleaned).replaceAll(" ");
+        cleaned = patterns.getWhitespacePattern().matcher(cleaned).replaceAll(" ").trim();
         if (cleaned.isEmpty()) {
             return null;
         }
@@ -1480,8 +1563,6 @@ public class FormUtils {
             log.warn("Cannot modify fields because the document has no AcroForm");
             return;
         }
-
-        ensureFontResources(acroForm);
 
         Set<String> existingNames = collectExistingFieldNames(acroForm);
 
@@ -1846,6 +1927,15 @@ public class FormUtils {
     }
 
     private String detectFieldType(PDField field) {
+        if (field instanceof PDSignatureField) {
+            return "signature";
+        }
+        if (field instanceof PDPushButton) {
+            return "button";
+        }
+        if (field instanceof PDTextField) {
+            return "text";
+        }
         if (field instanceof PDCheckBox) {
             return "checkbox";
         }
@@ -1953,9 +2043,17 @@ public class FormUtils {
         if (!options.isEmpty()) {
             comboBox.setOptions(options);
         }
+        List<String> allowedOptions = resolveOptions(comboBox);
+        String comboName =
+                Optional.ofNullable(comboBox.getFullyQualifiedName())
+                        .orElseGet(comboBox::getPartialName);
         String defaultValue = definition.defaultValue();
         if (defaultValue != null && !defaultValue.isBlank()) {
-            comboBox.setValue(defaultValue);
+            String filteredDefault =
+                    filterSingleChoiceSelection(defaultValue, allowedOptions, comboName);
+            if (filteredDefault != null) {
+                comboBox.setValue(filteredDefault);
+            }
         }
     }
 
@@ -1975,20 +2073,26 @@ public class FormUtils {
         if (!options.isEmpty()) {
             listBox.setOptions(options);
         }
+        List<String> allowedOptions = collectChoiceAllowedValues(listBox);
+        String listBoxName =
+                Optional.ofNullable(listBox.getFullyQualifiedName())
+                        .orElseGet(listBox::getPartialName);
 
         String defaultValue = definition.defaultValue();
         if (defaultValue != null && !defaultValue.isBlank()) {
             if (Boolean.TRUE.equals(definition.multiSelect())) {
-                List<String> selections =
-                        Arrays.stream(defaultValue.split(","))
-                                .map(String::trim)
-                                .filter(s -> !s.isEmpty())
-                                .toList();
-                if (!selections.isEmpty()) {
-                    listBox.setValue(selections);
+                List<String> selections = parseMultiChoiceSelections(defaultValue);
+                List<String> filtered =
+                        filterChoiceSelections(selections, allowedOptions, listBoxName);
+                if (!filtered.isEmpty()) {
+                    listBox.setValue(filtered);
                 }
             } else {
-                listBox.setValue(defaultValue);
+                String filteredDefault =
+                        filterSingleChoiceSelection(defaultValue, allowedOptions, listBoxName);
+                if (filteredDefault != null) {
+                    listBox.setValue(filteredDefault);
+                }
             }
         }
     }

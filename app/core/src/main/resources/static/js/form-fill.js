@@ -2072,7 +2072,6 @@ function pad(value) {
   return str.padStart(2, "0");
 }
 
-// Set initial state when script loads
 if (statusEl && !statusEl.textContent) {
   setStatus(formFillLocale.selectFile, "info");
 }
