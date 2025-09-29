@@ -76,7 +76,7 @@ function FileContextInner({
     const currentSelection = stateRef.current.ui.selectedFileIds;
     const newFileIds = stirlingFiles.map(stirlingFile => stirlingFile.fileId);
     dispatch({ type: 'SET_SELECTED_FILES', payload: { fileIds: [...currentSelection, ...newFileIds] } });
-  }
+  };
 
   // File operations using unified addFiles helper with persistence
   const addRawFiles = useCallback(async (files: File[], options?: { insertAfterPageId?: string; selectFiles?: boolean }): Promise<StirlingFile[]> => {

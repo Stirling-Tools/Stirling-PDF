@@ -50,7 +50,7 @@ const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({ setActiveButton }) 
   const animTimeoutRef = useRef<number | null>(null);
   const replayRafRef = useRef<number | null>(null);
 
-  const isSwitchingToNewTool = () => { return prevKeyRef.current && prevKeyRef.current !== selectedToolKey };
+  const isSwitchingToNewTool = () => { return prevKeyRef.current && prevKeyRef.current !== selectedToolKey; };
 
   const clearTimers = () => {
     if (collapseTimeoutRef.current) {
@@ -81,7 +81,7 @@ const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({ setActiveButton }) 
       setReplayAnim(false);
       animTimeoutRef.current = null;
     }, 500);
-  }
+  };
 
   const firstShow = () => {
     clearTimers();
@@ -91,7 +91,7 @@ const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({ setActiveButton }) 
     animTimeoutRef.current = window.setTimeout(() => {
       animTimeoutRef.current = null;
     }, 500);
-  }
+  };
 
   const triggerCollapse = () => {
     clearTimers();
@@ -101,7 +101,7 @@ const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({ setActiveButton }) 
       prevKeyRef.current = null;
       collapseTimeoutRef.current = null;
     }, 500); // match CSS transition duration
-  }
+  };
 
   useEffect(() => {
     if (indicatorShouldShow) {

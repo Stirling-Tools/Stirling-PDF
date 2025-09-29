@@ -1,5 +1,5 @@
-import '@testing-library/jest-dom'
-import { vi } from 'vitest'
+import '@testing-library/jest-dom';
+import { vi } from 'vitest';
 
 // Mock i18next for tests
 vi.mock('react-i18next', () => ({
@@ -27,8 +27,8 @@ vi.mock('i18next-http-backend', () => ({
 }));
 
 // Mock window.URL.createObjectURL and revokeObjectURL for tests
-global.URL.createObjectURL = vi.fn(() => 'mocked-url')
-global.URL.revokeObjectURL = vi.fn()
+global.URL.createObjectURL = vi.fn(() => 'mocked-url');
+global.URL.revokeObjectURL = vi.fn();
 
 // Mock File and Blob API methods that aren't available in jsdom
 if (!globalThis.File.prototype.arrayBuffer) {
@@ -88,21 +88,21 @@ global.Worker = vi.fn().mockImplementation(() => ({
   removeEventListener: vi.fn(),
   onmessage: null,
   onerror: null,
-}))
+}));
 
 // Mock ResizeObserver for Mantine components
 global.ResizeObserver = vi.fn().mockImplementation(() => ({
   observe: vi.fn(),
   unobserve: vi.fn(),
   disconnect: vi.fn(),
-}))
+}));
 
 // Mock IntersectionObserver for components that might use it
 global.IntersectionObserver = vi.fn().mockImplementation(() => ({
   observe: vi.fn(),
   unobserve: vi.fn(),
   disconnect: vi.fn(),
-}))
+}));
 
 // Mock matchMedia for responsive components
 Object.defineProperty(window, 'matchMedia', {
@@ -117,7 +117,7 @@ Object.defineProperty(window, 'matchMedia', {
     removeEventListener: vi.fn(),
     dispatchEvent: vi.fn(),
   })),
-})
+});
 
 // Set global test timeout to prevent hangs
-vi.setConfig({ testTimeout: 5000, hookTimeout: 5000 })
+vi.setConfig({ testTimeout: 5000, hookTimeout: 5000 });
