@@ -51,6 +51,8 @@ const nodeGlobs = [
 const __dirname = fileURLToPath(new URL('./', import.meta.url));
 
 export default defineConfig(
+  { ignores: ignorePatterns },
+
   // Shared settings for all files
   {
     ignores: ignorePatterns,
