@@ -316,9 +316,7 @@ document.addEventListener("DOMContentLoaded", function () {
     updateBookmarkData();
 
     // Initialize tooltips for dynamically added elements
-    if (typeof $ !== "undefined") {
-      $('[data-bs-toggle="tooltip"]').tooltip();
-    }
+    window.tooltipSetup();
   }
 
   // Create the main bookmark element with collapsible interface
@@ -390,8 +388,6 @@ document.addEventListener("DOMContentLoaded", function () {
       childCount.style.fontSize = "0.7rem";
       childCount.style.padding = "0.2em 0.5em";
       childCount.textContent = bookmark.children.length;
-      childCount.setAttribute("data-bs-toggle", "tooltip");
-      childCount.setAttribute("data-bs-placement", "top");
       childCount.title = `${bookmark.children.length} child bookmark${bookmark.children.length > 1 ? "s" : ""}`;
       toggleContainer.appendChild(childCount);
     } else {
@@ -577,10 +573,6 @@ document.addEventListener("DOMContentLoaded", function () {
     button.type = "button";
     button.className = `btn ${className} btn-bookmark-action`;
     button.innerHTML = `<span class="material-symbols-rounded">${icon}</span>`;
-
-    // Use Bootstrap tooltips
-    button.setAttribute("data-bs-toggle", "tooltip");
-    button.setAttribute("data-bs-placement", "top");
     button.title = title;
 
     button.addEventListener("click", clickHandler);
@@ -601,10 +593,6 @@ document.addEventListener("DOMContentLoaded", function () {
   // Update the add bookmark button appearance with clear visual cue
   addBookmarkBtn.innerHTML = '<span class="material-symbols-rounded">add</span> Add Top-level Bookmark';
   addBookmarkBtn.className = "btn btn-primary btn-add-bookmark top-level";
-
-  // Use Bootstrap tooltips
-  addBookmarkBtn.setAttribute("data-bs-toggle", "tooltip");
-  addBookmarkBtn.setAttribute("data-bs-placement", "top");
   addBookmarkBtn.title = "Add a new top-level bookmark";
 
   // Add icon to empty state button as well
@@ -612,14 +600,10 @@ document.addEventListener("DOMContentLoaded", function () {
     const emptyStateBtn = document.querySelector(".btn-add-first-bookmark");
     if (emptyStateBtn) {
       emptyStateBtn.innerHTML = '<span class="material-symbols-rounded">add</span> Add First Bookmark';
-      emptyStateBtn.setAttribute("data-bs-toggle", "tooltip");
-      emptyStateBtn.setAttribute("data-bs-placement", "top");
       emptyStateBtn.title = "Add first bookmark";
 
       // Initialize tooltips for the empty state button
-      if (typeof $ !== "undefined") {
-        $('[data-bs-toggle="tooltip"]').tooltip();
-      }
+      window.tooltipSetup();
     }
   };
 
