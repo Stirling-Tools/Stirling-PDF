@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -26,6 +27,9 @@ import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationWidget;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceDictionary;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceEntry;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceStream;
 import org.apache.pdfbox.pdmodel.interactive.form.*;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -689,6 +693,7 @@ public class FormUtils {
 
         List<FormFieldInfo> fields = new ArrayList<>();
         Map<String, Integer> typeCounters = new HashMap<>();
+        Map<Integer, Integer> pageOrderCounters = new HashMap<>();
         for (PDField field : acroForm.getFieldTree()) {
             if (!(field instanceof PDTerminalField terminalField)) {
                 continue;
@@ -712,6 +717,7 @@ public class FormUtils {
             String displayLabel =
                     deriveDisplayLabel(field, name, tooltip, type, typeIndex, options);
             boolean multiSelect = resolveMultiSelect(terminalField);
+            int pageOrder = pageOrderCounters.merge(pageIndex, 1, Integer::sum) - 1;
 
             fields.add(
                     new FormFieldInfo(
@@ -723,7 +729,8 @@ public class FormUtils {
                             required,
                             pageIndex,
                             multiSelect,
-                            tooltip));
+                            tooltip,
+                            pageOrder));
         }
 
         fields.sort(
@@ -731,6 +738,10 @@ public class FormUtils {
                     int pageCompare = Integer.compare(a.pageIndex(), b.pageIndex());
                     if (pageCompare != 0) {
                         return pageCompare;
+                    }
+                    int orderCompare = Integer.compare(a.pageOrder(), b.pageOrder());
+                    if (orderCompare != 0) {
+                        return orderCompare;
                     }
                     return a.name().compareToIgnoreCase(b.name());
                 });
@@ -902,9 +913,10 @@ public class FormUtils {
             if (field instanceof PDTextField textField) {
                 setTextValue(textField, value);
             } else if (field instanceof PDCheckBox checkBox) {
-                if (isChecked(value)) {
-                    String onValue = determineCheckBoxOnValue(checkBox);
-                    if (onValue != null) {
+                LinkedHashSet<String> candidateStates = collectCheckBoxStates(checkBox);
+                if (shouldCheckBoxBeChecked(value, candidateStates)) {
+                    String onValue = determineCheckBoxOnValue(candidateStates, value);
+                    if (onValue != null && !onValue.isBlank()) {
                         try {
                             checkBox.getCOSObject().setName(COSName.AS, onValue);
                             checkBox.getCOSObject().setName(COSName.V, onValue);
@@ -913,12 +925,34 @@ public class FormUtils {
                                     "Failed to set checkbox appearance state directly: {}",
                                     e.getMessage());
                         }
-                        checkBox.setValue(onValue);
+                        try {
+                            checkBox.setValue(onValue);
+                        } catch (IllegalArgumentException illegal) {
+                            log.debug(
+                                    "Standard setValue failed for checkbox '{}': {}",
+                                    field.getFullyQualifiedName(),
+                                    illegal.getMessage());
+                            forceCheckBoxValue(checkBox, onValue);
+                        }
                         if (!checkBox.isChecked()) {
-                            checkBox.check();
+                            try {
+                                checkBox.check();
+                            } catch (Exception checkProblem) {
+                                log.debug(
+                                        "Unable to confirm checkbox '{}' state: {}",
+                                        field.getFullyQualifiedName(),
+                                        checkProblem.getMessage());
+                            }
                         }
                     } else {
-                        checkBox.check();
+                        try {
+                            checkBox.check();
+                        } catch (Exception checkProblem) {
+                            log.debug(
+                                    "Unable to infer on-state for checkbox '{}': {}",
+                                    field.getFullyQualifiedName(),
+                                    checkProblem.getMessage());
+                        }
                     }
                 } else {
                     checkBox.unCheck();
@@ -1087,25 +1121,132 @@ public class FormUtils {
         return false;
     }
 
-    private String determineCheckBoxOnValue(PDCheckBox checkBox) {
+    private LinkedHashSet<String> collectCheckBoxStates(PDCheckBox checkBox) {
+        LinkedHashSet<String> states = new LinkedHashSet<>();
         try {
             String onValue = checkBox.getOnValue();
-            if (onValue != null && !onValue.isBlank()) {
-                return onValue;
+            if (isSettableCheckBoxState(onValue)) {
+                states.add(onValue.trim());
             }
         } catch (Exception e) {
-            log.debug("Failed to obtain explicit on-value for checkbox: {}", e.getMessage());
+            log.debug(
+                    "Failed to obtain explicit on-value for checkbox '{}': {}",
+                    checkBox.getFullyQualifiedName(),
+                    e.getMessage());
+        }
+
+        try {
+            for (PDAnnotationWidget widget : checkBox.getWidgets()) {
+                PDAppearanceDictionary appearance = widget.getAppearance();
+                if (appearance == null) {
+                    continue;
+                }
+                PDAppearanceEntry normal = appearance.getNormalAppearance();
+                if (normal == null) {
+                    continue;
+                }
+                if (normal.isSubDictionary()) {
+                    Map<COSName, PDAppearanceStream> entries = normal.getSubDictionary();
+                    if (entries != null) {
+                        for (COSName name : entries.keySet()) {
+                            String state = name.getName();
+                            if (isSettableCheckBoxState(state)) {
+                                states.add(state.trim());
+                            }
+                        }
+                    }
+                } else if (normal.isStream()) {
+                    COSName appearanceState = widget.getAppearanceState();
+                    String state = appearanceState != null ? appearanceState.getName() : null;
+                    if (state != null && isSettableCheckBoxState(state)) {
+                        states.add(state.trim());
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.debug(
+                    "Failed to obtain appearance states for checkbox '{}': {}",
+                    checkBox.getFullyQualifiedName(),
+                    e.getMessage());
         }
 
         try {
             List<String> exports = checkBox.getExportValues();
-            if (exports != null && !exports.isEmpty()) {
-                return exports.get(0);
+            if (exports != null) {
+                for (String export : exports) {
+                    if (isSettableCheckBoxState(export)) {
+                        states.add(export.trim());
+                    }
+                }
             }
         } catch (Exception e) {
-            log.debug("Failed to obtain export values for checkbox: {}", e.getMessage());
+            log.debug(
+                    "Failed to obtain export values for checkbox '{}': {}",
+                    checkBox.getFullyQualifiedName(),
+                    e.getMessage());
         }
-        return "Yes";
+        return states;
+    }
+
+    private boolean shouldCheckBoxBeChecked(String value, LinkedHashSet<String> candidateStates) {
+        if (value == null) {
+            return false;
+        }
+        if (isChecked(value)) {
+            return true;
+        }
+        String normalized = value.trim();
+        if (normalized.isEmpty() || "off".equalsIgnoreCase(normalized)) {
+            return false;
+        }
+        for (String state : candidateStates) {
+            if (state.equalsIgnoreCase(normalized)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private String determineCheckBoxOnValue(
+            LinkedHashSet<String> candidateStates, String requestedValue) {
+        if (requestedValue != null) {
+            String normalized = requestedValue.trim();
+            for (String candidate : candidateStates) {
+                if (candidate.equalsIgnoreCase(normalized)) {
+                    return candidate;
+                }
+            }
+        }
+        if (!candidateStates.isEmpty()) {
+            return candidateStates.iterator().next();
+        }
+        return null;
+    }
+
+    private boolean isSettableCheckBoxState(String state) {
+        if (state == null) {
+            return false;
+        }
+        String trimmed = state.trim();
+        if (trimmed.isEmpty()) {
+            return false;
+        }
+        return !"Off".equalsIgnoreCase(trimmed);
+    }
+
+    private void forceCheckBoxValue(PDCheckBox checkBox, String onValue) {
+        if (!isSettableCheckBoxState(onValue)) {
+            return;
+        }
+        try {
+            checkBox.getCOSObject().setName(COSName.AS, onValue);
+            checkBox.getCOSObject().setName(COSName.V, onValue);
+        } catch (Exception e) {
+            log.debug(
+                    "Failed to force checkbox value via COS update for '{}': {}",
+                    checkBox.getFullyQualifiedName(),
+                    e.getMessage());
+        }
     }
 
     private String deriveDisplayLabel(
@@ -1665,19 +1806,16 @@ public class FormUtils {
     }
 
     private Set<String> collectExistingFieldNames(PDAcroForm acroForm) {
-        Set<String> existing = new HashSet<>();
         if (acroForm == null) {
-            return existing;
+            return Collections.emptySet();
         }
+        Set<String> existing = new HashSet<>();
         for (PDField field : acroForm.getFieldTree()) {
-            if (field == null) {
-                continue;
-            }
-            if (field.getFullyQualifiedName() != null) {
-                existing.add(field.getFullyQualifiedName());
-            }
-            if (field.getPartialName() != null) {
-                existing.add(field.getPartialName());
+            if (field instanceof PDTerminalField) {
+                String fqn = field.getFullyQualifiedName();
+                if (fqn != null && !fqn.isEmpty()) {
+                    existing.add(fqn);
+                }
             }
         }
         return existing;
@@ -1926,5 +2064,6 @@ public class FormUtils {
             boolean required,
             int pageIndex,
             boolean multiSelect,
-            String tooltip) {}
+            String tooltip,
+            int pageOrder) {}
 }

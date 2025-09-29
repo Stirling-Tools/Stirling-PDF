@@ -17,11 +17,17 @@ import stirling.software.common.util.FormUtils;
 
 final class FormPayloadParser {
 
-    private static final TypeReference<Map<String, Object>> MAP_TYPE = new TypeReference<>() {};
+    private static final String KEY_FIELDS = "fields";
+    private static final String KEY_NAME = "name";
+    private static final String KEY_TARGET_NAME = "targetName";
+    private static final String KEY_FIELD_NAME = "fieldName";
+    private static final String KEY_FIELD = "field";
+    private static final String KEY_VALUE = "value";
+    private static final String KEY_DEFAULT_VALUE = "defaultValue";
 
+    private static final TypeReference<Map<String, Object>> MAP_TYPE = new TypeReference<>() {};
     private static final TypeReference<List<FormUtils.ModifyFormFieldDefinition>>
             MODIFY_FIELD_LIST_TYPE = new TypeReference<>() {};
-
     private static final TypeReference<List<String>> STRING_LIST_TYPE = new TypeReference<>() {};
 
     private FormPayloadParser() {}
@@ -40,21 +46,24 @@ final class FormPayloadParser {
             return List.of();
         }
 
-        JsonNode root = objectMapper.readTree(json);
+        final JsonNode root = objectMapper.readTree(json);
         if (root == null || root.isNull()) {
             return List.of();
         }
-        if (!root.isArray()) {
+
+        if (!root.isArray()
+                && !(root.isObject() && root.has(KEY_FIELDS) && root.get(KEY_FIELDS).isArray())) {
             throw ExceptionUtils.createIllegalArgumentException(
                     "error.invalidFormat",
                     "Invalid {0} format: {1}",
                     "records payload",
-                    "must be a JSON array");
+                    "must be a JSON array or an object with a 'fields' array");
         }
 
-        List<Map<String, Object>> records = new ArrayList<>();
-        for (JsonNode node : root) {
-            Map<String, Object> record = parseRecordNode(objectMapper, node);
+        final JsonNode arrayNode = root.isArray() ? root : root.get(KEY_FIELDS);
+        final List<Map<String, Object>> records = new ArrayList<>();
+        for (JsonNode entry : arrayNode) {
+            final Map<String, Object> record = parseRecordNode(entry);
             if (record.isEmpty()) {
                 throw ExceptionUtils.createIllegalArgumentException(
                         "error.dataRequired",
@@ -79,20 +88,28 @@ final class FormPayloadParser {
             return List.of();
         }
 
-        JsonNode root = objectMapper.readTree(json);
+        final JsonNode root = objectMapper.readTree(json);
         if (root == null || root.isNull()) {
             return List.of();
         }
 
-        Set<String> names = new LinkedHashSet<>();
+        final Set<String> names = new LinkedHashSet<>();
+
         if (root.isArray()) {
             collectNames(root, names);
-        } else if (root.has("fields") && root.get("fields").isArray()) {
-            collectNames(root.get("fields"), names);
-        } else {
-            String name = extractName(root);
-            if (name != null) {
-                names.add(name);
+        } else if (root.isObject()) {
+            if (root.has(KEY_FIELDS) && root.get(KEY_FIELDS).isArray()) {
+                collectNames(root.get(KEY_FIELDS), names);
+            } else {
+                final String single = extractName(root);
+                if (nonBlank(single)) {
+                    names.add(single);
+                }
+            }
+        } else if (root.isTextual()) {
+            final String single = trimToNull(root.asText());
+            if (single != null) {
+                names.add(single);
             }
         }
 
@@ -100,10 +117,18 @@ final class FormPayloadParser {
             return List.copyOf(names);
         }
 
-        return objectMapper.readValue(json, STRING_LIST_TYPE);
+        try {
+            return objectMapper.readValue(json, STRING_LIST_TYPE);
+        } catch (IOException e) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.invalidFormat",
+                    "Invalid {0} format: {1}",
+                    "names payload",
+                    "expected array of strings or objects with 'name'-like properties");
+        }
     }
 
-    private static Map<String, Object> parseRecordNode(ObjectMapper objectMapper, JsonNode node) {
+    private static Map<String, Object> parseRecordNode(JsonNode node) {
         if (node == null || node.isNull()) {
             return Map.of();
         }
@@ -113,14 +138,15 @@ final class FormPayloadParser {
         }
 
         if (node.isObject()) {
-            JsonNode fieldsNode = node.get("fields");
+            final JsonNode fieldsNode = node.get(KEY_FIELDS);
             if (fieldsNode != null && fieldsNode.isArray()) {
-                Map<String, Object> record = extractFieldInfoArray(fieldsNode);
+                final Map<String, Object> record = extractFieldInfoArray(fieldsNode);
                 if (!record.isEmpty()) {
                     return record;
                 }
             }
-            return objectMapper.convertValue(node, MAP_TYPE);
+            // Fall back to a flat object-to-Map mapping
+            return objectToLinkedMap(node);
         }
 
         throw ExceptionUtils.createIllegalArgumentException(
@@ -131,8 +157,8 @@ final class FormPayloadParser {
     }
 
     private static Map<String, Object> extractFieldInfoArray(JsonNode fieldsNode) {
-        Map<String, Object> record = new LinkedHashMap<>();
-        if (fieldsNode == null || fieldsNode.isNull()) {
+        final Map<String, Object> record = new LinkedHashMap<>();
+        if (fieldsNode == null || fieldsNode.isNull() || !fieldsNode.isArray()) {
             return record;
         }
 
@@ -141,33 +167,33 @@ final class FormPayloadParser {
                 continue;
             }
 
-            String name = stringValue(fieldNode.get("name"));
-            if (name == null || name.isBlank()) {
+            final String name = extractName(fieldNode);
+            if (!nonBlank(name)) {
                 continue;
             }
 
-            boolean multiSelect = fieldNode.path("multiSelect").asBoolean(false);
-            JsonNode valueNode = fieldNode.get("value");
-            if ((valueNode == null || valueNode.isNull()) && fieldNode.hasNonNull("defaultValue")) {
-                valueNode = fieldNode.get("defaultValue");
+            JsonNode valueNode = fieldNode.get(KEY_VALUE);
+            if ((valueNode == null || valueNode.isNull())
+                    && fieldNode.hasNonNull(KEY_DEFAULT_VALUE)) {
+                valueNode = fieldNode.get(KEY_DEFAULT_VALUE);
             }
 
-            String value = normalizeFieldValue(valueNode, multiSelect);
-            record.put(name, value == null ? "" : value);
+            final String normalized = normalizeFieldValue(valueNode);
+            record.put(name, normalized == null ? "" : normalized);
         }
 
         return record;
     }
 
-    private static String normalizeFieldValue(JsonNode valueNode, boolean multiSelect) {
+    private static String normalizeFieldValue(JsonNode valueNode) {
         if (valueNode == null || valueNode.isNull()) {
             return null;
         }
 
         if (valueNode.isArray()) {
-            List<String> values = new ArrayList<>();
+            final List<String> values = new ArrayList<>();
             for (JsonNode element : valueNode) {
-                String text = stringValue(element);
+                final String text = coerceScalarToString(element);
                 if (text != null) {
                     values.add(text);
                 }
@@ -176,22 +202,20 @@ final class FormPayloadParser {
         }
 
         if (valueNode.isObject()) {
+            // Preserve object as JSON string
             return valueNode.toString();
         }
 
-        if (multiSelect) {
-            return stringValue(valueNode);
-        }
-
-        return stringValue(valueNode);
+        // Scalar (text/number/boolean)
+        return coerceScalarToString(valueNode);
     }
 
-    private static String stringValue(JsonNode node) {
+    private static String coerceScalarToString(JsonNode node) {
         if (node == null || node.isNull()) {
             return null;
         }
         if (node.isTextual()) {
-            return node.asText();
+            return trimToEmpty(node.asText());
         }
         if (node.isNumber()) {
             return node.numberValue().toString();
@@ -199,13 +223,17 @@ final class FormPayloadParser {
         if (node.isBoolean()) {
             return Boolean.toString(node.booleanValue());
         }
-        return node.toString();
+        // Fallback for other scalar-like nodes
+        return trimToEmpty(node.asText());
     }
 
     private static void collectNames(JsonNode arrayNode, Set<String> sink) {
+        if (arrayNode == null || !arrayNode.isArray()) {
+            return;
+        }
         for (JsonNode node : arrayNode) {
-            String name = extractName(node);
-            if (name != null && !name.isBlank()) {
+            final String name = extractName(node);
+            if (nonBlank(name)) {
                 sink.add(name);
             }
         }
@@ -217,20 +245,19 @@ final class FormPayloadParser {
         }
 
         if (node.isTextual()) {
-            String value = node.asText();
-            return value != null && !value.isBlank() ? value : null;
+            return trimToNull(node.asText());
         }
 
         if (node.isObject()) {
-            String direct = textProperty(node, "name", "targetName", "fieldName");
-            if (direct != null && !direct.isBlank()) {
+            final String direct = textProperty(node, KEY_NAME, KEY_TARGET_NAME, KEY_FIELD_NAME);
+            if (nonBlank(direct)) {
                 return direct;
             }
-
-            JsonNode field = node.get("field");
+            final JsonNode field = node.get(KEY_FIELD);
             if (field != null && field.isObject()) {
-                String nested = textProperty(field, "name", "targetName", "fieldName");
-                if (nested != null && !nested.isBlank()) {
+                final String nested =
+                        textProperty(field, KEY_NAME, KEY_TARGET_NAME, KEY_FIELD_NAME);
+                if (nonBlank(nested)) {
                     return nested;
                 }
             }
@@ -241,12 +268,44 @@ final class FormPayloadParser {
 
     private static String textProperty(JsonNode node, String... keys) {
         for (String key : keys) {
-            JsonNode valueNode = node.get(key);
-            String value = stringValue(valueNode);
-            if (value != null && !value.isBlank()) {
+            final JsonNode valueNode = node.get(key);
+            final String value = coerceScalarToString(valueNode);
+            if (nonBlank(value)) {
                 return value;
             }
         }
         return null;
+    }
+
+    private static Map<String, Object> objectToLinkedMap(JsonNode objectNode) {
+        final Map<String, Object> result = new LinkedHashMap<>();
+        objectNode
+                .fields()
+                .forEachRemaining(
+                        e -> {
+                            final JsonNode v = e.getValue();
+                            if (v == null || v.isNull()) {
+                                result.put(e.getKey(), null);
+                            } else if (v.isTextual() || v.isNumber() || v.isBoolean()) {
+                                result.put(e.getKey(), coerceScalarToString(v));
+                            } else {
+                                result.put(e.getKey(), v.toString());
+                            }
+                        });
+        return result;
+    }
+
+    private static boolean nonBlank(String s) {
+        return s != null && !s.isBlank();
+    }
+
+    private static String trimToNull(String s) {
+        if (s == null) return null;
+        final String t = s.trim();
+        return t.isEmpty() ? null : t;
+    }
+
+    private static String trimToEmpty(String s) {
+        return s == null ? "" : s.trim();
     }
 }

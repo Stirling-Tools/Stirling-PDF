@@ -24,6 +24,8 @@ const retainedFieldValues = new Map();
 const multiTemplateSelectedFiles = [];
 const multiTemplateSelectionIndex = new Map();
 let suppressFileInputChange = false;
+const fieldOrdinalOrder = new Map();
+let nextFieldOrdinalValue = 0;
 
 const editModalEl = document.getElementById("formFieldEditModal");
 const editModal =
@@ -451,6 +453,7 @@ function resetState() {
   batchButton.disabled = true;
   clearMultiTemplateSelection({ skipInputSync: true });
   clearFileSelection();
+  clearFieldOrdering();
   if (batchTextarea) {
     batchTextarea.value = "";
   }
@@ -490,11 +493,13 @@ async function fetchFields(file) {
 
 function renderFields(fields) {
   const fieldsForDisplay = normalizeFieldsForDisplay(fields);
+  const orderedFields = applyStableFieldOrdering(fieldsForDisplay);
 
   fieldsForm.innerHTML = "";
   fieldValidationRegistry.clear();
   fieldMetadata.clear();
-  if (!Array.isArray(fieldsForDisplay) || fieldsForDisplay.length === 0) {
+  if (!Array.isArray(orderedFields) || orderedFields.length === 0) {
+    clearFieldOrdering();
     resetFieldSection();
     if (!batchEdited && batchTextarea) {
       batchTextarea.value = "";
@@ -505,7 +510,7 @@ function renderFields(fields) {
   fieldsForm.classList.remove("d-none");
 
   const displayedNames = new Set();
-  fieldsForDisplay.forEach((field, index) => {
+  orderedFields.forEach((field, index) => {
     const metadataKey = buildFieldMetadataKey(field, index);
     fieldMetadata.set(metadataKey, {
       ...field,
@@ -525,7 +530,7 @@ function renderFields(fields) {
       retainedFieldValues.delete(name);
     }
   }
-
+    populateBatchTemplate(orderedFields);
   populateBatchTemplate(fieldsForDisplay);
 }
 
@@ -1548,6 +1553,101 @@ function normalizeFieldsForDisplay(fields) {
   }
 
   return filtered;
+}
+
+function applyStableFieldOrdering(fields) {
+  if (!Array.isArray(fields) || fields.length === 0) {
+    fieldOrdinalOrder.clear();
+    nextFieldOrdinalValue = 0;
+    return [];
+  }
+
+  const entries = fields.map((field, index) => {
+    const key = resolveFieldOrderKey(field, index);
+    if (!fieldOrdinalOrder.has(key)) {
+      fieldOrdinalOrder.set(key, nextFieldOrdinalValue++);
+    }
+    return {
+      field,
+      key,
+      order: fieldOrdinalOrder.get(key),
+    };
+  });
+
+  const currentKeys = new Set(entries.map((entry) => entry.key));
+  for (const existingKey of Array.from(fieldOrdinalOrder.keys())) {
+    if (!currentKeys.has(existingKey)) {
+      fieldOrdinalOrder.delete(existingKey);
+    }
+  }
+  if (fieldOrdinalOrder.size === 0) {
+    nextFieldOrdinalValue = 0;
+  }
+
+  entries.sort((a, b) => {
+    if (a.order !== b.order) {
+      return a.order - b.order;
+    }
+    const pageCompare = compareMaybeNumeric(a.field?.pageIndex, b.field?.pageIndex);
+    if (pageCompare !== 0) {
+      return pageCompare;
+    }
+    return (a.field?.name || "").localeCompare(b.field?.name || "", undefined, {
+      sensitivity: "base",
+    });
+  });
+
+  return entries.map((entry) => entry.field);
+}
+
+function resolveFieldOrderKey(field, fallbackIndex = 0) {
+  if (!field || typeof field !== "object") {
+    return `unknown::${fallbackIndex}`;
+  }
+
+  const pageIndex = toNumericOrNull(field.pageIndex);
+  const pageOrder = toNumericOrNull(field.pageOrder);
+  if (pageIndex !== null && pageOrder !== null) {
+    return `page:${pageIndex}|order:${pageOrder}`;
+  }
+
+  if (typeof field.name === "string" && field.name.trim().length > 0) {
+    return `name:${field.name}|page:${pageIndex ?? "na"}`;
+  }
+
+  if (typeof field.label === "string" && field.label.trim().length > 0) {
+    return `label:${field.label}|page:${pageIndex ?? "na"}`;
+  }
+
+  return `fallback:${pageIndex ?? "na"}|${fallbackIndex}`;
+}
+
+function toNumericOrNull(value) {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function compareMaybeNumeric(a, b) {
+  const numericA = toNumericOrNull(a);
+  const numericB = toNumericOrNull(b);
+  if (numericA === null && numericB === null) {
+    return 0;
+  }
+  if (numericA === null) {
+    return 1;
+  }
+  if (numericB === null) {
+    return -1;
+  }
+  return numericA - numericB;
+}
+
+function clearFieldOrdering() {
+  fieldOrdinalOrder.clear();
+  nextFieldOrdinalValue = 0;
 }
 
 async function buildMultiTemplateRecords(files) {
