@@ -141,7 +141,7 @@ public class FormUtils {
         } catch (NoSuchMethodException nsme) {
             log.warn(
                     "AcroForm.refreshAppearances() not available in this PDFBox version; relying on NeedAppearances.");
-        } catch (Throwable t) {
+        } catch (Exception t) {
             log.warn("Failed to refresh field appearances via AcroForm: {}", t.getMessage(), t);
         }
     }
