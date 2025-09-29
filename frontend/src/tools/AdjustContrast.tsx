@@ -5,6 +5,9 @@ import { useBaseTool } from '../hooks/tools/shared/useBaseTool';
 import { useAdjustContrastParameters } from '../hooks/tools/adjustContrast/useAdjustContrastParameters';
 import { useAdjustContrastOperation } from '../hooks/tools/adjustContrast/useAdjustContrastOperation';
 import AdjustContrastSettings from '../components/tools/adjustContrast/AdjustContrastSettings';
+import AdjustContrastBasicSettings from '../components/tools/adjustContrast/AdjustContrastBasicSettings';
+import AdjustContrastColorSettings from '../components/tools/adjustContrast/AdjustContrastColorSettings';
+import AdjustContrastPreview from '../components/tools/adjustContrast/AdjustContrastPreview';
 import { useAccordionSteps } from '../hooks/tools/shared/useAccordionSteps';
 
 const AdjustContrast = (props: BaseToolProps) => {
@@ -17,10 +20,10 @@ const AdjustContrast = (props: BaseToolProps) => {
     props
   );
 
-  enum Step { NONE='none', SETTINGS='settings' }
+  enum Step { NONE='none', BASIC='basic', COLORS='colors' }
   const accordion = useAccordionSteps<Step>({
     noneValue: Step.NONE,
-    initialStep: Step.SETTINGS,
+    initialStep: Step.BASIC,
     stateConditions: { hasFiles: base.hasFiles, hasResults: base.hasResults },
     afterResults: base.handleSettingsReset
   });
@@ -32,19 +35,36 @@ const AdjustContrast = (props: BaseToolProps) => {
     },
     steps: [
       {
-        title: t('adjustContrast.title', 'Adjust Colors/Contrast'),
-        isCollapsed: accordion.getCollapsedState(Step.SETTINGS),
-        onCollapsedClick: () => accordion.handleStepToggle(Step.SETTINGS),
+        title: t('adjustContrast.basic', 'Basic Adjustments'),
+        isCollapsed: accordion.getCollapsedState(Step.BASIC),
+        onCollapsedClick: () => accordion.handleStepToggle(Step.BASIC),
         content: (
-          <AdjustContrastSettings
+          <AdjustContrastBasicSettings
             parameters={base.params.parameters}
             onParameterChange={base.params.updateParameter}
             disabled={base.endpointLoading}
-            file={base.selectedFiles[0] || null}
+          />
+        ),
+      },
+      {
+        title: t('adjustContrast.adjustColors', 'Adjust Colors'),
+        isCollapsed: accordion.getCollapsedState(Step.COLORS),
+        onCollapsedClick: () => accordion.handleStepToggle(Step.COLORS),
+        content: (
+          <AdjustContrastColorSettings
+            parameters={base.params.parameters}
+            onParameterChange={base.params.updateParameter}
+            disabled={base.endpointLoading}
           />
         ),
       },
     ],
+    preview: (
+      <AdjustContrastPreview
+        file={base.selectedFiles[0] || null}
+        parameters={base.params.parameters}
+      />
+    ),
     executeButton: {
       text: t('adjustContrast.confirm', 'Confirm'),
       isVisible: !base.hasResults,

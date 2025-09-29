@@ -1,5 +1,5 @@
 import React from 'react';
-import { Stack, Slider, Text, Group, NumberInput, Divider } from '@mantine/core';
+import { Stack, Slider, Text, Group, NumberInput } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { AdjustContrastParameters } from '../../../hooks/tools/adjustContrast/useAdjustContrastParameters';
 
@@ -7,10 +7,9 @@ interface Props {
   parameters: AdjustContrastParameters;
   onParameterChange: <K extends keyof AdjustContrastParameters>(key: K, value: AdjustContrastParameters[K]) => void;
   disabled?: boolean;
-  file?: File | null;
 }
 
-export default function AdjustContrastSettings({ parameters, onParameterChange, disabled }: Props) {
+export default function AdjustContrastColorSettings({ parameters, onParameterChange, disabled }: Props) {
   const { t } = useTranslation();
 
   const renderSlider = (label: string, value: number, onChange: (v: number) => void) => (
@@ -35,12 +34,6 @@ export default function AdjustContrastSettings({ parameters, onParameterChange, 
 
   return (
     <Stack gap="md">
-      {renderSlider(t('adjustContrast.contrast', 'Contrast'), parameters.contrast, (v) => onParameterChange('contrast', v as any))}
-      {renderSlider(t('adjustContrast.brightness', 'Brightness'), parameters.brightness, (v) => onParameterChange('brightness', v as any))}
-      {renderSlider(t('adjustContrast.saturation', 'Saturation'), parameters.saturation, (v) => onParameterChange('saturation', v as any))}
-
-      <Divider />
-      <Text size="sm" fw={700}>{t('adjustContrast.adjustColors', 'Adjust Colors')}</Text>
       {renderSlider(t('adjustContrast.red', 'Red'), parameters.red, (v) => onParameterChange('red', v as any))}
       {renderSlider(t('adjustContrast.green', 'Green'), parameters.green, (v) => onParameterChange('green', v as any))}
       {renderSlider(t('adjustContrast.blue', 'Blue'), parameters.blue, (v) => onParameterChange('blue', v as any))}

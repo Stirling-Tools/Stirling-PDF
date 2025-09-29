@@ -54,6 +54,8 @@ export interface ToolFlowConfig {
   title?: TitleConfig;
   files: FilesStepConfig;
   steps: MiddleStepConfig[];
+  // Optional preview content rendered between steps and the execute button
+  preview?: React.ReactNode;
   executeButton?: ExecuteButtonConfig;
   review: ReviewStepConfig;
   forceStepNumbers?: boolean;
@@ -89,6 +91,9 @@ export function createToolFlow(config: ToolFlowConfig) {
             tooltip: stepConfig.tooltip
           }, stepConfig.content)
         )}
+
+        {/* Preview (outside steps, above execute button). Hide when review is visible. */}
+        {!config.review.isVisible && config.preview}
 
         {/* Execute Button */}
         {config.executeButton && config.executeButton.isVisible !== false && (
