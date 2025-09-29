@@ -52,6 +52,6 @@ const OperationButton = ({
       }
     </Button>
   );
-}
+};
 
 export default OperationButton;

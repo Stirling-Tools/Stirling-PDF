@@ -10,5 +10,5 @@ export default function ToolLoadingFallback({ toolName }: { toolName?: string })
         </Text>
       </Stack>
     </Center>
-  )
+  );
 }

@@ -92,7 +92,7 @@ import SignSettings from "../components/tools/sign/SignSettings";
 import CropSettings from "../components/tools/crop/CropSettings";
 import RemoveAnnotations from "../tools/RemoveAnnotations";
 import RemoveAnnotationsSettings from "../components/tools/removeAnnotations/RemoveAnnotationsSettings";
-import PageLayoutSettings from "../components/tools/pageLayout/PageLayoutSettings"
+import PageLayoutSettings from "../components/tools/pageLayout/PageLayoutSettings";
 import ExtractImages from "../tools/ExtractImages";
 import ExtractImagesSettings from "../components/tools/extractImages/ExtractImagesSettings";
 import ReplaceColorSettings from "../components/tools/replaceColor/ReplaceColorSettings";

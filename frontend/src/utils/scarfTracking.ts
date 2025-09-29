@@ -17,7 +17,7 @@ export function firePixel(pathname: string): void {
   lastFiredTime = now;
 
   const url = 'https://static.scarf.sh/a.png?x-pxid=3c1d68de-8945-4e9f-873f-65320b6fabf7'
-             + '&path=' + encodeURIComponent(pathname)
+             + '&path=' + encodeURIComponent(pathname);
 
   const img = new Image();
   img.referrerPolicy = "no-referrer-when-downgrade";

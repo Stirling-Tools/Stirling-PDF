@@ -158,6 +158,6 @@ const SplitSettings = ({
       {parameters.method === SPLIT_METHODS.BY_PAGE_DIVIDER && renderByPageDividerForm()}
     </Stack>
   );
-}
+};
 
 export default SplitSettings;

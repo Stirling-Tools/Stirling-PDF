@@ -11,7 +11,7 @@ interface CompressedObject {
 
 const getData = (zipEntry: JSZipObject): CompressedObject | undefined => {
   return (zipEntry as any)._data as CompressedObject;
-}
+};
 
 export interface ZipExtractionResult {
   success: boolean;

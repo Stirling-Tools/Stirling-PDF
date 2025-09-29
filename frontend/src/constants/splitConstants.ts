@@ -22,7 +22,7 @@ export const ENDPOINTS = {
 export type SplitMethod = typeof SPLIT_METHODS[keyof typeof SPLIT_METHODS];
 export const isSplitMethod = (value: string | null): value is SplitMethod => {
   return Object.values(SPLIT_METHODS).includes(value as SplitMethod);
-}
+};
 
 import { CardOption } from '../components/shared/CardSelector';
 

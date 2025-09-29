@@ -32,7 +32,7 @@ const ToolChain: React.FC<ToolChainProps> = ({
 
   const getToolName = (toolId: ToolId) => {
     return t(`home.${toolId}.title`, toolId);
-  }
+  };
 
   // Create full tool chain for tooltip
   const fullChainDisplay = displayStyle === 'badges' ? (

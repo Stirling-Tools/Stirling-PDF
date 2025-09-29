@@ -1,4 +1,4 @@
-import { defineConfig } from 'vitest/config'
+import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   test: {
@@ -6,4 +6,4 @@ export default defineConfig({
     testTimeout: 5000,
     include: ['src/utils/convertUtils.test.ts']
   },
-})
+});

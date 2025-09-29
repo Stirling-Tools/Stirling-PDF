@@ -452,7 +452,7 @@ describe('Convert Tool Integration Tests', () => {
       const files = [
         createPDFFile(),
         createTestStirlingFile('test2.pdf', '%PDF-1.4...', 'application/pdf')
-      ]
+      ];
       const parameters: ConvertParameters = {
         fromExtension: 'pdf',
         toExtension: 'png',
