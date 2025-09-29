@@ -1,4 +1,3 @@
-import React from "react";
 import { Stack, Text, Select, Switch } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { COLOR_TYPES, FIT_OPTIONS } from "../../../constants/convertConstants";

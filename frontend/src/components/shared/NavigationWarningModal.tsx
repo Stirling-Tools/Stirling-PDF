@@ -1,4 +1,3 @@
-import React from 'react';
 import { Modal, Text, Button, Group, Stack } from '@mantine/core';
 import { useNavigationGuard } from '../../contexts/NavigationContext';
 import { useTranslation } from 'react-i18next';

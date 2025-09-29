@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Box, Text, Loader, Stack, Center, Flex } from '@mantine/core';
 import FilePreview from '../../shared/FilePreview';
 import FileMetadata from './FileMetadata';
