@@ -9,6 +9,8 @@ import org.apache.pdfbox.pdmodel.font.encoding.Encoding;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.util.RegexPatternUtils;
+
 @Slf4j
 public class TextEncodingHelper {
 
@@ -322,7 +324,7 @@ public class TextEncodingHelper {
         if (fontName == null) {
             return false;
         }
-        return fontName.matches("^[A-Z]{6}\\+.*");
+        return RegexPatternUtils.getInstance().getFontNamePattern().matcher(fontName).matches();
     }
 
     public static boolean canCalculateBasicWidths(PDFont font) {

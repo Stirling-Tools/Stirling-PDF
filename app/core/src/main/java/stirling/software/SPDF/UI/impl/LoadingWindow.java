@@ -7,6 +7,7 @@ import java.io.InputStreamReader;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -15,10 +16,13 @@ import io.github.pixee.security.BoundedLineReader;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.common.util.UIScaling;
 
 @Slf4j
 public class LoadingWindow extends JDialog {
+    private static final Pattern PATTERN =
+            RegexPatternUtils.getInstance().getContainsDigitsPattern();
     private final JProgressBar progressBar;
     private final JLabel statusLabel;
     private final JPanel mainPanel;
@@ -151,7 +155,10 @@ public class LoadingWindow extends JDialog {
                                                         BoundedLineReader.readLine(
                                                                 reader, 5_000_000))
                                                 != null) {
-                                            if (line.matches(".*\\d+.*")) { // Contains numbers
+                                            if (RegexPatternUtils.getInstance()
+                                                    .getContainsDigitsPattern()
+                                                    .matcher(line)
+                                                    .matches()) { // Contains numbers
                                                 String[] parts = line.trim().split(",");
                                                 if (parts.length >= 2) {
                                                     existingPids.add(
@@ -206,8 +213,8 @@ public class LoadingWindow extends JDialog {
                                                                                                 newReader,
                                                                                                 5_000_000))
                                                                         != null) {
-                                                                    if (newLine.matches(
-                                                                            ".*\\d+.*")) {
+                                                                    if (PATTERN.matcher(newLine)
+                                                                            .matches()) {
                                                                         String[] parts =
                                                                                 newLine.trim()
                                                                                         .split(",");
@@ -220,9 +227,7 @@ public class LoadingWindow extends JDialog {
                                                                             if (!existingPids
                                                                                     .contains(
                                                                                             pid)) {
-                                                                                log.debug(
-                                                                                        "Found new explorer.exe with PID: "
-                                                                                                + pid);
+                                                                                log.debug("Found new explorer.exe with PID: {}", pid);
                                                                                 ProcessBuilder
                                                                                         killProcess =
                                                                                                 new ProcessBuilder(
@@ -240,9 +245,7 @@ public class LoadingWindow extends JDialog {
                                                                                         2,
                                                                                         TimeUnit
                                                                                                 .SECONDS);
-                                                                                log.debug(
-                                                                                        "Explorer process terminated: "
-                                                                                                + pid);
+                                                                                log.debug("Explorer process terminated: {}", pid);
                                                                             }
                                                                         }
                                                                     }
@@ -313,7 +316,7 @@ public class LoadingWindow extends JDialog {
                         mainPanel.revalidate();
                         mainPanel.repaint();
                     } catch (Exception e) {
-                        log.error("Error updating progress to " + progress, e);
+                        log.error("Error updating progress to {}", progress, e);
                     }
                 });
     }
@@ -338,7 +341,7 @@ public class LoadingWindow extends JDialog {
                         mainPanel.revalidate();
                         mainPanel.repaint();
                     } catch (Exception e) {
-                        log.error("Error updating status to: " + status, e);
+                        log.error("Error updating status to: {}", status, e);
                     }
                 });
     }
