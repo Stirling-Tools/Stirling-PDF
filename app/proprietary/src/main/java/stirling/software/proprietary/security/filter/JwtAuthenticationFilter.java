@@ -62,7 +62,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(
             HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
-        if (!validateAndNormalizeJwtSettings() && !jwtService.isJwtEnabled()) {
+        if (!jwtService.isJwtEnabled()) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -110,36 +110,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
-    }
-
-    private boolean validateAndNormalizeJwtSettings() {
-        ApplicationProperties.Security.Jwt jwtProperties = securityProperties.getJwt();
-
-        boolean enableKeystore = jwtProperties.isEnableKeystore();
-        boolean enableKeyRotation = jwtProperties.isEnableKeyRotation();
-        boolean enableKeyCleanup = jwtProperties.isEnableKeyCleanup();
-        boolean secureCookie = jwtProperties.isSecureCookie();
-
-        // If any JWT property is disabled, disable all JWT properties for consistency
-        if (!enableKeystore || !enableKeyRotation || !enableKeyCleanup || !secureCookie) {
-            log.debug(
-                    "One or more JWT properties are disabled - normalizing all JWT settings to false");
-            log.debug(
-                    "Current settings: keystore={}, rotation={}, cleanup={}, secureCookie={}",
-                    enableKeystore,
-                    enableKeyRotation,
-                    enableKeyCleanup,
-                    secureCookie);
-
-            jwtProperties.setEnableKeystore(false);
-            jwtProperties.setEnableKeyRotation(false);
-            jwtProperties.setEnableKeyCleanup(false);
-            jwtProperties.setSecureCookie(false);
-
-            return false;
-        }
-
-        return true;
     }
 
     private boolean apiKeyExists(HttpServletRequest request, HttpServletResponse response)

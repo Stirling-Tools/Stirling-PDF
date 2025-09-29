@@ -62,9 +62,8 @@ public class InitialSecuritySetup {
 
         if (!v2Enabled) {
             log.debug("v2 is disabled - disabling all JWT features");
-            jwtProperties.setEnableKeystore(false);
-            jwtProperties.setEnableKeyRotation(false);
-            jwtProperties.setEnableKeyCleanup(false);
+            jwtProperties.setEnabled(false);
+            jwtProperties.setKeyCleanup(false);
             jwtProperties.setSecureCookie(false);
         }
     }
