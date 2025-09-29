@@ -159,7 +159,7 @@ export default defineConfig(
   {
     files: jsGlobs,
     ignores: [
-      nodeGlobs,
+      ...nodeGlobs,
       ...ignorePatterns
     ],
     extends: [
