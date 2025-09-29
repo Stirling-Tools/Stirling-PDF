@@ -92,7 +92,6 @@ import ScannerImageSplitSettings from "../components/tools/scannerImageSplit/Sca
 import ChangeMetadataSingleStep from "../components/tools/changeMetadata/ChangeMetadataSingleStep";
 import SignSettings from "../components/tools/sign/SignSettings";
 import CropSettings from "../components/tools/crop/CropSettings";
-import AdjustContrastSettings from "../components/tools/adjustContrast/AdjustContrastSettings";
 import RemoveAnnotations from "../tools/RemoveAnnotations";
 import RemoveAnnotationsSettings from "../components/tools/removeAnnotations/RemoveAnnotationsSettings";
 import PageLayoutSettings from "../components/tools/pageLayout/PageLayoutSettings";
@@ -643,7 +642,6 @@ export function useFlatToolRegistry(): ToolRegistry {
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.ADVANCED_FORMATTING,
         operationConfig: adjustContrastOperationConfig,
-        settingsComponent: AdjustContrastSettings,
         synonyms: getSynonyms(t, "adjustContrast"),
       },
       repair: {

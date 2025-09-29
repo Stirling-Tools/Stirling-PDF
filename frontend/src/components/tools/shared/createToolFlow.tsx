@@ -92,8 +92,9 @@ export function createToolFlow(config: ToolFlowConfig) {
           }, stepConfig.content)
         )}
 
-        {/* Preview (outside steps, above execute button). Hide when review is visible. */}
-        {!config.review.isVisible && config.preview}
+        {/* Preview (outside steps, above execute button).
+            Hide when review is visible or when no files are selected. */}
+        {!config.review.isVisible && (config.files.selectedFiles?.length ?? 0) > 0 && config.preview}
 
         {/* Execute Button */}
         {config.executeButton && config.executeButton.isVisible !== false && (

@@ -4,7 +4,6 @@ import { BaseToolProps, ToolComponent } from '../types/tool';
 import { useBaseTool } from '../hooks/tools/shared/useBaseTool';
 import { useAdjustContrastParameters } from '../hooks/tools/adjustContrast/useAdjustContrastParameters';
 import { useAdjustContrastOperation } from '../hooks/tools/adjustContrast/useAdjustContrastOperation';
-import AdjustContrastSettings from '../components/tools/adjustContrast/AdjustContrastSettings';
 import AdjustContrastBasicSettings from '../components/tools/adjustContrast/AdjustContrastBasicSettings';
 import AdjustContrastColorSettings from '../components/tools/adjustContrast/AdjustContrastColorSettings';
 import AdjustContrastPreview from '../components/tools/adjustContrast/AdjustContrastPreview';

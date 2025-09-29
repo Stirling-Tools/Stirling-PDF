@@ -1714,6 +1714,7 @@
   "adjustContrast": {
     "title": "Adjust Colors/Contrast",
     "header": "Adjust Colors/Contrast",
+    "basic": "Basic Adjustments",
     "contrast": "Contrast:",
     "brightness": "Brightness:",
     "saturation": "Saturation:",
