@@ -263,4 +263,8 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
         KeyFactory keyFactory = KeyFactory.getInstance("RSA");
         return keyFactory.generatePublic(keySpec);
     }
+
+    public boolean isKeystoreEnabled() {
+        return jwtProperties.isEnabled();
+    }
 }
