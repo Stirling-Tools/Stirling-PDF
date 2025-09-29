@@ -30,6 +30,6 @@ const ErrorNotification = ({
       {error}
     </Notification>
   );
-}
+};
 
 export default ErrorNotification;

@@ -11,7 +11,7 @@ interface CompressedObject {
 
 const getData = (zipEntry: JSZipObject): CompressedObject | undefined => {
   return (zipEntry as any)._data as CompressedObject;
-}
+};
 
 export interface ZipExtractionResult {
   success: boolean;
@@ -337,6 +337,125 @@ export class ZipFileService {
       const errorMessage = error instanceof Error ? error.message : '';
       return errorMessage.includes('password') || errorMessage.includes('encrypted');
     }
+  }
+
+  /**
+   * Extract all files from a ZIP archive (not limited to PDFs)
+   */
+  async extractAllFiles(
+    file: File | Blob,
+    onProgress?: (progress: ZipExtractionProgress) => void
+  ): Promise<ZipExtractionResult> {
+    const result: ZipExtractionResult = {
+      success: false,
+      extractedFiles: [],
+      errors: [],
+      totalFiles: 0,
+      extractedCount: 0
+    };
+
+    try {
+      // Load ZIP contents
+      const zip = new JSZip();
+      const zipContents = await zip.loadAsync(file);
+
+      // Get all files (not directories)
+      const allFiles = Object.entries(zipContents.files).filter(([, zipEntry]) =>
+        !zipEntry.dir
+      );
+
+      result.totalFiles = allFiles.length;
+
+      // Extract each file
+      for (let i = 0; i < allFiles.length; i++) {
+        const [filename, zipEntry] = allFiles[i];
+
+        try {
+          // Report progress
+          if (onProgress) {
+            onProgress({
+              currentFile: filename,
+              extractedCount: i,
+              totalFiles: allFiles.length,
+              progress: (i / allFiles.length) * 100
+            });
+          }
+
+          // Extract file content
+          const content = await zipEntry.async('blob');
+
+          // Create File object with appropriate MIME type
+          const mimeType = this.getMimeTypeFromExtension(filename);
+          const extractedFile = new File([content], filename, { type: mimeType });
+
+          result.extractedFiles.push(extractedFile);
+          result.extractedCount++;
+
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+          result.errors.push(`Failed to extract "${filename}": ${errorMessage}`);
+        }
+      }
+
+      // Final progress report
+      if (onProgress) {
+        onProgress({
+          currentFile: '',
+          extractedCount: result.extractedCount,
+          totalFiles: result.totalFiles,
+          progress: 100
+        });
+      }
+
+      result.success = result.extractedFiles.length > 0;
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      result.errors.push(`Failed to process ZIP file: ${errorMessage}`);
+    }
+
+    return result;
+  }
+
+  /**
+   * Get MIME type based on file extension
+   */
+  private getMimeTypeFromExtension(fileName: string): string {
+    const ext = fileName.toLowerCase().split('.').pop();
+
+    const mimeTypes: Record<string, string> = {
+      // Images
+      'png': 'image/png',
+      'jpg': 'image/jpeg',
+      'jpeg': 'image/jpeg',
+      'gif': 'image/gif',
+      'webp': 'image/webp',
+      'bmp': 'image/bmp',
+      'svg': 'image/svg+xml',
+      'tiff': 'image/tiff',
+      'tif': 'image/tiff',
+
+      // Documents
+      'pdf': 'application/pdf',
+      'txt': 'text/plain',
+      'html': 'text/html',
+      'css': 'text/css',
+      'js': 'application/javascript',
+      'json': 'application/json',
+      'xml': 'application/xml',
+
+      // Office documents
+      'doc': 'application/msword',
+      'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'xls': 'application/vnd.ms-excel',
+      'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+
+      // Archives
+      'zip': 'application/zip',
+      'rar': 'application/x-rar-compressed',
+    };
+
+    return mimeTypes[ext || ''] || 'application/octet-stream';
   }
 }
 

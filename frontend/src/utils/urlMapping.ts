@@ -39,7 +39,6 @@ export const URL_TO_TOOL_MAP: Record<string, ToolId> = {
   '/remove-cert-sign': 'removeCertSign',
   '/unlock-pdf-forms': 'unlockPDFForms',
   '/validate-signature': 'validateSignature',
-  '/manage-certificates': 'manageCertificates',
 
   // Content manipulation
   '/sanitize': 'sanitize',
@@ -64,8 +63,8 @@ export const URL_TO_TOOL_MAP: Record<string, ToolId> = {
   '/booklet-imposition': 'bookletImposition',
 
   // Splitting tools
-  '/auto-split-pdf': 'autoSplitPDF',
-  '/auto-size-split-pdf': 'autoSizeSplitPDF',
+  '/auto-split-pdf': 'split',
+  '/auto-size-split-pdf': 'split',
   '/scanner-image-split': 'scannerImageSplit',
 
   // Annotation and content removal
@@ -75,8 +74,8 @@ export const URL_TO_TOOL_MAP: Record<string, ToolId> = {
   // Image and visual tools
   '/extract-images': 'extractImages',
   '/adjust-contrast': 'adjustContrast',
-  '/fake-scan': 'fakeScan',
-  '/replace-color-pdf': 'replaceColorPdf',
+  '/fake-scan': 'scannerEffect',
+  '/replace-color-pdf': 'replaceColor',
 
   // Metadata and info
   '/change-metadata': 'changeMetadata',
@@ -116,13 +115,13 @@ export const URL_TO_TOOL_MAP: Record<string, ToolId> = {
   '/view-pdf': 'read',
   '/get-info-on-pdf': 'getPdfInfo',
   '/remove-image-pdf': 'removeImage',
-  '/replace-and-invert-color-pdf': 'replaceColorPdf',
+  '/replace-and-invert-color-pdf': 'replaceColor',
   '/pipeline': 'automate',
   '/extract-image-scans': 'scannerImageSplit',
   '/show-javascript': 'showJS',
-  '/scanner-effect': 'fakeScan',
-  '/split-by-size-or-count': 'autoSizeSplitPDF',
+  '/scanner-effect': 'scannerEffect',
+  '/split-by-size-or-count': 'split',
   '/overlay-pdf': 'overlayPdfs',
-  '/split-pdf-by-sections': 'autoSplitPDF',
-  '/split-pdf-by-chapters': 'autoSplitPDF',
+  '/split-pdf-by-sections': 'split',
+  '/split-pdf-by-chapters': 'split',
 };

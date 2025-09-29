@@ -1,17 +1,15 @@
 #!/usr/bin/env node
 
-import { execSync } from 'node:child_process';
-import { existsSync, mkdirSync, writeFileSync, readFileSync } from 'node:fs';
-import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
+const { execSync } = require('node:child_process');
+const { existsSync, mkdirSync, writeFileSync, readFileSync } = require('node:fs');
+const path = require('node:path');
 
-import { argv } from 'node:process';
+const { argv } = require('node:process');
 const inputIdx = argv.indexOf('--input');
 const INPUT_FILE = inputIdx > -1 ? argv[inputIdx + 1] : null;
 const POSTPROCESS_ONLY = !!INPUT_FILE;
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// __dirname is available in CommonJS by default
 
 /**
  * Generate 3rd party licenses for frontend dependencies

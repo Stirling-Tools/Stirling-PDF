@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useSearch } from '@embedpdf/plugin-search/react';
 import { useViewer } from '../../contexts/ViewerContext';
 import { SEARCH_CONSTANTS } from './constants/search';
@@ -24,9 +24,9 @@ interface SearchResultState {
   activeResultIndex?: number;
 }
 
-export function CustomSearchLayer({ 
-  pageIndex, 
-  scale, 
+export function CustomSearchLayer({
+  pageIndex,
+  scale,
   highlightColor = SEARCH_CONSTANTS.HIGHLIGHT_COLORS.BACKGROUND,
   activeHighlightColor = SEARCH_CONSTANTS.HIGHLIGHT_COLORS.ACTIVE_BACKGROUND,
   opacity = SEARCH_CONSTANTS.HIGHLIGHT_COLORS.OPACITY,
@@ -42,17 +42,17 @@ export function CustomSearchLayer({
     if (!searchProvides) {
       return;
     }
-    
+
     const unsubscribe = searchProvides.onSearchResultStateChange?.((state: SearchResultState) => {
       // Auto-scroll to active search result
       if (state?.results && state.activeResultIndex !== undefined && state.activeResultIndex >= 0) {
         const activeResult = state.results[state.activeResultIndex];
-        if (activeResult) {            
+        if (activeResult) {
           const pageNumber = activeResult.pageIndex + 1; // Convert to 1-based page number
           scrollActions.scrollToPage(pageNumber);
         }
       }
-      
+
       setSearchResultState(state);
     });
 
@@ -69,7 +69,7 @@ export function CustomSearchLayer({
     const filtered = searchResultState.results
       .map((result, originalIndex) => ({ result, originalIndex }))
       .filter(({ result }) => result.pageIndex === pageIndex);
-    
+
     return filtered;
   }, [searchResultState, pageIndex]);
 
@@ -78,7 +78,7 @@ export function CustomSearchLayer({
   }
 
   return (
-    <div style={{ 
+    <div style={{
       position: 'absolute',
       top: 0,
       left: 0,
