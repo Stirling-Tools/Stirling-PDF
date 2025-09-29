@@ -158,7 +158,10 @@ export default defineConfig(
   },
   {
     files: jsGlobs,
-    ignores: nodeGlobs,
+    ignores: [
+      nodeGlobs,
+      ...ignorePatterns
+    ],
     extends: [
       reactPlugin.configs.flat.recommended,
       ...tseslint.configs.recommended,
