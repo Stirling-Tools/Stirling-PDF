@@ -245,6 +245,16 @@ public final class RegexPatternUtils {
         return getPattern("\\s+");
     }
 
+    /** Pattern for removing bracket and hash characters from form field names */
+    public Pattern getFormFieldBracketPattern() {
+        return getPattern("[#\\[\\]]");
+    }
+
+    /** Pattern for collapsing underscores and hyphens */
+    public Pattern getUnderscoreHyphenPattern() {
+        return getPattern("[_-]+");
+    }
+
     /** Pattern for matching newlines (Windows and Unix style) */
     public Pattern getNewlinesPattern() {
         return getPattern("\\r?\\n");
@@ -480,6 +490,8 @@ public final class RegexPatternUtils {
         getPattern("(?i)^(text|field|form)[\\s_-]*\\d+$");
         getPattern("[\\p{Punct}]+");
         getPattern("(?<=[a-z])(?=[A-Z])");
+        getPattern("[#\\[\\]]");
+        getPattern("[_-]+");
         log.debug("Pre-compiled {} common regex patterns", patternCache.size());
     }
 
