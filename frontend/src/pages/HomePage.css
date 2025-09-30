@@ -88,7 +88,7 @@
   scroll-behavior: smooth;
   scrollbar-width: none;
   -ms-overflow-style: none;
-  touch-action: pan-y;
+  touch-action: pan-x;
 }
 
 .mobile-slider::-webkit-scrollbar {

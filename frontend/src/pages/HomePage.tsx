@@ -32,7 +32,7 @@ export default function HomePage() {
 
   const { openFilesModal } = useFilesModalContext();
   const { colorScheme } = useMantineColorScheme();
-  const isMobile = useMediaQuery("(max-width: 1024px)");
+  const isMobile = useMediaQuery("(max-width: 900px)");
   const sliderRef = useRef<HTMLDivElement | null>(null);
   const [activeMobileView, setActiveMobileView] = useState<MobileView>("tools");
 
@@ -42,26 +42,42 @@ export default function HomePage() {
     colorScheme === "dark" ? "Dark" : "Light"
   }.svg`;
 
-  const handleSelectMobileView = useCallback((view: MobileView) => {
-    setActiveMobileView(view);
-  }, []);
+  const scrollToMobileView = useCallback(
+    (view: MobileView, behavior: ScrollBehavior = "smooth") => {
+      const container = sliderRef.current;
+      if (!container) return;
+
+      const offset = view === "tools" ? 0 : container.clientWidth;
+
+      if (behavior === "auto") {
+        container.scrollLeft = offset;
+        return;
+      }
+
+      container.scrollTo({ left: offset, behavior });
+    },
+    []
+  );
+
+  const handleSelectMobileView = useCallback(
+    (view: MobileView) => {
+      scrollToMobileView(view);
+      setActiveMobileView(view);
+    },
+    [scrollToMobileView]
+  );
 
   useEffect(() => {
     if (isMobile) {
-      const container = sliderRef.current;
-      if (container) {
-        const offset = activeMobileView === "tools" ? 0 : container.clientWidth;
-        container.scrollTo({ left: offset, behavior: "smooth" });
-      }
+      scrollToMobileView(activeMobileView, "auto");
       return;
     }
 
-    setActiveMobileView("tools");
-    const container = sliderRef.current;
-    if (container) {
-      container.scrollTo({ left: 0, behavior: "auto" });
+    if (activeMobileView !== "tools") {
+      setActiveMobileView("tools");
     }
-  }, [activeMobileView, isMobile]);
+    scrollToMobileView("tools", "auto");
+  }, [activeMobileView, isMobile, scrollToMobileView]);
 
   useEffect(() => {
     if (!isMobile) return;
