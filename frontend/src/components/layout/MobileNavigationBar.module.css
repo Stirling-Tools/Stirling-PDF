@@ -1,0 +1,63 @@
+.container {
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  gap: 0.25rem;
+  padding: 0.5rem 0.75rem calc(env(safe-area-inset-bottom) + 0.5rem);
+  background: var(--bg-toolbar);
+  border-top: 1px solid var(--border-subtle);
+  box-shadow: 0 -6px 24px rgba(12, 18, 28, 0.08);
+  z-index: 30;
+}
+
+.button {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  border: none;
+  background: transparent;
+  padding: 0.35rem 0;
+  border-radius: 0.75rem;
+  color: var(--text-secondary, #94a3b8);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.button:focus-visible {
+  outline: 2px solid rgba(88, 101, 242, 0.6);
+  outline-offset: 2px;
+}
+
+.button:hover:not(.disabled) {
+  background-color: rgba(88, 101, 242, 0.08);
+}
+
+.active {
+  color: var(--text-primary, #f8fafc);
+}
+
+.active .mantine-ActionIcon-root {
+  background-color: rgba(88, 101, 242, 0.22);
+}
+
+.disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.label {
+  font-size: 0.7rem;
+  line-height: 1;
+}
+
+@supports (backdrop-filter: blur(12px)) {
+  .container {
+    background: rgba(18, 20, 28, 0.72);
+    backdrop-filter: blur(18px);
+  }
+}

@@ -1,13 +1,14 @@
-import { useRainbowThemeContext } from '../shared/RainbowThemeProvider';
-import { useToolWorkflow } from '../../contexts/ToolWorkflowContext';
-import ToolPicker from './ToolPicker';
-import SearchResults from './SearchResults';
-import ToolRenderer from './ToolRenderer';
-import ToolSearch from './toolPicker/ToolSearch';
+import { useRainbowThemeContext } from "../shared/RainbowThemeProvider";
+import { useToolWorkflow } from "../../contexts/ToolWorkflowContext";
+import ToolPicker from "./ToolPicker";
+import SearchResults from "./SearchResults";
+import ToolRenderer from "./ToolRenderer";
+import ToolSearch from "./toolPicker/ToolSearch";
 import { useSidebarContext } from "../../contexts/SidebarContext";
-import rainbowStyles from '../../styles/rainbow.module.css';
-import { ScrollArea } from '@mantine/core';
-import { ToolId } from '../../types/toolId';
+import rainbowStyles from "../../styles/rainbow.module.css";
+import { ScrollArea } from "@mantine/core";
+import { ToolId } from "../../types/toolId";
+import { useIsMobile } from "../../hooks/useIsMobile";
 
 // No props needed - component uses context
 
@@ -15,6 +16,7 @@ export default function ToolPanel() {
   const { isRainbowMode } = useRainbowThemeContext();
   const { sidebarRefs } = useSidebarContext();
   const { toolPanelRef } = sidebarRefs;
+  const isMobile = useIsMobile();
 
 
   // Use context-based hooks to eliminate prop drilling
@@ -34,12 +36,13 @@ export default function ToolPanel() {
     <div
       ref={toolPanelRef}
       data-sidebar="tool-panel"
-      className={`h-screen flex flex-col overflow-hidden bg-[var(--bg-toolbar)] border-r border-[var(--border-subtle)] transition-all duration-300 ease-out ${
+      className={`${isMobile ? "h-full" : "h-screen"} flex flex-col overflow-hidden bg-[var(--bg-toolbar)] border-r border-[var(--border-subtle)] transition-all duration-300 ease-out ${
         isRainbowMode ? rainbowStyles.rainbowPaper : ''
       }`}
       style={{
-        width: isPanelVisible ? '18.5rem' : '0',
-        padding: '0'
+        width: isMobile ? (isPanelVisible ? "100%" : "0") : isPanelVisible ? "18.5rem" : "0",
+        padding: "0",
+        borderRight: isMobile ? "none" : undefined,
       }}
     >
       <div
