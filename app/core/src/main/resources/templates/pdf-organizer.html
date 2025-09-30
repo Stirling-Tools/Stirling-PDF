@@ -42,22 +42,29 @@
                   <option value="REMOVE_FIRST_AND_LAST" th:text="#{pdfOrganiser.mode.9}">Remove First and Last</option>
                 </select>
               </div>
-              <div class="mb-3">
+              <div class="mb-3"  id="pageToOrganizeSection">
                 <label for="pageOrder" th:text="#{pageOrderPrompt}"></label>
                 <input type="text" class="form-control" id="pageOrder" name="pageNumbers"
-                  th:placeholder="#{pdfOrganiser.placeholder}" required>
+                  th:placeholder="#{pdfOrganiser.placeholder}">
               </div>
               <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{pdfOrganiser.submit}"></button>
             </form>
             <script>
-              document.getElementById('customMode').addEventListener('change', function () {
-                var pageOrderInput = document.getElementById('pageOrder');
-                if (this.value === "" || this.value === "DUPLICATE") {
-                  pageOrderInput.disabled = false;
+              // Only display the page input field when split mode is custom.
+              function togglePageInput() {
+                const mode = document.getElementById('customMode').value;
+                const pageInputSection = document.getElementById('pageToOrganizeSection');
+                if (mode === "") {
+                  pageInputSection.style.display = "block";
+                  document.getElementById('pageOrder').setAttribute("required", "true");
                 } else {
-                  pageOrderInput.disabled = true;
+                  pageInputSection.style.display = "none";
+                  document.getElementById('pageOrder').removeAttribute("required");
                 }
-              });
+              }
+
+              document.getElementById('customMode').addEventListener('change', togglePageInput);
+              window.addEventListener('DOMContentLoaded', togglePageInput);
             </script>
           </div>
         </div>
