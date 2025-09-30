@@ -73,11 +73,11 @@ public class ApplicationProperties {
     public PropertySource<?> dynamicYamlPropertySource(ConfigurableEnvironment environment)
             throws IOException {
         String configPath = InstallationPathConfig.getSettingsPath();
-        log.debug("Attempting to load settings from: " + configPath);
+        log.debug("Attempting to load settings from: {}", configPath);
 
         File file = new File(configPath);
         if (!file.exists()) {
-            log.error("Warning: Settings file does not exist at: " + configPath);
+            log.error("Warning: Settings file does not exist at: {}", configPath);
         }
 
         Resource resource = new FileSystemResource(configPath);
@@ -90,7 +90,7 @@ public class ApplicationProperties {
                 new YamlPropertySourceFactory().createPropertySource(null, encodedResource);
         environment.getPropertySources().addFirst(propertySource);
 
-        log.debug("Loaded properties: " + propertySource.getSource());
+        log.debug("Loaded properties: {}", propertySource.getSource());
 
         return propertySource;
     }
@@ -311,11 +311,10 @@ public class ApplicationProperties {
 
         @Data
         public static class Jwt {
-            private boolean enableKeystore = true;
-            private boolean enableKeyRotation = false;
-            private boolean enableKeyCleanup = true;
+            private boolean enabled = true;
+            private boolean keyCleanup = true;
             private int keyRetentionDays = 7;
-            private boolean secureCookie;
+            private Boolean secureCookie;
         }
     }
 
@@ -385,16 +384,19 @@ public class ApplicationProperties {
 
         @JsonIgnore
         public String getBaseTmpDir() {
-            return baseTmpDir != null && !baseTmpDir.isEmpty()
-                    ? baseTmpDir
-                    : java.lang.System.getProperty("java.io.tmpdir") + "/stirling-pdf";
+            if (baseTmpDir != null && !baseTmpDir.isEmpty()) {
+                return baseTmpDir;
+            }
+            String tmp = java.lang.System.getProperty("java.io.tmpdir");
+            return new File(tmp, "stirling-pdf").getPath();
         }
 
         @JsonIgnore
         public String getLibreofficeDir() {
-            return libreofficeDir != null && !libreofficeDir.isEmpty()
-                    ? libreofficeDir
-                    : getBaseTmpDir() + "/libreoffice";
+            if (libreofficeDir != null && !libreofficeDir.isEmpty()) {
+                return libreofficeDir;
+            }
+            return new File(getBaseTmpDir(), "libreoffice").getPath();
         }
     }
 
@@ -460,19 +462,17 @@ public class ApplicationProperties {
         private List<String> languages;
 
         public String getAppName() {
-            return appName != null && appName.trim().length() > 0 ? appName : null;
+            return appName != null && !appName.trim().isEmpty() ? appName : null;
         }
 
         public String getHomeDescription() {
-            return homeDescription != null && homeDescription.trim().length() > 0
+            return homeDescription != null && !homeDescription.trim().isEmpty()
                     ? homeDescription
                     : null;
         }
 
         public String getAppNameNavbar() {
-            return appNameNavbar != null && appNameNavbar.trim().length() > 0
-                    ? appNameNavbar
-                    : null;
+            return appNameNavbar != null && !appNameNavbar.trim().isEmpty() ? appNameNavbar : null;
         }
     }
 

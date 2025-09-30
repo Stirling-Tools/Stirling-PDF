@@ -38,12 +38,12 @@ class ApplicationPropertiesLogicTest {
                 new ApplicationProperties.TempFileManagement();
 
         String expectedBase =
-                java.lang.System.getProperty("java.io.tmpdir").replaceAll("/+$", "")
-                        + "/stirling-pdf";
-        assertEquals(expectedBase, normalize.apply(tfm.getBaseTmpDir()));
+                Paths.get(java.lang.System.getProperty("java.io.tmpdir"), "stirling-pdf")
+                        .toString();
+        assertEquals(expectedBase, tfm.getBaseTmpDir());
 
-        String expectedLibre = expectedBase + "/libreoffice";
-        assertEquals(expectedLibre, normalize.apply(tfm.getLibreofficeDir()));
+        String expectedLibre = Paths.get(expectedBase, "libreoffice").toString();
+        assertEquals(expectedLibre, tfm.getLibreofficeDir());
 
         tfm.setBaseTmpDir("/custom/base");
         assertEquals("/custom/base", normalize.apply(tfm.getBaseTmpDir()));
