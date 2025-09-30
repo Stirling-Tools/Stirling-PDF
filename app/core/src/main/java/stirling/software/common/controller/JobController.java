@@ -26,6 +26,7 @@ import stirling.software.common.model.job.ResultFile;
 import stirling.software.common.service.FileStorage;
 import stirling.software.common.service.JobQueue;
 import stirling.software.common.service.TaskManager;
+import stirling.software.common.util.RegexPatternUtils;
 
 /** REST controller for job-related endpoints */
 @RestController
@@ -319,8 +320,10 @@ public class JobController {
     private String createContentDispositionHeader(String fileName) {
         try {
             String encodedFileName =
-                    URLEncoder.encode(fileName, StandardCharsets.UTF_8)
-                            .replace("+", "%20"); // URLEncoder uses + for spaces, but we want %20
+                    RegexPatternUtils.getInstance()
+                            .getPlusSignPattern()
+                            .matcher(URLEncoder.encode(fileName, StandardCharsets.UTF_8))
+                            .replaceAll("%20"); // URLEncoder uses + for spaces, but we want %20
             return "attachment; filename=\"" + fileName + "\"; filename*=UTF-8''" + encodedFileName;
         } catch (Exception e) {
             // Fallback to basic filename if encoding fails
