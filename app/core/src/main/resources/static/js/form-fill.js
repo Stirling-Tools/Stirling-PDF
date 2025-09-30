@@ -122,8 +122,8 @@ function isPlainObject(value) {
 function cloneTemplateRecord(record) {
   if (!isPlainObject(record)) return {};
   try {
-    return typeof structuredClone === "function" 
-      ? structuredClone(record) 
+    return typeof structuredClone === "function"
+      ? structuredClone(record)
       : JSON.parse(JSON.stringify(record));
   } catch {
     return { ...record };
@@ -135,10 +135,10 @@ function normalizeFieldsResponse(data) {
     return { fields: data, template: createTemplateRecordFromFields(data) };
   }
   if (isPlainObject(data)) {
-    const fields = Array.isArray(data.fields) ? data.fields : 
+    const fields = Array.isArray(data.fields) ? data.fields :
                    Array.isArray(data.data) ? data.data : [];
-    const template = isPlainObject(data.template) ? 
-                     cloneTemplateRecord(data.template) : 
+    const template = isPlainObject(data.template) ?
+                     cloneTemplateRecord(data.template) :
                      createTemplateRecordFromFields(fields);
     return { fields, template };
   }
@@ -166,12 +166,12 @@ function readExistingBatchRecords() {
 function updateFileChooserSummary(files) {
   const container = fileChooser?.querySelector(".selected-files");
   if (!container) return;
-  
+
   if (!Array.isArray(files) || files.length === 0) {
     container.textContent = "";
     return;
   }
-  
+
   container.textContent = files
     .map(file => file?.name || "")
     .filter(name => name.length > 0)
@@ -215,13 +215,13 @@ function clearMultiTemplateSelection(options = {}) {
 
 function mergeMultiTemplateFiles(files) {
   if (!Array.isArray(files) || files.length === 0) return false;
-  
+
   let changed = false;
   files.forEach(file => {
     if (!file) return;
     const signature = getFileSignature(file);
     if (!signature) return;
-    
+
     const existingIndex = multiTemplateSelectionIndex.get(signature);
     if (existingIndex == null) {
       multiTemplateSelectionIndex.set(signature, multiTemplateSelectedFiles.length);
@@ -231,7 +231,7 @@ function mergeMultiTemplateFiles(files) {
     }
     changed = true;
   });
-  
+
   return changed;
 }
 
@@ -369,8 +369,10 @@ batchFileInput?.addEventListener("change", async () => {
   try {
     const text = await file.text();
     const parsed = JSON.parse(text);
-    if (!Array.isArray(parsed) || parsed.length === 0) {
-      setStatus(formFillLocale.batchEmpty, "warning");
+    const validation = validateJsonStructure(parsed);
+
+    if (!validation.valid) {
+      setStatus(validation.message, "danger");
       batchTextarea && (batchTextarea.value = "");
       batchButton.disabled = true;
       return;
@@ -380,7 +382,21 @@ batchFileInput?.addEventListener("change", async () => {
       batchTextarea.value = JSON.stringify(parsed, null, 2);
     }
     batchEdited = true;
-    setStatus(formFillLocale.batchFileReady ?? formFillLocale.batchReady, "success");
+
+    const hasIssues = validation.warnings || validation.suggestions;
+    const issueCount = (validation.warnings?.length || 0) + (validation.suggestions?.length || 0);
+
+    const message = hasIssues
+      ? `${formFillLocale.batchFileReady ?? formFillLocale.batchReady} (${issueCount} note${issueCount > 1 ? 's' : ''})`
+      : (formFillLocale.batchFileReady ?? formFillLocale.batchReady);
+    setStatus(message, validation.warnings ? "warning" : (validation.suggestions ? "info" : "success"));
+
+    if (validation.warnings) {
+      console.warn("JSON validation warnings:", validation.warnings);
+    }
+    if (validation.suggestions) {
+      console.info("JSON validation suggestions:", validation.suggestions);
+    }
   } catch (error) {
     console.error("Unable to load batch JSON file", error);
     if (batchTextarea) {
@@ -1328,7 +1344,7 @@ function validateField(input, options = {}) {
 
 function validateAllFields(options = {}) {
   if (fieldValidationRegistry.size === 0) return true;
-  
+
   const { focus = true } = options;
   let firstInvalid = null;
 
@@ -1471,13 +1487,13 @@ function addOptionsToSelect(selectEl, options, currentValue, allowMultiple = fal
 
 function populateBatchTemplate(fields, templateRecord) {
   if (!batchTextarea || batchEdited) return;
-  
+
   const resolvedTemplate = resolveTemplateRecord(templateRecord, fields);
   if (!isPlainObject(resolvedTemplate) || Object.keys(resolvedTemplate).length === 0) {
     batchTextarea.value = "";
     return;
   }
-  
+
   batchTextarea.value = JSON.stringify([resolvedTemplate], null, 2);
   batchEdited = false;
   updateBatchButtonState({ silent: true });
@@ -1485,10 +1501,10 @@ function populateBatchTemplate(fields, templateRecord) {
 
 function createTemplateRecordFromFields(fields) {
   if (!Array.isArray(fields) || fields.length === 0) return {};
-  
+
   const fillable = fields.filter(field => field?.name && FILLABLE_TYPES.has(field.type));
   if (fillable.length === 0) return {};
-  
+
   const templateRecord = {};
   fillable.forEach(field => {
     templateRecord[field.name] = inferTemplateValue(field);
@@ -1503,7 +1519,7 @@ function buildFieldMetadataKey(field, index) {
 
 function normalizeFieldsForDisplay(fields) {
   if (!Array.isArray(fields) || fields.length === 0) return [];
-  
+
   const filtered = [];
   const indexByName = new Map();
   const namesEncountered = new Set();
@@ -1794,17 +1810,33 @@ function parseBatchPayload() {
     setStatus(formFillLocale.batchEmpty, "warning");
     throw new Error("empty-batch");
   }
-  try {
-    const payload = JSON.parse(raw);
-    if (!Array.isArray(payload) || payload.length === 0) {
-      setStatus(formFillLocale.batchEmpty, "warning");
-      throw new Error("invalid-batch");
-    }
-    return payload;
-  } catch (err) {
+
+  const result = preprocessBatchJson(raw);
+
+  if (!result.success) {
     setStatus(formFillLocale.parsingError, "danger");
-    throw err;
+    console.error("JSON parsing failed:", result.error);
+    throw result.error;
   }
+
+  const validation = validateJsonStructure(result.payload);
+
+  if (!validation.valid) {
+    setStatus(validation.message, "danger");
+    throw new Error("invalid-batch");
+  }
+
+  // Log helpful information for the user
+  if (result.wasFixed) {
+    console.info("JSON was automatically corrected for parsing. Original preserved for backend.");
+  }
+
+  if (validation.suggestions) {
+    console.info("JSON suggestions:", validation.suggestions);
+  }
+
+  // Always return the parsed payload - the backend will receive the complete JSON structure
+  return result.payload;
 }
 
 async function handleDownloadResponse(response, fallbackName) {
@@ -1891,6 +1923,102 @@ function hasSelectedFormFile() {
   return getSelectedFormFiles().length > 0;
 }
 
+function validateJsonStructure(payload) {
+  if (!Array.isArray(payload)) return { valid: false, message: "JSON must be an array" };
+  if (payload.length === 0) return { valid: false, message: "Array cannot be empty" };
+
+  const warnings = [];
+  const suggestions = [];
+
+  for (let i = 0; i < payload.length; i++) {
+    const record = payload[i];
+    if (!record || typeof record !== 'object') {
+      return { valid: false, message: `Record ${i + 1} must be an object` };
+    }
+
+    // Validate each field in the record
+    Object.entries(record).forEach(([key, value]) => {
+      // Check for empty string values
+      if (value === "") {
+        suggestions.push(`Record ${i + 1}: "${key}" has empty value`);
+      }
+
+      // Check for boolean values - these are valid
+      if (typeof value === 'boolean') {
+        // Boolean values like true/false are perfectly valid
+      }
+
+      // Check string values
+      if (typeof value === 'string' && value.trim() !== value) {
+        suggestions.push(`Record ${i + 1}: "${key}" has leading/trailing whitespace`);
+      }
+
+      // Check for null values
+      if (value === null) {
+        suggestions.push(`Record ${i + 1}: "${key}" is null - consider using empty string instead`);
+      }
+    });
+  }
+
+  return {
+    valid: true,
+    warnings: warnings.length > 0 ? warnings : null,
+    suggestions: suggestions.length > 0 ? suggestions : null,
+    message: (warnings.length > 0 || suggestions.length > 0)
+      ? `JSON valid${warnings.length > 0 ? ' with warnings' : ''}${suggestions.length > 0 ? ' and suggestions' : ''}`
+      : "JSON structure valid"
+  };
+}
+
+function preprocessBatchJson(rawJson) {
+  // This function attempts to fix common JSON issues before parsing
+  // while preserving the original structure for backend submission
+  try {
+    // First, try to parse as-is
+    const payload = JSON.parse(rawJson);
+    return { success: true, payload, original: rawJson };
+  } catch (error) {
+    // If parsing fails, try to fix common issues
+    let fixedJson = rawJson;
+
+    // Fix unquoted string values (common issue)
+    // This regex looks for patterns like: "key": value, where value is not quoted, boolean, number, or null
+    fixedJson = fixedJson.replace(/"([^"]+)":\s*([A-Za-z][A-Za-z0-9]*),?/g, (match, key, value) => {
+      // Don't quote boolean values or null
+      if (['true', 'false', 'null'].includes(value.toLowerCase())) {
+        return match;
+      }
+      // Don't quote if it's already quoted
+      if (value.startsWith('"') && value.endsWith('"')) {
+        return match;
+      }
+      // Don't quote numbers
+      if (/^\d+(\.\d+)?$/.test(value)) {
+        return match;
+      }
+      // Quote the value
+      return `"${key}": "${value}"${match.endsWith(',') ? ',' : ''}`;
+    });
+
+    try {
+      const payload = JSON.parse(fixedJson);
+      return {
+        success: true,
+        payload,
+        original: rawJson, // Keep original for backend
+        fixed: fixedJson,
+        wasFixed: true
+      };
+    } catch (fixError) {
+      return {
+        success: false,
+        error: fixError,
+        original: rawJson
+      };
+    }
+  }
+}
+
 function updateBatchButtonState(options = {}) {
   const { silent = false } = options;
   if (!hasSelectedFormFile()) {
@@ -1904,14 +2032,33 @@ function updateBatchButtonState(options = {}) {
     batchButton.disabled = true;
     return;
   }
+
   try {
     const payload = JSON.parse(raw);
-    if (Array.isArray(payload) && payload.length > 0) {
+    const validation = validateJsonStructure(payload);
+
+    if (validation.valid) {
       batchButton.disabled = false;
-      if (!silent) setStatus(formFillLocale.batchReady, "success");
+      if (!silent) {
+        const hasIssues = validation.warnings || validation.suggestions;
+        const issueCount = (validation.warnings?.length || 0) + (validation.suggestions?.length || 0);
+
+        const message = hasIssues
+          ? `${formFillLocale.batchReady} (${issueCount} note${issueCount > 1 ? 's' : ''})`
+          : formFillLocale.batchReady;
+        setStatus(message, validation.warnings ? "warning" : (validation.suggestions ? "info" : "success"));
+
+        // Log detailed information to console
+        if (validation.warnings) {
+          console.warn("JSON validation warnings:", validation.warnings);
+        }
+        if (validation.suggestions) {
+          console.info("JSON validation suggestions:", validation.suggestions);
+        }
+      }
     } else {
       batchButton.disabled = true;
-      if (!silent) setStatus(formFillLocale.batchEmpty, "warning");
+      if (!silent) setStatus(validation.message, "danger");
     }
   } catch (error) {
     batchButton.disabled = true;
