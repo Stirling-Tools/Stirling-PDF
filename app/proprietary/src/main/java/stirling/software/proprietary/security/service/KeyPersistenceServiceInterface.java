@@ -16,8 +16,6 @@ public interface KeyPersistenceServiceInterface {
 
     Optional<KeyPair> getKeyPair(String keyId);
 
-    boolean isKeystoreEnabled();
-
     JwtVerificationKey refreshActiveKeyPair();
 
     List<JwtVerificationKey> getKeysEligibleForCleanup(LocalDateTime cutoffDate);

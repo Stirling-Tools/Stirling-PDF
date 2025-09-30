@@ -40,7 +40,7 @@ public class KeyPairCleanupService {
     @PostConstruct
     @Scheduled(fixedDelay = 1, timeUnit = TimeUnit.DAYS)
     public void cleanup() {
-        if (!jwtProperties.isEnableKeyCleanup() || !keyPersistenceService.isKeystoreEnabled()) {
+        if (!jwtProperties.isEnabled() || !jwtProperties.isKeyCleanup()) {
             return;
         }
 
@@ -71,7 +71,7 @@ public class KeyPairCleanupService {
     }
 
     private void removePrivateKey(String keyId) throws IOException {
-        if (!keyPersistenceService.isKeystoreEnabled()) {
+        if (!jwtProperties.isEnabled()) {
             return;
         }
 

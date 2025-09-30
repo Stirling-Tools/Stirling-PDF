@@ -227,7 +227,9 @@ public class LoadingWindow extends JDialog {
                                                                             if (!existingPids
                                                                                     .contains(
                                                                                             pid)) {
-                                                                                log.debug("Found new explorer.exe with PID: {}", pid);
+                                                                                log.debug(
+                                                                                        "Found new explorer.exe with PID: {}",
+                                                                                        pid);
                                                                                 ProcessBuilder
                                                                                         killProcess =
                                                                                                 new ProcessBuilder(
@@ -245,7 +247,9 @@ public class LoadingWindow extends JDialog {
                                                                                         2,
                                                                                         TimeUnit
                                                                                                 .SECONDS);
-                                                                                log.debug("Explorer process terminated: {}", pid);
+                                                                                log.debug(
+                                                                                        "Explorer process terminated: {}",
+                                                                                        pid);
                                                                             }
                                                                         }
                                                                     }

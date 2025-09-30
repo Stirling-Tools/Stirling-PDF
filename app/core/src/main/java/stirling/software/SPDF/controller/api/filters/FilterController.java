@@ -87,13 +87,15 @@ public class FilterController {
         PDDocument document = pdfDocumentFactory.load(inputFile);
         int actualPageCount = document.getNumberOfPages();
         // Perform the comparison
-        boolean valid = switch (comparator) {
-            case "Greater" -> actualPageCount > pageCount;
-            case "Equal" -> actualPageCount == pageCount;
-            case "Less" -> actualPageCount < pageCount;
-            default ->
-                throw ExceptionUtils.createInvalidArgumentException("comparator", comparator);
-        };
+        boolean valid =
+                switch (comparator) {
+                    case "Greater" -> actualPageCount > pageCount;
+                    case "Equal" -> actualPageCount == pageCount;
+                    case "Less" -> actualPageCount < pageCount;
+                    default ->
+                            throw ExceptionUtils.createInvalidArgumentException(
+                                    "comparator", comparator);
+                };
 
         if (valid) return WebResponseUtils.multiPartFileToWebResponse(inputFile);
         return null;
@@ -123,13 +125,15 @@ public class FilterController {
         float standardArea = standardSize.getWidth() * standardSize.getHeight();
 
         // Perform the comparison
-        boolean valid = switch (comparator) {
-            case "Greater" -> actualArea > standardArea;
-            case "Equal" -> actualArea == standardArea;
-            case "Less" -> actualArea < standardArea;
-            default ->
-                throw ExceptionUtils.createInvalidArgumentException("comparator", comparator);
-        };
+        boolean valid =
+                switch (comparator) {
+                    case "Greater" -> actualArea > standardArea;
+                    case "Equal" -> actualArea == standardArea;
+                    case "Less" -> actualArea < standardArea;
+                    default ->
+                            throw ExceptionUtils.createInvalidArgumentException(
+                                    "comparator", comparator);
+                };
 
         if (valid) return WebResponseUtils.multiPartFileToWebResponse(inputFile);
         return null;
@@ -149,13 +153,15 @@ public class FilterController {
         long actualFileSize = inputFile.getSize();
 
         // Perform the comparison
-        boolean valid = switch (comparator) {
-            case "Greater" -> actualFileSize > fileSize;
-            case "Equal" -> actualFileSize == fileSize;
-            case "Less" -> actualFileSize < fileSize;
-            default ->
-                throw ExceptionUtils.createInvalidArgumentException("comparator", comparator);
-        };
+        boolean valid =
+                switch (comparator) {
+                    case "Greater" -> actualFileSize > fileSize;
+                    case "Equal" -> actualFileSize == fileSize;
+                    case "Less" -> actualFileSize < fileSize;
+                    default ->
+                            throw ExceptionUtils.createInvalidArgumentException(
+                                    "comparator", comparator);
+                };
 
         if (valid) return WebResponseUtils.multiPartFileToWebResponse(inputFile);
         return null;
@@ -179,13 +185,15 @@ public class FilterController {
         int actualRotation = firstPage.getRotation();
 
         // Perform the comparison
-        boolean valid = switch (comparator) {
-            case "Greater" -> actualRotation > rotation;
-            case "Equal" -> actualRotation == rotation;
-            case "Less" -> actualRotation < rotation;
-            default ->
-                throw ExceptionUtils.createInvalidArgumentException("comparator", comparator);
-        };
+        boolean valid =
+                switch (comparator) {
+                    case "Greater" -> actualRotation > rotation;
+                    case "Equal" -> actualRotation == rotation;
+                    case "Less" -> actualRotation < rotation;
+                    default ->
+                            throw ExceptionUtils.createInvalidArgumentException(
+                                    "comparator", comparator);
+                };
 
         if (valid) return WebResponseUtils.multiPartFileToWebResponse(inputFile);
         return null;

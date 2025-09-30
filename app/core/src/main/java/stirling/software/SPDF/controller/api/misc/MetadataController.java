@@ -23,9 +23,9 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.misc.MetadataRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.service.PdfMetadataService;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.RegexPatternUtils;
-import stirling.software.common.service.PdfMetadataService;
 import stirling.software.common.util.WebResponseUtils;
 import stirling.software.common.util.propertyeditor.StringToMapPropertyEditor;
 

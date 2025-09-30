@@ -170,14 +170,15 @@ public class WatermarkController {
             throws IOException {
         String resourceDir = "";
         PDFont font = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
-        resourceDir = switch (alphabet) {
-            case "arabic" -> "static/fonts/NotoSansArabic-Regular.ttf";
-            case "japanese" -> "static/fonts/Meiryo.ttf";
-            case "korean" -> "static/fonts/malgun.ttf";
-            case "chinese" -> "static/fonts/SimSun.ttf";
-            case "thai" -> "static/fonts/NotoSansThai-Regular.ttf";
-            default -> "static/fonts/NotoSans-Regular.ttf";
-        };
+        resourceDir =
+                switch (alphabet) {
+                    case "arabic" -> "static/fonts/NotoSansArabic-Regular.ttf";
+                    case "japanese" -> "static/fonts/Meiryo.ttf";
+                    case "korean" -> "static/fonts/malgun.ttf";
+                    case "chinese" -> "static/fonts/SimSun.ttf";
+                    case "thai" -> "static/fonts/NotoSansThai-Regular.ttf";
+                    default -> "static/fonts/NotoSans-Regular.ttf";
+                };
 
         ClassPathResource classPathResource = new ClassPathResource(resourceDir);
         String fileExtension = resourceDir.substring(resourceDir.lastIndexOf("."));
