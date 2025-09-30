@@ -113,6 +113,18 @@
   },
   "include": [
     "src",
-    "src/global.d.ts"
-, "vite.config.ts"  ]
+    "src/*.js",
+    "src/*.jsx",
+    "src/**/*.js",
+    "src/**/*.jsx",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/global.d.ts",
+    "vite.config.ts",
+    "vitest.config.ts",
+    "vitest.minimal.config.ts",
+    "playwright.config.ts",
+    "tailwind.config.js",
+    "postcss.config.js"
+  ]
 }
