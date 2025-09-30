@@ -29,15 +29,18 @@ const EmbedPdfViewerContent = ({
   const { colorScheme: _colorScheme } = useMantineColorScheme();
   const viewerRef = React.useRef<HTMLDivElement>(null);
   const [isViewerHovered, setIsViewerHovered] = React.useState(false);
-  const { isThumbnailSidebarVisible, toggleThumbnailSidebar, zoomActions, spreadActions, panActions: _panActions, rotationActions: _rotationActions, getScrollState, getZoomState, getSpreadState } = useViewer();
+  const { isThumbnailSidebarVisible, toggleThumbnailSidebar, zoomActions, spreadActions, panActions: _panActions, rotationActions: _rotationActions, getScrollState, getZoomState, getSpreadState, isAnnotationMode, isAnnotationsVisible } = useViewer();
 
   const scrollState = getScrollState();
   const zoomState = getZoomState();
   const spreadState = getSpreadState();
 
-  // Check if we're in signature mode
+  // Check if we're in signature mode OR viewer annotation mode
   const { selectedTool } = useNavigationState();
   const isSignatureMode = selectedTool === 'sign';
+
+  // Enable annotations when: in sign mode, OR annotation mode is active, OR we want to show existing annotations
+  const shouldEnableAnnotations = isSignatureMode || isAnnotationMode || isAnnotationsVisible;
 
   // Get signature context
   const { signatureApiRef, historyApiRef } = useSignature();
@@ -186,7 +189,7 @@ const EmbedPdfViewerContent = ({
             <LocalEmbedPDF
               file={effectiveFile.file}
               url={effectiveFile.url}
-              enableSignature={isSignatureMode}
+              enableAnnotations={shouldEnableAnnotations}
               signatureApiRef={signatureApiRef as React.RefObject<any>}
               historyApiRef={historyApiRef as React.RefObject<any>}
               onSignatureAdded={() => {
