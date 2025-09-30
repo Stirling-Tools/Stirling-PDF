@@ -1,6 +1,6 @@
 package stirling.software.proprietary.security.database.repository;
 
-import java.util.Date;
+import java.time.Instant;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -27,7 +27,7 @@ public interface SessionRepository extends JpaRepository<SessionEntity, String> 
             "UPDATE SessionEntity s SET s.expired = :expired, s.lastRequest = :lastRequest WHERE s.principalName = :principalName")
     void saveByPrincipalName(
             @Param("expired") boolean expired,
-            @Param("lastRequest") Date lastRequest,
+            @Param("lastRequest") Instant lastRequest,
             @Param("principalName") String principalName);
 
     @Query(

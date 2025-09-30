@@ -5,6 +5,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import stirling.software.common.model.api.misc.HighContrastColorCombination;
 import stirling.software.common.model.api.misc.ReplaceAndInvert;
+import stirling.software.common.util.misc.ColorSpaceConversionStrategy;
 import stirling.software.common.util.misc.CustomColorReplaceStrategy;
 import stirling.software.common.util.misc.InvertFullColorStrategy;
 import stirling.software.common.util.misc.ReplaceAndInvertColorStrategy;
@@ -19,21 +20,17 @@ public class ReplaceAndInvertColorFactory {
             String backGroundColor,
             String textColor) {
 
-        if (replaceAndInvertOption == ReplaceAndInvert.CUSTOM_COLOR
-                || replaceAndInvertOption == ReplaceAndInvert.HIGH_CONTRAST_COLOR) {
-
-            return new CustomColorReplaceStrategy(
-                    file,
-                    replaceAndInvertOption,
-                    textColor,
-                    backGroundColor,
-                    highContrastColorCombination);
-
-        } else if (replaceAndInvertOption == ReplaceAndInvert.FULL_INVERSION) {
-
-            return new InvertFullColorStrategy(file, replaceAndInvertOption);
-        }
-
-        return null;
+        return switch (replaceAndInvertOption) {
+            case CUSTOM_COLOR, HIGH_CONTRAST_COLOR ->
+                    new CustomColorReplaceStrategy(
+                            file,
+                            replaceAndInvertOption,
+                            textColor,
+                            backGroundColor,
+                            highContrastColorCombination);
+            case FULL_INVERSION -> new InvertFullColorStrategy(file, replaceAndInvertOption);
+            case COLOR_SPACE_CONVERSION ->
+                    new ColorSpaceConversionStrategy(file, replaceAndInvertOption);
+        };
     }
 }
