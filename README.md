@@ -97,7 +97,6 @@ All documentation available at [https://docs.stirlingpdf.com/](https://docs.stir
 
 
 
-
 # 📖 Get Started
 
 Visit our comprehensive documentation at [docs.stirlingpdf.com](https://docs.stirlingpdf.com) for:
