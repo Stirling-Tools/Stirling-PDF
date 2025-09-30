@@ -3,8 +3,8 @@
     "direction": "ltr"
   },
   "addPageNumbers": {
-    "fontSize": "Tamaño de Letra",
-    "fontName": "Nombre de Letra",
+    "fontSize": "Tamaño de fuente",
+    "fontName": "Nombre de fuente",
     "title": "Añadir Números de Página",
     "header": "Añadir Números de Página",
     "selectText": {
@@ -22,16 +22,16 @@
   },
   "pdfPrompt": "Seleccionar PDF(s)",
   "multiPdfPrompt": "Seleccionar PDFs (2+)",
-  "multiPdfDropPrompt": "Seleccione (o arrastre y suelte) todos los PDF que quiera",
+  "multiPdfDropPrompt": "Seleccione (o arrastre y suelte) todos los PDF que necesite",
   "imgPrompt": "Seleccionar Imagen(es)",
-  "genericSubmit": "Enviar",
+  "genericSubmit": "Procesar",
   "uploadLimit": "Tamaño máximo de archivo:",
   "uploadLimitExceededSingular": "es demasiado grande. El tamaño máximo permitido es",
   "uploadLimitExceededPlural": "son demasiado grandes. El tamaño máximo permitido es",
   "processTimeWarning": "Advertencia: este proceso puede tardar hasta un minuto dependiendo del tamaño del archivo",
-  "pageOrderPrompt": "Orden de páginas (Introduzca una lista de números de página separados por coma):",
-  "pageSelectionPrompt": "Selección de página personalizada (Introduzca una lista de números de página separados por comas 1,5,6 o funciones como 2n+1):",
-  "goToPage": "Ir a",
+  "pageOrderPrompt": "Orden personalizado de páginas (Introduzca una lista de números de página separados por coma o funciones como 2n+1):",
+  "pageSelectionPrompt": "Selección personalizada de páginas (Introduzca una lista de números de página separados por comas 1,5,6 o funciones como 2n+1):",
+  "goToPage": "Ir a página",
   "true": "Verdadero",
   "false": "Falso",
   "unknown": "Desconocido",
@@ -40,8 +40,8 @@
   "close": "Cerrar",
   "filesSelected": "archivos seleccionados",
   "noFavourites": "No se agregaron favoritos",
-  "downloadComplete": "Descarga finalizada",
-  "bored": "¿Cansado de esperar?",
+  "downloadComplete": "Descarga completada",
+  "bored": "¿Aburrido de esperar?",
   "alphabet": "Alfabeto",
   "downloadPdf": "Descargar PDF",
   "text": "Texto",
@@ -57,19 +57,19 @@
   "error": {
     "pdfPassword": "El documento PDF está protegido con contraseña y no se ha proporcionado o es incorrecta",
     "_value": "Error",
-    "sorry": "¡Perdón por el fallo!",
+    "sorry": "¡Disculpe por el problema!",
     "needHelp": "¿Necesita ayuda / Encontró un fallo?",
-    "contactTip": "Si sigue experimentando errores, no dude en contactarnos para solicitar soporte. Puede enviarnos un ticket en la página de GitHub o contactarnos mediante Discord:",
+    "contactTip": "Si sigue teniendo problemas, no dude en contactarnos para solicitar ayuda. Puede enviar un ticket en nuestra página de GitHub o contactarnos a través de Discord:",
     "404": {
-      "head": "404 - Página no encontrada | Ups, ¡algo salió mal!",
-      "1": "Parece que no podemos encontrar la página que está buscando.",
+      "head": "404 - Página No Encontrada | ¡Vaya, nos tropezamos en el código!",
+      "1": "No podemos encontrar la página que está buscando.",
       "2": "Algo salió mal"
     },
     "github": "Envíe un ticket en GitHub",
     "showStack": "Mostrar seguimiento de pila",
     "copyStack": "Copiar seguimiento de pila",
     "githubSubmit": "GitHub - Enviar un ticket",
-    "discordSubmit": "Discord - Enviar mensaje de soporte",
+    "discordSubmit": "Discord - Enviar publicación de soporte",
     "dismissAllErrors": "Descartar Todos los Errores",
     "encryptedPdfMustRemovePassword": "Este PDF está cifrado o protegido con contraseña. Por favor desbloquéelo antes de convertir a PDF/A.",
     "incorrectPasswordProvided": "La contraseña del PDF es incorrecta o no fue proporcionada."
@@ -78,7 +78,7 @@
   "username": "Nombre de usuario",
   "password": "Contraseña",
   "welcome": "Bienvenido",
-  "property": "Propietario",
+  "property": "Propiedad",
   "black": "Negro",
   "white": "Blanco",
   "red": "Rojo",
@@ -190,7 +190,7 @@
   "settings": {
     "title": "Configuración",
     "update": "Actualización disponible",
-    "updateAvailable": "{0} es la versión instalada. Hay disponible una versión nueva ({1}).",
+    "updateAvailable": "{0} es la versión instalada actualmente. Hay una nueva versión ({1}) disponible.",
     "appVersion": "Versión de la aplicación:",
     "downloadOption": {
       "title": "Elegir la opción de descarga (para descargas de un solo archivo sin ZIP):",
@@ -365,7 +365,7 @@
     },
     "pdfOrganiser": {
       "title": "Organizador",
-      "desc": "Eliminar/Reorganizar páginas en cualquier orden",
+      "desc": "Eliminar o reorganizar páginas en cualquier orden",
       "tags": "organizar,reorganizar,reordenar"
     },
     "addImage": {
@@ -375,7 +375,7 @@
     },
     "watermark": {
       "title": "Añadir marca de agua",
-      "desc": "Añadir una marca de agua predefinida al documento PDF",
+      "desc": "Agregar marcas de agua de texto o imagen a archivos PDF",
       "tags": "sello,marca,superposición"
     },
     "permissions": {
@@ -383,16 +383,16 @@
       "desc": "Cambiar los permisos del documento PDF"
     },
     "pageRemover": {
-      "title": "Eliminar",
+      "title": "Eliminar páginas",
       "desc": "Eliminar páginas no deseadas del documento PDF"
     },
     "addPassword": {
-      "title": "Añadir contraseña",
-      "desc": "Encriptar el documento PDF con una contraseña"
+      "title": "Proteger con contraseña",
+      "desc": "Cifrar documento PDF con contraseña"
     },
     "removePassword": {
-      "title": "Eliminar contraseña",
-      "desc": "Eliminar la contraseña del documento PDF",
+      "title": "Quitar contraseña",
+      "desc": "Quitar protección por contraseña del documento PDF",
       "tags": "desbloquear"
     },
     "compress": {
@@ -407,7 +407,7 @@
     },
     "changeMetadata": {
       "title": "Cambiar metadatos",
-      "desc": "Cambiar/Eliminar/Añadir metadatos al documento PDF",
+      "desc": "Cambiar, eliminar o agregar metadatos del documento PDF",
       "tags": "editar,modificar,actualizar"
     },
     "fileToPDF": {
@@ -416,7 +416,7 @@
     },
     "ocr": {
       "title": "Ejecutar OCR en PDF y/o tareas de limpieza",
-      "desc": "Tareas de limpieza y detectar texto en imágenes dentro de un PDF y volver a incrustarlo como texto",
+      "desc": "Limpiar escaneos y detectar texto en imágenes dentro de un PDF para volver a agregarlo como texto editable",
       "tags": "extraer,escanear"
     },
     "extractImages": {
@@ -426,7 +426,7 @@
     },
     "pdfToPDFA": {
       "title": "Convertir PDF a PDF/A",
-      "desc": "Convertir PDF a PDF/A para almacenamiento a largo plazo"
+      "desc": "Convertir PDF a PDF/A para almacenamiento a largo plazo y cumplimiento de estándares"
     },
     "PDFToWord": {
       "title": "PDF a Word",
@@ -458,8 +458,8 @@
       "tags": "firma,autógrafo"
     },
     "flatten": {
-      "title": "Aplanar",
-      "desc": "Eliminar todos los elementos y formularios interactivos de un PDF",
+      "title": "Eliminar interactividad",
+      "desc": "Eliminar todos los elementos interactivos y formularios de un PDF",
       "tags": "simplificar,eliminar,interactivo"
     },
     "repair": {
@@ -484,17 +484,17 @@
     },
     "certSign": {
       "title": "Firmar con certificado",
-      "desc": "Firmar un PDF con un Certificado/Clave (PEM/P12)",
+      "desc": "Firmar un PDF con certificado/clave digital (PEM/P12)",
       "tags": "autenticar,PEM,P12,oficial,cifrar,firmar,certificado,PKCS12,JKS,servidor,manual,auto"
     },
     "removeCertSign": {
-      "title": "Quitar signo de certificado",
-      "desc": "Eliminar firma de certificado de PDF",
+      "title": "Quitar firma de certificado",
+      "desc": "Eliminar firma de certificado del PDF",
       "tags": "eliminar,borrar,desbloquear"
     },
     "pageLayout": {
       "title": "Diseño de varias páginas",
-      "desc": "Unir varias páginas de un documento PDF en una sola página",
+      "desc": "Combinar múltiples páginas de un documento PDF en una sola página",
       "tags": "diseño,organizar,combinar"
     },
     "scalePages": {
@@ -512,7 +512,7 @@
       "tags": "número,paginación,contar"
     },
     "auto-rename": {
-      "title": "Renombrar archivo PDF automáticamente",
+      "title": "Renombrar archivo automáticamente",
       "desc": "Renombrar automáticamente un archivo PDF según el encabezamiento detectado"
     },
     "adjustContrast": {
@@ -527,7 +527,7 @@
     },
     "autoSplitPDF": {
       "title": "Auto Dividir Páginas",
-      "desc": "Auto Dividir PDF escaneado con código QR divisor de página escaneada físicamente",
+      "desc": "Dividir automáticamente PDF escaneado usando códigos QR divisores",
       "tags": "auto,dividir,QR"
     },
     "sanitizePDF": {
@@ -574,8 +574,8 @@
       "desc": "Redactar automáticamente (ocultar) texto en un PDF según el texto introducido"
     },
     "redact": {
-      "title": "Redacción Manual",
-      "desc": "Redacta un PDF basado en el texto seleccionado, dibuja formas y/o página(s) selecionada(s)",
+      "title": "Redactar",
+      "desc": "Ocultar texto confidencial en PDF",
       "tags": "censurar,ocultar,tapar"
     },
     "PDFToCSV": {
@@ -610,7 +610,7 @@
     },
     "validateSignature": {
       "title": "Validar firma del PDF",
-      "desc": "Verifica firmas digitales y certificados en los documentos PDF",
+      "desc": "Verificar firmas digitales y certificados en documentos PDF",
       "tags": "validar,verificar,certificado"
     },
     "replace-color": {
@@ -677,7 +677,7 @@
       "title": "Automatizar"
     },
     "bookletImposition": {
-      "desc": "Crear folletos con ordenamiento de páginas adecuado y diseño de múltiples páginas para impresión y encuadernación",
+      "desc": "Crear folletos con ordenamiento de páginas adecuado para impresión y encuadernación",
       "tags": "folleto,imprimir,encuadernación",
       "title": "Imposición de Folleto"
     },
@@ -729,7 +729,7 @@
       "title": "Reemplazar e Invertir Color"
     },
     "sanitize": {
-      "desc": "Elimine elementos potencialmente dañinos de archivos PDF",
+      "desc": "Eliminar elementos potencialmente peligrosos de archivos PDF",
       "tags": "limpiar,purgar,eliminar",
       "title": "Desinfectar"
     },
@@ -1058,7 +1058,7 @@
       "image": "Imagen"
     },
     "settings": {
-      "fontSize": "Tamaño de Letra",
+      "fontSize": "Tamaño de fuente",
       "alphabet": "Fuente/Idioma",
       "color": "Color de Marca de Agua",
       "convertToImage": "Aplanar páginas de PDF en imágenes",
@@ -1300,7 +1300,7 @@
   },
   "addPassword": {
     "tags": "seguro,seguridad",
-    "title": "Añadir contraseña",
+    "title": "Proteger con contraseña",
     "header": "Añadir contraseña (encriptar)",
     "selectText": {
       "1": "Seleccionar PDF para encriptar",
@@ -1374,8 +1374,8 @@
     }
   },
   "removePassword": {
-    "tags": "seguro,Desencriptar,seguridad,quitar contraseña,eliminar contraseña",
-    "title": "Eliminar contraseña",
+    "tags": "seguro,Descifrar,seguridad,quitar contraseña,eliminar contraseña",
+    "title": "Quitar contraseña",
     "header": "Eliminar contraseña (desencriptar)",
     "selectText": {
       "1": "Seleccionar PDF para desencriptar",
@@ -1571,8 +1571,8 @@
       "3": "Corregir las páginas que se escanearon en un ángulo torcido girándolas nuevamente a su lugar",
       "4": "Limpiar la página para que sea menos probable que el OCR encuentre texto en el ruido de fondo (Sin cambio de salida)",
       "5": "Limpiar la página para que sea menos probable que el OCR encuentre texto en el ruido de fondo, mantiene la limpieza en la salida.",
-      "6": "Ignorar las páginas que tienen texto interactivo, solo las páginas OCR que son imágenes",
-      "7": "Forzar OCR, OCR eliminará en cada página todo el texto original",
+      "6": "Ignorar páginas que ya tienen texto editable, solo aplicar OCR en páginas que son imágenes",
+      "7": "Forzar OCR, procesará cada página eliminando todo el texto original",
       "8": "Normal (se producirá un error si el PDF contiene texto)",
       "9": "Ajustes adicionales",
       "10": "Modo OCR",
@@ -2720,7 +2720,7 @@
     }
   },
   "decrypt": {
-    "passwordPrompt": "Este archivo está protegido con contraseña. Introdúzca la contraseña:",
+    "passwordPrompt": "Este archivo está protegido con contraseña. Por favor, introduzca la contraseña:",
     "cancelled": "Operación cancelada para el PDF: {0}",
     "noPassword": "No se proporcionó contraseña para PDF cifrado: {0}",
     "invalidPassword": "Por favor, inténtelo de nuevo con la contraseña correcta.",
@@ -3506,11 +3506,11 @@
       "totalCredits": "Créditos Totales"
     }
   },
-  "discardChanges": "Descartar Cambios",
+  "discardChanges": "Descartar cambios",
   "edit": "Editar",
-  "editYourNewFiles": "Edite su(s) nuevo(s) archivo(s)",
-  "exportAndContinue": "Exportar y Continuar",
-  "fileSelected": "Seleccionado: {{filename}}",
+  "editYourNewFiles": "Editar sus nuevos archivos",
+  "exportAndContinue": "Exportar y continuar",
+  "fileSelected": "Archivo seleccionado: {{filename}}",
   "files": {
     "addFiles": "Agregar archivos",
     "selectFromWorkbench": "Seleccione archivos del área de trabajo o ",
@@ -3525,7 +3525,7 @@
     "signUp": "Registrarse Gratis",
     "title": "¡Está usando Stirling PDF como invitado!"
   },
-  "keepWorking": "Seguir Trabajando",
+  "keepWorking": "Seguir trabajando",
   "landing": {
     "addFiles": "Agregar Archivos",
     "uploadFromComputer": "Cargar desde el ordenador"
