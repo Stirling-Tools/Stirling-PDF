@@ -8,7 +8,7 @@ interface NavigationWarningModalProps {
 }
 
 const NavigationWarningModal = ({
-  onApplyAndContinue,
+  onApplyAndContinue: _onApplyAndContinue,
   onExportAndContinue
 }: NavigationWarningModalProps) => {
 
@@ -78,7 +78,7 @@ const NavigationWarningModal = ({
             </Button>
 
             {/* TODO:: Add this back in when it works */}
-            {/* {onApplyAndContinue && (
+            {/* {_onApplyAndContinue && (
               <Button
                 variant="light"
                 color="blue"
