@@ -6,7 +6,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.pdfbox.multipdf.PDFMergerUtility;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -22,13 +21,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
@@ -39,7 +36,6 @@ import stirling.software.common.util.WebResponseUtils;
 @RequestMapping("/api/v1/form")
 @Tag(name = "Forms", description = "PDF form APIs")
 @RequiredArgsConstructor
-@Slf4j
 public class FormFillController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
@@ -99,19 +95,6 @@ public class FormFillController {
             FormUtils.FormFieldExtraction extraction =
                     FormUtils.extractFieldsWithTemplate(document);
             return ResponseEntity.ok(extraction);
-        }
-    }
-
-    private void appendFilledDocument(
-            byte[] templateBytes,
-            Map<String, Object> values,
-            boolean flatten,
-            PDFMergerUtility mergerUtility,
-            PDDocument mergedDocument)
-            throws IOException {
-        try (PDDocument document = pdfDocumentFactory.load(templateBytes)) {
-            FormUtils.applyFieldValues(document, values, flatten);
-            mergerUtility.appendDocument(mergedDocument, document);
         }
     }
 
@@ -210,96 +193,6 @@ public class FormFillController {
 
         return processSingleFile(
                 file, "filled", document -> FormUtils.applyFieldValues(document, values, flatten));
-    }
-
-    @PostMapping(value = "/mail-merge", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Operation(
-            summary = "Generate multiple filled PDFs",
-            description =
-                    "Applies the provided JSON data to one or more PDF forms and returns a"
-                            + " combined PDF")
-    public ResponseEntity<byte[]> mailMerge(
-            @Parameter(
-                            description = "One or more PDF form templates",
-                            required = true,
-                            content =
-                                    @Content(
-                                            mediaType = MediaType.APPLICATION_PDF_VALUE,
-                                            array =
-                                                    @ArraySchema(
-                                                            schema =
-                                                                    @Schema(
-                                                                            type = "string",
-                                                                            format = "binary"))))
-                    @RequestParam("file")
-                    MultipartFile[] files,
-            @Parameter(
-                            description = "JSON array of field-value objects used for the merge",
-                            example = "[{\"field\":\"value\"}]")
-                    @RequestPart(value = "records", required = false)
-                    byte[] recordsPayload,
-            @RequestParam(value = "flatten", defaultValue = "false") boolean flatten)
-            throws IOException {
-
-        if (files == null || files.length == 0) {
-            throw ExceptionUtils.createIllegalArgumentException(
-                    "error.fileRequired", "At least one PDF form must be provided");
-        }
-
-        for (MultipartFile pdf : files) {
-            requirePdf(pdf, "file");
-        }
-
-        String rawRecords = decodePart(recordsPayload);
-        List<Map<String, Object>> records =
-                FormPayloadParser.parseRecordArray(objectMapper, rawRecords);
-        if (records.isEmpty()) {
-            throw ExceptionUtils.createIllegalArgumentException(
-                    "error.dataRequired",
-                    "{0} must contain at least one object",
-                    "records payload");
-        }
-
-        String baseName = buildBaseName(files[0], "merge");
-
-        PDFMergerUtility mergerUtility = new PDFMergerUtility();
-        try (PDDocument mergedDocument = pdfDocumentFactory.createNewDocument()) {
-            if (files.length == 1) {
-                byte[] templateBytes = files[0].getBytes();
-                for (Map<String, Object> record : records) {
-                    appendFilledDocument(
-                            templateBytes, record, flatten, mergerUtility, mergedDocument);
-                }
-            } else {
-                if (records.size() == files.length) {
-                    for (int i = 0; i < files.length; i++) {
-                        appendFilledDocument(
-                                files[i].getBytes(),
-                                records.get(i),
-                                flatten,
-                                mergerUtility,
-                                mergedDocument);
-                    }
-                } else if (records.size() == 1) {
-                    Map<String, Object> sharedRecord = records.get(0);
-                    for (MultipartFile pdf : files) {
-                        appendFilledDocument(
-                                pdf.getBytes(),
-                                sharedRecord,
-                                flatten,
-                                mergerUtility,
-                                mergedDocument);
-                    }
-                } else {
-                    throw ExceptionUtils.createIllegalArgumentException(
-                            "error.invalidArgument",
-                            "Invalid argument: {0}",
-                            "records payload count must match uploaded PDFs or be a single shared object");
-                }
-            }
-
-            return saveDocument(mergedDocument, baseName);
-        }
     }
 
     private ResponseEntity<byte[]> processSingleFile(

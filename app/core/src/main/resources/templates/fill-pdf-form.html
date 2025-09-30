@@ -28,12 +28,6 @@
                   <label for="formFillFlatten" th:text="#{formFill.flattenLabel}"></label>
                 </div>
 
-                <div class="form-check ms-3">
-                  <input id="formFillMultiTemplate" type="checkbox" />
-                  <label for="formFillMultiTemplate" th:text="#{formFill.multiTemplateLabel}"></label>
-                </div>
-                <p class="form-text ms-3" th:text="#{formFill.multiTemplateHelp}"></p>
-
                 <div class="alert alert-info mb-3" id="formFillStatus" role="alert" th:text="#{formFill.selectPrompt}"></div>
 
                 <div class="d-none" id="formFillFields"></div>
@@ -43,19 +37,9 @@
                 </div>
 
                 <div class="mb-3">
-                  <label class="form-label" for="formFillBatchJson" th:text="#{formFill.batchTitle}"></label>
-                  <p class="form-text" th:text="#{formFill.batchHelp}"></p>
-                  <textarea class="form-control" id="formFillBatchJson" placeholder='[{"field":"value"}]' rows="6"></textarea>
-                </div>
-
-                <div class="mb-3">
-                  <label class="form-label" for="formFillBatchFile" th:text="#{formFill.batchFileLabel}"></label>
-                  <p class="form-text" th:text="#{formFill.batchFileHelp}"></p>
-                  <input accept="application/json,.json" class="form-control" id="formFillBatchFile" type="file" />
-                </div>
-
-                <div class="mb-2 text-start">
-                  <button class="btn btn-outline-primary" disabled id="formFillBatchDownload" th:text="#{formFill.batchDownload}" type="button"></button>
+                  <label class="form-label" for="formFillBatchJson" th:text="#{formFill.jsonTitle}"></label>
+                  <p class="form-text" th:text="#{formFill.jsonHelp}"></p>
+                  <textarea class="form-control" id="formFillBatchJson" placeholder='{"field":"value"}' readonly rows="6"></textarea>
                 </div>
               </form>
             </div>
@@ -141,14 +125,8 @@
         loading: /*[[#{formFill.loading}]]*/ 'Reading form fields…',
         ready: /*[[#{formFill.ready}]]*/ 'Fields loaded. Enter values and press Download.',
         selectFile: /*[[#{formFill.selectPrompt}]]*/ 'Please choose a PDF form first.',
-        parsingError: /*[[#{formFill.parsingError}]]*/ 'Unable to parse JSON payload.',
         requestError: /*[[#{formFill.requestError}]]*/ 'Something went wrong while communicating with the server.',
         unsupportedField: /*[[#{formFill.unsupportedField}]]*/ 'Unsupported field type',
-        batchReady: /*[[#{formFill.batchReady}]]*/ 'Ready to generate batch output.',
-        batchFileReady: /*[[#{formFill.batchFileReady}]]*/ "Batch file ready. You'll receive a combined PDF when you download.",
-        multiTemplatePreview: /*[[#{formFill.multiTemplatePreview}]]*/ 'Multi-template mode enabled. The preview shows the first PDF; others will use JSON mapping when you download.',
-        multiTemplateReady: /*[[#{formFill.multiTemplateReady}]]*/ 'Templates ready. Review the JSON payload then download to merge.',
-        batchEmpty: /*[[#{formFill.batchEmpty}]]*/ 'Provide an array of JSON objects to enable batch generation.',
         pageLabel: /*[[#{formFill.pageLabel}]]*/ 'Page',
         keyLabel: /*[[#{formFill.keyLabel}]]*/ 'Key',
         validationRequired: /*[[#{formFill.validationRequired}]]*/ 'This field is required.',
@@ -160,13 +138,11 @@
         editField: /*[[#{formFill.editField}]]*/ 'Edit field',
         deleteField: /*[[#{formFill.deleteField}]]*/ 'Delete field',
         editUnavailable: /*[[#{formFill.editUnavailable}]]*/ 'Editing is currently unavailable.',
-        editMultiDisabled: /*[[#{formFill.editMultiDisabled}]]*/ 'Turn off multi-template mode to edit individual fields.',
         editMissing: /*[[#{formFill.editMissing}]]*/ 'Unable to locate the selected field.',
         editUnsupported: /*[[#{formFill.editUnsupported}]]*/ 'This field type is not supported for editing yet.',
         deleteMissing: /*[[#{formFill.deleteMissing}]]*/ 'Unable to locate the selected field.',
         deleteConfirm: /*[[#{formFill.deleteConfirm}]]*/ 'Delete "{0}"? This action cannot be undone.',
         deleteSuccess: /*[[#{formFill.deleteSuccess}]]*/ 'Field deleted. Preview refreshed.',
-        modifying: /*[[#{formFill.modifying}]]*/ 'Updating field…',
         deleting: /*[[#{formFill.deleting}]]*/ 'Deleting field…',
         modifySuccess: /*[[#{formFill.modifySuccess}]]*/ 'Field updated. Preview refreshed.',
         updating: /*[[#{formFill.modifying}]]*/ 'Updating field…',

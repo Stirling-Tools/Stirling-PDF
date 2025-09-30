@@ -70,12 +70,11 @@ final class FormPayloadParser {
 
         // 2. If an array was supplied to /fill (non-standard), treat first element as record
         if (root.isArray()) {
-            if (root.size() == 0) {
+            if (root.isEmpty()) {
                 return Map.of();
             }
             JsonNode first = root.get(0);
             if (first != null && first.isObject()) {
-                // If it looks like an array of field definitions (has name/value keys), convert
                 if (first.has(KEY_NAME) || first.has(KEY_VALUE) || first.has(KEY_DEFAULT_VALUE)) {
                     return extractFieldInfoArray(root);
                 }
@@ -86,41 +85,6 @@ final class FormPayloadParser {
 
         // 3. Anything else: fallback to strict map parse
         return objectMapper.readValue(json, MAP_TYPE);
-    }
-
-    static List<Map<String, Object>> parseRecordArray(ObjectMapper objectMapper, String json)
-            throws IOException {
-        if (json == null || json.isBlank()) {
-            return List.of();
-        }
-
-        final JsonNode root = objectMapper.readTree(json);
-        if (root == null || root.isNull()) {
-            return List.of();
-        }
-
-        if (!root.isArray()
-                && !(root.isObject() && root.has(KEY_FIELDS) && root.get(KEY_FIELDS).isArray())) {
-            throw ExceptionUtils.createIllegalArgumentException(
-                    "error.invalidFormat",
-                    "Invalid {0} format: {1}",
-                    "records payload",
-                    "must be a JSON array or an object with a 'fields' array");
-        }
-
-        final JsonNode arrayNode = root.isArray() ? root : root.get(KEY_FIELDS);
-        final List<Map<String, Object>> records = new ArrayList<>();
-        for (JsonNode entry : arrayNode) {
-            final Map<String, Object> record = parseRecordNode(entry);
-            if (record.isEmpty()) {
-                throw ExceptionUtils.createIllegalArgumentException(
-                        "error.dataRequired",
-                        "{0} must contain at least one populated record",
-                        "records payload");
-            }
-            records.add(record);
-        }
-        return records;
     }
 
     static List<FormUtils.ModifyFormFieldDefinition> parseModificationDefinitions(
@@ -174,34 +138,6 @@ final class FormPayloadParser {
                     "names payload",
                     "expected array of strings or objects with 'name'-like properties");
         }
-    }
-
-    private static Map<String, Object> parseRecordNode(JsonNode node) {
-        if (node == null || node.isNull()) {
-            return Map.of();
-        }
-
-        if (node.isArray()) {
-            return extractFieldInfoArray(node);
-        }
-
-        if (node.isObject()) {
-            final JsonNode fieldsNode = node.get(KEY_FIELDS);
-            if (fieldsNode != null && fieldsNode.isArray()) {
-                final Map<String, Object> record = extractFieldInfoArray(fieldsNode);
-                if (!record.isEmpty()) {
-                    return record;
-                }
-            }
-            // Fall back to a flat object-to-Map mapping
-            return objectToLinkedMap(node);
-        }
-
-        throw ExceptionUtils.createIllegalArgumentException(
-                "error.invalidFormat",
-                "Invalid {0} format: {1}",
-                "record",
-                "must be a JSON object or an array of field definitions");
     }
 
     private static Map<String, Object> extractFieldInfoArray(JsonNode fieldsNode) {
@@ -328,16 +264,16 @@ final class FormPayloadParser {
     private static Map<String, Object> objectToLinkedMap(JsonNode objectNode) {
         final Map<String, Object> result = new LinkedHashMap<>();
         objectNode
-                .fields()
+                .fieldNames()
                 .forEachRemaining(
-                        e -> {
-                            final JsonNode v = e.getValue();
+                        key -> {
+                            final JsonNode v = objectNode.get(key);
                             if (v == null || v.isNull()) {
-                                result.put(e.getKey(), null);
+                                result.put(key, null);
                             } else if (v.isTextual() || v.isNumber() || v.isBoolean()) {
-                                result.put(e.getKey(), coerceScalarToString(v));
+                                result.put(key, coerceScalarToString(v));
                             } else {
-                                result.put(e.getKey(), v.toString());
+                                result.put(key, v.toString());
                             }
                         });
         return result;

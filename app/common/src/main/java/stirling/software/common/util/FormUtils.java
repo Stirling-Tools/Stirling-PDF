@@ -376,11 +376,7 @@ public class FormUtils {
             String selected =
                     filterSingleChoiceSelection(
                             value, allowedOptions, choiceField.getFullyQualifiedName());
-            if (selected == null) {
-                choiceField.setValue("");
-            } else {
-                choiceField.setValue(selected);
-            }
+            choiceField.setValue(Objects.requireNonNullElse(selected, ""));
         }
     }
 
@@ -542,7 +538,7 @@ public class FormUtils {
                 } else if (normal.isStream()) {
                     COSName appearanceState = widget.getAppearanceState();
                     String state = appearanceState != null ? appearanceState.getName() : null;
-                    if (state != null && isSettableCheckBoxState(state)) {
+                    if (isSettableCheckBoxState(state)) {
                         states.add(state.trim());
                     }
                 }
@@ -853,7 +849,6 @@ public class FormUtils {
                             .filter(s -> !s.isEmpty())
                             .orElseGet(originalField::getPartialName);
 
-            // Free up the original name so it can be reused.
             if (desiredName != null) {
                 existingNames.remove(originalField.getFullyQualifiedName());
                 existingNames.remove(originalField.getPartialName());
@@ -861,8 +856,25 @@ public class FormUtils {
                 existingNames.add(desiredName);
             }
 
-            removeFieldFromDocument(document, acroForm, originalField);
+            // Try to modify field in-place first for simple property changes
+            String currentType = detectFieldType(originalField);
+            boolean typeChanging = !currentType.equals(resolvedType);
 
+            if (!typeChanging) {
+                try {
+                    modifyFieldPropertiesInPlace(originalField, modification, desiredName);
+                    log.debug("Successfully modified field '{}' in-place", lookupName);
+                    continue; // Skip the remove-and-recreate process
+                } catch (Exception e) {
+                    log.debug(
+                            "In-place modification failed for '{}', falling back to recreation: {}",
+                            lookupName,
+                            e.getMessage());
+                }
+            }
+
+            // For type changes or when in-place modification fails, use remove-and-recreate
+            // But create the new field first to ensure success before removing the original
             NewFormFieldDefinition replacementDefinition =
                     new NewFormFieldDefinition(
                             desiredName,
@@ -886,6 +898,8 @@ public class FormUtils {
                 if (handler == null || !handler.supportsDefinitionCreation()) {
                     handler = FormFieldTypeSupport.TEXT;
                 }
+
+                // Create new field first - if this fails, original field is preserved
                 createNewField(
                         handler,
                         acroForm,
@@ -894,7 +908,15 @@ public class FormUtils {
                         desiredName,
                         replacementDefinition,
                         sanitizedOptions,
-                        widget);
+                        null); // Don't reuse widget for type changes
+
+                // Only remove original field after successful creation of replacement
+                removeFieldFromDocument(document, acroForm, originalField);
+
+                log.debug(
+                        "Successfully replaced field '{}' with type '{}'",
+                        lookupName,
+                        resolvedType);
             } catch (Exception e) {
                 log.warn(
                         "Failed to modify form field '{}' to type '{}': {}",
@@ -902,10 +924,69 @@ public class FormUtils {
                         resolvedType,
                         e.getMessage(),
                         e);
+                // Original field is preserved since we didn't remove it yet
             }
         }
 
         ensureAppearances(acroForm);
+    }
+
+    private void modifyFieldPropertiesInPlace(
+            PDField field, ModifyFormFieldDefinition modification, String newName)
+            throws IOException {
+        // Update field name if different
+        if (newName != null && !newName.equals(field.getPartialName())) {
+            field.setPartialName(newName);
+        }
+
+        // Update label (alternate field name)
+        if (modification.label() != null) {
+            if (!modification.label().isBlank()) {
+                field.setAlternateFieldName(modification.label());
+            } else {
+                field.setAlternateFieldName(null);
+            }
+        }
+
+        // Update required status
+        if (modification.required() != null) {
+            field.setRequired(modification.required());
+        }
+
+        // Update default value
+        if (modification.defaultValue() != null) {
+            if (!modification.defaultValue().isBlank()) {
+                field.setValue(modification.defaultValue());
+            } else {
+                field.setValue(null);
+            }
+        }
+
+        // Handle choice field specific properties
+        if (field instanceof PDChoice choiceField
+                && (modification.options() != null || modification.multiSelect() != null)) {
+
+            if (modification.options() != null) {
+                List<String> sanitizedOptions = sanitizeOptions(modification.options());
+                choiceField.setOptions(sanitizedOptions);
+            }
+
+            if (modification.multiSelect() != null) {
+                choiceField.setMultiSelect(modification.multiSelect());
+            }
+        }
+
+        // Update tooltip on widgets
+        if (modification.tooltip() != null) {
+            List<PDAnnotationWidget> widgets = field.getWidgets();
+            for (PDAnnotationWidget widget : widgets) {
+                if (!modification.tooltip().isBlank()) {
+                    widget.getCOSObject().setString(COSName.TU, modification.tooltip());
+                } else {
+                    widget.getCOSObject().removeItem(COSName.TU);
+                }
+            }
+        }
     }
 
     private String fallbackLabelForType(String type, int typeIndex) {
@@ -1333,11 +1414,20 @@ public class FormUtils {
 
         PDAnnotationWidget widget =
                 existingWidget != null ? existingWidget : new PDAnnotationWidget();
+
+        // Ensure rectangle is valid and set before any appearance-related operations
+        // please note removal of this might cause issues
+        if (rectangle == null || rectangle.getWidth() <= 0 || rectangle.getHeight() <= 0) {
+            log.warn("Invalid rectangle for field '{}', using default dimensions", name);
+            rectangle = new PDRectangle(100, 100, 100, 20); // Default fallback
+        }
         widget.setRectangle(rectangle);
         widget.setPage(page);
+
         if (existingWidget == null) {
             widget.setPrinted(true);
         }
+
         if (definition.tooltip() != null && !definition.tooltip().isBlank()) {
             widget.getCOSObject().setString(COSName.TU, definition.tooltip());
         } else {
@@ -1350,13 +1440,23 @@ public class FormUtils {
 
         field.getWidgets().add(widget);
         widget.setParent(field);
+
+        // Ensure annotations list exists before adding
         List<PDAnnotation> annotations = page.getAnnotations();
         if (annotations == null) {
             page.getAnnotations().add(widget);
         } else if (!annotations.contains(widget)) {
             annotations.add(widget);
         }
+
         acroForm.getFields().add(field);
+
+        // Force appearance generation after all properties are set
+        try {
+            widget.constructAppearances();
+        } catch (Exception e) {
+            log.debug("Could not construct appearances for field '{}': {}", name, e.getMessage());
+        }
     }
 
     @JsonInclude(JsonInclude.Include.NON_NULL)

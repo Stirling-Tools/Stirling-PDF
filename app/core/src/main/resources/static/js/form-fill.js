@@ -1,38 +1,50 @@
-const fileInput = document.querySelector("input[name='formFillFile']");
-const fileChooser = document.querySelector(
-  ".custom-file-chooser[data-bs-element-id='formFillFile-input']"
-);
-const statusEl = document.getElementById("formFillStatus");
-const fieldsForm = document.getElementById("formFillFields");
-const downloadButton = document.getElementById("formFillDownload");
-const batchButton = document.getElementById("formFillBatchDownload");
-const batchTextarea = document.getElementById("formFillBatchJson");
-const batchFileInput = document.getElementById("formFillBatchFile");
-const flattenToggle = document.getElementById("formFillFlatten");
-const multiTemplateToggle = document.getElementById("formFillMultiTemplate");
+const locale =
+  typeof formFillLocale !== "undefined" && formFillLocale
+    ? formFillLocale
+    : {};
 
-let currentFile = null;
-let batchEdited = false;
-const DEFAULT_BATCH_PLACEHOLDER = '[{"field":"value"}]';
-const multiTemplateRecordCache = new Map();
-let previousTemplateFileKeys = [];
-const fieldValidationRegistry = new Map();
-const fieldMetadata = new Map();
-let editingFieldName = null;
-const pendingRemovalNames = new Set();
-const retainedFieldValues = new Map();
-const multiTemplateSelectedFiles = [];
-const multiTemplateSelectionIndex = new Map();
-let suppressFileInputChange = false;
-const fieldOrdinalOrder = new Map();
-let nextFieldOrdinalValue = 0;
+const dom = {
+  fileInput: document.querySelector("input[name='formFillFile']"),
+  fileChooser: document.querySelector(
+    ".custom-file-chooser[data-bs-element-id='formFillFile-input']"
+  ),
+  status: document.getElementById("formFillStatus"),
+  fieldsForm: document.getElementById("formFillFields"),
+  downloadButton: document.getElementById("formFillDownload"),
+  batchTextarea: document.getElementById("formFillBatchJson"),
+  flattenToggle: document.getElementById("formFillFlatten"),
+  editModalEl: document.getElementById("formFieldEditModal"),
+  editForm: document.getElementById("formFieldEditForm"),
+};
 
-const editModalEl = document.getElementById("formFieldEditModal");
+const {
+  fileInput,
+  fileChooser,
+  status: statusEl,
+  fieldsForm,
+  downloadButton,
+  batchTextarea,
+  flattenToggle,
+  editModalEl,
+  editForm,
+} = dom;
+
 const editModal =
   editModalEl && window.bootstrap?.Modal
     ? new window.bootstrap.Modal(editModalEl, { backdrop: "static" })
     : null;
-const editForm = document.getElementById("formFieldEditForm");
+
+const state = {
+  currentFile: null,
+  fieldValidationRegistry: new Map(),
+  fieldMetadata: new Map(),
+  pendingRemovalNames: new Set(),
+  retainedFieldValues: new Map(),
+  fieldOrdinalOrder: new Map(),
+  nextFieldOrdinalValue: 0,
+};
+
+const DEFAULT_JSON_PLACEHOLDER = '{"field":"value"}';
 const editInputs = {
   type: document.getElementById("formFieldEditType"),
   name: document.getElementById("formFieldEditName"),
@@ -48,26 +60,6 @@ const editInputs = {
 
 const MODIFIABLE_FIELD_TYPES = new Set(["text", "checkbox", "combobox", "listbox"]);
 const OPTION_FIELD_TYPES = new Set(["combobox", "listbox"]);
-
-if (editInputs.type) {
-  editInputs.type.addEventListener("change", (event) => {
-    updateEditTypeControls(event.target?.value ?? "text");
-  });
-}
-
-if (editForm) {
-  editForm.addEventListener("submit", submitEditForm);
-}
-
-if (editModalEl) {
-  editModalEl.addEventListener("hidden.bs.modal", () => {
-    resetEditForm();
-  });
-}
-
-if (multiTemplateToggle && fileInput) {
-  fileInput.multiple = multiTemplateToggle.checked;
-}
 
 const STATUS_CLASSES = {
   info: "alert alert-info",
@@ -106,15 +98,6 @@ const prefersDayFirst = (() => {
   return !normalized.startsWith("en-us") && !normalized.startsWith("en_us");
 })();
 
-function isMultiTemplateMode() {
-  return Boolean(multiTemplateToggle?.checked);
-}
-
-function getFileSignature(file) {
-  if (!file) return "";
-  return `${file.name ?? ""}::${file.size ?? 0}::${file.lastModified ?? 0}`;
-}
-
 function isPlainObject(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
@@ -151,18 +134,6 @@ function resolveTemplateRecord(templateRecord, fields) {
     : createTemplateRecordFromFields(fields);
 }
 
-function readExistingBatchRecords() {
-  if (!batchTextarea) return [];
-  const raw = batchTextarea.value?.trim();
-  if (!raw) return [];
-  try {
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
 function updateFileChooserSummary(files) {
   const container = fileChooser?.querySelector(".selected-files");
   if (!container) return;
@@ -178,81 +149,18 @@ function updateFileChooserSummary(files) {
     .join(", ");
 }
 
-function syncMultiTemplateSelectionToInput() {
-  if (!fileInput) {
-    return;
-  }
-
-  try {
-    suppressFileInputChange = true;
-    if (multiTemplateSelectedFiles.length === 0) {
-      fileInput.value = "";
-    } else {
-      const dataTransfer = new DataTransfer();
-      multiTemplateSelectedFiles.forEach((file) => {
-        try {
-          dataTransfer.items.add(file);
-        } catch (error) {
-          console.warn("Unable to add file to DataTransfer", error);
-        }
-      });
-      fileInput.files = dataTransfer.files;
-    }
-  } catch (error) {
-    console.warn("Unable to synchronize multi-template selection with input", error);
-  } finally {
-    suppressFileInputChange = false;
-    updateFileChooserSummary(multiTemplateSelectedFiles);
-  }
-}
-
-function clearMultiTemplateSelection(options = {}) {
-  const { skipInputSync = false } = options;
-  multiTemplateSelectedFiles.length = 0;
-  multiTemplateSelectionIndex.clear();
-  if (!skipInputSync) syncMultiTemplateSelectionToInput();
-}
-
-function mergeMultiTemplateFiles(files) {
-  if (!Array.isArray(files) || files.length === 0) return false;
-
-  let changed = false;
-  files.forEach(file => {
-    if (!file) return;
-    const signature = getFileSignature(file);
-    if (!signature) return;
-
-    const existingIndex = multiTemplateSelectionIndex.get(signature);
-    if (existingIndex == null) {
-      multiTemplateSelectionIndex.set(signature, multiTemplateSelectedFiles.length);
-      multiTemplateSelectedFiles.push(file);
-    } else {
-      multiTemplateSelectedFiles[existingIndex] = file;
-    }
-    changed = true;
-  });
-
-  return changed;
-}
-
 async function loadSingleFormFile(file) {
   if (!file) {
-    previousTemplateFileKeys = [];
     resetState();
     return;
   }
 
-  currentFile = file;
+  state.currentFile = file;
 
   if (batchTextarea) {
     batchTextarea.value = "";
   }
-  if (batchFileInput) {
-    batchFileInput.value = "";
-  }
-
-  batchEdited = false;
-  setStatus(formFillLocale.loading, "info");
+  setStatus(locale.loading, "info");
   toggleInputs(false);
 
   try {
@@ -260,247 +168,40 @@ async function loadSingleFormFile(file) {
     renderFields(fields, template);
     const usableFields = fields.filter(field => FILLABLE_TYPES.has(field.type));
     if (usableFields.length === 0) {
-      setStatus(formFillLocale.noFields, "warning");
-      downloadButton.disabled = false;
-      batchButton.disabled = true;
+      setStatus(locale.noFields, "warning");
+      updateDownloadButtonVisibility();
     } else {
-      setStatus(formFillLocale.ready, "success");
-      downloadButton.disabled = false;
-      updateBatchButtonState({ silent: true });
+      setStatus(locale.ready, "success");
+      updateDownloadButtonVisibility();
     }
-    previousTemplateFileKeys = [getFileSignature(file)];
   } catch (error) {
     console.error(error);
-    setStatus(formFillLocale.requestError, "danger");
+    setStatus(locale.requestError, "danger");
     resetFieldSection();
   } finally {
     toggleInputs(true);
   }
 }
 
-fileInput?.addEventListener("change", async (event) => {
-  if (suppressFileInputChange) {
-    return;
-  }
-
-  const files = Array.from(event.target.files ?? []);
-  const primaryFile = files[0] ?? null;
-  const multiMode = isMultiTemplateMode();
-
-  if (!multiMode) {
-    clearMultiTemplateSelection({ skipInputSync: true });
-    await loadSingleFormFile(primaryFile);
-    return;
-  }
-
-  if (batchFileInput) {
-    batchFileInput.value = "";
-  }
-
-  if (files.length === 0) {
-    if (multiTemplateSelectedFiles.length === 0) {
-      previousTemplateFileKeys = [];
-      clearMultiTemplateSelection();
-      resetState();
-    } else {
-      syncMultiTemplateSelectionToInput();
-    }
-    return;
-  }
-
-  mergeMultiTemplateFiles(files);
-  syncMultiTemplateSelectionToInput();
-
-  if (multiTemplateSelectedFiles.length === 0) {
-    previousTemplateFileKeys = [];
-    resetState();
-    return;
-  }
-
-  currentFile = multiTemplateSelectedFiles[0] ?? null;
-
-  setStatus(formFillLocale.loading, "info");
-  toggleInputs(false);
-  resetFieldSection();
-  try {
-    const records = await buildMultiTemplateRecords(multiTemplateSelectedFiles);
-    previousTemplateFileKeys = multiTemplateSelectedFiles.map((file) =>
-      getFileSignature(file)
-    );
-    if (records.length > 0) {
-      if (batchTextarea) {
-        batchTextarea.value = JSON.stringify(records, null, 2);
-      }
-      batchEdited = false;
-      setStatus(
-        formFillLocale.multiTemplateReady ?? formFillLocale.batchReady,
-        "success"
-      );
-    } else if (batchTextarea) {
-      batchTextarea.value = "";
-      setStatus(formFillLocale.batchEmpty, "info");
-    }
-    downloadButton.disabled = false;
-    updateBatchButtonState({ silent: true });
-  } catch (error) {
-    console.error(error);
-    setStatus(formFillLocale.requestError, "danger");
-  } finally {
-    toggleInputs(true);
-  }
-});
-
-batchTextarea?.addEventListener("input", () => {
-  if (batchFileInput) {
-    batchFileInput.value = "";
-  }
-  batchEdited = true;
-  updateBatchButtonState();
-});
-
-batchFileInput?.addEventListener("change", async () => {
-  batchEdited = false;
-  const file = batchFileInput.files?.[0];
-  if (!file) {
-    updateBatchButtonState({ silent: true });
-    return;
-  }
-
-  try {
-    const text = await file.text();
-    const parsed = JSON.parse(text);
-    const validation = validateJsonStructure(parsed);
-
-    if (!validation.valid) {
-      setStatus(validation.message, "danger");
-      batchTextarea && (batchTextarea.value = "");
-      batchButton.disabled = true;
-      return;
-    }
-
-    if (batchTextarea) {
-      batchTextarea.value = JSON.stringify(parsed, null, 2);
-    }
-    batchEdited = true;
-
-    const hasIssues = validation.warnings || validation.suggestions;
-    const issueCount = (validation.warnings?.length || 0) + (validation.suggestions?.length || 0);
-
-    const message = hasIssues
-      ? `${formFillLocale.batchFileReady ?? formFillLocale.batchReady} (${issueCount} note${issueCount > 1 ? 's' : ''})`
-      : (formFillLocale.batchFileReady ?? formFillLocale.batchReady);
-    setStatus(message, validation.warnings ? "warning" : (validation.suggestions ? "info" : "success"));
-
-    if (validation.warnings) {
-      console.warn("JSON validation warnings:", validation.warnings);
-    }
-    if (validation.suggestions) {
-      console.info("JSON validation suggestions:", validation.suggestions);
-    }
-  } catch (error) {
-    console.error("Unable to load batch JSON file", error);
-    if (batchTextarea) {
-      batchTextarea.value = "";
-    }
-    setStatus(formFillLocale.parsingError, "danger");
-    batchButton.disabled = true;
-  } finally {
-    batchFileInput.value = "";
-    updateBatchButtonState({ silent: true });
-  }
-});
-
-multiTemplateToggle?.addEventListener("change", () => {
-  const enabled = multiTemplateToggle.checked;
-  if (fileInput) {
-    fileInput.multiple = enabled;
-  }
-
-  if (enabled) {
-    const currentSelection = Array.from(fileInput?.files ?? []);
-    if (currentSelection.length > 0) {
-      mergeMultiTemplateFiles(currentSelection);
-      syncMultiTemplateSelectionToInput();
-    }
-  } else {
-    clearMultiTemplateSelection({ skipInputSync: true });
-  }
-
-  if (!enabled && fileInput?.files?.length > 1) {
-    const selection = Array.from(fileInput.files);
-    const primary = selection[0];
-    try {
-      const dataTransfer = new DataTransfer();
-      dataTransfer.items.add(primary);
-      fileInput.files = dataTransfer.files;
-    } catch (error) {
-      console.warn(
-        "Unable to trim file selection when disabling multi-template mode",
-        error
-      );
-      clearFileSelection();
-      resetState();
-    }
-    currentFile = primary ?? null;
-  }
-
-  if (!enabled) {
-    previousTemplateFileKeys = [];
-  }
-
-  if (hasSelectedFormFile()) {
-    const syntheticChange = new CustomEvent("change", {
-      detail: { source: "programmatic" },
-    });
-    fileInput.dispatchEvent(syntheticChange);
-  } else {
-    updateBatchButtonState({ silent: true });
-  }
-});
-
-flattenToggle?.addEventListener("change", () => {
-  updateBatchButtonState({ silent: true });
-});
-
-downloadButton?.addEventListener("click", async () => {
-  if (!hasSelectedFormFile()) {
-    setStatus(formFillLocale.selectFile, "warning");
-    return;
-  }
-  await performDownload(false);
-});
-
-batchButton?.addEventListener("click", async () => {
-  if (!hasSelectedFormFile()) {
-    setStatus(formFillLocale.selectFile, "warning");
-    return;
-  }
-  await performDownload(true);
-});
-
 function resetState() {
-  currentFile = null;
+  state.currentFile = null;
   resetFieldSection();
-  downloadButton.disabled = true;
-  batchButton.disabled = true;
-  clearMultiTemplateSelection({ skipInputSync: true });
+  if (downloadButton) {
+    downloadButton.disabled = true;
+  }
   clearFileSelection();
   clearFieldOrdering();
   if (batchTextarea) {
     batchTextarea.value = "";
   }
-  if (batchFileInput) {
-    batchFileInput.value = "";
-  }
-  batchEdited = false;
-  setStatus(formFillLocale.selectFile, "info");
+  setStatus(locale.selectFile, "info");
 }
 
 function resetFieldSection() {
   fieldsForm.classList.add("d-none");
   fieldsForm.innerHTML = "";
-  fieldValidationRegistry.clear();
-  retainedFieldValues.clear();
+  state.fieldValidationRegistry.clear();
+  state.retainedFieldValues.clear();
 }
 
 async function fetchFields(file) {
@@ -525,12 +226,12 @@ function renderFields(fields, templateRecord) {
   const orderedFields = applyStableFieldOrdering(fieldsForDisplay);
 
   fieldsForm.innerHTML = "";
-  fieldValidationRegistry.clear();
-  fieldMetadata.clear();
+  state.fieldValidationRegistry.clear();
+  state.fieldMetadata.clear();
   if (!Array.isArray(orderedFields) || orderedFields.length === 0) {
     clearFieldOrdering();
     resetFieldSection();
-    if (!batchEdited && batchTextarea) {
+    if (batchTextarea) {
       batchTextarea.value = "";
     }
     return;
@@ -541,7 +242,7 @@ function renderFields(fields, templateRecord) {
   const displayedNames = new Set();
   orderedFields.forEach((field, index) => {
     const metadataKey = buildFieldMetadataKey(field, index);
-    fieldMetadata.set(metadataKey, {
+    state.fieldMetadata.set(metadataKey, {
       ...field,
       key: metadataKey,
       index,
@@ -554,9 +255,9 @@ function renderFields(fields, templateRecord) {
     fieldsForm.appendChild(group);
   });
 
-  for (const name of Array.from(retainedFieldValues.keys())) {
+  for (const name of Array.from(state.retainedFieldValues.keys())) {
     if (!displayedNames.has(name)) {
-      retainedFieldValues.delete(name);
+      state.retainedFieldValues.delete(name);
     }
   }
   populateBatchTemplate(orderedFields, templateRecord);
@@ -576,7 +277,7 @@ function buildFieldGroup(field, index, metadataKey) {
   if (!input) {
     const note = document.createElement("div");
     note.className = "form-text text-muted";
-    note.textContent = `${formFillLocale.unsupportedField}: ${field.type}`;
+    note.textContent = `${locale.unsupportedField}: ${field.type}`;
     wrapper.appendChild(note);
     return wrapper;
   }
@@ -625,7 +326,7 @@ function appendFieldDetails(wrapper, field, metadataKey) {
   if (typeof field.pageIndex === "number" && field.pageIndex >= 0) {
     const pageHint = document.createElement("div");
     pageHint.className = "form-text";
-    pageHint.textContent = `${formFillLocale.pageLabel ?? "Page"} ${field.pageIndex + 1}`;
+  pageHint.textContent = `${locale.pageLabel ?? "Page"} ${field.pageIndex + 1}`;
     wrapper.appendChild(pageHint);
   }
   if (field.tooltip) {
@@ -639,7 +340,7 @@ function appendFieldDetails(wrapper, field, metadataKey) {
     keyHint.className = "form-text text-muted";
     const code = document.createElement("code");
     code.textContent = field.name;
-    const keyLabel = formFillLocale.keyLabel ?? "Key";
+  const keyLabel = locale.keyLabel ?? "Key";
     keyHint.append(`${keyLabel}: `, code);
     wrapper.appendChild(keyHint);
   }
@@ -651,7 +352,7 @@ function appendFieldDetails(wrapper, field, metadataKey) {
 }
 
 function createFieldActions(field, metadataKey) {
-  if (!metadataKey || !field?.name || isMultiTemplateMode()) {
+  if (!metadataKey || !field?.name) {
     return null;
   }
 
@@ -666,7 +367,7 @@ function createFieldActions(field, metadataKey) {
     const editButton = document.createElement("button");
     editButton.type = "button";
     editButton.className = "btn btn-link btn-sm p-0 d-inline-flex align-items-center gap-1";
-    editButton.title = formFillLocale.editField ?? "Edit field";
+  editButton.title = locale.editField ?? "Edit field";
     editButton.dataset.fieldKey = fieldKey;
     editButton.innerHTML =
       '<span class="material-symbols-rounded" aria-hidden="true">edit</span><span class="visually-hidden">' +
@@ -682,7 +383,7 @@ function createFieldActions(field, metadataKey) {
   deleteButton.type = "button";
   deleteButton.className =
     "btn btn-link btn-sm text-danger p-0 d-inline-flex align-items-center gap-1";
-  deleteButton.title = formFillLocale.deleteField ?? "Delete field";
+  deleteButton.title = locale.deleteField ?? "Delete field";
   deleteButton.dataset.fieldKey = fieldKey;
   deleteButton.innerHTML =
     '<span class="material-symbols-rounded" aria-hidden="true">delete</span><span class="visually-hidden">' +
@@ -700,27 +401,23 @@ function lookupFieldMetadata(fieldKey) {
   if (!fieldKey) {
     return null;
   }
-  return fieldMetadata.get(fieldKey) ?? null;
+  return state.fieldMetadata.get(fieldKey) ?? null;
 }
 
 function handleEditField(fieldKey) {
   if (!editModal || !editForm) {
-    setStatus(formFillLocale.editUnavailable ?? formFillLocale.requestError, "warning");
-    return;
-  }
-  if (isMultiTemplateMode()) {
-    setStatus(formFillLocale.editMultiDisabled ?? formFillLocale.selectFile, "warning");
+    setStatus(locale.editUnavailable ?? locale.requestError, "warning");
     return;
   }
 
   const metadata = lookupFieldMetadata(fieldKey);
   if (!metadata) {
-    setStatus(formFillLocale.editMissing ?? formFillLocale.requestError, "warning");
+    setStatus(locale.editMissing ?? locale.requestError, "warning");
     return;
   }
 
   if (!MODIFIABLE_FIELD_TYPES.has(metadata.type)) {
-    setStatus(formFillLocale.editUnsupported ?? formFillLocale.requestError, "warning");
+    setStatus(locale.editUnsupported ?? locale.requestError, "warning");
     return;
   }
 
@@ -729,30 +426,46 @@ function handleEditField(fieldKey) {
     editModal.show();
   } catch (error) {
     console.error("Failed to show edit modal", error);
-    setStatus(formFillLocale.requestError, "danger");
+    setStatus(locale.requestError, "danger");
   }
 }
 
-async function handleDeleteField(fieldKey) {
-  if (isMultiTemplateMode()) {
-    setStatus(formFillLocale.editMultiDisabled ?? formFillLocale.selectFile, "warning");
+async function handleFileSelection(event) {
+  const files = Array.from(event.target.files ?? []);
+  updateFileChooserSummary(files);
+
+  const primaryFile = files[0] ?? null;
+  if (!primaryFile) {
+    resetState();
     return;
   }
 
+  await loadSingleFormFile(primaryFile);
+}
+
+async function handleDownloadClick() {
+  if (!hasSelectedFormFile()) {
+    setStatus(locale.selectFile, "warning");
+    return;
+  }
+  await performDownload();
+}
+
+async function handleDeleteField(fieldKey) {
   const metadata = lookupFieldMetadata(fieldKey);
   if (!metadata?.name) {
-    setStatus(formFillLocale.deleteMissing ?? formFillLocale.requestError, "warning");
+    setStatus(locale.deleteMissing ?? locale.requestError, "warning");
     return;
   }
 
-  if (!currentFile) {
-    setStatus(formFillLocale.selectFile, "warning");
+  if (!state.currentFile) {
+    setStatus(locale.selectFile, "warning");
     return;
   }
 
   const displayLabel = metadata.label || metadata.name;
   const confirmTemplate =
-    formFillLocale.deleteConfirm ?? 'Delete "{0}"? This action cannot be undone.';
+    locale.deleteConfirm ?? 'Delete "{0}"? This action cannot be undone.';
   const confirmationMessage = confirmTemplate.replace("{0}", displayLabel);
   const confirmed = window.confirm(confirmationMessage);
   if (!confirmed) {
@@ -763,12 +476,12 @@ async function handleDeleteField(fieldKey) {
     "/api/v1/form/delete-fields",
     "names",
     JSON.stringify([metadata.name]),
-    formFillLocale.deleteSuccess ?? formFillLocale.ready,
-    formFillLocale.deleting ?? formFillLocale.loading
+    locale.deleteSuccess ?? locale.ready,
+    locale.deleting ?? locale.loading
   );
 
   if (success && metadata.name) {
-    pendingRemovalNames.add(metadata.name);
+    state.pendingRemovalNames.add(metadata.name);
     removeRetainedValue(metadata.name);
   }
 }
@@ -778,7 +491,6 @@ function populateEditForm(metadata) {
     return;
   }
 
-  editingFieldName = metadata.name;
   if (editForm) {
     editForm.dataset.fieldKey = metadata.key ?? metadata.name ?? "";
   }
@@ -821,7 +533,6 @@ function resetEditForm() {
   if (!editInputs) {
     return;
   }
-  editingFieldName = null;
   if (editForm) {
     delete editForm.dataset.fieldKey;
   }
@@ -874,10 +585,10 @@ function updateEditTypeControls(type) {
   if (editInputs.defaultValue) {
     if (normalized === "checkbox") {
       editInputs.defaultValue.placeholder =
-        formFillLocale.checkboxDefaultHint ?? "true or false";
+        locale.checkboxDefaultHint ?? "true or false";
     } else if (normalized === "listbox") {
       editInputs.defaultValue.placeholder =
-        formFillLocale.listboxDefaultHint ?? "Option 1, Option 2";
+        locale.listboxDefaultHint ?? "Option 1, Option 2";
     } else {
       editInputs.defaultValue.placeholder = "";
     }
@@ -968,13 +679,13 @@ function computeDefaultValue(type, rawValue, options = {}) {
 }
 
 async function mutatePdf(endpoint, payloadKey, payloadValue, successMessage, statusMessage) {
-  if (!currentFile) {
-    setStatus(formFillLocale.selectFile, "warning");
+  if (!state.currentFile) {
+    setStatus(locale.selectFile, "warning");
     return false;
   }
 
   const formData = new FormData();
-  formData.append("file", currentFile);
+  formData.append("file", state.currentFile);
   formData.append(payloadKey, payloadValue);
 
   toggleInputs(false);
@@ -995,11 +706,11 @@ async function mutatePdf(endpoint, payloadKey, payloadValue, successMessage, sta
     }
 
     const blob = await response.blob();
-    await refreshFormPreviewFromBlob(blob, currentFile?.name, successMessage);
+    await refreshFormPreviewFromBlob(blob, state.currentFile?.name, successMessage);
     success = true;
   } catch (error) {
     console.error(error);
-    const message = error?.message || formFillLocale.requestError;
+    const message = error?.message || locale.requestError;
     setStatus(message, "danger");
   } finally {
     toggleInputs(true);
@@ -1047,21 +758,16 @@ async function submitEditForm(event) {
     return;
   }
 
-  if (isMultiTemplateMode()) {
-    setStatus(formFillLocale.editMultiDisabled ?? formFillLocale.selectFile, "warning");
-    return;
-  }
-
   const fieldKey = editForm.dataset.fieldKey;
   const metadata = lookupFieldMetadata(fieldKey);
   if (!metadata) {
-    setStatus(formFillLocale.editMissing ?? formFillLocale.requestError, "warning");
+  setStatus(locale.editMissing ?? locale.requestError, "warning");
     return;
   }
 
   const payload = collectModificationPayload(metadata);
   if (!payload) {
-    setStatus(formFillLocale.editMissing ?? formFillLocale.requestError, "warning");
+  setStatus(locale.editMissing ?? locale.requestError, "warning");
     return;
   }
 
@@ -1069,15 +775,15 @@ async function submitEditForm(event) {
     "/api/v1/form/modify-fields",
     "updates",
     JSON.stringify([payload]),
-    formFillLocale.modifySuccess ?? formFillLocale.ready,
-    formFillLocale.updating ?? formFillLocale.loading
+  locale.modifySuccess ?? locale.ready,
+  locale.updating ?? locale.loading
   );
 
   if (success) {
     const targetName = payload.targetName;
     const replacementName = payload.name ?? targetName;
     if (targetName && replacementName && targetName !== replacementName) {
-      pendingRemovalNames.add(targetName);
+  state.pendingRemovalNames.add(targetName);
       renameRetainedValue(targetName, replacementName);
     }
   }
@@ -1112,7 +818,7 @@ function setupInlineValidation(input, field, wrapper) {
     invalid: false,
   };
 
-  fieldValidationRegistry.set(input, entry);
+  state.fieldValidationRegistry.set(input, entry);
 
   const handleChange = () => {
     entry.touched = true;
@@ -1136,9 +842,9 @@ function registerInputRetention(input, field) {
   const storeValue = () => {
     const snapshot = snapshotInputForRetention(input);
     if (snapshot) {
-      retainedFieldValues.set(fieldName, snapshot);
+  state.retainedFieldValues.set(fieldName, snapshot);
     } else {
-      retainedFieldValues.delete(fieldName);
+  state.retainedFieldValues.delete(fieldName);
     }
   };
 
@@ -1197,7 +903,7 @@ function applyRetainedValueToInput(input, field) {
     return;
   }
 
-  const retained = retainedFieldValues.get(field.name);
+  const retained = state.retainedFieldValues.get(field.name);
   if (!retained) {
     return;
   }
@@ -1221,7 +927,7 @@ function applyRetainedValueToInput(input, field) {
         }
       });
       if (values.length > 0 && applied === 0) {
-        retainedFieldValues.delete(field.name);
+  state.retainedFieldValues.delete(field.name);
       }
       break;
     }
@@ -1233,7 +939,7 @@ function applyRetainedValueToInput(input, field) {
       if (canApply) {
         input.value = value;
       } else {
-        retainedFieldValues.delete(field.name);
+  state.retainedFieldValues.delete(field.name);
       }
       break;
     }
@@ -1247,19 +953,19 @@ function removeRetainedValue(fieldName) {
   if (!fieldName) {
     return;
   }
-  retainedFieldValues.delete(fieldName);
+  state.retainedFieldValues.delete(fieldName);
 }
 
 function renameRetainedValue(oldName, newName) {
   if (!oldName || !newName || oldName === newName) {
     return;
   }
-  if (!retainedFieldValues.has(oldName)) {
+  if (!state.retainedFieldValues.has(oldName)) {
     return;
   }
-  const retained = retainedFieldValues.get(oldName);
-  retainedFieldValues.delete(oldName);
-  retainedFieldValues.set(newName, retained);
+  const retained = state.retainedFieldValues.get(oldName);
+  state.retainedFieldValues.delete(oldName);
+  state.retainedFieldValues.set(newName, retained);
 }
 
 function buildValidationConstraints(field, input) {
@@ -1289,12 +995,12 @@ function buildValidationConstraints(field, input) {
 }
 
 function validateField(input, options = {}) {
-  const entry = fieldValidationRegistry.get(input);
+  const entry = state.fieldValidationRegistry.get(input);
   if (!entry) {
     return true;
   }
   if (!document.body.contains(input)) {
-    fieldValidationRegistry.delete(input);
+  state.fieldValidationRegistry.delete(input);
     return true;
   }
 
@@ -1305,22 +1011,22 @@ function validateField(input, options = {}) {
   let error = "";
   if (constraints.required && isEmpty) {
     if (constraints.multiple) {
-      error = formFillLocale.validationSelect ?? formFillLocale.validationRequired;
+      error = locale.validationSelect ?? locale.validationRequired;
     } else {
-      error = formFillLocale.validationRequired;
+      error = locale.validationRequired;
     }
   }
 
   if (!error && constraints.dateLike && !isEmpty) {
     const normalized = toISODate(String(value));
     if (!normalized) {
-      error = formFillLocale.validationDate ?? formFillLocale.validationInvalid;
+      error = locale.validationDate ?? locale.validationInvalid;
     }
   }
 
   if (!error && constraints.emailLike && !isEmpty) {
     if (!EMAIL_REGEX.test(String(value).trim())) {
-      error = formFillLocale.validationEmail ?? formFillLocale.validationInvalid;
+      error = locale.validationEmail ?? locale.validationInvalid;
     }
   }
 
@@ -1330,7 +1036,7 @@ function validateField(input, options = {}) {
   if (entry.invalid && shouldShow) {
     input.classList.add("is-invalid");
     input.setAttribute("aria-invalid", "true");
-    messageEl.textContent = error || formFillLocale.validationInvalid;
+  messageEl.textContent = error || locale.validationInvalid;
     messageEl.style.display = "";
   } else {
     input.classList.remove("is-invalid");
@@ -1343,12 +1049,12 @@ function validateField(input, options = {}) {
 }
 
 function validateAllFields(options = {}) {
-  if (fieldValidationRegistry.size === 0) return true;
+  if (state.fieldValidationRegistry.size === 0) return true;
 
   const { focus = true } = options;
   let firstInvalid = null;
 
-  for (const input of fieldValidationRegistry.keys()) {
+  for (const input of state.fieldValidationRegistry.keys()) {
     if (!validateField(input, { force: true }) && !firstInvalid) {
       firstInvalid = input;
     }
@@ -1486,7 +1192,7 @@ function addOptionsToSelect(selectEl, options, currentValue, allowMultiple = fal
 }
 
 function populateBatchTemplate(fields, templateRecord) {
-  if (!batchTextarea || batchEdited) return;
+  if (!batchTextarea) return;
 
   const resolvedTemplate = resolveTemplateRecord(templateRecord, fields);
   if (!isPlainObject(resolvedTemplate) || Object.keys(resolvedTemplate).length === 0) {
@@ -1494,9 +1200,7 @@ function populateBatchTemplate(fields, templateRecord) {
     return;
   }
 
-  batchTextarea.value = JSON.stringify([resolvedTemplate], null, 2);
-  batchEdited = false;
-  updateBatchButtonState({ silent: true });
+  batchTextarea.value = JSON.stringify(resolvedTemplate, null, 2);
 }
 
 function createTemplateRecordFromFields(fields) {
@@ -1528,7 +1232,7 @@ function normalizeFieldsForDisplay(fields) {
     const name = typeof field?.name === "string" ? field.name : null;
     if (name) {
       namesEncountered.add(name);
-      if (pendingRemovalNames.has(name)) return;
+  if (state.pendingRemovalNames.has(name)) return;
     }
 
     if (name && indexByName.has(name)) {
@@ -1539,8 +1243,8 @@ function normalizeFieldsForDisplay(fields) {
     }
   });
 
-  pendingRemovalNames.forEach(name => {
-    if (!namesEncountered.has(name)) pendingRemovalNames.delete(name);
+  state.pendingRemovalNames.forEach(name => {
+    if (!namesEncountered.has(name)) state.pendingRemovalNames.delete(name);
   });
 
   return filtered;
@@ -1548,31 +1252,31 @@ function normalizeFieldsForDisplay(fields) {
 
 function applyStableFieldOrdering(fields) {
   if (!Array.isArray(fields) || fields.length === 0) {
-    fieldOrdinalOrder.clear();
-    nextFieldOrdinalValue = 0;
+  state.fieldOrdinalOrder.clear();
+  state.nextFieldOrdinalValue = 0;
     return [];
   }
 
   const entries = fields.map((field, index) => {
     const key = resolveFieldOrderKey(field, index);
-    if (!fieldOrdinalOrder.has(key)) {
-      fieldOrdinalOrder.set(key, nextFieldOrdinalValue++);
+    if (!state.fieldOrdinalOrder.has(key)) {
+      state.fieldOrdinalOrder.set(key, state.nextFieldOrdinalValue++);
     }
     return {
       field,
       key,
-      order: fieldOrdinalOrder.get(key),
+  order: state.fieldOrdinalOrder.get(key),
     };
   });
 
   const currentKeys = new Set(entries.map((entry) => entry.key));
-  for (const existingKey of Array.from(fieldOrdinalOrder.keys())) {
+  for (const existingKey of Array.from(state.fieldOrdinalOrder.keys())) {
     if (!currentKeys.has(existingKey)) {
-      fieldOrdinalOrder.delete(existingKey);
+      state.fieldOrdinalOrder.delete(existingKey);
     }
   }
-  if (fieldOrdinalOrder.size === 0) {
-    nextFieldOrdinalValue = 0;
+  if (state.fieldOrdinalOrder.size === 0) {
+    state.nextFieldOrdinalValue = 0;
   }
 
   entries.sort((a, b) => {
@@ -1637,56 +1341,8 @@ function compareMaybeNumeric(a, b) {
 }
 
 function clearFieldOrdering() {
-  fieldOrdinalOrder.clear();
-  nextFieldOrdinalValue = 0;
-}
-
-async function buildMultiTemplateRecords(files) {
-  if (!Array.isArray(files) || files.length === 0) {
-    return [];
-  }
-
-  const existingRecords = readExistingBatchRecords();
-  const previousRecordMap = new Map();
-  const limit = Math.min(previousTemplateFileKeys.length, existingRecords.length);
-  for (let index = 0; index < limit; index += 1) {
-    const key = previousTemplateFileKeys[index];
-    const record = existingRecords[index];
-    if (!key || !isPlainObject(record)) {
-      continue;
-    }
-    if (!previousRecordMap.has(key)) {
-      previousRecordMap.set(key, []);
-    }
-    previousRecordMap.get(key).push(record);
-  }
-
-  const records = [];
-  for (const file of files) {
-    const signature = getFileSignature(file);
-    if (!signature) {
-      records.push({});
-      continue;
-    }
-
-    const reuseQueue = previousRecordMap.get(signature);
-    if (reuseQueue?.length) {
-      const nextRecord = reuseQueue.shift();
-      records.push({ ...(nextRecord ?? {}) });
-      continue;
-    }
-
-    let templateRecord = multiTemplateRecordCache.get(signature);
-    if (!templateRecord) {
-      const { fields, template } = await fetchFields(file);
-      templateRecord = resolveTemplateRecord(template, fields);
-      multiTemplateRecordCache.set(signature, templateRecord);
-    }
-
-    records.push(cloneTemplateRecord(templateRecord));
-  }
-
-  return records;
+  state.fieldOrdinalOrder.clear();
+  state.nextFieldOrdinalValue = 0;
 }
 
 function inferTemplateValue(field) {
@@ -1722,12 +1378,9 @@ function normalizeValueCollection(value, multiple) {
   return [value];
 }
 
-async function performDownload(isBatch) {
+async function performDownload() {
   if (!validateAllFields({ focus: true })) {
-    setStatus(
-      formFillLocale.validationFix ?? formFillLocale.validationRequired,
-      "warning"
-    );
+    setStatus(locale.validationFix ?? locale.validationRequired, "warning");
     return;
   }
   try {
@@ -1735,50 +1388,25 @@ async function performDownload(isBatch) {
     const formData = new FormData();
     const selectedFiles = getSelectedFormFiles();
     if (selectedFiles.length === 0) {
-      setStatus(formFillLocale.selectFile, "warning");
+      setStatus(locale.selectFile, "warning");
       return;
     }
 
-    if (isBatch) {
-      selectedFiles.forEach((file) => {
-        formData.append("file", file);
-      });
-    } else {
-      formData.append("file", selectedFiles[0]);
-    }
+    formData.append("file", selectedFiles[0]);
     formData.append("flatten", String(flattenToggle?.checked ?? false));
+    const valueMap = collectFieldValues();
+    formData.append("data", JSON.stringify(valueMap));
+    setStatus(locale.loading, "info");
+    const response = await fetch("/api/v1/form/fill", {
+      method: "POST",
+      body: formData,
+    });
+    await handleDownloadResponse(response, "form-filled.pdf");
 
-    if (isBatch) {
-      const payload = parseBatchPayload();
-      formData.append("records", JSON.stringify(payload));
-      setStatus(formFillLocale.loading, "info");
-      const response = await fetch("/api/v1/form/mail-merge", {
-        method: "POST",
-        body: formData,
-      });
-      await handleDownloadResponse(response, "form-merge.pdf");
-    } else {
-      const valueMap = collectFieldValues();
-      formData.append("data", JSON.stringify(valueMap));
-      setStatus(formFillLocale.loading, "info");
-      const response = await fetch("/api/v1/form/fill", {
-        method: "POST",
-        body: formData,
-      });
-      await handleDownloadResponse(response, "form-filled.pdf");
-    }
-
-    setStatus(formFillLocale.ready, "success");
+    setStatus(locale.ready, "success");
   } catch (error) {
     console.error(error);
-    const message = (error && error.message) || "";
-    if (message === "empty-batch" || message === "invalid-batch") {
-      // Status already provided in parseBatchPayload
-    } else if (error instanceof SyntaxError) {
-      // parseBatchPayload will have provided feedback
-    } else {
-      setStatus(formFillLocale.requestError, "danger");
-    }
+    setStatus(locale.requestError, "danger");
   } finally {
     toggleInputs(true);
   }
@@ -1802,41 +1430,6 @@ function collectFieldValues() {
     }
   });
   return result;
-}
-
-function parseBatchPayload() {
-  const raw = batchTextarea?.value ?? "";
-  if (!raw.trim()) {
-    setStatus(formFillLocale.batchEmpty, "warning");
-    throw new Error("empty-batch");
-  }
-
-  const result = preprocessBatchJson(raw);
-
-  if (!result.success) {
-    setStatus(formFillLocale.parsingError, "danger");
-    console.error("JSON parsing failed:", result.error);
-    throw result.error;
-  }
-
-  const validation = validateJsonStructure(result.payload);
-
-  if (!validation.valid) {
-    setStatus(validation.message, "danger");
-    throw new Error("invalid-batch");
-  }
-
-  // Log helpful information for the user
-  if (result.wasFixed) {
-    console.info("JSON was automatically corrected for parsing. Original preserved for backend.");
-  }
-
-  if (validation.suggestions) {
-    console.info("JSON suggestions:", validation.suggestions);
-  }
-
-  // Always return the parsed payload - the backend will receive the complete JSON structure
-  return result.payload;
 }
 
 async function handleDownloadResponse(response, fallbackName) {
@@ -1882,20 +1475,12 @@ function toggleInputs(enabled) {
       browseButton.disabled = !enabled;
     }
   }
-  if (batchTextarea) batchTextarea.disabled = !enabled;
-  if (batchFileInput) batchFileInput.disabled = !enabled;
   if (flattenToggle) flattenToggle.disabled = !enabled;
 
-  if (downloadButton) {
-    downloadButton.disabled = !enabled || !hasSelectedFormFile();
-  }
-
-  if (batchButton) {
-    if (!enabled) {
-      batchButton.disabled = true;
-    } else {
-      updateBatchButtonState({ silent: true });
-    }
+  if (downloadButton && enabled) {
+    updateDownloadButtonVisibility();
+  } else if (downloadButton) {
+    downloadButton.disabled = true;
   }
 }
 
@@ -1923,147 +1508,10 @@ function hasSelectedFormFile() {
   return getSelectedFormFiles().length > 0;
 }
 
-function validateJsonStructure(payload) {
-  if (!Array.isArray(payload)) return { valid: false, message: "JSON must be an array" };
-  if (payload.length === 0) return { valid: false, message: "Array cannot be empty" };
+function updateDownloadButtonVisibility() {
+  if (!downloadButton) return;
 
-  const warnings = [];
-  const suggestions = [];
-
-  for (let i = 0; i < payload.length; i++) {
-    const record = payload[i];
-    if (!record || typeof record !== 'object') {
-      return { valid: false, message: `Record ${i + 1} must be an object` };
-    }
-
-    // Validate each field in the record
-    Object.entries(record).forEach(([key, value]) => {
-      // Check for empty string values
-      if (value === "") {
-        suggestions.push(`Record ${i + 1}: "${key}" has empty value`);
-      }
-
-      // Check for boolean values - these are valid
-      if (typeof value === 'boolean') {
-        // Boolean values like true/false are perfectly valid
-      }
-
-      // Check string values
-      if (typeof value === 'string' && value.trim() !== value) {
-        suggestions.push(`Record ${i + 1}: "${key}" has leading/trailing whitespace`);
-      }
-
-      // Check for null values
-      if (value === null) {
-        suggestions.push(`Record ${i + 1}: "${key}" is null - consider using empty string instead`);
-      }
-    });
-  }
-
-  return {
-    valid: true,
-    warnings: warnings.length > 0 ? warnings : null,
-    suggestions: suggestions.length > 0 ? suggestions : null,
-    message: (warnings.length > 0 || suggestions.length > 0)
-      ? `JSON valid${warnings.length > 0 ? ' with warnings' : ''}${suggestions.length > 0 ? ' and suggestions' : ''}`
-      : "JSON structure valid"
-  };
-}
-
-function preprocessBatchJson(rawJson) {
-  // This function attempts to fix common JSON issues before parsing
-  // while preserving the original structure for backend submission
-  try {
-    // First, try to parse as-is
-    const payload = JSON.parse(rawJson);
-    return { success: true, payload, original: rawJson };
-  } catch (error) {
-    // If parsing fails, try to fix common issues
-    let fixedJson = rawJson;
-
-    // Fix unquoted string values (common issue)
-    // This regex looks for patterns like: "key": value, where value is not quoted, boolean, number, or null
-    fixedJson = fixedJson.replace(/"([^"]+)":\s*([A-Za-z][A-Za-z0-9]*),?/g, (match, key, value) => {
-      // Don't quote boolean values or null
-      if (['true', 'false', 'null'].includes(value.toLowerCase())) {
-        return match;
-      }
-      // Don't quote if it's already quoted
-      if (value.startsWith('"') && value.endsWith('"')) {
-        return match;
-      }
-      // Don't quote numbers
-      if (/^\d+(\.\d+)?$/.test(value)) {
-        return match;
-      }
-      // Quote the value
-      return `"${key}": "${value}"${match.endsWith(',') ? ',' : ''}`;
-    });
-
-    try {
-      const payload = JSON.parse(fixedJson);
-      return {
-        success: true,
-        payload,
-        original: rawJson, // Keep original for backend
-        fixed: fixedJson,
-        wasFixed: true
-      };
-    } catch (fixError) {
-      return {
-        success: false,
-        error: fixError,
-        original: rawJson
-      };
-    }
-  }
-}
-
-function updateBatchButtonState(options = {}) {
-  const { silent = false } = options;
-  if (!hasSelectedFormFile()) {
-    batchButton.disabled = true;
-    return;
-  }
-
-  const raw = batchTextarea?.value ?? "";
-  if (!raw.trim()) {
-    if (!silent) setStatus(formFillLocale.batchEmpty, "info");
-    batchButton.disabled = true;
-    return;
-  }
-
-  try {
-    const payload = JSON.parse(raw);
-    const validation = validateJsonStructure(payload);
-
-    if (validation.valid) {
-      batchButton.disabled = false;
-      if (!silent) {
-        const hasIssues = validation.warnings || validation.suggestions;
-        const issueCount = (validation.warnings?.length || 0) + (validation.suggestions?.length || 0);
-
-        const message = hasIssues
-          ? `${formFillLocale.batchReady} (${issueCount} note${issueCount > 1 ? 's' : ''})`
-          : formFillLocale.batchReady;
-        setStatus(message, validation.warnings ? "warning" : (validation.suggestions ? "info" : "success"));
-
-        // Log detailed information to console
-        if (validation.warnings) {
-          console.warn("JSON validation warnings:", validation.warnings);
-        }
-        if (validation.suggestions) {
-          console.info("JSON validation suggestions:", validation.suggestions);
-        }
-      }
-    } else {
-      batchButton.disabled = true;
-      if (!silent) setStatus(validation.message, "danger");
-    }
-  } catch (error) {
-    batchButton.disabled = true;
-    if (!silent) setStatus(formFillLocale.parsingError, "danger");
-  }
+  downloadButton.disabled = getSelectedFormFiles().length === 0;
 }
 
 function setStatus(message, variant = "info") {
@@ -2194,10 +1642,44 @@ function pad(value) {
   return str.padStart(2, "0");
 }
 
-if (statusEl && !statusEl.textContent) {
-  setStatus(formFillLocale.selectFile, "info");
+function initialize() {
+  if (editInputs.type) {
+    editInputs.type.addEventListener("change", (event) => {
+      updateEditTypeControls(event.target?.value ?? "text");
+    });
+    updateEditTypeControls(editInputs.type.value ?? "text");
+  }
+
+  if (editForm) {
+    editForm.addEventListener("submit", submitEditForm);
+  }
+
+  if (editModalEl) {
+    editModalEl.addEventListener("hidden.bs.modal", resetEditForm);
+  }
+
+  if (fileInput) {
+    fileInput.addEventListener("change", handleFileSelection);
+  }
+
+  if (downloadButton) {
+    downloadButton.addEventListener("click", handleDownloadClick);
+  }
+
+  if (statusEl && !statusEl.textContent) {
+    setStatus(locale.selectFile, "info");
+  }
+
+  if (batchTextarea) {
+    if (!batchTextarea.placeholder) {
+      batchTextarea.placeholder = DEFAULT_JSON_PLACEHOLDER;
+    }
+    batchTextarea.readOnly = true;
+  }
+
+  if (downloadButton) {
+    updateDownloadButtonVisibility();
+  }
 }
 
-if (batchTextarea && !batchTextarea.placeholder) {
-  batchTextarea.placeholder = DEFAULT_BATCH_PLACEHOLDER;
-}
+initialize();
