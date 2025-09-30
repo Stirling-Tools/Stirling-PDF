@@ -1,16 +1,11 @@
 package stirling.software.common.util;
 
-import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.Enumeration;
 import java.util.List;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
-import java.util.zip.ZipInputStream;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -20,6 +15,10 @@ import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.github.junrar.Archive;
+import com.github.junrar.exception.RarException;
+import com.github.junrar.rarfile.FileHeader;
+
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
@@ -27,55 +26,70 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 
 @Slf4j
 @UtilityClass
-public class CbzUtils {
+public class CbrUtils {
 
-    public byte[] convertCbzToPdf(
-            MultipartFile cbzFile,
+    public byte[] convertCbrToPdf(
+            MultipartFile cbrFile,
             CustomPDFDocumentFactory pdfDocumentFactory,
             TempFileManager tempFileManager)
             throws IOException {
-        return convertCbzToPdf(cbzFile, pdfDocumentFactory, tempFileManager, false);
+        return convertCbrToPdf(cbrFile, pdfDocumentFactory, tempFileManager, false);
     }
 
-    public byte[] convertCbzToPdf(
-            MultipartFile cbzFile,
+    public byte[] convertCbrToPdf(
+            MultipartFile cbrFile,
             CustomPDFDocumentFactory pdfDocumentFactory,
             TempFileManager tempFileManager,
             boolean optimizeForEbook)
             throws IOException {
 
-        validateCbzFile(cbzFile);
+        validateCbrFile(cbrFile);
 
-        try (TempFile tempFile = new TempFile(tempFileManager, ".cbz")) {
-            cbzFile.transferTo(tempFile.getFile());
+        try (TempFile tempFile = new TempFile(tempFileManager, ".cbr")) {
+            cbrFile.transferTo(tempFile.getFile());
 
-            // Early ZIP validity check using ZipInputStream (fail fast on non-zip content)
-            try (BufferedInputStream bis =
-                            new BufferedInputStream(
-                                    new java.io.FileInputStream(tempFile.getFile()));
-                    ZipInputStream zis = new ZipInputStream(bis)) {
-                if (zis.getNextEntry() == null) {
-                    throw new IllegalArgumentException("Archive is empty or invalid ZIP");
+            try (PDDocument document = pdfDocumentFactory.createNewDocument()) {
+
+                Archive archive;
+                try {
+                    archive = new Archive(tempFile.getFile());
+                } catch (RarException e) {
+                    log.warn("Failed to open CBR/RAR archive: {}", e.getMessage());
+                    String errorMessage =
+                            "Invalid CBR/RAR archive: "
+                                    + e.getMessage()
+                                    + ". The file may be encrypted, corrupted, or use RAR 5 format which is not yet supported.";
+                    throw ExceptionUtils.createIllegalArgumentException(
+                            "error.invalidFormat", errorMessage);
+                } catch (IOException e) {
+                    log.warn("IO error reading CBR/RAR archive: {}", e.getMessage());
+                    throw ExceptionUtils.createFileProcessingException("CBR extraction", e);
                 }
-            } catch (IOException e) {
-                throw new IllegalArgumentException("Invalid CBZ/ZIP archive", e);
-            }
 
-            try (PDDocument document = pdfDocumentFactory.createNewDocument();
-                    ZipFile zipFile = new ZipFile(tempFile.getFile())) {
-                Enumeration<? extends ZipEntry> entries = zipFile.entries();
                 List<ImageEntryData> imageEntries = new ArrayList<>();
-                while (entries.hasMoreElements()) {
-                    ZipEntry entry = entries.nextElement();
-                    if (!entry.isDirectory() && isImageFile(entry.getName())) {
-                        try (InputStream is = zipFile.getInputStream(entry)) {
-                            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                            is.transferTo(baos);
-                            imageEntries.add(
-                                    new ImageEntryData(entry.getName(), baos.toByteArray()));
-                        } catch (IOException e) {
-                            log.warn("Error reading image {}: {}", entry.getName(), e.getMessage());
+
+                try {
+                    for (FileHeader fileHeader : archive) {
+                        if (!fileHeader.isDirectory() && isImageFile(fileHeader.getFileName())) {
+                            try (InputStream is = archive.getInputStream(fileHeader)) {
+                                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                                is.transferTo(baos);
+                                imageEntries.add(
+                                        new ImageEntryData(
+                                                fileHeader.getFileName(), baos.toByteArray()));
+                            } catch (Exception e) {
+                                log.warn(
+                                        "Error reading image {}: {}",
+                                        fileHeader.getFileName(),
+                                        e.getMessage());
+                            }
                         }
+                    }
+                } finally {
+                    try {
+                        archive.close();
+                    } catch (IOException e) {
+                        log.warn("Error closing CBR/RAR archive: {}", e.getMessage());
                     }
                 }
 
@@ -83,7 +97,9 @@ public class CbzUtils {
                         Comparator.comparing(ImageEntryData::name, new NaturalOrderComparator()));
 
                 if (imageEntries.isEmpty()) {
-                    throw new IllegalArgumentException("No valid images found in the CBZ file");
+                    throw ExceptionUtils.createIllegalArgumentException(
+                            "error.fileProcessing",
+                            "No valid images found in the CBR file. The archive may be empty or contain no supported image formats.");
                 }
 
                 for (ImageEntryData imageEntry : imageEntries) {
@@ -106,9 +122,11 @@ public class CbzUtils {
                 }
 
                 if (document.getNumberOfPages() == 0) {
-                    throw new IllegalArgumentException(
-                            "No images could be processed from the CBZ file");
+                    throw ExceptionUtils.createIllegalArgumentException(
+                            "error.fileProcessing",
+                            "No images could be processed from the CBR file. All images may be corrupted or in unsupported formats.");
                 }
+
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 document.save(baos);
                 byte[] pdfBytes = baos.toByteArray();
@@ -128,7 +146,7 @@ public class CbzUtils {
         }
     }
 
-    private void validateCbzFile(MultipartFile file) {
+    private void validateCbrFile(MultipartFile file) {
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException("File cannot be null or empty");
         }
@@ -139,32 +157,19 @@ public class CbzUtils {
         }
 
         String extension = FilenameUtils.getExtension(filename).toLowerCase();
-        if (!"cbz".equals(extension) && !"zip".equals(extension)) {
-            throw new IllegalArgumentException("File must be a CBZ or ZIP archive");
+        if (!"cbr".equals(extension) && !"rar".equals(extension)) {
+            throw new IllegalArgumentException("File must be a CBR or RAR archive");
         }
     }
 
-    public boolean isCbzFile(MultipartFile file) {
+    public boolean isCbrFile(MultipartFile file) {
         String filename = file.getOriginalFilename();
         if (filename == null) {
             return false;
         }
 
         String extension = FilenameUtils.getExtension(filename).toLowerCase();
-        return "cbz".equals(extension) || "zip".equals(extension);
-    }
-
-    public static boolean isComicBookFile(MultipartFile file) {
-        String filename = file.getOriginalFilename();
-        if (filename == null) {
-            return false;
-        }
-
-        String extension = FilenameUtils.getExtension(filename).toLowerCase();
-        return "cbz".equals(extension)
-                || "zip".equals(extension)
-                || "cbr".equals(extension)
-                || "rar".equals(extension);
+        return "cbr".equals(extension) || "rar".equals(extension);
     }
 
     private boolean isImageFile(String filename) {
@@ -174,6 +179,30 @@ public class CbzUtils {
     private record ImageEntryData(String name, byte[] data) {}
 
     private class NaturalOrderComparator implements Comparator<String> {
+        private static String getChunk(String s, int length, int marker) {
+            StringBuilder chunk = new StringBuilder();
+            char c = s.charAt(marker);
+            chunk.append(c);
+            marker++;
+
+            if (isDigit(c)) {
+                while (marker < length && isDigit(s.charAt(marker))) {
+                    chunk.append(s.charAt(marker));
+                    marker++;
+                }
+            } else {
+                while (marker < length && !isDigit(s.charAt(marker))) {
+                    chunk.append(s.charAt(marker));
+                    marker++;
+                }
+            }
+            return chunk.toString();
+        }
+
+        private static boolean isDigit(char ch) {
+            return ch >= '0' && ch <= '9';
+        }
+
         @Override
         public int compare(String s1, String s2) {
             int len1 = s1.length();
@@ -202,30 +231,6 @@ public class CbzUtils {
             }
 
             return Integer.compare(len1, len2);
-        }
-
-        private static String getChunk(String s, int length, int marker) {
-            StringBuilder chunk = new StringBuilder();
-            char c = s.charAt(marker);
-            chunk.append(c);
-            marker++;
-
-            if (isDigit(c)) {
-                while (marker < length && isDigit(s.charAt(marker))) {
-                    chunk.append(s.charAt(marker));
-                    marker++;
-                }
-            } else {
-                while (marker < length && !isDigit(s.charAt(marker))) {
-                    chunk.append(s.charAt(marker));
-                    marker++;
-                }
-            }
-            return chunk.toString();
-        }
-
-        private static boolean isDigit(char ch) {
-            return ch >= '0' && ch <= '9';
         }
     }
 }

@@ -20,5 +20,5 @@ public class ConvertPdfToCbzRequest {
             description = "The DPI (Dots Per Inch) for rendering PDF pages as images",
             example = "300",
             requiredMode = Schema.RequiredMode.NOT_REQUIRED)
-    private Integer dpi = 300;
+    private int dpi = 300;
 }
