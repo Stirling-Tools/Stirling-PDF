@@ -68,6 +68,27 @@ public class MergeController {
         return mergedDoc;
     }
 
+    // Re-order files to match the explicit order provided by the front-end.
+    // fileOrder is newline-delimited original filenames in the desired order.
+    private static MultipartFile[] reorderFilesByProvidedOrder(
+            MultipartFile[] files, String fileOrder) {
+        String[] desired = fileOrder.split("\n", -1);
+        List<MultipartFile> remaining = new ArrayList<>(Arrays.asList(files));
+        List<MultipartFile> ordered = new ArrayList<>(files.length);
+
+        for (String name : desired) {
+            if (name == null || name.isEmpty()) continue;
+            int idx = indexOfByOriginalFilename(remaining, name);
+            if (idx >= 0) {
+                ordered.add(remaining.remove(idx));
+            }
+        }
+
+        // Append any files not explicitly listed, preserving their relative order
+        ordered.addAll(remaining);
+        return ordered.toArray(new MultipartFile[0]);
+    }
+
     // Returns a comparator for sorting MultipartFile arrays based on the given sort type
     private Comparator<MultipartFile> getSortComparator(String sortType) {
         return switch (sortType) {
@@ -80,14 +101,14 @@ public class MergeController {
                             String.CASE_INSENSITIVE_ORDER);
             case "byDateModified" ->
                     (file1, file2) -> {
-                        long t1 = getPdfModificationTimeSafe(file1);
-                        long t2 = getPdfModificationTimeSafe(file2);
+                        long t1 = getPdfDateTimeSafe(file1);
+                        long t2 = getPdfDateTimeSafe(file2);
                         return Long.compare(t2, t1);
                     };
             case "byDateCreated" ->
                     (file1, file2) -> {
-                        long t1 = getPdfCreationTimeSafe(file1);
-                        long t2 = getPdfCreationTimeSafe(file2);
+                        long t1 = getPdfDateTimeSafe(file1);
+                        long t2 = getPdfDateTimeSafe(file2);
                         return Long.compare(t2, t1);
                     };
             case "byPDFTitle" ->
@@ -119,78 +140,6 @@ public class MergeController {
             case "orderProvided" -> (file1, file2) -> 0; // Default is the order provided
             default -> (file1, file2) -> 0; // Default is the order provided
         };
-    }
-
-    private long getPdfModificationTimeSafe(MultipartFile file) {
-        try {
-            try (PDDocument doc = pdfDocumentFactory.load(file)) {
-                PDDocumentInformation info = doc.getDocumentInformation();
-                if (info != null) {
-                    if (info.getModificationDate() != null) {
-                        return info.getModificationDate().getTimeInMillis();
-                    }
-                    if (info.getCreationDate() != null) {
-                        return info.getCreationDate().getTimeInMillis();
-                    }
-                }
-
-                // Fallback to XMP metadata if Info dates are missing
-                PDMetadata metadata = doc.getDocumentCatalog().getMetadata();
-                if (metadata != null) {
-                    try (InputStream is = metadata.createInputStream()) {
-                        DomXmpParser parser = new DomXmpParser();
-                        XMPMetadata xmp = parser.parse(is);
-                        XMPBasicSchema basic = xmp.getXMPBasicSchema();
-                        if (basic != null) {
-                            if (basic.getModifyDate() != null) {
-                                return basic.getModifyDate().getTimeInMillis();
-                            }
-                            if (basic.getCreateDate() != null) {
-                                return basic.getCreateDate().getTimeInMillis();
-                            }
-                        }
-                    } catch (Exception e) {
-                        log.debug(
-                                "Unable to read XMP metadata dates from uploaded file: {}",
-                                e.getMessage());
-                    }
-                }
-            }
-        } catch (IOException e) {
-            log.debug("Unable to read PDF dates from uploaded file: {}", e.getMessage());
-        }
-        return 0L;
-    }
-
-    private long getPdfCreationTimeSafe(MultipartFile file) {
-        try {
-            try (PDDocument doc = pdfDocumentFactory.load(file)) {
-                PDDocumentInformation info = doc.getDocumentInformation();
-                if (info != null && info.getCreationDate() != null) {
-                    return info.getCreationDate().getTimeInMillis();
-                }
-
-                // Fallback to XMP metadata
-                PDMetadata metadata = doc.getDocumentCatalog().getMetadata();
-                if (metadata != null) {
-                    try (InputStream is = metadata.createInputStream()) {
-                        DomXmpParser parser = new DomXmpParser();
-                        XMPMetadata xmp = parser.parse(is);
-                        XMPBasicSchema basic = xmp.getXMPBasicSchema();
-                        if (basic != null && basic.getCreateDate() != null) {
-                            return basic.getCreateDate().getTimeInMillis();
-                        }
-                    } catch (Exception e) {
-                        log.debug(
-                                "Unable to read XMP metadata creation date from uploaded file: {}",
-                                e.getMessage());
-                    }
-                }
-            }
-        } catch (IOException e) {
-            log.debug("Unable to read PDF creation date from uploaded file: {}", e.getMessage());
-        }
-        return 0L;
     }
 
     // Adds a table of contents to the merged document using filenames as chapter titles
@@ -230,24 +179,45 @@ public class MergeController {
         }
     }
 
-    // Re-order files to match the explicit order provided by the front-end.
-    // fileOrder is newline-delimited original filenames in the desired order.
-    private static MultipartFile[] reorderFilesByProvidedOrder(MultipartFile[] files, String fileOrder) {
-        String[] desired = fileOrder.split("\n", -1);
-        List<MultipartFile> remaining = new ArrayList<>(Arrays.asList(files));
-        List<MultipartFile> ordered = new ArrayList<>(files.length);
+    private long getPdfDateTimeSafe(MultipartFile file) {
+        try {
+            try (PDDocument doc = pdfDocumentFactory.load(file)) {
+                PDDocumentInformation info = doc.getDocumentInformation();
+                if (info != null) {
+                    if (info.getModificationDate() != null) {
+                        return info.getModificationDate().getTimeInMillis();
+                    }
+                    if (info.getCreationDate() != null) {
+                        return info.getCreationDate().getTimeInMillis();
+                    }
+                }
 
-        for (String name : desired) {
-            if (name == null || name.isEmpty()) continue;
-            int idx = indexOfByOriginalFilename(remaining, name);
-            if (idx >= 0) {
-                ordered.add(remaining.remove(idx));
+                // Fallback to XMP metadata if Info dates are missing
+                PDMetadata metadata = doc.getDocumentCatalog().getMetadata();
+                if (metadata != null) {
+                    try (InputStream is = metadata.createInputStream()) {
+                        DomXmpParser parser = new DomXmpParser();
+                        XMPMetadata xmp = parser.parse(is);
+                        XMPBasicSchema basic = xmp.getXMPBasicSchema();
+                        if (basic != null) {
+                            if (basic.getModifyDate() != null) {
+                                return basic.getModifyDate().getTimeInMillis();
+                            }
+                            if (basic.getCreateDate() != null) {
+                                return basic.getCreateDate().getTimeInMillis();
+                            }
+                        }
+                    } catch (Exception e) {
+                        log.debug(
+                                "Unable to read XMP metadata dates from uploaded file: {}",
+                                e.getMessage());
+                    }
+                }
             }
+        } catch (IOException e) {
+            log.debug("Unable to read PDF dates from uploaded file: {}", e.getMessage());
         }
-
-        // Append any files not explicitly listed, preserving their relative order
-        ordered.addAll(remaining);
-        return ordered.toArray(new MultipartFile[0]);
+        return 0L;
     }
 
     private static int indexOfByOriginalFilename(List<MultipartFile> list, String name) {
