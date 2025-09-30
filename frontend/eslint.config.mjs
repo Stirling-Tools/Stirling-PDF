@@ -199,15 +199,13 @@ export default defineConfig(
     ],
     extends: [
       reactPlugin.configs.flat.recommended,
-      ...tseslint.configs.recommended,
+      eslint.configs.recommended,
     ],
     languageOptions: {
-      parser: tseslint.parser,
       parserOptions: {
         ecmaFeatures: {
           jsx: true,
         },
-        projectService: true,
         tsconfigRootDir: __dirname,
       },
       globals: {
