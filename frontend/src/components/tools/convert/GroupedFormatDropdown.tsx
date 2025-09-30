@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { Stack, Text, Group, Button, Box, Popover, UnstyledButton, useMantineTheme, useMantineColorScheme } from "@mantine/core";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 
@@ -34,14 +34,14 @@ const GroupedFormatDropdown = ({
 
   const groupedOptions = useMemo(() => {
     const groups: Record<string, FormatOption[]> = {};
-    
+
     options.forEach(option => {
       if (!groups[option.group]) {
         groups[option.group] = [];
       }
       groups[option.group].push(option);
     });
-    
+
     return groups;
   }, [options]);
 
@@ -77,14 +77,14 @@ const GroupedFormatDropdown = ({
             padding: '0.5rem 0.75rem',
             border: `0.0625rem solid ${theme.colors.gray[4]}`,
             borderRadius: theme.radius.sm,
-            backgroundColor: disabled 
-              ? theme.colors.gray[1] 
-              : colorScheme === 'dark' 
-                ? theme.colors.dark[6] 
+            backgroundColor: disabled
+              ? theme.colors.gray[1]
+              : colorScheme === 'dark'
+                ? theme.colors.dark[6]
                 : theme.white,
             cursor: disabled ? 'not-allowed' : 'pointer',
             width: '100%',
-            color: disabled 
+            color: disabled
               ? colorScheme === 'dark' ? theme.colors.dark[1] : theme.colors.dark[7]
               : colorScheme === 'dark' ? theme.colors.dark[0] : theme.colors.dark[9]
           }}
@@ -93,19 +93,19 @@ const GroupedFormatDropdown = ({
             <Text size="sm" c={value ? undefined : 'dimmed'}>
               {selectedLabel}
             </Text>
-            <KeyboardArrowDownIcon 
-              style={{ 
+            <KeyboardArrowDownIcon
+              style={{
                 fontSize: '1rem',
                 transform: dropdownOpened ? 'rotate(180deg)' : 'rotate(0deg)',
                 transition: 'transform 0.2s ease',
                 color: colorScheme === 'dark' ? theme.colors.dark[2] : theme.colors.gray[6]
-              }} 
+              }}
             />
           </Group>
         </UnstyledButton>
       </Popover.Target>
-      <Popover.Dropdown 
-        style={{ 
+      <Popover.Dropdown
+        style={{
           minWidth: Math.min(350, parseInt(minWidth.replace('rem', '')) * 16),
           maxWidth: '90vw',
           maxHeight: '40vh',
@@ -117,10 +117,10 @@ const GroupedFormatDropdown = ({
         <Stack gap="md">
           {Object.entries(groupedOptions).map(([groupName, groupOptions]) => (
             <Box key={groupName}>
-              <Text 
-                size="sm" 
-                fw={600} 
-                c={colorScheme === 'dark' ? 'dark.2' : 'gray.6'} 
+              <Text
+                size="sm"
+                fw={600}
+                c={colorScheme === 'dark' ? 'dark.2' : 'gray.6'}
                 mb="xs"
               >
                 {groupName}

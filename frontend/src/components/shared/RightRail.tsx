@@ -16,6 +16,7 @@ import { SearchInterface } from '../viewer/SearchInterface';
 import { ViewerContext } from '../../contexts/ViewerContext';
 import { useSignature } from '../../contexts/SignatureContext';
 import ViewerAnnotationControls from './rightRail/ViewerAnnotationControls';
+import { useSignature } from '../../contexts/SignatureContext';
 
 import { parseSelection } from '../../utils/bulkselection/parseSelection';
 
