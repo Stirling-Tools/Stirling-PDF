@@ -25,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.misc.ExtractHeaderRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.common.util.WebResponseUtils;
 
 @RestController
@@ -76,7 +77,7 @@ public class AutoRenameController {
                     }
 
                     private void processLine() {
-                        if (lineBuilder.length() > 0 && lineCount < LINE_LIMIT) {
+                        if (!lineBuilder.isEmpty() && lineCount < LINE_LIMIT) {
                             lineInfos.add(new LineInfo(lineBuilder.toString(), maxFontSizeInLine));
                         }
                     }
@@ -135,7 +136,12 @@ public class AutoRenameController {
 
         // Sanitize the header string by removing characters not allowed in a filename.
         if (header != null && header.length() < 255) {
-            header = header.replaceAll("[/\\\\?%*:|\"<>]", "").trim();
+            header =
+                    RegexPatternUtils.getInstance()
+                            .getSafeFilenamePattern()
+                            .matcher(header)
+                            .replaceAll("")
+                            .trim();
             return WebResponseUtils.pdfDocToWebResponse(document, header + ".pdf");
         } else {
             log.info("File has no good title to be found");
