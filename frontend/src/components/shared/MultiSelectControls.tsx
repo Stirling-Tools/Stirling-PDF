@@ -1,4 +1,3 @@
-import React from "react";
 import { Box, Group, Text, Button } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 
@@ -37,7 +36,7 @@ const MultiSelectControls = ({
           >
             {t("fileManager.clearSelection", "Clear Selection")}
           </Button>
-          
+
           {onAddToUpload && (
             <Button
               size="xs"
@@ -47,7 +46,7 @@ const MultiSelectControls = ({
               {t("fileManager.addToUpload", "Add to Upload")}
             </Button>
           )}
-          
+
           {onOpenInFileEditor && (
             <Button
               size="xs"
@@ -58,7 +57,7 @@ const MultiSelectControls = ({
               {t("fileManager.openInFileEditor", "Open in File Editor")}
             </Button>
           )}
-          
+
           {onOpenInPageEditor && (
             <Button
               size="xs"
@@ -69,7 +68,7 @@ const MultiSelectControls = ({
               {t("fileManager.openInPageEditor", "Open in Page Editor")}
             </Button>
           )}
-          
+
           {onDeleteAll && (
             <Button
               size="xs"

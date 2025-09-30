@@ -1,4 +1,3 @@
-import React from 'react';
 import EmbedPdfViewer from './EmbedPdfViewer';
 
 export interface ViewerProps {

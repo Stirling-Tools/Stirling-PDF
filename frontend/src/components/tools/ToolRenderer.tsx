@@ -1,4 +1,4 @@
-import React, { Suspense } from "react";
+import { Suspense } from "react";
 import { useToolWorkflow } from "../../contexts/ToolWorkflowContext";
 import { BaseToolProps } from "../../types/tool";
 import ToolLoadingFallback from "./ToolLoadingFallback";
@@ -26,7 +26,7 @@ const ToolRenderer = ({
 
   // Wrap lazy-loaded component with Suspense
   return (
-    <Suspense fallback={<ToolLoadingFallback toolName={selectedTool.name} />}> 
+    <Suspense fallback={<ToolLoadingFallback toolName={selectedTool.name} />}>
       <ToolComponent
         onPreviewFile={onPreviewFile}
         onComplete={onComplete}
