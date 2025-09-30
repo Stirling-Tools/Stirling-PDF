@@ -7,19 +7,45 @@
 }
 
 .mobile-toggle {
-  padding: 0.75rem 1rem;
+  padding: 0.5rem 0.75rem;
   border-bottom: 1px solid var(--border-subtle);
   background: var(--bg-toolbar);
   display: flex;
   flex-direction: column;
+  gap: 0.35rem;
+}
+
+.mobile-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 0.5rem;
+}
+
+.mobile-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.mobile-brand-mark {
+  height: 1.25rem;
+  width: auto;
+}
+
+.mobile-brand-name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.2;
 }
 
 .mobile-toggle-buttons {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.25rem;
-  padding: 0.25rem;
+  padding: 0.2rem;
   border-radius: 9999px;
   background: var(--bg-background);
   border: 1px solid var(--border-subtle);
@@ -28,8 +54,8 @@
 .mobile-toggle-button {
   border: none;
   border-radius: 9999px;
-  padding: 0.5rem 1rem;
-  font-size: 0.875rem;
+  padding: 0.4rem 0.9rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: var(--text-muted);
   background: transparent;
@@ -47,7 +73,7 @@
 }
 
 .mobile-toggle-hint {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   color: var(--text-muted);
   text-align: center;
 }

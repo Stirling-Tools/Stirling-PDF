@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useToolWorkflow } from "../contexts/ToolWorkflowContext";
-import { ActionIcon, Group } from "@mantine/core";
+import { ActionIcon, Group, useMantineColorScheme } from "@mantine/core";
 import { useSidebarContext } from "../contexts/SidebarContext";
 import { useDocumentMeta } from "../hooks/useDocumentMeta";
-import { getBaseUrl } from "../constants/app";
+import { BASE_PATH, getBaseUrl } from "../constants/app";
 import { useMediaQuery } from "@mantine/hooks";
 
 import ToolPanel from "../components/tools/ToolPanel";
@@ -31,9 +31,16 @@ export default function HomePage() {
   const { selectedTool, selectedToolKey } = useToolWorkflow();
 
   const { openFilesModal } = useFilesModalContext();
+  const { colorScheme } = useMantineColorScheme();
   const isMobile = useMediaQuery("(max-width: 1024px)");
   const sliderRef = useRef<HTMLDivElement | null>(null);
   const [activeMobileView, setActiveMobileView] = useState<MobileView>("tools");
+
+  const brandName = t("home.mobile.brandName", "Stirling");
+  const brandAltText = t("home.mobile.brandAlt", "Stirling PDF logo");
+  const brandMarkSrc = `${BASE_PATH}/branding/StirlingPDFLogoNoText${
+    colorScheme === "dark" ? "Dark" : "Light"
+  }.svg`;
 
   const handleSelectMobileView = useCallback((view: MobileView) => {
     setActiveMobileView(view);
@@ -106,20 +113,19 @@ export default function HomePage() {
       {isMobile ? (
         <div className="mobile-layout">
           <div className="mobile-toggle">
-            <div className="flex items-center justify-between">
-              <h1 className="text-base font-semibold text-[var(--text-primary)]">
-                {selectedTool?.name || t('home.mobile.toolSettings', 'Tool settings')}
-              </h1>
-              <div className="flex items-center gap-2">
-                <ActionIcon
-                  variant="subtle"
-                  size="lg"
-                  aria-label={t('home.mobile.openFiles', 'Open files')}
-                  onClick={() => openFilesModal()}
-                >
-                  <LocalIcon icon="folder-rounded" width="1.5rem" height="1.5rem" />
-                </ActionIcon>
+            <div className="mobile-header">
+              <div className="mobile-brand">
+                <img src={brandMarkSrc} alt={brandAltText} className="mobile-brand-mark" />
+                <span className="mobile-brand-name">{brandName}</span>
               </div>
+              <ActionIcon
+                variant="subtle"
+                size="md"
+                aria-label={t('home.mobile.openFiles', 'Open files')}
+                onClick={() => openFilesModal()}
+              >
+                <LocalIcon icon="folder-rounded" width="1.25rem" height="1.25rem" />
+              </ActionIcon>
             </div>
             <div className="mobile-toggle-buttons" role="tablist" aria-label={t('home.mobile.viewSwitcher', 'Switch workspace view')}>
               <button
