@@ -101,7 +101,7 @@ public class ScannerEffectRequest {
         this.noise = 1.0f;
         this.brightness = 1.02f;
         this.contrast = 1.05f;
-        this.resolution = 600;
+        this.resolution = 300;
     }
 
     public void applyMediumQualityPreset() {
