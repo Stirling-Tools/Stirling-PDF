@@ -8,6 +8,49 @@ import { AddFilesCommand } from './commands/add-page.js';
 import { DecryptFile } from '../DecryptFiles.js';
 import { CommandSequence } from './commands/commands-sequence.js';
 
+const isSvgFile = (file) => {
+  if (!file) return false;
+  const type = (file.type || '').toLowerCase();
+  if (type === 'image/svg+xml') {
+    return true;
+  }
+  const name = (file.name || '').toLowerCase();
+  return name.endsWith('.svg');
+};
+
+const partitionSvgFiles = (files = []) => {
+  const allowed = [];
+  const rejected = [];
+
+  files.forEach((file) => {
+    if (isSvgFile(file)) {
+      rejected.push(file);
+    } else {
+      allowed.push(file);
+    }
+  });
+
+  return { allowed, rejected };
+};
+
+const notifySvgUnsupported = (files = []) => {
+  if (!files.length) return;
+  if (!window.location.pathname?.includes('multi-tool')) return;
+
+  const message = window.multiTool?.svgNotSupported ||
+    'SVG files are not supported in Multi Tool and were ignored.';
+  const names = files
+    .map((file) => file?.name)
+    .filter(Boolean)
+    .join(', ');
+
+  if (names) {
+    alert(`${message}\n${names}`);
+  } else {
+    alert(message);
+  }
+};
+
 class PdfContainer {
   fileName;
   pagesContainer;
@@ -180,10 +223,18 @@ class PdfContainer {
       input.onchange = async (e) => {
         const files = e.target.files;
         if (files.length > 0) {
-          pages = await this.addFilesFromFiles(files, nextSiblingElement, pages);
-          this.updateFilename(files[0].name);
+          const {
+            pages: updatedPages,
+            acceptedFileCount,
+          } = await this.addFilesFromFiles(files, nextSiblingElement, pages);
 
-          if(window.selectPage){
+          pages = updatedPages;
+
+          if (acceptedFileCount > 0) {
+            this.updateFilename();
+          }
+
+          if (window.selectPage && acceptedFileCount > 0) {
             this.showButton(document.getElementById('select-pages-container'), true);
           }
         }
@@ -196,11 +247,17 @@ class PdfContainer {
 
   async handleDroppedFiles(files, nextSiblingElement = null) {
     if (files.length > 0) {
-      const pages = await this.addFilesFromFiles(files, nextSiblingElement, []);
-      this.updateFilename(files[0]?.name || 'untitled');
+      const {
+        pages,
+        acceptedFileCount,
+      } = await this.addFilesFromFiles(files, nextSiblingElement, []);
 
-      if(window.selectPage) {
-        this.showButton(document.getElementById('select-pages-container'), true);
+      if (acceptedFileCount > 0) {
+        this.updateFilename();
+
+        if (window.selectPage) {
+          this.showButton(document.getElementById('select-pages-container'), true);
+        }
       }
 
       return pages;
@@ -209,14 +266,24 @@ class PdfContainer {
 
   async addFilesFromFiles(files, nextSiblingElement, pages) {
     this.fileName = files[0].name;
-    for (var i = 0; i < files.length; i++) {
+    const fileArray = Array.from(files || []);
+    const { allowed: allowedFiles, rejected: rejectedSvgFiles } = partitionSvgFiles(fileArray);
+
+    if (allowedFiles.length > 0) {
+      this.fileName = allowedFiles[0].name || 'untitled';
+    }
+
+    let acceptedFileCount = 0;
+
+    for (let i = 0; i < allowedFiles.length; i++) {
+      const file = allowedFiles[i];
       const startTime = Date.now();
       let processingTime,
         errorMessage = null,
         pageCount = 0;
 
       try {
-        let decryptedFile = files[i];
+        let decryptedFile = file;
         let isEncrypted = false;
         let requiresPassword = false;
         await this.decryptFile
@@ -245,18 +312,27 @@ class PdfContainer {
 
         processingTime = Date.now() - startTime;
         this.captureFileProcessingEvent(true, decryptedFile, processingTime, null, pageCount);
+        acceptedFileCount++;
       } catch (error) {
         processingTime = Date.now() - startTime;
         errorMessage = error.message || 'Unknown error';
-        this.captureFileProcessingEvent(false, files[i], processingTime, errorMessage, pageCount);
+        this.captureFileProcessingEvent(false, file, processingTime, errorMessage, pageCount);
+
+        if (isSvgFile(file)) {
+          rejectedSvgFiles.push(file);
+        }
       }
+    }
+
+    if (rejectedSvgFiles.length > 0) {
+      notifySvgUnsupported(rejectedSvgFiles);
     }
 
     document.querySelectorAll('.enable-on-file').forEach((element) => {
       element.disabled = false;
     });
 
-    return pages;
+    return { pages, acceptedFileCount };
   }
 
   captureFileProcessingEvent(success, file, processingTime, errorMessage, pageCount) {
