@@ -34,6 +34,10 @@ export default function HomePage() {
   const { colorScheme } = useMantineColorScheme();
   const isMobile = useMediaQuery("(max-width: 900px)");
   const sliderRef = useRef<HTMLDivElement | null>(null);
+  const slideRefs = useRef<Record<MobileView, HTMLDivElement | null>>({
+    tools: null,
+    workbench: null,
+  });
   const [activeMobileView, setActiveMobileView] = useState<MobileView>("tools");
 
   const brandName = t("home.mobile.brandName", "Stirling");
@@ -45,23 +49,32 @@ export default function HomePage() {
   const scrollToMobileView = useCallback(
     (view: MobileView, behavior: ScrollBehavior = "smooth") => {
       const container = sliderRef.current;
-      if (!container) return;
+      const target = slideRefs.current[view];
 
-      const offsetWidth = container.getBoundingClientRect().width || container.clientWidth;
-      const maxOffset = Math.max(0, container.scrollWidth - container.clientWidth);
-      const offset = view === "tools" ? 0 : Math.max(0, Math.min(maxOffset, offsetWidth));
+      if (!container || !target) {
+        return;
+      }
 
       if (behavior === "auto") {
-        container.scrollLeft = offset;
+        container.scrollLeft = target.offsetLeft;
+        return;
+      }
+
+      if (typeof target.scrollIntoView === "function") {
+        target.scrollIntoView({
+          behavior,
+          block: "nearest",
+          inline: "start",
+        });
         return;
       }
 
       if (typeof container.scrollTo === "function") {
-        container.scrollTo({ left: offset, behavior });
+        container.scrollTo({ left: target.offsetLeft, behavior });
         return;
       }
 
-      container.scrollLeft = offset;
+      container.scrollLeft = target.offsetLeft;
     },
     []
   );
@@ -175,12 +188,24 @@ export default function HomePage() {
             </span>
           </div>
           <div ref={sliderRef} className="mobile-slider">
-            <div className="mobile-slide" aria-label={t('home.mobile.toolsSlide', 'Tool selection panel')}>
+            <div
+              className="mobile-slide"
+              aria-label={t('home.mobile.toolsSlide', 'Tool selection panel')}
+              ref={(node) => {
+                slideRefs.current.tools = node;
+              }}
+            >
               <div className="mobile-slide-content">
                 <ToolPanel />
               </div>
             </div>
-            <div className="mobile-slide" aria-label={t('home.mobile.workbenchSlide', 'Workspace panel')}>
+            <div
+              className="mobile-slide"
+              aria-label={t('home.mobile.workbenchSlide', 'Workspace panel')}
+              ref={(node) => {
+                slideRefs.current.workbench = node;
+              }}
+            >
               <div className="mobile-slide-content">
                 <div className="flex-1 min-h-0 flex flex-col">
                   <Workbench />
