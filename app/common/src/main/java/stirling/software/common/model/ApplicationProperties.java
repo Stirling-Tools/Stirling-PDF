@@ -306,7 +306,7 @@ public class ApplicationProperties {
             private boolean enabled = true;
             private boolean keyCleanup = true;
             private int keyRetentionDays = 7;
-            private boolean secureCookie;
+            private Boolean secureCookie;
         }
     }
 
