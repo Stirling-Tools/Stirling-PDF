@@ -81,7 +81,14 @@ export default defineConfig(
     languageOptions: {
       parser: tseslint.parser,
       parserOptions: {
-        projectService: true,
+        projectService: {
+          allowDefaultProject: [
+            'src/components/tooltips/usePageSelectionTips.tsx',
+            'src/reportWebVitals.js',
+            'src/setupTests.js'
+          ],
+          defaultProject: './tsconfig.json'
+        },
         tsconfigRootDir: __dirname,
       },
       globals: {
