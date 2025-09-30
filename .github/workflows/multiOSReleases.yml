@@ -252,7 +252,7 @@ jobs:
 
       - name: Install Cosign
         if: matrix.os == 'windows-latest'
-        uses: sigstore/cosign-installer@d58896d6a1865668819e1d91763c7751a165e159 # v3.9.2
+        uses: sigstore/cosign-installer@d7543c93d881b35a8faa02e8e3605f69b7a1ce62 # v3.10.0
 
       - name: Generate key pair
         if: matrix.os == 'windows-latest'
