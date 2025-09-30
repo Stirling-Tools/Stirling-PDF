@@ -115,7 +115,7 @@ export default function HomePage() {
                   variant="subtle"
                   size="lg"
                   aria-label={t('home.mobile.openFiles', 'Open files')}
-                  onClick={openFilesModal}
+                  onClick={() => openFilesModal()}
                 >
                   <LocalIcon icon="folder-rounded" width="1.5rem" height="1.5rem" />
                 </ActionIcon>
