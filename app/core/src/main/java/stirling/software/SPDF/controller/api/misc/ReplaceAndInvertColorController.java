@@ -31,8 +31,8 @@ public class ReplaceAndInvertColorController {
     @Operation(
             summary = "Replace-Invert Color PDF",
             description =
-                    "This endpoint accepts a PDF file and option of invert all colors or replace"
-                            + " text and background colors. Input:PDF Output:PDF Type:SISO")
+                    "This endpoint accepts a PDF file and provides options to invert all colors, replace"
+                            + " text and background colors, or convert to CMYK color space for printing. Input:PDF Output:PDF Type:SISO")
     public ResponseEntity<InputStreamResource> replaceAndInvertColor(
             @ModelAttribute ReplaceAndInvertColorRequest request) throws IOException {
 

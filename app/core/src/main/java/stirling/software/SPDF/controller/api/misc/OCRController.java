@@ -1,10 +1,14 @@
 package stirling.software.SPDF.controller.api.misc;
 
 import java.awt.image.BufferedImage;
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -34,13 +38,8 @@ import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.SPDF.model.api.misc.ProcessPdfWithOcrRequest;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
-import stirling.software.common.util.ExceptionUtils;
-import stirling.software.common.util.ProcessExecutor;
+import stirling.software.common.util.*;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
-import stirling.software.common.util.TempDirectory;
-import stirling.software.common.util.TempFile;
-import stirling.software.common.util.TempFileManager;
-import stirling.software.common.util.WebResponseUtils;
 
 @RestController
 @RequestMapping("/api/v1/misc")
@@ -126,7 +125,7 @@ public class OCRController {
             try {
                 // Use OCRmyPDF if available (no fallback - error if it fails)
                 if (isOcrMyPdfEnabled()) {
-                    if (sidecar != null && sidecar) {
+                    if (sidecar) {
                         sidecarTextFile = new TempFile(tempFileManager, ".txt");
                     }
 
@@ -161,15 +160,16 @@ public class OCRController {
 
                 // Return the OCR processed PDF as a response
                 String outputFilename =
-                        Filenames.toSimpleFileName(inputFile.getOriginalFilename())
-                                        .replaceFirst("[.][^.]+$", "")
+                        GeneralUtils.removeExtension(
+                                        Filenames.toSimpleFileName(inputFile.getOriginalFilename()))
                                 + "_OCR.pdf";
 
-                if (sidecar != null && sidecar && sidecarTextFile != null) {
+                if (sidecar && sidecarTextFile != null) {
                     // Create a zip file containing both the PDF and the text file
                     String outputZipFilename =
-                            Filenames.toSimpleFileName(inputFile.getOriginalFilename())
-                                            .replaceFirst("[.][^.]+$", "")
+                            GeneralUtils.removeExtension(
+                                            Filenames.toSimpleFileName(
+                                                    inputFile.getOriginalFilename()))
                                     + "_OCR.zip";
 
                     try (TempFile tempZipFile = new TempFile(tempFileManager, ".zip");
@@ -257,7 +257,7 @@ public class OCRController {
         if (cleanFinal != null && cleanFinal) {
             command.add("--clean-final");
         }
-        if (ocrType != null && !"".equals(ocrType)) {
+        if (ocrType != null && !ocrType.isEmpty()) {
             if ("skip-text".equals(ocrType)) {
                 command.add("--skip-text");
             } else if ("force-ocr".equals(ocrType)) {
@@ -338,7 +338,7 @@ public class OCRController {
 
                 for (int pageNum = 0; pageNum < pageCount; pageNum++) {
                     PDPage page = document.getPage(pageNum);
-                    boolean hasText = false;
+                    boolean hasText;
 
                     // Check for existing text
                     try (PDDocument tempDoc = new PDDocument()) {
