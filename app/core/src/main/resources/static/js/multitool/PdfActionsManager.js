@@ -169,19 +169,19 @@ class PdfActionsManager {
     rotateCW.onclick = this.rotateCWButtonCallback;
     buttonContainer.appendChild(rotateCW);
 
-    const deletePage = document.createElement("button");
-    deletePage.classList.add("btn", "btn-danger");
-    deletePage.setAttribute('title', window.translations.delete);
-    deletePage.innerHTML = `<span class="material-symbols-rounded">delete</span>`;
-    deletePage.onclick = this.deletePageButtonCallback;
-    buttonContainer.appendChild(deletePage);
-
     const duplicatePage = document.createElement("button");
     duplicatePage.classList.add("btn", "btn-secondary");
     duplicatePage.setAttribute('title', window.translations.duplicate);
     duplicatePage.innerHTML = `<span class="material-symbols-rounded">control_point_duplicate</span>`;
     duplicatePage.onclick = this.duplicatePageButtonCallback;
     buttonContainer.appendChild(duplicatePage);
+
+    const deletePage = document.createElement("button");
+    deletePage.classList.add("btn", "btn-danger");
+    deletePage.setAttribute('title', window.translations.delete);
+    deletePage.innerHTML = `<span class="material-symbols-rounded">delete</span>`;
+    deletePage.onclick = this.deletePageButtonCallback;
+    buttonContainer.appendChild(deletePage);
 
     div.appendChild(buttonContainer);
 
