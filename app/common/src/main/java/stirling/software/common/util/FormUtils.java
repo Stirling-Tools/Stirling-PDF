@@ -137,7 +137,7 @@ public class FormUtils {
                     break;
                 case "button":
                 case "signature":
-                    continue outer; // skip non-fillable
+                    continue; // skip non-fillable
                 default:
                     value = safeDefault(info.value());
             }
@@ -1372,12 +1372,17 @@ public class FormUtils {
                         .filter(s -> !s.isEmpty())
                         .orElse("field");
 
-        String candidate = sanitized;
+        StringBuilder candidateBuilder = new StringBuilder(sanitized);
+        String candidate = candidateBuilder.toString();
         int counter = 1;
+
         while (existingNames.contains(candidate)) {
-            candidate = sanitized + "_" + counter;
+            candidateBuilder.setLength(0);
+            candidateBuilder.append(sanitized).append("_").append(counter);
+            candidate = candidateBuilder.toString();
             counter++;
         }
+
         return candidate;
     }
 
