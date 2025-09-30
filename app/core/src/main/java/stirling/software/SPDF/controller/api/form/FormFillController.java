@@ -82,7 +82,7 @@ public class FormFillController {
     @Operation(
             summary = "Inspect PDF form fields",
             description = "Returns metadata describing each field in the provided PDF form")
-    public ResponseEntity<List<FormUtils.FormFieldInfo>> listFields(
+    public ResponseEntity<FormUtils.FormFieldExtraction> listFields(
             @Parameter(
                             description = "The input PDF file",
                             required = true,
@@ -96,8 +96,9 @@ public class FormFillController {
 
         requirePdf(file, "file");
         try (PDDocument document = pdfDocumentFactory.load(file, true)) {
-            List<FormUtils.FormFieldInfo> fields = FormUtils.extractFormFields(document);
-            return ResponseEntity.ok(fields);
+            FormUtils.FormFieldExtraction extraction =
+                    FormUtils.extractFieldsWithTemplate(document);
+            return ResponseEntity.ok(extraction);
         }
     }
 

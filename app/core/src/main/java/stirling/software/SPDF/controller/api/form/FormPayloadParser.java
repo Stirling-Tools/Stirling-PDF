@@ -37,6 +37,54 @@ final class FormPayloadParser {
         if (json == null || json.isBlank()) {
             return Map.of();
         }
+
+        JsonNode root;
+        try {
+            root = objectMapper.readTree(json);
+        } catch (IOException e) {
+            // Fallback to legacy direct map parse (will throw again if invalid)
+            return objectMapper.readValue(json, MAP_TYPE);
+        }
+        if (root == null || root.isNull()) {
+            return Map.of();
+        }
+
+        // 1. If payload already a flat object with no special wrapping, keep legacy behavior
+        if (root.isObject()) {
+            // a) Prefer explicit 'template' object if present (new combined /fields response)
+            JsonNode templateNode = root.get("template");
+            if (templateNode != null && templateNode.isObject()) {
+                return objectToLinkedMap(templateNode);
+            }
+            // b) Accept an inline 'fields' array of field definitions (build map from them)
+            JsonNode fieldsNode = root.get(KEY_FIELDS);
+            if (fieldsNode != null && fieldsNode.isArray()) {
+                Map<String, Object> record = extractFieldInfoArray(fieldsNode);
+                if (!record.isEmpty()) {
+                    return record;
+                }
+            }
+            // c) Fallback: treat entire object as the value map (legacy behavior)
+            return objectToLinkedMap(root);
+        }
+
+        // 2. If an array was supplied to /fill (non-standard), treat first element as record
+        if (root.isArray()) {
+            if (root.size() == 0) {
+                return Map.of();
+            }
+            JsonNode first = root.get(0);
+            if (first != null && first.isObject()) {
+                // If it looks like an array of field definitions (has name/value keys), convert
+                if (first.has(KEY_NAME) || first.has(KEY_VALUE) || first.has(KEY_DEFAULT_VALUE)) {
+                    return extractFieldInfoArray(root);
+                }
+                return objectToLinkedMap(first);
+            }
+            return Map.of();
+        }
+
+        // 3. Anything else: fallback to strict map parse
         return objectMapper.readValue(json, MAP_TYPE);
     }
 
