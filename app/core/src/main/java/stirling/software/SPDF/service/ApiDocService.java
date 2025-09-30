@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
@@ -26,6 +25,7 @@ import stirling.software.SPDF.SPDFApplication;
 import stirling.software.SPDF.model.ApiEndpoint;
 import stirling.software.common.model.enumeration.Role;
 import stirling.software.common.service.UserServiceInterface;
+import stirling.software.common.util.RegexPatternUtils;
 
 @Service
 @Slf4j
@@ -52,7 +52,7 @@ public class ApiDocService {
     }
 
     public List<String> getExtensionTypes(boolean output, String operationName) {
-        if (outputToFileTypes.size() == 0) {
+        if (outputToFileTypes.isEmpty()) {
             outputToFileTypes.put("PDF", List.of("pdf"));
             outputToFileTypes.put(
                     "IMAGE",
@@ -74,7 +74,7 @@ public class ApiDocService {
                     "BOOK", Arrays.asList("epub", "mobi", "azw3", "fb2", "txt", "docx"));
             // type.
         }
-        if (apiDocsJsonRootNode == null || apiDocumentation.size() == 0) {
+        if (apiDocsJsonRootNode == null || apiDocumentation.isEmpty()) {
             loadApiDocumentation();
         }
         if (!apiDocumentation.containsKey(operationName)) {
@@ -82,13 +82,11 @@ public class ApiDocService {
         }
         ApiEndpoint endpoint = apiDocumentation.get(operationName);
         String description = endpoint.getDescription();
-        Pattern pattern = null;
-        if (output) {
-            pattern = Pattern.compile("Output:(\\w+)");
-        } else {
-            pattern = Pattern.compile("Input:(\\w+)");
-        }
-        Matcher matcher = pattern.matcher(description);
+        Matcher matcher =
+                (output
+                                ? RegexPatternUtils.getInstance().getApiDocOutputTypePattern()
+                                : RegexPatternUtils.getInstance().getApiDocInputTypePattern())
+                        .matcher(description);
         while (matcher.find()) {
             String type = matcher.group(1).toUpperCase();
             if (outputToFileTypes.containsKey(type)) {
@@ -138,7 +136,7 @@ public class ApiDocService {
     }
 
     public boolean isValidOperation(String operationName, Map<String, Object> parameters) {
-        if (apiDocumentation.size() == 0) {
+        if (apiDocumentation.isEmpty()) {
             loadApiDocumentation();
         }
         if (!apiDocumentation.containsKey(operationName)) {
@@ -149,7 +147,7 @@ public class ApiDocService {
     }
 
     public boolean isMultiInput(String operationName) {
-        if (apiDocsJsonRootNode == null || apiDocumentation.size() == 0) {
+        if (apiDocsJsonRootNode == null || apiDocumentation.isEmpty()) {
             loadApiDocumentation();
         }
         if (!apiDocumentation.containsKey(operationName)) {
@@ -157,8 +155,8 @@ public class ApiDocService {
         }
         ApiEndpoint endpoint = apiDocumentation.get(operationName);
         String description = endpoint.getDescription();
-        Pattern pattern = Pattern.compile("Type:(\\w+)");
-        Matcher matcher = pattern.matcher(description);
+        Matcher matcher =
+                RegexPatternUtils.getInstance().getApiDocTypePattern().matcher(description);
         if (matcher.find()) {
             String type = matcher.group(1);
             return type.startsWith("MI");

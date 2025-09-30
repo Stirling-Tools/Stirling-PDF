@@ -1,5 +1,6 @@
 package stirling.software.SPDF.controller.api.security;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 import org.apache.pdfbox.cos.COSDictionary;
@@ -29,7 +30,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -37,6 +37,7 @@ import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.model.api.security.SanitizePdfRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.WebResponseUtils;
 
 @RestController
@@ -88,11 +89,14 @@ public class SanitizeController {
             sanitizeFonts(document);
         }
 
-        return WebResponseUtils.pdfDocToWebResponse(
-                document,
-                Filenames.toSimpleFileName(inputFile.getOriginalFilename())
-                                .replaceFirst("[.][^.]+$", "")
-                        + "_sanitized.pdf");
+        // Save the sanitized document to output stream
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        document.save(outputStream);
+        document.close();
+
+        return WebResponseUtils.bytesToWebResponse(
+                outputStream.toByteArray(),
+                GeneralUtils.generateFilename(inputFile.getOriginalFilename(), "_sanitized.pdf"));
     }
 
     private void sanitizeJavaScript(PDDocument document) throws IOException {
@@ -177,11 +181,9 @@ public class SanitizeController {
     private void sanitizeLinks(PDDocument document) throws IOException {
         for (PDPage page : document.getPages()) {
             for (PDAnnotation annotation : page.getAnnotations()) {
-                if (annotation != null && annotation instanceof PDAnnotationLink linkAnnotation) {
+                if (annotation instanceof PDAnnotationLink linkAnnotation) {
                     PDAction action = linkAnnotation.getAction();
-                    if (action != null
-                            && (action instanceof PDActionLaunch
-                                    || action instanceof PDActionURI)) {
+                    if ((action instanceof PDActionLaunch || action instanceof PDActionURI)) {
                         linkAnnotation.setAction(null);
                     }
                 }

@@ -115,7 +115,7 @@ public class PipelineDirectoryProcessor {
         log.info("Handling directory: {}", dir);
         Path processingDir = createProcessingDirectory(dir);
         Optional<Path> jsonFileOptional = findJsonFile(dir);
-        if (!jsonFileOptional.isPresent()) {
+        if (jsonFileOptional.isEmpty()) {
             log.warn("No .JSON settings file found. No processing will happen for dir {}.", dir);
             return;
         }
@@ -150,7 +150,7 @@ public class PipelineDirectoryProcessor {
         for (PipelineOperation operation : config.getOperations()) {
             validateOperation(operation);
             File[] files = collectFilesForProcessing(dir, jsonFile, operation);
-            if (files == null || files.length == 0) {
+            if (files.length == 0) {
                 log.debug("No files detected for {} ", dir);
                 return;
             }

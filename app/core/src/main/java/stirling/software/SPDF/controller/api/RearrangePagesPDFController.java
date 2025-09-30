@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -68,9 +67,7 @@ public class RearrangePagesPDFController {
         }
         return WebResponseUtils.pdfDocToWebResponse(
                 document,
-                Filenames.toSimpleFileName(pdfFile.getOriginalFilename())
-                                .replaceFirst("[.][^.]+$", "")
-                        + "_removed_pages.pdf");
+                GeneralUtils.generateFilename(pdfFile.getOriginalFilename(), "_removed_pages.pdf"));
     }
 
     private List<Integer> removeFirst(int totalPages) {
@@ -208,30 +205,19 @@ public class RearrangePagesPDFController {
     private List<Integer> processSortTypes(String sortTypes, int totalPages, String pageOrder) {
         try {
             SortTypes mode = SortTypes.valueOf(sortTypes.toUpperCase());
-            switch (mode) {
-                case REVERSE_ORDER:
-                    return reverseOrder(totalPages);
-                case DUPLEX_SORT:
-                    return duplexSort(totalPages);
-                case BOOKLET_SORT:
-                    return bookletSort(totalPages);
-                case SIDE_STITCH_BOOKLET_SORT:
-                    return sideStitchBooklet(totalPages);
-                case ODD_EVEN_SPLIT:
-                    return oddEvenSplit(totalPages);
-                case ODD_EVEN_MERGE:
-                    return oddEvenMerge(totalPages);
-                case REMOVE_FIRST:
-                    return removeFirst(totalPages);
-                case REMOVE_LAST:
-                    return removeLast(totalPages);
-                case REMOVE_FIRST_AND_LAST:
-                    return removeFirstAndLast(totalPages);
-                case DUPLICATE:
-                    return duplicate(totalPages, pageOrder);
-                default:
-                    throw new IllegalArgumentException("Unsupported custom mode");
-            }
+            return switch (mode) {
+                case REVERSE_ORDER -> reverseOrder(totalPages);
+                case DUPLEX_SORT -> duplexSort(totalPages);
+                case BOOKLET_SORT -> bookletSort(totalPages);
+                case SIDE_STITCH_BOOKLET_SORT -> sideStitchBooklet(totalPages);
+                case ODD_EVEN_SPLIT -> oddEvenSplit(totalPages);
+                case ODD_EVEN_MERGE -> oddEvenMerge(totalPages);
+                case REMOVE_FIRST -> removeFirst(totalPages);
+                case REMOVE_LAST -> removeLast(totalPages);
+                case REMOVE_FIRST_AND_LAST -> removeFirstAndLast(totalPages);
+                case DUPLICATE -> duplicate(totalPages, pageOrder);
+                default -> throw new IllegalArgumentException("Unsupported custom mode");
+            };
         } catch (IllegalArgumentException e) {
             log.error("Unsupported custom mode", e);
             return null;
@@ -260,14 +246,14 @@ public class RearrangePagesPDFController {
             int totalPages = document.getNumberOfPages();
             List<Integer> newPageOrder;
             if (sortType != null
-                    && sortType.length() > 0
+                    && !sortType.isEmpty()
                     && !"custom".equals(sortType.toLowerCase())) {
                 newPageOrder = processSortTypes(sortType, totalPages, pageOrder);
             } else {
                 newPageOrder = GeneralUtils.parsePageList(pageOrderArr, totalPages, false);
             }
-            log.info("newPageOrder = " + newPageOrder);
-            log.info("totalPages = " + totalPages);
+            log.info("newPageOrder = {}", newPageOrder);
+            log.info("totalPages = {}", totalPages);
             // Create a new list to hold the pages in the new order
             List<PDPage> newPages = new ArrayList<>();
             for (int i = 0; i < newPageOrder.size(); i++) {
@@ -286,9 +272,8 @@ public class RearrangePagesPDFController {
 
             return WebResponseUtils.pdfDocToWebResponse(
                     document,
-                    Filenames.toSimpleFileName(pdfFile.getOriginalFilename())
-                                    .replaceFirst("[.][^.]+$", "")
-                            + "_rearranged.pdf");
+                    GeneralUtils.generateFilename(
+                            pdfFile.getOriginalFilename(), "_rearranged.pdf"));
         } catch (IOException e) {
             ExceptionUtils.logException("document rearrangement", e);
             throw e;
