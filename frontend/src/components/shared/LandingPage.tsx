@@ -7,6 +7,8 @@ import { useFileHandler } from '../../hooks/useFileHandler';
 import { useFilesModalContext } from '../../contexts/FilesModalContext';
 import { BASE_PATH } from '../../constants/app';
 
+import './LandingPage.css';
+
 const LandingPage = () => {
   const { addFiles } = useFileHandler();
   const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -43,17 +45,7 @@ const LandingPage = () => {
         onDrop={handleFileDrop}
         accept={["application/pdf", "application/zip", "application/x-zip-compressed"]}
         multiple={true}
-        className="w-4/5 flex items-center justify-center h-[95%]"
-        style={{
-          position: 'absolute',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          bottom: 0,
-          borderRadius: '0.25rem 0.25rem 0 0',
-          filter: 'var(--drop-shadow-filter)',
-          backgroundColor: 'var(--landing-paper-bg)',
-          transition: 'background-color 0.4s ease',
-        }}
+        className="landing-dropzone"
         activateOnClick={false}
         styles={{
           root: {
@@ -63,41 +55,18 @@ const LandingPage = () => {
           },
         }}
       >
-        <div
-          style={{
-            position: 'absolute',
-            top: 0,
-            right: 0,
-            zIndex: 10,
-
-          }}
-        >
+        <div className="landing-dropzone__sheet dropzone-inner">
           <img
+            className="landing-dropzone__badge"
             src={colorScheme === 'dark' ? `${BASE_PATH}/branding/StirlingPDFLogoNoTextDark.svg` : `${BASE_PATH}/branding/StirlingPDFLogoNoTextLight.svg`}
             alt="Stirling PDF Logo"
-            style={{
-              height: 'auto',
-              pointerEvents: 'none',
-            }}
           />
-        </div>
-        <div
-          className={`min-h-[45vh] flex flex-col items-center justify-center px-8 py-8 w-full min-w-[30rem] max-w-[calc(100%-2rem)] border transition-all duration-200 dropzone-inner relative`}
-          style={{
-            borderRadius: '0.5rem',
-            backgroundColor: 'var(--landing-inner-paper-bg)',
-            borderColor: 'var(--landing-inner-paper-border)',
-            borderWidth: '1px',
-            borderStyle: 'solid',
-          }}
-        >
-          {/* Logo positioned absolutely in top right corner */}
 
 
           {/* Centered content container */}
-          <div className="flex flex-col items-center gap-4 flex-none w-full">
+          <div className="landing-dropzone__body">
             {/* Stirling PDF Branding */}
-            <Group gap="xs" align="center">
+            <Group gap="xs" align="center" className="landing-dropzone__brand">
               <img
                 src={colorScheme === 'dark' ? `${BASE_PATH}/branding/StirlingPDFLogoWhiteText.svg` : `${BASE_PATH}/branding/StirlingPDFLogoGreyText.svg`}
                 alt="Stirling PDF"
@@ -107,15 +76,7 @@ const LandingPage = () => {
 
             {/* Add Files + Native Upload Buttons */}
             <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '0.6rem',
-                width: '80%',
-                marginTop: '0.8rem',
-                marginBottom: '0.8rem'
-              }}
+              className="landing-dropzone__actions"
               onMouseLeave={() => setIsUploadHover(false)}
             >
               <Button
@@ -152,7 +113,7 @@ const LandingPage = () => {
                   border: '1px solid var(--landing-button-border)',
                   borderRadius: '1rem',
                   height: '38px',
-                  width: isUploadHover ? 'calc(100% - 50px)' : '58px',
+                  width: isUploadHover ? 'calc(100% - 58px - 0.6rem)' : '58px',
                   minWidth: '58px',
                   paddingLeft: isUploadHover ? '1rem' : 0,
                   paddingRight: isUploadHover ? '1rem' : 0,
@@ -187,8 +148,7 @@ const LandingPage = () => {
 
           {/* Instruction Text */}
           <span
-            className="text-[var(--accent-interactive)]"
-            style={{ fontSize: '.8rem' }}
+            className="landing-dropzone__hint"
           >
             {t('fileUpload.dropFilesHere', 'Drop files here or click the upload button')}
           </span>
