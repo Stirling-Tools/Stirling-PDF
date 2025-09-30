@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ActionIcon, Popover, Divider } from '@mantine/core';
+import { ActionIcon, Popover } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import LocalIcon from '../LocalIcon';
 import { Tooltip } from '../Tooltip';

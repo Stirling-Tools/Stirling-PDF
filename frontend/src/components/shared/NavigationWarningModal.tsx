@@ -30,13 +30,6 @@ const NavigationWarningModal = ({
     confirmNavigation();
   };
 
-  const _handleApplyAndContinue = async () => {
-    if (onApplyAndContinue) {
-      await onApplyAndContinue();
-    }
-    setHasUnsavedChanges(false);
-    confirmNavigation();
-  };
 
   const handleExportAndContinue = async () => {
     if (onExportAndContinue) {
@@ -85,7 +78,7 @@ const NavigationWarningModal = ({
             </Button>
 
             {/* TODO:: Add this back in when it works */}
-            {/* {onApplyAndContinue  && (
+            {/* {onApplyAndContinue && (
               <Button
                 variant="light"
                 color="blue"

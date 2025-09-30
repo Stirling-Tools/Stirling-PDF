@@ -79,7 +79,7 @@ async function processRequestQueue() {
             arrayBuffer,
             pageNumbers,
             { scale: 1.0, quality: 0.8, batchSize: BATCH_SIZE },
-            (progress) => {
+            (_progress) => {
               // Optional: Could emit progress events here for UI feedback
             }
           );
