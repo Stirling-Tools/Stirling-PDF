@@ -39,14 +39,10 @@ import lombok.extern.slf4j.Slf4j;
 public class FormUtils {
 
     public List<FormFieldInfo> extractFormFields(PDDocument document) {
-        if (document == null) {
-            return List.of();
-        }
+        if (document == null) return List.of();
 
         PDAcroForm acroForm = getAcroFormSafely(document);
-        if (acroForm == null) {
-            return List.of();
-        }
+        if (acroForm == null) return List.of();
 
         List<FormFieldInfo> fields = new ArrayList<>();
         Map<String, Integer> typeCounters = new HashMap<>();
@@ -106,17 +102,64 @@ public class FormUtils {
         return Collections.unmodifiableList(fields);
     }
 
-    public void applyFieldValues(PDDocument document, Map<String, ?> values, boolean flatten)
-            throws IOException {
-        applyFieldValues(document, values, flatten, false);
+    /**
+     * Build a single record object (field-name -> value placeholder) that can be directly submitted
+     * to /api/v1/form/fill as the 'data' JSON. For checkboxes a boolean false is supplied unless
+     * currently checked. For list/choice fields we default to empty string. For multi-select list
+     * boxes we return an empty JSON array. Radio buttons get their current value (or empty string).
+     * Signature and button fields are skipped.
+     */
+    public Map<String, Object> buildFillTemplateRecord(List<FormFieldInfo> extracted) {
+        if (extracted == null || extracted.isEmpty()) return Map.of();
+        Map<String, Object> record = new LinkedHashMap<>();
+        outer:
+        for (FormFieldInfo info : extracted) {
+            if (info == null || info.name() == null || info.name().isBlank()) {
+                continue;
+            }
+            String type = info.type();
+            Object value;
+            switch (type) {
+                case "checkbox":
+                    value = isChecked(info.value()) ? Boolean.TRUE : Boolean.FALSE;
+                    break;
+                case "listbox":
+                    if (info.multiSelect()) {
+                        value = new ArrayList<>();
+                    } else {
+                        value = safeDefault(info.value());
+                    }
+                    break;
+                case "combobox":
+                case "radio":
+                case "text":
+                    value = safeDefault(info.value());
+                    break;
+                case "button":
+                case "signature":
+                    continue outer; // skip non-fillable
+                default:
+                    value = safeDefault(info.value());
+            }
+            record.put(info.name(), value);
+        }
+        return record;
+    }
+
+    public FormFieldExtraction extractFieldsWithTemplate(PDDocument document) {
+        List<FormFieldInfo> fields = extractFormFields(document);
+        Map<String, Object> template = buildFillTemplateRecord(fields);
+        return new FormFieldExtraction(fields, template);
+    }
+
+    private String safeDefault(String current) {
+        return current != null ? current : "";
     }
 
     public void applyFieldValues(
             PDDocument document, Map<String, ?> values, boolean flatten, boolean strict)
             throws IOException {
-        if (document == null || values == null || values.isEmpty()) {
-            return;
-        }
+        if (document == null || values == null || values.isEmpty()) return;
 
         PDAcroForm acroForm = getAcroFormSafely(document);
         if (acroForm == null) {
@@ -170,20 +213,13 @@ public class FormUtils {
         }
     }
 
-    private PDAcroForm getAcroFormSafely(PDDocument document) {
-        try {
-            PDDocumentCatalog catalog = document.getDocumentCatalog();
-            return catalog != null ? catalog.getAcroForm() : null;
-        } catch (Exception e) {
-            log.warn("Unable to access AcroForm: {}", e.getMessage(), e);
-            return null;
-        }
+    public void applyFieldValues(PDDocument document, Map<String, ?> values, boolean flatten)
+            throws IOException {
+        applyFieldValues(document, values, flatten, false);
     }
 
     private void ensureAppearances(PDAcroForm acroForm) {
-        if (acroForm == null) {
-            return;
-        }
+        if (acroForm == null) return;
 
         boolean originalNeedAppearances = acroForm.getNeedAppearances();
         acroForm.setNeedAppearances(true);
@@ -203,6 +239,24 @@ public class FormUtils {
                 }
             }
         }
+    }
+
+    private PDAcroForm getAcroFormSafely(PDDocument document) {
+        try {
+            PDDocumentCatalog catalog = document.getDocumentCatalog();
+            return catalog != null ? catalog.getAcroForm() : null;
+        } catch (Exception e) {
+            log.warn("Unable to access AcroForm: {}", e.getMessage(), e);
+            return null;
+        }
+    }
+
+    String filterSingleChoiceSelection(
+            String selection, List<String> allowedOptions, String fieldName) {
+        if (selection == null || selection.trim().isEmpty()) return null;
+        List<String> filtered =
+                filterChoiceSelections(List.of(selection), allowedOptions, fieldName);
+        return filtered.isEmpty() ? null : filtered.get(0);
     }
 
     private void applyValueToField(PDField field, String value) {
@@ -330,18 +384,8 @@ public class FormUtils {
         }
     }
 
-    String filterSingleChoiceSelection(
-        String selection, List<String> allowedOptions, String fieldName) {
-        if (selection == null || selection.trim().isEmpty()) {
-            return null;
-        }
-        List<String> filtered =
-                filterChoiceSelections(List.of(selection), allowedOptions, fieldName);
-        return filtered.isEmpty() ? null : filtered.get(0);
-    }
-
     List<String> filterChoiceSelections(
-        List<String> selections, List<String> allowedOptions, String fieldName) {
+            List<String> selections, List<String> allowedOptions, String fieldName) {
         if (selections == null || selections.isEmpty()) {
             return Collections.emptyList();
         }
@@ -387,6 +431,14 @@ public class FormUtils {
         }
 
         return validSelections;
+    }
+
+    List<String> parseMultiChoiceSelections(String raw) {
+        if (raw == null || raw.isBlank()) return List.of();
+        return Arrays.stream(raw.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
     }
 
     List<String> collectChoiceAllowedValues(PDChoice choiceField) {
@@ -443,26 +495,81 @@ public class FormUtils {
         return new ArrayList<>(allowed);
     }
 
-    List<String> parseMultiChoiceSelections(String raw) {
-        if (raw == null || raw.isBlank()) {
-            return Collections.emptyList();
-        }
-        return Arrays.stream(raw.split(","))
-                .map(String::trim)
-                .filter(s -> !s.isEmpty())
-                .collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
-    }
-
     boolean isChecked(String value) {
-        if (value == null) {
-            return false;
-        }
+        if (value == null) return false;
         String normalized = value.trim().toLowerCase();
         return "true".equals(normalized)
                 || "1".equals(normalized)
                 || "yes".equals(normalized)
                 || "on".equals(normalized)
                 || "checked".equals(normalized);
+    }
+
+    private LinkedHashSet<String> collectCheckBoxStates(PDCheckBox checkBox) {
+        LinkedHashSet<String> states = new LinkedHashSet<>();
+        try {
+            String onValue = checkBox.getOnValue();
+            if (isSettableCheckBoxState(onValue)) {
+                states.add(onValue.trim());
+            }
+        } catch (Exception e) {
+            log.debug(
+                    "Failed to obtain explicit on-value for checkbox '{}': {}",
+                    checkBox.getFullyQualifiedName(),
+                    e.getMessage());
+        }
+
+        try {
+            for (PDAnnotationWidget widget : checkBox.getWidgets()) {
+                PDAppearanceDictionary appearance = widget.getAppearance();
+                if (appearance == null) {
+                    continue;
+                }
+                PDAppearanceEntry normal = appearance.getNormalAppearance();
+                if (normal == null) {
+                    continue;
+                }
+                if (normal.isSubDictionary()) {
+                    Map<COSName, PDAppearanceStream> entries = normal.getSubDictionary();
+                    if (entries != null) {
+                        for (COSName name : entries.keySet()) {
+                            String state = name.getName();
+                            if (isSettableCheckBoxState(state)) {
+                                states.add(state.trim());
+                            }
+                        }
+                    }
+                } else if (normal.isStream()) {
+                    COSName appearanceState = widget.getAppearanceState();
+                    String state = appearanceState != null ? appearanceState.getName() : null;
+                    if (state != null && isSettableCheckBoxState(state)) {
+                        states.add(state.trim());
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.debug(
+                    "Failed to obtain appearance states for checkbox '{}': {}",
+                    checkBox.getFullyQualifiedName(),
+                    e.getMessage());
+        }
+
+        try {
+            List<String> exports = checkBox.getExportValues();
+            if (exports != null) {
+                for (String export : exports) {
+                    if (isSettableCheckBoxState(export)) {
+                        states.add(export.trim());
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.debug(
+                    "Failed to obtain export values for checkbox '{}': {}",
+                    checkBox.getFullyQualifiedName(),
+                    e.getMessage());
+        }
+        return states;
     }
 
     private String safeValue(PDTerminalField field) {
@@ -522,71 +629,10 @@ public class FormUtils {
         return false;
     }
 
-    private LinkedHashSet<String> collectCheckBoxStates(PDCheckBox checkBox) {
-        LinkedHashSet<String> states = new LinkedHashSet<>();
-        try {
-            String onValue = checkBox.getOnValue();
-            if (isSettableCheckBoxState(onValue)) {
-                states.add(onValue.trim());
-            }
-        } catch (Exception e) {
-            log.debug(
-                    "Failed to obtain explicit on-value for checkbox '{}': {}",
-                    checkBox.getFullyQualifiedName(),
-                    e.getMessage());
-        }
-
-        try {
-            for (PDAnnotationWidget widget : checkBox.getWidgets()) {
-                PDAppearanceDictionary appearance = widget.getAppearance();
-                if (appearance == null) {
-                    continue;
-                }
-                PDAppearanceEntry normal = appearance.getNormalAppearance();
-                if (normal == null) {
-                    continue;
-                }
-                if (normal.isSubDictionary()) {
-                    Map<COSName, PDAppearanceStream> entries = normal.getSubDictionary();
-                    if (entries != null) {
-                        for (COSName name : entries.keySet()) {
-                            String state = name.getName();
-                            if (isSettableCheckBoxState(state)) {
-                                states.add(state.trim());
-                            }
-                        }
-                    }
-                } else if (normal.isStream()) {
-                    COSName appearanceState = widget.getAppearanceState();
-                    String state = appearanceState != null ? appearanceState.getName() : null;
-                    if (isSettableCheckBoxState(state)) {
-                        states.add(state.trim());
-                    }
-                }
-            }
-        } catch (Exception e) {
-            log.debug(
-                    "Failed to obtain appearance states for checkbox '{}': {}",
-                    checkBox.getFullyQualifiedName(),
-                    e.getMessage());
-        }
-
-        try {
-            List<String> exports = checkBox.getExportValues();
-            if (exports != null) {
-                for (String export : exports) {
-                    if (isSettableCheckBoxState(export)) {
-                        states.add(export.trim());
-                    }
-                }
-            }
-        } catch (Exception e) {
-            log.debug(
-                    "Failed to obtain export values for checkbox '{}': {}",
-                    checkBox.getFullyQualifiedName(),
-                    e.getMessage());
-        }
-        return states;
+    private boolean isSettableCheckBoxState(String state) {
+        if (state == null) return false;
+        String trimmed = state.trim();
+        return !trimmed.isEmpty() && !"Off".equalsIgnoreCase(trimmed);
     }
 
     private boolean shouldCheckBoxBeChecked(String value, LinkedHashSet<String> candidateStates) {
@@ -624,15 +670,9 @@ public class FormUtils {
         return null;
     }
 
-    private boolean isSettableCheckBoxState(String state) {
-        if (state == null) {
-            return false;
-        }
-        String trimmed = state.trim();
-        if (trimmed.isEmpty()) {
-            return false;
-        }
-        return !"Off".equalsIgnoreCase(trimmed);
+    private boolean isMeaningfulLabel(String candidate) {
+        if (candidate == null || candidate.isBlank()) return false;
+        return !looksGeneric(candidate.trim());
     }
 
     private void forceCheckBoxValue(PDCheckBox checkBox, String onValue) {
@@ -698,14 +738,6 @@ public class FormUtils {
         return cleaned.isEmpty() ? null : cleaned;
     }
 
-    private boolean isMeaningfulLabel(String candidate) {
-        if (candidate == null || candidate.isBlank()) {
-            return false;
-        }
-        String normalized = candidate.trim();
-        return !looksGeneric(normalized);
-    }
-
     private boolean looksGeneric(String value) {
         String simplified =
                 RegexPatternUtils.getInstance()
@@ -713,25 +745,21 @@ public class FormUtils {
                         .matcher(value)
                         .replaceAll(" ")
                         .trim();
-        if (simplified.isEmpty()) {
-            return true;
-        }
-        if (RegexPatternUtils.getInstance()
-                .getGenericFieldNamePattern()
-                .matcher(simplified)
-                .matches()) {
-            return true;
-        }
-        if (RegexPatternUtils.getInstance()
-                .getSimpleFormFieldPattern()
-                .matcher(simplified)
-                .matches()) {
-            return true;
-        }
-        return RegexPatternUtils.getInstance()
-                .getOptionalTNumericPattern()
-                .matcher(simplified)
-                .matches();
+
+        if (simplified.isEmpty()) return true;
+
+        RegexPatternUtils patterns = RegexPatternUtils.getInstance();
+        return patterns.getGenericFieldNamePattern().matcher(simplified).matches()
+                || patterns.getSimpleFormFieldPattern().matcher(simplified).matches()
+                || patterns.getOptionalTNumericPattern().matcher(simplified).matches();
+    }
+
+    private String capitalizeWord(String word) {
+        if (word == null || word.isEmpty() || word.equals(word.toUpperCase(Locale.ROOT)))
+            return word;
+        if (word.length() == 1) return word.toUpperCase(Locale.ROOT);
+        return word.substring(0, 1).toUpperCase(Locale.ROOT)
+                + word.substring(1).toLowerCase(Locale.ROOT);
     }
 
     private String humanizeName(String name) {
@@ -763,18 +791,121 @@ public class FormUtils {
         return result.isEmpty() ? null : result;
     }
 
-    private String capitalizeWord(String word) {
-        if (word == null || word.isEmpty()) {
-            return word;
+    public void modifyFormFields(
+            PDDocument document, List<ModifyFormFieldDefinition> modifications) {
+        if (document == null || modifications == null || modifications.isEmpty()) return;
+
+        PDAcroForm acroForm = getAcroFormSafely(document);
+        if (acroForm == null) {
+            log.warn("Cannot modify fields because the document has no AcroForm");
+            return;
         }
-        if (word.equals(word.toUpperCase(Locale.ROOT))) {
-            return word;
+
+        Set<String> existingNames = collectExistingFieldNames(acroForm);
+
+        for (ModifyFormFieldDefinition modification : modifications) {
+            if (modification == null || modification.targetName() == null) {
+                continue;
+            }
+
+            String lookupName = modification.targetName().trim();
+            if (lookupName.isEmpty()) {
+                continue;
+            }
+
+            PDField originalField = locateField(acroForm, lookupName);
+            if (originalField == null) {
+                log.warn("No matching field '{}' found for modification", lookupName);
+                continue;
+            }
+
+            List<PDAnnotationWidget> widgets = originalField.getWidgets();
+            if (widgets == null || widgets.isEmpty()) {
+                log.warn("Field '{}' has no widgets; skipping modification", lookupName);
+                continue;
+            }
+
+            PDAnnotationWidget widget = widgets.get(0);
+            PDRectangle originalRectangle = cloneRectangle(widget.getRectangle());
+            PDPage page = resolveWidgetPage(document, widget);
+            if (page == null || originalRectangle == null) {
+                log.warn(
+                        "Unable to resolve widget page or rectangle for '{}'; skipping",
+                        lookupName);
+                continue;
+            }
+
+            String resolvedType =
+                    Optional.ofNullable(modification.type())
+                            .map(FormUtils::normalizeFieldType)
+                            .orElseGet(() -> detectFieldType(originalField));
+
+            if (!RegexPatternUtils.getInstance()
+                    .getSupportedNewFieldTypes()
+                    .contains(resolvedType)) {
+                log.warn("Unsupported target type '{}' for field '{}'", resolvedType, lookupName);
+                continue;
+            }
+
+            String desiredName =
+                    Optional.ofNullable(modification.name())
+                            .map(String::trim)
+                            .filter(s -> !s.isEmpty())
+                            .orElseGet(originalField::getPartialName);
+
+            // Free up the original name so it can be reused.
+            if (desiredName != null) {
+                existingNames.remove(originalField.getFullyQualifiedName());
+                existingNames.remove(originalField.getPartialName());
+                desiredName = generateUniqueFieldName(desiredName, existingNames);
+                existingNames.add(desiredName);
+            }
+
+            removeFieldFromDocument(document, acroForm, originalField);
+
+            NewFormFieldDefinition replacementDefinition =
+                    new NewFormFieldDefinition(
+                            desiredName,
+                            modification.label(),
+                            resolvedType,
+                            determineWidgetPageIndex(document, widget),
+                            originalRectangle.getLowerLeftX(),
+                            page.getMediaBox().getHeight() - originalRectangle.getUpperRightY(),
+                            originalRectangle.getWidth(),
+                            originalRectangle.getHeight(),
+                            modification.required(),
+                            modification.multiSelect(),
+                            modification.options(),
+                            modification.defaultValue(),
+                            modification.tooltip());
+
+            List<String> sanitizedOptions = sanitizeOptions(modification.options());
+
+            try {
+                FormFieldTypeSupport handler = FormFieldTypeSupport.forTypeName(resolvedType);
+                if (handler == null || !handler.supportsDefinitionCreation()) {
+                    handler = FormFieldTypeSupport.TEXT;
+                }
+                createNewField(
+                        handler,
+                        acroForm,
+                        page,
+                        originalRectangle,
+                        desiredName,
+                        replacementDefinition,
+                        sanitizedOptions,
+                        widget);
+            } catch (Exception e) {
+                log.warn(
+                        "Failed to modify form field '{}' to type '{}': {}",
+                        lookupName,
+                        resolvedType,
+                        e.getMessage(),
+                        e);
+            }
         }
-        if (word.length() == 1) {
-            return word.toUpperCase(Locale.ROOT);
-        }
-        return word.substring(0, 1).toUpperCase(Locale.ROOT)
-                + word.substring(1).toLowerCase(Locale.ROOT);
+
+        ensureAppearances(acroForm);
     }
 
     private String fallbackLabelForType(String type, int typeIndex) {
@@ -864,129 +995,8 @@ public class FormUtils {
         return -1;
     }
 
-    public void modifyFormFields(
-            PDDocument document, List<ModifyFormFieldDefinition> modifications) {
-        if (document == null || modifications == null || modifications.isEmpty()) {
-            return;
-        }
-
-        PDAcroForm acroForm = getAcroFormSafely(document);
-        if (acroForm == null) {
-            log.warn("Cannot modify fields because the document has no AcroForm");
-            return;
-        }
-
-        Set<String> existingNames = collectExistingFieldNames(acroForm);
-
-        for (ModifyFormFieldDefinition modification : modifications) {
-            if (modification == null || modification.targetName() == null) {
-                continue;
-            }
-
-            String lookupName = modification.targetName().trim();
-            if (lookupName.isEmpty()) {
-                continue;
-            }
-
-            PDField originalField = locateField(acroForm, lookupName);
-            if (originalField == null) {
-                log.warn("No matching field '{}' found for modification", lookupName);
-                continue;
-            }
-
-            List<PDAnnotationWidget> widgets = originalField.getWidgets();
-            if (widgets == null || widgets.isEmpty()) {
-                log.warn("Field '{}' has no widgets; skipping modification", lookupName);
-                continue;
-            }
-
-            PDAnnotationWidget widget = widgets.get(0);
-            PDRectangle originalRectangle = cloneRectangle(widget.getRectangle());
-            PDPage page = resolveWidgetPage(document, widget);
-            if (page == null || originalRectangle == null) {
-                log.warn(
-                        "Unable to resolve widget page or rectangle for '{}'; skipping",
-                        lookupName);
-                continue;
-            }
-
-            String resolvedType =
-                    Optional.ofNullable(modification.type())
-                            .map(FormUtils::normalizeFieldType)
-                            .orElseGet(() -> detectFieldType(originalField));
-
-            if (!RegexPatternUtils.getInstance()
-                    .getSupportedNewFieldTypes()
-                    .contains(resolvedType)) {
-                log.warn("Unsupported target type '{}' for field '{}'", resolvedType, lookupName);
-                continue;
-            }
-
-            String desiredName =
-                    Optional.ofNullable(modification.name())
-                            .map(String::trim)
-                            .filter(s -> !s.isEmpty())
-                            .orElseGet(originalField::getPartialName);
-
-            // Free up the original name so it can be reused.
-            if (desiredName != null) {
-                existingNames.remove(originalField.getFullyQualifiedName());
-                existingNames.remove(originalField.getPartialName());
-                desiredName = generateUniqueFieldName(desiredName, existingNames);
-                existingNames.add(desiredName);
-            }
-
-            removeFieldFromDocument(document, acroForm, originalField);
-
-            NewFormFieldDefinition replacementDefinition =
-                    new NewFormFieldDefinition(
-                            desiredName,
-                            modification.label(),
-                            resolvedType,
-                            determineWidgetPageIndex(document, widget),
-                            originalRectangle.getLowerLeftX(),
-                            page.getMediaBox().getHeight() - originalRectangle.getUpperRightY(),
-                            originalRectangle.getWidth(),
-                            originalRectangle.getHeight(),
-                            modification.required(),
-                            modification.multiSelect(),
-                            modification.options(),
-                            modification.defaultValue(),
-                            modification.tooltip());
-
-            List<String> sanitizedOptions = sanitizeOptions(modification.options());
-
-            try {
-                FormCopyUtils.FieldTypeSupport handler =
-                        FormCopyUtils.FieldTypeSupport.forTypeName(resolvedType);
-                if (handler == null || !handler.supportsDefinitionCreation()) {
-                    handler = FormCopyUtils.FieldTypeSupport.TEXT;
-                }
-                createNewField(
-                        handler,
-                        acroForm,
-                        page,
-                        originalRectangle,
-                        desiredName,
-                        replacementDefinition,
-                        sanitizedOptions);
-            } catch (Exception e) {
-                log.warn(
-                        "Failed to modify form field '{}' to type '{}': {}",
-                        lookupName,
-                        resolvedType,
-                        e.getMessage(),
-                        e);
-            }
-        }
-
-        ensureAppearances(acroForm);
-    }
-
     public void deleteFormFields(PDDocument document, List<String> fieldNames) {
-        if (document == null || fieldNames == null || fieldNames.isEmpty()) {
-            return;
-        }
+        if (document == null || fieldNames == null || fieldNames.isEmpty()) return;
 
         PDAcroForm acroForm = getAcroFormSafely(document);
         if (acroForm == null) {
@@ -1012,9 +1022,7 @@ public class FormUtils {
     }
 
     private void removeFieldFromDocument(PDDocument document, PDAcroForm acroForm, PDField field) {
-        if (field == null) {
-            return;
-        }
+        if (field == null) return;
 
         try {
             List<PDAnnotationWidget> widgets = field.getWidgets();
@@ -1081,9 +1089,7 @@ public class FormUtils {
     }
 
     private void pruneFieldReferences(List<PDField> fields, PDField target) {
-        if (fields == null || fields.isEmpty() || target == null) {
-            return;
-        }
+        if (fields == null || fields.isEmpty() || target == null) return;
 
         fields.removeIf(existing -> isSameFieldReference(existing, target));
 
@@ -1098,22 +1104,38 @@ public class FormUtils {
     }
 
     private boolean isSameFieldReference(PDField a, PDField b) {
-        if (a == b) {
-            return true;
-        }
-        if (a == null || b == null) {
-            return false;
-        }
+        if (a == b) return true;
+        if (a == null || b == null) return false;
 
         String aName = a.getFullyQualifiedName();
         String bName = b.getFullyQualifiedName();
-        if (aName != null && aName.equals(bName)) {
-            return true;
-        }
+        if (aName != null && aName.equals(bName)) return true;
 
         String aPartial = a.getPartialName();
         String bPartial = b.getPartialName();
         return aPartial != null && aPartial.equals(bPartial);
+    }
+
+    private void createNewField(
+            FormFieldTypeSupport handler,
+            PDAcroForm acroForm,
+            PDPage page,
+            PDRectangle rectangle,
+            String name,
+            NewFormFieldDefinition definition,
+            List<String> options,
+            PDAnnotationWidget existingWidget)
+            throws IOException {
+
+        if (!handler.supportsDefinitionCreation()) {
+            throw new IllegalArgumentException(
+                    "Field type '" + handler.typeName() + "' cannot be created via definition");
+        }
+
+        PDTerminalField field = handler.createField(acroForm);
+        registerNewField(field, acroForm, page, rectangle, name, definition, existingWidget);
+        List<String> preparedOptions = options != null ? options : List.of();
+        handler.applyNewFieldDefinition(field, definition, preparedOptions);
     }
 
     private PDRectangle cloneRectangle(PDRectangle rectangle) {
@@ -1289,34 +1311,14 @@ public class FormUtils {
                 .toList();
     }
 
-    private void createNewField(
-            FormCopyUtils.FieldTypeSupport handler,
-            PDAcroForm acroForm,
-            PDPage page,
-            PDRectangle rectangle,
-            String name,
-            NewFormFieldDefinition definition,
-            List<String> options)
-            throws IOException {
-
-        if (!handler.supportsDefinitionCreation()) {
-            throw new IllegalArgumentException(
-                    "Field type '" + handler.typeName() + "' cannot be created via definition");
-        }
-
-        PDTerminalField field = handler.createField(acroForm);
-        registerNewField(field, acroForm, page, rectangle, name, definition);
-        List<String> preparedOptions = options != null ? options : List.of();
-        handler.applyNewFieldDefinition(field, definition, preparedOptions);
-    }
-
     private <T extends PDTerminalField> void registerNewField(
             T field,
             PDAcroForm acroForm,
             PDPage page,
             PDRectangle rectangle,
             String name,
-            NewFormFieldDefinition definition)
+            NewFormFieldDefinition definition,
+            PDAnnotationWidget existingWidget)
             throws IOException {
 
         field.setPartialName(name);
@@ -1329,19 +1331,36 @@ public class FormUtils {
         }
         field.setRequired(Boolean.TRUE.equals(definition.required()));
 
-        PDAnnotationWidget widget = new PDAnnotationWidget();
+        PDAnnotationWidget widget =
+                existingWidget != null ? existingWidget : new PDAnnotationWidget();
         widget.setRectangle(rectangle);
         widget.setPage(page);
-        widget.setPrinted(true);
+        if (existingWidget == null) {
+            widget.setPrinted(true);
+        }
         if (definition.tooltip() != null && !definition.tooltip().isBlank()) {
             widget.getCOSObject().setString(COSName.TU, definition.tooltip());
+        } else {
+            try {
+                widget.getCOSObject().removeItem(COSName.TU);
+            } catch (Exception e) {
+                log.debug("Unable to clear tooltip for '{}': {}", name, e.getMessage());
+            }
         }
 
         field.getWidgets().add(widget);
         widget.setParent(field);
-        page.getAnnotations().add(widget);
+        List<PDAnnotation> annotations = page.getAnnotations();
+        if (annotations == null) {
+            page.getAnnotations().add(widget);
+        } else if (!annotations.contains(widget)) {
+            annotations.add(widget);
+        }
         acroForm.getFields().add(field);
     }
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public record FormFieldExtraction(List<FormFieldInfo> fields, Map<String, Object> template) {}
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public record NewFormFieldDefinition(

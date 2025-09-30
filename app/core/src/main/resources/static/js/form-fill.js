@@ -119,39 +119,63 @@ function isPlainObject(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+function cloneTemplateRecord(record) {
+  if (!isPlainObject(record)) return {};
+  try {
+    return typeof structuredClone === "function" 
+      ? structuredClone(record) 
+      : JSON.parse(JSON.stringify(record));
+  } catch {
+    return { ...record };
+  }
+}
+
+function normalizeFieldsResponse(data) {
+  if (Array.isArray(data)) {
+    return { fields: data, template: createTemplateRecordFromFields(data) };
+  }
+  if (isPlainObject(data)) {
+    const fields = Array.isArray(data.fields) ? data.fields : 
+                   Array.isArray(data.data) ? data.data : [];
+    const template = isPlainObject(data.template) ? 
+                     cloneTemplateRecord(data.template) : 
+                     createTemplateRecordFromFields(fields);
+    return { fields, template };
+  }
+  return { fields: [], template: {} };
+}
+
+function resolveTemplateRecord(templateRecord, fields) {
+  return isPlainObject(templateRecord) && Object.keys(templateRecord).length > 0
+    ? cloneTemplateRecord(templateRecord)
+    : createTemplateRecordFromFields(fields);
+}
+
 function readExistingBatchRecords() {
   if (!batchTextarea) return [];
   const raw = batchTextarea.value?.trim();
-  if (!raw) {
-    return [];
-  }
+  if (!raw) return [];
   try {
     const parsed = JSON.parse(raw);
     return Array.isArray(parsed) ? parsed : [];
-  } catch (error) {
+  } catch {
     return [];
   }
 }
 
 function updateFileChooserSummary(files) {
-  if (!fileChooser) {
-    return;
-  }
-  const selectedFilesContainer = fileChooser.querySelector(".selected-files");
-  if (!selectedFilesContainer) {
-    return;
-  }
-
+  const container = fileChooser?.querySelector(".selected-files");
+  if (!container) return;
+  
   if (!Array.isArray(files) || files.length === 0) {
-    selectedFilesContainer.textContent = "";
+    container.textContent = "";
     return;
   }
-
-  const summary = files
-    .map((file) => (file && typeof file.name === "string" ? file.name : ""))
-    .filter((name) => name.length > 0)
+  
+  container.textContent = files
+    .map(file => file?.name || "")
+    .filter(name => name.length > 0)
     .join(", ");
-  selectedFilesContainer.textContent = summary;
 }
 
 function syncMultiTemplateSelectionToInput() {
@@ -186,36 +210,28 @@ function clearMultiTemplateSelection(options = {}) {
   const { skipInputSync = false } = options;
   multiTemplateSelectedFiles.length = 0;
   multiTemplateSelectionIndex.clear();
-  if (!skipInputSync) {
-    syncMultiTemplateSelectionToInput();
-  }
+  if (!skipInputSync) syncMultiTemplateSelectionToInput();
 }
 
 function mergeMultiTemplateFiles(files) {
-  if (!Array.isArray(files) || files.length === 0) {
-    return false;
-  }
-
+  if (!Array.isArray(files) || files.length === 0) return false;
+  
   let changed = false;
-  files.forEach((file) => {
-    if (!file) {
-      return;
-    }
+  files.forEach(file => {
+    if (!file) return;
     const signature = getFileSignature(file);
-    if (!signature) {
-      return;
-    }
+    if (!signature) return;
+    
     const existingIndex = multiTemplateSelectionIndex.get(signature);
     if (existingIndex == null) {
       multiTemplateSelectionIndex.set(signature, multiTemplateSelectedFiles.length);
       multiTemplateSelectedFiles.push(file);
-      changed = true;
     } else {
       multiTemplateSelectedFiles[existingIndex] = file;
-      changed = true;
     }
+    changed = true;
   });
-
+  
   return changed;
 }
 
@@ -240,9 +256,9 @@ async function loadSingleFormFile(file) {
   toggleInputs(false);
 
   try {
-    const fields = await fetchFields(file);
-    renderFields(fields);
-    const usableFields = fields.filter((field) => FILLABLE_TYPES.has(field.type));
+    const { fields, template } = await fetchFields(file);
+    renderFields(fields, template);
+    const usableFields = fields.filter(field => FILLABLE_TYPES.has(field.type));
     if (usableFields.length === 0) {
       setStatus(formFillLocale.noFields, "warning");
       downloadButton.disabled = false;
@@ -485,13 +501,10 @@ async function fetchFields(file) {
   }
 
   const data = await response.json();
-  if (!Array.isArray(data)) {
-    return [];
-  }
-  return data;
+  return normalizeFieldsResponse(data);
 }
 
-function renderFields(fields) {
+function renderFields(fields, templateRecord) {
   const fieldsForDisplay = normalizeFieldsForDisplay(fields);
   const orderedFields = applyStableFieldOrdering(fieldsForDisplay);
 
@@ -530,8 +543,7 @@ function renderFields(fields) {
       retainedFieldValues.delete(name);
     }
   }
-    populateBatchTemplate(orderedFields);
-  populateBatchTemplate(fieldsForDisplay);
+  populateBatchTemplate(orderedFields, templateRecord);
 }
 
 function buildFieldGroup(field, index, metadataKey) {
@@ -897,25 +909,16 @@ function collectModificationPayload(metadata) {
 
 function sanitizeFieldName(value, fallback) {
   const trimmed = (value ?? "").trim();
-  if (trimmed) {
-    return trimmed;
-  }
-  return fallback ?? "";
+  return trimmed || fallback || "";
 }
 
 function sanitizeOptionalText(value) {
   const trimmed = (value ?? "").trim();
-  return trimmed.length > 0 ? trimmed : null;
+  return trimmed || null;
 }
 
 function parseOptionsInput(raw) {
-  if (!raw) {
-    return [];
-  }
-  return raw
-    .split(/\r?\n|,/)
-    .map((value) => value.trim())
-    .filter((value) => value.length > 0);
+  return raw ? raw.split(/\r?\n|,/).map(value => value.trim()).filter(value => value.length > 0) : [];
 }
 
 function computeDefaultValue(type, rawValue, options = {}) {
@@ -1324,24 +1327,18 @@ function validateField(input, options = {}) {
 }
 
 function validateAllFields(options = {}) {
-  if (fieldValidationRegistry.size === 0) {
-    return true;
-  }
-
+  if (fieldValidationRegistry.size === 0) return true;
+  
   const { focus = true } = options;
   let firstInvalid = null;
 
   for (const input of fieldValidationRegistry.keys()) {
-    const valid = validateField(input, { force: true });
-    if (!valid && !firstInvalid) {
+    if (!validateField(input, { force: true }) && !firstInvalid) {
       firstInvalid = input;
     }
   }
 
-  if (firstInvalid && focus) {
-    firstInvalid.focus({ preventScroll: false });
-  }
-
+  if (firstInvalid && focus) firstInvalid.focus({ preventScroll: false });
   return !firstInvalid;
 }
 
@@ -1472,41 +1469,28 @@ function addOptionsToSelect(selectEl, options, currentValue, allowMultiple = fal
   });
 }
 
-function populateBatchTemplate(fields) {
-  if (!batchTextarea) {
-    return;
-  }
-
-  if (batchEdited) {
-    return;
-  }
-
-  const templateRecord = createTemplateRecordFromFields(fields);
-  if (!isPlainObject(templateRecord) || Object.keys(templateRecord).length === 0) {
+function populateBatchTemplate(fields, templateRecord) {
+  if (!batchTextarea || batchEdited) return;
+  
+  const resolvedTemplate = resolveTemplateRecord(templateRecord, fields);
+  if (!isPlainObject(resolvedTemplate) || Object.keys(resolvedTemplate).length === 0) {
     batchTextarea.value = "";
     return;
   }
-
-  batchTextarea.value = JSON.stringify([templateRecord], null, 2);
+  
+  batchTextarea.value = JSON.stringify([resolvedTemplate], null, 2);
   batchEdited = false;
   updateBatchButtonState({ silent: true });
 }
 
 function createTemplateRecordFromFields(fields) {
-  if (!Array.isArray(fields) || fields.length === 0) {
-    return {};
-  }
-
-  const fillable = fields.filter(
-    (field) => field?.name && FILLABLE_TYPES.has(field.type)
-  );
-
-  if (fillable.length === 0) {
-    return {};
-  }
-
+  if (!Array.isArray(fields) || fields.length === 0) return {};
+  
+  const fillable = fields.filter(field => field?.name && FILLABLE_TYPES.has(field.type));
+  if (fillable.length === 0) return {};
+  
   const templateRecord = {};
-  fillable.forEach((field) => {
+  fillable.forEach(field => {
     templateRecord[field.name] = inferTemplateValue(field);
   });
   return templateRecord;
@@ -1518,39 +1502,30 @@ function buildFieldMetadataKey(field, index) {
 }
 
 function normalizeFieldsForDisplay(fields) {
-  if (!Array.isArray(fields) || fields.length === 0) {
-    return [];
-  }
-
+  if (!Array.isArray(fields) || fields.length === 0) return [];
+  
   const filtered = [];
   const indexByName = new Map();
   const namesEncountered = new Set();
 
-  fields.forEach((field) => {
+  fields.forEach(field => {
     const name = typeof field?.name === "string" ? field.name : null;
     if (name) {
       namesEncountered.add(name);
-      if (pendingRemovalNames.has(name)) {
-        return;
-      }
+      if (pendingRemovalNames.has(name)) return;
     }
 
     if (name && indexByName.has(name)) {
-      const existingIndex = indexByName.get(name);
-      filtered[existingIndex] = field;
+      filtered[indexByName.get(name)] = field;
     } else {
-      if (name) {
-        indexByName.set(name, filtered.length);
-      }
+      if (name) indexByName.set(name, filtered.length);
       filtered.push(field);
     }
   });
 
-  for (const name of Array.from(pendingRemovalNames)) {
-    if (!namesEncountered.has(name)) {
-      pendingRemovalNames.delete(name);
-    }
-  }
+  pendingRemovalNames.forEach(name => {
+    if (!namesEncountered.has(name)) pendingRemovalNames.delete(name);
+  });
 
   return filtered;
 }
@@ -1687,12 +1662,12 @@ async function buildMultiTemplateRecords(files) {
 
     let templateRecord = multiTemplateRecordCache.get(signature);
     if (!templateRecord) {
-      const fields = await fetchFields(file);
-      templateRecord = createTemplateRecordFromFields(fields);
+      const { fields, template } = await fetchFields(file);
+      templateRecord = resolveTemplateRecord(template, fields);
       multiTemplateRecordCache.set(signature, templateRecord);
     }
 
-    records.push({ ...templateRecord });
+    records.push(cloneTemplateRecord(templateRecord));
   }
 
   return records;
