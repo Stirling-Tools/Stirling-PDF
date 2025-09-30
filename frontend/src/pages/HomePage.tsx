@@ -47,14 +47,21 @@ export default function HomePage() {
       const container = sliderRef.current;
       if (!container) return;
 
-      const offset = view === "tools" ? 0 : container.clientWidth;
+      const offsetWidth = container.getBoundingClientRect().width || container.clientWidth;
+      const maxOffset = Math.max(0, container.scrollWidth - container.clientWidth);
+      const offset = view === "tools" ? 0 : Math.max(0, Math.min(maxOffset, offsetWidth));
 
       if (behavior === "auto") {
         container.scrollLeft = offset;
         return;
       }
 
-      container.scrollTo({ left: offset, behavior });
+      if (typeof container.scrollTo === "function") {
+        container.scrollTo({ left: offset, behavior });
+        return;
+      }
+
+      container.scrollLeft = offset;
     },
     []
   );

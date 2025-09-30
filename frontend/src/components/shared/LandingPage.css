@@ -16,7 +16,7 @@
 
 .landing-dropzone__sheet {
   position: relative;
-  width: min(100%, 32rem);
+  width: min(100%, 34rem);
   margin: 0 auto;
   padding: clamp(1.75rem, 4vw, 2.5rem);
   border-radius: 0.5rem;
@@ -57,7 +57,7 @@
   justify-content: center;
   gap: 0.6rem;
   width: 100%;
-  max-width: 20rem;
+  max-width: min(100%, 30rem);
   margin: clamp(0.5rem, 2vw, 0.9rem) auto;
 }
 
@@ -79,5 +79,11 @@
 
   .landing-dropzone__actions {
     max-width: 100%;
+  }
+}
+
+@media (min-width: 901px) {
+  .landing-dropzone__sheet {
+    width: 36rem;
   }
 }
