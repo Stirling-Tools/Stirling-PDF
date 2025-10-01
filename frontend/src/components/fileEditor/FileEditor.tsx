@@ -172,8 +172,8 @@ const FileEditor = ({
 
       // Process all extracted files
       if (allExtractedFiles.length > 0) {
-        // Add files to context (they will be processed automatically)
-        await addFiles(allExtractedFiles);
+        // Add files to context and select them automatically
+        await addFiles(allExtractedFiles, { selectFiles: true });
         showStatus(`Added ${allExtractedFiles.length} files`, 'success');
       }
     } catch (err) {
