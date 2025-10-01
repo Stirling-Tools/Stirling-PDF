@@ -109,7 +109,7 @@ export default function ToolConfigurationModal({ opened, tool, onSave, onCancel,
           {t('automate.config.description', 'Configure the settings for this tool. These settings will be applied when the automation runs.')}
         </Text>
 
-        <div style={{ maxHeight: '60vh', overflowY: 'auto' }}>
+        <div style={{ maxHeight: '60vh', overflowY: 'auto', overflowX: "hidden" }}>
           {renderToolSettings()}
         </div>
 
