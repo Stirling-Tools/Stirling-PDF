@@ -483,7 +483,6 @@ export function useFlatToolRegistry(): ToolRegistry {
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.PAGE_FORMATTING,
         maxFiles: -1,
-        urlPath: '/pdf-to-single-page',
         endpoints: ["pdf-to-single-page"],
         operationConfig: singleLargePageOperationConfig,
         synonyms: getSynonyms(t, "pdfToSinglePage")
@@ -830,7 +829,6 @@ export function useFlatToolRegistry(): ToolRegistry {
         categoryId: ToolCategoryId.RECOMMENDED_TOOLS,
         subcategoryId: SubcategoryId.GENERAL,
         maxFiles: -1,
-        urlPath: '/ocr-pdf',
         operationConfig: ocrOperationConfig,
         settingsComponent: OCRSettings,
         synonyms: getSynonyms(t, "ocr")

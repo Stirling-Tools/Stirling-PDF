@@ -37,8 +37,6 @@ export type ToolRegistryEntry = {
 	endpoints?: string[];
 	link?: string;
 	type?: string;
-	// URL path for routing (e.g., '/split-pdfs', '/compress-pdf')
-	urlPath?: string;
 	// Workbench type for navigation
 	workbench?: WorkbenchType;
 	// Operation configuration for automation
@@ -130,8 +128,8 @@ export const getToolWorkbench = (tool: ToolRegistryEntry): WorkbenchType => {
 /**
  * Get URL path for a tool
  */
-export const getToolUrlPath = (toolId: string, tool: ToolRegistryEntry): string => {
-  return tool.urlPath || `/${toolId.replace(/([A-Z])/g, '-$1').toLowerCase()}`;
+export const getToolUrlPath = (toolId: string): string => {
+  return `/${toolId.replace(/([A-Z])/g, '-$1').toLowerCase()}`;
 };
 
 /**
