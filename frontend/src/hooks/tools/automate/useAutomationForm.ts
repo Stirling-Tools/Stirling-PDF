@@ -2,7 +2,9 @@ import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AutomationTool, AutomationConfig, AutomationMode } from '../../../types/automation';
 import { AUTOMATION_CONSTANTS } from '../../../constants/automation';
-import { ToolRegistry } from '../../../data/toolsTaxonomy';
+import { ToolRegistry, isValidToolId } from '../../../data/toolsTaxonomy';
+import { ToolId } from 'src/types/toolId';
+
 
 interface UseAutomationFormProps {
   mode: AutomationMode;
@@ -41,11 +43,15 @@ export function useAutomationForm({ mode, existingAutomation, toolRegistry }: Us
       const operations = existingAutomation.operations || [];
       const tools = operations.map((op, index) => {
         const operation = typeof op === 'string' ? op : op.operation;
+        const toolEntry = toolRegistry[operation as ToolId];
+        // If tool has no settingsComponent, it's automatically configured
+        const isConfigured = mode === AutomationMode.EDIT ? true : !toolEntry?.automationSettings;
+
         return {
           id: `${operation}-${Date.now()}-${index}`,
           operation: operation,
           name: getToolName(operation),
-          configured: mode === AutomationMode.EDIT ? true : false,
+          configured: isConfigured,
           parameters: typeof op === 'object' ? op.parameters || {} : {}
         };
       });
@@ -65,11 +71,15 @@ export function useAutomationForm({ mode, existingAutomation, toolRegistry }: Us
   }, [mode, existingAutomation, t, getToolName]);
 
   const addTool = (operation: string) => {
+    const toolEntry = toolRegistry[operation];
+    // If tool has no settingsComponent, it's automatically configured
+    const isConfigured = !toolEntry?.settingsComponent;
+
     const newTool: AutomationTool = {
       id: `${operation}-${Date.now()}`,
       operation,
       name: getToolName(operation),
-      configured: false,
+      configured: isConfigured,
       parameters: getToolDefaultParameters(operation)
     };
 

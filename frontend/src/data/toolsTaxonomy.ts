@@ -42,7 +42,9 @@ export type ToolRegistryEntry = {
 	// Operation configuration for automation
 	operationConfig?: ToolOperationConfig<any>;
 	// Settings component for automation configuration
-	settingsComponent?: React.ComponentType<any>;
+	automationSettings: React.ComponentType<any> | null;
+	// Whether this tool supports automation (defaults to true)
+	supportsAutomate?: boolean;
 	// Synonyms for search (optional)
 	synonyms?: string[];
 }
@@ -137,4 +139,11 @@ export const getToolUrlPath = (toolId: string): string => {
  */
 export const isValidToolId = (toolId: string, registry: ToolRegistry): boolean => {
   return toolId in registry;
+};
+
+/**
+ * Check if a tool supports automation (defaults to true)
+ */
+export const getToolSupportsAutomate = (tool: ToolRegistryEntry): boolean => {
+  return tool.supportsAutomate !== false;
 };
