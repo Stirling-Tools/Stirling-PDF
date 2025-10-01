@@ -33,7 +33,7 @@ export function parseToolRoute(registry: ToolRegistry): ToolRoute {
 
   // Fallback: Try to find tool by primary URL path in registry
   for (const [toolId, tool] of Object.entries(registry)) {
-    const toolUrlPath = getToolUrlPath(toolId, tool);
+    const toolUrlPath = getToolUrlPath(toolId);
     if (path === toolUrlPath && isValidToolId(toolId)) {
       return {
         workbench: getToolWorkbench(tool),
@@ -88,7 +88,7 @@ export function updateToolRoute(toolId: ToolId, registry: ToolRegistry, replace:
     return;
   }
 
-  const toolPath = getToolUrlPath(toolId, tool);
+  const toolPath = getToolUrlPath(toolId);
   const newPath = withBasePath(toolPath);
   const searchParams = new URLSearchParams(window.location.search);
 
@@ -116,19 +116,3 @@ export function getToolDisplayName(toolId: ToolId, registry: ToolRegistry): stri
   return tool ? tool.name : toolId;
 }
 
-/**
- * Generate shareable URL for current tool state using registry
- */
-export function generateShareableUrl(toolId: ToolId | null, registry: ToolRegistry): string {
-  const baseUrl = window.location.origin;
-
-  if (!toolId || !registry[toolId]) {
-    return `${baseUrl}${BASE_PATH || ''}`;
-  }
-
-  const tool = registry[toolId];
-
-  const toolPath = getToolUrlPath(toolId, tool);
-  const fullPath = withBasePath(toolPath);
-  return `${baseUrl}${fullPath}`;
-}

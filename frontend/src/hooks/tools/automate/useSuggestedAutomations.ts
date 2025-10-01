@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import React from 'react';
 import LocalIcon from '../../../components/shared/LocalIcon';
 import { SuggestedAutomation } from '../../../types/automation';
+import { SPLIT_METHODS } from '../../../constants/splitConstants';
 
 // Create icon components
 const CompressIcon = () => React.createElement(LocalIcon, { icon: 'compress', width: '1.5rem', height: '1.5rem' });
@@ -83,18 +84,18 @@ export function useSuggestedAutomations(): SuggestedAutomation[] {
             }
           },
           {
-            operation: "splitPdf",
+            operation: "split",
             parameters: {
-              mode: 'bySizeOrCount',
+              method: SPLIT_METHODS.BY_SIZE,
               pages: '',
               hDiv: '1',
               vDiv: '1',
               merge: false,
-              splitType: 'size',
               splitValue: '20MB',
               bookmarkLevel: '1',
               includeMetadata: false,
               allowDuplicates: false,
+              duplexMode: false,
             }
           },
           {

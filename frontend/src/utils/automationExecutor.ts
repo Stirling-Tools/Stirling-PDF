@@ -5,6 +5,127 @@ import { AutomationFileProcessor } from './automationFileProcessor';
 import { ToolType } from '../hooks/tools/shared/useToolOperation';
 import { processResponse } from './toolResponseProcessor';
 
+/**
+ * Process multi-file tool response (handles ZIP or single PDF responses)
+ */
+const processMultiFileResponse = async (
+  responseData: Blob,
+  responseHeaders: any,
+  files: File[],
+  filePrefix: string,
+  preserveBackendFilename?: boolean
+): Promise<File[]> => {
+  // Multi-file responses are typically ZIP files, but may be single files (e.g. split with merge=true)
+  if (responseData.type === 'application/pdf' ||
+      (responseHeaders && responseHeaders['content-type'] === 'application/pdf')) {
+    // Single PDF response - use processResponse to respect preserveBackendFilename
+    const processedFiles = await processResponse(
+      responseData,
+      files,
+      filePrefix,
+      undefined,
+      preserveBackendFilename ? responseHeaders : undefined
+    );
+    return processedFiles;
+  } else {
+    // ZIP response
+    const result = await AutomationFileProcessor.extractAutomationZipFiles(responseData);
+
+    if (result.errors.length > 0) {
+      console.warn(`⚠️ File processing warnings:`, result.errors);
+    }
+
+    // Apply prefix to files, replacing any existing prefix
+    const processedFiles = filePrefix && !preserveBackendFilename
+      ? result.files.map(file => {
+          const nameWithoutPrefix = file.name.replace(/^[^_]*_/, '');
+          return new File([file], `${filePrefix}${nameWithoutPrefix}`, { type: file.type });
+        })
+      : result.files;
+
+    return processedFiles;
+  }
+};
+
+/**
+ * Core execution function for API requests
+ */
+const executeApiRequest = async (
+  endpoint: string,
+  formData: FormData,
+  files: File[],
+  filePrefix: string,
+  preserveBackendFilename?: boolean
+): Promise<File[]> => {
+  const response = await axios.post(endpoint, formData, {
+    responseType: 'blob',
+    timeout: AUTOMATION_CONSTANTS.OPERATION_TIMEOUT
+  });
+
+  return await processMultiFileResponse(
+    response.data,
+    response.headers,
+    files,
+    filePrefix,
+    preserveBackendFilename
+  );
+};
+
+/**
+ * Execute single-file tool operation (processes files one at a time)
+ */
+const executeSingleFileOperation = async (
+  config: any,
+  parameters: any,
+  files: File[],
+  filePrefix: string
+): Promise<File[]> => {
+  const resultFiles: File[] = [];
+
+  for (const file of files) {
+    const endpoint = typeof config.endpoint === 'function'
+      ? config.endpoint(parameters)
+      : config.endpoint;
+
+    const formData = (config.buildFormData as (params: any, file: File) => FormData)(parameters, file);
+
+    const processedFiles = await executeApiRequest(
+      endpoint,
+      formData,
+      [file],
+      filePrefix,
+      config.preserveBackendFilename
+    );
+    resultFiles.push(...processedFiles);
+  }
+
+  return resultFiles;
+};
+
+/**
+ * Execute multi-file tool operation (processes all files in one request)
+ */
+const executeMultiFileOperation = async (
+  config: any,
+  parameters: any,
+  files: File[],
+  filePrefix: string
+): Promise<File[]> => {
+  const endpoint = typeof config.endpoint === 'function'
+    ? config.endpoint(parameters)
+    : config.endpoint;
+
+  const formData = (config.buildFormData as (params: any, files: File[]) => FormData)(parameters, files);
+
+  return await executeApiRequest(
+    endpoint,
+    formData,
+    files,
+    filePrefix,
+    config.preserveBackendFilename
+  );
+};
+
 
 /**
  * Execute a tool operation directly without using React hooks
@@ -28,119 +149,27 @@ export const executeToolOperationWithPrefix = async (
   toolRegistry: ToolRegistry,
   filePrefix: string = AUTOMATION_CONSTANTS.FILE_PREFIX
 ): Promise<File[]> => {
-  console.log(`🔧 Executing tool: ${operationName}`, { parameters, fileCount: files.length });
-
   const config = toolRegistry[operationName as keyof ToolRegistry]?.operationConfig;
   if (!config) {
-    console.error(`❌ Tool operation not supported: ${operationName}`);
     throw new Error(`Tool operation not supported: ${operationName}`);
   }
-
-  console.log(`📋 Using config:`, config);
 
   try {
     // Check if tool uses custom processor (like Convert tool)
     if (config.customProcessor) {
-      console.log(`🎯 Using custom processor for ${config.operationType}`);
       const resultFiles = await config.customProcessor(parameters, files);
-      console.log(`✅ Custom processor returned ${resultFiles.length} files`);
       return resultFiles;
     }
 
+    // Execute based on tool type
     if (config.toolType === ToolType.multiFile) {
-      // Multi-file processing - single API call with all files
-      const endpoint = typeof config.endpoint === 'function'
-        ? config.endpoint(parameters)
-        : config.endpoint;
-
-      console.log(`🌐 Making multi-file request to: ${endpoint}`);
-      const formData = (config.buildFormData as (params: any, files: File[]) => FormData)(parameters, files);
-      console.log(`📤 FormData entries:`, Array.from(formData.entries()));
-
-      const response = await axios.post(endpoint, formData, {
-        responseType: 'blob',
-        timeout: AUTOMATION_CONSTANTS.OPERATION_TIMEOUT
-      });
-
-      console.log(`📥 Response status: ${response.status}, size: ${response.data.size} bytes`);
-
-      // Multi-file responses are typically ZIP files, but may be single files (e.g. split with merge=true)
-      let result;
-      if (response.data.type === 'application/pdf' ||
-          (response.headers && response.headers['content-type'] === 'application/pdf')) {
-        // Single PDF response (e.g. split with merge option) - use processResponse to respect preserveBackendFilename
-        const processedFiles = await processResponse(
-          response.data,
-          files,
-          filePrefix,
-          undefined,
-          config.preserveBackendFilename ? response.headers : undefined
-        );
-        result = {
-          success: true,
-          files: processedFiles,
-          errors: []
-        };
-      } else {
-        // ZIP response
-        result = await AutomationFileProcessor.extractAutomationZipFiles(response.data);
-      }
-
-      if (result.errors.length > 0) {
-        console.warn(`⚠️ File processing warnings:`, result.errors);
-      }
-      // Apply prefix to files, replacing any existing prefix
-      // Skip prefixing if preserveBackendFilename is true and backend provided a filename
-      const processedFiles = filePrefix && !config.preserveBackendFilename
-        ? result.files.map(file => {
-            const nameWithoutPrefix = file.name.replace(/^[^_]*_/, '');
-            return new File([file], `${filePrefix}${nameWithoutPrefix}`, { type: file.type });
-          })
-        : result.files;
-
-      console.log(`📁 Processed ${processedFiles.length} files from response`);
-      return processedFiles;
-
+      return await executeMultiFileOperation(config, parameters, files, filePrefix);
     } else {
-      // Single-file processing - separate API call per file
-      console.log(`🔄 Processing ${files.length} files individually`);
-      const resultFiles: File[] = [];
-
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        const endpoint = typeof config.endpoint === 'function'
-          ? config.endpoint(parameters)
-          : config.endpoint;
-
-        console.log(`🌐 Making single-file request ${i+1}/${files.length} to: ${endpoint} for file: ${file.name}`);
-        const formData = (config.buildFormData as (params: any, file: File) => FormData)(parameters, file);
-        console.log(`📤 FormData entries:`, Array.from(formData.entries()));
-
-        const response = await axios.post(endpoint, formData, {
-          responseType: 'blob',
-          timeout: AUTOMATION_CONSTANTS.OPERATION_TIMEOUT
-        });
-
-        console.log(`📥 Response ${i+1} status: ${response.status}, size: ${response.data.size} bytes`);
-
-        // Create result file using processResponse to respect preserveBackendFilename setting
-        const processedFiles = await processResponse(
-          response.data,
-          [file],
-          filePrefix,
-          undefined,
-          config.preserveBackendFilename ? response.headers : undefined
-        );
-        resultFiles.push(...processedFiles);
-        console.log(`✅ Created result file(s): ${processedFiles.map(f => f.name).join(', ')}`);
-      }
-
-      console.log(`🎉 Single-file processing complete: ${resultFiles.length} files`);
-      return resultFiles;
+      return await executeSingleFileOperation(config, parameters, files, filePrefix);
     }
 
   } catch (error: any) {
-    console.error(`Tool operation ${operationName} failed:`, error);
+    console.error(`❌ ${operationName} failed:`, error);
     throw new Error(`${operationName} operation failed: ${error.response?.data || error.message}`);
   }
 };
@@ -156,9 +185,8 @@ export const executeAutomationSequence = async (
   onStepComplete?: (stepIndex: number, resultFiles: File[]) => void,
   onStepError?: (stepIndex: number, error: string) => void
 ): Promise<File[]> => {
-  console.log(`🚀 Starting automation sequence: ${automation.name || 'Unnamed'}`);
-  console.log(`📁 Initial files: ${initialFiles.length}`);
-  console.log(`🔧 Operations: ${automation.operations?.length || 0}`);
+  console.log(`🚀 Starting automation: ${automation.name || 'Unnamed'}`);
+  console.log(`📁 Input: ${initialFiles.length} file(s)`);
 
   if (!automation?.operations || automation.operations.length === 0) {
     throw new Error('No operations in automation');
@@ -170,9 +198,8 @@ export const executeAutomationSequence = async (
   for (let i = 0; i < automation.operations.length; i++) {
     const operation = automation.operations[i];
 
-    console.log(`📋 Step ${i + 1}/${automation.operations.length}: ${operation.operation}`);
-    console.log(`📄 Input files: ${currentFiles.length}`);
-    console.log(`⚙️ Parameters:`, operation.parameters || {});
+    console.log(`\n📋 Step ${i + 1}/${automation.operations.length}: ${operation.operation}`);
+    console.log(`   Input: ${currentFiles.length} file(s)`);
 
     try {
       onStepStart?.(i, operation.operation);
@@ -196,6 +223,6 @@ export const executeAutomationSequence = async (
     }
   }
 
-  console.log(`🎉 Automation sequence completed: ${currentFiles.length} final files`);
+  console.log(`\n🎉 Automation complete: ${currentFiles.length} file(s)`);
   return currentFiles;
 };

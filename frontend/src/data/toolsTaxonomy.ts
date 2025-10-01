@@ -37,14 +37,14 @@ export type ToolRegistryEntry = {
 	endpoints?: string[];
 	link?: string;
 	type?: string;
-	// URL path for routing (e.g., '/split-pdfs', '/compress-pdf')
-	urlPath?: string;
 	// Workbench type for navigation
 	workbench?: WorkbenchType;
 	// Operation configuration for automation
 	operationConfig?: ToolOperationConfig<any>;
 	// Settings component for automation configuration
-	settingsComponent?: React.ComponentType<any>;
+	automationSettings: React.ComponentType<any> | null;
+	// Whether this tool supports automation (defaults to true)
+	supportsAutomate?: boolean;
 	// Synonyms for search (optional)
 	synonyms?: string[];
 }
@@ -130,8 +130,8 @@ export const getToolWorkbench = (tool: ToolRegistryEntry): WorkbenchType => {
 /**
  * Get URL path for a tool
  */
-export const getToolUrlPath = (toolId: string, tool: ToolRegistryEntry): string => {
-  return tool.urlPath || `/${toolId.replace(/([A-Z])/g, '-$1').toLowerCase()}`;
+export const getToolUrlPath = (toolId: string): string => {
+  return `/${toolId.replace(/([A-Z])/g, '-$1').toLowerCase()}`;
 };
 
 /**
@@ -139,4 +139,11 @@ export const getToolUrlPath = (toolId: string, tool: ToolRegistryEntry): string 
  */
 export const isValidToolId = (toolId: string, registry: ToolRegistry): boolean => {
   return toolId in registry;
+};
+
+/**
+ * Check if a tool supports automation (defaults to true)
+ */
+export const getToolSupportsAutomate = (tool: ToolRegistryEntry): boolean => {
+  return tool.supportsAutomate !== false;
 };

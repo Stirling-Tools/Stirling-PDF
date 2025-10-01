@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Stack, Text, ScrollArea } from '@mantine/core';
-import { ToolRegistryEntry } from '../../../data/toolsTaxonomy';
+import { ToolRegistryEntry, getToolSupportsAutomate } from '../../../data/toolsTaxonomy';
 import { useToolSections } from '../../../hooks/useToolSections';
 import { renderToolButtons } from '../shared/renderToolButtons';
 import ToolSearch from '../toolPicker/ToolSearch';
@@ -28,9 +28,11 @@ export default function ToolSelector({
   const [shouldAutoFocus, setShouldAutoFocus] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Filter out excluded tools (like 'automate' itself)
+  // Filter out excluded tools (like 'automate' itself) and tools that don't support automation
   const baseFilteredTools = useMemo(() => {
-    return Object.entries(toolRegistry).filter(([key]) => !excludeTools.includes(key));
+    return Object.entries(toolRegistry).filter(([key, tool]) =>
+      !excludeTools.includes(key) && getToolSupportsAutomate(tool)
+    );
   }, [toolRegistry, excludeTools]);
 
   // Apply search filter

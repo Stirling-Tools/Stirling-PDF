@@ -22,7 +22,7 @@ export function useToolNavigation(): {
 
   const getToolNavigation = useCallback((toolId: string, tool: ToolRegistryEntry): ToolNavigationProps => {
     // Generate SSR-safe relative path
-    const path = getToolUrlPath(toolId, tool);
+    const path = getToolUrlPath(toolId);
     const href = path; // Relative path, no window.location needed
 
     // Click handler that maintains SPA behavior

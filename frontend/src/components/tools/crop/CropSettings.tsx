@@ -1,10 +1,11 @@
 import { useMemo, useState, useEffect } from "react";
-import { Stack, Text, Box, Group, NumberInput, ActionIcon, Center, Alert } from "@mantine/core";
+import { Stack, Text, Box, Group, ActionIcon, Center, Alert } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import { CropParametersHook } from "../../../hooks/tools/crop/useCropParameters";
 import { useSelectedFiles } from "../../../contexts/file/fileHooks";
 import CropAreaSelector from "./CropAreaSelector";
+import CropCoordinateInputs from "./CropCoordinateInputs";
 import { DEFAULT_CROP_AREA } from "../../../constants/cropConstants";
 import { PAGE_SIZES } from "../../../constants/pageSizeConstants";
 import {
@@ -190,71 +191,22 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
       </Stack>
 
       {/* Manual Coordinate Input */}
-      <Stack gap="xs">
-        <Text size="sm" fw={500}>
-          {t("crop.coordinates.title", "Position and Size")}
-        </Text>
+      <CropCoordinateInputs
+        cropArea={cropArea}
+        onCoordinateChange={handleCoordinateChange}
+        disabled={disabled}
+        pdfBounds={pdfBounds}
+        showAutomationInfo={false}
+      />
 
-        <Group grow>
-          <NumberInput
-            label={t("crop.coordinates.x", "X Position")}
-            value={Math.round(cropArea.x * 10) / 10}
-            onChange={(value) => handleCoordinateChange('x', value)}
-            disabled={disabled}
-            min={0}
-            max={pdfBounds.actualWidth}
-            step={0.1}
-            decimalScale={1}
-            size="xs"
-          />
-          <NumberInput
-            label={t("crop.coordinates.y", "Y Position")}
-            value={Math.round(cropArea.y * 10) / 10}
-            onChange={(value) => handleCoordinateChange('y', value)}
-            disabled={disabled}
-            min={0}
-            max={pdfBounds.actualHeight}
-            step={0.1}
-            decimalScale={1}
-            size="xs"
-          />
-        </Group>
-
-        <Group grow>
-          <NumberInput
-            label={t("crop.coordinates.width", "Width")}
-            value={Math.round(cropArea.width * 10) / 10}
-            onChange={(value) => handleCoordinateChange('width', value)}
-            disabled={disabled}
-            min={0.1}
-            max={pdfBounds.actualWidth}
-            step={0.1}
-            decimalScale={1}
-            size="xs"
-          />
-          <NumberInput
-            label={t("crop.coordinates.height", "Height")}
-            value={Math.round(cropArea.height * 10) / 10}
-            onChange={(value) => handleCoordinateChange('height', value)}
-            disabled={disabled}
-            min={0.1}
-            max={pdfBounds.actualHeight}
-            step={0.1}
-            decimalScale={1}
-            size="xs"
-          />
-        </Group>
-
-
-        {/* Validation Alert */}
-        {!isCropValid && (
-          <Alert color="red" variant="light">
-            <Text size="xs">
-              {t("crop.error.invalidArea", "Crop area extends beyond PDF boundaries")}
-            </Text>
-          </Alert>
-        )}
-      </Stack>
+      {/* Validation Alert */}
+      {!isCropValid && (
+        <Alert color="red" variant="light">
+          <Text size="xs">
+            {t("crop.error.invalidArea", "Crop area extends beyond PDF boundaries")}
+          </Text>
+        </Alert>
+      )}
     </Stack>
   );
 };
