@@ -14,7 +14,6 @@ interface AppConfigModalProps {
 }
 
 const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
-  const { config, loading, error } = useAppConfig();
   const [active, setActive] = useState<NavKey>('overview');
   const isMobile = useMediaQuery("(max-width: 1024px)");
 
@@ -38,7 +37,6 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
     contentBg: 'var(--modal-content-bg)',
     headerBorder: 'var(--modal-header-border)',
   }), []);
-  const isDev = process.env.NODE_ENV === 'development';
 
   // Placeholder logout handler (not needed in open-source but keeps SaaS compatibility)
   const handleLogout = () => {

@@ -1,6 +1,5 @@
 import React from 'react';
 import { NavKey } from './types';
-import { AppConfig } from '../../../hooks/useAppConfig';
 import HotkeysSection from './configSections/HotkeysSection';
 
 export interface ConfigNavItem {
