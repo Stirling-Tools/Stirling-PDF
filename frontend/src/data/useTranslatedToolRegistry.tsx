@@ -62,6 +62,7 @@ import { removeAnnotationsOperationConfig } from "../hooks/tools/removeAnnotatio
 import { extractImagesOperationConfig } from "../hooks/tools/extractImages/useExtractImagesOperation";
 import { replaceColorOperationConfig } from "../hooks/tools/replaceColor/useReplaceColorOperation";
 import { removePagesOperationConfig } from "../hooks/tools/removePages/useRemovePagesOperation";
+import { removeBlanksOperationConfig } from "../hooks/tools/removeBlanks/useRemoveBlanksOperation";
 import CompressSettings from "../components/tools/compress/CompressSettings";
 import AddPasswordSettings from "../components/tools/addPassword/AddPasswordSettings";
 import RemovePasswordSettings from "../components/tools/removePassword/RemovePasswordSettings";
@@ -97,6 +98,7 @@ import RotateAutomationSettings from "../components/tools/rotate/RotateAutomatio
 import SplitAutomationSettings from "../components/tools/split/SplitAutomationSettings";
 import AddAttachmentsSettings from "../components/tools/addAttachments/AddAttachmentsSettings";
 import RemovePagesSettings from "../components/tools/removePages/RemovePagesSettings";
+import RemoveBlanksSettings from "../components/tools/removeBlanks/RemoveBlanksSettings";
 
 const showPlaceholderTools = true; // Show all tools; grey out unavailable ones in UI
 
@@ -554,7 +556,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         endpoints: ["remove-pages"],
         synonyms: getSynonyms(t, "removePages"),
         operationConfig: removePagesOperationConfig,
-        automationSettings: RemovePagesSettings, // TODO:: Needs settings
+        automationSettings: RemovePagesSettings,
       },
       removeBlanks: {
         icon: <LocalIcon icon="scan-delete-rounded" width="1.5rem" height="1.5rem" />,
@@ -566,8 +568,8 @@ export function useFlatToolRegistry(): ToolRegistry {
         maxFiles: 1,
         endpoints: ["remove-blanks"],
         synonyms: getSynonyms(t, "removeBlanks"),
-
-        automationSettings: null, // TODO:: Needs settings
+        operationConfig: removeBlanksOperationConfig,
+        automationSettings: RemoveBlanksSettings, // TODO:: Needs settings
       },
       removeAnnotations: {
         icon: <LocalIcon icon="thread-unread-rounded" width="1.5rem" height="1.5rem" />,
