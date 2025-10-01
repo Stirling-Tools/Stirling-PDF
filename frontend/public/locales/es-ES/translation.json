@@ -38,7 +38,7 @@
   "save": "Guardar",
   "saveToBrowser": "Guardar en el navegador",
   "close": "Cerrar",
-  "filesSelected": "archivos seleccionados",
+  "filesSelected": "{{count}} archivos seleccionados",
   "noFavourites": "No se agregaron favoritos",
   "downloadComplete": "Descarga completada",
   "bored": "¿Aburrido de esperar?",

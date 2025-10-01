@@ -269,8 +269,9 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ position = 'bottom-
           <ScrollArea h={190} type="scroll">
             <div className={styles.languageGrid}>
               {languageOptions.map((option, index) => {
-                const isEnglishGB = option.value === 'en-GB'; // Currently only English GB has enough translations to use
-                const isDisabled = !isEnglishGB;
+                // Enable languages with >90% translation completion
+                const enabledLanguages = ['en-GB', 'ar-AR', 'de-DE', 'es-ES', 'fr-FR', 'it-IT', 'pt-BR', 'ru-RU', 'zh-CN'];
+                const isDisabled = !enabledLanguages.includes(option.value);
 
                 return (
                   <LanguageItem

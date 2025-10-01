@@ -1,4 +1,10 @@
 {
+  "unsavedChanges": "Você tem alterações não salvas no seu PDF. O que você gostaria de fazer?",
+  "unsavedChangesTitle": "Alterações não salvas",
+  "keepWorking": "Continuar trabalhando",
+  "discardChanges": "Descartar alterações",
+  "applyAndContinue": "Aplicar e continuar",
+  "exportAndContinue": "Exportar e continuar",
   "language": {
     "direction": "ltr"
   },
@@ -35,10 +41,28 @@
   "true": "Verdadeiro",
   "false": "Falso",
   "unknown": "Desconhecido",
+  "app": {
+    "description": "A alternativa gratuita ao Adobe Acrobat (10M+ downloads)"
+  },
   "save": "Salvar",
   "saveToBrowser": "Salvar no Navegador",
+  "download": "Baixar (JSON)",
+  "undoOperationTooltip": "Clique para desfazer a última operação e restaurar os arquivos originais",
+  "undo": "Desfazer",
+  "moreOptions": "Mais opções",
+  "editYourNewFiles": "Edite seu(s) novo(s) arquivo(s)",
   "close": "Fechar",
+  "fileSelected": "Selecionado: {{filename}}",
+  "chooseFile": "Escolher arquivo",
   "filesSelected": "Arquivos Selecionados",
+  "files": {
+    "title": "Arquivos",
+    "upload": "Fazer upload",
+    "uploadFiles": "Fazer upload de arquivos",
+    "addFiles": "Adicionar arquivos",
+    "selectFromWorkbench": "Selecione arquivos da bancada de trabalho ou ",
+    "selectMultipleFromWorkbench": "Selecione pelo menos {{count}} arquivos da bancada de trabalho ou "
+  },
   "noFavourites": "Nenhum Favorito Adicionado",
   "downloadComplete": "Download Completo",
   "bored": "Entediado? Clique aqui!",
@@ -56,7 +80,10 @@
   },
   "error": {
     "pdfPassword": "O PDF está protegido por senha e a senha não foi fornecida ou está incorreta",
+    "encryptedPdfMustRemovePassword": "Este PDF está criptografado ou protegido por senha. Desbloqueie-o antes de converter para PDF/A.",
+    "incorrectPasswordProvided": "A senha do PDF está incorreta ou não foi fornecida.",
     "_value": "Erro",
+    "dismissAllErrors": "Dispensar todos os erros",
     "sorry": "Desculpe pelo problema!",
     "needHelp": "Precisa de ajuda / Encontrou um problema?",
     "contactTip": "Se você ainda estiver com problemas, não hesite em entrar em contato conosco para obter ajuda. Você pode enviar um tíquete em nossa página GitHub ou entrar em contato conosco através do Discord:",
@@ -71,6 +98,10 @@
     "githubSubmit": "GitHub - Submeter um tíquete",
     "discordSubmit": "Discord - Submeter um post de suporte"
   },
+  "warning": {
+    "tooltipTitle": "Aviso"
+  },
+  "edit": "Editar",
   "delete": "Apagar",
   "username": "Usuário",
   "password": "Senha",
@@ -82,6 +113,7 @@
   "green": "Verde",
   "blue": "Azul",
   "custom": "Personalizado...",
+  "comingSoon": "Em breve",
   "WorkInProgess": "Trabalho em progresso, talvez não funcione ou apresente erros, Por favor, reporte qualquer problema!",
   "poweredBy": "Distribuído por",
   "yes": "Sim",
@@ -115,12 +147,14 @@
   "page": "Página",
   "pages": "Páginas",
   "loading": "Carregando...",
+  "review": "Revisar",
   "addToDoc": "Adicionar ao Documento",
   "reset": "Reiniciar",
   "apply": "Aplicar",
   "noFileSelected": "Nenhum arquivo selecionado. Por favo, envie um arquivo.",
   "legal": {
     "privacy": "Política de Privacidade",
+    "iAgreeToThe": "Concordo com todos os",
     "terms": "Termos e Condições",
     "accessibility": "Acessibilidade",
     "cookie": "Política de Cookies",
@@ -285,7 +319,7 @@
     "percentage": "Percentagem",
     "loading": "Carregando...",
     "failedToLoad": "Falha ao carregar dados do Endpoint. Por favor, tente atualizar.",
-    "home": "Home",
+    "home": "Início",
     "login": "Login",
     "top": "Top",
     "numberOfVisits": "Número de Visitas",
@@ -300,13 +334,13 @@
     "fileSize": "Tamanho do Arquivo",
     "deleteBackupFile": "Apagar arquivo de backup",
     "importBackupFile": "Importar arquivo de backup",
-    "createBackupFile": "Create Backup File",
+    "createBackupFile": "Criar arquivo de backup",
     "downloadBackupFile": "Baixar arquivo de backup",
     "info_1": "Ao importar dados, é crucial garantir a estrutura correta. Se você não tem certeza do que está fazendo procure auxílio de um profissional. Um erro na estrutura pode ocasionar em mau funcionamento da aplicação, incluindo a impossibilidade da aplicação ser executada.",
     "info_2": "O nome do arquivo não importa ao enviar. Ele será renomeado em seguida para seguir o formato backup_usuario_yyyyMMddHHmm.sql, garantindo uma convenção de nomes coerente.",
     "submit": "Importar Backup",
     "importIntoDatabaseSuccessed": "Importação para o banco de dados bem sucedida",
-    "backupCreated": "Database backup successful",
+    "backupCreated": "Backup do banco de dados criado com sucesso",
     "fileNotFound": "Arquivo não encontrado",
     "fileNullOrEmpty": "O arquivo não pode estar nulo ou vazio",
     "failedImportFile": "Falha ao importar arquivo",
@@ -332,285 +366,304 @@
     "globalPopularity": "Popularidade Global",
     "sortBy": "Ordenar por:",
     "multiTool": {
+      "tags": "múltiplas,ferramentas",
       "title": "Multiferramentas de PDF",
       "desc": "Mesclar, girar, reorganizar, dividir, inserir e remover páginas."
     },
     "merge": {
+      "tags": "combinar,juntar,unir",
       "title": "Mesclar",
       "desc": "Mescle facilmente vários PDFs em um só."
     },
     "split": {
+      "tags": "dividir,separar,quebrar",
       "title": "Dividir",
       "desc": "Dividir PDFs em vários documentos/arquivos."
     },
     "rotate": {
+      "tags": "girar,virar,orientar",
       "title": "Girar",
       "desc": "Gire facilmente seus PDFs."
     },
-    "imageToPDF": {
-      "title": "Imagem para PDF",
-      "desc": "Converter uma imagem (PNG, JPG, GIF) em PDF."
-    },
-    "pdfToImage": {
-      "title": "PDF para Imagem",
-      "desc": "Converter PDF em uma imagem (PNG, JPG, GIF e outros)."
+    "convert": {
+      "tags": "transformar,alterar",
+      "title": "Converter",
+      "desc": "Converter arquivos entre diferentes formatos"
     },
     "pdfOrganiser": {
+      "tags": "organizar,rearranjar,reordenar",
       "title": "Organizar Páginas",
       "desc": "Remover/reorganizar as páginas de diversas formas diferentes."
     },
     "addImage": {
+      "tags": "inserir,incorporar,colocar",
       "title": "Adicionar Imagem",
       "desc": "Adicionar imagens em um local definido no PDF."
     },
+    "addAttachments": {
+      "tags": "incorporar,anexar,incluir",
+      "title": "Adicionar anexos",
+      "desc": "Adicionar ou remover arquivos incorporados (anexos) em um PDF"
+    },
     "watermark": {
+      "tags": "carimbo,marca,sobreposição",
       "title": "Adicionar Marca d'água",
       "desc": "Adicionar uma marca d'água personalizada ao seu PDF."
     },
-    "permissions": {
-      "title": "Alterar Permissões",
-      "desc": "Alterar as permissões do seu PDF."
+    "removePassword": {
+      "tags": "desbloquear",
+      "title": "Desproteger PDF",
+      "desc": "Descriptografar o PDF realizando a remoção da senha."
     },
-    "pageRemover": {
+    "compress": {
+      "tags": "reduzir,compactar,otimizar",
+      "title": "Comprimir",
+      "desc": "Comprimir PDFs para reduzir o tamanho do arquivo."
+    },
+    "unlockPDFForms": {
+      "tags": "desbloquear,habilitar,editar",
+      "title": "Desbloquear Formulários do PDF",
+      "desc": "Remove a propriedade de apenas leitura de formulários em um documento PDF."
+    },
+    "changeMetadata": {
+      "tags": "editar,modificar,atualizar",
+      "title": "Alterar Metadados",
+      "desc": "Alterar/remover/adicionar metadados de um PDF."
+    },
+    "ocr": {
+      "tags": "extrair,escanear",
+      "title": "Processamento de OCR",
+      "desc": "Reconhecimento Óptico de Caracteres transforma PDFs com imagens em documentos pesquisáveis e com texto selecionável."
+    },
+    "extractImages": {
+      "tags": "extrair,salvar,exportar",
+      "title": "Extrair Imagens",
+      "desc": "Extrair as imagens de um PDF e salvá-las em um arquivo compactado."
+    },
+    "scannerImageSplit": {
+      "tags": "detectar,dividir,fotos",
+      "title": "Detectar e dividir fotos digitalizadas",
+      "desc": "Detectar e dividir fotos digitalizadas em páginas separadas"
+    },
+    "sign": {
+      "tags": "assinatura,autógrafo",
+      "title": "Assinar",
+      "desc": "Adicionar assinatura ao PDF por desenho, texto ou imagem."
+    },
+    "flatten": {
+      "tags": "simplificar,remover,interativo",
+      "title": "Achatar",
+      "desc": "Combinar todos os elementos e formulários interativos de um PDF em uma única camada fixa, não editável."
+    },
+    "certSign": {
+      "tags": "autenticar,PEM,P12,oficial,criptografar,assinar,certificado,PKCS12,JKS,servidor,manual,automático",
+      "title": "Assinar com Certificado",
+      "desc": "Assinar PDF com um Certificado/Chave (PEM/P12/JKS)."
+    },
+    "repair": {
+      "tags": "corrigir,restaurar",
+      "title": "Reparar",
+      "desc": "Tentar reparar um PDF corrompido/quebrado."
+    },
+    "removeBlanks": {
+      "tags": "excluir,limpar,vazio",
+      "title": "Remover Páginas em Branco",
+      "desc": "Detectar e remover páginas em branco de um PDF."
+    },
+    "removeAnnotations": {
+      "tags": "excluir,limpar,remover",
+      "title": "Remover Anotações",
+      "desc": "Remove todos os comentários/anotações de um PDF."
+    },
+    "compare": {
+      "tags": "diferença",
+      "title": "Comparar",
+      "desc": "Comparar e mostrar as diferenças entre dois documentos PDF."
+    },
+    "removeCertSign": {
+      "tags": "remover,excluir,desbloquear",
+      "title": "Remover Assinatura com Certificado",
+      "desc": "Remover assinatura com Certificado/Chave (PEM/P12/JKS) em um PDF."
+    },
+    "pageLayout": {
+      "tags": "layout,organizar,combinar",
+      "title": "Layout de Múltiplas Páginas",
+      "desc": "Mesclar várias páginas de um documento PDF em uma única página."
+    },
+    "bookletImposition": {
+      "tags": "livreto,impressão,encadernação",
+      "title": "Imposição de livreto",
+      "desc": "Criar livretos com ordenação correta de páginas e layout multi-página para impressão e encadernação"
+    },
+    "scalePages": {
+      "tags": "redimensionar,ajustar,escalar",
+      "title": "Ajustar Dimensões da Página",
+      "desc": "Alterar o tamanho/escala da página e/ou seu conteúdo."
+    },
+    "addPageNumbers": {
+      "tags": "numerar,paginação,contar",
+      "title": "Adicionar Números de Página",
+      "desc": "Adicionar números de página no documento, em um local definido."
+    },
+    "autoRename": {
+      "tags": "detecção automática,baseado em cabeçalho,organizar,renomear",
+      "title": "Renomear PDF automaticamente",
+      "desc": "Renomeia automaticamente um arquivo PDF com base no cabeçalho detectado"
+    },
+    "adjustContrast": {
+      "tags": "contraste,brilho,saturação",
+      "title": "Ajuste Visual do PDF",
+      "desc": "Ajustar Contraste, Saturação e Brilho de um PDF."
+    },
+    "crop": {
+      "tags": "recortar,cortar,redimensionar",
+      "title": "Recortar",
+      "desc": "Recortar trecho de um PDF para reduzir o tamanho."
+    },
+    "autoSplitPDF": {
+      "tags": "auto,dividir,QR",
+      "title": "Divisão Automática de Páginas",
+      "desc": "Dividir automaticamente um PDF digitalizado utilizando um separador de páginas físico com QR Code."
+    },
+    "sanitize": {
+      "tags": "limpar,purgar,remover",
+      "title": "Sanitizar",
+      "desc": "Remover elementos potencialmente nocivos de arquivos PDF"
+    },
+    "getPdfInfo": {
+      "tags": "informações,metadados,detalhes",
+      "title": "Obter Informações de um PDF",
+      "desc": "Obtém informações (metadata) de um PDF."
+    },
+    "pdfToSinglePage": {
+      "tags": "combinar,mesclar,única",
+      "title": "PDF para Página Única",
+      "desc": "Combina todas as páginas de um PDF em uma única página."
+    },
+    "showJS": {
+      "tags": "javascript,código,script",
+      "title": "Mostrar Javascript",
+      "desc": "Procura, exibe e extrai qualquer JavaScript injetado em um PDF."
+    },
+    "redact": {
+      "tags": "censurar,ocultar,esconder",
+      "title": "Ocultação de Texto Manual",
+      "desc": "Ocultação de texto manual baseada em um texto selecionado, desenho de formas ou/e páginas selecionadas."
+    },
+    "overlayPdfs": {
+      "tags": "sobrepor,combinar,empilhar",
+      "title": "Sobrepor PDFs",
+      "desc": "Sobrepõe PDFs sobre outro PDF"
+    },
+    "splitBySections": {
+      "tags": "dividir,seções,particionar",
+      "title": "Dividir PDF por seções",
+      "desc": "Divida cada página de um PDF em seções menores horizontais e verticais"
+    },
+    "addStamp": {
+      "tags": "carimbo,marcar,selo",
+      "title": "Adicionar carimbo ao PDF",
+      "desc": "Adicionar carimbos de texto ou imagem em locais definidos"
+    },
+    "removeImage": {
+      "tags": "remover,excluir,limpar",
+      "title": "Remover Imagem",
+      "desc": "Remova imagens do PDF para reduzir o tamanho do arquivo."
+    },
+    "splitByChapters": {
+      "tags": "dividir,capítulos,estrutura",
+      "title": "Divide PDF por Capítulos",
+      "desc": "Divide um PDF em vários arquivos baseado na sua estrutura de capítulos."
+    },
+    "validateSignature": {
+      "tags": "validar,verificar,certificado",
+      "title": "Verificar Assinatura com Certificado",
+      "desc": "Verifica assinatura digital e certificado em um PDF."
+    },
+    "swagger": {
+      "tags": "API,documentação,teste",
+      "title": "Documentação da API",
+      "desc": "Ver documentação da API e testar endpoints"
+    },
+    "scannerEffect": {
+      "tags": "scanner,simular,criar",
+      "title": "Efeito de scanner",
+      "desc": "Criar um PDF que pareça ter sido digitalizado"
+    },
+    "editTableOfContents": {
+      "tags": "marcadores,conteúdo,editar",
+      "title": "Editar sumário",
+      "desc": "Adicionar ou editar marcadores e sumário em documentos PDF"
+    },
+    "manageCertificates": {
+      "tags": "certificados,importar,exportar",
+      "title": "Gerenciar certificados",
+      "desc": "Importar, exportar ou excluir arquivos de certificado digital usados para assinar PDFs."
+    },
+    "read": {
+      "tags": "visualizar,abrir,exibir",
+      "title": "Ler",
+      "desc": "Visualize e anote PDFs. Realce texto, desenhe ou insira comentários para revisão e colaboração."
+    },
+    "reorganizePages": {
+      "tags": "reorganizar,reordenar,organizar",
+      "title": "Reorganizar páginas",
+      "desc": "Reorganize, duplique ou exclua páginas do PDF com controle visual de arrastar e soltar."
+    },
+    "extractPages": {
+      "tags": "extrair,selecionar,copiar",
+      "title": "Extrair Página(s)",
+      "desc": "Extrair páginas específicas de um documento PDF"
+    },
+    "removePages": {
+      "tags": "excluir,extrair,remover",
       "title": "Remover Páginas",
       "desc": "Excluir páginas indesejadas do seu PDF."
+    },
+    "autoSizeSplitPDF": {
+      "tags": "auto,dividir,tamanho",
+      "title": "Divisão Manual do PDF",
+      "desc": "Divida um PDF em vários, com base no tamanho, contagem de páginas ou contagem de documentos."
+    },
+    "replaceColor": {
+      "title": "Substituir e inverter cor",
+      "desc": "Substituir ou inverter cores em documentos PDF"
+    },
+    "devApi": {
+      "tags": "API,desenvolvimento,documentação",
+      "title": "API",
+      "desc": "Link para a documentação da API"
+    },
+    "devFolderScanning": {
+      "tags": "automação,pasta,varredura",
+      "title": "Varredura automática de pasta",
+      "desc": "Link para o guia de varredura automática de pastas"
+    },
+    "devSsoGuide": {
+      "title": "Guia de SSO",
+      "desc": "Link para o guia de SSO"
+    },
+    "devAirgapped": {
+      "title": "Configuração Air-gapped",
+      "desc": "Link para o guia de configuração isolada (air-gapped)"
     },
     "addPassword": {
       "title": "Proteger PDF",
       "desc": "Criptografar seu PDF com uma senha podendo realizar alterações de permissões."
     },
-    "removePassword": {
-      "title": "Desproteger PDF",
-      "desc": "Descriptografar o PDF realizando a remoção da senha."
-    },
-    "compress": {
-      "title": "Comprimir",
-      "desc": "Comprimir PDFs para reduzir o tamanho do arquivo."
-    },
-    "unlockPDFForms": {
-      "title": "Desbloquear Formulários do PDF",
-      "desc": "Remove a propriedade de apenas leitura de formulários em um documento PDF."
-    },
-    "changeMetadata": {
-      "title": "Alterar Metadados",
-      "desc": "Alterar/remover/adicionar metadados de um PDF."
-    },
-    "fileToPDF": {
-      "title": "Converter Arquivo para PDF",
-      "desc": "Converter praticamente qualquer arquivo em PDF (DOCX, PNG, XLS, PPT, TXT e outros)."
-    },
-    "ocr": {
-      "title": "Processamento de OCR",
-      "desc": "Reconhecimento Óptico de Caracteres transforma PDFs com imagens em documentos pesquisáveis e com texto selecionável."
-    },
-    "extractImages": {
-      "title": "Extrair Imagens",
-      "desc": "Extrair as imagens de um PDF e salvá-las em um arquivo compactado."
-    },
-    "pdfToPDFA": {
-      "title": "PDF para PDF/A",
-      "desc": "Converter o PDF para o formato PDF/A, voltado a armazenamento a longo prazo."
-    },
-    "PDFToWord": {
-      "title": "PDF para Word",
-      "desc": "Converter PDF para formatos Word (DOC, DOCX e ODT)."
-    },
-    "PDFToPresentation": {
-      "title": "PDF para Apresentação",
-      "desc": "Converter PDF para formatos de Apresentação (PPT, PPTX e ODP)."
-    },
-    "PDFToText": {
-      "title": "PDF para TXT/RTF",
-      "desc": "Converter PDF em formato de TXT ou RTF."
-    },
-    "PDFToHTML": {
-      "title": "PDF para HTML",
-      "desc": "Converter PDF para o formato HTML."
-    },
-    "PDFToXML": {
-      "title": "PDF para XML",
-      "desc": "Converter PDF para formato XML."
-    },
-    "ScannerImageSplit": {
-      "title": "Detectar/Dividir Fotos Digitalizadas",
-      "desc": "Divide várias fotos de dentro de uma imagem/PDF."
-    },
-    "sign": {
-      "title": "Assinar",
-      "desc": "Adicionar assinatura ao PDF por desenho, texto ou imagem."
-    },
-    "flatten": {
-      "title": "Achatar",
-      "desc": "Combinar todos os elementos e formulários interativos de um PDF em uma única camada fixa, não editável."
-    },
-    "repair": {
-      "title": "Reparar",
-      "desc": "Tentar reparar um PDF corrompido/quebrado."
-    },
-    "removeBlanks": {
-      "title": "Remover Páginas em Branco",
-      "desc": "Detectar e remover páginas em branco de um PDF."
-    },
-    "removeAnnotations": {
-      "title": "Remover Anotações",
-      "desc": "Remove todos os comentários/anotações de um PDF."
-    },
-    "compare": {
-      "title": "Comparar",
-      "desc": "Comparar e mostrar as diferenças entre dois documentos PDF."
-    },
-    "certSign": {
-      "title": "Assinar com Certificado",
-      "desc": "Assinar PDF com um Certificado/Chave (PEM/P12/JKS)."
-    },
-    "removeCertSign": {
-      "title": "Remover Assinatura com Certificado",
-      "desc": "Remover assinatura com Certificado/Chave (PEM/P12/JKS) em um PDF."
-    },
-    "pageLayout": {
-      "title": "Layout de Múltiplas Páginas",
-      "desc": "Mesclar várias páginas de um documento PDF em uma única página."
-    },
-    "scalePages": {
-      "title": "Ajustar Dimensões da Página",
-      "desc": "Alterar o tamanho/escala da página e/ou seu conteúdo."
-    },
-    "pipeline": {
-      "title": "Pipeline",
-      "desc": "Executar várias ações em PDFs seguindo scripts de operações."
-    },
-    "addPageNumbers": {
-      "title": "Adicionar Números de Página",
-      "desc": "Adicionar números de página no documento, em um local definido."
-    },
-    "auto-rename": {
-      "title": "Renomeação Automática do PDF",
-      "desc": "Renomeia automaticamente o PDF com base no cabeçalho detectado."
-    },
-    "adjustContrast": {
-      "title": "Ajuste Visual do PDF",
-      "desc": "Ajustar Contraste, Saturação e Brilho de um PDF."
-    },
-    "crop": {
-      "title": "Recortar",
-      "desc": "Recortar trecho de um PDF para reduzir o tamanho."
-    },
-    "autoSplitPDF": {
-      "title": "Divisão Automática de Páginas",
-      "desc": "Dividir automaticamente um PDF digitalizado utilizando um separador de páginas físico com QR Code."
-    },
-    "sanitizePDF": {
-      "title": "Higienizar",
-      "desc": "Remover scripts, links, metadados e outros elementos de um PDF."
-    },
-    "URLToPDF": {
-      "title": "Converter URL/Site para PDF",
-      "desc": "Converter qualquer página da internet para um PDF."
-    },
-    "HTMLToPDF": {
-      "title": "HTML para PDF",
-      "desc": "Converter qualquer arquivo HTML ou zip para PDF."
-    },
-    "MarkdownToPDF": {
-      "title": "Markdown para PDF",
-      "desc": "Converte qualquer arquivo Markdown para PDF."
-    },
-    "PDFToMarkdown": {
-      "title": "PDF para Markdown",
-      "desc": "Converte qualquer PDF para Markdown."
-    },
-    "getPdfInfo": {
-      "title": "Obter Informações de um PDF",
-      "desc": "Obtém informações (metadata) de um PDF."
-    },
-    "pageExtracter": {
-      "title": "Extrair Página(s)",
-      "desc": "Extrair determinadas páginas de um PDF."
-    },
-    "pdfToSinglePage": {
-      "title": "PDF para Página Única",
-      "desc": "Combina todas as páginas de um PDF em uma única página."
-    },
-    "showJS": {
-      "title": "Mostrar Javascript",
-      "desc": "Procura, exibe e extrai qualquer JavaScript injetado em um PDF."
-    },
-    "autoRedact": {
-      "title": "Ocultação de Texto Automática",
-      "desc": "Ocultação automática (escurecimento) de texto em um PDF com base em texto de entrada."
-    },
-    "redact": {
-      "title": "Ocultação de Texto Manual",
-      "desc": "Ocultação de texto manual baseada em um texto selecionado, desenho de formas ou/e páginas selecionadas."
-    },
-    "PDFToCSV": {
-      "title": "PDF para CSV",
-      "desc": "Extração de tabelas de um PDF convertendo para CSV."
-    },
-    "split-by-size-or-count": {
-      "title": "Divisão Manual do PDF",
-      "desc": "Divida um PDF em vários, com base no tamanho, contagem de páginas ou contagem de documentos."
-    },
-    "overlay-pdfs": {
-      "title": "Sobrepor PDFs",
-      "desc": "Sobrepõe PDF sobre outro PDF."
-    },
-    "split-by-sections": {
-      "title": "Dividir PDF por Seções",
-      "desc": "Divida cada página de um PDF em seções horizontais e/ou verticais menores."
-    },
-    "AddStampRequest": {
-      "title": "Adicionar Carimbo ao PDF",
-      "desc": "Adicione texto ou carimbos de imagem em locais definidos."
-    },
-    "removeImage": {
-      "title": "Remover Imagem",
-      "desc": "Remova imagens do PDF para reduzir o tamanho do arquivo."
-    },
-    "splitByChapters": {
-      "title": "Divide PDF por Capítulos",
-      "desc": "Divide um PDF em vários arquivos baseado na sua estrutura de capítulos."
-    },
-    "validateSignature": {
-      "title": "Verificar Assinatura com Certificado",
-      "desc": "Verifica assinatura digital e certificado em um PDF."
-    },
-    "replace-color": {
-      "title": "Substitui e Inverte Cores",
-      "desc": "Substitui cor do texto e plano de fundo de um PDF e/ou inverte a toda cor do PDF para reduzir o tamanho."
-    },
-    "convert": {
-      "title": "Converter"
-    },
-    "attachments": {
-      "title": "Add attachments"
-    },
-    "extractPages": {
-      "title": "Extrair Página(s)"
-    },
-    "removePages": {
-      "title": "Remover Páginas",
-      "desc": "Excluir páginas indesejadas do seu PDF."
-    },
-    "removeImagePdf": {
-      "title": "Remover Imagem",
-      "desc": "Remova imagens do PDF para reduzir o tamanho do arquivo."
-    },
-    "autoSizeSplitPDF": {
-      "title": "Divisão Manual do PDF",
-      "desc": "Divida um PDF em vários, com base no tamanho, contagem de páginas ou contagem de documentos."
-    },
-    "adjust-contrast": {
-      "title": "Ajuste Visual do PDF",
-      "desc": "Ajustar Contraste, Saturação e Brilho de um PDF."
-    },
-    "replaceColorPdf": {
-      "title": "Substitui e Inverte Cores",
-      "desc": "Substitui cor do texto e plano de fundo de um PDF e/ou inverte a toda cor do PDF para reduzir o tamanho."
-    },
     "changePermissions": {
-      "title": "Alterar Permissões"
+      "title": "Alterar Permissões",
+      "desc": "Alterar restrições e permissões do documento"
+    },
+    "automate": {
+      "tags": "fluxo de trabalho,sequência,automação",
+      "title": "Automatizar",
+      "desc": "Crie fluxos de trabalho de várias etapas encadeando ações de PDF. Ideal para tarefas recorrentes."
     }
+  },
+  "landing": {
+    "addFiles": "Adicionar arquivos",
+    "uploadFromComputer": "Fazer upload do computador"
   },
   "viewPdf": {
     "tags": "visualizar,ler,anotar,texto,imagem",
@@ -645,17 +698,29 @@
   "merge": {
     "tags": "mesclar,Operações de Página,Back-end,lado do servidor",
     "title": "Mesclar",
-    "header": "Mesclar",
-    "sortByName": "Classificar por Nome",
-    "sortByDate": "Classificar por Data",
-    "removeCertSign": "Remover a assinatura digital do arquivo mesclado?",
+    "removeDigitalSignature.tooltip": {
+      "title": "Remover assinatura digital",
+      "description": "Assinaturas digitais serão invalidadas ao mesclar arquivos. Marque isto para removê-las do PDF final."
+    },
+    "generateTableOfContents.tooltip": {
+      "title": "Gerar sumário",
+      "description": "Cria automaticamente um sumário clicável no PDF mesclado com base nos nomes originais dos arquivos e nos números de página."
+    },
     "submit": "Mesclar",
     "sortBy": {
-      "filename": "Nome do Arquivo"
+      "description": "Os arquivos serão mesclados na ordem em que forem selecionados. Arraste para reordenar ou ordene abaixo.",
+      "label": "Ordenar por",
+      "filename": "Nome do Arquivo",
+      "dateModified": "Data de modificação",
+      "ascending": "Ascendente",
+      "descending": "Descendente",
+      "sort": "Ordenar"
+    },
+    "error": {
+      "failed": "Ocorreu um erro ao mesclar os PDFs."
     }
   },
   "split": {
-    "tags": "Operações de Página,dividir,Múltiplas Páginas,cortar,lado do servidor",
     "title": "Dividir",
     "header": "Dividir",
     "desc": {
@@ -671,25 +736,206 @@
     "splitPages": "Digite as páginas para a divisão:",
     "submit": "Dividir",
     "steps": {
+      "chooseMethod": "Escolher método",
       "settings": "Configurações"
     },
+    "settings": {
+      "selectMethodFirst": "Selecione um método de divisão primeiro"
+    },
+    "error": {
+      "failed": "Ocorreu um erro ao dividir o PDF."
+    },
+    "method": {
+      "label": "Escolha o método de divisão",
+      "placeholder": "Selecione como dividir o PDF"
+    },
     "methods": {
+      "prefix": {
+        "splitAt": "Dividir em",
+        "splitBy": "Dividir por"
+      },
+      "byPages": {
+        "name": "Números de página",
+        "desc": "Extrair páginas específicas (1,3,5-10)",
+        "tooltip": "Insira números de página separados por vírgulas ou intervalos com hífens"
+      },
+      "bySections": {
+        "name": "Seções",
+        "desc": "Dividir páginas em seções de grade",
+        "tooltip": "Divida cada página em seções horizontais e verticais"
+      },
       "bySize": {
-        "name": "Tamanho do Arquivo"
+        "name": "Tamanho do Arquivo",
+        "desc": "Limitar tamanho máximo do arquivo",
+        "tooltip": "Especifique o tamanho máximo do arquivo (ex.: 10MB, 500KB)"
+      },
+      "byPageCount": {
+        "name": "Quantidade de páginas",
+        "desc": "Páginas fixas por arquivo",
+        "tooltip": "Informe o número de páginas para cada arquivo dividido"
+      },
+      "byDocCount": {
+        "name": "Quantidade de documentos",
+        "desc": "Criar número específico de arquivos",
+        "tooltip": "Informe quantos arquivos deseja criar"
+      },
+      "byChapters": {
+        "name": "Capítulos",
+        "desc": "Dividir nos limites de marcadores",
+        "tooltip": "Usa marcadores do PDF para determinar pontos de corte"
+      },
+      "byPageDivider": {
+        "name": "Folha divisora",
+        "desc": "Divisão automática com folhas divisoras",
+        "tooltip": "Use folhas divisoras com código QR entre documentos ao digitalizar"
       }
     },
     "value": {
       "fileSize": {
-        "label": "Tamanho do Arquivo"
+        "label": "Tamanho do Arquivo",
+        "placeholder": "ex.: 10MB, 500KB"
+      },
+      "pageCount": {
+        "label": "Páginas por arquivo",
+        "placeholder": "ex.: 5, 10"
+      },
+      "docCount": {
+        "label": "Número de arquivos",
+        "placeholder": "ex.: 3, 5"
+      }
+    },
+    "tooltip": {
+      "header": {
+        "title": "Visão geral dos métodos de divisão"
+      },
+      "byPages": {
+        "title": "Dividir por números de página",
+        "text": "Divida seu PDF em números de página específicos. Usar 'n' divide após a página n. Usar 'n-m' divide antes de n e após m.",
+        "bullet1": "Pontos únicos: 3,7 (divide após as páginas 3 e 7)",
+        "bullet2": "Intervalos: 3-8 (divide antes da página 3 e após a 8)",
+        "bullet3": "Misto: 2,5-10,15 (divide após 2, antes de 5, após 10 e após 15)"
+      },
+      "bySections": {
+        "title": "Dividir por seções de grade",
+        "text": "Divida cada página em uma grade de seções. Útil para documentos com múltiplas colunas ou para extrair áreas específicas.",
+        "bullet1": "Horizontal: número de linhas a criar",
+        "bullet2": "Vertical: número de colunas a criar",
+        "bullet3": "Mesclar: combine todas as seções em um PDF"
+      },
+      "bySize": {
+        "title": "Dividir por tamanho de arquivo",
+        "text": "Crie vários PDFs que não excedam um tamanho de arquivo especificado. Ideal para limitações de tamanho ou anexos de e-mail.",
+        "bullet1": "Use MB para arquivos maiores (ex.: 10MB)",
+        "bullet2": "Use KB para arquivos menores (ex.: 500KB)",
+        "bullet3": "O sistema dividirá em limites de página"
+      },
+      "byCount": {
+        "title": "Dividir por contagem",
+        "text": "Crie vários PDFs com um número específico de páginas ou documentos cada.",
+        "bullet1": "Contagem de páginas: número fixo de páginas por arquivo",
+        "bullet2": "Contagem de documentos: número fixo de arquivos de saída",
+        "bullet3": "Útil para fluxos de trabalho em lote"
+      },
+      "byChapters": {
+        "title": "Dividir por capítulos",
+        "text": "Use marcadores do PDF para dividir automaticamente nos limites de capítulos. Requer PDFs com estrutura de marcadores.",
+        "bullet1": "Nível de marcador: em qual nível dividir (1=nível superior)",
+        "bullet2": "Incluir metadados: preservar propriedades do documento",
+        "bullet3": "Permitir duplicados: lidar com nomes de marcador repetidos"
       }
     }
   },
   "rotate": {
-    "tags": "Lado do servidor",
     "title": "Girar",
-    "header": "Girar",
-    "selectAngle": "Selecione o ângulo de rotação (múltiplos de 90 graus):",
-    "submit": "Girar"
+    "submit": "Girar",
+    "error": {
+      "failed": "Ocorreu um erro ao girar o PDF."
+    },
+    "preview": {
+      "title": "Pré-visualização da rotação"
+    },
+    "rotateLeft": "Girar no sentido anti-horário",
+    "rotateRight": "Girar no sentido horário",
+    "tooltip": {
+      "header": {
+        "title": "Visão geral das configurações de rotação"
+      },
+      "description": {
+        "text": "Gire as páginas do seu PDF no sentido horário ou anti-horário em incrementos de 90 graus. Todas as páginas do PDF serão giradas. A pré-visualização mostra como o documento ficará após a rotação."
+      },
+      "controls": {
+        "title": "Controles",
+        "text": "Use os botões de rotação para ajustar a orientação. O botão esquerdo gira no sentido anti-horário; o direito, no sentido horário. Cada clique gira 90 graus."
+      }
+    }
+  },
+  "convert": {
+    "title": "Converter",
+    "desc": "Converter arquivos entre diferentes formatos",
+    "files": "Arquivos",
+    "selectFilesPlaceholder": "Selecione arquivos na visualização principal para começar",
+    "settings": "Configurações",
+    "conversionCompleted": "Conversão concluída",
+    "results": "Resultados",
+    "defaultFilename": "arquivo_convertido",
+    "conversionResults": "Resultados da conversão",
+    "convertFrom": "Converter de",
+    "convertTo": "Converter para",
+    "sourceFormatPlaceholder": "Formato de origem",
+    "targetFormatPlaceholder": "Formato de destino",
+    "selectSourceFormatFirst": "Selecione primeiro um formato de origem",
+    "outputOptions": "Opções de saída",
+    "pdfOptions": "Opções de PDF",
+    "imageOptions": "Opções de imagem",
+    "colorType": "Tipo de cor",
+    "color": "Cor",
+    "greyscale": "Escala de Cinza",
+    "blackwhite": "Preto e branco",
+    "dpi": "DPI",
+    "output": "Saída",
+    "single": "Único",
+    "multiple": "Múltiplos",
+    "fitOption": "Opção de ajuste",
+    "maintainAspectRatio": "Manter proporção",
+    "fitDocumentToPage": "Ajustar documento à página",
+    "fillPage": "Preencher a página",
+    "autoRotate": "Rotação automática",
+    "autoRotateDescription": "Gira automaticamente as imagens para se ajustarem melhor à página do PDF",
+    "combineImages": "Combinar imagens",
+    "combineImagesDescription": "Combine todas as imagens em um único PDF ou crie PDFs separados para cada imagem",
+    "webOptions": "Opções de Web para PDF",
+    "zoomLevel": "Nível de zoom",
+    "emailOptions": "Opções de E-mail para PDF",
+    "includeAttachments": "Incluir anexos do e-mail",
+    "maxAttachmentSize": "Tamanho máximo do anexo (MB)",
+    "includeAllRecipients": "Incluir destinatários CC e BCC no cabeçalho",
+    "downloadHtml": "Baixar arquivo HTML intermediário em vez de PDF",
+    "pdfaOptions": "Opções de PDF/A",
+    "outputFormat": "Formato de saída",
+    "pdfaNote": "PDF/A-1b é mais compatível; PDF/A-2b oferece mais recursos.",
+    "pdfaDigitalSignatureWarning": "O PDF contém uma assinatura digital. Isso será removido na próxima etapa.",
+    "fileFormat": "Formato de arquivo",
+    "wordDoc": "Documento do Word",
+    "wordDocExt": "Documento do Word (.docx)",
+    "odtExt": "Texto OpenDocument (.odt)",
+    "pptExt": "PowerPoint (.pptx)",
+    "odpExt": "Apresentação OpenDocument (.odp)",
+    "txtExt": "Texto simples (.txt)",
+    "rtfExt": "Rich Text Format (.rtf)",
+    "selectedFiles": "Arquivos selecionados",
+    "noFileSelected": "Nenhum arquivo selecionado. Use o painel de arquivos para adicionar arquivos.",
+    "convertFiles": "Converter arquivos",
+    "converting": "Convertendo...",
+    "downloadConverted": "Baixar arquivo convertido",
+    "errorNoFiles": "Selecione ao menos um arquivo para converter.",
+    "errorNoFormat": "Selecione os formatos de origem e de destino.",
+    "errorNotSupported": "Conversão de {{from}} para {{to}} não é suportada.",
+    "images": "Imagens",
+    "officeDocs": "Documentos do Office (Word, Excel, PowerPoint)",
+    "imagesExt": "Imagens (JPG, PNG, etc.)",
+    "markdown": "Markdown",
+    "textRtf": "Texto/RTF",
+    "grayscale": "Escala de Cinza"
   },
   "imageToPdf": {
     "tags": "conversão,img,jpg,imagem,foto"
@@ -729,6 +975,19 @@
       "10": "Mesclagem ímpar-par",
       "11": "Duplicar todas as páginas"
     },
+    "desc": {
+      "CUSTOM": "Use uma sequência personalizada de números de página ou expressões para definir uma nova ordem.",
+      "REVERSE_ORDER": "Inverta o documento para que a última página se torne a primeira e assim por diante.",
+      "DUPLEX_SORT": "Intercale frentes e depois versos como se um scanner duplex escaneasse todas as frentes e depois todos os versos (1, n, 2, n-1, …).",
+      "BOOKLET_SORT": "Organize páginas para impressão em livreto (última, primeira, segunda, penúltima, …).",
+      "SIDE_STITCH_BOOKLET_SORT": "Organize páginas para livreto grampeado na lateral (otimizado para encadernação lateral).",
+      "ODD_EVEN_SPLIT": "Divida o documento em duas saídas: todas as páginas ímpares e todas as pares.",
+      "ODD_EVEN_MERGE": "Mescle dois PDFs alternando páginas: ímpares do primeiro, pares do segundo.",
+      "DUPLICATE": "Duplique cada página de acordo com a contagem da ordem personalizada (ex.: 4 duplicatas — cada página 4×).",
+      "REMOVE_FIRST": "Remova a primeira página do documento.",
+      "REMOVE_LAST": "Remova a última página do documento.",
+      "REMOVE_FIRST_AND_LAST": "Remova a primeira e a última páginas do documento."
+    },
     "placeholder": "(por exemplo 1,3,2 ou 4-8,2,10-12 ou 2n-1)"
   },
   "addImage": {
@@ -739,33 +998,190 @@
     "upload": "Carregar imagem",
     "submit": "Adicionar imagem"
   },
+  "attachments": {
+    "tags": "embed,attach,file,attachment,attachments",
+    "title": "Add attachments",
+    "header": "Add attachments",
+    "add": "Adicionar anexo",
+    "remove": "Remover anexo",
+    "embed": "Incorporar anexo",
+    "submit": "Add attachments"
+  },
   "watermark": {
-    "tags": "Texto,repetindo,rótulo,próprio,direitos autorais,marca registrada,img,jpg,imagem,foto",
     "title": "Adicionar marca d'água",
-    "header": "Adicionar marca d'água",
-    "customColor": "Cor de texto personalizada",
-    "selectText": {
-      "1": "Selecione PDF para adicionar a marca d'água:",
-      "2": "Texto da marca d'água:",
-      "3": "Tamanho da fonte:",
-      "4": "Rotação (0-360):",
-      "5": "Espaçador de Largura (Espaço entre cada marca d'água horizontalmente):",
-      "6": "Espaçador de Altura (Espaço entre cada marca d'água verticalmente):",
-      "7": "Opacidade (0% - 100%):",
-      "8": "Tipo de marca d'água:",
-      "9": "Imagem da marca d'água:",
-      "10": "Converter PDF em imagem PDF."
-    },
+    "desc": "Adicione marcas d'água de texto ou imagem a arquivos PDF",
+    "completed": "Marca d'água adicionada",
     "submit": "Adicionar Marca D'água",
-    "type": {
-      "1": "Texto",
-      "2": "Imagem"
+    "filenamePrefix": "com_marca_dagua",
+    "error": {
+      "failed": "Ocorreu um erro ao adicionar a marca d'água ao PDF."
     },
     "watermarkType": {
-      "text": "Texto"
+      "text": "Texto",
+      "image": "Imagem"
     },
     "settings": {
-      "fontSize": "Tamanho da Fonte"
+      "type": "Tipo de marca d'água",
+      "text": {
+        "label": "Texto da marca d'água",
+        "placeholder": "Insira o texto da marca d'água"
+      },
+      "image": {
+        "label": "Imagem da marca d'água",
+        "choose": "Escolher imagem",
+        "selected": "Selecionado: {{filename}}"
+      },
+      "fontSize": "Tamanho da Fonte",
+      "size": "Tamanho",
+      "alphabet": "Fonte/Idioma",
+      "color": "Cor da marca d'água",
+      "rotation": "Rotação (graus)",
+      "opacity": "Opacidade (%)",
+      "spacing": {
+        "horizontal": "Espaçamento horizontal",
+        "vertical": "Espaçamento vertical"
+      },
+      "convertToImage": "Achatar páginas do PDF em imagens"
+    },
+    "alphabet": {
+      "roman": "Romano/Latino",
+      "arabic": "Árabe",
+      "japanese": "Japonês",
+      "korean": "Coreano",
+      "chinese": "Chinês",
+      "thai": "Tailandês"
+    },
+    "steps": {
+      "type": "Tipo de marca d'água",
+      "wording": "Texto",
+      "textStyle": "Estilo",
+      "formatting": "Formatação",
+      "file": "Arquivo de marca d'água"
+    },
+    "results": {
+      "title": "Resultados da marca d'água"
+    },
+    "tooltip": {
+      "language": {
+        "title": "Suporte a idiomas",
+        "text": "Escolha o idioma apropriado para garantir a renderização correta da fonte do seu texto."
+      },
+      "appearance": {
+        "title": "Configurações de aparência",
+        "text": "Controle como a sua marca d'água aparece e se mistura ao documento.",
+        "bullet1": "Rotação: -360° a 360° para marcas d'água inclinadas",
+        "bullet2": "Opacidade: 0–100% para controlar a transparência",
+        "bullet3": "Opacidade menor cria marcas d'água sutis"
+      },
+      "spacing": {
+        "title": "Controle de espaçamento",
+        "text": "Ajuste o espaçamento entre marcas d'água repetidas pela página.",
+        "bullet1": "Espaçamento em largura: distância horizontal entre marcas d'água",
+        "bullet2": "Espaçamento em altura: distância vertical entre marcas d'água",
+        "bullet3": "Valores maiores criam padrões mais espaçados"
+      },
+      "type": {
+        "header": {
+          "title": "Seleção do tipo de marca d'água"
+        },
+        "description": {
+          "title": "Escolha sua marca d'água",
+          "text": "Selecione entre marcas d'água de texto ou de imagem conforme sua necessidade."
+        },
+        "text": {
+          "title": "Marcas d'água de texto",
+          "text": "Perfeito para adicionar avisos de copyright, nomes de empresa ou etiquetas de confidencialidade. Suporta vários idiomas e cores personalizadas.",
+          "bullet1": "Fontes e idiomas personalizáveis",
+          "bullet2": "Cores e transparência ajustáveis",
+          "bullet3": "Ideal para texto legal ou de branding"
+        },
+        "image": {
+          "title": "Marcas d'água de imagem",
+          "text": "Use logos, carimbos ou qualquer imagem como marca d'água. Ótimo para branding e identificação visual.",
+          "bullet1": "Envie qualquer formato de imagem",
+          "bullet2": "Mantém a qualidade da imagem",
+          "bullet3": "Perfeito para logos e carimbos"
+        }
+      },
+      "wording": {
+        "header": {
+          "title": "Conteúdo do texto"
+        },
+        "text": {
+          "title": "Texto da marca d'água",
+          "text": "Insira o texto que aparecerá como sua marca d'água ao longo do documento.",
+          "bullet1": "Seja conciso para melhor legibilidade",
+          "bullet2": "Exemplos comuns: 'CONFIDENCIAL', 'RASCUNHO', nome da empresa",
+          "bullet3": "Caracteres de emoji não são suportados e serão filtrados"
+        }
+      },
+      "textStyle": {
+        "header": {
+          "title": "Estilo do texto"
+        },
+        "color": {
+          "title": "Seleção de cor",
+          "text": "Escolha uma cor que tenha bom contraste com o conteúdo do documento.",
+          "bullet1": "Cinza claro (#d3d3d3) para marcas d'água discretas",
+          "bullet2": "Preto ou cores escuras para alto contraste",
+          "bullet3": "Cores personalizadas para branding"
+        },
+        "language": {
+          "title": "Suporte a idiomas",
+          "text": "Escolha o idioma apropriado para garantir a renderização correta da fonte."
+        }
+      },
+      "file": {
+        "header": {
+          "title": "Envio de imagem"
+        },
+        "upload": {
+          "title": "Seleção de imagem",
+          "text": "Envie uma imagem para usar como marca d'água.",
+          "bullet1": "Suporta formatos comuns: PNG, JPG, GIF, BMP",
+          "bullet2": "PNG com transparência funciona melhor",
+          "bullet3": "Imagens de maior resolução mantêm melhor a qualidade"
+        },
+        "recommendations": {
+          "title": "Boas práticas",
+          "text": "Dicas para melhores resultados com marca d'água de imagem.",
+          "bullet1": "Use logos ou carimbos com fundo transparente",
+          "bullet2": "Designs simples funcionam melhor que imagens complexas",
+          "bullet3": "Considere o tamanho final do documento ao escolher a resolução"
+        }
+      },
+      "formatting": {
+        "header": {
+          "title": "Formatação e layout"
+        },
+        "size": {
+          "title": "Controle de tamanho",
+          "text": "Ajuste o tamanho da sua marca d'água (texto ou imagem).",
+          "bullet1": "Tamanhos maiores criam marcas d'água mais proeminentes"
+        },
+        "appearance": {
+          "title": "Configurações de aparência",
+          "text": "Controle como a sua marca d'água aparece e se mistura ao documento.",
+          "bullet1": "Rotação: -360° a 360° para marcas d'água inclinadas",
+          "bullet2": "Opacidade: 0–100% para controlar a transparência",
+          "bullet3": "Opacidade menor cria marcas d'água sutis"
+        },
+        "spacing": {
+          "title": "Controle de espaçamento",
+          "text": "Ajuste o espaçamento entre marcas d'água repetidas pela página.",
+          "bullet1": "Espaçamento horizontal: distância entre marcas d'água da esquerda para a direita",
+          "bullet2": "Espaçamento vertical: distância entre marcas d'água de cima para baixo",
+          "bullet3": "Valores maiores criam padrões mais espaçados"
+        },
+        "security": {
+          "title": "Opção de segurança",
+          "text": "Converta o PDF final para um formato baseado em imagem para segurança aprimorada.",
+          "bullet1": "Impede seleção e cópia de texto",
+          "bullet2": "Torna as marcas d'água mais difíceis de remover",
+          "bullet3": "Gera arquivos de tamanho maior",
+          "bullet4": "Melhor para conteúdo sensível ou com direitos autorais"
+        }
+      }
     }
   },
   "permissions": {
@@ -790,50 +1206,148 @@
   "removePages": {
     "tags": "Remover páginas,excluir páginas",
     "title": "Remover Páginas",
+    "pageNumbers": {
+      "label": "Páginas para remover",
+      "placeholder": "ex.: 1,3,5-8,10",
+      "error": "Formato de número de página inválido. Use números, intervalos (1-5) ou expressões matemáticas (2n+1)"
+    },
+    "filenamePrefix": "paginas_removidas",
+    "files": {
+      "placeholder": "Selecione um arquivo PDF na visualização principal para começar"
+    },
+    "settings": {
+      "title": "Configurações"
+    },
+    "tooltip": {
+      "header": {
+        "title": "Configurações de remoção de páginas"
+      },
+      "pageNumbers": {
+        "title": "Seleção de páginas",
+        "text": "Especifique quais páginas remover do seu PDF. Você pode selecionar páginas individuais, intervalos ou usar expressões matemáticas.",
+        "bullet1": "Páginas individuais: 1,3,5 (remove as páginas 1, 3 e 5)",
+        "bullet2": "Intervalos de páginas: 1-5,10-15 (remove 1-5 e 10-15)",
+        "bullet3": "Matemática: 2n+1 (remove páginas ímpares)",
+        "bullet4": "Intervalos abertos: 5- (remove da página 5 até o fim)"
+      },
+      "examples": {
+        "title": "Exemplos comuns",
+        "text": "Aqui estão alguns padrões comuns de seleção de páginas:",
+        "bullet1": "Remover primeira página: 1",
+        "bullet2": "Remover as últimas 3 páginas: -3",
+        "bullet3": "Remover páginas alternadas: 2n",
+        "bullet4": "Remover páginas específicas espalhadas: 1,5,10,15"
+      },
+      "safety": {
+        "title": "Dicas de segurança",
+        "text": "Considerações importantes ao remover páginas:",
+        "bullet1": "Sempre visualize sua seleção antes de processar",
+        "bullet2": "Mantenha um backup do arquivo original",
+        "bullet3": "A numeração de páginas começa em 1, não 0",
+        "bullet4": "Números de página inválidos serão ignorados"
+      }
+    },
+    "error": {
+      "failed": "Ocorreu um erro ao remover páginas."
+    },
+    "results": {
+      "title": "Resultados da remoção de páginas"
+    },
     "submit": "Remover Páginas"
   },
-  "addPassword": {
-    "tags": "seguro,segurança",
-    "title": "Proteger PDF",
-    "header": "Proteger PDF (Criptografar)",
-    "selectText": {
-      "1": "Selecione o PDF para Criptografar:",
-      "2": "Senha de acesso:",
-      "3": "Tamanho da chave de criptografia:",
-      "4": "Valores mais altos são mais seguros, mas valores mais baixos são melhores para compatibilidade.",
-      "5": "Permissões a serem definidas (recomendado para uso junto com a senha do proprietário):",
-      "6": "Impedir a montagem do documento.",
-      "7": "Impedir a extração de conteúdo.",
-      "8": "Impedir a extração para acessibilidade.",
-      "9": "Impedir o preenchimento do formulário.",
-      "10": "Impedir modificação.",
-      "11": "Impedir modificação de anotações.",
-      "12": "Impedir impressão.",
-      "13": "Impedir impressão de formatos diferentes.",
-      "14": "Senha do proprietário:",
-      "15": "Restringe o que pode ser feito com o documento depois de aberto (não suportado por todos os leitores).",
-      "16": "Restringe a abertura do próprio documento."
-    },
-    "submit": "Criptografar",
+  "pageSelection": {
     "tooltip": {
-      "permissions": {
-        "title": "Alterar Permissões"
+      "header": {
+        "title": "Guia de seleção de páginas"
+      },
+      "basic": {
+        "title": "Uso básico",
+        "text": "Selecione páginas específicas do seu documento PDF usando sintaxe simples.",
+        "bullet1": "Páginas individuais: 1,3,5",
+        "bullet2": "Intervalos de páginas: 3-6 ou 10-15",
+        "bullet3": "Todas as páginas: all"
+      },
+      "advanced": {
+        "title": "Recursos avançados"
+      },
+      "tips": {
+        "title": "Dicas",
+        "text": "Mantenha estas diretrizes em mente:",
+        "bullet1": "A numeração de páginas começa em 1 (não 0)",
+        "bullet2": "Espaços são removidos automaticamente",
+        "bullet3": "Expressões inválidas são ignoradas"
+      },
+      "syntax": {
+        "title": "Noções básicas de sintaxe",
+        "text": "Use números, intervalos, palavras-chave e progressões (n começa em 0). Parênteses são suportados.",
+        "bullets": {
+          "numbers": "Números/intervalos: 5, 10-20",
+          "keywords": "Palavras-chave: ímpar, par",
+          "progressions": "Progressões: 3n, 4n+1"
+        }
+      },
+      "operators": {
+        "title": "Operadores",
+        "text": "AND tem precedência maior que vírgula. NOT se aplica dentro do intervalo do documento.",
+        "and": "AND: & ou \"and\" — exige ambas as condições (ex.: 1-50 & par)",
+        "comma": "Vírgula: , ou | — combina seleções (ex.: 1-10, 20)",
+        "not": "NOT: ! ou \"not\" — exclui páginas (ex.: 3n & not 30)"
+      },
+      "examples": {
+        "title": "Exemplos"
       }
     }
   },
-  "removePassword": {
-    "tags": "seguro, descriptografar, segurança, remover senha",
-    "title": "Desproteger PDF",
-    "header": "Desproteger PDF (descriptografar)",
-    "selectText": {
-      "1": "Selecione o PDF para descriptografar:",
-      "2": "Senha"
+  "bulkSelection": {
+    "header": {
+      "title": "Guia de seleção de páginas"
     },
-    "submit": "Descriptografar",
-    "desc": "Descriptografar o PDF realizando a remoção da senha.",
-    "password": {
-      "stepTitle": "Desproteger PDF",
-      "label": "Senha Atual"
+    "syntax": {
+      "title": "Noções básicas de sintaxe",
+      "text": "Use números, intervalos, palavras-chave e progressões (n começa em 0). Parênteses são suportados.",
+      "bullets": {
+        "numbers": "Números/intervalos: 5, 10-20",
+        "keywords": "Palavras-chave: ímpar, par",
+        "progressions": "Progressões: 3n, 4n+1"
+      }
+    },
+    "operators": {
+      "title": "Operadores",
+      "text": "AND tem precedência maior que a vírgula. NOT se aplica dentro do intervalo do documento.",
+      "and": "AND: & ou \"and\" — exige ambas as condições (ex.: 1-50 & par)",
+      "comma": "Vírgula: , ou | — combina seleções (ex.: 1-10, 20)",
+      "not": "NOT: ! ou \"not\" — exclui páginas (ex.: 3n & not 30)"
+    },
+    "examples": {
+      "title": "Exemplos",
+      "first50": "Primeiras 50",
+      "last50": "Últimas 50",
+      "every3rd": "A cada 3ª",
+      "oddWithinExcluding": "Ímpares entre 1-20, excluindo 5-7",
+      "combineSets": "Combinar conjuntos"
+    },
+    "firstNPages": {
+      "title": "Primeiras N páginas",
+      "placeholder": "Número de páginas"
+    },
+    "lastNPages": {
+      "title": "Últimas N páginas",
+      "placeholder": "Número de páginas"
+    },
+    "everyNthPage": {
+      "title": "A cada N páginas",
+      "placeholder": "Tamanho do passo"
+    },
+    "range": {
+      "title": "Intervalo",
+      "fromPlaceholder": "De",
+      "toPlaceholder": "Até"
+    },
+    "keywords": {
+      "title": "Palavras-chave"
+    },
+    "advanced": {
+      "title": "Avançado"
     }
   },
   "compressPdfs": {
@@ -843,28 +1357,141 @@
     "tags": "remoção,apagar,formulario,campo,apenasleitura",
     "title": "Remover Apenas Leitura de Formulários",
     "header": "Desbloquear Formulários do PDF",
-    "submit": "Remove"
+    "submit": "Remove",
+    "description": "Esta ferramenta removerá as restrições de somente leitura dos campos de formulário PDF, tornando-os editáveis e preenchíveis.",
+    "filenamePrefix": "formularios_desbloqueados",
+    "files": {
+      "placeholder": "Selecione um arquivo PDF na visualização principal para começar"
+    },
+    "error": {
+      "failed": "Ocorreu um erro ao desbloquear formulários PDF."
+    },
+    "results": {
+      "title": "Resultados dos formulários desbloqueados"
+    }
   },
   "changeMetadata": {
-    "tags": "Título,autor,data,criação,hora,editor,produtor,estatísticas",
-    "title": "Alterar Metadados",
     "header": "Alterar Metadados",
-    "selectText": {
-      "1": "Edite as variáveis ​​que deseja alterar.",
-      "2": "Excluir todos os metadados.",
-      "3": "Mostrar metadados personalizados.",
-      "4": "Outros metadados:",
-      "5": "Adicionar Entrada de Metadados Personalizada"
+    "submit": "Alterar",
+    "filenamePrefix": "metadados",
+    "settings": {
+      "title": "Configurações de metadados"
     },
-    "author": "Autor:",
-    "creationDate": "Data de criação (aaaa/mm/dd HH:mm:ss):",
-    "creator": "Criador:",
-    "keywords": "Palavras-chave:",
-    "modDate": "Data de modificação (aaaa/mm/dd HH:mm:ss):",
-    "producer": "Produtor:",
-    "subject": "Assunto:",
-    "trapped": "Metadados trapping:",
-    "submit": "Alterar"
+    "standardFields": {
+      "title": "Campos padrão"
+    },
+    "deleteAll": {
+      "label": "Remover metadados existentes",
+      "checkbox": "Excluir todos os metadados"
+    },
+    "title": {
+      "label": "Título",
+      "placeholder": "Título do documento"
+    },
+    "author": {
+      "label": "Autor",
+      "placeholder": "Autor do documento"
+    },
+    "subject": {
+      "label": "Assunto",
+      "placeholder": "Assunto do documento"
+    },
+    "keywords": {
+      "label": "Palavras-chave",
+      "placeholder": "Palavras-chave do documento"
+    },
+    "creator": {
+      "label": "Criador",
+      "placeholder": "Criador do documento"
+    },
+    "producer": {
+      "label": "Produtor",
+      "placeholder": "Produtor do documento"
+    },
+    "dates": {
+      "title": "Campos de data"
+    },
+    "creationDate": {
+      "label": "Data de criação",
+      "placeholder": "Data de criação"
+    },
+    "modificationDate": {
+      "label": "Data de modificação",
+      "placeholder": "Data de modificação"
+    },
+    "trapped": {
+      "label": "Status de trapping",
+      "unknown": "Desconhecido",
+      "true": "Verdadeiro",
+      "false": "Falso"
+    },
+    "advanced": {
+      "title": "Opções avançadas"
+    },
+    "customFields": {
+      "title": "Metadados personalizados",
+      "description": "Adicione campos de metadados personalizados ao documento",
+      "add": "Adicionar campo",
+      "key": "Chave",
+      "keyPlaceholder": "Chave personalizada",
+      "value": "Valor",
+      "valuePlaceholder": "Valor personalizado",
+      "remove": "Remover"
+    },
+    "results": {
+      "title": "PDFs atualizados"
+    },
+    "error": {
+      "failed": "Ocorreu um erro ao alterar os metadados do PDF."
+    },
+    "tooltip": {
+      "header": {
+        "title": "Visão geral dos metadados de PDF"
+      },
+      "standardFields": {
+        "title": "Campos padrão",
+        "text": "Campos comuns de metadados de PDF que descrevem o documento.",
+        "bullet1": "Título: nome ou título do documento",
+        "bullet2": "Autor: pessoa que criou o documento",
+        "bullet3": "Assunto: breve descrição do conteúdo",
+        "bullet4": "Palavras-chave: termos de pesquisa do documento",
+        "bullet5": "Criador/Produtor: software usado para criar o PDF"
+      },
+      "dates": {
+        "title": "Campos de data",
+        "text": "Quando o documento foi criado e modificado.",
+        "bullet1": "Data de criação: quando o documento original foi criado",
+        "bullet2": "Data de modificação: quando foi alterado pela última vez"
+      },
+      "options": {
+        "title": "Opções adicionais",
+        "text": "Campos personalizados e controles de privacidade.",
+        "bullet1": "Metadados personalizados: adicione seus próprios pares chave-valor",
+        "bullet2": "Status de trapping: configuração para impressão de alta qualidade",
+        "bullet3": "Excluir tudo: remove todos os metadados para privacidade"
+      },
+      "deleteAll": {
+        "title": "Remover metadados existentes",
+        "text": "Exclusão completa de metadados para garantir privacidade."
+      },
+      "customFields": {
+        "title": "Metadados personalizados",
+        "text": "Adicione seus próprios pares de metadados chave-valor.",
+        "bullet1": "Adicione quaisquer campos personalizados relevantes ao seu documento",
+        "bullet2": "Exemplos: Departamento, Projeto, Versão, Status",
+        "bullet3": "Chave e valor são obrigatórios para cada entrada"
+      },
+      "advanced": {
+        "title": "Opções avançadas",
+        "trapped": {
+          "title": "Status de trapping",
+          "description": "Indica se o documento está preparado para impressão de alta qualidade.",
+          "bullet1": "Verdadeiro: o documento foi preparado (trapping) para impressão",
+          "bullet2": "Falso: o documento não foi preparado (trapping)",
+          "bullet3": "Desconhecido: o status de trapping não está especificado"
+        }
+      }
+    }
   },
   "fileToPDF": {
     "tags": "transformação,formato,documento,imagem,slide,texto,conversão,escritório,documentos,word,excel,powerpoint",
@@ -878,6 +1505,7 @@
   "ocr": {
     "tags": "reconhecimento,texto,imagem,digitalização,leitura,identificação,detecção,editável",
     "title": "Processamento de OCR",
+    "desc": "Reconhecimento Óptico de Caracteres transforma PDFs com imagens em documentos pesquisáveis e com texto selecionável.",
     "header": "Processamento de OCR (Reconhecimento Óptico de Caracteres)",
     "selectText": {
       "1": "Selecione os idiomas a serem detectados no PDF (os listados são os atualmente instalados):",
@@ -896,22 +1524,85 @@
     "help": "Por favor, leia a documentação abaixo para saber mais sobre OCR e sua utilização.",
     "credit": "Este serviço usa Qpdf e Tesseract para OCR.",
     "submit": "Processar OCR no PDF",
-    "desc": "Reconhecimento Óptico de Caracteres transforma PDFs com imagens em documentos pesquisáveis e com texto selecionável.",
+    "operation": {
+      "submit": "Processar OCR e revisar"
+    },
+    "results": {
+      "title": "Resultados de OCR"
+    },
+    "languagePicker": {
+      "additionalLanguages": "Procurando idiomas adicionais?",
+      "viewSetupGuide": "Ver guia de configuração →"
+    },
     "settings": {
       "title": "Configurações",
       "ocrMode": {
-        "label": "Modo OCR:"
+        "label": "Modo OCR:",
+        "auto": "Automático (pular camadas de texto)",
+        "force": "Forçar (re-OCR em tudo, substituir texto)",
+        "strict": "Rígido (abortar se houver texto)"
       },
       "languages": {
-        "label": "Idiomas"
+        "label": "Idiomas",
+        "placeholder": "Selecionar idiomas"
+      },
+      "compatibilityMode": {
+        "label": "Modo de compatibilidade"
+      },
+      "advancedOptions": {
+        "label": "Opções de processamento",
+        "sidecar": "Criar um arquivo de texto",
+        "deskew": "Corrigir inclinação das páginas",
+        "clean": "Limpar arquivo de entrada",
+        "cleanFinal": "Limpar saída final"
       }
     },
     "tooltip": {
+      "header": {
+        "title": "Visão geral das configurações de OCR"
+      },
       "mode": {
-        "title": "Modo OCR:"
+        "title": "Modo OCR:",
+        "text": "Optical Character Recognition (OCR) ajuda você a transformar páginas digitalizadas ou capturas de tela em texto que pode pesquisar, copiar ou destacar.",
+        "bullet1": "Automático pula páginas que já contêm camadas de texto.",
+        "bullet2": "Forçar reexecuta o OCR em todas as páginas e substitui todo o texto.",
+        "bullet3": "Rígido interrompe se for encontrado qualquer texto selecionável."
       },
       "languages": {
-        "title": "Idiomas"
+        "title": "Idiomas",
+        "text": "Melhore a precisão do OCR especificando os idiomas esperados. Escolha um ou mais idiomas para orientar a detecção."
+      },
+      "output": {
+        "title": "Saída",
+        "text": "Decida como você quer que o texto de saída seja formatado:",
+        "bullet1": "PDF pesquisável incorpora o texto atrás da imagem original.",
+        "bullet2": "HOCR XML retorna um arquivo estruturado legível por máquina.",
+        "bullet3": "Sidecar de texto simples cria um arquivo .txt separado com o conteúdo bruto."
+      },
+      "advanced": {
+        "header": {
+          "title": "Processamento avançado de OCR"
+        },
+        "compatibility": {
+          "title": "Modo de compatibilidade",
+          "text": "Usa o modo de OCR 'sandwich PDF': resulta em arquivos maiores, porém mais confiáveis com certos idiomas e softwares PDF mais antigos. Por padrão usamos hOCR para PDFs menores e modernos."
+        },
+        "sidecar": {
+          "title": "Criar arquivo de texto",
+          "text": "Gera um arquivo .txt separado junto ao PDF contendo todo o texto extraído para fácil acesso e processamento."
+        },
+        "deskew": {
+          "title": "Corrigir inclinação das páginas",
+          "text": "Corrige automaticamente páginas tortas ou inclinadas para melhorar a precisão do OCR. Útil para documentos digitalizados que não ficaram perfeitamente alinhados."
+        },
+        "clean": {
+          "title": "Limpar arquivo de entrada",
+          "text": "Pré-processa a entrada removendo ruído, aprimorando contraste e otimizando a imagem para melhor reconhecimento de OCR antes do processamento."
+        },
+        "cleanFinal": {
+          "title": "Limpar saída final",
+          "text": "Pós-processa o PDF final removendo artefatos de OCR e otimizando a camada de texto para melhor legibilidade e tamanho menor."
+        }
       }
     }
   },
@@ -921,7 +1612,13 @@
     "header": "Extrair Imagens",
     "selectText": "Selecione o formato de saída das imagens extraídas:",
     "allowDuplicates": "Salvar imagens duplicadas.",
-    "submit": "Extrair"
+    "submit": "Extrair",
+    "settings": {
+      "title": "Configurações"
+    },
+    "error": {
+      "failed": "Ocorreu um erro ao extrair imagens do PDF."
+    }
   },
   "pdfToPDFA": {
     "tags": "arquivo,longo prazo,padrão,conversão,armazenamento,preservação",
@@ -993,17 +1690,53 @@
     },
     "info": "Python não está instalado. É necessário para executar."
   },
+  "scannerImageSplit": {
+    "title": "Imagens extraídas",
+    "submit": "Extrair fotos digitalizadas",
+    "error": {
+      "failed": "Ocorreu um erro ao extrair fotos digitalizadas."
+    },
+    "tooltip": {
+      "title": "Divisor de fotos",
+      "whatThisDoes": "O que isso faz",
+      "whatThisDoesDesc": "Localiza e extrai automaticamente cada foto de uma página digitalizada ou imagem composta — sem recorte manual.",
+      "whenToUse": "Quando usar",
+      "useCase1": "Digitalize páginas inteiras de álbuns de uma vez",
+      "useCase2": "Divida lotes de mesa plana em arquivos separados",
+      "useCase3": "Quebre colagens em fotos individuais",
+      "useCase4": "Puxe fotos de documentos",
+      "quickFixes": "Correções rápidas",
+      "problem1": "Fotos não detectadas → aumente a Tolerância para 30–50",
+      "problem2": "Muitas detecções falsas → aumente a Área mínima para 15.000–20.000",
+      "problem3": "Cortes muito justos → aumente o Tamanho da borda para 5–10",
+      "problem4": "Fotos inclinadas não endireitadas → reduza o Limite de ângulo para ~5°",
+      "problem5": "Caixas de poeira/ruído → aumente a Área mínima de contorno para 1000–2000",
+      "setupTips": "Dicas de configuração",
+      "tip1": "Use um fundo liso e claro",
+      "tip2": "Deixe um pequeno espaço (≈1 cm) entre as fotos",
+      "tip3": "Digitalize a 300–600 DPI",
+      "tip4": "Limpe o vidro do scanner",
+      "headsUp": "Atenção",
+      "headsUpDesc": "Fotos sobrepostas ou fundos muito próximos em cor às fotos podem reduzir a precisão — tente um fundo mais claro ou mais escuro e deixe mais espaço."
+    }
+  },
   "sign": {
-    "tags": "autorizar,iniciais,assinatura-desenhada,assinatura-de-texto,assinatura-de-imagem",
     "title": "Assinar",
     "header": "Assinar",
     "upload": "Carregar Imagem",
-    "draw": "Desenhar Assinatura",
-    "text": "Inserir Texto",
+    "draw": {
+      "title": "Desenhe sua assinatura",
+      "clear": "Limpar"
+    },
+    "text": {
+      "name": "Nome do signatário",
+      "placeholder": "Insira seu nome completo"
+    },
     "clear": "Limpar",
     "add": "Adicionar",
     "saved": "Assinaturas Salvas",
     "save": "Salvar Assinatura",
+    "applySignatures": "Aplicar assinaturas",
     "personalSigs": "Assinaturas Pessoais",
     "sharedSigs": "Assinaturas Compartilhadas",
     "noSavedSigs": "Nenhuma assinatura salva encontrada.",
@@ -1015,42 +1748,157 @@
     "previous": "Página anterior",
     "maintainRatio": "Habilitar manter proporção",
     "undo": "Desfazer",
-    "redo": "Refazer"
+    "redo": "Refazer",
+    "submit": "Assinar documento",
+    "steps": {
+      "configure": "Configurar assinatura"
+    },
+    "type": {
+      "title": "Tipo de assinatura",
+      "draw": "Desenhar",
+      "canvas": "Canvas",
+      "image": "Imagem",
+      "text": "Texto"
+    },
+    "image": {
+      "label": "Enviar imagem da assinatura",
+      "placeholder": "Selecionar arquivo de imagem",
+      "hint": "Envie uma imagem PNG ou JPG da sua assinatura"
+    },
+    "instructions": {
+      "title": "Como adicionar assinatura"
+    },
+    "activate": "Ativar posicionamento de assinatura",
+    "deactivate": "Parar de posicionar assinaturas",
+    "results": {
+      "title": "Resultados da assinatura"
+    },
+    "error": {
+      "failed": "Ocorreu um erro ao assinar o PDF."
+    }
   },
   "flatten": {
-    "tags": "estático,desativar,não-interativo,otimizar",
     "title": "Achatar",
     "header": "Achatar",
     "flattenOnlyForms": "Achatar apenas formulários interativos.",
     "submit": "Achatar",
+    "filenamePrefix": "achatado",
+    "files": {
+      "placeholder": "Selecione um arquivo PDF na visualização principal para começar"
+    },
     "steps": {
       "settings": "Configurações"
     },
     "options": {
-      "flattenOnlyForms": "Achatar apenas formulários interativos."
+      "stepTitle": "Opções de achatamento",
+      "title": "Opções de achatamento",
+      "flattenOnlyForms.desc": "Achatar apenas campos de formulário, mantendo outros elementos interativos",
+      "note": "Achatar remove elementos interativos do PDF, tornando-os não editáveis."
+    },
+    "results": {
+      "title": "Resultados do achatamento"
+    },
+    "error": {
+      "failed": "Ocorreu um erro ao achatar o PDF."
+    },
+    "tooltip": {
+      "header": {
+        "title": "Sobre o achatamento de PDFs"
+      },
+      "description": {
+        "title": "O que o achatamento faz?",
+        "text": "Achatar torna seu PDF não editável transformando formulários preenchíveis e botões em texto e imagens comuns. O PDF terá exatamente a mesma aparência, mas ninguém poderá alterar ou preencher os formulários. Perfeito para compartilhar formulários concluídos, criar documentos finais para registros ou garantir que o PDF tenha a mesma aparência em qualquer lugar.",
+        "bullet1": "Caixas de texto viram texto comum (não pode ser editado)",
+        "bullet2": "Caixas de seleção e botões viram imagens",
+        "bullet3": "Ótimo para versões finais que você não quer alterar",
+        "bullet4": "Garante aparência consistente em todos os dispositivos"
+      },
+      "formsOnly": {
+        "title": "O que significa 'Achatar apenas formulários'?",
+        "text": "Essa opção apenas remove a capacidade de preencher formulários, mas mantém outros recursos funcionando como clicar em links, ver marcadores e ler comentários.",
+        "bullet1": "Formulários ficam não editáveis",
+        "bullet2": "Links continuam funcionando ao clicar",
+        "bullet3": "Comentários e notas permanecem visíveis",
+        "bullet4": "Marcadores continuam ajudando na navegação"
+      }
     }
   },
   "repair": {
     "tags": "corrigir,restaurar,correção,recuperar",
     "title": "Reparar",
     "header": "Reparar",
-    "submit": "Reparar"
+    "submit": "Reparar",
+    "description": "Esta ferramenta tentará reparar arquivos PDF corrompidos ou danificados. Nenhuma configuração adicional é necessária.",
+    "filenamePrefix": "reparado",
+    "files": {
+      "placeholder": "Selecione um arquivo PDF na visualização principal para começar"
+    },
+    "error": {
+      "failed": "Ocorreu um erro ao reparar o PDF."
+    },
+    "results": {
+      "title": "Resultados do reparo"
+    }
   },
   "removeBlanks": {
-    "tags": "limpeza,otimização,sem-conteúdo,organizar",
     "title": "Remover Páginas em Branco",
     "header": "Remover Páginas em Branco",
-    "threshold": "Limite de brancura de pixel:",
-    "thresholdDesc": "Limite para determinar o quão branco um pixel branco deve ser para ser classificado como \"branco\", para remoção. 0 = Preto, 255 = branco puro.",
-    "whitePercent": "Porcentagem de branco (%):",
-    "whitePercentDesc": "Porcentagem da página que devem ter pixels classificados como “brancos” para serem removidas.",
+    "settings": {
+      "title": "Configurações"
+    },
+    "threshold": {
+      "label": "Limite de brancura do pixel"
+    },
+    "whitePercent": {
+      "label": "Limite de porcentagem de branco",
+      "unit": "%"
+    },
+    "includeBlankPages": {
+      "label": "Incluir páginas em branco detectadas"
+    },
+    "tooltip": {
+      "header": {
+        "title": "Configurações de remoção de páginas em branco"
+      },
+      "threshold": {
+        "title": "Limite de brancura do pixel",
+        "text": "Controla quão branco um pixel deve ser para ser considerado 'branco'. Isso ajuda a determinar o que conta como área em branco na página.",
+        "bullet1": "0 = Preto puro (mais restritivo)",
+        "bullet2": "128 = Cinza médio",
+        "bullet3": "255 = Branco puro (menos restritivo)"
+      },
+      "whitePercent": {
+        "title": "Limite de porcentagem de branco",
+        "text": "Define a porcentagem mínima de pixels brancos necessária para que uma página seja considerada em branco e removida.",
+        "bullet1": "Valores menores (ex.: 80%) = Mais páginas removidas",
+        "bullet2": "Valores maiores (ex.: 95%) = Apenas páginas muito em branco removidas",
+        "bullet3": "Use valores maiores para documentos com fundos claros"
+      },
+      "includeBlankPages": {
+        "title": "Incluir páginas em branco detectadas",
+        "text": "Quando ativado, cria um PDF separado contendo todas as páginas em branco que foram detectadas e removidas do documento original.",
+        "bullet1": "Útil para revisar o que foi removido",
+        "bullet2": "Ajuda a verificar a precisão da detecção",
+        "bullet3": "Pode ser desativado para reduzir o tamanho do arquivo de saída"
+      }
+    },
     "submit": "Remover Páginas em Branco"
   },
   "removeAnnotations": {
     "tags": "comentários,destaque,notas,marcação,remover",
     "title": "Remover Anotações",
     "header": "Remover Anotações",
-    "submit": "Remover"
+    "submit": "Remover",
+    "settings": {
+      "title": "Configurações"
+    },
+    "info": {
+      "title": "Sobre remover anotações",
+      "description": "Esta ferramenta removerá todas as anotações (comentários, realces, notas etc.) dos seus documentos PDF."
+    },
+    "error": {
+      "failed": "Ocorreu um erro ao remover anotações do PDF."
+    }
   },
   "compare": {
     "tags": "diferenciar,contraste,mudanças,análise",
@@ -1082,28 +1930,140 @@
   "certSign": {
     "tags": "autenticar,PEM,P12,oficial,criptografar",
     "title": "Assinatura com Certificado",
-    "header": "Assinatura com Certificado (Em desenvolvimento)",
-    "selectPDF": "Selecione um arquivo PDF para assinatura:",
-    "jksNote": "Nota: Se o seu tipo de certificado não estiver listado abaixo, converta-o em um arquivo Java Keystore (.jks) usando a ferramenta de linha de comando keytool. Em seguida, escolha a opção de arquivo .jks abaixo.",
-    "selectKey": "Selecione o seu arquivo de chave privada (formato PKCS#8, pode ser .pem ou .der):",
-    "selectCert": "Selecione o seu arquivo de certificado (formato X.509, pode ser .pem ou .der):",
-    "selectP12": "Selecione o seu arquivo de armazenamento de chave PKCS#12 (.p12 ou .pfx) (opcional, se fornecido, deve conter a sua chave privada e certificado):",
-    "selectJKS": "Selecione seu arquivo Java Keystore (.jks ou .keystore):",
-    "certType": "Tipo de Certificado:",
-    "password": "Digite a senha do seu armazenamento de chave ou chave privada (se aplicável):",
-    "showSig": "Mostrar Assinatura.",
-    "reason": "Razão",
-    "location": "Localização",
-    "name": "Nome",
-    "showLogo": "Mostrar Logotipo",
-    "submit": "Assinar PDF"
+    "filenamePrefix": "assinado",
+    "signMode": {
+      "stepTitle": "Modo de assinatura",
+      "tooltip": {
+        "header": {
+          "title": "Sobre assinaturas de PDF"
+        },
+        "overview": {
+          "title": "Como funcionam as assinaturas",
+          "text": "Ambos os modos selam o documento (quaisquer edições são sinalizadas como adulteração) e registram quem/quando/como para auditoria. A confiabilidade no visualizador depende da cadeia de certificação."
+        },
+        "manual": {
+          "title": "Manual — Traga seu certificado",
+          "text": "Use seus próprios arquivos de certificado para uma identidade alinhada à marca. Pode exibir <b>Confiável</b> quando sua AC/cadeia for reconhecida.",
+          "use": "Use para: voltado ao cliente, jurídico, conformidade."
+        },
+        "auto": {
+          "title": "Automático — Selagem instantânea sem configuração",
+          "text": "Assina com um certificado de servidor <b>autoassinado</b>. Mesmo <b>selo à prova de adulteração</b> e <b>trilha de auditoria</b>; normalmente exibe <b>Não verificado</b> nos visualizadores.",
+          "use": "Use quando: você precisa de rapidez e identidade interna consistente em revisões e registros."
+        },
+        "rule": {
+          "title": "Regra prática",
+          "text": "Precisa do status <b>Confiável</b> no destinatário? <b>Manual</b>. Precisa de selagem rápida, à prova de adulteração e trilha de auditoria sem configuração? <b>Automático</b>."
+        }
+      }
+    },
+    "certTypeStep": {
+      "stepTitle": "Formato do certificado"
+    },
+    "certFiles": {
+      "stepTitle": "Arquivos de certificado"
+    },
+    "appearance": {
+      "stepTitle": "Aparência da assinatura",
+      "tooltip": {
+        "header": {
+          "title": "Sobre a aparência da assinatura"
+        },
+        "invisible": {
+          "title": "Assinaturas invisíveis",
+          "text": "A assinatura é adicionada ao PDF para segurança, mas não ficará visível ao visualizar o documento. Perfeita para requisitos legais sem alterar a aparência do documento.",
+          "bullet1": "Fornece segurança sem alterações visuais",
+          "bullet2": "Atende aos requisitos legais para assinatura digital",
+          "bullet3": "Não afeta o layout ou design do documento"
+        },
+        "visible": {
+          "title": "Assinaturas visíveis",
+          "text": "Exibe um bloco de assinatura no PDF com seu nome, data e detalhes opcionais. Útil quando você quer que os leitores vejam claramente que o documento está assinado.",
+          "bullet1": "Mostra o nome e a data do signatário no documento",
+          "bullet2": "Pode incluir o motivo e o local da assinatura",
+          "bullet3": "Escolha em qual página posicionar a assinatura",
+          "bullet4": "Logo opcional pode ser incluído"
+        }
+      }
+    },
+    "sign": {
+      "submit": "Assinar PDF",
+      "results": "PDF assinado"
+    },
+    "error": {
+      "failed": "Ocorreu um erro ao processar as assinaturas."
+    },
+    "tooltip": {
+      "header": {
+        "title": "Sobre o gerenciamento de assinaturas"
+      },
+      "overview": {
+        "title": "O que esta ferramenta pode fazer?",
+        "text": "Esta ferramenta permite verificar se seus PDFs estão assinados digitalmente e adicionar novas assinaturas digitais. Assinaturas digitais provam quem criou ou aprovou um documento e mostram se ele foi alterado desde a assinatura.",
+        "bullet1": "Verifique as assinaturas existentes e sua validade",
+        "bullet2": "Veja informações detalhadas sobre signatários e certificados",
+        "bullet3": "Adicione novas assinaturas digitais para proteger seus documentos",
+        "bullet4": "Vários arquivos suportados com navegação fácil"
+      },
+      "validation": {
+        "title": "Verificando assinaturas",
+        "text": "Ao verificar as assinaturas, a ferramenta informa se são válidas, quem assinou o documento, quando foi assinado e se o documento foi alterado desde a assinatura.",
+        "bullet1": "Mostra se as assinaturas são válidas ou inválidas",
+        "bullet2": "Exibe informações do signatário e data da assinatura",
+        "bullet3": "Verifica se o documento foi modificado após a assinatura",
+        "bullet4": "Pode usar certificados personalizados para verificação"
+      },
+      "signing": {
+        "title": "Adicionando assinaturas",
+        "text": "Para assinar um PDF, você precisa de um certificado digital (como PEM, PKCS12 ou JKS). Você pode optar por deixar a assinatura visível no documento ou mantê-la invisível apenas para segurança.",
+        "bullet1": "Suporta formatos de certificado PEM, PKCS12, JKS e de servidor",
+        "bullet2": "Opção para mostrar ou ocultar a assinatura no PDF",
+        "bullet3": "Adicione motivo, local e nome do signatário",
+        "bullet4": "Escolha em qual página colocar assinaturas visíveis",
+        "bullet5": "Use certificado do servidor para a opção simples 'Assinar com Stirling-PDF'"
+      }
+    },
+    "certType": {
+      "tooltip": {
+        "header": {
+          "title": "Sobre os tipos de certificado"
+        },
+        "what": {
+          "title": "O que é um certificado?",
+          "text": "É uma identificação segura da sua assinatura que comprova que você assinou. A menos que seja exigido assinar por certificado, recomendamos usar outro método seguro como Digitar, Desenhar ou Enviar."
+        },
+        "which": {
+          "title": "Qual opção devo usar?",
+          "text": "Escolha o formato que corresponde ao seu arquivo de certificado:",
+          "bullet1": "PKCS#12 (.p12 / .pfx) – um arquivo combinado (mais comum)",
+          "bullet2": "PFX (.pfx) – versão da Microsoft do PKCS12",
+          "bullet3": "PEM – arquivos .pem separados de chave privada e certificado",
+          "bullet4": "JKS – keystore .jks Java para fluxos de trabalho de dev / CI-CD"
+        },
+        "convert": {
+          "title": "Chave não listada?",
+          "text": "Converta seu arquivo para um keystore Java (.jks) com o keytool e, em seguida, escolha JKS."
+        }
+      }
+    }
   },
   "removeCertSign": {
     "tags": "autenticar,PEM,P12,oficial,descriptografar",
     "title": "Remover Assinatura com Certificado",
     "header": "Remover Assinatura com Certificado",
     "selectPDF": "Selecione um arquivo PDF:",
-    "submit": "Remover Assinatura"
+    "submit": "Remover Assinatura",
+    "description": "Esta ferramenta removerá assinaturas de certificado digital do seu documento PDF.",
+    "filenamePrefix": "sem_assinatura",
+    "files": {
+      "placeholder": "Selecione um arquivo PDF na visualização principal para começar"
+    },
+    "error": {
+      "failed": "Ocorreu um erro ao remover assinaturas de certificado."
+    },
+    "results": {
+      "title": "Resultados da remoção de certificados"
+    }
   },
   "pageLayout": {
     "tags": "mesclar,composto,vista-única,organizar",
@@ -1113,14 +2073,144 @@
     "addBorder": "Adicionar bordas.",
     "submit": "Enviar"
   },
+  "bookletImposition": {
+    "tags": "livreto,imposição,impressão,encadernação,dobra,assinatura",
+    "title": "Imposição de livreto",
+    "header": "Imposição de livreto",
+    "submit": "Criar livreto",
+    "spineLocation": {
+      "label": "Posição da lombada",
+      "left": "Esquerda (Padrão)",
+      "right": "Direita (RTL)"
+    },
+    "doubleSided": {
+      "label": "Impressão frente e verso",
+      "tooltip": "Cria frente e verso para impressão correta do livreto"
+    },
+    "manualDuplex": {
+      "title": "Modo duplex manual",
+      "instructions": "Para impressoras sem duplex automático. Você precisará executar isto duas vezes:"
+    },
+    "duplexPass": {
+      "label": "Passagem de impressão",
+      "first": "1ª passagem",
+      "second": "2ª passagem",
+      "firstInstructions": "Imprime as frentes → empilhe com a face voltada para baixo → execute novamente com a 2ª passagem",
+      "secondInstructions": "Carregue a pilha impressa com a face voltada para baixo → imprime os versos"
+    },
+    "rtlBinding": {
+      "label": "Encadernação da direita para a esquerda (RTL)",
+      "tooltip": "Para árabe, hebraico ou outros idiomas da direita para a esquerda (RTL)"
+    },
+    "addBorder": {
+      "label": "Adicionar bordas ao redor das páginas",
+      "tooltip": "Adiciona bordas ao redor de cada seção da página para ajudar no corte e alinhamento"
+    },
+    "addGutter": {
+      "label": "Adicionar margem de lombada",
+      "tooltip": "Adiciona espaço de margem interna para encadernação"
+    },
+    "gutterSize": {
+      "label": "Tamanho da lombada (pontos)"
+    },
+    "flipOnShortEdge": {
+      "label": "Virar na borda curta (apenas duplex automático)",
+      "tooltip": "Ative para impressão duplex na borda curta (apenas duplex automático — ignorado no modo manual)",
+      "manualNote": "Não necessário no modo manual — você vira a pilha manualmente"
+    },
+    "advanced": {
+      "toggle": "Opções avançadas"
+    },
+    "paperSizeNote": "O tamanho do papel é derivado automaticamente da sua primeira página.",
+    "tooltip": {
+      "header": {
+        "title": "Guia de criação de livreto"
+      },
+      "description": {
+        "title": "O que é imposição de livreto?",
+        "text": "Cria livretos profissionais organizando as páginas na ordem correta de impressão. Suas páginas do PDF são posicionadas 2 por folha em folhas paisagem para que, quando dobradas e encadernadas, sejam lidas na sequência correta como um livro real."
+      },
+      "example": {
+        "title": "Exemplo: livreto de 8 páginas",
+        "text": "Seu documento de 8 páginas se torna 2 folhas:",
+        "bullet1": "Folha 1 Frente: Páginas 8, 1 | Verso: Páginas 2, 7",
+        "bullet2": "Folha 2 Frente: Páginas 6, 3 | Verso: Páginas 4, 5",
+        "bullet3": "Quando dobrado e empilhado: Lê 1→2→3→4→5→6→7→8"
+      },
+      "printing": {
+        "title": "Como imprimir e montar",
+        "text": "Siga estas etapas para livretos perfeitos:",
+        "bullet1": "Imprima frente e verso com 'Virar na borda longa'",
+        "bullet2": "Empilhe as folhas em ordem e dobre ao meio",
+        "bullet3": "Grampeie ou encaderne ao longo da lombada dobrada",
+        "bullet4": "Para impressoras de borda curta: habilite a opção 'Virar na borda curta'"
+      },
+      "manualDuplex": {
+        "title": "Duplex manual (impressoras de uma face)",
+        "text": "Para impressoras sem duplex automático:",
+        "bullet1": "Desative 'Impressão frente e verso'",
+        "bullet2": "Selecione '1ª passagem' → Imprima → Empilhe com a face para baixo",
+        "bullet3": "Selecione '2ª passagem' → Carregue a pilha → Imprima os versos",
+        "bullet4": "Dobre e monte normalmente"
+      },
+      "advanced": {
+        "title": "Opções avançadas",
+        "text": "Ajuste fino do seu livreto:",
+        "bullet1": "Encadernação da direita para a esquerda: Para árabe, hebraico ou idiomas RTL",
+        "bullet2": "Bordas: Mostra linhas de corte para acabamento",
+        "bullet3": "Margem de lombada: Adiciona espaço para encadernação",
+        "bullet4": "Virar na borda curta: Somente para impressoras com duplex automático"
+      }
+    },
+    "error": {
+      "failed": "Ocorreu um erro ao criar a imposição de livreto."
+    }
+  },
   "scalePages": {
-    "tags": "redimensionar,modificar,dimensão,adaptar",
     "title": "Ajustar Dimensões da Página",
     "header": "Ajustar Dimensões da Página",
     "pageSize": "Tamanho desejado do documento:",
     "keepPageSize": "Tamanho Original",
     "scaleFactor": "Fator de zoom (corte) de uma página:",
     "submit": "Enviar"
+  },
+  "adjustPageScale": {
+    "tags": "redimensionar,modificar,dimensão,adaptar",
+    "title": "Ajustar escala da página",
+    "header": "Ajustar escala da página",
+    "scaleFactor": {
+      "label": "Fator de escala"
+    },
+    "pageSize": {
+      "label": "Tamanho de página desejado",
+      "keep": "Manter tamanho original",
+      "letter": "Carta",
+      "legal": "Legal"
+    },
+    "submit": "Ajustar escala da página",
+    "error": {
+      "failed": "Ocorreu um erro ao ajustar a escala da página."
+    },
+    "tooltip": {
+      "header": {
+        "title": "Visão geral das configurações de escala da página"
+      },
+      "description": {
+        "title": "Descrição",
+        "text": "Ajuste o tamanho do conteúdo do PDF e altere as dimensões da página."
+      },
+      "scaleFactor": {
+        "title": "Fator de escala",
+        "text": "Controla o quão grande ou pequeno o conteúdo aparece na página. O conteúdo é escalado e centralizado — se o conteúdo escalado for maior que o tamanho da página, ele poderá ser recortado.",
+        "bullet1": "1,0 = Tamanho original",
+        "bullet2": "0,5 = Metade do tamanho (50% menor)",
+        "bullet3": "2,0 = Dobro do tamanho (200% maior, pode recortar)"
+      },
+      "pageSize": {
+        "title": "Tamanho de página desejado",
+        "text": "Define as dimensões das páginas do PDF de saída. 'Manter tamanho original' mantém as dimensões atuais, enquanto as outras opções redimensionam para tamanhos de papel padrão."
+      }
+    }
   },
   "add-page-numbers": {
     "tags": "paginar,rotular,organizar,índice"
@@ -1129,16 +2219,66 @@
     "tags": "detecção-automática,baseado-em-cabeçalho,organizar,relabel",
     "title": "Renomeação Automática do PDF",
     "header": "Renomeação Automática do PDF",
-    "submit": "Renomeação Automática"
+    "description": "Localiza automaticamente o título no conteúdo do seu PDF e o usa como nome de arquivo.",
+    "submit": "Renomeação Automática",
+    "files": {
+      "placeholder": "Selecione um arquivo PDF na visualização principal para começar"
+    },
+    "error": {
+      "failed": "Ocorreu um erro ao renomear automaticamente o PDF."
+    },
+    "results": {
+      "title": "Resultados de renomeação automática"
+    },
+    "tooltip": {
+      "header": {
+        "title": "Como funciona a renomeação automática"
+      },
+      "howItWorks": {
+        "title": "Renomeação inteligente",
+        "text": "Localiza automaticamente o título no conteúdo do seu PDF e o usa como nome de arquivo.",
+        "bullet1": "Procura por texto que pareça ser um título ou cabeçalho",
+        "bullet2": "Cria um nome de arquivo limpo e válido a partir do título detectado",
+        "bullet3": "Mantém o nome original se nenhum título adequado for encontrado"
+      }
+    }
   },
   "adjust-contrast": {
     "tags": "correção-de-cor,ajustar,modificar,realçar"
   },
   "crop": {
-    "tags": "aparar,encolher,editar,formato",
     "title": "Recortar",
     "header": "Recortar",
-    "submit": "Enviar"
+    "submit": "Enviar",
+    "noFileSelected": "Selecione um arquivo PDF para iniciar o corte",
+    "preview": {
+      "title": "Seleção da área de corte"
+    },
+    "reset": "Redefinir para o PDF completo",
+    "coordinates": {
+      "title": "Posição e tamanho",
+      "x": "Posição X",
+      "y": "Posição Y",
+      "width": "Largura",
+      "height": "Altura"
+    },
+    "error": {
+      "invalidArea": "A área de corte se estende além dos limites do PDF",
+      "failed": "Falha ao recortar o PDF"
+    },
+    "steps": {
+      "selectArea": "Selecionar área de corte"
+    },
+    "tooltip": {
+      "title": "Como recortar PDFs",
+      "description": "Selecione a área a recortar do seu PDF arrastando e redimensionando a sobreposição azul na miniatura.",
+      "drag": "Arraste a sobreposição para mover a área de corte",
+      "resize": "Arraste os cantos e bordas para redimensionar",
+      "precision": "Use as entradas de coordenadas para posicionamento preciso"
+    },
+    "results": {
+      "title": "Resultados do corte"
+    }
   },
   "autoSplitPDF": {
     "tags": "baseado-em-QR,separar,segmento-de-digitalização,organizar",
@@ -1221,64 +2361,122 @@
     "downloadJS": "Baixar JavaScript",
     "submit": "Mostrar"
   },
-  "autoRedact": {
-    "tags": "Redigir,ocultar,escurecer,preto,marcador,oculto",
-    "title": "Ocultação de Texto Automática",
-    "header": "Ocultação de Texto Automática",
-    "colorLabel": "Cor:",
-    "textsToRedactLabel": "Texto para ocultar (um por linha):",
-    "textsToRedactPlaceholder": "Por exemplo: \\nConfidencial \\nSecreto",
-    "useRegexLabel": "Usar Regex (expressão regular).",
-    "wholeWordSearchLabel": "Pesquisa apenas palavras inteiras.",
-    "customPaddingLabel": "Preenchimento extra personalizado:",
-    "convertPDFToImageLabel": "Converter PDF em imagem PDF (Usado para remover o texto atrás da caixa).",
-    "submitButton": "Ocultar"
-  },
   "redact": {
     "tags": "Redigir,ocultar,escurecer,preto,marcador,oculto,manual",
     "title": "Ocultação de Texto Manual",
-    "header": "Ocultação de Texto Manual",
     "submit": "Ocultar",
-    "textBasedRedaction": "Ocultação baseada em texto",
-    "pageBasedRedaction": "Ocultação baseada em páginas",
-    "convertPDFToImageLabel": "Converter PDF para PDF-Imagem (Utilizado para remover texto atrás da seleção)",
-    "pageRedactionNumbers": {
-      "title": "Páginas",
-      "placeholder": "(p.ex. 1,2,8 ou 4,7,12-16 ou 2n-1)"
+    "error": {
+      "failed": "Ocorreu um erro ao ocultar o PDF."
     },
-    "redactionColor": {
-      "title": "Cor da Ocultação"
+    "modeSelector": {
+      "title": "Método de ocultação",
+      "mode": "Modo",
+      "automatic": "Automático",
+      "automaticDesc": "Oculte texto com base em termos de busca",
+      "manual": "Manual",
+      "manualDesc": "Clique e arraste para ocultar áreas específicas",
+      "manualComingSoon": "Ocultação manual em breve"
     },
-    "export": "Exportar",
-    "upload": "Carregar",
-    "boxRedaction": "Ocultação baseada em formas",
-    "zoom": "Zoom",
-    "zoomIn": "Ampliar",
-    "zoomOut": "Reduzir",
-    "nextPage": "Proxima Página",
-    "previousPage": "Página Anterior",
-    "toggleSidebar": "Mostrar/Ocultar Barra Lateral",
-    "showThumbnails": "Mostrar Miniaturas",
-    "showDocumentOutline": "Mostrar Estrutura do Documento (duplo clique para expandir/recolher todos os itens)",
-    "showAttatchments": "Mostrar Anexos",
-    "showLayers": "Mostrar Camadas (duplo clique para restabelecer as camadas para o estado padrão)",
-    "colourPicker": "Seletor de Cores",
-    "findCurrentOutlineItem": "Encontrar item atual",
-    "applyChanges": "Aplicar Alterações",
     "auto": {
+      "header": "Ocultação automática",
       "settings": {
+        "title": "Configurações de ocultação",
         "advancedTitle": "Avançado"
       },
+      "colorLabel": "Cor da caixa",
       "wordsToRedact": {
-        "add": "Adicionar"
+        "title": "Palavras para ocultar",
+        "placeholder": "Digite uma palavra",
+        "add": "Adicionar",
+        "examples": "Exemplos: Confidential, Top-Secret"
+      },
+      "useRegexLabel": "Usar Regex",
+      "wholeWordSearchLabel": "Correspondência de palavra inteira",
+      "customPaddingLabel": "Espaçamento extra personalizado",
+      "convertPDFToImageLabel": "Converter PDF para PDF-imagem"
+    },
+    "tooltip": {
+      "mode": {
+        "header": {
+          "title": "Método de ocultação"
+        },
+        "automatic": {
+          "title": "Ocultação automática",
+          "text": "Localiza e oculta automaticamente o texto especificado por todo o documento. Perfeito para remover informações sensíveis consistentes como nomes, endereços ou marcadores de confidencialidade."
+        },
+        "manual": {
+          "title": "Ocultação manual",
+          "text": "Clique e arraste para selecionar manualmente áreas específicas para ocultar. Dá controle preciso sobre o que será ocultado. (Em breve)"
+        }
+      },
+      "words": {
+        "header": {
+          "title": "Palavras para ocultar"
+        },
+        "description": {
+          "title": "Correspondência de texto",
+          "text": "Digite palavras ou frases para localizar e ocultar em seu documento. Cada palavra será pesquisada separadamente."
+        },
+        "bullet1": "Adicione uma palavra por vez",
+        "bullet2": "Pressione Enter ou clique em 'Adicionar outra' para incluir",
+        "bullet3": "Clique em × para remover palavras",
+        "examples": {
+          "title": "Exemplos comuns",
+          "text": "Palavras típicas para ocultar incluem: dados bancários, endereços de e-mail ou nomes específicos."
+        }
+      },
+      "advanced": {
+        "header": {
+          "title": "Configurações avançadas de ocultação"
+        },
+        "color": {
+          "title": "Cor da caixa e espaçamento",
+          "text": "Personalize a aparência das caixas de ocultação. Preto é o padrão, mas você pode escolher qualquer cor. O espaçamento adiciona espaço extra ao redor do texto encontrado."
+        },
+        "regex": {
+          "title": "Usar Regex",
+          "text": "Ative expressões regulares para correspondência avançada de padrões. Útil para encontrar telefones, e-mails ou padrões complexos.",
+          "bullet1": "Exemplo: \\d{4}-\\d{2}-\\d{2} para corresponder datas no formato YYYY-MM-DD",
+          "bullet2": "Use com cautela — teste cuidadosamente"
+        },
+        "wholeWord": {
+          "title": "Palavra inteira",
+          "text": "Corresponde apenas palavras completas, não correspondências parciais. 'John' não corresponderá a 'Johnson' quando ativado."
+        },
+        "convert": {
+          "title": "Converter para PDF-imagem",
+          "text": "Converte o PDF para um PDF baseado em imagem após a ocultação. Isso garante que o texto atrás das caixas seja completamente removido e irrecuperável."
+        }
       }
     },
     "manual": {
+      "header": "Ocultação manual",
+      "textBasedRedaction": "Ocultação baseada em texto",
+      "pageBasedRedaction": "Ocultação baseada em página",
+      "convertPDFToImageLabel": "Converter PDF para PDF-imagem (usado para remover texto atrás da caixa)",
       "pageRedactionNumbers": {
         "title": "Páginas",
         "placeholder": "(por exemplo 1,2,8 ou 4,7,12-16 ou 2n-1)"
       },
-      "export": "Exportar"
+      "redactionColor": {
+        "title": "Cor da ocultação"
+      },
+      "export": "Exportar",
+      "upload": "Upload",
+      "boxRedaction": "Ocultação por caixa",
+      "zoom": "Zoom",
+      "zoomIn": "Ampliar",
+      "zoomOut": "Reduzir",
+      "nextPage": "Próxima página",
+      "previousPage": "Página anterior",
+      "toggleSidebar": "Alternar barra lateral",
+      "showThumbnails": "Mostrar miniaturas",
+      "showDocumentOutline": "Mostrar estrutura do documento (clique duplo para expandir/recolher todos os itens)",
+      "showAttachments": "Mostrar anexos",
+      "showLayers": "Mostrar camadas (clique duplo para restaurar todas as camadas ao padrão)",
+      "colourPicker": "Seletor de cor",
+      "findCurrentOutlineItem": "Localizar item atual do sumário",
+      "applyChanges": "Aplicar alterações"
     }
   },
   "tableExtraxt": {
@@ -1332,6 +2530,7 @@
     "tags": "Carimbo,Adicionar imagem,centralizar imagem,Marca d'água,PDF,Incorporar,Personalizar",
     "header": "Adicionar Carimbo ao PDF",
     "title": "Adicionar Carimbo ao PDF",
+    "stampSetup": "Configuração de carimbo",
     "stampType": "Tipo de carimbo:",
     "stampText": "Texto do carimbo:",
     "stampImage": "Imagem do carimbo:",
@@ -1344,7 +2543,8 @@
     "overrideY": "Substituir coordenada Y:",
     "customMargin": "Margem personalizada:",
     "customColor": "Cor de texto personalizada:",
-    "submit": "Enviar"
+    "submit": "Enviar",
+    "noStampSelected": "Nenhum carimbo selecionado. Volte para a Etapa 1."
   },
   "removeImagePdf": {
     "tags": "Remover imagem,operações de página,back-end,lado do servidor"
@@ -1398,31 +2598,15 @@
     },
     "selectCustomCert": "Arquivo customizado de certificado X.509 (Opcional)"
   },
-  "replace-color": {
-    "title": "Substitui e Inverte Cores",
-    "header": "Substitui e Inverte Cores",
-    "selectText": {
-      "1": "Substituir ou inverter cores Opções:",
-      "2": "Padrão (Cores de alto constraste)",
-      "3": "Customizado (Cores customizadas)",
-      "4": "Inversão Completa (Inverte todas cores)",
-      "5": "Opções de cores de alto contraste:",
-      "6": "Texto branco em um plano de fundo preto",
-      "7": "Texto preto em um plano de fundo branco",
-      "8": "Texto amarelo em um plano de fundo preto",
-      "9": "Texto verde em um plano de fundo preto",
-      "10": "Escolha a cor do texto:",
-      "11": "Escolha a cor do plano de fundo:"
-    },
-    "submit": "Substituir"
-  },
-  "replaceColorPdf": {
-    "tags": "Substitui Cor, Operações na Página, back end, lado do servidor"
+  "replaceColor": {
+    "tags": "Substituir cor,Operações de página,Back end,server side"
   },
   "login": {
     "title": "Iniciar sessão",
     "header": "Iniciar sessão",
     "signin": "Iniciar sessão",
+    "signInWith": "Entrar com",
+    "signInAnonymously": "Cadastrar-se como convidado",
     "rememberme": "Lembrar de mim",
     "invalid": "Usuário ou senha inválidos.",
     "locked": "Sua conta foi bloqueada.",
@@ -1441,12 +2625,70 @@
     "alreadyLoggedIn": "Você já está conectado em",
     "alreadyLoggedIn2": "aparelhos. Por favor saia dos aparelhos e tente novamente.",
     "toManySessions": "Você tem muitas sessões ativas",
-    "logoutMessage": "Você foi desconectado."
+    "logoutMessage": "Você foi desconectado.",
+    "youAreLoggedIn": "Você está conectado!",
+    "email": "E-mail",
+    "password": "Senha",
+    "enterEmail": "Insira seu e-mail",
+    "enterPassword": "Insira sua senha",
+    "loggingIn": "Entrando...",
+    "signingIn": "Fazendo login...",
+    "login": "Login",
+    "or": "Ou",
+    "useMagicLink": "Usar link mágico",
+    "enterEmailForMagicLink": "Insira seu e-mail para link mágico",
+    "sending": "Enviando…",
+    "sendMagicLink": "Enviar link mágico",
+    "cancel": "Cancelar",
+    "dontHaveAccount": "Não tem uma conta? Cadastre-se",
+    "home": "Início",
+    "debug": "Depurar",
+    "signOut": "Sair",
+    "pleaseEnterBoth": "Insira e-mail e senha",
+    "pleaseEnterEmail": "Insira seu endereço de e-mail",
+    "magicLinkSent": "Link mágico enviado para {{email}}! Verifique seu e-mail e clique no link para entrar.",
+    "passwordResetSent": "Link de redefinição de senha enviado para {{email}}! Verifique seu e-mail e siga as instruções.",
+    "failedToSignIn": "Falha ao entrar com {{provider}}: {{message}}",
+    "unexpectedError": "Erro inesperado: {{message}}"
+  },
+  "signup": {
+    "title": "Criar uma conta",
+    "subtitle": "Junte-se ao Stirling PDF para começar",
+    "name": "Nome",
+    "email": "E-mail",
+    "password": "Senha",
+    "confirmPassword": "Confirmar senha",
+    "enterName": "Insira seu nome",
+    "enterEmail": "Insira seu e-mail",
+    "enterPassword": "Insira sua senha",
+    "confirmPasswordPlaceholder": "Confirmar senha",
+    "or": "ou",
+    "creatingAccount": "Criando conta...",
+    "signUp": "Cadastrar",
+    "alreadyHaveAccount": "Já tem uma conta? Entre",
+    "pleaseFillAllFields": "Preencha todos os campos",
+    "passwordsDoNotMatch": "As senhas não correspondem",
+    "passwordTooShort": "A senha deve ter pelo menos 6 caracteres",
+    "invalidEmail": "Insira um endereço de e-mail válido",
+    "checkEmailConfirmation": "Verifique seu e-mail para um link de confirmação e conclua seu cadastro.",
+    "accountCreatedSuccessfully": "Conta criada com sucesso! Agora você pode entrar.",
+    "unexpectedError": "Erro inesperado: {{message}}"
   },
   "pdfToSinglePage": {
     "title": "PDF para Página Única",
     "header": "PDF para Página Única",
-    "submit": "Converter para Página Única"
+    "submit": "Converter para Página Única",
+    "description": "Esta ferramenta irá mesclar todas as páginas do seu PDF em uma única página grande. A largura permanecerá a mesma das páginas originais, mas a altura será a soma de todas as alturas.",
+    "filenamePrefix": "pagina_unica",
+    "files": {
+      "placeholder": "Selecione um arquivo PDF na visualização principal para começar"
+    },
+    "error": {
+      "failed": "Ocorreu um erro ao converter para página única."
+    },
+    "results": {
+      "title": "Resultados de página única"
+    }
   },
   "pageExtracter": {
     "title": "Extrair Página(s)",
@@ -1477,10 +2719,38 @@
   },
   "compress": {
     "title": "Comprimir",
+    "desc": "Comprimir PDFs para reduzir o tamanho do arquivo.",
     "header": "Comprimir",
+    "method": {
+      "title": "Método de compressão",
+      "quality": "Qualidade",
+      "filesize": "Tamanho do Arquivo"
+    },
     "credit": "Este serviço usa o Qpdf para compressão/otimização de PDF.",
     "grayscale": {
       "label": "Aplicar escala de cinza para compressão"
+    },
+    "tooltip": {
+      "header": {
+        "title": "Visão geral das configurações de compressão"
+      },
+      "description": {
+        "title": "Descrição",
+        "text": "A compressão é uma forma fácil de reduzir o tamanho do arquivo. Escolha Tamanho do arquivo para informar um tamanho alvo e deixarmos a qualidade ajustada para você. Escolha Qualidade para definir manualmente a intensidade da compressão."
+      },
+      "qualityAdjustment": {
+        "title": "Ajuste de qualidade",
+        "text": "Arraste o controle deslizante para ajustar a intensidade da compressão. Valores menores (1–3) preservam a qualidade, mas resultam em arquivos maiores. Valores maiores (7–9) reduzem mais o arquivo, porém diminuem a clareza das imagens.",
+        "bullet1": "Valores menores preservam a qualidade",
+        "bullet2": "Valores maiores reduzem o tamanho do arquivo"
+      },
+      "grayscale": {
+        "title": "Tons de cinza",
+        "text": "Selecione esta opção para converter todas as imagens para preto e branco, o que pode reduzir significativamente o tamanho do arquivo, especialmente para PDFs digitalizados ou documentos com muitas imagens."
+      }
+    },
+    "error": {
+      "failed": "Ocorreu um erro ao comprimir o PDF."
     },
     "selectText": {
       "1": {
@@ -1491,20 +2761,17 @@
       "4": "Modo Automático - Ajusta automaticamente a qualidade para atingir o tamanho exato desejado",
       "5": "Tamanho esperado do PDF (por exemplo, 25 MB, 10,8 MB, 25 KB):"
     },
-    "submit": "Comprimir",
-    "method": {
-      "filesize": "Tamanho do Arquivo"
-    }
+    "submit": "Comprimir"
   },
   "decrypt": {
-    "passwordPrompt": "This file is password-protected. Please enter the password:",
-    "cancelled": "Operation cancelled for PDF: {0}",
-    "noPassword": "No password provided for encrypted PDF: {0}",
-    "invalidPassword": "Please try again with the correct password.",
-    "invalidPasswordHeader": "Incorrect password or unsupported encryption for PDF: {0}",
-    "unexpectedError": "There was an error processing the file. Please try again.",
-    "serverError": "Server error while decrypting: {0}",
-    "success": "File decrypted successfully."
+    "passwordPrompt": "Este arquivo está protegido por senha. Insira a senha:",
+    "cancelled": "Operação cancelada para PDF: {0}",
+    "noPassword": "Nenhuma senha fornecida para PDF criptografado: {0}",
+    "invalidPassword": "Tente novamente com a senha correta.",
+    "invalidPasswordHeader": "Senha incorreta ou criptografia não suportada para PDF: {0}",
+    "unexpectedError": "Houve um erro ao processar o arquivo. Tente novamente.",
+    "serverError": "Erro do servidor ao descriptografar: {0}",
+    "success": "Arquivo descriptografado com sucesso."
   },
   "multiTool-advert": {
     "message": "Esta função também está disponível em <a href=\"{0}\">Multiferramentas de PDF</a>. Com uma interface mais completa e funções adicionais."
@@ -1629,6 +2896,12 @@
     },
     "note": "Notas de Lançamento estão disponíveis apenas em Inglês"
   },
+  "swagger": {
+    "title": "Documentação da API",
+    "header": "Documentação da API",
+    "desc": "Visualize e teste os endpoints da API do Stirling PDF",
+    "tags": "api,documentação,swagger,endpoints,desenvolvimento"
+  },
   "cookieBanner": {
     "popUp": {
       "title": "Como nós utilizamos Cookies:",
@@ -1666,52 +2939,288 @@
       }
     }
   },
-  "download": "Baixar (JSON)",
-  "undo": "Desfazer",
-  "convert": {
-    "title": "Converter",
-    "settings": "Configurações",
-    "color": "Cor",
-    "greyscale": "Escala de Cinza",
-    "fillPage": "Preencher a página",
-    "pdfaDigitalSignatureWarning": "O PDF contém uma assinatura digital. Isso será removido na próxima etapa.",
-    "grayscale": "Escala de Cinza"
+  "removeMetadata": {
+    "submit": "Remover metadados"
   },
-  "attachments": {
-    "tags": "embed,attach,file,attachment,attachments",
-    "title": "Add attachments",
-    "header": "Add attachments",
-    "submit": "Add attachments"
+  "sidebar": {
+    "toggle": "Alternar barra lateral"
+  },
+  "theme": {
+    "toggle": "Alternar tema"
+  },
+  "view": {
+    "viewer": "Visualizador",
+    "pageEditor": "Editor de páginas",
+    "fileManager": "Gerenciador de arquivos"
+  },
+  "pageEditor": {
+    "title": "Editor de páginas",
+    "save": "Salvar alterações",
+    "noPdfLoaded": "Nenhum PDF carregado. Faça upload de um PDF para editar.",
+    "rotatedLeft": "Giro à esquerda:",
+    "rotatedRight": "Giro à direita:",
+    "deleted": "Excluído:",
+    "movedLeft": "Movido para a esquerda:",
+    "movedRight": "Movido para a direita:",
+    "splitAt": "Dividir em:",
+    "insertedPageBreak": "Quebra de página inserida em:",
+    "addFileNotImplemented": "Adicionar arquivo não implementado na demonstração",
+    "closePdf": "Fechar PDF",
+    "reset": "Redefinir alterações",
+    "zoomIn": "Ampliar",
+    "zoomOut": "Reduzir",
+    "fitToWidth": "Ajustar à largura",
+    "actualSize": "Tamanho real"
+  },
+  "viewer": {
+    "firstPage": "Primeira página",
+    "lastPage": "Última página",
+    "previousPage": "Página anterior",
+    "nextPage": "Próxima página",
+    "zoomIn": "Ampliar",
+    "zoomOut": "Reduzir",
+    "singlePageView": "Visualização de página única",
+    "dualPageView": "Visualização de duas páginas"
   },
   "rightRail": {
+    "closeSelected": "Fechar arquivos selecionados",
     "selectAll": "Selecionar Tudo",
-    "deselectAll": "Desselecionar Tudo"
+    "deselectAll": "Desselecionar Tudo",
+    "selectByNumber": "Selecionar por números de página",
+    "deleteSelected": "Excluir páginas selecionadas",
+    "closePdf": "Fechar PDF",
+    "exportAll": "Exportar PDF",
+    "downloadSelected": "Baixar arquivos selecionados",
+    "downloadAll": "Baixar tudo",
+    "toggleTheme": "Alternar tema",
+    "language": "Idioma",
+    "search": "Pesquisar PDF",
+    "panMode": "Modo de panorâmica",
+    "rotateLeft": "Girar à esquerda",
+    "rotateRight": "Girar à direita",
+    "toggleSidebar": "Alternar barra lateral"
+  },
+  "search": {
+    "title": "Pesquisar PDF",
+    "placeholder": "Digite o termo de busca..."
+  },
+  "guestBanner": {
+    "title": "Você está usando o Stirling PDF como convidado!",
+    "message": "Crie uma conta gratuita para salvar seu trabalho, acessar mais recursos e apoiar o projeto.",
+    "dismiss": "Dispensar banner",
+    "signUp": "Inscreva-se grátis"
+  },
+  "toolPicker": {
+    "searchPlaceholder": "Pesquisar ferramentas...",
+    "noToolsFound": "Nenhuma ferramenta encontrada",
+    "allTools": "TODAS AS FERRAMENTAS",
+    "quickAccess": "ACESSO RÁPIDO",
+    "categories": {
+      "standardTools": "Ferramentas padrão",
+      "advancedTools": "Ferramentas avançadas",
+      "recommendedTools": "Ferramentas recomendadas"
+    },
+    "subcategories": {
+      "signing": "Assinatura",
+      "documentSecurity": "Segurança de documentos",
+      "verification": "Verificação",
+      "documentReview": "Revisão de documentos",
+      "pageFormatting": "Formatação de página",
+      "extraction": "Extração",
+      "removal": "Remoção",
+      "automation": "Automação",
+      "general": "Geral",
+      "advancedFormatting": "Formatação avançada",
+      "developerTools": "Ferramentas de desenvolvedor"
+    }
   },
   "quickAccess": {
-    "sign": "Assinar"
+    "read": "Ler",
+    "sign": "Assinar",
+    "automate": "Automatizar",
+    "files": "Arquivos",
+    "activity": "Atividade",
+    "config": "Config",
+    "allTools": "Todas as ferramentas"
   },
   "fileUpload": {
+    "selectFile": "Selecionar um arquivo",
+    "selectFiles": "Selecionar arquivos",
+    "selectPdfToView": "Selecione um PDF para visualizar",
+    "selectPdfToEdit": "Selecione um PDF para editar",
+    "chooseFromStorage": "Escolha um arquivo do armazenamento ou faça upload de um novo PDF",
+    "chooseFromStorageMultiple": "Escolha arquivos do armazenamento ou faça upload de novos PDFs",
+    "loadFromStorage": "Carregar do armazenamento",
+    "filesAvailable": "arquivos disponíveis",
     "loading": "Carregando...",
-    "or": "ou"
+    "or": "ou",
+    "dropFileHere": "Solte o arquivo aqui ou clique para fazer upload",
+    "dropFilesHere": "Solte os arquivos aqui ou clique no botão de upload",
+    "pdfFilesOnly": "Apenas arquivos PDF",
+    "supportedFileTypes": "Tipos de arquivo suportados",
+    "upload": "Fazer upload",
+    "uploadFile": "Fazer upload de arquivo",
+    "uploadFiles": "Fazer upload de arquivos",
+    "noFilesInStorage": "Nenhum arquivo disponível no armazenamento. Primeiro faça upload de alguns arquivos.",
+    "selectFromStorage": "Selecionar do armazenamento",
+    "backToTools": "Voltar às ferramentas",
+    "addFiles": "Adicionar arquivos",
+    "dragFilesInOrClick": "Arraste arquivos ou clique em \"Adicionar arquivos\" para procurar"
   },
   "fileManager": {
+    "title": "Fazer upload de arquivos PDF",
+    "subtitle": "Adicione arquivos ao seu armazenamento para fácil acesso entre as ferramentas",
+    "filesSelected": "arquivos selecionados",
+    "clearSelection": "Limpar seleção",
+    "openInFileEditor": "Abrir no editor de arquivos",
+    "uploadError": "Falha ao fazer upload de alguns arquivos.",
+    "failedToOpen": "Falha ao abrir o arquivo. Ele pode ter sido removido do armazenamento.",
+    "failedToLoad": "Falha ao carregar o arquivo para o conjunto ativo.",
+    "storageCleared": "O navegador limpou o armazenamento. Os arquivos foram removidos. Reenvie-os.",
+    "clearAll": "Limpar tudo",
+    "reloadFiles": "Recarregar arquivos",
+    "dragDrop": "Arraste e solte arquivos aqui",
+    "clickToUpload": "Clique para fazer upload de arquivos",
+    "selectedFiles": "Arquivos selecionados",
+    "storage": "Armazenamento",
+    "filesStored": "arquivos armazenados",
+    "storageError": "Ocorreu um erro de armazenamento",
+    "storageLow": "O armazenamento está acabando. Considere remover arquivos antigos.",
+    "noFileSelected": "Nenhum arquivo selecionado",
+    "showHistory": "Mostrar histórico",
+    "hideHistory": "Ocultar histórico",
+    "fileHistory": "Histórico de arquivos",
+    "loadingHistory": "Carregando histórico...",
+    "lastModified": "Última modificação",
+    "toolChain": "Ferramentas aplicadas",
+    "restore": "Restaurar",
+    "searchFiles": "Pesquisar arquivos...",
+    "recent": "Recentes",
+    "localFiles": "Arquivos locais",
+    "googleDrive": "Google Drive",
+    "googleDriveShort": "Drive",
+    "myFiles": "Meus arquivos",
+    "noRecentFiles": "Nenhum arquivo recente encontrado",
+    "dropFilesHint": "Solte os arquivos aqui para fazer upload",
+    "googleDriveNotAvailable": "Integração com Google Drive indisponível",
+    "openFiles": "Abrir arquivos",
+    "openFile": "Abrir arquivo",
+    "details": "Detalhes do arquivo",
     "fileName": "Nome",
+    "fileFormat": "Formato",
+    "fileSize": "Tamanho",
     "fileVersion": "Versão",
+    "totalSelected": "Total selecionado",
+    "dropFilesHere": "Solte os arquivos aqui",
     "selectAll": "Selecionar Tudo",
     "deselectAll": "Desselecionar Tudo",
     "deleteSelected": "Apagar Selecionados",
+    "downloadSelected": "Baixar selecionados",
+    "selectedCount": "{{count}} selecionado(s)",
     "download": "Baixar (JSON)",
-    "delete": "Apagar"
+    "delete": "Apagar",
+    "unsupported": "Não suportado"
+  },
+  "storage": {
+    "temporaryNotice": "Os arquivos são armazenados temporariamente no seu navegador e podem ser limpos automaticamente",
+    "storageLimit": "Limite de armazenamento",
+    "storageUsed": "Armazenamento temporário usado",
+    "storageFull": "O armazenamento está quase cheio. Considere remover alguns arquivos.",
+    "fileTooLarge": "Arquivo muito grande. Tamanho máximo por arquivo é",
+    "storageQuotaExceeded": "Cota de armazenamento excedida. Remova alguns arquivos antes de enviar mais.",
+    "approximateSize": "Tamanho aproximado"
   },
   "sanitize": {
+    "title": "Sanitizar",
+    "desc": "Remova elementos potencialmente nocivos de arquivos PDF.",
     "submit": "Higienizar",
+    "completed": "Sanitização concluída com sucesso",
+    "error.generic": "Falha na sanitização",
+    "error.failed": "Ocorreu um erro ao sanitizar o PDF.",
+    "filenamePrefix": "sanitizado",
+    "sanitizationResults": "Resultados da sanitização",
     "steps": {
-      "settings": "Configurações"
+      "files": "Arquivos",
+      "settings": "Configurações",
+      "results": "Resultados"
+    },
+    "files": {
+      "placeholder": "Selecione um arquivo PDF na visualização principal para começar"
+    },
+    "options": {
+      "title": "Opções de sanitização",
+      "note": "Selecione os elementos que deseja remover do PDF. Pelo menos uma opção deve ser selecionada.",
+      "removeJavaScript.desc": "Remover ações e scripts JavaScript do PDF",
+      "removeEmbeddedFiles.desc": "Remover quaisquer arquivos incorporados no PDF",
+      "removeXMPMetadata.desc": "Remover metadados XMP do PDF",
+      "removeMetadata.desc": "Remover metadados de informações do documento (título, autor etc.)",
+      "removeLinks.desc": "Remover links externos e ações de lançamento do PDF",
+      "removeFonts.desc": "Remover fontes incorporadas do PDF"
+    }
+  },
+  "addPassword": {
+    "title": "Proteger PDF",
+    "desc": "Criptografe seu documento PDF com uma senha.",
+    "completed": "Proteção por senha aplicada",
+    "submit": "Criptografar",
+    "filenamePrefix": "criptografado",
+    "error": {
+      "failed": "Ocorreu um erro ao criptografar o PDF."
+    },
+    "passwords": {
+      "stepTitle": "Senhas e criptografia",
+      "completed": "Senhas configuradas",
+      "user": {
+        "label": "Senha do usuário",
+        "placeholder": "Insira a senha do usuário"
+      },
+      "owner": {
+        "label": "Senha do proprietário",
+        "placeholder": "Insira a senha do proprietário"
+      }
+    },
+    "encryption": {
+      "keyLength": {
+        "label": "Tamanho da chave de criptografia",
+        "40bit": "40 bits (Baixo)",
+        "128bit": "128 bits (Padrão)",
+        "256bit": "256 bits (Alto)"
+      }
+    },
+    "results": {
+      "title": "PDFs criptografados"
+    },
+    "tooltip": {
+      "header": {
+        "title": "Visão geral da proteção por senha"
+      },
+      "passwords": {
+        "title": "Tipos de senha",
+        "text": "A senha do usuário restringe a abertura do documento, enquanto a senha do proprietário controla o que pode ser feito com o documento após aberto. Você pode definir ambas ou apenas uma.",
+        "bullet1": "Senha do usuário: Necessária para abrir o PDF",
+        "bullet2": "Senha do proprietário: Controla as permissões do documento (não suportado por todos os visualizadores de PDF)"
+      },
+      "encryption": {
+        "title": "Níveis de criptografia",
+        "text": "Níveis mais altos de criptografia oferecem melhor segurança, mas podem não ser compatíveis com visualizadores de PDF mais antigos.",
+        "bullet1": "40 bits: Segurança básica, compatível com leitores antigos",
+        "bullet2": "128 bits: Segurança padrão, amplamente suportada",
+        "bullet3": "256 bits: Segurança máxima, requer leitores modernos"
+      },
+      "permissions": {
+        "title": "Alterar Permissões",
+        "text": "Essas permissões controlam o que os usuários podem fazer com o PDF. São mais eficazes quando combinadas com uma senha de proprietário."
+      }
     }
   },
   "changePermissions": {
     "title": "Alterar Permissões",
+    "desc": "Altere as restrições e permissões do documento.",
+    "completed": "Permissões alteradas",
     "submit": "Alterar Permissões",
+    "error": {
+      "failed": "Ocorreu um erro ao alterar as permissões do PDF."
+    },
     "permissions": {
       "preventAssembly": {
         "label": "Impedir montagem do documento."
@@ -1738,10 +3247,195 @@
         "label": "Impedir impressão de formatos diferentes."
       }
     },
+    "results": {
+      "title": "PDFs modificados"
+    },
     "tooltip": {
       "header": {
         "title": "Alterar Permissões"
+      },
+      "description": {
+        "text": "Altera as permissões do documento, permitindo/bloqueando o acesso a diferentes recursos nos leitores de PDF."
+      },
+      "warning": {
+        "text": "Para tornar essas permissões imutáveis, use a ferramenta Adicionar senha para definir uma senha de proprietário."
       }
     }
-  }
+  },
+  "removePassword": {
+    "title": "Desproteger PDF",
+    "desc": "Descriptografar o PDF realizando a remoção da senha.",
+    "tags": "seguro, descriptografar, segurança, remover senha",
+    "password": {
+      "stepTitle": "Desproteger PDF",
+      "label": "Senha Atual",
+      "placeholder": "Insira a senha atual",
+      "completed": "Senha configurada"
+    },
+    "filenamePrefix": "descriptografado",
+    "error": {
+      "failed": "Ocorreu um erro ao remover a senha do PDF."
+    },
+    "tooltip": {
+      "description": "Remover a proteção por senha requer a senha usada para criptografar o PDF. Isso irá descriptografar o documento, tornando-o acessível sem senha."
+    },
+    "submit": "Descriptografar",
+    "results": {
+      "title": "PDFs descriptografados"
+    }
+  },
+  "automate": {
+    "title": "Automatizar",
+    "desc": "Crie fluxos de trabalho de várias etapas encadeando ações de PDF. Ideal para tarefas recorrentes.",
+    "invalidStep": "Etapa inválida",
+    "files": {
+      "placeholder": "Selecione arquivos para processar com esta automação"
+    },
+    "selection": {
+      "title": "Seleção de automação",
+      "saved": {
+        "title": "Salvos"
+      },
+      "createNew": {
+        "title": "Criar nova automação"
+      },
+      "suggested": {
+        "title": "Sugeridos"
+      }
+    },
+    "creation": {
+      "createTitle": "Criar automação",
+      "editTitle": "Editar automação",
+      "intro": "As automações executam ferramentas sequencialmente. Para começar, adicione as ferramentas na ordem em que deseja executá-las.",
+      "name": {
+        "label": "Nome da automação",
+        "placeholder": "Minha automação"
+      },
+      "description": {
+        "label": "Descrição (opcional)",
+        "placeholder": "Descreva o que esta automação faz..."
+      },
+      "tools": {
+        "selectTool": "Selecionar uma ferramenta...",
+        "selected": "Ferramentas selecionadas",
+        "remove": "Remover ferramenta",
+        "configure": "Configurar ferramenta",
+        "notConfigured": "! Não configurado",
+        "addTool": "Adicionar ferramenta",
+        "add": "Adicionar uma ferramenta..."
+      },
+      "save": "Salvar automação",
+      "unsavedChanges": {
+        "title": "Alterações não salvas",
+        "message": "Você tem alterações não salvas. Tem certeza de que deseja voltar? Todas as alterações serão perdidas.",
+        "cancel": "Cancelar",
+        "confirm": "Voltar"
+      },
+      "icon": {
+        "label": "Ícone"
+      }
+    },
+    "run": {
+      "title": "Executar automação"
+    },
+    "sequence": {
+      "unnamed": "Automação sem nome",
+      "steps": "{{count}} etapas",
+      "running": "Executando automação...",
+      "run": "Executar automação",
+      "finish": "Concluir"
+    },
+    "reviewTitle": "Resultados da automação",
+    "config": {
+      "loading": "Carregando configuração da ferramenta...",
+      "noSettings": "Esta ferramenta não possui configurações.",
+      "title": "Configurar {{toolName}}",
+      "description": "Configure as configurações desta ferramenta. Essas configurações serão aplicadas quando a automação for executada.",
+      "cancel": "Cancelar",
+      "save": "Salvar configuração"
+    },
+    "copyToSaved": "Copiar para Salvos"
+  },
+  "automation": {
+    "suggested": {
+      "securePdfIngestion": "Ingestão segura de PDF",
+      "securePdfIngestionDesc": "Fluxo de processamento de PDF abrangente que higieniza documentos, aplica OCR com limpeza, converte para o formato PDF/A para arquivamento de longo prazo e otimiza o tamanho do arquivo.",
+      "emailPreparation": "Preparação para e-mail",
+      "emailPreparationDesc": "Otimiza PDFs para distribuição por e-mail comprimindo arquivos, dividindo documentos grandes em partes de 20MB para compatibilidade com e-mail e removendo metadados para privacidade.",
+      "secureWorkflow": "Fluxo de segurança",
+      "secureWorkflowDesc": "Protege documentos PDF removendo conteúdo potencialmente malicioso, como JavaScript e arquivos incorporados, e adiciona proteção por senha para evitar acesso não autorizado. A senha padrão é 'password'.",
+      "processImages": "Processar imagens",
+      "processImagesDesc": "Converte vários arquivos de imagem em um único documento PDF e, em seguida, aplica tecnologia de OCR para extrair texto pesquisável das imagens."
+    }
+  },
+  "common": {
+    "copy": "Copiar",
+    "copied": "Copiado!",
+    "refresh": "Atualizar",
+    "retry": "Tentar novamente",
+    "remaining": "restante",
+    "used": "usado",
+    "available": "disponível",
+    "cancel": "Cancelar"
+  },
+  "config": {
+    "account": {
+      "overview": {
+        "title": "Configurações da conta",
+        "manageAccountPreferences": "Gerencie as preferências da sua conta",
+        "guestDescription": "Você entrou como convidado. Considere atualizar sua conta acima."
+      },
+      "upgrade": {
+        "title": "Atualizar conta de convidado",
+        "description": "Vincule sua conta para preservar seu histórico e acessar mais recursos!",
+        "socialLogin": "Atualizar com conta social",
+        "linkWith": "Vincular com",
+        "emailPassword": "ou insira seu e-mail e senha",
+        "email": "E-mail",
+        "emailPlaceholder": "Insira seu e-mail",
+        "password": "Senha (opcional)",
+        "passwordPlaceholder": "Defina uma senha",
+        "passwordNote": "Deixe em branco para usar apenas verificação por e-mail",
+        "upgradeButton": "Atualizar conta"
+      }
+    },
+    "apiKeys": {
+      "description": "Sua chave de API para acessar a suíte de ferramentas de PDF do Stirling. Copie-a para seu projeto ou atualize para gerar uma nova.",
+      "publicKeyAriaLabel": "Chave pública de API",
+      "copyKeyAriaLabel": "Copiar chave de API",
+      "refreshAriaLabel": "Atualizar chave de API",
+      "includedCredits": "Créditos incluídos",
+      "purchasedCredits": "Créditos comprados",
+      "totalCredits": "Créditos totais",
+      "chartAriaLabel": "Uso de créditos: incluídos {{includedUsed}} de {{includedTotal}}, comprados {{purchasedUsed}} de {{purchasedTotal}}",
+      "nextReset": "Próxima redefinição",
+      "lastApiUse": "Último uso da API",
+      "overlayMessage": "Gere uma chave para ver os créditos e os créditos disponíveis",
+      "label": "Chave de API",
+      "guestInfo": "Usuários convidados não recebem chaves de API. Crie uma conta para obter uma chave de API que você possa usar em suas aplicações.",
+      "goToAccount": "Ir para a conta",
+      "refreshModal": {
+        "title": "Atualizar chaves de API",
+        "warning": "⚠️ Aviso: Esta ação gerará novas chaves de API e tornará suas chaves anteriores inválidas.",
+        "impact": "Quaisquer aplicativos ou serviços que estejam usando essas chaves deixarão de funcionar até que você os atualize com as novas chaves.",
+        "confirmPrompt": "Tem certeza de que deseja continuar?",
+        "confirmCta": "Atualizar chaves"
+      },
+      "generateError": "Não conseguimos gerar sua chave de API."
+    }
+  },
+  "AddAttachmentsRequest": {
+    "attachments": "Selecionar anexos",
+    "info": "Selecione arquivos para anexar ao seu PDF. Esses arquivos serão incorporados e acessíveis pelo painel de anexos do PDF.",
+    "selectFiles": "Selecionar arquivos para anexar",
+    "placeholder": "Escolha arquivos...",
+    "addMoreFiles": "Adicionar mais arquivos...",
+    "selectedFiles": "Arquivos selecionados",
+    "submit": "Adicionar anexos",
+    "results": {
+      "title": "Resultados dos anexos"
+    }
+  },
+  "termsAndConditions": "Termos e Condições",
+  "logOut": "Sair"
 }

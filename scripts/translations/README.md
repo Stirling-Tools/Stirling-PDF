@@ -1,8 +1,95 @@
 # Translation Management Scripts
 
-This directory contains Python scripts for managing frontend translations in Stirling PDF. These tools help analyze, merge, and manage translations against the en-GB golden truth file.
+This directory contains Python scripts for managing frontend translations in Stirling PDF. These tools help analyze, merge, validate, and manage translations against the en-GB golden truth file.
 
 ## Scripts Overview
+
+### 0. Validation Scripts (Run First!)
+
+#### `json_validator.py`
+Validates JSON syntax in translation files with detailed error reporting.
+
+**Usage:**
+```bash
+# Validate single file
+python scripts/translations/json_validator.py ar_AR_batch_1_of_3.json
+
+# Validate all batches for a language
+python scripts/translations/json_validator.py --all-batches ar_AR
+
+# Validate pattern with wildcards
+python scripts/translations/json_validator.py "ar_AR_batch_*.json"
+
+# Brief output (no context)
+python scripts/translations/json_validator.py --all-batches ar_AR --brief
+
+# Only show files with errors
+python scripts/translations/json_validator.py --all-batches ar_AR --quiet
+```
+
+**Features:**
+- Validates JSON syntax with detailed error messages
+- Shows exact line, column, and character position of errors
+- Displays context around errors for easy fixing
+- Suggests common fixes based on error type
+- Detects unescaped quotes and backslashes
+- Reports entry counts for valid files
+- Exit code 1 if any files invalid (good for CI/CD)
+
+**Common Issues Detected:**
+- Unescaped quotes inside strings: `"text with "quotes""` → `"text with \"quotes\""`
+- Invalid backslash escapes: `\d{4}` → `\\d{4}`
+- Missing commas between entries
+- Trailing commas before closing braces
+
+#### `validate_placeholders.py`
+Validates that translation files have correct placeholders matching en-GB (source of truth).
+
+**Usage:**
+```bash
+# Validate all languages
+python scripts/translations/validate_placeholders.py
+
+# Validate specific language
+python scripts/translations/validate_placeholders.py --language es-ES
+
+# Show detailed text samples
+python scripts/translations/validate_placeholders.py --verbose
+
+# Output as JSON
+python scripts/translations/validate_placeholders.py --json
+```
+
+**Features:**
+- Detects missing placeholders (e.g., {n}, {total}, {filename})
+- Detects extra placeholders not in en-GB
+- Shows exact keys and text where issues occur
+- Exit code 1 if issues found (good for CI/CD)
+
+#### `validate_json_structure.py`
+Validates JSON structure and key consistency with en-GB.
+
+**Usage:**
+```bash
+# Validate all languages
+python scripts/translations/validate_json_structure.py
+
+# Validate specific language
+python scripts/translations/validate_json_structure.py --language de-DE
+
+# Show all missing/extra keys
+python scripts/translations/validate_json_structure.py --verbose
+
+# Output as JSON
+python scripts/translations/validate_json_structure.py --json
+```
+
+**Features:**
+- Validates JSON syntax
+- Detects missing keys (not translated yet)
+- Detects extra keys (not in en-GB, should be removed)
+- Reports key counts and structure differences
+- Exit code 1 if issues found (good for CI/CD)
 
 ### 1. `translation_analyzer.py`
 Analyzes translation files to find missing translations, untranslated entries, and provides completion statistics.
@@ -142,7 +229,20 @@ python scripts/translations/translation_analyzer.py --language it-IT --summary
 
 #### Step 2: Extract Untranslated Entries
 ```bash
+# For small files (< 1200 entries)
 python scripts/translations/compact_translator.py it-IT --output to_translate.json
+
+# For large files, split into batches
+python scripts/translations/compact_translator.py it-IT --output it_IT_batch --batch-size 400
+# Creates: it_IT_batch_1_of_N.json, it_IT_batch_2_of_N.json, etc.
+```
+
+#### Step 2.5: Validate JSON (if using batches)
+```bash
+# After AI translates the batches, validate them before merging
+python scripts/translations/json_validator.py --all-batches it_IT
+
+# Fix any errors reported (common issues: unescaped quotes, backslashes)
 ```
 
 **Output format**: Compact JSON with minimal whitespace
@@ -309,6 +409,34 @@ ignore = [
 
 ### Common Issues and Solutions
 
+#### JSON Syntax Errors in AI Translations
+**Problem**: AI-translated batch files have JSON syntax errors
+**Symptoms**:
+- `JSONDecodeError: Expecting ',' delimiter`
+- `JSONDecodeError: Invalid \escape`
+
+**Solution**:
+```bash
+# 1. Validate all batches to find errors
+python scripts/translations/json_validator.py --all-batches ar_AR
+
+# 2. Check detailed error with context
+python scripts/translations/json_validator.py ar_AR_batch_2_of_3.json
+
+# 3. Fix the reported issues:
+#    - Unescaped quotes: "text with "quotes"" → "text with \"quotes\""
+#    - Backslashes in regex: "\d{4}" → "\\d{4}"
+#    - Missing commas between entries
+
+# 4. Validate again until all pass
+python scripts/translations/json_validator.py --all-batches ar_AR
+```
+
+**Common fixes:**
+- Arabic/RTL text with embedded quotes: Always escape with backslash
+- Regex patterns: Double all backslashes (`\d` → `\\d`)
+- Check for missing/extra commas at line reported in error
+
 #### [UNTRANSLATED] Pollution
 **Problem**: Hundreds of [UNTRANSLATED] markers from incomplete translation attempts
 **Solution**:
@@ -325,6 +453,54 @@ ignore = [
 **Solution**: Use `json_beautifier.py` to restructure files to match en-GB exactly
 
 ## Real-World Examples
+
+### Complete Arabic Translation with Validation (Batch Method)
+```bash
+# Check status
+python scripts/translations/translation_analyzer.py --language ar-AR --summary
+# Result: 50% complete, 1088 missing
+
+# Extract in batches due to AI token limits
+python scripts/translations/compact_translator.py ar-AR --output ar_AR_batch --batch-size 400
+# Created: ar_AR_batch_1_of_3.json (400 entries)
+#          ar_AR_batch_2_of_3.json (400 entries)
+#          ar_AR_batch_3_of_3.json (288 entries)
+
+# [Send each batch to AI for translation]
+
+# Validate translated batches before merging
+python scripts/translations/json_validator.py --all-batches ar_AR
+# Found errors in batch 1 and 2:
+#   - Line 263: Unescaped quotes in "انقر "إضافة ملفات""
+#   - Line 132: Unescaped quotes in "أو "and""
+#   - Line 213: Invalid escape "\d{4}"
+
+# Fix errors manually or with sed, then validate again
+python scripts/translations/json_validator.py --all-batches ar_AR
+# All valid!
+
+# Merge all batches
+python3 << 'EOF'
+import json
+merged = {}
+for i in range(1, 4):
+    with open(f'ar_AR_batch_{i}_of_3.json', 'r', encoding='utf-8') as f:
+        merged.update(json.load(f))
+with open('ar_AR_merged.json', 'w', encoding='utf-8') as f:
+    json.dump(merged, f, ensure_ascii=False, indent=2)
+EOF
+
+# Apply merged translations
+python scripts/translations/translation_merger.py ar-AR apply-translations --translations-file ar_AR_merged.json
+# Result: Applied 1088 translations
+
+# Beautify to match en-GB structure
+python scripts/translations/json_beautifier.py --language ar-AR
+
+# Check final progress
+python scripts/translations/translation_analyzer.py --language ar-AR --summary
+# Result: 98.7% complete, 9 missing, 20 untranslated
+```
 
 ### Complete Italian Translation (Compact Method)
 ```bash
