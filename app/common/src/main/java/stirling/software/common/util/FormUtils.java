@@ -38,6 +38,19 @@ import lombok.extern.slf4j.Slf4j;
 @UtilityClass
 public class FormUtils {
 
+    // Field type constants
+    public static final String FIELD_TYPE_TEXT = "text";
+    public static final String FIELD_TYPE_CHECKBOX = "checkbox";
+    public static final String FIELD_TYPE_COMBOBOX = "combobox";
+    public static final String FIELD_TYPE_LISTBOX = "listbox";
+    public static final String FIELD_TYPE_RADIO = "radio";
+    public static final String FIELD_TYPE_BUTTON = "button";
+    public static final String FIELD_TYPE_SIGNATURE = "signature";
+
+    // Set of choice field types that support options
+    public static final Set<String> CHOICE_FIELD_TYPES =
+            Set.of(FIELD_TYPE_COMBOBOX, FIELD_TYPE_LISTBOX, FIELD_TYPE_RADIO);
+
     public List<FormFieldInfo> extractFormFields(PDDocument document) {
         if (document == null) return List.of();
 
@@ -112,7 +125,6 @@ public class FormUtils {
     public Map<String, Object> buildFillTemplateRecord(List<FormFieldInfo> extracted) {
         if (extracted == null || extracted.isEmpty()) return Map.of();
         Map<String, Object> record = new LinkedHashMap<>();
-        outer:
         for (FormFieldInfo info : extracted) {
             if (info == null || info.name() == null || info.name().isBlank()) {
                 continue;
@@ -120,18 +132,18 @@ public class FormUtils {
             String type = info.type();
             Object value;
             switch (type) {
-                case "checkbox":
+                case FIELD_TYPE_CHECKBOX:
                     value = isChecked(info.value()) ? Boolean.TRUE : Boolean.FALSE;
                     break;
-                case "listbox":
+                case FIELD_TYPE_LISTBOX:
                     if (info.multiSelect()) {
                         value = new ArrayList<>();
                     } else {
                         value = safeDefault(info.value());
                     }
                     break;
-                case "button":
-                case "signature":
+                case FIELD_TYPE_BUTTON:
+                case FIELD_TYPE_SIGNATURE:
                     continue; // skip non-fillable
                 default:
                     value = safeDefault(info.value());
@@ -263,31 +275,34 @@ public class FormUtils {
                 if (shouldCheckBoxBeChecked(value, candidateStates)) {
                     String onValue = determineCheckBoxOnValue(candidateStates, value);
                     if (onValue != null && !onValue.isBlank()) {
+                        // Set both /V (value) and /AS (appearance state) directly via COS object
                         try {
                             checkBox.getCOSObject().setName(COSName.AS, onValue);
                             checkBox.getCOSObject().setName(COSName.V, onValue);
+
+                            // Verify state was set correctly, only call check() if needed
+                            if (!checkBox.isChecked()) {
+                                try {
+                                    checkBox.check();
+                                } catch (Exception checkProblem) {
+                                    log.debug(
+                                            "Unable to confirm checkbox '{}' state after COS update: {}",
+                                            field.getFullyQualifiedName(),
+                                            checkProblem.getMessage());
+                                }
+                            }
                         } catch (Exception e) {
                             log.debug(
                                     "Failed to set checkbox appearance state directly: {}",
                                     e.getMessage());
-                        }
-                        try {
-                            checkBox.setValue(onValue);
-                        } catch (IllegalArgumentException illegal) {
-                            log.debug(
-                                    "Standard setValue failed for checkbox '{}': {}",
-                                    field.getFullyQualifiedName(),
-                                    illegal.getMessage());
-                            forceCheckBoxValue(checkBox, onValue);
-                        }
-                        if (!checkBox.isChecked()) {
                             try {
-                                checkBox.check();
-                            } catch (Exception checkProblem) {
+                                checkBox.setValue(onValue);
+                            } catch (IllegalArgumentException illegal) {
                                 log.debug(
-                                        "Unable to confirm checkbox '{}' state: {}",
+                                        "Standard setValue failed for checkbox '{}': {}",
                                         field.getFullyQualifiedName(),
-                                        checkProblem.getMessage());
+                                        illegal.getMessage());
+                                forceCheckBoxValue(checkBox, onValue);
                             }
                         }
                     } else {
@@ -392,6 +407,10 @@ public class FormUtils {
         }
 
         if (allowedOptions == null || allowedOptions.isEmpty()) {
+            log.debug(
+                    "No allowed options defined for choice field '{}', accepting all values: {}",
+                    fieldName,
+                    sanitizedSelections);
             return new ArrayList<>(sanitizedSelections);
         }
 
@@ -531,7 +550,7 @@ public class FormUtils {
                 } else if (normal.isStream()) {
                     COSName appearanceState = widget.getAppearanceState();
                     String state = appearanceState != null ? appearanceState.getName() : null;
-                    if (isSettableCheckBoxState(state)) {
+                    if (isSettableCheckBoxState(state) && state != null) {
                         states.add(state.trim());
                     }
                 }
@@ -691,7 +710,8 @@ public class FormUtils {
             return tooltipLabel;
         }
 
-        if (options != null && !options.isEmpty()) {
+        // Only check options for choice-type fields (combobox, listbox, radio)
+        if (CHOICE_FIELD_TYPES.contains(type) && options != null && !options.isEmpty()) {
             String optionCandidate = cleanLabel(options.get(0));
             if (looksGeneric(optionCandidate)) {
                 return optionCandidate;
@@ -866,7 +886,6 @@ public class FormUtils {
                         replacementDefinition,
                         sanitizedOptions); // Don't reuse widget for type changes
 
-                // Only remove original field after successful creation of replacement
                 removeFieldFromDocument(document, acroForm, originalField);
 
                 log.debug(
@@ -880,7 +899,6 @@ public class FormUtils {
                         resolvedType,
                         e.getMessage(),
                         e);
-                // Original field is preserved since we didn't remove it yet
             }
         }
 
@@ -895,7 +913,6 @@ public class FormUtils {
             field.setPartialName(newName);
         }
 
-        // Update label (alternate field name)
         if (modification.label() != null) {
             if (!modification.label().isBlank()) {
                 field.setAlternateFieldName(modification.label());
@@ -904,12 +921,10 @@ public class FormUtils {
             }
         }
 
-        // Update required status
         if (modification.required() != null) {
             field.setRequired(modification.required());
         }
 
-        // Update default value
         if (modification.defaultValue() != null) {
             if (!modification.defaultValue().isBlank()) {
                 field.setValue(modification.defaultValue());
@@ -918,7 +933,6 @@ public class FormUtils {
             }
         }
 
-        // Handle choice field specific properties
         if (field instanceof PDChoice choiceField
                 && (modification.options() != null || modification.multiSelect() != null)) {
 
@@ -948,11 +962,11 @@ public class FormUtils {
     private String fallbackLabelForType(String type, int typeIndex) {
         String suffix = " " + typeIndex;
         return switch (type) {
-            case "checkbox" -> "Checkbox" + suffix;
-            case "radio" -> "Option" + suffix;
-            case "combobox" -> "Dropdown" + suffix;
-            case "listbox" -> "List" + suffix;
-            case "text" -> "Text field" + suffix;
+            case FIELD_TYPE_CHECKBOX -> "Checkbox" + suffix;
+            case FIELD_TYPE_RADIO -> "Option" + suffix;
+            case FIELD_TYPE_COMBOBOX -> "Dropdown" + suffix;
+            case FIELD_TYPE_LISTBOX -> "List" + suffix;
+            case FIELD_TYPE_TEXT -> "Text field" + suffix;
             default -> "Field" + suffix;
         };
     }
@@ -1286,36 +1300,36 @@ public class FormUtils {
      */
     public String detectFieldType(PDField field) {
         if (field instanceof PDSignatureField) {
-            return "signature";
+            return FIELD_TYPE_SIGNATURE;
         }
         if (field instanceof PDPushButton) {
-            return "button";
+            return FIELD_TYPE_BUTTON;
         }
         if (field instanceof PDTextField) {
-            return "text";
+            return FIELD_TYPE_TEXT;
         }
         if (field instanceof PDCheckBox) {
-            return "checkbox";
+            return FIELD_TYPE_CHECKBOX;
         }
         if (field instanceof PDComboBox) {
-            return "combobox";
+            return FIELD_TYPE_COMBOBOX;
         }
         if (field instanceof PDListBox) {
-            return "listbox";
+            return FIELD_TYPE_LISTBOX;
         }
         if (field instanceof PDRadioButton) {
-            return "radio";
+            return FIELD_TYPE_RADIO;
         }
-        return "text";
+        return FIELD_TYPE_TEXT;
     }
 
     private String normalizeFieldType(String type) {
         if (type == null) {
-            return "text";
+            return FIELD_TYPE_TEXT;
         }
         String normalized = type.trim().toLowerCase(Locale.ROOT);
         if (normalized.isEmpty()) {
-            return "text";
+            return FIELD_TYPE_TEXT;
         }
         return normalized;
     }
@@ -1377,11 +1391,14 @@ public class FormUtils {
 
         // Ensure rectangle is valid and set before any appearance-related operations
         // please note removal of this might cause issues
-        if (rectangle == null || rectangle.getWidth() <= 0 || rectangle.getHeight() <= 0) {
+        PDRectangle validRectangle = rectangle;
+        if (validRectangle == null
+                || validRectangle.getWidth() <= 0
+                || validRectangle.getHeight() <= 0) {
             log.warn("Invalid rectangle for field '{}', using default dimensions", name);
-            rectangle = new PDRectangle(100, 100, 100, 20);
+            validRectangle = new PDRectangle(100, 100, 100, 20);
         }
-        widget.setRectangle(rectangle);
+        widget.setRectangle(validRectangle);
         widget.setPage(page);
 
         if (existingWidget == null) {
@@ -1411,12 +1428,8 @@ public class FormUtils {
 
         acroForm.getFields().add(field);
 
-        // Force appearance generation after all properties are set
-        try {
-            widget.constructAppearances();
-        } catch (Exception e) {
-            log.debug("Could not construct appearances for field '{}': {}", name, e.getMessage());
-        }
+        // Appearance generation will be handled by ensureAppearances() in the parent flow
+        // to avoid conflicts and ensure consistency
     }
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
