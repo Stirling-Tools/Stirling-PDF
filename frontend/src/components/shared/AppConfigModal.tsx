@@ -1,7 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { Modal, Text, ActionIcon } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
-import { useAppConfig } from '../../hooks/useAppConfig';
 import LocalIcon from './LocalIcon';
 import Overview from './config/configSections/Overview';
 import { createConfigNavSections } from './config/configNavSections';
