@@ -95,6 +95,7 @@ import ReplaceColorSettings from "../components/tools/replaceColor/ReplaceColorS
 import AddStampAutomationSettings from "../components/tools/addStamp/AddStampAutomationSettings";
 import CertSignAutomationSettings from "../components/tools/certSign/CertSignAutomationSettings";
 import CropAutomationSettings from "../components/tools/crop/CropAutomationSettings";
+import RotateAutomationSettings from "../components/tools/rotate/RotateAutomationSettings";
 
 const showPlaceholderTools = true; // Show all tools; grey out unavailable ones in UI
 
@@ -408,7 +409,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         maxFiles: -1,
         endpoints: ["rotate-pdf"],
         operationConfig: rotateOperationConfig,
-        automationSettings: RotateSettings, //TODO:: Fix
+        automationSettings: RotateAutomationSettings,
         synonyms: getSynonyms(t, "rotate")
       },
       split: {

@@ -850,6 +850,7 @@
   "rotate": {
     "title": "Rotate PDF",
     "submit": "Apply Rotation",
+    "selectRotation":  "Select Rotation Angle (Clockwise)",
     "error": {
       "failed": "An error occurred while rotating the PDF."
     },
