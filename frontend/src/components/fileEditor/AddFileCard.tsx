@@ -24,6 +24,10 @@ const AddFileCard = ({
   const { colorScheme } = useMantineColorScheme();
   const [isUploadHover, setIsUploadHover] = useState(false);
 
+  const handleCardClick = () => {
+    openFilesModal();
+  };
+
   const handleNativeUploadClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     fileInputRef.current?.click();
@@ -66,10 +70,17 @@ const AddFileCard = ({
       />
 
       <div
-        className={`${styles.addFileCard} w-[18rem] h-[22rem] select-none flex flex-col shadow-sm transition-all relative`}
+        className={`${styles.addFileCard} w-[18rem] h-[22rem] select-none flex flex-col shadow-sm transition-all relative cursor-pointer`}
         tabIndex={0}
-        role="region"
+        role="button"
         aria-label={t('fileEditor.addFiles', 'Add files')}
+        onClick={handleCardClick}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleCardClick();
+          }
+        }}
         onDragOver={handleDragOver}
         onDrop={handleDrop}
       >
