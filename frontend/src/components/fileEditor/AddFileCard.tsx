@@ -48,12 +48,12 @@ const AddFileCard = ({
   };
 
   // Prevent this card from interfering with drag and drop to parent Dropzone
-  const handleDragOver = (e: React.DragEvent) => {
+  const handleDragOver = (_e: React.DragEvent) => {
     // Don't prevent default - let the parent Dropzone handle it
     // Don't stop propagation - let it bubble up
   };
 
-  const handleDrop = (e: React.DragEvent) => {
+  const handleDrop = (_e: React.DragEvent) => {
     // Don't prevent default or stop propagation
     // Let the parent Dropzone handle the file drop
   };
