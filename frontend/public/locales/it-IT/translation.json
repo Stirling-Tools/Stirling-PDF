@@ -87,7 +87,10 @@
     "showStack": "Mostra traccia dello stack",
     "copyStack": "Copia traccia dello stack",
     "githubSubmit": "GitHub: apri un ticket",
-    "discordSubmit": "Discord: invia post di supporto"
+    "discordSubmit": "Discord: invia post di supporto",
+    "dismissAllErrors": "Chiudi tutti gli errori",
+    "encryptedPdfMustRemovePassword": "Questo PDF è crittografato o protetto da password. Si prega di sbloccarlo prima di convertire in PDF/A.",
+    "incorrectPasswordProvided": "La password del PDF è errata o non è stata fornita."
   },
   "warning": {
     "tooltipTitle": "Avviso"
@@ -358,179 +361,223 @@
     "sortBy": "Ordinamento:",
     "multiTool": {
       "title": "Multifunzione PDF",
-      "desc": "Unisci, Ruota, Riordina, e Rimuovi pagine"
+      "desc": "Unisci, Ruota, Riordina, e Rimuovi pagine",
+      "tags": "multipli,strumenti"
     },
     "merge": {
       "title": "Unisci",
-      "desc": "Unisci facilmente più PDF in uno."
+      "desc": "Unisci facilmente più PDF in uno.",
+      "tags": "combina,unisci,unifica"
     },
     "split": {
       "title": "Dividi",
-      "desc": "Dividi un singolo PDF in più documenti."
+      "desc": "Dividi un singolo PDF in più documenti.",
+      "tags": "dividi,separa,spezza"
     },
     "rotate": {
       "title": "Ruota",
-      "desc": "Ruota un PDF."
+      "desc": "Ruota un PDF.",
+      "tags": "ruota,capovolgi,orienta"
     },
     "convert": {
       "title": "Converti",
-      "desc": "Converti file tra diversi formati"
+      "desc": "Converti file tra diversi formati",
+      "tags": "trasforma,cambia"
     },
     "pdfOrganiser": {
       "title": "Organizza",
-      "desc": "Rimuovi/Riordina le pagine in qualsiasi ordine."
+      "desc": "Rimuovi/Riordina le pagine in qualsiasi ordine.",
+      "tags": "organizza,riordina,riorganizza"
     },
     "addImage": {
       "title": "Aggiungi Immagine",
-      "desc": "Aggiungi un'immagine in un punto specifico del PDF (Lavori in corso)"
+      "desc": "Aggiungi un'immagine in un punto specifico del PDF (Lavori in corso)",
+      "tags": "inserisci,incorpora,posiziona"
     },
     "addAttachments": {
       "title": "Aggiungi allegati",
-      "desc": "Aggiungi o rimuovi file incorporati (allegati) da/verso un PDF"
+      "desc": "Aggiungi o rimuovi file incorporati (allegati) da/verso un PDF",
+      "tags": "incorpora,allega,includi"
     },
     "watermark": {
       "title": "Aggiungi Filigrana",
-      "desc": "Aggiungi una filigrana al tuo PDF."
+      "desc": "Aggiungi una filigrana al tuo PDF.",
+      "tags": "timbro,marca,sovrapponi"
     },
     "removePassword": {
       "title": "Rimuovi Password",
-      "desc": "Rimuovi la password dal tuo PDF."
+      "desc": "Rimuovi la password dal tuo PDF.",
+      "tags": "sblocca"
     },
     "compress": {
       "title": "Comprimi",
-      "desc": "Comprimi PDF per ridurne le dimensioni."
+      "desc": "Comprimi PDF per ridurne le dimensioni.",
+      "tags": "riduci,comprimi,ottimizza"
     },
     "unlockPDFForms": {
       "title": "Sblocca moduli PDF",
-      "desc": "Rimuovi la proprietà di sola lettura dei campi del modulo in un documento PDF."
+      "desc": "Rimuovi la proprietà di sola lettura dei campi del modulo in un documento PDF.",
+      "tags": "sblocca,abilita,modifica"
     },
     "changeMetadata": {
       "title": "Modifica Proprietà",
-      "desc": "Modifica/Aggiungi/Rimuovi le proprietà di un documento PDF."
+      "desc": "Modifica/Aggiungi/Rimuovi le proprietà di un documento PDF.",
+      "tags": "modifica,cambia,aggiorna"
     },
     "ocr": {
       "title": "OCR / Pulisci scansioni",
-      "desc": "Pulisci scansioni ed estrai testo da immagini, convertendo le immagini in testo puro."
+      "desc": "Pulisci scansioni ed estrai testo da immagini, convertendo le immagini in testo puro.",
+      "tags": "estrai,scansiona"
     },
     "extractImages": {
       "title": "Estrai immagini",
-      "desc": "Estrai tutte le immagini da un PDF e salvale come zip."
+      "desc": "Estrai tutte le immagini da un PDF e salvale come zip.",
+      "tags": "estrai,salva,esporta"
     },
     "scannerImageSplit": {
       "title": "Rileva/Dividi foto scansionate",
-      "desc": "Divide più foto all’interno di una foto/PDF"
+      "desc": "Divide più foto all’interno di una foto/PDF",
+      "tags": "rileva,dividi,foto"
     },
     "sign": {
       "title": "Firma",
-      "desc": "Aggiungi una firma al PDF da disegno, testo o immagine."
+      "desc": "Aggiungi una firma al PDF da disegno, testo o immagine.",
+      "tags": "firma,autografo"
     },
     "flatten": {
       "title": "Appiattisci",
-      "desc": "Rimuovi tutti gli elementi interattivi e moduli da un PDF."
+      "desc": "Rimuovi tutti gli elementi interattivi e moduli da un PDF.",
+      "tags": "semplifica,rimuovi,interattivo"
     },
     "certSign": {
       "title": "Firma con certificato",
-      "desc": "Firma un PDF con un certificato/chiave (PEM/P12)"
+      "desc": "Firma un PDF con un certificato/chiave (PEM/P12)",
+      "tags": "autentica,PEM,P12,ufficiale,cripta,firma,certificato,PKCS12,JKS,server,manuale,auto"
     },
     "repair": {
       "title": "Ripara",
-      "desc": "Prova a riparare un PDF corrotto."
+      "desc": "Prova a riparare un PDF corrotto.",
+      "tags": "ripara,ripristina"
     },
     "removeBlanks": {
       "title": "Rimuovi pagine vuote",
-      "desc": "Trova e rimuovi pagine vuote da un PDF."
+      "desc": "Trova e rimuovi pagine vuote da un PDF.",
+      "tags": "elimina,pulisci,vuote"
     },
     "removeAnnotations": {
       "title": "Rimuovi annotazioni",
-      "desc": "Rimuove tutti i commenti/annotazioni da un PDF"
+      "desc": "Rimuove tutti i commenti/annotazioni da un PDF",
+      "tags": "elimina,pulisci,rimuovi"
     },
     "compare": {
       "title": "Compara",
-      "desc": "Vedi e compara le differenze tra due PDF."
+      "desc": "Vedi e compara le differenze tra due PDF.",
+      "tags": "differenza"
     },
     "removeCertSign": {
       "title": "Rimuovere firma dal certificato",
-      "desc": "Rimuovi la firma del certificato dal PDF"
+      "desc": "Rimuovi la firma del certificato dal PDF",
+      "tags": "rimuovi,elimina,sblocca"
     },
     "pageLayout": {
       "title": "Layout multipagina",
-      "desc": "Unisci più pagine di un documento PDF in un'unica pagina"
+      "desc": "Unisci più pagine di un documento PDF in un'unica pagina",
+      "tags": "layout,disponi,combina"
     },
     "bookletImposition": {
       "title": "Imposizione a libretto",
-      "desc": "Crea libretti con corretto ordinamento pagine e layout multipagina per stampa e rilegatura"
+      "desc": "Crea libretti con corretto ordinamento pagine e layout multipagina per stampa e rilegatura",
+      "tags": "opuscolo,stampa,rilegatura"
     },
     "scalePages": {
       "title": "Regola le dimensioni/scala della pagina",
-      "desc": "Modificare le dimensioni/scala della pagina e/o dei suoi contenuti."
+      "desc": "Modificare le dimensioni/scala della pagina e/o dei suoi contenuti.",
+      "tags": "ridimensiona,adatta,scala"
     },
     "addPageNumbers": {
       "title": "Aggiungi numeri di pagina",
-      "desc": "Aggiungi numeri di pagina in tutto un documento in una posizione prestabilita"
+      "desc": "Aggiungi numeri di pagina in tutto un documento in una posizione prestabilita",
+      "tags": "numero,paginazione,conteggio"
     },
     "autoRename": {
       "title": "Rinomina automatica file PDF",
-      "desc": "Rinomina automaticamente un file PDF in base all’intestazione rilevata"
+      "desc": "Rinomina automaticamente un file PDF in base all’intestazione rilevata",
+      "tags": "auto-rilevamento,basato su intestazione,organizza,rinomina"
     },
     "adjustContrast": {
       "title": "Regola colori/contrasto",
-      "desc": "Regola contrasto, saturazione e luminosità di un PDF"
+      "desc": "Regola contrasto, saturazione e luminosità di un PDF",
+      "tags": "contrasto,luminosità,saturazione"
     },
     "crop": {
       "title": "Ritaglia PDF",
-      "desc": "Ritaglia un PDF per ridurne le dimensioni (mantiene il testo!)"
+      "desc": "Ritaglia un PDF per ridurne le dimensioni (mantiene il testo!)",
+      "tags": "ritaglia,taglia,ridimensiona"
     },
     "autoSplitPDF": {
       "title": "Pagine divise automaticamente",
-      "desc": "Dividi automaticamente il PDF scansionato con il codice QR dello divisore di pagina fisico scansionato"
+      "desc": "Dividi automaticamente il PDF scansionato con il codice QR dello divisore di pagina fisico scansionato",
+      "tags": "auto,dividi,QR"
     },
     "sanitize": {
       "title": "Sanitizza",
-      "desc": "Rimuovi elementi potenzialmente dannosi dai PDF"
+      "desc": "Rimuovi elementi potenzialmente dannosi dai PDF",
+      "tags": "pulisci,elimina,rimuovi"
     },
     "getPdfInfo": {
       "title": "Ottieni TUTTE le informazioni in PDF",
-      "desc": "Raccogli tutte le informazioni possibili sui PDF"
+      "desc": "Raccogli tutte le informazioni possibili sui PDF",
+      "tags": "info,metadati,dettagli"
     },
     "pdfToSinglePage": {
       "title": "PDF in un'unica pagina di grandi dimensioni",
-      "desc": "Unisce tutte le pagine PDF in un'unica grande pagina"
+      "desc": "Unisce tutte le pagine PDF in un'unica grande pagina",
+      "tags": "combina,unisci,singola"
     },
     "showJS": {
       "title": "Mostra Javascript",
-      "desc": "Cerca e visualizza qualsiasi JS inserito in un PDF"
+      "desc": "Cerca e visualizza qualsiasi JS inserito in un PDF",
+      "tags": "javascript,codice,script"
     },
     "redact": {
       "title": "Redazione manuale",
-      "desc": "Redige un PDF in base al testo selezionato, alle forme disegnate e/o alle pagina selezionata(e)"
+      "desc": "Redige un PDF in base al testo selezionato, alle forme disegnate e/o alle pagina selezionata(e)",
+      "tags": "censura,oscura,nascondi"
     },
     "overlayPdfs": {
       "title": "Sovrapponi PDF",
-      "desc": "Sovrapponi PDF sopra un altro PDF"
+      "desc": "Sovrapponi PDF sopra un altro PDF",
+      "tags": "sovrapponi,combina,impila"
     },
     "splitBySections": {
       "title": "Dividi PDF per sezioni",
-      "desc": "Divide ogni pagina di un PDF in sezioni orizzontali e verticali più piccole"
+      "desc": "Divide ogni pagina di un PDF in sezioni orizzontali e verticali più piccole",
+      "tags": "dividi,sezioni,separa"
     },
     "addStamp": {
       "title": "Aggiungi timbro al PDF",
-      "desc": "Aggiungi timbri di testo o immagine in posizioni specifiche"
+      "desc": "Aggiungi timbri di testo o immagine in posizioni specifiche",
+      "tags": "timbro,marca,sigillo"
     },
     "removeImage": {
       "title": "Rimuovi immagine",
-      "desc": "Rimuovi le immagini dal PDF per ridurre la dimensione del file"
+      "desc": "Rimuovi le immagini dal PDF per ridurre la dimensione del file",
+      "tags": "rimuovi,elimina,pulisci"
     },
     "splitByChapters": {
       "title": "Dividi PDF per capitoli",
-      "desc": "Dividi un PDF in più file in base alla struttura dei capitoli."
+      "desc": "Dividi un PDF in più file in base alla struttura dei capitoli.",
+      "tags": "dividi,capitoli,struttura"
     },
     "validateSignature": {
       "title": "Convalida la firma PDF",
-      "desc": "Verificare le firme digitali e i certificati nei documenti PDF"
+      "desc": "Verificare le firme digitali e i certificati nei documenti PDF",
+      "tags": "convalida,verifica,certificato"
     },
     "swagger": {
       "title": "Documentazione API",
-      "desc": "Visualizza documentazione API e testa gli endpoint"
+      "desc": "Visualizza documentazione API e testa gli endpoint",
+      "tags": "API,documentazione,test"
     },
     "fakeScan": {
       "title": "Finta scansione",
@@ -538,31 +585,38 @@
     },
     "editTableOfContents": {
       "title": "Modifica indice",
-      "desc": "Aggiungi o modifica segnalibri e sommario nei documenti PDF"
+      "desc": "Aggiungi o modifica segnalibri e sommario nei documenti PDF",
+      "tags": "segnalibri,contenuti,modifica"
     },
     "manageCertificates": {
       "title": "Gestisci certificati",
-      "desc": "Importa, esporta o elimina i file certificato usati per firmare i PDF."
+      "desc": "Importa, esporta o elimina i file certificato usati per firmare i PDF.",
+      "tags": "certificati,importa,esporta"
     },
     "read": {
       "title": "Leggi",
-      "desc": "Visualizza e annota PDF. Evidenzia testo, disegna o inserisci commenti per revisione e collaborazione."
+      "desc": "Visualizza e annota PDF. Evidenzia testo, disegna o inserisci commenti per revisione e collaborazione.",
+      "tags": "visualizza,apri,mostra"
     },
     "reorganizePages": {
       "title": "Riorganizza pagine",
-      "desc": "Riorganizza, duplica o elimina pagine PDF con controllo visivo drag‑and‑drop."
+      "desc": "Riorganizza, duplica o elimina pagine PDF con controllo visivo drag‑and‑drop.",
+      "tags": "riordina,riorganizza,organizza"
     },
     "extractPages": {
       "title": "Estrai pagine",
-      "desc": "Estrai pagine specifiche da un PDF"
+      "desc": "Estrai pagine specifiche da un PDF",
+      "tags": "estrai,seleziona,copia"
     },
     "removePages": {
       "title": "Rimuovi",
-      "desc": "Elimina alcune pagine dal PDF."
+      "desc": "Elimina alcune pagine dal PDF.",
+      "tags": "elimina,estrai,escludi"
     },
     "autoSizeSplitPDF": {
       "title": "Divisione automatica per dimensione/numero",
-      "desc": "Dividi un singolo PDF in più documenti in base alle dimensioni, al numero di pagine o al numero di documenti"
+      "desc": "Dividi un singolo PDF in più documenti in base alle dimensioni, al numero di pagine o al numero di documenti",
+      "tags": "auto,dividi,dimensione"
     },
     "replaceColorPdf": {
       "title": "Sostituisci e inverti il colore",
@@ -570,11 +624,13 @@
     },
     "devApi": {
       "title": "API",
-      "desc": "Link alla documentazione API"
+      "desc": "Link alla documentazione API",
+      "tags": "API,sviluppo,documentazione"
     },
     "devFolderScanning": {
       "title": "Scansione cartelle automatizzata",
-      "desc": "Link alla guida per scansione cartelle automatizzata"
+      "desc": "Link alla guida per scansione cartelle automatizzata",
+      "tags": "automazione,cartella,scansione"
     },
     "devSsoGuide": {
       "title": "Guida SSO",
@@ -594,7 +650,17 @@
     },
     "automate": {
       "title": "Automatizza",
-      "desc": "Crea flussi multi‑step concatenando azioni PDF. Ideale per attività ricorrenti."
+      "desc": "Crea flussi multi‑step concatenando azioni PDF. Ideale per attività ricorrenti.",
+      "tags": "flusso di lavoro,sequenza,automazione"
+    },
+    "replaceColor": {
+      "desc": "Sostituisci o inverti i colori nei documenti PDF",
+      "title": "Sostituisci e inverti colore"
+    },
+    "scannerEffect": {
+      "desc": "Crea un PDF che sembra essere stato scansionato",
+      "tags": "scansiona,simula,crea",
+      "title": "Effetto scanner"
     }
   },
   "landing": {
@@ -654,7 +720,9 @@
     },
     "error": {
       "failed": "Si è verificato un errore durante l’unione dei PDF."
-    }
+    },
+    "generateTableOfContents": "Generare l'indice nel file unito?",
+    "removeDigitalSignature": "Rimuovere la firma digitale nel file unito?"
   },
   "split": {
     "tags": "Operazioni sulla pagina,divisione,multi pagina,taglio,lato server",
@@ -913,7 +981,20 @@
       "10": "Unione pari-dispari",
       "11": "Duplica tutte le pagine"
     },
-    "placeholder": "(ad es. 1,3,2 o 4-8,2,10-12 o 2n-1)"
+    "placeholder": "(ad es. 1,3,2 o 4-8,2,10-12 o 2n-1)",
+    "desc": {
+      "BOOKLET_SORT": "Disporre le pagine per la stampa a opuscolo (ultima, prima, seconda, penultima, …).",
+      "CUSTOM": "Utilizzare una sequenza personalizzata di numeri di pagina o espressioni per definire un nuovo ordine.",
+      "DUPLEX_SORT": "Alternare fronte e retro come se uno scanner duplex avesse scansionato tutti i fronti, poi tutti i retri (1, n, 2, n-1, …).",
+      "DUPLICATE": "Duplicare ogni pagina secondo il conteggio dell'ordine personalizzato (ad es., 4 duplica ogni pagina 4×).",
+      "ODD_EVEN_MERGE": "Unire due PDF alternando le pagine: dispari dal primo, pari dal secondo.",
+      "ODD_EVEN_SPLIT": "Dividere il documento in due output: tutte le pagine dispari e tutte le pagine pari.",
+      "REMOVE_FIRST": "Rimuovere la prima pagina dal documento.",
+      "REMOVE_FIRST_AND_LAST": "Rimuovere sia la prima che l'ultima pagina dal documento.",
+      "REMOVE_LAST": "Rimuovere l'ultima pagina dal documento.",
+      "REVERSE_ORDER": "Capovolgere il documento in modo che l'ultima pagina diventi la prima e così via.",
+      "SIDE_STITCH_BOOKLET_SORT": "Disporre le pagine per la stampa a opuscolo con cucitura laterale (ottimizzato per la rilegatura sul lato)."
+    }
   },
   "addImage": {
     "tags": "img,jpg,immagine,foto",
@@ -1347,7 +1428,7 @@
     },
     "trapped": {
       "label": "Stato Trapped",
-      "unknown": "Unknown",
+      "unknown": "Sconosciuto",
       "true": "True",
       "false": "False"
     },
@@ -1538,7 +1619,13 @@
     "header": "Estrai immagini",
     "selectText": "Seleziona il formato in cui salvare le immagini estratte",
     "allowDuplicates": "Salva le immagini duplicate",
-    "submit": "Estrai"
+    "submit": "Estrai",
+    "error": {
+      "failed": "Si è verificato un errore durante l'estrazione delle immagini dal PDF."
+    },
+    "settings": {
+      "title": "Impostazioni"
+    }
   },
   "pdfToPDFA": {
     "tags": "archivio,a lungo termine,standard,conversione,archiviazione,conservazione",
@@ -1615,8 +1702,14 @@
     "title": "Firma",
     "header": "Firma PDF",
     "upload": "Carica immagine",
-    "draw": "Disegna Firma",
-    "text": "Testo",
+    "draw": {
+      "clear": "Cancella",
+      "title": "Disegna la tua firma"
+    },
+    "text": {
+      "name": "Nome firmatario",
+      "placeholder": "Inserisci il tuo nome completo"
+    },
     "clear": "Cancella",
     "add": "Aggiungi",
     "saved": "Firme salvate",
@@ -1632,7 +1725,35 @@
     "previous": "Pagina precedente",
     "maintainRatio": "Attiva il mantenimento delle proporzioni",
     "undo": "Annulla",
-    "redo": "Rifare"
+    "redo": "Rifare",
+    "activate": "Attiva posizionamento firma",
+    "applySignatures": "Applica firme",
+    "deactivate": "Interrompi posizionamento firme",
+    "error": {
+      "failed": "Si è verificato un errore durante la firma del PDF."
+    },
+    "image": {
+      "hint": "Carica un'immagine PNG o JPG della tua firma",
+      "label": "Carica immagine firma",
+      "placeholder": "Seleziona file immagine"
+    },
+    "instructions": {
+      "title": "Come aggiungere la firma"
+    },
+    "results": {
+      "title": "Risultati firma"
+    },
+    "steps": {
+      "configure": "Configura firma"
+    },
+    "submit": "Firma documento",
+    "type": {
+      "canvas": "Canvas",
+      "draw": "Disegna",
+      "image": "Immagine",
+      "text": "Testo",
+      "title": "Tipo di firma"
+    }
   },
   "flatten": {
     "tags": "statico,disattivato,non interattivo,ottimizzato",
@@ -1651,7 +1772,8 @@
       "stepTitle": "Opzioni di flattening",
       "title": "Opzioni di flattening",
       "flattenOnlyForms.desc": "Appiattisci solo i campi modulo, lasciando intatti gli altri elementi interattivi",
-      "note": "Il flattening rimuove gli elementi interattivi dal PDF, rendendoli non modificabili."
+      "note": "Il flattening rimuove gli elementi interattivi dal PDF, rendendoli non modificabili.",
+      "flattenOnlyForms": "Appiattisci solo i moduli"
     },
     "results": {
       "title": "Risultati Flatten"
@@ -1747,7 +1869,17 @@
     "tags": "commenti,evidenziazioni,note,markup,rimozione",
     "title": "Rimuovi Annotazioni",
     "header": "Rimuovi Annotazioni",
-    "submit": "Rimuovi"
+    "submit": "Rimuovi",
+    "error": {
+      "failed": "Si è verificato un errore durante la rimozione delle annotazioni dal PDF."
+    },
+    "info": {
+      "description": "Questo strumento rimuoverà tutte le annotazioni (commenti, evidenziazioni, note, ecc.) dai tuoi documenti PDF.",
+      "title": "Informazioni su Rimuovi annotazioni"
+    },
+    "settings": {
+      "title": "Impostazioni"
+    }
   },
   "compare": {
     "tags": "differenziare,contrastare,cambiare,analisi",
@@ -3024,7 +3156,13 @@
       "removeXMPMetadata.desc": "Rimuovi i metadati XMP dal PDF",
       "removeMetadata.desc": "Rimuovi le informazioni (titolo, autore, ecc.)",
       "removeLinks.desc": "Rimuovi link esterni e azioni di avvio dal PDF",
-      "removeFonts.desc": "Rimuovi i font incorporati dal PDF"
+      "removeFonts.desc": "Rimuovi i font incorporati dal PDF",
+      "removeEmbeddedFiles": "Rimuovi file incorporati",
+      "removeFonts": "Rimuovi caratteri",
+      "removeJavaScript": "Rimuovi JavaScript",
+      "removeLinks": "Rimuovi collegamenti",
+      "removeMetadata": "Rimuovi metadati documento",
+      "removeXMPMetadata": "Rimuovi metadati XMP"
     }
   },
   "addPassword": {
@@ -3294,5 +3432,56 @@
     }
   },
   "termsAndConditions": "Termini e condizioni",
-  "logOut": "Esci"
+  "logOut": "Esci",
+  "AddAttachmentsRequest": {
+    "addMoreFiles": "Aggiungi altri file...",
+    "attachments": "Seleziona allegati",
+    "info": "Seleziona i file da allegare al tuo PDF. Questi file saranno incorporati e accessibili tramite il pannello allegati del PDF.",
+    "placeholder": "Scegli file...",
+    "results": {
+      "title": "Risultati allegati"
+    },
+    "selectFiles": "Seleziona file da allegare",
+    "selectedFiles": "File selezionati",
+    "submit": "Aggiungi allegati"
+  },
+  "applyAndContinue": "Applica e continua",
+  "discardChanges": "Scarta modifiche",
+  "exportAndContinue": "Esporta e continua",
+  "keepWorking": "Continua a lavorare",
+  "replaceColor": {
+    "tags": "Sostituisci colore,Operazioni pagina,Back end,lato server"
+  },
+  "scannerImageSplit": {
+    "error": {
+      "failed": "Si è verificato un errore durante l'estrazione delle scansioni di immagini."
+    },
+    "submit": "Estrai scansioni di immagini",
+    "title": "Immagini estratte",
+    "tooltip": {
+      "headsUp": "Attenzione",
+      "headsUpDesc": "Foto sovrapposte o sfondi molto simili nel colore alle foto possono ridurre la precisione - prova uno sfondo più chiaro o più scuro e lascia più spazio.",
+      "problem1": "Foto non rilevate → aumentare la tolleranza a 30-50",
+      "problem2": "Troppe rilevazioni errate → aumentare l'area minima a 15.000-20.000",
+      "problem3": "I ritagli sono troppo stretti → aumentare la dimensione del bordo a 5-10",
+      "problem4": "Foto inclinate non raddrizzate → abbassare la soglia angolare a ~5°",
+      "problem5": "Caselle di polvere/rumore → aumentare l'area minima del contorno a 1000-2000",
+      "quickFixes": "Correzioni rapide",
+      "setupTips": "Suggerimenti di configurazione",
+      "tip1": "Usa uno sfondo semplice e chiaro",
+      "tip2": "Lascia un piccolo spazio (≈1 cm) tra le foto",
+      "tip3": "Scansiona a 300-600 DPI",
+      "tip4": "Pulisci il vetro dello scanner",
+      "title": "Divisore di foto",
+      "useCase1": "Scansiona intere pagine di album in una volta",
+      "useCase2": "Dividi i lotti flatbed in file separati",
+      "useCase3": "Suddividi collage in singole foto",
+      "useCase4": "Estrai foto dai documenti",
+      "whatThisDoes": "Cosa fa",
+      "whatThisDoesDesc": "Trova ed estrae automaticamente ogni foto da una pagina scansionata o da un'immagine composita - senza ritaglio manuale.",
+      "whenToUse": "Quando usare"
+    }
+  },
+  "unsavedChanges": "Hai modifiche non salvate al tuo PDF. Cosa vuoi fare?",
+  "unsavedChangesTitle": "Modifiche non salvate"
 }
