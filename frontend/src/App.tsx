@@ -1,4 +1,4 @@
-import React, { Suspense } from "react";
+import { Suspense } from "react";
 import { RainbowThemeProvider } from "./components/shared/RainbowThemeProvider";
 import { FileContextProvider } from "./contexts/FileContext";
 import { NavigationProvider } from "./contexts/NavigationContext";
@@ -14,6 +14,7 @@ import "./styles/cookieconsent.css";
 import "./index.css";
 import { RightRailProvider } from "./contexts/RightRailContext";
 import { ViewerProvider } from "./contexts/ViewerContext";
+import { SignatureProvider } from "./contexts/SignatureContext";
 
 // Import file ID debugging helpers (development only)
 import "./utils/fileIdSafety";
@@ -45,9 +46,11 @@ export default function App() {
                 <ToolWorkflowProvider>
                   <SidebarProvider>
                     <ViewerProvider>
+                      <SignatureProvider>
                       <RightRailProvider>
-                        <HomePage />
-                      </RightRailProvider>
+                            <HomePage />
+                          </RightRailProvider>
+                      </SignatureProvider>
                     </ViewerProvider>
                   </SidebarProvider>
                 </ToolWorkflowProvider>

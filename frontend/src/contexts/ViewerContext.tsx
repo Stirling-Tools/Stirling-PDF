@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode, useRef } from 'react';
 import { SpreadMode } from '@embedpdf/plugin-spread/react';
+import { useNavigation } from './NavigationContext';
 
 // Bridge API interfaces - these match what the bridges provide
 interface ScrollAPIWrapper {
@@ -207,6 +208,9 @@ interface ViewerProviderProps {
 export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
   // UI state - only state directly managed by this context
   const [isThumbnailSidebarVisible, setIsThumbnailSidebarVisible] = useState(false);
+
+  // Get current navigation state to check if we're in sign mode
+  useNavigation();
 
   // Bridge registry - bridges register their state and APIs here
   const bridgeRefs = useRef({

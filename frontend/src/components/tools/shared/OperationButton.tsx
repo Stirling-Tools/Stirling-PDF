@@ -1,4 +1,3 @@
-import React from 'react';
 import { Button } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 
@@ -52,6 +51,6 @@ const OperationButton = ({
       }
     </Button>
   );
-}
+};
 
 export default OperationButton;

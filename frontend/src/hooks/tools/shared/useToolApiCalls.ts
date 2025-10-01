@@ -1,5 +1,6 @@
 import { useCallback, useRef } from 'react';
-import axios, { CancelTokenSource } from '../../../services/http';
+import axios, {type CancelTokenSource} from 'axios'; // Real axios for static methods (CancelToken, isCancel)
+import apiClient from '../../../services/apiClient'; // Our configured instance
 import { processResponse, ResponseHandler } from '../../../utils/toolResponseProcessor';
 import { isEmptyOutput } from '../../../services/errorUtils';
 import type { ProcessingProgress } from './useToolState';
@@ -42,9 +43,9 @@ export const useToolApiCalls = <TParams = void>() => {
         const formData = config.buildFormData(params, file);
         const endpoint = typeof config.endpoint === 'function' ? config.endpoint(params) : config.endpoint;
         console.debug('[processFiles] POST', { endpoint, name: file.name });
-        const response = await axios.post(endpoint, formData, {
+        const response = await apiClient.post(endpoint, formData, {
           responseType: 'blob',
-          cancelToken: cancelTokenRef.current.token,
+          cancelToken: cancelTokenRef.current?.token,
         });
         console.debug('[processFiles] Response OK', { name: file.name, status: (response as any)?.status });
 
@@ -61,10 +62,10 @@ export const useToolApiCalls = <TParams = void>() => {
         if (empty) {
           console.warn('[processFiles] Empty output treated as failure', { name: file.name });
           failedFiles.push(file.name);
-          try { 
-            (markFileError as any)?.((file as any).fileId); 
-          } catch (e) { 
-            console.debug('markFileError', e); 
+          try {
+            (markFileError as any)?.((file as any).fileId);
+          } catch (e) {
+            console.debug('markFileError', e);
           }
           continue;
         }
@@ -80,10 +81,10 @@ export const useToolApiCalls = <TParams = void>() => {
         console.error('[processFiles] Failed', { name: file.name, error });
         failedFiles.push(file.name);
         // mark errored file so UI can highlight
-        try { 
-          (markFileError as any)?.((file as any).fileId); 
-        } catch (e) { 
-          console.debug('markFileError', e); 
+        try {
+          (markFileError as any)?.((file as any).fileId);
+        } catch (e) {
+          console.debug('markFileError', e);
         }
       }
     }

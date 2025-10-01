@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Stack, Text, NumberInput } from "@mantine/core";
 
 interface NumberInputWithUnitProps {
@@ -11,14 +11,14 @@ interface NumberInputWithUnitProps {
   disabled?: boolean;
 }
 
-const NumberInputWithUnit = ({ 
-  label, 
-  value, 
-  onChange, 
-  unit, 
-  min, 
-  max, 
-  disabled = false 
+const NumberInputWithUnit = ({
+  label,
+  value,
+  onChange,
+  unit,
+  min,
+  max,
+  disabled = false
 }: NumberInputWithUnitProps) => {
   const [localValue, setLocalValue] = useState<number | string>(value);
 

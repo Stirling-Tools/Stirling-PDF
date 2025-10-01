@@ -1,4 +1,3 @@
-import React from "react";
 import { Stack, Text, Select, ColorInput } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { AddWatermarkParameters } from "../../../hooks/tools/addWatermark/useAddWatermarkParameters";
@@ -27,7 +26,7 @@ const WatermarkTextStyle = ({ parameters, onParameterChange, disabled = false }:
           format="hex"
         />
       </Stack>
-      
+
       <Stack gap="xs">
         <Text size="xs" fw={500}>
           {t("watermark.settings.alphabet", "Alphabet")}
