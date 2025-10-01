@@ -3,6 +3,7 @@ import { ToolType, useToolOperation } from '../shared/useToolOperation';
 import { AdjustContrastParameters, defaultParameters } from './useAdjustContrastParameters';
 import { PDFDocument as PDFLibDocument } from 'pdf-lib';
 import { applyAdjustmentsToCanvas } from '../../../components/tools/adjustContrast/utils';
+import { pdfWorkerManager } from '../../../services/pdfWorkerManager';
 import { createFileFromApiResponse } from '../../../utils/fileResponseUtils';
 
 async function renderPdfPageToCanvas(pdf: any, pageNumber: number, scale: number): Promise<HTMLCanvasElement> {
@@ -19,11 +20,8 @@ async function renderPdfPageToCanvas(pdf: any, pageNumber: number, scale: number
 
 // adjustment logic moved to shared util
 
-async function processPdfClientSide(params: AdjustContrastParameters, files: File[]): Promise<File[]> {
-  const outputs: File[] = [];
-  const { pdfWorkerManager } = await import('../../../services/pdfWorkerManager');
-
-  for (const file of files) {
+// Render, adjust, and assemble all pages of a single PDF into a new PDF
+async function buildAdjustedPdfForFile(file: File, params: AdjustContrastParameters): Promise<File> {
     const arrayBuffer = await file.arrayBuffer();
     const pdf = await pdfWorkerManager.createDocument(arrayBuffer, {});
     const pageCount = pdf.numPages;
@@ -44,11 +42,37 @@ async function processPdfClientSide(params: AdjustContrastParameters, files: Fil
 
     const pdfBytes = await newDoc.save();
     const out = createFileFromApiResponse(pdfBytes, { 'content-type': 'application/pdf' }, file.name);
-    outputs.push(out);
     pdfWorkerManager.destroyDocument(pdf);
-  }
+    return out;
+}
 
-  return outputs;
+async function processPdfClientSide(params: AdjustContrastParameters, files: File[]): Promise<File[]> {
+  // Limit concurrency to avoid exhausting memory/CPU while still getting speedups
+  // Heuristic: use up to 4 workers on capable machines, otherwise 2-3
+  let CONCURRENCY_LIMIT = 2;
+  if (typeof navigator !== 'undefined' && typeof navigator.hardwareConcurrency === 'number') {
+    if (navigator.hardwareConcurrency >= 8) CONCURRENCY_LIMIT = 4;
+    else if (navigator.hardwareConcurrency >= 4) CONCURRENCY_LIMIT = 3;
+  }
+  CONCURRENCY_LIMIT = Math.min(CONCURRENCY_LIMIT, files.length);
+
+  const mapWithConcurrency = async <T, R>(items: T[], limit: number, worker: (item: T, index: number) => Promise<R>): Promise<R[]> => {
+    const results: R[] = new Array(items.length);
+    let nextIndex = 0;
+
+    const workers = new Array(Math.min(limit, items.length)).fill(0).map(async () => {
+      let current = nextIndex++;
+      while (current < items.length) {
+        results[current] = await worker(items[current], current);
+        current = nextIndex++;
+      }
+    });
+
+    await Promise.all(workers);
+    return results;
+  };
+
+  return mapWithConcurrency(files, CONCURRENCY_LIMIT, (file) => buildAdjustedPdfForFile(file, params));
 }
 
 export const adjustContrastOperationConfig = {
@@ -56,6 +80,8 @@ export const adjustContrastOperationConfig = {
   customProcessor: processPdfClientSide,
   operationType: 'adjustContrast',
   defaultParameters,
+  // Single-step settings component for Automate
+  settingsComponentPath: 'components/tools/adjustContrast/AdjustContrastSingleStepSettings',
 } as const;
 
 export const useAdjustContrastOperation = () => {

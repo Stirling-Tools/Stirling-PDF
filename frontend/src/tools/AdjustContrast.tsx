@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import React, { useEffect, useMemo, useState } from 'react';
 import { createToolFlow } from '../components/tools/shared/createToolFlow';
 import { BaseToolProps, ToolComponent } from '../types/tool';
 import { useBaseTool } from '../hooks/tools/shared/useBaseTool';
@@ -8,6 +9,7 @@ import AdjustContrastBasicSettings from '../components/tools/adjustContrast/Adju
 import AdjustContrastColorSettings from '../components/tools/adjustContrast/AdjustContrastColorSettings';
 import AdjustContrastPreview from '../components/tools/adjustContrast/AdjustContrastPreview';
 import { useAccordionSteps } from '../hooks/tools/shared/useAccordionSteps';
+import NavigationArrows from '../components/shared/filePreview/NavigationArrows';
 
 const AdjustContrast = (props: BaseToolProps) => {
   const { t } = useTranslation();
@@ -26,6 +28,23 @@ const AdjustContrast = (props: BaseToolProps) => {
     stateConditions: { hasFiles: base.hasFiles, hasResults: base.hasResults },
     afterResults: base.handleSettingsReset
   });
+
+  // Track which selected file is being previewed. Clamp when selection changes.
+  const [previewIndex, setPreviewIndex] = useState(0);
+  const totalSelected = base.selectedFiles.length;
+
+  useEffect(() => {
+    if (previewIndex >= totalSelected) {
+      setPreviewIndex(Math.max(0, totalSelected - 1));
+    }
+  }, [totalSelected, previewIndex]);
+
+  const currentFile = useMemo(() => {
+    return totalSelected > 0 ? base.selectedFiles[previewIndex] : null;
+  }, [base.selectedFiles, previewIndex, totalSelected]);
+
+  const handlePrev = () => setPreviewIndex((i) => Math.max(0, i - 1));
+  const handleNext = () => setPreviewIndex((i) => Math.min(totalSelected - 1, i + 1));
 
   return createToolFlow({
     files: {
@@ -59,10 +78,25 @@ const AdjustContrast = (props: BaseToolProps) => {
       },
     ],
     preview: (
-      <AdjustContrastPreview
-        file={base.selectedFiles[0] || null}
-        parameters={base.params.parameters}
-      />
+      <div>
+        <NavigationArrows
+          onPrevious={handlePrev}
+          onNext={handleNext}
+          disabled={totalSelected <= 1}
+        >
+          <div style={{ width: '100%' }}>
+            <AdjustContrastPreview
+              file={currentFile || null}
+              parameters={base.params.parameters}
+            />
+          </div>
+        </NavigationArrows>
+        {totalSelected > 1 && (
+          <div style={{ textAlign: 'center', marginTop: 8, fontSize: 12, color: 'var(--text-color-muted)' }}>
+            {`${previewIndex + 1} of ${totalSelected}`}
+          </div>
+        )}
+      </div>
     ),
     executeButton: {
       text: t('adjustContrast.confirm', 'Confirm'),

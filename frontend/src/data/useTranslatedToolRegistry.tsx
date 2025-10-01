@@ -15,6 +15,7 @@ import { reorganizePagesOperationConfig } from "../hooks/tools/reorganizePages/u
 import RemovePassword from "../tools/RemovePassword";
 import { SubcategoryId, ToolCategoryId, ToolRegistry } from "./toolsTaxonomy";
 import AdjustContrast from "../tools/AdjustContrast";
+import AdjustContrastSingleStepSettings from "../components/tools/adjustContrast/AdjustContrastSingleStepSettings";
 import { adjustContrastOperationConfig } from "../hooks/tools/adjustContrast/useAdjustContrastOperation";
 import { getSynonyms } from "../utils/toolSynonyms";
 import AddWatermark from "../tools/AddWatermark";
@@ -642,6 +643,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.ADVANCED_FORMATTING,
         operationConfig: adjustContrastOperationConfig,
+        settingsComponent: AdjustContrastSingleStepSettings,
         synonyms: getSynonyms(t, "adjustContrast"),
       },
       repair: {
