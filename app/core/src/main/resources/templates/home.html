@@ -10,6 +10,29 @@
   <div class="page-container" style="max-height:100vh;">
     <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
     <div style="transform-origin: center top; flex:0 1 auto; display:flex; flex-direction:column; align-items:center; justify-content:flex-start;" id="scale-wrap">
+      <!-- V2 Announcement Banner -->
+      <div class="v2-announcement-banner" id="v2AnnouncementBanner">
+        <button class="v2-banner-close" onclick="closeV2Banner()" aria-label="Close announcement">
+          <span aria-hidden="true">&times;</span>
+        </button>
+        <div class="v2-banner-content">
+          <a href="https://stirling.com" target="_blank" class="v2-banner-title-link">
+            <h2 class="v2-banner-title">Introducing Stirling PDF V2</h2>
+          </a>
+          <p class="v2-banner-subtitle">A redesigned interface with all your favorite tools, just improved</p>
+          <div class="v2-banner-links">
+            <a href="https://stirling.com" target="_blank" class="v2-banner-button v2-banner-button-primary">
+              <span class="v2-button-text">Visit stirling.com</span>
+            </a>
+            <a href="https://stirling.com/app" target="_blank" class="v2-banner-button v2-banner-button-secondary">
+              <span class="v2-button-text">Try the New Stirling PDF</span>
+            </a>
+          </div>
+          <p class="v2-banner-footer">
+            <a href="https://www.stirling.com/blog/introducing-v2" target="_blank" class="v2-banner-link-inline">Read the full announcement</a> or <a href="https://discord.gg/Cn8pWhQRxZ" target="_blank" class="v2-banner-link-inline">join our Discord community</a> for questions and feedback.
+          </p>
+        </div>
+      </div>
       <br class="d-md-none">
       <!-- Features -->
       <script th:src="@{'/js/homecard.js'}"></script>
@@ -29,25 +52,6 @@
                     <div class="lead fs-4"
                       th:text="${@homeText != 'null' and @homeText != null and @homeText != ''} ? ${@homeText} : #{home.desc}">
                   </div>
-                  </div>
-                  <div id="groupRecent" style="width: fit-content; margin: 0 auto">
-                    <div
-                      th:replace="~{fragments/featureGroupHeader :: featureGroupHeader(groupTitle=#{navbar.recent})}">
-                    </div>
-                    <div class="recent-features">
-                      <div class="newfeature"
-                        th:insert="~{fragments/navbarEntry :: navbarEntry('add-attachments', 'attachment', 'home.attachments.title', 'home.attachments.desc', 'attachments.tags', 'other')}">
-                      </div>
-                      <div class="newfeature"
-                        th:insert="~{fragments/navbarEntry :: navbarEntry('scanner-effect', 'scanner', 'scannerEffect.title', 'scannerEffect.description', 'scannerEffect.tags', 'advance')}">
-                      </div>
-                      <div class="newfeature"
-                        th:insert="~{fragments/navbarEntry :: navbarEntry('compress-pdf', 'zoom_in_map', 'home.compressPdfs.title', 'home.compressPdfs.desc', 'compressPDFs.tags', 'advance')}">
-                      </div>
-                      <div class="newfeature"
-                        th:insert="~{fragments/navbarEntry :: navbarEntry('edit-table-of-contents', 'bookmark_add', 'home.editTableOfContents.title', 'home.editTableOfContents.desc', 'editTableOfContents.tags', 'advance')}">
-                      </div>
-                    </div>
                   </div>
                 </div>
 
@@ -207,6 +211,238 @@
     .toggle-favourites.active {
       color: gold;
     }
+
+    /* V2 Announcement Banner Styles */
+    .v2-announcement-banner {
+      width: 100%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 3rem 2rem;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      border-bottom: 3px solid rgba(255, 255, 255, 0.2);
+      position: relative;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+
+    .v2-announcement-banner.hidden {
+      display: none;
+    }
+
+    .v2-banner-close {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      color: white;
+      font-size: 1.75rem;
+      width: 2.5rem;
+      height: 2.5rem;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      line-height: 1;
+      padding: 0;
+      z-index: 10;
+    }
+
+    .v2-banner-close:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: rotate(90deg);
+    }
+
+    [data-bs-theme="dark"] .v2-banner-close {
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    [data-bs-theme="dark"] .v2-banner-close:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    [data-bs-theme="dark"] .v2-announcement-banner {
+      background: linear-gradient(135deg, #4a5fd6 0%, #5e3a7a 100%);
+      border-bottom: 3px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    }
+
+    .v2-banner-content {
+      max-width: 900px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .v2-banner-title-link {
+      text-decoration: none;
+      display: inline-block;
+      transition: transform 0.2s ease;
+    }
+
+    .v2-banner-title-link:hover {
+      transform: translateY(-2px);
+    }
+
+    .v2-banner-title {
+      margin: 0 0 0.75rem 0;
+      font-size: 2.25rem;
+      font-weight: 700;
+      color: #ffffff;
+      letter-spacing: -0.5px;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    [data-bs-theme="dark"] .v2-banner-title {
+      color: #f5f5f5;
+    }
+
+    .v2-banner-subtitle {
+      margin: 0 0 2rem 0;
+      font-size: 1.25rem;
+      font-weight: 400;
+      color: rgba(255, 255, 255, 0.95);
+      letter-spacing: 0.3px;
+    }
+
+    [data-bs-theme="dark"] .v2-banner-subtitle {
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    .v2-banner-links {
+      display: flex;
+      gap: 1.25rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 2rem;
+    }
+
+    .v2-banner-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.875rem 2rem;
+      font-size: 1.1rem;
+      font-weight: 600;
+      text-decoration: none;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      min-width: 200px;
+    }
+
+    .v2-banner-button-primary {
+      background: #ffffff;
+      color: #667eea;
+      border: 2px solid transparent;
+    }
+
+    .v2-banner-button-primary:hover {
+      background: #f8f9ff;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      color: #667eea;
+    }
+
+    [data-bs-theme="dark"] .v2-banner-button-primary {
+      background: #f5f5f5;
+      color: #4a5fd6;
+    }
+
+    [data-bs-theme="dark"] .v2-banner-button-primary:hover {
+      background: #ffffff;
+      color: #4a5fd6;
+    }
+
+    .v2-banner-button-secondary {
+      background: rgba(255, 255, 255, 0.2);
+      color: #ffffff;
+      border: 2px solid rgba(255, 255, 255, 0.4);
+      backdrop-filter: blur(10px);
+    }
+
+    .v2-banner-button-secondary:hover {
+      background: rgba(255, 255, 255, 0.3);
+      border-color: rgba(255, 255, 255, 0.6);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      color: #ffffff;
+    }
+
+    [data-bs-theme="dark"] .v2-banner-button-secondary {
+      background: rgba(255, 255, 255, 0.15);
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    [data-bs-theme="dark"] .v2-banner-button-secondary:hover {
+      background: rgba(255, 255, 255, 0.25);
+      border-color: rgba(255, 255, 255, 0.5);
+    }
+
+    .v2-button-text {
+      letter-spacing: 0.3px;
+    }
+
+    .v2-banner-footer {
+      margin: 0;
+      font-size: 1rem;
+      line-height: 1.6;
+      color: rgba(255, 255, 255, 0.92);
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    [data-bs-theme="dark"] .v2-banner-footer {
+      color: rgba(255, 255, 255, 0.88);
+    }
+
+    .v2-banner-link-inline {
+      color: #ffffff;
+      font-weight: 600;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      transition: opacity 0.2s ease;
+    }
+
+    .v2-banner-link-inline:hover {
+      opacity: 0.85;
+      color: #ffffff;
+    }
+
+    [data-bs-theme="dark"] .v2-banner-link-inline {
+      color: #f5f5f5;
+    }
+
+    [data-bs-theme="dark"] .v2-banner-link-inline:hover {
+      color: #ffffff;
+    }
+
+    @media (max-width: 768px) {
+      .v2-announcement-banner {
+        padding: 2rem 1.5rem;
+      }
+
+      .v2-banner-title {
+        font-size: 1.75rem;
+      }
+
+      .v2-banner-subtitle {
+        font-size: 1.1rem;
+      }
+
+      .v2-banner-links {
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .v2-banner-button {
+        width: 100%;
+        min-width: unset;
+      }
+
+      .v2-banner-footer {
+        font-size: 0.95rem;
+      }
+    }
   </style>
   <script th:inline="javascript">
     /*<![CDATA[*/
@@ -214,6 +450,30 @@
     /*]]>*/
 
     window.showSurvey = /*[[${showSurveyFromDocker}]]*/ true
+
+    // V2 Banner close functionality
+    function closeV2Banner() {
+      const banner = document.getElementById('v2AnnouncementBanner');
+      if (banner) {
+        banner.style.opacity = '0';
+        banner.style.transform = 'translateY(-20px)';
+        setTimeout(() => {
+          banner.classList.add('hidden');
+          localStorage.setItem('v2BannerClosed', 'true');
+        }, 300);
+      }
+    }
+
+    // Check if banner was previously closed
+    document.addEventListener('DOMContentLoaded', function() {
+      const bannerClosed = localStorage.getItem('v2BannerClosed');
+      if (bannerClosed === 'true') {
+        const banner = document.getElementById('v2AnnouncementBanner');
+        if (banner) {
+          banner.classList.add('hidden');
+        }
+      }
+    });
   </script>
   <script th:src="@{'/js/pages/home.js'}" th:inline="javascript"></script>
   <script>
