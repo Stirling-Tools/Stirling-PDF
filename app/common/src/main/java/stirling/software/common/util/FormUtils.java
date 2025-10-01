@@ -130,11 +130,6 @@ public class FormUtils {
                         value = safeDefault(info.value());
                     }
                     break;
-                case "combobox":
-                case "radio":
-                case "text":
-                    value = safeDefault(info.value());
-                    break;
                 case "button":
                 case "signature":
                     continue; // skip non-fillable
@@ -316,7 +311,6 @@ public class FormUtils {
                 applyChoiceValue(choiceField, value);
             } else if (field instanceof PDPushButton) {
                 log.debug("Ignore Push button");
-                // Ignore buttons during fill operations
             } else if (field instanceof PDSignatureField) {
                 log.debug("Skipping signature field '{}'", field.getFullyQualifiedName());
             } else {
@@ -425,7 +419,6 @@ public class FormUtils {
                         fieldName);
             }
         }
-
         return validSelections;
     }
 
@@ -871,8 +864,8 @@ public class FormUtils {
                         originalRectangle,
                         desiredName,
                         replacementDefinition,
-                        sanitizedOptions,
-                        null); // Don't reuse widget for type changes
+                        sanitizedOptions
+                ); // Don't reuse widget for type changes
 
                 // Only remove original field after successful creation of replacement
                 removeFieldFromDocument(document, acroForm, originalField);
@@ -1168,8 +1161,7 @@ public class FormUtils {
             PDRectangle rectangle,
             String name,
             NewFormFieldDefinition definition,
-            List<String> options,
-            PDAnnotationWidget existingWidget)
+            List<String> options)
             throws IOException {
 
         if (!handler.supportsDefinitionCreation()) {
@@ -1178,7 +1170,7 @@ public class FormUtils {
         }
 
         PDTerminalField field = handler.createField(acroForm);
-        registerNewField(field, acroForm, page, rectangle, name, definition, existingWidget);
+        registerNewField(field, acroForm, page, rectangle, name, definition, null);
         List<String> preparedOptions = options != null ? options : List.of();
         handler.applyNewFieldDefinition(field, definition, preparedOptions);
     }
@@ -1388,7 +1380,7 @@ public class FormUtils {
         // please note removal of this might cause issues
         if (rectangle == null || rectangle.getWidth() <= 0 || rectangle.getHeight() <= 0) {
             log.warn("Invalid rectangle for field '{}', using default dimensions", name);
-            rectangle = new PDRectangle(100, 100, 100, 20); // Default fallback
+            rectangle = new PDRectangle(100, 100, 100, 20);
         }
         widget.setRectangle(rectangle);
         widget.setPage(page);
