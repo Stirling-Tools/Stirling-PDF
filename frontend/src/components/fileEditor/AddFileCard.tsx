@@ -47,17 +47,6 @@ const AddFileCard = ({
     event.target.value = '';
   };
 
-  // Prevent this card from interfering with drag and drop to parent Dropzone
-  const handleDragOver = (_e: React.DragEvent) => {
-    // Don't prevent default - let the parent Dropzone handle it
-    // Don't stop propagation - let it bubble up
-  };
-
-  const handleDrop = (_e: React.DragEvent) => {
-    // Don't prevent default or stop propagation
-    // Let the parent Dropzone handle the file drop
-  };
-
   return (
     <>
       <input
@@ -81,8 +70,6 @@ const AddFileCard = ({
             handleCardClick();
           }
         }}
-        onDragOver={handleDragOver}
-        onDrop={handleDrop}
       >
         {/* Header bar - matches FileEditorThumbnail structure */}
         <div className={`${styles.header} ${styles.addFileHeader}`}>
