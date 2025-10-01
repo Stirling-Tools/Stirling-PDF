@@ -1,4 +1,8 @@
 {
+  "keepWorking": "作業を続ける",
+  "discardChanges": "変更を破棄",
+  "applyAndContinue": "適用して続行",
+  "exportAndContinue": "エクスポートして続行",
   "language": {
     "direction": "ltr"
   },
@@ -35,10 +39,27 @@
   "true": "真",
   "false": "偽",
   "unknown": "不明",
+  "app": {
+    "description": "無料の Adobe Acrobat 代替（1,000万+ ダウンロード）"
+  },
   "save": "保存",
   "saveToBrowser": "ブラウザへ保存",
+  "download": "ダウンロード",
+  "undo": "元に戻す",
+  "moreOptions": "その他のオプション",
+  "editYourNewFiles": "新しいファイルを編集",
   "close": "閉じる",
+  "fileSelected": "選択中：{{filename}}",
+  "chooseFile": "ファイルを選択",
   "filesSelected": "選択されたファイル",
+  "files": {
+    "title": "ファイル",
+    "upload": "アップロード",
+    "uploadFiles": "ファイルをアップロード",
+    "addFiles": "ファイルを追加",
+    "selectFromWorkbench": "ワークベンチからファイルを選択または ",
+    "selectMultipleFromWorkbench": "ワークベンチから少なくとも {{count}} 件選択または "
+  },
   "noFavourites": "お気に入りはありません",
   "downloadComplete": "ダウンロード完了",
   "bored": "待ち時間が退屈",
@@ -56,7 +77,10 @@
   },
   "error": {
     "pdfPassword": "PDFにパスワードが設定されてますが、パスワードが入力されてないか間違ってます。",
+    "encryptedPdfMustRemovePassword": "この PDF は暗号化またはパスワード保護されています。PDF/A へ変換する前にロックを解除してください。",
+    "incorrectPasswordProvided": "PDF のパスワードが間違っているか指定されていません。",
     "_value": "エラー",
+    "dismissAllErrors": "すべてのエラーを閉じる",
     "sorry": "問題が発生したことをお詫び申し上げます！",
     "needHelp": "助けが必要/問題が見つかりましたか？",
     "contactTip": "まだ問題が解決していない場合は、お手数ですが、GitHubページでチケットを提出するか、Discordで私たちに連絡してください：",
@@ -71,6 +95,7 @@
     "githubSubmit": "GitHub - チケットを提出",
     "discordSubmit": "Discord - サポート投稿を提出"
   },
+  "edit": "編集",
   "delete": "削除",
   "username": "ユーザー名",
   "password": "パスワード",
@@ -82,6 +107,7 @@
   "green": "緑",
   "blue": "青",
   "custom": "カスタム...",
+  "comingSoon": "近日公開",
   "WorkInProgess": "作業中です。動作しないまたはバグがある可能性があります。問題があれば報告してください！",
   "poweredBy": "Powered by",
   "yes": "はい",
@@ -121,6 +147,7 @@
   "noFileSelected": "ファイルが選択されていません。アップロードしてください。",
   "legal": {
     "privacy": "プライバシーポリシー",
+    "iAgreeToThe": "以下すべてに同意します：",
     "terms": "利用規約",
     "accessibility": "アクセシビリティ",
     "cookie": "Cookieポリシー",
@@ -332,290 +359,304 @@
     "globalPopularity": "グローバル人気",
     "sortBy": "ソート順:",
     "multiTool": {
+      "tags": "multiple,tools",
       "title": "PDFマルチツール",
       "desc": "ページの結合、回転、並べ替え、削除します。"
     },
     "merge": {
+      "tags": "combine,join,unite",
       "title": "結合",
       "desc": "複数のPDFを1つに結合します。"
     },
     "split": {
+      "tags": "divide,separate,break",
       "title": "分割",
       "desc": "PDFを複数のドキュメントに分割します。"
     },
     "rotate": {
+      "tags": "turn,flip,orient",
       "title": "回転",
       "desc": "PDFを回転します。"
     },
-    "imageToPDF": {
-      "title": "画像をPDFに変換",
-      "desc": "画像 (PNG, JPEG, GIF) をPDFに変換します。"
-    },
-    "pdfToImage": {
-      "title": "PDFを画像に変換",
-      "desc": "PDFを画像 (PNG, JPEG, GIF) に変換します。"
+    "convert": {
+      "tags": "transform,change",
+      "title": "変換",
+      "desc": "異なる形式間でファイルを変換"
     },
     "pdfOrganiser": {
+      "tags": "organize,rearrange,reorder",
       "title": "整理",
       "desc": "ページの削除/並べ替えします。"
     },
     "addImage": {
+      "tags": "insert,embed,place",
       "title": "画像の追加",
       "desc": "PDF上の任意の場所に画像を追加します。"
     },
+    "addAttachments": {
+      "tags": "embed,attach,include",
+      "title": "添付を追加",
+      "desc": "PDF に埋め込みファイル（添付）を追加・削除します"
+    },
     "watermark": {
+      "tags": "stamp,mark,overlay",
       "title": "透かしの追加",
       "desc": "PDFに独自の透かしを追加します。"
     },
-    "permissions": {
-      "title": "権限の変更",
-      "desc": "PDFの権限を変更します。"
+    "removePassword": {
+      "tags": "unlock",
+      "title": "パスワードの削除",
+      "desc": "PDFからパスワードの削除します。"
     },
-    "pageRemover": {
+    "compress": {
+      "tags": "shrink,reduce,optimize",
+      "title": "圧縮",
+      "desc": "PDFを圧縮してファイルサイズを小さくします。"
+    },
+    "unlockPDFForms": {
+      "tags": "unlock,enable,edit",
+      "title": "PDFフォームのロックを解除",
+      "desc": "PDFドキュメント内のフォームフィールドの読み取り専用プロパティを削除します。"
+    },
+    "changeMetadata": {
+      "tags": "edit,modify,update",
+      "title": "メタデータの変更",
+      "desc": "PDFのメタデータを変更/削除/追加します。"
+    },
+    "ocr": {
+      "tags": "extract,scan",
+      "title": "OCR / クリーンアップ",
+      "desc": "クリーンアップはPDF内の画像からテキストを検出してテキストとして再追加します。"
+    },
+    "extractImages": {
+      "tags": "pull,save,export",
+      "title": "画像の抽出",
+      "desc": "PDFからすべての画像を抽出してzipで保存します。"
+    },
+    "scannerImageSplit": {
+      "tags": "detect,split,photos",
+      "title": "スキャン写真の検出と分割",
+      "desc": "スキャンした写真を検出して別々のページに分割"
+    },
+    "sign": {
+      "tags": "signature,autograph",
+      "title": "署名",
+      "desc": "手書き、テキストまたは画像によってPDFに署名を追加します。"
+    },
+    "flatten": {
+      "tags": "simplify,remove,interactive",
+      "title": "平坦化",
+      "desc": "PDFからインタラクティブな要素とフォームをすべて削除します。"
+    },
+    "certSign": {
+      "tags": "authenticate,PEM,P12,official,encrypt,sign,certificate,PKCS12,JKS,server,manual,auto",
+      "title": "証明書による署名",
+      "desc": "証明書/キーを使用してPDFに署名します。 (PEM/P12)"
+    },
+    "repair": {
+      "tags": "fix,restore",
+      "title": "修復",
+      "desc": "破損したPDFの修復を試みます。"
+    },
+    "removeBlanks": {
+      "tags": "delete,clean,empty",
+      "title": "空白ページの削除",
+      "desc": "ドキュメントから空白ページを検出して削除します。"
+    },
+    "removeAnnotations": {
+      "tags": "delete,clean,strip",
+      "title": "注釈の削除",
+      "desc": "PDFからすべてのコメント・注釈を削除します。"
+    },
+    "compare": {
+      "tags": "difference",
+      "title": "比較",
+      "desc": "2つのPDFを比較して表示します。"
+    },
+    "removeCertSign": {
+      "tags": "remove,delete,unlock",
+      "title": "証明書の署名を削除する",
+      "desc": "PDFから証明書署名を削除する"
+    },
+    "pageLayout": {
+      "tags": "layout,arrange,combine",
+      "title": "マルチページレイアウト",
+      "desc": "PDFの複数のページを1ページに結合します。"
+    },
+    "bookletImposition": {
+      "tags": "booklet,print,binding",
+      "title": "小冊子面付け",
+      "desc": "印刷と製本に適したページ順と多面付けレイアウトで小冊子を作成"
+    },
+    "scalePages": {
+      "tags": "resize,adjust,scale",
+      "title": "ページの縮尺の調整",
+      "desc": "ページやコンテンツの縮尺を変更します。"
+    },
+    "addPageNumbers": {
+      "tags": "number,pagination,count",
+      "title": "ページ番号の追加",
+      "desc": "ドキュメント全体の設定された場所にページ番号を追加します。"
+    },
+    "autoRename": {
+      "tags": "auto-detect,header-based,organize,relabel",
+      "title": "PDF ファイル名を自動変更",
+      "desc": "検出されたヘッダーに基づいて PDF ファイル名を自動変更"
+    },
+    "adjustContrast": {
+      "tags": "contrast,brightness,saturation",
+      "title": "色/コントラストの調整",
+      "desc": "PDFのコントラスト、彩度、明るさを調整します。"
+    },
+    "crop": {
+      "tags": "trim,cut,resize",
+      "title": "PDFのトリミング",
+      "desc": "PDFをトリミングしてサイズを縮小します (テキストは維持します！)。"
+    },
+    "autoSplitPDF": {
+      "tags": "auto,split,QR",
+      "title": "ページの自動分割",
+      "desc": "ページ分割用QRコードを使用したスキャンしたPDFを自動分割します。"
+    },
+    "sanitize": {
+      "tags": "clean,purge,remove",
+      "title": "無害化",
+      "desc": "PDF ファイルから潜在的に有害な要素を削除"
+    },
+    "getPdfInfo": {
+      "tags": "info,metadata,details",
+      "title": "PDFのすべての情報を入手",
+      "desc": "PDFのあらゆる情報を取得します。"
+    },
+    "pdfToSinglePage": {
+      "tags": "combine,merge,single",
+      "title": "PDFを単一の大きなページに変換",
+      "desc": "PDFのすべてのページを1つの大きな単一ページに結合します"
+    },
+    "showJS": {
+      "tags": "javascript,code,script",
+      "title": "JavaScriptを表示",
+      "desc": "PDFに挿入されたJavaScriptを検索して表示します。"
+    },
+    "redact": {
+      "tags": "censor,blackout,hide",
+      "title": "手動墨消し",
+      "desc": "選択したテキスト、描画した図形、選択したページに基づいてPDFを墨消します。"
+    },
+    "overlayPdfs": {
+      "tags": "overlay,combine,stack",
+      "title": "PDF をオーバーレイ",
+      "desc": "PDF を別の PDF に重ね合わせます"
+    },
+    "splitBySections": {
+      "tags": "split,sections,divide",
+      "title": "セクションで PDF を分割",
+      "desc": "PDF の各ページを水平・垂直の小セクションに分割"
+    },
+    "addStamp": {
+      "tags": "stamp,mark,seal",
+      "title": "PDF にスタンプを追加",
+      "desc": "指定位置にテキストまたは画像スタンプを追加"
+    },
+    "removeImage": {
+      "tags": "remove,delete,clean",
+      "title": "画像の削除",
+      "desc": "PDFから画像を削除してファイルサイズを小さくします"
+    },
+    "splitByChapters": {
+      "tags": "split,chapters,structure",
+      "title": "PDFをチャプターごとに分割",
+      "desc": "チャプターの構造に基づいてPDFを複数のファイルに分割します"
+    },
+    "validateSignature": {
+      "tags": "validate,verify,certificate",
+      "title": "PDF署名の検証",
+      "desc": "PDF文書のデジタル署名と証明書を検証します"
+    },
+    "swagger": {
+      "tags": "API,documentation,test",
+      "title": "API ドキュメント",
+      "desc": "API ドキュメントを表示し、エンドポイントをテスト"
+    },
+    "scannerEffect": {
+      "tags": "scan,simulate,create",
+      "title": "スキャナー風効果",
+      "desc": "スキャンしたように見える PDF を作成"
+    },
+    "editTableOfContents": {
+      "tags": "bookmarks,contents,edit",
+      "title": "目次の編集",
+      "desc": "PDFドキュメントにしおりと目次を追加または編集します"
+    },
+    "manageCertificates": {
+      "tags": "certificates,import,export",
+      "title": "証明書を管理",
+      "desc": "PDF 署名に使用するデジタル証明書ファイルをインポート、エクスポート、削除します。"
+    },
+    "read": {
+      "tags": "view,open,display",
+      "title": "閲覧",
+      "desc": "PDF を閲覧・注釈。テキストのハイライト、描画、コメント挿入でレビューやコラボに対応。"
+    },
+    "reorganizePages": {
+      "tags": "rearrange,reorder,organize",
+      "title": "ページを再配置",
+      "desc": "ドラッグ＆ドロップで視覚的に PDF ページを並べ替え・複製・削除。"
+    },
+    "extractPages": {
+      "tags": "pull,select,copy",
+      "title": "ページの抽出",
+      "desc": "PDF 文書から特定のページを抽出"
+    },
+    "removePages": {
+      "tags": "delete,extract,exclude",
       "title": "削除",
       "desc": "PDFから不要なページを削除します。"
+    },
+    "autoSizeSplitPDF": {
+      "tags": "auto,split,size",
+      "title": "サイズ・数による自動分割",
+      "desc": "サイズ・ページ数またはドキュメント数に基づいて、1つのPDFを複数のドキュメントに分割します。"
+    },
+    "replaceColor": {
+      "title": "色の置換と反転",
+      "desc": "PDF 文書の色を置換または反転"
+    },
+    "devApi": {
+      "tags": "API,development,documentation",
+      "title": "API",
+      "desc": "API ドキュメントへのリンク"
+    },
+    "devFolderScanning": {
+      "tags": "automation,folder,scanning",
+      "title": "自動フォルダスキャン",
+      "desc": "自動フォルダスキャン ガイドへのリンク"
+    },
+    "devSsoGuide": {
+      "title": "SSO ガイド",
+      "desc": "SSO ガイドへのリンク"
+    },
+    "devAirgapped": {
+      "title": "エアギャップ設定",
+      "desc": "エアギャップ環境のセットアップガイドへのリンク"
     },
     "addPassword": {
       "title": "パスワードの追加",
       "desc": "PDFをパスワードで暗号化します。"
     },
-    "removePassword": {
-      "title": "パスワードの削除",
-      "desc": "PDFからパスワードの削除します。"
-    },
-    "compress": {
-      "title": "圧縮",
-      "desc": "PDFを圧縮してファイルサイズを小さくします。"
-    },
-    "unlockPDFForms": {
-      "title": "PDFフォームのロックを解除",
-      "desc": "PDFドキュメント内のフォームフィールドの読み取り専用プロパティを削除します。"
-    },
-    "changeMetadata": {
-      "title": "メタデータの変更",
-      "desc": "PDFのメタデータを変更/削除/追加します。"
-    },
-    "fileToPDF": {
-      "title": "ファイルをPDFに変換",
-      "desc": "ほぼすべてのファイルをPDFに変換します。 (DOCX, PNG, XLS, PPT, TXTなど)"
-    },
-    "ocr": {
-      "title": "OCR / クリーンアップ",
-      "desc": "クリーンアップはPDF内の画像からテキストを検出してテキストとして再追加します。"
-    },
-    "extractImages": {
-      "title": "画像の抽出",
-      "desc": "PDFからすべての画像を抽出してzipで保存します。"
-    },
-    "pdfToPDFA": {
-      "title": "PDFをPDF/Aに変換",
-      "desc": "長期保存のためにPDFをPDF/Aに変換。"
-    },
-    "PDFToWord": {
-      "title": "PDFをWordに変換",
-      "desc": "PDFをWord形式に変換します。 (DOC, DOCX および ODT)"
-    },
-    "PDFToPresentation": {
-      "title": "PDFをプレゼンテーションに変換",
-      "desc": "PDFをプレゼンテーション形式に変換します。 (PPT, PPTX および ODP)"
-    },
-    "PDFToText": {
-      "title": "PDFをText/RTFに変換",
-      "desc": "PDFをTextまたはRTF形式に変換します。"
-    },
-    "PDFToHTML": {
-      "title": "PDFをHTMLに変換",
-      "desc": "PDFをHTML形式に変換します。"
-    },
-    "PDFToXML": {
-      "title": "PDFをXMLに変換",
-      "desc": "PDFをXML形式に変換します。"
-    },
-    "ScannerImageSplit": {
-      "title": "スキャンされた画像の検出/分割",
-      "desc": "1枚の画像/PDFから複数の写真を分割します。"
-    },
-    "sign": {
-      "title": "署名",
-      "desc": "手書き、テキストまたは画像によってPDFに署名を追加します。"
-    },
-    "flatten": {
-      "title": "平坦化",
-      "desc": "PDFからインタラクティブな要素とフォームをすべて削除します。"
-    },
-    "repair": {
-      "title": "修復",
-      "desc": "破損したPDFの修復を試みます。"
-    },
-    "removeBlanks": {
-      "title": "空白ページの削除",
-      "desc": "ドキュメントから空白ページを検出して削除します。"
-    },
-    "removeAnnotations": {
-      "title": "注釈の削除",
-      "desc": "PDFからすべてのコメント・注釈を削除します。"
-    },
-    "compare": {
-      "title": "比較",
-      "desc": "2つのPDFを比較して表示します。"
-    },
-    "certSign": {
-      "title": "証明書による署名",
-      "desc": "証明書/キーを使用してPDFに署名します。 (PEM/P12)"
-    },
-    "removeCertSign": {
-      "title": "証明書の署名を削除する",
-      "desc": "PDFから証明書署名を削除する"
-    },
-    "pageLayout": {
-      "title": "マルチページレイアウト",
-      "desc": "PDFの複数のページを1ページに結合します。"
-    },
-    "scalePages": {
-      "title": "ページの縮尺の調整",
-      "desc": "ページやコンテンツの縮尺を変更します。"
-    },
-    "pipeline": {
-      "title": "パイプライン",
-      "desc": "パイプラインスクリプトを定義してPDF上で複数のアクションを実行します。"
-    },
-    "addPageNumbers": {
-      "title": "ページ番号の追加",
-      "desc": "ドキュメント全体の設定された場所にページ番号を追加します。"
-    },
-    "auto-rename": {
-      "title": "PDFファイル名の自動変更",
-      "desc": "検出されたヘッダーに基づいてPDFファイルの名前を自動的に変更します。"
-    },
-    "adjustContrast": {
-      "title": "色/コントラストの調整",
-      "desc": "PDFのコントラスト、彩度、明るさを調整します。"
-    },
-    "crop": {
-      "title": "PDFのトリミング",
-      "desc": "PDFをトリミングしてサイズを縮小します (テキストは維持します！)。"
-    },
-    "autoSplitPDF": {
-      "title": "ページの自動分割",
-      "desc": "ページ分割用QRコードを使用したスキャンしたPDFを自動分割します。"
-    },
-    "sanitizePDF": {
-      "title": "サニタイズ",
-      "desc": "PDFファイルからスクリプトやその他の要素を削除します。"
-    },
-    "URLToPDF": {
-      "title": "URL/WebサイトをPDFに変換",
-      "desc": "あらゆるhttp(s)URLをPDFに変換します。"
-    },
-    "HTMLToPDF": {
-      "title": "HTMLをPDFに変換",
-      "desc": "HTMLファイルまたはzipをPDFに変換します。"
-    },
-    "MarkdownToPDF": {
-      "title": "MarkdownをPDFに変換",
-      "desc": "あらゆるMarkdownファイルをPDFに変換します。"
-    },
-    "PDFToMarkdown": {
-      "title": "PDFをMarkdownに変換",
-      "desc": "あらゆるPDFをMarkdownに変換します。"
-    },
-    "getPdfInfo": {
-      "title": "PDFのすべての情報を入手",
-      "desc": "PDFのあらゆる情報を取得します。"
-    },
-    "pageExtracter": {
-      "title": "ページの抽出",
-      "desc": "PDFから選択したページを抽出します。"
-    },
-    "pdfToSinglePage": {
-      "title": "PDFを単一の大きなページに変換",
-      "desc": "PDFのすべてのページを1つの大きな単一ページに結合します"
-    },
-    "showJS": {
-      "title": "JavaScriptを表示",
-      "desc": "PDFに挿入されたJavaScriptを検索して表示します。"
-    },
-    "autoRedact": {
-      "title": "自動墨消し",
-      "desc": "入力したテキストに基づいてPDF内のテキストを自動で墨消し(黒塗り)ます。"
-    },
-    "redact": {
-      "title": "手動墨消し",
-      "desc": "選択したテキスト、描画した図形、選択したページに基づいてPDFを墨消します。"
-    },
-    "PDFToCSV": {
-      "title": "PDFをCSVに変換",
-      "desc": "PDFから表を抽出しCSVに変換します。"
-    },
-    "split-by-size-or-count": {
-      "title": "サイズ・数による自動分割",
-      "desc": "サイズ・ページ数またはドキュメント数に基づいて、1つのPDFを複数のドキュメントに分割します。"
-    },
-    "overlay-pdfs": {
-      "title": "PDFのオーバーレイ",
-      "desc": "PDFの上に別のPDFを重ねます。"
-    },
-    "split-by-sections": {
-      "title": "PDFをセクションで分割",
-      "desc": "PDFの各ページを縦横に分割します。"
-    },
-    "AddStampRequest": {
-      "title": "PDFにスタンプを追加",
-      "desc": "設定した位置にテキストや画像のスタンプを追加できます"
-    },
-    "removeImage": {
-      "title": "画像の削除",
-      "desc": "PDFから画像を削除してファイルサイズを小さくします"
-    },
-    "splitByChapters": {
-      "title": "PDFをチャプターごとに分割",
-      "desc": "チャプターの構造に基づいてPDFを複数のファイルに分割します"
-    },
-    "validateSignature": {
-      "title": "PDF署名の検証",
-      "desc": "PDF文書のデジタル署名と証明書を検証します"
-    },
-    "replace-color": {
-      "title": "色の置換と反転",
-      "desc": "PDF内のテキストと背景の色を置き換え、PDFのフルカラーを反転してファイルサイズを縮小します。"
-    },
-    "convert": {
-      "title": "変換"
-    },
-    "attachments": {
-      "title": "添付ファイルの追加",
-      "desc": "PDFに埋め込みファイル（添付ファイル）を追加または削除します"
-    },
-    "editTableOfContents": {
-      "title": "目次の編集",
-      "desc": "PDFドキュメントにしおりと目次を追加または編集します"
-    },
-    "extractPages": {
-      "title": "ページの抽出"
-    },
-    "removePages": {
-      "title": "削除",
-      "desc": "PDFから不要なページを削除します。"
-    },
-    "removeImagePdf": {
-      "title": "画像の削除",
-      "desc": "PDFから画像を削除してファイルサイズを小さくします"
-    },
-    "autoSizeSplitPDF": {
-      "title": "サイズ・数による自動分割",
-      "desc": "サイズ・ページ数またはドキュメント数に基づいて、1つのPDFを複数のドキュメントに分割します。"
-    },
-    "adjust-contrast": {
-      "title": "色/コントラストの調整",
-      "desc": "PDFのコントラスト、彩度、明るさを調整します。"
-    },
-    "replaceColorPdf": {
-      "title": "色の置換と反転",
-      "desc": "PDF内のテキストと背景の色を置き換え、PDFのフルカラーを反転してファイルサイズを縮小します。"
-    },
     "changePermissions": {
-      "title": "権限の変更"
+      "title": "権限の変更",
+      "desc": "文書の制限と権限を変更"
+    },
+    "automate": {
+      "tags": "workflow,sequence,automation",
+      "title": "自動化",
+      "desc": "PDF アクションを連結して複数ステップのワークフローを構築。繰り返し作業に最適です。"
     }
+  },
+  "landing": {
+    "addFiles": "ファイルを追加",
+    "uploadFromComputer": "コンピュータからアップロード"
   },
   "viewPdf": {
     "tags": "view,read,annotate,text,image",
@@ -650,17 +691,29 @@
   "merge": {
     "tags": "merge,Page operations,Back end,server side",
     "title": "結合",
-    "header": "複数のPDFを結合 (2ファイル以上)",
-    "sortByName": "名前で並べ替え",
-    "sortByDate": "日付で並べ替え",
-    "removeCertSign": "結合されたファイル内のデジタル署名を削除しますか？",
+    "removeDigitalSignature.tooltip": {
+      "title": "デジタル署名を削除",
+      "description": "ファイルを結合するとデジタル署名は無効になります。最終的な結合 PDF から署名を削除するにはチェックを入れてください。"
+    },
+    "generateTableOfContents.tooltip": {
+      "title": "目次を生成",
+      "description": "元のファイル名とページ番号に基づいて、結合後の PDF にクリック可能な目次を自動作成します。"
+    },
     "submit": "結合",
     "sortBy": {
-      "filename": "ファイル名"
+      "description": "ファイルは選択した順に結合されます。ドラッグで並べ替えるか、下のソートを使用してください。",
+      "label": "並べ替え",
+      "filename": "ファイル名",
+      "dateModified": "更新日",
+      "ascending": "昇順",
+      "descending": "降順",
+      "sort": "ソート"
+    },
+    "error": {
+      "failed": "PDF の結合中にエラーが発生しました。"
     }
   },
   "split": {
-    "tags": "Page operations,divide,Multi Page,cut,server side",
     "title": "PDFの分割",
     "header": "PDFの分割",
     "desc": {
@@ -690,11 +743,76 @@
     }
   },
   "rotate": {
-    "tags": "server side",
     "title": "PDFの回転",
-    "header": "PDFの回転",
-    "selectAngle": "回転角度を選択 (90度の倍数):",
     "submit": "回転"
+  },
+  "convert": {
+    "title": "変換",
+    "desc": "異なる形式間でファイルを変換します",
+    "files": "ファイル",
+    "selectFilesPlaceholder": "開始するにはメインビューでファイルを選択してください",
+    "settings": "設定",
+    "conversionCompleted": "変換が完了しました",
+    "results": "結果",
+    "defaultFilename": "converted_file",
+    "conversionResults": "変換結果",
+    "convertFrom": "変換元",
+    "convertTo": "変換先",
+    "sourceFormatPlaceholder": "変換元形式",
+    "targetFormatPlaceholder": "変換先形式",
+    "selectSourceFormatFirst": "先に変換元形式を選択してください",
+    "outputOptions": "出力オプション",
+    "pdfOptions": "PDF オプション",
+    "imageOptions": "画像オプション",
+    "colorType": "色の種類",
+    "color": "色",
+    "greyscale": "グレースケール",
+    "blackwhite": "白黒",
+    "dpi": "DPI",
+    "output": "出力",
+    "single": "単一",
+    "multiple": "複数",
+    "fitOption": "フィットオプション",
+    "maintainAspectRatio": "縦横比を維持",
+    "fitDocumentToPage": "ページに合わせて文書をフィット",
+    "fillPage": "フルページ",
+    "autoRotate": "自動回転",
+    "autoRotateDescription": "PDF ページにより適した向きになるよう画像を自動回転します",
+    "combineImages": "画像を結合",
+    "combineImagesDescription": "すべての画像を 1 つの PDF に結合するか、各画像ごとに別々の PDF を作成します",
+    "webOptions": "Web → PDF オプション",
+    "zoomLevel": "ズームレベル",
+    "emailOptions": "メール → PDF オプション",
+    "includeAttachments": "メールの添付ファイルを含める",
+    "maxAttachmentSize": "最大添付サイズ（MB）",
+    "includeAllRecipients": "ヘッダーに CC と BCC 受信者を含める",
+    "downloadHtml": "PDF の代わりに中間ファイル（HTML）をダウンロード",
+    "pdfaOptions": "PDF/A オプション",
+    "outputFormat": "出力形式",
+    "pdfaNote": "PDF/A-1b は互換性が高く、PDF/A-2b はより多くの機能をサポートします。",
+    "pdfaDigitalSignatureWarning": "PDFにはデジタル署名が含まれています。これは次の手順で削除されます。",
+    "fileFormat": "ファイル形式",
+    "wordDoc": "Word 文書",
+    "wordDocExt": "Word 文書（.docx）",
+    "odtExt": "OpenDocument テキスト（.odt）",
+    "pptExt": "PowerPoint（.pptx）",
+    "odpExt": "OpenDocument プレゼンテーション（.odp）",
+    "txtExt": "プレーンテキスト（.txt）",
+    "rtfExt": "リッチテキスト形式（.rtf）",
+    "selectedFiles": "選択したファイル",
+    "noFileSelected": "ファイルが選択されていません。ファイルパネルから追加してください。",
+    "convertFiles": "ファイルを変換",
+    "converting": "変換中...",
+    "downloadConverted": "変換後のファイルをダウンロード",
+    "errorNoFiles": "変換するファイルを少なくとも 1 つ選択してください。",
+    "errorNoFormat": "変換元と変換先の両方の形式を選択してください。",
+    "errorNotSupported": "{{from}} から {{to}} への変換はサポートされていません。",
+    "images": "画像",
+    "officeDocs": "オフィス文書（Word、Excel、PowerPoint）",
+    "imagesExt": "画像（JPG、PNG など）",
+    "markdown": "Markdown",
+    "textRtf": "テキスト/RTF",
+    "grayscale": "グレースケール"
   },
   "imageToPdf": {
     "tags": "conversion,img,jpg,picture,photo,psd,photoshop"
@@ -737,35 +855,25 @@
     "placeholder": "(例:1,3,2または4-8,2,10-12または2n-1)"
   },
   "addImage": {
-    "tags": "img,jpg,picture,photo",
+    "tags": "画像,img,jpg,ピクチャ,写真",
     "title": "画像の追加",
     "header": "PDFに画像を追加",
     "everyPage": "全ページ？",
     "upload": "画像の追加",
     "submit": "画像の追加"
   },
+  "attachments": {
+    "tags": "embed,attach,file,attachment,attachments",
+    "title": "添付ファイルの追加",
+    "header": "添付ファイルの追加",
+    "add": "添付を追加",
+    "remove": "添付を削除",
+    "embed": "添付を埋め込む",
+    "submit": "添付ファイルの追加"
+  },
   "watermark": {
-    "tags": "Text,repeating,label,own,copyright,trademark,img,jpg,picture,photo",
     "title": "透かしの追加",
-    "header": "透かしの追加",
-    "customColor": "文字色のカスタム",
-    "selectText": {
-      "1": "透かしを追加するPDFを選択:",
-      "2": "透かしのテキスト:",
-      "3": "文字サイズ:",
-      "4": "回転 (0-360):",
-      "5": "幅スペース (各透かし間の水平方向のスペース):",
-      "6": "高さスペース (各透かし間の垂直方向のスペース):",
-      "7": "不透明度 (0% - 100%):",
-      "8": "透かしの種類:",
-      "9": "透かしの画像:",
-      "10": "PDFをPDFイメージに変換する"
-    },
     "submit": "透かしを追加",
-    "type": {
-      "1": "テキスト",
-      "2": "画像"
-    },
     "watermarkType": {
       "text": "テキスト"
     },
@@ -797,52 +905,60 @@
     "title": "削除",
     "submit": "削除"
   },
-  "addPassword": {
-    "tags": "secure,security",
-    "title": "パスワードの追加",
-    "header": "パスワードの追加 (暗号化)",
-    "selectText": {
-      "1": "暗号化するPDFを選択",
-      "2": "ユーザーパスワード",
-      "3": "暗号化キーの長さ",
-      "4": "値が大きいほど強力ですが、値が小さいほど互換性が高くなります。",
-      "5": "権限の設定 (所有者パスワードとの併用をおすすめします)",
-      "6": "ドキュメントの組立を禁止",
-      "7": "コンテンツの抽出を禁止",
-      "8": "アクセシビリティのための抽出を禁止",
-      "9": "フォームへの入力を禁止",
-      "10": "変更を禁止",
-      "11": "注釈の変更を禁止",
-      "12": "印刷を禁止",
-      "13": "異なる形式の印刷を禁止",
-      "14": "所有者パスワード",
-      "15": "ドキュメントを開いた後に実行できる操作を制限します (すべてのリーダーでサポートされているわけではありません)",
-      "16": "ドキュメントを開くことを制限します"
+  "bulkSelection": {
+    "header": {
+      "title": "ページ選択ガイド"
     },
-    "submit": "暗号化",
-    "tooltip": {
-      "permissions": {
-        "title": "権限の変更"
+    "syntax": {
+      "title": "構文の基本",
+      "text": "数値、範囲、キーワード、等差列（n は 0 から）を使用します。括弧も使用できます。",
+      "bullets": {
+        "numbers": "数値/範囲：5、10-20",
+        "keywords": "キーワード：odd, even",
+        "progressions": "等差列：3n、4n+1"
       }
-    }
-  },
-  "removePassword": {
-    "tags": "secure,Decrypt,security,unpassword,delete password",
-    "title": "パスワードの削除",
-    "header": "パスワードの削除 (復号化)",
-    "selectText": {
-      "1": "復号化するPDFを選択",
-      "2": "パスワード"
     },
-    "submit": "削除",
-    "desc": "PDFからパスワードの削除します。",
-    "password": {
-      "stepTitle": "パスワードの削除",
-      "label": "現在のパスワード"
+    "operators": {
+      "title": "演算子",
+      "text": "AND はカンマより優先されます。NOT は文書範囲内に適用されます。",
+      "and": "AND：& または \"and\" — 両方の条件を必須（例：1-50 & even）",
+      "comma": "カンマ：, または | — 選択を結合（例：1-10, 20）",
+      "not": "NOT：! または \"not\" — ページを除外（例：3n & not 30）"
+    },
+    "examples": {
+      "title": "例",
+      "first50": "最初の 50",
+      "last50": "最後の 50",
+      "every3rd": "3 ページごと",
+      "oddWithinExcluding": "1–20 の奇数（5–7 を除外）",
+      "combineSets": "セットを結合"
+    },
+    "firstNPages": {
+      "title": "最初の N ページ",
+      "placeholder": "ページ数"
+    },
+    "lastNPages": {
+      "title": "最後の N ページ",
+      "placeholder": "ページ数"
+    },
+    "everyNthPage": {
+      "title": "N ページごと",
+      "placeholder": "ステップ幅"
+    },
+    "range": {
+      "title": "範囲",
+      "fromPlaceholder": "開始",
+      "toPlaceholder": "終了"
+    },
+    "keywords": {
+      "title": "キーワード"
+    },
+    "advanced": {
+      "title": "詳細"
     }
   },
   "compressPdfs": {
-    "tags": "squish,small,tiny"
+    "tags": "圧縮,小さく,軽量"
   },
   "unlockPDFForms": {
     "tags": "remove,delete,form,field,readonly",
@@ -851,25 +967,118 @@
     "submit": "Remove"
   },
   "changeMetadata": {
-    "tags": "Title,author,date,creation,time,publisher,producer,stats",
-    "title": "タイトル:",
     "header": "メタデータの変更",
-    "selectText": {
-      "1": "変更したい変数を編集してください",
-      "2": "すべてのメタデータを削除",
-      "3": "カスタムメタデータを表示",
-      "4": "その他のメタデータ:",
-      "5": "カスタムメタデータの追加"
+    "submit": "変更",
+    "filenamePrefix": "metadata",
+    "settings": {
+      "title": "メタデータ設定"
     },
-    "author": "著者:",
-    "creationDate": "作成日 (yyyy/MM/dd HH:mm:ss):",
-    "creator": "作成者:",
-    "keywords": "キーワード:",
-    "modDate": "変更日 (yyyy/MM/dd HH:mm:ss):",
-    "producer": "プロデューサー:",
-    "subject": "主題:",
-    "trapped": "トラッピング:",
-    "submit": "変更"
+    "standardFields": {
+      "title": "標準フィールド"
+    },
+    "deleteAll": {
+      "label": "既存メタデータを削除",
+      "checkbox": "すべてのメタデータを削除"
+    },
+    "title": {
+      "label": "タイトル",
+      "placeholder": "文書のタイトル"
+    },
+    "author": {
+      "label": "著者",
+      "placeholder": "文書の著者"
+    },
+    "subject": {
+      "label": "件名",
+      "placeholder": "文書の件名"
+    },
+    "keywords": {
+      "label": "キーワード",
+      "placeholder": "文書のキーワード"
+    },
+    "creator": {
+      "label": "作成アプリ",
+      "placeholder": "文書の作成アプリ"
+    },
+    "producer": {
+      "label": "生成アプリ",
+      "placeholder": "文書の生成アプリ"
+    },
+    "dates": {
+      "title": "日付フィールド"
+    },
+    "creationDate": {
+      "label": "作成日",
+      "placeholder": "作成日"
+    },
+    "modificationDate": {
+      "label": "更新日",
+      "placeholder": "更新日"
+    },
+    "trapped": {
+      "label": "トラッピング状態",
+      "unknown": "Unknown",
+      "true": "True",
+      "false": "False"
+    },
+    "advanced": {
+      "title": "詳細オプション"
+    },
+    "customFields": {
+      "title": "カスタムメタデータ",
+      "description": "文書にカスタムメタデータ項目を追加します",
+      "add": "フィールドを追加",
+      "key": "キー",
+      "keyPlaceholder": "カスタムキー",
+      "value": "値",
+      "valuePlaceholder": "カスタム値",
+      "remove": "削除"
+    },
+    "results": {
+      "title": "更新された PDF"
+    },
+    "error": {
+      "failed": "PDF メタデータの変更中にエラーが発生しました。"
+    },
+    "tooltip": {
+      "header": {
+        "title": "PDF メタデータの概要"
+      },
+      "dates": {
+        "title": "日付フィールド",
+        "text": "文書の作成日時と最終更新日時です。",
+        "bullet1": "作成日：文書が作られた日",
+        "bullet2": "更新日：最後に変更された日"
+      },
+      "options": {
+        "title": "追加オプション",
+        "text": "カスタム項目とプライバシー制御。",
+        "bullet1": "カスタムメタデータ：独自のキー/値を追加",
+        "bullet2": "トラッピング：高品質印刷向け設定",
+        "bullet3": "すべて削除：プライバシー保護のため"
+      },
+      "deleteAll": {
+        "title": "既存メタデータの削除",
+        "text": "プライバシー保護のためにメタデータを完全削除します。"
+      },
+      "customFields": {
+        "title": "カスタムメタデータ",
+        "text": "独自のキーと値のペアを追加します。",
+        "bullet1": "文書に関連する任意のカスタム項目を追加",
+        "bullet2": "例：部署、プロジェクト、バージョン、ステータス",
+        "bullet3": "各項目にはキーと値が必要"
+      },
+      "advanced": {
+        "title": "詳細オプション",
+        "trapped": {
+          "title": "トラッピング状態",
+          "description": "高品質印刷のために文書が準備されているかを示します。",
+          "bullet1": "True：高品質印刷のためにトラッピング済み",
+          "bullet2": "False：トラッピングされていない",
+          "bullet3": "Unknown：トラッピング状態は未指定"
+        }
+      }
+    }
   },
   "fileToPDF": {
     "tags": "transformation,format,document,picture,slide,text,conversion,office,docs,word,excel,powerpoint",
@@ -883,6 +1092,7 @@
   "ocr": {
     "tags": "recognition,text,image,scan,read,identify,detection,editable",
     "title": "OCR / クリーンアップ",
+    "desc": "クリーンアップはPDF内の画像からテキストを検出してテキストとして再追加します。",
     "header": "クリーンアップ / OCR (光学式文字認識)",
     "selectText": {
       "1": "PDF内で検出される言語を選択 (リストされているものは現在検出されているものです):",
@@ -901,22 +1111,85 @@
     "help": "他の言語でこれを使用する方法やDocker以外で使用する方法についてはこのドキュメントをお読みください。",
     "credit": "本サービスにはOCRにqpdfとTesseractを使用しています。",
     "submit": "OCRでPDFを処理する",
-    "desc": "クリーンアップはPDF内の画像からテキストを検出してテキストとして再追加します。",
+    "operation": {
+      "submit": "OCR を実行してレビュー"
+    },
+    "results": {
+      "title": "OCR 結果"
+    },
+    "languagePicker": {
+      "additionalLanguages": "追加の言語をお探しですか？",
+      "viewSetupGuide": "セットアップガイドを見る →"
+    },
     "settings": {
       "title": "設定",
       "ocrMode": {
-        "label": "OCRモード"
+        "label": "OCRモード",
+        "auto": "自動（テキストレイヤーはスキップ）",
+        "force": "強制（全ページを再 OCR・テキスト置換）",
+        "strict": "厳密（テキストが見つかったら中止）"
       },
       "languages": {
-        "label": "言語"
+        "label": "言語",
+        "placeholder": "言語を選択"
+      },
+      "compatibilityMode": {
+        "label": "互換モード"
+      },
+      "advancedOptions": {
+        "label": "処理オプション",
+        "sidecar": "テキストファイルを作成",
+        "deskew": "ページの傾きを補正",
+        "clean": "入力ファイルをクリーン化",
+        "cleanFinal": "最終出力をクリーン化"
       }
     },
     "tooltip": {
+      "header": {
+        "title": "OCR 設定の概要"
+      },
       "mode": {
-        "title": "OCRモード"
+        "title": "OCRモード",
+        "text": "OCR（光学式文字認識）は、スキャンやスクリーンショットのページを検索・コピー・ハイライト可能なテキストに変換します。",
+        "bullet1": "自動はすでにテキストレイヤーを含むページをスキップします。",
+        "bullet2": "強制はすべてのページを再 OCR し、テキストを置換します。",
+        "bullet3": "厳密は選択可能なテキストが見つかれば処理を停止します。"
       },
       "languages": {
-        "title": "言語"
+        "title": "言語",
+        "text": "想定する言語を指定することで OCR の精度を高めます。検出を補助するため 1 つ以上の言語を選択してください。"
+      },
+      "output": {
+        "title": "出力",
+        "text": "テキスト出力の形式を選択してください：",
+        "bullet1": "検索可能 PDF は、元画像の背後にテキストを埋め込みます。",
+        "bullet2": "HOCR XML は構造化された機械可読ファイルを返します。",
+        "bullet3": "プレーンテキストのサイドカーは生テキストを含む別個の .txt を作成します。"
+      },
+      "advanced": {
+        "header": {
+          "title": "高度な OCR 処理"
+        },
+        "compatibility": {
+          "title": "互換モード",
+          "text": "OCR の “サンドイッチ PDF” モードを使用します：ファイルサイズは大きくなりますが、一部の言語や古い PDF ソフトでより確実です。既定では小さくモダンな hOCR を使用します。"
+        },
+        "sidecar": {
+          "title": "テキストファイルを作成",
+          "text": "抽出された全テキストを含む .txt ファイルを PDF と並行して生成し、アクセスや処理を容易にします。"
+        },
+        "deskew": {
+          "title": "ページの傾きを補正",
+          "text": "傾いたページを自動補正して OCR 精度を向上します。完全に整列していないスキャン文書に有用です。"
+        },
+        "clean": {
+          "title": "入力ファイルをクリーン化",
+          "text": "ノイズ除去、コントラスト強調などの前処理を行い、OCR の認識精度を高めてから処理します。"
+        },
+        "cleanFinal": {
+          "title": "最終出力をクリーン化",
+          "text": "OCR のアーティファクトを除去し、テキストレイヤーを最適化して可読性の向上とファイルサイズの縮小を図ります。"
+        }
       }
     }
   },
@@ -926,7 +1199,13 @@
     "header": "画像の抽出",
     "selectText": "抽出した画像のフォーマットを選択",
     "allowDuplicates": "重複した画像を保存する",
-    "submit": "抽出"
+    "submit": "抽出",
+    "settings": {
+      "title": "設定"
+    },
+    "error": {
+      "failed": "PDF からの画像抽出中にエラーが発生しました。"
+    }
   },
   "pdfToPDFA": {
     "tags": "archive,long-term,standard,conversion,storage,preservation",
@@ -939,7 +1218,7 @@
     "pdfWithDigitalSignature": "PDFにはデジタル署名が含まれています。これは次の手順で削除されます。"
   },
   "PDFToWord": {
-    "tags": "doc,docx,odt,word,transformation,format,conversion,office,microsoft,docfile",
+    "tags": "doc,docx,odt,word,変換,フォーマット,コンバージョン,オフィス,microsoft,docファイル",
     "title": "PDFをWordに変換",
     "header": "PDFをWordに変換",
     "selectText": {
@@ -949,7 +1228,7 @@
     "submit": "変換"
   },
   "PDFToPresentation": {
-    "tags": "slides,show,office,microsoft",
+    "tags": "スライド,プレゼン,オフィス,microsoft",
     "title": "PDFをプレゼンテーションに変換",
     "header": "PDFをプレゼンテーションに変換",
     "selectText": {
@@ -959,7 +1238,7 @@
     "submit": "変換"
   },
   "PDFToText": {
-    "tags": "richformat,richtextformat,rich text format",
+    "tags": "リッチフォーマット,リッチテキストフォーマット,リッチ テキスト フォーマット",
     "title": "PDFをText/RTFに変換",
     "header": "PDFをText/RTFに変換",
     "selectText": {
@@ -969,21 +1248,21 @@
     "submit": "変換"
   },
   "PDFToHTML": {
-    "tags": "web content,browser friendly",
+    "tags": "ウェブコンテンツ,ブラウザー対応",
     "title": "PDFをHTMLに変換",
     "header": "PDFをHTMLに変換",
     "credit": "本サービスはファイル変換にpdftohtmlを使用しています。",
     "submit": "変換"
   },
   "PDFToXML": {
-    "tags": "data-extraction,structured-content,interop,transformation,convert",
+    "tags": "データ抽出,構造化コンテンツ,相互運用,変換,コンバート",
     "title": "PDFをXMLに変換",
     "header": "PDFをXMLに変換",
     "credit": "本サービスはファイル変換にLibreOfficeを使用しています。",
     "submit": "変換"
   },
   "ScannerImageSplit": {
-    "tags": "separate,auto-detect,scans,multi-photo,organize",
+    "tags": "分割,自動検出,スキャン,複数写真,整理",
     "selectText": {
       "1": "角度のしきい値:",
       "2": "画像を回転させるために必要な絶対角度の最小値を設定 (初期値:10)。",
@@ -999,7 +1278,6 @@
     "info": "Pythonがインストールされていません。実行する必要があります。"
   },
   "sign": {
-    "tags": "authorize,initials,drawn-signature,text-sign,image-signature",
     "title": "署名",
     "header": "PDFに署名",
     "upload": "画像をアップロード",
@@ -1023,16 +1301,49 @@
     "redo": "やり直す"
   },
   "flatten": {
-    "tags": "static,deactivate,non-interactive,streamline",
     "title": "平坦化",
     "header": "PDFを平坦化する",
     "flattenOnlyForms": "フォームのみを平坦にする",
     "submit": "平坦化",
+    "filenamePrefix": "flattened",
+    "files": {
+      "placeholder": "開始するにはメインビューで PDF ファイルを選択してください"
+    },
     "steps": {
       "settings": "設定"
     },
     "options": {
-      "flattenOnlyForms": "フォームのみを平坦にする"
+      "stepTitle": "フラット化オプション",
+      "title": "フラット化オプション",
+      "flattenOnlyForms.desc": "フォームフィールドのみをフラット化し、その他のインタラクティブ要素は維持します",
+      "note": "フラット化すると PDF からインタラクティブ要素が削除され、編集できなくなります。"
+    },
+    "results": {
+      "title": "フラット化の結果"
+    },
+    "error": {
+      "failed": "PDF のフラット化中にエラーが発生しました。"
+    },
+    "tooltip": {
+      "header": {
+        "title": "PDF のフラット化について"
+      },
+      "description": {
+        "title": "フラット化とは？",
+        "text": "フラット化は、入力可能なフォームやボタンを通常のテキストや画像に変換して PDF を編集不可にします。見た目はまったく同じですが、フォームの入力や変更はできなくなります。完成したフォームの共有、記録用の最終文書作成、表示の一貫性確保に最適です。",
+        "bullet1": "テキストボックスは通常のテキストになり（編集不可）",
+        "bullet2": "チェックボックスやボタンは画像になります",
+        "bullet3": "変更されたくない最終版に最適",
+        "bullet4": "すべてのデバイスで見た目が一貫します"
+      },
+      "formsOnly": {
+        "title": "「フォームのみフラット化」とは？",
+        "text": "このオプションはフォームの入力機能だけを無効化し、リンクのクリック、ブックマーク表示、コメントの閲覧など他の機能は維持します。",
+        "bullet1": "フォームは編集不可になります",
+        "bullet2": "リンクは引き続きクリックで機能します",
+        "bullet3": "コメントやメモは表示されたままです",
+        "bullet4": "ブックマークは引き続きナビゲーションに有用です"
+      }
     }
   },
   "repair": {
@@ -1042,13 +1353,10 @@
     "submit": "修復"
   },
   "removeBlanks": {
-    "tags": "cleanup,streamline,non-content,organize",
     "title": "空白の削除",
     "header": "空白ページの削除",
     "threshold": "しきい値 :",
-    "thresholdDesc": "白色ピクセルの白さを決めるためのしきい値",
     "whitePercent": "白比率",
-    "whitePercentDesc": "削除するページの白の割合",
     "submit": "空白ページの削除"
   },
   "removeAnnotations": {
@@ -1058,7 +1366,7 @@
     "submit": "削除"
   },
   "compare": {
-    "tags": "differentiate,contrast,changes,analysis",
+    "tags": "差分,対比,変更,分析",
     "title": "比較",
     "header": "PDFの比較",
     "highlightColor": {
@@ -1087,21 +1395,122 @@
   "certSign": {
     "tags": "authenticate,PEM,P12,official,encrypt",
     "title": "証明書による署名",
-    "header": "証明書を使用してPDFに署名します。 (制作中)",
-    "selectPDF": "署名するPDFファイルを選択:",
-    "jksNote": "注: 証明書のタイプが以下にリストされていない場合は、keytoolコマンドラインツールを使用して証明書をJavaキーストア(.jks)ファイルに変換してください。次に以下の.jksファイル オプションを選択します。",
-    "selectKey": "秘密キーファイルを選択 (PKCS#8形式、.pemまたは.der) :",
-    "selectCert": "証明書ファイルを選択 (X.509形式、.pemまたは.der) :",
-    "selectP12": "PKCS#12キーストアファイルを選択 (.p12または.pfx) (オプション。指定する場合は秘密キーと証明書が含まれている必要があります。):",
-    "selectJKS": "Javaキーストアファイルを選択 (.jks or .keystore):",
-    "certType": "証明書の種類",
-    "password": "キーストアまたは秘密キーのパスワードを入力 (ある場合) :",
-    "showSig": "署名を表示",
-    "reason": "理由",
-    "location": "場所",
-    "name": "名前",
-    "showLogo": "ロゴを表示",
-    "submit": "PDFに署名"
+    "filenamePrefix": "signed",
+    "signMode": {
+      "stepTitle": "署名モード",
+      "tooltip": {
+        "header": {
+          "title": "PDF 署名について"
+        },
+        "overview": {
+          "title": "署名の仕組み",
+          "text": "どちらのモードでも文書にシールを施し（編集は改ざんとして検知）、誰が・いつ・どのようにを記録します。ビューアーの信頼表示は証明書チェーンに依存します。"
+        },
+        "manual": {
+          "title": "手動 — 証明書を持ち込む",
+          "text": "独自の証明書ファイルで署名し、ブランドに合ったアイデンティティを示せます。CA/チェーンが認識されると<b>信頼済み</b>と表示できます。",
+          "use": "用途：対外的、法務、コンプライアンス。"
+        },
+        "auto": {
+          "title": "自動 — 設定不要・即時のシステムシール",
+          "text": "サーバーの<b>自己署名</b>証明書で署名します。同じ<b>改ざん検知シール</b>と<b>監査証跡</b>を提供し、多くのビューアーでは<b>未検証</b>と表示されます。",
+          "use": "用途：迅速性が必要で、レビューや記録で一貫した内部アイデンティティが求められる場合。"
+        },
+        "rule": {
+          "title": "判断基準",
+          "text": "受信者側で<b>信頼済み</b>表示が必要なら<b>手動</b>。設定不要で高速な改ざん検知と監査証跡が必要なら<b>自動</b>。"
+        }
+      }
+    },
+    "certTypeStep": {
+      "stepTitle": "証明書形式"
+    },
+    "certFiles": {
+      "stepTitle": "証明書ファイル"
+    },
+    "appearance": {
+      "stepTitle": "署名の表示",
+      "tooltip": {
+        "header": {
+          "title": "署名の表示について"
+        },
+        "invisible": {
+          "title": "不可視署名",
+          "text": "PDF にセキュリティのため署名を追加しますが、表示時には見えません。見た目を変えずに法的要件を満たしたい場合に最適です。",
+          "bullet1": "見た目を変えずにセキュリティを提供",
+          "bullet2": "電子署名の法的要件を満たす",
+          "bullet3": "文書のレイアウトやデザインに影響しない"
+        },
+        "visible": {
+          "title": "可視署名",
+          "text": "PDF 上に署名ブロックを表示し、氏名、日付、任意の詳細を示します。文書が署名済みであることを読者に明確に示したい場合に有用です。",
+          "bullet1": "署名者名と日付を文書上に表示",
+          "bullet2": "署名理由と場所を含めることが可能",
+          "bullet3": "署名を配置するページを選択可能",
+          "bullet4": "任意でロゴを含められます"
+        }
+      }
+    },
+    "sign": {
+      "submit": "PDF に署名",
+      "results": "署名済み PDF"
+    },
+    "error": {
+      "failed": "署名の処理中にエラーが発生しました。"
+    },
+    "tooltip": {
+      "header": {
+        "title": "署名の管理について"
+      },
+      "overview": {
+        "title": "このツールでできること",
+        "text": "PDF が電子署名されているかの確認や、新しい電子署名の追加ができます。電子署名は文書の作成者や承認者を証明し、署名後に変更があったかを示します。",
+        "bullet1": "既存の署名とその有効性を確認",
+        "bullet2": "署名者と証明書の詳細を表示",
+        "bullet3": "新しい電子署名を追加して文書を保護",
+        "bullet4": "複数ファイルをサポートし、簡単に移動"
+      },
+      "validation": {
+        "title": "署名の検証",
+        "text": "署名の確認では、署名が有効か、誰がいつ署名したか、署名後に文書が変更されたかを知らせます。",
+        "bullet1": "署名が有効か無効かを表示",
+        "bullet2": "署名者情報と署名日時を表示",
+        "bullet3": "署名後に文書が変更されたかを確認",
+        "bullet4": "検証にカスタム証明書を使用可能"
+      },
+      "signing": {
+        "title": "署名の追加",
+        "text": "PDF に署名するには、PEM、PKCS12、JKS などの電子証明書が必要です。署名を文書上に表示することも、セキュリティ目的のみで非表示にすることもできます。",
+        "bullet1": "PEM、PKCS12、JKS、サーバー証明書形式に対応",
+        "bullet2": "署名を PDF 上に表示/非表示にするオプション",
+        "bullet3": "理由、場所、署名者名を追加",
+        "bullet4": "可視署名の配置ページを選択",
+        "bullet5": "「Stirling-PDF で署名」用のサーバー証明書を使用可能"
+      }
+    },
+    "certType": {
+      "tooltip": {
+        "header": {
+          "title": "証明書タイプについて"
+        },
+        "what": {
+          "title": "証明書とは？",
+          "text": "あなたが署名したことを証明する安全な ID です。証明書による署名が必須でない場合は、タイプ入力、手書き、アップロードなどの別の安全な方法をお勧めします。"
+        },
+        "which": {
+          "title": "どのオプションを使うべき？",
+          "text": "お持ちの証明書ファイルに合う形式を選択してください：",
+          "bullet1": "PKCS#12（.p12 / .pfx）— 1 つの結合ファイル（最も一般的）",
+          "bullet2": "PFX（.pfx）— Microsoft の PKCS12 形式",
+          "bullet3": "PEM — 秘密鍵と証明書の .pem を別々に",
+          "bullet4": "JKS — 開発/CI-CD 用の Java .jks キーストア"
+        },
+        "convert": {
+          "title": "鍵が一覧にありませんか？",
+          "text": "keytool でファイルを Java キーストア（.jks）に変換し、JKS を選択してください。"
+        }
+      }
+    }
   },
   "removeCertSign": {
     "tags": "authenticate,PEM,P12,official,decrypt",
@@ -1118,8 +1527,100 @@
     "addBorder": "境界線を追加",
     "submit": "送信"
   },
+  "bookletImposition": {
+    "tags": "小冊子,面付け,印刷,製本,折り,折丁",
+    "title": "小冊子面付け",
+    "header": "小冊子面付け",
+    "submit": "小冊子を作成",
+    "spineLocation": {
+      "label": "背位置",
+      "left": "左（標準）",
+      "right": "右（RTL）"
+    },
+    "doubleSided": {
+      "label": "両面印刷",
+      "tooltip": "適切な小冊子印刷のために表裏の両面を作成します"
+    },
+    "manualDuplex": {
+      "title": "手動両面モード",
+      "instructions": "自動両面機能のないプリンター用。次の 2 回に分けて印刷します："
+    },
+    "duplexPass": {
+      "label": "印刷パス",
+      "first": "1 回目",
+      "second": "2 回目",
+      "firstInstructions": "表面を印刷 → 用紙を表向きのまま積む → 2 回目で再給紙",
+      "secondInstructions": "印刷済みの束を表向きでトレイに戻す → 裏面を印刷"
+    },
+    "rtlBinding": {
+      "label": "右綴じ",
+      "tooltip": "アラビア語、ヘブライ語など右から左の言語向け"
+    },
+    "addBorder": {
+      "label": "ページの周囲に枠線を追加",
+      "tooltip": "各ページ区画の周りにカットや位置合わせ用の枠線を追加します"
+    },
+    "addGutter": {
+      "label": "ノド（余白）を追加",
+      "tooltip": "製本用の内側余白スペースを追加します"
+    },
+    "gutterSize": {
+      "label": "ノド幅（ポイント）"
+    },
+    "flipOnShortEdge": {
+      "label": "短辺で反転（自動両面のみ）",
+      "tooltip": "短辺反転の自動両面印刷向けに有効化（手動モードでは無視）",
+      "manualNote": "手動モードでは不要です—束を自分で反転します"
+    },
+    "advanced": {
+      "toggle": "詳細オプション"
+    },
+    "paperSizeNote": "用紙サイズは 1 ページ目から自動的に取得されます。",
+    "tooltip": {
+      "header": {
+        "title": "小冊子作成ガイド"
+      },
+      "description": {
+        "title": "小冊子面付けとは？",
+        "text": "印刷順序に合わせてページを配置し、プロ品質の小冊子を作成します。PDF ページは横置き用紙に 2 面付けされ、折って綴じると本のように正しい順序で読めます。"
+      },
+      "example": {
+        "title": "例：8 ページ小冊子",
+        "text": "8 ページ文書は 2 枚の用紙になります：",
+        "bullet1": "用紙 1 表：ページ 8, 1｜裏：ページ 2, 7",
+        "bullet2": "用紙 2 表：ページ 6, 3｜裏：ページ 4, 5",
+        "bullet3": "折って重ねると：1→2→3→4→5→6→7→8 の順で読めます"
+      },
+      "printing": {
+        "title": "印刷と組み立て方法",
+        "text": "完璧な小冊子のための手順：",
+        "bullet1": "「長辺で反転」の両面印刷を使用",
+        "bullet2": "用紙を順に重ね、半分に折る",
+        "bullet3": "折り目に沿ってホチキス留めや製本をする",
+        "bullet4": "短辺反転プリンターの場合：「短辺で反転」を有効化"
+      },
+      "manualDuplex": {
+        "title": "手動両面（片面プリンター）",
+        "text": "自動両面機能がないプリンター向け：",
+        "bullet1": "「両面印刷」をオフにする",
+        "bullet2": "「1 回目」を選択 → 印刷 → 束を表向きで積む",
+        "bullet3": "「2 回目」を選択 → 束をセット → 裏面を印刷",
+        "bullet4": "通常どおり折って組み立てる"
+      },
+      "advanced": {
+        "title": "詳細オプション",
+        "text": "小冊子を細かく調整：",
+        "bullet1": "右綴じ：RTL 言語向け",
+        "bullet2": "枠線：トリミング用のカットライン表示",
+        "bullet3": "ノド：製本/ホチキス用スペースを追加",
+        "bullet4": "短辺反転：自動両面プリンターのみ"
+      }
+    },
+    "error": {
+      "failed": "丁合いレイアウトの作成中にエラーが発生しました。"
+    }
+  },
   "scalePages": {
-    "tags": "resize,modify,dimension,adapt",
     "title": "ページの縮尺の調整",
     "header": "ページの縮尺の調整",
     "pageSize": "1ページのサイズ",
@@ -1127,26 +1628,114 @@
     "scaleFactor": "1ページの拡大レベル (トリミング)。",
     "submit": "送信"
   },
+  "adjustPageScale": {
+    "tags": "リサイズ,変更,寸法,調整",
+    "title": "ページスケールを調整",
+    "header": "ページスケールを調整",
+    "scaleFactor": {
+      "label": "拡大縮小率"
+    },
+    "pageSize": {
+      "label": "出力ページサイズ",
+      "keep": "元のサイズを保持",
+      "letter": "レター",
+      "legal": "リーガル"
+    },
+    "submit": "ページスケールを調整",
+    "error": {
+      "failed": "ページスケールの調整中にエラーが発生しました。"
+    },
+    "tooltip": {
+      "header": {
+        "title": "ページスケール設定の概要"
+      },
+      "description": {
+        "title": "説明",
+        "text": "PDF コンテンツのサイズを調整し、ページ寸法を変更します。"
+      },
+      "scaleFactor": {
+        "title": "拡大縮小率",
+        "text": "ページ上のコンテンツの見え方の大きさを制御します。コンテンツは拡大縮小され中央配置されます。拡大後にページより大きい場合はトリミングされることがあります。",
+        "bullet1": "1.0 = 元のサイズ",
+        "bullet2": "0.5 = 半分（50% 小さく）",
+        "bullet3": "2.0 = 2 倍（200% 大きく、切り抜かれ得ます）"
+      },
+      "pageSize": {
+        "title": "出力ページサイズ",
+        "text": "出力 PDF ページの寸法を設定します。「元のサイズを保持」は現在の寸法を維持し、その他は標準的な用紙サイズにリサイズします。"
+      }
+    }
+  },
   "add-page-numbers": {
-    "tags": "paginate,label,organize,index"
+    "tags": "ページ番号,ラベル,整理,索引"
   },
   "auto-rename": {
-    "tags": "auto-detect,header-based,organize,relabel",
+    "tags": "自動検出,ヘッダー基準,整理,リネーム",
     "title": "ファイル名の自動変更",
     "header": "PDF名の自動変更",
-    "submit": "自動リネーム"
+    "description": "PDF コンテンツからタイトルを自動的に検出し、ファイル名として使用します。",
+    "submit": "自動リネーム",
+    "files": {
+      "placeholder": "開始するにはメインビューで PDF ファイルを選択してください"
+    },
+    "error": {
+      "failed": "PDF の自動リネーム中にエラーが発生しました。"
+    },
+    "results": {
+      "title": "自動リネーム結果"
+    },
+    "tooltip": {
+      "header": {
+        "title": "自動リネームの仕組み"
+      },
+      "howItWorks": {
+        "title": "スマートリネーム",
+        "text": "PDF コンテンツからタイトルを自動的に検出し、ファイル名として使用します。",
+        "bullet1": "タイトルや見出しと見なせるテキストを探します",
+        "bullet2": "検出したタイトルからクリーンで有効なファイル名を作成します",
+        "bullet3": "適切なタイトルが見つからない場合は元の名前を保持します"
+      }
+    }
   },
   "adjust-contrast": {
     "tags": "color-correction,tune,modify,enhance"
   },
   "crop": {
-    "tags": "trim,shrink,edit,shape",
     "title": "切り抜き",
     "header": "PDFのトリミング",
-    "submit": "送信"
+    "submit": "送信",
+    "noFileSelected": "トリミングを開始する PDF ファイルを選択してください",
+    "preview": {
+      "title": "切り抜き範囲の選択"
+    },
+    "reset": "PDF 全体にリセット",
+    "coordinates": {
+      "title": "位置とサイズ",
+      "x": "X 位置",
+      "y": "Y 位置",
+      "width": "幅",
+      "height": "高さ"
+    },
+    "error": {
+      "invalidArea": "切り抜き範囲が PDF の境界を超えています",
+      "failed": "PDF の切り抜きに失敗しました"
+    },
+    "steps": {
+      "selectArea": "切り抜き範囲を選択"
+    },
+    "tooltip": {
+      "title": "PDF を切り抜く方法",
+      "description": "サムネイル上の青いオーバーレイをドラッグしてサイズ変更し、PDF から切り抜く範囲を選択します。",
+      "drag": "オーバーレイをドラッグして切り抜き範囲を移動",
+      "resize": "角と辺のハンドルをドラッグしてサイズ変更",
+      "precision": "座標入力で正確に位置指定"
+    },
+    "results": {
+      "title": "切り抜き結果"
+    }
   },
   "autoSplitPDF": {
-    "tags": "QR-based,separate,scan-segment,organize",
+    "tags": "QR ベース,分離,スキャン分割,整理",
     "title": "PDFの自動分割",
     "header": "PDFの自動分割",
     "description": "印刷、挿入、スキャン、アップロード、およびドキュメントを自動分離します。手動での仕分けの必要ありません。",
@@ -1165,14 +1754,14 @@
     "tags": "clean,secure,safe,remove-threats"
   },
   "URLToPDF": {
-    "tags": "web-capture,save-page,web-to-doc,archive",
+    "tags": "ウェブキャプチャ,ページ保存,Web→ドキュメント,アーカイブ",
     "title": "URLをPDFに変換",
     "header": "URLをPDFに変換",
     "submit": "変換",
     "credit": "WeasyPrintを使用"
   },
   "HTMLToPDF": {
-    "tags": "markup,web-content,transformation,convert",
+    "tags": "マークアップ,ウェブコンテンツ,変換,コンバート",
     "title": "HTMLをPDFに変換",
     "header": "HTMLをPDFに変換",
     "help": "HTMLファイルと必要なhtml/css/画像などを含むZIPを受け入れます",
@@ -1201,7 +1790,7 @@
     "credit": "WeasyPrintを使用"
   },
   "PDFToMarkdown": {
-    "tags": "markup,web-content,transformation,convert,md",
+    "tags": "マークアップ,ウェブコンテンツ,変換,コンバート,md",
     "title": "PDFをMarkdownに変換",
     "header": "PDFをMarkdownに変換",
     "submit": "変換"
@@ -1217,7 +1806,7 @@
     "tags": "extract"
   },
   "PdfToSinglePage": {
-    "tags": "single page"
+    "tags": "単一ページ"
   },
   "showJS": {
     "tags": "JS",
@@ -1226,50 +1815,10 @@
     "downloadJS": "Javascriptをダウンロード",
     "submit": "表示"
   },
-  "autoRedact": {
-    "tags": "Redact,Hide,black out,black,marker,hidden",
-    "title": "自動墨消し",
-    "header": "自動墨消し",
-    "colorLabel": "カラー",
-    "textsToRedactLabel": "編集するテキスト（行区切り）",
-    "textsToRedactPlaceholder": "例: \\n機密 \\n極秘",
-    "useRegexLabel": "正規表現を使用する",
-    "wholeWordSearchLabel": "単語単位の検索",
-    "customPaddingLabel": "追加の余白",
-    "convertPDFToImageLabel": "PDFをPDF画像に変換 (墨消しの後ろのテキストを削除するために使用)",
-    "submitButton": "送信"
-  },
   "redact": {
     "tags": "Redact,Hide,black out,black,marker,hidden,manual",
     "title": "手動墨消し",
-    "header": "手動墨消し",
     "submit": "編集",
-    "textBasedRedaction": "テキストベースの墨消し",
-    "pageBasedRedaction": "ページベースの墨消し",
-    "convertPDFToImageLabel": "PDFをPDF画像に変換します (ボックスの背後のテキストを削除するために使用します)",
-    "pageRedactionNumbers": {
-      "title": "ページ",
-      "placeholder": "(例:1,2,8、4,7,12-16、2n-1)"
-    },
-    "redactionColor": {
-      "title": "編集色"
-    },
-    "export": "出力",
-    "upload": "アップロード",
-    "boxRedaction": "ボックス描画の墨消し",
-    "zoom": "ズーム",
-    "zoomIn": "拡大",
-    "zoomOut": "縮小",
-    "nextPage": "次のページ",
-    "previousPage": "前のページ",
-    "toggleSidebar": "サイドバーを切替え",
-    "showThumbnails": "サムネイルを表示",
-    "showDocumentOutline": "ドキュメントのアウトラインを表示 (ダブルクリックするとすべての項目を展開/折りたたむことができます)",
-    "showAttatchments": "添付ファイルを表示",
-    "showLayers": "レイヤーを表示（ダブルクリックするとすべてのレイヤーがデフォルトの状態にリセットされます）",
-    "colourPicker": "カラー選択",
-    "findCurrentOutlineItem": "現在のアウトライン項目を検索",
-    "applyChanges": "変更を適用",
     "auto": {
       "settings": {
         "advancedTitle": "アドバンスド"
@@ -1290,7 +1839,7 @@
     "tags": "CSV,Table Extraction,extract,convert"
   },
   "autoSizeSplitPDF": {
-    "tags": "pdf,split,document,organization"
+    "tags": "pdf,分割,ドキュメント,整理"
   },
   "overlay-pdfs": {
     "tags": "Overlay",
@@ -1334,9 +1883,10 @@
     "merge": "1 つの PDF に結合するかどうか"
   },
   "AddStampRequest": {
-    "tags": "Stamp, Add image, center image, Watermark, PDF, Embed, Customize,Customise",
+    "tags": "スタンプ, 画像を追加, 画像を中央に配置, 透かし, PDF, 埋め込み, カスタマイズ",
     "header": "PDFにスタンプを押す",
     "title": "PDFにスタンプを押す",
+    "stampSetup": "スタンプ設定",
     "stampType": "スタンプの種類",
     "stampText": "スタンプする文章",
     "stampImage": "スタンプする画像",
@@ -1349,7 +1899,8 @@
     "overrideY": "Y座標のオーバーライド",
     "customMargin": "余白のカスタム",
     "customColor": "文字色のカスタム",
-    "submit": "送信"
+    "submit": "送信",
+    "noStampSelected": "スタンプが選択されていません。ステップ1に戻ってください。"
   },
   "removeImagePdf": {
     "tags": "Remove Image,Page operations,Back end,server side"
@@ -1403,31 +1954,12 @@
     },
     "selectCustomCert": "カスタム証明書ファイル X.509 (オプション)"
   },
-  "replace-color": {
-    "title": "色の置換・反転",
-    "header": "PDFの色の置換・反転",
-    "selectText": {
-      "1": "色の置換または反転オプション",
-      "2": "デフォルト(デフォルトの高コントラスト色)",
-      "3": "カスタム（カスタマイズされた色）",
-      "4": "フル反転(すべての色を反転)",
-      "5": "高コントラストカラーオプション",
-      "6": "黒背景に白文字",
-      "7": "白背景に黒文字",
-      "8": "黒背景に黄色文字",
-      "9": "黒背景に緑文字",
-      "10": "テキストの色を選択",
-      "11": "背景色を選択"
-    },
-    "submit": "置換"
-  },
-  "replaceColorPdf": {
-    "tags": "色の置き換え、ページ操作、バックエンド、サーバー側"
-  },
   "login": {
     "title": "サインイン",
     "header": "サインイン",
     "signin": "サインイン",
+    "signInWith": "次でサインイン",
+    "signInAnonymously": "ゲストとして登録",
     "rememberme": "サインイン状態を記憶する",
     "invalid": "ユーザー名かパスワードが無効です。",
     "locked": "あなたのアカウントはロックされています。",
@@ -1446,7 +1978,31 @@
     "alreadyLoggedIn": "すでにログインしています",
     "alreadyLoggedIn2": "デバイスからログアウトしてもう一度お試しください。",
     "toManySessions": "アクティブなセッションが多すぎます",
-    "logoutMessage": "ログアウトしました"
+    "logoutMessage": "ログアウトしました",
+    "youAreLoggedIn": "ログイン済みです！",
+    "email": "メール",
+    "password": "パスワード",
+    "enterEmail": "メールアドレスを入力",
+    "enterPassword": "パスワードを入力",
+    "loggingIn": "サインイン中...",
+    "signingIn": "サインイン中...",
+    "login": "ログイン",
+    "or": "または",
+    "useMagicLink": "代わりにマジックリンクを使う",
+    "enterEmailForMagicLink": "マジックリンク用のメールアドレスを入力",
+    "sending": "送信中…",
+    "sendMagicLink": "マジックリンクを送る",
+    "cancel": "キャンセル",
+    "dontHaveAccount": "アカウントをお持ちでないですか？ 登録",
+    "home": "ホーム",
+    "debug": "デバッグ",
+    "signOut": "サインアウト",
+    "pleaseEnterBoth": "メールとパスワードの両方を入力してください",
+    "pleaseEnterEmail": "メールアドレスを入力してください",
+    "magicLinkSent": "マジックリンクを {{email}} に送信しました！ メールを確認してリンクをクリックし、サインインしてください。",
+    "passwordResetSent": "パスワード再設定リンクを {{email}} に送信しました！ メールの指示に従ってください。",
+    "failedToSignIn": "{{provider}} でのサインインに失敗しました：{{message}}",
+    "unexpectedError": "予期しないエラー：{{message}}"
   },
   "pdfToSinglePage": {
     "title": "PDFを単一ページに変換",
@@ -1482,10 +2038,38 @@
   },
   "compress": {
     "title": "圧縮",
+    "desc": "PDF を圧縮してファイルサイズを削減します。",
     "header": "PDFを圧縮",
+    "method": {
+      "title": "圧縮方式",
+      "quality": "品質",
+      "filesize": "ファイルサイズ"
+    },
     "credit": "本サービスはPDFの圧縮/最適化にqpdfを使用しています。",
     "grayscale": {
       "label": "圧縮にグレースケールを適用する"
+    },
+    "tooltip": {
+      "header": {
+        "title": "圧縮設定の概要"
+      },
+      "description": {
+        "title": "説明",
+        "text": "圧縮はファイルサイズを簡単に減らす方法です。「ファイルサイズ」を選ぶと目標サイズを入力でき、品質は自動調整します。「品質」を選ぶと圧縮強度を手動設定できます。"
+      },
+      "qualityAdjustment": {
+        "title": "品質調整",
+        "text": "スライダーで圧縮強度を調整します。低め（1–3）は画質を保ちますがサイズは大きめ、高め（7–9）は大きく縮小できますが画像の鮮明さが低下します。",
+        "bullet1": "値が小さいほど画質を保持",
+        "bullet2": "値が大きいほどファイルサイズを削減"
+      },
+      "grayscale": {
+        "title": "グレースケール",
+        "text": "このオプションを選ぶと、すべての画像を白黒に変換します。特にスキャン PDF や画像の多い文書で大幅なサイズ削減が見込めます。"
+      }
+    },
+    "error": {
+      "failed": "PDF の圧縮中にエラーが発生しました。"
     },
     "selectText": {
       "1": {
@@ -1496,10 +2080,7 @@
       "4": "自動モード - PDFを正確なサイズにするために品質を自動調整する。",
       "5": "PDFサイズ (例:25MB, 10.8MB, 25KB)"
     },
-    "submit": "圧縮",
-    "method": {
-      "filesize": "ファイルサイズ"
-    }
+    "submit": "圧縮"
   },
   "decrypt": {
     "passwordPrompt": "このファイルはパスワードで保護されています。パスワードを入力してください:",
@@ -1671,42 +2252,116 @@
       }
     }
   },
-  "download": "ダウンロード",
-  "undo": "元に戻す",
-  "convert": {
-    "title": "変換",
-    "settings": "設定",
-    "color": "色",
-    "greyscale": "グレースケール",
-    "fillPage": "フルページ",
-    "pdfaDigitalSignatureWarning": "PDFにはデジタル署名が含まれています。これは次の手順で削除されます。",
-    "grayscale": "グレースケール"
-  },
-  "attachments": {
-    "tags": "embed,attach,file,attachment,attachments",
-    "title": "添付ファイルの追加",
-    "header": "添付ファイルの追加",
-    "submit": "添付ファイルの追加"
+  "pageEditor": {
+    "title": "ページエディタ",
+    "save": "変更を保存",
+    "noPdfLoaded": "PDF が読み込まれていません。編集する PDF をアップロードしてください。",
+    "rotatedLeft": "左へ回転：",
+    "rotatedRight": "右へ回転：",
+    "deleted": "削除：",
+    "movedLeft": "左へ移動：",
+    "movedRight": "右へ移動：",
+    "splitAt": "分割位置：",
+    "insertedPageBreak": "ここで改ページを挿入：",
+    "addFileNotImplemented": "デモではファイル追加は未実装です",
+    "closePdf": "PDF を閉じる",
+    "reset": "変更をリセット",
+    "zoomIn": "拡大",
+    "zoomOut": "縮小",
+    "fitToWidth": "幅に合わせる",
+    "actualSize": "原寸"
   },
   "rightRail": {
     "selectAll": "すべて選択",
     "deselectAll": "選択を解除"
   },
+  "guestBanner": {
+    "title": "ゲストとして Stirling PDF を利用中です！",
+    "message": "無料アカウントを作成して作業を保存し、より多くの機能にアクセスしてプロジェクトをサポートしましょう。",
+    "dismiss": "バナーを閉じる",
+    "signUp": "無料で登録"
+  },
   "quickAccess": {
     "sign": "署名"
   },
   "fileUpload": {
+    "selectFile": "ファイルを選択",
+    "selectFiles": "ファイルを選択",
+    "selectPdfToView": "閲覧する PDF を選択",
+    "selectPdfToEdit": "編集する PDF を選択",
+    "chooseFromStorage": "ストレージから選択するか、新しい PDF をアップロード",
+    "chooseFromStorageMultiple": "ストレージから選択するか、新しい PDF をアップロード（複数）",
+    "loadFromStorage": "ストレージから読み込む",
+    "filesAvailable": "件利用可能",
     "loading": "読込中...",
-    "or": "または"
+    "or": "または",
+    "dropFileHere": "ここにドロップするかクリックしてアップロード",
+    "dropFilesHere": "ここにドロップするかアップロードボタンをクリック",
+    "pdfFilesOnly": "PDF のみ",
+    "supportedFileTypes": "対応ファイルタイプ",
+    "upload": "アップロード",
+    "uploadFile": "ファイルをアップロード",
+    "uploadFiles": "複数ファイルをアップロード",
+    "noFilesInStorage": "ストレージにファイルがありません。まずはファイルをアップロードしてください。",
+    "selectFromStorage": "ストレージから選択",
+    "backToTools": "ツールに戻る",
+    "addFiles": "ファイルを追加",
+    "dragFilesInOrClick": "ファイルをドラッグするか「ファイルを追加」をクリックして参照"
   },
   "fileManager": {
+    "title": "PDF ファイルをアップロード",
+    "subtitle": "ツール間で簡単にアクセスできるよう、ファイルをストレージに追加",
+    "filesSelected": "件選択",
+    "clearSelection": "選択をクリア",
+    "openInFileEditor": "ファイルエディタで開く",
+    "uploadError": "一部のファイルのアップロードに失敗しました。",
+    "failedToOpen": "ファイルを開けません。ストレージから削除された可能性があります。",
+    "failedToLoad": "アクティブセットへのファイル読み込みに失敗しました。",
+    "storageCleared": "ブラウザのストレージがクリアされました。ファイルは削除されました。再アップロードしてください。",
+    "clearAll": "すべてクリア",
+    "reloadFiles": "ファイルを再読み込み",
+    "dragDrop": "ここにファイルをドラッグ＆ドロップ",
+    "clickToUpload": "クリックしてファイルをアップロード",
+    "selectedFiles": "選択したファイル",
+    "storage": "ストレージ",
+    "filesStored": "件保存済み",
+    "storageError": "ストレージエラーが発生しました",
+    "storageLow": "ストレージの空き容量が少なくなっています。古いファイルの削除をご検討ください。",
+    "supportMessage": "ブラウザ内データベース ストレージにより無制限の容量を実現",
+    "noFileSelected": "ファイルが選択されていません",
+    "showHistory": "履歴を表示",
+    "hideHistory": "履歴を非表示",
+    "fileHistory": "ファイル履歴",
+    "loadingHistory": "履歴を読み込み中...",
+    "lastModified": "最終更新",
+    "toolChain": "適用ツール",
+    "restore": "復元",
+    "searchFiles": "ファイルを検索...",
+    "recent": "最近使用",
+    "localFiles": "ローカルファイル",
+    "googleDrive": "Google ドライブ",
+    "googleDriveShort": "ドライブ",
+    "myFiles": "マイファイル",
+    "noRecentFiles": "最近のファイルは見つかりませんでした",
+    "dropFilesHint": "ここにドロップしてアップロード",
+    "googleDriveNotAvailable": "Google ドライブ連携は利用できません",
+    "openFiles": "複数ファイルを開く",
+    "openFile": "ファイルを開く",
+    "details": "ファイル詳細",
     "fileName": "名前",
+    "fileFormat": "形式",
+    "fileSize": "サイズ",
     "fileVersion": "バージョン",
+    "totalSelected": "合計選択数",
+    "dropFilesHere": "ここにファイルをドロップ",
     "selectAll": "すべて選択",
     "deselectAll": "選択を解除",
     "deleteSelected": "選択項目を削除",
+    "downloadSelected": "選択をダウンロード",
+    "selectedCount": "{{count}} 件選択",
     "download": "ダウンロード",
-    "delete": "削除"
+    "delete": "削除",
+    "unsupported": "未対応"
   },
   "sanitize": {
     "submit": "PDFをサニタイズ",
@@ -1714,9 +2369,69 @@
       "settings": "設定"
     }
   },
+  "addPassword": {
+    "title": "パスワードの追加",
+    "desc": "パスワードで PDF 文書を暗号化します。",
+    "completed": "パスワード保護を適用しました",
+    "submit": "暗号化",
+    "filenamePrefix": "encrypted",
+    "error": {
+      "failed": "PDF の暗号化中にエラーが発生しました。"
+    },
+    "passwords": {
+      "stepTitle": "パスワードと暗号化",
+      "completed": "パスワードを設定しました",
+      "user": {
+        "label": "ユーザーパスワード",
+        "placeholder": "ユーザーパスワードを入力"
+      },
+      "owner": {
+        "label": "オーナーパスワード",
+        "placeholder": "オーナーパスワードを入力"
+      }
+    },
+    "encryption": {
+      "keyLength": {
+        "label": "暗号鍵長",
+        "40bit": "40 ビット（低）",
+        "128bit": "128 ビット（標準）",
+        "256bit": "256 ビット（高）"
+      }
+    },
+    "results": {
+      "title": "暗号化済み PDF"
+    },
+    "tooltip": {
+      "header": {
+        "title": "パスワード保護の概要"
+      },
+      "passwords": {
+        "title": "パスワードの種類",
+        "text": "ユーザーパスワードは文書のオープンを制限し、オーナーパスワードは開いた後に実行できる操作を制御します。両方、またはいずれか一方を設定できます。",
+        "bullet1": "ユーザーパスワード：PDF を開くために必要",
+        "bullet2": "オーナーパスワード：文書の権限を制御（すべての PDF ビューアーでサポートされるわけではありません）"
+      },
+      "encryption": {
+        "title": "暗号化レベル",
+        "text": "暗号化レベルが高いほど安全性は向上しますが、古い PDF ビューアーではサポートされない場合があります。",
+        "bullet1": "40 ビット：基本的なセキュリティ。古いビューアーと互換",
+        "bullet2": "128 ビット：標準的なセキュリティ。広くサポート",
+        "bullet3": "256 ビット：最大のセキュリティ。最新ビューアーが必要"
+      },
+      "permissions": {
+        "title": "権限の変更",
+        "text": "これらの権限は、PDF でユーザーができることを制御します。オーナーパスワードと併用すると最も効果的です。"
+      }
+    }
+  },
   "changePermissions": {
     "title": "権限の変更",
+    "desc": "文書の制限と権限を変更します。",
+    "completed": "権限を変更しました",
     "submit": "権限の変更",
+    "error": {
+      "failed": "PDF の権限変更中にエラーが発生しました。"
+    },
     "permissions": {
       "preventAssembly": {
         "label": "ドキュメントの組立を禁止"
@@ -1743,10 +2458,182 @@
         "label": "異なる形式の印刷を禁止"
       }
     },
+    "results": {
+      "title": "変更済み PDF"
+    },
     "tooltip": {
       "header": {
         "title": "権限の変更"
+      },
+      "description": {
+        "text": "PDF リーダーで利用できる各種機能へのアクセス可否を変更します。"
+      },
+      "warning": {
+        "text": "これらの権限を変更不可にするには、パスワード追加ツールでオーナーパスワードを設定してください。"
       }
     }
-  }
+  },
+  "removePassword": {
+    "title": "パスワードの削除",
+    "desc": "PDFからパスワードの削除します。",
+    "tags": "secure,Decrypt,security,unpassword,delete password",
+    "password": {
+      "stepTitle": "パスワードの削除",
+      "label": "現在のパスワード"
+    },
+    "submit": "削除"
+  },
+  "automate": {
+    "title": "自動化",
+    "desc": "PDF アクションを連結して複数ステップのワークフローを構築します。繰り返し作業に最適です。",
+    "invalidStep": "無効なステップ",
+    "files": {
+      "placeholder": "この自動処理で処理するファイルを選択"
+    },
+    "selection": {
+      "title": "自動処理の選択",
+      "saved": {
+        "title": "保存済み"
+      },
+      "createNew": {
+        "title": "新しい自動処理を作成"
+      },
+      "suggested": {
+        "title": "提案"
+      }
+    },
+    "creation": {
+      "createTitle": "自動処理を作成",
+      "editTitle": "自動処理を編集",
+      "intro": "自動処理はツールを順番に実行します。まずは実行したい順にツールを追加してください。",
+      "name": {
+        "label": "自動処理名",
+        "placeholder": "マイ自動処理"
+      },
+      "description": {
+        "label": "説明（任意）",
+        "placeholder": "この自動処理が何を行うかを説明..."
+      },
+      "tools": {
+        "selectTool": "ツールを選択...",
+        "selected": "選択したツール",
+        "remove": "ツールを削除",
+        "configure": "ツールを設定",
+        "notConfigured": "！未設定",
+        "addTool": "ツールを追加",
+        "add": "ツールを追加..."
+      },
+      "save": "自動処理を保存",
+      "unsavedChanges": {
+        "title": "未保存の変更",
+        "message": "未保存の変更があります。本当に戻りますか？すべての変更は失われます。",
+        "cancel": "キャンセル",
+        "confirm": "戻る"
+      },
+      "icon": {
+        "label": "アイコン"
+      }
+    },
+    "run": {
+      "title": "自動処理を実行"
+    },
+    "sequence": {
+      "unnamed": "名称未設定の自動処理",
+      "steps": "{{count}} ステップ",
+      "running": "自動処理を実行中...",
+      "run": "自動処理を実行",
+      "finish": "完了"
+    },
+    "reviewTitle": "自動処理の結果",
+    "config": {
+      "loading": "ツール設定を読み込み中...",
+      "noSettings": "このツールに設定項目はありません。",
+      "title": "{{toolName}} を構成",
+      "description": "このツールの設定を構成します。設定は自動実行時に適用されます。",
+      "cancel": "キャンセル",
+      "save": "設定を保存"
+    },
+    "copyToSaved": "保存済みにコピー"
+  },
+  "automation": {
+    "suggested": {
+      "securePdfIngestion": "安全な PDF 取り込み",
+      "securePdfIngestionDesc": "文書の無害化、クリーンアップ付き OCR、長期保存のための PDF/A 変換、ファイルサイズ最適化を行う総合ワークフローです。",
+      "emailPreparation": "メール配布の準備",
+      "emailPreparationDesc": "PDF をメール配布向けに最適化します。ファイルを圧縮し、大きな文書はメール互換の 20MB チャンクに分割し、プライバシーのためメタデータを削除します。",
+      "secureWorkflow": "セキュリティ ワークフロー",
+      "secureWorkflowDesc": "JavaScript や埋め込みファイルなどの潜在的に悪意あるコンテンツを削除し、パスワード保護を追加して PDF を保護します。既定パスワードは「password」です。",
+      "processImages": "画像を処理",
+      "processImagesDesc": "複数の画像ファイルを 1 つの PDF に変換し、OCR で検索可能なテキストを抽出します。"
+    }
+  },
+  "common": {
+    "copy": "コピー",
+    "copied": "コピーしました！",
+    "refresh": "更新",
+    "retry": "再試行",
+    "remaining": "残り",
+    "used": "使用済み",
+    "available": "利用可能",
+    "cancel": "キャンセル"
+  },
+  "config": {
+    "account": {
+      "overview": {
+        "title": "アカウント設定",
+        "manageAccountPreferences": "アカウント設定を管理",
+        "guestDescription": "現在はゲストとしてサインインしています。上位プランへのアップグレードをご検討ください。"
+      },
+      "upgrade": {
+        "title": "ゲストアカウントをアップグレード",
+        "description": "アカウントを連携すると履歴が保存され、より多くの機能にアクセスできます！",
+        "socialLogin": "ソーシャルアカウントでアップグレード",
+        "linkWith": "連携するサービス",
+        "emailPassword": "またはメールとパスワードを入力",
+        "email": "メール",
+        "emailPlaceholder": "メールアドレスを入力",
+        "password": "パスワード（任意）",
+        "passwordPlaceholder": "パスワードを設定",
+        "passwordNote": "空欄のままにするとメール認証のみを使用します",
+        "upgradeButton": "アカウントをアップグレード"
+      }
+    },
+    "apiKeys": {
+      "description": "Stirling の PDF ツール群にアクセスするための API キーです。プロジェクトにコピーするか、更新して新しいキーを生成できます。",
+      "publicKeyAriaLabel": "公開 API キー",
+      "copyKeyAriaLabel": "API キーをコピー",
+      "refreshAriaLabel": "API キーを更新",
+      "includedCredits": "含まれるクレジット",
+      "purchasedCredits": "購入したクレジット",
+      "totalCredits": "合計クレジット",
+      "chartAriaLabel": "クレジット使用状況：含まれる分 {{includedUsed}} / {{includedTotal}}、購入分 {{purchasedUsed}} / {{purchasedTotal}}",
+      "nextReset": "次回リセット",
+      "lastApiUse": "最終 API 使用",
+      "overlayMessage": "キーを生成すると、クレジットと利用可能クレジットが表示されます",
+      "label": "API キー",
+      "guestInfo": "ゲストユーザーには API キーは付与されません。アカウントを作成して、アプリケーションで利用できる API キーを取得してください。",
+      "goToAccount": "アカウントへ移動",
+      "refreshModal": {
+        "title": "API キーを更新",
+        "warning": "⚠️ 警告：この操作は新しい API キーを生成し、以前のキーを無効にします。",
+        "impact": "現在これらのキーを使用しているアプリやサービスは、新しいキーに更新するまで動作しなくなります。",
+        "confirmPrompt": "続行してよろしいですか？",
+        "confirmCta": "キーを更新"
+      },
+      "generateError": "API キーを生成できませんでした。"
+    }
+  },
+  "AddAttachmentsRequest": {
+    "attachments": "添付ファイルを選択",
+    "info": "PDF に添付するファイルを選択します。これらのファイルは埋め込まれ、PDF の添付パネルからアクセスできます。",
+    "selectFiles": "添付するファイルを選択",
+    "placeholder": "ファイルを選択...",
+    "addMoreFiles": "さらにファイルを追加...",
+    "selectedFiles": "選択したファイル",
+    "submit": "添付を追加",
+    "results": {
+      "title": "添付結果"
+    }
+  },
+  "logOut": "ログアウト"
 }
