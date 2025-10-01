@@ -39,16 +39,16 @@ import lombok.extern.slf4j.Slf4j;
 public class FormUtils {
 
     // Field type constants
-    public static final String FIELD_TYPE_TEXT = "text";
-    public static final String FIELD_TYPE_CHECKBOX = "checkbox";
-    public static final String FIELD_TYPE_COMBOBOX = "combobox";
-    public static final String FIELD_TYPE_LISTBOX = "listbox";
-    public static final String FIELD_TYPE_RADIO = "radio";
-    public static final String FIELD_TYPE_BUTTON = "button";
-    public static final String FIELD_TYPE_SIGNATURE = "signature";
+    public final String FIELD_TYPE_TEXT = "text";
+    public final String FIELD_TYPE_CHECKBOX = "checkbox";
+    public final String FIELD_TYPE_COMBOBOX = "combobox";
+    public final String FIELD_TYPE_LISTBOX = "listbox";
+    public final String FIELD_TYPE_RADIO = "radio";
+    public final String FIELD_TYPE_BUTTON = "button";
+    public final String FIELD_TYPE_SIGNATURE = "signature";
 
     // Set of choice field types that support options
-    public static final Set<String> CHOICE_FIELD_TYPES =
+    public final Set<String> CHOICE_FIELD_TYPES =
             Set.of(FIELD_TYPE_COMBOBOX, FIELD_TYPE_LISTBOX, FIELD_TYPE_RADIO);
 
     public List<FormFieldInfo> extractFormFields(PDDocument document) {
@@ -908,7 +908,6 @@ public class FormUtils {
     private void modifyFieldPropertiesInPlace(
             PDField field, ModifyFormFieldDefinition modification, String newName)
             throws IOException {
-        // Update field name if different
         if (newName != null && !newName.equals(field.getPartialName())) {
             field.setPartialName(newName);
         }
@@ -1418,18 +1417,13 @@ public class FormUtils {
         field.getWidgets().add(widget);
         widget.setParent(field);
 
-        // Ensure annotations list exists before adding
         List<PDAnnotation> annotations = page.getAnnotations();
         if (annotations == null) {
             page.getAnnotations().add(widget);
         } else if (!annotations.contains(widget)) {
             annotations.add(widget);
         }
-
         acroForm.getFields().add(field);
-
-        // Appearance generation will be handled by ensureAppearances() in the parent flow
-        // to avoid conflicts and ensure consistency
     }
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
