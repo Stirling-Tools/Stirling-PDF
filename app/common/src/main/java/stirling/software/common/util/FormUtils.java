@@ -51,6 +51,39 @@ public class FormUtils {
     public final Set<String> CHOICE_FIELD_TYPES =
             Set.of(FIELD_TYPE_COMBOBOX, FIELD_TYPE_LISTBOX, FIELD_TYPE_RADIO);
 
+    /**
+     * Returns a normalized logical type string for the supplied PDFBox field instance. Centralized
+     * so all callers share identical mapping logic.
+     *
+     * @param field PDField to classify
+     * @return one of: signature, button, text, checkbox, combobox, listbox, radio (defaults to
+     *     text)
+     */
+    public String detectFieldType(PDField field) {
+        if (field instanceof PDSignatureField) {
+            return FIELD_TYPE_SIGNATURE;
+        }
+        if (field instanceof PDPushButton) {
+            return FIELD_TYPE_BUTTON;
+        }
+        if (field instanceof PDTextField) {
+            return FIELD_TYPE_TEXT;
+        }
+        if (field instanceof PDCheckBox) {
+            return FIELD_TYPE_CHECKBOX;
+        }
+        if (field instanceof PDComboBox) {
+            return FIELD_TYPE_COMBOBOX;
+        }
+        if (field instanceof PDListBox) {
+            return FIELD_TYPE_LISTBOX;
+        }
+        if (field instanceof PDRadioButton) {
+            return FIELD_TYPE_RADIO;
+        }
+        return FIELD_TYPE_TEXT;
+    }
+
     public List<FormFieldInfo> extractFormFields(PDDocument document) {
         if (document == null) return List.of();
 
@@ -1289,39 +1322,6 @@ public class FormUtils {
         return null;
     }
 
-    /**
-     * Returns a normalized logical type string for the supplied PDFBox field instance. Centralized
-     * so all callers share identical mapping logic.
-     *
-     * @param field PDField to classify
-     * @return one of: signature, button, text, checkbox, combobox, listbox, radio (defaults to
-     *     text)
-     */
-    public String detectFieldType(PDField field) {
-        if (field instanceof PDSignatureField) {
-            return FIELD_TYPE_SIGNATURE;
-        }
-        if (field instanceof PDPushButton) {
-            return FIELD_TYPE_BUTTON;
-        }
-        if (field instanceof PDTextField) {
-            return FIELD_TYPE_TEXT;
-        }
-        if (field instanceof PDCheckBox) {
-            return FIELD_TYPE_CHECKBOX;
-        }
-        if (field instanceof PDComboBox) {
-            return FIELD_TYPE_COMBOBOX;
-        }
-        if (field instanceof PDListBox) {
-            return FIELD_TYPE_LISTBOX;
-        }
-        if (field instanceof PDRadioButton) {
-            return FIELD_TYPE_RADIO;
-        }
-        return FIELD_TYPE_TEXT;
-    }
-
     private String normalizeFieldType(String type) {
         if (type == null) {
             return FIELD_TYPE_TEXT;
@@ -1389,7 +1389,7 @@ public class FormUtils {
                 existingWidget != null ? existingWidget : new PDAnnotationWidget();
 
         // Ensure rectangle is valid and set before any appearance-related operations
-        // please note removal of this might cause issues
+        // please note removal of this might cause **subtle** issues
         PDRectangle validRectangle = rectangle;
         if (validRectangle == null
                 || validRectangle.getWidth() <= 0

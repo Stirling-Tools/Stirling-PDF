@@ -84,7 +84,6 @@ const DATE_PATTERNS = [
   /\bend\s+date\b/i,
 ];
 const EMAIL_FIELD_PATTERNS = [/\bemail\b/i, /\be-mail\b/i, /\bmail\s*address\b/i];
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const prefersDayFirst = (() => {
   const localeHint =
@@ -314,6 +313,14 @@ function buildFieldGroup(field, index, metadataKey) {
   } else {
     wrapper.appendChild(label);
     wrapper.appendChild(input);
+  }
+
+  if (input.dataset.invalidDateValue) {
+    const dateWarning = document.createElement("div");
+    dateWarning.id = inputId + "-date-warning";
+    dateWarning.className = "form-text text-warning small";
+    dateWarning.innerHTML = `<span class="material-symbols-rounded" aria-hidden="true">warning</span> Invalid date format "${input.dataset.invalidDateValue}" - please enter a valid date`;
+    wrapper.appendChild(dateWarning);
   }
 
   appendFieldDetails(wrapper, field, metadataKey);
@@ -825,12 +832,19 @@ function setupInlineValidation(input, field, wrapper) {
     validateField(input);
   };
 
-  input.addEventListener("input", handleChange);
-  input.addEventListener("change", handleChange);
-  input.addEventListener("blur", () => {
+  const handleBlur = () => {
     entry.touched = true;
     validateField(input, { force: true });
-  });
+  };
+
+  if (constraints.dateLike || constraints.emailLike) {
+    input.addEventListener("change", handleChange);
+    input.addEventListener("blur", handleBlur);
+  } else {
+    input.addEventListener("input", handleChange);
+    input.addEventListener("change", handleChange);
+    input.addEventListener("blur", handleBlur);
+  }
 }
 
 function registerInputRetention(input, field) {
@@ -919,6 +933,8 @@ function applyRetainedValueToInput(input, field) {
         : [];
       const valueSet = new Set(values);
       let applied = 0;
+      const unavailableValues = [];
+
       Array.from(input.options || []).forEach((option) => {
         const selected = valueSet.has(option.value);
         option.selected = selected;
@@ -926,8 +942,24 @@ function applyRetainedValueToInput(input, field) {
           applied += 1;
         }
       });
-      if (values.length > 0 && applied === 0) {
-  state.retainedFieldValues.delete(field.name);
+
+      values.forEach(value => {
+        if (!Array.from(input.options || []).some(option => option.value === value)) {
+          unavailableValues.push(value);
+        }
+      });
+
+      if (unavailableValues.length > 0) {
+        const wrapper = input.closest('.mb-3') || input.parentElement;
+        if (wrapper) {
+          let warningEl = wrapper.querySelector('.multi-select-warning');
+          if (!warningEl) {
+            warningEl = document.createElement("div");
+            warningEl.className = "form-text text-warning small multi-select-warning";
+            wrapper.appendChild(warningEl);
+          }
+          warningEl.innerHTML = `<span class="material-symbols-rounded" aria-hidden="true">warning</span> Some previous selections are no longer available: ${unavailableValues.join(', ')}`;
+        }
       }
       break;
     }
@@ -1000,7 +1032,7 @@ function validateField(input, options = {}) {
     return true;
   }
   if (!document.body.contains(input)) {
-  state.fieldValidationRegistry.delete(input);
+    state.fieldValidationRegistry.delete(input);
     return true;
   }
 
@@ -1008,29 +1040,37 @@ function validateField(input, options = {}) {
   const { force = false } = options;
   const { value, isEmpty } = extractValueForValidation(input, constraints);
 
+  const fieldLabel = getFieldLabelForInput(input);
+
   let error = "";
   if (constraints.required && isEmpty) {
     if (constraints.multiple) {
-      error = locale.validationSelect ?? locale.validationRequired;
+      error = fieldLabel
+        ? `${fieldLabel} selection is required`
+        : (locale.validationSelect ?? locale.validationRequired);
     } else {
-      error = locale.validationRequired;
+      error = fieldLabel
+        ? `${fieldLabel} is required`
+        : locale.validationRequired;
     }
   }
 
   if (!error && constraints.dateLike && !isEmpty) {
     const normalized = toISODate(String(value));
     if (!normalized) {
-      error = locale.validationDate ?? locale.validationInvalid;
+      error = fieldLabel
+        ? `${fieldLabel} must be a valid date`
+        : (locale.validationDate ?? locale.validationInvalid);
     }
   }
 
   if (!error && constraints.emailLike && !isEmpty) {
-    if (!EMAIL_REGEX.test(String(value).trim())) {
-      error = locale.validationEmail ?? locale.validationInvalid;
+    if (input.type === "email" && !input.validity.valid) {
+      error = fieldLabel
+        ? `${fieldLabel} must be a valid email address`
+        : (locale.validationEmail ?? locale.validationInvalid);
     }
-  }
-
-  entry.invalid = Boolean(error);
+  }  entry.invalid = Boolean(error);
   const shouldShow = entry.touched || force;
 
   if (entry.invalid && shouldShow) {
@@ -1053,15 +1093,70 @@ function validateAllFields(options = {}) {
 
   const { focus = true } = options;
   let firstInvalid = null;
+  const invalidFields = [];
 
   for (const input of state.fieldValidationRegistry.keys()) {
-    if (!validateField(input, { force: true }) && !firstInvalid) {
-      firstInvalid = input;
+    if (!validateField(input, { force: true })) {
+      if (!firstInvalid) {
+        firstInvalid = input;
+      }
+      const fieldLabel = getFieldLabelForInput(input) || input.dataset.fieldName || 'Unknown field';
+      invalidFields.push({ input, label: fieldLabel });
     }
   }
 
+  updateErrorSummary(invalidFields);
+
   if (firstInvalid && focus) firstInvalid.focus({ preventScroll: false });
   return !firstInvalid;
+}
+
+function updateErrorSummary(invalidFields) {
+  let errorSummary = document.getElementById('form-error-summary');
+
+  if (invalidFields.length === 0) {
+    if (errorSummary) {
+      errorSummary.remove();
+    }
+    return;
+  }
+
+  if (!errorSummary) {
+    errorSummary = document.createElement('div');
+    errorSummary.id = 'form-error-summary';
+    errorSummary.className = 'alert alert-danger';
+    errorSummary.setAttribute('role', 'alert');
+    errorSummary.setAttribute('aria-live', 'assertive');
+
+    if (fieldsForm && fieldsForm.parentNode) {
+      fieldsForm.parentNode.insertBefore(errorSummary, fieldsForm);
+    }
+  }
+
+  const heading = document.createElement('h4');
+  heading.className = 'alert-heading h6 mb-2';
+  heading.textContent = `Please fix the following ${invalidFields.length} error${invalidFields.length === 1 ? '' : 's'}:`;
+
+  const errorList = document.createElement('ul');
+  errorList.className = 'mb-0 ps-3';
+
+  invalidFields.forEach(({ input, label }) => {
+    const listItem = document.createElement('li');
+    const link = document.createElement('a');
+    link.href = '#' + input.id;
+    link.className = 'text-decoration-none';
+    link.textContent = label;
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      input.focus({ preventScroll: false });
+    });
+    listItem.appendChild(link);
+    errorList.appendChild(listItem);
+  });
+
+  errorSummary.innerHTML = '';
+  errorSummary.appendChild(heading);
+  errorSummary.appendChild(errorList);
 }
 
 function extractValueForValidation(input, constraints) {
@@ -1078,9 +1173,6 @@ function extractValueForValidation(input, constraints) {
   }
 
   let value = input.value?.trim() ?? "";
-  if (!value && input.dataset.originalValue) {
-    value = String(input.dataset.originalValue).trim();
-  }
   return { value, isEmpty: value.length === 0 };
 }
 
@@ -1102,6 +1194,20 @@ function collectFieldHaystack(field) {
     .join(" ");
 }
 
+function getFieldLabelForInput(input) {
+  if (!input || !input.id) {
+    return null;
+  }
+
+  const label = document.querySelector(`label[for="${input.id}"]`);
+  if (label) {
+    const text = label.textContent || "";
+    return text.replace(/\s*\*\s*$/, "").trim();
+  }
+
+  return input.dataset.fieldName || null;
+}
+
 function buildInputForField(field, inputId) {
   if (!field || !field.name) {
     return null;
@@ -1117,8 +1223,9 @@ function buildInputForField(field, inputId) {
   switch (field.type) {
     case "text":
       dateLike = isDateField(field);
+      const emailLike = isEmailField(field);
       element = document.createElement("input");
-      element.type = dateLike ? "date" : "text";
+      element.type = dateLike ? "date" : emailLike ? "email" : "text";
       element.className = "form-control";
       if (dateLike) {
         const isoValue = toISODate(currentValue);
@@ -1127,11 +1234,14 @@ function buildInputForField(field, inputId) {
         } else {
           element.value = "";
           if (currentValue) {
-            element.placeholder = currentValue;
-            element.dataset.originalValue = currentValue;
+            element.dataset.invalidDateValue = currentValue;
+            element.setAttribute("aria-describedby", inputId + "-date-warning");
           }
         }
         element.autocomplete = "bday";
+      } else if (emailLike) {
+        element.value = currentValue;
+        element.autocomplete = "email";
       } else {
         element.value = currentValue;
         element.autocomplete = "off";
@@ -1425,7 +1535,7 @@ function collectFieldValues() {
       const values = Array.from(input.selectedOptions).map((option) => option.value);
       result[fieldName] = values.join(",");
     } else {
-      result[fieldName] = input.value || input.dataset.originalValue || "";
+      result[fieldName] = input.value || "";
     }
   });
   return result;
@@ -1517,6 +1627,14 @@ function setStatus(message, variant = "info") {
   if (!statusEl) return;
   statusEl.textContent = message;
   statusEl.className = STATUS_CLASSES[variant] ?? STATUS_CLASSES.info;
+
+  if (variant === "danger" || variant === "warning") {
+    statusEl.setAttribute("role", "alert");
+    statusEl.setAttribute("aria-live", "assertive");
+  } else {
+    statusEl.setAttribute("role", "status");
+    statusEl.setAttribute("aria-live", "polite");
+  }
 }
 
 function isTruthy(value) {
