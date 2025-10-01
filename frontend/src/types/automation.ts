@@ -66,8 +66,3 @@ export interface SuggestedAutomation {
   updatedAt: string;
   icon: any; // MUI Icon component
 }
-
-// Export the AutomateParameters interface that was previously defined inline
-export interface AutomateParameters extends AutomationExecutionCallbacks {
-  automationConfig?: AutomationConfig;
-}

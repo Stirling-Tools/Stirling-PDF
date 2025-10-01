@@ -1,4 +1,3 @@
-import React from 'react';
 import { Divider, Select, Stack, TextInput } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { ReorganizePagesParameters } from '../../../hooks/tools/reorganizePages/useReorganizePagesParameters';
@@ -31,7 +30,7 @@ export default function ReorganizePagesSettings({
         disabled={disabled}
       />
       {selectedMode && (
-        <div 
+        <div
           style={{
             backgroundColor: 'var(--information-text-bg)',
             color: 'var(--information-text-color)',

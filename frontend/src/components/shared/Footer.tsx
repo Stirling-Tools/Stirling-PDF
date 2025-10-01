@@ -1,5 +1,4 @@
 import { Flex } from '@mantine/core';
-import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useCookieConsent } from '../../hooks/useCookieConsent';
 

@@ -15,7 +15,7 @@ const viewOptionStyle = {
   gap: 6,
   whiteSpace: 'nowrap',
   paddingTop: '0.3rem',
-}
+};
 
 
 // Build view options showing text always
