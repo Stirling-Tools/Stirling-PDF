@@ -70,7 +70,6 @@ import AddWatermarkSingleStepSettings from "../components/tools/addWatermark/Add
 import OCRSettings from "../components/tools/ocr/OCRSettings";
 import ConvertSettings from "../components/tools/convert/ConvertSettings";
 import ChangePermissionsSettings from "../components/tools/changePermissions/ChangePermissionsSettings";
-import CertificateTypeSettings from "../components/tools/certSign/CertificateTypeSettings";
 import BookletImpositionSettings from "../components/tools/bookletImposition/BookletImpositionSettings";
 import FlattenSettings from "../components/tools/flatten/FlattenSettings";
 import RedactSingleStepSettings from "../components/tools/redact/RedactSingleStepSettings";
@@ -95,6 +94,7 @@ import ExtractImagesSettings from "../components/tools/extractImages/ExtractImag
 import ReplaceColorSettings from "../components/tools/replaceColor/ReplaceColorSettings";
 import AddStampAutomationSettings from "../components/tools/addStamp/AddStampAutomationSettings";
 import CertSignAutomationSettings from "../components/tools/certSign/CertSignAutomationSettings";
+import CropAutomationSettings from "../components/tools/crop/CropAutomationSettings";
 
 const showPlaceholderTools = true; // Show all tools; grey out unavailable ones in UI
 
@@ -235,7 +235,8 @@ export function useFlatToolRegistry(): ToolRegistry {
         subcategoryId: SubcategoryId.SIGNING,
         operationConfig: signOperationConfig,
         automationSettings: SignSettings, // TODO:: not all settings shown, suggested next tools shown
-        synonyms: getSynonyms(t, "sign")
+        synonyms: getSynonyms(t, "sign"),
+        supportsAutomate: false, //TODO make support Sign
       },
 
       // Document Security
@@ -395,7 +396,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         maxFiles: -1,
         endpoints: ["crop"],
         operationConfig: cropOperationConfig,
-        automationSettings: CropSettings,   //TODO: Implement CropSettings
+        automationSettings: CropAutomationSettings,
       },
       rotate: {
         icon: <LocalIcon icon="rotate-right-rounded" width="1.5rem" height="1.5rem" />,
