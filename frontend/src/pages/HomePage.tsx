@@ -38,11 +38,13 @@ export default function HomePage() {
   const [activeMobileView, setActiveMobileView] = useState<MobileView>("tools");
   const isProgrammaticScroll = useRef(false);
 
-  const brandName = t("home.mobile.brandName", "Stirling");
   const brandAltText = t("home.mobile.brandAlt", "Stirling PDF logo");
-  const brandMarkSrc = `${BASE_PATH}/branding/StirlingPDFLogoNoText${
+  const brandIconSrc = `${BASE_PATH}/branding/StirlingPDFLogoNoText${
     colorScheme === "dark" ? "Dark" : "Light"
   }.svg`;
+  const brandTextSrc = `${BASE_PATH}/branding/StirlingPDFLogo${
+    colorScheme === "dark" ? "White" : "Black"
+  }Text.svg`;
 
   const handleSelectMobileView = useCallback((view: MobileView) => {
     setActiveMobileView(view);
@@ -127,8 +129,8 @@ export default function HomePage() {
           <div className="mobile-toggle">
             <div className="mobile-header">
               <div className="mobile-brand">
-                <img src={brandMarkSrc} alt={brandAltText} className="mobile-brand-mark" />
-                <span className="mobile-brand-name">{brandName}</span>
+                <img src={brandIconSrc} alt="" className="mobile-brand-icon" />
+                <img src={brandTextSrc} alt={brandAltText} className="mobile-brand-text" />
               </div>
             </div>
             <div className="mobile-toggle-buttons" role="tablist" aria-label={t('home.mobile.viewSwitcher', 'Switch workspace view')}>

@@ -25,20 +25,20 @@
 .mobile-brand {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.5rem;
   min-width: 0;
 }
 
-.mobile-brand-mark {
-  height: 1.25rem;
+.mobile-brand-icon {
+  height: 1.5rem;
   width: auto;
+  flex-shrink: 0;
 }
 
-.mobile-brand-name {
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  line-height: 1.2;
+.mobile-brand-text {
+  height: 1.5rem;
+  width: auto;
+  max-width: 100%;
 }
 
 .mobile-toggle-buttons {
