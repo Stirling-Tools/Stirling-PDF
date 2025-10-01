@@ -8,6 +8,7 @@ import { useSidebarContext } from "../../contexts/SidebarContext";
 import rainbowStyles from '../../styles/rainbow.module.css';
 import { ScrollArea } from '@mantine/core';
 import { ToolId } from '../../types/toolId';
+import { useMediaQuery } from '@mantine/hooks';
 
 // No props needed - component uses context
 
@@ -15,6 +16,7 @@ export default function ToolPanel() {
   const { isRainbowMode } = useRainbowThemeContext();
   const { sidebarRefs } = useSidebarContext();
   const { toolPanelRef } = sidebarRefs;
+  const isMobile = useMediaQuery('(max-width: 1024px)');
 
 
   // Use context-based hooks to eliminate prop drilling
@@ -34,17 +36,17 @@ export default function ToolPanel() {
     <div
       ref={toolPanelRef}
       data-sidebar="tool-panel"
-      className={`h-screen flex flex-col overflow-hidden bg-[var(--bg-toolbar)] border-r border-[var(--border-subtle)] transition-all duration-300 ease-out ${
+      className={`flex flex-col overflow-hidden bg-[var(--bg-toolbar)] border-r border-[var(--border-subtle)] transition-all duration-300 ease-out ${
         isRainbowMode ? rainbowStyles.rainbowPaper : ''
-      }`}
+      } ${isMobile ? 'h-full border-r-0' : 'h-screen'}`}
       style={{
-        width: isPanelVisible ? '18.5rem' : '0',
+        width: isMobile ? '100%' : isPanelVisible ? '18.5rem' : '0',
         padding: '0'
       }}
     >
       <div
         style={{
-          opacity: isPanelVisible ? 1 : 0,
+          opacity: isMobile || isPanelVisible ? 1 : 0,
           transition: 'opacity 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
           height: '100%',
           display: 'flex',
