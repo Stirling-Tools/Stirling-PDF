@@ -62,7 +62,6 @@ import { removeAnnotationsOperationConfig } from "../hooks/tools/removeAnnotatio
 import { extractImagesOperationConfig } from "../hooks/tools/extractImages/useExtractImagesOperation";
 import { replaceColorOperationConfig } from "../hooks/tools/replaceColor/useReplaceColorOperation";
 import CompressSettings from "../components/tools/compress/CompressSettings";
-import SplitSettings from "../components/tools/split/SplitSettings";
 import AddPasswordSettings from "../components/tools/addPassword/AddPasswordSettings";
 import RemovePasswordSettings from "../components/tools/removePassword/RemovePasswordSettings";
 import SanitizeSettings from "../components/tools/sanitize/SanitizeSettings";
@@ -73,7 +72,6 @@ import ChangePermissionsSettings from "../components/tools/changePermissions/Cha
 import BookletImpositionSettings from "../components/tools/bookletImposition/BookletImpositionSettings";
 import FlattenSettings from "../components/tools/flatten/FlattenSettings";
 import RedactSingleStepSettings from "../components/tools/redact/RedactSingleStepSettings";
-import RotateSettings from "../components/tools/rotate/RotateSettings";
 import Redact from "../tools/Redact";
 import AdjustPageScale from "../tools/AdjustPageScale";
 import ReplaceColor from "../tools/ReplaceColor";
@@ -86,7 +84,6 @@ import AdjustPageScaleSettings from "../components/tools/adjustPageScale/AdjustP
 import ScannerImageSplitSettings from "../components/tools/scannerImageSplit/ScannerImageSplitSettings";
 import ChangeMetadataSingleStep from "../components/tools/changeMetadata/ChangeMetadataSingleStep";
 import SignSettings from "../components/tools/sign/SignSettings";
-import CropSettings from "../components/tools/crop/CropSettings";
 import RemoveAnnotations from "../tools/RemoveAnnotations";
 import PageLayoutSettings from "../components/tools/pageLayout/PageLayoutSettings";
 import ExtractImages from "../tools/ExtractImages";
@@ -96,6 +93,7 @@ import AddStampAutomationSettings from "../components/tools/addStamp/AddStampAut
 import CertSignAutomationSettings from "../components/tools/certSign/CertSignAutomationSettings";
 import CropAutomationSettings from "../components/tools/crop/CropAutomationSettings";
 import RotateAutomationSettings from "../components/tools/rotate/RotateAutomationSettings";
+import SplitAutomationSettings from "../components/tools/split/SplitAutomationSettings";
 
 const showPlaceholderTools = true; // Show all tools; grey out unavailable ones in UI
 
@@ -420,7 +418,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.PAGE_FORMATTING,
         operationConfig: splitOperationConfig,
-        automationSettings: SplitSettings, // Todo:: not all settings shown
+        automationSettings: SplitAutomationSettings,
         synonyms: getSynonyms(t, "split")
       },
       reorganizePages: {
