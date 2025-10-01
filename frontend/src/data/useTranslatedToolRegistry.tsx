@@ -94,6 +94,7 @@ import CertSignAutomationSettings from "../components/tools/certSign/CertSignAut
 import CropAutomationSettings from "../components/tools/crop/CropAutomationSettings";
 import RotateAutomationSettings from "../components/tools/rotate/RotateAutomationSettings";
 import SplitAutomationSettings from "../components/tools/split/SplitAutomationSettings";
+import AddAttachmentsSettings from "../components/tools/addAttachments/AddAttachmentsSettings";
 
 const showPlaceholderTools = true; // Show all tools; grey out unavailable ones in UI
 
@@ -509,7 +510,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         maxFiles: 1,
         endpoints: ["add-attachments"],
         operationConfig: addAttachmentsOperationConfig,
-        automationSettings: null, // TODO:: Needs settings
+        automationSettings: AddAttachmentsSettings,
       },
 
       // Extraction
