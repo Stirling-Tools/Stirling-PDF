@@ -303,11 +303,10 @@ public class ApplicationProperties {
 
         @Data
         public static class Jwt {
-            private boolean enableKeystore = true;
-            private boolean enableKeyRotation = false;
-            private boolean enableKeyCleanup = true;
+            private boolean enabled = true;
+            private boolean keyCleanup = true;
             private int keyRetentionDays = 7;
-            private boolean secureCookie;
+            private Boolean secureCookie;
         }
     }
 
@@ -377,16 +376,19 @@ public class ApplicationProperties {
 
         @JsonIgnore
         public String getBaseTmpDir() {
-            return baseTmpDir != null && !baseTmpDir.isEmpty()
-                    ? baseTmpDir
-                    : java.lang.System.getProperty("java.io.tmpdir") + "/stirling-pdf";
+            if (baseTmpDir != null && !baseTmpDir.isEmpty()) {
+                return baseTmpDir;
+            }
+            String tmp = java.lang.System.getProperty("java.io.tmpdir");
+            return new File(tmp, "stirling-pdf").getPath();
         }
 
         @JsonIgnore
         public String getLibreofficeDir() {
-            return libreofficeDir != null && !libreofficeDir.isEmpty()
-                    ? libreofficeDir
-                    : getBaseTmpDir() + "/libreoffice";
+            if (libreofficeDir != null && !libreofficeDir.isEmpty()) {
+                return libreofficeDir;
+            }
+            return new File(getBaseTmpDir(), "libreoffice").getPath();
         }
     }
 

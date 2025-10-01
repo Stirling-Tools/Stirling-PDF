@@ -288,8 +288,8 @@ public class GeneralWebController {
             case "eot" -> "embedded-opentype";
             case "svg" -> "svg";
             default ->
-                // or throw an exception if an unexpected extension is encountered
-                "";
+                    // or throw an exception if an unexpected extension is encountered
+                    "";
         };
     }
 
