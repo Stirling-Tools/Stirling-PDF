@@ -61,6 +61,7 @@ import { cropOperationConfig } from "../hooks/tools/crop/useCropOperation";
 import { removeAnnotationsOperationConfig } from "../hooks/tools/removeAnnotations/useRemoveAnnotationsOperation";
 import { extractImagesOperationConfig } from "../hooks/tools/extractImages/useExtractImagesOperation";
 import { replaceColorOperationConfig } from "../hooks/tools/replaceColor/useReplaceColorOperation";
+import { removePagesOperationConfig } from "../hooks/tools/removePages/useRemovePagesOperation";
 import CompressSettings from "../components/tools/compress/CompressSettings";
 import AddPasswordSettings from "../components/tools/addPassword/AddPasswordSettings";
 import RemovePasswordSettings from "../components/tools/removePassword/RemovePasswordSettings";
@@ -95,6 +96,7 @@ import CropAutomationSettings from "../components/tools/crop/CropAutomationSetti
 import RotateAutomationSettings from "../components/tools/rotate/RotateAutomationSettings";
 import SplitAutomationSettings from "../components/tools/split/SplitAutomationSettings";
 import AddAttachmentsSettings from "../components/tools/addAttachments/AddAttachmentsSettings";
+import RemovePagesSettings from "../components/tools/removePages/RemovePagesSettings";
 
 const showPlaceholderTools = true; // Show all tools; grey out unavailable ones in UI
 
@@ -551,8 +553,8 @@ export function useFlatToolRegistry(): ToolRegistry {
         maxFiles: 1,
         endpoints: ["remove-pages"],
         synonyms: getSynonyms(t, "removePages"),
-
-        automationSettings: null, // TODO:: Needs settings
+        operationConfig: removePagesOperationConfig,
+        automationSettings: RemovePagesSettings, // TODO:: Needs settings
       },
       removeBlanks: {
         icon: <LocalIcon icon="scan-delete-rounded" width="1.5rem" height="1.5rem" />,
