@@ -48,7 +48,7 @@ const FileListArea: React.FC<FileListAreaProps> = ({
             <EmptyFilesState />
           ) : recentFiles.length === 0 && isLoading ? (
             <Center style={{ height: '12.5rem' }}>
-              <Text c="dimmed" ta="center">Loading files...</Text>
+              <Text c="dimmed" ta="center">{t('fileManager.loadingFiles', 'Loading files...')}</Text>
             </Center>
           ) : (
             filteredFiles.map((file, index) => {
