@@ -101,6 +101,7 @@ import SplitAutomationSettings from "../components/tools/split/SplitAutomationSe
 import AddAttachmentsSettings from "../components/tools/addAttachments/AddAttachmentsSettings";
 import RemovePagesSettings from "../components/tools/removePages/RemovePagesSettings";
 import RemoveBlanksSettings from "../components/tools/removeBlanks/RemoveBlanksSettings";
+import AddPageNumbersAutomationSettings from "../components/tools/addPageNumbers/AddPageNumbersAutomationSettings";
 
 const showPlaceholderTools = true; // Show all tools; grey out unavailable ones in UI
 
@@ -464,7 +465,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         description: t("home.addPageNumbers.desc", "Add Page numbers throughout a document in a set location"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.PAGE_FORMATTING,
-        automationSettings: null,
+        automationSettings: AddPageNumbersAutomationSettings,
         maxFiles: -1,
         endpoints: ["add-page-numbers"],
         operationConfig: addPageNumbersOperationConfig,
