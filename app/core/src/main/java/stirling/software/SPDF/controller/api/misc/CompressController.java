@@ -774,11 +774,8 @@ public class CompressController {
 
                     // Check if we can't increase the level further
                     if (newOptimizeLevel == optimizeLevel) {
-                        if (autoMode) {
-                            log.info(
-                                    "Maximum optimization level reached without meeting target size.");
-                            sizeMet = true;
-                        }
+                        log.info("Maximum optimization level reached without meeting target size.");
+                        sizeMet = true;
                     } else {
                         // Reset flags for next iteration with higher optimization level
                         imageCompressionApplied = false;
@@ -809,7 +806,7 @@ public class CompressController {
                 try {
                     Files.deleteIfExists(tempFile);
                 } catch (IOException e) {
-                    log.warn("Failed to delete temporary file: " + tempFile, e);
+                    log.warn("Failed to delete temporary file: {}", tempFile, e);
                 }
             }
         }
@@ -879,7 +876,7 @@ public class CompressController {
         command.add("-sOutputFile=" + gsOutputFile.toString());
         command.add(currentFile.toString());
 
-        ProcessExecutorResult returnCode = null;
+        ProcessExecutorResult returnCode;
         try {
             returnCode =
                     ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT)
