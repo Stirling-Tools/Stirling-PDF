@@ -93,6 +93,8 @@ import ScannerImageSplitSettings from "../components/tools/scannerImageSplit/Sca
 import ChangeMetadataSingleStep from "../components/tools/changeMetadata/ChangeMetadataSingleStep";
 import SignSettings from "../components/tools/sign/SignSettings";
 import CropSettings from "../components/tools/crop/CropSettings";
+import AddPageNumbers from "../tools/AddPageNumbers";
+import { addPageNumbersOperationConfig } from "../components/tools/addPageNumbers/useAddPageNumbersOperation";
 import RemoveAnnotations from "../tools/RemoveAnnotations";
 import RemoveAnnotationsSettings from "../components/tools/removeAnnotations/RemoveAnnotationsSettings";
 import PageLayoutSettings from "../components/tools/pageLayout/PageLayoutSettings";
@@ -447,11 +449,13 @@ export function useFlatToolRegistry(): ToolRegistry {
       addPageNumbers: {
         icon: <LocalIcon icon="123-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.addPageNumbers.title", "Add Page Numbers"),
-        component: null,
-
+        component: AddPageNumbers,
         description: t("home.addPageNumbers.desc", "Add Page numbers throughout a document in a set location"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.PAGE_FORMATTING,
+        maxFiles: -1,
+        endpoints: ["add-page-numbers"],
+        operationConfig: addPageNumbersOperationConfig,
         synonyms: getSynonyms(t, "addPageNumbers")
       },
       pageLayout: {
