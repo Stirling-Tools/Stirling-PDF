@@ -94,6 +94,7 @@ import ExtractImages from "../tools/ExtractImages";
 import ExtractImagesSettings from "../components/tools/extractImages/ExtractImagesSettings";
 import ReplaceColorSettings from "../components/tools/replaceColor/ReplaceColorSettings";
 import AddStampAutomationSettings from "../components/tools/addStamp/AddStampAutomationSettings";
+import CertSignAutomationSettings from "../components/tools/certSign/CertSignAutomationSettings";
 
 const showPlaceholderTools = true; // Show all tools; grey out unavailable ones in UI
 
@@ -223,7 +224,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         maxFiles: -1,
         endpoints: ["cert-sign"],
         operationConfig: certSignOperationConfig,
-        automationSettings: CertificateTypeSettings, //TODO:: not all settings shown
+        automationSettings: CertSignAutomationSettings,
       },
       sign: {
         icon: <LocalIcon icon="signature-rounded" width="1.5rem" height="1.5rem" />,
