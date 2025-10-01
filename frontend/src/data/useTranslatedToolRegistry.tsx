@@ -569,7 +569,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         endpoints: ["remove-blanks"],
         synonyms: getSynonyms(t, "removeBlanks"),
         operationConfig: removeBlanksOperationConfig,
-        automationSettings: RemoveBlanksSettings, // TODO:: Needs settings
+        automationSettings: RemoveBlanksSettings,
       },
       removeAnnotations: {
         icon: <LocalIcon icon="thread-unread-rounded" width="1.5rem" height="1.5rem" />,
@@ -830,7 +830,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         subcategoryId: SubcategoryId.GENERAL,
         maxFiles: -1,
         operationConfig: compressOperationConfig,
-        automationSettings: CompressSettings, //TODO:: width not great
+        automationSettings: CompressSettings,
         synonyms: getSynonyms(t, "compress")
       },
       convert: {
