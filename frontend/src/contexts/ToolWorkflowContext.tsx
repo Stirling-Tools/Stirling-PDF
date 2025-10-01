@@ -75,7 +75,7 @@ interface ToolWorkflowContextValue extends ToolWorkflowState {
   // Tool management (from hook)
   selectedToolKey: string | null;
   selectedTool: ToolRegistryEntry | null;
-  toolRegistry: Record<string, ToolRegistryEntry>;
+  toolRegistry: ToolRegistry;
   getSelectedTool: (toolId: string | null) => ToolRegistryEntry | null;
 
   // UI Actions
@@ -231,7 +231,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
   // Filter tools based on search query with fuzzy matching (name, description, id, synonyms)
   const filteredTools = useMemo(() => {
     if (!toolRegistry) return [];
-    return filterToolRegistryByQuery(toolRegistry as Record<string, ToolRegistryEntry>, state.searchQuery);
+    return filterToolRegistryByQuery(toolRegistry, state.searchQuery);
   }, [toolRegistry, state.searchQuery]);
 
   const isPanelVisible = useMemo(() =>
@@ -244,7 +244,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     navigationState.selectedTool,
     handleToolSelect,
     handleBackToTools,
-    toolRegistry as ToolRegistry,
+    toolRegistry,
     true
   );
 

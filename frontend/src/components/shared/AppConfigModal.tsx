@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { Modal, Text, ActionIcon } from '@mantine/core';
+import { useMediaQuery } from '@mantine/hooks';
 import { useAppConfig } from '../../hooks/useAppConfig';
 import LocalIcon from './LocalIcon';
 import Overview from './config/configSections/Overview';
@@ -15,6 +16,7 @@ interface AppConfigModalProps {
 const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
   const { config, loading, error } = useAppConfig();
   const [active, setActive] = useState<NavKey>('overview');
+  const isMobile = useMediaQuery("(max-width: 1024px)");
 
   useEffect(() => {
     const handler = (ev: Event) => {
@@ -47,15 +49,10 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
   // Left navigation structure and icons
   const configNavSections = useMemo(() =>
     createConfigNavSections(
-      isDev,
       Overview,
-      handleLogout,
-      config,
-      loading,
-      error,
-      colors
+      handleLogout
     ),
-    [isDev, config, loading, error, colors]
+    []
   );
 
   const activeLabel = useMemo(() => {
@@ -79,18 +76,19 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
       opened={opened}
       onClose={onClose}
       title={null}
-      size={980}
+      size={isMobile ? "100%" : 980}
       centered
       radius="lg"
       withCloseButton={false}
       style={{ zIndex: 1000 }}
       overlayProps={{ opacity: 0.35, blur: 2 }}
       padding={0}
+      fullScreen={isMobile}
     >
       <div className="modal-container">
         {/* Left navigation */}
         <div
-          className="modal-nav"
+          className={`modal-nav ${isMobile ? 'mobile' : ''}`}
           style={{
             background: colors.navBg,
             borderRight: `1px solid ${colors.headerBorder}`,
@@ -99,26 +97,31 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
           <div className="modal-nav-scroll">
             {configNavSections.map(section => (
               <div key={section.title} className="modal-nav-section">
-                <Text size="xs" fw={600} c={colors.sectionTitle} style={{ textTransform: 'uppercase', letterSpacing: 0.4 }}>
-                  {section.title}
-                </Text>
+                {!isMobile && (
+                  <Text size="xs" fw={600} c={colors.sectionTitle} style={{ textTransform: 'uppercase', letterSpacing: 0.4 }}>
+                    {section.title}
+                  </Text>
+                )}
                 <div className="modal-nav-section-items">
                   {section.items.map(item => {
                     const isActive = active === item.key;
                     const color = isActive ? colors.navItemActive : colors.navItem;
+                    const iconSize = isMobile ? 28 : 18;
                     return (
                       <div
                         key={item.key}
                         onClick={() => setActive(item.key)}
-                        className="modal-nav-item"
+                        className={`modal-nav-item ${isMobile ? 'mobile' : ''}`}
                         style={{
                           background: isActive ? colors.navItemActiveBg : 'transparent',
                         }}
                       >
-                        <LocalIcon icon={item.icon} width={18} height={18} style={{ color }} />
-                        <Text size="sm" fw={500} style={{ color }}>
-                          {item.label}
-                        </Text>
+                        <LocalIcon icon={item.icon} width={iconSize} height={iconSize} style={{ color }} />
+                        {!isMobile && (
+                          <Text size="sm" fw={500} style={{ color }}>
+                            {item.label}
+                          </Text>
+                        )}
                       </div>
                     );
                   })}

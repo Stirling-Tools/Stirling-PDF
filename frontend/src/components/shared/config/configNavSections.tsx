@@ -26,13 +26,8 @@ export interface ConfigColors {
 }
 
 export const createConfigNavSections = (
-  isDev: boolean,
   Overview: React.ComponentType<{ onLogoutClick: () => void }>,
-  onLogoutClick: () => void,
-  config: AppConfig | null,
-  loading: boolean,
-  error: string | null,
-  colors: ConfigColors
+  onLogoutClick: () => void
 ): ConfigNavSection[] => {
   const sections: ConfigNavSection[] = [
     {
@@ -58,16 +53,6 @@ export const createConfigNavSections = (
       ],
     },
   ];
-
-  if (isDev) {
-    // Log debug info instead of showing UI
-    console.log('Debug Config:', {
-      config,
-      loading,
-      error,
-      colors
-    });
-  }
 
   return sections;
 };

@@ -15,6 +15,43 @@
   flex-direction: column;
 }
 
+/* Mobile: compact icon-only navigation */
+@media (max-width: 1024px) {
+  .modal-container {
+    height: 100vh !important;
+    max-height: none !important;
+  }
+
+  .modal-nav {
+    width: 5rem; /* 80px - wider for larger icons */
+    height: 100vh !important;
+    max-height: none !important;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+  }
+
+  .modal-nav-scroll {
+    padding: 1rem 0.5rem;
+  }
+
+  .modal-nav-section {
+    margin-bottom: 1.5rem;
+  }
+
+  .modal-nav-item.mobile {
+    padding: 1rem;
+    justify-content: center;
+    border-radius: 0.75rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .modal-content {
+    height: 100vh !important;
+    max-height: none !important;
+    border-radius: 0;
+  }
+}
+
 .modal-nav-scroll {
   flex: 1;
   overflow-y: auto;

@@ -57,6 +57,8 @@ export const isMacLike = (): boolean => {
 
 export const isModifierCode = (code: string): boolean => MODIFIER_CODES.has(code);
 
+const isFunctionKey = (code: string): boolean => /^F\d{1,2}$/.test(code);
+
 export const bindingEquals = (a?: HotkeyBinding | null, b?: HotkeyBinding | null): boolean => {
   if (!a && !b) return true;
   if (!a || !b) return false;
@@ -122,7 +124,8 @@ const getKeyLabel = (code: string): string => {
     return `Num ${remainder}`;
   }
 
-  if (/^F\d{1,2}$/.test(code)) {
+  // Match function keys (F1-F12)
+  if (isFunctionKey(code)) {
     return code;
   }
 
