@@ -88,7 +88,7 @@
   scroll-behavior: smooth;
   scrollbar-width: none;
   -ms-overflow-style: none;
-  touch-action: pan-y;
+  touch-action: pan-x pinch-zoom;
 }
 
 .mobile-slider::-webkit-scrollbar {
@@ -125,6 +125,9 @@
   border-top: 1px solid var(--border-subtle);
   background: var(--bg-toolbar);
   gap: 0.5rem;
+  position: relative;
+  z-index: 10;
+  touch-action: manipulation;
 }
 
 .mobile-bottom-button {
@@ -141,10 +144,17 @@
   cursor: pointer;
   border-radius: 0.5rem;
   transition: background 0.2s ease;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+  min-height: 44px;
 }
 
-.mobile-bottom-button:hover {
-  background: var(--bg-hover, rgba(0, 0, 0, 0.05));
+@media (hover: hover) and (pointer: fine) {
+  .mobile-bottom-button:hover {
+    background: var(--bg-hover, rgba(0, 0, 0, 0.05));
+  }
 }
 
 .mobile-bottom-button:active {
