@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ActionIcon, Popover } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import LocalIcon from '../LocalIcon';
@@ -32,6 +32,13 @@ export default function ViewerAnnotationControls({ currentView }: ViewerAnnotati
   const { actions: fileActions } = useFileContext();
   const activeFiles = selectors.getFiles();
 
+  // Turn off annotation mode when switching away from viewer
+  useEffect(() => {
+    if (currentView !== 'viewer' && viewerContext?.isAnnotationMode) {
+      viewerContext.setAnnotationMode(false);
+    }
+  }, [currentView, viewerContext]);
+
   return (
     <>
       {/* Annotation Visibility Toggle */}
@@ -43,7 +50,7 @@ export default function ViewerAnnotationControls({ currentView }: ViewerAnnotati
           onClick={() => {
             viewerContext?.toggleAnnotationsVisibility();
           }}
-          disabled={currentView !== 'viewer'}
+          disabled={currentView !== 'viewer' || viewerContext?.isAnnotationMode}
         >
           <LocalIcon
             icon={viewerContext?.isAnnotationsVisible ? "visibility" : "visibility-off-rounded"}
