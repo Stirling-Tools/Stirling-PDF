@@ -864,8 +864,7 @@ public class FormUtils {
                         originalRectangle,
                         desiredName,
                         replacementDefinition,
-                        sanitizedOptions
-                ); // Don't reuse widget for type changes
+                        sanitizedOptions); // Don't reuse widget for type changes
 
                 // Only remove original field after successful creation of replacement
                 removeFieldFromDocument(document, acroForm, originalField);
