@@ -8,6 +8,7 @@ import { useNavigationActions } from '../../contexts/NavigationContext';
 import { zipFileService } from '../../services/zipFileService';
 import { detectFileExtension } from '../../utils/fileUtils';
 import FileEditorThumbnail from './FileEditorThumbnail';
+import AddFileCard from './AddFileCard';
 import FilePickerModal from '../shared/FilePickerModal';
 import SkeletonLoader from '../shared/SkeletonLoader';
 import { FileId, StirlingFile } from '../../types/fileContext';
@@ -405,6 +406,16 @@ const FileEditor = ({
               pointerEvents: 'auto'
             }}
           >
+            {/* Add File Card - only show when files exist */}
+            {activeStirlingFileStubs.length > 0 && (
+              <AddFileCard
+                key="add-file-card"
+                onFileSelect={handleFileUpload}
+                accept=".pdf,.zip"
+                multiple={true}
+              />
+            )}
+
             {activeStirlingFileStubs.map((record, index) => {
               return (
                 <FileEditorThumbnail

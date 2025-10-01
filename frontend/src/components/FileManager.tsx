@@ -20,7 +20,7 @@ const FileManager: React.FC<FileManagerProps> = ({ selectedTool }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
-  const { loadRecentFiles, handleRemoveFile } = useFileManager();
+  const { loadRecentFiles, handleRemoveFile, loading } = useFileManager();
 
   // File management handlers
   const isFileSupported = useCallback((fileName: string) => {
@@ -147,6 +147,7 @@ const FileManager: React.FC<FileManagerProps> = ({ selectedTool }) => {
             onFileRemove={handleRemoveFileByIndex}
             modalHeight={modalHeight}
             refreshRecentFiles={refreshRecentFiles}
+            isLoading={loading}
           >
             {isMobile ? <MobileLayout /> : <DesktopLayout />}
           </FileManagerProvider>
