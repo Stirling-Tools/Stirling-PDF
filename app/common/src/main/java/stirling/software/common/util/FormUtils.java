@@ -666,11 +666,6 @@ public class FormUtils {
         return null;
     }
 
-    private boolean isMeaningfulLabel(String candidate) {
-        if (candidate == null || candidate.isBlank()) return false;
-        return !looksGeneric(candidate.trim());
-    }
-
     private void forceCheckBoxValue(PDCheckBox checkBox, String onValue) {
         if (!isSettableCheckBoxState(onValue)) {
             return;
@@ -694,24 +689,24 @@ public class FormUtils {
             int typeIndex,
             List<String> options) {
         String alternate = cleanLabel(field.getAlternateFieldName());
-        if (isMeaningfulLabel(alternate)) {
+        if (looksGeneric(alternate)) {
             return alternate;
         }
 
         String tooltipLabel = cleanLabel(tooltip);
-        if (isMeaningfulLabel(tooltipLabel)) {
+        if (looksGeneric(tooltipLabel)) {
             return tooltipLabel;
         }
 
         if (options != null && !options.isEmpty()) {
             String optionCandidate = cleanLabel(options.get(0));
-            if (isMeaningfulLabel(optionCandidate)) {
+            if (looksGeneric(optionCandidate)) {
                 return optionCandidate;
             }
         }
 
         String humanized = cleanLabel(humanizeName(name));
-        if (isMeaningfulLabel(humanized)) {
+        if (looksGeneric(humanized)) {
             return humanized;
         }
 
@@ -719,49 +714,32 @@ public class FormUtils {
     }
 
     private String cleanLabel(String label) {
-        if (label == null) {
-            return null;
-        }
+        if (label == null) return null;
+
+        RegexPatternUtils patterns = RegexPatternUtils.getInstance();
         String cleaned = label.trim();
-        while (true) {
-            final boolean b = !cleaned.isEmpty() && cleaned.charAt(cleaned.length() - 1) == '.';
-            if (!b) break;
-            cleaned = cleaned.substring(0, cleaned.length() - 1).trim();
-        }
-        if (!cleaned.isEmpty() && cleaned.charAt(cleaned.length() - 1) == ':') {
-            cleaned = cleaned.substring(0, cleaned.length() - 1).trim();
-        }
+
+        cleaned = patterns.getPattern("[.:]+$").matcher(cleaned).replaceAll("").trim();
+
         return cleaned.isEmpty() ? null : cleaned;
     }
 
     private boolean looksGeneric(String value) {
-        String simplified =
-                RegexPatternUtils.getInstance()
-                        .getPunctuationPattern()
-                        .matcher(value)
-                        .replaceAll(" ")
-                        .trim();
+        if (value == null) return true;
+
+        RegexPatternUtils patterns = RegexPatternUtils.getInstance();
+        String simplified = patterns.getPunctuationPattern().matcher(value).replaceAll(" ").trim();
 
         if (simplified.isEmpty()) return true;
 
-        RegexPatternUtils patterns = RegexPatternUtils.getInstance();
         return patterns.getGenericFieldNamePattern().matcher(simplified).matches()
                 || patterns.getSimpleFormFieldPattern().matcher(simplified).matches()
                 || patterns.getOptionalTNumericPattern().matcher(simplified).matches();
     }
 
-    private String capitalizeWord(String word) {
-        if (word == null || word.isEmpty() || word.equals(word.toUpperCase(Locale.ROOT)))
-            return word;
-        if (word.length() == 1) return word.toUpperCase(Locale.ROOT);
-        return word.substring(0, 1).toUpperCase(Locale.ROOT)
-                + word.substring(1).toLowerCase(Locale.ROOT);
-    }
-
     private String humanizeName(String name) {
-        if (name == null) {
-            return null;
-        }
+        if (name == null) return null;
+
         RegexPatternUtils patterns = RegexPatternUtils.getInstance();
 
         String cleaned = patterns.getFormFieldBracketPattern().matcher(name).replaceAll(" ");
@@ -769,22 +747,8 @@ public class FormUtils {
         cleaned = patterns.getUnderscoreHyphenPattern().matcher(cleaned).replaceAll(" ");
         cleaned = patterns.getCamelCaseBoundaryPattern().matcher(cleaned).replaceAll(" ");
         cleaned = patterns.getWhitespacePattern().matcher(cleaned).replaceAll(" ").trim();
-        if (cleaned.isEmpty()) {
-            return null;
-        }
 
-        StringBuilder builder = new StringBuilder();
-        for (String part : cleaned.split(" ")) {
-            if (part.isBlank()) {
-                continue;
-            }
-            if (!builder.isEmpty()) {
-                builder.append(' ');
-            }
-            builder.append(capitalizeWord(part));
-        }
-        String result = builder.toString().trim();
-        return result.isEmpty() ? null : result;
+        return cleaned.isEmpty() ? null : cleaned;
     }
 
     public void modifyFormFields(
