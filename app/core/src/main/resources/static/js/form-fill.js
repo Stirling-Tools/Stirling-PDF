@@ -1425,8 +1425,7 @@ function collectFieldValues() {
       const values = Array.from(input.selectedOptions).map((option) => option.value);
       result[fieldName] = values.join(",");
     } else {
-      const value = input.value || input.dataset.originalValue || "";
-      result[fieldName] = value;
+      result[fieldName] = input.value || input.dataset.originalValue || "";
     }
   });
   return result;
