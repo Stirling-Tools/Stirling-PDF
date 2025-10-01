@@ -34,11 +34,14 @@ export default function ToolList({
 
   const handleToolSelect = (index: number, newOperation: string) => {
     const defaultParams = getToolDefaultParameters(newOperation);
+    const toolEntry = toolRegistry[newOperation];
+    // If tool has no settingsComponent, it's automatically configured
+    const isConfigured = !toolEntry?.automationSettings;
 
     onToolUpdate(index, {
       operation: newOperation,
       name: getToolName(newOperation),
-      configured: false,
+      configured: isConfigured,
       parameters: defaultParams,
     });
   };
