@@ -15,6 +15,7 @@ import RightRail from "../components/shared/RightRail";
 import FileManager from "../components/FileManager";
 import LocalIcon from "../components/shared/LocalIcon";
 import { useFilesModalContext } from "../contexts/FilesModalContext";
+import AppConfigModal from "../components/shared/AppConfigModal";
 
 import "./HomePage.css";
 
@@ -37,6 +38,7 @@ export default function HomePage() {
   const sliderRef = useRef<HTMLDivElement | null>(null);
   const [activeMobileView, setActiveMobileView] = useState<MobileView>("tools");
   const isProgrammaticScroll = useRef(false);
+  const [configModalOpen, setConfigModalOpen] = useState(false);
 
   const brandAltText = t("home.mobile.brandAlt", "Stirling PDF logo");
   const brandIconSrc = `${BASE_PATH}/branding/StirlingPDFLogoNoText${
@@ -207,8 +209,20 @@ export default function HomePage() {
               <LocalIcon icon="folder-rounded" width="1.5rem" height="1.5rem" />
               <span className="mobile-bottom-button-label">{t('quickAccess.files', 'Files')}</span>
             </button>
+            <button
+              className="mobile-bottom-button"
+              aria-label={t('quickAccess.config', 'Config')}
+              onClick={() => setConfigModalOpen(true)}
+            >
+              <LocalIcon icon="settings-rounded" width="1.5rem" height="1.5rem" />
+              <span className="mobile-bottom-button-label">{t('quickAccess.config', 'Config')}</span>
+            </button>
           </div>
           <FileManager selectedTool={selectedTool as any /* FIX ME */} />
+          <AppConfigModal
+            opened={configModalOpen}
+            onClose={() => setConfigModalOpen(false)}
+          />
         </div>
       ) : (
         <Group

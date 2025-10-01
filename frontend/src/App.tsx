@@ -4,6 +4,7 @@ import { FileContextProvider } from "./contexts/FileContext";
 import { NavigationProvider } from "./contexts/NavigationContext";
 import { FilesModalProvider } from "./contexts/FilesModalContext";
 import { ToolWorkflowProvider } from "./contexts/ToolWorkflowContext";
+import { HotkeyProvider } from "./contexts/HotkeyContext";
 import { SidebarProvider } from "./contexts/SidebarContext";
 import ErrorBoundary from "./components/shared/ErrorBoundary";
 import HomePage from "./pages/HomePage";
@@ -44,15 +45,17 @@ export default function App() {
             <NavigationProvider>
               <FilesModalProvider>
                 <ToolWorkflowProvider>
-                  <SidebarProvider>
-                    <ViewerProvider>
-                      <SignatureProvider>
-                      <RightRailProvider>
+                  <HotkeyProvider>
+                    <SidebarProvider>
+                      <ViewerProvider>
+                        <SignatureProvider>
+                          <RightRailProvider>
                             <HomePage />
                           </RightRailProvider>
-                      </SignatureProvider>
-                    </ViewerProvider>
-                  </SidebarProvider>
+                        </SignatureProvider>
+                      </ViewerProvider>
+                    </SidebarProvider>
+                  </HotkeyProvider>
                 </ToolWorkflowProvider>
               </FilesModalProvider>
             </NavigationProvider>
