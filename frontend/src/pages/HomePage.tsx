@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useToolWorkflow } from "../contexts/ToolWorkflowContext";
-import { ActionIcon, Group, useMantineColorScheme } from "@mantine/core";
+import { Group, useMantineColorScheme } from "@mantine/core";
 import { useSidebarContext } from "../contexts/SidebarContext";
 import { useDocumentMeta } from "../hooks/useDocumentMeta";
 import { BASE_PATH, getBaseUrl } from "../constants/app";
 import { useMediaQuery } from "@mantine/hooks";
+import AppsIcon from '@mui/icons-material/AppsRounded';
 
 import ToolPanel from "../components/tools/ToolPanel";
 import Workbench from "../components/layout/Workbench";
@@ -28,13 +29,14 @@ export default function HomePage() {
 
   const { quickAccessRef } = sidebarRefs;
 
-  const { selectedTool, selectedToolKey } = useToolWorkflow();
+  const { selectedTool, selectedToolKey, handleToolSelect, handleBackToTools } = useToolWorkflow();
 
   const { openFilesModal } = useFilesModalContext();
   const { colorScheme } = useMantineColorScheme();
   const isMobile = useMediaQuery("(max-width: 1024px)");
   const sliderRef = useRef<HTMLDivElement | null>(null);
   const [activeMobileView, setActiveMobileView] = useState<MobileView>("tools");
+  const isProgrammaticScroll = useRef(false);
 
   const brandName = t("home.mobile.brandName", "Stirling");
   const brandAltText = t("home.mobile.brandAlt", "Stirling PDF logo");
@@ -50,8 +52,14 @@ export default function HomePage() {
     if (isMobile) {
       const container = sliderRef.current;
       if (container) {
-        const offset = activeMobileView === "tools" ? 0 : container.clientWidth;
+        isProgrammaticScroll.current = true;
+        const offset = activeMobileView === "tools" ? 0 : container.offsetWidth;
         container.scrollTo({ left: offset, behavior: "smooth" });
+
+        // Re-enable scroll listener after animation completes
+        setTimeout(() => {
+          isProgrammaticScroll.current = false;
+        }, 500);
       }
       return;
     }
@@ -72,6 +80,10 @@ export default function HomePage() {
     let animationFrame = 0;
 
     const handleScroll = () => {
+      if (isProgrammaticScroll.current) {
+        return;
+      }
+
       if (animationFrame) {
         cancelAnimationFrame(animationFrame);
       }
@@ -118,14 +130,6 @@ export default function HomePage() {
                 <img src={brandMarkSrc} alt={brandAltText} className="mobile-brand-mark" />
                 <span className="mobile-brand-name">{brandName}</span>
               </div>
-              <ActionIcon
-                variant="subtle"
-                size="md"
-                aria-label={t('home.mobile.openFiles', 'Open files')}
-                onClick={() => openFilesModal()}
-              >
-                <LocalIcon icon="folder-rounded" width="1.25rem" height="1.25rem" />
-              </ActionIcon>
             </div>
             <div className="mobile-toggle-buttons" role="tablist" aria-label={t('home.mobile.viewSwitcher', 'Switch workspace view')}>
               <button
@@ -159,11 +163,48 @@ export default function HomePage() {
             </div>
             <div className="mobile-slide" aria-label={t('home.mobile.workbenchSlide', 'Workspace panel')}>
               <div className="mobile-slide-content">
-                <div className="flex-1 min-h-0 flex flex-col">
+                <div className="flex-1 min-h-0 flex">
                   <Workbench />
+                  <RightRail />
                 </div>
               </div>
             </div>
+          </div>
+          <div className="mobile-bottom-bar">
+            <button
+              className="mobile-bottom-button"
+              aria-label={t('quickAccess.allTools', 'All Tools')}
+              onClick={() => {
+                handleBackToTools();
+                if (isMobile) {
+                  setActiveMobileView('tools');
+                }
+              }}
+            >
+              <AppsIcon sx={{ fontSize: '1.5rem' }} />
+              <span className="mobile-bottom-button-label">{t('quickAccess.allTools', 'All Tools')}</span>
+            </button>
+            <button
+              className="mobile-bottom-button"
+              aria-label={t('quickAccess.automate', 'Automate')}
+              onClick={() => {
+                handleToolSelect('automate');
+                if (isMobile) {
+                  setActiveMobileView('tools');
+                }
+              }}
+            >
+              <LocalIcon icon="automation-outline" width="1.5rem" height="1.5rem" />
+              <span className="mobile-bottom-button-label">{t('quickAccess.automate', 'Automate')}</span>
+            </button>
+            <button
+              className="mobile-bottom-button"
+              aria-label={t('home.mobile.openFiles', 'Open files')}
+              onClick={() => openFilesModal()}
+            >
+              <LocalIcon icon="folder-rounded" width="1.5rem" height="1.5rem" />
+              <span className="mobile-bottom-button-label">{t('quickAccess.files', 'Files')}</span>
+            </button>
           </div>
           <FileManager selectedTool={selectedTool as any /* FIX ME */} />
         </div>

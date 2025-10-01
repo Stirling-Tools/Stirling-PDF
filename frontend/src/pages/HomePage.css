@@ -116,3 +116,43 @@
   flex: 1 1 auto;
   min-height: 0;
 }
+
+.mobile-bottom-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0.5rem;
+  border-top: 1px solid var(--border-subtle);
+  background: var(--bg-toolbar);
+  gap: 0.5rem;
+}
+
+.mobile-bottom-button {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  padding: 0.5rem;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  cursor: pointer;
+  border-radius: 0.5rem;
+  transition: background 0.2s ease;
+}
+
+.mobile-bottom-button:hover {
+  background: var(--bg-hover, rgba(0, 0, 0, 0.05));
+}
+
+.mobile-bottom-button:active {
+  background: var(--bg-active, rgba(0, 0, 0, 0.1));
+}
+
+.mobile-bottom-button-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
