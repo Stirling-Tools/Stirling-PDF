@@ -131,7 +131,7 @@ public class PdfUtils {
     }
 
     public boolean hasImagesOnPage(PDPage page) throws IOException {
-        return getAllImages(page.getResources()).size() > 0;
+        return !getAllImages(page.getResources()).isEmpty();
     }
 
     public boolean hasTextOnPage(PDPage page, String phrase) throws IOException {
@@ -631,16 +631,13 @@ public class PdfUtils {
         int actualPageCount = pdfDocument.getNumberOfPages();
         pdfDocument.close();
 
-        switch (comparator.toLowerCase()) {
-            case "greater":
-                return actualPageCount > pageCount;
-            case "equal":
-                return actualPageCount == pageCount;
-            case "less":
-                return actualPageCount < pageCount;
-            default:
-                throw ExceptionUtils.createInvalidArgumentException("comparator", comparator);
-        }
+        return switch (comparator.toLowerCase()) {
+            case "greater" -> actualPageCount > pageCount;
+            case "equal" -> actualPageCount == pageCount;
+            case "less" -> actualPageCount < pageCount;
+            default ->
+                    throw ExceptionUtils.createInvalidArgumentException("comparator", comparator);
+        };
     }
 
     public boolean pageSize(PDDocument pdfDocument, String expectedPageSize) throws IOException {
