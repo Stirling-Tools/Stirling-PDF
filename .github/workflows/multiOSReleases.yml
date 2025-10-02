@@ -72,7 +72,7 @@ jobs:
           java-version: "21"
           distribution: "temurin"
 
-      - uses: gradle/actions/setup-gradle@017a9effdb900e5b5b2fddfb590a105619dca3c3 # v4.4.2
+      - uses: gradle/actions/setup-gradle@748248ddd2a24f49513d8f472f81c3a07d4d50e1 # v4.4.4
         with:
           gradle-version: 8.14
 
@@ -160,7 +160,7 @@ jobs:
           java-version: "21"
           distribution: "temurin"
 
-      - uses: gradle/actions/setup-gradle@017a9effdb900e5b5b2fddfb590a105619dca3c3 # v4.4.2
+      - uses: gradle/actions/setup-gradle@748248ddd2a24f49513d8f472f81c3a07d4d50e1 # v4.4.4
         with:
           gradle-version: 8.14
 
@@ -252,7 +252,7 @@ jobs:
 
       - name: Install Cosign
         if: matrix.os == 'windows-latest'
-        uses: sigstore/cosign-installer@d58896d6a1865668819e1d91763c7751a165e159 # v3.9.2
+        uses: sigstore/cosign-installer@d7543c93d881b35a8faa02e8e3605f69b7a1ce62 # v3.10.0
 
       - name: Generate key pair
         if: matrix.os == 'windows-latest'
