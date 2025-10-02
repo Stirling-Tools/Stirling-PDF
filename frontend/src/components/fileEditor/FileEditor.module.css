@@ -305,3 +305,83 @@
 :global([data-mantine-color-scheme="light"]) .card[data-selected="true"] {
   outline-color: #3B4B6E;
 }
+
+/* =========================
+   Add File Card Styles
+   ========================= */
+
+.addFileCard {
+  background: var(--file-card-bg);
+  border: 2px dashed var(--border-default);
+  border-radius: 0.0625rem;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  max-width: 100%;
+  max-height: 100%;
+  overflow: hidden;
+  margin-left: 0.5rem;
+  margin-right: 0.5rem;
+  opacity: 0.7;
+}
+
+.addFileCard:hover {
+  opacity: 1;
+  border-color: var(--color-blue-500);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.addFileCard:focus {
+  outline: 2px solid var(--color-blue-500);
+  outline-offset: 2px;
+}
+
+.addFileHeader {
+  background: var(--bg-subtle);
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border-default);
+}
+
+.addFileCard:hover .addFileHeader {
+  background: var(--color-blue-500);
+  color: white;
+}
+
+.addFileContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem 1rem;
+  gap: 0.5rem;
+}
+
+.addFileIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 5rem;
+  height: 5rem;
+  border-radius: 50%;
+  background: var(--bg-subtle);
+  transition: background-color 0.18s ease;
+}
+
+.addFileCard:hover .addFileIcon {
+  background: var(--color-blue-50);
+}
+
+.addFileText {
+  font-weight: 500;
+  transition: color 0.18s ease;
+}
+
+.addFileCard:hover .addFileText {
+  color: var(--text-primary);
+}
+
+.addFileSubtext {
+  font-size: 0.875rem;
+  opacity: 0.8;
+}

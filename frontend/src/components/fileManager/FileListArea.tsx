@@ -1,10 +1,10 @@
 import React from 'react';
 import { Center, ScrollArea, Text, Stack } from '@mantine/core';
 import CloudIcon from '@mui/icons-material/Cloud';
-import HistoryIcon from '@mui/icons-material/History';
 import { useTranslation } from 'react-i18next';
 import FileListItem from './FileListItem';
 import FileHistoryGroup from './FileHistoryGroup';
+import EmptyFilesState from './EmptyFilesState';
 import { useFileManagerContext } from '../../contexts/FileManagerContext';
 
 interface FileListAreaProps {
@@ -29,6 +29,7 @@ const FileListArea: React.FC<FileListAreaProps> = ({
     onFileDoubleClick,
     onDownloadSingle,
     isFileSupported,
+    isLoading,
   } = useFileManagerContext();
   const { t } = useTranslation();
 
@@ -43,15 +44,11 @@ const FileListArea: React.FC<FileListAreaProps> = ({
         scrollbarSize={8}
       >
         <Stack gap={0}>
-          {recentFiles.length === 0 ? (
+          {recentFiles.length === 0 && !isLoading ? (
+            <EmptyFilesState />
+          ) : recentFiles.length === 0 && isLoading ? (
             <Center style={{ height: '12.5rem' }}>
-              <Stack align="center" gap="sm">
-                <HistoryIcon style={{ fontSize: '3rem', color: 'var(--mantine-color-gray-5)' }} />
-                <Text c="dimmed" ta="center">{t('fileManager.noRecentFiles', 'No recent files')}</Text>
-                <Text size="xs" c="dimmed" ta="center" style={{ opacity: 0.7 }}>
-                  {t('fileManager.dropFilesHint', 'Drop files anywhere to upload')}
-                </Text>
-              </Stack>
+              <Text c="dimmed" ta="center">{t('fileManager.loadingFiles', 'Loading files...')}</Text>
             </Center>
           ) : (
             filteredFiles.map((file, index) => {
