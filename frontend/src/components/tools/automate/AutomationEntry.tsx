@@ -113,11 +113,11 @@ export default function AutomationEntry({
     if (title) {
       // Custom automation with title
       return (
-        <Group gap="md" align="center" justify="flex-start" style={{ width: '100%' }}>
+        <Group gap="xs" align="center" justify="flex-start" style={{ width: '100%' }}>
           {BadgeIcon && (
             <ToolIcon
               icon={<BadgeIcon />}
-              color={keepIconColor ? 'var(--mantine-primary-color-filled)' : 'var(--mantine-color-text)'}
+              {...(keepIconColor && { color: 'var(--mantine-primary-color-filled)' })}
             />
           )}
           <Text size="xs" style={{ flex: 1, textAlign: 'left', color: 'var(--mantine-color-text)' }}>
@@ -128,11 +128,11 @@ export default function AutomationEntry({
     } else {
       // Suggested automation showing tool chain
       return (
-        <Group gap="md" align="center" justify="flex-start" style={{ width: '100%' }}>
+        <Group gap="xs" align="center" justify="flex-start" style={{ width: '100%' }}>
           {BadgeIcon && (
             <ToolIcon
               icon={<BadgeIcon />}
-              color={keepIconColor ? 'var(--mantine-primary-color-filled)' : 'var(--mantine-color-text)'}
+              {...(keepIconColor && { color: 'var(--mantine-primary-color-filled)' })}
             />
           )}
           <Group gap="xs" justify="flex-start" style={{ flex: 1 }}>
