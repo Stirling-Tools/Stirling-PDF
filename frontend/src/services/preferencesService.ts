@@ -27,7 +27,7 @@ class PreferencesService {
   ): Promise<UserPreferences[K]> {
     const db = this.ensureDatabase();
 
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       const transaction = db.transaction(['preferences'], 'readonly');
       const store = transaction.objectStore('preferences');
       const request = store.get(key);
@@ -75,7 +75,7 @@ class PreferencesService {
   async getAllPreferences(): Promise<UserPreferences> {
     const db = this.ensureDatabase();
 
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       const transaction = db.transaction(['preferences'], 'readonly');
       const store = transaction.objectStore('preferences');
       const request = store.getAll();

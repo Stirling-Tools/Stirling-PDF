@@ -36,26 +36,18 @@ export const PreferencesProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   const updatePreference = useCallback(
     async <K extends keyof UserPreferences>(key: K, value: UserPreferences[K]) => {
-      try {
         await preferencesService.setPreference(key, value);
         setPreferences((prev) => ({
           ...prev,
           [key]: value,
         }));
-      } catch (error) {
-        throw error;
-      }
     },
     []
   );
 
   const resetPreferences = useCallback(async () => {
-    try {
       await preferencesService.clearAllPreferences();
       setPreferences(DEFAULT_PREFERENCES);
-    } catch (error) {
-      throw error;
-    }
   }, []);
 
   return (
