@@ -120,6 +120,7 @@
   --border-strong: #9ca3af;
   --hover-bg: #f9fafb;
   --active-bg: #f3f4f6;
+  --automation-entry-hover-bg: var(--color-gray-100);
 
   /* Icon colors for light mode */
   --icon-user-bg: #9CA3AF;
@@ -317,6 +318,7 @@
   --border-strong: #4b5563;
   --hover-bg: #374151;
   --active-bg: #4b5563;
+  --automation-entry-hover-bg: var(--color-gray-200);
 
   /* Icon colors for dark mode */
   --icon-user-bg: #2A2F36;

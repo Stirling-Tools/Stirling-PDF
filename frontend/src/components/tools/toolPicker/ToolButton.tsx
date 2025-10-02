@@ -2,6 +2,7 @@ import React from "react";
 import { Button } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Tooltip } from "../../shared/Tooltip";
+import { ToolIcon } from "../../shared/ToolIcon";
 import { ToolRegistryEntry } from "../../../data/toolsTaxonomy";
 import { useToolNavigation } from "../../../hooks/useToolNavigation";
 import { handleUnlessSpecialClick } from "../../../utils/clickHandlers";
@@ -57,7 +58,10 @@ const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect,
 
   const buttonContent = (
     <>
-      <div className="tool-button-icon" style={{ color: "var(--tools-text-and-icon-color)", marginRight: "0.5rem", transform: "scale(0.8)", transformOrigin: "center", opacity: isUnavailable ? 0.25 : 1 }}>{tool.icon}</div>
+      <ToolIcon
+        icon={tool.icon}
+        opacity={isUnavailable ? 0.25 : 1}
+      />
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', flex: 1, overflow: 'visible' }}>
         <FitText
           text={tool.name}
@@ -67,9 +71,9 @@ const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect,
           style={{ display: 'inline-block', maxWidth: '100%', opacity: isUnavailable ? 0.25 : 1 }}
         />
         {matchedSynonym && (
-          <span style={{ 
-            fontSize: '0.75rem', 
-            color: 'var(--mantine-color-dimmed)', 
+          <span style={{
+            fontSize: '0.75rem',
+            color: 'var(--mantine-color-dimmed)',
             opacity: isUnavailable ? 0.25 : 1,
             marginTop: '1px',
             overflow: 'visible',
