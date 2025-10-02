@@ -90,21 +90,21 @@ jobs:
       - name: Generate tags
         id: meta
         uses: docker/metadata-action@c1e51972afc2121e065aed6d45c65596fe445f3f # v5.8.0
-        if: github.ref != 'refs/heads/main'
         with:
           images: |
             ${{ secrets.DOCKER_HUB_USERNAME }}/s-pdf
             ghcr.io/${{ steps.repoowner.outputs.lowercase }}/s-pdf
             ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf
             ${{ secrets.DOCKER_HUB_ORG_USERNAME }}/stirling-pdf
+            ${{ secrets.DOCKER_HUB_USERNAME }}/test
           tags: |
             type=raw,value=${{ steps.versionNumber.outputs.versionNumber }},enable=${{ github.ref == 'refs/heads/master' }}
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/master' }}
+            type=raw,value=v2-announcement,enable=${{ github.ref == 'refs/heads/v1.3.2_V2Announcement' }}
 
       - name: Build and push main Dockerfile
         id: build-push-regular
         uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
-        if: github.ref != 'refs/heads/main'
         with:
           builder: ${{ steps.buildx.outputs.name }}
           context: .
@@ -143,9 +143,11 @@ jobs:
             ghcr.io/${{ steps.repoowner.outputs.lowercase }}/s-pdf
             ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf
             ${{ secrets.DOCKER_HUB_ORG_USERNAME }}/stirling-pdf
+            ${{ secrets.DOCKER_HUB_USERNAME }}/test
           tags: |
             type=raw,value=${{ steps.versionNumber.outputs.versionNumber }}-ultra-lite,enable=${{ github.ref == 'refs/heads/master' }}
             type=raw,value=latest-ultra-lite,enable=${{ github.ref == 'refs/heads/master' }}
+            type=raw,value=v2-announcement-ultra-lite,enable=${{ github.ref == 'refs/heads/v1.3.2_V2Announcement' }}
 
       - name: Build and push Dockerfile-ultra-lite
         id: build-push-lite
