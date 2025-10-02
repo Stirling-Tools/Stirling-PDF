@@ -255,6 +255,22 @@
     "cacheInputs": {
       "name": "Save form inputs",
       "help": "Enable to store previously used inputs for future runs"
+    },
+    "hotkeys": {
+      "title": "Keyboard Shortcuts",
+      "description": "Hover a tool to see its shortcut or customise it below. Click \"Change shortcut\" and press a new key combination. Press Esc to cancel.",
+      "errorModifier": {
+        "mac": "Include ⌘ (Command), ⌥ (Option), or another modifier in your shortcut.",
+        "windows": "Include Ctrl, Alt, or another modifier in your shortcut."
+      },
+      "errorConflict": "Shortcut already used by {{tool}}.",
+      "none": "Not assigned",
+      "customBadge": "Custom",
+      "defaultLabel": "Default: {{shortcut}}",
+      "capturing": "Press keys… (Esc to cancel)",
+      "change": "Change shortcut",
+      "reset": "Reset",
+      "shortcut": "Shortcut"
     }
   },
   "changeCreds": {
@@ -868,6 +884,7 @@
   "rotate": {
     "title": "Rotate PDF",
     "submit": "Apply Rotation",
+    "selectRotation":  "Select Rotation Angle (Clockwise)",
     "error": {
       "failed": "An error occurred while rotating the PDF."
     },
