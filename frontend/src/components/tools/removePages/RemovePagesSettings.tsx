@@ -16,16 +16,17 @@ const RemovePagesSettings = ({ parameters, onParameterChange, disabled = false }
     // Allow user to type naturally - don't normalize input in real-time
     onParameterChange('pageNumbers', value);
   };
+  console.log('Current pageNumbers input:', parameters.pageNumbers, disabled);
 
   // Check if current input is valid
-  const isValid = validatePageNumbers(parameters.pageNumbers);
-  const hasValue = parameters.pageNumbers.trim().length > 0;
+  const isValid = validatePageNumbers(parameters.pageNumbers || '');
+  const hasValue = (parameters?.pageNumbers?.trim().length ?? 0) > 0;
 
   return (
     <Stack gap="md">
       <TextInput
         label={t('removePages.pageNumbers.label', 'Pages to Remove')}
-        value={parameters.pageNumbers}
+        value={parameters.pageNumbers || ''}
         onChange={(event) => handlePageNumbersChange(event.currentTarget.value)}
         placeholder={t('removePages.pageNumbers.placeholder', 'e.g., 1,3,5-8,10')}
         disabled={disabled}

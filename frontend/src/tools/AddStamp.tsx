@@ -6,15 +6,14 @@ import { BaseToolProps, ToolComponent } from "../types/tool";
 import { useEndpointEnabled } from "../hooks/useEndpointConfig";
 import { useAddStampParameters } from "../components/tools/addStamp/useAddStampParameters";
 import { useAddStampOperation } from "../components/tools/addStamp/useAddStampOperation";
-import { Group, Select, Stack, Textarea, TextInput, ColorInput, Button, Slider, Text, NumberInput, Divider } from "@mantine/core";
+import { Stack, Text } from "@mantine/core";
 import StampPreview from "../components/tools/addStamp/StampPreview";
-import LocalIcon from "../components/shared/LocalIcon";
 import styles from "../components/tools/addStamp/StampPreview.module.css";
-import { Tooltip } from "../components/shared/Tooltip";
 import ButtonSelector from "../components/shared/ButtonSelector";
 import { useAccordionSteps } from "../hooks/tools/shared/useAccordionSteps";
 import ObscuredOverlay from "../components/shared/ObscuredOverlay";
-import { getDefaultFontSizeForAlphabet } from "../components/tools/addStamp/StampPreviewUtils";
+import StampSetupSettings from "../components/tools/addStamp/StampSetupSettings";
+import StampPositionFormattingSettings from "../components/tools/addStamp/StampPositionFormattingSettings";
 
 const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
@@ -70,108 +69,22 @@ const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const getSteps = () => {
     const steps: any[] = [];
 
-    // Step 1: Stamp Setup 
+    // Step 1: Stamp Setup
     steps.push({
       title: t("AddStampRequest.stampSetup", "Stamp Setup"),
       isCollapsed: accordion.getCollapsedState(AddStampStep.STAMP_SETUP),
       onCollapsedClick: () => accordion.handleStepToggle(AddStampStep.STAMP_SETUP),
       isVisible: hasFiles || hasResults,
       content: (
-        <Stack gap="md">
-          <TextInput
-            label={t('pageSelectionPrompt', 'Page Selection (e.g. 1,3,2 or 4-8,2,10-12 or 2n-1)')}
-            value={params.parameters.pageNumbers}
-            onChange={(e) => params.updateParameter('pageNumbers', e.currentTarget.value)}
-            disabled={endpointLoading}
-          />
-          <Divider/>
-          <div>
-            <Text size="sm" fw={500} mb="xs">{t('AddStampRequest.stampType', 'Stamp Type')}</Text>
-            <ButtonSelector
-              value={params.parameters.stampType}
-              onChange={(v: 'text' | 'image') => params.updateParameter('stampType', v)}
-              options={[
-                { value: 'text', label: t('watermark.type.1', 'Text') },
-                { value: 'image', label: t('watermark.type.2', 'Image') },
-              ]}
-              disabled={endpointLoading}
-              buttonClassName={styles.modeToggleButton}
-              textClassName={styles.modeToggleButtonText}
-            />
-          </div>
-
-          {params.parameters.stampType === 'text' && (
-            <>
-              <Textarea
-                label={t('AddStampRequest.stampText', 'Stamp Text')}
-                value={params.parameters.stampText}
-                onChange={(e) => params.updateParameter('stampText', e.currentTarget.value)}
-                autosize
-                minRows={2}
-                disabled={endpointLoading}
-              />
-              <Select
-                label={t('AddStampRequest.alphabet', 'Alphabet')}
-                value={params.parameters.alphabet}
-                onChange={(v) => {
-                  const nextAlphabet = (v as any) || 'roman';
-                  params.updateParameter('alphabet', nextAlphabet);
-                  const nextDefault = getDefaultFontSizeForAlphabet(nextAlphabet);
-                  params.updateParameter('fontSize', nextDefault);
-                }}
-                data={[
-                  { value: 'roman', label: 'Roman' },
-                  { value: 'arabic', label: 'العربية' },
-                  { value: 'japanese', label: '日本語' },
-                  { value: 'korean', label: '한국어' },
-                  { value: 'chinese', label: '简体中文' },
-                  { value: 'thai', label: 'ไทย' },
-                ]}
-                disabled={endpointLoading}
-              />
-            </>
-          )}
-
-          {params.parameters.stampType === 'image' && (
-            <Stack gap="xs">
-              <input
-                type="file"
-                accept=".png,.jpg,.jpeg,.gif,.bmp,.tiff,.tif,.webp"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) params.updateParameter('stampImage', file);
-                }}
-                disabled={endpointLoading}
-                style={{ display: 'none' }}
-                id="stamp-image-input"
-              />
-              <Button
-                size="xs"
-                component="label"
-                htmlFor="stamp-image-input"
-                disabled={endpointLoading}
-              >
-                {t('chooseFile', 'Choose File')}
-              </Button>
-              {params.parameters.stampImage && (
-                <Stack gap="xs">
-                  <img
-                    src={URL.createObjectURL(params.parameters.stampImage)}
-                    alt="Selected stamp image"
-                    className="max-h-24 w-full object-contain border border-gray-200 rounded bg-gray-50"
-                  />
-                  <Text size="xs" c="dimmed">
-                    {params.parameters.stampImage.name}
-                  </Text>
-                </Stack>
-              )}
-            </Stack>
-          )}
-        </Stack>
+        <StampSetupSettings
+          parameters={params.parameters}
+          onParameterChange={params.updateParameter}
+          disabled={endpointLoading}
+        />
       ),
     });
 
-    // Step 3: Formatting & Position
+    // Step 2: Formatting & Position
     steps.push({
       title: t("AddStampRequest.positionAndFormatting", "Position & Formatting"),
       isCollapsed: accordion.getCollapsedState(AddStampStep.POSITION_FORMATTING),
@@ -209,151 +122,13 @@ const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
             </div>
           )}
 
+          <StampPositionFormattingSettings
+            parameters={params.parameters}
+            onParameterChange={params.updateParameter}
+            disabled={endpointLoading}
+          />
 
-          {/* Icon pill buttons row */}
-          <div className="flex justify-between gap-[0.5rem]">
-            <Tooltip content={t('AddStampRequest.rotation', 'Rotation')} position="top">
-              <Button
-                variant={params.parameters._activePill === 'rotation' ? 'filled' : 'outline'}
-                className="flex-1"
-                onClick={() => params.updateParameter('_activePill', 'rotation')}
-              >
-                <LocalIcon icon="rotate-right-rounded" width="1.1rem" height="1.1rem" />
-              </Button>
-            </Tooltip>
-            <Tooltip content={t('AddStampRequest.opacity', 'Opacity')} position="top">
-              <Button
-                variant={params.parameters._activePill === 'opacity' ? 'filled' : 'outline'}
-                className="flex-1"
-                onClick={() => params.updateParameter('_activePill', 'opacity')}
-              >
-                <LocalIcon icon="opacity" width="1.1rem" height="1.1rem" />
-              </Button>
-            </Tooltip>
-            <Tooltip content={params.parameters.stampType === 'image' ? t('AddStampRequest.imageSize', 'Image Size') : t('AddStampRequest.fontSize', 'Font Size')} position="top">
-              <Button
-                variant={params.parameters._activePill === 'fontSize' ? 'filled' : 'outline'}
-                className="flex-1"
-                onClick={() => params.updateParameter('_activePill', 'fontSize')}
-              >
-                <LocalIcon icon="zoom-in-map-rounded" width="1.1rem" height="1.1rem" />
-              </Button>
-            </Tooltip>
-          </div>
-
-          {/* Single slider bound to selected pill */}
-          {params.parameters._activePill === 'fontSize' && (
-            <Stack gap="xs">
-              <Text className={styles.labelText}>
-                {params.parameters.stampType === 'image' 
-                  ? t('AddStampRequest.imageSize', 'Image Size')
-                  : t('AddStampRequest.fontSize', 'Font Size')
-                }
-              </Text>
-              <Group className={styles.sliderGroup} align="center">
-                <NumberInput
-                  value={params.parameters.fontSize}
-                  onChange={(v) => params.updateParameter('fontSize', typeof v === 'number' ? v : 1)}
-                  min={1}
-                  max={400}
-                  step={1}
-                  size="sm"
-                  className={styles.numberInput}
-                  disabled={endpointLoading}
-                />
-                <Slider
-                  value={params.parameters.fontSize}
-                  onChange={(v) => params.updateParameter('fontSize', v as number)}
-                  min={1}
-                  max={400}
-                  step={1}
-                  className={styles.slider}
-                />
-              </Group>
-            </Stack>
-          )}
-          {params.parameters._activePill === 'rotation' && (
-            <Stack gap="xs">
-              <Text className={styles.labelText}>{t('AddStampRequest.rotation', 'Rotation')}</Text>
-              <Group className={styles.sliderGroup} align="center">
-                <NumberInput
-                  value={params.parameters.rotation}
-                  onChange={(v) => params.updateParameter('rotation', typeof v === 'number' ? v : 0)}
-                  min={-180}
-                  max={180}
-                  step={1}
-                  size="sm"
-                  className={styles.numberInput}
-                  hideControls
-                  disabled={endpointLoading}
-                />
-                <Slider
-                  value={params.parameters.rotation}
-                  onChange={(v) => params.updateParameter('rotation', v as number)}
-                  min={-180}
-                  max={180}
-                  step={1}
-                  className={styles.sliderWide}
-                />
-              </Group>
-            </Stack>
-          )}
-          {params.parameters._activePill === 'opacity' && (
-            <Stack gap="xs">
-              <Text className={styles.labelText}>{t('AddStampRequest.opacity', 'Opacity')}</Text>
-              <Group className={styles.sliderGroup} align="center">
-                <NumberInput
-                  value={params.parameters.opacity}
-                  onChange={(v) => params.updateParameter('opacity', typeof v === 'number' ? v : 0)}
-                  min={0}
-                  max={100}
-                  step={1}
-                  size="sm"
-                  className={styles.numberInput}
-                  disabled={endpointLoading}
-                />
-                <Slider
-                  value={params.parameters.opacity}
-                  onChange={(v) => params.updateParameter('opacity', v as number)}
-                  min={0}
-                  max={100}
-                  step={1}
-                  className={styles.slider}
-                />
-              </Group>
-            </Stack>
-          )}
-
-
-          {params.parameters.stampType !== 'image' && (
-            <ColorInput
-              label={t('AddStampRequest.customColor', 'Custom Text Color')}
-              value={params.parameters.customColor}
-              onChange={(value) => params.updateParameter('customColor', value)}
-              format="hex"
-              disabled={endpointLoading}
-            />
-          )}
-
-
-          {/* Margin selection appears when using quick grid (and for text stamps) */}
-          {(params.parameters.stampType === 'text' || (params.parameters.stampType === 'image' && quickPositionModeSelected)) && (
-            <Select
-              label={t('AddStampRequest.margin', 'Margin')}
-              value={params.parameters.customMargin}
-              onChange={(v) => params.updateParameter('customMargin', (v as any) || 'medium')}
-              data={[
-                { value: 'small', label: t('margin.small', 'Small') },
-                { value: 'medium', label: t('margin.medium', 'Medium') },
-                { value: 'large', label: t('margin.large', 'Large') },
-                { value: 'x-large', label: t('margin.xLarge', 'Extra Large') },
-              ]}
-              disabled={endpointLoading}
-            />
-          )}
-
-
-          {/* Unified preview wrapped with obscured overlay if no stamp selected in step 4 */}
+          {/* Unified preview wrapped with obscured overlay if no stamp selected */}
           <ObscuredOverlay
             obscured={
               accordion.currentStep === AddStampStep.POSITION_FORMATTING &&
