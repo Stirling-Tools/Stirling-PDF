@@ -26,7 +26,7 @@ const FileInfoCard: React.FC<FileInfoCardProps> = ({
       <ScrollArea style={{ flex: 1 }} p="md">
         <Stack gap="sm">
           <Group justify="space-between" py="xs">
-            <Text size="sm" c="dimmed">{t('fileManager.fileName', 'Name')}</Text>
+            <Text className='ph-no-capture' size="sm" c="dimmed">{t('fileManager.fileName', 'Name')}</Text>
             <Text size="sm" fw={500} style={{ maxWidth: '60%', textAlign: 'right' }} truncate>
               {currentFile ? currentFile.name : ''}
             </Text>

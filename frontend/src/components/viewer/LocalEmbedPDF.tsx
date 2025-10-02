@@ -182,14 +182,17 @@ export function LocalEmbedPDF({ file, url, enableSignature = false, onSignatureA
 
   // Wrap your UI with the <EmbedPDF> provider
   return (
-    <div style={{
-      height: '100%',
-      width: '100%',
-      position: 'relative',
-      overflow: 'hidden',
-      flex: 1,
-      minHeight: 0,
-      minWidth: 0
+    <div
+      className='ph-no-capture'
+
+      style={{
+        height: '100%',
+        width: '100%',
+        position: 'relative',
+        overflow: 'hidden',
+        flex: 1,
+        minHeight: 0,
+        minWidth: 0,
     }}>
       <EmbedPDF
         engine={engine}
@@ -310,7 +313,7 @@ export function LocalEmbedPDF({ file, url, enableSignature = false, onSignatureA
                     <CustomSearchLayer pageIndex={pageIndex} scale={scale} />
 
                     {/* Selection layer for text interaction */}
-                    <SelectionLayer pageIndex={pageIndex} scale={scale} />
+                    <SelectionLayer  pageIndex={pageIndex} scale={scale} />
                     {/* Annotation layer for signatures (only when enabled) */}
                     {enableSignature && (
                       <AnnotationLayer

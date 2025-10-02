@@ -317,6 +317,7 @@ const FileThumbnail = ({
         >
           {file.thumbnail && (
             <img
+              className="ph-no-capture"
               src={file.thumbnail}
               alt={file.name}
               draggable={false}
