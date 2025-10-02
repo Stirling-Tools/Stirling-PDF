@@ -60,13 +60,13 @@ const NavigationWarningModal = ({
       closeOnClickOutside={false}
       closeOnEscape={false}
     >
-      <Stack gap="md">
-        <Text>
+      <Stack gap="xl">
+        <Text size="md">
           {t("unsavedChanges", "You have unsaved changes to your PDF. What would you like to do?")}
         </Text>
 
-        <Group justify="space-between" gap="sm">
-          <Group gap="sm">
+        <Group justify="space-between" gap="xl" mt="xl">
+          <Group gap="xl">
             <Button
               variant="light"
               color="red"
@@ -84,7 +84,7 @@ const NavigationWarningModal = ({
             </Button>
           </Group>
 
-          <Group gap="sm">
+          <Group gap="xl">
             {onExportAndContinue && (
               <Button
                 variant="light"
@@ -97,7 +97,7 @@ const NavigationWarningModal = ({
             {onApplyAndContinue && (
               <Button
                 variant="light"
-                color="green"
+                color="blue"
                 onClick={handleApplyAndContinue}
               >
                 {t("applyAndContinue", "Apply & Continue")}
