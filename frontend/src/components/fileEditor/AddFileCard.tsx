@@ -15,7 +15,7 @@ interface AddFileCardProps {
 
 const AddFileCard = ({
   onFileSelect,
-  accept = ".pdf,.zip",
+  accept = "*/*",
   multiple = true
 }: AddFileCardProps) => {
   const { t } = useTranslation();

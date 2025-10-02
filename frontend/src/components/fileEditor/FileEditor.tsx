@@ -411,8 +411,6 @@ const FileEditor = ({
               <AddFileCard
                 key="add-file-card"
                 onFileSelect={handleFileUpload}
-                accept=".pdf,.zip"
-                multiple={true}
               />
             )}
 
