@@ -673,9 +673,8 @@ export function useFlatToolRegistry(): ToolRegistry {
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.ADVANCED_FORMATTING,
         operationConfig: adjustContrastOperationConfig,
-        settingsComponent: AdjustContrastSingleStepSettings,
+        automationSettings: AdjustContrastSingleStepSettings,
         synonyms: getSynonyms(t, "adjustContrast"),
-        automationSettings: null,
       },
       repair: {
         icon: <LocalIcon icon="build-outline-rounded" width="1.5rem" height="1.5rem" />,
