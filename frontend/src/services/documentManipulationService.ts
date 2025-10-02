@@ -10,14 +10,8 @@ export class DocumentManipulationService {
    * Returns single document or multiple documents if splits are present
    */
   applyDOMChangesToDocument(pdfDocument: PDFDocument, currentDisplayOrder?: PDFDocument, splitPositions?: Set<number>): PDFDocument | PDFDocument[] {
-    console.log('DocumentManipulationService: Applying DOM changes to document');
-    console.log('Original document page order:', pdfDocument.pages.map(p => p.pageNumber));
-    console.log('Current display order:', currentDisplayOrder?.pages.map(p => p.pageNumber) || 'none provided');
-    console.log('Split positions:', splitPositions ? Array.from(splitPositions).sort() : 'none');
-    
     // Use current display order (from React state) if provided, otherwise use original order
     const baseDocument = currentDisplayOrder || pdfDocument;
-    console.log('Using page order:', baseDocument.pages.map(p => p.pageNumber));
     
     // Apply DOM changes to each page (rotation only now, splits are position-based)
     let updatedPages = baseDocument.pages.map(page => this.applyPageChanges(page));
@@ -57,32 +51,25 @@ export class DocumentManipulationService {
   private createSplitDocuments(document: PDFDocument): PDFDocument[] {
     const documents: PDFDocument[] = [];
     const splitPoints: number[] = [];
-    
+
     // Find split points
     document.pages.forEach((page, index) => {
       if (page.splitAfter) {
-        console.log(`Found split marker at page ${page.pageNumber} (index ${index}), adding split point at ${index + 1}`);
         splitPoints.push(index + 1);
       }
     });
-    
+
     // Add end point if not already there
     if (splitPoints.length === 0 || splitPoints[splitPoints.length - 1] !== document.pages.length) {
       splitPoints.push(document.pages.length);
     }
-    
-    console.log('Final split points:', splitPoints);
-    console.log('Total pages to split:', document.pages.length);
-    
+
     let startIndex = 0;
     let partNumber = 1;
-    
+
     for (const endIndex of splitPoints) {
       const segmentPages = document.pages.slice(startIndex, endIndex);
-      
-      console.log(`Creating split document ${partNumber}: pages ${startIndex}-${endIndex-1} (${segmentPages.length} pages)`);
-      console.log(`Split document ${partNumber} page numbers:`, segmentPages.map(p => p.pageNumber));
-      
+
       if (segmentPages.length > 0) {
         documents.push({
           ...document,
@@ -93,11 +80,10 @@ export class DocumentManipulationService {
         });
         partNumber++;
       }
-      
+
       startIndex = endIndex;
     }
-    
-    console.log(`Created ${documents.length} split documents`);
+
     return documents;
   }
 
@@ -108,7 +94,6 @@ export class DocumentManipulationService {
     // Find the DOM element for this page
     const pageElement = document.querySelector(`[data-page-id="${page.id}"]`);
     if (!pageElement) {
-      console.log(`Page ${page.pageNumber}: No DOM element found, keeping original state`);
       return page;
     }
 
@@ -116,8 +101,7 @@ export class DocumentManipulationService {
 
     // Apply rotation changes from DOM
     updatedPage.rotation = this.getRotationFromDOM(pageElement, page);
-    
-    
+
     return updatedPage;
   }
 
@@ -126,16 +110,21 @@ export class DocumentManipulationService {
    */
   private getRotationFromDOM(pageElement: Element, originalPage: PDFPage): number {
     const img = pageElement.querySelector('img');
-    if (img && img.style.transform) {
-      // Parse rotation from transform property (e.g., "rotate(90deg)" -> 90)
-      const rotationMatch = img.style.transform.match(/rotate\((-?\d+)deg\)/);
-      const domRotation = rotationMatch ? parseInt(rotationMatch[1]) : 0;
-      
-      console.log(`Page ${originalPage.pageNumber}: DOM rotation = ${domRotation}°, original = ${originalPage.rotation}°`);
-      return domRotation;
+    if (img) {
+      const originalRotation = parseInt(img.getAttribute('data-original-rotation') || '0');
+
+      const currentTransform = img.style.transform || '';
+      const rotationMatch = currentTransform.match(/rotate\((-?\d+)deg\)/);
+      const visualRotation = rotationMatch ? parseInt(rotationMatch[1]) : originalRotation;
+
+      const userChange = ((visualRotation - originalRotation) % 360 + 360) % 360;
+
+      let finalRotation = (originalPage.rotation + userChange) % 360;
+      if (finalRotation === 360) finalRotation = 0;
+
+      return finalRotation;
     }
-    
-    console.log(`Page ${originalPage.pageNumber}: No DOM rotation found, keeping original = ${originalPage.rotation}°`);
+
     return originalPage.rotation;
   }
 

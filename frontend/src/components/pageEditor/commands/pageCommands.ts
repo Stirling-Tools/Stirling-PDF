@@ -17,32 +17,34 @@ export class RotatePageCommand extends DOMCommand {
   }
 
   execute(): void {
-    // Only update DOM for immediate visual feedback
     const pageElement = document.querySelector(`[data-page-id="${this.pageId}"]`);
     if (pageElement) {
       const img = pageElement.querySelector('img');
       if (img) {
-        // Extract current rotation from transform property to match the animated CSS
         const currentTransform = img.style.transform || '';
         const rotateMatch = currentTransform.match(/rotate\(([^)]+)\)/);
         const currentRotation = rotateMatch ? parseInt(rotateMatch[1]) : 0;
-        const newRotation = currentRotation + this.degrees;
+        let newRotation = currentRotation + this.degrees;
+
+        newRotation = ((newRotation % 360) + 360) % 360;
+
         img.style.transform = `rotate(${newRotation}deg)`;
       }
     }
   }
 
   undo(): void {
-    // Only update DOM
     const pageElement = document.querySelector(`[data-page-id="${this.pageId}"]`);
     if (pageElement) {
       const img = pageElement.querySelector('img');
       if (img) {
-        // Extract current rotation from transform property
         const currentTransform = img.style.transform || '';
         const rotateMatch = currentTransform.match(/rotate\(([^)]+)\)/);
         const currentRotation = rotateMatch ? parseInt(rotateMatch[1]) : 0;
-        const previousRotation = currentRotation - this.degrees;
+        let previousRotation = currentRotation - this.degrees;
+
+        previousRotation = ((previousRotation % 360) + 360) % 360;
+
         img.style.transform = `rotate(${previousRotation}deg)`;
       }
     }

@@ -57,13 +57,13 @@ const addFilesMutex = new SimpleMutex();
 /**
  * Helper to create ProcessedFile metadata structure
  */
-export function createProcessedFile(pageCount: number, thumbnail?: string) {
+export function createProcessedFile(pageCount: number, thumbnail?: string, pageRotations?: number[]) {
   return {
     totalPages: pageCount,
     pages: Array.from({ length: pageCount }, (_, index) => ({
       pageNumber: index + 1,
       thumbnail: index === 0 ? thumbnail : undefined, // Only first page gets thumbnail initially
-      rotation: 0,
+      rotation: pageRotations?.[index] ?? 0,
       splitBefore: false
     })),
     thumbnailUrl: thumbnail,
@@ -82,8 +82,22 @@ export async function generateProcessedFileMetadata(file: File): Promise<Process
   }
 
   try {
-    const result = await generateThumbnailWithMetadata(file);
-      return createProcessedFile(result.pageCount, result.thumbnail);
+    // Generate unrotated thumbnails for PageEditor (rotation applied via CSS)
+    const unrotatedResult = await generateThumbnailWithMetadata(file, false);
+
+    // Generate rotated thumbnail for file manager display
+    const rotatedResult = await generateThumbnailWithMetadata(file, true);
+
+    const processedFile = createProcessedFile(
+      unrotatedResult.pageCount,
+      unrotatedResult.thumbnail, // Page thumbnails (unrotated)
+      unrotatedResult.pageRotations
+    );
+
+    // Use rotated thumbnail for file manager
+    processedFile.thumbnailUrl = rotatedResult.thumbnail;
+
+    return processedFile;
   } catch (error) {
     if (DEBUG) console.warn(`📄 Failed to generate processedFileMetadata for ${file.name}:`, error);
   }

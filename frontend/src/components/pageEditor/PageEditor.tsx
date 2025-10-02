@@ -5,6 +5,8 @@ import { useNavigationGuard } from "../../contexts/NavigationContext";
 import { PDFDocument, PageEditorFunctions } from "../../types/pageEditor";
 import { pdfExportService } from "../../services/pdfExportService";
 import { documentManipulationService } from "../../services/documentManipulationService";
+import { exportProcessedDocumentsToFiles } from "../../services/pdfExportHelpers";
+import { createStirlingFilesAndStubs } from "../../services/fileStubHelpers";
 // Thumbnail generation is now handled by individual PageThumbnail components
 import './PageEditor.module.css';
 import PageThumbnail from './PageThumbnail';
@@ -524,66 +526,38 @@ const PageEditor = ({
     try {
       // Step 1: Apply DOM changes to document state first
       const processedDocuments = documentManipulationService.applyDOMChangesToDocument(
-        mergedPdfDocument || displayDocument, // Original order
-        displayDocument, // Current display order (includes reordering)
-        splitPositions // Position-based splits
+        mergedPdfDocument || displayDocument,
+        displayDocument,
+        splitPositions
       );
 
-      // Step 2: Check if we have multiple documents (splits) or single document
-      if (Array.isArray(processedDocuments)) {
-        // Multiple documents (splits) - export as ZIP
-        const blobs: Blob[] = [];
-        const filenames: string[] = [];
+      // Step 2: Export to files
+      const sourceFiles = getSourceFiles();
+      const exportFilename = getExportFilename();
+      const files = await exportProcessedDocumentsToFiles(processedDocuments, sourceFiles, exportFilename);
 
-        const sourceFiles = getSourceFiles();
-        const baseExportFilename = getExportFilename();
-        const baseName = baseExportFilename.replace(/\.pdf$/i, '');
-
-        for (let i = 0; i < processedDocuments.length; i++) {
-          const doc = processedDocuments[i];
-          const partFilename = `${baseName}_part_${i + 1}.pdf`;
-
-          const result = sourceFiles
-            ? await pdfExportService.exportPDFMultiFile(doc, sourceFiles, [], { filename: partFilename })
-            : await pdfExportService.exportPDF(doc, [], { filename: partFilename });
-          blobs.push(result.blob);
-          filenames.push(result.filename);
-        }
-
-        // Create ZIP file
+      // Step 3: Download
+      if (files.length > 1) {
+        // Multiple files - create ZIP
         const JSZip = await import('jszip');
         const zip = new JSZip.default();
 
-        blobs.forEach((blob, index) => {
-          zip.file(filenames[index], blob);
+        files.forEach((file) => {
+          zip.file(file.name, file);
         });
 
         const zipBlob = await zip.generateAsync({ type: 'blob' });
-        const zipFilename = baseExportFilename.replace(/\.pdf$/i, '.zip');
+        const exportFilename = getExportFilename();
+        const zipFilename = exportFilename.replace(/\.pdf$/i, '.zip');
 
         pdfExportService.downloadFile(zipBlob, zipFilename);
-        setHasUnsavedChanges(false); // Clear unsaved changes after successful export
       } else {
-        // Single document - regular export
-        const sourceFiles = getSourceFiles();
-        const exportFilename = getExportFilename();
-        const result = sourceFiles
-          ? await pdfExportService.exportPDFMultiFile(
-              processedDocuments,
-              sourceFiles,
-              [],
-              { selectedOnly: false, filename: exportFilename }
-            )
-          : await pdfExportService.exportPDF(
-              processedDocuments,
-              [],
-              { selectedOnly: false, filename: exportFilename }
-            );
-
-        pdfExportService.downloadFile(result.blob, result.filename);
-        setHasUnsavedChanges(false); // Clear unsaved changes after successful export
+        // Single file - download directly
+        const file = files[0];
+        pdfExportService.downloadFile(file, file.name);
       }
 
+      setHasUnsavedChanges(false);
       setExportLoading(false);
     } catch (error) {
       console.error('Export failed:', error);
@@ -592,21 +566,39 @@ const PageEditor = ({
   }, [displayDocument, mergedPdfDocument, splitPositions, getSourceFiles, getExportFilename, setHasUnsavedChanges]);
 
   // Apply DOM changes to document state using dedicated service
-  const applyChanges = useCallback(() => {
+  const applyChanges = useCallback(async () => {
     if (!displayDocument) return;
 
-    // Pass current display document (which includes reordering) to get both reordering AND DOM changes
-    const processedDocuments = documentManipulationService.applyDOMChangesToDocument(
-      mergedPdfDocument || displayDocument, // Original order
-      displayDocument, // Current display order (includes reordering)
-      splitPositions // Position-based splits
-    );
+    setExportLoading(true);
+    try {
+      // Step 1: Apply DOM changes to document state first
+      const processedDocuments = documentManipulationService.applyDOMChangesToDocument(
+        mergedPdfDocument || displayDocument,
+        displayDocument,
+        splitPositions
+      );
 
-    // For apply changes, we only set the first document if it's an array (splits shouldn't affect document state)
-    const documentToSet = Array.isArray(processedDocuments) ? processedDocuments[0] : processedDocuments;
-    setEditedDocument(documentToSet);
+      // Step 2: Export to files
+      const sourceFiles = getSourceFiles();
+      const exportFilename = getExportFilename();
+      const files = await exportProcessedDocumentsToFiles(processedDocuments, sourceFiles, exportFilename);
 
-  }, [displayDocument, mergedPdfDocument, splitPositions]);
+      // Step 3: Create StirlingFiles and stubs for version history
+      const parentStub = selectors.getStirlingFileStub(activeFileIds[0]);
+      if (!parentStub) throw new Error('Parent stub not found');
+
+      const { stirlingFiles, stubs } = await createStirlingFilesAndStubs(files, parentStub, 'multiTool');
+
+      // Step 4: Consume files (replace in context)
+      await actions.consumeFiles(activeFileIds, stirlingFiles, stubs);
+
+      setHasUnsavedChanges(false);
+      setExportLoading(false);
+    } catch (error) {
+      console.error('Apply changes failed:', error);
+      setExportLoading(false);
+    }
+  }, [displayDocument, mergedPdfDocument, splitPositions, activeFileIds, getSourceFiles, getExportFilename, actions, selectors, setHasUnsavedChanges]);
 
 
   const closePdf = useCallback(() => {
@@ -793,7 +785,7 @@ const PageEditor = ({
 
       <NavigationWarningModal
         onApplyAndContinue={async () => {
-          applyChanges();
+          await applyChanges();
         }}
         onExportAndContinue={async () => {
           await onExportAll();

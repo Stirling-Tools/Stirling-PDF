@@ -28,7 +28,7 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPI
   useEffect(() => {
     if (!annotationApi || (!isPlacementMode && !isAnnotationMode)) return;
 
-    const handleKeyDown = (event: KeyboardEvent) => {
+  const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Delete' || event.key === 'Backspace') {
         const selectedAnnotation = annotationApi.getSelectedAnnotation?.();
 
