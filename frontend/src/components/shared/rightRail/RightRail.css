@@ -67,7 +67,7 @@
 }
 
 .right-rail-slot.visible {
-  max-height: 18rem; /* increased to fit additional controls + divider */
+  max-height: 40rem; /* increased to fit additional controls + divider */
   opacity: 1;
 }
 
@@ -77,14 +77,14 @@
     opacity: 0;
   }
   100% {
-    max-height: 18rem;
+    max-height: 40rem;
     opacity: 1;
   }
 }
 
 @keyframes rightRailShrinkUp {
   0% {
-    max-height: 18rem;
+    max-height: 40rem;
     opacity: 1;
   }
   100% {

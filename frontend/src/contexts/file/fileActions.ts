@@ -476,7 +476,6 @@ export async function addStirlingFileStubs(
   await addFilesMutex.lock();
 
   try {
-    if (DEBUG) console.log(`📄 addStirlingFileStubs: Adding ${stirlingFileStubs.length} StirlingFileStubs preserving metadata`);
 
     const existingQuickKeys = buildQuickKeySet(stateRef.current.files.byId);
     const validStubs: StirlingFileStub[] = [];
@@ -515,14 +514,12 @@ export async function addStirlingFileStubs(
                                 record.processedFile.totalPages !== record.processedFile.pages.length;
 
         if (needsProcessing) {
-          if (DEBUG) console.log(`📄 addStirlingFileStubs: Regenerating processedFile for ${record.name}`);
 
           // Use centralized metadata generation function
           const processedFileMetadata = await generateProcessedFileMetadata(stirlingFile);
           if (processedFileMetadata) {
             record.processedFile = processedFileMetadata;
             record.thumbnailUrl = processedFileMetadata.thumbnailUrl; // Update thumbnail if needed
-            if (DEBUG) console.log(`📄 addStirlingFileStubs: Regenerated processedFile for ${record.name} with ${processedFileMetadata.totalPages} pages`);
           } else {
             // Fallback for files that couldn't be processed
             if (DEBUG) console.warn(`📄 addStirlingFileStubs: Failed to regenerate processedFile for ${record.name}`);
@@ -541,7 +538,6 @@ export async function addStirlingFileStubs(
     // Dispatch ADD_FILES action if we have new files
     if (validStubs.length > 0) {
       dispatch({ type: 'ADD_FILES', payload: { stirlingFileStubs: validStubs } });
-      if (DEBUG) console.log(`📄 addStirlingFileStubs: Successfully added ${validStubs.length} files with preserved metadata`);
     }
 
     return loadedFiles;

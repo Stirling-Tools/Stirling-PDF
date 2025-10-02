@@ -15,7 +15,19 @@ export function ZoomAPIBridge() {
     if (zoom && !hasSetInitialZoom.current) {
       hasSetInitialZoom.current = true;
       setTimeout(() => {
-        zoom.requestZoom(1.4);
+        try {
+          zoom.requestZoom(1.4);
+        } catch (error) {
+          console.log('Zoom initialization delayed, viewport not ready:', error);
+          // Retry after a longer delay
+          setTimeout(() => {
+            try {
+              zoom.requestZoom(1.4);
+            } catch (retryError) {
+              console.log('Zoom initialization failed:', retryError);
+            }
+          }, 200);
+        }
       }, 50);
     }
   }, [zoom]);
