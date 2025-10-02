@@ -416,6 +416,27 @@ export default function RightRail() {
               </Tooltip>
             )}
 
+            {/* Save Changes - page editor only */}
+            {pageControlsMounted && (
+              <Tooltip content={t('rightRail.saveChanges', 'Save Changes')} position="left" offset={12} arrow>
+                <div className={`right-rail-fade ${pageControlsVisible ? 'enter' : 'exit'}`} aria-hidden={!pageControlsVisible}>
+                  <div style={{ display: 'inline-flex' }}>
+                    <ActionIcon
+                      variant="subtle"
+                      radius="md"
+                      className="right-rail-icon"
+                      onClick={() => { pageEditorFunctions?.applyChanges?.(); }}
+                      disabled={!pageControlsVisible || !pageEditorFunctions?.canUndo || pageEditorFunctions?.exportLoading}
+                      loading={pageEditorFunctions?.exportLoading}
+                      aria-label={typeof t === 'function' ? t('rightRail.saveChanges', 'Save Changes') : 'Save Changes'}
+                    >
+                      <LocalIcon icon="save-outline" width="1.5rem" height="1.5rem" />
+                    </ActionIcon>
+                  </div>
+                </div>
+              </Tooltip>
+            )}
+
             {/* Close (File Editor: Close Selected | Page Editor: Close PDF) */}
             <Tooltip content={currentView === 'pageEditor' ? t('rightRail.closePdf', 'Close PDF') : t('rightRail.closeSelected', 'Close Selected Files')} position="left" offset={12} arrow>
               <div>

@@ -428,7 +428,6 @@ export async function generateThumbnailWithMetadata(file: File, applyRotation: b
       const p = await pdf.getPage(i);
       const rotation = p.rotate || 0;
       pageRotations.push(rotation);
-      console.log(`[Thumbnail Utils] Page ${i}: page.rotate = ${rotation}`);
     }
 
     pdfWorkerManager.destroyDocument(pdf);

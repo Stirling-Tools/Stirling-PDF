@@ -200,14 +200,6 @@ export class EnhancedPDFProcessingService {
         const page = await pdf.getPage(i);
         const thumbnail = await this.renderPageThumbnail(page, config.thumbnailQuality);
 
-        // Log all rotation-related properties
-        console.log(`[PDF Load] Page ${i}:`, {
-          'page.rotate': page.rotate,
-          'page.rotation': (page as any).rotation,
-          'page.view': page.view,
-          'page keys': Object.keys(page)
-        });
-
         const rotation = page.rotate || 0;
 
         pages.push({
@@ -264,7 +256,7 @@ export class EnhancedPDFProcessingService {
         id: `${createQuickKey(file)}-page-${i}`,
         pageNumber: i,
         thumbnail,
-        rotation: (console.log(`[PDF Load] Page ${i}: page.rotate = ${page.rotate}`), page.rotate || 0),
+        rotation: page.rotate || 0,
         selected: false
       });
 
@@ -330,7 +322,7 @@ export class EnhancedPDFProcessingService {
         id: `${createQuickKey(file)}-page-${i}`,
         pageNumber: i,
         thumbnail,
-        rotation: (console.log(`[PDF Load] Page ${i}: page.rotate = ${page.rotate}`), page.rotate || 0),
+        rotation: page.rotate || 0,
         selected: false
       });
 
