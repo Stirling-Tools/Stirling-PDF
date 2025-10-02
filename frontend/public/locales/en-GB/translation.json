@@ -16,16 +16,34 @@
     "selectText": {
       "1": "Select PDF file:",
       "2": "Margin Size",
-      "3": "Position",
+      "3": "Position Selection",
       "4": "Starting Number",
       "5": "Pages to Number",
-      "6": "Custom Text"
+      "6": "Custom Text Format"
     },
     "customTextDesc": "Custom Text",
-    "numberPagesDesc": "Which pages to number, default 'all', also accepts 1-5 or 2,5,9 etc",
-    "customNumberDesc": "Defaults to {n}, also accepts 'Page {n} of {total}', 'Text-{n}', '{filename}-{n}",
-    "submit": "Add Page Numbers"
+    "numberPagesDesc": "e.g., 1,3,5-8 or leave blank for all pages",
+    "customNumberDesc": "e.g., \"Page {n}\" or leave blank for just numbers",
+    "submit": "Add Page Numbers",
+    "configuration": "Configuration",
+    "customize": "Customize Appearance",
+    "pagesAndStarting": "Pages & Starting Number",
+    "positionAndPages": "Position & Pages",
+    "error": {
+      "failed": "Add page numbers operation failed"
+    },
+    "results": {
+      "title": "Page Number Results"
+    },
+    "preview": "Position Selection",
+    "previewDisclaimer": "Preview is approximate. Final output may vary due to PDF font metrics."
   },
+  "pageSelectionPrompt": "Specify which pages to add numbers to. Examples: \"1,3,5\" for specific pages, \"1-5\" for ranges, \"2n\" for even pages, or leave blank for all pages.",
+  "startingNumberTooltip": "The first number to display. Subsequent pages will increment from this number.",
+  "marginTooltip": "Distance between the page number and the edge of the page.",
+  "fontSizeTooltip": "Size of the page number text in points. Larger numbers create bigger text.",
+  "fontTypeTooltip": "Font family for the page numbers. Choose based on your document style.",
+  "customTextTooltip": "Optional custom format for page numbers. Use {n} as placeholder for the number. Example: \"Page {n}\" will show \"Page 1\", \"Page 2\", etc.",
   "pdfPrompt": "Select PDF(s)",
   "multiPdfPrompt": "Select PDFs (2+)",
   "multiPdfDropPrompt": "Select (or drag & drop) all PDFs you require",
@@ -237,6 +255,22 @@
     "cacheInputs": {
       "name": "Save form inputs",
       "help": "Enable to store previously used inputs for future runs"
+    },
+    "hotkeys": {
+      "title": "Keyboard Shortcuts",
+      "description": "Hover a tool to see its shortcut or customise it below. Click \"Change shortcut\" and press a new key combination. Press Esc to cancel.",
+      "errorModifier": {
+        "mac": "Include ⌘ (Command), ⌥ (Option), or another modifier in your shortcut.",
+        "windows": "Include Ctrl, Alt, or another modifier in your shortcut."
+      },
+      "errorConflict": "Shortcut already used by {{tool}}.",
+      "none": "Not assigned",
+      "customBadge": "Custom",
+      "defaultLabel": "Default: {{shortcut}}",
+      "capturing": "Press keys… (Esc to cancel)",
+      "change": "Change shortcut",
+      "reset": "Reset",
+      "shortcut": "Shortcut"
     }
   },
   "changeCreds": {
@@ -850,6 +884,7 @@
   "rotate": {
     "title": "Rotate PDF",
     "submit": "Apply Rotation",
+    "selectRotation":  "Select Rotation Angle (Clockwise)",
     "error": {
       "failed": "An error occurred while rotating the PDF."
     },
@@ -3044,7 +3079,12 @@
     "panMode": "Pan Mode",
     "rotateLeft": "Rotate Left",
     "rotateRight": "Rotate Right",
-    "toggleSidebar": "Toggle Sidebar"
+    "toggleSidebar": "Toggle Sidebar",
+    "exportSelected": "Export Selected Pages",
+    "toggleAnnotations": "Toggle Annotations Visibility",
+    "annotationMode": "Toggle Annotation Mode",
+    "draw": "Draw",
+    "save": "Save"
   },
   "search": {
     "title": "Search PDF",
@@ -3113,6 +3153,9 @@
     "addFiles": "Add Files",
     "dragFilesInOrClick": "Drag files in or click \"Add Files\" to browse"
   },
+  "fileEditor": {
+    "addFiles": "Add Files"
+  },
   "fileManager": {
     "title": "Upload PDF Files",
     "subtitle": "Add files to your storage for easy access across tools",
@@ -3148,7 +3191,6 @@
     "googleDriveShort": "Drive",
     "myFiles": "My Files",
     "noRecentFiles": "No recent files found",
-    "dropFilesHint": "Drop files here to upload",
     "googleDriveNotAvailable": "Google Drive integration not available",
     "openFiles": "Open Files",
     "openFile": "Open File",

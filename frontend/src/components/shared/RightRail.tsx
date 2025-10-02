@@ -15,6 +15,7 @@ import BulkSelectionPanel from '../pageEditor/BulkSelectionPanel';
 import { SearchInterface } from '../viewer/SearchInterface';
 import { ViewerContext } from '../../contexts/ViewerContext';
 import { useSignature } from '../../contexts/SignatureContext';
+import ViewerAnnotationControls from './rightRail/ViewerAnnotationControls';
 
 import { parseSelection } from '../../utils/bulkselection/parseSelection';
 
@@ -293,6 +294,9 @@ export default function RightRail() {
                 <LocalIcon icon="view-list" width="1.5rem" height="1.5rem" />
               </ActionIcon>
             </Tooltip>
+
+            {/* Annotation Controls */}
+            <ViewerAnnotationControls currentView={currentView} />
           </div>
           <Divider className="right-rail-divider" />
         </div>
