@@ -6,6 +6,7 @@ on:
     branches:
       - master
       - main
+      - v1.3.2_V2Announcement
 
 # cancel in-progress jobs if a new job is triggered
 # This is useful to avoid running multiple builds for the same branch if a new commit is pushed
@@ -172,10 +173,12 @@ jobs:
             ghcr.io/${{ steps.repoowner.outputs.lowercase }}/s-pdf
             ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf
             ${{ secrets.DOCKER_HUB_ORG_USERNAME }}/stirling-pdf
+            ${{ secrets.DOCKER_HUB_USERNAME }}/test
           tags: |
             type=raw,value=${{ steps.versionNumber.outputs.versionNumber }}-fat,enable=${{ github.ref == 'refs/heads/master' }}
             type=raw,value=latest-fat,enable=${{ github.ref == 'refs/heads/master' }}
             type=raw,value=alpha,enable=${{ github.ref == 'refs/heads/main' }}
+            type=raw,value=v2-announcement,enable=${{ github.ref == 'refs/heads/v1.3.2_V2Announcement' }}
 
       - name: Build and push main Dockerfile fat
         id: build-push-fat
