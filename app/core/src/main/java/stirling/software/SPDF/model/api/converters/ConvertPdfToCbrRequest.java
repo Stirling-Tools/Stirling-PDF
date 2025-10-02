@@ -18,7 +18,7 @@ public class ConvertPdfToCbrRequest {
 
     @Schema(
             description = "The DPI (Dots Per Inch) for rendering PDF pages as images",
-            example = "300",
+            example = "150",
             requiredMode = Schema.RequiredMode.REQUIRED)
-    private int dpi = 300;
+    private int dpi = 150;
 }

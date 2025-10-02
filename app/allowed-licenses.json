@@ -167,6 +167,10 @@
     {
       "moduleName": ".*",
       "moduleLicense": "The W3C License"
+    },
+    {
+      "moduleName": "com.github.junrar:junrar",
+      "moduleLicense": "UnRAR License"
     }
   ]
 }
