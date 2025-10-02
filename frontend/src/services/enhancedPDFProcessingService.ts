@@ -200,11 +200,21 @@ export class EnhancedPDFProcessingService {
         const page = await pdf.getPage(i);
         const thumbnail = await this.renderPageThumbnail(page, config.thumbnailQuality);
 
+        // Log all rotation-related properties
+        console.log(`[PDF Load] Page ${i}:`, {
+          'page.rotate': page.rotate,
+          'page.rotation': (page as any).rotation,
+          'page.view': page.view,
+          'page keys': Object.keys(page)
+        });
+
+        const rotation = page.rotate || 0;
+
         pages.push({
           id: `${createQuickKey(file)}-page-${i}`,
           pageNumber: i,
           thumbnail,
-          rotation: 0,
+          rotation,
           selected: false
         });
 
@@ -254,7 +264,7 @@ export class EnhancedPDFProcessingService {
         id: `${createQuickKey(file)}-page-${i}`,
         pageNumber: i,
         thumbnail,
-        rotation: 0,
+        rotation: (console.log(`[PDF Load] Page ${i}: page.rotate = ${page.rotate}`), page.rotate || 0),
         selected: false
       });
 
@@ -265,11 +275,15 @@ export class EnhancedPDFProcessingService {
 
     // Create placeholder pages for remaining pages
     for (let i = priorityCount + 1; i <= totalPages; i++) {
+      // Load page just to get rotation
+      const page = await pdf.getPage(i);
+      const rotation = page.rotate || 0;
+
       pages.push({
         id: `${createQuickKey(file)}-page-${i}`,
         pageNumber: i,
         thumbnail: null, // Will be loaded lazily
-        rotation: 0,
+        rotation,
         selected: false
       });
     }
@@ -316,7 +330,7 @@ export class EnhancedPDFProcessingService {
         id: `${createQuickKey(file)}-page-${i}`,
         pageNumber: i,
         thumbnail,
-        rotation: 0,
+        rotation: (console.log(`[PDF Load] Page ${i}: page.rotate = ${page.rotate}`), page.rotate || 0),
         selected: false
       });
 
@@ -333,11 +347,15 @@ export class EnhancedPDFProcessingService {
 
     // Create placeholders for remaining pages
     for (let i = firstChunkEnd + 1; i <= totalPages; i++) {
+      // Load page just to get rotation
+      const page = await pdf.getPage(i);
+      const rotation = page.rotate || 0;
+
       pages.push({
         id: `${createQuickKey(file)}-page-${i}`,
         pageNumber: i,
         thumbnail: null,
-        rotation: 0,
+        rotation,
         selected: false
       });
     }
@@ -367,11 +385,15 @@ export class EnhancedPDFProcessingService {
     // Create placeholder pages without thumbnails
     const pages: PDFPage[] = [];
     for (let i = 1; i <= totalPages; i++) {
+      // Load page just to get rotation
+      const page = await pdf.getPage(i);
+      const rotation = page.rotate || 0;
+
       pages.push({
         id: `${createQuickKey(file)}-page-${i}`,
         pageNumber: i,
         thumbnail: null,
-        rotation: 0,
+        rotation,
         selected: false
       });
     }
@@ -390,7 +412,8 @@ export class EnhancedPDFProcessingService {
     const scales = { low: 0.2, medium: 0.5, high: 0.8 }; // Reduced low quality for page editor
     const scale = scales[quality];
 
-    const viewport = page.getViewport({ scale });
+    // Render WITHOUT rotation - rotation will be applied via CSS
+    const viewport = page.getViewport({ scale, rotation: 0 });
     const canvas = document.createElement('canvas');
     canvas.width = viewport.width;
     canvas.height = viewport.height;

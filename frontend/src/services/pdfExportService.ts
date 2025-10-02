@@ -98,10 +98,7 @@ export class PDFExportService {
         // Create a blank page
         const blankPage = newDoc.addPage(PageSizes.A4);
 
-        // Apply rotation if needed
-        if (page.rotation !== 0) {
-          blankPage.setRotation(degrees(page.rotation));
-        }
+        blankPage.setRotation(degrees(page.rotation));
       } else if (page.originalFileId && loadedDocs.has(page.originalFileId)) {
         // Get the correct source document for this page
         const sourceDoc = loadedDocs.get(page.originalFileId)!;
@@ -111,10 +108,7 @@ export class PDFExportService {
           // Copy the page from the correct source document
           const [copiedPage] = await newDoc.copyPages(sourceDoc, [sourcePageIndex]);
 
-          // Apply rotation
-          if (page.rotation !== 0) {
-            copiedPage.setRotation(degrees(page.rotation));
-          }
+          copiedPage.setRotation(degrees(page.rotation));
 
           newDoc.addPage(copiedPage);
         }
@@ -147,10 +141,7 @@ export class PDFExportService {
         // Create a blank page
         const blankPage = newDoc.addPage(PageSizes.A4);
 
-        // Apply rotation if needed
-        if (page.rotation !== 0) {
-          blankPage.setRotation(degrees(page.rotation));
-        }
+        blankPage.setRotation(degrees(page.rotation));
       } else {
         // Get the original page from source document using originalPageNumber
         const sourcePageIndex = page.originalPageNumber - 1;
@@ -159,10 +150,7 @@ export class PDFExportService {
           // Copy the page
           const [copiedPage] = await newDoc.copyPages(sourceDoc, [sourcePageIndex]);
 
-          // Apply rotation
-          if (page.rotation !== 0) {
-            copiedPage.setRotation(degrees(page.rotation));
-          }
+          copiedPage.setRotation(degrees(page.rotation));
 
           newDoc.addPage(copiedPage);
         }

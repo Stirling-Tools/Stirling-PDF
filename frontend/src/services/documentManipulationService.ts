@@ -123,19 +123,36 @@ export class DocumentManipulationService {
 
   /**
    * Read rotation from DOM element
+   * Visual rotation = original rotation + user changes
+   * Need to extract just the user changes
    */
   private getRotationFromDOM(pageElement: Element, originalPage: PDFPage): number {
     const img = pageElement.querySelector('img');
-    if (img && img.style.transform) {
-      // Parse rotation from transform property (e.g., "rotate(90deg)" -> 90)
-      const rotationMatch = img.style.transform.match(/rotate\((-?\d+)deg\)/);
-      const domRotation = rotationMatch ? parseInt(rotationMatch[1]) : 0;
-      
-      console.log(`Page ${originalPage.pageNumber}: DOM rotation = ${domRotation}°, original = ${originalPage.rotation}°`);
-      return domRotation;
+    if (img) {
+      // Get the original rotation from data attribute
+      const originalRotation = parseInt(img.getAttribute('data-original-rotation') || '0');
+
+      // Parse current visual rotation from transform property
+      const currentTransform = img.style.transform || '';
+      const rotationMatch = currentTransform.match(/rotate\((-?\d+)deg\)/);
+      const visualRotation = rotationMatch ? parseInt(rotationMatch[1]) : originalRotation;
+
+      // Calculate the user's rotation change (visual - original)
+      let userChange = visualRotation - originalRotation;
+      // Normalize to 0-359 range
+      userChange = ((userChange % 360) + 360) % 360;
+
+      // Add user's change to the original page rotation from state
+      let finalRotation = (originalPage.rotation + userChange) % 360;
+
+      // Ensure 360 becomes 0
+      if (finalRotation === 360) finalRotation = 0;
+
+      console.log(`Page ${originalPage.pageNumber}: original = ${originalRotation}°, visual = ${visualRotation}°, user change = ${userChange}°, final = ${finalRotation}°`);
+      return finalRotation;
     }
-    
-    console.log(`Page ${originalPage.pageNumber}: No DOM rotation found, keeping original = ${originalPage.rotation}°`);
+
+    console.log(`Page ${originalPage.pageNumber}: No img found, keeping original = ${originalPage.rotation}°`);
     return originalPage.rotation;
   }
 

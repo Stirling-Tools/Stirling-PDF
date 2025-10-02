@@ -3,6 +3,7 @@ import { pdfWorkerManager } from '../services/pdfWorkerManager';
 export interface ThumbnailWithMetadata {
   thumbnail: string; // Always returns a thumbnail (placeholder if needed)
   pageCount: number;
+  pageRotations?: number[]; // Rotation for each page (0, 90, 180, 270)
 }
 
 interface ColorScheme {
@@ -377,8 +378,10 @@ export async function generateThumbnailForFile(file: File): Promise<string> {
 
 /**
  * Generate thumbnail and extract page count for a PDF file - always returns a valid thumbnail
+ * @param applyRotation - If true, render thumbnail with PDF rotation applied (for static display).
+ *                        If false, render without rotation (for CSS-based rotation in PageEditor)
  */
-export async function generateThumbnailWithMetadata(file: File): Promise<ThumbnailWithMetadata> {
+export async function generateThumbnailWithMetadata(file: File, applyRotation: boolean = true): Promise<ThumbnailWithMetadata> {
   // Non-PDF files have no page count
   if (!file.type.startsWith('application/pdf')) {
     const thumbnail = await generateThumbnailForFile(file);
@@ -399,7 +402,13 @@ export async function generateThumbnailWithMetadata(file: File): Promise<Thumbna
 
     const pageCount = pdf.numPages;
     const page = await pdf.getPage(1);
-    const viewport = page.getViewport({ scale });
+
+    // If applyRotation is false, render without rotation (for CSS-based rotation)
+    // If applyRotation is true, let PDF.js apply rotation (for static display)
+    const viewport = applyRotation
+      ? page.getViewport({ scale })
+      : page.getViewport({ scale, rotation: 0 });
+
     const canvas = document.createElement("canvas");
     canvas.width = viewport.width;
     canvas.height = viewport.height;
@@ -413,8 +422,17 @@ export async function generateThumbnailWithMetadata(file: File): Promise<Thumbna
     await page.render({ canvasContext: context, viewport, canvas }).promise;
     const thumbnail = canvas.toDataURL();
 
+    // Read rotation for all pages
+    const pageRotations: number[] = [];
+    for (let i = 1; i <= pageCount; i++) {
+      const p = await pdf.getPage(i);
+      const rotation = p.rotate || 0;
+      pageRotations.push(rotation);
+      console.log(`[Thumbnail Utils] Page ${i}: page.rotate = ${rotation}`);
+    }
+
     pdfWorkerManager.destroyDocument(pdf);
-    return { thumbnail, pageCount };
+    return { thumbnail, pageCount, pageRotations };
 
   } catch (error) {
     if (error instanceof Error && error.name === "PasswordException") {

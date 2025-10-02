@@ -81,16 +81,24 @@ export function usePageDocument(): PageDocumentHook {
 
       if (processedFile?.pages && processedFile.pages.length > 0) {
         // Use fully processed pages with thumbnails
-        filePages = processedFile.pages.map((page, pageIndex) => ({
-          id: `${fileId}-${page.pageNumber}`,
-          pageNumber: startPageNumber + pageIndex,
-          thumbnail: page.thumbnail || null,
-          rotation: page.rotation || 0,
-          selected: false,
-          splitAfter: page.splitAfter || false,
-          originalPageNumber: page.originalPageNumber || page.pageNumber || pageIndex + 1,
-          originalFileId: fileId,
-        }));
+        filePages = processedFile.pages.map((page, pageIndex) => {
+          const rotation = page.rotation || 0;
+          console.log(`[usePageDocument] Creating page ${startPageNumber + pageIndex} from processedFile:`, {
+            'page.rotation': page.rotation,
+            'final rotation': rotation,
+            'page.pageNumber': page.pageNumber
+          });
+          return {
+            id: `${fileId}-${page.pageNumber}`,
+            pageNumber: startPageNumber + pageIndex,
+            thumbnail: page.thumbnail || null,
+            rotation,
+            selected: false,
+            splitAfter: page.splitAfter || false,
+            originalPageNumber: page.originalPageNumber || page.pageNumber || pageIndex + 1,
+            originalFileId: fileId,
+          };
+        });
       } else if (processedFile?.totalPages) {
         // Fallback: create pages without thumbnails but with correct count
         filePages = Array.from({ length: processedFile.totalPages }, (_, pageIndex) => ({
