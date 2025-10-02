@@ -41,7 +41,7 @@ const LandingPage = () => {
       {/* White PDF Page Background */}
       <Dropzone
         onDrop={handleFileDrop}
-        accept={["application/pdf", "application/zip", "application/x-zip-compressed"]}
+        accept={["*/*"]}
         multiple={true}
         className="w-4/5 flex items-center justify-center h-[95%]"
         style={{
@@ -178,7 +178,7 @@ const LandingPage = () => {
               ref={fileInputRef}
               type="file"
               multiple
-              accept=".pdf,.zip"
+              accept="*/*"
               onChange={handleFileSelect}
               style={{ display: 'none' }}
             />

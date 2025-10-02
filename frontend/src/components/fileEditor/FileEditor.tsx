@@ -8,6 +8,7 @@ import { useNavigationActions } from '../../contexts/NavigationContext';
 import { zipFileService } from '../../services/zipFileService';
 import { detectFileExtension } from '../../utils/fileUtils';
 import FileEditorThumbnail from './FileEditorThumbnail';
+import AddFileCard from './AddFileCard';
 import FilePickerModal from '../shared/FilePickerModal';
 import SkeletonLoader from '../shared/SkeletonLoader';
 import { FileId, StirlingFile } from '../../types/fileContext';
@@ -171,8 +172,8 @@ const FileEditor = ({
 
       // Process all extracted files
       if (allExtractedFiles.length > 0) {
-        // Add files to context (they will be processed automatically)
-        await addFiles(allExtractedFiles);
+        // Add files to context and select them automatically
+        await addFiles(allExtractedFiles, { selectFiles: true });
         showStatus(`Added ${allExtractedFiles.length} files`, 'success');
       }
     } catch (err) {
@@ -405,6 +406,14 @@ const FileEditor = ({
               pointerEvents: 'auto'
             }}
           >
+            {/* Add File Card - only show when files exist */}
+            {activeStirlingFileStubs.length > 0 && (
+              <AddFileCard
+                key="add-file-card"
+                onFileSelect={handleFileUpload}
+              />
+            )}
+
             {activeStirlingFileStubs.map((record, index) => {
               return (
                 <FileEditorThumbnail

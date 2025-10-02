@@ -18,6 +18,7 @@ interface FileManagerContextValue {
   expandedFileIds: Set<FileId>;
   fileGroups: Map<FileId, StirlingFileStub[]>;
   loadedHistoryFiles: Map<FileId, StirlingFileStub[]>;
+  isLoading: boolean;
 
   // Handlers
   onSourceChange: (source: 'recent' | 'local' | 'drive') => void;
@@ -58,6 +59,7 @@ interface FileManagerProviderProps {
   onFileRemove: (index: number) => void;
   modalHeight: string;
   refreshRecentFiles: () => Promise<void>;
+  isLoading: boolean;
 }
 
 export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
@@ -71,6 +73,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
   onFileRemove,
   modalHeight,
   refreshRecentFiles,
+  isLoading,
 }) => {
   const [activeSource, setActiveSource] = useState<'recent' | 'local' | 'drive'>('recent');
   const [selectedFileIds, setSelectedFileIds] = useState<FileId[]>([]);
@@ -574,6 +577,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     expandedFileIds,
     fileGroups,
     loadedHistoryFiles,
+    isLoading,
 
     // Handlers
     onSourceChange: handleSourceChange,
@@ -607,6 +611,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     expandedFileIds,
     fileGroups,
     loadedHistoryFiles,
+    isLoading,
     handleSourceChange,
     handleLocalFileClick,
     handleFileSelect,

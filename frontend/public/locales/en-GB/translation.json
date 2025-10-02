@@ -3080,7 +3080,12 @@
     "panMode": "Pan Mode",
     "rotateLeft": "Rotate Left",
     "rotateRight": "Rotate Right",
-    "toggleSidebar": "Toggle Sidebar"
+    "toggleSidebar": "Toggle Sidebar",
+    "exportSelected": "Export Selected Pages",
+    "toggleAnnotations": "Toggle Annotations Visibility",
+    "annotationMode": "Toggle Annotation Mode",
+    "draw": "Draw",
+    "save": "Save"
   },
   "search": {
     "title": "Search PDF",
@@ -3149,6 +3154,9 @@
     "addFiles": "Add Files",
     "dragFilesInOrClick": "Drag files in or click \"Add Files\" to browse"
   },
+  "fileEditor": {
+    "addFiles": "Add Files"
+  },
   "fileManager": {
     "title": "Upload PDF Files",
     "subtitle": "Add files to your storage for easy access across tools",
@@ -3184,7 +3192,6 @@
     "googleDriveShort": "Drive",
     "myFiles": "My Files",
     "noRecentFiles": "No recent files found",
-    "dropFilesHint": "Drop files here to upload",
     "googleDriveNotAvailable": "Google Drive integration not available",
     "openFiles": "Open Files",
     "openFile": "Open File",
