@@ -1,16 +1,18 @@
-import React from 'react';
+import React, { useCallback, useState, useEffect, useRef } from 'react';
 import { Box, Center, Text, ActionIcon } from '@mantine/core';
 import { useMantineTheme, useMantineColorScheme } from '@mantine/core';
 import CloseIcon from '@mui/icons-material/Close';
 
-import { useFileState } from "../../contexts/FileContext";
+import { useFileState, useFileActions } from "../../contexts/FileContext";
 import { useFileWithUrl } from "../../hooks/useFileWithUrl";
 import { useViewer } from "../../contexts/ViewerContext";
 import { LocalEmbedPDF } from './LocalEmbedPDF';
 import { PdfViewerToolbar } from './PdfViewerToolbar';
 import { ThumbnailSidebar } from './ThumbnailSidebar';
-import { useNavigationState } from '../../contexts/NavigationContext';
+import { useNavigationGuard, useNavigationState } from '../../contexts/NavigationContext';
 import { useSignature } from '../../contexts/SignatureContext';
+import { createStirlingFilesAndStubs } from '../../services/fileStubHelpers';
+import NavigationWarningModal from '../shared/NavigationWarningModal';
 
 export interface EmbedPdfViewerProps {
   sidebarsVisible: boolean;
@@ -29,11 +31,34 @@ const EmbedPdfViewerContent = ({
   const { colorScheme: _colorScheme } = useMantineColorScheme();
   const viewerRef = React.useRef<HTMLDivElement>(null);
   const [isViewerHovered, setIsViewerHovered] = React.useState(false);
-  const { isThumbnailSidebarVisible, toggleThumbnailSidebar, zoomActions, spreadActions, panActions: _panActions, rotationActions: _rotationActions, getScrollState, getZoomState, getSpreadState, isAnnotationMode, isAnnotationsVisible } = useViewer();
+  const [saveLoading, setSaveLoading] = useState(false);
+
+  const { isThumbnailSidebarVisible, toggleThumbnailSidebar, zoomActions, spreadActions, panActions: _panActions, rotationActions: _rotationActions, getScrollState, getZoomState, getSpreadState, getRotationState, isAnnotationMode, isAnnotationsVisible, exportActions } = useViewer();
 
   const scrollState = getScrollState();
   const zoomState = getZoomState();
   const spreadState = getSpreadState();
+  const rotationState = getRotationState();
+
+  // Track initial rotation to detect changes
+  const initialRotationRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (initialRotationRef.current === null && rotationState.rotation !== undefined) {
+      initialRotationRef.current = rotationState.rotation;
+    }
+  }, [rotationState.rotation]);
+
+  // Get signature context
+  const { signatureApiRef, historyApiRef } = useSignature();
+
+  // Get current file from FileContext
+  const { selectors } = useFileState();
+  const { actions } = useFileActions();
+  const activeFiles = selectors.getFiles();
+  const activeFileIds = activeFiles.map(f => f.fileId);
+
+  // Navigation guard for unsaved changes
+  const { setHasUnsavedChanges, registerUnsavedChangesChecker, unregisterUnsavedChangesChecker } = useNavigationGuard();
 
   // Check if we're in signature mode OR viewer annotation mode
   const { selectedTool } = useNavigationState();
@@ -41,13 +66,6 @@ const EmbedPdfViewerContent = ({
 
   // Enable annotations when: in sign mode, OR annotation mode is active, OR we want to show existing annotations
   const shouldEnableAnnotations = isSignatureMode || isAnnotationMode || isAnnotationsVisible;
-
-  // Get signature context
-  const { signatureApiRef, historyApiRef } = useSignature();
-
-  // Get current file from FileContext
-  const { selectors } = useFileState();
-  const activeFiles = selectors.getFiles();
 
   // Determine which file to display
   const currentFile = React.useMemo(() => {
@@ -134,6 +152,71 @@ const EmbedPdfViewerContent = ({
     };
   }, [isViewerHovered]);
 
+  // Register checker for unsaved changes (annotations only for now)
+  useEffect(() => {
+    if (previewFile) {
+      return;
+    }
+
+    const checkForChanges = () => {
+      // Check for annotation changes via history
+      const hasAnnotationChanges = historyApiRef.current?.canUndo() || false;
+
+      console.log('[Viewer] Checking for unsaved changes:', {
+        hasAnnotationChanges
+      });
+      return hasAnnotationChanges;
+    };
+
+    console.log('[Viewer] Registering unsaved changes checker');
+    registerUnsavedChangesChecker(checkForChanges);
+
+    return () => {
+      console.log('[Viewer] Unregistering unsaved changes checker');
+      unregisterUnsavedChangesChecker();
+    };
+  }, [historyApiRef, previewFile, registerUnsavedChangesChecker, unregisterUnsavedChangesChecker]);
+
+  // Apply changes - save annotations/rotations to new file version
+  const applyChanges = useCallback(async () => {
+    if (!currentFile || activeFileIds.length === 0) return;
+
+    setSaveLoading(true);
+    try {
+      console.log('[Viewer] Applying changes - exporting PDF with rotations:', rotationState.rotation);
+
+      // Step 1: Export PDF with annotations/rotations using EmbedPDF
+      const arrayBuffer = await exportActions.saveAsCopy();
+      if (!arrayBuffer) {
+        throw new Error('Failed to export PDF');
+      }
+
+      console.log('[Viewer] Exported PDF size:', arrayBuffer.byteLength);
+
+      // Step 2: Convert ArrayBuffer to File
+      const blob = new Blob([arrayBuffer], { type: 'application/pdf' });
+      const filename = currentFile.name || 'document.pdf';
+      const file = new File([blob], filename, { type: 'application/pdf' });
+
+      // Step 3: Create StirlingFiles and stubs for version history
+      const parentStub = selectors.getStirlingFileStub(activeFileIds[0]);
+      if (!parentStub) throw new Error('Parent stub not found');
+
+      const { stirlingFiles, stubs } = await createStirlingFilesAndStubs([file], parentStub, 'multiTool');
+
+      // Step 4: Consume files (replace in context)
+      await actions.consumeFiles(activeFileIds, stirlingFiles, stubs);
+
+      // Step 5: Reset initial rotation after successful save
+      initialRotationRef.current = rotationState.rotation;
+
+      setHasUnsavedChanges(false);
+      setSaveLoading(false);
+    } catch (error) {
+      console.error('Apply changes failed:', error);
+      setSaveLoading(false);
+    }
+  }, [currentFile, activeFileIds, rotationState.rotation, exportActions, actions, selectors, setHasUnsavedChanges]);
 
   return (
     <Box
@@ -240,6 +323,15 @@ const EmbedPdfViewerContent = ({
         visible={isThumbnailSidebarVisible}
         onToggle={toggleThumbnailSidebar}
       />
+
+      {/* Navigation Warning Modal */}
+      {!previewFile && (
+        <NavigationWarningModal
+          onApplyAndContinue={async () => {
+            await applyChanges();
+          }}
+        />
+      )}
     </Box>
   );
 };
