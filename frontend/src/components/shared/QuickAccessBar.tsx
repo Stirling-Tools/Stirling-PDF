@@ -13,6 +13,7 @@ import './quickAccessBar/QuickAccessBar.css';
 import AllToolsNavButton from './AllToolsNavButton';
 import ActiveToolButton from "./quickAccessBar/ActiveToolButton";
 import AppConfigModal from './AppConfigModal';
+import { useAppConfig } from '../../hooks/useAppConfig';
 import {
   isNavButtonActive,
   getNavButtonStyle,
@@ -25,6 +26,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
   const { openFilesModal, isFilesModalOpen } = useFilesModalContext();
   const { handleReaderToggle, handleBackToTools, handleToolSelect, selectedToolKey, leftPanelView, toolRegistry, readerMode, resetTool } = useToolWorkflow();
   const { getToolNavigation } = useSidebarNavigation();
+  const { config } = useAppConfig();
   const [configModalOpen, setConfigModalOpen] = useState(false);
   const [activeButton, setActiveButton] = useState<string>('tools');
   const scrollableRef = useRef<HTMLDivElement>(null);
@@ -151,8 +153,8 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
     //},
     {
       id: 'config',
-      name: t("quickAccess.config", "Config"),
-      icon: <LocalIcon icon="settings-rounded" width="1.25rem" height="1.25rem" />,
+      name: config?.enableLogin ? t("quickAccess.account", "Account") : t("quickAccess.config", "Config"),
+      icon: config?.enableLogin ? <LocalIcon icon="person-rounded" width="1.25rem" height="1.25rem" /> : <LocalIcon icon="settings-rounded" width="1.25rem" height="1.25rem" />,
       size: 'lg',
       type: 'modal',
       onClick: () => {
