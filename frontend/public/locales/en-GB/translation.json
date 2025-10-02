@@ -547,7 +547,7 @@
     "adjustContrast": {
       "tags": "contrast,brightness,saturation",
       "title": "Adjust Colours/Contrast",
-      "desc": "Adjust Contrast, Saturation and Brightness of a PDF"
+      "desc": "Adjust Colors/Contrast, Saturation and Brightness of a PDF"
     },
     "crop": {
       "tags": "trim,cut,resize",
@@ -2791,8 +2791,9 @@
     "submit": "Sanitize PDF"
   },
   "adjustContrast": {
-    "title": "Adjust Contrast",
-    "header": "Adjust Contrast",
+    "title": "Adjust Colors/Contrast",
+    "header": "Adjust Colors/Contrast",
+    "basic": "Basic Adjustments",
     "contrast": "Contrast:",
     "brightness": "Brightness:",
     "saturation": "Saturation:",
@@ -3126,6 +3127,7 @@
     "automate": "Automate",
     "files": "Files",
     "activity": "Activity",
+    "account": "Account",
     "config": "Config",
     "allTools": "All Tools"
   },

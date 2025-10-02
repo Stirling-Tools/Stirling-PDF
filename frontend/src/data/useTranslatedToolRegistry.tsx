@@ -14,6 +14,9 @@ import ReorganizePages from "../tools/ReorganizePages";
 import { reorganizePagesOperationConfig } from "../hooks/tools/reorganizePages/useReorganizePagesOperation";
 import RemovePassword from "../tools/RemovePassword";
 import { SubcategoryId, ToolCategoryId, ToolRegistry } from "./toolsTaxonomy";
+import AdjustContrast from "../tools/AdjustContrast";
+import AdjustContrastSingleStepSettings from "../components/tools/adjustContrast/AdjustContrastSingleStepSettings";
+import { adjustContrastOperationConfig } from "../hooks/tools/adjustContrast/useAdjustContrastOperation";
 import { getSynonyms } from "../utils/toolSynonyms";
 import AddWatermark from "../tools/AddWatermark";
 import AddStamp from "../tools/AddStamp";
@@ -665,12 +668,13 @@ export function useFlatToolRegistry(): ToolRegistry {
       adjustContrast: {
         icon: <LocalIcon icon="palette" width="1.5rem" height="1.5rem" />,
         name: t("home.adjustContrast.title", "Adjust Colors/Contrast"),
-        component: null,
+        component: AdjustContrast,
         description: t("home.adjustContrast.desc", "Adjust colors and contrast of PDF documents"),
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.ADVANCED_FORMATTING,
+        operationConfig: adjustContrastOperationConfig,
+        automationSettings: AdjustContrastSingleStepSettings,
         synonyms: getSynonyms(t, "adjustContrast"),
-        automationSettings: null,
       },
       repair: {
         icon: <LocalIcon icon="build-outline-rounded" width="1.5rem" height="1.5rem" />,
