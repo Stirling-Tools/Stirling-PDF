@@ -6,6 +6,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { Tooltip } from '../../shared/Tooltip';
+import { ToolIcon } from '../../shared/ToolIcon';
 import { ToolRegistryEntry } from '../../../data/toolsTaxonomy';
 
 interface AutomationEntryProps {
@@ -114,10 +115,9 @@ export default function AutomationEntry({
       return (
         <Group gap="md" align="center" justify="flex-start" style={{ width: '100%' }}>
           {BadgeIcon && (
-            <BadgeIcon
-              style={{
-                color: keepIconColor ? 'var(--mantine-primary-color-filled)' : 'var(--mantine-color-text)'
-              }}
+            <ToolIcon
+              icon={<BadgeIcon />}
+              color={keepIconColor ? 'var(--mantine-primary-color-filled)' : 'var(--mantine-color-text)'}
             />
           )}
           <Text size="xs" style={{ flex: 1, textAlign: 'left', color: 'var(--mantine-color-text)' }}>
@@ -130,10 +130,9 @@ export default function AutomationEntry({
       return (
         <Group gap="md" align="center" justify="flex-start" style={{ width: '100%' }}>
           {BadgeIcon && (
-            <BadgeIcon
-              style={{
-                color: keepIconColor ? 'var(--mantine-primary-color-filled)' : 'var(--mantine-color-text)'
-              }}
+            <ToolIcon
+              icon={<BadgeIcon />}
+              color={keepIconColor ? 'var(--mantine-primary-color-filled)' : 'var(--mantine-color-text)'}
             />
           )}
           <Group gap="xs" justify="flex-start" style={{ flex: 1 }}>
