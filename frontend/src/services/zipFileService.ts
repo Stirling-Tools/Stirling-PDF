@@ -1,5 +1,7 @@
 import JSZip, { JSZipObject } from 'jszip';
-import { StirlingFileStub } from '../types/fileContext';
+import { StirlingFileStub, createStirlingFile } from '../types/fileContext';
+import { generateThumbnailForFile } from '../utils/thumbnailUtils';
+import { fileStorage } from './fileStorage';
 
 // Undocumented interface in JSZip for JSZipObject._data
 interface CompressedObject {
@@ -439,6 +441,79 @@ export class ZipFileService {
     };
 
     return mimeTypes[ext || ''] || 'application/octet-stream';
+  }
+
+  /**
+   * Extract PDF files from ZIP and store them in IndexedDB with preserved history metadata
+   * Used by both FileManager and FileEditor to avoid code duplication
+   *
+   * @param zipFile - The ZIP file to extract from
+   * @param zipStub - The StirlingFileStub for the ZIP (contains metadata to preserve)
+   * @returns Object with success status, extracted stubs, and any errors
+   */
+  async extractAndStoreFilesWithHistory(
+    zipFile: File,
+    zipStub: StirlingFileStub
+  ): Promise<{ success: boolean; extractedStubs: StirlingFileStub[]; errors: string[] }> {
+    const result = {
+      success: false,
+      extractedStubs: [] as StirlingFileStub[],
+      errors: [] as string[]
+    };
+
+    try {
+      // Extract PDF files from ZIP
+      const extractionResult = await this.extractPdfFiles(zipFile);
+
+      if (!extractionResult.success || extractionResult.extractedFiles.length === 0) {
+        result.errors = extractionResult.errors;
+        return result;
+      }
+
+      // Process each extracted file
+      for (const extractedFile of extractionResult.extractedFiles) {
+        try {
+          // Generate thumbnail
+          const thumbnail = await generateThumbnailForFile(extractedFile);
+
+          // Create StirlingFile
+          const newStirlingFile = createStirlingFile(extractedFile);
+
+          // Create StirlingFileStub with ZIP's history metadata
+          const stub: StirlingFileStub = {
+            id: newStirlingFile.fileId,
+            name: extractedFile.name,
+            size: extractedFile.size,
+            type: extractedFile.type,
+            lastModified: extractedFile.lastModified,
+            quickKey: newStirlingFile.quickKey,
+            createdAt: Date.now(),
+            isLeaf: true,
+            // Preserve ZIP's history - unzipping is NOT a tool operation
+            originalFileId: zipStub.originalFileId,
+            parentFileId: zipStub.parentFileId,
+            versionNumber: zipStub.versionNumber,
+            toolHistory: zipStub.toolHistory || [],
+            thumbnailUrl: thumbnail
+          };
+
+          // Store in IndexedDB
+          await fileStorage.storeStirlingFile(newStirlingFile, stub);
+
+          result.extractedStubs.push(stub);
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+          result.errors.push(`Failed to process "${extractedFile.name}": ${errorMessage}`);
+        }
+      }
+
+      result.success = result.extractedStubs.length > 0;
+      return result;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      result.errors.push(`Failed to extract ZIP file: ${errorMessage}`);
+      return result;
+    }
   }
 }
 

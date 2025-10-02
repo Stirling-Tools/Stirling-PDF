@@ -554,23 +554,21 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
         return;
       }
 
-      // Extract files from the ZIP
-      const extractionResult = await zipFileService.extractPdfFiles(stirlingFile);
+      // Extract and store files using shared service method
+      const result = await zipFileService.extractAndStoreFilesWithHistory(stirlingFile, file);
 
-      if (extractionResult.success && extractionResult.extractedFiles.length > 0) {
-        // Add extracted files to the file manager
-        onNewFilesSelect(extractionResult.extractedFiles);
+      if (result.success) {
+        // Refresh file manager to show new files
+        await refreshRecentFiles();
+      }
 
-        // Optionally remove the original ZIP file
-        const fileIndex = filteredFiles.findIndex(f => f.id === file.id);
-        if (fileIndex !== -1) {
-          await handleFileRemove(fileIndex);
-        }
+      if (result.errors.length > 0) {
+        console.error('Errors during unzip:', result.errors);
       }
     } catch (error) {
       console.error('Failed to unzip file:', error);
     }
-  }, [onNewFilesSelect, filteredFiles, handleFileRemove]);
+  }, [refreshRecentFiles]);
 
   // Cleanup blob URLs when component unmounts
   useEffect(() => {
