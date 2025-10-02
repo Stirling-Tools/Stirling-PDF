@@ -19,7 +19,7 @@ const DocumentThumbnail: React.FC<DocumentThumbnailProps> = ({
   children
 }) => {
   if (!file) return null;
-  
+
   const containerStyle = {
     position: 'relative' as const,
     cursor: onClick ? 'pointer' : 'default',
@@ -36,6 +36,7 @@ const DocumentThumbnail: React.FC<DocumentThumbnailProps> = ({
     return (
       <Box style={containerStyle} onClick={onClick}>
         <Image
+          className='ph-no-capture'
           src={thumbnail}
           alt={`Preview of ${file.name}`}
           fit="contain"
@@ -49,11 +50,12 @@ const DocumentThumbnail: React.FC<DocumentThumbnailProps> = ({
   return (
     <Box style={containerStyle} onClick={onClick}>
       <Center style={{ width: '100%', height: '100%', backgroundColor: 'var(--mantine-color-gray-1)', borderRadius: '0.25rem' }}>
-        <PictureAsPdfIcon 
-          style={{ 
-            fontSize: '2rem', 
-            color: 'var(--mantine-color-gray-6)' 
-          }} 
+        <PictureAsPdfIcon
+          className='ph-no-capture'
+          style={{
+            fontSize: '2rem',
+            color: 'var(--mantine-color-gray-6)'
+          }}
         />
       </Center>
       {children}

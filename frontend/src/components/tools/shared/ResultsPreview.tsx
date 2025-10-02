@@ -62,6 +62,7 @@ const ResultsPreview = ({
       {/* File name at the top */}
       <Box mb="sm" style={{ minHeight: '3rem', display: 'flex', alignItems: 'flex-start' }}>
         <Text
+          className='ph-no-capture'
           size="sm"
           fw={500}
           style={{
