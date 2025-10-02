@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Group, Text, ActionIcon, Menu, Box } from '@mantine/core';
+import { Group, Text, ActionIcon, Menu, Button, Box } from '@mantine/core';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -51,8 +51,7 @@ export default function AutomationEntry({
   const [isHovered, setIsHovered] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  // Keep item in hovered state if menu is open
-  const shouldShowHovered = isHovered || isMenuOpen;
+  const shouldShowMenu = isHovered || isMenuOpen;
 
   // Helper function to resolve tool display names
   const getToolDisplayName = (operation: string): string => {
@@ -109,132 +108,135 @@ export default function AutomationEntry({
     );
   };
 
-  const renderContent = () => {
-    if (title) {
-      // Custom automation with title
-      return (
-        <Group gap="xs" align="center" justify="flex-start" style={{ width: '100%' }}>
-          {BadgeIcon && (
-            <ToolIcon
-              icon={<BadgeIcon />}
-              {...(keepIconColor && { color: 'var(--mantine-primary-color-filled)' })}
-            />
-          )}
-          <Text size="xs" style={{ flex: 1, textAlign: 'left', color: 'var(--mantine-color-text)' }}>
+  const buttonContent = (
+    <>
+      {BadgeIcon && (
+        <ToolIcon
+          icon={<BadgeIcon />}
+          {...(keepIconColor && { color: 'var(--mantine-primary-color-filled)' })}
+        />
+      )}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', flex: 1, overflow: 'visible' }}>
+        {title ? (
+          // Custom automation with title
+          <Text size="sm" style={{ textAlign: 'left' }}>
             {title}
           </Text>
-        </Group>
-      );
-    } else {
-      // Suggested automation showing tool chain
-      return (
-        <Group gap="xs" align="center" justify="flex-start" style={{ width: '100%' }}>
-          {BadgeIcon && (
-            <ToolIcon
-              icon={<BadgeIcon />}
-              {...(keepIconColor && { color: 'var(--mantine-primary-color-filled)' })}
-            />
-          )}
+        ) : (
+          // Suggested automation showing tool chain
           <Group gap="xs" justify="flex-start" style={{ flex: 1 }}>
             {operations.map((op, index) => (
               <React.Fragment key={`${op}-${index}`}>
-                <Text size="xs" style={{ color: 'var(--mantine-color-text)' }}>
+                <Text size="sm">
                   {getToolDisplayName(op)}
                 </Text>
-
                 {index < operations.length - 1 && (
-                  <Text size="xs" c="dimmed" style={{ color: 'var(--mantine-color-text)' }}>
+                  <Text size="sm" c="dimmed">
                     →
                   </Text>
                 )}
               </React.Fragment>
             ))}
           </Group>
-        </Group>
-      );
-    }
-  };
+        )}
+      </div>
+    </>
+  );
 
-  const boxContent = (
+  const wrapperContent = (
     <Box
-      style={{
-        backgroundColor: shouldShowHovered ? 'var(--mantine-color-gray-1)' : 'transparent',
-        borderRadius: 'var(--mantine-radius-md)',
-        transition: 'background-color 0.15s ease',
-        padding: '0.75rem 1rem',
-        cursor: 'pointer'
-      }}
-      onClick={onClick}
+      style={{ position: 'relative', width: '100%' }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <Group gap="md" align="center" justify="space-between" style={{ width: '100%' }}>
-        <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-start' }}>
-          {renderContent()}
-        </div>
+      <Button
+        variant="subtle"
+        onClick={onClick}
+        size="sm"
+        radius="md"
+        fullWidth
+        justify="flex-start"
+        className="tool-button"
+        styles={{
+          root: {
+            borderRadius: 0,
+            color: "var(--tools-text-and-icon-color)",
+            overflow: 'visible',
+            backgroundColor: shouldShowMenu ? 'var(--automation-entry-hover-bg)' : undefined,
+            '&:hover': {
+              backgroundColor: 'var(--automation-entry-hover-bg)'
+            }
+          },
+          label: { overflow: 'visible' }
+        }}
+      >
+        {buttonContent}
+      </Button>
+      {showMenu && (
+        <Menu
+          position="bottom-end"
+          withinPortal
+          onOpen={() => setIsMenuOpen(true)}
+          onClose={() => setIsMenuOpen(false)}
+        >
+          <Menu.Target>
+            <ActionIcon
+              variant="subtle"
+              c="dimmed"
+              size="md"
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                position: 'absolute',
+                right: '0.5rem',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                zIndex: 1,
+                opacity: shouldShowMenu ? 1 : 0,
+                transition: 'opacity 0.2s ease',
+                pointerEvents: shouldShowMenu ? 'auto' : 'none'
+              }}
+            >
+              <MoreVertIcon style={{ fontSize: 20 }} />
+            </ActionIcon>
+          </Menu.Target>
 
-        {showMenu && (
-          <Menu
-            position="bottom-end"
-            withinPortal
-            onOpen={() => setIsMenuOpen(true)}
-            onClose={() => setIsMenuOpen(false)}
-          >
-            <Menu.Target>
-              <ActionIcon
-                variant="subtle"
-                c="dimmed"
-                size="md"
-                onClick={(e) => e.stopPropagation()}
-                style={{
-                  opacity: shouldShowHovered ? 1 : 0,
-                  transform: shouldShowHovered ? 'scale(1)' : 'scale(0.8)',
-                  transition: 'opacity 0.3s ease, transform 0.3s ease',
-                  pointerEvents: shouldShowHovered ? 'auto' : 'none'
+          <Menu.Dropdown>
+            {onCopy && (
+              <Menu.Item
+                leftSection={<ContentCopyIcon style={{ fontSize: 16 }} />}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onCopy();
                 }}
               >
-                <MoreVertIcon style={{ fontSize: 20 }} />
-              </ActionIcon>
-            </Menu.Target>
-
-            <Menu.Dropdown>
-              {onCopy && (
-                <Menu.Item
-                  leftSection={<ContentCopyIcon style={{ fontSize: 16 }} />}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onCopy();
-                  }}
-                >
-                  {t('automate.copyToSaved', 'Copy to Saved')}
-                </Menu.Item>
-              )}
-              {onEdit && (
-                <Menu.Item
-                  leftSection={<EditIcon style={{ fontSize: 16 }} />}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onEdit();
-                  }}
-                >
-                  {t('edit', 'Edit')}
-                </Menu.Item>
-              )}
-              {onDelete && (
-                <Menu.Item
-                  leftSection={<DeleteIcon style={{ fontSize: 16 }} />}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDelete();
-                  }}
-                >
-                  {t('delete', 'Delete')}
-                </Menu.Item>
-              )}
-            </Menu.Dropdown>
-          </Menu>
-        )}
-      </Group>
+                {t('automate.copyToSaved', 'Copy to Saved')}
+              </Menu.Item>
+            )}
+            {onEdit && (
+              <Menu.Item
+                leftSection={<EditIcon style={{ fontSize: 16 }} />}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit();
+                }}
+              >
+                {t('edit', 'Edit')}
+              </Menu.Item>
+            )}
+            {onDelete && (
+              <Menu.Item
+                leftSection={<DeleteIcon style={{ fontSize: 16 }} />}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete();
+                }}
+              >
+                {t('delete', 'Delete')}
+              </Menu.Item>
+            )}
+          </Menu.Dropdown>
+        </Menu>
+      )}
     </Box>
   );
 
@@ -248,9 +250,9 @@ export default function AutomationEntry({
       arrow={true}
       delay={500}
     >
-      {boxContent}
+      {wrapperContent}
     </Tooltip>
   ) : (
-    boxContent
+    wrapperContent
   );
 }
