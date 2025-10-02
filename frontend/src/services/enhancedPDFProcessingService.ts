@@ -404,7 +404,6 @@ export class EnhancedPDFProcessingService {
     const scales = { low: 0.2, medium: 0.5, high: 0.8 }; // Reduced low quality for page editor
     const scale = scales[quality];
 
-    // Render WITHOUT rotation - rotation will be applied via CSS
     const viewport = page.getViewport({ scale, rotation: 0 });
     const canvas = document.createElement('canvas');
     canvas.width = viewport.width;

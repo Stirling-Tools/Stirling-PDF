@@ -164,7 +164,6 @@ export class ThumbnailGenerationService {
       for (const pageNumber of batch) {
         try {
           const page = await pdf.getPage(pageNumber);
-          // Render without rotation - rotation will be applied via CSS in PageEditor
           const viewport = page.getViewport({ scale, rotation: 0 });
 
           const canvas = document.createElement('canvas');
