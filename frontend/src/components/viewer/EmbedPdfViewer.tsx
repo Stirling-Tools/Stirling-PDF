@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import { Box, Center, Text, ActionIcon } from '@mantine/core';
 import { useMantineTheme, useMantineColorScheme } from '@mantine/core';
 import CloseIcon from '@mui/icons-material/Close';
