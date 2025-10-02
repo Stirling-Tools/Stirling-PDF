@@ -164,7 +164,7 @@ export class ThumbnailGenerationService {
       for (const pageNumber of batch) {
         try {
           const page = await pdf.getPage(pageNumber);
-          const viewport = page.getViewport({ scale });
+          const viewport = page.getViewport({ scale, rotation: 0 });
 
           const canvas = document.createElement('canvas');
           canvas.width = viewport.width;

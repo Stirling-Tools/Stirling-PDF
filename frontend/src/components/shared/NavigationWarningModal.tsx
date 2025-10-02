@@ -8,7 +8,7 @@ interface NavigationWarningModalProps {
 }
 
 const NavigationWarningModal = ({
-  onApplyAndContinue: _onApplyAndContinue,
+  onApplyAndContinue,
   onExportAndContinue
 }: NavigationWarningModalProps) => {
 
@@ -30,6 +30,13 @@ const NavigationWarningModal = ({
     confirmNavigation();
   };
 
+  const handleApplyAndContinue = async () => {
+    if (onApplyAndContinue) {
+      await onApplyAndContinue();
+    }
+    setHasUnsavedChanges(false);
+    confirmNavigation();
+  };
 
   const handleExportAndContinue = async () => {
     if (onExportAndContinue) {
@@ -49,26 +56,25 @@ const NavigationWarningModal = ({
       onClose={handleKeepWorking}
       title={t("unsavedChangesTitle", "Unsaved Changes")}
       centered
-      size="lg"
+      size="xl"
       closeOnClickOutside={false}
       closeOnEscape={false}
     >
-      <Stack gap="md">
-        <Text>
+      <Stack gap="xl">
+        <Text size="md">
           {t("unsavedChanges", "You have unsaved changes to your PDF. What would you like to do?")}
         </Text>
 
+        <Group justify="space-between" gap="xl" mt="xl">
+          <Group gap="xl">
+            <Button
+              variant="light"
+              color="red"
+              onClick={handleDiscardChanges}
+            >
+              {t("discardChanges", "Discard Changes")}
+            </Button>
 
-        <Group justify="space-between" gap="sm">
-          <Button
-            variant="light"
-            color="red"
-            onClick={handleDiscardChanges}
-          >
-            {t("discardChanges", "Discard Changes")}
-          </Button>
-
-          <Group gap="sm">
             <Button
               variant="light"
               color="var(--mantine-color-gray-8)"
@@ -76,23 +82,25 @@ const NavigationWarningModal = ({
             >
               {t("keepWorking", "Keep Working")}
             </Button>
+          </Group>
 
-            {/* TODO:: Add this back in when it works */}
-            {/* {_onApplyAndContinue && (
+          <Group gap="xl">
+            {onExportAndContinue && (
+              <Button
+                variant="light"
+                onClick={handleExportAndContinue}
+              >
+                {t("exportAndContinue", "Export & Continue")}
+              </Button>
+            )}
+
+            {onApplyAndContinue && (
               <Button
                 variant="light"
                 color="blue"
                 onClick={handleApplyAndContinue}
               >
                 {t("applyAndContinue", "Apply & Continue")}
-              </Button>
-            )} */}
-
-            {onExportAndContinue && (
-              <Button
-                onClick={handleExportAndContinue}
-              >
-                {t("exportAndContinue", "Export & Continue")}
               </Button>
             )}
           </Group>
