@@ -2,6 +2,7 @@ import React from 'react';
 import { Stack, Text, Divider, Card, Group, Anchor } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { useSuggestedTools } from '../../../hooks/useSuggestedTools';
+import { ToolIcon } from '../../shared/ToolIcon';
 
 export function SuggestedToolsSection(): React.ReactElement {
   const { t } = useTranslation();
@@ -31,7 +32,7 @@ export function SuggestedToolsSection(): React.ReactElement {
                 style={{ cursor: 'pointer' }}
               >
                 <Group gap="xs">
-                  <IconComponent fontSize="small" />
+                  <ToolIcon icon={<IconComponent />} />
                   <Text size="sm" fw={500}>
                     {tool.title}
                   </Text>
