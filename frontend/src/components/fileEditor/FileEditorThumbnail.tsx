@@ -324,7 +324,7 @@ const FileEditorThumbnail = ({
         marginTop: '0.5rem',
         marginBottom: '0.5rem',
       }}>
-        <Text size="lg" fw={700} className={styles.title} lineClamp={2}>
+        <Text  size="lg" fw={700} className={`${styles.title}  ph-no-capture `}  lineClamp={2}>
           {file.name}
         </Text>
         <Text
@@ -350,6 +350,7 @@ const FileEditorThumbnail = ({
         <div className={styles.previewPaper}>
           {file.thumbnailUrl && (
             <img
+              className="ph-no-capture"
               src={file.thumbnailUrl}
               alt={file.name}
               draggable={false}

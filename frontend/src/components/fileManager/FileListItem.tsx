@@ -93,7 +93,7 @@ const FileListItem: React.FC<FileListItemProps> = ({
 
           <Box style={{ flex: 1, minWidth: 0 }}>
             <Group gap="xs" align="center">
-              <Text size="sm" fw={500} truncate style={{ flex: 1 }}>{file.name}</Text>
+              <Text size="sm" fw={500} className='ph-no-capture' truncate style={{ flex: 1 }}>{file.name}</Text>
               <Badge size="xs" variant="light" color={"blue"}>
                 v{currentVersion}
               </Badge>

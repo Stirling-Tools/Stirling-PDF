@@ -371,6 +371,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
             </div>
           ) : thumbnailUrl ? (
             <img
+              className="ph-no-capture"
               src={thumbnailUrl}
               alt={`Page ${page.pageNumber}`}
               draggable={false}

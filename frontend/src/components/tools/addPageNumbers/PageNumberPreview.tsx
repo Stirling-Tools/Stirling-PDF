@@ -200,7 +200,7 @@ export default function PageNumberPreview({ parameters, onParameterChange, file,
           <img
             src={pageThumbnail}
             alt="page preview"
-            className={styles.pageThumbnail}
+            className={`${styles.pageThumbnail} ph-no-capture`}
             draggable={false}
           />
         )}
