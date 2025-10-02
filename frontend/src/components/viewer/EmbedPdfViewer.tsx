@@ -31,7 +31,6 @@ const EmbedPdfViewerContent = ({
   const { colorScheme: _colorScheme } = useMantineColorScheme();
   const viewerRef = React.useRef<HTMLDivElement>(null);
   const [isViewerHovered, setIsViewerHovered] = React.useState(false);
-  const [saveLoading, setSaveLoading] = useState(false);
 
   const { isThumbnailSidebarVisible, toggleThumbnailSidebar, zoomActions, spreadActions, panActions: _panActions, rotationActions: _rotationActions, getScrollState, getZoomState, getSpreadState, getRotationState, isAnnotationMode, isAnnotationsVisible, exportActions } = useViewer();
 
@@ -177,15 +176,14 @@ const EmbedPdfViewerContent = ({
     };
   }, [historyApiRef, previewFile, registerUnsavedChangesChecker, unregisterUnsavedChangesChecker]);
 
-  // Apply changes - save annotations/rotations to new file version
+  // Apply changes - save annotations to new file version
   const applyChanges = useCallback(async () => {
     if (!currentFile || activeFileIds.length === 0) return;
 
-    setSaveLoading(true);
     try {
-      console.log('[Viewer] Applying changes - exporting PDF with rotations:', rotationState.rotation);
+      console.log('[Viewer] Applying changes - exporting PDF with annotations');
 
-      // Step 1: Export PDF with annotations/rotations using EmbedPDF
+      // Step 1: Export PDF with annotations using EmbedPDF
       const arrayBuffer = await exportActions.saveAsCopy();
       if (!arrayBuffer) {
         throw new Error('Failed to export PDF');
@@ -207,16 +205,11 @@ const EmbedPdfViewerContent = ({
       // Step 4: Consume files (replace in context)
       await actions.consumeFiles(activeFileIds, stirlingFiles, stubs);
 
-      // Step 5: Reset initial rotation after successful save
-      initialRotationRef.current = rotationState.rotation;
-
       setHasUnsavedChanges(false);
-      setSaveLoading(false);
     } catch (error) {
       console.error('Apply changes failed:', error);
-      setSaveLoading(false);
     }
-  }, [currentFile, activeFileIds, rotationState.rotation, exportActions, actions, selectors, setHasUnsavedChanges]);
+  }, [currentFile, activeFileIds, exportActions, actions, selectors, setHasUnsavedChanges]);
 
   return (
     <Box
