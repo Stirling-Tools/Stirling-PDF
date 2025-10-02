@@ -309,6 +309,47 @@ const FileEditor = ({
     }
   }, [activeStirlingFileStubs, selectors, _setStatus]);
 
+  const handleUnzipFile = useCallback(async (fileId: FileId) => {
+    const record = activeStirlingFileStubs.find(r => r.id === fileId);
+    const file = record ? selectors.getFile(record.id) : null;
+    if (record && file) {
+      try {
+        // Extract files from the ZIP
+        const extractionResult = await zipFileService.extractPdfFiles(file);
+
+        if (extractionResult.success && extractionResult.extractedFiles.length > 0) {
+          // Add extracted files to FileContext
+          await addFiles(extractionResult.extractedFiles);
+
+          // Remove the original ZIP file
+          removeFiles([fileId], false);
+
+          alert({
+            alertType: 'success',
+            title: `Extracted ${extractionResult.extractedFiles.length} file(s) from ${file.name}`,
+            expandable: false,
+            durationMs: 3500
+          });
+        } else {
+          alert({
+            alertType: 'error',
+            title: `Failed to extract files from ${file.name}`,
+            expandable: false,
+            durationMs: 3500
+          });
+        }
+      } catch (error) {
+        console.error('Failed to unzip file:', error);
+        alert({
+          alertType: 'error',
+          title: `Error unzipping ${file.name}`,
+          expandable: false,
+          durationMs: 3500
+        });
+      }
+    }
+  }, [activeStirlingFileStubs, selectors, addFiles, removeFiles]);
+
   const handleViewFile = useCallback((fileId: FileId) => {
     const record = activeStirlingFileStubs.find(r => r.id === fileId);
     if (record) {
@@ -429,6 +470,7 @@ const FileEditor = ({
                   _onSetStatus={showStatus}
                   onReorderFiles={handleReorderFiles}
                   onDownloadFile={handleDownloadFile}
+                  onUnzipFile={handleUnzipFile}
                   toolMode={toolMode}
                   isSupported={isFileSupported(record.name)}
                 />

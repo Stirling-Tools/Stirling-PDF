@@ -1,9 +1,11 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { generateThumbnailForFile, generateThumbnailWithMetadata, ThumbnailWithMetadata } from '../../../utils/thumbnailUtils';
 import { zipFileService } from '../../../services/zipFileService';
+import { usePreferences } from '../../../contexts/PreferencesContext';
 
 
 export const useToolResources = () => {
+  const { preferences } = usePreferences();
   const [blobUrls, setBlobUrls] = useState<string[]>([]);
 
   const addBlobUrl = useCallback((url: string) => {
@@ -81,8 +83,13 @@ export const useToolResources = () => {
     return results;
   }, []);
 
-  const extractZipFiles = useCallback(async (zipBlob: Blob): Promise<File[]> => {
+  const extractZipFiles = useCallback(async (zipBlob: Blob, skipAutoUnzip = false): Promise<File[]> => {
     try {
+      // Check if auto-unzip is disabled (unless explicitly skipped like in automation)
+      if (!skipAutoUnzip && !preferences.autoUnzip) {
+        return [new File([zipBlob], 'result.zip', { type: 'application/zip' })];
+      }
+
       const zipFile = new File([zipBlob], 'temp.zip', { type: 'application/zip' });
       const extractionResult = await zipFileService.extractPdfFiles(zipFile);
       return extractionResult.success ? extractionResult.extractedFiles : [];
@@ -90,7 +97,7 @@ export const useToolResources = () => {
       console.error('useToolResources.extractZipFiles - Error:', error);
       return [];
     }
-  }, []);
+  }, [preferences.autoUnzip]);
 
   const extractAllZipFiles = useCallback(async (zipBlob: Blob): Promise<File[]> => {
     try {

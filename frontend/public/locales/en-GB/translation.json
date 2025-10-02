@@ -256,6 +256,13 @@
       "name": "Save form inputs",
       "help": "Enable to store previously used inputs for future runs"
     },
+    "general": {
+      "title": "General",
+      "description": "Configure general application preferences.",
+      "autoUnzip": "Auto-unzip API responses",
+      "autoUnzipDescription": "Automatically extract files from ZIP responses",
+      "autoUnzipTooltip": "Automatically extract ZIP files returned from API operations. Disable to keep ZIP files intact. This does not affect automation workflows."
+    },
     "hotkeys": {
       "title": "Keyboard Shortcuts",
       "description": "Hover a tool to see its shortcut or customise it below. Click \"Change shortcut\" and press a new key combination. Press Esc to cancel.",
@@ -3184,6 +3191,7 @@
     "lastModified": "Last Modified",
     "toolChain": "Tools Applied",
     "restore": "Restore",
+    "unzip": "Unzip",
     "searchFiles": "Search files...",
     "recent": "Recent",
     "localFiles": "Local Files",

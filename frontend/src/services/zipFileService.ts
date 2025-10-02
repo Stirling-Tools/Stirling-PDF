@@ -1,4 +1,5 @@
 import JSZip, { JSZipObject } from 'jszip';
+import { StirlingFileStub } from '../types/fileContext';
 
 // Undocumented interface in JSZip for JSZipObject._data
 interface CompressedObject {
@@ -40,6 +41,15 @@ export class ZipFileService {
   private readonly maxFileSize = 100 * 1024 * 1024; // 100MB per file
   private readonly maxTotalSize = 500 * 1024 * 1024; // 500MB total extraction limit
   private readonly supportedExtensions = ['.pdf'];
+
+  // ZIP file validation constants
+  private static readonly VALID_ZIP_TYPES = [
+    'application/zip',
+    'application/x-zip-compressed',
+    'application/x-zip',
+    'application/octet-stream' // Some browsers use this for ZIP files
+  ];
+  private static readonly VALID_ZIP_EXTENSIONS = ['.zip'];
 
   /**
    * Validate a ZIP file without extracting it
@@ -238,18 +248,22 @@ export class ZipFileService {
   /**
    * Check if a file is a ZIP file based on type and extension
    */
-  private isZipFile(file: File): boolean {
-    const validTypes = [
-      'application/zip',
-      'application/x-zip-compressed',
-      'application/x-zip',
-      'application/octet-stream' // Some browsers use this for ZIP files
-    ];
-
-    const validExtensions = ['.zip'];
-    const hasValidType = validTypes.includes(file.type);
-    const hasValidExtension = validExtensions.some(ext =>
+  public isZipFile(file: File): boolean {
+    const hasValidType = ZipFileService.VALID_ZIP_TYPES.includes(file.type);
+    const hasValidExtension = ZipFileService.VALID_ZIP_EXTENSIONS.some(ext =>
       file.name.toLowerCase().endsWith(ext)
+    );
+
+    return hasValidType || hasValidExtension;
+  }
+
+  /**
+   * Check if a StirlingFileStub represents a ZIP file (for UI checks without loading full file)
+   */
+  public isZipFileStub(stub: StirlingFileStub): boolean {
+    const hasValidType = stub.type && ZipFileService.VALID_ZIP_TYPES.includes(stub.type);
+    const hasValidExtension = ZipFileService.VALID_ZIP_EXTENSIONS.some(ext =>
+      stub.name.toLowerCase().endsWith(ext)
     );
 
     return hasValidType || hasValidExtension;
@@ -306,37 +320,6 @@ export class ZipFileService {
     const sizes = ['B', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  }
-
-  /**
-   * Get file extension from filename
-   */
-  private getFileExtension(filename: string): string {
-    return filename.substring(filename.lastIndexOf('.')).toLowerCase();
-  }
-
-  /**
-   * Check if ZIP file contains password protection
-   */
-  private async isPasswordProtected(file: File): Promise<boolean> {
-    try {
-      const zip = new JSZip();
-      await zip.loadAsync(file);
-
-      // Check if any files are encrypted
-      for (const [_filename, zipEntry] of Object.entries(zip.files)) {
-        if (zipEntry.options?.compression === 'STORE' && getData(zipEntry)?.compressedSize === 0) {
-          // This might indicate encryption, but JSZip doesn't provide direct encryption detection
-          // We'll handle this in the extraction phase
-        }
-      }
-
-      return false; // JSZip will throw an error if password is required
-    } catch (error) {
-      // If we can't load the ZIP, it might be password protected
-      const errorMessage = error instanceof Error ? error.message : '';
-      return errorMessage.includes('password') || errorMessage.includes('encrypted');
-    }
   }
 
   /**

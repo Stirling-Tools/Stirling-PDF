@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { fileStorage } from '../services/fileStorage';
+import { zipFileService } from '../services/zipFileService';
 import { StirlingFileStub } from '../types/fileContext';
 import { downloadFiles } from '../utils/downloadUtils';
 import { FileId } from '../types/file';
@@ -36,6 +37,7 @@ interface FileManagerContextValue {
   onDownloadSingle: (file: StirlingFileStub) => void;
   onToggleExpansion: (fileId: FileId) => void;
   onAddToRecents: (file: StirlingFileStub) => void;
+  onUnzipFile: (file: StirlingFileStub) => Promise<void>;
   onNewFilesSelect: (files: File[]) => void;
 
   // External props
@@ -544,6 +546,32 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     }
   }, [refreshRecentFiles]);
 
+  const handleUnzipFile = useCallback(async (file: StirlingFileStub) => {
+    try {
+      // Load the full file from storage
+      const stirlingFile = await fileStorage.getStirlingFile(file.id);
+      if (!stirlingFile) {
+        return;
+      }
+
+      // Extract files from the ZIP
+      const extractionResult = await zipFileService.extractPdfFiles(stirlingFile);
+
+      if (extractionResult.success && extractionResult.extractedFiles.length > 0) {
+        // Add extracted files to the file manager
+        onNewFilesSelect(extractionResult.extractedFiles);
+
+        // Optionally remove the original ZIP file
+        const fileIndex = filteredFiles.findIndex(f => f.id === file.id);
+        if (fileIndex !== -1) {
+          await handleFileRemove(fileIndex);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to unzip file:', error);
+    }
+  }, [onNewFilesSelect, filteredFiles, handleFileRemove]);
+
   // Cleanup blob URLs when component unmounts
   useEffect(() => {
     return () => {
@@ -595,6 +623,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     onDownloadSingle: handleDownloadSingle,
     onToggleExpansion: handleToggleExpansion,
     onAddToRecents: handleAddToRecents,
+    onUnzipFile: handleUnzipFile,
     onNewFilesSelect,
 
     // External props
@@ -627,6 +656,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     handleDownloadSelected,
     handleToggleExpansion,
     handleAddToRecents,
+    handleUnzipFile,
     onNewFilesSelect,
     recentFiles,
     isFileSupported,
