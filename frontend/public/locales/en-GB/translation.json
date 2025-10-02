@@ -3079,7 +3079,12 @@
     "panMode": "Pan Mode",
     "rotateLeft": "Rotate Left",
     "rotateRight": "Rotate Right",
-    "toggleSidebar": "Toggle Sidebar"
+    "toggleSidebar": "Toggle Sidebar",
+    "exportSelected": "Export Selected Pages",
+    "toggleAnnotations": "Toggle Annotations Visibility",
+    "annotationMode": "Toggle Annotation Mode",
+    "draw": "Draw",
+    "save": "Save"
   },
   "search": {
     "title": "Search PDF",

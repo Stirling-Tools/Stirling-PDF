@@ -192,6 +192,11 @@ return useToolOperation({
 - **Preview System**: Tool results can be previewed without polluting file context (Split tool example)
 - **Performance**: Web Worker thumbnails, IndexedDB persistence, background processing
 
+## Translation Rules
+
+- **CRITICAL**: Always update translations in `en-GB` only, never `en-US`
+- Translation files are located in `frontend/public/locales/`
+
 ## Important Notes
 
 - **Java Version**: Minimum JDK 17, supports and recommends JDK 21

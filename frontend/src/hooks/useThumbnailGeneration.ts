@@ -70,7 +70,6 @@ async function processRequestQueue() {
           const pageNumbers = requests.map(req => req.pageNumber);
           const arrayBuffer = await file.arrayBuffer();
 
-          console.log(`📸 Batch generating ${requests.length} thumbnails for pages: ${pageNumbers.slice(0, 5).join(', ')}${pageNumbers.length > 5 ? '...' : ''}`);
 
           // Use quickKey for PDF document caching (same metadata, consistent format)
           const fileId = createQuickKey(file) as FileId;
@@ -80,9 +79,8 @@ async function processRequestQueue() {
             arrayBuffer,
             pageNumbers,
             { scale: 1.0, quality: 0.8, batchSize: BATCH_SIZE },
-            (progress) => {
+            (_progress) => {
               // Optional: Could emit progress events here for UI feedback
-              console.log(`📸 Batch progress: ${progress.completed}/${progress.total} thumbnails generated`);
             }
           );
 

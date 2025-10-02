@@ -3,6 +3,7 @@ import { useAnnotationCapability } from '@embedpdf/plugin-annotation/react';
 import { PdfAnnotationSubtype, PdfStandardFont, PdfTextAlignment, PdfVerticalAlignment, uuidV4 } from '@embedpdf/models';
 import { SignParameters } from '../../hooks/tools/sign/useSignParameters';
 import { useSignature } from '../../contexts/SignatureContext';
+import { useViewer } from '../../contexts/ViewerContext';
 
 export interface SignatureAPI {
   addImageSignature: (signatureData: string, x: number, y: number, width: number, height: number, pageIndex: number) => void;
@@ -20,11 +21,12 @@ export interface SignatureAPI {
 export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPIBridge(_, ref) {
   const { provides: annotationApi } = useAnnotationCapability();
   const { signatureConfig, storeImageData, isPlacementMode } = useSignature();
+  const { isAnnotationMode } = useViewer();
 
 
-  // Enable keyboard deletion of selected annotations - only when in signature placement mode
+  // Enable keyboard deletion of selected annotations - when in signature placement mode or viewer annotation mode
   useEffect(() => {
-    if (!annotationApi || !isPlacementMode) return;
+    if (!annotationApi || (!isPlacementMode && !isAnnotationMode)) return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Delete' || event.key === 'Backspace') {
@@ -65,7 +67,7 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPI
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [annotationApi, storeImageData, isPlacementMode]);
+  }, [annotationApi, storeImageData, isPlacementMode, isAnnotationMode]);
 
   useImperativeHandle(ref, () => ({
     addImageSignature: (signatureData: string, x: number, y: number, width: number, height: number, pageIndex: number) => {
