@@ -65,8 +65,6 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
   // Create plugins configuration
   const plugins = useMemo(() => {
     if (!pdfSource) return [];
-    console.log('PDF Source:', pdfSource);
-    console.log('Annotations enabled:', enableAnnotations);
     const loaderConfig =
       pdfSource.type === 'url'
         ? {
