@@ -74,6 +74,8 @@ export interface NavigationContextActions {
   setSelectedTool: (toolId: ToolId | null) => void;
   setToolAndWorkbench: (toolId: ToolId | null, workbench: WorkbenchType) => void;
   setHasUnsavedChanges: (hasChanges: boolean) => void;
+  registerUnsavedChangesChecker: (checker: () => boolean) => void;
+  unregisterUnsavedChangesChecker: () => void;
   showNavigationWarning: (show: boolean) => void;
   requestNavigation: (navigationFn: () => void) => void;
   confirmNavigation: () => void;
@@ -106,11 +108,29 @@ export const NavigationProvider: React.FC<{
 }> = ({ children }) => {
   const [state, dispatch] = useReducer(navigationReducer, initialState);
   const toolRegistry = useFlatToolRegistry();
+  const unsavedChangesCheckerRef = React.useRef<(() => boolean) | null>(null);
 
   const actions: NavigationContextActions = {
     setWorkbench: useCallback((workbench: WorkbenchType) => {
-      // If we're leaving pageEditor workbench and have unsaved changes, request navigation
-      if (state.workbench === 'pageEditor' && workbench !== 'pageEditor' && state.hasUnsavedChanges) {
+      // Check for unsaved changes using registered checker or state
+      const hasUnsavedChanges = unsavedChangesCheckerRef.current?.() || state.hasUnsavedChanges;
+      console.log('[NavigationContext] setWorkbench:', {
+        from: state.workbench,
+        to: workbench,
+        hasChecker: !!unsavedChangesCheckerRef.current,
+        hasUnsavedChanges
+      });
+
+      // If we're leaving pageEditor or viewer workbench and have unsaved changes, request navigation
+      const leavingWorkbenchWithChanges =
+        (state.workbench === 'pageEditor' && workbench !== 'pageEditor' && hasUnsavedChanges) ||
+        (state.workbench === 'viewer' && workbench !== 'viewer' && hasUnsavedChanges);
+
+      if (leavingWorkbenchWithChanges) {
+        // Update state to reflect unsaved changes so modal knows
+        if (!state.hasUnsavedChanges) {
+          dispatch({ type: 'SET_UNSAVED_CHANGES', payload: { hasChanges: true } });
+        }
         const performWorkbenchChange = () => {
           dispatch({ type: 'SET_WORKBENCH', payload: { workbench } });
         };
@@ -126,8 +146,15 @@ export const NavigationProvider: React.FC<{
     }, []),
 
     setToolAndWorkbench: useCallback((toolId: ToolId | null, workbench: WorkbenchType) => {
-      // If we're leaving pageEditor workbench and have unsaved changes, request navigation
-      if (state.workbench === 'pageEditor' && workbench !== 'pageEditor' && state.hasUnsavedChanges) {
+      // Check for unsaved changes using registered checker or state
+      const hasUnsavedChanges = unsavedChangesCheckerRef.current?.() || state.hasUnsavedChanges;
+
+      // If we're leaving pageEditor or viewer workbench and have unsaved changes, request navigation
+      const leavingWorkbenchWithChanges =
+        (state.workbench === 'pageEditor' && workbench !== 'pageEditor' && hasUnsavedChanges) ||
+        (state.workbench === 'viewer' && workbench !== 'viewer' && hasUnsavedChanges);
+
+      if (leavingWorkbenchWithChanges) {
         const performWorkbenchChange = () => {
           dispatch({ type: 'SET_TOOL_AND_WORKBENCH', payload: { toolId, workbench } });
         };
@@ -140,6 +167,14 @@ export const NavigationProvider: React.FC<{
 
     setHasUnsavedChanges: useCallback((hasChanges: boolean) => {
       dispatch({ type: 'SET_UNSAVED_CHANGES', payload: { hasChanges } });
+    }, []),
+
+    registerUnsavedChangesChecker: useCallback((checker: () => boolean) => {
+      unsavedChangesCheckerRef.current = checker;
+    }, []),
+
+    unregisterUnsavedChangesChecker: useCallback(() => {
+      unsavedChangesCheckerRef.current = null;
     }, []),
 
     showNavigationWarning: useCallback((show: boolean) => {
@@ -254,6 +289,8 @@ export const useNavigationGuard = () => {
     confirmNavigation: actions.confirmNavigation,
     cancelNavigation: actions.cancelNavigation,
     setHasUnsavedChanges: actions.setHasUnsavedChanges,
-    setShowNavigationWarning: actions.showNavigationWarning
+    setShowNavigationWarning: actions.showNavigationWarning,
+    registerUnsavedChangesChecker: actions.registerUnsavedChangesChecker,
+    unregisterUnsavedChangesChecker: actions.unregisterUnsavedChangesChecker
   };
 };
