@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { createPluginRegistration } from '@embedpdf/core';
 import { EmbedPDF } from '@embedpdf/core/react';
 import { usePdfiumEngine } from '@embedpdf/engines/react';
@@ -38,6 +38,7 @@ import { RotateAPIBridge } from './RotateAPIBridge';
 import { SignatureAPIBridge, SignatureAPI } from './SignatureAPIBridge';
 import { HistoryAPIBridge, HistoryAPI } from './HistoryAPIBridge';
 import { ExportAPIBridge } from './ExportAPIBridge';
+import { usePdfLoaderSource } from '../../hooks/usePdfLoaderSource';
 
 interface LocalEmbedPDFProps {
   file?: File | Blob;
@@ -49,34 +50,48 @@ interface LocalEmbedPDFProps {
 }
 
 export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatureAdded, signatureApiRef, historyApiRef }: LocalEmbedPDFProps) {
-  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [, setAnnotations] = useState<Array<{id: string, pageIndex: number, rect: any}>>([]);
 
-  // Convert File to URL if needed
-  useEffect(() => {
-    if (file) {
-      const objectUrl = URL.createObjectURL(file);
-      setPdfUrl(objectUrl);
-      return () => URL.revokeObjectURL(objectUrl);
-    } else if (url) {
-      setPdfUrl(url);
-    }
-  }, [file, url]);
+  const {
+    source: pdfSource,
+    isLoading: isPdfSourceLoading,
+    error: pdfSourceError,
+  } = usePdfLoaderSource({
+    file,
+    url,
+    fallbackId: 'stirling-pdf-viewer',
+  });
 
   // Create plugins configuration
   const plugins = useMemo(() => {
-    if (!pdfUrl) return [];
+    if (!pdfSource) return [];
+    console.log('PDF Source:', pdfSource);
+    console.log('Annotations enabled:', enableAnnotations);
+    const loaderConfig =
+      pdfSource.type === 'url'
+        ? {
+            loadingOptions: {
+              type: 'url' as const,
+              pdfFile: {
+                id: pdfSource.id,
+                url: pdfSource.url,
+                ...(pdfSource.name ? { name: pdfSource.name } : {}),
+              },
+            },
+          }
+        : {
+            loadingOptions: {
+              type: 'buffer' as const,
+              pdfFile: {
+                id: pdfSource.id,
+                content: pdfSource.content,
+                ...(pdfSource.name ? { name: pdfSource.name } : {}),
+              },
+            },
+          };
 
     return [
-      createPluginRegistration(LoaderPluginPackage, {
-        loadingOptions: {
-          type: 'url',
-          pdfFile: {
-            id: 'stirling-pdf-viewer',
-            url: pdfUrl,
-          },
-        },
-      }),
+      createPluginRegistration(LoaderPluginPackage, loaderConfig),
       createPluginRegistration(ViewportPluginPackage, {
         viewportGap: 10,
       }),
@@ -140,10 +155,10 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
 
       // Register export plugin for downloading PDFs
       createPluginRegistration(ExportPluginPackage, {
-        defaultFileName: 'document.pdf',
+        defaultFileName: pdfSource.name ?? 'document.pdf',
       }),
     ];
-  }, [pdfUrl]);
+  }, [pdfSource, enableAnnotations]);
 
   // Initialize the engine with the React hook
   const { engine, isLoading, error } = usePdfiumEngine();
@@ -163,7 +178,20 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
     );
   }
 
-  if (isLoading || !engine || !pdfUrl) {
+  if (pdfSourceError) {
+    return (
+      <Center h="100%" w="100%">
+        <Stack align="center" gap="md">
+          <div style={{ fontSize: '24px' }}>❌</div>
+          <Text c="red" size="sm" style={{ textAlign: 'center' }}>
+            Error preparing PDF file: {pdfSourceError}
+          </Text>
+        </Stack>
+      </Center>
+    );
+  }
+
+  if (isLoading || !engine || !pdfSource || isPdfSourceLoading) {
     return <ToolLoadingFallback toolName="PDF Engine" />;
   }
 

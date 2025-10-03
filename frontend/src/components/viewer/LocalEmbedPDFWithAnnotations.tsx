@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { createPluginRegistration } from '@embedpdf/core';
 import { EmbedPDF } from '@embedpdf/core/react';
 import { usePdfiumEngine } from '@embedpdf/engines/react';
@@ -35,6 +35,7 @@ import { SpreadAPIBridge } from './SpreadAPIBridge';
 import { SearchAPIBridge } from './SearchAPIBridge';
 import { ThumbnailAPIBridge } from './ThumbnailAPIBridge';
 import { RotateAPIBridge } from './RotateAPIBridge';
+import { usePdfLoaderSource } from '../../hooks/usePdfLoaderSource';
 
 interface LocalEmbedPDFWithAnnotationsProps {
   file?: File | Blob;
@@ -47,33 +48,46 @@ export function LocalEmbedPDFWithAnnotations({
   url,
   onAnnotationChange
 }: LocalEmbedPDFWithAnnotationsProps) {
-  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const {
+    source: pdfSource,
+    isLoading: isPdfSourceLoading,
+    error: pdfSourceError,
+  } = usePdfLoaderSource({
+    file,
+    url,
+    fallbackId: 'stirling-pdf-signing-viewer',
+  });
 
-  // Convert File to URL if needed
-  useEffect(() => {
-    if (file) {
-      const objectUrl = URL.createObjectURL(file);
-      setPdfUrl(objectUrl);
-      return () => URL.revokeObjectURL(objectUrl);
-    } else if (url) {
-      setPdfUrl(url);
-    }
-  }, [file, url]);
 
   // Create plugins configuration with annotation support
   const plugins = useMemo(() => {
-    if (!pdfUrl) return [];
+    if (!pdfSource) return [];
+
+    const loaderConfig =
+      pdfSource.type === 'url'
+        ? {
+            loadingOptions: {
+              type: 'url' as const,
+              pdfFile: {
+                id: pdfSource.id,
+                url: pdfSource.url,
+                ...(pdfSource.name ? { name: pdfSource.name } : {}),
+              },
+            },
+          }
+        : {
+            loadingOptions: {
+              type: 'buffer' as const,
+              pdfFile: {
+                id: pdfSource.id,
+                content: pdfSource.content,
+                ...(pdfSource.name ? { name: pdfSource.name } : {}),
+              },
+            },
+          };
 
     return [
-      createPluginRegistration(LoaderPluginPackage, {
-        loadingOptions: {
-          type: 'url',
-          pdfFile: {
-            id: 'stirling-pdf-signing-viewer',
-            url: pdfUrl,
-          },
-        },
-      }),
+      createPluginRegistration(LoaderPluginPackage, loaderConfig),
       createPluginRegistration(ViewportPluginPackage, {
         viewportGap: 10,
       }),
@@ -135,7 +149,7 @@ export function LocalEmbedPDFWithAnnotations({
         defaultRotation: Rotation.Degree0,
       }),
     ];
-  }, [pdfUrl]);
+  }, [pdfSource]);
 
   // Initialize the engine
   const { engine, isLoading, error } = usePdfiumEngine();
@@ -154,7 +168,20 @@ export function LocalEmbedPDFWithAnnotations({
     );
   }
 
-  if (isLoading || !engine || !pdfUrl) {
+  if (pdfSourceError) {
+    return (
+      <Center h="100%" w="100%">
+        <Stack align="center" gap="md">
+          <div style={{ fontSize: '24px' }}>❌</div>
+          <Text c="red" size="sm" style={{ textAlign: 'center' }}>
+            Error preparing PDF file: {pdfSourceError}
+          </Text>
+        </Stack>
+      </Center>
+    );
+  }
+
+  if (isLoading || !engine || !pdfSource || isPdfSourceLoading) {
     return <ToolLoadingFallback toolName="PDF Engine" />;
   }
 
