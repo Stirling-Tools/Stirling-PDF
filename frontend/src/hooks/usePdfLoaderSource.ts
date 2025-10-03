@@ -25,7 +25,27 @@ function isPdfFile(file: File | Blob): boolean {
 }
 
 function isPdfUrl(url: string): boolean {
-  return url.toLowerCase().includes('.pdf');
+  const trimmed = url.trim();
+  if (!trimmed) {
+    return false;
+  }
+
+  const lowerCaseUrl = trimmed.toLowerCase();
+  if (lowerCaseUrl.startsWith('data:application/pdf')) {
+    return true;
+  }
+
+  try {
+    const parsed = new URL(trimmed);
+    return parsed.pathname.toLowerCase().endsWith('.pdf');
+  } catch {
+    try {
+      const parsed = new URL(trimmed, 'http://localhost');
+      return parsed.pathname.toLowerCase().endsWith('.pdf');
+    } catch {
+      return lowerCaseUrl.endsWith('.pdf');
+    }
+  }
 }
 
 export function usePdfLoaderSource({ file, url, fallbackId }: UsePdfLoaderSourceOptions) {
@@ -41,7 +61,13 @@ export function usePdfLoaderSource({ file, url, fallbackId }: UsePdfLoaderSource
 
       if (file) {
         if (!isPdfFile(file)) {
-          setError('Datei ist kein PDF.');
+            setError('File is not a PDF.');
+          setSource(null);
+          return;
+        }
+
+        if ('size' in file && file.size === 0) {
+            setError('PDF file is empty.');
           setSource(null);
           return;
         }
@@ -79,19 +105,26 @@ export function usePdfLoaderSource({ file, url, fallbackId }: UsePdfLoaderSource
       setIsLoading(false);
 
       if (typeof url === 'string' && url.length > 0) {
-        if (!isPdfUrl(url)) {
-          setError('URL zeigt nicht auf ein PDF.');
+        const normalizedUrl = url.trim();
+
+        if (normalizedUrl.length === 0) {
           setSource(null);
           return;
         }
 
-        const id = url || fallbackId;
+        if (!isPdfUrl(normalizedUrl)) {
+            setError('URL does not point to a PDF.');
+          setSource(null);
+          return;
+        }
+
+        const id = normalizedUrl || fallbackId;
 
         if (!cancelled) {
           setSource({
             type: 'url',
             id,
-            url,
+            url: normalizedUrl,
           });
         }
       } else {
