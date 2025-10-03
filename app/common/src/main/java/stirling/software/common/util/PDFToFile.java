@@ -25,14 +25,18 @@ import com.vladsch.flexmark.util.data.MutableDataSet;
 
 import io.github.pixee.security.Filenames;
 
-import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 
 @Slf4j
-@NoArgsConstructor
 public class PDFToFile {
+
+    private final TempFileManager tempFileManager;
+
+    public PDFToFile(TempFileManager tempFileManager) {
+        this.tempFileManager = tempFileManager;
+    }
 
     public ResponseEntity<byte[]> processPdfToMarkdown(MultipartFile inputFile)
             throws IOException, InterruptedException {
@@ -74,9 +78,9 @@ public class PDFToFile {
         byte[] fileBytes;
         String fileName;
 
-        try (TempFile tempInputFile = new TempFile(Files.createTempFile("input_", ".pdf"));
-                TempDir tempOutputDir = new TempDir(Files.createTempDirectory("output_"))) {
-            inputFile.transferTo(tempInputFile.path);
+        try (TempFile tempInputFile = new TempFile(tempFileManager, ".pdf");
+                TempDirectory tempOutputDir = new TempDirectory(tempFileManager)) {
+            inputFile.transferTo(tempInputFile.getFile());
 
             List<String> command =
                     new ArrayList<>(
@@ -85,14 +89,16 @@ public class PDFToFile {
                                     "-s",
                                     "-noframes",
                                     "-c",
-                                    tempInputFile.path.toString(),
+                                    tempInputFile.getAbsolutePath(),
                                     pdfBaseName));
 
             ProcessExecutorResult returnCode =
                     ProcessExecutor.getInstance(ProcessExecutor.Processes.PDFTOHTML)
-                            .runCommandWithOutputHandling(command, tempOutputDir.dir.toFile());
+                            .runCommandWithOutputHandling(
+                                    command, tempOutputDir.getPath().toFile());
             // Process HTML files to Markdown
-            File[] outputFiles = Objects.requireNonNull(tempOutputDir.dir.toFile().listFiles());
+            File[] outputFiles =
+                    Objects.requireNonNull(tempOutputDir.getPath().toFile().listFiles());
             List<File> markdownFiles = new ArrayList<>();
 
             // Convert HTML files to Markdown
@@ -102,7 +108,7 @@ public class PDFToFile {
                     String markdown = htmlToMarkdownConverter.convert(html);
 
                     String mdFileName = outputFile.getName().replace(".html", ".md");
-                    File mdFile = new File(tempOutputDir.dir.toFile(), mdFileName);
+                    File mdFile = new File(tempOutputDir.getPath().toFile(), mdFileName);
                     Files.writeString(mdFile.toPath(), markdown);
                     markdownFiles.add(mdFile);
                 }
@@ -162,10 +168,10 @@ public class PDFToFile {
         byte[] fileBytes;
         String fileName;
 
-        try (TempFile inputFileTemp = createTempFile("input_", ".pdf");
-                TempDir outputDirTemp = createTempDir("output_")) {
-            tempInputFile = inputFileTemp.path;
-            tempOutputDir = outputDirTemp.dir;
+        try (TempFile inputFileTemp = new TempFile(tempFileManager, ".pdf");
+                TempDirectory outputDirTemp = new TempDirectory(tempFileManager)) {
+            tempInputFile = inputFileTemp.getPath();
+            tempOutputDir = outputDirTemp.getPath();
 
             // Save the uploaded file to a temporary location
             inputFile.transferTo(tempInputFile);
@@ -201,11 +207,6 @@ public class PDFToFile {
                 log.error("Exception writing zip", e);
             }
             fileBytes = byteArrayOutputStream.toByteArray();
-
-        } finally {
-            // Clean up the temporary files
-            if (tempInputFile != null) Files.deleteIfExists(tempInputFile);
-            if (tempOutputDir != null) FileUtils.deleteDirectory(tempOutputDir.toFile());
         }
 
         return WebResponseUtils.bytesToWebResponse(
@@ -243,10 +244,10 @@ public class PDFToFile {
         byte[] fileBytes;
         String fileName;
 
-        try (TempFile inputFileTemp = createTempFile("input_", ".pdf");
-                TempDir outputDirTemp = createTempDir("output_")) {
-            tempInputFile = inputFileTemp.path;
-            tempOutputDir = outputDirTemp.dir;
+        try (TempFile inputFileTemp = new TempFile(tempFileManager, ".pdf");
+                TempDirectory outputDirTemp = new TempDirectory(tempFileManager)) {
+            tempInputFile = inputFileTemp.getPath();
+            tempOutputDir = outputDirTemp.getPath();
 
             // Save the uploaded file to a temporary location
             inputFile.transferTo(tempInputFile);
@@ -301,47 +302,8 @@ public class PDFToFile {
 
                 fileBytes = byteArrayOutputStream.toByteArray();
             }
-
-        } finally {
-            // Clean up the temporary files
-            Files.deleteIfExists(tempInputFile);
-            if (tempOutputDir != null) FileUtils.deleteDirectory(tempOutputDir.toFile());
         }
         return WebResponseUtils.bytesToWebResponse(
                 fileBytes, fileName, MediaType.APPLICATION_OCTET_STREAM);
-    }
-
-    private TempFile createTempFile(String prefix, String suffix) throws IOException {
-        return new TempFile(Files.createTempFile(prefix, suffix));
-    }
-
-    private TempDir createTempDir(String prefix) throws IOException {
-        return new TempDir(Files.createTempDirectory(prefix));
-    }
-
-    private static class TempFile implements AutoCloseable {
-        private final Path path;
-
-        public TempFile(Path path) {
-            this.path = path;
-        }
-
-        @Override
-        public void close() throws IOException {
-            Files.deleteIfExists(path);
-        }
-    }
-
-    private static class TempDir implements AutoCloseable {
-        private final Path dir;
-
-        public TempDir(Path dir) {
-            this.dir = dir;
-        }
-
-        @Override
-        public void close() throws IOException {
-            FileUtils.deleteDirectory(dir.toFile());
-        }
     }
 }
