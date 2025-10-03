@@ -662,7 +662,7 @@ const PageEditor = ({
   const displayedPages = displayDocument?.pages || [];
 
   return (
-    <Box pos="relative" h='100%' pt={40} style={{ overflow: 'auto' }} data-scrolling-container="true">
+    <Box pos="relative" h='100%' style={{ overflow: 'auto' }} data-scrolling-container="true">
       <LoadingOverlay visible={globalProcessing && !mergedPdfDocument} />
 
       {!mergedPdfDocument && !globalProcessing && activeFileIds.length === 0 && (
