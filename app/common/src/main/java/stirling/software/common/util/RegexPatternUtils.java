@@ -457,7 +457,10 @@ public final class RegexPatternUtils {
         return getPattern("pdfaid:conformance[\"\\s]*=[\"\\s]*([A-Za-z]+)");
     }
 
-    // API doc parsing patterns
+    /** Pattern for matching slash in page mode description */
+    public Pattern getPageModePattern() {
+        return getPattern("/");
+    }
 
     /**
      * Pre-compile commonly used patterns for immediate availability. This eliminates first-call

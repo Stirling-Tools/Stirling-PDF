@@ -200,42 +200,39 @@ public class GetInfoOnPDF {
             try (RandomAccessReadBuffer source = new RandomAccessReadBuffer(baos.toByteArray())) {
                 PreflightParser parser = new PreflightParser(source);
 
-                final PDDocument parsedDocument;
-                try {
-                    parsedDocument = parser.parse();
+                try (PDDocument parsedDocument = parser.parse()) {
+                    if (!(parsedDocument instanceof PreflightDocument preflightDocument)) {
+                        log.debug(
+                                "Parsed document is not a PreflightDocument; unable to validate claimed PDF/A {}",
+                                version);
+                        return false;
+                    }
+
+                    try {
+                        ValidationResult result = preflightDocument.validate();
+                        if (!result.isValid() && log.isDebugEnabled()) {
+                            log.debug(
+                                    "PDF/A validation found {} errors for claimed version {}",
+                                    result.getErrorsList().size(),
+                                    version);
+                            int logged = 0;
+                            for (ValidationResult.ValidationError error : result.getErrorsList()) {
+                                log.debug(
+                                        "  Error {}: {}", error.getErrorCode(), error.getDetails());
+                                if (++logged >= 5) {
+                                    break;
+                                }
+                            }
+                        }
+                        return result.isValid();
+                    } catch (ValidationException e) {
+                        log.debug(
+                                "Validation exception during PDF/A validation: {}", e.getMessage());
+                    }
                 } catch (SyntaxValidationException e) {
                     log.debug(
                             "Syntax validation failed during PDF/A validation: {}", e.getMessage());
                     return false;
-                }
-
-                if (!(parsedDocument instanceof PreflightDocument preflightDocument)) {
-                    try (parsedDocument) {
-                        log.debug(
-                                "Parsed document is not a PreflightDocument; unable to validate claimed PDF/A {}",
-                                version);
-                    }
-                    return false;
-                }
-
-                try (preflightDocument) {
-                    ValidationResult result = preflightDocument.validate();
-                    if (!result.isValid() && log.isDebugEnabled()) {
-                        log.debug(
-                                "PDF/A validation found {} errors for claimed version {}",
-                                result.getErrorsList().size(),
-                                version);
-                        int logged = 0;
-                        for (ValidationResult.ValidationError error : result.getErrorsList()) {
-                            log.debug("  Error {}: {}", error.getErrorCode(), error.getDetails());
-                            if (++logged >= 5) {
-                                break;
-                            }
-                        }
-                    }
-                    return result.isValid();
-                } catch (ValidationException e) {
-                    log.debug("Validation exception during PDF/A validation: {}", e.getMessage());
                 }
             }
         } catch (IOException e) {
@@ -345,6 +342,132 @@ public class GetInfoOnPDF {
         }
 
         return summaryData;
+    }
+
+    private static void setNodePermissions(PDDocument pdfBoxDoc, ObjectNode permissionsNode) {
+        AccessPermission ap = pdfBoxDoc.getCurrentAccessPermission();
+
+        permissionsNode.put("Document Assembly", getPermissionState(ap.canAssembleDocument()));
+        permissionsNode.put("Extracting Content", getPermissionState(ap.canExtractContent()));
+        permissionsNode.put(
+                "Extracting for accessibility",
+                getPermissionState(ap.canExtractForAccessibility()));
+        permissionsNode.put("Form Filling", getPermissionState(ap.canFillInForm()));
+        permissionsNode.put("Modifying", getPermissionState(ap.canModify()));
+        permissionsNode.put("Modifying annotations", getPermissionState(ap.canModifyAnnotations()));
+        permissionsNode.put("Printing", getPermissionState(ap.canPrint()));
+    }
+
+    private static String getPermissionState(boolean state) {
+        return state ? "Allowed" : "Not Allowed";
+    }
+
+    public static String getPageOrientation(double width, double height) {
+        if (width > height) {
+            return "Landscape";
+        } else if (height > width) {
+            return "Portrait";
+        } else {
+            return "Square";
+        }
+    }
+
+    public static String getPageSize(float width, float height) {
+        // Define standard page sizes
+        Map<String, PDRectangle> standardSizes = new HashMap<>();
+        standardSizes.put("Letter", PDRectangle.LETTER);
+        standardSizes.put("LEGAL", PDRectangle.LEGAL);
+        standardSizes.put("A0", PDRectangle.A0);
+        standardSizes.put("A1", PDRectangle.A1);
+        standardSizes.put("A2", PDRectangle.A2);
+        standardSizes.put("A3", PDRectangle.A3);
+        standardSizes.put("A4", PDRectangle.A4);
+        standardSizes.put("A5", PDRectangle.A5);
+        standardSizes.put("A6", PDRectangle.A6);
+
+        for (Map.Entry<String, PDRectangle> entry : standardSizes.entrySet()) {
+            PDRectangle size = entry.getValue();
+            if (isCloseToSize(width, height, size.getWidth(), size.getHeight())) {
+                return entry.getKey();
+            }
+        }
+        return "Custom";
+    }
+
+    private static boolean isCloseToSize(
+            float width, float height, float standardWidth, float standardHeight) {
+        float tolerance = 1.0f; // You can adjust the tolerance as needed
+        return Math.abs(width - standardWidth) <= tolerance
+                && Math.abs(height - standardHeight) <= tolerance;
+    }
+
+    public static ObjectNode getDimensionInfo(ObjectNode dimensionInfo, float width, float height) {
+        float ppi = 72; // Points Per Inch
+
+        float widthInInches = width / ppi;
+        float heightInInches = height / ppi;
+
+        float widthInCm = widthInInches * 2.54f;
+        float heightInCm = heightInInches * 2.54f;
+
+        dimensionInfo.put("Width (px)", String.format("%.2f", width));
+        dimensionInfo.put("Height (px)", String.format("%.2f", height));
+        dimensionInfo.put("Width (in)", String.format("%.2f", widthInInches));
+        dimensionInfo.put("Height (in)", String.format("%.2f", heightInInches));
+        dimensionInfo.put("Width (cm)", String.format("%.2f", widthInCm));
+        dimensionInfo.put("Height (cm)", String.format("%.2f", heightInCm));
+        return dimensionInfo;
+    }
+
+    public static ArrayNode exploreStructureTree(List<Object> nodes) {
+        ArrayNode elementsArray = objectMapper.createArrayNode();
+        if (nodes != null) {
+            for (Object obj : nodes) {
+                if (obj instanceof PDStructureNode node) {
+                    ObjectNode elementNode = objectMapper.createObjectNode();
+
+                    if (node instanceof PDStructureElement structureElement) {
+                        elementNode.put("Type", structureElement.getStructureType());
+                        elementNode.put("Content", getContent(structureElement));
+
+                        // Recursively explore child elements
+                        ArrayNode childElements = exploreStructureTree(structureElement.getKids());
+                        if (!childElements.isEmpty()) {
+                            elementNode.set("Children", childElements);
+                        }
+                    }
+                    elementsArray.add(elementNode);
+                }
+            }
+        }
+        return elementsArray;
+    }
+
+    public static String getContent(PDStructureElement structureElement) {
+        StringBuilder contentBuilder = new StringBuilder();
+
+        for (Object item : structureElement.getKids()) {
+            if (item instanceof COSString cosString) {
+                contentBuilder.append(cosString.getString());
+            } else if (item instanceof PDStructureElement) {
+                // For simplicity, we're handling only COSString and PDStructureElement here
+                // but a more comprehensive method would handle other types too
+                contentBuilder.append(getContent((PDStructureElement) item));
+            }
+        }
+
+        return contentBuilder.toString();
+    }
+
+    private static String formatDate(Calendar calendar) {
+        if (calendar != null) {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            ZonedDateTime zonedDateTime =
+                    ZonedDateTime.ofInstant(calendar.toInstant(), ZoneId.systemDefault());
+            return zonedDateTime.format(formatter);
+        } else {
+            return null;
+        }
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/get-info-on-pdf")
@@ -721,11 +844,10 @@ public class GetInfoOnPDF {
                 Set<String> uniqueURIs = new HashSet<>(); // To store unique URIs
 
                 for (PDAnnotation annotation : annotations) {
-                    if (annotation instanceof PDAnnotationLink linkAnnotation) {
-                        if (linkAnnotation.getAction() instanceof PDActionURI uriAction) {
-                            String uri = uriAction.getURI();
-                            uniqueURIs.add(uri); // Add to set to ensure uniqueness
-                        }
+                    if (annotation instanceof PDAnnotationLink linkAnnotation
+                            && linkAnnotation.getAction() instanceof PDActionURI uriAction) {
+                        String uri = uriAction.getURI();
+                        uniqueURIs.add(uri); // Add to set to ensure uniqueness
                     }
                 }
 
@@ -875,133 +997,11 @@ public class GetInfoOnPDF {
         return null;
     }
 
-    private void setNodePermissions(PDDocument pdfBoxDoc, ObjectNode permissionsNode) {
-        AccessPermission ap = pdfBoxDoc.getCurrentAccessPermission();
-
-        permissionsNode.put("Document Assembly", getPermissionState(ap.canAssembleDocument()));
-        permissionsNode.put("Extracting Content", getPermissionState(ap.canExtractContent()));
-        permissionsNode.put(
-                "Extracting for accessibility",
-                getPermissionState(ap.canExtractForAccessibility()));
-        permissionsNode.put("Form Filling", getPermissionState(ap.canFillInForm()));
-        permissionsNode.put("Modifying", getPermissionState(ap.canModify()));
-        permissionsNode.put("Modifying annotations", getPermissionState(ap.canModifyAnnotations()));
-        permissionsNode.put("Printing", getPermissionState(ap.canPrint()));
-    }
-
-    private String getPermissionState(boolean state) {
-        return state ? "Allowed" : "Not Allowed";
-    }
-
-    public String getPageOrientation(double width, double height) {
-        if (width > height) {
-            return "Landscape";
-        } else if (height > width) {
-            return "Portrait";
-        } else {
-            return "Square";
-        }
-    }
-
-    public String getPageSize(float width, float height) {
-        // Define standard page sizes
-        Map<String, PDRectangle> standardSizes = new HashMap<>();
-        standardSizes.put("Letter", PDRectangle.LETTER);
-        standardSizes.put("LEGAL", PDRectangle.LEGAL);
-        standardSizes.put("A0", PDRectangle.A0);
-        standardSizes.put("A1", PDRectangle.A1);
-        standardSizes.put("A2", PDRectangle.A2);
-        standardSizes.put("A3", PDRectangle.A3);
-        standardSizes.put("A4", PDRectangle.A4);
-        standardSizes.put("A5", PDRectangle.A5);
-        standardSizes.put("A6", PDRectangle.A6);
-
-        for (Map.Entry<String, PDRectangle> entry : standardSizes.entrySet()) {
-            PDRectangle size = entry.getValue();
-            if (isCloseToSize(width, height, size.getWidth(), size.getHeight())) {
-                return entry.getKey();
-            }
-        }
-        return "Custom";
-    }
-
-    private boolean isCloseToSize(
-            float width, float height, float standardWidth, float standardHeight) {
-        float tolerance = 1.0f; // You can adjust the tolerance as needed
-        return Math.abs(width - standardWidth) <= tolerance
-                && Math.abs(height - standardHeight) <= tolerance;
-    }
-
-    public ObjectNode getDimensionInfo(ObjectNode dimensionInfo, float width, float height) {
-        float ppi = 72; // Points Per Inch
-
-        float widthInInches = width / ppi;
-        float heightInInches = height / ppi;
-
-        float widthInCm = widthInInches * 2.54f;
-        float heightInCm = heightInInches * 2.54f;
-
-        dimensionInfo.put("Width (px)", String.format("%.2f", width));
-        dimensionInfo.put("Height (px)", String.format("%.2f", height));
-        dimensionInfo.put("Width (in)", String.format("%.2f", widthInInches));
-        dimensionInfo.put("Height (in)", String.format("%.2f", heightInInches));
-        dimensionInfo.put("Width (cm)", String.format("%.2f", widthInCm));
-        dimensionInfo.put("Height (cm)", String.format("%.2f", heightInCm));
-        return dimensionInfo;
-    }
-
-    public ArrayNode exploreStructureTree(List<Object> nodes) {
-        ArrayNode elementsArray = objectMapper.createArrayNode();
-        if (nodes != null) {
-            for (Object obj : nodes) {
-                if (obj instanceof PDStructureNode node) {
-                    ObjectNode elementNode = objectMapper.createObjectNode();
-
-                    if (node instanceof PDStructureElement structureElement) {
-                        elementNode.put("Type", structureElement.getStructureType());
-                        elementNode.put("Content", getContent(structureElement));
-
-                        // Recursively explore child elements
-                        ArrayNode childElements = exploreStructureTree(structureElement.getKids());
-                        if (!childElements.isEmpty()) {
-                            elementNode.set("Children", childElements);
-                        }
-                    }
-                    elementsArray.add(elementNode);
-                }
-            }
-        }
-        return elementsArray;
-    }
-
-    public String getContent(PDStructureElement structureElement) {
-        StringBuilder contentBuilder = new StringBuilder();
-
-        for (Object item : structureElement.getKids()) {
-            if (item instanceof COSString cosString) {
-                contentBuilder.append(cosString.getString());
-            } else if (item instanceof PDStructureElement) {
-                // For simplicity, we're handling only COSString and PDStructureElement here
-                // but a more comprehensive method would handle other types too
-                contentBuilder.append(getContent((PDStructureElement) item));
-            }
-        }
-
-        return contentBuilder.toString();
-    }
-
-    private String formatDate(Calendar calendar) {
-        if (calendar != null) {
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-            ZonedDateTime zonedDateTime =
-                    ZonedDateTime.ofInstant(calendar.toInstant(), ZoneId.systemDefault());
-            return zonedDateTime.format(formatter);
-        } else {
-            return null;
-        }
-    }
-
     private String getPageModeDescription(String pageMode) {
-        return pageMode != null ? pageMode.toString().replaceFirst("/", "") : "Unknown";
+        if (pageMode == null) return "Unknown";
+        return RegexPatternUtils.getInstance()
+                .getPageModePattern()
+                .matcher(pageMode)
+                .replaceFirst("");
     }
 }
