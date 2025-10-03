@@ -47,9 +47,7 @@ export function ZoomAPIBridge() {
   useEffect(() => {
     if (zoom && zoomState) {
       // Update local state
-      const currentZoomLevel =
-        zoomState.currentZoomLevel ??
-        1.4;
+      const currentZoomLevel = zoomState.currentZoomLevel ?? 1.4;
       const newState = {
         currentZoom: currentZoomLevel,
         zoomPercent: Math.round(currentZoomLevel * 100),
