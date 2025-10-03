@@ -50,7 +50,7 @@ interface LocalEmbedPDFProps {
 }
 
 export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatureAdded, signatureApiRef, historyApiRef }: LocalEmbedPDFProps) {
-  const [, setAnnotations] = useState<Array<{id: string, pageIndex: number, rect: any}>>([]);
+  const [, setAnnotations] = useState<Array<{ id: string, pageIndex: number, rect: any }>>([]);
 
   const {
     source: pdfSource,
@@ -68,25 +68,25 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
     const loaderConfig =
       pdfSource.type === 'url'
         ? {
-            loadingOptions: {
-              type: 'url' as const,
-              pdfFile: {
-                id: pdfSource.id,
-                url: pdfSource.url,
-                ...(pdfSource.name ? { name: pdfSource.name } : {}),
-              },
+          loadingOptions: {
+            type: 'url' as const,
+            pdfFile: {
+              id: pdfSource.id,
+              url: pdfSource.url,
+              ...(pdfSource.name ? { name: pdfSource.name } : {}),
             },
-          }
+          },
+        }
         : {
-            loadingOptions: {
-              type: 'buffer' as const,
-              pdfFile: {
-                id: pdfSource.id,
-                content: pdfSource.content,
-                ...(pdfSource.name ? { name: pdfSource.name } : {}),
-              },
+          loadingOptions: {
+            type: 'buffer' as const,
+            pdfFile: {
+              id: pdfSource.id,
+              content: pdfSource.content,
+              ...(pdfSource.name ? { name: pdfSource.name } : {}),
             },
-          };
+          },
+        };
 
     return [
       createPluginRegistration(LoaderPluginPackage, loaderConfig),
@@ -219,7 +219,7 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
         flex: 1,
         minHeight: 0,
         minWidth: 0,
-    }}>
+      }}>
       <EmbedPDF
         engine={engine}
         plugins={plugins}
@@ -313,50 +313,50 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
               contain: 'strict',
             }}
           >
-          <Scroller
-            renderPage={({ width, height, pageIndex, scale, rotation }: { width: number; height: number; pageIndex: number; scale: number; rotation?: number }) => (
-              <Rotate pageSize={{ width, height }}>
-                <PagePointerProvider {...{ pageWidth: width, pageHeight: height, pageIndex, scale, rotation: rotation || 0 }}>
-                  <div
-                    style={{
-                      width,
-                      height,
-                      position: 'relative',
-                      userSelect: 'none',
-                      WebkitUserSelect: 'none',
-                      MozUserSelect: 'none',
-                      msUserSelect: 'none',
-                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)'
-                    }}
-                    draggable={false}
-                    onDragStart={(e) => e.preventDefault()}
-                    onDrop={(e) => e.preventDefault()}
-                    onDragOver={(e) => e.preventDefault()}
-                  >
-                    {/* High-resolution tile layer */}
-                    <TilingLayer pageIndex={pageIndex} scale={scale} />
+            <Scroller
+              renderPage={({ width, height, pageIndex, scale, rotation }: { width: number; height: number; pageIndex: number; scale: number; rotation?: number }) => (
+                <Rotate pageSize={{ width, height }}>
+                  <PagePointerProvider {...{ pageWidth: width, pageHeight: height, pageIndex, scale, rotation: rotation || 0 }}>
+                    <div
+                      style={{
+                        width,
+                        height,
+                        position: 'relative',
+                        userSelect: 'none',
+                        WebkitUserSelect: 'none',
+                        MozUserSelect: 'none',
+                        msUserSelect: 'none',
+                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)'
+                      }}
+                      draggable={false}
+                      onDragStart={(e) => e.preventDefault()}
+                      onDrop={(e) => e.preventDefault()}
+                      onDragOver={(e) => e.preventDefault()}
+                    >
+                      {/* High-resolution tile layer */}
+                      <TilingLayer pageIndex={pageIndex} scale={scale} />
 
-                    {/* Search highlight layer */}
-                    <CustomSearchLayer pageIndex={pageIndex} scale={scale} />
+                      {/* Search highlight layer */}
+                      <CustomSearchLayer pageIndex={pageIndex} scale={scale} />
 
-                    {/* Selection layer for text interaction */}
-                    <SelectionLayer  pageIndex={pageIndex} scale={scale} />
-                    {/* Annotation layer for signatures (only when enabled) */}
-                    {enableAnnotations && (
-                      <AnnotationLayer
-                        pageIndex={pageIndex}
-                        scale={scale}
-                        pageWidth={width}
-                        pageHeight={height}
-                        rotation={rotation || 0}
-                        selectionOutlineColor="#007ACC"
-                      />
-                    )}
-                  </div>
-                </PagePointerProvider>
-              </Rotate>
-            )}
-          />
+                      {/* Selection layer for text interaction */}
+                      <SelectionLayer pageIndex={pageIndex} scale={scale} />
+                      {/* Annotation layer for signatures (only when enabled) */}
+                      {enableAnnotations && (
+                        <AnnotationLayer
+                          pageIndex={pageIndex}
+                          scale={scale}
+                          pageWidth={width}
+                          pageHeight={height}
+                          rotation={rotation || 0}
+                          selectionOutlineColor="#007ACC"
+                        />
+                      )}
+                    </div>
+                  </PagePointerProvider>
+                </Rotate>
+              )}
+            />
           </Viewport>
         </GlobalPointerProvider>
       </EmbedPDF>
