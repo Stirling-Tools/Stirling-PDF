@@ -57,8 +57,6 @@ export function LocalEmbedPDFWithAnnotations({
     url,
     fallbackId: 'stirling-pdf-signing-viewer',
   });
-
-
   // Create plugins configuration with annotation support
   const plugins = useMemo(() => {
     if (!pdfSource) return [];
