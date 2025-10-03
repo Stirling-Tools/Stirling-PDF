@@ -19,18 +19,13 @@ import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 @Slf4j
 public class ColorSpaceConversionStrategy extends ReplaceAndInvertColorStrategy {
 
-    public ColorSpaceConversionStrategy(MultipartFile file, ReplaceAndInvert replaceAndInvert) {
-        super(file, replaceAndInvert);
-    }
-
     @Override
     public InputStreamResource replace() throws IOException {
-        Path tempInputFile = null;
-        Path tempOutputFile = null;
+        try (TempPath tempInput = new TempPath("colorspace_input_", ".pdf");
+                TempPath tempOutput = new TempPath("colorspace_output_", ".pdf")) {
 
-        try {
-            tempInputFile = Files.createTempFile("colorspace_input_", ".pdf");
-            tempOutputFile = Files.createTempFile("colorspace_output_", ".pdf");
+            Path tempInputFile = tempInput.getPath();
+            Path tempOutputFile = tempOutput.getPath();
 
             Files.write(tempInputFile, getFileInput().getBytes());
 
@@ -74,20 +69,30 @@ public class ColorSpaceConversionStrategy extends ReplaceAndInvertColorStrategy 
             log.warn("CMYK color space conversion failed", e);
             throw new IOException(
                     "Failed to convert PDF to CMYK color space: " + e.getMessage(), e);
-        } finally {
-            if (tempInputFile != null) {
-                try {
-                    Files.deleteIfExists(tempInputFile);
-                } catch (IOException e) {
-                    log.warn("Failed to delete temporary input file: {}", tempInputFile, e);
-                }
-            }
-            if (tempOutputFile != null) {
-                try {
-                    Files.deleteIfExists(tempOutputFile);
-                } catch (IOException e) {
-                    log.warn("Failed to delete temporary output file: {}", tempOutputFile, e);
-                }
+        }
+    }
+
+    public ColorSpaceConversionStrategy(MultipartFile file, ReplaceAndInvert replaceAndInvert) {
+        super(file, replaceAndInvert);
+    }
+
+    private static class TempPath implements AutoCloseable {
+        private final Path path;
+
+        public TempPath(String prefix, String suffix) throws IOException {
+            this.path = Files.createTempFile(prefix, suffix);
+        }
+
+        public Path getPath() {
+            return path;
+        }
+
+        @Override
+        public void close() {
+            try {
+                Files.deleteIfExists(path);
+            } catch (IOException e) {
+                log.warn("Failed to delete temporary file: {}", path, e);
             }
         }
     }

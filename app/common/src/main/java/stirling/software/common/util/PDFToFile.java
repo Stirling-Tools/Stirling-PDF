@@ -71,15 +71,12 @@ public class PDFToFile {
             pdfBaseName = originalPdfFileName.substring(0, originalPdfFileName.lastIndexOf('.'));
         }
 
-        Path tempInputFile = null;
-        Path tempOutputDir = null;
         byte[] fileBytes;
         String fileName;
 
-        try {
-            tempInputFile = Files.createTempFile("input_", ".pdf");
-            inputFile.transferTo(tempInputFile);
-            tempOutputDir = Files.createTempDirectory("output_");
+        try (TempFile tempInputFile = new TempFile(Files.createTempFile("input_", ".pdf"));
+                TempDir tempOutputDir = new TempDir(Files.createTempDirectory("output_"))) {
+            inputFile.transferTo(tempInputFile.path);
 
             List<String> command =
                     new ArrayList<>(
@@ -88,14 +85,14 @@ public class PDFToFile {
                                     "-s",
                                     "-noframes",
                                     "-c",
-                                    tempInputFile.toString(),
+                                    tempInputFile.path.toString(),
                                     pdfBaseName));
 
             ProcessExecutorResult returnCode =
                     ProcessExecutor.getInstance(ProcessExecutor.Processes.PDFTOHTML)
-                            .runCommandWithOutputHandling(command, tempOutputDir.toFile());
+                            .runCommandWithOutputHandling(command, tempOutputDir.dir.toFile());
             // Process HTML files to Markdown
-            File[] outputFiles = Objects.requireNonNull(tempOutputDir.toFile().listFiles());
+            File[] outputFiles = Objects.requireNonNull(tempOutputDir.dir.toFile().listFiles());
             List<File> markdownFiles = new ArrayList<>();
 
             // Convert HTML files to Markdown
@@ -105,7 +102,7 @@ public class PDFToFile {
                     String markdown = htmlToMarkdownConverter.convert(html);
 
                     String mdFileName = outputFile.getName().replace(".html", ".md");
-                    File mdFile = new File(tempOutputDir.toFile(), mdFileName);
+                    File mdFile = new File(tempOutputDir.dir.toFile(), mdFileName);
                     Files.writeString(mdFile.toPath(), markdown);
                     markdownFiles.add(mdFile);
                 }
@@ -142,10 +139,6 @@ public class PDFToFile {
 
                 fileBytes = byteArrayOutputStream.toByteArray();
             }
-
-        } finally {
-            if (tempInputFile != null) Files.deleteIfExists(tempInputFile);
-            if (tempOutputDir != null) FileUtils.deleteDirectory(tempOutputDir.toFile());
         }
         return WebResponseUtils.bytesToWebResponse(
                 fileBytes, fileName, MediaType.APPLICATION_OCTET_STREAM);
@@ -169,13 +162,13 @@ public class PDFToFile {
         byte[] fileBytes;
         String fileName;
 
-        try {
-            // Save the uploaded file to a temporary location
-            tempInputFile = Files.createTempFile("input_", ".pdf");
-            inputFile.transferTo(tempInputFile);
+        try (TempFile inputFileTemp = createTempFile("input_", ".pdf");
+                TempDir outputDirTemp = createTempDir("output_")) {
+            tempInputFile = inputFileTemp.path;
+            tempOutputDir = outputDirTemp.dir;
 
-            // Prepare the output directory
-            tempOutputDir = Files.createTempDirectory("output_");
+            // Save the uploaded file to a temporary location
+            inputFile.transferTo(tempInputFile);
 
             // Run the pdftohtml command with complex output
             List<String> command =
@@ -250,13 +243,13 @@ public class PDFToFile {
         byte[] fileBytes;
         String fileName;
 
-        try {
-            // Save the uploaded file to a temporary location
-            tempInputFile = Files.createTempFile("input_", ".pdf");
-            inputFile.transferTo(tempInputFile);
+        try (TempFile inputFileTemp = createTempFile("input_", ".pdf");
+                TempDir outputDirTemp = createTempDir("output_")) {
+            tempInputFile = inputFileTemp.path;
+            tempOutputDir = outputDirTemp.dir;
 
-            // Prepare the output directory
-            tempOutputDir = Files.createTempDirectory("output_");
+            // Save the uploaded file to a temporary location
+            inputFile.transferTo(tempInputFile);
 
             // Run the LibreOffice command
             List<String> command =
@@ -316,5 +309,39 @@ public class PDFToFile {
         }
         return WebResponseUtils.bytesToWebResponse(
                 fileBytes, fileName, MediaType.APPLICATION_OCTET_STREAM);
+    }
+
+    private TempFile createTempFile(String prefix, String suffix) throws IOException {
+        return new TempFile(Files.createTempFile(prefix, suffix));
+    }
+
+    private TempDir createTempDir(String prefix) throws IOException {
+        return new TempDir(Files.createTempDirectory(prefix));
+    }
+
+    private static class TempFile implements AutoCloseable {
+        private final Path path;
+
+        public TempFile(Path path) {
+            this.path = path;
+        }
+
+        @Override
+        public void close() throws IOException {
+            Files.deleteIfExists(path);
+        }
+    }
+
+    private static class TempDir implements AutoCloseable {
+        private final Path dir;
+
+        public TempDir(Path dir) {
+            this.dir = dir;
+        }
+
+        @Override
+        public void close() throws IOException {
+            FileUtils.deleteDirectory(dir.toFile());
+        }
     }
 }
