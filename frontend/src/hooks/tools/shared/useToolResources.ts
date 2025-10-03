@@ -99,30 +99,21 @@ export const useToolResources = () => {
     }
   }, [preferences.autoUnzip]);
 
-  const extractAllZipFiles = useCallback(async (zipBlob: Blob): Promise<File[]> => {
+  const extractAllZipFiles = useCallback(async (zipBlob: Blob, skipAutoUnzip = false): Promise<File[]> => {
     try {
-      const JSZip = (await import('jszip')).default;
-      const zip = new JSZip();
-
-      const arrayBuffer = await zipBlob.arrayBuffer();
-      const zipContent = await zip.loadAsync(arrayBuffer);
-
-      const extractedFiles: File[] = [];
-
-      for (const [filename, file] of Object.entries(zipContent.files)) {
-        if (!file.dir) {
-          const content = await file.async('blob');
-          const extractedFile = new File([content], filename, { type: 'application/pdf' });
-          extractedFiles.push(extractedFile);
-        }
+      // Check if auto-unzip is disabled (unless explicitly skipped like in automation)
+      if (!skipAutoUnzip && !preferences.autoUnzip) {
+        return [new File([zipBlob], 'result.zip', { type: 'application/zip' })];
       }
 
-      return extractedFiles;
+      const zipFile = new File([zipBlob], 'temp.zip', { type: 'application/zip' });
+      const extractionResult = await zipFileService.extractAllFiles(zipFile);
+      return extractionResult.success ? extractionResult.extractedFiles : [];
     } catch (error) {
-      console.error('Error in extractAllZipFiles:', error);
+      console.error('useToolResources.extractAllZipFiles - Error:', error);
       return [];
     }
-  }, []);
+  }, [preferences.autoUnzip]);
 
   const createDownloadInfo = useCallback(async (
     files: File[],
