@@ -63,7 +63,7 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
   });
 
   // Create plugins configuration
-  const plugins = useMemo(() => {
+  const basePlugins = useMemo(() => {
     if (!pdfSource) return [];
     const loaderConfig =
       pdfSource.type === 'url'
@@ -105,17 +105,6 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
       // Register selection plugin (depends on InteractionManager)
       createPluginRegistration(SelectionPluginPackage),
 
-      // Register history plugin for undo/redo (recommended for annotations)
-      ...(enableAnnotations ? [createPluginRegistration(HistoryPluginPackage)] : []),
-
-      // Register annotation plugin (depends on InteractionManager, Selection, History)
-      ...(enableAnnotations ? [createPluginRegistration(AnnotationPluginPackage, {
-        annotationAuthor: 'Digital Signature',
-        autoCommit: true,
-        deactivateToolAfterCreate: false,
-        selectAfterCreate: true,
-      })] : []),
-
       // Register pan plugin (depends on Viewport, InteractionManager)
       createPluginRegistration(PanPluginPackage, {
         defaultMode: 'mobile', // Try mobile mode which might be more permissive
@@ -156,7 +145,38 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
         defaultFileName: pdfSource.name ?? 'document.pdf',
       }),
     ];
-  }, [pdfSource, enableAnnotations]);
+  }, [pdfSource]);
+
+  const annotationPlugins = useMemo(() => {
+    if (!enableAnnotations) {
+      return [];
+    }
+
+    return [
+      // Register history plugin for undo/redo (recommended for annotations)
+      createPluginRegistration(HistoryPluginPackage),
+
+      // Register annotation plugin (depends on InteractionManager, Selection, History)
+      createPluginRegistration(AnnotationPluginPackage, {
+        annotationAuthor: 'Digital Signature',
+        autoCommit: true,
+        deactivateToolAfterCreate: false,
+        selectAfterCreate: true,
+      }),
+    ];
+  }, [enableAnnotations]);
+
+  const plugins = useMemo(() => {
+    if (!basePlugins.length) {
+      return basePlugins;
+    }
+
+    if (!annotationPlugins.length) {
+      return basePlugins;
+    }
+
+    return [...basePlugins, ...annotationPlugins];
+  }, [annotationPlugins, basePlugins]);
 
   // Initialize the engine with the React hook
   const { engine, isLoading, error } = usePdfiumEngine();
