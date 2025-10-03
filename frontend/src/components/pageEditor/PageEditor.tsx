@@ -167,7 +167,7 @@ const PageEditor = ({
 
       const pagesToDelete = pageIds.map(pageId => {
 
-    const page = displayDocument.pages.find(p => p.id === pageId);
+        const page = displayDocument.pages.find(p => p.id === pageId);
         return page?.pageNumber || 0;
       }).filter(num => num > 0);
 
@@ -199,7 +199,7 @@ const PageEditor = ({
       );
       executeCommandWithTracking(splitCommand);
     }
-}), [splitPositions, executeCommandWithTracking]);
+  }), [splitPositions, executeCommandWithTracking]);
 
   // Command executor for PageThumbnail
   const executeCommand = useCallback((command: any) => {
@@ -497,16 +497,16 @@ const PageEditor = ({
       const exportFilename = getExportFilename();
       const result = sourceFiles
         ? await pdfExportService.exportPDFMultiFile(
-            documentWithDOMState,
-            sourceFiles,
-            validSelectedPageIds,
-            { selectedOnly: true, filename: exportFilename }
-          )
+          documentWithDOMState,
+          sourceFiles,
+          validSelectedPageIds,
+          { selectedOnly: true, filename: exportFilename }
+        )
         : await pdfExportService.exportPDF(
-            documentWithDOMState,
-            validSelectedPageIds,
-            { selectedOnly: true, filename: exportFilename }
-          );
+          documentWithDOMState,
+          validSelectedPageIds,
+          { selectedOnly: true, filename: exportFilename }
+        );
 
       // Step 4: Download the result
       pdfExportService.downloadFile(result.blob, result.filename);
@@ -614,7 +614,7 @@ const PageEditor = ({
     if (!displayDocument) return;
 
     // For now, trigger the actual export directly
-   // In the original, this would show a preview modal first
+    // In the original, this would show a preview modal first
     if (selectedOnly) {
       onExportSelected();
     } else {
@@ -708,36 +708,36 @@ const PageEditor = ({
 
               return Array.from(splitPositions).map((position) => {
 
-              // Calculate items per row using DragDropGrid's logic
-              const availableWidth = containerWidth - ITEM_GAP; // Account for first gap
-              const itemWithGap = ITEM_WIDTH + ITEM_GAP;
-              const itemsPerRow = Math.max(1, Math.floor(availableWidth / itemWithGap));
+                // Calculate items per row using DragDropGrid's logic
+                const availableWidth = containerWidth - ITEM_GAP; // Account for first gap
+                const itemWithGap = ITEM_WIDTH + ITEM_GAP;
+                const itemsPerRow = Math.max(1, Math.floor(availableWidth / itemWithGap));
 
-              // Calculate position within the grid (same as DragDropGrid)
-              const row = Math.floor(position / itemsPerRow);
-              const col = position % itemsPerRow;
+                // Calculate position within the grid (same as DragDropGrid)
+                const row = Math.floor(position / itemsPerRow);
+                const col = position % itemsPerRow;
 
-              // Position split line between pages (after the current page)
-              // Calculate grid centering offset (same as DragDropGrid)
-              const gridWidth = itemsPerRow * ITEM_WIDTH + (itemsPerRow - 1) * ITEM_GAP;
-              const gridOffset = Math.max(0, (containerWidth - gridWidth) / 2);
+                // Position split line between pages (after the current page)
+                // Calculate grid centering offset (same as DragDropGrid)
+                const gridWidth = itemsPerRow * ITEM_WIDTH + (itemsPerRow - 1) * ITEM_GAP;
+                const gridOffset = Math.max(0, (containerWidth - gridWidth) / 2);
 
-              const leftPosition = gridOffset + col * itemWithGap + ITEM_WIDTH + (ITEM_GAP / 2);
-              const topPosition = row * ITEM_HEIGHT + (ITEM_HEIGHT * 0.05); // Center vertically (5% offset since page is 90% height)
+                const leftPosition = gridOffset + col * itemWithGap + ITEM_WIDTH + (ITEM_GAP / 2);
+                const topPosition = row * ITEM_HEIGHT + (ITEM_HEIGHT * 0.05); // Center vertically (5% offset since page is 90% height)
 
-              return (
-                <div
-                  key={`split-${position}`}
-                  style={{
-                    position: 'absolute',
-                    left: leftPosition,
-                    top: topPosition,
-                    width: '1px',
-                    height: `calc(${GRID_CONSTANTS.ITEM_HEIGHT} * 0.9)`, // Match page container height (90%)
-                    borderLeft: '1px dashed #3b82f6'
-                  }}
-                />
-              );
+                return (
+                  <div
+                    key={`split-${position}`}
+                    style={{
+                      position: 'absolute',
+                      left: leftPosition,
+                      top: topPosition,
+                      width: '1px',
+                      height: `calc(${GRID_CONSTANTS.ITEM_HEIGHT} * 0.9)`, // Match page container height (90%)
+                      borderLeft: '1px dashed #3b82f6'
+                    }}
+                  />
+                );
               });
             })()}
           </div>
@@ -765,7 +765,7 @@ const PageEditor = ({
                 onTogglePage={togglePage}
                 onAnimateReorder={animateReorder}
                 onExecuteCommand={executeCommand}
-                onSetStatus={() => {}}
+                onSetStatus={() => { }}
                 onSetMovingPage={setMovingPage}
                 onDeletePage={handleDeletePage}
                 createRotateCommand={createRotateCommand}
