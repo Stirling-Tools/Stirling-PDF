@@ -61,13 +61,13 @@ export function usePdfLoaderSource({ file, url, fallbackId }: UsePdfLoaderSource
 
       if (file) {
         if (!isPdfFile(file)) {
-            setError('File is not a PDF.');
+          setError('File is not a PDF.');
           setSource(null);
           return;
         }
 
         if ('size' in file && file.size === 0) {
-            setError('PDF file is empty.');
+          setError('PDF file is empty.');
           setSource(null);
           return;
         }
@@ -113,7 +113,7 @@ export function usePdfLoaderSource({ file, url, fallbackId }: UsePdfLoaderSource
         }
 
         if (!isPdfUrl(normalizedUrl)) {
-            setError('URL does not point to a PDF.');
+          setError('URL does not point to a PDF.');
           setSource(null);
           return;
         }
