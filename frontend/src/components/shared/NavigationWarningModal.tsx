@@ -32,7 +32,7 @@ const NavigationWarningModal = ({ onApplyAndContinue, onExportAndContinue }: Nav
     confirmNavigation();
   };
 
-  const handleExportAndContinue = async () => {
+  const _handleExportAndContinue = async () => {
     if (onExportAndContinue) {
       await onExportAndContinue();
     }
@@ -64,22 +64,19 @@ const NavigationWarningModal = ({ onApplyAndContinue, onExportAndContinue }: Nav
           {t("areYouSure", "Are you sure you want to leave?")}
         </Text>
         </Stack>
+
         {/* Desktop layout: 2 groups side by side */}
         <Group justify="space-between" gap="xl" visibleFrom="md">
           <Group gap="sm">
-
-
             <Button variant="light" color="var(--mantine-color-gray-8)" onClick={handleKeepWorking} w={BUTTON_WIDTH} leftSection={<ArrowBackIcon fontSize="small" />}>
               {t("keepWorking", "Keep Working")}
             </Button>
           </Group>
-
           <Group gap="sm">
             <Button variant="filled" color="var(--mantine-color-red-9)" onClick={handleDiscardChanges} w={BUTTON_WIDTH} leftSection={<DeleteOutlineIcon fontSize="small" />}>
               {t("discardChanges", "Discard Changes")}
             </Button>
             {onApplyAndContinue && (
-
               <Button variant="filled"  onClick={handleApplyAndContinue} w={BUTTON_WIDTH} leftSection={<CheckCircleOutlineIcon fontSize="small" />}>
                 {t("applyAndContinue", "Apply & Leave")}
               </Button>
