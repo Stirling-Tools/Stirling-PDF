@@ -163,15 +163,14 @@ public class PDFToFile {
             pdfBaseName = originalPdfFileName.substring(0, originalPdfFileName.lastIndexOf('.'));
         }
 
-        Path tempInputFile = null;
-        Path tempOutputDir = null;
         byte[] fileBytes;
         String fileName;
 
         try (TempFile inputFileTemp = new TempFile(tempFileManager, ".pdf");
                 TempDirectory outputDirTemp = new TempDirectory(tempFileManager)) {
-            tempInputFile = inputFileTemp.getPath();
-            tempOutputDir = outputDirTemp.getPath();
+
+            Path tempInputFile = inputFileTemp.getPath();
+            Path tempOutputDir = outputDirTemp.getPath();
 
             // Save the uploaded file to a temporary location
             inputFile.transferTo(tempInputFile);
@@ -239,15 +238,14 @@ public class PDFToFile {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
 
-        Path tempInputFile = null;
-        Path tempOutputDir = null;
         byte[] fileBytes;
         String fileName;
 
         try (TempFile inputFileTemp = new TempFile(tempFileManager, ".pdf");
                 TempDirectory outputDirTemp = new TempDirectory(tempFileManager)) {
-            tempInputFile = inputFileTemp.getPath();
-            tempOutputDir = outputDirTemp.getPath();
+
+            Path tempInputFile = inputFileTemp.getPath();
+            Path tempOutputDir = outputDirTemp.getPath();
 
             // Save the uploaded file to a temporary location
             inputFile.transferTo(tempInputFile);
