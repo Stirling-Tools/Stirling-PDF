@@ -15,7 +15,7 @@ interface FileUploadButtonProps {
 const FileUploadButton = ({
   file,
   onChange,
-  accept = "*/*",
+  accept,
   disabled = false,
   placeholder,
   variant = "outline",

@@ -15,7 +15,7 @@ interface AddFileCardProps {
 
 const AddFileCard = ({
   onFileSelect,
-  accept = "*/*",
+  accept,
   multiple = true
 }: AddFileCardProps) => {
   const { t } = useTranslation();
