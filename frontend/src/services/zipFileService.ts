@@ -325,6 +325,48 @@ export class ZipFileService {
   }
 
   /**
+   * Determine if a ZIP file should be extracted based on user preferences
+   *
+   * @param zipBlob - The ZIP file to check
+   * @param autoUnzip - User preference for auto-unzipping
+   * @param autoUnzipFileLimit - Maximum number of files to auto-extract
+   * @param skipAutoUnzip - Bypass preference check (for automation)
+   * @returns true if the ZIP should be extracted, false otherwise
+   */
+  async shouldUnzip(
+    zipBlob: Blob | File,
+    autoUnzip: boolean,
+    autoUnzipFileLimit: number,
+    skipAutoUnzip: boolean = false
+  ): Promise<boolean> {
+    try {
+      // Automation always extracts
+      if (skipAutoUnzip) {
+        return true;
+      }
+
+      // Check if auto-unzip is enabled
+      if (!autoUnzip) {
+        return false;
+      }
+
+      // Load ZIP and count files
+      const zip = new JSZip();
+      const zipContents = await zip.loadAsync(zipBlob);
+
+      // Count non-directory entries
+      const fileCount = Object.values(zipContents.files).filter(entry => !entry.dir).length;
+
+      // Only extract if within limit
+      return fileCount <= autoUnzipFileLimit;
+    } catch (error) {
+      console.error('Error checking shouldUnzip:', error);
+      // On error, default to not extracting (safer)
+      return false;
+    }
+  }
+
+  /**
    * Extract all files from a ZIP archive (not limited to PDFs)
    */
   async extractAllFiles(

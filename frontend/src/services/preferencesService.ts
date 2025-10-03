@@ -2,10 +2,12 @@ import { indexedDBManager, DATABASE_CONFIGS } from './indexedDBManager';
 
 export interface UserPreferences {
   autoUnzip: boolean;
+  autoUnzipFileLimit: number;
 }
 
 export const DEFAULT_PREFERENCES: UserPreferences = {
   autoUnzip: true,
+  autoUnzipFileLimit: 4,
 };
 
 class PreferencesService {
