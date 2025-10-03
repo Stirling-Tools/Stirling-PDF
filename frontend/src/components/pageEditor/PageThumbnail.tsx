@@ -375,6 +375,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
               src={thumbnailUrl}
               alt={`Page ${page.pageNumber}`}
               draggable={false}
+              data-original-rotation={page.rotation}
               style={{
                 width: '100%',
                 height: '100%',
