@@ -534,7 +534,9 @@ describe('Convert Tool Integration Tests', () => {
       });
 
       expect(mockedApiClient.post).not.toHaveBeenCalled();
-      expect(result.current.errorMessage).toContain('noFileSelected');
+      expect(result.current.errorMessage).toBe(
+        i18n.t('noFileSelected', 'No files selected')
+      );
     });
   });
 
