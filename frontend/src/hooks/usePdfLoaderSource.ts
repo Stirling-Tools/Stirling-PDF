@@ -118,7 +118,7 @@ export function usePdfLoaderSource({ file, url, fallbackId }: UsePdfLoaderSource
           return;
         }
 
-        const id = normalizedUrl || fallbackId;
+        const id = normalizedUrl;
 
         if (!cancelled) {
           setSource({
