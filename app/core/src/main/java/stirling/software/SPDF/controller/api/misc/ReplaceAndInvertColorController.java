@@ -18,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.model.api.misc.ReplaceAndInvertColorRequest;
 import stirling.software.SPDF.service.misc.ReplaceAndInvertColorService;
+import stirling.software.common.util.GeneralUtils;
 
 @RestController
 @RequestMapping("/api/v1/misc")
@@ -45,8 +46,11 @@ public class ReplaceAndInvertColorController {
                         request.getTextColor());
 
         // Return the modified PDF as a downloadable file
+        String filename =
+                GeneralUtils.generateFilename(
+                        request.getFileInput().getOriginalFilename(), "_inverted.pdf");
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=inverted.pdf")
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
                 .contentType(MediaType.APPLICATION_PDF)
                 .body(resource);
     }
