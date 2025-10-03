@@ -16,6 +16,7 @@ import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.github.junrar.Archive;
+import com.github.junrar.exception.CorruptHeaderException;
 import com.github.junrar.exception.RarException;
 import com.github.junrar.rarfile.FileHeader;
 
@@ -53,12 +54,33 @@ public class CbrUtils {
                 Archive archive;
                 try {
                     archive = new Archive(tempFile.getFile());
+                } catch (CorruptHeaderException e) {
+                    log.warn(
+                            "Failed to open CBR/RAR archive due to corrupt header: {}",
+                            e.getMessage());
+                    throw ExceptionUtils.createIllegalArgumentException(
+                            "error.invalidFormat",
+                            "Invalid or corrupted CBR/RAR archive. "
+                                    + "The file may be corrupted, use an unsupported RAR format (RAR5+), "
+                                    + "or may not be a valid RAR archive. "
+                                    + "Please ensure the file is a valid RAR archive.");
                 } catch (RarException e) {
                     log.warn("Failed to open CBR/RAR archive: {}", e.getMessage());
-                    String errorMessage =
-                            "Invalid CBR/RAR archive: "
-                                    + e.getMessage()
-                                    + ". The file may be encrypted, corrupted, or use RAR 5 format which is not yet supported.";
+                    String errorMessage;
+                    String exMessage = e.getMessage() != null ? e.getMessage() : "";
+
+                    if (exMessage.contains("encrypted")) {
+                        errorMessage = "Encrypted CBR/RAR archives are not supported.";
+                    } else if (exMessage.isEmpty()) {
+                        errorMessage =
+                                "Invalid CBR/RAR archive. "
+                                        + "The file may be encrypted, corrupted, or use an unsupported format.";
+                    } else {
+                        errorMessage =
+                                "Invalid CBR/RAR archive: "
+                                        + exMessage
+                                        + ". The file may be encrypted, corrupted, or use an unsupported format.";
+                    }
                     throw ExceptionUtils.createIllegalArgumentException(
                             "error.invalidFormat", errorMessage);
                 } catch (IOException e) {

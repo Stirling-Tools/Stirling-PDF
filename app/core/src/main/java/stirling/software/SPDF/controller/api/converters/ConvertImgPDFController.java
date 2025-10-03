@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
@@ -267,7 +268,7 @@ public class ConvertImgPDFController {
             description =
                     "This endpoint converts a CBZ (ZIP) comic book archive to a PDF file. "
                             + "Input:CBZ Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> convertCbzToPdf(@ModelAttribute ConvertCbzToPdfRequest request)
+    public ResponseEntity<?> convertCbzToPdf(@ModelAttribute ConvertCbzToPdfRequest request)
             throws IOException {
         MultipartFile file = request.getFileInput();
         boolean optimizeForEbook = request.isOptimizeForEbook();
@@ -285,9 +286,11 @@ public class ConvertImgPDFController {
                             file, pdfDocumentFactory, tempFileManager, optimizeForEbook);
         } catch (IllegalArgumentException ex) {
             String message = ex.getMessage() == null ? "Invalid CBZ file" : ex.getMessage();
+            Map<String, Object> errorBody =
+                    Map.of("error", "Invalid CBZ file", "message", message, "trace", "");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .contentType(MediaType.TEXT_PLAIN)
-                    .body(message.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(errorBody);
         }
 
         String filename = createConvertedFilename(file.getOriginalFilename(), "_converted.pdf");
@@ -301,7 +304,7 @@ public class ConvertImgPDFController {
             description =
                     "This endpoint converts a PDF file to a CBZ (ZIP) comic book archive. "
                             + "Input:PDF Output:CBZ Type:SISO")
-    public ResponseEntity<byte[]> convertPdfToCbz(@ModelAttribute ConvertPdfToCbzRequest request)
+    public ResponseEntity<?> convertPdfToCbz(@ModelAttribute ConvertPdfToCbzRequest request)
             throws IOException {
         MultipartFile file = request.getFileInput();
         int dpi = request.getDpi();
@@ -315,9 +318,11 @@ public class ConvertImgPDFController {
             cbzBytes = PdfToCbzUtils.convertPdfToCbz(file, dpi, pdfDocumentFactory);
         } catch (IllegalArgumentException ex) {
             String message = ex.getMessage() == null ? "Invalid PDF file" : ex.getMessage();
+            Map<String, Object> errorBody =
+                    Map.of("error", "Invalid PDF file", "message", message, "trace", "");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .contentType(MediaType.TEXT_PLAIN)
-                    .body(message.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(errorBody);
         }
 
         String filename = createConvertedFilename(file.getOriginalFilename(), "_converted.cbz");
@@ -332,7 +337,7 @@ public class ConvertImgPDFController {
             description =
                     "This endpoint converts a CBR (RAR) comic book archive to a PDF file. "
                             + "Input:CBR Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> convertCbrToPdf(@ModelAttribute ConvertCbrToPdfRequest request)
+    public ResponseEntity<?> convertCbrToPdf(@ModelAttribute ConvertCbrToPdfRequest request)
             throws IOException {
         MultipartFile file = request.getFileInput();
         boolean optimizeForEbook = request.isOptimizeForEbook();
@@ -350,9 +355,11 @@ public class ConvertImgPDFController {
                             file, pdfDocumentFactory, tempFileManager, optimizeForEbook);
         } catch (IllegalArgumentException ex) {
             String message = ex.getMessage() == null ? "Invalid CBR file" : ex.getMessage();
+            Map<String, Object> errorBody =
+                    Map.of("error", "Invalid CBR file", "message", message, "trace", "");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .contentType(MediaType.TEXT_PLAIN)
-                    .body(message.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(errorBody);
         }
 
         String filename = createConvertedFilename(file.getOriginalFilename(), "_converted.pdf");
@@ -366,7 +373,7 @@ public class ConvertImgPDFController {
             description =
                     "This endpoint converts a PDF file to a CBR-like (ZIP-based) comic book archive. "
                             + "Note: Output is ZIP-based for compatibility. Input:PDF Output:CBR Type:SISO")
-    public ResponseEntity<byte[]> convertPdfToCbr(@ModelAttribute ConvertPdfToCbrRequest request)
+    public ResponseEntity<?> convertPdfToCbr(@ModelAttribute ConvertPdfToCbrRequest request)
             throws IOException {
         MultipartFile file = request.getFileInput();
         int dpi = request.getDpi();
@@ -380,9 +387,11 @@ public class ConvertImgPDFController {
             cbrBytes = PdfToCbrUtils.convertPdfToCbr(file, dpi, pdfDocumentFactory);
         } catch (IllegalArgumentException ex) {
             String message = ex.getMessage() == null ? "Invalid PDF file" : ex.getMessage();
+            Map<String, Object> errorBody =
+                    Map.of("error", "Invalid PDF file", "message", message, "trace", "");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .contentType(MediaType.TEXT_PLAIN)
-                    .body(message.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(errorBody);
         }
 
         String filename = createConvertedFilename(file.getOriginalFilename(), "_converted.cbr");
