@@ -401,7 +401,7 @@ public class GetInfoOnPDF {
                 && Math.abs(height - standardHeight) <= tolerance;
     }
 
-    public static ObjectNode getDimensionInfo(ObjectNode dimensionInfo, float width, float height) {
+    public static void getDimensionInfo(ObjectNode dimensionInfo, float width, float height) {
         float ppi = 72; // Points Per Inch
 
         float widthInInches = width / ppi;
@@ -416,7 +416,6 @@ public class GetInfoOnPDF {
         dimensionInfo.put("Height (in)", String.format("%.2f", heightInInches));
         dimensionInfo.put("Width (cm)", String.format("%.2f", widthInCm));
         dimensionInfo.put("Height (cm)", String.format("%.2f", heightInCm));
-        return dimensionInfo;
     }
 
     public static ArrayNode exploreStructureTree(List<Object> nodes) {
@@ -449,10 +448,10 @@ public class GetInfoOnPDF {
         for (Object item : structureElement.getKids()) {
             if (item instanceof COSString cosString) {
                 contentBuilder.append(cosString.getString());
-            } else if (item instanceof PDStructureElement) {
+            } else if (item instanceof PDStructureElement pdstructureelement) {
                 // For simplicity, we're handling only COSString and PDStructureElement here
                 // but a more comprehensive method would handle other types too
-                contentBuilder.append(getContent((PDStructureElement) item));
+                contentBuilder.append(getContent(pdstructureelement));
             }
         }
 
@@ -997,7 +996,7 @@ public class GetInfoOnPDF {
         return null;
     }
 
-    private String getPageModeDescription(String pageMode) {
+    private static String getPageModeDescription(String pageMode) {
         if (pageMode == null) return "Unknown";
         return RegexPatternUtils.getInstance()
                 .getPageModePattern()
