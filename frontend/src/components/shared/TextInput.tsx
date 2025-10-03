@@ -7,6 +7,10 @@ import styles from './textInput/TextInput.module.css';
  * Props for the TextInput component
  */
 export interface TextInputProps {
+  /** The input ID (required) */
+  id: string;
+  /** The input name (required) */
+  name: string;
   /** The input value (required) */
   value: string;
   /** Callback when input value changes (required) */
@@ -36,6 +40,8 @@ export interface TextInputProps {
 }
 
 export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(({
+  id,
+  name,
   value,
   onChange,
   placeholder,
@@ -76,6 +82,8 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(({
       <input
         ref={ref}
         type="text"
+        id={id}
+        name={name}
         placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.currentTarget.value)}
