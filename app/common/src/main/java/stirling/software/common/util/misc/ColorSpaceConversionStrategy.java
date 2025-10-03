@@ -15,14 +15,26 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.model.api.misc.ReplaceAndInvert;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
+import stirling.software.common.util.TempFile;
+import stirling.software.common.util.TempFileManager;
 
 @Slf4j
 public class ColorSpaceConversionStrategy extends ReplaceAndInvertColorStrategy {
 
+    private final TempFileManager tempFileManager;
+
+    public ColorSpaceConversionStrategy(
+            MultipartFile file,
+            ReplaceAndInvert replaceAndInvert,
+            TempFileManager tempFileManager) {
+        super(file, replaceAndInvert);
+        this.tempFileManager = tempFileManager;
+    }
+
     @Override
     public InputStreamResource replace() throws IOException {
-        try (TempPath tempInput = new TempPath("colorspace_input_", ".pdf");
-                TempPath tempOutput = new TempPath("colorspace_output_", ".pdf")) {
+        try (TempFile tempInput = new TempFile(tempFileManager, ".pdf");
+                TempFile tempOutput = new TempFile(tempFileManager, ".pdf")) {
 
             Path tempInputFile = tempInput.getPath();
             Path tempOutputFile = tempOutput.getPath();
@@ -69,31 +81,6 @@ public class ColorSpaceConversionStrategy extends ReplaceAndInvertColorStrategy 
             log.warn("CMYK color space conversion failed", e);
             throw new IOException(
                     "Failed to convert PDF to CMYK color space: " + e.getMessage(), e);
-        }
-    }
-
-    public ColorSpaceConversionStrategy(MultipartFile file, ReplaceAndInvert replaceAndInvert) {
-        super(file, replaceAndInvert);
-    }
-
-    private static class TempPath implements AutoCloseable {
-        private final Path path;
-
-        public TempPath(String prefix, String suffix) throws IOException {
-            this.path = Files.createTempFile(prefix, suffix);
-        }
-
-        public Path getPath() {
-            return path;
-        }
-
-        @Override
-        public void close() {
-            try {
-                Files.deleteIfExists(path);
-            } catch (IOException e) {
-                log.warn("Failed to delete temporary file: {}", path, e);
-            }
         }
     }
 }
