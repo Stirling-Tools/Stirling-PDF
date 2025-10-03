@@ -42,7 +42,7 @@ export function loadScript({ src, id, async = true, defer = false, onLoad }: Scr
       resolve();
     };
 
-    script.onerror = (error) => {
+    script.onerror = () => {
       reject(new Error(`Failed to load script: ${src}`));
     };
 

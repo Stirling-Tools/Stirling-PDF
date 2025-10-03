@@ -155,8 +155,12 @@ class GoogleDrivePickerService {
           reject(new Error(response.error));
           return;
         }
+        if(response.access_token == null){
+          reject(new Error("No acces token in response"));
+        }
+
         this.accessToken = response.access_token;
-        sessionStorage.setItem(SESSION_STORAGE_ID, this.accessToken);
+        sessionStorage.setItem(SESSION_STORAGE_ID, this.accessToken ?? "");
         resolve();
       };
 
@@ -178,7 +182,7 @@ class GoogleDrivePickerService {
 
       const mimeTypes = fileInputToGooglePickerMimeTypes(options.mimeTypes || undefined);
 
-      let builder = new window.google.picker.PickerBuilder()
+      const builder = new window.google.picker.PickerBuilder()
         .setDeveloperKey(this.config.apiKey)
         .setAppId(this.config.appId)
         .setOAuthToken(this.accessToken)
