@@ -60,8 +60,6 @@ async function isPdfFile(file: File | Blob): Promise<boolean> {
 
   return hasPdfMimeType && hasPdfExtension;
 }
-
-
 function isPdfUrl(url: string): boolean {
   const trimmed = url.trim();
   if (!trimmed) {
