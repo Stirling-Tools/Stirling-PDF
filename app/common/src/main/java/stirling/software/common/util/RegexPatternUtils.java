@@ -447,6 +447,16 @@ public final class RegexPatternUtils {
         return getPattern("@\\s*([^\\s\\(]+(?:\\.[a-zA-Z0-9]+)?)");
     }
 
+    /** Pattern for matching pdfaid:part attribute in XMP metadata */
+    public Pattern getPdfAidPartPattern() {
+        return getPattern("pdfaid:part[\"\\s]*=[\"\\s]*([0-9]+)");
+    }
+
+    /** Pattern for matching pdfaid:conformance attribute in XMP metadata */
+    public Pattern getPdfAidConformancePattern() {
+        return getPattern("pdfaid:conformance[\"\\s]*=[\"\\s]*([A-Za-z]+)");
+    }
+
     // API doc parsing patterns
 
     /**
