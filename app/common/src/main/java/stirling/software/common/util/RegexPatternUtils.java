@@ -437,6 +437,11 @@ public final class RegexPatternUtils {
                 Pattern.CASE_INSENSITIVE);
     }
 
+    /** Pattern for matching image file extensions (case-insensitive) */
+    public Pattern getImageFilePattern() {
+        return getPattern(".*\\.(jpg|jpeg|png|gif|bmp|webp)$", Pattern.CASE_INSENSITIVE);
+    }
+
     /** Pattern for matching attachment section headers (case-insensitive) */
     public Pattern getAttachmentSectionPattern() {
         return getPattern("attachments\\s*\\(\\d+\\)", Pattern.CASE_INSENSITIVE);
@@ -447,7 +452,20 @@ public final class RegexPatternUtils {
         return getPattern("@\\s*([^\\s\\(]+(?:\\.[a-zA-Z0-9]+)?)");
     }
 
-    // API doc parsing patterns
+    /** Pattern for matching pdfaid:part attribute in XMP metadata */
+    public Pattern getPdfAidPartPattern() {
+        return getPattern("pdfaid:part[\"\\s]*=[\"\\s]*([0-9]+)");
+    }
+
+    /** Pattern for matching pdfaid:conformance attribute in XMP metadata */
+    public Pattern getPdfAidConformancePattern() {
+        return getPattern("pdfaid:conformance[\"\\s]*=[\"\\s]*([A-Za-z]+)");
+    }
+
+    /** Pattern for matching slash in page mode description */
+    public Pattern getPageModePattern() {
+        return getPattern("/");
+    }
 
     /**
      * Pre-compile commonly used patterns for immediate availability. This eliminates first-call

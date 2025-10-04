@@ -116,101 +116,82 @@ public class OCRController {
 
         // Use try-with-resources for proper temp file management
         try (TempFile tempInputFile = new TempFile(tempFileManager, ".pdf");
-                TempFile tempOutputFile = new TempFile(tempFileManager, ".pdf")) {
+                TempFile tempOutputFile = new TempFile(tempFileManager, ".pdf");
+                TempFile sidecarTextFile = sidecar ? new TempFile(tempFileManager, ".txt") : null) {
 
             inputFile.transferTo(tempInputFile.getFile());
 
-            TempFile sidecarTextFile = null;
+            // Use OCRmyPDF if available (no fallback - error if it fails)
+            if (isOcrMyPdfEnabled()) {
+                processWithOcrMyPdf(
+                        selectedLanguages,
+                        sidecar,
+                        deskew,
+                        clean,
+                        cleanFinal,
+                        ocrType,
+                        ocrRenderType,
+                        removeImagesAfter,
+                        tempInputFile.getPath(),
+                        tempOutputFile.getPath(),
+                        sidecarTextFile != null ? sidecarTextFile.getPath() : null);
+                log.info("OCRmyPDF processing completed successfully");
+            }
+            // Use Tesseract only if OCRmyPDF is not available
+            else if (isTesseractEnabled()) {
+                processWithTesseract(
+                        selectedLanguages,
+                        ocrType,
+                        tempInputFile.getPath(),
+                        tempOutputFile.getPath());
+                log.info("Tesseract processing completed successfully");
+            } else {
+                throw ExceptionUtils.createOcrToolsUnavailableException();
+            }
 
-            try {
-                // Use OCRmyPDF if available (no fallback - error if it fails)
-                if (isOcrMyPdfEnabled()) {
-                    if (sidecar) {
-                        sidecarTextFile = new TempFile(tempFileManager, ".txt");
-                    }
+            // Read the processed PDF file
+            byte[] pdfBytes = Files.readAllBytes(tempOutputFile.getPath());
 
-                    processWithOcrMyPdf(
-                            selectedLanguages,
-                            sidecar,
-                            deskew,
-                            clean,
-                            cleanFinal,
-                            ocrType,
-                            ocrRenderType,
-                            removeImagesAfter,
-                            tempInputFile.getPath(),
-                            tempOutputFile.getPath(),
-                            sidecarTextFile != null ? sidecarTextFile.getPath() : null);
-                    log.info("OCRmyPDF processing completed successfully");
-                }
-                // Use Tesseract only if OCRmyPDF is not available
-                else if (isTesseractEnabled()) {
-                    processWithTesseract(
-                            selectedLanguages,
-                            ocrType,
-                            tempInputFile.getPath(),
-                            tempOutputFile.getPath());
-                    log.info("Tesseract processing completed successfully");
-                } else {
-                    throw ExceptionUtils.createOcrToolsUnavailableException();
-                }
+            // Return the OCR processed PDF as a response
+            String outputFilename =
+                    GeneralUtils.removeExtension(
+                                    Filenames.toSimpleFileName(inputFile.getOriginalFilename()))
+                            + "_OCR.pdf";
 
-                // Read the processed PDF file
-                byte[] pdfBytes = Files.readAllBytes(tempOutputFile.getPath());
-
-                // Return the OCR processed PDF as a response
-                String outputFilename =
+            if (sidecar && sidecarTextFile != null) {
+                // Create a zip file containing both the PDF and the text file
+                String outputZipFilename =
                         GeneralUtils.removeExtension(
                                         Filenames.toSimpleFileName(inputFile.getOriginalFilename()))
-                                + "_OCR.pdf";
+                                + "_OCR.zip";
 
-                if (sidecar && sidecarTextFile != null) {
-                    // Create a zip file containing both the PDF and the text file
-                    String outputZipFilename =
-                            GeneralUtils.removeExtension(
-                                            Filenames.toSimpleFileName(
-                                                    inputFile.getOriginalFilename()))
-                                    + "_OCR.zip";
+                try (TempFile tempZipFile = new TempFile(tempFileManager, ".zip");
+                        ZipOutputStream zipOut =
+                                new ZipOutputStream(Files.newOutputStream(tempZipFile.getPath()))) {
 
-                    try (TempFile tempZipFile = new TempFile(tempFileManager, ".zip");
-                            ZipOutputStream zipOut =
-                                    new ZipOutputStream(
-                                            Files.newOutputStream(tempZipFile.getPath()))) {
+                    // Add PDF file to the zip
+                    ZipEntry pdfEntry = new ZipEntry(outputFilename);
+                    zipOut.putNextEntry(pdfEntry);
+                    zipOut.write(pdfBytes);
+                    zipOut.closeEntry();
 
-                        // Add PDF file to the zip
-                        ZipEntry pdfEntry = new ZipEntry(outputFilename);
-                        zipOut.putNextEntry(pdfEntry);
-                        zipOut.write(pdfBytes);
-                        zipOut.closeEntry();
+                    // Add text file to the zip
+                    ZipEntry txtEntry = new ZipEntry(outputFilename.replace(".pdf", ".txt"));
+                    zipOut.putNextEntry(txtEntry);
+                    Files.copy(sidecarTextFile.getPath(), zipOut);
+                    zipOut.closeEntry();
 
-                        // Add text file to the zip
-                        ZipEntry txtEntry = new ZipEntry(outputFilename.replace(".pdf", ".txt"));
-                        zipOut.putNextEntry(txtEntry);
-                        Files.copy(sidecarTextFile.getPath(), zipOut);
-                        zipOut.closeEntry();
+                    zipOut.finish();
 
-                        zipOut.finish();
+                    byte[] zipBytes = Files.readAllBytes(tempZipFile.getPath());
 
-                        byte[] zipBytes = Files.readAllBytes(tempZipFile.getPath());
-
-                        // Return the zip file containing both the PDF and the text file
-                        return WebResponseUtils.bytesToWebResponse(
-                                zipBytes, outputZipFilename, MediaType.APPLICATION_OCTET_STREAM);
-                    }
-                } else {
-                    // Return the OCR processed PDF as a response
-                    return WebResponseUtils.bytesToWebResponse(pdfBytes, outputFilename);
+                    // Return the zip file containing both the PDF and the text file
+                    return WebResponseUtils.bytesToWebResponse(
+                            zipBytes, outputZipFilename, MediaType.APPLICATION_OCTET_STREAM);
                 }
-
-            } finally {
-                // Clean up sidecar temp file if created
-                if (sidecarTextFile != null) {
-                    try {
-                        sidecarTextFile.close();
-                    } catch (Exception e) {
-                        log.warn("Failed to close sidecar temp file", e);
-                    }
-                }
+            } else {
+                // Return the OCR processed PDF as a response
+                return WebResponseUtils.bytesToWebResponse(pdfBytes, outputFilename);
             }
         }
     }
