@@ -1,21 +1,34 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ActionIcon, Badge, Group, Paper, ScrollArea, Text, Tooltip } from '@mantine/core';
+import { ActionIcon, Badge, Group, Paper, ScrollArea, SegmentedControl, Text, Tooltip } from '@mantine/core';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import ViewSidebarRoundedIcon from '@mui/icons-material/ViewSidebarRounded';
 import DashboardCustomizeRoundedIcon from '@mui/icons-material/DashboardCustomizeRounded';
 import { useTranslation } from 'react-i18next';
 import { useToolWorkflow } from '../../contexts/ToolWorkflowContext';
 import ToolSearch from './toolPicker/ToolSearch';
-import ToolPicker from './ToolPicker';
-import SearchResults from './SearchResults';
 import { ToolId } from '../../types/toolId';
+import { useToolSections } from '../../hooks/useToolSections';
+import NoToolsFound from './shared/NoToolsFound';
+import ToolPanelOverlayTile from './ToolPanelOverlayTile';
+import { getSubcategoryLabel } from '../../data/toolsTaxonomy';
 import './ToolPanelOverlay.css';
+
+type LayoutVariant = 'compact' | 'detailed';
 
 interface ToolPanelOverlayProps {
   isOpen: boolean;
 }
 
 const EXIT_ANIMATION_MS = 320;
+const LAYOUT_STORAGE_KEY = 'toolPanelOverlayLayout';
+
+const getInitialLayout = (): LayoutVariant => {
+  if (typeof window === 'undefined') {
+    return 'compact';
+  }
+  const stored = window.localStorage.getItem(LAYOUT_STORAGE_KEY);
+  return stored === 'detailed' ? 'detailed' : 'compact';
+};
 
 export default function ToolPanelOverlay({ isOpen }: ToolPanelOverlayProps) {
   const { t } = useTranslation();
@@ -33,6 +46,14 @@ export default function ToolPanelOverlay({ isOpen }: ToolPanelOverlayProps) {
 
   const [shouldRender, setShouldRender] = useState(isOpen);
   const [isClosing, setIsClosing] = useState(false);
+  const [layout, setLayout] = useState<LayoutVariant>(getInitialLayout);
+
+  const { sections, searchGroups } = useToolSections(filteredTools, searchQuery);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    window.localStorage.setItem(LAYOUT_STORAGE_KEY, layout);
+  }, [layout]);
 
   useEffect(() => {
     if (isOpen) {
@@ -69,6 +90,24 @@ export default function ToolPanelOverlay({ isOpen }: ToolPanelOverlayProps) {
   const showSearchResults = useMemo(() => searchQuery.trim().length > 0, [searchQuery]);
   const totalToolCount = showSearchResults ? filteredTools.length : Object.keys(toolRegistry).length;
 
+  const matchedTextMap = useMemo(() => {
+    const map = new Map<string, string>();
+    filteredTools.forEach(({ item: [id], matchedText }) => {
+      if (matchedText) {
+        map.set(id, matchedText);
+      }
+    });
+    return map;
+  }, [filteredTools]);
+
+  const subcategoryGroups = useMemo(() => {
+    if (showSearchResults) {
+      return searchGroups;
+    }
+    const allSection = sections.find(section => section.key === 'all');
+    return allSection ? allSection.subcategories : [];
+  }, [searchGroups, sections, showSearchResults]);
+
   if (!shouldRender) {
     return null;
   }
@@ -81,6 +120,8 @@ export default function ToolPanelOverlay({ isOpen }: ToolPanelOverlayProps) {
   const toggleLabel = toolPanelMode === 'fullscreen'
     ? t('toolPanel.modeToggle.sidebar', 'Switch to advanced sidebar')
     : t('toolPanel.modeToggle.fullscreen', 'Switch to legacy fullscreen');
+
+  const layoutLabel = t('toolPanel.overlay.layoutLabel', 'Layout');
 
   return (
     <div
@@ -96,7 +137,7 @@ export default function ToolPanelOverlay({ isOpen }: ToolPanelOverlayProps) {
               {t('toolPanel.overlay.title', 'All tools')}
             </Text>
             <Text size="sm" c="dimmed">
-              {t('toolPanel.overlay.subtitle', 'Browse and launch tools in the legacy fullscreen catalog.')}
+              {t('toolPanel.overlay.subtitle', 'Browse every tool in the legacy fullscreen catalog.')}
             </Text>
           </div>
           <Group gap="xs">
@@ -130,44 +171,69 @@ export default function ToolPanelOverlay({ isOpen }: ToolPanelOverlayProps) {
         </header>
 
         <div className="tool-panel-overlay__search">
-          <Group justify="space-between" align="center">
-            <div className="tool-panel-overlay__search-input">
-              <ToolSearch
-                value={searchQuery}
-                onChange={setSearchQuery}
-                toolRegistry={toolRegistry}
-                mode="filter"
-                autoFocus
+          <div className="tool-panel-overlay__search-input">
+            <ToolSearch
+              value={searchQuery}
+              onChange={setSearchQuery}
+              toolRegistry={toolRegistry}
+              mode="filter"
+              autoFocus
+            />
+          </div>
+          <div className="tool-panel-overlay__search-controls">
+            <div className="tool-panel-overlay__layout-toggle">
+              <SegmentedControl
+                value={layout}
+                onChange={value => setLayout(value as LayoutVariant)}
+                size="sm"
+                aria-label={layoutLabel}
+                data={[
+                  { label: t('toolPanel.overlay.layoutCompact', 'Compact grid'), value: 'compact' },
+                  { label: t('toolPanel.overlay.layoutDetailed', 'Detailed cards'), value: 'detailed' },
+                ]}
               />
             </div>
             <Badge variant="light" size="lg" radius="sm">
-              {t('toolPanel.overlay.totalLabel', '{{count}} tools available', {
+              {t('toolPanel.overlay.totalLabel', {
                 count: totalToolCount,
+                defaultValue: '{{count}} tools available',
               })}
             </Badge>
-          </Group>
+          </div>
         </div>
 
         <div className="tool-panel-overlay__body">
           <ScrollArea className="tool-panel-overlay__scroll" type="always">
-            {showSearchResults ? (
-              <div className="tool-panel-overlay__results">
-                <SearchResults
-                  filteredTools={filteredTools}
-                  onSelect={(id) => handleToolSelect(id as ToolId)}
-                  searchQuery={searchQuery}
-                />
-              </div>
-            ) : (
-              <div className="tool-panel-overlay__picker">
-                <ToolPicker
-                  selectedToolKey={selectedToolKey}
-                  onSelect={(id) => handleToolSelect(id as ToolId)}
-                  filteredTools={filteredTools}
-                  isSearching={showSearchResults}
-                />
-              </div>
-            )}
+            <div className="tool-panel-overlay__content">
+              {subcategoryGroups.length === 0 ? (
+                <div className="tool-panel-overlay__empty">
+                  <NoToolsFound />
+                </div>
+              ) : (
+                subcategoryGroups.map(group => (
+                  <section key={group.subcategoryId} className="tool-panel-overlay__section">
+                    <header className="tool-panel-overlay__section-header">
+                      <Text fw={600} size="sm">
+                        {getSubcategoryLabel(t, group.subcategoryId)}
+                      </Text>
+                    </header>
+                    <div className={`tool-panel-overlay__grid tool-panel-overlay__grid--${layout}`}>
+                      {group.tools.map(({ id, tool }) => (
+                        <ToolPanelOverlayTile
+                          key={id}
+                          id={id}
+                          tool={tool}
+                          layout={layout}
+                          onSelect={toolId => handleToolSelect(toolId as ToolId)}
+                          isSelected={selectedToolKey === id}
+                          matchedSynonym={matchedTextMap.get(id)}
+                        />
+                      ))}
+                    </div>
+                  </section>
+                ))
+              )}
+            </div>
           </ScrollArea>
         </div>
       </Paper>
