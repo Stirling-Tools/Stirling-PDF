@@ -161,16 +161,18 @@ export default function ToolPanelOverlay() {
         <ScrollArea className="tool-panel-overlay__scroll" offsetScrollbars>
           <div className="tool-panel-overlay__content">
             {subcategoryGroups.length === 0 ? (
-              <NoToolsFound
-                title={t('toolPanel.overlay.noResultsTitle', 'No tools found')}
-                description={t('toolPanel.overlay.noResultsDescription', 'Try adjusting your filters or search terms.')}
-              />
+              <div className="tool-panel-overlay__empty">
+                <NoToolsFound />
+                <Text size="sm" c="dimmed">
+                  {t('toolPanel.overlayHint', 'Select a tool to open it in the workspace.')}
+                </Text>
+              </div>
             ) : (
-              subcategoryGroups.map(({ key, tools }) => (
-                <section key={key} className="tool-panel-overlay__section">
+              subcategoryGroups.map(({ subcategoryId, tools }) => (
+                <section key={subcategoryId} className="tool-panel-overlay__section">
                   <header className="tool-panel-overlay__section-header">
                     <Text size="sm" fw={600} tt="uppercase" c="dimmed" lts={0.5}>
-                      {getSubcategoryLabel(key, t)}
+                      {getSubcategoryLabel(t, subcategoryId)}
                     </Text>
                     <Badge variant="outline" size="xs" radius="sm" color="gray">
                       {tools.length}
@@ -180,8 +182,7 @@ export default function ToolPanelOverlay() {
                     className={`tool-panel-overlay__grid tool-panel-overlay__grid--${layout}`}
                     role="list"
                   >
-                    {tools.map(tool => {
-                      const [toolId, toolConfig] = tool.item;
+                    {tools.map(({ id: toolId, tool: toolConfig }) => {
                       const matchedText = matchedTextMap.get(toolId);
                       return (
                         <ToolPanelOverlayTile

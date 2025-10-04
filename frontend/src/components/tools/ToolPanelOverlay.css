@@ -69,6 +69,13 @@
   gap: 2rem;
 }
 
+.tool-panel-overlay__empty {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem;
+}
+
 .tool-panel-overlay__section {
   display: flex;
   flex-direction: column;
