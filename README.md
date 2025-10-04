@@ -62,7 +62,7 @@ All documentation available at [https://docs.stirlingpdf.com/](https://docs.stir
 - **PDF to XML**: Convert to XML format
 - **PDF to HTML**: Transform to HTML
 - **PDF to PDF/A**: Convert to archival (PDF/A-1b, PDF/A-2b) format
-- **PDF to Markdown**: Extract text as Markdown
+- **PDF to Markdown**: Convert PDF to Markdown
 - **PDF to CBZ**: Convert to comic book archive
 - **PDF to CBR**: Convert to comic book rar archive
 
@@ -99,14 +99,14 @@ All documentation available at [https://docs.stirlingpdf.com/](https://docs.stir
 
 #### Advanced
 - **Compress**: Reduce file size
-- **Pipeline**: Automated workflow processing ()
+- **Pipeline**: Automated workflow processing (OCR images pipeline, prepare PDFs for emailing pipeline)
 - **Adjust Colours/Contrast**: Colour and contrast adjustment
 - **Auto Rename PDF File**: Automatic file renaming
 - **Auto Split Pages**: Automatic page splitting
 - **Detect/Split Scanned photos**: Photo detection and splitting
 - **Overlay PDFs**: Layer PDFs over each other
 - **Repair**: Fix corrupted PDFs
-- **Show Javascript**: Display embedded JavaScript
+- **Show JavaScript**: Display embedded JavaScript
 - **Auto Split by Size/Count**: Split by file size or page count
 - **Split PDF by Chapters**: Chapter-based splitting
 - **Split PDF by Sections**: Section-based splitting
