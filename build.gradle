@@ -9,7 +9,7 @@ plugins {
     id "com.diffplug.spotless" version "7.2.1"
     id "com.github.jk1.dependency-license-report" version "2.9"
     //id "nebula.lint" version "19.0.3"
-    id "org.panteleyev.jpackageplugin" version "1.7.5"
+    id "org.panteleyev.jpackageplugin" version "1.7.6"
     id "org.sonarqube" version "6.3.1.5724"
 }
 
