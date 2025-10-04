@@ -9,6 +9,10 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.apache.pdfbox.cos.COSName;
+import org.apache.pdfbox.pdmodel.graphics.color.PDColor;
+import org.apache.pdfbox.pdmodel.graphics.color.PDDeviceRGB;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationWidget;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceCharacteristicsDictionary;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.pdmodel.interactive.form.PDCheckBox;
 import org.apache.pdfbox.pdmodel.interactive.form.PDChoice;
@@ -21,6 +25,9 @@ import org.apache.pdfbox.pdmodel.interactive.form.PDSignatureField;
 import org.apache.pdfbox.pdmodel.interactive.form.PDTerminalField;
 import org.apache.pdfbox.pdmodel.interactive.form.PDTextField;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public enum FormFieldTypeSupport {
     TEXT("text", "textField", PDTextField.class) {
         @Override
@@ -87,13 +94,49 @@ public enum FormFieldTypeSupport {
                 List<String> options)
                 throws IOException {
             PDCheckBox checkBox = (PDCheckBox) field;
+
             if (!options.isEmpty()) {
                 checkBox.setExportValues(options);
             }
+
+            ensureCheckBoxAppearance(checkBox);
+
             if (FormUtils.isChecked(definition.defaultValue())) {
                 checkBox.check();
             } else {
                 checkBox.unCheck();
+            }
+        }
+
+        private void ensureCheckBoxAppearance(PDCheckBox checkBox) {
+            try {
+                if (checkBox.getWidgets().isEmpty()) {
+                    return;
+                }
+
+                PDAnnotationWidget widget = checkBox.getWidgets().get(0);
+
+                PDAppearanceCharacteristicsDictionary appearanceChars =
+                        widget.getAppearanceCharacteristics();
+                if (appearanceChars == null) {
+                    appearanceChars =
+                            new PDAppearanceCharacteristicsDictionary(widget.getCOSObject());
+                    widget.setAppearanceCharacteristics(appearanceChars);
+                }
+
+                appearanceChars.setBorderColour(
+                        new PDColor(new float[] {0, 0, 0}, PDDeviceRGB.INSTANCE));
+                appearanceChars.setBackground(
+                        new PDColor(new float[] {1, 1, 1}, PDDeviceRGB.INSTANCE));
+
+                appearanceChars.setNormalCaption("4");
+
+                widget.setPrinted(true);
+                widget.setReadOnly(false);
+                widget.setHidden(false);
+
+            } catch (Exception e) {
+                log.debug("Unable to set checkbox appearance characteristics: {}", e.getMessage());
             }
         }
     },

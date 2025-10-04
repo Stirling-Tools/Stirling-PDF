@@ -31,7 +31,7 @@ const {
 
 const editModal =
   editModalEl && window.bootstrap?.Modal
-    ? new window.bootstrap.Modal(editModalEl, { backdrop: "static" })
+    ? new window.bootstrap.Modal(editModalEl, { backdrop: true })
     : null;
 
 const state = {
@@ -42,6 +42,8 @@ const state = {
   retainedFieldValues: new Map(),
   fieldOrdinalOrder: new Map(),
   nextFieldOrdinalValue: 0,
+  currentFetchController: null,
+  fieldLabelCache: new Map(),
 };
 
 const DEFAULT_JSON_PLACEHOLDER = '{"field":"value"}';
@@ -154,12 +156,17 @@ async function loadSingleFormFile(file) {
     return;
   }
 
+  // Cancel any in-flight request
+  if (state.currentFetchController) {
+    state.currentFetchController.abort();
+  }
+
   state.currentFile = file;
 
   if (batchTextarea) {
     batchTextarea.value = "";
   }
-  setStatus(locale.loading, "info");
+  setStatus(locale.loadingFields || locale.loading || "Loading form fields...", "info");
   toggleInputs(false);
 
   try {
@@ -174,10 +181,15 @@ async function loadSingleFormFile(file) {
       updateDownloadButtonVisibility();
     }
   } catch (error) {
+    if (error.name === 'AbortError') {
+      console.log('Field loading was cancelled');
+      return;
+    }
     console.error(error);
     setStatus(locale.requestError, "danger");
     resetFieldSection();
   } finally {
+    state.currentFetchController = null;
     toggleInputs(true);
   }
 }
@@ -201,15 +213,22 @@ function resetFieldSection() {
   fieldsForm.innerHTML = "";
   state.fieldValidationRegistry.clear();
   state.retainedFieldValues.clear();
+  state.fieldMetadata.clear();
+  state.fieldLabelCache.clear();
+  state.pendingRemovalNames.clear();
 }
 
 async function fetchFields(file) {
+  const controller = new AbortController();
+  state.currentFetchController = controller;
+
   const formData = new FormData();
   formData.append("file", file);
 
   const response = await fetch("/api/v1/form/fields", {
     method: "POST",
     body: formData,
+    signal: controller.signal,
   });
 
   if (!response.ok) {
@@ -217,7 +236,16 @@ async function fetchFields(file) {
   }
 
   const data = await response.json();
-  return normalizeFieldsResponse(data);
+  const normalized = normalizeFieldsResponse(data);
+
+  // Warn if unexpected data format
+  if (!normalized.fields || normalized.fields.length === 0) {
+    if (data && (Array.isArray(data) && data.length > 0 || Object.keys(data).length > 0)) {
+      console.warn('Received data but no fields extracted:', data);
+    }
+  }
+
+  return normalized;
 }
 
 function renderFields(fields, templateRecord) {
@@ -374,12 +402,11 @@ function createFieldActions(field, metadataKey) {
     const editButton = document.createElement("button");
     editButton.type = "button";
     editButton.className = "btn btn-link btn-sm p-0 d-inline-flex align-items-center gap-1";
-  editButton.title = locale.editField ?? "Edit field";
+    editButton.setAttribute("aria-label", `${locale.editField ?? "Edit field"}: ${displayLabel || field.name}`);
+    editButton.title = locale.editField ?? "Edit field";
     editButton.dataset.fieldKey = fieldKey;
     editButton.innerHTML =
-      '<span class="material-symbols-rounded" aria-hidden="true">edit</span><span class="visually-hidden">' +
-      (displayLabel || field.name) +
-      '</span>';
+      '<span class="material-symbols-rounded" aria-hidden="true">edit</span>';
     editButton.addEventListener("click", () => {
       handleEditField(fieldKey);
     });
@@ -390,12 +417,11 @@ function createFieldActions(field, metadataKey) {
   deleteButton.type = "button";
   deleteButton.className =
     "btn btn-link btn-sm text-danger p-0 d-inline-flex align-items-center gap-1";
+  deleteButton.setAttribute("aria-label", `${locale.deleteField ?? "Delete field"}: ${displayLabel || field.name}`);
   deleteButton.title = locale.deleteField ?? "Delete field";
   deleteButton.dataset.fieldKey = fieldKey;
   deleteButton.innerHTML =
-    '<span class="material-symbols-rounded" aria-hidden="true">delete</span><span class="visually-hidden">' +
-    (displayLabel || field.name) +
-    '</span>';
+    '<span class="material-symbols-rounded" aria-hidden="true">delete</span>';
   deleteButton.addEventListener("click", () => {
     handleDeleteField(fieldKey);
   });
@@ -484,13 +510,31 @@ async function handleDeleteField(fieldKey) {
     "names",
     JSON.stringify([metadata.name]),
     locale.deleteSuccess ?? locale.ready,
-    locale.deleting ?? locale.loading
+    (locale.deleting ?? locale.loading) || "Deleting field..."
   );
 
   if (success && metadata.name) {
     state.pendingRemovalNames.add(metadata.name);
     removeRetainedValue(metadata.name);
+    cleanupFieldReferences(metadata.name, fieldKey);
   }
+}
+
+function cleanupFieldReferences(fieldName, fieldKey) {
+  // Clean up validation registry for this field
+  for (const [input, entry] of Array.from(state.fieldValidationRegistry.entries())) {
+    if (input.name === fieldName || input.dataset?.fieldName === fieldName) {
+      state.fieldValidationRegistry.delete(input);
+    }
+  }
+
+  // Clean up metadata
+  if (fieldKey) {
+    state.fieldMetadata.delete(fieldKey);
+  }
+
+  // Clean up label cache
+  state.fieldLabelCache.delete(fieldName);
 }
 
 function populateEditForm(metadata) {
@@ -782,8 +826,8 @@ async function submitEditForm(event) {
     "/api/v1/form/modify-fields",
     "updates",
     JSON.stringify([payload]),
-  locale.modifySuccess ?? locale.ready,
-  locale.updating ?? locale.loading
+    locale.modifySuccess ?? locale.ready,
+    (locale.updating ?? locale.loading) || "Updating field..."
   );
 
   if (success) {
@@ -950,12 +994,21 @@ function applyRetainedValueToInput(input, field) {
       });
 
       if (unavailableValues.length > 0) {
+        // Clean unavailable values from retained state
+        const validValues = values.filter(v => !unavailableValues.includes(v));
+        if (validValues.length > 0) {
+          state.retainedFieldValues.set(field.name, { kind: "multiple", value: validValues });
+        } else {
+          state.retainedFieldValues.delete(field.name);
+        }
+
         const wrapper = input.closest('.mb-3') || input.parentElement;
         if (wrapper) {
           let warningEl = wrapper.querySelector('.multi-select-warning');
           if (!warningEl) {
             warningEl = document.createElement("div");
             warningEl.className = "form-text text-warning small multi-select-warning";
+            warningEl.setAttribute("role", "status");
             wrapper.appendChild(warningEl);
           }
           warningEl.innerHTML = `<span class="material-symbols-rounded" aria-hidden="true">warning</span> Some previous selections are no longer available: ${unavailableValues.join(', ')}`;
@@ -1121,12 +1174,15 @@ function updateErrorSummary(invalidFields) {
     return;
   }
 
+  const isNewSummary = !errorSummary;
+
   if (!errorSummary) {
     errorSummary = document.createElement('div');
     errorSummary.id = 'form-error-summary';
     errorSummary.className = 'alert alert-danger';
     errorSummary.setAttribute('role', 'alert');
     errorSummary.setAttribute('aria-live', 'assertive');
+    errorSummary.setAttribute('tabindex', '-1');
 
     if (fieldsForm && fieldsForm.parentNode) {
       fieldsForm.parentNode.insertBefore(errorSummary, fieldsForm);
@@ -1157,6 +1213,13 @@ function updateErrorSummary(invalidFields) {
   errorSummary.innerHTML = '';
   errorSummary.appendChild(heading);
   errorSummary.appendChild(errorList);
+
+  // Move focus to error summary for accessibility
+  if (isNewSummary) {
+    setTimeout(() => {
+      errorSummary.focus({ preventScroll: false });
+    }, 100);
+  }
 }
 
 function extractValueForValidation(input, constraints) {
@@ -1199,13 +1262,29 @@ function getFieldLabelForInput(input) {
     return null;
   }
 
-  const label = document.querySelector(`label[for="${input.id}"]`);
-  if (label) {
-    const text = label.textContent || "";
-    return text.replace(/\s*\*\s*$/, "").trim();
+  const fieldName = input.dataset.fieldName || input.name;
+
+  // Check cache first
+  if (fieldName && state.fieldLabelCache.has(fieldName)) {
+    return state.fieldLabelCache.get(fieldName);
   }
 
-  return input.dataset.fieldName || null;
+  const label = document.querySelector(`label[for="${input.id}"]`);
+  let labelText = null;
+
+  if (label) {
+    const text = label.textContent || "";
+    labelText = text.replace(/\s*\*\s*$/, "").trim();
+  } else {
+    labelText = fieldName;
+  }
+
+  // Cache the label
+  if (fieldName && labelText) {
+    state.fieldLabelCache.set(fieldName, labelText);
+  }
+
+  return labelText;
 }
 
 function buildInputForField(field, inputId) {
@@ -1506,14 +1585,14 @@ async function performDownload() {
     formData.append("flatten", String(flattenToggle?.checked ?? false));
     const valueMap = collectFieldValues();
     formData.append("data", JSON.stringify(valueMap));
-    setStatus(locale.loading, "info");
+    setStatus(locale.fillingForm || locale.loading || "Filling form...", "info");
     const response = await fetch("/api/v1/form/fill", {
       method: "POST",
       body: formData,
     });
     await handleDownloadResponse(response, "form-filled.pdf");
 
-    setStatus(locale.ready, "success");
+    setStatus(locale.downloadReady || locale.ready || "Form filled successfully", "success");
   } catch (error) {
     console.error(error);
     setStatus(locale.requestError, "danger");
@@ -1664,21 +1743,31 @@ function toISODate(value) {
     return "";
   }
 
+  // Already in ISO format - validate it
   if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
-    return trimmed;
+    const [year, month, day] = trimmed.split('-').map(Number);
+    if (isValidDateParts(year, month, day)) {
+      return trimmed;
+    }
+    return "";
   }
 
+  // Compact format: YYYYMMDD
   const compact = trimmed.match(/^(\d{4})(\d{2})(\d{2})$/);
   if (compact) {
     const [, year, month, day] = compact;
     if (isValidDateParts(Number(year), Number(month), Number(day))) {
       return `${year}-${month}-${day}`;
     }
+    return "";
   }
 
+  // Separated format with various delimiters
   const separated = trimmed.match(/^(\d{1,4})[\/\-.](\d{1,2})[\/\-.](\d{1,4})$/);
   if (separated) {
     const [, firstRaw, secondRaw, thirdRaw] = separated;
+
+    // Format: YYYY-MM-DD or YYYY/MM/DD
     if (firstRaw.length === 4) {
       const year = Number(firstRaw);
       const month = Number(secondRaw);
@@ -1686,45 +1775,63 @@ function toISODate(value) {
       if (isValidDateParts(year, month, day)) {
         return `${String(year).padStart(4, "0")}-${pad(month)}-${pad(day)}`;
       }
+      return "";
     }
 
+    // Format: DD-MM-YYYY or MM-DD-YYYY
     if (thirdRaw.length === 4) {
       const year = Number(thirdRaw);
       const firstNum = Number(firstRaw);
       const secondNum = Number(secondRaw);
-      let month;
-      let day;
 
+      // Try user's locale preference first
+      let month, day;
       if (prefersDayFirst) {
         day = firstNum;
         month = secondNum;
-        if (!isValidDateParts(year, month, day) && firstNum <= 12 && secondNum > 12) {
-          day = secondNum;
-          month = firstNum;
-        }
       } else {
         month = firstNum;
         day = secondNum;
-        if (!isValidDateParts(year, month, day) && firstNum > 12 && secondNum <= 12) {
-          month = secondNum;
+      }
+
+      // If preferred format is invalid, try the opposite if unambiguous
+      if (!isValidDateParts(year, month, day)) {
+        if (firstNum <= 12 && secondNum > 12) {
+          // Only second number can be day
+          month = firstNum;
+          day = secondNum;
+        } else if (firstNum > 12 && secondNum <= 12) {
+          // Only first number can be day
           day = firstNum;
+          month = secondNum;
+        } else {
+          // Ambiguous or both invalid
+          return "";
         }
       }
 
       if (isValidDateParts(year, month, day)) {
         return `${String(year).padStart(4, "0")}-${pad(month)}-${pad(day)}`;
       }
+      return "";
     }
   }
 
-  const jsDate = new Date(trimmed);
-  if (!Number.isNaN(jsDate.getTime())) {
-    const year = jsDate.getUTCFullYear();
-    const month = jsDate.getUTCMonth() + 1;
-    const day = jsDate.getUTCDate();
-    if (isValidDateParts(year, month, day)) {
-  return `${String(year).padStart(4, "0")}-${pad(month)}-${pad(day)}`;
+  // Fallback to native parsing - but be strict about validation
+  try {
+    const jsDate = new Date(trimmed);
+    if (!Number.isNaN(jsDate.getTime())) {
+      const year = jsDate.getFullYear();
+      const month = jsDate.getMonth() + 1;
+      const day = jsDate.getDate();
+
+      // Verify the parsed date matches the original input to avoid misinterpretation
+      if (isValidDateParts(year, month, day)) {
+        return `${String(year).padStart(4, "0")}-${pad(month)}-${pad(day)}`;
+      }
     }
+  } catch {
+    // Invalid date string
   }
 
   return "";
