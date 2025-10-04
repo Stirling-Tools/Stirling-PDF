@@ -232,6 +232,13 @@ public class GeneralWebController {
         return "overlay-pdf";
     }
 
+    @GetMapping("/fill-pdf-form")
+    @Hidden
+    public String fillPdfForm(Model model) {
+        model.addAttribute("currentPage", "fill-pdf-form");
+        return "fill-pdf-form";
+    }
+
     private List<FontResource> getFontNames() {
         List<FontResource> fontNames = new ArrayList<>();
         // Extract font names from classpath
