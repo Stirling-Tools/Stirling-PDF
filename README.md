@@ -40,7 +40,7 @@ All documentation available at [https://docs.stirlingpdf.com/](https://docs.stir
 - **Crop PDF**: Adjust PDF page boundaries
 - **Rotate**: Rotate pages in 90-degree increments
 - **Adjust page size/scale**: Resize page contents
-- **Multi-Page Layout**: Format multiple pages per sheet
+- **Multi-Page Layout**: Add multiple pages to PDF
 - **PDF to Single Large Page**: Convert to single continuous page
 - **Rotate**: Rotate PDF pages
 - **Organize**: Rearrange PDF pages
@@ -78,7 +78,7 @@ All documentation available at [https://docs.stirlingpdf.com/](https://docs.stir
 - **Add Password**: Apply PDF encryption
 - **Manual Redaction**: Manual content redaction
 - **Remove Certificate Sign**: Remove digital signatures
-- **Sanitize**: Clean PDF metadata
+- **Sanitize**: Clean PDF of potential security issues
 - **Validate PDF Signature**: Verify digital signatures
 
 #### View & Edit
