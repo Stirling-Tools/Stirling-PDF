@@ -29,7 +29,10 @@ project: &project
   - settings.gradle
   - frontend/**
   - docker/**
-  - testing/**
+  - '!**/requirements.txt'
+  - '!**/requirements.in'
+  - '!**/requirements*.txt'
+  - '!**/requirements*.in'
 
 frontend: &frontend
   - frontend/**
