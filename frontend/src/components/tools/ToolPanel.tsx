@@ -56,7 +56,7 @@ export default function ToolPanel() {
 
     if (isFullscreenMode) {
       if (isCatalogActive) {
-        return '100%';
+        return 'clamp(32rem, 48vw, 56rem)';
       }
 
       if (leftPanelView === 'toolContent' && isPanelVisible) {
@@ -79,7 +79,6 @@ export default function ToolPanel() {
       style={{
         width: computedWidth(),
         padding: '0',
-        flex: isCatalogActive ? '1 1 auto' : undefined,
       }}
     >
       <div

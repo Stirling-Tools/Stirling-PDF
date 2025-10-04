@@ -199,21 +199,3 @@
   flex: 0 0 auto;
 }
 
-.home-desktop-layout--catalog .home-desktop-layout__quick {
-  max-width: 0;
-  transform: translateX(-100%);
-  opacity: 0;
-  pointer-events: none;
-}
-
-.home-desktop-layout--catalog .home-desktop-layout__tool-panel {
-  flex: 1 1 auto;
-}
-
-.home-desktop-layout--catalog .home-desktop-layout__workbench,
-.home-desktop-layout--catalog .home-desktop-layout__right-rail {
-  max-width: 0;
-  opacity: 0;
-  transform: translateX(2rem);
-  pointer-events: none;
-}

@@ -132,8 +132,6 @@ export default function HomePage() {
 
   // Note: File selection limits are now handled directly by individual tools
 
-  const desktopCatalogActive = !isMobile && toolPanelMode === 'fullscreen' && leftPanelView === 'toolPicker';
-
   return (
     <div className="h-screen overflow-hidden">
       <ToolPanelModePrompt />
@@ -240,7 +238,7 @@ export default function HomePage() {
           align="flex-start"
           gap={0}
           h="100%"
-          className={`flex-nowrap flex home-desktop-layout ${desktopCatalogActive ? 'home-desktop-layout--catalog' : ''}`}
+          className="flex-nowrap flex home-desktop-layout"
         >
           <div className="home-desktop-layout__quick">
             <QuickAccessBar
@@ -250,10 +248,10 @@ export default function HomePage() {
           <div className="home-desktop-layout__tool-panel">
             <ToolPanel />
           </div>
-          <div className="home-desktop-layout__workbench" aria-hidden={desktopCatalogActive}>
+          <div className="home-desktop-layout__workbench">
             <Workbench />
           </div>
-          <div className="home-desktop-layout__right-rail" aria-hidden={desktopCatalogActive}>
+          <div className="home-desktop-layout__right-rail">
             <RightRail />
           </div>
           <FileManager selectedTool={selectedTool as any /* FIX ME */} />
