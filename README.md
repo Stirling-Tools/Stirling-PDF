@@ -122,11 +122,11 @@ Stirling-PDF currently supports 40 languages!
 | Catalan (Català) (ca_CA)                     | ![38%](https://geps.dev/progress/38)   |
 | Croatian (Hrvatski) (hr_HR)                  | ![35%](https://geps.dev/progress/35)   |
 | Czech (Česky) (cs_CZ)                        | ![39%](https://geps.dev/progress/39)   |
-| Danish (Dansk) (da_DK)                       | ![35%](https://geps.dev/progress/35)   |
+| Danish (Dansk) (da_DK)                       | ![34%](https://geps.dev/progress/34)   |
 | Dutch (Nederlands) (nl_NL)                   | ![34%](https://geps.dev/progress/34)   |
 | English (English) (en_GB)                    | ![100%](https://geps.dev/progress/100) |
 | English (US) (en_US)                         | ![100%](https://geps.dev/progress/100) |
-| French (Français) (fr_FR)                    | ![96%](https://geps.dev/progress/96)   |
+| French (Français) (fr_FR)                    | ![95%](https://geps.dev/progress/95)   |
 | German (Deutsch) (de_DE)                     | ![97%](https://geps.dev/progress/97)   |
 | Greek (Ελληνικά) (el_GR)                     | ![39%](https://geps.dev/progress/39)   |
 | Hindi (हिंदी) (hi_IN)                          | ![39%](https://geps.dev/progress/39)   |
@@ -136,14 +136,14 @@ Stirling-PDF currently supports 40 languages!
 | Italian (Italiano) (it_IT)                   | ![97%](https://geps.dev/progress/97)   |
 | Japanese (日本語) (ja_JP)                    | ![72%](https://geps.dev/progress/72)   |
 | Korean (한국어) (ko_KR)                      | ![39%](https://geps.dev/progress/39)   |
-| Norwegian (Norsk) (no_NB)                    | ![37%](https://geps.dev/progress/37)   |
+| Norwegian (Norsk) (no_NB)                    | ![36%](https://geps.dev/progress/36)   |
 | Persian (فارسی) (fa_IR)                      | ![38%](https://geps.dev/progress/38)   |
 | Polish (Polski) (pl_PL)                      | ![41%](https://geps.dev/progress/41)   |
 | Portuguese (Português) (pt_PT)               | ![39%](https://geps.dev/progress/39)   |
 | Portuguese Brazilian (Português) (pt_BR)     | ![97%](https://geps.dev/progress/97)   |
 | Romanian (Română) (ro_RO)                    | ![33%](https://geps.dev/progress/33)   |
 | Russian (Русский) (ru_RU)                    | ![96%](https://geps.dev/progress/96)   |
-| Serbian Latin alphabet (Srpski) (sr_LATN_RS) | ![43%](https://geps.dev/progress/43)   |
+| Serbian Latin alphabet (Srpski) (sr_LATN_RS) | ![42%](https://geps.dev/progress/42)   |
 | Simplified Chinese (简体中文) (zh_CN)         | ![98%](https://geps.dev/progress/98)   |
 | Slovakian (Slovensky) (sk_SK)                | ![29%](https://geps.dev/progress/29)   |
 | Slovenian (Slovenščina) (sl_SI)              | ![40%](https://geps.dev/progress/40)   |
