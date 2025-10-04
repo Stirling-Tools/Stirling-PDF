@@ -54,14 +54,14 @@ All documentation available at [https://docs.stirlingpdf.com/](https://docs.stir
 - **Email to PDF**: Convert email files to PDF
 
 #### Convert from PDF
-- **PDF to Word**: Convert to Microsoft Word format
+- **PDF to Word**: Convert to documet (docx, doc, odt) format
 - **PDF to Image**: Extract PDF pages as images
 - **PDF to RTF (Text)**: Convert to Rich Text Format
-- **PDF to Presentation**: Convert to presentation format
+- **PDF to Presentation**: Convert to presentation (pptx, ppt, odp) format
 - **PDF to CSV**: Extract tables to CSV
 - **PDF to XML**: Convert to XML format
 - **PDF to HTML**: Transform to HTML
-- **PDF to PDF/A**: Convert to archival format
+- **PDF to PDF/A**: Convert to archival (PDF/A-1b, PDF/A-2b) format
 - **PDF to Markdown**: Extract text as Markdown
 - **PDF to CBZ**: Convert to comic book archive
 - **PDF to CBR**: Convert to comic book rar archive
@@ -86,10 +86,10 @@ All documentation available at [https://docs.stirlingpdf.com/](https://docs.stir
 - **Extract Images**: Extract embedded images
 - **Change Metadata**: Edit PDF metadata
 - **Get ALL Info on PDF**: Comprehensive PDF analysis
-- **Advanced Colour options**: Colour manipulation
+- **Advanced Colour options**: Colour manipulation (various options for colour inversion, CMYK conversion)
 - **Compare**: Compare PDF documents
 - **Add Page Numbers**: Insert page numbering
-- **Flatten**: Flatten PDF layers
+- **Flatten**: Flatten PDF layers, and interactive elements
 - **Remove Annotations**: Delete comments and markups
 - **Remove Blank pages**: Delete empty pages
 - **Remove Image**: Delete embedded images
@@ -99,7 +99,7 @@ All documentation available at [https://docs.stirlingpdf.com/](https://docs.stir
 
 #### Advanced
 - **Compress**: Reduce file size
-- **Pipeline**: Automated workflow processing
+- **Pipeline**: Automated workflow processing ()
 - **Adjust Colours/Contrast**: Colour and contrast adjustment
 - **Auto Rename PDF File**: Automatic file renaming
 - **Auto Split Pages**: Automatic page splitting
