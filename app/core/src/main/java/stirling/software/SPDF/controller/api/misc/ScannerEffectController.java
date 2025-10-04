@@ -8,6 +8,10 @@ import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ForkJoinPool;
@@ -36,22 +40,28 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.SPDF.model.api.misc.ScannerEffectRequest;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ApplicationContextProvider;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.ProcessExecutor;
+import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.common.util.WebResponseUtils;
 
 @RestController
 @RequestMapping("/api/v1/misc")
 @Tag(name = "Misc", description = "Miscellaneous PDF APIs")
+@Slf4j
 @RequiredArgsConstructor
 public class ScannerEffectController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final EndpointConfiguration endpointConfiguration;
 
     // Size limits to prevent OutOfMemoryError
     private static final int MAX_IMAGE_WIDTH = 8192;
@@ -80,6 +90,24 @@ public class ScannerEffectController {
         double minScale = Math.min(Math.min(widthScale, heightScale), pixelScale);
 
         return (int) Math.max(72, resolution * minScale);
+    }
+
+    private static int determineRenderResolution(
+            ScannerEffectRequest request, boolean ghostscriptEnabled) {
+        int requested = request.getResolution();
+        if (!ghostscriptEnabled) {
+            return requested;
+        }
+
+        if (request.isAdvancedEnabled()) {
+            return Math.min(requested, 240);
+        }
+
+        return switch (request.getQuality()) {
+            case high -> Math.min(requested, 200);
+            case medium -> Math.min(requested, 160);
+            case low -> Math.min(requested, 130);
+        };
     }
 
     private static BufferedImage renderPageSafely(PDFRenderer renderer, int pageIndex, int dpi)
@@ -370,7 +398,7 @@ public class ScannerEffectController {
 
         System.arraycopy(srcPixels, 0, tempPixels, 0, pixelCount);
 
-        for (int pass = 0; pass < 3; pass++) {
+        for (int pass = 0; pass < 2; pass++) {
             boxBlurHorizontal(tempPixels, dstPixels, width, height, radius);
             boxBlurVertical(dstPixels, tempPixels, width, height, radius);
         }
@@ -451,6 +479,28 @@ public class ScannerEffectController {
         }
     }
 
+    private static long safeFileSize(Path path) {
+        try {
+            return Files.size(path);
+        } catch (IOException e) {
+            log.debug("Failed to read file size for {}", path, e);
+            return -1;
+        }
+    }
+
+    private static String formatDurationSince(long startNanos) {
+        return formatDuration(System.nanoTime() - startNanos);
+    }
+
+    private static String formatDuration(long nanos) {
+        Duration duration = Duration.ofNanos(nanos);
+        long millis = duration.toMillis();
+        if (millis >= 1000) {
+            return String.format("%.2fs", millis / 1000.0);
+        }
+        return millis + "ms";
+    }
+
     @PostMapping(value = "/scanner-effect", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "Apply scanner effect to PDF",
@@ -460,89 +510,325 @@ public class ScannerEffectController {
             throws IOException {
         MultipartFile file = request.getFileInput();
 
-        // Apply preset first if needed
-        if (!request.isAdvancedEnabled()) {
-            switch (request.getQuality()) {
-                case high -> request.applyHighQualityPreset();
-                case medium -> request.applyMediumQualityPreset();
-                case low -> request.applyLowQualityPreset();
-            }
-        }
+        boolean qpdfEnabled = isQpdfEnabled();
+        boolean ghostscriptEnabled = isGhostscriptEnabled();
+        long overallStart = System.nanoTime();
 
-        // Extract values after preset application
-        int baseRotation = request.getRotationValue() + request.getRotate();
-        int rotateVariance = request.getRotateVariance();
-        int borderPx = request.getBorder();
-        float brightness = request.getBrightness();
-        float contrast = request.getContrast();
-        float blur = request.getBlur();
-        float noise = request.getNoise();
-        boolean yellowish = request.isYellowish();
-        int resolution = request.getResolution();
-        ScannerEffectRequest.Colorspace colorspace = request.getColorspace();
+        log.info(
+                "Scanner effect request received: filename={}, size={} bytes, advanced={}, resolution={}, qpdfEnabled={}, ghostscriptEnabled={}",
+                file.getOriginalFilename(),
+                file.getSize(),
+                request.isAdvancedEnabled(),
+                request.getResolution(),
+                qpdfEnabled,
+                ghostscriptEnabled);
 
-        int maxSafeDpi = 500; // Default maximum safe DPI
-        ApplicationProperties properties =
-                ApplicationContextProvider.getBean(ApplicationProperties.class);
-        if (properties != null && properties.getSystem() != null) {
-            maxSafeDpi = properties.getSystem().getMaxDPI();
-        }
-        if (resolution > maxSafeDpi) {
-            throw ExceptionUtils.createIllegalArgumentException(
-                    "error.dpiExceedsLimit",
-                    "DPI value {0} exceeds maximum safe limit of {1}. High DPI values can cause"
-                            + " memory issues and crashes. Please use a lower DPI value.",
-                    resolution,
-                    maxSafeDpi);
-        }
+        List<Path> tempFiles = new ArrayList<>();
+        Path processingInput;
 
-        try (PDDocument document = pdfDocumentFactory.load(file);
-                PDDocument outputDocument = new PDDocument();
-                ManagedForkJoinPool managedPool =
-                        new ManagedForkJoinPool(
-                                Math.max(1, Runtime.getRuntime().availableProcessors() - 1))) {
+        try {
+            Path originalInput = Files.createTempFile("scanner_effect_input_", ".pdf");
+            tempFiles.add(originalInput);
+            file.transferTo(originalInput.toFile());
 
-            int totalPages = document.getNumberOfPages();
-            ForkJoinPool customPool = managedPool.getPool();
-
-            List<ProcessedPage> processedPages;
-            try {
-                processedPages =
-                        customPool
-                                .submit(
-                                        () ->
-                                                IntStream.range(0, totalPages)
-                                                        .parallel()
-                                                        .mapToObj(
-                                                                i ->
-                                                                        processPage(
-                                                                                i,
-                                                                                document,
-                                                                                baseRotation,
-                                                                                rotateVariance,
-                                                                                borderPx,
-                                                                                brightness,
-                                                                                contrast,
-                                                                                blur,
-                                                                                noise,
-                                                                                yellowish,
-                                                                                resolution,
-                                                                                colorspace))
-                                                        .toList())
-                                .get();
-            } catch (Exception e) {
-                throw new IOException("Parallel page processing failed", e);
+            processingInput = originalInput;
+            if (qpdfEnabled && !ghostscriptEnabled) {
+                try {
+                    long qpdfStart = System.nanoTime();
+                    Path qpdfOutput = runQpdfPreprocessing(originalInput);
+                    tempFiles.add(qpdfOutput);
+                    processingInput = qpdfOutput;
+                    if (log.isInfoEnabled()) {
+                        long originalSize = safeFileSize(originalInput);
+                        long optimizedSize = safeFileSize(qpdfOutput);
+                        log.info(
+                                "QPDF preprocessing completed in {} ({} bytes -> {} bytes)",
+                                formatDurationSince(qpdfStart),
+                                originalSize,
+                                optimizedSize);
+                    }
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    log.warn("QPDF preprocessing interrupted; continuing with original input.", e);
+                } catch (Exception e) {
+                    log.warn("QPDF preprocessing failed; continuing with original input.", e);
+                }
+            } else if (qpdfEnabled) {
+                log.info(
+                        "Skipping QPDF preprocessing because Ghostscript post-processing is enabled for this request.");
             }
 
-            writeProcessedPagesToDocument(processedPages, outputDocument);
+            if (!request.isAdvancedEnabled()) {
+                switch (request.getQuality()) {
+                    case high -> request.applyHighQualityPreset();
+                    case medium -> request.applyMediumQualityPreset();
+                    case low -> request.applyLowQualityPreset();
+                }
+            }
 
-            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-            outputDocument.save(outputStream);
+            int baseRotation = request.getRotationValue() + request.getRotate();
+            int rotateVariance = request.getRotateVariance();
+            int borderPx = request.getBorder();
+            float brightness = request.getBrightness();
+            float contrast = request.getContrast();
+            float blur = request.getBlur();
+            float noise = request.getNoise();
+            boolean yellowish = request.isYellowish();
+            int resolution = request.getResolution();
+            int renderResolution = determineRenderResolution(request, ghostscriptEnabled);
+            ScannerEffectRequest.Colorspace colorspace = request.getColorspace();
 
-            return WebResponseUtils.bytesToWebResponse(
-                    outputStream.toByteArray(),
-                    GeneralUtils.generateFilename(
-                            file.getOriginalFilename(), "_scanner_effect.pdf"));
+            int maxSafeDpi = 500; // Default maximum safe DPI
+            ApplicationProperties properties =
+                    ApplicationContextProvider.getBean(ApplicationProperties.class);
+            if (properties != null && properties.getSystem() != null) {
+                maxSafeDpi = properties.getSystem().getMaxDPI();
+            }
+            if (resolution > maxSafeDpi) {
+                throw ExceptionUtils.createIllegalArgumentException(
+                        "error.dpiExceedsLimit",
+                        "DPI value {0} exceeds maximum safe limit of {1}. High DPI values can cause"
+                                + " memory issues and crashes. Please use a lower DPI value.",
+                        resolution,
+                        maxSafeDpi);
+            }
+
+            long documentLoadStart = System.nanoTime();
+            try (PDDocument document = pdfDocumentFactory.load(processingInput);
+                    PDDocument outputDocument = new PDDocument();
+                    ManagedForkJoinPool managedPool =
+                            new ManagedForkJoinPool(
+                                    Math.min(
+                                            64,
+                                            Math.max(
+                                                    2,
+                                                    Runtime.getRuntime().availableProcessors()
+                                                            * 2)))) {
+
+                log.info(
+                        "Input document loaded in {} from {}",
+                        formatDurationSince(documentLoadStart),
+                        processingInput);
+
+                int totalPages = document.getNumberOfPages();
+                ForkJoinPool customPool = managedPool.getPool();
+
+                log.info(
+                        "Processing {} page(s) at {} DPI for rendering (requested {} DPI) using {} worker thread(s)",
+                        totalPages,
+                        renderResolution,
+                        resolution,
+                        customPool.getParallelism());
+
+                ThreadLocal<PDFRenderer> rendererCache =
+                        ThreadLocal.withInitial(
+                                () -> {
+                                    PDFRenderer renderer = new PDFRenderer(document);
+                                    renderer.setSubsamplingAllowed(true);
+                                    renderer.setImageDownscalingOptimizationThreshold(0.5f);
+                                    return renderer;
+                                });
+
+                List<ProcessedPage> processedPages;
+                try {
+                    long renderStart = System.nanoTime();
+                    processedPages =
+                            customPool
+                                    .submit(
+                                            () ->
+                                                    IntStream.range(0, totalPages)
+                                                            .parallel()
+                                                            .mapToObj(
+                                                                    i ->
+                                                                            processPage(
+                                                                                    i,
+                                                                                    document,
+                                                                                    rendererCache,
+                                                                                    baseRotation,
+                                                                                    rotateVariance,
+                                                                                    borderPx,
+                                                                                    brightness,
+                                                                                    contrast,
+                                                                                    blur,
+                                                                                    noise,
+                                                                                    yellowish,
+                                                                                    renderResolution,
+                                                                                    colorspace))
+                                                            .toList())
+                                    .get();
+                    log.info("Page rendering completed in {}", formatDurationSince(renderStart));
+                    rendererCache.remove();
+                } catch (Exception e) {
+                    throw new IOException("Parallel page processing failed", e);
+                }
+
+                long writingStart = System.nanoTime();
+                writeProcessedPagesToDocument(processedPages, outputDocument);
+                log.info("Composited output document in {}", formatDurationSince(writingStart));
+
+                ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+                outputDocument.save(outputStream);
+
+                byte[] processedBytes =
+                        finalizeWithGhostscript(
+                                outputStream.toByteArray(), request, ghostscriptEnabled);
+
+                log.info(
+                        "Scanner effect pipeline completed in {}",
+                        formatDurationSince(overallStart));
+
+                return WebResponseUtils.bytesToWebResponse(
+                        processedBytes,
+                        GeneralUtils.generateFilename(
+                                file.getOriginalFilename(), "_scanner_effect.pdf"));
+            }
+        } finally {
+            for (Path tempFile : tempFiles) {
+                try {
+                    Files.deleteIfExists(tempFile);
+                } catch (IOException e) {
+                    log.warn("Failed to delete temporary file {}", tempFile, e);
+                }
+            }
+        }
+    }
+
+    private boolean isGhostscriptEnabled() {
+        return endpointConfiguration.isGroupEnabled("Ghostscript");
+    }
+
+    private boolean isQpdfEnabled() {
+        return endpointConfiguration.isGroupEnabled("qpdf");
+    }
+
+    private byte[] finalizeWithGhostscript(
+            byte[] pdfBytes, ScannerEffectRequest request, boolean ghostscriptEnabled) {
+        if (!ghostscriptEnabled) {
+            log.debug("Ghostscript group disabled or unavailable; skipping rasterization step.");
+            return pdfBytes;
+        }
+
+        long start = System.nanoTime();
+        try {
+            byte[] result = runGhostscriptRasterization(pdfBytes, request);
+            log.info("Ghostscript rasterization completed in {}", formatDurationSince(start));
+            return result;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.warn("Ghostscript rasterization step interrupted; returning original output.", e);
+            return pdfBytes;
+        } catch (Exception e) {
+            log.warn("Ghostscript rasterization step failed; continuing with original output.", e);
+            return pdfBytes;
+        }
+    }
+
+    private void writeProcessedPagesToDocument(List<ProcessedPage> pages, PDDocument document)
+            throws IOException {
+        for (ProcessedPage page : pages) {
+            PDPage newPage = new PDPage(new PDRectangle(page.origW, page.origH));
+            document.addPage(newPage);
+
+            try (PDPageContentStream contentStream = new PDPageContentStream(document, newPage)) {
+                PDImageXObject pdImage = LosslessFactory.createFromImage(document, page.image);
+                contentStream.drawImage(
+                        pdImage, page.offsetX, page.offsetY, page.drawW, page.drawH);
+            }
+
+            page.image.flush();
+        }
+    }
+
+    private Path runQpdfPreprocessing(Path inputFile) throws IOException, InterruptedException {
+        Path qpdfOutput = Files.createTempFile("scanner_effect_qpdf_pre_", ".pdf");
+
+        List<String> command = new ArrayList<>();
+        command.add("qpdf");
+        command.add("--normalize-content=y");
+        command.add("--object-streams=preserve");
+        command.add("--stream-data=preserve");
+        command.add("--linearize");
+        command.add(inputFile.toString());
+        command.add(qpdfOutput.toString());
+
+        ProcessExecutorResult result =
+                ProcessExecutor.getInstance(ProcessExecutor.Processes.QPDF)
+                        .runCommandWithOutputHandling(command);
+
+        if (result.getRc() != 0 && result.getRc() != 3) {
+            throw new IOException("QPDF returned non-zero exit code: " + result.getRc());
+        }
+
+        return qpdfOutput;
+    }
+
+    private byte[] runGhostscriptRasterization(byte[] pdfBytes, ScannerEffectRequest request)
+            throws IOException, InterruptedException {
+        Path inputFile = null;
+        Path outputFile = null;
+        try {
+            inputFile = Files.createTempFile("scanner_effect_gs_in_", ".pdf");
+            outputFile = Files.createTempFile("scanner_effect_gs_out_", ".pdf");
+
+            Files.write(inputFile, pdfBytes);
+
+            List<String> command = new ArrayList<>();
+            command.add("gs");
+            command.add("-sDEVICE=pdfwrite");
+            command.add("-dCompatibilityLevel=1.5");
+            command.add("-dNOPAUSE");
+            command.add("-dQUIET");
+            command.add("-dBATCH");
+            String pdfSetting;
+            if (request.isAdvancedEnabled()) {
+                pdfSetting = request.getResolution() >= 240 ? "/prepress" : "/ebook";
+            } else {
+                pdfSetting =
+                        switch (request.getQuality()) {
+                            case high -> "/prepress";
+                            case medium -> "/ebook";
+                            case low -> "/screen";
+                        };
+            }
+            command.add("-dPDFSETTINGS=" + pdfSetting);
+            if (request.isAdvancedEnabled() && request.getResolution() > 0) {
+                int effectiveResolution = Math.max(72, Math.min(600, request.getResolution()));
+                command.add("-r" + effectiveResolution + "x" + effectiveResolution);
+            }
+            command.add("-dFastWebView=true");
+            command.add("-dDetectDuplicateImages=true");
+            command.add("-dCompressFonts=true");
+            command.add("-dSubsetFonts=true");
+            command.add("-sOutputFile=" + outputFile);
+            command.add(inputFile.toString());
+
+            ProcessExecutorResult result =
+                    ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT)
+                            .runCommandWithOutputHandling(command);
+
+            if (result.getRc() != 0) {
+                throw new IOException("Ghostscript returned non-zero exit code: " + result.getRc());
+            }
+
+            return Files.readAllBytes(outputFile);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw e;
+        } finally {
+            if (inputFile != null) {
+                try {
+                    Files.deleteIfExists(inputFile);
+                } catch (IOException e) {
+                    log.warn("Failed to delete Ghostscript temp input file {}", inputFile, e);
+                }
+            }
+            if (outputFile != null) {
+                try {
+                    Files.deleteIfExists(outputFile);
+                } catch (IOException e) {
+                    log.warn("Failed to delete Ghostscript temp output file {}", outputFile, e);
+                }
+            }
         }
     }
 
@@ -550,6 +836,7 @@ public class ScannerEffectController {
     private ProcessedPage processPage(
             int pageIndex,
             PDDocument document,
+            ThreadLocal<PDFRenderer> rendererCache,
             int baseRotation,
             int rotateVariance,
             int borderPx,
@@ -558,10 +845,11 @@ public class ScannerEffectController {
             float blur,
             float noise,
             boolean yellowish,
-            int resolution,
+            int renderResolution,
             ScannerEffectRequest.Colorspace colorspace) {
 
         try {
+            long pageStart = System.nanoTime();
             // Get page dimensions once to avoid redundant calls and race conditions
             PDRectangle pageSize;
             synchronized (document) {
@@ -570,10 +858,10 @@ public class ScannerEffectController {
             float pageWidthPts = pageSize.getWidth();
             float pageHeightPts = pageSize.getHeight();
 
-            int safeResolution = calculateSafeResolution(pageWidthPts, pageHeightPts, resolution);
+            int safeResolution =
+                    calculateSafeResolution(pageWidthPts, pageHeightPts, renderResolution);
 
-            PDFRenderer pdfRenderer = new PDFRenderer(document);
-            BufferedImage image = renderPageSafely(pdfRenderer, pageIndex, safeResolution);
+            BufferedImage image = renderPageSafely(rendererCache.get(), pageIndex, safeResolution);
 
             BufferedImage processed = convertColorspace(image, colorspace);
             image.flush();
@@ -621,30 +909,16 @@ public class ScannerEffectController {
                 rotated.flush();
             }
 
+            if (log.isDebugEnabled()) {
+                log.debug("Processed page {} in {}", pageIndex + 1, formatDurationSince(pageStart));
+            }
+
             return new ProcessedPage(
                     pageIndex, adjusted, origW, origH, offsetX, offsetY, drawW, drawH);
         } catch (IOException e) {
             throw new RuntimeException("Failed to process page " + (pageIndex + 1), e);
         } catch (OutOfMemoryError | NegativeArraySizeException e) {
-            throw ExceptionUtils.createOutOfMemoryDpiException(pageIndex + 1, resolution, e);
-        } finally {
-            BUFFER_CACHE.remove();
-        }
-    }
-
-    private void writeProcessedPagesToDocument(List<ProcessedPage> pages, PDDocument document)
-            throws IOException {
-        for (ProcessedPage page : pages) {
-            PDPage newPage = new PDPage(new PDRectangle(page.origW, page.origH));
-            document.addPage(newPage);
-
-            try (PDPageContentStream contentStream = new PDPageContentStream(document, newPage)) {
-                PDImageXObject pdImage = LosslessFactory.createFromImage(document, page.image);
-                contentStream.drawImage(
-                        pdImage, page.offsetX, page.offsetY, page.drawW, page.drawH);
-            }
-
-            page.image.flush();
+            throw ExceptionUtils.createOutOfMemoryDpiException(pageIndex + 1, renderResolution, e);
         }
     }
 
