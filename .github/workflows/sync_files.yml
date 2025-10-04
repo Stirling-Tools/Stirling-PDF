@@ -30,6 +30,10 @@ permissions:
 jobs:
   sync-files:
     runs-on: ubuntu-latest
+    env:
+      # Prevents sdist builds → no tar extraction
+      PIP_ONLY_BINARY: ":all:"
+      PIP_DISABLE_PIP_VERSION_CHECK: "1"
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
@@ -61,7 +65,9 @@ jobs:
           git diff --staged --quiet || git commit -m ":memo: Sync translation files" || echo "No changes detected"
 
       - name: Install dependencies
-        run: pip install --require-hashes -r ./.github/scripts/requirements_sync_readme.txt
+        # Wheels-only + Hash-Pinning
+        run: |
+          pip install --require-hashes --only-binary=:all: -r ./.github/scripts/requirements_sync_readme.txt
 
       - name: Sync README.md
         run: |
