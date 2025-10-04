@@ -58,7 +58,7 @@ dependencies {
     implementation 'commons-io:commons-io:2.20.0'
     implementation "org.bouncycastle:bcprov-jdk18on:$bouncycastleVersion"
     implementation "org.bouncycastle:bcpkix-jdk18on:$bouncycastleVersion"
-    implementation 'io.micrometer:micrometer-core:1.15.3'
+    implementation 'io.micrometer:micrometer-core:1.15.4'
     implementation 'com.google.zxing:core:3.5.3'
     implementation "org.commonmark:commonmark:$commonmarkVersion" // https://mvnrepository.com/artifact/org.commonmark/commonmark
     implementation "org.commonmark:commonmark-ext-gfm-tables:$commonmarkVersion"
