@@ -82,6 +82,8 @@ const ToolSearch = ({
 
   const searchInput = (
       <TextInput
+        id="tool-search-input"
+        name="tool-search-input"
         ref={searchRef}
         value={value}
         onChange={handleSearchChange}
