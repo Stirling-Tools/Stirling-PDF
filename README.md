@@ -42,7 +42,6 @@ All documentation available at [https://docs.stirlingpdf.com/](https://docs.stir
 - **Adjust page size/scale**: Resize page contents
 - **Multi-Page Layout**: Add multiple pages to PDF
 - **PDF to Single Large Page**: Convert to single continuous page
-- **Rotate**: Rotate PDF pages
 - **Organize**: Rearrange PDF pages
 
 #### Convert to PDF
