@@ -29,8 +29,8 @@ project: &project
   - settings.gradle
   - frontend/**
   - docker/**
-  - '!**/requirements.txt'
-  - '!**/requirements.in'
+  - '!testing/cucumber/requirements.txt'
+  - '!testing/cucumber/requirements.in'
   - '!**/requirements*.txt'
   - '!**/requirements*.in'
 
