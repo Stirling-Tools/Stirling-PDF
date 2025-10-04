@@ -9,15 +9,16 @@ import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode
-public class ConvertCbzToPdfRequest {
+public class ConvertPdfToCbrRequest {
 
     @Schema(
-            description = "The input CBZ file to be converted to a PDF file",
+            description = "The input PDF file to be converted to a CBR file",
             requiredMode = Schema.RequiredMode.REQUIRED)
     private MultipartFile fileInput;
 
     @Schema(
-            description = "Optimize the output PDF for ebook reading using Ghostscript",
-            defaultValue = "false")
-    private boolean optimizeForEbook;
+            description = "The DPI (Dots Per Inch) for rendering PDF pages as images",
+            example = "150",
+            requiredMode = Schema.RequiredMode.REQUIRED)
+    private int dpi = 150;
 }

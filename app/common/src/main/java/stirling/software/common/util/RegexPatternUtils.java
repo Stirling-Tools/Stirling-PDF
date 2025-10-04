@@ -437,6 +437,11 @@ public final class RegexPatternUtils {
                 Pattern.CASE_INSENSITIVE);
     }
 
+    /** Pattern for matching image file extensions (case-insensitive) */
+    public Pattern getImageFilePattern() {
+        return getPattern(".*\\.(jpg|jpeg|png|gif|bmp|webp)$", Pattern.CASE_INSENSITIVE);
+    }
+
     /** Pattern for matching attachment section headers (case-insensitive) */
     public Pattern getAttachmentSectionPattern() {
         return getPattern("attachments\\s*\\(\\d+\\)", Pattern.CASE_INSENSITIVE);
