@@ -9,6 +9,7 @@ import { useMediaQuery } from "@mantine/hooks";
 import AppsIcon from '@mui/icons-material/AppsRounded';
 
 import ToolPanel from "../components/tools/ToolPanel";
+import ToolPanelModePrompt from "../components/tools/ToolPanelModePrompt";
 import Workbench from "../components/layout/Workbench";
 import QuickAccessBar from "../components/shared/QuickAccessBar";
 import RightRail from "../components/shared/RightRail";
@@ -30,7 +31,14 @@ export default function HomePage() {
 
   const { quickAccessRef } = sidebarRefs;
 
-  const { selectedTool, selectedToolKey, handleToolSelect, handleBackToTools } = useToolWorkflow();
+  const {
+    selectedTool,
+    selectedToolKey,
+    handleToolSelect,
+    handleBackToTools,
+    leftPanelView,
+    toolPanelMode,
+  } = useToolWorkflow();
 
   const { openFilesModal } = useFilesModalContext();
   const { colorScheme } = useMantineColorScheme();
@@ -126,6 +134,7 @@ export default function HomePage() {
 
   return (
     <div className="h-screen overflow-hidden">
+      <ToolPanelModePrompt />
       {isMobile ? (
         <div className="mobile-layout">
           <div className="mobile-toggle">
@@ -229,13 +238,22 @@ export default function HomePage() {
           align="flex-start"
           gap={0}
           h="100%"
-          className="flex-nowrap flex"
+          className="flex-nowrap flex home-desktop-layout"
         >
-          <QuickAccessBar
-            ref={quickAccessRef} />
-          <ToolPanel />
-          <Workbench />
-          <RightRail />
+          <div className="home-desktop-layout__quick">
+            <QuickAccessBar
+              ref={quickAccessRef}
+            />
+          </div>
+          <div className="home-desktop-layout__tool-panel">
+            <ToolPanel />
+          </div>
+          <div className="home-desktop-layout__workbench">
+            <Workbench />
+          </div>
+          <div className="home-desktop-layout__right-rail">
+            <RightRail />
+          </div>
           <FileManager selectedTool={selectedTool as any /* FIX ME */} />
         </Group>
       )}

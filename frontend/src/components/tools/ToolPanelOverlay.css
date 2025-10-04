@@ -1,0 +1,211 @@
+.tool-panel-overlay {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--bg-background);
+  color: var(--text-primary);
+}
+
+.tool-panel-overlay__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-toolbar);
+}
+
+.tool-panel-overlay__heading {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.tool-panel-overlay__search {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 1.5rem;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-toolbar);
+}
+
+.tool-panel-overlay__search-input {
+  flex: 1 1 20rem;
+  min-width: 16rem;
+}
+
+.tool-panel-overlay__search-input .search-input-container {
+  width: 100%;
+}
+
+.tool-panel-overlay__search-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.tool-panel-overlay__layout-toggle .mantine-SegmentedControl-control {
+  font-weight: 500;
+}
+
+.tool-panel-overlay__body {
+  flex: 1;
+  min-height: 0;
+  background: var(--bg-background);
+}
+
+.tool-panel-overlay__scroll {
+  height: 100%;
+}
+
+.tool-panel-overlay__content {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.tool-panel-overlay__empty {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem;
+}
+
+.tool-panel-overlay__section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.tool-panel-overlay__section-header {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  color: var(--tool-subcategory-text-color);
+}
+
+.tool-panel-overlay__grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.tool-panel-overlay__grid--compact {
+  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+}
+
+.tool-panel-overlay__grid--detailed {
+  grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
+}
+
+.tool-panel-overlay__tile-link,
+.tool-panel-overlay__tile-button {
+  all: unset;
+  display: block;
+}
+
+.tool-panel-overlay__tile-button {
+  cursor: pointer;
+}
+
+.tool-panel-overlay__tile-button[aria-disabled="true"],
+.tool-panel-overlay__tile-link[aria-disabled="true"] {
+  pointer-events: none;
+}
+
+.tool-panel-overlay__tile {
+  width: 100%;
+  height: 100%;
+  background: var(--tool-card-background, var(--bg-elevated));
+  border: 1px solid var(--border-subtle);
+  border-radius: 1rem;
+  padding: 1rem;
+  display: flex;
+  gap: 0.75rem;
+  color: var(--text-primary);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.tool-panel-overlay__tile[data-variant="compact"] {
+  flex-direction: column;
+  align-items: flex-start;
+  min-height: 10rem;
+}
+
+.tool-panel-overlay__tile[data-variant="detailed"] {
+  flex-direction: row;
+  align-items: flex-start;
+  min-height: 9rem;
+}
+
+.tool-panel-overlay__tile[data-selected="true"] {
+  border-color: var(--accent-primary, var(--primary-border, var(--mantine-color-pink-6)));
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-primary, var(--mantine-color-pink-6)) 20%, transparent);
+}
+
+.tool-panel-overlay__tile[data-disabled="true"] {
+  opacity: 0.45;
+}
+
+.tool-panel-overlay__tile:hover:not([data-disabled="true"]) {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--accent-primary, var(--mantine-color-pink-6)) 30%, var(--border-subtle));
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.12);
+}
+
+.tool-panel-overlay__tile-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 0.75rem;
+  background: color-mix(in srgb, var(--accent-primary, var(--mantine-color-pink-6)) 10%, transparent);
+  color: var(--tools-text-and-icon-color);
+  flex-shrink: 0;
+}
+
+.tool-panel-overlay__tile-icon svg,
+.tool-panel-overlay__tile-icon span {
+  font-size: 1.8rem;
+}
+
+.tool-panel-overlay__tile-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.tool-panel-overlay__tile-name {
+  color: var(--text-primary);
+}
+
+.tool-panel-overlay__tile-description {
+  line-height: 1.4;
+}
+
+.tool-panel-overlay__tile-match {
+  font-style: italic;
+}
+
+.tool-panel-overlay__tile-hotkey {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+@media (max-width: 1280px) {
+  .tool-panel-overlay__content {
+    padding: 1.25rem;
+  }
+
+  .tool-panel-overlay__search {
+    padding-inline: 1.25rem;
+  }
+}
