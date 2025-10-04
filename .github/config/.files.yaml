@@ -17,6 +17,10 @@ project: &project
   - exampleYmlFiles/**
   - gradle/**
   - libs/**
+  - '!testing/cucumber/requirements.txt'
+  - '!testing/cucumber/requirements.in'
+  - '!**/requirements*.txt'
+  - '!**/requirements*.in'
   - testing/**
   - build.gradle
   - Dockerfile
@@ -29,10 +33,6 @@ project: &project
   - settings.gradle
   - frontend/**
   - docker/**
-  - '!testing/cucumber/requirements.txt'
-  - '!testing/cucumber/requirements.in'
-  - '!**/requirements*.txt'
-  - '!**/requirements*.in'
 
 frontend: &frontend
   - frontend/**
