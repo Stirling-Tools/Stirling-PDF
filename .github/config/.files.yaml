@@ -17,11 +17,7 @@ project: &project
   - exampleYmlFiles/**
   - gradle/**
   - libs/**
-  - '!testing/cucumber/requirements.txt'
-  - '!testing/cucumber/requirements.in'
-  - '!**/requirements*.txt'
-  - '!**/requirements*.in'
-  - testing/**
+  - testing/**/!(requirements.txt|requirements.in)*
   - build.gradle
   - Dockerfile
   - Dockerfile.fat
