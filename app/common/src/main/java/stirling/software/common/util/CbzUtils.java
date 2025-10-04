@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.List;
-import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
@@ -30,13 +29,19 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 @UtilityClass
 public class CbzUtils {
 
-    private final Pattern IMAGE_PATTERN =
-            Pattern.compile(".*\\.(jpg|jpeg|png|gif|bmp|webp)$", Pattern.CASE_INSENSITIVE);
-
     public byte[] convertCbzToPdf(
             MultipartFile cbzFile,
             CustomPDFDocumentFactory pdfDocumentFactory,
             TempFileManager tempFileManager)
+            throws IOException {
+        return convertCbzToPdf(cbzFile, pdfDocumentFactory, tempFileManager, false);
+    }
+
+    public byte[] convertCbzToPdf(
+            MultipartFile cbzFile,
+            CustomPDFDocumentFactory pdfDocumentFactory,
+            TempFileManager tempFileManager,
+            boolean optimizeForEbook)
             throws IOException {
 
         validateCbzFile(cbzFile);
@@ -106,7 +111,19 @@ public class CbzUtils {
                 }
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 document.save(baos);
-                return baos.toByteArray();
+                byte[] pdfBytes = baos.toByteArray();
+
+                // Apply Ghostscript optimization if requested
+                if (optimizeForEbook) {
+                    try {
+                        return GeneralUtils.optimizePdfWithGhostscript(pdfBytes);
+                    } catch (IOException e) {
+                        log.warn("Ghostscript optimization failed, returning unoptimized PDF", e);
+                        return pdfBytes;
+                    }
+                }
+
+                return pdfBytes;
             }
         }
     }
@@ -137,8 +154,21 @@ public class CbzUtils {
         return "cbz".equals(extension) || "zip".equals(extension);
     }
 
+    public static boolean isComicBookFile(MultipartFile file) {
+        String filename = file.getOriginalFilename();
+        if (filename == null) {
+            return false;
+        }
+
+        String extension = FilenameUtils.getExtension(filename).toLowerCase();
+        return "cbz".equals(extension)
+                || "zip".equals(extension)
+                || "cbr".equals(extension)
+                || "rar".equals(extension);
+    }
+
     private boolean isImageFile(String filename) {
-        return IMAGE_PATTERN.matcher(filename).matches();
+        return RegexPatternUtils.getInstance().getImageFilePattern().matcher(filename).matches();
     }
 
     private record ImageEntryData(String name, byte[] data) {}
