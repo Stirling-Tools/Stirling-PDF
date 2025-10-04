@@ -3,7 +3,7 @@ import {
   Text, Center, Box, LoadingOverlay, Stack, Group
 } from '@mantine/core';
 import { Dropzone } from '@mantine/dropzone';
-import { useFileSelection, useFileState, useFileManagement } from '../../contexts/FileContext';
+import { useFileSelection, useFileState, useFileManagement, useFileActions } from '../../contexts/FileContext';
 import { useNavigationActions } from '../../contexts/NavigationContext';
 import { zipFileService } from '../../services/zipFileService';
 import { detectFileExtension } from '../../utils/fileUtils';
@@ -37,6 +37,7 @@ const FileEditor = ({
   // Use optimized FileContext hooks
   const { state, selectors } = useFileState();
   const { addFiles, removeFiles, reorderFiles } = useFileManagement();
+  const { actions } = useFileActions();
 
   // Extract needed values from state (memoized to prevent infinite loops)
   const activeStirlingFileStubs = useMemo(() => selectors.getStirlingFileStubs(), [selectors.getFilesSignature()]);
@@ -309,6 +310,48 @@ const FileEditor = ({
     }
   }, [activeStirlingFileStubs, selectors, _setStatus]);
 
+  const handleUnzipFile = useCallback(async (fileId: FileId) => {
+    const record = activeStirlingFileStubs.find(r => r.id === fileId);
+    const file = record ? selectors.getFile(record.id) : null;
+    if (record && file) {
+      try {
+        // Extract and store files using shared service method
+        const result = await zipFileService.extractAndStoreFilesWithHistory(file, record);
+
+        if (result.success && result.extractedStubs.length > 0) {
+          // Add extracted file stubs to FileContext
+          await actions.addStirlingFileStubs(result.extractedStubs);
+
+          // Remove the original ZIP file
+          removeFiles([fileId], false);
+
+          alert({
+            alertType: 'success',
+            title: `Extracted ${result.extractedStubs.length} file(s) from ${file.name}`,
+            expandable: false,
+            durationMs: 3500
+          });
+        } else {
+          alert({
+            alertType: 'error',
+            title: `Failed to extract files from ${file.name}`,
+            body: result.errors.join('\n'),
+            expandable: true,
+            durationMs: 3500
+          });
+        }
+      } catch (error) {
+        console.error('Failed to unzip file:', error);
+        alert({
+          alertType: 'error',
+          title: `Error unzipping ${file.name}`,
+          expandable: false,
+          durationMs: 3500
+        });
+      }
+    }
+  }, [activeStirlingFileStubs, selectors, actions, removeFiles]);
+
   const handleViewFile = useCallback((fileId: FileId) => {
     const record = activeStirlingFileStubs.find(r => r.id === fileId);
     if (record) {
@@ -429,6 +472,7 @@ const FileEditor = ({
                   _onSetStatus={showStatus}
                   onReorderFiles={handleReorderFiles}
                   onDownloadFile={handleDownloadFile}
+                  onUnzipFile={handleUnzipFile}
                   toolMode={toolMode}
                   isSupported={isFileSupported(record.name)}
                 />
