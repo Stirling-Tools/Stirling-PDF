@@ -17,7 +17,7 @@ project: &project
   - exampleYmlFiles/**
   - gradle/**
   - libs/**
-  - testing/**/!(requirements.txt|requirements.in)*
+  - testing/**
   - build.gradle
   - Dockerfile
   - Dockerfile.fat
@@ -29,6 +29,7 @@ project: &project
   - settings.gradle
   - frontend/**
   - docker/**
+  - '!**/requirements*'
 
 frontend: &frontend
   - frontend/**
