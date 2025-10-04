@@ -1,0 +1,86 @@
+.tool-panel-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  background: rgba(10, 10, 10, 0.45);
+  backdrop-filter: blur(4px);
+  transition: opacity 0.32s ease, transform 0.32s ease;
+  opacity: 1;
+}
+
+.tool-panel-overlay--open {
+  transform: translateX(0);
+}
+
+.tool-panel-overlay--closing {
+  opacity: 0;
+  transform: translateX(-10%);
+  pointer-events: none;
+}
+
+.tool-panel-overlay__paper {
+  flex: 1;
+  max-width: 72rem;
+  margin: 2rem;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-background);
+  border-radius: 1.25rem;
+  overflow: hidden;
+}
+
+.tool-panel-overlay__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  gap: 1rem;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.tool-panel-overlay__search {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-toolbar);
+}
+
+.tool-panel-overlay__search-input .search-input-container {
+  width: min(32rem, 100%);
+}
+
+.tool-panel-overlay__body {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+}
+
+.tool-panel-overlay__scroll {
+  height: 100%;
+}
+
+.tool-panel-overlay__results,
+.tool-panel-overlay__picker {
+  padding: 1.5rem;
+  min-height: 100%;
+}
+
+.tool-panel-overlay__picker {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-toolbar);
+  border-radius: 1rem;
+}
+
+.tool-panel-overlay__picker .tool-picker-scrollable {
+  padding-bottom: 2rem;
+}
+
+@media (max-width: 1024px) {
+  .tool-panel-overlay__paper {
+    margin: 0;
+    border-radius: 0;
+  }
+}

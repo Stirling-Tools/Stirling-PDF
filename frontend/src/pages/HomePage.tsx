@@ -9,6 +9,8 @@ import { useMediaQuery } from "@mantine/hooks";
 import AppsIcon from '@mui/icons-material/AppsRounded';
 
 import ToolPanel from "../components/tools/ToolPanel";
+import ToolPanelOverlay from "../components/tools/ToolPanelOverlay";
+import ToolPanelModePrompt from "../components/tools/ToolPanelModePrompt";
 import Workbench from "../components/layout/Workbench";
 import QuickAccessBar from "../components/shared/QuickAccessBar";
 import RightRail from "../components/shared/RightRail";
@@ -30,7 +32,14 @@ export default function HomePage() {
 
   const { quickAccessRef } = sidebarRefs;
 
-  const { selectedTool, selectedToolKey, handleToolSelect, handleBackToTools } = useToolWorkflow();
+  const {
+    selectedTool,
+    selectedToolKey,
+    handleToolSelect,
+    handleBackToTools,
+    leftPanelView,
+    toolPanelMode,
+  } = useToolWorkflow();
 
   const { openFilesModal } = useFilesModalContext();
   const { colorScheme } = useMantineColorScheme();
@@ -124,8 +133,12 @@ export default function HomePage() {
 
   // Note: File selection limits are now handled directly by individual tools
 
+  const showFullscreenOverlay = !isMobile && toolPanelMode === 'fullscreen' && leftPanelView === 'toolPicker';
+
   return (
     <div className="h-screen overflow-hidden">
+      <ToolPanelModePrompt />
+      <ToolPanelOverlay isOpen={showFullscreenOverlay} />
       {isMobile ? (
         <div className="mobile-layout">
           <div className="mobile-toggle">

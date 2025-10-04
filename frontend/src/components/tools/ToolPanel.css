@@ -1,0 +1,28 @@
+.tool-panel__search-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+}
+
+.tool-panel__search-row .search-input-container {
+  flex: 1;
+}
+
+.tool-panel__mode-toggle {
+  transition: transform 0.2s ease;
+}
+
+.tool-panel__mode-toggle:hover {
+  transform: scale(1.05);
+}
+
+.tool-panel--overlay-hidden {
+  visibility: hidden;
+}
+
+.tool-panel__overlay-hint {
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-background);
+}
