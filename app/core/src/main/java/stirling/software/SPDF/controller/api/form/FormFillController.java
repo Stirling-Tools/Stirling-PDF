@@ -192,7 +192,9 @@ public class FormFillController {
         Map<String, Object> values = FormPayloadParser.parseValueMap(objectMapper, rawValues);
 
         return processSingleFile(
-                file, "filled", document -> FormUtils.applyFieldValues(document, values, flatten));
+                file,
+                "filled",
+                document -> FormUtils.applyFieldValues(document, values, flatten, true));
     }
 
     private ResponseEntity<byte[]> processSingleFile(

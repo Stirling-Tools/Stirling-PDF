@@ -1,7 +1,6 @@
 package stirling.software.common.util;
 
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -21,7 +20,11 @@ import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
 import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.font.PDFont;
+import org.apache.pdfbox.pdmodel.font.PDType1Font;
+import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationWidget;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceDictionary;
@@ -239,7 +242,7 @@ public class FormUtils {
 
             Object rawValue = entry.getValue();
             String value = rawValue == null ? null : Objects.toString(rawValue, null);
-            applyValueToField(field, value);
+            applyValueToField(field, value, strict);
         }
 
         ensureAppearances(acroForm);
@@ -264,11 +267,30 @@ public class FormUtils {
         boolean originalNeedAppearances = acroForm.getNeedAppearances();
         acroForm.setNeedAppearances(true);
         try {
-            Method refresh = acroForm.getClass().getMethod("refreshAppearances");
-            refresh.invoke(acroForm);
-        } catch (NoSuchMethodException e) {
-            log.debug("AcroForm.refreshAppearances() not available on this PDFBox version");
-        } catch (Exception e) {
+            try {
+                PDResources dr = acroForm.getDefaultResources();
+                if (dr == null) {
+                    dr = new PDResources();
+                    acroForm.setDefaultResources(dr);
+                }
+                PDFont helvetica = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
+                try {
+                    // Map standard name used by many DAs
+                    dr.put(COSName.getPDFName("Helvetica"), helvetica);
+                } catch (Exception ignore) {
+                    try {
+                        dr.add(helvetica);
+                    } catch (Exception ignore2) {
+                        // ignore
+                    }
+                }
+            } catch (Exception fontPrep) {
+                log.debug(
+                        "Unable to ensure default font resources before refresh: {}",
+                        fontPrep.getMessage());
+            }
+            acroForm.refreshAppearances();
+        } catch (IOException e) {
             log.warn("Failed to refresh form appearances: {}", e.getMessage(), e);
         } finally {
             if (!originalNeedAppearances) {
@@ -299,57 +321,28 @@ public class FormUtils {
         return filtered.isEmpty() ? null : filtered.get(0);
     }
 
-    private void applyValueToField(PDField field, String value) {
+    private void applyValueToField(PDField field, String value, boolean strict) throws IOException {
         try {
             if (field instanceof PDTextField textField) {
                 setTextValue(textField, value);
             } else if (field instanceof PDCheckBox checkBox) {
                 LinkedHashSet<String> candidateStates = collectCheckBoxStates(checkBox);
-                if (shouldCheckBoxBeChecked(value, candidateStates)) {
-                    String onValue = determineCheckBoxOnValue(candidateStates, value);
-                    if (onValue != null && !onValue.isBlank()) {
-                        // Set both /V (value) and /AS (appearance state) directly via COS object
-                        try {
-                            checkBox.getCOSObject().setName(COSName.AS, onValue);
-                            checkBox.getCOSObject().setName(COSName.V, onValue);
-
-                            // Verify state was set correctly, only call check() if needed
-                            if (!checkBox.isChecked()) {
-                                try {
-                                    checkBox.check();
-                                } catch (Exception checkProblem) {
-                                    log.debug(
-                                            "Unable to confirm checkbox '{}' state after COS update: {}",
-                                            field.getFullyQualifiedName(),
-                                            checkProblem.getMessage());
-                                }
-                            }
-                        } catch (Exception e) {
-                            log.debug(
-                                    "Failed to set checkbox appearance state directly: {}",
-                                    e.getMessage());
-                            try {
-                                checkBox.setValue(onValue);
-                            } catch (IllegalArgumentException illegal) {
-                                log.debug(
-                                        "Standard setValue failed for checkbox '{}': {}",
-                                        field.getFullyQualifiedName(),
-                                        illegal.getMessage());
-                                forceCheckBoxValue(checkBox, onValue);
-                            }
-                        }
+                boolean shouldCheck = shouldCheckBoxBeChecked(value, candidateStates);
+                try {
+                    if (shouldCheck) {
+                        checkBox.check();
                     } else {
-                        try {
-                            checkBox.check();
-                        } catch (Exception checkProblem) {
-                            log.debug(
-                                    "Unable to infer on-state for checkbox '{}': {}",
-                                    field.getFullyQualifiedName(),
-                                    checkProblem.getMessage());
-                        }
+                        checkBox.unCheck();
                     }
-                } else {
-                    checkBox.unCheck();
+                } catch (IOException checkProblem) {
+                    log.warn(
+                            "Failed to set checkbox state for '{}': {}",
+                            field.getFullyQualifiedName(),
+                            checkProblem.getMessage(),
+                            checkProblem);
+                    if (strict) {
+                        throw checkProblem;
+                    }
                 }
             } else if (field instanceof PDRadioButton radioButton) {
                 if (value != null && !value.isBlank()) {
@@ -370,6 +363,13 @@ public class FormUtils {
                     field.getFullyQualifiedName(),
                     e.getMessage(),
                     e);
+            if (strict) {
+                if (e instanceof IOException io) {
+                    throw io;
+                }
+                throw new IOException(
+                        "Failed to set value for field '" + field.getFullyQualifiedName() + "'", e);
+            }
         }
     }
 
@@ -385,7 +385,42 @@ public class FormUtils {
         }
 
         try {
-            textField.setDefaultAppearance("/Helvetica 12 Tf 0 g");
+            PDAcroForm acroForm = textField.getAcroForm();
+            PDResources dr = acroForm != null ? acroForm.getDefaultResources() : null;
+            if (dr == null && acroForm != null) {
+                dr = new PDResources();
+                acroForm.setDefaultResources(dr);
+            }
+
+            String resourceName = "Helv";
+            try {
+                PDFont helvetica = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
+                if (dr != null) {
+                    try {
+                        COSName alias = dr.add(helvetica);
+                        if (alias != null
+                                && alias.getName() != null
+                                && !alias.getName().isBlank()) {
+                            resourceName = alias.getName();
+                        }
+                    } catch (Exception addEx) {
+                        try {
+                            COSName explicit = COSName.getPDFName("Helvetica");
+                            dr.put(explicit, helvetica);
+                            resourceName = explicit.getName();
+                        } catch (Exception ignore) {
+                            // ignore
+                        }
+                    }
+                }
+            } catch (Exception fontEx) {
+                log.debug(
+                        "Unable to prepare Helvetica font for '{}': {}",
+                        textField.getFullyQualifiedName(),
+                        fontEx.getMessage());
+            }
+
+            textField.setDefaultAppearance("/" + resourceName + " 12 Tf 0 g");
         } catch (Exception e) {
             log.debug(
                     "Unable to adjust default appearance for '{}': {}",
@@ -440,11 +475,10 @@ public class FormUtils {
         }
 
         if (allowedOptions == null || allowedOptions.isEmpty()) {
-            log.debug(
-                    "No allowed options defined for choice field '{}', accepting all values: {}",
-                    fieldName,
-                    sanitizedSelections);
-            return new ArrayList<>(sanitizedSelections);
+            throw new IllegalArgumentException(
+                    "The /Opt array is missing for choice field '"
+                            + fieldName
+                            + "', cannot set values.");
         }
 
         Map<String, String> allowedLookup = new LinkedHashMap<>();
@@ -693,37 +727,6 @@ public class FormUtils {
             }
         }
         return false;
-    }
-
-    private String determineCheckBoxOnValue(
-            LinkedHashSet<String> candidateStates, String requestedValue) {
-        if (requestedValue != null) {
-            String normalized = requestedValue.trim();
-            for (String candidate : candidateStates) {
-                if (candidate.equalsIgnoreCase(normalized)) {
-                    return candidate;
-                }
-            }
-        }
-        if (!candidateStates.isEmpty()) {
-            return candidateStates.iterator().next();
-        }
-        return null;
-    }
-
-    private void forceCheckBoxValue(PDCheckBox checkBox, String onValue) {
-        if (!isSettableCheckBoxState(onValue)) {
-            return;
-        }
-        try {
-            checkBox.getCOSObject().setName(COSName.AS, onValue);
-            checkBox.getCOSObject().setName(COSName.V, onValue);
-        } catch (Exception e) {
-            log.debug(
-                    "Failed to force checkbox value via COS update for '{}': {}",
-                    checkBox.getFullyQualifiedName(),
-                    e.getMessage());
-        }
     }
 
     private String deriveDisplayLabel(
