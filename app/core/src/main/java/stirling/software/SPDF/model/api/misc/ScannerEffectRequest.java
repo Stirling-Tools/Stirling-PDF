@@ -79,14 +79,6 @@ public class ScannerEffectRequest {
     @Schema(description = "Whether advanced settings are enabled", example = "false")
     private boolean advancedEnabled = false;
 
-    public int getQualityValue() {
-        return switch (quality) {
-            case low -> 30;
-            case medium -> 60;
-            case high -> 100;
-        };
-    }
-
     public int getRotationValue() {
         return switch (rotation) {
             case none -> 0;
@@ -105,8 +97,8 @@ public class ScannerEffectRequest {
     }
 
     public void applyMediumQualityPreset() {
-        this.blur = 0.6f;
-        this.noise = 4.0f;
+        this.blur = 0.10f;
+        this.noise = 1.0f;
         this.brightness = 1.06f;
         this.contrast = 1.12f;
         this.resolution = 240;

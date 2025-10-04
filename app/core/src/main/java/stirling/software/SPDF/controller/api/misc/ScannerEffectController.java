@@ -479,15 +479,6 @@ public class ScannerEffectController {
         }
     }
 
-    private static long safeFileSize(Path path) {
-        try {
-            return Files.size(path);
-        } catch (IOException e) {
-            log.debug("Failed to read file size for {}", path, e);
-            return -1;
-        }
-    }
-
     private static String formatDurationSince(long startNanos) {
         return formatDuration(System.nanoTime() - startNanos);
     }
@@ -510,17 +501,15 @@ public class ScannerEffectController {
             throws IOException {
         MultipartFile file = request.getFileInput();
 
-        boolean qpdfEnabled = isQpdfEnabled();
         boolean ghostscriptEnabled = isGhostscriptEnabled();
         long overallStart = System.nanoTime();
 
         log.info(
-                "Scanner effect request received: filename={}, size={} bytes, advanced={}, resolution={}, qpdfEnabled={}, ghostscriptEnabled={}",
+                "Scanner effect request received: filename={}, size={} bytes, advanced={}, resolution={}, ghostscriptEnabled={}",
                 file.getOriginalFilename(),
                 file.getSize(),
                 request.isAdvancedEnabled(),
                 request.getResolution(),
-                qpdfEnabled,
                 ghostscriptEnabled);
 
         List<Path> tempFiles = new ArrayList<>();
@@ -532,31 +521,6 @@ public class ScannerEffectController {
             file.transferTo(originalInput.toFile());
 
             processingInput = originalInput;
-            if (qpdfEnabled && !ghostscriptEnabled) {
-                try {
-                    long qpdfStart = System.nanoTime();
-                    Path qpdfOutput = runQpdfPreprocessing(originalInput);
-                    tempFiles.add(qpdfOutput);
-                    processingInput = qpdfOutput;
-                    if (log.isInfoEnabled()) {
-                        long originalSize = safeFileSize(originalInput);
-                        long optimizedSize = safeFileSize(qpdfOutput);
-                        log.info(
-                                "QPDF preprocessing completed in {} ({} bytes -> {} bytes)",
-                                formatDurationSince(qpdfStart),
-                                originalSize,
-                                optimizedSize);
-                    }
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    log.warn("QPDF preprocessing interrupted; continuing with original input.", e);
-                } catch (Exception e) {
-                    log.warn("QPDF preprocessing failed; continuing with original input.", e);
-                }
-            } else if (qpdfEnabled) {
-                log.info(
-                        "Skipping QPDF preprocessing because Ghostscript post-processing is enabled for this request.");
-            }
 
             if (!request.isAdvancedEnabled()) {
                 switch (request.getQuality()) {
@@ -656,7 +620,18 @@ public class ScannerEffectController {
                                                                                     colorspace))
                                                             .toList())
                                     .get();
-                    log.info("Page rendering completed in {}", formatDurationSince(renderStart));
+                    long renderDuration = System.nanoTime() - renderStart;
+                    log.info(
+                            "Page rendering completed in {} (avg per page: {}, max per page: {})",
+                            formatDuration(renderDuration),
+                            formatDuration(renderDuration / Math.max(1, totalPages)),
+                            formatDuration(
+                                    processedPages.stream()
+                                            .mapToLong(ProcessedPage::totalNanos)
+                                            .max()
+                                            .orElse(0)));
+                    logForkJoinPoolMetrics(customPool);
+                    logRenderingSummary(processedPages);
                     rendererCache.remove();
                 } catch (Exception e) {
                     throw new IOException("Parallel page processing failed", e);
@@ -697,10 +672,6 @@ public class ScannerEffectController {
         return endpointConfiguration.isGroupEnabled("Ghostscript");
     }
 
-    private boolean isQpdfEnabled() {
-        return endpointConfiguration.isGroupEnabled("qpdf");
-    }
-
     private byte[] finalizeWithGhostscript(
             byte[] pdfBytes, ScannerEffectRequest request, boolean ghostscriptEnabled) {
         if (!ghostscriptEnabled) {
@@ -739,27 +710,48 @@ public class ScannerEffectController {
         }
     }
 
-    private Path runQpdfPreprocessing(Path inputFile) throws IOException, InterruptedException {
-        Path qpdfOutput = Files.createTempFile("scanner_effect_qpdf_pre_", ".pdf");
+    private void logForkJoinPoolMetrics(ForkJoinPool pool) {
+        if (!log.isInfoEnabled()) {
+            return;
+        }
+        log.info(
+                "ForkJoinPool stats -> parallelism: {}, activeThreads: {}, queuedTasks: {}, stealCount: {}",
+                pool.getParallelism(),
+                pool.getActiveThreadCount(),
+                pool.getQueuedTaskCount(),
+                pool.getStealCount());
+    }
 
-        List<String> command = new ArrayList<>();
-        command.add("qpdf");
-        command.add("--normalize-content=y");
-        command.add("--object-streams=preserve");
-        command.add("--stream-data=preserve");
-        command.add("--linearize");
-        command.add(inputFile.toString());
-        command.add(qpdfOutput.toString());
-
-        ProcessExecutorResult result =
-                ProcessExecutor.getInstance(ProcessExecutor.Processes.QPDF)
-                        .runCommandWithOutputHandling(command);
-
-        if (result.getRc() != 0 && result.getRc() != 3) {
-            throw new IOException("QPDF returned non-zero exit code: " + result.getRc());
+    private void logRenderingSummary(List<ProcessedPage> pages) {
+        if (!log.isInfoEnabled() || pages.isEmpty()) {
+            return;
         }
 
-        return qpdfOutput;
+        long totalRender = 0L;
+        long totalEffects = 0L;
+        long total = 0L;
+        long maxRender = 0L;
+        long maxEffects = 0L;
+        long maxTotal = 0L;
+
+        for (ProcessedPage page : pages) {
+            totalRender += page.renderNanos;
+            totalEffects += page.effectsNanos;
+            total += page.totalNanos;
+            maxRender = Math.max(maxRender, page.renderNanos);
+            maxEffects = Math.max(maxEffects, page.effectsNanos);
+            maxTotal = Math.max(maxTotal, page.totalNanos);
+        }
+
+        int count = pages.size();
+        log.info(
+                "Render summary -> avg render: {}, avg effects: {}, avg total: {}, max render: {}, max effects: {}, max total: {}",
+                formatDuration(totalRender / count),
+                formatDuration(totalEffects / count),
+                formatDuration(total / count),
+                formatDuration(maxRender),
+                formatDuration(maxEffects),
+                formatDuration(maxTotal));
     }
 
     private byte[] runGhostscriptRasterization(byte[] pdfBytes, ScannerEffectRequest request)
@@ -861,7 +853,10 @@ public class ScannerEffectController {
             int safeResolution =
                     calculateSafeResolution(pageWidthPts, pageHeightPts, renderResolution);
 
+            long rasterStart = System.nanoTime();
             BufferedImage image = renderPageSafely(rendererCache.get(), pageIndex, safeResolution);
+            long renderNanos = System.nanoTime() - rasterStart;
+            long effectsStart = System.nanoTime();
 
             BufferedImage processed = convertColorspace(image, colorspace);
             image.flush();
@@ -901,6 +896,7 @@ public class ScannerEffectController {
             BufferedImage blurred = applyGaussianBlur(softened, blur);
             BufferedImage adjusted =
                     applyAllEffectsSinglePass(blurred, brightness, contrast, yellowish, noise);
+            long effectsNanos = System.nanoTime() - effectsStart;
 
             softened.flush();
             blurred.flush();
@@ -913,12 +909,32 @@ public class ScannerEffectController {
                 log.debug("Processed page {} in {}", pageIndex + 1, formatDurationSince(pageStart));
             }
 
+            long totalNanos = System.nanoTime() - pageStart;
+            log.info(
+                    "Page {} timings -> render: {}, effects: {}, total: {}",
+                    pageIndex + 1,
+                    formatDuration(renderNanos),
+                    formatDuration(effectsNanos),
+                    formatDuration(totalNanos));
+
             return new ProcessedPage(
-                    pageIndex, adjusted, origW, origH, offsetX, offsetY, drawW, drawH);
+                    pageIndex,
+                    adjusted,
+                    origW,
+                    origH,
+                    offsetX,
+                    offsetY,
+                    drawW,
+                    drawH,
+                    renderNanos,
+                    effectsNanos,
+                    totalNanos);
         } catch (IOException e) {
             throw new RuntimeException("Failed to process page " + (pageIndex + 1), e);
         } catch (OutOfMemoryError | NegativeArraySizeException e) {
             throw ExceptionUtils.createOutOfMemoryDpiException(pageIndex + 1, renderResolution, e);
+        } finally {
+            BUFFER_CACHE.remove();
         }
     }
 
@@ -974,6 +990,9 @@ public class ScannerEffectController {
     private static class ProcessedPage {
         final BufferedImage image;
         final float origW, origH, offsetX, offsetY, drawW, drawH;
+        final long renderNanos;
+        final long effectsNanos;
+        final long totalNanos;
 
         ProcessedPage(
                 int pageNumber,
@@ -983,7 +1002,10 @@ public class ScannerEffectController {
                 float offsetX,
                 float offsetY,
                 float drawW,
-                float drawH) {
+                float drawH,
+                long renderNanos,
+                long effectsNanos,
+                long totalNanos) {
             this.image = image;
             this.origW = origW;
             this.origH = origH;
@@ -991,6 +1013,13 @@ public class ScannerEffectController {
             this.offsetY = offsetY;
             this.drawW = drawW;
             this.drawH = drawH;
+            this.renderNanos = renderNanos;
+            this.effectsNanos = effectsNanos;
+            this.totalNanos = totalNanos;
+        }
+
+        long totalNanos() {
+            return this.totalNanos;
         }
     }
 }
