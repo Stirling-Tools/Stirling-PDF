@@ -26,8 +26,9 @@ All documentation available at [https://docs.stirlingpdf.com/](https://docs.stir
 - Custom download options
 - Custom 'Pipelines' to run multiple features in an automated queue
 - API for integration with external scripts
-- Optional Login and Authentication support
-- Database Backup and Import
+- Optional Login and Authentication support (see [here](https://docs.stirlingpdf.com/Advanced%20Configuration/System%20and%20Security) for documentation)
+- Enterprise features like SSO (see [here](https://docs.stirlingpdf.com/Advanced%20Configuration/Single%20Sign-On%20Configuration) for documentation)
+- Database Backup and Import (see [here](https://docs.stirlingpdf.com/Advanced%20Configuration/DATABASE) for documentation)
 
 ### 50+ PDF Operations
 
