@@ -905,4 +905,67 @@ public class GeneralUtils {
         // If all components so far are equal, the longer version is considered higher
         return current.length > compare.length;
     }
+
+    /**
+     * Optimizes a PDF using Ghostscript with ebook settings for better e-reader compatibility. Uses
+     * -dPDFSETTINGS=/ebook -dFastWebView=true settings to create an optimized PDF.
+     *
+     * @param inputPdfBytes Original PDF as byte array
+     * @return Optimized PDF as byte array
+     * @throws IOException if Ghostscript optimization fails
+     */
+    public byte[] optimizePdfWithGhostscript(byte[] inputPdfBytes) throws IOException {
+        Path tempInput = null;
+        Path tempOutput = null;
+
+        try {
+            tempInput = Files.createTempFile("gs_input_", ".pdf");
+            tempOutput = Files.createTempFile("gs_output_", ".pdf");
+
+            Files.write(tempInput, inputPdfBytes);
+
+            List<String> command = new ArrayList<>();
+            command.add("gs");
+            command.add("-sDEVICE=pdfwrite");
+            command.add("-dPDFSETTINGS=/ebook");
+            command.add("-dFastWebView=true");
+            command.add("-dNOPAUSE");
+            command.add("-dQUIET");
+            command.add("-dBATCH");
+            command.add("-sOutputFile=" + tempOutput.toString());
+            command.add(tempInput.toString());
+
+            ProcessExecutor.ProcessExecutorResult result =
+                    ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT)
+                            .runCommandWithOutputHandling(command);
+
+            if (result.getRc() != 0) {
+                log.warn(
+                        "Ghostscript ebook optimization failed with return code: {}",
+                        result.getRc());
+                throw ExceptionUtils.createGhostscriptCompressionException();
+            }
+
+            return Files.readAllBytes(tempOutput);
+
+        } catch (Exception e) {
+            log.warn("Ghostscript ebook optimization failed", e);
+            throw ExceptionUtils.createGhostscriptCompressionException(e);
+        } finally {
+            if (tempInput != null) {
+                try {
+                    Files.deleteIfExists(tempInput);
+                } catch (IOException e) {
+                    log.warn("Failed to delete temp input file: {}", tempInput, e);
+                }
+            }
+            if (tempOutput != null) {
+                try {
+                    Files.deleteIfExists(tempOutput);
+                } catch (IOException e) {
+                    log.warn("Failed to delete temp output file: {}", tempOutput, e);
+                }
+            }
+        }
+    }
 }
