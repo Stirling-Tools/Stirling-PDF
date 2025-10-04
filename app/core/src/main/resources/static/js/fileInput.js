@@ -29,6 +29,54 @@ const mimeTypes = {
   "pdf": "application/pdf",
 };
 
+const isMultiToolPage = () => window.location.pathname?.includes('multi-tool');
+
+const isSvgFile = (file) => {
+  if (!file) return false;
+  const type = (file.type || '').toLowerCase();
+  if (type === 'image/svg+xml') {
+    return true;
+  }
+  const name = (file.name || '').toLowerCase();
+  return name.endsWith('.svg');
+};
+
+function filterSvgFiles(files) {
+  if (!Array.isArray(files) || !isMultiToolPage()) {
+    return { allowed: files ?? [], rejected: [] };
+  }
+
+  const allowed = [];
+  const rejected = [];
+
+  files.forEach((file) => {
+    if (isSvgFile(file)) {
+      rejected.push(file);
+    } else {
+      allowed.push(file);
+    }
+  });
+
+  return { allowed, rejected };
+}
+
+function showSvgWarning(rejectedFiles = []) {
+  if (!rejectedFiles.length) return;
+
+  const message = window.multiTool?.svgNotSupported ||
+    'SVG files are not supported in Multi Tool and were ignored.';
+  const rejectedNames = rejectedFiles
+    .map((file) => file?.name)
+    .filter(Boolean)
+    .join(', ');
+
+  if (rejectedNames) {
+    alert(`${message}\n${rejectedNames}`);
+  } else {
+    alert(message);
+  }
+}
+
 function setupFileInput(chooser) {
   const elementId = chooser.getAttribute('data-bs-element-id');
   const filesSelected = chooser.getAttribute('data-bs-files-selected');
@@ -197,6 +245,24 @@ function setupFileInput(chooser) {
     const decryptFile = new DecryptFile();
 
     await checkZipFile();
+
+    const { allowed: nonSvgFiles, rejected: rejectedSvgFiles } = filterSvgFiles(allFiles);
+    if (rejectedSvgFiles.length > 0) {
+      showSvgWarning(rejectedSvgFiles);
+      allFiles = nonSvgFiles;
+
+      const updatedTransfer = toDataTransfer(allFiles);
+      element.files = updatedTransfer.files;
+      if (allFiles.length === 0) {
+        element.value = '';
+      }
+
+      if (allFiles.length === 0) {
+        inputContainer.querySelector('#fileInputText').innerHTML = originalText;
+        showOrHideSelectedFilesContainer(allFiles);
+        return;
+      }
+    }
 
     const uploadLimit = window.stirlingPDF?.uploadLimit ?? 0;
     if (uploadLimit > 0) {
