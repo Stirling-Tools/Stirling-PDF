@@ -401,7 +401,7 @@ public class GetInfoOnPDF {
                 && Math.abs(height - standardHeight) <= tolerance;
     }
 
-    public static void getDimensionInfo(ObjectNode dimensionInfo, float width, float height) {
+    private static void setDimensionInfo(ObjectNode dimensionInfo, float width, float height) {
         float ppi = 72; // Points Per Inch
 
         float widthInInches = width / ppi;
@@ -418,7 +418,7 @@ public class GetInfoOnPDF {
         dimensionInfo.put("Height (cm)", String.format("%.2f", heightInCm));
     }
 
-    public static ArrayNode exploreStructureTree(List<Object> nodes) {
+    private static ArrayNode exploreStructureTree(List<Object> nodes) {
         ArrayNode elementsArray = objectMapper.createArrayNode();
         if (nodes != null) {
             for (Object obj : nodes) {
@@ -442,7 +442,7 @@ public class GetInfoOnPDF {
         return elementsArray;
     }
 
-    public static String getContent(PDStructureElement structureElement) {
+    private static String getContent(PDStructureElement structureElement) {
         StringBuilder contentBuilder = new StringBuilder();
 
         for (Object item : structureElement.getKids()) {
@@ -474,6 +474,10 @@ public class GetInfoOnPDF {
     public ResponseEntity<byte[]> getPdfInfo(@ModelAttribute PDFFile request) throws IOException {
         MultipartFile inputFile = request.getFileInput();
         boolean readonly = true;
+        final String pagePrefix = "Page ";
+        final int prefixLength = pagePrefix.length();
+        StringBuilder keyBuilder = new StringBuilder(prefixLength + 8);
+        keyBuilder.append(pagePrefix);
         try (PDDocument pdfBoxDoc = pdfDocumentFactory.load(inputFile, readonly)) {
             ObjectMapper objectMapper = new ObjectMapper();
             ObjectNode jsonOutput = objectMapper.createObjectNode();
@@ -757,7 +761,7 @@ public class GetInfoOnPDF {
 
                 ObjectNode sizeInfo = objectMapper.createObjectNode();
 
-                getDimensionInfo(sizeInfo, width, height);
+                setDimensionInfo(sizeInfo, width, height);
 
                 sizeInfo.put("Standard Page", getPageSize(width, height));
                 pageInfo.set("Size", sizeInfo);
@@ -969,8 +973,10 @@ public class GetInfoOnPDF {
                 }
 
                 pageInfo.set("Multimedia", multimediaArray);
+                keyBuilder.setLength(prefixLength);
+                keyBuilder.append(pageNum + 1);
 
-                pageInfoParent.set("Page " + (pageNum + 1), pageInfo);
+                pageInfoParent.set(keyBuilder.toString(), pageInfo);
             }
 
             jsonOutput.set("BasicInfo", basicInfo);
