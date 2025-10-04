@@ -49,6 +49,8 @@ export default function ToolPanel() {
     setToolPanelMode(isFullscreenMode ? 'sidebar' : 'fullscreen');
   };
 
+  const reservedDesktopWidth = '8.5rem';
+
   const computedWidth = () => {
     if (isMobile) {
       return '100%';
@@ -56,7 +58,7 @@ export default function ToolPanel() {
 
     if (isFullscreenMode) {
       if (isCatalogActive) {
-        return 'clamp(32rem, 48vw, 56rem)';
+        return `calc(100vw - ${reservedDesktopWidth})`;
       }
 
       if (leftPanelView === 'toolContent' && isPanelVisible) {
@@ -78,6 +80,7 @@ export default function ToolPanel() {
       } ${isMobile ? 'h-full border-r-0' : 'h-screen'} ${isCatalogActive ? 'tool-panel--catalog' : ''}`}
       style={{
         width: computedWidth(),
+        maxWidth: isCatalogActive ? `calc(100vw - ${reservedDesktopWidth})` : undefined,
         padding: '0',
       }}
     >

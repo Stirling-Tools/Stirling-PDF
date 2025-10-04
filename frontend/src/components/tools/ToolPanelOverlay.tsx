@@ -71,7 +71,7 @@ export default function ToolPanelOverlay() {
 
   const handleClose = () => {
     setSearchQuery('');
-    setLeftPanelView(selectedToolKey ? 'toolContent' : 'hidden');
+    setLeftPanelView(selectedToolKey ? 'toolContent' : 'toolPicker');
   };
 
   const toggleLabel = toolPanelMode === 'fullscreen'
