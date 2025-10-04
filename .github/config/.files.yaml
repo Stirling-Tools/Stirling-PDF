@@ -29,8 +29,6 @@ project: &project
   - settings.gradle
   - frontend/**
   - docker/**
-  - '!testing/**/requirements*'
-  - '!**/requirements*'
 
 frontend: &frontend
   - frontend/**
