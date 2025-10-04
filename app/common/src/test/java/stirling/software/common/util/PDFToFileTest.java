@@ -5,7 +5,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 
@@ -47,10 +49,21 @@ class PDFToFileTest {
 
     @Mock private ProcessExecutor mockProcessExecutor;
     @Mock private ProcessExecutorResult mockExecutorResult;
+    @Mock private TempFileManager mockTempFileManager;
 
     @BeforeEach
-    void setUp() {
-        pdfToFile = new PDFToFile();
+    void setUp() throws IOException {
+        // Mock the TempFileManager to return real temp files
+        lenient()
+                .when(mockTempFileManager.createTempFile(anyString()))
+                .thenAnswer(
+                        invocation ->
+                                Files.createTempFile("test", invocation.getArgument(0)).toFile());
+        lenient()
+                .when(mockTempFileManager.createTempDirectory())
+                .thenAnswer(invocation -> Files.createTempDirectory("test"));
+
+        pdfToFile = new PDFToFile(mockTempFileManager);
     }
 
     @Test

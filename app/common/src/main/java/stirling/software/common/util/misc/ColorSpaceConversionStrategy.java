@@ -15,22 +15,29 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.model.api.misc.ReplaceAndInvert;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
+import stirling.software.common.util.TempFile;
+import stirling.software.common.util.TempFileManager;
 
 @Slf4j
 public class ColorSpaceConversionStrategy extends ReplaceAndInvertColorStrategy {
 
-    public ColorSpaceConversionStrategy(MultipartFile file, ReplaceAndInvert replaceAndInvert) {
+    private final TempFileManager tempFileManager;
+
+    public ColorSpaceConversionStrategy(
+            MultipartFile file,
+            ReplaceAndInvert replaceAndInvert,
+            TempFileManager tempFileManager) {
         super(file, replaceAndInvert);
+        this.tempFileManager = tempFileManager;
     }
 
     @Override
     public InputStreamResource replace() throws IOException {
-        Path tempInputFile = null;
-        Path tempOutputFile = null;
+        try (TempFile tempInput = new TempFile(tempFileManager, ".pdf");
+                TempFile tempOutput = new TempFile(tempFileManager, ".pdf")) {
 
-        try {
-            tempInputFile = Files.createTempFile("colorspace_input_", ".pdf");
-            tempOutputFile = Files.createTempFile("colorspace_output_", ".pdf");
+            Path tempInputFile = tempInput.getPath();
+            Path tempOutputFile = tempOutput.getPath();
 
             Files.write(tempInputFile, getFileInput().getBytes());
 
@@ -74,21 +81,6 @@ public class ColorSpaceConversionStrategy extends ReplaceAndInvertColorStrategy 
             log.warn("CMYK color space conversion failed", e);
             throw new IOException(
                     "Failed to convert PDF to CMYK color space: " + e.getMessage(), e);
-        } finally {
-            if (tempInputFile != null) {
-                try {
-                    Files.deleteIfExists(tempInputFile);
-                } catch (IOException e) {
-                    log.warn("Failed to delete temporary input file: {}", tempInputFile, e);
-                }
-            }
-            if (tempOutputFile != null) {
-                try {
-                    Files.deleteIfExists(tempOutputFile);
-                } catch (IOException e) {
-                    log.warn("Failed to delete temporary output file: {}", tempOutputFile, e);
-                }
-            }
         }
     }
 }
