@@ -37,6 +37,7 @@ interface FileManagerContextValue {
   onToggleExpansion: (fileId: FileId) => void;
   onAddToRecents: (file: StirlingFileStub) => void;
   onNewFilesSelect: (files: File[]) => void;
+  onGoogleDriveSelect: (files: File[]) => void;
 
   // External props
   recentFiles: StirlingFileStub[];
@@ -544,6 +545,19 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     }
   }, [refreshRecentFiles]);
 
+  const handleGoogleDriveSelect = useCallback(async (files: File[]) => {
+    if (files.length > 0) {
+      try {
+        // Process Google Drive files same as local files
+        onNewFilesSelect(files);
+        await refreshRecentFiles();
+        onClose();
+      } catch (error) {
+        console.error('Failed to process Google Drive files:', error);
+      }
+    }
+  }, [onNewFilesSelect, refreshRecentFiles, onClose]);
+
   // Cleanup blob URLs when component unmounts
   useEffect(() => {
     return () => {
@@ -596,6 +610,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     onToggleExpansion: handleToggleExpansion,
     onAddToRecents: handleAddToRecents,
     onNewFilesSelect,
+    onGoogleDriveSelect: handleGoogleDriveSelect,
 
     // External props
     recentFiles,
@@ -628,6 +643,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     handleToggleExpansion,
     handleAddToRecents,
     onNewFilesSelect,
+    handleGoogleDriveSelect,
     recentFiles,
     isFileSupported,
     modalHeight,

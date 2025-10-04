@@ -258,12 +258,6 @@ public class AppConfig {
         return false;
     }
 
-    @Bean(name = "GoogleDriveEnabled")
-    @Profile("default")
-    public boolean googleDriveEnabled() {
-        return false;
-    }
-
     @Bean(name = "license")
     @Profile("default")
     public String licenseType() {

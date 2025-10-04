@@ -51,7 +51,6 @@ const Overview: React.FC = () => {
   } : null;
 
   const integrationConfig = config ? {
-    GoogleDriveEnabled: config.GoogleDriveEnabled,
     SSOAutoLogin: config.SSOAutoLogin,
   } : null;
 
