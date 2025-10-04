@@ -138,3 +138,4 @@ steps:
         action: hover
       - command: assert
         expect: the background of the Sign button is highlighted
+# **Note**: The following files have been edited recently. Please review the changes carefully to ensure they meet your requirements.

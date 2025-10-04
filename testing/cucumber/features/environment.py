@@ -1,6 +1,7 @@
 import os
 
 
+# behavior hooks
 def before_all(context):
     context.endpoint = None
     context.request_data = None

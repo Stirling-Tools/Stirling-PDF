@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Default values
+# Default values for parameters
 build_type="full"
 enable_security="false"
 run_compose="true"
