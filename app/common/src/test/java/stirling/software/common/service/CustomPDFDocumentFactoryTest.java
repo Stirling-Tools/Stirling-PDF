@@ -1,7 +1,6 @@
 package stirling.software.common.service;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static stirling.software.common.service.SpyPDFDocumentFactory.*;
 
@@ -22,7 +21,6 @@ import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 
 import stirling.software.common.model.api.PDFFile;
-import stirling.software.common.service.SpyPDFDocumentFactory.StrategyType;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
