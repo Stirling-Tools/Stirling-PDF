@@ -86,7 +86,7 @@ All documentation available at [https://docs.stirlingpdf.com/](https://docs.stir
 - **Extract Images**: Extract embedded images
 - **Change Metadata**: Edit PDF metadata
 - **Get ALL Info on PDF**: Comprehensive PDF analysis
-- **Advanced Colour options**: Color manipulation
+- **Advanced Colour options**: Colour manipulation
 - **Compare**: Compare PDF documents
 - **Add Page Numbers**: Insert page numbering
 - **Flatten**: Flatten PDF layers
@@ -100,7 +100,7 @@ All documentation available at [https://docs.stirlingpdf.com/](https://docs.stir
 #### Advanced
 - **Compress**: Reduce file size
 - **Pipeline**: Automated workflow processing
-- **Adjust Colours/Contrast**: Color and contrast adjustment
+- **Adjust Colours/Contrast**: Colour and contrast adjustment
 - **Auto Rename PDF File**: Automatic file renaming
 - **Auto Split Pages**: Automatic page splitting
 - **Detect/Split Scanned photos**: Photo detection and splitting
