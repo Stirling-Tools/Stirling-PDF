@@ -9,7 +9,6 @@ import { useMediaQuery } from "@mantine/hooks";
 import AppsIcon from '@mui/icons-material/AppsRounded';
 
 import ToolPanel from "../components/tools/ToolPanel";
-import ToolPanelOverlay from "../components/tools/ToolPanelOverlay";
 import ToolPanelModePrompt from "../components/tools/ToolPanelModePrompt";
 import Workbench from "../components/layout/Workbench";
 import QuickAccessBar from "../components/shared/QuickAccessBar";
@@ -133,12 +132,11 @@ export default function HomePage() {
 
   // Note: File selection limits are now handled directly by individual tools
 
-  const showFullscreenOverlay = !isMobile && toolPanelMode === 'fullscreen' && leftPanelView === 'toolPicker';
+  const desktopCatalogActive = !isMobile && toolPanelMode === 'fullscreen' && leftPanelView === 'toolPicker';
 
   return (
     <div className="h-screen overflow-hidden">
       <ToolPanelModePrompt />
-      <ToolPanelOverlay isOpen={showFullscreenOverlay} />
       {isMobile ? (
         <div className="mobile-layout">
           <div className="mobile-toggle">
@@ -242,13 +240,22 @@ export default function HomePage() {
           align="flex-start"
           gap={0}
           h="100%"
-          className="flex-nowrap flex"
+          className={`flex-nowrap flex home-desktop-layout ${desktopCatalogActive ? 'home-desktop-layout--catalog' : ''}`}
         >
-          <QuickAccessBar
-            ref={quickAccessRef} />
-          <ToolPanel />
-          <Workbench />
-          <RightRail />
+          <div className="home-desktop-layout__quick">
+            <QuickAccessBar
+              ref={quickAccessRef}
+            />
+          </div>
+          <div className="home-desktop-layout__tool-panel">
+            <ToolPanel />
+          </div>
+          <div className="home-desktop-layout__workbench" aria-hidden={desktopCatalogActive}>
+            <Workbench />
+          </div>
+          <div className="home-desktop-layout__right-rail" aria-hidden={desktopCatalogActive}>
+            <RightRail />
+          </div>
           <FileManager selectedTool={selectedTool as any /* FIX ME */} />
         </Group>
       )}

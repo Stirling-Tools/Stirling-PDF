@@ -166,3 +166,54 @@
   font-weight: 500;
   color: var(--text-muted);
 }
+
+.home-desktop-layout {
+  width: 100%;
+  transition: background-color 0.3s ease;
+}
+
+.home-desktop-layout__quick,
+.home-desktop-layout__tool-panel,
+.home-desktop-layout__workbench,
+.home-desktop-layout__right-rail {
+  display: flex;
+  overflow: hidden;
+  transition: max-width 0.35s ease, transform 0.35s ease, opacity 0.3s ease;
+}
+
+.home-desktop-layout__quick {
+  max-width: 5rem;
+}
+
+.home-desktop-layout__tool-panel {
+  flex: 0 0 auto;
+  min-width: 0;
+}
+
+.home-desktop-layout__workbench {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.home-desktop-layout__right-rail {
+  flex: 0 0 auto;
+}
+
+.home-desktop-layout--catalog .home-desktop-layout__quick {
+  max-width: 0;
+  transform: translateX(-100%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.home-desktop-layout--catalog .home-desktop-layout__tool-panel {
+  flex: 1 1 auto;
+}
+
+.home-desktop-layout--catalog .home-desktop-layout__workbench,
+.home-desktop-layout--catalog .home-desktop-layout__right-rail {
+  max-width: 0;
+  opacity: 0;
+  transform: translateX(2rem);
+  pointer-events: none;
+}
