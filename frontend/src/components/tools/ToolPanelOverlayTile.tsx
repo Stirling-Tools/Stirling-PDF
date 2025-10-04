@@ -59,8 +59,8 @@ const ToolPanelOverlayTile: React.FC<ToolPanelOverlayTileProps> = ({
       return null;
     }
 
-    if (React.isValidElement(tool.icon)) {
-      const existingStyle = (tool.icon.props as { style?: React.CSSProperties }).style || {};
+    if (React.isValidElement<{ style?: React.CSSProperties }>(tool.icon)) {
+      const existingStyle = tool.icon.props.style || {};
       return React.cloneElement(tool.icon, {
         style: {
           ...existingStyle,
