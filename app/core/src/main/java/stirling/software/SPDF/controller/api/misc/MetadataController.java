@@ -24,6 +24,8 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.model.api.misc.MetadataRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.PdfMetadataService;
+import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.common.util.WebResponseUtils;
 import stirling.software.common.util.propertyeditor.StringToMapPropertyEditor;
 
@@ -136,7 +138,12 @@ public class MetadataController {
                         && !key.contains("customValue")) {
                     info.setCustomMetadataValue(key, entry.getValue());
                 } else if (key.contains("customKey")) {
-                    int number = Integer.parseInt(key.replaceAll("\\D", ""));
+                    int number =
+                            Integer.parseInt(
+                                    RegexPatternUtils.getInstance()
+                                            .getNumericExtractionPattern()
+                                            .matcher(key)
+                                            .replaceAll(""));
                     String customKey = entry.getValue();
                     String customValue = allRequestParams.get("customValue" + number);
                     info.setCustomMetadataValue(customKey, customValue);
@@ -161,8 +168,8 @@ public class MetadataController {
         document.setDocumentInformation(info);
         return WebResponseUtils.pdfDocToWebResponse(
                 document,
-                Filenames.toSimpleFileName(pdfFile.getOriginalFilename())
-                                .replaceFirst("[.][^.]+$", "")
+                GeneralUtils.removeExtension(
+                                Filenames.toSimpleFileName(pdfFile.getOriginalFilename()))
                         + "_metadata.pdf");
     }
 }

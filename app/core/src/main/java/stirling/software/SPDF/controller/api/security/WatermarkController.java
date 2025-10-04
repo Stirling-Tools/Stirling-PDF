@@ -34,7 +34,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -42,7 +41,9 @@ import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.model.api.security.AddWatermarkRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.PdfUtils;
+import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.common.util.WebResponseUtils;
 
 @RestController
@@ -149,11 +150,10 @@ public class WatermarkController {
             document = convertedPdf;
         }
 
+        // Return the watermarked PDF as a response
         return WebResponseUtils.pdfDocToWebResponse(
                 document,
-                Filenames.toSimpleFileName(pdfFile.getOriginalFilename())
-                                .replaceFirst("[.][^.]+$", "")
-                        + "_watermarked.pdf");
+                GeneralUtils.generateFilename(pdfFile.getOriginalFilename(), "_watermarked.pdf"));
     }
 
     private void addTextWatermark(
@@ -170,39 +170,25 @@ public class WatermarkController {
             throws IOException {
         String resourceDir = "";
         PDFont font = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
-        switch (alphabet) {
-            case "arabic":
-                resourceDir = "static/fonts/NotoSansArabic-Regular.ttf";
-                break;
-            case "japanese":
-                resourceDir = "static/fonts/Meiryo.ttf";
-                break;
-            case "korean":
-                resourceDir = "static/fonts/malgun.ttf";
-                break;
-            case "chinese":
-                resourceDir = "static/fonts/SimSun.ttf";
-                break;
-            case "thai":
-                resourceDir = "static/fonts/NotoSansThai-Regular.ttf";
-                break;
-            case "roman":
-            default:
-                resourceDir = "static/fonts/NotoSans-Regular.ttf";
-                break;
-        }
+        resourceDir =
+                switch (alphabet) {
+                    case "arabic" -> "static/fonts/NotoSansArabic-Regular.ttf";
+                    case "japanese" -> "static/fonts/Meiryo.ttf";
+                    case "korean" -> "static/fonts/malgun.ttf";
+                    case "chinese" -> "static/fonts/SimSun.ttf";
+                    case "thai" -> "static/fonts/NotoSansThai-Regular.ttf";
+                    default -> "static/fonts/NotoSans-Regular.ttf";
+                };
 
-        if (!"".equals(resourceDir)) {
-            ClassPathResource classPathResource = new ClassPathResource(resourceDir);
-            String fileExtension = resourceDir.substring(resourceDir.lastIndexOf("."));
-            File tempFile = Files.createTempFile("NotoSansFont", fileExtension).toFile();
-            try (InputStream is = classPathResource.getInputStream();
-                    FileOutputStream os = new FileOutputStream(tempFile)) {
-                IOUtils.copy(is, os);
-                font = PDType0Font.load(document, tempFile);
-            } finally {
-                if (tempFile != null) Files.deleteIfExists(tempFile.toPath());
-            }
+        ClassPathResource classPathResource = new ClassPathResource(resourceDir);
+        String fileExtension = resourceDir.substring(resourceDir.lastIndexOf("."));
+        File tempFile = Files.createTempFile("NotoSansFont", fileExtension).toFile();
+        try (InputStream is = classPathResource.getInputStream();
+                FileOutputStream os = new FileOutputStream(tempFile)) {
+            IOUtils.copy(is, os);
+            font = PDType0Font.load(document, tempFile);
+        } finally {
+            Files.deleteIfExists(tempFile.toPath());
         }
 
         contentStream.setFont(font, fontSize);
@@ -219,7 +205,8 @@ public class WatermarkController {
         }
         contentStream.setNonStrokingColor(redactColor);
 
-        String[] textLines = watermarkText.split("\\\\n");
+        String[] textLines =
+                RegexPatternUtils.getInstance().getEscapedNewlinePattern().split(watermarkText);
         float maxLineWidth = 0;
 
         for (int i = 0; i < textLines.length; ++i) {

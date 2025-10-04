@@ -65,23 +65,22 @@ public class PdfUtilsTest {
         doc1.addPage(new PDPage());
         doc1.addPage(new PDPage());
         doc1.addPage(new PDPage());
-        PdfUtils utils = new PdfUtils();
-        assertTrue(utils.pageCount(doc1, 2, "greater"));
+        assertTrue(PdfUtils.pageCount(doc1, 2, "greater"));
 
         PDDocument doc2 = new PDDocument();
         doc2.addPage(new PDPage());
         doc2.addPage(new PDPage());
         doc2.addPage(new PDPage());
-        assertTrue(utils.pageCount(doc2, 3, "equal"));
+        assertTrue(PdfUtils.pageCount(doc2, 3, "equal"));
 
         PDDocument doc3 = new PDDocument();
         doc3.addPage(new PDPage());
         doc3.addPage(new PDPage());
-        assertTrue(utils.pageCount(doc3, 5, "less"));
+        assertTrue(PdfUtils.pageCount(doc3, 5, "less"));
 
         PDDocument doc4 = new PDDocument();
         doc4.addPage(new PDPage());
-        assertThrows(IllegalArgumentException.class, () -> utils.pageCount(doc4, 1, "bad"));
+        assertThrows(IllegalArgumentException.class, () -> PdfUtils.pageCount(doc4, 1, "bad"));
     }
 
     @Test
@@ -91,8 +90,7 @@ public class PdfUtilsTest {
         doc.addPage(page);
         PDRectangle rect = page.getMediaBox();
         String expected = rect.getWidth() + "x" + rect.getHeight();
-        PdfUtils utils = new PdfUtils();
-        assertTrue(utils.pageSize(doc, expected));
+        assertTrue(PdfUtils.pageSize(doc, expected));
     }
 
     @Test
