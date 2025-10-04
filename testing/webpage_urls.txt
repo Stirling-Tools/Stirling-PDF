@@ -8,7 +8,6 @@
 /pdf-organizer
 /multi-page-layout
 /scale-pages
-/crop
 /extract-page
 /pdf-to-single-page
 /img-to-pdf
