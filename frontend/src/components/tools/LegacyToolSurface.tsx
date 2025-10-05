@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { ActionIcon, ScrollArea, Switch, Text, Tooltip, useMantineColorScheme } from '@mantine/core';
+import { ActionIcon, ScrollArea, Switch, Tooltip, useMantineColorScheme } from '@mantine/core';
 import ViewSidebarRoundedIcon from '@mui/icons-material/ViewSidebarRounded';
 import { useTranslation } from 'react-i18next';
 import ToolSearch from './toolPicker/ToolSearch';

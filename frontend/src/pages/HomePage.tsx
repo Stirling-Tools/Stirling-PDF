@@ -37,7 +37,6 @@ export default function HomePage() {
     handleToolSelect,
     handleBackToTools,
     readerMode,
-    leftPanelView,
     setLeftPanelView,
   } = useToolWorkflow();
 

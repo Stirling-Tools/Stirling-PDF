@@ -5,11 +5,6 @@ const RECENT_TOOLS_KEY = 'stirlingpdf.recentTools';
 const FAVORITE_TOOLS_KEY = 'stirlingpdf.favoriteTools';
 const MAX_RECENT_TOOLS = 10;
 
-interface ToolHistoryData {
-  recentTools: ToolId[];
-  favoriteTools: ToolId[];
-}
-
 export function useToolHistory() {
   const [recentTools, setRecentTools] = useState<ToolId[]>([]);
   const [favoriteTools, setFavoriteTools] = useState<ToolId[]>([]);
