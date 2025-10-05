@@ -20,5 +20,5 @@ public class EditTableOfContentsRequest extends PDFFile {
     @Schema(
             description = "Whether to replace existing bookmarks or append to them",
             example = "true")
-    private Boolean replaceExisting;
+    private boolean replaceExisting;
 }

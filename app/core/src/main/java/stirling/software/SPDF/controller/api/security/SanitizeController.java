@@ -57,12 +57,12 @@ public class SanitizeController {
     public ResponseEntity<byte[]> sanitizePDF(@ModelAttribute SanitizePdfRequest request)
             throws IOException {
         MultipartFile inputFile = request.getFileInput();
-        boolean removeJavaScript = Boolean.TRUE.equals(request.getRemoveJavaScript());
-        boolean removeEmbeddedFiles = Boolean.TRUE.equals(request.getRemoveEmbeddedFiles());
-        boolean removeXMPMetadata = Boolean.TRUE.equals(request.getRemoveXMPMetadata());
-        boolean removeMetadata = Boolean.TRUE.equals(request.getRemoveMetadata());
-        boolean removeLinks = Boolean.TRUE.equals(request.getRemoveLinks());
-        boolean removeFonts = Boolean.TRUE.equals(request.getRemoveFonts());
+        boolean removeJavaScript = request.isRemoveJavaScript();
+        boolean removeEmbeddedFiles = request.isRemoveEmbeddedFiles();
+        boolean removeXMPMetadata = request.isRemoveXMPMetadata();
+        boolean removeMetadata = request.isRemoveMetadata();
+        boolean removeLinks = request.isRemoveLinks();
+        boolean removeFonts = request.isRemoveFonts();
 
         PDDocument document = pdfDocumentFactory.load(inputFile, true);
         if (removeJavaScript) {

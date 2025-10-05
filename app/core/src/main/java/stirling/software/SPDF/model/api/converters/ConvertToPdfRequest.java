@@ -34,5 +34,5 @@ public class ConvertToPdfRequest {
             description = "Whether to automatically rotate the images to better fit the PDF page",
             requiredMode = Schema.RequiredMode.REQUIRED,
             defaultValue = "false")
-    private Boolean autoRotate;
+    private boolean autoRotate;
 }

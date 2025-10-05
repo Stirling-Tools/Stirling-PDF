@@ -88,7 +88,7 @@ public class ConvertImgPDFController {
         String colorType = request.getColorType();
         int dpi = request.getDpi();
         String pageNumbers = request.getPageNumbers();
-        boolean includeAnnotations = Boolean.TRUE.equals(request.getIncludeAnnotations());
+        boolean includeAnnotations = request.isIncludeAnnotations();
         Path tempFile = null;
         Path tempOutputDir = null;
         Path tempPdfPath = null;
@@ -246,7 +246,7 @@ public class ConvertImgPDFController {
         MultipartFile[] file = request.getFileInput();
         String fitOption = request.getFitOption();
         String colorType = request.getColorType();
-        boolean autoRotate = Boolean.TRUE.equals(request.getAutoRotate());
+        boolean autoRotate = request.isAutoRotate();
         // Handle Null entries for formdata
         if (colorType == null || colorType.isBlank()) {
             colorType = "color";

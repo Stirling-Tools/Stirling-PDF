@@ -28,5 +28,5 @@ public class SplitPdfBySectionsRequest extends PDFFile {
             description = "Merge the split documents into a single PDF",
             defaultValue = "true",
             requiredMode = Schema.RequiredMode.REQUIRED)
-    private Boolean merge;
+    private boolean merge;
 }

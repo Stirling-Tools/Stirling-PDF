@@ -66,7 +66,7 @@ public class SplitPdfBySectionsController {
         // Process the PDF based on split parameters
         int horiz = request.getHorizontalDivisions() + 1;
         int verti = request.getVerticalDivisions() + 1;
-        boolean merge = Boolean.TRUE.equals(request.getMerge());
+        boolean merge = request.isMerge();
         List<PDDocument> splitDocuments = splitPdfPages(sourceDocument, verti, horiz);
 
         String filename = GeneralUtils.generateFilename(file.getOriginalFilename(), "_split.pdf");

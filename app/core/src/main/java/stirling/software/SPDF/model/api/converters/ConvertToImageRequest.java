@@ -43,5 +43,5 @@ public class ConvertToImageRequest extends PDFWithPageNums {
     @Schema(
             description = "Include annotations such as comments in the output image(s)",
             defaultValue = "false")
-    private Boolean includeAnnotations;
+    private boolean includeAnnotations;
 }

@@ -53,5 +53,5 @@ public class AddWatermarkRequest extends PDFFile {
             description = "Convert the redacted PDF to an image",
             defaultValue = "false",
             requiredMode = Schema.RequiredMode.REQUIRED)
-    private Boolean convertPDFToImage;
+    private boolean convertPDFToImage;
 }

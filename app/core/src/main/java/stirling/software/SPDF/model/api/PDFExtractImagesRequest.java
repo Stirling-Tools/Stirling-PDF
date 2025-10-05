@@ -14,5 +14,5 @@ public class PDFExtractImagesRequest extends PDFWithImageFormatRequest {
                     "Boolean to enable/disable the saving of duplicate images, true to enable"
                             + " duplicates",
             defaultValue = "false")
-    private Boolean allowDuplicates;
+    private boolean allowDuplicates;
 }

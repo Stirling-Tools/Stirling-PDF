@@ -17,5 +17,5 @@ public class FlattenRequest extends PDFFile {
                             + " image)",
             requiredMode = Schema.RequiredMode.REQUIRED,
             defaultValue = "false")
-    private Boolean flattenOnlyForms;
+    private boolean flattenOnlyForms;
 }

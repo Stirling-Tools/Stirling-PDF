@@ -98,7 +98,7 @@ public class WatermarkController {
         int widthSpacer = request.getWidthSpacer();
         int heightSpacer = request.getHeightSpacer();
         String customColor = request.getCustomColor();
-        boolean convertPdfToImage = Boolean.TRUE.equals(request.getConvertPDFToImage());
+        boolean convertPdfToImage = request.isConvertPDFToImage();
 
         // Load the input PDF
         PDDocument document = pdfDocumentFactory.load(pdfFile);

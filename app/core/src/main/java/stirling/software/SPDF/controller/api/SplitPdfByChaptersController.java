@@ -128,7 +128,7 @@ public class SplitPdfByChaptersController {
         Path zipFile = null;
 
         try {
-            boolean includeMetadata = Boolean.TRUE.equals(request.getIncludeMetadata());
+            boolean includeMetadata = request.isIncludeMetadata();
             Integer bookmarkLevel =
                     request.getBookmarkLevel(); // levels start from 0 (top most bookmarks)
             if (bookmarkLevel < 0) {
@@ -164,7 +164,7 @@ public class SplitPdfByChaptersController {
                         .body("Unable to extract outline items".getBytes());
             }
 
-            boolean allowDuplicates = Boolean.TRUE.equals(request.getAllowDuplicates());
+            boolean allowDuplicates = request.isAllowDuplicates();
             if (!allowDuplicates) {
                 /*
                 duplicates are generated when multiple bookmarks correspond to the same page,

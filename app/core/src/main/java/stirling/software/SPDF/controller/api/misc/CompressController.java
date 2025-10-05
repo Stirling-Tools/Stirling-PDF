@@ -661,7 +661,7 @@ public class CompressController {
         MultipartFile inputFile = request.getFileInput();
         Integer optimizeLevel = request.getOptimizeLevel();
         String expectedOutputSizeString = request.getExpectedOutputSize();
-        Boolean convertToGrayscale = request.getGrayscale();
+        boolean convertToGrayscale = request.isGrayscale();
         if (expectedOutputSizeString == null && optimizeLevel == null) {
             throw new Exception("Both expected output size and optimize level are not specified");
         }
@@ -736,8 +736,7 @@ public class CompressController {
                 }
 
                 // Apply image compression for levels 4+ only if Ghostscript didn't run
-                if ((optimizeLevel >= 4 || Boolean.TRUE.equals(convertToGrayscale))
-                        && !imageCompressionApplied) {
+                if ((optimizeLevel >= 4 || convertToGrayscale) && !imageCompressionApplied) {
                     // Use different scale factors based on level
                     double scaleFactor =
                             switch (optimizeLevel) {
@@ -756,7 +755,7 @@ public class CompressController {
                                     currentFile,
                                     scaleFactor,
                                     0.7f, // Default JPEG quality
-                                    Boolean.TRUE.equals(convertToGrayscale));
+                                    convertToGrayscale);
 
                     tempFiles.add(compressedImageFile);
                     currentFile = compressedImageFile;
@@ -927,10 +926,10 @@ public class CompressController {
         // Build QPDF command
         List<String> command = new ArrayList<>();
         command.add("qpdf");
-        if (request.getNormalize()) {
+        if (request.isNormalize()) {
             command.add("--normalize-content=y");
         }
-        if (request.getLinearize()) {
+        if (request.isLinearize()) {
             command.add("--linearize");
         }
         command.add("--recompress-flate");

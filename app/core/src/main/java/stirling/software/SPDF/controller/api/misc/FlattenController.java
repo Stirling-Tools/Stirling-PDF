@@ -52,9 +52,9 @@ public class FlattenController {
         MultipartFile file = request.getFileInput();
 
         PDDocument document = pdfDocumentFactory.load(file);
-        Boolean flattenOnlyForms = request.getFlattenOnlyForms();
+        boolean flattenOnlyForms = request.isFlattenOnlyForms();
 
-        if (Boolean.TRUE.equals(flattenOnlyForms)) {
+        if (flattenOnlyForms) {
             PDAcroForm acroForm = document.getDocumentCatalog().getAcroForm();
             if (acroForm != null) {
                 acroForm.flatten();

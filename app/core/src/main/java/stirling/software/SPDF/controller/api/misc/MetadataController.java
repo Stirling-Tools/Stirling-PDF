@@ -67,7 +67,7 @@ public class MetadataController {
         MultipartFile pdfFile = request.getFileInput();
 
         // Extract metadata information
-        boolean deleteAll = Boolean.TRUE.equals(request.getDeleteAll());
+        boolean deleteAll = request.isDeleteAll();
         String author = request.getAuthor();
         String creationDate = request.getCreationDate();
         String creator = request.getCreator();

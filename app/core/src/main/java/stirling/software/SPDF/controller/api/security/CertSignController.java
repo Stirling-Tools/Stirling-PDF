@@ -103,12 +103,12 @@ public class CertSignController {
             MultipartFile input,
             OutputStream output,
             CreateSignature instance,
-            Boolean showSignature,
+            boolean showSignature,
             Integer pageNumber,
             String name,
             String location,
             String reason,
-            Boolean showLogo) {
+            boolean showLogo) {
         try (PDDocument doc = pdfDocumentFactory.load(input)) {
             PDSignature signature = new PDSignature();
             signature.setFilter(PDSignature.FILTER_ADOBE_PPKLITE);
@@ -117,7 +117,7 @@ public class CertSignController {
             signature.setLocation(location);
             signature.setReason(reason);
             signature.setSignDate(Calendar.getInstance()); // PDFBox requires Calendar
-            if (Boolean.TRUE.equals(showSignature)) {
+            if (showSignature) {
                 SignatureOptions signatureOptions = new SignatureOptions();
                 signatureOptions.setVisualSignature(
                         instance.createVisibleSignature(doc, signature, pageNumber, showLogo));
@@ -155,13 +155,13 @@ public class CertSignController {
         MultipartFile p12File = request.getP12File();
         MultipartFile jksfile = request.getJksFile();
         String password = request.getPassword();
-        Boolean showSignature = request.getShowSignature();
+        boolean showSignature = request.isShowSignature();
         String reason = request.getReason();
         String location = request.getLocation();
         String name = request.getName();
         // Convert 1-indexed page number (user input) to 0-indexed page number (API requirement)
         Integer pageNumber = request.getPageNumber() != null ? (request.getPageNumber() - 1) : null;
-        Boolean showLogo = request.getShowLogo();
+        boolean showLogo = request.isShowLogo();
 
         if (StringUtils.isBlank(certType)) {
             throw ExceptionUtils.createIllegalArgumentException(

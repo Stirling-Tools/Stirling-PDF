@@ -119,7 +119,7 @@ public class AutoSplitPdfController {
     public ResponseEntity<byte[]> autoSplitPdf(@ModelAttribute AutoSplitPdfRequest request)
             throws IOException {
         MultipartFile file = request.getFileInput();
-        boolean duplexMode = Boolean.TRUE.equals(request.getDuplexMode());
+        boolean duplexMode = request.isDuplexMode();
 
         PDDocument document = null;
         List<PDDocument> splitDocuments = new ArrayList<>();

@@ -14,13 +14,13 @@ public class SplitPdfByChaptersRequest extends PDFFile {
             description = "Whether to include Metadata or not",
             defaultValue = "true",
             requiredMode = Schema.RequiredMode.REQUIRED)
-    private Boolean includeMetadata;
+    private boolean includeMetadata;
 
     @Schema(
             description = "Whether to allow duplicates or not",
             defaultValue = "true",
             requiredMode = Schema.RequiredMode.REQUIRED)
-    private Boolean allowDuplicates;
+    private boolean allowDuplicates;
 
     @Schema(
             description = "Maximum bookmark level required",

@@ -242,7 +242,7 @@ public class MergeController {
         List<File> filesToDelete = new ArrayList<>(); // List of temporary files to delete
         TempFile outputTempFile = null;
 
-        boolean removeCertSign = Boolean.TRUE.equals(request.getRemoveCertSign());
+        boolean removeCertSign = request.isRemoveCertSign();
         boolean generateToc = request.isGenerateToc();
 
         MultipartFile[] files = request.getFileInput();

@@ -33,30 +33,30 @@ public class AddPasswordRequest extends PDFFile {
     private int keyLength = 256;
 
     @Schema(description = "Whether document assembly is prevented", defaultValue = "false")
-    private Boolean preventAssembly;
+    private boolean preventAssembly;
 
     @Schema(description = "Whether content extraction is prevented", defaultValue = "false")
-    private Boolean preventExtractContent;
+    private boolean preventExtractContent;
 
     @Schema(
             description = "Whether content extraction for accessibility is prevented",
             defaultValue = "false")
-    private Boolean preventExtractForAccessibility;
+    private boolean preventExtractForAccessibility;
 
     @Schema(description = "Whether form filling is prevented", defaultValue = "false")
-    private Boolean preventFillInForm;
+    private boolean preventFillInForm;
 
     @Schema(description = "Whether document modification is prevented", defaultValue = "false")
-    private Boolean preventModify;
+    private boolean preventModify;
 
     @Schema(
             description = "Whether modification of annotations is prevented",
             defaultValue = "false")
-    private Boolean preventModifyAnnotations;
+    private boolean preventModifyAnnotations;
 
     @Schema(description = "Whether printing of the document is prevented", defaultValue = "false")
-    private Boolean preventPrinting;
+    private boolean preventPrinting;
 
     @Schema(description = "Whether faithful printing is prevented", defaultValue = "false")
-    private Boolean preventPrintingFaithful;
+    private boolean preventPrintingFaithful;
 }
