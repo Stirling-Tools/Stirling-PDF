@@ -793,10 +793,9 @@ public class ScannerEffectController {
             command.add("-dPDFSETTINGS=" + pdfSetting);
             if (request.isAdvancedEnabled() && request.getResolution() > 0) {
                 int effectiveResolution = Math.max(72, Math.min(600, request.getResolution()));
-                command.add("-r" + effectiveResolution + "x" + effectiveResolution);
+                command.add("-r" + effectiveResolution);
             }
             command.add("-dFastWebView=true");
-            command.add("-dDetectDuplicateImages=true");
             command.add("-dCompressFonts=true");
             command.add("-dSubsetFonts=true");
             command.add("-sOutputFile=" + outputFile);
