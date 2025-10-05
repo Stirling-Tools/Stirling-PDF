@@ -176,7 +176,7 @@ export default function RightRail() {
   }, [currentView]);
 
   return (
-    <div className="right-rail">
+    <div className="right-rail" data-sidebar="right-rail">
       <div className="right-rail-inner">
         {topButtons.length > 0 && (
           <>
@@ -480,5 +480,4 @@ export default function RightRail() {
     </div>
   );
 }
-
 

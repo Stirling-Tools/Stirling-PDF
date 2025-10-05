@@ -16,6 +16,7 @@ import FileManager from "../components/FileManager";
 import LocalIcon from "../components/shared/LocalIcon";
 import { useFilesModalContext } from "../contexts/FilesModalContext";
 import AppConfigModal from "../components/shared/AppConfigModal";
+import ToolPanelModePrompt from "../components/tools/ToolPanelModePrompt";
 
 import "./HomePage.css";
 
@@ -30,7 +31,12 @@ export default function HomePage() {
 
   const { quickAccessRef } = sidebarRefs;
 
-  const { selectedTool, selectedToolKey, handleToolSelect, handleBackToTools } = useToolWorkflow();
+  const {
+    selectedTool,
+    selectedToolKey,
+    handleToolSelect,
+    handleBackToTools,
+  } = useToolWorkflow();
 
   const { openFilesModal } = useFilesModalContext();
   const { colorScheme } = useMantineColorScheme();
@@ -126,6 +132,7 @@ export default function HomePage() {
 
   return (
     <div className="h-screen overflow-hidden">
+      <ToolPanelModePrompt />
       {isMobile ? (
         <div className="mobile-layout">
           <div className="mobile-toggle">
@@ -231,8 +238,7 @@ export default function HomePage() {
           h="100%"
           className="flex-nowrap flex"
         >
-          <QuickAccessBar
-            ref={quickAccessRef} />
+          <QuickAccessBar ref={quickAccessRef} />
           <ToolPanel />
           <Workbench />
           <RightRail />

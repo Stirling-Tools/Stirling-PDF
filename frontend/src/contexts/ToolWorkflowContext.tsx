@@ -14,11 +14,14 @@ import { getDefaultWorkbench } from '../types/workbench';
 import { filterToolRegistryByQuery } from '../utils/toolSearch';
 
 // State interface
+type ToolPanelMode = 'sidebar' | 'legacy';
+
 interface ToolWorkflowState {
   // UI State
   sidebarsVisible: boolean;
   leftPanelView: 'toolPicker' | 'toolContent' | 'hidden';
   readerMode: boolean;
+  toolPanelMode: ToolPanelMode;
 
   // File/Preview State
   previewFile: File | null;
@@ -33,13 +36,29 @@ type ToolWorkflowAction =
   | { type: 'SET_SIDEBARS_VISIBLE'; payload: boolean }
   | { type: 'SET_LEFT_PANEL_VIEW'; payload: 'toolPicker' | 'toolContent' | 'hidden' }
   | { type: 'SET_READER_MODE'; payload: boolean }
+  | { type: 'SET_TOOL_PANEL_MODE'; payload: ToolPanelMode }
   | { type: 'SET_PREVIEW_FILE'; payload: File | null }
   | { type: 'SET_PAGE_EDITOR_FUNCTIONS'; payload: PageEditorFunctions | null }
   | { type: 'SET_SEARCH_QUERY'; payload: string }
   | { type: 'RESET_UI_STATE' };
 
 // Initial state
-const initialState: ToolWorkflowState = {
+export const TOOL_PANEL_MODE_STORAGE_KEY = 'toolPanelModePreference';
+
+const getStoredToolPanelMode = (): ToolPanelMode => {
+  if (typeof window === 'undefined') {
+    return 'sidebar';
+  }
+
+  const stored = window.localStorage.getItem(TOOL_PANEL_MODE_STORAGE_KEY);
+  if (stored === 'legacy' || stored === 'fullscreen') {
+    return 'legacy';
+  }
+
+  return 'sidebar';
+};
+
+const baseState: Omit<ToolWorkflowState, 'toolPanelMode'> = {
   sidebarsVisible: true,
   leftPanelView: 'toolPicker',
   readerMode: false,
@@ -47,6 +66,11 @@ const initialState: ToolWorkflowState = {
   pageEditorFunctions: null,
   searchQuery: '',
 };
+
+const createInitialState = (): ToolWorkflowState => ({
+  ...baseState,
+  toolPanelMode: getStoredToolPanelMode(),
+});
 
 // Reducer
 function toolWorkflowReducer(state: ToolWorkflowState, action: ToolWorkflowAction): ToolWorkflowState {
@@ -57,6 +81,8 @@ function toolWorkflowReducer(state: ToolWorkflowState, action: ToolWorkflowActio
       return { ...state, leftPanelView: action.payload };
     case 'SET_READER_MODE':
       return { ...state, readerMode: action.payload };
+    case 'SET_TOOL_PANEL_MODE':
+      return { ...state, toolPanelMode: action.payload };
     case 'SET_PREVIEW_FILE':
       return { ...state, previewFile: action.payload };
     case 'SET_PAGE_EDITOR_FUNCTIONS':
@@ -64,7 +90,11 @@ function toolWorkflowReducer(state: ToolWorkflowState, action: ToolWorkflowActio
     case 'SET_SEARCH_QUERY':
       return { ...state, searchQuery: action.payload };
     case 'RESET_UI_STATE':
-      return { ...initialState, searchQuery: state.searchQuery }; // Preserve search
+      return {
+        ...baseState,
+        toolPanelMode: state.toolPanelMode,
+        searchQuery: state.searchQuery,
+      };
     default:
       return state;
   }
@@ -82,6 +112,7 @@ interface ToolWorkflowContextValue extends ToolWorkflowState {
   setSidebarsVisible: (visible: boolean) => void;
   setLeftPanelView: (view: 'toolPicker' | 'toolContent' | 'hidden') => void;
   setReaderMode: (mode: boolean) => void;
+  setToolPanelMode: (mode: ToolPanelMode) => void;
   setPreviewFile: (file: File | null) => void;
   setPageEditorFunctions: (functions: PageEditorFunctions | null) => void;
   setSearchQuery: (query: string) => void;
@@ -113,7 +144,7 @@ interface ToolWorkflowProviderProps {
 }
 
 export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
-  const [state, dispatch] = useReducer(toolWorkflowReducer, initialState);
+  const [state, dispatch] = useReducer(toolWorkflowReducer, undefined, createInitialState);
 
   // Store reset functions for tools
   const [toolResetFunctions, setToolResetFunctions] = React.useState<Record<string, () => void>>({});
@@ -148,6 +179,10 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     dispatch({ type: 'SET_READER_MODE', payload: mode });
   }, [actions]);
 
+  const setToolPanelMode = useCallback((mode: ToolPanelMode) => {
+    dispatch({ type: 'SET_TOOL_PANEL_MODE', payload: mode });
+  }, []);
+
   const setPreviewFile = useCallback((file: File | null) => {
     dispatch({ type: 'SET_PREVIEW_FILE', payload: file });
     if (file) {
@@ -162,6 +197,14 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
   const setSearchQuery = useCallback((query: string) => {
     dispatch({ type: 'SET_SEARCH_QUERY', payload: query });
   }, []);
+
+  React.useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    window.localStorage.setItem(TOOL_PANEL_MODE_STORAGE_KEY, state.toolPanelMode);
+  }, [state.toolPanelMode]);
 
   // Tool reset methods
   const registerToolReset = useCallback((toolId: string, resetFunction: () => void) => {
@@ -261,6 +304,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     setSidebarsVisible,
     setLeftPanelView,
     setReaderMode,
+    setToolPanelMode,
     setPreviewFile,
     setPageEditorFunctions,
     setSearchQuery,
@@ -289,6 +333,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     setSidebarsVisible,
     setLeftPanelView,
     setReaderMode,
+    setToolPanelMode,
     setPreviewFile,
     setPageEditorFunctions,
     setSearchQuery,
