@@ -297,23 +297,6 @@ public class PdfAttachmentHandler {
         return dateTime.withZoneSameInstant(ZoneId.of("UTC")).format(formatter);
     }
 
-    @Data
-    public class MarkerPosition {
-        private int pageIndex;
-        private float x;
-        private float y;
-        private String character;
-        private String filename;
-
-        public MarkerPosition(int pageIndex, float x, float y, String character, String filename) {
-            this.pageIndex = pageIndex;
-            this.x = x;
-            this.y = y;
-            this.character = character;
-            this.filename = filename;
-        }
-    }
-
     private String normalizeFilename(String filename) {
         if (filename == null) return "";
         String normalized = filename.toLowerCase().trim();
@@ -331,9 +314,9 @@ public class PdfAttachmentHandler {
     }
 
     private Map<Integer, String> addAttachmentsToDocumentWithMapping(
-        PDDocument document,
-        List<MultipartFile> attachments,
-        List<EmlParser.EmailAttachment> originalAttachments)
+            PDDocument document,
+            List<MultipartFile> attachments,
+            List<EmlParser.EmailAttachment> originalAttachments)
             throws IOException {
 
         PDDocumentCatalog catalog = document.getDocumentCatalog();
@@ -702,123 +685,6 @@ public class PdfAttachmentHandler {
             this.y = y;
             this.character = character;
             this.filename = filename;
-        }
-    }
-
-    public class AttachmentMarkerPositionFinder extends PDFTextStripper {
-        @Getter private final List<MarkerPosition> positions = new ArrayList<>();
-        private int currentPageIndex;
-        protected boolean sortByPosition;
-        private boolean isInAttachmentSection;
-        private boolean attachmentSectionFound;
-        private final StringBuilder currentText = new StringBuilder();
-
-        private static final Pattern ATTACHMENT_SECTION_PATTERN =
-                Pattern.compile("attachments\\s*\\(\\d+\\)", Pattern.CASE_INSENSITIVE);
-
-        private static final Pattern FILENAME_PATTERN =
-                Pattern.compile("@\\s*([^\\s\\(]+(?:\\.[a-zA-Z0-9]+)?)");
-
-        public AttachmentMarkerPositionFinder() {
-            super();
-            this.currentPageIndex = 0;
-            this.sortByPosition = false; // Disable sorting to preserve document order
-            this.isInAttachmentSection = false;
-            this.attachmentSectionFound = false;
-        }
-
-        @Override
-        public String getText(PDDocument document) throws IOException {
-            super.getText(document);
-
-            if (sortByPosition) {
-                positions.sort(
-                        (a, b) -> {
-                            int pageCompare = Integer.compare(a.getPageIndex(), b.getPageIndex());
-                            if (pageCompare != 0) return pageCompare;
-                            return Float.compare(
-                                    b.getY(), a.getY()); // Descending Y per PDF coordinate system
-                        });
-            }
-
-            return ""; // Return empty string as we only need positions
-        }
-
-        @Override
-        protected void startPage(PDPage page) throws IOException {
-            super.startPage(page);
-        }
-
-        @Override
-        protected void endPage(PDPage page) throws IOException {
-            currentPageIndex++;
-            super.endPage(page);
-        }
-
-        @Override
-        protected void writeString(String string, List<TextPosition> textPositions)
-                throws IOException {
-            String lowerString = string.toLowerCase();
-
-            if (ATTACHMENT_SECTION_PATTERN.matcher(lowerString).find()) {
-                isInAttachmentSection = true;
-                attachmentSectionFound = true;
-            }
-
-            if (isInAttachmentSection
-                    && (lowerString.contains("</body>")
-                            || lowerString.contains("</html>")
-                            || (attachmentSectionFound
-                                    && lowerString.trim().isEmpty()
-                                    && string.length() > 50))) {
-                isInAttachmentSection = false;
-            }
-
-            if (isInAttachmentSection) {
-                currentText.append(string);
-
-                for (int i = 0; (i = string.indexOf(ATTACHMENT_MARKER, i)) != -1; i++) {
-                    if (i < textPositions.size()) {
-                        TextPosition textPosition = textPositions.get(i);
-
-                        String filename = extractFilenameAfterMarker(string, i);
-
-                        MarkerPosition position =
-                                new MarkerPosition(
-                                        currentPageIndex,
-                                        textPosition.getXDirAdj(),
-                                        textPosition.getYDirAdj(),
-                                        ATTACHMENT_MARKER,
-                                        filename);
-                        positions.add(position);
-                    }
-                }
-            }
-            super.writeString(string, textPositions);
-        }
-
-        @Override
-        public void setSortByPosition(boolean sortByPosition) {
-            this.sortByPosition = sortByPosition;
-        }
-
-        private String extractFilenameAfterMarker(String text, int markerIndex) {
-            String afterMarker = text.substring(markerIndex + 1);
-
-            Matcher matcher = FILENAME_PATTERN.matcher("@" + afterMarker);
-            if (matcher.find()) {
-                return matcher.group(1);
-            }
-
-            String[] parts = afterMarker.split("[\\s\\(\\)]+");
-            for (String part : parts) {
-                part = part.trim();
-                if (part.length() > 3 && part.contains(".")) {
-                    return part;
-                }
-            }
-
-            return null;
         }
     }
 }
