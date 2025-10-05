@@ -14,7 +14,10 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.Future;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
@@ -63,12 +66,10 @@ public class ScannerEffectController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final EndpointConfiguration endpointConfiguration;
 
-    // Size limits to prevent OutOfMemoryError
     private static final int MAX_IMAGE_WIDTH = 8192;
     private static final int MAX_IMAGE_HEIGHT = 8192;
     private static final long MAX_IMAGE_PIXELS = 16_777_216; // 4096x4096
 
-    // ThreadLocal buffer reuse to minimize allocations across parallel threads
     private static final ThreadLocal<BufferCache> BUFFER_CACHE =
             ThreadLocal.withInitial(BufferCache::new);
 
@@ -559,15 +560,7 @@ public class ScannerEffectController {
 
             long documentLoadStart = System.nanoTime();
             try (PDDocument document = pdfDocumentFactory.load(processingInput);
-                    PDDocument outputDocument = new PDDocument();
-                    ManagedForkJoinPool managedPool =
-                            new ManagedForkJoinPool(
-                                    Math.min(
-                                            64,
-                                            Math.max(
-                                                    2,
-                                                    Runtime.getRuntime().availableProcessors()
-                                                            * 2)))) {
+                    PDDocument outputDocument = new PDDocument()) {
 
                 log.info(
                         "Input document loaded in {} from {}",
@@ -575,87 +568,102 @@ public class ScannerEffectController {
                         processingInput);
 
                 int totalPages = document.getNumberOfPages();
-                ForkJoinPool customPool = managedPool.getPool();
+                int configuredParallelism =
+                        Math.min(64, Math.max(2, Runtime.getRuntime().availableProcessors() * 2));
+                int desiredParallelism = Math.max(1, Math.min(totalPages, configuredParallelism));
 
-                log.info(
-                        "Processing {} page(s) at {} DPI for rendering (requested {} DPI) using {} worker thread(s)",
-                        totalPages,
-                        renderResolution,
-                        resolution,
-                        customPool.getParallelism());
+                try (ManagedForkJoinPool managedPool =
+                        new ManagedForkJoinPool(desiredParallelism)) {
+                    ForkJoinPool customPool = managedPool.getPool();
 
-                ThreadLocal<PDFRenderer> rendererCache =
-                        ThreadLocal.withInitial(
-                                () -> {
-                                    PDFRenderer renderer = new PDFRenderer(document);
-                                    renderer.setSubsamplingAllowed(true);
-                                    renderer.setImageDownscalingOptimizationThreshold(0.5f);
-                                    return renderer;
-                                });
-
-                List<ProcessedPage> processedPages;
-                try {
-                    long renderStart = System.nanoTime();
-                    processedPages =
-                            customPool
-                                    .submit(
-                                            () ->
-                                                    IntStream.range(0, totalPages)
-                                                            .parallel()
-                                                            .mapToObj(
-                                                                    i ->
-                                                                            processPage(
-                                                                                    i,
-                                                                                    document,
-                                                                                    rendererCache,
-                                                                                    baseRotation,
-                                                                                    rotateVariance,
-                                                                                    borderPx,
-                                                                                    brightness,
-                                                                                    contrast,
-                                                                                    blur,
-                                                                                    noise,
-                                                                                    yellowish,
-                                                                                    renderResolution,
-                                                                                    colorspace))
-                                                            .toList())
-                                    .get();
-                    long renderDuration = System.nanoTime() - renderStart;
                     log.info(
-                            "Page rendering completed in {} (avg per page: {}, max per page: {})",
-                            formatDuration(renderDuration),
-                            formatDuration(renderDuration / Math.max(1, totalPages)),
-                            formatDuration(
-                                    processedPages.stream()
-                                            .mapToLong(ProcessedPage::totalNanos)
-                                            .max()
-                                            .orElse(0)));
-                    logForkJoinPoolMetrics(customPool);
-                    logRenderingSummary(processedPages);
-                    rendererCache.remove();
-                } catch (Exception e) {
-                    throw new IOException("Parallel page processing failed", e);
+                            "Processing {} page(s) at {} DPI for rendering (requested {} DPI) using {} worker thread(s)",
+                            totalPages,
+                            renderResolution,
+                            resolution,
+                            customPool.getParallelism());
+
+                    ThreadLocal<PDFRenderer> rendererCache =
+                            ThreadLocal.withInitial(
+                                    () -> {
+                                        PDFRenderer renderer = new PDFRenderer(document);
+                                        renderer.setSubsamplingAllowed(true);
+                                        renderer.setImageDownscalingOptimizationThreshold(0.5f);
+                                        return renderer;
+                                    });
+
+                    List<ProcessedPage> processedPages;
+                    try {
+                        long renderStart = System.nanoTime();
+                        List<Callable<ProcessedPage>> tasks =
+                                IntStream.range(0, totalPages)
+                                        .mapToObj(
+                                                i ->
+                                                        (Callable<ProcessedPage>)
+                                                                () ->
+                                                                        processPage(
+                                                                                i,
+                                                                                document,
+                                                                                rendererCache,
+                                                                                baseRotation,
+                                                                                rotateVariance,
+                                                                                borderPx,
+                                                                                brightness,
+                                                                                contrast,
+                                                                                blur,
+                                                                                noise,
+                                                                                yellowish,
+                                                                                renderResolution,
+                                                                                colorspace))
+                                        .toList();
+
+                        List<Future<ProcessedPage>> futures = customPool.invokeAll(tasks);
+                        processedPages = new ArrayList<>(totalPages);
+                        for (Future<ProcessedPage> future : futures) {
+                            processedPages.add(future.get());
+                        }
+
+                        long renderDuration = System.nanoTime() - renderStart;
+                        log.info(
+                                "Page rendering completed in {} (avg per page: {}, max per page: {})",
+                                formatDuration(renderDuration),
+                                formatDuration(renderDuration / Math.max(1, totalPages)),
+                                formatDuration(
+                                        processedPages.stream()
+                                                .mapToLong(ProcessedPage::totalNanos)
+                                                .max()
+                                                .orElse(0)));
+                        logForkJoinPoolMetrics(customPool);
+                        logRenderingSummary(processedPages);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        throw new IOException("Parallel page processing interrupted", e);
+                    } catch (ExecutionException e) {
+                        throw new IOException("Parallel page processing failed", e.getCause());
+                    } finally {
+                        rendererCache.remove();
+                    }
+
+                    long writingStart = System.nanoTime();
+                    writeProcessedPagesToDocument(processedPages, outputDocument);
+                    log.info("Composited output document in {}", formatDurationSince(writingStart));
+
+                    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+                    outputDocument.save(outputStream);
+
+                    byte[] processedBytes =
+                            finalizeWithGhostscript(
+                                    outputStream.toByteArray(), request, ghostscriptEnabled);
+
+                    log.info(
+                            "Scanner effect pipeline completed in {}",
+                            formatDurationSince(overallStart));
+
+                    return WebResponseUtils.bytesToWebResponse(
+                            processedBytes,
+                            GeneralUtils.generateFilename(
+                                    file.getOriginalFilename(), "_scanner_effect.pdf"));
                 }
-
-                long writingStart = System.nanoTime();
-                writeProcessedPagesToDocument(processedPages, outputDocument);
-                log.info("Composited output document in {}", formatDurationSince(writingStart));
-
-                ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-                outputDocument.save(outputStream);
-
-                byte[] processedBytes =
-                        finalizeWithGhostscript(
-                                outputStream.toByteArray(), request, ghostscriptEnabled);
-
-                log.info(
-                        "Scanner effect pipeline completed in {}",
-                        formatDurationSince(overallStart));
-
-                return WebResponseUtils.bytesToWebResponse(
-                        processedBytes,
-                        GeneralUtils.generateFilename(
-                                file.getOriginalFilename(), "_scanner_effect.pdf"));
             }
         } finally {
             for (Path tempFile : tempFiles) {
@@ -824,7 +832,6 @@ public class ScannerEffectController {
         }
     }
 
-    /** Process a single page with all scanner effects applied. */
     private ProcessedPage processPage(
             int pageIndex,
             PDDocument document,
@@ -842,7 +849,7 @@ public class ScannerEffectController {
 
         try {
             long pageStart = System.nanoTime();
-            // Get page dimensions once to avoid redundant calls and race conditions
+
             PDRectangle pageSize;
             synchronized (document) {
                 pageSize = document.getPage(pageIndex).getMediaBox();
