@@ -36,6 +36,9 @@ export default function HomePage() {
     selectedToolKey,
     handleToolSelect,
     handleBackToTools,
+    readerMode,
+    leftPanelView,
+    setLeftPanelView,
   } = useToolWorkflow();
 
   const { openFilesModal } = useFilesModalContext();
@@ -115,6 +118,23 @@ export default function HomePage() {
       }
     };
   }, [isMobile]);
+
+  // Automatically switch to workbench when read mode or multiTool is activated in mobile
+  useEffect(() => {
+    if (isMobile && (readerMode || selectedToolKey === 'multiTool')) {
+      setActiveMobileView('workbench');
+    }
+  }, [isMobile, readerMode, selectedToolKey]);
+
+  // When navigating back to tools view in mobile with a workbench-only tool, show tool picker
+  useEffect(() => {
+    if (isMobile && activeMobileView === 'tools' && selectedTool) {
+      // Check if this is a workbench-only tool (has workbench but no component)
+      if (selectedTool.workbench && !selectedTool.component) {
+        setLeftPanelView('toolPicker');
+      }
+    }
+  }, [isMobile, activeMobileView, selectedTool, setLeftPanelView]);
 
   const baseUrl = getBaseUrl();
 

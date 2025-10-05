@@ -18,6 +18,11 @@ const ToolRenderer = ({
   const { toolRegistry } = useToolWorkflow();
   const selectedTool = toolRegistry[selectedToolKey];
 
+  // Handle tools that only work in workbenches (read, multiTool)
+  if (selectedTool && !selectedTool.component && selectedTool.workbench) {
+    return null; // These tools render in their workbench, not in the sidebar
+  }
+
   if (!selectedTool || !selectedTool.component) {
     return <div>Tool not found: {selectedToolKey}</div>;
   }

@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { ActionIcon, ScrollArea, Switch, Text, Tooltip } from '@mantine/core';
+import { ActionIcon, ScrollArea, Switch, Text, Tooltip, useMantineColorScheme } from '@mantine/core';
 import ViewSidebarRoundedIcon from '@mui/icons-material/ViewSidebarRounded';
 import { useTranslation } from 'react-i18next';
 import ToolSearch from './toolPicker/ToolSearch';
@@ -7,6 +7,7 @@ import LegacyToolList from './LegacyToolList';
 import { ToolRegistryEntry } from '../../data/toolsTaxonomy';
 import { ToolId } from '../../types/toolId';
 import { useFocusTrap } from '../../hooks/tools/useFocusTrap';
+import { BASE_PATH } from '../../constants/app';
 import './ToolPanel.css';
 
 interface LegacyToolSurfaceProps {
@@ -44,11 +45,20 @@ const LegacyToolSurface = ({
   geometry,
 }: LegacyToolSurfaceProps) => {
   const { t } = useTranslation();
+  const { colorScheme } = useMantineColorScheme();
   const [isExiting, setIsExiting] = useState(false);
   const surfaceRef = useRef<HTMLDivElement>(null);
 
   // Enable focus trap when surface is active
   useFocusTrap(surfaceRef, !isExiting);
+
+  const brandAltText = t("home.mobile.brandAlt", "Stirling PDF logo");
+  const brandIconSrc = `${BASE_PATH}/branding/StirlingPDFLogoNoText${
+    colorScheme === "dark" ? "Dark" : "Light"
+  }.svg`;
+  const brandTextSrc = `${BASE_PATH}/branding/StirlingPDFLogo${
+    colorScheme === "dark" ? "White" : "Black"
+  }Text.svg`;
 
   const handleExit = () => {
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -96,19 +106,15 @@ const LegacyToolSurface = ({
         className={`tool-panel__legacy-surface-inner ${isExiting ? 'tool-panel__legacy-surface-inner--exiting' : ''}`}
       >
         <header className="tool-panel__legacy-header">
-          <div className="tool-panel__legacy-heading">
-            <Text fw={700} size="lg">
-              {t('toolPanel.legacy.heading', 'All tools (legacy view)')}
-            </Text>
-            <Text size="sm" c="dimmed">
-              {t('toolPanel.legacy.tagline', 'Browse and launch tools while keeping the classic full-width gallery.')}
-            </Text>
+          <div className="tool-panel__legacy-brand">
+            <img src={brandIconSrc} alt="" className="tool-panel__legacy-brand-icon" />
+            <img src={brandTextSrc} alt={brandAltText} className="tool-panel__legacy-brand-text" />
           </div>
           <Tooltip label={toggleLabel} position="bottom" withArrow>
             <ActionIcon
               variant="subtle"
               radius="xl"
-              size="lg"
+              size="md"
               onClick={handleExit}
               aria-label={toggleLabel}
             >

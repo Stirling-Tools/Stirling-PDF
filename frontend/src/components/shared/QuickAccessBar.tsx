@@ -24,7 +24,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
   const { t } = useTranslation();
   const { isRainbowMode } = useRainbowThemeContext();
   const { openFilesModal, isFilesModalOpen } = useFilesModalContext();
-  const { handleReaderToggle, handleBackToTools, handleToolSelect, selectedToolKey, leftPanelView, toolRegistry, readerMode, resetTool } = useToolWorkflow();
+  const { handleReaderToggle, handleBackToTools, handleToolSelect, selectedToolKey, leftPanelView, toolRegistry, readerMode, resetTool, setToolPanelMode } = useToolWorkflow();
   const { getToolNavigation } = useSidebarNavigation();
   const { config } = useAppConfig();
   const [configModalOpen, setConfigModalOpen] = useState(false);
@@ -100,6 +100,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
         setActiveButton('read');
         handleBackToTools();
         handleReaderToggle();
+        setToolPanelMode('sidebar');
       }
     },
     // TODO: Add sign
