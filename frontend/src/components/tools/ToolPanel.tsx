@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useLayoutEffect } from 'react';
+import { useMemo } from 'react';
 import { useRainbowThemeContext } from '../shared/RainbowThemeProvider';
 import { useToolWorkflow } from '../../contexts/ToolWorkflowContext';
 import ToolPicker from './ToolPicker';
@@ -14,6 +14,8 @@ import ViewSidebarRoundedIcon from '@mui/icons-material/ViewSidebarRounded';
 import DashboardCustomizeRoundedIcon from '@mui/icons-material/DashboardCustomizeRounded';
 import { useTranslation } from 'react-i18next';
 import LegacyToolSurface from './LegacyToolSurface';
+import { useToolPanelGeometry } from '../../hooks/tools/useToolPanelGeometry';
+import { useLocalStorageState } from '../../hooks/tools/useLocalStorageState';
 import './ToolPanel.css';
 
 // No props needed - component uses context
@@ -42,80 +44,14 @@ export default function ToolPanel() {
 
   const isLegacyMode = toolPanelMode === 'legacy';
   const legacyExpanded = isLegacyMode && leftPanelView === 'toolPicker' && !isMobile;
-  const [legacyGeometry, setLegacyGeometry] = useState<{ left: number; top: number; width: number; height: number } | null>(null);
 
-  const LEGACY_DESCRIPTION_STORAGE_KEY = 'legacyToolDescriptions';
-  const [showLegacyDescriptions, setShowLegacyDescriptions] = useState(() => {
-    if (typeof window === 'undefined') {
-      return true;
-    }
-
-    const stored = window.localStorage.getItem(LEGACY_DESCRIPTION_STORAGE_KEY);
-    if (stored === null) {
-      return true;
-    }
-    return stored === 'true';
+  // Use custom hooks for state management
+  const [showLegacyDescriptions, setShowLegacyDescriptions] = useLocalStorageState('legacyToolDescriptions', true);
+  const legacyGeometry = useToolPanelGeometry({
+    enabled: legacyExpanded,
+    toolPanelRef,
+    quickAccessRef,
   });
-
-  useEffect(() => {
-    if (typeof window === 'undefined') {
-      return;
-    }
-
-    window.localStorage.setItem(LEGACY_DESCRIPTION_STORAGE_KEY, String(showLegacyDescriptions));
-  }, [showLegacyDescriptions]);
-
-  useLayoutEffect(() => {
-    if (!legacyExpanded) {
-      setLegacyGeometry(null);
-      return;
-    }
-
-    const panelEl = toolPanelRef.current;
-    if (!panelEl) {
-      setLegacyGeometry(null);
-      return;
-    }
-
-    const rightRailEl = () => document.querySelector('[data-sidebar="right-rail"]') as HTMLElement | null;
-
-    const updateGeometry = () => {
-      const rect = panelEl.getBoundingClientRect();
-      const rail = rightRailEl();
-      const rightOffset = rail ? Math.max(0, window.innerWidth - rail.getBoundingClientRect().left) : 0;
-      const width = Math.max(360, window.innerWidth - rect.left - rightOffset);
-      const height = Math.max(rect.height, window.innerHeight - rect.top);
-      setLegacyGeometry({
-        left: rect.left,
-        top: rect.top,
-        width,
-        height,
-      });
-    };
-
-    updateGeometry();
-
-    const handleResize = () => updateGeometry();
-    window.addEventListener('resize', handleResize);
-
-    let resizeObserver: ResizeObserver | null = null;
-    if (typeof ResizeObserver !== 'undefined') {
-      resizeObserver = new ResizeObserver(() => updateGeometry());
-      resizeObserver.observe(panelEl);
-      if (quickAccessRef.current) {
-        resizeObserver.observe(quickAccessRef.current);
-      }
-      const rail = rightRailEl();
-      if (rail) {
-        resizeObserver.observe(rail);
-      }
-    }
-
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      resizeObserver?.disconnect();
-    };
-  }, [legacyExpanded, quickAccessRef, toolPanelRef]);
 
   const toggleLabel = isLegacyMode
     ? t('toolPanel.toggle.sidebar', 'Switch to sidebar mode')

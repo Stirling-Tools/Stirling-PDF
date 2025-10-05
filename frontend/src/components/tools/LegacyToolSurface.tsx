@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { ActionIcon, Group, ScrollArea, Switch, Text, Tooltip } from '@mantine/core';
 import ViewSidebarRoundedIcon from '@mui/icons-material/ViewSidebarRounded';
 import { useTranslation } from 'react-i18next';
@@ -6,6 +6,7 @@ import ToolSearch from './toolPicker/ToolSearch';
 import LegacyToolList from './LegacyToolList';
 import { ToolRegistryEntry } from '../../data/toolsTaxonomy';
 import { ToolId } from '../../types/toolId';
+import { useFocusTrap } from '../../hooks/tools/useFocusTrap';
 import './ToolPanel.css';
 
 interface LegacyToolSurfaceProps {
@@ -43,17 +44,36 @@ const LegacyToolSurface = ({
   geometry,
 }: LegacyToolSurfaceProps) => {
   const { t } = useTranslation();
+  const [isExiting, setIsExiting] = useState(false);
+  const surfaceRef = useRef<HTMLDivElement>(null);
+
+  // Enable focus trap when surface is active
+  useFocusTrap(surfaceRef, !isExiting);
+
+  const handleExit = () => {
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (prefersReducedMotion) {
+      onExitLegacyMode();
+      return;
+    }
+
+    setIsExiting(true);
+    setTimeout(() => {
+      onExitLegacyMode();
+    }, 220); // Match animation duration (0.22s)
+  };
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
-        onExitLegacyMode();
+        handleExit();
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onExitLegacyMode]);
+  }, []);
 
   const style = geometry
     ? {
@@ -71,7 +91,10 @@ const LegacyToolSurface = ({
       role="region"
       aria-label={t('toolPanel.legacy.heading', 'All tools (legacy view)')}
     >
-      <div className="tool-panel__legacy-surface-inner">
+      <div
+        ref={surfaceRef}
+        className={`tool-panel__legacy-surface-inner ${isExiting ? 'tool-panel__legacy-surface-inner--exiting' : ''}`}
+      >
         <header className="tool-panel__legacy-header">
           <div className="tool-panel__legacy-heading">
             <Text fw={700} size="lg">
@@ -86,7 +109,7 @@ const LegacyToolSurface = ({
               variant="subtle"
               radius="xl"
               size="lg"
-              onClick={onExitLegacyMode}
+              onClick={handleExit}
               aria-label={toggleLabel}
             >
               <ViewSidebarRoundedIcon fontSize="small" />

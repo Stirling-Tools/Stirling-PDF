@@ -1,3 +1,32 @@
+/* CSS Custom Properties for Legacy Mode */
+.tool-panel__legacy-surface-inner {
+  --legacy-bg-surface-1: color-mix(in srgb, var(--bg-toolbar) 96%, transparent);
+  --legacy-bg-surface-2: color-mix(in srgb, var(--bg-background) 90%, transparent);
+  --legacy-bg-header: color-mix(in srgb, var(--bg-toolbar) 86%, transparent);
+  --legacy-bg-controls-1: color-mix(in srgb, var(--bg-toolbar) 84%, transparent);
+  --legacy-bg-controls-2: color-mix(in srgb, var(--bg-background) 72%, transparent);
+  --legacy-bg-body-1: color-mix(in srgb, var(--bg-background) 86%, transparent);
+  --legacy-bg-body-2: color-mix(in srgb, var(--bg-toolbar) 78%, transparent);
+  --legacy-bg-group: color-mix(in srgb, var(--bg-toolbar) 82%, transparent);
+  --legacy-bg-item: color-mix(in srgb, var(--bg-toolbar) 88%, transparent);
+  --legacy-bg-list-item: color-mix(in srgb, var(--bg-toolbar) 86%, transparent);
+  --legacy-bg-icon-detailed: color-mix(in srgb, var(--bg-muted) 75%, transparent);
+  --legacy-bg-icon-compact: color-mix(in srgb, var(--bg-muted) 70%, transparent);
+  --legacy-border-subtle-75: color-mix(in srgb, var(--border-subtle) 75%, transparent);
+  --legacy-border-subtle-70: color-mix(in srgb, var(--border-subtle) 70%, transparent);
+  --legacy-border-subtle-65: color-mix(in srgb, var(--border-subtle) 65%, transparent);
+  --legacy-shadow-primary: color-mix(in srgb, var(--shadow-color, rgba(15, 23, 42, 0.55)) 25%, transparent);
+  --legacy-shadow-secondary: color-mix(in srgb, var(--shadow-color, rgba(15, 23, 42, 0.35)) 30%, transparent);
+  --legacy-shadow-group: color-mix(in srgb, var(--shadow-color, rgba(15, 23, 42, 0.45)) 18%, transparent);
+  --legacy-accent-hover: color-mix(in srgb, var(--text-primary) 20%, var(--border-subtle));
+  --legacy-accent-selected: color-mix(in srgb, var(--text-primary) 30%, var(--border-subtle));
+  --legacy-accent-ring: color-mix(in srgb, var(--text-primary) 15%, transparent);
+  --legacy-accent-list-bg: color-mix(in srgb, var(--text-primary) 8%, var(--bg-toolbar));
+  --legacy-accent-list-border: color-mix(in srgb, var(--text-primary) 20%, var(--border-subtle));
+  --legacy-text-icon: color-mix(in srgb, var(--text-primary) 90%, var(--text-muted));
+  --legacy-text-icon-compact: color-mix(in srgb, var(--text-primary) 88%, var(--text-muted));
+}
+
 .tool-panel {
   position: relative;
   transition: width 0.3s ease, max-width 0.3s ease;
@@ -62,17 +91,21 @@
   background:
     linear-gradient(
       140deg,
-      color-mix(in srgb, var(--bg-toolbar) 96%, transparent),
-      color-mix(in srgb, var(--bg-background) 90%, transparent)
+      var(--legacy-bg-surface-1),
+      var(--legacy-bg-surface-2)
     )
     padding-box;
-  border: 1px solid color-mix(in srgb, var(--border-subtle) 75%, transparent);
+  border: 1px solid var(--legacy-border-subtle-75);
   box-shadow:
-    0 24px 64px color-mix(in srgb, var(--shadow-color, rgba(15, 23, 42, 0.55)) 25%, transparent),
-    0 6px 18px color-mix(in srgb, var(--shadow-color, rgba(15, 23, 42, 0.35)) 30%, transparent);
+    0 24px 64px var(--legacy-shadow-primary),
+    0 6px 18px var(--legacy-shadow-secondary);
   backdrop-filter: blur(18px);
   overflow: hidden;
-  animation: tool-panel-legacy-slide 0.28s ease forwards;
+  animation: tool-panel-legacy-slide-in 0.28s ease forwards;
+}
+
+.tool-panel__legacy-surface-inner--exiting {
+  animation: tool-panel-legacy-slide-out 0.22s ease forwards;
 }
 
 .tool-panel__legacy-header {
@@ -81,10 +114,10 @@
   align-items: flex-start;
   gap: 1rem;
   padding: 1.25rem 1.75rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--border-subtle) 70%, transparent);
+  border-bottom: 1px solid var(--legacy-border-subtle-70);
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--bg-toolbar) 86%, transparent),
+    var(--legacy-bg-header),
     transparent 85%
   );
 }
@@ -100,11 +133,11 @@
   align-items: center;
   gap: 1rem;
   padding: 1rem 1.75rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--border-subtle) 70%, transparent);
+  border-bottom: 1px solid var(--legacy-border-subtle-70);
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--bg-toolbar) 84%, transparent),
-    color-mix(in srgb, var(--bg-background) 72%, transparent)
+    var(--legacy-bg-controls-1),
+    var(--legacy-bg-controls-2)
   );
 }
 
@@ -115,11 +148,7 @@
 .tool-panel__legacy-body {
   flex: 1;
   min-height: 0;
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--bg-background) 86%, transparent),
-    color-mix(in srgb, var(--bg-toolbar) 78%, transparent)
-  );
+  background: transparent;
 }
 
 .tool-panel__legacy-scroll {
@@ -149,9 +178,9 @@
   margin: 0 0 1.5rem;
   padding: 0.65rem 0.75rem 1rem;
   border-radius: 1rem;
-  background: color-mix(in srgb, var(--bg-toolbar) 82%, transparent);
-  border: 1px solid color-mix(in srgb, var(--border-subtle) 65%, transparent);
-  box-shadow: 0 14px 32px color-mix(in srgb, var(--shadow-color, rgba(15, 23, 42, 0.45)) 18%, transparent);
+  background: var(--legacy-bg-group);
+  border: 1px solid var(--legacy-border-subtle-65);
+  box-shadow: 0 14px 32px var(--legacy-shadow-group);
   break-inside: avoid;
   backdrop-filter: blur(10px);
 }
@@ -179,9 +208,9 @@
   gap: 0.75rem;
   align-items: flex-start;
   padding: 0.85rem 0.95rem;
-  border: 1px solid color-mix(in srgb, var(--border-subtle) 70%, transparent);
+  border: 1px solid var(--legacy-border-subtle-70);
   border-radius: 0.95rem;
-  background: color-mix(in srgb, var(--bg-toolbar) 88%, transparent);
+  background: var(--legacy-bg-item);
   backdrop-filter: blur(6px);
   cursor: pointer;
   transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
@@ -190,7 +219,7 @@
 }
 
 .tool-panel__legacy-item:focus-visible {
-  outline: 2px solid var(--accent-primary, var(--mantine-color-pink-6));
+  outline: 2px solid var(--legacy-accent-selected);
   outline-offset: 3px;
 }
 
@@ -202,13 +231,13 @@
 
 .tool-panel__legacy-item:hover:not([aria-disabled="true"]):not(:disabled) {
   transform: translateY(-2px);
-  border-color: color-mix(in srgb, var(--accent-primary, var(--mantine-color-pink-6)) 38%, var(--border-subtle));
+  border-color: var(--legacy-accent-hover);
   box-shadow: var(--shadow-xl, 0 18px 34px rgba(15, 23, 42, 0.14));
 }
 
 .tool-panel__legacy-item--selected {
-  border-color: color-mix(in srgb, var(--accent-primary, var(--mantine-color-pink-6)) 52%, var(--border-subtle));
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-primary, var(--mantine-color-pink-6)) 28%, transparent);
+  border-color: var(--legacy-accent-selected);
+  box-shadow: 0 0 0 2px var(--legacy-accent-ring);
 }
 
 .tool-panel__legacy-item--detailed {
@@ -222,8 +251,8 @@
   width: 2.75rem;
   height: 2.75rem;
   border-radius: 0.75rem;
-  background: color-mix(in srgb, var(--bg-muted) 75%, transparent);
-  color: color-mix(in srgb, var(--text-primary) 90%, var(--text-muted));
+  background: var(--legacy-bg-icon-detailed);
+  color: var(--legacy-text-icon);
   flex-shrink: 0;
 }
 
@@ -265,7 +294,7 @@
   border-radius: 0.65rem;
   cursor: pointer;
   transition: background 0.2s ease, transform 0.2s ease;
-  background: color-mix(in srgb, var(--bg-toolbar) 86%, transparent);
+  background: var(--legacy-bg-list-item);
   border: 1px solid transparent;
   width: 100%;
   box-sizing: border-box;
@@ -279,8 +308,8 @@
 
 .tool-panel__legacy-list-item:hover:not([aria-disabled="true"]):not(:disabled),
 .tool-panel__legacy-list-item--selected {
-  background: color-mix(in srgb, var(--accent-primary, var(--mantine-color-pink-6)) 22%, var(--bg-toolbar));
-  border-color: color-mix(in srgb, var(--accent-primary, var(--mantine-color-pink-6)) 30%, var(--border-subtle));
+  background: var(--legacy-accent-list-bg);
+  border-color: var(--legacy-accent-list-border);
 }
 
 .tool-panel__legacy-list-item--selected {
@@ -294,8 +323,8 @@
   width: 2.1rem;
   height: 2.1rem;
   border-radius: 0.6rem;
-  background: color-mix(in srgb, var(--bg-muted) 70%, transparent);
-  color: color-mix(in srgb, var(--text-primary) 88%, var(--text-muted));
+  background: var(--legacy-bg-icon-compact);
+  color: var(--legacy-text-icon-compact);
   flex-shrink: 0;
 }
 
@@ -314,7 +343,7 @@
   gap: 0.75rem;
 }
 
-@keyframes tool-panel-legacy-slide {
+@keyframes tool-panel-legacy-slide-in {
   from {
     transform: translateX(-6%) scaleX(0.85);
     opacity: 0;
@@ -322,6 +351,32 @@
   to {
     transform: translateX(0) scaleX(1);
     opacity: 1;
+  }
+}
+
+@keyframes tool-panel-legacy-slide-out {
+  from {
+    transform: translateX(0) scaleX(1);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(-6%) scaleX(0.85);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tool-panel__legacy-surface-inner {
+    animation: none !important;
+  }
+
+  .tool-panel__mode-toggle {
+    transition: none;
+  }
+
+  .tool-panel__legacy-item,
+  .tool-panel__legacy-list-item {
+    transition: none;
   }
 }
 
