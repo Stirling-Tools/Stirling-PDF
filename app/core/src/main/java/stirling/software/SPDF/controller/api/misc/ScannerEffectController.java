@@ -474,6 +474,179 @@ public class ScannerEffectController {
         return millis + "ms";
     }
 
+    private static void writeProcessedPagesToDocument(
+            List<ProcessedPage> pages, PDDocument document) throws IOException {
+        for (ProcessedPage page : pages) {
+            PDPage newPage = new PDPage(new PDRectangle(page.origW, page.origH));
+            document.addPage(newPage);
+
+            try (PDPageContentStream contentStream = new PDPageContentStream(document, newPage)) {
+                PDImageXObject pdImage = LosslessFactory.createFromImage(document, page.image);
+                contentStream.drawImage(
+                        pdImage, page.offsetX, page.offsetY, page.drawW, page.drawH);
+            }
+
+            page.image.flush();
+        }
+    }
+
+    private static ProcessedPage processPage(
+            int pageIndex,
+            PDDocument document,
+            ThreadLocal<PDFRenderer> rendererCache,
+            int baseRotation,
+            int rotateVariance,
+            int borderPx,
+            float brightness,
+            float contrast,
+            float blur,
+            float noise,
+            boolean yellowish,
+            int renderResolution,
+            ScannerEffectRequest.Colorspace colorspace) {
+
+        try {
+            long pageStart = System.nanoTime();
+
+            PDRectangle pageSize;
+            synchronized (document) {
+                pageSize = document.getPage(pageIndex).getMediaBox();
+            }
+            float pageWidthPts = pageSize.getWidth();
+            float pageHeightPts = pageSize.getHeight();
+
+            int safeResolution =
+                    calculateSafeResolution(pageWidthPts, pageHeightPts, renderResolution);
+
+            long rasterStart = System.nanoTime();
+            BufferedImage image = renderPageSafely(rendererCache.get(), pageIndex, safeResolution);
+            long renderNanos = System.nanoTime() - rasterStart;
+            long effectsStart = System.nanoTime();
+
+            BufferedImage processed = convertColorspace(image, colorspace);
+            image.flush();
+
+            GradientConfig gradient = createRandomGradient();
+            BufferedImage composed = addBorderWithGradient(processed, borderPx, gradient);
+            processed.flush();
+
+            double rotation = calculateRotation(baseRotation, rotateVariance);
+            BufferedImage rotated = rotateImage(composed, rotation, gradient);
+
+            if (rotated != composed) {
+                composed.flush();
+            }
+
+            // Reuse the pageSize we already retrieved to avoid redundant document access
+            float origW = pageSize.getWidth();
+            float origH = pageSize.getHeight();
+
+            int rotW = rotated.getWidth();
+            int rotH = rotated.getHeight();
+            float scale = Math.max(origW / rotW, origH / rotH);
+            float drawW = rotW * scale;
+            float drawH = rotH * scale;
+            float offsetX = (origW - drawW) / 2f;
+            float offsetY = (origH - drawH) / 2f;
+
+            int featherRadius = Math.max(10, Math.round(Math.min(rotW, rotH) * 0.02f));
+            BufferedImage softened =
+                    softenEdges(
+                            rotated,
+                            featherRadius,
+                            gradient.startColor,
+                            gradient.endColor,
+                            gradient.vertical);
+
+            BufferedImage blurred = applyGaussianBlur(softened, blur);
+            BufferedImage adjusted =
+                    applyAllEffectsSinglePass(blurred, brightness, contrast, yellowish, noise);
+            long effectsNanos = System.nanoTime() - effectsStart;
+
+            softened.flush();
+            blurred.flush();
+
+            if (rotated != composed) {
+                rotated.flush();
+            }
+
+            if (log.isDebugEnabled()) {
+                log.debug("Processed page {} in {}", pageIndex + 1, formatDurationSince(pageStart));
+            }
+
+            long totalNanos = System.nanoTime() - pageStart;
+            log.info(
+                    "Page {} timings -> render: {}, effects: {}, total: {}",
+                    pageIndex + 1,
+                    formatDuration(renderNanos),
+                    formatDuration(effectsNanos),
+                    formatDuration(totalNanos));
+
+            return new ProcessedPage(
+                    pageIndex,
+                    adjusted,
+                    origW,
+                    origH,
+                    offsetX,
+                    offsetY,
+                    drawW,
+                    drawH,
+                    renderNanos,
+                    effectsNanos,
+                    totalNanos);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to process page " + (pageIndex + 1), e);
+        } catch (OutOfMemoryError | NegativeArraySizeException e) {
+            throw ExceptionUtils.createOutOfMemoryDpiException(pageIndex + 1, renderResolution, e);
+        } finally {
+            BUFFER_CACHE.remove();
+        }
+    }
+
+    private void logForkJoinPoolMetrics(ForkJoinPool pool) {
+        if (!log.isInfoEnabled()) {
+            return;
+        }
+        log.info(
+                "ForkJoinPool stats -> parallelism: {}, activeThreads: {}, queuedTasks: {}, stealCount: {}",
+                pool.getParallelism(),
+                pool.getActiveThreadCount(),
+                pool.getQueuedTaskCount(),
+                pool.getStealCount());
+    }
+
+    private void logRenderingSummary(List<ProcessedPage> pages) {
+        if (!log.isInfoEnabled() || pages.isEmpty()) {
+            return;
+        }
+
+        long totalRender = 0L;
+        long totalEffects = 0L;
+        long total = 0L;
+        long maxRender = 0L;
+        long maxEffects = 0L;
+        long maxTotal = 0L;
+
+        for (ProcessedPage page : pages) {
+            totalRender += page.renderNanos;
+            totalEffects += page.effectsNanos;
+            total += page.totalNanos;
+            maxRender = Math.max(maxRender, page.renderNanos);
+            maxEffects = Math.max(maxEffects, page.effectsNanos);
+            maxTotal = Math.max(maxTotal, page.totalNanos);
+        }
+
+        int count = pages.size();
+        log.info(
+                "Render summary -> avg render: {}, avg effects: {}, avg total: {}, max render: {}, max effects: {}, max total: {}",
+                formatDuration(totalRender / count),
+                formatDuration(totalEffects / count),
+                formatDuration(total / count),
+                formatDuration(maxRender),
+                formatDuration(maxEffects),
+                formatDuration(maxTotal));
+    }
+
     @PostMapping(value = "/scanner-effect", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "Apply scanner effect to PDF",
@@ -611,7 +784,7 @@ public class ScannerEffectController {
                         log.info(
                                 "Page rendering completed in {} (avg per page: {}, max per page: {})",
                                 formatDuration(renderDuration),
-                                formatDuration(renderDuration / Math.max(1, totalPages)),
+                                formatDuration(renderDuration / totalPages),
                                 formatDuration(
                                         processedPages.stream()
                                                 .mapToLong(ProcessedPage::totalNanos)
@@ -653,179 +826,6 @@ public class ScannerEffectController {
                     log.warn("Failed to delete temporary file {}", tempFile, e);
                 }
             }
-        }
-    }
-
-    private void writeProcessedPagesToDocument(List<ProcessedPage> pages, PDDocument document)
-            throws IOException {
-        for (ProcessedPage page : pages) {
-            PDPage newPage = new PDPage(new PDRectangle(page.origW, page.origH));
-            document.addPage(newPage);
-
-            try (PDPageContentStream contentStream = new PDPageContentStream(document, newPage)) {
-                PDImageXObject pdImage = LosslessFactory.createFromImage(document, page.image);
-                contentStream.drawImage(
-                        pdImage, page.offsetX, page.offsetY, page.drawW, page.drawH);
-            }
-
-            page.image.flush();
-        }
-    }
-
-    private void logForkJoinPoolMetrics(ForkJoinPool pool) {
-        if (!log.isInfoEnabled()) {
-            return;
-        }
-        log.info(
-                "ForkJoinPool stats -> parallelism: {}, activeThreads: {}, queuedTasks: {}, stealCount: {}",
-                pool.getParallelism(),
-                pool.getActiveThreadCount(),
-                pool.getQueuedTaskCount(),
-                pool.getStealCount());
-    }
-
-    private void logRenderingSummary(List<ProcessedPage> pages) {
-        if (!log.isInfoEnabled() || pages.isEmpty()) {
-            return;
-        }
-
-        long totalRender = 0L;
-        long totalEffects = 0L;
-        long total = 0L;
-        long maxRender = 0L;
-        long maxEffects = 0L;
-        long maxTotal = 0L;
-
-        for (ProcessedPage page : pages) {
-            totalRender += page.renderNanos;
-            totalEffects += page.effectsNanos;
-            total += page.totalNanos;
-            maxRender = Math.max(maxRender, page.renderNanos);
-            maxEffects = Math.max(maxEffects, page.effectsNanos);
-            maxTotal = Math.max(maxTotal, page.totalNanos);
-        }
-
-        int count = pages.size();
-        log.info(
-                "Render summary -> avg render: {}, avg effects: {}, avg total: {}, max render: {}, max effects: {}, max total: {}",
-                formatDuration(totalRender / count),
-                formatDuration(totalEffects / count),
-                formatDuration(total / count),
-                formatDuration(maxRender),
-                formatDuration(maxEffects),
-                formatDuration(maxTotal));
-    }
-
-    private ProcessedPage processPage(
-            int pageIndex,
-            PDDocument document,
-            ThreadLocal<PDFRenderer> rendererCache,
-            int baseRotation,
-            int rotateVariance,
-            int borderPx,
-            float brightness,
-            float contrast,
-            float blur,
-            float noise,
-            boolean yellowish,
-            int renderResolution,
-            ScannerEffectRequest.Colorspace colorspace) {
-
-        try {
-            long pageStart = System.nanoTime();
-
-            PDRectangle pageSize;
-            synchronized (document) {
-                pageSize = document.getPage(pageIndex).getMediaBox();
-            }
-            float pageWidthPts = pageSize.getWidth();
-            float pageHeightPts = pageSize.getHeight();
-
-            int safeResolution =
-                    calculateSafeResolution(pageWidthPts, pageHeightPts, renderResolution);
-
-            long rasterStart = System.nanoTime();
-            BufferedImage image = renderPageSafely(rendererCache.get(), pageIndex, safeResolution);
-            long renderNanos = System.nanoTime() - rasterStart;
-            long effectsStart = System.nanoTime();
-
-            BufferedImage processed = convertColorspace(image, colorspace);
-            image.flush();
-
-            GradientConfig gradient = createRandomGradient();
-            BufferedImage composed = addBorderWithGradient(processed, borderPx, gradient);
-            processed.flush();
-
-            double rotation = calculateRotation(baseRotation, rotateVariance);
-            BufferedImage rotated = rotateImage(composed, rotation, gradient);
-
-            if (rotated != composed) {
-                composed.flush();
-            }
-
-            // Reuse the pageSize we already retrieved to avoid redundant document access
-            float origW = pageSize.getWidth();
-            float origH = pageSize.getHeight();
-
-            int rotW = rotated.getWidth();
-            int rotH = rotated.getHeight();
-            float scale = Math.max(origW / rotW, origH / rotH);
-            float drawW = rotW * scale;
-            float drawH = rotH * scale;
-            float offsetX = (origW - drawW) / 2f;
-            float offsetY = (origH - drawH) / 2f;
-
-            int featherRadius = Math.max(10, Math.round(Math.min(rotW, rotH) * 0.02f));
-            BufferedImage softened =
-                    softenEdges(
-                            rotated,
-                            featherRadius,
-                            gradient.startColor,
-                            gradient.endColor,
-                            gradient.vertical);
-
-            BufferedImage blurred = applyGaussianBlur(softened, blur);
-            BufferedImage adjusted =
-                    applyAllEffectsSinglePass(blurred, brightness, contrast, yellowish, noise);
-            long effectsNanos = System.nanoTime() - effectsStart;
-
-            softened.flush();
-            blurred.flush();
-
-            if (rotated != composed) {
-                rotated.flush();
-            }
-
-            if (log.isDebugEnabled()) {
-                log.debug("Processed page {} in {}", pageIndex + 1, formatDurationSince(pageStart));
-            }
-
-            long totalNanos = System.nanoTime() - pageStart;
-            log.info(
-                    "Page {} timings -> render: {}, effects: {}, total: {}",
-                    pageIndex + 1,
-                    formatDuration(renderNanos),
-                    formatDuration(effectsNanos),
-                    formatDuration(totalNanos));
-
-            return new ProcessedPage(
-                    pageIndex,
-                    adjusted,
-                    origW,
-                    origH,
-                    offsetX,
-                    offsetY,
-                    drawW,
-                    drawH,
-                    renderNanos,
-                    effectsNanos,
-                    totalNanos);
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to process page " + (pageIndex + 1), e);
-        } catch (OutOfMemoryError | NegativeArraySizeException e) {
-            throw ExceptionUtils.createOutOfMemoryDpiException(pageIndex + 1, renderResolution, e);
-        } finally {
-            BUFFER_CACHE.remove();
         }
     }
 
