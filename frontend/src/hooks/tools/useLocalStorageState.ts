@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Dispatch, SetStateAction } from 'react';
 
-export function useLocalStorageState<T>(key: string, defaultValue: T): [T, (value: T) => void] {
+export function useLocalStorageState<T>(key: string, defaultValue: T): [T, Dispatch<SetStateAction<T>>] {
   const [state, setState] = useState<T>(() => {
     if (typeof window === 'undefined') {
       return defaultValue;

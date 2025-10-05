@@ -9,8 +9,8 @@ export interface ToolPanelGeometry {
 
 interface UseToolPanelGeometryOptions {
   enabled: boolean;
-  toolPanelRef: RefObject<HTMLDivElement>;
-  quickAccessRef: RefObject<HTMLDivElement>;
+  toolPanelRef: RefObject<HTMLDivElement | null>;
+  quickAccessRef: RefObject<HTMLDivElement | null>;
 }
 
 export function useToolPanelGeometry({
