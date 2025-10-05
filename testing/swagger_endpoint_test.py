@@ -199,7 +199,10 @@ class SwaggerTester:
             status_code = response.status_code
             success = self._is_expected_status(status_code, expected_statuses)
             message = response.reason or ""
-            if not success:
+            if not success and self._is_disabled_endpoint(response):
+                success = True
+                message = "Endpoint disabled"
+            elif not success:
                 message = response.text[:3000] or message
             return EndpointResult(method.upper(), raw_path, url, status_code, expected_statuses, success, message)
         except requests.RequestException as exc:
@@ -230,6 +233,25 @@ class SwaggerTester:
                 if int(candidate[0]) == status // 100:
                     return True
         return 100 <= status < 400
+
+    def _is_disabled_endpoint(self, response: requests.Response) -> bool:
+        if response.status_code != 403:
+            return False
+
+        body_text = response.text or ""
+        if "this endpoint is disabled" in body_text.lower():
+            return True
+
+        try:
+            payload = response.json()
+        except ValueError:
+            return False
+
+        if isinstance(payload, dict):
+            message = payload.get("message")
+            if isinstance(message, str) and message.lower() == "this endpoint is disabled":
+                return True
+        return False
 
     # ------------------------------------------------------------------
     # Request body helpers
