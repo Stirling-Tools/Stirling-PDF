@@ -748,7 +748,6 @@ public class ScannerEffectController {
                                         renderer.setImageDownscalingOptimizationThreshold(0.5f);
                                         return renderer;
                                     });
-
                     List<ProcessedPage> processedPages;
                     try {
                         long renderStart = System.nanoTime();

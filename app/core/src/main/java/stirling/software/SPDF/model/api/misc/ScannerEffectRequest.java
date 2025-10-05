@@ -89,11 +89,11 @@ public class ScannerEffectRequest {
     }
 
     public void applyHighQualityPreset() {
-        this.blur = 0.12f;
-        this.noise = 1.2f;
+        this.blur = 0.10f;
+        this.noise = 1.0f;
         this.brightness = 1.03f;
         this.contrast = 1.06f;
-        this.resolution = 300;
+        this.resolution = 150;
     }
 
     public void applyMediumQualityPreset() {
@@ -101,14 +101,14 @@ public class ScannerEffectRequest {
         this.noise = 1.0f;
         this.brightness = 1.06f;
         this.contrast = 1.12f;
-        this.resolution = 240;
+        this.resolution = 100;
     }
 
     public void applyLowQualityPreset() {
         this.blur = 0.9f;
-        this.noise = 6.5f;
+        this.noise = 2.5f;
         this.brightness = 1.08f;
         this.contrast = 1.15f;
-        this.resolution = 180;
+        this.resolution = 75;
     }
 }
