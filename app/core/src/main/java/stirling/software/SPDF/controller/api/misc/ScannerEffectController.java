@@ -45,15 +45,12 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.SPDF.model.api.misc.ScannerEffectRequest;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ApplicationContextProvider;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
-import stirling.software.common.util.ProcessExecutor;
-import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.common.util.WebResponseUtils;
 
 @RestController
@@ -64,8 +61,6 @@ import stirling.software.common.util.WebResponseUtils;
 public class ScannerEffectController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
-    private final EndpointConfiguration endpointConfiguration;
-
     private static final int MAX_IMAGE_WIDTH = 8192;
     private static final int MAX_IMAGE_HEIGHT = 8192;
     private static final long MAX_IMAGE_PIXELS = 16_777_216; // 4096x4096
@@ -93,22 +88,8 @@ public class ScannerEffectController {
         return (int) Math.max(72, resolution * minScale);
     }
 
-    private static int determineRenderResolution(
-            ScannerEffectRequest request, boolean ghostscriptEnabled) {
-        int requested = request.getResolution();
-        if (!ghostscriptEnabled) {
-            return requested;
-        }
-
-        if (request.isAdvancedEnabled()) {
-            return Math.min(requested, 240);
-        }
-
-        return switch (request.getQuality()) {
-            case high -> Math.min(requested, 200);
-            case medium -> Math.min(requested, 160);
-            case low -> Math.min(requested, 130);
-        };
+    private static int determineRenderResolution(ScannerEffectRequest request) {
+        return request.getResolution();
     }
 
     private static BufferedImage renderPageSafely(PDFRenderer renderer, int pageIndex, int dpi)
@@ -502,16 +483,14 @@ public class ScannerEffectController {
             throws IOException {
         MultipartFile file = request.getFileInput();
 
-        boolean ghostscriptEnabled = isGhostscriptEnabled();
         long overallStart = System.nanoTime();
 
         log.info(
-                "Scanner effect request received: filename={}, size={} bytes, advanced={}, resolution={}, ghostscriptEnabled={}",
+                "Scanner effect request received: filename={}, size={} bytes, advanced={}, resolution={}",
                 file.getOriginalFilename(),
                 file.getSize(),
                 request.isAdvancedEnabled(),
-                request.getResolution(),
-                ghostscriptEnabled);
+                request.getResolution());
 
         List<Path> tempFiles = new ArrayList<>();
         Path processingInput;
@@ -540,7 +519,7 @@ public class ScannerEffectController {
             float noise = request.getNoise();
             boolean yellowish = request.isYellowish();
             int resolution = request.getResolution();
-            int renderResolution = determineRenderResolution(request, ghostscriptEnabled);
+            int renderResolution = determineRenderResolution(request);
             ScannerEffectRequest.Colorspace colorspace = request.getColorspace();
 
             int maxSafeDpi = 500; // Default maximum safe DPI
@@ -568,6 +547,11 @@ public class ScannerEffectController {
                         processingInput);
 
                 int totalPages = document.getNumberOfPages();
+                if (totalPages == 0) {
+                    throw ExceptionUtils.createIllegalArgumentException(
+                            "error.emptyDocument",
+                            "The provided PDF contains no pages to process.");
+                }
                 int configuredParallelism =
                         Math.min(64, Math.max(2, Runtime.getRuntime().availableProcessors() * 2));
                 int desiredParallelism = Math.max(1, Math.min(totalPages, configuredParallelism));
@@ -651,16 +635,12 @@ public class ScannerEffectController {
                     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
                     outputDocument.save(outputStream);
 
-                    byte[] processedBytes =
-                            finalizeWithGhostscript(
-                                    outputStream.toByteArray(), request, ghostscriptEnabled);
-
                     log.info(
                             "Scanner effect pipeline completed in {}",
                             formatDurationSince(overallStart));
 
                     return WebResponseUtils.bytesToWebResponse(
-                            processedBytes,
+                            outputStream.toByteArray(),
                             GeneralUtils.generateFilename(
                                     file.getOriginalFilename(), "_scanner_effect.pdf"));
                 }
@@ -673,32 +653,6 @@ public class ScannerEffectController {
                     log.warn("Failed to delete temporary file {}", tempFile, e);
                 }
             }
-        }
-    }
-
-    private boolean isGhostscriptEnabled() {
-        return endpointConfiguration.isGroupEnabled("Ghostscript");
-    }
-
-    private byte[] finalizeWithGhostscript(
-            byte[] pdfBytes, ScannerEffectRequest request, boolean ghostscriptEnabled) {
-        if (!ghostscriptEnabled) {
-            log.debug("Ghostscript group disabled or unavailable; skipping rasterization step.");
-            return pdfBytes;
-        }
-
-        long start = System.nanoTime();
-        try {
-            byte[] result = runGhostscriptRasterization(pdfBytes, request);
-            log.info("Ghostscript rasterization completed in {}", formatDurationSince(start));
-            return result;
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            log.warn("Ghostscript rasterization step interrupted; returning original output.", e);
-            return pdfBytes;
-        } catch (Exception e) {
-            log.warn("Ghostscript rasterization step failed; continuing with original output.", e);
-            return pdfBytes;
         }
     }
 
@@ -760,75 +714,6 @@ public class ScannerEffectController {
                 formatDuration(maxRender),
                 formatDuration(maxEffects),
                 formatDuration(maxTotal));
-    }
-
-    private byte[] runGhostscriptRasterization(byte[] pdfBytes, ScannerEffectRequest request)
-            throws IOException, InterruptedException {
-        Path inputFile = null;
-        Path outputFile = null;
-        try {
-            inputFile = Files.createTempFile("scanner_effect_gs_in_", ".pdf");
-            outputFile = Files.createTempFile("scanner_effect_gs_out_", ".pdf");
-
-            Files.write(inputFile, pdfBytes);
-
-            List<String> command = new ArrayList<>();
-            command.add("gs");
-            command.add("-sDEVICE=pdfwrite");
-            command.add("-dCompatibilityLevel=1.5");
-            command.add("-dNOPAUSE");
-            command.add("-dQUIET");
-            command.add("-dBATCH");
-            String pdfSetting;
-            if (request.isAdvancedEnabled()) {
-                pdfSetting = request.getResolution() >= 240 ? "/prepress" : "/ebook";
-            } else {
-                pdfSetting =
-                        switch (request.getQuality()) {
-                            case high -> "/prepress";
-                            case medium -> "/ebook";
-                            case low -> "/screen";
-                        };
-            }
-            command.add("-dPDFSETTINGS=" + pdfSetting);
-            if (request.isAdvancedEnabled() && request.getResolution() > 0) {
-                int effectiveResolution = Math.max(72, Math.min(600, request.getResolution()));
-                command.add("-r" + effectiveResolution);
-            }
-            command.add("-dFastWebView=true");
-            command.add("-dCompressFonts=true");
-            command.add("-dSubsetFonts=true");
-            command.add("-sOutputFile=" + outputFile);
-            command.add(inputFile.toString());
-
-            ProcessExecutorResult result =
-                    ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT)
-                            .runCommandWithOutputHandling(command);
-
-            if (result.getRc() != 0) {
-                throw new IOException("Ghostscript returned non-zero exit code: " + result.getRc());
-            }
-
-            return Files.readAllBytes(outputFile);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw e;
-        } finally {
-            if (inputFile != null) {
-                try {
-                    Files.deleteIfExists(inputFile);
-                } catch (IOException e) {
-                    log.warn("Failed to delete Ghostscript temp input file {}", inputFile, e);
-                }
-            }
-            if (outputFile != null) {
-                try {
-                    Files.deleteIfExists(outputFile);
-                } catch (IOException e) {
-                    log.warn("Failed to delete Ghostscript temp output file {}", outputFile, e);
-                }
-            }
-        }
     }
 
     private ProcessedPage processPage(
