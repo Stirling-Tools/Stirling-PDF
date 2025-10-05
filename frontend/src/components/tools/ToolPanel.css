@@ -2,9 +2,9 @@
 .tool-panel__legacy-surface-inner {
   --legacy-bg-surface-1: color-mix(in srgb, var(--bg-toolbar) 96%, transparent);
   --legacy-bg-surface-2: color-mix(in srgb, var(--bg-background) 90%, transparent);
-  --legacy-bg-header: color-mix(in srgb, var(--bg-toolbar) 86%, transparent);
-  --legacy-bg-controls-1: color-mix(in srgb, var(--bg-toolbar) 84%, transparent);
-  --legacy-bg-controls-2: color-mix(in srgb, var(--bg-background) 72%, transparent);
+  --legacy-bg-header: var(--bg-toolbar);
+  --legacy-bg-controls-1: var(--bg-toolbar);
+  --legacy-bg-controls-2: color-mix(in srgb, var(--bg-toolbar) 95%, var(--bg-background));
   --legacy-bg-body-1: color-mix(in srgb, var(--bg-background) 86%, transparent);
   --legacy-bg-body-2: color-mix(in srgb, var(--bg-toolbar) 78%, transparent);
   --legacy-bg-group: color-mix(in srgb, var(--bg-toolbar) 82%, transparent);
@@ -87,7 +87,7 @@
   height: 100%;
   display: flex;
   flex-direction: column;
-  border-radius: 0 1.25rem 1.25rem 0;
+  border-radius: 0;
   background:
     linear-gradient(
       140deg,
@@ -111,34 +111,36 @@
 .tool-panel__legacy-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   gap: 1rem;
-  padding: 1.25rem 1.75rem;
-  border-bottom: 1px solid var(--legacy-border-subtle-70);
-  background: linear-gradient(
-    180deg,
-    var(--legacy-bg-header),
-    transparent 85%
-  );
+  padding: 0.75rem 1.75rem;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-toolbar);
 }
 
-.tool-panel__legacy-heading {
+.tool-panel__legacy-brand {
   display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.tool-panel__legacy-brand-icon {
+  height: 1.75rem;
+  width: auto;
+}
+
+.tool-panel__legacy-brand-text {
+  height: 1.25rem;
+  width: auto;
 }
 
 .tool-panel__legacy-controls {
   display: flex;
   align-items: center;
   gap: 1rem;
-  padding: 1rem 1.75rem;
-  border-bottom: 1px solid var(--legacy-border-subtle-70);
-  background: linear-gradient(
-    180deg,
-    var(--legacy-bg-controls-1),
-    var(--legacy-bg-controls-2)
-  );
+  padding: 0.75rem 1.75rem;
+  border-bottom: 1px solid var(--tool-panel-search-border-bottom);
+  background: var(--tool-panel-search-bg);
 }
 
 .tool-panel__legacy-controls .search-input-container {
@@ -188,8 +190,22 @@
 .tool-panel__legacy-section-header {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 0.5rem;
   padding: 0.1rem 0.15rem 0.35rem;
+}
+
+.tool-panel__legacy-section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.tool-panel__legacy-section-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
 }
 
 .tool-panel__legacy-grid {
@@ -244,6 +260,51 @@
   min-height: 7.5rem;
 }
 
+.tool-panel__legacy-item--with-star {
+  position: relative;
+}
+
+.tool-panel__legacy-star {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: 2;
+}
+
+.tool-panel__legacy-item:hover .tool-panel__legacy-star,
+.tool-panel__legacy-star:focus {
+  opacity: 1;
+}
+
+.tool-panel__legacy-list-item--with-star {
+  position: relative;
+}
+
+.tool-panel__legacy-star-compact {
+  position: absolute;
+  top: 0.35rem;
+  right: 0.35rem;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: 2;
+}
+
+.tool-panel__legacy-list-item:hover .tool-panel__legacy-star-compact,
+.tool-panel__legacy-star-compact:focus {
+  opacity: 1;
+}
+
+.tool-panel__legacy-group--special {
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--legacy-bg-group) 95%, var(--text-primary) 5%),
+    var(--legacy-bg-group)
+  );
+  border-width: 1.5px;
+}
+
 .tool-panel__legacy-icon {
   display: flex;
   align-items: center;
@@ -254,10 +315,37 @@
   background: var(--legacy-bg-icon-detailed);
   color: var(--legacy-text-icon);
   flex-shrink: 0;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.tool-panel__legacy-icon::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--text-primary) 12%, transparent),
+    color-mix(in srgb, var(--text-primary) 4%, transparent)
+  );
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  border-radius: 0.75rem;
+}
+
+.tool-panel__legacy-item:hover:not([aria-disabled="true"]) .tool-panel__legacy-icon {
+  transform: scale(1.08);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--text-primary) 15%, transparent);
+}
+
+.tool-panel__legacy-item:hover:not([aria-disabled="true"]) .tool-panel__legacy-icon::before {
+  opacity: 1;
 }
 
 .tool-panel__legacy-icon svg {
   font-size: 1.65rem;
+  position: relative;
+  z-index: 1;
 }
 
 .tool-panel__legacy-body {
@@ -279,6 +367,13 @@
   font-style: italic;
 }
 
+.tool-panel__legacy-shortcut {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.2rem;
+}
+
 .tool-panel__legacy-list {
   display: flex;
   flex-direction: column;
@@ -298,6 +393,7 @@
   border: 1px solid transparent;
   width: 100%;
   box-sizing: border-box;
+  position: relative;
 }
 
 .tool-panel__legacy-list-item[aria-disabled="true"],
@@ -326,6 +422,36 @@
   background: var(--legacy-bg-icon-compact);
   color: var(--legacy-text-icon-compact);
   flex-shrink: 0;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.tool-panel__legacy-list-icon::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--text-primary) 10%, transparent),
+    color-mix(in srgb, var(--text-primary) 3%, transparent)
+  );
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  border-radius: 0.6rem;
+}
+
+.tool-panel__legacy-list-item:hover:not([aria-disabled="true"]) .tool-panel__legacy-list-icon {
+  transform: scale(1.06);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--text-primary) 12%, transparent);
+}
+
+.tool-panel__legacy-list-item:hover:not([aria-disabled="true"]) .tool-panel__legacy-list-icon::before {
+  opacity: 1;
+}
+
+.tool-panel__legacy-list-icon svg {
+  position: relative;
+  z-index: 1;
 }
 
 .tool-panel__legacy-list-body {

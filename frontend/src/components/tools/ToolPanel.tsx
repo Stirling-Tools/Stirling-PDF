@@ -46,7 +46,7 @@ export default function ToolPanel() {
   const legacyExpanded = isLegacyMode && leftPanelView === 'toolPicker' && !isMobile;
 
   // Use custom hooks for state management
-  const [showLegacyDescriptions, setShowLegacyDescriptions] = useLocalStorageState('legacyToolDescriptions', true);
+  const [showLegacyDescriptions, setShowLegacyDescriptions] = useLocalStorageState('legacyToolDescriptions', false);
   const legacyGeometry = useToolPanelGeometry({
     enabled: legacyExpanded,
     toolPanelRef,

@@ -12,6 +12,7 @@ import { ToolId, isValidToolId } from '../types/toolId';
 import { useNavigationUrlSync } from '../hooks/useUrlSync';
 import { getDefaultWorkbench } from '../types/workbench';
 import { filterToolRegistryByQuery } from '../utils/toolSearch';
+import { useToolHistory } from '../hooks/tools/useToolHistory';
 
 // State interface
 type ToolPanelMode = 'sidebar' | 'legacy';
@@ -134,6 +135,13 @@ interface ToolWorkflowContextValue extends ToolWorkflowState {
   // Computed values
   filteredTools: Array<{ item: [string, ToolRegistryEntry]; matchedText?: string }>; // Filtered by search
   isPanelVisible: boolean;
+
+  // Tool History
+  recentTools: ToolId[];
+  favoriteTools: ToolId[];
+  addToRecent: (toolId: ToolId) => void;
+  toggleFavorite: (toolId: ToolId) => void;
+  isFavorite: (toolId: ToolId) => boolean;
 }
 
 const ToolWorkflowContext = createContext<ToolWorkflowContextValue | undefined>(undefined);
@@ -158,6 +166,15 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     toolRegistry,
     getSelectedTool,
   } = useToolManagement();
+
+  // Tool history hook
+  const {
+    recentTools,
+    favoriteTools,
+    addToRecent,
+    toggleFavorite,
+    isFavorite,
+  } = useToolHistory();
 
   // Get selected tool from navigation context
   const selectedTool = getSelectedTool(navigationState.selectedTool);
@@ -224,19 +241,24 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
 
   // Workflow actions (compound actions that coordinate multiple state changes)
   const handleToolSelect = useCallback((toolId: ToolId) => {
+    // Track tool usage in recent history
+    addToRecent(toolId);
+
     // Handle read tool selection - should behave exactly like QuickAccessBar read button
     if (toolId === 'read') {
       setReaderMode(true);
       actions.setSelectedTool('read');
       actions.setWorkbench('viewer');
       setSearchQuery('');
+      setToolPanelMode('sidebar'); // Close legacy mode when switching to reader
+      setLeftPanelView('toolPicker'); // Show tool picker when navigating back to tools
       return;
     }
 
-    // Handle multiTool selection - enable page editor workbench and hide left panel
+    // Handle multiTool selection - enable page editor workbench
     if (toolId === 'multiTool') {
       setReaderMode(false);
-      setLeftPanelView('hidden');
+      setLeftPanelView('toolPicker'); // Show tool picker when navigating back to tools in mobile
       actions.setSelectedTool('multiTool');
       actions.setWorkbench('pageEditor');
       setSearchQuery('');
@@ -259,7 +281,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     setSearchQuery('');
     setLeftPanelView('toolContent');
     setReaderMode(false); // Disable read mode when selecting tools
-  }, [actions, getSelectedTool, setLeftPanelView, setReaderMode, setSearchQuery]);
+  }, [actions, getSelectedTool, setLeftPanelView, setReaderMode, setSearchQuery, addToRecent]);
 
   const handleBackToTools = useCallback(() => {
     setLeftPanelView('toolPicker');
@@ -324,6 +346,13 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     // Computed
     filteredTools,
     isPanelVisible,
+
+    // Tool History
+    recentTools,
+    favoriteTools,
+    addToRecent,
+    toggleFavorite,
+    isFavorite,
   }), [
     state,
     navigationState.selectedTool,
@@ -345,6 +374,11 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     handleReaderToggle,
     filteredTools,
     isPanelVisible,
+    recentTools,
+    favoriteTools,
+    addToRecent,
+    toggleFavorite,
+    isFavorite,
   ]);
 
   return (
