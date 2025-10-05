@@ -8,13 +8,15 @@ import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Queue;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.Future;
@@ -43,7 +45,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.misc.ScannerEffectRequest;
 import stirling.software.common.model.ApplicationProperties;
@@ -56,7 +57,6 @@ import stirling.software.common.util.WebResponseUtils;
 @RestController
 @RequestMapping("/api/v1/misc")
 @Tag(name = "Misc", description = "Miscellaneous PDF APIs")
-@Slf4j
 @RequiredArgsConstructor
 public class ScannerEffectController {
 
@@ -64,6 +64,7 @@ public class ScannerEffectController {
     private static final int MAX_IMAGE_WIDTH = 8192;
     private static final int MAX_IMAGE_HEIGHT = 8192;
     private static final long MAX_IMAGE_PIXELS = 16_777_216; // 4096x4096
+    private static final long RENDER_CLONE_IN_MEMORY_THRESHOLD = 16 * 1024 * 1024; // 16 MB
 
     private static final ThreadLocal<BufferCache> BUFFER_CACHE =
             ThreadLocal.withInitial(BufferCache::new);
@@ -461,19 +462,6 @@ public class ScannerEffectController {
         }
     }
 
-    private static String formatDurationSince(long startNanos) {
-        return formatDuration(System.nanoTime() - startNanos);
-    }
-
-    private static String formatDuration(long nanos) {
-        Duration duration = Duration.ofNanos(nanos);
-        long millis = duration.toMillis();
-        if (millis >= 1000) {
-            return String.format("%.2fs", millis / 1000.0);
-        }
-        return millis + "ms";
-    }
-
     private static void writeProcessedPagesToDocument(
             List<ProcessedPage> pages, PDDocument document) throws IOException {
         for (ProcessedPage page : pages) {
@@ -492,8 +480,7 @@ public class ScannerEffectController {
 
     private static ProcessedPage processPage(
             int pageIndex,
-            PDDocument document,
-            ThreadLocal<PDFRenderer> rendererCache,
+            RenderingResources renderingResources,
             int baseRotation,
             int rotateVariance,
             int borderPx,
@@ -506,23 +493,14 @@ public class ScannerEffectController {
             ScannerEffectRequest.Colorspace colorspace) {
 
         try {
-            long pageStart = System.nanoTime();
-
-            PDRectangle pageSize;
-            synchronized (document) {
-                pageSize = document.getPage(pageIndex).getMediaBox();
-            }
+            PDRectangle pageSize = renderingResources.getPageMediaBox(pageIndex);
             float pageWidthPts = pageSize.getWidth();
             float pageHeightPts = pageSize.getHeight();
 
             int safeResolution =
                     calculateSafeResolution(pageWidthPts, pageHeightPts, renderResolution);
 
-            long rasterStart = System.nanoTime();
-            BufferedImage image = renderPageSafely(rendererCache.get(), pageIndex, safeResolution);
-            long renderNanos = System.nanoTime() - rasterStart;
-            long effectsStart = System.nanoTime();
-
+            BufferedImage image = renderingResources.renderPage(pageIndex, safeResolution);
             BufferedImage processed = convertColorspace(image, colorspace);
             image.flush();
 
@@ -561,7 +539,6 @@ public class ScannerEffectController {
             BufferedImage blurred = applyGaussianBlur(softened, blur);
             BufferedImage adjusted =
                     applyAllEffectsSinglePass(blurred, brightness, contrast, yellowish, noise);
-            long effectsNanos = System.nanoTime() - effectsStart;
 
             softened.flush();
             blurred.flush();
@@ -569,82 +546,12 @@ public class ScannerEffectController {
             if (rotated != composed) {
                 rotated.flush();
             }
-
-            if (log.isDebugEnabled()) {
-                log.debug("Processed page {} in {}", pageIndex + 1, formatDurationSince(pageStart));
-            }
-
-            long totalNanos = System.nanoTime() - pageStart;
-            log.info(
-                    "Page {} timings -> render: {}, effects: {}, total: {}",
-                    pageIndex + 1,
-                    formatDuration(renderNanos),
-                    formatDuration(effectsNanos),
-                    formatDuration(totalNanos));
-
-            return new ProcessedPage(
-                    pageIndex,
-                    adjusted,
-                    origW,
-                    origH,
-                    offsetX,
-                    offsetY,
-                    drawW,
-                    drawH,
-                    renderNanos,
-                    effectsNanos,
-                    totalNanos);
+            return new ProcessedPage(adjusted, origW, origH, offsetX, offsetY, drawW, drawH);
         } catch (IOException e) {
             throw new RuntimeException("Failed to process page " + (pageIndex + 1), e);
         } catch (OutOfMemoryError | NegativeArraySizeException e) {
             throw ExceptionUtils.createOutOfMemoryDpiException(pageIndex + 1, renderResolution, e);
-        } finally {
-            BUFFER_CACHE.remove();
         }
-    }
-
-    private void logForkJoinPoolMetrics(ForkJoinPool pool) {
-        if (!log.isInfoEnabled()) {
-            return;
-        }
-        log.info(
-                "ForkJoinPool stats -> parallelism: {}, activeThreads: {}, queuedTasks: {}, stealCount: {}",
-                pool.getParallelism(),
-                pool.getActiveThreadCount(),
-                pool.getQueuedTaskCount(),
-                pool.getStealCount());
-    }
-
-    private void logRenderingSummary(List<ProcessedPage> pages) {
-        if (!log.isInfoEnabled() || pages.isEmpty()) {
-            return;
-        }
-
-        long totalRender = 0L;
-        long totalEffects = 0L;
-        long total = 0L;
-        long maxRender = 0L;
-        long maxEffects = 0L;
-        long maxTotal = 0L;
-
-        for (ProcessedPage page : pages) {
-            totalRender += page.renderNanos;
-            totalEffects += page.effectsNanos;
-            total += page.totalNanos;
-            maxRender = Math.max(maxRender, page.renderNanos);
-            maxEffects = Math.max(maxEffects, page.effectsNanos);
-            maxTotal = Math.max(maxTotal, page.totalNanos);
-        }
-
-        int count = pages.size();
-        log.info(
-                "Render summary -> avg render: {}, avg effects: {}, avg total: {}, max render: {}, max effects: {}, max total: {}",
-                formatDuration(totalRender / count),
-                formatDuration(totalEffects / count),
-                formatDuration(total / count),
-                formatDuration(maxRender),
-                formatDuration(maxEffects),
-                formatDuration(maxTotal));
     }
 
     @PostMapping(value = "/scanner-effect", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -655,15 +562,6 @@ public class ScannerEffectController {
     public ResponseEntity<byte[]> scannerEffect(@Valid @ModelAttribute ScannerEffectRequest request)
             throws IOException {
         MultipartFile file = request.getFileInput();
-
-        long overallStart = System.nanoTime();
-
-        log.info(
-                "Scanner effect request received: filename={}, size={} bytes, advanced={}, resolution={}",
-                file.getOriginalFilename(),
-                file.getSize(),
-                request.isAdvancedEnabled(),
-                request.getResolution());
 
         List<Path> tempFiles = new ArrayList<>();
         Path processingInput;
@@ -695,6 +593,15 @@ public class ScannerEffectController {
             int renderResolution = determineRenderResolution(request);
             ScannerEffectRequest.Colorspace colorspace = request.getColorspace();
 
+            long inputFileSize = Files.size(processingInput);
+            byte[] renderingPdfBytes = null;
+            if (inputFileSize <= RENDER_CLONE_IN_MEMORY_THRESHOLD) {
+                renderingPdfBytes = Files.readAllBytes(processingInput);
+            }
+
+            final byte[] sharedPdfBytes = renderingPdfBytes;
+            final Path sharedPdfPath = sharedPdfBytes == null ? processingInput : null;
+
             int maxSafeDpi = 500; // Default maximum safe DPI
             ApplicationProperties properties =
                     ApplicationContextProvider.getBean(ApplicationProperties.class);
@@ -710,14 +617,11 @@ public class ScannerEffectController {
                         maxSafeDpi);
             }
 
-            long documentLoadStart = System.nanoTime();
-            try (PDDocument document = pdfDocumentFactory.load(processingInput);
+            try (PDDocument document =
+                            sharedPdfBytes != null
+                                    ? pdfDocumentFactory.load(sharedPdfBytes)
+                                    : pdfDocumentFactory.load(processingInput);
                     PDDocument outputDocument = new PDDocument()) {
-
-                log.info(
-                        "Input document loaded in {} from {}",
-                        formatDurationSince(documentLoadStart),
-                        processingInput);
 
                 int totalPages = document.getNumberOfPages();
                 if (totalPages == 0) {
@@ -733,24 +637,29 @@ public class ScannerEffectController {
                         new ManagedForkJoinPool(desiredParallelism)) {
                     ForkJoinPool customPool = managedPool.getPool();
 
-                    log.info(
-                            "Processing {} page(s) at {} DPI for rendering (requested {} DPI) using {} worker thread(s)",
-                            totalPages,
-                            renderResolution,
-                            resolution,
-                            customPool.getParallelism());
-
-                    ThreadLocal<PDFRenderer> rendererCache =
+                    Queue<RenderingResources> renderingResourcesToClose =
+                            new ConcurrentLinkedQueue<>();
+                    ThreadLocal<RenderingResources> renderingResources =
                             ThreadLocal.withInitial(
                                     () -> {
-                                        PDFRenderer renderer = new PDFRenderer(document);
-                                        renderer.setSubsamplingAllowed(true);
-                                        renderer.setImageDownscalingOptimizationThreshold(0.5f);
-                                        return renderer;
+                                        try {
+                                            RenderingResources resources =
+                                                    sharedPdfBytes != null
+                                                            ? RenderingResources.fromBytes(
+                                                                    pdfDocumentFactory,
+                                                                    sharedPdfBytes)
+                                                            : RenderingResources.fromPath(
+                                                                    pdfDocumentFactory,
+                                                                    sharedPdfPath);
+                                            renderingResourcesToClose.add(resources);
+                                            return resources;
+                                        } catch (IOException e) {
+                                            throw new UncheckedIOException(
+                                                    "Failed to prepare rendering resources", e);
+                                        }
                                     });
                     List<ProcessedPage> processedPages;
                     try {
-                        long renderStart = System.nanoTime();
                         List<Callable<ProcessedPage>> tasks =
                                 IntStream.range(0, totalPages)
                                         .mapToObj(
@@ -759,8 +668,8 @@ public class ScannerEffectController {
                                                                 () ->
                                                                         processPage(
                                                                                 i,
-                                                                                document,
-                                                                                rendererCache,
+                                                                                renderingResources
+                                                                                        .get(),
                                                                                 baseRotation,
                                                                                 rotateVariance,
                                                                                 borderPx,
@@ -778,38 +687,22 @@ public class ScannerEffectController {
                         for (Future<ProcessedPage> future : futures) {
                             processedPages.add(future.get());
                         }
-
-                        long renderDuration = System.nanoTime() - renderStart;
-                        log.info(
-                                "Page rendering completed in {} (avg per page: {}, max per page: {})",
-                                formatDuration(renderDuration),
-                                formatDuration(renderDuration / totalPages),
-                                formatDuration(
-                                        processedPages.stream()
-                                                .mapToLong(ProcessedPage::totalNanos)
-                                                .max()
-                                                .orElse(0)));
-                        logForkJoinPoolMetrics(customPool);
-                        logRenderingSummary(processedPages);
                     } catch (InterruptedException e) {
                         Thread.currentThread().interrupt();
                         throw new IOException("Parallel page processing interrupted", e);
                     } catch (ExecutionException e) {
                         throw new IOException("Parallel page processing failed", e.getCause());
                     } finally {
-                        rendererCache.remove();
+                        renderingResources.remove();
+                        for (RenderingResources resources : renderingResourcesToClose) {
+                            resources.closeQuietly();
+                        }
                     }
 
-                    long writingStart = System.nanoTime();
                     writeProcessedPagesToDocument(processedPages, outputDocument);
-                    log.info("Composited output document in {}", formatDurationSince(writingStart));
 
                     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
                     outputDocument.save(outputStream);
-
-                    log.info(
-                            "Scanner effect pipeline completed in {}",
-                            formatDurationSince(overallStart));
 
                     return WebResponseUtils.bytesToWebResponse(
                             outputStream.toByteArray(),
@@ -822,8 +715,51 @@ public class ScannerEffectController {
                 try {
                     Files.deleteIfExists(tempFile);
                 } catch (IOException e) {
-                    log.warn("Failed to delete temporary file {}", tempFile, e);
+                    // Ignore cleanup failures
                 }
+            }
+        }
+    }
+
+    private static final class RenderingResources implements AutoCloseable {
+        private final PDDocument document;
+        private final PDFRenderer renderer;
+
+        private RenderingResources(PDDocument document) {
+            this.document = document;
+            this.renderer = new PDFRenderer(document);
+            this.renderer.setSubsamplingAllowed(true);
+            this.renderer.setImageDownscalingOptimizationThreshold(0.5f);
+        }
+
+        static RenderingResources fromBytes(CustomPDFDocumentFactory factory, byte[] pdfBytes)
+                throws IOException {
+            return new RenderingResources(factory.load(pdfBytes, true));
+        }
+
+        static RenderingResources fromPath(CustomPDFDocumentFactory factory, Path pdfPath)
+                throws IOException {
+            return new RenderingResources(factory.load(pdfPath, true));
+        }
+
+        PDRectangle getPageMediaBox(int pageIndex) {
+            return document.getPage(pageIndex).getMediaBox();
+        }
+
+        BufferedImage renderPage(int pageIndex, int dpi) throws IOException {
+            return renderPageSafely(renderer, pageIndex, dpi);
+        }
+
+        @Override
+        public void close() throws IOException {
+            document.close();
+        }
+
+        void closeQuietly() {
+            try {
+                close();
+            } catch (IOException e) {
+                // Ignore close failure
             }
         }
     }
@@ -880,22 +816,15 @@ public class ScannerEffectController {
     private static class ProcessedPage {
         final BufferedImage image;
         final float origW, origH, offsetX, offsetY, drawW, drawH;
-        final long renderNanos;
-        final long effectsNanos;
-        final long totalNanos;
 
         ProcessedPage(
-                int pageNumber,
                 BufferedImage image,
                 float origW,
                 float origH,
                 float offsetX,
                 float offsetY,
                 float drawW,
-                float drawH,
-                long renderNanos,
-                long effectsNanos,
-                long totalNanos) {
+                float drawH) {
             this.image = image;
             this.origW = origW;
             this.origH = origH;
@@ -903,13 +832,6 @@ public class ScannerEffectController {
             this.offsetY = offsetY;
             this.drawW = drawW;
             this.drawH = drawH;
-            this.renderNanos = renderNanos;
-            this.effectsNanos = effectsNanos;
-            this.totalNanos = totalNanos;
-        }
-
-        long totalNanos() {
-            return this.totalNanos;
         }
     }
 }
