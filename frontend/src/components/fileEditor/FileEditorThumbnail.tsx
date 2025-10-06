@@ -4,7 +4,7 @@ import { alert } from '../toast';
 import { useTranslation } from 'react-i18next';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import DownloadOutlinedIcon from '@mui/icons-material/DownloadOutlined';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import CloseIcon from '@mui/icons-material/Close';
 import UnarchiveIcon from '@mui/icons-material/Unarchive';
 import PushPinIcon from '@mui/icons-material/PushPin';
 import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined';
@@ -29,7 +29,7 @@ interface FileEditorThumbnailProps {
   selectedFiles: FileId[];
   selectionMode: boolean;
   onToggleFile: (fileId: FileId) => void;
-  onDeleteFile: (fileId: FileId) => void;
+  onCloseFile: (fileId: FileId) => void;
   onViewFile: (fileId: FileId) => void;
   _onSetStatus: (status: string) => void;
   onReorderFiles?: (sourceFileId: FileId, targetFileId: FileId, selectedFileIds: FileId[]) => void;
@@ -44,7 +44,7 @@ const FileEditorThumbnail = ({
   index,
   selectedFiles,
   onToggleFile,
-  onDeleteFile,
+  onCloseFile,
   _onSetStatus,
   onReorderFiles,
   onDownloadFile,
@@ -363,13 +363,13 @@ const FileEditorThumbnail = ({
           <button
             className={`${styles.actionRow} ${styles.actionDanger}`}
             onClick={() => {
-              onDeleteFile(file.id);
-              alert({ alertType: 'neutral', title: `Deleted ${file.name}`, expandable: false, durationMs: 3500 });
+              onCloseFile(file.id);
+              alert({ alertType: 'neutral', title: `Closed ${file.name}`, expandable: false, durationMs: 3500 });
               setShowActions(false);
             }}
           >
-            <DeleteOutlineIcon fontSize="small" />
-            <span>{t('delete', 'Delete')}</span>
+            <CloseIcon fontSize="small" />
+            <span>{t('close', 'Close')}</span>
           </button>
         </div>
       )}
