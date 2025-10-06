@@ -5,6 +5,14 @@ import globals from "globals";
 import { defineConfig } from 'eslint/config';
 import tseslint from 'typescript-eslint';
 
+const srcGlobs = [
+  'src/**/*.{js,mjs,jsx,ts,tsx}',
+];
+const nodeGlobs = [
+  'scripts/**/*.{js,ts,mjs}',
+  '*.config.{js,ts,mjs}',
+];
+
 export default defineConfig(
   eslint.configs.recommended,
   tseslint.configs.recommended,
@@ -41,9 +49,7 @@ export default defineConfig(
   },
   // Config for browser scripts
   {
-    files: [
-      "src",
-    ],
+    files: srcGlobs,
     languageOptions: {
       globals: {
         ...globals.browser,
@@ -52,11 +58,7 @@ export default defineConfig(
   },
   // Config for node scripts
   {
-    files: [
-      "scripts/*.js",
-      "postcss.config.js",
-      "tailwind.config.js",
-    ],
+    files: nodeGlobs,
     languageOptions: {
       globals: {
         ...globals.node,
