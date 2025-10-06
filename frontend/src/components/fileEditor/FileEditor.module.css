@@ -225,6 +225,11 @@
   color: rgba(0, 0, 0, 0.35);
 }
 
+.pinned {
+  color: #FFC107 !important;
+}
+
+
 /* Unsupported file indicator */
 .unsupportedPill {
   margin-left: 1.75rem;

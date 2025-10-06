@@ -265,7 +265,7 @@ const FileEditorThumbnail = ({
             <ActionIcon
               aria-label={isPinned ? t('unpin', 'Unpin') : t('pin', 'Pin')}
               variant="subtle"
-              className={styles.headerIconButton}
+              className={isPinned ? styles.pinned : styles.headerIconButton}
               onClick={(e) => {
                 e.stopPropagation();
                 if (actualFile) {
@@ -336,7 +336,7 @@ const FileEditorThumbnail = ({
               setShowActions(false);
             }}
           >
-            {isPinned ? <PushPinIcon fontSize="small" /> : <PushPinOutlinedIcon fontSize="small" />}
+            {isPinned ? <PushPinIcon className={styles.pinned} fontSize="small" /> : <PushPinOutlinedIcon fontSize="small" />}
             <span>{isPinned ? t('unpin', 'Unpin') : t('pin', 'Pin')}</span>
           </button>
 
