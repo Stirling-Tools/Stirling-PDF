@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -16,6 +17,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import org.apache.pdfbox.cos.COSArray;
+import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
@@ -1039,10 +1041,29 @@ public class FormUtils {
         if (widgets == null || widgets.isEmpty()) {
             return -1;
         }
+        Map<PDAnnotationWidget, Integer> widgetPageFallbacks = null;
         for (PDAnnotationWidget widget : widgets) {
             int idx = resolveWidgetPageIndex(document, widget);
             if (idx >= 0) {
                 return idx;
+            }
+            try {
+                COSDictionary widgetDictionary = widget.getCOSObject();
+                if (widgetDictionary != null
+                        && widgetDictionary.getDictionaryObject(COSName.P) == null) {
+                    if (widgetPageFallbacks == null) {
+                        widgetPageFallbacks = buildWidgetPageFallbackMap(document);
+                    }
+                    Integer fallbackIndex = widgetPageFallbacks.get(widget);
+                    if (fallbackIndex != null && fallbackIndex >= 0) {
+                        return fallbackIndex;
+                    }
+                }
+            } catch (Exception e) {
+                log.debug(
+                        "Failed to inspect widget page reference for field '{}': {}",
+                        field.getFullyQualifiedName(),
+                        e.getMessage());
             }
         }
         return -1;
@@ -1051,6 +1072,19 @@ public class FormUtils {
     private int resolveWidgetPageIndex(PDDocument document, PDAnnotationWidget widget) {
         if (document == null || widget == null) {
             return -1;
+        }
+        try {
+            COSDictionary widgetDictionary = widget.getCOSObject();
+            if (widgetDictionary != null
+                    && widgetDictionary.getDictionaryObject(COSName.P) == null) {
+                Map<PDAnnotationWidget, Integer> fallback = buildWidgetPageFallbackMap(document);
+                Integer index = fallback.get(widget);
+                if (index != null) {
+                    return index;
+                }
+            }
+        } catch (Exception e) {
+            log.debug("Widget page lookup via fallback map failed: {}", e.getMessage());
         }
         try {
             PDPage page = widget.getPage();
@@ -1283,6 +1317,65 @@ public class FormUtils {
             }
         }
         return -1;
+    }
+
+    private Map<PDAnnotationWidget, Integer> buildWidgetPageFallbackMap(PDDocument document) {
+        if (document == null) {
+            return Collections.emptyMap();
+        }
+
+        Map<PDAnnotationWidget, Integer> widgetToPage = new IdentityHashMap<>();
+        int pageCount = document.getNumberOfPages();
+        for (int pageIndex = 0; pageIndex < pageCount; pageIndex++) {
+            PDPage page;
+            try {
+                page = document.getPage(pageIndex);
+            } catch (Exception e) {
+                log.debug(
+                        "Failed to access page {} while building widget map: {}",
+                        pageIndex,
+                        e.getMessage());
+                continue;
+            }
+
+            List<PDAnnotation> annotations;
+            try {
+                annotations = page.getAnnotations();
+            } catch (IOException e) {
+                log.debug(
+                        "Failed to access annotations for page {}: {}", pageIndex, e.getMessage());
+                continue;
+            }
+
+            if (annotations == null || annotations.isEmpty()) {
+                continue;
+            }
+
+            for (PDAnnotation annotation : annotations) {
+                if (!(annotation instanceof PDAnnotationWidget widget)) {
+                    continue;
+                }
+
+                COSDictionary widgetDictionary;
+                try {
+                    widgetDictionary = widget.getCOSObject();
+                } catch (Exception e) {
+                    log.debug(
+                            "Failed to access widget dictionary while building fallback map: {}",
+                            e.getMessage());
+                    continue;
+                }
+
+                if (widgetDictionary == null
+                        || widgetDictionary.getDictionaryObject(COSName.P) != null) {
+                    continue;
+                }
+
+                widgetToPage.putIfAbsent(widget, pageIndex);
+            }
+        }
+
+        return widgetToPage.isEmpty() ? Collections.emptyMap() : widgetToPage;
     }
 
     private Set<String> collectExistingFieldNames(PDAcroForm acroForm) {
