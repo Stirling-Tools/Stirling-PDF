@@ -274,7 +274,7 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
         <GlobalPointerProvider>
           <Viewport
             style={{
-              backgroundColor: 'var(--bg-surface)',
+              backgroundColor: 'var(--bg-background)',
               height: '100%',
               width: '100%',
               maxHeight: '100%',
@@ -299,7 +299,8 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
                       userSelect: 'none',
                       WebkitUserSelect: 'none',
                       MozUserSelect: 'none',
-                      msUserSelect: 'none'
+                      msUserSelect: 'none',
+                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)'
                     }}
                     draggable={false}
                     onDragStart={(e) => e.preventDefault()}

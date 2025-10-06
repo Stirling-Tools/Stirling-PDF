@@ -391,7 +391,7 @@ const FileEditor = ({
       <Box pos="relative" style={{ overflow: 'auto' }}>
         <LoadingOverlay visible={false} />
 
-        <Box p="md" pt="xl">
+        <Box p="md">
 
 
         {activeStirlingFileStubs.length === 0 && !zipExtractionProgress.isExtracting ? (
@@ -490,7 +490,7 @@ const FileEditor = ({
         onSelectFiles={handleLoadFromStorage}
       />
 
-      
+
       </Box>
     </Dropzone>
   );
