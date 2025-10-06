@@ -1,6 +1,7 @@
 import React from 'react';
 import { NavKey } from './types';
 import HotkeysSection from './configSections/HotkeysSection';
+import GeneralSection from './configSections/GeneralSection';
 
 export interface ConfigNavItem {
   key: NavKey;
@@ -43,6 +44,12 @@ export const createConfigNavSections = (
     {
       title: 'Preferences',
       items: [
+        {
+          key: 'general',
+          label: 'General',
+          icon: 'settings-rounded',
+          component: <GeneralSection />
+        },
         {
           key: 'hotkeys',
           label: 'Keyboard Shortcuts',

@@ -314,6 +314,15 @@ export const DATABASE_CONFIGS = {
     }]
   } as DatabaseConfig,
 
+  PREFERENCES: {
+    name: 'stirling-pdf-preferences',
+    version: 1,
+    stores: [{
+      name: 'preferences',
+      keyPath: 'key'
+    }]
+  } as DatabaseConfig,
+
 } as const;
 
 export const indexedDBManager = IndexedDBManager.getInstance();

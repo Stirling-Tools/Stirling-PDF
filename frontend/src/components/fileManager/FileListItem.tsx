@@ -5,10 +5,12 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import DownloadIcon from '@mui/icons-material/Download';
 import HistoryIcon from '@mui/icons-material/History';
 import RestoreIcon from '@mui/icons-material/Restore';
+import UnarchiveIcon from '@mui/icons-material/Unarchive';
 import { useTranslation } from 'react-i18next';
 import { getFileSize, getFileDate } from '../../utils/fileUtils';
 import { FileId, StirlingFileStub } from '../../types/fileContext';
 import { useFileManagerContext } from '../../contexts/FileManagerContext';
+import { zipFileService } from '../../services/zipFileService';
 import ToolChain from '../shared/ToolChain';
 
 interface FileListItemProps {
@@ -38,7 +40,10 @@ const FileListItem: React.FC<FileListItemProps> = ({
   const [isHovered, setIsHovered] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { t } = useTranslation();
-  const {expandedFileIds, onToggleExpansion, onAddToRecents } = useFileManagerContext();
+  const {expandedFileIds, onToggleExpansion, onAddToRecents, onUnzipFile } = useFileManagerContext();
+
+  // Check if this is a ZIP file
+  const isZipFile = zipFileService.isZipFileStub(file);
 
   // Keep item in hovered state if menu is open
   const shouldShowHovered = isHovered || isMenuOpen;
@@ -187,6 +192,22 @@ const FileListItem: React.FC<FileListItemProps> = ({
                     }}
                   >
                     {t('fileManager.restore', 'Restore')}
+                  </Menu.Item>
+                  <Menu.Divider />
+                </>
+              )}
+
+              {/* Unzip option for ZIP files */}
+              {isZipFile && !isHistoryFile && (
+                <>
+                  <Menu.Item
+                    leftSection={<UnarchiveIcon style={{ fontSize: 16 }} />}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onUnzipFile(file);
+                    }}
+                  >
+                    {t('fileManager.unzip', 'Unzip')}
                   </Menu.Item>
                   <Menu.Divider />
                 </>

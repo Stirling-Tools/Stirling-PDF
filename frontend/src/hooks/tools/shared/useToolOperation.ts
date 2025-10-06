@@ -257,6 +257,7 @@ export const useToolOperation = <TParams>(
             processedFiles = [singleFile];
           } else {
             // Default: assume ZIP response for multi-file endpoints
+            // Note: extractZipFiles will check preferences.autoUnzip setting
             processedFiles = await extractZipFiles(response.data);
 
             if (processedFiles.length === 0) {
