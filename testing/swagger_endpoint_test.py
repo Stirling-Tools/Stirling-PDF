@@ -24,6 +24,8 @@ import requests
 DEFAULT_SAMPLE_FILE = "testing/cucumber/exampleFiles/ghost1.pdf"
 IMAGE_SAMPLE_FILE = "docs/stirling.png"
 MARKDOWN_SAMPLE_FILE = "testing/samples/sample.md"
+CBZ_SAMPLE_FILE = "testing/samples/sample.cbz"
+CBR_SAMPLE_FILE = "testing/samples/sample.cbr"
 CERT_SAMPLE_FILE = "app/core/src/test/resources/certs/test-cert.pem"
 PKCS12_SAMPLE_FILE = "app/core/src/test/resources/certs/test-cert.p12"
 DEFAULT_SPEC_ENDPOINT = "/v1/api-docs"
@@ -48,14 +50,13 @@ SKIP_ENDPOINTS = {
     ("post", "/api/v1/security/validate-signature"),
     ("post", "/api/v1/security/cert-sign"),
     ("post", "/api/v1/pipeline/handleData"),
-    ("post", "/api/v1/general/split-pdf-by-chapters"),
+    # ("post", "/api/v1/general/split-pdf-by-chapters"),
     ("post", "/api/v1/security/remove-cert-sign"),
     ("post", "/api/v1/convert/pdf/img"),
     ("post", "/api/v1/convert/markdown/pdf"),
     ("post", "/api/v1/admin/job/cleanup"),
     ("delete", "/api/v1/audit/cleanup/before"),
     ("delete", "/api/v1/general/job/{jobId}"),
-
 }
 
 
@@ -88,7 +89,16 @@ class SwaggerTester:
                 continue
             shared_params = path_item.get("parameters", []) or []
             for method, operation in path_item.items():
-                if method.lower() not in {"get", "put", "post", "delete", "patch", "head", "options", "trace"}:
+                if method.lower() not in {
+                    "get",
+                    "put",
+                    "post",
+                    "delete",
+                    "patch",
+                    "head",
+                    "options",
+                    "trace",
+                }:
                     continue
                 if not isinstance(operation, dict):
                     continue
@@ -110,15 +120,21 @@ class SwaggerTester:
                     )
                     continue
 
-                merged_params = self._merge_parameters(shared_params, operation.get("parameters", []) or [])
-                result = self._exercise_endpoint(raw_path, method.lower(), operation, merged_params)
+                merged_params = self._merge_parameters(
+                    shared_params, operation.get("parameters", []) or []
+                )
+                result = self._exercise_endpoint(
+                    raw_path, method.lower(), operation, merged_params
+                )
                 results.append(result)
         return results
 
     # ------------------------------------------------------------------
     # Parameter helpers
     # ------------------------------------------------------------------
-    def _merge_parameters(self, path_params: List[Dict[str, Any]], op_params: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def _merge_parameters(
+        self, path_params: List[Dict[str, Any]], op_params: List[Dict[str, Any]]
+    ) -> List[Dict[str, Any]]:
         merged: Dict[Tuple[str, str], Dict[str, Any]] = {}
         for param in path_params + op_params:
             if not isinstance(param, dict):
@@ -129,7 +145,9 @@ class SwaggerTester:
             merged[key] = param
         return list(merged.values())
 
-    def _prepare_parameters(self, parameters: List[Dict[str, Any]]) -> Tuple[Dict[str, Any], Dict[str, str], Dict[str, str]]:
+    def _prepare_parameters(
+        self, parameters: List[Dict[str, Any]]
+    ) -> Tuple[Dict[str, Any], Dict[str, str], Dict[str, str]]:
         path_values: Dict[str, Any] = {}
         query_values: Dict[str, Any] = {}
         header_values: Dict[str, str] = {}
@@ -185,9 +203,19 @@ class SwaggerTester:
                 body_info = operation.get("requestBody") or {}
                 body_required = body_info.get("required", False)
                 content = body_info.get("content", {}) or {}
-                body_prepared = self._prepare_request_body(content, open_files, raw_path, method.lower())
+                body_prepared = self._prepare_request_body(
+                    content, open_files, raw_path, method.lower()
+                )
                 if body_prepared is None and body_required:
-                    return EndpointResult(method, raw_path, url, None, content.keys(), False, "Unable to prepare request body")
+                    return EndpointResult(
+                        method,
+                        raw_path,
+                        url,
+                        None,
+                        content.keys(),
+                        False,
+                        "Unable to prepare request body",
+                    )
                 if body_prepared:
                     extra_headers = body_prepared.pop("headers", None)
                     if extra_headers:
@@ -204,9 +232,19 @@ class SwaggerTester:
                 message = "Endpoint disabled"
             elif not success:
                 message = response.text[:3000] or message
-            return EndpointResult(method.upper(), raw_path, url, status_code, expected_statuses, success, message)
+            return EndpointResult(
+                method.upper(),
+                raw_path,
+                url,
+                status_code,
+                expected_statuses,
+                success,
+                message,
+            )
         except requests.RequestException as exc:
-            return EndpointResult(method.upper(), raw_path, url, None, [], False, f"Request failed: {exc}")
+            return EndpointResult(
+                method.upper(), raw_path, url, None, [], False, f"Request failed: {exc}"
+            )
         finally:
             for fh in open_files:
                 try:
@@ -229,7 +267,11 @@ class SwaggerTester:
         for candidate in expected:
             if candidate.upper() == "DEFAULT":
                 return True
-            if candidate.endswith("XX") and len(candidate) == 3 and candidate[0].isdigit():
+            if (
+                candidate.endswith("XX")
+                and len(candidate) == 3
+                and candidate[0].isdigit()
+            ):
                 if int(candidate[0]) == status // 100:
                     return True
         return 100 <= status < 400
@@ -249,7 +291,10 @@ class SwaggerTester:
 
         if isinstance(payload, dict):
             message = payload.get("message")
-            if isinstance(message, str) and message.lower() == "this endpoint is disabled":
+            if (
+                isinstance(message, str)
+                and message.lower() == "this endpoint is disabled"
+            ):
                 return True
         return False
 
@@ -275,17 +320,30 @@ class SwaggerTester:
         ]
 
         media_types = list(content.keys())
-        media_types.sort(key=lambda m: next((i for i, t in enumerate(preferred_order) if self._media_matches(m, t)), len(preferred_order)))
+        media_types.sort(
+            key=lambda m: next(
+                (i for i, t in enumerate(preferred_order) if self._media_matches(m, t)),
+                len(preferred_order),
+            )
+        )
 
         for media_type in media_types:
-            schema = content[media_type].get("schema") if isinstance(content[media_type], dict) else None
+            schema = (
+                content[media_type].get("schema")
+                if isinstance(content[media_type], dict)
+                else None
+            )
             resolved_schema = self._resolve_schema(schema)
 
-            if media_type.startswith("application/json") or media_type.endswith("+json"):
+            if media_type.startswith("application/json") or media_type.endswith(
+                "+json"
+            ):
                 example = self._generate_example(resolved_schema)
                 return {"json": example}
             if media_type == "multipart/form-data":
-                form_fields, files = self._generate_multipart_payload(resolved_schema, open_files, path_hint, method)
+                form_fields, files = self._generate_multipart_payload(
+                    resolved_schema, open_files, path_hint, method
+                )
                 payload: Dict[str, Any] = {"data": form_fields}
                 if files:
                     payload["files"] = files
@@ -295,9 +353,14 @@ class SwaggerTester:
                 return {"data": form_fields}
             if media_type in {"text/plain", "text/csv", "text/html"}:
                 example = self._generate_example(resolved_schema)
-                return {"data": self._stringify(example), "headers": {"Content-Type": media_type}}
+                return {
+                    "data": self._stringify(example),
+                    "headers": {"Content-Type": media_type},
+                }
             if media_type in {"application/octet-stream", "application/pdf"}:
-                file_tuple, fh = self._binary_sample_for("fileInput", resolved_schema, path_hint, method)
+                file_tuple, fh = self._binary_sample_for(
+                    "fileInput", resolved_schema, path_hint, method
+                )
                 open_files.append(fh)
                 return {"data": fh.read(), "headers": {"Content-Type": media_type}}
 
@@ -327,7 +390,9 @@ class SwaggerTester:
         for name, prop_schema in properties.items():
             resolved = self._resolve_schema(prop_schema)
             if self._is_binary_schema(resolved):
-                file_tuple, fh = self._binary_sample_for(name, resolved, path_hint, method)
+                file_tuple, fh = self._binary_sample_for(
+                    name, resolved, path_hint, method
+                )
                 open_files.append(fh)
                 files.append((name, file_tuple))
             else:
@@ -359,7 +424,9 @@ class SwaggerTester:
     # ------------------------------------------------------------------
     # Schema helpers
     # ------------------------------------------------------------------
-    def _resolve_schema(self, schema: Optional[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+    def _resolve_schema(
+        self, schema: Optional[Dict[str, Any]]
+    ) -> Optional[Dict[str, Any]]:
         if not schema:
             return None
         if "$ref" in schema:
@@ -410,7 +477,9 @@ class SwaggerTester:
     # ------------------------------------------------------------------
     # Example generation
     # ------------------------------------------------------------------
-    def _generate_example(self, schema: Optional[Dict[str, Any]], depth: int = 0) -> Any:
+    def _generate_example(
+        self, schema: Optional[Dict[str, Any]], depth: int = 0
+    ) -> Any:
         if schema is None or depth > 6:
             return "example"
 
@@ -429,9 +498,13 @@ class SwaggerTester:
             return self._choose_enum_value(enum)
 
         if "oneOf" in schema:
-            return self._generate_example(self._resolve_schema(schema["oneOf"][0]), depth + 1)
+            return self._generate_example(
+                self._resolve_schema(schema["oneOf"][0]), depth + 1
+            )
         if "anyOf" in schema:
-            return self._generate_example(self._resolve_schema(schema["anyOf"][0]), depth + 1)
+            return self._generate_example(
+                self._resolve_schema(schema["anyOf"][0]), depth + 1
+            )
         if "allOf" in schema:
             combined: Dict[str, Any] = {}
             for subschema in schema["allOf"]:
@@ -450,7 +523,9 @@ class SwaggerTester:
                 resolved = self._resolve_schema(subschema)
                 result[name] = self._generate_example(resolved, depth + 1)
             if not result and schema.get("additionalProperties"):
-                additional_schema = self._resolve_schema(schema.get("additionalProperties"))
+                additional_schema = self._resolve_schema(
+                    schema.get("additionalProperties")
+                )
                 result["key"] = self._generate_example(additional_schema, depth + 1)
             return result
         if schema_type == "array":
@@ -510,7 +585,17 @@ class SwaggerTester:
         return str(value)
 
     def _choose_enum_value(self, values: List[Any]) -> Any:
-        preferred = ["txt", "text", "json", "pdf", "png", "jpg", "jpeg", "true", "false"]
+        preferred = [
+            "txt",
+            "text",
+            "json",
+            "pdf",
+            "png",
+            "jpg",
+            "jpeg",
+            "true",
+            "false",
+        ]
         for pref in preferred:
             for value in values:
                 if isinstance(value, str) and value.lower() == pref:
@@ -543,6 +628,22 @@ class SwaggerTester:
             return self._open_file(MARKDOWN_SAMPLE_FILE, "text/markdown")
 
         if (
+            "cbz" in name_lower
+            or "cbz" in path_lower
+            or (content_type and "cbz" in content_type)
+        ):
+            return self._open_file(CBZ_SAMPLE_FILE, "application/x-cbz")
+
+        if (
+            "cbr" in name_lower
+            or "rar" in name_lower
+            or "cbr" in path_lower
+            or "rar" in path_lower
+            or (content_type and ("cbr" in content_type or "rar" in content_type))
+        ):
+            return self._open_file(CBR_SAMPLE_FILE, "application/x-cbr")
+
+        if (
             "cert" in name_lower
             or "certificate" in name_lower
             or "cert" in path_lower
@@ -555,12 +656,17 @@ class SwaggerTester:
         if "key" in name_lower:
             return self._open_file(CERT_SAMPLE_FILE, "application/x-pem-file")
 
-        if content_type and content_type in {"application/x-pkcs12", "application/pkcs12"}:
+        if content_type and content_type in {
+            "application/x-pkcs12",
+            "application/pkcs12",
+        }:
             return self._open_file(PKCS12_SAMPLE_FILE, content_type)
 
         return self._open_file(self.sample_file, "application/pdf")
 
-    def _open_file(self, path: str, content_type: str) -> Tuple[Tuple[str, Any, str], Any]:
+    def _open_file(
+        self, path: str, content_type: str
+    ) -> Tuple[Tuple[str, Any, str], Any]:
         fh = open(path, "rb")
         filename = os.path.basename(path)
         return (filename, fh, content_type), fh
@@ -569,6 +675,7 @@ class SwaggerTester:
 # ----------------------------------------------------------------------
 # CLI helpers
 # ----------------------------------------------------------------------
+
 
 def load_spec(base_url: str, spec_path: Optional[str]) -> Dict[str, Any]:
     if spec_path:
@@ -582,10 +689,22 @@ def load_spec(base_url: str, spec_path: Optional[str]) -> Dict[str, Any]:
 
 
 def parse_args(argv: List[str]) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Exercise all endpoints defined in the Swagger specification.")
-    parser.add_argument("--base-url", default="http://localhost:8080", help="Base URL of the running Stirling-PDF instance")
-    parser.add_argument("--spec", dest="spec_path", help="Optional path to a Swagger/OpenAPI JSON file")
-    parser.add_argument("--sample-file", default=DEFAULT_SAMPLE_FILE, help="Path to a sample PDF file to use for binary uploads")
+    parser = argparse.ArgumentParser(
+        description="Exercise all endpoints defined in the Swagger specification."
+    )
+    parser.add_argument(
+        "--base-url",
+        default="http://localhost:8080",
+        help="Base URL of the running Stirling-PDF instance",
+    )
+    parser.add_argument(
+        "--spec", dest="spec_path", help="Optional path to a Swagger/OpenAPI JSON file"
+    )
+    parser.add_argument(
+        "--sample-file",
+        default=DEFAULT_SAMPLE_FILE,
+        help="Path to a sample PDF file to use for binary uploads",
+    )
     return parser.parse_args(argv)
 
 
@@ -608,7 +727,9 @@ def main(argv: List[str]) -> int:
         status_repr = result.status_code if result.status_code is not None else "ERR"
         status_text = "PASS" if result.success else "FAIL"
         expected = ",".join(result.expected) if result.expected else "<default>"
-        print(f"[{status_text}] {result.method} {result.path} -> {status_repr} (expected: {expected})")
+        print(
+            f"[{status_text}] {result.method} {result.path} -> {status_repr} (expected: {expected})"
+        )
         if not result.success and result.message:
             print(f"    Details: {result.message}")
 
