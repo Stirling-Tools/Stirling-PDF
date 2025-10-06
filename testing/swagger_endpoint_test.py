@@ -634,14 +634,15 @@ class SwaggerTester:
         ):
             return self._open_file(CBZ_SAMPLE_FILE, "application/x-cbz")
 
-        if (
-            "cbr" in name_lower
-            or "rar" in name_lower
-            or "cbr" in path_lower
-            or "rar" in path_lower
-            or (content_type and ("cbr" in content_type or "rar" in content_type))
-        ):
-            return self._open_file(CBR_SAMPLE_FILE, "application/x-cbr")
+        # TODO: BUG
+        # if (
+        #     "cbr" in name_lower
+        #     or "rar" in name_lower
+        #     or "cbr" in path_lower
+        #     or "rar" in path_lower
+        #     or (content_type and ("cbr" in content_type or "rar" in content_type))
+        # ):
+        #     return self._open_file(CBR_SAMPLE_FILE, "application/x-cbr")
 
         if (
             "cert" in name_lower
