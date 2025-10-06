@@ -5,11 +5,13 @@ import { useTranslation } from 'react-i18next';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import DownloadOutlinedIcon from '@mui/icons-material/DownloadOutlined';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import UnarchiveIcon from '@mui/icons-material/Unarchive';
 import PushPinIcon from '@mui/icons-material/PushPin';
 import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { StirlingFileStub } from '../../types/fileContext';
+import { zipFileService } from '../../services/zipFileService';
 
 import styles from './FileEditor.module.css';
 import { useFileContext } from '../../contexts/FileContext';
@@ -32,6 +34,7 @@ interface FileEditorThumbnailProps {
   _onSetStatus: (status: string) => void;
   onReorderFiles?: (sourceFileId: FileId, targetFileId: FileId, selectedFileIds: FileId[]) => void;
   onDownloadFile: (fileId: FileId) => void;
+  onUnzipFile?: (fileId: FileId) => void;
   toolMode?: boolean;
   isSupported?: boolean;
 }
@@ -45,6 +48,7 @@ const FileEditorThumbnail = ({
   _onSetStatus,
   onReorderFiles,
   onDownloadFile,
+  onUnzipFile,
   isSupported = true,
 }: FileEditorThumbnailProps) => {
   const { t } = useTranslation();
@@ -63,6 +67,9 @@ const FileEditorThumbnail = ({
     return activeFiles.find(f => f.fileId === file.id);
   }, [activeFiles, file.id]);
   const isPinned = actualFile ? isFilePinned(actualFile) : false;
+
+  // Check if this is a ZIP file
+  const isZipFile = zipFileService.isZipFileStub(file);
 
   const pageCount = file.processedFile?.totalPages || 0;
 
@@ -299,6 +306,16 @@ const FileEditorThumbnail = ({
             <span>{t('download', 'Download')}</span>
           </button>
 
+          {isZipFile && onUnzipFile && (
+            <button
+              className={styles.actionRow}
+              onClick={() => { onUnzipFile(file.id); alert({ alertType: 'success', title: `Unzipping ${file.name}`, expandable: false, durationMs: 2500 }); setShowActions(false); }}
+            >
+              <UnarchiveIcon fontSize="small" />
+              <span>{t('fileManager.unzip', 'Unzip')}</span>
+            </button>
+          )}
+
           <div className={styles.actionsDivider} />
 
           <button
@@ -324,7 +341,7 @@ const FileEditorThumbnail = ({
         marginTop: '0.5rem',
         marginBottom: '0.5rem',
       }}>
-        <Text size="lg" fw={700} className={styles.title} lineClamp={2}>
+        <Text  size="lg" fw={700} className={`${styles.title}  ph-no-capture `}  lineClamp={2}>
           {file.name}
         </Text>
         <Text
@@ -350,6 +367,7 @@ const FileEditorThumbnail = ({
         <div className={styles.previewPaper}>
           {file.thumbnailUrl && (
             <img
+              className="ph-no-capture"
               src={file.thumbnailUrl}
               alt={file.name}
               draggable={false}

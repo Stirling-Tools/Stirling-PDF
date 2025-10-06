@@ -15,6 +15,7 @@ import { renderHook, act } from '@testing-library/react';
 import { useConvertOperation } from '../../hooks/tools/convert/useConvertOperation';
 import { ConvertParameters } from '../../hooks/tools/convert/useConvertParameters';
 import { FileContextProvider } from '../../contexts/FileContext';
+import { PreferencesProvider } from '../../contexts/PreferencesContext';
 import { I18nextProvider } from 'react-i18next';
 import i18n from '../../i18n/config';
 import { createTestStirlingFile } from '../utils/testFileHelpers';
@@ -88,9 +89,11 @@ const createPDFFile = (): StirlingFile => {
 // Test wrapper component
 const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <I18nextProvider i18n={i18n}>
-    <FileContextProvider>
-      {children}
-    </FileContextProvider>
+    <PreferencesProvider>
+      <FileContextProvider>
+        {children}
+      </FileContextProvider>
+    </PreferencesProvider>
   </I18nextProvider>
 );
 
@@ -452,7 +455,7 @@ describe('Convert Tool Integration Tests', () => {
       const files = [
         createPDFFile(),
         createTestStirlingFile('test2.pdf', '%PDF-1.4...', 'application/pdf')
-      ]
+      ];
       const parameters: ConvertParameters = {
         fromExtension: 'pdf',
         toExtension: 'png',

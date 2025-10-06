@@ -12,7 +12,7 @@
  * Memory management handled by FileLifecycleManager (PDF.js cleanup, blob URL revocation).
  */
 
-import React, { useReducer, useCallback, useEffect, useRef, useMemo } from 'react';
+import { useReducer, useCallback, useEffect, useRef, useMemo } from 'react';
 import {
   FileContextProviderProps,
   FileContextSelectors,
@@ -76,7 +76,7 @@ function FileContextInner({
     const currentSelection = stateRef.current.ui.selectedFileIds;
     const newFileIds = stirlingFiles.map(stirlingFile => stirlingFile.fileId);
     dispatch({ type: 'SET_SELECTED_FILES', payload: { fileIds: [...currentSelection, ...newFileIds] } });
-  }
+  };
 
   // File operations using unified addFiles helper with persistence
   const addRawFiles = useCallback(async (files: File[], options?: { insertAfterPageId?: string; selectFiles?: boolean }): Promise<StirlingFile[]> => {

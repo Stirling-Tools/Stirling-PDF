@@ -12,6 +12,8 @@ import { ButtonConfig } from '../../types/sidebar';
 import './quickAccessBar/QuickAccessBar.css';
 import AllToolsNavButton from './AllToolsNavButton';
 import ActiveToolButton from "./quickAccessBar/ActiveToolButton";
+import AppConfigModal from './AppConfigModal';
+import { useAppConfig } from '../../hooks/useAppConfig';
 import {
   isNavButtonActive,
   getNavButtonStyle,
@@ -24,6 +26,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
   const { openFilesModal, isFilesModalOpen } = useFilesModalContext();
   const { handleReaderToggle, handleBackToTools, handleToolSelect, selectedToolKey, leftPanelView, toolRegistry, readerMode, resetTool } = useToolWorkflow();
   const { getToolNavigation } = useSidebarNavigation();
+  const { config } = useAppConfig();
   const [configModalOpen, setConfigModalOpen] = useState(false);
   const [activeButton, setActiveButton] = useState<string>('tools');
   const scrollableRef = useRef<HTMLDivElement>(null);
@@ -41,10 +44,10 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
   // Helper function to render navigation buttons with URL support
   const renderNavButton = (config: ButtonConfig, index: number) => {
     const isActive = isNavButtonActive(config, activeButton, isFilesModalOpen, configModalOpen, selectedToolKey, leftPanelView);
-    
+
     // Check if this button has URL navigation support
-    const navProps = config.type === 'navigation' && (config.id === 'read' || config.id === 'automate') 
-      ? getToolNavigation(config.id) 
+    const navProps = config.type === 'navigation' && (config.id === 'read' || config.id === 'automate')
+      ? getToolNavigation(config.id)
       : null;
 
     const handleClick = (e?: React.MouseEvent) => {
@@ -59,7 +62,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
     return (
       <div key={config.id} className="flex flex-col items-center gap-1" style={{ marginTop: index === 0 ? '0.5rem' : "0rem" }}>
         <ActionIcon
-          {...(navProps ? { 
+          {...(navProps ? {
             component: "a" as const,
             href: navProps.href,
             onClick: (e: React.MouseEvent) => handleClick(e),
@@ -150,8 +153,8 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
     //},
     {
       id: 'config',
-      name: t("quickAccess.config", "Config"),
-      icon: <LocalIcon icon="settings-rounded" width="1.25rem" height="1.25rem" />,
+      name: config?.enableLogin ? t("quickAccess.account", "Account") : t("quickAccess.config", "Config"),
+      icon: config?.enableLogin ? <LocalIcon icon="person-rounded" width="1.25rem" height="1.25rem" /> : <LocalIcon icon="settings-rounded" width="1.25rem" height="1.25rem" />,
       size: 'lg',
       type: 'modal',
       onClick: () => {
@@ -217,7 +220,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
           <div className="spacer" />
 
           {/* Config button at the bottom */}
-          {/* {buttonConfigs
+          {buttonConfigs
             .filter(config => config.id === 'config')
             .map(config => (
                 <div key={config.id} className="flex flex-col items-center gap-1">
@@ -237,16 +240,18 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
                     {config.name}
                   </span>
                 </div>
-            ))} */}
+            ))}
         </div>
       </div>
 
-      {/* <AppConfigModal
+      <AppConfigModal
         opened={configModalOpen}
         onClose={() => setConfigModalOpen(false)}
-      /> */}
+      />
     </div>
   );
 });
+
+QuickAccessBar.displayName = 'QuickAccessBar';
 
 export default QuickAccessBar;

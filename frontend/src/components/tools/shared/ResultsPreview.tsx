@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Box, Text, Loader, Stack, Center, Flex } from '@mantine/core';
 import FilePreview from '../../shared/FilePreview';
 import FileMetadata from './FileMetadata';
@@ -62,6 +62,7 @@ const ResultsPreview = ({
       {/* File name at the top */}
       <Box mb="sm" style={{ minHeight: '3rem', display: 'flex', alignItems: 'flex-start' }}>
         <Text
+          className='ph-no-capture'
           size="sm"
           fw={500}
           style={{

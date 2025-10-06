@@ -1,10 +1,12 @@
-import React, { Suspense } from "react";
+import { Suspense } from "react";
 import { RainbowThemeProvider } from "./components/shared/RainbowThemeProvider";
 import { FileContextProvider } from "./contexts/FileContext";
 import { NavigationProvider } from "./contexts/NavigationContext";
 import { FilesModalProvider } from "./contexts/FilesModalContext";
 import { ToolWorkflowProvider } from "./contexts/ToolWorkflowContext";
+import { HotkeyProvider } from "./contexts/HotkeyContext";
 import { SidebarProvider } from "./contexts/SidebarContext";
+import { PreferencesProvider } from "./contexts/PreferencesContext";
 import ErrorBoundary from "./components/shared/ErrorBoundary";
 import HomePage from "./pages/HomePage";
 
@@ -40,23 +42,27 @@ export default function App() {
     <Suspense fallback={<LoadingFallback />}>
       <RainbowThemeProvider>
         <ErrorBoundary>
-          <FileContextProvider enableUrlSync={true} enablePersistence={true}>
-            <NavigationProvider>
-              <FilesModalProvider>
-                <ToolWorkflowProvider>
-                  <SidebarProvider>
-                    <ViewerProvider>
-                      <SignatureProvider>
-                      <RightRailProvider>
-                            <HomePage />
-                          </RightRailProvider>
-                      </SignatureProvider>
-                    </ViewerProvider>
-                  </SidebarProvider>
-                </ToolWorkflowProvider>
-              </FilesModalProvider>
-            </NavigationProvider>
-          </FileContextProvider>
+          <PreferencesProvider>
+            <FileContextProvider enableUrlSync={true} enablePersistence={true}>
+              <NavigationProvider>
+                <FilesModalProvider>
+                  <ToolWorkflowProvider>
+                    <HotkeyProvider>
+                      <SidebarProvider>
+                        <ViewerProvider>
+                          <SignatureProvider>
+                            <RightRailProvider>
+                              <HomePage />
+                            </RightRailProvider>
+                          </SignatureProvider>
+                        </ViewerProvider>
+                      </SidebarProvider>
+                    </HotkeyProvider>
+                  </ToolWorkflowProvider>
+                </FilesModalProvider>
+              </NavigationProvider>
+            </FileContextProvider>
+          </PreferencesProvider>
         </ErrorBoundary>
       </RainbowThemeProvider>
     </Suspense>

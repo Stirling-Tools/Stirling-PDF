@@ -120,6 +120,7 @@
   --border-strong: #9ca3af;
   --hover-bg: #f9fafb;
   --active-bg: #f3f4f6;
+  --automation-entry-hover-bg: var(--color-gray-100);
 
   /* Icon colors for light mode */
   --icon-user-bg: #9CA3AF;
@@ -224,6 +225,15 @@
   --bulk-card-hover-border: #d1d5db; /* slightly darker on hover */
   --unsupported-bar-bg: #5a616e;
   --unsupported-bar-border: #6B7280;
+
+  /* Config Modal colors (light mode) */
+  --modal-nav-bg: #F5F6F8;
+  --modal-nav-section-title: #6B7280;
+  --modal-nav-item: #374151;
+  --modal-nav-item-active: #0A8BFF;
+  --modal-nav-item-active-bg: rgba(10, 139, 255, 0.08);
+  --modal-content-bg: #ffffff;
+  --modal-header-border: rgba(0, 0, 0, 0.06);
 }
 
 [data-mantine-color-scheme="dark"] {
@@ -308,6 +318,7 @@
   --border-strong: #4b5563;
   --hover-bg: #374151;
   --active-bg: #4b5563;
+  --automation-entry-hover-bg: var(--color-gray-200);
 
   /* Icon colors for dark mode */
   --icon-user-bg: #2A2F36;
@@ -414,6 +425,15 @@
   --bulk-card-hover-border: var(--border-strong); /* stronger border on hover */
   --unsupported-bar-bg: #1F2329;
   --unsupported-bar-border: #4B525A;
+
+  /* Config Modal colors (dark mode) */
+  --modal-nav-bg: #1F2329;
+  --modal-nav-section-title: #9CA3AF;
+  --modal-nav-item: #D0D6DC;
+  --modal-nav-item-active: #0A8BFF;
+  --modal-nav-item-active-bg: rgba(10, 139, 255, 0.15);
+  --modal-content-bg: #2A2F36;
+  --modal-header-border: rgba(255, 255, 255, 0.08);
 }
 
 /* Dropzone drop state styling */

@@ -1,9 +1,11 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { generateThumbnailForFile, generateThumbnailWithMetadata, ThumbnailWithMetadata } from '../../../utils/thumbnailUtils';
 import { zipFileService } from '../../../services/zipFileService';
+import { usePreferences } from '../../../contexts/PreferencesContext';
 
 
 export const useToolResources = () => {
+  const { preferences } = usePreferences();
   const [blobUrls, setBlobUrls] = useState<string[]>([]);
 
   const addBlobUrl = useCallback((url: string) => {
@@ -81,8 +83,20 @@ export const useToolResources = () => {
     return results;
   }, []);
 
-  const extractZipFiles = useCallback(async (zipBlob: Blob): Promise<File[]> => {
+  const extractZipFiles = useCallback(async (zipBlob: Blob, skipAutoUnzip = false): Promise<File[]> => {
     try {
+      // Check if we should extract based on preferences
+      const shouldExtract = await zipFileService.shouldUnzip(
+        zipBlob,
+        preferences.autoUnzip,
+        preferences.autoUnzipFileLimit,
+        skipAutoUnzip
+      );
+
+      if (!shouldExtract) {
+        return [new File([zipBlob], 'result.zip', { type: 'application/zip' })];
+      }
+
       const zipFile = new File([zipBlob], 'temp.zip', { type: 'application/zip' });
       const extractionResult = await zipFileService.extractPdfFiles(zipFile);
       return extractionResult.success ? extractionResult.extractedFiles : [];
@@ -90,32 +104,30 @@ export const useToolResources = () => {
       console.error('useToolResources.extractZipFiles - Error:', error);
       return [];
     }
-  }, []);
+  }, [preferences.autoUnzip, preferences.autoUnzipFileLimit]);
 
-  const extractAllZipFiles = useCallback(async (zipBlob: Blob): Promise<File[]> => {
+  const extractAllZipFiles = useCallback(async (zipBlob: Blob, skipAutoUnzip = false): Promise<File[]> => {
     try {
-      const JSZip = (await import('jszip')).default;
-      const zip = new JSZip();
+      // Check if we should extract based on preferences
+      const shouldExtract = await zipFileService.shouldUnzip(
+        zipBlob,
+        preferences.autoUnzip,
+        preferences.autoUnzipFileLimit,
+        skipAutoUnzip
+      );
 
-      const arrayBuffer = await zipBlob.arrayBuffer();
-      const zipContent = await zip.loadAsync(arrayBuffer);
-
-      const extractedFiles: File[] = [];
-
-      for (const [filename, file] of Object.entries(zipContent.files)) {
-        if (!file.dir) {
-          const content = await file.async('blob');
-          const extractedFile = new File([content], filename, { type: 'application/pdf' });
-          extractedFiles.push(extractedFile);
-        }
+      if (!shouldExtract) {
+        return [new File([zipBlob], 'result.zip', { type: 'application/zip' })];
       }
 
-      return extractedFiles;
+      const zipFile = new File([zipBlob], 'temp.zip', { type: 'application/zip' });
+      const extractionResult = await zipFileService.extractAllFiles(zipFile);
+      return extractionResult.success ? extractionResult.extractedFiles : [];
     } catch (error) {
-      console.error('Error in extractAllZipFiles:', error);
+      console.error('useToolResources.extractAllZipFiles - Error:', error);
       return [];
     }
-  }, []);
+  }, [preferences.autoUnzip, preferences.autoUnzipFileLimit]);
 
   const createDownloadInfo = useCallback(async (
     files: File[],

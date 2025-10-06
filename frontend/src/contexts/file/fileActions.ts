@@ -57,13 +57,13 @@ const addFilesMutex = new SimpleMutex();
 /**
  * Helper to create ProcessedFile metadata structure
  */
-export function createProcessedFile(pageCount: number, thumbnail?: string) {
+export function createProcessedFile(pageCount: number, thumbnail?: string, pageRotations?: number[]) {
   return {
     totalPages: pageCount,
     pages: Array.from({ length: pageCount }, (_, index) => ({
       pageNumber: index + 1,
       thumbnail: index === 0 ? thumbnail : undefined, // Only first page gets thumbnail initially
-      rotation: 0,
+      rotation: pageRotations?.[index] ?? 0,
       splitBefore: false
     })),
     thumbnailUrl: thumbnail,
@@ -82,8 +82,22 @@ export async function generateProcessedFileMetadata(file: File): Promise<Process
   }
 
   try {
-    const result = await generateThumbnailWithMetadata(file);
-      return createProcessedFile(result.pageCount, result.thumbnail);
+    // Generate unrotated thumbnails for PageEditor (rotation applied via CSS)
+    const unrotatedResult = await generateThumbnailWithMetadata(file, false);
+
+    // Generate rotated thumbnail for file manager display
+    const rotatedResult = await generateThumbnailWithMetadata(file, true);
+
+    const processedFile = createProcessedFile(
+      unrotatedResult.pageCount,
+      unrotatedResult.thumbnail, // Page thumbnails (unrotated)
+      unrotatedResult.pageRotations
+    );
+
+    // Use rotated thumbnail for file manager
+    processedFile.thumbnailUrl = rotatedResult.thumbnail;
+
+    return processedFile;
   } catch (error) {
     if (DEBUG) console.warn(`📄 Failed to generate processedFileMetadata for ${file.name}:`, error);
   }
@@ -476,7 +490,6 @@ export async function addStirlingFileStubs(
   await addFilesMutex.lock();
 
   try {
-    if (DEBUG) console.log(`📄 addStirlingFileStubs: Adding ${stirlingFileStubs.length} StirlingFileStubs preserving metadata`);
 
     const existingQuickKeys = buildQuickKeySet(stateRef.current.files.byId);
     const validStubs: StirlingFileStub[] = [];
@@ -515,14 +528,12 @@ export async function addStirlingFileStubs(
                                 record.processedFile.totalPages !== record.processedFile.pages.length;
 
         if (needsProcessing) {
-          if (DEBUG) console.log(`📄 addStirlingFileStubs: Regenerating processedFile for ${record.name}`);
 
           // Use centralized metadata generation function
           const processedFileMetadata = await generateProcessedFileMetadata(stirlingFile);
           if (processedFileMetadata) {
             record.processedFile = processedFileMetadata;
             record.thumbnailUrl = processedFileMetadata.thumbnailUrl; // Update thumbnail if needed
-            if (DEBUG) console.log(`📄 addStirlingFileStubs: Regenerated processedFile for ${record.name} with ${processedFileMetadata.totalPages} pages`);
           } else {
             // Fallback for files that couldn't be processed
             if (DEBUG) console.warn(`📄 addStirlingFileStubs: Failed to regenerate processedFile for ${record.name}`);
@@ -541,7 +552,6 @@ export async function addStirlingFileStubs(
     // Dispatch ADD_FILES action if we have new files
     if (validStubs.length > 0) {
       dispatch({ type: 'ADD_FILES', payload: { stirlingFileStubs: validStubs } });
-      if (DEBUG) console.log(`📄 addStirlingFileStubs: Successfully added ${validStubs.length} files with preserved metadata`);
     }
 
     return loadedFiles;

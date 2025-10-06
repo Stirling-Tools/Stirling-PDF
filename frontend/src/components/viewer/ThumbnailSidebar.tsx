@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Box, ScrollArea } from '@mantine/core';
 import { useViewer } from '../../contexts/ViewerContext';
 
@@ -134,6 +134,7 @@ export function ThumbnailSidebar({ visible, onToggle: _onToggle }: ThumbnailSide
                     {/* Thumbnail Image */}
                     {thumbnails[pageIndex] && thumbnails[pageIndex] !== 'error' ? (
                       <img
+                        className='ph-no-capture'
                         src={thumbnails[pageIndex]}
                         alt={`Page ${pageIndex + 1} thumbnail`}
                         style={{

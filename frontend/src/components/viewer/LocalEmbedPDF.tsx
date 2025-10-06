@@ -24,6 +24,11 @@ import { Rotation } from '@embedpdf/models';
 import { HistoryPluginPackage } from '@embedpdf/plugin-history/react';
 import { AnnotationLayer, AnnotationPluginPackage } from '@embedpdf/plugin-annotation/react';
 import { PdfAnnotationSubtype } from '@embedpdf/models';
+
+// Import annotation plugins
+import { HistoryPluginPackage } from '@embedpdf/plugin-history/react';
+import { AnnotationLayer, AnnotationPluginPackage } from '@embedpdf/plugin-annotation/react';
+import { PdfAnnotationSubtype } from '@embedpdf/models';
 import { CustomSearchLayer } from './CustomSearchLayer';
 import { ZoomAPIBridge } from './ZoomAPIBridge';
 import ToolLoadingFallback from '../tools/ToolLoadingFallback';
@@ -35,6 +40,8 @@ import { SpreadAPIBridge } from './SpreadAPIBridge';
 import { SearchAPIBridge } from './SearchAPIBridge';
 import { ThumbnailAPIBridge } from './ThumbnailAPIBridge';
 import { RotateAPIBridge } from './RotateAPIBridge';
+import { SignatureAPIBridge, SignatureAPI } from './SignatureAPIBridge';
+import { HistoryAPIBridge, HistoryAPI } from './HistoryAPIBridge';
 import { SignatureAPIBridge, SignatureAPI } from './SignatureAPIBridge';
 import { HistoryAPIBridge, HistoryAPI } from './HistoryAPIBridge';
 import { ExportAPIBridge } from './ExportAPIBridge';
@@ -50,6 +57,7 @@ interface LocalEmbedPDFProps {
 
 export function LocalEmbedPDF({ file, url, enableSignature = false, onSignatureAdded, signatureApiRef, historyApiRef }: LocalEmbedPDFProps) {
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [, setAnnotations] = useState<Array<{id: string, pageIndex: number, rect: any}>>([]);
   const [, setAnnotations] = useState<Array<{id: string, pageIndex: number, rect: any}>>([]);
 
   // Convert File to URL if needed
@@ -182,14 +190,17 @@ export function LocalEmbedPDF({ file, url, enableSignature = false, onSignatureA
 
   // Wrap your UI with the <EmbedPDF> provider
   return (
-    <div style={{
-      height: '100%',
-      width: '100%',
-      position: 'relative',
-      overflow: 'hidden',
-      flex: 1,
-      minHeight: 0,
-      minWidth: 0
+    <div
+      className='ph-no-capture'
+
+      style={{
+        height: '100%',
+        width: '100%',
+        position: 'relative',
+        overflow: 'hidden',
+        flex: 1,
+        minHeight: 0,
+        minWidth: 0,
     }}>
       <EmbedPDF
         engine={engine}
@@ -271,7 +282,7 @@ export function LocalEmbedPDF({ file, url, enableSignature = false, onSignatureA
         <GlobalPointerProvider>
           <Viewport
             style={{
-              backgroundColor: 'var(--bg-surface)',
+              backgroundColor: 'var(--bg-background)',
               height: '100%',
               width: '100%',
               maxHeight: '100%',
@@ -296,7 +307,8 @@ export function LocalEmbedPDF({ file, url, enableSignature = false, onSignatureA
                       userSelect: 'none',
                       WebkitUserSelect: 'none',
                       MozUserSelect: 'none',
-                      msUserSelect: 'none'
+                      msUserSelect: 'none',
+                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)'
                     }}
                     draggable={false}
                     onDragStart={(e) => e.preventDefault()}

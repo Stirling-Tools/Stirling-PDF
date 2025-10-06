@@ -1,9 +1,10 @@
 {
-  "unsavedChanges": "You have unsaved changes to your PDF. What would you like to do?",
+  "unsavedChanges": "You have unsaved changes to your PDF.",
+  "areYouSure": "Are you sure you want to leave?",
   "unsavedChangesTitle": "Unsaved Changes",
   "keepWorking": "Keep Working",
-  "discardChanges": "Discard Changes",
-  "applyAndContinue": "Apply & Continue",
+  "discardChanges": "Discard & Leave",
+  "applyAndContinue": "Save & Leave",
   "exportAndContinue": "Export & Continue",
   "language": {
     "direction": "ltr"
@@ -16,16 +17,34 @@
     "selectText": {
       "1": "Select PDF file:",
       "2": "Margin Size",
-      "3": "Position",
+      "3": "Position Selection",
       "4": "Starting Number",
       "5": "Pages to Number",
-      "6": "Custom Text"
+      "6": "Custom Text Format"
     },
     "customTextDesc": "Custom Text",
-    "numberPagesDesc": "Which pages to number, default 'all', also accepts 1-5 or 2,5,9 etc",
-    "customNumberDesc": "Defaults to {n}, also accepts 'Page {n} of {total}', 'Text-{n}', '{filename}-{n}",
-    "submit": "Add Page Numbers"
+    "numberPagesDesc": "e.g., 1,3,5-8 or leave blank for all pages",
+    "customNumberDesc": "e.g., \"Page {n}\" or leave blank for just numbers",
+    "submit": "Add Page Numbers",
+    "configuration": "Configuration",
+    "customize": "Customize Appearance",
+    "pagesAndStarting": "Pages & Starting Number",
+    "positionAndPages": "Position & Pages",
+    "error": {
+      "failed": "Add page numbers operation failed"
+    },
+    "results": {
+      "title": "Page Number Results"
+    },
+    "preview": "Position Selection",
+    "previewDisclaimer": "Preview is approximate. Final output may vary due to PDF font metrics."
   },
+  "pageSelectionPrompt": "Specify which pages to add numbers to. Examples: \"1,3,5\" for specific pages, \"1-5\" for ranges, \"2n\" for even pages, or leave blank for all pages.",
+  "startingNumberTooltip": "The first number to display. Subsequent pages will increment from this number.",
+  "marginTooltip": "Distance between the page number and the edge of the page.",
+  "fontSizeTooltip": "Size of the page number text in points. Larger numbers create bigger text.",
+  "fontTypeTooltip": "Font family for the page numbers. Choose based on your document style.",
+  "customTextTooltip": "Optional custom format for page numbers. Use {n} as placeholder for the number. Example: \"Page {n}\" will show \"Page 1\", \"Page 2\", etc.",
   "pdfPrompt": "Select PDF(s)",
   "multiPdfPrompt": "Select PDFs (2+)",
   "multiPdfDropPrompt": "Select (or drag & drop) all PDFs you require",
@@ -237,6 +256,32 @@
     "cacheInputs": {
       "name": "Save form inputs",
       "help": "Enable to store previously used inputs for future runs"
+    },
+    "general": {
+      "title": "General",
+      "description": "Configure general application preferences.",
+      "autoUnzip": "Auto-unzip API responses",
+      "autoUnzipDescription": "Automatically extract files from ZIP responses",
+      "autoUnzipTooltip": "Automatically extract ZIP files returned from API operations. Disable to keep ZIP files intact. This does not affect automation workflows.",
+      "autoUnzipFileLimit": "Auto-unzip file limit",
+      "autoUnzipFileLimitDescription": "Maximum number of files to extract from ZIP",
+      "autoUnzipFileLimitTooltip": "Only unzip if the ZIP contains this many files or fewer. Set higher to extract larger ZIPs."
+    },
+    "hotkeys": {
+      "title": "Keyboard Shortcuts",
+      "description": "Hover a tool to see its shortcut or customise it below. Click \"Change shortcut\" and press a new key combination. Press Esc to cancel.",
+      "errorModifier": {
+        "mac": "Include ⌘ (Command), ⌥ (Option), or another modifier in your shortcut.",
+        "windows": "Include Ctrl, Alt, or another modifier in your shortcut."
+      },
+      "errorConflict": "Shortcut already used by {{tool}}.",
+      "none": "Not assigned",
+      "customBadge": "Custom",
+      "defaultLabel": "Default: {{shortcut}}",
+      "capturing": "Press keys… (Esc to cancel)",
+      "change": "Change shortcut",
+      "reset": "Reset",
+      "shortcut": "Shortcut"
     }
   },
   "changeCreds": {
@@ -513,7 +558,7 @@
     "adjustContrast": {
       "tags": "contrast,brightness,saturation",
       "title": "Adjust Colours/Contrast",
-      "desc": "Adjust Contrast, Saturation and Brightness of a PDF"
+      "desc": "Adjust Colors/Contrast, Saturation and Brightness of a PDF"
     },
     "crop": {
       "tags": "trim,cut,resize",
@@ -850,6 +895,7 @@
   "rotate": {
     "title": "Rotate PDF",
     "submit": "Apply Rotation",
+    "selectRotation":  "Select Rotation Angle (Clockwise)",
     "error": {
       "failed": "An error occurred while rotating the PDF."
     },
@@ -2756,8 +2802,9 @@
     "submit": "Sanitize PDF"
   },
   "adjustContrast": {
-    "title": "Adjust Contrast",
-    "header": "Adjust Contrast",
+    "title": "Adjust Colors/Contrast",
+    "header": "Adjust Colors/Contrast",
+    "basic": "Basic Adjustments",
     "contrast": "Contrast:",
     "brightness": "Brightness:",
     "saturation": "Saturation:",
@@ -3044,7 +3091,12 @@
     "panMode": "Pan Mode",
     "rotateLeft": "Rotate Left",
     "rotateRight": "Rotate Right",
-    "toggleSidebar": "Toggle Sidebar"
+    "toggleSidebar": "Toggle Sidebar",
+    "exportSelected": "Export Selected Pages",
+    "toggleAnnotations": "Toggle Annotations Visibility",
+    "annotationMode": "Toggle Annotation Mode",
+    "draw": "Draw",
+    "save": "Save"
   },
   "search": {
     "title": "Search PDF",
@@ -3086,6 +3138,7 @@
     "automate": "Automate",
     "files": "Files",
     "activity": "Activity",
+    "account": "Account",
     "config": "Config",
     "allTools": "All Tools"
   },
@@ -3112,6 +3165,9 @@
     "backToTools": "Back to Tools",
     "addFiles": "Add Files",
     "dragFilesInOrClick": "Drag files in or click \"Add Files\" to browse"
+  },
+  "fileEditor": {
+    "addFiles": "Add Files"
   },
   "fileManager": {
     "title": "Upload PDF Files",
@@ -3141,6 +3197,7 @@
     "lastModified": "Last Modified",
     "toolChain": "Tools Applied",
     "restore": "Restore",
+    "unzip": "Unzip",
     "searchFiles": "Search files...",
     "recent": "Recent",
     "localFiles": "Local Files",
@@ -3148,7 +3205,6 @@
     "googleDriveShort": "Drive",
     "myFiles": "My Files",
     "noRecentFiles": "No recent files found",
-    "dropFilesHint": "Drop files here to upload",
     "googleDriveNotAvailable": "Google Drive integration not available",
     "openFiles": "Open Files",
     "openFile": "Open File",

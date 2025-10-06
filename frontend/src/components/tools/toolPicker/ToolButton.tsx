@@ -1,10 +1,14 @@
 import React from "react";
 import { Button } from "@mantine/core";
+import { useTranslation } from "react-i18next";
 import { Tooltip } from "../../shared/Tooltip";
+import { ToolIcon } from "../../shared/ToolIcon";
 import { ToolRegistryEntry } from "../../../data/toolsTaxonomy";
 import { useToolNavigation } from "../../../hooks/useToolNavigation";
 import { handleUnlessSpecialClick } from "../../../utils/clickHandlers";
 import FitText from "../../shared/FitText";
+import { useHotkeys } from "../../../contexts/HotkeyContext";
+import HotkeyDisplay from "../../hotkeys/HotkeyDisplay";
 
 interface ToolButtonProps {
   id: string;
@@ -17,8 +21,11 @@ interface ToolButtonProps {
 }
 
 const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect, disableNavigation = false, matchedSynonym }) => {
+  const { t } = useTranslation();
   // Special case: read and multiTool are navigational tools that are always available
   const isUnavailable = !tool.component && !tool.link && id !== 'read' && id !== 'multiTool';
+  const { hotkeys } = useHotkeys();
+  const binding = hotkeys[id];
   const { getToolNavigation } = useToolNavigation();
 
   const handleClick = (id: string) => {
@@ -37,11 +44,24 @@ const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect,
 
   const tooltipContent = isUnavailable
     ? (<span><strong>Coming soon:</strong> {tool.description}</span>)
-    : tool.description;
+    : (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+        <span>{tool.description}</span>
+        {binding && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem' }}>
+            <span style={{ color: 'var(--mantine-color-dimmed)', fontWeight: 500 }}>{t('settings.hotkeys.shortcut', 'Shortcut')}</span>
+            <HotkeyDisplay binding={binding} />
+          </div>
+        )}
+      </div>
+    );
 
   const buttonContent = (
     <>
-      <div className="tool-button-icon" style={{ color: "var(--tools-text-and-icon-color)", marginRight: "0.5rem", transform: "scale(0.8)", transformOrigin: "center", opacity: isUnavailable ? 0.25 : 1 }}>{tool.icon}</div>
+      <ToolIcon
+        icon={tool.icon}
+        opacity={isUnavailable ? 0.25 : 1}
+      />
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', flex: 1, overflow: 'visible' }}>
         <FitText
           text={tool.name}
@@ -51,9 +71,9 @@ const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect,
           style={{ display: 'inline-block', maxWidth: '100%', opacity: isUnavailable ? 0.25 : 1 }}
         />
         {matchedSynonym && (
-          <span style={{ 
-            fontSize: '0.75rem', 
-            color: 'var(--mantine-color-dimmed)', 
+          <span style={{
+            fontSize: '0.75rem',
+            color: 'var(--mantine-color-dimmed)',
             opacity: isUnavailable ? 0.25 : 1,
             marginTop: '1px',
             overflow: 'visible',

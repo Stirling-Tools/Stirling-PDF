@@ -123,6 +123,15 @@ interface ViewerContextType {
   isThumbnailSidebarVisible: boolean;
   toggleThumbnailSidebar: () => void;
 
+  // Annotation visibility toggle
+  isAnnotationsVisible: boolean;
+  toggleAnnotationsVisibility: () => void;
+
+  // Annotation/drawing mode for viewer
+  isAnnotationMode: boolean;
+  setAnnotationMode: (enabled: boolean) => void;
+  toggleAnnotationMode: () => void;
+
   // State getters - read current state from bridges
   getScrollState: () => ScrollState;
   getZoomState: () => ZoomState;
@@ -208,6 +217,11 @@ interface ViewerProviderProps {
 export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
   // UI state - only state directly managed by this context
   const [isThumbnailSidebarVisible, setIsThumbnailSidebarVisible] = useState(false);
+  const [isAnnotationsVisible, setIsAnnotationsVisible] = useState(true);
+  const [isAnnotationMode, setIsAnnotationModeState] = useState(false);
+
+  // Get current navigation state to check if we're in sign mode
+  useNavigation();
 
   // Get current navigation state to check if we're in sign mode
   useNavigation();
@@ -266,6 +280,18 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
 
   const toggleThumbnailSidebar = () => {
     setIsThumbnailSidebarVisible(prev => !prev);
+  };
+
+  const toggleAnnotationsVisibility = () => {
+    setIsAnnotationsVisible(prev => !prev);
+  };
+
+  const setAnnotationMode = (enabled: boolean) => {
+    setIsAnnotationModeState(enabled);
+  };
+
+  const toggleAnnotationMode = () => {
+    setIsAnnotationModeState(prev => !prev);
   };
 
   // State getters - read from bridge refs
@@ -546,6 +572,13 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     // UI state
     isThumbnailSidebarVisible,
     toggleThumbnailSidebar,
+
+    // Annotation controls
+    isAnnotationsVisible,
+    toggleAnnotationsVisibility,
+    isAnnotationMode,
+    setAnnotationMode,
+    toggleAnnotationMode,
 
     // State getters
     getScrollState,

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from "react-i18next";
 import { Stack, Button, Text, Alert, Tabs } from '@mantine/core';
 import { SignParameters } from "../../../hooks/tools/sign/useSignParameters";
@@ -183,13 +183,21 @@ const SignSettings = ({
           onPenSizeChange={setPenSize}
           onPenSizeInputChange={setPenSizeInput}
           onSignatureDataChange={handleCanvasSignatureChange}
-          onDrawingComplete={() => {
-            // Automatically activate placement mode when drawing is complete
-            if (onActivateSignaturePlacement) {
-              onActivateSignaturePlacement();
-            }
-          }}
           disabled={disabled}
+          additionalButtons={
+            <Button
+              onClick={() => {
+                if (onActivateSignaturePlacement) {
+                  onActivateSignaturePlacement();
+                }
+              }}
+              color="blue"
+              variant="filled"
+              disabled={disabled || !canvasSignatureData}
+            >
+              Update and Place
+            </Button>
+          }
         />
       )}
 
@@ -216,7 +224,7 @@ const SignSettings = ({
       {/* Instructions for placing signature */}
       <Alert color="blue" title={t('sign.instructions.title', 'How to add signature')}>
         <Text size="sm">
-          {parameters.signatureType === 'canvas' && 'After drawing your signature in the canvas above, click anywhere on the PDF to place it.'}
+          {parameters.signatureType === 'canvas' && 'After drawing your signature in the canvas above, click "Update and Place" then click anywhere on the PDF to place it.'}
           {parameters.signatureType === 'image' && 'After uploading your signature image above, click anywhere on the PDF to place it.'}
           {parameters.signatureType === 'text' && 'After entering your name above, click anywhere on the PDF to place your signature.'}
         </Text>
