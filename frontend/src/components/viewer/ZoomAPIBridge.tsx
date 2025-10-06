@@ -12,30 +12,42 @@ export function ZoomAPIBridge() {
 
   // Set initial zoom once when plugin is ready
   useEffect(() => {
-    if (zoom && !hasSetInitialZoom.current) {
-      hasSetInitialZoom.current = true;
-      setTimeout(() => {
-        try {
-          zoom.requestZoom(1.4);
-        } catch (error) {
-          console.log('Zoom initialization delayed, viewport not ready:', error);
-          // Retry after a longer delay
-          setTimeout(() => {
-            try {
-              zoom.requestZoom(1.4);
-            } catch (retryError) {
-              console.log('Zoom initialization failed:', retryError);
-            }
-          }, 200);
-        }
-      }, 50);
+    if (!zoom || hasSetInitialZoom.current) {
+      return;
     }
-  }, [zoom]);
+
+    let retryTimer: ReturnType<typeof setTimeout> | undefined;
+    const attemptInitialZoom = () => {
+      try {
+        zoom.requestZoom(1.4);
+        hasSetInitialZoom.current = true;
+      } catch (error) {
+        console.log('Zoom initialization delayed, viewport not ready:', error);
+        retryTimer = setTimeout(() => {
+          try {
+            zoom.requestZoom(1.4);
+            hasSetInitialZoom.current = true;
+          } catch (retryError) {
+            console.log('Zoom initialization failed:', retryError);
+          }
+        }, 200);
+      }
+    };
+
+    const timer = setTimeout(attemptInitialZoom, 50);
+
+    return () => {
+      clearTimeout(timer);
+      if (retryTimer) {
+        clearTimeout(retryTimer);
+      }
+    };
+  }, [zoom, zoomState]);
 
   useEffect(() => {
     if (zoom && zoomState) {
       // Update local state
-      const currentZoomLevel = zoomState.currentZoomLevel || 1.4;
+      const currentZoomLevel = zoomState.currentZoomLevel ?? 1.4;
       const newState = {
         currentZoom: currentZoomLevel,
         zoomPercent: Math.round(currentZoomLevel * 100),
