@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { type OverlayPdfsParameters, type OverlayMode } from '../../../hooks/tools/overlayPdfs/useOverlayPdfsParameters';
 import LocalIcon from '../../shared/LocalIcon';
 import { useFilesModalContext } from '../../../contexts/FilesModalContext';
+import styles from './OverlayPdfsSettings.module.css';
 
 interface OverlayPdfsSettingsProps {
   parameters: OverlayPdfsParameters;
@@ -82,7 +83,7 @@ export default function OverlayPdfsSettings({ parameters, onParameterChange, dis
               <Stack gap="xs">
                 {parameters.overlayFiles.map((_, index) => (
                   <Group key={index} gap="xs" wrap="nowrap">
-                    <Text size="sm" style={{ width: 140, flexShrink: 0 }}>
+                    <Text size="sm" className={styles.countLabel}>
                       {t('overlay-pdfs.counts.item', 'Count for file')} {index + 1}
                     </Text>
                     <NumberInput
@@ -126,52 +127,26 @@ export default function OverlayPdfsSettings({ parameters, onParameterChange, dis
         </Button>
 
         {parameters.overlayFiles?.length > 0 && (() => {
-          const FILE_ROW_REM = 2.5; 
-          const VISIBLE_ROWS = 6.5;
-          const maxHeightRem = Math.round(FILE_ROW_REM * VISIBLE_ROWS * 4) / 4; 
-
           return (
-            <div
-              style={{
-                maxHeight: `${maxHeightRem}rem`,
-                overflowY: 'auto',
-                overflowX: 'hidden',
-                width: '100%'
-              }}
-           >
+            <div className={styles.fileListContainer}>
               <Stack gap="xs">
                 {parameters.overlayFiles.map((file, index) => (
                   <Group
                     key={index}
                     justify="space-between"
                     p="xs"
-                    style={{
-                      border: '1px solid var(--mantine-color-gray-3)',
-                      borderRadius: 'var(--mantine-radius-sm)',
-                      alignItems: 'center',
-                      width: '100%'
-                    }}
+                    className={styles.fileItem}
                   >
-                    <Group gap="xs" style={{ flex: 1, minWidth: 0, alignItems: 'center' }}>
-                      <div style={{ flex: 1, minWidth: 0 }}>
+                    <Group gap="xs" className={styles.fileGroup}>
+                      <div className={styles.fileNameContainer}>
                         <div
-                          style={{
-                            fontSize: 'var(--mantine-font-size-sm)',
-                            fontWeight: 400,
-                            lineHeight: 1.2,
-                            display: '-webkit-box',
-                            WebkitLineClamp: 1 as any,
-                            WebkitBoxOrient: 'vertical' as any,
-                            overflow: 'hidden',
-                            whiteSpace: 'normal',
-                            wordBreak: 'break-word'
-                          }}
+                          className={styles.fileName}
                           title={file.name}
                         >
                           {file.name}
                         </div>
                       </div>
-                      <Text size="xs" c="dimmed" style={{ flexShrink: 0 }}>
+                      <Text size="xs" c="dimmed" className={styles.fileSize}>
                         ({(file.size / 1024).toFixed(1)} KB)
                       </Text>
                     </Group>
@@ -179,7 +154,7 @@ export default function OverlayPdfsSettings({ parameters, onParameterChange, dis
                       size="sm"
                       variant="subtle"
                       color="red"
-                      style={{ flexShrink: 0 }}
+                      className={styles.removeButton}
                       onClick={() => {
                         const next = (parameters.overlayFiles || []).filter((_, i) => i !== index);
                         handleOverlayFilesChange(next);
