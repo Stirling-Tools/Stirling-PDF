@@ -622,7 +622,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const undoBtn = document.getElementById("undoBtn");
 
   function saveBookmarkState() {
-    previousBookmarks = [...bookmarks];
+    previousBookmarks = JSON.parse(JSON.stringify(bookmarks));
     undoBtn.disabled = false;
   }
 
