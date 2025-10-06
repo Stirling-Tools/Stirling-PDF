@@ -26,6 +26,7 @@ IMAGE_SAMPLE_FILE = "docs/stirling.png"
 MARKDOWN_SAMPLE_FILE = "testing/samples/sample.md"
 CBZ_SAMPLE_FILE = "testing/samples/sample.cbz"
 CBR_SAMPLE_FILE = "testing/samples/sample.cbr"
+CHAPTERED_PDF_SAMPLE_FILE = "testing/samples/split_pdf_by_chapters_sample.pdf"
 CERT_SAMPLE_FILE = "app/core/src/test/resources/certs/test-cert.pem"
 PKCS12_SAMPLE_FILE = "app/core/src/test/resources/certs/test-cert.p12"
 DEFAULT_SPEC_ENDPOINT = "/v1/api-docs"
@@ -643,6 +644,9 @@ class SwaggerTester:
         #     or (content_type and ("cbr" in content_type or "rar" in content_type))
         # ):
         #     return self._open_file(CBR_SAMPLE_FILE, "application/x-cbr")
+
+        if "split-pdf-by-chapters" in path_lower:
+            return self._open_file(CHAPTERED_PDF_SAMPLE_FILE, "application/pdf")
 
         if (
             "cert" in name_lower
