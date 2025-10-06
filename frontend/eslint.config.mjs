@@ -1,8 +1,17 @@
 // @ts-check
 
 import eslint from '@eslint/js';
+import globals from "globals";
 import { defineConfig } from 'eslint/config';
 import tseslint from 'typescript-eslint';
+
+const srcGlobs = [
+  'src/**/*.{js,mjs,jsx,ts,tsx}',
+];
+const nodeGlobs = [
+  'scripts/**/*.{js,ts,mjs}',
+  '*.config.{js,ts,mjs}',
+];
 
 export default defineConfig(
   eslint.configs.recommended,
@@ -15,7 +24,6 @@ export default defineConfig(
   },
   {
     rules: {
-      "no-undef": "off", // Temporarily disabled until codebase conformant
       "@typescript-eslint/no-empty-object-type": [
         "error",
         {
@@ -38,5 +46,23 @@ export default defineConfig(
         },
       ],
     },
-  }
+  },
+  // Config for browser scripts
+  {
+    files: srcGlobs,
+    languageOptions: {
+      globals: {
+        ...globals.browser,
+      }
+    }
+  },
+  // Config for node scripts
+  {
+    files: nodeGlobs,
+    languageOptions: {
+      globals: {
+        ...globals.node,
+      }
+    }
+  },
 );
