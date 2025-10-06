@@ -34,9 +34,9 @@
 .header {
   height: 2.25rem;
   border-radius: 0.0625rem 0.0625rem 0 0;
-  display: grid;
-  grid-template-columns: 44px 1fr 44px;
+  display: flex;
   align-items: center;
+  justify-content: space-between;
   padding: 0 6px;
   user-select: none;
   background: var(--bg-toolbar);
@@ -86,14 +86,23 @@
 }
 
 .headerIndex {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
   text-align: center;
   font-weight: 500;
   font-size: 18px;
   letter-spacing: 0.04em;
 }
 
-.kebab {
-  justify-self: end;
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.headerIconButton {
   color: #FFFFFF !important;
 }
 

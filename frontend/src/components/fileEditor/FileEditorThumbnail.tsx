@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef, useMemo, useEffect } from 'react';
-import { Text, ActionIcon, CheckboxIndicator } from '@mantine/core';
+import { Text, ActionIcon, CheckboxIndicator, Tooltip } from '@mantine/core';
 import { alert } from '../toast';
 import { useTranslation } from 'react-i18next';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
@@ -258,18 +258,60 @@ const FileEditorThumbnail = ({
           {index + 1}
         </div>
 
-        {/* Kebab menu */}
-        <ActionIcon
-          aria-label={t('moreOptions', 'More options')}
-          variant="subtle"
-          className={styles.kebab}
-          onClick={(e) => {
-            e.stopPropagation();
-            setShowActions((v) => !v);
-          }}
-        >
-          <MoreVertIcon fontSize="small" />
-        </ActionIcon>
+        {/* Action buttons group */}
+        <div className={styles.headerActions}>
+          {/* Pin/Unpin icon */}
+          <Tooltip label={isPinned ? t('unpin', 'Unpin') : t('pin', 'Pin')}>
+            <ActionIcon
+              aria-label={isPinned ? t('unpin', 'Unpin') : t('pin', 'Pin')}
+              variant="subtle"
+              className={styles.headerIconButton}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (actualFile) {
+                  if (isPinned) {
+                    unpinFile(actualFile);
+                    alert({ alertType: 'neutral', title: `Unpinned ${file.name}`, expandable: false, durationMs: 3000 });
+                  } else {
+                    pinFile(actualFile);
+                    alert({ alertType: 'success', title: `Pinned ${file.name}`, expandable: false, durationMs: 3000 });
+                  }
+                }
+              }}
+            >
+              {isPinned ? <PushPinIcon fontSize="small" /> : <PushPinOutlinedIcon fontSize="small" />}
+            </ActionIcon>
+          </Tooltip>
+
+          {/* Download icon */}
+          <Tooltip label={t('download', 'Download')}>
+            <ActionIcon
+              aria-label={t('download', 'Download')}
+              variant="subtle"
+              className={styles.headerIconButton}
+              onClick={(e) => {
+                e.stopPropagation();
+                onDownloadFile(file.id);
+                alert({ alertType: 'success', title: `Downloading ${file.name}`, expandable: false, durationMs: 2500 });
+              }}
+            >
+              <DownloadOutlinedIcon fontSize="small" />
+            </ActionIcon>
+          </Tooltip>
+
+          {/* Kebab menu */}
+          <ActionIcon
+            aria-label={t('moreOptions', 'More options')}
+            variant="subtle"
+            className={styles.headerIconButton}
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowActions((v) => !v);
+            }}
+          >
+            <MoreVertIcon fontSize="small" />
+          </ActionIcon>
+        </div>
       </div>
 
       {/* Actions overlay */}
