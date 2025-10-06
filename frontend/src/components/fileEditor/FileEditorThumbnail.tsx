@@ -436,13 +436,6 @@ const FileEditorThumbnail = ({
           )}
         </div>
 
-        {/* Pin indicator (bottom-left) */}
-        {isPinned && (
-          <span className={styles.pinIndicator} aria-hidden>
-            <PushPinIcon fontSize="small" />
-          </span>
-        )}
-
         {/* Drag handle (span wrapper so we can attach a ref reliably) */}
         <span ref={handleRef} className={styles.dragHandle} aria-hidden>
           <DragIndicatorIcon fontSize="small" />
