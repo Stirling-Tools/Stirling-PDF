@@ -315,7 +315,7 @@ public class FormUtils {
         }
     }
 
-    String filterSingleChoiceSelection(
+    public String filterSingleChoiceSelection(
             String selection, List<String> allowedOptions, String fieldName) {
         if (selection == null || selection.trim().isEmpty()) return null;
         List<String> filtered =
