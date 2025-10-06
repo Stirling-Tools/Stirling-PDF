@@ -32,6 +32,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
+      - name: Set up Java 17
+        uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165 # v5.0.0
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@748248ddd2a24f49513d8f472f81c3a07d4d50e1 # v4.4.4
+
       - name: Set up Python
         uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
         with:
@@ -40,25 +49,28 @@ jobs:
       - name: Install Python dependencies
         run: pip install --upgrade pip requests
 
-      - name: Build Stirling PDF fat Docker image
-        run: |
-          docker build \
-            --file Dockerfile.fat \
-            --build-arg VERSION_TAG=${{ github.sha }} \
-            --tag stirling-pdf-fat \
-            .
+      - name: Build Stirling PDF application
+        run: ./gradlew :stirling-pdf:bootJar
+        env:
+          DISABLE_ADDITIONAL_FEATURES: "false"
 
-      - name: Start Stirling PDF (Docker fat)
+      - name: Locate application jar
         run: |
-          docker run -d \
-            --name stirling-pdf-fat \
-            -e DISABLE_ADDITIONAL_FEATURES=false \
-            -p 8080:8080 \
-            stirling-pdf-fat
+          JAR_PATH=$(ls app/core/build/libs/stirling-pdf-*.jar | head -n 1)
+          if [ -z "$JAR_PATH" ]; then
+            echo "Unable to find built jar" >&2
+            exit 1
+          fi
+          echo "JAR_PATH=$JAR_PATH" >> $GITHUB_ENV
+
+      - name: Start Stirling PDF
+        run: |
+          java -jar "$JAR_PATH" > server.log 2>&1 &
+          echo $! > server.pid
 
       - name: Wait for application to be ready
         run: |
-          for attempt in $(seq 1 40); do
+          for attempt in $(seq 1 30); do
             status=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/v1/api-docs || true)
             if [ "$status" != "000" ] && [ "$status" -lt 500 ]; then
               exit 0
@@ -66,22 +78,18 @@ jobs:
             sleep 5
           done
           echo "Application did not become ready in time" >&2
-          docker logs stirling-pdf-fat || true
+          cat server.log || true
           exit 1
 
       - name: Run Swagger endpoint tests
         run: python testing/swagger_endpoint_test.py --base-url http://localhost:8080
 
-      - name: Collect server logs
+      - name: Stop Stirling PDF
         if: always()
         run: |
-          docker logs stirling-pdf-fat > server.log 2>&1 || true
-
-      - name: Stop and remove Stirling PDF container
-        if: always()
-        run: |
-          docker stop stirling-pdf-fat || true
-          docker rm stirling-pdf-fat || true
+          if [ -f server.pid ]; then
+            kill $(cat server.pid) || true
+          fi
 
       - name: Upload server logs
         if: failure()
