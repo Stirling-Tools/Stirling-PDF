@@ -50,6 +50,14 @@ const nodeGlobs = [
 
 const __dirname = fileURLToPath(new URL('./', import.meta.url));
 
+const srcGlobs = [
+  'src/**/*.{js,mjs,jsx,ts,tsx}',
+];
+const nodeGlobs = [
+  'scripts/**/*.{js,ts,mjs}',
+  '*.config.{js,ts,mjs}',
+];
+
 export default defineConfig(
   { ignores: ignorePatterns },
 
@@ -224,5 +232,5 @@ export default defineConfig(
       'react/jsx-uses-react': 'error',
       'react/jsx-uses-vars': 'error',
     }
-  }
+  },
 );
