@@ -1,4 +1,7 @@
 import JSZip, { JSZipObject } from 'jszip';
+import { StirlingFileStub, createStirlingFile } from '../types/fileContext';
+import { generateThumbnailForFile } from '../utils/thumbnailUtils';
+import { fileStorage } from './fileStorage';
 
 // Undocumented interface in JSZip for JSZipObject._data
 interface CompressedObject {
@@ -40,6 +43,15 @@ export class ZipFileService {
   private readonly maxFileSize = 100 * 1024 * 1024; // 100MB per file
   private readonly maxTotalSize = 500 * 1024 * 1024; // 500MB total extraction limit
   private readonly supportedExtensions = ['.pdf'];
+
+  // ZIP file validation constants
+  private static readonly VALID_ZIP_TYPES = [
+    'application/zip',
+    'application/x-zip-compressed',
+    'application/x-zip',
+    'application/octet-stream' // Some browsers use this for ZIP files
+  ];
+  private static readonly VALID_ZIP_EXTENSIONS = ['.zip'];
 
   /**
    * Validate a ZIP file without extracting it
@@ -238,18 +250,22 @@ export class ZipFileService {
   /**
    * Check if a file is a ZIP file based on type and extension
    */
-  private isZipFile(file: File): boolean {
-    const validTypes = [
-      'application/zip',
-      'application/x-zip-compressed',
-      'application/x-zip',
-      'application/octet-stream' // Some browsers use this for ZIP files
-    ];
-
-    const validExtensions = ['.zip'];
-    const hasValidType = validTypes.includes(file.type);
-    const hasValidExtension = validExtensions.some(ext =>
+  public isZipFile(file: File): boolean {
+    const hasValidType = ZipFileService.VALID_ZIP_TYPES.includes(file.type);
+    const hasValidExtension = ZipFileService.VALID_ZIP_EXTENSIONS.some(ext =>
       file.name.toLowerCase().endsWith(ext)
+    );
+
+    return hasValidType || hasValidExtension;
+  }
+
+  /**
+   * Check if a StirlingFileStub represents a ZIP file (for UI checks without loading full file)
+   */
+  public isZipFileStub(stub: StirlingFileStub): boolean {
+    const hasValidType = stub.type && ZipFileService.VALID_ZIP_TYPES.includes(stub.type);
+    const hasValidExtension = ZipFileService.VALID_ZIP_EXTENSIONS.some(ext =>
+      stub.name.toLowerCase().endsWith(ext)
     );
 
     return hasValidType || hasValidExtension;
@@ -309,33 +325,44 @@ export class ZipFileService {
   }
 
   /**
-   * Get file extension from filename
+   * Determine if a ZIP file should be extracted based on user preferences
+   *
+   * @param zipBlob - The ZIP file to check
+   * @param autoUnzip - User preference for auto-unzipping
+   * @param autoUnzipFileLimit - Maximum number of files to auto-extract
+   * @param skipAutoUnzip - Bypass preference check (for automation)
+   * @returns true if the ZIP should be extracted, false otherwise
    */
-  private getFileExtension(filename: string): string {
-    return filename.substring(filename.lastIndexOf('.')).toLowerCase();
-  }
-
-  /**
-   * Check if ZIP file contains password protection
-   */
-  private async isPasswordProtected(file: File): Promise<boolean> {
+  async shouldUnzip(
+    zipBlob: Blob | File,
+    autoUnzip: boolean,
+    autoUnzipFileLimit: number,
+    skipAutoUnzip: boolean = false
+  ): Promise<boolean> {
     try {
-      const zip = new JSZip();
-      await zip.loadAsync(file);
-
-      // Check if any files are encrypted
-      for (const [_filename, zipEntry] of Object.entries(zip.files)) {
-        if (zipEntry.options?.compression === 'STORE' && getData(zipEntry)?.compressedSize === 0) {
-          // This might indicate encryption, but JSZip doesn't provide direct encryption detection
-          // We'll handle this in the extraction phase
-        }
+      // Automation always extracts
+      if (skipAutoUnzip) {
+        return true;
       }
 
-      return false; // JSZip will throw an error if password is required
+      // Check if auto-unzip is enabled
+      if (!autoUnzip) {
+        return false;
+      }
+
+      // Load ZIP and count files
+      const zip = new JSZip();
+      const zipContents = await zip.loadAsync(zipBlob);
+
+      // Count non-directory entries
+      const fileCount = Object.values(zipContents.files).filter(entry => !entry.dir).length;
+
+      // Only extract if within limit
+      return fileCount <= autoUnzipFileLimit;
     } catch (error) {
-      // If we can't load the ZIP, it might be password protected
-      const errorMessage = error instanceof Error ? error.message : '';
-      return errorMessage.includes('password') || errorMessage.includes('encrypted');
+      console.error('Error checking shouldUnzip:', error);
+      // On error, default to not extracting (safer)
+      return false;
     }
   }
 
@@ -456,6 +483,79 @@ export class ZipFileService {
     };
 
     return mimeTypes[ext || ''] || 'application/octet-stream';
+  }
+
+  /**
+   * Extract PDF files from ZIP and store them in IndexedDB with preserved history metadata
+   * Used by both FileManager and FileEditor to avoid code duplication
+   *
+   * @param zipFile - The ZIP file to extract from
+   * @param zipStub - The StirlingFileStub for the ZIP (contains metadata to preserve)
+   * @returns Object with success status, extracted stubs, and any errors
+   */
+  async extractAndStoreFilesWithHistory(
+    zipFile: File,
+    zipStub: StirlingFileStub
+  ): Promise<{ success: boolean; extractedStubs: StirlingFileStub[]; errors: string[] }> {
+    const result = {
+      success: false,
+      extractedStubs: [] as StirlingFileStub[],
+      errors: [] as string[]
+    };
+
+    try {
+      // Extract PDF files from ZIP
+      const extractionResult = await this.extractPdfFiles(zipFile);
+
+      if (!extractionResult.success || extractionResult.extractedFiles.length === 0) {
+        result.errors = extractionResult.errors;
+        return result;
+      }
+
+      // Process each extracted file
+      for (const extractedFile of extractionResult.extractedFiles) {
+        try {
+          // Generate thumbnail
+          const thumbnail = await generateThumbnailForFile(extractedFile);
+
+          // Create StirlingFile
+          const newStirlingFile = createStirlingFile(extractedFile);
+
+          // Create StirlingFileStub with ZIP's history metadata
+          const stub: StirlingFileStub = {
+            id: newStirlingFile.fileId,
+            name: extractedFile.name,
+            size: extractedFile.size,
+            type: extractedFile.type,
+            lastModified: extractedFile.lastModified,
+            quickKey: newStirlingFile.quickKey,
+            createdAt: Date.now(),
+            isLeaf: true,
+            // Preserve ZIP's history - unzipping is NOT a tool operation
+            originalFileId: zipStub.originalFileId,
+            parentFileId: zipStub.parentFileId,
+            versionNumber: zipStub.versionNumber,
+            toolHistory: zipStub.toolHistory || [],
+            thumbnailUrl: thumbnail
+          };
+
+          // Store in IndexedDB
+          await fileStorage.storeStirlingFile(newStirlingFile, stub);
+
+          result.extractedStubs.push(stub);
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+          result.errors.push(`Failed to process "${extractedFile.name}": ${errorMessage}`);
+        }
+      }
+
+      result.success = result.extractedStubs.length > 0;
+      return result;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      result.errors.push(`Failed to extract ZIP file: ${errorMessage}`);
+      return result;
+    }
   }
 }
 
