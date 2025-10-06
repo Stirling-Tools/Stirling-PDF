@@ -33,7 +33,7 @@ const LegacyToolList = ({
 }: LegacyToolListProps) => {
   const { t } = useTranslation();
   const { hotkeys } = useHotkeys();
-  const { toolRegistry, recentTools, favoriteTools, toggleFavorite, isFavorite } = useToolWorkflow();
+  const { toolRegistry, recentTools, favoriteTools, toggleFavorite, isFavorite, legacyToolSettings } = useToolWorkflow();
 
   const { sections, searchGroups } = useToolSections(filteredTools, searchQuery);
 
@@ -85,6 +85,38 @@ const LegacyToolList = ({
     ? 'tool-panel__legacy-groups tool-panel__legacy-groups--detailed'
     : 'tool-panel__legacy-groups tool-panel__legacy-groups--compact';
 
+  const getItemClasses = (isDetailed: boolean) => {
+    const base = isDetailed ? 'tool-panel__legacy-item--detailed' : '';
+    const border = legacyToolSettings.toolItemBorder === 'hidden' ? 'tool-panel__legacy-item--no-border' : '';
+    const hover = `tool-panel__legacy-item--hover-${legacyToolSettings.hoverIntensity}`;
+    return [base, border, hover].filter(Boolean).join(' ');
+  };
+
+  const getIconBackground = (categoryColor: string, isDetailed: boolean) => {
+    if (legacyToolSettings.iconBackground === 'none' || legacyToolSettings.iconBackground === 'hover') {
+      return 'transparent';
+    }
+
+    const baseColor = isDetailed ? 'var(--legacy-bg-icon-detailed)' : 'var(--legacy-bg-icon-compact)';
+    const blend1 = isDetailed ? '18%' : '15%';
+    const blend2 = isDetailed ? '8%' : '6%';
+
+    return `linear-gradient(135deg,
+      color-mix(in srgb, ${categoryColor} ${blend1}, ${baseColor}),
+      color-mix(in srgb, ${categoryColor} ${blend2}, ${baseColor})
+    )`;
+  };
+
+  const getIconStyle = () => {
+    if (legacyToolSettings.iconColorScheme === 'monochrome') {
+      return { filter: 'grayscale(1) opacity(0.8)' };
+    }
+    if (legacyToolSettings.iconColorScheme === 'vibrant') {
+      return { filter: 'saturate(1.5) brightness(1.1)' };
+    }
+    return {};
+  };
+
   // Helper function to render a tool item
   const renderToolItem = (id: string, tool: ToolRegistryEntry) => {
     const matchedText = matchedTextMap.get(id);
@@ -123,25 +155,37 @@ const LegacyToolList = ({
 
     // Detailed view
     if (showDescriptions) {
+      const iconBg = getIconBackground(categoryColor, true);
+      const iconClasses = legacyToolSettings.iconBackground === 'hover'
+        ? 'tool-panel__legacy-icon tool-panel__legacy-icon--hover-bg'
+        : 'tool-panel__legacy-icon';
+
+      const hoverBgDetailed = legacyToolSettings.iconBackground === 'hover'
+        ? `linear-gradient(135deg,
+            color-mix(in srgb, ${categoryColor} 18%, var(--legacy-bg-icon-detailed)),
+            color-mix(in srgb, ${categoryColor} 8%, var(--legacy-bg-icon-detailed))
+          )`
+        : undefined;
+
       return (
         <button
           key={id}
           type="button"
-          className={`tool-panel__legacy-item tool-panel__legacy-item--detailed ${isSelected ? 'tool-panel__legacy-item--selected' : ''} tool-panel__legacy-item--with-star`}
+          className={`tool-panel__legacy-item ${getItemClasses(true)} ${isSelected ? 'tool-panel__legacy-item--selected' : ''} tool-panel__legacy-item--with-star`}
           onClick={handleClick}
           aria-disabled={isDisabled}
           disabled={isDisabled}
+          style={{
+            ['--legacy-icon-hover-bg' as any]: hoverBgDetailed,
+          }}
         >
           {tool.icon ? (
             <span
-              className="tool-panel__legacy-icon"
+              className={iconClasses}
               aria-hidden
               style={{
-                background: `linear-gradient(135deg,
-                  color-mix(in srgb, ${categoryColor} 18%, var(--legacy-bg-icon-detailed)),
-                  color-mix(in srgb, ${categoryColor} 8%, var(--legacy-bg-icon-detailed))
-                )`,
-                color: categoryColor
+                background: iconBg,
+                ...getIconStyle(),
               }}
             >
               {iconNode}
@@ -189,25 +233,37 @@ const LegacyToolList = ({
     }
 
     // Compact view
+    const iconBg = getIconBackground(categoryColor, false);
+    const iconClasses = legacyToolSettings.iconBackground === 'hover'
+      ? 'tool-panel__legacy-list-icon tool-panel__legacy-list-icon--hover-bg'
+      : 'tool-panel__legacy-list-icon';
+
+    const hoverBgCompact = legacyToolSettings.iconBackground === 'hover'
+      ? `linear-gradient(135deg,
+          color-mix(in srgb, ${categoryColor} 15%, var(--legacy-bg-icon-compact)),
+          color-mix(in srgb, ${categoryColor} 6%, var(--legacy-bg-icon-compact))
+        )`
+      : undefined;
+
     const compactButton = (
       <button
         key={id}
         type="button"
-        className={`tool-panel__legacy-list-item ${isSelected ? 'tool-panel__legacy-list-item--selected' : ''} ${!isDisabled ? 'tool-panel__legacy-list-item--with-star' : ''}`}
+        className={`tool-panel__legacy-list-item ${getItemClasses(false)} ${isSelected ? 'tool-panel__legacy-list-item--selected' : ''} ${!isDisabled ? 'tool-panel__legacy-list-item--with-star' : ''}`}
         onClick={handleClick}
         aria-disabled={isDisabled}
         disabled={isDisabled}
+        style={{
+          ['--legacy-icon-hover-bg' as any]: hoverBgCompact,
+        }}
       >
         {tool.icon ? (
           <span
-            className="tool-panel__legacy-list-icon"
+            className={iconClasses}
             aria-hidden
             style={{
-              background: `linear-gradient(135deg,
-                color-mix(in srgb, ${categoryColor} 15%, var(--legacy-bg-icon-compact)),
-                color-mix(in srgb, ${categoryColor} 6%, var(--legacy-bg-icon-compact))
-              )`,
-              color: categoryColor
+              background: iconBg,
+              ...getIconStyle(),
             }}
           >
             {iconNode}
@@ -278,14 +334,25 @@ const LegacyToolList = ({
             <section className="tool-panel__legacy-group tool-panel__legacy-group--special">
               <header className="tool-panel__legacy-section-header">
                 <div className="tool-panel__legacy-section-title">
-                  <span className="tool-panel__legacy-section-icon" style={{ color: '#FFC107' }} aria-hidden>
+                  <span
+                    className="tool-panel__legacy-section-icon"
+                    style={{
+                      color: legacyToolSettings.headerIconColor === 'colored' ? '#FFC107' : 'var(--mantine-color-dimmed)',
+                      ...getIconStyle(),
+                    }}
+                    aria-hidden
+                  >
                     <StarRoundedIcon />
                   </span>
                   <Text size="sm" fw={600} tt="uppercase" lts={0.5} c="dimmed">
                     {t('toolPanel.legacy.favorites', 'Favourites')}
                   </Text>
                 </div>
-                <Badge size="sm" variant="light" color="yellow">
+                <Badge
+                  size="sm"
+                  variant="light"
+                  color={legacyToolSettings.headerBadgeColor === 'colored' ? 'yellow' : 'gray'}
+                >
                   {favoriteToolItems.length}
                 </Badge>
               </header>
@@ -305,14 +372,25 @@ const LegacyToolList = ({
             <section className="tool-panel__legacy-group tool-panel__legacy-group--special">
               <header className="tool-panel__legacy-section-header">
                 <div className="tool-panel__legacy-section-title">
-                  <span className="tool-panel__legacy-section-icon" style={{ color: '#1BB1D4' }} aria-hidden>
+                  <span
+                    className="tool-panel__legacy-section-icon"
+                    style={{
+                      color: legacyToolSettings.headerIconColor === 'colored' ? '#1BB1D4' : 'var(--mantine-color-dimmed)',
+                      ...getIconStyle(),
+                    }}
+                    aria-hidden
+                  >
                     <HistoryRoundedIcon />
                   </span>
                   <Text size="sm" fw={600} tt="uppercase" lts={0.5} c="dimmed">
                     {t('toolPanel.legacy.recent', 'Recently used')}
                   </Text>
                 </div>
-                <Badge size="sm" variant="light" color="cyan">
+                <Badge
+                  size="sm"
+                  variant="light"
+                  color={legacyToolSettings.headerBadgeColor === 'colored' ? 'cyan' : 'gray'}
+                >
                   {recentToolItems.length}
                 </Badge>
               </header>
@@ -345,20 +423,37 @@ const LegacyToolList = ({
               <div className="tool-panel__legacy-section-title">
                 <span
                   className="tool-panel__legacy-section-icon"
-                  style={{ color: categoryColor }}
+                  style={{
+                    color: legacyToolSettings.sectionTitleColor === 'colored' ? categoryColor : 'var(--mantine-color-dimmed)',
+                    ...getIconStyle(),
+                  }}
                   aria-hidden
                 >
                   {getSubcategoryIcon(subcategoryId)}
                 </span>
-                <Text size="sm" fw={600} tt="uppercase" lts={0.5} style={{ color: categoryColor }}>
+                <Text
+                  size="sm"
+                  fw={600}
+                  tt="uppercase"
+                  lts={0.5}
+                  style={{
+                    color: legacyToolSettings.sectionTitleColor === 'colored' ? categoryColor : undefined,
+                  }}
+                  c={legacyToolSettings.sectionTitleColor === 'neutral' ? 'dimmed' : undefined}
+                >
                   {getSubcategoryLabel(t, subcategoryId)}
                 </Text>
               </div>
-              <Badge size="sm" variant="light" style={{
-                backgroundColor: `color-mix(in srgb, ${categoryColor} 15%, transparent)`,
-                color: categoryColor,
-                borderColor: `color-mix(in srgb, ${categoryColor} 30%, transparent)`
-              }}>
+              <Badge
+                size="sm"
+                variant="light"
+                style={legacyToolSettings.sectionTitleColor === 'colored' ? {
+                  backgroundColor: `color-mix(in srgb, ${categoryColor} 15%, transparent)`,
+                  color: categoryColor,
+                  borderColor: `color-mix(in srgb, ${categoryColor} 30%, transparent)`
+                } : undefined}
+                color={legacyToolSettings.sectionTitleColor === 'neutral' ? 'gray' : undefined}
+              >
                 {tools.length}
               </Badge>
             </header>

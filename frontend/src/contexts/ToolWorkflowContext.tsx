@@ -13,6 +13,7 @@ import { useNavigationUrlSync } from '../hooks/useUrlSync';
 import { getDefaultWorkbench } from '../types/workbench';
 import { filterToolRegistryByQuery } from '../utils/toolSearch';
 import { useToolHistory } from '../hooks/tools/useToolHistory';
+import { LegacyToolStyleSettings, defaultLegacyToolSettings } from '../components/tools/LegacyToolSettings';
 
 // State interface
 type ToolPanelMode = 'sidebar' | 'legacy';
@@ -23,6 +24,7 @@ interface ToolWorkflowState {
   leftPanelView: 'toolPicker' | 'toolContent' | 'hidden';
   readerMode: boolean;
   toolPanelMode: ToolPanelMode;
+  legacyToolSettings: LegacyToolStyleSettings;
 
   // File/Preview State
   previewFile: File | null;
@@ -38,6 +40,7 @@ type ToolWorkflowAction =
   | { type: 'SET_LEFT_PANEL_VIEW'; payload: 'toolPicker' | 'toolContent' | 'hidden' }
   | { type: 'SET_READER_MODE'; payload: boolean }
   | { type: 'SET_TOOL_PANEL_MODE'; payload: ToolPanelMode }
+  | { type: 'SET_LEGACY_TOOL_SETTINGS'; payload: LegacyToolStyleSettings }
   | { type: 'SET_PREVIEW_FILE'; payload: File | null }
   | { type: 'SET_PAGE_EDITOR_FUNCTIONS'; payload: PageEditorFunctions | null }
   | { type: 'SET_SEARCH_QUERY'; payload: string }
@@ -45,6 +48,7 @@ type ToolWorkflowAction =
 
 // Initial state
 export const TOOL_PANEL_MODE_STORAGE_KEY = 'toolPanelModePreference';
+export const LEGACY_TOOL_SETTINGS_STORAGE_KEY = 'legacyToolStyleSettings';
 
 const getStoredToolPanelMode = (): ToolPanelMode => {
   if (typeof window === 'undefined') {
@@ -59,7 +63,24 @@ const getStoredToolPanelMode = (): ToolPanelMode => {
   return 'sidebar';
 };
 
-const baseState: Omit<ToolWorkflowState, 'toolPanelMode'> = {
+const getStoredLegacyToolSettings = (): LegacyToolStyleSettings => {
+  if (typeof window === 'undefined') {
+    return defaultLegacyToolSettings;
+  }
+
+  try {
+    const stored = window.localStorage.getItem(LEGACY_TOOL_SETTINGS_STORAGE_KEY);
+    if (stored) {
+      return { ...defaultLegacyToolSettings, ...JSON.parse(stored) };
+    }
+  } catch (e) {
+    console.error('Failed to parse legacy tool settings:', e);
+  }
+
+  return defaultLegacyToolSettings;
+};
+
+const baseState: Omit<ToolWorkflowState, 'toolPanelMode' | 'legacyToolSettings'> = {
   sidebarsVisible: true,
   leftPanelView: 'toolPicker',
   readerMode: false,
@@ -71,6 +92,7 @@ const baseState: Omit<ToolWorkflowState, 'toolPanelMode'> = {
 const createInitialState = (): ToolWorkflowState => ({
   ...baseState,
   toolPanelMode: getStoredToolPanelMode(),
+  legacyToolSettings: getStoredLegacyToolSettings(),
 });
 
 // Reducer
@@ -84,6 +106,8 @@ function toolWorkflowReducer(state: ToolWorkflowState, action: ToolWorkflowActio
       return { ...state, readerMode: action.payload };
     case 'SET_TOOL_PANEL_MODE':
       return { ...state, toolPanelMode: action.payload };
+    case 'SET_LEGACY_TOOL_SETTINGS':
+      return { ...state, legacyToolSettings: action.payload };
     case 'SET_PREVIEW_FILE':
       return { ...state, previewFile: action.payload };
     case 'SET_PAGE_EDITOR_FUNCTIONS':
@@ -94,6 +118,7 @@ function toolWorkflowReducer(state: ToolWorkflowState, action: ToolWorkflowActio
       return {
         ...baseState,
         toolPanelMode: state.toolPanelMode,
+        legacyToolSettings: state.legacyToolSettings,
         searchQuery: state.searchQuery,
       };
     default:
@@ -114,6 +139,7 @@ interface ToolWorkflowContextValue extends ToolWorkflowState {
   setLeftPanelView: (view: 'toolPicker' | 'toolContent' | 'hidden') => void;
   setReaderMode: (mode: boolean) => void;
   setToolPanelMode: (mode: ToolPanelMode) => void;
+  setLegacyToolSettings: (settings: LegacyToolStyleSettings) => void;
   setPreviewFile: (file: File | null) => void;
   setPageEditorFunctions: (functions: PageEditorFunctions | null) => void;
   setSearchQuery: (query: string) => void;
@@ -200,6 +226,10 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     dispatch({ type: 'SET_TOOL_PANEL_MODE', payload: mode });
   }, []);
 
+  const setLegacyToolSettings = useCallback((settings: LegacyToolStyleSettings) => {
+    dispatch({ type: 'SET_LEGACY_TOOL_SETTINGS', payload: settings });
+  }, []);
+
   const setPreviewFile = useCallback((file: File | null) => {
     dispatch({ type: 'SET_PREVIEW_FILE', payload: file });
     if (file) {
@@ -222,6 +252,14 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
 
     window.localStorage.setItem(TOOL_PANEL_MODE_STORAGE_KEY, state.toolPanelMode);
   }, [state.toolPanelMode]);
+
+  React.useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    window.localStorage.setItem(LEGACY_TOOL_SETTINGS_STORAGE_KEY, JSON.stringify(state.legacyToolSettings));
+  }, [state.legacyToolSettings]);
 
   // Tool reset methods
   const registerToolReset = useCallback((toolId: string, resetFunction: () => void) => {
@@ -327,6 +365,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     setLeftPanelView,
     setReaderMode,
     setToolPanelMode,
+    setLegacyToolSettings,
     setPreviewFile,
     setPageEditorFunctions,
     setSearchQuery,
@@ -363,6 +402,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     setLeftPanelView,
     setReaderMode,
     setToolPanelMode,
+    setLegacyToolSettings,
     setPreviewFile,
     setPageEditorFunctions,
     setSearchQuery,

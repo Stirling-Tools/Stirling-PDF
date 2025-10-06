@@ -4,9 +4,11 @@ import ViewSidebarRoundedIcon from '@mui/icons-material/ViewSidebarRounded';
 import { useTranslation } from 'react-i18next';
 import ToolSearch from './toolPicker/ToolSearch';
 import LegacyToolList from './LegacyToolList';
+import LegacyToolSettings from './LegacyToolSettings';
 import { ToolRegistryEntry } from '../../data/toolsTaxonomy';
 import { ToolId } from '../../types/toolId';
 import { useFocusTrap } from '../../hooks/tools/useFocusTrap';
+import { useToolWorkflow } from '../../contexts/ToolWorkflowContext';
 import { BASE_PATH } from '../../constants/app';
 import './ToolPanel.css';
 
@@ -46,6 +48,7 @@ const LegacyToolSurface = ({
 }: LegacyToolSurfaceProps) => {
   const { t } = useTranslation();
   const { colorScheme } = useMantineColorScheme();
+  const { legacyToolSettings, setLegacyToolSettings } = useToolWorkflow();
   const [isExiting, setIsExiting] = useState(false);
   const surfaceRef = useRef<HTMLDivElement>(null);
 
@@ -110,17 +113,23 @@ const LegacyToolSurface = ({
             <img src={brandIconSrc} alt="" className="tool-panel__legacy-brand-icon" />
             <img src={brandTextSrc} alt={brandAltText} className="tool-panel__legacy-brand-text" />
           </div>
-          <Tooltip label={toggleLabel} position="bottom" withArrow>
-            <ActionIcon
-              variant="subtle"
-              radius="xl"
-              size="md"
-              onClick={handleExit}
-              aria-label={toggleLabel}
-            >
-              <ViewSidebarRoundedIcon fontSize="small" />
-            </ActionIcon>
-          </Tooltip>
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+            <LegacyToolSettings
+              settings={legacyToolSettings}
+              onChange={setLegacyToolSettings}
+            />
+            <Tooltip label={toggleLabel} position="bottom" withArrow>
+              <ActionIcon
+                variant="subtle"
+                radius="xl"
+                size="md"
+                onClick={handleExit}
+                aria-label={toggleLabel}
+              >
+                <ViewSidebarRoundedIcon fontSize="small" />
+              </ActionIcon>
+            </Tooltip>
+          </div>
         </header>
 
         <div className="tool-panel__legacy-controls">

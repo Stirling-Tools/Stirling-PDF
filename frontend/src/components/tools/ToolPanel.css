@@ -530,3 +530,42 @@
     column-width: 14rem;
   }
 }
+
+/* Dynamic settings support */
+
+/* No border variant */
+.tool-panel__legacy-item--no-border,
+.tool-panel__legacy-list-item--no-border {
+  border: none !important;
+}
+
+/* Hover intensity variants */
+.tool-panel__legacy-item--hover-subtle:hover,
+.tool-panel__legacy-list-item--hover-subtle:hover {
+  background: var(--legacy-hover-subtle);
+  transform: none;
+}
+
+.tool-panel__legacy-item--hover-moderate:hover,
+.tool-panel__legacy-list-item--hover-moderate:hover {
+  background: var(--legacy-hover);
+  transform: translateY(-2px);
+}
+
+.tool-panel__legacy-item--hover-prominent:hover,
+.tool-panel__legacy-list-item--hover-prominent:hover {
+  background: var(--legacy-hover-prominent);
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Hover-only icon background */
+.tool-panel__legacy-icon--hover-bg,
+.tool-panel__legacy-list-icon--hover-bg {
+  transition: background 0.2s ease;
+}
+
+.tool-panel__legacy-item:hover .tool-panel__legacy-icon--hover-bg,
+.tool-panel__legacy-list-item:hover .tool-panel__legacy-list-icon--hover-bg {
+  background: var(--legacy-icon-hover-bg) !important;
+}
