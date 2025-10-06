@@ -641,7 +641,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // do not override normal paste behavior on input fields
     if (event.target.tagName.toLowerCase() === "input") return;
 
-    if (event.ctrlKey && event.keyCode == 90) {
+    if ((event.ctrlKey || event.metaKey) && (event.key === 'z' || event.key === 'Z')) {
       undoBookmarkChanges();
     }
   }
