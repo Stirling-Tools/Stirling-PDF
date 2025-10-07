@@ -1,15 +1,17 @@
 import React, { useState, useCallback, useRef, useMemo, useEffect } from 'react';
-import { Text, ActionIcon, CheckboxIndicator } from '@mantine/core';
+import { Text, ActionIcon, CheckboxIndicator, Tooltip } from '@mantine/core';
 import { alert } from '../toast';
 import { useTranslation } from 'react-i18next';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import DownloadOutlinedIcon from '@mui/icons-material/DownloadOutlined';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import CloseIcon from '@mui/icons-material/Close';
+import UnarchiveIcon from '@mui/icons-material/Unarchive';
 import PushPinIcon from '@mui/icons-material/PushPin';
 import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { StirlingFileStub } from '../../types/fileContext';
+import { zipFileService } from '../../services/zipFileService';
 
 import styles from './FileEditor.module.css';
 import { useFileContext } from '../../contexts/FileContext';
@@ -27,11 +29,12 @@ interface FileEditorThumbnailProps {
   selectedFiles: FileId[];
   selectionMode: boolean;
   onToggleFile: (fileId: FileId) => void;
-  onDeleteFile: (fileId: FileId) => void;
+  onCloseFile: (fileId: FileId) => void;
   onViewFile: (fileId: FileId) => void;
   _onSetStatus: (status: string) => void;
   onReorderFiles?: (sourceFileId: FileId, targetFileId: FileId, selectedFileIds: FileId[]) => void;
   onDownloadFile: (fileId: FileId) => void;
+  onUnzipFile?: (fileId: FileId) => void;
   toolMode?: boolean;
   isSupported?: boolean;
 }
@@ -41,10 +44,11 @@ const FileEditorThumbnail = ({
   index,
   selectedFiles,
   onToggleFile,
-  onDeleteFile,
+  onCloseFile,
   _onSetStatus,
   onReorderFiles,
   onDownloadFile,
+  onUnzipFile,
   isSupported = true,
 }: FileEditorThumbnailProps) => {
   const { t } = useTranslation();
@@ -63,6 +67,9 @@ const FileEditorThumbnail = ({
     return activeFiles.find(f => f.fileId === file.id);
   }, [activeFiles, file.id]);
   const isPinned = actualFile ? isFilePinned(actualFile) : false;
+
+  // Check if this is a ZIP file
+  const isZipFile = zipFileService.isZipFileStub(file);
 
   const pageCount = file.processedFile?.totalPages || 0;
 
@@ -251,18 +258,60 @@ const FileEditorThumbnail = ({
           {index + 1}
         </div>
 
-        {/* Kebab menu */}
-        <ActionIcon
-          aria-label={t('moreOptions', 'More options')}
-          variant="subtle"
-          className={styles.kebab}
-          onClick={(e) => {
-            e.stopPropagation();
-            setShowActions((v) => !v);
-          }}
-        >
-          <MoreVertIcon fontSize="small" />
-        </ActionIcon>
+        {/* Action buttons group */}
+        <div className={styles.headerActions}>
+          {/* Pin/Unpin icon */}
+          <Tooltip label={isPinned ? t('unpin', 'Unpin') : t('pin', 'Pin')}>
+            <ActionIcon
+              aria-label={isPinned ? t('unpin', 'Unpin') : t('pin', 'Pin')}
+              variant="subtle"
+              className={isPinned ? styles.pinned : styles.headerIconButton}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (actualFile) {
+                  if (isPinned) {
+                    unpinFile(actualFile);
+                    alert({ alertType: 'neutral', title: `Unpinned ${file.name}`, expandable: false, durationMs: 3000 });
+                  } else {
+                    pinFile(actualFile);
+                    alert({ alertType: 'success', title: `Pinned ${file.name}`, expandable: false, durationMs: 3000 });
+                  }
+                }
+              }}
+            >
+              {isPinned ? <PushPinIcon fontSize="small" /> : <PushPinOutlinedIcon fontSize="small" />}
+            </ActionIcon>
+          </Tooltip>
+
+          {/* Download icon */}
+          <Tooltip label={t('download', 'Download')}>
+            <ActionIcon
+              aria-label={t('download', 'Download')}
+              variant="subtle"
+              className={styles.headerIconButton}
+              onClick={(e) => {
+                e.stopPropagation();
+                onDownloadFile(file.id);
+                alert({ alertType: 'success', title: `Downloading ${file.name}`, expandable: false, durationMs: 2500 });
+              }}
+            >
+              <DownloadOutlinedIcon fontSize="small" />
+            </ActionIcon>
+          </Tooltip>
+
+          {/* Kebab menu */}
+          <ActionIcon
+            aria-label={t('moreOptions', 'More options')}
+            variant="subtle"
+            className={styles.headerIconButton}
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowActions((v) => !v);
+            }}
+          >
+            <MoreVertIcon fontSize="small" />
+          </ActionIcon>
+        </div>
       </div>
 
       {/* Actions overlay */}
@@ -287,7 +336,7 @@ const FileEditorThumbnail = ({
               setShowActions(false);
             }}
           >
-            {isPinned ? <PushPinIcon fontSize="small" /> : <PushPinOutlinedIcon fontSize="small" />}
+            {isPinned ? <PushPinIcon className={styles.pinned} fontSize="small" /> : <PushPinOutlinedIcon fontSize="small" />}
             <span>{isPinned ? t('unpin', 'Unpin') : t('pin', 'Pin')}</span>
           </button>
 
@@ -299,18 +348,28 @@ const FileEditorThumbnail = ({
             <span>{t('download', 'Download')}</span>
           </button>
 
+          {isZipFile && onUnzipFile && (
+            <button
+              className={styles.actionRow}
+              onClick={() => { onUnzipFile(file.id); alert({ alertType: 'success', title: `Unzipping ${file.name}`, expandable: false, durationMs: 2500 }); setShowActions(false); }}
+            >
+              <UnarchiveIcon fontSize="small" />
+              <span>{t('fileManager.unzip', 'Unzip')}</span>
+            </button>
+          )}
+
           <div className={styles.actionsDivider} />
 
           <button
             className={`${styles.actionRow} ${styles.actionDanger}`}
             onClick={() => {
-              onDeleteFile(file.id);
-              alert({ alertType: 'neutral', title: `Deleted ${file.name}`, expandable: false, durationMs: 3500 });
+              onCloseFile(file.id);
+              alert({ alertType: 'neutral', title: `Closed ${file.name}`, expandable: false, durationMs: 3500 });
               setShowActions(false);
             }}
           >
-            <DeleteOutlineIcon fontSize="small" />
-            <span>{t('delete', 'Delete')}</span>
+            <CloseIcon fontSize="small" />
+            <span>{t('close', 'Close')}</span>
           </button>
         </div>
       )}
@@ -376,13 +435,6 @@ const FileEditorThumbnail = ({
             />
           )}
         </div>
-
-        {/* Pin indicator (bottom-left) */}
-        {isPinned && (
-          <span className={styles.pinIndicator} aria-hidden>
-            <PushPinIcon fontSize="small" />
-          </span>
-        )}
 
         {/* Drag handle (span wrapper so we can attach a ref reliably) */}
         <span ref={handleRef} className={styles.dragHandle} aria-hidden>
