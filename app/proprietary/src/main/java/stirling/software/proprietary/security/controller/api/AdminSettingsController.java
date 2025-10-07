@@ -90,7 +90,8 @@ public class AdminSettingsController {
                 @ApiResponse(responseCode = "200", description = "Settings retrieved successfully"),
                 @ApiResponse(
                         responseCode = "403",
-                        description = "Access denied - Admin role required")
+                        description = "Access denied - Admin role required"),
+                @ApiResponse(responseCode = "500", description = "Failed to retrieve settings")
             })
     public ResponseEntity<?> getSettings(
             @RequestParam(value = "includePending", defaultValue = "false")
