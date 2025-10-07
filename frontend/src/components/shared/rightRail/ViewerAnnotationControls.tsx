@@ -10,6 +10,7 @@ import { useFileState, useFileContext } from '../../../contexts/FileContext';
 import { generateThumbnailWithMetadata } from '../../../utils/thumbnailUtils';
 import { createProcessedFile } from '../../../contexts/file/fileActions';
 import { createStirlingFile, createNewStirlingFileStub } from '../../../types/fileContext';
+import { useNavigationState } from '../../../contexts/NavigationContext';
 
 interface ViewerAnnotationControlsProps {
   currentView: string;
@@ -32,12 +33,21 @@ export default function ViewerAnnotationControls({ currentView }: ViewerAnnotati
   const { actions: fileActions } = useFileContext();
   const activeFiles = selectors.getFiles();
 
+  // Check if we're in sign mode
+  const { selectedTool } = useNavigationState();
+  const isSignMode = selectedTool === 'sign';
+
   // Turn off annotation mode when switching away from viewer
   useEffect(() => {
     if (currentView !== 'viewer' && viewerContext?.isAnnotationMode) {
       viewerContext.setAnnotationMode(false);
     }
   }, [currentView, viewerContext]);
+
+  // Don't show any annotation controls in sign mode
+  if (isSignMode) {
+    return null;
+  }
 
   return (
     <>

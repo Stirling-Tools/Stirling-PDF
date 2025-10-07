@@ -15,9 +15,10 @@ import { flattenSignatures } from "../utils/signatureFlattening";
 const Sign = (props: BaseToolProps) => {
   const { t } = useTranslation();
   const { setWorkbench } = useNavigation();
-  const { setSignatureConfig, activateDrawMode, activateSignaturePlacementMode, deactivateDrawMode, updateDrawSettings, undo, redo, signatureApiRef, getImageData, setSignaturesApplied } = useSignature();
+  const { setSignatureConfig, activateDrawMode, activateSignaturePlacementMode, deactivateDrawMode, updateDrawSettings, undo, redo, signatureApiRef, getImageData, setSignaturesApplied, historyApiRef } = useSignature();
   const { consumeFiles, selectors } = useFileContext();
   const { exportActions, getScrollState } = useViewer();
+  const { setHasUnsavedChanges, unregisterUnsavedChangesChecker } = useNavigation();
 
   // Track which signature mode was active for reactivation after save
   const activeModeRef = useRef<'draw' | 'placement' | null>(null);
@@ -37,6 +38,11 @@ const Sign = (props: BaseToolProps) => {
     activeModeRef.current = 'placement';
     handleSignaturePlacement();
   }, [handleSignaturePlacement]);
+
+  const handleDeactivateSignature = useCallback(() => {
+    activeModeRef.current = null;
+    deactivateDrawMode();
+  }, [deactivateDrawMode]);
 
   const base = useBaseTool(
     'sign',
@@ -65,6 +71,17 @@ const Sign = (props: BaseToolProps) => {
   // Save signed files to the system - apply signatures using EmbedPDF and replace original
   const handleSaveToSystem = useCallback(async () => {
     try {
+      console.log('=== Apply Signatures Started ===');
+      console.log('exportActions:', exportActions);
+      console.log('signatureApiRef.current:', signatureApiRef.current);
+
+      // Deactivate signature placement mode immediately
+      handleDeactivateSignature();
+
+      // Unregister unsaved changes checker to prevent warning during apply
+      unregisterUnsavedChangesChecker();
+      setHasUnsavedChanges(false);
+
       // Get the original file
       let originalFile = null;
       if (base.selectedFiles.length > 0) {
@@ -84,8 +101,10 @@ const Sign = (props: BaseToolProps) => {
         return;
       }
 
+      console.log('originalFile:', originalFile);
+
       // Use the signature flattening utility
-      const success = await flattenSignatures({
+      const newFileIds = await flattenSignatures({
         signatureApiRef,
         getImageData,
         exportActions,
@@ -95,34 +114,26 @@ const Sign = (props: BaseToolProps) => {
         getScrollState
       });
 
-      if (success) {
+      console.log('flattenSignatures result:', newFileIds);
+
+      if (newFileIds && newFileIds.length > 0) {
         console.log('✓ Signature flattening completed successfully');
 
         // Mark signatures as applied
         setSignaturesApplied(true);
 
-        // Force refresh the viewer to show the flattened PDF
+        // Force viewer reload to show flattened PDF
+        setWorkbench('fileEditor');
         setTimeout(() => {
-          // Navigate away from viewer and back to force reload
-          setWorkbench('fileEditor');
-          setTimeout(() => {
-            setWorkbench('viewer');
-
-            // Reactivate the signature mode that was active before save
-            if (activeModeRef.current === 'draw') {
-              activateDrawMode();
-            } else if (activeModeRef.current === 'placement') {
-              handleSignaturePlacement();
-            }
-          }, 100);
-        }, 200);
+          setWorkbench('viewer');
+        }, 50);
       } else {
         console.error('Signature flattening failed');
       }
     } catch (error) {
       console.error('Error saving signed document:', error);
     }
-  }, [exportActions, base.selectedFiles, selectors, consumeFiles, signatureApiRef, getImageData, setWorkbench, activateDrawMode]);
+  }, [exportActions, base.selectedFiles, selectors, consumeFiles, signatureApiRef, getImageData, setWorkbench, activateDrawMode, setSignaturesApplied, getScrollState, handleDeactivateSignature, setHasUnsavedChanges, unregisterUnsavedChangesChecker]);
 
   const getSteps = () => {
     const steps = [];
@@ -140,7 +151,7 @@ const Sign = (props: BaseToolProps) => {
             disabled={base.endpointLoading}
             onActivateDrawMode={handleActivateDrawMode}
             onActivateSignaturePlacement={handleActivateSignaturePlacement}
-            onDeactivateSignature={deactivateDrawMode}
+            onDeactivateSignature={handleDeactivateSignature}
             onUpdateDrawSettings={updateDrawSettings}
             onUndo={undo}
             onRedo={redo}

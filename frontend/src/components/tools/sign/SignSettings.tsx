@@ -116,6 +116,13 @@ const SignSettings = ({
     }
   }, [parameters.signatureType, parameters.signerName, parameters.fontSize, parameters.fontFamily, onActivateSignaturePlacement, onDeactivateSignature]);
 
+  // Reset to move mode when placement mode is deactivated
+  useEffect(() => {
+    if (!isPlacementMode && interactionMode === 'place') {
+      setInteractionMode('move');
+    }
+  }, [isPlacementMode, interactionMode]);
+
   // Handle signature data updates
   useEffect(() => {
     let newSignatureData: string | undefined = undefined;
@@ -288,7 +295,10 @@ const SignSettings = ({
       {/* Apply Signatures Button */}
       {onSave && (
         <Button
-          onClick={onSave}
+          onClick={() => {
+            console.log('Apply Signatures button clicked');
+            onSave();
+          }}
           color="blue"
           variant="filled"
           fullWidth

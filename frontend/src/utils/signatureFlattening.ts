@@ -1,6 +1,6 @@
 import { PDFDocument, rgb } from 'pdf-lib';
 import { generateThumbnailWithMetadata } from './thumbnailUtils';
-import { createProcessedFile } from '../contexts/file/fileActions';
+import { createProcessedFile, createChildStub } from '../contexts/file/fileActions';
 import { createNewStirlingFileStub, createStirlingFile, StirlingFile, FileId, StirlingFileStub } from '../types/fileContext';
 import type { SignatureAPI } from '../components/viewer/SignatureAPIBridge';
 
@@ -22,7 +22,7 @@ interface SignatureFlatteningOptions {
   getScrollState: () => { currentPage: number; totalPages: number };
 }
 
-export async function flattenSignatures(options: SignatureFlatteningOptions): Promise<boolean> {
+export async function flattenSignatures(options: SignatureFlatteningOptions): Promise<FileId[] | null> {
   const { signatureApiRef, getImageData, exportActions, selectors, consumeFiles, originalFile, getScrollState } = options;
 
   try {
@@ -85,7 +85,7 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
     // Step 3: Use EmbedPDF's saveAsCopy to get the base PDF (now without annotations)
     if (!exportActions) {
       console.error('No export actions available');
-      return false;
+      return null;
     }
     const pdfArrayBuffer = await exportActions.saveAsCopy();
 
@@ -111,7 +111,7 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
 
       if (!currentFile) {
         console.error('No file available to replace');
-        return false;
+        return null;
       }
 
       let signedFile = new File([blob], currentFile.name, { type: 'application/pdf' });
@@ -150,9 +150,11 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
 
           const pages = pdfDoc.getPages();
 
+          console.log('Starting to render annotations. Total pages with annotations:', allAnnotations.length);
 
           for (const pageData of allAnnotations) {
             const { pageIndex, annotations } = pageData;
+            console.log(`Rendering ${annotations.length} annotations on page ${pageIndex}`);
 
             if (pageIndex < pages.length) {
               const page = pages[pageIndex];
@@ -187,8 +189,18 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
                       }
                     }
 
+                    console.log('Processing annotation:', {
+                      pageIndex,
+                      hasImageData: !!imageDataUrl,
+                      imageDataType: typeof imageDataUrl,
+                      startsWithDataImage: imageDataUrl && typeof imageDataUrl === 'string' && imageDataUrl.startsWith('data:image'),
+                      position: { pdfX, pdfY, width, height }
+                    });
+
                     if (imageDataUrl && typeof imageDataUrl === 'string' && imageDataUrl.startsWith('data:image')) {
                       try {
+                        console.log('Rendering image annotation at:', { pdfX, pdfY, width, height });
+
                         // Convert data URL to bytes
                         const base64Data = imageDataUrl.split(',')[1];
                         const imageBytes = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
@@ -211,10 +223,13 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
                           height: height,
                         });
 
+                        console.log('✓ Successfully rendered image annotation');
+
                       } catch (imageError) {
                         console.error('Failed to render image annotation:', imageError);
                       }
                     } else if (annotation.content || annotation.text) {
+                      console.warn('Rendering text annotation instead');
                       // Handle text annotations
                       page.drawText(annotation.content || annotation.text, {
                         x: pdfX,
@@ -287,23 +302,35 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
       const record = selectors.getStirlingFileStub(currentFile.fileId);
       if (!record) {
         console.error('No file record found for:', currentFile.fileId);
-        return false;
+        return null;
       }
 
-      // Create output stub and file
-      const outputStub = createNewStirlingFileStub(signedFile, undefined, thumbnailResult.thumbnail, processedFileMetadata);
+      console.log('Parent file record:', record);
+      console.log('Parent version:', record.versionNumber);
+
+      // Create output stub and file as a child of the original (increments version)
+      const outputStub = createChildStub(
+        record,
+        { toolId: 'sign', timestamp: Date.now() },
+        signedFile,
+        thumbnailResult.thumbnail,
+        processedFileMetadata
+      );
       const outputStirlingFile = createStirlingFile(signedFile, outputStub.id);
 
-      // Replace the original file with the signed version
-      await consumeFiles(inputFileIds, [outputStirlingFile], [outputStub]);
+      console.log('Output stub version:', outputStub.versionNumber);
+      console.log('Consuming files - replacing:', inputFileIds, 'with:', outputStub.id);
 
-      console.log('✓ Signature flattening completed successfully');
-      return true;
+      // Replace the original file with the signed version
+      const newFileIds = await consumeFiles(inputFileIds, [outputStirlingFile], [outputStub]);
+
+      console.log('✓ Signature flattening completed successfully. New file IDs:', newFileIds);
+      return newFileIds;
     }
 
-    return false;
+    return null;
   } catch (error) {
     console.error('Error flattening signatures:', error);
-    return false;
+    return null;
   }
 }
