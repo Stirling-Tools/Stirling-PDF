@@ -73,10 +73,10 @@ function toolWorkflowReducer(state: ToolWorkflowState, action: ToolWorkflowActio
 // Context value interface
 interface ToolWorkflowContextValue extends ToolWorkflowState {
   // Tool management (from hook)
-  selectedToolKey: string | null;
+  selectedToolKey: ToolId | null;
   selectedTool: ToolRegistryEntry | null;
-  toolRegistry: Record<string, ToolRegistryEntry>;
-  getSelectedTool: (toolId: string | null) => ToolRegistryEntry | null;
+  toolRegistry: Partial<ToolRegistry>;
+  getSelectedTool: (toolId: ToolId | null) => ToolRegistryEntry | null;
 
   // UI Actions
   setSidebarsVisible: (visible: boolean) => void;
@@ -101,7 +101,7 @@ interface ToolWorkflowContextValue extends ToolWorkflowState {
   handleReaderToggle: () => void;
 
   // Computed values
-  filteredTools: Array<{ item: [string, ToolRegistryEntry]; matchedText?: string }>; // Filtered by search
+  filteredTools: Array<{ item: [ToolId, ToolRegistryEntry]; matchedText?: string }>; // Filtered by search
   isPanelVisible: boolean;
 }
 

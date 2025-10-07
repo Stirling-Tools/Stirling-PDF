@@ -2,14 +2,15 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useS
 import { HotkeyBinding, bindingEquals, bindingMatchesEvent, deserializeBindings, getDisplayParts, isMacLike, normalizeBinding, serializeBindings } from '../utils/hotkeys';
 import { useToolWorkflow } from './ToolWorkflowContext';
 import { ToolId } from '../types/toolId';
+import { ToolCategoryId, ToolRegistry, ToolRegistryEntry } from '../data/toolsTaxonomy';
 
 interface HotkeyContextValue {
-  hotkeys: Record<string, HotkeyBinding>;
-  defaults: Record<string, HotkeyBinding>;
+  hotkeys: Record<ToolId, HotkeyBinding>;
+  defaults: Record<ToolId, HotkeyBinding>;
   isMac: boolean;
-  updateHotkey: (toolId: string, binding: HotkeyBinding) => void;
-  resetHotkey: (toolId: string) => void;
-  isBindingAvailable: (binding: HotkeyBinding, excludeToolId?: string) => boolean;
+  updateHotkey: (toolId: ToolId, binding: HotkeyBinding) => void;
+  resetHotkey: (toolId: ToolId) => void;
+  isBindingAvailable: (binding: HotkeyBinding, excludeToolId?: ToolId) => boolean;
   pauseHotkeys: () => void;
   resumeHotkeys: () => void;
   areHotkeysPaused: boolean;
@@ -20,46 +21,32 @@ const HotkeyContext = createContext<HotkeyContextValue | undefined>(undefined);
 
 const STORAGE_KEY = 'stirlingpdf.hotkeys';
 
-const KEY_ORDER: string[] = [
-  'Digit1', 'Digit2', 'Digit3', 'Digit4', 'Digit5', 'Digit6', 'Digit7', 'Digit8', 'Digit9', 'Digit0',
-  'KeyQ', 'KeyW', 'KeyE', 'KeyR', 'KeyT', 'KeyY', 'KeyU', 'KeyI', 'KeyO', 'KeyP',
-  'KeyA', 'KeyS', 'KeyD', 'KeyF', 'KeyG', 'KeyH', 'KeyJ', 'KeyK', 'KeyL',
-  'KeyZ', 'KeyX', 'KeyC', 'KeyV', 'KeyB', 'KeyN', 'KeyM',
-  'F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9', 'F10', 'F11', 'F12',
-];
-
-const generateDefaultHotkeys = (toolIds: string[], macLike: boolean): Record<string, HotkeyBinding> => {
+const generateDefaultHotkeys = (
+  toolEntries: Partial<ToolRegistry>,
+  macLike: boolean
+): Record<string, HotkeyBinding> => {
   const defaults: Record<string, HotkeyBinding> = {};
-  let index = 0;
-  let useShift = false;
 
-  const nextBinding = (): HotkeyBinding => {
-    if (index >= KEY_ORDER.length) {
-      index = 0;
-      if (!useShift) {
-        useShift = true;
-      } else {
-        // If we somehow run out of combinations, wrap back around (unlikely given tool count)
-        useShift = false;
-      }
+  // Get Quick Access tools (RECOMMENDED_TOOLS category) from registry
+  const quickAccessTools = (Object.entries(toolEntries) as [ToolId, ToolRegistryEntry][])
+    .filter(([_, tool]) => tool.categoryId === ToolCategoryId.RECOMMENDED_TOOLS)
+    .map(([toolId, _]) => toolId);
+
+  // Assign Cmd+Option+Number (Mac) or Ctrl+Alt+Number (Windows) to Quick Access tools
+  quickAccessTools.forEach((toolId, index) => {
+    if (index < 9) { // Limit to Digit1-9
+      const digitNumber = index + 1;
+      defaults[toolId] = {
+        code: `Digit${digitNumber}`,
+        alt: true,
+        shift: false,
+        meta: macLike,
+        ctrl: !macLike,
+      };
     }
-
-    const code = KEY_ORDER[index];
-    index += 1;
-
-    return {
-      code,
-      alt: true,
-      shift: useShift,
-      meta: macLike,
-      ctrl: !macLike,
-    };
-  };
-
-  toolIds.forEach(toolId => {
-    defaults[toolId] = nextBinding();
   });
 
+  // All other tools have no default (will be undefined in the record)
   return defaults;
 };
 
@@ -84,7 +71,7 @@ export const HotkeyProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const toolIds = useMemo(() => Object.keys(toolRegistry), [toolRegistry]);
 
-  const defaults = useMemo(() => generateDefaultHotkeys(toolIds, isMac), [toolIds, isMac]);
+  const defaults = useMemo(() => generateDefaultHotkeys(toolRegistry, isMac), [toolRegistry, isMac]);
 
   // Remove bindings for tools that are no longer present
   useEffect(() => {
@@ -92,7 +79,7 @@ export const HotkeyProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       const next: Record<string, HotkeyBinding> = {};
       let changed = false;
       Object.entries(prev).forEach(([toolId, binding]) => {
-        if (toolRegistry[toolId]) {
+        if (toolRegistry[toolId as ToolId]) {
           next[toolId] = binding;
         } else {
           changed = true;
@@ -106,7 +93,15 @@ export const HotkeyProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const merged: Record<string, HotkeyBinding> = {};
     toolIds.forEach(toolId => {
       const custom = customBindings[toolId];
-      merged[toolId] = custom ? normalizeBinding(custom) : defaults[toolId];
+      const defaultBinding = defaults[toolId];
+
+      // Only add to resolved if there's a custom binding or a default binding
+      if (custom) {
+        merged[toolId] = normalizeBinding(custom);
+      } else if (defaultBinding) {
+        merged[toolId] = defaultBinding;
+      }
+      // If neither exists, don't add to merged (tool has no hotkey)
     });
     return merged;
   }, [customBindings, defaults, toolIds]);

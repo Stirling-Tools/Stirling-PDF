@@ -9,12 +9,13 @@ import { handleUnlessSpecialClick } from "../../../utils/clickHandlers";
 import FitText from "../../shared/FitText";
 import { useHotkeys } from "../../../contexts/HotkeyContext";
 import HotkeyDisplay from "../../hotkeys/HotkeyDisplay";
+import { ToolId } from "src/types/toolId";
 
 interface ToolButtonProps {
-  id: string;
+  id: ToolId;
   tool: ToolRegistryEntry;
   isSelected: boolean;
-  onSelect: (id: string) => void;
+  onSelect: (id: ToolId) => void;
   rounded?: boolean;
   disableNavigation?: boolean;
   matchedSynonym?: string;
@@ -28,7 +29,7 @@ const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect,
   const binding = hotkeys[id];
   const { getToolNavigation } = useToolNavigation();
 
-  const handleClick = (id: string) => {
+  const handleClick = (id: ToolId) => {
     if (isUnavailable) return;
     if (tool.link) {
       // Open external link in new tab
@@ -102,7 +103,7 @@ const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect,
       fullWidth
       justify="flex-start"
       className="tool-button"
-      styles={{ 
+      styles={{
         root: { borderRadius: 0, color: "var(--tools-text-and-icon-color)", overflow: 'visible' },
         label: { overflow: 'visible' }
       }}
@@ -123,7 +124,7 @@ const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect,
       fullWidth
       justify="flex-start"
       className="tool-button"
-      styles={{ 
+      styles={{
         root: { borderRadius: 0, color: "var(--tools-text-and-icon-color)", overflow: 'visible' },
         label: { overflow: 'visible' }
       }}

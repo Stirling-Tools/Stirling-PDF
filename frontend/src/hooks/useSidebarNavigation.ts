@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { useToolNavigation } from './useToolNavigation';
 import { useToolWorkflow } from '../contexts/ToolWorkflowContext';
 import { handleUnlessSpecialClick } from '../utils/clickHandlers';
+import { ToolId } from 'src/types/toolId';
 
 export interface SidebarNavigationProps {
   /** Full URL for the navigation (for href attribute) */
@@ -16,7 +17,7 @@ export interface SidebarNavigationProps {
  */
 export function useSidebarNavigation(): {
   getHomeNavigation: () => SidebarNavigationProps;
-  getToolNavigation: (toolId: string) => SidebarNavigationProps | null;
+  getToolNavigation: (toolId: ToolId) => SidebarNavigationProps | null;
 } {
   const { getToolNavigation: getToolNavProps } = useToolNavigation();
   const { getSelectedTool } = useToolWorkflow();
@@ -32,14 +33,14 @@ export function useSidebarNavigation(): {
     return { href, onClick: defaultNavClick };
   }, [defaultNavClick]);
 
-  const getToolNavigation = useCallback((toolId: string): SidebarNavigationProps | null => {
+  const getToolNavigation = useCallback((toolId: ToolId): SidebarNavigationProps | null => {
     // Handle special nav sections that aren't tools
     if (toolId === 'read') return { href: '/read', onClick: defaultNavClick };
     if (toolId === 'automate') return { href: '/automate', onClick: defaultNavClick };
 
     const tool = getSelectedTool(toolId);
     if (!tool) return null;
-    
+
     // Delegate to useToolNavigation for true tools
     return getToolNavProps(toolId, tool);
   }, [getToolNavProps, getSelectedTool, defaultNavClick]);
