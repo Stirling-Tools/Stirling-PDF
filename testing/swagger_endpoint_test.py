@@ -45,33 +45,33 @@ DEFAULT_RETRIES = 1
 DEFAULT_CONCURRENCY = 100
 
 DEFAULT_SKIP_ENDPOINTS = {
-    # ("get", "/api/v1/admin/job/stats"),
-    # ("get", "/api/v1/audit/data"),
-    # ("get", "/api/v1/audit/export/csv"),
-    # ("get", "/api/v1/audit/export/json"),
-    # ("get", "/api/v1/audit/stats"),
-    # ("get", "/api/v1/audit/types"),
-    # ("get", "/api/v1/general/files/{fileId}/metadata"),
-    # ("get", "/api/v1/general/files/{fileId}"),
-    # ("get", "/api/v1/general/job/{jobId}/result/files"),
-    # ("get", "/api/v1/general/job/{jobId}/result"),
-    # ("get", "/api/v1/general/job/{jobId}"),
-    # ("get", "/api/v1/admin/job/queue/stats"),
-    # ("post", "/api/v1/pipeline/handleData"),
-    # ("post", "/api/v1/admin/job/cleanup"),
-    # ("post", "/api/v1/misc/ocr-pdf"),
-    # ("delete", "/api/v1/audit/cleanup/before"),
-    # ("delete", "/api/v1/general/job/{jobId}"),
-    # # Buggy endpoints
-    # ("post", "/api/v1/convert/cbr/pdf"),  # Invalid CBR file
-    # ("post", "/api/v1/convert/pdf/img"),
-    # ("post", "/api/v1/convert/file/pdf"),  # unoconvert
-    # # check inputs
-    # ("post", "/api/v1/security/cert-sign"),
-    # ("post", "/api/v1/general/crop"),
-    # ("post", "/api/v1/general/overlay-pdfs"),
-    # # weasyprint
-    # ("post", "/api/v1/convert/markdown/pdf"),
+    ("get", "/api/v1/admin/job/stats"),
+    ("get", "/api/v1/audit/data"),
+    ("get", "/api/v1/audit/export/csv"),
+    ("get", "/api/v1/audit/export/json"),
+    ("get", "/api/v1/audit/stats"),
+    ("get", "/api/v1/audit/types"),
+    ("get", "/api/v1/general/files/{fileId}/metadata"),
+    ("get", "/api/v1/general/files/{fileId}"),
+    ("get", "/api/v1/general/job/{jobId}/result/files"),
+    ("get", "/api/v1/general/job/{jobId}/result"),
+    ("get", "/api/v1/general/job/{jobId}"),
+    ("get", "/api/v1/admin/job/queue/stats"),
+    ("post", "/api/v1/pipeline/handleData"),
+    ("post", "/api/v1/admin/job/cleanup"),
+    ("post", "/api/v1/misc/ocr-pdf"),
+    ("delete", "/api/v1/audit/cleanup/before"),
+    ("delete", "/api/v1/general/job/{jobId}"),
+    # Buggy endpoints
+    ("post", "/api/v1/convert/cbr/pdf"),  # Invalid CBR file
+    ("post", "/api/v1/convert/html/pdf"),
+    ("post", "/api/v1/convert/pdf/img"),
+    ("post", "/api/v1/convert/file/pdf"),  # unoconvert
+    ("post", "/api/v1/convert/eml/pdf"),
+    # check inputs
+    ("post", "/api/v1/security/cert-sign"),
+    ("post", "/api/v1/general/crop"),
+    ("post", "/api/v1/general/overlay-pdfs"),
 }
 
 
