@@ -37,7 +37,8 @@ ENV SETUPTOOLS_USE_DISTUTILS=local \
 COPY .github/scripts/requirements_dev.txt /tmp/requirements_dev.txt
 RUN python3 -m venv --system-site-packages /opt/venv \
   && . /opt/venv/bin/activate \
-  && pip install --no-cache-dir --require-hashes -r /tmp/requirements_dev.txt
+  && pip install --no-cache-dir --require-hashes -r /tmp/requirements_dev.txt \
+  && pip install --no-cache-dir uv
 
 # Füge den venv-Pfad zur globalen PATH-Variable hinzu, damit die Tools verfügbar sind
 ENV PATH="/opt/venv/bin:$PATH"
