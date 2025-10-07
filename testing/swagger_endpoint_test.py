@@ -20,39 +20,37 @@
   - Reports summary of tested, successful, failed, skipped, and disabled endpoints.
 
   Usage:
-#   python swagger_endpoint_test.py [options]
+    python swagger_endpoint_test.py [options]
 
-# Options:
-#   --base-url         Base URL of the running instance (falls back to spec.servers[0].url)
-#   --spec             Path to an OpenAPI JSON file
-#   --sample-file      Sample PDF path for binary uploads
-#   --strict           Only treat documented statuses (or default/xXX) as success
-#   --timeout          Request timeout (seconds)
-#   --retries          HTTP retries with backoff
-#   --concurrency      Parallel workers
-#   --bearer           Bearer token (sets Authorization: Bearer ...)
-#   --auth-header      Custom header in "Name: Value" form (can be used multiple times)
-#   --include-tags     Comma-separated list of tags to include
-#   --exclude-tags     Comma-separated list of tags to exclude
-#   --only-path        Regex: only paths matching this pattern will be tested
-#   --skip             Extra skips, comma-separated "METHOD:/path" entries
+  Options:
+    --base-url         Base URL of the running instance (falls back to spec.servers[0].url)
+    --spec             Path to an OpenAPI JSON file
+    --sample-file      Sample PDF path for binary uploads
+    --strict           Only treat documented statuses (or default/xXX) as success
+    --timeout          Request timeout (seconds)
+    --retries          HTTP retries with backoff
+    --concurrency      Parallel workers
+    --bearer           Bearer token (sets Authorization: Bearer ...)
+    --auth-header      Custom header in "Name: Value" form (can be used multiple times)
+    --include-tags     Comma-separated list of tags to include
+    --exclude-tags     Comma-separated list of tags to exclude
+    --only-path        Regex: only paths matching this pattern will be tested
+    --skip             Extra skips, comma-separated "METHOD:/path" entries
 
-# Classes:
-#   EndpointResult: Data class representing the result of a single endpoint test.
-#   SwaggerTester:  Main class for exercising endpoints as defined in the OpenAPI spec.
+  Classes:
+    EndpointResult: Data class representing the result of a single endpoint test.
+    SwaggerTester:  Main class for exercising endpoints as defined in the OpenAPI spec.
 
-# Functions:
-#   load_spec:      Loads the OpenAPI specification from file or server.
-#   parse_args:     Parses command-line arguments.
-#   _parse_auth:    Parses authentication headers from arguments.
-#   _extra_headers_into: Applies additional custom headers to the session.
-#   main:           Entry point for running the test suite.
+  Functions:
+    load_spec:      Loads the OpenAPI specification from file or server.
+    parse_args:     Parses command-line arguments.
+    _parse_auth:    Parses authentication headers from arguments.
+    _extra_headers_into: Applies additional custom headers to the session.
+    main:           Entry point for running the test suite.
 
-# Example:
-#   python swagger_endpoint_test.py --base-url http://localhost:8080 --strict --concurrency 10
-
+  Example:
+    python swagger_endpoint_test.py --base-url http://localhost:8080 --strict --concurrency 10
 """
-
 
 from __future__ import annotations
 
