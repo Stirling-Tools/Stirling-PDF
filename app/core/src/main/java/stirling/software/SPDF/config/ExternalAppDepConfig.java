@@ -3,6 +3,7 @@ package stirling.software.SPDF.config;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -50,13 +51,23 @@ public class ExternalAppDepConfig {
     private boolean isCommandAvailable(String command) {
         try {
             ProcessBuilder processBuilder = new ProcessBuilder();
-            if (System.getProperty("os.name").toLowerCase().contains("windows")) {
+            if (System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("windows")) {
                 processBuilder.command("where", command);
             } else {
                 processBuilder.command("which", command);
             }
             Process process = processBuilder.start();
             int exitCode = process.waitFor();
+            // if (exitCode != 0) {
+            //     // check program version
+            //     ProcessBuilder versionBuilder = new ProcessBuilder();
+            //     if (System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("windows")) {
+            //         versionBuilder.command("cmd.exe", "/c", command + " --version");
+            //     }
+            //     Process versionProcess = versionBuilder.start();
+            //     exitCode = versionProcess.waitFor();
+            // }
+            // log.info("Command {} exited with code {}", command, exitCode);
             return exitCode == 0;
         } catch (Exception e) {
             log.debug("Error checking for command {}: {}", command, e.getMessage());
@@ -66,7 +77,7 @@ public class ExternalAppDepConfig {
 
     private List<String> getAffectedFeatures(String group) {
         return endpointConfiguration.getEndpointsForGroup(group).stream()
-                .map(endpoint -> formatEndpointAsFeature(endpoint))
+                .map(this::formatEndpointAsFeature)
                 .toList();
     }
 
@@ -75,7 +86,7 @@ public class ExternalAppDepConfig {
         String feature = endpoint.replace("-", " ").replace("pdf", "PDF").replace("img", "image");
         // Split into words and capitalize each word
         return Arrays.stream(RegexPatternUtils.getInstance().getWordSplitPattern().split(feature))
-                .map(word -> capitalizeWord(word))
+                .map(this::capitalizeWord)
                 .collect(Collectors.joining(" "));
     }
 
@@ -86,7 +97,8 @@ public class ExternalAppDepConfig {
         if ("pdf".equalsIgnoreCase(word)) {
             return "PDF";
         }
-        return word.substring(0, 1).toUpperCase() + word.substring(1).toLowerCase();
+        return word.substring(0, 1).toUpperCase(Locale.ROOT)
+                + word.substring(1).toLowerCase(Locale.ROOT);
     }
 
     private void checkDependencyAndDisableGroup(String command) {
@@ -128,14 +140,15 @@ public class ExternalAppDepConfig {
             endpointConfiguration.disableGroup("Python");
             endpointConfiguration.disableGroup("OpenCV");
             log.warn(
-                    "Missing dependency: Python - Disabling Python features: {} and OpenCV features: {}",
+                    "Missing dependency: Python - Disabling Python features: {} and OpenCV"
+                            + " features: {}",
                     String.join(", ", pythonFeatures),
                     String.join(", ", openCVFeatures));
         } else {
             // If Python is available, check for OpenCV
             try {
                 ProcessBuilder processBuilder = new ProcessBuilder();
-                if (System.getProperty("os.name").toLowerCase().contains("windows")) {
+                if (System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("windows")) {
                     processBuilder.command("python", "-c", "import cv2");
                 } else {
                     processBuilder.command("python3", "-c", "import cv2");

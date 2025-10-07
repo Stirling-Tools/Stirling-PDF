@@ -17,6 +17,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.Locale;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -778,20 +779,33 @@ class EmlToPdfTest {
     private String createSimpleTextEmailWithCharset(
             String from, String to, String subject, String body, String charset) {
         return String.format(
+                Locale.ROOT,
                 "From: %s\nTo: %s\nSubject: %s\nDate: %s\nContent-Type: text/plain; charset=%s\nContent-Transfer-Encoding: 8bit\n\n%s",
-                from, to, subject, getTimestamp(), charset, body);
+                from,
+                to,
+                subject,
+                getTimestamp(),
+                charset,
+                body);
     }
 
     private String createEmailWithCustomHeaders() {
         return String.format(
+                Locale.ROOT,
                 "From: sender@example.com\nDate: %s\nContent-Type: text/plain; charset=UTF-8\nContent-Transfer-Encoding: 8bit\n\n%s",
-                getTimestamp(), "This is an email body with some headers missing.");
+                getTimestamp(),
+                "This is an email body with some headers missing.");
     }
 
     private String createHtmlEmail(String from, String to, String subject, String htmlBody) {
         return String.format(
+                Locale.ROOT,
                 "From: %s\nTo: %s\nSubject: %s\nDate: %s\nContent-Type: text/html; charset=UTF-8\nContent-Transfer-Encoding: 8bit\n\n%s",
-                from, to, subject, getTimestamp(), htmlBody);
+                from,
+                to,
+                subject,
+                getTimestamp(),
+                htmlBody);
     }
 
     private String createMultipartEmailWithAttachment(
@@ -806,6 +820,7 @@ class EmlToPdfTest {
                 Base64.getEncoder()
                         .encodeToString(attachmentContent.getBytes(StandardCharsets.UTF_8));
         return String.format(
+                Locale.ROOT,
                 """
                     From: %s
                     To: %s
@@ -845,6 +860,7 @@ class EmlToPdfTest {
                 Base64.getEncoder()
                         .encodeToString(attachmentEmlContent.getBytes(StandardCharsets.UTF_8));
         return String.format(
+                Locale.ROOT,
                 """
                     From: %s
                     To: %s
@@ -883,6 +899,7 @@ class EmlToPdfTest {
     private String createMultipartAlternativeEmail(
             String textBody, String htmlBody, String boundary) {
         return String.format(
+                Locale.ROOT,
                 """
                     From: %s
                     To: %s
@@ -918,6 +935,7 @@ class EmlToPdfTest {
 
     private String createQuotedPrintableEmail() {
         return String.format(
+                Locale.ROOT,
                 "From: %s\nTo: %s\nSubject: %s\nDate: %s\nMIME-Version: 1.0\nContent-Type: text/plain; charset=UTF-8\nContent-Transfer-Encoding: quoted-printable\n\n%s",
                 "sender@example.com",
                 "recipient@example.com",
@@ -930,6 +948,7 @@ class EmlToPdfTest {
         String encodedBody =
                 Base64.getEncoder().encodeToString(body.getBytes(StandardCharsets.UTF_8));
         return String.format(
+                Locale.ROOT,
                 "From: %s\nTo: %s\nSubject: %s\nDate: %s\nMIME-Version: 1.0\nContent-Type: text/plain; charset=UTF-8\nContent-Transfer-Encoding: base64\n\n%s",
                 "sender@example.com",
                 "recipient@example.com",
@@ -941,6 +960,7 @@ class EmlToPdfTest {
     private String createEmailWithInlineImage(
             String htmlBody, String boundary, String contentId, String base64Image) {
         return String.format(
+                Locale.ROOT,
                 """
                     From: %s
                     To: %s
@@ -985,6 +1005,7 @@ class EmlToPdfTest {
         String encodedAttachment =
                 Base64.getEncoder().encodeToString(attachmentBody.getBytes(StandardCharsets.UTF_8));
         return String.format(
+                Locale.ROOT,
                 """
                     From: %s
                     To: %s

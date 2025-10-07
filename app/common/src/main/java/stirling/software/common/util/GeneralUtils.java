@@ -385,7 +385,7 @@ public class GeneralUtils {
             throw new IllegalArgumentException("Invalid default unit: " + defaultUnit);
         }
 
-        sizeStr = sizeStr.trim().toUpperCase();
+        sizeStr = sizeStr.trim().toUpperCase(Locale.ROOT);
         sizeStr = sizeStr.replace(",", ".").replace(" ", "");
 
         try {
@@ -414,7 +414,7 @@ public class GeneralUtils {
                 return Long.parseLong(sizeStr.substring(0, sizeStr.length() - 1));
             } else {
                 // Use provided default unit or fall back to MB
-                String unit = defaultUnit != null ? defaultUnit.toUpperCase() : "MB";
+                String unit = defaultUnit != null ? defaultUnit.toUpperCase(Locale.ROOT) : "MB";
                 double value = Double.parseDouble(sizeStr);
                 return switch (unit) {
                     case "TB" -> (long) (value * 1024L * 1024L * 1024L * 1024L);
@@ -456,13 +456,14 @@ public class GeneralUtils {
         if (bytes < 1024) {
             return bytes + " B";
         } else if (bytes < 1024L * 1024L) {
-            return String.format(Locale.US, "%.2f KB", bytes / 1024.0);
+            return String.format(Locale.ROOT, "%.2f KB", bytes / 1024.0);
         } else if (bytes < 1024L * 1024L * 1024L) {
-            return String.format(Locale.US, "%.2f MB", bytes / (1024.0 * 1024.0));
+            return String.format(Locale.ROOT, "%.2f MB", bytes / (1024.0 * 1024.0));
         } else if (bytes < 1024L * 1024L * 1024L * 1024L) {
-            return String.format(Locale.US, "%.2f GB", bytes / (1024.0 * 1024.0 * 1024.0));
+            return String.format(Locale.ROOT, "%.2f GB", bytes / (1024.0 * 1024.0 * 1024.0));
         } else {
-            return String.format(Locale.US, "%.2f TB", bytes / (1024.0 * 1024.0 * 1024.0 * 1024.0));
+            return String.format(
+                    Locale.ROOT, "%.2f TB", bytes / (1024.0 * 1024.0 * 1024.0 * 1024.0));
         }
     }
 
@@ -722,7 +723,7 @@ public class GeneralUtils {
                         byte[] mac = net.getHardwareAddress();
                         if (mac != null && mac.length > 0) {
                             for (byte b : mac) {
-                                sb.append(String.format("%02X", b));
+                                sb.append(String.format(Locale.ROOT, "%02X", b));
                             }
                             break; // Use the first valid network interface
                         }
@@ -732,7 +733,7 @@ public class GeneralUtils {
                 byte[] mac = network.getHardwareAddress();
                 if (mac != null) {
                     for (byte b : mac) {
-                        sb.append(String.format("%02X", b));
+                        sb.append(String.format(Locale.ROOT, "%02X", b));
                     }
                 }
             }

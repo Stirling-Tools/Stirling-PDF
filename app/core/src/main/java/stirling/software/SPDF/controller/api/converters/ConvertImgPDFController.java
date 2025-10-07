@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -118,7 +119,7 @@ public class ConvertImgPDFController {
                             newPdfBytes,
                             "webp".equalsIgnoreCase(imageFormat)
                                     ? "png"
-                                    : imageFormat.toUpperCase(),
+                                    : imageFormat.toUpperCase(Locale.ROOT),
                             colorTypeResult,
                             singleImage,
                             dpi,
@@ -371,8 +372,9 @@ public class ConvertImgPDFController {
     @Operation(
             summary = "Convert PDF to CBR comic book archive",
             description =
-                    "This endpoint converts a PDF file to a CBR-like (ZIP-based) comic book archive. "
-                            + "Note: Output is ZIP-based for compatibility. Input:PDF Output:CBR Type:SISO")
+                    "This endpoint converts a PDF file to a CBR-like (ZIP-based) comic book"
+                            + " archive. Note: Output is ZIP-based for compatibility. Input:PDF"
+                            + " Output:CBR Type:SISO")
     public ResponseEntity<?> convertPdfToCbr(@ModelAttribute ConvertPdfToCbrRequest request)
             throws IOException {
         MultipartFile file = request.getFileInput();

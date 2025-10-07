@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -495,9 +496,9 @@ public class UserService implements UserServiceInterface {
                         .matches();
 
         List<String> notAllowedUserList = new ArrayList<>();
-        notAllowedUserList.add("ALL_USERS".toLowerCase());
+        notAllowedUserList.add("ALL_USERS".toLowerCase(Locale.ROOT));
         notAllowedUserList.add("anonymoususer");
-        boolean notAllowedUser = notAllowedUserList.contains(username.toLowerCase());
+        boolean notAllowedUser = notAllowedUserList.contains(username.toLowerCase(Locale.ROOT));
         return (isValidSimpleUsername || isValidEmail) && !notAllowedUser;
     }
 
