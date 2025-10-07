@@ -1032,7 +1032,7 @@ def main(argv: List[str]) -> int:
     print(f"Skipped:               {skipped}")
     print(f"Disabled (403 noted):  {disabled}")
 
-    # In CI möchtest du evtl. auch bei Disabled/Skipped mit 0 rausgehen
+    # In CI, you might want to exit with 0 even if there are disabled/skipped tests
     return 0 if not failures else 1
 
 
