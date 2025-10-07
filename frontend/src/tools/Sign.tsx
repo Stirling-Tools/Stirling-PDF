@@ -45,12 +45,16 @@ const Sign = (props: BaseToolProps) => {
     props
   );
 
-  // Open viewer when files are selected
+  const hasOpenedViewer = useRef(false);
+
+  // Open viewer when files are selected (only once)
   useEffect(() => {
-    if (base.selectedFiles.length > 0) {
+    if (base.selectedFiles.length > 0 && !hasOpenedViewer.current) {
       setWorkbench('viewer');
+      hasOpenedViewer.current = true;
     }
   }, [base.selectedFiles.length, setWorkbench]);
+
 
 
   // Sync signature configuration with context
@@ -123,26 +127,28 @@ const Sign = (props: BaseToolProps) => {
   const getSteps = () => {
     const steps = [];
 
-    // Step 1: Signature Configuration - Always visible
-    steps.push({
-      title: t('sign.steps.configure', 'Configure Signature'),
-      isCollapsed: false,
-      onCollapsedClick: undefined,
-      content: (
-        <SignSettings
-          parameters={base.params.parameters}
-          onParameterChange={base.params.updateParameter}
-          disabled={base.endpointLoading}
-          onActivateDrawMode={handleActivateDrawMode}
-          onActivateSignaturePlacement={handleActivateSignaturePlacement}
-          onDeactivateSignature={deactivateDrawMode}
-          onUpdateDrawSettings={updateDrawSettings}
-          onUndo={undo}
-          onRedo={redo}
-          onSave={handleSaveToSystem}
-        />
-      ),
-    });
+    // Step 1: Signature Configuration - Only visible when file is loaded
+    if (base.selectedFiles.length > 0) {
+      steps.push({
+        title: t('sign.steps.configure', 'Configure Signature'),
+        isCollapsed: false,
+        onCollapsedClick: undefined,
+        content: (
+          <SignSettings
+            parameters={base.params.parameters}
+            onParameterChange={base.params.updateParameter}
+            disabled={base.endpointLoading}
+            onActivateDrawMode={handleActivateDrawMode}
+            onActivateSignaturePlacement={handleActivateSignaturePlacement}
+            onDeactivateSignature={deactivateDrawMode}
+            onUpdateDrawSettings={updateDrawSettings}
+            onUndo={undo}
+            onRedo={redo}
+            onSave={handleSaveToSystem}
+          />
+        ),
+      });
+    }
 
     return steps;
   };

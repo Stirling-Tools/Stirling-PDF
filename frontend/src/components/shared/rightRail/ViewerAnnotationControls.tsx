@@ -25,7 +25,7 @@ export default function ViewerAnnotationControls({ currentView }: ViewerAnnotati
   const viewerContext = React.useContext(ViewerContext);
 
   // Signature context for accessing drawing API
-  const { signatureApiRef } = useSignature();
+  const { signatureApiRef, isPlacementMode } = useSignature();
 
   // File state for save functionality
   const { state, selectors } = useFileState();
@@ -50,7 +50,7 @@ export default function ViewerAnnotationControls({ currentView }: ViewerAnnotati
           onClick={() => {
             viewerContext?.toggleAnnotationsVisibility();
           }}
-          disabled={currentView !== 'viewer' || viewerContext?.isAnnotationMode}
+          disabled={currentView !== 'viewer' || viewerContext?.isAnnotationMode || isPlacementMode}
         >
           <LocalIcon
             icon={viewerContext?.isAnnotationsVisible ? "visibility" : "visibility-off-rounded"}

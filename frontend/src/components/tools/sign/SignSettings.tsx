@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from "react-i18next";
-import { Stack, Button, Text, Alert, Tabs } from '@mantine/core';
+import { Stack, Button, Text, Alert, Tabs, SegmentedControl } from '@mantine/core';
 import { SignParameters } from "../../../hooks/tools/sign/useSignParameters";
 import { SuggestedToolsSection } from "../shared/SuggestedToolsSection";
+import { useSignature } from "../../../contexts/SignatureContext";
 
 // Import the new reusable components
 import { DrawingCanvas } from "../../annotation/shared/DrawingCanvas";
@@ -35,12 +36,14 @@ const SignSettings = ({
   onSave
 }: SignSettingsProps) => {
   const { t } = useTranslation();
+  const { isPlacementMode } = useSignature();
 
   // State for drawing
   const [selectedColor, setSelectedColor] = useState('#000000');
   const [penSize, setPenSize] = useState(2);
   const [penSizeInput, setPenSizeInput] = useState('2');
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
+  const [interactionMode, setInteractionMode] = useState<'move' | 'place'>('move');
 
   // State for different signature types
   const [canvasSignatureData, setCanvasSignatureData] = useState<string | null>(null);
@@ -100,12 +103,14 @@ const SignSettings = ({
   useEffect(() => {
     if (parameters.signatureType === 'text' && parameters.signerName && parameters.signerName.trim() !== '') {
       if (onActivateSignaturePlacement) {
+        setInteractionMode('place');
         setTimeout(() => {
           onActivateSignaturePlacement();
         }, 100);
       }
     } else if (parameters.signatureType === 'text' && (!parameters.signerName || parameters.signerName.trim() === '')) {
       if (onDeactivateSignature) {
+        setInteractionMode('move');
         onDeactivateSignature();
       }
     }
@@ -130,6 +135,7 @@ const SignSettings = ({
   // Handle image signature activation - activate when image data syncs with parameters
   useEffect(() => {
     if (parameters.signatureType === 'image' && imageSignatureData && parameters.signatureData === imageSignatureData && onActivateSignaturePlacement) {
+      setInteractionMode('place');
       setTimeout(() => {
         onActivateSignaturePlacement();
       }, 100);
@@ -139,6 +145,7 @@ const SignSettings = ({
   // Handle canvas signature activation - activate when canvas data syncs with parameters
   useEffect(() => {
     if (parameters.signatureType === 'canvas' && canvasSignatureData && parameters.signatureData === canvasSignatureData && onActivateSignaturePlacement) {
+      setInteractionMode('place');
       setTimeout(() => {
         onActivateSignaturePlacement();
       }, 100);
@@ -235,10 +242,34 @@ const SignSettings = ({
       )}
 
 
+      {/* Interaction Mode Toggle */}
+      {(canvasSignatureData || imageSignatureData || (parameters.signerName && parameters.signerName.trim() !== '')) && (
+        <SegmentedControl
+          value={interactionMode}
+          onChange={(value) => {
+            setInteractionMode(value as 'move' | 'place');
+            if (value === 'place') {
+              if (onActivateSignaturePlacement) {
+                onActivateSignaturePlacement();
+              }
+            } else {
+              if (onDeactivateSignature) {
+                onDeactivateSignature();
+              }
+            }
+          }}
+          data={[
+            { label: 'Move Signature', value: 'move' },
+            { label: 'Place Signature', value: 'place' }
+          ]}
+          fullWidth
+        />
+      )}
+
       {/* Instructions for placing signature */}
       <Alert color="blue" title={t('sign.instructions.title', 'How to add signature')}>
         <Text size="sm">
-          {parameters.signatureType === 'canvas' && 'After drawing your signature in the canvas above, click "Update and Place" then click anywhere on the PDF to place it.'}
+          {parameters.signatureType === 'canvas' && 'After drawing your signature in the canvas, close the modal then click anywhere on the PDF to place it.'}
           {parameters.signatureType === 'image' && 'After uploading your signature image above, click anywhere on the PDF to place it.'}
           {parameters.signatureType === 'text' && 'After entering your name above, click anywhere on the PDF to place your signature.'}
         </Text>
