@@ -407,13 +407,11 @@ const FileEditorThumbnail = ({
       </div>
 
       {/* Hover Menu */}
-      {isSupported && (
-        <HoverActionMenu
-          show={showHoverMenu}
-          actions={hoverActions}
-          position="outside"
-        />
-      )}
+      <HoverActionMenu
+        show={showHoverMenu}
+        actions={hoverActions}
+        position="outside"
+      />
 
       {/* Close Confirmation Modal */}
       <Modal
