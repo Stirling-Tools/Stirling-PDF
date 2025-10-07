@@ -48,6 +48,18 @@
   --color-yellow-200: #fef08a;
   --color-yellow-300: #fde047;
   --color-yellow-400: #facc15;
+
+  /* Category colors - consistent across light and dark modes */
+  --category-color-removal: #ef4444;        /* Red for removal tools */
+  --category-color-security: #f59e0b;       /* Orange for security tools */
+  --category-color-formatting: #8b5cf6;     /* Purple for formatting tools */
+  --category-color-extraction: #06b6d4;      /* Cyan for extraction tools */
+  --category-color-signing: #10b981;        /* Green for signing tools */
+  --category-color-general: #3b82f6;        /* Blue for general tools */
+  --category-color-verification: #f97316;    /* Orange for verification tools */
+  --category-color-automation: #ec4899;     /* Pink for automation tools */
+  --category-color-developer: #6b7280;      /* Gray for developer tools */
+  --category-color-default: #6b7280;        /* Default gray */
   --color-yellow-500: #eab308;
   --color-yellow-600: #ca8a04;
   --color-yellow-700: #a16207;
@@ -276,6 +288,18 @@
   --color-gray-700: #d1d5db;
   --color-gray-800: #e5e7eb;
   --color-gray-900: #f3f4f6;
+
+  /* Category colors - same as light mode for consistency */
+  --category-color-removal: #ef4444;        /* Red for removal tools */
+  --category-color-security: #f59e0b;       /* Orange for security tools */
+  --category-color-formatting: #8b5cf6;     /* Purple for formatting tools */
+  --category-color-extraction: #06b6d4;      /* Cyan for extraction tools */
+  --category-color-signing: #10b981;        /* Green for signing tools */
+  --category-color-general: #3b82f6;        /* Blue for general tools */
+  --category-color-verification: #f97316;    /* Orange for verification tools */
+  --category-color-automation: #ec4899;     /* Pink for automation tools */
+  --category-color-developer: #6b7280;      /* Gray for developer tools */
+  --category-color-default: #6b7280;        /* Default gray */
 
   /* Success (green) - dark */
   --color-green-50: #052e16;

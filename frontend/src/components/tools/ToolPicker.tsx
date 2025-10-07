@@ -6,6 +6,7 @@ import "./toolPicker/ToolPicker.css";
 import { useToolSections } from "../../hooks/useToolSections";
 import NoToolsFound from "./shared/NoToolsFound";
 import { renderToolButtons } from "./shared/renderToolButtons";
+import Badge from "../shared/Badge";
 
 interface ToolPickerProps {
   selectedToolKey: string | null;
@@ -115,7 +116,7 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
             {searchGroups.length === 0 ? (
               <NoToolsFound />
             ) : (
-              searchGroups.map(group => renderToolButtons(t, group, selectedToolKey, onSelect))
+                      searchGroups.map(group => renderToolButtons(t, group, selectedToolKey, onSelect, true, false, filteredTools))
             )}
           </Stack>
         ) : (
@@ -142,25 +143,16 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
               onClick={() => scrollTo(quickAccessRef)}
             >
               <span style={{ fontSize: "1rem" }}>{t("toolPicker.quickAccess", "QUICK ACCESS")}</span>
-              <span
-                style={{
-                  background: "var(--tool-header-badge-bg)",
-                  color: "var(--tool-header-badge-text)",
-                  borderRadius: ".5rem",
-                  padding: "0.125rem 0.5rem",
-                  fontSize: ".75rem",
-                  fontWeight: 700
-                }}
-              >
+              <Badge>
                 {quickSection?.subcategories.reduce((acc, sc) => acc + sc.tools.length, 0)}
-              </span>
+              </Badge>
             </div>
 
             <Box ref={quickAccessRef} w="100%" my="sm">
               <Stack p="sm" gap="xs">
-                {quickSection?.subcategories.map(sc =>
-                  renderToolButtons(t, sc, selectedToolKey, onSelect, false)
-                )}
+                        {quickSection?.subcategories.map(sc =>
+                          renderToolButtons(t, sc, selectedToolKey, onSelect, false, false)
+                        )}
               </Stack>
             </Box>
           </>
@@ -188,25 +180,16 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
               onClick={() => scrollTo(allToolsRef)}
             >
               <span style={{ fontSize: "1rem" }}>{t("toolPicker.allTools", "ALL TOOLS")}</span>
-              <span
-                style={{
-                  background: "var(--tool-header-badge-bg)",
-                  color: "var(--tool-header-badge-text)",
-                  borderRadius: ".5rem",
-                  padding: "0.125rem 0.5rem",
-                  fontSize: ".75rem",
-                  fontWeight: 700
-                }}
-              >
+              <Badge>
                 {allSection?.subcategories.reduce((acc, sc) => acc + sc.tools.length, 0)}
-              </span>
+              </Badge>
             </div>
 
             <Box ref={allToolsRef} w="100%">
               <Stack p="sm" gap="xs">
-                {allSection?.subcategories.map(sc =>
-                  renderToolButtons(t, sc, selectedToolKey, onSelect, true)
-                )}
+                        {allSection?.subcategories.map(sc =>
+                          renderToolButtons(t, sc, selectedToolKey, onSelect, true, false)
+                        )}
               </Stack>
             </Box>
           </>

@@ -20,7 +20,7 @@ interface ToolSearchProps {
   autoFocus?: boolean;
 }
 
-const ToolSearch = ({
+const ToolSearch: React.FC<ToolSearchProps> = ({
   value,
   onChange,
   toolRegistry,
@@ -31,7 +31,7 @@ const ToolSearch = ({
   hideIcon = false,
   onFocus,
   autoFocus = false,
-}: ToolSearchProps) => {
+}) => {
   const { t } = useTranslation();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
@@ -81,15 +81,15 @@ const ToolSearch = ({
   }, [autoFocus]);
 
   const searchInput = (
-      <TextInput
-        ref={searchRef}
-        value={value}
-        onChange={handleSearchChange}
-        placeholder={placeholder || t("toolPicker.searchPlaceholder", "Search tools...")}
-        icon={hideIcon ? undefined : <LocalIcon icon="search-rounded" width="1.5rem" height="1.5rem" />}
-        autoComplete="off"
-        onFocus={onFocus}
-      />
+        <TextInput
+          ref={searchRef}
+          value={value}
+          onChange={handleSearchChange}
+          placeholder={placeholder || t("toolPicker.searchPlaceholder", "Search tools...")}
+          icon={hideIcon ? undefined : <LocalIcon icon="search-rounded" width="1.5rem" height="1.5rem" />}
+          autoComplete="off"
+          onFocus={onFocus}
+        />
   );
 
   if (mode === "filter") {

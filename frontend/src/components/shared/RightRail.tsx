@@ -27,7 +27,8 @@ export default function RightRail() {
   // Viewer context for PDF controls - safely handle when not available
   const viewerContext = React.useContext(ViewerContext);
   const { toggleTheme } = useRainbowThemeContext();
-  const { buttons, actions } = useRightRail();
+  const { buttons, actions, allButtonsDisabled } = useRightRail();
+
   const topButtons = useMemo(() => buttons.filter(b => (b.section || 'top') === 'top' && (b.visible ?? true)), [buttons]);
 
   // Access PageEditor functions for page-editor-specific actions
@@ -176,7 +177,7 @@ export default function RightRail() {
   }, [currentView]);
 
   return (
-    <div className="right-rail" data-sidebar="right-rail">
+    <div className={`right-rail`} data-sidebar="right-rail">
       <div className="right-rail-inner">
         {topButtons.length > 0 && (
           <>
@@ -188,7 +189,7 @@ export default function RightRail() {
                     radius="md"
                     className="right-rail-icon"
                     onClick={() => actions[btn.id]?.()}
-                    disabled={btn.disabled}
+                    disabled={btn.disabled || allButtonsDisabled}
                   >
                     {btn.icon}
                   </ActionIcon>
@@ -214,7 +215,7 @@ export default function RightRail() {
                       variant="subtle"
                       radius="md"
                       className="right-rail-icon"
-                      disabled={currentView !== 'viewer'}
+                      disabled={currentView !== 'viewer' || allButtonsDisabled}
                       aria-label={typeof t === 'function' ? t('rightRail.search', 'Search PDF') : 'Search PDF'}
                     >
                       <LocalIcon icon="search" width="1.5rem" height="1.5rem" />
@@ -244,7 +245,7 @@ export default function RightRail() {
                   viewerContext?.panActions.togglePan();
                   setIsPanning(!isPanning);
                 }}
-                disabled={currentView !== 'viewer'}
+                disabled={currentView !== 'viewer' || allButtonsDisabled}
               >
                 <LocalIcon icon="pan-tool-rounded" width="1.5rem" height="1.5rem" />
               </ActionIcon>
@@ -259,7 +260,7 @@ export default function RightRail() {
                 onClick={() => {
                   viewerContext?.rotationActions.rotateBackward();
                 }}
-                disabled={currentView !== 'viewer'}
+                disabled={currentView !== 'viewer' || allButtonsDisabled}
               >
                 <LocalIcon icon="rotate-left" width="1.5rem" height="1.5rem" />
               </ActionIcon>
@@ -274,7 +275,7 @@ export default function RightRail() {
                 onClick={() => {
                   viewerContext?.rotationActions.rotateForward();
                 }}
-                disabled={currentView !== 'viewer'}
+                disabled={currentView !== 'viewer' || allButtonsDisabled}
               >
                 <LocalIcon icon="rotate-right" width="1.5rem" height="1.5rem" />
               </ActionIcon>
@@ -289,7 +290,7 @@ export default function RightRail() {
                 onClick={() => {
                   viewerContext?.toggleThumbnailSidebar();
                 }}
-                disabled={currentView !== 'viewer'}
+                disabled={currentView !== 'viewer' || allButtonsDisabled}
               >
                 <LocalIcon icon="view-list" width="1.5rem" height="1.5rem" />
               </ActionIcon>
@@ -315,7 +316,7 @@ export default function RightRail() {
                   radius="md"
                   className="right-rail-icon"
                   onClick={handleSelectAll}
-                  disabled={currentView === 'viewer' || totalItems === 0 || selectedCount === totalItems}
+                  disabled={currentView === 'viewer' || totalItems === 0 || selectedCount === totalItems || allButtonsDisabled}
                 >
                   <LocalIcon icon="select-all" width="1.5rem" height="1.5rem" />
                 </ActionIcon>
@@ -330,7 +331,7 @@ export default function RightRail() {
                   radius="md"
                   className="right-rail-icon"
                   onClick={handleDeselectAll}
-                  disabled={currentView === 'viewer' || selectedCount === 0}
+                  disabled={currentView === 'viewer' || selectedCount === 0 || allButtonsDisabled}
                 >
                   <LocalIcon icon="crop-square-outline" width="1.5rem" height="1.5rem" />
                 </ActionIcon>
@@ -349,7 +350,7 @@ export default function RightRail() {
                           variant="subtle"
                           radius="md"
                           className="right-rail-icon"
-                          disabled={!pageControlsVisible || totalItems === 0}
+                          disabled={!pageControlsVisible || totalItems === 0 || allButtonsDisabled}
                           aria-label={typeof t === 'function' ? t('rightRail.selectByNumber', 'Select by Page Numbers') : 'Select by Page Numbers'}
                         >
                           <LocalIcon icon="pin-end" width="1.5rem" height="1.5rem" />
@@ -385,7 +386,7 @@ export default function RightRail() {
                       radius="md"
                       className="right-rail-icon"
                       onClick={() => { pageEditorFunctions?.handleDelete?.(); }}
-                      disabled={!pageControlsVisible || (pageEditorFunctions?.selectedPageIds?.length || 0) === 0}
+                      disabled={!pageControlsVisible || (pageEditorFunctions?.selectedPageIds?.length || 0) === 0 || allButtonsDisabled}
                       aria-label={typeof t === 'function' ? t('rightRail.deleteSelected', 'Delete Selected Pages') : 'Delete Selected Pages'}
                     >
                       <LocalIcon icon="delete-outline-rounded" width="1.5rem" height="1.5rem" />
@@ -406,7 +407,7 @@ export default function RightRail() {
                       radius="md"
                       className="right-rail-icon"
                       onClick={() => { pageEditorFunctions?.onExportSelected?.(); }}
-                      disabled={!pageControlsVisible || (pageEditorFunctions?.selectedPageIds?.length || 0) === 0 || pageEditorFunctions?.exportLoading}
+                      disabled={!pageControlsVisible || (pageEditorFunctions?.selectedPageIds?.length || 0) === 0 || pageEditorFunctions?.exportLoading || allButtonsDisabled}
                       aria-label={typeof t === 'function' ? t('rightRail.exportSelected', 'Export Selected Pages') : 'Export Selected Pages'}
                     >
                       <LocalIcon icon="download" width="1.5rem" height="1.5rem" />
@@ -427,7 +428,8 @@ export default function RightRail() {
                   disabled={
                     currentView === 'viewer' ||
                     (currentView === 'fileEditor' && selectedCount === 0) ||
-                    (currentView === 'pageEditor' && (activeFiles.length === 0 || !pageEditorFunctions?.closePdf))
+                    (currentView === 'pageEditor' && (activeFiles.length === 0 || !pageEditorFunctions?.closePdf)) ||
+                    allButtonsDisabled
                   }
                 >
                   <LocalIcon icon="close-rounded" width="1.5rem" height="1.5rem" />
@@ -441,7 +443,8 @@ export default function RightRail() {
 
         {/* Theme toggle and Language dropdown */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
-          <Tooltip content={t('rightRail.toggleTheme', 'Toggle Theme')} position="left" offset={12} arrow>
+          <Tooltip content={t('rightRail.toggleTheme', 'Toggle Theme')} position="left" offset={12} arrow portalTarget={document.body}
+          >
             <ActionIcon
               variant="subtle"
               radius="md"
@@ -452,7 +455,11 @@ export default function RightRail() {
             </ActionIcon>
           </Tooltip>
 
-          <LanguageSelector position="left-start" offset={6} compact />
+          <Tooltip content={t('rightRail.language', 'Language')} position="left" offset={12} arrow portalTarget={document.body}>
+            <div style={{ display: 'inline-flex' }}>
+              <LanguageSelector position="left-start" offset={6} compact />
+            </div>
+          </Tooltip>
 
           <Tooltip content={
             currentView === 'pageEditor'
@@ -466,7 +473,7 @@ export default function RightRail() {
                 className="right-rail-icon"
                 onClick={handleExportAll}
                 disabled={
-                  currentView === 'viewer' ? !exportState?.canExport : totalItems === 0
+                  currentView === 'viewer' ? !exportState?.canExport : totalItems === 0 || allButtonsDisabled
                 }
               >
                 <LocalIcon icon="download" width="1.5rem" height="1.5rem" />

@@ -77,17 +77,17 @@ export const SUBCATEGORY_ORDER: SubcategoryId[] = [
 ];
 
 export const SUBCATEGORY_COLOR_MAP: Record<SubcategoryId, string> = {
-  [SubcategoryId.SIGNING]: '#E91E63',           // Rose Pink
-  [SubcategoryId.DOCUMENT_SECURITY]: '#D32F2F', // Deep Red
-  [SubcategoryId.VERIFICATION]: '#1976D2',      // Medium Blue
-  [SubcategoryId.DOCUMENT_REVIEW]: '#388E3C',   // Forest Green
-  [SubcategoryId.PAGE_FORMATTING]: '#5E35B1',   // Deep Purple
-  [SubcategoryId.EXTRACTION]: '#F57C00',        // Amber/Gold
-  [SubcategoryId.REMOVAL]: '#E64A19',           // Rust Orange
-  [SubcategoryId.AUTOMATION]: '#00897B',        // Teal
-  [SubcategoryId.GENERAL]: '#689F38',           // Olive Green
-  [SubcategoryId.ADVANCED_FORMATTING]: '#8E24AA', // Deep Magenta
-  [SubcategoryId.DEVELOPER_TOOLS]: '#455A64',   // Slate Grey
+  [SubcategoryId.SIGNING]: 'var(--category-color-signing)',           // Green
+  [SubcategoryId.DOCUMENT_SECURITY]: 'var(--category-color-security)', // Orange
+  [SubcategoryId.VERIFICATION]: 'var(--category-color-verification)',      // Orange
+  [SubcategoryId.DOCUMENT_REVIEW]: 'var(--category-color-general)',   // Blue
+  [SubcategoryId.PAGE_FORMATTING]: 'var(--category-color-formatting)',   // Purple
+  [SubcategoryId.EXTRACTION]: 'var(--category-color-extraction)',        // Cyan
+  [SubcategoryId.REMOVAL]: 'var(--category-color-removal)',           // Red
+  [SubcategoryId.AUTOMATION]: 'var(--category-color-automation)',        // Pink
+  [SubcategoryId.GENERAL]: 'var(--category-color-general)',           // Blue
+  [SubcategoryId.ADVANCED_FORMATTING]: 'var(--category-color-formatting)', // Purple
+  [SubcategoryId.DEVELOPER_TOOLS]: 'var(--category-color-developer)',   // Gray
 };
 
 export const getSubcategoryIcon = (subcategory: SubcategoryId): React.ReactNode => {

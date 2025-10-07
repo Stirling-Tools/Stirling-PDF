@@ -13,10 +13,10 @@ import { useNavigationUrlSync } from '../hooks/useUrlSync';
 import { getDefaultWorkbench } from '../types/workbench';
 import { filterToolRegistryByQuery } from '../utils/toolSearch';
 import { useToolHistory } from '../hooks/tools/useToolHistory';
-import { LegacyToolStyleSettings, defaultLegacyToolSettings } from '../components/tools/LegacyToolSettings';
+import { FullscreenToolStyleSettings, defaultFullscreenToolSettings } from '../components/tools/FullscreenToolSettings';
 
 // State interface
-type ToolPanelMode = 'sidebar' | 'legacy';
+type ToolPanelMode = 'sidebar' | 'fullscreen';
 
 interface ToolWorkflowState {
   // UI State
@@ -24,7 +24,7 @@ interface ToolWorkflowState {
   leftPanelView: 'toolPicker' | 'toolContent' | 'hidden';
   readerMode: boolean;
   toolPanelMode: ToolPanelMode;
-  legacyToolSettings: LegacyToolStyleSettings;
+  fullscreenToolSettings: FullscreenToolStyleSettings;
 
   // File/Preview State
   previewFile: File | null;
@@ -40,7 +40,7 @@ type ToolWorkflowAction =
   | { type: 'SET_LEFT_PANEL_VIEW'; payload: 'toolPicker' | 'toolContent' | 'hidden' }
   | { type: 'SET_READER_MODE'; payload: boolean }
   | { type: 'SET_TOOL_PANEL_MODE'; payload: ToolPanelMode }
-  | { type: 'SET_LEGACY_TOOL_SETTINGS'; payload: LegacyToolStyleSettings }
+  | { type: 'SET_FULLSCREEN_TOOL_SETTINGS'; payload: FullscreenToolStyleSettings }
   | { type: 'SET_PREVIEW_FILE'; payload: File | null }
   | { type: 'SET_PAGE_EDITOR_FUNCTIONS'; payload: PageEditorFunctions | null }
   | { type: 'SET_SEARCH_QUERY'; payload: string }
@@ -48,6 +48,7 @@ type ToolWorkflowAction =
 
 // Initial state
 export const TOOL_PANEL_MODE_STORAGE_KEY = 'toolPanelModePreference';
+export const FULLSCREEN_TOOL_SETTINGS_STORAGE_KEY = 'fullscreenToolStyleSettings';
 export const LEGACY_TOOL_SETTINGS_STORAGE_KEY = 'legacyToolStyleSettings';
 
 const getStoredToolPanelMode = (): ToolPanelMode => {
@@ -57,30 +58,34 @@ const getStoredToolPanelMode = (): ToolPanelMode => {
 
   const stored = window.localStorage.getItem(TOOL_PANEL_MODE_STORAGE_KEY);
   if (stored === 'legacy' || stored === 'fullscreen') {
-    return 'legacy';
+    return 'fullscreen';
   }
 
   return 'sidebar';
 };
 
-const getStoredLegacyToolSettings = (): LegacyToolStyleSettings => {
+const getStoredFullscreenToolSettings = (): FullscreenToolStyleSettings => {
   if (typeof window === 'undefined') {
-    return defaultLegacyToolSettings;
+    return defaultFullscreenToolSettings;
   }
 
   try {
-    const stored = window.localStorage.getItem(LEGACY_TOOL_SETTINGS_STORAGE_KEY);
-    if (stored) {
-      return { ...defaultLegacyToolSettings, ...JSON.parse(stored) };
+    const storedNew = window.localStorage.getItem(FULLSCREEN_TOOL_SETTINGS_STORAGE_KEY);
+    if (storedNew) {
+      return { ...defaultFullscreenToolSettings, ...JSON.parse(storedNew) };
+    }
+    const storedLegacy = window.localStorage.getItem(LEGACY_TOOL_SETTINGS_STORAGE_KEY);
+    if (storedLegacy) {
+      return { ...defaultFullscreenToolSettings, ...JSON.parse(storedLegacy) };
     }
   } catch (e) {
-    console.error('Failed to parse legacy tool settings:', e);
+    console.error('Failed to parse fullscreen tool settings:', e);
   }
 
-  return defaultLegacyToolSettings;
+  return defaultFullscreenToolSettings;
 };
 
-const baseState: Omit<ToolWorkflowState, 'toolPanelMode' | 'legacyToolSettings'> = {
+const baseState: Omit<ToolWorkflowState, 'toolPanelMode' | 'fullscreenToolSettings'> = {
   sidebarsVisible: true,
   leftPanelView: 'toolPicker',
   readerMode: false,
@@ -92,7 +97,7 @@ const baseState: Omit<ToolWorkflowState, 'toolPanelMode' | 'legacyToolSettings'>
 const createInitialState = (): ToolWorkflowState => ({
   ...baseState,
   toolPanelMode: getStoredToolPanelMode(),
-  legacyToolSettings: getStoredLegacyToolSettings(),
+  fullscreenToolSettings: getStoredFullscreenToolSettings(),
 });
 
 // Reducer
@@ -106,8 +111,8 @@ function toolWorkflowReducer(state: ToolWorkflowState, action: ToolWorkflowActio
       return { ...state, readerMode: action.payload };
     case 'SET_TOOL_PANEL_MODE':
       return { ...state, toolPanelMode: action.payload };
-    case 'SET_LEGACY_TOOL_SETTINGS':
-      return { ...state, legacyToolSettings: action.payload };
+    case 'SET_FULLSCREEN_TOOL_SETTINGS':
+      return { ...state, fullscreenToolSettings: action.payload };
     case 'SET_PREVIEW_FILE':
       return { ...state, previewFile: action.payload };
     case 'SET_PAGE_EDITOR_FUNCTIONS':
@@ -118,7 +123,7 @@ function toolWorkflowReducer(state: ToolWorkflowState, action: ToolWorkflowActio
       return {
         ...baseState,
         toolPanelMode: state.toolPanelMode,
-        legacyToolSettings: state.legacyToolSettings,
+        fullscreenToolSettings: state.fullscreenToolSettings,
         searchQuery: state.searchQuery,
       };
     default:
@@ -139,12 +144,12 @@ interface ToolWorkflowContextValue extends ToolWorkflowState {
   setLeftPanelView: (view: 'toolPicker' | 'toolContent' | 'hidden') => void;
   setReaderMode: (mode: boolean) => void;
   setToolPanelMode: (mode: ToolPanelMode) => void;
-  setLegacyToolSettings: (settings: LegacyToolStyleSettings) => void;
+  setFullscreenToolSettings: (settings: FullscreenToolStyleSettings) => void;
   setPreviewFile: (file: File | null) => void;
   setPageEditorFunctions: (functions: PageEditorFunctions | null) => void;
   setSearchQuery: (query: string) => void;
 
-  // Tool Actions
+
   selectTool: (toolId: ToolId | null) => void;
   clearToolSelection: () => void;
 
@@ -226,8 +231,9 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     dispatch({ type: 'SET_TOOL_PANEL_MODE', payload: mode });
   }, []);
 
-  const setLegacyToolSettings = useCallback((settings: LegacyToolStyleSettings) => {
-    dispatch({ type: 'SET_LEGACY_TOOL_SETTINGS', payload: settings });
+
+  const setFullscreenToolSettings = useCallback((settings: FullscreenToolStyleSettings) => {
+    dispatch({ type: 'SET_FULLSCREEN_TOOL_SETTINGS', payload: settings });
   }, []);
 
   const setPreviewFile = useCallback((file: File | null) => {
@@ -258,8 +264,10 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
       return;
     }
 
-    window.localStorage.setItem(LEGACY_TOOL_SETTINGS_STORAGE_KEY, JSON.stringify(state.legacyToolSettings));
-  }, [state.legacyToolSettings]);
+    const serialized = JSON.stringify(state.fullscreenToolSettings);
+    window.localStorage.setItem(FULLSCREEN_TOOL_SETTINGS_STORAGE_KEY, serialized);
+    window.localStorage.setItem(LEGACY_TOOL_SETTINGS_STORAGE_KEY, serialized);
+  }, [state.fullscreenToolSettings]);
 
   // Tool reset methods
   const registerToolReset = useCallback((toolId: string, resetFunction: () => void) => {
@@ -288,8 +296,6 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
       actions.setSelectedTool('read');
       actions.setWorkbench('viewer');
       setSearchQuery('');
-      setToolPanelMode('sidebar'); // Close legacy mode when switching to reader
-      setLeftPanelView('toolPicker'); // Show tool picker when navigating back to tools
       return;
     }
 
@@ -365,7 +371,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     setLeftPanelView,
     setReaderMode,
     setToolPanelMode,
-    setLegacyToolSettings,
+    setFullscreenToolSettings,
     setPreviewFile,
     setPageEditorFunctions,
     setSearchQuery,
@@ -402,7 +408,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     setLeftPanelView,
     setReaderMode,
     setToolPanelMode,
-    setLegacyToolSettings,
+    setFullscreenToolSettings,
     setPreviewFile,
     setPageEditorFunctions,
     setSearchQuery,

@@ -136,6 +136,39 @@
   opacity: 0.55;
 }
 
+.tool-panel-mode-prompt__preview--fullscreen {
+  align-items: flex-start;
+  justify-content: center;
+  padding: 0.65rem 0.6rem;
+}
+
+.tool-panel-mode-prompt__fullscreen-columns {
+  width: 100%;
+  display: flex;
+  gap: 0.45rem;
+  justify-content: space-between;
+}
+
+.tool-panel-mode-prompt__fullscreen-column {
+  flex: 1;
+  display: grid;
+  gap: 0.3rem;
+}
+
+.tool-panel-mode-prompt__fullscreen-card {
+  border-radius: 0.45rem;
+  border: 1px solid color-mix(in srgb, var(--border-subtle) 55%, transparent);
+  background: linear-gradient(150deg,
+    color-mix(in srgb, var(--bg-muted) 88%, transparent),
+    color-mix(in srgb, var(--bg-background) 76%, transparent)
+  );
+  height: 1.2rem;
+}
+
+.tool-panel-mode-prompt__fullscreen-card--muted {
+  opacity: 0.55;
+}
+
 .tool-panel-mode-prompt__card-content {
   display: flex;
   flex-direction: column;

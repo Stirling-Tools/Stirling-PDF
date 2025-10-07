@@ -48,14 +48,14 @@ const SearchResults: React.FC<SearchResultsProps> = ({ filteredTools, onSelect, 
               ) : undefined;
               
               return (
-                <ToolButton
-                  key={id}
-                  id={id}
-                  tool={tool}
-                  isSelected={false}
-                  onSelect={onSelect}
-                  matchedSynonym={matchedSynonym}
-                />
+                        <ToolButton
+                          key={id}
+                          id={id}
+                          tool={tool}
+                          isSelected={false}
+                          onSelect={onSelect}
+                          matchedSynonym={matchedSynonym}
+                        />
               );
             })}
           </Stack>

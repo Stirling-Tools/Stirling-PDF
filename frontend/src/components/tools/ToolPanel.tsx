@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { useRainbowThemeContext } from '../shared/RainbowThemeProvider';
 import { useToolWorkflow } from '../../contexts/ToolWorkflowContext';
 import ToolPicker from './ToolPicker';
@@ -13,9 +13,10 @@ import { useMediaQuery } from '@mantine/hooks';
 import ViewSidebarRoundedIcon from '@mui/icons-material/ViewSidebarRounded';
 import DashboardCustomizeRoundedIcon from '@mui/icons-material/DashboardCustomizeRounded';
 import { useTranslation } from 'react-i18next';
-import LegacyToolSurface from './LegacyToolSurface';
+import FullscreenToolSurface from './FullscreenToolSurface';
 import { useToolPanelGeometry } from '../../hooks/tools/useToolPanelGeometry';
 import { useLocalStorageState } from '../../hooks/tools/useLocalStorageState';
+import { useRightRail } from '../../contexts/RightRailContext';
 import './ToolPanel.css';
 
 // No props needed - component uses context
@@ -40,28 +41,49 @@ export default function ToolPanel() {
     toolPanelMode,
     setToolPanelMode,
     setLeftPanelView,
+    readerMode,
   } = useToolWorkflow();
 
-  const isLegacyMode = toolPanelMode === 'legacy';
-  const legacyExpanded = isLegacyMode && leftPanelView === 'toolPicker' && !isMobile;
+  const { setAllRightRailButtonsDisabled } = useRightRail();
+
+  const isFullscreenMode = toolPanelMode === 'fullscreen';
+  const toolPickerVisible = !readerMode;
+  const fullscreenExpanded = isFullscreenMode && leftPanelView === 'toolPicker' && !isMobile && toolPickerVisible;
+
+
+  // Debug logging for troubleshooting
+  React.useEffect(() => {
+    console.log('ToolPanel debug:', {
+      isFullscreenMode,
+      leftPanelView,
+      isMobile,
+      toolPickerVisible,
+      fullscreenExpanded
+    });
+  }, [isFullscreenMode, leftPanelView, isMobile, toolPickerVisible, fullscreenExpanded]);
+
+  // Disable right rail buttons when fullscreen mode is active
+  React.useEffect(() => {
+    setAllRightRailButtonsDisabled(fullscreenExpanded);
+  }, [fullscreenExpanded, setAllRightRailButtonsDisabled]);
 
   // Use custom hooks for state management
   const [showLegacyDescriptions, setShowLegacyDescriptions] = useLocalStorageState('legacyToolDescriptions', false);
-  const legacyGeometry = useToolPanelGeometry({
-    enabled: legacyExpanded,
+  const fullscreenGeometry = useToolPanelGeometry({
+    enabled: fullscreenExpanded,
     toolPanelRef,
     quickAccessRef,
   });
 
-  const toggleLabel = isLegacyMode
+  const toggleLabel = isFullscreenMode
     ? t('toolPanel.toggle.sidebar', 'Switch to sidebar mode')
-    : t('toolPanel.toggle.legacy', 'Switch to legacy mode');
+    : t('toolPanel.toggle.fullscreen', 'Switch to fullscreen mode');
 
   const handleModeToggle = () => {
-    const nextMode = isLegacyMode ? 'sidebar' : 'legacy';
+    const nextMode = isFullscreenMode ? 'sidebar' : 'fullscreen';
     setToolPanelMode(nextMode);
 
-    if (nextMode === 'legacy' && leftPanelView !== 'toolPicker') {
+    if (nextMode === 'fullscreen' && leftPanelView !== 'toolPicker') {
       setLeftPanelView('toolPicker');
     }
   };
@@ -92,15 +114,15 @@ export default function ToolPanel() {
     <div
       ref={toolPanelRef}
       data-sidebar="tool-panel"
-      className={`tool-panel flex flex-col ${legacyExpanded ? 'tool-panel--legacy-active' : 'overflow-hidden'} bg-[var(--bg-toolbar)] border-r border-[var(--border-subtle)] transition-all duration-300 ease-out ${
+      className={`tool-panel flex flex-col ${fullscreenExpanded ? 'tool-panel--fullscreen-active' : 'overflow-hidden'} bg-[var(--bg-toolbar)] border-r border-[var(--border-subtle)] transition-all duration-300 ease-out ${
         isRainbowMode ? rainbowStyles.rainbowPaper : ''
-      } ${isMobile ? 'h-full border-r-0' : 'h-screen'} ${legacyExpanded ? 'tool-panel--legacy' : ''}`}
+      } ${isMobile ? 'h-full border-r-0' : 'h-screen'} ${fullscreenExpanded ? 'tool-panel--fullscreen' : ''}`}
       style={{
         width: computedWidth(),
         padding: '0'
       }}
     >
-      {!legacyExpanded && (
+      {!fullscreenExpanded && (
         <div
           style={{
             opacity: isMobile || isPanelVisible ? 1 : 0,
@@ -123,17 +145,26 @@ export default function ToolPanel() {
               toolRegistry={toolRegistry}
               mode="filter"
             />
-            {!isMobile && (
-              <Tooltip label={toggleLabel} position="bottom" withArrow>
+            {!isMobile && leftPanelView === 'toolPicker' && (
+              <Tooltip 
+                label={toggleLabel} 
+                position="bottom" 
+                withArrow
+                styles={{
+                  tooltip: {
+                    zIndex: 1400, // Higher than fullscreen surface
+                  }
+                }}
+              >
                 <ActionIcon
                   variant="subtle"
                   radius="xl"
-                  color="gray"
+                  style={{ color: 'var(--right-rail-icon)' }}
                   onClick={handleModeToggle}
                   aria-label={toggleLabel}
                   className="tool-panel__mode-toggle"
                 >
-                  {isLegacyMode ? (
+                  {isFullscreenMode ? (
                     <ViewSidebarRoundedIcon fontSize="small" />
                   ) : (
                     <DashboardCustomizeRoundedIcon fontSize="small" />
@@ -143,23 +174,23 @@ export default function ToolPanel() {
             )}
           </div>
 
-          {searchQuery.trim().length > 0 ? (
-            <div className="flex-1 flex flex-col overflow-y-auto">
-              <SearchResults
-                filteredTools={filteredTools}
-                onSelect={(id) => handleToolSelect(id as ToolId)}
-                searchQuery={searchQuery}
-              />
-            </div>
-          ) : leftPanelView === 'toolPicker' ? (
-            <div className="flex-1 flex flex-col overflow-auto">
-              <ToolPicker
-                selectedToolKey={selectedToolKey}
-                onSelect={(id) => handleToolSelect(id as ToolId)}
-                filteredTools={filteredTools}
-                isSearching={Boolean(searchQuery && searchQuery.trim().length > 0)}
-              />
-            </div>
+                {searchQuery.trim().length > 0 ? (
+                  <div className="flex-1 flex flex-col overflow-y-auto">
+                    <SearchResults
+                      filteredTools={filteredTools}
+                      onSelect={(id) => handleToolSelect(id as ToolId)}
+                      searchQuery={searchQuery}
+                    />
+                  </div>
+                ) : leftPanelView === 'toolPicker' ? (
+                  <div className="flex-1 flex flex-col overflow-auto">
+                    <ToolPicker
+                      selectedToolKey={selectedToolKey}
+                      onSelect={(id) => handleToolSelect(id as ToolId)}
+                      filteredTools={filteredTools}
+                      isSearching={Boolean(searchQuery && searchQuery.trim().length > 0)}
+                    />
+                  </div>
           ) : (
             <div className="flex-1 flex flex-col overflow-hidden">
               <div className="flex-1 min-h-0 overflow-hidden">
@@ -181,8 +212,8 @@ export default function ToolPanel() {
         </div>
       )}
 
-      {legacyExpanded && (
-        <LegacyToolSurface
+      {fullscreenExpanded && (
+        <FullscreenToolSurface
           searchQuery={searchQuery}
           toolRegistry={toolRegistry}
           filteredTools={filteredTools}
@@ -190,11 +221,11 @@ export default function ToolPanel() {
           showDescriptions={showLegacyDescriptions}
           matchedTextMap={matchedTextMap}
           onSearchChange={setSearchQuery}
-          onSelect={(id) => handleToolSelect(id as ToolId)}
+          onSelect={(id: ToolId) => handleToolSelect(id)}
           onToggleDescriptions={() => setShowLegacyDescriptions((prev) => !prev)}
-          onExitLegacyMode={() => setToolPanelMode('sidebar')}
+          onExitFullscreenMode={() => setToolPanelMode('sidebar')}
           toggleLabel={toggleLabel}
-          geometry={legacyGeometry}
+          geometry={fullscreenGeometry}
         />
       )}
     </div>

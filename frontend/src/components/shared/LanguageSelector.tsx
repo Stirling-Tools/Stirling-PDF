@@ -209,6 +209,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ position = 'bottom-
         width={600}
         position={position}
         offset={offset}
+        zIndex={1400}
         transitionProps={{
           transition: 'scale-y',
           duration: 200,
@@ -264,6 +265,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ position = 'bottom-
             boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
             backgroundColor: 'light-dark(var(--mantine-color-white), var(--mantine-color-dark-6))',
             border: 'light-dark(1px solid var(--mantine-color-gray-3), 1px solid var(--mantine-color-dark-4))',
+            zIndex: 1400,
           }}
         >
           <ScrollArea h={190} type="scroll">

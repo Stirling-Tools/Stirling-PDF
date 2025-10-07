@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { ActionIcon, Badge, Text } from '@mantine/core';
+import { ActionIcon, Text } from '@mantine/core';
 import { Tooltip } from '../shared/Tooltip';
 import { useTranslation } from 'react-i18next';
 import { ToolRegistryEntry, getSubcategoryLabel, getSubcategoryColor, getSubcategoryIcon } from '../../data/toolsTaxonomy';
@@ -12,9 +12,10 @@ import { useToolWorkflow } from '../../contexts/ToolWorkflowContext';
 import StarRoundedIcon from '@mui/icons-material/StarRounded';
 import StarBorderRoundedIcon from '@mui/icons-material/StarBorderRounded';
 import HistoryRoundedIcon from '@mui/icons-material/HistoryRounded';
+import Badge from '../shared/Badge';
 import './ToolPanel.css';
 
-interface LegacyToolListProps {
+interface FullscreenToolListProps {
   filteredTools: Array<{ item: [string, ToolRegistryEntry]; matchedText?: string }>;
   searchQuery: string;
   showDescriptions: boolean;
@@ -23,17 +24,17 @@ interface LegacyToolListProps {
   onSelect: (id: ToolId) => void;
 }
 
-const LegacyToolList = ({
+const FullscreenToolList = ({
   filteredTools,
   searchQuery,
   showDescriptions,
   selectedToolKey,
   matchedTextMap,
   onSelect,
-}: LegacyToolListProps) => {
+}: FullscreenToolListProps) => {
   const { t } = useTranslation();
   const { hotkeys } = useHotkeys();
-  const { toolRegistry, recentTools, favoriteTools, toggleFavorite, isFavorite, legacyToolSettings } = useToolWorkflow();
+  const { toolRegistry, recentTools, favoriteTools, toggleFavorite, isFavorite, fullscreenToolSettings } = useToolWorkflow();
 
   const { sections, searchGroups } = useToolSections(filteredTools, searchQuery);
 
@@ -72,32 +73,32 @@ const LegacyToolList = ({
 
   if (subcategoryGroups.length === 0 && !showRecentFavorites) {
     return (
-      <div className="tool-panel__legacy-empty">
+      <div className="tool-panel__fullscreen-empty">
         <NoToolsFound />
         <Text size="sm" c="dimmed">
-          {t('toolPanel.legacy.noResults', 'Try adjusting your search or toggle descriptions to find what you need.')}
+          {t('toolPanel.fullscreen.noResults', 'Try adjusting your search or toggle descriptions to find what you need.')}
         </Text>
       </div>
     );
   }
 
   const containerClass = showDescriptions
-    ? 'tool-panel__legacy-groups tool-panel__legacy-groups--detailed'
-    : 'tool-panel__legacy-groups tool-panel__legacy-groups--compact';
+    ? 'tool-panel__fullscreen-groups tool-panel__fullscreen-groups--detailed'
+    : 'tool-panel__fullscreen-groups tool-panel__fullscreen-groups--compact';
 
   const getItemClasses = (isDetailed: boolean) => {
-    const base = isDetailed ? 'tool-panel__legacy-item--detailed' : '';
-    const border = legacyToolSettings.toolItemBorder === 'hidden' ? 'tool-panel__legacy-item--no-border' : '';
-    const hover = `tool-panel__legacy-item--hover-${legacyToolSettings.hoverIntensity}`;
+    const base = isDetailed ? 'tool-panel__fullscreen-item--detailed' : '';
+    const border = fullscreenToolSettings.toolItemBorder === 'hidden' ? 'tool-panel__fullscreen-item--no-border' : '';
+    const hover = `tool-panel__fullscreen-item--hover-${fullscreenToolSettings.hoverIntensity}`;
     return [base, border, hover].filter(Boolean).join(' ');
   };
 
   const getIconBackground = (categoryColor: string, isDetailed: boolean) => {
-    if (legacyToolSettings.iconBackground === 'none' || legacyToolSettings.iconBackground === 'hover') {
+    if (fullscreenToolSettings.iconBackground === 'none' || fullscreenToolSettings.iconBackground === 'hover') {
       return 'transparent';
     }
 
-    const baseColor = isDetailed ? 'var(--legacy-bg-icon-detailed)' : 'var(--legacy-bg-icon-compact)';
+    const baseColor = isDetailed ? 'var(--fullscreen-bg-icon-detailed)' : 'var(--fullscreen-bg-icon-compact)';
     const blend1 = isDetailed ? '18%' : '15%';
     const blend2 = isDetailed ? '8%' : '6%';
 
@@ -108,10 +109,10 @@ const LegacyToolList = ({
   };
 
   const getIconStyle = () => {
-    if (legacyToolSettings.iconColorScheme === 'monochrome') {
+    if (fullscreenToolSettings.iconColorScheme === 'monochrome') {
       return { filter: 'grayscale(1) opacity(0.8)' };
     }
-    if (legacyToolSettings.iconColorScheme === 'vibrant') {
+    if (fullscreenToolSettings.iconColorScheme === 'vibrant') {
       return { filter: 'saturate(1.5) brightness(1.1)' };
     }
     return {};
@@ -156,29 +157,29 @@ const LegacyToolList = ({
     // Detailed view
     if (showDescriptions) {
       const iconBg = getIconBackground(categoryColor, true);
-      const iconClasses = legacyToolSettings.iconBackground === 'hover'
-        ? 'tool-panel__legacy-icon tool-panel__legacy-icon--hover-bg'
-        : 'tool-panel__legacy-icon';
+      const iconClasses = fullscreenToolSettings.iconBackground === 'hover'
+        ? 'tool-panel__fullscreen-icon tool-panel__fullscreen-icon--hover-bg'
+        : 'tool-panel__fullscreen-icon';
 
-      const hoverBgDetailed = legacyToolSettings.iconBackground === 'hover'
+      const hoverBgDetailed = fullscreenToolSettings.iconBackground === 'hover'
         ? `linear-gradient(135deg,
-            color-mix(in srgb, ${categoryColor} 18%, var(--legacy-bg-icon-detailed)),
-            color-mix(in srgb, ${categoryColor} 8%, var(--legacy-bg-icon-detailed))
+            color-mix(in srgb, ${categoryColor} 18%, var(--fullscreen-bg-icon-detailed)),
+            color-mix(in srgb, ${categoryColor} 8%, var(--fullscreen-bg-icon-detailed))
           )`
         : undefined;
 
-      return (
-        <button
-          key={id}
-          type="button"
-          className={`tool-panel__legacy-item ${getItemClasses(true)} ${isSelected ? 'tool-panel__legacy-item--selected' : ''} tool-panel__legacy-item--with-star`}
-          onClick={handleClick}
-          aria-disabled={isDisabled}
-          disabled={isDisabled}
-          style={{
-            ['--legacy-icon-hover-bg' as any]: hoverBgDetailed,
-          }}
-        >
+          return (
+            <button
+              key={id}
+              type="button"
+              className={`tool-panel__fullscreen-item ${getItemClasses(true)} ${isSelected ? 'tool-panel__fullscreen-item--selected' : ''} tool-panel__fullscreen-item--with-star`}
+              onClick={handleClick}
+              aria-disabled={isDisabled}
+              disabled={isDisabled}
+              style={{
+                ['--fullscreen-icon-hover-bg' as any]: hoverBgDetailed,
+              }}
+            >
           {tool.icon ? (
             <span
               className={iconClasses}
@@ -191,15 +192,15 @@ const LegacyToolList = ({
               {iconNode}
             </span>
           ) : null}
-          <span className="tool-panel__legacy-body">
-            <Text fw={600} size="sm" className="tool-panel__legacy-name">
+          <span className="tool-panel__fullscreen-body">
+            <Text fw={600} size="sm" className="tool-panel__fullscreen-name">
               {tool.name}
             </Text>
-            <Text size="sm" c="dimmed" className="tool-panel__legacy-description">
+            <Text size="sm" c="dimmed" className="tool-panel__fullscreen-description">
               {tool.description}
             </Text>
             {binding && (
-              <div className="tool-panel__legacy-shortcut">
+              <div className="tool-panel__fullscreen-shortcut">
                 <span style={{ color: 'var(--mantine-color-dimmed)', fontSize: '0.75rem' }}>
                   {t('settings.hotkeys.shortcut', 'Shortcut')}
                 </span>
@@ -207,8 +208,8 @@ const LegacyToolList = ({
               </div>
             )}
             {matchedText && (
-              <Text size="xs" c="dimmed" className="tool-panel__legacy-match">
-                {t('toolPanel.legacy.matchedSynonym', 'Matches "{{text}}"', { text: matchedText })}
+              <Text size="xs" c="dimmed" className="tool-panel__fullscreen-match">
+                {t('toolPanel.fullscreen.matchedSynonym', 'Matches "{{text}}"', { text: matchedText })}
               </Text>
             )}
           </span>
@@ -218,8 +219,8 @@ const LegacyToolList = ({
               radius="xl"
               size="sm"
               onClick={handleStarClick}
-              className="tool-panel__legacy-star"
-              aria-label={isFav ? t('toolPanel.legacy.unfavorite', 'Remove from favourites') : t('toolPanel.legacy.favorite', 'Add to favourites')}
+              className="tool-panel__fullscreen-star"
+              aria-label={isFav ? t('toolPanel.fullscreen.unfavorite', 'Remove from favourites') : t('toolPanel.fullscreen.favorite', 'Add to favourites')}
             >
               {isFav ? (
                 <StarRoundedIcon fontSize="small" style={{ color: '#FFC107' }} />
@@ -234,29 +235,29 @@ const LegacyToolList = ({
 
     // Compact view
     const iconBg = getIconBackground(categoryColor, false);
-    const iconClasses = legacyToolSettings.iconBackground === 'hover'
-      ? 'tool-panel__legacy-list-icon tool-panel__legacy-list-icon--hover-bg'
-      : 'tool-panel__legacy-list-icon';
+    const iconClasses = fullscreenToolSettings.iconBackground === 'hover'
+      ? 'tool-panel__fullscreen-list-icon tool-panel__fullscreen-list-icon--hover-bg'
+      : 'tool-panel__fullscreen-list-icon';
 
-    const hoverBgCompact = legacyToolSettings.iconBackground === 'hover'
+    const hoverBgCompact = fullscreenToolSettings.iconBackground === 'hover'
       ? `linear-gradient(135deg,
-          color-mix(in srgb, ${categoryColor} 15%, var(--legacy-bg-icon-compact)),
-          color-mix(in srgb, ${categoryColor} 6%, var(--legacy-bg-icon-compact))
+          color-mix(in srgb, ${categoryColor} 15%, var(--fullscreen-bg-icon-compact)),
+          color-mix(in srgb, ${categoryColor} 6%, var(--fullscreen-bg-icon-compact))
         )`
       : undefined;
 
-    const compactButton = (
-      <button
-        key={id}
-        type="button"
-        className={`tool-panel__legacy-list-item ${getItemClasses(false)} ${isSelected ? 'tool-panel__legacy-list-item--selected' : ''} ${!isDisabled ? 'tool-panel__legacy-list-item--with-star' : ''}`}
-        onClick={handleClick}
-        aria-disabled={isDisabled}
-        disabled={isDisabled}
-        style={{
-          ['--legacy-icon-hover-bg' as any]: hoverBgCompact,
-        }}
-      >
+        const compactButton = (
+          <button
+            key={id}
+            type="button"
+            className={`tool-panel__fullscreen-list-item ${getItemClasses(false)} ${isSelected ? 'tool-panel__fullscreen-list-item--selected' : ''} ${!isDisabled ? 'tool-panel__fullscreen-list-item--with-star' : ''}`}
+            onClick={handleClick}
+            aria-disabled={isDisabled}
+            disabled={isDisabled}
+            style={{
+              ['--fullscreen-icon-hover-bg' as any]: hoverBgCompact,
+            }}
+          >
         {tool.icon ? (
           <span
             className={iconClasses}
@@ -269,13 +270,13 @@ const LegacyToolList = ({
             {iconNode}
           </span>
         ) : null}
-        <span className="tool-panel__legacy-list-body">
-          <Text fw={600} size="sm" className="tool-panel__legacy-name">
+        <span className="tool-panel__fullscreen-list-body">
+          <Text fw={600} size="sm" className="tool-panel__fullscreen-name">
             {tool.name}
           </Text>
           {matchedText && (
-            <Text size="xs" c="dimmed" className="tool-panel__legacy-match">
-              {t('toolPanel.legacy.matchedSynonym', 'Matches "{{text}}"', { text: matchedText})}
+            <Text size="xs" c="dimmed" className="tool-panel__fullscreen-match">
+              {t('toolPanel.fullscreen.matchedSynonym', 'Matches "{{text}}"', { text: matchedText})}
             </Text>
           )}
         </span>
@@ -285,8 +286,8 @@ const LegacyToolList = ({
             radius="xl"
             size="xs"
             onClick={handleStarClick}
-            className="tool-panel__legacy-star-compact"
-            aria-label={isFav ? t('toolPanel.legacy.unfavorite', 'Remove from favourites') : t('toolPanel.legacy.favorite', 'Add to favourites')}
+            className="tool-panel__fullscreen-star-compact"
+            aria-label={isFav ? t('toolPanel.fullscreen.unfavorite', 'Remove from favourites') : t('toolPanel.fullscreen.favorite', 'Add to favourites')}
           >
             {isFav ? (
               <StarRoundedIcon fontSize="inherit" style={{ color: '#FFC107', fontSize: '1rem' }} />
@@ -331,13 +332,13 @@ const LegacyToolList = ({
       {showRecentFavorites && (
         <>
           {favoriteToolItems.length > 0 && (
-            <section className="tool-panel__legacy-group tool-panel__legacy-group--special">
-              <header className="tool-panel__legacy-section-header">
-                <div className="tool-panel__legacy-section-title">
+            <section className="tool-panel__fullscreen-group tool-panel__fullscreen-group--special">
+              <header className="tool-panel__fullscreen-section-header">
+                <div className="tool-panel__fullscreen-section-title">
                   <span
-                    className="tool-panel__legacy-section-icon"
+                    className="tool-panel__fullscreen-section-icon"
                     style={{
-                      color: legacyToolSettings.headerIconColor === 'colored' ? '#FFC107' : 'var(--mantine-color-dimmed)',
+                      color: fullscreenToolSettings.headerIconColor === 'colored' ? '#FFC107' : 'var(--mantine-color-dimmed)',
                       ...getIconStyle(),
                     }}
                     aria-hidden
@@ -345,23 +346,23 @@ const LegacyToolList = ({
                     <StarRoundedIcon />
                   </span>
                   <Text size="sm" fw={600} tt="uppercase" lts={0.5} c="dimmed">
-                    {t('toolPanel.legacy.favorites', 'Favourites')}
+                    {t('toolPanel.fullscreen.favorites', 'Favourites')}
                   </Text>
                 </div>
                 <Badge
                   size="sm"
-                  variant="light"
-                  color={legacyToolSettings.headerBadgeColor === 'colored' ? 'yellow' : 'gray'}
+                  variant={fullscreenToolSettings.headerBadgeColor === 'colored' ? 'colored' : 'default'}
+                  color={fullscreenToolSettings.headerBadgeColor === 'colored' ? '#FFC107' : undefined}
                 >
                   {favoriteToolItems.length}
                 </Badge>
               </header>
               {showDescriptions ? (
-                <div className="tool-panel__legacy-grid tool-panel__legacy-grid--detailed">
+                <div className="tool-panel__fullscreen-grid tool-panel__fullscreen-grid--detailed">
                   {favoriteToolItems.map((item: any) => renderToolItem(item.id, item.tool))}
                 </div>
               ) : (
-                <div className="tool-panel__legacy-list">
+                <div className="tool-panel__fullscreen-list">
                   {favoriteToolItems.map((item: any) => renderToolItem(item.id, item.tool))}
                 </div>
               )}
@@ -369,13 +370,13 @@ const LegacyToolList = ({
           )}
 
           {recentToolItems.length > 0 && (
-            <section className="tool-panel__legacy-group tool-panel__legacy-group--special">
-              <header className="tool-panel__legacy-section-header">
-                <div className="tool-panel__legacy-section-title">
+            <section className="tool-panel__fullscreen-group tool-panel__fullscreen-group--special">
+              <header className="tool-panel__fullscreen-section-header">
+                <div className="tool-panel__fullscreen-section-title">
                   <span
-                    className="tool-panel__legacy-section-icon"
+                    className="tool-panel__fullscreen-section-icon"
                     style={{
-                      color: legacyToolSettings.headerIconColor === 'colored' ? '#1BB1D4' : 'var(--mantine-color-dimmed)',
+                      color: fullscreenToolSettings.headerIconColor === 'colored' ? '#1BB1D4' : 'var(--mantine-color-dimmed)',
                       ...getIconStyle(),
                     }}
                     aria-hidden
@@ -383,23 +384,23 @@ const LegacyToolList = ({
                     <HistoryRoundedIcon />
                   </span>
                   <Text size="sm" fw={600} tt="uppercase" lts={0.5} c="dimmed">
-                    {t('toolPanel.legacy.recent', 'Recently used')}
+                    {t('toolPanel.fullscreen.recent', 'Recently used')}
                   </Text>
                 </div>
                 <Badge
                   size="sm"
-                  variant="light"
-                  color={legacyToolSettings.headerBadgeColor === 'colored' ? 'cyan' : 'gray'}
+                  variant={fullscreenToolSettings.headerBadgeColor === 'colored' ? 'colored' : 'default'}
+                  color={fullscreenToolSettings.headerBadgeColor === 'colored' ? '#1BB1D4' : undefined}
                 >
                   {recentToolItems.length}
                 </Badge>
               </header>
               {showDescriptions ? (
-                <div className="tool-panel__legacy-grid tool-panel__legacy-grid--detailed">
+                <div className="tool-panel__fullscreen-grid tool-panel__fullscreen-grid--detailed">
                   {recentToolItems.map((item: any) => renderToolItem(item.id, item.tool))}
                 </div>
               ) : (
-                <div className="tool-panel__legacy-list">
+                <div className="tool-panel__fullscreen-list">
                   {recentToolItems.map((item: any) => renderToolItem(item.id, item.tool))}
                 </div>
               )}
@@ -414,17 +415,17 @@ const LegacyToolList = ({
         return (
           <section
             key={subcategoryId}
-            className={`tool-panel__legacy-group ${showDescriptions ? 'tool-panel__legacy-group--detailed' : 'tool-panel__legacy-group--compact'}`}
+            className={`tool-panel__fullscreen-group ${showDescriptions ? 'tool-panel__fullscreen-group--detailed' : 'tool-panel__fullscreen-group--compact'}`}
             style={{
-              borderColor: `color-mix(in srgb, ${categoryColor} 25%, var(--legacy-border-subtle-65))`,
+              borderColor: `color-mix(in srgb, ${categoryColor} 25%, var(--fullscreen-border-subtle-65))`,
             }}
           >
-            <header className="tool-panel__legacy-section-header">
-              <div className="tool-panel__legacy-section-title">
+            <header className="tool-panel__fullscreen-section-header">
+              <div className="tool-panel__fullscreen-section-title">
                 <span
-                  className="tool-panel__legacy-section-icon"
+                  className="tool-panel__fullscreen-section-icon"
                   style={{
-                    color: legacyToolSettings.sectionTitleColor === 'colored' ? categoryColor : 'var(--mantine-color-dimmed)',
+                    color: fullscreenToolSettings.sectionTitleColor === 'colored' ? categoryColor : 'var(--mantine-color-dimmed)',
                     ...getIconStyle(),
                   }}
                   aria-hidden
@@ -437,33 +438,28 @@ const LegacyToolList = ({
                   tt="uppercase"
                   lts={0.5}
                   style={{
-                    color: legacyToolSettings.sectionTitleColor === 'colored' ? categoryColor : undefined,
+                    color: fullscreenToolSettings.sectionTitleColor === 'colored' ? categoryColor : undefined,
                   }}
-                  c={legacyToolSettings.sectionTitleColor === 'neutral' ? 'dimmed' : undefined}
+                  c={fullscreenToolSettings.sectionTitleColor === 'neutral' ? 'dimmed' : undefined}
                 >
                   {getSubcategoryLabel(t, subcategoryId)}
                 </Text>
               </div>
               <Badge
                 size="sm"
-                variant="light"
-                style={legacyToolSettings.sectionTitleColor === 'colored' ? {
-                  backgroundColor: `color-mix(in srgb, ${categoryColor} 15%, transparent)`,
-                  color: categoryColor,
-                  borderColor: `color-mix(in srgb, ${categoryColor} 30%, transparent)`
-                } : undefined}
-                color={legacyToolSettings.sectionTitleColor === 'neutral' ? 'gray' : undefined}
+                variant={fullscreenToolSettings.sectionTitleColor === 'colored' ? 'colored' : 'default'}
+                color={fullscreenToolSettings.sectionTitleColor === 'colored' ? categoryColor : undefined}
               >
                 {tools.length}
               </Badge>
             </header>
 
             {showDescriptions ? (
-              <div className="tool-panel__legacy-grid tool-panel__legacy-grid--detailed">
+              <div className="tool-panel__fullscreen-grid tool-panel__fullscreen-grid--detailed">
                 {tools.map(({ id, tool }) => renderToolItem(id, tool))}
               </div>
             ) : (
-              <div className="tool-panel__legacy-list">
+              <div className="tool-panel__fullscreen-list">
                 {tools.map(({ id, tool }) => renderToolItem(id, tool))}
               </div>
             )}
@@ -474,4 +470,6 @@ const LegacyToolList = ({
   );
 };
 
-export default LegacyToolList;
+export default FullscreenToolList;
+
+

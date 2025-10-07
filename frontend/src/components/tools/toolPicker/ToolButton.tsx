@@ -103,7 +103,11 @@ const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect,
       justify="flex-start"
       className="tool-button"
       styles={{ 
-        root: { borderRadius: 0, color: "var(--tools-text-and-icon-color)", overflow: 'visible' },
+        root: { 
+          borderRadius: 0, 
+          color: "var(--tools-text-and-icon-color)", 
+          overflow: 'visible'
+        },
         label: { overflow: 'visible' }
       }}
     >
@@ -124,7 +128,11 @@ const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect,
       justify="flex-start"
       className="tool-button"
       styles={{ 
-        root: { borderRadius: 0, color: "var(--tools-text-and-icon-color)", overflow: 'visible' },
+        root: { 
+          borderRadius: 0, 
+          color: "var(--tools-text-and-icon-color)", 
+          overflow: 'visible'
+        },
         label: { overflow: 'visible' }
       }}
     >
@@ -141,7 +149,15 @@ const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect,
       justify="flex-start"
       className="tool-button"
       aria-disabled={isUnavailable}
-      styles={{ root: { borderRadius: 0, color: "var(--tools-text-and-icon-color)", cursor: isUnavailable ? 'not-allowed' : undefined, overflow: 'visible' }, label: { overflow: 'visible' } }}
+      styles={{
+        root: { 
+          borderRadius: 0, 
+          color: "var(--tools-text-and-icon-color)", 
+          cursor: isUnavailable ? 'not-allowed' : undefined, 
+          overflow: 'visible'
+        }, 
+        label: { overflow: 'visible' } 
+      }}
     >
       {buttonContent}
     </Button>

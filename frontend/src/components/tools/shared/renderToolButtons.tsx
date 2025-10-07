@@ -30,20 +30,20 @@ export const renderToolButtons = (
         <SubcategoryHeader label={getSubcategoryLabel(t, subcategory.subcategoryId)} />
       )}
       <div>
-        {subcategory.tools.map(({ id, tool }) => {
-          const matchedSynonym = matchedTextMap.get(id);
-          
-          return (
-            <ToolButton
-              key={id}
-              id={id}
-              tool={tool}
-              isSelected={selectedToolKey === id}
-              onSelect={onSelect}
-              disableNavigation={disableNavigation}
-              matchedSynonym={matchedSynonym}
-            />
-          );
+        {subcategory.tools.map(({ id, tool }, index) => {
+                  const matchedSynonym = matchedTextMap.get(id);
+                  
+                  return (
+                    <ToolButton
+                      key={id}
+                      id={id}
+                      tool={tool}
+                      isSelected={selectedToolKey === id}
+                      onSelect={onSelect}
+                      disableNavigation={disableNavigation}
+                      matchedSynonym={matchedSynonym}
+                    />
+                  );
         })}
       </div>
     </Box>

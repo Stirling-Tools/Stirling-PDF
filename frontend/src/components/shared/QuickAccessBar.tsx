@@ -98,24 +98,21 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
       type: 'navigation',
       onClick: () => {
         setActiveButton('read');
-        handleBackToTools();
         handleReaderToggle();
-        setToolPanelMode('sidebar');
       }
     },
-    // TODO: Add sign
-    //{
-    //  id: 'sign',
-    //  name: t("quickAccess.sign", "Sign"),
-    //  icon: <LocalIcon icon="signature-rounded" width="1.25rem" height="1.25rem" />,
-    //  size: 'lg',
-    //  isRound: false,
-    //  type: 'navigation',
-    //  onClick: () => {
-    //    setActiveButton('sign');
-    //    handleToolSelect('sign');
-    //  }
-    //},
+    {
+     id: 'sign',
+     name: t("quickAccess.sign", "Sign"),
+     icon: <LocalIcon icon="signature-rounded" width="1.25rem" height="1.25rem" />,
+     size: 'lg',
+     isRound: false,
+     type: 'navigation',
+     onClick: () => {
+       setActiveButton('sign');
+       handleToolSelect('sign');
+     }
+    },
     {
       id: 'automate',
       name: t("quickAccess.automate", "Automate"),

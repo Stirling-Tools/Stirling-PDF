@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useToolWorkflow, TOOL_PANEL_MODE_STORAGE_KEY } from '../../contexts/ToolWorkflowContext';
 import './ToolPanelModePrompt.css';
 
-type ToolPanelModeOption = 'sidebar' | 'legacy';
+type ToolPanelModeOption = 'sidebar' | 'fullscreen';
 
 const PROMPT_SEEN_KEY = 'toolPanelModePromptSeen';
 
@@ -72,10 +72,10 @@ const ToolPanelModePrompt = () => {
             <Stack gap="md" className="tool-panel-mode-prompt__card-content">
               <Group justify="space-between">
                 <Stack gap={2}>
-                  <Text fw={600}>{t('toolPanel.modePrompt.sidebarTitle', 'Advanced sidebar')}</Text>
-                  <Text size="sm" c="dimmed">
-                    {t('toolPanel.modePrompt.sidebarDescription', 'Keep tools alongside your workspace for quick switching.')}
-                  </Text>
+                <Text fw={600}>{t('toolPanel.modePrompt.sidebarTitle', 'Sidebar mode')}</Text>
+                <Text size="sm" c="dimmed">
+                  {t('toolPanel.modePrompt.sidebarDescription', 'Keep tools alongside your workspace for quick switching.')}
+                </Text>
                 </Stack>
                 <Badge color="blue" variant="filled">
                   {t('toolPanel.modePrompt.recommended', 'Recommended')}
@@ -101,45 +101,45 @@ const ToolPanelModePrompt = () => {
                 className="tool-panel-mode-prompt__action"
                 onClick={() => handleSelect('sidebar')}
               >
-                {t('toolPanel.modePrompt.chooseSidebar', 'Use advanced sidebar')}
+                {t('toolPanel.modePrompt.chooseSidebar', 'Use sidebar mode')}
               </Button>
             </Stack>
           </Card>
           <Card withBorder radius="lg" shadow="xs" padding="lg" className="tool-panel-mode-prompt__card">
             <Stack gap="md" className="tool-panel-mode-prompt__card-content">
               <Stack gap={2}>
-                <Text fw={600}>{t('toolPanel.modePrompt.legacyTitle', 'Legacy fullscreen')}</Text>
+                <Text fw={600}>{t('toolPanel.modePrompt.fullscreenTitle', 'Fullscreen mode - (legacy)')}</Text>
                 <Text size="sm" c="dimmed">
-                  {t('toolPanel.modePrompt.legacyDescription', 'Browse every tool in a catalogue that covers the workspace until you pick one.')}
+                  {t('toolPanel.modePrompt.fullscreenDescription', 'Browse every tool in a catalogue that covers the workspace until you pick one.')}
                 </Text>
               </Stack>
-              <div className="tool-panel-mode-prompt__preview tool-panel-mode-prompt__preview--legacy" aria-hidden>
-                <div className="tool-panel-mode-prompt__legacy-columns">
-                  <div className="tool-panel-mode-prompt__legacy-column">
-                    <span className="tool-panel-mode-prompt__legacy-card" />
-                    <span className="tool-panel-mode-prompt__legacy-card" />
-                    <span className="tool-panel-mode-prompt__legacy-card tool-panel-mode-prompt__legacy-card--muted" />
+              <div className="tool-panel-mode-prompt__preview tool-panel-mode-prompt__preview--fullscreen" aria-hidden>
+                <div className="tool-panel-mode-prompt__fullscreen-columns">
+                  <div className="tool-panel-mode-prompt__fullscreen-column">
+                    <span className="tool-panel-mode-prompt__fullscreen-card" />
+                    <span className="tool-panel-mode-prompt__fullscreen-card" />
+                    <span className="tool-panel-mode-prompt__fullscreen-card tool-panel-mode-prompt__fullscreen-card--muted" />
                   </div>
-                  <div className="tool-panel-mode-prompt__legacy-column">
-                    <span className="tool-panel-mode-prompt__legacy-card" />
-                    <span className="tool-panel-mode-prompt__legacy-card" />
-                    <span className="tool-panel-mode-prompt__legacy-card tool-panel-mode-prompt__legacy-card--muted" />
+                  <div className="tool-panel-mode-prompt__fullscreen-column">
+                    <span className="tool-panel-mode-prompt__fullscreen-card" />
+                    <span className="tool-panel-mode-prompt__fullscreen-card" />
+                    <span className="tool-panel-mode-prompt__fullscreen-card tool-panel-mode-prompt__fullscreen-card--muted" />
                   </div>
-                  <div className="tool-panel-mode-prompt__legacy-column">
-                    <span className="tool-panel-mode-prompt__legacy-card" />
-                    <span className="tool-panel-mode-prompt__legacy-card" />
-                    <span className="tool-panel-mode-prompt__legacy-card tool-panel-mode-prompt__legacy-card--muted" />
+                  <div className="tool-panel-mode-prompt__fullscreen-column">
+                    <span className="tool-panel-mode-prompt__fullscreen-card" />
+                    <span className="tool-panel-mode-prompt__fullscreen-card" />
+                    <span className="tool-panel-mode-prompt__fullscreen-card tool-panel-mode-prompt__fullscreen-card--muted" />
                   </div>
                 </div>
               </div>
               <Button
-                variant={toolPanelMode === 'legacy' ? 'filled' : 'outline'}
+                variant={toolPanelMode === 'fullscreen' ? 'filled' : 'outline'}
                 color="blue"
                 radius="md"
                 className="tool-panel-mode-prompt__action"
-                onClick={() => handleSelect('legacy')}
+                onClick={() => handleSelect('fullscreen')}
               >
-                {t('toolPanel.modePrompt.chooseLegacy', 'Use legacy fullscreen')}
+                {t('toolPanel.modePrompt.chooseFullscreen', 'Use fullscreen mode')}
               </Button>
             </Stack>
           </Card>

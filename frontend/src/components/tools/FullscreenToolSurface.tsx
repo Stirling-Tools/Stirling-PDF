@@ -3,8 +3,8 @@ import { ActionIcon, ScrollArea, Switch, Tooltip, useMantineColorScheme } from '
 import ViewSidebarRoundedIcon from '@mui/icons-material/ViewSidebarRounded';
 import { useTranslation } from 'react-i18next';
 import ToolSearch from './toolPicker/ToolSearch';
-import LegacyToolList from './LegacyToolList';
-import LegacyToolSettings from './LegacyToolSettings';
+import FullscreenToolList from './FullscreenToolList';
+import FullscreenToolSettings from './FullscreenToolSettings';
 import { ToolRegistryEntry } from '../../data/toolsTaxonomy';
 import { ToolId } from '../../types/toolId';
 import { useFocusTrap } from '../../hooks/tools/useFocusTrap';
@@ -12,7 +12,7 @@ import { useToolWorkflow } from '../../contexts/ToolWorkflowContext';
 import { BASE_PATH } from '../../constants/app';
 import './ToolPanel.css';
 
-interface LegacyToolSurfaceProps {
+interface FullscreenToolSurfaceProps {
   searchQuery: string;
   toolRegistry: Record<string, ToolRegistryEntry>;
   filteredTools: Array<{ item: [string, ToolRegistryEntry]; matchedText?: string }>;
@@ -22,7 +22,7 @@ interface LegacyToolSurfaceProps {
   onSearchChange: (value: string) => void;
   onSelect: (id: ToolId) => void;
   onToggleDescriptions: () => void;
-  onExitLegacyMode: () => void;
+  onExitFullscreenMode: () => void;
   toggleLabel: string;
   geometry: {
     left: number;
@@ -32,7 +32,7 @@ interface LegacyToolSurfaceProps {
   } | null;
 }
 
-const LegacyToolSurface = ({
+const FullscreenToolSurface = ({
   searchQuery,
   toolRegistry,
   filteredTools,
@@ -42,13 +42,13 @@ const LegacyToolSurface = ({
   onSearchChange,
   onSelect,
   onToggleDescriptions,
-  onExitLegacyMode,
+  onExitFullscreenMode,
   toggleLabel,
   geometry,
-}: LegacyToolSurfaceProps) => {
+}: FullscreenToolSurfaceProps) => {
   const { t } = useTranslation();
   const { colorScheme } = useMantineColorScheme();
-  const { legacyToolSettings, setLegacyToolSettings } = useToolWorkflow();
+  const { fullscreenToolSettings, setFullscreenToolSettings } = useToolWorkflow();
   const [isExiting, setIsExiting] = useState(false);
   const surfaceRef = useRef<HTMLDivElement>(null);
 
@@ -67,13 +67,13 @@ const LegacyToolSurface = ({
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     if (prefersReducedMotion) {
-      onExitLegacyMode();
+      onExitFullscreenMode();
       return;
     }
 
     setIsExiting(true);
     setTimeout(() => {
-      onExitLegacyMode();
+      onExitFullscreenMode();
     }, 220); // Match animation duration (0.22s)
   };
 
@@ -99,24 +99,24 @@ const LegacyToolSurface = ({
 
   return (
     <div
-      className="tool-panel__legacy-surface"
+      className="tool-panel__fullscreen-surface"
       style={style}
       role="region"
-      aria-label={t('toolPanel.legacy.heading', 'All tools (legacy view)')}
+      aria-label={t('toolPanel.fullscreen.heading', 'All tools (fullscreen view)')}
     >
       <div
         ref={surfaceRef}
-        className={`tool-panel__legacy-surface-inner ${isExiting ? 'tool-panel__legacy-surface-inner--exiting' : ''}`}
+        className={`tool-panel__fullscreen-surface-inner ${isExiting ? 'tool-panel__fullscreen-surface-inner--exiting' : ''}`}
       >
-        <header className="tool-panel__legacy-header">
-          <div className="tool-panel__legacy-brand">
-            <img src={brandIconSrc} alt="" className="tool-panel__legacy-brand-icon" />
-            <img src={brandTextSrc} alt={brandAltText} className="tool-panel__legacy-brand-text" />
+        <header className="tool-panel__fullscreen-header">
+          <div className="tool-panel__fullscreen-brand">
+            <img src={brandIconSrc} alt="" className="tool-panel__fullscreen-brand-icon" />
+            <img src={brandTextSrc} alt={brandAltText} className="tool-panel__fullscreen-brand-text" />
           </div>
           <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-            <LegacyToolSettings
-              settings={legacyToolSettings}
-              onChange={setLegacyToolSettings}
+            <FullscreenToolSettings
+              settings={fullscreenToolSettings}
+              onChange={setFullscreenToolSettings}
             />
             <Tooltip label={toggleLabel} position="bottom" withArrow>
               <ActionIcon
@@ -125,6 +125,7 @@ const LegacyToolSurface = ({
                 size="md"
                 onClick={handleExit}
                 aria-label={toggleLabel}
+                style={{ color: 'var(--right-rail-icon)' }}
               >
                 <ViewSidebarRoundedIcon fontSize="small" />
               </ActionIcon>
@@ -132,7 +133,7 @@ const LegacyToolSurface = ({
           </div>
         </header>
 
-        <div className="tool-panel__legacy-controls">
+        <div className="tool-panel__fullscreen-controls">
           <ToolSearch
             value={searchQuery}
             onChange={onSearchChange}
@@ -145,13 +146,13 @@ const LegacyToolSurface = ({
             onChange={() => onToggleDescriptions()}
             size="md"
             labelPosition="left"
-            label={showDescriptions ? t('toolPanel.legacy.descriptionsOn', 'Showing descriptions') : t('toolPanel.legacy.descriptionsOff', 'Descriptions hidden')}
+            label={t('toolPanel.fullscreen.showDetails', 'Show Details')}
           />
         </div>
 
-        <div className="tool-panel__legacy-body">
-          <ScrollArea className="tool-panel__legacy-scroll" offsetScrollbars>
-            <LegacyToolList
+        <div className="tool-panel__fullscreen-body">
+          <ScrollArea className="tool-panel__fullscreen-scroll" offsetScrollbars>
+            <FullscreenToolList
               filteredTools={filteredTools}
               searchQuery={searchQuery}
               showDescriptions={showDescriptions}
@@ -166,4 +167,6 @@ const LegacyToolSurface = ({
   );
 };
 
-export default LegacyToolSurface;
+export default FullscreenToolSurface;
+
+
