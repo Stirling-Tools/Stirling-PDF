@@ -211,7 +211,7 @@ public class PipelineDirectoryProcessor {
                                         boolean isAllowed =
                                                 allowAllFiles
                                                         || inputExtensions.contains(
-                                                                extension.toLowerCase(Locale.ROOT));
+                                                                extension.toLowerCase());
                                         if (!isAllowed) {
                                             log.info(
                                                     "Skipping file with unsupported extension: {}"
