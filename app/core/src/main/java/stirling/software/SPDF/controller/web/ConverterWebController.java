@@ -159,6 +159,13 @@ public class ConverterWebController {
         return "convert/pdf-to-pdfa";
     }
 
+    @GetMapping("/pdf-to-outline")
+    @Hidden
+    public String pdfToOutlineForm(Model model) {
+        model.addAttribute("currentPage", "pdf-to-outline");
+        return "convert/pdf-to-outline";
+    }
+
     @GetMapping("/eml-to-pdf")
     @Hidden
     public String convertEmlToPdfForm(Model model) {
