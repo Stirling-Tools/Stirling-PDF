@@ -386,6 +386,8 @@ public class EndpointConfiguration {
         addEndpointToGroup("Java", "pdf-to-markdown");
         addEndpointToGroup("Java", "add-attachments");
         addEndpointToGroup("Java", "compress-pdf");
+        addEndpointToGroup("RAR", "pdf-to-cbr");
+        addEndpointToGroup("RAR", "pdf/cbr");
 
         // Javascript
         addEndpointToGroup("Javascript", "pdf-organizer");
@@ -484,7 +486,8 @@ public class EndpointConfiguration {
                 || "Java".equals(group)
                 || "Javascript".equals(group)
                 || "Weasyprint".equals(group)
-                || "Pdftohtml".equals(group);
+                || "Pdftohtml".equals(group)
+                || "RAR".equals(group);
     }
 
     private boolean isEndpointEnabledDirectly(String endpoint) {
