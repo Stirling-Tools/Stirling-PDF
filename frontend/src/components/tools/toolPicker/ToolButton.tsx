@@ -48,12 +48,16 @@ const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect,
     : (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
         <span>{tool.description}</span>
-        {binding && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem' }}>
+        {binding ? (
+          <>
             <span style={{ color: 'var(--mantine-color-dimmed)', fontWeight: 500 }}>{t('settings.hotkeys.shortcut', 'Shortcut')}</span>
             <HotkeyDisplay binding={binding} />
-          </div>
+          </>
+        ) : (
+          <span style={{ color: 'var(--mantine-color-dimmed)', fontWeight: 500, fontStyle: 'italic' }}>{t('settings.hotkeys.noShortcut', 'No shortcut set')}</span>
         )}
+        </div>
       </div>
     );
 
