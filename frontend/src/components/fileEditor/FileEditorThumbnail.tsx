@@ -19,6 +19,7 @@ import { useFileState } from '../../contexts/file/fileHooks';
 import { FileId } from '../../types/file';
 import { formatFileSize } from '../../utils/fileUtils';
 import ToolChain from '../shared/ToolChain';
+import HoverActionMenu, { HoverAction } from '../shared/HoverActionMenu';
 
 
 
@@ -169,6 +170,42 @@ const FileEditorThumbnail = ({
   const handleCancelClose = useCallback(() => {
     setShowCloseModal(false);
   }, []);
+
+  // Build hover menu actions
+  const hoverActions = useMemo<HoverAction[]>(() => [
+    {
+      id: 'view',
+      icon: <VisibilityIcon style={{ fontSize: 20 }} />,
+      label: t('openInViewer', 'Open in Viewer'),
+      onClick: (e) => {
+        e.stopPropagation();
+        onViewFile(file.id);
+      }
+    },
+    {
+      id: 'unzip',
+      icon: <UnarchiveIcon style={{ fontSize: 20 }} />,
+      label: t('fileManager.unzip', 'Unzip'),
+      onClick: (e) => {
+        e.stopPropagation();
+        if (onUnzipFile) {
+          onUnzipFile(file.id);
+          alert({ alertType: 'success', title: `Unzipping ${file.name}`, expandable: false, durationMs: 2500 });
+        }
+      },
+      hidden: !isZipFile || !onUnzipFile
+    },
+    {
+      id: 'close',
+      icon: <CloseIcon style={{ fontSize: 20 }} />,
+      label: t('close', 'Close'),
+      onClick: (e) => {
+        e.stopPropagation();
+        handleCloseWithConfirmation();
+      },
+      color: 'red'
+    }
+  ], [t, file.id, file.name, isZipFile, onViewFile, onUnzipFile, handleCloseWithConfirmation]);
 
   // ---- Card interactions ----
   const handleCardClick = () => {
@@ -370,53 +407,12 @@ const FileEditorThumbnail = ({
       </div>
 
       {/* Hover Menu */}
-      {showHoverMenu && isSupported && (
-        <div className={styles.hoverMenu} onClick={(e) => e.stopPropagation()}>
-          <Tooltip label={t('openInViewer', 'Open in Viewer')}>
-            <ActionIcon
-              size="md"
-              variant="subtle"
-              style={{ color: 'var(--mantine-color-dimmed)' }}
-              onClick={(e) => {
-                e.stopPropagation();
-                onViewFile(file.id);
-              }}
-            >
-              <VisibilityIcon style={{ fontSize: 20 }} />
-            </ActionIcon>
-          </Tooltip>
-
-          {isZipFile && onUnzipFile && (
-            <Tooltip label={t('fileManager.unzip', 'Unzip')}>
-              <ActionIcon
-                size="md"
-                variant="subtle"
-                style={{ color: 'var(--mantine-color-dimmed)' }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onUnzipFile(file.id);
-                  alert({ alertType: 'success', title: `Unzipping ${file.name}`, expandable: false, durationMs: 2500 });
-                }}
-              >
-                <UnarchiveIcon style={{ fontSize: 20 }} />
-              </ActionIcon>
-            </Tooltip>
-          )}
-
-          <Tooltip label={t('close', 'Close')}>
-            <ActionIcon
-              size="md"
-              variant="subtle"
-              c="red"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleCloseWithConfirmation();
-              }}
-            >
-              <CloseIcon style={{ fontSize: 20 }} />
-            </ActionIcon>
-          </Tooltip>
-        </div>
+      {isSupported && (
+        <HoverActionMenu
+          show={showHoverMenu}
+          actions={hoverActions}
+          position="outside"
+        />
       )}
 
       {/* Close Confirmation Modal */}

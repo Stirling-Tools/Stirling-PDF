@@ -262,34 +262,6 @@
   height: 20px;
 }
 
-/* Hover Menu */
-.hoverMenu {
-  position: absolute;
-  bottom: -8px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  background: var(--bg-toolbar);
-  border: 1px solid var(--border-default);
-  padding: 6px 12px;
-  border-radius: 20px;
-  box-shadow: var(--shadow-md);
-  z-index: 30;
-  animation: fadeIn 200ms ease-out;
-  white-space: nowrap;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
 /* Animations */
 @keyframes pulse {
   0%, 100% {
