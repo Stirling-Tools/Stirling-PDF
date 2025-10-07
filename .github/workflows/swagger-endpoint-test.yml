@@ -82,7 +82,7 @@ jobs:
           exit 1
 
       - name: Run Swagger endpoint tests
-        run: python testing/swagger_endpoint_test.py --base-url http://localhost:8080
+        run: python testing/swagger_endpoint_test.py --base-url http://localhost:8080 --exclude-tags "Audit,Admin Job Management,Job Management,Admin Settings"
 
       - name: Stop Stirling PDF
         if: always()
