@@ -9,10 +9,10 @@ import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode
-public class ConvertCbzToPdfRequest {
+public class ConvertCbrToPdfRequest {
 
     @Schema(
-            description = "The input CBZ file to be converted to a PDF file",
+            description = "The input CBR file to be converted to a PDF file",
             requiredMode = Schema.RequiredMode.REQUIRED)
     private MultipartFile fileInput;
 

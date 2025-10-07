@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
@@ -32,15 +33,20 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.SPDF.config.EndpointConfiguration;
+import stirling.software.SPDF.model.api.converters.ConvertCbrToPdfRequest;
 import stirling.software.SPDF.model.api.converters.ConvertCbzToPdfRequest;
+import stirling.software.SPDF.model.api.converters.ConvertPdfToCbrRequest;
 import stirling.software.SPDF.model.api.converters.ConvertPdfToCbzRequest;
 import stirling.software.SPDF.model.api.converters.ConvertToImageRequest;
 import stirling.software.SPDF.model.api.converters.ConvertToPdfRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.CbrUtils;
 import stirling.software.common.util.CbzUtils;
 import stirling.software.common.util.CheckProgramInstall;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.PdfToCbrUtils;
 import stirling.software.common.util.PdfToCbzUtils;
 import stirling.software.common.util.PdfUtils;
 import stirling.software.common.util.ProcessExecutor;
@@ -58,9 +64,14 @@ public class ConvertImgPDFController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
+    private final EndpointConfiguration endpointConfiguration;
     private static final Pattern EXTENSION_PATTERN =
             RegexPatternUtils.getInstance().getPattern(RegexPatternUtils.getExtensionRegex());
     private static final String DEFAULT_COMIC_NAME = "comic";
+
+    private boolean isGhostscriptEnabled() {
+        return endpointConfiguration.isGroupEnabled("Ghostscript");
+    }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/img")
     @Operation(
@@ -257,17 +268,29 @@ public class ConvertImgPDFController {
             description =
                     "This endpoint converts a CBZ (ZIP) comic book archive to a PDF file. "
                             + "Input:CBZ Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> convertCbzToPdf(@ModelAttribute ConvertCbzToPdfRequest request)
+    public ResponseEntity<?> convertCbzToPdf(@ModelAttribute ConvertCbzToPdfRequest request)
             throws IOException {
         MultipartFile file = request.getFileInput();
+        boolean optimizeForEbook = request.isOptimizeForEbook();
+
+        // Disable optimization if Ghostscript is not available
+        if (optimizeForEbook && !isGhostscriptEnabled()) {
+            log.warn("Ghostscript optimization requested but Ghostscript is not enabled/available");
+            optimizeForEbook = false;
+        }
+
         byte[] pdfBytes;
         try {
-            pdfBytes = CbzUtils.convertCbzToPdf(file, pdfDocumentFactory, tempFileManager);
+            pdfBytes =
+                    CbzUtils.convertCbzToPdf(
+                            file, pdfDocumentFactory, tempFileManager, optimizeForEbook);
         } catch (IllegalArgumentException ex) {
             String message = ex.getMessage() == null ? "Invalid CBZ file" : ex.getMessage();
+            Map<String, Object> errorBody =
+                    Map.of("error", "Invalid CBZ file", "message", message, "trace", "");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .contentType(MediaType.TEXT_PLAIN)
-                    .body(message.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(errorBody);
         }
 
         String filename = createConvertedFilename(file.getOriginalFilename(), "_converted.pdf");
@@ -281,12 +304,12 @@ public class ConvertImgPDFController {
             description =
                     "This endpoint converts a PDF file to a CBZ (ZIP) comic book archive. "
                             + "Input:PDF Output:CBZ Type:SISO")
-    public ResponseEntity<byte[]> convertPdfToCbz(@ModelAttribute ConvertPdfToCbzRequest request)
+    public ResponseEntity<?> convertPdfToCbz(@ModelAttribute ConvertPdfToCbzRequest request)
             throws IOException {
         MultipartFile file = request.getFileInput();
-        Integer dpi = request.getDpi();
+        int dpi = request.getDpi();
 
-        if (dpi == null || dpi <= 0) {
+        if (dpi <= 0) {
             dpi = 300;
         }
 
@@ -295,15 +318,86 @@ public class ConvertImgPDFController {
             cbzBytes = PdfToCbzUtils.convertPdfToCbz(file, dpi, pdfDocumentFactory);
         } catch (IllegalArgumentException ex) {
             String message = ex.getMessage() == null ? "Invalid PDF file" : ex.getMessage();
+            Map<String, Object> errorBody =
+                    Map.of("error", "Invalid PDF file", "message", message, "trace", "");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .contentType(MediaType.TEXT_PLAIN)
-                    .body(message.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(errorBody);
         }
 
         String filename = createConvertedFilename(file.getOriginalFilename(), "_converted.cbz");
 
         return WebResponseUtils.bytesToWebResponse(
                 cbzBytes, filename, MediaType.APPLICATION_OCTET_STREAM);
+    }
+
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/cbr/pdf")
+    @Operation(
+            summary = "Convert CBR comic book archive to PDF",
+            description =
+                    "This endpoint converts a CBR (RAR) comic book archive to a PDF file. "
+                            + "Input:CBR Output:PDF Type:SISO")
+    public ResponseEntity<?> convertCbrToPdf(@ModelAttribute ConvertCbrToPdfRequest request)
+            throws IOException {
+        MultipartFile file = request.getFileInput();
+        boolean optimizeForEbook = request.isOptimizeForEbook();
+
+        // Disable optimization if Ghostscript is not available
+        if (optimizeForEbook && !isGhostscriptEnabled()) {
+            log.warn("Ghostscript optimization requested but Ghostscript is not enabled/available");
+            optimizeForEbook = false;
+        }
+
+        byte[] pdfBytes;
+        try {
+            pdfBytes =
+                    CbrUtils.convertCbrToPdf(
+                            file, pdfDocumentFactory, tempFileManager, optimizeForEbook);
+        } catch (IllegalArgumentException ex) {
+            String message = ex.getMessage() == null ? "Invalid CBR file" : ex.getMessage();
+            Map<String, Object> errorBody =
+                    Map.of("error", "Invalid CBR file", "message", message, "trace", "");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(errorBody);
+        }
+
+        String filename = createConvertedFilename(file.getOriginalFilename(), "_converted.pdf");
+
+        return WebResponseUtils.bytesToWebResponse(pdfBytes, filename);
+    }
+
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/cbr")
+    @Operation(
+            summary = "Convert PDF to CBR comic book archive",
+            description =
+                    "This endpoint converts a PDF file to a CBR-like (ZIP-based) comic book archive. "
+                            + "Note: Output is ZIP-based for compatibility. Input:PDF Output:CBR Type:SISO")
+    public ResponseEntity<?> convertPdfToCbr(@ModelAttribute ConvertPdfToCbrRequest request)
+            throws IOException {
+        MultipartFile file = request.getFileInput();
+        int dpi = request.getDpi();
+
+        if (dpi <= 0) {
+            dpi = 300;
+        }
+
+        byte[] cbrBytes;
+        try {
+            cbrBytes = PdfToCbrUtils.convertPdfToCbr(file, dpi, pdfDocumentFactory);
+        } catch (IllegalArgumentException ex) {
+            String message = ex.getMessage() == null ? "Invalid PDF file" : ex.getMessage();
+            Map<String, Object> errorBody =
+                    Map.of("error", "Invalid PDF file", "message", message, "trace", "");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(errorBody);
+        }
+
+        String filename = createConvertedFilename(file.getOriginalFilename(), "_converted.cbr");
+
+        return WebResponseUtils.bytesToWebResponse(
+                cbrBytes, filename, MediaType.APPLICATION_OCTET_STREAM);
     }
 
     private String createConvertedFilename(String originalFilename, String suffix) {
