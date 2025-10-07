@@ -98,10 +98,13 @@ public class ConvertPDFToOutline {
 
     private ProcessExecutorResult runPdfOutliner(Path inputFile, Path outputFile)
             throws IOException, InterruptedException {
-        // Prepare command: python pdf_outliner.py input.pdf -o output.pdf
+        // Prepare command: uvx --from git+https://github.com/daniel-eder/pdf-outliner.git
+        // pdf-outliner input.pdf -o output.pdf
         List<String> command = new ArrayList<>();
-        command.add("python");
-        command.add("./reference/pdf-outliner/pdf_outliner.py"); // Path to the script
+        command.add("uvx");
+        command.add("--from");
+        command.add("git+https://github.com/daniel-eder/pdf-outliner.git");
+        command.add("pdf-outliner");
         command.add(inputFile.toString());
         command.add("-o");
         command.add(outputFile.toString());
