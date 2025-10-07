@@ -66,6 +66,8 @@
   "save": "Save",
   "saveToBrowser": "Save to Browser",
   "download": "Download",
+  "pin": "Pin",
+  "unpin": "Unpin",
   "undoOperationTooltip": "Click to undo the last operation and restore the original files",
   "undo": "Undo",
   "moreOptions": "More Options",

@@ -288,7 +288,7 @@ const FileEditor = ({
 
 
   // File operations using context
-  const handleDeleteFile = useCallback((fileId: FileId) => {
+  const handleCloseFile = useCallback((fileId: FileId) => {
     const record = activeStirlingFileStubs.find(r => r.id === fileId);
     const file = record ? selectors.getFile(record.id) : null;
     if (record && file) {
@@ -467,7 +467,7 @@ const FileEditor = ({
                   selectedFiles={localSelectedIds}
                   selectionMode={selectionMode}
                   onToggleFile={toggleFile}
-                  onDeleteFile={handleDeleteFile}
+                  onCloseFile={handleCloseFile}
                   onViewFile={handleViewFile}
                   _onSetStatus={showStatus}
                   onReorderFiles={handleReorderFiles}
