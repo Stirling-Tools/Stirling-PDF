@@ -77,7 +77,7 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
       centered
       radius="lg"
       withCloseButton={false}
-      style={{ zIndex: 1000 }}
+      zIndex={200000}
       overlayProps={{ opacity: 0.35, blur: 2 }}
       padding={0}
       fullScreen={isMobile}

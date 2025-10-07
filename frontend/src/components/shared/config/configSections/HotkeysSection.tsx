@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Alert, Badge, Box, Button, Divider, Group, Paper, Stack, Text } from '@mantine/core';
+import { Alert, Badge, Box, Button, Divider, Group, Paper, Stack, Text, TextInput } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { useToolWorkflow } from '../../../../contexts/ToolWorkflowContext';
 import { useHotkeys } from '../../../../contexts/HotkeyContext';
@@ -26,8 +26,20 @@ const HotkeysSection: React.FC = () => {
   const { hotkeys, defaults, updateHotkey, resetHotkey, pauseHotkeys, resumeHotkeys, getDisplayParts, isMac } = useHotkeys();
   const [editingTool, setEditingTool] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string>('');
 
   const tools = useMemo(() => Object.entries(toolRegistry), [toolRegistry]);
+
+  const filteredTools = useMemo(() => {
+    if (!searchQuery.trim()) return tools;
+    
+    const query = searchQuery.toLowerCase();
+    return tools.filter(([toolId, tool]) => 
+      tool.name.toLowerCase().includes(query) ||
+      tool.description.toLowerCase().includes(query) ||
+      toolId.toLowerCase().includes(query)
+    );
+  }, [tools, searchQuery]);
 
   useEffect(() => {
     if (!editingTool) {
@@ -45,14 +57,16 @@ const HotkeysSection: React.FC = () => {
     }
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      event.preventDefault();
-      event.stopPropagation();
-
       if (event.key === 'Escape') {
+        event.preventDefault();
+        event.stopPropagation();
         setEditingTool(null);
         setError(null);
         return;
       }
+
+      event.preventDefault();
+      event.stopPropagation();
 
       const binding = eventToBinding(event as KeyboardEvent);
       if (!binding) {
@@ -99,9 +113,22 @@ const HotkeysSection: React.FC = () => {
         </Text>
       </div>
 
+      <TextInput
+        placeholder="Search tools..."
+        value={searchQuery}
+        onChange={(event) => setSearchQuery(event.currentTarget.value)}
+        size="md"
+        radius="md"
+      />
+
       <Paper withBorder p="md" radius="md">
         <Stack gap="md">
-          {tools.map(([toolId, tool], index) => {
+          {filteredTools.length === 0 ? (
+            <Text c="dimmed" ta="center" py="xl">
+              {searchQuery.trim() ? 'No tools found matching your search.' : 'No tools available.'}
+            </Text>
+          ) : (
+            filteredTools.map(([toolId, tool], index) => {
             const currentBinding = hotkeys[toolId];
             const defaultBinding = defaults[toolId];
             const isEditing = editingTool === toolId;
@@ -158,10 +185,11 @@ const HotkeysSection: React.FC = () => {
                   )}
                 </Box>
 
-                {index < tools.length - 1 && <Divider />}
+                {index < filteredTools.length - 1 && <Divider />}
               </React.Fragment>
             );
-          })}
+          })
+          )}
         </Stack>
       </Paper>
     </Stack>

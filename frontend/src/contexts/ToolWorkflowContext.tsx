@@ -302,7 +302,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     // Handle multiTool selection - enable page editor workbench
     if (toolId === 'multiTool') {
       setReaderMode(false);
-      setLeftPanelView('toolPicker'); // Show tool picker when navigating back to tools in mobile
+      setLeftPanelView('hidden');
       actions.setSelectedTool('multiTool');
       actions.setWorkbench('pageEditor');
       setSearchQuery('');
