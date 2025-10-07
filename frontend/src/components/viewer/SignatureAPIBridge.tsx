@@ -22,9 +22,10 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPI
   const { signatureConfig, storeImageData, isPlacementMode } = useSignature();
 
 
-  // Enable keyboard deletion of selected annotations - only when in signature placement mode
+  // Enable keyboard deletion of selected annotations
   useEffect(() => {
-    if (!annotationApi || !isPlacementMode) return;
+    // Always enable delete key when we have annotation API and are in sign mode
+    if (!annotationApi || (isPlacementMode === undefined)) return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Delete' || event.key === 'Backspace') {

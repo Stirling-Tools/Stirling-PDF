@@ -64,7 +64,7 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
       padRef.current = null;
     }
     setModalOpen(true);
-  };
+  };1
 
   const trimCanvas = (canvas: HTMLCanvasElement): string => {
     const ctx = canvas.getContext('2d');
