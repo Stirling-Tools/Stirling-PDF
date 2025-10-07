@@ -24,11 +24,6 @@ import { Rotation } from '@embedpdf/models';
 import { HistoryPluginPackage } from '@embedpdf/plugin-history/react';
 import { AnnotationLayer, AnnotationPluginPackage } from '@embedpdf/plugin-annotation/react';
 import { PdfAnnotationSubtype } from '@embedpdf/models';
-
-// Import annotation plugins
-import { HistoryPluginPackage } from '@embedpdf/plugin-history/react';
-import { AnnotationLayer, AnnotationPluginPackage } from '@embedpdf/plugin-annotation/react';
-import { PdfAnnotationSubtype } from '@embedpdf/models';
 import { CustomSearchLayer } from './CustomSearchLayer';
 import { ZoomAPIBridge } from './ZoomAPIBridge';
 import ToolLoadingFallback from '../tools/ToolLoadingFallback';
@@ -42,22 +37,19 @@ import { ThumbnailAPIBridge } from './ThumbnailAPIBridge';
 import { RotateAPIBridge } from './RotateAPIBridge';
 import { SignatureAPIBridge, SignatureAPI } from './SignatureAPIBridge';
 import { HistoryAPIBridge, HistoryAPI } from './HistoryAPIBridge';
-import { SignatureAPIBridge, SignatureAPI } from './SignatureAPIBridge';
-import { HistoryAPIBridge, HistoryAPI } from './HistoryAPIBridge';
 import { ExportAPIBridge } from './ExportAPIBridge';
 
 interface LocalEmbedPDFProps {
   file?: File | Blob;
   url?: string | null;
-  enableSignature?: boolean;
+  enableAnnotations?: boolean;
   onSignatureAdded?: (annotation: any) => void;
   signatureApiRef?: React.RefObject<SignatureAPI>;
   historyApiRef?: React.RefObject<HistoryAPI>;
 }
 
-export function LocalEmbedPDF({ file, url, enableSignature = false, onSignatureAdded, signatureApiRef, historyApiRef }: LocalEmbedPDFProps) {
+export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatureAdded, signatureApiRef, historyApiRef }: LocalEmbedPDFProps) {
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
-  const [, setAnnotations] = useState<Array<{id: string, pageIndex: number, rect: any}>>([]);
   const [, setAnnotations] = useState<Array<{id: string, pageIndex: number, rect: any}>>([]);
 
   // Convert File to URL if needed
@@ -101,10 +93,10 @@ export function LocalEmbedPDF({ file, url, enableSignature = false, onSignatureA
       createPluginRegistration(SelectionPluginPackage),
 
       // Register history plugin for undo/redo (recommended for annotations)
-      ...(enableSignature ? [createPluginRegistration(HistoryPluginPackage)] : []),
+      ...(enableAnnotations ? [createPluginRegistration(HistoryPluginPackage)] : []),
 
       // Register annotation plugin (depends on InteractionManager, Selection, History)
-      ...(enableSignature ? [createPluginRegistration(AnnotationPluginPackage, {
+      ...(enableAnnotations ? [createPluginRegistration(AnnotationPluginPackage, {
         annotationAuthor: 'Digital Signature',
         autoCommit: true,
         deactivateToolAfterCreate: false,
@@ -205,7 +197,7 @@ export function LocalEmbedPDF({ file, url, enableSignature = false, onSignatureA
       <EmbedPDF
         engine={engine}
         plugins={plugins}
-        onInitialized={enableSignature ? async (registry) => {
+        onInitialized={enableAnnotations ? async (registry) => {
           const annotationPlugin = registry.getPlugin('annotation');
           if (!annotationPlugin || !annotationPlugin.provides) return;
 
@@ -276,8 +268,8 @@ export function LocalEmbedPDF({ file, url, enableSignature = false, onSignatureA
         <SearchAPIBridge />
         <ThumbnailAPIBridge />
         <RotateAPIBridge />
-        {enableSignature && <SignatureAPIBridge ref={signatureApiRef} />}
-        {enableSignature && <HistoryAPIBridge ref={historyApiRef} />}
+        {enableAnnotations && <SignatureAPIBridge ref={signatureApiRef} />}
+        {enableAnnotations && <HistoryAPIBridge ref={historyApiRef} />}
         <ExportAPIBridge />
         <GlobalPointerProvider>
           <Viewport
@@ -324,7 +316,7 @@ export function LocalEmbedPDF({ file, url, enableSignature = false, onSignatureA
                     {/* Selection layer for text interaction */}
                     <SelectionLayer pageIndex={pageIndex} scale={scale} />
                     {/* Annotation layer for signatures (only when enabled) */}
-                    {enableSignature && (
+                    {enableAnnotations && (
                       <AnnotationLayer
                         pageIndex={pageIndex}
                         scale={scale}

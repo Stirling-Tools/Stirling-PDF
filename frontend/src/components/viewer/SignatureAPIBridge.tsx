@@ -203,6 +203,7 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPI
           // Use stamp tool for image/canvas signatures
           annotationApi.setActiveTool('stamp');
           const activeTool = annotationApi.getActiveTool();
+
           if (activeTool && activeTool.id === 'stamp') {
             annotationApi.setToolDefaults('stamp', {
               imageSrc: signatureConfig.signatureData,
