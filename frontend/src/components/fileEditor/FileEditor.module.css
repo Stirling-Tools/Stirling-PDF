@@ -9,7 +9,7 @@
   transition: box-shadow 0.18s ease, outline-color 0.18s ease, transform 0.18s ease;
   max-width: 100%;
   max-height: 100%;
-  overflow: hidden;
+  overflow: visible;
   margin-left: 0.5rem;
   margin-right: 0.5rem;
 }
@@ -265,29 +265,28 @@
 /* Hover Menu */
 .hoverMenu {
   position: absolute;
-  bottom: 1rem;
+  bottom: -8px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
-  gap: 0.5rem;
-  padding: 0.75rem;
+  gap: 8px;
+  align-items: center;
   background: var(--bg-toolbar);
   border: 1px solid var(--border-default);
-  border-radius: 8px;
+  padding: 6px 12px;
+  border-radius: 20px;
   box-shadow: var(--shadow-md);
   z-index: 30;
   animation: fadeIn 200ms ease-out;
-  backdrop-filter: blur(8px);
+  white-space: nowrap;
 }
 
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateX(-50%) translateY(8px);
   }
   to {
     opacity: 1;
-    transform: translateX(-50%) translateY(0);
   }
 }
 

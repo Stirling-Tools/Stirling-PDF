@@ -372,43 +372,50 @@ const FileEditorThumbnail = ({
       {/* Hover Menu */}
       {showHoverMenu && isSupported && (
         <div className={styles.hoverMenu} onClick={(e) => e.stopPropagation()}>
-          <Button
-            variant="light"
-            leftSection={<VisibilityIcon fontSize="small" />}
-            onClick={(e) => {
-              e.stopPropagation();
-              onViewFile(file.id);
-            }}
-            size="sm"
-          >
-            {t('openInViewer', 'Open in Viewer')}
-          </Button>
-          <Button
-            variant="light"
-            color="red"
-            leftSection={<CloseIcon fontSize="small" />}
-            onClick={(e) => {
-              e.stopPropagation();
-              handleCloseWithConfirmation();
-            }}
-            size="sm"
-          >
-            {t('close', 'Close')}
-          </Button>
-          {isZipFile && onUnzipFile && (
-            <Button
-              variant="light"
-              leftSection={<UnarchiveIcon fontSize="small" />}
+          <Tooltip label={t('openInViewer', 'Open in Viewer')}>
+            <ActionIcon
+              size="md"
+              variant="subtle"
+              style={{ color: 'var(--mantine-color-dimmed)' }}
               onClick={(e) => {
                 e.stopPropagation();
-                onUnzipFile(file.id);
-                alert({ alertType: 'success', title: `Unzipping ${file.name}`, expandable: false, durationMs: 2500 });
+                onViewFile(file.id);
               }}
-              size="sm"
             >
-              {t('fileManager.unzip', 'Unzip')}
-            </Button>
+              <VisibilityIcon style={{ fontSize: 20 }} />
+            </ActionIcon>
+          </Tooltip>
+
+          {isZipFile && onUnzipFile && (
+            <Tooltip label={t('fileManager.unzip', 'Unzip')}>
+              <ActionIcon
+                size="md"
+                variant="subtle"
+                style={{ color: 'var(--mantine-color-dimmed)' }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onUnzipFile(file.id);
+                  alert({ alertType: 'success', title: `Unzipping ${file.name}`, expandable: false, durationMs: 2500 });
+                }}
+              >
+                <UnarchiveIcon style={{ fontSize: 20 }} />
+              </ActionIcon>
+            </Tooltip>
           )}
+
+          <Tooltip label={t('close', 'Close')}>
+            <ActionIcon
+              size="md"
+              variant="subtle"
+              c="red"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleCloseWithConfirmation();
+              }}
+            >
+              <CloseIcon style={{ fontSize: 20 }} />
+            </ActionIcon>
+          </Tooltip>
         </div>
       )}
 
