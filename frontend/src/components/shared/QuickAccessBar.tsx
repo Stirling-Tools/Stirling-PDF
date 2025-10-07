@@ -24,7 +24,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
   const { t } = useTranslation();
   const { isRainbowMode } = useRainbowThemeContext();
   const { openFilesModal, isFilesModalOpen } = useFilesModalContext();
-  const { handleReaderToggle, handleBackToTools, handleToolSelect, selectedToolKey, leftPanelView, toolRegistry, readerMode, resetTool, setToolPanelMode } = useToolWorkflow();
+  const { handleReaderToggle, handleBackToTools: _handleBackToTools, handleToolSelect, selectedToolKey, leftPanelView, toolRegistry, readerMode, resetTool, setToolPanelMode: _setToolPanelMode } = useToolWorkflow();
   const { getToolNavigation } = useSidebarNavigation();
   const { config } = useAppConfig();
   const [configModalOpen, setConfigModalOpen] = useState(false);

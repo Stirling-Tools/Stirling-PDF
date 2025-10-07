@@ -30,7 +30,7 @@ export const renderToolButtons = (
         <SubcategoryHeader label={getSubcategoryLabel(t, subcategory.subcategoryId)} />
       )}
       <div>
-        {subcategory.tools.map(({ id, tool }, index) => {
+        {subcategory.tools.map(({ id, tool }, _index) => {
                   const matchedSynonym = matchedTextMap.get(id);
                   
                   return (
