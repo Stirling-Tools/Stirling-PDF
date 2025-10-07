@@ -101,6 +101,10 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPI
     addTextSignature: (text: string, x: number, y: number, pageIndex: number) => {
       if (!annotationApi) return;
 
+      const textColor = signatureConfig?.textColor || '#000000';
+      const fontSize = signatureConfig?.fontSize || 16;
+      const fontFamily = signatureConfig?.fontFamily || 'Helvetica';
+
       // Create text annotation for signature
       annotationApi.createAnnotation(pageIndex, {
         type: PdfAnnotationSubtype.FREETEXT,
@@ -110,8 +114,8 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPI
         },
         contents: text,
         author: 'Digital Signature',
-        fontSize: 16,
-        fontColor: '#000000',
+        fontSize: fontSize,
+        fontColor: textColor,
         fontFamily: PdfStandardFont.Helvetica,
         textAlign: PdfTextAlignment.Left,
         verticalAlign: PdfVerticalAlignment.Top,
@@ -150,45 +154,31 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPI
 
       try {
         if (signatureConfig.signatureType === 'text' && signatureConfig.signerName) {
-          // Try different tool names for text annotations
-          const textToolNames = ['freetext', 'text', 'textbox', 'annotation-text'];
-          let activatedTool = null;
-
-          for (const toolName of textToolNames) {
-            annotationApi.setActiveTool(toolName);
-            const tool = annotationApi.getActiveTool();
-
-            if (tool && tool.id === toolName) {
-              activatedTool = tool;
-              annotationApi.setToolDefaults(toolName, {
-                contents: signatureConfig.signerName,
-                fontSize: signatureConfig.fontSize || 16,
-                fontFamily: signatureConfig.fontFamily === 'Times-Roman' ? PdfStandardFont.Times_Roman :
-                          signatureConfig.fontFamily === 'Courier' ? PdfStandardFont.Courier :
-                          PdfStandardFont.Helvetica,
-                fontColor: '#000000',
-              });
-              break;
-            }
-          }
+          // Skip native text tools - always use stamp for consistent sizing
+          const activatedTool = null;
 
           if (!activatedTool) {
-            // Fallback: create a simple text image as stamp
+            // Create text image as stamp with actual pixel size matching desired display size
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
             if (ctx) {
-              const fontSize = signatureConfig.fontSize || 16;
+              const baseFontSize = signatureConfig.fontSize || 16;
               const fontFamily = signatureConfig.fontFamily || 'Helvetica';
+              const textColor = signatureConfig.textColor || '#000000';
 
-              canvas.width = Math.max(200, signatureConfig.signerName.length * fontSize * 0.6);
-              canvas.height = fontSize + 20;
-              ctx.fillStyle = '#000000';
-              ctx.font = `${fontSize}px ${fontFamily}`;
+              // Canvas pixel size = display size (EmbedPDF uses pixel dimensions directly)
+              canvas.width = Math.max(200, signatureConfig.signerName.length * baseFontSize * 0.6);
+              canvas.height = baseFontSize + 20;
+
+              ctx.fillStyle = textColor;
+              ctx.font = `${baseFontSize}px ${fontFamily}`;
               ctx.textAlign = 'left';
               ctx.textBaseline = 'middle';
               ctx.fillText(signatureConfig.signerName, 10, canvas.height / 2);
               const dataURL = canvas.toDataURL();
 
+              // Deactivate and reactivate to force refresh
+              annotationApi.setActiveTool(null);
               annotationApi.setActiveTool('stamp');
               const stampTool = annotationApi.getActiveTool();
               if (stampTool && stampTool.id === 'stamp') {
@@ -307,6 +297,9 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPI
 
         case 'text':
           if (params.signerName) {
+            const textColor = params.textColor || '#000000';
+            const fontSize = params.fontSize || 16;
+
             annotationApi.createAnnotation(page, {
               type: PdfAnnotationSubtype.FREETEXT,
               rect: {
@@ -315,8 +308,8 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPI
               },
               contents: params.signerName,
               author: 'Digital Signature',
-              fontSize: 16,
-              fontColor: '#000000',
+              fontSize: fontSize,
+              fontColor: textColor,
               fontFamily: PdfStandardFont.Helvetica,
               textAlign: PdfTextAlignment.Left,
               verticalAlign: PdfVerticalAlignment.Top,

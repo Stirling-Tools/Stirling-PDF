@@ -99,7 +99,7 @@ const SignSettings = ({
     }
   }, [parameters.signatureType]);
 
-  // Handle text signature activation
+  // Handle text signature activation (including fontSize and fontFamily changes)
   useEffect(() => {
     if (parameters.signatureType === 'text' && parameters.signerName && parameters.signerName.trim() !== '') {
       if (onActivateSignaturePlacement) {
@@ -114,7 +114,7 @@ const SignSettings = ({
         onDeactivateSignature();
       }
     }
-  }, [parameters.signatureType, parameters.signerName, onActivateSignaturePlacement, onDeactivateSignature]);
+  }, [parameters.signatureType, parameters.signerName, parameters.fontSize, parameters.fontFamily, onActivateSignaturePlacement, onDeactivateSignature]);
 
   // Handle signature data updates
   useEffect(() => {
@@ -237,6 +237,8 @@ const SignSettings = ({
           onFontSizeChange={(size) => onParameterChange('fontSize', size)}
           fontFamily={parameters.fontFamily || 'Helvetica'}
           onFontFamilyChange={(family) => onParameterChange('fontFamily', family)}
+          textColor={parameters.textColor || '#000000'}
+          onTextColorChange={(color) => onParameterChange('textColor', color)}
           disabled={disabled}
         />
       )}
