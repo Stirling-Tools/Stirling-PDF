@@ -11,6 +11,7 @@ interface DrawingCanvasProps {
   onPenSizeChange: (size: number) => void;
   onPenSizeInputChange: (input: string) => void;
   onSignatureDataChange: (data: string | null) => void;
+  onDrawingComplete?: () => void;  // Called when user finishes drawing
   disabled?: boolean;
   width?: number;
   height?: number;
@@ -27,6 +28,7 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
   onPenSizeChange,
   onPenSizeInputChange,
   onSignatureDataChange,
+  onDrawingComplete,
   disabled = false,
   width = 400,
   height = 150,
@@ -35,66 +37,15 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
   additionalButtons
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const modalCanvasRef = useRef<HTMLCanvasElement>(null);
-  const visibleModalCanvasRef = useRef<HTMLCanvasElement>(null);
+  const hiddenCanvasRef = useRef<HTMLCanvasElement>(null); // Hidden canvas that persists
+  const visibleModalCanvasRef = useRef<HTMLCanvasElement>(null); // Visible canvas in modal
 
-  const [isDrawing, setIsDrawing] = useState(false);
   const [isModalDrawing, setIsModalDrawing] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Drawing functions for main canvas
-  const startDrawing = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!canvasRef.current || disabled) return;
-
-    setIsDrawing(true);
-    const rect = canvasRef.current.getBoundingClientRect();
-    const scaleX = canvasRef.current.width / rect.width;
-    const scaleY = canvasRef.current.height / rect.height;
-    const x = (e.clientX - rect.left) * scaleX;
-    const y = (e.clientY - rect.top) * scaleY;
-
-    const ctx = canvasRef.current.getContext('2d');
-    if (ctx) {
-      ctx.strokeStyle = selectedColor;
-      ctx.lineWidth = penSize;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-      ctx.beginPath();
-      ctx.moveTo(x, y);
-    }
-  }, [disabled, selectedColor, penSize]);
-
-  const draw = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!isDrawing || !canvasRef.current || disabled) return;
-
-    const rect = canvasRef.current.getBoundingClientRect();
-    const scaleX = canvasRef.current.width / rect.width;
-    const scaleY = canvasRef.current.height / rect.height;
-    const x = (e.clientX - rect.left) * scaleX;
-    const y = (e.clientY - rect.top) * scaleY;
-
-    const ctx = canvasRef.current.getContext('2d');
-    if (ctx) {
-      ctx.lineTo(x, y);
-      ctx.stroke();
-    }
-  }, [isDrawing, disabled]);
-
-  const stopDrawing = useCallback(() => {
-    if (!isDrawing || disabled) return;
-
-    setIsDrawing(false);
-
-    // Save canvas as signature data
-    if (canvasRef.current) {
-      const dataURL = canvasRef.current.toDataURL('image/png');
-      onSignatureDataChange(dataURL);
-    }
-  }, [isDrawing, disabled, onSignatureDataChange]);
-
-  // Modal canvas drawing functions
+  // Modal canvas drawing functions - draw to BOTH canvases
   const startModalDrawing = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!visibleModalCanvasRef.current || !modalCanvasRef.current) return;
+    if (!visibleModalCanvasRef.current || !hiddenCanvasRef.current) return;
 
     setIsModalDrawing(true);
     const rect = visibleModalCanvasRef.current.getBoundingClientRect();
@@ -103,9 +54,9 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
     const x = (e.clientX - rect.left) * scaleX;
     const y = (e.clientY - rect.top) * scaleY;
 
-    // Draw on both the visible modal canvas and hidden canvas
+    // Draw on both canvases
     const visibleCtx = visibleModalCanvasRef.current.getContext('2d');
-    const hiddenCtx = modalCanvasRef.current.getContext('2d');
+    const hiddenCtx = hiddenCanvasRef.current.getContext('2d');
 
     [visibleCtx, hiddenCtx].forEach(ctx => {
       if (ctx) {
@@ -120,7 +71,7 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
   }, [selectedColor, penSize]);
 
   const drawModal = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!isModalDrawing || !visibleModalCanvasRef.current || !modalCanvasRef.current) return;
+    if (!isModalDrawing || !visibleModalCanvasRef.current || !hiddenCanvasRef.current) return;
 
     const rect = visibleModalCanvasRef.current.getBoundingClientRect();
     const scaleX = visibleModalCanvasRef.current.width / rect.width;
@@ -130,7 +81,7 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
 
     // Draw on both canvases
     const visibleCtx = visibleModalCanvasRef.current.getContext('2d');
-    const hiddenCtx = modalCanvasRef.current.getContext('2d');
+    const hiddenCtx = hiddenCanvasRef.current.getContext('2d');
 
     [visibleCtx, hiddenCtx].forEach(ctx => {
       if (ctx) {
@@ -143,78 +94,47 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
   const stopModalDrawing = useCallback(() => {
     if (!isModalDrawing) return;
     setIsModalDrawing(false);
-
-    // Sync the canvases and update signature data (only when drawing stops)
-    if (modalCanvasRef.current) {
-      const dataURL = modalCanvasRef.current.toDataURL('image/png');
-      onSignatureDataChange(dataURL);
-
-      // Also update the small canvas display
-      if (canvasRef.current) {
-        const smallCtx = canvasRef.current.getContext('2d');
-        if (smallCtx) {
-          const img = new Image();
-          img.onload = () => {
-            smallCtx.clearRect(0, 0, canvasRef.current!.width, canvasRef.current!.height);
-            smallCtx.drawImage(img, 0, 0, canvasRef.current!.width, canvasRef.current!.height);
-          };
-          img.src = dataURL;
-        }
-      }
-    }
   }, [isModalDrawing]);
 
-  // Clear canvas functions
-  const clearCanvas = useCallback(() => {
-    if (!canvasRef.current || disabled) return;
-
-    const ctx = canvasRef.current.getContext('2d');
-    if (ctx) {
-      ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
-
-      // Also clear the modal canvas if it exists
-      if (modalCanvasRef.current) {
-        const modalCtx = modalCanvasRef.current.getContext('2d');
-        if (modalCtx) {
-          modalCtx.clearRect(0, 0, modalCanvasRef.current.width, modalCanvasRef.current.height);
-        }
-      }
-
-      onSignatureDataChange(null);
-    }
-  }, [disabled]);
-
+  // Clear canvas function
   const clearModalCanvas = useCallback(() => {
-    // Clear both modal canvases (visible and hidden)
-    if (modalCanvasRef.current) {
-      const hiddenCtx = modalCanvasRef.current.getContext('2d');
-      if (hiddenCtx) {
-        hiddenCtx.clearRect(0, 0, modalCanvasRef.current.width, modalCanvasRef.current.height);
+    // Clear hidden canvas
+    if (hiddenCanvasRef.current) {
+      const ctx = hiddenCanvasRef.current.getContext('2d');
+      if (ctx) {
+        ctx.clearRect(0, 0, hiddenCanvasRef.current.width, hiddenCanvasRef.current.height);
       }
     }
 
+    // Clear visible modal canvas
     if (visibleModalCanvasRef.current) {
-      const visibleCtx = visibleModalCanvasRef.current.getContext('2d');
-      if (visibleCtx) {
-        visibleCtx.clearRect(0, 0, visibleModalCanvasRef.current.width, visibleModalCanvasRef.current.height);
+      const ctx = visibleModalCanvasRef.current.getContext('2d');
+      if (ctx) {
+        ctx.clearRect(0, 0, visibleModalCanvasRef.current.width, visibleModalCanvasRef.current.height);
       }
     }
 
-    // Also clear the main canvas and signature data
+    // Clear small preview canvas
     if (canvasRef.current) {
-      const mainCtx = canvasRef.current.getContext('2d');
-      if (mainCtx) {
-        mainCtx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+      const ctx = canvasRef.current.getContext('2d');
+      if (ctx) {
+        ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
       }
     }
 
     onSignatureDataChange(null);
-  }, []);
+  }, [onSignatureDataChange]);
 
-  const saveModalSignature = useCallback(() => {
-    if (!modalCanvasRef.current) return;
+  const closeModalAndSave = useCallback(() => {
+    if (!hiddenCanvasRef.current) {
+      setIsModalOpen(false);
+      return;
+    }
 
-    const dataURL = modalCanvasRef.current.toDataURL('image/png');
+    // Get data from the hidden canvas (which persists)
+    const dataURL = hiddenCanvasRef.current.toDataURL('image/png');
+
+    // Update signature data immediately
     onSignatureDataChange(dataURL);
 
     // Copy to small canvas for display
@@ -230,86 +150,34 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
       }
     }
 
+    // Close modal (hidden canvas stays mounted)
     setIsModalOpen(false);
-  }, []);
+
+    // Trigger drawing complete callback to activate placement mode
+    if (onDrawingComplete) {
+      onDrawingComplete();
+    }
+  }, [onSignatureDataChange, onDrawingComplete]);
 
   const openModal = useCallback(() => {
     setIsModalOpen(true);
-    // Copy content to modal canvas after a brief delay
+    // Copy hidden canvas content to visible modal canvas after modal opens
     setTimeout(() => {
-      if (visibleModalCanvasRef.current && modalCanvasRef.current) {
+      if (hiddenCanvasRef.current && visibleModalCanvasRef.current) {
         const visibleCtx = visibleModalCanvasRef.current.getContext('2d');
         if (visibleCtx) {
-          visibleCtx.strokeStyle = selectedColor;
-          visibleCtx.lineWidth = penSize;
-          visibleCtx.lineCap = 'round';
-          visibleCtx.lineJoin = 'round';
           visibleCtx.clearRect(0, 0, visibleModalCanvasRef.current.width, visibleModalCanvasRef.current.height);
-          visibleCtx.drawImage(modalCanvasRef.current, 0, 0, visibleModalCanvasRef.current.width, visibleModalCanvasRef.current.height);
+          visibleCtx.drawImage(hiddenCanvasRef.current, 0, 0);
         }
       }
-    }, 300);
-  }, [selectedColor, penSize]);
-
-  // Initialize canvas settings whenever color or pen size changes
-  React.useEffect(() => {
-    const updateCanvas = (canvas: HTMLCanvasElement | null) => {
-      if (!canvas) return;
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-        ctx.strokeStyle = selectedColor;
-        ctx.lineWidth = penSize;
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
-      }
-    };
-
-    updateCanvas(canvasRef.current);
-    updateCanvas(modalCanvasRef.current);
-    updateCanvas(visibleModalCanvasRef.current);
-  }, [selectedColor, penSize]);
+    }, 50);
+  }, []);
 
   return (
     <>
       <Paper withBorder p="md">
         <Stack gap="sm">
-          <Group justify="space-between">
-            <Text fw={500}>Draw your signature</Text>
-            <Group gap="lg">
-              <div>
-                <Text size="sm" fw={500} mb="xs" ta="center">Color</Text>
-                <Group justify="center">
-                  <ColorSwatchButton
-                    color={selectedColor}
-                    onClick={onColorSwatchClick}
-                  />
-                </Group>
-              </div>
-              <div>
-                <Text size="sm" fw={500} mb="xs">Pen Size</Text>
-                <PenSizeSelector
-                  value={penSize}
-                  inputValue={penSizeInput}
-                  onValueChange={onPenSizeChange}
-                  onInputChange={onPenSizeInputChange}
-                  disabled={disabled}
-                  placeholder="Size"
-                  size="compact-sm"
-                  style={{ width: '60px' }}
-                />
-              </div>
-              <div style={{ paddingTop: '24px' }}>
-                <Button
-                  variant="light"
-                  size="compact-sm"
-                  onClick={openModal}
-                  disabled={disabled}
-                >
-                  Expand
-                </Button>
-              </div>
-            </Group>
-          </Group>
+          <Text fw={500}>Draw your signature</Text>
           <canvas
             ref={canvasRef}
             width={width}
@@ -317,94 +185,76 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
             style={{
               border: '1px solid #ccc',
               borderRadius: '4px',
-              cursor: disabled ? 'default' : 'crosshair',
+              cursor: disabled ? 'pointer' : 'pointer',
               backgroundColor: '#ffffff',
               width: '100%',
             }}
-            onMouseDown={startDrawing}
-            onMouseMove={draw}
-            onMouseUp={stopDrawing}
-            onMouseLeave={stopDrawing}
+            onClick={disabled ? undefined : openModal}
           />
-          <Group justify="space-between">
-            <div>
-              {additionalButtons}
-            </div>
-            <Button
-              variant="subtle"
-              color="red"
-              size="compact-sm"
-              onClick={clearCanvas}
-              disabled={disabled}
-            >
-              Clear
-            </Button>
-          </Group>
+          <Text size="sm" c="dimmed" ta="center">
+            Click to open drawing canvas
+          </Text>
         </Stack>
       </Paper>
 
-      {/* Hidden canvas for modal synchronization */}
+      {/* Hidden canvas that persists - always mounted */}
       <canvas
-        ref={modalCanvasRef}
+        ref={hiddenCanvasRef}
         width={modalWidth}
         height={modalHeight}
         style={{ display: 'none' }}
       />
 
-      {/* Modal for larger signature canvas */}
+      {/* Modal for drawing signature */}
       <Modal
         opened={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={closeModalAndSave}
         title="Draw Your Signature"
         size="xl"
         centered
       >
         <Stack gap="md">
           {/* Color and Pen Size picker */}
-          <Paper withBorder p="sm">
-            <Group gap="lg" align="flex-end">
-              <div>
-                <Text size="sm" fw={500} mb="xs">Color</Text>
-                <ColorSwatchButton
-                  color={selectedColor}
-                  onClick={onColorSwatchClick}
-                />
-              </div>
-              <div>
-                <Text size="sm" fw={500} mb="xs">Pen Size</Text>
-                <PenSizeSelector
-                  value={penSize}
-                  inputValue={penSizeInput}
-                  onValueChange={onPenSizeChange}
-                  onInputChange={onPenSizeInputChange}
-                  placeholder="Size"
-                  size="compact-sm"
-                  style={{ width: '60px' }}
-                />
-              </div>
-            </Group>
-          </Paper>
+          <Group gap="lg" align="flex-end">
+            <div>
+              <Text size="sm" fw={500} mb="xs">Color</Text>
+              <ColorSwatchButton
+                color={selectedColor}
+                onClick={onColorSwatchClick}
+              />
+            </div>
+            <div>
+              <Text size="sm" fw={500} mb="xs">Pen Size</Text>
+              <PenSizeSelector
+                value={penSize}
+                inputValue={penSizeInput}
+                onValueChange={onPenSizeChange}
+                onInputChange={onPenSizeInputChange}
+                placeholder="Size"
+                size="compact-sm"
+                style={{ width: '60px' }}
+              />
+            </div>
+          </Group>
 
-          <Paper withBorder p="md">
-            <canvas
-              ref={visibleModalCanvasRef}
-              width={modalWidth}
-              height={modalHeight}
-              style={{
-                border: '1px solid #ccc',
-                borderRadius: '4px',
-                cursor: 'crosshair',
-                backgroundColor: '#ffffff',
-                width: '100%',
-                maxWidth: `${modalWidth}px`,
-                height: 'auto',
-              }}
-              onMouseDown={startModalDrawing}
-              onMouseMove={drawModal}
-              onMouseUp={stopModalDrawing}
-              onMouseLeave={stopModalDrawing}
-            />
-          </Paper>
+          <canvas
+            ref={visibleModalCanvasRef}
+            width={modalWidth}
+            height={modalHeight}
+            style={{
+              border: '1px solid #ccc',
+              borderRadius: '4px',
+              cursor: 'crosshair',
+              backgroundColor: '#ffffff',
+              width: '100%',
+              maxWidth: `${modalWidth}px`,
+              height: 'auto',
+            }}
+            onMouseDown={startModalDrawing}
+            onMouseMove={drawModal}
+            onMouseUp={stopModalDrawing}
+            onMouseLeave={stopModalDrawing}
+          />
 
           <Group justify="space-between">
             <Button
@@ -414,19 +264,11 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
             >
               Clear Canvas
             </Button>
-            <Group gap="sm">
-              <Button
-                variant="subtle"
-                onClick={() => setIsModalOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={saveModalSignature}
-              >
-                Save Signature
-              </Button>
-            </Group>
+            <Button
+              onClick={closeModalAndSave}
+            >
+              Done
+            </Button>
           </Group>
         </Stack>
       </Modal>

@@ -136,6 +136,15 @@ const SignSettings = ({
     }
   }, [parameters.signatureType, parameters.signatureData, imageSignatureData]);
 
+  // Handle canvas signature activation - activate when canvas data syncs with parameters
+  useEffect(() => {
+    if (parameters.signatureType === 'canvas' && canvasSignatureData && parameters.signatureData === canvasSignatureData && onActivateSignaturePlacement) {
+      setTimeout(() => {
+        onActivateSignaturePlacement();
+      }, 100);
+    }
+  }, [parameters.signatureType, parameters.signatureData, canvasSignatureData]);
+
   // Draw settings are no longer needed since draw mode is removed
 
   return (
@@ -183,6 +192,11 @@ const SignSettings = ({
           onPenSizeChange={setPenSize}
           onPenSizeInputChange={setPenSizeInput}
           onSignatureDataChange={handleCanvasSignatureChange}
+          onDrawingComplete={() => {
+            if (onActivateSignaturePlacement) {
+              onActivateSignaturePlacement();
+            }
+          }}
           disabled={disabled}
           additionalButtons={
             <Button
