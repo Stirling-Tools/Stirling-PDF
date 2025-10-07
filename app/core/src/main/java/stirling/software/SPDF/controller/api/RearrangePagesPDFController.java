@@ -260,7 +260,7 @@ public class RearrangePagesPDFController {
                 newPages.add(document.getPage(newPageOrder.get(i)));
             }
 
-            // Create a new document bad on the original one
+            // Create a new document based on the original one
             PDDocument rearrangedDocument =
                     pdfDocumentFactory.createNewDocumentBasedOnOldDocument(document);
 
