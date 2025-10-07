@@ -24,7 +24,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
   const { t } = useTranslation();
   const { isRainbowMode } = useRainbowThemeContext();
   const { openFilesModal, isFilesModalOpen } = useFilesModalContext();
-  const { handleReaderToggle, handleBackToTools: _handleBackToTools, handleToolSelect, selectedToolKey, leftPanelView, toolRegistry, readerMode, resetTool, setToolPanelMode: _setToolPanelMode } = useToolWorkflow();
+  const { handleReaderToggle, handleToolSelect, selectedToolKey, leftPanelView, toolRegistry, readerMode, resetTool } = useToolWorkflow();
   const { getToolNavigation } = useSidebarNavigation();
   const { config } = useAppConfig();
   const [configModalOpen, setConfigModalOpen] = useState(false);
@@ -68,7 +68,8 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
             onClick: (e: React.MouseEvent) => handleClick(e),
             'aria-label': config.name
           } : {
-            onClick: () => handleClick()
+            onClick: () => handleClick(),
+            'aria-label': config.name
           })}
           size={isActive ? (config.size || 'lg') : 'lg'}
           variant="subtle"
@@ -228,6 +229,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
                     onClick={config.onClick}
                     style={getNavButtonStyle(config, activeButton, isFilesModalOpen, configModalOpen, selectedToolKey, leftPanelView)}
                     className={isNavButtonActive(config, activeButton, isFilesModalOpen, configModalOpen, selectedToolKey, leftPanelView) ? 'activeIconScale' : ''}
+                    aria-label={config.name}
                     data-testid={`${config.id}-button`}
                   >
                     <span className="iconContainer">

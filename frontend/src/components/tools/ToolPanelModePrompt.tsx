@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Badge, Button, Card, Group, Modal, Stack, Text } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import { useToolWorkflow, TOOL_PANEL_MODE_STORAGE_KEY } from '../../contexts/ToolWorkflowContext';
+import { useToolWorkflow } from '../../contexts/ToolWorkflowContext';
+import { TOOL_PANEL_MODE_STORAGE_KEY } from '../../contexts/toolWorkflow/state';
 import './ToolPanelModePrompt.css';
 
 type ToolPanelModeOption = 'sidebar' | 'fullscreen';

@@ -51,17 +51,6 @@ export default function ToolPanel() {
   const fullscreenExpanded = isFullscreenMode && leftPanelView === 'toolPicker' && !isMobile && toolPickerVisible;
 
 
-  // Debug logging for troubleshooting
-  React.useEffect(() => {
-    console.log('ToolPanel debug:', {
-      isFullscreenMode,
-      leftPanelView,
-      isMobile,
-      toolPickerVisible,
-      fullscreenExpanded
-    });
-  }, [isFullscreenMode, leftPanelView, isMobile, toolPickerVisible, fullscreenExpanded]);
-
   // Disable right rail buttons when fullscreen mode is active
   React.useEffect(() => {
     setAllRightRailButtonsDisabled(fullscreenExpanded);
