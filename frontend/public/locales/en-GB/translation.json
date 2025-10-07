@@ -1,9 +1,10 @@
 {
-  "unsavedChanges": "You have unsaved changes to your PDF. What would you like to do?",
+  "unsavedChanges": "You have unsaved changes to your PDF.",
+  "areYouSure": "Are you sure you want to leave?",
   "unsavedChangesTitle": "Unsaved Changes",
   "keepWorking": "Keep Working",
-  "discardChanges": "Discard Changes",
-  "applyAndContinue": "Apply & Continue",
+  "discardChanges": "Discard & Leave",
+  "applyAndContinue": "Save & Leave",
   "exportAndContinue": "Export & Continue",
   "language": {
     "direction": "ltr"
@@ -65,6 +66,8 @@
   "save": "Save",
   "saveToBrowser": "Save to Browser",
   "download": "Download",
+  "pin": "Pin",
+  "unpin": "Unpin",
   "undoOperationTooltip": "Click to undo the last operation and restore the original files",
   "undo": "Undo",
   "moreOptions": "More Options",
@@ -255,6 +258,16 @@
     "cacheInputs": {
       "name": "Save form inputs",
       "help": "Enable to store previously used inputs for future runs"
+    },
+    "general": {
+      "title": "General",
+      "description": "Configure general application preferences.",
+      "autoUnzip": "Auto-unzip API responses",
+      "autoUnzipDescription": "Automatically extract files from ZIP responses",
+      "autoUnzipTooltip": "Automatically extract ZIP files returned from API operations. Disable to keep ZIP files intact. This does not affect automation workflows.",
+      "autoUnzipFileLimit": "Auto-unzip file limit",
+      "autoUnzipFileLimitDescription": "Maximum number of files to extract from ZIP",
+      "autoUnzipFileLimitTooltip": "Only unzip if the ZIP contains this many files or fewer. Set higher to extract larger ZIPs."
     },
     "hotkeys": {
       "title": "Keyboard Shortcuts",
@@ -3186,6 +3199,7 @@
     "lastModified": "Last Modified",
     "toolChain": "Tools Applied",
     "restore": "Restore",
+    "unzip": "Unzip",
     "searchFiles": "Search files...",
     "recent": "Recent",
     "localFiles": "Local Files",
