@@ -109,7 +109,7 @@ const ToolPanelModePrompt = () => {
           <Card withBorder radius="lg" shadow="xs" padding="lg" className="tool-panel-mode-prompt__card">
             <Stack gap="md" className="tool-panel-mode-prompt__card-content">
               <Stack gap={2}>
-                <Text fw={600}>{t('toolPanel.modePrompt.fullscreenTitle', 'Fullscreen mode - (legacy)')}</Text>
+                <Text fw={600}>{t('toolPanel.modePrompt.fullscreenTitle', 'Fullscreen mode')}</Text>
                 <Text size="sm" c="dimmed">
                   {t('toolPanel.modePrompt.fullscreenDescription', 'Browse every tool in a catalogue that covers the workspace until you pick one.')}
                 </Text>

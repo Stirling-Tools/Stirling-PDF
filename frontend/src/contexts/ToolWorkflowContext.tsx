@@ -19,6 +19,7 @@ import {
   toolWorkflowReducer,
   ToolPanelMode,
 } from './toolWorkflow/state';
+import { usePreferences } from './PreferencesContext';
 
 // State interface
 // Types and reducer/state moved to './toolWorkflow/state'
@@ -75,6 +76,7 @@ interface ToolWorkflowProviderProps {
 
 export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
   const [state, dispatch] = useReducer(toolWorkflowReducer, undefined, createInitialState);
+  const { preferences } = usePreferences();
 
   // Store reset functions for tools
   const [toolResetFunctions, setToolResetFunctions] = React.useState<Record<string, () => void>>({});
@@ -145,6 +147,20 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
 
     window.localStorage.setItem(TOOL_PANEL_MODE_STORAGE_KEY, state.toolPanelMode);
   }, [state.toolPanelMode]);
+
+  // Keep tool panel mode in sync with user preference. This ensures the
+  // Config setting (Default tool picker mode) immediately affects the app
+  // and persists across reloads.
+  useEffect(() => {
+    if (!preferences) return;
+    const preferredMode = preferences.defaultToolPanelMode;
+    if (preferredMode && preferredMode !== state.toolPanelMode) {
+      dispatch({ type: 'SET_TOOL_PANEL_MODE', payload: preferredMode });
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem(TOOL_PANEL_MODE_STORAGE_KEY, preferredMode);
+      }
+    }
+  }, [preferences.defaultToolPanelMode]);
 
   // Tool reset methods
   const registerToolReset = useCallback((toolId: string, resetFunction: () => void) => {
