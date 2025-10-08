@@ -828,7 +828,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         name: t("home.compare.title", "Compare"),
         component: null,
         description: t("home.compare.desc", "Compare two PDF documents and highlight differences"),
-        categoryId: ToolCategoryId.RECOMMENDED_TOOLS,
+        categoryId: ToolCategoryId.STANDARD_TOOLS /* TODO: Change to RECOMMENDED_TOOLS when component is implemented */,
         subcategoryId: SubcategoryId.GENERAL,
         synonyms: getSynonyms(t, "compare"),
         supportsAutomate: false,
