@@ -71,10 +71,6 @@ const Sign = (props: BaseToolProps) => {
   // Save signed files to the system - apply signatures using EmbedPDF and replace original
   const handleSaveToSystem = useCallback(async () => {
     try {
-      console.log('=== Apply Signatures Started ===');
-      console.log('exportActions:', exportActions);
-      console.log('signatureApiRef.current:', signatureApiRef.current);
-
       // Unregister unsaved changes checker to prevent warning during apply
       unregisterUnsavedChangesChecker();
       setHasUnsavedChanges(false);
@@ -98,8 +94,6 @@ const Sign = (props: BaseToolProps) => {
         return;
       }
 
-      console.log('originalFile:', originalFile);
-
       // Use the signature flattening utility
       const flattenResult = await flattenSignatures({
         signatureApiRef,
@@ -110,19 +104,13 @@ const Sign = (props: BaseToolProps) => {
         getScrollState
       });
 
-      console.log('flattenSignatures result:', flattenResult);
-
       if (flattenResult) {
-        console.log('✓ Signature flattening completed - now consuming files');
-
         // Now consume the files - this triggers the viewer reload
-        const newFileIds = await consumeFiles(
+        await consumeFiles(
           flattenResult.inputFileIds,
           [flattenResult.outputStirlingFile],
           [flattenResult.outputStub]
         );
-
-        console.log('✓ Files consumed successfully. New file IDs:', newFileIds);
 
         // Mark signatures as applied
         setSignaturesApplied(true);

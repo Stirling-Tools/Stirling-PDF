@@ -310,9 +310,6 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
         return null;
       }
 
-      console.log('Parent file record:', record);
-      console.log('Parent version:', record.versionNumber);
-
       // Create output stub and file as a child of the original (increments version)
       const outputStub = createChildStub(
         record,
@@ -322,9 +319,6 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
         processedFileMetadata
       );
       const outputStirlingFile = createStirlingFile(signedFile, outputStub.id);
-
-      console.log('Output stub version:', outputStub.versionNumber);
-      console.log('✓ Signature flattening completed successfully');
 
       // Return the flattened file data for consumption by caller
       return {
