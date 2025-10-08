@@ -3,6 +3,7 @@ import { TourProvider, useTour } from '@reactour/tour';
 import { useOnboarding } from '../../contexts/OnboardingContext';
 import { useTranslation } from 'react-i18next';
 import { useMediaQuery } from '@mantine/hooks';
+import { Button, CloseButton } from '@mantine/core';
 
 function TourContent() {
   const { isOpen, currentStep } = useOnboarding();
@@ -101,13 +102,6 @@ export default function OnboardingTour() {
           ...base,
           backgroundColor: 'var(--mantine-primary-color-filled)',
         }),
-        close: (base) => ({
-          ...base,
-          color: 'var(--mantine-color-text)',
-          position: 'absolute',
-          top: '8px',
-          right: '8px',
-        }),
       }}
       showNavigation={true}
       showBadge={true}
@@ -117,27 +111,21 @@ export default function OnboardingTour() {
       prevButton={({ currentStep, setCurrentStep }) => {
         const isFirst = currentStep === 0;
         return (
-          <button
+          <Button
             onClick={() => setCurrentStep(Math.max(0, currentStep - 1))}
             disabled={isFirst}
-            style={{
-              backgroundColor: isFirst ? '#ccc' : 'var(--mantine-primary-color-filled)',
-              color: 'white',
-              border: 'none',
-              padding: '8px 16px',
-              borderRadius: '4px',
-              cursor: isFirst ? 'not-allowed' : 'pointer',
-              marginRight: '8px',
-            }}
+            variant="filled"
+            size="sm"
+            style={{ marginRight: '8px' }}
           >
             {t('onboarding.previous', 'Previous')}
-          </button>
+          </Button>
         );
       }}
       nextButton={({ currentStep, stepsLength, setCurrentStep, setIsOpen }) => {
         const isLast = currentStep === stepsLength - 1;
         return (
-          <button
+          <Button
             onClick={() => {
               if (isLast) {
                 setIsOpen(false);
@@ -146,18 +134,26 @@ export default function OnboardingTour() {
                 setCurrentStep(Math.min(stepsLength - 1, currentStep + 1));
               }
             }}
-            style={{
-              backgroundColor: 'var(--mantine-primary-color-filled)',
-              color: 'white',
-              border: 'none',
-              padding: '8px 16px',
-              borderRadius: '4px',
-              cursor: 'pointer',
-            }}
+            variant="filled"
+            size="sm"
           >
             {isLast ? t('onboarding.finish', 'Finish') : t('onboarding.next', 'Next')}
-          </button>
+          </Button>
         );
+      }}
+      components={{
+        Close: ({ onClick }) => (
+          <CloseButton
+            onClick={onClick}
+            size="md"
+            style={{ position: 'absolute', top: '8px', right: '8px' }}
+          />
+        ),
+        Content: ({ content }) => (
+          <div style={{ paddingRight: '16px' /* Ensure text doesn't overlap with close button */ }}>
+            {content}
+          </div>
+        ),
       }}
     >
       <TourContent />
