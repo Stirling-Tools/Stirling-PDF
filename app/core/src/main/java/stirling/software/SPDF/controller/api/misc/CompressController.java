@@ -103,7 +103,7 @@ public class CompressController {
     public TempFile compressImagesInPDF(
             Path pdfFile, double scaleFactor, float jpegQuality, boolean convertToGrayscale)
             throws Exception {
-        TempFile newCompressedPDF = new TempFile(tempFileManager, ".pdf");
+        TempFile newCompressedPDF = tempFileManager.createManagedTempFile(".pdf");
         long originalFileSize = Files.size(pdfFile);
         log.info(
                 "Starting image compression with scale factor: {}, JPEG quality: {}, grayscale: {}"
@@ -682,13 +682,13 @@ public class CompressController {
         List<TempFile> tempFiles = new ArrayList<>();
 
         // Create initial input file
-        TempFile originalTempFile = new TempFile(tempFileManager, ".pdf");
+        TempFile originalTempFile = tempFileManager.createManagedTempFile(".pdf");
         tempFiles.add(originalTempFile);
         Path originalFile = originalTempFile.getPath();
         inputFile.transferTo(originalTempFile.getFile());
         long inputFileSize = Files.size(originalFile);
 
-        TempFile currentTempFile = new TempFile(tempFileManager, ".pdf");
+        TempFile currentTempFile = tempFileManager.createManagedTempFile(".pdf");
         tempFiles.add(currentTempFile);
         Path currentFile = currentTempFile.getPath();
         Files.copy(originalFile, currentFile, StandardCopyOption.REPLACE_EXISTING);
@@ -828,7 +828,7 @@ public class CompressController {
         long preGsSize = Files.size(currentFile);
         log.info("Pre-Ghostscript file size: {}", GeneralUtils.formatBytes(preGsSize));
 
-        try (TempFile gsOutputFile = new TempFile(tempFileManager, ".pdf")) {
+        try (TempFile gsOutputFile = tempFileManager.createManagedTempFile(".pdf")) {
             Path gsOutputPath = gsOutputFile.getPath();
 
             // Build Ghostscript command based on optimization level
@@ -930,7 +930,7 @@ public class CompressController {
             qpdfCompressionLevel = 9;
         }
 
-        try (TempFile qpdfOutputFile = new TempFile(tempFileManager, ".pdf")) {
+        try (TempFile qpdfOutputFile = tempFileManager.createManagedTempFile(".pdf")) {
             Path qpdfOutputPath = qpdfOutputFile.getPath();
 
             // Build QPDF command
