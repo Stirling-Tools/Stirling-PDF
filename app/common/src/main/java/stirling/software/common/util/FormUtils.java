@@ -1,5 +1,6 @@
 package stirling.software.common.util;
 
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -22,22 +23,29 @@ import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
 import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
+import org.apache.pdfbox.pdmodel.graphics.image.JPEGFactory;
+import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationWidget;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceDictionary;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceEntry;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceStream;
 import org.apache.pdfbox.pdmodel.interactive.form.*;
+import org.apache.pdfbox.rendering.ImageType;
+import org.apache.pdfbox.rendering.PDFRenderer;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.common.model.ApplicationProperties;
 
 @Slf4j
 @UtilityClass
@@ -204,7 +212,9 @@ public class FormUtils {
     public void applyFieldValues(
             PDDocument document, Map<String, ?> values, boolean flatten, boolean strict)
             throws IOException {
-        if (document == null || values == null || values.isEmpty()) return;
+        if (document == null) {
+            return;
+        }
 
         PDAcroForm acroForm = getAcroFormSafely(document);
         if (acroForm == null) {
@@ -212,48 +222,191 @@ public class FormUtils {
                 throw new IOException("No AcroForm present in document");
             }
             log.debug("Skipping form fill because document has no AcroForm");
+            if (flatten) {
+                flattenEntireDocument(document, null);
+            }
             return;
         }
 
-        Map<String, PDField> lookup = new LinkedHashMap<>();
-        for (PDField field : acroForm.getFieldTree()) {
-            String fqName = field.getFullyQualifiedName();
-            if (fqName != null) {
-                lookup.putIfAbsent(fqName, field);
+        if (values != null && !values.isEmpty()) {
+            Map<String, PDField> lookup = new LinkedHashMap<>();
+            for (PDField field : acroForm.getFieldTree()) {
+                String fqName = field.getFullyQualifiedName();
+                if (fqName != null) {
+                    lookup.putIfAbsent(fqName, field);
+                }
+                String partial = field.getPartialName();
+                if (partial != null) {
+                    lookup.putIfAbsent(partial, field);
+                }
             }
-            String partial = field.getPartialName();
-            if (partial != null) {
-                lookup.putIfAbsent(partial, field);
+
+            for (Map.Entry<String, ?> entry : values.entrySet()) {
+                String key = entry.getKey();
+                if (key == null || key.isBlank()) {
+                    continue;
+                }
+
+                PDField field = lookup.get(key);
+                if (field == null) {
+                    field = acroForm.getField(key);
+                }
+                if (field == null) {
+                    log.debug("No matching field found for '{}', skipping", key);
+                    continue;
+                }
+
+                Object rawValue = entry.getValue();
+                String value = rawValue == null ? null : Objects.toString(rawValue, null);
+                applyValueToField(field, value, strict);
             }
+
+            ensureAppearances(acroForm);
         }
 
-        for (Map.Entry<String, ?> entry : values.entrySet()) {
-            String key = entry.getKey();
-            if (key == null || key.isBlank()) {
-                continue;
-            }
-
-            PDField field = lookup.get(key);
-            if (field == null) {
-                field = acroForm.getField(key);
-            }
-            if (field == null) {
-                log.debug("No matching field found for '{}', skipping", key);
-                continue;
-            }
-
-            Object rawValue = entry.getValue();
-            String value = rawValue == null ? null : Objects.toString(rawValue, null);
-            applyValueToField(field, value, strict);
-        }
-
-        ensureAppearances(acroForm);
+        repairWidgetGeometry(document, acroForm);
 
         if (flatten) {
+            flattenEntireDocument(document, acroForm);
+        }
+    }
+
+    private void flattenEntireDocument(PDDocument document, PDAcroForm acroForm)
+            throws IOException {
+        if (document == null) {
+            return;
+        }
+
+        if (acroForm != null) {
             try {
                 acroForm.flatten();
             } catch (Exception e) {
                 log.warn("Failed to flatten AcroForm: {}", e.getMessage(), e);
+            }
+        }
+
+        PDFRenderer renderer = new PDFRenderer(document);
+        ApplicationProperties properties =
+                ApplicationContextProvider.getBean(ApplicationProperties.class);
+
+        int requestedDpi =
+                properties != null && properties.getSystem() != null
+                        ? properties.getSystem().getMaxDPI()
+                        : 300;
+
+        rebuildDocumentFromImages(document, renderer, requestedDpi);
+        if (document.getDocumentCatalog() != null) {
+            document.getDocumentCatalog().setAcroForm(null);
+        }
+    }
+
+    private void rebuildDocumentFromImages(PDDocument document, PDFRenderer renderer, int dpi)
+            throws IOException {
+        int pageCount = document.getNumberOfPages();
+
+        for (int pageIndex = 0; pageIndex < pageCount; pageIndex++) {
+            BufferedImage rendered;
+            try {
+                rendered = renderer.renderImageWithDPI(pageIndex, dpi, ImageType.RGB);
+            } catch (OutOfMemoryError e) {
+                throw ExceptionUtils.createOutOfMemoryDpiException(pageIndex + 1, dpi, e);
+            } catch (NegativeArraySizeException e) {
+                throw ExceptionUtils.createOutOfMemoryDpiException(pageIndex + 1, dpi, e);
+            }
+
+            PDPage page = document.getPage(pageIndex);
+            PDRectangle mediaBox = page.getMediaBox();
+
+            // Ensure the page has resources before drawing
+            if (page.getResources() == null) {
+                page.setResources(new PDResources());
+            }
+
+            List<PDAnnotation> annotations = new ArrayList<>(page.getAnnotations());
+            for (PDAnnotation annotation : annotations) {
+                annotation.getCOSObject().removeItem(COSName.AP);
+                page.getAnnotations().remove(annotation);
+            }
+
+            try (PDPageContentStream contentStream =
+                    new PDPageContentStream(
+                            document, page, PDPageContentStream.AppendMode.OVERWRITE, true, true)) {
+                PDImageXObject pdImage = JPEGFactory.createFromImage(document, rendered);
+                contentStream.drawImage(
+                        pdImage,
+                        mediaBox.getLowerLeftX(),
+                        mediaBox.getLowerLeftY(),
+                        mediaBox.getWidth(),
+                        mediaBox.getHeight());
+            }
+        }
+    }
+
+    private void repairWidgetGeometry(PDDocument document, PDAcroForm acroForm) {
+        if (document == null || acroForm == null) {
+            return;
+        }
+
+        for (PDField field : acroForm.getFieldTree()) {
+            if (!(field instanceof PDTerminalField terminalField)) {
+                continue;
+            }
+
+            List<PDAnnotationWidget> widgets = terminalField.getWidgets();
+            if (widgets == null || widgets.isEmpty()) {
+                continue;
+            }
+
+            for (PDAnnotationWidget widget : widgets) {
+                if (widget == null) {
+                    continue;
+                }
+
+                PDRectangle rectangle = widget.getRectangle();
+                boolean invalidRectangle =
+                        rectangle == null
+                                || rectangle.getWidth() <= 0
+                                || rectangle.getHeight() <= 0;
+
+                PDPage page = widget.getPage();
+                if (page == null) {
+                    page = resolveWidgetPage(document, widget);
+                    if (page != null) {
+                        widget.setPage(page);
+                    }
+                }
+
+                if (invalidRectangle) {
+                    if (page == null && document.getNumberOfPages() > 0) {
+                        page = document.getPage(0);
+                        widget.setPage(page);
+                    }
+
+                    if (page != null) {
+                        PDRectangle mediaBox = page.getMediaBox();
+                        float fallbackWidth = Math.min(200f, mediaBox.getWidth());
+                        float fallbackHeight = Math.min(40f, mediaBox.getHeight());
+                        PDRectangle fallbackRectangle =
+                                new PDRectangle(
+                                        mediaBox.getLowerLeftX(),
+                                        mediaBox.getLowerLeftY(),
+                                        fallbackWidth,
+                                        fallbackHeight);
+                        widget.setRectangle(fallbackRectangle);
+
+                        try {
+                            List<PDAnnotation> pageAnnotations = page.getAnnotations();
+                            if (pageAnnotations != null && !pageAnnotations.contains(widget)) {
+                                pageAnnotations.add(widget);
+                            }
+                        } catch (IOException e) {
+                            log.debug(
+                                    "Unable to repair annotations for widget '{}': {}",
+                                    terminalField.getFullyQualifiedName(),
+                                    e.getMessage());
+                        }
+                    }
+                }
             }
         }
     }
@@ -897,7 +1050,7 @@ public class FormUtils {
                             resolvedType,
                             determineWidgetPageIndex(document, widget),
                             originalRectangle.getLowerLeftX(),
-                            page.getMediaBox().getHeight() - originalRectangle.getUpperRightY(),
+                            originalRectangle.getLowerLeftY(),
                             originalRectangle.getWidth(),
                             originalRectangle.getHeight(),
                             modification.required(),
