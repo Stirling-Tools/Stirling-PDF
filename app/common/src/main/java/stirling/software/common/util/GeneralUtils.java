@@ -297,6 +297,7 @@ public class GeneralUtils {
      * @return true if URL is reachable, false otherwise
      */
     public boolean isURLReachable(String urlStr, int connectTimeout, int readTimeout) {
+        HttpURLConnection connection = null;
         try {
             // Parse the URL
             URL url = URI.create(urlStr).toURL();
@@ -307,14 +308,17 @@ public class GeneralUtils {
                 return false; // Disallow other protocols
             }
 
-            // Check if the host is a local address
             String host = url.getHost();
-            if (isLocalAddress(host)) {
-                return false; // Exclude local addresses
+            if (host == null || host.isBlank()) {
+                return false;
+            }
+
+            if (isDisallowedNetworkLocation(host)) {
+                return false; // Exclude local, private or otherwise sensitive addresses
             }
 
             // Check if the URL is reachable
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("HEAD");
             connection.setConnectTimeout(connectTimeout);
             connection.setReadTimeout(readTimeout);
@@ -325,27 +329,125 @@ public class GeneralUtils {
         } catch (Exception e) {
             log.debug("URL {} is not reachable: {}", urlStr, e.getMessage());
             return false; // Return false in case of any exception
+        } finally {
+            if (connection != null) {
+                connection.disconnect();
+            }
         }
     }
 
-    private boolean isLocalAddress(String host) {
+    private boolean isDisallowedNetworkLocation(String host) {
         try {
-            // Resolve DNS to IP address
-            InetAddress address = InetAddress.getByName(host);
-
-            // Check for local addresses
-            return address.isAnyLocalAddress()
-                    || // Matches 0.0.0.0 or similar
-                    address.isLoopbackAddress()
-                    || // Matches 127.0.0.1 or ::1
-                    address.isSiteLocalAddress()
-                    || // Matches private IPv4 ranges: 192.168.x.x, 10.x.x.x, 172.16.x.x to
-                    // 172.31.x.x
-                    address.getHostAddress()
-                            .startsWith("fe80:"); // Matches link-local IPv6 addresses
+            InetAddress[] addresses = InetAddress.getAllByName(host);
+            for (InetAddress address : addresses) {
+                if (address == null || isSensitiveAddress(address)) {
+                    log.debug("Blocking URL to host {} resolved to {}", host, address);
+                    return true;
+                }
+            }
+            return false;
         } catch (Exception e) {
-            return false; // Return false for invalid or unresolved addresses
+            log.debug("Unable to resolve host {}: {}", host, e.getMessage());
+            return true; // Treat resolution issues as unsafe to avoid SSRF
         }
+    }
+
+    private boolean isSensitiveAddress(InetAddress address) {
+        if (address.isAnyLocalAddress()
+                || address.isLoopbackAddress()
+                || address.isLinkLocalAddress()
+                || address.isSiteLocalAddress()
+                || address.isMulticastAddress()) {
+            return true;
+        }
+
+        byte[] rawAddress = address.getAddress();
+        if (address instanceof Inet4Address) {
+            return isPrivateOrReservedIPv4(rawAddress);
+        }
+
+        if (address instanceof Inet6Address inet6Address) {
+            if (isUniqueLocalIPv6(rawAddress)) {
+                return true;
+            }
+            if (isIPv4MappedAddress(rawAddress) || inet6Address.isIPv4CompatibleAddress()) {
+                byte[] ipv4 =
+                        Arrays.copyOfRange(rawAddress, rawAddress.length - 4, rawAddress.length);
+                return isPrivateOrReservedIPv4(ipv4);
+            }
+        }
+
+        return false;
+    }
+
+    private boolean isPrivateOrReservedIPv4(byte[] address) {
+        if (address == null || address.length != 4) {
+            return true;
+        }
+
+        int first = Byte.toUnsignedInt(address[0]);
+        int second = Byte.toUnsignedInt(address[1]);
+
+        if (first == 0 || first == 127) {
+            return true; // 0.0.0.0/8 and 127.0.0.0/8
+        }
+        if (first == 100 && second >= 64 && second <= 127) {
+            return true; // 100.64.0.0/10 Carrier-grade NAT
+        }
+        if (first == 169 && second == 254) {
+            return true; // 169.254.0.0/16 Link-local
+        }
+        if (first == 172 && second >= 16 && second <= 31) {
+            return true; // 172.16.0.0/12 Private
+        }
+        if (first == 192 && second == 0 && Byte.toUnsignedInt(address[2]) == 0) {
+            return true; // 192.0.0.0/24 IETF Protocol Assignments
+        }
+        if (first == 192 && second == 0 && Byte.toUnsignedInt(address[2]) == 2) {
+            return true; // 192.0.2.0/24 TEST-NET-1
+        }
+        if (first == 192 && second == 168) {
+            return true; // 192.168.0.0/16 Private
+        }
+        if (first == 198 && (second == 18 || second == 19)) {
+            return true; // 198.18.0.0/15 Benchmark tests
+        }
+        if (first == 198 && second == 51 && Byte.toUnsignedInt(address[2]) == 100) {
+            return true; // 198.51.100.0/24 TEST-NET-2
+        }
+        if (first == 203 && second == 0 && Byte.toUnsignedInt(address[2]) == 113) {
+            return true; // 203.0.113.0/24 TEST-NET-3
+        }
+        if (first == 10) {
+            return true; // 10.0.0.0/8 Private
+        }
+        if ((first & 0xF0) == 0xE0) {
+            return true; // 224.0.0.0/4 Multicast and reserved (already covered but explicit)
+        }
+        if (first >= 240) {
+            return true; // 240.0.0.0/4 Reserved for future use
+        }
+        return false;
+    }
+
+    private boolean isUniqueLocalIPv6(byte[] address) {
+        if (address == null || address.length != 16) {
+            return true;
+        }
+        int first = Byte.toUnsignedInt(address[0]);
+        return (first & 0xFE) == 0xFC; // fc00::/7 Unique local addresses
+    }
+
+    private boolean isIPv4MappedAddress(byte[] address) {
+        if (address == null || address.length != 16) {
+            return false;
+        }
+        for (int i = 0; i < 10; i++) {
+            if (address[i] != 0) {
+                return false;
+            }
+        }
+        return address[10] == (byte) 0xFF && address[11] == (byte) 0xFF;
     }
 
     /*
