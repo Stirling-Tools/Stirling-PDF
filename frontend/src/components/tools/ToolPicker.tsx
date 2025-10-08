@@ -66,7 +66,7 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
   }, []);
 
   const { sections: visibleSections } = useToolSections(filteredTools);
-  const { favoriteTools, toolRegistry } = useToolWorkflow();
+  const { favoriteTools, recentTools, toolRegistry } = useToolWorkflow();
 
   const favoriteToolItems = useMemo(() => {
     return favoriteTools
@@ -78,6 +78,20 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
       // Only include ready tools (component or link) and navigational exceptions
       .filter((item: any) => item && (item.tool.component || item.tool.link || item.id === 'read' || item.id === 'multiTool')) as Array<{ id: string; tool: ToolRegistryEntry }>;
   }, [favoriteTools, toolRegistry]);
+
+  const recentToolItems = useMemo(() => {
+    return recentTools
+      .map((toolId) => {
+        const tool = (toolRegistry as any)[toolId as ToolId] as ToolRegistryEntry | undefined;
+        return tool ? { id: toolId as string, tool } : null;
+      })
+      .filter(Boolean)
+      .slice(0, 5) as Array<{ id: string; tool: ToolRegistryEntry }>; // cap to 5
+  }, [recentTools, toolRegistry]);
+
+  const recommendedCount = useMemo(() => {
+    return favoriteToolItems.length + recentToolItems.length;
+  }, [favoriteToolItems.length, recentToolItems.length]);
 
   const quickSection = useMemo(
     () => visibleSections.find(s => s.key === 'quick'),
@@ -160,7 +174,7 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
             >
               <span style={{ fontSize: "1rem" }}>{t("toolPicker.recommended", "RECOMMENDED")}</span>
               <Badge>
-                {quickSection?.subcategories.reduce((acc, sc) => acc + sc.tools.length, 0)}
+                {recommendedCount}
               </Badge>
             </div>
 
@@ -182,12 +196,23 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
                     </div>
                   </Box>
                 )}
-                {favoriteToolItems.length > 0 && (
-                  <SubcategoryHeader label={t('toolPanel.suggestedTools', 'Suggested Tools')} />
+                {recentToolItems.length > 0 && (
+                  <Box w="100%">
+                    <SubcategoryHeader label={t('toolPanel.fullscreen.recent', 'Recently used')} />
+                    <div>
+                      {recentToolItems.map(({ id, tool }) => (
+                        <ToolButton
+                          key={`recent-${id}`}
+                          id={id}
+                          tool={tool}
+                          isSelected={selectedToolKey === id}
+                          onSelect={onSelect}
+                        />
+                      ))}
+                    </div>
+                  </Box>
                 )}
-                {quickSection?.subcategories.map(sc =>
-                  renderToolButtons(t, sc, selectedToolKey, onSelect, false, false)
-                )}
+                {/* Temporarily hide the rest of Recommended tools; show only Favourites and Recently used */}
               </Stack>
             </Box>
           </>
