@@ -104,6 +104,9 @@ export default function OnboardingTour() {
         close: (base) => ({
           ...base,
           color: 'var(--mantine-color-text)',
+          position: 'absolute',
+          top: '8px',
+          right: '8px',
         }),
       }}
       showNavigation={true}
