@@ -22,9 +22,10 @@ interface ToolButtonProps {
   rounded?: boolean;
   disableNavigation?: boolean;
   matchedSynonym?: string;
+  hasStars?: boolean;
 }
 
-const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect, disableNavigation = false, matchedSynonym }) => {
+const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect, disableNavigation = false, matchedSynonym, hasStars = false }) => {
   const { t } = useTranslation();
   // Special case: read and multiTool are navigational tools that are always available
   const isUnavailable = !tool.component && !tool.link && id !== 'read' && id !== 'multiTool';
@@ -169,7 +170,7 @@ const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect,
     </Button>
   );
 
-  const star = !isUnavailable ? (
+  const star = hasStars && !isUnavailable ? (
     <ActionIcon
       variant="subtle"
       radius="xl"

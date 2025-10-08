@@ -141,7 +141,7 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
             {searchGroups.length === 0 ? (
               <NoToolsFound />
             ) : (
-                      searchGroups.map(group => renderToolButtons(t, group, selectedToolKey, onSelect, true, false, filteredTools))
+                      searchGroups.map(group => renderToolButtons(t, group, selectedToolKey, onSelect, true, false, filteredTools, true))
             )}
           </Stack>
         ) : (
@@ -186,6 +186,7 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
                           tool={tool}
                           isSelected={selectedToolKey === id}
                           onSelect={onSelect}
+                          hasStars
                         />
                       ))}
                     </div>
@@ -202,6 +203,7 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
                           tool={tool}
                           isSelected={selectedToolKey === id}
                           onSelect={onSelect}
+                          hasStars
                         />
                       ))}
                     </div>
@@ -242,7 +244,7 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
             <Box ref={allToolsRef} w="100%">
               <Stack p="sm" gap="xs">
                         {allSection?.subcategories.map((sc: any) =>
-                          renderToolButtons(t, sc, selectedToolKey, onSelect, true, false)
+                          renderToolButtons(t, sc, selectedToolKey, onSelect, true, false, undefined, true)
                         )}
               </Stack>
             </Box>

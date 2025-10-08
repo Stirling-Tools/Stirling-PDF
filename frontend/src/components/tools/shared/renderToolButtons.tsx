@@ -14,7 +14,8 @@ export const renderToolButtons = (
   onSelect: (id: string) => void,
   showSubcategoryHeader: boolean = true,
   disableNavigation: boolean = false,
-  searchResults?: Array<{ item: [string, any]; matchedText?: string }>
+  searchResults?: Array<{ item: [string, any]; matchedText?: string }>,
+  hasStars: boolean = false
 ) => {
   // Create a map of matched text for quick lookup
   const matchedTextMap = new Map<string, string>();
@@ -42,6 +43,7 @@ export const renderToolButtons = (
                       onSelect={onSelect}
                       disableNavigation={disableNavigation}
                       matchedSynonym={matchedSynonym}
+                      hasStars={hasStars}
                     />
                   );
         })}
