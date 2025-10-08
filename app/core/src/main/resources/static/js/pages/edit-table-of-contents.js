@@ -54,7 +54,6 @@ document.addEventListener("DOMContentLoaded", function () {
   // display new bookmark data given by a callback function that loads or fetches the data
   async function loadBookmarks(getBookmarkDataCallback) {
     // reset bookmarks
-    saveBookmarkState();
     bookmarks = [];
     updateBookmarksUI();
     showLoadingIndicator();
@@ -71,6 +70,7 @@ document.addEventListener("DOMContentLoaded", function () {
       bookmarks = [];
       throw new Error(`Error loading bookmarks: ${error}`);
     } finally {
+      updateBookmarkHistory();
       removeLoadingIndicator();
       updateBookmarksUI();
     }
@@ -174,7 +174,6 @@ document.addEventListener("DOMContentLoaded", function () {
       expanded: false, // New bookmarks start collapsed
     };
 
-    saveBookmarkState();
     if (parent === null) {
       bookmarks.push(newBookmark);
     } else {
@@ -188,6 +187,7 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     }
 
+    updateBookmarkHistory();
     updateBookmarksUI();
 
     // After updating UI, find and focus the new bookmark's title field
@@ -235,10 +235,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function removeBookmark(id) {
     // Remove from top level
-    saveBookmarkState();
     const index = bookmarks.findIndex((b) => b.id === id);
     if (index !== -1) {
       bookmarks.splice(index, 1);
+      updateBookmarkHistory();
       updateBookmarksUI();
       return;
     }
@@ -259,6 +259,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     if (removeFromChildren(bookmarks, id)) {
+      updateBookmarkHistory();
       updateBookmarksUI();
     }
 
@@ -618,31 +619,80 @@ document.addEventListener("DOMContentLoaded", function () {
     updateEmptyStateButton();
   }
 
-  // Undo button funcionality
-  const undoBtn = document.getElementById("undoBtn");
+  // Undo/Redo button funcionality
+  function cloneBookmarks() {
+    return bookmarks.map(cleanBookmark);
+  }
 
-  function saveBookmarkState() {
-    previousBookmarks = JSON.parse(JSON.stringify(bookmarks));
-    undoBtn.disabled = false;
+  const undoBtn = document.getElementById("undoBtn");
+  const redoBtn = document.getElementById("redoBtn");
+
+  let undoStack = [];
+  let redoStack = [];
+  let lastState = cloneBookmarks();
+
+  function updateHistoryButtonsState() {
+    undoBtn.disabled = undoStack.length === 0;
+    redoBtn.disabled = redoStack.length === 0;
+  }
+
+  function updateBookmarkHistory() {
+    const currentState = cloneBookmarks();
+    // patch that when applied to currentState results in lastState
+    const undoPatch = jsonpatch.compare(currentState, lastState);
+
+    if (undoPatch.length > 0) {
+      undoStack.push(undoPatch);
+      // new action -> new future path -> clear redo stack
+      redoStack = [];
+      updateHistoryButtonsState();
+      lastState = currentState;
+    }
+  }
+
+  function traverseBookmarkHistory(popStack, pushStack) {
+    // combined logic for undo and redo
+    // take patch from popStack, apply it and push inverse patch to the pushStack
+
+    if (popStack.length === 0) return;
+
+    const currentState = cloneBookmarks();
+    const patch = popStack.pop();
+    const newState = jsonpatch.applyPatch(
+      currentState,
+      patch,
+      true, // validateOperation
+      false // mutateDocument
+    ).newDocument;
+
+    const inversePatch = jsonpatch.compare(newState, currentState);
+    pushStack.push(inversePatch);
+
+    bookmarks = newState.map(convertExtractedBookmark);
+    lastState = cloneBookmarks();
+    updateBookmarksUI();
+    updateHistoryButtonsState();
   }
 
   function undoBookmarkChanges() {
-    if (previousBookmarks === null) return;
-
-    bookmarks = [...previousBookmarks];
-    previousBookmarks = null;
-    undoBtn.disabled = true;
-    updateBookmarksUI();
+    traverseBookmarkHistory(undoStack, redoStack);
   }
-  undoBtn.addEventListener("click", undoBookmarkChanges);
 
-  // ctrl+z keybind
+  function redoBookmarkChanges() {
+    traverseBookmarkHistory(redoStack, undoStack);
+  }
+
+  undoBtn.addEventListener("click", undoBookmarkChanges);
+  redoBtn.addEventListener("click", redoBookmarkChanges);
+
+  // undo / redo keybinds
   function keyPressHandler(event) {
-    // do not override normal paste behavior on input fields
+    // do not override normal editing behavior on input fields
     if (event.target.tagName.toLowerCase() === "input") return;
 
-    if ((event.ctrlKey || event.metaKey) && (event.key === 'z' || event.key === 'Z')) {
-      undoBookmarkChanges();
+    if (event.ctrlKey || event.metaKey) {
+      if (event.key.toLowerCase() === "z") undoBookmarkChanges();
+      if (event.key.toLowerCase() === "y") redoBookmarkChanges();
     }
   }
   document.body.addEventListener("keydown", keyPressHandler);
@@ -655,8 +705,8 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function clearAllBookmarks() {
-    saveBookmarkState();
     bookmarks = [];
+    updateBookmarkHistory();
     updateBookmarksUI();
   }
   clearAllBtn.addEventListener("click", clearAllBookmarks);

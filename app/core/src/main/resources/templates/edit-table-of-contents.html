@@ -72,6 +72,13 @@
                         <span class="material-symbols-rounded">undo</span>
                       </button>
                       <button type="button"
+                        id="redoBtn"
+                        class="btn btn-outline-primary"
+                        th:title="#{editTableOfContents.redo}"
+                        disabled>
+                        <span class="material-symbols-rounded">redo</span>
+                      </button>
+                      <button type="button"
                         id="clearAllBtn"
                         class="btn btn-outline-danger"
                         th:title="#{editTableOfContents.clearAll}"
@@ -177,6 +184,7 @@
       <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
     </div>
 
+    <script th:src="@{'/js/thirdParty/fast-json-patch.min.js'}"></script>
     <script th:src="@{'/js/pages/edit-table-of-contents.js'}"></script>
     <script>
     document.addEventListener('DOMContentLoaded', function() {
