@@ -33,6 +33,7 @@ import stirling.software.common.configuration.InstallationPathConfig;
 @UtilityClass
 public class GeneralUtils {
 
+    /** Maximum number of resolved DNS addresses allowed for a host before it is considered unsafe. */
     private static final int MAX_DNS_ADDRESSES = 20;
 
     private final Set<String> DEFAULT_VALID_SCRIPTS = Set.of("png_to_webp.py", "split_photos.py");
@@ -155,7 +156,7 @@ public class GeneralUtils {
         return matcher.find() ? matcher.replaceFirst("") : filename;
     }
 
-    /*
+    /**
      * Append suffix to base name with null safety.
      *
      * @param baseName the base filename, null becomes "default"
@@ -166,7 +167,7 @@ public class GeneralUtils {
         return (baseName == null ? "default" : baseName) + (suffix != null ? suffix : "");
     }
 
-    /*
+    /**
      * Generate a PDF filename by removing extension from first file and adding suffix.
      *
      * <p>High-level utility method for common PDF naming scenarios. Handles null safety and uses
@@ -181,7 +182,7 @@ public class GeneralUtils {
         return appendSuffix(baseName, suffix);
     }
 
-    /*
+    /**
      * Process a list of filenames by removing extensions and adding suffix.
      *
      * <p>Efficiently processes multiple filenames using streaming operations and bulk operations
@@ -202,7 +203,7 @@ public class GeneralUtils {
                 .forEach(processor);
     }
 
-    /*
+    /**
      * Extract title from filename by removing extension, with fallback handling.
      *
      * <p>Returns "Untitled" for null or empty filenames, otherwise removes the extension using the
@@ -270,6 +271,12 @@ public class GeneralUtils {
                 .getResources(pattern);
     }
 
+    /**
+     * Validates URL syntax and disallows common-infrastructure targets to reduce SSRF risk.
+     *
+     * @param urlStr a URL string to validate
+     * @return {@code true} if the URL is syntactically valid and allowed; {@code false} otherwise
+     */
     public boolean isValidURL(String urlStr) {
         try {
             Urls.create(
@@ -280,7 +287,7 @@ public class GeneralUtils {
         }
     }
 
-    /*
+    /**
      * Checks if a URL is reachable with proper timeout configuration and error handling.
      *
      * @param urlStr the URL string to check
@@ -290,13 +297,14 @@ public class GeneralUtils {
         return isURLReachable(urlStr, 5000, 5000);
     }
 
-    /*
-     * Checks if a URL is reachable with configurable timeouts.
+    /**
+     * Checks whether a URL is reachable using configurable timeouts. Only {@code http} and
+     * {@code https} protocols are permitted, and local/private/multicast ranges are blocked.
      *
-     * @param urlStr the URL string to check
+     * @param urlStr the URL to probe
      * @param connectTimeout connection timeout in milliseconds
      * @param readTimeout read timeout in milliseconds
-     * @return true if URL is reachable, false otherwise
+     * @return {@code true} if a HEAD request returns a 2xx or 3xx status; {@code false} otherwise
      */
     public boolean isURLReachable(String urlStr, int connectTimeout, int readTimeout) {
         HttpURLConnection connection = null;
@@ -338,6 +346,13 @@ public class GeneralUtils {
         }
     }
 
+    /**
+     * Determines whether the specified host resolves to a disallowed network location, such as
+     * local, private, multicast, or reserved ranges. Excessive DNS results are also blocked.
+     *
+     * @param host the hostname to resolve
+     * @return {@code true} if the host should be considered unsafe
+     */
     private boolean isDisallowedNetworkLocation(String host) {
         try {
             InetAddress[] addresses = InetAddress.getAllByName(host);
@@ -361,6 +376,14 @@ public class GeneralUtils {
         }
     }
 
+    /**
+     * Returns whether the given IP address lies within ranges that should not be contacted by the
+     * server (loopback, link-local, private, multicast, etc.). IPv6 ULA and IPv4-mapped addresses
+     * are handled.
+     *
+     * @param address the resolved address
+     * @return {@code true} if the address is considered sensitive
+     */
     private boolean isSensitiveAddress(InetAddress address) {
         if (address.isAnyLocalAddress()
                 || address.isLoopbackAddress()
@@ -389,6 +412,13 @@ public class GeneralUtils {
         return false;
     }
 
+    /**
+     * Checks whether an IPv4 address is private or reserved. Any malformed input defaults to
+     * {@code true} (conservative) to avoid misuse.
+     *
+     * @param address 4-byte IPv4 address
+     * @return {@code true} if private/reserved
+     */
     private boolean isPrivateOrReservedIPv4(byte[] address) {
         // IPv4 addresses must be exactly 4 bytes. Treat null or unexpected lengths as
         // sensitive to avoid processing malformed input.
@@ -438,6 +468,13 @@ public class GeneralUtils {
         return false;
     }
 
+    /**
+     * Checks whether an IPv6 address is a Unique Local Address (ULA, fc00::/7). Any malformed input
+     * defaults to {@code true} (conservative) to avoid misuse.
+     *
+     * @param address 16-byte IPv6 address
+     * @return {@code true} if ULA
+     */
     private boolean isUniqueLocalIPv6(byte[] address) {
         if (address == null || address.length != 16) {
             return true;
@@ -446,6 +483,13 @@ public class GeneralUtils {
         return (first & 0xFE) == 0xFC; // fc00::/7 Unique local addresses
     }
 
+    /**
+     * Checks whether an IPv6 address is an IPv4-mapped address (::ffff:0:0/96). Any malformed
+     * input defaults to {@code false} (conservative) to avoid misuse.
+     *
+     * @param address 16-byte IPv6 address
+     * @return {@code true} if IPv4-mapped
+     */
     private boolean isIPv4MappedAddress(byte[] address) {
         if (address == null || address.length != 16) {
             return false;
