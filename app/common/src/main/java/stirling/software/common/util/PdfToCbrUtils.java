@@ -142,9 +142,8 @@ public class PdfToCbrUtils {
             }
         }
         if (tempDir != null) {
-            try {
-                Files.walk(tempDir)
-                        .sorted(Comparator.reverseOrder())
+            try (var paths = Files.walk(tempDir)) {
+                paths.sorted(Comparator.reverseOrder())
                         .forEach(
                                 path -> {
                                     try {
