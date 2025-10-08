@@ -3140,6 +3140,7 @@
     "automate": "Automate",
     "files": "Files",
     "activity": "Activity",
+    "help": "Help",
     "account": "Account",
     "config": "Config",
     "allTools": "All Tools"
@@ -3558,5 +3559,21 @@
     }
   },
   "termsAndConditions": "Terms & Conditions",
-  "logOut": "Log out"
+  "logOut": "Log out",
+  "onboarding": {
+    "quickAccess": "Quick access to your most-used tools and settings. Pin your favourite tools here for easy access.",
+    "toolPanel": "Browse all available PDF tools organised by category. Select a tool to get started.",
+    "workbench": "Your main workspace. Upload files, configure tool settings, and process your PDFs here.",
+    "rightRail": "View your active files, processing history, and tool-specific options in this panel.",
+    "mobile": {
+      "toolsTab": "Browse all available PDF tools. Swipe or tap to switch between Tools and Workspace views.",
+      "workspaceTab": "Your workspace where you can upload files and configure tool settings.",
+      "bottomBar": "Quick access to all tools, automation, your files, and settings from the bottom bar."
+    },
+    "previous": "Previous",
+    "next": "Next",
+    "finish": "Finish",
+    "startTour": "Start Tour",
+    "startTourDescription": "Take a guided tour of Stirling PDF's key features"
+  }
 }

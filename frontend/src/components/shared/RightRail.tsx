@@ -176,7 +176,7 @@ export default function RightRail() {
   }, [currentView]);
 
   return (
-    <div className="right-rail">
+    <div className="right-rail" data-tour="right-rail">
       <div className="right-rail-inner">
         {topButtons.length > 0 && (
           <>

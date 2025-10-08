@@ -14,6 +14,7 @@ import AllToolsNavButton from './AllToolsNavButton';
 import ActiveToolButton from "./quickAccessBar/ActiveToolButton";
 import AppConfigModal from './AppConfigModal';
 import { useAppConfig } from '../../hooks/useAppConfig';
+import { useOnboarding } from '../../contexts/OnboardingContext';
 import {
   isNavButtonActive,
   getNavButtonStyle,
@@ -27,6 +28,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
   const { handleReaderToggle, handleBackToTools, handleToolSelect, selectedToolKey, leftPanelView, toolRegistry, readerMode, resetTool } = useToolWorkflow();
   const { getToolNavigation } = useSidebarNavigation();
   const { config } = useAppConfig();
+  const { startTour } = useOnboarding();
   const [configModalOpen, setConfigModalOpen] = useState(false);
   const [activeButton, setActiveButton] = useState<string>('tools');
   const scrollableRef = useRef<HTMLDivElement>(null);
@@ -152,6 +154,17 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
     //  onClick: () => setActiveButton('activity')
     //},
     {
+      id: 'help',
+      name: t("quickAccess.help", "Help"),
+      icon: <LocalIcon icon="help-rounded" width="1.5rem" height="1.5rem" />,
+      isRound: true,
+      size: 'lg',
+      type: 'action',
+      onClick: () => {
+        startTour();
+      },
+    },
+    {
       id: 'config',
       name: config?.enableLogin ? t("quickAccess.account", "Account") : t("quickAccess.config", "Config"),
       icon: config?.enableLogin ? <LocalIcon icon="person-rounded" width="1.25rem" height="1.25rem" /> : <LocalIcon icon="settings-rounded" width="1.25rem" height="1.25rem" />,
@@ -169,6 +182,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
     <div
       ref={ref}
       data-sidebar="quick-access"
+      data-tour="quick-access"
       className={`h-screen flex flex-col w-20 quick-access-bar-main ${isRainbowMode ? 'rainbow-mode' : ''}`}
       style={{
         borderRight: '1px solid var(--border-default)'

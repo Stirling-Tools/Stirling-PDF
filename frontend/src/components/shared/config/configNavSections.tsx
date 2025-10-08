@@ -2,6 +2,7 @@ import React from 'react';
 import { NavKey } from './types';
 import HotkeysSection from './configSections/HotkeysSection';
 import GeneralSection from './configSections/GeneralSection';
+import HelpSection from './configSections/HelpSection';
 
 export interface ConfigNavItem {
   key: NavKey;
@@ -27,7 +28,8 @@ export interface ConfigColors {
 
 export const createConfigNavSections = (
   Overview: React.ComponentType<{ onLogoutClick: () => void }>,
-  onLogoutClick: () => void
+  onLogoutClick: () => void,
+  onModalClose?: () => void,
 ): ConfigNavSection[] => {
   const sections: ConfigNavSection[] = [
     {
@@ -55,6 +57,17 @@ export const createConfigNavSections = (
           label: 'Keyboard Shortcuts',
           icon: 'keyboard-rounded',
           component: <HotkeysSection />
+        },
+      ],
+    },
+    {
+      title: 'Help',
+      items: [
+        {
+          key: 'help',
+          label: 'Help & Support',
+          icon: 'help-rounded',
+          component: <HelpSection onClose={onModalClose} />
         },
       ],
     },

@@ -36,6 +36,7 @@ export default function ToolPanel() {
     <div
       ref={toolPanelRef}
       data-sidebar="tool-panel"
+      data-tour="tool-panel"
       className={`flex flex-col overflow-hidden bg-[var(--bg-toolbar)] border-r border-[var(--border-subtle)] transition-all duration-300 ease-out ${
         isRainbowMode ? rainbowStyles.rainbowPaper : ''
       } ${isMobile ? 'h-full border-r-0' : 'h-screen'}`}
