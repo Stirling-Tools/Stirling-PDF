@@ -3,82 +3,26 @@ import { TourProvider, useTour } from '@reactour/tour';
 import { useOnboarding } from '../../contexts/OnboardingContext';
 import { useTranslation } from 'react-i18next';
 import { useMediaQuery } from '@mantine/hooks';
-import { useSidebarContext } from '../../contexts/SidebarContext';
-
-interface TourStep {
-  selector: string;
-  content: string;
-  position?: 'top' | 'right' | 'bottom' | 'left' | 'center';
-}
 
 function TourContent() {
-  const { t } = useTranslation();
-  const { isOpen, currentStep, setCurrentStep, completeTour } = useOnboarding();
-  const isMobile = useMediaQuery("(max-width: 1024px)");
-  const { sidebarRefs } = useSidebarContext();
-
-  // Desktop tour steps
-  const desktopSteps: TourStep[] = [
-    {
-      selector: '[data-tour="quick-access"]',
-      content: t('onboarding.quickAccess', 'Quick access to your most-used tools and settings. Pin your favorite tools here for easy access.'),
-      position: 'right',
-    },
-    {
-      selector: '[data-tour="tool-panel"]',
-      content: t('onboarding.toolPanel', 'Browse all available PDF tools organized by category. Select a tool to get started.'),
-      position: 'right',
-    },
-    {
-      selector: '[data-tour="workbench"]',
-      content: t('onboarding.workbench', 'Your main workspace. Upload files, configure tool settings, and process your PDFs here.'),
-      position: 'left',
-    },
-    {
-      selector: '[data-tour="right-rail"]',
-      content: t('onboarding.rightRail', 'View your active files, processing history, and tool-specific options in this panel.'),
-      position: 'left',
-    },
-  ];
-
-  // Mobile tour steps
-  const mobileSteps: TourStep[] = [
-    {
-      selector: '[data-tour="mobile-tools-tab"]',
-      content: t('onboarding.mobile.toolsTab', 'Browse all available PDF tools. Swipe or tap to switch between Tools and Workspace views.'),
-      position: 'bottom',
-    },
-    {
-      selector: '[data-tour="mobile-workspace-tab"]',
-      content: t('onboarding.mobile.workspaceTab', 'Your workspace where you can upload files and configure tool settings.'),
-      position: 'bottom',
-    },
-    {
-      selector: '[data-tour="mobile-bottom-bar"]',
-      content: t('onboarding.mobile.bottomBar', 'Quick access to all tools, automation, your files, and settings from the bottom bar.'),
-      position: 'top',
-    },
-  ];
-
-  const steps = isMobile ? mobileSteps : desktopSteps;
-
-  const { setIsOpen: setTourOpen, setCurrentStep: setTourStep } = useTour();
+  const { isOpen, currentStep } = useOnboarding();
+  const { setIsOpen, setCurrentStep } = useTour();
 
   // Sync tour state with context
   React.useEffect(() => {
-    setTourOpen(isOpen);
-  }, [isOpen, setTourOpen]);
+    setIsOpen(isOpen);
+  }, [isOpen, setIsOpen]);
 
   React.useEffect(() => {
-    setTourStep(currentStep);
-  }, [currentStep, setTourStep]);
+    setCurrentStep(currentStep);
+  }, [currentStep, setCurrentStep]);
 
   return null;
 }
 
 export default function OnboardingTour() {
   const { t } = useTranslation();
-  const { isOpen, currentStep, setCurrentStep, completeTour, closeTour } = useOnboarding();
+  const { completeTour, closeTour } = useOnboarding();
   const isMobile = useMediaQuery("(max-width: 1024px)");
 
   const desktopSteps = [
@@ -127,18 +71,15 @@ export default function OnboardingTour() {
   return (
     <TourProvider
       steps={steps}
-      currentStep={currentStep}
-      setCurrentStep={setCurrentStep}
-      isOpen={isOpen}
       onClickClose={({ setIsOpen }) => {
         setIsOpen(false);
         closeTour();
       }}
       onClickMask={({ setCurrentStep, currentStep, steps, setIsOpen }) => {
-        if (currentStep === steps.length - 1) {
+        if (steps && currentStep === steps.length - 1) {
           setIsOpen(false);
           completeTour();
-        } else {
+        } else if (steps) {
           setCurrentStep((s) => (s === steps.length - 1 ? 0 : s + 1));
         }
       }}
@@ -170,7 +111,7 @@ export default function OnboardingTour() {
       showCloseButton={true}
       disableInteraction={false}
       padding={10}
-      prevButton={({ currentStep, stepsLength, setCurrentStep }) => {
+      prevButton={({ currentStep, setCurrentStep }) => {
         const isFirst = currentStep === 0;
         return (
           <button
