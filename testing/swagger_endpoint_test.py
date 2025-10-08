@@ -1,55 +1,55 @@
 #!/usr/bin/env python3
 """
-  Swagger endpoint integration test runner.
+Swagger endpoint integration test runner.
 
-  This script provides an automated integration test runner for OpenAPI/Swagger endpoints.
-  It exercises all endpoints defined in an OpenAPI specification, supporting parallel requests,
-  automatic retries, timeouts, and dynamic request generation based on schema examples, defaults,
-  and enums. It can operate in strict mode (only documented responses are accepted as success),
-  and supports filtering by tags or path regex, as well as dynamic skipping of endpoints.
+This script provides an automated integration test runner for OpenAPI/Swagger endpoints.
+It exercises all endpoints defined in an OpenAPI specification, supporting parallel requests,
+automatic retries, timeouts, and dynamic request generation based on schema examples, defaults,
+and enums. It can operate in strict mode (only documented responses are accepted as success),
+and supports filtering by tags or path regex, as well as dynamic skipping of endpoints.
 
-  Features:
-  - Parallel execution of endpoint requests with configurable concurrency.
-  - Automatic retries and timeouts for HTTP requests.
-  - Uses schema examples, defaults, and enums to generate request parameters and bodies.
-  - Supports multipart, form, JSON, and binary request bodies.
-  - Optional strict mode: only documented responses (or default/xXX) are considered success.
-  - Tag and path filtering, as well as dynamic skips for endpoints.
-  - Supports Bearer and custom authentication headers.
-  - Loads OpenAPI spec from file or from a running server's /v1/api-docs endpoint.
-  - Reports summary of tested, successful, failed, skipped, and disabled endpoints.
+Features:
+- Parallel execution of endpoint requests with configurable concurrency.
+- Automatic retries and timeouts for HTTP requests.
+- Uses schema examples, defaults, and enums to generate request parameters and bodies.
+- Supports multipart, form, JSON, and binary request bodies.
+- Optional strict mode: only documented responses (or default/xXX) are considered success.
+- Tag and path filtering, as well as dynamic skips for endpoints.
+- Supports Bearer and custom authentication headers.
+- Loads OpenAPI spec from file or from a running server's /v1/api-docs endpoint.
+- Reports summary of tested, successful, failed, skipped, and disabled endpoints.
 
-  Usage:
-    python swagger_endpoint_test.py [options]
+Usage:
+  python swagger_endpoint_test.py [options]
 
-  Options:
-    --base-url         Base URL of the running instance (falls back to spec.servers[0].url)
-    --spec             Path to an OpenAPI JSON file
-    --sample-file      Sample PDF path for binary uploads
-    --strict           Only treat documented statuses (or default/xXX) as success
-    --timeout          Request timeout (seconds)
-    --retries          HTTP retries with backoff
-    --concurrency      Parallel workers
-    --bearer           Bearer token (sets Authorization: Bearer ...)
-    --auth-header      Custom header in "Name: Value" form (can be used multiple times)
-    --include-tags     Comma-separated list of tags to include
-    --exclude-tags     Comma-separated list of tags to exclude
-    --only-path        Regex: only paths matching this pattern will be tested
-    --skip             Extra skips, comma-separated "METHOD:/path" entries
+Options:
+  --base-url         Base URL of the running instance (falls back to spec.servers[0].url)
+  --spec             Path to an OpenAPI JSON file
+  --sample-file      Sample PDF path for binary uploads
+  --strict           Only treat documented statuses (or default/xXX) as success
+  --timeout          Request timeout (seconds)
+  --retries          HTTP retries with backoff
+  --concurrency      Parallel workers
+  --bearer           Bearer token (sets Authorization: Bearer ...)
+  --auth-header      Custom header in "Name: Value" form (can be used multiple times)
+  --include-tags     Comma-separated list of tags to include
+  --exclude-tags     Comma-separated list of tags to exclude
+  --only-path        Regex: only paths matching this pattern will be tested
+  --skip             Extra skips, comma-separated "METHOD:/path" entries
 
-  Classes:
-    EndpointResult: Data class representing the result of a single endpoint test.
-    SwaggerTester:  Main class for exercising endpoints as defined in the OpenAPI spec.
+Classes:
+  EndpointResult: Data class representing the result of a single endpoint test.
+  SwaggerTester:  Main class for exercising endpoints as defined in the OpenAPI spec.
 
-  Functions:
-    load_spec:      Loads the OpenAPI specification from file or server.
-    parse_args:     Parses command-line arguments.
-    _parse_auth:    Parses authentication headers from arguments.
-    _extra_headers_into: Applies additional custom headers to the session.
-    main:           Entry point for running the test suite.
+Functions:
+  load_spec:      Loads the OpenAPI specification from file or server.
+  parse_args:     Parses command-line arguments.
+  _parse_auth:    Parses authentication headers from arguments.
+  _extra_headers_into: Applies additional custom headers to the session.
+  main:           Entry point for running the test suite.
 
-  Example:
-    python swagger_endpoint_test.py --base-url http://localhost:8080 --strict --concurrency 10
+Example:
+  python swagger_endpoint_test.py --base-url http://localhost:8080 --strict --concurrency 10
 """
 
 from __future__ import annotations
@@ -62,7 +62,7 @@ import re
 import sys
 import threading
 from dataclasses import dataclass
-from typing import Any, Dict, Iterable, List, Optional, Tuple
+from typing import Any, Iterable
 
 import requests
 from requests.adapters import HTTPAdapter
@@ -123,7 +123,7 @@ class EndpointResult:
     method: str
     path: str
     url: str
-    status_code: Optional[int]
+    status_code: int | None
     expected: Iterable[str]
     success: bool
     message: str
@@ -135,16 +135,16 @@ class SwaggerTester:
     def __init__(
         self,
         base_url: str,
-        spec: Dict[str, Any],
+        spec: dict[str, Any],
         sample_file: str,
         strict: bool,
         timeout: int,
         retries: int,
-        auth_header: Optional[Tuple[str, str]],
-        include_tags: Optional[List[str]],
-        exclude_tags: Optional[List[str]],
-        only_path_regex: Optional[re.Pattern[str]],
-        extra_skips: set[Tuple[str, str]],
+        auth_header: tuple[str, str] | None,
+        include_tags: list[str] | None,
+        exclude_tags: list[str] | None,
+        only_path_regex: re.Pattern[str] | None,
+        extra_skips: set[tuple[str, str]],
         concurrency: int,
     ) -> None:
         self.base_url = base_url.rstrip("/")
@@ -158,7 +158,7 @@ class SwaggerTester:
         self.only_path_regex = only_path_regex
         self.skip_endpoints = set(DEFAULT_SKIP_ENDPOINTS)
         self.skip_endpoints |= extra_skips
-        self._ref_stack: List[str] = []
+        self._ref_stack: list[str] = []
 
         self._session = self._build_session(auth_header)
         self._lock = threading.Lock()
@@ -167,9 +167,7 @@ class SwaggerTester:
     # -----------------------------
     # Session with retries
     # -----------------------------
-    def _build_session(
-        self, auth_header: Optional[Tuple[str, str]]
-    ) -> requests.Session:
+    def _build_session(self, auth_header: tuple[str, str] | None) -> requests.Session:
         sess = requests.Session()
         retry = Retry(
             total=self.retries,
@@ -194,8 +192,8 @@ class SwaggerTester:
     # -----------------------------
     # Public API
     # -----------------------------
-    def run(self) -> List[EndpointResult]:
-        tasks: List[Tuple[str, str, Dict[str, Any], List[Dict[str, Any]]]] = []
+    def run(self) -> list[EndpointResult]:
+        tasks: list[tuple[str, str, dict[str, Any], list[dict[str, Any]]]] = []
         paths = self.spec.get("paths", {}) or {}
 
         for raw_path, path_item in paths.items():
@@ -239,7 +237,7 @@ class SwaggerTester:
                 )
                 tasks.append((m, raw_path, operation, merged_params))
 
-        results: List[EndpointResult] = []
+        results: list[EndpointResult] = []
         with cf.ThreadPoolExecutor(max_workers=self._concurrency) as ex:
             futures = [
                 ex.submit(self._exercise_endpoint, p, m, op, params)
@@ -254,9 +252,9 @@ class SwaggerTester:
     # Parameter helpers
     # -----------------------------
     def _merge_parameters(
-        self, path_params: List[Dict[str, Any]], op_params: List[Dict[str, Any]]
-    ) -> List[Dict[str, Any]]:
-        merged: Dict[Tuple[str, str], Dict[str, Any]] = {}
+        self, path_params: list[dict[str, Any]], op_params: list[dict[str, Any]]
+    ) -> list[dict[str, Any]]:
+        merged: dict[tuple[str, str], dict[str, Any]] = {}
         for param in path_params + op_params:
             if not isinstance(param, dict):
                 continue
@@ -267,12 +265,12 @@ class SwaggerTester:
         return list(merged.values())
 
     def _prepare_parameters(
-        self, parameters: List[Dict[str, Any]]
-    ) -> Tuple[Dict[str, Any], Dict[str, Any], Dict[str, str]]:
-        path_values: Dict[str, Any] = {}
-        query_values: Dict[str, Any] = {}
-        header_values: Dict[str, str] = {}
-        cookie_headers: List[str] = []
+        self, parameters: list[dict[str, Any]]
+    ) -> tuple[dict[str, Any], dict[str, Any], dict[str, str]]:
+        path_values: dict[str, Any] = {}
+        query_values: dict[str, Any] = {}
+        header_values: dict[str, str] = {}
+        cookie_headers: list[str] = []
 
         for param in parameters:
             location = param.get("in")
@@ -305,8 +303,8 @@ class SwaggerTester:
         self,
         raw_path: str,
         method: str,
-        operation: Dict[str, Any],
-        parameters: List[Dict[str, Any]],
+        operation: dict[str, Any],
+        parameters: list[dict[str, Any]],
     ) -> EndpointResult:
         if operation.get("x-skip"):
             return EndpointResult(
@@ -324,13 +322,13 @@ class SwaggerTester:
         url_path = self._apply_path_params(raw_path, path_values)
         url = f"{self.base_url}{url_path}"
 
-        request_kwargs: Dict[str, Any] = {
+        request_kwargs: dict[str, Any] = {
             "params": query_values,
             "headers": header_values.copy(),
             "timeout": self.timeout,
         }
 
-        open_files: List[Any] = []
+        open_files: list[Any] = []
         try:
             if "requestBody" in operation:
                 body_info = operation.get("requestBody") or {}
@@ -397,7 +395,7 @@ class SwaggerTester:
                 except Exception:
                     pass
 
-    def _resolve_request_body(self, rb: Any) -> Optional[Dict[str, Any]]:
+    def _resolve_request_body(self, rb: Any) -> dict[str, Any] | None:
         """Handle $ref for requestBody as well as inline 'content'."""
         if not rb:
             return None
@@ -410,7 +408,7 @@ class SwaggerTester:
             return rb.get("content") or None
         return None
 
-    def _expected_statuses(self, operation: Dict[str, Any]) -> List[str]:
+    def _expected_statuses(self, operation: dict[str, Any]) -> list[str]:
         responses = operation.get("responses", {}) or {}
         return [str(k) for k in responses.keys() if isinstance(k, str)]
 
@@ -457,11 +455,11 @@ class SwaggerTester:
     # -----------------------------
     def _prepare_request_body(
         self,
-        content: Optional[Dict[str, Any]],
-        open_files: List[Any],
+        content: dict[str, Any] | None,
+        open_files: list[Any],
         path_hint: str,
         method: str,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         if not content:
             return None
 
@@ -508,7 +506,7 @@ class SwaggerTester:
                 form_fields, files = self._generate_multipart_payload(
                     resolved_schema, open_files, path_hint, method
                 )
-                payload: Dict[str, Any] = {"data": form_fields}
+                payload: dict[str, Any] = {"data": form_fields}
                 if files:
                     payload["files"] = files
                 return payload
@@ -530,7 +528,7 @@ class SwaggerTester:
 
         return None
 
-    def _pack_media(self, media_type: str, value: Any) -> Dict[str, Any]:
+    def _pack_media(self, media_type: str, value: Any) -> dict[str, Any]:
         if media_type.startswith("application/json") or media_type.endswith("+json"):
             return {"json": value}
         if media_type == "application/x-www-form-urlencoded":
@@ -560,13 +558,13 @@ class SwaggerTester:
 
     def _generate_multipart_payload(
         self,
-        schema: Optional[Dict[str, Any]],
-        open_files: List[Any],
+        schema: dict[str, Any] | None,
+        open_files: list[Any],
         path_hint: str,
         method: str,
-    ) -> Tuple[Dict[str, Any], List[Tuple[str, Tuple[str, Any, str]]]]:
-        fields: Dict[str, Any] = {}
-        files: List[Tuple[str, Tuple[str, Any, str]]] = []
+    ) -> tuple[dict[str, Any], list[tuple[str, tuple[str, Any, str]]]]:
+        fields: dict[str, Any] = {}
+        files: list[tuple[str, tuple[str, Any, str]]] = []
         if not schema:
             return fields, files
 
@@ -590,8 +588,8 @@ class SwaggerTester:
                     fields[name] = self._stringify(example)
         return fields, files
 
-    def _generate_form_fields(self, schema: Optional[Dict[str, Any]]) -> Dict[str, Any]:
-        fields: Dict[str, Any] = {}
+    def _generate_form_fields(self, schema: dict[str, Any] | None) -> dict[str, Any]:
+        fields: dict[str, Any] = {}
         if not schema:
             return fields
         schema = self._ensure_object_schema(schema)
@@ -609,9 +607,7 @@ class SwaggerTester:
     # -----------------------------
     # Schema helpers
     # -----------------------------
-    def _resolve_schema(
-        self, schema: Optional[Dict[str, Any]]
-    ) -> Optional[Dict[str, Any]]:
+    def _resolve_schema(self, schema: dict[str, Any] | None) -> dict[str, Any] | None:
         if not schema:
             return None
         if "$ref" in schema:
@@ -627,7 +623,7 @@ class SwaggerTester:
             return resolved
         return schema
 
-    def _resolve_ref(self, ref: str) -> Optional[Dict[str, Any]]:
+    def _resolve_ref(self, ref: str) -> dict[str, Any] | None:
         if not ref.startswith("#/"):
             return None
         parts = ref.lstrip("#/").split("/")
@@ -639,12 +635,12 @@ class SwaggerTester:
                 return None
         return node if isinstance(node, dict) else None
 
-    def _ensure_object_schema(self, schema: Dict[str, Any]) -> Dict[str, Any]:
+    def _ensure_object_schema(self, schema: dict[str, Any]) -> dict[str, Any]:
         if schema.get("type") == "object" or "properties" in schema:
             return schema
         return {"type": "object", "properties": {}}
 
-    def _is_binary_schema(self, schema: Optional[Dict[str, Any]]) -> bool:
+    def _is_binary_schema(self, schema: dict[str, Any] | None) -> bool:
         if not schema:
             return False
         t = schema.get("type")
@@ -660,9 +656,7 @@ class SwaggerTester:
     # -----------------------------
     # Example generation
     # -----------------------------
-    def _generate_example(
-        self, schema: Optional[Dict[str, Any]], depth: int = 0
-    ) -> Any:
+    def _generate_example(self, schema: dict[str, Any] | None, depth: int = 0) -> Any:
         if schema is None or depth > 6:
             return "example"
 
@@ -690,7 +684,7 @@ class SwaggerTester:
                 self._resolve_schema(schema["anyOf"][0]), depth + 1
             )
         if "allOf" in schema:
-            combined: Dict[str, Any] = {}
+            combined: dict[str, Any] = {}
             for subschema in schema["allOf"]:
                 resolved = self._resolve_schema(subschema)
                 example = self._generate_example(resolved, depth + 1)
@@ -702,7 +696,7 @@ class SwaggerTester:
         t = schema.get("type")
         if t == "object" or (not t and schema.get("properties")):
             properties = schema.get("properties", {}) or {}
-            result: Dict[str, Any] = {}
+            result: dict[str, Any] = {}
             for name, subschema in properties.items():
                 resolved = self._resolve_schema(subschema)
                 result[name] = self._generate_example(resolved, depth + 1)
@@ -751,7 +745,7 @@ class SwaggerTester:
     # -----------------------------
     # Utility helpers
     # -----------------------------
-    def _apply_path_params(self, raw_path: str, path_values: Dict[str, Any]) -> str:
+    def _apply_path_params(self, raw_path: str, path_values: dict[str, Any]) -> str:
         applied = raw_path
         for name, value in path_values.items():
             applied = applied.replace(f"{{{name}}}", self._stringify(value))
@@ -766,7 +760,7 @@ class SwaggerTester:
             return ""
         return str(value)
 
-    def _choose_enum_value(self, values: List[Any]) -> Any:
+    def _choose_enum_value(self, values: list[Any]) -> Any:
         preferred = [
             "txt",
             "text",
@@ -787,10 +781,10 @@ class SwaggerTester:
     def _binary_sample_for(
         self,
         field_name: str,
-        schema: Optional[Dict[str, Any]],
+        schema: dict[str, Any] | None,
         path_hint: str,
         method: str,
-    ) -> Tuple[Tuple[str, Any, str], Any]:
+    ) -> tuple[tuple[str, Any, str], Any]:
         name_lower = field_name.lower()
         content_type = (schema or {}).get("contentMediaType")
         path_lower = path_hint.lower()
@@ -852,7 +846,7 @@ class SwaggerTester:
 
     def _open_file(
         self, path: str, content_type: str
-    ) -> Tuple[Tuple[str, Any, str], Any]:
+    ) -> tuple[tuple[str, Any, str], Any]:
         fh = open(path, "rb")
         filename = os.path.basename(path)
         return (filename, fh, content_type), fh
@@ -862,8 +856,8 @@ class SwaggerTester:
 # CLI helpers
 # -----------------------------
 def load_spec(
-    base_url: Optional[str], spec_path: Optional[str], timeout: int
-) -> Tuple[Dict[str, Any], str]:
+    base_url: str | None, spec_path: str | None, timeout: int
+) -> tuple[dict[str, Any], str]:
     if spec_path:
         with open(spec_path, "r", encoding="utf-8") as handle:
             spec = json.load(handle)
@@ -886,7 +880,7 @@ def load_spec(
     return spec, final_base.rstrip("/")
 
 
-def parse_args(argv: List[str]) -> argparse.Namespace:
+def parse_args(argv: list[str]) -> argparse.Namespace:
     p = argparse.ArgumentParser(
         description="Exercise all endpoints defined in the OpenAPI specification."
     )
@@ -933,7 +927,7 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
     return p.parse_args(argv)
 
 
-def _parse_auth(args: argparse.Namespace) -> Optional[Tuple[str, str]]:
+def _parse_auth(args: argparse.Namespace) -> tuple[str, str] | None:
     if args.bearer:
         return ("Authorization", f"Bearer {args.bearer}")
     if args.auth_header:
@@ -944,7 +938,7 @@ def _parse_auth(args: argparse.Namespace) -> Optional[Tuple[str, str]]:
 
 
 def _extra_headers_into(
-    auth_header: Optional[Tuple[str, str]],
+    auth_header: tuple[str, str] | None,
     args: argparse.Namespace,
     sess: requests.Session,
 ) -> None:
@@ -959,7 +953,7 @@ def _extra_headers_into(
                 sess.headers[name] = value
 
 
-def main(argv: List[str]) -> int:
+def main(argv: list[str]) -> int:
     args = parse_args(argv)
     auth_header = _parse_auth(args)
 
@@ -977,7 +971,7 @@ def main(argv: List[str]) -> int:
     ]
     only_path_regex = re.compile(args.only_path) if args.only_path else None
 
-    extra_skips: set[Tuple[str, str]] = set()
+    extra_skips: set[tuple[str, str]] = set()
     if args.skip:
         for item in args.skip.split(","):
             item = item.strip()
