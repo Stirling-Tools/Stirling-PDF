@@ -432,8 +432,8 @@ public class GeneralUtils {
         if (first == 10) {
             return true; // 10.0.0.0/8 Private
         }
-        if (first >= 240) {
-            return true; // 240.0.0.0/4 Reserved for future use
+        if (first >= 224) {
+            return true; // 224.0.0.0/4 Multicast and 240.0.0.0/4 Reserved for future use
         }
         return false;
     }
