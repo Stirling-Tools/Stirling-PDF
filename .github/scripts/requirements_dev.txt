@@ -681,6 +681,10 @@ zopfli==0.2.3.post1 \
     # via fonttools
 
 # The following packages are considered to be unsafe in a requirements file:
+# VCS pin for pip to mitigate CVE-XXXX-YYYY (replace with actual CVE or issue reference).
+# This pin ensures we use a commit with the required fix before it is released on PyPI.
+# Maintainers: Once a fixed version of pip is released on PyPI, remove this VCS pin
+# and restore a standard version specifier (e.g., pip==<new_version>).
 pip @ git+https://github.com/pypa/pip.git@2e05cae3da2cfafa6dce58167a25b7dba4bc2a33
     # via -r .github/scripts/requirements_dev.in
 setuptools==80.9.0 \
