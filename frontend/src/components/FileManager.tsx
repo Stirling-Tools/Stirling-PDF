@@ -109,16 +109,19 @@ const FileManager: React.FC<FileManagerProps> = ({ selectedTool }) => {
         header: { display: 'none' }
       }}
     >
-      <div style={{
-        position: 'relative',
-        height: modalHeight,
-        width: modalWidth,
-        maxWidth: modalMaxWidth,
-        maxHeight: modalMaxHeight,
-        minWidth: modalMinWidth,
-        margin: '0 auto',
-        overflow: 'hidden'
-      }}>
+      <div
+        data-tour="files-modal-container"
+        style={{
+          position: 'relative',
+          height: modalHeight,
+          width: modalWidth,
+          maxWidth: modalMaxWidth,
+          maxHeight: modalMaxHeight,
+          minWidth: modalMinWidth,
+          margin: '0 auto',
+          overflow: 'hidden'
+        }}
+      >
         <Dropzone
           onDrop={handleNewFileUpload}
           onDragEnter={() => setIsDragging(true)}

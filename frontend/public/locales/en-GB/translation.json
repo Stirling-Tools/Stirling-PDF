@@ -3565,6 +3565,11 @@
     "toolPanel": "Browse all available PDF tools organised by category. Select a tool to get started.",
     "workbench": "Your main workspace. Upload files, configure tool settings, and process your PDFs here.",
     "rightRail": "View your active files, processing history, and tool-specific options in this panel.",
+    "filesButton": "Click the Files button to manage your PDFs and see your recent files.",
+    "filesModal": "This is your file manager. Upload files from your device, browse recent files, and view file details here.",
+    "fileSources": "Choose where to load files from - your recent files or upload new ones from your device.",
+    "fileList": "Your files appear here. Select files to work with them in the main workspace.",
+    "fileDetails": "View detailed information about selected files, including size, type, and preview.",
     "mobile": {
       "toolsTab": "Browse all available PDF tools. Swipe or tap to switch between Tools and Workspace views.",
       "workspaceTab": "Your workspace where you can upload files and configure tool settings.",
