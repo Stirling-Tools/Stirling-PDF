@@ -1,4 +1,3 @@
-import { FullscreenToolStyleSettings, defaultFullscreenToolSettings } from '../../components/tools/FullscreenToolSettings';
 import { PageEditorFunctions } from '../../types/pageEditor';
 
 // State & Modes
@@ -10,9 +9,7 @@ export interface ToolWorkflowState {
   leftPanelView: 'toolPicker' | 'toolContent' | 'hidden';
   readerMode: boolean;
   toolPanelMode: ToolPanelMode;
-  fullscreenToolSettings: FullscreenToolStyleSettings;
 
-  // File/Preview State
   previewFile: File | null;
   pageEditorFunctions: PageEditorFunctions | null;
 
@@ -26,7 +23,6 @@ export type ToolWorkflowAction =
   | { type: 'SET_LEFT_PANEL_VIEW'; payload: 'toolPicker' | 'toolContent' | 'hidden' }
   | { type: 'SET_READER_MODE'; payload: boolean }
   | { type: 'SET_TOOL_PANEL_MODE'; payload: ToolPanelMode }
-  | { type: 'SET_FULLSCREEN_TOOL_SETTINGS'; payload: FullscreenToolStyleSettings }
   | { type: 'SET_PREVIEW_FILE'; payload: File | null }
   | { type: 'SET_PAGE_EDITOR_FUNCTIONS'; payload: PageEditorFunctions | null }
   | { type: 'SET_SEARCH_QUERY'; payload: string }
@@ -34,7 +30,6 @@ export type ToolWorkflowAction =
 
 // Storage keys
 export const TOOL_PANEL_MODE_STORAGE_KEY = 'toolPanelModePreference';
-export const FULLSCREEN_TOOL_SETTINGS_STORAGE_KEY = 'fullscreenToolStyleSettings';
 
 export const getStoredToolPanelMode = (): ToolPanelMode => {
   if (typeof window === 'undefined') {
@@ -49,24 +44,7 @@ export const getStoredToolPanelMode = (): ToolPanelMode => {
   return 'sidebar';
 };
 
-export const getStoredFullscreenToolSettings = (): FullscreenToolStyleSettings => {
-  if (typeof window === 'undefined') {
-    return defaultFullscreenToolSettings;
-  }
-
-  try {
-    const storedNew = window.localStorage.getItem(FULLSCREEN_TOOL_SETTINGS_STORAGE_KEY);
-    if (storedNew) {
-      return { ...defaultFullscreenToolSettings, ...JSON.parse(storedNew) };
-    }
-  } catch (e) {
-    console.error('Failed to parse fullscreen tool settings:', e);
-  }
-
-  return defaultFullscreenToolSettings;
-};
-
-export const baseState: Omit<ToolWorkflowState, 'toolPanelMode' | 'fullscreenToolSettings'> = {
+export const baseState: Omit<ToolWorkflowState, 'toolPanelMode'> = {
   sidebarsVisible: true,
   leftPanelView: 'toolPicker',
   readerMode: false,
@@ -78,7 +56,6 @@ export const baseState: Omit<ToolWorkflowState, 'toolPanelMode' | 'fullscreenToo
 export const createInitialState = (): ToolWorkflowState => ({
   ...baseState,
   toolPanelMode: getStoredToolPanelMode(),
-  fullscreenToolSettings: getStoredFullscreenToolSettings(),
 });
 
 export function toolWorkflowReducer(state: ToolWorkflowState, action: ToolWorkflowAction): ToolWorkflowState {
@@ -91,8 +68,6 @@ export function toolWorkflowReducer(state: ToolWorkflowState, action: ToolWorkfl
       return { ...state, readerMode: action.payload };
     case 'SET_TOOL_PANEL_MODE':
       return { ...state, toolPanelMode: action.payload };
-    case 'SET_FULLSCREEN_TOOL_SETTINGS':
-      return { ...state, fullscreenToolSettings: action.payload };
     case 'SET_PREVIEW_FILE':
       return { ...state, previewFile: action.payload };
     case 'SET_PAGE_EDITOR_FUNCTIONS':
@@ -103,7 +78,6 @@ export function toolWorkflowReducer(state: ToolWorkflowState, action: ToolWorkfl
       return {
         ...baseState,
         toolPanelMode: state.toolPanelMode,
-        fullscreenToolSettings: state.fullscreenToolSettings,
         searchQuery: state.searchQuery,
       };
     default:

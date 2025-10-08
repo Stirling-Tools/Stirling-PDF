@@ -11,7 +11,7 @@ import HotkeyDisplay from '../hotkeys/HotkeyDisplay';
 import { useToolWorkflow } from '../../contexts/ToolWorkflowContext';
 import StarRoundedIcon from '@mui/icons-material/StarRounded';
 import StarBorderRoundedIcon from '@mui/icons-material/StarBorderRounded';
-import HistoryRoundedIcon from '@mui/icons-material/HistoryRounded';
+import ThumbUpRoundedIcon from '@mui/icons-material/ThumbUpRounded';
 import Badge from '../shared/Badge';
 import './ToolPanel.css';
 
@@ -34,22 +34,12 @@ const FullscreenToolList = ({
 }: FullscreenToolListProps) => {
   const { t } = useTranslation();
   const { hotkeys } = useHotkeys();
-  const { toolRegistry, recentTools, favoriteTools, toggleFavorite, isFavorite, fullscreenToolSettings } = useToolWorkflow();
+  const { toolRegistry, favoriteTools, toggleFavorite, isFavorite } = useToolWorkflow();
 
   const { sections, searchGroups } = useToolSections(filteredTools, searchQuery);
 
   const tooltipPortalTarget = typeof document !== 'undefined' ? document.body : undefined;
 
-  // Prepare recent and favorite tool items
-  const recentToolItems = useMemo(() => {
-    return recentTools
-      .map((toolId) => {
-        const tool = toolRegistry[toolId];
-        return tool ? { id: toolId, tool } : null;
-      })
-      .filter(Boolean)
-      .slice(0, 6); // Show max 6 recent tools
-  }, [recentTools, toolRegistry]);
 
   const favoriteToolItems = useMemo(() => {
     return favoriteTools
@@ -60,8 +50,16 @@ const FullscreenToolList = ({
       .filter(Boolean);
   }, [favoriteTools, toolRegistry]);
 
-  // Show recent/favorites section only when not searching
-  const showRecentFavorites = searchQuery.trim().length === 0 && (recentToolItems.length > 0 || favoriteToolItems.length > 0);
+  const quickSection = useMemo(() => sections.find(section => section.key === 'quick'), [sections]);
+  const recommendedItems = useMemo(() => {
+    if (!quickSection) return [] as Array<{ id: string, tool: ToolRegistryEntry }>;
+    const items: Array<{ id: string, tool: ToolRegistryEntry }> = [];
+    quickSection.subcategories.forEach(sc => sc.tools.forEach(t => items.push(t)));
+    return items.slice(0, 5);
+  }, [quickSection]);
+
+  // Show recommended/favorites section only when not searching
+  const showRecentFavorites = searchQuery.trim().length === 0 && ((recommendedItems.length > 0) || favoriteToolItems.length > 0);
 
   const subcategoryGroups = useMemo(() => {
     if (searchQuery.trim().length > 0) {
@@ -88,16 +86,10 @@ const FullscreenToolList = ({
 
   const getItemClasses = (isDetailed: boolean) => {
     const base = isDetailed ? 'tool-panel__fullscreen-item--detailed' : '';
-    const border = fullscreenToolSettings.toolItemBorder === 'hidden' ? 'tool-panel__fullscreen-item--no-border' : '';
-    const hover = `tool-panel__fullscreen-item--hover-${fullscreenToolSettings.hoverIntensity}`;
-    return [base, border, hover].filter(Boolean).join(' ');
+    return base;
   };
 
   const getIconBackground = (categoryColor: string, isDetailed: boolean) => {
-    if (fullscreenToolSettings.iconBackground === 'none' || fullscreenToolSettings.iconBackground === 'hover') {
-      return 'transparent';
-    }
-
     const baseColor = isDetailed ? 'var(--fullscreen-bg-icon-detailed)' : 'var(--fullscreen-bg-icon-compact)';
     const blend1 = isDetailed ? '18%' : '15%';
     const blend2 = isDetailed ? '8%' : '6%';
@@ -109,12 +101,6 @@ const FullscreenToolList = ({
   };
 
   const getIconStyle = () => {
-    if (fullscreenToolSettings.iconColorScheme === 'monochrome') {
-      return { filter: 'grayscale(1) opacity(0.8)' };
-    }
-    if (fullscreenToolSettings.iconColorScheme === 'vibrant') {
-      return { filter: 'saturate(1.5) brightness(1.1)' };
-    }
     return {};
   };
 
@@ -157,16 +143,7 @@ const FullscreenToolList = ({
     // Detailed view
     if (showDescriptions) {
       const iconBg = getIconBackground(categoryColor, true);
-      const iconClasses = fullscreenToolSettings.iconBackground === 'hover'
-        ? 'tool-panel__fullscreen-icon tool-panel__fullscreen-icon--hover-bg'
-        : 'tool-panel__fullscreen-icon';
-
-      const hoverBgDetailed = fullscreenToolSettings.iconBackground === 'hover'
-        ? `linear-gradient(135deg,
-            color-mix(in srgb, ${categoryColor} 18%, var(--fullscreen-bg-icon-detailed)),
-            color-mix(in srgb, ${categoryColor} 8%, var(--fullscreen-bg-icon-detailed))
-          )`
-        : undefined;
+      const iconClasses = 'tool-panel__fullscreen-icon';
 
           return (
             <button
@@ -176,9 +153,6 @@ const FullscreenToolList = ({
               onClick={handleClick}
               aria-disabled={isDisabled}
               disabled={isDisabled}
-              style={{
-                ['--fullscreen-icon-hover-bg' as any]: hoverBgDetailed,
-              }}
             >
           {tool.icon ? (
             <span
@@ -235,16 +209,7 @@ const FullscreenToolList = ({
 
     // Compact view
     const iconBg = getIconBackground(categoryColor, false);
-    const iconClasses = fullscreenToolSettings.iconBackground === 'hover'
-      ? 'tool-panel__fullscreen-list-icon tool-panel__fullscreen-list-icon--hover-bg'
-      : 'tool-panel__fullscreen-list-icon';
-
-    const hoverBgCompact = fullscreenToolSettings.iconBackground === 'hover'
-      ? `linear-gradient(135deg,
-          color-mix(in srgb, ${categoryColor} 15%, var(--fullscreen-bg-icon-compact)),
-          color-mix(in srgb, ${categoryColor} 6%, var(--fullscreen-bg-icon-compact))
-        )`
-      : undefined;
+    const iconClasses = 'tool-panel__fullscreen-list-icon';
 
         const compactButton = (
           <button
@@ -254,9 +219,6 @@ const FullscreenToolList = ({
             onClick={handleClick}
             aria-disabled={isDisabled}
             disabled={isDisabled}
-            style={{
-              ['--fullscreen-icon-hover-bg' as any]: hoverBgCompact,
-            }}
           >
         {tool.icon ? (
           <span
@@ -299,19 +261,23 @@ const FullscreenToolList = ({
       </button>
     );
 
-    const tooltipContent = (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-        <span>{tool.description}</span>
-        {binding && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem' }}>
-            <span style={{ color: 'var(--mantine-color-dimmed)', fontWeight: 500 }}>
-              {t('settings.hotkeys.shortcut', 'Shortcut')}
-            </span>
-            <HotkeyDisplay binding={binding} />
-          </div>
-        )}
-      </div>
-    );
+    const tooltipContent = isDisabled
+      ? (
+        <span><strong>{t('toolPanel.fullscreen.comingSoon', 'Coming soon:')}</strong> {tool.description}</span>
+      )
+      : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+          <span>{tool.description}</span>
+          {binding && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem' }}>
+              <span style={{ color: 'var(--mantine-color-dimmed)', fontWeight: 500 }}>
+                {t('settings.hotkeys.shortcut', 'Shortcut')}
+              </span>
+              <HotkeyDisplay binding={binding} />
+            </div>
+          )}
+        </div>
+      );
 
     return (
       <Tooltip
@@ -332,14 +298,18 @@ const FullscreenToolList = ({
       {showRecentFavorites && (
         <>
           {favoriteToolItems.length > 0 && (
-            <section className="tool-panel__fullscreen-group tool-panel__fullscreen-group--special">
+            <section 
+              className="tool-panel__fullscreen-group tool-panel__fullscreen-group--special"
+              style={{
+                borderColor: 'var(--fullscreen-border-favorites)',
+              }}
+            >
               <header className="tool-panel__fullscreen-section-header">
                 <div className="tool-panel__fullscreen-section-title">
                   <span
                     className="tool-panel__fullscreen-section-icon"
                     style={{
-                      color: fullscreenToolSettings.headerIconColor === 'colored' ? '#FFC107' : 'var(--mantine-color-dimmed)',
-                      ...getIconStyle(),
+                      color: 'var(--special-color-favorites)',
                     }}
                     aria-hidden
                   >
@@ -351,8 +321,8 @@ const FullscreenToolList = ({
                 </div>
                 <Badge
                   size="sm"
-                  variant={fullscreenToolSettings.headerBadgeColor === 'colored' ? 'colored' : 'default'}
-                  color={fullscreenToolSettings.headerBadgeColor === 'colored' ? '#FFC107' : undefined}
+                  variant="colored"
+                  color="var(--special-color-favorites)"
                 >
                   {favoriteToolItems.length}
                 </Badge>
@@ -369,39 +339,43 @@ const FullscreenToolList = ({
             </section>
           )}
 
-          {recentToolItems.length > 0 && (
-            <section className="tool-panel__fullscreen-group tool-panel__fullscreen-group--special">
+          {recommendedItems.length > 0 && (
+            <section 
+              className="tool-panel__fullscreen-group tool-panel__fullscreen-group--special"
+              style={{
+                borderColor: 'var(--fullscreen-border-recommended)',
+              }}
+            >
               <header className="tool-panel__fullscreen-section-header">
                 <div className="tool-panel__fullscreen-section-title">
                   <span
                     className="tool-panel__fullscreen-section-icon"
                     style={{
-                      color: fullscreenToolSettings.headerIconColor === 'colored' ? '#1BB1D4' : 'var(--mantine-color-dimmed)',
-                      ...getIconStyle(),
+                      color: 'var(--special-color-recommended)',
                     }}
                     aria-hidden
                   >
-                    <HistoryRoundedIcon />
+                    <ThumbUpRoundedIcon />
                   </span>
                   <Text size="sm" fw={600} tt="uppercase" lts={0.5} c="dimmed">
-                    {t('toolPanel.fullscreen.recent', 'Recently used')}
+                    {t('toolPanel.fullscreen.recommended', 'Recommended')}
                   </Text>
                 </div>
                 <Badge
                   size="sm"
-                  variant={fullscreenToolSettings.headerBadgeColor === 'colored' ? 'colored' : 'default'}
-                  color={fullscreenToolSettings.headerBadgeColor === 'colored' ? '#1BB1D4' : undefined}
+                  variant="colored"
+                  color="var(--special-color-recommended)"
                 >
-                  {recentToolItems.length}
+                  {recommendedItems.length}
                 </Badge>
               </header>
               {showDescriptions ? (
                 <div className="tool-panel__fullscreen-grid tool-panel__fullscreen-grid--detailed">
-                  {recentToolItems.map((item: any) => renderToolItem(item.id, item.tool))}
+                  {recommendedItems.map((item: any) => renderToolItem(item.id, item.tool))}
                 </div>
               ) : (
                 <div className="tool-panel__fullscreen-list">
-                  {recentToolItems.map((item: any) => renderToolItem(item.id, item.tool))}
+                  {recommendedItems.map((item: any) => renderToolItem(item.id, item.tool))}
                 </div>
               )}
             </section>
@@ -425,8 +399,7 @@ const FullscreenToolList = ({
                 <span
                   className="tool-panel__fullscreen-section-icon"
                   style={{
-                    color: fullscreenToolSettings.sectionTitleColor === 'colored' ? categoryColor : 'var(--mantine-color-dimmed)',
-                    ...getIconStyle(),
+                    color: categoryColor,
                   }}
                   aria-hidden
                 >
@@ -438,17 +411,16 @@ const FullscreenToolList = ({
                   tt="uppercase"
                   lts={0.5}
                   style={{
-                    color: fullscreenToolSettings.sectionTitleColor === 'colored' ? categoryColor : undefined,
+                    color: categoryColor,
                   }}
-                  c={fullscreenToolSettings.sectionTitleColor === 'neutral' ? 'dimmed' : undefined}
                 >
                   {getSubcategoryLabel(t, subcategoryId)}
                 </Text>
               </div>
               <Badge
                 size="sm"
-                variant={fullscreenToolSettings.sectionTitleColor === 'colored' ? 'colored' : 'default'}
-                color={fullscreenToolSettings.sectionTitleColor === 'colored' ? categoryColor : undefined}
+                variant="colored"
+                color={categoryColor}
               >
                 {tools.length}
               </Badge>

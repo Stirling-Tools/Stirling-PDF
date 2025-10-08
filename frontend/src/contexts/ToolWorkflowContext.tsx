@@ -9,20 +9,16 @@ import { PageEditorFunctions } from '../types/pageEditor';
 import { ToolRegistryEntry, ToolRegistry } from '../data/toolsTaxonomy';
 import { useNavigationActions, useNavigationState } from './NavigationContext';
 import { ToolId, isValidToolId } from '../types/toolId';
-import { useNavigationUrlSync } from '../hooks/useUrlSync';
 import { getDefaultWorkbench } from '../types/workbench';
 import { filterToolRegistryByQuery } from '../utils/toolSearch';
 import { useToolHistory } from '../hooks/tools/useToolHistory';
-import { FullscreenToolStyleSettings } from '../components/tools/FullscreenToolSettings';
 import {
   ToolWorkflowState,
   TOOL_PANEL_MODE_STORAGE_KEY,
-  FULLSCREEN_TOOL_SETTINGS_STORAGE_KEY,
   createInitialState,
   toolWorkflowReducer,
   ToolPanelMode,
 } from './toolWorkflow/state';
-import { usePreferences } from '../contexts/PreferencesContext';
 
 // State interface
 // Types and reducer/state moved to './toolWorkflow/state'
@@ -40,7 +36,6 @@ interface ToolWorkflowContextValue extends ToolWorkflowState {
   setLeftPanelView: (view: 'toolPicker' | 'toolContent' | 'hidden') => void;
   setReaderMode: (mode: boolean) => void;
   setToolPanelMode: (mode: ToolPanelMode) => void;
-  setFullscreenToolSettings: (settings: FullscreenToolStyleSettings) => void;
   setPreviewFile: (file: File | null) => void;
   setPageEditorFunctions: (functions: PageEditorFunctions | null) => void;
   setSearchQuery: (query: string) => void;
@@ -80,7 +75,6 @@ interface ToolWorkflowProviderProps {
 
 export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
   const [state, dispatch] = useReducer(toolWorkflowReducer, undefined, createInitialState);
-  const { preferences } = usePreferences();
 
   // Store reset functions for tools
   const [toolResetFunctions, setToolResetFunctions] = React.useState<Record<string, () => void>>({});
@@ -129,10 +123,6 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
   }, []);
 
 
-  const setFullscreenToolSettings = useCallback((settings: FullscreenToolStyleSettings) => {
-    dispatch({ type: 'SET_FULLSCREEN_TOOL_SETTINGS', payload: settings });
-  }, []);
-
   const setPreviewFile = useCallback((file: File | null) => {
     dispatch({ type: 'SET_PREVIEW_FILE', payload: file });
     if (file) {
@@ -148,31 +138,13 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     dispatch({ type: 'SET_SEARCH_QUERY', payload: query });
   }, []);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (typeof window === 'undefined') {
       return;
     }
 
     window.localStorage.setItem(TOOL_PANEL_MODE_STORAGE_KEY, state.toolPanelMode);
   }, [state.toolPanelMode]);
-
-  // Initialize tool panel mode from user preferences if no explicit localStorage preference exists yet
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const stored = window.localStorage.getItem(TOOL_PANEL_MODE_STORAGE_KEY);
-    if (stored === null && preferences?.defaultToolPanelMode && state.toolPanelMode !== preferences.defaultToolPanelMode) {
-      dispatch({ type: 'SET_TOOL_PANEL_MODE', payload: preferences.defaultToolPanelMode });
-    }
-  }, [preferences?.defaultToolPanelMode]);
-
-  React.useEffect(() => {
-    if (typeof window === 'undefined') {
-      return;
-    }
-
-    const serialized = JSON.stringify(state.fullscreenToolSettings);
-    window.localStorage.setItem(FULLSCREEN_TOOL_SETTINGS_STORAGE_KEY, serialized);
-  }, [state.fullscreenToolSettings]);
 
   // Tool reset methods
   const registerToolReset = useCallback((toolId: string, resetFunction: () => void) => {
@@ -253,15 +225,6 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     [state.sidebarsVisible, state.readerMode, state.leftPanelView]
   );
 
-  // URL sync for proper tool navigation
-  useNavigationUrlSync(
-    navigationState.selectedTool,
-    handleToolSelect,
-    handleBackToTools,
-    toolRegistry as ToolRegistry,
-    true
-  );
-
   // Properly memoized context value
   const contextValue = useMemo((): ToolWorkflowContextValue => ({
     // State
@@ -276,7 +239,6 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     setLeftPanelView,
     setReaderMode,
     setToolPanelMode,
-    setFullscreenToolSettings,
     setPreviewFile,
     setPageEditorFunctions,
     setSearchQuery,
@@ -313,7 +275,6 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     setLeftPanelView,
     setReaderMode,
     setToolPanelMode,
-    setFullscreenToolSettings,
     setPreviewFile,
     setPageEditorFunctions,
     setSearchQuery,
@@ -343,7 +304,6 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
 export function useToolWorkflow(): ToolWorkflowContextValue {
   const context = useContext(ToolWorkflowContext);
   if (!context) {
-
     console.error('ToolWorkflowContext not found. Current stack:', new Error().stack);
     throw new Error('useToolWorkflow must be used within a ToolWorkflowProvider');
   }

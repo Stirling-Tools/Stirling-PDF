@@ -66,7 +66,7 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
   }, []);
 
   const { sections: visibleSections } = useToolSections(filteredTools);
-  const { favoriteTools, recentTools, toolRegistry } = useToolWorkflow();
+  const { favoriteTools, toolRegistry } = useToolWorkflow();
 
   const favoriteToolItems = useMemo(() => {
     return favoriteTools
@@ -79,24 +79,19 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
       .filter((item: any) => item && (item.tool.component || item.tool.link || item.id === 'read' || item.id === 'multiTool')) as Array<{ id: string; tool: ToolRegistryEntry }>;
   }, [favoriteTools, toolRegistry]);
 
-  const recentToolItems = useMemo(() => {
-    return recentTools
-      .map((toolId) => {
-        const tool = (toolRegistry as any)[toolId as ToolId] as ToolRegistryEntry | undefined;
-        return tool ? { id: toolId as string, tool } : null;
-      })
-      .filter(Boolean)
-      .slice(0, 5) as Array<{ id: string; tool: ToolRegistryEntry }>; // cap to 5
-  }, [recentTools, toolRegistry]);
-
-  const recommendedCount = useMemo(() => {
-    return favoriteToolItems.length + recentToolItems.length;
-  }, [favoriteToolItems.length, recentToolItems.length]);
-
   const quickSection = useMemo(
     () => visibleSections.find(s => s.key === 'quick'),
     [visibleSections]
   );
+
+  const recommendedItems = useMemo(() => {
+    if (!quickSection) return [] as Array<{ id: string; tool: ToolRegistryEntry }>;
+    const items: Array<{ id: string; tool: ToolRegistryEntry }> = [];
+    quickSection.subcategories.forEach((sc: any) => sc.tools.forEach((toolEntry: any) => items.push(toolEntry)));
+    return items.slice(0, 5);
+  }, [quickSection]);
+
+  const recommendedCount = useMemo(() => favoriteToolItems.length + recommendedItems.length, [favoriteToolItems.length, recommendedItems.length]);
   const allSection = useMemo(
     () => visibleSections.find(s => s.key === 'all'),
     [visibleSections]
@@ -172,7 +167,7 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
               }}
               onClick={() => scrollTo(quickAccessRef)}
             >
-              <span style={{ fontSize: "1rem" }}>{t("toolPicker.recommended", "RECOMMENDED")}</span>
+              <span style={{ fontSize: "1rem" }}>{t("toolPicker.quickAccess", "QUICK ACCESS")}</span>
               <Badge>
                 {recommendedCount}
               </Badge>
@@ -196,13 +191,13 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
                     </div>
                   </Box>
                 )}
-                {recentToolItems.length > 0 && (
+                {recommendedItems.length > 0 && (
                   <Box w="100%">
-                    <SubcategoryHeader label={t('toolPanel.fullscreen.recent', 'Recently used')} />
+                    <SubcategoryHeader label={t('toolPanel.fullscreen.recommended', 'Recommended')} />
                     <div>
-                      {recentToolItems.map(({ id, tool }) => (
+                      {recommendedItems.map(({ id, tool }) => (
                         <ToolButton
-                          key={`recent-${id}`}
+                          key={`rec-${id}`}
                           id={id}
                           tool={tool}
                           isSelected={selectedToolKey === id}
@@ -212,7 +207,6 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
                     </div>
                   </Box>
                 )}
-                {/* Temporarily hide the rest of Recommended tools; show only Favourites and Recently used */}
               </Stack>
             </Box>
           </>
@@ -247,7 +241,7 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
 
             <Box ref={allToolsRef} w="100%">
               <Stack p="sm" gap="xs">
-                        {allSection?.subcategories.map(sc =>
+                        {allSection?.subcategories.map((sc: any) =>
                           renderToolButtons(t, sc, selectedToolKey, onSelect, true, false)
                         )}
               </Stack>

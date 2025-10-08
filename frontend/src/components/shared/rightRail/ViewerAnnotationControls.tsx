@@ -10,6 +10,7 @@ import { useFileState, useFileContext } from '../../../contexts/FileContext';
 import { generateThumbnailWithMetadata } from '../../../utils/thumbnailUtils';
 import { createProcessedFile } from '../../../contexts/file/fileActions';
 import { createStirlingFile, createNewStirlingFileStub } from '../../../types/fileContext';
+import { useToolWorkflow } from '../../../contexts/ToolWorkflowContext';
 
 interface ViewerAnnotationControlsProps {
   currentView: string;
@@ -17,6 +18,8 @@ interface ViewerAnnotationControlsProps {
 
 export default function ViewerAnnotationControls({ currentView }: ViewerAnnotationControlsProps) {
   const { t } = useTranslation();
+  const { toolPanelMode, leftPanelView } = useToolWorkflow();
+  const disableForFullscreen = toolPanelMode === 'fullscreen' && leftPanelView === 'toolPicker';
   const [selectedColor, setSelectedColor] = useState('#000000');
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
   const [isHoverColorPickerOpen, setIsHoverColorPickerOpen] = useState(false);
@@ -42,7 +45,7 @@ export default function ViewerAnnotationControls({ currentView }: ViewerAnnotati
   return (
     <>
       {/* Annotation Visibility Toggle */}
-      <Tooltip content={t('rightRail.toggleAnnotations', 'Toggle Annotations Visibility')} position="left" offset={12} arrow>
+      <Tooltip content={t('rightRail.toggleAnnotations', 'Toggle Annotations Visibility')} position="left" offset={12} arrow portalTarget={document.body}>
         <ActionIcon
           variant="subtle"
           radius="md"
@@ -50,7 +53,7 @@ export default function ViewerAnnotationControls({ currentView }: ViewerAnnotati
           onClick={() => {
             viewerContext?.toggleAnnotationsVisibility();
           }}
-          disabled={currentView !== 'viewer' || viewerContext?.isAnnotationMode}
+          disabled={currentView !== 'viewer' || viewerContext?.isAnnotationMode || disableForFullscreen}
         >
           <LocalIcon
             icon={viewerContext?.isAnnotationsVisible ? "visibility" : "visibility-off-rounded"}
@@ -94,7 +97,7 @@ export default function ViewerAnnotationControls({ currentView }: ViewerAnnotati
                     }
                   }
                 }}
-                disabled={currentView !== 'viewer'}
+                disabled={currentView !== 'viewer' || disableForFullscreen}
                 aria-label="Drawing mode active"
               >
                 <LocalIcon icon="edit" width="1.5rem" height="1.5rem" />
@@ -119,7 +122,7 @@ export default function ViewerAnnotationControls({ currentView }: ViewerAnnotati
         </div>
       ) : (
         // When inactive: Show "Draw" tooltip
-        <Tooltip content={t('rightRail.draw', 'Draw')} position="left" offset={12} arrow>
+        <Tooltip content={t('rightRail.draw', 'Draw')} position="left" offset={12} arrow portalTarget={document.body}>
           <ActionIcon
             variant="subtle"
             radius="md"
@@ -136,7 +139,7 @@ export default function ViewerAnnotationControls({ currentView }: ViewerAnnotati
                 }
               }
             }}
-            disabled={currentView !== 'viewer'}
+            disabled={currentView !== 'viewer' || disableForFullscreen}
             aria-label={typeof t === 'function' ? t('rightRail.draw', 'Draw') : 'Draw'}
           >
             <LocalIcon icon="edit" width="1.5rem" height="1.5rem" />
@@ -145,7 +148,7 @@ export default function ViewerAnnotationControls({ currentView }: ViewerAnnotati
       )}
 
       {/* Save PDF with Annotations */}
-      <Tooltip content={t('rightRail.save', 'Save')} position="left" offset={12} arrow>
+      <Tooltip content={t('rightRail.save', 'Save')} position="left" offset={12} arrow portalTarget={document.body}>
         <ActionIcon
           variant="subtle"
           radius="md"
@@ -193,7 +196,7 @@ export default function ViewerAnnotationControls({ currentView }: ViewerAnnotati
               }
             }
           }}
-          disabled={currentView !== 'viewer'}
+          disabled={currentView !== 'viewer' || disableForFullscreen}
         >
           <LocalIcon icon="save" width="1.5rem" height="1.5rem" />
         </ActionIcon>

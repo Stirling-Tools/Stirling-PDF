@@ -32,7 +32,8 @@ export default function RightRail() {
   const topButtons = useMemo(() => buttons.filter(b => (b.section || 'top') === 'top' && (b.visible ?? true)), [buttons]);
 
   // Access PageEditor functions for page-editor-specific actions
-  const { pageEditorFunctions } = useToolWorkflow();
+  const { pageEditorFunctions, toolPanelMode, leftPanelView } = useToolWorkflow();
+  const disableForFullscreen = toolPanelMode === 'fullscreen' && leftPanelView === 'toolPicker';
 
   // CSV input state for page selection
   const [csvInput, setCsvInput] = useState<string>("");
@@ -183,13 +184,13 @@ export default function RightRail() {
           <>
             <div className="right-rail-section">
               {topButtons.map(btn => (
-                <Tooltip key={btn.id} content={btn.tooltip} position="left" offset={12} arrow>
+                <Tooltip key={btn.id} content={btn.tooltip} position="left" offset={12} arrow portalTarget={document.body}>
                   <ActionIcon
                     variant="subtle"
                     radius="md"
                     className="right-rail-icon"
                     onClick={() => actions[btn.id]?.()}
-                    disabled={btn.disabled || allButtonsDisabled}
+                    disabled={btn.disabled || allButtonsDisabled || disableForFullscreen}
                   >
                     {btn.icon}
                   </ActionIcon>
@@ -207,7 +208,7 @@ export default function RightRail() {
         >
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
             {/* Search */}
-            <Tooltip content={t('rightRail.search', 'Search PDF')} position="left" offset={12} arrow>
+            <Tooltip content={t('rightRail.search', 'Search PDF')} position="left" offset={12} arrow portalTarget={document.body}>
               <Popover position="left" withArrow shadow="md" offset={8}>
                 <Popover.Target>
                   <div style={{ display: 'inline-flex' }}>
@@ -215,7 +216,7 @@ export default function RightRail() {
                       variant="subtle"
                       radius="md"
                       className="right-rail-icon"
-                      disabled={currentView !== 'viewer' || allButtonsDisabled}
+                      disabled={currentView !== 'viewer' || allButtonsDisabled || disableForFullscreen}
                       aria-label={typeof t === 'function' ? t('rightRail.search', 'Search PDF') : 'Search PDF'}
                     >
                       <LocalIcon icon="search" width="1.5rem" height="1.5rem" />
@@ -235,7 +236,7 @@ export default function RightRail() {
 
 
             {/* Pan Mode */}
-            <Tooltip content={t('rightRail.panMode', 'Pan Mode')} position="left" offset={12} arrow>
+            <Tooltip content={t('rightRail.panMode', 'Pan Mode')} position="left" offset={12} arrow portalTarget={document.body}>
               <ActionIcon
                 variant={isPanning ? "filled" : "subtle"}
                 color={isPanning ? "blue" : undefined}
@@ -245,14 +246,14 @@ export default function RightRail() {
                   viewerContext?.panActions.togglePan();
                   setIsPanning(!isPanning);
                 }}
-                disabled={currentView !== 'viewer' || allButtonsDisabled}
+                disabled={currentView !== 'viewer' || allButtonsDisabled || disableForFullscreen}
               >
                 <LocalIcon icon="pan-tool-rounded" width="1.5rem" height="1.5rem" />
               </ActionIcon>
             </Tooltip>
 
             {/* Rotate Left */}
-            <Tooltip content={t('rightRail.rotateLeft', 'Rotate Left')} position="left" offset={12} arrow>
+            <Tooltip content={t('rightRail.rotateLeft', 'Rotate Left')} position="left" offset={12} arrow portalTarget={document.body}>
               <ActionIcon
                 variant="subtle"
                 radius="md"
@@ -260,14 +261,14 @@ export default function RightRail() {
                 onClick={() => {
                   viewerContext?.rotationActions.rotateBackward();
                 }}
-                disabled={currentView !== 'viewer' || allButtonsDisabled}
+                disabled={currentView !== 'viewer' || allButtonsDisabled || disableForFullscreen}
               >
                 <LocalIcon icon="rotate-left" width="1.5rem" height="1.5rem" />
               </ActionIcon>
             </Tooltip>
 
             {/* Rotate Right */}
-            <Tooltip content={t('rightRail.rotateRight', 'Rotate Right')} position="left" offset={12} arrow>
+            <Tooltip content={t('rightRail.rotateRight', 'Rotate Right')} position="left" offset={12} arrow portalTarget={document.body}>
               <ActionIcon
                 variant="subtle"
                 radius="md"
@@ -275,14 +276,14 @@ export default function RightRail() {
                 onClick={() => {
                   viewerContext?.rotationActions.rotateForward();
                 }}
-                disabled={currentView !== 'viewer' || allButtonsDisabled}
+                disabled={currentView !== 'viewer' || allButtonsDisabled || disableForFullscreen}
               >
                 <LocalIcon icon="rotate-right" width="1.5rem" height="1.5rem" />
               </ActionIcon>
             </Tooltip>
 
             {/* Sidebar Toggle */}
-            <Tooltip content={t('rightRail.toggleSidebar', 'Toggle Sidebar')} position="left" offset={12} arrow>
+            <Tooltip content={t('rightRail.toggleSidebar', 'Toggle Sidebar')} position="left" offset={12} arrow portalTarget={document.body}>
               <ActionIcon
                 variant="subtle"
                 radius="md"
@@ -290,7 +291,7 @@ export default function RightRail() {
                 onClick={() => {
                   viewerContext?.toggleThumbnailSidebar();
                 }}
-                disabled={currentView !== 'viewer' || allButtonsDisabled}
+                disabled={currentView !== 'viewer' || allButtonsDisabled || disableForFullscreen}
               >
                 <LocalIcon icon="view-list" width="1.5rem" height="1.5rem" />
               </ActionIcon>
@@ -309,14 +310,14 @@ export default function RightRail() {
         >
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
             {/* Select All Button */}
-            <Tooltip content={t('rightRail.selectAll', 'Select All')} position="left" offset={12} arrow>
+            <Tooltip content={t('rightRail.selectAll', 'Select All')} position="left" offset={12} arrow portalTarget={document.body}>
               <div>
                 <ActionIcon
                   variant="subtle"
                   radius="md"
                   className="right-rail-icon"
                   onClick={handleSelectAll}
-                  disabled={currentView === 'viewer' || totalItems === 0 || selectedCount === totalItems || allButtonsDisabled}
+                  disabled={currentView === 'viewer' || totalItems === 0 || selectedCount === totalItems || allButtonsDisabled || disableForFullscreen}
                 >
                   <LocalIcon icon="select-all" width="1.5rem" height="1.5rem" />
                 </ActionIcon>
@@ -324,14 +325,14 @@ export default function RightRail() {
             </Tooltip>
 
             {/* Deselect All Button */}
-            <Tooltip content={t('rightRail.deselectAll', 'Deselect All')} position="left" offset={12} arrow>
+            <Tooltip content={t('rightRail.deselectAll', 'Deselect All')} position="left" offset={12} arrow portalTarget={document.body}>
               <div>
                 <ActionIcon
                   variant="subtle"
                   radius="md"
                   className="right-rail-icon"
                   onClick={handleDeselectAll}
-                  disabled={currentView === 'viewer' || selectedCount === 0 || allButtonsDisabled}
+                  disabled={currentView === 'viewer' || selectedCount === 0 || allButtonsDisabled || disableForFullscreen}
                 >
                   <LocalIcon icon="crop-square-outline" width="1.5rem" height="1.5rem" />
                 </ActionIcon>
@@ -340,7 +341,7 @@ export default function RightRail() {
 
             {/* Select by Numbers - page editor only, with animated presence */}
             {pageControlsMounted && (
-                                  <Tooltip content={t('rightRail.selectByNumber', 'Select by Page Numbers')} position="left" offset={12} arrow>
+                                  <Tooltip content={t('rightRail.selectByNumber', 'Select by Page Numbers')} position="left" offset={12} arrow portalTarget={document.body}>
 
               <div className={`right-rail-fade ${pageControlsVisible ? 'enter' : 'exit'}`} aria-hidden={!pageControlsVisible}>
                 <Popover position="left" withArrow shadow="md" offset={8}>
@@ -350,7 +351,7 @@ export default function RightRail() {
                           variant="subtle"
                           radius="md"
                           className="right-rail-icon"
-                          disabled={!pageControlsVisible || totalItems === 0 || allButtonsDisabled}
+                          disabled={!pageControlsVisible || totalItems === 0 || allButtonsDisabled || disableForFullscreen}
                           aria-label={typeof t === 'function' ? t('rightRail.selectByNumber', 'Select by Page Numbers') : 'Select by Page Numbers'}
                         >
                           <LocalIcon icon="pin-end" width="1.5rem" height="1.5rem" />
@@ -377,7 +378,7 @@ export default function RightRail() {
 
             {/* Delete Selected Pages - page editor only, with animated presence */}
             {pageControlsMounted && (
-                              <Tooltip content={t('rightRail.deleteSelected', 'Delete Selected Pages')} position="left" offset={12} arrow>
+                              <Tooltip content={t('rightRail.deleteSelected', 'Delete Selected Pages')} position="left" offset={12} arrow portalTarget={document.body}>
 
               <div className={`right-rail-fade ${pageControlsVisible ? 'enter' : 'exit'}`} aria-hidden={!pageControlsVisible}>
                   <div style={{ display: 'inline-flex' }}>
@@ -386,7 +387,7 @@ export default function RightRail() {
                       radius="md"
                       className="right-rail-icon"
                       onClick={() => { pageEditorFunctions?.handleDelete?.(); }}
-                      disabled={!pageControlsVisible || (pageEditorFunctions?.selectedPageIds?.length || 0) === 0 || allButtonsDisabled}
+                      disabled={!pageControlsVisible || (pageEditorFunctions?.selectedPageIds?.length || 0) === 0 || allButtonsDisabled || disableForFullscreen}
                       aria-label={typeof t === 'function' ? t('rightRail.deleteSelected', 'Delete Selected Pages') : 'Delete Selected Pages'}
                     >
                       <LocalIcon icon="delete-outline-rounded" width="1.5rem" height="1.5rem" />
@@ -399,7 +400,7 @@ export default function RightRail() {
 
             {/* Export Selected Pages - page editor only */}
             {pageControlsMounted && (
-              <Tooltip content={t('rightRail.exportSelected', 'Export Selected Pages')} position="left" offset={12} arrow>
+              <Tooltip content={t('rightRail.exportSelected', 'Export Selected Pages')} position="left" offset={12} arrow portalTarget={document.body}>
                 <div className={`right-rail-fade ${pageControlsVisible ? 'enter' : 'exit'}`} aria-hidden={!pageControlsVisible}>
                   <div style={{ display: 'inline-flex' }}>
                     <ActionIcon
@@ -407,7 +408,7 @@ export default function RightRail() {
                       radius="md"
                       className="right-rail-icon"
                       onClick={() => { pageEditorFunctions?.onExportSelected?.(); }}
-                      disabled={!pageControlsVisible || (pageEditorFunctions?.selectedPageIds?.length || 0) === 0 || pageEditorFunctions?.exportLoading || allButtonsDisabled}
+                      disabled={!pageControlsVisible || (pageEditorFunctions?.selectedPageIds?.length || 0) === 0 || pageEditorFunctions?.exportLoading || allButtonsDisabled || disableForFullscreen}
                       aria-label={typeof t === 'function' ? t('rightRail.exportSelected', 'Export Selected Pages') : 'Export Selected Pages'}
                     >
                       <LocalIcon icon="download" width="1.5rem" height="1.5rem" />
@@ -418,7 +419,7 @@ export default function RightRail() {
             )}
 
             {/* Close (File Editor: Close Selected | Page Editor: Close PDF) */}
-            <Tooltip content={currentView === 'pageEditor' ? t('rightRail.closePdf', 'Close PDF') : t('rightRail.closeSelected', 'Close Selected Files')} position="left" offset={12} arrow>
+            <Tooltip content={currentView === 'pageEditor' ? t('rightRail.closePdf', 'Close PDF') : t('rightRail.closeSelected', 'Close Selected Files')} position="left" offset={12} arrow portalTarget={document.body}>
               <div>
                 <ActionIcon
                   variant="subtle"
@@ -429,7 +430,7 @@ export default function RightRail() {
                     currentView === 'viewer' ||
                     (currentView === 'fileEditor' && selectedCount === 0) ||
                     (currentView === 'pageEditor' && (activeFiles.length === 0 || !pageEditorFunctions?.closePdf)) ||
-                    allButtonsDisabled
+                    allButtonsDisabled || disableForFullscreen
                   }
                 >
                   <LocalIcon icon="close-rounded" width="1.5rem" height="1.5rem" />
@@ -465,7 +466,7 @@ export default function RightRail() {
             currentView === 'pageEditor'
               ? t('rightRail.exportAll', 'Export PDF')
               : (selectedCount > 0 ? t('rightRail.downloadSelected', 'Download Selected Files') : t('rightRail.downloadAll', 'Download All'))
-          } position="left" offset={12} arrow>
+          } position="left" offset={12} arrow portalTarget={document.body}>
             <div>
               <ActionIcon
                 variant="subtle"
@@ -473,7 +474,7 @@ export default function RightRail() {
                 className="right-rail-icon"
                 onClick={handleExportAll}
                 disabled={
-                  currentView === 'viewer' ? !exportState?.canExport : totalItems === 0 || allButtonsDisabled
+                  disableForFullscreen || (currentView === 'viewer' ? !exportState?.canExport : totalItems === 0 || allButtonsDisabled)
                 }
               >
                 <LocalIcon icon="download" width="1.5rem" height="1.5rem" />

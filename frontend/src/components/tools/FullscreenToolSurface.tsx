@@ -4,11 +4,9 @@ import ViewSidebarRoundedIcon from '@mui/icons-material/ViewSidebarRounded';
 import { useTranslation } from 'react-i18next';
 import ToolSearch from './toolPicker/ToolSearch';
 import FullscreenToolList from './FullscreenToolList';
-import FullscreenToolSettings from './FullscreenToolSettings';
 import { ToolRegistryEntry } from '../../data/toolsTaxonomy';
 import { ToolId } from '../../types/toolId';
 import { useFocusTrap } from '../../hooks/tools/useFocusTrap';
-import { useToolWorkflow } from '../../contexts/ToolWorkflowContext';
 import { BASE_PATH } from '../../constants/app';
 import './ToolPanel.css';
 
@@ -48,7 +46,6 @@ const FullscreenToolSurface = ({
 }: FullscreenToolSurfaceProps) => {
   const { t } = useTranslation();
   const { colorScheme } = useMantineColorScheme();
-  const { fullscreenToolSettings, setFullscreenToolSettings } = useToolWorkflow();
   const [isExiting, setIsExiting] = useState(false);
   const surfaceRef = useRef<HTMLDivElement>(null);
 
@@ -104,10 +101,6 @@ const FullscreenToolSurface = ({
             <img src={brandTextSrc} alt={brandAltText} className="tool-panel__fullscreen-brand-text" />
           </div>
           <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-            <FullscreenToolSettings
-              settings={fullscreenToolSettings}
-              onChange={setFullscreenToolSettings}
-            />
             <Tooltip label={toggleLabel} position="bottom" withArrow>
               <ActionIcon
                 variant="subtle"

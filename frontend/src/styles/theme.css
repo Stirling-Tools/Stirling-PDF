@@ -60,6 +60,10 @@
   --category-color-automation: #ec4899;     /* Pink for automation tools */
   --category-color-developer: #6b7280;      /* Gray for developer tools */
   --category-color-default: #6b7280;        /* Default gray */
+
+  /* Special section colors - consistent across light and dark modes */
+  --special-color-favorites: #FFC107;      /* Yellow/gold for favorites */
+  --special-color-recommended: #1BB1D4;    /* Cyan for recommended */
   --color-yellow-500: #eab308;
   --color-yellow-600: #ca8a04;
   --color-yellow-700: #a16207;
@@ -300,6 +304,10 @@
   --category-color-automation: #ec4899;     /* Pink for automation tools */
   --category-color-developer: #6b7280;      /* Gray for developer tools */
   --category-color-default: #6b7280;        /* Default gray */
+
+  /* Special section colors - same as light mode for consistency */
+  --special-color-favorites: #FFC107;      /* Yellow/gold for favorites */
+  --special-color-recommended: #1BB1D4;    /* Cyan for recommended */
 
   /* Success (green) - dark */
   --color-green-50: #052e16;

@@ -15,6 +15,8 @@
   --fullscreen-border-subtle-75: color-mix(in srgb, var(--border-subtle) 75%, transparent);
   --fullscreen-border-subtle-70: color-mix(in srgb, var(--border-subtle) 70%, transparent);
   --fullscreen-border-subtle-65: color-mix(in srgb, var(--border-subtle) 65%, transparent);
+  --fullscreen-border-favorites: color-mix(in srgb, var(--special-color-favorites) 25%, var(--border-subtle));
+  --fullscreen-border-recommended: color-mix(in srgb, var(--special-color-recommended) 25%, var(--border-subtle));
   --fullscreen-shadow-primary: color-mix(in srgb, var(--shadow-color, rgba(15, 23, 42, 0.55)) 25%, transparent);
   --fullscreen-shadow-secondary: color-mix(in srgb, var(--shadow-color, rgba(15, 23, 42, 0.35)) 30%, transparent);
   --fullscreen-shadow-group: color-mix(in srgb, var(--shadow-color, rgba(15, 23, 42, 0.45)) 18%, transparent);
@@ -25,10 +27,6 @@
   --fullscreen-accent-list-border: color-mix(in srgb, var(--text-primary) 20%, var(--border-subtle));
   --fullscreen-text-icon: color-mix(in srgb, var(--text-primary) 90%, var(--text-muted));
   --fullscreen-text-icon-compact: color-mix(in srgb, var(--text-primary) 88%, var(--text-muted));
-  --fullscreen-hover-subtle: color-mix(in srgb, var(--text-primary) 5%, var(--bg-toolbar));
-  --fullscreen-hover: color-mix(in srgb, var(--text-primary) 8%, var(--bg-toolbar));
-  --fullscreen-hover-prominent: color-mix(in srgb, var(--text-primary) 12%, var(--bg-toolbar));
-  --fullscreen-icon-hover-bg: color-mix(in srgb, var(--text-primary) 10%, var(--bg-muted));
 }
 
 .tool-panel {
@@ -234,6 +232,8 @@
   transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
   width: 100%;
   box-sizing: border-box;
+  /* Allow flex children to shrink without forcing horizontal overflow */
+  min-width: 0;
 }
 
 .tool-panel__fullscreen-item:focus-visible {
@@ -297,12 +297,7 @@
 }
 
 .tool-panel__fullscreen-group--special {
-  background: linear-gradient(
-    135deg,
-    color-mix(in srgb, var(--fullscreen-bg-group) 95%, var(--text-primary) 5%),
-    var(--fullscreen-bg-group)
-  );
-  border-width: 1.5px;
+  border-width: 1px;
 }
 
 .tool-panel__fullscreen-icon {
@@ -353,6 +348,9 @@
   flex-direction: column;
   gap: 0.4rem;
   text-align: left;
+  /* Prevent long content (names, descriptions, shortcuts) from overflowing */
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .tool-panel__fullscreen-name {
@@ -361,6 +359,15 @@
 
 .tool-panel__fullscreen-description {
   line-height: 1.45;
+}
+
+/* Ensure long words or unbroken strings wrap instead of overflowing */
+.tool-panel__fullscreen-name,
+.tool-panel__fullscreen-description,
+.tool-panel__fullscreen-match {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  hyphens: auto;
 }
 
 .tool-panel__fullscreen-match {
@@ -372,6 +379,9 @@
   align-items: center;
   gap: 0.5rem;
   margin-top: 0.2rem;
+  /* Allow hotkey chips to wrap on small widths to avoid overflow */
+  flex-wrap: wrap;
+  row-gap: 0.25rem;
 }
 
 .tool-panel__fullscreen-list {
@@ -531,42 +541,5 @@
   }
 }
 
-/* Dynamic settings support */
 
-/* No border variant */
-.tool-panel__fullscreen-item--no-border,
-.tool-panel__fullscreen-list-item--no-border {
-  border: none !important;
-}
-
-/* Hover intensity variants */
-.tool-panel__fullscreen-item--hover-subtle:hover,
-.tool-panel__fullscreen-list-item--hover-subtle:hover {
-  background: var(--fullscreen-hover-subtle);
-  transform: none;
-}
-
-.tool-panel__fullscreen-item--hover-moderate:hover,
-.tool-panel__fullscreen-list-item--hover-moderate:hover {
-  background: var(--fullscreen-hover);
-  transform: translateY(-2px);
-}
-
-.tool-panel__fullscreen-item--hover-prominent:hover,
-.tool-panel__fullscreen-list-item--hover-prominent:hover {
-  background: var(--fullscreen-hover-prominent);
-  transform: translateY(-3px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-/* Hover-only icon background */
-.tool-panel__fullscreen-icon--hover-bg,
-.tool-panel__fullscreen-list-icon--hover-bg {
-  transition: background 0.2s ease;
-}
-
-.tool-panel__fullscreen-item:hover .tool-panel__fullscreen-icon--hover-bg,
-.tool-panel__fullscreen-list-item:hover .tool-panel__fullscreen-list-icon--hover-bg {
-  background: var(--fullscreen-icon-hover-bg) !important;
-}
 
