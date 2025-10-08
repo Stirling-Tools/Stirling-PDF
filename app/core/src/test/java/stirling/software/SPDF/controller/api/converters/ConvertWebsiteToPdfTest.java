@@ -3,14 +3,19 @@ package stirling.software.SPDF.controller.api.converters;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.List;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -165,7 +170,8 @@ public class ConvertWebsiteToPdfTest {
 
         try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class);
                 MockedStatic<WebResponseUtils> wr = Mockito.mockStatic(WebResponseUtils.class);
-                MockedStatic<GeneralUtils> gu = Mockito.mockStatic(GeneralUtils.class)) {
+                MockedStatic<GeneralUtils> gu = Mockito.mockStatic(GeneralUtils.class);
+                MockedStatic<HttpClient> httpClient = mockHttpClientReturning("<html></html>")) {
 
             // URL-Checks positiv erzwingen
             gu.when(() -> GeneralUtils.isValidURL("https://example.com")).thenReturn(true);
@@ -198,16 +204,19 @@ public class ConvertWebsiteToPdfTest {
             List<String> cmd = cmdCaptor.getValue();
             assertNotNull(cmd);
             assertEquals("/usr/bin/weasyprint", cmd.get(0));
-            assertEquals("https://example.com", cmd.get(1));
-            assertEquals("--pdf-forms", cmd.get(2));
-            assertTrue(cmd.size() >= 4, "WeasyPrint sollte einen Output-Pfad erhalten");
-            String outPathStr = cmd.get(3);
+            assertTrue(cmd.size() >= 6, "WeasyPrint sollte HTML-Eingabe und Output-Pfad erhalten");
+            String htmlPathStr = cmd.get(1);
+            assertEquals("--base-url", cmd.get(2));
+            assertEquals("https://example.com", cmd.get(3));
+            assertEquals("--pdf-forms", cmd.get(4));
+            String outPathStr = cmd.get(5);
             assertNotNull(outPathStr);
 
             // Temp-Datei muss im finally gelöscht sein
             Path outPath = Path.of(outPathStr);
             assertFalse(
-                    Files.exists(outPath), "Temp-Output-Datei sollte nach dem Call gelöscht sein");
+                    Files.exists(Path.of(htmlPathStr)),
+                    "Temp-HTML-Datei sollte nach dem Call gelöscht sein");
         }
     }
 
@@ -218,18 +227,29 @@ public class ConvertWebsiteToPdfTest {
         request.setUrlInput("https://example.com");
 
         Path preCreatedTemp = java.nio.file.Files.createTempFile("test_output_", ".pdf");
+        Path htmlTemp = java.nio.file.Files.createTempFile("test_input_", ".html");
 
         try (MockedStatic<GeneralUtils> gu = Mockito.mockStatic(GeneralUtils.class);
                 MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class);
                 MockedStatic<WebResponseUtils> wr = Mockito.mockStatic(WebResponseUtils.class);
-                MockedStatic<Files> files = Mockito.mockStatic(Files.class)) {
+                MockedStatic<Files> files = Mockito.mockStatic(Files.class);
+                MockedStatic<HttpClient> httpClient = mockHttpClientReturning("<html></html>")) {
 
             // URL-Checks positiv
             gu.when(() -> GeneralUtils.isValidURL("https://example.com")).thenReturn(true);
             gu.when(() -> GeneralUtils.isURLReachable("https://example.com")).thenReturn(true);
 
             // Temp-Datei erzwingen + Delete-Fehler provozieren
+            files.when(() -> Files.createTempFile("url_input_", ".html")).thenReturn(htmlTemp);
             files.when(() -> Files.createTempFile("output_", ".pdf")).thenReturn(preCreatedTemp);
+            files.when(
+                            () ->
+                                    Files.writeString(
+                                            eq(htmlTemp),
+                                            anyString(),
+                                            eq(java.nio.charset.StandardCharsets.UTF_8)))
+                    .thenReturn(htmlTemp);
+            files.when(() -> Files.deleteIfExists(htmlTemp)).thenReturn(true);
             files.when(() -> Files.deleteIfExists(preCreatedTemp))
                     .thenThrow(new IOException("fail delete"));
             files.when(() -> Files.exists(preCreatedTemp)).thenReturn(true); // für den Assert
@@ -257,8 +277,52 @@ public class ConvertWebsiteToPdfTest {
         } finally {
             try {
                 java.nio.file.Files.deleteIfExists(preCreatedTemp);
+                java.nio.file.Files.deleteIfExists(htmlTemp);
             } catch (IOException ignore) {
             }
         }
+    }
+
+    @Test
+    void redirect_with_error_when_disallowed_content_detected() throws Exception {
+        UrlToPdfRequest request = new UrlToPdfRequest();
+        request.setUrlInput("https://example.com");
+
+        try (MockedStatic<GeneralUtils> gu = Mockito.mockStatic(GeneralUtils.class);
+                MockedStatic<HttpClient> httpClient =
+                        mockHttpClientReturning(
+                                "<link rel=\"attachment\" href=\"file:///etc/passwd\">"); ) {
+
+            gu.when(() -> GeneralUtils.isValidURL("https://example.com")).thenReturn(true);
+            gu.when(() -> GeneralUtils.isURLReachable("https://example.com")).thenReturn(true);
+
+            ResponseEntity<?> resp = sut.urlToPdf(request);
+
+            assertEquals(HttpStatus.SEE_OTHER, resp.getStatusCode());
+            URI location = resp.getHeaders().getLocation();
+            assertNotNull(location, "Location header expected");
+            assertTrue(
+                    location.getQuery() != null
+                            && location.getQuery().contains("error=error.disallowedUrlContent"));
+        }
+    }
+
+    private MockedStatic<HttpClient> mockHttpClientReturning(String body) throws Exception {
+        MockedStatic<HttpClient> httpClientStatic = Mockito.mockStatic(HttpClient.class);
+        HttpClient.Builder builder = Mockito.mock(HttpClient.Builder.class);
+        HttpClient client = Mockito.mock(HttpClient.class);
+        HttpResponse<String> response = Mockito.mock(HttpResponse.class);
+
+        httpClientStatic.when(HttpClient::newBuilder).thenReturn(builder);
+        when(builder.followRedirects(HttpClient.Redirect.NORMAL)).thenReturn(builder);
+        when(builder.connectTimeout(any(Duration.class))).thenReturn(builder);
+        when(builder.build()).thenReturn(client);
+
+        when(client.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
+                .thenReturn(response);
+        when(response.statusCode()).thenReturn(200);
+        when(response.body()).thenReturn(body);
+
+        return httpClientStatic;
     }
 }
