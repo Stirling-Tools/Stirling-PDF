@@ -283,7 +283,8 @@
       "capturing": "Press keys… (Esc to cancel)",
       "change": "Change shortcut",
       "reset": "Reset",
-      "shortcut": "Shortcut"
+      "shortcut": "Shortcut",
+      "noShortcut": "No shortcut set"
     }
   },
   "changeCreds": {

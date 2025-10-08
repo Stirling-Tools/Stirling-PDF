@@ -6,11 +6,12 @@ import "./toolPicker/ToolPicker.css";
 import { useToolSections } from "../../hooks/useToolSections";
 import NoToolsFound from "./shared/NoToolsFound";
 import { renderToolButtons } from "./shared/renderToolButtons";
+import { ToolId } from "src/types/toolId";
 
 interface ToolPickerProps {
   selectedToolKey: string | null;
   onSelect: (id: string) => void;
-  filteredTools: Array<{ item: [string, ToolRegistryEntry]; matchedText?: string }>;
+  filteredTools: Array<{ item: [ToolId, ToolRegistryEntry]; matchedText?: string }>;
   isSearching?: boolean;
 }
 
