@@ -697,6 +697,9 @@ document.addEventListener("DOMContentLoaded", function () {
   }
   document.body.addEventListener("keydown", keyPressHandler);
 
+  // register event listener for text input changes in bookmark title or page number fields
+  bookmarksContainer.addEventListener("change", updateBookmarkHistory);
+
   // ClearAll button functionality
   const clearAllBtn = document.getElementById("clearAllBtn");
 
