@@ -1,10 +1,18 @@
 import React from "react";
-import { TourProvider, useTour } from '@reactour/tour';
+import { TourProvider, useTour, type StepType } from '@reactour/tour';
 import { useOnboarding } from '../../contexts/OnboardingContext';
 import { useTranslation } from 'react-i18next';
-import { useMediaQuery } from '@mantine/hooks';
 import { Button, CloseButton } from '@mantine/core';
 import { useFilesModalContext } from '../../contexts/FilesModalContext';
+
+// Enum case order defines order steps will appear
+enum TourStep {
+  QUICK_ACCESS,
+  TOOL_PANEL,
+  FILES_BUTTON,
+  FILE_SOURCES,
+  FILE_DETAILS,
+}
 
 function TourContent() {
   const { isOpen } = useOnboarding();
@@ -17,16 +25,16 @@ function TourContent() {
     setIsOpen(isOpen);
   }, [isOpen, setIsOpen]);
 
-  // Reset the advanced flag when we're back on step 2
+  // Reset the advanced flag when we're back on Files button step
   React.useEffect(() => {
-    if (currentStep === 2 && !isFilesModalOpen) {
+    if (currentStep === TourStep.FILES_BUTTON && !isFilesModalOpen) {
       hasAdvancedRef.current = false;
     }
   }, [currentStep, isFilesModalOpen]);
 
-  // Advance tour when Files modal opens (if on step 2 - Files button step)
+  // Advance tour when Files modal opens (if on Files button step)
   React.useEffect(() => {
-    if (isFilesModalOpen && currentStep === 2 && isOpen && !hasAdvancedRef.current) {
+    if (isFilesModalOpen && currentStep === TourStep.FILES_BUTTON && isOpen && !hasAdvancedRef.current) {
       hasAdvancedRef.current = true;
       // Wait for the file-sources element to exist in DOM and modal to settle
       const checkElement = () => {
@@ -34,7 +42,7 @@ function TourContent() {
         if (element) {
           // Wait for modal opening animation to complete (Mantine modals have ~200ms transition)
           setTimeout(() => {
-            setCurrentStep(3);
+            setCurrentStep(TourStep.FILE_SOURCES);
           }, 300);
         } else {
           // Check again in next frame
@@ -51,55 +59,38 @@ function TourContent() {
 export default function OnboardingTour() {
   const { t } = useTranslation();
   const { completeTour, closeTour } = useOnboarding();
-  const isMobile = useMediaQuery("(max-width: 1024px)");
 
-  const desktopSteps = [
-    {
+  // Define steps as object keyed by enum - TypeScript ensures all keys are present
+  const stepsConfig: Record<TourStep, StepType> = {
+    [TourStep.QUICK_ACCESS]: {
       selector: '[data-tour="quick-access"]',
       content: t('onboarding.quickAccess', 'Quick access to your most-used tools and settings. Pin your favourite tools here for easy access.'),
-      position: 'right' as const,
+      position: 'right',
     },
-    {
+    [TourStep.TOOL_PANEL]: {
       selector: '[data-tour="tool-panel"]',
       content: t('onboarding.toolPanel', 'Browse all available PDF tools organised by category. Select a tool to get started.'),
-      position: 'right' as const,
+      position: 'right',
     },
-    {
+    [TourStep.FILES_BUTTON]: {
       selector: '[data-testid="files-button"]',
       content: t('onboarding.filesButton', 'Click the Files button to manage your PDFs and see your recent files.'),
-      position: 'right' as const,
+      position: 'right',
     },
-    {
+    [TourStep.FILE_SOURCES]: {
       selector: '[data-tour="file-sources"]',
       content: t('onboarding.fileSources', 'Choose where to load files from - your recent files or upload new ones from your device.'),
-      position: 'right' as const,
+      position: 'right',
     },
-    {
+    [TourStep.FILE_DETAILS]: {
       selector: '[data-tour="file-details"]',
       content: t('onboarding.fileDetails', 'View detailed information about selected files, including size, type, and preview.'),
-      position: 'left' as const,
+      position: 'left',
     },
-  ];
+  };
 
-  const mobileSteps = [
-    {
-      selector: '[data-tour="mobile-tools-tab"]',
-      content: t('onboarding.mobile.toolsTab', 'Browse all available PDF tools. Swipe or tap to switch between Tools and Workspace views.'),
-      position: 'bottom' as const,
-    },
-    {
-      selector: '[data-tour="mobile-workspace-tab"]',
-      content: t('onboarding.mobile.workspaceTab', 'Your workspace where you can upload files and configure tool settings.'),
-      position: 'bottom' as const,
-    },
-    {
-      selector: '[data-tour="mobile-bottom-bar"]',
-      content: t('onboarding.mobile.bottomBar', 'Quick access to all tools, automation, your files, and settings from the bottom bar.'),
-      position: 'top' as const,
-    },
-  ];
-
-  const steps = isMobile ? mobileSteps : desktopSteps;
+  // Convert to array using enum's numeric ordering
+  const steps = Object.values(stepsConfig);
 
   return (
     <TourProvider
@@ -109,8 +100,8 @@ export default function OnboardingTour() {
         closeTour();
       }}
       onClickMask={({ setCurrentStep, currentStep, steps, setIsOpen }) => {
-        // Step 2 is the Files button - don't allow clicking outside to advance
-        if (currentStep === 2) {
+        // Files button step - don't allow clicking outside to advance
+        if (currentStep === TourStep.FILES_BUTTON) {
           return;
         }
 
@@ -146,8 +137,8 @@ export default function OnboardingTour() {
       disableInteraction={false}
       padding={0}
       prevButton={({ currentStep, setCurrentStep }) => {
-        const isFirst = currentStep === 0;
-        const isFirstModalStep = currentStep === 3; // First step inside Files modal
+        const isFirst = currentStep === TourStep.QUICK_ACCESS;
+        const isFirstModalStep = currentStep === TourStep.FILE_SOURCES;
         return (
           <Button
             onClick={() => setCurrentStep(Math.max(0, currentStep - 1))}
@@ -162,7 +153,7 @@ export default function OnboardingTour() {
       }}
       nextButton={({ currentStep, stepsLength, setCurrentStep, setIsOpen }) => {
         const isLast = currentStep === stepsLength - 1;
-        const isFilesStep = currentStep === 2;
+        const isFilesStep = currentStep === TourStep.FILES_BUTTON;
 
         return (
           <Button
