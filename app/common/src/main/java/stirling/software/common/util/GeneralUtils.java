@@ -440,7 +440,7 @@ public class GeneralUtils {
 
     private boolean isUniqueLocalIPv6(byte[] address) {
         if (address == null || address.length != 16) {
-            return true;
+            return false;
         }
         int first = Byte.toUnsignedInt(address[0]);
         return (first & 0xFE) == 0xFC; // fc00::/7 Unique local addresses
