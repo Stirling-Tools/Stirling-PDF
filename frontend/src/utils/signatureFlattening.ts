@@ -17,13 +17,18 @@ interface SignatureFlatteningOptions {
     saveAsCopy: () => Promise<ArrayBuffer | null>;
   };
   selectors: MinimalFileContextSelectors;
-  consumeFiles: (inputFileIds: FileId[], outputStirlingFiles: StirlingFile[], outputStirlingFileStubs: StirlingFileStub[]) => Promise<FileId[]>;
   originalFile?: StirlingFile;
   getScrollState: () => { currentPage: number; totalPages: number };
 }
 
-export async function flattenSignatures(options: SignatureFlatteningOptions): Promise<FileId[] | null> {
-  const { signatureApiRef, getImageData, exportActions, selectors, consumeFiles, originalFile, getScrollState } = options;
+export interface SignatureFlatteningResult {
+  inputFileIds: FileId[];
+  outputStirlingFile: StirlingFile;
+  outputStub: StirlingFileStub;
+}
+
+export async function flattenSignatures(options: SignatureFlatteningOptions): Promise<SignatureFlatteningResult | null> {
+  const { signatureApiRef, getImageData, exportActions, selectors, originalFile, getScrollState } = options;
 
   try {
     // Step 1: Extract all annotations from EmbedPDF before export
@@ -319,13 +324,14 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
       const outputStirlingFile = createStirlingFile(signedFile, outputStub.id);
 
       console.log('Output stub version:', outputStub.versionNumber);
-      console.log('Consuming files - replacing:', inputFileIds, 'with:', outputStub.id);
+      console.log('✓ Signature flattening completed successfully');
 
-      // Replace the original file with the signed version
-      const newFileIds = await consumeFiles(inputFileIds, [outputStirlingFile], [outputStub]);
-
-      console.log('✓ Signature flattening completed successfully. New file IDs:', newFileIds);
-      return newFileIds;
+      // Return the flattened file data for consumption by caller
+      return {
+        inputFileIds,
+        outputStirlingFile,
+        outputStub
+      };
     }
 
     return null;

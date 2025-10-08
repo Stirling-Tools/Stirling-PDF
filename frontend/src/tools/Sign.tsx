@@ -75,9 +75,6 @@ const Sign = (props: BaseToolProps) => {
       console.log('exportActions:', exportActions);
       console.log('signatureApiRef.current:', signatureApiRef.current);
 
-      // Deactivate signature placement mode immediately
-      handleDeactivateSignature();
-
       // Unregister unsaved changes checker to prevent warning during apply
       unregisterUnsavedChangesChecker();
       setHasUnsavedChanges(false);
@@ -104,29 +101,36 @@ const Sign = (props: BaseToolProps) => {
       console.log('originalFile:', originalFile);
 
       // Use the signature flattening utility
-      const newFileIds = await flattenSignatures({
+      const flattenResult = await flattenSignatures({
         signatureApiRef,
         getImageData,
         exportActions,
         selectors,
-        consumeFiles,
         originalFile,
         getScrollState
       });
 
-      console.log('flattenSignatures result:', newFileIds);
+      console.log('flattenSignatures result:', flattenResult);
 
-      if (newFileIds && newFileIds.length > 0) {
-        console.log('✓ Signature flattening completed successfully');
+      if (flattenResult) {
+        console.log('✓ Signature flattening completed - now consuming files');
+
+        // Now consume the files - this triggers the viewer reload
+        const newFileIds = await consumeFiles(
+          flattenResult.inputFileIds,
+          [flattenResult.outputStirlingFile],
+          [flattenResult.outputStub]
+        );
+
+        console.log('✓ Files consumed successfully. New file IDs:', newFileIds);
 
         // Mark signatures as applied
         setSignaturesApplied(true);
 
-        // Force viewer reload to show flattened PDF
-        setWorkbench('fileEditor');
-        setTimeout(() => {
-          setWorkbench('viewer');
-        }, 50);
+        // Deactivate signature placement mode after everything completes
+        handleDeactivateSignature();
+
+        // File has been consumed - viewer should reload automatically via key prop
       } else {
         console.error('Signature flattening failed');
       }
