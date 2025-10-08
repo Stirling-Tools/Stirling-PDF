@@ -71,8 +71,6 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
       }
     }
 
-    console.log(`Total annotations found: ${allAnnotations.reduce((sum, page) => sum + page.annotations.length, 0)}`);
-
     // Step 2: Delete ONLY session annotations from EmbedPDF before export (they'll be rendered manually)
     // Leave old annotations alone - they will remain as annotations in the PDF
     if (allAnnotations.length > 0 && signatureApiRef?.current) {
@@ -124,7 +122,6 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
       // Step 4: Manually render extracted annotations onto the PDF using PDF-lib
       if (allAnnotations.length > 0) {
         try {
-          console.log('Manually rendering annotations onto PDF...');
           const pdfArrayBufferForFlattening = await signedFile.arrayBuffer();
 
           // Try different loading options to handle problematic PDFs
@@ -155,11 +152,8 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
 
           const pages = pdfDoc.getPages();
 
-          console.log('Starting to render annotations. Total pages with annotations:', allAnnotations.length);
-
           for (const pageData of allAnnotations) {
             const { pageIndex, annotations } = pageData;
-            console.log(`Rendering ${annotations.length} annotations on page ${pageIndex}`);
 
             if (pageIndex < pages.length) {
               const page = pages[pageIndex];
@@ -194,17 +188,8 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
                       }
                     }
 
-                    console.log('Processing annotation:', {
-                      pageIndex,
-                      hasImageData: !!imageDataUrl,
-                      imageDataType: typeof imageDataUrl,
-                      startsWithDataImage: imageDataUrl && typeof imageDataUrl === 'string' && imageDataUrl.startsWith('data:image'),
-                      position: { pdfX, pdfY, width, height }
-                    });
-
                     if (imageDataUrl && typeof imageDataUrl === 'string' && imageDataUrl.startsWith('data:image')) {
                       try {
-                        console.log('Rendering image annotation at:', { pdfX, pdfY, width, height });
 
                         // Convert data URL to bytes
                         const base64Data = imageDataUrl.split(',')[1];
@@ -227,8 +212,6 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
                           width: width,
                           height: height,
                         });
-
-                        console.log('✓ Successfully rendered image annotation');
 
                       } catch (imageError) {
                         console.error('Failed to render image annotation:', imageError);

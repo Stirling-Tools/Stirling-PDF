@@ -182,4 +182,4 @@ Sign.getDefaultParameters = () => ({
   signerName: '',
 });
 
-export default Sign as ToolComponent;111
+export default Sign as ToolComponent;

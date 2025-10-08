@@ -295,10 +295,7 @@ const SignSettings = ({
       {/* Apply Signatures Button */}
       {onSave && (
         <Button
-          onClick={() => {
-            console.log('Apply Signatures button clicked');
-            onSave();
-          }}
+          onClick={onSave}
           color="blue"
           variant="filled"
           fullWidth
