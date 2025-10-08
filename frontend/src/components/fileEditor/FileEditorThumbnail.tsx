@@ -180,7 +180,17 @@ const FileEditorThumbnail = ({
       onClick: (e) => {
         e.stopPropagation();
         onViewFile(file.id);
-      }
+      },
+    },
+    {
+      id: 'download',
+      icon: <DownloadOutlinedIcon style={{ fontSize: 20 }} />,
+      label: t('download', 'Download'),
+      onClick: (e) => {
+        e.stopPropagation();
+        onDownloadFile(file.id);
+        alert({ alertType: 'success', title: `Downloading ${file.name}`, expandable: false, durationMs: 2500 });
+      },
     },
     {
       id: 'unzip',
@@ -193,7 +203,7 @@ const FileEditorThumbnail = ({
           alert({ alertType: 'success', title: `Unzipping ${file.name}`, expandable: false, durationMs: 2500 });
         }
       },
-      hidden: !isZipFile || !onUnzipFile
+      hidden: !isZipFile || !onUnzipFile,
     },
     {
       id: 'close',
@@ -203,9 +213,9 @@ const FileEditorThumbnail = ({
         e.stopPropagation();
         handleCloseWithConfirmation();
       },
-      color: 'red'
+      color: 'red',
     }
-  ], [t, file.id, file.name, isZipFile, onViewFile, onUnzipFile, handleCloseWithConfirmation]);
+  ], [t, file.id, file.name, isZipFile, onViewFile, onDownloadFile, onUnzipFile, handleCloseWithConfirmation]);
 
   // ---- Card interactions ----
   const handleCardClick = () => {
@@ -294,22 +304,6 @@ const FileEditorThumbnail = ({
               }}
             >
               {isPinned ? <PushPinIcon fontSize="small" /> : <PushPinOutlinedIcon fontSize="small" />}
-            </ActionIcon>
-          </Tooltip>
-
-          {/* Download icon */}
-          <Tooltip label={t('download', 'Download')}>
-            <ActionIcon
-              aria-label={t('download', 'Download')}
-              variant="subtle"
-              className={styles.headerIconButton}
-              onClick={(e) => {
-                e.stopPropagation();
-                onDownloadFile(file.id);
-                alert({ alertType: 'success', title: `Downloading ${file.name}`, expandable: false, durationMs: 2500 });
-              }}
-            >
-              <DownloadOutlinedIcon fontSize="small" />
             </ActionIcon>
           </Tooltip>
         </div>
