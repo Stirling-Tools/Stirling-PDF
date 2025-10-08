@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { fileStorage } from '../services/fileStorage';
+import { zipFileService } from '../services/zipFileService';
 import { StirlingFileStub } from '../types/fileContext';
 import { downloadFiles } from '../utils/downloadUtils';
 import { FileId } from '../types/file';
@@ -36,6 +37,7 @@ interface FileManagerContextValue {
   onDownloadSingle: (file: StirlingFileStub) => void;
   onToggleExpansion: (fileId: FileId) => void;
   onAddToRecents: (file: StirlingFileStub) => void;
+  onUnzipFile: (file: StirlingFileStub) => Promise<void>;
   onNewFilesSelect: (files: File[]) => void;
   onGoogleDriveSelect: (files: File[]) => void;
 
@@ -558,6 +560,30 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     }
   }, [onNewFilesSelect, refreshRecentFiles, onClose]);
 
+  const handleUnzipFile = useCallback(async (file: StirlingFileStub) => {
+    try {
+      // Load the full file from storage
+      const stirlingFile = await fileStorage.getStirlingFile(file.id);
+      if (!stirlingFile) {
+        return;
+      }
+
+      // Extract and store files using shared service method
+      const result = await zipFileService.extractAndStoreFilesWithHistory(stirlingFile, file);
+
+      if (result.success) {
+        // Refresh file manager to show new files
+        await refreshRecentFiles();
+      }
+
+      if (result.errors.length > 0) {
+        console.error('Errors during unzip:', result.errors);
+      }
+    } catch (error) {
+      console.error('Failed to unzip file:', error);
+    }
+  }, [refreshRecentFiles]);
+
   // Cleanup blob URLs when component unmounts
   useEffect(() => {
     return () => {
@@ -609,6 +635,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     onDownloadSingle: handleDownloadSingle,
     onToggleExpansion: handleToggleExpansion,
     onAddToRecents: handleAddToRecents,
+    onUnzipFile: handleUnzipFile,
     onNewFilesSelect,
     onGoogleDriveSelect: handleGoogleDriveSelect,
 
@@ -642,6 +669,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     handleDownloadSelected,
     handleToggleExpansion,
     handleAddToRecents,
+    handleUnzipFile,
     onNewFilesSelect,
     handleGoogleDriveSelect,
     recentFiles,
