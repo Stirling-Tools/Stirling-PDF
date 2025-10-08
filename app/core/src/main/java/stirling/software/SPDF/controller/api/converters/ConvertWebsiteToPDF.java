@@ -12,6 +12,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -50,6 +51,11 @@ public class ConvertWebsiteToPDF {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final RuntimePathConfig runtimePathConfig;
     private final ApplicationProperties applicationProperties;
+
+    private static final Pattern FILE_SCHEME_PATTERN =
+            Pattern.compile("(?<![a-z0-9_])file\\s*:(?:/{1,3}|%2f|%5c|%3a|&#x2f;|&#47;)");
+
+    private static final Pattern NUMERIC_HTML_ENTITY_PATTERN = Pattern.compile("&#(x?[0-9a-f]+);");
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/url/pdf")
     @Operation(
@@ -194,17 +200,59 @@ public class ConvertWebsiteToPDF {
             return false;
         }
 
-        String lowerCaseContent = htmlContent.toLowerCase(Locale.ROOT);
-        String normalized =
-                lowerCaseContent
-                        .replace("file%3a", "file:")
-                        .replace("file&#x3a;", "file:")
-                        .replace("file&#58;", "file:");
+        String normalized = normalizeForSchemeDetection(htmlContent);
         return FILE_SCHEME_PATTERN.matcher(normalized).find();
     }
 
-    private static final Pattern FILE_SCHEME_PATTERN =
-            Pattern.compile("(?<![a-z0-9_])file\\s*:(?:/{1,3}|%2f|%5c|%3a|&#x2f;|&#47;)");
+    private String normalizeForSchemeDetection(String htmlContent) {
+        String lowerCaseContent = htmlContent.toLowerCase(Locale.ROOT);
+        String decodedHtmlEntities = decodeNumericHtmlEntities(lowerCaseContent);
+        decodedHtmlEntities =
+                decodedHtmlEntities
+                        .replace("&colon;", ":")
+                        .replace("&sol;", "/")
+                        .replace("&frasl;", "/");
+        return percentDecode(decodedHtmlEntities);
+    }
+
+    private String percentDecode(String content) {
+        StringBuilder result = new StringBuilder(content.length());
+        for (int i = 0; i < content.length(); i++) {
+            char current = content.charAt(i);
+            if (current == '%' && i + 2 < content.length()) {
+                String hex = content.substring(i + 1, i + 3);
+                try {
+                    int value = Integer.parseInt(hex, 16);
+                    result.append((char) value);
+                    i += 2;
+                    continue;
+                } catch (NumberFormatException ignored) {
+                    // Fall through to append the literal characters when parsing fails
+                }
+            }
+            result.append(current);
+        }
+        return result.toString();
+    }
+
+    private String decodeNumericHtmlEntities(String content) {
+        Matcher matcher = NUMERIC_HTML_ENTITY_PATTERN.matcher(content);
+        StringBuffer decoded = new StringBuffer();
+        while (matcher.find()) {
+            String entityBody = matcher.group(1);
+            try {
+                int radix = entityBody.startsWith("x") ? 16 : 10;
+                int codePoint =
+                        Integer.parseInt(radix == 16 ? entityBody.substring(1) : entityBody, radix);
+                matcher.appendReplacement(
+                        decoded, Matcher.quoteReplacement(Character.toString((char) codePoint)));
+            } catch (NumberFormatException ex) {
+                matcher.appendReplacement(decoded, matcher.group(0));
+            }
+        }
+        matcher.appendTail(decoded);
+        return decoded.toString();
+    }
 
     private String convertURLToFileName(String url) {
         String safeName = GeneralUtils.convertToFileName(url);
