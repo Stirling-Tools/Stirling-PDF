@@ -110,7 +110,7 @@ export default function OnboardingTour() {
       showBadge={true}
       showCloseButton={true}
       disableInteraction={false}
-      padding={10}
+      padding={0}
       prevButton={({ currentStep, setCurrentStep }) => {
         const isFirst = currentStep === 0;
         return (
