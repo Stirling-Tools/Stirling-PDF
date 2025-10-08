@@ -182,7 +182,9 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
                     </div>
                   </Box>
                 )}
-                <SubcategoryHeader label={t('toolPanel.recommendedTools', 'Recommended Tools')} />
+                {favoriteToolItems.length > 0 && (
+                  <SubcategoryHeader label={t('toolPanel.suggestedTools', 'Suggested Tools')} />
+                )}
                 {quickSection?.subcategories.map(sc =>
                   renderToolButtons(t, sc, selectedToolKey, onSelect, false, false)
                 )}
