@@ -191,7 +191,7 @@ const SignSettings = ({
           }
         }}
         hasSignatureData={!!(canvasSignatureData || imageSignatureData || (parameters.signerName && parameters.signerName.trim() !== ''))}
-        disabled={false}
+        disabled={disabled}
         showPlaceButton={false}
         placeButtonText={t('sign.updateAndPlace', 'Update and Place')}
       />
