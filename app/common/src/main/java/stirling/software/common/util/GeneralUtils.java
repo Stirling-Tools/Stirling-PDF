@@ -33,6 +33,8 @@ import stirling.software.common.configuration.InstallationPathConfig;
 @UtilityClass
 public class GeneralUtils {
 
+    private static final int MAX_DNS_ADDRESSES = 20;
+
     private final Set<String> DEFAULT_VALID_SCRIPTS = Set.of("png_to_webp.py", "split_photos.py");
     private final Set<String> DEFAULT_VALID_PIPELINE =
             Set.of(
@@ -339,6 +341,13 @@ public class GeneralUtils {
     private boolean isDisallowedNetworkLocation(String host) {
         try {
             InetAddress[] addresses = InetAddress.getAllByName(host);
+            if (addresses.length > MAX_DNS_ADDRESSES) {
+                log.debug(
+                        "Blocking URL to host {} due to excessive DNS records (>{})",
+                        host,
+                        MAX_DNS_ADDRESSES);
+                return true;
+            }
             for (InetAddress address : addresses) {
                 if (address == null || isSensitiveAddress(address)) {
                     log.debug("Blocking URL to host {} resolved to {}", host, address);
@@ -381,6 +390,8 @@ public class GeneralUtils {
     }
 
     private boolean isPrivateOrReservedIPv4(byte[] address) {
+        // IPv4 addresses must be exactly 4 bytes. Treat null or unexpected lengths as
+        // sensitive to avoid processing malformed input.
         if (address == null || address.length != 4) {
             return true;
         }
@@ -420,9 +431,6 @@ public class GeneralUtils {
         }
         if (first == 10) {
             return true; // 10.0.0.0/8 Private
-        }
-        if ((first & 0xF0) == 0xE0) {
-            return true; // 224.0.0.0/4 Multicast and reserved (already covered but explicit)
         }
         if (first >= 240) {
             return true; // 240.0.0.0/4 Reserved for future use
