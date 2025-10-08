@@ -1,7 +1,7 @@
 import { PDFDocument, rgb } from 'pdf-lib';
 import { generateThumbnailWithMetadata } from './thumbnailUtils';
 import { createProcessedFile, createChildStub } from '../contexts/file/fileActions';
-import { createNewStirlingFileStub, createStirlingFile, StirlingFile, FileId, StirlingFileStub } from '../types/fileContext';
+import { createStirlingFile, StirlingFile, FileId, StirlingFileStub } from '../types/fileContext';
 import type { SignatureAPI } from '../components/viewer/SignatureAPIBridge';
 
 interface MinimalFileContextSelectors {

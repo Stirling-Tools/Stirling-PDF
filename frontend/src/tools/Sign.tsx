@@ -15,7 +15,7 @@ import { flattenSignatures } from "../utils/signatureFlattening";
 const Sign = (props: BaseToolProps) => {
   const { t } = useTranslation();
   const { setWorkbench } = useNavigation();
-  const { setSignatureConfig, activateDrawMode, activateSignaturePlacementMode, deactivateDrawMode, updateDrawSettings, undo, redo, signatureApiRef, getImageData, setSignaturesApplied, historyApiRef } = useSignature();
+  const { setSignatureConfig, activateDrawMode, activateSignaturePlacementMode, deactivateDrawMode, updateDrawSettings, undo, redo, signatureApiRef, getImageData, setSignaturesApplied } = useSignature();
   const { consumeFiles, selectors } = useFileContext();
   const { exportActions, getScrollState } = useViewer();
   const { setHasUnsavedChanges, unregisterUnsavedChangesChecker } = useNavigation();
