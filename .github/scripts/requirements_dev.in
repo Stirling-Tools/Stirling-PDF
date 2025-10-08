@@ -1,4 +1,4 @@
-pip
+pip @ git+https://github.com/pypa/pip.git@2e05cae3da2cfafa6dce58167a25b7dba4bc2a33
 setuptools
 WeasyPrint
 pdf2image
