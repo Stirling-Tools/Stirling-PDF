@@ -13,8 +13,7 @@ export type NavKey =
   | 'requests'
   | 'developer'
   | 'api-keys'
-  | 'hotkeys'
-  | 'help';
+  | 'hotkeys';
 
 
   // some of these are not used yet, but appear in figma designs

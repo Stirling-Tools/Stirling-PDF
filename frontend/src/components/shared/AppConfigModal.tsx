@@ -48,9 +48,8 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
     createConfigNavSections(
       Overview,
       handleLogout,
-      onClose,
     ),
-    [onClose]
+    []
   );
 
   const activeLabel = useMemo(() => {
