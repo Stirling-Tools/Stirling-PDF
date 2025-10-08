@@ -275,8 +275,7 @@
   z-index: 2;
 }
 
-.tool-panel__fullscreen-item:hover .tool-panel__fullscreen-star,
-.tool-panel__fullscreen-star:focus {
+.tool-panel__fullscreen-item:hover .tool-panel__fullscreen-star {
   opacity: 1;
 }
 
@@ -293,8 +292,7 @@
   z-index: 2;
 }
 
-.tool-panel__fullscreen-list-item:hover .tool-panel__fullscreen-star-compact,
-.tool-panel__fullscreen-star-compact:focus {
+.tool-panel__fullscreen-list-item:hover .tool-panel__fullscreen-star-compact {
   opacity: 1;
 }
 

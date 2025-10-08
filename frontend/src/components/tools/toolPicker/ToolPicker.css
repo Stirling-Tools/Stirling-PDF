@@ -71,6 +71,24 @@
   line-height: 1;
 }
 
+/* Container to enable hover-only favourite star overlay */
+.tool-button-container {
+  position: relative;
+}
+
+.tool-button-star {
+  position: absolute;
+  top: 0.35rem;
+  right: 0.35rem;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: 1; /* lower than sticky section headers */
+}
+
+.tool-button-container:hover .tool-button-star {
+  opacity: 1;
+}
+
 .search-input-container {
   margin-top: 0.5rem;
   margin-bottom: 0.5rem;

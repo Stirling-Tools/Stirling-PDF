@@ -7,6 +7,10 @@ import { useToolSections } from "../../hooks/useToolSections";
 import NoToolsFound from "./shared/NoToolsFound";
 import { renderToolButtons } from "./shared/renderToolButtons";
 import Badge from "../shared/Badge";
+import SubcategoryHeader from "./shared/SubcategoryHeader";
+import ToolButton from "./toolPicker/ToolButton";
+import { useToolWorkflow } from "../../contexts/ToolWorkflowContext";
+import { ToolId } from "../../types/toolId";
 
 interface ToolPickerProps {
   selectedToolKey: string | null;
@@ -62,6 +66,18 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
   }, []);
 
   const { sections: visibleSections } = useToolSections(filteredTools);
+  const { favoriteTools, toolRegistry } = useToolWorkflow();
+
+  const favoriteToolItems = useMemo(() => {
+    return favoriteTools
+      .map((toolId) => {
+        const tool = (toolRegistry as any)[toolId as ToolId] as ToolRegistryEntry | undefined;
+        return tool ? { id: toolId as string, tool } : null;
+      })
+      .filter(Boolean)
+      // Only include ready tools (component or link) and navigational exceptions
+      .filter((item: any) => item && (item.tool.component || item.tool.link || item.id === 'read' || item.id === 'multiTool')) as Array<{ id: string; tool: ToolRegistryEntry }>;
+  }, [favoriteTools, toolRegistry]);
 
   const quickSection = useMemo(
     () => visibleSections.find(s => s.key === 'quick'),
@@ -142,7 +158,7 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
               }}
               onClick={() => scrollTo(quickAccessRef)}
             >
-              <span style={{ fontSize: "1rem" }}>{t("toolPicker.quickAccess", "QUICK ACCESS")}</span>
+              <span style={{ fontSize: "1rem" }}>{t("toolPicker.recommended", "RECOMMENDED")}</span>
               <Badge>
                 {quickSection?.subcategories.reduce((acc, sc) => acc + sc.tools.length, 0)}
               </Badge>
@@ -150,9 +166,26 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
 
             <Box ref={quickAccessRef} w="100%" my="sm">
               <Stack p="sm" gap="xs">
-                        {quickSection?.subcategories.map(sc =>
-                          renderToolButtons(t, sc, selectedToolKey, onSelect, false, false)
-                        )}
+                {favoriteToolItems.length > 0 && (
+                  <Box w="100%">
+                    <SubcategoryHeader label={t('toolPanel.fullscreen.favorites', 'Favourites')} mt={0} />
+                    <div>
+                      {favoriteToolItems.map(({ id, tool }) => (
+                        <ToolButton
+                          key={`fav-${id}`}
+                          id={id}
+                          tool={tool}
+                          isSelected={selectedToolKey === id}
+                          onSelect={onSelect}
+                        />
+                      ))}
+                    </div>
+                  </Box>
+                )}
+                <SubcategoryHeader label={t('toolPanel.recommendedTools', 'Recommended Tools')} />
+                {quickSection?.subcategories.map(sc =>
+                  renderToolButtons(t, sc, selectedToolKey, onSelect, false, false)
+                )}
               </Stack>
             </Box>
           </>

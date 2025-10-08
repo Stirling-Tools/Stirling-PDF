@@ -1,5 +1,5 @@
 import React from "react";
-import { Button } from "@mantine/core";
+import { ActionIcon, Button } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Tooltip } from "../../shared/Tooltip";
 import { ToolIcon } from "../../shared/ToolIcon";
@@ -9,6 +9,10 @@ import { handleUnlessSpecialClick } from "../../../utils/clickHandlers";
 import FitText from "../../shared/FitText";
 import { useHotkeys } from "../../../contexts/HotkeyContext";
 import HotkeyDisplay from "../../hotkeys/HotkeyDisplay";
+import StarRoundedIcon from '@mui/icons-material/StarRounded';
+import StarBorderRoundedIcon from '@mui/icons-material/StarBorderRounded';
+import { useToolWorkflow } from "../../../contexts/ToolWorkflowContext";
+import { ToolId } from "../../../types/toolId";
 
 interface ToolButtonProps {
   id: string;
@@ -27,6 +31,8 @@ const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect,
   const { hotkeys } = useHotkeys();
   const binding = hotkeys[id];
   const { getToolNavigation } = useToolNavigation();
+  const { isFavorite, toggleFavorite } = useToolWorkflow();
+  const fav = isFavorite(id as ToolId);
 
   const handleClick = (id: string) => {
     if (isUnavailable) return;
@@ -163,10 +169,33 @@ const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect,
     </Button>
   );
 
+  const star = !isUnavailable ? (
+    <ActionIcon
+      variant="subtle"
+      radius="xl"
+      size="xs"
+      onClick={(e: React.MouseEvent) => {
+        e.stopPropagation();
+        toggleFavorite(id as ToolId);
+      }}
+      className="tool-button-star"
+      aria-label={fav ? t('toolPanel.fullscreen.unfavorite', 'Remove from favourites') : t('toolPanel.fullscreen.favorite', 'Add to favourites')}
+    >
+      {fav ? (
+        <StarRoundedIcon fontSize="inherit" style={{ color: '#FFC107', fontSize: '1rem' }} />
+      ) : (
+        <StarBorderRoundedIcon fontSize="inherit" style={{ fontSize: '1rem' }} />
+      )}
+    </ActionIcon>
+  ) : null;
+
   return (
-    <Tooltip content={tooltipContent} position="right" arrow={true} delay={500}>
-      {buttonElement}
-    </Tooltip>
+    <div className="tool-button-container">
+      {star}
+      <Tooltip content={tooltipContent} position="right" arrow={true} delay={500}>
+        {buttonElement}
+      </Tooltip>
+    </div>
   );
 };
 
