@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Paper, Stack, Switch, Text, Tooltip, NumberInput } from '@mantine/core';
+import { Paper, Stack, Switch, Text, Tooltip, NumberInput, SegmentedControl } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { usePreferences } from '../../../../contexts/PreferencesContext';
 
@@ -26,6 +26,24 @@ const GeneralSection: React.FC = () => {
 
       <Paper withBorder p="md" radius="md">
         <Stack gap="md">
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div>
+              <Text fw={500} size="sm">
+                {t('settings.general.defaultToolPickerMode', 'Default tool picker mode')}
+              </Text>
+              <Text size="xs" c="dimmed" mt={4}>
+                {t('settings.general.defaultToolPickerModeDescription', 'Choose whether the tool picker opens in fullscreen or sidebar by default')}
+              </Text>
+            </div>
+            <SegmentedControl
+              value={preferences.defaultToolPanelMode}
+              onChange={(val) => updatePreference('defaultToolPanelMode', val as any)}
+              data={[
+                { label: t('settings.general.mode.sidebar', 'Sidebar'), value: 'sidebar' },
+                { label: t('settings.general.mode.fullscreen', 'Fullscreen'), value: 'fullscreen' },
+              ]}
+            />
+          </div>
           <Tooltip
             label={t('settings.general.autoUnzipTooltip', 'Automatically extract ZIP files returned from API operations. Disable to keep ZIP files intact. This does not affect automation workflows.')}
             multiline

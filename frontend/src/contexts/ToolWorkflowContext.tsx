@@ -3,7 +3,7 @@
  * Eliminates prop drilling with a single, simple context
  */
 
-import React, { createContext, useContext, useReducer, useCallback, useMemo } from 'react';
+import React, { createContext, useContext, useReducer, useCallback, useMemo, useEffect } from 'react';
 import { useToolManagement } from '../hooks/useToolManagement';
 import { PageEditorFunctions } from '../types/pageEditor';
 import { ToolRegistryEntry, ToolRegistry } from '../data/toolsTaxonomy';
@@ -22,6 +22,7 @@ import {
   toolWorkflowReducer,
   ToolPanelMode,
 } from './toolWorkflow/state';
+import { usePreferences } from '../contexts/PreferencesContext';
 
 // State interface
 // Types and reducer/state moved to './toolWorkflow/state'
@@ -79,6 +80,7 @@ interface ToolWorkflowProviderProps {
 
 export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
   const [state, dispatch] = useReducer(toolWorkflowReducer, undefined, createInitialState);
+  const { preferences } = usePreferences();
 
   // Store reset functions for tools
   const [toolResetFunctions, setToolResetFunctions] = React.useState<Record<string, () => void>>({});
@@ -153,6 +155,15 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
 
     window.localStorage.setItem(TOOL_PANEL_MODE_STORAGE_KEY, state.toolPanelMode);
   }, [state.toolPanelMode]);
+
+  // Initialize tool panel mode from user preferences if no explicit localStorage preference exists yet
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const stored = window.localStorage.getItem(TOOL_PANEL_MODE_STORAGE_KEY);
+    if (stored === null && preferences?.defaultToolPanelMode && state.toolPanelMode !== preferences.defaultToolPanelMode) {
+      dispatch({ type: 'SET_TOOL_PANEL_MODE', payload: preferences.defaultToolPanelMode });
+    }
+  }, [preferences?.defaultToolPanelMode]);
 
   React.useEffect(() => {
     if (typeof window === 'undefined') {
