@@ -8,14 +8,6 @@ import { loadScript } from '../utils/scriptLoader';
 const SCOPES = 'https://www.googleapis.com/auth/drive.readonly';
 const SESSION_STORAGE_ID = 'googleDrivePickerAccessToken';
 
-// Google API types (minimal definitions)
-declare global {
-  interface Window {
-    gapi?: any;
-    google?: any;
-  }
-}
-
 interface GoogleDriveConfig {
   clientId: string;
   apiKey: string;
@@ -119,7 +111,7 @@ class GoogleDrivePickerService {
     this.tokenClient = window.google.accounts.oauth2.initTokenClient({
       client_id: this.config.clientId,
       scope: SCOPES,
-      callback: '', // Will be set during picker creation
+      callback: () => {}, // Will be overridden during picker creation
     });
 
     this.gisLoaded = true;
@@ -182,21 +174,24 @@ class GoogleDrivePickerService {
 
       const mimeTypes = fileInputToGooglePickerMimeTypes(options.mimeTypes || undefined);
 
+      const view1 = new window.google.picker.DocsView().setIncludeFolders(true);
+      if (mimeTypes !== null) {
+        view1.setMimeTypes(mimeTypes);
+      }
+
+      const view2 = new window.google.picker.DocsView()
+        .setIncludeFolders(true)
+        .setEnableDrives(true);
+      if (mimeTypes !== null) {
+        view2.setMimeTypes(mimeTypes);
+      }
+
       const builder = new window.google.picker.PickerBuilder()
         .setDeveloperKey(this.config.apiKey)
         .setAppId(this.config.appId)
         .setOAuthToken(this.accessToken)
-        .addView(
-          new window.google.picker.DocsView()
-            .setIncludeFolders(true)
-            .setMimeTypes(mimeTypes)
-        )
-        .addView(
-          new window.google.picker.DocsView()
-            .setIncludeFolders(true)
-            .setEnableDrives(true)
-            .setMimeTypes(mimeTypes)
-        )
+        .addView(view1)
+        .addView(view2)
         .setCallback((data: any) => this.pickerCallback(data, resolve, reject));
 
       if (options.multiple) {
@@ -254,7 +249,7 @@ class GoogleDrivePickerService {
   signOut(): void {
     if (this.accessToken) {
       sessionStorage.removeItem(SESSION_STORAGE_ID);
-      window.google?.accounts.oauth2.revoke(this.accessToken);
+      window.google?.accounts.oauth2.revoke(this.accessToken, () => {});
       this.accessToken = null;
     }
   }
