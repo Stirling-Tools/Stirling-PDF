@@ -193,7 +193,7 @@ const SignSettings = ({
         hasSignatureData={!!(canvasSignatureData || imageSignatureData || (parameters.signerName && parameters.signerName.trim() !== ''))}
         disabled={false}
         showPlaceButton={false}
-        placeButtonText="Update and Place"
+        placeButtonText={t('sign.updateAndPlace', 'Update and Place')}
       />
 
       {/* Signature Creation based on type */}
@@ -223,7 +223,7 @@ const SignSettings = ({
               variant="filled"
               disabled={disabled || !canvasSignatureData}
             >
-              Update and Place
+              {t('sign.updateAndPlace', 'Update and Place')}
             </Button>
           }
         />
@@ -268,8 +268,8 @@ const SignSettings = ({
             }
           }}
           data={[
-            { label: 'Move Signature', value: 'move' },
-            { label: 'Place Signature', value: 'place' }
+            { label: t('sign.mode.move', 'Move Signature'), value: 'move' },
+            { label: t('sign.mode.place', 'Place Signature'), value: 'place' }
           ]}
           fullWidth
         />
@@ -278,9 +278,9 @@ const SignSettings = ({
       {/* Instructions for placing signature */}
       <Alert color="blue" title={t('sign.instructions.title', 'How to add signature')}>
         <Text size="sm">
-          {parameters.signatureType === 'canvas' && 'After drawing your signature in the canvas, close the modal then click anywhere on the PDF to place it.'}
-          {parameters.signatureType === 'image' && 'After uploading your signature image above, click anywhere on the PDF to place it.'}
-          {parameters.signatureType === 'text' && 'After entering your name above, click anywhere on the PDF to place your signature.'}
+          {parameters.signatureType === 'canvas' && t('sign.instructions.canvas', 'After drawing your signature in the canvas, close the modal then click anywhere on the PDF to place it.')}
+          {parameters.signatureType === 'image' && t('sign.instructions.image', 'After uploading your signature image above, click anywhere on the PDF to place it.')}
+          {parameters.signatureType === 'text' && t('sign.instructions.text', 'After entering your name above, click anywhere on the PDF to place your signature.')}
         </Text>
       </Alert>
 
