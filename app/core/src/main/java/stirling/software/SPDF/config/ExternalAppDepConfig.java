@@ -237,7 +237,7 @@ public class ExternalAppDepConfig {
                     pool.invokeAll(tasks, timeout.toMillis(), TimeUnit.MILLISECONDS);
             for (Future<Void> f : futures) {
                 try {
-                    f.get(10, TimeUnit.MILLISECONDS);
+                    f.get();
                 } catch (Exception ignored) {
                 }
             }
