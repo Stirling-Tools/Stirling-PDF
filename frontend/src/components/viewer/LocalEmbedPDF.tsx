@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { createPluginRegistration } from '@embedpdf/core';
 import { EmbedPDF } from '@embedpdf/core/react';
 import { usePdfiumEngine } from '@embedpdf/engines/react';
@@ -38,6 +38,7 @@ import { RotateAPIBridge } from './RotateAPIBridge';
 import { SignatureAPIBridge, SignatureAPI } from './SignatureAPIBridge';
 import { HistoryAPIBridge, HistoryAPI } from './HistoryAPIBridge';
 import { ExportAPIBridge } from './ExportAPIBridge';
+import { usePdfLoaderSource } from '../../hooks/usePdfLoaderSource';
 
 interface LocalEmbedPDFProps {
   file?: File | Blob;
@@ -49,34 +50,46 @@ interface LocalEmbedPDFProps {
 }
 
 export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatureAdded, signatureApiRef, historyApiRef }: LocalEmbedPDFProps) {
-  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
-  const [, setAnnotations] = useState<Array<{id: string, pageIndex: number, rect: any}>>([]);
+  const [, setAnnotations] = useState<Array<{ id: string, pageIndex: number, rect: any }>>([]);
 
-  // Convert File to URL if needed
-  useEffect(() => {
-    if (file) {
-      const objectUrl = URL.createObjectURL(file);
-      setPdfUrl(objectUrl);
-      return () => URL.revokeObjectURL(objectUrl);
-    } else if (url) {
-      setPdfUrl(url);
-    }
-  }, [file, url]);
+  const {
+    source: pdfSource,
+    isLoading: isPdfSourceLoading,
+    error: pdfSourceError,
+  } = usePdfLoaderSource({
+    file,
+    url,
+    fallbackId: 'stirling-pdf-viewer',
+  });
 
   // Create plugins configuration
-  const plugins = useMemo(() => {
-    if (!pdfUrl) return [];
+  const basePlugins = useMemo(() => {
+    if (!pdfSource) return [];
+    const loaderConfig =
+      pdfSource.type === 'url'
+        ? {
+          loadingOptions: {
+            type: 'url' as const,
+            pdfFile: {
+              id: pdfSource.id,
+              url: pdfSource.url,
+              ...(pdfSource.name ? { name: pdfSource.name } : {}),
+            },
+          },
+        }
+        : {
+          loadingOptions: {
+            type: 'buffer' as const,
+            pdfFile: {
+              id: pdfSource.id,
+              content: pdfSource.content,
+              ...(pdfSource.name ? { name: pdfSource.name } : {}),
+            },
+          },
+        };
 
     return [
-      createPluginRegistration(LoaderPluginPackage, {
-        loadingOptions: {
-          type: 'url',
-          pdfFile: {
-            id: 'stirling-pdf-viewer',
-            url: pdfUrl,
-          },
-        },
-      }),
+      createPluginRegistration(LoaderPluginPackage, loaderConfig),
       createPluginRegistration(ViewportPluginPackage, {
         viewportGap: 10,
       }),
@@ -91,17 +104,6 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
 
       // Register selection plugin (depends on InteractionManager)
       createPluginRegistration(SelectionPluginPackage),
-
-      // Register history plugin for undo/redo (recommended for annotations)
-      ...(enableAnnotations ? [createPluginRegistration(HistoryPluginPackage)] : []),
-
-      // Register annotation plugin (depends on InteractionManager, Selection, History)
-      ...(enableAnnotations ? [createPluginRegistration(AnnotationPluginPackage, {
-        annotationAuthor: 'Digital Signature',
-        autoCommit: true,
-        deactivateToolAfterCreate: false,
-        selectAfterCreate: true,
-      })] : []),
 
       // Register pan plugin (depends on Viewport, InteractionManager)
       createPluginRegistration(PanPluginPackage, {
@@ -140,10 +142,41 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
 
       // Register export plugin for downloading PDFs
       createPluginRegistration(ExportPluginPackage, {
-        defaultFileName: 'document.pdf',
+        defaultFileName: pdfSource.name ?? 'document.pdf',
       }),
     ];
-  }, [pdfUrl]);
+  }, [pdfSource]);
+
+  const annotationPlugins = useMemo(() => {
+    if (!enableAnnotations) {
+      return [];
+    }
+
+    return [
+      // Register history plugin for undo/redo (recommended for annotations)
+      createPluginRegistration(HistoryPluginPackage),
+
+      // Register annotation plugin (depends on InteractionManager, Selection, History)
+      createPluginRegistration(AnnotationPluginPackage, {
+        annotationAuthor: 'Digital Signature',
+        autoCommit: true,
+        deactivateToolAfterCreate: false,
+        selectAfterCreate: true,
+      }),
+    ];
+  }, [enableAnnotations]);
+
+  const plugins = useMemo(() => {
+    if (!basePlugins.length) {
+      return basePlugins;
+    }
+
+    if (!annotationPlugins.length) {
+      return basePlugins;
+    }
+
+    return [...basePlugins, ...annotationPlugins];
+  }, [annotationPlugins, basePlugins]);
 
   // Initialize the engine with the React hook
   const { engine, isLoading, error } = usePdfiumEngine();
@@ -163,7 +196,20 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
     );
   }
 
-  if (isLoading || !engine || !pdfUrl) {
+  if (pdfSourceError) {
+    return (
+      <Center h="100%" w="100%">
+        <Stack align="center" gap="md">
+          <div style={{ fontSize: '24px' }}>❌</div>
+          <Text c="red" size="sm" style={{ textAlign: 'center' }}>
+            Error preparing PDF file: {pdfSourceError}
+          </Text>
+        </Stack>
+      </Center>
+    );
+  }
+
+  if (isLoading || !engine || !pdfSource || isPdfSourceLoading) {
     return <ToolLoadingFallback toolName="PDF Engine" />;
   }
 
@@ -193,7 +239,7 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
         flex: 1,
         minHeight: 0,
         minWidth: 0,
-    }}>
+      }}>
       <EmbedPDF
         engine={engine}
         plugins={plugins}
@@ -287,50 +333,50 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
               contain: 'strict',
             }}
           >
-          <Scroller
-            renderPage={({ width, height, pageIndex, scale, rotation }: { width: number; height: number; pageIndex: number; scale: number; rotation?: number }) => (
-              <Rotate pageSize={{ width, height }}>
-                <PagePointerProvider {...{ pageWidth: width, pageHeight: height, pageIndex, scale, rotation: rotation || 0 }}>
-                  <div
-                    style={{
-                      width,
-                      height,
-                      position: 'relative',
-                      userSelect: 'none',
-                      WebkitUserSelect: 'none',
-                      MozUserSelect: 'none',
-                      msUserSelect: 'none',
-                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)'
-                    }}
-                    draggable={false}
-                    onDragStart={(e) => e.preventDefault()}
-                    onDrop={(e) => e.preventDefault()}
-                    onDragOver={(e) => e.preventDefault()}
-                  >
-                    {/* High-resolution tile layer */}
-                    <TilingLayer pageIndex={pageIndex} scale={scale} />
+            <Scroller
+              renderPage={({ width, height, pageIndex, scale, rotation }: { width: number; height: number; pageIndex: number; scale: number; rotation?: number }) => (
+                <Rotate pageSize={{ width, height }}>
+                  <PagePointerProvider {...{ pageWidth: width, pageHeight: height, pageIndex, scale, rotation: rotation || 0 }}>
+                    <div
+                      style={{
+                        width,
+                        height,
+                        position: 'relative',
+                        userSelect: 'none',
+                        WebkitUserSelect: 'none',
+                        MozUserSelect: 'none',
+                        msUserSelect: 'none',
+                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)'
+                      }}
+                      draggable={false}
+                      onDragStart={(e) => e.preventDefault()}
+                      onDrop={(e) => e.preventDefault()}
+                      onDragOver={(e) => e.preventDefault()}
+                    >
+                      {/* High-resolution tile layer */}
+                      <TilingLayer pageIndex={pageIndex} scale={scale} />
 
-                    {/* Search highlight layer */}
-                    <CustomSearchLayer pageIndex={pageIndex} scale={scale} />
+                      {/* Search highlight layer */}
+                      <CustomSearchLayer pageIndex={pageIndex} scale={scale} />
 
-                    {/* Selection layer for text interaction */}
-                    <SelectionLayer  pageIndex={pageIndex} scale={scale} />
-                    {/* Annotation layer for signatures (only when enabled) */}
-                    {enableAnnotations && (
-                      <AnnotationLayer
-                        pageIndex={pageIndex}
-                        scale={scale}
-                        pageWidth={width}
-                        pageHeight={height}
-                        rotation={rotation || 0}
-                        selectionOutlineColor="#007ACC"
-                      />
-                    )}
-                  </div>
-                </PagePointerProvider>
-              </Rotate>
-            )}
-          />
+                      {/* Selection layer for text interaction */}
+                      <SelectionLayer pageIndex={pageIndex} scale={scale} />
+                      {/* Annotation layer for signatures (only when enabled) */}
+                      {enableAnnotations && (
+                        <AnnotationLayer
+                          pageIndex={pageIndex}
+                          scale={scale}
+                          pageWidth={width}
+                          pageHeight={height}
+                          rotation={rotation || 0}
+                          selectionOutlineColor="#007ACC"
+                        />
+                      )}
+                    </div>
+                  </PagePointerProvider>
+                </Rotate>
+              )}
+            />
           </Viewport>
         </GlobalPointerProvider>
       </EmbedPDF>
