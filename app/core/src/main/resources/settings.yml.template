@@ -76,11 +76,6 @@ premium:
       author: username
       creator: Stirling-PDF
       producer: Stirling-PDF
-    googleDrive:
-      enabled: false
-      clientId: ''
-      apiKey: ''
-      appId: ''
   enterpriseFeatures:
     audit:
       enabled: true # Enable audit logging

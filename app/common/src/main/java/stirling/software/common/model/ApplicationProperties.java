@@ -530,7 +530,6 @@ public class ApplicationProperties {
             private boolean ssoAutoLogin;
             private boolean database;
             private CustomMetadata customMetadata = new CustomMetadata();
-            private GoogleDrive googleDrive = new GoogleDrive();
 
             @Data
             public static class CustomMetadata {
@@ -547,26 +546,6 @@ public class ApplicationProperties {
                     return producer == null || producer.trim().isEmpty()
                             ? "Stirling-PDF"
                             : producer;
-                }
-            }
-
-            @Data
-            public static class GoogleDrive {
-                private boolean enabled;
-                private String clientId;
-                private String apiKey;
-                private String appId;
-
-                public String getClientId() {
-                    return clientId == null || clientId.trim().isEmpty() ? "" : clientId;
-                }
-
-                public String getApiKey() {
-                    return apiKey == null || apiKey.trim().isEmpty() ? "" : apiKey;
-                }
-
-                public String getAppId() {
-                    return appId == null || appId.trim().isEmpty() ? "" : appId;
                 }
             }
         }

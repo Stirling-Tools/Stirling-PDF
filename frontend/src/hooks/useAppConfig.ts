@@ -21,7 +21,6 @@ export interface AppConfig {
   runningProOrHigher?: boolean;
   runningEE?: boolean;
   license?: string;
-  GoogleDriveEnabled?: boolean;
   SSOAutoLogin?: boolean;
   serverCertificateEnabled?: boolean;
   error?: string;

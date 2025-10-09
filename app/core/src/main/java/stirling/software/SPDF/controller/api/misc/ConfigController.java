@@ -98,11 +98,6 @@ public class ConfigController {
                 if (applicationContext.containsBean("license")) {
                     configData.put("license", applicationContext.getBean("license", String.class));
                 }
-                if (applicationContext.containsBean("GoogleDriveEnabled")) {
-                    configData.put(
-                            "GoogleDriveEnabled",
-                            applicationContext.getBean("GoogleDriveEnabled", Boolean.class));
-                }
                 if (applicationContext.containsBean("SSOAutoLogin")) {
                     configData.put(
                             "SSOAutoLogin",
