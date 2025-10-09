@@ -27,10 +27,10 @@ import { usePreferences } from './PreferencesContext';
 // Context value interface
 interface ToolWorkflowContextValue extends ToolWorkflowState {
   // Tool management (from hook)
-  selectedToolKey: string | null;
+  selectedToolKey: ToolId | null;
   selectedTool: ToolRegistryEntry | null;
-  toolRegistry: Record<ToolId, ToolRegistryEntry>;
-  getSelectedTool: (toolId: string | null) => ToolRegistryEntry | null;
+  toolRegistry: Partial<ToolRegistry>;
+  getSelectedTool: (toolId: ToolId | null) => ToolRegistryEntry | null;
 
   // UI Actions
   setSidebarsVisible: (visible: boolean) => void;

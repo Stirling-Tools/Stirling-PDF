@@ -2,14 +2,17 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useS
 import { HotkeyBinding, bindingEquals, bindingMatchesEvent, deserializeBindings, getDisplayParts, isMacLike, normalizeBinding, serializeBindings } from '../utils/hotkeys';
 import { useToolWorkflow } from './ToolWorkflowContext';
 import { ToolId } from '../types/toolId';
+import { ToolCategoryId, ToolRegistryEntry } from '../data/toolsTaxonomy';
+
+type Bindings = Partial<Record<ToolId, HotkeyBinding>>;
 
 interface HotkeyContextValue {
-  hotkeys: Record<string, HotkeyBinding>;
-  defaults: Record<string, HotkeyBinding>;
+  hotkeys: Bindings;
+  defaults: Bindings;
   isMac: boolean;
-  updateHotkey: (toolId: string, binding: HotkeyBinding) => void;
-  resetHotkey: (toolId: string) => void;
-  isBindingAvailable: (binding: HotkeyBinding, excludeToolId?: string) => boolean;
+  updateHotkey: (toolId: ToolId, binding: HotkeyBinding) => void;
+  resetHotkey: (toolId: ToolId) => void;
+  isBindingAvailable: (binding: HotkeyBinding, excludeToolId?: ToolId) => boolean;
   pauseHotkeys: () => void;
   resumeHotkeys: () => void;
   areHotkeysPaused: boolean;
@@ -20,46 +23,29 @@ const HotkeyContext = createContext<HotkeyContextValue | undefined>(undefined);
 
 const STORAGE_KEY = 'stirlingpdf.hotkeys';
 
-const KEY_ORDER: string[] = [
-  'Digit1', 'Digit2', 'Digit3', 'Digit4', 'Digit5', 'Digit6', 'Digit7', 'Digit8', 'Digit9', 'Digit0',
-  'KeyQ', 'KeyW', 'KeyE', 'KeyR', 'KeyT', 'KeyY', 'KeyU', 'KeyI', 'KeyO', 'KeyP',
-  'KeyA', 'KeyS', 'KeyD', 'KeyF', 'KeyG', 'KeyH', 'KeyJ', 'KeyK', 'KeyL',
-  'KeyZ', 'KeyX', 'KeyC', 'KeyV', 'KeyB', 'KeyN', 'KeyM',
-  'F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9', 'F10', 'F11', 'F12',
-];
+const generateDefaultHotkeys = (toolEntries: [ToolId, ToolRegistryEntry][], macLike: boolean): Bindings => {
+  const defaults: Bindings = {};
 
-const generateDefaultHotkeys = (toolIds: string[], macLike: boolean): Record<string, HotkeyBinding> => {
-  const defaults: Record<string, HotkeyBinding> = {};
-  let index = 0;
-  let useShift = false;
+  // Get Quick Access tools (RECOMMENDED_TOOLS category) from registry
+  const quickAccessTools = toolEntries
+    .filter(([_, tool]) => tool.categoryId === ToolCategoryId.RECOMMENDED_TOOLS)
+    .map(([toolId, _]) => toolId);
 
-  const nextBinding = (): HotkeyBinding => {
-    if (index >= KEY_ORDER.length) {
-      index = 0;
-      if (!useShift) {
-        useShift = true;
-      } else {
-        // If we somehow run out of combinations, wrap back around (unlikely given tool count)
-        useShift = false;
-      }
+  // Assign Cmd+Option+Number (Mac) or Ctrl+Alt+Number (Windows) to Quick Access tools
+  quickAccessTools.forEach((toolId, index) => {
+    if (index < 9) { // Limit to Digit1-9
+      const digitNumber = index + 1;
+      defaults[toolId] = {
+        code: `Digit${digitNumber}`,
+        alt: true,
+        shift: false,
+        meta: macLike,
+        ctrl: !macLike,
+      };
     }
-
-    const code = KEY_ORDER[index];
-    index += 1;
-
-    return {
-      code,
-      alt: true,
-      shift: useShift,
-      meta: macLike,
-      ctrl: !macLike,
-    };
-  };
-
-  toolIds.forEach(toolId => {
-    defaults[toolId] = nextBinding();
   });
 
+  // All other tools have no default (will be undefined in the record)
   return defaults;
 };
 
@@ -74,7 +60,7 @@ const shouldIgnoreTarget = (target: EventTarget | null): boolean => {
 export const HotkeyProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { toolRegistry, handleToolSelect } = useToolWorkflow();
   const isMac = useMemo(() => isMacLike(), []);
-  const [customBindings, setCustomBindings] = useState<Record<string, HotkeyBinding>>(() => {
+  const [customBindings, setCustomBindings] = useState<Bindings>(() => {
     if (typeof window === 'undefined') {
       return {};
     }
@@ -82,17 +68,17 @@ export const HotkeyProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   });
   const [areHotkeysPaused, setHotkeysPaused] = useState(false);
 
-  const toolIds = useMemo(() => Object.keys(toolRegistry), [toolRegistry]);
+  const toolEntries = useMemo(() => Object.entries(toolRegistry), [toolRegistry]) as [ToolId, ToolRegistryEntry][];
 
-  const defaults = useMemo(() => generateDefaultHotkeys(toolIds, isMac), [toolIds, isMac]);
+  const defaults = useMemo(() => generateDefaultHotkeys(toolEntries, isMac), [toolRegistry, isMac]);
 
   // Remove bindings for tools that are no longer present
   useEffect(() => {
     setCustomBindings(prev => {
-      const next: Record<string, HotkeyBinding> = {};
+      const next: Bindings = {};
       let changed = false;
-      Object.entries(prev).forEach(([toolId, binding]) => {
-        if (toolRegistry[toolId as ToolId]) {
+      (Object.entries(prev) as [ToolId, HotkeyBinding][]).forEach(([toolId, binding]) => {
+        if (toolRegistry[toolId]) {
           next[toolId] = binding;
         } else {
           changed = true;
@@ -103,13 +89,21 @@ export const HotkeyProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, [toolRegistry]);
 
   const resolved = useMemo(() => {
-    const merged: Record<string, HotkeyBinding> = {};
-    toolIds.forEach(toolId => {
+    const merged: Bindings = {};
+    toolEntries.forEach(([toolId, _]) => {
       const custom = customBindings[toolId];
-      merged[toolId] = custom ? normalizeBinding(custom) : defaults[toolId];
+      const defaultBinding = defaults[toolId];
+
+      // Only add to resolved if there's a custom binding or a default binding
+      if (custom) {
+        merged[toolId] = normalizeBinding(custom);
+      } else if (defaultBinding) {
+        merged[toolId] = defaultBinding;
+      }
+      // If neither exists, don't add to merged (tool has no hotkey)
     });
     return merged;
-  }, [customBindings, defaults, toolIds]);
+  }, [customBindings, defaults, toolEntries]);
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -118,7 +112,7 @@ export const HotkeyProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     window.localStorage.setItem(STORAGE_KEY, serializeBindings(customBindings));
   }, [customBindings]);
 
-  const isBindingAvailable = useCallback((binding: HotkeyBinding, excludeToolId?: string) => {
+  const isBindingAvailable = useCallback((binding: HotkeyBinding, excludeToolId?: ToolId) => {
     const normalized = normalizeBinding(binding);
     return Object.entries(resolved).every(([toolId, existing]) => {
       if (toolId === excludeToolId) {
@@ -128,7 +122,7 @@ export const HotkeyProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     });
   }, [resolved]);
 
-  const updateHotkey = useCallback((toolId: string, binding: HotkeyBinding) => {
+  const updateHotkey = useCallback((toolId: ToolId, binding: HotkeyBinding) => {
     setCustomBindings(prev => {
       const normalized = normalizeBinding(binding);
       const defaultsForTool = defaults[toolId];
@@ -142,7 +136,7 @@ export const HotkeyProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     });
   }, [defaults]);
 
-  const resetHotkey = useCallback((toolId: string) => {
+  const resetHotkey = useCallback((toolId: ToolId) => {
     setCustomBindings(prev => {
       if (!(toolId in prev)) {
         return prev;
@@ -165,12 +159,12 @@ export const HotkeyProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       if (event.repeat) return;
       if (shouldIgnoreTarget(event.target)) return;
 
-      const entries = Object.entries(resolved) as Array<[string, HotkeyBinding]>;
+      const entries = Object.entries(resolved) as [ToolId, HotkeyBinding][];
       for (const [toolId, binding] of entries) {
         if (bindingMatchesEvent(binding, event)) {
           event.preventDefault();
           event.stopPropagation();
-          handleToolSelect(toolId as ToolId);
+          handleToolSelect(toolId);
           break;
         }
       }

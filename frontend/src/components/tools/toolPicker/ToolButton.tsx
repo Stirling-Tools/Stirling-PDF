@@ -14,10 +14,10 @@ import { useToolWorkflow } from "../../../contexts/ToolWorkflowContext";
 import { ToolId } from "../../../types/toolId";
 
 interface ToolButtonProps {
-  id: string;
+  id: ToolId;
   tool: ToolRegistryEntry;
   isSelected: boolean;
-  onSelect: (id: string) => void;
+  onSelect: (id: ToolId) => void;
   rounded?: boolean;
   disableNavigation?: boolean;
   matchedSynonym?: string;
@@ -34,7 +34,7 @@ const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect,
   const { isFavorite, toggleFavorite } = useToolWorkflow();
   const fav = isFavorite(id as ToolId);
 
-  const handleClick = (id: string) => {
+  const handleClick = (id: ToolId) => {
     if (isUnavailable) return;
     if (tool.link) {
       // Open external link in new tab
@@ -53,12 +53,16 @@ const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect,
     : (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
         <span>{tool.description}</span>
-        {binding && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem' }}>
+        {binding ? (
+          <>
             <span style={{ color: 'var(--mantine-color-dimmed)', fontWeight: 500 }}>{t('settings.hotkeys.shortcut', 'Shortcut')}</span>
             <HotkeyDisplay binding={binding} />
-          </div>
+          </>
+        ) : (
+          <span style={{ color: 'var(--mantine-color-dimmed)', fontWeight: 500, fontStyle: 'italic' }}>{t('settings.hotkeys.noShortcut', 'No shortcut set')}</span>
         )}
+        </div>
       </div>
     );
 

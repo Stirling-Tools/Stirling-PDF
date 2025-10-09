@@ -5,13 +5,14 @@ import SubcategoryHeader from './SubcategoryHeader';
 import { getSubcategoryLabel } from "../../../data/toolsTaxonomy";
 import { TFunction } from 'i18next';
 import { SubcategoryGroup } from '../../../hooks/useToolSections';
+import { ToolId } from 'src/types/toolId';
 
 // Helper function to render tool buttons for a subcategory
 export const renderToolButtons = (
   t: TFunction,
   subcategory: SubcategoryGroup,
   selectedToolKey: string | null,
-  onSelect: (id: string) => void,
+  onSelect: (id: ToolId) => void,
   showSubcategoryHeader: boolean = true,
   disableNavigation: boolean = false,
   searchResults?: Array<{ item: [string, any]; matchedText?: string }>,
@@ -33,7 +34,7 @@ export const renderToolButtons = (
       <div>
         {subcategory.tools.map(({ id, tool }) => {
           const matchedSynonym = matchedTextMap.get(id);
-          
+
           return (
             <ToolButton
               key={id}

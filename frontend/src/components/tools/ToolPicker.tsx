@@ -194,7 +194,7 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
                       {recommendedItems.map(({ id, tool }) => (
                         <ToolButton
                           key={`rec-${id}`}
-                          id={id}
+                          id={id as ToolId}
                           tool={tool}
                           isSelected={selectedToolKey === id}
                           onSelect={onSelect}

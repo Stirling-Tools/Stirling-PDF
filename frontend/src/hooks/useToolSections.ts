@@ -38,7 +38,7 @@ export function useToolSections(
     if (!filteredTools || !Array.isArray(filteredTools)) {
       return {} as GroupedTools;
     }
-    
+
     const grouped = {} as GroupedTools;
     filteredTools.forEach(({ item: [id, tool] }) => {
       const categoryId = tool.categoryId;
@@ -106,11 +106,11 @@ export function useToolSections(
     if (!filteredTools || !Array.isArray(filteredTools)) {
       return [];
     }
-    
+
     const subMap = {} as SubcategoryIdMap;
-    const seen = new Set<string /* FIX ME: Should be ToolId */>();
+    const seen = new Set<ToolId>();
     filteredTools.forEach(({ item: [id, tool] }) => {
-      const toolId = id as string /* FIX ME: Should be ToolId */;
+      const toolId = id as ToolId;
       if (seen.has(toolId)) return;
       seen.add(toolId);
       const sub = tool.subcategoryId;

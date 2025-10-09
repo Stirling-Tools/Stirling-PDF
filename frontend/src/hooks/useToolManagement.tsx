@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useFlatToolRegistry } from "../data/useTranslatedToolRegistry";
-import { getAllEndpoints, type ToolRegistryEntry } from "../data/toolsTaxonomy";
+import { getAllEndpoints, type ToolRegistryEntry, type ToolRegistry } from "../data/toolsTaxonomy";
 import { useMultipleEndpointsEnabled } from "./useEndpointConfig";
 import { FileId } from '../types/file';
 import { ToolId } from 'src/types/toolId';
@@ -9,9 +9,9 @@ import { ToolId } from 'src/types/toolId';
 interface ToolManagementResult {
   selectedTool: ToolRegistryEntry | null;
   toolSelectedFileIds: FileId[];
-  toolRegistry: Record<ToolId, ToolRegistryEntry>;
+  toolRegistry: Partial<ToolRegistry>;
   setToolSelectedFileIds: (fileIds: FileId[]) => void;
-  getSelectedTool: (toolKey: string | null) => ToolRegistryEntry | null;
+  getSelectedTool: (toolKey: ToolId | null) => ToolRegistryEntry | null;
 }
 
 export const useToolManagement = (): ToolManagementResult => {
@@ -31,9 +31,9 @@ export const useToolManagement = (): ToolManagementResult => {
     return endpoints.length === 0 || endpoints.some((endpoint: string) => endpointStatus[endpoint] === true);
   }, [endpointsLoading, endpointStatus, baseRegistry]);
 
-  const toolRegistry: Record<ToolId, ToolRegistryEntry> = useMemo(() => {
-    const availableToolRegistry: Record<ToolId, ToolRegistryEntry> = {} as Record<ToolId, ToolRegistryEntry>;
-    Object.keys(baseRegistry).forEach(toolKey => {
+  const toolRegistry: Partial<ToolRegistry> = useMemo(() => {
+    const availableToolRegistry: Partial<ToolRegistry> = {};
+    (Object.keys(baseRegistry) as ToolId[]).forEach(toolKey => {
       if (isToolAvailable(toolKey)) {
         const baseTool = baseRegistry[toolKey as keyof typeof baseRegistry];
         availableToolRegistry[toolKey as ToolId] = {
@@ -46,8 +46,8 @@ export const useToolManagement = (): ToolManagementResult => {
     return availableToolRegistry;
   }, [isToolAvailable, t, baseRegistry]);
 
-  const getSelectedTool = useCallback((toolKey: string | null): ToolRegistryEntry | null => {
-    return toolKey ? toolRegistry[toolKey as ToolId] || null : null;
+  const getSelectedTool = useCallback((toolKey: ToolId | null): ToolRegistryEntry | null => {
+    return toolKey ? toolRegistry[toolKey] || null : null;
   }, [toolRegistry]);
 
   return {

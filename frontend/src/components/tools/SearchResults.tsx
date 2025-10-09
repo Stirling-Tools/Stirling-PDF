@@ -8,6 +8,7 @@ import { useToolSections } from '../../hooks/useToolSections';
 import SubcategoryHeader from './shared/SubcategoryHeader';
 import NoToolsFound from './shared/NoToolsFound';
 import "./toolPicker/ToolPicker.css";
+import { ToolId } from 'src/types/toolId';
 
 interface SearchResultsProps {
   filteredTools: Array<{ item: [ToolId, ToolRegistryEntry]; matchedText?: string }>;
@@ -41,13 +42,13 @@ const SearchResults: React.FC<SearchResultsProps> = ({ filteredTools, onSelect, 
             {group.tools.map(({ id, tool }) => {
               const matchedText = matchedTextMap.get(id);
               // Check if the match was from synonyms and show the actual synonym that matched
-              const isSynonymMatch = matchedText && tool.synonyms?.some(synonym => 
+              const isSynonymMatch = matchedText && tool.synonyms?.some(synonym =>
                 matchedText.toLowerCase().includes(synonym.toLowerCase())
               );
-              const matchedSynonym = isSynonymMatch ? tool.synonyms?.find(synonym => 
+              const matchedSynonym = isSynonymMatch ? tool.synonyms?.find(synonym =>
                 matchedText.toLowerCase().includes(synonym.toLowerCase())
               ) : undefined;
-              
+
               return (
                 <ToolButton
                   key={id}

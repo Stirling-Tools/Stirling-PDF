@@ -5,7 +5,7 @@ import { ToolId } from "../../types/toolId";
 import ToolLoadingFallback from "./ToolLoadingFallback";
 
 interface ToolRendererProps extends BaseToolProps {
-  selectedToolKey: ToolId | string;
+  selectedToolKey: ToolId;
 }
 
 

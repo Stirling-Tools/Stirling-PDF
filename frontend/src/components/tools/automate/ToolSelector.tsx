@@ -31,7 +31,7 @@ export default function ToolSelector({
 
   // Filter out excluded tools (like 'automate' itself) and tools that don't support automation
   const baseFilteredTools = useMemo(() => {
-    return Object.entries(toolRegistry).filter(([key, tool]) =>
+    return (Object.entries(toolRegistry) as [ToolId, ToolRegistryEntry][]).filter(([key, tool]) =>
       !excludeTools.includes(key) && getToolSupportsAutomate(tool)
     );
   }, [toolRegistry, excludeTools]);
@@ -67,7 +67,7 @@ export default function ToolSelector({
   }, [filteredTools]);
 
   // Use the same tool sections logic as the main ToolPicker
-  const { sections, searchGroups } = useToolSections(transformedFilteredTools);
+  const { sections, searchGroups } = useToolSections(transformedFilteredTools as any /* FIX ME */);
 
   // Determine what to display: search results or organized sections
   const isSearching = searchTerm.trim().length > 0;
@@ -157,7 +157,7 @@ export default function ToolSelector({
           // Show selected tool in AutomationEntry style when tool is selected and dropdown closed
           <div onClick={handleSearchFocus} style={{ cursor: 'pointer',
            borderRadius: "var(--mantine-radius-lg)" }}>
-            <ToolButton id='tool' tool={toolRegistry[selectedValue as ToolId]}  isSelected={false}
+            <ToolButton id={'tool' as ToolId} tool={toolRegistry[selectedValue as ToolId]}  isSelected={false}
           onSelect={()=>{}} rounded={true} disableNavigation={true}></ToolButton>
           </div>
         ) : (

@@ -5,7 +5,9 @@ import { useToolWorkflow } from '../../../../contexts/ToolWorkflowContext';
 import { useHotkeys } from '../../../../contexts/HotkeyContext';
 import { ToolId } from '../../../../types/toolId';
 import HotkeyDisplay from '../../../hotkeys/HotkeyDisplay';
-import { bindingEquals, eventToBinding } from '../../../../utils/hotkeys';
+import { bindingEquals, eventToBinding, HotkeyBinding } from '../../../../utils/hotkeys';
+import { ToolId } from 'src/types/toolId';
+import { ToolRegistryEntry } from 'src/data/toolsTaxonomy';
 
 const rowStyle: React.CSSProperties = {
   display: 'flex',
@@ -25,11 +27,11 @@ const HotkeysSection: React.FC = () => {
   const { t } = useTranslation();
   const { toolRegistry } = useToolWorkflow();
   const { hotkeys, defaults, updateHotkey, resetHotkey, pauseHotkeys, resumeHotkeys, getDisplayParts, isMac } = useHotkeys();
-  const [editingTool, setEditingTool] = useState<string | null>(null);
+  const [editingTool, setEditingTool] = useState<ToolId | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
 
-  const tools = useMemo(() => Object.entries(toolRegistry), [toolRegistry]);
+  const tools = useMemo(() => Object.entries(toolRegistry) as [ToolId, ToolRegistryEntry][], [toolRegistry]);
 
   const filteredTools = useMemo(() => {
     if (!searchQuery.trim()) return tools;
@@ -79,7 +81,7 @@ const HotkeysSection: React.FC = () => {
         return;
       }
 
-      const conflictEntry = Object.entries(hotkeys).find(([toolId, existing]) => (
+      const conflictEntry = (Object.entries(hotkeys) as [ToolId, HotkeyBinding][]).find(([toolId, existing]) => (
         toolId !== editingTool && bindingEquals(existing, binding)
       ));
 
@@ -103,7 +105,7 @@ const HotkeysSection: React.FC = () => {
     };
   }, [editingTool, hotkeys, toolRegistry, updateHotkey, t]);
 
-  const handleStartCapture = (toolId: string) => {
+  const handleStartCapture = (toolId: ToolId) => {
     setEditingTool(toolId);
     setError(null);
   };

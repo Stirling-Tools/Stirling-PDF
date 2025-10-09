@@ -11,7 +11,7 @@ export function filterToolRegistryByQuery(
   toolRegistry: Record<ToolId, ToolRegistryEntry>,
   query: string
 ): RankedToolItem[] {
-  const entries = Object.entries(toolRegistry);
+  const entries = Object.entries(toolRegistry) as [ToolId, ToolRegistryEntry][];
   if (!query.trim()) {
     return entries.map(([id, tool]) => ({ item: [id, tool] as [ToolId, ToolRegistryEntry] }));
   }
@@ -19,10 +19,10 @@ export function filterToolRegistryByQuery(
   const nq = normalizeForSearch(query);
   const threshold = minScoreForQuery(query);
 
-  const exactName: Array<{ id: string; tool: ToolRegistryEntry; pos: number }> = [];
-  const exactSyn: Array<{ id: string; tool: ToolRegistryEntry; text: string; pos: number }> = [];
-  const fuzzyName: Array<{ id: string; tool: ToolRegistryEntry; score: number; text: string }> = [];
-  const fuzzySyn: Array<{ id: string; tool: ToolRegistryEntry; score: number; text: string }> = [];
+  const exactName: Array<{ id: ToolId; tool: ToolRegistryEntry; pos: number }> = [];
+  const exactSyn: Array<{ id: ToolId; tool: ToolRegistryEntry; text: string; pos: number }> = [];
+  const fuzzyName: Array<{ id: ToolId; tool: ToolRegistryEntry; score: number; text: string }> = [];
+  const fuzzySyn: Array<{ id: ToolId; tool: ToolRegistryEntry; score: number; text: string }> = [];
 
   for (const [id, tool] of entries) {
     const nameNorm = normalizeForSearch(tool.name || '');
