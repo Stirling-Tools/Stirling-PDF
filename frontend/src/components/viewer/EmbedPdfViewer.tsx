@@ -13,6 +13,7 @@ import { useNavigationGuard, useNavigationState } from '../../contexts/Navigatio
 import { useSignature } from '../../contexts/SignatureContext';
 import { createStirlingFilesAndStubs } from '../../services/fileStubHelpers';
 import NavigationWarningModal from '../shared/NavigationWarningModal';
+import { isStirlingFile } from '../../types/fileContext';
 
 export interface EmbedPdfViewerProps {
   sidebarsVisible: boolean;
@@ -263,6 +264,7 @@ const EmbedPdfViewerContent = ({
             transition: 'margin-right 0.3s ease'
           }}>
             <LocalEmbedPDF
+              key={currentFile && isStirlingFile(currentFile) ? currentFile.fileId : (effectiveFile.file instanceof File ? effectiveFile.file.name : effectiveFile.url)}
               file={effectiveFile.file}
               url={effectiveFile.url}
               enableAnnotations={shouldEnableAnnotations}

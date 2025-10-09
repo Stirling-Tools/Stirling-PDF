@@ -1,7 +1,8 @@
-import React, { useRef, useState, useCallback } from 'react';
-import { Paper, Group, Button, Modal, Stack, Text } from '@mantine/core';
+import React, { useRef, useState } from 'react';
+import { Paper, Button, Modal, Stack, Text, Popover, ColorPicker as MantineColorPicker } from '@mantine/core';
 import { ColorSwatchButton } from './ColorPicker';
 import PenSizeSelector from '../../tools/sign/PenSizeSelector';
+import SignaturePad from 'signature_pad';
 
 interface DrawingCanvasProps {
   selectedColor: string;
@@ -11,6 +12,7 @@ interface DrawingCanvasProps {
   onPenSizeChange: (size: number) => void;
   onPenSizeInputChange: (input: string) => void;
   onSignatureDataChange: (data: string | null) => void;
+  onDrawingComplete?: () => void;
   disabled?: boolean;
   width?: number;
   height?: number;
@@ -27,407 +29,249 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
   onPenSizeChange,
   onPenSizeInputChange,
   onSignatureDataChange,
+  onDrawingComplete,
   disabled = false,
   width = 400,
   height = 150,
-  modalWidth = 800,
-  modalHeight = 400,
-  additionalButtons
 }) => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const previewCanvasRef = useRef<HTMLCanvasElement>(null);
   const modalCanvasRef = useRef<HTMLCanvasElement>(null);
-  const visibleModalCanvasRef = useRef<HTMLCanvasElement>(null);
+  const padRef = useRef<SignaturePad | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [colorPickerOpen, setColorPickerOpen] = useState(false);
 
-  const [isDrawing, setIsDrawing] = useState(false);
-  const [isModalDrawing, setIsModalDrawing] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const initPad = (canvas: HTMLCanvasElement) => {
+    if (!padRef.current) {
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width;
+      canvas.height = rect.height;
 
-  // Drawing functions for main canvas
-  const startDrawing = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!canvasRef.current || disabled) return;
-
-    setIsDrawing(true);
-    const rect = canvasRef.current.getBoundingClientRect();
-    const scaleX = canvasRef.current.width / rect.width;
-    const scaleY = canvasRef.current.height / rect.height;
-    const x = (e.clientX - rect.left) * scaleX;
-    const y = (e.clientY - rect.top) * scaleY;
-
-    const ctx = canvasRef.current.getContext('2d');
-    if (ctx) {
-      ctx.strokeStyle = selectedColor;
-      ctx.lineWidth = penSize;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-      ctx.beginPath();
-      ctx.moveTo(x, y);
+      padRef.current = new SignaturePad(canvas, {
+        penColor: selectedColor,
+        minWidth: penSize * 0.5,
+        maxWidth: penSize * 2.5,
+        throttle: 10,
+        minDistance: 5,
+        velocityFilterWeight: 0.7,
+      });
     }
-  }, [disabled, selectedColor, penSize]);
+  };
 
-  const draw = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!isDrawing || !canvasRef.current || disabled) return;
-
-    const rect = canvasRef.current.getBoundingClientRect();
-    const scaleX = canvasRef.current.width / rect.width;
-    const scaleY = canvasRef.current.height / rect.height;
-    const x = (e.clientX - rect.left) * scaleX;
-    const y = (e.clientY - rect.top) * scaleY;
-
-    const ctx = canvasRef.current.getContext('2d');
-    if (ctx) {
-      ctx.lineTo(x, y);
-      ctx.stroke();
+  const openModal = () => {
+    // Clear pad ref so it reinitializes
+    if (padRef.current) {
+      padRef.current.off();
+      padRef.current = null;
     }
-  }, [isDrawing, disabled]);
+    setModalOpen(true);
+  };
 
-  const stopDrawing = useCallback(() => {
-    if (!isDrawing || disabled) return;
+  const trimCanvas = (canvas: HTMLCanvasElement): string => {
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return canvas.toDataURL('image/png');
 
-    setIsDrawing(false);
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const pixels = imageData.data;
 
-    // Save canvas as signature data
-    if (canvasRef.current) {
-      const dataURL = canvasRef.current.toDataURL('image/png');
-      onSignatureDataChange(dataURL);
-    }
-  }, [isDrawing, disabled, onSignatureDataChange]);
+    let minX = canvas.width, minY = canvas.height, maxX = 0, maxY = 0;
 
-  // Modal canvas drawing functions
-  const startModalDrawing = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!visibleModalCanvasRef.current || !modalCanvasRef.current) return;
-
-    setIsModalDrawing(true);
-    const rect = visibleModalCanvasRef.current.getBoundingClientRect();
-    const scaleX = visibleModalCanvasRef.current.width / rect.width;
-    const scaleY = visibleModalCanvasRef.current.height / rect.height;
-    const x = (e.clientX - rect.left) * scaleX;
-    const y = (e.clientY - rect.top) * scaleY;
-
-    // Draw on both the visible modal canvas and hidden canvas
-    const visibleCtx = visibleModalCanvasRef.current.getContext('2d');
-    const hiddenCtx = modalCanvasRef.current.getContext('2d');
-
-    [visibleCtx, hiddenCtx].forEach(ctx => {
-      if (ctx) {
-        ctx.strokeStyle = selectedColor;
-        ctx.lineWidth = penSize;
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
-        ctx.beginPath();
-        ctx.moveTo(x, y);
-      }
-    });
-  }, [selectedColor, penSize]);
-
-  const drawModal = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!isModalDrawing || !visibleModalCanvasRef.current || !modalCanvasRef.current) return;
-
-    const rect = visibleModalCanvasRef.current.getBoundingClientRect();
-    const scaleX = visibleModalCanvasRef.current.width / rect.width;
-    const scaleY = visibleModalCanvasRef.current.height / rect.height;
-    const x = (e.clientX - rect.left) * scaleX;
-    const y = (e.clientY - rect.top) * scaleY;
-
-    // Draw on both canvases
-    const visibleCtx = visibleModalCanvasRef.current.getContext('2d');
-    const hiddenCtx = modalCanvasRef.current.getContext('2d');
-
-    [visibleCtx, hiddenCtx].forEach(ctx => {
-      if (ctx) {
-        ctx.lineTo(x, y);
-        ctx.stroke();
-      }
-    });
-  }, [isModalDrawing]);
-
-  const stopModalDrawing = useCallback(() => {
-    if (!isModalDrawing) return;
-    setIsModalDrawing(false);
-
-    // Sync the canvases and update signature data (only when drawing stops)
-    if (modalCanvasRef.current) {
-      const dataURL = modalCanvasRef.current.toDataURL('image/png');
-      onSignatureDataChange(dataURL);
-
-      // Also update the small canvas display
-      if (canvasRef.current) {
-        const smallCtx = canvasRef.current.getContext('2d');
-        if (smallCtx) {
-          const img = new Image();
-          img.onload = () => {
-            smallCtx.clearRect(0, 0, canvasRef.current!.width, canvasRef.current!.height);
-            smallCtx.drawImage(img, 0, 0, canvasRef.current!.width, canvasRef.current!.height);
-          };
-          img.src = dataURL;
+    // Find bounds of non-transparent pixels
+    for (let y = 0; y < canvas.height; y++) {
+      for (let x = 0; x < canvas.width; x++) {
+        const alpha = pixels[(y * canvas.width + x) * 4 + 3];
+        if (alpha > 0) {
+          if (x < minX) minX = x;
+          if (x > maxX) maxX = x;
+          if (y < minY) minY = y;
+          if (y > maxY) maxY = y;
         }
       }
     }
-  }, [isModalDrawing]);
 
-  // Clear canvas functions
-  const clearCanvas = useCallback(() => {
-    if (!canvasRef.current || disabled) return;
+    const trimWidth = maxX - minX + 1;
+    const trimHeight = maxY - minY + 1;
 
-    const ctx = canvasRef.current.getContext('2d');
-    if (ctx) {
-      ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
-
-      // Also clear the modal canvas if it exists
-      if (modalCanvasRef.current) {
-        const modalCtx = modalCanvasRef.current.getContext('2d');
-        if (modalCtx) {
-          modalCtx.clearRect(0, 0, modalCanvasRef.current.width, modalCanvasRef.current.height);
-        }
-      }
-
-      onSignatureDataChange(null);
-    }
-  }, [disabled]);
-
-  const clearModalCanvas = useCallback(() => {
-    // Clear both modal canvases (visible and hidden)
-    if (modalCanvasRef.current) {
-      const hiddenCtx = modalCanvasRef.current.getContext('2d');
-      if (hiddenCtx) {
-        hiddenCtx.clearRect(0, 0, modalCanvasRef.current.width, modalCanvasRef.current.height);
-      }
+    // Create trimmed canvas
+    const trimmedCanvas = document.createElement('canvas');
+    trimmedCanvas.width = trimWidth;
+    trimmedCanvas.height = trimHeight;
+    const trimmedCtx = trimmedCanvas.getContext('2d');
+    if (trimmedCtx) {
+      trimmedCtx.drawImage(canvas, minX, minY, trimWidth, trimHeight, 0, 0, trimWidth, trimHeight);
     }
 
-    if (visibleModalCanvasRef.current) {
-      const visibleCtx = visibleModalCanvasRef.current.getContext('2d');
-      if (visibleCtx) {
-        visibleCtx.clearRect(0, 0, visibleModalCanvasRef.current.width, visibleModalCanvasRef.current.height);
-      }
-    }
+    return trimmedCanvas.toDataURL('image/png');
+  };
 
-    // Also clear the main canvas and signature data
-    if (canvasRef.current) {
-      const mainCtx = canvasRef.current.getContext('2d');
-      if (mainCtx) {
-        mainCtx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
-      }
-    }
+  const closeModal = () => {
+    if (padRef.current && !padRef.current.isEmpty()) {
+      const canvas = modalCanvasRef.current;
+      if (canvas) {
+        const trimmedPng = trimCanvas(canvas);
+        onSignatureDataChange(trimmedPng);
 
-    onSignatureDataChange(null);
-  }, []);
-
-  const saveModalSignature = useCallback(() => {
-    if (!modalCanvasRef.current) return;
-
-    const dataURL = modalCanvasRef.current.toDataURL('image/png');
-    onSignatureDataChange(dataURL);
-
-    // Copy to small canvas for display
-    if (canvasRef.current) {
-      const ctx = canvasRef.current.getContext('2d');
-      if (ctx) {
+        // Update preview canvas with proper aspect ratio
         const img = new Image();
         img.onload = () => {
-          ctx.clearRect(0, 0, canvasRef.current!.width, canvasRef.current!.height);
-          ctx.drawImage(img, 0, 0, canvasRef.current!.width, canvasRef.current!.height);
+          if (previewCanvasRef.current) {
+            const ctx = previewCanvasRef.current.getContext('2d');
+            if (ctx) {
+              ctx.clearRect(0, 0, previewCanvasRef.current.width, previewCanvasRef.current.height);
+
+              // Calculate scaling to fit within preview canvas while maintaining aspect ratio
+              const scale = Math.min(
+                previewCanvasRef.current.width / img.width,
+                previewCanvasRef.current.height / img.height
+              );
+              const scaledWidth = img.width * scale;
+              const scaledHeight = img.height * scale;
+              const x = (previewCanvasRef.current.width - scaledWidth) / 2;
+              const y = (previewCanvasRef.current.height - scaledHeight) / 2;
+
+              ctx.drawImage(img, x, y, scaledWidth, scaledHeight);
+            }
+          }
         };
-        img.src = dataURL;
-      }
-    }
+        img.src = trimmedPng;
 
-    setIsModalOpen(false);
-  }, []);
-
-  const openModal = useCallback(() => {
-    setIsModalOpen(true);
-    // Copy content to modal canvas after a brief delay
-    setTimeout(() => {
-      if (visibleModalCanvasRef.current && modalCanvasRef.current) {
-        const visibleCtx = visibleModalCanvasRef.current.getContext('2d');
-        if (visibleCtx) {
-          visibleCtx.strokeStyle = selectedColor;
-          visibleCtx.lineWidth = penSize;
-          visibleCtx.lineCap = 'round';
-          visibleCtx.lineJoin = 'round';
-          visibleCtx.clearRect(0, 0, visibleModalCanvasRef.current.width, visibleModalCanvasRef.current.height);
-          visibleCtx.drawImage(modalCanvasRef.current, 0, 0, visibleModalCanvasRef.current.width, visibleModalCanvasRef.current.height);
+        if (onDrawingComplete) {
+          onDrawingComplete();
         }
       }
-    }, 300);
-  }, [selectedColor, penSize]);
+    }
+    if (padRef.current) {
+      padRef.current.off();
+      padRef.current = null;
+    }
+    setModalOpen(false);
+  };
 
-  // Initialize canvas settings whenever color or pen size changes
-  React.useEffect(() => {
-    const updateCanvas = (canvas: HTMLCanvasElement | null) => {
-      if (!canvas) return;
-      const ctx = canvas.getContext('2d');
+  const clear = () => {
+    if (padRef.current) {
+      padRef.current.clear();
+    }
+    if (previewCanvasRef.current) {
+      const ctx = previewCanvasRef.current.getContext('2d');
       if (ctx) {
-        ctx.strokeStyle = selectedColor;
-        ctx.lineWidth = penSize;
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
+        ctx.clearRect(0, 0, previewCanvasRef.current.width, previewCanvasRef.current.height);
       }
-    };
+    }
+    onSignatureDataChange(null);
+  };
 
-    updateCanvas(canvasRef.current);
-    updateCanvas(modalCanvasRef.current);
-    updateCanvas(visibleModalCanvasRef.current);
-  }, [selectedColor, penSize]);
+  const updatePenColor = (color: string) => {
+    if (padRef.current) {
+      padRef.current.penColor = color;
+    }
+  };
+
+  const updatePenSize = (size: number) => {
+    if (padRef.current) {
+      padRef.current.minWidth = size * 0.8;
+      padRef.current.maxWidth = size * 1.2;
+    }
+  };
 
   return (
     <>
       <Paper withBorder p="md">
         <Stack gap="sm">
-          <Group justify="space-between">
-            <Text fw={500}>Draw your signature</Text>
-            <Group gap="lg">
-              <div>
-                <Text size="sm" fw={500} mb="xs" ta="center">Color</Text>
-                <Group justify="center">
-                  <ColorSwatchButton
-                    color={selectedColor}
-                    onClick={onColorSwatchClick}
-                  />
-                </Group>
-              </div>
-              <div>
-                <Text size="sm" fw={500} mb="xs">Pen Size</Text>
-                <PenSizeSelector
-                  value={penSize}
-                  inputValue={penSizeInput}
-                  onValueChange={onPenSizeChange}
-                  onInputChange={onPenSizeInputChange}
-                  disabled={disabled}
-                  placeholder="Size"
-                  size="compact-sm"
-                  style={{ width: '60px' }}
-                />
-              </div>
-              <div style={{ paddingTop: '24px' }}>
-                <Button
-                  variant="light"
-                  size="compact-sm"
-                  onClick={openModal}
-                  disabled={disabled}
-                >
-                  Expand
-                </Button>
-              </div>
-            </Group>
-          </Group>
+          <Text fw={500}>Draw your signature</Text>
           <canvas
-            ref={canvasRef}
+            ref={previewCanvasRef}
             width={width}
             height={height}
             style={{
               border: '1px solid #ccc',
               borderRadius: '4px',
-              cursor: disabled ? 'default' : 'crosshair',
+              cursor: disabled ? 'default' : 'pointer',
               backgroundColor: '#ffffff',
               width: '100%',
             }}
-            onMouseDown={startDrawing}
-            onMouseMove={draw}
-            onMouseUp={stopDrawing}
-            onMouseLeave={stopDrawing}
+            onClick={disabled ? undefined : openModal}
           />
-          <Group justify="space-between">
-            <div>
-              {additionalButtons}
-            </div>
-            <Button
-              variant="subtle"
-              color="red"
-              size="compact-sm"
-              onClick={clearCanvas}
-              disabled={disabled}
-            >
-              Clear
-            </Button>
-          </Group>
+          <Text size="sm" c="dimmed" ta="center">
+            Click to open drawing canvas
+          </Text>
         </Stack>
       </Paper>
 
-      {/* Hidden canvas for modal synchronization */}
-      <canvas
-        ref={modalCanvasRef}
-        width={modalWidth}
-        height={modalHeight}
-        style={{ display: 'none' }}
-      />
-
-      {/* Modal for larger signature canvas */}
-      <Modal
-        opened={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        title="Draw Your Signature"
-        size="xl"
-        centered
-      >
+      <Modal opened={modalOpen} onClose={closeModal} title="Draw Your Signature" size="auto" centered>
         <Stack gap="md">
-          {/* Color and Pen Size picker */}
-          <Paper withBorder p="sm">
-            <Group gap="lg" align="flex-end">
-              <div>
-                <Text size="sm" fw={500} mb="xs">Color</Text>
-                <ColorSwatchButton
-                  color={selectedColor}
-                  onClick={onColorSwatchClick}
-                />
-              </div>
-              <div>
-                <Text size="sm" fw={500} mb="xs">Pen Size</Text>
-                <PenSizeSelector
-                  value={penSize}
-                  inputValue={penSizeInput}
-                  onValueChange={onPenSizeChange}
-                  onInputChange={onPenSizeInputChange}
-                  placeholder="Size"
-                  size="compact-sm"
-                  style={{ width: '60px' }}
-                />
-              </div>
-            </Group>
-          </Paper>
+          <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-end' }}>
+            <div>
+              <Text size="sm" fw={500} mb="xs">Color</Text>
+              <Popover
+                opened={colorPickerOpen}
+                onChange={setColorPickerOpen}
+                position="bottom-start"
+                withArrow
+                withinPortal={false}
+              >
+                <Popover.Target>
+                  <div>
+                    <ColorSwatchButton
+                      color={selectedColor}
+                      onClick={() => setColorPickerOpen(!colorPickerOpen)}
+                    />
+                  </div>
+                </Popover.Target>
+                <Popover.Dropdown>
+                  <MantineColorPicker
+                    format="hex"
+                    value={selectedColor}
+                    onChange={(color) => {
+                      onColorSwatchClick();
+                      updatePenColor(color);
+                    }}
+                    swatches={['#000000', '#0066cc', '#cc0000', '#cc6600', '#009900', '#6600cc']}
+                  />
+                </Popover.Dropdown>
+              </Popover>
+            </div>
+            <div>
+              <Text size="sm" fw={500} mb="xs">Pen Size</Text>
+              <PenSizeSelector
+                value={penSize}
+                inputValue={penSizeInput}
+                onValueChange={(size) => {
+                  onPenSizeChange(size);
+                  updatePenSize(size);
+                }}
+                onInputChange={onPenSizeInputChange}
+                placeholder="Size"
+                size="compact-sm"
+                style={{ width: '60px' }}
+              />
+            </div>
+          </div>
 
-          <Paper withBorder p="md">
-            <canvas
-              ref={visibleModalCanvasRef}
-              width={modalWidth}
-              height={modalHeight}
-              style={{
-                border: '1px solid #ccc',
-                borderRadius: '4px',
-                cursor: 'crosshair',
-                backgroundColor: '#ffffff',
-                width: '100%',
-                maxWidth: `${modalWidth}px`,
-                height: 'auto',
-              }}
-              onMouseDown={startModalDrawing}
-              onMouseMove={drawModal}
-              onMouseUp={stopModalDrawing}
-              onMouseLeave={stopModalDrawing}
-            />
-          </Paper>
+          <canvas
+            ref={(el) => {
+              modalCanvasRef.current = el;
+              if (el) initPad(el);
+            }}
+            style={{
+              border: '1px solid #ccc',
+              borderRadius: '4px',
+              display: 'block',
+              touchAction: 'none',
+              backgroundColor: 'white',
+              width: '100%',
+              maxWidth: '800px',
+              height: '400px',
+              cursor: 'crosshair',
+            }}
+          />
 
-          <Group justify="space-between">
-            <Button
-              variant="subtle"
-              color="red"
-              onClick={clearModalCanvas}
-            >
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <Button variant="subtle" color="red" onClick={clear}>
               Clear Canvas
             </Button>
-            <Group gap="sm">
-              <Button
-                variant="subtle"
-                onClick={() => setIsModalOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={saveModalSignature}
-              >
-                Save Signature
-              </Button>
-            </Group>
-          </Group>
+            <Button onClick={closeModal}>
+              Done
+            </Button>
+          </div>
         </Stack>
       </Modal>
     </>

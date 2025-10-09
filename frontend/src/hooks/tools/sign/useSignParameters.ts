@@ -17,6 +17,7 @@ export interface SignParameters {
   signerName?: string;
   fontFamily?: string;
   fontSize?: number;
+  textColor?: string;
 }
 
 export const DEFAULT_PARAMETERS: SignParameters = {
@@ -26,6 +27,7 @@ export const DEFAULT_PARAMETERS: SignParameters = {
   signerName: '',
   fontFamily: 'Helvetica',
   fontSize: 16,
+  textColor: '#000000',
 };
 
 const validateSignParameters = (parameters: SignParameters): boolean => {

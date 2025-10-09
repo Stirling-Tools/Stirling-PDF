@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from "react-i18next";
-import { Stack, Button, Text, Alert, Tabs } from '@mantine/core';
+import { Stack, Button, Text, Alert, Tabs, SegmentedControl } from '@mantine/core';
 import { SignParameters } from "../../../hooks/tools/sign/useSignParameters";
 import { SuggestedToolsSection } from "../shared/SuggestedToolsSection";
+import { useSignature } from "../../../contexts/SignatureContext";
 
 // Import the new reusable components
 import { DrawingCanvas } from "../../annotation/shared/DrawingCanvas";
@@ -35,12 +36,14 @@ const SignSettings = ({
   onSave
 }: SignSettingsProps) => {
   const { t } = useTranslation();
+  const { isPlacementMode } = useSignature();
 
   // State for drawing
   const [selectedColor, setSelectedColor] = useState('#000000');
   const [penSize, setPenSize] = useState(2);
   const [penSizeInput, setPenSizeInput] = useState('2');
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
+  const [interactionMode, setInteractionMode] = useState<'move' | 'place'>('move');
 
   // State for different signature types
   const [canvasSignatureData, setCanvasSignatureData] = useState<string | null>(null);
@@ -96,20 +99,29 @@ const SignSettings = ({
     }
   }, [parameters.signatureType]);
 
-  // Handle text signature activation
+  // Handle text signature activation (including fontSize and fontFamily changes)
   useEffect(() => {
     if (parameters.signatureType === 'text' && parameters.signerName && parameters.signerName.trim() !== '') {
       if (onActivateSignaturePlacement) {
+        setInteractionMode('place');
         setTimeout(() => {
           onActivateSignaturePlacement();
         }, 100);
       }
     } else if (parameters.signatureType === 'text' && (!parameters.signerName || parameters.signerName.trim() === '')) {
       if (onDeactivateSignature) {
+        setInteractionMode('move');
         onDeactivateSignature();
       }
     }
-  }, [parameters.signatureType, parameters.signerName, onActivateSignaturePlacement, onDeactivateSignature]);
+  }, [parameters.signatureType, parameters.signerName, parameters.fontSize, parameters.fontFamily, onActivateSignaturePlacement, onDeactivateSignature]);
+
+  // Reset to move mode when placement mode is deactivated
+  useEffect(() => {
+    if (!isPlacementMode && interactionMode === 'place') {
+      setInteractionMode('move');
+    }
+  }, [isPlacementMode, interactionMode]);
 
   // Handle signature data updates
   useEffect(() => {
@@ -130,11 +142,22 @@ const SignSettings = ({
   // Handle image signature activation - activate when image data syncs with parameters
   useEffect(() => {
     if (parameters.signatureType === 'image' && imageSignatureData && parameters.signatureData === imageSignatureData && onActivateSignaturePlacement) {
+      setInteractionMode('place');
       setTimeout(() => {
         onActivateSignaturePlacement();
       }, 100);
     }
   }, [parameters.signatureType, parameters.signatureData, imageSignatureData]);
+
+  // Handle canvas signature activation - activate when canvas data syncs with parameters
+  useEffect(() => {
+    if (parameters.signatureType === 'canvas' && canvasSignatureData && parameters.signatureData === canvasSignatureData && onActivateSignaturePlacement) {
+      setInteractionMode('place');
+      setTimeout(() => {
+        onActivateSignaturePlacement();
+      }, 100);
+    }
+  }, [parameters.signatureType, parameters.signatureData, canvasSignatureData]);
 
   // Draw settings are no longer needed since draw mode is removed
 
@@ -170,7 +193,7 @@ const SignSettings = ({
         hasSignatureData={!!(canvasSignatureData || imageSignatureData || (parameters.signerName && parameters.signerName.trim() !== ''))}
         disabled={disabled}
         showPlaceButton={false}
-        placeButtonText="Update and Place"
+        placeButtonText={t('sign.updateAndPlace', 'Update and Place')}
       />
 
       {/* Signature Creation based on type */}
@@ -183,6 +206,11 @@ const SignSettings = ({
           onPenSizeChange={setPenSize}
           onPenSizeInputChange={setPenSizeInput}
           onSignatureDataChange={handleCanvasSignatureChange}
+          onDrawingComplete={() => {
+            if (onActivateSignaturePlacement) {
+              onActivateSignaturePlacement();
+            }
+          }}
           disabled={disabled}
           additionalButtons={
             <Button
@@ -195,7 +223,7 @@ const SignSettings = ({
               variant="filled"
               disabled={disabled || !canvasSignatureData}
             >
-              Update and Place
+              {t('sign.updateAndPlace', 'Update and Place')}
             </Button>
           }
         />
@@ -216,17 +244,43 @@ const SignSettings = ({
           onFontSizeChange={(size) => onParameterChange('fontSize', size)}
           fontFamily={parameters.fontFamily || 'Helvetica'}
           onFontFamilyChange={(family) => onParameterChange('fontFamily', family)}
+          textColor={parameters.textColor || '#000000'}
+          onTextColorChange={(color) => onParameterChange('textColor', color)}
           disabled={disabled}
         />
       )}
 
 
+      {/* Interaction Mode Toggle */}
+      {(canvasSignatureData || imageSignatureData || (parameters.signerName && parameters.signerName.trim() !== '')) && (
+        <SegmentedControl
+          value={interactionMode}
+          onChange={(value) => {
+            setInteractionMode(value as 'move' | 'place');
+            if (value === 'place') {
+              if (onActivateSignaturePlacement) {
+                onActivateSignaturePlacement();
+              }
+            } else {
+              if (onDeactivateSignature) {
+                onDeactivateSignature();
+              }
+            }
+          }}
+          data={[
+            { label: t('sign.mode.move', 'Move Signature'), value: 'move' },
+            { label: t('sign.mode.place', 'Place Signature'), value: 'place' }
+          ]}
+          fullWidth
+        />
+      )}
+
       {/* Instructions for placing signature */}
       <Alert color="blue" title={t('sign.instructions.title', 'How to add signature')}>
         <Text size="sm">
-          {parameters.signatureType === 'canvas' && 'After drawing your signature in the canvas above, click "Update and Place" then click anywhere on the PDF to place it.'}
-          {parameters.signatureType === 'image' && 'After uploading your signature image above, click anywhere on the PDF to place it.'}
-          {parameters.signatureType === 'text' && 'After entering your name above, click anywhere on the PDF to place your signature.'}
+          {parameters.signatureType === 'canvas' && t('sign.instructions.canvas', 'After drawing your signature in the canvas, close the modal then click anywhere on the PDF to place it.')}
+          {parameters.signatureType === 'image' && t('sign.instructions.image', 'After uploading your signature image above, click anywhere on the PDF to place it.')}
+          {parameters.signatureType === 'text' && t('sign.instructions.text', 'After entering your name above, click anywhere on the PDF to place your signature.')}
         </Text>
       </Alert>
 

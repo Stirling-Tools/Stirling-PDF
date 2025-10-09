@@ -51,8 +51,9 @@ function processFileSwap(
     }
   });
 
-  // Clear selections that reference removed files
+  // Clear selections that reference removed files and add new files to selection
   const validSelectedFileIds = state.ui.selectedFileIds.filter(id => !unpinnedRemoveIds.includes(id));
+  const newSelectedFileIds = [...validSelectedFileIds, ...addedIds];
 
   return {
     ...state,
@@ -62,7 +63,7 @@ function processFileSwap(
     },
     ui: {
       ...state.ui,
-      selectedFileIds: validSelectedFileIds
+      selectedFileIds: newSelectedFileIds
     }
   };
 }

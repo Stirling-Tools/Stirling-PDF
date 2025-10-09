@@ -50,6 +50,7 @@
     "react-dom": "^19.1.1",
     "react-i18next": "^15.7.3",
     "react-router-dom": "^7.9.1",
+    "signature_pad": "^5.0.4",
     "tailwindcss": "^4.1.13",
     "web-vitals": "^5.1.0"
   },
