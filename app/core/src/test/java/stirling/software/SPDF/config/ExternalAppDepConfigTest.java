@@ -112,13 +112,70 @@ class ExternalAppDepConfigTest {
 
     private Object invokePrivateMethod(Object target, String methodName, Object... args)
             throws Exception {
-        Class<?>[] parameterTypes = new Class<?>[args.length];
-        for (int i = 0; i < args.length; i++) {
-            parameterTypes[i] = args[i] != null ? args[i].getClass() : Object.class;
-        }
-
-        Method method = ExternalAppDepConfig.class.getDeclaredMethod(methodName, parameterTypes);
+        Method method = findMatchingMethod(methodName, args);
         method.setAccessible(true);
         return method.invoke(target, args);
+    }
+
+    private Method findMatchingMethod(String methodName, Object[] args)
+            throws NoSuchMethodException {
+        Method[] methods = ExternalAppDepConfig.class.getDeclaredMethods();
+        for (Method candidate : methods) {
+            if (!candidate.getName().equals(methodName)
+                    || candidate.getParameterCount() != args.length) {
+                continue;
+            }
+
+            Class<?>[] parameterTypes = candidate.getParameterTypes();
+            boolean matches = true;
+            for (int i = 0; i < parameterTypes.length; i++) {
+                if (!isParameterCompatible(parameterTypes[i], args[i])) {
+                    matches = false;
+                    break;
+                }
+            }
+
+            if (matches) {
+                return candidate;
+            }
+        }
+
+        throw new NoSuchMethodException(
+                "No matching method found for " + methodName + " with provided arguments");
+    }
+
+    private boolean isParameterCompatible(Class<?> parameterType, Object arg) {
+        if (arg == null) {
+            return !parameterType.isPrimitive();
+        }
+
+        Class<?> argumentClass = arg.getClass();
+        if (parameterType.isPrimitive()) {
+            return getWrapperType(parameterType).isAssignableFrom(argumentClass);
+        }
+
+        return parameterType.isAssignableFrom(argumentClass);
+    }
+
+    private Class<?> getWrapperType(Class<?> primitiveType) {
+        if (primitiveType == boolean.class) {
+            return Boolean.class;
+        } else if (primitiveType == byte.class) {
+            return Byte.class;
+        } else if (primitiveType == short.class) {
+            return Short.class;
+        } else if (primitiveType == int.class) {
+            return Integer.class;
+        } else if (primitiveType == long.class) {
+            return Long.class;
+        } else if (primitiveType == float.class) {
+            return Float.class;
+        } else if (primitiveType == double.class) {
+            return Double.class;
+        } else if (primitiveType == char.class) {
+            return Character.class;
+        }
+
+        throw new IllegalArgumentException("Type is not primitive: " + primitiveType);
     }
 }
