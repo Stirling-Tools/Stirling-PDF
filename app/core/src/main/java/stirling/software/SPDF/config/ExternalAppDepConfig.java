@@ -92,8 +92,6 @@ public class ExternalAppDepConfig {
         }
     }
 
-    // ----------------------- core checks -----------------------
-
     private void checkDependencyAndDisableGroup(String command) {
         boolean available = isCommandAvailable(command);
 
@@ -171,8 +169,6 @@ public class ExternalAppDepConfig {
                 + word.substring(1).toLowerCase(Locale.ROOT);
     }
 
-    // --------------------- python/opencv ---------------------
-
     private void checkPythonAndOpenCV() {
         String python = findFirstAvailable(List.of("python3", "python")).orElse(null);
         if (python == null) {
@@ -204,8 +200,6 @@ public class ExternalAppDepConfig {
                 String.join(", ", openCVFeatures));
     }
 
-    // --------------------- probing helpers ---------------------
-
     private Optional<String> findFirstAvailable(List<String> commands) {
         for (String c : commands) {
             if (isCommandAvailable(c)) return Optional.of(c);
@@ -216,7 +210,7 @@ public class ExternalAppDepConfig {
     private boolean isCommandAvailable(String command) {
         // First try OS-native lookup
         List<String> lookup =
-                isWindows ? List.of("where", command) : List.of("command", "-v", command);
+                isWindows ? List.of("where", command) : List.of("which", command);
         ProbeResult res = runAndWait(lookup, DEFAULT_TIMEOUT);
         if (res.exitCode() == 0) return true;
 
@@ -284,8 +278,6 @@ public class ExternalAppDepConfig {
         return sb.toString().trim();
     }
 
-    // --------------------- tiny value types ---------------------
-
     private record ProbeResult(int exitCode, String stdout, String stderr) {
         String combined() {
             return (stdout == null ? "" : stdout) + "\n" + (stderr == null ? "" : stderr);
@@ -298,8 +290,8 @@ public class ExternalAppDepConfig {
 
         Version(String ver) {
             String[] tokens = ver.split("\\.");
-            parts = new int[Math.max(3, tokens.length)];
-            for (int i = 0; i < parts.length; i++) {
+            parts = new int[3];
+            for (int i = 0; i < 3; i++) {
                 if (i < tokens.length) {
                     try {
                         parts[i] = Integer.parseInt(tokens[i]);
@@ -314,10 +306,9 @@ public class ExternalAppDepConfig {
 
         @Override
         public int compareTo(Version o) {
-            int n = Math.max(parts.length, o.parts.length);
-            for (int i = 0; i < n; i++) {
-                int a = i < parts.length ? parts[i] : 0;
-                int b = i < o.parts.length ? o.parts[i] : 0;
+            for (int i = 0; i < 3; i++) {
+                int a = parts[i];
+                int b = o.parts[i];
                 if (a != b) return Integer.compare(a, b);
             }
             return 0;
