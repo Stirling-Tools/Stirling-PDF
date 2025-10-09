@@ -8,14 +8,15 @@ Stirling-PDF is a robust, locally hosted, web-based PDF manipulation tool. This 
 
 Stirling-PDF is built using:
 
-- Spring Boot + Thymeleaf
-- PDFBox
-- LibreOffice
-- qpdf
-- HTML, CSS, JavaScript
+- Spring Boot (Backend API)
+- React + TypeScript + Vite (Frontend V2)
+- Mantine UI + TailwindCSS (UI Framework)
+- PDFBox (PDF manipulation)
+- LibreOffice (Document conversion)
+- qpdf (PDF processing)
+- PDF.js (Client-side PDF rendering)
+- Embedded-PDF (PDF viewer component)
 - Docker
-- PDF.js
-- PDF-LIB.js
 - Lombok
 
 ## 3. Development Environment Setup
@@ -24,8 +25,9 @@ Stirling-PDF is built using:
 
 - Docker
 - Git
-- Java JDK 17 or later
+- Java JDK 17 or later (JDK 21 recommended)
 - Gradle 7.0 or later (Included within the repo)
+- Node.js 18+ and npm (for frontend development)
 
 ### Setup Steps
 
@@ -38,8 +40,8 @@ Stirling-PDF is built using:
 
 2. Install Docker and JDK17 if not already installed.
 
-3. Install a recommended Java IDE such as Eclipse, IntelliJ, or VSCode
-   1. Only VSCode
+3. Install a recommended IDE:
+   - **VSCode** (recommended for frontend)
       1. Open VS Code.
       2. When prompted, install the recommended extensions.
       3. Alternatively, open the command palette (`Ctrl + Shift + P` or `Cmd + Shift + P` on macOS) and run:
@@ -49,13 +51,15 @@ Stirling-PDF is built using:
         ```
 
       4. Install the required extensions from the list.
+   - **IntelliJ IDEA** (recommended for backend)
+   - **Eclipse** (alternative for backend)
 
 4. Lombok Setup
 Stirling-PDF uses Lombok to reduce boilerplate code. Some IDEs, like Eclipse, don't support Lombok out of the box. To set up Lombok in your development environment:
 Visit the [Lombok website](https://projectlombok.org/setup/) for installation instructions specific to your IDE.
 
 5. Add environment variable
-For local testing, you should generally be testing the full 'Security' version of Stirling PDF. To do this, you must add the environment flag DISABLE_ADDITIONAL_FEATURES=false to your system and/or IDE build/run step.
+For local testing, you should generally be testing the full 'Security' version of Stirling PDF. To do this, you must add the environment flag DOCKER_ENABLE_SECURITY=true to your system and/or IDE build/run step.
 
 ## 4. Project Structure
 
@@ -68,10 +72,21 @@ Stirling-PDF/
 ├── customFiles/           # Custom static files and templates (generated at runtime used to replace existing files)
 ├── docs/                  # Documentation files
 ├── exampleYmlFiles/       # Example YAML configuration files
+├── frontend/              # React frontend application (V2)
+│   ├── src/
+│   │   ├── components/    # React components
+│   │   ├── tools/         # PDF tool implementations
+│   │   ├── contexts/      # React contexts (FileContext, etc.)
+│   │   ├── hooks/         # Custom React hooks
+│   │   ├── services/      # API and processing services
+│   │   └── i18n.ts        # Internationalization config
+│   ├── public/
+│   │   └── locales/       # Translation JSON files
+│   └── package.json
 ├── images/                # Image assets
 ├── pipeline/              # Pipeline-related files (generated at runtime)
 ├── scripts/               # Utility scripts
-├── src/                   # Source code
+├── src/                   # Backend source code
 │   ├── main/
 │   │   ├── java/
 │   │   │   └── stirling/
@@ -79,16 +94,14 @@ Stirling-PDF/
 │   │   │           └── SPDF/
 │   │   │               ├── config/
 │   │   │               ├── controller/
+│   │   │               │   ├── api/    # REST API endpoints
+│   │   │               │   └── web/    # Web controllers
 │   │   │               ├── model/
 │   │   │               ├── repository/
 │   │   │               ├── service/
 │   │   │               └── utils/
 │   │   └── resources/
-│   │       ├── static/
-│   │       │   ├── css/
-│   │       │   ├── js/
-│   │       │   └── pdfjs/
-│   │       └── templates/
+│   │       └── static/    # Legacy static assets
 │   └── test/
 │       └── java/
 │           └── stirling/
@@ -141,7 +154,7 @@ services:
       - ./stirling/latest/config:/configs:rw
       - ./stirling/latest/logs:/logs:rw
     environment:
-      DISABLE_ADDITIONAL_FEATURES: "false"
+      DOCKER_ENABLE_SECURITY: "true"
       SECURITY_ENABLELOGIN: "true"
       PUID: 1002
       PGID: 1002
@@ -170,7 +183,7 @@ Stirling-PDF uses different Docker images for various configurations. The build 
 1. Set the security environment variable:
 
    ```bash
-   export DISABLE_ADDITIONAL_FEATURES=true  # or false for to enable login and security features for builds
+   export DOCKER_ENABLE_SECURITY=true  # or false to disable login and security features for builds
    ```
 
 2. Build the project with Gradle:
@@ -196,7 +209,7 @@ Stirling-PDF uses different Docker images for various configurations. The build 
    For the fat version (with login and security features enabled):
 
    ```bash
-   export DISABLE_ADDITIONAL_FEATURES=false
+   export DOCKER_ENABLE_SECURITY=true
    docker build --no-cache --pull --build-arg VERSION_TAG=alpha -t stirlingtools/stirling-pdf:latest-fat -f ./Dockerfile.fat .
    ```
 
@@ -224,38 +237,50 @@ Note: The `test.sh` script will run automatically when you raise a PR. However, 
 
 ### Full Testing with Docker
 
-1. Build and run the Docker container per the above instructions:
+1. Build and run the Docker container per the above instructions
 
 2. Access the application at `http://localhost:8080` and manually test all features developed.
 
-### Local Testing (Java and UI Components)
+### Local Testing (Frontend and Backend)
 
-For quick iterations and development of Java backend, JavaScript, and UI components, you can run and test Stirling-PDF locally without Docker. This approach allows you to work on and verify changes to:
+For quick iterations and development, you can run the frontend and backend separately:
 
-- Java backend logic
-- RESTful API endpoints
-- JavaScript functionality
-- User interface components and styling
-- Thymeleaf templates
+#### Backend Development
 
-To run Stirling-PDF locally:
-
-1. Compile and run the project using built-in IDE methods or by running:
+1. Run the backend:
 
    ```bash
    ./gradlew bootRun
    ```
 
-2. Access the application at `http://localhost:8080` in your web browser.
+2. The backend API will be available at `http://localhost:8080`
 
-3. Manually test the features you're working on through the UI.
+3. API documentation is available at `http://localhost:8080/swagger-ui/index.html`
 
-4. For API changes, use tools like Postman or curl to test endpoints directly.
+#### Frontend Development
+
+1. Install dependencies (first time only):
+
+   ```bash
+   cd frontend
+   npm install
+   ```
+
+2. Start the development server:
+
+   ```bash
+   npm run dev
+   ```
+
+3. The frontend will be available at `http://localhost:5173`
+
+4. Vite automatically proxies API calls from `/api/*` to the backend at `localhost:8080`
 
 Important notes:
 
+- Frontend requires the backend to be running for full functionality
+- Hot module replacement (HMR) enables instant updates during development
 - Local testing doesn't include features that depend on external tools like qpdf, LibreOffice, or Python scripts.
-- There are currently no automated unit tests. All testing is done manually through the UI or API calls. (You are welcome to add JUnits!)
 - Always verify your changes in the full Docker environment before submitting pull requests, as some integrations and features will only work in the complete setup.
 
 ## 7. Contributing
@@ -307,112 +332,170 @@ docker run -p 8080:8080 -e APP_NAME="My PDF Tool" stirling-pdf:full
 
 Refer to the main README for a full list of customization options.
 
-## 10. Language Translations
+## 10. Frontend Development (V2)
 
-For managing language translations that affect multiple files, Stirling-PDF provides a helper script:
+### Architecture Overview
 
-```bash
-/scripts/replace_translation_line.sh
+The V2 frontend is designed for **stateful document processing**:
+- Users upload PDFs once, then chain tools (split → merge → compress → view)
+- File state and processing results persist across tool switches
+- No file reloading between tools - performance critical for large PDFs (up to 100GB+)
+
+### Key Components
+
+#### FileContext - Central State Management
+**Location**: `frontend/src/contexts/FileContext.tsx`
+- **Active files**: Currently loaded PDFs and their variants
+- **Tool navigation**: Current mode (viewer/pageEditor/fileEditor/toolName)
+- **Memory management**: PDF document cleanup, blob URL lifecycle, Web Worker management
+- **IndexedDB persistence**: File storage with thumbnail caching
+- **Preview system**: Tools can preview results without context pollution
+
+**Critical**: All file operations go through FileContext. Don't bypass with direct file handling.
+
+#### Processing Services
+- **enhancedPDFProcessingService**: Background PDF parsing and manipulation
+- **thumbnailGenerationService**: Web Worker-based with main-thread fallback
+- **fileStorage**: IndexedDB with LRU cache management
+
+### Tool Development
+
+**Architecture**: Modular hook-based system with clear separation of concerns:
+
+- **useToolOperation** (`frontend/src/hooks/tools/shared/useToolOperation.ts`): Main orchestrator hook
+  - Coordinates all tool operations with consistent interface
+  - Integrates with FileContext for operation tracking
+  - Handles validation, error handling, and UI state management
+
+- **Supporting Hooks**:
+  - **useToolState**: UI state management (loading, progress, error, files)
+  - **useToolApiCalls**: HTTP requests and file processing
+  - **useToolResources**: Blob URLs, thumbnails, ZIP downloads
+
+- **Utilities**:
+  - **toolErrorHandler**: Standardized error extraction and i18n support
+  - **toolResponseProcessor**: API response handling (single/zip/custom)
+  - **toolOperationTracker**: FileContext integration utilities
+
+**Three Tool Patterns**:
+
+**Pattern 1: Single-File Tools** (Individual processing)
+- Backend processes one file per API call
+- Set `multiFileEndpoint: false`
+- Examples: Compress, Rotate
+
+```typescript
+return useToolOperation({
+  operationType: 'compress',
+  endpoint: '/api/v1/misc/compress-pdf',
+  buildFormData: (params, file: File) => { /* single file */ },
+  multiFileEndpoint: false,
+});
 ```
 
-This script helps you make consistent replacements across language files.
+**Pattern 2: Multi-File Tools** (Batch processing)
+- Backend accepts `MultipartFile[]` arrays in single API call
+- Set `multiFileEndpoint: true`
+- Examples: Split, Merge, Overlay
 
-When contributing translations:
-
-1. Use the helper script for multi-file changes.
-2. Ensure all language files are updated consistently.
-3. The PR checks will verify consistency in language file updates.
-
-Remember to test your changes thoroughly to ensure they don't break any existing functionality.
-
-## Code examples
-
-### Overview of Thymeleaf
-
-Thymeleaf is a server-side Java HTML template engine. It is used in Stirling-PDF to render dynamic web pages. Thymeleaf integrates heavily with Spring Boot.
-
-### Thymeleaf overview
-
-In Stirling-PDF, Thymeleaf is used to create HTML templates that are rendered on the server side. These templates are located in the `app/core/src/main/resources/templates` directory. Thymeleaf templates use a combination of HTML and special Thymeleaf attributes to dynamically generate content.
-
-Some examples of this are:
-
-```html
-<th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
-```
-or
-```html
-<th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+```typescript
+return useToolOperation({
+  operationType: 'split',
+  endpoint: '/api/v1/general/split-pages',
+  buildFormData: (params, files: File[]) => { /* all files */ },
+  multiFileEndpoint: true,
+  filePrefix: 'split_',
+});
 ```
 
-Where it uses the `th:block`, `th:` indicating it's a special Thymeleaf element to be used server-side in generating the HTML, and block being the actual element type.
-In this case, we are inserting the `navbar` entry within the `fragments/navbar.html` fragment into the `th:block` element.
+**Pattern 3: Complex Tools** (Custom processing)
+- Tools with complex routing logic or non-standard processing
+- Provide `customProcessor` for full control
+- Examples: Convert, OCR
 
-They can be more complex, such as:
-
-```html
-<th:block th:insert="~{fragments/common :: head(title=#{pageExtracter.title}, header=#{pageExtracter.header})}"></th:block>
+```typescript
+return useToolOperation({
+  operationType: 'convert',
+  customProcessor: async (params, files) => { /* custom logic */ },
+});
 ```
 
-Which is the same as above but passes the parameters title and header into the fragment `common.html` to be used in its HTML generation.
+**Benefits**:
+- **No Timeouts**: Operations run until completion (supports 100GB+ files)
+- **Consistent**: All tools follow same pattern and interface
+- **Maintainable**: Single responsibility hooks, easy to test and modify
+- **i18n Ready**: Built-in internationalization support
+- **Type Safe**: Full TypeScript support with generic interfaces
+- **Memory Safe**: Automatic resource cleanup and blob URL management
 
-Thymeleaf can also be used to loop through objects or pass things from the Java side into the HTML side.
+### Adding a New Tool
 
-```java
- @GetMapping
-       public String newFeaturePage(Model model) {
-           model.addAttribute("exampleData", exampleData);
-           return "new-feature";
-       }
+See [ADDING_TOOLS.md](../ADDING_TOOLS.md) for a complete guide to creating new PDF tools.
+
+### Internationalization
+
+Translations are stored in JSON files at `frontend/public/locales/{language-code}/translation.json`.
+
+To use translations in React components:
+
+```typescript
+import { useTranslation } from 'react-i18next';
+
+function MyComponent() {
+  const { t } = useTranslation();
+
+  return (
+    <div>
+      <h1>{t('myTool.title')}</h1>
+      <p>{t('myTool.description')}</p>
+    </div>
+  );
+}
 ```
 
-In the above example, if exampleData is a list of plain java objects of class Person and within it, you had id, name, age, etc. You can reference it like so
+See [HowToAddNewLanguage.md](./HowToAddNewLanguage.md) for details on adding new languages.
 
-```html
-<tbody>
-   <!-- Use th:each to iterate over the list -->
-   <tr th:each="person : ${exampleData}">
-       <td th:text="${person.id}"></td>
-       <td th:text="${person.name}"></td>
-       <td th:text="${person.age}"></td>
-       <td th:text="${person.email}"></td>
-   </tr>
-</tbody>
-```
+## 11. Backend Development
 
-This would generate n entries of tr for each person in exampleData
-
-### Adding a New Feature to the Backend (API)
+### Adding a New API Endpoint
 
 1. **Create a New Controller:**
-   - Create a new Java class in the `app/core/src/main/java/stirling/software/SPDF/controller/api` directory.
+   - Create a new Java class in the `src/main/java/stirling/software/SPDF/controller/api` directory.
    - Annotate the class with `@RestController` and `@RequestMapping` to define the API endpoint.
-   - Ensure to add API documentation annotations like `@Tag(name = "General", description = "General APIs")` and `@Operation(summary = "Crops a PDF document", description = "This operation takes an input PDF file and crops it according to the given coordinates. Input:PDF Output:PDF Type:SISO")`.
+   - Ensure to add API documentation annotations like `@Tag` and `@Operation`.
 
    ```java
    package stirling.software.SPDF.controller.api;
 
-   import org.springframework.web.bind.annotation.GetMapping;
-   import org.springframework.web.bind.annotation.RequestMapping;
-   import org.springframework.web.bind.annotation.RestController;
+   import org.springframework.web.bind.annotation.*;
+   import org.springframework.web.multipart.MultipartFile;
    import io.swagger.v3.oas.annotations.Operation;
    import io.swagger.v3.oas.annotations.tags.Tag;
 
    @RestController
-   @RequestMapping("/api/v1/new-feature")
+   @RequestMapping("/api/v1/pdf")
    @Tag(name = "General", description = "General APIs")
    public class NewFeatureController {
 
-       @GetMapping
-       @Operation(summary = "New Feature", description = "This is a new feature endpoint.")
-       public String newFeature() {
-           return "NewFeatureResponse"; // This refers to the NewFeatureResponse.html template presenting the user with the generated html from that file when they navigate to /api/v1/new-feature
+       @PostMapping("/new-feature")
+       @Operation(summary = "New Feature", description = "This is a new feature endpoint. Input:PDF Output:PDF Type:SISO")
+       public ResponseEntity<byte[]> newFeature(
+           @RequestPart("fileInput") MultipartFile file,
+           @RequestParam("param1") String param1) {
+
+           // Process PDF
+           byte[] result = processFile(file, param1);
+
+           return ResponseEntity.ok()
+               .header("Content-Disposition", "attachment; filename=output.pdf")
+               .contentType(MediaType.APPLICATION_PDF)
+               .body(result);
        }
    }
    ```
 
-2. **Define the Service Layer:** (Not required but often useful)
-   - Create a new service class in the `app/core/src/main/java/stirling/software/SPDF/service` directory.
+2. **Define the Service Layer:** (Optional but recommended)
+   - Create a new service class in the `src/main/java/stirling/software/SPDF/service` directory.
    - Implement the business logic for the new feature.
 
    ```java
@@ -423,167 +506,76 @@ This would generate n entries of tr for each person in exampleData
    @Service
    public class NewFeatureService {
 
-       public String getNewFeatureData() {
+       public byte[] processFile(MultipartFile file, String param1) {
            // Implement business logic here
-           return "New Feature Data";
+           return processedBytes;
        }
    }
    ```
 
-2b. **Integrate the Service with the Controller:**
-
-- Autowire the service class in the controller and use it to handle the API request.
-
-  ```java
-  package stirling.software.SPDF.controller.api;
-
-  import org.springframework.beans.factory.annotation.Autowired;
-  import org.springframework.web.bind.annotation.GetMapping;
-  import org.springframework.web.bind.annotation.RequestMapping;
-  import org.springframework.web.bind.annotation.RestController;
-  import stirling.software.SPDF.service.NewFeatureService;
-  import io.swagger.v3.oas.annotations.Operation;
-  import io.swagger.v3.oas.annotations.tags.Tag;
-
-  @RestController
-  @RequestMapping("/api/v1/new-feature")
-  @Tag(name = "General", description = "General APIs")
-  public class NewFeatureController {
-
-      @Autowired
-      private NewFeatureService newFeatureService;
-
-      @GetMapping
-      @Operation(summary = "New Feature", description = "This is a new feature endpoint.")
-      public String newFeature() {
-          return newFeatureService.getNewFeatureData();
-      }
-  }
-  ```
-
-### Adding a New Feature to the Frontend (UI)
-
-1. **Create a New Thymeleaf Template:**
-   - Create a new HTML file in the `app/core/src/main/resources/templates` directory.
-   - Use Thymeleaf attributes to dynamically generate content.
-   - Use `extract-page.html` as a base example for the HTML template, which is useful to ensure importing of the general layout, navbar, and footer.
-
-   ```html
-   <!DOCTYPE html>
-   <html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="https://www.thymeleaf.org">
-     <head>
-     <th:block th:insert="~{fragments/common :: head(title=#{newFeature.title}, header=#{newFeature.header})}"></th:block>
-     </head>
-
-     <body>
-       <div id="page-container">
-         <div id="content-wrap">
-           <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
-           <br><br>
-           <div class="container">
-             <div class="row justify-content-center">
-               <div class="col-md-6 bg-card">
-                 <div class="tool-header">
-                   <span class="material-symbols-rounded tool-header-icon organize">upload</span>
-                   <span class="tool-header-text" th:text="#{newFeature.header}"></span>
-                 </div>
-                 <form th:action="@{'/api/v1/new-feature'}" method="post" enctype="multipart/form-data">
-                   <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
-                   <input type="hidden" id="customMode" name="customMode" value="">
-                   <div class="mb-3">
-                     <label for="featureInput" th:text="#{newFeature.prompt}"></label>
-                     <input type="text" class="form-control" id="featureInput" name="featureInput" th:placeholder="#{newFeature.placeholder}" required>
-                   </div>
-
-                   <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{newFeature.submit}"></button>
-                 </form>
-               </div>
-             </div>
-           </div>
-         </div>
-         <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
-       </div>
-     </body>
-   </html>
-   ```
-
-2. **Create a New Controller for the UI:**
-   - Create a new Java class in the `app/core/src/main/java/stirling/software/SPDF/controller/ui` directory.
-   - Annotate the class with `@Controller` and `@RequestMapping` to define the UI endpoint.
+3. **Integrate the Service with the Controller:**
 
    ```java
-   package stirling.software.SPDF.controller.ui;
-
-   import org.springframework.beans.factory.annotation.Autowired;
-   import org.springframework.stereotype.Controller;
-   import org.springframework.ui.Model;
-   import org.springframework.web.bind.annotation.GetMapping;
-   import org.springframework.web.bind.annotation.RequestMapping;
-   import stirling.software.SPDF.service.NewFeatureService;
-
-   @Controller
-   @RequestMapping("/new-feature")
-   public class NewFeatureUIController {
+   @RestController
+   @RequestMapping("/api/v1/pdf")
+   public class NewFeatureController {
 
        @Autowired
        private NewFeatureService newFeatureService;
 
-       @GetMapping
-       public String newFeaturePage(Model model) {
-           model.addAttribute("newFeatureData", newFeatureService.getNewFeatureData());
-           return "new-feature";
+       @PostMapping("/new-feature")
+       public ResponseEntity<byte[]> newFeature(
+           @RequestPart("fileInput") MultipartFile file,
+           @RequestParam("param1") String param1) {
+
+           byte[] result = newFeatureService.processFile(file, param1);
+
+           return ResponseEntity.ok()
+               .header("Content-Disposition", "attachment; filename=output.pdf")
+               .contentType(MediaType.APPLICATION_PDF)
+               .body(result);
        }
    }
    ```
 
-3. **Update the Navigation Bar:**
-   - Add a link to the new feature page in the navigation bar.
-   - Update the `app/core/src/main/resources/templates/fragments/navbar.html` file.
+### Multi-File Endpoints
 
-   ```html
-   <li class="nav-item">
-       <a class="nav-link" th:href="@{'/new-feature'}">New Feature</a>
-   </li>
-   ```
+For tools that process multiple files in one request:
 
-## Adding New Translations to Existing Language Files in Stirling-PDF
+```java
+@PostMapping("/merge")
+public ResponseEntity<byte[]> mergePdfs(
+    @RequestPart("fileInput") MultipartFile[] files) {
 
-When adding a new feature or modifying existing ones in Stirling-PDF, you'll need to add new translation entries to the existing language files. Here's a step-by-step guide:
+    // Process all files together
+    byte[] merged = mergeService.mergeFiles(files);
 
-### 1. Locate Existing Language Files
-
-Find the existing `messages.properties` files in the `app/core/src/main/resources` directory. You'll see files like:
-
-- `messages.properties` (default, usually English)
-- `messages_en_GB.properties`
-- `messages_fr_FR.properties`
-- `messages_de_DE.properties`
-- etc.
-
-### 2. Add New Translation Entries
-
-Open each of these files and add your new translation entries. For example, if you're adding a new feature called "PDF Splitter",
-Use descriptive, hierarchical keys (e.g., `feature.element.description`)
-you might add:
-
-```properties
-pdfSplitter.title=PDF Splitter
-pdfSplitter.description=Split your PDF into multiple documents
-pdfSplitter.button.split=Split PDF
-pdfSplitter.input.pages=Enter page numbers to split
+    return ResponseEntity.ok()
+        .header("Content-Disposition", "attachment; filename=merged.pdf")
+        .contentType(MediaType.APPLICATION_PDF)
+        .body(merged);
+}
 ```
 
-Add these entries to the default GB language file and any others you wish, translating the values as appropriate for each language.
+## 12. Best Practices
 
-### 3. Use Translations in Thymeleaf Templates
+### Frontend
+- Always use FileContext for file operations
+- Implement proper cleanup for PDF.js documents and blob URLs
+- Use the `useToolOperation` hook for consistent tool behavior
+- Follow TypeScript strict mode guidelines
+- Test with large files (100MB+) to ensure memory efficiency
 
-In your Thymeleaf templates, use the `#{key}` syntax to reference the new translations:
+### Backend
+- Use PDFBox for PDF manipulation
+- Implement proper error handling and logging
+- Add Swagger documentation to all API endpoints
+- Use service layer for business logic
+- Follow Spring Boot best practices
 
-```html
-<h1 th:text="#{pdfSplitter.title}">PDF Splitter</h1>
-<p th:text="#{pdfSplitter.description}">Split your PDF into multiple documents</p>
-<input type="text" th:placeholder="#{pdfSplitter.input.pages}">
-<button th:text="#{pdfSplitter.button.split}">Split PDF</button>
-```
-
-Remember, never hard-code text in your templates or Java code. Always use translation keys to ensure proper localization.
+### General
+- Write clear commit messages
+- Update documentation for any API changes
+- Test in Docker before submitting PRs
+- Run `./gradlew spotlessApply` to format code
+- Ensure all tests pass with `./test.sh`
