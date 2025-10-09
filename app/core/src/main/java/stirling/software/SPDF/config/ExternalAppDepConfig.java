@@ -209,8 +209,7 @@ public class ExternalAppDepConfig {
 
     private boolean isCommandAvailable(String command) {
         // First try OS-native lookup
-        List<String> lookup =
-                isWindows ? List.of("where", command) : List.of("which", command);
+        List<String> lookup = isWindows ? List.of("where", command) : List.of("which", command);
         ProbeResult res = runAndWait(lookup, DEFAULT_TIMEOUT);
         if (res.exitCode() == 0) return true;
 
