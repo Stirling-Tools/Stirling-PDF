@@ -1,34 +1,30 @@
 import { useImperativeHandle, forwardRef, useEffect } from 'react';
 import { useAnnotationCapability } from '@embedpdf/plugin-annotation/react';
-import { PdfAnnotationSubtype, PdfStandardFont, PdfTextAlignment, PdfVerticalAlignment, uuidV4 } from '@embedpdf/models';
-import { SignParameters } from '../../hooks/tools/sign/useSignParameters';
+import { PdfAnnotationSubtype, uuidV4 } from '@embedpdf/models';
 import { useSignature } from '../../contexts/SignatureContext';
-import { useViewer } from '../../contexts/ViewerContext';
 
 export interface SignatureAPI {
   addImageSignature: (signatureData: string, x: number, y: number, width: number, height: number, pageIndex: number) => void;
-  addTextSignature: (text: string, x: number, y: number, pageIndex: number) => void;
   activateDrawMode: () => void;
   activateSignaturePlacementMode: () => void;
   activateDeleteMode: () => void;
   deleteAnnotation: (annotationId: string, pageIndex: number) => void;
   updateDrawSettings: (color: string, size: number) => void;
   deactivateTools: () => void;
-  applySignatureFromParameters: (params: SignParameters) => void;
   getPageAnnotations: (pageIndex: number) => Promise<any[]>;
 }
 
 export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPIBridge(_, ref) {
   const { provides: annotationApi } = useAnnotationCapability();
   const { signatureConfig, storeImageData, isPlacementMode } = useSignature();
-  const { isAnnotationMode } = useViewer();
 
 
-  // Enable keyboard deletion of selected annotations - when in signature placement mode or viewer annotation mode
+  // Enable keyboard deletion of selected annotations
   useEffect(() => {
-    if (!annotationApi || (!isPlacementMode && !isAnnotationMode)) return;
+    // Always enable delete key when we have annotation API and are in sign mode
+    if (!annotationApi || (isPlacementMode === undefined)) return;
 
-  const handleKeyDown = (event: KeyboardEvent) => {
+    const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Delete' || event.key === 'Backspace') {
         const selectedAnnotation = annotationApi.getSelectedAnnotation?.();
 
@@ -67,7 +63,7 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPI
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [annotationApi, storeImageData, isPlacementMode, isAnnotationMode]);
+  }, [annotationApi, storeImageData, isPlacementMode]);
 
   useImperativeHandle(ref, () => ({
     addImageSignature: (signatureData: string, x: number, y: number, width: number, height: number, pageIndex: number) => {
@@ -100,34 +96,6 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPI
       });
     },
 
-    addTextSignature: (text: string, x: number, y: number, pageIndex: number) => {
-      if (!annotationApi) return;
-
-      // Create text annotation for signature
-      annotationApi.createAnnotation(pageIndex, {
-        type: PdfAnnotationSubtype.FREETEXT,
-        rect: {
-          origin: { x, y },
-          size: { width: 200, height: 50 }
-        },
-        contents: text,
-        author: 'Digital Signature',
-        fontSize: 16,
-        fontColor: '#000000',
-        fontFamily: PdfStandardFont.Helvetica,
-        textAlign: PdfTextAlignment.Left,
-        verticalAlign: PdfVerticalAlignment.Top,
-        opacity: 1,
-        pageIndex: pageIndex,
-        id: uuidV4(),
-        created: new Date(),
-        customData: {
-          signatureText: text,
-          signatureType: 'text'
-        }
-      });
-    },
-
     activateDrawMode: () => {
       if (!annotationApi) return;
 
@@ -152,45 +120,31 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPI
 
       try {
         if (signatureConfig.signatureType === 'text' && signatureConfig.signerName) {
-          // Try different tool names for text annotations
-          const textToolNames = ['freetext', 'text', 'textbox', 'annotation-text'];
-          let activatedTool = null;
-
-          for (const toolName of textToolNames) {
-            annotationApi.setActiveTool(toolName);
-            const tool = annotationApi.getActiveTool();
-
-            if (tool && tool.id === toolName) {
-              activatedTool = tool;
-              annotationApi.setToolDefaults(toolName, {
-                contents: signatureConfig.signerName,
-                fontSize: signatureConfig.fontSize || 16,
-                fontFamily: signatureConfig.fontFamily === 'Times-Roman' ? PdfStandardFont.Times_Roman :
-                          signatureConfig.fontFamily === 'Courier' ? PdfStandardFont.Courier :
-                          PdfStandardFont.Helvetica,
-                fontColor: '#000000',
-              });
-              break;
-            }
-          }
+          // Skip native text tools - always use stamp for consistent sizing
+          const activatedTool = null;
 
           if (!activatedTool) {
-            // Fallback: create a simple text image as stamp
+            // Create text image as stamp with actual pixel size matching desired display size
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
             if (ctx) {
-              const fontSize = signatureConfig.fontSize || 16;
+              const baseFontSize = signatureConfig.fontSize || 16;
               const fontFamily = signatureConfig.fontFamily || 'Helvetica';
+              const textColor = signatureConfig.textColor || '#000000';
 
-              canvas.width = Math.max(200, signatureConfig.signerName.length * fontSize * 0.6);
-              canvas.height = fontSize + 20;
-              ctx.fillStyle = '#000000';
-              ctx.font = `${fontSize}px ${fontFamily}`;
+              // Canvas pixel size = display size (EmbedPDF uses pixel dimensions directly)
+              canvas.width = Math.max(200, signatureConfig.signerName.length * baseFontSize * 0.6);
+              canvas.height = baseFontSize + 20;
+
+              ctx.fillStyle = textColor;
+              ctx.font = `${baseFontSize}px ${fontFamily}`;
               ctx.textAlign = 'left';
               ctx.textBaseline = 'middle';
               ctx.fillText(signatureConfig.signerName, 10, canvas.height / 2);
               const dataURL = canvas.toDataURL();
 
+              // Deactivate and reactivate to force refresh
+              annotationApi.setActiveTool(null);
               annotationApi.setActiveTool('stamp');
               const stampTool = annotationApi.getActiveTool();
               if (stampTool && stampTool.id === 'stamp') {
@@ -205,6 +159,7 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPI
           // Use stamp tool for image/canvas signatures
           annotationApi.setActiveTool('stamp');
           const activeTool = annotationApi.getActiveTool();
+
           if (activeTool && activeTool.id === 'stamp') {
             annotationApi.setToolDefaults('stamp', {
               imageSrc: signatureConfig.signatureData,
@@ -265,84 +220,6 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPI
     deactivateTools: () => {
       if (!annotationApi) return;
       annotationApi.setActiveTool(null);
-    },
-
-    applySignatureFromParameters: (params: SignParameters) => {
-      if (!annotationApi || !params.signaturePosition) return;
-
-      const { x, y, width, height, page } = params.signaturePosition;
-
-      switch (params.signatureType) {
-        case 'image':
-          if (params.signatureData) {
-            const annotationId = uuidV4();
-
-            // Store image data in our persistent store
-            storeImageData(annotationId, params.signatureData);
-
-            annotationApi.createAnnotation(page, {
-              type: PdfAnnotationSubtype.STAMP,
-              rect: {
-                origin: { x, y },
-                size: { width, height }
-              },
-              author: 'Digital Signature',
-              subject: `Digital Signature - ${params.reason || 'Document signing'}`,
-              pageIndex: page,
-              id: annotationId,
-              created: new Date(),
-              // Store image data in multiple places to ensure history captures it
-              imageSrc: params.signatureData,
-              contents: params.signatureData, // Some annotation systems use contents
-              data: params.signatureData, // Try data field
-              imageData: params.signatureData, // Try imageData field
-              appearance: params.signatureData // Try appearance field
-            });
-
-            // Switch to select mode after placing signature so it can be easily deleted
-            setTimeout(() => {
-              annotationApi.setActiveTool('select');
-            }, 100);
-          }
-          break;
-
-        case 'text':
-          if (params.signerName) {
-            annotationApi.createAnnotation(page, {
-              type: PdfAnnotationSubtype.FREETEXT,
-              rect: {
-                origin: { x, y },
-                size: { width, height }
-              },
-              contents: params.signerName,
-              author: 'Digital Signature',
-              fontSize: 16,
-              fontColor: '#000000',
-              fontFamily: PdfStandardFont.Helvetica,
-              textAlign: PdfTextAlignment.Left,
-              verticalAlign: PdfVerticalAlignment.Top,
-              opacity: 1,
-              pageIndex: page,
-              id: uuidV4(),
-              created: new Date(),
-              customData: {
-                signatureText: params.signerName,
-                signatureType: 'text'
-              }
-            });
-
-            // Switch to select mode after placing signature so it can be easily deleted
-            setTimeout(() => {
-              annotationApi.setActiveTool('select');
-            }, 100);
-          }
-          break;
-
-        case 'draw':
-          // For draw mode, we activate the tool and let user draw
-          annotationApi.setActiveTool('ink');
-          break;
-      }
     },
 
     getPageAnnotations: async (pageIndex: number): Promise<any[]> => {
