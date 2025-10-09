@@ -314,7 +314,7 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
                     <CustomSearchLayer pageIndex={pageIndex} scale={scale} />
 
                     {/* Selection layer for text interaction */}
-                    <SelectionLayer  pageIndex={pageIndex} scale={scale} />
+                    <SelectionLayer pageIndex={pageIndex} scale={scale} />
                     {/* Annotation layer for signatures (only when enabled) */}
                     {enableAnnotations && (
                       <AnnotationLayer

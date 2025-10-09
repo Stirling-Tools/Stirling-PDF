@@ -10,6 +10,7 @@ import { useFileState, useFileContext } from '../../../contexts/FileContext';
 import { generateThumbnailWithMetadata } from '../../../utils/thumbnailUtils';
 import { createProcessedFile } from '../../../contexts/file/fileActions';
 import { createStirlingFile, createNewStirlingFileStub } from '../../../types/fileContext';
+import { useNavigationState } from '../../../contexts/NavigationContext';
 
 interface ViewerAnnotationControlsProps {
   currentView: string;
@@ -26,12 +27,16 @@ export default function ViewerAnnotationControls({ currentView, disabled = false
   const viewerContext = React.useContext(ViewerContext);
 
   // Signature context for accessing drawing API
-  const { signatureApiRef } = useSignature();
+  const { signatureApiRef, isPlacementMode } = useSignature();
 
   // File state for save functionality
   const { state, selectors } = useFileState();
   const { actions: fileActions } = useFileContext();
   const activeFiles = selectors.getFiles();
+
+  // Check if we're in sign mode
+  const { selectedTool } = useNavigationState();
+  const isSignMode = selectedTool === 'sign';
 
   // Turn off annotation mode when switching away from viewer
   useEffect(() => {
@@ -39,6 +44,11 @@ export default function ViewerAnnotationControls({ currentView, disabled = false
       viewerContext.setAnnotationMode(false);
     }
   }, [currentView, viewerContext]);
+
+  // Don't show any annotation controls in sign mode
+  if (isSignMode) {
+    return null;
+  }
 
   return (
     <>
@@ -51,7 +61,7 @@ export default function ViewerAnnotationControls({ currentView, disabled = false
           onClick={() => {
             viewerContext?.toggleAnnotationsVisibility();
           }}
-          disabled={disabled || viewerContext?.isAnnotationMode}
+          disabled={disabled || currentView !== 'viewer' || viewerContext?.isAnnotationMode || isPlacementMode}
         >
           <LocalIcon
             icon={viewerContext?.isAnnotationsVisible ? "visibility" : "visibility-off-rounded"}
