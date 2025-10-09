@@ -1814,8 +1814,16 @@
       "placeholder": "Enter your full name"
     },
     "instructions": {
-      "title": "How to add signature"
+      "title": "How to add signature",
+      "canvas": "After drawing your signature in the canvas, close the modal then click anywhere on the PDF to place it.",
+      "image": "After uploading your signature image above, click anywhere on the PDF to place it.",
+      "text": "After entering your name above, click anywhere on the PDF to place your signature."
     },
+    "mode": {
+      "move": "Move Signature",
+      "place": "Place Signature"
+    },
+    "updateAndPlace": "Update and Place",
     "activate": "Activate Signature Placement",
     "deactivate": "Stop Placing Signatures",
     "results": {
