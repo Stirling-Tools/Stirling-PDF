@@ -1,5 +1,5 @@
 import React from 'react';
-import { ActionIcon, Text } from '@mantine/core';
+import { Text } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import HotkeyDisplay from '../../hotkeys/HotkeyDisplay';
 import FavoriteStar from '../toolPicker/FavoriteStar';
