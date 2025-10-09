@@ -1,9 +1,15 @@
 package stirling.software.SPDF.config;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.springframework.context.annotation.Configuration;
@@ -15,149 +21,311 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.util.RegexPatternUtils;
 
+/**
+ * Dependency checker that - runs probes in parallel with timeouts (prevents hanging on broken
+ * PATHs) - supports Windows+Unix in a single place - de-duplicates logic for version extraction &
+ * command availability - keeps group <-> command mapping and feature formatting tidy & immutable
+ */
 @Configuration
 @Slf4j
 public class ExternalAppDepConfig {
 
+    private static final Duration DEFAULT_TIMEOUT = Duration.ofSeconds(5);
+    private static final Pattern VERSION_PATTERN = Pattern.compile("(\\d+(?:\\.\\d+){0,2})");
+
     private final EndpointConfiguration endpointConfiguration;
+
+    private final boolean isWindows =
+            System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("windows");
 
     private final String weasyprintPath;
     private final String unoconvPath;
+
+    /**
+     * Map of command(binary) -> affected groups (e.g. "gs" -> ["Ghostscript"]). Immutable to avoid
+     * accidental mutations.
+     */
     private final Map<String, List<String>> commandToGroupMapping;
+
+    private final ExecutorService pool =
+            Executors.newFixedThreadPool(
+                    Math.max(2, Runtime.getRuntime().availableProcessors() / 2));
 
     public ExternalAppDepConfig(
             EndpointConfiguration endpointConfiguration, RuntimePathConfig runtimePathConfig) {
         this.endpointConfiguration = endpointConfiguration;
-        weasyprintPath = runtimePathConfig.getWeasyPrintPath();
-        unoconvPath = runtimePathConfig.getUnoConvertPath();
+        this.weasyprintPath = runtimePathConfig.getWeasyPrintPath();
+        this.unoconvPath = runtimePathConfig.getUnoConvertPath();
 
-        commandToGroupMapping =
-                new HashMap<>() {
-
-                    {
-                        put("gs", List.of("Ghostscript"));
-                        put("ocrmypdf", List.of("OCRmyPDF"));
-                        put("soffice", List.of("LibreOffice"));
-                        put(weasyprintPath, List.of("Weasyprint"));
-                        put("pdftohtml", List.of("Pdftohtml"));
-                        put(unoconvPath, List.of("Unoconvert"));
-                        put("qpdf", List.of("qpdf"));
-                        put("tesseract", List.of("tesseract"));
-                    }
-                };
-    }
-
-    private boolean isCommandAvailable(String command) {
-        try {
-            ProcessBuilder processBuilder = new ProcessBuilder();
-            if (System.getProperty("os.name").toLowerCase().contains("windows")) {
-                processBuilder.command("where", command);
-            } else {
-                processBuilder.command("which", command);
-            }
-            Process process = processBuilder.start();
-            int exitCode = process.waitFor();
-            return exitCode == 0;
-        } catch (Exception e) {
-            log.debug("Error checking for command {}: {}", command, e.getMessage());
-            return false;
-        }
-    }
-
-    private List<String> getAffectedFeatures(String group) {
-        return endpointConfiguration.getEndpointsForGroup(group).stream()
-                .map(endpoint -> formatEndpointAsFeature(endpoint))
-                .toList();
-    }
-
-    private String formatEndpointAsFeature(String endpoint) {
-        // First replace common terms
-        String feature = endpoint.replace("-", " ").replace("pdf", "PDF").replace("img", "image");
-        // Split into words and capitalize each word
-        return Arrays.stream(RegexPatternUtils.getInstance().getWordSplitPattern().split(feature))
-                .map(word -> capitalizeWord(word))
-                .collect(Collectors.joining(" "));
-    }
-
-    private String capitalizeWord(String word) {
-        if (word.isEmpty()) {
-            return word;
-        }
-        if ("pdf".equalsIgnoreCase(word)) {
-            return "PDF";
-        }
-        return word.substring(0, 1).toUpperCase() + word.substring(1).toLowerCase();
-    }
-
-    private void checkDependencyAndDisableGroup(String command) {
-        boolean isAvailable = isCommandAvailable(command);
-        if (!isAvailable) {
-            List<String> affectedGroups = commandToGroupMapping.get(command);
-            if (affectedGroups != null) {
-                for (String group : affectedGroups) {
-                    List<String> affectedFeatures = getAffectedFeatures(group);
-                    endpointConfiguration.disableGroup(group);
-                    log.warn(
-                            "Missing dependency: {} - Disabling group: {} (Affected features: {})",
-                            command,
-                            group,
-                            !affectedFeatures.isEmpty()
-                                    ? String.join(", ", affectedFeatures)
-                                    : "unknown");
-                }
-            }
-        }
+        Map<String, List<String>> tmp = new HashMap<>();
+        tmp.put("gs", List.of("Ghostscript"));
+        tmp.put("ocrmypdf", List.of("OCRmyPDF"));
+        tmp.put("soffice", List.of("LibreOffice"));
+        tmp.put(weasyprintPath, List.of("Weasyprint"));
+        tmp.put("pdftohtml", List.of("Pdftohtml"));
+        tmp.put(unoconvPath, List.of("Unoconvert"));
+        tmp.put("qpdf", List.of("qpdf"));
+        tmp.put("tesseract", List.of("tesseract"));
+        this.commandToGroupMapping = Collections.unmodifiableMap(tmp);
     }
 
     @PostConstruct
     public void checkDependencies() {
-        // Check core dependencies
-        checkDependencyAndDisableGroup("gs");
-        checkDependencyAndDisableGroup("ocrmypdf");
-        checkDependencyAndDisableGroup("tesseract");
-        checkDependencyAndDisableGroup("soffice");
-        checkDependencyAndDisableGroup("qpdf");
-        checkDependencyAndDisableGroup(weasyprintPath);
-        checkDependencyAndDisableGroup("pdftohtml");
-        checkDependencyAndDisableGroup(unoconvPath);
-        // Special handling for Python/OpenCV dependencies
-        boolean pythonAvailable = isCommandAvailable("python3") || isCommandAvailable("python");
-        if (!pythonAvailable) {
-            List<String> pythonFeatures = getAffectedFeatures("Python");
+        try {
+            // core checks in parallel
+            List<Callable<Void>> tasks =
+                    commandToGroupMapping.keySet().stream()
+                            .<Callable<Void>>map(
+                                    cmd ->
+                                            () -> {
+                                                checkDependencyAndDisableGroup(cmd);
+                                                return null;
+                                            })
+                            .collect(Collectors.toList());
+            invokeAllWithTimeout(tasks, DEFAULT_TIMEOUT.plusSeconds(3));
+
+            // Python / OpenCV special handling
+            checkPythonAndOpenCV();
+        } finally {
+            endpointConfiguration.logDisabledEndpointsSummary();
+            pool.shutdown();
+        }
+    }
+
+    // ----------------------- core checks -----------------------
+
+    private void checkDependencyAndDisableGroup(String command) {
+        boolean available = isCommandAvailable(command);
+
+        if (!available) {
+            List<String> affectedGroups = commandToGroupMapping.get(command);
+            if (affectedGroups == null || affectedGroups.isEmpty()) return;
+
+            for (String group : affectedGroups) {
+                List<String> affectedFeatures = getAffectedFeatures(group);
+                endpointConfiguration.disableGroup(group);
+                log.warn(
+                        "Missing dependency: {} - Disabling group: {} (Affected features: {})",
+                        command,
+                        group,
+                        affectedFeatures.isEmpty()
+                                ? "unknown"
+                                : String.join(", ", affectedFeatures));
+            }
+            return;
+        }
+
+        // Extra: enforce minimum WeasyPrint version if command matches
+        if (isWeasyprint(command)) {
+            Optional<String> version = getVersionSafe(command, "--version");
+            version.ifPresentOrElse(
+                    v -> {
+                        Version installed = new Version(v);
+                        // https://www.courtbouillon.org/blog/00040-weasyprint-58/
+                        Version required = new Version("58.0");
+                        if (installed.compareTo(required) < 0) {
+                            List<String> affectedGroups =
+                                    commandToGroupMapping.getOrDefault(
+                                            command, List.of("Weasyprint"));
+                            for (String group : affectedGroups) {
+                                endpointConfiguration.disableGroup(group);
+                            }
+                            log.warn(
+                                    "WeasyPrint version {} is below required {} - disabling"
+                                            + " group(s): {}",
+                                    installed,
+                                    required,
+                                    String.join(", ", affectedGroups));
+                        } else {
+                            log.info("WeasyPrint {} meets minimum {}", installed, required);
+                        }
+                    },
+                    () ->
+                            log.warn(
+                                    "WeasyPrint version could not be determined ({} --version)",
+                                    command));
+        }
+    }
+
+    private boolean isWeasyprint(String command) {
+        return Objects.equals(command, weasyprintPath)
+                || command.toLowerCase(Locale.ROOT).contains("weasyprint");
+    }
+
+    private List<String> getAffectedFeatures(String group) {
+        List<String> endpoints = new ArrayList<>(endpointConfiguration.getEndpointsForGroup(group));
+        return endpoints.stream().map(this::formatEndpointAsFeature).toList();
+    }
+
+    private String formatEndpointAsFeature(String endpoint) {
+        String feature = endpoint.replace("-", " ").replace("pdf", "PDF").replace("img", "image");
+        return Arrays.stream(RegexPatternUtils.getInstance().getWordSplitPattern().split(feature))
+                .map(this::capitalizeWord)
+                .collect(Collectors.joining(" "));
+    }
+
+    private String capitalizeWord(String word) {
+        if (word == null || word.isEmpty()) return word;
+        if ("pdf".equalsIgnoreCase(word)) return "PDF";
+        return word.substring(0, 1).toUpperCase(Locale.ROOT)
+                + word.substring(1).toLowerCase(Locale.ROOT);
+    }
+
+    // --------------------- python/opencv ---------------------
+
+    private void checkPythonAndOpenCV() {
+        String python = findFirstAvailable(List.of("python3", "python")).orElse(null);
+        if (python == null) {
+            disablePythonAndOpenCV("Python interpreter not found on PATH");
+            return;
+        }
+
+        // Check OpenCV import
+        int ec = runAndWait(List.of(python, "-c", "import cv2"), DEFAULT_TIMEOUT).exitCode();
+        if (ec != 0) {
             List<String> openCVFeatures = getAffectedFeatures("OpenCV");
-            endpointConfiguration.disableGroup("Python");
             endpointConfiguration.disableGroup("OpenCV");
             log.warn(
-                    "Missing dependency: Python - Disabling Python features: {} and OpenCV features: {}",
-                    String.join(", ", pythonFeatures),
+                    "OpenCV not available in Python - Disabling OpenCV features: {}",
                     String.join(", ", openCVFeatures));
-        } else {
-            // If Python is available, check for OpenCV
-            try {
-                ProcessBuilder processBuilder = new ProcessBuilder();
-                if (System.getProperty("os.name").toLowerCase().contains("windows")) {
-                    processBuilder.command("python", "-c", "import cv2");
-                } else {
-                    processBuilder.command("python3", "-c", "import cv2");
+        }
+    }
+
+    private void disablePythonAndOpenCV(String reason) {
+        List<String> pythonFeatures = getAffectedFeatures("Python");
+        List<String> openCVFeatures = getAffectedFeatures("OpenCV");
+        endpointConfiguration.disableGroup("Python");
+        endpointConfiguration.disableGroup("OpenCV");
+        log.warn(
+                "Missing dependency: Python (reason: {}) - Disabling Python features: {} and OpenCV"
+                        + " features: {}",
+                reason,
+                String.join(", ", pythonFeatures),
+                String.join(", ", openCVFeatures));
+    }
+
+    // --------------------- probing helpers ---------------------
+
+    private Optional<String> findFirstAvailable(List<String> commands) {
+        for (String c : commands) {
+            if (isCommandAvailable(c)) return Optional.of(c);
+        }
+        return Optional.empty();
+    }
+
+    private boolean isCommandAvailable(String command) {
+        // First try OS-native lookup
+        List<String> lookup =
+                isWindows ? List.of("where", command) : List.of("command", "-v", command);
+        ProbeResult res = runAndWait(lookup, DEFAULT_TIMEOUT);
+        if (res.exitCode() == 0) return true;
+
+        // Fallback: try `--version` when helpful (covers py-launcher shims on Windows etc.)
+        ProbeResult ver = runAndWait(List.of(command, "--version"), DEFAULT_TIMEOUT);
+        return ver.exitCode() == 0;
+    }
+
+    private Optional<String> getVersionSafe(String command, String arg) {
+        try {
+            ProbeResult res = runAndWait(List.of(command, arg), DEFAULT_TIMEOUT);
+            if (res.exitCode() != 0) return Optional.empty();
+            String text = res.combined();
+            Matcher m = VERSION_PATTERN.matcher(text);
+            return m.find() ? Optional.of(m.group(1)) : Optional.empty();
+        } catch (Exception e) {
+            return Optional.empty();
+        }
+    }
+
+    private void invokeAllWithTimeout(List<Callable<Void>> tasks, Duration timeout) {
+        try {
+            List<Future<Void>> futures =
+                    pool.invokeAll(tasks, timeout.toMillis(), TimeUnit.MILLISECONDS);
+            for (Future<Void> f : futures) {
+                try {
+                    f.get(10, TimeUnit.MILLISECONDS);
+                } catch (Exception ignored) {
                 }
-                Process process = processBuilder.start();
-                int exitCode = process.waitFor();
-                if (exitCode != 0) {
-                    List<String> openCVFeatures = getAffectedFeatures("OpenCV");
-                    endpointConfiguration.disableGroup("OpenCV");
-                    log.warn(
-                            "OpenCV not available in Python - Disabling OpenCV features: {}",
-                            String.join(", ", openCVFeatures));
-                }
-            } catch (Exception e) {
-                List<String> openCVFeatures = getAffectedFeatures("OpenCV");
-                endpointConfiguration.disableGroup("OpenCV");
-                log.warn(
-                        "Error checking OpenCV: {} - Disabling OpenCV features: {}",
-                        e.getMessage(),
-                        String.join(", ", openCVFeatures));
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    private ProbeResult runAndWait(List<String> cmd, Duration timeout) {
+        ProcessBuilder pb = new ProcessBuilder(cmd);
+        try {
+            Process p = pb.start();
+            boolean finished = p.waitFor(timeout.toMillis(), TimeUnit.MILLISECONDS);
+            if (!finished) {
+                p.destroyForcibly();
+                return new ProbeResult(124, "", "timeout");
+            }
+            String out = readStream(p.getInputStream());
+            String err = readStream(p.getErrorStream());
+            int ec = p.exitValue();
+            return new ProbeResult(ec, out, err);
+        } catch (IOException | InterruptedException e) {
+            if (e instanceof InterruptedException) Thread.currentThread().interrupt();
+            return new ProbeResult(127, "", String.valueOf(e.getMessage()));
+        }
+    }
+
+    private static String readStream(InputStream in) throws IOException {
+        StringBuilder sb = new StringBuilder();
+        try (BufferedReader br =
+                new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                if (sb.length() > 0) sb.append('\n');
+                sb.append(line);
             }
         }
-        endpointConfiguration.logDisabledEndpointsSummary();
+        return sb.toString().trim();
+    }
+
+    // --------------------- tiny value types ---------------------
+
+    private record ProbeResult(int exitCode, String stdout, String stderr) {
+        String combined() {
+            return (stdout == null ? "" : stdout) + "\n" + (stderr == null ? "" : stderr);
+        }
+    }
+
+    /** Simple numeric version comparator (major.minor.patch). */
+    static class Version implements Comparable<Version> {
+        private final int[] parts;
+
+        Version(String ver) {
+            String[] tokens = ver.split("\\.");
+            parts = new int[Math.max(3, tokens.length)];
+            for (int i = 0; i < parts.length; i++) {
+                if (i < tokens.length) {
+                    try {
+                        parts[i] = Integer.parseInt(tokens[i]);
+                    } catch (NumberFormatException e) {
+                        parts[i] = 0;
+                    }
+                } else {
+                    parts[i] = 0;
+                }
+            }
+        }
+
+        @Override
+        public int compareTo(Version o) {
+            int n = Math.max(parts.length, o.parts.length);
+            for (int i = 0; i < n; i++) {
+                int a = i < parts.length ? parts[i] : 0;
+                int b = i < o.parts.length ? o.parts[i] : 0;
+                if (a != b) return Integer.compare(a, b);
+            }
+            return 0;
+        }
+
+        @Override
+        public String toString() {
+            return parts[0] + "." + parts[1] + "." + parts[2];
+        }
     }
 }
