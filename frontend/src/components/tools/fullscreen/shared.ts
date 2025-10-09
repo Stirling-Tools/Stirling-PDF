@@ -31,7 +31,7 @@ export function useToolMeta(id: string, tool: ToolRegistryEntry) {
   const { isFavorite, toggleFavorite } = useToolWorkflow();
 
   const isFav = isFavorite(id as ToolId);
-  const binding = hotkeys[id];
+  const binding = hotkeys[id as ToolId];
   const disabled = isToolDisabled(id, tool);
 
   return {

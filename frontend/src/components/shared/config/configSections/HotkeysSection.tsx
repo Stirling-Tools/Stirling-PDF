@@ -6,7 +6,6 @@ import { useHotkeys } from '../../../../contexts/HotkeyContext';
 import { ToolId } from '../../../../types/toolId';
 import HotkeyDisplay from '../../../hotkeys/HotkeyDisplay';
 import { bindingEquals, eventToBinding, HotkeyBinding } from '../../../../utils/hotkeys';
-import { ToolId } from 'src/types/toolId';
 import { ToolRegistryEntry } from 'src/data/toolsTaxonomy';
 
 const rowStyle: React.CSSProperties = {

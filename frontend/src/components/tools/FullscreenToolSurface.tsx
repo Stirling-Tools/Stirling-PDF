@@ -13,7 +13,7 @@ import { ToolPanelGeometry } from '../../hooks/tools/useToolPanelGeometry';
 
 interface FullscreenToolSurfaceProps {
   searchQuery: string;
-  toolRegistry: Record<ToolId, ToolRegistryEntry>;
+  toolRegistry: Partial<Record<ToolId, ToolRegistryEntry>>;
   filteredTools: Array<{ item: [ToolId, ToolRegistryEntry]; matchedText?: string }>;
   selectedToolKey: string | null;
   showDescriptions: boolean;

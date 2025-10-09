@@ -11,7 +11,7 @@ import { ToolId } from "src/types/toolId";
 interface ToolSearchProps {
   value: string;
   onChange: (value: string) => void;
-  toolRegistry: Readonly<Record<ToolId, ToolRegistryEntry>>;
+  toolRegistry: Partial<Record<ToolId, ToolRegistryEntry>>;
   onToolSelect?: (toolId: ToolId) => void;
   mode: "filter" | "dropdown" | "unstyled";
   selectedToolKey?: string | null;

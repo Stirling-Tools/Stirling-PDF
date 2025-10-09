@@ -8,7 +8,6 @@ import { useToolSections } from '../../hooks/useToolSections';
 import SubcategoryHeader from './shared/SubcategoryHeader';
 import NoToolsFound from './shared/NoToolsFound';
 import "./toolPicker/ToolPicker.css";
-import { ToolId } from 'src/types/toolId';
 
 interface SearchResultsProps {
   filteredTools: Array<{ item: [ToolId, ToolRegistryEntry]; matchedText?: string }>;

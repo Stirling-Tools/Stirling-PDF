@@ -4,7 +4,7 @@ import { ToolRegistryEntry } from '../../data/toolsTaxonomy';
 
 export function useFavoriteToolItems(
   favoriteTools: ToolId[],
-  toolRegistry: Readonly<Record<ToolId, ToolRegistryEntry>>
+  toolRegistry: Partial<Record<ToolId, ToolRegistryEntry>>
 ): Array<{ id: ToolId; tool: ToolRegistryEntry }> {
   return useMemo(() => {
     return favoriteTools
