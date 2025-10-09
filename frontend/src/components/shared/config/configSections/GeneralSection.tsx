@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Paper, Stack, Switch, Text, Tooltip, NumberInput, SegmentedControl } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { usePreferences } from '../../../../contexts/PreferencesContext';
+import { ToolPanelMode } from 'src/contexts/toolWorkflow/toolWorkflowState';
 
 const DEFAULT_AUTO_UNZIP_FILE_LIMIT = 4;
 
@@ -37,7 +38,7 @@ const GeneralSection: React.FC = () => {
             </div>
             <SegmentedControl
               value={preferences.defaultToolPanelMode}
-              onChange={(val) => updatePreference('defaultToolPanelMode', val as any)}
+              onChange={(val: string) => updatePreference('defaultToolPanelMode', val as ToolPanelMode)}
               data={[
                 { label: t('settings.general.mode.sidebar', 'Sidebar'), value: 'sidebar' },
                 { label: t('settings.general.mode.fullscreen', 'Fullscreen'), value: 'fullscreen' },

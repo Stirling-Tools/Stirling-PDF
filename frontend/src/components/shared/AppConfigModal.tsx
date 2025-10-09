@@ -6,6 +6,7 @@ import Overview from './config/configSections/Overview';
 import { createConfigNavSections } from './config/configNavSections';
 import { NavKey } from './config/types';
 import './AppConfigModal.css';
+import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from '../../styles/zIndex';
 
 interface AppConfigModalProps {
   opened: boolean;
@@ -77,7 +78,7 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
       centered
       radius="lg"
       withCloseButton={false}
-      zIndex={200000}
+      zIndex={Z_INDEX_OVER_FULLSCREEN_SURFACE}
       overlayProps={{ opacity: 0.35, blur: 2 }}
       padding={0}
       fullScreen={isMobile}

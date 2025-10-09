@@ -20,7 +20,10 @@ import ViewerAnnotationControls from './rightRail/ViewerAnnotationControls';
 import { parseSelection } from '../../utils/bulkselection/parseSelection';
 
 
+import { useSidebarContext } from '../../contexts/SidebarContext';
+
 export default function RightRail() {
+  const { sidebarRefs } = useSidebarContext();
   const { t } = useTranslation();
   const [isPanning, setIsPanning] = useState(false);
 
@@ -178,7 +181,7 @@ export default function RightRail() {
   }, [currentView]);
 
   return (
-    <div className={`right-rail`} data-sidebar="right-rail">
+    <div ref={sidebarRefs.rightRailRef} className={`right-rail`} data-sidebar="right-rail">
       <div className="right-rail-inner">
         {topButtons.length > 0 && (
           <>
@@ -298,7 +301,10 @@ export default function RightRail() {
             </Tooltip>
 
             {/* Annotation Controls */}
-            <ViewerAnnotationControls currentView={currentView} />
+            <ViewerAnnotationControls
+              currentView={currentView}
+              disabled={currentView !== 'viewer' || allButtonsDisabled || disableForFullscreen}
+            />
           </div>
           <Divider className="right-rail-divider" />
         </div>

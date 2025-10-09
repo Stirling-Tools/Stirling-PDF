@@ -1,9 +1,10 @@
+import { ToolPanelMode } from 'src/contexts/toolWorkflow/toolWorkflowState';
 import { indexedDBManager, DATABASE_CONFIGS } from './indexedDBManager';
 
 export interface UserPreferences {
   autoUnzip: boolean;
   autoUnzipFileLimit: number;
-  defaultToolPanelMode: 'sidebar' | 'fullscreen';
+  defaultToolPanelMode: ToolPanelMode;
 }
 
 export const DEFAULT_PREFERENCES: UserPreferences = {

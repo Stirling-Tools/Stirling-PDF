@@ -92,7 +92,7 @@ export const HotkeyProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       const next: Record<string, HotkeyBinding> = {};
       let changed = false;
       Object.entries(prev).forEach(([toolId, binding]) => {
-        if (toolRegistry[toolId]) {
+        if (toolRegistry[toolId as ToolId]) {
           next[toolId] = binding;
         } else {
           changed = true;

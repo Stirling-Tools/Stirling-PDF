@@ -11,14 +11,14 @@ import { useNavigationActions, useNavigationState } from './NavigationContext';
 import { ToolId, isValidToolId } from '../types/toolId';
 import { getDefaultWorkbench } from '../types/workbench';
 import { filterToolRegistryByQuery } from '../utils/toolSearch';
-import { useToolHistory } from '../hooks/tools/useToolHistory';
+import { useToolHistory } from '../hooks/tools/useUserToolActivity';
 import {
   ToolWorkflowState,
   TOOL_PANEL_MODE_STORAGE_KEY,
   createInitialState,
   toolWorkflowReducer,
   ToolPanelMode,
-} from './toolWorkflow/state';
+} from './toolWorkflow/toolWorkflowState';
 import { usePreferences } from './PreferencesContext';
 
 // State interface
@@ -29,7 +29,7 @@ interface ToolWorkflowContextValue extends ToolWorkflowState {
   // Tool management (from hook)
   selectedToolKey: string | null;
   selectedTool: ToolRegistryEntry | null;
-  toolRegistry: Record<string, ToolRegistryEntry>;
+  toolRegistry: Record<ToolId, ToolRegistryEntry>;
   getSelectedTool: (toolId: string | null) => ToolRegistryEntry | null;
 
   // UI Actions
@@ -56,13 +56,11 @@ interface ToolWorkflowContextValue extends ToolWorkflowState {
   handleReaderToggle: () => void;
 
   // Computed values
-  filteredTools: Array<{ item: [string, ToolRegistryEntry]; matchedText?: string }>; // Filtered by search
+  filteredTools: Array<{ item: [ToolId, ToolRegistryEntry]; matchedText?: string }>; // Filtered by search
   isPanelVisible: boolean;
 
   // Tool History
-  recentTools: ToolId[];
   favoriteTools: ToolId[];
-  addToRecent: (toolId: ToolId) => void;
   toggleFavorite: (toolId: ToolId) => void;
   isFavorite: (toolId: ToolId) => boolean;
 }
@@ -93,9 +91,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
 
   // Tool history hook
   const {
-    recentTools,
     favoriteTools,
-    addToRecent,
     toggleFavorite,
     isFavorite,
   } = useToolHistory();
@@ -180,9 +176,6 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
 
   // Workflow actions (compound actions that coordinate multiple state changes)
   const handleToolSelect = useCallback((toolId: ToolId) => {
-    // Track tool usage in recent history
-    addToRecent(toolId);
-
     // Handle read tool selection - should behave exactly like QuickAccessBar read button
     if (toolId === 'read') {
       setReaderMode(true);
@@ -218,7 +211,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     setSearchQuery('');
     setLeftPanelView('toolContent');
     setReaderMode(false); // Disable read mode when selecting tools
-  }, [actions, getSelectedTool, setLeftPanelView, setReaderMode, setSearchQuery, addToRecent]);
+  }, [actions, getSelectedTool, setLeftPanelView, setReaderMode, setSearchQuery]);
 
   const handleBackToTools = useCallback(() => {
     setLeftPanelView('toolPicker');
@@ -276,9 +269,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     isPanelVisible,
 
     // Tool History
-    recentTools,
     favoriteTools,
-    addToRecent,
     toggleFavorite,
     isFavorite,
   }), [
@@ -302,9 +293,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     handleReaderToggle,
     filteredTools,
     isPanelVisible,
-    recentTools,
     favoriteTools,
-    addToRecent,
     toggleFavorite,
     isFavorite,
   ]);

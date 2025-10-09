@@ -31,21 +31,21 @@ export const renderToolButtons = (
         <SubcategoryHeader label={getSubcategoryLabel(t, subcategory.subcategoryId)} />
       )}
       <div>
-        {subcategory.tools.map(({ id, tool }, _index) => {
-                  const matchedSynonym = matchedTextMap.get(id);
-                  
-                  return (
-                    <ToolButton
-                      key={id}
-                      id={id}
-                      tool={tool}
-                      isSelected={selectedToolKey === id}
-                      onSelect={onSelect}
-                      disableNavigation={disableNavigation}
-                      matchedSynonym={matchedSynonym}
-                      hasStars={hasStars}
-                    />
-                  );
+        {subcategory.tools.map(({ id, tool }) => {
+          const matchedSynonym = matchedTextMap.get(id);
+          
+          return (
+            <ToolButton
+              key={id}
+              id={id}
+              tool={tool}
+              isSelected={selectedToolKey === id}
+              onSelect={onSelect}
+              disableNavigation={disableNavigation}
+              matchedSynonym={matchedSynonym}
+              hasStars={hasStars}
+            />
+          );
         })}
       </div>
     </Box>

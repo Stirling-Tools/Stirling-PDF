@@ -3,6 +3,7 @@ import { Alert, Badge, Box, Button, Divider, Group, Paper, Stack, Text, TextInpu
 import { useTranslation } from 'react-i18next';
 import { useToolWorkflow } from '../../../../contexts/ToolWorkflowContext';
 import { useHotkeys } from '../../../../contexts/HotkeyContext';
+import { ToolId } from '../../../../types/toolId';
 import HotkeyDisplay from '../../../hotkeys/HotkeyDisplay';
 import { bindingEquals, eventToBinding } from '../../../../utils/hotkeys';
 
@@ -83,7 +84,10 @@ const HotkeysSection: React.FC = () => {
       ));
 
       if (conflictEntry) {
-        const conflictTool = toolRegistry[conflictEntry[0]]?.name ?? conflictEntry[0];
+        const conflictKey = conflictEntry[0];
+        const conflictTool = (conflictKey in toolRegistry)
+          ? toolRegistry[conflictKey as ToolId]?.name
+          : conflictKey;
         setError(t('settings.hotkeys.errorConflict', 'Shortcut already used by {{tool}}.', { tool: conflictTool }));
         return;
       }
@@ -114,7 +118,7 @@ const HotkeysSection: React.FC = () => {
       </div>
 
       <TextInput
-        placeholder="Search tools..."
+        placeholder={t('settings.hotkeys.searchPlaceholder', 'Search tools...')}
         value={searchQuery}
         onChange={(event) => setSearchQuery(event.currentTarget.value)}
         size="md"
@@ -125,7 +129,7 @@ const HotkeysSection: React.FC = () => {
         <Stack gap="md">
           {filteredTools.length === 0 ? (
             <Text c="dimmed" ta="center" py="xl">
-              {searchQuery.trim() ? 'No tools found matching your search.' : 'No tools available.'}
+              {t('toolPicker.noToolsFound', 'No tools found')}
             </Text>
           ) : (
             filteredTools.map(([toolId, tool], index) => {

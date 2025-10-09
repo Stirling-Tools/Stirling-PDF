@@ -1,4 +1,4 @@
-import React, { useRef, useState, useCallback } from 'react';
+import React, { useRef, useState, useCallback, useEffect } from 'react';
 import { Paper, Group, Button, Modal, Stack, Text } from '@mantine/core';
 import { ColorSwatchButton } from './ColorPicker';
 import PenSizeSelector from '../../tools/sign/PenSizeSelector';
@@ -252,7 +252,7 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
   }, [selectedColor, penSize]);
 
   // Initialize canvas settings whenever color or pen size changes
-  React.useEffect(() => {
+  useEffect(() => {
     const updateCanvas = (canvas: HTMLCanvasElement | null) => {
       if (!canvas) return;
       const ctx = canvas.getContext('2d');

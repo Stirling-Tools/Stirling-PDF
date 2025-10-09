@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { supportedLanguages } from '../../i18n';
 import LocalIcon from './LocalIcon';
 import styles from './LanguageSelector.module.css';
+import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from '../../styles/zIndex';
 
 // Types
 interface LanguageSelectorProps {
@@ -209,7 +210,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ position = 'bottom-
         width={600}
         position={position}
         offset={offset}
-        zIndex={1400}
+        zIndex={Z_INDEX_OVER_FULLSCREEN_SURFACE}
         transitionProps={{
           transition: 'scale-y',
           duration: 200,
@@ -265,7 +266,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ position = 'bottom-
             boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
             backgroundColor: 'light-dark(var(--mantine-color-white), var(--mantine-color-dark-6))',
             border: 'light-dark(1px solid var(--mantine-color-gray-3), 1px solid var(--mantine-color-dark-4))',
-            zIndex: 1400,
+            zIndex: Z_INDEX_OVER_FULLSCREEN_SURFACE,
           }}
         >
           <ScrollArea h={190} type="scroll">

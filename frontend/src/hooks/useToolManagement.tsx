@@ -4,11 +4,12 @@ import { useFlatToolRegistry } from "../data/useTranslatedToolRegistry";
 import { getAllEndpoints, type ToolRegistryEntry } from "../data/toolsTaxonomy";
 import { useMultipleEndpointsEnabled } from "./useEndpointConfig";
 import { FileId } from '../types/file';
+import { ToolId } from 'src/types/toolId';
 
 interface ToolManagementResult {
   selectedTool: ToolRegistryEntry | null;
   toolSelectedFileIds: FileId[];
-  toolRegistry: Record<string, ToolRegistryEntry>;
+  toolRegistry: Record<ToolId, ToolRegistryEntry>;
   setToolSelectedFileIds: (fileIds: FileId[]) => void;
   getSelectedTool: (toolKey: string | null) => ToolRegistryEntry | null;
 }
@@ -30,12 +31,12 @@ export const useToolManagement = (): ToolManagementResult => {
     return endpoints.length === 0 || endpoints.some((endpoint: string) => endpointStatus[endpoint] === true);
   }, [endpointsLoading, endpointStatus, baseRegistry]);
 
-  const toolRegistry: Record<string, ToolRegistryEntry> = useMemo(() => {
-    const availableToolRegistry: Record<string, ToolRegistryEntry> = {};
+  const toolRegistry: Record<ToolId, ToolRegistryEntry> = useMemo(() => {
+    const availableToolRegistry: Record<ToolId, ToolRegistryEntry> = {} as Record<ToolId, ToolRegistryEntry>;
     Object.keys(baseRegistry).forEach(toolKey => {
       if (isToolAvailable(toolKey)) {
         const baseTool = baseRegistry[toolKey as keyof typeof baseRegistry];
-        availableToolRegistry[toolKey] = {
+        availableToolRegistry[toolKey as ToolId] = {
           ...baseTool,
           name: baseTool.name,
           description: baseTool.description,
@@ -46,7 +47,7 @@ export const useToolManagement = (): ToolManagementResult => {
   }, [isToolAvailable, t, baseRegistry]);
 
   const getSelectedTool = useCallback((toolKey: string | null): ToolRegistryEntry | null => {
-    return toolKey ? toolRegistry[toolKey] || null : null;
+    return toolKey ? toolRegistry[toolKey as ToolId] || null : null;
   }, [toolRegistry]);
 
   return {

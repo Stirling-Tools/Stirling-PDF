@@ -9,6 +9,7 @@ import MobileLayout from './fileManager/MobileLayout';
 import DesktopLayout from './fileManager/DesktopLayout';
 import DragOverlay from './fileManager/DragOverlay';
 import { FileManagerProvider } from '../contexts/FileManagerContext';
+import { Z_INDEX_FILE_MANAGER_MODAL } from '../styles/zIndex';
 
 interface FileManagerProps {
   selectedTool?: Tool | null;
@@ -100,7 +101,7 @@ const FileManager: React.FC<FileManagerProps> = ({ selectedTool }) => {
       radius="md"
       className="overflow-hidden p-0"
       withCloseButton={false}
-      zIndex={1300}
+      zIndex={Z_INDEX_FILE_MANAGER_MODAL}
       styles={{
         content: {
           position: 'relative',

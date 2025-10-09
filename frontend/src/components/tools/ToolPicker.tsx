@@ -4,6 +4,8 @@ import { useTranslation } from "react-i18next";
 import { ToolRegistryEntry } from "../../data/toolsTaxonomy";
 import "./toolPicker/ToolPicker.css";
 import { useToolSections } from "../../hooks/useToolSections";
+import type { SubcategoryGroup } from "../../hooks/useToolSections";
+import { useFavoriteToolItems } from "../../hooks/tools/useFavoriteToolItems";
 import NoToolsFound from "./shared/NoToolsFound";
 import { renderToolButtons } from "./shared/renderToolButtons";
 import Badge from "../shared/Badge";
@@ -15,7 +17,7 @@ import { ToolId } from "../../types/toolId";
 interface ToolPickerProps {
   selectedToolKey: string | null;
   onSelect: (id: string) => void;
-  filteredTools: Array<{ item: [string, ToolRegistryEntry]; matchedText?: string }>;
+  filteredTools: Array<{ item: [ToolId, ToolRegistryEntry]; matchedText?: string }>;
   isSearching?: boolean;
 }
 
@@ -68,16 +70,7 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
   const { sections: visibleSections } = useToolSections(filteredTools);
   const { favoriteTools, toolRegistry } = useToolWorkflow();
 
-  const favoriteToolItems = useMemo(() => {
-    return favoriteTools
-      .map((toolId) => {
-        const tool = (toolRegistry as any)[toolId as ToolId] as ToolRegistryEntry | undefined;
-        return tool ? { id: toolId as string, tool } : null;
-      })
-      .filter(Boolean)
-      // Only include ready tools (component or link) and navigational exceptions
-      .filter((item: any) => item && (item.tool.component || item.tool.link || item.id === 'read' || item.id === 'multiTool')) as Array<{ id: string; tool: ToolRegistryEntry }>;
-  }, [favoriteTools, toolRegistry]);
+  const favoriteToolItems = useFavoriteToolItems(favoriteTools, toolRegistry);
 
   const quickSection = useMemo(
     () => visibleSections.find(s => s.key === 'quick'),
@@ -87,8 +80,8 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
   const recommendedItems = useMemo(() => {
     if (!quickSection) return [] as Array<{ id: string; tool: ToolRegistryEntry }>;
     const items: Array<{ id: string; tool: ToolRegistryEntry }> = [];
-    quickSection.subcategories.forEach((sc: any) => sc.tools.forEach((toolEntry: any) => items.push(toolEntry)));
-    return items.slice(0, 5);
+    quickSection.subcategories.forEach((sc: SubcategoryGroup) => sc.tools.forEach((toolEntry) => items.push(toolEntry)));
+    return items;
   }, [quickSection]);
 
   const recommendedCount = useMemo(() => favoriteToolItems.length + recommendedItems.length, [favoriteToolItems.length, recommendedItems.length]);
@@ -113,7 +106,9 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
   };
 
   // Build flat list by subcategory for search mode
-  const { searchGroups } = useToolSections(isSearching ? filteredTools : []);
+  const emptyFilteredTools: ToolPickerProps['filteredTools'] = [];
+  const effectiveFilteredForSearch: ToolPickerProps['filteredTools'] = isSearching ? filteredTools : emptyFilteredTools;
+  const { searchGroups } = useToolSections(effectiveFilteredForSearch);
 
   return (
     <Box
@@ -243,7 +238,7 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
 
             <Box ref={allToolsRef} w="100%">
               <Stack p="sm" gap="xs">
-                        {allSection?.subcategories.map((sc: any) =>
+                        {allSection?.subcategories.map((sc: SubcategoryGroup) =>
                           renderToolButtons(t, sc, selectedToolKey, onSelect, true, false, undefined, true)
                         )}
               </Stack>

@@ -10,16 +10,14 @@ import { useFileState, useFileContext } from '../../../contexts/FileContext';
 import { generateThumbnailWithMetadata } from '../../../utils/thumbnailUtils';
 import { createProcessedFile } from '../../../contexts/file/fileActions';
 import { createStirlingFile, createNewStirlingFileStub } from '../../../types/fileContext';
-import { useToolWorkflow } from '../../../contexts/ToolWorkflowContext';
 
 interface ViewerAnnotationControlsProps {
   currentView: string;
+  disabled?: boolean;
 }
 
-export default function ViewerAnnotationControls({ currentView }: ViewerAnnotationControlsProps) {
+export default function ViewerAnnotationControls({ currentView, disabled = false }: ViewerAnnotationControlsProps) {
   const { t } = useTranslation();
-  const { toolPanelMode, leftPanelView } = useToolWorkflow();
-  const disableForFullscreen = toolPanelMode === 'fullscreen' && leftPanelView === 'toolPicker';
   const [selectedColor, setSelectedColor] = useState('#000000');
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
   const [isHoverColorPickerOpen, setIsHoverColorPickerOpen] = useState(false);
@@ -53,7 +51,7 @@ export default function ViewerAnnotationControls({ currentView }: ViewerAnnotati
           onClick={() => {
             viewerContext?.toggleAnnotationsVisibility();
           }}
-          disabled={currentView !== 'viewer' || viewerContext?.isAnnotationMode || disableForFullscreen}
+          disabled={disabled || viewerContext?.isAnnotationMode}
         >
           <LocalIcon
             icon={viewerContext?.isAnnotationsVisible ? "visibility" : "visibility-off-rounded"}
@@ -97,7 +95,7 @@ export default function ViewerAnnotationControls({ currentView }: ViewerAnnotati
                     }
                   }
                 }}
-                disabled={currentView !== 'viewer' || disableForFullscreen}
+              disabled={disabled}
                 aria-label="Drawing mode active"
               >
                 <LocalIcon icon="edit" width="1.5rem" height="1.5rem" />
@@ -139,7 +137,7 @@ export default function ViewerAnnotationControls({ currentView }: ViewerAnnotati
                 }
               }
             }}
-            disabled={currentView !== 'viewer' || disableForFullscreen}
+            disabled={disabled}
             aria-label={typeof t === 'function' ? t('rightRail.draw', 'Draw') : 'Draw'}
           >
             <LocalIcon icon="edit" width="1.5rem" height="1.5rem" />
@@ -196,7 +194,7 @@ export default function ViewerAnnotationControls({ currentView }: ViewerAnnotati
               }
             }
           }}
-          disabled={currentView !== 'viewer' || disableForFullscreen}
+          disabled={disabled}
         >
           <LocalIcon icon="save" width="1.5rem" height="1.5rem" />
         </ActionIcon>

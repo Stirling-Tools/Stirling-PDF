@@ -6,14 +6,15 @@ import ToolSearch from './toolPicker/ToolSearch';
 import FullscreenToolList from './FullscreenToolList';
 import { ToolRegistryEntry } from '../../data/toolsTaxonomy';
 import { ToolId } from '../../types/toolId';
-import { useFocusTrap } from '../../hooks/tools/useFocusTrap';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { BASE_PATH } from '../../constants/app';
 import './ToolPanel.css';
+import { ToolPanelGeometry } from '../../hooks/tools/useToolPanelGeometry';
 
 interface FullscreenToolSurfaceProps {
   searchQuery: string;
-  toolRegistry: Record<string, ToolRegistryEntry>;
-  filteredTools: Array<{ item: [string, ToolRegistryEntry]; matchedText?: string }>;
+  toolRegistry: Record<ToolId, ToolRegistryEntry>;
+  filteredTools: Array<{ item: [ToolId, ToolRegistryEntry]; matchedText?: string }>;
   selectedToolKey: string | null;
   showDescriptions: boolean;
   matchedTextMap: Map<string, string>;
@@ -22,12 +23,7 @@ interface FullscreenToolSurfaceProps {
   onToggleDescriptions: () => void;
   onExitFullscreenMode: () => void;
   toggleLabel: string;
-  geometry: {
-    left: number;
-    top: number;
-    width: number;
-    height: number;
-  } | null;
+  geometry: ToolPanelGeometry | null;
 }
 
 const FullscreenToolSurface = ({
@@ -69,10 +65,16 @@ const FullscreenToolSurface = ({
     }
 
     setIsExiting(true);
-    setTimeout(() => {
+    const el = surfaceRef.current;
+    if (!el) {
       onExitFullscreenMode();
-    }, 220); // Match animation duration (0.22s)
-  };
+      return;
+    }
+    // Rely on CSS animation end rather than duplicating timing in JS
+    el.addEventListener('animationend', () => {
+      onExitFullscreenMode();
+    }, { once: true });
+};
 
 
   const style = geometry

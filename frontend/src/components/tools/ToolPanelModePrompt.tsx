@@ -2,50 +2,33 @@ import { useEffect, useState } from 'react';
 import { Badge, Button, Card, Group, Modal, Stack, Text } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { useToolWorkflow } from '../../contexts/ToolWorkflowContext';
-import { TOOL_PANEL_MODE_STORAGE_KEY } from '../../contexts/toolWorkflow/state';
 import './ToolPanelModePrompt.css';
+import { useToolPanelModePreference } from '../../hooks/useToolPanelModePreference';
+import { ToolPanelMode } from 'src/contexts/toolWorkflow/toolWorkflowState';
 
-type ToolPanelModeOption = 'sidebar' | 'fullscreen';
-
-const PROMPT_SEEN_KEY = 'toolPanelModePromptSeen';
+// type moved to hook
 
 const ToolPanelModePrompt = () => {
   const { t } = useTranslation();
   const { toolPanelMode, setToolPanelMode } = useToolWorkflow();
   const [opened, setOpened] = useState(false);
-  const [hydrated, setHydrated] = useState(false);
+  const { hydrated, shouldShowPrompt, markPromptSeen, setPreferredMode } = useToolPanelModePreference();
 
   useEffect(() => {
-    if (typeof window === 'undefined') {
-      return;
-    }
-
-    const hasSeenPrompt = window.localStorage.getItem(PROMPT_SEEN_KEY);
-    const storedPreference = window.localStorage.getItem(TOOL_PANEL_MODE_STORAGE_KEY);
-
-    if (!hasSeenPrompt && !storedPreference) {
+    if (shouldShowPrompt) {
       setOpened(true);
     }
+  }, [shouldShowPrompt]);
 
-    setHydrated(true);
-  }, []);
-
-  const persistSeen = () => {
-    if (typeof window === 'undefined') {
-      return;
-    }
-
-    window.localStorage.setItem(PROMPT_SEEN_KEY, 'true');
-  };
-
-  const handleSelect = (mode: ToolPanelModeOption) => {
+  const handleSelect = (mode: ToolPanelMode) => {
     setToolPanelMode(mode);
-    persistSeen();
+    setPreferredMode(mode);
+    markPromptSeen();
     setOpened(false);
   };
 
   const handleDismiss = () => {
-    persistSeen();
+    markPromptSeen();
     setOpened(false);
   };
 

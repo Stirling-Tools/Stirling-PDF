@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, Stack } from '@mantine/core';
 import { getSubcategoryLabel, ToolRegistryEntry } from '../../data/toolsTaxonomy';
+import { ToolId } from '../../types/toolId';
 import ToolButton from './toolPicker/ToolButton';
 import { useTranslation } from 'react-i18next';
 import { useToolSections } from '../../hooks/useToolSections';
@@ -9,7 +10,7 @@ import NoToolsFound from './shared/NoToolsFound';
 import "./toolPicker/ToolPicker.css";
 
 interface SearchResultsProps {
-  filteredTools: Array<{ item: [string, ToolRegistryEntry]; matchedText?: string }>;
+  filteredTools: Array<{ item: [ToolId, ToolRegistryEntry]; matchedText?: string }>;
   onSelect: (id: string) => void;
   searchQuery?: string;
 }
@@ -48,14 +49,14 @@ const SearchResults: React.FC<SearchResultsProps> = ({ filteredTools, onSelect, 
               ) : undefined;
               
               return (
-                        <ToolButton
-                          key={id}
-                          id={id}
-                          tool={tool}
-                          isSelected={false}
-                          onSelect={onSelect}
-                          matchedSynonym={matchedSynonym}
-                        />
+                <ToolButton
+                  key={id}
+                  id={id}
+                  tool={tool}
+                  isSelected={false}
+                  onSelect={onSelect}
+                  matchedSynonym={matchedSynonym}
+                />
               );
             })}
           </Stack>

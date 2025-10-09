@@ -6,12 +6,13 @@ import { ToolRegistryEntry } from "../../../data/toolsTaxonomy";
 import { TextInput } from "../../shared/TextInput";
 import "./ToolPicker.css";
 import { rankByFuzzy, idToWords } from "../../../utils/fuzzySearch";
+import { ToolId } from "src/types/toolId";
 
 interface ToolSearchProps {
   value: string;
   onChange: (value: string) => void;
-  toolRegistry: Readonly<Record<string, ToolRegistryEntry>>;
-  onToolSelect?: (toolId: string) => void;
+  toolRegistry: Readonly<Record<ToolId, ToolRegistryEntry>>;
+  onToolSelect?: (toolId: ToolId) => void;
   mode: "filter" | "dropdown" | "unstyled";
   selectedToolKey?: string | null;
   placeholder?: string;
@@ -20,7 +21,7 @@ interface ToolSearchProps {
   autoFocus?: boolean;
 }
 
-const ToolSearch: React.FC<ToolSearchProps> = ({
+const ToolSearch = ({
   value,
   onChange,
   toolRegistry,
@@ -31,7 +32,7 @@ const ToolSearch: React.FC<ToolSearchProps> = ({
   hideIcon = false,
   onFocus,
   autoFocus = false,
-}) => {
+}: ToolSearchProps) => {
   const { t } = useTranslation();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
@@ -126,7 +127,7 @@ const ToolSearch: React.FC<ToolSearchProps> = ({
                 key={id}
                 variant="subtle"
                 onClick={() => {
-                  onToolSelect?.(id);
+                  onToolSelect?.(id as ToolId);
                   setDropdownOpen(false);
                 }}
                 leftSection={<div style={{ color: "var(--tools-text-and-icon-color)" }}>{tool.icon}</div>}

@@ -1,5 +1,5 @@
 import React from "react";
-import { ActionIcon, Button } from "@mantine/core";
+import { Button } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Tooltip } from "../../shared/Tooltip";
 import { ToolIcon } from "../../shared/ToolIcon";
@@ -9,8 +9,7 @@ import { handleUnlessSpecialClick } from "../../../utils/clickHandlers";
 import FitText from "../../shared/FitText";
 import { useHotkeys } from "../../../contexts/HotkeyContext";
 import HotkeyDisplay from "../../hotkeys/HotkeyDisplay";
-import StarRoundedIcon from '@mui/icons-material/StarRounded';
-import StarBorderRoundedIcon from '@mui/icons-material/StarBorderRounded';
+import FavoriteStar from "./FavoriteStar";
 import { useToolWorkflow } from "../../../contexts/ToolWorkflowContext";
 import { ToolId } from "../../../types/toolId";
 
@@ -171,23 +170,12 @@ const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect,
   );
 
   const star = hasStars && !isUnavailable ? (
-    <ActionIcon
-      variant="subtle"
-      radius="xl"
-      size="xs"
-      onClick={(e: React.MouseEvent) => {
-        e.stopPropagation();
-        toggleFavorite(id as ToolId);
-      }}
+    <FavoriteStar
+      isFavorite={fav}
+      onToggle={() => toggleFavorite(id as ToolId)}
       className="tool-button-star"
-      aria-label={fav ? t('toolPanel.fullscreen.unfavorite', 'Remove from favourites') : t('toolPanel.fullscreen.favorite', 'Add to favourites')}
-    >
-      {fav ? (
-        <StarRoundedIcon fontSize="inherit" style={{ color: '#FFC107', fontSize: '1rem' }} />
-      ) : (
-        <StarBorderRoundedIcon fontSize="inherit" style={{ fontSize: '1rem' }} />
-      )}
-    </ActionIcon>
+      size="xs"
+    />
   ) : null;
 
   return (

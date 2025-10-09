@@ -8,6 +8,7 @@ import { TooltipContent } from './tooltip/TooltipContent';
 import { useSidebarContext } from '../../contexts/SidebarContext';
 import { BASE_PATH } from '../../constants/app';
 import styles from './tooltip/Tooltip.module.css';
+import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from '../../styles/zIndex';
 
 export interface TooltipProps {
   sidebarTooltip?: boolean;
@@ -291,7 +292,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
         left: coords.left,
         width: maxWidth !== undefined ? maxWidth : (sidebarTooltip ? '25rem' as const : undefined),
         minWidth,
-        zIndex: 9999,
+        zIndex: Z_INDEX_OVER_FULLSCREEN_SURFACE,
         visibility: positionReady ? 'visible' : 'hidden',
         opacity: positionReady ? 1 : 0,
         color: 'var(--text-primary)',

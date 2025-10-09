@@ -1,6 +1,17 @@
 /* CSS variables for Tailwind + Mantine integration */
 
 :root {
+  /* Global animation durations */
+  --fullscreen-anim-duration-in: 0.28s;
+  --fullscreen-anim-duration-out: 0.22s;
+
+  /* Z-index constants (added in this PR) */
+  --z-over-fullscreen-surface: 1400;
+  --z-fullscreen-surface: 1200;
+  --z-fullscreen-favorite-star: 2;
+  --z-fullscreen-icon-svg: 1;
+  --z-toolpicker-star: 1;
+
   /* Standard gray scale */
   --gray-50: 249 250 251;
   --gray-100: 243 244 246;

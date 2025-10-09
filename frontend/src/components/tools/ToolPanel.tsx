@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useRainbowThemeContext } from '../shared/RainbowThemeProvider';
 import { useToolWorkflow } from '../../contexts/ToolWorkflowContext';
 import ToolPicker from './ToolPicker';
@@ -15,9 +15,10 @@ import DashboardCustomizeRoundedIcon from '@mui/icons-material/DashboardCustomiz
 import { useTranslation } from 'react-i18next';
 import FullscreenToolSurface from './FullscreenToolSurface';
 import { useToolPanelGeometry } from '../../hooks/tools/useToolPanelGeometry';
-import { useLocalStorageState } from '../../hooks/tools/useLocalStorageState';
+import { useLocalStorageState } from '../../hooks/tools/useJsonLocalStorageState';
 import { useRightRail } from '../../contexts/RightRailContext';
 import './ToolPanel.css';
+import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from '../../styles/zIndex';
 
 // No props needed - component uses context
 
@@ -25,7 +26,7 @@ export default function ToolPanel() {
   const { t } = useTranslation();
   const { isRainbowMode } = useRainbowThemeContext();
   const { sidebarRefs } = useSidebarContext();
-  const { toolPanelRef, quickAccessRef } = sidebarRefs;
+  const { toolPanelRef, quickAccessRef, rightRailRef } = sidebarRefs;
   const isMobile = useMediaQuery('(max-width: 1024px)');
 
   const {
@@ -52,7 +53,7 @@ export default function ToolPanel() {
 
 
   // Disable right rail buttons when fullscreen mode is active
-  React.useEffect(() => {
+  useEffect(() => {
     setAllRightRailButtonsDisabled(fullscreenExpanded);
   }, [fullscreenExpanded, setAllRightRailButtonsDisabled]);
 
@@ -62,6 +63,7 @@ export default function ToolPanel() {
     enabled: fullscreenExpanded,
     toolPanelRef,
     quickAccessRef,
+    rightRailRef,
   });
 
   const toggleLabel = isFullscreenMode
@@ -141,7 +143,7 @@ export default function ToolPanel() {
                 withArrow
                 styles={{
                   tooltip: {
-                    zIndex: 1400, // Higher than fullscreen surface
+                    zIndex: Z_INDEX_OVER_FULLSCREEN_SURFACE,
                   }
                 }}
               >

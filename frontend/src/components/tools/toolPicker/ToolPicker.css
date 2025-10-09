@@ -82,7 +82,7 @@
   right: 0.35rem;
   opacity: 0;
   transition: opacity 0.2s ease;
-  z-index: 1; /* lower than sticky section headers */
+  z-index: var(--z-toolpicker-star); /* lower than sticky section headers */
 }
 
 .tool-button-container:hover .tool-button-star {

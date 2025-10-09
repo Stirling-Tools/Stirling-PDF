@@ -93,7 +93,7 @@ const EmbedPdfViewerContent = ({
   }, [previewFile, fileWithUrl]);
 
   // Handle scroll wheel zoom with accumulator for smooth trackpad pinch
-  React.useEffect(() => {
+  useEffect(() => {
     let accumulator = 0;
 
     const handleWheel = (event: WheelEvent) => {
@@ -127,7 +127,7 @@ const EmbedPdfViewerContent = ({
   }, [zoomActions]);
 
   // Handle keyboard zoom shortcuts
-  React.useEffect(() => {
+  useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (!isViewerHovered) return;
 

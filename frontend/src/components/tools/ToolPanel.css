@@ -76,7 +76,7 @@
   position: fixed;
   display: flex;
   pointer-events: none;
-  z-index: 1200;
+  z-index: var(--z-fullscreen-surface);
   top: 0;
   left: 0;
   width: 0;
@@ -101,11 +101,14 @@
   box-shadow: none;
   backdrop-filter: blur(18px);
   overflow: hidden;
-  animation: tool-panel-fullscreen-slide-in 0.28s ease forwards;
+  /* Shared animation durations for JS + CSS (sourced from theme.css) */
+  --fullscreen-anim-in-duration: var(--fullscreen-anim-duration-in);
+  --fullscreen-anim-out-duration: var(--fullscreen-anim-duration-out);
+  animation: tool-panel-fullscreen-slide-in var(--fullscreen-anim-in-duration) ease forwards;
 }
 
 .tool-panel__fullscreen-surface-inner--exiting {
-  animation: tool-panel-fullscreen-slide-out 0.22s ease forwards;
+  animation: tool-panel-fullscreen-slide-out var(--fullscreen-anim-out-duration) ease forwards;
 }
 
 .tool-panel__fullscreen-header {
@@ -340,7 +343,7 @@
 .tool-panel__fullscreen-icon svg {
   font-size: 1.65rem;
   position: relative;
-  z-index: 1;
+  z-index: var(--z-fullscreen-icon-svg);
 }
 
 .tool-panel__fullscreen-body {

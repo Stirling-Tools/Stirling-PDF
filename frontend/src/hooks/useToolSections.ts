@@ -2,9 +2,10 @@ import { useMemo } from 'react';
 
 import { SUBCATEGORY_ORDER, SubcategoryId, ToolCategoryId, ToolRegistryEntry } from '../data/toolsTaxonomy';
 import { useTranslation } from 'react-i18next';
+import { ToolId } from 'src/types/toolId';
 
 type SubcategoryIdMap = {
-  [subcategoryId in SubcategoryId]: Array<{ id: string /* FIX ME: Should be ToolId */; tool: ToolRegistryEntry }>;
+  [subcategoryId in SubcategoryId]: Array<{ id: ToolId; tool: ToolRegistryEntry }>;
 }
 
 type GroupedTools = {
@@ -14,7 +15,7 @@ type GroupedTools = {
 export interface SubcategoryGroup {
   subcategoryId: SubcategoryId;
   tools: {
-    id: string /* FIX ME: Should be ToolId */;
+    id: ToolId;
     tool: ToolRegistryEntry;
   }[];
 };
@@ -28,7 +29,7 @@ export interface ToolSection {
 };
 
 export function useToolSections(
-  filteredTools: Array<{ item: [string /* FIX ME: Should be ToolId */, ToolRegistryEntry]; matchedText?: string }>,
+  filteredTools: Array<{ item: [ToolId, ToolRegistryEntry]; matchedText?: string }>,
   searchQuery?: string
 ) {
   const { t } = useTranslation();
@@ -114,7 +115,7 @@ export function useToolSections(
       seen.add(toolId);
       const sub = tool.subcategoryId;
       if (!subMap[sub]) subMap[sub] = [];
-      subMap[sub].push({ id: toolId, tool });
+      subMap[sub].push({ id: toolId as ToolId, tool });
     });
     const entries = Object.entries(subMap);
 
