@@ -9,7 +9,7 @@
   transition: box-shadow 0.18s ease, outline-color 0.18s ease, transform 0.18s ease;
   max-width: 100%;
   max-height: 100%;
-  overflow: hidden;
+  overflow: visible;
   margin-left: 0.5rem;
   margin-right: 0.5rem;
 }
