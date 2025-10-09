@@ -62,7 +62,12 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
 
     // Render navigation button with conditional URL support
     return (
-      <div key={config.id} className="flex flex-col items-center gap-1" style={{ marginTop: index === 0 ? '0.5rem' : "0rem" }}>
+      <div
+        key={config.id}
+        className="flex flex-col items-center gap-1"
+        style={{ marginTop: index === 0 ? '0.5rem' : "0rem" }}
+        data-tour={`${config.id}-button`}
+      >
         <ActionIcon
           {...(navProps ? {
             component: "a" as const,

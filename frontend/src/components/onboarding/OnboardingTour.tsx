@@ -12,46 +12,25 @@ enum TourStep {
   FILES_BUTTON,
   FILE_SOURCES,
   FILE_DETAILS,
+  WRAP_UP,
 }
 
 function TourContent() {
   const { isOpen } = useOnboarding();
-  const { setIsOpen, currentStep, setCurrentStep } = useTour();
-  const { isFilesModalOpen } = useFilesModalContext();
-  const hasAdvancedRef = React.useRef(false);
+  const { setIsOpen, setCurrentStep } = useTour();
+  const previousIsOpenRef = React.useRef(isOpen);
 
-  // Sync tour open state with context
+  // Sync tour open state with context and reset to step 0 when reopening
   React.useEffect(() => {
+    const wasClosedNowOpen = !previousIsOpenRef.current && isOpen;
+    previousIsOpenRef.current = isOpen;
+
+    if (wasClosedNowOpen) {
+      // Tour is being opened (Help button pressed), reset to first step
+      setCurrentStep(0);
+    }
     setIsOpen(isOpen);
-  }, [isOpen, setIsOpen]);
-
-  // Reset the advanced flag when we're back on Files button step
-  React.useEffect(() => {
-    if (currentStep === TourStep.FILES_BUTTON && !isFilesModalOpen) {
-      hasAdvancedRef.current = false;
-    }
-  }, [currentStep, isFilesModalOpen]);
-
-  // Advance tour when Files modal opens (if on Files button step)
-  React.useEffect(() => {
-    if (isFilesModalOpen && currentStep === TourStep.FILES_BUTTON && isOpen && !hasAdvancedRef.current) {
-      hasAdvancedRef.current = true;
-      // Wait for the file-sources element to exist in DOM and modal to settle
-      const checkElement = () => {
-        const element = document.querySelector('[data-tour="file-sources"]');
-        if (element) {
-          // Wait for modal opening animation to complete (Mantine modals have ~200ms transition)
-          setTimeout(() => {
-            setCurrentStep(TourStep.FILE_SOURCES);
-          }, 300);
-        } else {
-          // Check again in next frame
-          requestAnimationFrame(checkElement);
-        }
-      };
-      checkElement();
-    }
-  }, [isFilesModalOpen, currentStep, isOpen, setCurrentStep]);
+  }, [isOpen, setIsOpen, setCurrentStep]);
 
   return null;
 }
@@ -59,6 +38,7 @@ function TourContent() {
 export default function OnboardingTour() {
   const { t } = useTranslation();
   const { completeTour, closeTour } = useOnboarding();
+  const { openFilesModal, closeFilesModal } = useFilesModalContext();
 
   // Define steps as object keyed by enum - TypeScript ensures all keys are present
   const stepsConfig: Record<TourStep, StepType> = {
@@ -66,26 +46,43 @@ export default function OnboardingTour() {
       selector: '[data-tour="quick-access"]',
       content: t('onboarding.quickAccess', 'Quick access to your most-used tools and settings. Pin your favourite tools here for easy access.'),
       position: 'right',
+      padding: 0,
+      action: () => closeFilesModal(),
     },
     [TourStep.TOOL_PANEL]: {
       selector: '[data-tour="tool-panel"]',
       content: t('onboarding.toolPanel', 'Browse all available PDF tools organised by category. Select a tool to get started.'),
       position: 'right',
+      padding: 0,
+      action: () => closeFilesModal(),
     },
     [TourStep.FILES_BUTTON]: {
-      selector: '[data-testid="files-button"]',
-      content: t('onboarding.filesButton', 'Click the Files button to manage your PDFs and see your recent files.'),
+      selector: '[data-tour="files-button"]',
+      content: t('onboarding.filesButton', 'Click the Files button to manage your PDFs by uploading or viewing recent files.'),
       position: 'right',
+      padding: 10,
+      action: () => openFilesModal(),
     },
     [TourStep.FILE_SOURCES]: {
       selector: '[data-tour="file-sources"]',
       content: t('onboarding.fileSources', 'Choose where to load files from - your recent files or upload new ones from your device.'),
       position: 'right',
+      padding: 0,
+      action: () => openFilesModal(),
     },
     [TourStep.FILE_DETAILS]: {
       selector: '[data-tour="file-details"]',
       content: t('onboarding.fileDetails', 'View detailed information about selected files, including size, type, and preview.'),
       position: 'left',
+      padding: 0,
+      action: () => openFilesModal(),
+    },
+    [TourStep.WRAP_UP]: {
+      selector: 'body',
+      content: t('onboarding.wrapUp', 'You\'re all set! Start working with your PDFs by uploading files or selecting a tool from the sidebar.'),
+      position: 'center',
+      padding: 0,
+      action: () => closeFilesModal(),
     },
   };
 
@@ -134,15 +131,13 @@ export default function OnboardingTour() {
       showNavigation={true}
       showBadge={true}
       showCloseButton={true}
-      disableInteraction={false}
-      padding={0}
+      disableInteraction={true}
       prevButton={({ currentStep, setCurrentStep }) => {
         const isFirst = currentStep === TourStep.QUICK_ACCESS;
-        const isFirstModalStep = currentStep === TourStep.FILE_SOURCES;
         return (
           <Button
             onClick={() => setCurrentStep(Math.max(0, currentStep - 1))}
-            disabled={isFirst || isFirstModalStep}
+            disabled={isFirst}
             variant="filled"
             size="sm"
             style={{ marginRight: '8px' }}
@@ -153,7 +148,6 @@ export default function OnboardingTour() {
       }}
       nextButton={({ currentStep, stepsLength, setCurrentStep, setIsOpen }) => {
         const isLast = currentStep === stepsLength - 1;
-        const isFilesStep = currentStep === TourStep.FILES_BUTTON;
 
         return (
           <Button
@@ -167,7 +161,6 @@ export default function OnboardingTour() {
             }}
             variant="filled"
             size="sm"
-            disabled={isFilesStep}
           >
             {isLast ? t('onboarding.finish', 'Finish') : t('onboarding.next', 'Next')}
           </Button>
