@@ -2,6 +2,7 @@ import React from 'react';
 import { ActionIcon, Text } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import HotkeyDisplay from '../../hotkeys/HotkeyDisplay';
+import FavoriteStar from '../toolPicker/FavoriteStar';
 import { ToolRegistryEntry, getSubcategoryColor } from '../../../data/toolsTaxonomy';
 import { getIconBackground, getIconStyle, getItemClasses, useToolMeta } from './shared';
 
@@ -70,21 +71,13 @@ const DetailedToolItem: React.FC<DetailedToolItemProps> = ({ id, tool, isSelecte
         )}
       </span>
       {!disabled && (
-        <ActionIcon
-          variant="subtle"
-          radius="xl"
-          size="sm"
-          onClick={(e: React.MouseEvent) => { e.stopPropagation(); toggleFavorite(); }}
-          className="tool-panel__fullscreen-star"
-          aria-label={isFav ? t('toolPanel.fullscreen.unfavorite', 'Remove from favourites') : t('toolPanel.fullscreen.favorite', 'Add to favourites')}
-        >
-          {/* Star icons kept inline to avoid new dependency here */}
-          {isFav ? (
-            <span className="material-icons" style={{ color: 'var(--special-color-favorites)', fontSize: '20px' }}>star</span>
-          ) : (
-            <span className="material-icons" style={{ fontSize: '20px' }}>star_border</span>
-          )}
-        </ActionIcon>
+        <div className="tool-panel__fullscreen-star">
+          <FavoriteStar
+            isFavorite={isFav}
+            onToggle={toggleFavorite}
+            size="sm"
+          />
+        </div>
       )}
     </button>
   );
