@@ -164,14 +164,14 @@ export default function OnboardingTour() {
       selector: '[data-tour="file-card-checkbox"]',
       content: t('onboarding.fileCheckbox', "Click a file card to select it for processing. You can select multiple files for batch operations."),
       position: 'top',
-      padding: 0,
+      padding: 10,
       action: () => closeFilesModal(),
     },
     [TourStep.SELECT_CONTROLS]: {
       selector: '[data-tour="select-all-button"]',
       content: t('onboarding.selectControls', 'Use these buttons to quickly select or deselect all files when working with multiple PDFs.'),
       position: 'left',
-      padding: 0,
+      padding: 10,
       action: () => {
         closeFilesModal();
         selectFirstFile();
@@ -181,7 +181,7 @@ export default function OnboardingTour() {
       selector: '[data-tour="crop-settings"]',
       content: t('onboarding.cropSettings', "Here you can adjust the crop area by dragging on the preview or entering precise coordinates. We'll modify the crop area slightly."),
       position: 'left',
-      padding: 0,
+      padding: 10,
       action: () => {
         closeFilesModal();
         modifyCropSettings();
@@ -208,7 +208,7 @@ export default function OnboardingTour() {
       selector: '[data-tour="undo-button"]',
       content: t('onboarding.undo', "Made a mistake? Use the Undo button to revert the operation and restore your original files."),
       position: 'left',
-      padding: 0,
+      padding: 10,
       action: () => closeFilesModal(),
     },
     [TourStep.WRAP_UP]: {
