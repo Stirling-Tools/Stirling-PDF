@@ -39,7 +39,7 @@ jobs:
 
             const configPath = path.join(process.env.GITHUB_WORKSPACE, '.github', 'config', 'repo_devs.json');
             const repoDevsConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-            const repoDevs = (repoDevsConfig.repo_devs || []).map((login) => login.toLowerCase());
+            const label_changer = (repoDevsConfig.label_changer || []).map((login) => login.toLowerCase());
 
             const labelsConfigPath = path.join(process.env.GITHUB_WORKSPACE, '.github', 'labels.yml');
             const labelsFile = fs.readFileSync(labelsConfigPath, 'utf8');
@@ -60,6 +60,7 @@ jobs:
               return;
             }
 
+            // TODO not correctly
             const configuredLabels = Array.isArray(repoDevsConfig.label)
               ? repoDevsConfig.label
               : Array.isArray(repoDevsConfig.labels)
@@ -90,7 +91,7 @@ jobs:
             }
 
             const commenter = (comment?.user?.login || '').toLowerCase();
-            if (!repoDevs.includes(commenter)) {
+            if (!label_changer.includes(commenter)) {
               core.info(`User ${commenter} is not authorized to manage labels.`);
               return;
             }
