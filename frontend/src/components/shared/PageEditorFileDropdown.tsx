@@ -27,7 +27,7 @@ export const PageEditorFileDropdown: React.FC<PageEditorFileDropdownProps> = ({
   switchingTo,
   viewOptionStyle,
 }) => {
-  const handleCheckboxClick = (e: React.MouseEvent, fileId: string) => {
+  const handleCheckboxClick = (e: React.MouseEvent, fileId: FileId) => {
     e.stopPropagation();
     onToggleSelection(fileId);
   };
