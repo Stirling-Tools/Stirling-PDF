@@ -238,7 +238,7 @@ export default function OnboardingTour() {
         }),
       }}
       showNavigation={true}
-      showBadge={true}
+      showBadge={false}
       showCloseButton={true}
       disableInteraction={true}
       disableKeyboardNavigation={['left']}
@@ -260,7 +260,7 @@ export default function OnboardingTour() {
             }}
             variant="filled"
           >
-            {isLast ? t('onboarding.finish', 'Finish') : t('onboarding.next', 'Next')}
+            {isLast ? t('onboarding.ok', 'OK') : t('onboarding.next', 'Next')}
           </Button>
         );
       }}
