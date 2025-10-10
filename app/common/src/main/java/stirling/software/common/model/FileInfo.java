@@ -30,11 +30,11 @@ public class FileInfo {
     // Formats the file size into a human-readable string.
     public String getFormattedFileSize() {
         if (fileSize >= 1024 * 1024 * 1024) {
-            return String.format(Locale.US, "%.2f GB", fileSize / (1024.0 * 1024 * 1024));
+            return String.format(Locale.ROOT, "%.2f GB", fileSize / (1024.0 * 1024 * 1024));
         } else if (fileSize >= 1024 * 1024) {
-            return String.format(Locale.US, "%.2f MB", fileSize / (1024.0 * 1024));
+            return String.format(Locale.ROOT, "%.2f MB", fileSize / (1024.0 * 1024));
         } else if (fileSize >= 1024) {
-            return String.format(Locale.US, "%.2f KB", fileSize / 1024.0);
+            return String.format(Locale.ROOT, "%.2f KB", fileSize / 1024.0);
         } else {
             return String.format("%d Bytes", fileSize);
         }

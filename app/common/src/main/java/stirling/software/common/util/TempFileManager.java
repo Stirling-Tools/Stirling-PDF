@@ -130,7 +130,6 @@ public class TempFileManager {
                 return deleted;
             } catch (IOException e) {
                 log.warn("Failed to delete temp file: {}", path.toString(), e);
-                return false;
             }
         }
         return false;

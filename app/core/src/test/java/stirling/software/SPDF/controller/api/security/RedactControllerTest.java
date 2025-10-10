@@ -12,6 +12,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 import org.apache.pdfbox.contentstream.operator.Operator;
@@ -1242,7 +1243,7 @@ class RedactControllerTest {
             area.setY(50.0 + (i * 40));
             area.setWidth(50.0);
             area.setHeight(30.0);
-            area.setColor(String.format("%06X", i * 0x333333));
+            area.setColor(String.format(Locale.ROOT, "%06X", i * 0x333333));
             areas.add(area);
         }
 

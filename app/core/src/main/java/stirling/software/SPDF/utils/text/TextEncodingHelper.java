@@ -1,6 +1,7 @@
 package stirling.software.SPDF.utils.text;
 
 import java.io.IOException;
+import java.util.Locale;
 
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDSimpleFont;
@@ -24,7 +25,8 @@ public class TextEncodingHelper {
             byte[] encoded = font.encode(text);
             if (encoded.length > 0) {
                 log.debug(
-                        "Text '{}' has good full-string encoding for font {} - permissively allowing",
+                        "Text '{}' has good full-string encoding for font {} - permissively"
+                                + " allowing",
                         text,
                         font.getName() != null ? font.getName() : "Unknown");
                 return true;
@@ -61,6 +63,7 @@ public class TextEncodingHelper {
         for (int i = 0; i < text.length(); ) {
             int codePoint = text.codePointAt(i);
             String charStr = new String(Character.toChars(codePoint));
+            String hex = String.format(Locale.ROOT, "%04X", codePoint); // U+%04X
             totalCodePoints++;
 
             try {
@@ -71,28 +74,23 @@ public class TextEncodingHelper {
 
                     if (charWidth >= 0) {
                         successfulCodePoints++;
-                        log.debug(
-                                "Code point '{}' (U+{}) encoded successfully",
-                                charStr,
-                                Integer.toHexString(codePoint).toUpperCase());
+                        log.debug("Code point '{}' (U+{}) encoded successfully", charStr, hex);
                     } else {
                         log.debug(
                                 "Code point '{}' (U+{}) has invalid width: {}",
                                 charStr,
-                                Integer.toHexString(codePoint).toUpperCase(),
+                                hex,
                                 charWidth);
                     }
                 } else {
                     log.debug(
-                            "Code point '{}' (U+{}) encoding failed - empty result",
-                            charStr,
-                            Integer.toHexString(codePoint).toUpperCase());
+                            "Code point '{}' (U+{}) encoding failed - empty result", charStr, hex);
                 }
             } catch (IOException | IllegalArgumentException e) {
                 log.debug(
                         "Code point '{}' (U+{}) validation failed: {}",
                         charStr,
-                        Integer.toHexString(codePoint).toUpperCase(),
+                        hex,
                         e.getMessage());
             }
 
@@ -100,16 +98,20 @@ public class TextEncodingHelper {
         }
 
         double successRate =
-                totalCodePoints > 0 ? (double) successfulCodePoints / totalCodePoints : 0;
+                totalCodePoints > 0 ? (double) successfulCodePoints / totalCodePoints : 0.0;
+        String pct =
+                String.format(
+                        Locale.ROOT, "%.1f%%", successRate * 100); // Pre-formatting percentage!
+
         boolean isAcceptable = successRate >= 0.95;
 
         log.debug(
-                "Array validation for '{}': {}/{} code points successful ({:.1f}%) - {}",
+                "Array validation for '{}': {}/{} code points successful ({}) - {}",
                 text,
                 successfulCodePoints,
                 totalCodePoints,
-                successRate * 100,
-                isAcceptable ? "ALLOWING" : "rejecting");
+                pct,
+                (isAcceptable ? "ALLOWING" : "rejecting"));
 
         return isAcceptable;
     }
