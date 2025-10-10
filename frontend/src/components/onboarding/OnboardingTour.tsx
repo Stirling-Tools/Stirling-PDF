@@ -8,6 +8,7 @@ import { useTourOrchestration } from '../../contexts/TourOrchestrationContext';
 
 // Enum case order defines order steps will appear
 enum TourStep {
+  WELCOME,
   ALL_TOOLS,
   SELECT_CROP_TOOL,
   TOOL_INTERFACE,
@@ -68,9 +69,9 @@ export default function OnboardingTour() {
 
   // Define steps as object keyed by enum - TypeScript ensures all keys are present
   const stepsConfig: Record<TourStep, StepType> = {
-    [TourStep.ALL_TOOLS]: {
-      selector: '[data-tour="tool-panel"]',
-      content: t('onboarding.allTools', 'Welcome to Stirling PDF! This is the All Tools panel where you can browse and select from all available PDF tools organized by category.'),
+    [TourStep.WELCOME]: {
+      selector: 'body',
+      content: t('onboarding.welcome', "Welcome to Stirling PDF! Let's take you on a quick tour around the app."),
       position: 'center',
       padding: 0,
       action: () => {
@@ -79,22 +80,28 @@ export default function OnboardingTour() {
         backToAllTools();
       },
     },
+    [TourStep.ALL_TOOLS]: {
+      selector: '[data-tour="tool-panel"]',
+      content: t('onboarding.allTools', 'This is the All Tools panel, where you can browse and select from all available PDF tools.'),
+      position: 'center',
+      padding: 0,
+    },
     [TourStep.SELECT_CROP_TOOL]: {
       selector: '[data-tour="tool-button-crop"]',
-      content: t('onboarding.selectCropTool', "Let's select the Crop tool to demonstrate a complete workflow. We'll automatically select it for you in a moment."),
+      content: t('onboarding.selectCropTool', "Let's select the Crop tool to demonstrate how to use one of the tools."),
       position: 'right',
       padding: 0,
       actionAfter: () => selectCropTool(),
     },
     [TourStep.TOOL_INTERFACE]: {
       selector: '[data-tour="tool-panel"]',
-      content: t('onboarding.toolInterface', "This is the Crop tool interface. It replaces the All Tools panel and shows tool-specific settings. But first, we need a PDF file to work with."),
+      content: t('onboarding.toolInterface', "This is the Crop tool interface. As you can see, there's not much there yet because we haven't added any PDF files to work with yet."),
       position: 'center',
       padding: 0,
     },
     [TourStep.FILES_BUTTON]: {
       selector: '[data-tour="files-button"]',
-      content: t('onboarding.filesButton', "The Files button on the Quick Access bar lets you load PDFs. We'll automatically open the Files modal."),
+      content: t('onboarding.filesButton', "The Files button on the Quick Access bar allows you to upload PDFs to use the tools on."),
       position: 'right',
       padding: 10,
       action: () => openFilesModal(),
@@ -117,74 +124,74 @@ export default function OnboardingTour() {
     },
     [TourStep.VIEW_SWITCHER]: {
       selector: '[data-tour="view-switcher"]',
-      content: t('onboarding.viewSwitcher', 'Use these controls to switch between three different views: Viewer, Page Editor, and Active Files.'),
+      content: t('onboarding.viewSwitcher', 'Use these controls to select how you want to view your PDFs.'),
       position: 'bottom',
       padding: 0,
     },
     [TourStep.VIEWER]: {
       selector: '[data-tour="workbench"]',
-      content: t('onboarding.viewer', "The Viewer lets you read and annotate PDFs. Let's switch to it now to see our sample file."),
+      content: t('onboarding.viewer', "The Viewer lets you read and annotate your PDFs."),
       position: 'center',
       padding: 0,
       action: () => switchToViewer(),
     },
     [TourStep.PAGE_EDITOR]: {
       selector: '[data-tour="workbench"]',
-      content: t('onboarding.pageEditor', "The Page Editor allows you to reorder, rotate, split, and delete pages. Let's take a quick look."),
+      content: t('onboarding.pageEditor', "The Page Editor allows you to do various operations on the pages within your PDFs, such as reordering, rotating and deleting."),
       position: 'center',
       padding: 0,
       action: () => switchToPageEditor(),
     },
     [TourStep.ACTIVE_FILES]: {
       selector: '[data-tour="workbench"]',
-      content: t('onboarding.activeFiles', "Active Files shows all loaded PDFs and lets you select which ones to process. Let's go back there now."),
+      content: t('onboarding.activeFiles', "The Active Files view shows all of the PDFs you have loaded into the tool, and allows you to select which ones to process."),
       position: 'center',
       padding: 0,
       action: () => switchToActiveFiles(),
     },
     [TourStep.FILE_CHECKBOX]: {
       selector: '[data-tour="file-card-checkbox"]',
-      content: t('onboarding.fileCheckbox', "Click a file card to select it for processing. You can select multiple files for batch operations."),
+      content: t('onboarding.fileCheckbox', "Clicking one of the files selects it for processing. You can select multiple files for batch operations."),
       position: 'top',
       padding: 10,
     },
     [TourStep.SELECT_CONTROLS]: {
       selector: '[data-tour="select-all-button"]',
-      content: t('onboarding.selectControls', 'Use these buttons to quickly select or deselect all files when working with multiple PDFs.'),
+      content: t('onboarding.selectControls', "The Right Rail contains buttons to quickly select/deselect all of your active PDFs, along with buttons to change the app's theme or language."),
       position: 'left',
       padding: 10,
       action: () => selectFirstFile(),
     },
     [TourStep.CROP_SETTINGS]: {
       selector: '[data-tour="crop-settings"]',
-      content: t('onboarding.cropSettings', "Here you can adjust the crop area by dragging on the preview or entering precise coordinates. We'll modify the crop area slightly."),
+      content: t('onboarding.cropSettings', "Now that we've selected the file we want crop, we can configure the Crop tool to choose the area that we want to crop the PDF to."),
       position: 'left',
       padding: 10,
       action: () => modifyCropSettings(),
     },
     [TourStep.RUN_BUTTON]: {
       selector: '[data-tour="run-button"]',
-      content: t('onboarding.runButton', "Once your settings are configured, click Run to execute the tool and process your selected files."),
+      content: t('onboarding.runButton', "Once the tool has been configured, this button allows you to run the tool on all the selected PDFs."),
       position: 'top',
       padding: 10,
       actionAfter: () => executeTool(),
     },
     [TourStep.RESULTS]: {
       selector: '[data-tour="tool-panel"]',
-      content: t('onboarding.results', "After processing, you'll see a preview of the results in this panel. You can download the file or continue working with it in other tools."),
+      content: t('onboarding.results', "After the tool has finished running, the Review step will show a preview of the results in this panel. The modified file will replace the original file in the Workbench automatically (unless you Pin the original file)."),
       position: 'center',
       padding: 0,
     },
     [TourStep.UNDO]: {
       selector: '[data-tour="undo-button"]',
-      content: t('onboarding.undo', "Made a mistake? Use the Undo button to revert the operation and restore your original files."),
+      content: t('onboarding.undo', "If you're unhappy with the results from the tool, you can use the Undo button to revert the operation and restore your original files."),
       position: 'left',
       padding: 10,
       actionAfter: () => undoOperation(),
     },
     [TourStep.WRAP_UP]: {
       selector: '[data-tour="help-button"]',
-      content: t('onboarding.wrapUp', "You're all set! You've learned how to select tools, load files, switch views, configure settings, and process PDFs. Click the Help button anytime to see this tour again."),
+      content: t('onboarding.wrapUp', "You're all set! You've learnt about the main areas of the app and how to use them. Click the Help button whenever you like to see this tour again."),
       position: 'right',
       padding: 10,
     },
