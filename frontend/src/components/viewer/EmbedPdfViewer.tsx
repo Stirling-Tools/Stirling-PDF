@@ -1,7 +1,10 @@
-import React, { useCallback, useEffect, useRef } from 'react';
-import { Box, Center, Text, ActionIcon } from '@mantine/core';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Box, Center, Text, ActionIcon, Tabs, Collapse, Group, Button, Tooltip } from '@mantine/core';
 import { useMantineTheme, useMantineColorScheme } from '@mantine/core';
 import CloseIcon from '@mui/icons-material/Close';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import { useTranslation } from 'react-i18next';
 
 import { useFileState, useFileActions } from "../../contexts/FileContext";
 import { useFileWithUrl } from "../../hooks/useFileWithUrl";
@@ -28,8 +31,9 @@ const EmbedPdfViewerContent = ({
   onClose,
   previewFile,
 }: EmbedPdfViewerProps) => {
+  const { t } = useTranslation();
   const theme = useMantineTheme();
-  const { colorScheme: _colorScheme } = useMantineColorScheme();
+  const { colorScheme } = useMantineColorScheme();
   const viewerRef = React.useRef<HTMLDivElement>(null);
   const [isViewerHovered, setIsViewerHovered] = React.useState(false);
 
@@ -52,10 +56,11 @@ const EmbedPdfViewerContent = ({
   const { signatureApiRef, historyApiRef } = useSignature();
 
   // Get current file from FileContext
-  const { selectors } = useFileState();
+  const { selectors, state } = useFileState();
   const { actions } = useFileActions();
   const activeFiles = selectors.getFiles();
   const activeFileIds = activeFiles.map(f => f.fileId);
+  const selectedFileIds = state.ui.selectedFileIds;
 
   // Navigation guard for unsaved changes
   const { setHasUnsavedChanges, registerUnsavedChangesChecker, unregisterUnsavedChangesChecker } = useNavigationGuard();
@@ -67,15 +72,56 @@ const EmbedPdfViewerContent = ({
   // Enable annotations when: in sign mode, OR annotation mode is active, OR we want to show existing annotations
   const shouldEnableAnnotations = isSignatureMode || isAnnotationMode || isAnnotationsVisible;
 
+  // Track which file tab is active
+  const [activeFileIndex, setActiveFileIndex] = useState(0);
+  const [tabsExpanded, setTabsExpanded] = useState(true);
+  const tabsContainerRef = useRef<HTMLDivElement>(null);
+  const hasInitializedFromSelection = useRef(false);
+
+  // When viewer opens with a selected file, switch to that file
+  useEffect(() => {
+    if (!hasInitializedFromSelection.current && selectedFileIds.length > 0 && activeFiles.length > 0) {
+      const selectedFileId = selectedFileIds[0];
+      const index = activeFiles.findIndex(f => f.fileId === selectedFileId);
+      if (index !== -1 && index !== activeFileIndex) {
+        setActiveFileIndex(index);
+      }
+      hasInitializedFromSelection.current = true;
+    }
+  }, [selectedFileIds, activeFiles, activeFileIndex]);
+
+  // Reset active tab if it's out of bounds
+  useEffect(() => {
+    if (activeFileIndex >= activeFiles.length && activeFiles.length > 0) {
+      setActiveFileIndex(0);
+    }
+  }, [activeFiles.length, activeFileIndex]);
+
+  // Minimize when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (tabsContainerRef.current && !tabsContainerRef.current.contains(event.target as Node)) {
+        setTabsExpanded(false);
+      }
+    };
+
+    if (tabsExpanded) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }
+  }, [tabsExpanded]);
+
   // Determine which file to display
   const currentFile = React.useMemo(() => {
     if (previewFile) {
       return previewFile;
     } else if (activeFiles.length > 0) {
-      return activeFiles[0]; // Use first file for simplicity
+      return activeFiles[activeFileIndex] || activeFiles[0];
     }
     return null;
-  }, [previewFile, activeFiles]);
+  }, [previewFile, activeFiles, activeFileIndex]);
 
   // Get file with URL for rendering
   const fileWithUrl = useFileWithUrl(currentFile);
@@ -244,12 +290,96 @@ const EmbedPdfViewerContent = ({
         </Center>
       ) : (
         <>
-          {/* Tabs for multiple files */}
+          {/* Floating tabs for multiple files */}
           {activeFiles.length > 1 && !previewFile && (
-            <Box p="md" style={{ borderBottom: `1px solid ${theme.colors.gray[3]}` }}>
-              <Text size="sm" c="dimmed">
-                Multiple files loaded - showing first file for now
-              </Text>
+            <Box
+              ref={tabsContainerRef}
+              style={{
+                position: 'absolute',
+                top: '2rem',
+                left: 0,
+                zIndex: 100,
+                maxWidth: tabsExpanded ? '400px' : 'auto',
+                transition: 'max-width 0.3s ease',
+                backgroundColor: 'var(--right-rail-bg)',
+                borderRight: '1px solid var(--border-subtle)',
+                borderBottom: '1px solid var(--border-subtle)',
+                borderRadius: '0 0 8px 0',
+                boxShadow: theme.shadows.md
+              }}
+            >
+              <Box
+                p="xs"
+                style={{
+                  cursor: 'pointer',
+                  userSelect: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+                onClick={() => setTabsExpanded(!tabsExpanded)}
+              >
+                <Group gap="xs" style={{ width: '100%' }}>
+                  {tabsExpanded ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
+                  <Text size="sm" fw={500}>
+                    {t('viewer.files', 'Files')} ({activeFiles.length})
+                  </Text>
+                </Group>
+              </Box>
+
+              <Collapse in={tabsExpanded}>
+                <Box style={{ maxHeight: '400px', overflowY: 'auto', overflowX: 'hidden', padding: '0 0.5rem 0.5rem 0.5rem' }}>
+                  <Tabs
+                    value={activeFileIndex.toString()}
+                    onChange={(value) => setActiveFileIndex(parseInt(value || '0'))}
+                    variant="pills"
+                    orientation="vertical"
+                    styles={(theme) => ({
+                      tab: {
+                        justifyContent: 'flex-start',
+                        '&[data-active]': {
+                          backgroundColor: 'rgba(147, 197, 253, 0.8)',
+                        },
+                      },
+                    })}
+                  >
+                    <Tabs.List>
+                      {activeFiles.map((file, index) => {
+                        const stub = selectors.getStirlingFileStub(file.fileId);
+                        const displayName = file.name.length > 25 ? `${file.name.substring(0, 25)}...` : file.name;
+
+                        return (
+                          <Tooltip
+                            key={file.fileId}
+                            label={file.name}
+                            openDelay={1000}
+                            withArrow
+                            position="right"
+                          >
+                            <Tabs.Tab
+                              value={index.toString()}
+                              style={{
+                                backgroundColor: activeFileIndex === index ? 'color-mix(in srgb, var(--color-primary-500) 50%, transparent)' : undefined
+                              }}
+                            >
+                              <Group gap="xs" style={{ width: '100%', justifyContent: 'flex-start' }}>
+                                <Text size="sm" style={{ flex: 1, textAlign: 'left' }}>
+                                  {displayName}
+                                </Text>
+                                {stub?.versionNumber && stub.versionNumber > 1 && (
+                                  <Text size="xs" c="dimmed">
+                                    v{stub.versionNumber}
+                                  </Text>
+                                )}
+                              </Group>
+                            </Tabs.Tab>
+                          </Tooltip>
+                        );
+                      })}
+                    </Tabs.List>
+                  </Tabs>
+                </Box>
+              </Collapse>
             </Box>
           )}
 
