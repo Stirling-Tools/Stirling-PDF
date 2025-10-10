@@ -1,5 +1,6 @@
 import React from "react";
 import { ActionIcon } from "@mantine/core";
+import type { MantineSize } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import StarRoundedIcon from '@mui/icons-material/StarRounded';
 import StarBorderRoundedIcon from '@mui/icons-material/StarBorderRounded';
@@ -8,7 +9,7 @@ interface FavoriteStarProps {
   isFavorite: boolean;
   onToggle: () => void;
   className?: string;
-  size?: "xs" | "sm" | "md" | "lg" | "xl";
+  size?: MantineSize;
 }
 
 const FavoriteStar: React.FC<FavoriteStarProps> = ({ isFavorite, onToggle, className, size = "xs" }) => {
