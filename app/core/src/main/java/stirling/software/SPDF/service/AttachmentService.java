@@ -19,7 +19,6 @@ import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
@@ -40,6 +39,22 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 public class AttachmentService implements AttachmentServiceInterface {
+
+    private static final long DEFAULT_MAX_ATTACHMENT_SIZE_BYTES = 50L * 1024 * 1024; // 50 MB
+    private static final long DEFAULT_MAX_TOTAL_ATTACHMENT_SIZE_BYTES =
+            200L * 1024 * 1024; // 200 MB
+
+    private final long maxAttachmentSizeBytes;
+    private final long maxTotalAttachmentSizeBytes;
+
+    public AttachmentService() {
+        this(DEFAULT_MAX_ATTACHMENT_SIZE_BYTES, DEFAULT_MAX_TOTAL_ATTACHMENT_SIZE_BYTES);
+    }
+
+    public AttachmentService(long maxAttachmentSizeBytes, long maxTotalAttachmentSizeBytes) {
+        this.maxAttachmentSizeBytes = maxAttachmentSizeBytes;
+        this.maxTotalAttachmentSizeBytes = maxTotalAttachmentSizeBytes;
+    }
 
     @Override
     public PDDocument addAttachment(PDDocument document, List<MultipartFile> attachments)
@@ -134,6 +149,7 @@ public class AttachmentService implements AttachmentServiceInterface {
                 ZipOutputStream zipOutputStream = new ZipOutputStream(baos)) {
             Set<String> usedNames = new HashSet<>();
             boolean hasExtractedAttachments = false;
+            long totalBytesWritten = 0L;
 
             for (Map.Entry<String, PDComplexFileSpecification> entry : embeddedFiles.entrySet()) {
                 PDComplexFileSpecification fileSpecification = entry.getValue();
@@ -148,9 +164,30 @@ public class AttachmentService implements AttachmentServiceInterface {
 
                 String filename = determineFilename(entry.getKey(), fileSpecification);
                 filename = Filenames.toSimpleFileName(filename);
-                filename = ensureUniqueFilename(filename, usedNames);
+                String sanitizedFilename = sanitizeFilename(filename);
 
-                ZipEntry zipEntry = new ZipEntry(filename);
+                Optional<byte[]> attachmentData = readAttachmentData(embeddedFile);
+                if (attachmentData.isEmpty()) {
+                    log.warn(
+                            "Skipping attachment '{}' because it exceeds the size limit of {} bytes",
+                            sanitizedFilename,
+                            maxAttachmentSizeBytes);
+                    continue;
+                }
+
+                byte[] data = attachmentData.get();
+                if (maxTotalAttachmentSizeBytes > 0
+                        && (data.length + totalBytesWritten) > maxTotalAttachmentSizeBytes) {
+                    log.warn(
+                            "Skipping attachment '{}' because the total size would exceed {} bytes",
+                            sanitizedFilename,
+                            maxTotalAttachmentSizeBytes);
+                    continue;
+                }
+
+                String uniqueFilename = ensureUniqueFilename(sanitizedFilename, usedNames);
+
+                ZipEntry zipEntry = new ZipEntry(uniqueFilename);
                 if (embeddedFile.getModDate() != null) {
                     zipEntry.setLastModifiedTime(
                             FileTime.from(embeddedFile.getModDate().toInstant()));
@@ -159,13 +196,14 @@ public class AttachmentService implements AttachmentServiceInterface {
                     zipEntry.setCreationTime(
                             FileTime.from(embeddedFile.getCreationDate().toInstant()));
                 }
-                zipEntry.setSize(embeddedFile.getSize());
+                zipEntry.setSize(data.length);
 
                 zipOutputStream.putNextEntry(zipEntry);
-                IOUtils.copy(embeddedFile.createInputStream(), zipOutputStream);
+                zipOutputStream.write(data);
                 zipOutputStream.closeEntry();
                 hasExtractedAttachments = true;
-                log.info("Extracted attachment '{}' ({} bytes)", filename, embeddedFile.getSize());
+                totalBytesWritten += data.length;
+                log.info("Extracted attachment '{}' ({} bytes)", uniqueFilename, data.length);
             }
 
             zipOutputStream.finish();
@@ -175,6 +213,35 @@ public class AttachmentService implements AttachmentServiceInterface {
             }
 
             return Optional.of(baos.toByteArray());
+        }
+    }
+
+    private String sanitizeFilename(String candidate) {
+        String sanitized = Filenames.toSimpleFileName(candidate);
+        if (StringUtils.isBlank(sanitized)) {
+            sanitized = generateDefaultFilename();
+        }
+        return sanitized;
+    }
+
+    private String generateDefaultFilename() {
+        return "attachment";
+    }
+
+    private Optional<byte[]> readAttachmentData(PDEmbeddedFile embeddedFile) throws IOException {
+        try (var inputStream = embeddedFile.createInputStream();
+                var buffer = new ByteArrayOutputStream()) {
+            byte[] chunk = new byte[8192];
+            long total = 0L;
+            int read;
+            while ((read = inputStream.read(chunk)) != -1) {
+                total += read;
+                if (maxAttachmentSizeBytes > 0 && total > maxAttachmentSizeBytes) {
+                    return Optional.empty();
+                }
+                buffer.write(chunk, 0, read);
+            }
+            return Optional.of(buffer.toByteArray());
         }
     }
 
