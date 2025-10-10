@@ -239,7 +239,7 @@ public class AttachmentService implements AttachmentServiceInterface {
 
     private String fallbackFilename(String candidate) {
         if (StringUtils.isBlank(candidate)) {
-            return "attachment";
+            return "unknown_attachment_" + System.currentTimeMillis(); 
         }
         return candidate;
     }
