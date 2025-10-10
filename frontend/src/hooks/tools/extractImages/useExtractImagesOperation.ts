@@ -25,13 +25,13 @@ export const extractImagesOperationConfig = {
 
 export const useExtractImagesOperation = () => {
   const { t } = useTranslation();
-  const { extractAllZipFiles } = useToolResources();
+  const { extractZipFiles } = useToolResources();
 
   // Response handler that respects auto-unzip preferences
   const responseHandler = useCallback(async (blob: Blob, _originalFiles: File[]): Promise<File[]> => {
     // Extract images returns a ZIP file - use preference-aware extraction
-    return await extractAllZipFiles(blob);
-  }, [extractAllZipFiles]);
+    return await extractZipFiles(blob);
+  }, [extractZipFiles]);
 
   return useToolOperation<ExtractImagesParameters>({
     ...extractImagesOperationConfig,

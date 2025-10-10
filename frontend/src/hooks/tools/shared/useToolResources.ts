@@ -85,62 +85,13 @@ export const useToolResources = () => {
 
   const extractZipFiles = useCallback(async (zipBlob: Blob, skipAutoUnzip = false): Promise<File[]> => {
     try {
-      // Check if ZIP contains HTML files - if so, keep as ZIP
-      const zipFile = new File([zipBlob], 'temp.zip', { type: 'application/zip' });
-      const containsHtml = await zipFileService.containsHtmlFiles(zipFile);
-
-      if (containsHtml) {
-        // HTML files should stay zipped
-        return [new File([zipBlob], 'result.zip', { type: 'application/zip' })];
-      }
-
-      // Check if we should extract based on preferences
-      const shouldExtract = await zipFileService.shouldUnzip(
-        zipBlob,
-        preferences.autoUnzip,
-        preferences.autoUnzipFileLimit,
+      return await zipFileService.extractWithPreferences(zipBlob, {
+        autoUnzip: preferences.autoUnzip,
+        autoUnzipFileLimit: preferences.autoUnzipFileLimit,
         skipAutoUnzip
-      );
-
-      if (!shouldExtract) {
-        return [new File([zipBlob], 'result.zip', { type: 'application/zip' })];
-      }
-
-      const extractionResult = await zipFileService.extractAllFiles(zipFile);
-      return extractionResult.success ? extractionResult.extractedFiles : [];
+      });
     } catch (error) {
       console.error('useToolResources.extractZipFiles - Error:', error);
-      return [];
-    }
-  }, [preferences.autoUnzip, preferences.autoUnzipFileLimit]);
-
-  const extractAllZipFiles = useCallback(async (zipBlob: Blob, skipAutoUnzip = false): Promise<File[]> => {
-    try {
-      // Check if ZIP contains HTML files - if so, keep as ZIP
-      const zipFile = new File([zipBlob], 'temp.zip', { type: 'application/zip' });
-      const containsHtml = await zipFileService.containsHtmlFiles(zipFile);
-
-      if (containsHtml) {
-        // HTML files should stay zipped
-        return [new File([zipBlob], 'result.zip', { type: 'application/zip' })];
-      }
-
-      // Check if we should extract based on preferences
-      const shouldExtract = await zipFileService.shouldUnzip(
-        zipBlob,
-        preferences.autoUnzip,
-        preferences.autoUnzipFileLimit,
-        skipAutoUnzip
-      );
-
-      if (!shouldExtract) {
-        return [new File([zipBlob], 'result.zip', { type: 'application/zip' })];
-      }
-
-      const extractionResult = await zipFileService.extractAllFiles(zipFile);
-      return extractionResult.success ? extractionResult.extractedFiles : [];
-    } catch (error) {
-      console.error('useToolResources.extractAllZipFiles - Error:', error);
       return [];
     }
   }, [preferences.autoUnzip, preferences.autoUnzipFileLimit]);
@@ -168,7 +119,6 @@ export const useToolResources = () => {
     generateThumbnailsWithMetadata,
     createDownloadInfo,
     extractZipFiles,
-    extractAllZipFiles,
     cleanupBlobUrls,
   };
 };

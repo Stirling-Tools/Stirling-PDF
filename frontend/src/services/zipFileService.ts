@@ -402,6 +402,62 @@ export class ZipFileService {
   }
 
   /**
+   * Extract files from ZIP with HTML detection and preference checking
+   * This is the unified method that handles the common pattern of:
+   * 1. Check for HTML files → keep zipped if present
+   * 2. Check user preferences → respect autoUnzipFileLimit
+   * 3. Extract files if appropriate
+   *
+   * @param zipBlob - The ZIP blob to process
+   * @param options - Extraction options
+   * @returns Array of files (either extracted or the ZIP itself)
+   */
+  async extractWithPreferences(
+    zipBlob: Blob,
+    options: {
+      autoUnzip: boolean;
+      autoUnzipFileLimit: number;
+      skipAutoUnzip?: boolean;
+    }
+  ): Promise<File[]> {
+    try {
+      // Create File object if not already
+      const zipFile = zipBlob instanceof File
+        ? zipBlob
+        : new File([zipBlob], 'result.zip', { type: 'application/zip' });
+
+      // Check if ZIP contains HTML files - if so, keep as ZIP
+      const containsHtml = await this.containsHtmlFiles(zipFile);
+      if (containsHtml) {
+        return [zipFile];
+      }
+
+      // Check if we should extract based on preferences
+      const shouldExtract = await this.shouldUnzip(
+        zipBlob,
+        options.autoUnzip,
+        options.autoUnzipFileLimit,
+        options.skipAutoUnzip || false
+      );
+
+      if (!shouldExtract) {
+        return [zipFile];
+      }
+
+      // Extract all files
+      const extractionResult = await this.extractAllFiles(zipFile);
+      return extractionResult.success ? extractionResult.extractedFiles : [zipFile];
+    } catch (error) {
+      console.error('Error in extractWithPreferences:', error);
+      // On error, return ZIP as-is
+      const zipFile = zipBlob instanceof File
+        ? zipBlob
+        : new File([zipBlob], 'result.zip', { type: 'application/zip' });
+      return [zipFile];
+    }
+  }
+
+  /**
    * Extract all files from a ZIP archive (not limited to PDFs)
    */
   async extractAllFiles(
