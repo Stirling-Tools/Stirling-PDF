@@ -132,6 +132,10 @@ interface ViewerContextType {
   setAnnotationMode: (enabled: boolean) => void;
   toggleAnnotationMode: () => void;
 
+  // Active file index for multi-file viewing
+  activeFileIndex: number;
+  setActiveFileIndex: (index: number) => void;
+
   // State getters - read current state from bridges
   getScrollState: () => ScrollState;
   getZoomState: () => ZoomState;
@@ -219,6 +223,7 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
   const [isThumbnailSidebarVisible, setIsThumbnailSidebarVisible] = useState(false);
   const [isAnnotationsVisible, setIsAnnotationsVisible] = useState(true);
   const [isAnnotationMode, setIsAnnotationModeState] = useState(false);
+  const [activeFileIndex, setActiveFileIndex] = useState(0);
 
   // Get current navigation state to check if we're in sign mode
   useNavigation();
@@ -576,6 +581,10 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     isAnnotationMode,
     setAnnotationMode,
     toggleAnnotationMode,
+
+    // Active file index
+    activeFileIndex,
+    setActiveFileIndex,
 
     // State getters
     getScrollState,

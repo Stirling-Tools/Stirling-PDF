@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useFileState } from '../../../contexts/FileContext';
+import { usePageEditor } from '../../../contexts/PageEditorContext';
 import { PDFDocument, PDFPage } from '../../../types/pageEditor';
 import { FileId } from '../../../types/file';
 
@@ -15,9 +16,21 @@ export interface PageDocumentHook {
  */
 export function usePageDocument(): PageDocumentHook {
   const { state, selectors } = useFileState();
+  const { selectedFileIds } = usePageEditor();
 
-  // Prefer IDs + selectors to avoid array identity churn
-  const activeFileIds = state.files.ids;
+  // Convert Set to array and filter to maintain file order from FileContext
+  const allFileIds = state.files.ids;
+
+  // Create stable string representations for useMemo dependencies
+  const allFileIdsString = allFileIds.join(',');
+  const selectedIdsString = Array.from(selectedFileIds).sort().join(',');
+
+  const activeFileIds = useMemo(() => {
+    return allFileIds.filter(id => selectedFileIds.has(id));
+    // Using string representations to prevent infinite loops from Set reference changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allFileIdsString, selectedIdsString]);
+
   const primaryFileId = activeFileIds[0] ?? null;
 
   // Stable signature for effects (prevents loops)

@@ -45,6 +45,7 @@ const FileEditorThumbnail = ({
   selectedFiles,
   onToggleFile,
   onCloseFile,
+  onViewFile,
   _onSetStatus,
   onReorderFiles,
   onDownloadFile,
@@ -205,6 +206,11 @@ const FileEditorThumbnail = ({
     onToggleFile(file.id);
   };
 
+  const handleCardDoubleClick = () => {
+    if (!isSupported) return;
+    onViewFile(file.id);
+  };
+
   // ---- Style helpers ----
   const getHeaderClassName = () => {
     if (hasError) return styles.headerError;
@@ -226,6 +232,7 @@ const FileEditorThumbnail = ({
       role="listitem"
       aria-selected={isSelected}
       onClick={handleCardClick}
+      onDoubleClick={handleCardDoubleClick}
     >
       {/* Header bar */}
       <div

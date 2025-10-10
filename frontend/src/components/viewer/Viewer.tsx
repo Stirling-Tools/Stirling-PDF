@@ -5,6 +5,8 @@ export interface ViewerProps {
   setSidebarsVisible: (v: boolean) => void;
   onClose?: () => void;
   previewFile?: File | null;
+  activeFileIndex?: number;
+  setActiveFileIndex?: (index: number) => void;
 }
 
 const Viewer = (props: ViewerProps) => {
