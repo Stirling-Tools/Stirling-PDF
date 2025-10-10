@@ -156,10 +156,11 @@ export default function OnboardingTour() {
       padding: 10,
     },
     [TourStep.SELECT_CONTROLS]: {
-      selector: '[data-tour="select-all-button"]',
+      selector: '[data-tour="right-rail-controls"]',
+      highlightedSelectors: ['[data-tour="right-rail-controls"]', '[data-tour="right-rail-settings"]'],
       content: t('onboarding.selectControls', "The Right Rail contains buttons to quickly select/deselect all of your active PDFs, along with buttons to change the app's theme or language."),
       position: 'left',
-      padding: 10,
+      padding: 5,
       action: () => selectFirstFile(),
     },
     [TourStep.CROP_SETTINGS]: {

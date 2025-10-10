@@ -305,6 +305,7 @@ export default function RightRail() {
         <div
           className={`right-rail-slot ${currentView !== 'viewer' ? 'visible right-rail-enter' : 'right-rail-exit'}`}
           aria-hidden={currentView === 'viewer'}
+          data-tour="right-rail-controls"
         >
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
             {/* Select All Button */}
@@ -442,7 +443,7 @@ export default function RightRail() {
         </div>
 
         {/* Theme toggle and Language dropdown */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }} data-tour="right-rail-settings">
           <Tooltip content={t('rightRail.toggleTheme', 'Toggle Theme')} position="left" offset={12} arrow>
             <ActionIcon
               variant="subtle"
