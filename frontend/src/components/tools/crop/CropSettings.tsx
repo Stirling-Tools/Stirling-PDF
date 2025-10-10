@@ -93,6 +93,19 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
     loadPDFDimensions();
   }, [selectedStub, selectedFile, parameters]);
 
+  // Listen for tour events to set crop area
+  useEffect(() => {
+    const handleSetCropArea = (event: Event) => {
+      const customEvent = event as CustomEvent<Rectangle>;
+      if (customEvent.detail && pdfBounds) {
+        parameters.setCropArea(customEvent.detail, pdfBounds);
+      }
+    };
+
+    window.addEventListener('tour:setCropArea', handleSetCropArea);
+    return () => window.removeEventListener('tour:setCropArea', handleSetCropArea);
+  }, [parameters, pdfBounds]);
+
   // Current crop area
   const cropArea = parameters.getCropArea();
 

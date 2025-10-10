@@ -218,6 +218,7 @@ const FileEditorThumbnail = ({
       ref={fileElementRef}
       data-file-id={file.id}
       data-testid="file-thumbnail"
+      data-tour="file-card-checkbox"
       data-selected={isSelected}
       data-supported={isSupported}
       className={`${styles.card} w-[18rem] h-[22rem] select-none flex flex-col shadow-sm transition-all relative`}

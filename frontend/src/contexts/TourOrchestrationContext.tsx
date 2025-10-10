@@ -5,6 +5,9 @@ import { useNavigationActions } from './NavigationContext';
 import { useToolWorkflow } from './ToolWorkflowContext';
 
 interface TourOrchestrationContextType {
+  // Tool deselection
+  backToAllTools: () => void;
+
   // Tool selection
   selectCropTool: () => void;
 
@@ -35,7 +38,11 @@ export const TourOrchestrationProvider: React.FC<{ children: React.ReactNode }> 
   const { addFiles } = useFileHandler();
   const { closeFilesModal } = useFilesModalContext();
   const { actions: navActions } = useNavigationActions();
-  const { handleToolSelect } = useToolWorkflow();
+  const { handleToolSelect, handleBackToTools } = useToolWorkflow();
+
+  const backToAllTools = useCallback(() => {
+    handleBackToTools();
+  }, [handleBackToTools]);
 
   const selectCropTool = useCallback(() => {
     handleToolSelect('crop');
@@ -71,14 +78,26 @@ export const TourOrchestrationProvider: React.FC<{ children: React.ReactNode }> 
     // This function could trigger a click event on the first file card
     const firstFileCard = document.querySelector('[data-tour="file-card-checkbox"]') as HTMLElement;
     if (firstFileCard) {
-      firstFileCard.click();
+      // Check if already selected (data-selected attribute)
+      const isSelected = firstFileCard.getAttribute('data-selected') === 'true';
+      // Only click if not already selected (to avoid toggling off)
+      if (!isSelected) {
+        firstFileCard.click();
+      }
     }
   }, []);
 
   const modifyCropSettings = useCallback(() => {
-    // Placeholder for crop settings modification
-    // Will be implemented with actual crop parameter manipulation
-    console.log('Modify crop settings');
+    // Dispatch a custom event to modify crop settings
+    const event = new CustomEvent('tour:setCropArea', {
+      detail: {
+        x: 112,
+        y: 428,
+        width: 273,
+        height: 169
+      }
+    });
+    window.dispatchEvent(event);
   }, []);
 
   const executeTool = useCallback(() => {
@@ -98,6 +117,7 @@ export const TourOrchestrationProvider: React.FC<{ children: React.ReactNode }> 
   }, []);
 
   const value: TourOrchestrationContextType = {
+    backToAllTools,
     selectCropTool,
     loadSampleFile,
     switchToViewer,
