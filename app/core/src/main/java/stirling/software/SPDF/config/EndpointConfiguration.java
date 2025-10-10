@@ -257,6 +257,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Convert", "html-to-pdf");
         addEndpointToGroup("Convert", "url-to-pdf");
         addEndpointToGroup("Convert", "markdown-to-pdf");
+        addEndpointToGroup("Convert", "ebook-to-pdf");
         addEndpointToGroup("Convert", "pdf-to-csv");
         addEndpointToGroup("Convert", "pdf-to-markdown");
         addEndpointToGroup("Convert", "eml-to-pdf");
@@ -436,6 +437,9 @@ public class EndpointConfiguration {
         addEndpointToGroup("Weasyprint", "markdown-to-pdf");
         addEndpointToGroup("Weasyprint", "eml-to-pdf");
 
+        // Calibre dependent endpoints
+        addEndpointToGroup("Calibre", "ebook-to-pdf");
+
         // Pdftohtml dependent endpoints
         addEndpointToGroup("Pdftohtml", "pdf-to-html");
         addEndpointToGroup("Pdftohtml", "pdf-to-markdown");
@@ -484,7 +488,8 @@ public class EndpointConfiguration {
                 || "Java".equals(group)
                 || "Javascript".equals(group)
                 || "Weasyprint".equals(group)
-                || "Pdftohtml".equals(group);
+                || "Pdftohtml".equals(group)
+                || "Calibre".equals(group);
     }
 
     private boolean isEndpointEnabledDirectly(String endpoint) {

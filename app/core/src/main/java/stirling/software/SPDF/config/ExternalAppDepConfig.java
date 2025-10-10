@@ -23,6 +23,7 @@ public class ExternalAppDepConfig {
 
     private final String weasyprintPath;
     private final String unoconvPath;
+    private final String calibrePath;
     private final Map<String, List<String>> commandToGroupMapping;
 
     public ExternalAppDepConfig(
@@ -30,6 +31,7 @@ public class ExternalAppDepConfig {
         this.endpointConfiguration = endpointConfiguration;
         weasyprintPath = runtimePathConfig.getWeasyPrintPath();
         unoconvPath = runtimePathConfig.getUnoConvertPath();
+        calibrePath = runtimePathConfig.getCalibrePath();
 
         commandToGroupMapping =
                 new HashMap<>() {
@@ -43,6 +45,7 @@ public class ExternalAppDepConfig {
                         put(unoconvPath, List.of("Unoconvert"));
                         put("qpdf", List.of("qpdf"));
                         put("tesseract", List.of("tesseract"));
+                        put(calibrePath, List.of("Calibre"));
                     }
                 };
     }
@@ -57,6 +60,12 @@ public class ExternalAppDepConfig {
             }
             Process process = processBuilder.start();
             int exitCode = process.waitFor();
+            if (exitCode != 0) {
+                ProcessBuilder altProcessBuilder = new ProcessBuilder();
+                altProcessBuilder.command(command, "--version");
+                Process altProcess = altProcessBuilder.start();
+                exitCode = altProcess.waitFor();
+            }
             return exitCode == 0;
         } catch (Exception e) {
             log.debug("Error checking for command {}: {}", command, e.getMessage());
@@ -66,7 +75,7 @@ public class ExternalAppDepConfig {
 
     private List<String> getAffectedFeatures(String group) {
         return endpointConfiguration.getEndpointsForGroup(group).stream()
-                .map(endpoint -> formatEndpointAsFeature(endpoint))
+                .map(this::formatEndpointAsFeature)
                 .toList();
     }
 
@@ -75,7 +84,7 @@ public class ExternalAppDepConfig {
         String feature = endpoint.replace("-", " ").replace("pdf", "PDF").replace("img", "image");
         // Split into words and capitalize each word
         return Arrays.stream(RegexPatternUtils.getInstance().getWordSplitPattern().split(feature))
-                .map(word -> capitalizeWord(word))
+                .map(this::capitalizeWord)
                 .collect(Collectors.joining(" "));
     }
 
@@ -120,6 +129,7 @@ public class ExternalAppDepConfig {
         checkDependencyAndDisableGroup(weasyprintPath);
         checkDependencyAndDisableGroup("pdftohtml");
         checkDependencyAndDisableGroup(unoconvPath);
+        checkDependencyAndDisableGroup(calibrePath);
         // Special handling for Python/OpenCV dependencies
         boolean pythonAvailable = isCommandAvailable("python3") || isCommandAvailable("python");
         if (!pythonAvailable) {
