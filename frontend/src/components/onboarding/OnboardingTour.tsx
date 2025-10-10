@@ -84,17 +84,13 @@ export default function OnboardingTour() {
       content: t('onboarding.selectCropTool', "Let's select the Crop tool to demonstrate a complete workflow. We'll automatically select it for you in a moment."),
       position: 'right',
       padding: 0,
-      action: () => closeFilesModal(),
+      actionAfter: () => selectCropTool(),
     },
     [TourStep.TOOL_INTERFACE]: {
       selector: '[data-tour="tool-panel"]',
       content: t('onboarding.toolInterface', "This is the Crop tool interface. It replaces the All Tools panel and shows tool-specific settings. But first, we need a PDF file to work with."),
       position: 'right',
       padding: 0,
-      action: () => {
-        closeFilesModal();
-        selectCropTool();
-      },
     },
     [TourStep.FILES_BUTTON]: {
       selector: '[data-tour="files-button"]',
@@ -108,116 +104,89 @@ export default function OnboardingTour() {
       content: t('onboarding.fileSources', 'You can upload new files or access recent files from here.'),
       position: 'right',
       padding: 0,
-      action: () => openFilesModal(),
+      actionAfter: () => {
+        closeFilesModal();
+        loadSampleFile();
+      }
     },
     [TourStep.WORKBENCH]: {
       selector: '[data-tour="workbench"]',
       content: t('onboarding.workbench', 'This is the Workbench - the main area where you view and edit your PDFs.'),
       position: 'center',
       padding: 0,
-      action: () => {
-        loadSampleFile();
-      },
     },
     [TourStep.VIEW_SWITCHER]: {
       selector: '[data-tour="view-switcher"]',
       content: t('onboarding.viewSwitcher', 'Use these controls to switch between three different views: Viewer, Page Editor, and Active Files.'),
       position: 'bottom',
       padding: 0,
-      action: () => {
-        closeFilesModal();
-      },
     },
     [TourStep.VIEWER]: {
       selector: '[data-tour="workbench"]',
       content: t('onboarding.viewer', "The Viewer lets you read and annotate PDFs. Let's switch to it now to see our sample file."),
       position: 'center',
       padding: 0,
-      action: () => {
-        closeFilesModal();
-        switchToViewer();
-      },
+      action: () => switchToViewer(),
     },
     [TourStep.PAGE_EDITOR]: {
       selector: '[data-tour="workbench"]',
       content: t('onboarding.pageEditor', "The Page Editor allows you to reorder, rotate, split, and delete pages. Let's take a quick look."),
       position: 'center',
       padding: 0,
-      action: () => {
-        closeFilesModal();
-        switchToPageEditor();
-      },
+      action: () => switchToPageEditor(),
     },
     [TourStep.ACTIVE_FILES]: {
       selector: '[data-tour="workbench"]',
       content: t('onboarding.activeFiles', "Active Files shows all loaded PDFs and lets you select which ones to process. Let's go back there now."),
       position: 'center',
       padding: 0,
-      action: () => {
-        closeFilesModal();
-        switchToActiveFiles();
-      },
+      action: () => switchToActiveFiles(),
     },
     [TourStep.FILE_CHECKBOX]: {
       selector: '[data-tour="file-card-checkbox"]',
       content: t('onboarding.fileCheckbox', "Click a file card to select it for processing. You can select multiple files for batch operations."),
       position: 'top',
       padding: 10,
-      action: () => closeFilesModal(),
     },
     [TourStep.SELECT_CONTROLS]: {
       selector: '[data-tour="select-all-button"]',
       content: t('onboarding.selectControls', 'Use these buttons to quickly select or deselect all files when working with multiple PDFs.'),
       position: 'left',
       padding: 10,
-      action: () => {
-        closeFilesModal();
-        selectFirstFile();
-      },
+      action: () => selectFirstFile(),
     },
     [TourStep.CROP_SETTINGS]: {
       selector: '[data-tour="crop-settings"]',
       content: t('onboarding.cropSettings', "Here you can adjust the crop area by dragging on the preview or entering precise coordinates. We'll modify the crop area slightly."),
       position: 'left',
       padding: 10,
-      action: () => {
-        closeFilesModal();
-        modifyCropSettings();
-      },
+      action: () => modifyCropSettings(),
     },
     [TourStep.RUN_BUTTON]: {
       selector: '[data-tour="run-button"]',
       content: t('onboarding.runButton', "Once your settings are configured, click Run to execute the tool and process your selected files."),
       position: 'top',
       padding: 10,
-      action: () => closeFilesModal(),
+      actionAfter: () => executeTool(),
     },
     [TourStep.RESULTS]: {
       selector: '[data-tour="tool-panel"]',
       content: t('onboarding.results', "After processing, you'll see a preview of the results in this panel. You can download the file or continue working with it in other tools."),
       position: 'right',
       padding: 0,
-      action: () => {
-        closeFilesModal();
-        executeTool();
-      },
     },
     [TourStep.UNDO]: {
       selector: '[data-tour="undo-button"]',
       content: t('onboarding.undo', "Made a mistake? Use the Undo button to revert the operation and restore your original files."),
       position: 'left',
       padding: 10,
-      action: () => closeFilesModal(),
+      actionAfter: () => undoOperation(),
     },
     [TourStep.WRAP_UP]: {
       selector: 'body',
       content: t('onboarding.wrapUp', "You're all set! You've learned how to select tools, load files, switch views, configure settings, and process PDFs. Click the Help button anytime to see this tour again."),
       position: 'center',
       padding: 0,
-      action: () => {
-        closeFilesModal();
-        undoOperation();
-      },
     },
   };
 
