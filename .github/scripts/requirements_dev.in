@@ -1,4 +1,4 @@
-pip
+pip @ git+https://github.com/pypa/pip.git@2e05cae3da2cfafa6dce58167a25b7dba4bc2a33 # CVE-2025-8869 mitigation - revert to released version once pip 25.3+ is available
 setuptools
 WeasyPrint
 pdf2image
