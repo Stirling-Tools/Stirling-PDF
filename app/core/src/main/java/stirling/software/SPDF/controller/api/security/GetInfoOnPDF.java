@@ -11,16 +11,13 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.pdfbox.cos.COSBase;
 import org.apache.pdfbox.cos.COSInputStream;
 import org.apache.pdfbox.cos.COSName;
-import org.apache.pdfbox.cos.COSStream;
 import org.apache.pdfbox.cos.COSString;
 import org.apache.pdfbox.io.RandomAccessReadBuffer;
 import org.apache.pdfbox.pdmodel.*;
 import org.apache.pdfbox.pdmodel.common.PDMetadata;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
-import org.apache.pdfbox.pdmodel.common.PDStream;
 import org.apache.pdfbox.pdmodel.common.filespecification.PDComplexFileSpecification;
 import org.apache.pdfbox.pdmodel.common.filespecification.PDEmbeddedFile;
 import org.apache.pdfbox.pdmodel.documentinterchange.logicalstructure.PDStructureElement;
@@ -31,11 +28,6 @@ import org.apache.pdfbox.pdmodel.encryption.PDEncryption;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDFontDescriptor;
 import org.apache.pdfbox.pdmodel.graphics.PDXObject;
-import org.apache.pdfbox.pdmodel.graphics.color.PDColorSpace;
-import org.apache.pdfbox.pdmodel.graphics.color.PDDeviceCMYK;
-import org.apache.pdfbox.pdmodel.graphics.color.PDDeviceGray;
-import org.apache.pdfbox.pdmodel.graphics.color.PDDeviceRGB;
-import org.apache.pdfbox.pdmodel.graphics.color.PDICCBased;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.pdmodel.graphics.optionalcontent.PDOptionalContentGroup;
@@ -973,10 +965,6 @@ public class GetInfoOnPDF {
             ArrayNode fontsArray = extractPageFonts(resources);
             pageInfo.set("Fonts", fontsArray);
 
-            // Color spaces (enhanced)
-            ArrayNode colorSpacesArray = extractPageColorSpaces(resources);
-            pageInfo.set("Color Spaces & ICC Profiles", colorSpacesArray);
-
             // XObjects count
             ObjectNode xObjectCountNode = extractPageXObjects(resources);
             pageInfo.set("XObjectCounts", xObjectCountNode);
@@ -1114,46 +1102,6 @@ public class GetInfoOnPDF {
         }
 
         return fontsArray;
-    }
-
-    private static ArrayNode extractPageColorSpaces(PDResources resources) {
-        ArrayNode colorSpacesArray = objectMapper.createArrayNode();
-
-        try {
-            Iterable<COSName> colorSpaceNames = resources.getColorSpaceNames();
-            for (COSName name : colorSpaceNames) {
-                PDColorSpace colorSpace = resources.getColorSpace(name);
-                ObjectNode colorSpaceNode = objectMapper.createObjectNode();
-
-                colorSpaceNode.put("Name", name.getName());
-
-                if (colorSpace instanceof PDICCBased iccBased) {
-                    PDStream iccData = iccBased.getPDStream();
-                    byte[] iccBytes = iccData.toByteArray();
-                    colorSpaceNode.put("Type", "ICC-Based");
-                    colorSpaceNode.put("ICC Profile Length", iccBytes.length);
-                    colorSpaceNode.put("NumberOfComponents", iccBased.getNumberOfComponents());
-                } else if (colorSpace instanceof PDDeviceRGB) {
-                    colorSpaceNode.put("Type", "DeviceRGB");
-                    colorSpaceNode.put("NumberOfComponents", 3);
-                } else if (colorSpace instanceof PDDeviceCMYK) {
-                    colorSpaceNode.put("Type", "DeviceCMYK");
-                    colorSpaceNode.put("NumberOfComponents", 4);
-                } else if (colorSpace instanceof PDDeviceGray) {
-                    colorSpaceNode.put("Type", "DeviceGray");
-                    colorSpaceNode.put("NumberOfComponents", 1);
-                } else {
-                    colorSpaceNode.put("Type", colorSpace.getClass().getSimpleName());
-                    colorSpaceNode.put("NumberOfComponents", colorSpace.getNumberOfComponents());
-                }
-
-                colorSpacesArray.add(colorSpaceNode);
-            }
-        } catch (Exception e) {
-            log.error("Error extracting page color spaces: {}", e.getMessage());
-        }
-
-        return colorSpacesArray;
     }
 
     private static ObjectNode extractPageXObjects(PDResources resources) {
@@ -1333,12 +1281,6 @@ public class GetInfoOnPDF {
             basicInfo.put("ParagraphCount", paragraphCount);
             basicInfo.put("CharacterCount", fullText.length());
 
-            CompressionInfo compressionInfo = detectCompression(document);
-            basicInfo.put("Compression", compressionInfo.hasCompression);
-            if (compressionInfo.hasCompression && compressionInfo.compressionType != null) {
-                basicInfo.put("CompressionType", compressionInfo.compressionType);
-            }
-
             String language = document.getDocumentCatalog().getLanguage();
             if (language != null) {
                 basicInfo.put("Language", language);
@@ -1354,50 +1296,6 @@ public class GetInfoOnPDF {
         }
 
         return basicInfo;
-    }
-
-    private CompressionInfo detectCompression(PDDocument document) {
-        CompressionInfo info = new CompressionInfo();
-        info.hasCompression = false;
-        info.compressionType = "None";
-
-        try {
-            Set<String> compressionTypes = new HashSet<>();
-
-            for (PDPage page : document.getPages()) {
-                PDResources resources = page.getResources();
-                if (resources != null) {
-                    for (COSName xObjectName : resources.getXObjectNames()) {
-                        PDXObject xObject = resources.getXObject(xObjectName);
-                        if (xObject instanceof PDImageXObject) {
-                            COSBase cosObject = xObject.getCOSObject();
-                            if (cosObject instanceof COSStream stream) {
-                                COSBase filters = stream.getFilters();
-                                if (filters instanceof COSName) {
-                                    compressionTypes.add(((COSName) filters).getName());
-                                } else if (filters != null) {
-                                    compressionTypes.add(filters.toString());
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            if (!compressionTypes.isEmpty()) {
-                info.hasCompression = true;
-                info.compressionType = String.join(", ", compressionTypes);
-            }
-        } catch (Exception e) {
-            log.error("Error detecting compression: {}", e.getMessage());
-        }
-
-        return info;
-    }
-
-    private static class CompressionInfo {
-        boolean hasCompression;
-        String compressionType;
     }
 
     private static class ImageStatistics {

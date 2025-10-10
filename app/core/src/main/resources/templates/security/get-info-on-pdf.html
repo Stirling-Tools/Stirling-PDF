@@ -89,7 +89,6 @@
                           <ul class="list-unstyled">
                             <li><strong>Images:</strong> <span id="summary-images">-</span></li>
                             <li><strong>Fonts:</strong> <span id="summary-fonts">-</span></li>
-                            <li><strong>Color Spaces:</strong> <span id="summary-color-spaces">-</span></li>
                             <li><strong>Form Fields:</strong> <span id="summary-form-fields">-</span></li>
                             <li><strong>Embedded Files:</strong> <span id="summary-embedded-files">-</span></li>
                           </ul>
@@ -231,7 +230,6 @@
                   // Reset technical details fields
                   document.getElementById('summary-images').textContent = '-';
                   document.getElementById('summary-fonts').textContent = '-';
-                  document.getElementById('summary-color-spaces').textContent = '-';
                   document.getElementById('summary-form-fields').textContent = '-';
                   document.getElementById('summary-embedded-files').textContent = '-';
                   document.getElementById('summary-javascript').textContent = '-';
@@ -310,12 +308,11 @@
                     }
                   }
                   
-                  // Count fonts and color spaces from PerPageInfo
+                  // Count fonts from PerPageInfo
                   if (data && data.PerPageInfo) {
                     let totalFonts = 0;
                     let embeddedFonts = 0;
                     const fontSet = new Set();
-                    const colorSpaceSet = new Set();
                     
                     for (const pageKey in data.PerPageInfo) {
                       const pageData = data.PerPageInfo[pageKey];
@@ -330,15 +327,6 @@
                           }
                         });
                       }
-                      
-                      // Count color spaces
-                      if (pageData["Color Spaces & ICC Profiles"] && Array.isArray(pageData["Color Spaces & ICC Profiles"])) {
-                        pageData["Color Spaces & ICC Profiles"].forEach(cs => {
-                          if (cs.Type) {
-                            colorSpaceSet.add(cs.Type);
-                          }
-                        });
-                      }
                     }
                     
                     // Display fonts
@@ -347,14 +335,6 @@
                       document.getElementById('summary-fonts').textContent = `${totalFonts} (${embeddedFonts} embedded)`;
                     } else {
                       document.getElementById('summary-fonts').textContent = 'None';
-                    }
-                    
-                    // Display color spaces
-                    if (colorSpaceSet.size > 0) {
-                      const colorSpacesArray = Array.from(colorSpaceSet);
-                      document.getElementById('summary-color-spaces').textContent = colorSpacesArray.join(', ');
-                    } else {
-                      document.getElementById('summary-color-spaces').textContent = 'None';
                     }
                   }
                   
