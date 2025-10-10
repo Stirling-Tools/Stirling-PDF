@@ -260,6 +260,8 @@ public class EndpointConfiguration {
         addEndpointToGroup("Convert", "pdf-to-csv");
         addEndpointToGroup("Convert", "pdf-to-markdown");
         addEndpointToGroup("Convert", "eml-to-pdf");
+        addEndpointToGroup("Convert", "pdf-to-vector");
+        addEndpointToGroup("Convert", "vector-to-pdf");
 
         // Adding endpoints to "Security" group
         addEndpointToGroup("Security", "add-password");
@@ -386,6 +388,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Java", "pdf-to-markdown");
         addEndpointToGroup("Java", "add-attachments");
         addEndpointToGroup("Java", "compress-pdf");
+        addEndpointToGroup("Java", "pdf-to-vector");
 
         // Javascript
         addEndpointToGroup("Javascript", "pdf-organizer");
@@ -401,6 +404,8 @@ public class EndpointConfiguration {
         addEndpointToGroup("Ghostscript", "repair");
         addEndpointToGroup("Ghostscript", "compress-pdf");
         addEndpointToGroup("Ghostscript", "replace-invert-pdf");
+        addEndpointToGroup("Ghostscript", "pdf-to-vector");
+        addEndpointToGroup("Ghostscript", "vector-to-pdf");
 
         /* tesseract */
         addEndpointToGroup("tesseract", "ocr-pdf");
@@ -414,6 +419,9 @@ public class EndpointConfiguration {
         addEndpointAlternative("compress-pdf", "qpdf");
         addEndpointAlternative("compress-pdf", "Ghostscript");
         addEndpointAlternative("compress-pdf", "Java");
+        addEndpointAlternative("pdf-to-vector", "Ghostscript");
+        addEndpointAlternative("pdf-to-vector", "Java");
+        addEndpointAlternative("vector-to-pdf", "Ghostscript");
         addEndpointAlternative("ocr-pdf", "tesseract");
         addEndpointAlternative("ocr-pdf", "OCRmyPDF");
 
