@@ -307,6 +307,7 @@ public class ApplicationProperties {
             private boolean keyCleanup = true;
             private int keyRetentionDays = 7;
             private Boolean secureCookie;
+            private boolean enableKeyRotation = false;
         }
     }
 

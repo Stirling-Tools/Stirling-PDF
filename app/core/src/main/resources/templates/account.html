@@ -343,7 +343,7 @@
       async function refreshApiKey() {
         try {
           /*<![CDATA[*/
-          const urlUpdateApiKey = /*[[@{/api/v1/user/update-api-key}]]*/ "/api/v1/user/update-api-key";
+          const urlUpdateApiKey = /*[[@{/v1/api/user/update-api-key}]]*/ "/v1/api/user/update-api-key";
           /*]]>*/
           let response = await window.fetchWithCsrf(urlUpdateApiKey, { method: 'POST' });
           if (response.status === 200) {
@@ -439,7 +439,7 @@
 	
 	    document.getElementById('syncToAccount').addEventListener('click', async function() {
 	      /*<![CDATA[*/
-	      const urlUpdateUserSettings = /*[[@{/api/v1/user/updateUserSettings}]]*/ "/api/v1/user/updateUserSettings";
+       const urlUpdateUserSettings = /*[[@{/v1/api/user/updateUserSettings}]]*/ "/v1/api/user/updateUserSettings";
 	      /*]]>*/
 	
 	      let settings = {};

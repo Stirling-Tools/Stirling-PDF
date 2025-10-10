@@ -251,7 +251,9 @@ public class SecurityConfiguration {
                                                         || trimmedUri.startsWith("/pdfjs-legacy/")
                                                         || trimmedUri.startsWith("/favicon")
                                                         || trimmedUri.startsWith(
-                                                                "/api/v1/info/status")
+                                                                "/v1/api/auth/keys")
+                                                        || trimmedUri.startsWith(
+                                                                "/v1/api/info/status")
                                                         || trimmedUri.startsWith("/v1/api-docs")
                                                         || uri.contains("/v1/api-docs");
                                             })

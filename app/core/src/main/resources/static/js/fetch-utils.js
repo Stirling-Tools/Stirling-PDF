@@ -5,7 +5,7 @@ window.JWTManager = {
     logout: function() {
 
         // Clear JWT cookie manually (fallback)
-        document.cookie = 'stirling_jwt=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; SameSite=None; Secure';
+        document.cookie = 'stirling_jwt=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; SameSite=Strict; Secure';
 
         // Perform logout request to clear server-side session
         fetch('/logout', {

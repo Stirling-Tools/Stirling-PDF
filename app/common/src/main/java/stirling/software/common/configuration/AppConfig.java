@@ -52,7 +52,7 @@ public class AppConfig {
     @Value("${server.port:8080}")
     private String serverPort;
 
-    @Value("${v2}")
+    @Value("${v2:true}")
     public boolean v2Enabled;
 
     @Bean

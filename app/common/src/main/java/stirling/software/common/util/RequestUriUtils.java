@@ -23,7 +23,8 @@ public class RequestUriUtils {
                 || requestURI.endsWith(".ico")
                 || requestURI.endsWith(".txt")
                 || requestURI.endsWith(".webmanifest")
-                || requestURI.startsWith(contextPath + "/api/v1/info/status");
+                || requestURI.startsWith(contextPath + "/api/v1/info/status")
+                || requestURI.startsWith(contextPath + "/v1/api/info/status");
     }
 
     public static boolean isTrackableResource(String requestURI) {

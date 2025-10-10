@@ -47,7 +47,7 @@ public class JwtService implements JwtServiceInterface {
     private static final String ISSUER = "Stirling PDF";
     private static final long EXPIRATION = 3600000;
 
-    @Value("${stirling.security.jwt.secureCookie:true}")
+    @Value("${security.jwt.secureCookie:true}")
     private boolean secureCookie;
 
     private final KeyPersistenceServiceInterface keyPersistenceService;
@@ -293,7 +293,7 @@ public class JwtService implements JwtServiceInterface {
                 ResponseCookie.from(JWT_COOKIE_NAME, "")
                         .httpOnly(true)
                         .secure(secureCookie)
-                        .sameSite("None")
+                        .sameSite("Strict")
                         .maxAge(0)
                         .path("/")
                         .build();
