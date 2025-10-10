@@ -133,7 +133,7 @@ public class AttachmentService implements AttachmentServiceInterface {
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 ZipOutputStream zipOutputStream = new ZipOutputStream(baos)) {
             Set<String> usedNames = new HashSet<>();
-            boolean wroteEntry = false;
+            boolean hasExtractedAttachments = false;
 
             for (Map.Entry<String, PDComplexFileSpecification> entry : embeddedFiles.entrySet()) {
                 PDComplexFileSpecification fileSpecification = entry.getValue();
@@ -164,13 +164,13 @@ public class AttachmentService implements AttachmentServiceInterface {
                 zipOutputStream.putNextEntry(zipEntry);
                 IOUtils.copy(embeddedFile.createInputStream(), zipOutputStream);
                 zipOutputStream.closeEntry();
-                wroteEntry = true;
+                hasExtractedAttachments = true;
                 log.info("Extracted attachment '{}' ({} bytes)", filename, embeddedFile.getSize());
             }
 
             zipOutputStream.finish();
 
-            if (!wroteEntry) {
+            if (!hasExtractedAttachments) {
                 return Optional.empty();
             }
 
@@ -239,7 +239,7 @@ public class AttachmentService implements AttachmentServiceInterface {
 
     private String fallbackFilename(String candidate) {
         if (StringUtils.isBlank(candidate)) {
-            return "unknown_attachment_" + System.currentTimeMillis(); 
+            return "unknown_attachment_" + System.currentTimeMillis();
         }
         return candidate;
     }
