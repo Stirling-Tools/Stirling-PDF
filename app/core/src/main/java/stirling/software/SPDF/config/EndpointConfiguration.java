@@ -386,7 +386,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Java", "pdf-to-markdown");
         addEndpointToGroup("Java", "add-attachments");
         addEndpointToGroup("Java", "compress-pdf");
-        addEndpointToGroup("RAR", "pdf-to-cbr");
+        addEndpointToGroup("rar", "pdf-to-cbr");
 
         // Javascript
         addEndpointToGroup("Javascript", "pdf-organizer");

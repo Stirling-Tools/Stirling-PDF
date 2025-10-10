@@ -51,7 +51,7 @@ public class ConverterWebController {
     @Hidden
     public String convertPdfToCbrForm(Model model) {
         if (!ApplicationContextProvider.getBean(EndpointConfiguration.class)
-                .isEndpointEnabled("pdf/cbr")) {
+                .isEndpointEnabled("pdf-to-cbr")) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
         model.addAttribute("currentPage", "pdf-to-cbr");
