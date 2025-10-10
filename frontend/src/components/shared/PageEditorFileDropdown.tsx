@@ -6,11 +6,13 @@ import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import FitText from './FitText';
 
+import { FileId } from '../../types/file';
+
 interface PageEditorFileDropdownProps {
   displayName: string;
-  allFiles: Array<{ fileId: string; name: string; versionNumber?: number }>;
-  selectedFileIds: Set<string>;
-  onToggleSelection: (fileId: string) => void;
+  allFiles: Array<{ fileId: FileId; name: string; versionNumber?: number }>;
+  selectedFileIds: Set<FileId>;
+  onToggleSelection: (fileId: FileId) => void;
   onReorder: (fromIndex: number, toIndex: number) => void;
   switchingTo?: string | null;
   viewOptionStyle: React.CSSProperties;

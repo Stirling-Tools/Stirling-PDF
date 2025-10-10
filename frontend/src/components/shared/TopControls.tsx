@@ -9,6 +9,7 @@ import { WorkbenchType, isValidWorkbench } from '../../types/workbench';
 import { FileDropdownMenu } from './FileDropdownMenu';
 import { PageEditorFileDropdown } from './PageEditorFileDropdown';
 import { usePageEditor } from '../../contexts/PageEditorContext';
+import { FileId } from '../../types/file';
 
 
 const viewOptionStyle: React.CSSProperties = {
@@ -25,15 +26,15 @@ const viewOptionStyle: React.CSSProperties = {
 const createViewOptions = (
   currentView: WorkbenchType,
   switchingTo: WorkbenchType | null,
-  activeFiles: Array<{ fileId: string; name: string; versionNumber?: number }>,
+  activeFiles: Array<{ fileId: string | FileId; name: string; versionNumber?: number }>,
   currentFileIndex: number,
   onFileSelect?: (index: number) => void,
   pageEditorState?: {
-    allFiles: Array<{ fileId: string; name: string; versionNumber?: number }>;
-    selectedFileIds: Set<string>;
+    allFiles: Array<{ fileId: FileId; name: string; versionNumber?: number }>;
+    selectedFileIds: Set<FileId>;
     selectedCount: number;
     totalCount: number;
-    onToggleSelection: (fileId: string) => void;
+    onToggleSelection: (fileId: FileId) => void;
     onReorder: (fromIndex: number, toIndex: number) => void;
   }
 ) => {
@@ -194,12 +195,12 @@ const TopControls = ({
             currentFileIndex,
             onFileSelect,
             {
-              allFiles: activeFiles,
+              allFiles: activeFiles as Array<{ fileId: FileId; name: string; versionNumber?: number }>,
               selectedFileIds,
               selectedCount,
               totalCount,
               onToggleSelection: toggleFileSelection,
-              onReorder: (fromIndex, toIndex) => pageEditorReorderFiles(fromIndex, toIndex, activeFiles.map(f => f.fileId)),
+              onReorder: (fromIndex, toIndex) => pageEditorReorderFiles(fromIndex, toIndex, activeFiles.map(f => f.fileId as FileId)),
             }
           )}
           value={currentView}
