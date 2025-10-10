@@ -8,6 +8,7 @@ import { HotkeyProvider } from "./contexts/HotkeyContext";
 import { SidebarProvider } from "./contexts/SidebarContext";
 import { PreferencesProvider } from "./contexts/PreferencesContext";
 import { OnboardingProvider } from "./contexts/OnboardingContext";
+import { TourOrchestrationProvider } from "./contexts/TourOrchestrationContext";
 import ErrorBoundary from "./components/shared/ErrorBoundary";
 import HomePage from "./pages/HomePage";
 import OnboardingTour from "./components/onboarding/OnboardingTour";
@@ -55,8 +56,10 @@ export default function App() {
                           <ViewerProvider>
                             <SignatureProvider>
                               <RightRailProvider>
-                                <HomePage />
-                                <OnboardingTour />
+                                <TourOrchestrationProvider>
+                                  <HomePage />
+                                  <OnboardingTour />
+                                </TourOrchestrationProvider>
                               </RightRailProvider>
                             </SignatureProvider>
                           </ViewerProvider>
