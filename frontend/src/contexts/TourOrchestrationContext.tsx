@@ -1,10 +1,16 @@
-import React, { createContext, useContext, useCallback } from 'react';
+import React, { createContext, useContext, useCallback, useRef } from 'react';
 import { useFileHandler } from '../hooks/useFileHandler';
 import { useFilesModalContext } from './FilesModalContext';
 import { useNavigationActions } from './NavigationContext';
 import { useToolWorkflow } from './ToolWorkflowContext';
+import { useAllFiles, useFileManagement } from './FileContext';
+import { StirlingFile } from '../types/fileContext';
 
 interface TourOrchestrationContextType {
+  // State management
+  saveWorkbenchState: () => void;
+  restoreWorkbenchState: () => Promise<void>;
+
   // Tool deselection
   backToAllTools: () => void;
 
@@ -39,6 +45,50 @@ export const TourOrchestrationProvider: React.FC<{ children: React.ReactNode }> 
   const { closeFilesModal } = useFilesModalContext();
   const { actions: navActions } = useNavigationActions();
   const { handleToolSelect, handleBackToTools } = useToolWorkflow();
+  const { files } = useAllFiles();
+  const { clearAllFiles } = useFileManagement();
+
+  // Store the user's files before tour starts
+  const savedFilesRef = useRef<StirlingFile[]>([]);
+
+  // Keep a ref to always have the latest files
+  const filesRef = useRef<StirlingFile[]>(files);
+  React.useEffect(() => {
+    filesRef.current = files;
+  }, [files]);
+
+  const saveWorkbenchState = useCallback(() => {
+    // Get fresh files from ref
+    const currentFiles = filesRef.current;
+    console.log('Saving workbench state, files count:', currentFiles.length);
+    savedFilesRef.current = [...currentFiles];
+    // Clear all files for clean demo
+    clearAllFiles();
+  }, [clearAllFiles]);
+
+  const restoreWorkbenchState = useCallback(async () => {
+    console.log('Restoring workbench state, saved files count:', savedFilesRef.current.length);
+
+    // Go back to All Tools
+    handleBackToTools();
+
+    // Clear all files (including tour sample)
+    clearAllFiles();
+
+    // Restore saved files
+    if (savedFilesRef.current.length > 0) {
+      // Create fresh File objects from StirlingFile to avoid ID conflicts
+      const filesToRestore = await Promise.all(
+        savedFilesRef.current.map(async (sf) => {
+          const buffer = await sf.arrayBuffer();
+          return new File([buffer], sf.name, { type: sf.type, lastModified: sf.lastModified });
+        })
+      );
+      console.log('Restoring files:', filesToRestore.map(f => f.name));
+      await addFiles(filesToRestore);
+      savedFilesRef.current = [];
+    }
+  }, [clearAllFiles, addFiles, handleBackToTools]);
 
   const backToAllTools = useCallback(() => {
     handleBackToTools();
@@ -117,6 +167,8 @@ export const TourOrchestrationProvider: React.FC<{ children: React.ReactNode }> 
   }, []);
 
   const value: TourOrchestrationContextType = {
+    saveWorkbenchState,
+    restoreWorkbenchState,
     backToAllTools,
     selectCropTool,
     loadSampleFile,

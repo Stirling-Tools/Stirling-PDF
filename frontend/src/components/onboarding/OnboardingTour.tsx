@@ -54,6 +54,8 @@ export default function OnboardingTour() {
   const { completeTour, closeTour } = useOnboarding();
   const { openFilesModal, closeFilesModal } = useFilesModalContext();
   const {
+    saveWorkbenchState,
+    restoreWorkbenchState,
     backToAllTools,
     selectCropTool,
     loadSampleFile,
@@ -74,6 +76,7 @@ export default function OnboardingTour() {
       position: 'right',
       padding: 0,
       action: () => {
+        saveWorkbenchState();
         closeFilesModal();
         backToAllTools();
       },
@@ -228,11 +231,13 @@ export default function OnboardingTour() {
       steps={steps}
       onClickClose={({ setIsOpen }) => {
         setIsOpen(false);
+        restoreWorkbenchState();
         closeTour();
       }}
       onClickMask={({ setCurrentStep, currentStep, steps, setIsOpen }) => {
         if (steps && currentStep === steps.length - 1) {
           setIsOpen(false);
+          restoreWorkbenchState();
           completeTour();
         } else if (steps) {
           setCurrentStep((s) => (s === steps.length - 1 ? 0 : s + 1));
@@ -284,6 +289,7 @@ export default function OnboardingTour() {
             onClick={() => {
               if (isLast) {
                 setIsOpen(false);
+                restoreWorkbenchState();
                 completeTour();
               } else {
                 setCurrentStep(Math.min(stepsLength - 1, currentStep + 1));
