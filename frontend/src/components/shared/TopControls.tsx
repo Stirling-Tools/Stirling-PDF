@@ -9,7 +9,7 @@ import { WorkbenchType, isValidWorkbench } from '../../types/workbench';
 import { FileDropdownMenu } from './FileDropdownMenu';
 
 
-const viewOptionStyle = {
+const viewOptionStyle: React.CSSProperties = {
   display: 'inline-flex',
   flexDirection: 'row',
   alignItems: 'center',
@@ -45,7 +45,7 @@ const createViewOptions = (
         viewOptionStyle={viewOptionStyle}
       />
     ) : (
-      <div style={viewOptionStyle as React.CSSProperties}>
+      <div style={viewOptionStyle}>
         {switchingTo === "viewer" ? (
           <Loader size="xs" />
         ) : (
@@ -59,7 +59,7 @@ const createViewOptions = (
 
   const pageEditorOption = {
     label: (
-      <div style={viewOptionStyle as React.CSSProperties}>
+      <div style={viewOptionStyle}>
         {currentView === "pageEditor" ? (
           <>
             {switchingTo === "pageEditor" ? <Loader size="xs" /> : <EditNoteIcon fontSize="small" />}
@@ -78,7 +78,7 @@ const createViewOptions = (
 
   const fileEditorOption = {
     label: (
-      <div style={viewOptionStyle as React.CSSProperties}>
+      <div style={viewOptionStyle}>
         {currentView === "fileEditor" ? (
           <>
             {switchingTo === "fileEditor" ? <Loader size="xs" /> : <FolderIcon fontSize="small" />}

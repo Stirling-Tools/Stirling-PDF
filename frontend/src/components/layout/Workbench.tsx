@@ -22,7 +22,7 @@ export default function Workbench() {
   const { isRainbowMode } = useRainbowThemeContext();
 
   // Use context-based hooks to eliminate all prop drilling
-  const { state, selectors } = useFileState();
+  const { selectors } = useFileState();
   const { workbench: currentView } = useNavigationState();
   const { actions: navActions } = useNavigationActions();
   const setCurrentView = navActions.setWorkbench;

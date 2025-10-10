@@ -25,7 +25,7 @@ export const FileDropdownMenu: React.FC<FileDropdownMenuProps> = ({
   return (
     <Menu trigger="click" position="bottom" width="30rem">
       <Menu.Target>
-        <div style={{...viewOptionStyle, cursor: 'pointer'} as React.CSSProperties}>
+        <div style={{...viewOptionStyle, cursor: 'pointer'}}>
           {switchingTo === "viewer" ? (
             <Loader size="xs" />
           ) : (
