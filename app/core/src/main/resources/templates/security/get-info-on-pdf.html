@@ -320,7 +320,7 @@
                       // Count fonts
                       if (pageData.Fonts && Array.isArray(pageData.Fonts)) {
                         pageData.Fonts.forEach(font => {
-                          const fontKey = font.Name + '|' + font.Subtype;
+                          const fontKey = JSON.stringify([font.Name, font.Subtype]);
                           fontSet.add(fontKey);
                           if (font.IsEmbedded) {
                             embeddedFonts++;
