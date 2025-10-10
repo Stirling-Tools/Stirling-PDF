@@ -44,7 +44,13 @@ public class ConvertWebsiteToPDF {
     private final RuntimePathConfig runtimePathConfig;
     private final ApplicationProperties applicationProperties;
 
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/url/pdf")
+    // TODO: check MediaType for URL input?
+    @PostMapping(
+            consumes = {
+                MediaType.MULTIPART_FORM_DATA_VALUE,
+                MediaType.APPLICATION_FORM_URLENCODED_VALUE
+            },
+            value = "/url/pdf")
     @Operation(
             summary = "Convert a URL to a PDF",
             description =

@@ -38,6 +38,7 @@ public class RedactPdfRequest extends PDFFile {
     @Schema(
             description = "Custom padding for redaction",
             type = "number",
+            defaultValue = "0.1",
             requiredMode = Schema.RequiredMode.REQUIRED)
     private float customPadding;
 
