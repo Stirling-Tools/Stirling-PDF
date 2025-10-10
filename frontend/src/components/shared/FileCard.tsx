@@ -51,6 +51,7 @@ const FileCard = ({ file, fileStub, onRemove, onDoubleClick, onView, onEdit, isS
       onMouseLeave={() => setIsHovered(false)}
       onClick={onSelect}
       data-testid="file-card"
+      data-tour="file-card-checkbox"
     >
       <Stack gap={6} align="center">
         <Box

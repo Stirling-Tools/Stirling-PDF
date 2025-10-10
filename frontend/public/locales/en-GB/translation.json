@@ -3200,6 +3200,7 @@
     "automate": "Automate",
     "files": "Files",
     "activity": "Activity",
+    "help": "Help",
     "account": "Account",
     "config": "Config",
     "allTools": "All Tools"
@@ -3618,5 +3619,35 @@
     }
   },
   "termsAndConditions": "Terms & Conditions",
-  "logOut": "Log out"
+  "logOut": "Log out",
+  "onboarding": {
+    "welcome": "Welcome to Stirling PDF! Let's take you on a quick tour around the app.",
+    "allTools": "This is the All Tools panel, where you can browse and select from all available PDF tools.",
+    "selectCropTool": "Let's select the Crop tool to demonstrate how to use one of the tools.",
+    "toolInterface": "This is the Crop tool interface. As you can see, there's not much there yet because we haven't added any PDF files to work with yet.",
+    "filesButton": "The Files button on the Quick Access bar allows you to upload PDFs to use the tools on.",
+    "fileSources": "You can upload new files or access recent files from here.",
+    "workbench": "This is the Workbench - the main area where you view and edit your PDFs.",
+    "viewSwitcher": "Use these controls to select how you want to view your PDFs.",
+    "viewer": "The Viewer lets you read and annotate your PDFs.",
+    "pageEditor": "The Page Editor allows you to do various operations on the pages within your PDFs, such as reordering, rotating and deleting.",
+    "activeFiles": "The Active Files view shows all of the PDFs you have loaded into the tool, and allows you to select which ones to process.",
+    "fileCheckbox": "Clicking one of the files selects it for processing. You can select multiple files for batch operations.",
+    "selectControls": "The Right Rail contains buttons to quickly select/deselect all of your active PDFs, along with buttons to change the app's theme or language.",
+    "cropSettings": "Now that we've selected the file we want crop, we can configure the Crop tool to choose the area that we want to crop the PDF to.",
+    "runButton": "Once the tool has been configured, this button allows you to run the tool on all the selected PDFs.",
+    "results": "After the tool has finished running, the Review step will show a preview of the results in this panel. The modified file will replace the original file in the Workbench automatically (unless you Pin the original file).",
+    "undo": "If you're unhappy with the results from the tool, you can use the Undo button to revert the operation and restore your original files.",
+    "wrapUp": "You're all set! You've learnt about the main areas of the app and how to use them. Click the Help button whenever you like to see this tour again.",
+    "mobile": {
+      "toolsTab": "Browse all available PDF tools. Swipe or tap to switch between Tools and Workspace views.",
+      "workspaceTab": "Your workspace where you can upload files and configure tool settings.",
+      "bottomBar": "Quick access to all tools, automation, your files, and settings from the bottom bar."
+    },
+    "previous": "Previous",
+    "next": "Next",
+    "ok": "OK",
+    "startTour": "Start Tour",
+    "startTourDescription": "Take a guided tour of Stirling PDF's key features"
+  }
 }

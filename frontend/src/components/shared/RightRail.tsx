@@ -181,7 +181,7 @@ export default function RightRail() {
   }, [currentView]);
 
   return (
-    <div ref={sidebarRefs.rightRailRef} className={`right-rail`} data-sidebar="right-rail">
+    <div ref={sidebarRefs.rightRailRef} className={`right-rail`} data-sidebar="right-rail" data-tour="right-rail">
       <div className="right-rail-inner">
         {topButtons.length > 0 && (
           <>
@@ -313,6 +313,7 @@ export default function RightRail() {
         <div
           className={`right-rail-slot ${currentView !== 'viewer' ? 'visible right-rail-enter' : 'right-rail-exit'}`}
           aria-hidden={currentView === 'viewer'}
+          data-tour="right-rail-controls"
         >
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
             {/* Select All Button */}
@@ -324,6 +325,7 @@ export default function RightRail() {
                   className="right-rail-icon"
                   onClick={handleSelectAll}
                   disabled={currentView === 'viewer' || totalItems === 0 || selectedCount === totalItems || allButtonsDisabled || disableForFullscreen}
+                  data-tour="select-all-button"
                 >
                   <LocalIcon icon="select-all" width="1.5rem" height="1.5rem" />
                 </ActionIcon>
@@ -339,6 +341,7 @@ export default function RightRail() {
                   className="right-rail-icon"
                   onClick={handleDeselectAll}
                   disabled={currentView === 'viewer' || selectedCount === 0 || allButtonsDisabled || disableForFullscreen}
+                  data-tour="deselect-all-button"
                 >
                   <LocalIcon icon="crop-square-outline" width="1.5rem" height="1.5rem" />
                 </ActionIcon>
@@ -449,7 +452,7 @@ export default function RightRail() {
         </div>
 
         {/* Theme toggle and Language dropdown */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }} data-tour="right-rail-settings">
           <Tooltip content={t('rightRail.toggleTheme', 'Toggle Theme')} position="left" offset={12} arrow portalTarget={document.body}
           >
             <ActionIcon
