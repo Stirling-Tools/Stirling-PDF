@@ -65,7 +65,7 @@ repositories {
 
 allprojects {
     group = 'stirling.software'
-    version = '1.3.2'
+    version = '1.4.0'
 
     configurations.configureEach {
         exclude group: 'commons-logging', module: 'commons-logging'
