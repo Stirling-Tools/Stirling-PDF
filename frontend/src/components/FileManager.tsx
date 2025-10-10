@@ -88,7 +88,7 @@ const FileManager: React.FC<FileManagerProps> = ({ selectedTool }) => {
   }, []);
 
   // Preload Google Drive scripts if configured
-  
+
   useEffect(() => {
     if (isGoogleDriveConfigured()) {
       // Load scripts in parallel without blocking

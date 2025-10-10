@@ -1538,11 +1538,15 @@
   "overlay-pdfs": {
     "tags": "Overlay",
     "header": "Overlay PDF Files",
+    "title": "Overlay PDFs",
+    "desc": "Overlay one PDF on top of another",
     "baseFile": {
       "label": "Select Base PDF File"
     },
     "overlayFiles": {
-      "label": "Select Overlay PDF Files"
+      "label": "Select Overlay PDF Files",
+      "placeholder": "Choose PDF(s)...",
+      "addMore": "Add more PDFs..."
     },
     "mode": {
       "label": "Select Overlay Mode",
@@ -1552,14 +1556,49 @@
     },
     "counts": {
       "label": "Overlay Counts (for Fixed Repeat Mode)",
-      "placeholder": "Enter comma-separated counts (e.g., 2,3,1)"
+      "placeholder": "Enter comma-separated counts (e.g., 2,3,1)",
+      "item": "Count for file"
     },
     "position": {
       "label": "Select Overlay Position",
       "foreground": "Foreground",
       "background": "Background"
     },
-    "submit": "Submit"
+    "submit": "Submit",
+    "settings": {
+      "title": "Settings"
+    },
+    "results": {
+      "title": "Overlay Results"
+    },
+    "tooltip": {
+      "header": {
+        "title": "Overlay PDFs Overview"
+      },
+      "description": {
+        "title": "Description",
+        "text": "Combine a base PDF with one or more overlay PDFs. Overlays can be applied page-by-page in different modes and placed in the foreground or background."
+      },
+      "mode": {
+        "title": "Overlay Mode",
+        "text": "Choose how to distribute overlay pages across the base PDF pages.",
+        "sequential": "Sequential Overlay: Use pages from the first overlay PDF until it ends, then move to the next.",
+        "interleaved": "Interleaved Overlay: Take one page from each overlay in turn.",
+        "fixedRepeat": "Fixed Repeat Overlay: Take a set number of pages from each overlay before moving to the next. Use Counts to set the numbers."
+      },
+      "position": {
+        "title": "Overlay Position",
+        "text": "Foreground places the overlay on top of the page. Background places it behind."
+      },
+      "overlayFiles": {
+        "title": "Overlay Files",
+        "text": "Select one or more PDFs to overlay on the base. The order of these files affects how pages are applied in Sequential and Fixed Repeat modes."
+      },
+      "counts": {
+        "title": "Counts (Fixed Repeat only)",
+        "text": "Provide a positive number for each overlay file showing how many pages to take before moving to the next. Required when mode is Fixed Repeat."
+      }
+    }
   },
   "split-by-sections": {
     "tags": "Section Split, Divide, Customize",
