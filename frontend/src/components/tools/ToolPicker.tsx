@@ -4,13 +4,20 @@ import { useTranslation } from "react-i18next";
 import { ToolRegistryEntry } from "../../data/toolsTaxonomy";
 import "./toolPicker/ToolPicker.css";
 import { useToolSections } from "../../hooks/useToolSections";
+import type { SubcategoryGroup } from "../../hooks/useToolSections";
+import { useFavoriteToolItems } from "../../hooks/tools/useFavoriteToolItems";
 import NoToolsFound from "./shared/NoToolsFound";
 import { renderToolButtons } from "./shared/renderToolButtons";
+import Badge from "../shared/Badge";
+import SubcategoryHeader from "./shared/SubcategoryHeader";
+import ToolButton from "./toolPicker/ToolButton";
+import { useToolWorkflow } from "../../contexts/ToolWorkflowContext";
+import { ToolId } from "../../types/toolId";
 
 interface ToolPickerProps {
   selectedToolKey: string | null;
   onSelect: (id: string) => void;
-  filteredTools: Array<{ item: [string, ToolRegistryEntry]; matchedText?: string }>;
+  filteredTools: Array<{ item: [ToolId, ToolRegistryEntry]; matchedText?: string }>;
   isSearching?: boolean;
 }
 
@@ -61,11 +68,23 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
   }, []);
 
   const { sections: visibleSections } = useToolSections(filteredTools);
+  const { favoriteTools, toolRegistry } = useToolWorkflow();
+
+  const favoriteToolItems = useFavoriteToolItems(favoriteTools, toolRegistry);
 
   const quickSection = useMemo(
     () => visibleSections.find(s => s.key === 'quick'),
     [visibleSections]
   );
+
+  const recommendedItems = useMemo(() => {
+    if (!quickSection) return [] as Array<{ id: string; tool: ToolRegistryEntry }>;
+    const items: Array<{ id: string; tool: ToolRegistryEntry }> = [];
+    quickSection.subcategories.forEach((sc: SubcategoryGroup) => sc.tools.forEach((toolEntry) => items.push(toolEntry)));
+    return items;
+  }, [quickSection]);
+
+  const recommendedCount = useMemo(() => favoriteToolItems.length + recommendedItems.length, [favoriteToolItems.length, recommendedItems.length]);
   const allSection = useMemo(
     () => visibleSections.find(s => s.key === 'all'),
     [visibleSections]
@@ -87,7 +106,9 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
   };
 
   // Build flat list by subcategory for search mode
-  const { searchGroups } = useToolSections(isSearching ? filteredTools : []);
+  const emptyFilteredTools: ToolPickerProps['filteredTools'] = [];
+  const effectiveFilteredForSearch: ToolPickerProps['filteredTools'] = isSearching ? filteredTools : emptyFilteredTools;
+  const { searchGroups } = useToolSections(effectiveFilteredForSearch);
 
   return (
     <Box
@@ -115,7 +136,7 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
             {searchGroups.length === 0 ? (
               <NoToolsFound />
             ) : (
-              searchGroups.map(group => renderToolButtons(t, group, selectedToolKey, onSelect))
+                      searchGroups.map(group => renderToolButtons(t, group, selectedToolKey, onSelect, true, false, filteredTools, true))
             )}
           </Stack>
         ) : (
@@ -142,24 +163,46 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
               onClick={() => scrollTo(quickAccessRef)}
             >
               <span style={{ fontSize: "1rem" }}>{t("toolPicker.quickAccess", "QUICK ACCESS")}</span>
-              <span
-                style={{
-                  background: "var(--tool-header-badge-bg)",
-                  color: "var(--tool-header-badge-text)",
-                  borderRadius: ".5rem",
-                  padding: "0.125rem 0.5rem",
-                  fontSize: ".75rem",
-                  fontWeight: 700
-                }}
-              >
-                {quickSection?.subcategories.reduce((acc, sc) => acc + sc.tools.length, 0)}
-              </span>
+              <Badge>
+                {recommendedCount}
+              </Badge>
             </div>
 
             <Box ref={quickAccessRef} w="100%" my="sm">
               <Stack p="sm" gap="xs">
-                {quickSection?.subcategories.map(sc =>
-                  renderToolButtons(t, sc, selectedToolKey, onSelect, false)
+                {favoriteToolItems.length > 0 && (
+                  <Box w="100%">
+                    <SubcategoryHeader label={t('toolPanel.fullscreen.favorites', 'Favourites')} mt={0} />
+                    <div>
+                      {favoriteToolItems.map(({ id, tool }) => (
+                        <ToolButton
+                          key={`fav-${id}`}
+                          id={id}
+                          tool={tool}
+                          isSelected={selectedToolKey === id}
+                          onSelect={onSelect}
+                          hasStars
+                        />
+                      ))}
+                    </div>
+                  </Box>
+                )}
+                {recommendedItems.length > 0 && (
+                  <Box w="100%">
+                    <SubcategoryHeader label={t('toolPanel.fullscreen.recommended', 'Recommended')} />
+                    <div>
+                      {recommendedItems.map(({ id, tool }) => (
+                        <ToolButton
+                          key={`rec-${id}`}
+                          id={id as ToolId}
+                          tool={tool}
+                          isSelected={selectedToolKey === id}
+                          onSelect={onSelect}
+                          hasStars
+                        />
+                      ))}
+                    </div>
+                  </Box>
                 )}
               </Stack>
             </Box>
@@ -188,25 +231,16 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
               onClick={() => scrollTo(allToolsRef)}
             >
               <span style={{ fontSize: "1rem" }}>{t("toolPicker.allTools", "ALL TOOLS")}</span>
-              <span
-                style={{
-                  background: "var(--tool-header-badge-bg)",
-                  color: "var(--tool-header-badge-text)",
-                  borderRadius: ".5rem",
-                  padding: "0.125rem 0.5rem",
-                  fontSize: ".75rem",
-                  fontWeight: 700
-                }}
-              >
+              <Badge>
                 {allSection?.subcategories.reduce((acc, sc) => acc + sc.tools.length, 0)}
-              </span>
+              </Badge>
             </div>
 
             <Box ref={allToolsRef} w="100%">
               <Stack p="sm" gap="xs">
-                {allSection?.subcategories.map(sc =>
-                  renderToolButtons(t, sc, selectedToolKey, onSelect, true)
-                )}
+                        {allSection?.subcategories.map((sc: SubcategoryGroup) =>
+                          renderToolButtons(t, sc, selectedToolKey, onSelect, true, false, undefined, true)
+                        )}
               </Stack>
             </Box>
           </>

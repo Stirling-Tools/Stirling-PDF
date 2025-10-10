@@ -1,10 +1,11 @@
 import { Suspense } from "react";
 import { useToolWorkflow } from "../../contexts/ToolWorkflowContext";
 import { BaseToolProps } from "../../types/tool";
+import { ToolId } from "../../types/toolId";
 import ToolLoadingFallback from "./ToolLoadingFallback";
 
 interface ToolRendererProps extends BaseToolProps {
-  selectedToolKey: string;
+  selectedToolKey: ToolId;
 }
 
 
@@ -16,7 +17,14 @@ const ToolRenderer = ({
 }: ToolRendererProps) => {
   // Get the tool from context (instead of direct hook call)
   const { toolRegistry } = useToolWorkflow();
-  const selectedTool = toolRegistry[selectedToolKey];
+  const selectedTool = (selectedToolKey in toolRegistry)
+    ? toolRegistry[selectedToolKey as ToolId]
+    : undefined;
+
+  // Handle tools that only work in workbenches (read, multiTool)
+  if (selectedTool && !selectedTool.component && selectedTool.workbench) {
+    return null; // These tools render in their workbench, not in the sidebar
+  }
 
   if (!selectedTool || !selectedTool.component) {
     return <div>Tool not found: {selectedToolKey}</div>;

@@ -1,10 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Alert, Badge, Box, Button, Divider, Group, Paper, Stack, Text } from '@mantine/core';
+import { Alert, Badge, Box, Button, Divider, Group, Paper, Stack, Text, TextInput } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { useToolWorkflow } from '../../../../contexts/ToolWorkflowContext';
 import { useHotkeys } from '../../../../contexts/HotkeyContext';
+import { ToolId } from '../../../../types/toolId';
 import HotkeyDisplay from '../../../hotkeys/HotkeyDisplay';
-import { bindingEquals, eventToBinding } from '../../../../utils/hotkeys';
+import { bindingEquals, eventToBinding, HotkeyBinding } from '../../../../utils/hotkeys';
+import { ToolRegistryEntry } from 'src/data/toolsTaxonomy';
 
 const rowStyle: React.CSSProperties = {
   display: 'flex',
@@ -24,10 +26,22 @@ const HotkeysSection: React.FC = () => {
   const { t } = useTranslation();
   const { toolRegistry } = useToolWorkflow();
   const { hotkeys, defaults, updateHotkey, resetHotkey, pauseHotkeys, resumeHotkeys, getDisplayParts, isMac } = useHotkeys();
-  const [editingTool, setEditingTool] = useState<string | null>(null);
+  const [editingTool, setEditingTool] = useState<ToolId | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string>('');
 
-  const tools = useMemo(() => Object.entries(toolRegistry), [toolRegistry]);
+  const tools = useMemo(() => Object.entries(toolRegistry) as [ToolId, ToolRegistryEntry][], [toolRegistry]);
+
+  const filteredTools = useMemo(() => {
+    if (!searchQuery.trim()) return tools;
+    
+    const query = searchQuery.toLowerCase();
+    return tools.filter(([toolId, tool]) => 
+      tool.name.toLowerCase().includes(query) ||
+      tool.description.toLowerCase().includes(query) ||
+      toolId.toLowerCase().includes(query)
+    );
+  }, [tools, searchQuery]);
 
   useEffect(() => {
     if (!editingTool) {
@@ -45,14 +59,16 @@ const HotkeysSection: React.FC = () => {
     }
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      event.preventDefault();
-      event.stopPropagation();
-
       if (event.key === 'Escape') {
+        event.preventDefault();
+        event.stopPropagation();
         setEditingTool(null);
         setError(null);
         return;
       }
+
+      event.preventDefault();
+      event.stopPropagation();
 
       const binding = eventToBinding(event as KeyboardEvent);
       if (!binding) {
@@ -64,12 +80,15 @@ const HotkeysSection: React.FC = () => {
         return;
       }
 
-      const conflictEntry = Object.entries(hotkeys).find(([toolId, existing]) => (
+      const conflictEntry = (Object.entries(hotkeys) as [ToolId, HotkeyBinding][]).find(([toolId, existing]) => (
         toolId !== editingTool && bindingEquals(existing, binding)
       ));
 
       if (conflictEntry) {
-        const conflictTool = toolRegistry[conflictEntry[0]]?.name ?? conflictEntry[0];
+        const conflictKey = conflictEntry[0];
+        const conflictTool = (conflictKey in toolRegistry)
+          ? toolRegistry[conflictKey as ToolId]?.name
+          : conflictKey;
         setError(t('settings.hotkeys.errorConflict', 'Shortcut already used by {{tool}}.', { tool: conflictTool }));
         return;
       }
@@ -85,7 +104,7 @@ const HotkeysSection: React.FC = () => {
     };
   }, [editingTool, hotkeys, toolRegistry, updateHotkey, t]);
 
-  const handleStartCapture = (toolId: string) => {
+  const handleStartCapture = (toolId: ToolId) => {
     setEditingTool(toolId);
     setError(null);
   };
@@ -99,9 +118,22 @@ const HotkeysSection: React.FC = () => {
         </Text>
       </div>
 
+      <TextInput
+        placeholder={t('settings.hotkeys.searchPlaceholder', 'Search tools...')}
+        value={searchQuery}
+        onChange={(event) => setSearchQuery(event.currentTarget.value)}
+        size="md"
+        radius="md"
+      />
+
       <Paper withBorder p="md" radius="md">
         <Stack gap="md">
-          {tools.map(([toolId, tool], index) => {
+          {filteredTools.length === 0 ? (
+            <Text c="dimmed" ta="center" py="xl">
+              {t('toolPicker.noToolsFound', 'No tools found')}
+            </Text>
+          ) : (
+            filteredTools.map(([toolId, tool], index) => {
             const currentBinding = hotkeys[toolId];
             const defaultBinding = defaults[toolId];
             const isEditing = editingTool === toolId;
@@ -158,10 +190,11 @@ const HotkeysSection: React.FC = () => {
                   )}
                 </Box>
 
-                {index < tools.length - 1 && <Divider />}
+                {index < filteredTools.length - 1 && <Divider />}
               </React.Fragment>
             );
-          })}
+          })
+          )}
         </Stack>
       </Paper>
     </Stack>

@@ -1,27 +1,28 @@
+import { ToolId } from "src/types/toolId";
 import { ToolRegistryEntry } from "../data/toolsTaxonomy";
 import { scoreMatch, minScoreForQuery, normalizeForSearch } from "./fuzzySearch";
 
 export interface RankedToolItem {
-  item: [string, ToolRegistryEntry];
+  item: [ToolId, ToolRegistryEntry];
   matchedText?: string;
 }
 
 export function filterToolRegistryByQuery(
-  toolRegistry: Record<string, ToolRegistryEntry>,
+  toolRegistry: Record<ToolId, ToolRegistryEntry>,
   query: string
 ): RankedToolItem[] {
-  const entries = Object.entries(toolRegistry);
+  const entries = Object.entries(toolRegistry) as [ToolId, ToolRegistryEntry][];
   if (!query.trim()) {
-    return entries.map(([id, tool]) => ({ item: [id, tool] as [string, ToolRegistryEntry] }));
+    return entries.map(([id, tool]) => ({ item: [id, tool] as [ToolId, ToolRegistryEntry] }));
   }
 
   const nq = normalizeForSearch(query);
   const threshold = minScoreForQuery(query);
 
-  const exactName: Array<{ id: string; tool: ToolRegistryEntry; pos: number }> = [];
-  const exactSyn: Array<{ id: string; tool: ToolRegistryEntry; text: string; pos: number }> = [];
-  const fuzzyName: Array<{ id: string; tool: ToolRegistryEntry; score: number; text: string }> = [];
-  const fuzzySyn: Array<{ id: string; tool: ToolRegistryEntry; score: number; text: string }> = [];
+  const exactName: Array<{ id: ToolId; tool: ToolRegistryEntry; pos: number }> = [];
+  const exactSyn: Array<{ id: ToolId; tool: ToolRegistryEntry; text: string; pos: number }> = [];
+  const fuzzyName: Array<{ id: ToolId; tool: ToolRegistryEntry; score: number; text: string }> = [];
+  const fuzzySyn: Array<{ id: ToolId; tool: ToolRegistryEntry; score: number; text: string }> = [];
 
   for (const [id, tool] of entries) {
     const nameNorm = normalizeForSearch(tool.name || '');
@@ -78,21 +79,21 @@ export function filterToolRegistryByQuery(
   const seen = new Set<string>();
   const ordered: RankedToolItem[] = [];
 
-  const push = (id: string, tool: ToolRegistryEntry, matchedText?: string) => {
+  const push = (id: ToolId, tool: ToolRegistryEntry, matchedText?: string) => {
     if (seen.has(id)) return;
     seen.add(id);
     ordered.push({ item: [id, tool], matchedText });
   };
 
-  for (const { id, tool } of exactName) push(id, tool, tool.name);
-  for (const { id, tool, text } of exactSyn) push(id, tool, text);
-  for (const { id, tool, text } of fuzzyName) push(id, tool, text);
-  for (const { id, tool, text } of fuzzySyn) push(id, tool, text);
+  for (const { id, tool } of exactName) push(id as ToolId, tool, tool.name);
+  for (const { id, tool, text } of exactSyn) push(id as ToolId, tool, text);
+  for (const { id, tool, text } of fuzzyName) push(id as ToolId, tool, text);
+  for (const { id, tool, text } of fuzzySyn) push(id as ToolId, tool, text);
 
   if (ordered.length > 0) return ordered;
 
   // Fallback: return everything unchanged
-  return entries.map(([id, tool]) => ({ item: [id, tool] as [string, ToolRegistryEntry] }));
+  return entries.map(([id, tool]) => ({ item: [id, tool] as [ToolId, ToolRegistryEntry] }));
 }
 
 

@@ -6,12 +6,13 @@ import { ToolRegistryEntry } from "../../../data/toolsTaxonomy";
 import { TextInput } from "../../shared/TextInput";
 import "./ToolPicker.css";
 import { rankByFuzzy, idToWords } from "../../../utils/fuzzySearch";
+import { ToolId } from "src/types/toolId";
 
 interface ToolSearchProps {
   value: string;
   onChange: (value: string) => void;
-  toolRegistry: Readonly<Record<string, ToolRegistryEntry>>;
-  onToolSelect?: (toolId: string) => void;
+  toolRegistry: Partial<Record<ToolId, ToolRegistryEntry>>;
+  onToolSelect?: (toolId: ToolId) => void;
   mode: "filter" | "dropdown" | "unstyled";
   selectedToolKey?: string | null;
   placeholder?: string;
@@ -128,7 +129,7 @@ const ToolSearch = ({
                 key={id}
                 variant="subtle"
                 onClick={() => {
-                  onToolSelect?.(id);
+                  onToolSelect?.(id as ToolId);
                   setDropdownOpen(false);
                 }}
                 leftSection={<div style={{ color: "var(--tools-text-and-icon-color)" }}>{tool.icon}</div>}

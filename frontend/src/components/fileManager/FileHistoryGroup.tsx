@@ -44,7 +44,7 @@ const FileHistoryGroup: React.FC<FileHistoryGroupProps> = ({
         </Group>
 
         <Box ml="md">
-          {sortedHistory.map((historyFile, _index) => (
+          {sortedHistory.map((historyFile) => (
             <FileListItem
               key={`history-${historyFile.id}-${historyFile.versionNumber || 1}`}
               file={historyFile}
@@ -56,7 +56,6 @@ const FileHistoryGroup: React.FC<FileHistoryGroupProps> = ({
               onDoubleClick={() => onFileDoubleClick(historyFile)}
               isHistoryFile={true} // This enables "Add to Recents" in menu
               isLatestVersion={false} // History files are never latest
-              // onAddToRecents is accessed from context by FileListItem
             />
           ))}
         </Box>

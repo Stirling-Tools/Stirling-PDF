@@ -6,11 +6,12 @@ import { useToolSections } from '../../../hooks/useToolSections';
 import { renderToolButtons } from '../shared/renderToolButtons';
 import ToolSearch from '../toolPicker/ToolSearch';
 import ToolButton from '../toolPicker/ToolButton';
+import { ToolId } from '../../../types/toolId';
 
 interface ToolSelectorProps {
   onSelect: (toolKey: string) => void;
   excludeTools?: string[];
-  toolRegistry: Record<string, ToolRegistryEntry>; // Pass registry as prop to break circular dependency
+  toolRegistry: Record<ToolId, ToolRegistryEntry>; // Pass registry as prop to break circular dependency
   selectedValue?: string; // For showing current selection when editing existing tool
   placeholder?: string; // Custom placeholder text
 }
@@ -30,7 +31,7 @@ export default function ToolSelector({
 
   // Filter out excluded tools (like 'automate' itself) and tools that don't support automation
   const baseFilteredTools = useMemo(() => {
-    return Object.entries(toolRegistry).filter(([key, tool]) =>
+    return (Object.entries(toolRegistry) as [ToolId, ToolRegistryEntry][]).filter(([key, tool]) =>
       !excludeTools.includes(key) && getToolSupportsAutomate(tool)
     );
   }, [toolRegistry, excludeTools]);
@@ -53,20 +54,20 @@ export default function ToolSelector({
 
   // Create filtered tool registry for ToolSearch
   const filteredToolRegistry = useMemo(() => {
-    const registry: Record<string, ToolRegistryEntry> = {};
+    const registry: Record<ToolId, ToolRegistryEntry> = {} as Record<ToolId, ToolRegistryEntry>;
     baseFilteredTools.forEach(([key, tool]) => {
-      registry[key] = tool;
+      registry[key as ToolId] = tool;
     });
     return registry;
   }, [baseFilteredTools]);
 
   // Transform filteredTools to the expected format for useToolSections
   const transformedFilteredTools = useMemo(() => {
-    return filteredTools.map(([id, tool]) => ({ item: [id, tool] as [string, ToolRegistryEntry] }));
+    return filteredTools.map(([id, tool]) => ({ item: [id as ToolId, tool] as [ToolId, ToolRegistryEntry] }));
   }, [filteredTools]);
 
   // Use the same tool sections logic as the main ToolPicker
-  const { sections, searchGroups } = useToolSections(transformedFilteredTools);
+  const { sections, searchGroups } = useToolSections(transformedFilteredTools as any /* FIX ME */);
 
   // Determine what to display: search results or organized sections
   const isSearching = searchTerm.trim().length > 0;
@@ -88,7 +89,7 @@ export default function ToolSelector({
     }
 
     // Find the "all" section which contains all tools without duplicates
-    const allSection = sections.find(s => (s as any).key === 'all');
+    const allSection = sections.find(s => s.key === 'all');
     return allSection?.subcategories || [];
   }, [isSearching, searchGroups, sections, baseFilteredTools]);
 
@@ -100,7 +101,7 @@ export default function ToolSelector({
 
   const renderedTools = useMemo(() =>
     displayGroups.map((subcategory) =>
-      renderToolButtons(t, subcategory, null, handleToolSelect, !isSearching, true)
+      renderToolButtons(t, subcategory as any, null, handleToolSelect, !isSearching, true)
     ), [displayGroups, handleToolSelect, isSearching, t]
   );
 
@@ -142,8 +143,8 @@ export default function ToolSelector({
 
   // Get display value for selected tool
   const getDisplayValue = () => {
-    if (selectedValue && toolRegistry[selectedValue]) {
-      return toolRegistry[selectedValue].name;
+    if (selectedValue && toolRegistry[selectedValue as ToolId]) {
+      return toolRegistry[selectedValue as ToolId].name;
     }
     return placeholder || t('automate.creation.tools.add', 'Add a tool...');
   };
@@ -152,11 +153,11 @@ export default function ToolSelector({
     <div ref={containerRef} className='rounded-xl'>
       {/* Always show the target - either selected tool or search input */}
 
-        {selectedValue && toolRegistry[selectedValue] && !opened ? (
+        {selectedValue && toolRegistry[selectedValue as ToolId] && !opened ? (
           // Show selected tool in AutomationEntry style when tool is selected and dropdown closed
           <div onClick={handleSearchFocus} style={{ cursor: 'pointer',
            borderRadius: "var(--mantine-radius-lg)" }}>
-            <ToolButton id='tool' tool={toolRegistry[selectedValue]}  isSelected={false}
+            <ToolButton id={'tool' as ToolId} tool={toolRegistry[selectedValue as ToolId]}  isSelected={false}
           onSelect={()=>{}} rounded={true} disableNavigation={true}></ToolButton>
           </div>
         ) : (

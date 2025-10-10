@@ -46,6 +46,9 @@ services:
       - "3000:80"
     environment:
       BACKEND_URL: http://backend:8080
+      #VITE_GOOGLE_DRIVE_CLIENT_ID: <INSERT_YOUR_CLIENT_ID_HERE>
+      #VITE_GOOGLE_DRIVE_API_KEY: <INSERT_YOUR_API_KEY_HERE>
+      #VITE_GOOGLE_DRIVE_APP_ID: <INSERT_YOUR_APP_ID_HERE>
     depends_on:
       - backend
     networks:
