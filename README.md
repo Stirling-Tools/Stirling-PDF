@@ -62,6 +62,7 @@ All documentation available at [https://docs.stirlingpdf.com/](https://docs.stir
 - Convert PDF to XML
 - Convert PDF to CSV
 - URL to PDF
+- Convert common eBook formats (EPUB, MOBI, AZW3, FB2, TXT, DOCX) to PDF (using Calibre)
 - Markdown to PDF
 
 ### Security & Permissions
