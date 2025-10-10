@@ -137,7 +137,7 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
   const isFullCrop = parameters.isFullPDFCrop(pdfBounds);
 
   return (
-    <Stack gap="md">
+    <Stack gap="md" data-tour="crop-settings">
       {/* PDF Preview with Crop Selector */}
       <Stack gap="xs">
         <Group justify="space-between" align="center">

@@ -316,6 +316,7 @@ export default function RightRail() {
                   className="right-rail-icon"
                   onClick={handleSelectAll}
                   disabled={currentView === 'viewer' || totalItems === 0 || selectedCount === totalItems}
+                  data-tour="select-all-button"
                 >
                   <LocalIcon icon="select-all" width="1.5rem" height="1.5rem" />
                 </ActionIcon>
@@ -331,6 +332,7 @@ export default function RightRail() {
                   className="right-rail-icon"
                   onClick={handleDeselectAll}
                   disabled={currentView === 'viewer' || selectedCount === 0}
+                  data-tour="deselect-all-button"
                 >
                   <LocalIcon icon="crop-square-outline" width="1.5rem" height="1.5rem" />
                 </ActionIcon>

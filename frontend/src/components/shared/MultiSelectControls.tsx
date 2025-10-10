@@ -23,7 +23,7 @@ const MultiSelectControls = ({
   if (selectedCount === 0) return null;
 
   return (
-    <Box mb="md" p="md" style={{ backgroundColor: 'var(--mantine-color-blue-0)', borderRadius: 8 }}>
+    <Box mb="md" p="md" style={{ backgroundColor: 'var(--mantine-color-blue-0)', borderRadius: 8 }} data-tour="multi-select-controls">
       <Group justify="space-between">
         <Text size="sm">
           {selectedCount} {t("fileManager.filesSelected", "files selected")}
