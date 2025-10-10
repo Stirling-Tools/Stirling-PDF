@@ -10,12 +10,14 @@ import { useFileState, useFileContext } from '../../../contexts/FileContext';
 import { generateThumbnailWithMetadata } from '../../../utils/thumbnailUtils';
 import { createProcessedFile } from '../../../contexts/file/fileActions';
 import { createStirlingFile, createNewStirlingFileStub } from '../../../types/fileContext';
+import { useNavigationState } from '../../../contexts/NavigationContext';
 
 interface ViewerAnnotationControlsProps {
   currentView: string;
+  disabled?: boolean;
 }
 
-export default function ViewerAnnotationControls({ currentView }: ViewerAnnotationControlsProps) {
+export default function ViewerAnnotationControls({ currentView, disabled = false }: ViewerAnnotationControlsProps) {
   const { t } = useTranslation();
   const [selectedColor, setSelectedColor] = useState('#000000');
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
@@ -25,12 +27,16 @@ export default function ViewerAnnotationControls({ currentView }: ViewerAnnotati
   const viewerContext = React.useContext(ViewerContext);
 
   // Signature context for accessing drawing API
-  const { signatureApiRef } = useSignature();
+  const { signatureApiRef, isPlacementMode } = useSignature();
 
   // File state for save functionality
   const { state, selectors } = useFileState();
   const { actions: fileActions } = useFileContext();
   const activeFiles = selectors.getFiles();
+
+  // Check if we're in sign mode
+  const { selectedTool } = useNavigationState();
+  const isSignMode = selectedTool === 'sign';
 
   // Turn off annotation mode when switching away from viewer
   useEffect(() => {
@@ -39,10 +45,15 @@ export default function ViewerAnnotationControls({ currentView }: ViewerAnnotati
     }
   }, [currentView, viewerContext]);
 
+  // Don't show any annotation controls in sign mode
+  if (isSignMode) {
+    return null;
+  }
+
   return (
     <>
       {/* Annotation Visibility Toggle */}
-      <Tooltip content={t('rightRail.toggleAnnotations', 'Toggle Annotations Visibility')} position="left" offset={12} arrow>
+      <Tooltip content={t('rightRail.toggleAnnotations', 'Toggle Annotations Visibility')} position="left" offset={12} arrow portalTarget={document.body}>
         <ActionIcon
           variant="subtle"
           radius="md"
@@ -50,7 +61,7 @@ export default function ViewerAnnotationControls({ currentView }: ViewerAnnotati
           onClick={() => {
             viewerContext?.toggleAnnotationsVisibility();
           }}
-          disabled={currentView !== 'viewer' || viewerContext?.isAnnotationMode}
+          disabled={disabled || currentView !== 'viewer' || viewerContext?.isAnnotationMode || isPlacementMode}
         >
           <LocalIcon
             icon={viewerContext?.isAnnotationsVisible ? "visibility" : "visibility-off-rounded"}
@@ -94,7 +105,7 @@ export default function ViewerAnnotationControls({ currentView }: ViewerAnnotati
                     }
                   }
                 }}
-                disabled={currentView !== 'viewer'}
+              disabled={disabled}
                 aria-label="Drawing mode active"
               >
                 <LocalIcon icon="edit" width="1.5rem" height="1.5rem" />
@@ -119,7 +130,7 @@ export default function ViewerAnnotationControls({ currentView }: ViewerAnnotati
         </div>
       ) : (
         // When inactive: Show "Draw" tooltip
-        <Tooltip content={t('rightRail.draw', 'Draw')} position="left" offset={12} arrow>
+        <Tooltip content={t('rightRail.draw', 'Draw')} position="left" offset={12} arrow portalTarget={document.body}>
           <ActionIcon
             variant="subtle"
             radius="md"
@@ -136,7 +147,7 @@ export default function ViewerAnnotationControls({ currentView }: ViewerAnnotati
                 }
               }
             }}
-            disabled={currentView !== 'viewer'}
+            disabled={disabled}
             aria-label={typeof t === 'function' ? t('rightRail.draw', 'Draw') : 'Draw'}
           >
             <LocalIcon icon="edit" width="1.5rem" height="1.5rem" />
@@ -145,7 +156,7 @@ export default function ViewerAnnotationControls({ currentView }: ViewerAnnotati
       )}
 
       {/* Save PDF with Annotations */}
-      <Tooltip content={t('rightRail.save', 'Save')} position="left" offset={12} arrow>
+      <Tooltip content={t('rightRail.save', 'Save')} position="left" offset={12} arrow portalTarget={document.body}>
         <ActionIcon
           variant="subtle"
           radius="md"
@@ -193,7 +204,7 @@ export default function ViewerAnnotationControls({ currentView }: ViewerAnnotati
               }
             }
           }}
-          disabled={currentView !== 'viewer'}
+          disabled={disabled}
         >
           <LocalIcon icon="save" width="1.5rem" height="1.5rem" />
         </ActionIcon>

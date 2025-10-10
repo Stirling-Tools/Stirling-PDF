@@ -12,7 +12,6 @@ import org.springframework.core.annotation.Order;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.ApplicationProperties.EnterpriseEdition;
 import stirling.software.common.model.ApplicationProperties.Premium;
-import stirling.software.common.model.ApplicationProperties.Premium.ProFeatures.GoogleDrive;
 
 @Configuration
 @Order(Ordered.HIGHEST_PRECEDENCE)
@@ -53,19 +52,6 @@ public class EEAppConfig {
     @Bean(name = "SSOAutoLogin")
     public boolean ssoAutoLogin() {
         return applicationProperties.getPremium().getProFeatures().isSsoAutoLogin();
-    }
-
-    @Profile("security")
-    @Bean(name = "GoogleDriveEnabled")
-    @Primary
-    public boolean googleDriveEnabled() {
-        return runningProOrHigher()
-                && applicationProperties.getPremium().getProFeatures().getGoogleDrive().isEnabled();
-    }
-
-    @Bean(name = "GoogleDriveConfig")
-    public GoogleDrive googleDriveConfig() {
-        return applicationProperties.getPremium().getProFeatures().getGoogleDrive();
     }
 
     // TODO: Remove post migration
