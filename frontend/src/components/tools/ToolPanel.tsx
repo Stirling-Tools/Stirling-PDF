@@ -7,18 +7,17 @@ import ToolRenderer from './ToolRenderer';
 import ToolSearch from './toolPicker/ToolSearch';
 import { useSidebarContext } from "../../contexts/SidebarContext";
 import rainbowStyles from '../../styles/rainbow.module.css';
-import { ActionIcon, ScrollArea, Tooltip } from '@mantine/core';
+import { ActionIcon, ScrollArea } from '@mantine/core';
 import { ToolId } from '../../types/toolId';
 import { useMediaQuery } from '@mantine/hooks';
-import ViewSidebarRoundedIcon from '@mui/icons-material/ViewSidebarRounded';
-import DashboardCustomizeRoundedIcon from '@mui/icons-material/DashboardCustomizeRounded';
+import DoubleArrowIcon from '@mui/icons-material/DoubleArrow';
 import { useTranslation } from 'react-i18next';
 import FullscreenToolSurface from './FullscreenToolSurface';
 import { useToolPanelGeometry } from '../../hooks/tools/useToolPanelGeometry';
 import { useLocalStorageState } from '../../hooks/tools/useJsonLocalStorageState';
 import { useRightRail } from '../../contexts/RightRailContext';
+import { Tooltip } from '../shared/Tooltip';
 import './ToolPanel.css';
-import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from '../../styles/zIndex';
 
 // No props needed - component uses context
 
@@ -138,14 +137,10 @@ export default function ToolPanel() {
             />
             {!isMobile && leftPanelView === 'toolPicker' && (
               <Tooltip 
-                label={toggleLabel} 
-                position="bottom" 
-                withArrow
-                styles={{
-                  tooltip: {
-                    zIndex: Z_INDEX_OVER_FULLSCREEN_SURFACE,
-                  }
-                }}
+                content={toggleLabel}
+                position="bottom"
+                arrow={true}
+                openOnFocus={false}
               >
                 <ActionIcon
                   variant="subtle"
@@ -155,11 +150,7 @@ export default function ToolPanel() {
                   aria-label={toggleLabel}
                   className="tool-panel__mode-toggle"
                 >
-                  {isFullscreenMode ? (
-                    <ViewSidebarRoundedIcon fontSize="small" />
-                  ) : (
-                    <DashboardCustomizeRoundedIcon fontSize="small" />
-                  )}
+                  <DoubleArrowIcon fontSize="small" />
                 </ActionIcon>
               </Tooltip>
             )}

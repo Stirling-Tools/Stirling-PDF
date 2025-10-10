@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
-import { ActionIcon, ScrollArea, Switch, Tooltip, useMantineColorScheme } from '@mantine/core';
-import ViewSidebarRoundedIcon from '@mui/icons-material/ViewSidebarRounded';
+import { ActionIcon, ScrollArea, Switch, useMantineColorScheme } from '@mantine/core';
+import DoubleArrowIcon from '@mui/icons-material/DoubleArrow';
 import { useTranslation } from 'react-i18next';
 import ToolSearch from './toolPicker/ToolSearch';
 import FullscreenToolList from './FullscreenToolList';
@@ -8,8 +8,10 @@ import { ToolRegistryEntry } from '../../data/toolsTaxonomy';
 import { ToolId } from '../../types/toolId';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { BASE_PATH } from '../../constants/app';
+import { Tooltip } from '../shared/Tooltip';
 import './ToolPanel.css';
 import { ToolPanelGeometry } from '../../hooks/tools/useToolPanelGeometry';
+import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from '../../styles/zIndex';
 
 interface FullscreenToolSurfaceProps {
   searchQuery: string;
@@ -103,7 +105,7 @@ const FullscreenToolSurface = ({
             <img src={brandTextSrc} alt={brandAltText} className="tool-panel__fullscreen-brand-text" />
           </div>
           <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-            <Tooltip label={toggleLabel} position="bottom" withArrow>
+            <Tooltip content={toggleLabel} position="bottom" arrow={true} openOnFocus={false} containerStyle={{ zIndex: Z_INDEX_OVER_FULLSCREEN_SURFACE }}>
               <ActionIcon
                 variant="subtle"
                 radius="xl"
@@ -112,7 +114,7 @@ const FullscreenToolSurface = ({
                 aria-label={toggleLabel}
                 style={{ color: 'var(--right-rail-icon)' }}
               >
-                <ViewSidebarRoundedIcon fontSize="small" />
+                <DoubleArrowIcon fontSize="small" style={{ transform: 'rotate(180deg)' }} />
               </ActionIcon>
             </Tooltip>
           </div>
