@@ -2,6 +2,7 @@ import React from 'react';
 import { Menu, Loader, Group, Text } from '@mantine/core';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import FitText from './FitText';
 
 interface FileDropdownMenuProps {
   displayName: string;
@@ -30,7 +31,7 @@ export const FileDropdownMenu: React.FC<FileDropdownMenuProps> = ({
           ) : (
             <VisibilityIcon fontSize="small" />
           )}
-          <span>{displayName}</span>
+          <FitText text={displayName} fontSize={14} minimumFontScale={0.6} />
           <KeyboardArrowDownIcon fontSize="small" />
         </div>
       </Menu.Target>
@@ -44,7 +45,6 @@ export const FileDropdownMenu: React.FC<FileDropdownMenuProps> = ({
       }}>
         {activeFiles.map((file, index) => {
           const itemName = file?.name || 'Untitled';
-          const itemDisplayName = itemName.length > 50 ? `${itemName.substring(0, 50)}...` : itemName;
           const isActive = index === currentFileIndex;
           return (
             <Menu.Item
@@ -60,9 +60,9 @@ export const FileDropdownMenu: React.FC<FileDropdownMenuProps> = ({
               }}
             >
               <Group gap="xs" style={{ width: '100%', justifyContent: 'space-between' }}>
-                <Text size="sm" style={{ flex: 1, textAlign: 'left' }}>
-                  {itemDisplayName}
-                </Text>
+                <div style={{ flex: 1, textAlign: 'left', minWidth: 0 }}>
+                  <FitText text={itemName} fontSize={14} minimumFontScale={0.7} />
+                </div>
                 {file.versionNumber && file.versionNumber > 1 && (
                   <Text size="xs" c="dimmed">
                     v{file.versionNumber}

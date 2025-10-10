@@ -81,10 +81,6 @@ const Sign = (props: BaseToolProps) => {
       const fileIndex = activeFileIndex < allFiles.length ? activeFileIndex : 0;
       const originalFile = allFiles[fileIndex];
 
-      console.log('[Sign] Active file index:', activeFileIndex);
-      console.log('[Sign] All files:', allFiles.map(f => ({ name: f.name, id: f.fileId })));
-      console.log('[Sign] Selected file for signing:', { name: originalFile?.name, id: originalFile?.fileId });
-
       if (!originalFile) {
         console.error('No file available to replace');
         return;
@@ -102,9 +98,6 @@ const Sign = (props: BaseToolProps) => {
       });
 
       if (flattenResult) {
-        console.log('[Sign] About to consume - input IDs:', flattenResult.inputFileIds);
-        console.log('[Sign] About to consume - output file:', { name: flattenResult.outputStirlingFile.name, id: flattenResult.outputStirlingFile.fileId });
-
         // Now consume the files - this triggers the viewer reload
         await consumeFiles(
           flattenResult.inputFileIds,
@@ -112,24 +105,9 @@ const Sign = (props: BaseToolProps) => {
           [flattenResult.outputStub]
         );
 
-        // Find the new file's position in the updated file list and update activeFileIndex
-        const updatedFiles = selectors.getFiles();
-        console.log('[Sign] After consume - updated files:', updatedFiles.map(f => ({ name: f.name, id: f.fileId })));
-        console.log('[Sign] Looking for file ID:', flattenResult.outputStirlingFile.fileId);
-
-        const newFileIndex = updatedFiles.findIndex(f => {
-          console.log('[Sign] Comparing:', f.fileId, 'with', flattenResult.outputStirlingFile.fileId, 'match:', f.fileId === flattenResult.outputStirlingFile.fileId);
-          return f.fileId === flattenResult.outputStirlingFile.fileId;
-        });
-        console.log('[Sign] New file index:', newFileIndex);
-
-        if (newFileIndex !== -1) {
-          setActiveFileIndex(newFileIndex);
-          console.log('[Sign] Set active file index to:', newFileIndex);
-        } else {
-          console.error('[Sign] Failed to find new file in updated list! Defaulting to index 0');
-          setActiveFileIndex(0);
-        }
+        // According to FileReducer.processFileSwap, new files are inserted at the beginning
+        // So the new file will be at index 0
+        setActiveFileIndex(0);
 
         // Mark signatures as applied
         setSignaturesApplied(true);

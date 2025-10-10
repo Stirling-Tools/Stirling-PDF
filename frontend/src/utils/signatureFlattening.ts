@@ -290,9 +290,6 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
       // Prepare input file data for replacement
       const inputFileIds: FileId[] = [currentFile.fileId];
 
-      console.log('[flattenSignatures] Current file:', { name: currentFile.name, id: currentFile.fileId });
-      console.log('[flattenSignatures] Input file IDs to consume:', inputFileIds);
-
       const record = selectors.getStirlingFileStub(currentFile.fileId);
       if (!record) {
         console.error('No file record found for:', currentFile.fileId);

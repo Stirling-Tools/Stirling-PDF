@@ -30,9 +30,7 @@ const createViewOptions = (
   const currentFile = activeFiles[currentFileIndex];
   const isInViewer = currentView === 'viewer';
   const fileName = currentFile?.name || '';
-  const displayName = isInViewer && fileName
-    ? (fileName.length > 30 ? `${fileName.substring(0, 30)}...` : fileName)
-    : 'Viewer';
+  const displayName = isInViewer && fileName ? fileName : 'Viewer';
   const hasMultipleFiles = activeFiles.length > 1;
   const showDropdown = isInViewer && hasMultipleFiles;
 
