@@ -89,7 +89,9 @@ RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/a
     ocrmypdf \
     py3-pip \
     py3-pillow@testing \
-    py3-pdf2image@testing && \
+    py3-pdf2image@testing \
+    # Calibre for eBook conversions
+    calibre@testing && \
     python3 -m venv /opt/venv && \
     /opt/venv/bin/pip install --no-cache-dir --upgrade pip setuptools && \
     /opt/venv/bin/pip install --no-cache-dir --upgrade unoserver weasyprint && \
