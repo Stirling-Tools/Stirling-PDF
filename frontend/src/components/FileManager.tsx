@@ -9,6 +9,9 @@ import MobileLayout from './fileManager/MobileLayout';
 import DesktopLayout from './fileManager/DesktopLayout';
 import DragOverlay from './fileManager/DragOverlay';
 import { FileManagerProvider } from '../contexts/FileManagerContext';
+import { Z_INDEX_FILE_MANAGER_MODAL } from '../styles/zIndex';
+import { isGoogleDriveConfigured } from '../services/googleDrivePickerService';
+import { loadScript } from '../utils/scriptLoader';
 
 interface FileManagerProps {
   selectedTool?: Tool | null;
@@ -84,6 +87,30 @@ const FileManager: React.FC<FileManagerProps> = ({ selectedTool }) => {
     };
   }, []);
 
+  // Preload Google Drive scripts if configured
+
+  useEffect(() => {
+    if (isGoogleDriveConfigured()) {
+      // Load scripts in parallel without blocking
+      Promise.all([
+        loadScript({
+          src: 'https://apis.google.com/js/api.js',
+          id: 'gapi-script',
+          async: true,
+          defer: true,
+        }),
+        loadScript({
+          src: 'https://accounts.google.com/gsi/client',
+          id: 'gis-script',
+          async: true,
+          defer: true,
+        }),
+      ]).catch((error) => {
+        console.warn('Failed to preload Google Drive scripts:', error);
+      });
+    }
+  }, []);
+
   // Modal size constants for consistent scaling
   const modalHeight = '80vh';
   const modalWidth = isMobile ? '100%' : '80vw';
@@ -100,6 +127,7 @@ const FileManager: React.FC<FileManagerProps> = ({ selectedTool }) => {
       radius="md"
       className="overflow-hidden p-0"
       withCloseButton={false}
+      zIndex={Z_INDEX_FILE_MANAGER_MODAL}
       styles={{
         content: {
           position: 'relative',

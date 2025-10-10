@@ -5,6 +5,7 @@ import UploadIcon from '@mui/icons-material/Upload';
 import CloudIcon from '@mui/icons-material/Cloud';
 import { useTranslation } from 'react-i18next';
 import { useFileManagerContext } from '../../contexts/FileManagerContext';
+import { useGoogleDrivePicker } from '../../hooks/useGoogleDrivePicker';
 
 interface FileSourceButtonsProps {
   horizontal?: boolean;
@@ -13,8 +14,20 @@ interface FileSourceButtonsProps {
 const FileSourceButtons: React.FC<FileSourceButtonsProps> = ({
   horizontal = false
 }) => {
-  const { activeSource, onSourceChange, onLocalFileClick } = useFileManagerContext();
+  const { activeSource, onSourceChange, onLocalFileClick, onGoogleDriveSelect } = useFileManagerContext();
   const { t } = useTranslation();
+  const { isEnabled: isGoogleDriveEnabled, openPicker: openGoogleDrivePicker } = useGoogleDrivePicker();
+
+  const handleGoogleDriveClick = async () => {
+    try {
+      const files = await openGoogleDrivePicker({ multiple: true });
+      if (files.length > 0) {
+        onGoogleDriveSelect(files);
+      }
+    } catch (error) {
+      console.error('Failed to pick files from Google Drive:', error);
+    }
+  };
 
   const buttonProps = {
     variant: (source: string) => activeSource === source ? 'filled' : 'subtle',
@@ -67,15 +80,24 @@ const FileSourceButtons: React.FC<FileSourceButtonsProps> = ({
       </Button>
 
       <Button
-        variant={buttonProps.variant('drive')}
+        variant="subtle"
+        color='var(--mantine-color-gray-6)'
         leftSection={<CloudIcon />}
         justify={horizontal ? "center" : "flex-start"}
-        onClick={() => onSourceChange('drive')}
+        onClick={handleGoogleDriveClick}
         fullWidth={!horizontal}
         size={horizontal ? "xs" : "sm"}
-        disabled
-        color={activeSource === 'drive' ? 'gray' : undefined}
-        styles={buttonProps.getStyles('drive')}
+        disabled={!isGoogleDriveEnabled}
+        styles={{
+          root: {
+            backgroundColor: 'transparent',
+            border: 'none',
+            '&:hover': {
+              backgroundColor: isGoogleDriveEnabled ? 'var(--mantine-color-gray-0)' : 'transparent'
+            }
+          }
+        }}
+        title={!isGoogleDriveEnabled ? t('fileManager.googleDriveNotAvailable', 'Google Drive integration not available') : undefined}
       >
         {horizontal ? t('fileManager.googleDriveShort', 'Drive') : t('fileManager.googleDrive', 'Google Drive')}
       </Button>

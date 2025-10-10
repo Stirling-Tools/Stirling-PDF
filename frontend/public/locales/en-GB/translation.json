@@ -1,4 +1,21 @@
 {
+  "toolPanel": {
+    "modePrompt": {
+      "title": "Choose how you browse tools",
+      "description": "Preview both layouts and decide how you want to explore Stirling PDF tools.",
+      "sidebarTitle": "Sidebar mode",
+      "sidebarDescription": "Keep tools alongside your workspace for quick switching.",
+      "recommended": "Recommended",
+      "chooseSidebar": "Use sidebar mode",
+      "fullscreenTitle": "Fullscreen mode - (legacy)",
+      "fullscreenDescription": "Browse every tool in a catalogue that covers the workspace until you pick one.",
+      "chooseFullscreen": "Use fullscreen mode",
+      "dismiss": "Maybe later"
+    },
+    "fullscreen": {
+      "showDetails": "Show Details"
+    }
+  },
   "unsavedChanges": "You have unsaved changes to your PDF.",
   "areYouSure": "Are you sure you want to leave?",
   "unsavedChangesTitle": "Unsaved Changes",
@@ -283,7 +300,8 @@
       "capturing": "Press keys… (Esc to cancel)",
       "change": "Change shortcut",
       "reset": "Reset",
-      "shortcut": "Shortcut"
+      "shortcut": "Shortcut",
+      "noShortcut": "No shortcut set"
     }
   },
   "changeCreds": {
@@ -596,11 +614,6 @@
       "tags": "censor,blackout,hide",
       "title": "Redact",
       "desc": "Redacts (blacks out) a PDF based on selected text, drawn shapes and/or selected page(s)"
-    },
-    "overlayPdfs": {
-      "tags": "overlay,combine,stack",
-      "title": "Overlay PDFs",
-      "desc": "Overlays PDFs on-top of another PDF"
     },
     "splitBySections": {
       "tags": "split,sections,divide",
@@ -1818,8 +1831,16 @@
       "placeholder": "Enter your full name"
     },
     "instructions": {
-      "title": "How to add signature"
+      "title": "How to add signature",
+      "canvas": "After drawing your signature in the canvas, close the modal then click anywhere on the PDF to place it.",
+      "image": "After uploading your signature image above, click anywhere on the PDF to place it.",
+      "text": "After entering your name above, click anywhere on the PDF to place your signature."
     },
+    "mode": {
+      "move": "Move Signature",
+      "place": "Place Signature"
+    },
+    "updateAndPlace": "Update and Place",
     "activate": "Activate Signature Placement",
     "deactivate": "Stop Placing Signatures",
     "results": {
@@ -2541,11 +2562,15 @@
   "overlay-pdfs": {
     "tags": "Overlay",
     "header": "Overlay PDF Files",
+    "title": "Overlay PDFs",
+    "desc": "Overlay one PDF on top of another",
     "baseFile": {
       "label": "Select Base PDF File"
     },
     "overlayFiles": {
-      "label": "Select Overlay PDF Files"
+      "label": "Select Overlay PDF Files",
+      "placeholder": "Choose PDF(s)...",
+      "addMore": "Add more PDFs..."
     },
     "mode": {
       "label": "Select Overlay Mode",
@@ -2555,14 +2580,49 @@
     },
     "counts": {
       "label": "Overlay Counts (for Fixed Repeat Mode)",
-      "placeholder": "Enter comma-separated counts (e.g., 2,3,1)"
+      "placeholder": "Enter comma-separated counts (e.g., 2,3,1)",
+      "item": "Count for file"
     },
     "position": {
       "label": "Select Overlay Position",
       "foreground": "Foreground",
       "background": "Background"
     },
-    "submit": "Submit"
+    "submit": "Submit",
+    "settings": {
+      "title": "Settings"
+    },
+    "results": {
+      "title": "Overlay Results"
+    },
+    "tooltip": {
+      "header": {
+        "title": "Overlay PDFs Overview"
+      },
+      "description": {
+        "title": "Description",
+        "text": "Combine a base PDF with one or more overlay PDFs. Overlays can be applied page-by-page in different modes and placed in the foreground or background."
+      },
+      "mode": {
+        "title": "Overlay Mode",
+        "text": "Choose how to distribute overlay pages across the base PDF pages.",
+        "sequential": "Sequential Overlay: Use pages from the first overlay PDF until it ends, then move to the next.",
+        "interleaved": "Interleaved Overlay: Take one page from each overlay in turn.",
+        "fixedRepeat": "Fixed Repeat Overlay: Take a set number of pages from each overlay before moving to the next. Use Counts to set the numbers."
+      },
+      "position": {
+        "title": "Overlay Position",
+        "text": "Foreground places the overlay on top of the page. Background places it behind."
+      },
+      "overlayFiles": {
+        "title": "Overlay Files",
+        "text": "Select one or more PDFs to overlay on the base. The order of these files affects how pages are applied in Sequential and Fixed Repeat modes."
+      },
+      "counts": {
+        "title": "Counts (Fixed Repeat only)",
+        "text": "Provide a positive number for each overlay file showing how many pages to take before moving to the next. Required when mode is Fixed Repeat."
+      }
+    }
   },
   "split-by-sections": {
     "tags": "Section Split, Divide, Customize,Customise",

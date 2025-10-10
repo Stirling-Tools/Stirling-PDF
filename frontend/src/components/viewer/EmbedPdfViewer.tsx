@@ -13,6 +13,7 @@ import { useNavigationGuard, useNavigationState } from '../../contexts/Navigatio
 import { useSignature } from '../../contexts/SignatureContext';
 import { createStirlingFilesAndStubs } from '../../services/fileStubHelpers';
 import NavigationWarningModal from '../shared/NavigationWarningModal';
+import { isStirlingFile } from '../../types/fileContext';
 
 export interface EmbedPdfViewerProps {
   sidebarsVisible: boolean;
@@ -93,7 +94,7 @@ const EmbedPdfViewerContent = ({
   }, [previewFile, fileWithUrl]);
 
   // Handle scroll wheel zoom with accumulator for smooth trackpad pinch
-  React.useEffect(() => {
+  useEffect(() => {
     let accumulator = 0;
 
     const handleWheel = (event: WheelEvent) => {
@@ -127,7 +128,7 @@ const EmbedPdfViewerContent = ({
   }, [zoomActions]);
 
   // Handle keyboard zoom shortcuts
-  React.useEffect(() => {
+  useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (!isViewerHovered) return;
 
@@ -263,6 +264,7 @@ const EmbedPdfViewerContent = ({
             transition: 'margin-right 0.3s ease'
           }}>
             <LocalEmbedPDF
+              key={currentFile && isStirlingFile(currentFile) ? currentFile.fileId : (effectiveFile.file instanceof File ? effectiveFile.file.name : effectiveFile.url)}
               file={effectiveFile.file}
               url={effectiveFile.url}
               enableAnnotations={shouldEnableAnnotations}

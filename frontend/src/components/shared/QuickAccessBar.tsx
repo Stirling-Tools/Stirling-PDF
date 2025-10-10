@@ -25,7 +25,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
   const { t } = useTranslation();
   const { isRainbowMode } = useRainbowThemeContext();
   const { openFilesModal, isFilesModalOpen } = useFilesModalContext();
-  const { handleReaderToggle, handleBackToTools, handleToolSelect, selectedToolKey, leftPanelView, toolRegistry, readerMode, resetTool } = useToolWorkflow();
+  const { handleReaderToggle, handleToolSelect, selectedToolKey, leftPanelView, toolRegistry, readerMode, resetTool } = useToolWorkflow();
   const { getToolNavigation } = useSidebarNavigation();
   const { config } = useAppConfig();
   const { startTour } = useOnboarding();
@@ -75,7 +75,8 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
             onClick: (e: React.MouseEvent) => handleClick(e),
             'aria-label': config.name
           } : {
-            onClick: () => handleClick()
+            onClick: () => handleClick(),
+            'aria-label': config.name
           })}
           size={isActive ? (config.size || 'lg') : 'lg'}
           variant="subtle"
@@ -104,12 +105,10 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
       type: 'navigation',
       onClick: () => {
         setActiveButton('read');
-        handleBackToTools();
         handleReaderToggle();
       }
     },
-    // TODO: Add sign
-    //{
+    // {
     //  id: 'sign',
     //  name: t("quickAccess.sign", "Sign"),
     //  icon: <LocalIcon icon="signature-rounded" width="1.25rem" height="1.25rem" />,
@@ -120,7 +119,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
     //    setActiveButton('sign');
     //    handleToolSelect('sign');
     //  }
-    //},
+    // },
     {
       id: 'automate',
       name: t("quickAccess.automate", "Automate"),
