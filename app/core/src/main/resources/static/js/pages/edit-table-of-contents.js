@@ -4,6 +4,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const addBookmarkBtn = document.getElementById("addBookmarkBtn");
   const bookmarkDataInput = document.getElementById("bookmarkData");
   let bookmarks = [];
+  let previousBookmarks = null; // Used for undo feature
   let counter = 0; // Used for generating unique IDs
 
   // callback function on file input change to extract bookmarks from PDF
@@ -69,6 +70,7 @@ document.addEventListener("DOMContentLoaded", function () {
       bookmarks = [];
       throw new Error(`Error loading bookmarks: ${error}`);
     } finally {
+      updateBookmarkHistory();
       removeLoadingIndicator();
       updateBookmarksUI();
     }
@@ -185,6 +187,7 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     }
 
+    updateBookmarkHistory();
     updateBookmarksUI();
 
     // After updating UI, find and focus the new bookmark's title field
@@ -235,6 +238,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const index = bookmarks.findIndex((b) => b.id === id);
     if (index !== -1) {
       bookmarks.splice(index, 1);
+      updateBookmarkHistory();
       updateBookmarksUI();
       return;
     }
@@ -255,6 +259,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     if (removeFromChildren(bookmarks, id)) {
+      updateBookmarkHistory();
       updateBookmarksUI();
     }
 
@@ -287,6 +292,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function updateBookmarksUI() {
+    updateClearAllBtn();
     if (!bookmarksContainer) {
       return;
     }
@@ -612,6 +618,101 @@ document.addEventListener("DOMContentLoaded", function () {
     showEmptyState();
     updateEmptyStateButton();
   }
+
+  // Undo/Redo button funcionality
+  function cloneBookmarks() {
+    return bookmarks.map(cleanBookmark);
+  }
+
+  const undoBtn = document.getElementById("undoBtn");
+  const redoBtn = document.getElementById("redoBtn");
+
+  let undoStack = [];
+  let redoStack = [];
+  let lastState = cloneBookmarks();
+
+  function updateHistoryButtonsState() {
+    undoBtn.disabled = undoStack.length === 0;
+    redoBtn.disabled = redoStack.length === 0;
+  }
+
+  function updateBookmarkHistory() {
+    const currentState = cloneBookmarks();
+    // patch that when applied to currentState results in lastState
+    const undoPatch = jsonpatch.compare(currentState, lastState);
+
+    if (undoPatch.length > 0) {
+      undoStack.push(undoPatch);
+      // new action -> new future path -> clear redo stack
+      redoStack = [];
+      updateHistoryButtonsState();
+      lastState = currentState;
+    }
+  }
+
+  function traverseBookmarkHistory(popStack, pushStack) {
+    // combined logic for undo and redo
+    // take patch from popStack, apply it and push inverse patch to the pushStack
+
+    if (popStack.length === 0) return;
+
+    const currentState = cloneBookmarks();
+    const patch = popStack.pop();
+    const newState = jsonpatch.applyPatch(
+      currentState,
+      patch,
+      true, // validateOperation
+      false // mutateDocument
+    ).newDocument;
+
+    const inversePatch = jsonpatch.compare(newState, currentState);
+    pushStack.push(inversePatch);
+
+    bookmarks = newState.map(convertExtractedBookmark);
+    lastState = cloneBookmarks();
+    updateBookmarksUI();
+    updateHistoryButtonsState();
+  }
+
+  function undoBookmarkChanges() {
+    traverseBookmarkHistory(undoStack, redoStack);
+  }
+
+  function redoBookmarkChanges() {
+    traverseBookmarkHistory(redoStack, undoStack);
+  }
+
+  undoBtn.addEventListener("click", undoBookmarkChanges);
+  redoBtn.addEventListener("click", redoBookmarkChanges);
+
+  // undo / redo keybinds
+  function keyPressHandler(event) {
+    // do not override normal editing behavior on input fields
+    if (event.target.tagName.toLowerCase() === "input") return;
+
+    if (event.ctrlKey || event.metaKey) {
+      if (event.key.toLowerCase() === "z") undoBookmarkChanges();
+      if (event.key.toLowerCase() === "y") redoBookmarkChanges();
+    }
+  }
+  document.body.addEventListener("keydown", keyPressHandler);
+
+  // register event listener for text input changes in bookmark title or page number fields
+  bookmarksContainer.addEventListener("change", updateBookmarkHistory);
+
+  // ClearAll button functionality
+  const clearAllBtn = document.getElementById("clearAllBtn");
+
+  function updateClearAllBtn() {
+    clearAllBtn.disabled = !(bookmarks && bookmarks.length > 0);
+  }
+
+  function clearAllBookmarks() {
+    bookmarks = [];
+    updateBookmarkHistory();
+    updateBookmarksUI();
+  }
+  clearAllBtn.addEventListener("click", clearAllBookmarks);
 
   // Add bookmarks Import/Export functionality
 
