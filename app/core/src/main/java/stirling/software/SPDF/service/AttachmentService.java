@@ -225,7 +225,7 @@ public class AttachmentService implements AttachmentServiceInterface {
     }
 
     private String generateDefaultFilename() {
-        return "attachment";
+        return "unknown_attachment_" + System.currentTimeMillis();
     }
 
     private Optional<byte[]> readAttachmentData(PDEmbeddedFile embeddedFile) throws IOException {
