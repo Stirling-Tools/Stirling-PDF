@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Stack, Button, Box } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { useIndexedDBThumbnail } from '../../hooks/useIndexedDBThumbnail';
@@ -50,7 +50,7 @@ const FileDetails: React.FC<FileDetailsProps> = ({
   };
 
   // Reset index when selection changes
-  React.useEffect(() => {
+  useEffect(() => {
     if (currentFileIndex >= selectedFiles.length) {
       setCurrentFileIndex(0);
     }

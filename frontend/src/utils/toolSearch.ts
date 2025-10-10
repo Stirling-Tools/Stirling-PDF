@@ -8,7 +8,7 @@ export interface RankedToolItem {
 }
 
 export function filterToolRegistryByQuery(
-  toolRegistry: Record<string, ToolRegistryEntry>,
+  toolRegistry: Record<ToolId, ToolRegistryEntry>,
   query: string
 ): RankedToolItem[] {
   const entries = Object.entries(toolRegistry) as [ToolId, ToolRegistryEntry][];
@@ -85,10 +85,10 @@ export function filterToolRegistryByQuery(
     ordered.push({ item: [id, tool], matchedText });
   };
 
-  for (const { id, tool } of exactName) push(id, tool, tool.name);
-  for (const { id, tool, text } of exactSyn) push(id, tool, text);
-  for (const { id, tool, text } of fuzzyName) push(id, tool, text);
-  for (const { id, tool, text } of fuzzySyn) push(id, tool, text);
+  for (const { id, tool } of exactName) push(id as ToolId, tool, tool.name);
+  for (const { id, tool, text } of exactSyn) push(id as ToolId, tool, text);
+  for (const { id, tool, text } of fuzzyName) push(id as ToolId, tool, text);
+  for (const { id, tool, text } of fuzzySyn) push(id as ToolId, tool, text);
 
   if (ordered.length > 0) return ordered;
 

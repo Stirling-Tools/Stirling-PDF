@@ -7,6 +7,7 @@ import { useSuggestedAutomations } from "../../../hooks/tools/automate/useSugges
 import { AutomationConfig, SuggestedAutomation } from "../../../types/automation";
 import { iconMap } from './iconMap';
 import { ToolRegistryEntry } from '../../../data/toolsTaxonomy';
+import { ToolId } from '../../../types/toolId';
 
 interface AutomationSelectionProps {
   savedAutomations: AutomationConfig[];
@@ -15,7 +16,7 @@ interface AutomationSelectionProps {
   onEdit: (automation: AutomationConfig) => void;
   onDelete: (automation: AutomationConfig) => void;
   onCopyFromSuggested: (automation: SuggestedAutomation) => void;
-  toolRegistry: Record<string, ToolRegistryEntry>;
+  toolRegistry: Record<ToolId, ToolRegistryEntry>;
 }
 
 export default function AutomationSelection({

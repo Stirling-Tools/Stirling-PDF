@@ -1,13 +1,16 @@
+import { ToolPanelMode } from 'src/contexts/toolWorkflow/toolWorkflowState';
 import { indexedDBManager, DATABASE_CONFIGS } from './indexedDBManager';
 
 export interface UserPreferences {
   autoUnzip: boolean;
   autoUnzipFileLimit: number;
+  defaultToolPanelMode: ToolPanelMode;
 }
 
 export const DEFAULT_PREFERENCES: UserPreferences = {
   autoUnzip: true,
   autoUnzipFileLimit: 4,
+  defaultToolPanelMode: 'sidebar',
 };
 
 class PreferencesService {

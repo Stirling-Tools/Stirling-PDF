@@ -36,7 +36,7 @@ export const useToolManagement = (): ToolManagementResult => {
     (Object.keys(baseRegistry) as ToolId[]).forEach(toolKey => {
       if (isToolAvailable(toolKey)) {
         const baseTool = baseRegistry[toolKey as keyof typeof baseRegistry];
-        availableToolRegistry[toolKey] = {
+        availableToolRegistry[toolKey as ToolId] = {
           ...baseTool,
           name: baseTool.name,
           description: baseTool.description,

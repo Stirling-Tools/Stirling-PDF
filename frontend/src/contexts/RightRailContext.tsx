@@ -4,9 +4,11 @@ import { RightRailAction, RightRailButtonConfig } from '../types/rightRail';
 interface RightRailContextValue {
 	buttons: RightRailButtonConfig[];
 	actions: Record<string, RightRailAction>;
+	allButtonsDisabled: boolean;
 	registerButtons: (buttons: RightRailButtonConfig[]) => void;
 	unregisterButtons: (ids: string[]) => void;
 	setAction: (id: string, action: RightRailAction) => void;
+	setAllRightRailButtonsDisabled: (disabled: boolean) => void;
 	clear: () => void;
 }
 
@@ -15,6 +17,7 @@ const RightRailContext = createContext<RightRailContextValue | undefined>(undefi
 export function RightRailProvider({ children }: { children: React.ReactNode }) {
 	const [buttons, setButtons] = useState<RightRailButtonConfig[]>([]);
 	const [actions, setActions] = useState<Record<string, RightRailAction>>({});
+	const [allButtonsDisabled, setAllButtonsDisabled] = useState<boolean>(false);
 
 	const registerButtons = useCallback((newButtons: RightRailButtonConfig[]) => {
 		setButtons(prev => {
@@ -43,12 +46,25 @@ export function RightRailProvider({ children }: { children: React.ReactNode }) {
 		setActions(prev => ({ ...prev, [id]: action }));
 	}, []);
 
+	const setAllRightRailButtonsDisabled = useCallback((disabled: boolean) => {
+		setAllButtonsDisabled(disabled);
+	}, []);
+
 	const clear = useCallback(() => {
 		setButtons([]);
 		setActions({});
 	}, []);
 
-	const value = useMemo<RightRailContextValue>(() => ({ buttons, actions, registerButtons, unregisterButtons, setAction, clear }), [buttons, actions, registerButtons, unregisterButtons, setAction, clear]);
+	const value = useMemo<RightRailContextValue>(() => ({ 
+		buttons, 
+		actions, 
+		allButtonsDisabled, 
+		registerButtons, 
+		unregisterButtons, 
+		setAction, 
+		setAllRightRailButtonsDisabled, 
+		clear 
+	}), [buttons, actions, allButtonsDisabled, registerButtons, unregisterButtons, setAction, setAllRightRailButtonsDisabled, clear]);
 
 	return (
 		<RightRailContext.Provider value={value}>

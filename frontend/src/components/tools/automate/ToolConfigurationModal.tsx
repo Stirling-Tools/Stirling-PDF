@@ -9,6 +9,7 @@ import {
   Text,
   Alert
 } from '@mantine/core';
+import { Z_INDEX_AUTOMATE_MODAL } from '../../../styles/zIndex';
 import SettingsIcon from '@mui/icons-material/Settings';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
@@ -103,6 +104,7 @@ export default function ToolConfigurationModal({ opened, tool, onSave, onCancel,
       }
       size="lg"
       centered
+      zIndex={Z_INDEX_AUTOMATE_MODAL}
     >
       <Stack gap="md">
         <Text size="sm" c="dimmed">

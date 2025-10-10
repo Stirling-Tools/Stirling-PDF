@@ -8,6 +8,7 @@ import { TooltipContent } from './tooltip/TooltipContent';
 import { useSidebarContext } from '../../contexts/SidebarContext';
 import { BASE_PATH } from '../../constants/app';
 import styles from './tooltip/Tooltip.module.css';
+import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from '../../styles/zIndex';
 
 export interface TooltipProps {
   sidebarTooltip?: boolean;
@@ -28,6 +29,10 @@ export interface TooltipProps {
   pinOnClick?: boolean;
   /** If true, clicking outside also closes when not pinned (default true) */
   closeOnOutside?: boolean;
+  /** If true, tooltip interaction is disabled entirely */
+  disabled?: boolean;
+  /** If false, tooltip will not open on focus (hover only) */
+  openOnFocus?: boolean;
 }
 
 export const Tooltip: React.FC<TooltipProps> = ({
@@ -48,6 +53,8 @@ export const Tooltip: React.FC<TooltipProps> = ({
   containerStyle = {},
   pinOnClick = false,
   closeOnOutside = true,
+  disabled = false,
+  openOnFocus = true,
 }) => {
   const [internalOpen, setInternalOpen] = useState(false);
   const [isPinned, setIsPinned] = useState(false);
@@ -68,7 +75,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
   const sidebarContext = sidebarTooltip ? useSidebarContext() : null;
 
   const isControlled = controlledOpen !== undefined;
-  const open = isControlled ? !!controlledOpen : internalOpen;
+  const open = (isControlled ? !!controlledOpen : internalOpen) && !disabled;
 
   const setOpen = useCallback(
     (newOpen: boolean) => {
@@ -148,15 +155,16 @@ export const Tooltip: React.FC<TooltipProps> = ({
   // === Trigger handlers ===
   const openWithDelay = useCallback(() => {
     clearTimers();
+    if (disabled) return;
     openTimeoutRef.current = setTimeout(() => setOpen(true), Math.max(0, delay || 0));
-  }, [clearTimers, setOpen, delay]);
+  }, [clearTimers, setOpen, delay, disabled]);
 
   const handlePointerEnter = useCallback(
     (e: React.PointerEvent) => {
-      if (!isPinned) openWithDelay();
+      if (!isPinned && !disabled) openWithDelay();
       (children.props as any)?.onPointerEnter?.(e);
     },
-    [isPinned, openWithDelay, children.props]
+    [isPinned, openWithDelay, children.props, disabled]
   );
 
   const handlePointerLeave = useCallback(
@@ -219,10 +227,10 @@ export const Tooltip: React.FC<TooltipProps> = ({
   // Keyboard / focus accessibility
   const handleFocus = useCallback(
     (e: React.FocusEvent) => {
-      if (!isPinned) openWithDelay();
+      if (!isPinned && !disabled && openOnFocus) openWithDelay();
       (children.props as any)?.onFocus?.(e);
     },
-    [isPinned, openWithDelay, children.props]
+    [isPinned, openWithDelay, children.props, disabled, openOnFocus]
   );
 
   const handleBlur = useCallback(
@@ -291,7 +299,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
         left: coords.left,
         width: maxWidth !== undefined ? maxWidth : (sidebarTooltip ? '25rem' as const : undefined),
         minWidth,
-        zIndex: 9999,
+        zIndex: Z_INDEX_OVER_FULLSCREEN_SURFACE,
         visibility: positionReady ? 'visible' : 'hidden',
         opacity: positionReady ? 1 : 0,
         color: 'var(--text-primary)',
@@ -345,9 +353,13 @@ export const Tooltip: React.FC<TooltipProps> = ({
   return (
     <>
       {childWithHandlers}
-      {portalTarget && document.body.contains(portalTarget)
-        ? tooltipElement && createPortal(tooltipElement, portalTarget)
-        : tooltipElement}
+      {(() => {
+        const defaultTarget = typeof document !== 'undefined' ? document.body : null;
+        const target = portalTarget ?? defaultTarget;
+        return tooltipElement && target
+          ? createPortal(tooltipElement, target)
+          : tooltipElement;
+      })()}
     </>
   );
 };

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button, Text, Stack, Group, Card, Progress } from "@mantine/core";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
@@ -30,7 +30,7 @@ export default function AutomationRun({ automation, onComplete, automateOperatio
   const hasResults = automateOperation?.files.length > 0 || automateOperation?.downloadUrl !== null;
 
   // Initialize execution steps from automation
-  React.useEffect(() => {
+  useEffect(() => {
     if (automation?.operations) {
       const steps = automation.operations.map((op: any, index: number) => {
         const tool = toolRegistry[op.operation as keyof typeof toolRegistry];
@@ -47,7 +47,7 @@ export default function AutomationRun({ automation, onComplete, automateOperatio
   }, [automation, toolRegistry]);
 
   // Cleanup when component unmounts
-  React.useEffect(() => {
+  useEffect(() => {
     return () => {
       // Reset progress state when component unmounts
       setExecutionSteps([]);

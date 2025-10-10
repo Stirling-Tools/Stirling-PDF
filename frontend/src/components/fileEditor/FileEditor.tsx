@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useMemo } from 'react';
+import React, { useState, useCallback, useRef, useMemo, useEffect } from 'react';
 import {
   Text, Center, Box, LoadingOverlay, Stack, Group
 } from '@mantine/core';
@@ -62,7 +62,7 @@ const FileEditor = ({
   const [selectionMode, setSelectionMode] = useState(toolMode);
 
   // Enable selection mode automatically in tool mode
-  React.useEffect(() => {
+  useEffect(() => {
     if (toolMode) {
       setSelectionMode(true);
     }

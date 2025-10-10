@@ -1,13 +1,13 @@
 import React from 'react';
 import { Box, Stack } from '@mantine/core';
 import { getSubcategoryLabel, ToolRegistryEntry } from '../../data/toolsTaxonomy';
+import { ToolId } from '../../types/toolId';
 import ToolButton from './toolPicker/ToolButton';
 import { useTranslation } from 'react-i18next';
 import { useToolSections } from '../../hooks/useToolSections';
 import SubcategoryHeader from './shared/SubcategoryHeader';
 import NoToolsFound from './shared/NoToolsFound';
 import "./toolPicker/ToolPicker.css";
-import { ToolId } from 'src/types/toolId';
 
 interface SearchResultsProps {
   filteredTools: Array<{ item: [ToolId, ToolRegistryEntry]; matchedText?: string }>;
