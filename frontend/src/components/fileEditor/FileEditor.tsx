@@ -104,13 +104,22 @@ const FileEditor = ({
           // Handle PDF files normally
           allExtractedFiles.push(file);
         } else if (file.type === 'application/zip' || file.type === 'application/x-zip-compressed' || file.name.toLowerCase().endsWith('.zip')) {
-          // Handle ZIP files - only expand if they contain PDFs
+          // Handle ZIP files - extract all files except HTML
           try {
+            // Check if ZIP contains HTML files - if so, don't extract
+            const containsHtml = await zipFileService.containsHtmlFiles(file);
+
+            if (containsHtml) {
+              // HTML files should stay zipped
+              allExtractedFiles.push(file);
+              continue;
+            }
+
             // Validate ZIP file first
             const validation = await zipFileService.validateZipFile(file);
 
-            if (validation.isValid && validation.containsPDFs) {
-              // ZIP contains PDFs - extract them
+            if (validation.isValid && validation.containsFiles) {
+              // ZIP contains files - extract them
               setZipExtractionProgress({
                 isExtracting: true,
                 currentFile: file.name,
@@ -119,7 +128,7 @@ const FileEditor = ({
                 totalFiles: validation.fileCount
               });
 
-              const extractionResult = await zipFileService.extractPdfFiles(file, (progress) => {
+              const extractionResult = await zipFileService.extractAllFiles(file, (progress) => {
                 setZipExtractionProgress({
                   isExtracting: true,
                   currentFile: progress.currentFile,
@@ -148,7 +157,7 @@ const FileEditor = ({
                 errors.push(`Failed to extract ZIP file "${file.name}": ${extractionResult.errors.join(', ')}`);
               }
             } else {
-              // ZIP doesn't contain PDFs or is invalid - treat as regular file
+              // ZIP is empty or invalid - treat as regular file
               allExtractedFiles.push(file);
             }
           } catch (zipError) {

@@ -30,6 +30,7 @@ export class AutomationFileProcessor {
 
   /**
    * Extract files from a ZIP blob during automation execution, with fallback for non-ZIP files
+   * Extracts all file types (PDFs, images, etc.) except HTML files which stay zipped
    */
   static async extractAutomationZipFiles(blob: Blob): Promise<AutomationProcessingResult> {
     try {
@@ -40,20 +41,26 @@ export class AutomationFileProcessor {
         'application/zip'
       );
 
-      const result = await zipFileService.extractPdfFiles(zipFile);
-
-      if (!result.success || result.extractedFiles.length === 0) {
-        // Fallback: treat as single PDF file
-        const fallbackFile = ResourceManager.createTimestampedFile(
-          blob,
-          AUTOMATION_CONSTANTS.RESULT_FILE_PREFIX,
-          '.pdf'
-        );
-
+      // Check if ZIP contains HTML files - if so, keep as ZIP
+      const containsHtml = await zipFileService.containsHtmlFiles(zipFile);
+      if (containsHtml) {
+        // HTML files should stay zipped - return ZIP as-is
         return {
           success: true,
-          files: [fallbackFile],
-          errors: [`ZIP extraction failed, treated as single file: ${result.errors?.join(', ') || 'Unknown error'}`]
+          files: [zipFile],
+          errors: []
+        };
+      }
+
+      // Extract all files (not just PDFs) - handles images from scanner-image-split, etc.
+      const result = await zipFileService.extractAllFiles(zipFile);
+
+      if (!result.success || result.extractedFiles.length === 0) {
+        // Fallback: keep as ZIP file (might be valid ZIP with extraction issues)
+        return {
+          success: true,
+          files: [zipFile],
+          errors: [`ZIP extraction failed, kept as ZIP: ${result.errors?.join(', ') || 'Unknown error'}`]
         };
       }
 
@@ -63,18 +70,19 @@ export class AutomationFileProcessor {
         errors: []
       };
     } catch (error) {
-      console.warn('Failed to extract automation ZIP files, falling back to single file:', error);
-      // Fallback: treat as single PDF file
+      console.warn('Failed to extract automation ZIP files, keeping as ZIP:', error);
+      // Fallback: keep as ZIP file for next automation step to handle
       const fallbackFile = ResourceManager.createTimestampedFile(
         blob,
-        AUTOMATION_CONSTANTS.RESULT_FILE_PREFIX,
-        '.pdf'
+        AUTOMATION_CONSTANTS.RESPONSE_ZIP_PREFIX,
+        '.zip',
+        'application/zip'
       );
 
       return {
         success: true,
         files: [fallbackFile],
-        errors: [`ZIP extraction failed, treated as single file: ${error}`]
+        errors: [`ZIP extraction failed, kept as ZIP: ${error}`]
       };
     }
   }

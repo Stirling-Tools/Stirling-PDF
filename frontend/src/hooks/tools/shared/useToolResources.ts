@@ -27,11 +27,11 @@ export const useToolResources = () => {
 
   // Cleanup on unmount - use ref to avoid dependency on blobUrls state
   const blobUrlsRef = useRef<string[]>([]);
-  
+
   useEffect(() => {
     blobUrlsRef.current = blobUrls;
   }, [blobUrls]);
-  
+
   useEffect(() => {
     return () => {
       blobUrlsRef.current.forEach(url => {
@@ -85,6 +85,15 @@ export const useToolResources = () => {
 
   const extractZipFiles = useCallback(async (zipBlob: Blob, skipAutoUnzip = false): Promise<File[]> => {
     try {
+      // Check if ZIP contains HTML files - if so, keep as ZIP
+      const zipFile = new File([zipBlob], 'temp.zip', { type: 'application/zip' });
+      const containsHtml = await zipFileService.containsHtmlFiles(zipFile);
+
+      if (containsHtml) {
+        // HTML files should stay zipped
+        return [new File([zipBlob], 'result.zip', { type: 'application/zip' })];
+      }
+
       // Check if we should extract based on preferences
       const shouldExtract = await zipFileService.shouldUnzip(
         zipBlob,
@@ -97,8 +106,7 @@ export const useToolResources = () => {
         return [new File([zipBlob], 'result.zip', { type: 'application/zip' })];
       }
 
-      const zipFile = new File([zipBlob], 'temp.zip', { type: 'application/zip' });
-      const extractionResult = await zipFileService.extractPdfFiles(zipFile);
+      const extractionResult = await zipFileService.extractAllFiles(zipFile);
       return extractionResult.success ? extractionResult.extractedFiles : [];
     } catch (error) {
       console.error('useToolResources.extractZipFiles - Error:', error);
@@ -108,6 +116,15 @@ export const useToolResources = () => {
 
   const extractAllZipFiles = useCallback(async (zipBlob: Blob, skipAutoUnzip = false): Promise<File[]> => {
     try {
+      // Check if ZIP contains HTML files - if so, keep as ZIP
+      const zipFile = new File([zipBlob], 'temp.zip', { type: 'application/zip' });
+      const containsHtml = await zipFileService.containsHtmlFiles(zipFile);
+
+      if (containsHtml) {
+        // HTML files should stay zipped
+        return [new File([zipBlob], 'result.zip', { type: 'application/zip' })];
+      }
+
       // Check if we should extract based on preferences
       const shouldExtract = await zipFileService.shouldUnzip(
         zipBlob,
@@ -120,7 +137,6 @@ export const useToolResources = () => {
         return [new File([zipBlob], 'result.zip', { type: 'application/zip' })];
       }
 
-      const zipFile = new File([zipBlob], 'temp.zip', { type: 'application/zip' });
       const extractionResult = await zipFileService.extractAllFiles(zipFile);
       return extractionResult.success ? extractionResult.extractedFiles : [];
     } catch (error) {

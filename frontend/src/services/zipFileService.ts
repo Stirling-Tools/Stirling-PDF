@@ -29,6 +29,7 @@ export interface ZipValidationResult {
   fileCount: number;
   totalSizeBytes: number;
   containsPDFs: boolean;
+  containsFiles: boolean;
   errors: string[];
 }
 
@@ -42,7 +43,6 @@ export interface ZipExtractionProgress {
 export class ZipFileService {
   private readonly maxFileSize = 100 * 1024 * 1024; // 100MB per file
   private readonly maxTotalSize = 500 * 1024 * 1024; // 500MB total extraction limit
-  private readonly supportedExtensions = ['.pdf'];
 
   // ZIP file validation constants
   private static readonly VALID_ZIP_TYPES = [
@@ -62,6 +62,7 @@ export class ZipFileService {
       fileCount: 0,
       totalSizeBytes: 0,
       containsPDFs: false,
+      containsFiles: false,
       errors: []
     };
 
@@ -115,10 +116,13 @@ export class ZipFileService {
       result.fileCount = fileCount;
       result.totalSizeBytes = totalSize;
       result.containsPDFs = containsPDFs;
-      result.isValid = result.errors.length === 0 && containsPDFs;
+      result.containsFiles = fileCount > 0;
 
-      if (!containsPDFs) {
-        result.errors.push('ZIP file does not contain any PDF files');
+      // ZIP is valid if it has files and no size errors
+      result.isValid = result.errors.length === 0 && result.containsFiles;
+
+      if (!result.containsFiles) {
+        result.errors.push('ZIP file does not contain any files');
       }
 
       return result;
@@ -276,6 +280,37 @@ export class ZipFileService {
    */
   private isPdfFile(filename: string): boolean {
     return filename.toLowerCase().endsWith('.pdf');
+  }
+
+  /**
+   * Check if a filename indicates an HTML file
+   */
+  private isHtmlFile(filename: string): boolean {
+    const lowerName = filename.toLowerCase();
+    return lowerName.endsWith('.html') || lowerName.endsWith('.htm') || lowerName.endsWith('.xhtml');
+  }
+
+  /**
+   * Check if a ZIP file contains HTML files
+   * Used to determine if the ZIP should be kept intact (HTML) or extracted (other files)
+   */
+  async containsHtmlFiles(file: Blob | File): Promise<boolean> {
+    try {
+      const zip = new JSZip();
+      const zipContents = await zip.loadAsync(file);
+
+      // Check if any file is an HTML file
+      for (const [filename, zipEntry] of Object.entries(zipContents.files)) {
+        if (!zipEntry.dir && this.isHtmlFile(filename)) {
+          return true;
+        }
+      }
+
+      return false;
+    } catch (error) {
+      console.error('Error checking for HTML files:', error);
+      return false;
+    }
   }
 
   /**
@@ -486,8 +521,10 @@ export class ZipFileService {
   }
 
   /**
-   * Extract PDF files from ZIP and store them in IndexedDB with preserved history metadata
+   * Extract all files from ZIP and store them in IndexedDB with preserved history metadata
    * Used by both FileManager and FileEditor to avoid code duplication
+   *
+   * Note: HTML files will NOT be extracted - the ZIP is kept intact when HTML is detected
    *
    * @param zipFile - The ZIP file to extract from
    * @param zipStub - The StirlingFileStub for the ZIP (contains metadata to preserve)
@@ -504,8 +541,15 @@ export class ZipFileService {
     };
 
     try {
-      // Extract PDF files from ZIP
-      const extractionResult = await this.extractPdfFiles(zipFile);
+      // Check if ZIP contains HTML files - if so, don't extract
+      const hasHtml = await this.containsHtmlFiles(zipFile);
+      if (hasHtml) {
+        result.errors.push('ZIP contains HTML files and will not be auto-extracted. Download the ZIP to access the files.');
+        return result;
+      }
+
+      // Extract all files from ZIP (not just PDFs)
+      const extractionResult = await this.extractAllFiles(zipFile);
 
       if (!extractionResult.success || extractionResult.extractedFiles.length === 0) {
         result.errors = extractionResult.errors;
@@ -515,7 +559,7 @@ export class ZipFileService {
       // Process each extracted file
       for (const extractedFile of extractionResult.extractedFiles) {
         try {
-          // Generate thumbnail
+          // Generate thumbnail (works for PDFs and images)
           const thumbnail = await generateThumbnailForFile(extractedFile);
 
           // Create StirlingFile
