@@ -71,7 +71,7 @@ export default function OnboardingTour() {
     [TourStep.ALL_TOOLS]: {
       selector: '[data-tour="tool-panel"]',
       content: t('onboarding.allTools', 'Welcome to Stirling PDF! This is the All Tools panel where you can browse and select from all available PDF tools organized by category.'),
-      position: 'right',
+      position: 'center',
       padding: 0,
       action: () => {
         saveWorkbenchState();
@@ -89,7 +89,7 @@ export default function OnboardingTour() {
     [TourStep.TOOL_INTERFACE]: {
       selector: '[data-tour="tool-panel"]',
       content: t('onboarding.toolInterface', "This is the Crop tool interface. It replaces the All Tools panel and shows tool-specific settings. But first, we need a PDF file to work with."),
-      position: 'right',
+      position: 'center',
       padding: 0,
     },
     [TourStep.FILES_BUTTON]: {
@@ -172,7 +172,7 @@ export default function OnboardingTour() {
     [TourStep.RESULTS]: {
       selector: '[data-tour="tool-panel"]',
       content: t('onboarding.results', "After processing, you'll see a preview of the results in this panel. You can download the file or continue working with it in other tools."),
-      position: 'right',
+      position: 'center',
       padding: 0,
     },
     [TourStep.UNDO]: {
