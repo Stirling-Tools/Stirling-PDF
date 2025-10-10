@@ -2,11 +2,9 @@ import React from "react";
 import { TourProvider, useTour, type StepType } from '@reactour/tour';
 import { useOnboarding } from '../../contexts/OnboardingContext';
 import { useTranslation } from 'react-i18next';
-import { CloseButton, ActionIcon } from '@mantine/core';
+import { CloseButton, Button } from '@mantine/core';
 import { useFilesModalContext } from '../../contexts/FilesModalContext';
 import { useTourOrchestration } from '../../contexts/TourOrchestrationContext';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 
 // Enum case order defines order steps will appear
 enum TourStep {
@@ -273,7 +271,7 @@ export default function OnboardingTour() {
         const isLast = currentStep === stepsLength - 1;
 
         return (
-          <ActionIcon
+          <Button
             onClick={() => {
               if (isLast) {
                 setIsOpen(false);
@@ -284,11 +282,9 @@ export default function OnboardingTour() {
               }
             }}
             variant="filled"
-            size="lg"
-            aria-label={isLast ? t('onboarding.finish', 'Finish') : t('onboarding.next', 'Next')}
           >
-            <ArrowForwardIcon />
-          </ActionIcon>
+            {isLast ? t('onboarding.finish', 'Finish') : t('onboarding.next', 'Next')}
+          </Button>
         );
       }}
       components={{
