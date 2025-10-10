@@ -1,7 +1,8 @@
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { Text, Center, Box, LoadingOverlay, Stack } from "@mantine/core";
 import { useFileState, useFileActions } from "../../contexts/FileContext";
 import { useNavigationGuard } from "../../contexts/NavigationContext";
+import { usePageEditor } from "../../contexts/PageEditorContext";
 import { PDFDocument, PageEditorFunctions } from "../../types/pageEditor";
 import { pdfExportService } from "../../services/pdfExportService";
 import { documentManipulationService } from "../../services/documentManipulationService";
@@ -42,8 +43,25 @@ const PageEditor = ({
   // Navigation guard for unsaved changes
   const { setHasUnsavedChanges } = useNavigationGuard();
 
-  // Prefer IDs + selectors to avoid array identity churn
-  const activeFileIds = state.files.ids;
+  // Get selected files from PageEditorContext instead of all files
+  const { selectedFileIds, syncWithFileContext } = usePageEditor();
+
+  // Stable reference to file IDs to prevent infinite loops
+  const fileIdsString = state.files.ids.join(',');
+  const selectedIdsString = Array.from(selectedFileIds).sort().join(',');
+
+  // Sync with FileContext when files change
+  useEffect(() => {
+    syncWithFileContext(state.files.ids);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fileIdsString]); // Only re-run when the actual IDs change
+
+  // Get active file IDs from selected files (maintains order from FileContext)
+  const activeFileIds = useMemo(() => {
+    return state.files.ids.filter(id => selectedFileIds.has(id));
+    // Using string representations to prevent infinite loops
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fileIdsString, selectedIdsString]);
 
   // UI state
   const globalProcessing = state.ui.isProcessing;

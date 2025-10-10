@@ -7,6 +7,8 @@ import EditNoteIcon from "@mui/icons-material/EditNote";
 import FolderIcon from "@mui/icons-material/Folder";
 import { WorkbenchType, isValidWorkbench } from '../../types/workbench';
 import { FileDropdownMenu } from './FileDropdownMenu';
+import { PageEditorFileDropdown } from './PageEditorFileDropdown';
+import { usePageEditor } from '../../contexts/PageEditorContext';
 
 
 const viewOptionStyle: React.CSSProperties = {
@@ -25,7 +27,15 @@ const createViewOptions = (
   switchingTo: WorkbenchType | null,
   activeFiles: Array<{ fileId: string; name: string; versionNumber?: number }>,
   currentFileIndex: number,
-  onFileSelect?: (index: number) => void
+  onFileSelect?: (index: number) => void,
+  pageEditorState?: {
+    allFiles: Array<{ fileId: string; name: string; versionNumber?: number }>;
+    selectedFileIds: Set<string>;
+    selectedCount: number;
+    totalCount: number;
+    onToggleSelection: (fileId: string) => void;
+    onReorder: (fromIndex: number, toIndex: number) => void;
+  }
 ) => {
   const currentFile = activeFiles[currentFileIndex];
   const isInViewer = currentView === 'viewer';
@@ -57,20 +67,39 @@ const createViewOptions = (
     value: "viewer",
   };
 
+  // Page Editor dropdown logic
+  const isInPageEditor = currentView === 'pageEditor';
+  const hasPageEditorFiles = pageEditorState && pageEditorState.totalCount > 0;
+  const showPageEditorDropdown = isInPageEditor && hasPageEditorFiles;
+
+  let pageEditorDisplayName = 'Page Editor';
+  if (isInPageEditor && pageEditorState) {
+    if (pageEditorState.selectedCount === pageEditorState.totalCount) {
+      pageEditorDisplayName = `${pageEditorState.selectedCount} file${pageEditorState.selectedCount !== 1 ? 's' : ''}`;
+    } else {
+      pageEditorDisplayName = `${pageEditorState.selectedCount}/${pageEditorState.totalCount} selected`;
+    }
+  }
+
   const pageEditorOption = {
-    label: (
+    label: showPageEditorDropdown ? (
+      <PageEditorFileDropdown
+        displayName={pageEditorDisplayName}
+        allFiles={pageEditorState!.allFiles}
+        selectedFileIds={pageEditorState!.selectedFileIds}
+        onToggleSelection={pageEditorState!.onToggleSelection}
+        onReorder={pageEditorState!.onReorder}
+        switchingTo={switchingTo}
+        viewOptionStyle={viewOptionStyle}
+      />
+    ) : (
       <div style={viewOptionStyle}>
-        {currentView === "pageEditor" ? (
-          <>
-            {switchingTo === "pageEditor" ? <Loader size="xs" /> : <EditNoteIcon fontSize="small" />}
-            <span>Page Editor</span>
-          </>
+        {switchingTo === "pageEditor" ? (
+          <Loader size="xs" />
         ) : (
-          <>
-            {switchingTo === "pageEditor" ? <Loader size="xs" /> : <EditNoteIcon fontSize="small" />}
-            <span>Page Editor</span>
-          </>
+          <EditNoteIcon fontSize="small" />
         )}
+        <span>{pageEditorDisplayName}</span>
       </div>
     ),
     value: "pageEditor",
@@ -121,6 +150,17 @@ const TopControls = ({
   const { isRainbowMode } = useRainbowThemeContext();
   const [switchingTo, setSwitchingTo] = useState<WorkbenchType | null>(null);
 
+  // Get page editor state for dropdown
+  const {
+    selectedFileIds,
+    toggleFileSelection,
+    reorderFiles: pageEditorReorderFiles,
+  } = usePageEditor();
+
+  // Convert Set to array for counting
+  const selectedCount = selectedFileIds.size;
+  const totalCount = activeFiles.length;
+
   const handleViewChange = useCallback((view: string) => {
     if (!isValidWorkbench(view)) {
       return;
@@ -147,7 +187,21 @@ const TopControls = ({
     <div className="absolute left-0 w-full top-0 z-[100] pointer-events-none">
       <div className="flex justify-center mt-[0.5rem]">
         <SegmentedControl
-          data={createViewOptions(currentView, switchingTo, activeFiles, currentFileIndex, onFileSelect)}
+          data={createViewOptions(
+            currentView,
+            switchingTo,
+            activeFiles,
+            currentFileIndex,
+            onFileSelect,
+            {
+              allFiles: activeFiles,
+              selectedFileIds,
+              selectedCount,
+              totalCount,
+              onToggleSelection: toggleFileSelection,
+              onReorder: (fromIndex, toIndex) => pageEditorReorderFiles(fromIndex, toIndex, activeFiles.map(f => f.fileId)),
+            }
+          )}
           value={currentView}
           onChange={handleViewChange}
           color="blue"
