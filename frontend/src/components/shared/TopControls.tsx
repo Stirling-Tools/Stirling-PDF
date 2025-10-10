@@ -6,6 +6,7 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import EditNoteIcon from "@mui/icons-material/EditNote";
 import FolderIcon from "@mui/icons-material/Folder";
 import { WorkbenchType, isValidWorkbench } from '../../types/workbench';
+import { FileDropdownMenu } from './FileDropdownMenu';
 
 
 const viewOptionStyle = {
@@ -19,16 +20,40 @@ const viewOptionStyle = {
 
 
 // Build view options showing text always
-const createViewOptions = (currentView: WorkbenchType, switchingTo: WorkbenchType | null) => {
+const createViewOptions = (
+  currentView: WorkbenchType,
+  switchingTo: WorkbenchType | null,
+  activeFiles: Array<{ fileId: string; name: string; versionNumber?: number }>,
+  currentFileIndex: number,
+  onFileSelect?: (index: number) => void
+) => {
+  const currentFile = activeFiles[currentFileIndex];
+  const isInViewer = currentView === 'viewer';
+  const fileName = currentFile?.name || '';
+  const displayName = isInViewer && fileName
+    ? (fileName.length > 30 ? `${fileName.substring(0, 30)}...` : fileName)
+    : 'Viewer';
+  const hasMultipleFiles = activeFiles.length > 1;
+  const showDropdown = isInViewer && hasMultipleFiles;
+
   const viewerOption = {
-    label: (
+    label: showDropdown ? (
+      <FileDropdownMenu
+        displayName={displayName}
+        activeFiles={activeFiles}
+        currentFileIndex={currentFileIndex}
+        onFileSelect={onFileSelect}
+        switchingTo={switchingTo}
+        viewOptionStyle={viewOptionStyle}
+      />
+    ) : (
       <div style={viewOptionStyle as React.CSSProperties}>
         {switchingTo === "viewer" ? (
           <Loader size="xs" />
         ) : (
           <VisibilityIcon fontSize="small" />
         )}
-        <span>Viewer</span>
+        <span>{displayName}</span>
       </div>
     ),
     value: "viewer",
@@ -83,12 +108,18 @@ const createViewOptions = (currentView: WorkbenchType, switchingTo: WorkbenchTyp
 interface TopControlsProps {
   currentView: WorkbenchType;
   setCurrentView: (view: WorkbenchType) => void;
+  activeFiles?: Array<{ fileId: string; name: string; versionNumber?: number }>;
+  currentFileIndex?: number;
+  onFileSelect?: (index: number) => void;
 }
 
 const TopControls = ({
   currentView,
   setCurrentView,
-  }: TopControlsProps) => {
+  activeFiles = [],
+  currentFileIndex = 0,
+  onFileSelect,
+}: TopControlsProps) => {
   const { isRainbowMode } = useRainbowThemeContext();
   const [switchingTo, setSwitchingTo] = useState<WorkbenchType | null>(null);
 
@@ -118,7 +149,7 @@ const TopControls = ({
     <div className="absolute left-0 w-full top-0 z-[100] pointer-events-none">
       <div className="flex justify-center mt-[0.5rem]">
         <SegmentedControl
-          data={createViewOptions(currentView, switchingTo)}
+          data={createViewOptions(currentView, switchingTo, activeFiles, currentFileIndex, onFileSelect)}
           value={currentView}
           onChange={handleViewChange}
           color="blue"

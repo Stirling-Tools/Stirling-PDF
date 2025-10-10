@@ -66,6 +66,10 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
   const plugins = useMemo(() => {
     if (!pdfUrl) return [];
 
+    // Calculate 3.5rem in pixels dynamically based on root font size
+    const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
+    const viewportGap = rootFontSize * 3.5;
+
     return [
       createPluginRegistration(LoaderPluginPackage, {
         loadingOptions: {
@@ -77,7 +81,7 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
         },
       }),
       createPluginRegistration(ViewportPluginPackage, {
-        viewportGap: 56, // 3.5rem = 56px to match nav pill height
+        viewportGap,
       }),
       createPluginRegistration(ScrollPluginPackage, {
         strategy: ScrollStrategy.Vertical,

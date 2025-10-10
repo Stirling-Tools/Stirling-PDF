@@ -1,3 +1,4 @@
+import React, { useState } from 'react';
 import { Box } from '@mantine/core';
 import { useRainbowThemeContext } from '../shared/RainbowThemeProvider';
 import { useToolWorkflow } from '../../contexts/ToolWorkflowContext';
@@ -20,11 +21,12 @@ export default function Workbench() {
   const { isRainbowMode } = useRainbowThemeContext();
 
   // Use context-based hooks to eliminate all prop drilling
-  const { state } = useFileState();
+  const { state, selectors } = useFileState();
   const { workbench: currentView } = useNavigationState();
   const { actions: navActions } = useNavigationActions();
   const setCurrentView = navActions.setWorkbench;
-  const activeFiles = state.files.ids;
+  const activeFiles = selectors.getFiles();
+  const [activeFileIndex, setActiveFileIndex] = useState(0);
   const {
     previewFile,
     pageEditorFunctions,
@@ -95,6 +97,8 @@ export default function Workbench() {
             setSidebarsVisible={setSidebarsVisible}
             previewFile={previewFile}
             onClose={handlePreviewClose}
+            activeFileIndex={activeFileIndex}
+            setActiveFileIndex={setActiveFileIndex}
           />
         );
 
@@ -150,6 +154,12 @@ export default function Workbench() {
         <TopControls
           currentView={currentView}
           setCurrentView={setCurrentView}
+          activeFiles={activeFiles.map(f => {
+            const stub = selectors.getStirlingFileStub(f.fileId);
+            return { fileId: f.fileId, name: f.name, versionNumber: stub?.versionNumber };
+          })}
+          currentFileIndex={activeFileIndex}
+          onFileSelect={setActiveFileIndex}
         />
       )}
 
