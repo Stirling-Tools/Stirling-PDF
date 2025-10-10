@@ -19,6 +19,7 @@ interface SignatureFlatteningOptions {
   selectors: MinimalFileContextSelectors;
   originalFile?: StirlingFile;
   getScrollState: () => { currentPage: number; totalPages: number };
+  activeFileIndex?: number;
 }
 
 export interface SignatureFlatteningResult {
@@ -28,7 +29,7 @@ export interface SignatureFlatteningResult {
 }
 
 export async function flattenSignatures(options: SignatureFlatteningOptions): Promise<SignatureFlatteningResult | null> {
-  const { signatureApiRef, getImageData, exportActions, selectors, originalFile, getScrollState } = options;
+  const { signatureApiRef, getImageData, exportActions, selectors, originalFile, getScrollState, activeFileIndex } = options;
 
   try {
     // Step 1: Extract all annotations from EmbedPDF before export
@@ -104,10 +105,12 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
       if (!currentFile) {
         const allFileIds = selectors.getAllFileIds();
         if (allFileIds.length > 0) {
-          const fileStub = selectors.getStirlingFileStub(allFileIds[0]);
-          const fileObject = selectors.getFile(allFileIds[0]);
+          // Use activeFileIndex if provided, otherwise default to 0
+          const fileIndex = activeFileIndex !== undefined && activeFileIndex < allFileIds.length ? activeFileIndex : 0;
+          const fileStub = selectors.getStirlingFileStub(allFileIds[fileIndex]);
+          const fileObject = selectors.getFile(allFileIds[fileIndex]);
           if (fileStub && fileObject) {
-            currentFile = createStirlingFile(fileObject, allFileIds[0] as FileId);
+            currentFile = createStirlingFile(fileObject, allFileIds[fileIndex] as FileId);
           }
         }
       }
@@ -286,6 +289,9 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
 
       // Prepare input file data for replacement
       const inputFileIds: FileId[] = [currentFile.fileId];
+
+      console.log('[flattenSignatures] Current file:', { name: currentFile.name, id: currentFile.fileId });
+      console.log('[flattenSignatures] Input file IDs to consume:', inputFileIds);
 
       const record = selectors.getStirlingFileStub(currentFile.fileId);
       if (!record) {

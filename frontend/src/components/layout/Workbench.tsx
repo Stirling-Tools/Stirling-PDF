@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Box } from '@mantine/core';
 import { useRainbowThemeContext } from '../shared/RainbowThemeProvider';
 import { useToolWorkflow } from '../../contexts/ToolWorkflowContext';
 import { useFileHandler } from '../../hooks/useFileHandler';
 import { useFileState } from '../../contexts/FileContext';
 import { useNavigationState, useNavigationActions } from '../../contexts/NavigationContext';
+import { useViewer } from '../../contexts/ViewerContext';
 import './Workbench.css';
 
 import TopControls from '../shared/TopControls';
@@ -26,7 +27,6 @@ export default function Workbench() {
   const { actions: navActions } = useNavigationActions();
   const setCurrentView = navActions.setWorkbench;
   const activeFiles = selectors.getFiles();
-  const [activeFileIndex, setActiveFileIndex] = useState(0);
   const {
     previewFile,
     pageEditorFunctions,
@@ -45,6 +45,9 @@ export default function Workbench() {
   const { toolRegistry } = useToolWorkflow();
   const selectedTool = selectedToolId ? toolRegistry[selectedToolId] : null;
   const { addFiles } = useFileHandler();
+
+  // Get active file index from ViewerContext
+  const { activeFileIndex, setActiveFileIndex } = useViewer();
 
   const handlePreviewClose = () => {
     setPreviewFile(null);

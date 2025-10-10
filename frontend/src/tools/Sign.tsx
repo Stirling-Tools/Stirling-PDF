@@ -17,7 +17,7 @@ const Sign = (props: BaseToolProps) => {
   const { setWorkbench } = useNavigation();
   const { setSignatureConfig, activateDrawMode, activateSignaturePlacementMode, deactivateDrawMode, updateDrawSettings, undo, redo, signatureApiRef, getImageData, setSignaturesApplied } = useSignature();
   const { consumeFiles, selectors } = useFileContext();
-  const { exportActions, getScrollState } = useViewer();
+  const { exportActions, getScrollState, activeFileIndex, setActiveFileIndex } = useViewer();
   const { setHasUnsavedChanges, unregisterUnsavedChangesChecker } = useNavigation();
 
   // Track which signature mode was active for reactivation after save
@@ -75,19 +75,15 @@ const Sign = (props: BaseToolProps) => {
       unregisterUnsavedChangesChecker();
       setHasUnsavedChanges(false);
 
-      // Get the original file
-      let originalFile = null;
-      if (base.selectedFiles.length > 0) {
-        originalFile = base.selectedFiles[0];
-      } else {
-        const allFileIds = selectors.getAllFileIds();
-        if (allFileIds.length > 0) {
-          const stirlingFile = selectors.getFile(allFileIds[0]);
-          if (stirlingFile) {
-            originalFile = stirlingFile;
-          }
-        }
-      }
+      // Get the original file from FileContext using activeFileIndex
+      // The viewer displays files from FileContext, not from base.selectedFiles
+      const allFiles = selectors.getFiles();
+      const fileIndex = activeFileIndex < allFiles.length ? activeFileIndex : 0;
+      const originalFile = allFiles[fileIndex];
+
+      console.log('[Sign] Active file index:', activeFileIndex);
+      console.log('[Sign] All files:', allFiles.map(f => ({ name: f.name, id: f.fileId })));
+      console.log('[Sign] Selected file for signing:', { name: originalFile?.name, id: originalFile?.fileId });
 
       if (!originalFile) {
         console.error('No file available to replace');
@@ -101,16 +97,39 @@ const Sign = (props: BaseToolProps) => {
         exportActions,
         selectors,
         originalFile,
-        getScrollState
+        getScrollState,
+        activeFileIndex
       });
 
       if (flattenResult) {
+        console.log('[Sign] About to consume - input IDs:', flattenResult.inputFileIds);
+        console.log('[Sign] About to consume - output file:', { name: flattenResult.outputStirlingFile.name, id: flattenResult.outputStirlingFile.fileId });
+
         // Now consume the files - this triggers the viewer reload
         await consumeFiles(
           flattenResult.inputFileIds,
           [flattenResult.outputStirlingFile],
           [flattenResult.outputStub]
         );
+
+        // Find the new file's position in the updated file list and update activeFileIndex
+        const updatedFiles = selectors.getFiles();
+        console.log('[Sign] After consume - updated files:', updatedFiles.map(f => ({ name: f.name, id: f.fileId })));
+        console.log('[Sign] Looking for file ID:', flattenResult.outputStirlingFile.fileId);
+
+        const newFileIndex = updatedFiles.findIndex(f => {
+          console.log('[Sign] Comparing:', f.fileId, 'with', flattenResult.outputStirlingFile.fileId, 'match:', f.fileId === flattenResult.outputStirlingFile.fileId);
+          return f.fileId === flattenResult.outputStirlingFile.fileId;
+        });
+        console.log('[Sign] New file index:', newFileIndex);
+
+        if (newFileIndex !== -1) {
+          setActiveFileIndex(newFileIndex);
+          console.log('[Sign] Set active file index to:', newFileIndex);
+        } else {
+          console.error('[Sign] Failed to find new file in updated list! Defaulting to index 0');
+          setActiveFileIndex(0);
+        }
 
         // Mark signatures as applied
         setSignaturesApplied(true);
@@ -125,7 +144,7 @@ const Sign = (props: BaseToolProps) => {
     } catch (error) {
       console.error('Error saving signed document:', error);
     }
-  }, [exportActions, base.selectedFiles, selectors, consumeFiles, signatureApiRef, getImageData, setWorkbench, activateDrawMode, setSignaturesApplied, getScrollState, handleDeactivateSignature, setHasUnsavedChanges, unregisterUnsavedChangesChecker]);
+  }, [exportActions, base.selectedFiles, selectors, consumeFiles, signatureApiRef, getImageData, setWorkbench, activateDrawMode, setSignaturesApplied, getScrollState, handleDeactivateSignature, setHasUnsavedChanges, unregisterUnsavedChangesChecker, activeFileIndex, setActiveFileIndex]);
 
   const getSteps = () => {
     const steps = [];
