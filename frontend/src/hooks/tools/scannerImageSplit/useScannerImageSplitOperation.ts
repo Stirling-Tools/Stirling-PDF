@@ -27,14 +27,14 @@ export const scannerImageSplitOperationConfig = {
 
 export const useScannerImageSplitOperation = () => {
   const { t } = useTranslation();
-  const { extractAllZipFiles } = useToolResources();
+  const { extractZipFiles } = useToolResources();
 
   // Custom response handler that extracts ZIP files containing images
   // Can't add to exported config because it requires access to the hook so must be part of the hook
   const responseHandler = useCallback(async (blob: Blob, originalFiles: File[]): Promise<File[]> => {
     try {
       // Scanner image split returns ZIP files with multiple images
-      const extractedFiles = await extractAllZipFiles(blob);
+      const extractedFiles = await extractZipFiles(blob);
 
       // If extraction succeeded and returned files, use them
       if (extractedFiles.length > 0) {
@@ -49,7 +49,7 @@ export const useScannerImageSplitOperation = () => {
     const baseFileName = inputFileName.replace(/\.[^.]+$/, '');
     const singleFile = new File([blob], `${baseFileName}.png`, { type: 'image/png' });
     return [singleFile];
-  }, [extractAllZipFiles]);
+  }, [extractZipFiles]);
 
   const config: ToolOperationConfig<ScannerImageSplitParameters> = {
     ...scannerImageSplitOperationConfig,
