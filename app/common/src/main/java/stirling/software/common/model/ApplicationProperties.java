@@ -121,6 +121,8 @@ public class ApplicationProperties {
         private String loginMethod = "all";
         private String customGlobalAPIKey;
         private Jwt jwt = new Jwt();
+        private PasswordPolicy passwordPolicy = new PasswordPolicy();
+        private int sessionTimeout = 120; // Default 120 minutes
 
         public Boolean isAltLogin() {
             return saml2.getEnabled() || oauth2.getEnabled();
@@ -307,7 +309,18 @@ public class ApplicationProperties {
             private boolean keyCleanup = true;
             private int keyRetentionDays = 7;
             private Boolean secureCookie;
-            private boolean enableKeyRotation = false;
+            private boolean keyRotationEnabled = false;
+        }
+
+        @Data
+        public static class PasswordPolicy {
+            private int minLength = 8;
+            private boolean requireSpecialChar = true;
+            private boolean requireNumbers = true;
+            private boolean requireUppercase = true;
+            private boolean requireLowercase = true;
+            private int maxAge = 0; // 0 means no expiry
+            private int historyCount = 0; // 0 means no history check
         }
     }
 

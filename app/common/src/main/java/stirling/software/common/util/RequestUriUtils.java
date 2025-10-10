@@ -24,7 +24,7 @@ public class RequestUriUtils {
                 || requestURI.endsWith(".txt")
                 || requestURI.endsWith(".webmanifest")
                 || requestURI.startsWith(contextPath + "/api/v1/info/status")
-                || requestURI.startsWith(contextPath + "/v1/api/info/status");
+                || requestURI.startsWith(contextPath + "/api/v1/auth/keys");
     }
 
     public static boolean isTrackableResource(String requestURI) {

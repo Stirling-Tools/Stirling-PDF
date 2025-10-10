@@ -16,6 +16,15 @@ security:
   loginAttemptCount: 5 # lock user account after 5 tries; when using e.g. Fail2Ban you can deactivate the function with -1
   loginResetTimeMinutes: 120 # lock account for 2 hours after x attempts
   loginMethod: all # Accepts values like 'all' and 'normal'(only Login with Username/Password), 'oauth2'(only Login with OAuth2) or 'saml2'(only Login with SAML2)
+  sessionTimeout: 120 # Session timeout in minutes (default: 120)
+  passwordPolicy:
+    minLength: 8 # Minimum password length
+    requireSpecialChar: true # Require at least one special character
+    requireNumbers: true # Require at least one number
+    requireUppercase: true # Require at least one uppercase letter
+    requireLowercase: true # Require at least one lowercase letter
+    maxAge: 0 # Maximum password age in days (0 = no expiry)
+    historyCount: 0 # Number of previous passwords to check against (0 = no history check)
   initialLogin:
     username: '' # initial username for the first login
     password: '' # initial password for the first login
@@ -61,7 +70,7 @@ security:
     spCert: classpath:saml-public-cert.crt # Your signing certificate. Generated from your keypair
   jwt: # This feature is currently under development and not yet fully supported. Do not use in production.
     enabled: true # Set to 'true' to enable JWT key store
-    enableKeyRotation: false # Set to 'true' to enable periodic rotation of JWT signing keys
+    keyRotationEnabled: false # Set to 'true' to enable periodic rotation of JWT signing keys
     keyCleanup: false # Set to 'true' to enable key pair cleanup
     keyRetentionDays: 7 # Number of days to retain old keys. The default is 7 days.
     secureCookie: true # Set to 'true' to use secure cookies for JWTs

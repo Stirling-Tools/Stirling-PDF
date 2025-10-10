@@ -23,6 +23,7 @@
 
   <script>
     window.stirlingPDF = window.stirlingPDF || {};
+    window.stirlingPDF.secureCookie = /*[[${@secureCookie}]]*/ true;
     
     // Capture true system DPI at page load (before any zoom interactions)
     const systemDPR = window.devicePixelRatio || 1;

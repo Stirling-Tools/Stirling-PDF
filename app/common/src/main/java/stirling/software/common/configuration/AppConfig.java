@@ -73,6 +73,13 @@ public class AppConfig {
         return applicationProperties.getSecurity().getEnableLogin();
     }
 
+    @Bean(name = "secureCookie")
+    public boolean secureCookie() {
+        Boolean secureCookie = applicationProperties.getSecurity().getJwt().getSecureCookie();
+        // Default to true if not explicitly set
+        return secureCookie == null || secureCookie;
+    }
+
     @Bean(name = "appName")
     public String appName() {
         String homeTitle = applicationProperties.getUi().getAppName();

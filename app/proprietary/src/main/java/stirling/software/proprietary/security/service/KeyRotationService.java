@@ -18,16 +18,16 @@ import stirling.software.common.model.ApplicationProperties;
 public class KeyRotationService {
 
     private final KeyPersistenceServiceInterface keyPersistenceService;
-    private final ApplicationProperties applicationProperties;
+    private final ApplicationProperties.Security.Jwt jwt;
 
     @Scheduled(fixedDelay = 1, timeUnit = TimeUnit.DAYS)
     public void rotateIfEnabled() {
-        ApplicationProperties.Security.Jwt jwt = applicationProperties.getSecurity().getJwt();
-        if (!jwt.isEnabled() || !jwt.isEnableKeyRotation()) {
+        if (!jwt.isEnabled() || !jwt.isKeyRotationEnabled()) {
             return;
         }
+
         try {
-            log.info("Rotating JWT signing key (enableKeyRotation=true)");
+            log.info("Rotating JWT signing keys)");
             keyPersistenceService.refreshActiveKeyPair();
         } catch (Exception e) {
             log.warn("JWT key rotation failed: {}", e.getMessage(), e);

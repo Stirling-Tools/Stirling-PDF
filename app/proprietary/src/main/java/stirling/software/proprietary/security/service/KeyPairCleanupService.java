@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -23,7 +24,7 @@ import stirling.software.proprietary.security.model.JwtVerificationKey;
 
 @Slf4j
 @Service
-@ConditionalOnProperty(name = "v2", havingValue = "true", matchIfMissing = true)
+@ConditionalOnBooleanProperty(name = "v2", matchIfMissing = true)
 public class KeyPairCleanupService {
 
     private final KeyPersistenceService keyPersistenceService;

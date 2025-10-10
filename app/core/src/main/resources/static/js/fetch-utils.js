@@ -5,7 +5,11 @@ window.JWTManager = {
     logout: function() {
 
         // Clear JWT cookie manually (fallback)
-        document.cookie = 'stirling_jwt=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; SameSite=Strict; Secure';
+        // Use the secureCookie setting from the server (defaults to true if not set)
+        const isSecure = window.stirlingPDF?.secureCookie !== false;
+        const sameSite = isSecure ? 'Strict' : 'None';
+        const secureFlag = isSecure ? '; Secure' : '';
+        document.cookie = `stirling_jwt=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; SameSite=${sameSite}${secureFlag}`;
 
         // Perform logout request to clear server-side session
         fetch('/logout', {

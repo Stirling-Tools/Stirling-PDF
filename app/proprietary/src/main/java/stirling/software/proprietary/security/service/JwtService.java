@@ -293,7 +293,7 @@ public class JwtService implements JwtServiceInterface {
                 ResponseCookie.from(JWT_COOKIE_NAME, "")
                         .httpOnly(true)
                         .secure(secureCookie)
-                        .sameSite("Strict")
+                        .sameSite(secureCookie ? "Strict" : "None")
                         .maxAge(0)
                         .path("/")
                         .build();
