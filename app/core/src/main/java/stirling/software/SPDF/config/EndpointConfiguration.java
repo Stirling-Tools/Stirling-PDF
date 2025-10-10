@@ -486,7 +486,7 @@ public class EndpointConfiguration {
                 || "Javascript".equals(group)
                 || "Weasyprint".equals(group)
                 || "Pdftohtml".equals(group)
-                || "RAR".equals(group);
+                || "rar".equals(group);
     }
 
     private boolean isEndpointEnabledDirectly(String endpoint) {

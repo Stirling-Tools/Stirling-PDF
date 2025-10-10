@@ -43,7 +43,7 @@ public class ExternalAppDepConfig {
                         put(unoconvPath, List.of("Unoconvert"));
                         put("qpdf", List.of("qpdf"));
                         put("tesseract", List.of("tesseract"));
-                        put("rar", List.of("RAR")); // Required for real CBR output
+                        put("rar", List.of("rar")); // Required for real CBR output
                     }
                 };
     }
