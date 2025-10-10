@@ -10,6 +10,7 @@ import {
   Divider,
   Modal
 } from '@mantine/core';
+import { Z_INDEX_AUTOMATE_MODAL } from '../../../styles/zIndex';
 import CheckIcon from '@mui/icons-material/Check';
 import { ToolRegistry } from '../../../data/toolsTaxonomy';
 import ToolConfigurationModal from './ToolConfigurationModal';
@@ -221,6 +222,7 @@ export default function AutomationCreation({ mode, existingAutomation, onBack, o
         onClose={handleCancelBack}
         title={t('automate.creation.unsavedChanges.title', 'Unsaved Changes')}
         centered
+        zIndex={Z_INDEX_AUTOMATE_MODAL}
       >
         <Stack gap="md">
           <Text>

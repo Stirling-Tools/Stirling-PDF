@@ -46,6 +46,13 @@
   background-color: transparent !important;
 }
 
+/* When all buttons are disabled via context */
+.right-rail--all-disabled .right-rail-icon {
+  color: var(--right-rail-icon-disabled) !important;
+  background-color: transparent !important;
+  pointer-events: none !important;
+}
+
 .right-rail-spacer {
   flex: 1;
 }
