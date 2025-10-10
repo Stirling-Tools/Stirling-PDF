@@ -125,6 +125,7 @@ const FileManager: React.FC<FileManagerProps> = ({ selectedTool }) => {
       radius="md"
       className="overflow-hidden p-0"
       withCloseButton={false}
+      zIndex={1100}
       styles={{
         content: {
           position: 'relative',
