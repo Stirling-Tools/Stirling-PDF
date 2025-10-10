@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Box, Center, Text, ActionIcon, Tabs, Collapse, Group, Button, Tooltip } from '@mantine/core';
-import { useMantineColorScheme } from '@mantine/core';
+import { Box, Center, Text, ActionIcon, Tabs, Collapse, Group, Tooltip } from '@mantine/core';
 import CloseIcon from '@mui/icons-material/Close';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
@@ -32,7 +31,6 @@ const EmbedPdfViewerContent = ({
   previewFile,
 }: EmbedPdfViewerProps) => {
   const { t } = useTranslation();
-  const { colorScheme } = useMantineColorScheme();
   const viewerRef = React.useRef<HTMLDivElement>(null);
   const [isViewerHovered, setIsViewerHovered] = React.useState(false);
 
