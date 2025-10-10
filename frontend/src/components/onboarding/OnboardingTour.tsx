@@ -266,21 +266,9 @@ export default function OnboardingTour() {
       showBadge={true}
       showCloseButton={true}
       disableInteraction={true}
-      prevButton={({ currentStep, setCurrentStep }) => {
-        const isFirst = currentStep === TourStep.ALL_TOOLS;
-        return (
-          <ActionIcon
-            onClick={() => setCurrentStep(Math.max(0, currentStep - 1))}
-            disabled={isFirst}
-            variant="filled"
-            size="lg"
-            style={{ marginRight: '8px' }}
-            aria-label={t('onboarding.previous', 'Previous')}
-          >
-            <ArrowBackIcon />
-          </ActionIcon>
-        );
-      }}
+      disableKeyboardNavigation={['left']}
+      disableDotsNavigation={true}
+      prevButton={() => null}
       nextButton={({ currentStep, stepsLength, setCurrentStep, setIsOpen }) => {
         const isLast = currentStep === stepsLength - 1;
 
