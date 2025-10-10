@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Box, Center, Text, ActionIcon, Tabs, Collapse, Group, Button, Tooltip } from '@mantine/core';
-import { useMantineTheme, useMantineColorScheme } from '@mantine/core';
+import { useMantineColorScheme } from '@mantine/core';
 import CloseIcon from '@mui/icons-material/Close';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
@@ -32,7 +32,6 @@ const EmbedPdfViewerContent = ({
   previewFile,
 }: EmbedPdfViewerProps) => {
   const { t } = useTranslation();
-  const theme = useMantineTheme();
   const { colorScheme } = useMantineColorScheme();
   const viewerRef = React.useRef<HTMLDivElement>(null);
   const [isViewerHovered, setIsViewerHovered] = React.useState(false);
@@ -305,7 +304,7 @@ const EmbedPdfViewerContent = ({
                 borderRight: '1px solid var(--border-subtle)',
                 borderBottom: '1px solid var(--border-subtle)',
                 borderRadius: '0 0 8px 0',
-                boxShadow: theme.shadows.md
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)'
               }}
             >
               <Box
@@ -334,14 +333,9 @@ const EmbedPdfViewerContent = ({
                     onChange={(value) => setActiveFileIndex(parseInt(value || '0'))}
                     variant="pills"
                     orientation="vertical"
-                    styles={(theme) => ({
-                      tab: {
-                        justifyContent: 'flex-start',
-                        '&[data-active]': {
-                          backgroundColor: 'rgba(147, 197, 253, 0.8)',
-                        },
-                      },
-                    })}
+                    classNames={{
+                      tab: 'viewer-file-tab'
+                    }}
                   >
                     <Tabs.List>
                       {activeFiles.map((file, index) => {
@@ -358,9 +352,6 @@ const EmbedPdfViewerContent = ({
                           >
                             <Tabs.Tab
                               value={index.toString()}
-                              style={{
-                                backgroundColor: activeFileIndex === index ? 'color-mix(in srgb, var(--color-primary-500) 50%, transparent)' : undefined
-                              }}
                             >
                               <Group gap="xs" style={{ width: '100%', justifyContent: 'flex-start' }}>
                                 <Text size="sm" style={{ flex: 1, textAlign: 'left' }}>
