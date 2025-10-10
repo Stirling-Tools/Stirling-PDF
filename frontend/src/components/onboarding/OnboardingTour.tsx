@@ -16,6 +16,7 @@ enum TourStep {
   FILES_BUTTON,
   FILE_SOURCES,
   WORKBENCH,
+  VIEW_SWITCHER,
   VIEWER,
   PAGE_EDITOR,
   ACTIVE_FILES,
@@ -110,17 +111,26 @@ export default function OnboardingTour() {
     },
     [TourStep.WORKBENCH]: {
       selector: '[data-tour="workbench"]',
-      content: t('onboarding.workbench', 'This is the Workbench - the main area where you view and edit your PDFs. You can switch between three different views using the controls at the top.'),
+      content: t('onboarding.workbench', 'This is the Workbench - the main area where you view and edit your PDFs.'),
       position: 'center',
       padding: 0,
       action: () => {
         loadSampleFile();
       },
     },
-    [TourStep.VIEWER]: {
+    [TourStep.VIEW_SWITCHER]: {
       selector: '[data-tour="view-switcher"]',
-      content: t('onboarding.viewer', "The Viewer lets you read and annotate PDFs. Let's switch to it now to see our sample file."),
+      content: t('onboarding.viewSwitcher', 'Use these controls to switch between three different views: Viewer, Page Editor, and Active Files.'),
       position: 'bottom',
+      padding: 0,
+      action: () => {
+        closeFilesModal();
+      },
+    },
+    [TourStep.VIEWER]: {
+      selector: '[data-tour="workbench"]',
+      content: t('onboarding.viewer', "The Viewer lets you read and annotate PDFs. Let's switch to it now to see our sample file."),
+      position: 'center',
       padding: 0,
       action: () => {
         closeFilesModal();
@@ -128,9 +138,9 @@ export default function OnboardingTour() {
       },
     },
     [TourStep.PAGE_EDITOR]: {
-      selector: '[data-tour="view-switcher"]',
+      selector: '[data-tour="workbench"]',
       content: t('onboarding.pageEditor', "The Page Editor allows you to reorder, rotate, split, and delete pages. Let's take a quick look."),
-      position: 'bottom',
+      position: 'center',
       padding: 0,
       action: () => {
         closeFilesModal();
@@ -138,9 +148,9 @@ export default function OnboardingTour() {
       },
     },
     [TourStep.ACTIVE_FILES]: {
-      selector: '[data-tour="view-switcher"]',
+      selector: '[data-tour="workbench"]',
       content: t('onboarding.activeFiles', "Active Files shows all loaded PDFs and lets you select which ones to process. Let's go back there now."),
-      position: 'bottom',
+      position: 'center',
       padding: 0,
       action: () => {
         closeFilesModal();
