@@ -183,10 +183,10 @@ export default function OnboardingTour() {
       actionAfter: () => undoOperation(),
     },
     [TourStep.WRAP_UP]: {
-      selector: 'body',
+      selector: '[data-tour="help-button"]',
       content: t('onboarding.wrapUp', "You're all set! You've learned how to select tools, load files, switch views, configure settings, and process PDFs. Click the Help button anytime to see this tour again."),
-      position: 'center',
-      padding: 0,
+      position: 'right',
+      padding: 10,
     },
   };
 
