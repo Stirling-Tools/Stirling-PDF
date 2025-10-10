@@ -115,7 +115,7 @@ export function useToolSections(
       seen.add(toolId);
       const sub = tool.subcategoryId;
       if (!subMap[sub]) subMap[sub] = [];
-      subMap[sub].push({ id: toolId, tool });
+      subMap[sub].push({ id: toolId as ToolId, tool });
     });
     const entries = Object.entries(subMap);
 
