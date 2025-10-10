@@ -2,6 +2,23 @@
   "language": {
     "direction": "ltr"
   },
+  "toolPanel": {
+    "modePrompt": {
+      "title": "Choose how you browse tools",
+      "description": "Preview both layouts and decide how you want to explore Stirling PDF tools.",
+      "sidebarTitle": "Sidebar mode",
+      "sidebarDescription": "Keep tools alongside your workspace for quick switching.",
+      "recommended": "Recommended",
+      "chooseSidebar": "Use sidebar mode",
+      "fullscreenTitle": "Fullscreen mode - (legacy)",
+      "fullscreenDescription": "Browse every tool in a catalogue that covers the workspace until you pick one.",
+      "chooseFullscreen": "Use fullscreen mode",
+      "dismiss": "Maybe later"
+    },
+    "fullscreen": {
+      "showDetails": "Show Details"
+    }
+  },
   "addPageNumbers": {
     "fontSize": "Font Size",
     "fontName": "Font Name",
