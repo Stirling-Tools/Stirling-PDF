@@ -2,9 +2,11 @@ import React from "react";
 import { TourProvider, useTour, type StepType } from '@reactour/tour';
 import { useOnboarding } from '../../contexts/OnboardingContext';
 import { useTranslation } from 'react-i18next';
-import { Button, CloseButton } from '@mantine/core';
+import { CloseButton, ActionIcon } from '@mantine/core';
 import { useFilesModalContext } from '../../contexts/FilesModalContext';
 import { useTourOrchestration } from '../../contexts/TourOrchestrationContext';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 
 // Enum case order defines order steps will appear
 enum TourStep {
@@ -252,22 +254,23 @@ export default function OnboardingTour() {
       prevButton={({ currentStep, setCurrentStep }) => {
         const isFirst = currentStep === TourStep.ALL_TOOLS;
         return (
-          <Button
+          <ActionIcon
             onClick={() => setCurrentStep(Math.max(0, currentStep - 1))}
             disabled={isFirst}
             variant="filled"
-            size="sm"
+            size="lg"
             style={{ marginRight: '8px' }}
+            aria-label={t('onboarding.previous', 'Previous')}
           >
-            {t('onboarding.previous', 'Previous')}
-          </Button>
+            <ArrowBackIcon />
+          </ActionIcon>
         );
       }}
       nextButton={({ currentStep, stepsLength, setCurrentStep, setIsOpen }) => {
         const isLast = currentStep === stepsLength - 1;
 
         return (
-          <Button
+          <ActionIcon
             onClick={() => {
               if (isLast) {
                 setIsOpen(false);
@@ -277,10 +280,11 @@ export default function OnboardingTour() {
               }
             }}
             variant="filled"
-            size="sm"
+            size="lg"
+            aria-label={isLast ? t('onboarding.finish', 'Finish') : t('onboarding.next', 'Next')}
           >
-            {isLast ? t('onboarding.finish', 'Finish') : t('onboarding.next', 'Next')}
-          </Button>
+            <ArrowForwardIcon />
+          </ActionIcon>
         );
       }}
       components={{
