@@ -375,6 +375,8 @@ public class EndpointConfiguration {
         addEndpointToGroup("Java", "extract-page");
         addEndpointToGroup("Java", "pdf-to-single-page");
         addEndpointToGroup("Java", "markdown-to-pdf");
+        addEndpointToGroup("Java", "vector-to-pdf");
+        addEndpointToGroup("Java", "pdf-to-vector");
         addEndpointToGroup("Java", "show-javascript");
         addEndpointToGroup("Java", "auto-redact");
         addEndpointToGroup("Java", "redact");
@@ -389,7 +391,6 @@ public class EndpointConfiguration {
         addEndpointToGroup("Java", "add-attachments");
         addEndpointToGroup("Java", "compress-pdf");
         addEndpointToGroup("rar", "pdf-to-cbr");
-        addEndpointToGroup("Java", "pdf-to-vector");
 
         // Javascript
         addEndpointToGroup("Javascript", "pdf-organizer");
