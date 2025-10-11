@@ -51,13 +51,13 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 public class PdfAttachmentHandler {
     // Note: This class is designed for EML attachments, not general PDF attachments.
 
-    private static final String ATTACHMENT_MARKER = "@";
-    private static final float ATTACHMENT_ICON_WIDTH = 12f;
-    private static final float ATTACHMENT_ICON_HEIGHT = 14f;
-    private static final float ANNOTATION_X_OFFSET = 2f;
-    private static final float ANNOTATION_Y_OFFSET = 10f;
+    private final String ATTACHMENT_MARKER = "@";
+    private final float ATTACHMENT_ICON_WIDTH = 12f;
+    private final float ATTACHMENT_ICON_HEIGHT = 14f;
+    private final float ANNOTATION_X_OFFSET = 2f;
+    private final float ANNOTATION_Y_OFFSET = 10f;
 
-    public static byte[] attachFilesToPdf(
+    public byte[] attachFilesToPdf(
             byte[] pdfBytes,
             List<EmlParser.EmailAttachment> attachments,
             CustomPDFDocumentFactory pdfDocumentFactory)
@@ -102,7 +102,7 @@ public class PdfAttachmentHandler {
         }
     }
 
-    private static MultipartFile createMultipartFile(EmlParser.EmailAttachment attachment) {
+    private MultipartFile createMultipartFile(EmlParser.EmailAttachment attachment) {
         return new MultipartFile() {
             @Override
             public @NotNull String getName() {
@@ -156,7 +156,7 @@ public class PdfAttachmentHandler {
         };
     }
 
-    private static String ensureUniqueFilename(String filename, Set<String> existingNames) {
+    private String ensureUniqueFilename(String filename, Set<String> existingNames) {
         if (!existingNames.contains(filename)) {
             return filename;
         }
@@ -181,8 +181,7 @@ public class PdfAttachmentHandler {
         return uniqueName;
     }
 
-    private static @NotNull PDRectangle calculateAnnotationRectangle(
-            PDPage page, float x, float y) {
+    private @NotNull PDRectangle calculateAnnotationRectangle(PDPage page, float x, float y) {
         PDRectangle cropBox = page.getCropBox();
 
         // ISO 32000-1:2008 Section 8.3: PDF coordinate system transforms
@@ -243,8 +242,7 @@ public class PdfAttachmentHandler {
         return rect;
     }
 
-    public static String processInlineImages(
-            String htmlContent, EmlParser.EmailContent emailContent) {
+    public String processInlineImages(String htmlContent, EmlParser.EmailContent emailContent) {
         if (htmlContent == null || emailContent == null) return htmlContent;
 
         Map<String, EmlParser.EmailAttachment> contentIdMap = new HashMap<>();
@@ -286,12 +284,12 @@ public class PdfAttachmentHandler {
         return result.toString();
     }
 
-    public static String formatEmailDate(Date date) {
+    public String formatEmailDate(Date date) {
         if (date == null) return "";
         return formatEmailDate(ZonedDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault()));
     }
 
-    public static String formatEmailDate(ZonedDateTime dateTime) {
+    public String formatEmailDate(ZonedDateTime dateTime) {
         if (dateTime == null) return "";
 
         DateTimeFormatter formatter =
@@ -299,24 +297,7 @@ public class PdfAttachmentHandler {
         return dateTime.withZoneSameInstant(ZoneId.of("UTC")).format(formatter);
     }
 
-    @Data
-    public static class MarkerPosition {
-        private int pageIndex;
-        private float x;
-        private float y;
-        private String character;
-        private String filename;
-
-        public MarkerPosition(int pageIndex, float x, float y, String character, String filename) {
-            this.pageIndex = pageIndex;
-            this.x = x;
-            this.y = y;
-            this.character = character;
-            this.filename = filename;
-        }
-    }
-
-    private static String normalizeFilename(String filename) {
+    private String normalizeFilename(String filename) {
         if (filename == null) return "";
         String normalized = filename.toLowerCase().trim();
         normalized =
@@ -332,7 +313,7 @@ public class PdfAttachmentHandler {
         return normalized;
     }
 
-    private static Map<Integer, String> addAttachmentsToDocumentWithMapping(
+    private Map<Integer, String> addAttachmentsToDocumentWithMapping(
             PDDocument document,
             List<MultipartFile> attachments,
             List<EmlParser.EmailAttachment> originalAttachments)
@@ -408,7 +389,7 @@ public class PdfAttachmentHandler {
         return indexToFilenameMap;
     }
 
-    private static void addAttachmentAnnotationsToDocumentWithMapping(
+    private void addAttachmentAnnotationsToDocumentWithMapping(
             PDDocument document,
             List<EmlParser.EmailAttachment> attachments,
             Map<Integer, String> indexToFilenameMap)
@@ -456,7 +437,7 @@ public class PdfAttachmentHandler {
         }
     }
 
-    private static EmlParser.EmailAttachment findAttachmentByFilename(
+    private EmlParser.EmailAttachment findAttachmentByFilename(
             List<EmlParser.EmailAttachment> attachments, String targetFilename) {
         if (targetFilename == null || targetFilename.trim().isEmpty()) {
             return null;
@@ -488,7 +469,7 @@ public class PdfAttachmentHandler {
         return null;
     }
 
-    private static String findEmbeddedFilenameForAttachment(
+    private String findEmbeddedFilenameForAttachment(
             EmlParser.EmailAttachment attachment, Map<Integer, String> indexToFilenameMap) {
 
         String attachmentFilename = attachment.getFilename();
@@ -509,7 +490,7 @@ public class PdfAttachmentHandler {
         return null;
     }
 
-    public static class AttachmentMarkerPositionFinder extends PDFTextStripper {
+    public class AttachmentMarkerPositionFinder extends PDFTextStripper {
         private static final Pattern ATTACHMENT_SECTION_PATTERN =
                 RegexPatternUtils.getInstance().getAttachmentSectionPattern();
         private static final Pattern FILENAME_PATTERN =
@@ -627,7 +608,7 @@ public class PdfAttachmentHandler {
         }
     }
 
-    private static void addAttachmentAnnotationToPageWithMapping(
+    private void addAttachmentAnnotationToPageWithMapping(
             PDDocument document,
             PDPage page,
             EmlParser.EmailAttachment attachment,
@@ -680,7 +661,7 @@ public class PdfAttachmentHandler {
         page.getAnnotations().add(fileAnnotation);
     }
 
-    private static boolean isAscii(String str) {
+    private boolean isAscii(String str) {
         if (str == null) return true;
         for (int i = 0; i < str.length(); i++) {
             if (str.charAt(i) > 127) {
@@ -688,5 +669,22 @@ public class PdfAttachmentHandler {
             }
         }
         return true;
+    }
+
+    @Data
+    public class MarkerPosition {
+        private int pageIndex;
+        private float x;
+        private float y;
+        private String character;
+        private String filename;
+
+        public MarkerPosition(int pageIndex, float x, float y, String character, String filename) {
+            this.pageIndex = pageIndex;
+            this.x = x;
+            this.y = y;
+            this.character = character;
+            this.filename = filename;
+        }
     }
 }

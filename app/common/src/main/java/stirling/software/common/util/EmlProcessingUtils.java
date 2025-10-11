@@ -19,21 +19,21 @@ import stirling.software.common.model.api.converters.HTMLToPdfRequest;
 public class EmlProcessingUtils {
 
     // Style constants
-    private static final int DEFAULT_FONT_SIZE = 12;
-    private static final String DEFAULT_FONT_FAMILY = "Helvetica, sans-serif";
-    private static final float DEFAULT_LINE_HEIGHT = 1.4f;
-    private static final String DEFAULT_ZOOM = "1.0";
-    private static final String DEFAULT_TEXT_COLOR = "#202124";
-    private static final String DEFAULT_BACKGROUND_COLOR = "#ffffff";
-    private static final String DEFAULT_BORDER_COLOR = "#e8eaed";
-    private static final String ATTACHMENT_BACKGROUND_COLOR = "#f9f9f9";
-    private static final String ATTACHMENT_BORDER_COLOR = "#eeeeee";
+    private final int DEFAULT_FONT_SIZE = 12;
+    private final String DEFAULT_FONT_FAMILY = "Helvetica, sans-serif";
+    private final float DEFAULT_LINE_HEIGHT = 1.4f;
+    private final String DEFAULT_ZOOM = "1.0";
+    private final String DEFAULT_TEXT_COLOR = "#202124";
+    private final String DEFAULT_BACKGROUND_COLOR = "#ffffff";
+    private final String DEFAULT_BORDER_COLOR = "#e8eaed";
+    private final String ATTACHMENT_BACKGROUND_COLOR = "#f9f9f9";
+    private final String ATTACHMENT_BORDER_COLOR = "#eeeeee";
 
-    private static final int EML_CHECK_LENGTH = 8192;
-    private static final int MIN_HEADER_COUNT_FOR_VALID_EML = 2;
+    private final int EML_CHECK_LENGTH = 8192;
+    private final int MIN_HEADER_COUNT_FOR_VALID_EML = 2;
 
     // MIME type detection
-    private static final Map<String, String> EXTENSION_TO_MIME_TYPE =
+    private final Map<String, String> EXTENSION_TO_MIME_TYPE =
             Map.of(
                     ".png", MediaType.IMAGE_PNG_VALUE,
                     ".jpg", MediaType.IMAGE_JPEG_VALUE,
@@ -46,7 +46,7 @@ public class EmlProcessingUtils {
                     ".tiff", "image/tiff",
                     ".tif", "image/tiff");
 
-    public static void validateEmlInput(byte[] emlBytes) {
+    public void validateEmlInput(byte[] emlBytes) {
         if (emlBytes == null || emlBytes.length == 0) {
             throw new IllegalArgumentException("EML file is empty or null");
         }
@@ -56,7 +56,7 @@ public class EmlProcessingUtils {
         }
     }
 
-    private static boolean isInvalidEmlFormat(byte[] emlBytes) {
+    private boolean isInvalidEmlFormat(byte[] emlBytes) {
         try {
             int checkLength = Math.min(emlBytes.length, EML_CHECK_LENGTH);
             String content;
@@ -101,7 +101,7 @@ public class EmlProcessingUtils {
         }
     }
 
-    public static String generateEnhancedEmailHtml(
+    public String generateEnhancedEmailHtml(
             EmlParser.EmailContent content,
             EmlToPdfRequest request,
             CustomHtmlSanitizer customHtmlSanitizer) {
@@ -190,7 +190,7 @@ public class EmlProcessingUtils {
         return html.toString();
     }
 
-    public static String processEmailHtmlBody(
+    public String processEmailHtmlBody(
             String htmlBody,
             EmlParser.EmailContent emailContent,
             CustomHtmlSanitizer customHtmlSanitizer) {
@@ -217,8 +217,7 @@ public class EmlProcessingUtils {
         return processed;
     }
 
-    public static String convertTextToHtml(
-            String textBody, CustomHtmlSanitizer customHtmlSanitizer) {
+    public String convertTextToHtml(String textBody, CustomHtmlSanitizer customHtmlSanitizer) {
         if (textBody == null) return "";
 
         String html =
@@ -246,7 +245,7 @@ public class EmlProcessingUtils {
         return html;
     }
 
-    private static void appendEnhancedStyles(StringBuilder html) {
+    private void appendEnhancedStyles(StringBuilder html) {
         String css =
                 String.format(
                         """
@@ -388,7 +387,7 @@ public class EmlProcessingUtils {
         html.append(css);
     }
 
-    private static void appendAttachmentsSection(
+    private void appendAttachmentsSection(
             StringBuilder html,
             EmlParser.EmailContent content,
             EmlToPdfRequest request,
@@ -453,7 +452,7 @@ public class EmlProcessingUtils {
         html.append("</div>\n");
     }
 
-    public static HTMLToPdfRequest createHtmlRequest(EmlToPdfRequest request) {
+    public HTMLToPdfRequest createHtmlRequest(EmlToPdfRequest request) {
         HTMLToPdfRequest htmlRequest = new HTMLToPdfRequest();
 
         if (request != null) {
@@ -464,7 +463,7 @@ public class EmlProcessingUtils {
         return htmlRequest;
     }
 
-    public static String detectMimeType(String filename, String existingMimeType) {
+    public String detectMimeType(String filename, String existingMimeType) {
         if (existingMimeType != null && !existingMimeType.isEmpty()) {
             return existingMimeType;
         }
@@ -481,7 +480,7 @@ public class EmlProcessingUtils {
         return MediaType.IMAGE_PNG_VALUE; // Default MIME type
     }
 
-    public static String decodeUrlEncoded(String encoded) {
+    public String decodeUrlEncoded(String encoded) {
         try {
             return java.net.URLDecoder.decode(encoded, StandardCharsets.UTF_8);
         } catch (Exception e) {
@@ -489,7 +488,7 @@ public class EmlProcessingUtils {
         }
     }
 
-    public static String decodeMimeHeader(String encodedText) {
+    public String decodeMimeHeader(String encodedText) {
         if (encodedText == null || encodedText.trim().isEmpty()) {
             return encodedText;
         }
@@ -555,7 +554,7 @@ public class EmlProcessingUtils {
         }
     }
 
-    private static String decodeQuotedPrintable(String encodedText, String charset) {
+    private String decodeQuotedPrintable(String encodedText, String charset) {
         StringBuilder result = new StringBuilder();
         for (int i = 0; i < encodedText.length(); i++) {
             char c = encodedText.charAt(i);
@@ -598,7 +597,7 @@ public class EmlProcessingUtils {
         }
     }
 
-    public static String escapeHtml(String text) {
+    public String escapeHtml(String text) {
         if (text == null) return "";
         return text.replace("&", "&amp;")
                 .replace("<", "&lt;")
@@ -607,7 +606,7 @@ public class EmlProcessingUtils {
                 .replace("'", "&#39;");
     }
 
-    public static String sanitizeText(String text, CustomHtmlSanitizer customHtmlSanitizer) {
+    public String sanitizeText(String text, CustomHtmlSanitizer customHtmlSanitizer) {
         if (customHtmlSanitizer != null) {
             return customHtmlSanitizer.sanitize(text);
         } else {
@@ -615,7 +614,7 @@ public class EmlProcessingUtils {
         }
     }
 
-    public static String simplifyHtmlContent(String htmlContent) {
+    public String simplifyHtmlContent(String htmlContent) {
         String simplified =
                 RegexPatternUtils.getInstance()
                         .getScriptTagPattern()
