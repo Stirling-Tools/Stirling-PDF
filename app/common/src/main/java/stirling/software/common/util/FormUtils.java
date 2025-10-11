@@ -229,6 +229,8 @@ public class FormUtils {
         }
 
         if (values != null && !values.isEmpty()) {
+            acroForm.setCacheFields(true);
+
             Map<String, PDField> lookup = new LinkedHashMap<>();
             for (PDField field : acroForm.getFieldTree()) {
                 String fqName = field.getFullyQualifiedName();
@@ -271,17 +273,32 @@ public class FormUtils {
         }
     }
 
-    private void flattenEntireDocument(PDDocument document, PDAcroForm acroForm)
-            throws IOException {
+    private void flattenFormOnly(PDDocument document, PDAcroForm acroForm) throws IOException {
+        if (document == null || acroForm == null) {
+            return;
+        }
+
+        try {
+            acroForm.flatten();
+        } catch (Exception e) {
+            log.warn("Failed to flatten AcroForm: {}", e.getMessage(), e);
+            throw new IOException("Form flattening failed: " + e.getMessage(), e);
+        }
+    }
+
+    private void flattenViaRendering(PDDocument document, PDAcroForm acroForm) throws IOException {
         if (document == null) {
             return;
         }
 
+        // Remove the AcroForm structure first since we're rendering everything
         if (acroForm != null) {
             try {
-                acroForm.flatten();
+                if (document.getDocumentCatalog() != null) {
+                    document.getDocumentCatalog().setAcroForm(null);
+                }
             } catch (Exception e) {
-                log.warn("Failed to flatten AcroForm: {}", e.getMessage(), e);
+                log.debug("Failed to remove AcroForm before rendering: {}", e.getMessage());
             }
         }
 
@@ -295,9 +312,33 @@ public class FormUtils {
                         : 300;
 
         rebuildDocumentFromImages(document, renderer, requestedDpi);
-        if (document.getDocumentCatalog() != null) {
-            document.getDocumentCatalog().setAcroForm(null);
+    }
+
+    /**
+     * Flattens the document using the standard approach first, with fallback to rendering if
+     * standard flattening fails. This preserves the current method signature while improving the
+     * implementation strategy.
+     */
+    private void flattenEntireDocument(PDDocument document, PDAcroForm acroForm)
+            throws IOException {
+        if (document == null) {
+            return;
         }
+
+        if (acroForm != null) {
+            try {
+                // Attempt standard flattening first (preserves searchability)
+                flattenFormOnly(document, acroForm);
+                return;
+            } catch (Exception e) {
+                log.warn(
+                        "Standard form flattening failed, falling back to rendering approach: {}",
+                        e.getMessage());
+            }
+        }
+
+        // Fallback: Use rendering approach (loses searchability but more robust)
+        flattenViaRendering(document, acroForm);
     }
 
     private void rebuildDocumentFromImages(PDDocument document, PDFRenderer renderer, int dpi)
@@ -419,7 +460,6 @@ public class FormUtils {
     private void ensureAppearances(PDAcroForm acroForm) {
         if (acroForm == null) return;
 
-        boolean originalNeedAppearances = acroForm.getNeedAppearances();
         acroForm.setNeedAppearances(true);
         try {
             try {
@@ -447,14 +487,16 @@ public class FormUtils {
             acroForm.refreshAppearances();
         } catch (IOException e) {
             log.warn("Failed to refresh form appearances: {}", e.getMessage(), e);
-        } finally {
-            if (!originalNeedAppearances) {
-                try {
-                    acroForm.setNeedAppearances(false);
-                } catch (Exception ignored) {
-                    acroForm.getCOSObject().setBoolean(COSName.NEED_APPEARANCES, false);
-                }
-            }
+            return; // Don't set NeedAppearances to false if refresh failed
+        }
+
+        // After successful appearance generation, set NeedAppearances to false
+        // to signal that appearance streams are now embedded authoritatively
+        try {
+            acroForm.setNeedAppearances(false);
+        } catch (Exception ignored) {
+            // Fallback to direct COS manipulation if the setter fails
+            acroForm.getCOSObject().setBoolean(COSName.NEED_APPEARANCES, false);
         }
     }
 
