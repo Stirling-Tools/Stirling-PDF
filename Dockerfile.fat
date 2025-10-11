@@ -52,7 +52,6 @@ ENV DISABLE_ADDITIONAL_FEATURES=true \
     TEMP=/tmp/stirling-pdf \
     TMP=/tmp/stirling-pdf
 
-
 # JDK for app
 RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/apk/repositories && \
     echo "@community https://dl-cdn.alpinelinux.org/alpine/edge/community" | tee -a /etc/apk/repositories && \
@@ -90,13 +89,17 @@ RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/a
     py3-pip \
     py3-pillow@testing \
     py3-pdf2image@testing \
-    # Calibre for eBook conversions & requires these dependencies
+    # Calibre for eBook conversions & requires these dependencies (Alpine equivalents)
     wget \
     xz-utils \
-    libopengl0 \
-    libxcb-cursor0 \
-    && wget -nv -O- https://download.calibre-ebook.com/linux-installer.sh | sh /dev/stdin \
-    && python3 -m venv /opt/venv && \
+    mesa-gl \  # Equivalent to libopengl0 (provides OpenGL libs)
+    xcb-util-cursor \  # Equivalent to libxcb-cursor0 (provides libxcb-cursor.so.0)
+    libx11 \  # Common follow-up dep for X11
+    libxext \  # For X extensions
+    gcompat \  # glibc compat for Calibre binaries
+    && wget -nv -O- https://download.calibre-ebook.com/linux-installer.sh | sh /dev/stdin install_dir=/opt/calibre && \
+    ln -s /opt/calibre/bin/* /usr/local/bin/ && \  # Symlink for PATH
+    python3 -m venv /opt/venv && \
     /opt/venv/bin/pip install --no-cache-dir --upgrade pip setuptools && \
     /opt/venv/bin/pip install --no-cache-dir --upgrade unoserver weasyprint && \
     ln -s /usr/lib/libreoffice/program/uno.py /opt/venv/lib/python3.12/site-packages/ && \
