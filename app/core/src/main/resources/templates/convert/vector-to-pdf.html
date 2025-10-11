@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html th:data-language="${#locale.toString()}" th:dir="#{language.direction}" th:lang="${#locale.language}"
+  xmlns:th="https://www.thymeleaf.org">
+
+<head>
+  <th:block th:insert="~{fragments/common :: head(title=#{vectorToPdf.title}, header=#{vectorToPdf.header})}"></th:block>
+</head>
+
+<body>
+  <th:block th:insert="~{fragments/common :: game}"></th:block>
+  <div id="page-container">
+    <div id="content-wrap">
+      <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+      <br><br>
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-md-6 bg-card">
+            <div class="tool-header">
+              <span class="material-symbols-rounded tool-header-icon convertto">picture_as_pdf</span>
+              <span class="tool-header-text" th:text="#{vectorToPdf.header}"></span>
+            </div>
+            <form enctype="multipart/form-data" method="post" th:action="@{'/api/v1/convert/vector/pdf'}">
+              <div
+                th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='.ps,.eps,.epsf,application/pdf')}">
+              </div>
+              <div class="form-check mb-3">
+                <input id="prepress" name="prepress" type="checkbox" value="true">
+                <label for="prepress" th:text="#{vectorToPdf.prepress}"></label>
+              </div>
+              <button class="btn btn-primary" id="submitBtn" th:text="#{vectorToPdf.submit}" type="submit"></button>
+            </form>
+            <p class="mt-3" th:text="#{vectorToPdf.description}"></p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+  </div>
+</body>
+
+</html>
