@@ -90,9 +90,13 @@ RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/a
     py3-pip \
     py3-pillow@testing \
     py3-pdf2image@testing \
-    # Calibre for eBook conversions
-    calibre@testing && \
-    python3 -m venv /opt/venv && \
+    # Calibre for eBook conversions & requires these dependencies
+    wget \
+    xz-utils \
+    libopengl0 \
+    libxcb-cursor0 \
+    && wget -nv -O- https://download.calibre-ebook.com/linux-installer.sh | sh /dev/stdin \
+    && python3 -m venv /opt/venv && \
     /opt/venv/bin/pip install --no-cache-dir --upgrade pip setuptools && \
     /opt/venv/bin/pip install --no-cache-dir --upgrade unoserver weasyprint && \
     ln -s /usr/lib/libreoffice/program/uno.py /opt/venv/lib/python3.12/site-packages/ && \
