@@ -73,7 +73,7 @@ public class FormCopyUtils {
         newAcroForm.setDefaultResources(dr);
         newAcroForm.setDefaultAppearance("/Helv 12 Tf 0 g");
 
-        // Do not mutate the source AcroForm; skip bad widgets during copy
+        // Temporarily set NeedAppearances to true during field creation
         newAcroForm.setNeedAppearances(true);
 
         Map<String, Integer> fieldNameCounters = new HashMap<>();
@@ -124,16 +124,36 @@ public class FormCopyUtils {
                     widgetFieldMap);
         }
 
-        // Refresh appearances to ensure widgets render correctly across viewers
+        // Generate appearance streams and embed them authoritatively
+        boolean appearancesGenerated = false;
         try {
             // Use reflection to avoid compile-time dependency on PDFBox version
             Method m = newAcroForm.getClass().getMethod("refreshAppearances");
             m.invoke(newAcroForm);
+            appearancesGenerated = true;
         } catch (NoSuchMethodException nsme) {
             log.warn(
-                    "AcroForm.refreshAppearances() not available in this PDFBox version; relying on NeedAppearances.");
+                    "AcroForm.refreshAppearances() not available in this PDFBox version; "
+                            + "leaving NeedAppearances=true for viewer-side rendering.");
         } catch (Exception t) {
-            log.warn("Failed to refresh field appearances via AcroForm: {}", t.getMessage(), t);
+            log.warn(
+                    "Failed to refresh field appearances via AcroForm: {}. "
+                            + "Leaving NeedAppearances=true as fallback.",
+                    t.getMessage(),
+                    t);
+        }
+
+        // After successful appearance generation, set NeedAppearances to false
+        // to signal that appearance streams are now embedded authoritatively
+        if (appearancesGenerated) {
+            try {
+                newAcroForm.setNeedAppearances(false);
+            } catch (Exception e) {
+                log.debug(
+                        "Failed to set NeedAppearances to false: {}. "
+                                + "Appearances were generated but flag could not be updated.",
+                        e.getMessage());
+            }
         }
     }
 
