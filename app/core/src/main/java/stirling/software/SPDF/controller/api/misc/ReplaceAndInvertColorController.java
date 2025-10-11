@@ -3,7 +3,6 @@ package stirling.software.SPDF.controller.api.misc;
 import java.io.IOException;
 
 import org.springframework.core.io.InputStreamResource;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -18,6 +17,8 @@ import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.model.api.misc.ReplaceAndInvertColorRequest;
 import stirling.software.SPDF.service.misc.ReplaceAndInvertColorService;
+import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.WebResponseUtils;
 
 @RestController
 @RequestMapping("/api/v1/misc")
@@ -33,7 +34,7 @@ public class ReplaceAndInvertColorController {
             description =
                     "This endpoint accepts a PDF file and provides options to invert all colors, replace"
                             + " text and background colors, or convert to CMYK color space for printing. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<InputStreamResource> replaceAndInvertColor(
+    public ResponseEntity<byte[]> replaceAndInvertColor(
             @ModelAttribute ReplaceAndInvertColorRequest request) throws IOException {
 
         InputStreamResource resource =
@@ -45,9 +46,10 @@ public class ReplaceAndInvertColorController {
                         request.getTextColor());
 
         // Return the modified PDF as a downloadable file
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=inverted.pdf")
-                .contentType(MediaType.APPLICATION_PDF)
-                .body(resource);
+        String filename =
+                GeneralUtils.generateFilename(
+                        request.getFileInput().getOriginalFilename(), "_inverted.pdf");
+        return WebResponseUtils.bytesToWebResponse(
+                resource.getContentAsByteArray(), filename, MediaType.APPLICATION_PDF);
     }
 }
