@@ -1,7 +1,6 @@
 package stirling.software.SPDF.controller.api;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import java.io.ByteArrayOutputStream;

@@ -2,7 +2,6 @@ package stirling.software.proprietary.security.filter;
 
 import static stirling.software.common.util.RequestUriUtils.isStaticResource;
 import static stirling.software.proprietary.security.model.AuthenticationType.*;
-import static stirling.software.proprietary.security.model.AuthenticationType.SAML2;
 
 import java.io.IOException;
 import java.sql.SQLException;
