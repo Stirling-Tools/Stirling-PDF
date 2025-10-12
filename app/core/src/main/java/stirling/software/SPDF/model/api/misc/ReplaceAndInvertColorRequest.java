@@ -6,8 +6,8 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import stirling.software.common.model.api.PDFFile;
-import stirling.software.common.model.api.misc.HighContrastColorCombination;
 import stirling.software.common.model.api.misc.ReplaceAndInvert;
+import stirling.software.common.model.enumeration.HighContrastColorCombination;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
