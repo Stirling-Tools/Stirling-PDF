@@ -63,7 +63,10 @@ public class InitialSecuritySetup {
 
         boolean jwtEnabled = jwtProperties.isEnabled();
         if (!v2Enabled || !jwtEnabled) {
-            log.debug("V2 enabled: {}, JWT enabled: {} - disabling all JWT features", v2Enabled, jwtEnabled);
+            log.debug(
+                    "V2 enabled: {}, JWT enabled: {} - disabling all JWT features",
+                    v2Enabled,
+                    jwtEnabled);
 
             jwtProperties.setKeyCleanup(false);
         }
