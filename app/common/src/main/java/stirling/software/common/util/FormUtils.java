@@ -314,6 +314,8 @@ public class FormUtils {
         rebuildDocumentFromImages(document, renderer, requestedDpi);
     }
 
+    // note: this implementation suffers from:
+    // https://issues.apache.org/jira/browse/PDFBOX-5962
     private void flattenEntireDocument(PDDocument document, PDAcroForm acroForm)
             throws IOException {
         if (document == null) {
