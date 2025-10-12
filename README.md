@@ -64,7 +64,7 @@ All documentation available at [https://docs.stirlingpdf.com/](https://docs.stir
 - **PDF to PDF/A**: Convert to archival (PDF/A-1b, PDF/A-2b) format
 - **PDF to Markdown**: Convert PDF to Markdown
 - **PDF to CBZ**: Convert to comic book archive
-- **PDF to CBR**: Convert to comic book rar archive
+- **PDF to CBR**: Convert to comic book rar archive (requires [RAR setup](HowToSetupRAR.md))
 
 #### Sign & Security
 - **Sign**: Add digital signatures
