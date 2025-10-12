@@ -314,30 +314,12 @@ public class FormUtils {
         rebuildDocumentFromImages(document, renderer, requestedDpi);
     }
 
-    /**
-     * Flattens the document using the standard approach first, with fallback to rendering if
-     * standard flattening fails. This preserves the current method signature while improving the
-     * implementation strategy.
-     */
     private void flattenEntireDocument(PDDocument document, PDAcroForm acroForm)
             throws IOException {
         if (document == null) {
             return;
         }
 
-        if (acroForm != null) {
-            try {
-                // Attempt standard flattening first (preserves searchability)
-                flattenFormOnly(document, acroForm);
-                return;
-            } catch (Exception e) {
-                log.warn(
-                        "Standard form flattening failed, falling back to rendering approach: {}",
-                        e.getMessage());
-            }
-        }
-
-        // Fallback: Use rendering approach (loses searchability but more robust)
         flattenViaRendering(document, acroForm);
     }
 
