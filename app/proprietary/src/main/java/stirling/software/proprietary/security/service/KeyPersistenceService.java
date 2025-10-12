@@ -84,7 +84,7 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
 
     @PostConstruct
     public void initializeKeystore() {
-        if (!isKeystoreEnabled()) {
+        if (!jwtProperties.isEnabled()) {
             return;
         }
 
@@ -132,7 +132,7 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
 
     @Override
     public Optional<KeyPair> getKeyPair(String keyId) {
-        if (!isKeystoreEnabled()) {
+        if (!jwtProperties.isEnabled()) {
             return Optional.empty();
         }
 
@@ -153,11 +153,6 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
             log.error("Failed to load keypair for keyId: {}", keyId, e);
             return Optional.empty();
         }
-    }
-
-    @Override
-    public boolean isKeystoreEnabled() {
-        return jwtProperties.isEnableKeystore();
     }
 
     @Override
@@ -267,5 +262,9 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
         X509EncodedKeySpec keySpec = new X509EncodedKeySpec(keyBytes);
         KeyFactory keyFactory = KeyFactory.getInstance("RSA");
         return keyFactory.generatePublic(keySpec);
+    }
+
+    public boolean isKeystoreEnabled() {
+        return jwtProperties.isEnabled();
     }
 }

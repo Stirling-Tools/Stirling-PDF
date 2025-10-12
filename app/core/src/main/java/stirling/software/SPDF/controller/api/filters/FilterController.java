@@ -70,6 +70,7 @@ public class FilterController {
         return ResponseEntity.noContent().build();
     }
 
+		   
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/filter-contains-image")
     @Operation(
             summary = "Checks if a PDF contains an image",
@@ -186,6 +187,7 @@ public class FilterController {
         long fileSize = request.getFileSize();
         String comparator = request.getComparator();
 
+							
         long actualFileSize = inputFile.getSize();
         boolean valid = compare(actualFileSize, fileSize, comparator);
 

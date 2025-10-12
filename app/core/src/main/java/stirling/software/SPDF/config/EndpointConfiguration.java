@@ -386,6 +386,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Java", "pdf-to-markdown");
         addEndpointToGroup("Java", "add-attachments");
         addEndpointToGroup("Java", "compress-pdf");
+        addEndpointToGroup("rar", "pdf-to-cbr");
 
         // Javascript
         addEndpointToGroup("Javascript", "pdf-organizer");
@@ -400,6 +401,8 @@ public class EndpointConfiguration {
         /* Ghostscript */
         addEndpointToGroup("Ghostscript", "repair");
         addEndpointToGroup("Ghostscript", "compress-pdf");
+        addEndpointToGroup("Ghostscript", "crop");
+        addEndpointToGroup("Ghostscript", "replace-invert-pdf");
 
         /* tesseract */
         addEndpointToGroup("tesseract", "ocr-pdf");
@@ -483,7 +486,8 @@ public class EndpointConfiguration {
                 || "Java".equals(group)
                 || "Javascript".equals(group)
                 || "Weasyprint".equals(group)
-                || "Pdftohtml".equals(group);
+                || "Pdftohtml".equals(group)
+                || "rar".equals(group);
     }
 
     private boolean isEndpointEnabledDirectly(String endpoint) {

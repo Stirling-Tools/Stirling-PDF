@@ -2,7 +2,7 @@ plugins {
     id "java"
     id "jacoco"
     id "io.spring.dependency-management" version "1.1.7"
-    id "org.springframework.boot" version "3.5.5"
+    id "org.springframework.boot" version "3.5.6"
     id "org.springdoc.openapi-gradle-plugin" version "1.9.0"
     id "io.swagger.swaggerhub" version "1.3.2"
     id "edu.sc.seis.launch4j" version "4.0.0"
@@ -21,14 +21,14 @@ import java.nio.file.Files
 import java.time.Year
 
 ext {
-    springBootVersion = "3.5.5"
+    springBootVersion = "3.5.6"
     pdfboxVersion = "3.0.5"
     imageioVersion = "3.12.0"
-    lombokVersion = "1.18.38"
-    bouncycastleVersion = "1.81"
-    springSecuritySamlVersion = "6.5.3"
+    lombokVersion = "1.18.42"
+    bouncycastleVersion = "1.82"
+    springSecuritySamlVersion = "6.5.5"
     openSamlVersion = "4.3.2"
-    commonmarkVersion = "0.25.1"
+    commonmarkVersion = "0.26.0"
     googleJavaFormatVersion = "1.28.0"
     junitPlatformVersion = "1.12.2"
     tempJrePath = null
@@ -65,7 +65,7 @@ repositories {
 
 allprojects {
     group = 'stirling.software'
-    version = '1.3.2'
+    version = '1.4.0'
 
     configurations.configureEach {
         exclude group: 'commons-logging', module: 'commons-logging'
@@ -127,8 +127,8 @@ subprojects {
         implementation 'io.github.pixee:java-security-toolkit:1.2.2'
 
         //tmp for security bumps
-        implementation 'ch.qos.logback:logback-core:1.5.18'
-        implementation 'ch.qos.logback:logback-classic:1.5.18'
+        implementation 'ch.qos.logback:logback-core:1.5.19'
+        implementation 'ch.qos.logback:logback-classic:1.5.19'
         compileOnly "org.projectlombok:lombok:$lombokVersion"
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
 

@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -34,15 +36,20 @@ import org.springframework.web.multipart.MultipartFile;
 
 import io.github.pixee.security.Filenames;
 
+import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 
 @Slf4j
+@UtilityClass
 public class PdfUtils {
 
-    public static PDRectangle textToPageSize(String size) {
+    private final RegexPatternUtils patternCache = RegexPatternUtils.getInstance();
+
+    public PDRectangle textToPageSize(String size) {
+
         switch (size.toUpperCase()) {
             case "A0" -> {
                 return PDRectangle.A0;
@@ -75,7 +82,7 @@ public class PdfUtils {
         }
     }
 
-    public static List<RenderedImage> getAllImages(PDResources resources) throws IOException {
+    public List<RenderedImage> getAllImages(PDResources resources) throws IOException {
         List<RenderedImage> images = new ArrayList<>();
 
         for (COSName name : resources.getXObjectNames()) {
@@ -92,7 +99,7 @@ public class PdfUtils {
         return images;
     }
 
-    public static boolean hasImages(PDDocument document, String pagesToCheck) throws IOException {
+    public boolean hasImages(PDDocument document, String pagesToCheck) throws IOException {
         String[] pageOrderArr = pagesToCheck.split(",");
         List<Integer> pageList =
                 GeneralUtils.parsePageList(pageOrderArr, document.getNumberOfPages());
@@ -107,7 +114,7 @@ public class PdfUtils {
         return false;
     }
 
-    public static boolean hasText(PDDocument document, String pageNumbersToCheck, String phrase)
+    public boolean hasText(PDDocument document, String pageNumbersToCheck, String phrase)
             throws IOException {
         String[] pageOrderArr = pageNumbersToCheck.split(",");
         List<Integer> pageList =
@@ -123,11 +130,11 @@ public class PdfUtils {
         return false;
     }
 
-    public static boolean hasImagesOnPage(PDPage page) throws IOException {
-        return getAllImages(page.getResources()).size() > 0;
+    public boolean hasImagesOnPage(PDPage page) throws IOException {
+        return !getAllImages(page.getResources()).isEmpty();
     }
 
-    public static boolean hasTextOnPage(PDPage page, String phrase) throws IOException {
+    public boolean hasTextOnPage(PDPage page, String phrase) throws IOException {
         PDFTextStripper textStripper = new PDFTextStripper();
         PDDocument tempDoc = new PDDocument();
         tempDoc.addPage(page);
@@ -136,7 +143,7 @@ public class PdfUtils {
         return pageText.contains(phrase);
     }
 
-    public static byte[] convertFromPdf(
+    public byte[] convertFromPdf(
             CustomPDFDocumentFactory pdfDocumentFactory,
             byte[] inputStream,
             String imageType,
@@ -379,7 +386,7 @@ public class PdfUtils {
      * @return converted document to PDF-Image
      * @throws IOException if conversion fails
      */
-    public static PDDocument convertPdfToPdfImage(PDDocument document) throws IOException {
+    public PDDocument convertPdfToPdfImage(PDDocument document) throws IOException {
         PDDocument imageDocument = new PDDocument();
         PDFRenderer pdfRenderer = new PDFRenderer(document);
         pdfRenderer.setSubsamplingAllowed(true);
@@ -428,8 +435,7 @@ public class PdfUtils {
         return imageDocument;
     }
 
-    private static BufferedImage prepareImageForPdfToImage(
-            int maxWidth, int height, String imageType) {
+    private BufferedImage prepareImageForPdfToImage(int maxWidth, int height, String imageType) {
         BufferedImage combined;
         if ("png".equalsIgnoreCase(imageType)) {
             combined = new BufferedImage(maxWidth, height, BufferedImage.TYPE_INT_ARGB);
@@ -445,7 +451,7 @@ public class PdfUtils {
         return combined;
     }
 
-    public static byte[] imageToPdf(
+    public byte[] imageToPdf(
             MultipartFile[] files,
             String fitOption,
             boolean autoRotate,
@@ -489,7 +495,7 @@ public class PdfUtils {
         }
     }
 
-    public static void addImageToDocument(
+    public void addImageToDocument(
             PDDocument doc, PDImageXObject image, String fitOption, boolean autoRotate)
             throws IOException {
         boolean imageIsLandscape = image.getWidth() > image.getHeight();
@@ -539,7 +545,7 @@ public class PdfUtils {
         }
     }
 
-    public static byte[] overlayImage(
+    public byte[] overlayImage(
             CustomPDFDocumentFactory pdfDocumentFactory,
             byte[] pdfBytes,
             byte[] imageBytes,
@@ -586,8 +592,11 @@ public class PdfUtils {
         if (pagesToCheck == null || "all".equals(pagesToCheck)) {
             pdfText = new StringBuilder(textStripper.getText(pdfDocument));
         } else {
-            // remove whitespaces
-            pagesToCheck = pagesToCheck.replaceAll("\\s+", "");
+            // remove whitespaces using cached pattern
+            Pattern whitespacePattern =
+                    patternCache.getPattern(RegexPatternUtils.getWhitespaceRegex());
+            Matcher whitespaceMatcher = whitespacePattern.matcher(pagesToCheck);
+            pagesToCheck = whitespaceMatcher.replaceAll("");
 
             String[] splitPoints = pagesToCheck.split(",");
             for (String splitPoint : splitPoints) {
@@ -622,16 +631,13 @@ public class PdfUtils {
         int actualPageCount = pdfDocument.getNumberOfPages();
         pdfDocument.close();
 
-        switch (comparator.toLowerCase()) {
-            case "greater":
-                return actualPageCount > pageCount;
-            case "equal":
-                return actualPageCount == pageCount;
-            case "less":
-                return actualPageCount < pageCount;
-            default:
-                throw ExceptionUtils.createInvalidArgumentException("comparator", comparator);
-        }
+        return switch (comparator.toLowerCase()) {
+            case "greater" -> actualPageCount > pageCount;
+            case "equal" -> actualPageCount == pageCount;
+            case "less" -> actualPageCount < pageCount;
+            default ->
+                    throw ExceptionUtils.createInvalidArgumentException("comparator", comparator);
+        };
     }
 
     public boolean pageSize(PDDocument pdfDocument, String expectedPageSize) throws IOException {
