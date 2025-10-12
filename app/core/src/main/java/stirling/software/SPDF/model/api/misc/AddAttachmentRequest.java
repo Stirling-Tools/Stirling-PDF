@@ -17,7 +17,6 @@ public class AddAttachmentRequest extends PDFFile {
 
     @Schema(
             description = "The image file to be overlaid onto the PDF.",
-            requiredMode = Schema.RequiredMode.REQUIRED,
-            format = "binary")
+            requiredMode = Schema.RequiredMode.REQUIRED)
     private List<MultipartFile> attachments;
 }

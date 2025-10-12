@@ -12,14 +12,13 @@ import lombok.EqualsAndHashCode;
 public class ExtractImageScansRequest {
     @Schema(
             description = "The input file containing image scans",
-            requiredMode = Schema.RequiredMode.REQUIRED,
-            format = "binary")
+            requiredMode = Schema.RequiredMode.REQUIRED)
     private MultipartFile fileInput;
 
     @Schema(
             description = "The angle threshold for the image scan extraction",
             requiredMode = Schema.RequiredMode.REQUIRED,
-            defaultValue = "5")
+            defaultValue = "10")
     private int angleThreshold;
 
     @Schema(

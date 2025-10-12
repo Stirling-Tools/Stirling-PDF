@@ -16,6 +16,7 @@ public class AddStampRequest extends PDFWithPageNums {
     @Schema(
             description = "The stamp type (text or image)",
             allowableValues = {"text", "image"},
+            defaultValue = "text",
             requiredMode = Schema.RequiredMode.REQUIRED)
     private String stampType;
 
@@ -27,13 +28,14 @@ public class AddStampRequest extends PDFWithPageNums {
 
     @Schema(
             description = "The selected alphabet of the stamp text",
-            allowableValues = {"roman", "arabic", "japanese", "korean", "chinese"},
+            allowableValues = {"roman", "arabic", "japanese", "korean", "chinese", "thai"},
             defaultValue = "roman")
     private String alphabet = "roman";
 
     @Schema(
             description = "The font size of the stamp text and image",
             defaultValue = "30",
+            minimum = "1",
             requiredMode = Schema.RequiredMode.REQUIRED)
     private float fontSize;
 
@@ -45,17 +47,19 @@ public class AddStampRequest extends PDFWithPageNums {
 
     @Schema(
             description = "The opacity of the stamp (0.0 - 1.0)",
+            minimum = "0.0",
+            maximum = "1.0",
             defaultValue = "0.5",
             requiredMode = Schema.RequiredMode.REQUIRED)
     private float opacity;
 
     @Schema(
             description =
-                    "Position for stamp placement based on a 1-9 grid (1: bottom-left, 2: bottom-center,"
-                            + " 3: bottom-right, 4: middle-left, 5: middle-center, 6: middle-right,"
-                            + " 7: top-left, 8: top-center, 9: top-right)",
+                    "Position for stamp placement based on a 1-9 grid (1: top-left, 2: top-center,"
+                            + " 3: top-right, 4: middle-left, 5: middle-center, 6: middle-right,"
+                            + " 7: bottom-left, 8: bottom-center, 9: bottom-right)",
             allowableValues = {"1", "2", "3", "4", "5", "6", "7", "8", "9"},
-            defaultValue = "5",
+            defaultValue = "8",
             requiredMode = Schema.RequiredMode.REQUIRED)
     private int position;
 
@@ -82,6 +86,10 @@ public class AddStampRequest extends PDFWithPageNums {
             requiredMode = Schema.RequiredMode.REQUIRED)
     private String customMargin;
 
-    @Schema(description = "The color of the stamp text", defaultValue = "#d3d3d3")
+    @Schema(
+            description = "The color of the stamp text",
+            defaultValue = "#d3d3d3",
+            pattern = "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$",
+            requiredMode = Schema.RequiredMode.REQUIRED)
     private String customColor;
 }

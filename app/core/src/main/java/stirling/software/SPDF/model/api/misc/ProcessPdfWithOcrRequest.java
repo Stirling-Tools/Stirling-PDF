@@ -21,24 +21,28 @@ public class ProcessPdfWithOcrRequest extends PDFFile {
 
     @Schema(
             description = "Include OCR text in a sidecar text file if set to true",
+            requiredMode = Schema.RequiredMode.REQUIRED,
             allowableValues = {"true", "false"},
             defaultValue = "false")
     private Boolean sidecar;
 
     @Schema(
             description = "Deskew the input file if set to true",
+            requiredMode = Schema.RequiredMode.REQUIRED,
             allowableValues = {"true", "false"},
             defaultValue = "false")
     private Boolean deskew;
 
     @Schema(
             description = "Clean the input file if set to true",
+            requiredMode = Schema.RequiredMode.REQUIRED,
             allowableValues = {"true", "false"},
             defaultValue = "false")
     private Boolean clean;
 
     @Schema(
             description = "Clean the final output if set to true",
+            requiredMode = Schema.RequiredMode.REQUIRED,
             allowableValues = {"true", "false"},
             defaultValue = "false")
     private Boolean cleanFinal;
@@ -46,6 +50,7 @@ public class ProcessPdfWithOcrRequest extends PDFFile {
     @Schema(
             description = "Specify the OCR type, e.g., 'skip-text', 'force-ocr', or 'Normal'",
             requiredMode = Schema.RequiredMode.REQUIRED,
+            defaultValue = "force-ocr",
             allowableValues = {"skip-text", "force-ocr", "Normal"})
     private String ocrType;
 

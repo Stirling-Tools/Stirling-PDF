@@ -38,7 +38,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.model.api.security.SignatureValidationRequest;
-import stirling.software.SPDF.model.api.security.SignatureValidationResult;
+import stirling.software.SPDF.security.SignatureValidationResult;
 import stirling.software.SPDF.service.CertificateValidationService;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;

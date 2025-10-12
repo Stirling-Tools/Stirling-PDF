@@ -16,7 +16,7 @@ public class OverlayImageRequest extends PDFFile {
     @Schema(
             description = "The image file to be overlaid onto the PDF.",
             requiredMode = Schema.RequiredMode.REQUIRED,
-            format = "binary")
+            contentMediaType = "image/*")
     private MultipartFile imageFile;
 
     @Schema(

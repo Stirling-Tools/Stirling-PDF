@@ -28,6 +28,7 @@ public class ManualRedactPdfRequest extends PDFWithPageNums {
     @Schema(
             description = "The color used to fully redact certain pages",
             defaultValue = "#000000",
+            pattern = "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$",
             requiredMode = Schema.RequiredMode.REQUIRED)
     private String pageRedactionColor;
 }

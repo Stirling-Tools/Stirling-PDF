@@ -59,13 +59,14 @@ public class ScannerEffectController {
     @Operation(
             summary = "Apply scanner effect to PDF",
             description =
-                    "Applies various effects to simulate a scanned document, including rotation, noise, and edge softening. Input:PDF Output:PDF Type:SISO")
+                    "Applies various effects to simulate a scanned document, including rotation,"
+                            + " noise, and edge softening. Input:PDF Output:PDF Type:SISO")
     public ResponseEntity<byte[]> scannerEffect(@Valid @ModelAttribute ScannerEffectRequest request)
             throws IOException {
         MultipartFile file = request.getFileInput();
 
         // Apply preset first if needed
-        if (!request.isAdvancedEnabled()) {
+        if (!Boolean.TRUE.equals(request.getAdvancedEnabled())) {
             switch (request.getQuality()) {
                 case high -> request.applyHighQualityPreset();
                 case medium -> request.applyMediumQualityPreset();
@@ -81,7 +82,7 @@ public class ScannerEffectController {
         float contrast = request.getContrast();
         float blur = request.getBlur();
         float noise = request.getNoise();
-        boolean yellowish = request.isYellowish();
+        boolean yellowish = Boolean.TRUE.equals(request.getYellowish());
         int resolution = request.getResolution();
         ScannerEffectRequest.Colorspace colorspace = request.getColorspace();
 
