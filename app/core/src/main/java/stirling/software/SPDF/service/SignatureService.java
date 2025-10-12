@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import org.springframework.stereotype.Service;
-import org.thymeleaf.util.StringUtils;
+import org.springframework.util.StringUtils;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -41,7 +41,7 @@ public class SignatureService {
         List<SignatureFile> signatures = new ArrayList<>();
 
         // Get signatures from user's personal folder
-        if (!StringUtils.isEmptyOrWhitespace(username)) {
+        if (StringUtils.hasText(username)) {
             Path userFolder = Paths.get(SIGNATURE_BASE_PATH, username);
             if (Files.exists(userFolder)) {
                 try {

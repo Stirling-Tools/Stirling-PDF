@@ -11,7 +11,6 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
@@ -20,9 +19,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
-import org.springframework.core.io.ResourceLoader;
 import org.springframework.util.ClassUtils;
-import org.thymeleaf.spring6.SpringTemplateEngine;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -60,6 +57,7 @@ public class AppConfig {
         return v2Enabled;
     }
 
+    /* Commented out Thymeleaf template engine bean - to be removed when frontend migration is complete
     @Bean
     @ConditionalOnProperty(name = "system.customHTMLFiles", havingValue = "true")
     public SpringTemplateEngine templateEngine(ResourceLoader resourceLoader) {
@@ -67,6 +65,7 @@ public class AppConfig {
         templateEngine.addTemplateResolver(new FileFallbackTemplateResolver(resourceLoader));
         return templateEngine;
     }
+    */
 
     @Bean(name = "loginEnabled")
     public boolean loginEnabled() {
@@ -256,12 +255,6 @@ public class AppConfig {
     @Bean(name = "runningEE")
     @Profile("default")
     public boolean runningEnterprise() {
-        return false;
-    }
-
-    @Bean(name = "GoogleDriveEnabled")
-    @Profile("default")
-    public boolean googleDriveEnabled() {
         return false;
     }
 

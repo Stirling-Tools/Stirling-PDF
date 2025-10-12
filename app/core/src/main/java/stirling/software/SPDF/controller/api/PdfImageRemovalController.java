@@ -7,16 +7,15 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.service.PdfImageRemovalService;
+import stirling.software.common.annotations.AutoJobPostMapping;
+import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
@@ -26,9 +25,7 @@ import stirling.software.common.util.WebResponseUtils;
  * Controller class for handling PDF image removal requests. Provides an endpoint to remove images
  * from a PDF file to reduce its size.
  */
-@RestController
-@RequestMapping("/api/v1/general")
-@Tag(name = "General", description = "General APIs")
+@GeneralApi
 @RequiredArgsConstructor
 public class PdfImageRemovalController {
 
@@ -48,12 +45,13 @@ public class PdfImageRemovalController {
      *     content type and filename.
      * @throws IOException If an error occurs while processing the PDF file.
      */
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/remove-image-pdf")
+    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/remove-image-pdf")
+    @StandardPdfResponse
     @Operation(
             summary = "Remove images from file to reduce the file size.",
             description =
                     "This endpoint remove images from file to reduce the file size.Input:PDF"
-                            + " Output:PDF Type:MISO")
+                            + " Output:PDF Type:SISO")
     public ResponseEntity<byte[]> removeImages(@ModelAttribute PDFFile file) throws IOException {
         // Load the PDF document
         PDDocument document = pdfDocumentFactory.load(file);

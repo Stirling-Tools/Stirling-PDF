@@ -3,7 +3,6 @@ ignore = [
     'lang.div',
     'lang.dzo',
     'lang.que',
-    'language.direction',
 ]
 
 [az_AZ]
@@ -193,8 +192,6 @@ ignore = [
     'AddStampRequest.alphabet',
     'AddStampRequest.position',
     'PDFToBook.selectText.1',
-    'PDFToText.tags',
-    'addPageNumbers.selectText.3',
     'adminUserSettings.team',
     'alphabet',
     'audit.dashboard.modal.id',
@@ -204,7 +201,6 @@ ignore = [
     'audit.dashboard.table.details',
     'audit.dashboard.table.id',
     'certSign.name',
-    'cookieBanner.popUp.acceptAllBtn',
     'endpointStatistics.top10',
     'endpointStatistics.top20',
     'fileChooser.dragAndDrop',
@@ -313,9 +309,7 @@ ignore = [
 ]
 
 [fa_IR]
-ignore = [
-    'language.direction',
-]
+ignore = []
 
 [fr_FR]
 ignore = [
@@ -323,7 +317,6 @@ ignore = [
     'AddStampRequest.position',
     'AddStampRequest.rotation',
     'PDFToBook.selectText.1',
-    'addPageNumbers.selectText.3',
     'adminUserSettings.actions',
     'alphabet',
     'compare.document.1',
@@ -523,6 +516,11 @@ ignore = [
 [ml_IN]
 ignore = [
     'lang.iku',
+    'language.direction',
+]
+
+[ml_ML]
+ignore = [
     'language.direction',
 ]
 
@@ -770,7 +768,6 @@ ignore = [
 [sk_SK]
 ignore = [
     'adminUserSettings.admin',
-    'home.multiTool.title',
     'info',
     'lang.ceb',
     'lang.chr',
@@ -974,9 +971,13 @@ ignore = [
     'lang.yid',
     'lang.yor',
     'language.direction',
-    'pipeline.title',
     'pipelineOptions.pipelineHeader',
     'showJS.tags',
+]
+
+[zh_BO]
+ignore = [
+    'language.direction',
 ]
 
 [zh_CN]

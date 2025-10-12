@@ -21,97 +21,81 @@ All documentation available at [https://docs.stirlingpdf.com/](https://docs.stir
 
 ## Features
 
+- 50+ PDF Operations
 - Parallel file processing and downloads
 - Dark mode support
 - Custom download options
-- Custom 'Pipelines' to run multiple features in an automated queue
+- Custom 'Pipelines' to run multiple features in a automated queue
 - API for integration with external scripts
 - Optional Login and Authentication support (see [here](https://docs.stirlingpdf.com/Advanced%20Configuration/System%20and%20Security) for documentation)
-- Enterprise features like SSO (see [here](https://docs.stirlingpdf.com/Advanced%20Configuration/Single%20Sign-On%20Configuration) for documentation)
 - Database Backup and Import (see [here](https://docs.stirlingpdf.com/Advanced%20Configuration/DATABASE) for documentation)
+- Enterprise features like SSO (see [here](https://docs.stirlingpdf.com/Advanced%20Configuration/Single%20Sign-On%20Configuration) for documentation)
 
-### 50+ PDF Operations
+## PDF Features
 
-#### Organise
-- **Merge**: Combine multiple PDFs into one
-- **Split**: Divide PDFs into multiple files
-- **Extract page(s)**: Extract specific pages from PDF
-- **Remove**: Delete pages from PDF
-- **Crop PDF**: Adjust PDF page boundaries
-- **Rotate**: Rotate pages in 90-degree increments
-- **Adjust page size/scale**: Resize page contents
-- **Multi-Page Layout**: Add multiple pages to PDF
-- **PDF to Single Large Page**: Convert to single continuous page
-- **Organize**: Rearrange PDF pages
+### Page Operations
 
-#### Convert to PDF
-- **Image to PDF**: Convert images to PDF format
-- **Convert file to PDF**: Convert various common file types to PDF
-- **HTML to PDF**: Transform HTML documents to PDF
-- **Markdown to PDF**: Convert Markdown files to PDF
-- **CBZ to PDF**: Convert comic book archives
-- **CBR to PDF**: Convert comic book rar archives
-- **Email to PDF**: Convert email files to PDF
+- View and modify PDFs - View multi-page PDFs with custom viewing, sorting, and searching. Plus, on-page edit features like annotating, drawing, and adding text and images. (Using PDF.js with Joxit and Liberation fonts)
+- Full interactive GUI for merging/splitting/rotating/moving PDFs and their pages
+- Merge multiple PDFs into a single resultant file
+- Split PDFs into multiple files at specified page numbers or extract all pages as individual files
+- Reorganize PDF pages into different orders
+- Rotate PDFs in 90-degree increments
+- Remove pages
+- Multi-page layout (format PDFs into a multi-paged page)
+- Scale page contents size by set percentage
+- Adjust contrast
+- Crop PDF
+- Auto-split PDF (with physically scanned page dividers)
+- Extract page(s)
+- Convert PDF to a single page
+- Overlay PDFs on top of each other
+- PDF to a single page
+- Split PDF by sections
 
-#### Convert from PDF
-- **PDF to Word**: Convert to documet (docx, doc, odt) format
-- **PDF to Image**: Extract PDF pages as images
-- **PDF to RTF (Text)**: Convert to Rich Text Format
-- **PDF to Presentation**: Convert to presentation (pptx, ppt, odp) format
-- **PDF to CSV**: Extract tables to CSV
-- **PDF to XML**: Convert to XML format
-- **PDF to HTML**: Transform to HTML
-- **PDF to PDF/A**: Convert to archival (PDF/A-1b, PDF/A-2b) format
-- **PDF to Markdown**: Convert PDF to Markdown
-- **PDF to CBZ**: Convert to comic book archive
-- **PDF to CBR**: Convert to comic book rar archive
+### Conversion Operations
 
-#### Sign & Security
-- **Sign**: Add digital signatures
-- **Remove Password**: Remove PDF security
-- **Add Watermark**: Apply watermarks
-- **Sign with Certificate**: Certificate-based signing
-- **Add Stamp to PDF**: Apply digital stamps
-- **Auto Redact**: Automatically redact content
-- **Change Permissions**: Modify access permissions
-- **Add Password**: Apply PDF encryption
-- **Manual Redaction**: Manual content redaction
-- **Remove Certificate Sign**: Remove digital signatures
-- **Sanitize**: Clean PDF of potential security issues
-- **Validate PDF Signature**: Verify digital signatures
+- Convert PDFs to and from images
+- Convert any common file to PDF (using LibreOffice)
+- Convert PDF to Word/PowerPoint/others (using LibreOffice)
+- Convert HTML to PDF
+- Convert PDF to XML
+- Convert PDF to CSV
+- URL to PDF
+- Markdown to PDF
 
-#### View & Edit
-- **OCR / Cleanup scans**: Optical Character Recognition
-- **Add Image**: Insert images into PDF
-- **Extract Images**: Extract embedded images
-- **Change Metadata**: Edit PDF metadata
-- **Get ALL Info on PDF**: Comprehensive PDF analysis
-- **Advanced Colour options**: Colour manipulation (various options for colour inversion, CMYK conversion)
-- **Compare**: Compare PDF documents
-- **Add Page Numbers**: Insert page numbering
-- **Flatten**: Flatten PDF layers, and interactive elements
-- **Remove Annotations**: Delete comments and markups
-- **Remove Blank pages**: Delete empty pages
-- **Remove Image**: Delete embedded images
-- **View/Edit PDF**: Interactive PDF editing
-- **Unlock PDF Forms**: Enable form editing
-- **Add Attachments**: Attach files to PDF
+### Security & Permissions
 
-#### Advanced
-- **Compress**: Reduce file size
-- **Pipeline**: Automated workflow processing (OCR images pipeline, prepare PDFs for emailing pipeline)
-- **Adjust Colours/Contrast**: Colour and contrast adjustment
-- **Auto Rename PDF File**: Automatic file renaming
-- **Auto Split Pages**: Automatic page splitting
-- **Detect/Split Scanned photos**: Photo detection and splitting
-- **Overlay PDFs**: Layer PDFs over each other
-- **Repair**: Fix corrupted PDFs
-- **Show JavaScript**: Display embedded JavaScript
-- **Auto Split by Size/Count**: Split by file size or page count
-- **Split PDF by Chapters**: Chapter-based splitting
-- **Split PDF by Sections**: Section-based splitting
-- **Scanner Effect**: Apply scanner-like effects
-- **Edit Table of Contents**: Modify PDF bookmarks and TOC
+- Add and remove passwords
+- Change/set PDF permissions
+- Add watermark(s)
+- Certify/sign PDFs
+- Sanitize PDFs
+- Auto-redact text
+
+### Other Operations
+
+- Add/generate/write signatures
+- Split by Size or PDF
+- Repair PDFs
+- Detect and remove blank pages
+- Compare two PDFs and show differences in text
+- Add images to PDFs
+- Compress PDFs to decrease their filesize (using qpdf)
+- Extract images from PDF
+- Remove images from PDF
+- Extract images from scans
+- Remove annotations
+- Add page numbers
+- Auto-rename files by detecting PDF header text
+- OCR on PDF (using Tesseract OCR)
+- PDF/A conversion (using LibreOffice)
+- Edit metadata
+- Flatten PDFs
+- Get all information on a PDF to view or export as JSON
+- Show/detect embedded JavaScript
+
+
 
 # 📖 Get Started
 
@@ -130,48 +114,48 @@ Visit our comprehensive documentation at [docs.stirlingpdf.com](https://docs.sti
 Stirling-PDF currently supports 40 languages!
 
 | Language                                     | Progress                               |
-|----------------------------------------------|----------------------------------------|
-| Arabic (العربية) (ar_AR)                     | ![59%](https://geps.dev/progress/59)   |
-| Azerbaijani (Azərbaycan Dili) (az_AZ)        | ![60%](https://geps.dev/progress/60)   |
-| Basque (Euskara) (eu_ES)                     | ![35%](https://geps.dev/progress/35)   |
-| Bulgarian (Български) (bg_BG)                | ![66%](https://geps.dev/progress/66)   |
-| Catalan (Català) (ca_CA)                     | ![66%](https://geps.dev/progress/66)   |
-| Croatian (Hrvatski) (hr_HR)                  | ![96%](https://geps.dev/progress/96)   |
-| Czech (Česky) (cs_CZ)                        | ![68%](https://geps.dev/progress/68)   |
-| Danish (Dansk) (da_DK)                       | ![60%](https://geps.dev/progress/60)   |
-| Dutch (Nederlands) (nl_NL)                   | ![58%](https://geps.dev/progress/58)   |
+| -------------------------------------------- | -------------------------------------- |
+| Arabic (العربية) (ar_AR)                        | ![95%](https://geps.dev/progress/95)   |
+| Azerbaijani (Azərbaycan Dili) (az_AZ)        | ![35%](https://geps.dev/progress/35)   |
+| Basque (Euskara) (eu_ES)                     | ![20%](https://geps.dev/progress/20)   |
+| Bulgarian (Български) (bg_BG)                | ![39%](https://geps.dev/progress/39)   |
+| Catalan (Català) (ca_CA)                     | ![37%](https://geps.dev/progress/37)   |
+| Croatian (Hrvatski) (hr_HR)                  | ![34%](https://geps.dev/progress/34)   |
+| Czech (Česky) (cs_CZ)                        | ![38%](https://geps.dev/progress/38)   |
+| Danish (Dansk) (da_DK)                       | ![34%](https://geps.dev/progress/34)   |
+| Dutch (Nederlands) (nl_NL)                   | ![34%](https://geps.dev/progress/34)   |
 | English (English) (en_GB)                    | ![100%](https://geps.dev/progress/100) |
 | English (US) (en_US)                         | ![100%](https://geps.dev/progress/100) |
-| French (Français) (fr_FR)                    | ![88%](https://geps.dev/progress/88)   |
+| French (Français) (fr_FR)                    | ![93%](https://geps.dev/progress/93)   |
 | German (Deutsch) (de_DE)                     | ![95%](https://geps.dev/progress/95)   |
-| Greek (Ελληνικά) (el_GR)                     | ![65%](https://geps.dev/progress/65)   |
-| Hindi (हिंदी) (hi_IN)                        | ![65%](https://geps.dev/progress/65)   |
-| Hungarian (Magyar) (hu_HU)                   | ![97%](https://geps.dev/progress/97)   |
-| Indonesian (Bahasa Indonesia) (id_ID)        | ![60%](https://geps.dev/progress/60)   |
-| Irish (Gaeilge) (ga_IE)                      | ![66%](https://geps.dev/progress/66)   |
-| Italian (Italiano) (it_IT)                   | ![96%](https://geps.dev/progress/96)   |
-| Japanese (日本語) (ja_JP)                       | ![90%](https://geps.dev/progress/90)   |
-| Korean (한국어) (ko_KR)                         | ![66%](https://geps.dev/progress/66)   |
-| Norwegian (Norsk) (no_NB)                    | ![64%](https://geps.dev/progress/64)   |
-| Persian (فارسی) (fa_IR)                      | ![62%](https://geps.dev/progress/62)   |
-| Polish (Polski) (pl_PL)                      | ![70%](https://geps.dev/progress/70)   |
-| Portuguese (Português) (pt_PT)               | ![67%](https://geps.dev/progress/67)   |
-| Portuguese Brazilian (Português) (pt_BR)     | ![74%](https://geps.dev/progress/74)   |
-| Romanian (Română) (ro_RO)                    | ![56%](https://geps.dev/progress/56)   |
-| Russian (Русский) (ru_RU)                    | ![90%](https://geps.dev/progress/90)   |
-| Serbian Latin alphabet (Srpski) (sr_LATN_RS) | ![97%](https://geps.dev/progress/97)   |
-| Simplified Chinese (简体中文) (zh_CN)            | ![91%](https://geps.dev/progress/91)   |
-| Slovakian (Slovensky) (sk_SK)                | ![50%](https://geps.dev/progress/50)   |
-| Slovenian (Slovenščina) (sl_SI)              | ![69%](https://geps.dev/progress/69)   |
+| Greek (Ελληνικά) (el_GR)                     | ![38%](https://geps.dev/progress/38)   |
+| Hindi (हिंदी) (hi_IN)                          | ![38%](https://geps.dev/progress/38)   |
+| Hungarian (Magyar) (hu_HU)                   | ![42%](https://geps.dev/progress/42)   |
+| Indonesian (Bahasa Indonesia) (id_ID)        | ![34%](https://geps.dev/progress/34)   |
+| Irish (Gaeilge) (ga_IE)                      | ![38%](https://geps.dev/progress/38)   |
+| Italian (Italiano) (it_IT)                   | ![95%](https://geps.dev/progress/95)   |
+| Japanese (日本語) (ja_JP)                    | ![70%](https://geps.dev/progress/70)   |
+| Korean (한국어) (ko_KR)                      | ![38%](https://geps.dev/progress/38)   |
+| Norwegian (Norsk) (no_NB)                    | ![36%](https://geps.dev/progress/36)   |
+| Persian (فارسی) (fa_IR)                      | ![38%](https://geps.dev/progress/38)   |
+| Polish (Polski) (pl_PL)                      | ![40%](https://geps.dev/progress/40)   |
+| Portuguese (Português) (pt_PT)               | ![38%](https://geps.dev/progress/38)   |
+| Portuguese Brazilian (Português) (pt_BR)     | ![95%](https://geps.dev/progress/95)   |
+| Romanian (Română) (ro_RO)                    | ![32%](https://geps.dev/progress/32)   |
+| Russian (Русский) (ru_RU)                    | ![94%](https://geps.dev/progress/94)   |
+| Serbian Latin alphabet (Srpski) (sr_LATN_RS) | ![42%](https://geps.dev/progress/42)   |
+| Simplified Chinese (简体中文) (zh_CN)         | ![96%](https://geps.dev/progress/96)   |
+| Slovakian (Slovensky) (sk_SK)                | ![28%](https://geps.dev/progress/28)   |
+| Slovenian (Slovenščina) (sl_SI)              | ![40%](https://geps.dev/progress/40)   |
 | Spanish (Español) (es_ES)                    | ![95%](https://geps.dev/progress/95)   |
-| Swedish (Svenska) (sv_SE)                    | ![63%](https://geps.dev/progress/63)   |
-| Thai (ไทย) (th_TH)                           | ![57%](https://geps.dev/progress/57)   |
-| Tibetan (བོད་ཡིག་) (bo_CN)                   | ![63%](https://geps.dev/progress/63)   |
-| Traditional Chinese (繁體中文) (zh_TW)           | ![97%](https://geps.dev/progress/97)   |
-| Turkish (Türkçe) (tr_TR)                     | ![96%](https://geps.dev/progress/96)   |
-| Ukrainian (Українська) (uk_UA)               | ![69%](https://geps.dev/progress/69)   |
-| Vietnamese (Tiếng Việt) (vi_VN)              | ![55%](https://geps.dev/progress/55)   |
-| Malayalam (മലയാളം) (ml_IN)                   | ![71%](https://geps.dev/progress/71)   |
+| Swedish (Svenska) (sv_SE)                    | ![37%](https://geps.dev/progress/37)   |
+| Thai (ไทย) (th_TH)                           | ![34%](https://geps.dev/progress/34)   |
+| Tibetan (བོད་ཡིག་) (bo_CN)                     | ![65%](https://geps.dev/progress/65) |
+| Traditional Chinese (繁體中文) (zh_TW)        | ![42%](https://geps.dev/progress/42)   |
+| Turkish (Türkçe) (tr_TR)                     | ![41%](https://geps.dev/progress/41)   |
+| Ukrainian (Українська) (uk_UA)               | ![40%](https://geps.dev/progress/40)   |
+| Vietnamese (Tiếng Việt) (vi_VN)              | ![31%](https://geps.dev/progress/31)   |
+| Malayalam (മലയാളം) (ml_IN)              | ![73%](https://geps.dev/progress/73)   |
 
 ## Stirling PDF Enterprise
 

@@ -139,5 +139,8 @@
     "app/core/src/main/java",
     "app/common/src/main/java",
     "app/proprietary/src/main/java"
-  ]
+  ],
+  "[typescript]": {
+    "editor.defaultFormatter": "vscode.typescript-language-features"
+  }
 }
