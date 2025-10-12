@@ -1,0 +1,50 @@
+.fileListContainer {
+  max-height: 16.25rem;
+  overflow-y: auto;
+  overflow-x: hidden;
+  width: 100%;
+}
+
+.fileItem {
+  border: 1px solid var(--mantine-color-gray-3);
+  border-radius: var(--mantine-radius-sm);
+  align-items: center;
+  width: 100%;
+}
+
+.fileNameContainer {
+  flex: 1;
+  min-width: 0;
+}
+
+.fileName {
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 400;
+  line-height: 1.2;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.fileSize {
+  flex-shrink: 0;
+}
+
+.removeButton {
+  flex-shrink: 0;
+}
+
+.countLabel {
+  width: 140px;
+  flex-shrink: 0;
+}
+
+.fileGroup {
+  flex: 1;
+  min-width: 0;
+  align-items: center;
+}

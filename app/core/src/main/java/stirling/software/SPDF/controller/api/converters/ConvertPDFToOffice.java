@@ -7,19 +7,21 @@ import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.SPDF.config.swagger.PowerPointConversionResponse;
+import stirling.software.SPDF.config.swagger.TextPlainConversionResponse;
+import stirling.software.SPDF.config.swagger.WordConversionResponse;
+import stirling.software.SPDF.config.swagger.XmlConversionResponse;
 import stirling.software.SPDF.model.api.converters.PdfToPresentationRequest;
 import stirling.software.SPDF.model.api.converters.PdfToTextOrRTFRequest;
 import stirling.software.SPDF.model.api.converters.PdfToWordRequest;
+import stirling.software.common.annotations.AutoJobPostMapping;
+import stirling.software.common.annotations.api.ConvertApi;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
@@ -27,16 +29,15 @@ import stirling.software.common.util.PDFToFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
-@RestController
-@RequestMapping("/api/v1/convert")
-@Tag(name = "Convert", description = "Convert APIs")
+@ConvertApi
 @RequiredArgsConstructor
 public class ConvertPDFToOffice {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
 
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/presentation")
+    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/presentation")
+    @PowerPointConversionResponse
     @Operation(
             summary = "Convert PDF to Presentation format",
             description =
@@ -51,7 +52,8 @@ public class ConvertPDFToOffice {
         return pdfToFile.processPdfToOfficeFormat(inputFile, outputFormat, "impress_pdf_import");
     }
 
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/text")
+    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/text")
+    @TextPlainConversionResponse
     @Operation(
             summary = "Convert PDF to Text or RTF format",
             description =
@@ -77,7 +79,8 @@ public class ConvertPDFToOffice {
         }
     }
 
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/word")
+    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/word")
+    @WordConversionResponse
     @Operation(
             summary = "Convert PDF to Word document",
             description =
@@ -91,7 +94,8 @@ public class ConvertPDFToOffice {
         return pdfToFile.processPdfToOfficeFormat(inputFile, outputFormat, "writer_pdf_import");
     }
 
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/xml")
+    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/xml")
+    @XmlConversionResponse
     @Operation(
             summary = "Convert PDF to XML",
             description =

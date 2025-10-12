@@ -21,24 +21,19 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-
-import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.misc.PrintFileRequest;
+import stirling.software.common.annotations.api.MiscApi;
 
-@RestController
-@RequestMapping("/api/v1/misc")
-@Tag(name = "Misc", description = "Miscellaneous APIs")
+@MiscApi
 @Slf4j
 public class PrintFileController {
 
     // TODO
-    // @PostMapping(value = "/print-file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    // @AutoJobPostMapping(value = "/print-file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     // @Operation(
     //        summary = "Prints PDF/Image file to a set printer",
     //        description =

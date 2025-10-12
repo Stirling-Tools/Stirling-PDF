@@ -13,25 +13,22 @@ import org.commonmark.renderer.html.HtmlRenderer;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.SPDF.config.swagger.StandardPdfResponse;
+import stirling.software.common.annotations.AutoJobPostMapping;
+import stirling.software.common.annotations.api.ConvertApi;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.api.GeneralFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.*;
 
-@RestController
-@Tag(name = "Convert", description = "Convert APIs")
-@RequestMapping("/api/v1/convert")
+@ConvertApi
 @RequiredArgsConstructor
 public class ConvertMarkdownToPdf {
 
@@ -42,7 +39,8 @@ public class ConvertMarkdownToPdf {
 
     private final CustomHtmlSanitizer customHtmlSanitizer;
 
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/markdown/pdf")
+    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/markdown/pdf")
+    @StandardPdfResponse
     @Operation(
             summary = "Convert a Markdown file to PDF",
             description =

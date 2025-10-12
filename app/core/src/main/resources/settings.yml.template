@@ -60,10 +60,11 @@ security:
     privateKey: classpath:saml-private-key.key # Your private key. Generated from your keypair
     spCert: classpath:saml-public-cert.crt # Your signing certificate. Generated from your keypair
   jwt: # This feature is currently under development and not yet fully supported. Do not use in production.
-    enabled: false # Set to 'true' to enable JWT key store
-    keyCleanup: false # Set to 'true' to enable key pair cleanup
+    persistence: true # Set to 'true' to enable JWT key store
+    enableKeyRotation: true # Set to 'true' to enable key pair rotation
+    enableKeyCleanup: true # Set to 'true' to enable key pair cleanup
     keyRetentionDays: 7 # Number of days to retain old keys. The default is 7 days.
-    secureCookie: true # Set to 'true' to use secure cookies for JWTs
+    secureCookie: false # Set to 'true' to use secure cookies for JWTs
 
 premium:
   key: 00000000-0000-0000-0000-000000000000
@@ -75,11 +76,6 @@ premium:
       author: username
       creator: Stirling-PDF
       producer: Stirling-PDF
-    googleDrive:
-      enabled: false
-      clientId: ''
-      apiKey: ''
-      appId: ''
   enterpriseFeatures:
     audit:
       enabled: true # Enable audit logging
@@ -113,6 +109,11 @@ system:
   enableUrlToPDF: false # Set to 'true' to enable URL to PDF, INTERNAL ONLY, known security issues, should not be used externally
   disableSanitize: false # set to true to disable Sanitize HTML; (can lead to injections in HTML)
   maxDPI: 500 # Maximum allowed DPI for PDF to image conversion
+  serverCertificate:
+    enabled: true # Enable server-side certificate for "Sign with Stirling-PDF" option
+    organizationName: Stirling-PDF # Organization name for generated certificates
+    validity: 365 # Certificate validity in days
+    regenerateOnStartup: false # Generate new certificate on each startup
   html:
     urlSecurity:
       enabled: true # Enable URL security restrictions for HTML processing

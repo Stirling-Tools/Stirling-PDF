@@ -12,12 +12,10 @@ import java.util.regex.Pattern;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.util.HtmlUtils;
 
@@ -27,13 +25,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.tags.Tag;
 
 import jakarta.validation.Valid;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.annotations.api.AdminApi;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.RegexPatternUtils;
@@ -41,9 +39,7 @@ import stirling.software.proprietary.security.model.api.admin.SettingValueRespon
 import stirling.software.proprietary.security.model.api.admin.UpdateSettingValueRequest;
 import stirling.software.proprietary.security.model.api.admin.UpdateSettingsRequest;
 
-@Controller
-@Tag(name = "Admin Settings", description = "Admin-only Settings Management APIs")
-@RequestMapping("/api/v1/admin/settings")
+@AdminApi
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('ROLE_ADMIN')")
 @Slf4j

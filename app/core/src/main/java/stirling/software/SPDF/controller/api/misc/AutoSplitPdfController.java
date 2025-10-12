@@ -18,9 +18,6 @@ import org.apache.pdfbox.rendering.PDFRenderer;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.google.zxing.*;
@@ -28,13 +25,16 @@ import com.google.zxing.common.HybridBinarizer;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.SPDF.config.swagger.MultiFileResponse;
 import stirling.software.SPDF.model.api.misc.AutoSplitPdfRequest;
 import stirling.software.common.model.ApplicationProperties;
+
+import stirling.software.common.annotations.AutoJobPostMapping;
+import stirling.software.common.annotations.api.MiscApi;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ApplicationContextProvider;
 import stirling.software.common.util.ExceptionUtils;
@@ -43,10 +43,8 @@ import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
-@RestController
-@RequestMapping("/api/v1/misc")
+@MiscApi
 @Slf4j
-@Tag(name = "Misc", description = "Miscellaneous APIs")
 @RequiredArgsConstructor
 public class AutoSplitPdfController {
 
@@ -108,7 +106,8 @@ public class AutoSplitPdfController {
         }
     }
 
-    @PostMapping(value = "/auto-split-pdf", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @AutoJobPostMapping(value = "/auto-split-pdf", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @MultiFileResponse
     @Operation(
             summary = "Auto split PDF pages into separate documents",
             description =

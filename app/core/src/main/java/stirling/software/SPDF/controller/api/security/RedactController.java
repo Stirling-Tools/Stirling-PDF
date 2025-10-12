@@ -39,27 +39,29 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.PDFText;
 import stirling.software.SPDF.model.api.security.ManualRedactPdfRequest;
 import stirling.software.SPDF.model.api.security.RedactPdfRequest;
 import stirling.software.SPDF.pdf.TextFinder;
+<<<<<<< HEAD
 import stirling.software.SPDF.utils.text.TextEncodingHelper;
 import stirling.software.SPDF.utils.text.TextFinderUtils;
 import stirling.software.SPDF.utils.text.WidthCalculator;
+=======
+import stirling.software.common.annotations.AutoJobPostMapping;
+import stirling.software.common.annotations.api.SecurityApi;
+>>>>>>> refs/remotes/origin/V2
 import stirling.software.common.model.api.security.RedactionArea;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
@@ -67,10 +69,8 @@ import stirling.software.common.util.PdfUtils;
 import stirling.software.common.util.WebResponseUtils;
 import stirling.software.common.util.propertyeditor.StringToArrayListPropertyEditor;
 
-@RestController
-@RequestMapping("/api/v1/security")
+@SecurityApi
 @Slf4j
-@Tag(name = "Security", description = "Security APIs")
 @RequiredArgsConstructor
 public class RedactController {
 
@@ -98,9 +98,11 @@ public class RedactController {
                 List.class, "redactions", new StringToArrayListPropertyEditor());
     }
 
-    @PostMapping(value = "/redact", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @AutoJobPostMapping(value = "/redact", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @StandardPdfResponse
     @Operation(
-            summary = "Redact PDF manually",
+            operationId = "redactPdfManual",
+            summary = "Redacts areas and pages in a PDF document",
             description =
                     "This endpoint redacts content from a PDF file based on manually specified areas. "
                             + "Users can specify areas to redact and optionally convert the PDF to an image. "
@@ -495,9 +497,11 @@ public class RedactController {
         return pageNumbers;
     }
 
-    @PostMapping(value = "/auto-redact", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @AutoJobPostMapping(value = "/auto-redact", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @StandardPdfResponse
     @Operation(
             summary = "Redact PDF automatically",
+            operationId = "redactPdfAuto",
             description =
                     "This endpoint automatically redacts text from a PDF file based on specified patterns. "
                             + "Users can provide text patterns to redact, with options for regex and whole word matching. "

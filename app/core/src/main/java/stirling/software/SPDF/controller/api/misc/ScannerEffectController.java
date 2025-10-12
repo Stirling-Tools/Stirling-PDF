@@ -19,13 +19,9 @@ import org.apache.pdfbox.rendering.PDFRenderer;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 
 import jakarta.validation.Valid;
 
@@ -33,16 +29,19 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.misc.ScannerEffectRequest;
+<<<<<<< HEAD
 import stirling.software.common.model.ApplicationProperties;
+=======
+import stirling.software.common.annotations.AutoJobPostMapping;
+import stirling.software.common.annotations.api.MiscApi;
+>>>>>>> refs/remotes/origin/V2
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ApplicationContextProvider;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.WebResponseUtils;
 
-@RestController
-@RequestMapping("/api/v1/misc")
-@Tag(name = "Misc", description = "Miscellaneous PDF APIs")
+@MiscApi
 @RequiredArgsConstructor
 @Slf4j
 public class ScannerEffectController {
@@ -55,7 +54,7 @@ public class ScannerEffectController {
     private static final int MAX_IMAGE_HEIGHT = 8192;
     private static final long MAX_IMAGE_PIXELS = 16_777_216; // 4096x4096
 
-    @PostMapping(value = "/scanner-effect", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @AutoJobPostMapping(value = "/scanner-effect", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "Apply scanner effect to PDF",
             description =

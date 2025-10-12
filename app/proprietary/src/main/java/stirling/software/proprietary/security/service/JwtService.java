@@ -4,7 +4,6 @@ import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.HashMap;
@@ -13,6 +12,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseCookie;
@@ -53,6 +53,7 @@ public class JwtService implements JwtServiceInterface {
     private final KeyPersistenceServiceInterface keyPersistenceService;
     private final boolean v2Enabled;
 
+    @Autowired
     public JwtService(
             @Qualifier("v2Enabled") boolean v2Enabled,
             KeyPersistenceServiceInterface keyPersistenceService) {
@@ -93,8 +94,8 @@ public class JwtService implements JwtServiceInterface {
                             .claims(claims)
                             .subject(username)
                             .issuer(ISSUER)
-                            .issuedAt(Date.from(Instant.now()))
-                            .expiration(Date.from(Instant.now().plusMillis(EXPIRATION)))
+                            .issuedAt(new Date())
+                            .expiration(new Date(System.currentTimeMillis() + EXPIRATION))
                             .signWith(keyPair.getPrivate(), Jwts.SIG.RS256);
 
             String keyId = activeKey.getKeyId();
@@ -130,7 +131,7 @@ public class JwtService implements JwtServiceInterface {
 
     @Override
     public boolean isTokenExpired(String token) {
-        return extractExpiration(token).before(Date.from(Instant.now()));
+        return extractExpiration(token).before(new Date());
     }
 
     private Date extractExpiration(String token) {
@@ -154,8 +155,7 @@ public class JwtService implements JwtServiceInterface {
                     keyPair = specificKeyPair.get();
                 } else {
                     log.warn(
-                            "Key ID {} not found in keystore, token may have been signed with an"
-                                    + " expired key",
+                            "Key ID {} not found in keystore, token may have been signed with an expired key",
                             keyId);
 
                     if (keyId.equals(keyPersistenceService.getActiveKey().getKeyId())) {

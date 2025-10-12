@@ -1,0 +1,32 @@
+<svg width="400" height="300" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="400" height="300" fill="#f8f9fa" stroke="#dee2e6" stroke-width="2"/>
+  
+  <!-- Title -->
+  <text x="200" y="40" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#2c3e50">
+    Test Image for Convert Tool
+  </text>
+  
+  <!-- Shapes for visual content -->
+  <circle cx="100" cy="120" r="30" fill="#3498db" stroke="#2980b9" stroke-width="2"/>
+  <rect x="180" y="90" width="60" height="60" fill="#e74c3c" stroke="#c0392b" stroke-width="2"/>
+  <polygon points="320,90 350,150 290,150" fill="#f39c12" stroke="#e67e22" stroke-width="2"/>
+  
+  <!-- Labels -->
+  <text x="100" y="170" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#7f8c8d">Circle</text>
+  <text x="210" y="170" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#7f8c8d">Square</text>
+  <text x="320" y="170" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#7f8c8d">Triangle</text>
+  
+  <!-- Description -->
+  <text x="200" y="210" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#34495e">
+    This image tests conversion functionality
+  </text>
+  <text x="200" y="230" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#95a5a6">
+    PNG/JPG ↔ PDF conversions
+  </text>
+  
+  <!-- Footer -->
+  <text x="200" y="270" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#bdc3c7">
+    Generated for Stirling PDF testing - 400x300px
+  </text>
+</svg>

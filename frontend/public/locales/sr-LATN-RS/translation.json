@@ -1,0 +1,1752 @@
+{
+  "language": {
+    "direction": "ltr"
+  },
+  "addPageNumbers": {
+    "fontSize": "Veličina fonta",
+    "fontName": "Naziv fonta",
+    "title": "Dodavanje brojeva stranica",
+    "header": "Dodavanje brojeva stranica",
+    "selectText": {
+      "1": "Izaberi PDF fajl:",
+      "2": "Veličina margine",
+      "3": "Pozicija",
+      "4": "Početni broj",
+      "5": "Brojane stranice",
+      "6": "Prilagođeni tekst"
+    },
+    "customTextDesc": "Prilagođeni tekst",
+    "numberPagesDesc": "Koje stranice brojati, podrazumevano 'sve', takođe prihvata 1-5 ili 2,5,9 itd.",
+    "customNumberDesc": "Podrazumevano je {n}, takođe prihvata 'Stranica {n} od {ukupno}', 'Tekst-{n}', '{ime_fajla}-{n}'",
+    "submit": "Dodaj brojeve stranica"
+  },
+  "pdfPrompt": "Odaberi PDF(ove)",
+  "multiPdfPrompt": "Odaberi PDF-ove (2+)",
+  "multiPdfDropPrompt": "Odaberi (prevuci i pusti ) sve PDF-ove koji su vam potrebni",
+  "imgPrompt": "Odaberi sliku (slike)",
+  "genericSubmit": "Prihvatiti",
+  "uploadLimit": "Maksimalna veličina datoteke:",
+  "uploadLimitExceededSingular": "je prevelik. Maksimalna dozvoljena veličina je",
+  "uploadLimitExceededPlural": "su preveliki. Maksimalna dozvoljena veličina je",
+  "processTimeWarning": "Warning:Upozorenje: Ovaj proces može trajati i do minut, u zavisnosti od veličine dokumenta",
+  "pageOrderPrompt": "Prilagođeni redosled stranica (unesi listu brojeva stranica ili funkcija, kao što su 2n+1, razdvojene zarezima) :",
+  "pageSelectionPrompt": "Prilagođeni redosled stranica (unesi listu brojeva stranica 1,5,6 ili funkcija, kao što je 2n+1, razdvojenih zarezima) :",
+  "goToPage": "Idi",
+  "true": "Tačno",
+  "false": "Netačno",
+  "unknown": "Nepoznato",
+  "save": "Sačuvaj",
+  "saveToBrowser": "Sačuvaj u pregledaču",
+  "close": "Zatvori",
+  "filesSelected": "odabrani fajlovi",
+  "noFavourites": "Nema dodatih favorita",
+  "downloadComplete": "Preuzimanje završeno",
+  "bored": "Da li ti je dosadno dok čekaš?",
+  "alphabet": "Alfabet",
+  "downloadPdf": "Skini PDF",
+  "text": "Tekst",
+  "font": "Font",
+  "selectFillter": "-- Izaberi --",
+  "pageNum": "Broj Strane",
+  "sizes": {
+    "small": "Malo",
+    "medium": "Srednje",
+    "large": "Veliko",
+    "x-large": "X-Veliko"
+  },
+  "error": {
+    "pdfPassword": "PDF dokument je šifrovan i lozinka nije data ili je netačna",
+    "_value": "Error",
+    "sorry": "Izvinjavamo se zbog problema!",
+    "needHelp": "Potrebna pomoć / Naišli ste na problem?",
+    "contactTip": "Ako i dalje imaš problema, ne oklevaj da nas kontaktiraš za pomoć. Možeš poslati prijavu na našoj GitHub stranici ili nas kontaktirati putem Discord-a:",
+    "404": {
+      "head": "404 – Stranica nije pronađena | Ups, sapleli smo se u kodu!",
+      "1": "Izgleda da ne možemo da pronađemo stranicu koju tražiš.",
+      "2": "Nešto nije u redu"
+    },
+    "github": "Pošalji prijavu na GitHub-u",
+    "showStack": "Prikaži trag greške (Stack Trace)",
+    "copyStack": "Kopiraj trag greške (Stack Trace)",
+    "githubSubmit": "GitHub - pošalji prijavu",
+    "discordSubmit": "Discord - pošalji poruku za podršku"
+  },
+  "delete": "Obriši",
+  "username": "Korisničko ime",
+  "password": "Šifra",
+  "welcome": "Dobrodošli",
+  "property": "Svojstvo",
+  "black": "Crno",
+  "white": "Belo",
+  "red": "Crveno",
+  "green": "Zeleno",
+  "blue": "Plavo",
+  "custom": "Prilagođeno...",
+  "WorkInProgess": "Radovi u toku, možda neće raditi ili će biti grešaka, molimo prijavite sve probleme !",
+  "poweredBy": "Omogućeno od strane",
+  "yes": "Da",
+  "no": "Ne",
+  "changedCredsMessage": "Podaci za prijavu uspešno promenjeni!",
+  "notAuthenticatedMessage": "Korisnik nije autentifikovan.",
+  "userNotFoundMessage": "Korisnik nije pronađen.",
+  "incorrectPasswordMessage": "Trenutna šifra je netačna.",
+  "usernameExistsMessage": "Novi korisnik već postoji",
+  "invalidUsernameMessage": "Pogrešno korisničko ime, korisničko ime može sadržati samo slova, brojeve i specijalne karaktere @._+- ili mora biti validna email adresa.",
+  "invalidPasswordMessage": "Lozinka ne sme biti prazna i ne sme imati razmake na početku ili kraju.",
+  "confirmPasswordErrorMessage": "Nova lozinka i potvrda lozinke se moraju slagati.",
+  "deleteCurrentUserMessage": "Ne mogu obrisati trenutno prijavljenog korisnika.",
+  "deleteUsernameExistsMessage": "Korisničko ime ne postoji i ne može biti obrisano.",
+  "downgradeCurrentUserMessage": "Nije moguće degradirati ulogu trenutnog korisnika",
+  "disabledCurrentUserMessage": "Trenutno korisnik ne može biti onemogućen",
+  "downgradeCurrentUserLongMessage": "Nije moguće unazaditi ulogu trenutnog korisnika. Dakle, trenutni korisnik neće biti prikazan.",
+  "userAlreadyExistsOAuthMessage": "Korisnik već postoji kao OAuth2 korisnik.",
+  "userAlreadyExistsWebMessage": "Korisnik već postoji kao web korisnik.",
+  "oops": "Opa!",
+  "help": "Pomoć",
+  "goHomepage": "Idi na početnu stranu",
+  "joinDiscord": "Pridružite se našem Discord serveru",
+  "seeDockerHub": "Pogledaj Docker Hub",
+  "visitGithub": "Poseti Github repozitorijum",
+  "donate": "Doniraj",
+  "color": "Color",
+  "sponsor": "Sponzor",
+  "info": "Info",
+  "pro": "Pro",
+  "page": "Strana",
+  "pages": "Strane",
+  "loading": "Učitavam...",
+  "addToDoc": "Dodaj u dokument",
+  "reset": "Resetuj",
+  "apply": "Primeni",
+  "noFileSelected": "Datoteka nije izabrana. Otpremi jednu.",
+  "legal": {
+    "privacy": "Politika privatnosti",
+    "terms": "Uslovi i odredbe",
+    "accessibility": "Pristupačnost",
+    "cookie": "Politika kolačića",
+    "impressum": "Impresum",
+    "showCookieBanner": "Podešavanje kolačića"
+  },
+  "pipeline": {
+    "header": "Meni za Pipeline (Alfa verzija)",
+    "uploadButton": "Postavi prilagođeno",
+    "configureButton": "Konfiguriši",
+    "defaultOption": "Prilagođeno",
+    "submitButton": "Pošalji",
+    "help": "Pomoć za tok rada (pipeline)",
+    "scanHelp": "Pomoć za pretragu foldera",
+    "deletePrompt": "Jesi li siguran da želiš da obrišeš tok rada",
+    "tags": "automatizacija,sekvenciranje,skriptirano,batch-process",
+    "title": "Tok rada"
+  },
+  "pipelineOptions": {
+    "header": "Konfiguracija Pipeline-a",
+    "pipelineNameLabel": "Ime Pipeline-a",
+    "saveSettings": "Sačuvaj podešavanja",
+    "pipelineNamePrompt": "Unesite ime pipeline-a ovde",
+    "selectOperation": "Izaberi operaciju:",
+    "addOperationButton": "Dodaj operaciju",
+    "pipelineHeader": "Tok rada:",
+    "saveButton": "Preuzmi",
+    "validateButton": "Proveri"
+  },
+  "enterpriseEdition": {
+    "button": "Nadogradi na Pro verziju",
+    "warning": "Ova funkcija je dostupna samo Pro korisnicima.",
+    "yamlAdvert": "Stirling PDF Pro podržava YAML konfiguracione datoteke i druge SSO funkcionalnosti.",
+    "ssoAdvert": "Tražiš još funkcija za upravljanje korisnicima? Razmotri Stirling PDF Pro"
+  },
+  "analytics": {
+    "title": "Želiš li da učiniš Stirling PDF boljim?",
+    "paragraph1": "Stirling PDF ima opcioni sistem analitike koji nam pomaže da unapredimo proizvod. Ne pratimo nikakve lične podatke niti sadržaj fajlova.",
+    "paragraph2": "Molimo te da razmotriš uključivanje analitike kako bi pomogao Stirling PDF-u da raste i omogućio nam bolje razumevanje naših korisnika.",
+    "enable": "Omogući analitiku",
+    "disable": "Onemogući analitiku",
+    "settings": "Možeš da promeniš podešavanja za analitiku u config/settings.yml datoteci"
+  },
+  "navbar": {
+    "favorite": "Omiljeno",
+    "recent": "Novo i nedavno ažurirano",
+    "darkmode": "Tamni režim",
+    "language": "Jezici",
+    "settings": "Podešavanja",
+    "allTools": "Alati",
+    "multiTool": "Multi Tools",
+    "search": "Pretraga",
+    "sections": {
+      "organize": "Organizacija",
+      "convertTo": "Konvertuj u PDF",
+      "convertFrom": "Konvertuj iz PDF",
+      "security": "Potpis i bezbednost",
+      "advance": "Napredno",
+      "edit": "Pregled i uređivanje",
+      "popular": "Popularno"
+    }
+  },
+  "settings": {
+    "title": "Podešavanja",
+    "update": "Dostupno ažuriranje",
+    "updateAvailable": "{0} je trenutno instalirana verzija. Nova verzija ({1}) je dostupna.",
+    "appVersion": "Verzija aplikacije:",
+    "downloadOption": {
+      "title": "Odaberite opciju preuzimanja (Za preuzimanje pojedinačnih fajlova bez zip formata):",
+      "1": "Otvori u istom prozoru",
+      "2": "Otvori u novom prozoru",
+      "3": "Preuzmi fajl"
+    },
+    "zipThreshold": "Zipuj fajlove kada pređe broj preuzetih fajlova",
+    "signOut": "Odjava",
+    "accountSettings": "Podešavanja naloga",
+    "bored": {
+      "help": "Omogućava skrivenu igru"
+    },
+    "cacheInputs": {
+      "name": "Sačuvaj unete podatke",
+      "help": "Omogući prethodno unete podatke za buduće korišćenje"
+    }
+  },
+  "changeCreds": {
+    "title": "Promeni pristupne podatke",
+    "header": "Ažurirajte detalje svog naloga",
+    "changePassword": "Koristiš podrazumevane pristupne podatke. Molim te unesi novu lozinku",
+    "newUsername": "Novo korisničko ime",
+    "oldPassword": "Trenutna lozinka",
+    "newPassword": "Nova lozinka",
+    "confirmNewPassword": "Potvrdite novu lozinku",
+    "submit": "Potvrdi promene"
+  },
+  "account": {
+    "title": "Podešavanja naloga",
+    "accountSettings": "Podešavanja naloga",
+    "adminSettings": "Admin podešavanja - Pregled i dodavanje korisnika",
+    "userControlSettings": "Podešavanja kontrole korisnika",
+    "changeUsername": "Pormeni korisničko ime",
+    "newUsername": "Novo korisničko ime",
+    "password": "Potvrda lozinke",
+    "oldPassword": "Stara lozinka",
+    "newPassword": "Nova lozinka",
+    "changePassword": "Pormeni lozinku",
+    "confirmNewPassword": "Potvrdi novu lozinku",
+    "signOut": "Odjava",
+    "yourApiKey": "Tvoj API ključ",
+    "syncTitle": "Sinhronizacija podešavanja pregledača sa nalogom",
+    "settingsCompare": "Upoređivanje podešavanja:",
+    "property": "Svojstvo",
+    "webBrowserSettings": "Podešavanja veb pregledača",
+    "syncToBrowser": "Sinhronizacija naloga -> pregledač",
+    "syncToAccount": "Sinhronizacija naloga <- pregledač"
+  },
+  "adminUserSettings": {
+    "title": "Podešavanja kontrole korisnika",
+    "header": "Podešavanja kontrole korisnika za administratora",
+    "admin": "Administrator",
+    "user": "Korisnik",
+    "addUser": "Dodaj novog korisnika",
+    "deleteUser": "Izbriši korisnika",
+    "confirmDeleteUser": "Da obrišem korisnika?",
+    "confirmChangeUserStatus": "Da onemogućim/omogućim korisnika?",
+    "usernameInfo": "Korisničko ime može sadržati samo slova, brojeve i specijalne karaktere @._+- ili mora biti validna email adresa.",
+    "roles": "Uloge",
+    "role": "Uloga",
+    "actions": "Akcije",
+    "apiUser": "Korisnik s ograničenim API pristupom",
+    "extraApiUser": "Dodatni ograničeni API korisnik",
+    "webOnlyUser": "Korisnik samo za web",
+    "demoUser": "Demo korisnik (Bez prilagođenih podešavanja)",
+    "internalApiUser": "Interni API korisnik",
+    "forceChange": "Prisili korisnika da promeni korisničko ime/lozinku pri prijavi",
+    "submit": "Sačuvaj korisnika",
+    "changeUserRole": "Promenite ulogu korisnika",
+    "authenticated": "Prijavljen",
+    "editOwnProfil": "Izmeni sopstveni profil",
+    "enabledUser": "omogućen korisnik",
+    "disabledUser": "onemogućen korisnik",
+    "activeUsers": "Aktivni korisnici:",
+    "disabledUsers": "Onemogućeni korisnici:",
+    "totalUsers": "Totalno korisnika:",
+    "lastRequest": "Poslednji zahtev",
+    "usage": "Prikaži upotrebu"
+  },
+  "endpointStatistics": {
+    "title": "Statistika krajnjih tačaka",
+    "header": "Statistika krajnjih tačaka",
+    "top10": "Top 10",
+    "top20": "Top 20",
+    "all": "Svi",
+    "refresh": "Osveži",
+    "includeHomepage": "Uključi početnu stranu ('/')",
+    "includeLoginPage": "Uključi stranu za prijavu ('/login')",
+    "totalEndpoints": "Ukupno krajnjih tačaka",
+    "totalVisits": "Ukupno poseta",
+    "showing": "Prikaz",
+    "selectedVisits": "Izabrane posete",
+    "endpoint": "Krajnja tačka",
+    "visits": "Poseta",
+    "percentage": "Procenat",
+    "loading": "Učitavam...",
+    "failedToLoad": "Neuspešno učitavanje podataka o krajnjoj tačci. Pokušaj da osvežiš.",
+    "home": "Početna strana",
+    "login": "Prijava",
+    "top": "Top",
+    "numberOfVisits": "Broj poseta",
+    "visitsTooltip": "Poseta: {0} ({1}% od ukupno)",
+    "retry": "Pokušaj ponovo"
+  },
+  "database": {
+    "title": "Uvoz/izvoz baze",
+    "header": "Uvoz/izvoz baze",
+    "fileName": "Ime datoteke",
+    "creationDate": "Datum kreiranja",
+    "fileSize": "Veličina datoteke",
+    "deleteBackupFile": "Obriši rezervnu kopiju",
+    "importBackupFile": "Uvezi rezervnu kopiju",
+    "createBackupFile": "Kreiraj rezervnu kopiju",
+    "downloadBackupFile": "Preuzmi rezervnu kopiju",
+    "info_1": "Prilikom uvoza podataka, od suštinskog je značaja obezbediti ispravnu strukturu. Ako nisi siguran u ono što radiš, potraži savet i podršku stručnog lica. Greška u strukturi može izazvati neispravno funkcionisanje aplikacije, pa čak i potpunu nemogućnost njenog pokretanja.",
+    "info_2": "Naziv fajla prilikom otpremanja nije bitan. Fajl će kasnije biti preimenovan u format backup_user_yyyyMMddHHmm.sql, kako bi se obezbedila dosledna konvencija imenovanja.",
+    "submit": "Uvezi rezervnu kopiju",
+    "importIntoDatabaseSuccessed": "Uvoz u bazu uspešan",
+    "backupCreated": "Rezervna kopija baze podataka je uspešna napravljena",
+    "fileNotFound": "File not Found",
+    "fileNullOrEmpty": "Datoteka ne sme biti null ili prazna",
+    "failedImportFile": "Failed Import File",
+    "notSupported": "Ova funkcija nije dostupna za tvoju vezu sa bazom podataka."
+  },
+  "session": {
+    "expired": "Istekla ti je sesija. Osveži stranicu i pokušaj ponovo.",
+    "refreshPage": "Osveži stranicu"
+  },
+  "home": {
+    "desc": "Vaš lokalno hostovan jedinstveni alat za sve vaše potrebe vezane za PDF.",
+    "searchBar": "Pretraži funkcije...",
+    "viewPdf": {
+      "title": "Pogledaj/izmeni PDF",
+      "desc": "Pregledaj, anotiraj, dodaj tekst ili slike"
+    },
+    "setFavorites": "Podesi omiljene",
+    "hideFavorites": "Sakrij omiljene",
+    "showFavorites": "Prikaži omiljene",
+    "legacyHomepage": "Stara početna strana",
+    "newHomePage": "Isprobajte našu novu početnu stranu!",
+    "alphabetical": "Abecedno",
+    "globalPopularity": "Globalna popularnost",
+    "sortBy": "Sortiranje:",
+    "multiTool": {
+      "title": "PDF Multi Alat",
+      "desc": "Spajanje, rotacija, premeštanje i uklanjanje stranica"
+    },
+    "merge": {
+      "title": "Spajanje",
+      "desc": "Lako spojite više PDF-ova u jedan."
+    },
+    "split": {
+      "title": "Razdvajanje",
+      "desc": "Razdvojite PDF-ove u više dokumenata"
+    },
+    "rotate": {
+      "title": "Rotacija",
+      "desc": "Lako rotirajte vaše PDF-ove."
+    },
+    "imageToPDF": {
+      "title": "Slika u PDF",
+      "desc": "Konvertujte sliku (PNG, JPEG, GIF) u PDF."
+    },
+    "pdfToImage": {
+      "title": "PDF u Sliku",
+      "desc": "Konvertujte PDF u sliku. (PNG, JPEG, GIF)"
+    },
+    "pdfOrganiser": {
+      "title": "Organizacija",
+      "desc": "Uklonite/Premeštajte stranice u bilo kom redosledu"
+    },
+    "addImage": {
+      "title": "Dodaj sliku",
+      "desc": "Dodaje sliku na određeno mesto u PDF-u"
+    },
+    "watermark": {
+      "title": "Dodaj vodeni žig",
+      "desc": "Dodajte prilagođeni vodeni žig na vaš PDF dokument."
+    },
+    "permissions": {
+      "title": "Promeni dozvole",
+      "desc": "Promenite dozvole vašeg PDF dokumenta"
+    },
+    "pageRemover": {
+      "title": "Ukloni",
+      "desc": "Obrišite nepotrebne stranice iz vašeg PDF dokumenta."
+    },
+    "addPassword": {
+      "title": "Dodaj lozinku",
+      "desc": "Enkriptujte vaš PDF dokument lozinkom."
+    },
+    "removePassword": {
+      "title": "Ukloni lozinku",
+      "desc": "Uklonite zaštitu lozinkom sa vašeg PDF dokumenta."
+    },
+    "compress": {
+      "title": "Kompresuj",
+      "desc": "Kompresujte PDF-ove kako bi smanjili veličinu fajla."
+    },
+    "unlockPDFForms": {
+      "title": "Otključaj PDF obrazac",
+      "desc": "Uklanjanje oznake samo-za-čitanje sa svih polja PDF obrasca"
+    },
+    "changeMetadata": {
+      "title": "Promena metapodataka",
+      "desc": "Promenite/Uklonite/Dodajte metapodatke u PDF dokumentu"
+    },
+    "fileToPDF": {
+      "title": "Konvertuj fajl u PDF",
+      "desc": "Konvertujte gotovo bilo koji fajl u PDF (DOCX, PNG, XLS, PPT, TXT i više)"
+    },
+    "ocr": {
+      "title": "OCR / Čišćenje skenova",
+      "desc": "Čišćenje skenova i detektovanje teksta sa slika unutar PDF-a i ponovno dodavanje kao teksta."
+    },
+    "extractImages": {
+      "title": "Izvuci slike",
+      "desc": "Izvlači sve slike iz PDF-a i čuva ih u zip formatu"
+    },
+    "pdfToPDFA": {
+      "title": "PDF u PDF/A",
+      "desc": "Konvertujte PDF u PDF/A za dugoročno čuvanje"
+    },
+    "PDFToWord": {
+      "title": "PDF u Word",
+      "desc": "Konvertujte PDF u Word formate (DOC, DOCX i ODT)"
+    },
+    "PDFToPresentation": {
+      "title": "PDF u Prezentaciju",
+      "desc": "Konvertujte PDF u formate za prezentaciju (PPT, PPTX i ODP)"
+    },
+    "PDFToText": {
+      "title": "PDF u RTF (Tekst)",
+      "desc": "Konvertujte PDF u tekst ili RTF format"
+    },
+    "PDFToHTML": {
+      "title": "PDF u HTML",
+      "desc": "Konvertujte PDF u HTML format"
+    },
+    "PDFToXML": {
+      "title": "PDF u XML",
+      "desc": "Konvertujte PDF u XML format"
+    },
+    "ScannerImageSplit": {
+      "title": "Detekcija/Razdvajanje skeniranih fotografija",
+      "desc": "Razdvaja više fotografija unutar slike/PDF-a"
+    },
+    "sign": {
+      "title": "Potpis",
+      "desc": "Dodaje potpis u PDF crtežom, tekstom ili slikom"
+    },
+    "flatten": {
+      "title": "Ravnanje",
+      "desc": "Uklanja sve interaktivne elemente i forme iz PDF-a"
+    },
+    "repair": {
+      "title": "Popravi",
+      "desc": "Pokušava popraviti oštećeni/izgubljeni PDF"
+    },
+    "removeBlanks": {
+      "title": "Ukloni prazne stranice",
+      "desc": "Detektuje i uklanja prazne stranice iz dokumenta"
+    },
+    "removeAnnotations": {
+      "title": "Ukloni Anotacije",
+      "desc": "Uklanja sve komentare/anotacije iz PDF-a"
+    },
+    "compare": {
+      "title": "Uporedi",
+      "desc": "Upoređuje i prikazuje razlike između 2 PDF dokumenata"
+    },
+    "certSign": {
+      "title": "Potpis sa sertifikatom",
+      "desc": "Potpisuje PDF sa sertifikatom/ključem (PEM/P12)"
+    },
+    "removeCertSign": {
+      "title": "Uklanjanje digitalnog potpisa",
+      "desc": "Uklanjanje digitalnog potpisa sa sertifikatom iz PDF-a"
+    },
+    "pageLayout": {
+      "title": "Višestruki prikaz stranica",
+      "desc": "Spaja više stranica PDF dokumenta u jednu stranicu"
+    },
+    "scalePages": {
+      "title": "Podesi veličinu/skalu stranice",
+      "desc": "Podesi veličinu/skalu stranice i/ili njenog sadržaja."
+    },
+    "pipeline": {
+      "title": "Pipeline (Napredno)",
+      "desc": "Pokreće više akcija na PDF-ovima definisanjem skripti u pipelinu"
+    },
+    "addPageNumbers": {
+      "title": "Dodaj brojeve stranica",
+      "desc": "Dodaje brojeve stranica u dokumentu na određeno mesto"
+    },
+    "auto-rename": {
+      "title": "Automatsko preimenovanje PDF fajla",
+      "desc": "Automatski menja ime PDF fajla na osnovu detektovanog zaglavlja"
+    },
+    "adjustContrast": {
+      "title": "Podesi boje/kontrast",
+      "desc": "Podesi kontrast, zasićenost i osvetljenost PDF-a"
+    },
+    "crop": {
+      "title": "Skraćivanje PDF-a",
+      "desc": "Skraćuje PDF radi smanjenja veličine (zadržava tekst!)"
+    },
+    "autoSplitPDF": {
+      "title": "Automatsko razdvajanje stranica",
+      "desc": "Automatski deli skenirane PDF-ove pomoću fizičkog skenera QR koda"
+    },
+    "sanitizePDF": {
+      "title": "Sanitizacija",
+      "desc": "Uklanja skripte i druge elemente iz PDF fajlova"
+    },
+    "URLToPDF": {
+      "title": "URL/Website u PDF",
+      "desc": "Konvertuje bilo koji http(s) URL u PDF"
+    },
+    "HTMLToPDF": {
+      "title": "HTML u PDF",
+      "desc": "Konvertuje bilo koji HTML fajl ili zip u PDF"
+    },
+    "MarkdownToPDF": {
+      "title": "Markdown u PDF",
+      "desc": "Konvertuje bilo koji Markdown fajl u PDF"
+    },
+    "PDFToMarkdown": {
+      "title": "PDF to Markdown",
+      "desc": "Converts any PDF to Markdown"
+    },
+    "getPdfInfo": {
+      "title": "Dohvati SVE informacije o PDF-u",
+      "desc": "Dobavlja sve moguće informacije o PDF-ovima"
+    },
+    "pageExtracter": {
+      "title": "Izdvajanje stranica",
+      "desc": "Izdvaja odabrane stranice iz PDF-a"
+    },
+    "pdfToSinglePage": {
+      "title": "PDF u Jednu Veliku Stranicu",
+      "desc": "Spaja sve stranice PDF-a u jednu veliku stranicu"
+    },
+    "showJS": {
+      "title": "Prikaži JavaScript",
+      "desc": "Pretražuje i prikazuje bilo koji JavaScript ubačen u PDF"
+    },
+    "autoRedact": {
+      "title": "Automatsko Cenzurisanje",
+      "desc": "Automatsko cenzurisanje teksta u PDF-u na osnovu unetog teksta"
+    },
+    "redact": {
+      "title": "Manual Redaction",
+      "desc": "Redacts a PDF based on selected text, drawn shapes and/or selected page(s)"
+    },
+    "PDFToCSV": {
+      "title": "PDF u CSV",
+      "desc": "Izdvaja tabele iz PDF-a pretvarajući ih u CSV"
+    },
+    "split-by-size-or-count": {
+      "title": "Automatsko Deljenje po Veličini/Broju",
+      "desc": "Deljenje jednog PDF-a na više dokumenata na osnovu veličine, broja stranica ili broja dokumenata"
+    },
+    "overlay-pdfs": {
+      "title": "Preklapanje PDF-ova",
+      "desc": "Preklapa PDF-ove jedan preko drugog"
+    },
+    "split-by-sections": {
+      "title": "Deljenje PDF-a po Odeljcima",
+      "desc": "Deljenje svake stranice PDF-a na manje horizontalne i vertikalne odeljke"
+    },
+    "AddStampRequest": {
+      "title": "Dodaj pečat u PDF",
+      "desc": "Dodavanje teksta ili slike pečeta na željenim lokacijama"
+    },
+    "removeImage": {
+      "title": "Ukloni sliku",
+      "desc": "Remove image from PDF to reduce file size"
+    },
+    "splitByChapters": {
+      "title": "Podeli PDF po poglavljima",
+      "desc": "Split a PDF into multiple files based on its chapter structure."
+    },
+    "validateSignature": {
+      "title": "Proveri PDF potpis",
+      "desc": "Verifikacija digitalnog potpisa i sertifikata u PDF dokumentu"
+    },
+    "replace-color": {
+      "title": "Replace and Invert Color",
+      "desc": "Replace color for text and background in PDF and invert full color of pdf to reduce file size"
+    },
+    "convert": {
+      "title": "Konvertuj"
+    },
+    "attachments": {
+      "title": "Dodaj priloge",
+      "desc": "Dodavanje ili uklanjanje uključenih datoteka (priloga) u/iz PDF-a"
+    },
+    "editTableOfContents": {
+      "title": "Izmeni sadržaj",
+      "desc": "Dodaj ili izmeni obeleživače i sadržaj u PDF dokumentima"
+    },
+    "extractPages": {
+      "title": "Izdvajanje stranica"
+    },
+    "removePages": {
+      "title": "Ukloni",
+      "desc": "Brisanje nepotrebnih stranice iz PDF dokumenta"
+    },
+    "removeImagePdf": {
+      "title": "Ukloni sliku",
+      "desc": "Uklanjanje slike iz PDF-a u cilju smanjenja veličine datoteke"
+    },
+    "autoSizeSplitPDF": {
+      "title": "Automatsko deljenje po veličini/broju",
+      "desc": "Deljenje jednog PDF-a na više na osnovu veličine, broja stranica ili broja dokumenata"
+    },
+    "adjust-contrast": {
+      "title": "Podesi boje/kontrast",
+      "desc": "Podešavanje kontrasta, zasićenosti i osvetljenost PDF-a"
+    },
+    "replaceColorPdf": {
+      "title": "Napredna podešavanja boja",
+      "desc": "Zameni boju teksta i pozadine u PDF i invertuj celokupnu boju PDF-a u cilju smanjenja veličine datoteke"
+    },
+    "changePermissions": {
+      "title": "Promeni dozvole"
+    }
+  },
+  "viewPdf": {
+    "tags": "pregled,čitanje,anotiranje,tekst,slika",
+    "title": "Pogledaj/Izmeni PDF",
+    "header": "Prikaz PDF-a"
+  },
+  "multiTool": {
+    "tags": "Multi Alat,Multi operacija,Korisnički interfejs,klik i povuci,front end,klijentska strana,interaktivno,pomera",
+    "title": "PDF Multi Alatka",
+    "header": "PDF Multi Alatka",
+    "uploadPrompts": "Naziv datoteke",
+    "selectAll": "Izaberi sve",
+    "deselectAll": "Poništi sve",
+    "selectPages": "Izbor stranica",
+    "selectedPages": "Izabrane stranice",
+    "page": "Stranica",
+    "deleteSelected": "Izaberi izabrano",
+    "downloadAll": "Izvoz",
+    "downloadSelected": "Izvezi izabrano",
+    "insertPageBreak": "Ubaci prelom stranice",
+    "addFile": "Dodaj datoteku",
+    "rotateLeft": "Rotiraj levo",
+    "rotateRight": "Rotiraj desno",
+    "split": "Podeli",
+    "moveLeft": "Pomeri levo",
+    "moveRight": "Pomeri desno",
+    "delete": "Obriši",
+    "dragDropMessage": "Izabrane stranica/e",
+    "undo": "Undo",
+    "redo": "Redo"
+  },
+  "merge": {
+    "tags": "spajanje,Operacije sa stranicama,Backend,server strana",
+    "title": "Spajanje",
+    "header": "Spajanje više PDF fajlova (2+)",
+    "sortByName": "Sortiraj po imenu",
+    "sortByDate": "Sortiraj po datumu",
+    "removeCertSign": "Remove digital signature in the merged file?",
+    "submit": "Spajanje",
+    "sortBy": {
+      "filename": "Ime datoteke"
+    }
+  },
+  "split": {
+    "tags": "Operacije sa stranicama,podela,Višestruke stranice,sečenje,server strana",
+    "title": "Razdvajanje PDF-a",
+    "header": "Razdvajanje PDF-a",
+    "desc": {
+      "1": "Brojevi koje izaberete predstavljaju brojeve stranica na kojima želite napraviti razdvajanje",
+      "2": "Na primer, izbor 1,3,7-9 bi razdvojio dokument od 10 stranica u 6 odvojenih PDF-a sa:",
+      "3": "Dokument #1: Stranica 1",
+      "4": "Dokument #2: Stranice 2 i 3",
+      "5": "Dokument #3: Stranice 4, 5, 6 i 7",
+      "6": "Dokument #4: Stranica 8",
+      "7": "Dokument #5: Stranica 9",
+      "8": "Dokument #6: Stranice 10"
+    },
+    "splitPages": "Unesite stranice za razdvajanje:",
+    "submit": "Razdvoji",
+    "steps": {
+      "settings": "Podešavanja"
+    },
+    "methods": {
+      "bySize": {
+        "name": "Veličina datoteke"
+      }
+    },
+    "value": {
+      "fileSize": {
+        "label": "Veličina datoteke"
+      }
+    }
+  },
+  "rotate": {
+    "tags": "server strana",
+    "title": "Rotiranje PDF-a",
+    "header": "Rotiranje PDF-a",
+    "selectAngle": "Izaberite ugao rotacije (u višestrukim od 90 stepeni):",
+    "submit": "Rotiraj"
+  },
+  "imageToPdf": {
+    "tags": "konverzija,img,jpg,slika,foto"
+  },
+  "pdfToImage": {
+    "tags": "konverzija,img,jpg,slika,foto",
+    "title": "PDF u sliku",
+    "header": "PDF u sliku",
+    "selectText": "Format slike",
+    "singleOrMultiple": "Tip rezultata slike po stranici",
+    "single": "Jedna velika slika koja sadrži sve stranice",
+    "multi": "Više slika, po jedna slika po stranici",
+    "colorType": "Tip boje",
+    "color": "Boja",
+    "grey": "Nijanse sive",
+    "blackwhite": "Crno-belo (Može izgubiti podatke!)",
+    "submit": "Konvertuj",
+    "info": "Python nije instaliran. Neophodan je za WebP konverziju.",
+    "placeholder": "(npr. 1,2,8 ili 4,7,12-16 ili 2n-1)"
+  },
+  "pdfOrganiser": {
+    "tags": "dupleks,parne,neparne,sortiranje,pomeranje",
+    "title": "Organizator stranica",
+    "header": "Organizator stranica u PDF-u",
+    "submit": "Preuredi stranice",
+    "mode": {
+      "_value": "Mode",
+      "1": "Prilagođeni redosled stranica",
+      "2": "Obrnuti redosled",
+      "3": "Redosled za obostranu štampu",
+      "4": "Redosled za brošuru",
+      "5": "Redosled za brošuru sa spajanjem sa strane",
+      "6": "Razdvoji neparne i parne stranice",
+      "7": "Ukloni prvu",
+      "8": "Ukloni poslednju",
+      "9": "Ukloni prvu i poslednju",
+      "10": "Spoji neparne i parne stranice",
+      "11": "Dupliraj sve stranice"
+    },
+    "placeholder": "(npr. 1,3,2 ili 4-8,2,10-12 ili 2n-1)"
+  },
+  "addImage": {
+    "tags": "img,jpg,slika,foto",
+    "title": "Dodaj sliku",
+    "header": "Dodaj sliku u PDF",
+    "everyPage": "Na svakoj stranici?",
+    "upload": "Dodaj sliku",
+    "submit": "Dodaj sliku"
+  },
+  "watermark": {
+    "tags": "Tekst,ponavljanje,etiketa,vlastiti,autorsko pravo,zaštita, img,jpg,slika,foto",
+    "title": "Dodaj vodeni žig",
+    "header": "Dodaj vodeni žig",
+    "customColor": "Custom Text Color",
+    "selectText": {
+      "1": "Izaberite PDF za dodavanje vodenog žiga:",
+      "2": "Tekst vodenog žiga:",
+      "3": "Veličina fonta:",
+      "4": "Rotacija (0-360):",
+      "5": "Širina razmaka (Razmak između svakog vodenog žiga horizontalno):",
+      "6": "Visina razmaka (Razmak između svakog vodenog žiga vertikalno):",
+      "7": "Opačitost (0% - 100%):",
+      "8": "Tip vodenog žiga:",
+      "9": "Slika vodenog žiga:",
+      "10": "Convert PDF to PDF-Image"
+    },
+    "submit": "Dodaj vodeni žig",
+    "type": {
+      "1": "Text",
+      "2": "Image"
+    },
+    "watermarkType": {
+      "text": "Tekst"
+    },
+    "settings": {
+      "fontSize": "Veličina fonta"
+    }
+  },
+  "permissions": {
+    "tags": "čitanje,pisanje,izmena,štampa",
+    "title": "Promeni dozvole",
+    "header": "Promeni dozvole",
+    "warning": "Upozorenje: Da biste ove dozvole učinili nepromenljivim, preporučuje se postavljanje šifre putem stranice za dodavanje šifre.",
+    "selectText": {
+      "1": "Izaberite PDF za promenu dozvola",
+      "2": "Postavke dozvola",
+      "3": "Onemogući sastavljanje dokumenta",
+      "4": "Onemogući ekstrakciju sadržaja",
+      "5": "Onemogući ekstrakciju za pristupačnost",
+      "6": "Onemogući popunjavanje formulara",
+      "7": "Onemogući modifikaciju",
+      "8": "Onemogući modifikaciju anotacija",
+      "9": "Onemogući štampanje",
+      "10": "Onemogući štampanje u različitim formatima"
+    },
+    "submit": "Promeni"
+  },
+  "removePages": {
+    "tags": "Ukloni stranice,obriši stranice",
+    "title": "Ukloni",
+    "submit": "Ukloni"
+  },
+  "addPassword": {
+    "tags": "bezbedno,zaštita",
+    "title": "Dodaj šifru",
+    "header": "Dodaj šifru (Enkripcija)",
+    "selectText": {
+      "1": "Izaberite PDF za enkripciju",
+      "2": "Korisnička šifra",
+      "3": "Dužina enkripcijskog ključa",
+      "4": "Veće vrednosti su jače, ali manje vrednosti imaju bolju kompatibilnost.",
+      "5": "Postavke dozvola (Preporučuje se korišćenje sa šifrom vlasnika)",
+      "6": "Onemogući sastavljanje dokumenta",
+      "7": "Onemogući ekstrakciju sadržaja",
+      "8": "Onemogući ekstrakciju za pristupačnost",
+      "9": "Onemogući popunjavanje formulara",
+      "10": "Onemogući modifikaciju",
+      "11": "Onemogući modifikaciju anotacija",
+      "12": "Onemogući štampanje",
+      "13": "Onemogući štampanje u različitim formatima",
+      "14": "Šifra vlasnika",
+      "15": "Ograničava šta se može raditi sa dokumentom nakon otvaranja (Nije podržano od svih čitača)",
+      "16": "Ograničava otvaranje samog dokumenta"
+    },
+    "submit": "Enkriptuj",
+    "tooltip": {
+      "permissions": {
+        "title": "Promeni dozvole"
+      }
+    }
+  },
+  "removePassword": {
+    "tags": "bezbedno,Dešifruj,zaštita,ukloni lozinku",
+    "title": "Ukloni šifru",
+    "header": "Ukloni šifru (Dekripcija)",
+    "selectText": {
+      "1": "Izaberite PDF za dekripciju",
+      "2": "Šifra"
+    },
+    "submit": "Ukloni",
+    "desc": "Uklanjanje lozinke iz PDF dokumenta",
+    "password": {
+      "stepTitle": "Ukloni lozinku",
+      "label": "Trenutna lozinka"
+    }
+  },
+  "compressPdfs": {
+    "tags": "smanji,mali,minijaturni"
+  },
+  "unlockPDFForms": {
+    "tags": "ukloni,obriši,obrazac,polje,samo za čitanje",
+    "title": "Ukloni režim samo-za-čitanje sa polja obrasca",
+    "header": "Otključaj PDF obrazac",
+    "submit": "Remove"
+  },
+  "changeMetadata": {
+    "tags": "Naslov,autor,datum,kreacije,vreme,izdavač,proizvođač,statistike",
+    "title": "Naslov:",
+    "header": "Promeni metapodatke",
+    "selectText": {
+      "1": "Izmenite promenljive koje želite promeniti",
+      "2": "Obriši sve metapodatke",
+      "3": "Prikaži prilagođene metapodatke:",
+      "4": "Drugi metapodaci:",
+      "5": "Dodaj prilagođeni unos metapodataka"
+    },
+    "author": "Autor:",
+    "creationDate": "Datum kreiranja (gggg/MM/dd HH:mm:ss):",
+    "creator": "Kreator:",
+    "keywords": "Ključne reči:",
+    "modDate": "Datum izmene (gggg/MM/dd HH:mm:ss):",
+    "producer": "Proizvođač:",
+    "subject": "Tema:",
+    "trapped": "Zaglavljeno:",
+    "submit": "Promeni"
+  },
+  "fileToPDF": {
+    "tags": "transformacija,format,dokument,slika,slajd,tekst,konverzija,office,docs,word,excel,powerpoint",
+    "title": "Fajl u PDF",
+    "header": "Konvertuj bilo koji fajl u PDF",
+    "credit": "Ova usluga koristi LibreOffice i Unoconv za konverziju fajla.",
+    "supportedFileTypesInfo": "Podržani tipovi datoteka",
+    "supportedFileTypes": "Podržani tipovi fajlova bi trebali uključivati navedeno, ali za punu ažuriranu listu podržanih formata, molimo pogledajte LibreOffice dokumentaciju",
+    "submit": "Konvertuj u PDF"
+  },
+  "ocr": {
+    "tags": "prepoznavanje,tekst,slika,sken,čitanje,identifikacija,detekcija,uređivanje",
+    "title": "OCR / Čišćenje skeniranja",
+    "header": "Čišćenje skeniranja / OCR (Optičko prepoznavanje znakova)",
+    "selectText": {
+      "1": "Odaberite jezike koji će biti detektovani unutar PDF-a (Navedeni su trenutno detektovani):",
+      "2": "Proizvedi tekstualni fajl koji sadrži OCR tekst uz OCR-ovani PDF",
+      "3": "Ispravite stranice koje su skenirane pod uglom rotirajući ih na svoje mesto",
+      "4": "Očistite stranicu tako da je manje verovatno da će OCR pronaći tekst u pozadinskom šumu. (Bez promene izlaza)",
+      "5": "Očistite stranicu tako da je manje verovatno da će OCR pronaći tekst u pozadinskom šumu, zadržavajući čišćenje u izlazu.",
+      "6": "Ignoriše stranice koje imaju interaktivni tekst, samo OCR-uje stranice koje su slike",
+      "7": "Prinudni OCR, OCR-uje svaku stranicu uklanjajući sve originalne tekstualne elemente",
+      "8": "Normalno (Prikaže grešku ako PDF sadrži tekst)",
+      "9": "Dodatne postavke",
+      "10": "Režim OCR-a",
+      "11": "Ukloni slike nakon OCR-a (Uklanja SVE slike, korisno samo ako je deo koraka konverzije)",
+      "12": "Tip rendiranja (Napredno)"
+    },
+    "help": "Molimo vas da pročitate ovu dokumentaciju o tome kako koristiti ovo za druge jezike i/ili korišćenje van docker-a",
+    "credit": "Ova usluga koristi qpdf i Tesseract za OCR.",
+    "submit": "Obradi PDF sa OCR-om",
+    "desc": "Čišćenje skenova i detektovanje teksta na slikama unutar PDF-a i ponovno dodavanje kao teksta",
+    "settings": {
+      "title": "Podešavanja",
+      "ocrMode": {
+        "label": "Režim OCR-a:"
+      },
+      "languages": {
+        "label": "Jezici"
+      }
+    },
+    "tooltip": {
+      "mode": {
+        "title": "Režim OCR-a:"
+      },
+      "languages": {
+        "title": "Jezici"
+      }
+    }
+  },
+  "extractImages": {
+    "tags": "slika,foto,sačuvaj,arhiva,zip,zahvati,uhvati",
+    "title": "Izdvajanje slika",
+    "header": "Izdvajanje slika",
+    "selectText": "Odaberite format slike za konvertovanje izdvojenih slika",
+    "allowDuplicates": "Sačuvaj duplirane slike",
+    "submit": "Izdvajanje"
+  },
+  "pdfToPDFA": {
+    "tags": "arhiva,dugoročno,standard,konverzija,čuvanje,čuvanje",
+    "title": "PDF u PDF/A",
+    "header": "PDF u PDF/A",
+    "credit": "Ova usluga koristi libreoffice za konverziju u PDF/A format",
+    "submit": "Konvertuj",
+    "tip": "Trenutno nije podržano za više unosa istovremeno",
+    "outputFormat": "Izlazni format:",
+    "pdfWithDigitalSignature": "PDF sadrži digitalni potpis. Biće uklonjen u sledećem koraku."
+  },
+  "PDFToWord": {
+    "tags": "doc,docx,odt,word,transformacija,format,konverzija,office,microsoft,docfile",
+    "title": "PDF u Word",
+    "header": "PDF u Word",
+    "selectText": {
+      "1": "Format izlaznog fajla"
+    },
+    "credit": "Ova usluga koristi LibreOffice za konverziju fajlova.",
+    "submit": "Konvertuj"
+  },
+  "PDFToPresentation": {
+    "tags": "slajdovi,prikaz,office,microsoft",
+    "title": "PDF u Prezentaciju",
+    "header": "PDF u Prezentaciju",
+    "selectText": {
+      "1": "Format izlaznog fajla"
+    },
+    "credit": "Ova usluga koristi LibreOffice za konverziju fajlova.",
+    "submit": "Konvertuj"
+  },
+  "PDFToText": {
+    "tags": "richformat,richtextformat,rich tekst format",
+    "title": "PDF u RTF (Tekst)",
+    "header": "PDF u RTF (Tekst)",
+    "selectText": {
+      "1": "Format izlaznog fajla"
+    },
+    "credit": "Ova usluga koristi LibreOffice za konverziju fajlova.",
+    "submit": "Konvertuj"
+  },
+  "PDFToHTML": {
+    "tags": "web sadržaj,prijateljski za pretraživače",
+    "title": "PDF u HTML",
+    "header": "PDF u HTML",
+    "credit": "Ova usluga koristi pdftohtml za konverziju fajlova.",
+    "submit": "Konvertuj"
+  },
+  "PDFToXML": {
+    "tags": "izdvajanje-podataka,strukturirani-sadržaj,interop,transformacija,konvertovanje",
+    "title": "PDF u XML",
+    "header": "PDF u XML",
+    "credit": "Ova usluga koristi LibreOffice za konverziju fajlova.",
+    "submit": "Konvertuj"
+  },
+  "ScannerImageSplit": {
+    "tags": "razdvoji,auto-detekcija,skeniranja,višestruke fotografije,organizacija",
+    "selectText": {
+      "1": "Ugao praga:",
+      "2": "Postavlja minimalni apsolutni ugao potreban za rotiranje slike (podrazumevano: 10).",
+      "3": "Tolerancija:",
+      "4": "Određuje opseg varijacije boja oko procenjene boje pozadine (podrazumevano: 30).",
+      "5": "Minimalna površina:",
+      "6": "Postavlja minimalni prag površine za fotografiju (podrazumevano: 10000).",
+      "7": "Minimalna površina konture:",
+      "8": "Postavlja minimalni prag površine konture za fotografiju",
+      "9": "Veličina ivice:",
+      "10": "Postavlja veličinu ivice dodate i uklonjene kako bi se sprečile bele ivice u izlazu (podrazumevano: 1)."
+    },
+    "info": "Python nije instaliran. Neophodan je za rad."
+  },
+  "sign": {
+    "tags": "autorizacija,inicijali,crtani-potpis,tekstualni-potpis,slikovni-potpis",
+    "title": "Potpiši",
+    "header": "Potpiši PDF fajlove",
+    "upload": "Učitaj sliku",
+    "draw": "Nacrtaj potpis",
+    "text": "Tekstualni unos",
+    "clear": "Obriši",
+    "add": "Dodaj",
+    "saved": "Snimljeni potpisi",
+    "save": "Snimi potpis",
+    "personalSigs": "Lični potpisi",
+    "sharedSigs": "Deljeni potpisi",
+    "noSavedSigs": "Nema snimljenih potpisa",
+    "addToAll": "Dodaj na sve stranice",
+    "delete": "Obriši",
+    "first": "Prva strana",
+    "last": "Poslednja strana",
+    "next": "Sledeća strana",
+    "previous": "Prethodna strana",
+    "maintainRatio": "Uključi/isključi zadržavanje proporcija",
+    "undo": "Poništi",
+    "redo": "Ponovi"
+  },
+  "flatten": {
+    "tags": "statično,deaktivirati,neinteraktivno,usmeriti",
+    "title": "Ravnanje",
+    "header": "Ravnanje PDF fajlova",
+    "flattenOnlyForms": "Izravnaj samo forme",
+    "submit": "Ravnanje",
+    "steps": {
+      "settings": "Podešavanja"
+    },
+    "options": {
+      "flattenOnlyForms": "Izravnaj samo forme"
+    }
+  },
+  "repair": {
+    "tags": "popravi,vrati,korekcija,obnovi",
+    "title": "Popravi",
+    "header": "Popravi PDF fajlove",
+    "submit": "Popravi"
+  },
+  "removeBlanks": {
+    "tags": "čišćenje,usmeriti,ne-sadržaj,organizacija",
+    "title": "Ukloni prazne stranice",
+    "header": "Ukloni prazne stranice",
+    "threshold": "Prag beline piksela:",
+    "thresholdDesc": "Prag za određivanje koliko beli piksel mora biti 'beli'. 0 = Crno, 255 čisto belo.",
+    "whitePercent": "Procenat bele boje (%):",
+    "whitePercentDesc": "Procenat stranice koji mora biti 'beli' pikseli da bi se uklonili",
+    "submit": "Ukloni prazne"
+  },
+  "removeAnnotations": {
+    "tags": "komentari,isticanje,beleške,oznake,ukloni",
+    "title": "Ukloni Anotacije",
+    "header": "Ukloni Anotacije",
+    "submit": "Ukloni"
+  },
+  "compare": {
+    "tags": "razlikovati,kontrast,izmene,analiza",
+    "title": "Uporedi",
+    "header": "Uporedi PDF fajlove",
+    "highlightColor": {
+      "1": "Highlight Color 1:",
+      "2": "Highlight Color 2:"
+    },
+    "document": {
+      "1": "Dokument 1",
+      "2": "Dokument 2"
+    },
+    "submit": "Uporedi",
+    "complex": {
+      "message": "Jedan ili oba dostavljena dokumenta su veliki pa tačnost poređenja može biti smanjena."
+    },
+    "large": {
+      "file": {
+        "message": "Jedan ili oba dostavljena dokumenta su preveliki za obradu"
+      }
+    },
+    "no": {
+      "text": {
+        "message": "Jedan ili oba izabrana PDF-a nemaju tekstualni sadržaj. Izaberi PDF-ove sa tekstom za poređenje."
+      }
+    }
+  },
+  "certSign": {
+    "tags": "autentifikacija,PEM,P12,zvanično,šifrovanje",
+    "title": "Potpisivanje Sertifikatom",
+    "header": "Potpiši PDF sa svojim sertifikatom (Rad u toku)",
+    "selectPDF": "Izaberite PDF fajl za potpisivanje:",
+    "jksNote": "Napomena: Ako tvoj tip sertifikata nije naveden ispod, konvertuj ga u Java Keystore (.jks) format koristeći komandni alat keytool. Zatim izaberi opciju .jks ispod.",
+    "selectKey": "Izaberite svoj privatni ključ (PKCS#8 format, može biti .pem ili .der):",
+    "selectCert": "Izaberite svoj sertifikat (X.509 format, može biti .pem ili .der):",
+    "selectP12": "Izaberite svoj PKCS#12 keystore fajl (.p12 ili .pfx) (Opciono, ako je dostupan, trebalo bi da sadrži vaš privatni ključ i sertifikat):",
+    "selectJKS": "Izaberi svoju Java keystore datoteku (.jks or .keystore):",
+    "certType": "Tip sertifikata",
+    "password": "Unesite lozinku vašeg keystore-a ili privatnog ključa (ako je ima):",
+    "showSig": "Prikaži potpis",
+    "reason": "Razlog",
+    "location": "Lokacija",
+    "name": "Ime",
+    "showLogo": "Prikaži logo",
+    "submit": "Potpiši PDF"
+  },
+  "removeCertSign": {
+    "tags": "autentifikacija,PEM,P12,zvanični,dekripcija",
+    "title": "Ukloni potpis sertifikata",
+    "header": "Ukloni digitalni sertifikat iz PDF-a",
+    "selectPDF": "Izaberi PDF dokument:",
+    "submit": "Ukloni potpis"
+  },
+  "pageLayout": {
+    "tags": "spajanje,kompozit,pojedinačan-prikaz,organizacija",
+    "title": "Višestruki Raspored Stranica",
+    "header": "Višestruki Raspored Stranica",
+    "pagesPerSheet": "Stranica po listu:",
+    "addBorder": "Dodaj ivice",
+    "submit": "Potvrdi"
+  },
+  "scalePages": {
+    "tags": "izmena,modifikacija,dimenzija,adaptacija",
+    "title": "Podesi razmeru stranica",
+    "header": "Podesi razmeru stranica",
+    "pageSize": "Veličina stranice dokumenta.",
+    "keepPageSize": "Originalna veličina",
+    "scaleFactor": "Nivo zumiranja (rezanje) stranice.",
+    "submit": "Potvrdi"
+  },
+  "add-page-numbers": {
+    "tags": "paginacija,oznaka,organizacija,indeks"
+  },
+  "auto-rename": {
+    "tags": "auto-detekcija,zaglavlje-bazirano,organizacija,preimenovanje",
+    "title": "Automatsko preimenovanje",
+    "header": "Automatsko preimenovanje PDF-a",
+    "submit": "Automatsko preimenovanje"
+  },
+  "adjust-contrast": {
+    "tags": "korekcija-boja,podešavanje,modifikacija,unapredi"
+  },
+  "crop": {
+    "tags": "trimovanje,skupljanje,uređivanje,oblikovanje",
+    "title": "Iseci",
+    "header": "Skraćivanje PDF-a",
+    "submit": "Potvrdi"
+  },
+  "autoSplitPDF": {
+    "tags": "QR-bazirano,razdvoji,segment-skeniranja,organizacija",
+    "title": "Automatsko Deljenje PDF-a",
+    "header": "Automatsko Deljenje PDF-a",
+    "description": "Štampajte, umetnite, skenirajte, učitajte i dozvolite nam da automatski razdvojimo vaše dokumente. Nije potrebno ručno sortiranje.",
+    "selectText": {
+      "1": "Odštampajte nekoliko listova razdeljivača ispod (Crno-belo je u redu).",
+      "2": "Skenirajte sve vaše dokumente odjednom, ubacivanjem lista razdeljivača između njih.",
+      "3": "Učitajte jedan veliki skenirani PDF fajl i dozvolite Stirling PDF-u da obavi ostalo.",
+      "4": "Listovi razdeljivača se automatski detektuju i uklanjaju, obezbeđujući uredan konačni dokument."
+    },
+    "formPrompt": "Potvrdite PDF koji sadrži Stirling-PDF listove razdeljivača:",
+    "duplexMode": "Dupleks režim (skeniranje prednje i zadnje strane)",
+    "dividerDownload2": "Preuzmi 'Auto Splitter Divider (sa uputstvima).pdf'",
+    "submit": "Potvrdi"
+  },
+  "sanitizePdf": {
+    "tags": "čišćenje,bezbednost,bezbedno,ukloni-pretnje"
+  },
+  "URLToPDF": {
+    "tags": "uhvati-web,sačuvaj-stranicu,web-u-doc,arhiva",
+    "title": "URL u PDF",
+    "header": "URL u PDF",
+    "submit": "Konvertuj",
+    "credit": "Koristi WeasyPrint"
+  },
+  "HTMLToPDF": {
+    "tags": "oznake,web-sadržaj,transformacija,konvertovanje",
+    "title": "HTML u PDF",
+    "header": "HTML u PDF",
+    "help": "Prihvata HTML fajlove i ZIP-ove koji sadrže html/css/slike itd. potrebno",
+    "submit": "Konvertuj",
+    "credit": "Koristi WeasyPrint",
+    "zoom": "Nivo zumiranja za prikaz web sajta:",
+    "pageWidth": "Širina stranice u centimetrima. (Prazno za podrazumevanu vrednost)",
+    "pageHeight": "Visina stranice u centimetrima. (Prazno za podrazumevanu vrednost)",
+    "marginTop": "Gornja margina stranice u milimetrima. (Prazno za podrazumevanu vrednost)",
+    "marginBottom": "Donja margina stranice u milimetrima. (Prazno za podrazumevanu vrednost)",
+    "marginLeft": "Leva margina stranice u milimetrima. (Prazno za podrazumevanu vrednost)",
+    "marginRight": "Desna margina stranice u milimetrima. (Prazno za podrazumevanu vrednost)",
+    "printBackground": "Prikaži pozadinu web sajta.",
+    "defaultHeader": "Omogući podrazumevano zaglavlje (Naziv i broj stranice)",
+    "cssMediaType": "Promeni tip medija za CSS na stranici.",
+    "none": "Nijedno",
+    "print": "Štampaj",
+    "screen": "Ekran"
+  },
+  "MarkdownToPDF": {
+    "tags": "oznake,web-sadržaj,transformacija,konvertovanje",
+    "title": "Markdown u PDF",
+    "header": "Markdown u PDF",
+    "submit": "Konvertuj",
+    "help": "Rad u toku",
+    "credit": "Koristi WeasyPrint"
+  },
+  "PDFToMarkdown": {
+    "tags": "markup,web-sadržaj,transformacija,konvertovanje,md",
+    "title": "PDF u Markdown",
+    "header": "PDF u Markdown",
+    "submit": "Konvertuj"
+  },
+  "getPdfInfo": {
+    "tags": "informacije,podaci,statistike",
+    "title": "Informacije o PDF-u",
+    "header": "Informacije o PDF-u",
+    "submit": "Informacije",
+    "downloadJson": "Preuzmi JSON"
+  },
+  "extractPage": {
+    "tags": "izdvajanje"
+  },
+  "PdfToSinglePage": {
+    "tags": "jedna-stranica"
+  },
+  "showJS": {
+    "tags": "JS",
+    "title": "Prikaži Javascript",
+    "header": "Prikaži Javascript",
+    "downloadJS": "Preuzmi Javascript",
+    "submit": "Prikaži"
+  },
+  "autoRedact": {
+    "tags": "Cenzura,Sakrij,prekrivanje,crna,marker,skriveno",
+    "title": "Auto Cenzura",
+    "header": "Auto Cenzura",
+    "colorLabel": "Boja",
+    "textsToRedactLabel": "Tekst za cenzurisanje (razdvojeni linijama)",
+    "textsToRedactPlaceholder": "npr. \\nPoverljivo \\nVrhunski Tajno",
+    "useRegexLabel": "Koristi Regex",
+    "wholeWordSearchLabel": "Pretraga celih reči",
+    "customPaddingLabel": "Dodatni prazan prostor",
+    "convertPDFToImageLabel": "Konvertuj PDF u PDF-Image (koristi se za uklanjanje teksta iza okvira)",
+    "submitButton": "Potvrdi"
+  },
+  "redact": {
+    "tags": "Redact,Hide,black out,black,marker,hidden,manual",
+    "title": "Manual Redaction",
+    "header": "Manual Redaction",
+    "submit": "Redaktuj",
+    "textBasedRedaction": "Text based Redaction",
+    "pageBasedRedaction": "Page-based Redaction",
+    "convertPDFToImageLabel": "Convert PDF to PDF-Image (Used to remove text behind the box)",
+    "pageRedactionNumbers": {
+      "title": "Pages",
+      "placeholder": "(e.g. 1,2,8 or 4,7,12-16 or 2n-1)"
+    },
+    "redactionColor": {
+      "title": "Redaction Color"
+    },
+    "export": "Export",
+    "upload": "Upload",
+    "boxRedaction": "Box draw redaction",
+    "zoom": "Zoom",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out",
+    "nextPage": "Next Page",
+    "previousPage": "Previous Page",
+    "toggleSidebar": "Toggle Sidebar",
+    "showThumbnails": "Show Thumbnails",
+    "showDocumentOutline": "Show Document Outline (double-click to expand/collapse all items)",
+    "showAttatchments": "Show Attachments",
+    "showLayers": "Show Layers (double-click to reset all layers to the default state)",
+    "colourPicker": "Colour Picker",
+    "findCurrentOutlineItem": "Find current outline item",
+    "applyChanges": "Apply Changes",
+    "auto": {
+      "settings": {
+        "advancedTitle": "Napredno"
+      },
+      "wordsToRedact": {
+        "add": "Dodaj"
+      }
+    },
+    "manual": {
+      "pageRedactionNumbers": {
+        "title": "Strane",
+        "placeholder": "(npr. 1,2,8 ili 4,7,12-16 ili 2n-1)"
+      },
+      "export": "Izvoz"
+    }
+  },
+  "tableExtraxt": {
+    "tags": "CSV,Izdvajanje tabela,izdvajanje,konvertovanje"
+  },
+  "autoSizeSplitPDF": {
+    "tags": "pdf,delenje,dokumenti,organizacija"
+  },
+  "overlay-pdfs": {
+    "tags": "Preklapanje",
+    "header": "Preklapanje PDF fajlova",
+    "baseFile": {
+      "label": "Izaberite osnovni PDF fajl"
+    },
+    "overlayFiles": {
+      "label": "Izaberite PDF fajlove za preklapanje"
+    },
+    "mode": {
+      "label": "Izaberite režim preklapanja",
+      "sequential": "Sekvencijalno preklapanje",
+      "interleaved": "Interleaved preklapanje",
+      "fixedRepeat": "Fixed Repeat preklapanje"
+    },
+    "counts": {
+      "label": "Broj preklapanja (za režim Fixed Repeat)",
+      "placeholder": "Unesite brojeve odvojene zarezom (npr. 2,3,1)"
+    },
+    "position": {
+      "label": "Izaberite poziciju preklapanja",
+      "foreground": "Prethodni plan",
+      "background": "Pozadina"
+    },
+    "submit": "Potvrdi"
+  },
+  "split-by-sections": {
+    "tags": "Deljenje odeljaka,Deljenje,Podešavanje",
+    "title": "Razdvoji PDF po sekcijama",
+    "header": "Razdvoji PDF u sekcije",
+    "horizontal": {
+      "label": "Horizontalne podele",
+      "placeholder": "Unesite broj horizontalnih podele"
+    },
+    "vertical": {
+      "label": "Vertikalne podele",
+      "placeholder": "Unesite broj vertikalnih podele"
+    },
+    "submit": "Razdvoji PDF",
+    "merge": "Spoji u jedan PDF"
+  },
+  "AddStampRequest": {
+    "tags": "Stamp, Add image, center image, Watermark, PDF, Embed, Customize",
+    "header": "Pečatiraj PDF",
+    "title": "Dodavanje pečata u PDF",
+    "stampType": "Tip pečeta:",
+    "stampText": "Tekst pečata:",
+    "stampImage": "Slika pečeta:",
+    "alphabet": "Pismo:",
+    "fontSize": "Veličina fonta/slike:",
+    "rotation": "Rotacija:",
+    "opacity": "Providnost:",
+    "position": "Pozicija:",
+    "overrideX": "Zameni X koordinatu:",
+    "overrideY": "Zameni Y koordinatu:",
+    "customMargin": "Podešavanje margina:",
+    "customColor": "Custom Text Color",
+    "submit": "Pošalji"
+  },
+  "removeImagePdf": {
+    "tags": "Ukloni sliku, Zahvati na stranici, Bekend,serverska strana"
+  },
+  "splitPdfByChapters": {
+    "tags": "podeli,poglavlja,zabeleške,organizacija"
+  },
+  "validateSignature": {
+    "tags": "potpis,verifikacija,valdiacija,pdf,sertifikat,digitalni potpis,Validacija potpisa,Validacija sertifikata",
+    "title": "Verifikuj PDF potpise",
+    "header": "Verifikuj digitalne potpise",
+    "selectPDF": "Izaberi potpisanu PDF datoteku za proveru:",
+    "submit": "Verifikuj potpise",
+    "results": "Rezultati verifikacije:",
+    "status": {
+      "_value": "Status",
+      "valid": "Validan",
+      "invalid": "Invalidan"
+    },
+    "signer": "Potpisnik",
+    "date": "Datum",
+    "reason": "Razlog",
+    "location": "Lokacija",
+    "noSignatures": "Digitalni potpisi nisu pronađeni u ovom dokumentu",
+    "chain": {
+      "invalid": "Provera lanca sertifikata nije uspela – nije moguće potvrditi identitet potpisnika"
+    },
+    "trust": {
+      "invalid": "Sertifikat nije u skladištu poverenja – izvor nije moguće potvrditi"
+    },
+    "cert": {
+      "expired": "Sertifikat je istekao",
+      "revoked": "Sertifikat je opozvan",
+      "info": "Detalji o sertifikatu:",
+      "issuer": "Izdavalac",
+      "subject": "Subjekat",
+      "serialNumber": "Serijski broj",
+      "validFrom": "Važi od",
+      "validUntil": "Važi do",
+      "algorithm": "Algoritam",
+      "keySize": "Veličina ključa",
+      "version": "Verzija",
+      "keyUsage": "Namena ključa",
+      "selfSigned": "Samopotpisan",
+      "bits": "bitova"
+    },
+    "signature": {
+      "info": "Informacije o potpisu",
+      "_value": "Signature",
+      "mathValid": "Potpis je matematički validan ALI:"
+    },
+    "selectCustomCert": "Prilagođena X.509 datoteka sertifikata (opciono)"
+  },
+  "replace-color": {
+    "title": "Replace-Invert-Color",
+    "header": "Replace-Invert Color PDF",
+    "selectText": {
+      "1": "Replace or Invert color Options",
+      "2": "Default(Default high contrast colors)",
+      "3": "Custom(Customized colors)",
+      "4": "Full-Invert(Invert all colors)",
+      "5": "High contrast color options",
+      "6": "Beli tekst na crnoj pozadini",
+      "7": "Crni tekst na beloj pozadini",
+      "8": "Žuti tekst na crnoj pozadini",
+      "9": "Zeleni tekst na crnoj pozadini",
+      "10": "Choose text Color",
+      "11": "Choose background Color"
+    },
+    "submit": "Zameni"
+  },
+  "replaceColorPdf": {
+    "tags": "Replace Color,Page operations,Back end,server side"
+  },
+  "login": {
+    "title": "Prijavite se",
+    "header": "Prijavite se",
+    "signin": "Prijavite se",
+    "rememberme": "Zapamti me",
+    "invalid": "Neispravno korisničko ime ili lozinka.",
+    "locked": "Vaš nalog je zaključan.",
+    "signinTitle": "Molimo vas da se prijavite",
+    "ssoSignIn": "Prijavite se putem jedinstvene prijave",
+    "oAuth2AutoCreateDisabled": "OAUTH2 automatsko kreiranje korisnika je onemogućeno",
+    "oAuth2AdminBlockedUser": "Registracija ili prijava neregistrovanog korisnika je trenutno onemogućeno. Kontaktirajte administratora.",
+    "oauth2RequestNotFound": "Zahtev za autorizaciju nije pronađen",
+    "oauth2InvalidUserInfoResponse": "Neispravan odgovor sa korisničkim informacijama",
+    "oauth2invalidRequest": "Neispravan zahtev",
+    "oauth2AccessDenied": "Pristup odbijen",
+    "oauth2InvalidTokenResponse": "Neispravan odgovor tokena",
+    "oauth2InvalidIdToken": "Neispravan ID tokena",
+    "relyingPartyRegistrationNotFound": "Nije pronađena registracija partnerske strane",
+    "userIsDisabled": "Korisnik deaktiviran, prijava sa ovim korisničkim imenom je trenutno blokirana. Kontaktiraj administratora.",
+    "alreadyLoggedIn": "Već si prijavljen na",
+    "alreadyLoggedIn2": "uređaja. Odjavi se sa uređaja i pokušaj ponovo.",
+    "toManySessions": "Imaš previše aktivnih sesija",
+    "logoutMessage": "Odjavljen si."
+  },
+  "pdfToSinglePage": {
+    "title": "PDF u Jednu Stranicu",
+    "header": "PDF u Jednu Stranicu",
+    "submit": "Konvertuj u Jednu Stranicu"
+  },
+  "pageExtracter": {
+    "title": "Izdvajanje stranica",
+    "header": "Izdvajanje stranica",
+    "submit": "Izdvoji",
+    "placeholder": "(npr. 1,2,8 ili 4,7,12-16 ili 2n-1)"
+  },
+  "sanitizePDF": {
+    "title": "Sanitizacija PDF-a",
+    "header": "Sanitizacija PDF fajla",
+    "selectText": {
+      "1": "Ukloni JavaScript akcije",
+      "2": "Ukloni ugrađene fajlove",
+      "3": "Ukloni XMP metapodatke",
+      "4": "Ukloni linkove",
+      "5": "Ukloni fontove",
+      "6": "Ukloni metapodatke informacija o dokumentu"
+    },
+    "submit": "Sanitizuj PDF"
+  },
+  "adjustContrast": {
+    "title": "Podesi Kontrast",
+    "header": "Podesi Kontrast",
+    "contrast": "Kontrast:",
+    "brightness": "Osvetljenje:",
+    "saturation": "Zasićenje:",
+    "download": "Preuzmi"
+  },
+  "compress": {
+    "title": "Kompresija",
+    "header": "Kompresuj PDF",
+    "credit": "Ova usluga koristi qpdf za kompresiju / optimizaciju PDF-a.",
+    "grayscale": {
+      "label": "Primeni sivinu za kompresiju"
+    },
+    "selectText": {
+      "1": {
+        "_value": "Compression Settings",
+        "1": "1-3 PDF kompresija,</br> 4-6 blaga kompresija slika,</br> 7-9 intenzivna kompresija slika koja značajno smanjuje kvalitet slika"
+      },
+      "2": "Nivo optimizacije:",
+      "4": "Automatski režim - Automatski prilagođava kvalitet kako bi PDF bio tačne veličine",
+      "5": "Očekivana veličina PDF-a (npr. 25MB, 10.8MB, 25KB)"
+    },
+    "submit": "Kompresuj",
+    "method": {
+      "filesize": "Veličina datoteke"
+    }
+  },
+  "decrypt": {
+    "passwordPrompt": "Ova datoteka je zaštićena lozinkom. Unesi lozinku:",
+    "cancelled": "Operacija otkazana za PDF: {0}",
+    "noPassword": "Nije uneta lozinka za šifrovani PDF: {0}",
+    "invalidPassword": "Pokušaj ponovo sa ispravnom lozinkom.",
+    "invalidPasswordHeader": "Neispravna lozinka ili nepodržana enkripcija za PDF: {0}",
+    "unexpectedError": "Došle je do greške prilikom obrade datoteke. Pokušaj ponovo.",
+    "serverError": "Greška na serveru prilikom dekriptovanja: {0}",
+    "success": "Datoteka uspešno dekriptovana."
+  },
+  "multiTool-advert": {
+    "message": "Ova funkcija je dostupna i na našoj <a href=\"{0}\">stranici sa višenamenskim alatom</a>. Potraži unapređeni interfejs po stranici i dodatne funkcije!"
+  },
+  "pageRemover": {
+    "title": "Uklanjanje stranica",
+    "header": "Uklanjanje stranica iz PDF-a",
+    "pagesToDelete": "Stranice za brisanje (Unesite listu brojeva stranica odvojenih zarezima) :",
+    "submit": "Obriši stranice",
+    "placeholder": "(npr. 1,2,6 ili 1-10,15-30)"
+  },
+  "imageToPDF": {
+    "title": "Slika u PDF",
+    "header": "Slika u PDF",
+    "submit": "Konvertuj",
+    "selectLabel": "Opcije prilagođavanja slike",
+    "fillPage": "Popuni stranicu",
+    "fitDocumentToImage": "Prilagodi stranicu slici",
+    "maintainAspectRatio": "Očuvaj proporcije",
+    "selectText": {
+      "2": "Automatsko rotiranje PDF-a",
+      "3": "Logika za više fajlova (Omogućeno samo ako radite sa više slika)",
+      "4": "Spoji u jedan PDF",
+      "5": "Konvertuj u odvojene PDF-ove"
+    }
+  },
+  "PDFToCSV": {
+    "title": "PDF u CSV",
+    "header": "PDF u CSV",
+    "prompt": "Izaberite stranicu za ekstrakciju tabele",
+    "submit": "Izvuci"
+  },
+  "split-by-size-or-count": {
+    "title": "Razdvoji PDF po veličini ili broju",
+    "header": "Razdvoji PDF po veličini ili broju",
+    "type": {
+      "label": "Izaberite tip razdvajanja",
+      "size": "Po veličini",
+      "pageCount": "Po broju stranica",
+      "docCount": "Po broju dokumenata"
+    },
+    "value": {
+      "label": "Unesite vrednost",
+      "placeholder": "Unesite veličinu (npr. 2MB ili 3KB) ili broj (npr. 5)"
+    },
+    "submit": "Potvrdi"
+  },
+  "printFile": {
+    "title": "Odštampaj datoteku",
+    "header": "Odštampaj datoteku na štampaču",
+    "selectText": {
+      "1": "Izaberi datoteku za štampu",
+      "2": "Unesi naziv štampača"
+    },
+    "submit": "Štampaj"
+  },
+  "licenses": {
+    "nav": "Licenses",
+    "title": "3rd Party Licenses",
+    "header": "3rd Party Licenses",
+    "module": "Modul",
+    "version": "Verzija",
+    "license": "License"
+  },
+  "survey": {
+    "nav": "Anketa",
+    "title": "Stirling-PDF anketa",
+    "description": "Stirling-PDF ne prati korisnike, zato želimo da čujemo tvoje utiske kako bismo unapredili Stirling-PDF!",
+    "changes": "Stirling-PDF se promenio od poslednje ankete! Za više informacija, pogledaj naš blog post ovde:",
+    "changes2": "Sa ovim promenama dobijamo plaćenu poslovnu podršku i finansiranje",
+    "please": "Please consider taking our survey!",
+    "disabled": "(Popup za anketu će biti onemogućen u narednim ažuriranjima, ali će ostati dostupan na dnu stranice)",
+    "button": "Popuni anketu",
+    "dontShowAgain": "Ne prikazuj ponovo",
+    "meeting": {
+      "1": "Ako koristiš Stirling PDF na poslu, voleli bismo da razgovaramo sa tobom. Nudimo tehničke sesije podrške u zamenu za 15-minutni korisnički intervju.",
+      "2": "Ovo je prilika da:",
+      "3": "Dobiješ pomoć oko postavljanja, integracije ili rešavanja problema",
+      "4": "Pružiš direktne povratne informacije o performansama, specifičnim slučajevima i nedostacima funkcionalnosti",
+      "5": "Pomozi nam da unapredimo Stirling PDF za praktičnu upotrebu u preduzećima",
+      "6": "Ukoliko si zainteresov, možeš zakazati direktni termin sa našim timom. (Samo na engleskom jeziku)",
+      "7": "Radujemo se što ćemo detaljnije istražiti tvoje slučajeve korišćenja i učiniti Stirling PDF još boljim!",
+      "notInterested": "Nisi poslovni korisnik i/ili nisi zainteresovan za sastanak?",
+      "button": "Zakaži sastanak"
+    }
+  },
+  "removeImage": {
+    "title": "Ukloni sliku",
+    "header": "Ukloni sliku",
+    "removeImage": "Ukloni sliku",
+    "submit": "Ukloni sliku"
+  },
+  "splitByChapters": {
+    "title": "Podeli PDF po poglavljima",
+    "header": "Podeli PDF po poglavljima",
+    "bookmarkLevel": "Nivo oznake u sadržaju:",
+    "includeMetadata": "Uključi metapodatke",
+    "allowDuplicates": "Dozvoli duplikate",
+    "desc": {
+      "1": "Ovaj alat deli PDF fajl na više PDF-ova po osnovu strukture poglavlja.",
+      "2": "Nivo oznake: Izaberite nivo oznaka koji će se koristiti za deljenje (0 za najviši nivo, 1 za drugi nivo, itd.).",
+      "3": "Uključi metapodatke: Ako je označeno, metapodaci iz originalnog PDF-a biće uključeni u svaki podeljeni PDF.",
+      "4": "Dozvoli duplikate: Ako je označeno, omogućava da više oznaka na istoj strani kreira odvojene PDF fajlove."
+    },
+    "submit": "Podeli PDF"
+  },
+  "fileChooser": {
+    "click": "Klikni",
+    "or": "ili",
+    "dragAndDrop": "Prevuci i ispusti",
+    "dragAndDropPDF": "Prevuci PDF datoteku",
+    "dragAndDropImage": "Prevuci sliku",
+    "hoveredDragAndDrop": "Prevuci datoteku/e ovde",
+    "extractPDF": "Izvlačim..."
+  },
+  "releases": {
+    "footer": "Izdanja",
+    "title": "Beleške o izdanju",
+    "header": "Beleške o izdanju",
+    "current": {
+      "version": "Aktuelno izdanje"
+    },
+    "note": "Beleške o izdanju su dostupne samo na engleskom jeziku"
+  },
+  "cookieBanner": {
+    "popUp": {
+      "title": "Kako koristimo kolačiće",
+      "description": {
+        "1": "Koristimo kolačiće i druge tehnologije kako bismo poboljšali rad Stirling PDF-a — pomažući nam da unapredimo naše alate i nastavimo da razvijamo funkcije koje ćete voleti.",
+        "2": "If you’d rather not, clicking 'No Thanks' will only enable the essential cookies needed to keep things running smoothly."
+      },
+      "acceptAllBtn": "U redu",
+      "acceptNecessaryBtn": "Ne, hvala",
+      "showPreferencesBtn": "Upravljaj podešavanjima"
+    },
+    "preferencesModal": {
+      "title": "Centar za podešavanja saglasnoti",
+      "acceptAllBtn": "Prihvati sve",
+      "acceptNecessaryBtn": "Odbij sve",
+      "savePreferencesBtn": "Sačuvaj podešavanja",
+      "closeIconLabel": "Zatvori modal",
+      "serviceCounterLabel": "Usluga|Usluge",
+      "subtitle": "Korišćenje kolačića",
+      "description": {
+        "1": "Stirling PDF koristi kolačiće i slične tehnologije kako bi poboljšao vaše iskustvo i razumeo kako se naši alati koriste. Ovo nam pomaže da unapredimo performanse, razvijamo funkcije koje su vam važne i pružimo kontinuiranu podršku našim korisnicima.",
+        "2": "Stirling PDF ne može — i nikada neće — pratiti ili pristupati sadržaju dokumenata koje koristite.",
+        "3": "Vaša privatnost i poverenje su osnovni principi našeg rada."
+      },
+      "necessary": {
+        "title": {
+          "1": "Isključivo neophodni kolačići",
+          "2": "Uvek omogućeno"
+        },
+        "description": "These cookies are essential for the website to function properly. They enable core features like setting your privacy preferences, logging in, and filling out forms—which is why they can’t be turned off."
+      },
+      "analytics": {
+        "title": "Analitika",
+        "description": "Ovi kolačići nam pomažu da razumemo kako se naši alati koriste, kako bismo mogli da se fokusiramo na razvoj funkcija koje naša zajednica najviše ceni. Budite sigurni — Stirling PDF ne može i nikada neće pratiti sadržaj dokumenata sa kojima radite."
+      }
+    }
+  },
+  "download": "Preuzmi",
+  "undo": "Poništi",
+  "convert": {
+    "title": "Konvertuj",
+    "settings": "Podešavanja",
+    "color": "Boja",
+    "greyscale": "Monohromatski",
+    "fillPage": "Popuni stranicu",
+    "pdfaDigitalSignatureWarning": "PDF sadrži digitalni potpis. Biće uklonjen u sledećem koraku.",
+    "grayscale": "Monohromatski"
+  },
+  "attachments": {
+    "tags": "uključi,dodaj,datoteka,prilog,prilozi",
+    "title": "Dodaj priloge",
+    "header": "Dodaj priloge",
+    "submit": "Dodaj priloge"
+  },
+  "rightRail": {
+    "selectAll": "Izaberi sve",
+    "deselectAll": "Poništi sve"
+  },
+  "quickAccess": {
+    "sign": "Potpis"
+  },
+  "fileUpload": {
+    "loading": "Učitavam...",
+    "or": "ili"
+  },
+  "fileManager": {
+    "fileName": "Ime",
+    "fileVersion": "Verzija",
+    "selectAll": "Izaberi sve",
+    "deselectAll": "Poništi sve",
+    "deleteSelected": "Izaberi izabrano",
+    "download": "Preuzmi",
+    "delete": "Obriši"
+  },
+  "sanitize": {
+    "submit": "Sanitizacija PDF-a",
+    "steps": {
+      "settings": "Podešavanja"
+    }
+  },
+  "changePermissions": {
+    "title": "Promeni dozvole",
+    "submit": "Promeni dozvole",
+    "permissions": {
+      "preventAssembly": {
+        "label": "Onemogući sastavljanje dokumenta"
+      },
+      "preventExtractContent": {
+        "label": "Onemogući ekstrakciju sadržaja"
+      },
+      "preventExtractForAccessibility": {
+        "label": "Onemogući ekstrakciju alatima za pristupačnost"
+      },
+      "preventFillInForm": {
+        "label": "Onemogući popunjavanje formulara"
+      },
+      "preventModify": {
+        "label": "Onemogući modifikaciju"
+      },
+      "preventModifyAnnotations": {
+        "label": "Onemogući modifikaciju beleški"
+      },
+      "preventPrinting": {
+        "label": "Onemogući štampanje"
+      },
+      "preventPrintingFaithful": {
+        "label": "Onemogući štampanje u različitim formatima"
+      }
+    },
+    "tooltip": {
+      "header": {
+        "title": "Promeni dozvole"
+      }
+    }
+  }
+}

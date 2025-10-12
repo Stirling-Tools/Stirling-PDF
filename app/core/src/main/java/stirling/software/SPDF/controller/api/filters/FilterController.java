@@ -8,37 +8,35 @@ import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.SPDF.config.swagger.FilterResponse;
 import stirling.software.SPDF.model.api.PDFComparisonAndCount;
 import stirling.software.SPDF.model.api.PDFWithPageNums;
 import stirling.software.SPDF.model.api.filter.ContainsTextRequest;
 import stirling.software.SPDF.model.api.filter.FileSizeRequest;
 import stirling.software.SPDF.model.api.filter.PageRotationRequest;
 import stirling.software.SPDF.model.api.filter.PageSizeRequest;
+import stirling.software.common.annotations.AutoJobPostMapping;
+import stirling.software.common.annotations.api.FilterApi;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.PdfUtils;
 import stirling.software.common.util.WebResponseUtils;
 
-@RestController
-@RequestMapping("/api/v1/filter")
-@Tag(name = "Filter", description = "Filter APIs")
+@FilterApi
 @RequiredArgsConstructor
 public class FilterController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/filter-contains-text")
+    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/filter-contains-text")
+    @FilterResponse
     @Operation(
             summary = "Checks if a PDF contains set text, returns true if does",
             description = "Input:PDF Output:Boolean Type:SISO")
@@ -58,7 +56,8 @@ public class FilterController {
     }
 
     // TODO
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/filter-contains-image")
+    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/filter-contains-image")
+    @FilterResponse
     @Operation(
             summary = "Checks if a PDF contains an image",
             description = "Input:PDF Output:Boolean Type:SISO")
@@ -74,7 +73,8 @@ public class FilterController {
         return null;
     }
 
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/filter-page-count")
+    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/filter-page-count")
+    @FilterResponse
     @Operation(
             summary = "Checks if a PDF is greater, less or equal to a setPageCount",
             description = "Input:PDF Output:Boolean Type:SISO")
@@ -101,7 +101,8 @@ public class FilterController {
         return null;
     }
 
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/filter-page-size")
+    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/filter-page-size")
+    @FilterResponse
     @Operation(
             summary = "Checks if a PDF is of a certain size",
             description = "Input:PDF Output:Boolean Type:SISO")
@@ -139,7 +140,8 @@ public class FilterController {
         return null;
     }
 
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/filter-file-size")
+    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/filter-file-size")
+    @FilterResponse
     @Operation(
             summary = "Checks if a PDF is a set file size",
             description = "Input:PDF Output:Boolean Type:SISO")
@@ -167,7 +169,8 @@ public class FilterController {
         return null;
     }
 
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/filter-page-rotation")
+    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/filter-page-rotation")
+    @FilterResponse
     @Operation(
             summary = "Checks if a PDF is of a certain rotation",
             description = "Input:PDF Output:Boolean Type:SISO")

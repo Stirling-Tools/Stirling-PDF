@@ -30,17 +30,16 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.api.misc.AddStampRequest;
+import stirling.software.common.annotations.AutoJobPostMapping;
+import stirling.software.common.annotations.api.MiscApi;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.RegexPatternUtils;
@@ -48,9 +47,7 @@ import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
-@RestController
-@RequestMapping("/api/v1/misc")
-@Tag(name = "Misc", description = "Miscellaneous APIs")
+@MiscApi
 @RequiredArgsConstructor
 public class StampController {
 
@@ -74,7 +71,8 @@ public class StampController {
                 });
     }
 
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/add-stamp")
+    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/add-stamp")
+    @StandardPdfResponse
     @Operation(
             summary = "Add stamp to a PDF file",
             description =
@@ -236,17 +234,6 @@ public class StampController {
 
         PDRectangle pageSize = page.getMediaBox();
         float x, y;
-
-        if (overrideX >= 0 && overrideY >= 0) {
-            // Use override values if provided
-            x = overrideX;
-            y = overrideY;
-        } else {
-            x = calculatePositionX(pageSize, position, fontSize, font, fontSize, stampText, margin);
-            y =
-                    calculatePositionY(
-                            pageSize, position, calculateTextCapHeight(font, fontSize), margin);
-        }
         // Split the stampText into multiple lines
         String[] lines =
                 RegexPatternUtils.getInstance().getEscapedNewlinePattern().split(stampText);
@@ -256,15 +243,46 @@ public class StampController {
         float descent = font.getFontDescriptor().getDescent();
         float lineHeight = ((ascent - descent) / 1000) * fontSize;
 
+        // Compute a single pivot for the entire text block to avoid line-by-line wobble
+        float capHeight = calculateTextCapHeight(font, fontSize);
+        float blockHeight = Math.max(lineHeight, lineHeight * Math.max(1, lines.length));
+        float maxWidth = 0f;
+        for (String ln : lines) {
+            maxWidth = Math.max(maxWidth, calculateTextWidth(ln, font, fontSize));
+        }
+
+        if (overrideX >= 0 && overrideY >= 0) {
+            // Use override values if provided
+            x = overrideX;
+            y = overrideY;
+        } else {
+            // Base positioning on the true multi-line block size
+            x = calculatePositionX(pageSize, position, maxWidth, null, 0, null, margin);
+            y = calculatePositionY(pageSize, position, blockHeight, margin);
+        }
+
+        // After anchoring the block, draw from the top line downward
+        float adjustedX = x;
+        float adjustedY = y;
+        float pivotX = adjustedX + maxWidth / 2f;
+        float pivotY = adjustedY + blockHeight / 2f;
+
+        // Apply rotation about the block center at the graphics state level
+        contentStream.saveGraphicsState();
+        contentStream.transform(Matrix.getTranslateInstance(pivotX, pivotY));
+        contentStream.transform(Matrix.getRotateInstance(Math.toRadians(rotation), 0, 0));
+        contentStream.transform(Matrix.getTranslateInstance(-pivotX, -pivotY));
+
         contentStream.beginText();
         for (int i = 0; i < lines.length; i++) {
             String line = lines[i];
-            // Set the text matrix for each line with rotation
-            contentStream.setTextMatrix(
-                    Matrix.getRotateInstance(Math.toRadians(rotation), x, y - (i * lineHeight)));
+            // Start from top line: yTop = adjustedY + blockHeight - capHeight
+            float yLine = adjustedY + blockHeight - capHeight - (i * lineHeight);
+            contentStream.setTextMatrix(Matrix.getTranslateInstance(adjustedX, yLine));
             contentStream.showText(line);
         }
         contentStream.endText();
+        contentStream.restoreGraphicsState();
     }
 
     private void addImageStamp(
@@ -308,9 +326,17 @@ public class StampController {
         }
 
         contentStream.saveGraphicsState();
-        contentStream.transform(Matrix.getTranslateInstance(x, y));
+        // Rotate and scale about the center of the image
+        float centerX = x + (desiredPhysicalWidth / 2f);
+        float centerY = y + (desiredPhysicalHeight / 2f);
+        contentStream.transform(Matrix.getTranslateInstance(centerX, centerY));
         contentStream.transform(Matrix.getRotateInstance(Math.toRadians(rotation), 0, 0));
-        contentStream.drawImage(xobject, 0, 0, desiredPhysicalWidth, desiredPhysicalHeight);
+        contentStream.drawImage(
+                xobject,
+                -desiredPhysicalWidth / 2f,
+                -desiredPhysicalHeight / 2f,
+                desiredPhysicalWidth,
+                desiredPhysicalHeight);
         contentStream.restoreGraphicsState();
     }
 

@@ -13,26 +13,23 @@ import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.SPDF.config.swagger.StandardPdfResponse;
+import stirling.software.common.annotations.AutoJobPostMapping;
+import stirling.software.common.annotations.api.MiscApi;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.common.util.WebResponseUtils;
 
-@RestController
-@RequestMapping("/api/v1/misc")
+@MiscApi
 @Slf4j
-@Tag(name = "Misc", description = "Miscellaneous APIs")
 public class UnlockPDFFormsController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
@@ -40,7 +37,8 @@ public class UnlockPDFFormsController {
         this.pdfDocumentFactory = pdfDocumentFactory;
     }
 
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/unlock-pdf-forms")
+    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/unlock-pdf-forms")
+    @StandardPdfResponse
     @Operation(
             summary = "Remove read-only property from form fields",
             description =
