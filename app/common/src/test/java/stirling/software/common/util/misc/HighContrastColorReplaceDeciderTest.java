@@ -5,8 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 
 import org.junit.jupiter.api.Test;
 
-import stirling.software.common.model.api.misc.ReplaceAndInvert;
-import stirling.software.common.model.enumeration.HighContrastColorCombination;
+import stirling.software.common.model.enumeration.misc.HighContrastColorCombination;
+import stirling.software.common.model.enumeration.misc.ReplaceAndInvert;
 
 class HighContrastColorReplaceDeciderTest {
 

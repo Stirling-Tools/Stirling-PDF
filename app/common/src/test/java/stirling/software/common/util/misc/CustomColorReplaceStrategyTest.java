@@ -12,8 +12,8 @@ import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
-import stirling.software.common.model.api.misc.ReplaceAndInvert;
-import stirling.software.common.model.enumeration.HighContrastColorCombination;
+import stirling.software.common.model.enumeration.misc.HighContrastColorCombination;
+import stirling.software.common.model.enumeration.misc.ReplaceAndInvert;
 
 class CustomColorReplaceStrategyTest {
 

@@ -26,7 +26,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.SPDF.model.api.general.CropPdfForm;
+import stirling.software.SPDF.model.api.general.CropPdfFormRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.ProcessExecutor;
@@ -41,13 +41,16 @@ public class CropController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
+    // ToDo: No reference RemoveDataOutsideCrop in html | getRemoveDataOutsideCrop == true
+    // can only be changed using the API interface
     @PostMapping(value = "/crop", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "Crops a PDF document",
             description =
                     "This operation takes an input PDF file and crops it according to the given"
                             + " coordinates. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> cropPdf(@ModelAttribute CropPdfForm request) throws IOException {
+    public ResponseEntity<byte[]> cropPdf(@ModelAttribute CropPdfFormRequest request)
+            throws IOException {
         if (Boolean.TRUE.equals(request.getRemoveDataOutsideCrop())) {
             return cropWithGhostscript(request);
         } else {
@@ -55,7 +58,7 @@ public class CropController {
         }
     }
 
-    private ResponseEntity<byte[]> cropWithPDFBox(@ModelAttribute CropPdfForm request)
+    private ResponseEntity<byte[]> cropWithPDFBox(@ModelAttribute CropPdfFormRequest request)
             throws IOException {
         PDDocument sourceDocument = pdfDocumentFactory.load(request);
 
@@ -113,7 +116,7 @@ public class CropController {
                         request.getFileInput().getOriginalFilename(), "_cropped.pdf"));
     }
 
-    private ResponseEntity<byte[]> cropWithGhostscript(@ModelAttribute CropPdfForm request)
+    private ResponseEntity<byte[]> cropWithGhostscript(@ModelAttribute CropPdfFormRequest request)
             throws IOException {
         PDDocument sourceDocument = pdfDocumentFactory.load(request);
 

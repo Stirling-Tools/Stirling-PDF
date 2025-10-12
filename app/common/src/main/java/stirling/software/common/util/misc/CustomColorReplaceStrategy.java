@@ -24,8 +24,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.common.model.api.misc.ReplaceAndInvert;
-import stirling.software.common.model.enumeration.HighContrastColorCombination;
+import stirling.software.common.model.enumeration.misc.HighContrastColorCombination;
+import stirling.software.common.model.enumeration.misc.ReplaceAndInvert;
 
 @Slf4j
 public class CustomColorReplaceStrategy extends ReplaceAndInvertColorStrategy {

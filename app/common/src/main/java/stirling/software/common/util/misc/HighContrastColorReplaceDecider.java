@@ -1,7 +1,7 @@
 package stirling.software.common.util.misc;
 
-import stirling.software.common.model.api.misc.ReplaceAndInvert;
-import stirling.software.common.model.enumeration.HighContrastColorCombination;
+import stirling.software.common.model.enumeration.misc.HighContrastColorCombination;
+import stirling.software.common.model.enumeration.misc.ReplaceAndInvert;
 
 public class HighContrastColorReplaceDecider {
 

@@ -9,7 +9,7 @@ import stirling.software.common.model.api.PDFFile;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class CropPdfForm extends PDFFile {
+public class CropPdfFormRequest extends PDFFile {
 
     @Schema(
             description = "The x-coordinate of the top-left corner of the crop area",
@@ -30,6 +30,7 @@ public class CropPdfForm extends PDFFile {
     @Schema(
             description = "Whether to remove text outside the crop area (keeps images)",
             allowableValues = {"true", "false"},
-            type = "boolean")
+            requiredMode = Schema.RequiredMode.REQUIRED,
+            defaultValue = "true")
     private Boolean removeDataOutsideCrop = true;
 }

@@ -9,7 +9,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import stirling.software.common.model.api.PDFFile;
-import stirling.software.common.model.api.misc.ReplaceAndInvert;
+import stirling.software.common.model.enumeration.misc.ReplaceAndInvert;
 
 @Data
 @EqualsAndHashCode(callSuper = true)

@@ -1,4 +1,4 @@
-package stirling.software.common.model.enumeration;
+package stirling.software.common.model.enumeration.misc;
 
 public enum HighContrastColorCombination {
     WHITE_TEXT_ON_BLACK,
