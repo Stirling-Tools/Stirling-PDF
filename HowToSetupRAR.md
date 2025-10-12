@@ -19,6 +19,8 @@ CBR (Comic Book RAR) is an archive format used for digital comic books. It uses 
 
     * Visit the official download page: [rarlab.com/download.htm](https://www.rarlab.com/download.htm).
     * Download the correct command-line version for your host system's OS and CPU architecture.
+    * When using extract commands replace the -* with the current version number.
+    * For example, `tar -xzf rarlinux-x64-712.tar.gz` (for the latest as of writing this guide)
 
 2.  **Install RAR on your host system:**
 
@@ -64,7 +66,7 @@ Update your Docker command to include the volume mount. This exposes the `rar` e
 ```yaml
 services:
   stirling-pdf:
-    image: ghcr.io/stirling-tools/stirling-pdf:latest
+    image: docker.stirlingpdf.com/stirlingtools/stirling-pdf:latest
     ports:
       - '8080:8080'
     volumes:
@@ -149,6 +151,6 @@ Please be aware that RAR is shareware. It is free to use for personal, non-comme
 
 If you encounter issues or prefer not to use proprietary software, consider converting your files to the **CBZ (Comic Book ZIP)** format instead.
 
-* CBZ uses the open ZIP standard and requires no extra software installation.
+* CBZ uses the open ZIP open-standard and requires no extra software installation.
 * The **PDF to CBZ** tool is available in Stirling-PDF by default.
 * CBZ is widely supported by virtually all modern comic book reader applications, which is not the case for RAR.
