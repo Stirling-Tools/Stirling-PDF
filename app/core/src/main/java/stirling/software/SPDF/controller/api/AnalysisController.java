@@ -56,7 +56,9 @@ public class AnalysisController {
         }
     }
 
-    @AutoJobPostMapping(value = "/document-properties", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @AutoJobPostMapping(
+            value = "/document-properties",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @JsonDataResponse
     @Operation(
             summary = "Get PDF document properties",

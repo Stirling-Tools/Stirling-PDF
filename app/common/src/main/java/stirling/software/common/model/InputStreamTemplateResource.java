@@ -4,8 +4,6 @@ package stirling.software.common.model;
  * This class will be removed when frontend migration to React is complete
 
 
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 @Getter

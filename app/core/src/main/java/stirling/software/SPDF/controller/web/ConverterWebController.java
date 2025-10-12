@@ -1,16 +1,8 @@
 package stirling.software.SPDF.controller.web;
 
-<<<<<<< HEAD
 import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Controller;
-=======
->>>>>>> refs/remotes/origin/V2
 import org.springframework.ui.Model;
-<<<<<<< HEAD
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.server.ResponseStatusException;
-=======
->>>>>>> refs/remotes/origin/V2
 import org.springframework.web.servlet.ModelAndView;
 
 import io.swagger.v3.oas.annotations.Hidden;
@@ -32,7 +24,6 @@ public class ConverterWebController {
         model.addAttribute("currentPage", "img-to-pdf");
         return "convert/img-to-pdf";
     }
-
 
     @Deprecated
     // @GetMapping("/cbz-to-pdf")

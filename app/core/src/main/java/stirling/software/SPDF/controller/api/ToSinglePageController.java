@@ -32,7 +32,9 @@ public class ToSinglePageController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf-to-single-page")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/pdf-to-single-page")
     @StandardPdfResponse
     @Operation(
             summary = "Convert a multi-page PDF into a single long page PDF",

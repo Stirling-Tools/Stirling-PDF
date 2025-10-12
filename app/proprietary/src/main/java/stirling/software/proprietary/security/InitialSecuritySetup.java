@@ -60,14 +60,14 @@ public class InitialSecuritySetup {
         ApplicationProperties.Security.Jwt jwtProperties =
                 applicationProperties.getSecurity().getJwt();
 
-        boolean jwtEnabled = jwtProperties.isEnabled();
+        boolean jwtEnabled = jwtProperties.isEnableKeystore();
         if (!v2Enabled || !jwtEnabled) {
             log.debug(
                     "V2 enabled: {}, JWT enabled: {} - disabling all JWT features",
                     v2Enabled,
                     jwtEnabled);
 
-            jwtProperties.setKeyCleanup(false);
+            jwtProperties.setEnableKeyCleanup(false);
         }
     }
 

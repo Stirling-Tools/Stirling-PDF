@@ -303,18 +303,11 @@ public class ApplicationProperties {
 
         @Data
         public static class Jwt {
-<<<<<<< HEAD
-            private boolean enabled = true;
-            private boolean keyCleanup = true;
-            private int keyRetentionDays = 7;
-            private Boolean secureCookie;
-=======
             private boolean enableKeystore = true;
             private boolean enableKeyRotation = false;
             private boolean enableKeyCleanup = true;
             private int keyRetentionDays = 7;
             private boolean secureCookie;
->>>>>>> refs/remotes/origin/V2
         }
     }
 

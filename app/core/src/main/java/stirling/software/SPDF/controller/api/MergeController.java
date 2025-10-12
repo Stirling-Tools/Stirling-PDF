@@ -2,14 +2,7 @@ package stirling.software.SPDF.controller.api;
 
 import java.io.File;
 import java.io.IOException;
-<<<<<<< HEAD
 import java.io.InputStream;
-=======
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.attribute.BasicFileAttributes;
->>>>>>> refs/remotes/origin/V2
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -26,23 +19,13 @@ import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDOutlin
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 import org.apache.pdfbox.pdmodel.interactive.form.PDSignatureField;
-<<<<<<< HEAD
 import org.apache.xmpbox.XMPMetadata;
 import org.apache.xmpbox.schema.XMPBasicSchema;
 import org.apache.xmpbox.xml.DomXmpParser;
-=======
-import org.springframework.http.HttpStatus;
->>>>>>> refs/remotes/origin/V2
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
-<<<<<<< HEAD
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-=======
->>>>>>> refs/remotes/origin/V2
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 

@@ -14,11 +14,9 @@ import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDOutlin
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-
 import org.springframework.web.multipart.MultipartFile;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -48,7 +46,9 @@ public class EditTableOfContentsController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final ObjectMapper objectMapper;
 
-    @AutoJobPostMapping(value = "/extract-bookmarks", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @AutoJobPostMapping(
+            value = "/extract-bookmarks",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @JsonDataResponse
     @Operation(
             summary = "Extract PDF Bookmarks",
@@ -157,7 +157,9 @@ public class EditTableOfContentsController {
         return bookmark;
     }
 
-    @AutoJobPostMapping(value = "/edit-table-of-contents", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @AutoJobPostMapping(
+            value = "/edit-table-of-contents",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @StandardPdfResponse
     @Operation(
             summary = "Edit Table of Contents",

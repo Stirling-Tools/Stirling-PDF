@@ -46,10 +46,10 @@ class ApplicationPropertiesLogicTest {
         assertEquals(expectedLibre, tfm.getLibreofficeDir());
 
         tfm.setBaseTmpDir("/custom/base");
-        assertEquals("/custom/base", normalize.apply(tfm.getBaseTmpDir()));
+        assertEquals(normalize.apply("/custom/base"), normalize.apply(tfm.getBaseTmpDir()));
 
         tfm.setLibreofficeDir("/opt/libre");
-        assertEquals("/opt/libre", normalize.apply(tfm.getLibreofficeDir()));
+        assertEquals(normalize.apply("/opt/libre"), normalize.apply(tfm.getLibreofficeDir()));
     }
 
     @Test

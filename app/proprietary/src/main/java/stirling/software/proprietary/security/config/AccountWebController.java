@@ -10,11 +10,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-<<<<<<< HEAD
-import org.springframework.security.access.prepost.PreAuthorize;
-=======
-import org.springframework.beans.factory.annotation.Qualifier;
->>>>>>> refs/remotes/origin/V2
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -203,7 +198,7 @@ public class AccountWebController {
         return "login";
     }
 
-    //@EnterpriseEndpoint
+    // @EnterpriseEndpoint
     // @PreAuthorize("hasRole('ROLE_ADMIN')")
     // @GetMapping("/usage")
 

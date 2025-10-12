@@ -13,13 +13,10 @@ import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.model.api.misc.ReplaceAndInvertColorRequest;
 import stirling.software.SPDF.service.misc.ReplaceAndInvertColorService;
-<<<<<<< HEAD
-import stirling.software.common.util.GeneralUtils;
-import stirling.software.common.util.WebResponseUtils;
-=======
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
->>>>>>> refs/remotes/origin/V2
+import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.WebResponseUtils;
 
 @MiscApi
 @RequiredArgsConstructor
@@ -27,7 +24,9 @@ public class ReplaceAndInvertColorController {
 
     private final ReplaceAndInvertColorService replaceAndInvertColorService;
 
-    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/replace-invert-pdf")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/replace-invert-pdf")
     @Operation(
             summary = "Replace-Invert Color PDF",
             description =

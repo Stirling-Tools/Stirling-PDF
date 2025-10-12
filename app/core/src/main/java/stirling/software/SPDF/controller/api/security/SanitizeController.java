@@ -43,14 +43,12 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.WebResponseUtils;
 
-
 @Slf4j
 @SecurityApi
 @RequiredArgsConstructor
 public class SanitizeController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
-
 
     @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/sanitize-pdf")
     @StandardPdfResponse
