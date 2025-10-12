@@ -94,7 +94,7 @@ public class ConvertWebsiteToPdfTest {
     @Test
     void redirect_with_error_when_url_is_not_reachable() throws Exception {
         UrlToPdfRequest request = new UrlToPdfRequest();
-        // .invalid ist per RFC reserviert und nicht auflösbar
+        // .invalid is reserved per RFC and cannot be resolved
         request.setUrlInput("https://nonexistent.invalid/");
 
         ResponseEntity<?> resp = sut.urlToPdf(request);
@@ -109,7 +109,7 @@ public class ConvertWebsiteToPdfTest {
 
     @Test
     void redirect_with_error_when_endpoint_disabled() throws Exception {
-        // Feature deaktivieren
+        // Disable the feature
         applicationProperties.getSystem().setEnableUrlToPDF(false);
 
         UrlToPdfRequest request = new UrlToPdfRequest();
@@ -135,9 +135,9 @@ public class ConvertWebsiteToPdfTest {
         String out = (String) m.invoke(sut, in);
 
         assertTrue(out.endsWith(".pdf"));
-        // Nur A–Z, a–z, 0–9, Unterstrich und Punkt erlaubt
+        // Only A–Z, a–z, 0–9, underscore, and dot are allowed
         assertTrue(out.matches("[A-Za-z0-9_]+\\.pdf"));
-        // keine Truncation hier (Quelle ist nicht so lang)
+        // No truncation occurs here (the source is not that long)
         assertTrue(out.length() <= 54);
     }
 
@@ -147,14 +147,14 @@ public class ConvertWebsiteToPdfTest {
                 ConvertWebsiteToPDF.class.getDeclaredMethod("convertURLToFileName", String.class);
         m.setAccessible(true);
 
-        // Sehr lange URL → löst Truncation aus
+        // Very long URL triggers truncation
         String longUrl =
                 "https://very-very-long-domain.example.com/some/really/long/path/with?many=params&and=chars";
         String out = (String) m.invoke(sut, longUrl);
 
         assertTrue(out.endsWith(".pdf"));
         assertTrue(out.matches("[A-Za-z0-9_]+\\.pdf"));
-        // safeName ist auf 50 begrenzt → total max 54 inkl. ".pdf"
+        // safeName is limited to 50 -> total max 54 including ".pdf"
         assertTrue(out.length() <= 54, "Filename should be truncated to 50 + '.pdf'");
     }
 
@@ -167,23 +167,23 @@ public class ConvertWebsiteToPdfTest {
                 MockedStatic<WebResponseUtils> wr = Mockito.mockStatic(WebResponseUtils.class);
                 MockedStatic<GeneralUtils> gu = Mockito.mockStatic(GeneralUtils.class)) {
 
-            // URL-Checks positiv erzwingen
+            // Force URL checks to pass
             gu.when(() -> GeneralUtils.isValidURL("https://example.com")).thenReturn(true);
             gu.when(() -> GeneralUtils.isURLReachable("https://example.com")).thenReturn(true);
 
-            // richtiger ProcessExecutor!
+            // Use the correct ProcessExecutor instance!
             ProcessExecutor mockExec = Mockito.mock(ProcessExecutor.class);
             pe.when(() -> ProcessExecutor.getInstance(Processes.WEASYPRINT)).thenReturn(mockExec);
 
             @SuppressWarnings("unchecked")
             ArgumentCaptor<List<String>> cmdCaptor = ArgumentCaptor.forClass(List.class);
 
-            // Rückgabewert typgerecht
+            // Return value with the expected type
             ProcessExecutorResult dummyResult = Mockito.mock(ProcessExecutorResult.class);
             when(mockExec.runCommandWithOutputHandling(cmdCaptor.capture()))
                     .thenReturn(dummyResult);
 
-            // WebResponseUtils mocken
+            // Mock WebResponseUtils
             ResponseEntity<byte[]> fakeResponse = ResponseEntity.ok(new byte[0]);
             wr.when(() -> WebResponseUtils.pdfDocToWebResponse(any(PDDocument.class), anyString()))
                     .thenReturn(fakeResponse);
@@ -194,20 +194,19 @@ public class ConvertWebsiteToPdfTest {
             // Assert – Response OK
             assertEquals(HttpStatus.OK, resp.getStatusCode());
 
-            // Assert – WeasyPrint-Kommando korrekt
+            // Assert – WeasyPrint command is correct
             List<String> cmd = cmdCaptor.getValue();
             assertNotNull(cmd);
             assertEquals("/usr/bin/weasyprint", cmd.get(0));
             assertEquals("https://example.com", cmd.get(1));
             assertEquals("--pdf-forms", cmd.get(2));
-            assertTrue(cmd.size() >= 4, "WeasyPrint sollte einen Output-Pfad erhalten");
+            assertTrue(cmd.size() >= 4, "WeasyPrint should receive an output path");
             String outPathStr = cmd.get(3);
             assertNotNull(outPathStr);
 
-            // Temp-Datei muss im finally gelöscht sein
+            // Temp file must be deleted in the finally block
             Path outPath = Path.of(outPathStr);
-            assertFalse(
-                    Files.exists(outPath), "Temp-Output-Datei sollte nach dem Call gelöscht sein");
+            assertFalse(Files.exists(outPath), "Temp output file should be deleted after the call");
         }
     }
 
@@ -224,15 +223,15 @@ public class ConvertWebsiteToPdfTest {
                 MockedStatic<WebResponseUtils> wr = Mockito.mockStatic(WebResponseUtils.class);
                 MockedStatic<Files> files = Mockito.mockStatic(Files.class)) {
 
-            // URL-Checks positiv
+            // URL checks should pass
             gu.when(() -> GeneralUtils.isValidURL("https://example.com")).thenReturn(true);
             gu.when(() -> GeneralUtils.isURLReachable("https://example.com")).thenReturn(true);
 
-            // Temp-Datei erzwingen + Delete-Fehler provozieren
+            // Force temp file creation and trigger a delete failure
             files.when(() -> Files.createTempFile("output_", ".pdf")).thenReturn(preCreatedTemp);
             files.when(() -> Files.deleteIfExists(preCreatedTemp))
                     .thenThrow(new IOException("fail delete"));
-            files.when(() -> Files.exists(preCreatedTemp)).thenReturn(true); // für den Assert
+            files.when(() -> Files.exists(preCreatedTemp)).thenReturn(true); // for the assertion
 
             // ProcessExecutor
             ProcessExecutor mockExec = Mockito.mock(ProcessExecutor.class);
@@ -245,7 +244,7 @@ public class ConvertWebsiteToPdfTest {
             wr.when(() -> WebResponseUtils.pdfDocToWebResponse(any(PDDocument.class), anyString()))
                     .thenReturn(fakeResponse);
 
-            // Act: darf keine Exception werfen und soll eine Response liefern
+            // Act: should not throw an exception and must return a response
             ResponseEntity<?> resp = assertDoesNotThrow(() -> sut.urlToPdf(request));
 
             // Assert
@@ -253,7 +252,7 @@ public class ConvertWebsiteToPdfTest {
             assertEquals(HttpStatus.OK, resp.getStatusCode());
             assertTrue(
                     java.nio.file.Files.exists(preCreatedTemp),
-                    "Temp-Datei sollte trotz Lösch-IOException noch existieren");
+                    "Temp file should still exist despite the delete IOException");
         } finally {
             try {
                 java.nio.file.Files.deleteIfExists(preCreatedTemp);
