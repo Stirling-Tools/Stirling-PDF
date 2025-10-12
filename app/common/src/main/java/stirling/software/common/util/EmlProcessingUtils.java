@@ -13,7 +13,6 @@ import org.springframework.http.MediaType;
 import lombok.experimental.UtilityClass;
 
 import stirling.software.common.model.api.converters.EmlToPdfRequest;
-import stirling.software.common.model.api.converters.HTMLToPdfRequest;
 
 @UtilityClass
 public class EmlProcessingUtils {
@@ -22,7 +21,6 @@ public class EmlProcessingUtils {
     private static final int DEFAULT_FONT_SIZE = 12;
     private static final String DEFAULT_FONT_FAMILY = "Helvetica, sans-serif";
     private static final float DEFAULT_LINE_HEIGHT = 1.4f;
-    private static final String DEFAULT_ZOOM = "1.0";
     private static final String DEFAULT_TEXT_COLOR = "#202124";
     private static final String DEFAULT_BACKGROUND_COLOR = "#ffffff";
     private static final String DEFAULT_BORDER_COLOR = "#e8eaed";
@@ -435,7 +433,7 @@ public class EmlProcessingUtils {
             }
         }
 
-        if (request != null && request.isIncludeAttachments()) {
+        if (request != null && Boolean.TRUE.equals(request.getIncludeAttachments())) {
             html.append(
                     """
                     <div class="attachment-info-note">
@@ -451,17 +449,6 @@ public class EmlProcessingUtils {
                     """);
         }
         html.append("</div>\n");
-    }
-
-    public static HTMLToPdfRequest createHtmlRequest(EmlToPdfRequest request) {
-        HTMLToPdfRequest htmlRequest = new HTMLToPdfRequest();
-
-        if (request != null) {
-            htmlRequest.setFileInput(request.getFileInput());
-        }
-
-        htmlRequest.setZoom(Float.parseFloat(DEFAULT_ZOOM));
-        return htmlRequest;
     }
 
     public static String detectMimeType(String filename, String existingMimeType) {

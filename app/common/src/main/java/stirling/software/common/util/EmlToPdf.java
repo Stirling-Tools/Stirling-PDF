@@ -42,11 +42,7 @@ public class EmlToPdf {
 
             byte[] pdfBytes =
                     convertHtmlToPdf(
-                            weasyprintPath,
-                            request,
-                            htmlContent,
-                            tempFileManager,
-                            customHtmlSanitizer);
+                            weasyprintPath, htmlContent, tempFileManager, customHtmlSanitizer);
 
             if (shouldAttachFiles(emailContent, request)) {
                 pdfBytes =
@@ -67,24 +63,20 @@ public class EmlToPdf {
             EmlParser.EmailContent emailContent, EmlToPdfRequest request) {
         return emailContent != null
                 && request != null
-                && request.isIncludeAttachments()
+                && Boolean.TRUE.equals(request.getIncludeAttachments())
                 && !emailContent.getAttachments().isEmpty();
     }
 
     private static byte[] convertHtmlToPdf(
             String weasyprintPath,
-            EmlToPdfRequest request,
             String htmlContent,
             TempFileManager tempFileManager,
             CustomHtmlSanitizer customHtmlSanitizer)
             throws IOException, InterruptedException {
 
-        var htmlRequest = EmlProcessingUtils.createHtmlRequest(request);
-
         try {
             return FileToPdf.convertHtmlToPdf(
                     weasyprintPath,
-                    htmlRequest,
                     htmlContent.getBytes(StandardCharsets.UTF_8),
                     "email.html",
                     tempFileManager,
@@ -93,7 +85,6 @@ public class EmlToPdf {
             String simplifiedHtml = EmlProcessingUtils.simplifyHtmlContent(htmlContent);
             return FileToPdf.convertHtmlToPdf(
                     weasyprintPath,
-                    htmlRequest,
                     simplifiedHtml.getBytes(StandardCharsets.UTF_8),
                     "email.html",
                     tempFileManager,

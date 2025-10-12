@@ -243,7 +243,7 @@ public class MergeController {
         TempFile outputTempFile = null;
 
         boolean removeCertSign = Boolean.TRUE.equals(request.getRemoveCertSign());
-        boolean generateToc = request.isGenerateToc();
+        boolean generateToc = Boolean.TRUE.equals(request.getGenerateToc());
 
         MultipartFile[] files = request.getFileInput();
         if (files == null) {

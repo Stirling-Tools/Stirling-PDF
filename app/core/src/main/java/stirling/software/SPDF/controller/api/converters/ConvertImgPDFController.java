@@ -271,7 +271,7 @@ public class ConvertImgPDFController {
     public ResponseEntity<?> convertCbzToPdf(@ModelAttribute ConvertCbzToPdfRequest request)
             throws IOException {
         MultipartFile file = request.getFileInput();
-        boolean optimizeForEbook = request.isOptimizeForEbook();
+        boolean optimizeForEbook = Boolean.TRUE.equals(request.getOptimizeForEbook());
 
         // Disable optimization if Ghostscript is not available
         if (optimizeForEbook && !isGhostscriptEnabled()) {
@@ -340,7 +340,7 @@ public class ConvertImgPDFController {
     public ResponseEntity<?> convertCbrToPdf(@ModelAttribute ConvertCbrToPdfRequest request)
             throws IOException {
         MultipartFile file = request.getFileInput();
-        boolean optimizeForEbook = request.isOptimizeForEbook();
+        boolean optimizeForEbook = Boolean.TRUE.equals(request.getOptimizeForEbook());
 
         // Disable optimization if Ghostscript is not available
         if (optimizeForEbook && !isGhostscriptEnabled()) {

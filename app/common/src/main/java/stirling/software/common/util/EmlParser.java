@@ -370,7 +370,8 @@ public class EmlParser {
             } catch (ReflectiveOperationException e) {
             }
 
-            if ((request != null && request.isIncludeAttachments()) || attachment.isEmbedded()) {
+            if ((request != null && Boolean.TRUE.equals(request.getIncludeAttachments()))
+                    || attachment.isEmbedded()) {
                 extractAttachmentData(part, attachment, getContent, request);
             }
 

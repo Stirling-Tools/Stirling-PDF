@@ -14,6 +14,7 @@ public class PDFComparison extends PDFFile {
     @Schema(
             description = "The comparison type, accepts Greater, Equal, Less than",
             allowableValues = {"Greater", "Equal", "Less"},
+            defaultValue = "Equal",
             requiredMode = Schema.RequiredMode.REQUIRED)
     private String comparator;
 }

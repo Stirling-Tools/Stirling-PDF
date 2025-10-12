@@ -16,6 +16,7 @@ public class MetadataRequest extends PDFFile {
     @Schema(
             description = "Delete all metadata if set to true",
             defaultValue = "false",
+            allowableValues = {"true", "false"},
             requiredMode = Schema.RequiredMode.REQUIRED)
     private Boolean deleteAll;
 

@@ -48,7 +48,7 @@ public class CropController {
                     "This operation takes an input PDF file and crops it according to the given"
                             + " coordinates. Input:PDF Output:PDF Type:SISO")
     public ResponseEntity<byte[]> cropPdf(@ModelAttribute CropPdfForm request) throws IOException {
-        if (request.isRemoveDataOutsideCrop()) {
+        if (Boolean.TRUE.equals(request.getRemoveDataOutsideCrop())) {
             return cropWithGhostscript(request);
         } else {
             return cropWithPDFBox(request);

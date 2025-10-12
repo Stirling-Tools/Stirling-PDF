@@ -19,14 +19,12 @@ import java.util.zip.ZipOutputStream;
 
 import io.github.pixee.security.ZipSecurity;
 
-import stirling.software.common.model.api.converters.HTMLToPdfRequest;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 
 public class FileToPdf {
 
     public static byte[] convertHtmlToPdf(
             String weasyprintPath,
-            HTMLToPdfRequest request,
             byte[] fileBytes,
             String fileName,
             TempFileManager tempFileManager,

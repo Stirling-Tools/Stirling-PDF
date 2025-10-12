@@ -57,7 +57,6 @@ public class ConvertHtmlToPDF {
         byte[] pdfBytes =
                 FileToPdf.convertHtmlToPdf(
                         runtimePathConfig.getWeasyPrintPath(),
-                        request,
                         fileInput.getBytes(),
                         originalFilename,
                         tempFileManager,

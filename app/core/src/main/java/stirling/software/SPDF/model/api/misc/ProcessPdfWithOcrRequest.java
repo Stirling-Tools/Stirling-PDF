@@ -19,17 +19,29 @@ public class ProcessPdfWithOcrRequest extends PDFFile {
             defaultValue = "[\"eng\"]")
     private List<String> languages;
 
-    @Schema(description = "Include OCR text in a sidecar text file if set to true")
-    private boolean sidecar;
+    @Schema(
+            description = "Include OCR text in a sidecar text file if set to true",
+            allowableValues = {"true", "false"},
+            defaultValue = "false")
+    private Boolean sidecar;
 
-    @Schema(description = "Deskew the input file if set to true")
-    private boolean deskew;
+    @Schema(
+            description = "Deskew the input file if set to true",
+            allowableValues = {"true", "false"},
+            defaultValue = "false")
+    private Boolean deskew;
 
-    @Schema(description = "Clean the input file if set to true")
-    private boolean clean;
+    @Schema(
+            description = "Clean the input file if set to true",
+            allowableValues = {"true", "false"},
+            defaultValue = "false")
+    private Boolean clean;
 
-    @Schema(description = "Clean the final output if set to true")
-    private boolean cleanFinal;
+    @Schema(
+            description = "Clean the final output if set to true",
+            allowableValues = {"true", "false"},
+            defaultValue = "false")
+    private Boolean cleanFinal;
 
     @Schema(
             description = "Specify the OCR type, e.g., 'skip-text', 'force-ocr', or 'Normal'",
@@ -44,6 +56,9 @@ public class ProcessPdfWithOcrRequest extends PDFFile {
             defaultValue = "hocr")
     private String ocrRenderType = "hocr";
 
-    @Schema(description = "Remove images from the output PDF if set to true")
-    private boolean removeImagesAfter;
+    @Schema(
+            description = "Remove images from the output PDF if set to true",
+            allowableValues = {"true", "false"},
+            defaultValue = "false")
+    private Boolean removeImagesAfter;
 }

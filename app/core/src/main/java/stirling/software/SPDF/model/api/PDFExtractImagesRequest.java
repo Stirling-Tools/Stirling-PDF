@@ -13,6 +13,8 @@ public class PDFExtractImagesRequest extends PDFWithImageFormatRequest {
             description =
                     "Boolean to enable/disable the saving of duplicate images, true to enable"
                             + " duplicates",
+            requiredMode = Schema.RequiredMode.REQUIRED,
+            allowableValues = {"true", "false"},
             defaultValue = "false")
     private Boolean allowDuplicates;
 }

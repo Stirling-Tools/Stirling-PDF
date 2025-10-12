@@ -21,6 +21,7 @@ public class ManualRedactPdfRequest extends PDFWithPageNums {
     @Schema(
             description = "Convert the redacted PDF to an image",
             defaultValue = "false",
+            allowableValues = {"true", "false"},
             requiredMode = Schema.RequiredMode.REQUIRED)
     private Boolean convertPDFToImage;
 

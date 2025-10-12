@@ -13,7 +13,6 @@ import java.nio.file.Files;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import stirling.software.common.model.api.converters.HTMLToPdfRequest;
 import stirling.software.common.service.SsrfProtectionService;
 
 public class FileToPdfTest {
@@ -43,7 +42,6 @@ public class FileToPdfTest {
      */
     @Test
     public void testConvertHtmlToPdf() {
-        HTMLToPdfRequest request = new HTMLToPdfRequest();
         byte[] fileBytes = new byte[0]; // Sample file bytes (empty input)
         String fileName = "test.html"; // Sample file name indicating an HTML file
         TempFileManager tempFileManager = mock(TempFileManager.class); // Mock TempFileManager
@@ -64,7 +62,6 @@ public class FileToPdfTest {
                         () ->
                                 FileToPdf.convertHtmlToPdf(
                                         "/path/",
-                                        request,
                                         fileBytes,
                                         fileName,
                                         tempFileManager,

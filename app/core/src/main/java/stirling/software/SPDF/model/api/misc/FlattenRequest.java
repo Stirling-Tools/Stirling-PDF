@@ -16,6 +16,7 @@ public class FlattenRequest extends PDFFile {
                     "True to flatten only the forms, false to flatten full PDF (Convert page to"
                             + " image)",
             requiredMode = Schema.RequiredMode.REQUIRED,
+            allowableValues = {"true", "false"},
             defaultValue = "false")
     private Boolean flattenOnlyForms;
 }

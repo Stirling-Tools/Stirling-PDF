@@ -16,6 +16,7 @@ public class PDFWithPageSize extends PDFFile {
                     "The scale of pages in the output PDF. Acceptable values are A0-A6, LETTER,"
                             + " LEGAL, KEEP.",
             requiredMode = Schema.RequiredMode.REQUIRED,
+            defaultValue = "A4",
             allowableValues = {"A0", "A1", "A2", "A3", "A4", "A5", "A6", "LETTER", "LEGAL", "KEEP"})
     private String pageSize;
 }

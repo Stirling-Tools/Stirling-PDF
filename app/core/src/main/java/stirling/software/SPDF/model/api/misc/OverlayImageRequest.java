@@ -34,6 +34,7 @@ public class OverlayImageRequest extends PDFFile {
     @Schema(
             description = "Whether to overlay the image onto every page of the PDF.",
             requiredMode = Schema.RequiredMode.REQUIRED,
+            allowableValues = {"true", "false"},
             defaultValue = "false")
     private Boolean everyPage;
 }
