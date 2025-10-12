@@ -11,53 +11,6 @@ CBR (Comic Book RAR) is an archive format used for digital comic books. It uses 
 
 -----
 
-## Quick Start (Docker)
-
-This is the fastest way to get RAR working with a Stirling-PDF Docker container.
-
-1.  **Download RAR Command-Line Tools**
-
-    * Go to the official RARLAB downloads page: [rarlab.com/download.htm](https://www.rarlab.com/download.htm)
-    * Download the "RAR for Linux", "RAR for macOS", or "RAR for Windows" command-line version that matches your **host machine's architecture** (e.g., x64, ARM64).
-
-2.  **Install RAR on Your Host Machine**
-    Make the `rar` binary available system-wide. For Linux or macOS:
-
-    ```bash
-    # (Example for Linux x64)
-    # Extract the downloaded archive
-    tar -xzf rarlinux-x64-*.tar.gz
-
-    # Move the 'rar' binary to a standard location
-    sudo mv rar/rar /usr/local/bin/rar
-
-    # Make it executable
-    sudo chmod +x /usr/local/bin/rar
-    ```
-
-3.  **Mount the RAR Binary into Your Docker Container**
-    Add a single line to the `volumes` section of your `docker-compose.yml` file. This makes the `rar` binary on your host machine available inside the container.
-
-    ```yaml
-    services:
-      stirling-pdf:
-        image: ghcr.io/stirling-tools/stirling-pdf:latest
-        ports:
-          - '8080:8080'
-        volumes:
-          - ./StirlingPDF/trainingData:/usr/share/tessdata # Required for extra OCR languages
-          - ./StirlingPDF/extraConfigs:/configs
-          - ./StirlingPDF/customFiles:/customFiles/
-          - ./StirlingPDF/logs:/logs/
-          - ./StirlingPDF/pipeline:/pipeline/
-          # ADD THE FOLLOWING LINE:
-          - /usr/local/bin/rar:/usr/local/bin/rar:ro
-    ```
-
------
-
-## Detailed Setup Instructions
-
 ### Docker Setup
 
 #### Step 1: Download and Install RAR on the Host System
@@ -65,7 +18,7 @@ This is the fastest way to get RAR working with a Stirling-PDF Docker container.
 1.  **Download the RAR utility:**
 
     * Visit the official download page: [rarlab.com/download.htm](https://www.rarlab.com/download.htm).
-    * Download the correct command-line version for your host system's OS and CPU architecture (e.g., `rarlinux-x64-*.tar.gz` for 64-bit Linux).
+    * Download the correct command-line version for your host system's OS and CPU architecture.
 
 2.  **Install RAR on your host system:**
 
@@ -110,19 +63,18 @@ Update your Docker command to include the volume mount. This exposes the `rar` e
 
 ```yaml
 services:
-    stirling-pdf:
-        image: ghcr.io/stirling-tools/stirling-pdf:latest
-        container_name: stirling-pdf
-        ports:
-            - "8080:8080"
-        volumes:
-            # Your existing volumes...
-            - ./extraConfigs:/configs
-            - ./logs:/logs
-
-            # Add the RAR binary mount
-            - /usr/local/bin/rar:/usr/local/bin/rar:ro
-        restart: unless-stopped
+  stirling-pdf:
+    image: ghcr.io/stirling-tools/stirling-pdf:latest
+    ports:
+      - '8080:8080'
+    volumes:
+      - ./StirlingPDF/trainingData:/usr/share/tessdata # Required for extra OCR languages
+      - ./StirlingPDF/extraConfigs:/configs
+      - ./StirlingPDF/customFiles:/customFiles/
+      - ./StirlingPDF/logs:/logs/
+      - ./StirlingPDF/pipeline:/pipeline/
+      # ADD THE FOLLOWING LINE:
+      - /usr/local/bin/rar:/usr/local/bin/rar:ro
 ```
 
 ### Non-Docker Setup
