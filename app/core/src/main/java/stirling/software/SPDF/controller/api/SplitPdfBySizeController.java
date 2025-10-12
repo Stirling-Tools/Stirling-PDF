@@ -38,7 +38,9 @@ public class SplitPdfBySizeController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
 
-    @AutoJobPostMapping(value = "/split-by-size-or-count", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @AutoJobPostMapping(
+            value = "/split-by-size-or-count",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @MultiFileResponse
     @Operation(
             summary = "Auto split PDF pages into separate documents based on size or count",

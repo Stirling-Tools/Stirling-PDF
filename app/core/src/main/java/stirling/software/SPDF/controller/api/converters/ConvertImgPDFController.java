@@ -30,12 +30,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.EndpointConfiguration;
+import stirling.software.SPDF.config.swagger.MultiFileResponse;
+import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.api.converters.ConvertCbrToPdfRequest;
 import stirling.software.SPDF.model.api.converters.ConvertCbzToPdfRequest;
 import stirling.software.SPDF.model.api.converters.ConvertPdfToCbrRequest;
 import stirling.software.SPDF.model.api.converters.ConvertPdfToCbzRequest;
-import stirling.software.SPDF.config.swagger.MultiFileResponse;
-import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.api.converters.ConvertToImageRequest;
 import stirling.software.SPDF.model.api.converters.ConvertToPdfRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
@@ -70,7 +70,6 @@ public class ConvertImgPDFController {
     private boolean isGhostscriptEnabled() {
         return endpointConfiguration.isGroupEnabled("Ghostscript");
     }
-
 
     @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/img")
     @MultiFileResponse

@@ -114,7 +114,9 @@ public class SplitPdfByChaptersController {
         return bookmarks;
     }
 
-    @AutoJobPostMapping(value = "/split-pdf-by-chapters", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @AutoJobPostMapping(
+            value = "/split-pdf-by-chapters",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @MultiFileResponse
     @Operation(
             summary = "Split PDFs by Chapters",

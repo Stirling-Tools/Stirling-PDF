@@ -7,21 +7,18 @@ import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
 
-<<<<<<< HEAD
 import lombok.RequiredArgsConstructor;
 
-=======
 import stirling.software.SPDF.config.swagger.HtmlConversionResponse;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
->>>>>>> refs/remotes/origin/V2
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.util.PDFToFile;
 import stirling.software.common.util.TempFileManager;
 
 @ConvertApi
+@RequiredArgsConstructor
 public class ConvertPDFToHtml {
-
 
     private final TempFileManager tempFileManager;
 
