@@ -1,5 +1,5 @@
 # Main stage
-FROM alpine:3.22.1@sha256:4bcff63911fcb4448bd4fdacec207030997caf25e9bea4045fa6c8c44de311d1
+FROM alpine:3.22.2@sha256:4b7ce07002c69e8f3d704a9c5d6fd3053be500b7f1c69fc0d80990c2ad8dd412
 
 # Copy necessary files
 COPY scripts /scripts
@@ -40,9 +40,11 @@ ENV DISABLE_ADDITIONAL_FEATURES=true \
 
 
 # JDK for app
-RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/apk/repositories && \
-    echo "@community https://dl-cdn.alpinelinux.org/alpine/edge/community" | tee -a /etc/apk/repositories && \
-    echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/testing" | tee -a /etc/apk/repositories && \
+RUN printf '%s\n' \
+      'https://dl-cdn.alpinelinux.org/alpine/edge/main' \
+      'https://dl-cdn.alpinelinux.org/alpine/edge/community' \
+      'https://dl-cdn.alpinelinux.org/alpine/edge/testing' \
+      > /etc/apk/repositories && \
     apk upgrade --no-cache -a && \
     apk add --no-cache \
     ca-certificates \
@@ -64,19 +66,23 @@ RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/a
     # OCR MY PDF (unpaper for descew and other advanced features)
     tesseract-ocr-data-eng \
     tesseract-ocr-data-chi_sim \
-	tesseract-ocr-data-deu \
-	tesseract-ocr-data-fra \
-	tesseract-ocr-data-por \
+    tesseract-ocr-data-deu \
+    tesseract-ocr-data-fra \
+    tesseract-ocr-data-por \
     unpaper \
-    # CV
+    # CV / Python
     py3-opencv \
     python3 \
     ocrmypdf \
     py3-pip \
-    py3-pillow@testing \
-    py3-pdf2image@testing \
+    py3-pillow \
+    py3-pdf2image \
+    # Calibre
+    calibre \
     # URW Base 35 fonts for better PDF rendering
     font-urw-base35 && \
+    # Calibre fixes
+    apk fix --no-cache calibre && \
     python3 -m venv /opt/venv && \
     /opt/venv/bin/pip install --no-cache-dir --upgrade pip setuptools && \
     /opt/venv/bin/pip install --no-cache-dir --upgrade unoserver weasyprint && \
