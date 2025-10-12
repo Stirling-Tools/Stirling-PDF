@@ -20,20 +20,10 @@ public class PdfVectorExportRequest extends PDFFile {
     @Pattern(regexp = "(?i)(eps|ps|pcl|xps)")
     private String outputFormat = "eps";
 
-    @Schema(description = "Apply Ghostscript grayscale conversion", defaultValue = "false")
-    private Boolean grayscale;
-
-    @Schema(description = "Fit pages to bounding box", defaultValue = "false")
-    private Boolean fitPage;
-
-    @Schema(description = "Crop output to EPS bounding box", defaultValue = "true")
-    private Boolean cropToBoundingBox;
-
-    @Schema(description = "Apply Ghostscript prepress settings", defaultValue = "false")
-    private Boolean prepress;
-
     @Schema(
-            description = "Disable Ghostscript image cache to avoid rasterization",
-            defaultValue = "true")
-    private Boolean disableCache;
+            description = "Apply Ghostscript prepress settings",
+            requiredMode = Schema.RequiredMode.REQUIRED,
+            allowableValues = {"true", "false"},
+            defaultValue = "false")
+    private Boolean prepress;
 }
