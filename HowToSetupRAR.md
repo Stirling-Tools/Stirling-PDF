@@ -140,7 +140,7 @@ After setup, confirm that Stirling-PDF can access the `rar` command.
 
 - **For non-Docker users, check if `rar` is accessible from the command line:**
     ```bash
-  which rar
+     which rar
     ```
 or your operating system's equivalent.
 ## License Note
@@ -151,6 +151,6 @@ Please be aware that RAR is shareware. It is free to use for personal, non-comme
 
 If you encounter issues or prefer not to use proprietary software, consider converting your files to the **CBZ (Comic Book ZIP)** format instead.
 
-* CBZ uses the open ZIP open-standard and requires no extra software installation.
+* CBZ uses the open ZIP standard and requires no extra software installation.
 * The **PDF to CBZ** tool is available in Stirling-PDF by default.
 * CBZ is widely supported by virtually all modern comic book reader applications, which is not the case for RAR.
