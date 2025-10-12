@@ -52,6 +52,7 @@ All documentation available at [https://docs.stirlingpdf.com/](https://docs.stir
 - **CBZ to PDF**: Convert comic book archives
 - **CBR to PDF**: Convert comic book rar archives
 - **Email to PDF**: Convert email files to PDF
+- **Vector Image to PDF**: Convert vector images (PS, EPS, EPSF) to PDF format
 
 #### Convert from PDF
 - **PDF to Word**: Convert to documet (docx, doc, odt) format
@@ -65,6 +66,7 @@ All documentation available at [https://docs.stirlingpdf.com/](https://docs.stir
 - **PDF to Markdown**: Convert PDF to Markdown
 - **PDF to CBZ**: Convert to comic book archive
 - **PDF to CBR**: Convert to comic book rar archive
+- **PDF to Vector Image**: Convert PDF to vector image (EPS, PS, PCL, XPS) format
 
 #### Sign & Security
 - **Sign**: Add digital signatures
