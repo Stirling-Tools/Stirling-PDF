@@ -135,7 +135,7 @@ public class ConvertWebsiteToPdfTest {
         String out = (String) m.invoke(sut, in);
 
         assertTrue(out.endsWith(".pdf"));
-        // Only A–Z, a–z, 0–9, underscore, and dot are allowed
+        // Only A–Z, a–z, 0–9, and underscore are allowed
         assertTrue(out.matches("[A-Za-z0-9_]+\\.pdf"));
         // No truncation occurs here (the source is not that long)
         assertTrue(out.length() <= 54);
