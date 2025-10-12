@@ -56,23 +56,37 @@
                     name="includeTableOfContents"
                     type="checkbox"
                     value="true">
-                  <label class="form-check-label"
+                  <label
                     for="includeTableOfContents"
                     th:text="#{ebookToPDF.includeTableOfContents}">
                     Add table of contents
                   </label>
                 </div>
 
-                <div class="form-check mb-3">
+                <div class="form-check mb-2">
                   <input class="form-check-input"
                     id="includePageNumbers"
                     name="includePageNumbers"
                     type="checkbox"
                     value="true">
-                  <label class="form-check-label"
+                  <label
                     for="includePageNumbers"
                     th:text="#{ebookToPDF.includePageNumbers}">
                     Add page numbers
+                  </label>
+                </div>
+
+                <div class="form-check mb-3"
+                  th:if="${@endpointConfiguration.isGroupEnabled('Ghostscript')}">
+                  <input class="form-check-input"
+                    id="optimizeForEbook"
+                    name="optimizeForEbook"
+                    type="checkbox"
+                    value="true">
+                  <label
+                    for="optimizeForEbook"
+                    th:text="#{ebookToPDF.optimizeForEbook}">
+                    Optimize PDF for ebook readers (uses Ghostscript)
                   </label>
                 </div>
 

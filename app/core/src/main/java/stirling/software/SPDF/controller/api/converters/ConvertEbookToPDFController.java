@@ -54,11 +54,16 @@ public class ConvertEbookToPDFController {
         return endpointConfiguration.isGroupEnabled("Calibre");
     }
 
+    private boolean isGhostscriptEnabled() {
+        return endpointConfiguration.isGroupEnabled("Ghostscript");
+    }
+
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/ebook/pdf")
     @Operation(
             summary = "Convert an eBook file to PDF",
             description =
-                    "This endpoint converts common eBook formats (EPUB, MOBI, AZW3, FB2, TXT, DOCX) to PDF using Calibre. Input:BOOK Output:PDF Type:SISO")
+                    "This endpoint converts common eBook formats (EPUB, MOBI, AZW3, FB2, TXT, DOCX)"
+                            + " to PDF using Calibre. Input:BOOK Output:PDF Type:SISO")
     public ResponseEntity<byte[]> convertEbookToPdf(
             @ModelAttribute ConvertEbookToPdfRequest request) throws Exception {
         if (!isCalibreEnabled()) {
@@ -69,6 +74,17 @@ public class ConvertEbookToPDFController {
         if (inputFile == null || inputFile.isEmpty()) {
             throw new IllegalArgumentException("No input file provided");
         }
+
+        boolean optimizeForEbook = Boolean.TRUE.equals(request.getOptimizeForEbook());
+        if (optimizeForEbook && !isGhostscriptEnabled()) {
+            log.warn(
+                    "Ghostscript optimization requested but Ghostscript is not enabled/available"
+                            + " for ebook conversion");
+            optimizeForEbook = false;
+        }
+        boolean embedAllFonts = Boolean.TRUE.equals(request.getEmbedAllFonts());
+        boolean includeTableOfContents = Boolean.TRUE.equals(request.getIncludeTableOfContents());
+        boolean includePageNumbers = Boolean.TRUE.equals(request.getIncludePageNumbers());
 
         String originalFilename = Filenames.toSimpleFileName(inputFile.getOriginalFilename());
         if (originalFilename == null || originalFilename.isBlank()) {
@@ -98,7 +114,13 @@ public class ConvertEbookToPDFController {
             Files.copy(inputStream, inputPath, StandardCopyOption.REPLACE_EXISTING);
         }
 
-        List<String> command = buildCalibreCommand(inputPath, outputPath, request);
+        List<String> command =
+                buildCalibreCommand(
+                        inputPath,
+                        outputPath,
+                        embedAllFonts,
+                        includeTableOfContents,
+                        includePageNumbers);
         ProcessExecutorResult result =
                 ProcessExecutor.getInstance(ProcessExecutor.Processes.CALIBRE)
                         .runCommandWithOutputHandling(command, workingDirectory.toFile());
@@ -119,29 +141,50 @@ public class ConvertEbookToPDFController {
             throw new IllegalStateException("Calibre did not produce a PDF output");
         }
 
-        try (PDDocument document = pdfDocumentFactory.load(outputPath.toFile())) {
-            String outputFilename =
-                    GeneralUtils.generateFilename(originalFilename, "_convertedToPDF.pdf");
-            return WebResponseUtils.pdfDocToWebResponse(document, outputFilename);
+        String outputFilename =
+                GeneralUtils.generateFilename(originalFilename, "_convertedToPDF.pdf");
+
+        try {
+            if (optimizeForEbook) {
+                byte[] pdfBytes = Files.readAllBytes(outputPath);
+                try {
+                    byte[] optimizedPdf = GeneralUtils.optimizePdfWithGhostscript(pdfBytes);
+                    return WebResponseUtils.bytesToWebResponse(optimizedPdf, outputFilename);
+                } catch (IOException e) {
+                    log.warn(
+                            "Ghostscript optimization failed for ebook conversion, returning"
+                                    + " original PDF",
+                            e);
+                    return WebResponseUtils.bytesToWebResponse(pdfBytes, outputFilename);
+                }
+            }
+
+            try (PDDocument document = pdfDocumentFactory.load(outputPath.toFile())) {
+                return WebResponseUtils.pdfDocToWebResponse(document, outputFilename);
+            }
         } finally {
             cleanupTempFiles(workingDirectory, inputPath, outputPath);
         }
     }
 
     private List<String> buildCalibreCommand(
-            Path inputPath, Path outputPath, ConvertEbookToPdfRequest request) {
+            Path inputPath,
+            Path outputPath,
+            boolean embedAllFonts,
+            boolean includeTableOfContents,
+            boolean includePageNumbers) {
         List<String> command = new ArrayList<>();
         command.add("ebook-convert");
         command.add(inputPath.toString());
         command.add(outputPath.toString());
 
-        if (request.isEmbedAllFonts()) {
+        if (embedAllFonts) {
             command.add("--embed-all-fonts");
         }
-        if (request.isIncludeTableOfContents()) {
+        if (includeTableOfContents) {
             command.add("--pdf-add-toc");
         }
-        if (request.isIncludePageNumbers()) {
+        if (includePageNumbers) {
             command.add("--pdf-page-numbers");
         }
 

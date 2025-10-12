@@ -10,6 +10,7 @@ import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
@@ -166,5 +167,100 @@ class ConvertEbookToPDFControllerTest {
         request.setFileInput(unsupported);
 
         assertThrows(IllegalArgumentException.class, () -> controller.convertEbookToPdf(request));
+    }
+
+    @Test
+    void convertEbookToPdf_withOptimizeForEbookUsesGhostscript() throws Exception {
+        when(endpointConfiguration.isGroupEnabled("Calibre")).thenReturn(true);
+        when(endpointConfiguration.isGroupEnabled("Ghostscript")).thenReturn(true);
+
+        MockMultipartFile ebookFile =
+                new MockMultipartFile(
+                        "fileInput", "ebook.epub", "application/epub+zip", "content".getBytes());
+
+        ConvertEbookToPdfRequest request = new ConvertEbookToPdfRequest();
+        request.setFileInput(ebookFile);
+        request.setOptimizeForEbook(true);
+
+        Path workingDir = Files.createTempDirectory("ebook-convert-opt-test-");
+        when(tempFileManager.createTempDirectory()).thenReturn(workingDir);
+
+        AtomicReference<Path> deletedDir = new AtomicReference<>();
+        Mockito.doAnswer(
+                        invocation -> {
+                            Path dir = invocation.getArgument(0);
+                            deletedDir.set(dir);
+                            if (Files.exists(dir)) {
+                                try (Stream<Path> paths = Files.walk(dir)) {
+                                    paths.sorted(Comparator.reverseOrder())
+                                            .forEach(
+                                                    path -> {
+                                                        try {
+                                                            Files.deleteIfExists(path);
+                                                        } catch (IOException ignored) {
+                                                        }
+                                                    });
+                                }
+                            }
+                            return null;
+                        })
+                .when(tempFileManager)
+                .deleteTempDirectory(any(Path.class));
+
+        try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class);
+                MockedStatic<GeneralUtils> gu = Mockito.mockStatic(GeneralUtils.class);
+                MockedStatic<WebResponseUtils> wr = Mockito.mockStatic(WebResponseUtils.class)) {
+
+            ProcessExecutor executor = Mockito.mock(ProcessExecutor.class);
+            pe.when(() -> ProcessExecutor.getInstance(Processes.CALIBRE)).thenReturn(executor);
+
+            ProcessExecutorResult execResult = Mockito.mock(ProcessExecutorResult.class);
+            when(execResult.getRc()).thenReturn(0);
+
+            Path expectedInput = workingDir.resolve("ebook.epub");
+            Path expectedOutput = workingDir.resolve("ebook.pdf");
+            when(executor.runCommandWithOutputHandling(any(List.class), eq(workingDir.toFile())))
+                    .thenAnswer(
+                            invocation -> {
+                                Files.writeString(expectedOutput, "pdf");
+                                return execResult;
+                            });
+
+            gu.when(() -> GeneralUtils.generateFilename("ebook.epub", "_convertedToPDF.pdf"))
+                    .thenReturn("ebook_convertedToPDF.pdf");
+            byte[] optimizedBytes = "optimized".getBytes(StandardCharsets.UTF_8);
+            gu.when(() -> GeneralUtils.optimizePdfWithGhostscript(Mockito.any(byte[].class)))
+                    .thenReturn(optimizedBytes);
+
+            ResponseEntity<byte[]> expectedResponse = ResponseEntity.ok(optimizedBytes);
+            wr.when(
+                            () ->
+                                    WebResponseUtils.bytesToWebResponse(
+                                            optimizedBytes, "ebook_convertedToPDF.pdf"))
+                    .thenReturn(expectedResponse);
+
+            ResponseEntity<byte[]> response = controller.convertEbookToPdf(request);
+
+            assertSame(expectedResponse, response);
+            gu.verify(() -> GeneralUtils.optimizePdfWithGhostscript(Mockito.any(byte[].class)));
+            Mockito.verifyNoInteractions(pdfDocumentFactory);
+            Mockito.verify(tempFileManager).deleteTempDirectory(workingDir);
+            assertEquals(workingDir, deletedDir.get());
+            assertFalse(Files.exists(expectedInput));
+            assertFalse(Files.exists(expectedOutput));
+        }
+
+        if (Files.exists(workingDir)) {
+            try (Stream<Path> paths = Files.walk(workingDir)) {
+                paths.sorted(Comparator.reverseOrder())
+                        .forEach(
+                                path -> {
+                                    try {
+                                        Files.deleteIfExists(path);
+                                    } catch (IOException ignored) {
+                                    }
+                                });
+            }
+        }
     }
 }
