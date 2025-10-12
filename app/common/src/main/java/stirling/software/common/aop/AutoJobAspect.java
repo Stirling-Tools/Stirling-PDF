@@ -87,7 +87,8 @@ public class AutoJobAspect {
                     },
                     timeout,
                     queueable,
-                    resourceWeight);
+                    resourceWeight,
+                    trackProgress);
         } else {
             // Use retry logic
             return executeWithRetries(
@@ -220,7 +221,8 @@ public class AutoJobAspect {
                 },
                 timeout,
                 queueable,
-                resourceWeight);
+                resourceWeight,
+                trackProgress);
     }
 
     /**

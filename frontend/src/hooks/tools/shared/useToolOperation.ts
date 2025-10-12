@@ -1,12 +1,11 @@
 import { useCallback, useRef, useEffect } from 'react';
-import apiClient from '../../../services/apiClient';
 import { useTranslation } from 'react-i18next';
 import { useFileContext } from '../../../contexts/FileContext';
 import { useToolState, type ProcessingProgress } from './useToolState';
-import { useToolApiCalls, type ApiCallsConfig } from './useToolApiCalls';
+import { useToolApiCalls, type ApiCallsConfig, type BatchApiCallsConfig, type JobUpdate } from './useToolApiCalls';
 import { useToolResources } from './useToolResources';
 import { extractErrorMessage } from '../../../utils/toolErrorHandler';
-import { StirlingFile, extractFiles, FileId, StirlingFileStub, createStirlingFile } from '../../../types/fileContext';
+import { StirlingFile, extractFiles, FileId, StirlingFileStub, createStirlingFile, FileJobProgress } from '../../../types/fileContext';
 import { FILE_EVENTS } from '../../../services/errorUtils';
 import { ResponseHandler } from '../../../utils/toolResponseProcessor';
 import { createChildStub, generateProcessedFileMetadata } from '../../../contexts/file/fileActions';
@@ -145,13 +144,13 @@ export const useToolOperation = <TParams>(
   config: ToolOperationConfig<TParams>
 ): ToolOperationHook<TParams> => {
   const { t } = useTranslation();
-  const { addFiles, consumeFiles, undoConsumeFiles, selectors } = useFileContext();
+  const { consumeFiles, undoConsumeFiles, selectors } = useFileContext();
 
   // Composed hooks
   const { state, actions } = useToolState();
   const { actions: fileActions } = useFileContext();
-  const { processFiles, cancelOperation: cancelApiCalls } = useToolApiCalls<TParams>();
-  const { generateThumbnails, createDownloadInfo, cleanupBlobUrls, extractZipFiles, extractAllZipFiles } = useToolResources();
+  const { processFiles, processBatchJob, cancelOperation: cancelApiCalls } = useToolApiCalls<TParams>();
+  const { generateThumbnails, createDownloadInfo, cleanupBlobUrls } = useToolResources();
 
   // Track last operation for undo functionality
   const lastOperationRef = useRef<{
@@ -159,6 +158,45 @@ export const useToolOperation = <TParams>(
     inputStirlingFileStubs: StirlingFileStub[];
     outputFileIds: FileId[];
   } | null>(null);
+
+  const handleJobUpdate = useCallback((fileIds: FileId[], update: JobUpdate) => {
+    if (!fileIds || fileIds.length === 0) {
+      return;
+    }
+
+    fileIds.forEach(fileId => {
+      const record = selectors.getStirlingFileStub(fileId);
+      if (!record) {
+        return;
+      }
+
+      const existing = record.activeJobs ?? [];
+      const entry: FileJobProgress = {
+        jobId: update.jobId,
+        status: update.status,
+        progressPercent: Math.max(0, Math.min(update.progressPercent, 100)),
+        message: update.message,
+        queuePosition: update.queuePosition ?? null,
+        error: update.error,
+        updatedAt: Date.now(),
+      };
+
+      let nextJobs: FileJobProgress[];
+      if (update.status === 'completed') {
+        nextJobs = existing.filter(job => job.jobId !== update.jobId);
+      } else {
+        const idx = existing.findIndex(job => job.jobId === update.jobId);
+        if (idx >= 0) {
+          nextJobs = [...existing];
+          nextJobs[idx] = entry;
+        } else {
+          nextJobs = [...existing, entry];
+        }
+      }
+
+      fileActions.updateStirlingFileStub(fileId, { activeJobs: nextJobs });
+    });
+  }, [selectors, fileActions]);
 
   const executeOperation = useCallback(async (
     params: TParams,
@@ -230,7 +268,8 @@ export const useToolOperation = <TParams>(
             apiCallsConfig,
             actions.setProgress,
             actions.setStatus,
-            fileActions.markFileError as any
+            fileActions.markFileError as any,
+            handleJobUpdate
           );
           processedFiles = result.outputFiles;
           successSourceIds = result.successSourceIds as any;
@@ -238,35 +277,25 @@ export const useToolOperation = <TParams>(
           break;
         }
         case ToolType.multiFile: {
-          // Multi-file processing - single API call with all files
-          actions.setStatus('Processing files...');
-          const formData = config.buildFormData(params, filesForAPI);
-          const endpoint = typeof config.endpoint === 'function' ? config.endpoint(params) : config.endpoint;
+          const batchConfig: BatchApiCallsConfig<TParams> = {
+            endpoint: config.endpoint,
+            buildFormData: config.buildFormData,
+            filePrefix: config.filePrefix,
+            responseHandler: config.responseHandler,
+            preserveBackendFilename: config.preserveBackendFilename,
+          };
 
-          const response = await apiClient.post(endpoint, formData, { responseType: 'blob' });
+          const result = await processBatchJob(
+            params,
+            filesForAPI,
+            batchConfig,
+            actions.setProgress,
+            actions.setStatus,
+            handleJobUpdate
+          );
 
-          // Multi-file responses are typically ZIP files that need extraction, but some may return single PDFs
-          if (config.responseHandler) {
-            // Use custom responseHandler for multi-file (handles ZIP extraction)
-            processedFiles = await config.responseHandler(response.data, filesForAPI);
-          } else if (response.data.type === 'application/pdf' ||
-                    (response.headers && response.headers['content-type'] === 'application/pdf')) {
-            // Single PDF response (e.g. split with merge option) - add prefix to first original filename
-            const filename = `${config.filePrefix}${filesForAPI[0]?.name || 'document.pdf'}`;
-            const singleFile = new File([response.data], filename, { type: 'application/pdf' });
-            processedFiles = [singleFile];
-          } else {
-            // Default: assume ZIP response for multi-file endpoints
-            // Note: extractZipFiles will check preferences.autoUnzip setting
-            processedFiles = await extractZipFiles(response.data);
-
-            if (processedFiles.length === 0) {
-              // Try the generic extraction as fallback
-              processedFiles = await extractAllZipFiles(response.data);
-            }
-          }
-          // Assume all inputs succeeded together unless server provided an error earlier
-          successSourceIds = validFiles.map(f => (f as any).fileId) as any;
+          processedFiles = result.outputFiles;
+          successSourceIds = result.successSourceIds as any;
           break;
         }
 
@@ -446,7 +475,7 @@ export const useToolOperation = <TParams>(
       actions.setLoading(false);
       actions.setProgress(null);
     }
-  }, [t, config, actions, addFiles, consumeFiles, processFiles, generateThumbnails, createDownloadInfo, cleanupBlobUrls, extractZipFiles, extractAllZipFiles]);
+  }, [t, config, actions, consumeFiles, processFiles, processBatchJob, generateThumbnails, createDownloadInfo, cleanupBlobUrls, handleJobUpdate]);
 
   const cancelOperation = useCallback(() => {
     cancelApiCalls();

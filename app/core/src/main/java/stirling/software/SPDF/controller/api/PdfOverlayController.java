@@ -27,6 +27,8 @@ import stirling.software.SPDF.model.api.general.OverlayPdfsRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.service.JobProgressService;
+import stirling.software.common.service.JobProgressTracker;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.WebResponseUtils;
 
@@ -35,6 +37,7 @@ import stirling.software.common.util.WebResponseUtils;
 public class PdfOverlayController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final JobProgressService jobProgressService;
 
     @AutoJobPostMapping(value = "/overlay-pdfs", consumes = "multipart/form-data")
     @StandardPdfResponse
@@ -63,13 +66,17 @@ public class PdfOverlayController {
 
             try (PDDocument basePdf = pdfDocumentFactory.load(baseFile);
                     Overlay overlay = new Overlay()) {
+                JobProgressTracker progressTracker =
+                        jobProgressService.tracker(basePdf.getNumberOfPages() + 1);
+                boolean trackProgress = progressTracker.isEnabled();
                 Map<Integer, String> overlayGuide =
                         prepareOverlayGuide(
                                 basePdf.getNumberOfPages(),
                                 overlayPdfFiles,
                                 mode,
                                 counts,
-                                tempFiles);
+                                tempFiles,
+                                progressTracker);
 
                 overlay.setInputPDF(basePdf);
                 if (overlayPos == 0) {
@@ -80,6 +87,13 @@ public class PdfOverlayController {
 
                 ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
                 overlay.overlay(overlayGuide).save(outputStream);
+
+                if (trackProgress) {
+                    progressTracker.advance();
+                    progressTracker.complete();
+                } else {
+                    jobProgressService.updateProgress(100, null);
+                }
                 byte[] data = outputStream.toByteArray();
                 String outputFilename =
                         Filenames.toSimpleFileName(baseFile.getOriginalFilename())
@@ -104,18 +118,25 @@ public class PdfOverlayController {
     }
 
     private Map<Integer, String> prepareOverlayGuide(
-            int basePageCount, File[] overlayFiles, String mode, int[] counts, List<File> tempFiles)
+            int basePageCount,
+            File[] overlayFiles,
+            String mode,
+            int[] counts,
+            List<File> tempFiles,
+            JobProgressTracker progressTracker)
             throws IOException {
         Map<Integer, String> overlayGuide = new HashMap<>();
         switch (mode) {
             case "SequentialOverlay":
-                sequentialOverlay(overlayGuide, overlayFiles, basePageCount, tempFiles);
+                sequentialOverlay(
+                        overlayGuide, overlayFiles, basePageCount, tempFiles, progressTracker);
                 break;
             case "InterleavedOverlay":
-                interleavedOverlay(overlayGuide, overlayFiles, basePageCount);
+                interleavedOverlay(overlayGuide, overlayFiles, basePageCount, progressTracker);
                 break;
             case "FixedRepeatOverlay":
-                fixedRepeatOverlay(overlayGuide, overlayFiles, counts, basePageCount);
+                fixedRepeatOverlay(
+                        overlayGuide, overlayFiles, counts, basePageCount, progressTracker);
                 break;
             default:
                 throw new IllegalArgumentException("Invalid overlay mode");
@@ -127,10 +148,12 @@ public class PdfOverlayController {
             Map<Integer, String> overlayGuide,
             File[] overlayFiles,
             int basePageCount,
-            List<File> tempFiles)
+            List<File> tempFiles,
+            JobProgressTracker progressTracker)
             throws IOException {
         int overlayFileIndex = 0;
         int pageCountInCurrentOverlay = 0;
+        boolean trackProgress = progressTracker.isEnabled();
 
         for (int basePageIndex = 1; basePageIndex <= basePageCount; basePageIndex++) {
             if (pageCountInCurrentOverlay == 0
@@ -152,6 +175,10 @@ public class PdfOverlayController {
             }
 
             pageCountInCurrentOverlay++;
+
+            if (trackProgress) {
+                progressTracker.advance();
+            }
         }
     }
 
@@ -162,8 +189,12 @@ public class PdfOverlayController {
     }
 
     private void interleavedOverlay(
-            Map<Integer, String> overlayGuide, File[] overlayFiles, int basePageCount)
+            Map<Integer, String> overlayGuide,
+            File[] overlayFiles,
+            int basePageCount,
+            JobProgressTracker progressTracker)
             throws IOException {
+        boolean trackProgress = progressTracker.isEnabled();
         for (int basePageIndex = 1; basePageIndex <= basePageCount; basePageIndex++) {
             File overlayFile = overlayFiles[(basePageIndex - 1) % overlayFiles.length];
 
@@ -174,17 +205,26 @@ public class PdfOverlayController {
                     overlayGuide.put(basePageIndex, overlayFile.getAbsolutePath());
                 }
             }
+
+            if (trackProgress) {
+                progressTracker.advance();
+            }
         }
     }
 
     private void fixedRepeatOverlay(
-            Map<Integer, String> overlayGuide, File[] overlayFiles, int[] counts, int basePageCount)
+            Map<Integer, String> overlayGuide,
+            File[] overlayFiles,
+            int[] counts,
+            int basePageCount,
+            JobProgressTracker progressTracker)
             throws IOException {
         if (overlayFiles.length != counts.length) {
             throw new IllegalArgumentException(
                     "Counts array length must match the number of overlay files");
         }
         int currentPage = 1;
+        boolean trackProgress = progressTracker.isEnabled();
         for (int i = 0; i < overlayFiles.length; i++) {
             File overlayFile = overlayFiles[i];
             int repeatCount = counts[i];
@@ -196,6 +236,9 @@ public class PdfOverlayController {
                     for (int page = 0; page < overlayPageCount; page++) {
                         if (currentPage > basePageCount) break;
                         overlayGuide.put(currentPage++, overlayFile.getAbsolutePath());
+                        if (trackProgress) {
+                            progressTracker.advance();
+                        }
                     }
                 }
             }

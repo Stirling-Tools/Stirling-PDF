@@ -20,6 +20,7 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.context.JobContextHolder;
 import stirling.software.common.model.job.JobResponse;
 import stirling.software.common.util.ExecutorFactory;
 
@@ -65,7 +66,7 @@ public class JobExecutorService {
      * @return The response
      */
     public ResponseEntity<?> runJobGeneric(boolean async, Supplier<Object> work) {
-        return runJobGeneric(async, work, -1);
+        return runJobGeneric(async, work, -1, false, 50, true);
     }
 
     /**
@@ -78,7 +79,7 @@ public class JobExecutorService {
      */
     public ResponseEntity<?> runJobGeneric(
             boolean async, Supplier<Object> work, long customTimeoutMs) {
-        return runJobGeneric(async, work, customTimeoutMs, false, 50);
+        return runJobGeneric(async, work, customTimeoutMs, false, 50, true);
     }
 
     /**
@@ -96,7 +97,8 @@ public class JobExecutorService {
             Supplier<Object> work,
             long customTimeoutMs,
             boolean queueable,
-            int resourceWeight) {
+            int resourceWeight,
+            boolean trackProgress) {
         String jobId = UUID.randomUUID().toString();
 
         // Store the job ID in the request for potential use by other components
@@ -138,6 +140,8 @@ public class JobExecutorService {
                         && // Only async jobs can be queued
                         resourceMonitor.shouldQueueJob(resourceWeight);
 
+        boolean enableProgress = async && trackProgress;
+
         if (shouldQueue) {
             // Queue the job instead of executing immediately
             log.debug(
@@ -145,13 +149,18 @@ public class JobExecutorService {
                     jobId,
                     resourceWeight);
 
-            taskManager.createTask(jobId);
+            taskManager.createTask(jobId, trackProgress);
+
+            Supplier<Object> contextualWork = withJobContext(jobId, enableProgress, work);
 
             // Create a specialized wrapper that updates the TaskManager
             Supplier<Object> wrappedWork =
                     () -> {
                         try {
-                            Object result = work.get();
+                            if (enableProgress) {
+                                taskManager.updateProgress(jobId, 5, null);
+                            }
+                            Object result = contextualWork.get();
                             processJobResult(jobId, result);
                             return result;
                         } catch (Exception e) {
@@ -169,24 +178,49 @@ public class JobExecutorService {
             // Return immediately with job ID
             return ResponseEntity.ok().body(new JobResponse<>(true, jobId, null));
         } else if (async) {
-            taskManager.createTask(jobId);
+            taskManager.createTask(jobId, trackProgress);
             executor.execute(
-                    () -> {
-                        try {
-                            log.debug(
-                                    "Running async job {} with timeout {} ms", jobId, timeoutToUse);
+                    () ->
+                            runWithJobContext(
+                                    jobId,
+                                    enableProgress,
+                                    () -> {
+                                        try {
+                                            log.debug(
+                                                    "Running async job {} with timeout {} ms",
+                                                    jobId,
+                                                    timeoutToUse);
 
-                            // Execute with timeout
-                            Object result = executeWithTimeout(() -> work.get(), timeoutToUse);
-                            processJobResult(jobId, result);
-                        } catch (TimeoutException te) {
-                            log.error("Job {} timed out after {} ms", jobId, timeoutToUse);
-                            taskManager.setError(jobId, "Job timed out");
-                        } catch (Exception e) {
-                            log.error("Error executing job {}: {}", jobId, e.getMessage(), e);
-                            taskManager.setError(jobId, e.getMessage());
-                        }
-                    });
+                                            Supplier<Object> contextualWork =
+                                                    withJobContext(jobId, enableProgress, work);
+
+                                            if (enableProgress) {
+                                                taskManager.updateProgress(jobId, 5, null);
+                                            }
+
+                                            // Execute with timeout
+                                            Object result =
+                                                    executeWithTimeout(
+                                                            contextualWork,
+                                                            timeoutToUse,
+                                                            jobId,
+                                                            enableProgress);
+                                            processJobResult(jobId, result);
+                                        } catch (TimeoutException te) {
+                                            log.error(
+                                                    "Job {} timed out after {} ms",
+                                                    jobId,
+                                                    timeoutToUse);
+                                            taskManager.setError(jobId, "Job timed out");
+                                        } catch (Exception e) {
+                                            log.error(
+                                                    "Error executing job {}: {}",
+                                                    jobId,
+                                                    e.getMessage(),
+                                                    e);
+                                            taskManager.setError(jobId, e.getMessage());
+                                        }
+                                    }));
 
             return ResponseEntity.ok().body(new JobResponse<>(true, jobId, null));
         } else {
@@ -194,7 +228,9 @@ public class JobExecutorService {
                 log.debug("Running sync job with timeout {} ms", timeoutToUse);
 
                 // Execute with timeout
-                Object result = executeWithTimeout(() -> work.get(), timeoutToUse);
+                Supplier<Object> contextualWork = withJobContext(jobId, enableProgress, work);
+                Object result =
+                        executeWithTimeout(contextualWork, timeoutToUse, jobId, enableProgress);
 
                 // If the result is already a ResponseEntity, return it directly
                 if (result instanceof ResponseEntity) {
@@ -452,12 +488,14 @@ public class JobExecutorService {
      * @throws TimeoutException If the execution times out
      * @throws Exception If the supplier throws an exception
      */
-    private <T> T executeWithTimeout(Supplier<T> supplier, long timeoutMs)
+    private <T> T executeWithTimeout(
+            Supplier<T> supplier, long timeoutMs, String jobId, boolean progressEnabled)
             throws TimeoutException, Exception {
         // Use the same executor as other async jobs for consistency
         // This ensures all operations run on the same thread pool
         java.util.concurrent.CompletableFuture<T> future =
-                java.util.concurrent.CompletableFuture.supplyAsync(supplier, executor);
+                java.util.concurrent.CompletableFuture.supplyAsync(
+                        withJobContext(jobId, progressEnabled, supplier), executor);
 
         try {
             return future.get(timeoutMs, TimeUnit.MILLISECONDS);
@@ -472,5 +510,63 @@ public class JobExecutorService {
             Thread.currentThread().interrupt();
             throw new Exception("Execution was interrupted", e);
         }
+    }
+
+    /** Backwards compatible helper used by tests via reflection. */
+    @SuppressWarnings("unused")
+    private <T> T executeWithTimeout(Supplier<T> supplier, long timeoutMs)
+            throws TimeoutException, Exception {
+        return executeWithTimeout(
+                supplier,
+                timeoutMs,
+                JobContextHolder.getJobId(),
+                JobContextHolder.isProgressEnabled());
+    }
+
+    private <T> Supplier<T> withJobContext(
+            String jobId, boolean progressEnabled, Supplier<T> delegate) {
+        if (jobId == null) {
+            return delegate;
+        }
+        return () -> {
+            String previousJobId = JobContextHolder.getJobId();
+            boolean previousProgress = JobContextHolder.isProgressEnabled();
+
+            JobContextHolder.setContext(jobId, progressEnabled);
+            try {
+                return delegate.get();
+            } finally {
+                if (previousJobId == null) {
+                    JobContextHolder.clear();
+                } else {
+                    JobContextHolder.setContext(previousJobId, previousProgress);
+                }
+            }
+        };
+    }
+
+    private void runWithJobContext(String jobId, boolean progressEnabled, Runnable runnable) {
+        if (jobId == null) {
+            runnable.run();
+            return;
+        }
+        Runnable contextualRunnable =
+                () -> {
+                    String previousJobId = JobContextHolder.getJobId();
+                    boolean previousProgress = JobContextHolder.isProgressEnabled();
+
+                    JobContextHolder.setContext(jobId, progressEnabled);
+                    try {
+                        runnable.run();
+                    } finally {
+                        if (previousJobId == null) {
+                            JobContextHolder.clear();
+                        } else {
+                            JobContextHolder.setContext(previousJobId, previousProgress);
+                        }
+                    }
+                };
+
+        contextualRunnable.run();
     }
 }

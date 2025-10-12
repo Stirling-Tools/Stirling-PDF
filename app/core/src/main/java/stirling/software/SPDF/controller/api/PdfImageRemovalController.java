@@ -17,6 +17,8 @@ import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.service.JobProgressService;
+import stirling.software.common.service.JobProgressTracker;
 import stirling.software.common.util.WebResponseUtils;
 
 /**
@@ -31,6 +33,8 @@ public class PdfImageRemovalController {
     private final PdfImageRemovalService pdfImageRemovalService;
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+
+    private final JobProgressService jobProgressService;
 
     /**
      * Endpoint to remove images from a PDF file.
@@ -54,8 +58,13 @@ public class PdfImageRemovalController {
         // Load the PDF document
         PDDocument document = pdfDocumentFactory.load(file);
 
+        int pageCount = Math.max(1, document.getNumberOfPages());
+        JobProgressTracker progressTracker = jobProgressService.tracker(pageCount + 1);
+        boolean trackProgress = progressTracker.isEnabled();
+
         // Remove images from the PDF document using the service
-        PDDocument modifiedDocument = pdfImageRemovalService.removeImagesFromPdf(document);
+        PDDocument modifiedDocument =
+                pdfImageRemovalService.removeImagesFromPdf(document, progressTracker);
 
         // Create a ByteArrayOutputStream to hold the modified PDF data
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
@@ -68,6 +77,10 @@ public class PdfImageRemovalController {
         String mergedFileName =
                 file.getFileInput().getOriginalFilename().replaceFirst("[.][^.]+$", "")
                         + "_removed_images.pdf";
+
+        if (trackProgress) {
+            progressTracker.complete();
+        }
 
         // Convert the byte array to a web response and return it
         return WebResponseUtils.bytesToWebResponse(outputStream.toByteArray(), mergedFileName);

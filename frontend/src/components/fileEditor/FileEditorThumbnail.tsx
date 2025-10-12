@@ -55,6 +55,9 @@ const FileEditorThumbnail = ({
   const { pinFile, unpinFile, isFilePinned, activeFiles, actions: fileActions } = useFileContext();
   const { state } = useFileState();
   const hasError = state.ui.errorFileIds.includes(file.id);
+  const activeJobs = useMemo(() => file.activeJobs ?? [], [file.activeJobs]);
+  const visibleJobs = useMemo(() => activeJobs.filter(job => job.status !== 'completed'), [activeJobs]);
+  const hasActiveJobs = visibleJobs.length > 0;
 
   // ---- Drag state ----
   const [isDragging, setIsDragging] = useState(false);
@@ -212,6 +215,9 @@ const FileEditorThumbnail = ({
     return isSelected ? styles.headerSelected : styles.headerResting;
   };
 
+
+  const progressContainerBottom = file.toolHistory ? '56px' : '12px';
+  const toolChainBottom = hasActiveJobs ? '8px' : '4px';
 
   return (
     <div
@@ -436,6 +442,54 @@ const FileEditorThumbnail = ({
           )}
         </div>
 
+        {hasActiveJobs && (
+          <div
+            className={styles.jobProgressContainer}
+            style={{ bottom: progressContainerBottom }}
+          >
+            {visibleJobs.map(job => {
+              const queueSuffix = typeof job.queuePosition === 'number' ? ` (#${job.queuePosition + 1})` : '';
+              const label = job.message
+                || (job.status === 'failed'
+                  ? t('async.jobFailed', 'Job failed')
+                  : job.status === 'queued'
+                    ? `${t('async.jobQueued', 'Waiting in queue')}${queueSuffix}`
+                    : t('async.jobProcessing', 'Processing…'));
+              const rawPercent = Number.isFinite(job.progressPercent) ? Math.round(job.progressPercent) : 0;
+              const percent = Math.max(0, Math.min(rawPercent, 100));
+              const displayValue = job.status === 'failed'
+                ? t('async.jobFailedShort', 'Failed')
+                : job.status === 'queued'
+                  ? t('async.jobQueuedShort', 'Queued')
+                  : `${percent}%`;
+              const fillBase = job.status === 'failed'
+                ? 100
+                : Math.max(job.status === 'queued' ? 12 : 6, percent);
+              const fillWidth = Math.max(0, Math.min(fillBase, 100));
+
+              return (
+                <div
+                  key={job.jobId}
+                  className={styles.jobProgressRow}
+                  data-status={job.status}
+                  title={job.error || label}
+                >
+                  <div className={styles.jobProgressHeader}>
+                    <span className={styles.jobProgressLabel}>{label}</span>
+                    <span className={styles.jobProgressValue}>{displayValue}</span>
+                  </div>
+                  <div className={styles.jobProgressTrack}>
+                    <div className={styles.jobProgressFill} style={{ width: `${fillWidth}%` }} />
+                  </div>
+                  {job.status === 'failed' && job.error && (
+                    <div className={styles.jobProgressError}>{job.error}</div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
         {/* Drag handle (span wrapper so we can attach a ref reliably) */}
         <span ref={handleRef} className={styles.dragHandle} aria-hidden>
           <DragIndicatorIcon fontSize="small" />
@@ -445,7 +499,7 @@ const FileEditorThumbnail = ({
         {file.toolHistory && (
           <div style={{
             position: 'absolute',
-            bottom: '4px',
+            bottom: toolChainBottom,
             left: '4px',
             right: '4px',
             padding: '4px 6px',

@@ -87,7 +87,11 @@ export function createFileSelectors(
       return stateRef.current.files.ids
         .map(id => {
           const record = stateRef.current.files.byId[id];
-          return record ? `${id}:${record.size}:${record.lastModified}` : '';
+          if (!record) return '';
+          const jobsSignature = (record.activeJobs || [])
+            .map(job => `${job.jobId}:${job.status}:${Math.round(job.progressPercent)}`)
+            .join(';');
+          return `${id}:${record.size}:${record.lastModified}:${jobsSignature}`;
         })
         .join('|');
     },

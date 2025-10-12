@@ -25,6 +25,8 @@ import stirling.software.SPDF.model.api.general.MergeMultiplePagesRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.service.JobProgressService;
+import stirling.software.common.service.JobProgressTracker;
 import stirling.software.common.util.WebResponseUtils;
 
 @GeneralApi
@@ -32,6 +34,7 @@ import stirling.software.common.util.WebResponseUtils;
 public class MultiPageLayoutController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final JobProgressService jobProgressService;
 
     @AutoJobPostMapping(value = "/multi-page-layout", consumes = "multipart/form-data")
     @StandardPdfResponse
@@ -66,6 +69,8 @@ public class MultiPageLayoutController {
         newDocument.addPage(newPage);
 
         int totalPages = sourceDocument.getNumberOfPages();
+        JobProgressTracker progressTracker = jobProgressService.tracker(Math.max(1, totalPages));
+        boolean trackProgress = progressTracker.isEnabled();
         float cellWidth = newPage.getMediaBox().getWidth() / cols;
         float cellHeight = newPage.getMediaBox().getHeight() / rows;
 
@@ -126,6 +131,10 @@ public class MultiPageLayoutController {
                 contentStream.addRect(borderX, borderY, cellWidth, cellHeight);
                 contentStream.stroke();
             }
+
+            if (trackProgress) {
+                progressTracker.advance();
+            }
         }
 
         contentStream.close(); // Close the final content stream
@@ -134,6 +143,10 @@ public class MultiPageLayoutController {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         newDocument.save(baos);
         newDocument.close();
+
+        if (trackProgress) {
+            progressTracker.complete();
+        }
 
         byte[] result = baos.toByteArray();
         return WebResponseUtils.bytesToWebResponse(

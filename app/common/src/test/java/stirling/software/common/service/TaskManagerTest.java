@@ -50,6 +50,9 @@ class TaskManagerTest {
         assertEquals(jobId, result.getJobId());
         assertFalse(result.isComplete());
         assertNotNull(result.getCreatedAt());
+        assertTrue(result.isTrackProgress());
+        assertEquals(0, result.getProgressPercent());
+        assertEquals("Pending", result.getProgressMessage());
     }
 
     @Test
@@ -68,6 +71,8 @@ class TaskManagerTest {
         assertTrue(result.isComplete());
         assertEquals(resultObject, result.getResult());
         assertNotNull(result.getCompletedAt());
+        assertEquals(100, result.getProgressPercent());
+        assertEquals("Completed", result.getProgressMessage());
     }
 
     @Test
@@ -120,6 +125,8 @@ class TaskManagerTest {
         assertTrue(result.isComplete());
         assertEquals(errorMessage, result.getError());
         assertNotNull(result.getCompletedAt());
+        assertEquals(100, result.getProgressPercent());
+        assertEquals(errorMessage, result.getProgressMessage());
     }
 
     @Test
@@ -138,6 +145,7 @@ class TaskManagerTest {
         assertNotNull(result);
         assertTrue(result.isComplete());
         assertEquals(resultObject, result.getResult());
+        assertEquals(100, result.getProgressPercent());
     }
 
     @Test
@@ -154,6 +162,8 @@ class TaskManagerTest {
         assertNotNull(result);
         assertTrue(result.isComplete());
         assertEquals("Task completed successfully", result.getResult());
+        assertEquals(100, result.getProgressPercent());
+        assertEquals("Completed", result.getProgressMessage());
     }
 
     @Test
@@ -304,5 +314,46 @@ class TaskManagerTest {
 
         // Assert
         assertFalse(result);
+    }
+
+    @Test
+    void testCreateTaskWithoutProgressTracking() {
+        String jobId = UUID.randomUUID().toString();
+        taskManager.createTask(jobId, false);
+
+        JobResult result = taskManager.getJobResult(jobId);
+        assertNotNull(result);
+        assertFalse(result.isTrackProgress());
+        assertNull(result.getProgressPercent());
+        assertNull(result.getProgressMessage());
+    }
+
+    @Test
+    void testUpdateProgress() {
+        String jobId = UUID.randomUUID().toString();
+        taskManager.createTask(jobId);
+
+        boolean updated = taskManager.updateProgress(jobId, 50, "Halfway there");
+
+        assertTrue(updated);
+        JobResult result = taskManager.getJobResult(jobId);
+        assertEquals(50, result.getProgressPercent());
+        assertEquals("Halfway there", result.getProgressMessage());
+        assertNotNull(result.getProgressUpdatedAt());
+    }
+
+    @Test
+    void testUpdateProgressReturnsFalseWhenJobMissing() {
+        boolean updated = taskManager.updateProgress("missing", 10, "Stage");
+        assertFalse(updated);
+    }
+
+    @Test
+    void testUpdateProgressIgnoredWhenTrackingDisabled() {
+        String jobId = UUID.randomUUID().toString();
+        taskManager.createTask(jobId, false);
+
+        boolean updated = taskManager.updateProgress(jobId, 75, "Stage");
+        assertFalse(updated);
     }
 }

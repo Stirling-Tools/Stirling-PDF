@@ -35,6 +35,8 @@ import stirling.software.SPDF.model.api.security.SanitizePdfRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.SecurityApi;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.service.JobProgressService;
+import stirling.software.common.service.JobProgressTracker;
 import stirling.software.common.util.WebResponseUtils;
 
 @SecurityApi
@@ -42,6 +44,7 @@ import stirling.software.common.util.WebResponseUtils;
 public class SanitizeController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final JobProgressService jobProgressService;
 
     @AutoJobPostMapping(consumes = "multipart/form-data", value = "/sanitize-pdf")
     @StandardPdfResponse
@@ -61,28 +64,54 @@ public class SanitizeController {
         boolean removeFonts = Boolean.TRUE.equals(request.getRemoveFonts());
 
         PDDocument document = pdfDocumentFactory.load(inputFile, true);
+
+        int pageCount = Math.max(1, document.getNumberOfPages());
+        int pageSteps = 0;
+        if (removeJavaScript) pageSteps += pageCount;
+        if (removeEmbeddedFiles) pageSteps += pageCount;
+        if (removeLinks) pageSteps += pageCount;
+        if (removeFonts) pageSteps += pageCount;
+
+        int metadataSteps = 0;
+        if (removeXMPMetadata) metadataSteps++;
+        if (removeMetadata) metadataSteps++;
+
+        int totalSteps = Math.max(1, pageSteps + metadataSteps);
+        JobProgressTracker progressTracker = jobProgressService.tracker(totalSteps);
+        boolean trackProgress = progressTracker.isEnabled();
+
         if (removeJavaScript) {
-            sanitizeJavaScript(document);
+            sanitizeJavaScript(document, progressTracker, trackProgress);
         }
 
         if (removeEmbeddedFiles) {
-            sanitizeEmbeddedFiles(document);
+            sanitizeEmbeddedFiles(document, progressTracker, trackProgress);
         }
 
         if (removeXMPMetadata) {
             sanitizeXMPMetadata(document);
+            if (trackProgress) {
+                progressTracker.advance();
+            }
         }
 
         if (removeMetadata) {
             sanitizeDocumentInfoMetadata(document);
+            if (trackProgress) {
+                progressTracker.advance();
+            }
         }
 
         if (removeLinks) {
-            sanitizeLinks(document);
+            sanitizeLinks(document, progressTracker, trackProgress);
         }
 
         if (removeFonts) {
-            sanitizeFonts(document);
+            sanitizeFonts(document, progressTracker, trackProgress);
+        }
+
+        if (trackProgress) {
+            progressTracker.complete();
         }
 
         return WebResponseUtils.pdfDocToWebResponse(
@@ -92,7 +121,9 @@ public class SanitizeController {
                         + "_sanitized.pdf");
     }
 
-    private void sanitizeJavaScript(PDDocument document) throws IOException {
+    private void sanitizeJavaScript(
+            PDDocument document, JobProgressTracker progressTracker, boolean trackProgress)
+            throws IOException {
         // Get the root dictionary (catalog) of the PDF
         PDDocumentCatalog catalog = document.getDocumentCatalog();
 
@@ -140,16 +171,24 @@ public class SanitizeController {
                     }
                 }
             }
+
+            if (trackProgress) {
+                progressTracker.advance();
+            }
         }
     }
 
-    private void sanitizeEmbeddedFiles(PDDocument document) {
+    private void sanitizeEmbeddedFiles(
+            PDDocument document, JobProgressTracker progressTracker, boolean trackProgress) {
         PDPageTree allPages = document.getPages();
 
         for (PDPage page : allPages) {
             PDResources res = page.getResources();
             if (res != null && res.getCOSObject() != null) {
                 res.getCOSObject().removeItem(COSName.getPDFName("EmbeddedFiles"));
+            }
+            if (trackProgress) {
+                progressTracker.advance();
             }
         }
     }
@@ -171,7 +210,9 @@ public class SanitizeController {
         }
     }
 
-    private void sanitizeLinks(PDDocument document) throws IOException {
+    private void sanitizeLinks(
+            PDDocument document, JobProgressTracker progressTracker, boolean trackProgress)
+            throws IOException {
         for (PDPage page : document.getPages()) {
             for (PDAnnotation annotation : page.getAnnotations()) {
                 if (annotation != null && annotation instanceof PDAnnotationLink linkAnnotation) {
@@ -183,15 +224,22 @@ public class SanitizeController {
                     }
                 }
             }
+            if (trackProgress) {
+                progressTracker.advance();
+            }
         }
     }
 
-    private void sanitizeFonts(PDDocument document) {
+    private void sanitizeFonts(
+            PDDocument document, JobProgressTracker progressTracker, boolean trackProgress) {
         for (PDPage page : document.getPages()) {
             if (page != null
                     && page.getResources() != null
                     && page.getResources().getCOSObject() != null) {
                 page.getResources().getCOSObject().removeItem(COSName.getPDFName("Font"));
+            }
+            if (trackProgress) {
+                progressTracker.advance();
             }
         }
     }

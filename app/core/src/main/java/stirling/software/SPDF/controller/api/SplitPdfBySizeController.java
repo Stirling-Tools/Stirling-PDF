@@ -25,6 +25,8 @@ import stirling.software.SPDF.model.api.general.SplitPdfBySizeOrCountRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.service.JobProgressService;
+import stirling.software.common.service.JobProgressTracker;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.WebResponseUtils;
@@ -35,6 +37,7 @@ import stirling.software.common.util.WebResponseUtils;
 public class SplitPdfBySizeController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final JobProgressService jobProgressService;
 
     @AutoJobPostMapping(value = "/split-by-size-or-count", consumes = "multipart/form-data")
     @MultiFileResponse
@@ -78,21 +81,28 @@ public class SplitPdfBySizeController {
                     String value = request.getSplitValue();
                     log.debug("Split type: {}, Split value: {}", type, value);
 
+                    JobProgressTracker progressTracker =
+                            jobProgressService.tracker(sourceDocument.getNumberOfPages() + 2);
+                    boolean trackProgress = progressTracker.isEnabled();
+
                     if (type == 0) {
                         log.debug("Processing split by size");
                         long maxBytes = GeneralUtils.convertSizeToBytes(value);
                         log.debug("Max bytes per document: {}", maxBytes);
-                        handleSplitBySize(sourceDocument, maxBytes, zipOut, filename);
+                        handleSplitBySize(
+                                sourceDocument, maxBytes, zipOut, filename, progressTracker);
                     } else if (type == 1) {
                         log.debug("Processing split by page count");
                         int pageCount = Integer.parseInt(value);
                         log.debug("Pages per document: {}", pageCount);
-                        handleSplitByPageCount(sourceDocument, pageCount, zipOut, filename);
+                        handleSplitByPageCount(
+                                sourceDocument, pageCount, zipOut, filename, progressTracker);
                     } else if (type == 2) {
                         log.debug("Processing split by document count");
                         int documentCount = Integer.parseInt(value);
                         log.debug("Total number of documents: {}", documentCount);
-                        handleSplitByDocCount(sourceDocument, documentCount, zipOut, filename);
+                        handleSplitByDocCount(
+                                sourceDocument, documentCount, zipOut, filename, progressTracker);
                     } else {
                         log.error("Invalid split type: {}", type);
                         throw ExceptionUtils.createIllegalArgumentException(
@@ -102,6 +112,13 @@ public class SplitPdfBySizeController {
                     }
 
                     log.debug("PDF splitting completed successfully");
+
+                    if (trackProgress) {
+                        progressTracker.advance();
+                        progressTracker.complete();
+                    } else {
+                        jobProgressService.updateProgress(100, null);
+                    }
                 } catch (Exception e) {
                     ExceptionUtils.logException("PDF document loading or processing", e);
                     throw e;
@@ -138,7 +155,11 @@ public class SplitPdfBySizeController {
     }
 
     private void handleSplitBySize(
-            PDDocument sourceDocument, long maxBytes, ZipOutputStream zipOut, String baseFilename)
+            PDDocument sourceDocument,
+            long maxBytes,
+            ZipOutputStream zipOut,
+            String baseFilename,
+            JobProgressTracker progressTracker)
             throws IOException {
         log.debug("Starting handleSplitBySize with maxBytes={}", maxBytes);
 
@@ -147,6 +168,7 @@ public class SplitPdfBySizeController {
         int fileIndex = 1;
         int totalPages = sourceDocument.getNumberOfPages();
         int pageAdded = 0;
+        boolean trackProgress = progressTracker.isEnabled();
 
         // Smart size check frequency - check more often with larger documents
         int baseCheckFrequency = 5;
@@ -251,6 +273,9 @@ public class SplitPdfBySizeController {
                     }
                 }
             }
+            if (trackProgress) {
+                progressTracker.setStepsCompleted(Math.min(totalPages, pageIndex + 1));
+            }
         }
 
         // Save final document if it has any pages
@@ -260,13 +285,20 @@ public class SplitPdfBySizeController {
                     currentDoc.getNumberOfPages(),
                     fileIndex);
             saveDocumentToZip(currentDoc, zipOut, baseFilename, fileIndex++);
+            if (trackProgress) {
+                progressTracker.setStepsCompleted(totalPages);
+            }
         }
 
         log.debug("Completed handleSplitBySize with {} document parts created", fileIndex - 1);
     }
 
     private void handleSplitByPageCount(
-            PDDocument sourceDocument, int pageCount, ZipOutputStream zipOut, String baseFilename)
+            PDDocument sourceDocument,
+            int pageCount,
+            ZipOutputStream zipOut,
+            String baseFilename,
+            JobProgressTracker progressTracker)
             throws IOException {
         log.debug("Starting handleSplitByPageCount with pageCount={}", pageCount);
         int currentPageCount = 0;
@@ -284,11 +316,16 @@ public class SplitPdfBySizeController {
         int pageIndex = 0;
         int totalPages = sourceDocument.getNumberOfPages();
         log.debug("Processing {} pages", totalPages);
+        boolean trackProgress = progressTracker.isEnabled();
 
         try {
             for (PDPage page : sourceDocument.getPages()) {
                 pageIndex++;
                 log.debug("Processing page {} of {}", pageIndex, totalPages);
+
+                if (trackProgress) {
+                    progressTracker.setStepsCompleted(pageIndex);
+                }
 
                 try {
                     log.debug("Adding page {} to current document", pageIndex);
@@ -347,6 +384,9 @@ public class SplitPdfBySizeController {
                     log.error("Error saving final document part {}", fileIndex - 1, e);
                     throw e;
                 }
+                if (trackProgress) {
+                    progressTracker.setStepsCompleted(totalPages);
+                }
             } else {
                 log.debug("Final document has no pages, skipping");
             }
@@ -370,7 +410,8 @@ public class SplitPdfBySizeController {
             PDDocument sourceDocument,
             int documentCount,
             ZipOutputStream zipOut,
-            String baseFilename)
+            String baseFilename,
+            JobProgressTracker progressTracker)
             throws IOException {
         log.debug("Starting handleSplitByDocCount with documentCount={}", documentCount);
         int totalPageCount = sourceDocument.getNumberOfPages();
@@ -382,6 +423,7 @@ public class SplitPdfBySizeController {
 
         int currentPageIndex = 0;
         int fileIndex = 1;
+        boolean trackProgress = progressTracker.isEnabled();
 
         for (int i = 0; i < documentCount; i++) {
             log.debug("Creating document {} of {}", i + 1, documentCount);
@@ -407,6 +449,9 @@ public class SplitPdfBySizeController {
                     currentDoc.addPage(sourceDocument.getPage(currentPageIndex));
                     log.debug("Successfully added page {} to document {}", j + 1, i + 1);
                     currentPageIndex++;
+                    if (trackProgress) {
+                        progressTracker.setStepsCompleted(currentPageIndex);
+                    }
                 } catch (Exception e) {
                     log.error("Error adding page {} to document {}", j + 1, i + 1, e);
                     throw ExceptionUtils.createFileProcessingException("split", e);

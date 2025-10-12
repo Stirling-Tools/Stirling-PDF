@@ -32,6 +32,8 @@ import stirling.software.SPDF.model.api.SplitPdfBySectionsRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.service.JobProgressService;
+import stirling.software.common.service.JobProgressTracker;
 import stirling.software.common.util.WebResponseUtils;
 
 @GeneralApi
@@ -39,6 +41,7 @@ import stirling.software.common.util.WebResponseUtils;
 public class SplitPdfBySectionsController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final JobProgressService jobProgressService;
 
     @AutoJobPostMapping(value = "/split-pdf-by-sections", consumes = "multipart/form-data")
     @MultiFileResponse
@@ -59,15 +62,27 @@ public class SplitPdfBySectionsController {
         int horiz = request.getHorizontalDivisions() + 1;
         int verti = request.getVerticalDivisions() + 1;
         boolean merge = Boolean.TRUE.equals(request.getMerge());
-        List<PDDocument> splitDocuments = splitPdfPages(sourceDocument, verti, horiz);
+        int totalSections = sourceDocument.getNumberOfPages() * horiz * verti;
+        JobProgressTracker progressTracker = jobProgressService.tracker(totalSections + 1);
+        boolean trackProgress = progressTracker.isEnabled();
+        List<PDDocument> splitDocuments =
+                splitPdfPages(sourceDocument, verti, horiz, progressTracker);
 
         String filename =
                 Filenames.toSimpleFileName(file.getOriginalFilename())
                         .replaceFirst("[.][^.]+$", "");
         if (merge) {
-            MergeController mergeController = new MergeController(pdfDocumentFactory);
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            mergeController.mergeDocuments(splitDocuments).save(baos);
+            if (trackProgress) {
+                progressTracker.advance();
+            }
+            mergeDocuments(splitDocuments).save(baos);
+            for (PDDocument doc : splitDocuments) {
+                doc.close();
+            }
+            if (trackProgress) {
+                progressTracker.complete();
+            }
             return WebResponseUtils.bytesToWebResponse(baos.toByteArray(), filename + "_split.pdf");
         }
         for (PDDocument doc : splitDocuments) {
@@ -99,6 +114,10 @@ public class SplitPdfBySectionsController {
 
             zipOut.finish();
             data = Files.readAllBytes(zipFile);
+            if (trackProgress) {
+                progressTracker.advance();
+                progressTracker.complete();
+            }
             return WebResponseUtils.bytesToWebResponse(
                     data, filename + "_split.zip", MediaType.APPLICATION_OCTET_STREAM);
 
@@ -107,10 +126,27 @@ public class SplitPdfBySectionsController {
         }
     }
 
+    private PDDocument mergeDocuments(List<PDDocument> documents) throws IOException {
+        PDDocument merged = pdfDocumentFactory.createNewDocument();
+        for (PDDocument doc : documents) {
+            for (PDPage page : doc.getPages()) {
+                merged.addPage(page);
+            }
+        }
+        return merged;
+    }
+
     public List<PDDocument> splitPdfPages(
-            PDDocument document, int horizontalDivisions, int verticalDivisions)
+            PDDocument document,
+            int horizontalDivisions,
+            int verticalDivisions,
+            JobProgressTracker progressTracker)
             throws IOException {
         List<PDDocument> splitDocuments = new ArrayList<>();
+
+        int totalSections = document.getNumberOfPages() * horizontalDivisions * verticalDivisions;
+        int sectionCounter = 0;
+        boolean trackProgress = progressTracker.isEnabled();
 
         for (PDPage originalPage : document.getPages()) {
             PDRectangle originalMediaBox = originalPage.getMediaBox();
@@ -151,6 +187,10 @@ public class SplitPdfBySectionsController {
                     }
 
                     splitDocuments.add(subDoc);
+                    sectionCounter++;
+                    if (trackProgress) {
+                        progressTracker.advance();
+                    }
                 }
             }
         }

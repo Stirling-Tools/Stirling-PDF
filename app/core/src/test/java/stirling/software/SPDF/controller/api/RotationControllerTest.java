@@ -22,11 +22,14 @@ import org.springframework.mock.web.MockMultipartFile;
 
 import stirling.software.SPDF.model.api.general.RotatePDFRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.service.JobProgressService;
+import stirling.software.common.service.JobProgressTracker;
 
 @ExtendWith(MockitoExtension.class)
 public class RotationControllerTest {
 
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
+    @Mock private JobProgressService jobProgressService;
 
     @InjectMocks private RotationController rotationController;
 
@@ -42,12 +45,16 @@ public class RotationControllerTest {
         PDDocument mockDocument = mock(PDDocument.class);
         PDPageTree mockPages = mock(PDPageTree.class);
         PDPage mockPage = mock(PDPage.class);
+        JobProgressTracker mockTracker = mock(JobProgressTracker.class);
 
         when(pdfDocumentFactory.load(request)).thenReturn(mockDocument);
         when(mockDocument.getPages()).thenReturn(mockPages);
+        when(mockPages.getCount()).thenReturn(1);
         when(mockPages.iterator())
                 .thenReturn(java.util.Collections.singletonList(mockPage).iterator());
         when(mockPage.getRotation()).thenReturn(0);
+        when(jobProgressService.tracker(1)).thenReturn(mockTracker);
+        when(mockTracker.isEnabled()).thenReturn(false);
 
         // Act
         ResponseEntity<byte[]> response = rotationController.rotatePDF(request);

@@ -65,7 +65,17 @@ public class TaskManager {
      * @param jobId The job ID
      */
     public void createTask(String jobId) {
-        jobResults.put(jobId, JobResult.createNew(jobId));
+        createTask(jobId, true);
+    }
+
+    /**
+     * Create a new task with the given job ID and progress tracking preference
+     *
+     * @param jobId The job ID
+     * @param trackProgress Whether detailed progress updates should be stored
+     */
+    public void createTask(String jobId, boolean trackProgress) {
+        jobResults.put(jobId, JobResult.createNew(jobId, trackProgress));
         log.debug("Created task with job ID: {}", jobId);
     }
 
@@ -165,6 +175,11 @@ public class TaskManager {
                 && jobResult.getError() == null) {
             // If no result or error has been set, mark it as complete with an empty result
             jobResult.completeWithResult("Task completed successfully");
+        } else {
+            // Ensure progress is set to 100% with "Completed" message
+            if (jobResult.isTrackProgress()) {
+                jobResult.updateProgress(100, "Completed");
+            }
         }
         log.debug("Marked job ID: {} as complete", jobId);
     }
@@ -207,6 +222,33 @@ public class TaskManager {
         }
         log.warn("Attempted to add note to non-existent job ID: {}", jobId);
         return false;
+    }
+
+    /**
+     * Update the progress information for a task.
+     *
+     * @param jobId The job ID
+     * @param percent Percentage complete (0-100)
+     * @param message Descriptive message for the current stage
+     * @return true if the progress update was accepted
+     */
+    public boolean updateProgress(String jobId, int percent, String message) {
+        JobResult jobResult = jobResults.get(jobId);
+        if (jobResult == null) {
+            log.debug("Ignoring progress update for unknown job ID: {}", jobId);
+            return false;
+        }
+
+        if (!jobResult.isTrackProgress()) {
+            log.trace("Progress tracking disabled for job ID: {}", jobId);
+            return false;
+        }
+
+        jobResult.updateProgress(percent, message);
+        log.debug(
+                "Updated progress for job {} to {}% with message: {}",
+                jobId, jobResult.getProgressPercent(), message);
+        return true;
     }
 
     /**

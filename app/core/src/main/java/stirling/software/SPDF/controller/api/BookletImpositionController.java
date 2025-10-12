@@ -28,6 +28,8 @@ import lombok.RequiredArgsConstructor;
 import stirling.software.SPDF.model.api.general.BookletImpositionRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.service.JobProgressService;
+import stirling.software.common.service.JobProgressTracker;
 import stirling.software.common.util.WebResponseUtils;
 
 @RestController
@@ -37,6 +39,7 @@ import stirling.software.common.util.WebResponseUtils;
 public class BookletImpositionController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final JobProgressService jobProgressService;
 
     @AutoJobPostMapping(value = "/booklet-imposition", consumes = "multipart/form-data")
     @Operation(
@@ -68,20 +71,30 @@ public class BookletImpositionController {
         PDDocument sourceDocument = pdfDocumentFactory.load(file);
         int totalPages = sourceDocument.getNumberOfPages();
 
+        List<Side> sides = saddleStitchSides(totalPages, doubleSided, duplexPass, flipOnShortEdge);
+        JobProgressTracker progressTracker = jobProgressService.tracker(Math.max(1, sides.size()));
+        boolean trackProgress = progressTracker.isEnabled();
+
         // Create proper booklet with signature-based page ordering
         PDDocument newDocument =
                 createSaddleBooklet(
                         sourceDocument,
-                        totalPages,
                         addBorder,
                         spineLocation,
                         addGutter,
                         gutterSize,
                         doubleSided,
                         duplexPass,
-                        flipOnShortEdge);
+                        flipOnShortEdge,
+                        sides,
+                        progressTracker,
+                        trackProgress);
 
         sourceDocument.close();
+
+        if (trackProgress) {
+            progressTracker.complete();
+        }
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         newDocument.save(baos);
@@ -154,14 +167,16 @@ public class BookletImpositionController {
 
     private PDDocument createSaddleBooklet(
             PDDocument src,
-            int totalPages,
             boolean addBorder,
             String spineLocation,
             boolean addGutter,
             float gutterSize,
             boolean doubleSided,
             String duplexPass,
-            boolean flipOnShortEdge)
+            boolean flipOnShortEdge,
+            List<Side> sides,
+            JobProgressTracker progressTracker,
+            boolean trackProgress)
             throws IOException {
 
         PDDocument dst = pdfDocumentFactory.createNewDocumentBasedOnOldDocument(src);
@@ -175,8 +190,6 @@ public class BookletImpositionController {
         // Validate and clamp gutter size
         if (gutterSize < 0) gutterSize = 0;
         if (gutterSize >= pageSize.getWidth() / 2f) gutterSize = pageSize.getWidth() / 2f - 1f;
-
-        List<Side> sides = saddleStitchSides(totalPages, doubleSided, duplexPass, flipOnShortEdge);
 
         for (Side side : sides) {
             PDPage out = new PDPage(pageSize);
@@ -233,6 +246,10 @@ public class BookletImpositionController {
                         rightCellW,
                         cellH,
                         addBorder);
+            }
+
+            if (trackProgress) {
+                progressTracker.advance();
             }
         }
         return dst;

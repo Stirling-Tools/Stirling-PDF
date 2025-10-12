@@ -37,6 +37,8 @@ import stirling.software.SPDF.model.api.general.MergePdfsRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.service.JobProgressService;
+import stirling.software.common.service.JobProgressTracker;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.PdfErrorUtils;
@@ -48,6 +50,7 @@ import stirling.software.common.util.WebResponseUtils;
 public class MergeController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final JobProgressService jobProgressService;
 
     // Merges a list of PDDocument objects into a single PDDocument
     public PDDocument mergeDocuments(List<PDDocument> documents) throws IOException {
@@ -204,6 +207,10 @@ public class MergeController {
                     getSortComparator(
                             request.getSortType())); // Sort files based on the given sort type
 
+            JobProgressTracker progressTracker =
+                    jobProgressService.tracker(Math.max(1, files.length) + 4);
+            boolean trackProgress = progressTracker.isEnabled();
+
             PDFMergerUtility mergerUtility = new PDFMergerUtility();
             long totalSize = 0;
             List<Integer> invalidIndexes = new ArrayList<>();
@@ -224,6 +231,10 @@ public class MergeController {
                     invalidIndexes.add(index);
                 }
                 mergerUtility.addSource(tempFile); // Add source file to the merger utility
+
+                if (trackProgress) {
+                    progressTracker.advance();
+                }
             }
 
             if (!invalidIndexes.isEmpty()) {
@@ -243,6 +254,8 @@ public class MergeController {
                                 "{\"errorFileIds\":%s,\"message\":\"Some of the selected files can't be merged\"}",
                                 errorFileIds.toString());
 
+                jobProgressService.updateProgress(100, null);
+
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
                         .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
                         .body(payload.getBytes(StandardCharsets.UTF_8));
@@ -250,6 +263,10 @@ public class MergeController {
 
             mergedTempFile = Files.createTempFile("merged-", ".pdf").toFile();
             mergerUtility.setDestinationFileName(mergedTempFile.getAbsolutePath());
+
+            if (trackProgress) {
+                progressTracker.advance();
+            }
 
             try {
                 mergerUtility.mergeDocuments(
@@ -289,9 +306,17 @@ public class MergeController {
                 addTableOfContents(mergedDocument, files);
             }
 
+            if (trackProgress) {
+                progressTracker.advance();
+            }
+
             // Save the modified document to a new ByteArrayOutputStream
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             mergedDocument.save(baos);
+
+            if (trackProgress) {
+                progressTracker.complete();
+            }
 
             String mergedFileName =
                     files[0].getOriginalFilename().replaceFirst("[.][^.]+$", "")

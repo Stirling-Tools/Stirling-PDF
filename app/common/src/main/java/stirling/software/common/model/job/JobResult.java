@@ -41,6 +41,18 @@ public class JobResult {
     /** The actual result object, if not a file */
     private Object result;
 
+    /** Whether detailed progress tracking is enabled for this job. */
+    @Builder.Default private boolean trackProgress = true;
+
+    /** Most recent percentage update (0-100) if progress tracking is enabled. */
+    private Integer progressPercent;
+
+    /** Human readable progress message (e.g. current stage) when progress is enabled. */
+    private String progressMessage;
+
+    /** Timestamp of the last progress update. */
+    private LocalDateTime progressUpdatedAt;
+
     /**
      * Notes attached to this job for tracking purposes. Uses CopyOnWriteArrayList for thread safety
      * when notes are added concurrently.
@@ -54,11 +66,28 @@ public class JobResult {
      * @return A new JobResult
      */
     public static JobResult createNew(String jobId) {
-        return JobResult.builder()
-                .jobId(jobId)
-                .complete(false)
-                .createdAt(LocalDateTime.now())
-                .build();
+        return createNew(jobId, true);
+    }
+
+    /**
+     * Create a new JobResult with the given job ID and progress tracking preference.
+     *
+     * @param jobId The job ID
+     * @param trackProgress Whether detailed progress should be tracked
+     * @return A new JobResult
+     */
+    public static JobResult createNew(String jobId, boolean trackProgress) {
+        JobResult result =
+                JobResult.builder()
+                        .jobId(jobId)
+                        .complete(false)
+                        .createdAt(LocalDateTime.now())
+                        .trackProgress(trackProgress)
+                        .build();
+        if (trackProgress) {
+            result.updateProgressInternal(0, "Pending");
+        }
+        return result;
     }
 
     /**
@@ -70,6 +99,9 @@ public class JobResult {
         this.complete = true;
         this.result = result;
         this.completedAt = LocalDateTime.now();
+        if (trackProgress) {
+            updateProgressInternal(100, "Completed");
+        }
     }
 
     /**
@@ -81,6 +113,9 @@ public class JobResult {
         this.complete = true;
         this.error = error;
         this.completedAt = LocalDateTime.now();
+        if (trackProgress) {
+            updateProgressInternal(100, error != null ? error : "Failed");
+        }
     }
 
     /**
@@ -92,6 +127,9 @@ public class JobResult {
         this.complete = true;
         this.resultFiles = new ArrayList<>(resultFiles);
         this.completedAt = LocalDateTime.now();
+        if (trackProgress) {
+            updateProgressInternal(100, "Completed");
+        }
     }
 
     /**
@@ -160,5 +198,27 @@ public class JobResult {
      */
     public List<String> getNotes() {
         return Collections.unmodifiableList(notes);
+    }
+
+    /**
+     * Update the progress information if tracking is enabled.
+     *
+     * @param percent The percent complete (0-100)
+     * @param message Optional descriptive message
+     */
+    public void updateProgress(int percent, String message) {
+        if (!trackProgress) {
+            return;
+        }
+        updateProgressInternal(percent, message);
+    }
+
+    private void updateProgressInternal(int percent, String message) {
+        int clamped = Math.min(100, Math.max(0, percent));
+        this.progressPercent = clamped;
+        if (message != null && !message.isBlank()) {
+            this.progressMessage = message;
+        }
+        this.progressUpdatedAt = LocalDateTime.now();
     }
 }

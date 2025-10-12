@@ -28,6 +28,8 @@ import stirling.software.SPDF.model.api.PDFWithPageNums;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.service.JobProgressService;
+import stirling.software.common.service.JobProgressTracker;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.WebResponseUtils;
 
@@ -37,6 +39,7 @@ import stirling.software.common.util.WebResponseUtils;
 public class SplitPDFController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final JobProgressService jobProgressService;
 
     @AutoJobPostMapping(consumes = "multipart/form-data", value = "/split-pages")
     @MultiFileResponse
@@ -77,6 +80,8 @@ public class SplitPDFController {
             // split the document
             splitDocumentsBoas = new ArrayList<>();
             int previousPageNumber = 0;
+            JobProgressTracker progressTracker = jobProgressService.tracker(pageNumbers.size() + 2);
+            boolean trackProgress = progressTracker.isEnabled();
             for (int splitPoint : pageNumbers) {
                 try (PDDocument splitDocument =
                         pdfDocumentFactory.createNewDocumentBasedOnOldDocument(document)) {
@@ -94,6 +99,10 @@ public class SplitPDFController {
                     splitDocument.save(baos);
 
                     splitDocumentsBoas.add(baos);
+
+                    if (trackProgress) {
+                        progressTracker.advance();
+                    }
                 } catch (Exception e) {
                     ExceptionUtils.logException("document splitting and saving", e);
                     throw e;
@@ -128,11 +137,18 @@ public class SplitPDFController {
                 throw e;
             }
 
+            if (trackProgress) {
+                progressTracker.advance();
+            }
+
             log.debug("Successfully created zip file with split documents: {}", zipFile.toString());
             byte[] data = Files.readAllBytes(zipFile);
             Files.deleteIfExists(zipFile);
 
             // return the Resource in the response
+            if (trackProgress) {
+                progressTracker.complete();
+            }
             return WebResponseUtils.bytesToWebResponse(
                     data, filename + ".zip", MediaType.APPLICATION_OCTET_STREAM);
 

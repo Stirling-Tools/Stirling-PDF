@@ -94,7 +94,7 @@ class JobExecutorServiceTest {
         assertNotNull(jobResponse.getJobId());
 
         // Verify task manager was called
-        verify(taskManager).createTask(jobIdCaptor.capture());
+        verify(taskManager).createTask(jobIdCaptor.capture(), eq(true));
     }
 
     @Test
@@ -129,7 +129,8 @@ class JobExecutorServiceTest {
         when(jobQueue.queueJob(anyString(), eq(80), any(), anyLong())).thenReturn(future);
 
         // When
-        ResponseEntity<?> response = jobExecutorService.runJobGeneric(true, work, 5000, true, 80);
+        ResponseEntity<?> response =
+                jobExecutorService.runJobGeneric(true, work, 5000, true, 80, true);
 
         // Then
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -137,7 +138,7 @@ class JobExecutorServiceTest {
 
         // Verify job was queued
         verify(jobQueue).queueJob(anyString(), eq(80), any(), eq(5000L));
-        verify(taskManager).createTask(anyString());
+        verify(taskManager).createTask(anyString(), eq(true));
     }
 
     @Test

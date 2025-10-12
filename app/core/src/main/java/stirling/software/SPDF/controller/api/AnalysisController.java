@@ -22,12 +22,15 @@ import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.AnalysisApi;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.service.JobProgressService;
+import stirling.software.common.service.JobProgressTracker;
 
 @AnalysisApi
 @RequiredArgsConstructor
 public class AnalysisController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final JobProgressService jobProgressService;
 
     @AutoJobPostMapping(value = "/page-count", consumes = "multipart/form-data")
     @JsonDataResponse
@@ -89,12 +92,22 @@ public class AnalysisController {
         try (PDDocument document = pdfDocumentFactory.load(file.getFileInput())) {
             List<Map<String, Float>> dimensions = new ArrayList<>();
             PDPageTree pages = document.getPages();
+            JobProgressTracker progressTracker =
+                    jobProgressService.tracker(Math.max(1, pages.getCount()));
+            boolean trackProgress = progressTracker.isEnabled();
 
             for (PDPage page : pages) {
                 Map<String, Float> pageDim = new HashMap<>();
                 pageDim.put("width", page.getBBox().getWidth());
                 pageDim.put("height", page.getBBox().getHeight());
                 dimensions.add(pageDim);
+                if (trackProgress) {
+                    progressTracker.advance();
+                }
+            }
+
+            if (trackProgress) {
+                progressTracker.complete();
             }
             return dimensions;
         }
@@ -134,13 +147,24 @@ public class AnalysisController {
             Map<String, Object> annotInfo = new HashMap<>();
             int totalAnnotations = 0;
             Map<String, Integer> annotationTypes = new HashMap<>();
+            PDPageTree pages = document.getPages();
+            JobProgressTracker progressTracker =
+                    jobProgressService.tracker(Math.max(1, pages.getCount()));
+            boolean trackProgress = progressTracker.isEnabled();
 
-            for (PDPage page : document.getPages()) {
+            for (PDPage page : pages) {
                 for (PDAnnotation annot : page.getAnnotations()) {
                     totalAnnotations++;
                     String subType = annot.getSubtype();
                     annotationTypes.merge(subType, 1, Integer::sum);
                 }
+                if (trackProgress) {
+                    progressTracker.advance();
+                }
+            }
+
+            if (trackProgress) {
+                progressTracker.complete();
             }
 
             annotInfo.put("totalCount", totalAnnotations);
@@ -160,10 +184,22 @@ public class AnalysisController {
             Map<String, Object> fontInfo = new HashMap<>();
             Set<String> fontNames = new HashSet<>();
 
-            for (PDPage page : document.getPages()) {
+            PDPageTree pages = document.getPages();
+            JobProgressTracker progressTracker =
+                    jobProgressService.tracker(Math.max(1, pages.getCount()));
+            boolean trackProgress = progressTracker.isEnabled();
+
+            for (PDPage page : pages) {
                 for (COSName font : page.getResources().getFontNames()) {
                     fontNames.add(font.getName());
                 }
+                if (trackProgress) {
+                    progressTracker.advance();
+                }
+            }
+
+            if (trackProgress) {
+                progressTracker.complete();
             }
 
             fontInfo.put("fontCount", fontNames.size());

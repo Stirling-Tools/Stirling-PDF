@@ -26,6 +26,8 @@ import stirling.software.SPDF.model.api.general.ScalePagesRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.service.JobProgressService;
+import stirling.software.common.service.JobProgressTracker;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.WebResponseUtils;
 
@@ -34,6 +36,7 @@ import stirling.software.common.util.WebResponseUtils;
 public class ScalePagesController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final JobProgressService jobProgressService;
 
     @AutoJobPostMapping(value = "/scale-pages", consumes = "multipart/form-data")
     @StandardPdfResponse
@@ -55,6 +58,8 @@ public class ScalePagesController {
         PDRectangle targetSize = getTargetSize(targetPDRectangle, sourceDocument);
 
         int totalPages = sourceDocument.getNumberOfPages();
+        JobProgressTracker progressTracker = jobProgressService.tracker(Math.max(1, totalPages));
+        boolean trackProgress = progressTracker.isEnabled();
         for (int i = 0; i < totalPages; i++) {
             PDPage sourcePage = sourceDocument.getPage(i);
             PDRectangle sourceSize = sourcePage.getMediaBox();
@@ -87,12 +92,20 @@ public class ScalePagesController {
 
             contentStream.restoreGraphicsState();
             contentStream.close();
+
+            if (trackProgress) {
+                progressTracker.advance();
+            }
         }
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         outputDocument.save(baos);
         outputDocument.close();
         sourceDocument.close();
+
+        if (trackProgress) {
+            progressTracker.complete();
+        }
 
         return WebResponseUtils.bytesToWebResponse(
                 baos.toByteArray(),

@@ -5,6 +5,18 @@
 import { PageOperation } from './pageEditor';
 import { FileId, BaseFileMetadata } from './file';
 
+export type FileJobStatus = 'queued' | 'processing' | 'completed' | 'failed';
+
+export interface FileJobProgress {
+  jobId: string;
+  status: FileJobStatus;
+  progressPercent: number;
+  message?: string;
+  queuePosition?: number | null;
+  error?: string;
+  updatedAt: number;
+}
+
 // Re-export FileId for convenience
 export type { FileId };
 
@@ -45,6 +57,7 @@ export interface StirlingFileStub extends BaseFileMetadata {
   processedFile?: ProcessedFileMetadata; // PDF page data and processing results
   insertAfterPageId?: string;   // Page ID after which this file should be inserted
   isPinned?: boolean;           // Protected from tool consumption (replace/remove)
+  activeJobs?: FileJobProgress[]; // In-flight async operations associated with this file
   // Note: File object stored in provider ref, not in state
 }
 
@@ -155,7 +168,8 @@ export function createNewStirlingFileStub(
     isLeaf: true, // New files are leaf nodes by default
     versionNumber: 1, // New files start at version 1
     thumbnailUrl: thumbnail,
-    processedFile: processedFileMetadata
+    processedFile: processedFileMetadata,
+    activeJobs: []
   };
 }
 

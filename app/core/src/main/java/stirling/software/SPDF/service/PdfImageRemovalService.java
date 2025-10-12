@@ -11,6 +11,8 @@ import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.graphics.PDXObject;
 import org.springframework.stereotype.Service;
 
+import stirling.software.common.service.JobProgressTracker;
+
 /** Service class responsible for removing image objects from a PDF document. */
 @Service
 public class PdfImageRemovalService {
@@ -26,6 +28,13 @@ public class PdfImageRemovalService {
      * @throws IOException If an error occurs while processing the PDF document.
      */
     public PDDocument removeImagesFromPdf(PDDocument document) throws IOException {
+        return removeImagesFromPdf(document, null);
+    }
+
+    public PDDocument removeImagesFromPdf(PDDocument document, JobProgressTracker progressTracker)
+            throws IOException {
+        boolean trackProgress = progressTracker != null && progressTracker.isEnabled();
+
         // Iterate over each page in the PDF document
         for (PDPage page : document.getPages()) {
             PDResources resources = page.getResources();
@@ -44,6 +53,10 @@ public class PdfImageRemovalService {
             // Now, modify the resources by removing the collected names
             for (COSName name : namesToRemove) {
                 resources.put(name, (PDXObject) null);
+            }
+
+            if (trackProgress) {
+                progressTracker.advance();
             }
         }
         return document;

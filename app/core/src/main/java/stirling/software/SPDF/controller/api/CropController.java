@@ -22,6 +22,8 @@ import stirling.software.SPDF.model.api.general.CropPdfForm;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.service.JobProgressService;
+import stirling.software.common.service.JobProgressTracker;
 import stirling.software.common.util.WebResponseUtils;
 
 @GeneralApi
@@ -29,6 +31,7 @@ import stirling.software.common.util.WebResponseUtils;
 public class CropController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final JobProgressService jobProgressService;
 
     @AutoJobPostMapping(value = "/crop", consumes = "multipart/form-data")
     @StandardPdfResponse
@@ -44,6 +47,8 @@ public class CropController {
                 pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDocument);
 
         int totalPages = sourceDocument.getNumberOfPages();
+        JobProgressTracker progressTracker = jobProgressService.tracker(Math.max(1, totalPages));
+        boolean trackProgress = progressTracker.isEnabled();
 
         LayerUtility layerUtility = new LayerUtility(newDocument);
 
@@ -80,12 +85,20 @@ public class CropController {
                             request.getY(),
                             request.getWidth(),
                             request.getHeight()));
+
+            if (trackProgress) {
+                progressTracker.advance();
+            }
         }
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         newDocument.save(baos);
         newDocument.close();
         sourceDocument.close();
+
+        if (trackProgress) {
+            progressTracker.complete();
+        }
 
         byte[] pdfContent = baos.toByteArray();
         return WebResponseUtils.bytesToWebResponse(

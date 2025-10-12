@@ -33,6 +33,8 @@ import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.model.PdfMetadata;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.service.JobProgressService;
+import stirling.software.common.service.JobProgressTracker;
 import stirling.software.common.service.PdfMetadataService;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.WebResponseUtils;
@@ -45,6 +47,7 @@ public class SplitPdfByChaptersController {
     private final PdfMetadataService pdfMetadataService;
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final JobProgressService jobProgressService;
 
     private static List<Bookmark> extractOutlineItems(
             PDDocument sourceDocument,
@@ -178,8 +181,12 @@ public class SplitPdfByChaptersController {
                         bookmark.getStartPage(),
                         bookmark.getEndPage());
             }
+            JobProgressTracker progressTracker = jobProgressService.tracker(bookmarks.size() + 1);
+            boolean trackProgress = progressTracker.isEnabled();
+
             List<ByteArrayOutputStream> splitDocumentsBoas =
-                    getSplitDocumentsBoas(sourceDocument, bookmarks, includeMetadata);
+                    getSplitDocumentsBoas(
+                            sourceDocument, bookmarks, includeMetadata, progressTracker);
 
             zipFile = createZipFile(bookmarks, splitDocumentsBoas);
 
@@ -190,6 +197,14 @@ public class SplitPdfByChaptersController {
                     Filenames.toSimpleFileName(file.getOriginalFilename())
                             .replaceFirst("[.][^.]+$", "");
             sourceDocument.close();
+
+            if (trackProgress) {
+                progressTracker.advance();
+                progressTracker.complete();
+            } else {
+                jobProgressService.updateProgress(100, null);
+            }
+
             return WebResponseUtils.bytesToWebResponse(
                     data, filename + ".zip", MediaType.APPLICATION_OCTET_STREAM);
         } finally {
@@ -265,13 +280,17 @@ public class SplitPdfByChaptersController {
     }
 
     public List<ByteArrayOutputStream> getSplitDocumentsBoas(
-            PDDocument sourceDocument, List<Bookmark> bookmarks, boolean includeMetadata)
+            PDDocument sourceDocument,
+            List<Bookmark> bookmarks,
+            boolean includeMetadata,
+            JobProgressTracker progressTracker)
             throws Exception {
         List<ByteArrayOutputStream> splitDocumentsBoas = new ArrayList<>();
         PdfMetadata metadata = null;
         if (includeMetadata) {
             metadata = pdfMetadataService.extractMetadataFromPdf(sourceDocument);
         }
+        boolean trackProgress = progressTracker.isEnabled();
         for (Bookmark bookmark : bookmarks) {
             try (PDDocument splitDocument = new PDDocument()) {
                 boolean isSinglePage = (bookmark.getStartPage() == bookmark.getEndPage());
@@ -291,6 +310,9 @@ public class SplitPdfByChaptersController {
                 splitDocument.save(baos);
 
                 splitDocumentsBoas.add(baos);
+                if (trackProgress) {
+                    progressTracker.advance();
+                }
             } catch (Exception e) {
                 ExceptionUtils.logException("document splitting and saving", e);
                 throw e;

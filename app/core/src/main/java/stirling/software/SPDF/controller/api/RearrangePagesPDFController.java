@@ -24,6 +24,8 @@ import stirling.software.SPDF.model.api.general.RearrangePagesRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.service.JobProgressService;
+import stirling.software.common.service.JobProgressTracker;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.WebResponseUtils;
@@ -34,6 +36,7 @@ import stirling.software.common.util.WebResponseUtils;
 public class RearrangePagesPDFController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final JobProgressService jobProgressService;
 
     @AutoJobPostMapping(consumes = "multipart/form-data", value = "/remove-pages")
     @StandardPdfResponse
@@ -59,9 +62,20 @@ public class RearrangePagesPDFController {
 
         Collections.sort(pagesToRemove);
 
+        JobProgressTracker progressTracker =
+                jobProgressService.tracker(Math.max(1, pagesToRemove.size()));
+        boolean trackProgress = progressTracker.isEnabled();
+
         for (int i = pagesToRemove.size() - 1; i >= 0; i--) {
             int pageIndex = pagesToRemove.get(i);
             document.removePage(pageIndex);
+            if (trackProgress) {
+                progressTracker.advance();
+            }
+        }
+
+        if (trackProgress) {
+            progressTracker.complete();
         }
         return WebResponseUtils.pdfDocToWebResponse(
                 document,
@@ -272,14 +286,30 @@ public class RearrangePagesPDFController {
                 newPages.add(document.getPage(newPageOrder.get(i)));
             }
 
+            int removalSteps = document.getNumberOfPages();
+            int additionSteps = newPages.size();
+            JobProgressTracker progressTracker =
+                    jobProgressService.tracker(Math.max(1, removalSteps + additionSteps));
+            boolean trackProgress = progressTracker.isEnabled();
+
             // Remove all the pages from the original document
             for (int i = document.getNumberOfPages() - 1; i >= 0; i--) {
                 document.removePage(i);
+                if (trackProgress) {
+                    progressTracker.advance();
+                }
             }
 
             // Add the pages in the new order
             for (PDPage page : newPages) {
                 document.addPage(page);
+                if (trackProgress) {
+                    progressTracker.advance();
+                }
+            }
+
+            if (trackProgress) {
+                progressTracker.complete();
             }
 
             return WebResponseUtils.pdfDocToWebResponse(

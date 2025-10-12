@@ -14,17 +14,19 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.service.JobProgressService;
 
 class RearrangePagesPDFControllerTest {
 
     @Mock private CustomPDFDocumentFactory mockPdfDocumentFactory;
+    @Mock private JobProgressService mockJobProgressService;
 
     private RearrangePagesPDFController sut;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        sut = new RearrangePagesPDFController(mockPdfDocumentFactory);
+        sut = new RearrangePagesPDFController(mockPdfDocumentFactory, mockJobProgressService);
     }
 
     /** Tests the behavior of the oddEvenMerge method when there are no pages in the document. */

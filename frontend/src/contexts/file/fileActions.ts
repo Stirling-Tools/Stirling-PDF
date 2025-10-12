@@ -136,7 +136,7 @@ export function createChildStub(
   const originalFileId = parentStub.originalFileId || parentStub.id;
 
   // Copy parent metadata but exclude processedFile to prevent stale data
-  const { processedFile: _processedFile, ...parentMetadata } = parentStub;
+  const { processedFile: _processedFile, activeJobs: _activeJobs, ...parentMetadata } = parentStub;
 
   return {
     // Copy parent metadata (excluding processedFile)

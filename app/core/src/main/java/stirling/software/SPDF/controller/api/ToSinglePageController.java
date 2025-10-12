@@ -22,6 +22,8 @@ import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.service.JobProgressService;
+import stirling.software.common.service.JobProgressTracker;
 import stirling.software.common.util.WebResponseUtils;
 
 @GeneralApi
@@ -29,6 +31,7 @@ import stirling.software.common.util.WebResponseUtils;
 public class ToSinglePageController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final JobProgressService jobProgressService;
 
     @AutoJobPostMapping(consumes = "multipart/form-data", value = "/pdf-to-single-page")
     @StandardPdfResponse
@@ -44,6 +47,10 @@ public class ToSinglePageController {
 
         // Load the source document
         PDDocument sourceDocument = pdfDocumentFactory.load(request);
+
+        int totalPages = Math.max(1, sourceDocument.getNumberOfPages());
+        JobProgressTracker progressTracker = jobProgressService.tracker(totalPages + 1);
+        boolean trackProgress = progressTracker.isEnabled();
 
         // Calculate total height and max width
         float totalHeight = 0;
@@ -79,12 +86,19 @@ public class ToSinglePageController {
             layerUtility.appendFormAsLayer(newPage, form, af, defaultLayerName);
             yOffset -= page.getMediaBox().getHeight();
             pageIndex++;
+            if (trackProgress) {
+                progressTracker.advance();
+            }
         }
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         newDocument.save(baos);
         newDocument.close();
         sourceDocument.close();
+
+        if (trackProgress) {
+            progressTracker.complete();
+        }
 
         byte[] result = baos.toByteArray();
         return WebResponseUtils.bytesToWebResponse(

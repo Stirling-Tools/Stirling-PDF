@@ -1,6 +1,7 @@
 package stirling.software.common.annotations;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -72,6 +73,8 @@ class AutoJobPostMappingIntegrationTest {
 
     @Captor private ArgumentCaptor<Integer> resourceWeightCaptor;
 
+    @Captor private ArgumentCaptor<Boolean> trackProgressCaptor;
+
     @Test
     void shouldExecuteWithCustomParameters() throws Throwable {
         // Given
@@ -91,7 +94,12 @@ class AutoJobPostMappingIntegrationTest {
         when(fileStorage.retrieveFile("test-file-id")).thenReturn(mockFile);
 
         when(jobExecutorService.runJobGeneric(
-                        anyBoolean(), any(Supplier.class), anyLong(), anyBoolean(), anyInt()))
+                        anyBoolean(),
+                        any(Supplier.class),
+                        anyLong(),
+                        anyBoolean(),
+                        anyInt(),
+                        anyBoolean()))
                 .thenReturn(ResponseEntity.ok("success"));
 
         // When
@@ -106,12 +114,14 @@ class AutoJobPostMappingIntegrationTest {
                         workCaptor.capture(),
                         timeoutCaptor.capture(),
                         queueableCaptor.capture(),
-                        resourceWeightCaptor.capture());
+                        resourceWeightCaptor.capture(),
+                        trackProgressCaptor.capture());
 
         assertTrue(asyncCaptor.getValue(), "Async should be true");
         assertEquals(60000L, timeoutCaptor.getValue(), "Timeout should be 60000ms");
         assertTrue(queueableCaptor.getValue(), "Queueable should be true");
         assertEquals(75, resourceWeightCaptor.getValue(), "Resource weight should be 75");
+        assertTrue(trackProgressCaptor.getValue(), "Track progress should propagate");
 
         // Test that file was resolved
         assertNotNull(pdfFile.getFileInput(), "File input should be set");
@@ -135,7 +145,12 @@ class AutoJobPostMappingIntegrationTest {
 
         // Mock jobExecutorService to execute the work immediately
         when(jobExecutorService.runJobGeneric(
-                        anyBoolean(), any(Supplier.class), anyLong(), anyBoolean(), anyInt()))
+                        anyBoolean(),
+                        any(Supplier.class),
+                        anyLong(),
+                        anyBoolean(),
+                        anyInt(),
+                        anyBoolean()))
                 .thenAnswer(
                         invocation -> {
                             Supplier<Object> work = invocation.getArgument(1);
@@ -150,6 +165,16 @@ class AutoJobPostMappingIntegrationTest {
 
         // Verify that proceed was called twice (initial attempt + 1 retry)
         verify(joinPoint, times(2)).proceed(any());
+
+        verify(jobExecutorService)
+                .runJobGeneric(
+                        asyncCaptor.capture(),
+                        workCaptor.capture(),
+                        timeoutCaptor.capture(),
+                        queueableCaptor.capture(),
+                        resourceWeightCaptor.capture(),
+                        trackProgressCaptor.capture());
+        assertFalse(trackProgressCaptor.getValue(), "Track progress should be false when disabled");
     }
 
     @Test
@@ -168,7 +193,12 @@ class AutoJobPostMappingIntegrationTest {
 
         // Mock job executor to return a successful response
         when(jobExecutorService.runJobGeneric(
-                        anyBoolean(), any(Supplier.class), anyLong(), anyBoolean(), anyInt()))
+                        anyBoolean(),
+                        any(Supplier.class),
+                        anyLong(),
+                        anyBoolean(),
+                        anyInt(),
+                        anyBoolean()))
                 .thenReturn(ResponseEntity.ok("success"));
 
         // When

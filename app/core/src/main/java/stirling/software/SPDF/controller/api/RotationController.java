@@ -19,6 +19,8 @@ import stirling.software.SPDF.model.api.general.RotatePDFRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.service.JobProgressService;
+import stirling.software.common.service.JobProgressTracker;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.WebResponseUtils;
 
@@ -27,6 +29,7 @@ import stirling.software.common.util.WebResponseUtils;
 public class RotationController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final JobProgressService jobProgressService;
 
     @AutoJobPostMapping(consumes = "multipart/form-data", value = "/rotate-pdf")
     @StandardPdfResponse
@@ -51,9 +54,19 @@ public class RotationController {
 
         // Get the list of pages in the document
         PDPageTree pages = document.getPages();
+        int totalPages = Math.max(1, pages.getCount());
+        JobProgressTracker progressTracker = jobProgressService.tracker(totalPages);
+        boolean trackProgress = progressTracker.isEnabled();
 
         for (PDPage page : pages) {
             page.setRotation(page.getRotation() + angle);
+            if (trackProgress) {
+                progressTracker.advance();
+            }
+        }
+
+        if (trackProgress) {
+            progressTracker.complete();
         }
 
         return WebResponseUtils.pdfDocToWebResponse(

@@ -399,3 +399,101 @@
   font-size: 0.875rem;
   opacity: 0.8;
 }
+
+/* -----------------------
+   Async Job Progress HUD
+   ----------------------- */
+.jobProgressContainer {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 6;
+  pointer-events: none;
+}
+
+.jobProgressRow {
+  pointer-events: auto;
+  border-radius: 12px;
+  padding: 10px 14px 12px;
+  background: rgba(18, 26, 44, 0.88);
+  box-shadow: 0 18px 36px rgba(11, 16, 28, 0.25);
+  backdrop-filter: blur(12px);
+  color: #f1f6ff;
+  transition: transform 120ms ease;
+}
+
+.jobProgressRow[data-status='failed'] {
+  background: rgba(128, 28, 38, 0.9);
+}
+
+:global([data-mantine-color-scheme='dark']) .jobProgressRow {
+  background: rgba(28, 39, 58, 0.9);
+  color: var(--mantine-color-gray-2);
+}
+
+:global([data-mantine-color-scheme='dark']) .jobProgressRow[data-status='failed'] {
+  background: rgba(138, 34, 43, 0.92);
+}
+
+.jobProgressHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.jobProgressLabel {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.jobProgressValue {
+  font-variant-numeric: tabular-nums;
+  opacity: 0.92;
+}
+
+.jobProgressTrack {
+  position: relative;
+  margin-top: 8px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(241, 246, 255, 0.25);
+  overflow: hidden;
+}
+
+.jobProgressRow[data-status='failed'] .jobProgressTrack {
+  background: rgba(255, 255, 255, 0.23);
+}
+
+.jobProgressFill {
+  position: absolute;
+  inset: 0;
+  width: 0;
+  height: 100%;
+  background: linear-gradient(90deg, #5aa5ff 0%, #206de5 100%);
+  transition: width 160ms ease;
+}
+
+.jobProgressRow[data-status='queued'] .jobProgressFill {
+  background: linear-gradient(90deg, #cfd8dc 0%, #a7b6bf 100%);
+}
+
+.jobProgressRow[data-status='failed'] .jobProgressFill {
+  background: linear-gradient(90deg, #ff8a80 0%, #e53935 100%);
+}
+
+.jobProgressError {
+  margin-top: 8px;
+  font-size: 0.72rem;
+  line-height: 1.3;
+  opacity: 0.92;
+}

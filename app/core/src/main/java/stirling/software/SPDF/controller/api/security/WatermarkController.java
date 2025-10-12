@@ -40,6 +40,8 @@ import stirling.software.SPDF.model.api.security.AddWatermarkRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.SecurityApi;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.service.JobProgressService;
+import stirling.software.common.service.JobProgressTracker;
 import stirling.software.common.util.PdfUtils;
 import stirling.software.common.util.WebResponseUtils;
 
@@ -48,6 +50,7 @@ import stirling.software.common.util.WebResponseUtils;
 public class WatermarkController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final JobProgressService jobProgressService;
 
     @InitBinder
     public void initBinder(WebDataBinder binder) {
@@ -100,6 +103,10 @@ public class WatermarkController {
         PDDocument document = pdfDocumentFactory.load(pdfFile);
 
         // Create a page in the document
+        int totalPages = Math.max(1, document.getNumberOfPages());
+        JobProgressTracker progressTracker = jobProgressService.tracker(totalPages);
+        boolean trackProgress = progressTracker.isEnabled();
+
         for (PDPage page : document.getPages()) {
 
             // Get the page's content stream
@@ -138,12 +145,20 @@ public class WatermarkController {
 
             // Close the content stream
             contentStream.close();
+
+            if (trackProgress) {
+                progressTracker.advance();
+            }
         }
 
         if (convertPdfToImage) {
             PDDocument convertedPdf = PdfUtils.convertPdfToPdfImage(document);
             document.close();
             document = convertedPdf;
+        }
+
+        if (trackProgress) {
+            progressTracker.complete();
         }
 
         return WebResponseUtils.pdfDocToWebResponse(
