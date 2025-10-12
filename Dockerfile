@@ -38,7 +38,6 @@ ENV DISABLE_ADDITIONAL_FEATURES=true \
     TEMP=/tmp/stirling-pdf \
     TMP=/tmp/stirling-pdf
 
-
 # JDK for app
 RUN printf '%s\n' \
       'https://dl-cdn.alpinelinux.org/alpine/edge/main' \
