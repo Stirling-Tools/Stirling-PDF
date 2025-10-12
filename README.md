@@ -68,6 +68,7 @@ All documentation available at [https://docs.stirlingpdf.com/](https://docs.stir
 
 #### Forms
 - **Fill PDF Forms**: Fill out interactive PDF forms
+- **Extract PDF Forms**: Extract form data from PDF
 - **Batch Fill PDF Forms**: Fill forms via JSON
 - **Delete Form Fields**: Remove form fields from PDF
 - **Modify Form Fields**: Modify form fields in PDF
