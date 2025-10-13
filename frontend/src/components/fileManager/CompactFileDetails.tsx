@@ -42,6 +42,7 @@ const CompactFileDetails: React.FC<CompactFileDetailsProps> = ({
         <Box style={{ width: '7.5rem', height: '9.375rem', flexShrink: 0, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           {currentFile && thumbnail ? (
             <img
+              className='ph-no-capture'
               src={thumbnail}
               alt={currentFile.name}
               style={{
@@ -66,7 +67,7 @@ const CompactFileDetails: React.FC<CompactFileDetailsProps> = ({
 
         {/* File info */}
         <Box style={{ flex: 1, minWidth: 0 }}>
-          <Text size="sm" fw={500} truncate>
+          <Text className='ph-no-capture' size="sm" fw={500} truncate>
             {currentFile ? currentFile.name : 'No file selected'}
           </Text>
           <Text size="xs" c="dimmed">
