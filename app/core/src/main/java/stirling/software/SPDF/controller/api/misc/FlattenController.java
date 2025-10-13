@@ -74,7 +74,7 @@ public class FlattenController {
             Integer configuredMaxDpi = null;
             if (properties != null && properties.getSystem() != null) {
                 configuredMaxDpi = properties.getSystem().getMaxDPI();
-                if (configuredMaxDpi != null && configuredMaxDpi > 0) {
+                if (configuredMaxDpi > 0) {
                     defaultRenderDpi = configuredMaxDpi;
                 }
             }
