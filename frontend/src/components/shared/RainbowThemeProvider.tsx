@@ -6,9 +6,10 @@ import rainbowStyles from '../../styles/rainbow.module.css';
 import { ToastProvider } from '../toast';
 import ToastRenderer from '../toast/ToastRenderer';
 import { ToastPortalBinder } from '../toast';
+import { ThemeMode } from 'src/services/preferencesService';
 
 interface RainbowThemeContextType {
-  themeMode: 'light' | 'dark' | 'rainbow';
+  themeMode: ThemeMode;
   isRainbowMode: boolean;
   isToggleDisabled: boolean;
   toggleTheme: () => void;
