@@ -335,6 +335,7 @@ const EmbedPdfViewerContent = ({
       <ThumbnailSidebar
         visible={isThumbnailSidebarVisible}
         onToggle={toggleThumbnailSidebar}
+        activeFileIndex={activeFileIndex}
       />
 
       {/* Navigation Warning Modal */}
