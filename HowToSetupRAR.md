@@ -1,67 +1,93 @@
-# RAR Support Setup for PDF to CBR Conversion in Stirling-PDF
+# Enabling PDF to CBR Conversion in Stirling-PDF
 
 ## Overview
 
-Stirling-PDF can convert PDF files to the CBR (Comic Book RAR) format. To enable this functionality, the `rar` command-line utility must be installed and accessible. This guide covers the setup for both Docker and non-Docker environments.
+Stirling-PDF can convert PDF files into the Comic Book RAR (`.cbr`) format. This process relies on an external command-line utility, `rar`, which is not included by default. To enable this feature, you must first install the `rar` utility on your system and then make it accessible to Stirling-PDF.
 
+### What is a CBR file?
 
-## What is a CBR file?
+A CBR (Comic Book RAR) file is an archive used for distributing digital comic books. It is essentially a collection of sequential image files (e.g., JPEG, PNG) compressed into a single file using RAR compression.
 
-CBR (Comic Book RAR) is an archive format used for digital comic books. It uses RAR compression to package sequential image files (like JPEG or PNG) into a single file. While the CBZ (Comic Book ZIP) format is more common and uses the open ZIP standard, CBR requires the proprietary `rar` utility for creation.
+While CBR is a popular format, it requires the proprietary `rar` utility for creation. Its more common, open-standard alternative is CBZ (Comic Book ZIP), which is supported by Stirling-PDF out of the box.
 
 -----
 
-### Docker Setup
+## Step 1: Install the `rar` Command-Line Utility
 
-#### Step 1: Download and Install RAR on the Host System
+This is a mandatory prerequisite for both Docker and non-Docker setups. The `rar` executable must be installed on the host machine.
 
-1.  **Download the RAR utility:**
+### Linux
 
-    * Visit the official download page: [rarlab.com/download.htm](https://www.rarlab.com/download.htm).
-    * Download the correct command-line version for your host system's OS and CPU architecture.
-    * When using extract commands replace the -* with the current version number.
-    * For example, `tar -xzf rarlinux-x64-712.tar.gz` (for the latest as of writing this guide)
+The easiest method is to use your distribution's package manager.
 
-2.  **Install RAR on your host system:**
+**Debian / Ubuntu:**
+The `rar` package is available in the `non-free` repository.
 
-    **For Linux:**
+```bash
+sudo apt update
+sudo apt install rar
+```
 
+**Fedora / CentOS / RHEL:**
+The `rar` package is available in the RPM Fusion "non-free" repository.
+
+```bash
+# First, enable the RPM Fusion non-free repository for your system.
+# See https://rpmfusion.org/Configuration for instructions.
+
+# Then, install rar
+sudo dnf install rar  # For Fedora, RHEL 8+, CentOS Stream
+# or
+sudo yum install rar  # For CentOS 7
+```
+
+**Manual Installation (Any Linux Distribution):**
+
+1.  Visit the official download page: [rarlab.com/download.htm](https://www.rarlab.com/download.htm).
+2.  Download the "RAR for Linux x64" command-line version.
+3.  Extract the archive and install the binary:
     ```bash
-    # Extract the downloaded archive
+    # The version number (e.g., 712, as of writing this guiede) will change.
+    # Use the actual filename.
     tar -xzf rarlinux-x64-*.tar.gz
 
-    # Move the binary to a directory in your system's PATH
-    sudo mv rar/rar /usr/local/bin/rar
+    # Move the binary to a standard location in your system's PATH
+    sudo mv rar/rar /usr/local/bin/
 
-    # Grant execute permissions
+    # Ensure it has execute permissions
     sudo chmod +x /usr/local/bin/rar
     ```
 
-    **For Windows:**
+### Windows
 
-    * Download and extract the command-line tools archive.
-    * Copy `rar.exe` to a directory that is in your system's PATH (e.g., `C:\Windows\System32`).
-    * In Docker Desktop settings, ensure the drive containing `rar.exe` is shared with your Docker engine.
-    * Adjust the volume mount path in your Docker command to reflect the Windows path (e.g., `C:/path/to/rar.exe:/usr/local/bin/rar:ro`).
+1.  Download the "WinRAR and RAR command line tools" from [rarlab.com/download.htm](https://www.rarlab.com/download.htm).
+2.  Extract the downloaded archive.
+3.  Copy the `rar.exe` file to a folder that is included in your system's `PATH` environment variable. A common and reliable location is `C:\Windows\System32`.
+4.  If Stirling-PDF is already running, restart it to ensure it recognizes the updated `PATH`.
 
-    **For macOS:**
+### macOS
 
-    ```bash
-    # Extract the downloaded archive
-    tar -xzf rarmacos-*.tar.gz
+The recommended method is to use the [Homebrew](https://brew.sh/) package manager.
 
-    # Move the binary to a directory in your system's PATH
-    sudo mv rar/rar /usr/local/bin/rar
+```bash
+brew install rar
+```
 
-    # Grant execute permissions
-    sudo chmod +x /usr/local/bin/rar
-    ```
+-----
 
-#### Step 2: Mount the RAR Binary into the Docker Container
+## Step 2: Configure Stirling-PDF
 
-Update your Docker command to include the volume mount. This exposes the `rar` executable from your host to the container in read-only (`:ro`) mode.
+After installing `rar` on your host system, follow the appropriate instructions for your environment.
 
-**Using `docker-compose.yml`:**
+### For Non-Docker Users
+
+If you installed Stirling-PDF directly on your operating system (without Docker), no further configuration is needed. As long as the `rar` command is available in your system's `PATH`, Stirling-PDF will automatically (after restart) detect and use it.
+
+### For Docker Users
+
+For the binary to be accessable inside the container, you have to mount the binary as a volume.
+
+Update your `docker-compose.yml` to include the volume mount. The path on the host side must match where you installed `rar`.
 
 ```yaml
 services:
@@ -70,87 +96,59 @@ services:
     ports:
       - '8080:8080'
     volumes:
-      - ./StirlingPDF/trainingData:/usr/share/tessdata # Required for extra OCR languages
+      - ./StirlingPDF/trainingData:/usr/share/tessdata
       - ./StirlingPDF/extraConfigs:/configs
       - ./StirlingPDF/customFiles:/customFiles/
       - ./StirlingPDF/logs:/logs/
       - ./StirlingPDF/pipeline:/pipeline/
-      # ADD THE FOLLOWING LINE:
+      # Add the following line to mount the rar binary
       - /usr/local/bin/rar:/usr/local/bin/rar:ro
 ```
 
-### Non-Docker Setup
+**Note for Windows Docker Users:**
+The host path must use forward slashes. For example, if you placed `rar.exe` in `C:\Program Files\RAR`, your volume mount would look like this:
 
-If you are running Stirling-PDF directly on your OS, simply install the `rar` utility and ensure it is available in your system's PATH.
-
-**Linux (Debian/Ubuntu):**
-
-* The `rar` package is typically in the `non-free` repository. Ensure it is enabled.
-
-<!-- end list -->
-
-```bash
-sudo apt update
-sudo apt install rar
-```
-
-**Linux (Fedora/CentOS/RHEL):**
-
-* The `rar` package is available from the RPM Fusion "non-free" repository.
-
-<!-- end list -->
-
-```bash
-# First, enable the RPM Fusion non-free repository for your system
-# (See https://rpmfusion.org/Configuration)
-
-# Then, install rar
-sudo dnf install rar     # Fedora, RHEL 8+, CentOS Stream
-# or
-sudo yum install rar     # CentOS 7
-```
-
-**Windows:**
-
-1.  Download the command-line tools from [rarlab.com/download.htm](https://www.rarlab.com/download.htm).
-2.  Extract the archive and copy `rar.exe` to a folder included in your system's PATH environment variable (e.g., `C:\Windows\System32`).
-3.  Restart the Stirling-PDF application to ensure it recognizes the new PATH.
-
-**macOS:**
-
-* The easiest method is to use Homebrew.
-
-<!-- end list -->
-
-```bash
-brew install rar
+```yaml
+# Example for Windows host path
+- "C:/Program Files/RAR/rar.exe:/usr/local/bin/rar:ro"
 ```
 
 -----
 
-## Verification
+## Step 3: Verification
 
-After setup, confirm that Stirling-PDF can access the `rar` command.
+Confirm that Stirling-PDF can access the `rar` command.
 
-- **For Docker users, check if `rar` is accessible in the container:**
+* **For Docker Users:** Execute a command inside the running container.
 
-    ```bash
-    docker exec stirling-pdf rar
-    ```
+  ```bash
+  docker exec -it stirling-pdf rar
+  ```
 
-- **For non-Docker users, check if `rar` is accessible from the command line:**
-    ```bash
-     which rar
-    ```
-or your operating system's equivalent.
-## License Note
+* **For Non-Docker Users:** Check if the `rar` command is recognized in your terminal.
 
-Please be aware that RAR is shareware. It is free to use for personal, non-commercial purposes, but business or commercial use may require purchasing a license. Review the official RAR license terms on the RARLAB website for details.
+  ```bash
+  # On Linux and macOS
+  which rar
 
-## Alternative: Use CBZ Format
+  # On Windows
+  where rar
+  ```
 
-If you encounter issues or prefer not to use proprietary software, consider converting your files to the **CBZ (Comic Book ZIP)** format instead.
+In both cases, a successful setup will display the RAR version and usage information. An error like "command not found" means there is a problem with the installation or `PATH`.
 
-* CBZ uses the open ZIP standard and requires no extra software installation.
-* The **PDF to CBZ** tool is available in Stirling-PDF by default.
-* CBZ is widely supported by virtually all modern comic book reader applications, which is not the case for RAR.
+-----
+
+## Important Considerations
+
+### License Note
+
+RAR is shareware. While it is free to use for personal, non-commercial purposes, business or commercial use may require purchasing a license. Please review the official RAR license terms on the RARLAB website for complete details.
+
+### Alternative: Use the CBZ Format
+
+For broader compatibility and to avoid proprietary software, using the **CBZ (Comic Book ZIP)** format is highly recommended.
+
+* CBZ uses the open and universal ZIP standard.
+* The **PDF to CBZ** tool is enabled in Stirling-PDF by default and requires no extra software.
+* CBZ is supported by virtually all modern comic book reader applications.
