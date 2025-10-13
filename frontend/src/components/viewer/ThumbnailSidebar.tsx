@@ -5,14 +5,26 @@ import { useViewer } from '../../contexts/ViewerContext';
 interface ThumbnailSidebarProps {
   visible: boolean;
   onToggle: () => void;
+  activeFileIndex?: number;
 }
 
-export function ThumbnailSidebar({ visible, onToggle: _onToggle }: ThumbnailSidebarProps) {
+export function ThumbnailSidebar({ visible, onToggle: _onToggle, activeFileIndex }: ThumbnailSidebarProps) {
   const { getScrollState, scrollActions, getThumbnailAPI } = useViewer();
   const [thumbnails, setThumbnails] = useState<{ [key: number]: string }>({});
 
   const scrollState = getScrollState();
   const thumbnailAPI = getThumbnailAPI();
+
+  // Clear thumbnails when active file changes
+  useEffect(() => {
+    // Revoke old blob URLs to prevent memory leaks
+    Object.values(thumbnails).forEach((thumbUrl) => {
+      if (typeof thumbUrl === 'string' && thumbUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(thumbUrl);
+      }
+    });
+    setThumbnails({});
+  }, [activeFileIndex]);
 
   // Clear thumbnails when sidebar closes and revoke blob URLs to prevent memory leaks
   useEffect(() => {

@@ -52,3 +52,12 @@ code {
   color: var(--mantine-color-blue-8);
   text-decoration: underline;
 }
+
+/* Viewer file tabs */
+.viewer-file-tab {
+  justify-content: flex-start;
+}
+
+.viewer-file-tab[data-active] {
+  background-color: rgba(147, 197, 253, 0.5);
+}

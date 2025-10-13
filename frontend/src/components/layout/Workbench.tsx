@@ -1,9 +1,11 @@
+import React from 'react';
 import { Box } from '@mantine/core';
 import { useRainbowThemeContext } from '../shared/RainbowThemeProvider';
 import { useToolWorkflow } from '../../contexts/ToolWorkflowContext';
 import { useFileHandler } from '../../hooks/useFileHandler';
 import { useFileState } from '../../contexts/FileContext';
 import { useNavigationState, useNavigationActions } from '../../contexts/NavigationContext';
+import { useViewer } from '../../contexts/ViewerContext';
 import './Workbench.css';
 
 import TopControls from '../shared/TopControls';
@@ -20,11 +22,11 @@ export default function Workbench() {
   const { isRainbowMode } = useRainbowThemeContext();
 
   // Use context-based hooks to eliminate all prop drilling
-  const { state } = useFileState();
+  const { selectors } = useFileState();
   const { workbench: currentView } = useNavigationState();
   const { actions: navActions } = useNavigationActions();
   const setCurrentView = navActions.setWorkbench;
-  const activeFiles = state.files.ids;
+  const activeFiles = selectors.getFiles();
   const {
     previewFile,
     pageEditorFunctions,
@@ -43,6 +45,9 @@ export default function Workbench() {
   const { toolRegistry } = useToolWorkflow();
   const selectedTool = selectedToolId ? toolRegistry[selectedToolId] : null;
   const { addFiles } = useFileHandler();
+
+  // Get active file index from ViewerContext
+  const { activeFileIndex, setActiveFileIndex } = useViewer();
 
   const handlePreviewClose = () => {
     setPreviewFile(null);
@@ -95,6 +100,8 @@ export default function Workbench() {
             setSidebarsVisible={setSidebarsVisible}
             previewFile={previewFile}
             onClose={handlePreviewClose}
+            activeFileIndex={activeFileIndex}
+            setActiveFileIndex={setActiveFileIndex}
           />
         );
 
@@ -150,6 +157,12 @@ export default function Workbench() {
         <TopControls
           currentView={currentView}
           setCurrentView={setCurrentView}
+          activeFiles={activeFiles.map(f => {
+            const stub = selectors.getStirlingFileStub(f.fileId);
+            return { fileId: f.fileId, name: f.name, versionNumber: stub?.versionNumber };
+          })}
+          currentFileIndex={activeFileIndex}
+          onFileSelect={setActiveFileIndex}
         />
       )}
 
@@ -161,7 +174,7 @@ export default function Workbench() {
         className="flex-1 min-h-0 relative z-10 workbench-scrollable "
         style={{
           transition: 'opacity 0.15s ease-in-out',
-          paddingTop: activeFiles.length > 0 ? '3.5rem' : '0',
+          paddingTop: currentView === 'viewer' ? '0' : (activeFiles.length > 0 ? '3.5rem' : '0'),
         }}
       >
         {renderMainContent()}
