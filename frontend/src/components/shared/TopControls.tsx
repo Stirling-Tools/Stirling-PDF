@@ -51,7 +51,7 @@ const createViewOptions = (
         ) : (
           <VisibilityIcon fontSize="small" />
         )}
-        <span>{displayName}</span>
+        <span className="ph-no-capture">{displayName}</span>
       </div>
     ),
     value: "viewer",

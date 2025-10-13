@@ -31,7 +31,7 @@ export const FileDropdownMenu: React.FC<FileDropdownMenuProps> = ({
           ) : (
             <VisibilityIcon fontSize="small" />
           )}
-          <FitText text={displayName} fontSize={14} minimumFontScale={0.6} />
+          <FitText text={displayName} fontSize={14} minimumFontScale={0.6} className="ph-no-capture" />
           <KeyboardArrowDownIcon fontSize="small" />
         </div>
       </Menu.Target>
@@ -61,7 +61,7 @@ export const FileDropdownMenu: React.FC<FileDropdownMenuProps> = ({
             >
               <Group gap="xs" style={{ width: '100%', justifyContent: 'space-between' }}>
                 <div style={{ flex: 1, textAlign: 'left', minWidth: 0 }}>
-                  <FitText text={itemName} fontSize={14} minimumFontScale={0.7} />
+                  <FitText text={itemName} fontSize={14} minimumFontScale={0.7} className="ph-no-capture" />
                 </div>
                 {file.versionNumber && file.versionNumber > 1 && (
                   <Text size="xs" c="dimmed">
