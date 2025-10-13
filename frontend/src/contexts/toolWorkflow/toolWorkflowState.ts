@@ -28,21 +28,8 @@ export type ToolWorkflowAction =
   | { type: 'SET_SEARCH_QUERY'; payload: string }
   | { type: 'RESET_UI_STATE' };
 
-// Storage keys
-export const TOOL_PANEL_MODE_STORAGE_KEY = 'toolPanelModePreference';
-
-export const getStoredToolPanelMode = (): ToolPanelMode => {
-  if (typeof window === 'undefined') {
-    return 'sidebar';
-  }
-
-  const stored = window.localStorage.getItem(TOOL_PANEL_MODE_STORAGE_KEY);
-  if (stored === 'fullscreen') {
-    return 'fullscreen';
-  }
-
-  return 'sidebar';
-};
+// Default tool panel mode (used for initial state)
+export const DEFAULT_TOOL_PANEL_MODE: ToolPanelMode = 'sidebar';
 
 export const baseState: Omit<ToolWorkflowState, 'toolPanelMode'> = {
   sidebarsVisible: true,
@@ -55,7 +42,7 @@ export const baseState: Omit<ToolWorkflowState, 'toolPanelMode'> = {
 
 export const createInitialState = (): ToolWorkflowState => ({
   ...baseState,
-  toolPanelMode: getStoredToolPanelMode(),
+  toolPanelMode: DEFAULT_TOOL_PANEL_MODE,
 });
 
 export function toolWorkflowReducer(state: ToolWorkflowState, action: ToolWorkflowAction): ToolWorkflowState {

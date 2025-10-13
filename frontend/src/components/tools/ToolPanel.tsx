@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo } from 'react';
 import { useRainbowThemeContext } from '../shared/RainbowThemeProvider';
 import { useToolWorkflow } from '../../contexts/ToolWorkflowContext';
+import { usePreferences } from '../../contexts/PreferencesContext';
 import ToolPicker from './ToolPicker';
 import SearchResults from './SearchResults';
 import ToolRenderer from './ToolRenderer';
@@ -14,7 +15,6 @@ import DoubleArrowIcon from '@mui/icons-material/DoubleArrow';
 import { useTranslation } from 'react-i18next';
 import FullscreenToolSurface from './FullscreenToolSurface';
 import { useToolPanelGeometry } from '../../hooks/tools/useToolPanelGeometry';
-import { useLocalStorageState } from '../../hooks/tools/useJsonLocalStorageState';
 import { useRightRail } from '../../contexts/RightRailContext';
 import { Tooltip } from '../shared/Tooltip';
 import './ToolPanel.css';
@@ -45,6 +45,7 @@ export default function ToolPanel() {
   } = useToolWorkflow();
 
   const { setAllRightRailButtonsDisabled } = useRightRail();
+  const { preferences, updatePreference } = usePreferences();
 
   const isFullscreenMode = toolPanelMode === 'fullscreen';
   const toolPickerVisible = !readerMode;
@@ -56,8 +57,6 @@ export default function ToolPanel() {
     setAllRightRailButtonsDisabled(fullscreenExpanded);
   }, [fullscreenExpanded, setAllRightRailButtonsDisabled]);
 
-  // Use custom hooks for state management
-  const [showLegacyDescriptions, setShowLegacyDescriptions] = useLocalStorageState('legacyToolDescriptions', false);
   const fullscreenGeometry = useToolPanelGeometry({
     enabled: fullscreenExpanded,
     toolPanelRef,
@@ -200,11 +199,11 @@ export default function ToolPanel() {
           toolRegistry={toolRegistry}
           filteredTools={filteredTools}
           selectedToolKey={selectedToolKey}
-          showDescriptions={showLegacyDescriptions}
+          showDescriptions={preferences.showLegacyToolDescriptions}
           matchedTextMap={matchedTextMap}
           onSearchChange={setSearchQuery}
           onSelect={(id: ToolId) => handleToolSelect(id)}
-          onToggleDescriptions={() => setShowLegacyDescriptions((prev) => !prev)}
+          onToggleDescriptions={() => updatePreference('showLegacyToolDescriptions', !preferences.showLegacyToolDescriptions)}
           onExitFullscreenMode={() => setToolPanelMode('sidebar')}
           toggleLabel={toggleLabel}
           geometry={fullscreenGeometry}
