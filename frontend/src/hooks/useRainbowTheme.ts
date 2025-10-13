@@ -1,6 +1,6 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
-
-type ThemeMode = 'light' | 'dark' | 'rainbow';
+import { useCallback, useRef, useEffect } from 'react';
+import { usePreferences } from '../contexts/PreferencesContext';
+import { ThemeMode } from '../services/preferencesService';
 
 interface RainbowThemeHook {
   themeMode: ThemeMode;
@@ -13,36 +13,19 @@ interface RainbowThemeHook {
 
 const allowRainbowMode = false; // Override to allow/disallow fun
 
-export function useRainbowTheme(initialTheme: 'light' | 'dark' = 'light'): RainbowThemeHook {
-  // Get theme from localStorage or use initial
-  const [themeMode, setThemeMode] = useState<ThemeMode>(() => {
-    const stored = localStorage.getItem('stirling-theme');
-    if (stored && ['light', 'dark', 'rainbow'].includes(stored)) {
-      return stored as ThemeMode;
-    }
-    try {
-      // Fallback to OS preference if available
-      const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-      return prefersDark ? 'dark' : initialTheme;
-    } catch {
-      return initialTheme;
-    }
-  });
+export function useRainbowTheme(): RainbowThemeHook {
+  const { preferences, updatePreference } = usePreferences();
+  const themeMode = preferences.theme;
 
   // Track rapid toggles for easter egg
   const toggleCount = useRef(0);
   const lastToggleTime = useRef(Date.now());
-  const [isToggleDisabled, setIsToggleDisabled] = useState(false);
+  const isToggleDisabled = useRef(false);
 
-  // Save theme to localStorage whenever it changes
+  // Apply rainbow class to body whenever theme changes
   useEffect(() => {
-    localStorage.setItem('stirling-theme', themeMode);
-
-    // Apply rainbow class to body if in rainbow mode
     if (themeMode === 'rainbow') {
       document.body.classList.add('rainbow-mode-active');
-
-      // Show easter egg notification
       showRainbowNotification();
     } else {
       document.body.classList.remove('rainbow-mode-active');
@@ -141,7 +124,7 @@ export function useRainbowTheme(initialTheme: 'light' | 'dark' = 'light'): Rainb
 
   const toggleTheme = useCallback(() => {
     // Don't allow toggle if disabled
-    if (isToggleDisabled) {
+    if (isToggleDisabled.current) {
       return;
     }
 
@@ -149,7 +132,7 @@ export function useRainbowTheme(initialTheme: 'light' | 'dark' = 'light'): Rainb
 
     // Simple exit from rainbow mode with single click (after cooldown period)
     if (themeMode === 'rainbow') {
-      setThemeMode('light');
+      updatePreference('theme', 'light');
       console.log('🌈 Rainbow mode deactivated. Thanks for trying it!');
       showExitNotification();
       return;
@@ -165,14 +148,14 @@ export function useRainbowTheme(initialTheme: 'light' | 'dark' = 'light'): Rainb
 
     // Easter egg: Activate rainbow mode after 10 rapid toggles
     if (allowRainbowMode && toggleCount.current >= 10) {
-      setThemeMode('rainbow');
+      updatePreference('theme', 'rainbow');
       console.log('🌈 RAINBOW MODE ACTIVATED! 🌈 You found the secret easter egg!');
       console.log('🌈 Button will be disabled for 3 seconds, then click once to exit!');
 
       // Disable toggle for 3 seconds
-      setIsToggleDisabled(true);
+      isToggleDisabled.current = true;
       setTimeout(() => {
-        setIsToggleDisabled(false);
+        isToggleDisabled.current = false;
         console.log('🌈 Theme toggle re-enabled! Click once to exit rainbow mode.');
       }, 3000);
 
@@ -182,25 +165,26 @@ export function useRainbowTheme(initialTheme: 'light' | 'dark' = 'light'): Rainb
     }
 
     // Normal theme switching
-    setThemeMode(prevMode => prevMode === 'light' ? 'dark' : 'light');
-  }, [themeMode, isToggleDisabled]);
+    const nextTheme = themeMode === 'light' ? 'dark' : 'light';
+    updatePreference('theme', nextTheme);
+  }, [themeMode, updatePreference]);
 
   const activateRainbow = useCallback(() => {
-    setThemeMode('rainbow');
+    updatePreference('theme', 'rainbow');
     console.log('🌈 Rainbow mode manually activated!');
-  }, []);
+  }, [updatePreference]);
 
   const deactivateRainbow = useCallback(() => {
     if (themeMode === 'rainbow') {
-      setThemeMode('light');
+      updatePreference('theme', 'light');
       console.log('🌈 Rainbow mode manually deactivated.');
     }
-  }, [themeMode]);
+  }, [themeMode, updatePreference]);
 
   return {
     themeMode,
     isRainbowMode: themeMode === 'rainbow',
-    isToggleDisabled,
+    isToggleDisabled: isToggleDisabled.current,
     toggleTheme,
     activateRainbow,
     deactivateRainbow,

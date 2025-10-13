@@ -1,15 +1,24 @@
 import { ToolPanelMode } from 'src/contexts/toolWorkflow/toolWorkflowState';
 
+export type ThemeMode = 'light' | 'dark' | 'rainbow';
+
+// Detect OS theme preference
+function getSystemTheme(): 'light' | 'dark' {
+  return window?.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+
 export interface UserPreferences {
   autoUnzip: boolean;
   autoUnzipFileLimit: number;
   defaultToolPanelMode: ToolPanelMode;
+  theme: ThemeMode;
 }
 
 export const DEFAULT_PREFERENCES: UserPreferences = {
   autoUnzip: true,
   autoUnzipFileLimit: 4,
   defaultToolPanelMode: 'sidebar',
+  theme: getSystemTheme(),
 };
 
 const STORAGE_KEY = 'stirlingpdf_preferences';
@@ -60,6 +69,16 @@ class PreferencesService {
           ...preferences,
         };
       }
+
+      // Migration: Check for old 'stirling-theme' key
+      const oldTheme = localStorage.getItem('stirling-theme');
+      if (oldTheme && ['light', 'dark', 'rainbow'].includes(oldTheme)) {
+        return {
+          ...DEFAULT_PREFERENCES,
+          theme: oldTheme as ThemeMode,
+        };
+      }
+
       return { ...DEFAULT_PREFERENCES };
     } catch (error) {
       console.error('Error reading all preferences:', error);
