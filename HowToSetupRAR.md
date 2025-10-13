@@ -47,7 +47,7 @@ sudo yum install rar  # For CentOS 7
 2.  Download the "RAR for Linux x64" command-line version.
 3.  Extract the archive and install the binary:
     ```bash
-    # The version number (e.g., 712, as of writing this guiede) will change.
+    # The version number (e.g., 712, as of writing this guide) will change.
     # Use the actual filename.
     tar -xzf rarlinux-x64-*.tar.gz
 
@@ -85,7 +85,7 @@ If you installed Stirling-PDF directly on your operating system (without Docker)
 
 ### For Docker Users
 
-For the binary to be accessable inside the container, you have to mount the binary as a volume.
+For the binary to be accessible inside the container, you have to mount the binary as a volume.
 
 Update your `docker-compose.yml` to include the volume mount. The path on the host side must match where you installed `rar`.
 
