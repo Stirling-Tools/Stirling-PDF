@@ -1,9 +1,12 @@
+import React, { useMemo } from 'react';
 import { Box } from '@mantine/core';
 import { useRainbowThemeContext } from '../shared/RainbowThemeProvider';
 import { useToolWorkflow } from '../../contexts/ToolWorkflowContext';
 import { useFileHandler } from '../../hooks/useFileHandler';
 import { useFileState } from '../../contexts/FileContext';
 import { useNavigationState, useNavigationActions } from '../../contexts/NavigationContext';
+import { useViewer } from '../../contexts/ViewerContext';
+import { PageEditorProvider } from '../../contexts/PageEditorContext';
 import './Workbench.css';
 
 import TopControls from '../shared/TopControls';
@@ -20,11 +23,11 @@ export default function Workbench() {
   const { isRainbowMode } = useRainbowThemeContext();
 
   // Use context-based hooks to eliminate all prop drilling
-  const { state } = useFileState();
+  const { selectors } = useFileState();
   const { workbench: currentView } = useNavigationState();
   const { actions: navActions } = useNavigationActions();
   const setCurrentView = navActions.setWorkbench;
-  const activeFiles = state.files.ids;
+  const activeFiles = selectors.getFiles();
   const {
     previewFile,
     pageEditorFunctions,
@@ -43,6 +46,12 @@ export default function Workbench() {
   const { toolRegistry } = useToolWorkflow();
   const selectedTool = selectedToolId ? toolRegistry[selectedToolId] : null;
   const { addFiles } = useFileHandler();
+
+  // Get active file index from ViewerContext
+  const { activeFileIndex, setActiveFileIndex } = useViewer();
+
+  // Get all file IDs for PageEditor initialization
+  const allFileIds = useMemo(() => activeFiles.map(f => f.fileId), [activeFiles]);
 
   const handlePreviewClose = () => {
     setPreviewFile(null);
@@ -95,6 +104,8 @@ export default function Workbench() {
             setSidebarsVisible={setSidebarsVisible}
             previewFile={previewFile}
             onClose={handlePreviewClose}
+            activeFileIndex={activeFileIndex}
+            setActiveFileIndex={setActiveFileIndex}
           />
         );
 
@@ -137,37 +148,45 @@ export default function Workbench() {
   };
 
   return (
-    <Box
-      className="flex-1 h-full min-w-80 relative flex flex-col"
-      style={
-        isRainbowMode
-          ? {} // No background color in rainbow mode
-          : { backgroundColor: 'var(--bg-background)' }
-      }
-    >
-      {/* Top Controls */}
-      {activeFiles.length > 0 && (
-        <TopControls
-          currentView={currentView}
-          setCurrentView={setCurrentView}
-        />
-      )}
-
-      {/* Dismiss All Errors Button */}
-      <DismissAllErrorsButton />
-
-      {/* Main content area */}
+    <PageEditorProvider initialFileIds={allFileIds}>
       <Box
-        className="flex-1 min-h-0 relative z-10 workbench-scrollable "
-        style={{
-          transition: 'opacity 0.15s ease-in-out',
-          paddingTop: activeFiles.length > 0 ? '3.5rem' : '0',
-        }}
+        className="flex-1 h-full min-w-80 relative flex flex-col"
+        style={
+          isRainbowMode
+            ? {} // No background color in rainbow mode
+            : { backgroundColor: 'var(--bg-background)' }
+        }
       >
-        {renderMainContent()}
-      </Box>
+        {/* Top Controls */}
+        {activeFiles.length > 0 && (
+          <TopControls
+            currentView={currentView}
+            setCurrentView={setCurrentView}
+            activeFiles={activeFiles.map(f => {
+              const stub = selectors.getStirlingFileStub(f.fileId);
+              return { fileId: f.fileId, name: f.name, versionNumber: stub?.versionNumber };
+            })}
+            currentFileIndex={activeFileIndex}
+            onFileSelect={setActiveFileIndex}
+          />
+        )}
 
-      <Footer analyticsEnabled />
-    </Box>
+        {/* Dismiss All Errors Button */}
+        <DismissAllErrorsButton />
+
+        {/* Main content area */}
+        <Box
+          className="flex-1 min-h-0 relative z-10 workbench-scrollable "
+          style={{
+            transition: 'opacity 0.15s ease-in-out',
+            paddingTop: currentView === 'viewer' ? '0' : (activeFiles.length > 0 ? '3.5rem' : '0'),
+          }}
+        >
+          {renderMainContent()}
+        </Box>
+
+        <Footer analyticsEnabled />
+      </Box>
+    </PageEditorProvider>
   );
 }
