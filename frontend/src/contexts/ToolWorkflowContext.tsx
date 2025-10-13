@@ -73,7 +73,7 @@ interface ToolWorkflowProviderProps {
 
 export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
   const [state, dispatch] = useReducer(toolWorkflowReducer, undefined, createInitialState);
-  const { preferences } = usePreferences();
+  const { preferences, updatePreference } = usePreferences();
 
   // Store reset functions for tools
   const [toolResetFunctions, setToolResetFunctions] = React.useState<Record<string, () => void>>({});
@@ -117,7 +117,8 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
 
   const setToolPanelMode = useCallback((mode: ToolPanelMode) => {
     dispatch({ type: 'SET_TOOL_PANEL_MODE', payload: mode });
-  }, []);
+    updatePreference('defaultToolPanelMode', mode);
+  }, [updatePreference]);
 
 
   const setPreviewFile = useCallback((file: File | null) => {
