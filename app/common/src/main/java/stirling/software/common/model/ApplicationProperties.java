@@ -319,8 +319,6 @@ public class ApplicationProperties {
             private boolean requireNumbers = true;
             private boolean requireUppercase = true;
             private boolean requireLowercase = true;
-            private int maxAge = 0; // 0 means no expiry
-            private int historyCount = 0; // 0 means no history check
         }
     }
 

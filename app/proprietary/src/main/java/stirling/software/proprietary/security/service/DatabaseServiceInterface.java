@@ -6,10 +6,9 @@ import java.util.List;
 import org.apache.commons.lang3.tuple.Pair;
 
 import stirling.software.common.model.FileInfo;
-import stirling.software.common.model.exception.UnsupportedProviderException;
 
 public interface DatabaseServiceInterface {
-    void exportDatabase() throws SQLException, UnsupportedProviderException;
+    void exportDatabase() throws SQLException;
 
     void importDatabase();
 

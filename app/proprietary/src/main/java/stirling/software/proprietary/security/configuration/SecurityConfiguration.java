@@ -46,6 +46,7 @@ import stirling.software.proprietary.security.filter.UserAuthenticationFilter;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.oauth2.CustomOAuth2AuthenticationFailureHandler;
 import stirling.software.proprietary.security.oauth2.CustomOAuth2AuthenticationSuccessHandler;
+import stirling.software.proprietary.security.provider.UserAuthenticationProvider;
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticationFailureHandler;
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticationSuccessHandler;
 import stirling.software.proprietary.security.saml2.CustomSaml2ResponseAuthenticationConverter;
@@ -53,6 +54,7 @@ import stirling.software.proprietary.security.service.CustomOAuth2UserService;
 import stirling.software.proprietary.security.service.CustomUserDetailsService;
 import stirling.software.proprietary.security.service.JwtServiceInterface;
 import stirling.software.proprietary.security.service.LoginAttemptService;
+import stirling.software.proprietary.security.service.PasswordPolicyService;
 import stirling.software.proprietary.security.service.UserService;
 import stirling.software.proprietary.security.session.SessionPersistentRegistry;
 
@@ -80,6 +82,7 @@ public class SecurityConfiguration {
     private final GrantedAuthoritiesMapper oAuth2userAuthoritiesMapper;
     private final RelyingPartyRegistrationRepository saml2RelyingPartyRegistrations;
     private final OpenSaml4AuthenticationRequestResolver saml2AuthenticationRequestResolver;
+    private final PasswordPolicyService passwordPolicyService;
 
     public SecurityConfiguration(
             PersistentLoginRepository persistentLoginRepository,
@@ -99,7 +102,8 @@ public class SecurityConfiguration {
             @Autowired(required = false)
                     RelyingPartyRegistrationRepository saml2RelyingPartyRegistrations,
             @Autowired(required = false)
-                    OpenSaml4AuthenticationRequestResolver saml2AuthenticationRequestResolver) {
+                    OpenSaml4AuthenticationRequestResolver saml2AuthenticationRequestResolver,
+            PasswordPolicyService passwordPolicyService) {
         this.userDetailsService = userDetailsService;
         this.userService = userService;
         this.loginEnabledValue = loginEnabledValue;
@@ -116,6 +120,7 @@ public class SecurityConfiguration {
         this.oAuth2userAuthoritiesMapper = oAuth2userAuthoritiesMapper;
         this.saml2RelyingPartyRegistrations = saml2RelyingPartyRegistrations;
         this.saml2AuthenticationRequestResolver = saml2AuthenticationRequestResolver;
+        this.passwordPolicyService = passwordPolicyService;
     }
 
     @Bean
@@ -346,7 +351,7 @@ public class SecurityConfiguration {
     }
 
     public DaoAuthenticationProvider daoAuthenticationProvider() {
-        DaoAuthenticationProvider provider = new DaoAuthenticationProvider(userDetailsService);
+        UserAuthenticationProvider provider = new UserAuthenticationProvider(passwordPolicyService);
         provider.setPasswordEncoder(passwordEncoder());
         return provider;
     }

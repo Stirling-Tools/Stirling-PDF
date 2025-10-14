@@ -29,7 +29,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.enumeration.Role;
-import stirling.software.common.model.exception.UnsupportedProviderException;
 import stirling.software.common.service.UserServiceInterface;
 import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.proprietary.model.Team;
@@ -61,10 +60,12 @@ public class UserService implements UserServiceInterface {
 
     private final ApplicationProperties.Security.OAUTH2 oAuth2;
 
+    private final PasswordPolicyService passwordPolicyService;
+
     // Handle OAUTH2 login and user auto creation.
     public void processSSOPostLogin(
             String username, boolean autoCreateUser, AuthenticationType type)
-            throws IllegalArgumentException, SQLException, UnsupportedProviderException {
+            throws IllegalArgumentException, SQLException {
         if (!isUsernameValid(username)) {
             return;
         }
@@ -107,7 +108,7 @@ public class UserService implements UserServiceInterface {
         User user = saveUser(userOpt, generateApiKey());
         try {
             databaseService.exportDatabase();
-        } catch (SQLException | UnsupportedProviderException e) {
+        } catch (SQLException e) {
             log.error("Error exporting database after adding API key to user", e);
         }
         return user;
@@ -151,7 +152,7 @@ public class UserService implements UserServiceInterface {
     }
 
     public void saveUser(String username, AuthenticationType authenticationType)
-            throws IllegalArgumentException, SQLException, UnsupportedProviderException {
+            throws IllegalArgumentException, SQLException {
         saveUser(username, authenticationType, (Long) null, Role.USER.getRoleId());
     }
 
@@ -165,7 +166,7 @@ public class UserService implements UserServiceInterface {
 
     public User saveUser(
             String username, AuthenticationType authenticationType, Long teamId, String role)
-            throws IllegalArgumentException, SQLException, UnsupportedProviderException {
+            throws IllegalArgumentException, SQLException {
         return saveUserCore(
                 username, // username
                 null, // password
@@ -180,7 +181,7 @@ public class UserService implements UserServiceInterface {
 
     public User saveUser(
             String username, AuthenticationType authenticationType, Team team, String role)
-            throws IllegalArgumentException, SQLException, UnsupportedProviderException {
+            throws IllegalArgumentException, SQLException {
         return saveUserCore(
                 username, // username
                 null, // password
@@ -194,7 +195,7 @@ public class UserService implements UserServiceInterface {
     }
 
     public User saveUser(String username, String password, Long teamId)
-            throws IllegalArgumentException, SQLException, UnsupportedProviderException {
+            throws IllegalArgumentException, SQLException {
         return saveUserCore(
                 username, // username
                 password, // password
@@ -209,7 +210,7 @@ public class UserService implements UserServiceInterface {
 
     public User saveUser(
             String username, String password, Team team, String role, boolean firstLogin)
-            throws IllegalArgumentException, SQLException, UnsupportedProviderException {
+            throws IllegalArgumentException, SQLException {
         return saveUserCore(
                 username, // username
                 password, // password
@@ -224,7 +225,7 @@ public class UserService implements UserServiceInterface {
 
     public User saveUser(
             String username, String password, Long teamId, String role, boolean firstLogin)
-            throws IllegalArgumentException, SQLException, UnsupportedProviderException {
+            throws IllegalArgumentException, SQLException {
         return saveUserCore(
                 username, // username
                 password, // password
@@ -238,13 +239,13 @@ public class UserService implements UserServiceInterface {
     }
 
     public void saveUser(String username, String password, Long teamId, String role)
-            throws IllegalArgumentException, SQLException, UnsupportedProviderException {
+            throws IllegalArgumentException, SQLException {
         saveUser(username, password, teamId, role, false);
     }
 
     public void saveUser(
             String username, String password, Long teamId, boolean firstLogin, boolean enabled)
-            throws IllegalArgumentException, SQLException, UnsupportedProviderException {
+            throws IllegalArgumentException, SQLException {
         saveUserCore(
                 username, // username
                 password, // password
@@ -287,7 +288,7 @@ public class UserService implements UserServiceInterface {
     }
 
     public void updateUserSettings(String username, Map<String, String> updates)
-            throws SQLException, UnsupportedProviderException {
+            throws SQLException {
         Optional<User> userOpt = findByUsernameIgnoreCaseWithSettings(username);
         if (userOpt.isPresent()) {
             User user = userOpt.get();
@@ -320,7 +321,7 @@ public class UserService implements UserServiceInterface {
     }
 
     public void changeUsername(User user, String newUsername)
-            throws IllegalArgumentException, SQLException, UnsupportedProviderException {
+            throws IllegalArgumentException, SQLException {
         if (!isUsernameValid(newUsername)) {
             throw new IllegalArgumentException(getInvalidUsernameMessage());
         }
@@ -329,37 +330,32 @@ public class UserService implements UserServiceInterface {
         databaseService.exportDatabase();
     }
 
-    public void changePassword(User user, String newPassword)
-            throws SQLException, UnsupportedProviderException {
+    public void changePassword(User user, String newPassword) throws SQLException {
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
-        databaseService.exportDatabase();
+        databaseService.exportDatabase(); // todo: do we still want to export?
     }
 
-    public void changeFirstUse(User user, boolean firstUse)
-            throws SQLException, UnsupportedProviderException {
+    public void changeFirstUse(User user, boolean firstUse) throws SQLException {
         user.setFirstLogin(firstUse);
         userRepository.save(user);
         databaseService.exportDatabase();
     }
 
-    public void changeRole(User user, String newRole)
-            throws SQLException, UnsupportedProviderException {
+    public void changeRole(User user, String newRole) throws SQLException {
         Authority userAuthority = this.findRole(user);
         userAuthority.setAuthority(newRole);
         authorityRepository.save(userAuthority);
         databaseService.exportDatabase();
     }
 
-    public void changeUserEnabled(User user, Boolean enbeled)
-            throws SQLException, UnsupportedProviderException {
+    public void changeUserEnabled(User user, Boolean enbeled) throws SQLException {
         user.setEnabled(enbeled);
         userRepository.save(user);
         databaseService.exportDatabase();
     }
 
-    public void changeUserTeam(User user, Team team)
-            throws SQLException, UnsupportedProviderException {
+    public void changeUserTeam(User user, Team team) throws SQLException {
         if (team == null) {
             team = getDefaultTeam();
         }
@@ -421,7 +417,6 @@ public class UserService implements UserServiceInterface {
      * @return The saved User object
      * @throws IllegalArgumentException If username is invalid or team is invalid
      * @throws SQLException If database operation fails
-     * @throws UnsupportedProviderException If provider is not supported
      */
     private User saveUserCore(
             String username,
@@ -432,7 +427,7 @@ public class UserService implements UserServiceInterface {
             String role,
             boolean firstLogin,
             boolean enabled)
-            throws IllegalArgumentException, SQLException, UnsupportedProviderException {
+            throws IllegalArgumentException, SQLException {
 
         if (!isUsernameValid(username)) {
             throw new IllegalArgumentException(getInvalidUsernameMessage());
@@ -443,6 +438,10 @@ public class UserService implements UserServiceInterface {
 
         // Set password if provided
         if (password != null && !password.isEmpty()) {
+            // Enforce password policy at the service layer to ensure consistency
+            if (!passwordPolicyService.validatePassword(password)) {
+                throw new IllegalArgumentException("invalidPassword");
+            }
             user.setPassword(passwordEncoder.encode(password));
         }
 
@@ -596,7 +595,7 @@ public class UserService implements UserServiceInterface {
 
         try {
             databaseService.exportDatabase();
-        } catch (SQLException | UnsupportedProviderException e) {
+        } catch (SQLException e) {
             log.error("Error exporting database after synchronising custom API user", e);
         }
     }

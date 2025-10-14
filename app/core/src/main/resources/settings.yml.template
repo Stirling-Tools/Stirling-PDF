@@ -23,8 +23,6 @@ security:
     requireNumbers: true # Require at least one number
     requireUppercase: true # Require at least one uppercase letter
     requireLowercase: true # Require at least one lowercase letter
-    maxAge: 0 # Maximum password age in days (0 = no expiry)
-    historyCount: 0 # Number of previous passwords to check against (0 = no history check)
   initialLogin:
     username: '' # initial username for the first login
     password: '' # initial password for the first login

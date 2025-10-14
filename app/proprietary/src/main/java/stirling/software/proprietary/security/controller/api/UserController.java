@@ -64,7 +64,7 @@ public class UserController {
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/register")
     public String register(@ModelAttribute UsernameAndPass requestModel, Model model)
-            throws SQLException, UnsupportedProviderException {
+            throws SQLException {
         if (userService.usernameExistsIgnoreCase(requestModel.getUsername())) {
             model.addAttribute("error", "Username already exists");
             return "register";
@@ -78,6 +78,10 @@ public class UserController {
                     Role.USER.getRoleId(),
                     false);
         } catch (IllegalArgumentException e) {
+            if ("invalidPassword".equals(e.getMessage())) {
+                model.addAttribute("error", "Password does not meet requirements");
+                return "register";
+            }
             return "redirect:/login?messageType=invalidUsername";
         }
         return "redirect:/login?registered=true";
@@ -137,7 +141,7 @@ public class UserController {
             HttpServletRequest request,
             HttpServletResponse response,
             RedirectAttributes redirectAttributes)
-            throws SQLException, UnsupportedProviderException {
+            throws SQLException {
         if (principal == null) {
             return new RedirectView("/change-creds?messageType=notAuthenticated", true);
         }
@@ -166,7 +170,7 @@ public class UserController {
             HttpServletRequest request,
             HttpServletResponse response,
             RedirectAttributes redirectAttributes)
-            throws SQLException, UnsupportedProviderException {
+            throws SQLException {
         if (principal == null) {
             return new RedirectView("/account?messageType=notAuthenticated", true);
         }
@@ -278,7 +282,14 @@ public class UserController {
             if (password.isBlank()) {
                 return new RedirectView("/adminSettings?messageType=invalidPassword", true);
             }
-            userService.saveUser(username, password, effectiveTeamId, role, forceChange);
+            try {
+                userService.saveUser(username, password, effectiveTeamId, role, forceChange);
+            } catch (IllegalArgumentException e) {
+                if ("invalidPassword".equals(e.getMessage())) {
+                    return new RedirectView("/adminSettings?messageType=invalidPassword", true);
+                }
+                throw e;
+            }
         }
         return new RedirectView(
                 "/adminSettings", // Redirect to account page after adding the user
@@ -356,20 +367,22 @@ public class UserController {
             Authentication authentication)
             throws SQLException, UnsupportedProviderException {
         Optional<User> userOpt = userService.findByUsernameIgnoreCase(username);
+
         if (userOpt.isEmpty()) {
             return new RedirectView("/adminSettings?messageType=userNotFound", true);
         }
-        if (!userService.usernameExistsIgnoreCase(username)) {
-            return new RedirectView("/adminSettings?messageType=userNotFound", true);
-        }
+
         // Get the currently authenticated username
         String currentUsername = authentication.getName();
+
         // Check if the provided username matches the current session's username
         if (currentUsername.equalsIgnoreCase(username)) {
             return new RedirectView("/adminSettings?messageType=disabledCurrentUser", true);
         }
+
         User user = userOpt.get();
         userService.changeUserEnabled(user, enabled);
+
         if (!enabled) {
             // Invalidate all sessions if the user is being disabled
             List<Object> principals = sessionRegistry.getAllPrincipals();

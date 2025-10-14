@@ -1,5 +1,7 @@
 package stirling.software.proprietary.security.service;
 
+import static org.apache.commons.lang3.StringUtils.isBlank;
+
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -11,6 +13,7 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.security.model.api.Email;
@@ -20,13 +23,14 @@ import stirling.software.proprietary.security.model.api.Email;
  * JavaMailSender to send the email and is designed to handle both the message content and file
  * attachments.
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @ConditionalOnProperty(value = "mail.enabled", havingValue = "true", matchIfMissing = false)
 public class EmailService {
 
     private final JavaMailSender mailSender;
-    private final ApplicationProperties applicationProperties;
+    private final ApplicationProperties.Mail mailProperties;
 
     /**
      * Sends an email with an attachment asynchronously. This method is annotated with @Async, which
@@ -51,26 +55,31 @@ public class EmailService {
             throw new MessagingException("An attachment is required to send the email.");
         }
 
-        ApplicationProperties.Mail mailProperties = applicationProperties.getMail();
+        sendMessage(email, true);
+    }
 
+    private void sendMessage(Email email, boolean multipart) throws MessagingException {
         // Creates a MimeMessage to represent the email
         MimeMessage message = mailSender.createMimeMessage();
 
         // Helper class to set up the message content and attachments
-        MimeMessageHelper helper = new MimeMessageHelper(message, true);
+        MimeMessageHelper helper = new MimeMessageHelper(message, multipart);
 
         // Sets the recipient, subject, body, and sender email
         helper.addTo(email.getTo());
         helper.setSubject(email.getSubject());
-        helper.setText(
-                email.getBody(),
-                true); // The "true" here indicates that the body contains HTML content.
-        helper.setFrom(mailProperties.getFrom());
+        helper.setText(email.getBody(), true);
+        String from =
+                isBlank(mailProperties.getFrom())
+                        ? "accounts@stirling.com"
+                        : mailProperties.getFrom();
+        helper.setFrom(from);
 
-        // Adds the attachment to the email
-        helper.addAttachment(file.getOriginalFilename(), file);
+        // Adds the attachment to the email if present
+        if (multipart && email.getFileInput() != null && !email.getFileInput().isEmpty()) {
+            helper.addAttachment(email.getFileInput().getOriginalFilename(), email.getFileInput());
+        }
 
-        // Sends the email via the configured mail sender
         mailSender.send(message);
     }
 }

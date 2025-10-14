@@ -21,7 +21,6 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
-import stirling.software.common.model.exception.UnsupportedProviderException;
 import stirling.software.common.util.RequestUriUtils;
 import stirling.software.proprietary.audit.AuditEventType;
 import stirling.software.proprietary.audit.AuditLevel;
@@ -127,7 +126,7 @@ public class CustomSaml2AuthenticationSuccessHandler
 
                     generateJwt(response, authentication);
                     response.sendRedirect(contextPath + "/");
-                } catch (IllegalArgumentException | SQLException | UnsupportedProviderException e) {
+                } catch (IllegalArgumentException | SQLException e) {
                     log.debug(
                             "Invalid username detected for user: {}, redirecting to logout",
                             username);

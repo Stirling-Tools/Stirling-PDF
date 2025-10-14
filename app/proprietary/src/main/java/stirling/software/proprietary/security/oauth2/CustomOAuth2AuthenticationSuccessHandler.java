@@ -22,7 +22,6 @@ import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.common.model.ApplicationProperties;
-import stirling.software.common.model.exception.UnsupportedProviderException;
 import stirling.software.common.util.RequestUriUtils;
 import stirling.software.proprietary.audit.AuditEventType;
 import stirling.software.proprietary.audit.AuditLevel;
@@ -107,7 +106,7 @@ public class CustomOAuth2AuthenticationSuccessHandler
                             username, oauth2Properties.getAutoCreateUser(), OAUTH2);
                 }
                 response.sendRedirect(contextPath + "/");
-            } catch (IllegalArgumentException | SQLException | UnsupportedProviderException e) {
+            } catch (IllegalArgumentException | SQLException e) {
                 response.sendRedirect(contextPath + "/logout?invalidUsername=true");
             }
         }
