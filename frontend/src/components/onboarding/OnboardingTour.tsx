@@ -7,6 +7,7 @@ import { useFilesModalContext } from '../../contexts/FilesModalContext';
 import { useTourOrchestration } from '../../contexts/TourOrchestrationContext';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import CheckIcon from '@mui/icons-material/Check';
+import './OnboardingTour.css';
 
 // Enum case order defines order steps will appear
 enum TourStep {
@@ -243,6 +244,7 @@ export default function OnboardingTour() {
           justifyContent: 'center',
         }),
       }}
+      highlightedMaskClassName="tour-highlight-glow"
       showNavigation={true}
       showBadge={false}
       showCloseButton={true}
