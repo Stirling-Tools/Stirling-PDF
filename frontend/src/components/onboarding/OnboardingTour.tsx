@@ -97,7 +97,7 @@ export default function OnboardingTour() {
     },
     [TourStep.TOOL_INTERFACE]: {
       selector: '[data-tour="tool-panel"]',
-      content: t('onboarding.toolInterface', "This is the Crop tool interface. As you can see, there's not much there yet because we haven't added any PDF files to work with yet."),
+      content: t('onboarding.toolInterface', "This is the Crop tool interface. As you can see, there's not much there because we haven't added any PDF files to work with yet."),
       position: 'center',
       padding: 0,
     },
