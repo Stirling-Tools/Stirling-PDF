@@ -12,11 +12,11 @@ interface ValidateSignatureReportViewProps {
 }
 
 const NoSignatureSection = ({ message, label }: { message: string; label: string }) => (
-  <Stack align="flex-end" justify="center" gap="xs" style={{ minHeight: 360 }}>
+  <Stack align="center" justify="center" gap="xs" style={{ minHeight: 360, width: '100%' }}>
     <Badge color="gray" variant="light" size="lg" style={{ textTransform: 'uppercase' }}>
       {label}
     </Badge>
-    <Text size="sm" c="dimmed" style={{ textAlign: 'right' }}>
+    <Text size="sm" c="dimmed" style={{ textAlign: 'center' }}>
       {message}
     </Text>
   </Stack>

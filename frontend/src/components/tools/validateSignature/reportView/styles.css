@@ -59,16 +59,10 @@
 .report-container {
   width: 100%;
   height: 100%;
-  /* Match Active Files area background (light mode) */
-  background: rgb(var(--pdf-light-report-container-bg)) !important;
+  /* Match Active Files/Page Editor background */
+  background: var(--bg-background) !important;
   padding: 32px 24px 48px;
   overflow-y: auto;
-}
-
-/* Keep background consistent in dark mode */
-:root[data-mantine-color-scheme='dark'] .report-container {
-  /* Match Active Files area background (dark mode) */
-  background: var(--mantine-color-dark-6, var(--mantine-color-body)) !important;
 }
 
 /* Keep field blocks stable colors across themes */
