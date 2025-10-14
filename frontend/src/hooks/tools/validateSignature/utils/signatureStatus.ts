@@ -38,9 +38,15 @@ export const computeSignatureStatus = (
   if (!signature.notExpired) {
     trustIssues.push(t('validateSignature.issue.certExpired', 'Certificate expired'));
   }
-  if (!signature.notRevoked) {
+
+  // Use new revocationStatus field if available, fallback to notRevoked for backward compatibility
+  const revStatus = signature.revocationStatus || (signature.notRevoked ? 'good' : 'unknown');
+  if (revStatus === 'revoked') {
     trustIssues.push(t('validateSignature.issue.certRevoked', 'Certificate revoked'));
+  } else if (revStatus === 'soft-fail') {
+    trustIssues.push(t('validateSignature.issue.certRevocationUnknown', 'Certificate revocation status unknown'));
   }
+  // Don't report anything for 'not-checked', 'good', or 'unknown' unless actually revoked
 
   // Check for missing common metadata fields
   const missing: string[] = [];
