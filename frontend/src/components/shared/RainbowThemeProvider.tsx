@@ -6,7 +6,7 @@ import rainbowStyles from '../../styles/rainbow.module.css';
 import { ToastProvider } from '../toast';
 import ToastRenderer from '../toast/ToastRenderer';
 import { ToastPortalBinder } from '../toast';
-import { ThemeMode } from 'src/services/preferencesService';
+import type { ThemeMode } from '../../constants/theme';
 
 interface RainbowThemeContextType {
   themeMode: ThemeMode;

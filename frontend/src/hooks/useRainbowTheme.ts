@@ -1,6 +1,6 @@
 import { useCallback, useRef, useEffect } from 'react';
 import { usePreferences } from '../contexts/PreferencesContext';
-import { ThemeMode } from '../services/preferencesService';
+import type { ThemeMode } from '../constants/theme';
 
 interface RainbowThemeHook {
   themeMode: ThemeMode;

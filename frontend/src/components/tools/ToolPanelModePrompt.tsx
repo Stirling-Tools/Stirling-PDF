@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useToolWorkflow } from '../../contexts/ToolWorkflowContext';
 import { usePreferences } from '../../contexts/PreferencesContext';
 import './ToolPanelModePrompt.css';
-import { ToolPanelMode } from 'src/contexts/toolWorkflow/toolWorkflowState';
+import type { ToolPanelMode } from '../../constants/toolPanel';
 
 const ToolPanelModePrompt = () => {
   const { t } = useTranslation();

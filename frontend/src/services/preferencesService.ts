@@ -1,11 +1,5 @@
-import { ToolPanelMode, DEFAULT_TOOL_PANEL_MODE } from '../contexts/toolWorkflow/toolWorkflowState';
-
-export type ThemeMode = 'light' | 'dark' | 'rainbow';
-
-// Detect OS theme preference
-function getSystemTheme(): 'light' | 'dark' {
-  return window?.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-}
+import { type ToolPanelMode, DEFAULT_TOOL_PANEL_MODE } from '../constants/toolPanel';
+import { type ThemeMode, getSystemTheme } from '../constants/theme';
 
 export interface UserPreferences {
   autoUnzip: boolean;

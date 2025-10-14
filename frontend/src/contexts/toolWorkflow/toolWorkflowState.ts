@@ -1,7 +1,5 @@
 import { PageEditorFunctions } from '../../types/pageEditor';
-
-// State & Modes
-export type ToolPanelMode = 'sidebar' | 'fullscreen';
+import { type ToolPanelMode, DEFAULT_TOOL_PANEL_MODE } from '../../constants/toolPanel';
 
 export interface ToolWorkflowState {
   // UI State
@@ -27,9 +25,6 @@ export type ToolWorkflowAction =
   | { type: 'SET_PAGE_EDITOR_FUNCTIONS'; payload: PageEditorFunctions | null }
   | { type: 'SET_SEARCH_QUERY'; payload: string }
   | { type: 'RESET_UI_STATE' };
-
-// Default tool panel mode (used for initial state)
-export const DEFAULT_TOOL_PANEL_MODE: ToolPanelMode = 'sidebar';
 
 export const baseState: Omit<ToolWorkflowState, 'toolPanelMode'> = {
   sidebarsVisible: true,

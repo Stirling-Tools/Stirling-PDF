@@ -16,8 +16,8 @@ import {
   ToolWorkflowState,
   createInitialState,
   toolWorkflowReducer,
-  ToolPanelMode,
 } from './toolWorkflow/toolWorkflowState';
+import type { ToolPanelMode } from '../constants/toolPanel';
 import { usePreferences } from './PreferencesContext';
 
 // State interface
