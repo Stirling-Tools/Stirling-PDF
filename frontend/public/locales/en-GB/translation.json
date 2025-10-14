@@ -3626,7 +3626,7 @@
     "selectCropTool": "Let's select the Crop tool to demonstrate how to use one of the tools.",
     "toolInterface": "This is the Crop tool interface. As you can see, there's not much there yet because we haven't added any PDF files to work with yet.",
     "filesButton": "The Files button on the Quick Access bar allows you to upload PDFs to use the tools on.",
-    "fileSources": "You can upload new files or access recent files from here.",
+    "fileSources": "You can upload new files or access recent files from here. For the tour, we'll just use a sample file.",
     "workbench": "This is the Workbench - the main area where you view and edit your PDFs.",
     "viewSwitcher": "Use these controls to select how you want to view your PDFs.",
     "viewer": "The Viewer lets you read and annotate your PDFs.",

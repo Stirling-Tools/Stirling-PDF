@@ -108,12 +108,12 @@ export default function OnboardingTour() {
     },
     [TourStep.FILE_SOURCES]: {
       selector: '[data-tour="file-sources"]',
-      content: t('onboarding.fileSources', 'You can upload new files or access recent files from here.'),
+      content: t('onboarding.fileSources', "You can upload new files or access recent files from here. For the tour, we'll just use a sample file."),
       position: 'right',
       padding: 0,
       actionAfter: () => {
-        closeFilesModal();
         loadSampleFile();
+        closeFilesModal();
       }
     },
     [TourStep.WORKBENCH]: {
