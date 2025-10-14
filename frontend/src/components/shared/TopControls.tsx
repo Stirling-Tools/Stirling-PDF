@@ -1,4 +1,6 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
+// Component to sync PageEditorContext with FileContext
+// Must be inside PageEditorProvider to access usePageEditor
 import { SegmentedControl, Loader } from "@mantine/core";
 import { useRainbowThemeContext } from "./RainbowThemeProvider";
 import rainbowStyles from '../../styles/rainbow.module.css';
@@ -30,12 +32,12 @@ const createViewOptions = (
   currentFileIndex: number,
   onFileSelect?: (index: number) => void,
   pageEditorState?: {
-    allFiles: Array<{ fileId: FileId; name: string; versionNumber?: number }>;
-    selectedFileIds: Set<FileId>;
+    files: Array<{ fileId: FileId; name: string; versionNumber?: number; isSelected: boolean }>;
     selectedCount: number;
     totalCount: number;
     onToggleSelection: (fileId: FileId) => void;
     onReorder: (fromIndex: number, toIndex: number) => void;
+    fileColorMap: Map<string, number>;
   }
 ) => {
   const currentFile = activeFiles[currentFileIndex];
@@ -82,12 +84,12 @@ const createViewOptions = (
     label: showPageEditorDropdown ? (
       <PageEditorFileDropdown
         displayName={pageEditorDisplayName}
-        allFiles={pageEditorState!.allFiles}
-        selectedFileIds={pageEditorState!.selectedFileIds}
+        files={pageEditorState!.files}
         onToggleSelection={pageEditorState!.onToggleSelection}
         onReorder={pageEditorState!.onReorder}
         switchingTo={switchingTo}
         viewOptionStyle={viewOptionStyle}
+        fileColorMap={pageEditorState!.fileColorMap}
       />
     ) : (
       <div style={viewOptionStyle}>
@@ -149,14 +151,50 @@ const TopControls = ({
 
   // Get page editor state for dropdown
   const {
-    selectedFileIds,
+    files: pageEditorFiles = [],
     toggleFileSelection,
     reorderFiles: pageEditorReorderFiles,
   } = usePageEditor();
 
-  // Convert Set to array for counting
-  const selectedCount = selectedFileIds.size;
-  const totalCount = activeFiles.length;
+  // Convert to counts
+  const selectedCount = pageEditorFiles?.filter(f => f.isSelected).length || 0;
+  const totalCount = pageEditorFiles?.length || 0;
+
+  // Create stable file IDs string for dependency (only changes when file set changes)
+  const fileIdsString = (pageEditorFiles || []).map(f => f.fileId).sort().join(',');
+
+  // Track color assignments by insertion order (files keep their color)
+  const fileColorAssignments = React.useRef(new Map<string, number>());
+
+  // Create stable file color mapping (preserves colors on reorder)
+  const fileColorMap = useMemo(() => {
+    const map = new Map<string, number>();
+    if (!pageEditorFiles || pageEditorFiles.length === 0) return map;
+
+    const allFileIds = (pageEditorFiles || []).map(f => f.fileId as string);
+
+    // Assign colors to new files based on insertion order
+    allFileIds.forEach(fileId => {
+      if (!fileColorAssignments.current.has(fileId)) {
+        fileColorAssignments.current.set(fileId, fileColorAssignments.current.size);
+      }
+    });
+
+    // Clean up removed files
+    const activeSet = new Set(allFileIds);
+    for (const fileId of fileColorAssignments.current.keys()) {
+      if (!activeSet.has(fileId)) {
+        fileColorAssignments.current.delete(fileId);
+      }
+    }
+
+    return fileColorAssignments.current;
+  }, [fileIdsString]);
+
+  // Memoize the reorder handler - now much simpler!
+  const handleReorder = useCallback((fromIndex: number, toIndex: number) => {
+    pageEditorReorderFiles(fromIndex, toIndex);
+  }, [pageEditorReorderFiles]);
 
   const handleViewChange = useCallback((view: string) => {
     if (!isValidWorkbench(view)) {
@@ -191,12 +229,12 @@ const TopControls = ({
             currentFileIndex,
             onFileSelect,
             {
-              allFiles: activeFiles as Array<{ fileId: FileId; name: string; versionNumber?: number }>,
-              selectedFileIds,
+              files: pageEditorFiles,
               selectedCount,
               totalCount,
               onToggleSelection: toggleFileSelection,
-              onReorder: (fromIndex, toIndex) => pageEditorReorderFiles(fromIndex, toIndex, activeFiles.map(f => f.fileId as FileId)),
+              onReorder: handleReorder,
+              fileColorMap,
             }
           )}
           value={currentView}

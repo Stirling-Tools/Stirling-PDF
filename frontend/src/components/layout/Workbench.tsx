@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { Box } from '@mantine/core';
 import { useRainbowThemeContext } from '../shared/RainbowThemeProvider';
 import { useToolWorkflow } from '../../contexts/ToolWorkflowContext';
@@ -6,7 +6,7 @@ import { useFileHandler } from '../../hooks/useFileHandler';
 import { useFileState } from '../../contexts/FileContext';
 import { useNavigationState, useNavigationActions } from '../../contexts/NavigationContext';
 import { useViewer } from '../../contexts/ViewerContext';
-import { PageEditorProvider } from '../../contexts/PageEditorContext';
+import { PageEditorProvider, usePageEditor } from '../../contexts/PageEditorContext';
 import './Workbench.css';
 
 import TopControls from '../shared/TopControls';
@@ -18,16 +18,45 @@ import LandingPage from '../shared/LandingPage';
 import Footer from '../shared/Footer';
 import DismissAllErrorsButton from '../shared/DismissAllErrorsButton';
 
+// Syncs PageEditorContext with FileContext on activeFiles change
+function PageEditorSync({ activeFiles }: { activeFiles: Array<{ fileId: any; name: string; versionNumber?: number }> }) {
+  const { syncWithFileContext } = usePageEditor();
+
+  // Create stable signature to prevent unnecessary syncs
+  const fileSignature = useMemo(
+    () => activeFiles.map(f => `${f.fileId}-${f.name}-${f.versionNumber || 0}`).join('|'),
+    [activeFiles]
+  );
+
+  useEffect(() => {
+    // Filter for PDFs only - Page Editor doesn't support images
+    const pdfFiles = activeFiles.filter(f =>
+      f.name.toLowerCase().endsWith('.pdf')
+    );
+
+    const fileData = pdfFiles.map(f => ({
+      fileId: f.fileId,
+      name: f.name,
+      versionNumber: f.versionNumber,
+    }));
+    syncWithFileContext(fileData);
+  }, [fileSignature, syncWithFileContext, activeFiles]);
+
+  return null;
+}
+
 // No props needed - component uses contexts directly
 export default function Workbench() {
   const { isRainbowMode } = useRainbowThemeContext();
 
   // Use context-based hooks to eliminate all prop drilling
-  const { selectors } = useFileState();
+  const { state, selectors } = useFileState();
   const { workbench: currentView } = useNavigationState();
   const { actions: navActions } = useNavigationActions();
   const setCurrentView = navActions.setWorkbench;
-  const activeFiles = selectors.getFiles();
+
+  // Create stable reference for activeFiles based on file IDs
+  const activeFiles = useMemo(() => selectors.getFiles(), [state.files.ids.join(',')]);
   const {
     previewFile,
     pageEditorFunctions,
@@ -149,6 +178,7 @@ export default function Workbench() {
 
   return (
     <PageEditorProvider initialFileIds={allFileIds}>
+      <PageEditorSync activeFiles={activeFiles} />
       <Box
         className="flex-1 h-full min-w-80 relative flex flex-col"
         style={

@@ -707,6 +707,16 @@
       "tags": "workflow,sequence,automation",
       "title": "Automate",
       "desc": "Build multi-step workflows by chaining together PDF actions. Ideal for recurring tasks."
+    },
+    "mobile": {
+      "brandAlt": "Stirling PDF logo",
+      "viewSwitcher": "Switch workspace view",
+      "tools": "Tools",
+      "workspace": "Workspace",
+      "swipeHint": "Swipe left or right to switch views",
+      "toolsSlide": "Tool selection panel",
+      "workbenchSlide": "Workspace panel",
+      "openFiles": "Open files"
     }
   },
   "landing": {

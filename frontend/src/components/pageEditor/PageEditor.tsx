@@ -43,25 +43,13 @@ const PageEditor = ({
   // Navigation guard for unsaved changes
   const { setHasUnsavedChanges } = useNavigationGuard();
 
-  // Get selected files from PageEditorContext instead of all files
-  const { selectedFileIds, syncWithFileContext, updateCurrentPages, reorderedPages, clearReorderedPages, updateFileOrderFromPages } = usePageEditor();
+  // Get files from PageEditorContext (synced by Workbench)
+  const { files: pageEditorFiles, updateCurrentPages, reorderedPages, clearReorderedPages, updateFileOrderFromPages, lastReorderSource, clearReorderSource } = usePageEditor();
 
-  // Stable reference to file IDs to prevent infinite loops
-  const fileIdsString = state.files.ids.join(',');
-  const selectedIdsString = Array.from(selectedFileIds).sort().join(',');
-
-  // Sync with FileContext when files change
-  useEffect(() => {
-    syncWithFileContext(state.files.ids);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fileIdsString]); // Only re-run when the actual IDs change
-
-  // Get active file IDs from selected files (maintains order from FileContext)
+  // Get active file IDs from SELECTED files only
   const activeFileIds = useMemo(() => {
-    return state.files.ids.filter(id => selectedFileIds.has(id));
-    // Using string representations to prevent infinite loops
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fileIdsString, selectedIdsString]);
+    return pageEditorFiles.filter(f => f.isSelected).map(f => f.fileId);
+  }, [pageEditorFiles]);
 
   // UI state
   const globalProcessing = state.ui.isProcessing;
@@ -155,11 +143,19 @@ const PageEditor = ({
       };
       setEditedDocument(reorderedDocument);
       clearReorderedPages();
+      // Clear the source after applying to prevent feedback loop
+      clearReorderSource();
     }
-  }, [reorderedPages, displayDocument, clearReorderedPages]);
+  }, [reorderedPages, displayDocument, clearReorderedPages, clearReorderSource]);
 
   // Update file order when pages are manually reordered
   useEffect(() => {
+    // Skip if the last reorder came from file-level (prevent feedback loop)
+    if (lastReorderSource === 'file') {
+      clearReorderSource();
+      return;
+    }
+
     if (editedDocument?.pages && editedDocument.pages.length > 0 && activeFileIds.length > 1) {
       // Compute the file order based on page positions
       const fileFirstPagePositions = new Map<FileId, number>();
@@ -177,7 +173,7 @@ const PageEditor = ({
         .map(entry => entry[0]);
 
       // Check if the order has actually changed
-      const currentFileOrder = state.files.ids.filter(id => selectedFileIds.has(id));
+      const currentFileOrder = pageEditorFiles.filter(f => f.isSelected).map(f => f.fileId);
       const orderChanged = computedFileOrder.length !== currentFileOrder.length ||
         computedFileOrder.some((id, index) => id !== currentFileOrder[index]);
 
@@ -185,7 +181,7 @@ const PageEditor = ({
         updateFileOrderFromPages(editedDocument.pages);
       }
     }
-  }, [editedDocument?.pages, activeFileIds.length, state.files.ids, selectedFileIds, updateFileOrderFromPages]);
+  }, [editedDocument?.pages, activeFileIds.length, state.files.ids, pageEditorFiles, updateFileOrderFromPages, lastReorderSource, clearReorderSource]);
 
   // Utility functions to convert between page IDs and page numbers
   const getPageNumbersFromIds = useCallback((pageIds: string[]): number[] => {
@@ -729,14 +725,28 @@ const PageEditor = ({
   // Display all pages - use edited or original document
   const displayedPages = displayDocument?.pages || [];
 
-  // Create a mapping of fileId to color index for page highlighting
+  // Track color assignments by insertion order (files keep their color)
+  const fileColorAssignments = useRef(new Map<FileId, number>());
+
+  // Create a stable mapping of fileId to color index (preserves colors on reorder)
   const fileColorIndexMap = useMemo(() => {
-    const map = new Map<FileId, number>();
-    activeFileIds.forEach((fileId, index) => {
-      map.set(fileId, index);
+    // Assign colors to new files based on insertion order
+    activeFileIds.forEach(fileId => {
+      if (!fileColorAssignments.current.has(fileId)) {
+        fileColorAssignments.current.set(fileId, fileColorAssignments.current.size);
+      }
     });
-    return map;
-  }, [activeFileIds]);
+
+    // Clean up removed files
+    const activeSet = new Set(activeFileIds);
+    for (const fileId of fileColorAssignments.current.keys()) {
+      if (!activeSet.has(fileId)) {
+        fileColorAssignments.current.delete(fileId);
+      }
+    }
+
+    return fileColorAssignments.current;
+  }, [activeFileIds.join(',')]); // Only recalculate when the set of files changes, not the order
 
   return (
     <Box pos="relative" h='100%' style={{ overflow: 'auto' }} data-scrolling-container="true">

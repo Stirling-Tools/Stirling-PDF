@@ -12,11 +12,12 @@ import FitText from './FitText';
 import { getFileColorWithOpacity } from '../pageEditor/fileColors';
 
 import { FileId } from '../../types/file';
+import { PageEditorFile } from '../../contexts/PageEditorContext';
 
 interface FileMenuItemProps {
-  file: { fileId: FileId; name: string; versionNumber?: number };
+  file: PageEditorFile;
   index: number;
-  isSelected: boolean;
+  colorIndex: number;
   isFirst: boolean;
   isLast: boolean;
   onToggleSelection: (fileId: FileId) => void;
@@ -30,7 +31,7 @@ interface FileMenuItemProps {
 const FileMenuItem: React.FC<FileMenuItemProps> = ({
   file,
   index,
-  isSelected,
+  colorIndex,
   isFirst,
   isLast,
   onToggleSelection,
@@ -101,8 +102,8 @@ const FileMenuItem: React.FC<FileMenuItemProps> = ({
   }, [file.fileId, index, onReorder]);
 
   const itemName = file?.name || 'Untitled';
-  const fileColorBorder = getFileColorWithOpacity(index, 1);
-  const fileColorBorderHover = getFileColorWithOpacity(index, 1.0);
+  const fileColorBorder = getFileColorWithOpacity(colorIndex, 1);
+  const fileColorBorderHover = getFileColorWithOpacity(colorIndex, 1.0);
 
   return (
     <div
@@ -115,12 +116,12 @@ const FileMenuItem: React.FC<FileMenuItemProps> = ({
         padding: '0.75rem 0.75rem',
         marginBottom: '0.5rem',
         cursor: isDragging ? 'grabbing' : 'grab',
-        backgroundColor: isSelected ? 'rgba(0, 0, 0, 0.05)' : 'transparent',
+        backgroundColor: isDragOver ? 'rgba(59, 130, 246, 0.15)' : (file.isSelected ? 'rgba(0, 0, 0, 0.05)' : 'transparent'),
         borderLeft: `6px solid ${fileColorBorder}`,
-        borderTop: isDragOver ? '2px solid rgba(0, 0, 0, 0.5)' : 'none',
-        borderBottom: isDragOver ? '2px solid rgba(0, 0, 0, 0.5)' : 'none',
+        borderTop: isDragOver ? '3px solid rgb(59, 130, 246)' : 'none',
+        borderBottom: isDragOver ? '3px solid rgb(59, 130, 246)' : 'none',
         opacity: isDragging ? 0.5 : 1,
-        transition: 'opacity 0.2s ease-in-out, background-color 0.15s ease, border-color 0.15s ease',
+        transition: 'opacity 0.2s ease-in-out, background-color 0.15s ease, border 0.15s ease',
         userSelect: 'none',
       }}
       onMouseEnter={(e) => {
@@ -131,7 +132,7 @@ const FileMenuItem: React.FC<FileMenuItemProps> = ({
       }}
       onMouseLeave={(e) => {
         if (!isDragging) {
-          (e.currentTarget as HTMLDivElement).style.backgroundColor = isSelected ? 'rgba(0, 0, 0, 0.05)' : 'transparent';
+          (e.currentTarget as HTMLDivElement).style.backgroundColor = file.isSelected ? 'rgba(0, 0, 0, 0.05)' : 'transparent';
           (e.currentTarget as HTMLDivElement).style.borderLeftColor = fileColorBorder;
         }
       }}
@@ -149,7 +150,7 @@ const FileMenuItem: React.FC<FileMenuItemProps> = ({
               <DragIndicatorIcon fontSize="small" />
             </div>
             <Checkbox
-              checked={isSelected}
+              checked={file.isSelected}
               onChange={() => onToggleSelection(file.fileId)}
               onClick={(e) => e.stopPropagation()}
               size="sm"
@@ -169,7 +170,7 @@ const FileMenuItem: React.FC<FileMenuItemProps> = ({
               size="sm"
               variant="subtle"
               disabled={isFirst}
-              onClick={onMoveToTop}
+              onClick={(e) => onMoveToTop(e, index)}
               title="Move to top"
             >
               <VerticalAlignTopIcon fontSize="small" />
@@ -179,7 +180,7 @@ const FileMenuItem: React.FC<FileMenuItemProps> = ({
               size="sm"
               variant="subtle"
               disabled={isFirst}
-              onClick={onMoveUp}
+              onClick={(e) => onMoveUp(e, index)}
               title="Move up"
             >
               <ArrowUpwardIcon fontSize="small" />
@@ -189,7 +190,7 @@ const FileMenuItem: React.FC<FileMenuItemProps> = ({
               size="sm"
               variant="subtle"
               disabled={isLast}
-              onClick={onMoveDown}
+              onClick={(e) => onMoveDown(e, index)}
               title="Move down"
             >
               <ArrowDownwardIcon fontSize="small" />
@@ -199,7 +200,7 @@ const FileMenuItem: React.FC<FileMenuItemProps> = ({
               size="sm"
               variant="subtle"
               disabled={isLast}
-              onClick={onMoveToBottom}
+              onClick={(e) => onMoveToBottom(e, index)}
               title="Move to bottom"
             >
               <VerticalAlignBottomIcon fontSize="small" />
@@ -212,22 +213,22 @@ const FileMenuItem: React.FC<FileMenuItemProps> = ({
 
 interface PageEditorFileDropdownProps {
   displayName: string;
-  allFiles: Array<{ fileId: FileId; name: string; versionNumber?: number }>;
-  selectedFileIds: Set<FileId>;
+  files: PageEditorFile[];
   onToggleSelection: (fileId: FileId) => void;
   onReorder: (fromIndex: number, toIndex: number) => void;
   switchingTo?: string | null;
   viewOptionStyle: React.CSSProperties;
+  fileColorMap: Map<string, number>;
 }
 
 export const PageEditorFileDropdown: React.FC<PageEditorFileDropdownProps> = ({
   displayName,
-  allFiles,
-  selectedFileIds,
+  files,
   onToggleSelection,
   onReorder,
   switchingTo,
   viewOptionStyle,
+  fileColorMap,
 }) => {
   const handleMoveUp = (e: React.MouseEvent, index: number) => {
     e.stopPropagation();
@@ -238,7 +239,7 @@ export const PageEditorFileDropdown: React.FC<PageEditorFileDropdownProps> = ({
 
   const handleMoveDown = (e: React.MouseEvent, index: number) => {
     e.stopPropagation();
-    if (index < allFiles.length - 1) {
+    if (index < files.length - 1) {
       onReorder(index, index + 1);
     }
   };
@@ -252,8 +253,8 @@ export const PageEditorFileDropdown: React.FC<PageEditorFileDropdownProps> = ({
 
   const handleMoveToBottom = (e: React.MouseEvent, index: number) => {
     e.stopPropagation();
-    if (index < allFiles.length - 1) {
-      onReorder(index, allFiles.length - 1);
+    if (index < files.length - 1) {
+      onReorder(index, files.length - 1);
     }
   };
 
@@ -278,17 +279,17 @@ export const PageEditorFileDropdown: React.FC<PageEditorFileDropdownProps> = ({
         maxHeight: '80vh',
         overflowY: 'auto'
       }}>
-        {allFiles.map((file, index) => {
-          const isSelected = selectedFileIds.has(file.fileId);
+        {files.map((file, index) => {
           const isFirst = index === 0;
-          const isLast = index === allFiles.length - 1;
+          const isLast = index === files.length - 1;
+          const colorIndex = fileColorMap.get(file.fileId as string) ?? 0;
 
           return (
             <FileMenuItem
               key={file.fileId}
               file={file}
               index={index}
-              isSelected={isSelected}
+              colorIndex={colorIndex}
               isFirst={isFirst}
               isLast={isLast}
               onToggleSelection={onToggleSelection}

@@ -68,6 +68,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
   const [isDragging, setIsDragging] = useState(false);
   const [isMouseDown, setIsMouseDown] = useState(false);
   const [mouseStartPos, setMouseStartPos] = useState<{x: number, y: number} | null>(null);
+  const lastClickTimeRef = useRef<number>(0);
   const dragElementRef = useRef<HTMLDivElement>(null);
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(page.thumbnail);
   const { getThumbnailFromCache, requestThumbnail } = useThumbnailGeneration();
@@ -263,7 +264,12 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
 
     // If mouse moved less than 5 pixels, consider it a click (not a drag)
     if (distance < 5 && !isDragging) {
-      onTogglePage(page.id);
+      // Prevent rapid double-clicks from causing issues (debounce with 100ms threshold)
+      const now = Date.now();
+      if (now - lastClickTimeRef.current > 100) {
+        lastClickTimeRef.current = now;
+        onTogglePage(page.id);
+      }
     }
 
     setIsMouseDown(false);
@@ -275,7 +281,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
     setMouseStartPos(null);
   }, []);
 
-  const fileColorBorder = getFileColorWithOpacity(fileColorIndex, 0.5);
+  const fileColorBorder = getFileColorWithOpacity(fileColorIndex, 0.3);
 
   return (
     <div
@@ -295,7 +301,6 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
         hover:shadow-md
         transition-all
         relative
-        bg-white hover:bg-gray-50
         ${isDragging ? 'opacity-50 scale-95' : ''}
         ${movingPage === page.pageNumber ? 'page-moving' : ''}
       `}

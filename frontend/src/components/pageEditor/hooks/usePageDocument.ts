@@ -16,18 +16,20 @@ export interface PageDocumentHook {
  */
 export function usePageDocument(): PageDocumentHook {
   const { state, selectors } = useFileState();
-  const { selectedFileIds } = usePageEditor();
+  const { files: pageEditorFiles } = usePageEditor();
 
   // Convert Set to array and filter to maintain file order from FileContext
   const allFileIds = state.files.ids;
 
   // Create stable string representations for useMemo dependencies
   const allFileIdsString = allFileIds.join(',');
-  const selectedIdsString = Array.from(selectedFileIds).sort().join(',');
+  const selectedFiles = pageEditorFiles.filter(f => f.isSelected);
+  const selectedIdsString = selectedFiles.map(f => f.fileId).sort().join(',');
 
   const activeFileIds = useMemo(() => {
+    const selectedFileIds = new Set(selectedFiles.map(f => f.fileId));
     return allFileIds.filter(id => selectedFileIds.has(id));
-    // Using string representations to prevent infinite loops from Set reference changes
+    // Using string representations to prevent infinite loops
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allFileIdsString, selectedIdsString]);
 
