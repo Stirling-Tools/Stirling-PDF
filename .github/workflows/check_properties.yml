@@ -5,6 +5,8 @@ on:
     types: [opened, synchronize, reopened]
     paths:
       - "app/core/src/main/resources/messages_*.properties"
+    branches:
+      - main
 
 # cancel in-progress jobs if a new job is triggered
 # This is useful to avoid running multiple builds for the same branch if a new commit is pushed
@@ -23,7 +25,7 @@ permissions:
 
 jobs:
   check-files:
-    if: github.event_name == 'pull_request_target'
+    if: github.event_name == 'pull_request_target' && github.event.pull_request.base.ref == 'main'
     runs-on: ubuntu-latest
     permissions:
       issues: write # Allow posting comments on issues/PRs
