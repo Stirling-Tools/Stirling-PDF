@@ -4,6 +4,7 @@ import { useToolWorkflow } from '../../contexts/ToolWorkflowContext';
 import { useFileHandler } from '../../hooks/useFileHandler';
 import { useFileState } from '../../contexts/FileContext';
 import { useNavigationState, useNavigationActions } from '../../contexts/NavigationContext';
+import { isBaseWorkbench } from '../../types/workbench';
 import './Workbench.css';
 
 import TopControls from '../shared/TopControls';
@@ -31,7 +32,8 @@ export default function Workbench() {
     sidebarsVisible,
     setPreviewFile,
     setPageEditorFunctions,
-    setSidebarsVisible
+    setSidebarsVisible,
+    customWorkbenchViews,
   } = useToolWorkflow();
 
   const { handleToolSelect } = useToolWorkflow();
@@ -130,9 +132,14 @@ export default function Workbench() {
         );
 
       default:
-        return (
-          <LandingPage/>
-        );
+        if (!isBaseWorkbench(currentView)) {
+          const customView = customWorkbenchViews.find((view) => view.workbenchId === currentView && view.data != null);
+          if (customView) {
+            const CustomComponent = customView.component;
+            return <CustomComponent data={customView.data} />;
+          }
+        }
+        return <LandingPage />;
     }
   };
 
@@ -150,6 +157,7 @@ export default function Workbench() {
         <TopControls
           currentView={currentView}
           setCurrentView={setCurrentView}
+          customViews={customWorkbenchViews}
         />
       )}
 

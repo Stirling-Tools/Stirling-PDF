@@ -5,7 +5,9 @@ import rainbowStyles from '../../styles/rainbow.module.css';
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import EditNoteIcon from "@mui/icons-material/EditNote";
 import FolderIcon from "@mui/icons-material/Folder";
+import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import { WorkbenchType, isValidWorkbench } from '../../types/workbench';
+import type { CustomWorkbenchViewInstance } from '../../contexts/ToolWorkflowContext';
 
 
 const viewOptionStyle = {
@@ -19,7 +21,11 @@ const viewOptionStyle = {
 
 
 // Build view options showing text always
-const createViewOptions = (currentView: WorkbenchType, switchingTo: WorkbenchType | null) => {
+const createViewOptions = (
+  currentView: WorkbenchType,
+  switchingTo: WorkbenchType | null,
+  customViews: CustomWorkbenchViewInstance[]
+) => {
   const viewerOption = {
     label: (
       <div style={viewOptionStyle as React.CSSProperties}>
@@ -72,22 +78,41 @@ const createViewOptions = (currentView: WorkbenchType, switchingTo: WorkbenchTyp
     value: "fileEditor",
   };
 
-  // Build options array conditionally
-  return [
+  const baseOptions = [
     viewerOption,
     pageEditorOption,
     fileEditorOption,
   ];
+
+  const customOptions = customViews
+    .filter((view) => view.data != null)
+    .map((view) => ({
+      label: (
+        <div style={viewOptionStyle as React.CSSProperties}>
+          {switchingTo === view.workbenchId ? (
+            <Loader size="xs" />
+          ) : (
+            view.icon || <PictureAsPdfIcon fontSize="small" />
+          )}
+          <span>{view.label}</span>
+        </div>
+      ),
+      value: view.workbenchId,
+    }));
+
+  return [...baseOptions, ...customOptions];
 };
 
 interface TopControlsProps {
   currentView: WorkbenchType;
   setCurrentView: (view: WorkbenchType) => void;
+  customViews?: CustomWorkbenchViewInstance[];
 }
 
 const TopControls = ({
   currentView,
   setCurrentView,
+  customViews = [],
   }: TopControlsProps) => {
   const { isRainbowMode } = useRainbowThemeContext();
   const [switchingTo, setSwitchingTo] = useState<WorkbenchType | null>(null);
@@ -118,7 +143,7 @@ const TopControls = ({
     <div className="absolute left-0 w-full top-0 z-[100] pointer-events-none">
       <div className="flex justify-center mt-[0.5rem]">
         <SegmentedControl
-          data={createViewOptions(currentView, switchingTo)}
+          data={createViewOptions(currentView, switchingTo, customViews)}
           value={currentView}
           onChange={handleViewChange}
           color="blue"

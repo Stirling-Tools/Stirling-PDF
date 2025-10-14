@@ -43,6 +43,7 @@ export default function RightRail() {
 
   // Navigation view
   const { workbench: currentView } = useNavigationState();
+  const isCustomWorkbench = typeof currentView === 'string' && currentView.startsWith('custom:');
 
   // File state and selection
   const { state, selectors } = useFileState();
@@ -183,7 +184,7 @@ export default function RightRail() {
   return (
     <div ref={sidebarRefs.rightRailRef} className={`right-rail`} data-sidebar="right-rail">
       <div className="right-rail-inner">
-        {topButtons.length > 0 && (
+        {topButtons.length > 0 && !isCustomWorkbench && (
           <>
             <div className="right-rail-section">
               {topButtons.map(btn => (
@@ -205,6 +206,7 @@ export default function RightRail() {
         )}
 
         {/* Group: PDF Viewer Controls - visible only in viewer mode */}
+        {!isCustomWorkbench && (
         <div
           className={`right-rail-slot ${currentView === 'viewer' ? 'visible right-rail-enter' : 'right-rail-exit'}`}
           aria-hidden={currentView !== 'viewer'}
@@ -308,8 +310,10 @@ export default function RightRail() {
           </div>
           <Divider className="right-rail-divider" />
         </div>
+        )}
 
         {/* Group: Selection controls + Close, animate as one unit when entering/leaving viewer */}
+        {!isCustomWorkbench && (
         <div
           className={`right-rail-slot ${currentView !== 'viewer' ? 'visible right-rail-enter' : 'right-rail-exit'}`}
           aria-hidden={currentView === 'viewer'}
@@ -447,6 +451,7 @@ export default function RightRail() {
 
           <Divider className="right-rail-divider" />
         </div>
+        )}
 
         {/* Theme toggle and Language dropdown */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
