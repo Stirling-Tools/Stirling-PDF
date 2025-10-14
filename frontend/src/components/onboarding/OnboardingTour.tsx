@@ -24,7 +24,7 @@ enum TourStep {
   CROP_SETTINGS,
   RUN_BUTTON,
   RESULTS,
-  UNDO,
+  PIN,
   WRAP_UP,
 }
 
@@ -179,13 +179,13 @@ export default function OnboardingTour() {
     },
     [TourStep.RESULTS]: {
       selector: '[data-tour="tool-panel"]',
-      content: t('onboarding.results', "After the tool has finished running, the Review step will show a preview of the results in this panel. The modified file will replace the original file in the Workbench automatically (unless you Pin the original file)."),
+      content: t('onboarding.results', "After the tool has finished running, the Review step will show a preview of the results in this panel, and allow you to undo the operation or download the file. "),
       position: 'center',
       padding: 0,
     },
-    [TourStep.UNDO]: {
-      selector: '[data-tour="undo-button"]',
-      content: t('onboarding.undo', "If you're unhappy with the results from the tool, you can use the Undo button to revert the operation and restore your original files."),
+    [TourStep.PIN]: {
+      selector: '[data-tour="file-card-checkbox"]',
+      content: t('onboarding.undo', "The modified file will replace the original file in the Workbench automatically, allowing you to easily run it through more tools. You can use the Pin button if you’d rather your files stay active after running tools on them."),
       position: 'left',
       padding: 10,
       actionAfter: () => undoOperation(),

@@ -3636,8 +3636,8 @@
     "selectControls": "The Right Rail contains buttons to quickly select/deselect all of your active PDFs, along with buttons to change the app's theme or language.",
     "cropSettings": "Now that we've selected the file we want crop, we can configure the Crop tool to choose the area that we want to crop the PDF to.",
     "runButton": "Once the tool has been configured, this button allows you to run the tool on all the selected PDFs.",
-    "results": "After the tool has finished running, the Review step will show a preview of the results in this panel. The modified file will replace the original file in the Workbench automatically (unless you Pin the original file).",
-    "undo": "If you're unhappy with the results from the tool, you can use the Undo button to revert the operation and restore your original files.",
+    "results": "After the tool has finished running, the Review step will show a preview of the results in this panel, and allow you to undo the operation or download the file. ",
+    "pin": "The modified file will replace the original file in the Workbench automatically, allowing you to easily run it through more tools. You can use the Pin button if you’d rather your files stay active after running tools on them.",
     "wrapUp": "You're all set! You've learnt about the main areas of the app and how to use them. Click the Help button whenever you like to see this tour again.",
     "mobile": {
       "toolsTab": "Browse all available PDF tools. Swipe or tap to switch between Tools and Workspace views.",
