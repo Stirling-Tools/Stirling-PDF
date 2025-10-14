@@ -12,8 +12,13 @@
       "chooseFullscreen": "Use fullscreen mode",
       "dismiss": "Maybe later"
     },
+    "toggle": {
+      "fullscreen": "Switch to fullscreen mode"
+    },
     "fullscreen": {
-      "showDetails": "Show Details"
+      "showDetails": "Show Details",
+      "recommended": "Recommended",
+      "favorite": "Add to favourites"
     }
   },
   "unsavedChanges": "You have unsaved changes to your PDF.",
@@ -430,6 +435,9 @@
     "alphabetical": "Alphabetical",
     "globalPopularity": "Global Popularity",
     "sortBy": "Sort by:",
+    "mobile": {
+      "brandAlt": "Stirling PDF logo"
+    },
     "multiTool": {
       "tags": "multiple,tools",
       "title": "PDF Multi Tool",
@@ -3639,14 +3647,9 @@
     "results": "After the tool has finished running, the Review step will show a preview of the results in this panel, and allow you to undo the operation or download the file. ",
     "pin": "The modified file will replace the original file in the Workbench automatically, allowing you to easily run it through more tools. You can use the Pin button if you’d rather your files stay active after running tools on them.",
     "wrapUp": "You're all set! You've learnt about the main areas of the app and how to use them. Click the Help button whenever you like to see this tour again.",
-    "mobile": {
-      "toolsTab": "Browse all available PDF tools. Swipe or tap to switch between Tools and Workspace views.",
-      "workspaceTab": "Your workspace where you can upload files and configure tool settings.",
-      "bottomBar": "Quick access to all tools, automation, your files, and settings from the bottom bar."
-    },
     "previous": "Previous",
     "next": "Next",
-    "ok": "OK",
+    "finish": "Finish",
     "startTour": "Start Tour",
     "startTourDescription": "Take a guided tour of Stirling PDF's key features"
   }

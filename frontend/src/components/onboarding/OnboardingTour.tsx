@@ -2,9 +2,11 @@ import React from "react";
 import { TourProvider, useTour, type StepType } from '@reactour/tour';
 import { useOnboarding } from '../../contexts/OnboardingContext';
 import { useTranslation } from 'react-i18next';
-import { CloseButton, Button } from '@mantine/core';
+import { CloseButton, ActionIcon } from '@mantine/core';
 import { useFilesModalContext } from '../../contexts/FilesModalContext';
 import { useTourOrchestration } from '../../contexts/TourOrchestrationContext';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import CheckIcon from '@mui/icons-material/Check';
 
 // Enum case order defines order steps will appear
 enum TourStep {
@@ -185,7 +187,7 @@ export default function OnboardingTour() {
     },
     [TourStep.PIN]: {
       selector: '[data-tour="file-card-checkbox"]',
-      content: t('onboarding.undo', "The modified file will replace the original file in the Workbench automatically, allowing you to easily run it through more tools. You can use the Pin button if you’d rather your files stay active after running tools on them."),
+      content: t('onboarding.pin', "The modified file will replace the original file in the Workbench automatically, allowing you to easily run it through more tools. You can use the Pin button if you’d rather your files stay active after running tools on them."),
       position: 'left',
       padding: 10,
       actionAfter: () => undoOperation(),
@@ -236,6 +238,10 @@ export default function OnboardingTour() {
           ...base,
           backgroundColor: 'var(--mantine-primary-color-filled)',
         }),
+        controls: (base) => ({
+          ...base,
+          justifyContent: 'center',
+        }),
       }}
       showNavigation={true}
       showBadge={false}
@@ -248,7 +254,7 @@ export default function OnboardingTour() {
         const isLast = currentStep === stepsLength - 1;
 
         return (
-          <Button
+          <ActionIcon
             onClick={() => {
               if (isLast) {
                 setIsOpen(false);
@@ -258,10 +264,12 @@ export default function OnboardingTour() {
                 setCurrentStep(Math.min(stepsLength - 1, currentStep + 1));
               }
             }}
-            variant="filled"
+            variant="subtle"
+            size="lg"
+            aria-label={isLast ? t('onboarding.finish', 'Finish') : t('onboarding.next', 'Next')}
           >
-            {isLast ? t('onboarding.ok', 'OK') : t('onboarding.next', 'Next')}
-          </Button>
+            {isLast ? <CheckIcon sx={{ fontSize: '1.25rem' }} /> : <ArrowForwardIcon sx={{ fontSize: '1.25rem' }} />}
+          </ActionIcon>
         );
       }}
       components={{
