@@ -8,9 +8,10 @@ import FolderIcon from "@mui/icons-material/Folder";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import { WorkbenchType, isValidWorkbench } from '../../types/workbench';
 import type { CustomWorkbenchViewInstance } from '../../contexts/ToolWorkflowContext';
+import { FileDropdownMenu } from './FileDropdownMenu';
 
 
-const viewOptionStyle = {
+const viewOptionStyle: React.CSSProperties = {
   display: 'inline-flex',
   flexDirection: 'row',
   alignItems: 'center',
@@ -24,17 +25,36 @@ const viewOptionStyle = {
 const createViewOptions = (
   currentView: WorkbenchType,
   switchingTo: WorkbenchType | null,
-  customViews: CustomWorkbenchViewInstance[]
+  activeFiles: Array<{ fileId: string; name: string; versionNumber?: number }>,
+  currentFileIndex: number,
+  onFileSelect?: (index: number) => void,
+  customViews?: CustomWorkbenchViewInstance[]
 ) => {
+  const currentFile = activeFiles[currentFileIndex];
+  const isInViewer = currentView === 'viewer';
+  const fileName = currentFile?.name || '';
+  const displayName = isInViewer && fileName ? fileName : 'Viewer';
+  const hasMultipleFiles = activeFiles.length > 1;
+  const showDropdown = isInViewer && hasMultipleFiles;
+
   const viewerOption = {
-    label: (
-      <div style={viewOptionStyle as React.CSSProperties}>
+    label: showDropdown ? (
+      <FileDropdownMenu
+        displayName={displayName}
+        activeFiles={activeFiles}
+        currentFileIndex={currentFileIndex}
+        onFileSelect={onFileSelect}
+        switchingTo={switchingTo}
+        viewOptionStyle={viewOptionStyle}
+      />
+    ) : (
+      <div style={viewOptionStyle}>
         {switchingTo === "viewer" ? (
           <Loader size="xs" />
         ) : (
           <VisibilityIcon fontSize="small" />
         )}
-        <span>Viewer</span>
+        <span className="ph-no-capture">{displayName}</span>
       </div>
     ),
     value: "viewer",
@@ -42,7 +62,7 @@ const createViewOptions = (
 
   const pageEditorOption = {
     label: (
-      <div style={viewOptionStyle as React.CSSProperties}>
+      <div style={viewOptionStyle}>
         {currentView === "pageEditor" ? (
           <>
             {switchingTo === "pageEditor" ? <Loader size="xs" /> : <EditNoteIcon fontSize="small" />}
@@ -61,7 +81,7 @@ const createViewOptions = (
 
   const fileEditorOption = {
     label: (
-      <div style={viewOptionStyle as React.CSSProperties}>
+      <div style={viewOptionStyle}>
         {currentView === "fileEditor" ? (
           <>
             {switchingTo === "fileEditor" ? <Loader size="xs" /> : <FolderIcon fontSize="small" />}
@@ -84,7 +104,7 @@ const createViewOptions = (
     fileEditorOption,
   ];
 
-  const customOptions = customViews
+  const customOptions = (customViews ?? []) 
     .filter((view) => view.data != null)
     .map((view) => ({
       label: (
@@ -107,13 +127,19 @@ interface TopControlsProps {
   currentView: WorkbenchType;
   setCurrentView: (view: WorkbenchType) => void;
   customViews?: CustomWorkbenchViewInstance[];
+  activeFiles?: Array<{ fileId: string; name: string; versionNumber?: number }>;
+  currentFileIndex?: number;
+  onFileSelect?: (index: number) => void;
 }
 
 const TopControls = ({
   currentView,
   setCurrentView,
   customViews = [],
-  }: TopControlsProps) => {
+  activeFiles = [],
+  currentFileIndex = 0,
+  onFileSelect,
+}: TopControlsProps) => {
   const { isRainbowMode } = useRainbowThemeContext();
   const [switchingTo, setSwitchingTo] = useState<WorkbenchType | null>(null);
 
@@ -143,7 +169,7 @@ const TopControls = ({
     <div className="absolute left-0 w-full top-0 z-[100] pointer-events-none">
       <div className="flex justify-center mt-[0.5rem]">
         <SegmentedControl
-          data={createViewOptions(currentView, switchingTo, customViews)}
+          data={createViewOptions(currentView, switchingTo, activeFiles, currentFileIndex, onFileSelect)}
           value={currentView}
           onChange={handleViewChange}
           color="blue"
