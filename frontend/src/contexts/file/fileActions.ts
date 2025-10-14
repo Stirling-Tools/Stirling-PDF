@@ -18,6 +18,7 @@ import { FileLifecycleManager } from './lifecycle';
 import { buildQuickKeySet } from './fileSelectors';
 import { StirlingFile } from '../../types/fileContext';
 import { fileStorage } from '../../services/fileStorage';
+import { zipFileService } from '../../services/zipFileService';
 const DEBUG = process.env.NODE_ENV === 'development';
 
 /**
@@ -172,6 +173,11 @@ interface AddFileOptions {
 
   // Auto-selection after adding
   selectFiles?: boolean;
+
+  // Auto-unzip control
+  autoUnzip?: boolean;
+  autoUnzipFileLimit?: number;
+  skipAutoUnzip?: boolean; // When true: always unzip (except HTML). Used for file uploads. When false: respect autoUnzip/autoUnzipFileLimit preferences. Used for tool outputs.
 }
 
 /**
@@ -198,7 +204,58 @@ export async function addFiles(
   const { files = [] } = options;
   if (DEBUG) console.log(`📄 addFiles(raw): Adding ${files.length} files with immediate thumbnail generation`);
 
+  // ZIP pre-processing: Extract ZIP files with configurable behavior
+  // - File uploads: skipAutoUnzip=true → always extract (except HTML)
+  // - Tool outputs: skipAutoUnzip=false → respect user preferences
+  const filesToProcess: File[] = [];
+  const autoUnzip = options.autoUnzip ?? true; // Default to true
+  const autoUnzipFileLimit = options.autoUnzipFileLimit ?? 4; // Default limit
+  const skipAutoUnzip = options.skipAutoUnzip ?? false;
+
   for (const file of files) {
+    // Check if file is a ZIP
+    if (zipFileService.isZipFile(file)) {
+      try {
+        if (DEBUG) console.log(`📄 addFiles: Detected ZIP file: ${file.name}`);
+
+        // Check if ZIP contains HTML files - if so, keep as ZIP
+        const containsHtml = await zipFileService.containsHtmlFiles(file);
+        if (containsHtml) {
+          if (DEBUG) console.log(`📄 addFiles: ZIP contains HTML, keeping as ZIP: ${file.name}`);
+          filesToProcess.push(file);
+          continue;
+        }
+
+        // Apply extraction with preferences
+        const extractedFiles = await zipFileService.extractWithPreferences(file, {
+          autoUnzip,
+          autoUnzipFileLimit,
+          skipAutoUnzip
+        });
+
+        if (extractedFiles.length === 1 && extractedFiles[0] === file) {
+          // ZIP was not extracted (over limit or autoUnzip disabled)
+          if (DEBUG) console.log(`📄 addFiles: ZIP not extracted (preferences): ${file.name}`);
+        } else {
+          // ZIP was extracted
+          if (DEBUG) console.log(`📄 addFiles: Extracted ${extractedFiles.length} files from ZIP: ${file.name}`);
+        }
+
+        filesToProcess.push(...extractedFiles);
+      } catch (error) {
+        console.error(`📄 addFiles: Failed to process ZIP file ${file.name}:`, error);
+        // On error, keep the ZIP file as-is
+        filesToProcess.push(file);
+      }
+    } else {
+      // Not a ZIP file, add as-is
+      filesToProcess.push(file);
+    }
+  }
+
+  if (DEBUG) console.log(`📄 addFiles: After ZIP processing, ${filesToProcess.length} files to add`);
+
+  for (const file of filesToProcess) {
     const quickKey = createQuickKey(file);
 
     // Soft deduplication: Check if file already exists by metadata
