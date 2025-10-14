@@ -50,7 +50,14 @@ docker-compose -f docker/compose/docker-compose.fat.yml up --build
 - **Custom Ports**: Modify port mappings in docker-compose files
 - **Memory Limits**: Adjust memory limits per variant (2G ultra-lite, 4G standard, 6G fat)
 
+### [Google Drive Integration](https://developers.google.com/workspace/drive/picker/guides/overview)
+
+- **VITE_GOOGLE_DRIVE_CLIENT_ID**: [OAuth 2.0 Client ID](https://console.cloud.google.com/auth/clients/create)
+- **VITE_GOOGLE_DRIVE_API_KEY**: [Create New API](https://console.cloud.google.com/apis)
+- **VITE_GOOGLE_DRIVE_APP_ID**: This is your [project number](https://console.cloud.google.com/iam-admin/settings) in the GoogleCloud Settings
+
 ## Development vs Production
 
 - **Development**: Keep backend port 8080 exposed for debugging
 - **Production**: Remove backend port exposure, use only frontend proxy
+

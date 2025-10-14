@@ -40,7 +40,7 @@ const FileListItem: React.FC<FileListItemProps> = ({
   const [isHovered, setIsHovered] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { t } = useTranslation();
-  const {expandedFileIds, onToggleExpansion, onAddToRecents, onUnzipFile } = useFileManagerContext();
+  const {expandedFileIds, onToggleExpansion, onUnzipFile } = useFileManagerContext();
 
   // Check if this is a ZIP file
   const isZipFile = zipFileService.isZipFileStub(file);
@@ -188,7 +188,6 @@ const FileListItem: React.FC<FileListItemProps> = ({
                     leftSection={<RestoreIcon style={{ fontSize: 16 }} />}
                     onClick={(e) => {
                       e.stopPropagation();
-                      onAddToRecents(file);
                     }}
                   >
                     {t('fileManager.restore', 'Restore')}

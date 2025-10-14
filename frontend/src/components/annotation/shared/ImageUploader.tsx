@@ -48,7 +48,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
         disabled={disabled}
       />
       <Text size="sm" c="dimmed">
-        {hint || t('sign.image.hint', 'Upload a PNG or JPG image of your signature')}
+        {hint || t('sign.image.hint', 'Upload an image of your signature')}
       </Text>
     </Stack>
   );

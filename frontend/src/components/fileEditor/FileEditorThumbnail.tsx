@@ -227,6 +227,11 @@ const FileEditorThumbnail = ({
     onToggleFile(file.id);
   };
 
+  const handleCardDoubleClick = () => {
+    if (!isSupported) return;
+    onViewFile(file.id);
+  };
+
   // ---- Style helpers ----
   const getHeaderClassName = () => {
     if (hasError) return styles.headerError;
@@ -250,6 +255,7 @@ const FileEditorThumbnail = ({
       onClick={handleCardClick}
       onMouseEnter={() => setShowHoverMenu(true)}
       onMouseLeave={() => setShowHoverMenu(false)}
+      onDoubleClick={handleCardDoubleClick}
     >
       {/* Header bar */}
       <div

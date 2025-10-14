@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Stack, TextInput, Select, Combobox, useCombobox } from '@mantine/core';
+import { Stack, TextInput, Select, Combobox, useCombobox, Group, Box } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
+import { ColorPicker } from './ColorPicker';
 
 interface TextInputWithFontProps {
   text: string;
@@ -9,6 +10,8 @@ interface TextInputWithFontProps {
   onFontSizeChange: (size: number) => void;
   fontFamily: string;
   onFontFamilyChange: (family: string) => void;
+  textColor?: string;
+  onTextColorChange?: (color: string) => void;
   disabled?: boolean;
   label?: string;
   placeholder?: string;
@@ -21,6 +24,8 @@ export const TextInputWithFont: React.FC<TextInputWithFontProps> = ({
   onFontSizeChange,
   fontFamily,
   onFontFamilyChange,
+  textColor = '#000000',
+  onTextColorChange,
   disabled = false,
   label,
   placeholder
@@ -28,6 +33,7 @@ export const TextInputWithFont: React.FC<TextInputWithFontProps> = ({
   const { t } = useTranslation();
   const [fontSizeInput, setFontSizeInput] = useState(fontSize.toString());
   const fontSizeCombobox = useCombobox();
+  const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
 
   // Sync font size input with prop changes
   useEffect(() => {
@@ -42,7 +48,7 @@ export const TextInputWithFont: React.FC<TextInputWithFontProps> = ({
     { value: 'Georgia', label: 'Georgia' },
   ];
 
-  const fontSizeOptions = ['8', '12', '16', '20', '24', '28', '32', '36', '40', '48'];
+  const fontSizeOptions = ['8', '12', '16', '20', '24', '28', '32', '36', '40', '48', '56', '64', '72', '80', '96', '112', '128', '144', '160', '176', '192', '200'];
 
   return (
     <Stack gap="sm">
@@ -66,61 +72,101 @@ export const TextInputWithFont: React.FC<TextInputWithFontProps> = ({
         allowDeselect={false}
       />
 
-      {/* Font Size */}
-      <Combobox
-        onOptionSubmit={(optionValue) => {
-          setFontSizeInput(optionValue);
-          const size = parseInt(optionValue);
-          if (!isNaN(size)) {
-            onFontSizeChange(size);
-          }
-          fontSizeCombobox.closeDropdown();
-        }}
-        store={fontSizeCombobox}
-        withinPortal={false}
-      >
-        <Combobox.Target>
-          <TextInput
-            label="Font Size"
-            placeholder="Type or select font size (8-72)"
-            value={fontSizeInput}
-            onChange={(event) => {
-              const value = event.currentTarget.value;
-              setFontSizeInput(value);
+      {/* Font Size and Color */}
+      <Group grow>
+        <Combobox
+          onOptionSubmit={(optionValue) => {
+            setFontSizeInput(optionValue);
+            const size = parseInt(optionValue);
+            if (!isNaN(size)) {
+              onFontSizeChange(size);
+            }
+            fontSizeCombobox.closeDropdown();
+          }}
+          store={fontSizeCombobox}
+          withinPortal={false}
+        >
+          <Combobox.Target>
+            <TextInput
+              label="Font Size"
+              placeholder="Type or select font size (8-200)"
+              value={fontSizeInput}
+              onChange={(event) => {
+                const value = event.currentTarget.value;
+                setFontSizeInput(value);
 
-              // Parse and validate the typed value in real-time
-              const size = parseInt(value);
-              if (!isNaN(size) && size >= 8 && size <= 72) {
-                onFontSizeChange(size);
+                // Parse and validate the typed value in real-time
+                const size = parseInt(value);
+                if (!isNaN(size) && size >= 8 && size <= 200) {
+                  onFontSizeChange(size);
+                }
+
+                fontSizeCombobox.openDropdown();
+                fontSizeCombobox.updateSelectedOptionIndex();
+              }}
+              onClick={() => fontSizeCombobox.openDropdown()}
+              onFocus={() => fontSizeCombobox.openDropdown()}
+              onBlur={() => {
+                fontSizeCombobox.closeDropdown();
+                // Clean up invalid values on blur
+                const size = parseInt(fontSizeInput);
+                if (isNaN(size) || size < 8 || size > 200) {
+                  setFontSizeInput(fontSize.toString());
+                } else {
+                  onFontSizeChange(size);
+                }
+              }}
+              disabled={disabled}
+            />
+          </Combobox.Target>
+
+          <Combobox.Dropdown>
+            <Combobox.Options>
+              {fontSizeOptions.map((size) => (
+                <Combobox.Option value={size} key={size}>
+                  {size}px
+                </Combobox.Option>
+              ))}
+            </Combobox.Options>
+          </Combobox.Dropdown>
+        </Combobox>
+
+        {/* Text Color Picker */}
+        {onTextColorChange && (
+          <Box>
+            <TextInput
+              label="Text Color"
+              value={textColor}
+              readOnly
+              disabled={disabled}
+              onClick={() => !disabled && setIsColorPickerOpen(true)}
+              style={{ cursor: disabled ? 'default' : 'pointer' }}
+              rightSection={
+                <Box
+                  style={{
+                    width: 24,
+                    height: 24,
+                    backgroundColor: textColor,
+                    border: '1px solid #ccc',
+                    borderRadius: 4,
+                    cursor: disabled ? 'default' : 'pointer'
+                  }}
+                />
               }
+            />
+          </Box>
+        )}
+      </Group>
 
-              fontSizeCombobox.openDropdown();
-              fontSizeCombobox.updateSelectedOptionIndex();
-            }}
-            onClick={() => fontSizeCombobox.openDropdown()}
-            onFocus={() => fontSizeCombobox.openDropdown()}
-            onBlur={() => {
-              fontSizeCombobox.closeDropdown();
-              // Clean up invalid values on blur
-              const size = parseInt(fontSizeInput);
-              if (isNaN(size) || size < 8 || size > 72) {
-                setFontSizeInput(fontSize.toString());
-              }
-            }}
-            disabled={disabled}
-          />
-        </Combobox.Target>
-
-        <Combobox.Dropdown>
-          <Combobox.Options>
-            {fontSizeOptions.map((size) => (
-              <Combobox.Option value={size} key={size}>
-                {size}px
-              </Combobox.Option>
-            ))}
-          </Combobox.Options>
-        </Combobox.Dropdown>
-      </Combobox>
+      {/* Color Picker Modal */}
+      {onTextColorChange && (
+        <ColorPicker
+          isOpen={isColorPickerOpen}
+          onClose={() => setIsColorPickerOpen(false)}
+          selectedColor={textColor}
+          onColorChange={onTextColorChange}
+        />
+      )}
     </Stack>
   );
 };
