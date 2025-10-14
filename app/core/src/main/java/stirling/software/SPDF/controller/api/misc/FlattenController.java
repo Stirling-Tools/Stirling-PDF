@@ -74,18 +74,17 @@ public class FlattenController {
             Integer configuredMaxDpi = null;
             if (properties != null && properties.getSystem() != null) {
                 configuredMaxDpi = properties.getSystem().getMaxDPI();
-                if (configuredMaxDpi > 0) {
-                    defaultRenderDpi = configuredMaxDpi;
-                }
             }
 
+            int maxDpi =
+                    (configuredMaxDpi != null && configuredMaxDpi > 0)
+                            ? configuredMaxDpi
+                            : defaultRenderDpi;
+
             Integer requestedDpi = request.getRenderDpi();
-            int renderDpi = defaultRenderDpi;
+            int renderDpi = maxDpi;
             if (requestedDpi != null) {
-                renderDpi = requestedDpi;
-                if (configuredMaxDpi != null && configuredMaxDpi > 0) {
-                    renderDpi = Math.min(renderDpi, configuredMaxDpi);
-                }
+                renderDpi = Math.min(requestedDpi, maxDpi);
                 renderDpi = Math.max(renderDpi, 72);
             }
 
