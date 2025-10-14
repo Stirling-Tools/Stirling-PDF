@@ -11,6 +11,7 @@ import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-d
 import { PDFPage, PDFDocument } from '../../types/pageEditor';
 import { useThumbnailGeneration } from '../../hooks/useThumbnailGeneration';
 import { useFilesModalContext } from '../../contexts/FilesModalContext';
+import { getFileColorWithOpacity } from './fileColors';
 import styles from './PageEditor.module.css';
 
 
@@ -19,6 +20,7 @@ interface PageThumbnailProps {
   index: number;
   totalPages: number;
   originalFile?: File;
+  fileColorIndex: number;
   selectedPageIds: string[];
   selectionMode: boolean;
   movingPage: number | null;
@@ -45,6 +47,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
   index,
   totalPages,
   originalFile,
+  fileColorIndex,
   selectedPageIds,
   selectionMode,
   movingPage,
@@ -272,6 +275,8 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
     setMouseStartPos(null);
   }, []);
 
+  const fileColorBorder = getFileColorWithOpacity(fileColorIndex, 0.5);
+
   return (
     <div
       ref={pageElementRef}
@@ -290,14 +295,12 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
         hover:shadow-md
         transition-all
         relative
-        ${selectionMode
-          ? 'bg-white hover:bg-gray-50'
-          : 'bg-white hover:bg-gray-50'}
+        bg-white hover:bg-gray-50
         ${isDragging ? 'opacity-50 scale-95' : ''}
         ${movingPage === page.pageNumber ? 'page-moving' : ''}
       `}
       style={{
-        transition: isAnimating ? 'none' : 'transform 0.2s ease-in-out'
+        transition: isAnimating ? 'none' : 'transform 0.2s ease-in-out',
       }}
       draggable={false}
       onMouseDown={handleMouseDown}
@@ -346,7 +349,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
             height: '100%',
             backgroundColor: 'var(--mantine-color-gray-1)',
             borderRadius: 6,
-            border: '1px solid var(--mantine-color-gray-3)',
+            border: `4px solid ${fileColorBorder}`,
             padding: 4,
             display: 'flex',
             alignItems: 'center',

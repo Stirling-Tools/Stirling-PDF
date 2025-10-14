@@ -75,11 +75,7 @@ const createViewOptions = (
 
   let pageEditorDisplayName = 'Page Editor';
   if (isInPageEditor && pageEditorState) {
-    if (pageEditorState.selectedCount === pageEditorState.totalCount) {
-      pageEditorDisplayName = `${pageEditorState.selectedCount} file${pageEditorState.selectedCount !== 1 ? 's' : ''}`;
-    } else {
-      pageEditorDisplayName = `${pageEditorState.selectedCount}/${pageEditorState.totalCount} selected`;
-    }
+    pageEditorDisplayName = `${pageEditorState.selectedCount}/${pageEditorState.totalCount} selected`;
   }
 
   const pageEditorOption = {

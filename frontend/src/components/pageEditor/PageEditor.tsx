@@ -44,7 +44,7 @@ const PageEditor = ({
   const { setHasUnsavedChanges } = useNavigationGuard();
 
   // Get selected files from PageEditorContext instead of all files
-  const { selectedFileIds, syncWithFileContext } = usePageEditor();
+  const { selectedFileIds, syncWithFileContext, updateCurrentPages, reorderedPages, clearReorderedPages, updateFileOrderFromPages } = usePageEditor();
 
   // Stable reference to file IDs to prevent infinite loops
   const fileIdsString = state.files.ids.join(',');
@@ -136,6 +136,56 @@ const PageEditor = ({
 
   // Interface functions for parent component
   const displayDocument = editedDocument || mergedPdfDocument;
+
+  // Update current pages in context whenever displayDocument changes
+  useEffect(() => {
+    if (displayDocument?.pages) {
+      updateCurrentPages(displayDocument.pages);
+    }
+  }, [displayDocument?.pages, updateCurrentPages]);
+
+  // Apply reordered pages from file reordering
+  useEffect(() => {
+    if (reorderedPages && reorderedPages.length > 0 && displayDocument) {
+      // Create a new document with reordered pages
+      const reorderedDocument: PDFDocument = {
+        ...displayDocument,
+        pages: reorderedPages,
+        totalPages: reorderedPages.length,
+      };
+      setEditedDocument(reorderedDocument);
+      clearReorderedPages();
+    }
+  }, [reorderedPages, displayDocument, clearReorderedPages]);
+
+  // Update file order when pages are manually reordered
+  useEffect(() => {
+    if (editedDocument?.pages && editedDocument.pages.length > 0 && activeFileIds.length > 1) {
+      // Compute the file order based on page positions
+      const fileFirstPagePositions = new Map<FileId, number>();
+      editedDocument.pages.forEach((page, index) => {
+        const fileId = page.originalFileId;
+        if (!fileId) return;
+        if (!fileFirstPagePositions.has(fileId)) {
+          fileFirstPagePositions.set(fileId, index);
+        }
+      });
+
+      // Sort files by their first page position
+      const computedFileOrder = Array.from(fileFirstPagePositions.entries())
+        .sort((a, b) => a[1] - b[1])
+        .map(entry => entry[0]);
+
+      // Check if the order has actually changed
+      const currentFileOrder = state.files.ids.filter(id => selectedFileIds.has(id));
+      const orderChanged = computedFileOrder.length !== currentFileOrder.length ||
+        computedFileOrder.some((id, index) => id !== currentFileOrder[index]);
+
+      if (orderChanged && computedFileOrder.length > 0) {
+        updateFileOrderFromPages(editedDocument.pages);
+      }
+    }
+  }, [editedDocument?.pages, activeFileIds.length, state.files.ids, selectedFileIds, updateFileOrderFromPages]);
 
   // Utility functions to convert between page IDs and page numbers
   const getPageNumbersFromIds = useCallback((pageIds: string[]): number[] => {
@@ -679,6 +729,15 @@ const PageEditor = ({
   // Display all pages - use edited or original document
   const displayedPages = displayDocument?.pages || [];
 
+  // Create a mapping of fileId to color index for page highlighting
+  const fileColorIndexMap = useMemo(() => {
+    const map = new Map<FileId, number>();
+    activeFileIds.forEach((fileId, index) => {
+      map.set(fileId, index);
+    });
+    return map;
+  }, [activeFileIds]);
+
   return (
     <Box pos="relative" h='100%' style={{ overflow: 'auto' }} data-scrolling-container="true">
       <LoadingOverlay visible={globalProcessing && !mergedPdfDocument} />
@@ -767,34 +826,38 @@ const PageEditor = ({
             selectionMode={selectionMode}
             isAnimating={isAnimating}
             onReorderPages={handleReorderPages}
-            renderItem={(page, index, refs) => (
-              <PageThumbnail
-                key={page.id}
-                page={page}
-                index={index}
-                totalPages={displayDocument.pages.length}
-                originalFile={(page as any).originalFileId ? selectors.getFile((page as any).originalFileId) : undefined}
-                selectedPageIds={selectedPageIds}
-                selectionMode={selectionMode}
-                movingPage={movingPage}
-                isAnimating={isAnimating}
-                pageRefs={refs}
-                onReorderPages={handleReorderPages}
-                onTogglePage={togglePage}
-                onAnimateReorder={animateReorder}
-                onExecuteCommand={executeCommand}
-                onSetStatus={() => {}}
-                onSetMovingPage={setMovingPage}
-                onDeletePage={handleDeletePage}
-                createRotateCommand={createRotateCommand}
-                createDeleteCommand={createDeleteCommand}
-                createSplitCommand={createSplitCommand}
-                pdfDocument={displayDocument}
-                setPdfDocument={setEditedDocument}
-                splitPositions={splitPositions}
-                onInsertFiles={handleInsertFiles}
-              />
-            )}
+            renderItem={(page, index, refs) => {
+              const fileColorIndex = page.originalFileId ? fileColorIndexMap.get(page.originalFileId) ?? 0 : 0;
+              return (
+                <PageThumbnail
+                  key={page.id}
+                  page={page}
+                  index={index}
+                  totalPages={displayDocument.pages.length}
+                  originalFile={(page as any).originalFileId ? selectors.getFile((page as any).originalFileId) : undefined}
+                  fileColorIndex={fileColorIndex}
+                  selectedPageIds={selectedPageIds}
+                  selectionMode={selectionMode}
+                  movingPage={movingPage}
+                  isAnimating={isAnimating}
+                  pageRefs={refs}
+                  onReorderPages={handleReorderPages}
+                  onTogglePage={togglePage}
+                  onAnimateReorder={animateReorder}
+                  onExecuteCommand={executeCommand}
+                  onSetStatus={() => {}}
+                  onSetMovingPage={setMovingPage}
+                  onDeletePage={handleDeletePage}
+                  createRotateCommand={createRotateCommand}
+                  createDeleteCommand={createDeleteCommand}
+                  createSplitCommand={createSplitCommand}
+                  pdfDocument={displayDocument}
+                  setPdfDocument={setEditedDocument}
+                  splitPositions={splitPositions}
+                  onInsertFiles={handleInsertFiles}
+                />
+              );
+            }}
           />
 
         </Box>
