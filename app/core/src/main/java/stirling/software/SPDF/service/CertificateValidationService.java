@@ -461,43 +461,6 @@ public class CertificateValidationService {
         log.info("EUTL loading not yet implemented");
     }
 
-    // ==================== Legacy/Compatibility Methods ====================
-
-    /**
-     * @deprecated Use buildAndValidatePath() instead
-     */
-    @Deprecated
-    public boolean validateCertificateChain(X509Certificate cert) {
-        try {
-            buildAndValidatePath(cert, Collections.emptyList(), null, new Date());
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
-    /**
-     * @deprecated Use buildAndValidatePath() with custom anchor
-     */
-    @Deprecated
-    public boolean validateCertificateChainWithCustomCert(
-            X509Certificate cert, X509Certificate customCert) {
-        try {
-            buildAndValidatePath(cert, Collections.emptyList(), customCert, new Date());
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
-    /**
-     * @deprecated Use isOutsideValidityPeriod()
-     */
-    @Deprecated
-    public boolean isRevoked(X509Certificate cert) {
-        return isOutsideValidityPeriod(cert, new Date());
-    }
-
     /** Get signing trust store */
     public KeyStore getSigningTrustStore() {
         return signingTrustAnchors;

@@ -192,11 +192,9 @@ public class ValidateSignatureController {
 
                         if (!revocationEnabled) {
                             result.setRevocationStatus("not-checked");
-                            result.setNotRevoked(false); // Unknown, not checked
                         } else if (chainValid && trustValid) {
                             // Path building succeeded with revocation enabled = no revocation found
                             result.setRevocationStatus("good");
-                            result.setNotRevoked(true);
                         } else if (result.getChainValidationError() != null
                                 && result.getChainValidationError()
                                         .toLowerCase()
@@ -206,15 +204,11 @@ public class ValidateSignatureController {
                                     .toLowerCase()
                                     .contains("unable to check")) {
                                 result.setRevocationStatus("soft-fail");
-                                result.setNotRevoked(
-                                        false); // Treat soft-fail as potentially revoked
                             } else {
                                 result.setRevocationStatus("revoked");
-                                result.setNotRevoked(false);
                             }
                         } else {
                             result.setRevocationStatus("unknown");
-                            result.setNotRevoked(false);
                         }
 
                         // Set basic signature info

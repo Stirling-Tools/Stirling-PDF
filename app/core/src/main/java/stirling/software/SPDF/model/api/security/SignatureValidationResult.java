@@ -19,7 +19,6 @@ public class SignatureValidationResult {
     private boolean notExpired;
 
     // Revocation validation
-    private boolean notRevoked; // Deprecated: use revocationStatus instead
     private boolean revocationChecked; // true if PKIX revocation was enabled
     private String revocationStatus; // "not-checked" | "good" | "revoked" | "soft-fail" | "unknown"
 
