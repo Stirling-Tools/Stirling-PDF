@@ -727,7 +727,6 @@ class PdfContainer {
 
     for (const [doc, entry] of docPageMap.entries()) {
       entry.copiedPages = await pdfDoc.copyPages(doc, entry.indices);
-      entry.cursor = 0;
     }
 
     for (var i = 0; i < pageContainers.length; i++) {
