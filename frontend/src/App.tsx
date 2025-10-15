@@ -48,34 +48,34 @@ function ScarfTrackingInitializer() {
 export default function App() {
   return (
     <Suspense fallback={<LoadingFallback />}>
-      <RainbowThemeProvider>
-        <ErrorBoundary>
-          <AppConfigProvider>
-            <ScarfTrackingInitializer />
-            <PreferencesProvider>
+      <PreferencesProvider>
+        <RainbowThemeProvider>
+          <ErrorBoundary>
+            <AppConfigProvider>
+              <ScarfTrackingInitializer />
               <FileContextProvider enableUrlSync={true} enablePersistence={true}>
-              <NavigationProvider>
-                <FilesModalProvider>
-                  <ToolWorkflowProvider>
-                    <HotkeyProvider>
-                      <SidebarProvider>
-                        <ViewerProvider>
-                          <SignatureProvider>
-                            <RightRailProvider>
-                              <HomePage />
-                            </RightRailProvider>
-                          </SignatureProvider>
-                        </ViewerProvider>
-                      </SidebarProvider>
-                    </HotkeyProvider>
-                  </ToolWorkflowProvider>
-                </FilesModalProvider>
-              </NavigationProvider>
-            </FileContextProvider>
-          </PreferencesProvider>
-          </AppConfigProvider>
-        </ErrorBoundary>
-      </RainbowThemeProvider>
+                <NavigationProvider>
+                  <FilesModalProvider>
+                    <ToolWorkflowProvider>
+                      <HotkeyProvider>
+                        <SidebarProvider>
+                          <ViewerProvider>
+                            <SignatureProvider>
+                              <RightRailProvider>
+                                <HomePage />
+                              </RightRailProvider>
+                            </SignatureProvider>
+                          </ViewerProvider>
+                        </SidebarProvider>
+                      </HotkeyProvider>
+                    </ToolWorkflowProvider>
+                  </FilesModalProvider>
+                </NavigationProvider>
+              </FileContextProvider>
+            </AppConfigProvider>
+          </ErrorBoundary>
+        </RainbowThemeProvider>
+      </PreferencesProvider>
     </Suspense>
   );
 }
