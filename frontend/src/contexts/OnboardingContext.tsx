@@ -14,20 +14,20 @@ interface OnboardingContextValue {
 const OnboardingContext = createContext<OnboardingContextValue | undefined>(undefined);
 
 export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { preferences, updatePreference, isLoading } = usePreferences();
+  const { preferences, updatePreference } = usePreferences();
   const [isOpen, setIsOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
 
   // Auto-start tour for first-time users after preferences load
   useEffect(() => {
-    if (!isLoading && !preferences.hasCompletedOnboarding) {
+    if (!preferences.hasCompletedOnboarding) {
       // Small delay to ensure UI is rendered
       const timer = setTimeout(() => {
         setIsOpen(true);
       }, 500);
       return () => clearTimeout(timer);
     }
-  }, [isLoading, preferences.hasCompletedOnboarding]);
+  }, [preferences.hasCompletedOnboarding]);
 
   const startTour = useCallback(() => {
     setCurrentStep(0);
@@ -38,13 +38,13 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     setIsOpen(false);
   }, []);
 
-  const completeTour = useCallback(async () => {
+  const completeTour = useCallback(() => {
     setIsOpen(false);
-    await updatePreference('hasCompletedOnboarding', true);
+    updatePreference('hasCompletedOnboarding', true);
   }, [updatePreference]);
 
-  const resetTour = useCallback(async () => {
-    await updatePreference('hasCompletedOnboarding', false);
+  const resetTour = useCallback(() => {
+    updatePreference('hasCompletedOnboarding', false);
     setCurrentStep(0);
     setIsOpen(true);
   }, [updatePreference]);
