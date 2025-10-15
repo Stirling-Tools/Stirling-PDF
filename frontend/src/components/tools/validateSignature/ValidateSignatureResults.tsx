@@ -5,6 +5,7 @@ import type { SignatureValidationReportEntry } from '../../../types/validateSign
 import type { ValidateSignatureOperationHook } from '../../../hooks/tools/validateSignature/useValidateSignatureOperation';
 import './reportView/styles.css';
 import FitText from '../../shared/FitText';
+import { SuggestedToolsSection } from '../shared/SuggestedToolsSection';
 
 interface ValidateSignatureResultsProps {
   operation: ValidateSignatureOperationHook;
@@ -204,21 +205,22 @@ const ValidateSignatureResults = ({
           onChange={(v) => setSelectedType(v as 'pdf' | 'csv' | 'json')}
           data={downloadTypeOptions}
         />
-        <div>
-          <Button
-            color="blue"
-            onClick={() => selectedFile && handleDownload(selectedFile)}
-            disabled={!selectedFile}
-          >
-            {selectedDownloadLabel}
-          </Button>
-        </div>
+        <Button
+          color="blue"
+          onClick={() => selectedFile && handleDownload(selectedFile)}
+          disabled={!selectedFile}
+          fullWidth
+        >
+          {selectedDownloadLabel}
+        </Button>
         {selectedType === 'pdf' && !pdfFile && (
           <Text size="xs" c="dimmed">
             {t('validateSignature.report.noPdf', 'PDF report will be available after a successful validation.')}
           </Text>
         )}
       </Stack>
+
+      <SuggestedToolsSection />
     </Stack>
   );
 };
