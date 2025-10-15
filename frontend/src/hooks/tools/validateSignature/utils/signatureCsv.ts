@@ -9,7 +9,8 @@ const buildCsvRows = (entries: SignatureValidationReportEntry[]): string[][] => 
     'chainValid',
     'trustValid',
     'notExpired',
-    'notRevoked',
+    'revocationChecked',
+    'revocationStatus',
     'signerName',
     'signatureDate',
     'reason',
@@ -39,7 +40,8 @@ const buildCsvRows = (entries: SignatureValidationReportEntry[]): string[][] => 
           booleanToString(signature.chainValid),
           booleanToString(signature.trustValid),
           booleanToString(signature.notExpired),
-          booleanToString(signature.notRevoked),
+          booleanToString(signature.revocationChecked),
+          signature.revocationStatus || '',
           signature.signerName || '',
           signature.signatureDate || '',
           signature.reason || '',
@@ -60,6 +62,7 @@ const buildCsvRows = (entries: SignatureValidationReportEntry[]): string[][] => 
     } else {
       rows.push([
         fileResult.fileName,
+        '',
         '',
         '',
         '',

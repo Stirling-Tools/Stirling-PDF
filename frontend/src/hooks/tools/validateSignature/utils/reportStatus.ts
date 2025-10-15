@@ -20,9 +20,8 @@ export const deriveEntryStatus = (
     };
   }
 
-  const allValid = entry.signatures.every(
-    (sig) => sig.valid && sig.chainValid && sig.trustValid && sig.notExpired && sig.notRevoked
-  );
+  // File-level status is Valid only if every signature is cryptographically valid.
+  const allValid = entry.signatures.every((sig) => sig.valid);
 
   if (allValid) {
     return {
@@ -32,7 +31,7 @@ export const deriveEntryStatus = (
   }
 
   return {
-    text: t('validateSignature.status.reviewMissingFields', 'Needs Attention: Missing Fields'),
-    color: colorPalette.warning,
+    text: t('validateSignature.status.invalid', 'Invalid'),
+    color: colorPalette.danger,
   };
 };

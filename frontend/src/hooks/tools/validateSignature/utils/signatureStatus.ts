@@ -39,36 +39,18 @@ export const computeSignatureStatus = (
     trustIssues.push(t('validateSignature.issue.certExpired', 'Certificate expired'));
   }
 
-  // Use new revocationStatus field if available, fallback to notRevoked for backward compatibility
-  const revStatus = signature.revocationStatus || (signature.notRevoked ? 'good' : 'unknown');
+  // Use revocationStatus from backend; default to 'unknown' when absent
+  const revStatus = signature.revocationStatus ?? 'unknown';
   if (revStatus === 'revoked') {
     trustIssues.push(t('validateSignature.issue.certRevoked', 'Certificate revoked'));
   } else if (revStatus === 'soft-fail') {
     trustIssues.push(t('validateSignature.issue.certRevocationUnknown', 'Certificate revocation status unknown'));
   }
-  // Don't report anything for 'not-checked', 'good', or 'unknown' unless actually revoked
 
-  // Check for missing common metadata fields
-  const missing: string[] = [];
-  if (!signature.signerName || signature.signerName.trim().length === 0) missing.push(t('validateSignature.signer', 'Signer'));
-  if (!signature.reason || signature.reason.trim().length === 0) missing.push(t('validateSignature.reason', 'Reason'));
-  if (!signature.location || signature.location.trim().length === 0) missing.push(t('validateSignature.location', 'Location'));
-
-  // Aggregate all issues for details UI
+  // Aggregate all issues for details UI (ignore missing metadata fields; they are optional)
   issues.push(...trustIssues);
-  if (missing.length > 0) {
-    issues.push(t('validateSignature.issue.missingFields', 'Missing fields') + `: ${missing.join(', ')}`);
-  }
 
-  if (issues.length === 0) {
-    return {
-      kind: 'valid',
-      label: t('validateSignature.status.validFull', 'Fully Valid'),
-      details: [],
-    };
-  }
-
-  // Invalid ONLY when cryptographic signature itself failed or an explicit backend error occurred
+  // If cryptographic validation failed, mark as Invalid
   if (!signature.valid) {
     return {
       kind: 'invalid',
@@ -77,29 +59,10 @@ export const computeSignatureStatus = (
     };
   }
 
-  // Otherwise, it's a signed document with issues
-  const onlyMissing = missing.length > 0 && trustIssues.length === 0;
-  const onlyTrust = missing.length === 0 && trustIssues.length > 0;
-
-  if (onlyMissing) {
-    return {
-      kind: 'warning',
-      label: t('validateSignature.status.missingFields', 'Needs Attention: Missing Fields'),
-      details: issues,
-    };
-  }
-
-  if (onlyTrust) {
-    return {
-      kind: 'warning',
-      label: t('validateSignature.status.trustIssues', 'Needs Attention: Trust/Chain'),
-      details: issues,
-    };
-  }
-
+  // Otherwise, mark as Valid regardless of optional field presence and trust warnings
   return {
-    kind: 'warning',
-    label: t('validateSignature.status.needsAttention', 'Needs Attention'),
+    kind: 'valid',
+    label: t('validateSignature.status.valid', 'Valid'),
     details: issues,
   };
 };

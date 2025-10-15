@@ -25,13 +25,8 @@ const useFileSummary = (results: SignatureValidationReportEntry[]) => {
     results.forEach((result) => {
       signatureCount += result.signatures.length;
       result.signatures.forEach((signature) => {
-        const isFullyValid =
-          signature.valid &&
-          signature.chainValid &&
-          signature.trustValid &&
-          signature.notExpired &&
-          signature.notRevoked;
-        if (isFullyValid) {
+        const isValid = signature.valid;
+        if (isValid) {
           fullyValidCount += 1;
         }
       });
@@ -157,7 +152,7 @@ const ValidateSignatureResults = ({
             : hasSignatures
             ? allValid
               ? t('validateSignature.status.valid', 'Valid')
-              : t('validateSignature.status.needsAttention', 'Needs Attention')
+              : t('validateSignature.status.invalid', 'Invalid')
             : t('validateSignature.noSignaturesShort', 'No signatures');
           const badgeClass = hasError
             ? 'status-badge status-badge--invalid'

@@ -59,6 +59,12 @@ export const normalizeBackendResult = (
   chainValid: Boolean(item.chainValid),
   trustValid: Boolean(item.trustValid),
   notExpired: Boolean(item.notExpired),
+  revocationChecked:
+    item.revocationChecked === null || item.revocationChecked === undefined
+      ? null
+      : Boolean(item.revocationChecked),
+  revocationStatus: item.revocationStatus ? coerceString(item.revocationStatus) : null,
+  validationTimeSource: item.validationTimeSource ? coerceString(item.validationTimeSource) : null,
   signerName: coerceString(item.signerName),
   signatureDate: coerceString(item.signatureDate),
   reason: coerceString(item.reason),
