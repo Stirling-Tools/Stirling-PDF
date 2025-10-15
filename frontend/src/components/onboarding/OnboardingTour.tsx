@@ -204,21 +204,46 @@ export default function OnboardingTour() {
   // Convert to array using enum's numeric ordering
   const steps = Object.values(stepsConfig);
 
+  const advanceTour = ({ setCurrentStep, currentStep, steps, setIsOpen }: {
+    setCurrentStep: (value: number | ((prev: number) => number)) => void;
+    currentStep: number;
+    steps?: StepType[];
+    setIsOpen: (value: boolean) => void;
+  }) => {
+    if (steps && currentStep === steps.length - 1) {
+      setIsOpen(false);
+      restoreWorkbenchState();
+      completeTour();
+    } else if (steps) {
+      setCurrentStep((s) => (s === steps.length - 1 ? 0 : s + 1));
+    }
+  };
+
+  const handleCloseTour = ({ setIsOpen }: { setIsOpen: (value: boolean) => void }) => {
+    setIsOpen(false);
+    restoreWorkbenchState();
+    closeTour();
+  };
+
   return (
     <TourProvider
       steps={steps}
-      onClickClose={({ setIsOpen }) => {
-        setIsOpen(false);
-        restoreWorkbenchState();
-        closeTour();
+      onClickClose={handleCloseTour}
+      onClickMask={advanceTour}
+      onClickHighlighted={(e, clickProps) => {
+        e.stopPropagation();
+        advanceTour(clickProps);
       }}
-      onClickMask={({ setCurrentStep, currentStep, steps, setIsOpen }) => {
-        if (steps && currentStep === steps.length - 1) {
-          setIsOpen(false);
-          restoreWorkbenchState();
-          completeTour();
-        } else if (steps) {
-          setCurrentStep((s) => (s === steps.length - 1 ? 0 : s + 1));
+      keyboardHandler={(e, clickProps, status) => {
+        // Handle right arrow key to advance tour
+        if (e.key === 'ArrowRight' && !status?.isRightDisabled && clickProps) {
+          e.preventDefault();
+          advanceTour(clickProps);
+        }
+        // Handle escape key to close tour
+        else if (e.key === 'Escape' && !status?.isEscDisabled && clickProps) {
+          e.preventDefault();
+          handleCloseTour(clickProps);
         }
       }}
       styles={{
@@ -249,7 +274,6 @@ export default function OnboardingTour() {
       showBadge={false}
       showCloseButton={true}
       disableInteraction={true}
-      disableKeyboardNavigation={['left']}
       disableDotsNavigation={true}
       prevButton={() => null}
       nextButton={({ currentStep, stepsLength, setCurrentStep, setIsOpen }) => {
@@ -258,19 +282,13 @@ export default function OnboardingTour() {
         return (
           <ActionIcon
             onClick={() => {
-              if (isLast) {
-                setIsOpen(false);
-                restoreWorkbenchState();
-                completeTour();
-              } else {
-                setCurrentStep(Math.min(stepsLength - 1, currentStep + 1));
-              }
+              advanceTour({ setCurrentStep, currentStep, steps, setIsOpen });
             }}
             variant="subtle"
             size="lg"
             aria-label={isLast ? t('onboarding.finish', 'Finish') : t('onboarding.next', 'Next')}
           >
-            {isLast ? <CheckIcon sx={{ fontSize: '1.25rem' }} /> : <ArrowForwardIcon sx={{ fontSize: '1.25rem' }} />}
+            {isLast ? <CheckIcon /> : <ArrowForwardIcon />}
           </ActionIcon>
         );
       }}
