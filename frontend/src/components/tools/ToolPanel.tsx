@@ -103,7 +103,7 @@ export default function ToolPanel() {
     <div
       ref={toolPanelRef}
       data-sidebar="tool-panel"
-      data-tour="tool-panel"
+      data-tour={fullscreenExpanded ? undefined : "tool-panel"}
       className={`tool-panel flex flex-col ${fullscreenExpanded ? 'tool-panel--fullscreen-active' : 'overflow-hidden'} bg-[var(--bg-toolbar)] border-r border-[var(--border-subtle)] transition-all duration-300 ease-out ${
         isRainbowMode ? rainbowStyles.rainbowPaper : ''
       } ${isMobile ? 'h-full border-r-0' : 'h-screen'} ${fullscreenExpanded ? 'tool-panel--fullscreen' : ''}`}
