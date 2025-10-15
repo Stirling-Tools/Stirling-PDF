@@ -1,17 +1,16 @@
-import { DEFAULT_TOOL_PANEL_MODE } from '../constants/toolPanel';
-import { getSystemTheme } from '../constants/theme';
-import {
-  PreferencesVersion,
-  CURRENT_PREFERENCES_VERSION,
-  runMigrations,
-  needsMigration,
-  type CurrentPreferences,
-} from './preferencesMigrations';
+import { type ToolPanelMode, DEFAULT_TOOL_PANEL_MODE } from '../constants/toolPanel';
+import { type ThemeMode, getSystemTheme } from '../constants/theme';
 
-export type UserPreferences = CurrentPreferences;
+export interface UserPreferences {
+  autoUnzip: boolean;
+  autoUnzipFileLimit: number;
+  defaultToolPanelMode: ToolPanelMode;
+  theme: ThemeMode;
+  toolPanelModePromptSeen: boolean;
+  showLegacyToolDescriptions: boolean;
+}
 
 export const DEFAULT_PREFERENCES: UserPreferences = {
-  version: CURRENT_PREFERENCES_VERSION,
   autoUnzip: true,
   autoUnzipFileLimit: 4,
   defaultToolPanelMode: DEFAULT_TOOL_PANEL_MODE,
@@ -60,41 +59,59 @@ class PreferencesService {
   getAllPreferences(): UserPreferences {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
-      let preferences: Partial<CurrentPreferences>;
-
       if (stored) {
-        preferences = JSON.parse(stored) as Partial<CurrentPreferences>;
-        const currentVersion = (preferences.version ?? PreferencesVersion.V0) as PreferencesVersion;
-
-        // Check if migration is needed
-        if (needsMigration(currentVersion)) {
-          console.log(`Migrating preferences from version ${currentVersion} to ${CURRENT_PREFERENCES_VERSION}`);
-          preferences = runMigrations(currentVersion, preferences);
-
-          // Save migrated preferences
-          try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(preferences));
-          } catch (error) {
-            console.error('Error saving migrated preferences:', error);
-          }
-        }
-      } else {
-        // No stored preferences - check for legacy keys and migrate
-        preferences = runMigrations(PreferencesVersion.V0, {});
-
-        // Save migrated preferences (at minimum, the version number)
-        try {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(preferences));
-        } catch (error) {
-          console.error('Error saving migrated preferences:', error);
-        }
+        const preferences = JSON.parse(stored) as Partial<UserPreferences>;
+        // Merge with defaults to ensure all preferences exist
+        return {
+          ...DEFAULT_PREFERENCES,
+          ...preferences,
+        };
       }
 
-      // Merge with defaults to ensure all preferences exist
-      return {
+      // Migration: Check for old localStorage keys and migrate them
+      const migrations: Partial<UserPreferences> = {};
+
+      // Migrate old theme key
+      const oldTheme = localStorage.getItem('stirling-theme');
+      if (oldTheme && ['light', 'dark', 'rainbow'].includes(oldTheme)) {
+        migrations.theme = oldTheme as ThemeMode;
+      }
+
+      // Migrate old tool panel mode preference
+      const oldToolPanelMode = localStorage.getItem('toolPanelModePreference');
+      if (oldToolPanelMode && ['sidebar', 'fullscreen'].includes(oldToolPanelMode)) {
+        migrations.defaultToolPanelMode = oldToolPanelMode as ToolPanelMode;
+      }
+
+      // Migrate old tool panel mode prompt seen flag
+      const oldPromptSeen = localStorage.getItem('toolPanelModePromptSeen');
+      if (oldPromptSeen === 'true') {
+        migrations.toolPanelModePromptSeen = true;
+      }
+
+      // Migrate old legacy tool descriptions preference
+      const oldLegacyDescriptions = localStorage.getItem('legacyToolDescriptions');
+      if (oldLegacyDescriptions === 'true') {
+        migrations.showLegacyToolDescriptions = true;
+      }
+
+      const migratedPreferences = {
         ...DEFAULT_PREFERENCES,
-        ...preferences,
+        ...migrations,
       };
+
+      // If we migrated any values, save them to the new unified key
+      if (Object.keys(migrations).length > 0) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(migratedPreferences));
+
+        // Clean up old keys
+        localStorage.removeItem('stirling-theme');
+        localStorage.removeItem('toolPanelModePreference');
+        localStorage.removeItem('toolPanelModePromptSeen');
+        localStorage.removeItem('legacyToolDescriptions');
+      }
+
+      return migratedPreferences;
     } catch (error) {
       console.error('Error reading all preferences:', error);
       return { ...DEFAULT_PREFERENCES };
