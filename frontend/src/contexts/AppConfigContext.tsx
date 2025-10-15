@@ -60,7 +60,6 @@ export const AppConfigProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
       const data: AppConfig = await response.json();
       setConfig(data);
-      console.warn('[AppConfig] Fetched app config:', data);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
       setError(errorMessage);

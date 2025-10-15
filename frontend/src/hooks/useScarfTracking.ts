@@ -19,7 +19,6 @@ export function useScarfTracking() {
 
   // Update scarf config whenever config or consent changes
   useEffect(() => {
-    console.warn('[useScarfTracking] Updating scarf config:', { enableScarf: config?.enableScarf, isServiceAccepted });
     if (config && config.enableScarf !== undefined) {
       setScarfConfig(config.enableScarf, isServiceAccepted);
     }

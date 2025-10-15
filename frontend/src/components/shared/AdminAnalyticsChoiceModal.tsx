@@ -2,15 +2,17 @@ import { Modal, Stack, Button, Text, Title, Anchor } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
 import { Z_ANALYTICS_MODAL } from '../../styles/zIndex';
+import { useAppConfig } from '../../contexts/AppConfigContext';
 import apiClient from '../../services/apiClient';
 
 interface AdminAnalyticsChoiceModalProps {
   opened: boolean;
-  onClose?: () => void;
+  onClose: () => void;
 }
 
-export default function AdminAnalyticsChoiceModal({ opened }: AdminAnalyticsChoiceModalProps) {
+export default function AdminAnalyticsChoiceModal({ opened, onClose }: AdminAnalyticsChoiceModalProps) {
   const { t } = useTranslation();
+  const { refetch } = useAppConfig();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -19,14 +21,16 @@ export default function AdminAnalyticsChoiceModal({ opened }: AdminAnalyticsChoi
     setError(null);
 
     try {
-     const formData = new FormData();
+      const formData = new FormData();
       formData.append('enabled', enableAnalytics.toString());
 
       await apiClient.post('/api/v1/settings/update-enable-analytics', formData);
 
+      // Refetch config to apply new settings without page reload
+      await refetch();
 
-      // Reload the page to apply new settings
-      window.location.reload();
+      // Close the modal after successful save
+      onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error occurred');
       setLoading(false);

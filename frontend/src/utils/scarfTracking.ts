@@ -46,7 +46,6 @@ export function setScarfConfig(
  * @param pathname - The pathname to track (usually window.location.pathname)
  */
 export function firePixel(pathname: string): void {
-  console.warn('[scarfTracking]Firing with Current config:', { enableScarf, isServiceAccepted });
   // Dev-mode warning if called before initialization
   if (!configured) {
     console.warn(
@@ -82,7 +81,6 @@ export function firePixel(pathname: string): void {
   const img = new Image();
   img.referrerPolicy = "no-referrer-when-downgrade";
   img.src = url;
-  console.warn('[scarfTracking] Firing pixel for', pathname);
 }
 
 /**
