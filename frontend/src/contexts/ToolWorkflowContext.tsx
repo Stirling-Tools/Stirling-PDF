@@ -9,6 +9,7 @@ import { PageEditorFunctions } from '../types/pageEditor';
 import { ToolRegistryEntry, ToolRegistry } from '../data/toolsTaxonomy';
 import { useNavigationActions, useNavigationState } from './NavigationContext';
 import { ToolId, isValidToolId } from '../types/toolId';
+import { useNavigationUrlSync } from '../hooks/useUrlSync';
 import { getDefaultWorkbench } from '../types/workbench';
 import { filterToolRegistryByQuery } from '../utils/toolSearch';
 import { useToolHistory } from '../hooks/tools/useUserToolActivity';
@@ -220,6 +221,14 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
   const isPanelVisible = useMemo(() =>
     state.sidebarsVisible && !state.readerMode && state.leftPanelView !== 'hidden',
     [state.sidebarsVisible, state.readerMode, state.leftPanelView]
+  );
+
+  useNavigationUrlSync(
+    navigationState.selectedTool,
+    handleToolSelect,
+    handleBackToTools,
+    toolRegistry as ToolRegistry,
+    true
   );
 
   // Properly memoized context value
