@@ -125,6 +125,7 @@ const FilePickerModal = ({
       title={t("fileUpload.selectFromStorage", "Select Files from Storage")}
       size="lg"
       scrollAreaComponent={ScrollArea.Autosize}
+      zIndex={1100}
     >
       <Stack gap="md">
         {storedFiles.length === 0 ? (

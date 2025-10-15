@@ -17,7 +17,8 @@ const Sign = (props: BaseToolProps) => {
   const { setWorkbench } = useNavigation();
   const { setSignatureConfig, activateDrawMode, activateSignaturePlacementMode, deactivateDrawMode, updateDrawSettings, undo, redo, signatureApiRef, getImageData, setSignaturesApplied } = useSignature();
   const { consumeFiles, selectors } = useFileContext();
-  const { exportActions, getScrollState } = useViewer();
+  const { exportActions, getScrollState, activeFileIndex, setActiveFileIndex } = useViewer();
+  const { setHasUnsavedChanges, unregisterUnsavedChangesChecker } = useNavigation();
 
   // Track which signature mode was active for reactivation after save
   const activeModeRef = useRef<'draw' | 'placement' | null>(null);
@@ -38,6 +39,11 @@ const Sign = (props: BaseToolProps) => {
     handleSignaturePlacement();
   }, [handleSignaturePlacement]);
 
+  const handleDeactivateSignature = useCallback(() => {
+    activeModeRef.current = null;
+    deactivateDrawMode();
+  }, [deactivateDrawMode]);
+
   const base = useBaseTool(
     'sign',
     useSignParameters,
@@ -45,12 +51,16 @@ const Sign = (props: BaseToolProps) => {
     props
   );
 
-  // Open viewer when files are selected
+  const hasOpenedViewer = useRef(false);
+
+  // Open viewer when files are selected (only once)
   useEffect(() => {
-    if (base.selectedFiles.length > 0) {
+    if (base.selectedFiles.length > 0 && !hasOpenedViewer.current) {
       setWorkbench('viewer');
+      hasOpenedViewer.current = true;
     }
   }, [base.selectedFiles.length, setWorkbench]);
+
 
 
   // Sync signature configuration with context
@@ -61,19 +71,15 @@ const Sign = (props: BaseToolProps) => {
   // Save signed files to the system - apply signatures using EmbedPDF and replace original
   const handleSaveToSystem = useCallback(async () => {
     try {
-      // Get the original file
-      let originalFile = null;
-      if (base.selectedFiles.length > 0) {
-        originalFile = base.selectedFiles[0];
-      } else {
-        const allFileIds = selectors.getAllFileIds();
-        if (allFileIds.length > 0) {
-          const stirlingFile = selectors.getFile(allFileIds[0]);
-          if (stirlingFile) {
-            originalFile = stirlingFile;
-          }
-        }
-      }
+      // Unregister unsaved changes checker to prevent warning during apply
+      unregisterUnsavedChangesChecker();
+      setHasUnsavedChanges(false);
+
+      // Get the original file from FileContext using activeFileIndex
+      // The viewer displays files from FileContext, not from base.selectedFiles
+      const allFiles = selectors.getFiles();
+      const fileIndex = activeFileIndex < allFiles.length ? activeFileIndex : 0;
+      const originalFile = allFiles[fileIndex];
 
       if (!originalFile) {
         console.error('No file available to replace');
@@ -81,68 +87,68 @@ const Sign = (props: BaseToolProps) => {
       }
 
       // Use the signature flattening utility
-      const success = await flattenSignatures({
+      const flattenResult = await flattenSignatures({
         signatureApiRef,
         getImageData,
         exportActions,
         selectors,
-        consumeFiles,
         originalFile,
-        getScrollState
+        getScrollState,
+        activeFileIndex
       });
 
-      if (success) {
-        console.log('✓ Signature flattening completed successfully');
+      if (flattenResult) {
+        // Now consume the files - this triggers the viewer reload
+        await consumeFiles(
+          flattenResult.inputFileIds,
+          [flattenResult.outputStirlingFile],
+          [flattenResult.outputStub]
+        );
+
+        // According to FileReducer.processFileSwap, new files are inserted at the beginning
+        // So the new file will be at index 0
+        setActiveFileIndex(0);
 
         // Mark signatures as applied
         setSignaturesApplied(true);
 
-        // Force refresh the viewer to show the flattened PDF
-        setTimeout(() => {
-          // Navigate away from viewer and back to force reload
-          setWorkbench('fileEditor');
-          setTimeout(() => {
-            setWorkbench('viewer');
+        // Deactivate signature placement mode after everything completes
+        handleDeactivateSignature();
 
-            // Reactivate the signature mode that was active before save
-            if (activeModeRef.current === 'draw') {
-              activateDrawMode();
-            } else if (activeModeRef.current === 'placement') {
-              handleSignaturePlacement();
-            }
-          }, 100);
-        }, 200);
+        // File has been consumed - viewer should reload automatically via key prop
       } else {
         console.error('Signature flattening failed');
       }
     } catch (error) {
       console.error('Error saving signed document:', error);
     }
-  }, [exportActions, base.selectedFiles, selectors, consumeFiles, signatureApiRef, getImageData, setWorkbench, activateDrawMode]);
+  }, [exportActions, base.selectedFiles, selectors, consumeFiles, signatureApiRef, getImageData, setWorkbench, activateDrawMode, setSignaturesApplied, getScrollState, handleDeactivateSignature, setHasUnsavedChanges, unregisterUnsavedChangesChecker, activeFileIndex, setActiveFileIndex]);
 
   const getSteps = () => {
     const steps = [];
 
-    // Step 1: Signature Configuration - Always visible
-    steps.push({
-      title: t('sign.steps.configure', 'Configure Signature'),
-      isCollapsed: false,
-      onCollapsedClick: undefined,
-      content: (
-        <SignSettings
-          parameters={base.params.parameters}
-          onParameterChange={base.params.updateParameter}
-          disabled={base.endpointLoading}
-          onActivateDrawMode={handleActivateDrawMode}
-          onActivateSignaturePlacement={handleActivateSignaturePlacement}
-          onDeactivateSignature={deactivateDrawMode}
-          onUpdateDrawSettings={updateDrawSettings}
-          onUndo={undo}
-          onRedo={redo}
-          onSave={handleSaveToSystem}
-        />
-      ),
-    });
+    // Step 1: Signature Configuration - Only visible when file is loaded
+    if (base.selectedFiles.length > 0) {
+      steps.push({
+        title: t('sign.steps.configure', 'Configure Signature'),
+        isCollapsed: false,
+        onCollapsedClick: undefined,
+        content: (
+          <SignSettings
+            parameters={base.params.parameters}
+            onParameterChange={base.params.updateParameter}
+            disabled={base.endpointLoading}
+            onActivateDrawMode={handleActivateDrawMode}
+            onActivateSignaturePlacement={handleActivateSignaturePlacement}
+            onDeactivateSignature={handleDeactivateSignature}
+            onUpdateDrawSettings={updateDrawSettings}
+            onUndo={undo}
+            onRedo={redo}
+            onSave={handleSaveToSystem}
+          />
+        ),
+      });
+    }
 
     return steps;
   };

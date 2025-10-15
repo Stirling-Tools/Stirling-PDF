@@ -1,10 +1,11 @@
-import React, { useState, useCallback, useRef, useMemo, useEffect } from 'react';
-import { Text, ActionIcon, CheckboxIndicator, Tooltip } from '@mantine/core';
+import React, { useState, useCallback, useRef, useMemo } from 'react';
+import { Text, ActionIcon, CheckboxIndicator, Tooltip, Modal, Button, Group, Stack } from '@mantine/core';
+import { useMediaQuery } from '@mantine/hooks';
 import { alert } from '../toast';
 import { useTranslation } from 'react-i18next';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
 import DownloadOutlinedIcon from '@mui/icons-material/DownloadOutlined';
 import CloseIcon from '@mui/icons-material/Close';
+import VisibilityIcon from '@mui/icons-material/Visibility';
 import UnarchiveIcon from '@mui/icons-material/Unarchive';
 import PushPinIcon from '@mui/icons-material/PushPin';
 import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined';
@@ -19,6 +20,7 @@ import { useFileState } from '../../contexts/file/fileHooks';
 import { FileId } from '../../types/file';
 import { formatFileSize } from '../../utils/fileUtils';
 import ToolChain from '../shared/ToolChain';
+import HoverActionMenu, { HoverAction } from '../shared/HoverActionMenu';
 
 
 
@@ -45,6 +47,7 @@ const FileEditorThumbnail = ({
   selectedFiles,
   onToggleFile,
   onCloseFile,
+  onViewFile,
   _onSetStatus,
   onReorderFiles,
   onDownloadFile,
@@ -59,8 +62,9 @@ const FileEditorThumbnail = ({
   // ---- Drag state ----
   const [isDragging, setIsDragging] = useState(false);
   const dragElementRef = useRef<HTMLDivElement | null>(null);
-  const [actionsWidth, setActionsWidth] = useState<number | undefined>(undefined);
-  const [showActions, setShowActions] = useState(false);
+  const [showHoverMenu, setShowHoverMenu] = useState(false);
+  const isMobile = useMediaQuery('(max-width: 1024px)');
+  const [showCloseModal, setShowCloseModal] = useState(false);
 
   // Resolve the actual File object for pin/unpin operations
   const actualFile = useMemo(() => {
@@ -154,46 +158,66 @@ const FileEditorThumbnail = ({
     };
   }, [file.id, file.name, selectedFiles, onReorderFiles]);
 
-  // Update dropdown width on resize
-  useEffect(() => {
-    const update = () => {
-      if (dragElementRef.current) setActionsWidth(dragElementRef.current.offsetWidth);
-    };
-    update();
-    window.addEventListener('resize', update);
-    return () => window.removeEventListener('resize', update);
+  // Handle close with confirmation
+  const handleCloseWithConfirmation = useCallback(() => {
+    setShowCloseModal(true);
   }, []);
 
-  // Close the actions dropdown when hovering outside this file card (and its dropdown)
-  useEffect(() => {
-    if (!showActions) return;
+  const handleConfirmClose = useCallback(() => {
+    onCloseFile(file.id);
+    alert({ alertType: 'neutral', title: `Closed ${file.name}`, expandable: false, durationMs: 3500 });
+    setShowCloseModal(false);
+  }, [file.id, file.name, onCloseFile]);
 
-    const isInsideCard = (target: EventTarget | null) => {
-      const container = dragElementRef.current;
-      if (!container) return false;
-      return target instanceof Node && container.contains(target);
-    };
+  const handleCancelClose = useCallback(() => {
+    setShowCloseModal(false);
+  }, []);
 
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!isInsideCard(e.target)) {
-        setShowActions(false);
-      }
-    };
-
-    const handleTouchStart = (e: TouchEvent) => {
-      // On touch devices, close if the touch target is outside the card
-      if (!isInsideCard(e.target)) {
-        setShowActions(false);
-      }
-    };
-
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('touchstart', handleTouchStart, { passive: true });
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('touchstart', handleTouchStart);
-    };
-  }, [showActions]);
+  // Build hover menu actions
+  const hoverActions = useMemo<HoverAction[]>(() => [
+    {
+      id: 'view',
+      icon: <VisibilityIcon style={{ fontSize: 20 }} />,
+      label: t('openInViewer', 'Open in Viewer'),
+      onClick: (e) => {
+        e.stopPropagation();
+        onViewFile(file.id);
+      },
+    },
+    {
+      id: 'download',
+      icon: <DownloadOutlinedIcon style={{ fontSize: 20 }} />,
+      label: t('download', 'Download'),
+      onClick: (e) => {
+        e.stopPropagation();
+        onDownloadFile(file.id);
+        alert({ alertType: 'success', title: `Downloading ${file.name}`, expandable: false, durationMs: 2500 });
+      },
+    },
+    {
+      id: 'unzip',
+      icon: <UnarchiveIcon style={{ fontSize: 20 }} />,
+      label: t('fileManager.unzip', 'Unzip'),
+      onClick: (e) => {
+        e.stopPropagation();
+        if (onUnzipFile) {
+          onUnzipFile(file.id);
+          alert({ alertType: 'success', title: `Unzipping ${file.name}`, expandable: false, durationMs: 2500 });
+        }
+      },
+      hidden: !isZipFile || !onUnzipFile,
+    },
+    {
+      id: 'close',
+      icon: <CloseIcon style={{ fontSize: 20 }} />,
+      label: t('close', 'Close'),
+      onClick: (e) => {
+        e.stopPropagation();
+        handleCloseWithConfirmation();
+      },
+      color: 'red',
+    }
+  ], [t, file.id, file.name, isZipFile, onViewFile, onDownloadFile, onUnzipFile, handleCloseWithConfirmation]);
 
   // ---- Card interactions ----
   const handleCardClick = () => {
@@ -203,6 +227,11 @@ const FileEditorThumbnail = ({
       try { fileActions.clearFileError(file.id); } catch (_e) { void _e; }
     }
     onToggleFile(file.id);
+  };
+
+  const handleCardDoubleClick = () => {
+    if (!isSupported) return;
+    onViewFile(file.id);
   };
 
   // ---- Style helpers ----
@@ -226,6 +255,9 @@ const FileEditorThumbnail = ({
       role="listitem"
       aria-selected={isSelected}
       onClick={handleCardClick}
+      onMouseEnter={() => setShowHoverMenu(true)}
+      onMouseLeave={() => setShowHoverMenu(false)}
+      onDoubleClick={handleCardDoubleClick}
     >
       {/* Header bar */}
       <div
@@ -282,97 +314,8 @@ const FileEditorThumbnail = ({
               {isPinned ? <PushPinIcon fontSize="small" /> : <PushPinOutlinedIcon fontSize="small" />}
             </ActionIcon>
           </Tooltip>
-
-          {/* Download icon */}
-          <Tooltip label={t('download', 'Download')}>
-            <ActionIcon
-              aria-label={t('download', 'Download')}
-              variant="subtle"
-              className={styles.headerIconButton}
-              onClick={(e) => {
-                e.stopPropagation();
-                onDownloadFile(file.id);
-                alert({ alertType: 'success', title: `Downloading ${file.name}`, expandable: false, durationMs: 2500 });
-              }}
-            >
-              <DownloadOutlinedIcon fontSize="small" />
-            </ActionIcon>
-          </Tooltip>
-
-          {/* Kebab menu */}
-          <ActionIcon
-            aria-label={t('moreOptions', 'More options')}
-            variant="subtle"
-            className={styles.headerIconButton}
-            onClick={(e) => {
-              e.stopPropagation();
-              setShowActions((v) => !v);
-            }}
-          >
-            <MoreVertIcon fontSize="small" />
-          </ActionIcon>
         </div>
       </div>
-
-      {/* Actions overlay */}
-      {showActions && (
-        <div
-          className={styles.actionsOverlay}
-          style={{ width: actionsWidth }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <button
-            className={styles.actionRow}
-            onClick={() => {
-              if (actualFile) {
-                if (isPinned) {
-                  unpinFile(actualFile);
-                  alert({ alertType: 'neutral', title: `Unpinned ${file.name}`, expandable: false, durationMs: 3000 });
-                } else {
-                  pinFile(actualFile);
-                  alert({ alertType: 'success', title: `Pinned ${file.name}`, expandable: false, durationMs: 3000 });
-                }
-              }
-              setShowActions(false);
-            }}
-          >
-            {isPinned ? <PushPinIcon className={styles.pinned} fontSize="small" /> : <PushPinOutlinedIcon fontSize="small" />}
-            <span>{isPinned ? t('unpin', 'Unpin') : t('pin', 'Pin')}</span>
-          </button>
-
-          <button
-            className={styles.actionRow}
-            onClick={() => { onDownloadFile(file.id); alert({ alertType: 'success', title: `Downloading ${file.name}`, expandable: false, durationMs: 2500 }); setShowActions(false); }}
-          >
-            <DownloadOutlinedIcon fontSize="small" />
-            <span>{t('download', 'Download')}</span>
-          </button>
-
-          {isZipFile && onUnzipFile && (
-            <button
-              className={styles.actionRow}
-              onClick={() => { onUnzipFile(file.id); alert({ alertType: 'success', title: `Unzipping ${file.name}`, expandable: false, durationMs: 2500 }); setShowActions(false); }}
-            >
-              <UnarchiveIcon fontSize="small" />
-              <span>{t('fileManager.unzip', 'Unzip')}</span>
-            </button>
-          )}
-
-          <div className={styles.actionsDivider} />
-
-          <button
-            className={`${styles.actionRow} ${styles.actionDanger}`}
-            onClick={() => {
-              onCloseFile(file.id);
-              alert({ alertType: 'neutral', title: `Closed ${file.name}`, expandable: false, durationMs: 3500 });
-              setShowActions(false);
-            }}
-          >
-            <CloseIcon fontSize="small" />
-            <span>{t('close', 'Close')}</span>
-          </button>
-        </div>
-      )}
 
       {/* Title + meta line */}
       <div
@@ -464,6 +407,37 @@ const FileEditorThumbnail = ({
           </div>
         )}
       </div>
+
+      {/* Hover Menu */}
+      <HoverActionMenu
+        show={showHoverMenu || isMobile}
+        actions={hoverActions}
+        position="outside"
+      />
+
+      {/* Close Confirmation Modal */}
+      <Modal
+        opened={showCloseModal}
+        onClose={handleCancelClose}
+        title={t('confirmClose', 'Confirm Close')}
+        centered
+        size="auto"
+      >
+        <Stack gap="md">
+          <Text size="md">{t('confirmCloseMessage', 'Are you sure you want to close this file?')}</Text>
+          <Text size="sm" c="dimmed" fw={500}>
+            {file.name}
+          </Text>
+          <Group justify="flex-end" gap="sm">
+            <Button variant="light" onClick={handleCancelClose}>
+              {t('confirmCloseCancel', 'Cancel')}
+            </Button>
+            <Button variant="filled" color="red" onClick={handleConfirmClose}>
+              {t('confirmCloseConfirm', 'Close File')}
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
     </div>
   );
 };

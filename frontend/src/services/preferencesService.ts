@@ -1,128 +1,83 @@
-import { indexedDBManager, DATABASE_CONFIGS } from './indexedDBManager';
+import { type ToolPanelMode, DEFAULT_TOOL_PANEL_MODE } from '../constants/toolPanel';
+import { type ThemeMode, getSystemTheme } from '../constants/theme';
 
 export interface UserPreferences {
   autoUnzip: boolean;
   autoUnzipFileLimit: number;
+  defaultToolPanelMode: ToolPanelMode;
+  theme: ThemeMode;
+  toolPanelModePromptSeen: boolean;
+  showLegacyToolDescriptions: boolean;
 }
 
 export const DEFAULT_PREFERENCES: UserPreferences = {
   autoUnzip: true,
   autoUnzipFileLimit: 4,
+  defaultToolPanelMode: DEFAULT_TOOL_PANEL_MODE,
+  theme: getSystemTheme(),
+  toolPanelModePromptSeen: false,
+  showLegacyToolDescriptions: false,
 };
 
+const STORAGE_KEY = 'stirlingpdf_preferences';
+
 class PreferencesService {
-  private db: IDBDatabase | null = null;
-
-  async initialize(): Promise<void> {
-    this.db = await indexedDBManager.openDatabase(DATABASE_CONFIGS.PREFERENCES);
-  }
-
-  private ensureDatabase(): IDBDatabase {
-    if (!this.db) {
-      throw new Error('PreferencesService not initialized. Call initialize() first.');
-    }
-    return this.db;
-  }
-
-  async getPreference<K extends keyof UserPreferences>(
+  getPreference<K extends keyof UserPreferences>(
     key: K
-  ): Promise<UserPreferences[K]> {
-    const db = this.ensureDatabase();
-
-    return new Promise((resolve) => {
-      const transaction = db.transaction(['preferences'], 'readonly');
-      const store = transaction.objectStore('preferences');
-      const request = store.get(key);
-
-      request.onsuccess = () => {
-        const result = request.result;
-        if (result && result.value !== undefined) {
-          resolve(result.value);
-        } else {
-          // Return default value if preference not found
-          resolve(DEFAULT_PREFERENCES[key]);
+  ): UserPreferences[K] {
+    // Explicitly re-read every time in case preferences have changed in another tab etc.
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        const preferences = JSON.parse(stored) as Partial<UserPreferences>;
+        if (key in preferences && preferences[key] !== undefined) {
+          return preferences[key]!;
         }
-      };
-
-      request.onerror = () => {
-        console.error('Error reading preference:', key, request.error);
-        // Return default value on error
-        resolve(DEFAULT_PREFERENCES[key]);
-      };
-    });
+      }
+    } catch (error) {
+      console.error('Error reading preference:', key, error);
+    }
+    return DEFAULT_PREFERENCES[key];
   }
 
-  async setPreference<K extends keyof UserPreferences>(
+  setPreference<K extends keyof UserPreferences>(
     key: K,
     value: UserPreferences[K]
-  ): Promise<void> {
-    const db = this.ensureDatabase();
-
-    return new Promise((resolve, reject) => {
-      const transaction = db.transaction(['preferences'], 'readwrite');
-      const store = transaction.objectStore('preferences');
-      const request = store.put({ key, value });
-
-      request.onsuccess = () => {
-        resolve();
-      };
-
-      request.onerror = () => {
-        console.error('Error writing preference:', key, request.error);
-        reject(request.error);
-      };
-    });
+  ): void {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      const preferences = stored ? JSON.parse(stored) : {};
+      preferences[key] = value;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(preferences));
+    } catch (error) {
+      console.error('Error writing preference:', key, error);
+    }
   }
 
-  async getAllPreferences(): Promise<UserPreferences> {
-    const db = this.ensureDatabase();
-
-    return new Promise((resolve) => {
-      const transaction = db.transaction(['preferences'], 'readonly');
-      const store = transaction.objectStore('preferences');
-      const request = store.getAll();
-
-      request.onsuccess = () => {
-        const storedPrefs: Partial<UserPreferences> = {};
-        const results = request.result;
-
-        for (const item of results) {
-          if (item.key && item.value !== undefined) {
-            storedPrefs[item.key as keyof UserPreferences] = item.value;
-          }
-        }
-
+  getAllPreferences(): UserPreferences {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        const preferences = JSON.parse(stored) as Partial<UserPreferences>;
         // Merge with defaults to ensure all preferences exist
-        resolve({
+        return {
           ...DEFAULT_PREFERENCES,
-          ...storedPrefs,
-        });
-      };
-
-      request.onerror = () => {
-        console.error('Error reading all preferences:', request.error);
-        // Return defaults on error
-        resolve({ ...DEFAULT_PREFERENCES });
-      };
-    });
+          ...preferences,
+        };
+      }
+    } catch (error) {
+      console.error('Error reading preferences', error);
+    }
+    return { ...DEFAULT_PREFERENCES };
   }
 
-  async clearAllPreferences(): Promise<void> {
-    const db = this.ensureDatabase();
-
-    return new Promise((resolve, reject) => {
-      const transaction = db.transaction(['preferences'], 'readwrite');
-      const store = transaction.objectStore('preferences');
-      const request = store.clear();
-
-      request.onsuccess = () => {
-        resolve();
-      };
-
-      request.onerror = () => {
-        reject(request.error);
-      };
-    });
+  clearAllPreferences(): void {
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch (error) {
+      console.error('Error clearing preferences:', error);
+      throw error;
+    }
   }
 }
 

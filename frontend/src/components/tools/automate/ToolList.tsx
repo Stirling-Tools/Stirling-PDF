@@ -6,12 +6,13 @@ import CloseIcon from "@mui/icons-material/Close";
 import AddCircleOutline from "@mui/icons-material/AddCircleOutline";
 import { AutomationTool } from "../../../types/automation";
 import { ToolRegistryEntry } from "../../../data/toolsTaxonomy";
+import { ToolId } from "../../../types/toolId";
 import ToolSelector from "./ToolSelector";
 import AutomationEntry from "./AutomationEntry";
 
 interface ToolListProps {
   tools: AutomationTool[];
-  toolRegistry: Record<string, ToolRegistryEntry>;
+  toolRegistry: Record<ToolId, ToolRegistryEntry>;
   onToolUpdate: (index: number, updates: Partial<AutomationTool>) => void;
   onToolRemove: (index: number) => void;
   onToolConfigure: (index: number) => void;
@@ -34,7 +35,7 @@ export default function ToolList({
 
   const handleToolSelect = (index: number, newOperation: string) => {
     const defaultParams = getToolDefaultParameters(newOperation);
-    const toolEntry = toolRegistry[newOperation];
+    const toolEntry = toolRegistry[newOperation as ToolId];
     // If tool has no settingsComponent, it's automatically configured
     const isConfigured = !toolEntry?.automationSettings;
 

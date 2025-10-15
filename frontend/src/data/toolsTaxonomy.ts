@@ -4,6 +4,17 @@ import { ToolOperationConfig } from '../hooks/tools/shared/useToolOperation';
 import { BaseToolProps } from '../types/tool';
 import { WorkbenchType } from '../types/workbench';
 import { ToolId } from '../types/toolId';
+import DrawRoundedIcon from '@mui/icons-material/DrawRounded';
+import SecurityRoundedIcon from '@mui/icons-material/SecurityRounded';
+import VerifiedUserRoundedIcon from '@mui/icons-material/VerifiedUserRounded';
+import RateReviewRoundedIcon from '@mui/icons-material/RateReviewRounded';
+import ViewAgendaRoundedIcon from '@mui/icons-material/ViewAgendaRounded';
+import FileDownloadRoundedIcon from '@mui/icons-material/FileDownloadRounded';
+import DeleteSweepRoundedIcon from '@mui/icons-material/DeleteSweepRounded';
+import SmartToyRoundedIcon from '@mui/icons-material/SmartToyRounded';
+import BuildRoundedIcon from '@mui/icons-material/BuildRounded';
+import TuneRoundedIcon from '@mui/icons-material/TuneRounded';
+import CodeRoundedIcon from '@mui/icons-material/CodeRounded';
 
 export enum SubcategoryId {
   SIGNING = 'signing',
@@ -66,17 +77,46 @@ export const SUBCATEGORY_ORDER: SubcategoryId[] = [
 ];
 
 export const SUBCATEGORY_COLOR_MAP: Record<SubcategoryId, string> = {
-  [SubcategoryId.SIGNING]: '#FF7892',
-  [SubcategoryId.DOCUMENT_SECURITY]: '#FF7892',
-  [SubcategoryId.VERIFICATION]: '#1BB1D4',
-  [SubcategoryId.DOCUMENT_REVIEW]: '#48BD54',
-  [SubcategoryId.PAGE_FORMATTING]: '#7882FF',
-  [SubcategoryId.EXTRACTION]: '#1BB1D4',
-  [SubcategoryId.REMOVAL]: '#7882FF',
-  [SubcategoryId.AUTOMATION]: '#69DC95',
-  [SubcategoryId.GENERAL]: '#69DC95',
-  [SubcategoryId.ADVANCED_FORMATTING]: '#F55454',
-  [SubcategoryId.DEVELOPER_TOOLS]: '#F55454',
+  [SubcategoryId.SIGNING]: 'var(--category-color-signing)',           // Green
+  [SubcategoryId.DOCUMENT_SECURITY]: 'var(--category-color-security)', // Orange
+  [SubcategoryId.VERIFICATION]: 'var(--category-color-verification)',      // Orange
+  [SubcategoryId.DOCUMENT_REVIEW]: 'var(--category-color-general)',   // Blue
+  [SubcategoryId.PAGE_FORMATTING]: 'var(--category-color-formatting)',   // Purple
+  [SubcategoryId.EXTRACTION]: 'var(--category-color-extraction)',        // Cyan
+  [SubcategoryId.REMOVAL]: 'var(--category-color-removal)',           // Red
+  [SubcategoryId.AUTOMATION]: 'var(--category-color-automation)',        // Pink
+  [SubcategoryId.GENERAL]: 'var(--category-color-general)',           // Blue
+  [SubcategoryId.ADVANCED_FORMATTING]: 'var(--category-color-formatting)', // Purple
+  [SubcategoryId.DEVELOPER_TOOLS]: 'var(--category-color-developer)',   // Gray
+};
+
+export const getSubcategoryIcon = (subcategory: SubcategoryId): React.ReactNode => {
+  switch (subcategory) {
+    case SubcategoryId.SIGNING:
+      return React.createElement(DrawRoundedIcon);
+    case SubcategoryId.DOCUMENT_SECURITY:
+      return React.createElement(SecurityRoundedIcon);
+    case SubcategoryId.VERIFICATION:
+      return React.createElement(VerifiedUserRoundedIcon);
+    case SubcategoryId.DOCUMENT_REVIEW:
+      return React.createElement(RateReviewRoundedIcon);
+    case SubcategoryId.PAGE_FORMATTING:
+      return React.createElement(ViewAgendaRoundedIcon);
+    case SubcategoryId.EXTRACTION:
+      return React.createElement(FileDownloadRoundedIcon);
+    case SubcategoryId.REMOVAL:
+      return React.createElement(DeleteSweepRoundedIcon);
+    case SubcategoryId.AUTOMATION:
+      return React.createElement(SmartToyRoundedIcon);
+    case SubcategoryId.GENERAL:
+      return React.createElement(BuildRoundedIcon);
+    case SubcategoryId.ADVANCED_FORMATTING:
+      return React.createElement(TuneRoundedIcon);
+    case SubcategoryId.DEVELOPER_TOOLS:
+      return React.createElement(CodeRoundedIcon);
+    default:
+      return React.createElement(BuildRoundedIcon);
+  }
 };
 
 export const getCategoryLabel = (t: TFunction, id: ToolCategoryId): string => t(`toolPicker.categories.${id}`, id);
