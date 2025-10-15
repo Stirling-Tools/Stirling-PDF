@@ -34,11 +34,10 @@ class PreferencesService {
           return preferences[key]!;
         }
       }
-      return DEFAULT_PREFERENCES[key];
     } catch (error) {
       console.error('Error reading preference:', key, error);
-      return DEFAULT_PREFERENCES[key];
     }
+    return DEFAULT_PREFERENCES[key];
   }
 
   setPreference<K extends keyof UserPreferences>(
@@ -52,7 +51,6 @@ class PreferencesService {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(preferences));
     } catch (error) {
       console.error('Error writing preference:', key, error);
-      throw error;
     }
   }
 
@@ -67,55 +65,10 @@ class PreferencesService {
           ...preferences,
         };
       }
-
-      // Migration: Check for old localStorage keys and migrate them
-      const migrations: Partial<UserPreferences> = {};
-
-      // Migrate old theme key
-      const oldTheme = localStorage.getItem('stirling-theme');
-      if (oldTheme && ['light', 'dark', 'rainbow'].includes(oldTheme)) {
-        migrations.theme = oldTheme as ThemeMode;
-      }
-
-      // Migrate old tool panel mode preference
-      const oldToolPanelMode = localStorage.getItem('toolPanelModePreference');
-      if (oldToolPanelMode && ['sidebar', 'fullscreen'].includes(oldToolPanelMode)) {
-        migrations.defaultToolPanelMode = oldToolPanelMode as ToolPanelMode;
-      }
-
-      // Migrate old tool panel mode prompt seen flag
-      const oldPromptSeen = localStorage.getItem('toolPanelModePromptSeen');
-      if (oldPromptSeen === 'true') {
-        migrations.toolPanelModePromptSeen = true;
-      }
-
-      // Migrate old legacy tool descriptions preference
-      const oldLegacyDescriptions = localStorage.getItem('legacyToolDescriptions');
-      if (oldLegacyDescriptions === 'true') {
-        migrations.showLegacyToolDescriptions = true;
-      }
-
-      const migratedPreferences = {
-        ...DEFAULT_PREFERENCES,
-        ...migrations,
-      };
-
-      // If we migrated any values, save them to the new unified key
-      if (Object.keys(migrations).length > 0) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(migratedPreferences));
-
-        // Clean up old keys
-        localStorage.removeItem('stirling-theme');
-        localStorage.removeItem('toolPanelModePreference');
-        localStorage.removeItem('toolPanelModePromptSeen');
-        localStorage.removeItem('legacyToolDescriptions');
-      }
-
-      return migratedPreferences;
     } catch (error) {
-      console.error('Error reading all preferences:', error);
-      return { ...DEFAULT_PREFERENCES };
+      console.error('Error reading preferences', error);
     }
+    return { ...DEFAULT_PREFERENCES };
   }
 
   clearAllPreferences(): void {
