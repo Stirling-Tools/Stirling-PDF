@@ -2,8 +2,12 @@ export interface SignatureValidationBackendResult {
   valid: boolean;
   chainValid: boolean;
   trustValid: boolean;
+  chainValidationError?: string | null;
+  certPathLength?: number | null;
   notExpired: boolean;
-  notRevoked: boolean;
+  revocationChecked?: boolean | null;
+  revocationStatus?: string | null; // "not-checked" | "good" | "revoked" | "soft-fail" | "unknown"
+  validationTimeSource?: string | null; // "current" | "signing-time" | "timestamp"
   signerName?: string | null;
   signatureDate?: string | null;
   reason?: string | null;
@@ -26,8 +30,12 @@ export interface SignatureValidationSignature {
   valid: boolean;
   chainValid: boolean;
   trustValid: boolean;
+  chainValidationError?: string | null;
+  certPathLength?: number | null;
   notExpired: boolean;
-  notRevoked: boolean;
+  revocationChecked?: boolean | null;
+  revocationStatus?: string | null; // "not-checked" | "good" | "revoked" | "soft-fail" | "unknown"
+  validationTimeSource?: string | null; // "current" | "signing-time" | "timestamp"
   signerName: string;
   signatureDate: string;
   reason: string;
