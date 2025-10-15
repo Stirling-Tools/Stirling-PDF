@@ -7,11 +7,11 @@ import { useFilesModalContext } from '../../contexts/FilesModalContext';
 import { useTourOrchestration } from '../../contexts/TourOrchestrationContext';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import CheckIcon from '@mui/icons-material/Check';
+import TourWelcomeModal from './TourWelcomeModal';
 import './OnboardingTour.css';
 
 // Enum case order defines order steps will appear
 enum TourStep {
-  WELCOME,
   ALL_TOOLS,
   SELECT_CROP_TOOL,
   TOOL_INTERFACE,
@@ -53,7 +53,7 @@ function TourContent() {
 
 export default function OnboardingTour() {
   const { t } = useTranslation();
-  const { completeTour, closeTour } = useOnboarding();
+  const { completeTour, closeTour, showWelcomeModal, setShowWelcomeModal, startTour } = useOnboarding();
   const { openFilesModal, closeFilesModal } = useFilesModalContext();
   const {
     saveWorkbenchState,
@@ -72,9 +72,9 @@ export default function OnboardingTour() {
 
   // Define steps as object keyed by enum - TypeScript ensures all keys are present
   const stepsConfig: Record<TourStep, StepType> = {
-    [TourStep.WELCOME]: {
-      selector: 'body',
-      content: t('onboarding.welcome', "Welcome to Stirling PDF! Let's take you on a quick tour around the app."),
+    [TourStep.ALL_TOOLS]: {
+      selector: '[data-tour="tool-panel"]',
+      content: t('onboarding.allTools', 'This is the <strong>All Tools</strong> panel, where you can browse and select from all available PDF tools.'),
       position: 'center',
       padding: 0,
       action: () => {
@@ -82,12 +82,6 @@ export default function OnboardingTour() {
         closeFilesModal();
         backToAllTools();
       },
-    },
-    [TourStep.ALL_TOOLS]: {
-      selector: '[data-tour="tool-panel"]',
-      content: t('onboarding.allTools', 'This is the <strong>All Tools</strong> panel, where you can browse and select from all available PDF tools.'),
-      position: 'center',
-      padding: 0,
     },
     [TourStep.SELECT_CROP_TOOL]: {
       selector: '[data-tour="tool-button-crop"]',
@@ -226,89 +220,105 @@ export default function OnboardingTour() {
   };
 
   return (
-    <TourProvider
-      steps={steps}
-      onClickClose={handleCloseTour}
-      onClickMask={advanceTour}
-      onClickHighlighted={(e, clickProps) => {
-        e.stopPropagation();
-        advanceTour(clickProps);
-      }}
-      keyboardHandler={(e, clickProps, status) => {
-        // Handle right arrow key to advance tour
-        if (e.key === 'ArrowRight' && !status?.isRightDisabled && clickProps) {
-          e.preventDefault();
+    <>
+      <TourWelcomeModal
+        opened={showWelcomeModal}
+        onStartTour={() => {
+          setShowWelcomeModal(false);
+          startTour();
+        }}
+        onMaybeLater={() => {
+          setShowWelcomeModal(false);
+        }}
+        onDontShowAgain={() => {
+          setShowWelcomeModal(false);
+          completeTour();
+        }}
+      />
+      <TourProvider
+        steps={steps}
+        onClickClose={handleCloseTour}
+        onClickMask={advanceTour}
+        onClickHighlighted={(e, clickProps) => {
+          e.stopPropagation();
           advanceTour(clickProps);
-        }
-        // Handle escape key to close tour
-        else if (e.key === 'Escape' && !status?.isEscDisabled && clickProps) {
-          e.preventDefault();
-          handleCloseTour(clickProps);
-        }
-      }}
-      styles={{
-        popover: (base) => ({
-          ...base,
-          backgroundColor: 'var(--mantine-color-body)',
-          color: 'var(--mantine-color-text)',
-          borderRadius: '8px',
-          padding: '20px',
-          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-          maxWidth: '400px',
-        }),
-        maskArea: (base) => ({
-          ...base,
-          rx: 8,
-        }),
-        badge: (base) => ({
-          ...base,
-          backgroundColor: 'var(--mantine-primary-color-filled)',
-        }),
-        controls: (base) => ({
-          ...base,
-          justifyContent: 'center',
-        }),
-      }}
-      highlightedMaskClassName="tour-highlight-glow"
-      showNavigation={true}
-      showBadge={false}
-      showCloseButton={true}
-      disableInteraction={true}
-      disableDotsNavigation={true}
-      prevButton={() => null}
-      nextButton={({ currentStep, stepsLength, setCurrentStep, setIsOpen }) => {
-        const isLast = currentStep === stepsLength - 1;
+        }}
+        keyboardHandler={(e, clickProps, status) => {
+          // Handle right arrow key to advance tour
+          if (e.key === 'ArrowRight' && !status?.isRightDisabled && clickProps) {
+            e.preventDefault();
+            advanceTour(clickProps);
+          }
+          // Handle escape key to close tour
+          else if (e.key === 'Escape' && !status?.isEscDisabled && clickProps) {
+            e.preventDefault();
+            handleCloseTour(clickProps);
+          }
+        }}
+        styles={{
+          popover: (base) => ({
+            ...base,
+            backgroundColor: 'var(--mantine-color-body)',
+            color: 'var(--mantine-color-text)',
+            borderRadius: '8px',
+            padding: '20px',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+            maxWidth: '400px',
+          }),
+          maskArea: (base) => ({
+            ...base,
+            rx: 8,
+          }),
+          badge: (base) => ({
+            ...base,
+            backgroundColor: 'var(--mantine-primary-color-filled)',
+          }),
+          controls: (base) => ({
+            ...base,
+            justifyContent: 'center',
+          }),
+        }}
+        highlightedMaskClassName="tour-highlight-glow"
+        showNavigation={true}
+        showBadge={false}
+        showCloseButton={true}
+        disableInteraction={true}
+        disableDotsNavigation={true}
+        prevButton={() => null}
+        nextButton={({ currentStep, stepsLength, setCurrentStep, setIsOpen }) => {
+          const isLast = currentStep === stepsLength - 1;
 
-        return (
-          <ActionIcon
-            onClick={() => {
-              advanceTour({ setCurrentStep, currentStep, steps, setIsOpen });
-            }}
-            variant="subtle"
-            size="lg"
-            aria-label={isLast ? t('onboarding.finish', 'Finish') : t('onboarding.next', 'Next')}
-          >
-            {isLast ? <CheckIcon /> : <ArrowForwardIcon />}
-          </ActionIcon>
-        );
-      }}
-      components={{
-        Close: ({ onClick }) => (
-          <CloseButton
-            onClick={onClick}
-            size="md"
-            style={{ position: 'absolute', top: '8px', right: '8px' }}
-          />
-        ),
-        Content: ({ content } : {content: string}) => (
-          <div
-            style={{ paddingRight: '16px' /* Ensure text doesn't overlap with close button */ }}
-            dangerouslySetInnerHTML={{ __html: content }}
-          />
-        ),
-      }}
-    >
-      <TourContent />
-    </TourProvider>
+          return (
+            <ActionIcon
+              onClick={() => {
+                advanceTour({ setCurrentStep, currentStep, steps, setIsOpen });
+              }}
+              variant="subtle"
+              size="lg"
+              aria-label={isLast ? t('onboarding.finish', 'Finish') : t('onboarding.next', 'Next')}
+            >
+              {isLast ? <CheckIcon /> : <ArrowForwardIcon />}
+            </ActionIcon>
+          );
+        }}
+        components={{
+          Close: ({ onClick }) => (
+            <CloseButton
+              onClick={onClick}
+              size="md"
+              style={{ position: 'absolute', top: '8px', right: '8px' }}
+            />
+          ),
+          Content: ({ content } : {content: string}) => (
+            <div
+              style={{ paddingRight: '16px' /* Ensure text doesn't overlap with close button */ }}
+              dangerouslySetInnerHTML={{ __html: content }}
+            />
+          ),
+        }}
+      >
+        <TourContent />
+      </TourProvider>
+    </>
   );
 }

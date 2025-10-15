@@ -9,6 +9,8 @@ interface OnboardingContextValue {
   closeTour: () => void;
   completeTour: () => void;
   resetTour: () => void;
+  showWelcomeModal: boolean;
+  setShowWelcomeModal: (show: boolean) => void;
 }
 
 const OnboardingContext = createContext<OnboardingContextValue | undefined>(undefined);
@@ -17,14 +19,15 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const { preferences, updatePreference } = usePreferences();
   const [isOpen, setIsOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
 
-  // Auto-start tour for first-time users after preferences load
-  // Only show tour after user has seen the tool panel mode prompt
+  // Auto-show welcome modal for first-time users after preferences load
+  // Only show after user has seen the tool panel mode prompt
   useEffect(() => {
     if (!preferences.hasCompletedOnboarding && preferences.toolPanelModePromptSeen) {
       // Small delay to ensure UI is rendered
       const timer = setTimeout(() => {
-        setIsOpen(true);
+        setShowWelcomeModal(true);
       }, 500);
       return () => clearTimeout(timer);
     }
@@ -60,6 +63,8 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         closeTour,
         completeTour,
         resetTour,
+        showWelcomeModal,
+        setShowWelcomeModal,
       }}
     >
       {children}

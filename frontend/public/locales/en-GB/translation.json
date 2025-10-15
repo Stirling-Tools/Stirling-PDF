@@ -3629,7 +3629,14 @@
   "termsAndConditions": "Terms & Conditions",
   "logOut": "Log out",
   "onboarding": {
-    "welcome": "Welcome to Stirling PDF! Let's take you on a quick tour around the app.",
+    "welcomeModal": {
+      "title": "Welcome to Stirling PDF!",
+      "description": "Would you like to take a quick 1-minute tour to learn the key features and how to get started?",
+      "helpHint": "You can always access this tour later from the <strong>Help</strong> button in the bottom left.",
+      "startTour": "Start Tour",
+      "maybeLater": "Maybe Later",
+      "dontShowAgain": "Don't Show Again"
+    },
     "allTools": "This is the <strong>All Tools</strong> panel, where you can browse and select from all available PDF tools.",
     "selectCropTool": "Let's select the <strong>Crop</strong> tool to demonstrate how to use one of the tools.",
     "toolInterface": "This is the <strong>Crop</strong> tool interface. As you can see, there's not much there because we haven't added any PDF files to work with yet.",
