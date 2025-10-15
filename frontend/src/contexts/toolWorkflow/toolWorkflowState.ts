@@ -1,7 +1,5 @@
 import { PageEditorFunctions } from '../../types/pageEditor';
-
-// State & Modes
-export type ToolPanelMode = 'sidebar' | 'fullscreen';
+import { type ToolPanelMode, DEFAULT_TOOL_PANEL_MODE } from '../../constants/toolPanel';
 
 export interface ToolWorkflowState {
   // UI State
@@ -28,22 +26,7 @@ export type ToolWorkflowAction =
   | { type: 'SET_SEARCH_QUERY'; payload: string }
   | { type: 'RESET_UI_STATE' };
 
-// Storage keys
-export const TOOL_PANEL_MODE_STORAGE_KEY = 'toolPanelModePreference';
-
-export const getStoredToolPanelMode = (): ToolPanelMode => {
-  if (typeof window === 'undefined') {
-    return 'sidebar';
-  }
-
-  const stored = window.localStorage.getItem(TOOL_PANEL_MODE_STORAGE_KEY);
-  if (stored === 'fullscreen') {
-    return 'fullscreen';
-  }
-
-  return 'sidebar';
-};
-
+  
 export const baseState: Omit<ToolWorkflowState, 'toolPanelMode'> = {
   sidebarsVisible: true,
   leftPanelView: 'toolPicker',
@@ -55,7 +38,7 @@ export const baseState: Omit<ToolWorkflowState, 'toolPanelMode'> = {
 
 export const createInitialState = (): ToolWorkflowState => ({
   ...baseState,
-  toolPanelMode: getStoredToolPanelMode(),
+  toolPanelMode: DEFAULT_TOOL_PANEL_MODE,
 });
 
 export function toolWorkflowReducer(state: ToolWorkflowState, action: ToolWorkflowAction): ToolWorkflowState {

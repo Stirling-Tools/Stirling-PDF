@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import type { SignatureValidationReportEntry } from '../../../types/validateSignature';
 import type { ValidateSignatureOperationHook } from '../../../hooks/tools/validateSignature/useValidateSignatureOperation';
 import './reportView/styles.css';
+import FitText from '../../shared/FitText';
 
 interface ValidateSignatureResultsProps {
   operation: ValidateSignatureOperationHook;
@@ -164,10 +165,10 @@ const ValidateSignatureResults = ({
 
           return (
             <Stack key={result.fileId} gap={4} p="xs" style={{ borderLeft: '2px solid var(--mantine-color-gray-4)' }}>
-              <Group justify="space-between" align="center">
-                <Text fw={600} size="sm">
-                  {result.fileName}
-                </Text>
+              <Group justify="space-between" align="flex-start">
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <FitText text={result.fileName} lines={2} as="div" minimumFontScale={0.5} style={{ fontWeight: 600 }} />
+                </div>
                 <Badge className={badgeClass} variant="light">
                   {badgeLabel}
                 </Badge>
