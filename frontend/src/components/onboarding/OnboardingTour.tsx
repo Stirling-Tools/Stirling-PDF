@@ -85,26 +85,26 @@ export default function OnboardingTour() {
     },
     [TourStep.ALL_TOOLS]: {
       selector: '[data-tour="tool-panel"]',
-      content: t('onboarding.allTools', 'This is the All Tools panel, where you can browse and select from all available PDF tools.'),
+      content: t('onboarding.allTools', 'This is the <strong>All Tools</strong> panel, where you can browse and select from all available PDF tools.'),
       position: 'center',
       padding: 0,
     },
     [TourStep.SELECT_CROP_TOOL]: {
       selector: '[data-tour="tool-button-crop"]',
-      content: t('onboarding.selectCropTool', "Let's select the Crop tool to demonstrate how to use one of the tools."),
+      content: t('onboarding.selectCropTool', "Let's select the <strong>Crop</strong> tool to demonstrate how to use one of the tools."),
       position: 'right',
       padding: 0,
       actionAfter: () => selectCropTool(),
     },
     [TourStep.TOOL_INTERFACE]: {
       selector: '[data-tour="tool-panel"]',
-      content: t('onboarding.toolInterface', "This is the Crop tool interface. As you can see, there's not much there because we haven't added any PDF files to work with yet."),
+      content: t('onboarding.toolInterface', "This is the <strong>Crop</strong> tool interface. As you can see, there's not much there because we haven't added any PDF files to work with yet."),
       position: 'center',
       padding: 0,
     },
     [TourStep.FILES_BUTTON]: {
       selector: '[data-tour="files-button"]',
-      content: t('onboarding.filesButton', "The Files button on the Quick Access bar allows you to upload PDFs to use the tools on."),
+      content: t('onboarding.filesButton', "The <strong>Files</strong> button on the Quick Access bar allows you to upload PDFs to use the tools on."),
       position: 'right',
       padding: 10,
       action: () => openFilesModal(),
@@ -121,7 +121,7 @@ export default function OnboardingTour() {
     },
     [TourStep.WORKBENCH]: {
       selector: '[data-tour="workbench"]',
-      content: t('onboarding.workbench', 'This is the Workbench - the main area where you view and edit your PDFs.'),
+      content: t('onboarding.workbench', 'This is the <strong>Workbench</strong> - the main area where you view and edit your PDFs.'),
       position: 'center',
       padding: 0,
     },
@@ -133,21 +133,21 @@ export default function OnboardingTour() {
     },
     [TourStep.VIEWER]: {
       selector: '[data-tour="workbench"]',
-      content: t('onboarding.viewer', "The Viewer lets you read and annotate your PDFs."),
+      content: t('onboarding.viewer', "The <strong>Viewer</strong> lets you read and annotate your PDFs."),
       position: 'center',
       padding: 0,
       action: () => switchToViewer(),
     },
     [TourStep.PAGE_EDITOR]: {
       selector: '[data-tour="workbench"]',
-      content: t('onboarding.pageEditor', "The Page Editor allows you to do various operations on the pages within your PDFs, such as reordering, rotating and deleting."),
+      content: t('onboarding.pageEditor', "The <strong>Page Editor</strong> allows you to do various operations on the pages within your PDFs, such as reordering, rotating and deleting."),
       position: 'center',
       padding: 0,
       action: () => switchToPageEditor(),
     },
     [TourStep.ACTIVE_FILES]: {
       selector: '[data-tour="workbench"]',
-      content: t('onboarding.activeFiles', "The Active Files view shows all of the PDFs you have loaded into the tool, and allows you to select which ones to process."),
+      content: t('onboarding.activeFiles', "The <strong>Active Files</strong> view shows all of the PDFs you have loaded into the tool, and allows you to select which ones to process."),
       position: 'center',
       padding: 0,
       action: () => switchToActiveFiles(),
@@ -161,14 +161,14 @@ export default function OnboardingTour() {
     [TourStep.SELECT_CONTROLS]: {
       selector: '[data-tour="right-rail-controls"]',
       highlightedSelectors: ['[data-tour="right-rail-controls"]', '[data-tour="right-rail-settings"]'],
-      content: t('onboarding.selectControls', "The Right Rail contains buttons to quickly select/deselect all of your active PDFs, along with buttons to change the app's theme or language."),
+      content: t('onboarding.selectControls', "The <strong>Right Rail</strong> contains buttons to quickly select/deselect all of your active PDFs, along with buttons to change the app's theme or language."),
       position: 'left',
       padding: 5,
       action: () => selectFirstFile(),
     },
     [TourStep.CROP_SETTINGS]: {
       selector: '[data-tour="crop-settings"]',
-      content: t('onboarding.cropSettings', "Now that we've selected the file we want crop, we can configure the Crop tool to choose the area that we want to crop the PDF to."),
+      content: t('onboarding.cropSettings', "Now that we've selected the file we want crop, we can configure the <strong>Crop</strong> tool to choose the area that we want to crop the PDF to."),
       position: 'left',
       padding: 10,
       action: () => modifyCropSettings(),
@@ -182,20 +182,20 @@ export default function OnboardingTour() {
     },
     [TourStep.RESULTS]: {
       selector: '[data-tour="tool-panel"]',
-      content: t('onboarding.results', "After the tool has finished running, the Review step will show a preview of the results in this panel, and allow you to undo the operation or download the file. "),
+      content: t('onboarding.results', "After the tool has finished running, the <strong>Review</strong> step will show a preview of the results in this panel, and allow you to undo the operation or download the file. "),
       position: 'center',
       padding: 0,
     },
     [TourStep.PIN]: {
       selector: '[data-tour="file-card-checkbox"]',
-      content: t('onboarding.pin', "The modified file will replace the original file in the Workbench automatically, allowing you to easily run it through more tools. You can use the Pin button if you’d rather your files stay active after running tools on them."),
+      content: t('onboarding.pin', "The modified file will replace the original file in the <strong>Workbench</strong> automatically, allowing you to easily run it through more tools. You can use the <strong>Pin</strong> button if you'd rather your files stay active after running tools on them."),
       position: 'left',
       padding: 10,
       actionAfter: () => undoOperation(),
     },
     [TourStep.WRAP_UP]: {
       selector: '[data-tour="help-button"]',
-      content: t('onboarding.wrapUp', "You're all set! You've learnt about the main areas of the app and how to use them. Click the Help button whenever you like to see this tour again."),
+      content: t('onboarding.wrapUp', "You're all set! You've learnt about the main areas of the app and how to use them. Click the <strong>Help</strong> button whenever you like to see this tour again."),
       position: 'right',
       padding: 10,
     },
@@ -282,10 +282,11 @@ export default function OnboardingTour() {
             style={{ position: 'absolute', top: '8px', right: '8px' }}
           />
         ),
-        Content: ({ content }) => (
-          <div style={{ paddingRight: '16px' /* Ensure text doesn't overlap with close button */ }}>
-            {content}
-          </div>
+        Content: ({ content } : {content: string}) => (
+          <div
+            style={{ paddingRight: '16px' /* Ensure text doesn't overlap with close button */ }}
+            dangerouslySetInnerHTML={{ __html: content }}
+          />
         ),
       }}
     >
