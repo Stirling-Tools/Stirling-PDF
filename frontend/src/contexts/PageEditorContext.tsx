@@ -1,15 +1,11 @@
-import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, ReactNode, useMemo } from 'react';
 import { FileId } from '../types/file';
-import { useFileActions } from './FileContext';
+import { useFileActions, useFileState } from './FileContext';
 import { PDFPage } from '../types/pageEditor';
 import { MAX_PAGE_EDITOR_FILES } from '../components/pageEditor/fileColors';
 
-export interface PageEditorFile {
-  fileId: FileId;
-  name: string;
-  versionNumber?: number;
-  isSelected: boolean;
-}
+// PageEditorFile is now defined locally in consuming components
+// Components should derive file list directly from FileContext
 
 /**
  * Computes file order based on the position of each file's first page
@@ -103,9 +99,6 @@ function reorderPagesForFileMove(
 }
 
 interface PageEditorContextValue {
-  // Single array of files with selection state
-  files: PageEditorFile[];
-
   // Current page order (updated by PageEditor, used for file reordering)
   currentPages: PDFPage[] | null;
   updateCurrentPages: (pages: PDFPage[] | null) => void;
@@ -114,45 +107,64 @@ interface PageEditorContextValue {
   reorderedPages: PDFPage[] | null;
   clearReorderedPages: () => void;
 
-  // Set file selection
+  // Page editor's own file order (independent of FileContext global order)
+  fileOrder: FileId[];
+  setFileOrder: (order: FileId[]) => void;
+
+  // Set file selection (calls FileContext actions)
   setFileSelection: (fileId: FileId, selected: boolean) => void;
 
-  // Toggle file selection
+  // Toggle file selection (calls FileContext actions)
   toggleFileSelection: (fileId: FileId) => void;
 
-  // Select/deselect all files
+  // Select/deselect all files (calls FileContext actions)
   selectAll: () => void;
   deselectAll: () => void;
 
-  // Reorder files (simple array reordering)
+  // Reorder files (only affects page editor's local order)
   reorderFiles: (fromIndex: number, toIndex: number) => void;
 
   // Update file order based on page positions (when pages are manually reordered)
   updateFileOrderFromPages: (pages: PDFPage[]) => void;
-
-  // Track mutation source to prevent feedback loops
-  lastReorderSource: 'file' | 'page' | null;
-  clearReorderSource: () => void;
-
-  // Sync with FileContext when files change
-  syncWithFileContext: (fileContextFiles: Array<{ fileId: FileId; name: string; versionNumber?: number }>) => void;
 }
 
 const PageEditorContext = createContext<PageEditorContextValue | undefined>(undefined);
 
 interface PageEditorProviderProps {
   children: ReactNode;
-  initialFileIds?: FileId[];
 }
 
-export function PageEditorProvider({ children, initialFileIds = [] }: PageEditorProviderProps) {
-  // Single array of files with selection state
-  const [files, setFiles] = useState<PageEditorFile[]>([]);
+export function PageEditorProvider({ children }: PageEditorProviderProps) {
   const [currentPages, setCurrentPages] = useState<PDFPage[] | null>(null);
   const [reorderedPages, setReorderedPages] = useState<PDFPage[] | null>(null);
-  const [lastReorderSource, setLastReorderSource] = useState<'file' | 'page' | null>(null);
-  const lastReorderSourceAtRef = React.useRef<number>(0);
+
+  // Page editor's own file order (independent of FileContext)
+  const [fileOrder, setFileOrder] = useState<FileId[]>([]);
+
+  // Read from FileContext (for file metadata only, not order)
   const { actions: fileActions } = useFileActions();
+  const { state } = useFileState();
+
+  // Keep a ref to always read latest state in stable callbacks
+  const stateRef = React.useRef(state);
+  React.useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
+
+  // Initialize fileOrder from FileContext when files change (add/remove only)
+  React.useEffect(() => {
+    const currentFileIds = state.files.ids;
+
+    // Add new files to the end
+    const newFileIds = currentFileIds.filter(id => !fileOrder.includes(id));
+
+    // Remove deleted files
+    const validFileOrder = fileOrder.filter(id => currentFileIds.includes(id));
+
+    if (newFileIds.length > 0 || validFileOrder.length !== fileOrder.length) {
+      setFileOrder([...validFileOrder, ...newFileIds]);
+    }
+  }, [state.files.ids, fileOrder]);
 
   const updateCurrentPages = useCallback((pages: PDFPage[] | null) => {
     setCurrentPages(pages);
@@ -162,198 +174,132 @@ export function PageEditorProvider({ children, initialFileIds = [] }: PageEditor
     setReorderedPages(null);
   }, []);
 
-  const clearReorderSource = useCallback(() => {
-    setLastReorderSource(null);
-  }, []);
-
   const setFileSelection = useCallback((fileId: FileId, selected: boolean) => {
-    setFiles(prev => {
-      const selectedCount = prev.filter(f => f.isSelected).length;
+    const currentSelection = stateRef.current.ui.selectedFileIds;
+    const isAlreadySelected = currentSelection.includes(fileId);
 
-      // Check if we're trying to select when at limit
-      if (selected && selectedCount >= MAX_PAGE_EDITOR_FILES) {
-        const alreadySelected = prev.find(f => f.fileId === fileId)?.isSelected;
-        if (!alreadySelected) {
-          console.warn(`Page editor supports maximum ${MAX_PAGE_EDITOR_FILES} files. Cannot select more files.`);
-          return prev;
-        }
-      }
-
-      return prev.map(f =>
-        f.fileId === fileId ? { ...f, isSelected: selected } : f
-      );
-    });
-  }, []);
-
-  const toggleFileSelection = useCallback((fileId: FileId) => {
-    setFiles(prev => {
-      const file = prev.find(f => f.fileId === fileId);
-      if (!file) return prev;
-
-      const selectedCount = prev.filter(f => f.isSelected).length;
-
-      // If toggling on and at limit, don't allow
-      if (!file.isSelected && selectedCount >= MAX_PAGE_EDITOR_FILES) {
-        console.warn(`Page editor supports maximum ${MAX_PAGE_EDITOR_FILES} files. Cannot select more files.`);
-        return prev;
-      }
-
-      return prev.map(f =>
-        f.fileId === fileId ? { ...f, isSelected: !f.isSelected } : f
-      );
-    });
-  }, []);
-
-  const selectAll = useCallback(() => {
-    setFiles(prev => {
-      if (prev.length > MAX_PAGE_EDITOR_FILES) {
-        console.warn(`Page editor supports maximum ${MAX_PAGE_EDITOR_FILES} files. Only first ${MAX_PAGE_EDITOR_FILES} files will be selected.`);
-        return prev.map((f, index) => ({ ...f, isSelected: index < MAX_PAGE_EDITOR_FILES }));
-      }
-      return prev.map(f => ({ ...f, isSelected: true }));
-    });
-  }, []);
-
-  const deselectAll = useCallback(() => {
-    setFiles(prev => prev.map(f => ({ ...f, isSelected: false })));
-  }, []);
-
-  const reorderFiles = useCallback((fromIndex: number, toIndex: number) => {
-    let newFileIds: FileId[] = [];
-    let reorderedPagesResult: PDFPage[] | null = null;
-
-    // Mark that this reorder came from file-level action
-  setLastReorderSource('file');
-  lastReorderSourceAtRef.current = Date.now();
-
-    setFiles(prev => {
-      // Simple array reordering
-      const newOrder = [...prev];
-      const [movedFile] = newOrder.splice(fromIndex, 1);
-      newOrder.splice(toIndex, 0, movedFile);
-
-      // Collect file IDs for later FileContext update
-      newFileIds = newOrder.map(f => f.fileId);
-
-      // If current pages available, reorder them based on file move
-      if (currentPages && currentPages.length > 0 && fromIndex !== toIndex) {
-        // Get the current file order from pages (files that have pages loaded)
-        const currentFileOrder: FileId[] = [];
-        const filesSeen = new Set<FileId>();
-        currentPages.forEach(page => {
-          const fileId = page.originalFileId;
-          if (fileId && !filesSeen.has(fileId)) {
-            filesSeen.add(fileId);
-            currentFileOrder.push(fileId);
-          }
-        });
-
-        // Get the moved and target file IDs
-        const movedFileId = prev[fromIndex].fileId;
-        const targetFileId = prev[toIndex].fileId;
-
-        // Find their positions in the current page order (not the full file list)
-        const pageOrderFromIndex = currentFileOrder.findIndex(id => id === movedFileId);
-        const pageOrderToIndex = currentFileOrder.findIndex(id => id === targetFileId);
-
-        // Only reorder pages if both files have pages loaded
-        if (pageOrderFromIndex >= 0 && pageOrderToIndex >= 0) {
-          reorderedPagesResult = reorderPagesForFileMove(currentPages, pageOrderFromIndex, pageOrderToIndex, currentFileOrder);
-        }
-      }
-
-      return newOrder;
-    });
-
-    // Update FileContext after state settles
-    if (newFileIds.length > 0) {
-      fileActions.reorderFiles(newFileIds);
-    }
-
-    // Update reordered pages after state settles
-    if (reorderedPagesResult) {
-      setReorderedPages(reorderedPagesResult);
-    }
-  }, [fileActions, currentPages]);
-
-  const updateFileOrderFromPages = useCallback((pages: PDFPage[]) => {
-    if (!pages || pages.length === 0) return;
-    // Suppress page-derived reorder if a recent explicit file reorder just occurred (prevents feedback loop)
-    if (lastReorderSource === 'file' && Date.now() - lastReorderSourceAtRef.current < 500) {
+    // Check if we're trying to select when at limit
+    if (selected && !isAlreadySelected && currentSelection.length >= MAX_PAGE_EDITOR_FILES) {
+      console.warn(`Page editor supports maximum ${MAX_PAGE_EDITOR_FILES} files. Cannot select more files.`);
       return;
     }
 
-    setLastReorderSource('page');
-    lastReorderSourceAtRef.current = Date.now();
+    // Update FileContext selection
+    const newSelectedIds = selected
+      ? [...currentSelection, fileId]
+      : currentSelection.filter(id => id !== fileId);
+
+    fileActions.setSelectedFiles(newSelectedIds);
+  }, [fileActions]);
+
+  const toggleFileSelection = useCallback((fileId: FileId) => {
+    const currentSelection = stateRef.current.ui.selectedFileIds;
+    const isCurrentlySelected = currentSelection.includes(fileId);
+
+    // If toggling on and at limit, don't allow
+    if (!isCurrentlySelected && currentSelection.length >= MAX_PAGE_EDITOR_FILES) {
+      console.warn(`Page editor supports maximum ${MAX_PAGE_EDITOR_FILES} files. Cannot select more files.`);
+      return;
+    }
+
+    // Update FileContext selection
+    const newSelectedIds = isCurrentlySelected
+      ? currentSelection.filter(id => id !== fileId)
+      : [...currentSelection, fileId];
+
+    fileActions.setSelectedFiles(newSelectedIds);
+  }, [fileActions]);
+
+  const selectAll = useCallback(() => {
+    const allFileIds = stateRef.current.files.ids;
+
+    if (allFileIds.length > MAX_PAGE_EDITOR_FILES) {
+      console.warn(`Page editor supports maximum ${MAX_PAGE_EDITOR_FILES} files. Only first ${MAX_PAGE_EDITOR_FILES} files will be selected.`);
+      fileActions.setSelectedFiles(allFileIds.slice(0, MAX_PAGE_EDITOR_FILES));
+    } else {
+      fileActions.setSelectedFiles(allFileIds);
+    }
+  }, [fileActions]);
+
+  const deselectAll = useCallback(() => {
+    fileActions.setSelectedFiles([]);
+  }, [fileActions]);
+
+  const reorderFiles = useCallback((fromIndex: number, toIndex: number) => {
+    // Reorder local fileOrder array (page editor workspace only)
+    const newOrder = [...fileOrder];
+    const [movedFileId] = newOrder.splice(fromIndex, 1);
+    newOrder.splice(toIndex, 0, movedFileId);
+    setFileOrder(newOrder);
+
+    // If current pages available, reorder them based on file move
+    if (currentPages && currentPages.length > 0 && fromIndex !== toIndex) {
+      // Get the current file order from pages (files that have pages loaded)
+      const currentFileOrder: FileId[] = [];
+      const filesSeen = new Set<FileId>();
+      currentPages.forEach(page => {
+        const fileId = page.originalFileId;
+        if (fileId && !filesSeen.has(fileId)) {
+          filesSeen.add(fileId);
+          currentFileOrder.push(fileId);
+        }
+      });
+
+      // Get the moved and target file IDs
+      const movedFileId = fileOrder[fromIndex];
+      const targetFileId = fileOrder[toIndex];
+
+      // Find their positions in the current page order (not the full file list)
+      const pageOrderFromIndex = currentFileOrder.findIndex(id => id === movedFileId);
+      const pageOrderToIndex = currentFileOrder.findIndex(id => id === targetFileId);
+
+      // Only reorder pages if both files have pages loaded
+      if (pageOrderFromIndex >= 0 && pageOrderToIndex >= 0) {
+        const reorderedPagesResult = reorderPagesForFileMove(currentPages, pageOrderFromIndex, pageOrderToIndex, currentFileOrder);
+        setReorderedPages(reorderedPagesResult);
+      }
+    }
+  }, [fileOrder, currentPages]);
+
+  const updateFileOrderFromPages = useCallback((pages: PDFPage[]) => {
+    if (!pages || pages.length === 0) return;
 
     // Compute the new file order based on page positions
     const newFileOrder = computeFileOrderFromPages(pages);
 
     if (newFileOrder.length > 0) {
-      // Update global FileContext order
-      fileActions.reorderFiles(newFileOrder);
+      // Update local page editor file order (not FileContext)
+      setFileOrder(newFileOrder);
     }
-  }, [fileActions, lastReorderSource]);
-
-  const syncWithFileContext = useCallback((fileContextFiles: Array<{ fileId: FileId; name: string; versionNumber?: number }>) => {
-    setFiles(prev => {
-      // Create a map of existing files for quick lookup
-      const existingMap = new Map(prev.map(f => [f.fileId, f]));
-
-      // Build new files array from FileContext, preserving selection state
-      const newFiles: PageEditorFile[] = fileContextFiles.map(file => {
-        const existing = existingMap.get(file.fileId);
-        return {
-          fileId: file.fileId,
-          name: file.name,
-          versionNumber: file.versionNumber,
-          isSelected: existing?.isSelected ?? false, // Preserve selection or default to false
-        };
-      });
-
-      // If no files selected, select all by default (up to MAX_PAGE_EDITOR_FILES)
-      const selectedCount = newFiles.filter(f => f.isSelected).length;
-      if (selectedCount === 0 && newFiles.length > 0) {
-        const maxToSelect = Math.min(newFiles.length, MAX_PAGE_EDITOR_FILES);
-        if (newFiles.length > MAX_PAGE_EDITOR_FILES) {
-          console.warn(`Page editor supports maximum ${MAX_PAGE_EDITOR_FILES} files. Only first ${MAX_PAGE_EDITOR_FILES} files will be selected.`);
-        }
-        return newFiles.map((f, index) => ({
-          ...f,
-          isSelected: index < maxToSelect,
-        }));
-      }
-
-      // Enforce maximum file limit
-      if (selectedCount > MAX_PAGE_EDITOR_FILES) {
-        console.warn(`Page editor supports maximum ${MAX_PAGE_EDITOR_FILES} files. Limiting selection.`);
-        let selectedSoFar = 0;
-        return newFiles.map(f => ({
-          ...f,
-          isSelected: f.isSelected && selectedSoFar++ < MAX_PAGE_EDITOR_FILES,
-        }));
-      }
-
-      return newFiles;
-    });
   }, []);
 
-  const value: PageEditorContextValue = {
-    files,
+
+  const value: PageEditorContextValue = useMemo(() => ({
     currentPages,
     updateCurrentPages,
     reorderedPages,
     clearReorderedPages,
+    fileOrder,
+    setFileOrder,
     setFileSelection,
     toggleFileSelection,
     selectAll,
     deselectAll,
     reorderFiles,
     updateFileOrderFromPages,
-    lastReorderSource,
-    clearReorderSource,
-    syncWithFileContext,
-  };
+  }), [
+    currentPages,
+    updateCurrentPages,
+    reorderedPages,
+    clearReorderedPages,
+    fileOrder,
+    setFileSelection,
+    toggleFileSelection,
+    selectAll,
+    deselectAll,
+    reorderFiles,
+    updateFileOrderFromPages,
+  ]);
 
   return (
     <PageEditorContext.Provider value={value}>

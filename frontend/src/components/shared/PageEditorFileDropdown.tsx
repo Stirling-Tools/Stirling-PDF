@@ -1,4 +1,4 @@
-import React, { useRef, useCallback, useState } from 'react';
+import React, { useRef, useCallback, useState, useEffect } from 'react';
 import { Menu, Loader, Group, Text, Checkbox, ActionIcon } from '@mantine/core';
 import EditNoteIcon from '@mui/icons-material/EditNote';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
@@ -12,7 +12,14 @@ import FitText from './FitText';
 import { getFileColorWithOpacity } from '../pageEditor/fileColors';
 
 import { FileId } from '../../types/file';
-import { PageEditorFile } from '../../contexts/PageEditorContext';
+
+// Local interface for PageEditor file display
+interface PageEditorFile {
+  fileId: FileId;
+  name: string;
+  versionNumber?: number;
+  isSelected: boolean;
+}
 
 interface FileMenuItemProps {
   file: PageEditorFile;
@@ -45,61 +52,79 @@ const FileMenuItem: React.FC<FileMenuItemProps> = ({
   const [isDragOver, setIsDragOver] = useState(false);
   const itemRef = useRef<HTMLDivElement>(null);
 
-  const itemElementRef = useCallback((element: HTMLDivElement | null) => {
-    if (element) {
-      itemRef.current = element;
+  // Keep latest values without re-registering DnD
+  const indexRef = useRef(index);
+  const fileIdRef = useRef(file.fileId);
+  useEffect(() => { indexRef.current = index; }, [index]);
+  useEffect(() => { fileIdRef.current = file.fileId; }, [file.fileId]);
 
-      const dragCleanup = draggable({
-        element,
-        getInitialData: () => ({
-          type: 'file-item',
-          fileId: file.fileId,
-          fromIndex: index,
-        }),
-        onDragStart: () => {
-          setIsDragging(true);
-        },
-        onDrop: () => {
-          setIsDragging(false);
-        },
-        canDrag: () => true,
-      });
+  // NEW: keep latest onReorder without effect re-run
+  const onReorderRef = useRef(onReorder);
+  useEffect(() => { onReorderRef.current = onReorder; }, [onReorder]);
 
-      const dropCleanup = dropTargetForElements({
-        element,
-        getData: () => ({
-          type: 'file-item',
-          fileId: file.fileId,
-          toIndex: index,
-        }),
-        onDragEnter: () => {
-          setIsDragOver(true);
-        },
-        onDragLeave: () => {
-          setIsDragOver(false);
-        },
-        onDrop: ({ source }) => {
-          setIsDragOver(false);
-          const sourceData = source.data;
-          if (sourceData.type === 'file-item') {
-            const fromIndex = sourceData.fromIndex as number;
-            if (fromIndex !== index) {
-              onReorder(fromIndex, index);
-            }
+  // Gesture guard for row click vs drag
+  const movedRef = useRef(false);
+  const startRef = useRef<{ x: number; y: number } | null>(null);
+
+  const onPointerDown = (e: React.PointerEvent) => {
+    startRef.current = { x: e.clientX, y: e.clientY };
+    movedRef.current = false;
+  };
+
+  const onPointerMove = (e: React.PointerEvent) => {
+    if (!startRef.current) return;
+    const dx = e.clientX - startRef.current.x;
+    const dy = e.clientY - startRef.current.y;
+    if (dx * dx + dy * dy > 25) movedRef.current = true; // ~5px threshold
+  };
+
+  const onPointerUp = () => {
+    startRef.current = null;
+  };
+
+  useEffect(() => {
+    const element = itemRef.current;
+    if (!element) return;
+
+    const dragCleanup = draggable({
+      element,
+      getInitialData: () => ({
+        type: 'file-item',
+        fileId: fileIdRef.current,
+        fromIndex: indexRef.current,
+      }),
+      onDragStart: () => setIsDragging((p) => (p ? p : true)),
+      onDrop: () => setIsDragging((p) => (p ? false : p)),
+      canDrag: () => true,
+    });
+
+    const dropCleanup = dropTargetForElements({
+      element,
+      getData: () => ({
+        type: 'file-item',
+        fileId: fileIdRef.current,
+        toIndex: indexRef.current,
+      }),
+      onDragEnter: () => setIsDragOver((p) => (p ? p : true)),
+      onDragLeave: () => setIsDragOver((p) => (p ? false : p)),
+      onDrop: ({ source }) => {
+        setIsDragOver(false);
+        const sourceData = source.data as any;
+        if (sourceData?.type === 'file-item') {
+          const fromIndex = sourceData.fromIndex as number;
+          const toIndex = indexRef.current;
+          if (fromIndex !== toIndex) {
+            onReorderRef.current(fromIndex, toIndex); // use ref, no re-register
           }
         }
-      });
-
-      (element as any).__dragCleanup = () => {
-        dragCleanup();
-        dropCleanup();
-      };
-    } else {
-      if (itemRef.current && (itemRef.current as any).__dragCleanup) {
-        (itemRef.current as any).__dragCleanup();
       }
-    }
-  }, [file.fileId, index, onReorder]);
+    });
+
+    return () => {
+      try { dragCleanup(); } catch {}
+      try { dropCleanup(); } catch {}
+    };
+  }, []); // NOTE: no `onReorder` here
 
   const itemName = file?.name || 'Untitled';
   const fileColorBorder = getFileColorWithOpacity(colorIndex, 1);
@@ -107,9 +132,13 @@ const FileMenuItem: React.FC<FileMenuItemProps> = ({
 
   return (
     <div
-      ref={itemElementRef}
+      ref={itemRef}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
       onClick={(e) => {
         e.stopPropagation();
+        if (movedRef.current) return; // ignore click after drag
         onToggleSelection(file.fileId);
       }}
       style={{

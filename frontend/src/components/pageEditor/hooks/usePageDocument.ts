@@ -1,6 +1,5 @@
 import { useMemo } from 'react';
 import { useFileState } from '../../../contexts/FileContext';
-import { usePageEditor } from '../../../contexts/PageEditorContext';
 import { PDFDocument, PDFPage } from '../../../types/pageEditor';
 import { FileId } from '../../../types/file';
 
@@ -16,27 +15,28 @@ export interface PageDocumentHook {
  */
 export function usePageDocument(): PageDocumentHook {
   const { state, selectors } = useFileState();
-  const { files: pageEditorFiles } = usePageEditor();
 
   // Convert Set to array and filter to maintain file order from FileContext
   const allFileIds = state.files.ids;
 
-  // Create stable string representations for useMemo dependencies
-  const allFileIdsString = allFileIds.join(',');
-  const selectedFiles = pageEditorFiles.filter(f => f.isSelected);
-  const selectedIdsString = selectedFiles.map(f => f.fileId).sort().join(',');
+  // Derive selected file IDs directly from FileContext (single source of truth)
+  // Filter to only include PDF files (PageEditor only supports PDFs)
+  // Use stable string keys to prevent infinite loops
+  const allFileIdsKey = allFileIds.join(',');
+  const selectedIdsKey = [...state.ui.selectedFileIds].sort().join(',');
+  const filesSignature = selectors.getFilesSignature();
 
   const activeFileIds = useMemo(() => {
-    const selectedFileIds = new Set(selectedFiles.map(f => f.fileId));
-    return allFileIds.filter(id => selectedFileIds.has(id));
-    // Using string representations to prevent infinite loops
+    const selectedFileIds = new Set(state.ui.selectedFileIds);
+    return allFileIds.filter(id => {
+      if (!selectedFileIds.has(id)) return false;
+      const stub = selectors.getStirlingFileStub(id);
+      return stub?.name?.toLowerCase().endsWith('.pdf') ?? false;
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allFileIdsString, selectedIdsString]);
+  }, [allFileIdsKey, selectedIdsKey, filesSignature]);
 
   const primaryFileId = activeFileIds[0] ?? null;
-
-  // Stable signature for effects (prevents loops)
-  const filesSignature = selectors.getFilesSignature();
 
   // UI state
   const globalProcessing = state.ui.isProcessing;

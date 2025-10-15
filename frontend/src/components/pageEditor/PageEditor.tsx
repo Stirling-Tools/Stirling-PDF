@@ -43,8 +43,64 @@ const PageEditor = ({
   // Navigation guard for unsaved changes
   const { setHasUnsavedChanges } = useNavigationGuard();
 
-  // Get files from PageEditorContext (synced by Workbench)
-  const { files: pageEditorFiles, updateCurrentPages, reorderedPages, clearReorderedPages, updateFileOrderFromPages, lastReorderSource, clearReorderSource } = usePageEditor();
+  // Get PageEditor coordination functions
+  const { updateCurrentPages, reorderedPages, clearReorderedPages, updateFileOrderFromPages } = usePageEditor();
+
+  // Derive page editor files from FileContext (single source of truth)
+  // Filter to only show PDF files (PageEditor only supports PDFs)
+  // Use stable string keys to prevent infinite loops
+  // Cache file objects to prevent infinite re-renders from new object references
+  const fileIdsKey = state.files.ids.join(',');
+  const selectedIdsKey = [...state.ui.selectedFileIds].sort().join(',');
+  const filesSignature = selectors.getFilesSignature();
+
+  const fileObjectsRef = useRef(new Map<FileId, any>());
+
+  const pageEditorFiles = useMemo(() => {
+    const cache = fileObjectsRef.current;
+    const newFiles: any[] = [];
+
+    state.files.ids.forEach(fileId => {
+      const stub = selectors.getStirlingFileStub(fileId);
+      const isSelected = state.ui.selectedFileIds.includes(fileId);
+      const isPdf = stub?.name?.toLowerCase().endsWith('.pdf') ?? false;
+
+      if (!isPdf) return; // Skip non-PDFs
+
+      const cached = cache.get(fileId);
+
+      // Check if data actually changed (compare by fileId, not position)
+      if (cached &&
+          cached.fileId === fileId &&
+          cached.name === (stub?.name || '') &&
+          cached.versionNumber === stub?.versionNumber &&
+          cached.isSelected === isSelected) {
+        // Reuse existing object reference
+        newFiles.push(cached);
+      } else {
+        // Create new object only if data changed
+        const newFile = {
+          fileId,
+          name: stub?.name || '',
+          versionNumber: stub?.versionNumber,
+          isSelected,
+        };
+        cache.set(fileId, newFile);
+        newFiles.push(newFile);
+      }
+    });
+
+    // Clean up removed files from cache
+    const activeIds = new Set(newFiles.map(f => f.fileId));
+    for (const cachedId of cache.keys()) {
+      if (!activeIds.has(cachedId)) {
+        cache.delete(cachedId);
+      }
+    }
+
+    return newFiles;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fileIdsKey, selectedIdsKey, filesSignature]);
 
   // Get active file IDs from SELECTED files only
   const activeFileIds = useMemo(() => {
@@ -143,45 +199,15 @@ const PageEditor = ({
       };
       setEditedDocument(reorderedDocument);
       clearReorderedPages();
-      // Clear the source after applying to prevent feedback loop
-      clearReorderSource();
     }
-  }, [reorderedPages, displayDocument, clearReorderedPages, clearReorderSource]);
+  }, [reorderedPages, displayDocument, clearReorderedPages]);
 
   // Update file order when pages are manually reordered
   useEffect(() => {
-    // Skip if the last reorder came from file-level (prevent feedback loop)
-    if (lastReorderSource === 'file') {
-      clearReorderSource();
-      return;
-    }
-
     if (editedDocument?.pages && editedDocument.pages.length > 0 && activeFileIds.length > 1) {
-      // Compute the file order based on page positions
-      const fileFirstPagePositions = new Map<FileId, number>();
-      editedDocument.pages.forEach((page, index) => {
-        const fileId = page.originalFileId;
-        if (!fileId) return;
-        if (!fileFirstPagePositions.has(fileId)) {
-          fileFirstPagePositions.set(fileId, index);
-        }
-      });
-
-      // Sort files by their first page position
-      const computedFileOrder = Array.from(fileFirstPagePositions.entries())
-        .sort((a, b) => a[1] - b[1])
-        .map(entry => entry[0]);
-
-      // Check if the order has actually changed
-      const currentFileOrder = pageEditorFiles.filter(f => f.isSelected).map(f => f.fileId);
-      const orderChanged = computedFileOrder.length !== currentFileOrder.length ||
-        computedFileOrder.some((id, index) => id !== currentFileOrder[index]);
-
-      if (orderChanged && computedFileOrder.length > 0) {
-        updateFileOrderFromPages(editedDocument.pages);
-      }
+      updateFileOrderFromPages(editedDocument.pages);
     }
-  }, [editedDocument?.pages, activeFileIds.length, state.files.ids, pageEditorFiles, updateFileOrderFromPages, lastReorderSource, clearReorderSource]);
+  }, [editedDocument?.pages, activeFileIds.length, updateFileOrderFromPages]);
 
   // Utility functions to convert between page IDs and page numbers
   const getPageNumbersFromIds = useCallback((pageIds: string[]): number[] => {
