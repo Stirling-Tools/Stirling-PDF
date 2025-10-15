@@ -12,6 +12,7 @@ import { FileId, StirlingFileStub } from '../../types/fileContext';
 import { useFileManagerContext } from '../../contexts/FileManagerContext';
 import { zipFileService } from '../../services/zipFileService';
 import ToolChain from '../shared/ToolChain';
+import { Z_INDEX_OVER_FILE_MANAGER_MODAL } from '../../styles/zIndex';
 
 interface FileListItemProps {
   file: StirlingFileStub;
@@ -127,6 +128,7 @@ const FileListItem: React.FC<FileListItemProps> = ({
             withinPortal
             onOpen={() => setIsMenuOpen(true)}
             onClose={() => setIsMenuOpen(false)}
+            zIndex={Z_INDEX_OVER_FILE_MANAGER_MODAL}
           >
             <Menu.Target>
               <ActionIcon
