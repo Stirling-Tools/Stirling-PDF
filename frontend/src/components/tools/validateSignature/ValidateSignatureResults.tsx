@@ -144,7 +144,7 @@ const ValidateSignatureResults = ({
         )}
       </Group>
 
-      <Stack gap="sm">
+      <Stack gap="sm" style={{ maxHeight: '20rem', overflowY: 'auto' }}>
         {results.map((result) => {
           const hasError = Boolean(result.error);
           const hasSignatures = result.signatures.length > 0;
@@ -179,11 +179,6 @@ const ValidateSignatureResults = ({
                   count: result.signatures.length,
                 })}
               </Text>
-              {result.error && (
-                <Text size="xs" c="red">
-                  {result.error}
-                </Text>
-              )}
               {!result.error && result.signatures.length === 0 && (
                 <Text size="xs" c="dimmed">
                   {t('validateSignature.noSignatures', 'No digital signatures found in this document')}
