@@ -1,4 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
+import LoginRightCarousel from '../../components/shared/LoginRightCarousel'
+import loginSlides from '../../components/shared/loginSlides'
 import styles from './AuthLayout.module.css'
 
 interface AuthLayoutProps {
@@ -58,11 +60,7 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
           </div>
         </div>
         {!hideRightPanel && (
-          <div style={{
-            backgroundImage: `url(${window.location.origin}/images/auth-background.jpg)`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center'
-          }} />
+          <LoginRightCarousel imageSlides={loginSlides} initialSeconds={5} slideSeconds={8} />
         )}
       </div>
     </div>

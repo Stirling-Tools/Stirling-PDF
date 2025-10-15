@@ -279,9 +279,12 @@ public class JwtService implements JwtServiceInterface {
                 ResponseCookie.from(JWT_COOKIE_NAME, Newlines.stripAll(token))
                         .httpOnly(true)
                         .secure(secureCookie)
-                        .sameSite("Strict")
+                        .sameSite("Lax") // Changed from Strict to Lax for cross-port dev
+                        // compatibility
                         .maxAge(EXPIRATION / 1000)
                         .path("/")
+                        .domain("localhost") // Set domain to localhost for cross-port dev
+                        // compatibility
                         .build();
 
         response.addHeader("Set-Cookie", cookie.toString());
@@ -296,6 +299,8 @@ public class JwtService implements JwtServiceInterface {
                         .sameSite("None")
                         .maxAge(0)
                         .path("/")
+                        .domain("localhost") // Set domain to localhost for cross-port dev
+                        // compatibility
                         .build();
 
         response.addHeader("Set-Cookie", cookie.toString());

@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import { RainbowThemeProvider } from "./components/shared/RainbowThemeProvider";
 import { FileContextProvider } from "./contexts/FileContext";
 import { NavigationProvider } from "./contexts/NavigationContext";
@@ -52,8 +52,7 @@ const LoadingFallback = () => (
 export default function App() {
   return (
     <Suspense fallback={<LoadingFallback />}>
-    <BrowserRouter>
-      <PreferencesProvider>
+    <PreferencesProvider>
         <RainbowThemeProvider>
           <ErrorBoundary>
             <AuthProvider>
@@ -83,16 +82,16 @@ export default function App() {
                                             <OnboardingTour />
                                           </TourOrchestrationProvider>
                                         </RightRailProvider>
-                                      </SignatureProvider>
-                                    </ViewerProvider>
-                                  </SidebarProvider>
-                                </HotkeyProvider>
-                              </ToolWorkflowProvider>
-                            </FilesModalProvider>
-                          </NavigationProvider>
-                        </ToolRegistryProvider>
-                      </FileContextProvider>
-                    </OnboardingProvider>
+                                        </SignatureProvider>
+                                      </ViewerProvider>
+                                    </SidebarProvider>
+                                  </HotkeyProvider>
+                                </ToolWorkflowProvider>
+                              </FilesModalProvider>
+                            </NavigationProvider>
+                          </ToolRegistryProvider>
+                        </FileContextProvider>
+                      </OnboardingProvider>
                   }
                 />
               </Routes>
@@ -100,7 +99,6 @@ export default function App() {
           </ErrorBoundary>
         </RainbowThemeProvider>
       </PreferencesProvider>
-    </BrowserRouter>
     </Suspense>
   );
 }
