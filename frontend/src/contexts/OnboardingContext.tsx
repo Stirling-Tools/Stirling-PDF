@@ -19,15 +19,16 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [currentStep, setCurrentStep] = useState(0);
 
   // Auto-start tour for first-time users after preferences load
+  // Only show tour after user has seen the tool panel mode prompt
   useEffect(() => {
-    if (!preferences.hasCompletedOnboarding) {
+    if (!preferences.hasCompletedOnboarding && preferences.toolPanelModePromptSeen) {
       // Small delay to ensure UI is rendered
       const timer = setTimeout(() => {
         setIsOpen(true);
       }, 500);
       return () => clearTimeout(timer);
     }
-  }, [preferences.hasCompletedOnboarding]);
+  }, [preferences.hasCompletedOnboarding, preferences.toolPanelModePromptSeen]);
 
   const startTour = useCallback(() => {
     setCurrentStep(0);
