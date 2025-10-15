@@ -29,8 +29,13 @@ export default function EmailPasswordForm({
 }: EmailPasswordFormProps) {
   const { t } = useTranslation()
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    onSubmit()
+  }
+
   return (
-    <>
+    <form onSubmit={handleSubmit}>
       <div className="auth-fields">
         <div className="auth-field">
           <label htmlFor="email" className="auth-label">{t('login.email')}</label>
@@ -70,12 +75,12 @@ export default function EmailPasswordForm({
       </div>
 
       <button
-        onClick={onSubmit}
+        type="submit"
         disabled={isSubmitting || !email || (showPasswordField && !password)}
         className="auth-button"
       >
         {submitButtonText}
       </button>
-    </>
+    </form>
   )
 }

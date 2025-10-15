@@ -75,12 +75,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String jwtToken = jwtService.extractToken(request);
 
             if (jwtToken == null) {
-                // Any unauthenticated requests should redirect to /login
+                // Allow auth endpoints to pass through without JWT
                 String requestURI = request.getRequestURI();
                 String contextPath = request.getContextPath();
 
-                if (!requestURI.startsWith(contextPath + "/login")) {
+                // Skip redirect for auth endpoints (they'll handle their own auth checks)
+                if (!requestURI.startsWith(contextPath + "/login")
+                        && !requestURI.startsWith(contextPath + "/api/v1/auth")) {
                     response.sendRedirect("/login");
+                    return;
+                }
+
+                // For auth endpoints without JWT, continue to the endpoint
+                // (it will return 401 if needed)
+                if (requestURI.startsWith(contextPath + "/api/v1/auth")) {
+                    filterChain.doFilter(request, response);
                     return;
                 }
             }

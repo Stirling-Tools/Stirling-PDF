@@ -156,6 +156,13 @@ public class SecurityConfiguration {
                         csrf ->
                                 csrf.ignoringRequestMatchers(
                                                 request -> {
+                                                    String uri = request.getRequestURI();
+
+                                                    // Ignore CSRF for auth endpoints
+                                                    if (uri.startsWith("/api/v1/auth/")) {
+                                                        return true;
+                                                    }
+
                                                     String apiKey = request.getHeader("X-API-KEY");
                                                     // If there's no API key, don't ignore CSRF
                                                     // (return false)
@@ -254,9 +261,13 @@ public class SecurityConfiguration {
                                                         || trimmedUri.startsWith("/favicon")
                                                         || trimmedUri.startsWith(
                                                                 "/api/v1/info/status")
-                                                        || trimmedUri.startsWith("/api/v1/auth/register")
-                                                        || trimmedUri.startsWith("/api/v1/auth/login")
-                                                        || trimmedUri.startsWith("/api/v1/auth/refresh")
+                                                        || trimmedUri.startsWith(
+                                                                "/api/v1/auth/register")
+                                                        || trimmedUri.startsWith(
+                                                                "/api/v1/auth/login")
+                                                        || trimmedUri.startsWith(
+                                                                "/api/v1/auth/refresh")
+                                                        || trimmedUri.startsWith("/api/v1/auth/me")
                                                         || trimmedUri.startsWith("/v1/api-docs")
                                                         || uri.contains("/v1/api-docs");
                                             })

@@ -102,8 +102,8 @@ export default function Login() {
         setError(error.message)
       } else if (user && session) {
         console.log('[Login] Email sign in successful')
-        // Navigate to home page
-        navigate('/')
+        // Auth state will update automatically and Landing will redirect to home
+        // No need to navigate manually here
       }
     } catch (err) {
       console.error('[Login] Unexpected error:', err)

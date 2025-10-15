@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import { RainbowThemeProvider } from "./components/shared/RainbowThemeProvider";
 import { FileContextProvider } from "./contexts/FileContext";
 import { NavigationProvider } from "./contexts/NavigationContext";
@@ -48,48 +48,46 @@ const LoadingFallback = () => (
 export default function App() {
   return (
     <Suspense fallback={<LoadingFallback />}>
-      <BrowserRouter>
-        <PreferencesProvider>
-          <RainbowThemeProvider>
-            <ErrorBoundary>
-              <AuthProvider>
-                <Routes>
-                  {/* Auth routes - no FileContext or other providers needed */}
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/signup" element={<Signup />} />
-                  <Route path="/auth/callback" element={<AuthCallback />} />
+      <PreferencesProvider>
+        <RainbowThemeProvider>
+          <ErrorBoundary>
+            <AuthProvider>
+              <Routes>
+                {/* Auth routes - no FileContext or other providers needed */}
+                <Route path="/login" element={<Login />} />
+                <Route path="/signup" element={<Signup />} />
+                <Route path="/auth/callback" element={<AuthCallback />} />
 
-                  {/* Main app routes - wrapped with all providers */}
-                  <Route
-                    path="/*"
-                    element={
-                      <FileContextProvider enableUrlSync={true} enablePersistence={true}>
-                        <NavigationProvider>
-                          <FilesModalProvider>
-                            <ToolWorkflowProvider>
-                              <HotkeyProvider>
-                                <SidebarProvider>
-                                  <ViewerProvider>
-                                    <SignatureProvider>
-                                      <RightRailProvider>
-                                        <Landing />
-                                      </RightRailProvider>
-                                    </SignatureProvider>
-                                  </ViewerProvider>
-                                </SidebarProvider>
-                              </HotkeyProvider>
-                            </ToolWorkflowProvider>
-                          </FilesModalProvider>
-                        </NavigationProvider>
-                      </FileContextProvider>
-                    }
-                  />
-                </Routes>
-              </AuthProvider>
-            </ErrorBoundary>
-          </RainbowThemeProvider>
-        </PreferencesProvider>
-      </BrowserRouter>
+                {/* Main app routes - wrapped with all providers */}
+                <Route
+                  path="/*"
+                  element={
+                    <FileContextProvider enableUrlSync={true} enablePersistence={true}>
+                      <NavigationProvider>
+                        <FilesModalProvider>
+                          <ToolWorkflowProvider>
+                            <HotkeyProvider>
+                              <SidebarProvider>
+                                <ViewerProvider>
+                                  <SignatureProvider>
+                                    <RightRailProvider>
+                                      <Landing />
+                                    </RightRailProvider>
+                                  </SignatureProvider>
+                                </ViewerProvider>
+                              </SidebarProvider>
+                            </HotkeyProvider>
+                          </ToolWorkflowProvider>
+                        </FilesModalProvider>
+                      </NavigationProvider>
+                    </FileContextProvider>
+                  }
+                />
+              </Routes>
+            </AuthProvider>
+          </ErrorBoundary>
+        </RainbowThemeProvider>
+      </PreferencesProvider>
     </Suspense>
   );
 }

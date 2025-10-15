@@ -26,11 +26,11 @@ import stirling.software.proprietary.security.service.JwtServiceInterface;
 import stirling.software.proprietary.security.service.UserService;
 
 /**
- * REST API Controller for authentication operations.
- * Replaces Supabase authentication with Spring Security + JWT.
+ * REST API Controller for authentication operations. Replaces Supabase authentication with Spring
+ * Security + JWT.
  *
- * This controller provides endpoints matching the Supabase API surface
- * to enable seamless frontend integration.
+ * <p>This controller provides endpoints matching the Supabase API surface to enable seamless
+ * frontend integration.
  */
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -52,27 +52,26 @@ public class AuthController {
      */
     @PostMapping("/login")
     public ResponseEntity<?> login(
-            @RequestBody LoginRequest request,
-            HttpServletResponse response) {
+            @RequestBody LoginRequest request, HttpServletResponse response) {
         try {
-            log.debug("Login attempt for user: {}", request.getEmail());
+            log.debug("Login attempt for user: {}", request.email());
 
             // Load user
-            UserDetails userDetails = userDetailsService.loadUserByUsername(request.getEmail());
+            UserDetails userDetails = userDetailsService.loadUserByUsername(request.email());
             User user = (User) userDetails;
 
             // Validate password
-            if (!userService.isPasswordCorrect(user, request.getPassword())) {
-                log.warn("Invalid password for user: {}", request.getEmail());
+            if (!userService.isPasswordCorrect(user, request.password())) {
+                log.warn("Invalid password for user: {}", request.email());
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "Invalid credentials"));
+                        .body(Map.of("error", "Invalid credentials"));
             }
 
             // Check if user is enabled
             if (!user.isEnabled()) {
-                log.warn("Disabled user attempted login: {}", request.getEmail());
+                log.warn("Disabled user attempted login: {}", request.email());
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "User account is disabled"));
+                        .body(Map.of("error", "User account is disabled"));
             }
 
             // Generate JWT with claims
@@ -85,25 +84,22 @@ public class AuthController {
             // Set JWT cookie (HttpOnly for security)
             jwtService.addToken(response, token);
 
-            log.info("Login successful for user: {}", request.getEmail());
+            log.info("Login successful for user: {}", request.email());
 
             // Return user info (matches Supabase response structure)
-            return ResponseEntity.ok(Map.of(
-                "user", buildUserResponse(user),
-                "session", Map.of(
-                    "access_token", token,
-                    "expires_in", 3600
-                )
-            ));
+            return ResponseEntity.ok(
+                    Map.of(
+                            "user", buildUserResponse(user),
+                            "session", Map.of("access_token", token, "expires_in", 3600)));
 
         } catch (AuthenticationException e) {
-            log.error("Authentication failed for user: {}", request.getEmail(), e);
+            log.error("Authentication failed for user: {}", request.email(), e);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(Map.of("error", "Invalid credentials"));
+                    .body(Map.of("error", "Invalid credentials"));
         } catch (Exception e) {
-            log.error("Login error for user: {}", request.getEmail(), e);
+            log.error("Login error for user: {}", request.email(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Map.of("error", "Internal server error"));
+                    .body(Map.of("error", "Internal server error"));
         }
     }
 
@@ -116,53 +112,57 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
         try {
-            log.debug("Registration attempt for user: {}", request.getEmail());
+            log.debug("Registration attempt for user: {}", request.email());
 
             // Check if username exists
-            if (userService.usernameExistsIgnoreCase(request.getEmail())) {
-                log.warn("Registration failed: username already exists: {}", request.getEmail());
+            if (userService.usernameExistsIgnoreCase(request.email())) {
+                log.warn("Registration failed: username already exists: {}", request.email());
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", "User already exists"));
+                        .body(Map.of("error", "User already exists"));
             }
 
             // Validate username format
-            if (!userService.isUsernameValid(request.getEmail())) {
-                log.warn("Registration failed: invalid username format: {}", request.getEmail());
+            if (!userService.isUsernameValid(request.email())) {
+                log.warn("Registration failed: invalid username format: {}", request.email());
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", "Invalid username format"));
+                        .body(Map.of("error", "Invalid username format"));
             }
 
             // Validate password
-            if (request.getPassword() == null || request.getPassword().length() < 6) {
+            if (request.password() == null || request.password().length() < 6) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", "Password must be at least 6 characters"));
+                        .body(Map.of("error", "Password must be at least 6 characters"));
             }
 
             // Create user (using default team and USER role)
-            User user = userService.saveUser(
-                request.getEmail(),
-                request.getPassword(),
-                (Long) null, // team (use default)
-                Role.USER.getRoleId(),
-                false // first login not required
-            );
+            User user =
+                    userService.saveUser(
+                            request.email(),
+                            request.password(),
+                            (Long) null, // team (use default)
+                            Role.USER.getRoleId(),
+                            false // first login not required
+                            );
 
-            log.info("User registered successfully: {}", request.getEmail());
+            log.info("User registered successfully: {}", request.email());
 
             // Return user info (Note: No session, user must login)
-            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
-                "user", buildUserResponse(user),
-                "message", "Account created successfully. Please log in."
-            ));
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(
+                            Map.of(
+                                    "user",
+                                    buildUserResponse(user),
+                                    "message",
+                                    "Account created successfully. Please log in."));
 
         } catch (IllegalArgumentException e) {
             log.error("Registration validation error: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(Map.of("error", e.getMessage()));
+                    .body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
-            log.error("Registration error for user: {}", request.getEmail(), e);
+            log.error("Registration error for user: {}", request.email(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Map.of("error", "Registration failed: " + e.getMessage()));
+                    .body(Map.of("error", "Registration failed: " + e.getMessage()));
         }
     }
 
@@ -176,22 +176,22 @@ public class AuthController {
         try {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
-            if (auth == null || !auth.isAuthenticated() || auth.getPrincipal().equals("anonymousUser")) {
+            if (auth == null
+                    || !auth.isAuthenticated()
+                    || auth.getPrincipal().equals("anonymousUser")) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "Not authenticated"));
+                        .body(Map.of("error", "Not authenticated"));
             }
 
             UserDetails userDetails = (UserDetails) auth.getPrincipal();
             User user = (User) userDetails;
 
-            return ResponseEntity.ok(Map.of(
-                "user", buildUserResponse(user)
-            ));
+            return ResponseEntity.ok(Map.of("user", buildUserResponse(user)));
 
         } catch (Exception e) {
             log.error("Get current user error", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Map.of("error", "Internal server error"));
+                    .body(Map.of("error", "Internal server error"));
         }
     }
 
@@ -217,7 +217,7 @@ public class AuthController {
         } catch (Exception e) {
             log.error("Logout error", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Map.of("error", "Internal server error"));
+                    .body(Map.of("error", "Internal server error"));
         }
     }
 
@@ -229,15 +229,13 @@ public class AuthController {
      * @return New token information
      */
     @PostMapping("/refresh")
-    public ResponseEntity<?> refresh(
-            HttpServletRequest request,
-            HttpServletResponse response) {
+    public ResponseEntity<?> refresh(HttpServletRequest request, HttpServletResponse response) {
         try {
             String token = jwtService.extractToken(request);
 
             if (token == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "No token found"));
+                        .body(Map.of("error", "No token found"));
             }
 
             // Validate and extract username
@@ -257,15 +255,12 @@ public class AuthController {
 
             log.debug("Token refreshed for user: {}", username);
 
-            return ResponseEntity.ok(Map.of(
-                "access_token", newToken,
-                "expires_in", 3600
-            ));
+            return ResponseEntity.ok(Map.of("access_token", newToken, "expires_in", 3600));
 
         } catch (Exception e) {
             log.error("Token refresh error", e);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(Map.of("error", "Token refresh failed"));
+                    .body(Map.of("error", "Token refresh failed"));
         }
     }
 
@@ -295,13 +290,9 @@ public class AuthController {
     // Request/Response DTOs
     // ===========================
 
-    /**
-     * Login request DTO
-     */
+    /** Login request DTO */
     public record LoginRequest(String email, String password) {}
 
-    /**
-     * Registration request DTO
-     */
+    /** Registration request DTO */
     public record RegisterRequest(String email, String password, String name) {}
 }
