@@ -25,17 +25,15 @@ interface TourOrchestrationContextType {
   switchToPageEditor: () => void;
   switchToActiveFiles: () => void;
 
-  // File selection
+  // File operations
   selectFirstFile: () => void;
+  pinFile: () => void;
 
   // Crop settings (placeholder for now)
   modifyCropSettings: () => void;
 
   // Tool execution
   executeTool: () => void;
-
-  // Undo operation
-  undoOperation: () => void;
 }
 
 const TourOrchestrationContext = createContext<TourOrchestrationContextType | undefined>(undefined);
@@ -137,6 +135,14 @@ export const TourOrchestrationProvider: React.FC<{ children: React.ReactNode }> 
     }
   }, []);
 
+  const pinFile = useCallback(() => {
+    // Click the pin button directly
+    const pinButton = document.querySelector('[data-tour="file-card-pin"]') as HTMLElement;
+    if (pinButton) {
+      pinButton.click();
+    }
+  }, []);
+
   const modifyCropSettings = useCallback(() => {
     // Dispatch a custom event to modify crop settings
     const event = new CustomEvent('tour:setCropArea', {
@@ -158,14 +164,6 @@ export const TourOrchestrationProvider: React.FC<{ children: React.ReactNode }> 
     }
   }, []);
 
-  const undoOperation = useCallback(() => {
-    // Trigger the undo button click
-    const undoButton = document.querySelector('[data-tour="undo-button"]') as HTMLElement;
-    if (undoButton) {
-      undoButton.click();
-    }
-  }, []);
-
   const value: TourOrchestrationContextType = {
     saveWorkbenchState,
     restoreWorkbenchState,
@@ -176,9 +174,9 @@ export const TourOrchestrationProvider: React.FC<{ children: React.ReactNode }> 
     switchToPageEditor,
     switchToActiveFiles,
     selectFirstFile,
+    pinFile,
     modifyCropSettings,
     executeTool,
-    undoOperation,
   };
 
   return (

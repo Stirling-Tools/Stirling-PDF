@@ -27,7 +27,8 @@ enum TourStep {
   CROP_SETTINGS,
   RUN_BUTTON,
   RESULTS,
-  PIN,
+  FILE_REPLACEMENT,
+  PIN_BUTTON,
   WRAP_UP,
 }
 
@@ -53,7 +54,7 @@ function TourContent() {
 
 export default function OnboardingTour() {
   const { t } = useTranslation();
-  const { completeTour, closeTour, showWelcomeModal, setShowWelcomeModal, startTour } = useOnboarding();
+  const { completeTour, showWelcomeModal, setShowWelcomeModal, startTour } = useOnboarding();
   const { openFilesModal, closeFilesModal } = useFilesModalContext();
   const {
     saveWorkbenchState,
@@ -65,9 +66,9 @@ export default function OnboardingTour() {
     switchToPageEditor,
     switchToActiveFiles,
     selectFirstFile,
+    pinFile,
     modifyCropSettings,
     executeTool,
-    undoOperation,
   } = useTourOrchestration();
 
   // Define steps as object keyed by enum - TypeScript ensures all keys are present
@@ -180,12 +181,18 @@ export default function OnboardingTour() {
       position: 'center',
       padding: 0,
     },
-    [TourStep.PIN]: {
+    [TourStep.FILE_REPLACEMENT]: {
       selector: '[data-tour="file-card-checkbox"]',
-      content: t('onboarding.pin', "The modified file will replace the original file in the <strong>Workbench</strong> automatically, allowing you to easily run it through more tools. You can use the <strong>Pin</strong> button if you'd rather your files stay active after running tools on them."),
+      content: t('onboarding.fileReplacement', "The modified file will replace the original file in the Workbench automatically, allowing you to easily run it through more tools."),
       position: 'left',
       padding: 10,
-      actionAfter: () => undoOperation(),
+    },
+    [TourStep.PIN_BUTTON]: {
+      selector: '[data-tour="file-card-pin"]',
+      content: t('onboarding.pinButton', "You can use the <strong>Pin</strong> button if you'd rather your files stay active after running tools on them."),
+      position: 'left',
+      padding: 10,
+      action: () => pinFile(),
     },
     [TourStep.WRAP_UP]: {
       selector: '[data-tour="help-button"]',
