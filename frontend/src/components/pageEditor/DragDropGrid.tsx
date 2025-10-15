@@ -6,6 +6,7 @@ import { GRID_CONSTANTS } from './constants';
 interface DragDropItem {
   id: string;
   splitAfter?: boolean;
+  isPlaceholder?: boolean;
 }
 
 interface DragDropGridProps<T extends DragDropItem> {
@@ -25,9 +26,12 @@ const DragDropGrid = <T extends DragDropItem>({
   const itemRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // Filter out placeholder items (invisible pages for deselected files)
+  const visibleItems = items.filter(item => !item.isPlaceholder);
+
   // Responsive grid configuration
   const [itemsPerRow, setItemsPerRow] = useState(4);
-  const OVERSCAN = items.length > 1000 ? GRID_CONSTANTS.OVERSCAN_LARGE : GRID_CONSTANTS.OVERSCAN_SMALL;
+  const OVERSCAN = visibleItems.length > 1000 ? GRID_CONSTANTS.OVERSCAN_LARGE : GRID_CONSTANTS.OVERSCAN_SMALL;
 
   // Calculate items per row based on container width
   const calculateItemsPerRow = useCallback(() => {
@@ -76,7 +80,7 @@ const DragDropGrid = <T extends DragDropItem>({
 
   // Virtualization with react-virtual library
   const rowVirtualizer = useVirtualizer({
-    count: Math.ceil(items.length / itemsPerRow),
+    count: Math.ceil(visibleItems.length / itemsPerRow),
     getScrollElement: () => containerRef.current?.closest('[data-scrolling-container]') as Element,
     estimateSize: () => {
       const remToPx = parseFloat(getComputedStyle(document.documentElement).fontSize);
@@ -111,8 +115,8 @@ const DragDropGrid = <T extends DragDropItem>({
       >
         {rowVirtualizer.getVirtualItems().map((virtualRow) => {
           const startIndex = virtualRow.index * itemsPerRow;
-          const endIndex = Math.min(startIndex + itemsPerRow, items.length);
-          const rowItems = items.slice(startIndex, endIndex);
+          const endIndex = Math.min(startIndex + itemsPerRow, visibleItems.length);
+          const rowItems = visibleItems.slice(startIndex, endIndex);
 
           return (
             <div

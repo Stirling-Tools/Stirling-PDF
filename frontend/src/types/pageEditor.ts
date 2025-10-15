@@ -1,4 +1,5 @@
 import { FileId } from './file';
+import { PageBreakSettings } from '../components/pageEditor/commands/pageCommands';
 
 export interface PDFPage {
   id: string;
@@ -9,7 +10,9 @@ export interface PDFPage {
   selected: boolean;
   splitAfter?: boolean;
   isBlankPage?: boolean;
+  isPlaceholder?: boolean;
   originalFileId?: FileId;
+  pageBreakSettings?: PageBreakSettings;
 }
 
 export interface PDFDocument {
@@ -62,6 +65,7 @@ export interface PageEditorFunctions {
   onExportSelected: () => void;
   onExportAll: () => void;
   applyChanges: () => void;
+  reorderPagesByFileOrder: (newFileOrder: FileId[]) => void;
   exportLoading: boolean;
   selectionMode: boolean;
   selectedPageIds: string[];

@@ -281,7 +281,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
     setMouseStartPos(null);
   }, []);
 
-  const fileColorBorder = getFileColorWithOpacity(fileColorIndex, 0.3);
+  const fileColorBorder = page.isBlankPage ? 'transparent' : getFileColorWithOpacity(fileColorIndex, 0.3);
 
   return (
     <div
@@ -410,7 +410,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
             position: 'absolute',
             top: 5,
             left: 5,
-            background: page.isBlankPage ? 'rgba(255, 165, 0, 0.8)' : 'rgba(162, 201, 255, 0.8)',
+            background: 'rgba(162, 201, 255, 0.8)',
             padding: '6px 8px',
             borderRadius: 8,
             zIndex: 2,

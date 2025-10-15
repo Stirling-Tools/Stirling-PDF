@@ -10,6 +10,7 @@ import { FileDropdownMenu } from './FileDropdownMenu';
 import { PageEditorFileDropdown } from './PageEditorFileDropdown';
 import { usePageEditor } from '../../contexts/PageEditorContext';
 import { useFileState } from '../../contexts/FileContext';
+import { useToolWorkflow } from '../../contexts/ToolWorkflowContext';
 import { FileId } from '../../types/file';
 
 // Local interface for PageEditor file display
@@ -262,10 +263,24 @@ const TopControls = ({
     return fileColorAssignments.current;
   }, [fileIdsString]);
 
-  // Memoize the reorder handler - now much simpler!
+  // Get pageEditorFunctions from ToolWorkflowContext
+  const { pageEditorFunctions } = useToolWorkflow();
+
+  // Memoize the reorder handler
   const handleReorder = useCallback((fromIndex: number, toIndex: number) => {
+    // Reorder files in PageEditorContext (updates fileOrder)
     pageEditorReorderFiles(fromIndex, toIndex);
-  }, [pageEditorReorderFiles]);
+
+    // Also reorder pages directly
+    const newOrder = [...pageEditorFileOrder];
+    const [movedFileId] = newOrder.splice(fromIndex, 1);
+    newOrder.splice(toIndex, 0, movedFileId);
+
+    // Call reorderPagesByFileOrder if available
+    if (pageEditorFunctions?.reorderPagesByFileOrder) {
+      pageEditorFunctions.reorderPagesByFileOrder(newOrder);
+    }
+  }, [pageEditorReorderFiles, pageEditorFileOrder, pageEditorFunctions]);
 
   const handleViewChange = useCallback((view: string) => {
     if (!isValidWorkbench(view)) {

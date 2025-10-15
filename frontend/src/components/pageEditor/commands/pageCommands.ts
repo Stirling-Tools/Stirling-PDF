@@ -161,7 +161,8 @@ export class ReorderPagesCommand extends DOMCommand {
     private targetIndex: number,
     private selectedPages: number[] | undefined,
     private getCurrentDocument: () => PDFDocument | null,
-    private setDocument: (doc: PDFDocument) => void
+    private setDocument: (doc: PDFDocument) => void,
+    private onReorderComplete?: (newPages: PDFPage[]) => void
   ) {
     super();
   }
@@ -210,6 +211,11 @@ export class ReorderPagesCommand extends DOMCommand {
     };
 
     this.setDocument(reorderedDocument);
+
+    // Notify that reordering is complete
+    if (this.onReorderComplete) {
+      this.onReorderComplete(newPages);
+    }
   }
 
   undo(): void {
@@ -408,6 +414,14 @@ export class SplitAllCommand extends DOMCommand {
   }
 }
 
+export type PageSize = 'A4' | 'Letter' | 'Legal' | 'A3' | 'A5';
+export type PageOrientation = 'portrait' | 'landscape';
+
+export interface PageBreakSettings {
+  size: PageSize;
+  orientation: PageOrientation;
+}
+
 export class PageBreakCommand extends DOMCommand {
   private insertedPages: PDFPage[] = [];
   private originalDocument: PDFDocument | null = null;
@@ -415,7 +429,8 @@ export class PageBreakCommand extends DOMCommand {
   constructor(
     private selectedPageNumbers: number[],
     private getCurrentDocument: () => PDFDocument | null,
-    private setDocument: (doc: PDFDocument) => void
+    private setDocument: (doc: PDFDocument) => void,
+    private settings?: PageBreakSettings
   ) {
     super();
   }
@@ -450,7 +465,8 @@ export class PageBreakCommand extends DOMCommand {
           rotation: 0,
           selected: false,
           splitAfter: false,
-          isBlankPage: true // Custom flag for blank pages
+          isBlankPage: true, // Custom flag for blank pages
+          pageBreakSettings: this.settings // Store settings for export
         };
         newPages.push(blankPage);
         this.insertedPages.push(blankPage);

@@ -155,16 +155,47 @@ export function PageEditorProvider({ children }: PageEditorProviderProps) {
   React.useEffect(() => {
     const currentFileIds = state.files.ids;
 
-    // Add new files to the end
+    // Identify new files
     const newFileIds = currentFileIds.filter(id => !fileOrder.includes(id));
 
     // Remove deleted files
     const validFileOrder = fileOrder.filter(id => currentFileIds.includes(id));
 
     if (newFileIds.length > 0 || validFileOrder.length !== fileOrder.length) {
-      setFileOrder([...validFileOrder, ...newFileIds]);
+      // Check if new files have insertion positions
+      let hasInsertionPosition = false;
+      for (const fileId of newFileIds) {
+        const stub = state.files.byId[fileId];
+        if (stub?.insertAfterPageId) {
+          hasInsertionPosition = true;
+          break;
+        }
+      }
+
+      if (hasInsertionPosition) {
+        // Respect FileContext order when files have insertion positions
+        // FileContext already handled the positioning logic
+        const orderedNewFiles = currentFileIds.filter(id => newFileIds.includes(id));
+        const orderedValidFiles = currentFileIds.filter(id => validFileOrder.includes(id));
+
+        // Merge while preserving FileContext order
+        const newOrder: FileId[] = [];
+        const newFilesSet = new Set(orderedNewFiles);
+        const validFilesSet = new Set(orderedValidFiles);
+
+        currentFileIds.forEach(id => {
+          if (newFilesSet.has(id) || validFilesSet.has(id)) {
+            newOrder.push(id);
+          }
+        });
+
+        setFileOrder(newOrder);
+      } else {
+        // No insertion positions - append new files to end
+        setFileOrder([...validFileOrder, ...newFileIds]);
+      }
     }
-  }, [state.files.ids, fileOrder]);
+  }, [state.files.ids, state.files.byId, fileOrder]);
 
   const updateCurrentPages = useCallback((pages: PDFPage[] | null) => {
     setCurrentPages(pages);

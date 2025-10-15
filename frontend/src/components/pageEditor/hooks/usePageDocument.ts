@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useFileState } from '../../../contexts/FileContext';
+import { usePageEditor } from '../../../contexts/PageEditorContext';
 import { PDFDocument, PDFPage } from '../../../types/pageEditor';
 import { FileId } from '../../../types/file';
 
@@ -15,9 +16,11 @@ export interface PageDocumentHook {
  */
 export function usePageDocument(): PageDocumentHook {
   const { state, selectors } = useFileState();
+  const { fileOrder } = usePageEditor();
 
-  // Convert Set to array and filter to maintain file order from FileContext
-  const allFileIds = state.files.ids;
+  // Use PageEditorContext's fileOrder instead of FileContext's global order
+  // This ensures the page editor respects its own workspace ordering
+  const allFileIds = fileOrder;
 
   // Derive selected file IDs directly from FileContext (single source of truth)
   // Filter to only include PDF files (PageEditor only supports PDFs)
@@ -26,15 +29,14 @@ export function usePageDocument(): PageDocumentHook {
   const selectedIdsKey = [...state.ui.selectedFileIds].sort().join(',');
   const filesSignature = selectors.getFilesSignature();
 
+  // Get ALL PDF files (selected or not) for document building with placeholders
   const activeFileIds = useMemo(() => {
-    const selectedFileIds = new Set(state.ui.selectedFileIds);
     return allFileIds.filter(id => {
-      if (!selectedFileIds.has(id)) return false;
       const stub = selectors.getStirlingFileStub(id);
       return stub?.name?.toLowerCase().endsWith('.pdf') ?? false;
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allFileIdsKey, selectedIdsKey, filesSignature]);
+  }, [allFileIdsKey, filesSignature]);
 
   const primaryFileId = activeFileIds[0] ?? null;
 
@@ -84,11 +86,26 @@ export function usePageDocument(): PageDocumentHook {
     // Build pages by interleaving original pages with insertions
     let pages: PDFPage[] = [];
 
-    // Helper function to create pages from a file
-    const createPagesFromFile = (fileId: FileId, startPageNumber: number): PDFPage[] => {
+    // Helper function to create pages from a file (or placeholder if deselected)
+    const createPagesFromFile = (fileId: FileId, startPageNumber: number, isSelected: boolean): PDFPage[] => {
       const stirlingFileStub = selectors.getStirlingFileStub(fileId);
       if (!stirlingFileStub) {
         return [];
+      }
+
+      // If file is deselected, create a single placeholder page
+      if (!isSelected) {
+        return [{
+          id: `${fileId}-placeholder`,
+          pageNumber: startPageNumber,
+          originalPageNumber: 1,
+          originalFileId: fileId,
+          rotation: 0,
+          thumbnail: null,
+          selected: false,
+          splitAfter: false,
+          isPlaceholder: true,
+        }];
       }
 
       const processedFile = stirlingFileStub.processedFile;
@@ -105,6 +122,7 @@ export function usePageDocument(): PageDocumentHook {
           splitAfter: page.splitAfter || false,
           originalPageNumber: page.originalPageNumber || page.pageNumber || pageIndex + 1,
           originalFileId: fileId,
+          isPlaceholder: false,
         }));
       } else if (processedFile?.totalPages) {
         // Fallback: create pages without thumbnails but with correct count
@@ -117,6 +135,7 @@ export function usePageDocument(): PageDocumentHook {
           thumbnail: null,
           selected: false,
           splitAfter: false,
+          isPlaceholder: false,
         }));
       }
 
@@ -124,9 +143,11 @@ export function usePageDocument(): PageDocumentHook {
     };
 
     // Collect all pages from original files (without renumbering yet)
+    const selectedFileIdsSet = new Set(state.ui.selectedFileIds);
     const originalFilePages: PDFPage[] = [];
     originalFileIds.forEach(fileId => {
-      const filePages = createPagesFromFile(fileId, 1); // Temporary numbering
+      const isSelected = selectedFileIdsSet.has(fileId);
+      const filePages = createPagesFromFile(fileId, 1, isSelected); // Temporary numbering
       originalFilePages.push(...filePages);
     });
 
@@ -145,7 +166,8 @@ export function usePageDocument(): PageDocumentHook {
       // Collect all pages to insert
       const allNewPages: PDFPage[] = [];
       fileIds.forEach(fileId => {
-        const insertedPages = createPagesFromFile(fileId, 1);
+        const isSelected = selectedFileIdsSet.has(fileId);
+        const insertedPages = createPagesFromFile(fileId, 1, isSelected);
         allNewPages.push(...insertedPages);
       });
 
