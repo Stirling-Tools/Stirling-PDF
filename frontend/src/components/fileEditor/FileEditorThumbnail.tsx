@@ -63,7 +63,7 @@ const FileEditorThumbnail = ({
   const [isDragging, setIsDragging] = useState(false);
   const dragElementRef = useRef<HTMLDivElement | null>(null);
   const [showHoverMenu, setShowHoverMenu] = useState(false);
-  const isMobile = useMediaQuery('(max-width: 768px)');
+  const isMobile = useMediaQuery('(max-width: 1024px)');
   const [showCloseModal, setShowCloseModal] = useState(false);
 
   // Resolve the actual File object for pin/unpin operations
