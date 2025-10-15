@@ -1,8 +1,9 @@
+import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useToolOperation, ToolType } from '../shared/useToolOperation';
 import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
 import { ExtractImagesParameters, defaultParameters } from './useExtractImagesParameters';
-import JSZip from 'jszip';
+import { useToolResources } from '../shared/useToolResources';
 
 // Static configuration that can be used by both the hook and automation executor
 export const buildExtractImagesFormData = (parameters: ExtractImagesParameters, file: File): FormData => {
@@ -13,39 +14,28 @@ export const buildExtractImagesFormData = (parameters: ExtractImagesParameters, 
   return formData;
 };
 
-// Response handler for extract-images which returns a ZIP file
-const extractImagesResponseHandler = async (responseData: Blob, _originalFiles: File[]): Promise<File[]> => {
-  const zip = new JSZip();
-  const zipContent = await zip.loadAsync(responseData);
-  const extractedFiles: File[] = [];
-
-  for (const [filename, file] of Object.entries(zipContent.files)) {
-    if (!file.dir) {
-      const blob = await file.async('blob');
-      const extractedFile = new File([blob], filename, { type: blob.type });
-      extractedFiles.push(extractedFile);
-    }
-  }
-
-  return extractedFiles;
-};
-
-// Static configuration object
+// Static configuration object (without response handler - will be added in hook)
 export const extractImagesOperationConfig = {
   toolType: ToolType.singleFile,
   buildFormData: buildExtractImagesFormData,
   operationType: 'extractImages',
   endpoint: '/api/v1/misc/extract-images',
   defaultParameters,
-  // Extract-images returns a ZIP file containing multiple image files
-  responseHandler: extractImagesResponseHandler,
 } as const;
 
 export const useExtractImagesOperation = () => {
   const { t } = useTranslation();
+  const { extractZipFiles } = useToolResources();
+
+  // Response handler that respects auto-unzip preferences
+  const responseHandler = useCallback(async (blob: Blob, _originalFiles: File[]): Promise<File[]> => {
+    // Extract images returns a ZIP file - use preference-aware extraction
+    return await extractZipFiles(blob);
+  }, [extractZipFiles]);
 
   return useToolOperation<ExtractImagesParameters>({
     ...extractImagesOperationConfig,
+    responseHandler,
     getErrorMessage: createStandardErrorHandler(t('extractImages.error.failed', 'An error occurred while extracting images from the PDF.'))
   });
 };

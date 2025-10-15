@@ -79,8 +79,21 @@ function FileContextInner({
   };
 
   // File operations using unified addFiles helper with persistence
-  const addRawFiles = useCallback(async (files: File[], options?: { insertAfterPageId?: string; selectFiles?: boolean }): Promise<StirlingFile[]> => {
-    const stirlingFiles = await addFiles({ files, ...options }, stateRef, filesRef, dispatch, lifecycleManager, enablePersistence);
+  const addRawFiles = useCallback(async (files: File[], options?: { insertAfterPageId?: string; selectFiles?: boolean; skipAutoUnzip?: boolean }): Promise<StirlingFile[]> => {
+    const stirlingFiles = await addFiles(
+      {
+        files,
+        ...options,
+        // For direct file uploads: ALWAYS unzip (except HTML ZIPs)
+        // skipAutoUnzip bypasses preference checks - HTML detection still applies
+        skipAutoUnzip: true
+      },
+      stateRef,
+      filesRef,
+      dispatch,
+      lifecycleManager,
+      enablePersistence
+    );
 
     // Auto-select the newly added files if requested
     if (options?.selectFiles && stirlingFiles.length > 0) {
