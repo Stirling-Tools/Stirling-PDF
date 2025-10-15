@@ -151,7 +151,7 @@ export const useToolOperation = <TParams>(
   const { state, actions } = useToolState();
   const { actions: fileActions } = useFileContext();
   const { processFiles, cancelOperation: cancelApiCalls } = useToolApiCalls<TParams>();
-  const { generateThumbnails, createDownloadInfo, cleanupBlobUrls, extractZipFiles, extractAllZipFiles } = useToolResources();
+  const { generateThumbnails, createDownloadInfo, cleanupBlobUrls, extractZipFiles } = useToolResources();
 
   // Track last operation for undo functionality
   const lastOperationRef = useRef<{
@@ -259,11 +259,6 @@ export const useToolOperation = <TParams>(
             // Default: assume ZIP response for multi-file endpoints
             // Note: extractZipFiles will check preferences.autoUnzip setting
             processedFiles = await extractZipFiles(response.data);
-
-            if (processedFiles.length === 0) {
-              // Try the generic extraction as fallback
-              processedFiles = await extractAllZipFiles(response.data);
-            }
           }
           // Assume all inputs succeeded together unless server provided an error earlier
           successSourceIds = validFiles.map(f => (f as any).fileId) as any;
@@ -446,7 +441,7 @@ export const useToolOperation = <TParams>(
       actions.setLoading(false);
       actions.setProgress(null);
     }
-  }, [t, config, actions, addFiles, consumeFiles, processFiles, generateThumbnails, createDownloadInfo, cleanupBlobUrls, extractZipFiles, extractAllZipFiles]);
+  }, [t, config, actions, addFiles, consumeFiles, processFiles, generateThumbnails, createDownloadInfo, cleanupBlobUrls, extractZipFiles]);
 
   const cancelOperation = useCallback(() => {
     cancelApiCalls();
