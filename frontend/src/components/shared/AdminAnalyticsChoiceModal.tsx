@@ -1,4 +1,4 @@
-import { Modal, Stack, Button, Text, Title, Paper, List } from '@mantine/core';
+import { Modal, Stack, Button, Text, Title, Anchor } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
 import { Z_ANALYTICS_MODAL } from '../../styles/zIndex';
@@ -53,41 +53,22 @@ export default function AdminAnalyticsChoiceModal({ opened }: AdminAnalyticsChoi
       zIndex={Z_ANALYTICS_MODAL}
     >
       <Stack gap="md">
-        <Title order={2}>{t('analytics.modal.title', 'Configure Analytics')}</Title>
+        <Title order={2}>{t('analytics.title', 'Do you want make Stirling PDF better?')}</Title>
 
         <Text size="sm" c="dimmed">
-          {t('analytics.modal.description', 'Choose whether to enable analytics for Stirling PDF. If enabled, users can control individual services (PostHog and Scarf) through the cookie preferences.')}
+          {t('analytics.paragraph1', 'Stirling PDF has opt in analytics to help us improve the product. We do not track any personal information or file contents.')}
         </Text>
 
-        <Paper p="md" withBorder>
-          <Stack gap="xs">
-            <Text fw={600} size="sm">
-              {t('analytics.modal.whatWeCollect', 'What we collect:')}
-            </Text>
-            <List size="sm" spacing="xs">
-              <List.Item>{t('analytics.modal.collect.system', 'Operating system and Java version')}</List.Item>
-              <List.Item>{t('analytics.modal.collect.config', 'CPU/memory configuration and deployment type')}</List.Item>
-              <List.Item>{t('analytics.modal.collect.features', 'Aggregate feature usage counts')}</List.Item>
-              <List.Item>{t('analytics.modal.collect.pages', 'Page visits (via tracking pixel)')}</List.Item>
-            </List>
-          </Stack>
-        </Paper>
-
-        <Paper p="md" withBorder>
-          <Stack gap="xs">
-            <Text fw={600} size="sm">
-              {t('analytics.modal.whatWeDoNotCollect', 'What we do NOT collect:')}
-            </Text>
-            <List size="sm" spacing="xs">
-              <List.Item>{t('analytics.modal.notCollect.documents', 'Document content or file data')}</List.Item>
-              <List.Item>{t('analytics.modal.notCollect.pii', 'Personally identifiable information (PII)')}</List.Item>
-              <List.Item>{t('analytics.modal.notCollect.ip', 'IP addresses')}</List.Item>
-            </List>
-          </Stack>
-        </Paper>
-
-        <Text size="sm" fs="italic">
-          {t('analytics.modal.privacy', 'All analytics data is hosted on EU servers and respects your privacy.')}
+        <Text size="sm" c="dimmed">
+          {t('analytics.paragraph2', 'Please consider enabling analytics to help Stirling-PDF grow and to allow us to understand our users better.')}{' '}
+          <Anchor
+            href="https://docs.stirlingpdf.com/analytics-telemetry"
+            target="_blank"
+            rel="noopener noreferrer"
+            size="sm"
+          >
+            {t('analytics.learnMore', 'Learn more')}
+          </Anchor>
         </Text>
 
         {error && (
@@ -103,7 +84,7 @@ export default function AdminAnalyticsChoiceModal({ opened }: AdminAnalyticsChoi
             fullWidth
             size="md"
           >
-            {t('analytics.modal.enable', 'Enable Analytics')}
+            {t('analytics.enable', 'Enable analytics')}
           </Button>
 
           <Button
@@ -114,12 +95,12 @@ export default function AdminAnalyticsChoiceModal({ opened }: AdminAnalyticsChoi
             variant="subtle"
             c="gray"
           >
-            {t('analytics.modal.disable', 'Disable Analytics')}
+            {t('analytics.disable', 'Disable analytics')}
           </Button>
         </Stack>
 
         <Text size="xs" c="dimmed" ta="center">
-          {t('analytics.modal.note', 'This choice can be changed later by editing the settings.yml file.')}
+          {t('analytics.settings', 'You can change the settings for analytics in the config/settings.yml file')}
         </Text>
       </Stack>
     </Modal>

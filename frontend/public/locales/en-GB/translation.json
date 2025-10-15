@@ -232,6 +232,7 @@
     "title": "Do you want make Stirling PDF better?",
     "paragraph1": "Stirling PDF has opt in analytics to help us improve the product. We do not track any personal information or file contents.",
     "paragraph2": "Please consider enabling analytics to help Stirling-PDF grow and to allow us to understand our users better.",
+    "learnMore": "Learn more",
     "enable": "Enable analytics",
     "disable": "Disable analytics",
     "settings": "You can change the settings for analytics in the config/settings.yml file"
@@ -3619,29 +3620,6 @@
     "submit": "Add Attachments",
     "results": {
       "title": "Attachment Results"
-    }
-  },
-  "analytics": {
-    "modal": {
-      "title": "Configure Analytics",
-      "description": "Choose whether to enable analytics for Stirling PDF. If enabled, users can control individual services (PostHog and Scarf) through the cookie preferences.",
-      "whatWeCollect": "What we collect:",
-      "collect": {
-        "system": "Operating system and Java version",
-        "config": "CPU/memory configuration and deployment type",
-        "features": "Aggregate feature usage counts",
-        "pages": "Page visits (via tracking pixel)"
-      },
-      "whatWeDoNotCollect": "What we do NOT collect:",
-      "notCollect": {
-        "documents": "Document content or file data",
-        "pii": "Personally identifiable information (PII)",
-        "ip": "IP addresses"
-      },
-      "privacy": "All analytics data is hosted on EU servers and respects your privacy.",
-      "enable": "Enable Analytics",
-      "disable": "Disable Analytics",
-      "note": "This choice can be changed later by editing the settings.yml file."
     }
   },
   "termsAndConditions": "Terms & Conditions",
