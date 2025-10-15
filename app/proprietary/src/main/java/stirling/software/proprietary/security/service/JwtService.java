@@ -60,8 +60,13 @@ public class JwtService implements JwtServiceInterface {
         this.keyPersistenceService = keyPersistenceService;
     }
 
-    @Override
+    // Convenience method for direct Authentication use in proprietary code
     public String generateToken(Authentication authentication, Map<String, Object> claims) {
+        return generateToken((Object) authentication, claims);
+    }
+
+    public String generateToken(Object authenticationObj, Map<String, Object> claims) {
+        Authentication authentication = (Authentication) authenticationObj;
         Object principal = authentication.getPrincipal();
         String username = "";
 

@@ -10,12 +10,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.service.PasswordPolicyServiceInterface;
 
 /** Service for validating passwords against configured password policy. */
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class PasswordPolicyService {
+public class PasswordPolicyService implements PasswordPolicyServiceInterface {
 
     private final ApplicationProperties applicationProperties;
 

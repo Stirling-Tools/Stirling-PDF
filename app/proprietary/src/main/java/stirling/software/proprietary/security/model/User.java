@@ -18,6 +18,7 @@ import lombok.Setter;
 import lombok.ToString;
 
 import stirling.software.common.model.enumeration.Role;
+import stirling.software.common.model.user.UserInterface;
 import stirling.software.proprietary.model.Team;
 
 @Entity
@@ -27,7 +28,7 @@ import stirling.software.proprietary.model.Team;
 @Setter
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString(onlyExplicitlyIncluded = true)
-public class User implements UserDetails, Serializable {
+public class User implements UserInterface, UserDetails, Serializable {
 
     private static final long serialVersionUID = 1L;
 

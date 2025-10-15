@@ -44,7 +44,7 @@ import stirling.software.proprietary.security.session.SessionPersistentRegistry;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class UserService implements UserServiceInterface {
+public class UserService implements UserServiceInterface<User, Team> {
 
     private final UserRepository userRepository;
     private final TeamRepository teamRepository;

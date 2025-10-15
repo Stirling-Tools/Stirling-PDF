@@ -8,9 +8,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * Entity for tracking password history to prevent reuse.
- */
+/** Entity for tracking password history to prevent reuse. */
 @Entity
 @Table(name = "password_history")
 @Data
@@ -39,9 +37,7 @@ public class PasswordHistory implements Serializable {
         createdAt = LocalDateTime.now();
     }
 
-    /**
-     * Create a new password history entry.
-     */
+    /** Create a new password history entry. */
     public static PasswordHistory createEntry(User user, String passwordHash) {
         PasswordHistory history = new PasswordHistory();
         history.setUser(user);

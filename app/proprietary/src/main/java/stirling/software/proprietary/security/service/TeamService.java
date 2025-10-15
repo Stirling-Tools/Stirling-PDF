@@ -4,12 +4,13 @@ import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.common.service.TeamServiceInterface;
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.security.repository.TeamRepository;
 
 @Service
 @RequiredArgsConstructor
-public class TeamService {
+public class TeamService implements TeamServiceInterface<Team> {
 
     private final TeamRepository teamRepository;
 

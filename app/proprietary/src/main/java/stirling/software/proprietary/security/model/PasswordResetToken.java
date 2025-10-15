@@ -8,9 +8,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * Entity for password reset tokens.
- */
+/** Entity for password reset tokens. */
 @Entity
 @Table(name = "password_reset_tokens")
 @Data
@@ -45,23 +43,17 @@ public class PasswordResetToken implements Serializable {
         createdAt = LocalDateTime.now();
     }
 
-    /**
-     * Check if the token has expired.
-     */
+    /** Check if the token has expired. */
     public boolean isExpired() {
         return LocalDateTime.now().isAfter(expiresAt);
     }
 
-    /**
-     * Check if the token is valid (not expired and not used).
-     */
+    /** Check if the token is valid (not expired and not used). */
     public boolean isValid() {
         return !isExpired() && !used;
     }
 
-    /**
-     * Create a new password reset token.
-     */
+    /** Create a new password reset token. */
     public static PasswordResetToken createToken(User user, String token, int expirationHours) {
         PasswordResetToken resetToken = new PasswordResetToken();
         resetToken.setUser(user);

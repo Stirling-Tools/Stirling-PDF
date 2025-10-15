@@ -11,12 +11,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.service.LoginAttemptServiceInterface;
 import stirling.software.proprietary.security.model.AttemptCounter;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class LoginAttemptService {
+public class LoginAttemptService implements LoginAttemptServiceInterface {
 
     private final ApplicationProperties applicationProperties;
 

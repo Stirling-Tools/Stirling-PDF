@@ -11,7 +11,8 @@
       "Bash(rg:*)",
       "Bash(strings:*)",
       "Bash(pkill:*)",
-      "Bash(true)"
+      "Bash(true)",
+      "Bash(git log:*)"
     ],
     "deny": []
   }
