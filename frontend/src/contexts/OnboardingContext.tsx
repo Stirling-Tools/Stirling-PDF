@@ -25,11 +25,7 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   // Only show after user has seen the tool panel mode prompt
   useEffect(() => {
     if (!preferences.hasCompletedOnboarding && preferences.toolPanelModePromptSeen) {
-      // Small delay to ensure UI is rendered
-      const timer = setTimeout(() => {
-        setShowWelcomeModal(true);
-      }, 500);
-      return () => clearTimeout(timer);
+      setShowWelcomeModal(true);
     }
   }, [preferences.hasCompletedOnboarding, preferences.toolPanelModePromptSeen]);
 
