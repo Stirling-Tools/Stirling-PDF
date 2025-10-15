@@ -44,13 +44,17 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
     console.log('Logout placeholder for SaaS compatibility');
   };
 
+  // TODO: Replace with actual role check from JWT/auth context
+  const isAdmin = true; // Emulated admin role for now
+
   // Left navigation structure and icons
   const configNavSections = useMemo(() =>
     createConfigNavSections(
       Overview,
-      handleLogout
+      handleLogout,
+      isAdmin
     ),
-    []
+    [isAdmin]
   );
 
   const activeLabel = useMemo(() => {

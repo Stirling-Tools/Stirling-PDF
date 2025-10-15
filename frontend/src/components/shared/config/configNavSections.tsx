@@ -2,6 +2,15 @@ import React from 'react';
 import { NavKey } from './types';
 import HotkeysSection from './configSections/HotkeysSection';
 import GeneralSection from './configSections/GeneralSection';
+import AdminGeneralSection from './configSections/AdminGeneralSection';
+import AdminSecuritySection from './configSections/AdminSecuritySection';
+import AdminConnectionsSection from './configSections/AdminConnectionsSection';
+import AdminPrivacySection from './configSections/AdminPrivacySection';
+import AdminAdvancedSection from './configSections/AdminAdvancedSection';
+import AdminMailSection from './configSections/AdminMailSection';
+import AdminLegalSection from './configSections/AdminLegalSection';
+import AdminPremiumSection from './configSections/AdminPremiumSection';
+import AdminEndpointsSection from './configSections/AdminEndpointsSection';
 
 export interface ConfigNavItem {
   key: NavKey;
@@ -27,7 +36,8 @@ export interface ConfigColors {
 
 export const createConfigNavSections = (
   Overview: React.ComponentType<{ onLogoutClick: () => void }>,
-  onLogoutClick: () => void
+  onLogoutClick: () => void,
+  isAdmin: boolean = false
 ): ConfigNavSection[] => {
   const sections: ConfigNavSection[] = [
     {
@@ -59,6 +69,69 @@ export const createConfigNavSections = (
       ],
     },
   ];
+
+  // Add Admin Settings section if user is admin
+  if (isAdmin) {
+    sections.push({
+      title: 'Admin Settings',
+      items: [
+        {
+          key: 'adminGeneral',
+          label: 'General',
+          icon: 'settings-rounded',
+          component: <AdminGeneralSection />
+        },
+        {
+          key: 'adminSecurity',
+          label: 'Security',
+          icon: 'shield-rounded',
+          component: <AdminSecuritySection />
+        },
+        {
+          key: 'adminConnections',
+          label: 'Connections',
+          icon: 'link-rounded',
+          component: <AdminConnectionsSection />
+        },
+        {
+          key: 'adminMail',
+          label: 'Mail',
+          icon: 'mail-rounded',
+          component: <AdminMailSection />
+        },
+        {
+          key: 'adminLegal',
+          label: 'Legal',
+          icon: 'gavel-rounded',
+          component: <AdminLegalSection />
+        },
+        {
+          key: 'adminPrivacy',
+          label: 'Privacy',
+          icon: 'visibility-rounded',
+          component: <AdminPrivacySection />
+        },
+        {
+          key: 'adminPremium',
+          label: 'Premium',
+          icon: 'star-rounded',
+          component: <AdminPremiumSection />
+        },
+        {
+          key: 'adminEndpoints',
+          label: 'Endpoints',
+          icon: 'api-rounded',
+          component: <AdminEndpointsSection />
+        },
+        {
+          key: 'adminAdvanced',
+          label: 'Advanced',
+          icon: 'tune-rounded',
+          component: <AdminAdvancedSection />
+        },
+      ],
+    });
+  }
 
   return sections;
 };
