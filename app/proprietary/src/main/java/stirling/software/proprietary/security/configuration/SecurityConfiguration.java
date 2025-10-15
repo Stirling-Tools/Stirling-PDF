@@ -241,6 +241,8 @@ public class SecurityConfiguration {
                                                         || trimmedUri.startsWith("/saml2")
                                                         || trimmedUri.endsWith(".svg")
                                                         || trimmedUri.startsWith("/register")
+                                                        || trimmedUri.startsWith("/signup")
+                                                        || trimmedUri.startsWith("/auth/callback")
                                                         || trimmedUri.startsWith("/error")
                                                         || trimmedUri.startsWith("/images/")
                                                         || trimmedUri.startsWith("/public/")
@@ -252,6 +254,9 @@ public class SecurityConfiguration {
                                                         || trimmedUri.startsWith("/favicon")
                                                         || trimmedUri.startsWith(
                                                                 "/api/v1/info/status")
+                                                        || trimmedUri.startsWith("/api/v1/auth/register")
+                                                        || trimmedUri.startsWith("/api/v1/auth/login")
+                                                        || trimmedUri.startsWith("/api/v1/auth/refresh")
                                                         || trimmedUri.startsWith("/v1/api-docs")
                                                         || uri.contains("/v1/api-docs");
                                             })
