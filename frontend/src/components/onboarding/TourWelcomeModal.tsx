@@ -1,5 +1,6 @@
 import { Modal, Title, Text, Button, Stack, Group } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
+import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from '../../styles/zIndex';
 
 interface TourWelcomeModalProps {
   opened: boolean;
@@ -24,6 +25,7 @@ export default function TourWelcomeModal({
       size="md"
       radius="lg"
       withCloseButton={false}
+      zIndex={Z_INDEX_OVER_FULLSCREEN_SURFACE}
     >
       <Stack gap="lg">
         <Stack gap="xs">
