@@ -216,7 +216,7 @@ export default function OnboardingTour() {
   const handleCloseTour = ({ setIsOpen }: { setIsOpen: (value: boolean) => void }) => {
     setIsOpen(false);
     restoreWorkbenchState();
-    closeTour();
+    completeTour();
   };
 
   return (
