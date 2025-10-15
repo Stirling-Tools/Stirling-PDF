@@ -22,7 +22,6 @@ public class FlattenRequest extends PDFFile {
     @Schema(
             description = "Optional DPI for page rendering when flattening the full document.",
             requiredMode = Schema.RequiredMode.NOT_REQUIRED,
-            example = "100",
             minimum = "72")
     private Integer renderDpi;
 }
