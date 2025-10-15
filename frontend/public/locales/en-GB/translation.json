@@ -3092,6 +3092,10 @@
         "title": "Analytics",
         "description": "These cookies help us understand how our tools are being used, so we can focus on building the features our community values most. Rest assured—Stirling PDF cannot and will never track the content of the documents you work with."
       }
+    },
+    "services": {
+      "posthog": "PostHog Analytics",
+      "scarf": "Scarf Pixel"
     }
   },
   "removeMetadata": {
@@ -3615,6 +3619,29 @@
     "submit": "Add Attachments",
     "results": {
       "title": "Attachment Results"
+    }
+  },
+  "analytics": {
+    "modal": {
+      "title": "Configure Analytics",
+      "description": "Choose whether to enable analytics for Stirling PDF. If enabled, users can control individual services (PostHog and Scarf) through the cookie preferences.",
+      "whatWeCollect": "What we collect:",
+      "collect": {
+        "system": "Operating system and Java version",
+        "config": "CPU/memory configuration and deployment type",
+        "features": "Aggregate feature usage counts",
+        "pages": "Page visits (via tracking pixel)"
+      },
+      "whatWeDoNotCollect": "What we do NOT collect:",
+      "notCollect": {
+        "documents": "Document content or file data",
+        "pii": "Personally identifiable information (PII)",
+        "ip": "IP addresses"
+      },
+      "privacy": "All analytics data is hosted on EU servers and respects your privacy.",
+      "enable": "Enable Analytics",
+      "disable": "Disable Analytics",
+      "note": "This choice can be changed later by editing the settings.yml file."
     }
   },
   "termsAndConditions": "Terms & Conditions",

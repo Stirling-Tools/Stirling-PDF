@@ -9,6 +9,7 @@ import { SidebarProvider } from "./contexts/SidebarContext";
 import { PreferencesProvider } from "./contexts/PreferencesContext";
 import ErrorBoundary from "./components/shared/ErrorBoundary";
 import HomePage from "./pages/HomePage";
+import { useScarfTracking } from "./hooks/useScarfTracking";
 
 // Import global styles
 import "./styles/tailwind.css";
@@ -38,6 +39,9 @@ const LoadingFallback = () => (
 );
 
 export default function App() {
+  // Initialize scarf tracking (mounts once at app startup)
+  useScarfTracking();
+
   return (
     <Suspense fallback={<LoadingFallback />}>
       <RainbowThemeProvider>

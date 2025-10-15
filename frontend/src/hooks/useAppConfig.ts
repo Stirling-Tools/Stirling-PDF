@@ -10,7 +10,9 @@ export interface AppConfig {
   languages?: string[];
   enableLogin?: boolean;
   enableAlphaFunctionality?: boolean;
-  enableAnalytics?: boolean;
+  enableAnalytics?: boolean | null;
+  enablePosthog?: boolean | null;
+  enableScarf?: boolean | null;
   premiumEnabled?: boolean;
   premiumKey?: string;
   termsAndConditions?: string;
@@ -45,15 +47,16 @@ export function useAppConfig(): UseAppConfigReturn {
     try {
       setLoading(true);
       setError(null);
-      
+
       const response = await fetch('/api/v1/config/app-config');
-      
+
       if (!response.ok) {
         throw new Error(`Failed to fetch config: ${response.status} ${response.statusText}`);
       }
-      
+
       const data: AppConfig = await response.json();
       setConfig(data);
+      console.warn('Fetched app config:', data);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
       setError(errorMessage);
