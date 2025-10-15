@@ -1,6 +1,6 @@
 import React from 'react';
 import { Stack, Text, Code, Group, Badge, Alert, Loader } from '@mantine/core';
-import { useAppConfig } from '../../../../hooks/useAppConfig';
+import { useAppConfig } from '../../../../contexts/AppConfigContext';
 
 const Overview: React.FC = () => {
   const { config, loading, error } = useAppConfig();

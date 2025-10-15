@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useAppConfig } from './useAppConfig';
+import { useAppConfig } from '../contexts/AppConfigContext';
 import { useCookieConsent } from './useCookieConsent';
 import { setScarfConfig, firePixel } from '../utils/scarfTracking';
 

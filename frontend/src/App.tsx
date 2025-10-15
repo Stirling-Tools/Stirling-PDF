@@ -7,6 +7,7 @@ import { ToolWorkflowProvider } from "./contexts/ToolWorkflowContext";
 import { HotkeyProvider } from "./contexts/HotkeyContext";
 import { SidebarProvider } from "./contexts/SidebarContext";
 import { PreferencesProvider } from "./contexts/PreferencesContext";
+import { AppConfigProvider } from "./contexts/AppConfigContext";
 import ErrorBoundary from "./components/shared/ErrorBoundary";
 import HomePage from "./pages/HomePage";
 import { useScarfTracking } from "./hooks/useScarfTracking";
@@ -38,16 +39,21 @@ const LoadingFallback = () => (
   </div>
 );
 
-export default function App() {
-  // Initialize scarf tracking (mounts once at app startup)
+// Component to initialize scarf tracking (must be inside AppConfigProvider)
+function ScarfTrackingInitializer() {
   useScarfTracking();
+  return null;
+}
 
+export default function App() {
   return (
     <Suspense fallback={<LoadingFallback />}>
       <RainbowThemeProvider>
         <ErrorBoundary>
-          <PreferencesProvider>
-            <FileContextProvider enableUrlSync={true} enablePersistence={true}>
+          <AppConfigProvider>
+            <ScarfTrackingInitializer />
+            <PreferencesProvider>
+              <FileContextProvider enableUrlSync={true} enablePersistence={true}>
               <NavigationProvider>
                 <FilesModalProvider>
                   <ToolWorkflowProvider>
@@ -67,6 +73,7 @@ export default function App() {
               </NavigationProvider>
             </FileContextProvider>
           </PreferencesProvider>
+          </AppConfigProvider>
         </ErrorBoundary>
       </RainbowThemeProvider>
     </Suspense>

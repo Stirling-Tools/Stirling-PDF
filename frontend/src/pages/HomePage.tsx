@@ -6,7 +6,7 @@ import { useSidebarContext } from "../contexts/SidebarContext";
 import { useDocumentMeta } from "../hooks/useDocumentMeta";
 import { BASE_PATH, getBaseUrl } from "../constants/app";
 import { useMediaQuery } from "@mantine/hooks";
-import { useAppConfig } from "../hooks/useAppConfig";
+import { useAppConfig } from "../contexts/AppConfigContext";
 import AppsIcon from '@mui/icons-material/AppsRounded';
 
 import ToolPanel from "../components/tools/ToolPanel";

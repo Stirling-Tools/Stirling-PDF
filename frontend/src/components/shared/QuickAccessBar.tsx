@@ -13,7 +13,7 @@ import './quickAccessBar/QuickAccessBar.css';
 import AllToolsNavButton from './AllToolsNavButton';
 import ActiveToolButton from "./quickAccessBar/ActiveToolButton";
 import AppConfigModal from './AppConfigModal';
-import { useAppConfig } from '../../hooks/useAppConfig';
+import { useAppConfig } from '../../contexts/AppConfigContext';
 import {
   isNavButtonActive,
   getNavButtonStyle,

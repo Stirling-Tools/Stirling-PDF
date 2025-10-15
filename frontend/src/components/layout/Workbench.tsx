@@ -6,7 +6,7 @@ import { useFileHandler } from '../../hooks/useFileHandler';
 import { useFileState } from '../../contexts/FileContext';
 import { useNavigationState, useNavigationActions } from '../../contexts/NavigationContext';
 import { useViewer } from '../../contexts/ViewerContext';
-import { useAppConfig } from '../../hooks/useAppConfig';
+import { useAppConfig } from '../../contexts/AppConfigContext';
 import './Workbench.css';
 
 import TopControls from '../shared/TopControls';
