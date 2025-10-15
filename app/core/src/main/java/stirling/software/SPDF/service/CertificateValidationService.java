@@ -1,6 +1,8 @@
 package stirling.software.SPDF.service;
 
 import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.security.MessageDigest;
@@ -10,7 +12,15 @@ import java.util.*;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 
+import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDDocumentNameDictionary;
+import org.apache.pdfbox.pdmodel.PDEmbeddedFilesNameTreeNode;
+import org.apache.pdfbox.pdmodel.common.filespecification.PDComplexFileSpecification;
+import org.apache.pdfbox.pdmodel.common.filespecification.PDEmbeddedFile;
 import org.bouncycastle.asn1.ASN1Encodable;
 import org.bouncycastle.asn1.ASN1GeneralizedTime;
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
@@ -24,13 +34,15 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.tsp.TimeStampToken;
 import org.bouncycastle.util.Store;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.w3c.dom.Document;
+import org.w3c.dom.NodeList;
 
 import jakarta.annotation.PostConstruct;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.ServerCertificateServiceInterface;
 
 @Service
@@ -53,18 +65,25 @@ public class CertificateValidationService {
     // Separate trust stores: signing vs TLS
     private KeyStore signingTrustAnchors; // AATL/EUTL + server cert for PDF signing
     private final ServerCertificateServiceInterface serverCertificateService;
+    private final ApplicationProperties applicationProperties;
 
-    @Value("${security.validation.enableEUTL:false}")
-    private boolean enableEUTL;
+    // EUTL (EU Trusted List) constants
+    private static final String NS_TSL = "http://uri.etsi.org/02231/v2#";
 
-    @Value("${security.validation.allowAIA:true}")
-    private boolean allowAIA;
+    // Qualified CA service types to import as trust anchors (per ETSI TS 119 612)
+    private static final Set<String> EUTL_SERVICE_TYPES =
+            new HashSet<>(
+                    Arrays.asList(
+                            "http://uri.etsi.org/TrstSvc/Svctype/CA/QC",
+                            "http://uri.etsi.org/TrstSvc/Svctype/NationalRootCA-QC"));
 
-    @Value("${security.validation.revocation.mode:none}")
-    private String revocationMode; // none|ocsp|ocsp+crl
-
-    @Value("${security.validation.revocation.hardFail:false}")
-    private boolean revocationHardFail;
+    // Active statuses to accept (per ETSI TS 119 612)
+    private static final String STATUS_UNDER_SUPERVISION =
+            "http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/undersupervision";
+    private static final String STATUS_ACCREDITED =
+            "http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/accredited";
+    private static final String STATUS_SUPERVISION_IN_CESSATION =
+            "http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/supervisionincessation";
 
     static {
         if (java.security.Security.getProvider("BC") == null) {
@@ -73,9 +92,10 @@ public class CertificateValidationService {
     }
 
     public CertificateValidationService(
-            @Autowired(required = false)
-                    ServerCertificateServiceInterface serverCertificateService) {
+            @Autowired(required = false) ServerCertificateServiceInterface serverCertificateService,
+            ApplicationProperties applicationProperties) {
         this.serverCertificateService = serverCertificateService;
+        this.applicationProperties = applicationProperties;
     }
 
     @PostConstruct
@@ -83,21 +103,23 @@ public class CertificateValidationService {
         signingTrustAnchors = KeyStore.getInstance(KeyStore.getDefaultType());
         signingTrustAnchors.load(null, null);
 
-        // Load from multiple trust sources for maximum compatibility
-        loadJavaSystemTrustStore(); // Java's cacerts (includes OS trust store on Windows)
-        loadBundledMozillaCACerts(); // Mozilla CA bundle (MPL 2.0)
+        ApplicationProperties.Security.Validation validation =
+                applicationProperties.getSecurity().getValidation();
 
-        // Load trust anchors for PDF signing
-        loadServerCertAsAnchor();
+        // Enable JDK fetching of OCSP/CRLDP if allowed
+        if (validation.isAllowAIA()) {
+            java.security.Security.setProperty("ocsp.enable", "true");
+            System.setProperty("com.sun.security.enableCRLDP", "true");
+            System.setProperty("com.sun.security.enableAIAcaIssuers", "true");
+            log.info("Enabled AIA certificate fetching and revocation checking");
+        }
 
-        // Optional: EUTL (EU Trust List)
-        if (enableEUTL) loadEUTLCertificates();
-
-        // Note: For network-based revocation checking (OCSP/CRL fetching), configure JVM
-        // properties:
-        // -Dcom.sun.security.enableCRLDP=true
-        // -Dcom.sun.security.enableAIAcaIssuers=true
-        // And Security.setProperty("ocsp.enable", "true") at JVM startup
+        // Trust only what we explicitly opt into:
+        if (validation.getTrust().isServerAsAnchor()) loadServerCertAsAnchor();
+        if (validation.getTrust().isUseSystemTrust()) loadJavaSystemTrustStore();
+        if (validation.getTrust().isUseMozillaBundle()) loadBundledMozillaCACerts();
+        if (validation.getTrust().isUseAATL()) loadAATLCertificates();
+        if (validation.getTrust().isUseEUTL()) loadEUTLCertificates();
     }
 
     /**
@@ -146,6 +168,8 @@ public class CertificateValidationService {
         // PKIX parameters
         PKIXBuilderParameters params = new PKIXBuilderParameters(anchors, target);
         params.addCertStore(intermediateStore);
+        String revocationMode =
+                applicationProperties.getSecurity().getValidation().getRevocation().getMode();
         params.setRevocationEnabled(!"none".equalsIgnoreCase(revocationMode));
         if (validationTime != null) {
             params.setDate(validationTime);
@@ -162,6 +186,12 @@ public class CertificateValidationService {
                         EnumSet.noneOf(PKIXRevocationChecker.Option.class);
 
                 // Soft-fail: allow validation to succeed if revocation status unavailable
+                boolean revocationHardFail =
+                        applicationProperties
+                                .getSecurity()
+                                .getValidation()
+                                .getRevocation()
+                                .isHardFail();
                 if (!revocationHardFail) {
                     options.add(PKIXRevocationChecker.Option.SOFT_FAIL);
                 }
@@ -265,6 +295,8 @@ public class CertificateValidationService {
      * @return true if revocation mode is not "none"
      */
     public boolean isRevocationEnabled() {
+        String revocationMode =
+                applicationProperties.getSecurity().getValidation().getRevocation().getMode();
         return !"none".equalsIgnoreCase(revocationMode);
     }
 
@@ -456,9 +488,372 @@ public class CertificateValidationService {
         }
     }
 
+    /** Download and parse Adobe Approved Trust List (AATL) and add CA certs as trust anchors. */
+    private void loadAATLCertificates() {
+        try {
+            String aatlUrl = applicationProperties.getSecurity().getValidation().getAatl().getUrl();
+            log.info("Loading Adobe Approved Trust List (AATL) from: {}", aatlUrl);
+            byte[] pdfBytes = downloadTrustList(aatlUrl);
+            if (pdfBytes == null) {
+                log.warn("AATL download returned no data");
+                return;
+            }
+            int added = parseAATLPdf(pdfBytes);
+            log.info("Loaded {} AATL CA certificates into signing trust", added);
+        } catch (Exception e) {
+            log.warn("Failed to load AATL: {}", e.getMessage());
+            log.debug("AATL loading error", e);
+        }
+    }
+
+    /** Simple HTTP(S) fetch with sane timeouts. */
+    private byte[] downloadTrustList(String urlStr) {
+        HttpURLConnection conn = null;
+        try {
+            URL url = new URL(urlStr);
+            conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setConnectTimeout(10_000);
+            conn.setReadTimeout(30_000);
+            conn.setInstanceFollowRedirects(true);
+
+            int code = conn.getResponseCode();
+            if (code == HttpURLConnection.HTTP_OK) {
+                try (InputStream in = conn.getInputStream();
+                        ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+                    byte[] buf = new byte[8192];
+                    int r;
+                    while ((r = in.read(buf)) != -1) out.write(buf, 0, r);
+                    return out.toByteArray();
+                }
+            } else {
+                log.warn("AATL download failed: HTTP {}", code);
+                return null;
+            }
+        } catch (Exception e) {
+            log.warn("AATL download error: {}", e.getMessage());
+            return null;
+        } finally {
+            if (conn != null) conn.disconnect();
+        }
+    }
+
+    /**
+     * Parse AATL PDF, extract the embedded "SecuritySettings.xml", and import CA certs. Returns the
+     * number of newly-added CA certificates.
+     */
+    private int parseAATLPdf(byte[] pdfBytes) throws Exception {
+        try (PDDocument doc = Loader.loadPDF(pdfBytes)) {
+            PDDocumentNameDictionary names = doc.getDocumentCatalog().getNames();
+            if (names == null) {
+                log.warn("AATL PDF has no name dictionary");
+                return 0;
+            }
+
+            PDEmbeddedFilesNameTreeNode efRoot = names.getEmbeddedFiles();
+            if (efRoot == null) {
+                log.warn("AATL PDF has no embedded files");
+                return 0;
+            }
+
+            // 1) Try names at root level
+            Map<String, PDComplexFileSpecification> top = efRoot.getNames();
+            if (top != null) {
+                Integer count = tryParseSecuritySettingsXML(top);
+                if (count != null) return count;
+            }
+
+            // 2) Traverse kids (name-tree)
+            @SuppressWarnings("unchecked")
+            List<?> kids = efRoot.getKids();
+            if (kids != null) {
+                for (Object kidObj : kids) {
+                    if (kidObj instanceof PDEmbeddedFilesNameTreeNode) {
+                        PDEmbeddedFilesNameTreeNode kid = (PDEmbeddedFilesNameTreeNode) kidObj;
+                        Map<String, PDComplexFileSpecification> map = kid.getNames();
+                        if (map != null) {
+                            Integer count = tryParseSecuritySettingsXML(map);
+                            if (count != null) return count;
+                        }
+                    }
+                }
+            }
+
+            log.warn("AATL PDF did not contain SecuritySettings.xml");
+            return 0;
+        }
+    }
+
+    /**
+     * Try to locate "SecuritySettings.xml" in the given name map. If found and parsed, returns the
+     * number of certs added; otherwise returns null.
+     */
+    private Integer tryParseSecuritySettingsXML(Map<String, PDComplexFileSpecification> nameMap) {
+        PDComplexFileSpecification fileSpec = nameMap.get("SecuritySettings.xml");
+        if (fileSpec == null) return null;
+
+        PDEmbeddedFile ef = fileSpec.getEmbeddedFile();
+        if (ef == null) return null;
+
+        try (InputStream xmlStream = ef.createInputStream()) {
+            return parseSecuritySettingsXML(xmlStream);
+        } catch (Exception e) {
+            log.warn("Failed parsing SecuritySettings.xml: {}", e.getMessage());
+            log.debug("SecuritySettings.xml parse error", e);
+            return null;
+        }
+    }
+
+    /**
+     * Parse the SecuritySettings.xml and load only CA certificates (basicConstraints >= 0). Returns
+     * the number of newly-added CA certificates.
+     */
+    private int parseSecuritySettingsXML(InputStream xmlStream) throws Exception {
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+        factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
+        factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+        factory.setXIncludeAware(false);
+        factory.setExpandEntityReferences(false);
+
+        DocumentBuilder builder = factory.newDocumentBuilder();
+        Document doc = builder.parse(xmlStream);
+
+        NodeList certNodes = doc.getElementsByTagName("Certificate");
+        CertificateFactory cf = CertificateFactory.getInstance("X.509");
+
+        int added = 0;
+        for (int i = 0; i < certNodes.getLength(); i++) {
+            String base64 = certNodes.item(i).getTextContent().trim();
+            if (base64.isEmpty()) continue;
+
+            try {
+                byte[] certBytes = java.util.Base64.getMimeDecoder().decode(base64);
+                X509Certificate cert =
+                        (X509Certificate)
+                                cf.generateCertificate(new ByteArrayInputStream(certBytes));
+
+                // Only add CA certs as anchors
+                if (isCA(cert)) {
+                    String fingerprint = sha256Fingerprint(cert);
+                    String alias = "aatl-" + fingerprint;
+
+                    // avoid duplicates
+                    if (signingTrustAnchors.getCertificate(alias) == null) {
+                        signingTrustAnchors.setCertificateEntry(alias, cert);
+                        added++;
+                    }
+                } else {
+                    log.debug(
+                            "Skipping non-CA certificate from AATL: {}",
+                            cert.getSubjectX500Principal().getName());
+                }
+            } catch (Exception e) {
+                log.debug("Failed to parse an AATL certificate node: {}", e.getMessage());
+            }
+        }
+        return added;
+    }
+
+    /**
+     * Download LOTL (List Of Trusted Lists), resolve national TSLs, and import qualified CA
+     * certificates.
+     */
     private void loadEUTLCertificates() {
-        // TODO: Implement EUTL loading (ETSI TS 119 612 format)
-        log.info("EUTL loading not yet implemented");
+        try {
+            String lotlUrl =
+                    applicationProperties.getSecurity().getValidation().getEutl().getLotlUrl();
+            log.info("Loading EU Trusted List (LOTL) from: {}", lotlUrl);
+            byte[] lotlBytes = downloadXml(lotlUrl);
+            if (lotlBytes == null) {
+                log.warn("LOTL download returned no data");
+                return;
+            }
+
+            List<String> tslUrls = parseLotlForTslLocations(lotlBytes);
+            log.info("Found {} national TSL locations in LOTL", tslUrls.size());
+
+            int totalAdded = 0;
+            for (String tslUrl : tslUrls) {
+                try {
+                    byte[] tslBytes = downloadXml(tslUrl);
+                    if (tslBytes == null) {
+                        log.warn("TSL download failed: {}", tslUrl);
+                        continue;
+                    }
+                    int added = parseTslAndAddCas(tslBytes, tslUrl);
+                    totalAdded += added;
+                } catch (Exception e) {
+                    log.warn("Failed to parse TSL {}: {}", tslUrl, e.getMessage());
+                    log.debug("TSL parse error", e);
+                }
+            }
+
+            log.info("Imported {} qualified CA certificates from EUTL", totalAdded);
+        } catch (Exception e) {
+            log.warn("EUTL load failed: {}", e.getMessage());
+            log.debug("EUTL load error", e);
+        }
+    }
+
+    /** HTTP(S) GET for XML with sane timeouts. */
+    private byte[] downloadXml(String urlStr) {
+        HttpURLConnection conn = null;
+        try {
+            URL url = new URL(urlStr);
+            conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setConnectTimeout(10_000);
+            conn.setReadTimeout(30_000);
+            conn.setInstanceFollowRedirects(true);
+
+            int code = conn.getResponseCode();
+            if (code == HttpURLConnection.HTTP_OK) {
+                try (InputStream in = conn.getInputStream();
+                        ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+                    byte[] buf = new byte[8192];
+                    int r;
+                    while ((r = in.read(buf)) != -1) out.write(buf, 0, r);
+                    return out.toByteArray();
+                }
+            } else {
+                log.warn("XML download failed: HTTP {} for {}", code, urlStr);
+                return null;
+            }
+        } catch (Exception e) {
+            log.warn("XML download error for {}: {}", urlStr, e.getMessage());
+            return null;
+        } finally {
+            if (conn != null) conn.disconnect();
+        }
+    }
+
+    /** Parse LOTL and return all TSL URLs from PointersToOtherTSL. */
+    private List<String> parseLotlForTslLocations(byte[] lotlBytes) throws Exception {
+        DocumentBuilderFactory dbf = secureDbfWithNamespaces();
+        DocumentBuilder db = dbf.newDocumentBuilder();
+        Document doc = db.parse(new ByteArrayInputStream(lotlBytes));
+
+        List<String> out = new ArrayList<>();
+        NodeList ptrs = doc.getElementsByTagNameNS(NS_TSL, "PointersToOtherTSL");
+        if (ptrs.getLength() == 0) return out;
+
+        org.w3c.dom.Element ptrRoot = (org.w3c.dom.Element) ptrs.item(0);
+        NodeList locations = ptrRoot.getElementsByTagNameNS(NS_TSL, "TSLLocation");
+        for (int i = 0; i < locations.getLength(); i++) {
+            String url = locations.item(i).getTextContent().trim();
+            if (!url.isEmpty()) out.add(url);
+        }
+        return out;
+    }
+
+    /**
+     * Parse a single national TSL, import CA certificates for qualified services in an active
+     * status. Returns count of newly added CA certs.
+     */
+    private int parseTslAndAddCas(byte[] tslBytes, String sourceUrl) throws Exception {
+        DocumentBuilderFactory dbf = secureDbfWithNamespaces();
+        DocumentBuilder db = dbf.newDocumentBuilder();
+        Document doc = db.parse(new ByteArrayInputStream(tslBytes));
+
+        int added = 0;
+
+        NodeList services = doc.getElementsByTagNameNS(NS_TSL, "TSPService");
+        for (int i = 0; i < services.getLength(); i++) {
+            org.w3c.dom.Element svc = (org.w3c.dom.Element) services.item(i);
+            org.w3c.dom.Element info = firstChildNS(svc, "ServiceInformation");
+            if (info == null) continue;
+
+            String type = textOf(info, "ServiceTypeIdentifier");
+            if (!EUTL_SERVICE_TYPES.contains(type)) continue;
+
+            String status = textOf(info, "ServiceStatus");
+            if (!isActiveStatus(status)) continue;
+
+            org.w3c.dom.Element sdi = firstChildNS(info, "ServiceDigitalIdentity");
+            if (sdi == null) continue;
+
+            NodeList digitalIds = sdi.getElementsByTagNameNS(NS_TSL, "DigitalId");
+            for (int d = 0; d < digitalIds.getLength(); d++) {
+                org.w3c.dom.Element did = (org.w3c.dom.Element) digitalIds.item(d);
+                NodeList certNodes = did.getElementsByTagNameNS(NS_TSL, "X509Certificate");
+                for (int c = 0; c < certNodes.getLength(); c++) {
+                    String base64 = certNodes.item(c).getTextContent().trim();
+                    if (base64.isEmpty()) continue;
+
+                    try {
+                        byte[] certBytes = java.util.Base64.getMimeDecoder().decode(base64);
+                        CertificateFactory cf = CertificateFactory.getInstance("X.509");
+                        X509Certificate cert =
+                                (X509Certificate)
+                                        cf.generateCertificate(new ByteArrayInputStream(certBytes));
+
+                        if (!isCA(cert)) {
+                            log.debug(
+                                    "Skipping non-CA in TSL {}: {}",
+                                    sourceUrl,
+                                    cert.getSubjectX500Principal().getName());
+                            continue;
+                        }
+
+                        String fp = sha256Fingerprint(cert);
+                        String alias = "eutl-" + fp;
+
+                        if (signingTrustAnchors.getCertificate(alias) == null) {
+                            signingTrustAnchors.setCertificateEntry(alias, cert);
+                            added++;
+                        }
+                    } catch (Exception e) {
+                        log.debug(
+                                "Failed to import a certificate from {}: {}",
+                                sourceUrl,
+                                e.getMessage());
+                    }
+                }
+            }
+        }
+
+        log.debug("TSL {} → imported {} CA certificates", sourceUrl, added);
+        return added;
+    }
+
+    /** Check if service status is active (per ETSI TS 119 612). */
+    private boolean isActiveStatus(String statusUri) {
+        if (STATUS_UNDER_SUPERVISION.equals(statusUri)) return true;
+        if (STATUS_ACCREDITED.equals(statusUri)) return true;
+        boolean acceptTransitional =
+                applicationProperties
+                        .getSecurity()
+                        .getValidation()
+                        .getEutl()
+                        .isAcceptTransitional();
+        if (acceptTransitional && STATUS_SUPERVISION_IN_CESSATION.equals(statusUri)) return true;
+        return false;
+    }
+
+    /** Create secure DocumentBuilderFactory with namespace awareness. */
+    private DocumentBuilderFactory secureDbfWithNamespaces() throws Exception {
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        factory.setNamespaceAware(true);
+        // Secure processing hardening
+        factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+        factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
+        factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+        factory.setXIncludeAware(false);
+        factory.setExpandEntityReferences(false);
+        return factory;
+    }
+
+    /** Get first child element with given local name in TSL namespace. */
+    private org.w3c.dom.Element firstChildNS(org.w3c.dom.Element parent, String localName) {
+        NodeList nl = parent.getElementsByTagNameNS(NS_TSL, localName);
+        return (nl.getLength() == 0) ? null : (org.w3c.dom.Element) nl.item(0);
+    }
+
+    /** Get text content of first child with given local name. */
+    private String textOf(org.w3c.dom.Element parent, String localName) {
+        org.w3c.dom.Element e = firstChildNS(parent, localName);
+        return (e == null) ? "" : e.getTextContent().trim();
     }
 
     /** Get signing trust store */

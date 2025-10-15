@@ -65,6 +65,22 @@ security:
     enableKeyCleanup: true # Set to 'true' to enable key pair cleanup
     keyRetentionDays: 7 # Number of days to retain old keys. The default is 7 days.
     secureCookie: false # Set to 'true' to use secure cookies for JWTs
+  validation: # PDF signature validation settings
+    trust:
+      serverAsAnchor: true # Trust server certificate as anchor for PDF signatures (if configured and self-signed or CA)
+      useSystemTrust: true # Trust Java/OS system trust store for PDF signature validation
+      useMozillaBundle: true # Trust bundled Mozilla CA bundle (~140 CAs) for PDF signature validation
+      useAATL: false # Trust Adobe Approved Trust List (AATL) for PDF signature validation - downloads from Adobe on startup if enabled
+      useEUTL: false # Trust EU Trusted List (EUTL) for eIDAS qualified certificates - downloads LOTL and national TSLs on startup if enabled
+    allowAIA: false # Allow JDK to fetch issuer certificates and revocation information from network (OCSP/CRL/AIA)
+    aatl:
+      url: https://trustlist.adobe.com/tl.pdf # Adobe Approved Trust List download URL
+    eutl:
+      lotlUrl: https://ec.europa.eu/tools/lotl/eu-lotl.xml # EU List Of Trusted Lists (LOTL) URL
+      acceptTransitional: false # Accept certificates with 'supervisionincessation' status (transitional state)
+    revocation:
+      mode: none # Revocation checking mode: 'none' (disabled), 'ocsp' (OCSP only), 'crl' (CRL only), 'ocsp+crl' (OCSP with CRL fallback)
+      hardFail: false # Fail validation if revocation status cannot be determined (true=strict, false=soft-fail)
 
 premium:
   key: 00000000-0000-0000-0000-000000000000

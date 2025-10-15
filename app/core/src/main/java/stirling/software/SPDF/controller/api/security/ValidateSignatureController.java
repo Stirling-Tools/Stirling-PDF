@@ -125,15 +125,16 @@ public class ValidateSignatureController {
                                 certValidationService.extractIntermediateCertificates(
                                         certStore, signerCert);
 
-                        // Log what we found (temporary INFO level for debugging)
-                        log.info(
+                        // Log what we found
+                        log.debug(
                                 "Found {} intermediate certificates in CMS signature",
                                 intermediates.size());
                         for (X509Certificate inter : intermediates) {
-                            log.info(
+                            log.debug(
                                     "  → Intermediate: {}",
                                     inter.getSubjectX500Principal().getName());
-                            log.info("    Issuer DN: {}", inter.getIssuerX500Principal().getName());
+                            log.debug(
+                                    "    Issuer DN: {}", inter.getIssuerX500Principal().getName());
                         }
 
                         // Determine validation time (TSA timestamp or signingTime, or current)
