@@ -1,5 +1,6 @@
 import React, { useCallback, useState, useEffect, useRef, useMemo } from 'react';
 import { Text, Checkbox } from '@mantine/core';
+import { useMediaQuery } from '@mantine/hooks';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import RotateLeftIcon from '@mui/icons-material/RotateLeft';
@@ -67,6 +68,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
   const [isMouseDown, setIsMouseDown] = useState(false);
   const [mouseStartPos, setMouseStartPos] = useState<{x: number, y: number} | null>(null);
   const [isHovered, setIsHovered] = useState(false);
+  const isMobile = useMediaQuery('(max-width: 768px)');
   const dragElementRef = useRef<HTMLDivElement>(null);
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(page.thumbnail);
   const { getThumbnailFromCache, requestThumbnail } = useThumbnailGeneration();
@@ -484,7 +486,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
         </Text>
 
         <HoverActionMenu
-          show={isHovered}
+          show={isHovered || isMobile}
           actions={hoverActions}
           position="inside"
           className={styles.pageHoverControls}
