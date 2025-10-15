@@ -1,6 +1,6 @@
 package stirling.software.proprietary.security.controller.web;
 
-import java.util.Date;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,17 +43,17 @@ public class TeamWebController {
         // Filter out the Internal team
         List<TeamWithUserCountDTO> teamsWithCounts =
                 allTeamsWithCounts.stream()
-                        .filter(team -> !team.getName().equals(TeamService.INTERNAL_TEAM_NAME))
+                        .filter(team -> !TeamService.INTERNAL_TEAM_NAME.equals(team.getName()))
                         .toList();
 
         // Get the latest activity for each team
         List<Object[]> teamActivities = sessionRepository.findLatestActivityByTeam();
 
         // Convert the query results to a map for easy access in the view
-        Map<Long, Date> teamLastRequest = new HashMap<>();
+        Map<Long, Instant> teamLastRequest = new HashMap<>();
         for (Object[] result : teamActivities) {
             Long teamId = (Long) result[0]; // teamId alias
-            Date lastActivity = (Date) result[1]; // lastActivity alias
+            Instant lastActivity = (Instant) result[1]; // lastActivity alias
             teamLastRequest.put(teamId, lastActivity);
         }
 
@@ -97,7 +97,7 @@ public class TeamWebController {
                         .orElseThrow(() -> new RuntimeException("Team not found"));
 
         // Prevent access to Internal team
-        if (team.getName().equals(TeamService.INTERNAL_TEAM_NAME)) {
+        if (TeamService.INTERNAL_TEAM_NAME.equals(team.getName())) {
             return "redirect:/teams?error=internalTeamNotAccessible";
         }
 
@@ -114,21 +114,18 @@ public class TeamWebController {
                                         (user.getTeam() == null
                                                         || !user.getTeam().getId().equals(id))
                                                 && (user.getTeam() == null
-                                                        || !user.getTeam()
-                                                                .getName()
-                                                                .equals(
-                                                                        TeamService
-                                                                                .INTERNAL_TEAM_NAME)))
+                                                        || !TeamService.INTERNAL_TEAM_NAME.equals(
+                                                                user.getTeam().getName())))
                         .toList();
 
         // Get the latest session for each user in the team
         List<Object[]> userSessions = sessionRepository.findLatestSessionByTeamId(id);
 
         // Create a map of username to last request date
-        Map<String, Date> userLastRequest = new HashMap<>();
+        Map<String, Instant> userLastRequest = new HashMap<>();
         for (Object[] result : userSessions) {
             String username = (String) result[0]; // username alias
-            Date lastRequest = (Date) result[1]; // lastRequest alias
+            Instant lastRequest = (Instant) result[1]; // lastRequest alias
             userLastRequest.put(username, lastRequest);
         }
 

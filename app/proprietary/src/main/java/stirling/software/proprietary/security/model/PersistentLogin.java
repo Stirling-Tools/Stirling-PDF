@@ -1,6 +1,6 @@
 package stirling.software.proprietary.security.model;
 
-import java.util.Date;
+import java.time.Instant;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -25,5 +25,5 @@ public class PersistentLogin {
     private String token;
 
     @Column(name = "last_used", nullable = false)
-    private Date lastUsed;
+    private Instant lastUsed;
 }

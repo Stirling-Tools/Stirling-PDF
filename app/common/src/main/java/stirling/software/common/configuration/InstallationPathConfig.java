@@ -14,12 +14,17 @@ public class InstallationPathConfig {
     private static final String CONFIG_PATH;
     private static final String CUSTOM_FILES_PATH;
     private static final String CLIENT_WEBUI_PATH;
-    private static final String SCRIPTS_PATH;
     private static final String PIPELINE_PATH;
 
     // Config paths
     private static final String SETTINGS_PATH;
     private static final String CUSTOM_SETTINGS_PATH;
+    private static final String SCRIPTS_PATH;
+    private static final String BACKUP_PATH;
+
+    // Backup paths
+    private static final String BACKUP_DB_PATH;
+    private static final String BACKUP_PRIVATE_KEY_PATH;
 
     // Custom file paths
     private static final String STATIC_PATH;
@@ -41,6 +46,11 @@ public class InstallationPathConfig {
         SETTINGS_PATH = CONFIG_PATH + "settings.yml";
         CUSTOM_SETTINGS_PATH = CONFIG_PATH + "custom_settings.yml";
         SCRIPTS_PATH = CONFIG_PATH + "scripts" + File.separator;
+        BACKUP_PATH = CONFIG_PATH + "backup" + File.separator;
+
+        // Initialize backup paths
+        BACKUP_DB_PATH = BACKUP_PATH + "db" + File.separator;
+        BACKUP_PRIVATE_KEY_PATH = BACKUP_PATH + "keys" + File.separator;
 
         // Initialize custom file paths
         STATIC_PATH = CUSTOM_FILES_PATH + "static" + File.separator;
@@ -124,6 +134,10 @@ public class InstallationPathConfig {
     }
 
     public static String getPrivateKeyPath() {
-        return PRIVATE_KEY_PATH;
+        return BACKUP_PRIVATE_KEY_PATH;
+    }
+
+    public static String getBackupPath() {
+        return BACKUP_DB_PATH;
     }
 }

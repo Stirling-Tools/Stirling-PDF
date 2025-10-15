@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.List;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
@@ -20,6 +21,7 @@ import stirling.software.SPDF.service.AttachmentServiceInterface;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.WebResponseUtils;
 
 @MiscApi
@@ -31,7 +33,7 @@ public class AttachmentController {
 
     private final AttachmentServiceInterface pdfAttachmentService;
 
-    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/add-attachments")
+    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/add-attachments")
     @StandardPdfResponse
     @Operation(
             summary = "Add attachments to PDF",
@@ -48,8 +50,8 @@ public class AttachmentController {
 
         return WebResponseUtils.pdfDocToWebResponse(
                 document,
-                Filenames.toSimpleFileName(fileInput.getOriginalFilename())
-                                .replaceFirst("[.][^.]+$", "")
-                        + "_with_attachments.pdf");
+                GeneralUtils.generateFilename(
+                        Filenames.toSimpleFileName(fileInput.getOriginalFilename()),
+                        "_with_attachments.pdf"));
     }
 }

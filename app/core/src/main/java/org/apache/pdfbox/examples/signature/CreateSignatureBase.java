@@ -42,11 +42,25 @@ import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.bouncycastle.operator.jcajce.JcaDigestCalculatorProviderBuilder;
 
+import lombok.Getter;
+import lombok.Setter;
+
 public abstract class CreateSignatureBase implements SignatureInterface {
     private PrivateKey privateKey;
-    private Certificate[] certificateChain;
-    private String tsaUrl;
-    private boolean externalSigning;
+    @Getter private Certificate[] certificateChain;
+    @Setter private String tsaUrl;
+
+    /**
+     * Specifies whether the external signing scenario should be used. If set to {@code true},
+     * external signing will be performed and {@link SignatureInterface} will be used for signing.
+     * If set to {@code false}, internal signing will be performed.
+     *
+     * <p>Default: {@code false}
+     *
+     * @param externalSigning {@code true} if external signing should be performed; {@code false}
+     *     for internal signing
+     */
+    @Setter @Getter private boolean externalSigning;
 
     /**
      * Initialize the signature creator with a keystore (pkcs12) and pin that should be used for the
@@ -97,16 +111,8 @@ public abstract class CreateSignatureBase implements SignatureInterface {
         this.privateKey = privateKey;
     }
 
-    public Certificate[] getCertificateChain() {
-        return certificateChain;
-    }
-
     public final void setCertificateChain(final Certificate[] certificateChain) {
         this.certificateChain = certificateChain;
-    }
-
-    public void setTsaUrl(String tsaUrl) {
-        this.tsaUrl = tsaUrl;
     }
 
     /**
@@ -150,21 +156,5 @@ public abstract class CreateSignatureBase implements SignatureInterface {
                 | URISyntaxException e) {
             throw new IOException(e);
         }
-    }
-
-    public boolean isExternalSigning() {
-        return externalSigning;
-    }
-
-    /**
-     * Set if external signing scenario should be used. If {@code false}, SignatureInterface would
-     * be used for signing.
-     *
-     * <p>Default: {@code false}
-     *
-     * @param externalSigning {@code true} if external signing should be performed
-     */
-    public void setExternalSigning(boolean externalSigning) {
-        this.externalSigning = externalSigning;
     }
 }

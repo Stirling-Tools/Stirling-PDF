@@ -20,6 +20,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.SignatureFile;
@@ -74,7 +76,7 @@ public class GeneralWebController {
                             new ObjectMapper()
                                     .readValue(config, new TypeReference<Map<String, Object>>() {});
                     String name = (String) jsonContent.get("name");
-                    if (name == null || name.length() < 1) {
+                    if (name == null || name.isEmpty()) {
                         String filename =
                                 jsonFiles
                                         .get(pipelineConfigs.indexOf(config))
@@ -91,7 +93,7 @@ public class GeneralWebController {
                 log.error("exception", e);
             }
         }
-        if (pipelineConfigsWithNames.size() == 0) {
+        if (pipelineConfigsWithNames.isEmpty()) {
             Map<String, String> configWithName = new HashMap<>();
             configWithName.put("json", "");
             configWithName.put("name", "No preloaded configs found");
@@ -295,21 +297,16 @@ public class GeneralWebController {
     }
 
     public String getFormatFromExtension(String extension) {
-        switch (extension) {
-            case "ttf":
-                return "truetype";
-            case "woff":
-                return "woff";
-            case "woff2":
-                return "woff2";
-            case "eot":
-                return "embedded-opentype";
-            case "svg":
-                return "svg";
-            default:
-                // or throw an exception if an unexpected extension is encountered
-                return "";
-        }
+        return switch (extension) {
+            case "ttf" -> "truetype";
+            case "woff" -> "woff";
+            case "woff2" -> "woff2";
+            case "eot" -> "embedded-opentype";
+            case "svg" -> "svg";
+            default ->
+                    // or throw an exception if an unexpected extension is encountered
+                    "";
+        };
     }
 
     @Deprecated
@@ -336,6 +333,8 @@ public class GeneralWebController {
         return "remove-image-pdf";
     }
 
+    @Setter
+    @Getter
     public class FontResource {
 
         private String name;
@@ -348,30 +347,6 @@ public class GeneralWebController {
             this.name = name;
             this.extension = extension;
             this.type = getFormatFromExtension(extension);
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public void setName(String name) {
-            this.name = name;
-        }
-
-        public String getExtension() {
-            return extension;
-        }
-
-        public void setExtension(String extension) {
-            this.extension = extension;
-        }
-
-        public String getType() {
-            return type;
-        }
-
-        public void setType(String type) {
-            this.type = type;
         }
     }
 }

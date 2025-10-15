@@ -19,7 +19,10 @@ import org.apache.pdfbox.rendering.PDFRenderer;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.web.multipart.MultipartFile;
 
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.api.misc.ReplaceAndInvert;
+import stirling.software.common.util.ApplicationContextProvider;
+import stirling.software.common.util.ExceptionUtils;
 
 public class InvertFullColorStrategy extends ReplaceAndInvertColorStrategy {
 
@@ -44,8 +47,25 @@ public class InvertFullColorStrategy extends ReplaceAndInvertColorStrategy {
             // Render each page and invert colors
             PDFRenderer pdfRenderer = new PDFRenderer(document);
             for (int page = 0; page < document.getNumberOfPages(); page++) {
-                BufferedImage image =
-                        pdfRenderer.renderImageWithDPI(page, 300); // Render page at 300 DPI
+                BufferedImage image;
+
+                // Use global maximum DPI setting, fallback to 300 if not set
+                int renderDpi = 300; // Default fallback
+                ApplicationProperties properties =
+                        ApplicationContextProvider.getBean(ApplicationProperties.class);
+                if (properties != null && properties.getSystem() != null) {
+                    renderDpi = properties.getSystem().getMaxDPI();
+                }
+
+                try {
+                    image =
+                            pdfRenderer.renderImageWithDPI(
+                                    page, renderDpi); // Render page with global DPI setting
+                } catch (OutOfMemoryError e) {
+                    throw ExceptionUtils.createOutOfMemoryDpiException(page + 1, renderDpi, e);
+                } catch (NegativeArraySizeException e) {
+                    throw ExceptionUtils.createOutOfMemoryDpiException(page + 1, renderDpi, e);
+                }
 
                 // Invert the colors
                 invertImageColors(image);

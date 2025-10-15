@@ -2,6 +2,8 @@ package stirling.software.common.service;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.AdditionalAnswers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 import java.io.IOException;
@@ -15,6 +17,7 @@ import org.junit.jupiter.api.io.TempDir;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.http.MediaType;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -36,7 +39,7 @@ class FileStorageTest {
         // Create a mock MultipartFile
         mockFile = mock(MultipartFile.class);
         when(mockFile.getOriginalFilename()).thenReturn("test.pdf");
-        when(mockFile.getContentType()).thenReturn("application/pdf");
+        when(mockFile.getContentType()).thenReturn(MediaType.APPLICATION_PDF_VALUE);
     }
 
     @Test

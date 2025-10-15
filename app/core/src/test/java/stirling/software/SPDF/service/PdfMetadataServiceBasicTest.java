@@ -7,6 +7,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Calendar;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -81,6 +83,12 @@ class PdfMetadataServiceBasicTest {
         // Act
         PdfMetadata metadata = pdfMetadataService.extractMetadataFromPdf(testDocument);
 
+        // Convert Calendar to ZonedDateTime for comparison
+        ZonedDateTime expectedCreationDate =
+                ZonedDateTime.ofInstant(creationDate.toInstant(), ZoneId.systemDefault());
+        ZonedDateTime expectedModificationDate =
+                ZonedDateTime.ofInstant(modificationDate.toInstant(), ZoneId.systemDefault());
+
         // Assert
         assertEquals(testAuthor, metadata.getAuthor(), "Author should match");
         assertEquals(testProducer, metadata.getProducer(), "Producer should match");
@@ -88,9 +96,12 @@ class PdfMetadataServiceBasicTest {
         assertEquals(testCreator, metadata.getCreator(), "Creator should match");
         assertEquals(testSubject, metadata.getSubject(), "Subject should match");
         assertEquals(testKeywords, metadata.getKeywords(), "Keywords should match");
-        assertEquals(creationDate, metadata.getCreationDate(), "Creation date should match");
         assertEquals(
-                modificationDate, metadata.getModificationDate(), "Modification date should match");
+                expectedCreationDate, metadata.getCreationDate(), "Creation date should match");
+        assertEquals(
+                expectedModificationDate,
+                metadata.getModificationDate(),
+                "Modification date should match");
     }
 
     @Test

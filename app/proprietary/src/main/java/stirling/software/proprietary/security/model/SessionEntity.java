@@ -1,7 +1,7 @@
 package stirling.software.proprietary.security.model;
 
 import java.io.Serializable;
-import java.util.Date;
+import java.time.Instant;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -17,7 +17,7 @@ public class SessionEntity implements Serializable {
 
     private String principalName;
 
-    private Date lastRequest;
+    private Instant lastRequest;
 
     private boolean expired;
 }

@@ -586,7 +586,10 @@ class EmlToPdfTest {
             when(mockPdDocument.getNumberOfPages()).thenReturn(1);
 
             try (MockedStatic<FileToPdf> fileToPdf =
-                    mockStatic(FileToPdf.class, org.mockito.Mockito.withSettings().lenient())) {
+                    mockStatic(
+                            FileToPdf.class,
+                            org.mockito.Mockito.withSettings()
+                                    .defaultAnswer(org.mockito.Answers.RETURNS_DEFAULTS))) {
                 fileToPdf
                         .when(
                                 () ->
@@ -657,7 +660,10 @@ class EmlToPdfTest {
             when(mockPdDocument.getNumberOfPages()).thenReturn(1);
 
             try (MockedStatic<FileToPdf> fileToPdf =
-                    mockStatic(FileToPdf.class, org.mockito.Mockito.withSettings().lenient())) {
+                    mockStatic(
+                            FileToPdf.class,
+                            org.mockito.Mockito.withSettings()
+                                    .defaultAnswer(org.mockito.Answers.RETURNS_DEFAULTS))) {
                 fileToPdf
                         .when(
                                 () ->
@@ -724,7 +730,10 @@ class EmlToPdfTest {
             String errorMessage = "Conversion failed";
 
             try (MockedStatic<FileToPdf> fileToPdf =
-                    mockStatic(FileToPdf.class, org.mockito.Mockito.withSettings().lenient())) {
+                    mockStatic(
+                            FileToPdf.class,
+                            org.mockito.Mockito.withSettings()
+                                    .defaultAnswer(org.mockito.Answers.RETURNS_DEFAULTS))) {
                 fileToPdf
                         .when(
                                 () ->

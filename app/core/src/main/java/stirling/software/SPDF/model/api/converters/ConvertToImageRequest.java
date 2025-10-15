@@ -39,4 +39,9 @@ public class ConvertToImageRequest extends PDFWithPageNums {
             defaultValue = "300",
             requiredMode = Schema.RequiredMode.REQUIRED)
     private Integer dpi;
+
+    @Schema(
+            description = "Include annotations such as comments in the output image(s)",
+            defaultValue = "false")
+    private Boolean includeAnnotations;
 }

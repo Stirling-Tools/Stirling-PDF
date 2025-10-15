@@ -46,14 +46,11 @@ public class SPDFApplication {
     private final Environment env;
     private final ApplicationProperties applicationProperties;
 
-    // private final WebBrowser webBrowser; // Removed - desktop UI eliminated
-
     public SPDFApplication(
             AppConfig appConfig, Environment env, ApplicationProperties applicationProperties) {
         this.appConfig = appConfig;
         this.env = env;
         this.applicationProperties = applicationProperties;
-        // this.webBrowser = webBrowser; // Removed - desktop UI eliminated
     }
 
     public static void main(String[] args) throws IOException, InterruptedException {

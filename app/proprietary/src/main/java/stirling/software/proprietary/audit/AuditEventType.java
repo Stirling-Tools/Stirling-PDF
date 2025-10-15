@@ -1,6 +1,9 @@
 package stirling.software.proprietary.audit;
 
+import lombok.Getter;
+
 /** Standardized audit event types for the application. */
+@Getter
 public enum AuditEventType {
     // Authentication events - BASIC level
     USER_LOGIN("User login"),
@@ -26,10 +29,6 @@ public enum AuditEventType {
 
     AuditEventType(String description) {
         this.description = description;
-    }
-
-    public String getDescription() {
-        return description;
     }
 
     /**

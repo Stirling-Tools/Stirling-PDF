@@ -3,6 +3,7 @@ package stirling.software.common.annotations;
 import java.lang.annotation.*;
 
 import org.springframework.core.annotation.AliasFor;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
@@ -40,7 +41,7 @@ public @interface AutoJobPostMapping {
 
     /** MIME types this endpoint accepts. Defaults to {@code multipart/form-data}. */
     @AliasFor(annotation = RequestMapping.class, attribute = "consumes")
-    String[] consumes() default {"multipart/form-data"};
+    String[] consumes() default {MediaType.MULTIPART_FORM_DATA_VALUE};
 
     /**
      * Maximum execution time in milliseconds before the job is aborted. A negative value means "use

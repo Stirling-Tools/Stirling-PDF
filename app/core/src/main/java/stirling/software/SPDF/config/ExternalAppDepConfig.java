@@ -13,6 +13,7 @@ import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.configuration.RuntimePathConfig;
+import stirling.software.common.util.RegexPatternUtils;
 
 @Configuration
 @Slf4j
@@ -42,6 +43,7 @@ public class ExternalAppDepConfig {
                         put(unoconvPath, List.of("Unoconvert"));
                         put("qpdf", List.of("qpdf"));
                         put("tesseract", List.of("tesseract"));
+                        put("rar", List.of("rar")); // Required for real CBR output
                     }
                 };
     }
@@ -73,7 +75,7 @@ public class ExternalAppDepConfig {
         // First replace common terms
         String feature = endpoint.replace("-", " ").replace("pdf", "PDF").replace("img", "image");
         // Split into words and capitalize each word
-        return Arrays.stream(feature.split("\\s+"))
+        return Arrays.stream(RegexPatternUtils.getInstance().getWordSplitPattern().split(feature))
                 .map(word -> capitalizeWord(word))
                 .collect(Collectors.joining(" "));
     }
@@ -100,7 +102,7 @@ public class ExternalAppDepConfig {
                             "Missing dependency: {} - Disabling group: {} (Affected features: {})",
                             command,
                             group,
-                            affectedFeatures != null && !affectedFeatures.isEmpty()
+                            !affectedFeatures.isEmpty()
                                     ? String.join(", ", affectedFeatures)
                                     : "unknown");
                 }
@@ -119,6 +121,7 @@ public class ExternalAppDepConfig {
         checkDependencyAndDisableGroup(weasyprintPath);
         checkDependencyAndDisableGroup("pdftohtml");
         checkDependencyAndDisableGroup(unoconvPath);
+        checkDependencyAndDisableGroup("rar");
         // Special handling for Python/OpenCV dependencies
         boolean pythonAvailable = isCommandAvailable("python3") || isCommandAvailable("python");
         if (!pythonAvailable) {

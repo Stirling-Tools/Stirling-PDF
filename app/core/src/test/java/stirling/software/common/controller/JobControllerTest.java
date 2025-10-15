@@ -1,6 +1,7 @@
 package stirling.software.common.controller;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 import java.util.Map;
@@ -11,6 +12,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpSession;
 
@@ -126,7 +128,7 @@ class JobControllerTest {
         String jobId = "test-job-id";
         String fileId = "file-id";
         String originalFileName = "test.pdf";
-        String contentType = "application/pdf";
+        String contentType = MediaType.APPLICATION_PDF_VALUE;
         byte[] fileContent = "Test file content".getBytes();
 
         JobResult mockResult = new JobResult();
@@ -206,7 +208,7 @@ class JobControllerTest {
         String jobId = "test-job-id";
         String fileId = "file-id";
         String originalFileName = "test.pdf";
-        String contentType = "application/pdf";
+        String contentType = MediaType.APPLICATION_PDF_VALUE;
 
         JobResult mockResult = new JobResult();
         mockResult.setJobId(jobId);

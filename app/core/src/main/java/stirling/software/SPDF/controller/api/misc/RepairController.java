@@ -4,11 +4,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
 
-import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 
 import lombok.RequiredArgsConstructor;
@@ -20,6 +20,7 @@ import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.common.util.TempFile;
@@ -43,7 +44,7 @@ public class RepairController {
         return endpointConfiguration.isGroupEnabled("qpdf");
     }
 
-    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/repair")
+    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/repair")
     @StandardPdfResponse
     @Operation(
             summary = "Repair a PDF file",
@@ -121,11 +122,10 @@ public class RepairController {
             byte[] pdfBytes = pdfDocumentFactory.loadToBytes(tempOutputFile.getFile());
 
             // Return the repaired PDF as a response
-            String outputFilename =
-                    Filenames.toSimpleFileName(inputFile.getOriginalFilename())
-                                    .replaceFirst("[.][^.]+$", "")
-                            + "_repaired.pdf";
-            return WebResponseUtils.bytesToWebResponse(pdfBytes, outputFilename);
+            return WebResponseUtils.bytesToWebResponse(
+                    pdfBytes,
+                    GeneralUtils.generateFilename(
+                            inputFile.getOriginalFilename(), "_repaired.pdf"));
         }
     }
 }

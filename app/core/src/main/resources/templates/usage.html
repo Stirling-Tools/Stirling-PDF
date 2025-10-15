@@ -42,14 +42,18 @@
                 </div>
                 
                 <div class="filter-controls">
-                  <label class="filter-checkbox">
+                  <div class="form-check">
                     <input type="checkbox" id="hideHomeCheckbox" checked>
-                    <span th:text="#{endpointStatistics.includeHomepage}">Include Homepage ('/')</span>
-                  </label>
-                  <label class="filter-checkbox">
+                    <label for="hideHomeCheckbox">
+                      <span th:text="#{endpointStatistics.includeHomepage}">Include Homepage ('/')</span>
+                    </label>
+                  </div>
+                  <div class="form-check">
                     <input type="checkbox" id="hideLoginCheckbox" checked>
-                    <span th:text="#{endpointStatistics.includeLoginPage}">Include Login Page ('/login')</span>
-                  </label>
+                    <label for="hideLoginCheckbox">
+                      <span th:text="#{endpointStatistics.includeLoginPage}">Include Login Page ('/login')</span>
+                    </label>
+                  </div>
                 </div>
                 
                 <div class="my-4" style="color: var(--md-sys-color-on-surface); font-weight: 500;">

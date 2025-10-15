@@ -4,14 +4,12 @@ import static stirling.software.common.util.ProviderUtils.validateProvider;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -56,19 +54,16 @@ public class AccountWebController {
     private final SessionPersistentRegistry sessionPersistentRegistry;
     // Assuming you have a repository for user operations
     private final UserRepository userRepository;
-    private final boolean runningEE;
     private final TeamRepository teamRepository;
 
     public AccountWebController(
             ApplicationProperties applicationProperties,
             SessionPersistentRegistry sessionPersistentRegistry,
             UserRepository userRepository,
-            TeamRepository teamRepository,
-            @Qualifier("runningEE") boolean runningEE) {
+            TeamRepository teamRepository) {
         this.applicationProperties = applicationProperties;
         this.sessionPersistentRegistry = sessionPersistentRegistry;
         this.userRepository = userRepository;
-        this.runningEE = runningEE;
         this.teamRepository = teamRepository;
     }
 
@@ -203,12 +198,11 @@ public class AccountWebController {
         return "login";
     }
 
+    // @EnterpriseEndpoint
     // @PreAuthorize("hasRole('ROLE_ADMIN')")
     // @GetMapping("/usage")
+
     public String showUsage() {
-        if (!runningEE) {
-            return "error";
-        }
         return "usage";
     }
 
@@ -221,7 +215,7 @@ public class AccountWebController {
         Map<String, String> roleDetails = Role.getAllRoleDetails();
         // Map to store session information and user activity status
         Map<String, Boolean> userSessions = new HashMap<>();
-        Map<String, Date> userLastRequest = new HashMap<>();
+        Map<String, Instant> userLastRequest = new HashMap<>();
         int activeUsers = 0;
         int disabledUsers = 0;
         while (iterator.hasNext()) {
@@ -240,7 +234,7 @@ public class AccountWebController {
 
                 // Also check if user is part of the Internal team
                 if (user.getTeam() != null
-                        && user.getTeam().getName().equals(TeamService.INTERNAL_TEAM_NAME)) {
+                        && TeamService.INTERNAL_TEAM_NAME.equals(user.getTeam().getName())) {
                     shouldRemove = true;
                 }
 
@@ -252,27 +246,29 @@ public class AccountWebController {
                 // Determine the user's session status and last request time
                 int maxInactiveInterval = sessionPersistentRegistry.getMaxInactiveInterval();
                 boolean hasActiveSession = false;
-                Date lastRequest = null;
+                Instant lastRequest = null;
                 Optional<SessionEntity> latestSession =
                         sessionPersistentRegistry.findLatestSession(user.getUsername());
                 if (latestSession.isPresent()) {
                     SessionEntity sessionEntity = latestSession.get();
-                    Date lastAccessedTime = sessionEntity.getLastRequest();
+                    // sessionEntity stores Instant directly
+                    Instant lastAccessedTime =
+                            Optional.ofNullable(sessionEntity.getLastRequest())
+                                    .orElse(Instant.EPOCH);
+
                     Instant now = Instant.now();
                     // Calculate session expiration and update session status accordingly
                     Instant expirationTime =
-                            lastAccessedTime
-                                    .toInstant()
-                                    .plus(maxInactiveInterval, ChronoUnit.SECONDS);
+                            lastAccessedTime.plus(maxInactiveInterval, ChronoUnit.SECONDS);
                     if (now.isAfter(expirationTime)) {
                         sessionPersistentRegistry.expireSession(sessionEntity.getSessionId());
                     } else {
                         hasActiveSession = !sessionEntity.isExpired();
                     }
-                    lastRequest = sessionEntity.getLastRequest();
+                    lastRequest = lastAccessedTime;
                 } else {
                     // No session, set default last request time
-                    lastRequest = new Date(0);
+                    lastRequest = Instant.EPOCH;
                 }
                 userSessions.put(user.getUsername(), hasActiveSession);
                 userLastRequest.put(user.getUsername(), lastRequest);
@@ -289,19 +285,21 @@ public class AccountWebController {
                 allUsers.stream()
                         .sorted(
                                 (u1, u2) -> {
-                                    boolean u1Active = userSessions.get(u1.getUsername());
-                                    boolean u2Active = userSessions.get(u2.getUsername());
+                                    boolean u1Active =
+                                            userSessions.getOrDefault(u1.getUsername(), false);
+                                    boolean u2Active =
+                                            userSessions.getOrDefault(u2.getUsername(), false);
                                     if (u1Active && !u2Active) {
                                         return -1;
                                     } else if (!u1Active && u2Active) {
                                         return 1;
                                     } else {
-                                        Date u1LastRequest =
+                                        Instant u1LastRequest =
                                                 userLastRequest.getOrDefault(
-                                                        u1.getUsername(), new Date(0));
-                                        Date u2LastRequest =
+                                                        u1.getUsername(), Instant.EPOCH);
+                                        Instant u2LastRequest =
                                                 userLastRequest.getOrDefault(
-                                                        u2.getUsername(), new Date(0));
+                                                        u2.getUsername(), Instant.EPOCH);
                                         return u2LastRequest.compareTo(u1LastRequest);
                                     }
                                 })
@@ -359,11 +357,9 @@ public class AccountWebController {
                 teamRepository.findAll().stream()
                         .filter(
                                 team ->
-                                        !team.getName()
-                                                .equals(
-                                                        stirling.software.proprietary.security
-                                                                .service.TeamService
-                                                                .INTERNAL_TEAM_NAME))
+                                        !stirling.software.proprietary.security.service.TeamService
+                                                .INTERNAL_TEAM_NAME
+                                                .equals(team.getName()))
                         .toList();
         model.addAttribute("teams", allTeams);
 

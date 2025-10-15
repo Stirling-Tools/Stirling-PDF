@@ -15,20 +15,25 @@ public class SignPDFWithCertRequest extends PDFFile {
 
     @Schema(
             description = "The type of the digital certificate",
-            allowableValues = {"PEM", "PKCS12", "JKS", "SERVER"},
+            allowableValues = {"PEM", "PKCS12", "PFX", "JKS", "SERVER"},
             requiredMode = Schema.RequiredMode.REQUIRED)
     private String certType;
 
     @Schema(
             description =
                     "The private key for the digital certificate (required for PEM type"
-                            + " certificates)")
+                            + " certificates, supports .pem, .der, or .key files)")
     private MultipartFile privateKeyFile;
 
-    @Schema(description = "The digital certificate (required for PEM type certificates)")
+    @Schema(
+            description =
+                    "The digital certificate (required for PEM type certificates, supports"
+                            + " .pem, .der, .crt, or .cer files)")
     private MultipartFile certFile;
 
-    @Schema(description = "The PKCS12 keystore file (required for PKCS12 type certificates)")
+    @Schema(
+            description =
+                    "The PKCS12/PFX keystore file (required for PKCS12 or PFX type certificates)")
     private MultipartFile p12File;
 
     @Schema(description = "The JKS keystore file (Java Key Store)")

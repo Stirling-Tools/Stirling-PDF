@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html th:data-language="${#locale.toString()}" th:dir="#{language.direction}" th:lang="${#locale.language}"
+  xmlns:th="https://www.thymeleaf.org">
+
+<head>
+  <th:block th:insert="~{fragments/common :: head(title=#{pdfToCBZ.title}, header=#{pdfToCBZ.header})}"></th:block>
+</head>
+
+<body>
+  <th:block th:insert="~{fragments/common :: game}"></th:block>
+  <div id="page-container">
+    <div id="content-wrap">
+      <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+      <br><br>
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-md-6 bg-card">
+            <div class="tool-header">
+              <span class="material-symbols-rounded tool-header-icon convert">auto_stories</span>
+              <span class="tool-header-text" th:text="#{pdfToCBZ.header}"></span>
+            </div>
+            <form enctype="multipart/form-data" id="pdfToCBZForm" method="post"
+              th:action="@{'/api/v1/convert/pdf/cbz'}">
+              <div
+                th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf', inputText=#{pdfToCBZ.selectText})}">
+              </div>
+              <div class="mb-3">
+                <label for="dpi" th:text="#{pdfToCBZ.dpi}">DPI:</label>
+                <input class="form-control" id="dpi" max="600" min="72" name="dpi" required step="1" type="number" value="300">
+              </div>
+              <br>
+              <button class="btn btn-primary" id="submitBtn" th:text="#{pdfToCBZ.submit}" type="submit">Convert to CBZ</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+    <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+  </div>
+</body>
+
+</html>

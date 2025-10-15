@@ -7,6 +7,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Calendar;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -84,6 +86,12 @@ class PdfMetadataServiceTest {
         // Act
         PdfMetadata metadata = pdfMetadataService.extractMetadataFromPdf(testDocument);
 
+        // Convert Calendar to ZonedDateTime for comparison
+        ZonedDateTime expectedCreationDate =
+                ZonedDateTime.ofInstant(creationDate.toInstant(), ZoneId.systemDefault());
+        ZonedDateTime expectedModificationDate =
+                ZonedDateTime.ofInstant(modificationDate.toInstant(), ZoneId.systemDefault());
+
         // Assert
         assertEquals(testAuthor, metadata.getAuthor(), "Author should match");
         assertEquals(testProducer, metadata.getProducer(), "Producer should match");
@@ -91,9 +99,12 @@ class PdfMetadataServiceTest {
         assertEquals(testCreator, metadata.getCreator(), "Creator should match");
         assertEquals(testSubject, metadata.getSubject(), "Subject should match");
         assertEquals(testKeywords, metadata.getKeywords(), "Keywords should match");
-        assertEquals(creationDate, metadata.getCreationDate(), "Creation date should match");
         assertEquals(
-                modificationDate, metadata.getModificationDate(), "Modification date should match");
+                expectedCreationDate, metadata.getCreationDate(), "Creation date should match");
+        assertEquals(
+                expectedModificationDate,
+                metadata.getModificationDate(),
+                "Modification date should match");
     }
 
     @Test
@@ -190,6 +201,8 @@ class PdfMetadataServiceTest {
         // Prepare test metadata with existing creation date
         Calendar existingCreationDate = Calendar.getInstance();
         existingCreationDate.add(Calendar.DAY_OF_MONTH, -1); // Yesterday
+        ZonedDateTime existingCreationDateZdt =
+                ZonedDateTime.ofInstant(existingCreationDate.toInstant(), ZoneId.systemDefault());
 
         PdfMetadata testMetadata =
                 PdfMetadata.builder()
@@ -197,7 +210,7 @@ class PdfMetadataServiceTest {
                         .title("Test Title")
                         .subject("Test Subject")
                         .keywords("Test Keywords")
-                        .creationDate(existingCreationDate)
+                        .creationDate(existingCreationDateZdt)
                         .build();
 
         // Act

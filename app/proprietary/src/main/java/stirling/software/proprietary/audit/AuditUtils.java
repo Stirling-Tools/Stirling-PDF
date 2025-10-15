@@ -13,6 +13,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.MDC;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -24,6 +25,7 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.common.util.RequestUriUtils;
 import stirling.software.proprietary.config.AuditConfigurationProperties;
 
@@ -112,8 +114,8 @@ public class AuditUtils {
                     && req.getContentType() != null) {
 
                 String contentType = req.getContentType();
-                if (contentType.contains("application/x-www-form-urlencoded")
-                        || contentType.contains("multipart/form-data")) {
+                if (contentType.contains(MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+                        || contentType.contains(MediaType.MULTIPART_FORM_DATA_VALUE)) {
 
                     Map<String, String[]> params = new HashMap<>(req.getParameterMap());
                     // Remove CSRF token from logged parameters
@@ -322,7 +324,10 @@ public class AuditUtils {
                 return AuditEventType.SETTINGS_CHANGED;
             } else if (cls.contains("file")
                     || path.startsWith("/file")
-                    || path.matches("(?i).*/(upload|download)/.*")) {
+                    || RegexPatternUtils.getInstance()
+                            .getUploadDownloadPathPattern()
+                            .matcher(path)
+                            .matches()) {
                 return AuditEventType.FILE_OPERATION;
             }
         }
@@ -386,7 +391,10 @@ public class AuditUtils {
             return AuditEventType.SETTINGS_CHANGED;
         } else if (cls.contains("file")
                 || path.startsWith("/file")
-                || path.matches("(?i).*/(upload|download)/.*")) {
+                || RegexPatternUtils.getInstance()
+                        .getUploadDownloadPathPattern()
+                        .matcher(path)
+                        .matches()) {
             return AuditEventType.FILE_OPERATION;
         } else {
             return AuditEventType.PDF_PROCESS;

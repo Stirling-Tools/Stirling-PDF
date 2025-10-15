@@ -3,11 +3,11 @@ package stirling.software.SPDF.controller.api.misc;
 import java.io.IOException;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
 
-import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 
 import lombok.RequiredArgsConstructor;
@@ -17,6 +17,7 @@ import stirling.software.SPDF.model.api.misc.OverlayImageRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.PdfUtils;
 import stirling.software.common.util.WebResponseUtils;
 
@@ -27,7 +28,7 @@ public class OverlayImageController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/add-image")
+    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/add-image")
     @Operation(
             summary = "Overlay image onto a PDF file",
             description =
@@ -49,9 +50,7 @@ public class OverlayImageController {
 
             return WebResponseUtils.bytesToWebResponse(
                     result,
-                    Filenames.toSimpleFileName(pdfFile.getOriginalFilename())
-                                    .replaceFirst("[.][^.]+$", "")
-                            + "_overlayed.pdf");
+                    GeneralUtils.generateFilename(pdfFile.getOriginalFilename(), "_overlayed.pdf"));
         } catch (IOException e) {
             log.error("Failed to add image to PDF", e);
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);

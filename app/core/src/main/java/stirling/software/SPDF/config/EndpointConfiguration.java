@@ -9,6 +9,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
@@ -19,7 +20,7 @@ public class EndpointConfiguration {
 
     private static final String REMOVE_BLANKS = "remove-blanks";
     private final ApplicationProperties applicationProperties;
-    private Map<String, Boolean> endpointStatuses = new ConcurrentHashMap<>();
+    @Getter private Map<String, Boolean> endpointStatuses = new ConcurrentHashMap<>();
     private Map<String, Set<String>> endpointGroups = new ConcurrentHashMap<>();
     private Set<String> disabledGroups = new HashSet<>();
     private Map<String, Set<String>> endpointAlternatives = new ConcurrentHashMap<>();
@@ -44,10 +45,6 @@ public class EndpointConfiguration {
             log.debug("Disabling endpoint: {}", endpoint);
         }
         endpointStatuses.put(endpoint, false);
-    }
-
-    public Map<String, Boolean> getEndpointStatuses() {
-        return endpointStatuses;
     }
 
     public boolean isEndpointEnabled(String endpoint) {
@@ -391,6 +388,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Java", "pdf-to-markdown");
         addEndpointToGroup("Java", "add-attachments");
         addEndpointToGroup("Java", "compress-pdf");
+        addEndpointToGroup("rar", "pdf-to-cbr");
 
         // Javascript
         addEndpointToGroup("Javascript", "pdf-organizer");
@@ -405,6 +403,8 @@ public class EndpointConfiguration {
         /* Ghostscript */
         addEndpointToGroup("Ghostscript", "repair");
         addEndpointToGroup("Ghostscript", "compress-pdf");
+        addEndpointToGroup("Ghostscript", "crop");
+        addEndpointToGroup("Ghostscript", "replace-invert-pdf");
 
         /* tesseract */
         addEndpointToGroup("tesseract", "ocr-pdf");
@@ -488,7 +488,8 @@ public class EndpointConfiguration {
                 || "Java".equals(group)
                 || "Javascript".equals(group)
                 || "Weasyprint".equals(group)
-                || "Pdftohtml".equals(group);
+                || "Pdftohtml".equals(group)
+                || "rar".equals(group);
     }
 
     private boolean isEndpointEnabledDirectly(String endpoint) {

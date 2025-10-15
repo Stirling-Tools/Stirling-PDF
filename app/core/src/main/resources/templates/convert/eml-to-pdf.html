@@ -25,16 +25,16 @@
                 th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='.eml,message/rfc822')}">
               </div>
               
-              <div class="form-check mb-3">
-                <input type="checkbox" class="form-check-input" name="downloadHtml" id="downloadHtml">
-                <label class="form-check-label" for="downloadHtml" th:text="#{EMLToPDF.downloadHtml}"></label>
+                      <div class="form-check mb-3">
+                        <input id="downloadHtml" name="downloadHtml" type="checkbox">
+                        <label for="downloadHtml" th:text="#{EMLToPDF.downloadHtml}"></label>
                 <div class="form-text" th:text="#{EMLToPDF.downloadHtmlHelp}"></div>
               </div>
               
-              <div id="pdfOnlyOptions">
-                <div class="form-check mb-3">
-                  <input type="checkbox" class="form-check-input" name="includeAttachments" id="includeAttachments" checked>
-                  <label class="form-check-label" for="includeAttachments" th:text="#{EMLToPDF.includeAttachments}"></label>
+                      <div id="pdfOnlyOptions">
+                        <div class="form-check mb-3">
+                          <input checked id="includeAttachments" name="includeAttachments" type="checkbox">
+                          <label for="includeAttachments" th:text="#{EMLToPDF.includeAttachments}"></label>
                 </div>
                 
                 <div class="mb-3">

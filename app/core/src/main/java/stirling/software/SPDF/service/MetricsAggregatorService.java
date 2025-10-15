@@ -4,8 +4,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -13,15 +11,15 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.search.Search;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.EndpointInspector;
 import stirling.software.common.service.PostHogService;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class MetricsAggregatorService {
-    private static final Logger logger = LoggerFactory.getLogger(MetricsAggregatorService.class);
-
     private final MeterRegistry meterRegistry;
     private final PostHogService postHogService;
     private final EndpointInspector endpointInspector;
@@ -31,7 +29,7 @@ public class MetricsAggregatorService {
     public void aggregateAndSendMetrics() {
         Map<String, Object> metrics = new HashMap<>();
 
-        final boolean validateGetEndpoints = endpointInspector.getValidGetEndpoints().size() != 0;
+        final boolean validateGetEndpoints = !endpointInspector.getValidGetEndpoints().isEmpty();
         Search.in(meterRegistry)
                 .name("http.requests")
                 .counters()
@@ -66,7 +64,7 @@ public class MetricsAggregatorService {
                             if ("GET".equals(method)
                                     && validateGetEndpoints
                                     && !endpointInspector.isValidGetEndpoint(uri)) {
-                                logger.debug("Skipping invalid GET endpoint: {}", uri);
+                                log.debug("Skipping invalid GET endpoint: {}", uri);
                                 return;
                             }
 
@@ -77,7 +75,7 @@ public class MetricsAggregatorService {
                             double lastCount = lastSentMetrics.getOrDefault(key, 0.0);
                             double difference = currentCount - lastCount;
                             if (difference > 0) {
-                                logger.debug("{}, {}", key, difference);
+                                log.debug("{}, {}", key, difference);
                                 metrics.put(key, difference);
                                 lastSentMetrics.put(key, currentCount);
                             }
