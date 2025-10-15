@@ -40,9 +40,9 @@ const LoadingFallback = () => (
 export default function App() {
   return (
     <Suspense fallback={<LoadingFallback />}>
-      <RainbowThemeProvider>
-        <ErrorBoundary>
-          <PreferencesProvider>
+      <PreferencesProvider>
+        <RainbowThemeProvider>
+          <ErrorBoundary>
             <FileContextProvider enableUrlSync={true} enablePersistence={true}>
               <NavigationProvider>
                 <FilesModalProvider>
@@ -62,9 +62,9 @@ export default function App() {
                 </FilesModalProvider>
               </NavigationProvider>
             </FileContextProvider>
-          </PreferencesProvider>
-        </ErrorBoundary>
-      </RainbowThemeProvider>
+          </ErrorBoundary>
+        </RainbowThemeProvider>
+      </PreferencesProvider>
     </Suspense>
   );
 }

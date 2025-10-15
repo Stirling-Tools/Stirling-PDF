@@ -14,11 +14,10 @@ import { filterToolRegistryByQuery } from '../utils/toolSearch';
 import { useToolHistory } from '../hooks/tools/useUserToolActivity';
 import {
   ToolWorkflowState,
-  TOOL_PANEL_MODE_STORAGE_KEY,
   createInitialState,
   toolWorkflowReducer,
-  ToolPanelMode,
 } from './toolWorkflow/toolWorkflowState';
+import type { ToolPanelMode } from '../constants/toolPanel';
 import { usePreferences } from './PreferencesContext';
 
 // State interface
@@ -74,7 +73,7 @@ interface ToolWorkflowProviderProps {
 
 export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
   const [state, dispatch] = useReducer(toolWorkflowReducer, undefined, createInitialState);
-  const { preferences } = usePreferences();
+  const { preferences, updatePreference } = usePreferences();
 
   // Store reset functions for tools
   const [toolResetFunctions, setToolResetFunctions] = React.useState<Record<string, () => void>>({});
@@ -118,7 +117,8 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
 
   const setToolPanelMode = useCallback((mode: ToolPanelMode) => {
     dispatch({ type: 'SET_TOOL_PANEL_MODE', payload: mode });
-  }, []);
+    updatePreference('defaultToolPanelMode', mode);
+  }, [updatePreference]);
 
 
   const setPreviewFile = useCallback((file: File | null) => {
@@ -136,27 +136,15 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     dispatch({ type: 'SET_SEARCH_QUERY', payload: query });
   }, []);
 
-  useEffect(() => {
-    if (typeof window === 'undefined') {
-      return;
-    }
-
-    window.localStorage.setItem(TOOL_PANEL_MODE_STORAGE_KEY, state.toolPanelMode);
-  }, [state.toolPanelMode]);
-
   // Keep tool panel mode in sync with user preference. This ensures the
   // Config setting (Default tool picker mode) immediately affects the app
   // and persists across reloads.
   useEffect(() => {
-    if (!preferences) return;
     const preferredMode = preferences.defaultToolPanelMode;
-    if (preferredMode && preferredMode !== state.toolPanelMode) {
+    if (preferredMode !== state.toolPanelMode) {
       dispatch({ type: 'SET_TOOL_PANEL_MODE', payload: preferredMode });
-      if (typeof window !== 'undefined') {
-        window.localStorage.setItem(TOOL_PANEL_MODE_STORAGE_KEY, preferredMode);
-      }
     }
-  }, [preferences.defaultToolPanelMode]);
+  }, [preferences.defaultToolPanelMode, state.toolPanelMode]);
 
   // Tool reset methods
   const registerToolReset = useCallback((toolId: string, resetFunction: () => void) => {

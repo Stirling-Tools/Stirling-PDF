@@ -12,18 +12,6 @@ import posthog from 'posthog-js';
 import { PostHogProvider } from 'posthog-js/react';
 import { BASE_PATH } from './constants/app';
 
-// Compute initial color scheme
-function getInitialScheme(): 'light' | 'dark' {
-  const stored = localStorage.getItem('stirling-theme');
-  if (stored === 'light' || stored === 'dark') return stored;
-  try {
-    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-    return prefersDark ? 'dark' : 'light';
-  } catch {
-    return 'light';
-  }
-}
-
 posthog.init(import.meta.env.VITE_PUBLIC_POSTHOG_KEY, {
   api_host: import.meta.env.VITE_PUBLIC_POSTHOG_HOST,
   defaults: '2025-05-24',
@@ -57,7 +45,7 @@ if (!container) {
 const root = ReactDOM.createRoot(container); // Finds the root DOM element
 root.render(
   <React.StrictMode>
-    <ColorSchemeScript defaultColorScheme={getInitialScheme()} />
+    <ColorSchemeScript />
     <PostHogProvider
       client={posthog}
     >
