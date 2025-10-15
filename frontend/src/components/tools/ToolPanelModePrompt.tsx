@@ -2,17 +2,17 @@ import { useEffect, useState } from 'react';
 import { Badge, Button, Card, Group, Modal, Stack, Text } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { useToolWorkflow } from '../../contexts/ToolWorkflowContext';
+import { usePreferences } from '../../contexts/PreferencesContext';
 import './ToolPanelModePrompt.css';
-import { useToolPanelModePreference } from '../../hooks/useToolPanelModePreference';
-import { ToolPanelMode } from 'src/contexts/toolWorkflow/toolWorkflowState';
-
-// type moved to hook
+import type { ToolPanelMode } from '../../constants/toolPanel';
 
 const ToolPanelModePrompt = () => {
   const { t } = useTranslation();
   const { toolPanelMode, setToolPanelMode } = useToolWorkflow();
+  const { preferences, updatePreference } = usePreferences();
   const [opened, setOpened] = useState(false);
-  const { hydrated, shouldShowPrompt, markPromptSeen, setPreferredMode } = useToolPanelModePreference();
+
+  const shouldShowPrompt = !preferences.toolPanelModePromptSeen;
 
   useEffect(() => {
     if (shouldShowPrompt) {
@@ -22,19 +22,15 @@ const ToolPanelModePrompt = () => {
 
   const handleSelect = (mode: ToolPanelMode) => {
     setToolPanelMode(mode);
-    setPreferredMode(mode);
-    markPromptSeen();
+    updatePreference('defaultToolPanelMode', mode);
+    updatePreference('toolPanelModePromptSeen', true);
     setOpened(false);
   };
 
   const handleDismiss = () => {
-    markPromptSeen();
+    updatePreference('toolPanelModePromptSeen', true);
     setOpened(false);
   };
-
-  if (!hydrated) {
-    return null;
-  }
 
   return (
     <Modal
