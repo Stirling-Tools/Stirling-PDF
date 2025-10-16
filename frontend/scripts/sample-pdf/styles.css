@@ -123,18 +123,6 @@ body {
   transform: translateY(-50%);
 }
 
-/* Additional decorative element */
-.logo-container::before {
-  content: '';
-  position: absolute;
-  bottom: -30px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 150px;
-  height: 4px;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
-}
-
 .hero-content {
   text-align: center;
   padding: 60px;

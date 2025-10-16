@@ -3,12 +3,9 @@
 /**
  * Stirling PDF Sample Document Generator
  *
- * This script uses Puppeteer to generate a professional-looking sample PDF
- * from an HTML template. The output is used in the onboarding tour and as
- * a demo document for users to experiment with Stirling PDF's features.
- *
- * Usage: node generate.js
- * Output: ../../public/samples/stirling-sample.pdf
+ * This script uses Puppeteer to generate a sample PDF from a HTML template.
+ * The output is used in the onboarding tour and as a demo document
+ * for users to experiment with Stirling PDF's features.
  */
 
 import puppeteer from 'puppeteer';
