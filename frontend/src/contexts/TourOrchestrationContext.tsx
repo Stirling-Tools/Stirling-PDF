@@ -98,9 +98,9 @@ export const TourOrchestrationProvider: React.FC<{ children: React.ReactNode }> 
 
   const loadSampleFile = useCallback(async () => {
     try {
-      const response = await fetch('/samples/crop_test.pdf');
+      const response = await fetch('/samples/stirling-sample.pdf');
       const blob = await response.blob();
-      const file = new File([blob], 'crop_test.pdf', { type: 'application/pdf' });
+      const file = new File([blob], 'stirling-sample.pdf', { type: 'application/pdf' });
 
       await addFiles([file]);
       closeFilesModal();
@@ -147,10 +147,10 @@ export const TourOrchestrationProvider: React.FC<{ children: React.ReactNode }> 
     // Dispatch a custom event to modify crop settings
     const event = new CustomEvent('tour:setCropArea', {
       detail: {
-        x: 112,
-        y: 428,
-        width: 273,
-        height: 169
+        x: 80,
+        y: 435,
+        width: 440,
+        height: 170,
       }
     });
     window.dispatchEvent(event);
