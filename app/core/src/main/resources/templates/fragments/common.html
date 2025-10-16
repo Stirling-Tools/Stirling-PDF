@@ -168,14 +168,51 @@
   <!-- Bootstrap Icons -->
   <link rel="stylesheet" th:href="@{'/css/bootstrap-icons.min.css'}">
 
-  <!-- Pixel, doesn't collect any PII-->
-  <img th:if="${!@disablePixel}" referrerpolicy="no-referrer-when-downgrade"
-     th:src="'https://pixel.stirlingpdf.com/a.png?x-pxid=4f5fa02f-a065-4efb-bb2c-24509a4b6b92' 
-             + '&machineType=' + ${@machineType} 
-             + '&appVersion=' + ${@appVersion} 
-             + '&licenseType=' + ${@license} 
-             + '&loginEnabled=' + ${@loginEnabled}"
-     style="position: absolute; visibility: hidden;" />
+  <!-- Scarf Pixel - loaded dynamically based on cookie consent -->
+  <script th:inline="javascript">
+    const posthogEnabled = /*[[${@posthogEnabled}]]*/ false;
+    const scarfEnabled = /*[[${@scarfEnabled}]]*/ false;
+    const scarfPixelUrl = /*[['https://pixel.stirlingpdf.com/a.png?x-pxid=4f5fa02f-a065-4efb-bb2c-24509a4b6b92'
+             + '&machineType=' + ${@machineType}
+             + '&appVersion=' + ${@appVersion}
+             + '&licenseType=' + ${@license}
+             + '&loginEnabled=' + ${@loginEnabled}]]*/ '';
+
+    function loadScarfPixel() {
+      if (!scarfEnabled || !window.CookieConsent) return;
+
+      // Check if scarf service is accepted
+      if (window.CookieConsent.acceptedService('scarf', 'analytics')) {
+        // Remove any existing scarf pixel
+        const existingPixel = document.getElementById('scarf-pixel');
+        if (existingPixel) existingPixel.remove();
+
+        // Create and inject the pixel
+        const img = document.createElement('img');
+        img.id = 'scarf-pixel';
+        img.src = scarfPixelUrl;
+        img.referrerPolicy = 'no-referrer-when-downgrade';
+        img.style.position = 'absolute';
+        img.style.visibility = 'hidden';
+        document.body.appendChild(img);
+      } else {
+        // Remove pixel if user rejected
+        const existingPixel = document.getElementById('scarf-pixel');
+        if (existingPixel) existingPixel.remove();
+      }
+    }
+
+    // Load pixel on consent events
+    window.addEventListener('cc:onConsent', loadScarfPixel);
+    window.addEventListener('cc:onChange', loadScarfPixel);
+
+    // Try to load on page load if consent already given
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', loadScarfPixel);
+    } else {
+      loadScarfPixel();
+    }
+  </script>
      
   <!-- Custom -->
   <link rel="stylesheet" th:href="@{'/css/general.css'}">
@@ -221,7 +258,7 @@
         return;
       }
 
-      window.CookieConsent.acceptedCategory('analytics')?
+      window.CookieConsent.acceptedService('posthog', 'analytics')?
         posthog.opt_in_capturing() : posthog.opt_out_capturing();
     }
     const stirlingPDFLabel = /*[[${@StirlingPDFLabel}]]*/ '';
@@ -248,6 +285,8 @@
     const cookieBannerPreferencesModalNecessaryDescription = /*[[#{cookieBanner.preferencesModal.necessary.description}]]*/ "";
     const cookieBannerPreferencesModalAnalyticsTitle = /*[[#{cookieBanner.preferencesModal.analytics.title}]]*/ "";
     const cookieBannerPreferencesModalAnalyticsDescription = /*[[#{cookieBanner.preferencesModal.analytics.description}]]*/ "";
+    const cookieBannerPreferencesModalPosthogLabel = /*[[#{cookieBanner.preferencesModal.analytics.posthog.label}]]*/ "";
+    const cookieBannerPreferencesModalScarfLabel = /*[[#{cookieBanner.preferencesModal.analytics.scarf.label}]]*/ "";
 
     if (analyticsEnabled) {
       !function (t, e) {
