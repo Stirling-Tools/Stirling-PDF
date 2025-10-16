@@ -30,6 +30,7 @@ public class MergePdfsRequest extends MultiplePDFFiles {
                             + " PDF. If true, all certification signatures will be removed from the"
                             + " final merged document.",
             requiredMode = Schema.RequiredMode.REQUIRED,
+            allowableValues = {"true", "false"},
             defaultValue = "true")
     private Boolean removeCertSign;
 
@@ -37,6 +38,7 @@ public class MergePdfsRequest extends MultiplePDFFiles {
             description =
                     "Flag indicating whether to generate a table of contents for the merged PDF. If true, a table of contents will be created using the input filenames as chapter names.",
             requiredMode = Schema.RequiredMode.NOT_REQUIRED,
+            allowableValues = {"true", "false"},
             defaultValue = "false")
-    private boolean generateToc = false;
+    private Boolean generateToc = false;
 }

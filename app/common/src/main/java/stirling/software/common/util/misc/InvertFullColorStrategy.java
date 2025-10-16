@@ -20,7 +20,7 @@ import org.springframework.core.io.InputStreamResource;
 import org.springframework.web.multipart.MultipartFile;
 
 import stirling.software.common.model.ApplicationProperties;
-import stirling.software.common.model.api.misc.ReplaceAndInvert;
+import stirling.software.common.model.enumeration.misc.ReplaceAndInvert;
 import stirling.software.common.util.ApplicationContextProvider;
 import stirling.software.common.util.ExceptionUtils;
 

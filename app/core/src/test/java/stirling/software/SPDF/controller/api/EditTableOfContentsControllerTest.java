@@ -197,7 +197,6 @@ class EditTableOfContentsControllerTest {
         EditTableOfContentsRequest request = new EditTableOfContentsRequest();
         request.setFileInput(mockFile);
         request.setBookmarkData("[{\"title\":\"Chapter 1\",\"pageNumber\":1,\"children\":[]}]");
-        request.setReplaceExisting(true);
 
         List<BookmarkItem> bookmarks = new ArrayList<>();
         BookmarkItem bookmark = new BookmarkItem();

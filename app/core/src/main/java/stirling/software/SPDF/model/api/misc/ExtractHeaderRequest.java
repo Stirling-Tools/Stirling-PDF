@@ -14,7 +14,8 @@ public class ExtractHeaderRequest extends PDFFile {
     @Schema(
             description =
                     "Flag indicating whether to use the first text as a fallback if no suitable title is found. Defaults to false.",
-            requiredMode = Schema.RequiredMode.NOT_REQUIRED,
+            requiredMode = Schema.RequiredMode.REQUIRED,
+            allowableValues = {"true", "false"},
             defaultValue = "false")
     private Boolean useFirstTextAsFallback;
 }

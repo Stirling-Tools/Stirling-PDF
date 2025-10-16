@@ -21,12 +21,14 @@ public class ManualRedactPdfRequest extends PDFWithPageNums {
     @Schema(
             description = "Convert the redacted PDF to an image",
             defaultValue = "false",
+            allowableValues = {"true", "false"},
             requiredMode = Schema.RequiredMode.REQUIRED)
     private Boolean convertPDFToImage;
 
     @Schema(
             description = "The color used to fully redact certain pages",
             defaultValue = "#000000",
+            pattern = "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$",
             requiredMode = Schema.RequiredMode.REQUIRED)
     private String pageRedactionColor;
 }

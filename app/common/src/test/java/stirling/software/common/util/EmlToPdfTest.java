@@ -595,7 +595,6 @@ class EmlToPdfTest {
                                 () ->
                                         FileToPdf.convertHtmlToPdf(
                                                 anyString(),
-                                                any(),
                                                 any(byte[].class),
                                                 anyString(),
                                                 any(TempFileManager.class),
@@ -623,7 +622,6 @@ class EmlToPdfTest {
                         () ->
                                 FileToPdf.convertHtmlToPdf(
                                         anyString(),
-                                        any(),
                                         any(byte[].class),
                                         anyString(),
                                         any(TempFileManager.class),
@@ -669,7 +667,6 @@ class EmlToPdfTest {
                                 () ->
                                         FileToPdf.convertHtmlToPdf(
                                                 anyString(),
-                                                any(),
                                                 any(byte[].class),
                                                 anyString(),
                                                 any(TempFileManager.class),
@@ -708,7 +705,6 @@ class EmlToPdfTest {
                             () ->
                                     FileToPdf.convertHtmlToPdf(
                                             anyString(),
-                                            any(),
                                             any(byte[].class),
                                             anyString(),
                                             any(TempFileManager.class),
@@ -739,7 +735,6 @@ class EmlToPdfTest {
                                 () ->
                                         FileToPdf.convertHtmlToPdf(
                                                 anyString(),
-                                                any(),
                                                 any(byte[].class),
                                                 anyString(),
                                                 any(TempFileManager.class),

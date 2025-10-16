@@ -18,6 +18,8 @@ public class ConvertCbzToPdfRequest {
 
     @Schema(
             description = "Optimize the output PDF for ebook reading using Ghostscript",
-            defaultValue = "false")
-    private boolean optimizeForEbook;
+            requiredMode = Schema.RequiredMode.REQUIRED,
+            allowableValues = {"true", "false"},
+            defaultValue = "true")
+    private Boolean optimizeForEbook;
 }

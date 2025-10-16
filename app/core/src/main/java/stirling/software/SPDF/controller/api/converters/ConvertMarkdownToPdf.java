@@ -79,7 +79,6 @@ public class ConvertMarkdownToPdf {
         byte[] pdfBytes =
                 FileToPdf.convertHtmlToPdf(
                         runtimePathConfig.getWeasyPrintPath(),
-                        null,
                         htmlContent.getBytes(),
                         "converted.html",
                         tempFileManager,

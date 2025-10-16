@@ -29,6 +29,7 @@ public class OptimizePdfRequest extends PDFFile {
     @Schema(
             description = "Whether to linearize the PDF for faster web viewing. Default is false.",
             requiredMode = Schema.RequiredMode.REQUIRED,
+            allowableValues = {"true", "false"},
             defaultValue = "false")
     private Boolean linearize = false;
 
@@ -37,12 +38,14 @@ public class OptimizePdfRequest extends PDFFile {
                     "Whether to normalize the PDF content for better compatibility. Default is"
                             + " false.",
             requiredMode = Schema.RequiredMode.REQUIRED,
+            allowableValues = {"true", "false"},
             defaultValue = "false")
     private Boolean normalize = false;
 
     @Schema(
             description = "Whether to convert the PDF to grayscale. Default is false.",
             requiredMode = Schema.RequiredMode.REQUIRED,
+            allowableValues = {"true", "false"},
             defaultValue = "false")
     private Boolean grayscale = false;
 }

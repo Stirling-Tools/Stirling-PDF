@@ -1,4 +1,4 @@
-package stirling.software.SPDF.model.api.converters;
+package stirling.software.SPDF.controller.api.converters;
 
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;

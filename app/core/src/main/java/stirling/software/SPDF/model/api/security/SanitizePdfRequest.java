@@ -14,36 +14,42 @@ public class SanitizePdfRequest extends PDFFile {
     @Schema(
             description = "Remove JavaScript actions from the PDF",
             defaultValue = "true",
+            allowableValues = {"true", "false"},
             requiredMode = Schema.RequiredMode.REQUIRED)
     private Boolean removeJavaScript;
 
     @Schema(
             description = "Remove embedded files from the PDF",
             defaultValue = "true",
+            allowableValues = {"true", "false"},
             requiredMode = Schema.RequiredMode.REQUIRED)
     private Boolean removeEmbeddedFiles;
 
     @Schema(
             description = "Remove XMP metadata from the PDF",
             defaultValue = "false",
+            allowableValues = {"true", "false"},
             requiredMode = Schema.RequiredMode.REQUIRED)
     private Boolean removeXMPMetadata;
 
     @Schema(
             description = "Remove document info metadata from the PDF",
             defaultValue = "false",
+            allowableValues = {"true", "false"},
             requiredMode = Schema.RequiredMode.REQUIRED)
     private Boolean removeMetadata;
 
     @Schema(
             description = "Remove links from the PDF",
             defaultValue = "false",
+            allowableValues = {"true", "false"},
             requiredMode = Schema.RequiredMode.REQUIRED)
     private Boolean removeLinks;
 
     @Schema(
             description = "Remove fonts from the PDF",
             defaultValue = "false",
+            allowableValues = {"true", "false"},
             requiredMode = Schema.RequiredMode.REQUIRED)
     private Boolean removeFonts;
 }

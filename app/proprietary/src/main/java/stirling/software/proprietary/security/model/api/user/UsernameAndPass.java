@@ -9,6 +9,9 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 public class UsernameAndPass extends Username {
 
-    @Schema(description = "password of user", format = "password")
+    @Schema(
+            description = "password of user",
+            format = "password",
+            requiredMode = Schema.RequiredMode.REQUIRED)
     private String password;
 }

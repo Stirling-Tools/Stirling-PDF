@@ -16,7 +16,7 @@ public class AddPageNumbersRequest extends PDFWithPageNums {
             description = "Custom margin: small/medium/large/x-large",
             allowableValues = {"small", "medium", "large", "x-large"},
             defaultValue = "medium",
-            requiredMode = RequiredMode.NOT_REQUIRED)
+            requiredMode = RequiredMode.REQUIRED)
     private String customMargin;
 
     @Schema(
@@ -29,6 +29,7 @@ public class AddPageNumbersRequest extends PDFWithPageNums {
     @Schema(
             description = "Font type for page numbers",
             allowableValues = {"helvetica", "courier", "times"},
+            defaultValue = "times",
             requiredMode = RequiredMode.REQUIRED)
     private String fontType;
 
@@ -36,7 +37,7 @@ public class AddPageNumbersRequest extends PDFWithPageNums {
             description = "Hex colour for page numbers (e.g. #FF0000)",
             example = "#000000",
             defaultValue = "#000000",
-            requiredMode = RequiredMode.NOT_REQUIRED)
+            requiredMode = RequiredMode.REQUIRED)
     private String fontColor;
 
     @Schema(

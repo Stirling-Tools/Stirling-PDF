@@ -1,4 +1,4 @@
-package stirling.software.common.model.api.misc;
+package stirling.software.common.model.enumeration.misc;
 
 public enum ReplaceAndInvert {
     HIGH_CONTRAST_COLOR,

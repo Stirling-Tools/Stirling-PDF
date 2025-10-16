@@ -45,6 +45,7 @@ public class SignPDFWithCertRequest extends PDFFile {
     @Schema(
             description = "Whether to visually show the signature in the PDF file",
             defaultValue = "false",
+            allowableValues = {"true", "false"},
             requiredMode = Schema.RequiredMode.REQUIRED)
     private Boolean showSignature;
 
@@ -67,6 +68,7 @@ public class SignPDFWithCertRequest extends PDFFile {
     @Schema(
             description = "Whether to visually show a signature logo along with the signature",
             defaultValue = "true",
+            allowableValues = {"true", "false"},
             requiredMode = Schema.RequiredMode.REQUIRED)
     private Boolean showLogo;
 }

@@ -52,6 +52,7 @@ public class ConvertEmlToPDF {
 
         MultipartFile inputFile = request.getFileInput();
         String originalFilename = inputFile.getOriginalFilename();
+        boolean downloadHtml = Boolean.TRUE.equals(request.getDownloadHtml());
 
         // Validate input
         if (inputFile.isEmpty()) {
@@ -79,7 +80,7 @@ public class ConvertEmlToPDF {
         try {
             byte[] fileBytes = inputFile.getBytes();
 
-            if (request.isDownloadHtml()) {
+            if (downloadHtml) {
                 try {
                     String htmlContent = EmlToPdf.convertEmlToHtml(fileBytes, request);
                     log.info("Successfully converted EML to HTML: {}", originalFilename);

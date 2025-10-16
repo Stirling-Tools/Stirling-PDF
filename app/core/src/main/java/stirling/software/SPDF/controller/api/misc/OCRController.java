@@ -79,21 +79,23 @@ public class OCRController {
     @Operation(
             summary = "Process a PDF file with OCR",
             description =
-                    "This endpoint processes a PDF file using OCR (Optical Character Recognition). "
-                            + "Users can specify languages, sidecar, deskew, clean, cleanFinal, ocrType, ocrRenderType, and removeImagesAfter options. "
-                            + "Uses OCRmyPDF if available, falls back to Tesseract. Input:PDF Output:PDF Type:SI-Conditional")
+                    "This endpoint processes a PDF file using OCR (Optical Character Recognition)."
+                            + " Users can specify languages, sidecar, deskew, clean, cleanFinal,"
+                            + " ocrType, ocrRenderType, and removeImagesAfter options. Uses OCRmyPDF if"
+                            + " available, falls back to Tesseract. Input:PDF Output:PDF"
+                            + " Type:SI-Conditional")
     public ResponseEntity<byte[]> processPdfWithOCR(
             @ModelAttribute ProcessPdfWithOcrRequest request)
             throws IOException, InterruptedException {
         MultipartFile inputFile = request.getFileInput();
         List<String> selectedLanguages = request.getLanguages();
-        Boolean sidecar = request.isSidecar();
-        Boolean deskew = request.isDeskew();
-        Boolean clean = request.isClean();
-        Boolean cleanFinal = request.isCleanFinal();
+        boolean sidecar = Boolean.TRUE.equals(request.getSidecar());
+        boolean deskew = Boolean.TRUE.equals(request.getDeskew());
+        boolean clean = Boolean.TRUE.equals(request.getClean());
+        boolean cleanFinal = Boolean.TRUE.equals(request.getCleanFinal());
         String ocrType = request.getOcrType();
         String ocrRenderType = request.getOcrRenderType();
-        Boolean removeImagesAfter = request.isRemoveImagesAfter();
+        boolean removeImagesAfter = Boolean.TRUE.equals(request.getRemoveImagesAfter());
 
         if (selectedLanguages == null || selectedLanguages.isEmpty()) {
             throw ExceptionUtils.createOcrLanguageRequiredException();
@@ -198,13 +200,13 @@ public class OCRController {
 
     private void processWithOcrMyPdf(
             List<String> selectedLanguages,
-            Boolean sidecar,
-            Boolean deskew,
-            Boolean clean,
-            Boolean cleanFinal,
+            boolean sidecar,
+            boolean deskew,
+            boolean clean,
+            boolean cleanFinal,
             String ocrType,
             String ocrRenderType,
-            Boolean removeImagesAfter,
+            boolean removeImagesAfter,
             Path tempInputFile,
             Path tempOutputFile,
             Path sidecarTextPath)
@@ -224,18 +226,18 @@ public class OCRController {
                                 "--pdf-renderer",
                                 ocrRenderType));
 
-        if (sidecar != null && sidecar && sidecarTextPath != null) {
+        if (sidecar && sidecarTextPath != null) {
             command.add("--sidecar");
             command.add(sidecarTextPath.toString());
         }
 
-        if (deskew != null && deskew) {
+        if (deskew) {
             command.add("--deskew");
         }
-        if (clean != null && clean) {
+        if (clean) {
             command.add("--clean");
         }
-        if (cleanFinal != null && cleanFinal) {
+        if (cleanFinal) {
             command.add("--clean-final");
         }
         if (ocrType != null && !ocrType.isEmpty()) {
@@ -273,7 +275,7 @@ public class OCRController {
         }
 
         // Remove images from the OCR processed PDF if the flag is set to true
-        if (removeImagesAfter != null && removeImagesAfter) {
+        if (removeImagesAfter) {
             try (TempFile tempPdfWithoutImages = new TempFile(tempFileManager, "_no_images.pdf")) {
                 List<String> gsCommand =
                         Arrays.asList(

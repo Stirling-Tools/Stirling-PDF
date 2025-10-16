@@ -19,6 +19,8 @@ public class MergeMultiplePagesRequest extends PDFFile {
             allowableValues = {"2", "3", "4", "9", "16"})
     private int pagesPerSheet;
 
-    @Schema(description = "Boolean for if you wish to add border around the pages")
+    @Schema(
+            description = "Boolean for if you wish to add border around the pages",
+            allowableValues = {"true", "false"})
     private Boolean addBorder;
 }

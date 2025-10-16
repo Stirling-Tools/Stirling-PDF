@@ -16,6 +16,7 @@ public class MetadataRequest extends PDFFile {
     @Schema(
             description = "Delete all metadata if set to true",
             defaultValue = "false",
+            allowableValues = {"true", "false"},
             requiredMode = Schema.RequiredMode.REQUIRED)
     private Boolean deleteAll;
 
@@ -73,7 +74,7 @@ public class MetadataRequest extends PDFFile {
             description = "The trapped status of the document",
             defaultValue = "False",
             allowableValues = {"True", "False", "Unknown"},
-            requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+            requiredMode = Schema.RequiredMode.REQUIRED)
     private String trapped;
 
     @Schema(

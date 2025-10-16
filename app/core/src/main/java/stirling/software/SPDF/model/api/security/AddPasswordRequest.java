@@ -32,31 +32,59 @@ public class AddPasswordRequest extends PDFFile {
             requiredMode = Schema.RequiredMode.REQUIRED)
     private int keyLength = 256;
 
-    @Schema(description = "Whether document assembly is prevented", defaultValue = "false")
+    @Schema(
+            description = "Whether document assembly is prevented",
+            allowableValues = {"true", "false"},
+            requiredMode = Schema.RequiredMode.REQUIRED,
+            defaultValue = "false")
     private Boolean preventAssembly;
 
-    @Schema(description = "Whether content extraction is prevented", defaultValue = "false")
+    @Schema(
+            description = "Whether content extraction is prevented",
+            allowableValues = {"true", "false"},
+            requiredMode = Schema.RequiredMode.REQUIRED,
+            defaultValue = "false")
     private Boolean preventExtractContent;
 
     @Schema(
             description = "Whether content extraction for accessibility is prevented",
+            allowableValues = {"true", "false"},
+            requiredMode = Schema.RequiredMode.REQUIRED,
             defaultValue = "false")
     private Boolean preventExtractForAccessibility;
 
-    @Schema(description = "Whether form filling is prevented", defaultValue = "false")
+    @Schema(
+            description = "Whether form filling is prevented",
+            allowableValues = {"true", "false"},
+            requiredMode = Schema.RequiredMode.REQUIRED,
+            defaultValue = "false")
     private Boolean preventFillInForm;
 
-    @Schema(description = "Whether document modification is prevented", defaultValue = "false")
+    @Schema(
+            description = "Whether document modification is prevented",
+            allowableValues = {"true", "false"},
+            requiredMode = Schema.RequiredMode.REQUIRED,
+            defaultValue = "false")
     private Boolean preventModify;
 
     @Schema(
             description = "Whether modification of annotations is prevented",
+            allowableValues = {"true", "false"},
+            requiredMode = Schema.RequiredMode.REQUIRED,
             defaultValue = "false")
     private Boolean preventModifyAnnotations;
 
-    @Schema(description = "Whether printing of the document is prevented", defaultValue = "false")
+    @Schema(
+            description = "Whether printing of the document is prevented",
+            allowableValues = {"true", "false"},
+            requiredMode = Schema.RequiredMode.REQUIRED,
+            defaultValue = "false")
     private Boolean preventPrinting;
 
-    @Schema(description = "Whether faithful printing is prevented", defaultValue = "false")
+    @Schema(
+            description = "Whether faithful printing is prevented",
+            allowableValues = {"true", "false"},
+            requiredMode = Schema.RequiredMode.REQUIRED,
+            defaultValue = "false")
     private Boolean preventPrintingFaithful;
 }

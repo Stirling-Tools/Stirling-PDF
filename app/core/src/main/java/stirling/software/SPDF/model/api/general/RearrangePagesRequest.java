@@ -25,6 +25,20 @@ public class RearrangePagesRequest extends PDFWithPageNums {
                             + "ODD_EVEN_MERGE: Merges pages and organises them alternately into odd and even pages.\n"
                             + "REMOVE_FIRST: Removes the first page.\n"
                             + "REMOVE_LAST: Removes the last page.\n"
-                            + "REMOVE_FIRST_AND_LAST: Removes both the first and the last pages.\n")
+                            + "REMOVE_FIRST_AND_LAST: Removes both the first and the last pages.\n"
+                            + "SIDE_STITCH_BOOKLET_SORT: Similar to BOOKLET_SORT but for side-stitched booklets.\n",
+            allowableValues = {
+                "CUSTOM",
+                "DUPLICATE",
+                "REVERSE_ORDER",
+                "DUPLEX_SORT",
+                "BOOKLET_SORT",
+                "ODD_EVEN_SPLIT",
+                "ODD_EVEN_MERGE",
+                "REMOVE_FIRST",
+                "REMOVE_LAST",
+                "REMOVE_FIRST_AND_LAST",
+                "SIDE_STITCH_BOOKLET_SORT"
+            })
     private String customMode;
 }

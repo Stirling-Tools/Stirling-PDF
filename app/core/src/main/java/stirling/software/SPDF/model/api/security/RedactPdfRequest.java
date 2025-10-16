@@ -20,12 +20,14 @@ public class RedactPdfRequest extends PDFFile {
     @Schema(
             description = "Whether to use regex for the listOfText",
             defaultValue = "false",
+            allowableValues = {"true", "false"},
             requiredMode = Schema.RequiredMode.REQUIRED)
     private Boolean useRegex;
 
     @Schema(
             description = "Whether to use whole word search",
             defaultValue = "false",
+            allowableValues = {"true", "false"},
             requiredMode = Schema.RequiredMode.REQUIRED)
     private Boolean wholeWordSearch;
 
@@ -44,6 +46,7 @@ public class RedactPdfRequest extends PDFFile {
     @Schema(
             description = "Convert the redacted PDF to an image",
             defaultValue = "false",
+            allowableValues = {"true", "false"},
             requiredMode = Schema.RequiredMode.REQUIRED)
     private Boolean convertPDFToImage;
 }

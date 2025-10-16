@@ -6,8 +6,8 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import stirling.software.common.model.api.PDFFile;
-import stirling.software.common.model.api.misc.HighContrastColorCombination;
-import stirling.software.common.model.api.misc.ReplaceAndInvert;
+import stirling.software.common.model.enumeration.misc.HighContrastColorCombination;
+import stirling.software.common.model.enumeration.misc.ReplaceAndInvert;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -16,7 +16,7 @@ public class ReplaceAndInvertColorRequest extends PDFFile {
     @Schema(
             description = "Replace and Invert color options of a pdf.",
             requiredMode = Schema.RequiredMode.REQUIRED,
-            defaultValue = "HIGH_CONTRAST_COLOR",
+            defaultValue = "FULL_INVERSION",
             allowableValues = {
                 "HIGH_CONTRAST_COLOR",
                 "CUSTOM_COLOR",
