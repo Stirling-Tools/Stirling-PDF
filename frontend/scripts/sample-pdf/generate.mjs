@@ -18,7 +18,7 @@ const __dirname = dirname(__filename);
 
 const TEMPLATE_PATH = join(__dirname, 'template.html');
 const OUTPUT_DIR = join(__dirname, '../../public/samples');
-const OUTPUT_PATH = join(OUTPUT_DIR, 'stirling-sample.pdf');
+const OUTPUT_PATH = join(OUTPUT_DIR, 'Sample.pdf');
 
 async function generatePDF() {
   console.log('🚀 Starting Stirling PDF sample document generation...\n');
