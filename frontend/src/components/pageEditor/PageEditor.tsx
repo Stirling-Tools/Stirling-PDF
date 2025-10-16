@@ -26,6 +26,8 @@ import {
 import { GRID_CONSTANTS } from './constants';
 import { usePageDocument } from './hooks/usePageDocument';
 import { usePageEditorState } from './hooks/usePageEditorState';
+import { parseSelection } from "../../utils/bulkselection/parseSelection";
+import { usePageEditorRightRailButtons } from "./pageEditorRightRailButtons";
 
 export interface PageEditorProps {
   onFunctionsReady?: (functions: PageEditorFunctions) => void;
@@ -44,6 +46,7 @@ const PageEditor = ({
 
   // Prefer IDs + selectors to avoid array identity churn
   const activeFileIds = state.files.ids;
+  const filesSignature = selectors.getFilesSignature();
 
   // UI state
   const globalProcessing = state.ui.isProcessing;
@@ -64,6 +67,21 @@ const PageEditor = ({
     setSelectionMode, setSelectedPageIds, setMovingPage, setSplitPositions, setExportLoading,
     togglePage, toggleSelectAll, animateReorder
   } = usePageEditorState();
+
+  const [csvInput, setCsvInput] = useState<string>('');
+  const [rightRailVisible, setRightRailVisible] = useState(false);
+
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => setRightRailVisible(true));
+    return () => {
+      cancelAnimationFrame(frame);
+      setRightRailVisible(false);
+    };
+  }, []);
+
+  useEffect(() => {
+    setCsvInput('');
+  }, [filesSignature]);
 
   // Grid container ref for positioning split indicators
   const gridContainerRef = useRef<HTMLDivElement>(null);
@@ -118,6 +136,8 @@ const PageEditor = ({
 
   // Interface functions for parent component
   const displayDocument = editedDocument || mergedPdfDocument;
+  const totalPages = displayDocument?.pages.length ?? 0;
+  const selectedPageCount = selectedPageIds.length;
 
   // Utility functions to convert between page IDs and page numbers
   const getPageNumbersFromIds = useCallback((pageIds: string[]): number[] => {
@@ -414,6 +434,12 @@ const PageEditor = ({
     setSelectedPageIds(pageIds);
   }, [getPageIdsFromNumbers, setSelectedPageIds]);
 
+  const updatePagesFromCSV = useCallback((override?: string) => {
+    if (totalPages === 0) return;
+    const normalized = parseSelection(override ?? csvInput, totalPages);
+    handleSetSelectedPages(normalized);
+  }, [csvInput, totalPages, handleSetSelectedPages]);
+
   const handleReorderPages = useCallback((sourcePageNumber: number, targetIndex: number, selectedPageIds?: string[]) => {
     if (!displayDocument) return;
 
@@ -608,6 +634,24 @@ const PageEditor = ({
     setSelectedPageIds([]);
     setSelectionMode(false);
   }, [actions]);
+
+  usePageEditorRightRailButtons({
+    totalPages,
+    selectedPageCount,
+    rightRailVisible,
+    csvInput,
+    setCsvInput,
+    selectedPageIds,
+    displayDocument: displayDocument || undefined,
+    updatePagesFromCSV,
+    handleSelectAll,
+    handleDeselectAll,
+    handleDelete,
+    onExportSelected,
+    exportLoading,
+    activeFileCount: activeFileIds.length,
+    closePdf,
+  });
 
   // Export preview function - defined after export functions to avoid circular dependency
   const handleExportPreview = useCallback((selectedOnly: boolean = false) => {

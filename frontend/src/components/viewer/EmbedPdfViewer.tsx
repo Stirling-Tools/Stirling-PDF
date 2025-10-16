@@ -13,6 +13,7 @@ import { useSignature } from '../../contexts/SignatureContext';
 import { createStirlingFilesAndStubs } from '../../services/fileStubHelpers';
 import NavigationWarningModal from '../shared/NavigationWarningModal';
 import { isStirlingFile } from '../../types/fileContext';
+import ViewerRightRailButtons from './ViewerRightRailButtons';
 
 export interface EmbedPdfViewerProps {
   sidebarsVisible: boolean;
@@ -252,6 +253,7 @@ const EmbedPdfViewerContent = ({
         overflow: 'hidden',
         contain: 'layout style paint'
       }}>
+      <ViewerRightRailButtons />
       {/* Close Button - Only show in preview mode */}
       {onClose && previewFile && (
         <ActionIcon
