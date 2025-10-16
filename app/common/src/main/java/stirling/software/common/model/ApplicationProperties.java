@@ -321,6 +321,8 @@ public class ApplicationProperties {
         private String tessdataDir;
         private Boolean enableAlphaFunctionality;
         private Boolean enableAnalytics;
+        private Boolean enablePosthog;
+        private Boolean enableScarf;
         private Datasource datasource;
         private Boolean disableSanitize;
         private int maxDPI;
@@ -333,6 +335,18 @@ public class ApplicationProperties {
 
         public boolean isAnalyticsEnabled() {
             return this.getEnableAnalytics() != null && this.getEnableAnalytics();
+        }
+
+        public boolean isPosthogEnabled() {
+            // Treat null as enabled when analytics is enabled
+            return this.isAnalyticsEnabled()
+                    && (this.getEnablePosthog() == null || this.getEnablePosthog());
+        }
+
+        public boolean isScarfEnabled() {
+            // Treat null as enabled when analytics is enabled
+            return this.isAnalyticsEnabled()
+                    && (this.getEnableScarf() == null || this.getEnableScarf());
         }
     }
 
