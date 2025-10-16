@@ -7,7 +7,6 @@ import AdminSecuritySection from './configSections/AdminSecuritySection';
 import AdminConnectionsSection from './configSections/AdminConnectionsSection';
 import AdminPrivacySection from './configSections/AdminPrivacySection';
 import AdminAdvancedSection from './configSections/AdminAdvancedSection';
-import AdminMailSection from './configSections/AdminMailSection';
 import AdminLegalSection from './configSections/AdminLegalSection';
 import AdminPremiumSection from './configSections/AdminPremiumSection';
 import AdminEndpointsSection from './configSections/AdminEndpointsSection';
@@ -92,12 +91,6 @@ export const createConfigNavSections = (
           label: 'Connections',
           icon: 'link-rounded',
           component: <AdminConnectionsSection />
-        },
-        {
-          key: 'adminMail',
-          label: 'Mail',
-          icon: 'mail-rounded',
-          component: <AdminMailSection />
         },
         {
           key: 'adminLegal',

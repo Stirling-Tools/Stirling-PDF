@@ -111,20 +111,10 @@ export default function AdminGeneralSection() {
         </Text>
       </div>
 
-      {/* UI Settings */}
+      {/* System Settings */}
       <Paper withBorder p="md" radius="md">
         <Stack gap="md">
-          <Text fw={600} size="sm" mb="xs">{t('admin.settings.general.ui', 'User Interface')}</Text>
-
-          <div>
-            <TextInput
-              label={t('admin.settings.general.appName', 'Application Name')}
-              description={t('admin.settings.general.appName.description', 'The name displayed in the browser tab and home page')}
-              value={settings.ui.appName || ''}
-              onChange={(e) => setSettings({ ...settings, ui: { ...settings.ui, appName: e.target.value } })}
-              placeholder="Stirling PDF"
-            />
-          </div>
+          <Text fw={600} size="sm" mb="xs">{t('admin.settings.general.system', 'System')}</Text>
 
           <div>
             <TextInput
@@ -133,16 +123,6 @@ export default function AdminGeneralSection() {
               value={settings.ui.appNameNavbar || ''}
               onChange={(e) => setSettings({ ...settings, ui: { ...settings.ui, appNameNavbar: e.target.value } })}
               placeholder="Stirling PDF"
-            />
-          </div>
-
-          <div>
-            <TextInput
-              label={t('admin.settings.general.homeDescription', 'Home Description')}
-              description={t('admin.settings.general.homeDescription.description', 'The description text shown on the home page')}
-              value={settings.ui.homeDescription || ''}
-              onChange={(e) => setSettings({ ...settings, ui: { ...settings.ui, homeDescription: e.target.value } })}
-              placeholder="Your locally hosted one-stop-shop for all your PDF needs"
             />
           </div>
 
@@ -170,13 +150,6 @@ export default function AdminGeneralSection() {
               comboboxProps={{ zIndex: 1400 }}
             />
           </div>
-        </Stack>
-      </Paper>
-
-      {/* System Settings */}
-      <Paper withBorder p="md" radius="md">
-        <Stack gap="md">
-          <Text fw={600} size="sm" mb="xs">{t('admin.settings.general.system', 'System')}</Text>
 
           <div>
             <TextInput

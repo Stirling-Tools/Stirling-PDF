@@ -19,7 +19,6 @@ export type NavKey =
   | 'adminConnections'
   | 'adminPrivacy'
   | 'adminAdvanced'
-  | 'adminMail'
   | 'adminLegal'
   | 'adminPremium'
   | 'adminEndpoints';

@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { TextInput, NumberInput, Switch, Button, Stack, Paper, Text, Loader, Group, Select, PasswordInput } from '@mantine/core';
+import { TextInput, NumberInput, Switch, Button, Stack, Paper, Text, Loader, Group, Select, PasswordInput, Alert } from '@mantine/core';
 import { alert } from '../../../toast';
+import LocalIcon from '../../LocalIcon';
 import RestartConfirmationModal from '../RestartConfirmationModal';
 import { useRestartServer } from '../useRestartServer';
 
@@ -11,10 +12,6 @@ interface SecuritySettingsData {
   loginMethod?: string;
   loginAttemptCount?: number;
   loginResetTimeMinutes?: number;
-  initialLogin?: {
-    username?: string;
-    password?: string;
-  };
   jwt?: {
     persistence?: boolean;
     enableKeyRotation?: boolean;
@@ -167,32 +164,17 @@ export default function AdminSecuritySection() {
         </Stack>
       </Paper>
 
-      {/* Initial Login Credentials */}
-      <Paper withBorder p="md" radius="md">
-        <Stack gap="md">
-          <Text fw={600} size="sm" mb="xs">{t('admin.settings.security.initialLogin', 'Initial Login')}</Text>
-
-          <div>
-            <TextInput
-              label={t('admin.settings.security.initialLogin.username', 'Initial Username')}
-              description={t('admin.settings.security.initialLogin.username.description', 'Default admin username for first-time setup')}
-              value={settings.initialLogin?.username || ''}
-              onChange={(e) => setSettings({ ...settings, initialLogin: { ...settings.initialLogin, username: e.target.value } })}
-              placeholder="admin"
-            />
-          </div>
-
-          <div>
-            <PasswordInput
-              label={t('admin.settings.security.initialLogin.password', 'Initial Password')}
-              description={t('admin.settings.security.initialLogin.password.description', 'Default admin password for first-time setup')}
-              value={settings.initialLogin?.password || ''}
-              onChange={(e) => setSettings({ ...settings, initialLogin: { ...settings.initialLogin, password: e.target.value } })}
-              placeholder="••••••••"
-            />
-          </div>
-        </Stack>
-      </Paper>
+      {/* SSO/SAML Notice */}
+      <Alert
+        variant="light"
+        color="blue"
+        title={t('admin.settings.security.ssoNotice.title', 'Looking for SSO/SAML settings?')}
+        icon={<LocalIcon icon="info-rounded" width="1rem" height="1rem" />}
+      >
+        <Text size="sm">
+          {t('admin.settings.security.ssoNotice.message', 'OAuth2 and SAML2 authentication providers have been moved to the Connections menu for easier management.')}
+        </Text>
+      </Alert>
 
       {/* JWT Settings */}
       <Paper withBorder p="md" radius="md">

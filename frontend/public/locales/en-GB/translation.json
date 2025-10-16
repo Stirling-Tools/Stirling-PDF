@@ -3213,6 +3213,8 @@
   "admin": {
     "error": "Error",
     "success": "Success",
+    "expand": "Expand",
+    "close": "Close",
     "status": {
       "active": "Active",
       "inactive": "Inactive"
@@ -3223,6 +3225,7 @@
       "fetchError": "Failed to load settings",
       "saveError": "Failed to save settings",
       "saved": "Settings saved successfully",
+      "saveSuccess": "Settings saved successfully",
       "save": "Save Changes",
       "restartRequired": "Settings changes require a server restart to take effect.",
       "general": {
@@ -3252,6 +3255,10 @@
       "security": {
         "title": "Security",
         "description": "Configure authentication, login behaviour, and security policies.",
+        "ssoNotice": {
+          "title": "Looking for SSO/SAML settings?",
+          "message": "OAuth2 and SAML2 authentication providers have been moved to the Connections menu for easier management."
+        },
         "authentication": "Authentication",
         "enableLogin": "Enable Login",
         "enableLogin.description": "Require users to log in before accessing the application",
@@ -3287,6 +3294,12 @@
       "connections": {
         "title": "Connections",
         "description": "Configure external authentication providers like OAuth2 and SAML.",
+        "linkedServices": "Linked Services",
+        "unlinkedServices": "Unlinked Services",
+        "connect": "Connect",
+        "disconnect": "Disconnect",
+        "disconnected": "Provider disconnected successfully",
+        "disconnectError": "Failed to disconnect provider",
         "oauth2": "OAuth2",
         "oauth2.enabled": "Enable OAuth2",
         "oauth2.enabled.description": "Allow users to authenticate using OAuth2 providers",
