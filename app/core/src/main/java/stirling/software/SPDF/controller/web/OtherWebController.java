@@ -198,4 +198,11 @@ public class OtherWebController {
         model.addAttribute("currentPage", "add-attachments");
         return "misc/add-attachments";
     }
+
+    @GetMapping("/extract-attachments")
+    @Hidden
+    public String extractAttachmentsForm(Model model) {
+        model.addAttribute("currentPage", "extract-attachments");
+        return "misc/extract-attachments";
+    }
 }
