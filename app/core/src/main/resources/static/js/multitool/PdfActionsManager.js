@@ -1,4 +1,5 @@
 import { DeletePageCommand } from "./commands/delete-page.js";
+import { DuplicatePageCommand } from "./commands/duplicate-page.js";
 import { SelectPageCommand } from "./commands/select.js";
 import { SplitFileCommand } from "./commands/split.js";
 import { UndoManager } from "./UndoManager.js";
@@ -78,6 +79,18 @@ class PdfActionsManager {
     this._pushUndoClearRedo(deletePageCommand);
   }
 
+  duplicatePageButtonCallback(e) {
+    let imgContainer = this.getPageContainer(e.target);
+    let duplicatePageCommand = new DuplicatePageCommand(
+      imgContainer,
+      this.duplicatePage,
+      this.pagesContainer
+    );
+    duplicatePageCommand.execute();
+
+    this._pushUndoClearRedo(duplicatePageCommand);
+  }
+
   insertFileButtonCallback(e) {
     var imgContainer = this.getPageContainer(e.target);
     this.addFiles(imgContainer);
@@ -101,10 +114,11 @@ class PdfActionsManager {
     this.undoManager.pushUndoClearRedo(command);
   }
 
-  setActions({ movePageTo, addFiles, rotateElement }) {
+  setActions({ movePageTo, addFiles, rotateElement, duplicatePage }) {
     this.movePageTo = movePageTo;
     this.addFiles = addFiles;
     this.rotateElement = rotateElement;
+    this.duplicatePage = duplicatePage;
 
     this.moveUpButtonCallback = this.moveUpButtonCallback.bind(this);
     this.moveDownButtonCallback = this.moveDownButtonCallback.bind(this);
@@ -114,6 +128,7 @@ class PdfActionsManager {
     this.insertFileButtonCallback = this.insertFileButtonCallback.bind(this);
     this.insertFileBlankButtonCallback = this.insertFileBlankButtonCallback.bind(this);
     this.splitFileButtonCallback = this.splitFileButtonCallback.bind(this);
+    this.duplicatePageButtonCallback = this.duplicatePageButtonCallback.bind(this);
   }
 
 
@@ -153,6 +168,13 @@ class PdfActionsManager {
     rotateCW.innerHTML = `<span class="material-symbols-rounded">rotate_right</span>`;
     rotateCW.onclick = this.rotateCWButtonCallback;
     buttonContainer.appendChild(rotateCW);
+
+    const duplicatePage = document.createElement("button");
+    duplicatePage.classList.add("btn", "btn-secondary");
+    duplicatePage.setAttribute('title', window.translations.duplicate);
+    duplicatePage.innerHTML = `<span class="material-symbols-rounded">control_point_duplicate</span>`;
+    duplicatePage.onclick = this.duplicatePageButtonCallback;
+    buttonContainer.appendChild(duplicatePage);
 
     const deletePage = document.createElement("button");
     deletePage.classList.add("btn", "btn-danger");
@@ -195,7 +217,7 @@ class PdfActionsManager {
 
     const insertFileButton = document.createElement("button");
     insertFileButton.classList.add("btn", "btn-primary");
-    moveUp.setAttribute('title', window.translations.addFile);
+    insertFileButton.setAttribute('title', window.translations.addFile);
     insertFileButton.innerHTML = `<span class="material-symbols-rounded">add</span>`;
     insertFileButton.onclick = this.insertFileButtonCallback;
     insertFileButtonContainer.appendChild(insertFileButton);
