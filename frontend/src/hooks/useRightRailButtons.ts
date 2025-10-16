@@ -3,7 +3,7 @@ import { useRightRail } from '../contexts/RightRailContext';
 import { RightRailAction, RightRailButtonConfig } from '../types/rightRail';
 
 export interface RightRailButtonWithAction extends RightRailButtonConfig {
-  onClick: RightRailAction;
+  onClick?: RightRailAction;
 }
 
 /**
@@ -28,7 +28,7 @@ export function useRightRailButtons(buttons: readonly RightRailButtonWithAction[
     if (process.env.NODE_ENV === 'development') {
       const idSet = new Set<string>();
       buttons.forEach(b => {
-        if (!b.onClick) console.warn('[RightRail] Missing onClick for id:', b.id);
+        if (!b.onClick && !b.render) console.warn('[RightRail] Missing onClick/render for id:', b.id);
         if (idSet.has(b.id)) console.warn('[RightRail] Duplicate id in buttons array:', b.id);
         idSet.add(b.id);
       });

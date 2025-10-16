@@ -171,7 +171,7 @@
 
   /* RightRail (light) */
   --right-rail-bg: #F5F6F8;           /* light background */
-  --right-rail-foreground: #CDD4E1;   /* panel behind custom tool icons */
+  --right-rail-foreground: #E3E4E5;   /* panel behind custom tool icons */
   --right-rail-icon: #4B5563;         /* icon color */
   --right-rail-icon-disabled: #CECECE;/* disabled icon */
 

@@ -21,7 +21,7 @@ export function usePageDocument(): PageDocumentHook {
   const primaryFileId = activeFileIds[0] ?? null;
 
   // Stable signature for effects (prevents loops)
-  const filesSignature = selectors.getFilesSignature();
+  const activeFilesSignature = selectors.getFilesSignature();
 
   // UI state
   const globalProcessing = state.ui.isProcessing;
@@ -156,7 +156,7 @@ export function usePageDocument(): PageDocumentHook {
     };
 
     return mergedDoc;
-  }, [activeFileIds, primaryFileId, primaryStirlingFileStub, processedFilePages, processedFileTotalPages, selectors, filesSignature]);
+  }, [activeFileIds, primaryFileId, primaryStirlingFileStub, processedFilePages, processedFileTotalPages, selectors, activeFilesSignature]);
 
   // Large document detection for smart loading
   const isVeryLargeDocument = useMemo(() => {

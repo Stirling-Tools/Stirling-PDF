@@ -7,7 +7,7 @@ interface RightRailContextValue {
 	allButtonsDisabled: boolean;
 	registerButtons: (buttons: RightRailButtonConfig[]) => void;
 	unregisterButtons: (ids: string[]) => void;
-	setAction: (id: string, action: RightRailAction) => void;
+	setAction: (id: string, action?: RightRailAction) => void;
 	setAllRightRailButtonsDisabled: (disabled: boolean) => void;
 	clear: () => void;
 }
@@ -42,8 +42,16 @@ export function RightRailProvider({ children }: { children: React.ReactNode }) {
 		setActions(prev => Object.fromEntries(Object.entries(prev).filter(([id]) => !ids.includes(id))));
 	}, []);
 
-	const setAction = useCallback((id: string, action: RightRailAction) => {
-		setActions(prev => ({ ...prev, [id]: action }));
+	const setAction = useCallback((id: string, action?: RightRailAction) => {
+		setActions(prev => {
+			if (!action) {
+				if (!(id in prev)) return prev;
+				const next = { ...prev };
+				delete next[id];
+				return next;
+			}
+			return { ...prev, [id]: action };
+		});
 	}, []);
 
 	const setAllRightRailButtonsDisabled = useCallback((disabled: boolean) => {

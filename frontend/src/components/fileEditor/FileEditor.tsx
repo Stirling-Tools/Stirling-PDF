@@ -3,7 +3,7 @@ import {
   Text, Center, Box, LoadingOverlay, Stack
 } from '@mantine/core';
 import { Dropzone } from '@mantine/dropzone';
-import { useFileSelection, useFileState, useFileManagement, useFileActions } from '../../contexts/FileContext';
+import { useFileSelection, useFileState, useFileManagement, useFileActions, useFileContext } from '../../contexts/FileContext';
 import { useNavigationActions } from '../../contexts/NavigationContext';
 import { zipFileService } from '../../services/zipFileService';
 import { detectFileExtension } from '../../utils/fileUtils';
@@ -13,6 +13,7 @@ import FilePickerModal from '../shared/FilePickerModal';
 import { FileId, StirlingFile } from '../../types/fileContext';
 import { alert } from '../toast';
 import { downloadBlob } from '../../utils/downloadUtils';
+import { useFileEditorRightRailButtons } from './fileEditorRightRailButtons';
 
 
 interface FileEditorProps {
@@ -36,11 +37,15 @@ const FileEditor = ({
   // Use optimized FileContext hooks
   const { state, selectors } = useFileState();
   const { addFiles, removeFiles, reorderFiles } = useFileManagement();
-  const { actions } = useFileActions();
+  const { actions: fileActions } = useFileActions();
+  const { actions: fileContextActions } = useFileContext();
+  const { clearAllFileErrors } = fileContextActions;
 
   // Extract needed values from state (memoized to prevent infinite loops)
   const activeStirlingFileStubs = useMemo(() => selectors.getStirlingFileStubs(), [selectors.getFilesSignature()]);
   const selectedFileIds = state.ui.selectedFileIds;
+  const totalItems = state.files.ids.length;
+  const selectedCount = selectedFileIds.length;
 
   // Get navigation actions
   const { actions: navActions } = useNavigationActions();
@@ -76,6 +81,42 @@ const FileEditor = ({
 
   // Use activeStirlingFileStubs directly - no conversion needed
   const localSelectedIds = contextSelectedIds;
+
+  const handleSelectAllFiles = useCallback(() => {
+    setSelectedFiles(state.files.ids);
+    try {
+      clearAllFileErrors();
+    } catch (error) {
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('Failed to clear file errors on select all:', error);
+      }
+    }
+  }, [state.files.ids, setSelectedFiles, clearAllFileErrors]);
+
+  const handleDeselectAllFiles = useCallback(() => {
+    setSelectedFiles([]);
+    try {
+      clearAllFileErrors();
+    } catch (error) {
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('Failed to clear file errors on deselect:', error);
+      }
+    }
+  }, [setSelectedFiles, clearAllFileErrors]);
+
+  const handleCloseSelectedFiles = useCallback(() => {
+    if (selectedFileIds.length === 0) return;
+    void removeFiles(selectedFileIds, false);
+    setSelectedFiles([]);
+  }, [selectedFileIds, removeFiles, setSelectedFiles]);
+
+  useFileEditorRightRailButtons({
+    totalItems,
+    selectedCount,
+    onSelectAll: handleSelectAllFiles,
+    onDeselectAll: handleDeselectAllFiles,
+    onCloseSelected: handleCloseSelectedFiles,
+  });
 
   // Process uploaded files using context
   // ZIP extraction is now handled automatically in FileContext based on user preferences
@@ -226,7 +267,7 @@ const FileEditor = ({
 
         if (result.success && result.extractedStubs.length > 0) {
           // Add extracted file stubs to FileContext
-          await actions.addStirlingFileStubs(result.extractedStubs);
+          await fileActions.addStirlingFileStubs(result.extractedStubs);
 
           // Remove the original ZIP file
           removeFiles([fileId], false);
@@ -256,7 +297,7 @@ const FileEditor = ({
         });
       }
     }
-  }, [activeStirlingFileStubs, selectors, actions, removeFiles]);
+  }, [activeStirlingFileStubs, selectors, fileActions, removeFiles]);
 
   const handleViewFile = useCallback((fileId: FileId) => {
     const record = activeStirlingFileStubs.find(r => r.id === fileId);
