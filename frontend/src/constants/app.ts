@@ -1,4 +1,4 @@
-import { useAppConfig } from '../hooks/useAppConfig';
+import { useAppConfig } from '../contexts/AppConfigContext';
 
 // Get base URL from app config with fallback
 export const getBaseUrl = (): string => {

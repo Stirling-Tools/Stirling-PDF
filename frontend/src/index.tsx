@@ -17,22 +17,21 @@ posthog.init(import.meta.env.VITE_PUBLIC_POSTHOG_KEY, {
   defaults: '2025-05-24',
   capture_exceptions: true, // This enables capturing exceptions using Error Tracking, set to false if you don't want this
   debug: false,
-  opt_out_capturing_by_default: false, // We handle opt-out via cookie consent
+  opt_out_capturing_by_default: true, // Opt-out by default, controlled by cookie consent
 });
 
 function updatePosthogConsent(){
-    if(typeof(posthog) == "undefined") {
-      return;
-    }
-    const optIn = (window.CookieConsent as any).acceptedCategory('analytics');
-    if (optIn) {
-      posthog.opt_in_capturing();
-    } else {
-      posthog.opt_out_capturing();
-    }
-
-    console.log("Updated analytics consent: ", optIn? "opted in" : "opted out");
+  if(typeof(posthog) == "undefined" || !posthog.__loaded) {
+    return;
   }
+  const optIn = (window.CookieConsent as any)?.acceptedService?.('posthog', 'analytics') || false;
+  if (optIn) {
+    posthog.opt_in_capturing();
+  } else {
+    posthog.opt_out_capturing();
+  }
+  console.log("Updated PostHog consent: ", optIn ? "opted in" : "opted out");
+}
 
 window.addEventListener("cc:onConsent", updatePosthogConsent);
 window.addEventListener("cc:onChange", updatePosthogConsent);
