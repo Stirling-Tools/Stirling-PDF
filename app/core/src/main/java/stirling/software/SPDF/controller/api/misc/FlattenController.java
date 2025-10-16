@@ -62,7 +62,7 @@ public class FlattenController {
             return WebResponseUtils.pdfDocToWebResponse(
                     document, Filenames.toSimpleFileName(file.getOriginalFilename()));
         } else {
-            // flatten whole page aka convert each page to image and readd it (making text
+            // flatten whole page aka convert each page to image and re-add it (making text
             // unselectable)
             PDFRenderer pdfRenderer = new PDFRenderer(document);
             PDDocument newDocument =

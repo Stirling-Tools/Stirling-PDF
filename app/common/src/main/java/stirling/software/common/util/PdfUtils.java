@@ -567,7 +567,7 @@ public class PdfUtils {
                 PDImageXObject image = PDImageXObject.createFromByteArray(document, imageBytes, "");
                 // Draw the image onto the page at the specified x and y coordinates
                 contentStream.drawImage(image, x, y);
-                log.info("Image successfully overlayed onto PDF");
+                log.info("Image successfully overlaid onto PDF");
                 if (!everyPage && i == 0) {
                     break;
                 }
