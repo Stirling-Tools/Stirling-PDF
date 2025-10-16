@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { TextInput, Button, Stack, Paper, Text, Loader, Group } from '@mantine/core';
+import { TextInput, Button, Stack, Paper, Text, Loader, Group, Alert } from '@mantine/core';
+import WarningIcon from '@mui/icons-material/Warning';
 import { alert } from '../../../toast';
+import RestartConfirmationModal from '../RestartConfirmationModal';
+import { useRestartServer } from '../useRestartServer';
 
 interface LegalSettingsData {
   termsAndConditions?: string;
@@ -16,6 +19,7 @@ export default function AdminLegalSection() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [settings, setSettings] = useState<LegalSettingsData>({});
+  const { restartModalOpened, showRestartModal, closeRestartModal, restartServer } = useRestartServer();
 
   useEffect(() => {
     fetchSettings();
@@ -50,11 +54,7 @@ export default function AdminLegalSection() {
       });
 
       if (response.ok) {
-        alert({
-          alertType: 'success',
-          title: t('admin.success', 'Success'),
-          body: t('admin.settings.saved', 'Settings saved. Restart required for changes to take effect.'),
-        });
+        showRestartModal();
       } else {
         throw new Error('Failed to save');
       }
@@ -85,6 +85,21 @@ export default function AdminLegalSection() {
           {t('admin.settings.legal.description', 'Configure links to legal documents and policies.')}
         </Text>
       </div>
+
+      {/* Legal Disclaimer */}
+      <Alert
+        icon={<WarningIcon style={{ fontSize: 18 }} />}
+        title={t('admin.settings.legal.disclaimer.title', 'Legal Responsibility Warning')}
+        color="yellow"
+        variant="light"
+      >
+        <Text size="sm">
+          {t(
+            'admin.settings.legal.disclaimer.message',
+            'By customizing these legal documents, you assume full responsibility for ensuring compliance with all applicable laws and regulations, including but not limited to GDPR and other EU data protection requirements. Only modify these settings if: (1) you are operating a personal/private instance, (2) you are outside EU jurisdiction and understand your local legal obligations, or (3) you have obtained proper legal counsel and accept sole responsibility for all user data and legal compliance. Stirling-PDF and its developers assume no liability for your legal obligations.'
+          )}
+        </Text>
+      </Alert>
 
       <Paper withBorder p="md" radius="md">
         <Stack gap="md">
@@ -145,6 +160,13 @@ export default function AdminLegalSection() {
           {t('admin.settings.save', 'Save Changes')}
         </Button>
       </Group>
+
+      {/* Restart Confirmation Modal */}
+      <RestartConfirmationModal
+        opened={restartModalOpened}
+        onClose={closeRestartModal}
+        onRestart={restartServer}
+      />
     </Stack>
   );
 }

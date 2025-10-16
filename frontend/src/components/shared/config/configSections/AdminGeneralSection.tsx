@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { TextInput, Switch, Button, Stack, Paper, Text, Loader, Group, MultiSelect } from '@mantine/core';
 import { alert } from '../../../toast';
+import RestartConfirmationModal from '../RestartConfirmationModal';
+import { useRestartServer } from '../useRestartServer';
 
 interface GeneralSettingsData {
   ui: {
@@ -23,6 +25,7 @@ export default function AdminGeneralSection() {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const { restartModalOpened, showRestartModal, closeRestartModal, restartServer } = useRestartServer();
   const [settings, setSettings] = useState<GeneralSettingsData>({
     ui: {},
     system: {},
@@ -75,11 +78,8 @@ export default function AdminGeneralSection() {
       ]);
 
       if (uiResponse.ok && systemResponse.ok) {
-        alert({
-          alertType: 'success',
-          title: t('admin.success', 'Success'),
-          body: t('admin.settings.saved', 'Settings saved. Restart required for changes to take effect.'),
-        });
+        // Show restart confirmation modal
+        showRestartModal();
       } else {
         throw new Error('Failed to save');
       }
@@ -245,6 +245,13 @@ export default function AdminGeneralSection() {
           {t('admin.settings.save', 'Save Changes')}
         </Button>
       </Group>
+
+      {/* Restart Confirmation Modal */}
+      <RestartConfirmationModal
+        opened={restartModalOpened}
+        onClose={closeRestartModal}
+        onRestart={restartServer}
+      />
     </Stack>
   );
 }

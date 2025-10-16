@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { TextInput, NumberInput, Switch, Button, Stack, Paper, Text, Loader, Group, PasswordInput } from '@mantine/core';
 import { alert } from '../../../toast';
+import RestartConfirmationModal from '../RestartConfirmationModal';
+import { useRestartServer } from '../useRestartServer';
 
 interface MailSettingsData {
   enabled?: boolean;
@@ -17,6 +19,7 @@ export default function AdminMailSection() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [settings, setSettings] = useState<MailSettingsData>({});
+  const { restartModalOpened, showRestartModal, closeRestartModal, restartServer } = useRestartServer();
 
   useEffect(() => {
     fetchSettings();
@@ -51,11 +54,7 @@ export default function AdminMailSection() {
       });
 
       if (response.ok) {
-        alert({
-          alertType: 'success',
-          title: t('admin.success', 'Success'),
-          body: t('admin.settings.saved', 'Settings saved. Restart required for changes to take effect.'),
-        });
+        showRestartModal();
       } else {
         throw new Error('Failed to save');
       }
@@ -158,6 +157,13 @@ export default function AdminMailSection() {
           {t('admin.settings.save', 'Save Changes')}
         </Button>
       </Group>
+
+      {/* Restart Confirmation Modal */}
+      <RestartConfirmationModal
+        opened={restartModalOpened}
+        onClose={closeRestartModal}
+        onRestart={restartServer}
+      />
     </Stack>
   );
 }

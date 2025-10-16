@@ -1,19 +1,27 @@
 package stirling.software.proprietary.security.controller.api;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
+import org.springframework.boot.SpringApplication;
+import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -32,7 +40,9 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.annotations.api.AdminApi;
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.util.AppArgsCapture;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.JarPathUtil;
 import stirling.software.proprietary.security.model.api.admin.SettingValueResponse;
 import stirling.software.proprietary.security.model.api.admin.UpdateSettingValueRequest;
 import stirling.software.proprietary.security.model.api.admin.UpdateSettingsRequest;
@@ -45,6 +55,7 @@ public class AdminSettingsController {
 
     private final ApplicationProperties applicationProperties;
     private final ObjectMapper objectMapper;
+    private final ApplicationContext applicationContext;
 
     // Track settings that have been modified but not yet applied (require restart)
     private static final ConcurrentHashMap<String, Object> pendingChanges =
@@ -385,6 +396,106 @@ public class AdminSettingsController {
             log.error("Unexpected error while updating setting: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(GENERIC_SERVER_ERROR);
+        }
+    }
+
+    @PostMapping("/restart")
+    @Operation(
+            summary = "Restart the application",
+            description =
+                    "Triggers a graceful restart of the Spring Boot application to apply pending settings changes. Uses a restart helper to ensure proper restart. Admin access required.")
+    @ApiResponses(
+            value = {
+                @ApiResponse(
+                        responseCode = "200",
+                        description = "Restart initiated successfully"),
+                @ApiResponse(
+                        responseCode = "403",
+                        description = "Access denied - Admin role required"),
+                @ApiResponse(
+                        responseCode = "500",
+                        description = "Failed to initiate restart")
+            })
+    public ResponseEntity<String> restartApplication() {
+        try {
+            log.warn("Admin initiated application restart");
+
+            // Get paths to current JAR and restart helper
+            Path appJar = JarPathUtil.currentJar();
+            Path helperJar = JarPathUtil.restartHelperJar();
+
+            if (appJar == null) {
+                log.error("Cannot restart: not running from JAR (likely development mode)");
+                return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                        .body(
+                                "Restart not available in development mode. Please restart the application manually.");
+            }
+
+            if (helperJar == null || !Files.isRegularFile(helperJar)) {
+                log.error("Cannot restart: restart-helper.jar not found at expected location");
+                return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                        .body(
+                                "Restart helper not found. Please restart the application manually.");
+            }
+
+            // Get current application arguments
+            List<String> appArgs = AppArgsCapture.APP_ARGS.get();
+
+            // Write args to temp file to avoid command-line quoting issues
+            Path argsFile = Files.createTempFile("stirling-app-args-", ".txt");
+            Files.write(argsFile, appArgs, StandardCharsets.UTF_8);
+
+            // Get current process PID and java executable
+            long pid = ProcessHandle.current().pid();
+            String javaBin = JarPathUtil.javaExecutable();
+
+            // Build command to launch restart helper
+            List<String> cmd = new ArrayList<>();
+            cmd.add(javaBin);
+            cmd.add("-jar");
+            cmd.add(helperJar.toString());
+            cmd.add("--pid");
+            cmd.add(Long.toString(pid));
+            cmd.add("--app");
+            cmd.add(appJar.toString());
+            cmd.add("--argsFile");
+            cmd.add(argsFile.toString());
+            cmd.add("--backoffMs");
+            cmd.add("1000");
+
+            log.info("Launching restart helper: {}", String.join(" ", cmd));
+
+            // Launch restart helper process
+            new ProcessBuilder(cmd)
+                    .directory(appJar.getParent().toFile())
+                    .inheritIO() // Forward logs
+                    .start();
+
+            // Clear pending changes since we're restarting
+            pendingChanges.clear();
+
+            // Give the HTTP response time to complete, then exit
+            new Thread(
+                            () -> {
+                                try {
+                                    Thread.sleep(1000);
+                                    log.info("Shutting down for restart...");
+                                    SpringApplication.exit(applicationContext, () -> 0);
+                                    System.exit(0);
+                                } catch (InterruptedException e) {
+                                    log.error("Restart interrupted: {}", e.getMessage(), e);
+                                    Thread.currentThread().interrupt();
+                                }
+                            })
+                    .start();
+
+            return ResponseEntity.ok(
+                    "Application restart initiated. The server will be back online shortly.");
+
+        } catch (Exception e) {
+            log.error("Failed to initiate restart: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Failed to initiate application restart: " + e.getMessage());
         }
     }
 
