@@ -8,6 +8,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
+import java.util.Locale;
 
 import javax.imageio.ImageIO;
 
@@ -114,7 +115,7 @@ public class StampController {
 
         String customColor = request.getCustomColor();
         float marginFactor =
-                switch (request.getCustomMargin().toLowerCase()) {
+                switch (request.getCustomMargin().toLowerCase(Locale.ROOT)) {
                     case "small" -> 0.02f;
                     case "medium" -> 0.035f;
                     case "large" -> 0.05f;

@@ -2,6 +2,7 @@ package stirling.software.common.util;
 
 import java.io.IOException;
 import java.text.MessageFormat;
+import java.util.Locale;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -34,6 +35,7 @@ public class ExceptionUtils {
         if (context != null && !context.isEmpty()) {
             message =
                     String.format(
+                            Locale.ROOT,
                             "Error %s: PDF file appears to be corrupted or damaged. Please try using the 'Repair PDF' feature first to fix the file before proceeding with this operation.",
                             context);
         } else {
@@ -89,8 +91,10 @@ public class ExceptionUtils {
     public static IOException createFileProcessingException(String operation, Exception cause) {
         String message =
                 String.format(
+                        Locale.ROOT,
                         "An error occurred while processing the file during %s operation: %s",
-                        operation, cause.getMessage());
+                        operation,
+                        cause.getMessage());
         return new IOException(message, cause);
     }
 

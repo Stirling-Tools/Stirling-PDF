@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Stream;
 
 import org.springframework.stereotype.Service;
@@ -92,7 +93,7 @@ public class SignatureService {
     }
 
     private boolean isImageFile(Path path) {
-        String fileName = path.getFileName().toString().toLowerCase();
+        String fileName = path.getFileName().toString().toLowerCase(Locale.ROOT);
         return fileName.endsWith(".jpg")
                 || fileName.endsWith(".jpeg")
                 || fileName.endsWith(".png")
