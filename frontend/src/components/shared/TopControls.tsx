@@ -5,7 +5,9 @@ import rainbowStyles from '../../styles/rainbow.module.css';
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import EditNoteIcon from "@mui/icons-material/EditNote";
 import FolderIcon from "@mui/icons-material/Folder";
+import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import { WorkbenchType, isValidWorkbench } from '../../types/workbench';
+import type { CustomWorkbenchViewInstance } from '../../contexts/ToolWorkflowContext';
 import { FileDropdownMenu } from './FileDropdownMenu';
 
 
@@ -25,7 +27,8 @@ const createViewOptions = (
   switchingTo: WorkbenchType | null,
   activeFiles: Array<{ fileId: string; name: string; versionNumber?: number }>,
   currentFileIndex: number,
-  onFileSelect?: (index: number) => void
+  onFileSelect?: (index: number) => void,
+  customViews?: CustomWorkbenchViewInstance[]
 ) => {
   const currentFile = activeFiles[currentFileIndex];
   const isInViewer = currentView === 'viewer';
@@ -95,17 +98,35 @@ const createViewOptions = (
     value: "fileEditor",
   };
 
-  // Build options array conditionally
-  return [
+  const baseOptions = [
     viewerOption,
     pageEditorOption,
     fileEditorOption,
   ];
+
+  const customOptions = (customViews ?? []) 
+    .filter((view) => view.data != null)
+    .map((view) => ({
+      label: (
+        <div style={viewOptionStyle as React.CSSProperties}>
+          {switchingTo === view.workbenchId ? (
+            <Loader size="xs" />
+          ) : (
+            view.icon || <PictureAsPdfIcon fontSize="small" />
+          )}
+          <span>{view.label}</span>
+        </div>
+      ),
+      value: view.workbenchId,
+    }));
+
+  return [...baseOptions, ...customOptions];
 };
 
 interface TopControlsProps {
   currentView: WorkbenchType;
   setCurrentView: (view: WorkbenchType) => void;
+  customViews?: CustomWorkbenchViewInstance[];
   activeFiles?: Array<{ fileId: string; name: string; versionNumber?: number }>;
   currentFileIndex?: number;
   onFileSelect?: (index: number) => void;
@@ -114,6 +135,7 @@ interface TopControlsProps {
 const TopControls = ({
   currentView,
   setCurrentView,
+  customViews = [],
   activeFiles = [],
   currentFileIndex = 0,
   onFileSelect,
@@ -147,7 +169,7 @@ const TopControls = ({
     <div className="absolute left-0 w-full top-0 z-[100] pointer-events-none">
       <div className="flex justify-center mt-[0.5rem]">
         <SegmentedControl
-          data={createViewOptions(currentView, switchingTo, activeFiles, currentFileIndex, onFileSelect)}
+          data={createViewOptions(currentView, switchingTo, activeFiles, currentFileIndex, onFileSelect, customViews)}
           value={currentView}
           onChange={handleViewChange}
           color="blue"
