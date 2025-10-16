@@ -1,10 +1,8 @@
 import { useMemo } from 'react';
-import { ActionIcon, Popover } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import { Tooltip } from '../shared/Tooltip';
 import { useRightRailButtons, RightRailButtonWithAction } from '../../hooks/useRightRailButtons';
 import LocalIcon from '../shared/LocalIcon';
-import BulkSelectionPanel from './BulkSelectionPanel';
+import PageSelectByNumberButton from './PageSelectByNumberButton';
 
 interface PageEditorRightRailButtonsParams {
   totalPages: number;
@@ -84,36 +82,16 @@ export function usePageEditorRightRailButtons(params: PageEditorRightRailButtons
         disabled: totalPages === 0,
         visible: totalPages > 0,
         render: ({ disabled }) => (
-          <Tooltip content={selectByNumberLabel} position="left" offset={12} arrow portalTarget={document.body}>
-            <div className={`right-rail-fade enter`}>
-              <Popover position="left" withArrow shadow="md" offset={8}>
-                <Popover.Target>
-                  <div style={{ display: 'inline-flex' }}>
-                    <ActionIcon
-                      variant="subtle"
-                      radius="md"
-                      className="right-rail-icon"
-                      disabled={disabled || totalPages === 0}
-                      aria-label={selectByNumberLabel}
-                    >
-                      <LocalIcon icon="pin-end" width="1.5rem" height="1.5rem" />
-                    </ActionIcon>
-                  </div>
-                </Popover.Target>
-                <Popover.Dropdown>
-                  <div style={{ minWidth: '24rem', maxWidth: '32rem' }}>
-                    <BulkSelectionPanel
-                      csvInput={csvInput}
-                      setCsvInput={setCsvInput}
-                      selectedPageIds={selectedPageIds}
-                      displayDocument={displayDocument}
-                      onUpdatePagesFromCSV={updatePagesFromCSV}
-                    />
-                  </div>
-                </Popover.Dropdown>
-              </Popover>
-            </div>
-          </Tooltip>
+          <PageSelectByNumberButton
+            disabled={disabled}
+            totalPages={totalPages}
+            label={selectByNumberLabel}
+            csvInput={csvInput}
+            setCsvInput={setCsvInput}
+            selectedPageIds={selectedPageIds}
+            displayDocument={displayDocument}
+            updatePagesFromCSV={updatePagesFromCSV}
+          />
         ),
       },
       {

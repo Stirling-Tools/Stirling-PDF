@@ -45,7 +45,6 @@ export default function RightRail() {
   const disableForFullscreen = toolPanelMode === 'fullscreen' && leftPanelView === 'toolPicker';
 
   const { workbench: currentView } = useNavigationState();
-  const isCustomWorkbench = typeof currentView === 'string' && currentView.startsWith('custom:');
 
   const { selectors } = useFileState();
   const { selectedFiles, selectedFileIds } = useFileSelection();

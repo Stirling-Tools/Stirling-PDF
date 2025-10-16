@@ -46,7 +46,7 @@ const PageEditor = ({
 
   // Prefer IDs + selectors to avoid array identity churn
   const activeFileIds = state.files.ids;
-  const filesSignature = selectors.getFilesSignature();
+  const activeFilesSignature = selectors.getFilesSignature();
 
   // UI state
   const globalProcessing = state.ui.isProcessing;
@@ -72,7 +72,7 @@ const PageEditor = ({
 
   useEffect(() => {
     setCsvInput('');
-  }, [filesSignature]);
+  }, [activeFilesSignature]);
 
   // Grid container ref for positioning split indicators
   const gridContainerRef = useRef<HTMLDivElement>(null);
