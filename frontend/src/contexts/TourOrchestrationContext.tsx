@@ -5,6 +5,7 @@ import { useNavigationActions } from './NavigationContext';
 import { useToolWorkflow } from './ToolWorkflowContext';
 import { useAllFiles, useFileManagement } from './FileContext';
 import { StirlingFile } from '../types/fileContext';
+import { fileStorage } from '../services/fileStorage';
 
 interface TourOrchestrationContextType {
   // State management
@@ -72,6 +73,17 @@ export const TourOrchestrationProvider: React.FC<{ children: React.ReactNode }> 
 
     // Clear all files (including tour sample)
     clearAllFiles();
+
+    // Delete all active files from storage (they're just the ones from the tour)
+    const currentFiles = filesRef.current;
+    if (currentFiles.length > 0) {
+      try {
+        await Promise.all(currentFiles.map(file => fileStorage.deleteStirlingFile(file.fileId)));
+        console.log(`Deleted ${currentFiles.length} file(s) from storage`);
+      } catch (error) {
+        console.error('Failed to delete files from storage:', error);
+      }
+    }
 
     // Restore saved files
     if (savedFilesRef.current.length > 0) {
