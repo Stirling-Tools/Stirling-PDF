@@ -47,6 +47,13 @@ public class ConverterWebController {
         return "convert/cbr-to-pdf";
     }
 
+    @GetMapping("/ebook-to-pdf")
+    @Hidden
+    public String convertEbookToPdfForm(Model model) {
+        model.addAttribute("currentPage", "ebook-to-pdf");
+        return "convert/ebook-to-pdf";
+    }
+
     @GetMapping("/pdf-to-cbr")
     @Hidden
     public String convertPdfToCbrForm(Model model) {
