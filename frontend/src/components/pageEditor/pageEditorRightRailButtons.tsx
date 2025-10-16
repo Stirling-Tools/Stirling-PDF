@@ -9,7 +9,6 @@ import BulkSelectionPanel from './BulkSelectionPanel';
 interface PageEditorRightRailButtonsParams {
   totalPages: number;
   selectedPageCount: number;
-  rightRailVisible: boolean;
   csvInput: string;
   setCsvInput: (value: string) => void;
   selectedPageIds: string[];
@@ -28,7 +27,6 @@ export function usePageEditorRightRailButtons(params: PageEditorRightRailButtons
   const {
     totalPages,
     selectedPageCount,
-    rightRailVisible,
     csvInput,
     setCsvInput,
     selectedPageIds,
@@ -45,14 +43,15 @@ export function usePageEditorRightRailButtons(params: PageEditorRightRailButtons
 
   const { t } = useTranslation();
 
-  const buttons = useMemo<RightRailButtonWithAction[]>(() => {
-    const selectAllLabel = typeof t === 'function' ? t('rightRail.selectAll', 'Select All') : 'Select All';
-    const deselectAllLabel = typeof t === 'function' ? t('rightRail.deselectAll', 'Deselect All') : 'Deselect All';
-    const selectByNumberLabel = typeof t === 'function' ? t('rightRail.selectByNumber', 'Select by Page Numbers') : 'Select by Page Numbers';
-    const deleteSelectedLabel = typeof t === 'function' ? t('rightRail.deleteSelected', 'Delete Selected Pages') : 'Delete Selected Pages';
-    const exportSelectedLabel = typeof t === 'function' ? t('rightRail.exportSelected', 'Export Selected Pages') : 'Export Selected Pages';
-    const closePdfLabel = typeof t === 'function' ? t('rightRail.closePdf', 'Close PDF') : 'Close PDF';
+  // Lift i18n labels out of memo for clarity
+  const selectAllLabel = t('rightRail.selectAll', 'Select All');
+  const deselectAllLabel = t('rightRail.deselectAll', 'Deselect All');
+  const selectByNumberLabel = t('rightRail.selectByNumber', 'Select by Page Numbers');
+  const deleteSelectedLabel = t('rightRail.deleteSelected', 'Delete Selected Pages');
+  const exportSelectedLabel = t('rightRail.exportSelected', 'Export Selected Pages');
+  const closePdfLabel = t('rightRail.closePdf', 'Close PDF');
 
+  const buttons = useMemo<RightRailButtonWithAction[]>(() => {
     return [
       {
         id: 'page-select-all',
@@ -86,7 +85,7 @@ export function usePageEditorRightRailButtons(params: PageEditorRightRailButtons
         visible: totalPages > 0,
         render: ({ disabled }) => (
           <Tooltip content={selectByNumberLabel} position="left" offset={12} arrow portalTarget={document.body}>
-            <div className={`right-rail-fade ${rightRailVisible ? 'enter' : 'exit'}`} aria-hidden={!rightRailVisible}>
+            <div className={`right-rail-fade enter`}>
               <Popover position="left" withArrow shadow="md" offset={8}>
                 <Popover.Target>
                   <div style={{ display: 'inline-flex' }}>
@@ -94,7 +93,7 @@ export function usePageEditorRightRailButtons(params: PageEditorRightRailButtons
                       variant="subtle"
                       radius="md"
                       className="right-rail-icon"
-                      disabled={disabled || totalPages === 0 || !rightRailVisible}
+                      disabled={disabled || totalPages === 0}
                       aria-label={selectByNumberLabel}
                     >
                       <LocalIcon icon="pin-end" width="1.5rem" height="1.5rem" />
@@ -153,9 +152,14 @@ export function usePageEditorRightRailButtons(params: PageEditorRightRailButtons
     ];
   }, [
     t,
+    selectAllLabel,
+    deselectAllLabel,
+    selectByNumberLabel,
+    deleteSelectedLabel,
+    exportSelectedLabel,
+    closePdfLabel,
     totalPages,
     selectedPageCount,
-    rightRailVisible,
     csvInput,
     setCsvInput,
     selectedPageIds,

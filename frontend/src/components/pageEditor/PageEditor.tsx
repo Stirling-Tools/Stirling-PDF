@@ -69,15 +69,6 @@ const PageEditor = ({
   } = usePageEditorState();
 
   const [csvInput, setCsvInput] = useState<string>('');
-  const [rightRailVisible, setRightRailVisible] = useState(false);
-
-  useEffect(() => {
-    const frame = requestAnimationFrame(() => setRightRailVisible(true));
-    return () => {
-      cancelAnimationFrame(frame);
-      setRightRailVisible(false);
-    };
-  }, []);
 
   useEffect(() => {
     setCsvInput('');
@@ -638,7 +629,6 @@ const PageEditor = ({
   usePageEditorRightRailButtons({
     totalPages,
     selectedPageCount,
-    rightRailVisible,
     csvInput,
     setCsvInput,
     selectedPageIds,

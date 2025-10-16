@@ -13,13 +13,14 @@ export function useViewerRightRailButtons() {
   const viewer = useViewer();
   const [isPanning, setIsPanning] = useState<boolean>(() => viewer.getPanState()?.isPanning ?? false);
 
-  const viewerButtons = useMemo<RightRailButtonWithAction[]>(() => {
-    const searchLabel = typeof t === 'function' ? t('rightRail.search', 'Search PDF') : 'Search PDF';
-    const panLabel = typeof t === 'function' ? t('rightRail.panMode', 'Pan Mode') : 'Pan Mode';
-    const rotateLeftLabel = typeof t === 'function' ? t('rightRail.rotateLeft', 'Rotate Left') : 'Rotate Left';
-    const rotateRightLabel = typeof t === 'function' ? t('rightRail.rotateRight', 'Rotate Right') : 'Rotate Right';
-    const sidebarLabel = typeof t === 'function' ? t('rightRail.toggleSidebar', 'Toggle Sidebar') : 'Toggle Sidebar';
+  // Lift i18n labels out of memo for clarity
+  const searchLabel = t('rightRail.search', 'Search PDF');
+  const panLabel = t('rightRail.panMode', 'Pan Mode');
+  const rotateLeftLabel = t('rightRail.rotateLeft', 'Rotate Left');
+  const rotateRightLabel = t('rightRail.rotateRight', 'Rotate Right');
+  const sidebarLabel = t('rightRail.toggleSidebar', 'Toggle Sidebar');
 
+  const viewerButtons = useMemo<RightRailButtonWithAction[]>(() => {
     return [
       {
         id: 'viewer-search',
@@ -118,7 +119,7 @@ export function useViewerRightRailButtons() {
         )
       }
     ];
-  }, [t, viewer, isPanning]);
+  }, [t, viewer, isPanning, searchLabel, panLabel, rotateLeftLabel, rotateRightLabel, sidebarLabel]);
 
   useRightRailButtons(viewerButtons);
 }
