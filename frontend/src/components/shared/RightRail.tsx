@@ -1,462 +1,193 @@
-import React, { useCallback, useState, useEffect, useMemo } from 'react';
-import { ActionIcon, Divider, Popover } from '@mantine/core';
-import LocalIcon from './LocalIcon';
+import React, { useCallback, useMemo } from 'react';
+import { ActionIcon, Divider } from '@mantine/core';
 import './rightRail/RightRail.css';
 import { useToolWorkflow } from '../../contexts/ToolWorkflowContext';
 import { useRightRail } from '../../contexts/RightRailContext';
-import { useFileState, useFileSelection, useFileManagement, useFileContext } from '../../contexts/FileContext';
+import { useFileState, useFileSelection } from '../../contexts/FileContext';
 import { useNavigationState } from '../../contexts/NavigationContext';
 import { useTranslation } from 'react-i18next';
 
 import LanguageSelector from '../shared/LanguageSelector';
 import { useRainbowThemeContext } from '../shared/RainbowThemeProvider';
 import { Tooltip } from '../shared/Tooltip';
-import BulkSelectionPanel from '../pageEditor/BulkSelectionPanel';
-import { SearchInterface } from '../viewer/SearchInterface';
 import { ViewerContext } from '../../contexts/ViewerContext';
 import { useSignature } from '../../contexts/SignatureContext';
-import ViewerAnnotationControls from './rightRail/ViewerAnnotationControls';
-
-import { parseSelection } from '../../utils/bulkselection/parseSelection';
-
+import LocalIcon from './LocalIcon';
 
 import { useSidebarContext } from '../../contexts/SidebarContext';
+import { RightRailButtonConfig, RightRailRenderContext, RightRailSection } from '../../types/rightRail';
+
+const SECTION_ORDER: RightRailSection[] = ['top', 'middle', 'bottom'];
+
+function renderWithTooltip(
+  node: React.ReactNode,
+  tooltip: React.ReactNode | undefined
+) {
+  if (!tooltip) return node;
+
+  const portalTarget = typeof document !== 'undefined' ? document.body : undefined;
+
+  return (
+    <Tooltip content={tooltip} position="left" offset={12} arrow portalTarget={portalTarget}>
+      <div className="right-rail-tooltip-wrapper">{node}</div>
+    </Tooltip>
+  );
+}
 
 export default function RightRail() {
   const { sidebarRefs } = useSidebarContext();
   const { t } = useTranslation();
-  const [isPanning, setIsPanning] = useState(false);
-
-  // Viewer context for PDF controls - safely handle when not available
   const viewerContext = React.useContext(ViewerContext);
   const { toggleTheme } = useRainbowThemeContext();
   const { buttons, actions, allButtonsDisabled } = useRightRail();
 
-  const topButtons = useMemo(() => buttons.filter(b => (b.section || 'top') === 'top' && (b.visible ?? true)), [buttons]);
-
-  // Access PageEditor functions for page-editor-specific actions
   const { pageEditorFunctions, toolPanelMode, leftPanelView } = useToolWorkflow();
   const disableForFullscreen = toolPanelMode === 'fullscreen' && leftPanelView === 'toolPicker';
 
-  // CSV input state for page selection
-  const [csvInput, setCsvInput] = useState<string>("");
-
-  // Navigation view
   const { workbench: currentView } = useNavigationState();
-  const isCustomWorkbench = typeof currentView === 'string' && currentView.startsWith('custom:');
 
-  // File state and selection
-  const { state, selectors } = useFileState();
-  const { actions: fileActions } = useFileContext();
-  const { selectedFiles, selectedFileIds, setSelectedFiles } = useFileSelection();
-  const { removeFiles } = useFileManagement();
-
-  // Signature context for checking if signatures have been applied
+  const { selectors } = useFileState();
+  const { selectedFiles, selectedFileIds } = useFileSelection();
   const { signaturesApplied } = useSignature();
 
   const activeFiles = selectors.getFiles();
-  const filesSignature = selectors.getFilesSignature();
-
-  // Compute selection state and total items
-  const getSelectionState = useCallback(() => {
-    if (currentView === 'fileEditor' || currentView === 'viewer') {
-      const totalItems = activeFiles.length;
-      const selectedCount = selectedFileIds.length;
-      return { totalItems, selectedCount };
-    }
-
-    if (currentView === 'pageEditor') {
-      // Use PageEditor's own state
-      const totalItems = pageEditorFunctions?.totalPages || 0;
-      const selectedCount = pageEditorFunctions?.selectedPageIds?.length || 0;
-      return { totalItems, selectedCount };
-    }
-
-    return { totalItems: 0, selectedCount: 0 };
-  }, [currentView, activeFiles, selectedFileIds, pageEditorFunctions]);
-
-  const { totalItems, selectedCount } = getSelectionState();
-
-  // Get export state for viewer mode
+  const pageEditorTotalPages = pageEditorFunctions?.totalPages ?? 0;
+  const pageEditorSelectedCount = pageEditorFunctions?.selectedPageIds?.length ?? 0;
   const exportState = viewerContext?.getExportState?.();
 
-  const handleSelectAll = useCallback(() => {
-    if (currentView === 'fileEditor' || currentView === 'viewer') {
-      // Select all file IDs
-      const allIds = state.files.ids;
-      setSelectedFiles(allIds);
-      // Clear any previous error flags when selecting all
-      try { fileActions.clearAllFileErrors(); } catch (_e) { void _e; }
-      return;
-    }
+  const totalItems = useMemo(() => {
+    if (currentView === 'pageEditor') return pageEditorTotalPages;
+    return activeFiles.length;
+  }, [currentView, pageEditorTotalPages, activeFiles.length]);
 
+  const selectedCount = useMemo(() => {
     if (currentView === 'pageEditor') {
-      // Use PageEditor's select all function
-      pageEditorFunctions?.handleSelectAll?.();
+      return pageEditorSelectedCount;
     }
-  }, [currentView, state.files.ids, setSelectedFiles, pageEditorFunctions]);
+    return selectedFileIds.length;
+  }, [currentView, pageEditorSelectedCount, selectedFileIds.length]);
 
-  const handleDeselectAll = useCallback(() => {
-    if (currentView === 'fileEditor' || currentView === 'viewer') {
-      setSelectedFiles([]);
-      // Clear any previous error flags when deselecting all
-      try { fileActions.clearAllFileErrors(); } catch (_e) { void _e; }
-      return;
-    }
-    if (currentView === 'pageEditor') {
-      // Use PageEditor's deselect all function
-      pageEditorFunctions?.handleDeselectAll?.();
-    }
-  }, [currentView, setSelectedFiles, pageEditorFunctions]);
+  const sectionsWithButtons = useMemo(() => {
+    return SECTION_ORDER
+      .map(section => {
+        const sectionButtons = buttons.filter(btn => (btn.section ?? 'top') === section && (btn.visible ?? true));
+        return { section, buttons: sectionButtons };
+      })
+      .filter(entry => entry.buttons.length > 0);
+  }, [buttons]);
+
+  const renderButton = useCallback(
+    (btn: RightRailButtonConfig) => {
+      const action = actions[btn.id];
+      const disabled = Boolean(btn.disabled || allButtonsDisabled || disableForFullscreen);
+
+      const triggerAction = () => {
+        if (!disabled) action?.();
+      };
+
+      if (btn.render) {
+        const context: RightRailRenderContext = {
+          id: btn.id,
+          disabled,
+          allButtonsDisabled,
+          action,
+          triggerAction,
+        };
+        return btn.render(context) ?? null;
+      }
+
+      if (!btn.icon) return null;
+
+      const ariaLabel =
+        btn.ariaLabel || (typeof btn.tooltip === 'string' ? (btn.tooltip as string) : undefined);
+      const className = ['right-rail-icon', btn.className].filter(Boolean).join(' ');
+      const buttonNode = (
+        <ActionIcon
+          variant="subtle"
+          radius="md"
+          className={className}
+          onClick={triggerAction}
+          disabled={disabled}
+          aria-label={ariaLabel}
+        >
+          {btn.icon}
+        </ActionIcon>
+      );
+
+      return renderWithTooltip(buttonNode, btn.tooltip);
+    },
+    [actions, allButtonsDisabled, disableForFullscreen]
+  );
 
   const handleExportAll = useCallback(async () => {
     if (currentView === 'viewer') {
-      // Check if signatures have been applied
       if (!signaturesApplied) {
         alert('You have unapplied signatures. Please use "Apply Signatures" first before exporting.');
         return;
       }
-
-      // Use EmbedPDF export functionality for viewer mode
       viewerContext?.exportActions?.download();
-    } else if (currentView === 'fileEditor') {
-      // Download selected files (or all if none selected)
-      const filesToDownload = selectedFiles.length > 0 ? selectedFiles : activeFiles;
-
-      filesToDownload.forEach(file => {
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(file);
-        link.download = file.name;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(link.href);
-      });
-    } else if (currentView === 'pageEditor') {
-      // Export all pages (not just selected)
-      pageEditorFunctions?.onExportAll?.();
+      return;
     }
-  }, [currentView, activeFiles, selectedFiles, pageEditorFunctions, viewerContext, signaturesApplied, selectors, fileActions]);
 
-  const handleCloseSelected = useCallback(() => {
-    if (currentView !== 'fileEditor') return;
-    if (selectedFileIds.length === 0) return;
-
-    // Close only selected files (do not delete from storage)
-    removeFiles(selectedFileIds, false);
-
-    // Clear selection after closing
-    setSelectedFiles([]);
-  }, [currentView, selectedFileIds, removeFiles, setSelectedFiles]);
-
-  const updatePagesFromCSV = useCallback((override?: string) => {
-    const maxPages = pageEditorFunctions?.totalPages || 0;
-    const normalized = parseSelection(override ?? csvInput, maxPages);
-    pageEditorFunctions?.handleSetSelectedPages?.(normalized);
-  }, [csvInput, pageEditorFunctions]);
-
-  // Do not overwrite user's expression input when selection changes.
-
-  // Clear CSV input when files change (use stable signature to avoid ref churn)
-  useEffect(() => {
-    setCsvInput("");
-  }, [filesSignature]);
-
-  // Mount/visibility for page-editor-only buttons to allow exit animation, then remove to avoid flex gap
-  const [pageControlsMounted, setPageControlsMounted] = useState<boolean>(currentView === 'pageEditor');
-  const [pageControlsVisible, setPageControlsVisible] = useState<boolean>(currentView === 'pageEditor');
-
-  useEffect(() => {
     if (currentView === 'pageEditor') {
-      // Mount and show
-      setPageControlsMounted(true);
-      // Next tick to ensure transition applies
-      requestAnimationFrame(() => setPageControlsVisible(true));
-    } else {
-      // Start exit animation
-      setPageControlsVisible(false);
-      // After transition, unmount to remove flex gap
-      const timer = setTimeout(() => setPageControlsMounted(false), 240);
-      return () => clearTimeout(timer);
+      pageEditorFunctions?.onExportAll?.();
+      return;
     }
-  }, [currentView]);
+
+    const filesToDownload = selectedFiles.length > 0 ? selectedFiles : activeFiles;
+    filesToDownload.forEach(file => {
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(file);
+      link.download = file.name;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(link.href);
+    });
+  }, [
+    currentView,
+    selectedFiles,
+    activeFiles,
+    pageEditorFunctions,
+    viewerContext,
+    signaturesApplied
+  ]);
+
+  const downloadTooltip = useMemo(() => {
+    if (currentView === 'pageEditor') {
+      return t('rightRail.exportAll', 'Export PDF');
+    }
+    if (selectedCount > 0) {
+      return t('rightRail.downloadSelected', 'Download Selected Files');
+    }
+    return t('rightRail.downloadAll', 'Download All');
+  }, [currentView, selectedCount, t]);
 
   return (
-    <div ref={sidebarRefs.rightRailRef} className={`right-rail`} data-sidebar="right-rail">
+    <div ref={sidebarRefs.rightRailRef} className="right-rail" data-sidebar="right-rail">
       <div className="right-rail-inner">
-        {topButtons.length > 0 && !isCustomWorkbench && (
-          <>
+        {sectionsWithButtons.map(({ section, buttons: sectionButtons }) => (
+          <React.Fragment key={section}>
             <div className="right-rail-section">
-              {topButtons.map(btn => (
-                <Tooltip key={btn.id} content={btn.tooltip} position="left" offset={12} arrow portalTarget={document.body}>
-                  <ActionIcon
-                    variant="subtle"
-                    radius="md"
-                    className="right-rail-icon"
-                    onClick={() => actions[btn.id]?.()}
-                    disabled={btn.disabled || allButtonsDisabled || disableForFullscreen}
+              {sectionButtons.map((btn, index) => {
+                const content = renderButton(btn);
+                if (!content) return null;
+                return (
+                  <div
+                    key={btn.id}
+                    className="right-rail-button-wrapper"
+                    style={{ animationDelay: `${index * 50}ms` }}
                   >
-                    {btn.icon}
-                  </ActionIcon>
-                </Tooltip>
-              ))}
+                    {content}
+                  </div>
+                );
+              })}
             </div>
             <Divider className="right-rail-divider" />
-          </>
-        )}
-
-        {/* Group: PDF Viewer Controls - visible only in viewer mode */}
-        {!isCustomWorkbench && (
-        <div
-          className={`right-rail-slot ${currentView === 'viewer' ? 'visible right-rail-enter' : 'right-rail-exit'}`}
-          aria-hidden={currentView !== 'viewer'}
-        >
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
-            {/* Search */}
-            <Tooltip content={t('rightRail.search', 'Search PDF')} position="left" offset={12} arrow portalTarget={document.body}>
-              <Popover position="left" withArrow shadow="md" offset={8}>
-                <Popover.Target>
-                  <div style={{ display: 'inline-flex' }}>
-                    <ActionIcon
-                      variant="subtle"
-                      radius="md"
-                      className="right-rail-icon"
-                      disabled={currentView !== 'viewer' || allButtonsDisabled || disableForFullscreen}
-                      aria-label={typeof t === 'function' ? t('rightRail.search', 'Search PDF') : 'Search PDF'}
-                    >
-                      <LocalIcon icon="search" width="1.5rem" height="1.5rem" />
-                    </ActionIcon>
-                  </div>
-                </Popover.Target>
-                <Popover.Dropdown>
-                  <div style={{ minWidth: '20rem' }}>
-                    <SearchInterface
-                      visible={true}
-                      onClose={() => {}}
-                    />
-                  </div>
-                </Popover.Dropdown>
-              </Popover>
-            </Tooltip>
-
-
-            {/* Pan Mode */}
-            <Tooltip content={t('rightRail.panMode', 'Pan Mode')} position="left" offset={12} arrow portalTarget={document.body}>
-              <ActionIcon
-                variant={isPanning ? "filled" : "subtle"}
-                color={isPanning ? "blue" : undefined}
-                radius="md"
-                className="right-rail-icon"
-                onClick={() => {
-                  viewerContext?.panActions.togglePan();
-                  setIsPanning(!isPanning);
-                }}
-                disabled={currentView !== 'viewer' || allButtonsDisabled || disableForFullscreen}
-              >
-                <LocalIcon icon="pan-tool-rounded" width="1.5rem" height="1.5rem" />
-              </ActionIcon>
-            </Tooltip>
-
-            {/* Rotate Left */}
-            <Tooltip content={t('rightRail.rotateLeft', 'Rotate Left')} position="left" offset={12} arrow portalTarget={document.body}>
-              <ActionIcon
-                variant="subtle"
-                radius="md"
-                className="right-rail-icon"
-                onClick={() => {
-                  viewerContext?.rotationActions.rotateBackward();
-                }}
-                disabled={currentView !== 'viewer' || allButtonsDisabled || disableForFullscreen}
-              >
-                <LocalIcon icon="rotate-left" width="1.5rem" height="1.5rem" />
-              </ActionIcon>
-            </Tooltip>
-
-            {/* Rotate Right */}
-            <Tooltip content={t('rightRail.rotateRight', 'Rotate Right')} position="left" offset={12} arrow portalTarget={document.body}>
-              <ActionIcon
-                variant="subtle"
-                radius="md"
-                className="right-rail-icon"
-                onClick={() => {
-                  viewerContext?.rotationActions.rotateForward();
-                }}
-                disabled={currentView !== 'viewer' || allButtonsDisabled || disableForFullscreen}
-              >
-                <LocalIcon icon="rotate-right" width="1.5rem" height="1.5rem" />
-              </ActionIcon>
-            </Tooltip>
-
-            {/* Sidebar Toggle */}
-            <Tooltip content={t('rightRail.toggleSidebar', 'Toggle Sidebar')} position="left" offset={12} arrow portalTarget={document.body}>
-              <ActionIcon
-                variant="subtle"
-                radius="md"
-                className="right-rail-icon"
-                onClick={() => {
-                  viewerContext?.toggleThumbnailSidebar();
-                }}
-                disabled={currentView !== 'viewer' || allButtonsDisabled || disableForFullscreen}
-              >
-                <LocalIcon icon="view-list" width="1.5rem" height="1.5rem" />
-              </ActionIcon>
-            </Tooltip>
-
-            {/* Annotation Controls */}
-            <ViewerAnnotationControls
-              currentView={currentView}
-              disabled={currentView !== 'viewer' || allButtonsDisabled || disableForFullscreen}
-            />
-          </div>
-          <Divider className="right-rail-divider" />
-        </div>
-        )}
-
-        {/* Group: Selection controls + Close, animate as one unit when entering/leaving viewer */}
-        {!isCustomWorkbench && (
-        <div
-          className={`right-rail-slot ${currentView !== 'viewer' ? 'visible right-rail-enter' : 'right-rail-exit'}`}
-          aria-hidden={currentView === 'viewer'}
-        >
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
-            {/* Select All Button */}
-            <Tooltip content={t('rightRail.selectAll', 'Select All')} position="left" offset={12} arrow portalTarget={document.body}>
-              <div>
-                <ActionIcon
-                  variant="subtle"
-                  radius="md"
-                  className="right-rail-icon"
-                  onClick={handleSelectAll}
-                  disabled={currentView === 'viewer' || totalItems === 0 || selectedCount === totalItems || allButtonsDisabled || disableForFullscreen}
-                >
-                  <LocalIcon icon="select-all" width="1.5rem" height="1.5rem" />
-                </ActionIcon>
-              </div>
-            </Tooltip>
-
-            {/* Deselect All Button */}
-            <Tooltip content={t('rightRail.deselectAll', 'Deselect All')} position="left" offset={12} arrow portalTarget={document.body}>
-              <div>
-                <ActionIcon
-                  variant="subtle"
-                  radius="md"
-                  className="right-rail-icon"
-                  onClick={handleDeselectAll}
-                  disabled={currentView === 'viewer' || selectedCount === 0 || allButtonsDisabled || disableForFullscreen}
-                >
-                  <LocalIcon icon="crop-square-outline" width="1.5rem" height="1.5rem" />
-                </ActionIcon>
-              </div>
-            </Tooltip>
-
-            {/* Select by Numbers - page editor only, with animated presence */}
-            {pageControlsMounted && (
-                                  <Tooltip content={t('rightRail.selectByNumber', 'Select by Page Numbers')} position="left" offset={12} arrow portalTarget={document.body}>
-
-              <div className={`right-rail-fade ${pageControlsVisible ? 'enter' : 'exit'}`} aria-hidden={!pageControlsVisible}>
-                <Popover position="left" withArrow shadow="md" offset={8}>
-                  <Popover.Target>
-                      <div style={{ display: 'inline-flex' }}>
-                        <ActionIcon
-                          variant="subtle"
-                          radius="md"
-                          className="right-rail-icon"
-                          disabled={!pageControlsVisible || totalItems === 0 || allButtonsDisabled || disableForFullscreen}
-                          aria-label={typeof t === 'function' ? t('rightRail.selectByNumber', 'Select by Page Numbers') : 'Select by Page Numbers'}
-                        >
-                          <LocalIcon icon="pin-end" width="1.5rem" height="1.5rem" />
-                        </ActionIcon>
-                      </div>
-                  </Popover.Target>
-                  <Popover.Dropdown>
-
-                    <div style={{ minWidth: '24rem', maxWidth: '32rem' }}>
-                      <BulkSelectionPanel
-                        csvInput={csvInput}
-                        setCsvInput={setCsvInput}
-                        selectedPageIds={Array.isArray(pageEditorFunctions?.selectedPageIds) ? pageEditorFunctions.selectedPageIds : []}
-                        displayDocument={pageEditorFunctions?.displayDocument}
-                        onUpdatePagesFromCSV={updatePagesFromCSV}
-                      />
-                    </div>
-                  </Popover.Dropdown>
-                </Popover>
-              </div>
-              </Tooltip>
-
-            )}
-
-            {/* Delete Selected Pages - page editor only, with animated presence */}
-            {pageControlsMounted && (
-                              <Tooltip content={t('rightRail.deleteSelected', 'Delete Selected Pages')} position="left" offset={12} arrow portalTarget={document.body}>
-
-              <div className={`right-rail-fade ${pageControlsVisible ? 'enter' : 'exit'}`} aria-hidden={!pageControlsVisible}>
-                  <div style={{ display: 'inline-flex' }}>
-                    <ActionIcon
-                      variant="subtle"
-                      radius="md"
-                      className="right-rail-icon"
-                      onClick={() => { pageEditorFunctions?.handleDelete?.(); }}
-                      disabled={!pageControlsVisible || (pageEditorFunctions?.selectedPageIds?.length || 0) === 0 || allButtonsDisabled || disableForFullscreen}
-                      aria-label={typeof t === 'function' ? t('rightRail.deleteSelected', 'Delete Selected Pages') : 'Delete Selected Pages'}
-                    >
-                      <LocalIcon icon="delete-outline-rounded" width="1.5rem" height="1.5rem" />
-                    </ActionIcon>
-                  </div>
-              </div>
-              </Tooltip>
-
-            )}
-
-            {/* Export Selected Pages - page editor only */}
-            {pageControlsMounted && (
-              <Tooltip content={t('rightRail.exportSelected', 'Export Selected Pages')} position="left" offset={12} arrow portalTarget={document.body}>
-                <div className={`right-rail-fade ${pageControlsVisible ? 'enter' : 'exit'}`} aria-hidden={!pageControlsVisible}>
-                  <div style={{ display: 'inline-flex' }}>
-                    <ActionIcon
-                      variant="subtle"
-                      radius="md"
-                      className="right-rail-icon"
-                      onClick={() => { pageEditorFunctions?.onExportSelected?.(); }}
-                      disabled={!pageControlsVisible || (pageEditorFunctions?.selectedPageIds?.length || 0) === 0 || pageEditorFunctions?.exportLoading || allButtonsDisabled || disableForFullscreen}
-                      aria-label={typeof t === 'function' ? t('rightRail.exportSelected', 'Export Selected Pages') : 'Export Selected Pages'}
-                    >
-                      <LocalIcon icon="download" width="1.5rem" height="1.5rem" />
-                    </ActionIcon>
-                  </div>
-                </div>
-              </Tooltip>
-            )}
-
-            {/* Close (File Editor: Close Selected | Page Editor: Close PDF) */}
-            <Tooltip content={currentView === 'pageEditor' ? t('rightRail.closePdf', 'Close PDF') : t('rightRail.closeSelected', 'Close Selected Files')} position="left" offset={12} arrow portalTarget={document.body}>
-              <div>
-                <ActionIcon
-                  variant="subtle"
-                  radius="md"
-                  className="right-rail-icon"
-                  onClick={currentView === 'pageEditor' ? () => pageEditorFunctions?.closePdf?.() : handleCloseSelected}
-                  disabled={
-                    currentView === 'viewer' ||
-                    (currentView === 'fileEditor' && selectedCount === 0) ||
-                    (currentView === 'pageEditor' && (activeFiles.length === 0 || !pageEditorFunctions?.closePdf)) ||
-                    allButtonsDisabled || disableForFullscreen
-                  }
-                >
-                  <LocalIcon icon="close-rounded" width="1.5rem" height="1.5rem" />
-                </ActionIcon>
-              </div>
-            </Tooltip>
-          </div>
-
-          <Divider className="right-rail-divider" />
-        </div>
-        )}
-
-        {/* Theme toggle and Language dropdown */}
+          </React.Fragment>
+        ))}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
-          <Tooltip content={t('rightRail.toggleTheme', 'Toggle Theme')} position="left" offset={12} arrow portalTarget={document.body}
-          >
+          {renderWithTooltip(
             <ActionIcon
               variant="subtle"
               radius="md"
@@ -464,34 +195,32 @@ export default function RightRail() {
               onClick={toggleTheme}
             >
               <LocalIcon icon="contrast" width="1.5rem" height="1.5rem" />
-            </ActionIcon>
-          </Tooltip>
+            </ActionIcon>,
+            t('rightRail.toggleTheme', 'Toggle Theme')
+          )}
 
-          <Tooltip content={t('rightRail.language', 'Language')} position="left" offset={12} arrow portalTarget={document.body}>
+          {renderWithTooltip(
             <div style={{ display: 'inline-flex' }}>
               <LanguageSelector position="left-start" offset={6} compact />
-            </div>
-          </Tooltip>
+            </div>,
+            t('rightRail.language', 'Language')
+          )}
 
-          <Tooltip content={
-            currentView === 'pageEditor'
-              ? t('rightRail.exportAll', 'Export PDF')
-              : (selectedCount > 0 ? t('rightRail.downloadSelected', 'Download Selected Files') : t('rightRail.downloadAll', 'Download All'))
-          } position="left" offset={12} arrow portalTarget={document.body}>
-            <div>
-              <ActionIcon
-                variant="subtle"
-                radius="md"
-                className="right-rail-icon"
-                onClick={handleExportAll}
-                disabled={
-                  disableForFullscreen || (currentView === 'viewer' ? !exportState?.canExport : totalItems === 0 || allButtonsDisabled)
-                }
-              >
-                <LocalIcon icon="download" width="1.5rem" height="1.5rem" />
-              </ActionIcon>
-            </div>
-          </Tooltip>
+          {renderWithTooltip(
+            <ActionIcon
+              variant="subtle"
+              radius="md"
+              className="right-rail-icon"
+              onClick={handleExportAll}
+              disabled={
+                disableForFullscreen ||
+                (currentView === 'viewer' ? !exportState?.canExport : totalItems === 0 || allButtonsDisabled)
+              }
+            >
+              <LocalIcon icon="download" width="1.5rem" height="1.5rem" />
+            </ActionIcon>,
+            downloadTooltip
+          )}
         </div>
 
         <div className="right-rail-spacer" />
@@ -499,4 +228,3 @@ export default function RightRail() {
     </div>
   );
 }
-
