@@ -13,6 +13,7 @@ import { useSignature } from '../../contexts/SignatureContext';
 import { createStirlingFilesAndStubs } from '../../services/fileStubHelpers';
 import NavigationWarningModal from '../shared/NavigationWarningModal';
 import { isStirlingFile } from '../../types/fileContext';
+import { useViewerRightRailButtons } from './useViewerRightRailButtons';
 
 export interface EmbedPdfViewerProps {
   sidebarsVisible: boolean;
@@ -35,6 +36,9 @@ const EmbedPdfViewerContent = ({
   const [isViewerHovered, setIsViewerHovered] = React.useState(false);
 
   const { isThumbnailSidebarVisible, toggleThumbnailSidebar, zoomActions, spreadActions, panActions: _panActions, rotationActions: _rotationActions, getScrollState, getZoomState, getSpreadState, getRotationState, isAnnotationMode, isAnnotationsVisible, exportActions } = useViewer();
+
+  // Register viewer right-rail buttons
+  useViewerRightRailButtons();
 
   const scrollState = getScrollState();
   const zoomState = getZoomState();
