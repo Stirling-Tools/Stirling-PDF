@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { usePreferences } from './PreferencesContext';
+import { useMediaQuery } from '@mantine/hooks';
 
 interface OnboardingContextValue {
   isOpen: boolean;
@@ -20,14 +21,16 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [isOpen, setIsOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+  const isMobile = useMediaQuery("(max-width: 1024px)");
 
   // Auto-show welcome modal for first-time users after preferences load
   // Only show after user has seen the tool panel mode prompt
+  // Also, don't show tour on mobile devices because it feels clunky
   useEffect(() => {
-    if (!preferences.hasCompletedOnboarding && preferences.toolPanelModePromptSeen) {
+    if (!preferences.hasCompletedOnboarding && preferences.toolPanelModePromptSeen && !isMobile) {
       setShowWelcomeModal(true);
     }
-  }, [preferences.hasCompletedOnboarding, preferences.toolPanelModePromptSeen]);
+  }, [preferences.hasCompletedOnboarding, preferences.toolPanelModePromptSeen, isMobile]);
 
   const startTour = useCallback(() => {
     setCurrentStep(0);
