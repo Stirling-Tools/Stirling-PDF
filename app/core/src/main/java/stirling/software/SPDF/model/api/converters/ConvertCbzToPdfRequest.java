@@ -13,6 +13,8 @@ public class ConvertCbzToPdfRequest {
 
     @Schema(
             description = "The input CBZ file to be converted to a PDF file",
+            contentMediaType = "application/vnd.comicbook+zip",
+            format = "binary",
             requiredMode = Schema.RequiredMode.REQUIRED)
     private MultipartFile fileInput;
 
