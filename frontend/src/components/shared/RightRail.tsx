@@ -164,11 +164,11 @@ export default function RightRail() {
   }, [currentView, selectedCount, t]);
 
   return (
-    <div ref={sidebarRefs.rightRailRef} className="right-rail" data-sidebar="right-rail" data-tour="right-rail">
+    <div ref={sidebarRefs.rightRailRef} className="right-rail" data-sidebar="right-rail">
       <div className="right-rail-inner">
         {sectionsWithButtons.map(({ section, buttons: sectionButtons }) => (
           <React.Fragment key={section}>
-            <div className="right-rail-section">
+            <div className="right-rail-section" data-tour="right-rail-controls">
               {sectionButtons.map((btn, index) => {
                 const content = renderButton(btn);
                 if (!content) return null;
