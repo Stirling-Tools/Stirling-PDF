@@ -189,7 +189,6 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
     <div
       ref={ref}
       data-sidebar="quick-access"
-      data-tour="quick-access"
       className={`h-screen flex flex-col w-20 quick-access-bar-main ${isRainbowMode ? 'rainbow-mode' : ''}`}
       style={{
         borderRight: '1px solid var(--border-default)'

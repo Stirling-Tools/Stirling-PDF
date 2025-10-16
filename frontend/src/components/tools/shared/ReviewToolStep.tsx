@@ -80,7 +80,6 @@ function ReviewStepContent<TParams = unknown>({
           color="var(--mantine-color-gray-6)"
           onClick={handleUndo}
           fullWidth
-          data-tour="undo-button"
         >
           {t("undo", "Undo")}
         </Button>

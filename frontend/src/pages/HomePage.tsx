@@ -168,7 +168,6 @@ export default function HomePage() {
                 aria-selected={activeMobileView === "tools"}
                 className={`mobile-toggle-button ${activeMobileView === "tools" ? "active" : ""}`}
                 onClick={() => handleSelectMobileView("tools")}
-                data-tour="mobile-tools-tab"
               >
                 {t('home.mobile.tools', 'Tools')}
               </button>
@@ -178,7 +177,6 @@ export default function HomePage() {
                 aria-selected={activeMobileView === "workbench"}
                 className={`mobile-toggle-button ${activeMobileView === "workbench" ? "active" : ""}`}
                 onClick={() => handleSelectMobileView("workbench")}
-                data-tour="mobile-workspace-tab"
               >
                 {t('home.mobile.workspace', 'Workspace')}
               </button>
@@ -202,7 +200,7 @@ export default function HomePage() {
               </div>
             </div>
           </div>
-          <div className="mobile-bottom-bar" data-tour="mobile-bottom-bar">
+          <div className="mobile-bottom-bar">
             <button
               className="mobile-bottom-button"
               aria-label={t('quickAccess.allTools', 'All Tools')}
