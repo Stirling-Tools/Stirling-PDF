@@ -63,19 +63,40 @@ class SpringAuthClient {
   }
 
   /**
+   * Helper to get JWT token from cookie and add to fetch headers
+   */
+  private getAuthHeaders(): HeadersInit {
+    const cookies = document.cookie.split(';');
+    for (const cookie of cookies) {
+      const [name, value] = cookie.trim().split('=');
+      if (name === 'stirling_jwt') {
+        return {
+          'Authorization': `Bearer ${value}`,
+        };
+      }
+    }
+    return {};
+  }
+
+  /**
    * Get current session
    * Note: JWT is stored in HttpOnly cookie, so we can't read it directly
    * We check auth status by calling the /me endpoint
    */
   async getSession(): Promise<{ data: { session: Session | null }; error: AuthError | null }> {
     try {
-      // Verify with backend
+      // Verify with backend - add Authorization header from cookie
+      const authHeaders = this.getAuthHeaders();
       const response = await fetch('/api/v1/auth/me', {
         credentials: 'include', // Include cookies
+        headers: {
+          ...authHeaders,
+        },
       });
 
       if (!response.ok) {
         // Not authenticated
+        console.debug('[SpringAuth] getSession: Not authenticated (status:', response.status, ')');
         return { data: { session: null }, error: null };
       }
 
@@ -89,6 +110,7 @@ class SpringAuthClient {
         expires_at: Date.now() + 3600 * 1000,
       };
 
+      console.debug('[SpringAuth] getSession: Session retrieved successfully');
       return { data: { session }, error: null };
     } catch (error) {
       console.error('[SpringAuth] getSession error:', error);
@@ -190,9 +212,11 @@ class SpringAuthClient {
     options?: { redirectTo?: string; queryParams?: Record<string, any> };
   }): Promise<{ error: AuthError | null }> {
     try {
-      // Redirect to Spring OAuth2 endpoint
+      // Redirect to Spring OAuth2 endpoint (Vite will proxy to backend)
       const redirectUrl = `/oauth2/authorization/${params.provider}`;
-      window.location.href = redirectUrl;
+      console.log('[SpringAuth] Redirecting to OAuth:', redirectUrl);
+      // Use window.location.assign for full page navigation
+      window.location.assign(redirectUrl);
       return { error: null };
     } catch (error) {
       return {

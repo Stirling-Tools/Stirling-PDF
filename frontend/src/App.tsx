@@ -15,7 +15,6 @@ import HomePage from "./pages/HomePage";
 import { AuthProvider } from "./auth/UseSession";
 import Landing from "./routes/Landing";
 import Login from "./routes/Login";
-import Signup from "./routes/Signup";
 import AuthCallback from "./routes/AuthCallback";
 
 // Import global styles
@@ -55,7 +54,6 @@ export default function App() {
               <Routes>
                 {/* Auth routes - no FileContext or other providers needed */}
                 <Route path="/login" element={<Login />} />
-                <Route path="/signup" element={<Signup />} />
                 <Route path="/auth/callback" element={<AuthCallback />} />
 
                 {/* Main app routes - wrapped with all providers */}
