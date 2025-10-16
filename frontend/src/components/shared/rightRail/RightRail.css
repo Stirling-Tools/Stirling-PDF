@@ -29,6 +29,34 @@
   gap: 0.75rem;
 }
 
+.right-rail-button-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  animation: rightRailButtonReveal 200ms ease forwards;
+  transform-origin: top center;
+  opacity: 0;
+}
+
+.right-rail-tooltip-wrapper {
+  display: inline-flex;
+  width: 100%;
+  justify-content: center;
+}
+
+@keyframes rightRailButtonReveal {
+  0% {
+    opacity: 0;
+    transform: scaleY(0.6) translateY(-6px);
+  }
+  100% {
+    opacity: 1;
+    transform: scaleY(1) translateY(0);
+  }
+}
+
 .right-rail-divider {
   width: 2.75rem;
   border: none;
@@ -131,4 +159,3 @@
   transition-delay: 0s, 0s, 0s, 220ms;
   pointer-events: none;
 }
-

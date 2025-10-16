@@ -17,12 +17,19 @@ const FavoriteStar: React.FC<FavoriteStarProps> = ({ isFavorite, onToggle, class
 
   return (
     <ActionIcon
+      component="span"
       variant="subtle"
       radius="xl"
       size={size}
       onClick={(e: React.MouseEvent) => {
         e.stopPropagation();
         onToggle();
+      }}
+      onMouseDown={(e: React.MouseEvent) => {
+        e.stopPropagation();
+      }}
+      onKeyDown={(e: React.KeyboardEvent) => {
+        e.stopPropagation();
       }}
       className={className}
       aria-label={isFavorite ? t('toolPanel.fullscreen.unfavorite', 'Remove from favourites') : t('toolPanel.fullscreen.favorite', 'Add to favourites')}
