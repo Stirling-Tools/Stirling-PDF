@@ -8,7 +8,7 @@ import { Tooltip } from '../shared/Tooltip';
 import { SearchInterface } from './SearchInterface';
 import ViewerAnnotationControls from '../shared/rightRail/ViewerAnnotationControls';
 
-const ViewerRightRailButtons = () => {
+export function useViewerRightRailButtons() {
   const { t } = useTranslation();
   const viewer = useViewer();
   const [isPanning, setIsPanning] = useState<boolean>(() => viewer.getPanState()?.isPanning ?? false);
@@ -121,8 +121,4 @@ const ViewerRightRailButtons = () => {
   }, [t, viewer, isPanning]);
 
   useRightRailButtons(viewerButtons);
-
-  return null;
-};
-
-export default ViewerRightRailButtons;
+}
