@@ -41,10 +41,11 @@ class CertificateValidationServiceTest {
         when(validation.getTrust()).thenReturn(trust);
         when(validation.getRevocation()).thenReturn(revocation);
         when(validation.isAllowAIA()).thenReturn(false);
-        when(validation.isEnableEUTL()).thenReturn(false);
         when(trust.isServerAsAnchor()).thenReturn(false);
         when(trust.isUseSystemTrust()).thenReturn(false);
         when(trust.isUseMozillaBundle()).thenReturn(false);
+        when(trust.isUseAATL()).thenReturn(false);
+        when(trust.isUseEUTL()).thenReturn(false);
         when(revocation.getMode()).thenReturn("none");
         when(revocation.isHardFail()).thenReturn(false);
 
@@ -83,22 +84,6 @@ class CertificateValidationServiceTest {
 
         // Then it should be outside validity period
         assertTrue(result, "Expired certificate should be outside validity period");
-    }
-
-    @Test
-    @SuppressWarnings("deprecation")
-    void testDeprecatedIsRevoked_ValidCertificate() {
-        // Test deprecated method for backwards compatibility
-        boolean result = validationService.isRevoked(validCertificate);
-        assertFalse(result, "Valid certificate should not be considered revoked");
-    }
-
-    @Test
-    @SuppressWarnings("deprecation")
-    void testDeprecatedIsRevoked_ExpiredCertificate() {
-        // Test deprecated method for backwards compatibility
-        boolean result = validationService.isRevoked(expiredCertificate);
-        assertTrue(result, "Expired certificate should be considered revoked (legacy behavior)");
     }
 
     // Note: Full integration tests for buildAndValidatePath() would require
