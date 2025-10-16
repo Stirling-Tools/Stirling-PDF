@@ -1,12 +1,21 @@
 // Define workbench values once as source of truth
-const WORKBENCH_TYPES = ['viewer', 'pageEditor', 'fileEditor'] as const;
+export const BASE_WORKBENCH_TYPES = ['viewer', 'pageEditor', 'fileEditor'] as const;
 
-// Workbench types - how the user interacts with content
-export type WorkbenchType = typeof WORKBENCH_TYPES[number];
+export type BaseWorkbenchType = typeof BASE_WORKBENCH_TYPES[number];
+
+// Workbench types including custom views
+export type WorkbenchType = BaseWorkbenchType | `custom:${string}`;
 
 export const getDefaultWorkbench = (): WorkbenchType => 'fileEditor';
 
 // Type guard using the same source of truth
 export const isValidWorkbench = (value: string): value is WorkbenchType => {
-  return WORKBENCH_TYPES.includes(value as WorkbenchType);
+  if (BASE_WORKBENCH_TYPES.includes(value as BaseWorkbenchType)) {
+    return true;
+  }
+  return value.startsWith('custom:');
+};
+
+export const isBaseWorkbench = (value: WorkbenchType): value is BaseWorkbenchType => {
+  return BASE_WORKBENCH_TYPES.includes(value as BaseWorkbenchType);
 };

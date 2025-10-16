@@ -2,12 +2,9 @@ import { useTranslation } from 'react-i18next';
 import { useToolOperation, ToolType } from '../shared/useToolOperation';
 import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
 import { RemoveAnnotationsParameters, defaultParameters } from './useRemoveAnnotationsParameters';
-
+import { PDFDocument, PDFName, PDFRef, PDFDict } from 'pdf-lib';
 // Client-side PDF processing using PDF-lib
 const removeAnnotationsProcessor = async (_parameters: RemoveAnnotationsParameters, files: File[]): Promise<File[]> => {
-  // Dynamic import of PDF-lib for client-side processing
-  const { PDFDocument, PDFName, PDFRef, PDFDict } = await import('pdf-lib');
-
   const processedFiles: File[] = [];
 
   for (const file of files) {

@@ -1,0 +1,105 @@
+.grid-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.field-container {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.field-value {
+  border: 1px solid rgb(var(--pdf-light-box-border));
+  border-radius: 8px;
+  padding: 0.65rem 0.75rem;
+  background-color: rgb(var(--pdf-light-box-bg));
+  min-height: 44px;
+}
+
+/* Status badge colors sourced from light palette tokens */
+.status-badge {
+  border-radius: 9999px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.02em !important;
+}
+.status-badge--valid {
+  background-color: rgb(var(--pdf-light-status-valid-bg)) !important;
+  color: rgb(var(--pdf-light-status-valid-text)) !important;
+}
+.status-badge--warning {
+  background-color: rgb(var(--pdf-light-status-warning-bg)) !important;
+  color: rgb(var(--pdf-light-status-warning-text)) !important;
+}
+.status-badge--invalid {
+  background-color: rgb(var(--pdf-light-status-invalid-bg)) !important;
+  color: rgb(var(--pdf-light-status-invalid-text)) !important;
+}
+.status-badge--neutral {
+  background-color: rgb(var(--pdf-light-status-neutral-bg)) !important;
+  color: rgb(var(--pdf-light-status-neutral-text)) !important;
+}
+
+.simulated-page {
+  width: min(820px, 100%);
+  min-height: 1040px;
+  background-color: rgb(var(--pdf-light-simulated-page-bg)) !important;
+  box-shadow: 0 12px 32px rgba(var(--pdf-light-simulated-page-text), 0.12) !important;
+  border-radius: 12px !important;
+  padding: 48px 56px !important;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  color: rgb(var(--pdf-light-simulated-page-text)) !important;
+}
+
+/* Container for the interactive report view */
+.report-container {
+  width: 100%;
+  height: 100%;
+  /* Match Active Files/Page Editor background */
+  background: var(--bg-background) !important;
+  padding: 32px 24px 48px;
+  overflow-y: auto;
+}
+
+/* Keep field blocks stable colors across themes */
+.field-value {
+  border: 1px solid rgb(var(--pdf-light-box-border)) !important;
+  background-color: rgb(var(--pdf-light-box-bg)) !important;
+}
+
+.field-container {
+  color: rgb(var(--pdf-light-simulated-page-text)) !important;
+}
+
+/* Thumbnail preview styles */
+.thumbnail-container {
+  width: 140px;
+  height: 180px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 6px 18px rgba(var(--pdf-light-simulated-page-text), 0.15);
+  flex-shrink: 0;
+  background-color: rgb(var(--pdf-light-simulated-page-text));
+}
+
+.thumbnail-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.thumbnail-placeholder {
+  width: 140px;
+  height: 180px;
+  border-radius: 12px;
+  border: 1px dashed rgba(var(--pdf-light-neutral), 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgb(var(--pdf-light-text-muted));
+  background: linear-gradient(145deg, var(--mantine-color-gray-1) 0%, var(--mantine-color-gray-0) 100%);
+}

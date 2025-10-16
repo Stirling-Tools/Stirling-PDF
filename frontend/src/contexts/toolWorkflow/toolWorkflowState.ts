@@ -26,6 +26,7 @@ export type ToolWorkflowAction =
   | { type: 'SET_SEARCH_QUERY'; payload: string }
   | { type: 'RESET_UI_STATE' };
 
+  
 export const baseState: Omit<ToolWorkflowState, 'toolPanelMode'> = {
   sidebarsVisible: true,
   leftPanelView: 'toolPicker',

@@ -108,6 +108,7 @@ import RemovePagesSettings from "../components/tools/removePages/RemovePagesSett
 import RemoveBlanksSettings from "../components/tools/removeBlanks/RemoveBlanksSettings";
 import AddPageNumbersAutomationSettings from "../components/tools/addPageNumbers/AddPageNumbersAutomationSettings";
 import OverlayPdfsSettings from "../components/tools/overlayPdfs/OverlayPdfsSettings";
+import ValidateSignature from "../tools/ValidateSignature";
 
 const showPlaceholderTools = true; // Show all tools; grey out unavailable ones in UI
 
@@ -281,10 +282,12 @@ export function useFlatToolRegistry(): ToolRegistry {
       validateSignature: {
         icon: <LocalIcon icon="verified-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.validateSignature.title", "Validate PDF Signature"),
-        component: null,
+        component: ValidateSignature,
         description: t("home.validateSignature.desc", "Verify digital signatures and certificates in PDF documents"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.VERIFICATION,
+        maxFiles: -1,
+        endpoints: ["validate-signature"],
         synonyms: getSynonyms(t, "validateSignature"),
         automationSettings: null
       },
