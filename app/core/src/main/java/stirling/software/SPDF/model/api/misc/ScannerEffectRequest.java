@@ -79,14 +79,6 @@ public class ScannerEffectRequest {
     @Schema(description = "Whether advanced settings are enabled", example = "false")
     private boolean advancedEnabled = false;
 
-    public int getQualityValue() {
-        return switch (quality) {
-            case low -> 30;
-            case medium -> 60;
-            case high -> 100;
-        };
-    }
-
     public int getRotationValue() {
         return switch (rotation) {
             case none -> 0;
@@ -97,26 +89,26 @@ public class ScannerEffectRequest {
     }
 
     public void applyHighQualityPreset() {
-        this.blur = 0.1f;
+        this.blur = 0.10f;
         this.noise = 1.0f;
-        this.brightness = 1.02f;
-        this.contrast = 1.05f;
-        this.resolution = 300;
+        this.brightness = 1.03f;
+        this.contrast = 1.06f;
+        this.resolution = 150;
     }
 
     public void applyMediumQualityPreset() {
-        this.blur = 0.5f;
-        this.noise = 3.0f;
-        this.brightness = 1.05f;
-        this.contrast = 1.1f;
-        this.resolution = 300;
+        this.blur = 0.10f;
+        this.noise = 1.0f;
+        this.brightness = 1.06f;
+        this.contrast = 1.12f;
+        this.resolution = 100;
     }
 
     public void applyLowQualityPreset() {
-        this.blur = 1.0f;
-        this.noise = 5.0f;
-        this.brightness = 1.1f;
-        this.contrast = 1.2f;
-        this.resolution = 150;
+        this.blur = 0.9f;
+        this.noise = 2.5f;
+        this.brightness = 1.08f;
+        this.contrast = 1.15f;
+        this.resolution = 75;
     }
 }
