@@ -66,7 +66,6 @@ All documentation available at [https://docs.stirlingpdf.com/](https://docs.stir
 - **PDF to Markdown**: Convert PDF to Markdown
 - **PDF to CBZ**: Convert to comic book archive
 - **PDF to CBR**: Convert to comic book rar archive (requires [RAR setup](HowToSetupRAR.md))
-- **PDF to CBR**: Convert to comic book rar archive
 - **PDF to Vector Image**: Convert PDF to vector image (EPS, PS, PCL, XPS) format
 
 #### Sign & Security
