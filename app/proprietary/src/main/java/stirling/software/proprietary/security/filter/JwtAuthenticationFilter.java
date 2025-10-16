@@ -75,28 +75,49 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String jwtToken = jwtService.extractToken(request);
 
             if (jwtToken == null) {
-                // Allow auth endpoints to pass through without JWT
+                // Allow specific auth endpoints to pass through without JWT
                 String requestURI = request.getRequestURI();
                 String contextPath = request.getContextPath();
 
-                // Skip redirect for auth endpoints (they'll handle their own auth checks)
-                if (!requestURI.startsWith(contextPath + "/login")
-                        && !requestURI.startsWith(contextPath + "/api/v1/auth")) {
-                    response.sendRedirect("/login");
-                    return;
-                }
+                // Public auth endpoints that don't require JWT
+                boolean isPublicAuthEndpoint =
+                        requestURI.startsWith(contextPath + "/login")
+                                || requestURI.startsWith(contextPath + "/signup")
+                                || requestURI.startsWith(contextPath + "/auth/")
+                                || requestURI.startsWith(contextPath + "/oauth2")
+                                || requestURI.startsWith(contextPath + "/api/v1/auth/login")
+                                || requestURI.startsWith(contextPath + "/api/v1/auth/register")
+                                || requestURI.startsWith(contextPath + "/api/v1/auth/refresh");
 
-                // For auth endpoints without JWT, continue to the endpoint
-                // (it will return 401 if needed)
-                if (requestURI.startsWith(contextPath + "/api/v1/auth")) {
+                if (!isPublicAuthEndpoint) {
+                    // For API requests, return 401 JSON
+                    String acceptHeader = request.getHeader("Accept");
+                    if (requestURI.startsWith(contextPath + "/api/")
+                            || (acceptHeader != null
+                                    && acceptHeader.contains("application/json"))) {
+                        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                        response.setContentType("application/json");
+                        response.getWriter().write("{\"error\":\"Authentication required\"}");
+                        return;
+                    }
+
+                    // For HTML requests (SPA routes), let React Router handle it (serve
+                    // index.html)
                     filterChain.doFilter(request, response);
                     return;
                 }
+
+                // For public auth endpoints without JWT, continue to the endpoint
+                filterChain.doFilter(request, response);
+                return;
             }
 
             try {
+                log.debug("Validating JWT token");
                 jwtService.validateToken(jwtToken);
+                log.debug("JWT token validated successfully");
             } catch (AuthenticationFailureException e) {
+                log.warn("JWT validation failed: {}", e.getMessage());
                 jwtService.clearToken(response);
                 handleAuthenticationFailure(request, response, e);
                 return;
@@ -104,9 +125,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             Map<String, Object> claims = jwtService.extractClaims(jwtToken);
             String tokenUsername = claims.get("sub").toString();
+            log.debug("JWT token username: {}", tokenUsername);
 
             try {
                 authenticate(request, claims);
+                log.debug("Authentication successful for user: {}", tokenUsername);
             } catch (SQLException | UnsupportedProviderException e) {
                 log.error("Error processing user authentication for user: {}", tokenUsername, e);
                 handleAuthenticationFailure(

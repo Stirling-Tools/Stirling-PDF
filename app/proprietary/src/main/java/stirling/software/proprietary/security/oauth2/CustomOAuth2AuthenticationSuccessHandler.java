@@ -72,12 +72,6 @@ public class CustomOAuth2AuthenticationSuccessHandler
                 throw new LockedException(
                         "Your account has been locked due to too many failed login attempts.");
             }
-            if (jwtService.isJwtEnabled()) {
-                String jwt =
-                        jwtService.generateToken(
-                                authentication, Map.of("authType", AuthenticationType.OAUTH2));
-                jwtService.addToken(response, jwt);
-            }
             if (userService.isUserDisabled(username)) {
                 getRedirectStrategy()
                         .sendRedirect(request, response, "/logout?userIsDisabled=true");
@@ -102,7 +96,19 @@ public class CustomOAuth2AuthenticationSuccessHandler
                     userService.processSSOPostLogin(
                             username, oauth2Properties.getAutoCreateUser(), OAUTH2);
                 }
-                response.sendRedirect(contextPath + "/");
+
+                // Generate JWT if v2 is enabled
+                if (jwtService.isJwtEnabled()) {
+                    String jwt =
+                            jwtService.generateToken(
+                                    authentication, Map.of("authType", AuthenticationType.OAUTH2));
+                    jwtService.addToken(response, jwt);
+                    // Redirect to auth callback for v2 (React will handle final routing)
+                    response.sendRedirect(contextPath + "/auth/callback");
+                } else {
+                    // v1: redirect directly to home
+                    response.sendRedirect(contextPath + "/");
+                }
             } catch (IllegalArgumentException | SQLException | UnsupportedProviderException e) {
                 response.sendRedirect(contextPath + "/logout?invalidUsername=true");
             }

@@ -122,7 +122,14 @@ public class CustomSaml2AuthenticationSuccessHandler
                     log.debug("Successfully processed authentication for user: {}", username);
 
                     generateJwt(response, authentication);
-                    response.sendRedirect(contextPath + "/");
+
+                    // Redirect to auth callback for v2 (React will handle final routing)
+                    if (jwtService.isJwtEnabled()) {
+                        response.sendRedirect(contextPath + "/auth/callback");
+                    } else {
+                        // v1: redirect directly to home
+                        response.sendRedirect(contextPath + "/");
+                    }
                 } catch (IllegalArgumentException | SQLException | UnsupportedProviderException e) {
                     log.debug(
                             "Invalid username detected for user: {}, redirecting to logout",

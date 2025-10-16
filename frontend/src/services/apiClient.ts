@@ -8,6 +8,37 @@ const apiClient = axios.create({
   responseType: 'json',
 });
 
+// Helper function to get JWT token from cookies
+function getJwtTokenFromCookie(): string | null {
+  const cookies = document.cookie.split(';');
+  for (const cookie of cookies) {
+    const [name, value] = cookie.trim().split('=');
+    if (name === 'stirling_jwt') {
+      return value;
+    }
+  }
+  return null;
+}
+
+// ---------- Install request interceptor to add JWT token ----------
+apiClient.interceptors.request.use(
+  (config) => {
+    // Get JWT token from cookie
+    const jwtToken = getJwtTokenFromCookie();
+
+    // If token exists and Authorization header is not already set, add it
+    if (jwtToken && !config.headers.Authorization) {
+      config.headers.Authorization = `Bearer ${jwtToken}`;
+      console.debug('[API Client] Added JWT token from cookie to Authorization header');
+    }
+
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
 // ---------- Install error interceptor ----------
 apiClient.interceptors.response.use(
   (response) => response,

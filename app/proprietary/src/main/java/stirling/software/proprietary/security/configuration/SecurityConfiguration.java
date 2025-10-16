@@ -139,11 +139,15 @@ public class SecurityConfiguration {
                         .exceptionHandling(
                                 exceptionHandling ->
                                         exceptionHandling.authenticationEntryPoint(
-                                                jwtAuthenticationEntryPoint));
+                                                jwtAuthenticationEntryPoint))
+                        .addFilterAfter(
+                                userAuthenticationFilter,
+                                JwtAuthenticationFilter.class); // Run AFTER JWT filter
+            } else {
+                http.addFilterBefore(
+                        userAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
             }
-            http.addFilterBefore(
-                            userAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-                    .addFilterAfter(rateLimitingFilter(), UserAuthenticationFilter.class)
+            http.addFilterAfter(rateLimitingFilter(), UserAuthenticationFilter.class)
                     .addFilterAfter(firstLoginFilter, UsernamePasswordAuthenticationFilter.class);
 
             if (!securityProperties.getCsrfDisabled()) {
@@ -245,6 +249,7 @@ public class SecurityConfiguration {
                                                                 : uri;
                                                 return trimmedUri.startsWith("/login")
                                                         || trimmedUri.startsWith("/oauth")
+                                                        || trimmedUri.startsWith("/oauth2")
                                                         || trimmedUri.startsWith("/saml2")
                                                         || trimmedUri.endsWith(".svg")
                                                         || trimmedUri.startsWith("/register")
@@ -293,33 +298,39 @@ public class SecurityConfiguration {
             // Handle OAUTH2 Logins
             if (securityProperties.isOauth2Active()) {
                 http.oauth2Login(
-                        oauth2 ->
-                                oauth2.loginPage("/oauth2")
-                                        /*
-                                        This Custom handler is used to check if the OAUTH2 user trying to log in, already exists in the database.
-                                        If user exists, login proceeds as usual. If user does not exist, then it is auto-created but only if 'OAUTH2AutoCreateUser'
-                                        is set as true, else login fails with an error message advising the same.
-                                         */
-                                        .successHandler(
-                                                new CustomOAuth2AuthenticationSuccessHandler(
-                                                        loginAttemptService,
-                                                        securityProperties.getOauth2(),
-                                                        userService,
-                                                        jwtService))
-                                        .failureHandler(
-                                                new CustomOAuth2AuthenticationFailureHandler())
-                                        // Add existing Authorities from the database
-                                        .userInfoEndpoint(
-                                                userInfoEndpoint ->
-                                                        userInfoEndpoint
-                                                                .oidcUserService(
-                                                                        new CustomOAuth2UserService(
-                                                                                securityProperties,
-                                                                                userService,
-                                                                                loginAttemptService))
-                                                                .userAuthoritiesMapper(
-                                                                        oAuth2userAuthoritiesMapper))
-                                        .permitAll());
+                        oauth2 -> {
+                            // v2: Don't set loginPage, let default OAuth2 flow handle it
+                            // v1: Use /oauth2 as login page for Thymeleaf templates
+                            if (!v2Enabled) {
+                                oauth2.loginPage("/oauth2");
+                            }
+
+                            oauth2
+                                    /*
+                                    This Custom handler is used to check if the OAUTH2 user trying to log in, already exists in the database.
+                                    If user exists, login proceeds as usual. If user does not exist, then it is auto-created but only if 'OAUTH2AutoCreateUser'
+                                    is set as true, else login fails with an error message advising the same.
+                                     */
+                                    .successHandler(
+                                            new CustomOAuth2AuthenticationSuccessHandler(
+                                                    loginAttemptService,
+                                                    securityProperties.getOauth2(),
+                                                    userService,
+                                                    jwtService))
+                                    .failureHandler(new CustomOAuth2AuthenticationFailureHandler())
+                                    // Add existing Authorities from the database
+                                    .userInfoEndpoint(
+                                            userInfoEndpoint ->
+                                                    userInfoEndpoint
+                                                            .oidcUserService(
+                                                                    new CustomOAuth2UserService(
+                                                                            securityProperties,
+                                                                            userService,
+                                                                            loginAttemptService))
+                                                            .userAuthoritiesMapper(
+                                                                    oAuth2userAuthoritiesMapper))
+                                    .permitAll();
+                        });
             }
             // Handle SAML
             if (securityProperties.isSaml2Active() && runningProOrHigher) {
