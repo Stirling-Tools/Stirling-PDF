@@ -1,6 +1,5 @@
 package stirling.software.SPDF.service;
 
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 import java.io.IOException;

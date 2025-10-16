@@ -703,14 +703,40 @@ class PdfContainer {
   async exportPdf(selected) {
     const pdfDoc = await PDFLib.PDFDocument.create();
     const pageContainers = this.pagesContainer.querySelectorAll('.page-container'); // Select all .page-container elements
+
+    const docPageMap = new Map();
+
+    pageContainers.forEach((container, index) => {
+      if (selected && !window.selectedPages.includes(index + 1)) {
+        return;
+      }
+
+      const img = container.querySelector('img');
+      if (!img?.doc) {
+        return;
+      }
+
+      let entry = docPageMap.get(img.doc);
+      if (!entry) {
+        entry = { indices: [], copiedPages: [], cursor: 0 };
+        docPageMap.set(img.doc, entry);
+      }
+
+      entry.indices.push(img.pageIdx);
+    });
+
+    for (const [doc, entry] of docPageMap.entries()) {
+      entry.copiedPages = await pdfDoc.copyPages(doc, entry.indices);
+    }
+
     for (var i = 0; i < pageContainers.length; i++) {
       if (!selected || window.selectedPages.includes(i + 1)) {
         const img = pageContainers[i].querySelector('img'); // Find the img element within each .page-container
         if (!img) continue;
         let page;
         if (img.doc) {
-          const pages = await pdfDoc.copyPages(img.doc, [img.pageIdx]);
-          page = pages[0];
+          const entry = docPageMap.get(img.doc);
+          page = entry.copiedPages[entry.cursor++];
           pdfDoc.addPage(page);
         } else {
           page = pdfDoc.addPage([img.naturalWidth, img.naturalHeight]);

@@ -260,18 +260,17 @@ public class RearrangePagesPDFController {
                 newPages.add(document.getPage(newPageOrder.get(i)));
             }
 
-            // Remove all the pages from the original document
-            for (int i = document.getNumberOfPages() - 1; i >= 0; i--) {
-                document.removePage(i);
-            }
+            // Create a new document based on the original one
+            PDDocument rearrangedDocument =
+                    pdfDocumentFactory.createNewDocumentBasedOnOldDocument(document);
 
             // Add the pages in the new order
             for (PDPage page : newPages) {
-                document.addPage(page);
+                rearrangedDocument.addPage(page);
             }
 
             return WebResponseUtils.pdfDocToWebResponse(
-                    document,
+                    rearrangedDocument,
                     GeneralUtils.generateFilename(
                             pdfFile.getOriginalFilename(), "_rearranged.pdf"));
         } catch (IOException e) {
