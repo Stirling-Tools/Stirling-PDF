@@ -68,7 +68,7 @@ public class PipelineController {
         postHogService.captureEvent("pipeline_api_event", properties);
 
         try {
-            List<Resource> inputFiles = processor.generateInputFiles(files);
+            Map<String, Resource> inputFiles = processor.generateInputFiles(files);
             if (inputFiles == null || inputFiles.isEmpty()) {
                 return null;
             }

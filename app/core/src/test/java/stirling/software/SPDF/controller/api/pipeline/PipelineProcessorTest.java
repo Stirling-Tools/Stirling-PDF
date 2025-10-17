@@ -57,7 +57,7 @@ class PipelineProcessorTest {
                     }
                 };
 
-        List<Resource> files = List.of(file);
+        Map<String, Resource> files = Map.of(file.getFilename(), file);
 
         when(apiDocService.isMultiInput("/api/v1/filter/filter-page-count")).thenReturn(false);
         when(apiDocService.getExtensionTypes(false, "/api/v1/filter/filter-page-count"))
