@@ -1,11 +1,12 @@
 import { ToolType, useToolOperation } from '../shared/useToolOperation';
 import { useCallback } from 'react';
 import { executeAutomationSequence } from '../../../utils/automationExecutor';
-import { useFlatToolRegistry } from '../../../data/useTranslatedToolRegistry';
+import { useToolRegistry } from '../../../contexts/ToolRegistryContext';
 import { AutomateParameters } from '../../../types/automation';
 
 export function useAutomateOperation() {
-  const toolRegistry = useFlatToolRegistry();
+  const { regularTools } = useToolRegistry();
+  const toolRegistry = regularTools;
 
   const customProcessor = useCallback(async (params: AutomateParameters, files: File[]) => {
     console.log('🚀 Starting automation execution via customProcessor', { params, files });

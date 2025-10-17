@@ -5,7 +5,7 @@
 import { useEffect, useCallback, useRef } from 'react';
 import { ToolId } from '../types/toolId';
 import { parseToolRoute, updateToolRoute, clearToolRoute } from '../utils/urlRouting';
-import { ToolRegistry } from '../data/toolsTaxonomy';
+import { ToolRegistryMap } from '../data/toolsTaxonomy';
 import { firePixel } from '../utils/scarfTracking';
 import { withBasePath } from '../constants/app';
 
@@ -16,7 +16,7 @@ export function useNavigationUrlSync(
   selectedTool: ToolId | null,
   handleToolSelect: (toolId: ToolId) => void,
   clearToolSelection: () => void,
-  registry: ToolRegistry,
+  registry: ToolRegistryMap,
   enableSync: boolean = true
 ) {
   const hasInitialized = useRef(false);
@@ -88,7 +88,7 @@ export function useNavigationUrlSync(
 /**
  * Hook to programmatically navigate to tools with registry support
  */
-export function useToolNavigation(registry: ToolRegistry) {
+export function useToolNavigation(registry: ToolRegistryMap) {
   const navigateToTool = useCallback((toolId: ToolId) => {
     updateToolRoute(toolId, registry);
 
@@ -116,7 +116,7 @@ export function useToolNavigation(registry: ToolRegistry) {
 /**
  * Hook to get current URL route information with registry support
  */
-export function useCurrentRoute(registry: ToolRegistry) {
+export function useCurrentRoute(registry: ToolRegistryMap) {
   const getCurrentRoute = useCallback(() => {
     return parseToolRoute(registry);
   }, [registry]);

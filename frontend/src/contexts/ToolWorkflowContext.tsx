@@ -6,7 +6,7 @@
 import React, { createContext, useContext, useReducer, useCallback, useMemo, useEffect } from 'react';
 import { useToolManagement } from '../hooks/useToolManagement';
 import { PageEditorFunctions } from '../types/pageEditor';
-import { ToolRegistryEntry, ToolRegistry } from '../data/toolsTaxonomy';
+import { ToolRegistryEntry, ToolRegistryMap } from '../data/toolsTaxonomy';
 import { useNavigationActions, useNavigationState } from './NavigationContext';
 import { ToolId, isValidToolId } from '../types/toolId';
 import { WorkbenchType, getDefaultWorkbench, isBaseWorkbench } from '../types/workbench';
@@ -41,7 +41,7 @@ interface ToolWorkflowContextValue extends ToolWorkflowState {
   // Tool management (from hook)
   selectedToolKey: ToolId | null;
   selectedTool: ToolRegistryEntry | null;
-  toolRegistry: Partial<ToolRegistry>;
+  toolRegistry: ToolRegistryMap;
   getSelectedTool: (toolId: ToolId | null) => ToolRegistryEntry | null;
 
   // UI Actions
@@ -315,7 +315,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
   // Filter tools based on search query with fuzzy matching (name, description, id, synonyms)
   const filteredTools = useMemo(() => {
     if (!toolRegistry) return [];
-    return filterToolRegistryByQuery(toolRegistry as ToolRegistry, state.searchQuery);
+    return filterToolRegistryByQuery(toolRegistry, state.searchQuery);
   }, [toolRegistry, state.searchQuery]);
 
   const isPanelVisible = useMemo(() =>
@@ -327,7 +327,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     navigationState.selectedTool,
     handleToolSelect,
     handleBackToTools,
-    toolRegistry as ToolRegistry,
+    toolRegistry,
     true
   );
 

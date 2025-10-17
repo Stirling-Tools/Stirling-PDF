@@ -4,7 +4,7 @@ import { Button, Text, Stack, Group, Card, Progress } from "@mantine/core";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import CheckIcon from "@mui/icons-material/Check";
 import { useFileSelection } from "../../../contexts/FileContext";
-import { useFlatToolRegistry } from "../../../data/useTranslatedToolRegistry";
+import { useToolRegistry } from "../../../contexts/ToolRegistryContext";
 import { AutomationConfig, ExecutionStep } from "../../../types/automation";
 import { AUTOMATION_CONSTANTS, EXECUTION_STATUS } from "../../../constants/automation";
 import { useResourceCleanup } from "../../../utils/resourceManager";
@@ -18,7 +18,8 @@ interface AutomationRunProps {
 export default function AutomationRun({ automation, onComplete, automateOperation }: AutomationRunProps) {
   const { t } = useTranslation();
   const { selectedFiles } = useFileSelection();
-  const toolRegistry = useFlatToolRegistry();
+  const { regularTools } = useToolRegistry();
+  const toolRegistry = regularTools;
   const cleanup = useResourceCleanup();
 
   // Progress tracking state

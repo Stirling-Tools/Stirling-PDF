@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Stack, Text, ScrollArea } from '@mantine/core';
-import { ToolRegistryEntry, getToolSupportsAutomate } from '../../../data/toolsTaxonomy';
+import { ToolRegistryEntry, ToolRegistryMap, getToolSupportsAutomate } from '../../../data/toolsTaxonomy';
 import { useToolSections } from '../../../hooks/useToolSections';
 import { renderToolButtons } from '../shared/renderToolButtons';
 import ToolSearch from '../toolPicker/ToolSearch';
@@ -11,7 +11,7 @@ import { ToolId } from '../../../types/toolId';
 interface ToolSelectorProps {
   onSelect: (toolKey: string) => void;
   excludeTools?: string[];
-  toolRegistry: Record<ToolId, ToolRegistryEntry>; // Pass registry as prop to break circular dependency
+  toolRegistry: ToolRegistryMap; // Pass registry as prop to break circular dependency
   selectedValue?: string; // For showing current selection when editing existing tool
   placeholder?: string; // Custom placeholder text
 }
@@ -54,7 +54,7 @@ export default function ToolSelector({
 
   // Create filtered tool registry for ToolSearch
   const filteredToolRegistry = useMemo(() => {
-    const registry: Record<ToolId, ToolRegistryEntry> = {} as Record<ToolId, ToolRegistryEntry>;
+    const registry: ToolRegistryMap = {};
     baseFilteredTools.forEach(([key, tool]) => {
       registry[key as ToolId] = tool;
     });
@@ -142,10 +142,10 @@ export default function ToolSelector({
   };
 
   // Get display value for selected tool
+  const selectedTool = selectedValue ? toolRegistry[selectedValue as ToolId] : undefined;
+
   const getDisplayValue = () => {
-    if (selectedValue && toolRegistry[selectedValue as ToolId]) {
-      return toolRegistry[selectedValue as ToolId].name;
-    }
+    if (selectedTool) return selectedTool.name;
     return placeholder || t('automate.creation.tools.add', 'Add a tool...');
   };
 
@@ -153,12 +153,18 @@ export default function ToolSelector({
     <div ref={containerRef} className='rounded-xl'>
       {/* Always show the target - either selected tool or search input */}
 
-        {selectedValue && toolRegistry[selectedValue as ToolId] && !opened ? (
+        {selectedTool && !opened ? (
           // Show selected tool in AutomationEntry style when tool is selected and dropdown closed
           <div onClick={handleSearchFocus} style={{ cursor: 'pointer',
            borderRadius: "var(--mantine-radius-lg)" }}>
-            <ToolButton id={'tool' as ToolId} tool={toolRegistry[selectedValue as ToolId]}  isSelected={false}
-          onSelect={()=>{}} rounded={true} disableNavigation={true}></ToolButton>
+            <ToolButton
+              id={'tool' as ToolId}
+              tool={selectedTool}
+              isSelected={false}
+              onSelect={()=>{}}
+              rounded={true}
+              disableNavigation={true}
+            />
           </div>
         ) : (
           // Show search input when no tool selected OR when dropdown is opened

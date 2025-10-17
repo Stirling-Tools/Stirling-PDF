@@ -14,7 +14,8 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
 import WarningIcon from '@mui/icons-material/Warning';
-import { ToolRegistry } from '../../../data/toolsTaxonomy';
+import { ToolRegistryMap } from '../../../data/toolsTaxonomy';
+import { ToolId } from '../../../types/toolId';
 import { getAvailableToExtensions } from '../../../utils/convertUtils';
 interface ToolConfigurationModalProps {
   opened: boolean;
@@ -26,7 +27,7 @@ interface ToolConfigurationModalProps {
   };
   onSave: (parameters: any) => void;
   onCancel: () => void;
-  toolRegistry: ToolRegistry;
+  toolRegistry: ToolRegistryMap;
 }
 
 export default function ToolConfigurationModal({ opened, tool, onSave, onCancel, toolRegistry }: ToolConfigurationModalProps) {
@@ -35,7 +36,7 @@ export default function ToolConfigurationModal({ opened, tool, onSave, onCancel,
   const [parameters, setParameters] = useState<any>({});
 
   // Get tool info from registry
-  const toolInfo = toolRegistry[tool.operation as keyof ToolRegistry];
+  const toolInfo = toolRegistry[tool.operation as ToolId];
   const SettingsComponent = toolInfo?.automationSettings;
 
   // Initialize parameters from tool (which should contain defaults from registry)

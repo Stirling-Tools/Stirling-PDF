@@ -13,7 +13,7 @@ import RemovePages from "../tools/RemovePages";
 import ReorganizePages from "../tools/ReorganizePages";
 import { reorganizePagesOperationConfig } from "../hooks/tools/reorganizePages/useReorganizePagesOperation";
 import RemovePassword from "../tools/RemovePassword";
-import { SubcategoryId, ToolCategoryId, ToolRegistry } from "./toolsTaxonomy";
+import { SubcategoryId, ToolCategoryId, ToolRegistry, ToolRegistryMap } from "./toolsTaxonomy";
 import AdjustContrast from "../tools/AdjustContrast";
 import AdjustContrastSingleStepSettings from "../components/tools/adjustContrast/AdjustContrastSingleStepSettings";
 import { adjustContrastOperationConfig } from "../hooks/tools/adjustContrast/useAdjustContrastOperation";
@@ -109,14 +109,21 @@ import RemoveBlanksSettings from "../components/tools/removeBlanks/RemoveBlanksS
 import AddPageNumbersAutomationSettings from "../components/tools/addPageNumbers/AddPageNumbersAutomationSettings";
 import OverlayPdfsSettings from "../components/tools/overlayPdfs/OverlayPdfsSettings";
 import ValidateSignature from "../tools/ValidateSignature";
+import Automate from "../tools/Automate";
 
 const showPlaceholderTools = true; // Show all tools; grey out unavailable ones in UI
 
 // Convert tool supported file formats
 import { CONVERT_SUPPORTED_FORMATS } from "../constants/convertSupportedFornats";
 
+export interface TranslatedToolCatalog {
+  regularTools: ToolRegistryMap;
+  superTools: ToolRegistryMap;
+  linkTools: ToolRegistryMap;
+}
+
 // Hook to get the translated tool registry
-export function useFlatToolRegistry(): ToolRegistry {
+export function useTranslatedToolCatalog(): TranslatedToolCatalog {
   const { t } = useTranslation();
 
   return useMemo(() => {
@@ -126,6 +133,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         icon: <LocalIcon icon="dashboard-customize-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.multiTool.title", "Multi-Tool"),
         component: null,
+        kind: 'super',
         workbench: "pageEditor",
         description: t("home.multiTool.desc", "Use multiple tools on a single PDF document"),
         categoryId: ToolCategoryId.RECOMMENDED_TOOLS,
@@ -298,6 +306,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         icon: <LocalIcon icon="article-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.read.title", "Read"),
         component: null,
+        kind: 'super',
         workbench: "viewer",
         description: t(
           "home.read.desc",
@@ -564,7 +573,8 @@ export function useFlatToolRegistry(): ToolRegistry {
       automate: {
         icon: <LocalIcon icon="automation-outline" width="1.5rem" height="1.5rem" />,
         name: t("home.automate.title", "Automate"),
-        component: React.lazy(() => import("../tools/Automate")),
+        component: Automate,
+        kind: 'super',
         description: t(
           "home.automate.desc",
           "Build multi-step workflows by chaining together PDF actions. Ideal for recurring tasks."
@@ -702,6 +712,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         icon: <LocalIcon icon="open-in-new-rounded" width="1.5rem" height="1.5rem" style={{ color: "#2F7BF6" }} />,
         name: t("home.devApi.title", "API"),
         component: null,
+        kind: 'link',
         description: t("home.devApi.desc", "Link to API documentation"),
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.DEVELOPER_TOOLS,
@@ -714,6 +725,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         icon: <LocalIcon icon="open-in-new-rounded" width="1.5rem" height="1.5rem" style={{ color: "#2F7BF6" }} />,
         name: t("home.devFolderScanning.title", "Automated Folder Scanning"),
         component: null,
+        kind: 'link',
         description: t("home.devFolderScanning.desc", "Link to automated folder scanning guide"),
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.DEVELOPER_TOOLS,
@@ -726,6 +738,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         icon: <LocalIcon icon="open-in-new-rounded" width="1.5rem" height="1.5rem" style={{ color: "#2F7BF6" }} />,
         name: t("home.devSsoGuide.title", "SSO Guide"),
         component: null,
+        kind: 'link',
         description: t("home.devSsoGuide.desc", "Link to SSO guide"),
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.DEVELOPER_TOOLS,
@@ -738,6 +751,7 @@ export function useFlatToolRegistry(): ToolRegistry {
         icon: <LocalIcon icon="open-in-new-rounded" width="1.5rem" height="1.5rem" style={{ color: "#2F7BF6" }} />,
         name: t("home.devAirgapped.title", "Air-gapped Setup"),
         component: null,
+        kind: 'link',
         description: t("home.devAirgapped.desc", "Link to air-gapped setup guide"),
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.DEVELOPER_TOOLS,
@@ -829,15 +843,45 @@ export function useFlatToolRegistry(): ToolRegistry {
       },
     };
 
-    if (showPlaceholderTools) {
-      return allTools;
-    }
-    const filteredTools = Object.keys(allTools)
-      .filter((key) => allTools[key as ToolId].component !== null || allTools[key as ToolId].link)
-      .reduce((obj, key) => {
-        obj[key as ToolId] = allTools[key as ToolId];
-        return obj;
-      }, {} as ToolRegistry);
-    return filteredTools;
+    const regularTools: ToolRegistryMap = {};
+    const superTools: ToolRegistryMap = {};
+    const linkTools: ToolRegistryMap = {};
+
+    Object.entries(allTools).forEach(([key, entry]) => {
+      const toolId = key as ToolId;
+      const kind = entry.kind ?? (entry.link ? 'link' : 'regular');
+
+      switch (kind) {
+        case 'super':
+          superTools[toolId] = entry;
+          break;
+        case 'link':
+          linkTools[toolId] = entry;
+          break;
+        default:
+          regularTools[toolId] = entry;
+          break;
+      }
+    });
+
+    const filterTools = (registry: ToolRegistryMap): ToolRegistryMap => {
+      if (showPlaceholderTools) {
+        return { ...registry };
+      }
+
+      return (Object.keys(registry) as ToolId[]).reduce((acc, id) => {
+        const entry = registry[id];
+        if (entry && (entry.component !== null || entry.link)) {
+          acc[id] = entry;
+        }
+        return acc;
+      }, {} as ToolRegistryMap);
+    };
+
+    return {
+      regularTools: filterTools(regularTools),
+      superTools: filterTools(superTools),
+      linkTools: filterTools(linkTools),
+    };
   }, [t]); // Only re-compute when translations change
 }
