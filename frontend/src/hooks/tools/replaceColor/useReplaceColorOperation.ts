@@ -33,6 +33,6 @@ export const useReplaceColorOperation = () => {
 
   return useToolOperation<ReplaceColorParameters>({
     ...replaceColorOperationConfig,
-    getErrorMessage: createStandardErrorHandler(t('replaceColor.error.failed', 'An error occurred while processing the color replacement.'))
+    getErrorMessage: createStandardErrorHandler(t('replaceColor.error.failed', 'An error occurred while processing the colour replacement.'))
   });
 };
