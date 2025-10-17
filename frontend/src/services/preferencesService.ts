@@ -8,6 +8,7 @@ export interface UserPreferences {
   theme: ThemeMode;
   toolPanelModePromptSeen: boolean;
   showLegacyToolDescriptions: boolean;
+  hasCompletedOnboarding: boolean;
 }
 
 export const DEFAULT_PREFERENCES: UserPreferences = {
@@ -17,6 +18,7 @@ export const DEFAULT_PREFERENCES: UserPreferences = {
   theme: getSystemTheme(),
   toolPanelModePromptSeen: false,
   showLegacyToolDescriptions: false,
+  hasCompletedOnboarding: false,
 };
 
 const STORAGE_KEY = 'stirlingpdf_preferences';

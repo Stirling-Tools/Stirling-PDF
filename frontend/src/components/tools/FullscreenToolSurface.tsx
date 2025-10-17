@@ -94,6 +94,7 @@ const FullscreenToolSurface = ({
       style={style}
       role="region"
       aria-label={t('toolPanel.fullscreen.heading', 'All tools (fullscreen view)')}
+      data-tour="tool-panel"
     >
       <div
         ref={surfaceRef}

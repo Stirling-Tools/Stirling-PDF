@@ -247,6 +247,7 @@ const FileEditorThumbnail = ({
       ref={fileElementRef}
       data-file-id={file.id}
       data-testid="file-thumbnail"
+      data-tour="file-card-checkbox"
       data-selected={isSelected}
       data-supported={isSupported}
       className={`${styles.card} w-[18rem] h-[22rem] select-none flex flex-col shadow-sm transition-all relative`}
@@ -293,11 +294,12 @@ const FileEditorThumbnail = ({
         {/* Action buttons group */}
         <div className={styles.headerActions}>
           {/* Pin/Unpin icon */}
-          <Tooltip label={isPinned ? t('unpin', 'Unpin') : t('pin', 'Pin')}>
+          <Tooltip label={isPinned ? t('unpin', 'Unpin File (replace after tool run)') : t('pin', 'Pin File (keep active after tool run)')}>
             <ActionIcon
-              aria-label={isPinned ? t('unpin', 'Unpin') : t('pin', 'Pin')}
+              aria-label={isPinned ? t('unpin', 'Unpin File (replace after tool run)') : t('pin', 'Pin File (keep active after tool run)')}
               variant="subtle"
               className={isPinned ? styles.pinned : styles.headerIconButton}
+              data-tour="file-card-pin"
               onClick={(e) => {
                 e.stopPropagation();
                 if (actualFile) {
