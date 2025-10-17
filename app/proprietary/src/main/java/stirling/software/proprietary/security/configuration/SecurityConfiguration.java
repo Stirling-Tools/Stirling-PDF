@@ -299,18 +299,18 @@ public class SecurityConfiguration {
             if (securityProperties.isOauth2Active()) {
                 http.oauth2Login(
                         oauth2 -> {
-                            // v2: Don't set loginPage, let default OAuth2 flow handle it
                             // v1: Use /oauth2 as login page for Thymeleaf templates
                             if (!v2Enabled) {
                                 oauth2.loginPage("/oauth2");
                             }
 
+                            // v2: Don't set loginPage, let default OAuth2 flow handle it
                             oauth2
                                     /*
-                                    This Custom handler is used to check if the OAUTH2 user trying to log in, already exists in the database.
-                                    If user exists, login proceeds as usual. If user does not exist, then it is auto-created but only if 'OAUTH2AutoCreateUser'
-                                    is set as true, else login fails with an error message advising the same.
-                                     */
+                                       This Custom handler is used to check if the OAUTH2 user trying to log in, already exists in the database.
+                                       If user exists, login proceeds as usual. If user does not exist, then it is auto-created but only if 'OAUTH2AutoCreateUser'
+                                       is set as true, else login fails with an error message advising the same.
+                                    */
                                     .successHandler(
                                             new CustomOAuth2AuthenticationSuccessHandler(
                                                     loginAttemptService,

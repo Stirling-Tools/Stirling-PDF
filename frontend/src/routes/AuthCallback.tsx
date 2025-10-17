@@ -6,8 +6,8 @@ import { useAuth } from '../auth/UseSession'
  * OAuth Callback Handler
  *
  * This component is rendered after OAuth providers (GitHub, Google, etc.) redirect back.
- * The JWT has already been set as an HttpOnly cookie by the Spring backend.
- * We just need to refresh the session state and redirect to the home page.
+ * The JWT is passed in the URL fragment (#access_token=...) by the Spring backend.
+ * We extract it, store in localStorage, and redirect to the home page.
  */
 export default function AuthCallback() {
   const navigate = useNavigate()
@@ -18,13 +18,30 @@ export default function AuthCallback() {
       try {
         console.log('[AuthCallback] Handling OAuth callback...')
 
-        // JWT already set as cookie by backend
+        // Extract JWT from URL fragment (#access_token=...)
+        const hash = window.location.hash.substring(1) // Remove '#'
+        const params = new URLSearchParams(hash)
+        const token = params.get('access_token')
+
+        if (!token) {
+          console.error('[AuthCallback] No access_token in URL fragment')
+          navigate('/login', {
+            replace: true,
+            state: { error: 'OAuth login failed - no token received.' }
+          })
+          return
+        }
+
+        // Store JWT in localStorage
+        localStorage.setItem('stirling_jwt', token)
+        console.log('[AuthCallback] JWT stored in localStorage')
+
         // Refresh session to load user info into state
         await refreshSession()
 
         console.log('[AuthCallback] Session refreshed, redirecting to home')
 
-        // Redirect to home page
+        // Clear the hash from URL and redirect to home page
         navigate('/', { replace: true })
       } catch (error) {
         console.error('[AuthCallback] Error:', error)

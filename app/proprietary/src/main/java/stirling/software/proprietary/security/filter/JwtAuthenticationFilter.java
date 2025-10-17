@@ -118,7 +118,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 log.debug("JWT token validated successfully");
             } catch (AuthenticationFailureException e) {
                 log.warn("JWT validation failed: {}", e.getMessage());
-                jwtService.clearToken(response);
                 handleAuthenticationFailure(request, response, e);
                 return;
             }
