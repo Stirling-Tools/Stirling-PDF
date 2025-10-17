@@ -30,7 +30,6 @@ interface PageThumbnailProps {
   getBoxSelection?: () => string[];
   activeId: string | null;
   isOver: boolean;
-  dropSide: 'left' | 'right' | null;
   pageRefs: React.MutableRefObject<Map<string, HTMLDivElement>>;
   dragHandleProps?: any;
   onReorderPages: (sourcePageNumber: number, targetIndex: number, selectedPageIds?: string[]) => void;
@@ -65,7 +64,6 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
   getBoxSelection,
   activeId,
   isOver,
-  dropSide,
   pageRefs,
   dragHandleProps,
   onReorderPages,
@@ -304,22 +302,6 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseLeave}
     >
-      {/* Drop indicator - bar on left or right edge */}
-      {isOver && !isDragging && dropSide && (
-        <div
-          style={{
-            position: 'absolute',
-            [dropSide]: '-4px',
-            top: '0',
-            width: '4px',
-            height: '100%',
-            backgroundColor: '#22c55e',
-            borderRadius: '2px',
-            zIndex: 1000,
-            pointerEvents: 'none'
-          }}
-        />
-      )}
       {
         <div
           className={styles.checkboxContainer}

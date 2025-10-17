@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState, useCallback } from 'react';
+import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react';
 import { Box } from '@mantine/core';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { GRID_CONSTANTS } from './constants';
@@ -29,7 +29,7 @@ interface DragDropGridProps<T extends DragDropItem> {
   selectionMode: boolean;
   isAnimating: boolean;
   onReorderPages: (sourcePageNumber: number, targetIndex: number, selectedPageIds?: string[]) => void;
-  renderItem: (item: T, index: number, refs: React.MutableRefObject<Map<string, HTMLDivElement>>, boxSelectedIds: string[], clearBoxSelection: () => void, getBoxSelection: () => string[], activeId: string | null, isOver: boolean, dropSide: 'left' | 'right' | null, dragHandleProps?: any) => React.ReactNode;
+  renderItem: (item: T, index: number, refs: React.MutableRefObject<Map<string, HTMLDivElement>>, boxSelectedIds: string[], clearBoxSelection: () => void, getBoxSelection: () => string[], activeId: string | null, isOver: boolean, dragHandleProps?: any) => React.ReactNode;
   renderSplitMarker?: (item: T, index: number) => React.ReactNode;
   getThumbnailData?: (itemId: string) => { src: string; rotation: number } | null;
 }
@@ -44,13 +44,11 @@ interface DraggableItemProps<T extends DragDropItem> {
   getBoxSelection: () => string[];
   activeId: string | null;
   getThumbnailData?: (itemId: string) => { src: string; rotation: number } | null;
-  renderItem: (item: T, index: number, refs: React.MutableRefObject<Map<string, HTMLDivElement>>, boxSelectedIds: string[], clearBoxSelection: () => void, getBoxSelection: () => string[], activeId: string | null, isOver: boolean, dropSide: 'left' | 'right' | null, dragHandleProps?: any) => React.ReactNode;
+  onUpdateDropTarget: (itemId: string | null) => void;
+  renderItem: (item: T, index: number, refs: React.MutableRefObject<Map<string, HTMLDivElement>>, boxSelectedIds: string[], clearBoxSelection: () => void, getBoxSelection: () => string[], activeId: string | null, isOver: boolean, dragHandleProps?: any) => React.ReactNode;
 }
 
-const DraggableItem = <T extends DragDropItem>({ item, index, itemRefs, boxSelectedPageIds, clearBoxSelection, getBoxSelection, activeId, getThumbnailData, renderItem }: DraggableItemProps<T>) => {
-  const elementRef = React.useRef<HTMLDivElement | null>(null);
-  const [dropSide, setDropSide] = React.useState<'left' | 'right' | null>(null);
-
+const DraggableItem = <T extends DragDropItem>({ item, index, itemRefs, boxSelectedPageIds, clearBoxSelection, getBoxSelection, activeId, getThumbnailData, renderItem, onUpdateDropTarget }: DraggableItemProps<T>) => {
   const { attributes, listeners, setNodeRef: setDraggableRef } = useDraggable({
     id: item.id,
     data: {
@@ -80,33 +78,23 @@ const DraggableItem = <T extends DragDropItem>({ item, index, itemRefs, boxSelec
     data: { index, pageNumber: index + 1 }
   });
 
-  // Track cursor position when hovered to determine drop side
+  // Notify parent when hover state changes
   React.useEffect(() => {
-    if (!isOver || !elementRef.current) {
-      setDropSide(null);
-      return;
+    if (isOver) {
+      onUpdateDropTarget(item.id);
+    } else {
+      onUpdateDropTarget(null);
     }
-
-    const handlePointerMove = (e: PointerEvent) => {
-      if (!elementRef.current) return;
-      const rect = elementRef.current.getBoundingClientRect();
-      const midpoint = rect.left + rect.width / 2;
-      setDropSide(e.clientX < midpoint ? 'left' : 'right');
-    };
-
-    window.addEventListener('pointermove', handlePointerMove);
-    return () => window.removeEventListener('pointermove', handlePointerMove);
-  }, [isOver]);
+  }, [isOver, item.id, onUpdateDropTarget]);
 
   const setNodeRef = useCallback((element: HTMLDivElement | null) => {
-    elementRef.current = element;
     setDraggableRef(element);
     setDroppableRef(element);
   }, [setDraggableRef, setDroppableRef]);
 
   return (
     <>
-      {renderItem(item, index, itemRefs, boxSelectedPageIds, clearBoxSelection, getBoxSelection, activeId, isOver, dropSide, { ref: setNodeRef, ...attributes, ...listeners })}
+      {renderItem(item, index, itemRefs, boxSelectedPageIds, clearBoxSelection, getBoxSelection, activeId, isOver, { ref: setNodeRef, ...attributes, ...listeners })}
     </>
   );
 };
@@ -132,11 +120,114 @@ const DragDropGrid = <T extends DragDropItem>({
   // Drag state
   const [activeId, setActiveId] = useState<string | null>(null);
   const [dragPreview, setDragPreview] = useState<{ src: string; rotation: number } | null>(null);
+  const [hoveredItemId, setHoveredItemId] = useState<string | null>(null);
+  const [dropSide, setDropSide] = useState<'left' | 'right' | null>(null);
+  const lastCursorXRef = useRef<number | null>(null);
 
   // Configure sensors for dnd-kit
   const sensors = useSensors(
     useSensor(PointerSensor)
   );
+
+  // Throttled pointer move handler for drop indicator
+  // Calculate drop position based on cursor location relative to ALL items, not just hovered item
+  useEffect(() => {
+    if (!activeId) {
+      setDropSide(null);
+      setHoveredItemId(null);
+      return;
+    }
+
+    let rafId: number | null = null;
+
+    const handlePointerMove = (e: PointerEvent) => {
+      // Use the actual cursor position (pointer coordinates)
+      const cursorX = e.clientX;
+      const cursorY = e.clientY;
+
+      if (rafId === null) {
+        rafId = requestAnimationFrame(() => {
+          // Step 1: Group items by rows and find closest row to cursor
+          const rows = new Map<number, Array<{ id: string; element: HTMLDivElement; rect: DOMRect }>>();
+
+          itemRefs.current.forEach((element, itemId) => {
+            // Skip the item being dragged
+            if (itemId === activeId) return;
+
+            const rect = element.getBoundingClientRect();
+            const rowCenter = rect.top + rect.height / 2;
+
+            // Group items by their vertical center position (items in same row will have similar centers)
+            let foundRow = false;
+            rows.forEach((items, rowY) => {
+              if (Math.abs(rowY - rowCenter) < rect.height / 4) {
+                items.push({ id: itemId, element, rect });
+                foundRow = true;
+              }
+            });
+
+            if (!foundRow) {
+              rows.set(rowCenter, [{ id: itemId, element, rect }]);
+            }
+          });
+
+          // Step 2: Find the closest row to cursor Y position
+          let closestRowY = 0;
+          let closestRowDistance = Infinity;
+          rows.forEach((items, rowY) => {
+            const distance = Math.abs(cursorY - rowY);
+            if (distance < closestRowDistance) {
+              closestRowDistance = distance;
+              closestRowY = rowY;
+            }
+          });
+
+          const closestRow = rows.get(closestRowY);
+          if (!closestRow || closestRow.length === 0) {
+            setHoveredItemId(null);
+            setDropSide(null);
+            rafId = null;
+            return;
+          }
+
+          // Step 3: Within the closest row, find the closest edge to cursor X position
+          let closestItemId: string | null = null;
+          let closestDistance = Infinity;
+          let closestSide: 'left' | 'right' = 'left';
+
+          closestRow.forEach(({ id, rect }) => {
+            // Calculate distance to left and right edges
+            const distanceToLeft = Math.abs(cursorX - rect.left);
+            const distanceToRight = Math.abs(cursorX - rect.right);
+
+            // Find the closest edge
+            if (distanceToLeft < closestDistance) {
+              closestDistance = distanceToLeft;
+              closestItemId = id;
+              closestSide = 'left';
+            }
+            if (distanceToRight < closestDistance) {
+              closestDistance = distanceToRight;
+              closestItemId = id;
+              closestSide = 'right';
+            }
+          });
+
+          setHoveredItemId(closestItemId);
+          setDropSide(closestSide);
+          rafId = null;
+        });
+      }
+    };
+
+    window.addEventListener('pointermove', handlePointerMove, { passive: true });
+    return () => {
+      window.removeEventListener('pointermove', handlePointerMove);
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId);
+      }
+    };
+  }, [activeId]);
 
   // Responsive grid configuration
   const [itemsPerRow, setItemsPerRow] = useState(4);
@@ -300,14 +391,19 @@ const DragDropGrid = <T extends DragDropItem>({
   const handleDragCancel = useCallback(() => {
     setActiveId(null);
     setDragPreview(null);
+    setHoveredItemId(null);
+    setDropSide(null);
   }, []);
 
   // Handle drag end
   const handleDragEnd = useCallback((event: DragEndEvent) => {
     const { active, over } = event;
 
+    const finalDropSide = dropSide;
     setActiveId(null);
     setDragPreview(null);
+    setHoveredItemId(null);
+    setDropSide(null);
 
     if (!over || active.id === over.id) {
       return;
@@ -322,18 +418,9 @@ const DragDropGrid = <T extends DragDropItem>({
     const sourcePageNumber = activeData.pageNumber;
     let targetIndex = overData.index;
 
-    // Calculate drop position from final cursor position
-    const overElement = itemRefs.current.get(over.id as string);
-    if (overElement) {
-      const activatorEvent = (event as any).activatorEvent;
-      const cursorX = activatorEvent ? activatorEvent.clientX + (event.delta?.x || 0) : null;
-      if (cursorX) {
-        const rect = overElement.getBoundingClientRect();
-        const midpoint = rect.left + rect.width / 2;
-        if (cursorX >= midpoint) {
-          targetIndex = targetIndex + 1;
-        }
-      }
+    // Use the final drop side to adjust target index
+    if (finalDropSide === 'right') {
+      targetIndex = targetIndex + 1;
     }
 
     // Check if this page is box-selected
@@ -347,7 +434,7 @@ const DragDropGrid = <T extends DragDropItem>({
     if (pagesToDrag) {
       clearBoxSelection();
     }
-  }, [boxSelectedPageIds, onReorderPages, clearBoxSelection]);
+  }, [boxSelectedPageIds, dropSide, onReorderPages, clearBoxSelection]);
 
   // Calculate optimal width for centering
   const remToPx = parseFloat(getComputedStyle(document.documentElement).fontSize);
@@ -367,6 +454,37 @@ const DragDropGrid = <T extends DragDropItem>({
     pointerEvents: 'none' as const,
     zIndex: 1000,
   } : null;
+
+  // Calculate drop indicator position
+  const dropIndicatorStyle = useMemo(() => {
+    if (!hoveredItemId || !dropSide || !activeId) return null;
+
+    const element = itemRefs.current.get(hoveredItemId);
+    const container = containerRef.current;
+    if (!element || !container) return null;
+
+    const itemRect = element.getBoundingClientRect();
+    const containerRect = container.getBoundingClientRect();
+
+    const top = itemRect.top - containerRect.top;
+    const height = itemRect.height;
+    const left = dropSide === 'left'
+      ? itemRect.left - containerRect.left - itemGap / 2
+      : itemRect.right - containerRect.left + itemGap / 2;
+
+    return {
+      position: 'absolute' as const,
+      left: `${left}px`,
+      top: `${top}px`,
+      width: '4px',
+      height: `${height}px`,
+      backgroundColor: 'rgba(96, 165, 250, 0.8)',
+      borderRadius: '2px',
+      boxShadow: '0 0 8px 2px rgba(96, 165, 250, 0.6)',
+      zIndex: 1001,
+      pointerEvents: 'none' as const,
+    };
+  }, [hoveredItemId, dropSide, activeId, itemGap]);
 
   return (
     <DndContext
@@ -390,6 +508,9 @@ const DragDropGrid = <T extends DragDropItem>({
       >
         {/* Selection box overlay */}
         {selectionBoxStyle && <div style={selectionBoxStyle} />}
+
+        {/* Global drop indicator */}
+        {dropIndicatorStyle && <div style={dropIndicatorStyle} />}
 
       <div
         style={{
@@ -440,6 +561,7 @@ const DragDropGrid = <T extends DragDropItem>({
                       getBoxSelection={getBoxSelection}
                       activeId={activeId}
                       getThumbnailData={getThumbnailData}
+                      onUpdateDropTarget={setHoveredItemId}
                       renderItem={renderItem}
                     />
                   );

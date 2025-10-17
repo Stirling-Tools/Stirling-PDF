@@ -304,25 +304,31 @@ const TopControls = ({
     });
   }, [setCurrentView]);
 
+  // Memoize pageEditorState object to prevent recreating on every render
+  const pageEditorState = useMemo<PageEditorState>(() => ({
+    files: pageEditorFiles,
+    selectedCount,
+    totalCount,
+    onToggleSelection: toggleFileSelection,
+    onReorder: handleReorder,
+    fileColorMap,
+  }), [pageEditorFiles, selectedCount, totalCount, toggleFileSelection, handleReorder, fileColorMap]);
+
+  // Memoize view options to prevent SegmentedControl re-renders
+  const viewOptions = useMemo(() => createViewOptions(
+    currentView,
+    switchingTo,
+    activeFiles,
+    currentFileIndex,
+    onFileSelect,
+    pageEditorState
+  ), [currentView, switchingTo, activeFiles, currentFileIndex, onFileSelect, pageEditorState]);
+
   return (
     <div className="absolute left-0 w-full top-0 z-[100] pointer-events-none">
       <div className="flex justify-center mt-[0.5rem]">
         <SegmentedControl
-          data={createViewOptions(
-            currentView,
-            switchingTo,
-            activeFiles,
-            currentFileIndex,
-            onFileSelect,
-            {
-              files: pageEditorFiles,
-              selectedCount,
-              totalCount,
-              onToggleSelection: toggleFileSelection,
-              onReorder: handleReorder,
-              fileColorMap,
-            }
-          )}
+          data={viewOptions}
           value={currentView}
           onChange={handleViewChange}
           color="blue"

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { preferencesService, UserPreferences, DEFAULT_PREFERENCES } from '../services/preferencesService';
 
 interface PreferencesContextValue {
@@ -50,15 +50,15 @@ export const PreferencesProvider: React.FC<{ children: React.ReactNode }> = ({ c
       setPreferences(DEFAULT_PREFERENCES);
   }, []);
 
+  const value = React.useMemo(() => ({
+    preferences,
+    updatePreference,
+    resetPreferences,
+    isLoading,
+  }), [preferences, updatePreference, resetPreferences, isLoading]);
+
   return (
-    <PreferencesContext.Provider
-      value={{
-        preferences,
-        updatePreference,
-        resetPreferences,
-        isLoading,
-      }}
-    >
+    <PreferencesContext.Provider value={value}>
       {children}
     </PreferencesContext.Provider>
   );

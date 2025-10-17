@@ -974,7 +974,7 @@ const PageEditor = ({
                 rotation: page.rotation || 0
               };
             }}
-            renderItem={(page, index, refs, boxSelectedIds, clearBoxSelection, getBoxSelection, activeId, isOver, dropSide, dragHandleProps) => {
+            renderItem={(page, index, refs, boxSelectedIds, clearBoxSelection, getBoxSelection, activeId, isOver, dragHandleProps) => {
               const fileColorIndex = page.originalFileId ? fileColorIndexMap.get(page.originalFileId) ?? 0 : 0;
               const isBoxSelected = boxSelectedIds.includes(page.id);
               return (
@@ -995,7 +995,6 @@ const PageEditor = ({
                   getBoxSelection={getBoxSelection}
                   activeId={activeId}
                   isOver={isOver}
-                  dropSide={dropSide}
                   pageRefs={refs}
                   dragHandleProps={dragHandleProps}
                   onReorderPages={handleReorderPages}
