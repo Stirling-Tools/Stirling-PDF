@@ -304,7 +304,7 @@ public class PipelineDirectoryProcessor {
             List<File> filesToProcess, PipelineConfig config, Path dir, Path processingDir)
             throws IOException {
         try {
-            List<Resource> inputFiles =
+            Map<String, Resource> inputFiles =
                     processor.generateInputFiles(filesToProcess.toArray(new File[0]));
             if (inputFiles == null || inputFiles.isEmpty()) {
                 return;
