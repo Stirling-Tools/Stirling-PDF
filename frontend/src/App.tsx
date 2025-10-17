@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { RainbowThemeProvider } from "./components/shared/RainbowThemeProvider";
 import { FileContextProvider } from "./contexts/FileContext";
 import { NavigationProvider } from "./contexts/NavigationContext";
+import { ToolRegistryProvider } from "./contexts/ToolRegistryProvider";
 import { FilesModalProvider } from "./contexts/FilesModalContext";
 import { ToolWorkflowProvider } from "./contexts/ToolWorkflowContext";
 import { HotkeyProvider } from "./contexts/HotkeyContext";
@@ -44,23 +45,25 @@ export default function App() {
         <RainbowThemeProvider>
           <ErrorBoundary>
             <FileContextProvider enableUrlSync={true} enablePersistence={true}>
-              <NavigationProvider>
-                <FilesModalProvider>
-                  <ToolWorkflowProvider>
-                    <HotkeyProvider>
-                      <SidebarProvider>
-                        <ViewerProvider>
-                          <SignatureProvider>
-                            <RightRailProvider>
-                              <HomePage />
-                            </RightRailProvider>
-                          </SignatureProvider>
-                        </ViewerProvider>
-                      </SidebarProvider>
-                    </HotkeyProvider>
-                  </ToolWorkflowProvider>
-                </FilesModalProvider>
-              </NavigationProvider>
+              <ToolRegistryProvider>
+                <NavigationProvider>
+                  <FilesModalProvider>
+                    <ToolWorkflowProvider>
+                      <HotkeyProvider>
+                        <SidebarProvider>
+                          <ViewerProvider>
+                            <SignatureProvider>
+                              <RightRailProvider>
+                                <HomePage />
+                              </RightRailProvider>
+                            </SignatureProvider>
+                          </ViewerProvider>
+                        </SidebarProvider>
+                      </HotkeyProvider>
+                    </ToolWorkflowProvider>
+                  </FilesModalProvider>
+                </NavigationProvider>
+              </ToolRegistryProvider>
             </FileContextProvider>
           </ErrorBoundary>
         </RainbowThemeProvider>

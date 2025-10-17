@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useReducer, useCallback } from 'react';
 import { WorkbenchType, getDefaultWorkbench } from '../types/workbench';
 import { ToolId, isValidToolId } from '../types/toolId';
-import { useFlatToolRegistry } from '../data/useTranslatedToolRegistry';
+import { useToolRegistry } from './ToolRegistryContext';
 
 /**
  * NavigationContext - Complete navigation management system
@@ -107,7 +107,7 @@ export const NavigationProvider: React.FC<{
   enableUrlSync?: boolean;
 }> = ({ children }) => {
   const [state, dispatch] = useReducer(navigationReducer, initialState);
-  const toolRegistry = useFlatToolRegistry();
+  const { getToolById } = useToolRegistry();
   const unsavedChangesCheckerRef = React.useRef<(() => boolean) | null>(null);
 
   const actions: NavigationContextActions = {
@@ -222,13 +222,13 @@ export const NavigationProvider: React.FC<{
 
       // Look up the tool in the registry to get its proper workbench
 
-      const tool = isValidToolId(toolId)? toolRegistry[toolId] : null;
+      const tool = isValidToolId(toolId)? getToolById(toolId) : null;
       const workbench = tool ? (tool.workbench || getDefaultWorkbench()) : getDefaultWorkbench();
 
       // Validate toolId and convert to ToolId type
       const validToolId = isValidToolId(toolId) ? toolId : null;
       dispatch({ type: 'SET_TOOL_AND_WORKBENCH', payload: { toolId: validToolId, workbench } });
-    }, [toolRegistry])
+    }, [getToolById])
   };
 
   const stateValue: NavigationContextStateValue = {

@@ -36,6 +36,8 @@ export enum ToolCategoryId {
   RECOMMENDED_TOOLS = 'recommendedTools'
 }
 
+export type ToolKind = 'regular' | 'super' | 'link';
+
 export type ToolRegistryEntry = {
 	icon: React.ReactNode;
 	name: string;
@@ -47,7 +49,7 @@ export type ToolRegistryEntry = {
 	supportedFormats?: string[];
 	endpoints?: string[];
 	link?: string;
-	type?: string;
+	kind?: ToolKind;
 	// Workbench type for navigation
 	workbench?: WorkbenchType;
 	// Operation configuration for automation
@@ -61,6 +63,7 @@ export type ToolRegistryEntry = {
 }
 
 export type ToolRegistry = Record<ToolId, ToolRegistryEntry>;
+export type ToolRegistryMap = Partial<ToolRegistry>;
 
 export const SUBCATEGORY_ORDER: SubcategoryId[] = [
   SubcategoryId.SIGNING,
@@ -125,7 +128,7 @@ export const getSubcategoryColor = (subcategory: SubcategoryId): string => SUBCA
 
 
 
-export const getAllEndpoints = (registry: ToolRegistry): string[] => {
+export const getAllEndpoints = (registry: ToolRegistryMap): string[] => {
   const lists: string[][] = [];
   Object.values(registry).forEach(entry => {
     if (entry.endpoints && entry.endpoints.length > 0) {
@@ -146,7 +149,7 @@ export const getConversionEndpoints = (extensionToEndpoint: Record<string, Recor
 };
 
 export const getAllApplicationEndpoints = (
-  registry: ToolRegistry,
+  registry: ToolRegistryMap,
   extensionToEndpoint?: Record<string, Record<string, string>>
 ): string[] => {
   const toolEp = getAllEndpoints(registry);
@@ -177,7 +180,7 @@ export const getToolUrlPath = (toolId: string): string => {
 /**
  * Check if a tool ID exists in the registry
  */
-export const isValidToolId = (toolId: string, registry: ToolRegistry): boolean => {
+export const isValidToolId = (toolId: string, registry: ToolRegistryMap): boolean => {
   return toolId in registry;
 };
 

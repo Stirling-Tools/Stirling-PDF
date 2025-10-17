@@ -1,5 +1,6 @@
 import axios from 'axios';
-import { ToolRegistry } from '../data/toolsTaxonomy';
+import { ToolRegistryMap } from '../data/toolsTaxonomy';
+import { ToolId } from '../types/toolId';
 import { AUTOMATION_CONSTANTS } from '../constants/automation';
 import { AutomationFileProcessor } from './automationFileProcessor';
 import { ToolType } from '../hooks/tools/shared/useToolOperation';
@@ -134,7 +135,7 @@ export const executeToolOperation = async (
   operationName: string,
   parameters: any,
   files: File[],
-  toolRegistry: ToolRegistry
+  toolRegistry: ToolRegistryMap
 ): Promise<File[]> => {
   return executeToolOperationWithPrefix(operationName, parameters, files, toolRegistry, AUTOMATION_CONSTANTS.FILE_PREFIX);
 };
@@ -146,10 +147,10 @@ export const executeToolOperationWithPrefix = async (
   operationName: string,
   parameters: any,
   files: File[],
-  toolRegistry: ToolRegistry,
+  toolRegistry: ToolRegistryMap,
   filePrefix: string = AUTOMATION_CONSTANTS.FILE_PREFIX
 ): Promise<File[]> => {
-  const config = toolRegistry[operationName as keyof ToolRegistry]?.operationConfig;
+  const config = toolRegistry[operationName as ToolId]?.operationConfig;
   if (!config) {
     throw new Error(`Tool operation not supported: ${operationName}`);
   }
@@ -180,7 +181,7 @@ export const executeToolOperationWithPrefix = async (
 export const executeAutomationSequence = async (
   automation: any,
   initialFiles: File[],
-  toolRegistry: ToolRegistry,
+  toolRegistry: ToolRegistryMap,
   onStepStart?: (stepIndex: number, operationName: string) => void,
   onStepComplete?: (stepIndex: number, resultFiles: File[]) => void,
   onStepError?: (stepIndex: number, error: string) => void
