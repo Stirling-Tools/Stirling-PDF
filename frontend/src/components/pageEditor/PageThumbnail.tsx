@@ -7,7 +7,6 @@ import RotateRightIcon from '@mui/icons-material/RotateRight';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ContentCutIcon from '@mui/icons-material/ContentCut';
 import AddIcon from '@mui/icons-material/Add';
-import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { PDFPage, PDFDocument } from '../../types/pageEditor';
 import { useThumbnailGeneration } from '../../hooks/useThumbnailGeneration';
 import { useFilesModalContext } from '../../contexts/FilesModalContext';
@@ -25,7 +24,15 @@ interface PageThumbnailProps {
   selectionMode: boolean;
   movingPage: number | null;
   isAnimating: boolean;
+  isBoxSelected?: boolean;
+  boxSelectedPageIds?: string[];
+  clearBoxSelection?: () => void;
+  getBoxSelection?: () => string[];
+  activeId: string | null;
+  isOver: boolean;
+  dropSide: 'left' | 'right' | null;
   pageRefs: React.MutableRefObject<Map<string, HTMLDivElement>>;
+  dragHandleProps?: any;
   onReorderPages: (sourcePageNumber: number, targetIndex: number, selectedPageIds?: string[]) => void;
   onTogglePage: (pageId: string) => void;
   onAnimateReorder: () => void;
@@ -52,7 +59,15 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
   selectionMode,
   movingPage,
   isAnimating,
+  isBoxSelected = false,
+  boxSelectedPageIds = [],
+  clearBoxSelection,
+  getBoxSelection,
+  activeId,
+  isOver,
+  dropSide,
   pageRefs,
+  dragHandleProps,
   onReorderPages,
   onTogglePage,
   onExecuteCommand,
@@ -65,14 +80,16 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
   splitPositions,
   onInsertFiles,
 }: PageThumbnailProps) => {
-  const [isDragging, setIsDragging] = useState(false);
   const [isMouseDown, setIsMouseDown] = useState(false);
   const [mouseStartPos, setMouseStartPos] = useState<{x: number, y: number} | null>(null);
   const lastClickTimeRef = useRef<number>(0);
-  const dragElementRef = useRef<HTMLDivElement>(null);
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(page.thumbnail);
-  const { getThumbnailFromCache, requestThumbnail } = useThumbnailGeneration();
+  const elementRef = useRef<HTMLDivElement | null>(null);
+  const { getThumbnailFromCache, requestThumbnail} = useThumbnailGeneration();
   const { openFilesModal } = useFilesModalContext();
+
+  // Check if this page is currently being dragged
+  const isDragging = activeId === page.id;
 
   // Calculate document aspect ratio from first non-blank page
   const getDocumentAspectRatio = useCallback(() => {
@@ -130,63 +147,22 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
     };
   }, [page.id, page.thumbnail, originalFile, getThumbnailFromCache, requestThumbnail]);
 
-  const pageElementRef = useCallback((element: HTMLDivElement | null) => {
+  // Merge refs - combine our ref tracking with dnd-kit's ref
+  const mergedRef = useCallback((element: HTMLDivElement | null) => {
+    // Track in our refs map
+    elementRef.current = element;
     if (element) {
       pageRefs.current.set(page.id, element);
-      dragElementRef.current = element;
-
-      const dragCleanup = draggable({
-        element,
-        getInitialData: () => ({
-          pageNumber: page.pageNumber,
-          pageId: page.id,
-          selectedPageIds: [page.id]
-        }),
-        onDragStart: () => {
-          setIsDragging(true);
-        },
-        onDrop: ({ location }) => {
-          setIsDragging(false);
-
-          if (location.current.dropTargets.length === 0) {
-            return;
-          }
-
-          const dropTarget = location.current.dropTargets[0];
-          const targetData = dropTarget.data;
-
-          if (targetData.type === 'page') {
-            const targetPageNumber = targetData.pageNumber as number;
-            const targetIndex = pdfDocument.pages.findIndex(p => p.pageNumber === targetPageNumber);
-            if (targetIndex !== -1) {
-              onReorderPages(page.pageNumber, targetIndex, undefined);
-            }
-          }
-        }
-      });
-
-      element.style.cursor = 'grab';
-
-      const dropCleanup = dropTargetForElements({
-        element,
-        getData: () => ({
-          type: 'page',
-          pageNumber: page.pageNumber
-        }),
-        onDrop: (_) => {}
-      });
-
-      (element as any).__dragCleanup = () => {
-        dragCleanup();
-        dropCleanup();
-      };
     } else {
       pageRefs.current.delete(page.id);
-      if (dragElementRef.current && (dragElementRef.current as any).__dragCleanup) {
-        (dragElementRef.current as any).__dragCleanup();
-      }
     }
-  }, [page.id, page.pageNumber, pageRefs, selectionMode, selectedPageIds, pdfDocument.pages, onReorderPages]);
+
+    // Call dnd-kit's ref if provided
+    if (dragHandleProps?.ref) {
+      dragHandleProps.ref(element);
+    }
+  }, [page.id, pageRefs, dragHandleProps]);
+
 
   // DOM command handlers
   const handleRotateLeft = useCallback((e: React.MouseEvent) => {
@@ -262,19 +238,28 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
     const deltaY = Math.abs(e.clientY - mouseStartPos.y);
     const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
 
-    // If mouse moved less than 5 pixels, consider it a click (not a drag)
-    if (distance < 5 && !isDragging) {
+    // If mouse moved less than 2 pixels, consider it a click (not a drag)
+    if (distance < 2 && !isDragging) {
       // Prevent rapid double-clicks from causing issues (debounce with 100ms threshold)
       const now = Date.now();
       if (now - lastClickTimeRef.current > 100) {
         lastClickTimeRef.current = now;
-        onTogglePage(page.id);
+
+        // Clear box selection when clicking on a non-selected page
+        if (!isBoxSelected && clearBoxSelection) {
+          clearBoxSelection();
+        }
+
+        // Don't toggle page selection if it's box-selected (just keep the box selection)
+        if (!isBoxSelected) {
+          onTogglePage(page.id);
+        }
       }
     }
 
     setIsMouseDown(false);
     setMouseStartPos(null);
-  }, [isMouseDown, mouseStartPos, isDragging, page.id, onTogglePage]);
+  }, [isMouseDown, mouseStartPos, isDragging, page.id, isBoxSelected, clearBoxSelection, onTogglePage]);
 
   const handleMouseLeave = useCallback(() => {
     setIsMouseDown(false);
@@ -283,9 +268,13 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
 
   const fileColorBorder = page.isBlankPage ? 'transparent' : getFileColorWithOpacity(fileColorIndex, 0.3);
 
+  // Spread dragHandleProps but use our merged ref
+  const { ref: _, ...restDragProps } = dragHandleProps || {};
+
   return (
     <div
-      ref={pageElementRef}
+      ref={mergedRef}
+      {...restDragProps}
       data-page-id={page.id}
       data-page-number={page.pageNumber}
       className={`
@@ -303,15 +292,34 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
         relative
         ${isDragging ? 'opacity-50 scale-95' : ''}
         ${movingPage === page.pageNumber ? 'page-moving' : ''}
+        ${isBoxSelected ? 'ring-4 ring-blue-400 ring-offset-2' : ''}
       `}
       style={{
         transition: isAnimating ? 'none' : 'transform 0.2s ease-in-out',
+        ...(isBoxSelected && {
+          boxShadow: '0 0 0 4px rgba(59, 130, 246, 0.5)',
+        }),
       }}
-      draggable={false}
       onMouseDown={handleMouseDown}
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseLeave}
     >
+      {/* Drop indicator - bar on left or right edge */}
+      {isOver && !isDragging && dropSide && (
+        <div
+          style={{
+            position: 'absolute',
+            [dropSide]: '-4px',
+            top: '0',
+            width: '4px',
+            height: '100%',
+            backgroundColor: '#22c55e',
+            borderRadius: '2px',
+            zIndex: 1000,
+            pointerEvents: 'none'
+          }}
+        />
+      )}
       {
         <div
           className={styles.checkboxContainer}

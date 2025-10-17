@@ -3,7 +3,7 @@ import { Text, Center, Box, LoadingOverlay, Stack } from "@mantine/core";
 import { useFileState, useFileActions } from "../../contexts/FileContext";
 import { useNavigationGuard } from "../../contexts/NavigationContext";
 import { usePageEditor } from "../../contexts/PageEditorContext";
-import { PDFDocument, PageEditorFunctions } from "../../types/pageEditor";
+import { PDFDocument, PDFPage, PageEditorFunctions } from "../../types/pageEditor";
 import { pdfExportService } from "../../services/pdfExportService";
 import { documentManipulationService } from "../../services/documentManipulationService";
 import { exportProcessedDocumentsToFiles } from "../../services/pdfExportHelpers";
@@ -604,8 +604,13 @@ const PageEditor = ({
   const handleReorderPages = useCallback((sourcePageNumber: number, targetIndex: number, selectedPageIds?: string[]) => {
     if (!displayDocument) return;
 
+    console.log('=== HANDLE REORDER PAGES ===');
+    console.log('selectedPageIds:', selectedPageIds);
+
     // Convert selectedPageIds to page numbers for the reorder command
     const selectedPages = selectedPageIds ? getPageNumbersFromIds(selectedPageIds) : undefined;
+
+    console.log('selectedPages (converted to numbers):', selectedPages);
 
     const reorderCommand = new ReorderPagesCommand(
       sourcePageNumber,
@@ -961,8 +966,17 @@ const PageEditor = ({
             selectionMode={selectionMode}
             isAnimating={isAnimating}
             onReorderPages={handleReorderPages}
-            renderItem={(page, index, refs) => {
+            getThumbnailData={(pageId) => {
+              const page = displayDocument.pages.find(p => p.id === pageId);
+              if (!page?.thumbnail) return null;
+              return {
+                src: page.thumbnail,
+                rotation: page.rotation || 0
+              };
+            }}
+            renderItem={(page, index, refs, boxSelectedIds, clearBoxSelection, getBoxSelection, activeId, isOver, dropSide, dragHandleProps) => {
               const fileColorIndex = page.originalFileId ? fileColorIndexMap.get(page.originalFileId) ?? 0 : 0;
+              const isBoxSelected = boxSelectedIds.includes(page.id);
               return (
                 <PageThumbnail
                   key={page.id}
@@ -975,7 +989,15 @@ const PageEditor = ({
                   selectionMode={selectionMode}
                   movingPage={movingPage}
                   isAnimating={isAnimating}
+                  isBoxSelected={isBoxSelected}
+                  boxSelectedPageIds={boxSelectedIds}
+                  clearBoxSelection={clearBoxSelection}
+                  getBoxSelection={getBoxSelection}
+                  activeId={activeId}
+                  isOver={isOver}
+                  dropSide={dropSide}
                   pageRefs={refs}
+                  dragHandleProps={dragHandleProps}
                   onReorderPages={handleReorderPages}
                   onTogglePage={togglePage}
                   onAnimateReorder={animateReorder}
