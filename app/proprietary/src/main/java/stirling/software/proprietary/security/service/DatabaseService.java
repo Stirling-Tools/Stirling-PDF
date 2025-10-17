@@ -36,6 +36,12 @@ import stirling.software.proprietary.security.model.exception.BackupNotFoundExce
 @Service
 public class DatabaseService implements DatabaseServiceInterface {
 
+    private enum Dialect {
+        H2,
+        POSTGRES,
+        UNKNOWN
+    }
+
     public static final String BACKUP_PREFIX = "backup_";
     public static final String SQL_SUFFIX = ".sql";
     private final Path BACKUP_DIR;
@@ -45,10 +51,26 @@ public class DatabaseService implements DatabaseServiceInterface {
 
     public DatabaseService(
             ApplicationProperties.Datasource datasourceProps, DataSource dataSource) {
-        this.BACKUP_DIR =
-                Paths.get(InstallationPathConfig.getConfigPath(), "db", "backup").normalize();
         this.datasourceProps = datasourceProps;
         this.dataSource = dataSource;
+        this.BACKUP_DIR = resolveBackupDir(datasourceProps);
+    }
+
+    private Path resolveBackupDir(ApplicationProperties.Datasource ds) {
+        String base = InstallationPathConfig.getConfigPath();
+        String sub = "unknown";
+        boolean custom = ds.isEnableCustomDatabase();
+        String type = ds.getType() == null ? "" : ds.getType().toUpperCase();
+        String url =
+                ds.getCustomDatabaseUrl() == null ? "" : ds.getCustomDatabaseUrl().toLowerCase();
+        if (!custom) {
+            sub = "h2";
+        } else if ("H2".equals(type) && url.contains("h2")) {
+            sub = "h2";
+        } else if ("POSTGRESQL".equals(type) && url.contains("postgres")) {
+            sub = "postgres";
+        }
+        return Paths.get(base, "db", "backup", sub).normalize();
     }
 
     /**
@@ -77,38 +99,33 @@ public class DatabaseService implements DatabaseServiceInterface {
     public List<FileInfo> getBackupList() {
         List<FileInfo> backupFiles = new ArrayList<>();
 
-        if (isH2Database()) {
-            createBackupDirectory();
+        createBackupDirectory();
 
-            try (DirectoryStream<Path> stream =
-                    Files.newDirectoryStream(
-                            BACKUP_DIR,
-                            path ->
-                                    path.getFileName().toString().startsWith(BACKUP_PREFIX)
-                                            && path.getFileName()
-                                                    .toString()
-                                                    .endsWith(SQL_SUFFIX))) {
-                for (Path entry : stream) {
-                    BasicFileAttributes attrs =
-                            Files.readAttributes(entry, BasicFileAttributes.class);
-                    LocalDateTime modificationDate =
-                            LocalDateTime.ofInstant(
-                                    attrs.lastModifiedTime().toInstant(), ZoneId.systemDefault());
-                    LocalDateTime creationDate =
-                            LocalDateTime.ofInstant(
-                                    attrs.creationTime().toInstant(), ZoneId.systemDefault());
-                    long fileSize = attrs.size();
-                    backupFiles.add(
-                            new FileInfo(
-                                    entry.getFileName().toString(),
-                                    entry.toString(),
-                                    modificationDate,
-                                    fileSize,
-                                    creationDate));
-                }
-            } catch (IOException e) {
-                log.error("Error reading backup directory: {}", e.getMessage(), e);
+        try (DirectoryStream<Path> stream =
+                Files.newDirectoryStream(
+                        BACKUP_DIR,
+                        path ->
+                                path.getFileName().toString().startsWith(BACKUP_PREFIX)
+                                        && path.getFileName().toString().endsWith(SQL_SUFFIX))) {
+            for (Path entry : stream) {
+                BasicFileAttributes attrs = Files.readAttributes(entry, BasicFileAttributes.class);
+                LocalDateTime modificationDate =
+                        LocalDateTime.ofInstant(
+                                attrs.lastModifiedTime().toInstant(), ZoneId.systemDefault());
+                LocalDateTime creationDate =
+                        LocalDateTime.ofInstant(
+                                attrs.creationTime().toInstant(), ZoneId.systemDefault());
+                long fileSize = attrs.size();
+                backupFiles.add(
+                        new FileInfo(
+                                entry.getFileName().toString(),
+                                entry.toString(),
+                                modificationDate,
+                                fileSize,
+                                creationDate));
             }
+        } catch (IOException e) {
+            log.error("Error reading backup directory: {}", e.getMessage(), e);
         }
 
         return backupFiles;
@@ -195,6 +212,56 @@ public class DatabaseService implements DatabaseServiceInterface {
             }
 
             log.info("Database export completed: {}", insertOutputFilePath);
+        } else if (isPostgresDatabase()) {
+            // Use pg_dump to export PostgreSQL database
+            List<String> command = new ArrayList<>();
+            command.add("pg_dump");
+            if (datasourceProps.getHostName() != null) {
+                command.add("-h");
+                command.add(datasourceProps.getHostName());
+            }
+            if (datasourceProps.getPort() != null) {
+                command.add("-p");
+                command.add(String.valueOf(datasourceProps.getPort()));
+            }
+            if (datasourceProps.getUsername() != null) {
+                command.add("-U");
+                command.add(datasourceProps.getUsername());
+            }
+            command.add("-F");
+            command.add("p"); // plain SQL
+            command.add("--inserts");
+            command.add("-f");
+            command.add(insertOutputFilePath.toString());
+            // Database name
+            if (datasourceProps.getName() != null) {
+                command.add(datasourceProps.getName());
+            }
+
+            ProcessBuilder pb = new ProcessBuilder(command);
+            // Set password via env var to avoid prompt
+            if (datasourceProps.getPassword() != null) {
+                pb.environment().put("PGPASSWORD", datasourceProps.getPassword());
+            }
+            pb.redirectErrorStream(true);
+            try {
+                Process process = pb.start();
+                int exit = process.waitFor();
+                if (exit != 0) {
+                    log.error(
+                            "pg_dump exited with code {} while exporting to {}",
+                            exit,
+                            insertOutputFilePath);
+                } else {
+                    log.info("Database export completed: {}", insertOutputFilePath);
+                }
+            } catch (IOException | InterruptedException e) {
+                Thread.currentThread().interrupt();
+                log.error("Error during PostgreSQL database export: {}", e.getMessage(), e);
+            }
+        } else {
+            log.warn(
+                    "Database export not implemented for this driver. Only H2 and PostgreSQL are supported.");
         }
     }
 
@@ -240,9 +307,7 @@ public class DatabaseService implements DatabaseServiceInterface {
     private boolean isH2Database() {
         boolean isTypeH2 =
                 datasourceProps.getType().equalsIgnoreCase(ApplicationProperties.Driver.H2.name());
-        boolean isDBUrlH2 =
-                datasourceProps.getCustomDatabaseUrl().contains("h2")
-                        || datasourceProps.getCustomDatabaseUrl().contains("H2");
+        boolean isDBUrlH2 = datasourceProps.getCustomDatabaseUrl().toLowerCase().contains("h2");
         boolean isCustomDatabase = datasourceProps.isEnableCustomDatabase();
 
         if (isCustomDatabase) {
@@ -265,6 +330,35 @@ public class DatabaseService implements DatabaseServiceInterface {
         boolean isH2 = isTypeH2 && isDBUrlH2;
 
         return !isCustomDatabase || isH2;
+    }
+
+    private boolean isPostgresDatabase() {
+        boolean isTypePg =
+                datasourceProps
+                        .getType()
+                        .equalsIgnoreCase(ApplicationProperties.Driver.POSTGRESQL.name());
+        String url =
+                datasourceProps.getCustomDatabaseUrl() == null
+                        ? ""
+                        : datasourceProps.getCustomDatabaseUrl();
+        boolean isDBUrlPg = url.toLowerCase().contains("postgres");
+        boolean isCustomDatabase = datasourceProps.isEnableCustomDatabase();
+
+        if (isCustomDatabase) {
+            if (isTypePg && !isDBUrlPg) {
+                log.warn(
+                        "Datasource type is POSTGRESQL, but the URL does not contain 'postgres'. Please check your configuration.");
+                throw new IllegalStateException(
+                        "Datasource type is POSTGRESQL, but the URL does not contain 'postgres'. Please check your configuration.");
+            } else if (!isTypePg && isDBUrlPg) {
+                log.warn(
+                        "Datasource URL contains 'postgres', but the type is not POSTGRESQL. Please check your configuration.");
+                throw new IllegalStateException(
+                        "Datasource URL contains 'postgres', but the type is not POSTGRESQL. Please check your configuration.");
+            }
+        }
+        boolean isPg = isTypePg && isDBUrlPg;
+        return isCustomDatabase && isPg;
     }
 
     /**
@@ -314,6 +408,49 @@ public class DatabaseService implements DatabaseServiceInterface {
             } catch (ScriptException e) {
                 log.error("Error: File {} not found", scriptPath.toString(), e);
             }
+        } else if (isPostgresDatabase()) {
+            List<String> command = new ArrayList<>();
+            command.add("psql");
+
+            if (datasourceProps.getHostName() != null) {
+                command.add("-h");
+                command.add(datasourceProps.getHostName());
+            }
+            if (datasourceProps.getPort() != null) {
+                command.add("-p");
+                command.add(String.valueOf(datasourceProps.getPort()));
+            }
+            if (datasourceProps.getUsername() != null) {
+                command.add("-U");
+                command.add(datasourceProps.getUsername());
+            }
+            if (datasourceProps.getName() != null) {
+                command.add("-d");
+                command.add(datasourceProps.getName());
+            }
+            command.add("-f");
+            command.add(scriptPath.toString());
+
+            ProcessBuilder pb = new ProcessBuilder(command);
+            if (datasourceProps.getPassword() != null) {
+                pb.environment().put("PGPASSWORD", datasourceProps.getPassword());
+            }
+
+            pb.redirectErrorStream(true);
+
+            try {
+                Process process = pb.start();
+                int exit = process.waitFor();
+                if (exit != 0) {
+                    log.error("psql exited with code {} while importing from {}", exit, scriptPath);
+                } else {
+                    log.info("Database import completed: {}", scriptPath);
+                }
+            } catch (IOException | InterruptedException e) {
+                Thread.currentThread().interrupt();
+                log.error("Error during PostgreSQL database import: {}", e.getMessage(), e);
+            }
+            return;
         }
 
         log.info("Database import completed: {}", scriptPath);
