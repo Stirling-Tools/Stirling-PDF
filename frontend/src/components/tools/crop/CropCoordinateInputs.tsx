@@ -35,7 +35,7 @@ const CropCoordinateInputs = ({
 
       <Group grow>
         <NumberInput
-          label={t("crop.coordinates.x", "X Position")}
+          label={t("crop.coordinates.x.label", "X Position")}
           description={showAutomationInfo ? t("crop.coordinates.x.desc", "Left edge (points)") : undefined}
           value={Math.round(cropArea.x * 10) / 10}
           onChange={(value) => onCoordinateChange('x', value)}
@@ -47,7 +47,7 @@ const CropCoordinateInputs = ({
           size={showAutomationInfo ? "sm" : "xs"}
         />
         <NumberInput
-          label={t("crop.coordinates.y", "Y Position")}
+          label={t("crop.coordinates.y.label", "Y Position")}
           description={showAutomationInfo ? t("crop.coordinates.y.desc", "Bottom edge (points)") : undefined}
           value={Math.round(cropArea.y * 10) / 10}
           onChange={(value) => onCoordinateChange('y', value)}
@@ -62,7 +62,7 @@ const CropCoordinateInputs = ({
 
       <Group grow>
         <NumberInput
-          label={t("crop.coordinates.width", "Width")}
+          label={t("crop.coordinates.width.label", "Width")}
           description={showAutomationInfo ? t("crop.coordinates.width.desc", "Crop width (points)") : undefined}
           value={Math.round(cropArea.width * 10) / 10}
           onChange={(value) => onCoordinateChange('width', value)}
@@ -74,7 +74,7 @@ const CropCoordinateInputs = ({
           size={showAutomationInfo ? "sm" : "xs"}
         />
         <NumberInput
-          label={t("crop.coordinates.height", "Height")}
+          label={t("crop.coordinates.height.label", "Height")}
           description={showAutomationInfo ? t("crop.coordinates.height.desc", "Crop height (points)") : undefined}
           value={Math.round(cropArea.height * 10) / 10}
           onChange={(value) => onCoordinateChange('height', value)}
