@@ -1,11 +1,7 @@
-import React, { useRef, useCallback, useState, useEffect } from 'react';
-import { Menu, Loader, Group, Text, Checkbox, ActionIcon } from '@mantine/core';
+import React, { useRef, useState, useEffect } from 'react';
+import { Menu, Loader, Group, Text, Checkbox } from '@mantine/core';
 import EditNoteIcon from '@mui/icons-material/EditNote';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
-import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
-import VerticalAlignTopIcon from '@mui/icons-material/VerticalAlignTop';
-import VerticalAlignBottomIcon from '@mui/icons-material/VerticalAlignBottom';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import FitText from './FitText';
@@ -25,13 +21,7 @@ interface FileMenuItemProps {
   file: PageEditorFile;
   index: number;
   colorIndex: number;
-  isFirst: boolean;
-  isLast: boolean;
   onToggleSelection: (fileId: FileId) => void;
-  onMoveUp: (e: React.MouseEvent, index: number) => void;
-  onMoveDown: (e: React.MouseEvent, index: number) => void;
-  onMoveToTop: (e: React.MouseEvent, index: number) => void;
-  onMoveToBottom: (e: React.MouseEvent, index: number) => void;
   onReorder: (fromIndex: number, toIndex: number) => void;
 }
 
@@ -39,13 +29,7 @@ const FileMenuItem: React.FC<FileMenuItemProps> = ({
   file,
   index,
   colorIndex,
-  isFirst,
-  isLast,
   onToggleSelection,
-  onMoveUp,
-  onMoveDown,
-  onMoveToTop,
-  onMoveToBottom,
   onReorder,
 }) => {
   const [isDragging, setIsDragging] = useState(false);
@@ -166,75 +150,31 @@ const FileMenuItem: React.FC<FileMenuItemProps> = ({
         }
       }}
     >
-        <Group gap="xs" style={{ width: '100%', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1, minWidth: 0 }}>
-            <div
-              style={{
-                cursor: 'grab',
-                display: 'flex',
-                alignItems: 'center',
-                color: 'var(--mantine-color-dimmed)',
-              }}
-            >
-              <DragIndicatorIcon fontSize="small" />
-            </div>
-            <Checkbox
-              checked={file.isSelected}
-              onChange={() => onToggleSelection(file.fileId)}
-              onClick={(e) => e.stopPropagation()}
-              size="sm"
-            />
-            <div style={{ flex: 1, textAlign: 'left', minWidth: 0 }}>
-              <FitText text={itemName} fontSize={14} minimumFontScale={0.7} />
-            </div>
-            {file.versionNumber && file.versionNumber > 1 && (
-              <Text size="xs" c="dimmed">
-                v{file.versionNumber}
-              </Text>
-            )}
+        <Group gap="xs" style={{ width: '100%' }}>
+          <div
+            style={{
+              cursor: 'grab',
+              display: 'flex',
+              alignItems: 'center',
+              color: 'var(--mantine-color-dimmed)',
+            }}
+          >
+            <DragIndicatorIcon fontSize="small" />
           </div>
-          <div style={{ display: 'flex', gap: '0.25rem', alignItems: 'center' }} onClick={(e) => e.stopPropagation()}>
-            <ActionIcon
-              component="div"
-              size="sm"
-              variant="subtle"
-              disabled={isFirst}
-              onClick={(e) => onMoveToTop(e, index)}
-              title="Move to top"
-            >
-              <VerticalAlignTopIcon fontSize="small" />
-            </ActionIcon>
-            <ActionIcon
-              component="div"
-              size="sm"
-              variant="subtle"
-              disabled={isFirst}
-              onClick={(e) => onMoveUp(e, index)}
-              title="Move up"
-            >
-              <ArrowUpwardIcon fontSize="small" />
-            </ActionIcon>
-            <ActionIcon
-              component="div"
-              size="sm"
-              variant="subtle"
-              disabled={isLast}
-              onClick={(e) => onMoveDown(e, index)}
-              title="Move down"
-            >
-              <ArrowDownwardIcon fontSize="small" />
-            </ActionIcon>
-            <ActionIcon
-              component="div"
-              size="sm"
-              variant="subtle"
-              disabled={isLast}
-              onClick={(e) => onMoveToBottom(e, index)}
-              title="Move to bottom"
-            >
-              <VerticalAlignBottomIcon fontSize="small" />
-            </ActionIcon>
+          <Checkbox
+            checked={file.isSelected}
+            onChange={() => onToggleSelection(file.fileId)}
+            onClick={(e) => e.stopPropagation()}
+            size="sm"
+          />
+          <div style={{ flex: 1, textAlign: 'left', minWidth: 0 }}>
+            <FitText text={itemName} fontSize={14} minimumFontScale={0.7} />
           </div>
+          {file.versionNumber && file.versionNumber > 1 && (
+            <Text size="xs" c="dimmed">
+              v{file.versionNumber}
+            </Text>
+          )}
         </Group>
     </div>
   );
@@ -259,34 +199,6 @@ export const PageEditorFileDropdown: React.FC<PageEditorFileDropdownProps> = ({
   viewOptionStyle,
   fileColorMap,
 }) => {
-  const handleMoveUp = (e: React.MouseEvent, index: number) => {
-    e.stopPropagation();
-    if (index > 0) {
-      onReorder(index, index - 1);
-    }
-  };
-
-  const handleMoveDown = (e: React.MouseEvent, index: number) => {
-    e.stopPropagation();
-    if (index < files.length - 1) {
-      onReorder(index, index + 1);
-    }
-  };
-
-  const handleMoveToTop = (e: React.MouseEvent, index: number) => {
-    e.stopPropagation();
-    if (index > 0) {
-      onReorder(index, 0);
-    }
-  };
-
-  const handleMoveToBottom = (e: React.MouseEvent, index: number) => {
-    e.stopPropagation();
-    if (index < files.length - 1) {
-      onReorder(index, files.length - 1);
-    }
-  };
-
   return (
     <Menu trigger="click" position="bottom" width="40rem">
       <Menu.Target>
@@ -309,8 +221,6 @@ export const PageEditorFileDropdown: React.FC<PageEditorFileDropdownProps> = ({
         overflowY: 'auto'
       }}>
         {files.map((file, index) => {
-          const isFirst = index === 0;
-          const isLast = index === files.length - 1;
           const colorIndex = fileColorMap.get(file.fileId as string) ?? 0;
 
           return (
@@ -319,13 +229,7 @@ export const PageEditorFileDropdown: React.FC<PageEditorFileDropdownProps> = ({
               file={file}
               index={index}
               colorIndex={colorIndex}
-              isFirst={isFirst}
-              isLast={isLast}
               onToggleSelection={onToggleSelection}
-              onMoveUp={(e) => handleMoveUp(e, index)}
-              onMoveDown={(e) => handleMoveDown(e, index)}
-              onMoveToTop={(e) => handleMoveToTop(e, index)}
-              onMoveToBottom={(e) => handleMoveToBottom(e, index)}
               onReorder={onReorder}
             />
           );
