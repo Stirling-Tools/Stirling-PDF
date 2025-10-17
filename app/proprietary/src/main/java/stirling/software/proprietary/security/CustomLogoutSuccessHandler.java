@@ -72,7 +72,6 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
                     getRedirectStrategy().sendRedirect(request, response, LOGOUT_PATH);
                 }
             } else if (!jwtService.extractToken(request).isBlank()) {
-                jwtService.clearToken(response);
                 getRedirectStrategy().sendRedirect(request, response, LOGOUT_PATH);
             } else {
                 // Redirect to login page after logout

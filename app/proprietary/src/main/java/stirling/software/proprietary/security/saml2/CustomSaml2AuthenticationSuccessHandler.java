@@ -121,11 +121,26 @@ public class CustomSaml2AuthenticationSuccessHandler
                             username, saml2Properties.getAutoCreateUser(), SAML2);
                     log.debug("Successfully processed authentication for user: {}", username);
 
-                    generateJwt(response, authentication);
-
-                    // Redirect to auth callback for v2 (React will handle final routing)
+                    // Generate JWT if v2 is enabled
                     if (jwtService.isJwtEnabled()) {
-                        response.sendRedirect(contextPath + "/auth/callback");
+                        String jwt =
+                                jwtService.generateToken(
+                                        authentication,
+                                        Map.of("authType", AuthenticationType.SAML2));
+
+                        // Check if backend is running on port 8080 (dev mode indicator)
+                        String serverPort = String.valueOf(request.getServerPort());
+                        String redirectUrl;
+
+                        if ("8080".equals(serverPort)) {
+                            // Dev mode: assume frontend is on 5173
+                            redirectUrl = "http://localhost:5173/auth/callback#access_token=" + jwt;
+                        } else {
+                            // Prod mode: same origin
+                            redirectUrl = contextPath + "/auth/callback#access_token=" + jwt;
+                        }
+
+                        response.sendRedirect(redirectUrl);
                     } else {
                         // v1: redirect directly to home
                         response.sendRedirect(contextPath + "/");
@@ -140,15 +155,6 @@ public class CustomSaml2AuthenticationSuccessHandler
         } else {
             log.debug("Non-SAML2 principal detected, delegating to parent handler");
             super.onAuthenticationSuccess(request, response, authentication);
-        }
-    }
-
-    private void generateJwt(HttpServletResponse response, Authentication authentication) {
-        if (jwtService.isJwtEnabled()) {
-            String jwt =
-                    jwtService.generateToken(
-                            authentication, Map.of("authType", AuthenticationType.SAML2));
-            jwtService.addToken(response, jwt);
         }
     }
 }

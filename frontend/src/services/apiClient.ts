@@ -8,28 +8,26 @@ const apiClient = axios.create({
   responseType: 'json',
 });
 
-// Helper function to get JWT token from cookies
-function getJwtTokenFromCookie(): string | null {
-  const cookies = document.cookie.split(';');
-  for (const cookie of cookies) {
-    const [name, value] = cookie.trim().split('=');
-    if (name === 'stirling_jwt') {
-      return value;
-    }
+// Helper function to get JWT token from localStorage
+function getJwtTokenFromStorage(): string | null {
+  try {
+    return localStorage.getItem('stirling_jwt');
+  } catch (error) {
+    console.error('[API Client] Failed to read JWT from localStorage:', error);
+    return null;
   }
-  return null;
 }
 
 // ---------- Install request interceptor to add JWT token ----------
 apiClient.interceptors.request.use(
   (config) => {
-    // Get JWT token from cookie
-    const jwtToken = getJwtTokenFromCookie();
+    // Get JWT token from localStorage
+    const jwtToken = getJwtTokenFromStorage();
 
     // If token exists and Authorization header is not already set, add it
     if (jwtToken && !config.headers.Authorization) {
       config.headers.Authorization = `Bearer ${jwtToken}`;
-      console.debug('[API Client] Added JWT token from cookie to Authorization header');
+      console.debug('[API Client] Added JWT token from localStorage to Authorization header');
     }
 
     return config;

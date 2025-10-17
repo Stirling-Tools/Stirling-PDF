@@ -102,9 +102,21 @@ public class CustomOAuth2AuthenticationSuccessHandler
                     String jwt =
                             jwtService.generateToken(
                                     authentication, Map.of("authType", AuthenticationType.OAUTH2));
-                    jwtService.addToken(response, jwt);
-                    // Redirect to auth callback for v2 (React will handle final routing)
-                    response.sendRedirect(contextPath + "/auth/callback");
+
+                    // Check if backend is running on port 8080 (dev mode indicator)
+                    String serverPort = String.valueOf(request.getServerPort());
+                    String redirectUrl;
+
+                    if ("8080".equals(serverPort)) {
+                        // Dev mode: assume frontend is on 5173 or 5174
+                        // Try 5173 first (default Vite port)
+                        redirectUrl = "http://localhost:5173/auth/callback#access_token=" + jwt;
+                    } else {
+                        // Prod mode: same origin
+                        redirectUrl = contextPath + "/auth/callback#access_token=" + jwt;
+                    }
+
+                    response.sendRedirect(redirectUrl);
                 } else {
                     // v1: redirect directly to home
                     response.sendRedirect(contextPath + "/");

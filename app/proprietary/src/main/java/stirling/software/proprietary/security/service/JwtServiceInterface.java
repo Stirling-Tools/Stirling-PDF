@@ -67,21 +67,6 @@ public interface JwtServiceInterface {
     String extractToken(HttpServletRequest request);
 
     /**
-     * Add JWT token to HTTP response (header and cookie)
-     *
-     * @param response HTTP servlet response
-     * @param token JWT token to add
-     */
-    void addToken(HttpServletResponse response, String token);
-
-    /**
-     * Clear JWT token from HTTP response (remove cookie)
-     *
-     * @param response HTTP servlet response
-     */
-    void clearToken(HttpServletResponse response);
-
-    /**
      * Check if JWT authentication is enabled
      *
      * @return true if JWT is enabled, false otherwise

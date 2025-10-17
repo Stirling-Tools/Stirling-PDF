@@ -81,12 +81,9 @@ public class AuthController {
 
             String token = jwtService.generateToken(user.getUsername(), claims);
 
-            // Set JWT cookie (HttpOnly for security)
-            jwtService.addToken(response, token);
-
             log.info("Login successful for user: {}", request.email());
 
-            // Return user info (matches Supabase response structure)
+            // Return user info
             return ResponseEntity.ok(
                     Map.of(
                             "user", buildUserResponse(user),
@@ -204,9 +201,6 @@ public class AuthController {
     @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpServletResponse response) {
         try {
-            // Clear JWT cookie
-            jwtService.clearToken(response);
-
             // Clear security context
             SecurityContextHolder.clearContext();
 
@@ -251,7 +245,6 @@ public class AuthController {
             claims.put("role", user.getRolesAsString());
 
             String newToken = jwtService.generateToken(username, claims);
-            jwtService.addToken(response, newToken);
 
             log.debug("Token refreshed for user: {}", username);
 
