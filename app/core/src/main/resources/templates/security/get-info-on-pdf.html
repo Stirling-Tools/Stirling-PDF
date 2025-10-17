@@ -81,6 +81,29 @@
                       </div>
                     </div>
                     
+                    <!-- Technical Details section -->
+                    <div class="mt-4 mb-3">
+                      <h6 id="summary-technical-heading">Technical Details</h6>
+                      <div class="row">
+                        <div class="col-md-6">
+                          <ul class="list-unstyled">
+                            <li><strong>Images:</strong> <span id="summary-images">-</span></li>
+                            <li><strong>Fonts:</strong> <span id="summary-fonts">-</span></li>
+                            <li><strong>Form Fields:</strong> <span id="summary-form-fields">-</span></li>
+                            <li><strong>Embedded Files:</strong> <span id="summary-embedded-files">-</span></li>
+                          </ul>
+                        </div>
+                        <div class="col-md-6">
+                          <ul class="list-unstyled">
+                            <li><strong>JavaScript:</strong> <span id="summary-javascript">-</span></li>
+                            <li><strong>Layers:</strong> <span id="summary-layers">-</span></li>
+                            <li><strong>Bookmarks:</strong> <span id="summary-bookmarks">-</span></li>
+                            <li><strong>Multimedia:</strong> <span id="summary-multimedia">-</span></li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                    
                     <!-- Detailed alerts -->
                     <div id="summary-alerts" class="mt-3">
                       <!-- Will be populated with detailed alerts for encryption, permissions, etc. -->
@@ -121,6 +144,7 @@
                 const getPdfInfoSummaryAllPermissionsAlert = /*[[#{getPdfInfo.summary.all.permissions.alert}]]*/ "All Permissions Allowed";
                 const getPdfInfoSummaryComplianceAlert = /*[[#{getPdfInfo.summary.compliance.alert}]]*/ "{0} Compliant";
                 const getPdfInfoSummaryNoComplianceAlert = /*[[#{getPdfInfo.summary.no.compliance.alert}]]*/ "No Compliance Standards";
+                const getPdfInfoSummaryTechnicalSection = /*[[#{getPdfInfo.summary.technical.section}]]*/ "Technical Details";
                 
                 // Update the summary headings
                 document.addEventListener('DOMContentLoaded', function() {
@@ -128,6 +152,7 @@
                   document.getElementById('summary-basic-info-heading').textContent = getPdfInfoSummaryBasicInfo;
                   document.getElementById('summary-doc-info-heading').textContent = getPdfInfoSummaryDocInfo;
                   document.getElementById('summary-security-heading').textContent = getPdfInfoSummarySecuritySection;
+                  document.getElementById('summary-technical-heading').textContent = getPdfInfoSummaryTechnicalSection;
                 });
                 
                 // Pre-load section descriptions
@@ -141,6 +166,16 @@
                 const getPdfInfoSectionFormFields = /*[[#{getPdfInfo.section.FormFields}]]*/ "Interactive form fields present in the document";
                 const getPdfInfoSectionPerPageInfo = /*[[#{getPdfInfo.section.PerPageInfo}]]*/ "Detailed information about each page in the document";
 
+                /**
+                 * Form submission handler for PDF info extraction.
+                 * 
+                 * Process:
+                 * 1. Submit PDF to backend endpoint
+                 * 2. Receive JSON with sections: Metadata, BasicInfo, DocumentInfo, etc.
+                 * 3. Populate summary section from the detailed data
+                 * 4. Display all sections in collapsible cards
+                 * 5. Provide JSON download option
+                 */
                 document.getElementById("pdfInfoForm").addEventListener("submit", function(event) {
                   event.preventDefault();
                   
@@ -154,14 +189,29 @@
                   fetchWithCsrf('api/v1/security/get-info-on-pdf', {
                     method: 'POST',
                     body: formData
-                  }).then(response => response.json()).then(data => {
+                  }).then(response => {
+                    if (!response.ok) {
+                      throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                  }).then(data => {
+                    // Check if response contains an error
+                    if (data && data.error) {
+                      console.error('Server error:', data.error);
+                      alert('Error: ' + data.error);
+                      return;
+                    }
+                    
                     // Populate and display the enhanced PDF summary
                     populateSummarySection(data);
                     
                     displayJsonData(data);
                     setDownloadLink(data);
                     document.getElementById("downloadJson").style.display = "block";
-                  }).catch(error => console.error('Error:', error));
+                  }).catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while processing the PDF. Please try again.');
+                  });
                   
                 // Function to reset all summary elements to default state
                 function resetSummaryElements() {
@@ -176,6 +226,16 @@
                   document.getElementById('summary-author').textContent = '-';
                   document.getElementById('summary-created').textContent = '-';
                   document.getElementById('summary-modified').textContent = '-';
+                  
+                  // Reset technical details fields
+                  document.getElementById('summary-images').textContent = '-';
+                  document.getElementById('summary-fonts').textContent = '-';
+                  document.getElementById('summary-form-fields').textContent = '-';
+                  document.getElementById('summary-embedded-files').textContent = '-';
+                  document.getElementById('summary-javascript').textContent = '-';
+                  document.getElementById('summary-layers').textContent = '-';
+                  document.getElementById('summary-bookmarks').textContent = '-';
+                  document.getElementById('summary-multimedia').textContent = '-';
                   
                   // Reset security status cards
                   const cards = ['encryption-status', 'permissions-status', 'compliance-status'];
@@ -208,12 +268,12 @@
                   resetSummaryElements();
                   
                   // Get basic information
-                  if (data.BasicInfo) {
+                  if (data && data.BasicInfo) {
                     document.getElementById('summary-pages').textContent = data.BasicInfo["Number of pages"] || "-";
                     
                     // Format file size nicely
                     let fileSize = data.BasicInfo["FileSizeInBytes"];
-                    if (fileSize) {
+                    if (fileSize && fileSize > 0) {
                       const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
                       const i = Math.floor(Math.log(fileSize) / Math.log(1024));
                       fileSize = (fileSize / Math.pow(1024, i)).toFixed(2) + ' ' + sizes[i];
@@ -224,16 +284,111 @@
                   }
                   
                   // Get document information
-                  if (data.DocumentInfo) {
+                  if (data && data.DocumentInfo) {
                     document.getElementById('summary-version').textContent = data.DocumentInfo["PDF version"] || "-";
                   }
                   
                   // Get metadata
-                  if (data.Metadata) {
+                  if (data && data.Metadata) {
                     document.getElementById('summary-title').textContent = data.Metadata["Title"] || "-";
                     document.getElementById('summary-author').textContent = data.Metadata["Author"] || "-";
                     document.getElementById('summary-created').textContent = data.Metadata["CreationDate"] || "-";
                     document.getElementById('summary-modified').textContent = data.Metadata["ModificationDate"] || "-";
+                  }
+                  
+                  // Populate technical details
+                  if (data && data.BasicInfo) {
+                    // Images
+                    const totalImages = data.BasicInfo.TotalImages || 0;
+                    const uniqueImages = data.BasicInfo.UniqueImages || 0;
+                    if (totalImages > 0) {
+                      document.getElementById('summary-images').textContent = `${totalImages} total (${uniqueImages} unique)`;
+                    } else {
+                      document.getElementById('summary-images').textContent = 'None';
+                    }
+                  }
+                  
+                  // Count fonts from PerPageInfo
+                  if (data && data.PerPageInfo) {
+                    let totalFonts = 0;
+                    let embeddedFonts = 0;
+                    const fontSet = new Set();
+                    
+                    for (const pageKey in data.PerPageInfo) {
+                      const pageData = data.PerPageInfo[pageKey];
+                      
+                      // Count fonts
+                      if (pageData.Fonts && Array.isArray(pageData.Fonts)) {
+                        pageData.Fonts.forEach(font => {
+                          const fontKey = JSON.stringify([font.Name, font.Subtype]);
+                          fontSet.add(fontKey);
+                          if (font.IsEmbedded) {
+                            embeddedFonts++;
+                          }
+                        });
+                      }
+                    }
+                    
+                    // Display fonts
+                    totalFonts = fontSet.size;
+                    if (totalFonts > 0) {
+                      document.getElementById('summary-fonts').textContent = `${totalFonts} (${embeddedFonts} embedded)`;
+                    } else {
+                      document.getElementById('summary-fonts').textContent = 'None';
+                    }
+                  }
+                  
+                  // Form fields
+                  if (data && data.FormFields) {
+                    const formFieldCount = Object.keys(data.FormFields).length;
+                    document.getElementById('summary-form-fields').textContent = formFieldCount > 0 ? formFieldCount : 'None';
+                  }
+                  
+                  // Other section data
+                  if (data && data.Other) {
+                    // Embedded files
+                    const embeddedFiles = data.Other.EmbeddedFiles;
+                    if (embeddedFiles && Array.isArray(embeddedFiles)) {
+                      document.getElementById('summary-embedded-files').textContent = embeddedFiles.length > 0 ? embeddedFiles.length : 'None';
+                    } else {
+                      document.getElementById('summary-embedded-files').textContent = 'None';
+                    }
+                    
+                    // JavaScript
+                    const javascript = data.Other.JavaScript;
+                    if (javascript && Array.isArray(javascript)) {
+                      document.getElementById('summary-javascript').textContent = javascript.length > 0 ? `Yes (${javascript.length} scripts)` : 'None';
+                    } else {
+                      document.getElementById('summary-javascript').textContent = 'None';
+                    }
+                    
+                    // Layers
+                    const layers = data.Other.Layers;
+                    if (layers && Array.isArray(layers)) {
+                      document.getElementById('summary-layers').textContent = layers.length > 0 ? layers.length : 'None';
+                    } else {
+                      document.getElementById('summary-layers').textContent = 'None';
+                    }
+                    
+                    // Bookmarks
+                    const bookmarks = data.Other["Bookmarks/Outline/TOC"];
+                    if (bookmarks && Array.isArray(bookmarks)) {
+                      document.getElementById('summary-bookmarks').textContent = bookmarks.length > 0 ? bookmarks.length : 'None';
+                    } else {
+                      document.getElementById('summary-bookmarks').textContent = 'None';
+                    }
+                  }
+                  
+                  // Count multimedia from pages
+                  if (data && data.PerPageInfo) {
+                    let multimediaCount = 0;
+                    for (const pageKey in data.PerPageInfo) {
+                      const pageData = data.PerPageInfo[pageKey];
+                      if (pageData.Multimedia && Array.isArray(pageData.Multimedia)) {
+                        multimediaCount += pageData.Multimedia.length;
+                      }
+                    }
+                    document.getElementById('summary-multimedia').textContent = multimediaCount > 0 ? multimediaCount : 'None';
                   }
                   
                   // Update security status cards
@@ -257,7 +412,7 @@
                   const permissionsText = document.getElementById('permissions-text');
                   
                   let restrictedPermissions = [];
-                  if (data.Permissions) {
+                  if (data && data.Permissions) {
                     for (const [permission, state] of Object.entries(data.Permissions)) {
                       if (state === "Not Allowed") {
                         restrictedPermissions.push(permission);
@@ -282,7 +437,7 @@
                   let hasCompliance = false;
                   let compliantStandards = [];
                   
-                  if (data.Compliancy) {
+                  if (data && data.Compliancy) {
                     for (const [standard, compliant] of Object.entries(data.Compliancy)) {
                       if (compliant === true) {
                         hasCompliance = true;
@@ -311,7 +466,7 @@
                   let hasSummaryInfo = false;
                   
                   // Create a consolidated security details card if there are security details worth highlighting
-                  if ((data.Encryption && data.Encryption.IsEncrypted) || 
+                  if ((data && data.Encryption && data.Encryption.IsEncrypted) || 
                       restrictedPermissions.length > 0 || 
                       hasCompliance) {
                     
@@ -407,22 +562,22 @@
                   const summaryTextElement = document.getElementById('summary-text');
                   
                   // Create a general summary for the document
-                  let generalSummary = `This is a ${data.BasicInfo["Number of pages"] || "multi"}-page PDF`;
+                  let generalSummary = `This is a ${(data && data.BasicInfo && data.BasicInfo["Number of pages"]) ? data.BasicInfo["Number of pages"] : "multi"}-page PDF`;
                   
-                  if (data.Metadata && data.Metadata["Title"]) {
+                  if (data && data.Metadata && data.Metadata["Title"]) {
                     generalSummary += ` titled "${data.Metadata["Title"]}"`;
                   }
                   
-                  if (data.Metadata && data.Metadata["Author"]) {
+                  if (data && data.Metadata && data.Metadata["Author"]) {
                     generalSummary += ` created by ${data.Metadata["Author"]}`;
                   }
                   
-                  if (data.DocumentInfo && data.DocumentInfo["PDF version"]) {
+                  if (data && data.DocumentInfo && data.DocumentInfo["PDF version"]) {
                     generalSummary += ` (PDF version ${data.DocumentInfo["PDF version"]})`;
                   }
                   
                   // Add security information to the general summary if relevant
-                  if (data.Encryption && data.Encryption.IsEncrypted) {
+                  if (data && data.Encryption && data.Encryption.IsEncrypted) {
                     generalSummary += '. The document is password protected';
                     
                     if (data.Encryption.EncryptionAlgorithm) {
@@ -443,41 +598,39 @@
                     generalSummary += `. This document complies with the ${compliantStandards.join(', ')} PDF standard${compliantStandards.length > 1 ? 's' : ''}`;
                   }
                   
-                  generalSummary += '.';
+                  // Add interesting technical details
+                  const technicalFeatures = [];
                   
-                  // Remove SummaryData from JSON to avoid duplication
-                  if (data.SummaryData) {
-                    delete data.SummaryData;
+                  // Check for JavaScript
+                  if (data && data.Other && data.Other.JavaScript && Array.isArray(data.Other.JavaScript) && data.Other.JavaScript.length > 0) {
+                    technicalFeatures.push(`${data.Other.JavaScript.length} JavaScript script${data.Other.JavaScript.length > 1 ? 's' : ''}`);
                   }
+                  
+                  // Check for embedded files
+                  if (data && data.Other && data.Other.EmbeddedFiles && Array.isArray(data.Other.EmbeddedFiles) && data.Other.EmbeddedFiles.length > 0) {
+                    technicalFeatures.push(`${data.Other.EmbeddedFiles.length} embedded file${data.Other.EmbeddedFiles.length > 1 ? 's' : ''}`);
+                  }
+                  
+                  // Check for layers
+                  if (data && data.Other && data.Other.Layers && Array.isArray(data.Other.Layers) && data.Other.Layers.length > 0) {
+                    technicalFeatures.push(`${data.Other.Layers.length} layer${data.Other.Layers.length > 1 ? 's' : ''}`);
+                  }
+                  
+                  // Check for form fields
+                  if (data && data.FormFields && Object.keys(data.FormFields).length > 0) {
+                    technicalFeatures.push(`${Object.keys(data.FormFields).length} form field${Object.keys(data.FormFields).length > 1 ? 's' : ''}`);
+                  }
+                  
+                  if (technicalFeatures.length > 0) {
+                    generalSummary += `. The PDF contains ${technicalFeatures.join(', ')}`;
+                  }
+                  
+                  generalSummary += '.';
                   
                   summaryTextElement.innerHTML = generalSummary;
                   
                   // Display the summary section
                   document.getElementById('pdf-summary').style.display = 'block';
-                }
-                  
-                function generateSummaryFromData(summaryData) {
-                  let summary = [];
-                  
-                  // Handle encryption information
-                  if (summaryData.encrypted) {
-                    summary.push(getPdfInfoSummaryEncrypted);
-                  }
-                  
-                  // Handle permissions information
-                  if (summaryData.restrictedPermissions && summaryData.restrictedPermissions.length > 0) {
-                    const formattedPermissionsText = getPdfInfoSummaryPermissions.replace('{0}', summaryData.restrictedPermissionsCount);
-                    summary.push(formattedPermissionsText);
-                  }
-                  
-                  // Handle standard compliance information
-                  if (summaryData.standardCompliance) {
-                    const formattedComplianceText = getPdfInfoSummaryCompliance
-                      .replace('{0}', summaryData.standardCompliance);
-                    summary.push(formattedComplianceText);
-                  }
-                  
-                  return summary.join(' ');
                 }
                 });
 

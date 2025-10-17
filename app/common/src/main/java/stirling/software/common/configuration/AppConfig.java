@@ -271,9 +271,14 @@ public class AppConfig {
         return "NORMAL";
     }
 
-    @Bean(name = "disablePixel")
-    public boolean disablePixel() {
-        return Boolean.parseBoolean(env.getProperty("DISABLE_PIXEL", "false"));
+    @Bean(name = "scarfEnabled")
+    public boolean scarfEnabled() {
+        return applicationProperties.getSystem().isScarfEnabled();
+    }
+
+    @Bean(name = "posthogEnabled")
+    public boolean posthogEnabled() {
+        return applicationProperties.getSystem().isPosthogEnabled();
     }
 
     @Bean(name = "machineType")
