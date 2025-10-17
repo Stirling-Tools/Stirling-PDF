@@ -48,7 +48,7 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
   const configNavSections = useMemo(() =>
     createConfigNavSections(
       Overview,
-      handleLogout,
+      handleLogout
     ),
     []
   );
