@@ -1022,16 +1022,21 @@ public class CompressController {
 
         ProcessExecutorResult returnCode = null;
         try {
-            // Enable zopfli if requested by setting environment variable
-            Map<String, String> env = null;
-            // Enable zopfli at highest optimization levels for extra savings
+            // On high levels, prefer zopfli if platform supports env wrapper
             if (optimizeLevel >= 8) {
-                env = new HashMap<>();
-                env.put("QPDF_ZOPFLI", "silent");
+                String os = System.getProperty("os.name").toLowerCase(Locale.ROOT);
+                if (!os.contains("win")) {
+                    // Prepend env QPDF_ZOPFLI=silent for Unix-like systems
+                    List<String> zopfliCommand = new ArrayList<>();
+                    zopfliCommand.add("env");
+                    zopfliCommand.add("QPDF_ZOPFLI=silent");
+                    zopfliCommand.addAll(command);
+                    command = zopfliCommand;
+                }
             }
             returnCode =
                     ProcessExecutor.getInstance(ProcessExecutor.Processes.QPDF)
-                            .runCommandWithOutputHandling(command, null, env);
+                            .runCommandWithOutputHandling(command, null);
 
             // Update current file to the QPDF output
             Files.copy(qpdfOutputFile, currentFile, StandardCopyOption.REPLACE_EXISTING);

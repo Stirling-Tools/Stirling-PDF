@@ -162,12 +162,6 @@ public class ProcessExecutor {
 
     public ProcessExecutorResult runCommandWithOutputHandling(
             List<String> command, File workingDirectory) throws IOException, InterruptedException {
-        return runCommandWithOutputHandling(command, workingDirectory, null);
-    }
-
-    public ProcessExecutorResult runCommandWithOutputHandling(
-            List<String> command, File workingDirectory, Map<String, String> environment)
-            throws IOException, InterruptedException {
         String messages = "";
         int exitCode = 1;
         semaphore.acquire();
@@ -179,9 +173,6 @@ public class ProcessExecutor {
             // Use the working directory if it's set
             if (workingDirectory != null) {
                 processBuilder.directory(workingDirectory);
-            }
-            if (environment != null && !environment.isEmpty()) {
-                processBuilder.environment().putAll(environment);
             }
             Process process = processBuilder.start();
 
