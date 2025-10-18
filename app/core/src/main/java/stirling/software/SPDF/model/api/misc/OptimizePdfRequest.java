@@ -45,4 +45,6 @@ public class OptimizePdfRequest extends PDFFile {
             requiredMode = Schema.RequiredMode.REQUIRED,
             defaultValue = "false")
     private Boolean grayscale = false;
+
+    // Removed user-exposed flags; these behaviors are now driven by optimizeLevel automatically.
 }
