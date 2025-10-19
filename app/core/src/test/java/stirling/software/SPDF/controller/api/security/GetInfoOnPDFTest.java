@@ -28,11 +28,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import org.springframework.web.multipart.MultipartFile;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 
@@ -147,7 +147,10 @@ class GetInfoOnPDFTest {
             request.setFileInput(mockFile);
 
             PDDocument loadedDoc = Loader.loadPDF(mockFile.getBytes());
-            Mockito.when(pdfDocumentFactory.load(ArgumentMatchers.any(MockMultipartFile.class), ArgumentMatchers.anyBoolean()))
+            Mockito.when(
+                            pdfDocumentFactory.load(
+                                    ArgumentMatchers.any(MockMultipartFile.class),
+                                    ArgumentMatchers.anyBoolean()))
                     .thenReturn(loadedDoc);
 
             ResponseEntity<byte[]> response = getInfoOnPDF.getPdfInfo(request);
@@ -183,7 +186,10 @@ class GetInfoOnPDFTest {
             request.setFileInput(mockFile);
 
             PDDocument loadedDoc = Loader.loadPDF(mockFile.getBytes());
-            Mockito.when(pdfDocumentFactory.load(ArgumentMatchers.any(MockMultipartFile.class), ArgumentMatchers.anyBoolean()))
+            Mockito.when(
+                            pdfDocumentFactory.load(
+                                    ArgumentMatchers.any(MockMultipartFile.class),
+                                    ArgumentMatchers.anyBoolean()))
                     .thenReturn(loadedDoc);
 
             ResponseEntity<byte[]> response = getInfoOnPDF.getPdfInfo(request);
@@ -216,7 +222,10 @@ class GetInfoOnPDFTest {
             request.setFileInput(mockFile);
 
             PDDocument loadedDoc = Loader.loadPDF(mockFile.getBytes());
-            Mockito.when(pdfDocumentFactory.load(ArgumentMatchers.any(MockMultipartFile.class), ArgumentMatchers.anyBoolean()))
+            Mockito.when(
+                            pdfDocumentFactory.load(
+                                    ArgumentMatchers.any(MockMultipartFile.class),
+                                    ArgumentMatchers.anyBoolean()))
                     .thenReturn(loadedDoc);
 
             ResponseEntity<byte[]> response = getInfoOnPDF.getPdfInfo(request);
@@ -250,7 +259,10 @@ class GetInfoOnPDFTest {
             request.setFileInput(mockFile);
 
             PDDocument loadedDoc = Loader.loadPDF(mockFile.getBytes());
-            Mockito.when(pdfDocumentFactory.load(ArgumentMatchers.any(MockMultipartFile.class), ArgumentMatchers.anyBoolean()))
+            Mockito.when(
+                            pdfDocumentFactory.load(
+                                    ArgumentMatchers.any(MockMultipartFile.class),
+                                    ArgumentMatchers.anyBoolean()))
                     .thenReturn(loadedDoc);
 
             ResponseEntity<byte[]> response = getInfoOnPDF.getPdfInfo(request);
@@ -281,7 +293,10 @@ class GetInfoOnPDFTest {
             request.setFileInput(mockFile);
 
             PDDocument loadedDoc = Loader.loadPDF(mockFile.getBytes());
-            Mockito.when(pdfDocumentFactory.load(ArgumentMatchers.any(MockMultipartFile.class), ArgumentMatchers.anyBoolean()))
+            Mockito.when(
+                            pdfDocumentFactory.load(
+                                    ArgumentMatchers.any(MockMultipartFile.class),
+                                    ArgumentMatchers.anyBoolean()))
                     .thenReturn(loadedDoc);
 
             ResponseEntity<byte[]> response = getInfoOnPDF.getPdfInfo(request);
@@ -313,7 +328,10 @@ class GetInfoOnPDFTest {
             request.setFileInput(mockFile);
 
             PDDocument loadedDoc = Loader.loadPDF(mockFile.getBytes());
-            Mockito.when(pdfDocumentFactory.load(ArgumentMatchers.any(MockMultipartFile.class), ArgumentMatchers.anyBoolean()))
+            Mockito.when(
+                            pdfDocumentFactory.load(
+                                    ArgumentMatchers.any(MockMultipartFile.class),
+                                    ArgumentMatchers.anyBoolean()))
                     .thenReturn(loadedDoc);
 
             ResponseEntity<byte[]> response = getInfoOnPDF.getPdfInfo(request);
@@ -337,7 +355,10 @@ class GetInfoOnPDFTest {
             request.setFileInput(mockFile);
 
             PDDocument loadedDoc = Loader.loadPDF(mockFile.getBytes());
-            Mockito.when(pdfDocumentFactory.load(ArgumentMatchers.any(MockMultipartFile.class), ArgumentMatchers.anyBoolean()))
+            Mockito.when(
+                            pdfDocumentFactory.load(
+                                    ArgumentMatchers.any(MockMultipartFile.class),
+                                    ArgumentMatchers.anyBoolean()))
                     .thenReturn(loadedDoc);
 
             ResponseEntity<byte[]> response = getInfoOnPDF.getPdfInfo(request);
@@ -370,7 +391,10 @@ class GetInfoOnPDFTest {
             request.setFileInput(mockFile);
 
             PDDocument loadedDoc = Loader.loadPDF(mockFile.getBytes());
-            Mockito.when(pdfDocumentFactory.load(ArgumentMatchers.any(MockMultipartFile.class), ArgumentMatchers.anyBoolean()))
+            Mockito.when(
+                            pdfDocumentFactory.load(
+                                    ArgumentMatchers.any(MockMultipartFile.class),
+                                    ArgumentMatchers.anyBoolean()))
                     .thenReturn(loadedDoc);
 
             ResponseEntity<byte[]> response = getInfoOnPDF.getPdfInfo(request);
@@ -395,7 +419,10 @@ class GetInfoOnPDFTest {
             request.setFileInput(mockFile);
 
             PDDocument loadedDoc = Loader.loadPDF(mockFile.getBytes());
-            Mockito.when(pdfDocumentFactory.load(ArgumentMatchers.any(MockMultipartFile.class), ArgumentMatchers.anyBoolean()))
+            Mockito.when(
+                            pdfDocumentFactory.load(
+                                    ArgumentMatchers.any(MockMultipartFile.class),
+                                    ArgumentMatchers.anyBoolean()))
                     .thenReturn(loadedDoc);
 
             ResponseEntity<byte[]> response = getInfoOnPDF.getPdfInfo(request);
@@ -426,7 +453,10 @@ class GetInfoOnPDFTest {
             request.setFileInput(mockFile);
 
             PDDocument loadedDoc = Loader.loadPDF(mockFile.getBytes());
-            Mockito.when(pdfDocumentFactory.load(ArgumentMatchers.any(MockMultipartFile.class), ArgumentMatchers.anyBoolean()))
+            Mockito.when(
+                            pdfDocumentFactory.load(
+                                    ArgumentMatchers.any(MockMultipartFile.class),
+                                    ArgumentMatchers.anyBoolean()))
                     .thenReturn(loadedDoc);
 
             ResponseEntity<byte[]> response = getInfoOnPDF.getPdfInfo(request);
@@ -459,7 +489,10 @@ class GetInfoOnPDFTest {
             request.setFileInput(mockFile);
 
             PDDocument loadedDoc = Loader.loadPDF(mockFile.getBytes());
-            Mockito.when(pdfDocumentFactory.load(ArgumentMatchers.any(MockMultipartFile.class), ArgumentMatchers.anyBoolean()))
+            Mockito.when(
+                            pdfDocumentFactory.load(
+                                    ArgumentMatchers.any(MockMultipartFile.class),
+                                    ArgumentMatchers.anyBoolean()))
                     .thenReturn(loadedDoc);
 
             ResponseEntity<byte[]> response = getInfoOnPDF.getPdfInfo(request);
@@ -486,7 +519,8 @@ class GetInfoOnPDFTest {
 
             ResponseEntity<byte[]> response = getInfoOnPDF.getPdfInfo(request);
 
-            Assertions.assertEquals(HttpStatus.OK, response.getStatusCode()); // Returns error JSON with 200
+            Assertions.assertEquals(
+                    HttpStatus.OK, response.getStatusCode()); // Returns error JSON with 200
             String jsonResponse = new String(response.getBody(), StandardCharsets.UTF_8);
             JsonNode jsonNode = objectMapper.readTree(jsonResponse);
 
@@ -554,8 +588,7 @@ class GetInfoOnPDFTest {
                         }
 
                         @Override
-                        public void transferTo(java.io.File dest) throws IllegalStateException {
-                        }
+                        public void transferTo(java.io.File dest) throws IllegalStateException {}
                     };
 
             PDFFile request = new PDFFile();
@@ -567,7 +600,8 @@ class GetInfoOnPDFTest {
             JsonNode jsonNode = objectMapper.readTree(jsonResponse);
 
             Assertions.assertTrue(jsonNode.has("error"));
-            Assertions.assertTrue(jsonNode.get("error").asText().contains("exceeds maximum allowed size"));
+            Assertions.assertTrue(
+                    jsonNode.get("error").asText().contains("exceeds maximum allowed size"));
         }
     }
 
@@ -645,7 +679,10 @@ class GetInfoOnPDFTest {
                 request.setFileInput(mockFile);
 
                 PDDocument loadedDoc = Loader.loadPDF(mockFile.getBytes());
-                Mockito.when(pdfDocumentFactory.load(ArgumentMatchers.any(MockMultipartFile.class), ArgumentMatchers.anyBoolean()))
+                Mockito.when(
+                                pdfDocumentFactory.load(
+                                        ArgumentMatchers.any(MockMultipartFile.class),
+                                        ArgumentMatchers.anyBoolean()))
                         .thenReturn(loadedDoc);
 
                 ResponseEntity<byte[]> response = getInfoOnPDF.getPdfInfo(request);
@@ -678,7 +715,10 @@ class GetInfoOnPDFTest {
                 request.setFileInput(mockFile);
 
                 PDDocument loadedDoc = Loader.loadPDF(mockFile.getBytes());
-                Mockito.when(pdfDocumentFactory.load(ArgumentMatchers.any(MockMultipartFile.class), ArgumentMatchers.anyBoolean()))
+                Mockito.when(
+                                pdfDocumentFactory.load(
+                                        ArgumentMatchers.any(MockMultipartFile.class),
+                                        ArgumentMatchers.anyBoolean()))
                         .thenReturn(loadedDoc);
 
                 ResponseEntity<byte[]> response = getInfoOnPDF.getPdfInfo(request);
@@ -711,7 +751,10 @@ class GetInfoOnPDFTest {
             request.setFileInput(mockFile);
 
             PDDocument loadedDoc = Loader.loadPDF(mockFile.getBytes());
-            Mockito.when(pdfDocumentFactory.load(ArgumentMatchers.any(MockMultipartFile.class), ArgumentMatchers.anyBoolean()))
+            Mockito.when(
+                            pdfDocumentFactory.load(
+                                    ArgumentMatchers.any(MockMultipartFile.class),
+                                    ArgumentMatchers.anyBoolean()))
                     .thenReturn(loadedDoc);
 
             ResponseEntity<byte[]> response = getInfoOnPDF.getPdfInfo(request);
@@ -743,7 +786,10 @@ class GetInfoOnPDFTest {
             request.setFileInput(mockFile);
 
             PDDocument loadedDoc = Loader.loadPDF(mockFile.getBytes());
-            Mockito.when(pdfDocumentFactory.load(ArgumentMatchers.any(MockMultipartFile.class), ArgumentMatchers.anyBoolean()))
+            Mockito.when(
+                            pdfDocumentFactory.load(
+                                    ArgumentMatchers.any(MockMultipartFile.class),
+                                    ArgumentMatchers.anyBoolean()))
                     .thenReturn(loadedDoc);
 
             ResponseEntity<byte[]> response = getInfoOnPDF.getPdfInfo(request);
