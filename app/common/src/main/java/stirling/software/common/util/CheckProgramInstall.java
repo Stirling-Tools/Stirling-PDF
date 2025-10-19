@@ -12,6 +12,7 @@ public class CheckProgramInstall {
     private static boolean pythonAvailableChecked = false;
     private static String availablePythonCommand = null;
     private static boolean ffmpegAvailableChecked = false;
+    private static boolean ffmpegAvailable = false;
 
     /**
      * Checks which Python command is available and returns it.
@@ -69,11 +70,13 @@ public class CheckProgramInstall {
                 ProcessExecutorResult result =
                         ProcessExecutor.getInstance(ProcessExecutor.Processes.FFMPEG)
                                 .runCommandWithOutputHandling(Arrays.asList("ffmpeg", "-version"));
-                return true; // Command succeeded, FFmpeg is available
+                ffmpegAvailable = true; // Command succeeded, FFmpeg is available
             } catch (IOException | InterruptedException e) {
-                return false; // Command failed, FFmpeg is not available
+                ffmpegAvailable = false; // Command failed, FFmpeg is not available
+            } finally {
+                ffmpegAvailableChecked = true;
             }
         }
-        return false;
+        return ffmpegAvailable;
     }
 }

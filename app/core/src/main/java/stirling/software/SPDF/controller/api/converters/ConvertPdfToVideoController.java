@@ -1,5 +1,10 @@
 package stirling.software.SPDF.controller.api.converters;
 
+import java.awt.AlphaComposite;
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -31,7 +36,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.converters.PdfToVideoRequest;
 import stirling.software.common.model.ApplicationProperties;
@@ -50,7 +54,6 @@ import stirling.software.common.util.WebResponseUtils;
 @RequestMapping("/api/v1/convert")
 @Tag(name = "Convert", description = "Convert APIs")
 @RequiredArgsConstructor
-@Slf4j
 public class ConvertPdfToVideoController {
 
     private static final Set<String> SUPPORTED_FORMATS = Set.of("mp4", "webm");
@@ -60,6 +63,9 @@ public class ConvertPdfToVideoController {
                     "1080P", "scale=-2:1080,setsar=1",
                     "720P", "scale=-2:720,setsar=1",
                     "480P", "scale=-2:480,setsar=1");
+    private static final String WATERMARK_TEXT = "Stirling-PDF";
+    private static final float WATERMARK_OPACITY = 0.12f;
+    private static final int WATERMARK_MARGIN = 20;
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
@@ -141,7 +147,6 @@ public class ConvertPdfToVideoController {
                     ProcessExecutor.getInstance(ProcessExecutor.Processes.FFMPEG)
                             .runCommandWithOutputHandling(
                                     command, framesDirectory.getPath().toFile());
-            log.info("FFmpeg conversion logs: {}", result.getMessages());
 
             byte[] videoBytes = Files.readAllBytes(outputVideo.getPath());
             MediaType mediaType = getMediaType(format);
@@ -161,11 +166,37 @@ public class ConvertPdfToVideoController {
             }
             for (int pageIndex = 0; pageIndex < pageCount; pageIndex++) {
                 BufferedImage image = renderer.renderImageWithDPI(pageIndex, dpi, ImageType.RGB);
+                applyWatermark(image);
                 Path framePath =
                         outputDir.resolve(
                                 String.format(Locale.ROOT, "frame_%05d.png", pageIndex + 1));
                 ImageIO.write(image, "png", framePath.toFile());
             }
+        }
+    }
+
+    private void applyWatermark(BufferedImage image) {
+        Graphics2D graphics = image.createGraphics();
+        try {
+            graphics.setRenderingHint(
+                    java.awt.RenderingHints.KEY_TEXT_ANTIALIASING,
+                    java.awt.RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+            int fontSize = Math.max(24, Math.min(image.getWidth(), image.getHeight()) / 12);
+            Font font = new Font(Font.SANS_SERIF, Font.BOLD, fontSize);
+            graphics.setFont(font);
+
+            FontMetrics metrics = graphics.getFontMetrics(font);
+            int textWidth = metrics.stringWidth(WATERMARK_TEXT);
+
+            int x = Math.max(WATERMARK_MARGIN, image.getWidth() - textWidth - WATERMARK_MARGIN);
+            int y = image.getHeight() - WATERMARK_MARGIN;
+
+            graphics.setComposite(
+                    AlphaComposite.getInstance(AlphaComposite.SRC_OVER, WATERMARK_OPACITY));
+            graphics.setColor(new Color(255, 255, 255));
+            graphics.drawString(WATERMARK_TEXT, x, y - (metrics.getDescent() / 2));
+        } finally {
+            graphics.dispose();
         }
     }
 
@@ -188,7 +219,6 @@ public class ConvertPdfToVideoController {
             command.addAll(List.of("-c:v", "libvpx-vp9", "-b:v", "0", "-crf", "30"));
         }
         command.add(outputVideo.getAbsolutePath());
-        log.info("Command: {}", command);
         return command;
     }
 
