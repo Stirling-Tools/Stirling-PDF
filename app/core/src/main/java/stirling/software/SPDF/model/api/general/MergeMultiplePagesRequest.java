@@ -19,6 +19,13 @@ public class MergeMultiplePagesRequest extends PDFFile {
             allowableValues = {"2", "3", "4", "9", "16"})
     private int pagesPerSheet;
 
+    @Schema(
+            description = "The orientation of the output PDF pages",
+            type = "string",
+            defaultValue = "PORTRAIT",
+            allowableValues = {"PORTRAIT", "LANDSCAPE"})
+    private String orientation;
+
     @Schema(description = "Boolean for if you wish to add border around the pages")
     private Boolean addBorder;
 }

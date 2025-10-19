@@ -28,6 +28,13 @@
                     <option value="16">16</option>
                   </select>
                 </div>
+                <div class="mb-3">
+                  <label for="orientation" th:text="#{pageLayout.orientation}"></label>
+                  <select class="form-control" id="orientation" name="orientation">
+                    <option value="PORTRAIT">Portrait</option>
+                    <option value="LANDSCAPE">Landscape</option>
+                  </select>
+                </div>
                 <div class="form-check mb-3">
                   <input id="addBorder" name="addBorder" type="checkbox">
                   <label for="addBorder" th:text="#{pageLayout.addBorder}"></label>

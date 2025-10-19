@@ -51,6 +51,7 @@ public class MultiPageLayoutController {
 
         int pagesPerSheet = request.getPagesPerSheet();
         MultipartFile file = request.getFileInput();
+        String orientation = request.getOrientation();
         boolean addBorder = Boolean.TRUE.equals(request.getAddBorder());
 
         if (pagesPerSheet != 2
@@ -69,14 +70,14 @@ public class MultiPageLayoutController {
         PDDocument newDocument =
                 pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDocument);
 
-        // Create a new A4 landscape rectangle that will be used when pagesPerSheet is 2 or 3
+        // Create a new A4 landscape rectangle that we use when orientation is landscape
         PDRectangle a4Landscape =
                 new PDRectangle(PDRectangle.A4.getHeight(), PDRectangle.A4.getWidth());
 
         PDPage newPage =
-                (pagesPerSheet == 2 || pagesPerSheet == 3)
-                        ? new PDPage(a4Landscape)
-                        : new PDPage(PDRectangle.A4);
+                "PORTRAIT".equals(orientation)
+                        ? new PDPage(PDRectangle.A4)
+                        : new PDPage(a4Landscape);
         newDocument.addPage(newPage);
 
         int totalPages = sourceDocument.getNumberOfPages();
@@ -97,9 +98,9 @@ public class MultiPageLayoutController {
                 // Close the current content stream and create a new page and content stream
                 contentStream.close();
                 newPage =
-                        (pagesPerSheet == 2 || pagesPerSheet == 3)
-                                ? new PDPage(a4Landscape)
-                                : new PDPage(PDRectangle.A4);
+                        "PORTRAIT".equals(orientation)
+                                ? new PDPage(PDRectangle.A4)
+                                : new PDPage(a4Landscape);
                 newDocument.addPage(newPage);
                 contentStream =
                         new PDPageContentStream(
