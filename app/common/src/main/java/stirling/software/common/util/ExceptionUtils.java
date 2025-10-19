@@ -180,6 +180,15 @@ public class ExceptionUtils {
                 "error.toolRequired", "{0} is required for {1}", null, "Python", "WebP conversion");
     }
 
+    public static IOException createFfmpegRequiredException() {
+        return createIOException(
+                "error.toolRequired",
+                "{0} is required for {1}",
+                null,
+                "FFmpeg",
+                "PDF to video conversion");
+    }
+
     /** Create file operation exceptions. */
     public static IOException createFileNotFoundException(String fileId) {
         return createIOException("error.fileNotFound", "File not found with ID: {0}", null, fileId);
