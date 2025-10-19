@@ -105,12 +105,12 @@ class FileMonitorTest {
         // Create a PDF file
         Path pdfFile = tempDir.resolve("test.pdf");
         Files.write(pdfFile, "pdf content".getBytes());
-        Files.setLastModifiedTime(pdfFile, FileTime.from(Instant.now().minusMillis(10000)));
+        Files.setLastModifiedTime(pdfFile, FileTime.from(Instant.ofEpochMilli(1000000L)));
 
         // Create a TXT file
         Path txtFile = tempDir.resolve("test.txt");
         Files.write(txtFile, "text content".getBytes());
-        Files.setLastModifiedTime(txtFile, FileTime.from(Instant.now().minusMillis(10000)));
+        Files.setLastModifiedTime(txtFile, FileTime.from(Instant.ofEpochMilli(1000000L)));
 
         // PDF file should be ready for processing
         assertTrue(pdfMonitor.isFileReadyForProcessing(pdfFile));
@@ -168,7 +168,7 @@ class FileMonitorTest {
         Files.createDirectory(testDir);
 
         // Set modified time to 10 seconds ago
-        Files.setLastModifiedTime(testDir, FileTime.from(Instant.now().minusMillis(10000)));
+        Files.setLastModifiedTime(testDir, FileTime.from(Instant.ofEpochMilli(1000000L)));
 
         // A directory should not be considered ready for processing
         boolean isReady = fileMonitor.isFileReadyForProcessing(testDir);

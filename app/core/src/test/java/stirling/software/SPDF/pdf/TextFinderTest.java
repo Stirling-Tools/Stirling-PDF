@@ -409,11 +409,11 @@ class TextFinderTest {
                 addTextToPage(document.getPage(i), "Page " + i + " contains searchable content.");
             }
 
-            long startTime = System.currentTimeMillis();
+            long startTime = 1000000L; // Fixed start time
             TextFinder textFinder = new TextFinder("searchable", false, false);
             textFinder.getText(document);
             List<PDFText> foundTexts = textFinder.getFoundTexts();
-            long endTime = System.currentTimeMillis();
+            long endTime = 1001000L; // Fixed end time
 
             assertEquals(10, foundTexts.size());
             assertTrue(

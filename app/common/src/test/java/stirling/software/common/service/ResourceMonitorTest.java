@@ -126,7 +126,7 @@ class ResourceMonitorTest {
     void resourceMetricsShouldDetectStaleState() {
         // Given
         Instant now = Instant.now();
-        Instant pastInstant = now.minusMillis(6000);
+        Instant pastInstant = now.minusMillis(6000); // 6 seconds ago
 
         ResourceMetrics staleMetrics = new ResourceMetrics(0.5, 0.5, 1024, 2048, 4096, pastInstant);
         ResourceMetrics freshMetrics = new ResourceMetrics(0.5, 0.5, 1024, 2048, 4096, now);
