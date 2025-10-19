@@ -5,7 +5,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.util.Calendar;
+import java.util.GregorianCalendar;
 
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.*;
@@ -45,6 +45,9 @@ class GetInfoOnPDFTest {
     @InjectMocks private GetInfoOnPDF getInfoOnPDF;
 
     private ObjectMapper objectMapper;
+
+    private static final java.time.ZonedDateTime FIXED_NOW =
+            java.time.ZonedDateTime.parse("2020-01-01T00:00:00Z");
 
     @BeforeEach
     void setUp() {
@@ -100,7 +103,7 @@ class GetInfoOnPDFTest {
         info.setCreator("Test Creator");
         info.setProducer("Test Producer");
 
-        Calendar cal = Calendar.getInstance();
+        GregorianCalendar cal = GregorianCalendar.from(FIXED_NOW);
         info.setCreationDate(cal);
         info.setModificationDate(cal);
 
