@@ -175,7 +175,7 @@ public class TempFileCleanupServiceTest {
                                 // maxAgeMillis
                                 if (fileName.contains("old")) {
                                     return FileTime.fromMillis(
-                                            System.currentTimeMillis() - 5000); // 5 seconds ago
+                                            System.currentTimeMillis() - 5000000); // 5 seconds ago
                                 }
                                 // For empty.tmp file, return a timestamp older than 5 minutes (for
                                 // empty file test)
