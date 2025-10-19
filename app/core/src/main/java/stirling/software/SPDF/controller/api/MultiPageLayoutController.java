@@ -68,7 +68,15 @@ public class MultiPageLayoutController {
         PDDocument sourceDocument = pdfDocumentFactory.load(file);
         PDDocument newDocument =
                 pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDocument);
-        PDPage newPage = new PDPage(PDRectangle.A4);
+
+        // Create a new A4 landscape rectangle that will be used when pagesPerSheet is 2 or 3
+        PDRectangle a4Landscape =
+                new PDRectangle(PDRectangle.A4.getHeight(), PDRectangle.A4.getWidth());
+
+        PDPage newPage =
+                (pagesPerSheet == 2 || pagesPerSheet == 3)
+                        ? new PDPage(a4Landscape)
+                        : new PDPage(PDRectangle.A4);
         newDocument.addPage(newPage);
 
         int totalPages = sourceDocument.getNumberOfPages();
@@ -88,7 +96,10 @@ public class MultiPageLayoutController {
             if (i != 0 && i % pagesPerSheet == 0) {
                 // Close the current content stream and create a new page and content stream
                 contentStream.close();
-                newPage = new PDPage(PDRectangle.A4);
+                newPage =
+                        (pagesPerSheet == 2 || pagesPerSheet == 3)
+                                ? new PDPage(a4Landscape)
+                                : new PDPage(PDRectangle.A4);
                 newDocument.addPage(newPage);
                 contentStream =
                         new PDPageContentStream(
