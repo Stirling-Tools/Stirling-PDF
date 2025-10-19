@@ -5,6 +5,7 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
+import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -65,7 +66,6 @@ public class ConvertPdfToVideoController {
                     "480P", "scale=-2:480,setsar=1");
     private static final String WATERMARK_TEXT = "Stirling-PDF";
     private static final float WATERMARK_OPACITY = 0.12f;
-    private static final int WATERMARK_MARGIN = 20;
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
@@ -181,20 +181,31 @@ public class ConvertPdfToVideoController {
             graphics.setRenderingHint(
                     java.awt.RenderingHints.KEY_TEXT_ANTIALIASING,
                     java.awt.RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-            int fontSize = Math.max(24, Math.min(image.getWidth(), image.getHeight()) / 12);
+            int baseDimension = Math.min(image.getWidth(), image.getHeight());
+            int fontSize = Math.max(32, baseDimension / 5);
             Font font = new Font(Font.SANS_SERIF, Font.BOLD, fontSize);
             graphics.setFont(font);
 
             FontMetrics metrics = graphics.getFontMetrics(font);
             int textWidth = metrics.stringWidth(WATERMARK_TEXT);
+            int textHeight = metrics.getAscent();
 
-            int x = Math.max(WATERMARK_MARGIN, image.getWidth() - textWidth - WATERMARK_MARGIN);
-            int y = image.getHeight() - WATERMARK_MARGIN;
+            AffineTransform originalTransform = graphics.getTransform();
+            double angle = Math.atan2(image.getHeight(), image.getWidth());
+            graphics.translate(image.getWidth() / 2.0, image.getHeight() / 2.0);
+            graphics.rotate(-angle);
+
+            graphics.setComposite(
+                    AlphaComposite.getInstance(AlphaComposite.SRC_OVER, WATERMARK_OPACITY / 2));
+            graphics.setColor(Color.BLACK);
+            graphics.drawString(WATERMARK_TEXT, -textWidth / 2f + 3, textHeight / 2f + 3);
 
             graphics.setComposite(
                     AlphaComposite.getInstance(AlphaComposite.SRC_OVER, WATERMARK_OPACITY));
-            graphics.setColor(new Color(255, 255, 255));
-            graphics.drawString(WATERMARK_TEXT, x, y - (metrics.getDescent() / 2));
+            graphics.setColor(Color.WHITE);
+            graphics.drawString(WATERMARK_TEXT, -textWidth / 2f, textHeight / 2f);
+
+            graphics.setTransform(originalTransform);
         } finally {
             graphics.dispose();
         }
