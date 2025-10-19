@@ -12,13 +12,18 @@ interface FooterProps {
 }
 
 export default function Footer({
-  privacyPolicy = '/privacy',
-  termsAndConditions = '/terms',
-  accessibilityStatement = 'accessibility',
+  privacyPolicy,
+  termsAndConditions,
+  accessibilityStatement,
+  cookiePolicy,
+  impressum,
   analyticsEnabled = false
 }: FooterProps) {
   const { t } = useTranslation();
   const { showCookiePreferences } = useCookieConsent({ analyticsEnabled });
+
+  // Helper to check if a value is valid (not null/undefined/empty string)
+  const isValidLink = (link?: string) => link && link.trim().length > 0;
 
   return (
     <div style={{
@@ -43,7 +48,7 @@ export default function Footer({
           >
             {t('survey.nav', 'Survey')}
           </a>
-          {privacyPolicy && (
+          {isValidLink(privacyPolicy) && (
             <a
               className="footer-link px-3"
               target="_blank"
@@ -53,7 +58,7 @@ export default function Footer({
               {t('legal.privacy', 'Privacy Policy')}
             </a>
           )}
-          {termsAndConditions && (
+          {isValidLink(termsAndConditions) && (
             <a
               className="footer-link px-3"
               target="_blank"
@@ -63,7 +68,7 @@ export default function Footer({
               {t('legal.terms', 'Terms and Conditions')}
             </a>
           )}
-          {accessibilityStatement && (
+          {isValidLink(accessibilityStatement) && (
             <a
               className="footer-link px-3"
               target="_blank"
@@ -71,6 +76,26 @@ export default function Footer({
               href={accessibilityStatement}
             >
               {t('legal.accessibility', 'Accessibility')}
+            </a>
+          )}
+          {isValidLink(cookiePolicy) && (
+            <a
+              className="footer-link px-3"
+              target="_blank"
+              rel="noopener noreferrer"
+              href={cookiePolicy}
+            >
+              {t('legal.cookiePolicy', 'Cookie Policy')}
+            </a>
+          )}
+          {isValidLink(impressum) && (
+            <a
+              className="footer-link px-3"
+              target="_blank"
+              rel="noopener noreferrer"
+              href={impressum}
+            >
+              {t('legal.impressum', 'Impressum')}
             </a>
           )}
           {analyticsEnabled && (

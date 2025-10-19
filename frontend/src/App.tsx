@@ -9,6 +9,7 @@ import { SidebarProvider } from "./contexts/SidebarContext";
 import { PreferencesProvider } from "./contexts/PreferencesContext";
 import ErrorBoundary from "./components/shared/ErrorBoundary";
 import HomePage from "./pages/HomePage";
+import AppConfigLoader from "./components/shared/AppConfigLoader";
 
 // Import global styles
 import "./styles/tailwind.css";
@@ -43,6 +44,7 @@ export default function App() {
       <PreferencesProvider>
         <RainbowThemeProvider>
           <ErrorBoundary>
+            <AppConfigLoader />
             <FileContextProvider enableUrlSync={true} enablePersistence={true}>
               <NavigationProvider>
                 <FilesModalProvider>

@@ -51,9 +51,7 @@ public class ConfigController {
             configData.put("serverPort", appConfig.getServerPort());
 
             // Extract values from ApplicationProperties
-            configData.put("appName", applicationProperties.getUi().getAppName());
             configData.put("appNameNavbar", applicationProperties.getUi().getAppNameNavbar());
-            configData.put("homeDescription", applicationProperties.getUi().getHomeDescription());
             configData.put("languages", applicationProperties.getUi().getLanguages());
 
             // Security settings

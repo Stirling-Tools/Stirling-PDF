@@ -7,8 +7,6 @@ import { useRestartServer } from '../useRestartServer';
 
 interface GeneralSettingsData {
   ui: {
-    appName?: string;
-    homeDescription?: string;
     appNameNavbar?: string;
     languages?: string[];
   };

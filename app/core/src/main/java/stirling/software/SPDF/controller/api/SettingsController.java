@@ -72,14 +72,6 @@ public class SettingsController {
         // Update UI settings
         if (settings.containsKey("ui")) {
             Map<String, String> ui = (Map<String, String>) settings.get("ui");
-            if (ui.containsKey("appName")) {
-                GeneralUtils.saveKeyToSettings("ui.appName", ui.get("appName"));
-                applicationProperties.getUi().setAppName(ui.get("appName"));
-            }
-            if (ui.containsKey("homeDescription")) {
-                GeneralUtils.saveKeyToSettings("ui.homeDescription", ui.get("homeDescription"));
-                applicationProperties.getUi().setHomeDescription(ui.get("homeDescription"));
-            }
             if (ui.containsKey("appNameNavbar")) {
                 GeneralUtils.saveKeyToSettings("ui.appNameNavbar", ui.get("appNameNavbar"));
                 applicationProperties.getUi().setAppNameNavbar(ui.get("appNameNavbar"));
