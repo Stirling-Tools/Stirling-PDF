@@ -187,7 +187,8 @@ public class ConvertPdfToVideoController {
         } else if ("webm".equals(format)) {
             command.addAll(List.of("-c:v", "libvpx-vp9", "-b:v", "0", "-crf", "30"));
         }
-        command.add(outputVideo.getFile().getName());
+        command.add(outputVideo.getAbsolutePath());
+        log.info("Command: {}", command);
         return command;
     }
 

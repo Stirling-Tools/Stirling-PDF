@@ -65,7 +65,7 @@
                 <input id="dpi" type="number" class="form-control" name="dpi" min="72" max="500" value="150" required
                   th:disabled="${!isFfmpegAvailable}">
               </div>
-              <button type="submit" class="btn btn-primary" th:text="#{pdfToVideo.submit}" th:disabled="${!isFfmpegAvailable}"></button>
+              <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{pdfToVideo.submit}" th:disabled="${!isFfmpegAvailable}"></button>
             </form>
           </div>
         </div>
