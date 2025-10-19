@@ -65,7 +65,6 @@ public class ConvertPdfToVideoController {
                     "720P", "scale=-2:720,setsar=1",
                     "480P", "scale=-2:480,setsar=1");
     private static final String WATERMARK_TEXT = "Stirling-PDF";
-    private static final float WATERMARK_OPACITY = 0.12f;
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
@@ -88,6 +87,12 @@ public class ConvertPdfToVideoController {
         }
         if (!MediaType.APPLICATION_PDF_VALUE.equals(inputFile.getContentType())) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+
+        float opacity = request.getOpacity() != null ? request.getOpacity() : 1.0f;
+        if (opacity < 0.0f || opacity > 1.0f) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.invalidFormat", "Invalid {0} format: {1}", "opacity", opacity);
         }
 
         String format = normalizeFormat(request.getVideoFormat());
@@ -136,7 +141,7 @@ public class ConvertPdfToVideoController {
 
             inputFile.transferTo(inputTempFile.getFile());
 
-            generateFrames(inputTempFile.getPath(), framesDirectory.getPath(), dpi);
+            generateFrames(inputTempFile.getPath(), framesDirectory.getPath(), dpi, opacity);
 
             DecimalFormat decimalFormat =
                     new DecimalFormat("0.######", DecimalFormatSymbols.getInstance(Locale.ROOT));
@@ -155,7 +160,8 @@ public class ConvertPdfToVideoController {
         }
     }
 
-    private void generateFrames(Path inputPdf, Path outputDir, int dpi) throws IOException {
+    private void generateFrames(Path inputPdf, Path outputDir, int dpi, float opacity)
+            throws IOException {
         try (PDDocument document = pdfDocumentFactory.load(inputPdf.toFile())) {
             PDFRenderer renderer = new PDFRenderer(document);
             renderer.setSubsamplingAllowed(true);
@@ -166,7 +172,7 @@ public class ConvertPdfToVideoController {
             }
             for (int pageIndex = 0; pageIndex < pageCount; pageIndex++) {
                 BufferedImage image = renderer.renderImageWithDPI(pageIndex, dpi, ImageType.RGB);
-                applyWatermark(image);
+                applyWatermark(image, opacity);
                 Path framePath =
                         outputDir.resolve(
                                 String.format(Locale.ROOT, "frame_%05d.png", pageIndex + 1));
@@ -175,7 +181,7 @@ public class ConvertPdfToVideoController {
         }
     }
 
-    private void applyWatermark(BufferedImage image) {
+    private void applyWatermark(BufferedImage image, float opacity) {
         Graphics2D graphics = image.createGraphics();
         try {
             graphics.setRenderingHint(
@@ -195,13 +201,13 @@ public class ConvertPdfToVideoController {
             graphics.translate(image.getWidth() / 2.0, image.getHeight() / 2.0);
             graphics.rotate(-angle);
 
-            graphics.setComposite(
-                    AlphaComposite.getInstance(AlphaComposite.SRC_OVER, WATERMARK_OPACITY / 2));
+            // Draw shadow
+            graphics.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, opacity / 2));
             graphics.setColor(Color.BLACK);
             graphics.drawString(WATERMARK_TEXT, -textWidth / 2f + 3, textHeight / 2f + 3);
 
-            graphics.setComposite(
-                    AlphaComposite.getInstance(AlphaComposite.SRC_OVER, WATERMARK_OPACITY));
+            // Draw main text
+            graphics.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, opacity));
             graphics.setColor(Color.WHITE);
             graphics.drawString(WATERMARK_TEXT, -textWidth / 2f, textHeight / 2f);
 

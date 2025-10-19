@@ -36,4 +36,11 @@ public class PdfToVideoRequest extends PDFFile {
             maximum = "500",
             defaultValue = "150")
     private Integer dpi = 150;
+
+    @Schema(
+            description = "Opacity of the PDF pages in the video (0.0 to 1.0)",
+            minimum = "0.0",
+            maximum = "1.0",
+            defaultValue = "0.1")
+    private Float opacity = 0.1f;
 }
