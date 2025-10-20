@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Menu, Loader, Group, Text, Checkbox } from '@mantine/core';
-import EditNoteIcon from '@mui/icons-material/EditNote';
+import { LocalIcon } from '../shared/LocalIcon';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import AddIcon from '@mui/icons-material/Add';
@@ -107,16 +107,8 @@ const FileMenuItem: React.FC<FileMenuItemProps> = ({
     });
 
     return () => {
-      try {
-        dragCleanup();
-      } catch {
-        // Cleanup may fail if element was already removed
-      }
-      try {
-        dropCleanup();
-      } catch {
-        // Cleanup may fail if element was already removed
-      }
+      try { dragCleanup(); } catch {}
+      try { dropCleanup(); } catch {}
     };
   }, []); // NOTE: no `onReorder` here
 
@@ -191,23 +183,25 @@ const FileMenuItem: React.FC<FileMenuItemProps> = ({
 };
 
 interface PageEditorFileDropdownProps {
-  displayName: string;
   files: PageEditorFile[];
   onToggleSelection: (fileId: FileId) => void;
   onReorder: (fromIndex: number, toIndex: number) => void;
   switchingTo?: string | null;
   viewOptionStyle: React.CSSProperties;
   fileColorMap: Map<string, number>;
+  selectedCount: number;
+  totalCount: number;
 }
 
 export const PageEditorFileDropdown: React.FC<PageEditorFileDropdownProps> = ({
-  displayName,
   files,
   onToggleSelection,
   onReorder,
   switchingTo,
   viewOptionStyle,
   fileColorMap,
+  selectedCount,
+  totalCount,
 }) => {
   const { openFilesModal } = useFilesModalContext();
 
@@ -218,9 +212,9 @@ export const PageEditorFileDropdown: React.FC<PageEditorFileDropdownProps> = ({
           {switchingTo === "pageEditor" ? (
             <Loader size="xs" />
           ) : (
-            <EditNoteIcon fontSize="small" />
+            <LocalIcon icon="dashboard-customize-rounded" width="1.4rem" height="1.4rem" />
           )}
-          <FitText text={displayName} fontSize={14} minimumFontScale={0.6} />
+          <span>{selectedCount}/{totalCount} selected</span>
           <KeyboardArrowDownIcon fontSize="small" />
         </div>
       </Menu.Target>

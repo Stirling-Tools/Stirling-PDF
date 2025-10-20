@@ -3,9 +3,9 @@ import { SegmentedControl, Loader } from "@mantine/core";
 import { useRainbowThemeContext } from "./RainbowThemeProvider";
 import rainbowStyles from '../../styles/rainbow.module.css';
 import VisibilityIcon from "@mui/icons-material/Visibility";
-import EditNoteIcon from "@mui/icons-material/EditNote";
 import FolderIcon from "@mui/icons-material/Folder";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
+import { LocalIcon } from "./LocalIcon";
 import { WorkbenchType, isValidWorkbench } from '../../types/workbench';
 import { PageEditorFileDropdown } from './PageEditorFileDropdown';
 import { usePageEditor } from '../../contexts/PageEditorContext';
@@ -38,6 +38,7 @@ const viewOptionStyle: React.CSSProperties = {
   alignItems: 'center',
   gap: '0.5rem',
   justifyContent: 'center',
+  padding: '2px 1rem',
 };
 
 // Helper function to create view options for SegmentedControl
@@ -71,11 +72,10 @@ const createViewOptions = (
     ) : (
       <div style={viewOptionStyle}>
         {switchingTo === "viewer" ? (
-          <Loader size="xs" />
+          <Loader size="sm" />
         ) : (
-          <VisibilityIcon fontSize="small" />
+          <VisibilityIcon fontSize="medium" />
         )}
-        <span className="ph-no-capture">{viewerDisplayName}</span>
       </div>
     ),
     value: "viewer",
@@ -94,22 +94,22 @@ const createViewOptions = (
   const pageEditorOption = {
     label: showPageEditorDropdown ? (
       <PageEditorFileDropdown
-        displayName={pageEditorDisplayName}
         files={pageEditorState!.files}
         onToggleSelection={pageEditorState!.onToggleSelection}
         onReorder={pageEditorState!.onReorder}
         switchingTo={switchingTo}
         viewOptionStyle={viewOptionStyle}
         fileColorMap={pageEditorState!.fileColorMap}
+        selectedCount={pageEditorState!.selectedCount}
+        totalCount={pageEditorState!.totalCount}
       />
     ) : (
       <div style={viewOptionStyle}>
         {switchingTo === "pageEditor" ? (
-          <Loader size="xs" />
+          <Loader size="sm" />
         ) : (
-          <EditNoteIcon fontSize="small" />
+          <LocalIcon icon="dashboard-customize-rounded" width="1.5rem" height="1.5rem" />
         )}
-        <span>{pageEditorDisplayName}</span>
       </div>
     ),
     value: "pageEditor",
@@ -118,17 +118,7 @@ const createViewOptions = (
   const fileEditorOption = {
     label: (
       <div style={viewOptionStyle}>
-        {currentView === "fileEditor" ? (
-          <>
-            {switchingTo === "fileEditor" ? <Loader size="xs" /> : <FolderIcon fontSize="small" />}
-            <span>Active Files</span>
-          </>
-        ) : (
-          <>
-            {switchingTo === "fileEditor" ? <Loader size="xs" /> : <FolderIcon fontSize="small" />}
-            <span>Active Files</span>
-          </>
-        )}
+        {switchingTo === "fileEditor" ? <Loader size="sm" /> : <FolderIcon fontSize="medium" />}
       </div>
     ),
     value: "fileEditor",
@@ -146,9 +136,9 @@ const createViewOptions = (
       label: (
         <div style={viewOptionStyle as React.CSSProperties}>
           {switchingTo === view.workbenchId ? (
-            <Loader size="xs" />
+            <Loader size="sm" />
           ) : (
-            view.icon || <PictureAsPdfIcon fontSize="small" />
+            view.icon || <PictureAsPdfIcon fontSize="medium" />
           )}
           <span>{view.label}</span>
         </div>
@@ -344,7 +334,7 @@ const TopControls = ({
 
   return (
     <div className="absolute left-0 w-full top-0 z-[100] pointer-events-none">
-      <div className="flex justify-center mt-[0.5rem]">
+      <div className="flex justify-center">
         <SegmentedControl
           data-tour="view-switcher"
           data={viewOptions}
@@ -361,18 +351,32 @@ const TopControls = ({
           }}
           styles={{
             root: {
-              borderRadius: 9999,
-              maxHeight: '2.6rem',
+              borderRadius: '0 0 16px 16px',
+              height: '1.8rem',
+              backgroundColor: 'var(--bg-toolbar)',
+              border: '1px solid var(--border-default)',
+              borderTop: 'none',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+              outline: '1px solid rgba(0, 0, 0, 0.1)',
+              outlineOffset: '-1px',
+              padding: '0 0',
+              gap: '0',
             },
             control: {
-              borderRadius: 9999,
+              borderRadius: '0 0 16px 16px',
+              padding: '0',
+              border: 'none',
             },
             indicator: {
-              borderRadius: 9999,
-              maxHeight: '2rem',
+              borderRadius: '0 0 16px 16px',
+              height: '100%',
+              top: '0rem',
+              margin: '0',
+              border: 'none',
             },
             label: {
-              paddingTop: '0rem',
+              paddingTop: '0',
+              paddingBottom: '0',
             }
           }}
         />

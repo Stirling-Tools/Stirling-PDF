@@ -48,6 +48,7 @@ interface PageThumbnailProps {
   setPdfDocument: (doc: PDFDocument) => void;
   splitPositions: Set<number>;
   onInsertFiles?: (files: File[], insertAfterPage: number) => void;
+  zoomLevel?: number;
 }
 
 const PageThumbnail: React.FC<PageThumbnailProps> = ({
@@ -79,6 +80,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
   pdfDocument,
   splitPositions,
   onInsertFiles,
+  zoomLevel = 1.0,
 }: PageThumbnailProps) => {
   const [isMouseDown, setIsMouseDown] = useState(false);
   const [mouseStartPos, setMouseStartPos] = useState<{x: number, y: number} | null>(null);
@@ -351,8 +353,6 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
         !rounded-lg
         ${selectionMode ? 'cursor-pointer' : 'cursor-grab'}
         select-none
-        w-[20rem]
-        h-[20rem]
         flex items-center justify-center
         flex-shrink-0
         shadow-sm
@@ -364,6 +364,8 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
         ${isBoxSelected ? 'ring-4 ring-blue-400 ring-offset-2' : ''}
       `}
       style={{
+        width: `calc(20rem * ${zoomLevel})`,
+        height: `calc(20rem * ${zoomLevel})`,
         transition: isAnimating ? 'none' : 'transform 0.2s ease-in-out',
         ...(isBoxSelected && {
           boxShadow: '0 0 0 4px rgba(59, 130, 246, 0.5)',

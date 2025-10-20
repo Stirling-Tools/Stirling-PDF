@@ -27,9 +27,10 @@ interface DragDropGridProps<T extends DragDropItem> {
   selectionMode: boolean;
   isAnimating: boolean;
   onReorderPages: (sourcePageNumber: number, targetIndex: number, selectedPageIds?: string[]) => void;
-  renderItem: (item: T, index: number, refs: React.MutableRefObject<Map<string, HTMLDivElement>>, boxSelectedIds: string[], clearBoxSelection: () => void, getBoxSelection: () => string[], activeId: string | null, isOver: boolean, dragHandleProps?: any) => React.ReactNode;
+  renderItem: (item: T, index: number, refs: React.MutableRefObject<Map<string, HTMLDivElement>>, boxSelectedIds: string[], clearBoxSelection: () => void, getBoxSelection: () => string[], activeId: string | null, isOver: boolean, dragHandleProps?: any, zoomLevel?: number) => React.ReactNode;
   renderSplitMarker?: (item: T, index: number) => React.ReactNode;
   getThumbnailData?: (itemId: string) => { src: string; rotation: number } | null;
+  zoomLevel?: number;
 }
 
 // Lightweight wrapper that handles dnd-kit hooks for each visible item
@@ -43,10 +44,11 @@ interface DraggableItemProps<T extends DragDropItem> {
   activeId: string | null;
   getThumbnailData?: (itemId: string) => { src: string; rotation: number } | null;
   onUpdateDropTarget: (itemId: string | null) => void;
-  renderItem: (item: T, index: number, refs: React.MutableRefObject<Map<string, HTMLDivElement>>, boxSelectedIds: string[], clearBoxSelection: () => void, getBoxSelection: () => string[], activeId: string | null, isOver: boolean, dragHandleProps?: any) => React.ReactNode;
+  renderItem: (item: T, index: number, refs: React.MutableRefObject<Map<string, HTMLDivElement>>, boxSelectedIds: string[], clearBoxSelection: () => void, getBoxSelection: () => string[], activeId: string | null, isOver: boolean, dragHandleProps?: any, zoomLevel?: number) => React.ReactNode;
+  zoomLevel: number;
 }
 
-const DraggableItem = <T extends DragDropItem>({ item, index, itemRefs, boxSelectedPageIds, clearBoxSelection, getBoxSelection, activeId, getThumbnailData, renderItem, onUpdateDropTarget }: DraggableItemProps<T>) => {
+const DraggableItem = <T extends DragDropItem>({ item, index, itemRefs, boxSelectedPageIds, clearBoxSelection, getBoxSelection, activeId, getThumbnailData, renderItem, onUpdateDropTarget, zoomLevel }: DraggableItemProps<T>) => {
   const { attributes, listeners, setNodeRef: setDraggableRef } = useDraggable({
     id: item.id,
     data: {
@@ -92,7 +94,7 @@ const DraggableItem = <T extends DragDropItem>({ item, index, itemRefs, boxSelec
 
   return (
     <>
-      {renderItem(item, index, itemRefs, boxSelectedPageIds, clearBoxSelection, getBoxSelection, activeId, isOver, { ref: setNodeRef, ...attributes, ...listeners })}
+      {renderItem(item, index, itemRefs, boxSelectedPageIds, clearBoxSelection, getBoxSelection, activeId, isOver, { ref: setNodeRef, ...attributes, ...listeners }, zoomLevel)}
     </>
   );
 };
@@ -102,6 +104,7 @@ const DragDropGrid = <T extends DragDropItem>({
   renderItem,
   onReorderPages,
   getThumbnailData,
+  zoomLevel = 1.0,
 }: DragDropGridProps<T>) => {
   const itemRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const containerRef = useRef<HTMLDivElement>(null);
@@ -244,8 +247,8 @@ const DragDropGrid = <T extends DragDropItem>({
 
     // Convert rem to pixels for calculation
     const remToPx = parseFloat(getComputedStyle(document.documentElement).fontSize);
-    const ITEM_WIDTH = parseFloat(GRID_CONSTANTS.ITEM_WIDTH) * remToPx;
-    const ITEM_GAP = parseFloat(GRID_CONSTANTS.ITEM_GAP) * remToPx;
+    const ITEM_WIDTH = parseFloat(GRID_CONSTANTS.ITEM_WIDTH) * remToPx * zoomLevel;
+    const ITEM_GAP = parseFloat(GRID_CONSTANTS.ITEM_GAP) * remToPx * zoomLevel;
 
     // Calculate how many items fit: (width - gap) / (itemWidth + gap)
     const availableWidth = containerWidth - ITEM_GAP; // Account for first gap
@@ -253,9 +256,9 @@ const DragDropGrid = <T extends DragDropItem>({
     const calculated = Math.floor(availableWidth / itemWithGap);
 
     return Math.max(1, calculated); // At least 1 item per row
-  }, []);
+  }, [zoomLevel]);
 
-  // Update items per row when container resizes
+  // Update items per row when container resizes or zoom changes
   useEffect(() => {
     const updateLayout = () => {
       const newItemsPerRow = calculateItemsPerRow();
@@ -278,7 +281,7 @@ const DragDropGrid = <T extends DragDropItem>({
       window.removeEventListener('resize', updateLayout);
       resizeObserver.disconnect();
     };
-  }, [calculateItemsPerRow]);
+  }, [calculateItemsPerRow, zoomLevel]);
 
   // Virtualization with react-virtual library
   const rowVirtualizer = useVirtualizer({
@@ -286,10 +289,15 @@ const DragDropGrid = <T extends DragDropItem>({
     getScrollElement: () => containerRef.current?.closest('[data-scrolling-container]') as Element,
     estimateSize: () => {
       const remToPx = parseFloat(getComputedStyle(document.documentElement).fontSize);
-      return parseFloat(GRID_CONSTANTS.ITEM_HEIGHT) * remToPx;
+      return parseFloat(GRID_CONSTANTS.ITEM_HEIGHT) * remToPx * zoomLevel;
     },
     overscan: OVERSCAN,
   });
+
+  // Re-measure virtualizer when zoom or items per row changes
+  useEffect(() => {
+    rowVirtualizer.measure();
+  }, [zoomLevel, itemsPerRow]);
 
   // Box selection handlers
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
@@ -543,7 +551,7 @@ const DragDropGrid = <T extends DragDropItem>({
               <div
                 style={{
                   display: 'flex',
-                  gap: GRID_CONSTANTS.ITEM_GAP,
+                  gap: `calc(${GRID_CONSTANTS.ITEM_GAP} * ${zoomLevel})`,
                   justifyContent: 'flex-start',
                   height: '100%',
                   alignItems: 'center',
@@ -565,6 +573,7 @@ const DragDropGrid = <T extends DragDropItem>({
                       getThumbnailData={getThumbnailData}
                       onUpdateDropTarget={setHoveredItemId}
                       renderItem={renderItem}
+                      zoomLevel={zoomLevel}
                     />
                   );
                 })}

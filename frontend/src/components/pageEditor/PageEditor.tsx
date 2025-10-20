@@ -50,6 +50,20 @@ const PageEditor = ({
   // Get PageEditor coordination functions
   const { updateFileOrderFromPages, fileOrder } = usePageEditor();
 
+  // Zoom state management
+  const [zoomLevel, setZoomLevel] = useState(1.0);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isContainerHovered, setIsContainerHovered] = useState(false);
+
+  // Zoom actions
+  const zoomIn = useCallback(() => {
+    setZoomLevel(prev => Math.min(prev + 0.1, 3.0));
+  }, []);
+
+  const zoomOut = useCallback(() => {
+    setZoomLevel(prev => Math.max(prev - 0.1, 0.5));
+  }, []);
+
   // Derive page editor files from PageEditorContext's fileOrder (page editor workspace order)
   // Filter to only show PDF files (PageEditor only supports PDFs)
   // Use stable string keys to prevent infinite loops
@@ -822,6 +836,69 @@ const PageEditor = ({
     selectionMode, selectedPageIds, splitPositions, displayDocument?.pages.length, closePdf
   ]);
 
+  // Handle scroll wheel zoom with accumulator for smooth trackpad pinch
+  useEffect(() => {
+    let accumulator = 0;
+
+    const handleWheel = (event: WheelEvent) => {
+      // Check if Ctrl (Windows/Linux) or Cmd (Mac) is pressed
+      if (event.ctrlKey || event.metaKey) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        accumulator += event.deltaY;
+        const threshold = 10;
+
+        if (accumulator <= -threshold) {
+          // Accumulated scroll up - zoom in
+          zoomIn();
+          accumulator = 0;
+        } else if (accumulator >= threshold) {
+          // Accumulated scroll down - zoom out
+          zoomOut();
+          accumulator = 0;
+        }
+      }
+    };
+
+    const container = containerRef.current;
+    if (container) {
+      container.addEventListener('wheel', handleWheel, { passive: false });
+      return () => {
+        container.removeEventListener('wheel', handleWheel);
+      };
+    }
+  }, [zoomIn, zoomOut]);
+
+  // Handle keyboard zoom shortcuts
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (!isContainerHovered) return;
+
+      // Check if Ctrl (Windows/Linux) or Cmd (Mac) is pressed
+      if (event.ctrlKey || event.metaKey) {
+        if (event.key === '=' || event.key === '+') {
+          // Ctrl+= or Ctrl++ for zoom in
+          event.preventDefault();
+          zoomIn();
+        } else if (event.key === '-' || event.key === '_') {
+          // Ctrl+- for zoom out
+          event.preventDefault();
+          zoomOut();
+        } else if (event.key === '0') {
+          // Ctrl+0 for reset zoom
+          event.preventDefault();
+          setZoomLevel(1.0);
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isContainerHovered, zoomIn, zoomOut]);
+
   // Display all pages - use edited or original document
   const displayedPages = displayDocument?.pages || [];
 
@@ -849,7 +926,15 @@ const PageEditor = ({
   }, [orderedFileIds.join(',')]); // Only recalculate when the set of files changes, not the order
 
   return (
-    <Box pos="relative" h='100%' style={{ overflow: 'auto' }} data-scrolling-container="true">
+    <Box
+      ref={containerRef}
+      pos="relative"
+      h='100%'
+      style={{ overflow: 'auto' }}
+      data-scrolling-container="true"
+      onMouseEnter={() => setIsContainerHovered(true)}
+      onMouseLeave={() => setIsContainerHovered(false)}
+    >
       <LoadingOverlay visible={globalProcessing && !mergedPdfDocument} />
 
       {!mergedPdfDocument && !globalProcessing && selectedFileIds.length === 0 && (
@@ -870,21 +955,20 @@ const PageEditor = ({
       )}
 
       {displayDocument && (
-        <Box ref={gridContainerRef} p={0} pb="15rem" style={{ position: 'relative' }}>
+        <Box ref={gridContainerRef} p={0} pt="2rem" pb="15rem" style={{ position: 'relative' }}>
 
-
-          {/* Split Lines Overlay */}
-          <div
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              pointerEvents: 'none',
-              zIndex: 10
-            }}
-          >
+            {/* Split Lines Overlay */}
+            <div
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                pointerEvents: 'none',
+                zIndex: 10
+              }}
+            >
             {(() => {
               // Calculate remToPx once outside the map to avoid layout thrashing
               const containerWidth = containerDimensions.width;
@@ -936,6 +1020,7 @@ const PageEditor = ({
             selectionMode={selectionMode}
             isAnimating={isAnimating}
             onReorderPages={handleReorderPages}
+            zoomLevel={zoomLevel}
             getThumbnailData={(pageId) => {
               const page = displayDocument.pages.find(p => p.id === pageId);
               if (!page?.thumbnail) return null;
@@ -944,7 +1029,7 @@ const PageEditor = ({
                 rotation: page.rotation || 0
               };
             }}
-            renderItem={(page, index, refs, boxSelectedIds, clearBoxSelection, getBoxSelection, activeId, isOver, dragHandleProps) => {
+            renderItem={(page, index, refs, boxSelectedIds, clearBoxSelection, getBoxSelection, activeId, isOver, dragHandleProps, zoomLevel) => {
               const fileColorIndex = page.originalFileId ? fileColorIndexMap.get(page.originalFileId) ?? 0 : 0;
               const isBoxSelected = boxSelectedIds.includes(page.id);
               return (
@@ -981,11 +1066,11 @@ const PageEditor = ({
                   setPdfDocument={setEditedDocument}
                   splitPositions={splitPositions}
                   onInsertFiles={handleInsertFiles}
+                  zoomLevel={zoomLevel}
                 />
               );
             }}
           />
-
         </Box>
       )}
 
