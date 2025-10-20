@@ -153,6 +153,7 @@ export default function Workbench() {
   return (
     <Box
       className="flex-1 h-full min-w-80 relative flex flex-col"
+      data-tour="workbench"
       style={
         isRainbowMode
           ? {} // No background color in rainbow mode

@@ -41,6 +41,7 @@ const DetailedToolItem: React.FC<DetailedToolItemProps> = ({ id, tool, isSelecte
       onClick={onClick}
       aria-disabled={disabled}
       disabled={disabled}
+      data-tour={`tool-button-${id}`}
     >
       {tool.icon ? (
         <span

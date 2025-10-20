@@ -27,7 +27,7 @@ export interface ConfigColors {
 
 export const createConfigNavSections = (
   Overview: React.ComponentType<{ onLogoutClick: () => void }>,
-  onLogoutClick: () => void
+  onLogoutClick: () => void,
 ): ConfigNavSection[] => {
   const sections: ConfigNavSection[] = [
     {

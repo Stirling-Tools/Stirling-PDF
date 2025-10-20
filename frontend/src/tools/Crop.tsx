@@ -28,7 +28,7 @@ const Crop = (props: BaseToolProps) => {
     steps: [
       {
         title: t("crop.steps.selectArea", "Select Crop Area"),
-        isCollapsed: !base.hasFiles, // Collapsed until files selected
+        isCollapsed: base.settingsCollapsed,
         onCollapsedClick: base.hasResults ? base.handleSettingsReset : undefined,
         tooltip: tooltips,
         content: (

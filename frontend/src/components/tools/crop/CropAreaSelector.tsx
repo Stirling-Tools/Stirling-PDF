@@ -172,7 +172,8 @@ const CropAreaSelector: React.FC<CropAreaSelectorProps> = ({
             border: `2px solid ${theme.other.crop.overlayBorder}`,
             backgroundColor: theme.other.crop.overlayBackground,
             cursor: 'move',
-            pointerEvents: 'auto'
+            pointerEvents: 'auto',
+            transition: (isDragging || isResizing) ? undefined : 'all 1s ease-in-out'
           }}
           onMouseDown={handleOverlayMouseDown}
         >

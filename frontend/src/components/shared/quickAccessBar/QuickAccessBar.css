@@ -145,6 +145,7 @@
 .content-divider {
   width: 3.75rem;
   border-color: var(--color-gray-300);
+  margin: 1rem 0;
 }
 
 /* Spacer */
