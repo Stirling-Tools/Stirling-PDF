@@ -1,9 +1,9 @@
-import { useAppConfig } from '../hooks/useAppConfig';
-
-// Get base URL from app config with fallback
+// Get base URL from window location
 export const getBaseUrl = (): string => {
-  const { config } = useAppConfig();
-  return config?.baseUrl || 'https://stirling.com';
+  if (typeof window !== 'undefined') {
+    return `${window.location.protocol}//${window.location.host}`;
+  }
+  return 'https://stirling.com';
 };
 
 // Base path from Vite config - build-time constant, normalized (no trailing slash)

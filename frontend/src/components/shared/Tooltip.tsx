@@ -72,7 +72,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
     }
   }, []);
 
-  const sidebarContext = sidebarTooltip ? useSidebarContext() : null;
+  const sidebarContext = useSidebarContext();
 
   const isControlled = controlledOpen !== undefined;
   const open = (isControlled ? !!controlledOpen : internalOpen) && !disabled;

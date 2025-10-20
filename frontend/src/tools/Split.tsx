@@ -24,9 +24,9 @@ const Split = (props: BaseToolProps) => {
   const settingsTips = useSplitSettingsTips(base.params.parameters.method);
 
   // Get tooltip content for a specific method
-  const getMethodTooltip = (option: MethodOption) => {
-    const tooltipContent = useSplitSettingsTips(option.value);
-    return tooltipContent?.tips || [];
+  const getMethodTooltip = (_option: MethodOption) => {
+    // TODO: Fix hook call in non-React function
+    return [];
   };
 
   // Get the method name for the settings step title
