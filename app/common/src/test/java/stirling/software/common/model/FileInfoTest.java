@@ -11,6 +11,11 @@ import org.junit.jupiter.params.provider.CsvSource;
 
 public class FileInfoTest {
 
+    // Use fixed deterministic timestamps for all tests
+    private static final LocalDateTime TEST_MOD_DATE = LocalDateTime.of(2024, 6, 15, 10, 30, 45);
+    private static final LocalDateTime TEST_CREATION_DATE =
+            LocalDateTime.of(2024, 6, 14, 10, 30, 45);
+
     @ParameterizedTest(name = "{index}: fileSize={0}")
     @CsvSource({
         "0, '0 Bytes'",
@@ -31,9 +36,9 @@ public class FileInfoTest {
                                 + "to"
                                 + File.separator
                                 + "example.txt",
-                        LocalDateTime.now(),
+                        TEST_MOD_DATE,
                         fileSize,
-                        LocalDateTime.now().minusDays(1));
+                        TEST_CREATION_DATE);
 
         assertEquals(expectedFormattedSize, fileInfo.getFormattedFileSize());
     }
@@ -44,9 +49,9 @@ public class FileInfoTest {
                 new FileInfo(
                         "test.pdf",
                         File.separator + "tmp" + File.separator + "test.pdf",
-                        LocalDateTime.now(),
+                        TEST_MOD_DATE,
                         1234,
-                        LocalDateTime.now().minusDays(2));
+                        TEST_CREATION_DATE);
         assertEquals(
                 File.separator + "tmp" + File.separator + "test.pdf",
                 fileInfo.getFilePathAsPath().toString());
@@ -80,32 +85,31 @@ public class FileInfoTest {
 
     @Test
     void testGettersAndSetters() {
-        LocalDateTime now = LocalDateTime.now();
         FileInfo fileInfo =
                 new FileInfo(
                         "doc.pdf",
                         File.separator + "docs" + File.separator + "doc.pdf",
-                        now,
+                        TEST_MOD_DATE,
                         2048,
-                        now.minusDays(1));
+                        TEST_CREATION_DATE);
         // Test getters
         assertEquals("doc.pdf", fileInfo.getFileName());
         assertEquals(File.separator + "docs" + File.separator + "doc.pdf", fileInfo.getFilePath());
-        assertEquals(now, fileInfo.getModificationDate());
+        assertEquals(TEST_MOD_DATE, fileInfo.getModificationDate());
         assertEquals(2048, fileInfo.getFileSize());
-        assertEquals(now.minusDays(1), fileInfo.getCreationDate());
+        assertEquals(TEST_CREATION_DATE, fileInfo.getCreationDate());
 
         // Test setters
         fileInfo.setFileName("new.pdf");
         fileInfo.setFilePath(File.separator + "new" + File.separator + "new.pdf");
-        fileInfo.setModificationDate(now.plusDays(1));
+        fileInfo.setModificationDate(TEST_MOD_DATE.plusDays(1));
         fileInfo.setFileSize(4096);
-        fileInfo.setCreationDate(now.minusDays(2));
+        fileInfo.setCreationDate(TEST_CREATION_DATE.minusDays(2));
 
         assertEquals("new.pdf", fileInfo.getFileName());
         assertEquals(File.separator + "new" + File.separator + "new.pdf", fileInfo.getFilePath());
-        assertEquals(now.plusDays(1), fileInfo.getModificationDate());
+        assertEquals(TEST_MOD_DATE.plusDays(1), fileInfo.getModificationDate());
         assertEquals(4096, fileInfo.getFileSize());
-        assertEquals(now.minusDays(2), fileInfo.getCreationDate());
+        assertEquals(TEST_CREATION_DATE.minusDays(2), fileInfo.getCreationDate());
     }
 }

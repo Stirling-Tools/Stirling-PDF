@@ -131,6 +131,9 @@ public class TempFileCleanupServiceTest {
 
         // Use MockedStatic to mock Files operations
         try (MockedStatic<Files> mockedFiles = mockStatic(Files.class)) {
+            // Capture test time at the beginning for deterministic calculations
+            final long testTime = System.currentTimeMillis();
+
             // Mock Files.list for each directory we'll process
             mockedFiles
                     .when(() -> Files.list(eq(systemTempDir)))
@@ -175,19 +178,17 @@ public class TempFileCleanupServiceTest {
                                 // maxAgeMillis
                                 if (fileName.contains("old")) {
                                     return FileTime.fromMillis(
-                                            System.currentTimeMillis() - 5000000); // 5 seconds ago
+                                            testTime - 5000000); // ~1.4 hours ago
                                 }
                                 // For empty.tmp file, return a timestamp older than 5 minutes (for
                                 // empty file test)
                                 else if ("empty.tmp".equals(fileName)) {
                                     return FileTime.fromMillis(
-                                            System.currentTimeMillis()
-                                                    - 6 * 60 * 1000); // 6 minutes ago
+                                            testTime - 6 * 60 * 1000); // 6 minutes ago
                                 }
                                 // For all other files, return a recent timestamp
                                 else {
-                                    return FileTime.fromMillis(
-                                            System.currentTimeMillis() - 60000); // 1 minute ago
+                                    return FileTime.fromMillis(testTime - 60000); // 1 minute ago
                                 }
                             });
 
@@ -275,6 +276,9 @@ public class TempFileCleanupServiceTest {
 
         // Use MockedStatic to mock Files operations
         try (MockedStatic<Files> mockedFiles = mockStatic(Files.class)) {
+            // Capture test time at the beginning for deterministic calculations
+            final long testTime = System.currentTimeMillis();
+
             // Mock Files.list for systemTempDir
             mockedFiles
                     .when(() -> Files.list(eq(systemTempDir)))
@@ -289,9 +293,7 @@ public class TempFileCleanupServiceTest {
             // Configure Files.getLastModifiedTime to return recent timestamps
             mockedFiles
                     .when(() -> Files.getLastModifiedTime(any(Path.class)))
-                    .thenReturn(
-                            FileTime.fromMillis(
-                                    System.currentTimeMillis() - 60000)); // 1 minute ago
+                    .thenReturn(FileTime.fromMillis(testTime - 60000)); // 1 minute ago
 
             // Configure Files.size to return normal size
             mockedFiles.when(() -> Files.size(any(Path.class))).thenReturn(1024L); // 1 KB
@@ -336,6 +338,9 @@ public class TempFileCleanupServiceTest {
 
         // Use MockedStatic to mock Files operations
         try (MockedStatic<Files> mockedFiles = mockStatic(Files.class)) {
+            // Capture test time at the beginning for deterministic calculations
+            final long testTime = System.currentTimeMillis();
+
             // Mock Files.list for systemTempDir
             mockedFiles
                     .when(() -> Files.list(eq(systemTempDir)))
@@ -358,13 +363,11 @@ public class TempFileCleanupServiceTest {
                                 if ("empty.tmp".equals(fileName)) {
                                     // More than 5 minutes old
                                     return FileTime.fromMillis(
-                                            System.currentTimeMillis()
-                                                    - 6 * 60 * 1000); // 6 minutes ago
+                                            testTime - 6 * 60 * 1000); // 6 minutes ago
                                 } else {
                                     // Less than 5 minutes old
                                     return FileTime.fromMillis(
-                                            System.currentTimeMillis()
-                                                    - 2 * 60 * 1000); // 2 minutes ago
+                                            testTime - 2 * 60 * 1000); // 2 minutes ago
                                 }
                             });
 
@@ -413,6 +416,9 @@ public class TempFileCleanupServiceTest {
 
         // Use MockedStatic to mock Files operations
         try (MockedStatic<Files> mockedFiles = mockStatic(Files.class)) {
+            // Capture test time at the beginning for deterministic calculations
+            final long testTime = System.currentTimeMillis();
+
             // Mock Files.list for each directory
             mockedFiles
                     .when(() -> Files.list(eq(systemTempDir)))
@@ -454,12 +460,10 @@ public class TempFileCleanupServiceTest {
 
                                 if (fileName.contains("old")) {
                                     // Old file - very old timestamp (older than 1 hour)
-                                    return FileTime.fromMillis(
-                                            System.currentTimeMillis() - 7200000); // 2 hours ago
+                                    return FileTime.fromMillis(testTime - 7200000); // 2 hours ago
                                 } else {
                                     // Recent file - very recent timestamp (less than 1 hour)
-                                    return FileTime.fromMillis(
-                                            System.currentTimeMillis() - 60000); // 1 minute ago
+                                    return FileTime.fromMillis(testTime - 60000); // 1 minute ago
                                 }
                             });
 

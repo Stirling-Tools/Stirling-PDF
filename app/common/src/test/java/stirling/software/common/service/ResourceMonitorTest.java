@@ -124,12 +124,15 @@ class ResourceMonitorTest {
 
     @Test
     void resourceMetricsShouldDetectStaleState() {
+        // Capture test time at the beginning for deterministic calculations
+        final Instant testTime = Instant.now();
+
         // Given
-        Instant now = Instant.now();
-        Instant pastInstant = now.minusMillis(6000); // 6 seconds ago
+        Instant pastInstant =
+                testTime.minusMillis(6000); // 6 seconds ago (relative to test start time)
 
         ResourceMetrics staleMetrics = new ResourceMetrics(0.5, 0.5, 1024, 2048, 4096, pastInstant);
-        ResourceMetrics freshMetrics = new ResourceMetrics(0.5, 0.5, 1024, 2048, 4096, now);
+        ResourceMetrics freshMetrics = new ResourceMetrics(0.5, 0.5, 1024, 2048, 4096, testTime);
 
         // When/Then
         assertTrue(

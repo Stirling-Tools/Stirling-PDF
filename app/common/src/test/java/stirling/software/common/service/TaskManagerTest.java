@@ -215,6 +215,9 @@ class TaskManagerTest {
 
     @Test
     void testCleanupOldJobs() throws Exception {
+        // Capture test time at the beginning for deterministic calculations
+        final LocalDateTime testTime = LocalDateTime.now();
+
         // Arrange
         // 1. Create a recent completed job
         String recentJobId = "recent-job";
@@ -226,8 +229,9 @@ class TaskManagerTest {
         taskManager.createTask(oldJobId);
         JobResult oldJob = taskManager.getJobResult(oldJobId);
 
-        // Manually set the completion time to be older than the expiry
-        LocalDateTime oldTime = LocalDateTime.now().minusHours(1);
+        // Manually set the completion time to be older than the expiry (relative to test start
+        // time)
+        LocalDateTime oldTime = testTime.minusHours(1);
         ReflectionTestUtils.setField(oldJob, "completedAt", oldTime);
         ReflectionTestUtils.setField(oldJob, "complete", true);
 

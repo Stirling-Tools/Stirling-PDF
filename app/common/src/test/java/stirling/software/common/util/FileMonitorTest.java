@@ -46,12 +46,15 @@ class FileMonitorTest {
 
     @Test
     void testIsFileReadyForProcessing_OldFile() throws IOException {
+        // Capture test time at the beginning for deterministic calculations
+        final Instant testTime = Instant.now();
+
         // Create a test file
         Path testFile = tempDir.resolve("test-file.txt");
         Files.write(testFile, "test content".getBytes());
 
-        // Set modified time to 10 seconds ago
-        Files.setLastModifiedTime(testFile, FileTime.from(Instant.now().minusMillis(10000)));
+        // Set modified time to 10 seconds ago (relative to test start time)
+        Files.setLastModifiedTime(testFile, FileTime.from(testTime.minusMillis(10000)));
 
         // File should be ready for processing as it was modified more than 5 seconds ago
         assertTrue(fileMonitor.isFileReadyForProcessing(testFile));
@@ -59,12 +62,15 @@ class FileMonitorTest {
 
     @Test
     void testIsFileReadyForProcessing_RecentFile() throws IOException {
+        // Capture test time at the beginning for deterministic calculations
+        final Instant testTime = Instant.now();
+
         // Create a test file
         Path testFile = tempDir.resolve("recent-file.txt");
         Files.write(testFile, "test content".getBytes());
 
-        // Set modified time to just now
-        Files.setLastModifiedTime(testFile, FileTime.from(Instant.now()));
+        // Set modified time to just now (relative to test start time)
+        Files.setLastModifiedTime(testFile, FileTime.from(testTime));
 
         // File should not be ready for processing as it was just modified
         assertFalse(fileMonitor.isFileReadyForProcessing(testFile));
@@ -81,12 +87,16 @@ class FileMonitorTest {
 
     @Test
     void testIsFileReadyForProcessing_LockedFile() throws IOException {
+        // Capture test time at the beginning for deterministic calculations
+        final Instant testTime = Instant.now();
+
         // Create a test file
         Path testFile = tempDir.resolve("locked-file.txt");
         Files.write(testFile, "test content".getBytes());
 
-        // Set modified time to 10 seconds ago to make sure it passes the time check
-        Files.setLastModifiedTime(testFile, FileTime.from(Instant.now().minusMillis(10000)));
+        // Set modified time to 10 seconds ago (relative to test start time) to make sure it passes
+        // the time check
+        Files.setLastModifiedTime(testFile, FileTime.from(testTime.minusMillis(10000)));
 
         // Verify the file is considered ready when it meets the time criteria
         assertTrue(
@@ -126,12 +136,15 @@ class FileMonitorTest {
 
     @Test
     void testIsFileReadyForProcessing_FileInUse() throws IOException {
+        // Capture test time at the beginning for deterministic calculations
+        final Instant testTime = Instant.now();
+
         // Create a test file
         Path testFile = tempDir.resolve("in-use-file.txt");
         Files.write(testFile, "initial content".getBytes());
 
-        // Set modified time to 10 seconds ago
-        Files.setLastModifiedTime(testFile, FileTime.from(Instant.now().minusMillis(10000)));
+        // Set modified time to 10 seconds ago (relative to test start time)
+        Files.setLastModifiedTime(testFile, FileTime.from(testTime.minusMillis(10000)));
 
         // First check that the file is ready when meeting time criteria
         assertTrue(
@@ -140,7 +153,7 @@ class FileMonitorTest {
 
         // After modifying the file to simulate closing, it should still be ready
         Files.write(testFile, "updated content".getBytes());
-        Files.setLastModifiedTime(testFile, FileTime.from(Instant.now().minusMillis(10000)));
+        Files.setLastModifiedTime(testFile, FileTime.from(testTime.minusMillis(10000)));
 
         assertTrue(
                 fileMonitor.isFileReadyForProcessing(testFile),
@@ -149,12 +162,15 @@ class FileMonitorTest {
 
     @Test
     void testIsFileReadyForProcessing_FileWithAbsolutePath() throws IOException {
+        // Capture test time at the beginning for deterministic calculations
+        final Instant testTime = Instant.now();
+
         // Create a test file
         Path testFile = tempDir.resolve("absolute-path-file.txt");
         Files.write(testFile, "test content".getBytes());
 
-        // Set modified time to 10 seconds ago
-        Files.setLastModifiedTime(testFile, FileTime.from(Instant.now().minusMillis(10000)));
+        // Set modified time to 10 seconds ago (relative to test start time)
+        Files.setLastModifiedTime(testFile, FileTime.from(testTime.minusMillis(10000)));
 
         // File should be ready for processing as it was modified more than 5 seconds ago
         // Use the absolute path to make sure it's handled correctly
