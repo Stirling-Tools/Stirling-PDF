@@ -2,17 +2,7 @@ import { useImperativeHandle, forwardRef, useEffect } from 'react';
 import { useAnnotationCapability } from '@embedpdf/plugin-annotation/react';
 import { PdfAnnotationSubtype, uuidV4 } from '@embedpdf/models';
 import { useSignature } from '../../contexts/SignatureContext';
-
-export interface SignatureAPI {
-  addImageSignature: (signatureData: string, x: number, y: number, width: number, height: number, pageIndex: number) => void;
-  activateDrawMode: () => void;
-  activateSignaturePlacementMode: () => void;
-  activateDeleteMode: () => void;
-  deleteAnnotation: (annotationId: string, pageIndex: number) => void;
-  updateDrawSettings: (color: string, size: number) => void;
-  deactivateTools: () => void;
-  getPageAnnotations: (pageIndex: number) => Promise<any[]>;
-}
+import type { SignatureAPI } from './viewerTypes';
 
 export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPIBridge(_, ref) {
   const { provides: annotationApi } = useAnnotationCapability();
@@ -245,5 +235,7 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPI
 
   return null; // This is a bridge component with no UI
 });
+
+export type { SignatureAPI } from './viewerTypes';
 
 SignatureAPIBridge.displayName = 'SignatureAPIBridge';
