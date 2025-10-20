@@ -367,6 +367,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
         width: `calc(20rem * ${zoomLevel})`,
         height: `calc(20rem * ${zoomLevel})`,
         transition: isAnimating ? 'none' : 'transform 0.2s ease-in-out',
+        zIndex: isHovered ? 50 : 1,
         ...(isBoxSelected && {
           boxShadow: '0 0 0 4px rgba(59, 130, 246, 0.5)',
         }),
@@ -418,7 +419,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
             height: '100%',
             backgroundColor: 'var(--mantine-color-gray-1)',
             borderRadius: 6,
-            boxShadow: page.isBlankPage ? 'none' : `0 0 8px 4px ${fileColorBorder}`,
+            boxShadow: page.isBlankPage ? 'none' : `0 0 ${4 + 4 * zoomLevel}px 3px ${fileColorBorder}`,
             padding: 4,
             display: 'flex',
             alignItems: 'center',
