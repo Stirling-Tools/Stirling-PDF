@@ -3,9 +3,11 @@ import { Menu, Loader, Group, Text, Checkbox } from '@mantine/core';
 import EditNoteIcon from '@mui/icons-material/EditNote';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
+import AddIcon from '@mui/icons-material/Add';
 import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import FitText from './FitText';
 import { getFileColorWithOpacity } from '../pageEditor/fileColors';
+import { useFilesModalContext } from '../../contexts/FilesModalContext';
 
 import { FileId } from '../../types/file';
 
@@ -207,6 +209,8 @@ export const PageEditorFileDropdown: React.FC<PageEditorFileDropdownProps> = ({
   viewOptionStyle,
   fileColorMap,
 }) => {
+  const { openFilesModal } = useFilesModalContext();
+
   return (
     <Menu trigger="click" position="bottom" width="40rem">
       <Menu.Target>
@@ -242,6 +246,35 @@ export const PageEditorFileDropdown: React.FC<PageEditorFileDropdownProps> = ({
             />
           );
         })}
+
+        {/* Add File Button */}
+        <div
+          onClick={(e) => {
+            e.stopPropagation();
+            openFilesModal();
+          }}
+          style={{
+            padding: '0.75rem 0.75rem',
+            marginTop: '0.5rem',
+            cursor: 'pointer',
+            backgroundColor: 'transparent',
+            borderTop: '1px solid var(--border-subtle)',
+            transition: 'background-color 0.15s ease',
+          }}
+          onMouseEnter={(e) => {
+            (e.currentTarget as HTMLDivElement).style.backgroundColor = 'rgba(59, 130, 246, 0.25)';
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLDivElement).style.backgroundColor = 'transparent';
+          }}
+        >
+          <Group gap="xs" style={{ width: '100%' }}>
+            <AddIcon fontSize="small" style={{ color: 'var(--mantine-color-text)' }} />
+            <Text size="sm" fw={500} style={{ color: 'var(--mantine-color-text)' }}>
+              Add File
+            </Text>
+          </Group>
+        </div>
       </Menu.Dropdown>
     </Menu>
   );
