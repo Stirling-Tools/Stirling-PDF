@@ -44,10 +44,10 @@ const HoverActionMenu: React.FC<HoverActionMenuProps> = ({
           <ActionIcon
             size="md"
             variant="subtle"
-            style={{ color: action.color || 'var(--mantine-color-dimmed)' }}
             disabled={action.disabled}
             onClick={action.onClick}
             c={action.color}
+            style={{ color: action.color || 'var(--right-rail-icon)' }}
           >
             {action.icon}
           </ActionIcon>

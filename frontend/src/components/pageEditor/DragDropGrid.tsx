@@ -513,6 +513,7 @@ const DragDropGrid = <T extends DragDropItem>({
           width: '100%',
           height: '100%',
           position: 'relative',
+          overflow: 'hidden',
         }}
       >
         {/* Selection box overlay */}
@@ -525,9 +526,9 @@ const DragDropGrid = <T extends DragDropItem>({
         style={{
           height: `${rowVirtualizer.getTotalSize()}px`,
           width: '100%',
+          maxWidth: `${gridWidth}px`,
           position: 'relative',
           margin: '0 auto',
-          maxWidth: `${gridWidth}px`,
         }}
       >
         {rowVirtualizer.getVirtualItems().map((virtualRow) => {
