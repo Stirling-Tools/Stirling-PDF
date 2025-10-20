@@ -15,35 +15,37 @@ const nodeGlobs = [
 ];
 
 export default defineConfig(
+  {
+    // Everything that contains 3rd party code that we don't want to lint
+    ignores: [
+      'dist',
+      'node_modules',
+      'public',
+    ],
+  },
   eslint.configs.recommended,
   tseslint.configs.recommended,
   {
-    ignores: [
-      "dist", // Contains 3rd party code
-      "public", // Contains 3rd party code
-    ],
-  },
-  {
     rules: {
-      "@typescript-eslint/no-empty-object-type": [
-        "error",
+      '@typescript-eslint/no-empty-object-type': [
+        'error',
         {
           // Allow empty extending interfaces because there's no real reason not to, and it makes it obvious where to put extra attributes in the future
           allowInterfaces: 'with-single-extends',
         },
       ],
-      "@typescript-eslint/no-explicit-any": "off", // Temporarily disabled until codebase conformant
-      "@typescript-eslint/no-require-imports": "off", // Temporarily disabled until codebase conformant
-      "@typescript-eslint/no-unused-vars": [
-        "error",
+      '@typescript-eslint/no-explicit-any': 'off', // Temporarily disabled until codebase conformant
+      '@typescript-eslint/no-require-imports': 'off', // Temporarily disabled until codebase conformant
+      '@typescript-eslint/no-unused-vars': [
+        'error',
         {
-          "args": "all", // All function args must be used (or explicitly ignored)
-          "argsIgnorePattern": "^_", // Allow unused variables beginning with an underscore
-          "caughtErrors": "all", // Caught errors must be used (or explicitly ignored)
-          "caughtErrorsIgnorePattern": "^_", // Allow unused variables beginning with an underscore
-          "destructuredArrayIgnorePattern": "^_", // Allow unused variables beginning with an underscore
-          "varsIgnorePattern": "^_", // Allow unused variables beginning with an underscore
-          "ignoreRestSiblings": true, // Allow unused variables when removing attributes from objects (otherwise this requires explicit renaming like `({ x: _x, ...y }) => y`, which is clunky)
+          'args': 'all', // All function args must be used (or explicitly ignored)
+          'argsIgnorePattern': '^_', // Allow unused variables beginning with an underscore
+          'caughtErrors': 'all', // Caught errors must be used (or explicitly ignored)
+          'caughtErrorsIgnorePattern': '^_', // Allow unused variables beginning with an underscore
+          'destructuredArrayIgnorePattern': '^_', // Allow unused variables beginning with an underscore
+          'varsIgnorePattern': '^_', // Allow unused variables beginning with an underscore
+          'ignoreRestSiblings': true, // Allow unused variables when removing attributes from objects (otherwise this requires explicit renaming like `({ x: _x, ...y }) => y`, which is clunky)
         },
       ],
     },
@@ -66,10 +68,12 @@ export default defineConfig(
       }
     }
   },
+  // Config for import plugin
   {
-    files: srcGlobs, // Only run import cycle detection on application sources
-    ...(importPlugin.flatConfigs.typescript),
+    ...importPlugin.flatConfigs.recommended,
+    ...importPlugin.flatConfigs.typescript,
     rules: {
+      // ...importPlugin.flatConfigs.recommended.rules, // Temporarily disabled until codebase conformant
       ...importPlugin.flatConfigs.typescript.rules,
       'import/no-cycle': 'error',
     },
