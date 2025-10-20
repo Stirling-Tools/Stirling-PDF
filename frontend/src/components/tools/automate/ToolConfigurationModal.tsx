@@ -14,7 +14,7 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
 import WarningIcon from '@mui/icons-material/Warning';
-import { ToolRegistryMap } from '../../../data/toolsTaxonomy';
+import { ToolRegistry } from '../../../data/toolsTaxonomy';
 import { ToolId } from '../../../types/toolId';
 import { getAvailableToExtensions } from '../../../utils/convertUtils';
 interface ToolConfigurationModalProps {
@@ -27,7 +27,7 @@ interface ToolConfigurationModalProps {
   };
   onSave: (parameters: any) => void;
   onCancel: () => void;
-  toolRegistry: ToolRegistryMap;
+  toolRegistry: Partial<ToolRegistry>;
 }
 
 export default function ToolConfigurationModal({ opened, tool, onSave, onCancel, toolRegistry }: ToolConfigurationModalProps) {

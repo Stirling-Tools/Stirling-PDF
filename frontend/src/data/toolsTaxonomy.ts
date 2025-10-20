@@ -87,8 +87,6 @@ export type RegularToolRegistry = Record<RegularToolId, ToolRegistryEntry>;
 export type SuperToolRegistry = Record<SuperToolId, ToolRegistryEntry>;
 export type LinkToolRegistry = Record<LinkToolId, ToolRegistryEntry>;
 export type ToolRegistry = RegularToolRegistry & SuperToolRegistry & LinkToolRegistry;
-export type ToolRegistrySubset<K extends ToolId = ToolId> = Partial<Record<K, ToolRegistryEntry>>;
-export type ToolRegistryMap = ToolRegistrySubset;
 
 export const SUBCATEGORY_ORDER: SubcategoryId[] = [
   SubcategoryId.SIGNING,
@@ -153,7 +151,7 @@ export const getSubcategoryColor = (subcategory: SubcategoryId): string => SUBCA
 
 
 
-export const getAllEndpoints = (registry: ToolRegistryMap): string[] => {
+export const getAllEndpoints = (registry: ToolRegistry): string[] => {
   const lists: string[][] = [];
   Object.values(registry).forEach(entry => {
     if (entry.endpoints && entry.endpoints.length > 0) {
@@ -174,7 +172,7 @@ export const getConversionEndpoints = (extensionToEndpoint: Record<string, Recor
 };
 
 export const getAllApplicationEndpoints = (
-  registry: ToolRegistryMap,
+  registry: ToolRegistry,
   extensionToEndpoint?: Record<string, Record<string, string>>
 ): string[] => {
   const toolEp = getAllEndpoints(registry);
@@ -205,7 +203,7 @@ export const getToolUrlPath = (toolId: string): string => {
 /**
  * Check if a tool ID exists in the registry
  */
-export const isValidToolId = (toolId: string, registry: ToolRegistryMap): boolean => {
+export const isValidToolId = (toolId: string, registry: ToolRegistry): boolean => {
   return toolId in registry;
 };
 

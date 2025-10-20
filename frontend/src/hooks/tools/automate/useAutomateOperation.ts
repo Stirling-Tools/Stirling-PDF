@@ -5,8 +5,8 @@ import { useToolRegistry } from '../../../contexts/ToolRegistryContext';
 import { AutomateParameters } from '../../../types/automation';
 
 export function useAutomateOperation() {
-  const { regularTools } = useToolRegistry();
-  const toolRegistry = regularTools;
+  const { allTools } = useToolRegistry();
+  const toolRegistry = allTools;
 
   const customProcessor = useCallback(async (params: AutomateParameters, files: File[]) => {
     console.log('🚀 Starting automation execution via customProcessor', { params, files });

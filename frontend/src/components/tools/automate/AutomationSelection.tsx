@@ -6,7 +6,7 @@ import AutomationEntry from "./AutomationEntry";
 import { useSuggestedAutomations } from "../../../hooks/tools/automate/useSuggestedAutomations";
 import { AutomationConfig, SuggestedAutomation } from "../../../types/automation";
 import { iconMap } from './iconMap';
-import { ToolRegistryMap } from '../../../data/toolsTaxonomy';
+import { ToolRegistry } from '../../../data/toolsTaxonomy';
 
 interface AutomationSelectionProps {
   savedAutomations: AutomationConfig[];
@@ -15,7 +15,7 @@ interface AutomationSelectionProps {
   onEdit: (automation: AutomationConfig) => void;
   onDelete: (automation: AutomationConfig) => void;
   onCopyFromSuggested: (automation: SuggestedAutomation) => void;
-  toolRegistry: ToolRegistryMap;
+  toolRegistry: Partial<ToolRegistry>;
 }
 
 export default function AutomationSelection({

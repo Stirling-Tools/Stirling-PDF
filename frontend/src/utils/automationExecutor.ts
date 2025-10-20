@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { ToolRegistryMap } from '../data/toolsTaxonomy';
+import { ToolRegistry } from '../data/toolsTaxonomy';
 import { ToolId } from '../types/toolId';
 import { AUTOMATION_CONSTANTS } from '../constants/automation';
 import { AutomationFileProcessor } from './automationFileProcessor';
@@ -135,7 +135,7 @@ export const executeToolOperation = async (
   operationName: string,
   parameters: any,
   files: File[],
-  toolRegistry: ToolRegistryMap
+  toolRegistry: ToolRegistry
 ): Promise<File[]> => {
   return executeToolOperationWithPrefix(operationName, parameters, files, toolRegistry, AUTOMATION_CONSTANTS.FILE_PREFIX);
 };
@@ -147,7 +147,7 @@ export const executeToolOperationWithPrefix = async (
   operationName: string,
   parameters: any,
   files: File[],
-  toolRegistry: ToolRegistryMap,
+  toolRegistry: ToolRegistry,
   filePrefix: string = AUTOMATION_CONSTANTS.FILE_PREFIX
 ): Promise<File[]> => {
   const config = toolRegistry[operationName as ToolId]?.operationConfig;
@@ -181,7 +181,7 @@ export const executeToolOperationWithPrefix = async (
 export const executeAutomationSequence = async (
   automation: any,
   initialFiles: File[],
-  toolRegistry: ToolRegistryMap,
+  toolRegistry: ToolRegistry,
   onStepStart?: (stepIndex: number, operationName: string) => void,
   onStepComplete?: (stepIndex: number, resultFiles: File[]) => void,
   onStepError?: (stepIndex: number, error: string) => void

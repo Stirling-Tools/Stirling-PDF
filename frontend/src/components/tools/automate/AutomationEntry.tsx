@@ -7,7 +7,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { Tooltip } from '../../shared/Tooltip';
 import { ToolIcon } from '../../shared/ToolIcon';
-import { ToolRegistryMap } from '../../../data/toolsTaxonomy';
+import { ToolRegistry } from '../../../data/toolsTaxonomy';
 import { ToolId } from 'src/types/toolId';
 
 interface AutomationEntryProps {
@@ -32,7 +32,7 @@ interface AutomationEntryProps {
   /** Copy handler (for suggested automations) */
   onCopy?: () => void;
   /** Tool registry to resolve operation names */
-  toolRegistry?: ToolRegistryMap;
+  toolRegistry?: Partial<ToolRegistry>;
 }
 
 export default function AutomationEntry({

@@ -2,14 +2,14 @@ import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AutomationTool, AutomationConfig, AutomationMode } from '../../../types/automation';
 import { AUTOMATION_CONSTANTS } from '../../../constants/automation';
-import { ToolRegistryMap } from '../../../data/toolsTaxonomy';
+import { ToolRegistry } from '../../../data/toolsTaxonomy';
 import { ToolId } from 'src/types/toolId';
 
 
 interface UseAutomationFormProps {
   mode: AutomationMode;
   existingAutomation?: AutomationConfig;
-  toolRegistry: ToolRegistryMap;
+  toolRegistry: Partial<ToolRegistry>;
 }
 
 export function useAutomationForm({ mode, existingAutomation, toolRegistry }: UseAutomationFormProps) {

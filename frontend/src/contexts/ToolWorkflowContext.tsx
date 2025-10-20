@@ -6,7 +6,7 @@
 import React, { createContext, useContext, useReducer, useCallback, useMemo, useEffect } from 'react';
 import { useToolManagement } from '../hooks/useToolManagement';
 import { PageEditorFunctions } from '../types/pageEditor';
-import { ToolRegistryEntry, ToolRegistryMap } from '../data/toolsTaxonomy';
+import { ToolRegistryEntry, ToolRegistry } from '../data/toolsTaxonomy';
 import { useNavigationActions, useNavigationState } from './NavigationContext';
 import { ToolId, isValidToolId } from '../types/toolId';
 import { WorkbenchType, getDefaultWorkbench, isBaseWorkbench } from '../types/workbench';
@@ -20,6 +20,7 @@ import {
 } from './toolWorkflow/toolWorkflowState';
 import type { ToolPanelMode } from '../constants/toolPanel';
 import { usePreferences } from './PreferencesContext';
+import { useToolRegistry } from './ToolRegistryContext';
 
 // State interface
 // Types and reducer/state moved to './toolWorkflow/state'
@@ -41,7 +42,7 @@ interface ToolWorkflowContextValue extends ToolWorkflowState {
   // Tool management (from hook)
   selectedToolKey: ToolId | null;
   selectedTool: ToolRegistryEntry | null;
-  toolRegistry: ToolRegistryMap;
+  toolRegistry: Partial<ToolRegistry>;
   getSelectedTool: (toolId: ToolId | null) => ToolRegistryEntry | null;
 
   // UI Actions
@@ -111,10 +112,8 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
   const navigationState = useNavigationState();
 
   // Tool management hook
-  const {
-    toolRegistry,
-    getSelectedTool,
-  } = useToolManagement();
+  const { toolRegistry, getSelectedTool } = useToolManagement();
+  const { allTools } = useToolRegistry();
 
   // Tool history hook
   const {
@@ -327,7 +326,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     navigationState.selectedTool,
     handleToolSelect,
     handleBackToTools,
-    toolRegistry,
+    allTools,
     true
   );
 

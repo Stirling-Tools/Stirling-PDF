@@ -12,7 +12,7 @@ import {
 } from '@mantine/core';
 import { Z_INDEX_AUTOMATE_MODAL } from '../../../styles/zIndex';
 import CheckIcon from '@mui/icons-material/Check';
-import { ToolRegistryMap } from '../../../data/toolsTaxonomy';
+import { ToolRegistry } from '../../../data/toolsTaxonomy';
 import ToolConfigurationModal from './ToolConfigurationModal';
 import ToolList from './ToolList';
 import IconSelector from './IconSelector';
@@ -25,7 +25,7 @@ interface AutomationCreationProps {
   existingAutomation?: AutomationConfig;
   onBack: () => void;
   onComplete: (automation: AutomationConfig) => void;
-  toolRegistry: ToolRegistryMap;
+  toolRegistry: Partial<ToolRegistry>;
 }
 
 export default function AutomationCreation({ mode, existingAutomation, onBack, onComplete, toolRegistry }: AutomationCreationProps) {

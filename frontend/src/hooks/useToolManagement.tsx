@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo } from 'react';
 import { useToolRegistry } from "../contexts/ToolRegistryContext";
-import { getAllEndpoints, type ToolRegistryEntry, type ToolRegistryMap } from "../data/toolsTaxonomy";
+import { getAllEndpoints, type ToolRegistryEntry, type ToolRegistry } from "../data/toolsTaxonomy";
 import { useMultipleEndpointsEnabled } from "./useEndpointConfig";
 import { FileId } from '../types/file';
 import { ToolId } from 'src/types/toolId';
@@ -8,7 +8,7 @@ import { ToolId } from 'src/types/toolId';
 interface ToolManagementResult {
   selectedTool: ToolRegistryEntry | null;
   toolSelectedFileIds: FileId[];
-  toolRegistry: ToolRegistryMap;
+  toolRegistry: Partial<ToolRegistry>;
   setToolSelectedFileIds: (fileIds: FileId[]) => void;
   getSelectedTool: (toolKey: ToolId | null) => ToolRegistryEntry | null;
 }
@@ -30,8 +30,8 @@ export const useToolManagement = (): ToolManagementResult => {
     return endpoints.length === 0 || endpoints.some((endpoint: string) => endpointStatus[endpoint] === true);
   }, [endpointsLoading, endpointStatus, baseRegistry]);
 
-  const toolRegistry: ToolRegistryMap = useMemo(() => {
-    const availableToolRegistry: ToolRegistryMap = {};
+  const toolRegistry: Partial<ToolRegistry> = useMemo(() => {
+    const availableToolRegistry: Partial<ToolRegistry> = {};
     (Object.keys(baseRegistry) as ToolId[]).forEach(toolKey => {
       if (isToolAvailable(toolKey)) {
         const baseTool = baseRegistry[toolKey];
