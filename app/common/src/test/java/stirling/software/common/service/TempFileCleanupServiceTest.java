@@ -394,7 +394,7 @@ public class TempFileCleanupServiceTest {
         }
     }
 
-    // @Test - DISABLED: This test is flaky due to complex timestamp dependencies
+    @Test
     public void testRecursiveDirectoryCleaning() throws IOException {
         // Arrange - Create a nested directory structure with temp files
         Path dir1 = Files.createDirectories(systemTempDir.resolve("dir1"));
@@ -414,13 +414,21 @@ public class TempFileCleanupServiceTest {
         // Use MockedStatic to mock Files operations
         try (MockedStatic<Files> mockedFiles = mockStatic(Files.class)) {
             // Mock Files.list for each directory
-            mockedFiles.when(() -> Files.list(eq(systemTempDir))).thenReturn(Stream.of(dir1));
+            mockedFiles
+                    .when(() -> Files.list(eq(systemTempDir)))
+                    .thenAnswer(invocation -> Stream.of(dir1));
 
-            mockedFiles.when(() -> Files.list(eq(dir1))).thenReturn(Stream.of(tempFile1, dir2));
+            mockedFiles
+                    .when(() -> Files.list(eq(dir1)))
+                    .thenAnswer(invocation -> Stream.of(tempFile1, dir2));
 
-            mockedFiles.when(() -> Files.list(eq(dir2))).thenReturn(Stream.of(tempFile2, dir3));
+            mockedFiles
+                    .when(() -> Files.list(eq(dir2)))
+                    .thenAnswer(invocation -> Stream.of(tempFile2, dir3));
 
-            mockedFiles.when(() -> Files.list(eq(dir3))).thenReturn(Stream.of(tempFile3));
+            mockedFiles
+                    .when(() -> Files.list(eq(dir3)))
+                    .thenAnswer(invocation -> Stream.of(tempFile3));
 
             // Configure Files.isDirectory for each path
             mockedFiles.when(() -> Files.isDirectory(eq(dir1))).thenReturn(true);
@@ -433,6 +441,9 @@ public class TempFileCleanupServiceTest {
             // Configure Files.exists to return true for all paths
             mockedFiles.when(() -> Files.exists(any(Path.class))).thenReturn(true);
 
+            // Configure Files.size to return 0 for all files (ensure they're not empty)
+            mockedFiles.when(() -> Files.size(any(Path.class))).thenReturn(1024L);
+
             // Configure Files.getLastModifiedTime to return different times based on file names
             mockedFiles
                     .when(() -> Files.getLastModifiedTime(any(Path.class)))
@@ -442,12 +453,13 @@ public class TempFileCleanupServiceTest {
                                 String fileName = path.getFileName().toString();
 
                                 if (fileName.contains("old")) {
-                                    // Old file - very old timestamp
-                                    return FileTime.fromMillis(1000000L); // Very old timestamp
-                                } else {
-                                    // Recent file - very recent timestamp
+                                    // Old file - very old timestamp (older than 1 hour)
                                     return FileTime.fromMillis(
-                                            5000000000L); // Very recent timestamp
+                                            System.currentTimeMillis() - 7200000); // 2 hours ago
+                                } else {
+                                    // Recent file - very recent timestamp (less than 1 hour)
+                                    return FileTime.fromMillis(
+                                            System.currentTimeMillis() - 60000); // 1 minute ago
                                 }
                             });
 
@@ -460,12 +472,8 @@ public class TempFileCleanupServiceTest {
                                 return true;
                             });
 
-            // Act
+            // Act - pass maxAgeMillis = 3600000 (1 hour)
             invokeCleanupDirectoryStreaming(systemTempDir, false, 0, 3600000);
-
-            // Debug - print what was deleted
-            System.out.println("Deleted files: " + deletedFiles);
-            System.out.println("Looking for: " + tempFile3);
 
             // Assert
             assertFalse(deletedFiles.contains(tempFile1), "Recent temp file should be preserved");
