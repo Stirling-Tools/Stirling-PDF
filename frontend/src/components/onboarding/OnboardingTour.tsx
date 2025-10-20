@@ -2,11 +2,7 @@ import React from "react";
 import {
   TourProvider,
   useTour,
-  type StepType,
-  type ClickProps,
-  type KeyboardHandlerArgs,
-  type StylesObj,
-  type ComponentsObj
+  type StepType
 } from '@reactour/tour';
 import { useOnboarding } from '../../contexts/OnboardingContext';
 import { useTranslation } from 'react-i18next';
@@ -258,16 +254,16 @@ export default function OnboardingTour() {
           e.stopPropagation();
           advanceTour(clickProps);
         }}
-        keyboardHandler={({ event: e, setCurrentStep, currentStep, setIsOpen }) => {
+        keyboardHandler={(e, clickProps) => {
           // Handle right arrow key to advance tour
-          if (e.key === 'ArrowRight') {
+          if (e.key === 'ArrowRight' && clickProps) {
             e.preventDefault();
-            advanceTour({ setCurrentStep, currentStep, setIsOpen, steps });
+            advanceTour(clickProps);
           }
           // Handle escape key to close tour
-          else if (e.key === 'Escape') {
+          else if (e.key === 'Escape' && clickProps) {
             e.preventDefault();
-            handleCloseTour({ setCurrentStep, currentStep, setIsOpen, steps });
+            handleCloseTour(clickProps);
           }
         }}
         styles={{
