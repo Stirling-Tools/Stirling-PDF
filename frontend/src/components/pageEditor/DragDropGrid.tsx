@@ -124,9 +124,14 @@ const DragDropGrid = <T extends DragDropItem>({
   const [dropSide, setDropSide] = useState<'left' | 'right' | null>(null);
   const lastCursorXRef = useRef<number | null>(null);
 
-  // Configure sensors for dnd-kit
+  // Configure sensors for dnd-kit with activation constraint
+  // Require 10px movement before drag starts to allow clicks for selection
   const sensors = useSensors(
-    useSensor(PointerSensor)
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 10,
+      },
+    })
   );
 
   // Throttled pointer move handler for drop indicator

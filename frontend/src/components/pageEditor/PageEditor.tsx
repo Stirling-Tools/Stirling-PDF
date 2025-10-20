@@ -201,6 +201,11 @@ const PageEditor = ({
   // Interface functions for parent component
   const displayDocument = editedDocument || mergedPdfDocument;
 
+  // Derived values for right rail and usePageEditorRightRailButtons (must be after displayDocument)
+  const totalPages = displayDocument?.pages.length || 0;
+  const selectedPageCount = selectedPageIds.length;
+  const activeFileIds = selectedFileIds;
+
   // Utility functions to convert between page IDs and page numbers
   const getPageNumbersFromIds = useCallback((pageIds: string[]): number[] => {
     if (!displayDocument) return [];
@@ -711,6 +716,44 @@ const PageEditor = ({
     setSelectedPageIds([]);
     setSelectionMode(false);
   }, [actions]);
+
+  // Function to reorder pages based on new file order
+  const reorderPagesByFileOrder = useCallback((newFileOrder: FileId[]) => {
+    const docToUpdate = editedDocument || mergedPdfDocument;
+    if (!docToUpdate) return;
+
+    // Group pages by originalFileId
+    const pagesByFileId = new Map<FileId, PDFPage[]>();
+    docToUpdate.pages.forEach(page => {
+      if (page.originalFileId) {
+        if (!pagesByFileId.has(page.originalFileId)) {
+          pagesByFileId.set(page.originalFileId, []);
+        }
+        pagesByFileId.get(page.originalFileId)!.push(page);
+      }
+    });
+
+    // Rebuild pages array in new file order
+    const reorderedPages: PDFPage[] = [];
+    newFileOrder.forEach(fileId => {
+      const filePages = pagesByFileId.get(fileId);
+      if (filePages) {
+        reorderedPages.push(...filePages);
+      }
+    });
+
+    // Renumber pages
+    const renumberedPages = reorderedPages.map((page, idx) => ({
+      ...page,
+      pageNumber: idx + 1
+    }));
+
+    setEditedDocument({
+      ...docToUpdate,
+      pages: renumberedPages,
+      totalPages: renumberedPages.length
+    });
+  }, [editedDocument, mergedPdfDocument]);
 
   usePageEditorRightRailButtons({
     totalPages,
