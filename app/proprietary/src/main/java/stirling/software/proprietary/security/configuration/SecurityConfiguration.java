@@ -324,7 +324,7 @@ public class SecurityConfiguration {
                                                     userInfoEndpoint
                                                             .oidcUserService(
                                                                     new CustomOAuth2UserService(
-                                                                            securityProperties,
+                                                                            securityProperties.getOauth2(),
                                                                             userService,
                                                                             loginAttemptService))
                                                             .userAuthoritiesMapper(

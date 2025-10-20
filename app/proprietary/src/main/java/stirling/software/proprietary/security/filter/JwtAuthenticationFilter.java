@@ -213,14 +213,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             case OAUTH2 -> {
                 ApplicationProperties.Security.OAUTH2 oauth2Properties =
                         securityProperties.getOauth2();
+                // Provider IDs should already be set during initial authentication
+                // Pass null here since this is validating an existing JWT token
                 userService.processSSOPostLogin(
-                        username, oauth2Properties.getAutoCreateUser(), OAUTH2);
+                        username, null, null, oauth2Properties.getAutoCreateUser(), OAUTH2);
             }
             case SAML2 -> {
                 ApplicationProperties.Security.SAML2 saml2Properties =
                         securityProperties.getSaml2();
+                // Provider IDs should already be set during initial authentication
+                // Pass null here since this is validating an existing JWT token
                 userService.processSSOPostLogin(
-                        username, saml2Properties.getAutoCreateUser(), SAML2);
+                        username, null, null, saml2Properties.getAutoCreateUser(), SAML2);
             }
         }
     }

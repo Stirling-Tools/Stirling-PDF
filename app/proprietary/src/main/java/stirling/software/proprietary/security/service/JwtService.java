@@ -14,6 +14,7 @@ import java.util.function.Function;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -38,8 +39,10 @@ import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrin
 @Service
 public class JwtService implements JwtServiceInterface {
 
-    private static final String ISSUER = "https://stirling.com";
     private static final long EXPIRATION = 3600000;
+
+    @Value("${security.jwt.issuer:${server.url:https://stirling.com}}")
+    private String issuer;
 
     private final KeyPersistenceServiceInterface keyPersistenceService;
     private final boolean v2Enabled;
@@ -85,7 +88,7 @@ public class JwtService implements JwtServiceInterface {
                     Jwts.builder()
                             .claims(claims)
                             .subject(username)
-                            .issuer(ISSUER)
+                            .issuer(issuer)
                             .issuedAt(new Date())
                             .expiration(new Date(System.currentTimeMillis() + EXPIRATION))
                             .signWith(keyPair.getPrivate(), Jwts.SIG.RS256);

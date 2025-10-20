@@ -10,6 +10,7 @@ import java.util.Map;
 import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
 import org.springframework.security.web.savedrequest.SavedRequest;
@@ -92,9 +93,19 @@ public class CustomOAuth2AuthenticationSuccessHandler
                     response.sendRedirect(contextPath + "/logout?oAuth2AdminBlockedUser=true");
                     return;
                 }
-                if (principal instanceof OAuth2User) {
+                if (principal instanceof OAuth2User oAuth2User) {
+                    // Extract SSO provider information from OAuth2User
+                    String ssoProviderId = oAuth2User.getAttribute("sub"); // OIDC ID
+                    // Extract provider from authentication - need to get it from the token/request
+                    // For now, we'll extract it in a more generic way
+                    String ssoProvider = extractProviderFromAuthentication(authentication);
+
                     userService.processSSOPostLogin(
-                            username, oauth2Properties.getAutoCreateUser(), OAUTH2);
+                            username,
+                            ssoProviderId,
+                            ssoProvider,
+                            oauth2Properties.getAutoCreateUser(),
+                            OAUTH2);
                 }
 
                 // Generate JWT if v2 is enabled
@@ -125,5 +136,18 @@ public class CustomOAuth2AuthenticationSuccessHandler
                 response.sendRedirect(contextPath + "/logout?invalidUsername=true");
             }
         }
+    }
+
+    /**
+     * Extracts the OAuth2 provider registration ID from the authentication object.
+     *
+     * @param authentication The authentication object
+     * @return The provider registration ID (e.g., "google", "github"), or null if not available
+     */
+    private String extractProviderFromAuthentication(Authentication authentication) {
+        if (authentication instanceof OAuth2AuthenticationToken oauth2Token) {
+            return oauth2Token.getAuthorizedClientRegistrationId();
+        }
+        return null;
     }
 }

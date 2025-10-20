@@ -116,9 +116,20 @@ public class CustomSaml2AuthenticationSuccessHandler
                                 contextPath + "/login?errorOAuth=oAuth2AdminBlockedUser");
                         return;
                     }
-                    log.debug("Processing SSO post-login for user: {}", username);
+
+                    // Extract SSO provider information from SAML2 assertion
+                    String ssoProviderId = saml2Principal.nameId();
+                    String ssoProvider = "saml2"; // fixme
+
+                    log.debug("Processing SSO post-login for user: {} (Provider: {}, ProviderId: {})",
+                            username, ssoProvider, ssoProviderId);
+
                     userService.processSSOPostLogin(
-                            username, saml2Properties.getAutoCreateUser(), SAML2);
+                            username,
+                            ssoProviderId,
+                            ssoProvider,
+                            saml2Properties.getAutoCreateUser(),
+                            SAML2);
                     log.debug("Successfully processed authentication for user: {}", username);
 
                     // Generate JWT if v2 is enabled
