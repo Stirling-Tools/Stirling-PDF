@@ -1,7 +1,7 @@
 // @ts-check
 
 import eslint from '@eslint/js';
-import globals from "globals";
+import globals from 'globals';
 import { defineConfig } from 'eslint/config';
 import tseslint from 'typescript-eslint';
 import importPlugin from 'eslint-plugin-import';
@@ -67,11 +67,18 @@ export default defineConfig(
     }
   },
   {
-    extends: [
-      importPlugin.flatConfigs.typescript, // Use TypeScript mode for import plugin so type imports are resolved properly
-    ],
+    files: srcGlobs, // Only run import cycle detection on application sources
+    ...(importPlugin.flatConfigs.typescript),
     rules: {
-      "import/no-cycle": "error", // Detect import cycles
-    }
+      ...importPlugin.flatConfigs.typescript.rules,
+      'import/no-cycle': 'error',
+    },
+    settings: {
+      'import/resolver': {
+        typescript: {
+          project: './tsconfig.json',
+        },
+      },
+    },
   },
 );
