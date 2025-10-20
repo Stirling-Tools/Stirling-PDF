@@ -1,13 +1,19 @@
 import { createContext, useContext } from 'react';
 
-import type { ToolRegistryEntry, ToolRegistryMap } from '../data/toolsTaxonomy';
+import type {
+  ToolRegistryEntry,
+  ToolRegistry,
+  RegularToolRegistry,
+  SuperToolRegistry,
+  LinkToolRegistry,
+} from '../data/toolsTaxonomy';
 import type { ToolId } from '../types/toolId';
 
 export interface ToolRegistryCatalog {
-  regularTools: ToolRegistryMap;
-  superTools: ToolRegistryMap;
-  linkTools: ToolRegistryMap;
-  allTools: ToolRegistryMap;
+  regularTools: RegularToolRegistry;
+  superTools: SuperToolRegistry;
+  linkTools: LinkToolRegistry;
+  allTools: ToolRegistry;
   getToolById: (toolId: ToolId | null) => ToolRegistryEntry | null;
 }
 

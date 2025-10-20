@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 
 import type { ToolId } from '../types/toolId';
-import type { ToolRegistryMap } from '../data/toolsTaxonomy';
+import type { ToolRegistry } from '../data/toolsTaxonomy';
 import ToolRegistryContext, { ToolRegistryCatalog } from './ToolRegistryContext';
 import { useTranslatedToolCatalog } from '../data/useTranslatedToolRegistry';
 
@@ -14,7 +14,11 @@ export const ToolRegistryProvider: React.FC<ToolRegistryProviderProps> = ({ chil
 
   const contextValue = useMemo<ToolRegistryCatalog>(() => {
     const { regularTools, superTools, linkTools } = catalog;
-    const allTools: ToolRegistryMap = { ...regularTools, ...superTools, ...linkTools };
+    const allTools: ToolRegistry = {
+      ...regularTools,
+      ...superTools,
+      ...linkTools,
+    };
 
     const getToolById = (toolId: ToolId | null) => {
       if (!toolId) {
