@@ -74,7 +74,8 @@ public class UserService implements UserServiceInterface {
         // Find user by SSO provider ID first
         Optional<User> existingUser;
         if (ssoProviderId != null && ssoProvider != null) {
-            existingUser = userRepository.findBySsoProviderAndSsoProviderId(ssoProvider, ssoProviderId);
+            existingUser =
+                    userRepository.findBySsoProviderAndSsoProviderId(ssoProvider, ssoProviderId);
 
             if (existingUser.isPresent()) {
                 log.debug("User found by SSO provider ID: {}", ssoProviderId);

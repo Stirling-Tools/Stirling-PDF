@@ -132,23 +132,16 @@ public class SecurityConfiguration {
         if (loginEnabledValue) {
             boolean v2Enabled = appConfig.v2Enabled();
 
+            http.addFilterBefore(
+                            userAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                    .addFilterBefore(
+                            rateLimitingFilter(), UsernamePasswordAuthenticationFilter.class)
+                    .addFilterAfter(firstLoginFilter, IPRateLimitingFilter.class);
+            //                http.addFilterAfter(firstLoginFilter, IPRateLimitingFilter.class);
+
             if (v2Enabled) {
-                http.addFilterBefore(
-                                jwtAuthenticationFilter(),
-                                UsernamePasswordAuthenticationFilter.class)
-                        .exceptionHandling(
-                                exceptionHandling ->
-                                        exceptionHandling.authenticationEntryPoint(
-                                                jwtAuthenticationEntryPoint))
-                        .addFilterAfter(
-                                userAuthenticationFilter,
-                                JwtAuthenticationFilter.class); // Run AFTER JWT filter
-            } else {
-                http.addFilterBefore(
-                        userAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                http.addFilterBefore(jwtAuthenticationFilter(), UserAuthenticationFilter.class);
             }
-            http.addFilterAfter(rateLimitingFilter(), UserAuthenticationFilter.class)
-                    .addFilterAfter(firstLoginFilter, UsernamePasswordAuthenticationFilter.class);
 
             if (!securityProperties.getCsrfDisabled()) {
                 CookieCsrfTokenRepository cookieRepo =
@@ -324,7 +317,8 @@ public class SecurityConfiguration {
                                                     userInfoEndpoint
                                                             .oidcUserService(
                                                                     new CustomOAuth2UserService(
-                                                                            securityProperties.getOauth2(),
+                                                                            securityProperties
+                                                                                    .getOauth2(),
                                                                             userService,
                                                                             loginAttemptService))
                                                             .userAuthoritiesMapper(
@@ -378,8 +372,7 @@ public class SecurityConfiguration {
 
     @Bean
     public IPRateLimitingFilter rateLimitingFilter() {
-        // Example limit TODO add config level
-        int maxRequestsPerIp = 1000000;
+        int maxRequestsPerIp = securityProperties.getRateLimit().getMaxRequests();
         return new IPRateLimitingFilter(maxRequestsPerIp, maxRequestsPerIp);
     }
 

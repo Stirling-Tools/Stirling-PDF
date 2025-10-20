@@ -121,8 +121,11 @@ public class CustomSaml2AuthenticationSuccessHandler
                     String ssoProviderId = saml2Principal.nameId();
                     String ssoProvider = "saml2"; // fixme
 
-                    log.debug("Processing SSO post-login for user: {} (Provider: {}, ProviderId: {})",
-                            username, ssoProvider, ssoProviderId);
+                    log.debug(
+                            "Processing SSO post-login for user: {} (Provider: {}, ProviderId: {})",
+                            username,
+                            ssoProvider,
+                            ssoProviderId);
 
                     userService.processSSOPostLogin(
                             username,

@@ -60,6 +60,7 @@ security:
     privateKey: classpath:saml-private-key.key # Your private key. Generated from your keypair
     spCert: classpath:saml-public-cert.crt # Your signing certificate. Generated from your keypair
   jwt: # This feature is currently under development and not yet fully supported. Do not use in production.
+    issuer: https://stirling.com # The issuer field to include in the JWTs
     persistence: true # Set to 'true' to enable JWT key store
     enableKeyRotation: true # Set to 'true' to enable key pair rotation
     enableKeyCleanup: true # Set to 'true' to enable key pair cleanup
