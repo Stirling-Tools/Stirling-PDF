@@ -214,7 +214,7 @@ export const PageEditorFileDropdown: React.FC<PageEditorFileDropdownProps> = ({
           ) : (
             <LocalIcon icon="dashboard-customize-rounded" width="1.4rem" height="1.4rem" />
           )}
-          <span>{selectedCount}/{totalCount} selected</span>
+          <span>{selectedCount}/{totalCount} files selected</span>
           <KeyboardArrowDownIcon fontSize="small" />
         </div>
       </Menu.Target>

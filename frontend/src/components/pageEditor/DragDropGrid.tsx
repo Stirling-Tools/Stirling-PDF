@@ -448,8 +448,8 @@ const DragDropGrid = <T extends DragDropItem>({
 
   // Calculate optimal width for centering
   const remToPx = parseFloat(getComputedStyle(document.documentElement).fontSize);
-  const itemWidth = parseFloat(GRID_CONSTANTS.ITEM_WIDTH) * remToPx;
-  const itemGap = parseFloat(GRID_CONSTANTS.ITEM_GAP) * remToPx;
+  const itemWidth = parseFloat(GRID_CONSTANTS.ITEM_WIDTH) * remToPx * zoomLevel;
+  const itemGap = parseFloat(GRID_CONSTANTS.ITEM_GAP) * remToPx * zoomLevel;
   const gridWidth = itemsPerRow * itemWidth + (itemsPerRow - 1) * itemGap;
 
   // Calculate selection box dimensions
@@ -490,11 +490,10 @@ const DragDropGrid = <T extends DragDropItem>({
       height: `${height}px`,
       backgroundColor: 'rgba(96, 165, 250, 0.8)',
       borderRadius: '2px',
-      boxShadow: '0 0 8px 2px rgba(96, 165, 250, 0.6)',
       zIndex: 1001,
       pointerEvents: 'none' as const,
     };
-  }, [hoveredItemId, dropSide, activeId, itemGap]);
+  }, [hoveredItemId, dropSide, activeId, itemGap, zoomLevel]);
 
   return (
     <DndContext
@@ -619,8 +618,8 @@ const DragDropGrid = <T extends DragDropItem>({
                 src={dragPreview.src}
                 alt="Dragging"
                 style={{
-                  width: '20rem',
-                  height: '20rem',
+                  width: `calc(20rem * ${zoomLevel})`,
+                  height: `calc(20rem * ${zoomLevel})`,
                   objectFit: 'contain',
                   transform: `rotate(${dragPreview.rotation}deg)`,
                   pointerEvents: 'none',
@@ -629,8 +628,8 @@ const DragDropGrid = <T extends DragDropItem>({
               />
             ) : (
               <div style={{
-                width: '20rem',
-                height: '20rem',
+                width: `calc(20rem * ${zoomLevel})`,
+                height: `calc(20rem * ${zoomLevel})`,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
