@@ -84,9 +84,9 @@ class PdfVectorExportControllerTest {
         tempPaths.clear();
     }
 
-    private ProcessExecutorResult mockResult() {
+    private ProcessExecutorResult mockResult(int rc) {
         ProcessExecutorResult result = mock(ProcessExecutorResult.class);
-        lenient().when(result.getRc()).thenReturn(0);
+        lenient().when(result.getRc()).thenReturn(rc);
         lenient().when(result.getMessages()).thenReturn("");
         return result;
     }
@@ -94,7 +94,7 @@ class PdfVectorExportControllerTest {
     @Test
     void convertGhostscript_psToPdf_success() throws Exception {
         when(endpointConfiguration.isGroupEnabled("Ghostscript")).thenReturn(true);
-        ProcessExecutorResult result = mockResult();
+        ProcessExecutorResult result = mockResult(0);
         when(ghostscriptExecutor.runCommandWithOutputHandling(any())).thenReturn(result);
 
         MockMultipartFile file =

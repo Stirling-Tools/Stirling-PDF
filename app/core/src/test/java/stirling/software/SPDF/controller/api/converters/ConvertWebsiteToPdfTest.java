@@ -286,15 +286,14 @@ public class ConvertWebsiteToPdfTest {
         MockedStatic<HttpClient> httpClientStatic = Mockito.mockStatic(HttpClient.class);
         HttpClient.Builder builder = Mockito.mock(HttpClient.Builder.class);
         HttpClient client = Mockito.mock(HttpClient.class);
-        HttpResponse response = Mockito.mock(HttpResponse.class);
+        HttpResponse<String> response = Mockito.mock();
 
         httpClientStatic.when(HttpClient::newBuilder).thenReturn(builder);
         when(builder.followRedirects(HttpClient.Redirect.NORMAL)).thenReturn(builder);
         when(builder.connectTimeout(any(Duration.class))).thenReturn(builder);
         when(builder.build()).thenReturn(client);
 
-        when(client.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
-                .thenReturn(response);
+        Mockito.doReturn(response).when(client).send(any(HttpRequest.class), any());
         when(response.statusCode()).thenReturn(200);
         when(response.body()).thenReturn(body);
 

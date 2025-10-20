@@ -275,11 +275,10 @@ class UIScalingTest {
     @Test
     void testScaleIcon_NullIcon() {
         // Act
-        UIScaling.scaleIcon(null, 100, 100);
-        Image result = null;
+        Image result = UIScaling.scaleIcon(null, 100, 100);
 
         // Assert
-        assertNull(null, "Should return null for null input");
+        assertNull(result, "Should return null for null input");
     }
 
     @Test
