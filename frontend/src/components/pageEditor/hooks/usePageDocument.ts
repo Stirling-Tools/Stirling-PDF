@@ -26,7 +26,6 @@ export function usePageDocument(): PageDocumentHook {
   // Filter to only include PDF files (PageEditor only supports PDFs)
   // Use stable string keys to prevent infinite loops
   const allFileIdsKey = allFileIds.join(',');
-  const selectedIdsKey = [...state.ui.selectedFileIds].sort().join(',');
   const activeFilesSignature = selectors.getFilesSignature();
 
   // Get ALL PDF files (selected or not) for document building with placeholders

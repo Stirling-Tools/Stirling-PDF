@@ -4,6 +4,7 @@ import eslint from '@eslint/js';
 import globals from "globals";
 import { defineConfig } from 'eslint/config';
 import tseslint from 'typescript-eslint';
+import reactHooks from 'eslint-plugin-react-hooks';
 
 const srcGlobs = [
   'src/**/*.{js,mjs,jsx,ts,tsx}',
@@ -23,7 +24,11 @@ export default defineConfig(
     ],
   },
   {
+    plugins: {
+      'react-hooks': reactHooks,
+    },
     rules: {
+      ...reactHooks.configs.recommended.rules,
       "@typescript-eslint/no-empty-object-type": [
         "error",
         {

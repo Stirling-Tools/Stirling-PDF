@@ -105,8 +105,16 @@ const FileMenuItem: React.FC<FileMenuItemProps> = ({
     });
 
     return () => {
-      try { dragCleanup(); } catch {}
-      try { dropCleanup(); } catch {}
+      try {
+        dragCleanup();
+      } catch {
+        // Cleanup may fail if element was already removed
+      }
+      try {
+        dropCleanup();
+      } catch {
+        // Cleanup may fail if element was already removed
+      }
     };
   }, []); // NOTE: no `onReorder` here
 

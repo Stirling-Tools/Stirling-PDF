@@ -6,13 +6,11 @@ import {
   DndContext,
   DragEndEvent,
   DragStartEvent,
-  DragOverEvent,
   DragOverlay,
   useSensor,
   useSensors,
   PointerSensor,
   closestCenter,
-  useDndMonitor,
   useDraggable,
   useDroppable,
 } from '@dnd-kit/core';
@@ -122,7 +120,6 @@ const DragDropGrid = <T extends DragDropItem>({
   const [dragPreview, setDragPreview] = useState<{ src: string; rotation: number } | null>(null);
   const [hoveredItemId, setHoveredItemId] = useState<string | null>(null);
   const [dropSide, setDropSide] = useState<'left' | 'right' | null>(null);
-  const lastCursorXRef = useRef<number | null>(null);
 
   // Configure sensors for dnd-kit with activation constraint
   // Require 10px movement before drag starts to allow clicks for selection
@@ -179,7 +176,7 @@ const DragDropGrid = <T extends DragDropItem>({
           // Step 2: Find the closest row to cursor Y position
           let closestRowY = 0;
           let closestRowDistance = Infinity;
-          rows.forEach((items, rowY) => {
+          Array.from(rows.keys()).forEach((rowY) => {
             const distance = Math.abs(cursorY - rowY);
             if (distance < closestRowDistance) {
               closestRowDistance = distance;

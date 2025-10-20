@@ -48,7 +48,7 @@ const PageEditor = ({
   const { setHasUnsavedChanges } = useNavigationGuard();
 
   // Get PageEditor coordination functions
-  const { updateCurrentPages, reorderedPages, clearReorderedPages, updateFileOrderFromPages, fileOrder } = usePageEditor();
+  const { updateFileOrderFromPages, fileOrder } = usePageEditor();
 
   // Derive page editor files from PageEditorContext's fileOrder (page editor workspace order)
   // Filter to only show PDF files (PageEditor only supports PDFs)
