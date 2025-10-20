@@ -346,7 +346,9 @@ const TopControls = ({
     <div className="absolute left-0 w-full top-0 z-[100] pointer-events-none">
       <div className="flex justify-center mt-[0.5rem]">
         <SegmentedControl
-          data={viewOptions}
+          data-tour="view-switcher"
+          data={createViewOptions(currentView, switchingTo, activeFiles, currentFileIndex, onFileSelect, customViews)}
+
           value={currentView}
           onChange={handleViewChange}
           color="blue"
