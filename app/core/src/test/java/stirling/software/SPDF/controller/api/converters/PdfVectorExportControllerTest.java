@@ -84,9 +84,9 @@ class PdfVectorExportControllerTest {
         tempPaths.clear();
     }
 
-    private ProcessExecutorResult mockResult(int rc) {
+    private ProcessExecutorResult mockResult() {
         ProcessExecutorResult result = mock(ProcessExecutorResult.class);
-        lenient().when(result.getRc()).thenReturn(rc);
+        lenient().when(result.getRc()).thenReturn(0);
         lenient().when(result.getMessages()).thenReturn("");
         return result;
     }
@@ -94,7 +94,7 @@ class PdfVectorExportControllerTest {
     @Test
     void convertGhostscript_psToPdf_success() throws Exception {
         when(endpointConfiguration.isGroupEnabled("Ghostscript")).thenReturn(true);
-        ProcessExecutorResult result = mockResult(0);
+        ProcessExecutorResult result = mockResult();
         when(ghostscriptExecutor.runCommandWithOutputHandling(any())).thenReturn(result);
 
         MockMultipartFile file =
@@ -116,7 +116,7 @@ class PdfVectorExportControllerTest {
     void convertGhostscript_pdfPassThrough_success() throws Exception {
         when(endpointConfiguration.isGroupEnabled("Ghostscript")).thenReturn(false);
 
-        byte[] content = new byte[] {1};
+        byte[] content = {1};
         MockMultipartFile file =
                 new MockMultipartFile(
                         "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, content);
@@ -131,7 +131,7 @@ class PdfVectorExportControllerTest {
     }
 
     @Test
-    void convertGhostscript_unsupportedFormatThrows() throws Exception {
+    void convertGhostscript_unsupportedFormatThrows() {
         when(endpointConfiguration.isGroupEnabled("Ghostscript")).thenReturn(false);
         MockMultipartFile file =
                 new MockMultipartFile(

@@ -232,7 +232,7 @@ class ApplicationPropertiesLogicTest {
         Collection<String> nullColl = null;
         Collection<String> empty = List.of();
 
-        assertFalse(oauth2.isValid(nullColl, "scopes"));
+        assertFalse(oauth2.isValid((Collection<String>) null, "scopes"));
         assertFalse(oauth2.isValid(empty, "scopes"));
     }
 
