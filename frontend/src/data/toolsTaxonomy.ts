@@ -3,7 +3,7 @@ import React from 'react';
 import { ToolOperationConfig } from '../hooks/tools/shared/useToolOperation';
 import { BaseToolProps } from '../types/tool';
 import { WorkbenchType } from '../types/workbench';
-import { ToolId } from '../types/toolId';
+import { LinkToolId, RegularToolId, SuperToolId, ToolId, ToolKind } from '../types/toolId';
 import DrawRoundedIcon from '@mui/icons-material/DrawRounded';
 import SecurityRoundedIcon from '@mui/icons-material/SecurityRounded';
 import VerifiedUserRoundedIcon from '@mui/icons-material/VerifiedUserRounded';
@@ -36,29 +36,6 @@ export enum ToolCategoryId {
   RECOMMENDED_TOOLS = 'recommendedTools'
 }
 
-export type ToolKind = 'regular' | 'super' | 'link';
-
-const SUPER_TOOL_IDS = [
-  'multiTool',
-  'read',
-  'automate',
-] as const;
-export type SuperToolId = typeof SUPER_TOOL_IDS[number];
-export const isSuperToolId = (toolId: ToolId): toolId is SuperToolId =>
-  SUPER_TOOL_IDS.includes(toolId as SuperToolId);
-
-const LINK_TOOL_IDS = [
-  'devApi',
-  'devFolderScanning',
-  'devSsoGuide',
-  'devAirgapped',
-] as const;
-export type LinkToolId = typeof LINK_TOOL_IDS[number];
-export const isLinkToolId = (toolId: ToolId): toolId is LinkToolId =>
-  LINK_TOOL_IDS.includes(toolId as LinkToolId);
-
-export type RegularToolId = Exclude<ToolId, SuperToolId | LinkToolId>;
-
 export type ToolRegistryEntry = {
 	icon: React.ReactNode;
 	name: string;
@@ -86,7 +63,7 @@ export type ToolRegistryEntry = {
 export type RegularToolRegistry = Record<RegularToolId, ToolRegistryEntry>;
 export type SuperToolRegistry = Record<SuperToolId, ToolRegistryEntry>;
 export type LinkToolRegistry = Record<LinkToolId, ToolRegistryEntry>;
-export type ToolRegistry = RegularToolRegistry & SuperToolRegistry & LinkToolRegistry;
+export type ToolRegistry = Record<ToolId, ToolRegistryEntry>;
 
 export const SUBCATEGORY_ORDER: SubcategoryId[] = [
   SubcategoryId.SIGNING,

@@ -20,9 +20,8 @@ import {
   RegularToolRegistry,
   SuperToolRegistry,
   LinkToolRegistry,
-  isSuperToolId,
-  isLinkToolId,
 } from "./toolsTaxonomy";
+import { isSuperToolId, isLinkToolId } from '../types/toolId';
 import AdjustContrast from "../tools/AdjustContrast";
 import AdjustContrastSingleStepSettings from "../components/tools/adjustContrast/AdjustContrastSingleStepSettings";
 import { adjustContrastOperationConfig } from "../hooks/tools/adjustContrast/useAdjustContrastOperation";
@@ -122,6 +121,7 @@ import Automate from "../tools/Automate";
 import { CONVERT_SUPPORTED_FORMATS } from "../constants/convertSupportedFornats";
 
 export interface TranslatedToolCatalog {
+  allTools: ToolRegistry;
   regularTools: RegularToolRegistry;
   superTools: SuperToolRegistry;
   linkTools: LinkToolRegistry;
@@ -857,6 +857,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
     });
 
     return {
+      allTools,
       regularTools,
       superTools,
       linkTools,
