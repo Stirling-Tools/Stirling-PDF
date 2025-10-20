@@ -418,7 +418,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
             height: '100%',
             backgroundColor: 'var(--mantine-color-gray-1)',
             borderRadius: 6,
-            border: `4px solid ${fileColorBorder}`,
+            boxShadow: page.isBlankPage ? 'none' : `0 0 8px 4px ${fileColorBorder}`,
             padding: 4,
             display: 'flex',
             alignItems: 'center',
