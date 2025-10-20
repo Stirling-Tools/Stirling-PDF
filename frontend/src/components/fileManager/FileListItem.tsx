@@ -12,6 +12,7 @@ import { FileId, StirlingFileStub } from '../../types/fileContext';
 import { useFileManagerContext } from '../../contexts/FileManagerContext';
 import { zipFileService } from '../../services/zipFileService';
 import ToolChain from '../shared/ToolChain';
+import { Z_INDEX_OVER_FILE_MANAGER_MODAL } from '../../styles/zIndex';
 
 interface FileListItemProps {
   file: StirlingFileStub;
@@ -40,7 +41,7 @@ const FileListItem: React.FC<FileListItemProps> = ({
   const [isHovered, setIsHovered] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { t } = useTranslation();
-  const {expandedFileIds, onToggleExpansion, onAddToRecents, onUnzipFile } = useFileManagerContext();
+  const {expandedFileIds, onToggleExpansion, onUnzipFile } = useFileManagerContext();
 
   // Check if this is a ZIP file
   const isZipFile = zipFileService.isZipFileStub(file);
@@ -127,6 +128,7 @@ const FileListItem: React.FC<FileListItemProps> = ({
             withinPortal
             onOpen={() => setIsMenuOpen(true)}
             onClose={() => setIsMenuOpen(false)}
+            zIndex={Z_INDEX_OVER_FILE_MANAGER_MODAL}
           >
             <Menu.Target>
               <ActionIcon
@@ -188,7 +190,6 @@ const FileListItem: React.FC<FileListItemProps> = ({
                     leftSection={<RestoreIcon style={{ fontSize: 16 }} />}
                     onClick={(e) => {
                       e.stopPropagation();
-                      onAddToRecents(file);
                     }}
                   >
                     {t('fileManager.restore', 'Restore')}

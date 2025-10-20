@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useFileSelection } from "../contexts/FileContext";
 import { useNavigationActions } from "../contexts/NavigationContext";
@@ -48,7 +48,7 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   };
 
   // Register reset function with the tool workflow context - only once on mount
-  React.useEffect(() => {
+  useEffect(() => {
     const stableResetFunction = () => {
       if (resetFunctionRef.current) {
         resetFunctionRef.current();

@@ -13,6 +13,7 @@ import { useSignature } from '../../contexts/SignatureContext';
 import { createStirlingFilesAndStubs } from '../../services/fileStubHelpers';
 import NavigationWarningModal from '../shared/NavigationWarningModal';
 import { isStirlingFile } from '../../types/fileContext';
+import { useViewerRightRailButtons } from './useViewerRightRailButtons';
 
 export interface EmbedPdfViewerProps {
   sidebarsVisible: boolean;
@@ -35,6 +36,9 @@ const EmbedPdfViewerContent = ({
   const [isViewerHovered, setIsViewerHovered] = React.useState(false);
 
   const { isThumbnailSidebarVisible, toggleThumbnailSidebar, zoomActions, spreadActions, panActions: _panActions, rotationActions: _rotationActions, getScrollState, getZoomState, getSpreadState, getRotationState, isAnnotationMode, isAnnotationsVisible, exportActions } = useViewer();
+
+  // Register viewer right-rail buttons
+  useViewerRightRailButtons();
 
   const scrollState = getScrollState();
   const zoomState = getZoomState();
@@ -121,7 +125,7 @@ const EmbedPdfViewerContent = ({
   }, [previewFile, fileWithUrl]);
 
   // Handle scroll wheel zoom with accumulator for smooth trackpad pinch
-  React.useEffect(() => {
+  useEffect(() => {
     let accumulator = 0;
 
     const handleWheel = (event: WheelEvent) => {
@@ -155,7 +159,7 @@ const EmbedPdfViewerContent = ({
   }, [zoomActions]);
 
   // Handle keyboard zoom shortcuts
-  React.useEffect(() => {
+  useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (!isViewerHovered) return;
 
@@ -335,6 +339,7 @@ const EmbedPdfViewerContent = ({
       <ThumbnailSidebar
         visible={isThumbnailSidebarVisible}
         onToggle={toggleThumbnailSidebar}
+        activeFileIndex={activeFileIndex}
       />
 
       {/* Navigation Warning Modal */}

@@ -28,6 +28,8 @@ import {
 import { GRID_CONSTANTS } from './constants';
 import { usePageDocument } from './hooks/usePageDocument';
 import { usePageEditorState } from './hooks/usePageEditorState';
+import { parseSelection } from "../../utils/bulkselection/parseSelection";
+import { usePageEditorRightRailButtons } from "./pageEditorRightRailButtons";
 import { PageBreakSettingsModal } from './PageBreakSettingsModal';
 
 export interface PageEditorProps {
@@ -113,6 +115,7 @@ const PageEditor = ({
   const selectedFileIds = useMemo(() => {
     return pageEditorFiles.filter(f => f.isSelected).map(f => f.fileId);
   }, [pageEditorFiles]);
+  const activeFilesSignature = selectors.getFilesSignature();
 
   // UI state
   const globalProcessing = state.ui.isProcessing;
@@ -133,6 +136,12 @@ const PageEditor = ({
     setSelectionMode, setSelectedPageIds, setMovingPage, setSplitPositions, setExportLoading,
     togglePage, toggleSelectAll, animateReorder
   } = usePageEditorState();
+
+  const [csvInput, setCsvInput] = useState<string>('');
+
+  useEffect(() => {
+    setCsvInput('');
+  }, [activeFilesSignature]);
 
   // Grid container ref for positioning split indicators
   const gridContainerRef = useRef<HTMLDivElement>(null);
@@ -191,111 +200,6 @@ const PageEditor = ({
 
   // Interface functions for parent component
   const displayDocument = editedDocument || mergedPdfDocument;
-
-  // Update current pages in context whenever displayDocument changes
-  useEffect(() => {
-    if (displayDocument?.pages) {
-      updateCurrentPages(displayDocument.pages);
-    }
-  }, [displayDocument?.pages, updateCurrentPages]);
-
-  // Apply reordered pages from file reordering
-  useEffect(() => {
-    if (reorderedPages && reorderedPages.length > 0 && displayDocument) {
-      // Create a new document with reordered pages
-      const reorderedDocument: PDFDocument = {
-        ...displayDocument,
-        pages: reorderedPages,
-        totalPages: reorderedPages.length,
-      };
-      setEditedDocument(reorderedDocument);
-      clearReorderedPages();
-    }
-  }, [reorderedPages, displayDocument, clearReorderedPages]);
-
-  // Function to reorder pages based on new file order
-  const reorderPagesByFileOrder = useCallback((newFileOrder: FileId[]) => {
-    const docToUpdate = editedDocument || mergedPdfDocument;
-    if (!docToUpdate) return;
-
-    // Group pages by originalFileId
-    const pagesByFileId = new Map<FileId, PDFPage[]>();
-    docToUpdate.pages.forEach(page => {
-      if (page.originalFileId) {
-        if (!pagesByFileId.has(page.originalFileId)) {
-          pagesByFileId.set(page.originalFileId, []);
-        }
-        pagesByFileId.get(page.originalFileId)!.push(page);
-      }
-    });
-
-    // Rebuild pages array in new file order
-    const reorderedPages: PDFPage[] = [];
-    newFileOrder.forEach(fileId => {
-      const filePages = pagesByFileId.get(fileId);
-      if (filePages) {
-        reorderedPages.push(...filePages);
-      }
-    });
-
-    // Renumber pages
-    const renumberedPages = reorderedPages.map((page, idx) => ({
-      ...page,
-      pageNumber: idx + 1
-    }));
-
-    setEditedDocument({
-      ...docToUpdate,
-      pages: renumberedPages,
-      totalPages: renumberedPages.length
-    });
-  }, [editedDocument, mergedPdfDocument]);
-
-  // When file selection changes, update placeholder flags in editedDocument
-  const prevSelectedFileIdsRef = useRef<FileId[]>([]);
-  useEffect(() => {
-    const prevIds = prevSelectedFileIdsRef.current;
-    const currentIds = selectedFileIds;
-
-    // Skip if no change or first render
-    if (prevIds.length === 0 && currentIds.length > 0) {
-      prevSelectedFileIdsRef.current = currentIds;
-      return;
-    }
-
-    if (prevIds.length === currentIds.length && prevIds.every((id, idx) => id === currentIds[idx])) {
-      return;
-    }
-
-    // Use editedDocument if available, otherwise use mergedPdfDocument
-    const docToUpdate = editedDocument || mergedPdfDocument;
-    if (!docToUpdate) {
-      prevSelectedFileIdsRef.current = currentIds;
-      return;
-    }
-
-    const currentSet = new Set(currentIds);
-
-    // Update placeholder flags on existing pages based on selection
-    const updatedPages = docToUpdate.pages.map(page => {
-      const isSelected = page.originalFileId ? currentSet.has(page.originalFileId) : true;
-
-      // If file is deselected, mark all its pages as placeholders
-      // If file is selected, remove placeholder flag
-      if (!isSelected) {
-        return { ...page, isPlaceholder: true };
-      } else {
-        return { ...page, isPlaceholder: false };
-      }
-    });
-
-    setEditedDocument({
-      ...docToUpdate,
-      pages: updatedPages
-    });
-
-    prevSelectedFileIdsRef.current = currentIds;
-  }, [selectedFileIds, editedDocument, mergedPdfDocument]);
 
   // Utility functions to convert between page IDs and page numbers
   const getPageNumbersFromIds = useCallback((pageIds: string[]): number[] => {
@@ -601,6 +505,12 @@ const PageEditor = ({
     setSelectedPageIds(pageIds);
   }, [getPageIdsFromNumbers, setSelectedPageIds]);
 
+  const updatePagesFromCSV = useCallback((override?: string) => {
+    if (totalPages === 0) return;
+    const normalized = parseSelection(override ?? csvInput, totalPages);
+    handleSetSelectedPages(normalized);
+  }, [csvInput, totalPages, handleSetSelectedPages]);
+
   const handleReorderPages = useCallback((sourcePageNumber: number, targetIndex: number, selectedPageIds?: string[]) => {
     if (!displayDocument) return;
 
@@ -801,6 +711,23 @@ const PageEditor = ({
     setSelectedPageIds([]);
     setSelectionMode(false);
   }, [actions]);
+
+  usePageEditorRightRailButtons({
+    totalPages,
+    selectedPageCount,
+    csvInput,
+    setCsvInput,
+    selectedPageIds,
+    displayDocument: displayDocument || undefined,
+    updatePagesFromCSV,
+    handleSelectAll,
+    handleDeselectAll,
+    handleDelete,
+    onExportSelected,
+    exportLoading,
+    activeFileCount: activeFileIds.length,
+    closePdf,
+  });
 
   // Export preview function - defined after export functions to avoid circular dependency
   const handleExportPreview = useCallback((selectedOnly: boolean = false) => {

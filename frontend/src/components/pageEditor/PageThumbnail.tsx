@@ -1,5 +1,6 @@
-import React, { useCallback, useState, useEffect, useRef } from 'react';
-import { Text, Checkbox, Tooltip, ActionIcon } from '@mantine/core';
+import React, { useCallback, useState, useEffect, useRef, useMemo } from 'react';
+import { Text, Checkbox } from '@mantine/core';
+import { useMediaQuery } from '@mantine/hooks';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import RotateLeftIcon from '@mui/icons-material/RotateLeft';
@@ -12,6 +13,7 @@ import { useThumbnailGeneration } from '../../hooks/useThumbnailGeneration';
 import { useFilesModalContext } from '../../contexts/FilesModalContext';
 import { getFileColorWithOpacity } from './fileColors';
 import styles from './PageEditor.module.css';
+import HoverActionMenu, { HoverAction } from '../shared/HoverActionMenu';
 
 
 interface PageThumbnailProps {
@@ -80,6 +82,8 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
 }: PageThumbnailProps) => {
   const [isMouseDown, setIsMouseDown] = useState(false);
   const [mouseStartPos, setMouseStartPos] = useState<{x: number, y: number} | null>(null);
+  const [isHovered, setIsHovered] = useState(false);
+  const isMobile = useMediaQuery('(max-width: 1024px)');
   const lastClickTimeRef = useRef<number>(0);
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(page.thumbnail);
   const elementRef = useRef<HTMLDivElement | null>(null);
@@ -262,12 +266,79 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
   const handleMouseLeave = useCallback(() => {
     setIsMouseDown(false);
     setMouseStartPos(null);
+    setIsHovered(false);
   }, []);
 
   const fileColorBorder = page.isBlankPage ? 'transparent' : getFileColorWithOpacity(fileColorIndex, 0.3);
 
   // Spread dragHandleProps but use our merged ref
   const { ref: _, ...restDragProps } = dragHandleProps || {};
+
+  // Build hover menu actions
+  const hoverActions = useMemo<HoverAction[]>(() => [
+    {
+      id: 'move-left',
+      icon: <ArrowBackIcon style={{ fontSize: 20 }} />,
+      label: 'Move Left',
+      onClick: (e) => {
+        e.stopPropagation();
+        if (index > 0 && !movingPage && !isAnimating) {
+          onSetMovingPage(page.pageNumber);
+          onReorderPages(page.pageNumber, index - 1);
+          setTimeout(() => onSetMovingPage(null), 650);
+          onSetStatus(`Moved page ${page.pageNumber} left`);
+        }
+      },
+      disabled: index === 0
+    },
+    {
+      id: 'move-right',
+      icon: <ArrowForwardIcon style={{ fontSize: 20 }} />,
+      label: 'Move Right',
+      onClick: (e) => {
+        e.stopPropagation();
+        if (index < totalPages - 1 && !movingPage && !isAnimating) {
+          onSetMovingPage(page.pageNumber);
+          onReorderPages(page.pageNumber, index + 1);
+          setTimeout(() => onSetMovingPage(null), 650);
+          onSetStatus(`Moved page ${page.pageNumber} right`);
+        }
+      },
+      disabled: index === totalPages - 1
+    },
+    {
+      id: 'rotate-left',
+      icon: <RotateLeftIcon style={{ fontSize: 20 }} />,
+      label: 'Rotate Left',
+      onClick: handleRotateLeft,
+    },
+    {
+      id: 'rotate-right',
+      icon: <RotateRightIcon style={{ fontSize: 20 }} />,
+      label: 'Rotate Right',
+      onClick: handleRotateRight,
+    },
+    {
+      id: 'delete',
+      icon: <DeleteIcon style={{ fontSize: 20 }} />,
+      label: 'Delete Page',
+      onClick: handleDelete,
+      color: 'red',
+    },
+    {
+      id: 'split',
+      icon: <ContentCutIcon style={{ fontSize: 20 }} />,
+      label: 'Split After',
+      onClick: handleSplit,
+      hidden: index >= totalPages - 1,
+    },
+    {
+      id: 'insert',
+      icon: <AddIcon style={{ fontSize: 20 }} />,
+      label: 'Insert File After',
+      onClick: handleInsertFileAfter,
+    }
+  ], [index, totalPages, movingPage, isAnimating, page.pageNumber, handleRotateLeft, handleRotateRight, handleDelete, handleSplit, handleInsertFileAfter, onReorderPages, onSetMovingPage, onSetStatus]);
 
   return (
     <div
@@ -300,6 +371,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
       }}
       onMouseDown={handleMouseDown}
       onMouseUp={handleMouseUp}
+      onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={handleMouseLeave}
     >
       {
@@ -411,128 +483,12 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
           {page.pageNumber}
         </Text>
 
-        <div
+        <HoverActionMenu
+          show={isHovered || isMobile}
+          actions={hoverActions}
+          position="inside"
           className={styles.pageHoverControls}
-          style={{
-            position: 'absolute',
-            bottom: 8,
-            left: '50%',
-            transform: 'translateX(-50%)',
-            backgroundColor: 'var(--bg-toolbar)',
-            border: '1px solid var(--border-default)',
-            padding: '6px 12px',
-            borderRadius: 20,
-            opacity: 0,
-            transition: 'opacity 0.2s ease-in-out',
-            zIndex: 3,
-            display: 'flex',
-            gap: '8px',
-            alignItems: 'center',
-            whiteSpace: 'nowrap'
-          }}
-          onMouseDown={(e) => e.stopPropagation()}
-          onMouseUp={(e) => e.stopPropagation()}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <Tooltip label="Move Left">
-            <ActionIcon
-              size="md"
-              variant="subtle"
-              style={{ color: 'var(--mantine-color-dimmed)' }}
-              disabled={index === 0}
-              onClick={(e) => {
-                e.stopPropagation();
-                if (index > 0 && !movingPage && !isAnimating) {
-                  onSetMovingPage(page.pageNumber);
-                  // Actually move the page left (swap with previous page)
-                  onReorderPages(page.pageNumber, index - 1);
-                  setTimeout(() => onSetMovingPage(null), 650);
-                  onSetStatus(`Moved page ${page.pageNumber} left`);
-                }
-              }}
-            >
-              <ArrowBackIcon style={{ fontSize: 20 }} />
-            </ActionIcon>
-          </Tooltip>
-
-          <Tooltip label="Move Right">
-            <ActionIcon
-              size="md"
-              variant="subtle"
-              style={{ color: 'var(--mantine-color-dimmed)' }}
-              disabled={index === totalPages - 1}
-              onClick={(e) => {
-                e.stopPropagation();
-                if (index < totalPages - 1 && !movingPage && !isAnimating) {
-                  onSetMovingPage(page.pageNumber);
-                  // Actually move the page right (swap with next page)
-                  onReorderPages(page.pageNumber, index + 1);
-                  setTimeout(() => onSetMovingPage(null), 650);
-                  onSetStatus(`Moved page ${page.pageNumber} right`);
-                }
-              }}
-            >
-              <ArrowForwardIcon style={{ fontSize: 20 }} />
-            </ActionIcon>
-          </Tooltip>
-
-          <Tooltip label="Rotate Left">
-            <ActionIcon
-              size="md"
-              variant="subtle"
-              style={{ color: 'var(--mantine-color-dimmed)' }}
-              onClick={handleRotateLeft}
-            >
-              <RotateLeftIcon style={{ fontSize: 20 }} />
-            </ActionIcon>
-          </Tooltip>
-
-          <Tooltip label="Rotate Right">
-            <ActionIcon
-              size="md"
-              variant="subtle"
-              style={{ color: 'var(--mantine-color-dimmed)' }}
-              onClick={handleRotateRight}
-            >
-              <RotateRightIcon style={{ fontSize: 20 }} />
-            </ActionIcon>
-          </Tooltip>
-
-          <Tooltip label="Delete Page">
-            <ActionIcon
-              size="md"
-              variant="subtle"
-              c="red"
-              onClick={handleDelete}
-            >
-              <DeleteIcon style={{ fontSize: 20 }} />
-            </ActionIcon>
-          </Tooltip>
-
-          {index < totalPages - 1 && (
-            <Tooltip label="Split After">
-              <ActionIcon
-                size="md"
-                variant="subtle"
-                style={{ color: 'var(--mantine-color-dimmed)' }}
-                onClick={handleSplit}
-              >
-                <ContentCutIcon style={{ fontSize: 20 }} />
-              </ActionIcon>
-            </Tooltip>
-          )}
-
-          <Tooltip label="Insert File After">
-            <ActionIcon
-              size="md"
-              variant="subtle"
-              style={{ color: 'var(--mantine-color-dimmed)' }}
-              onClick={handleInsertFileAfter}
-            >
-              <AddIcon style={{ fontSize: 20 }} />
-            </ActionIcon>
-          </Tooltip>
-        </div>
+        />
 
       </div>
 

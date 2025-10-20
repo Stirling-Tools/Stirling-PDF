@@ -1,6 +1,17 @@
 /* CSS variables for Tailwind + Mantine integration */
 
 :root {
+  /* Global animation durations */
+  --fullscreen-anim-duration-in: 0.28s;
+  --fullscreen-anim-duration-out: 0.22s;
+
+  /* Z-index constants (added in this PR) */
+  --z-over-fullscreen-surface: 1400;
+  --z-fullscreen-surface: 1200;
+  --z-fullscreen-favorite-star: 2;
+  --z-fullscreen-icon-svg: 1;
+  --z-toolpicker-star: 1;
+
   /* Standard gray scale */
   --gray-50: 249 250 251;
   --gray-100: 243 244 246;
@@ -48,6 +59,22 @@
   --color-yellow-200: #fef08a;
   --color-yellow-300: #fde047;
   --color-yellow-400: #facc15;
+
+  /* Category colors - consistent across light and dark modes */
+  --category-color-removal: #ef4444;        /* Red for removal tools */
+  --category-color-security: #f59e0b;       /* Orange for security tools */
+  --category-color-formatting: #8b5cf6;     /* Purple for formatting tools */
+  --category-color-extraction: #06b6d4;      /* Cyan for extraction tools */
+  --category-color-signing: #10b981;        /* Green for signing tools */
+  --category-color-general: #3b82f6;        /* Blue for general tools */
+  --category-color-verification: #f97316;    /* Orange for verification tools */
+  --category-color-automation: #ec4899;     /* Pink for automation tools */
+  --category-color-developer: #6b7280;      /* Gray for developer tools */
+  --category-color-default: #6b7280;        /* Default gray */
+
+  /* Special section colors - consistent across light and dark modes */
+  --special-color-favorites: #FFC107;      /* Yellow/gold for favorites */
+  --special-color-recommended: #1BB1D4;    /* Cyan for recommended */
   --color-yellow-500: #eab308;
   --color-yellow-600: #ca8a04;
   --color-yellow-700: #a16207;
@@ -144,7 +171,7 @@
 
   /* RightRail (light) */
   --right-rail-bg: #F5F6F8;           /* light background */
-  --right-rail-foreground: #CDD4E1;   /* panel behind custom tool icons */
+  --right-rail-foreground: #E3E4E5;   /* panel behind custom tool icons */
   --right-rail-icon: #4B5563;         /* icon color */
   --right-rail-icon-disabled: #CECECE;/* disabled icon */
 
@@ -234,6 +261,29 @@
   --modal-nav-item-active-bg: rgba(10, 139, 255, 0.08);
   --modal-content-bg: #ffffff;
   --modal-header-border: rgba(0, 0, 0, 0.06);
+
+  /* PDF Report Colors (always light) */
+  --pdf-light-header-bg: 239 246 255;
+  --pdf-light-accent: 59 130 246;
+  --pdf-light-text-primary: 30 41 59;
+  --pdf-light-text-muted: 100 116 139;
+  --pdf-light-box-bg: 248 250 252;
+  --pdf-light-box-border: 226 232 240;
+  --pdf-light-warning: 234 179 8;
+  --pdf-light-danger: 248 113 113;
+  --pdf-light-success: 34 197 94;
+  --pdf-light-neutral: 148 163 184;
+  --pdf-light-status-valid-bg: 209 250 229;
+  --pdf-light-status-valid-text: 6 95 70;
+  --pdf-light-status-warning-bg: 254 243 199;
+  --pdf-light-status-warning-text: 146 64 14;
+  --pdf-light-status-invalid-bg: 254 226 226;
+  --pdf-light-status-invalid-text: 153 27 27;
+  --pdf-light-status-neutral-bg: 229 231 235;
+  --pdf-light-status-neutral-text: 55 65 81;
+  --pdf-light-report-container-bg: 249 250 251;
+  --pdf-light-simulated-page-bg: 255 255 255;
+  --pdf-light-simulated-page-text: 15 23 42;
 }
 
 [data-mantine-color-scheme="dark"] {
@@ -276,6 +326,22 @@
   --color-gray-700: #d1d5db;
   --color-gray-800: #e5e7eb;
   --color-gray-900: #f3f4f6;
+
+  /* Category colors - same as light mode for consistency */
+  --category-color-removal: #ef4444;        /* Red for removal tools */
+  --category-color-security: #f59e0b;       /* Orange for security tools */
+  --category-color-formatting: #8b5cf6;     /* Purple for formatting tools */
+  --category-color-extraction: #06b6d4;      /* Cyan for extraction tools */
+  --category-color-signing: #10b981;        /* Green for signing tools */
+  --category-color-general: #3b82f6;        /* Blue for general tools */
+  --category-color-verification: #f97316;    /* Orange for verification tools */
+  --category-color-automation: #ec4899;     /* Pink for automation tools */
+  --category-color-developer: #6b7280;      /* Gray for developer tools */
+  --category-color-default: #6b7280;        /* Default gray */
+
+  /* Special section colors - same as light mode for consistency */
+  --special-color-favorites: #FFC107;      /* Yellow/gold for favorites */
+  --special-color-recommended: #1BB1D4;    /* Cyan for recommended */
 
   /* Success (green) - dark */
   --color-green-50: #052e16;
@@ -445,4 +511,11 @@
 /* Smooth transitions for theme switching */
 * {
   transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+:root {
+  --shadow-color: rgba(15, 23, 42, 0.55);
+}
+
+[data-theme="dark"] {
+  --shadow-color: rgba(0, 0, 0, 0.75);
 }

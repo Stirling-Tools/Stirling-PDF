@@ -1,4 +1,33 @@
 {
+  "toolPanel": {
+    "modePrompt": {
+      "title": "Choose how you browse tools",
+      "description": "Preview both layouts and decide how you want to explore Stirling PDF tools.",
+      "sidebarTitle": "Sidebar mode",
+      "sidebarDescription": "Keep tools alongside your workspace for quick switching.",
+      "recommended": "Recommended",
+      "chooseSidebar": "Use sidebar mode",
+      "fullscreenTitle": "Fullscreen mode - (legacy)",
+      "fullscreenDescription": "Browse every tool in a catalogue that covers the workspace until you pick one.",
+      "chooseFullscreen": "Use fullscreen mode",
+      "dismiss": "Maybe later"
+    },
+    "fullscreen": {
+      "showDetails": "Show Details",
+      "comingSoon": "Coming soon:",
+      "favorite": "Add to favourites",
+      "favorites": "Favourites",
+      "heading": "All tools (fullscreen view)",
+      "noResults": "Try adjusting your search or toggle descriptions to find what you need.",
+      "recommended": "Recommended",
+      "unfavorite": "Remove from favourites"
+    },
+    "placeholder": "Choose a tool to get started",
+    "toggle": {
+      "fullscreen": "Switch to fullscreen mode",
+      "sidebar": "Switch to sidebar mode"
+    }
+  },
   "unsavedChanges": "You have unsaved changes to your PDF.",
   "areYouSure": "Are you sure you want to leave?",
   "unsavedChangesTitle": "Unsaved Changes",
@@ -39,7 +68,7 @@
     "preview": "Position Selection",
     "previewDisclaimer": "Preview is approximate. Final output may vary due to PDF font metrics."
   },
-  "pageSelectionPrompt": "Specify which pages to add numbers to. Examples: \"1,3,5\" for specific pages, \"1-5\" for ranges, \"2n\" for even pages, or leave blank for all pages.",
+  "pageSelectionPrompt": "Custom Page Selection (Enter a comma-separated list of page numbers 1,5,6 or Functions like 2n+1)",
   "startingNumberTooltip": "The first number to display. Subsequent pages will increment from this number.",
   "marginTooltip": "Distance between the page number and the edge of the page.",
   "fontSizeTooltip": "Size of the page number text in points. Larger numbers create bigger text.",
@@ -55,7 +84,6 @@
   "uploadLimitExceededPlural": "are too large. Maximum allowed size is",
   "processTimeWarning": "Warning: This process can take up to a minute depending on file-size",
   "pageOrderPrompt": "Custom Page Order (Enter a comma-separated list of page numbers or Functions like 2n+1) :",
-  "pageSelectionPrompt": "Custom Page Selection (Enter a comma-separated list of page numbers 1,5,6 or Functions like 2n+1) :",
   "goToPage": "Go",
   "true": "True",
   "false": "False",
@@ -73,6 +101,11 @@
   "moreOptions": "More Options",
   "editYourNewFiles": "Edit your new file(s)",
   "close": "Close",
+  "openInViewer": "Open in Viewer",
+  "confirmClose": "Confirm Close",
+  "confirmCloseMessage": "Are you sure you want to close this file?",
+  "confirmCloseCancel": "Cancel",
+  "confirmCloseConfirm": "Close File",
   "fileSelected": "Selected: {{filename}}",
   "chooseFile": "Choose File",
   "filesSelected": "{{count}} files selected",
@@ -82,7 +115,9 @@
     "uploadFiles": "Upload Files",
     "addFiles": "Add files",
     "selectFromWorkbench": "Select files from the workbench or ",
-    "selectMultipleFromWorkbench": "Select at least {{count}} files from the workbench or "
+    "selectMultipleFromWorkbench": "Select at least {{count}} files from the workbench or ",
+    "created": "Created",
+    "size": "File Size"
   },
   "noFavourites": "No favourites added",
   "downloadComplete": "Download Complete",
@@ -267,7 +302,13 @@
       "autoUnzipTooltip": "Automatically extract ZIP files returned from API operations. Disable to keep ZIP files intact. This does not affect automation workflows.",
       "autoUnzipFileLimit": "Auto-unzip file limit",
       "autoUnzipFileLimitDescription": "Maximum number of files to extract from ZIP",
-      "autoUnzipFileLimitTooltip": "Only unzip if the ZIP contains this many files or fewer. Set higher to extract larger ZIPs."
+      "autoUnzipFileLimitTooltip": "Only unzip if the ZIP contains this many files or fewer. Set higher to extract larger ZIPs.",
+      "defaultToolPickerMode": "Default tool picker mode",
+      "defaultToolPickerModeDescription": "Choose whether the tool picker opens in fullscreen or sidebar by default",
+      "mode": {
+        "fullscreen": "Fullscreen",
+        "sidebar": "Sidebar"
+      }
     },
     "hotkeys": {
       "title": "Keyboard Shortcuts",
@@ -284,7 +325,8 @@
       "change": "Change shortcut",
       "reset": "Reset",
       "shortcut": "Shortcut",
-      "noShortcut": "No shortcut set"
+      "noShortcut": "No shortcut set",
+      "searchPlaceholder": "Search tools..."
     }
   },
   "changeCreds": {
@@ -598,11 +640,6 @@
       "title": "Redact",
       "desc": "Redacts (blacks out) a PDF based on selected text, drawn shapes and/or selected page(s)"
     },
-    "overlayPdfs": {
-      "tags": "overlay,combine,stack",
-      "title": "Overlay PDFs",
-      "desc": "Overlays PDFs on-top of another PDF"
-    },
     "splitBySections": {
       "tags": "split,sections,divide",
       "title": "Split PDF by Sections",
@@ -648,9 +685,9 @@
       "title": "Manage Certificates",
       "desc": "Import, export, or delete digital certificate files used for signing PDFs."
     },
-  "read": {
-    "tags": "view,open,display",
-    "title": "Read",
+    "read": {
+      "tags": "view,open,display",
+      "title": "Read",
       "desc": "View and annotate PDFs. Highlight text, draw, or insert comments for review and collaboration."
     },
     "reorganizePages": {
@@ -710,13 +747,17 @@
     },
     "mobile": {
       "brandAlt": "Stirling PDF logo",
-      "viewSwitcher": "Switch workspace view",
-      "tools": "Tools",
-      "workspace": "Workspace",
+      "openFiles": "Open files",
       "swipeHint": "Swipe left or right to switch views",
+      "tools": "Tools",
       "toolsSlide": "Tool selection panel",
+      "viewSwitcher": "Switch workspace view",
       "workbenchSlide": "Workspace panel",
-      "openFiles": "Open files"
+      "workspace": "Workspace"
+    },
+    "overlay-pdfs": {
+      "desc": "Overlay one PDF on top of another",
+      "title": "Overlay PDFs"
     }
   },
   "landing": {
@@ -902,13 +943,50 @@
         "bullet1": "Bookmark Level: Which level to split on (1=top level)",
         "bullet2": "Include Metadata: Preserve document properties",
         "bullet3": "Allow Duplicates: Handle repeated bookmark names"
+      },
+      "byDocCount": {
+        "bullet1": "Enter the number of output files you want",
+        "bullet2": "Pages are distributed as evenly as possible",
+        "bullet3": "Useful when you need a specific number of files",
+        "text": "Create a specific number of output files by evenly distributing pages across them.",
+        "title": "Split by Document Count"
+      },
+      "byPageCount": {
+        "bullet1": "Enter the number of pages per output file",
+        "bullet2": "Last file may have fewer pages if not evenly divisible",
+        "bullet3": "Useful for batch processing workflows",
+        "text": "Create multiple PDFs with a specific number of pages each. Perfect for creating uniform document chunks.",
+        "title": "Split by Page Count"
+      },
+      "byPageDivider": {
+        "bullet1": "Print divider sheets from the download link",
+        "bullet2": "Insert divider sheets between your documents",
+        "bullet3": "Scan all documents together as one PDF",
+        "bullet4": "Upload - divider pages are automatically detected and removed",
+        "bullet5": "Enable Duplex Mode if scanning both sides of divider sheets",
+        "text": "Automatically split scanned documents using physical divider sheets with QR codes. Perfect for processing multiple documents scanned together.",
+        "title": "Split by Page Divider"
       }
-    }
+    },
+    "methodSelection": {
+      "tooltip": {
+        "bullet1": "Click on a method card to select it",
+        "bullet2": "Hover over each card to see a quick description",
+        "bullet3": "The settings step will appear after you select a method",
+        "bullet4": "You can change methods at any time before processing",
+        "header": {
+          "text": "Choose how you want to split your PDF document. Each method is optimized for different use cases and document types.",
+          "title": "Split Method Selection"
+        },
+        "title": "Choose Your Split Method"
+      }
+    },
+    "selectMethod": "Select a split method"
   },
   "rotate": {
     "title": "Rotate PDF",
     "submit": "Apply Rotation",
-    "selectRotation":  "Select Rotation Angle (Clockwise)",
+    "selectRotation": "Select Rotation Angle (Clockwise)",
     "error": {
       "failed": "An error occurred while rotating the PDF."
     },
@@ -996,7 +1074,8 @@
     "imagesExt": "Images (JPG, PNG, etc.)",
     "markdown": "Markdown",
     "textRtf": "Text/RTF",
-    "grayscale": "Greyscale"
+    "grayscale": "Greyscale",
+    "errorConversion": "An error occurred while converting the file."
   },
   "imageToPdf": {
     "tags": "conversion,img,jpg,picture,photo"
@@ -1023,7 +1102,7 @@
     "header": "PDF Page Organiser",
     "submit": "Rearrange Pages",
     "mode": {
-      "_value": "Organization mode",
+      "_value": "Organisation mode",
       "1": "Custom Page Order",
       "2": "Reverse Order",
       "3": "Duplex Sort",
@@ -1034,7 +1113,20 @@
       "8": "Remove Last",
       "9": "Remove First and Last",
       "10": "Odd-Even Merge",
-      "11": "Duplicate all pages"
+      "11": "Duplicate all pages",
+      "desc": {
+        "BOOKLET_SORT": "Arrange pages for booklet printing (last, first, second, second last, …).",
+        "CUSTOM": "Use a custom sequence of page numbers or expressions to define a new order.",
+        "DUPLEX_SORT": "Interleave fronts then backs as if a duplex scanner scanned all fronts, then all backs (1, n, 2, n-1, …).",
+        "DUPLICATE": "Duplicate each page according to the custom order count (e.g., 4 duplicates each page 4×).",
+        "ODD_EVEN_MERGE": "Merge two PDFs by alternating pages: odd from the first, even from the second.",
+        "ODD_EVEN_SPLIT": "Split the document into two outputs: all odd pages and all even pages.",
+        "REMOVE_FIRST": "Remove the first page from the document.",
+        "REMOVE_FIRST_AND_LAST": "Remove both the first and last pages from the document.",
+        "REMOVE_LAST": "Remove the last page from the document.",
+        "REVERSE_ORDER": "Flip the document so the last page becomes first and so on.",
+        "SIDE_STITCH_BOOKLET_SORT": "Arrange pages for side‑stitch booklet printing (optimized for binding on the side)."
+      }
     },
     "desc": {
       "CUSTOM": "Use a custom sequence of page numbers or expressions to define a new order.",
@@ -1100,7 +1192,9 @@
       "opacity": "Opacity (%)",
       "spacing": {
         "horizontal": "Horizontal Spacing",
-        "vertical": "Vertical Spacing"
+        "vertical": "Vertical Spacing",
+        "height": "Height Spacing",
+        "width": "Width Spacing"
       },
       "convertToImage": "Flatten PDF pages to images"
     },
@@ -1243,6 +1337,10 @@
           "bullet4": "Best for sensitive or copyrighted content"
         }
       }
+    },
+    "type": {
+      "1": "Text",
+      "2": "Image"
     }
   },
   "permissions": {
@@ -1356,6 +1454,38 @@
       },
       "examples": {
         "title": "Examples"
+      },
+      "complex": {
+        "bullet1": "<strong>1,3-5,8,2n</strong> → pages 1, 3–5, 8, plus evens",
+        "bullet2": "<strong>10-,2n-1</strong> → from page 10 to end + odd pages",
+        "description": "Mix different types.",
+        "title": "Complex Combinations"
+      },
+      "description": "Choose which pages to use for the operation. Supports single pages, ranges, formulas, and the all keyword.",
+      "individual": {
+        "bullet1": "<strong>1,3,5</strong> → selects pages 1, 3, 5",
+        "bullet2": "<strong>2,7,12</strong> → selects pages 2, 7, 12",
+        "description": "Enter numbers separated by commas.",
+        "title": "Individual Pages"
+      },
+      "mathematical": {
+        "bullet1": "<strong>2n</strong> → all even pages (2, 4, 6…)",
+        "bullet2": "<strong>2n-1</strong> → all odd pages (1, 3, 5…)",
+        "bullet3": "<strong>3n</strong> → every 3rd page (3, 6, 9…)",
+        "bullet4": "<strong>4n-1</strong> → pages 3, 7, 11, 15…",
+        "description": "Use n in formulas for patterns.",
+        "title": "Mathematical Functions"
+      },
+      "ranges": {
+        "bullet1": "<strong>3-6</strong> → selects pages 3–6",
+        "bullet2": "<strong>10-15</strong> → selects pages 10–15",
+        "bullet3": "<strong>5-</strong> → selects pages 5 to end",
+        "description": "Use - for consecutive pages.",
+        "title": "Page Ranges"
+      },
+      "special": {
+        "bullet1": "<strong>all</strong> → selects all pages",
+        "title": "Special Keywords"
       }
     }
   },
@@ -1665,6 +1795,9 @@
           "text": "Post-processes the final PDF by removing OCR artefacts and optimising the text layer for better readability and smaller file size."
         }
       }
+    },
+    "error": {
+      "failed": "OCR operation failed"
     }
   },
   "extractImages": {
@@ -1785,8 +1918,14 @@
     "title": "Sign",
     "header": "Sign PDFs",
     "upload": "Upload Image",
-    "draw": "Draw Signature",
-    "text": "Text Input",
+    "draw": {
+      "title": "Draw your signature",
+      "clear": "Clear"
+    },
+    "text": {
+      "name": "Signer Name",
+      "placeholder": "Enter your full name"
+    },
     "clear": "Clear",
     "add": "Add",
     "saved": "Saved Signatures",
@@ -1815,18 +1954,10 @@
       "image": "Image",
       "text": "Text"
     },
-    "draw": {
-      "title": "Draw your signature",
-      "clear": "Clear"
-    },
     "image": {
       "label": "Upload signature image",
       "placeholder": "Select image file",
       "hint": "Upload a PNG or JPG image of your signature"
-    },
-    "text": {
-      "name": "Signer Name",
-      "placeholder": "Enter your full name"
     },
     "instructions": {
       "title": "How to add signature",
@@ -1954,7 +2085,13 @@
         "bullet3": "Can be disabled to reduce output file size"
       }
     },
-    "submit": "Remove blank pages"
+    "submit": "Remove blank pages",
+    "error": {
+      "failed": "Failed to remove blank pages"
+    },
+    "results": {
+      "title": "Removed Blank Pages"
+    }
   },
   "removeAnnotations": {
     "tags": "comments,highlight,notes,markup,remove",
@@ -2056,7 +2193,12 @@
           "bullet3": "Choose which page to place the signature",
           "bullet4": "Optional logo can be included"
         }
-      }
+      },
+      "invisible": "Invisible",
+      "options": {
+        "title": "Signature Details"
+      },
+      "visible": "Visible"
     },
     "sign": {
       "submit": "Sign PDF",
@@ -2117,7 +2259,22 @@
           "text": "Convert your file to a Java keystore (.jks) with keytool, then pick JKS."
         }
       }
-    }
+    },
+    "chooseCertificate": "Choose Certificate File",
+    "chooseJksFile": "Choose JKS File",
+    "chooseP12File": "Choose PKCS12 File",
+    "choosePfxFile": "Choose PFX File",
+    "choosePrivateKey": "Choose Private Key File",
+    "location": "Location",
+    "logoTitle": "Logo",
+    "name": "Name",
+    "noLogo": "No Logo",
+    "pageNumber": "Page Number",
+    "password": "Certificate Password",
+    "passwordOptional": "Leave empty if no password",
+    "reason": "Reason",
+    "serverCertMessage": "Using server certificate - no files or password required",
+    "showLogo": "Show Logo"
   },
   "removeCertSign": {
     "tags": "authenticate,PEM,P12,official,decrypt",
@@ -2143,7 +2300,17 @@
     "header": "Multi Page Layout",
     "pagesPerSheet": "Pages per sheet:",
     "addBorder": "Add Borders",
-    "submit": "Submit"
+    "submit": "Submit",
+    "desc": {
+      "2": "Place 2 pages side-by-side on a single sheet.",
+      "3": "Place 3 pages on a single sheet in a single row.",
+      "4": "Place 4 pages on a single sheet (2 × 2 grid).",
+      "9": "Place 9 pages on a single sheet (3 × 3 grid).",
+      "16": "Place 16 pages on a single sheet (4 × 4 grid)."
+    },
+    "error": {
+      "failed": "An error occurred while creating the multi-page layout."
+    }
   },
   "bookletImposition": {
     "tags": "booklet,imposition,printing,binding,folding,signature",
@@ -2329,10 +2496,22 @@
     "reset": "Reset to full PDF",
     "coordinates": {
       "title": "Position and Size",
-      "x": "X Position",
-      "y": "Y Position",
-      "width": "Width",
-      "height": "Height"
+      "x": {
+        "label": "X Position",
+        "desc": "Left edge (points)"
+      },
+      "y": {
+        "label": "Y Position",
+        "desc": "Bottom edge (points)"
+      },
+      "width": {
+        "label": "Width",
+        "desc": "Crop width (points)"
+      },
+      "height": {
+        "label": "Height",
+        "desc": "Crop height (points)"
+      }
     },
     "error": {
       "invalidArea": "Crop area extends beyond PDF boundaries",
@@ -2350,6 +2529,10 @@
     },
     "results": {
       "title": "Crop Results"
+    },
+    "automation": {
+      "info": "Enter crop coordinates in PDF points. Origin (0,0) is at bottom-left. These values will be applied to all PDFs processed in this automation.",
+      "reference": "Reference: A4 page is 595.28 × 841.89 points (210mm × 297mm). 1 inch = 72 points."
     }
   },
   "autoSplitPDF": {
@@ -2560,11 +2743,15 @@
   "overlay-pdfs": {
     "tags": "Overlay",
     "header": "Overlay PDF Files",
+    "title": "Overlay PDFs",
+    "desc": "Overlay one PDF on top of another",
     "baseFile": {
       "label": "Select Base PDF File"
     },
     "overlayFiles": {
-      "label": "Select Overlay PDF Files"
+      "label": "Select Overlay PDF Files",
+      "placeholder": "Choose PDF(s)...",
+      "addMore": "Add more PDFs..."
     },
     "mode": {
       "label": "Select Overlay Mode",
@@ -2574,14 +2761,53 @@
     },
     "counts": {
       "label": "Overlay Counts (for Fixed Repeat Mode)",
-      "placeholder": "Enter comma-separated counts (e.g., 2,3,1)"
+      "placeholder": "Enter comma-separated counts (e.g., 2,3,1)",
+      "item": "Count for file",
+      "noFiles": "Add overlay files to configure counts"
     },
     "position": {
       "label": "Select Overlay Position",
       "foreground": "Foreground",
       "background": "Background"
     },
-    "submit": "Submit"
+    "submit": "Submit",
+    "settings": {
+      "title": "Settings"
+    },
+    "results": {
+      "title": "Overlay Results"
+    },
+    "tooltip": {
+      "header": {
+        "title": "Overlay PDFs Overview"
+      },
+      "description": {
+        "title": "Description",
+        "text": "Combine a base PDF with one or more overlay PDFs. Overlays can be applied page-by-page in different modes and placed in the foreground or background."
+      },
+      "mode": {
+        "title": "Overlay Mode",
+        "text": "Choose how to distribute overlay pages across the base PDF pages.",
+        "sequential": "Sequential Overlay: Use pages from the first overlay PDF until it ends, then move to the next.",
+        "interleaved": "Interleaved Overlay: Take one page from each overlay in turn.",
+        "fixedRepeat": "Fixed Repeat Overlay: Take a set number of pages from each overlay before moving to the next. Use Counts to set the numbers."
+      },
+      "position": {
+        "title": "Overlay Position",
+        "text": "Foreground places the overlay on top of the page. Background places it behind."
+      },
+      "overlayFiles": {
+        "title": "Overlay Files",
+        "text": "Select one or more PDFs to overlay on the base. The order of these files affects how pages are applied in Sequential and Fixed Repeat modes."
+      },
+      "counts": {
+        "title": "Counts (Fixed Repeat only)",
+        "text": "Provide a positive number for each overlay file showing how many pages to take before moving to the next. Required when mode is Fixed Repeat."
+      }
+    },
+    "error": {
+      "failed": "An error occurred while overlaying PDFs."
+    }
   },
   "split-by-sections": {
     "tags": "Section Split, Divide, Customize,Customise",
@@ -2616,7 +2842,18 @@
     "customMargin": "Custom Margin",
     "customColor": "Custom Text Colour",
     "submit": "Submit",
-    "noStampSelected": "No stamp selected. Return to Step 1."
+    "noStampSelected": "No stamp selected. Return to Step 1.",
+    "customPosition": "Drag the stamp to the desired location in the preview window.",
+    "error": {
+      "failed": "An error occurred while adding stamp to the PDF."
+    },
+    "imageSize": "Image Size",
+    "margin": "Margin",
+    "positionAndFormatting": "Position & Formatting",
+    "quickPosition": "Select a position on the page to place the stamp.",
+    "results": {
+      "title": "Stamp Results"
+    }
   },
   "removeImagePdf": {
     "tags": "Remove Image,Page operations,Back end,server side"
@@ -2634,7 +2871,8 @@
     "status": {
       "_value": "Status",
       "valid": "Valid",
-      "invalid": "Invalid"
+      "invalid": "Invalid",
+      "complete": "Validation complete"
     },
     "signer": "Signer",
     "date": "Date",
@@ -2661,16 +2899,71 @@
       "version": "Version",
       "keyUsage": "Key Usage",
       "selfSigned": "Self-Signed",
-      "bits": "bits"
+      "bits": "bits",
+      "details": "Certificate Details"
     },
     "signature": {
       "info": "Signature Information",
       "_value": "Signature",
       "mathValid": "Signature is mathematically valid BUT:"
     },
-    "selectCustomCert": "Custom Certificate File X.509 (Optional)"
+    "selectCustomCert": "Custom Certificate File X.509 (Optional)",
+    "downloadCsv": "Download CSV",
+    "downloadJson": "Download JSON",
+    "downloadPdf": "Download PDF Report",
+    "downloadType": {
+      "csv": "CSV",
+      "json": "JSON",
+      "pdf": "PDF"
+    },
+    "error": {
+      "allFailed": "Unable to validate the selected files.",
+      "partial": "Some files could not be validated.",
+      "reportGeneration": "Could not generate the PDF report. JSON and CSV are available.",
+      "unexpected": "Unexpected error during validation."
+    },
+    "finalizing": "Preparing downloads...",
+    "issue": {
+      "certExpired": "Certificate expired",
+      "certRevocationUnknown": "Certificate revocation status unknown",
+      "certRevoked": "Certificate revoked",
+      "chainInvalid": "Certificate chain invalid",
+      "signatureInvalid": "Signature cryptographic check failed",
+      "trustInvalid": "Certificate not trusted"
+    },
+    "noResults": "Run the validation to generate a report.",
+    "noSignaturesShort": "No signatures",
+    "processing": "Validating signatures...",
+    "report": {
+      "continued": "Continued",
+      "downloads": "Downloads",
+      "entryLabel": "Signature Summary",
+      "fields": {
+        "created": "Created",
+        "fileSize": "File Size",
+        "signatureCount": "Total Signatures",
+        "signatureDate": "Signature Date"
+      },
+      "filesEvaluated": "{{count}} files evaluated",
+      "footer": "Validated via Stirling PDF",
+      "generatedAt": "Generated",
+      "noPdf": "PDF report will be available after a successful validation.",
+      "page": "Page",
+      "shortTitle": "Signature Summary",
+      "signatureCountLabel": "{{count}} signatures",
+      "signaturesFound": "{{count}} signatures detected",
+      "signaturesValid": "{{count}} fully valid",
+      "title": "Signature Validation Report"
+    },
+    "settings": {
+      "certHint": "Upload a trusted X.509 certificate to validate against a custom trust source.",
+      "title": "Validation Settings"
+    },
+    "signatureDate": "Signature Date",
+    "totalSignatures": "Total Signatures"
   },
   "replaceColor": {
+    "tags": "Replace Colour,Page operations,Back end,server side",
     "labels": {
       "settings": "Settings",
       "colourOperation": "Colour operation"
@@ -2710,9 +3003,6 @@
     "error": {
       "failed": "An error occurred while processing the colour replacement."
     }
-  },
-  "replaceColor": {
-    "tags": "Replace Colour,Page operations,Back end,server side"
   },
   "login": {
     "title": "Sign in",
@@ -2829,7 +3119,19 @@
     "contrast": "Contrast:",
     "brightness": "Brightness:",
     "saturation": "Saturation:",
-    "download": "Download"
+    "download": "Download",
+    "adjustColors": "Adjust Colors",
+    "blue": "Blue",
+    "confirm": "Confirm",
+    "error": {
+      "failed": "Failed to adjust colors/contrast"
+    },
+    "green": "Green",
+    "noPreview": "Select a PDF to preview",
+    "red": "Red",
+    "results": {
+      "title": "Adjusted PDF"
+    }
   },
   "compress": {
     "title": "Compress",
@@ -2976,7 +3278,13 @@
     "title": "Remove image",
     "header": "Remove image",
     "removeImage": "Remove image",
-    "submit": "Remove image"
+    "submit": "Remove image",
+    "error": {
+      "failed": "Failed to remove images from the PDF."
+    },
+    "results": {
+      "title": "Remove Images Results"
+    }
   },
   "splitByChapters": {
     "title": "Split PDF by Chapters",
@@ -3121,7 +3429,9 @@
   },
   "search": {
     "title": "Search PDF",
-    "placeholder": "Enter search term..."
+    "placeholder": "Enter search term...",
+    "noResults": "No results found",
+    "searching": "Searching..."
   },
   "guestBanner": {
     "title": "You're using Stirling PDF as a guest!",
@@ -3243,7 +3553,17 @@
     "selectedCount": "{{count}} selected",
     "download": "Download",
     "delete": "Delete",
-    "unsupported": "Unsupported"
+    "unsupported": "Unsupported",
+    "addToUpload": "Add to Upload",
+    "deleteAll": "Delete All",
+    "loadingFiles": "Loading files...",
+    "noFiles": "No files available",
+    "noFilesFound": "No files found matching your search",
+    "openInPageEditor": "Open in Page Editor",
+    "showAll": "Show All",
+    "sortByDate": "Sort by Date",
+    "sortByName": "Sort by Name",
+    "sortBySize": "Sort by Size"
   },
   "storage": {
     "temporaryNotice": "Files are stored temporarily in your browser and may be cleared automatically",
@@ -3498,16 +3818,6 @@
       "processImagesDesc": "Converts multiple image files into a single PDF document, then applies OCR technology to extract searchable text from the images."
     }
   },
-  "viewer": {
-    "firstPage": "First Page",
-    "lastPage": "Last Page",
-    "previousPage": "Previous Page",
-    "nextPage": "Next Page",
-    "zoomIn": "Zoom In",
-    "zoomOut": "Zoom Out",
-    "singlePageView": "Single Page View",
-    "dualPageView": "Dual Page View"
-  },
   "common": {
     "copy": "Copy",
     "copied": "Copied!",
@@ -3516,7 +3826,8 @@
     "remaining": "remaining",
     "used": "used",
     "available": "available",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "preview": "Preview"
   },
   "config": {
     "account": {
@@ -3574,8 +3885,89 @@
     "submit": "Add Attachments",
     "results": {
       "title": "Attachment Results"
+    },
+    "error": {
+      "failed": "Add attachments operation failed"
     }
   },
   "termsAndConditions": "Terms & Conditions",
-  "logOut": "Log out"
+  "logOut": "Log out",
+  "addAttachments": {
+    "error": {
+      "failed": "An error occurred while adding attachments to the PDF."
+    }
+  },
+  "autoRename": {
+    "description": "This tool will automatically rename PDF files based on their content. It analyzes the document to find the most suitable title from the text."
+  },
+  "customPosition": "Custom Position",
+  "details": "Details",
+  "downloadUnavailable": "Download unavailable for this item",
+  "invalidUndoData": "Cannot undo: invalid operation data",
+  "margin": {
+    "large": "Large",
+    "medium": "Medium",
+    "small": "Small",
+    "xLarge": "Extra Large"
+  },
+  "noFilesToUndo": "Cannot undo: no files were processed in the last operation",
+  "noOperationToUndo": "No operation to undo",
+  "noValidFiles": "No valid files to process",
+  "operationCancelled": "Operation cancelled",
+  "pageEdit": {
+    "deselectAll": "Select None",
+    "selectAll": "Select All"
+  },
+  "quickPosition": "Quick Position",
+  "reorganizePages": {
+    "error": {
+      "failed": "Failed to reorganize pages"
+    },
+    "results": {
+      "title": "Pages Reorganized"
+    },
+    "settings": {
+      "title": "Settings"
+    },
+    "submit": "Reorganize Pages"
+  },
+  "replace-color": {
+    "options": {
+      "fill": "Fill colour",
+      "gradient": "Gradient"
+    },
+    "previewOverlayOpacity": "Preview overlay opacity",
+    "previewOverlayTransparency": "Preview overlay transparency",
+    "previewOverlayVisibility": "Show preview overlay",
+    "selectText": {
+      "1": "Replace or invert colour options",
+      "2": "Default (preset high contrast colours)",
+      "3": "Custom (choose your own colours)",
+      "4": "Full invert (invert all colours)",
+      "5": "High contrast color options",
+      "6": "White text on black background",
+      "7": "Black text on white background",
+      "8": "Yellow text on black background",
+      "9": "Green text on black background",
+      "10": "Choose text Color",
+      "11": "Choose background Color",
+      "12": "Choose start colour",
+      "13": "Choose end colour"
+    },
+    "submit": "Replace",
+    "title": "Replace-Invert-Color"
+  },
+  "size": "Size",
+  "submit": "Submit",
+  "success": "Success",
+  "tools": {
+    "noSearchResults": "No tools found",
+    "noTools": "No tools available"
+  },
+  "undoDataMismatch": "Cannot undo: operation data is corrupted",
+  "undoFailed": "Failed to undo operation",
+  "undoQuotaError": "Cannot undo: insufficient storage space",
+  "undoStorageError": "Undo completed but some files could not be saved to storage",
+  "undoSuccess": "Operation undone successfully",
+  "unsupported": "Unsupported"
 }

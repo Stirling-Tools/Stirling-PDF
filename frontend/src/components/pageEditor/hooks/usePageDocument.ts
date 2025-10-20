@@ -27,7 +27,7 @@ export function usePageDocument(): PageDocumentHook {
   // Use stable string keys to prevent infinite loops
   const allFileIdsKey = allFileIds.join(',');
   const selectedIdsKey = [...state.ui.selectedFileIds].sort().join(',');
-  const filesSignature = selectors.getFilesSignature();
+  const activeFilesSignature = selectors.getFilesSignature();
 
   // Get ALL PDF files (selected or not) for document building with placeholders
   const activeFileIds = useMemo(() => {
@@ -36,7 +36,7 @@ export function usePageDocument(): PageDocumentHook {
       return stub?.name?.toLowerCase().endsWith('.pdf') ?? false;
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allFileIdsKey, filesSignature]);
+  }, [allFileIdsKey, activeFilesSignature]);
 
   const primaryFileId = activeFileIds[0] ?? null;
 
@@ -193,7 +193,7 @@ export function usePageDocument(): PageDocumentHook {
     };
 
     return mergedDoc;
-  }, [activeFileIds, primaryFileId, primaryStirlingFileStub, processedFilePages, processedFileTotalPages, selectors, filesSignature]);
+  }, [activeFileIds, primaryFileId, primaryStirlingFileStub, processedFilePages, processedFileTotalPages, selectors, activeFilesSignature]);
 
   // Large document detection for smart loading
   const isVeryLargeDocument = useMemo(() => {

@@ -5,13 +5,15 @@ import rainbowStyles from '../../styles/rainbow.module.css';
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import EditNoteIcon from "@mui/icons-material/EditNote";
 import FolderIcon from "@mui/icons-material/Folder";
+import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import { WorkbenchType, isValidWorkbench } from '../../types/workbench';
-import { FileDropdownMenu } from './FileDropdownMenu';
 import { PageEditorFileDropdown } from './PageEditorFileDropdown';
 import { usePageEditor } from '../../contexts/PageEditorContext';
 import { useFileState } from '../../contexts/FileContext';
 import { useToolWorkflow } from '../../contexts/ToolWorkflowContext';
 import { FileId } from '../../types/file';
+import type { CustomWorkbenchViewInstance } from '../../contexts/ToolWorkflowContext';
+import { FileDropdownMenu } from './FileDropdownMenu';
 
 // Local interface for PageEditor file display
 interface PageEditorFile {
@@ -30,9 +32,9 @@ interface PageEditorState {
   fileColorMap: Map<string, number>;
 }
 
-// View option styling
 const viewOptionStyle: React.CSSProperties = {
-  display: 'flex',
+  display: 'inline-flex',
+  flexDirection: 'row',
   alignItems: 'center',
   gap: '0.5rem',
   justifyContent: 'center',
@@ -42,31 +44,27 @@ const viewOptionStyle: React.CSSProperties = {
 const createViewOptions = (
   currentView: WorkbenchType,
   switchingTo: WorkbenchType | null,
-  activeFiles?: Array<{ fileId: string; name: string; versionNumber?: number }>,
-  currentFileIndex?: number,
+  activeFiles: Array<{ fileId: string; name: string; versionNumber?: number }>,
+  currentFileIndex: number,
   onFileSelect?: (index: number) => void,
-  pageEditorState?: PageEditorState
+  pageEditorState?: PageEditorState,
+  customViews?: CustomWorkbenchViewInstance[]
 ) => {
   // Viewer dropdown logic
+  const currentFile = activeFiles[currentFileIndex];
   const isInViewer = currentView === 'viewer';
-  const hasActiveFiles = activeFiles && activeFiles.length > 0;
-  const showViewerDropdown = isInViewer && hasActiveFiles;
-
-  let viewerDisplayName = 'Viewer';
-  if (isInViewer && hasActiveFiles && currentFileIndex !== undefined) {
-    const currentFile = activeFiles[currentFileIndex];
-    if (currentFile) {
-      viewerDisplayName = currentFile.name;
-    }
-  }
+  const fileName = currentFile?.name || '';
+  const viewerDisplayName = isInViewer && fileName ? fileName : 'Viewer';
+  const hasMultipleFiles = activeFiles.length > 1;
+  const showViewerDropdown = isInViewer && hasMultipleFiles;
 
   const viewerOption = {
     label: showViewerDropdown ? (
       <FileDropdownMenu
         displayName={viewerDisplayName}
-        activeFiles={activeFiles!}
-        currentFileIndex={currentFileIndex!}
-        onFileSelect={onFileSelect!}
+        activeFiles={activeFiles}
+        currentFileIndex={currentFileIndex}
+        onFileSelect={onFileSelect}
         switchingTo={switchingTo}
         viewOptionStyle={viewOptionStyle}
       />
@@ -77,7 +75,7 @@ const createViewOptions = (
         ) : (
           <VisibilityIcon fontSize="small" />
         )}
-        <span>{viewerDisplayName}</span>
+        <span className="ph-no-capture">{viewerDisplayName}</span>
       </div>
     ),
     value: "viewer",
@@ -136,17 +134,35 @@ const createViewOptions = (
     value: "fileEditor",
   };
 
-  // Build options array conditionally
-  return [
+  const baseOptions = [
     viewerOption,
     pageEditorOption,
     fileEditorOption,
   ];
+
+  const customOptions = (customViews ?? [])
+    .filter((view) => view.data != null)
+    .map((view) => ({
+      label: (
+        <div style={viewOptionStyle as React.CSSProperties}>
+          {switchingTo === view.workbenchId ? (
+            <Loader size="xs" />
+          ) : (
+            view.icon || <PictureAsPdfIcon fontSize="small" />
+          )}
+          <span>{view.label}</span>
+        </div>
+      ),
+      value: view.workbenchId,
+    }));
+
+  return [...baseOptions, ...customOptions];
 };
 
 interface TopControlsProps {
   currentView: WorkbenchType;
   setCurrentView: (view: WorkbenchType) => void;
+  customViews?: CustomWorkbenchViewInstance[];
   activeFiles?: Array<{ fileId: string; name: string; versionNumber?: number }>;
   currentFileIndex?: number;
   onFileSelect?: (index: number) => void;
@@ -155,6 +171,7 @@ interface TopControlsProps {
 const TopControls = ({
   currentView,
   setCurrentView,
+  customViews = [],
   activeFiles = [],
   currentFileIndex = 0,
   onFileSelect,
@@ -321,8 +338,9 @@ const TopControls = ({
     activeFiles,
     currentFileIndex,
     onFileSelect,
-    pageEditorState
-  ), [currentView, switchingTo, activeFiles, currentFileIndex, onFileSelect, pageEditorState]);
+    pageEditorState,
+    customViews
+  ), [currentView, switchingTo, activeFiles, currentFileIndex, onFileSelect, pageEditorState, customViews]);
 
   return (
     <div className="absolute left-0 w-full top-0 z-[100] pointer-events-none">

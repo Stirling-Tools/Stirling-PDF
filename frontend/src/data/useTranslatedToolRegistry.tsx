@@ -66,6 +66,10 @@ import { extractImagesOperationConfig } from "../hooks/tools/extractImages/useEx
 import { replaceColorOperationConfig } from "../hooks/tools/replaceColor/useReplaceColorOperation";
 import { removePagesOperationConfig } from "../hooks/tools/removePages/useRemovePagesOperation";
 import { removeBlanksOperationConfig } from "../hooks/tools/removeBlanks/useRemoveBlanksOperation";
+import { overlayPdfsOperationConfig } from "../hooks/tools/overlayPdfs/useOverlayPdfsOperation";
+import { adjustPageScaleOperationConfig } from "../hooks/tools/adjustPageScale/useAdjustPageScaleOperation";
+import { scannerImageSplitOperationConfig } from "../hooks/tools/scannerImageSplit/useScannerImageSplitOperation";
+import { addPageNumbersOperationConfig } from "../components/tools/addPageNumbers/useAddPageNumbersOperation";
 import CompressSettings from "../components/tools/compress/CompressSettings";
 import AddPasswordSettings from "../components/tools/addPassword/AddPasswordSettings";
 import RemovePasswordSettings from "../components/tools/removePassword/RemovePasswordSettings";
@@ -81,16 +85,14 @@ import Redact from "../tools/Redact";
 import AdjustPageScale from "../tools/AdjustPageScale";
 import ReplaceColor from "../tools/ReplaceColor";
 import ScannerImageSplit from "../tools/ScannerImageSplit";
+import OverlayPdfs from "../tools/OverlayPdfs";
 import { ToolId } from "../types/toolId";
 import MergeSettings from '../components/tools/merge/MergeSettings';
-import { adjustPageScaleOperationConfig } from "../hooks/tools/adjustPageScale/useAdjustPageScaleOperation";
-import { scannerImageSplitOperationConfig } from "../hooks/tools/scannerImageSplit/useScannerImageSplitOperation";
 import AdjustPageScaleSettings from "../components/tools/adjustPageScale/AdjustPageScaleSettings";
 import ScannerImageSplitSettings from "../components/tools/scannerImageSplit/ScannerImageSplitSettings";
 import ChangeMetadataSingleStep from "../components/tools/changeMetadata/ChangeMetadataSingleStep";
 import SignSettings from "../components/tools/sign/SignSettings";
 import AddPageNumbers from "../tools/AddPageNumbers";
-import { addPageNumbersOperationConfig } from "../components/tools/addPageNumbers/useAddPageNumbersOperation";
 import RemoveAnnotations from "../tools/RemoveAnnotations";
 import PageLayoutSettings from "../components/tools/pageLayout/PageLayoutSettings";
 import ExtractImages from "../tools/ExtractImages";
@@ -105,89 +107,13 @@ import AddAttachmentsSettings from "../components/tools/addAttachments/AddAttach
 import RemovePagesSettings from "../components/tools/removePages/RemovePagesSettings";
 import RemoveBlanksSettings from "../components/tools/removeBlanks/RemoveBlanksSettings";
 import AddPageNumbersAutomationSettings from "../components/tools/addPageNumbers/AddPageNumbersAutomationSettings";
+import OverlayPdfsSettings from "../components/tools/overlayPdfs/OverlayPdfsSettings";
+import ValidateSignature from "../tools/ValidateSignature";
 
 const showPlaceholderTools = true; // Show all tools; grey out unavailable ones in UI
 
 // Convert tool supported file formats
-export const CONVERT_SUPPORTED_FORMATS = [
-  // Microsoft Office
-  "doc",
-  "docx",
-  "dot",
-  "dotx",
-  "csv",
-  "xls",
-  "xlsx",
-  "xlt",
-  "xltx",
-  "slk",
-  "dif",
-  "ppt",
-  "pptx",
-  // OpenDocument
-  "odt",
-  "ott",
-  "ods",
-  "ots",
-  "odp",
-  "otp",
-  "odg",
-  "otg",
-  // Text formats
-  "txt",
-  "text",
-  "xml",
-  "rtf",
-  "html",
-  "lwp",
-  "md",
-  // Images
-  "bmp",
-  "gif",
-  "jpeg",
-  "jpg",
-  "png",
-  "tif",
-  "tiff",
-  "pbm",
-  "pgm",
-  "ppm",
-  "ras",
-  "xbm",
-  "xpm",
-  "svg",
-  "svm",
-  "wmf",
-  "webp",
-  // StarOffice
-  "sda",
-  "sdc",
-  "sdd",
-  "sdw",
-  "stc",
-  "std",
-  "sti",
-  "stw",
-  "sxd",
-  "sxg",
-  "sxi",
-  "sxw",
-  // Email formats
-  "eml",
-  // Archive formats
-  "zip",
-  // Other
-  "dbf",
-  "fods",
-  "vsd",
-  "vor",
-  "vor3",
-  "vor4",
-  "uop",
-  "pct",
-  "ps",
-  "pdf",
-];
+import { CONVERT_SUPPORTED_FORMATS } from "../constants/convertSupportedFornats";
 
 // Hook to get the translated tool registry
 export function useFlatToolRegistry(): ToolRegistry {
@@ -356,10 +282,12 @@ export function useFlatToolRegistry(): ToolRegistry {
       validateSignature: {
         icon: <LocalIcon icon="verified-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.validateSignature.title", "Validate PDF Signature"),
-        component: null,
+        component: ValidateSignature,
         description: t("home.validateSignature.desc", "Verify digital signatures and certificates in PDF documents"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.VERIFICATION,
+        maxFiles: -1,
+        endpoints: ["validate-signature"],
         synonyms: getSynonyms(t, "validateSignature"),
         automationSettings: null
       },
@@ -704,13 +632,14 @@ export function useFlatToolRegistry(): ToolRegistry {
       },
       overlayPdfs: {
         icon: <LocalIcon icon="layers-rounded" width="1.5rem" height="1.5rem" />,
-        name: t("home.overlayPdfs.title", "Overlay PDFs"),
-        component: null,
-        description: t("home.overlayPdfs.desc", "Overlay one PDF on top of another"),
+        name: t("home.overlay-pdfs.title", "Overlay PDFs"),
+        component: OverlayPdfs,
+        description: t("home.overlay-pdfs.desc", "Overlay one PDF on top of another"),
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.ADVANCED_FORMATTING,
-        synonyms: getSynonyms(t, "overlayPdfs"),
-        automationSettings: null
+        operationConfig: overlayPdfsOperationConfig,
+        synonyms: getSynonyms(t, "overlay-pdfs"),
+        automationSettings: OverlayPdfsSettings
       },
       replaceColor: {
         icon: <LocalIcon icon="format-color-fill-rounded" width="1.5rem" height="1.5rem" />,
