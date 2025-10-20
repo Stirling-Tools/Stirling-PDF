@@ -6,28 +6,25 @@ import { defineConfig } from 'eslint/config';
 import tseslint from 'typescript-eslint';
 import importPlugin from 'eslint-plugin-import';
 
-const srcGlobs = ['src/**/*.{js,mjs,jsx,ts,tsx}'];
-const nodeGlobs = ['scripts/**/*.{js,ts,mjs}', '*.config.{js,ts,mjs}'];
+const srcGlobs = [
+  'src/**/*.{js,mjs,jsx,ts,tsx}',
+];
+const nodeGlobs = [
+  'scripts/**/*.{js,ts,mjs}',
+  '*.config.{js,ts,mjs}',
+];
 
-const importTsConfig = importPlugin.flatConfigs.typescript;
-
-export default defineConfig([
+export default defineConfig(
+  eslint.configs.recommended,
+  tseslint.configs.recommended,
   {
-    // Everything containing third-party code that we don't want to lint
     ignores: [
-      "node_modules",
-      "dist",
-      "public/js/thirdParty",
+      "dist", // Contains 3rd party code
+      "public", // Contains 3rd party code
     ],
   },
-  eslint.configs.recommended,
-  ...tseslint.configs.recommended,
   {
-    // Config to be run on all files
-    ...importTsConfig,
     rules: {
-      ...importTsConfig.rules,
-      'import/no-cycle': 'error',
       "@typescript-eslint/no-empty-object-type": [
         "error",
         {
@@ -50,13 +47,6 @@ export default defineConfig([
         },
       ],
     },
-    settings: {
-      'import/resolver': { // Tell import linter about our TS config and disable default (really slow) settings
-        typescript: {
-          project: './tsconfig.json',
-        },
-      },
-    },
   },
   // Config for browser scripts
   {
@@ -76,4 +66,19 @@ export default defineConfig([
       }
     }
   },
-]);
+  {
+    files: srcGlobs, // Only run import cycle detection on application sources
+    ...(importPlugin.flatConfigs.typescript),
+    rules: {
+      ...importPlugin.flatConfigs.typescript.rules,
+      'import/no-cycle': 'error',
+    },
+    settings: {
+      'import/resolver': {
+        typescript: {
+          project: './tsconfig.json',
+        },
+      },
+    },
+  },
+);
