@@ -62,7 +62,6 @@ public class User implements UserDetails, Serializable {
     @Column(name = "authenticationtype")
     private String authenticationType;
 
-    // todo: could these be linked to PII in anyway?
     @Column(name = "sso_provider_id")
     private String ssoProviderId;
 

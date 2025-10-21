@@ -26,11 +26,7 @@ import stirling.software.proprietary.security.service.JwtServiceInterface;
 import stirling.software.proprietary.security.service.UserService;
 
 /**
- * REST API Controller for authentication operations. Replaces Supabase authentication with Spring
- * Security + JWT.
- *
- * <p>This controller provides endpoints matching the Supabase API surface to enable seamless
- * frontend integration.
+ * REST API Controller for authentication operations.
  */
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -56,25 +52,21 @@ public class AuthController {
         try {
             log.debug("Login attempt for user: {}", request.email());
 
-            // Load user
             UserDetails userDetails = userDetailsService.loadUserByUsername(request.email());
             User user = (User) userDetails;
 
-            // Validate password
             if (!userService.isPasswordCorrect(user, request.password())) {
                 log.warn("Invalid password for user: {}", request.email());
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(Map.of("error", "Invalid credentials"));
             }
 
-            // Check if user is enabled
             if (!user.isEnabled()) {
                 log.warn("Disabled user attempted login: {}", request.email());
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(Map.of("error", "User account is disabled"));
             }
 
-            // Generate JWT with claims
             Map<String, Object> claims = new HashMap<>();
             claims.put("authType", AuthenticationType.WEB.toString());
             claims.put("role", user.getRolesAsString());
@@ -83,7 +75,6 @@ public class AuthController {
 
             log.info("Login successful for user: {}", request.email());
 
-            // Return user info
             return ResponseEntity.ok(
                     Map.of(
                             "user", buildUserResponse(user),
@@ -101,7 +92,7 @@ public class AuthController {
     }
 
     /**
-     * Registration endpoint - replaces Supabase signUp
+     * Registration endpoint
      *
      * @param request Registration details (email, password, name)
      * @return User information or error
@@ -111,39 +102,34 @@ public class AuthController {
         try {
             log.debug("Registration attempt for user: {}", request.email());
 
-            // Check if username exists
             if (userService.usernameExistsIgnoreCase(request.email())) {
                 log.warn("Registration failed: username already exists: {}", request.email());
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(Map.of("error", "User already exists"));
             }
 
-            // Validate username format
             if (!userService.isUsernameValid(request.email())) {
                 log.warn("Registration failed: invalid username format: {}", request.email());
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(Map.of("error", "Invalid username format"));
             }
 
-            // Validate password
             if (request.password() == null || request.password().length() < 6) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(Map.of("error", "Password must be at least 6 characters"));
             }
 
-            // Create user (using default team and USER role)
             User user =
                     userService.saveUser(
                             request.email(),
                             request.password(),
-                            (Long) null, // team (use default)
+                            (Long) null, // team
                             Role.USER.getRoleId(),
                             false // first login not required
                             );
 
             log.info("User registered successfully: {}", request.email());
 
-            // Return user info (Note: No session, user must login)
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(
                             Map.of(
@@ -164,7 +150,7 @@ public class AuthController {
     }
 
     /**
-     * Get current user - replaces Supabase getSession
+     * Get current user
      *
      * @return Current authenticated user information
      */
@@ -193,15 +179,14 @@ public class AuthController {
     }
 
     /**
-     * Logout endpoint - replaces Supabase signOut
+     * Logout endpoint
      *
-     * @param response HTTP response to clear JWT cookie
+     * @param response HTTP response
      * @return Success message
      */
     @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpServletResponse response) {
         try {
-            // Clear security context
             SecurityContextHolder.clearContext();
 
             log.debug("User logged out successfully");
@@ -216,7 +201,7 @@ public class AuthController {
     }
 
     /**
-     * Refresh token - replaces Supabase refreshSession
+     * Refresh token
      *
      * @param request HTTP request containing current JWT cookie
      * @param response HTTP response to set new JWT cookie
@@ -232,16 +217,14 @@ public class AuthController {
                         .body(Map.of("error", "No token found"));
             }
 
-            // Validate and extract username
             jwtService.validateToken(token);
             String username = jwtService.extractUsername(token);
 
-            // Generate new token
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
             User user = (User) userDetails;
 
             Map<String, Object> claims = new HashMap<>();
-            claims.put("authType", AuthenticationType.WEB.toString());
+            claims.put("authType", user.getAuthenticationType());
             claims.put("role", user.getRolesAsString());
 
             String newToken = jwtService.generateToken(username, claims);
@@ -273,7 +256,7 @@ public class AuthController {
 
         // Add metadata for OAuth compatibility
         Map<String, Object> appMetadata = new HashMap<>();
-        appMetadata.put("provider", "email"); // Default to email provider
+        appMetadata.put("provider", user.getAuthenticationType()); // Default to email provider
         userMap.put("app_metadata", appMetadata);
 
         return userMap;
