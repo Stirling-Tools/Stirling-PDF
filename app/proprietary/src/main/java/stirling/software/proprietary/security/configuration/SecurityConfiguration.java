@@ -137,7 +137,6 @@ public class SecurityConfiguration {
                     .addFilterBefore(
                             rateLimitingFilter(), UsernamePasswordAuthenticationFilter.class)
                     .addFilterAfter(firstLoginFilter, IPRateLimitingFilter.class);
-            //                http.addFilterAfter(firstLoginFilter, IPRateLimitingFilter.class);
 
             if (v2Enabled) {
                 http.addFilterBefore(jwtAuthenticationFilter(), UserAuthenticationFilter.class);

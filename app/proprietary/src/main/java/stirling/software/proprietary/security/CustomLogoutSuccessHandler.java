@@ -115,7 +115,8 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
             samlClient.setSPKeys(certificate, privateKey);
 
             // Build relay state to return user to login page after IdP logout
-            String relayState = UrlUtils.getOrigin(request) + request.getContextPath() + LOGOUT_PATH;
+            String relayState =
+                    UrlUtils.getOrigin(request) + request.getContextPath() + LOGOUT_PATH;
 
             // Redirect to identity provider for logout with relay state
             samlClient.redirectToIdentityProvider(response, relayState, nameIdValue);

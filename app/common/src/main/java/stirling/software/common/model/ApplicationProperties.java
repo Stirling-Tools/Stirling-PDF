@@ -349,7 +349,8 @@ public class ApplicationProperties {
         @Data
         public static class RateLimit {
             private int maxRequests = 1000;
-            private String resetSchedule = "0 0 0 * * MON"; // Cron expression: At 00:00 every Monday
+            private String resetSchedule =
+                    "0 0 0 * * MON"; // Cron expression: At 00:00 every Monday
         }
     }
 
