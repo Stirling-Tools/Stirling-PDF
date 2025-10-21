@@ -1,0 +1,63 @@
+# Example Docker Compose for Unified Stirling-PDF Container
+# MODE=FRONTEND: Frontend only, connects to separate backend
+
+services:
+  stirling-pdf-backend:
+    container_name: Stirling-PDF-Backend
+    build:
+      context: ../..
+      dockerfile: docker/Dockerfile.unified
+    ports:
+      - "8081:8080"
+    volumes:
+      - ./stirling/data:/usr/share/tessdata:rw
+      - ./stirling/config:/configs:rw
+      - ./stirling/logs:/logs:rw
+      - ./stirling/customFiles:/customFiles:rw
+      - ./stirling/pipeline:/pipeline:rw
+    environment:
+      MODE: BACKEND
+      DISABLE_ADDITIONAL_FEATURES: "false"
+      DOCKER_ENABLE_SECURITY: "false"
+      PUID: 1000
+      PGID: 1000
+      UMASK: "022"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/api/v1/info/status || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+
+  stirling-pdf-frontend:
+    container_name: Stirling-PDF-Frontend
+    build:
+      context: ../..
+      dockerfile: docker/Dockerfile.unified
+    ports:
+      - "8080:8080"
+    environment:
+      MODE: FRONTEND
+
+      # Point to the backend service
+      VITE_API_BASE_URL: http://stirling-pdf-backend:8080
+
+      # Minimal config needed for frontend
+      PUID: 1000
+      PGID: 1000
+    depends_on:
+      - stirling-pdf-backend
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 512M
