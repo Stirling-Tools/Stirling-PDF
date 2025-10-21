@@ -8,8 +8,11 @@ import { ToolWorkflowProvider } from "./contexts/ToolWorkflowContext";
 import { HotkeyProvider } from "./contexts/HotkeyContext";
 import { SidebarProvider } from "./contexts/SidebarContext";
 import { PreferencesProvider } from "./contexts/PreferencesContext";
+import { OnboardingProvider } from "./contexts/OnboardingContext";
+import { TourOrchestrationProvider } from "./contexts/TourOrchestrationContext";
 import ErrorBoundary from "./components/shared/ErrorBoundary";
 import HomePage from "./pages/HomePage";
+import OnboardingTour from "./components/onboarding/OnboardingTour";
 
 // Import global styles
 import "./styles/tailwind.css";
@@ -44,27 +47,32 @@ export default function App() {
       <PreferencesProvider>
         <RainbowThemeProvider>
           <ErrorBoundary>
-            <FileContextProvider enableUrlSync={true} enablePersistence={true}>
-              <ToolRegistryProvider>
-                <NavigationProvider>
-                  <FilesModalProvider>
-                    <ToolWorkflowProvider>
-                      <HotkeyProvider>
-                        <SidebarProvider>
-                          <ViewerProvider>
-                            <SignatureProvider>
-                              <RightRailProvider>
-                                <HomePage />
-                              </RightRailProvider>
-                            </SignatureProvider>
-                          </ViewerProvider>
-                        </SidebarProvider>
-                      </HotkeyProvider>
-                    </ToolWorkflowProvider>
-                  </FilesModalProvider>
-                </NavigationProvider>
-              </ToolRegistryProvider>
-            </FileContextProvider>
+            <OnboardingProvider>
+              <FileContextProvider enableUrlSync={true} enablePersistence={true}>
+                <ToolRegistryProvider>
+                  <NavigationProvider>
+                    <FilesModalProvider>
+                      <ToolWorkflowProvider>
+                        <HotkeyProvider>
+                          <SidebarProvider>
+                            <ViewerProvider>
+                              <SignatureProvider>
+                                <RightRailProvider>
+                                  <TourOrchestrationProvider>
+                                    <HomePage />
+                                    <OnboardingTour />
+                                  </TourOrchestrationProvider>
+                                </RightRailProvider>
+                              </SignatureProvider>
+                            </ViewerProvider>
+                          </SidebarProvider>
+                        </HotkeyProvider>
+                      </ToolWorkflowProvider>
+                    </FilesModalProvider>
+                  </NavigationProvider>
+                </ToolRegistryProvider>
+              </FileContextProvider>
+            </OnboardingProvider>
           </ErrorBoundary>
         </RainbowThemeProvider>
       </PreferencesProvider>
