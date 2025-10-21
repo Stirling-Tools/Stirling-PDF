@@ -27,8 +27,7 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const [stepData, setStepData] = useState<AutomationStepData>({ step: AUTOMATION_STEPS.SELECTION });
 
   const automateOperation = useAutomateOperation();
-  const { regularTools } = useToolRegistry();
-  const toolRegistry = regularTools;
+  const { regularTools: toolRegistry } = useToolRegistry();
   const hasResults = automateOperation.files.length > 0 || automateOperation.downloadUrl !== null;
   const { savedAutomations, deleteAutomation, refreshAutomations, copyFromSuggested } = useSavedAutomations();
 

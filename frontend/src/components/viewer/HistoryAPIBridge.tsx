@@ -108,5 +108,3 @@ export const HistoryAPIBridge = forwardRef<HistoryAPI>(function HistoryAPIBridge
 });
 
 HistoryAPIBridge.displayName = 'HistoryAPIBridge';
-
-export type { HistoryAPI } from './viewerTypes';
