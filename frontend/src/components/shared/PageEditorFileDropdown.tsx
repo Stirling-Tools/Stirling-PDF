@@ -36,13 +36,16 @@ const FileMenuItem: React.FC<FileMenuItemProps> = ({
 }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [dropPosition, setDropPosition] = useState<'above' | 'below'>('below');
   const itemRef = useRef<HTMLDivElement>(null);
 
   // Keep latest values without re-registering DnD
   const indexRef = useRef(index);
   const fileIdRef = useRef(file.fileId);
+  const dropPositionRef = useRef<'above' | 'below'>('below');
   useEffect(() => { indexRef.current = index; }, [index]);
   useEffect(() => { fileIdRef.current = file.fileId; }, [file.fileId]);
+  useEffect(() => { dropPositionRef.current = dropPosition; }, [dropPosition]);
 
   // NEW: keep latest onReorder without effect re-run
   const onReorderRef = useRef(onReorder);
@@ -92,15 +95,46 @@ const FileMenuItem: React.FC<FileMenuItemProps> = ({
         toIndex: indexRef.current,
       }),
       onDragEnter: () => setIsDragOver((p) => (p ? p : true)),
-      onDragLeave: () => setIsDragOver((p) => (p ? false : p)),
+      onDragLeave: () => {
+        setIsDragOver((p) => (p ? false : p));
+        setDropPosition('below');
+      },
+      onDrag: ({ source, self }) => {
+        // Determine drop position based on cursor location
+        const element = itemRef.current;
+        if (!element) return;
+
+        const rect = element.getBoundingClientRect();
+        const clientY = (source as any).element?.getBoundingClientRect().top || 0;
+        const midpoint = rect.top + rect.height / 2;
+
+        setDropPosition(clientY < midpoint ? 'below' : 'above');
+      },
       onDrop: ({ source }) => {
         setIsDragOver(false);
+        const dropPos = dropPositionRef.current;
+        setDropPosition('below');
         const sourceData = source.data as any;
         if (sourceData?.type === 'file-item') {
           const fromIndex = sourceData.fromIndex as number;
-          const toIndex = indexRef.current;
+          let toIndex = indexRef.current;
+
+          // Adjust toIndex based on drop position
+          // If dropping below and dragging from above, or dropping above and dragging from below
+          if (dropPos === 'below' && fromIndex < toIndex) {
+            // Dragging down, drop after target - no adjustment needed
+          } else if (dropPos === 'above' && fromIndex > toIndex) {
+            // Dragging up, drop before target - no adjustment needed
+          } else if (dropPos === 'below' && fromIndex > toIndex) {
+            // Dragging up but want below target
+            toIndex = toIndex + 1;
+          } else if (dropPos === 'above' && fromIndex < toIndex) {
+            // Dragging down but want above target
+            toIndex = toIndex - 1;
+          }
+
           if (fromIndex !== toIndex) {
-            onReorderRef.current(fromIndex, toIndex); // use ref, no re-register
+            onReorderRef.current(fromIndex, toIndex);
           }
         }
       }
@@ -118,40 +152,58 @@ const FileMenuItem: React.FC<FileMenuItemProps> = ({
 
   return (
     <div
-      ref={itemRef}
-      onPointerDown={onPointerDown}
-      onPointerMove={onPointerMove}
-      onPointerUp={onPointerUp}
-      onClick={(e) => {
-        e.stopPropagation();
-        if (movedRef.current) return; // ignore click after drag
-        onToggleSelection(file.fileId);
-      }}
       style={{
-        padding: '0.75rem 0.75rem',
+        position: 'relative',
         marginBottom: '0.5rem',
-        cursor: isDragging ? 'grabbing' : 'grab',
-        backgroundColor: isDragOver ? 'rgba(59, 130, 246, 0.15)' : (file.isSelected ? 'rgba(0, 0, 0, 0.05)' : 'transparent'),
-        borderLeft: `6px solid ${fileColorBorder}`,
-        borderTop: isDragOver ? '3px solid rgb(59, 130, 246)' : 'none',
-        borderBottom: isDragOver ? '3px solid rgb(59, 130, 246)' : 'none',
-        opacity: isDragging ? 0.5 : 1,
-        transition: 'opacity 0.2s ease-in-out, background-color 0.15s ease, border 0.15s ease',
-        userSelect: 'none',
-      }}
-      onMouseEnter={(e) => {
-        if (!isDragging) {
-          (e.currentTarget as HTMLDivElement).style.backgroundColor = 'rgba(0, 0, 0, 0.05)';
-          (e.currentTarget as HTMLDivElement).style.borderLeftColor = fileColorBorderHover;
-        }
-      }}
-      onMouseLeave={(e) => {
-        if (!isDragging) {
-          (e.currentTarget as HTMLDivElement).style.backgroundColor = file.isSelected ? 'rgba(0, 0, 0, 0.05)' : 'transparent';
-          (e.currentTarget as HTMLDivElement).style.borderLeftColor = fileColorBorder;
-        }
       }}
     >
+      {/* Drop indicator line */}
+      {isDragOver && (
+        <div
+          style={{
+            position: 'absolute',
+            ...(dropPosition === 'above' ? { top: '-2px' } : { bottom: '-2px' }),
+            left: 0,
+            right: 0,
+            height: '4px',
+            backgroundColor: 'rgb(59, 130, 246)',
+            borderRadius: '2px',
+            zIndex: 10,
+          }}
+        />
+      )}
+      <div
+        ref={itemRef}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onClick={(e) => {
+          e.stopPropagation();
+          if (movedRef.current) return; // ignore click after drag
+          onToggleSelection(file.fileId);
+        }}
+        style={{
+          padding: '0.75rem 0.75rem',
+          cursor: isDragging ? 'grabbing' : 'grab',
+          backgroundColor: file.isSelected ? 'rgba(0, 0, 0, 0.05)' : 'transparent',
+          borderLeft: `6px solid ${fileColorBorder}`,
+          opacity: isDragging ? 0.5 : 1,
+          transition: 'opacity 0.2s ease-in-out, background-color 0.15s ease',
+          userSelect: 'none',
+        }}
+        onMouseEnter={(e) => {
+          if (!isDragging) {
+            (e.currentTarget as HTMLDivElement).style.backgroundColor = 'rgba(0, 0, 0, 0.05)';
+            (e.currentTarget as HTMLDivElement).style.borderLeftColor = fileColorBorderHover;
+          }
+        }}
+        onMouseLeave={(e) => {
+          if (!isDragging) {
+            (e.currentTarget as HTMLDivElement).style.backgroundColor = file.isSelected ? 'rgba(0, 0, 0, 0.05)' : 'transparent';
+            (e.currentTarget as HTMLDivElement).style.borderLeftColor = fileColorBorder;
+          }
+        }}
+      >
         <Group gap="xs" style={{ width: '100%' }}>
           <div
             style={{
@@ -178,6 +230,7 @@ const FileMenuItem: React.FC<FileMenuItemProps> = ({
             </Text>
           )}
         </Group>
+      </div>
     </div>
   );
 };

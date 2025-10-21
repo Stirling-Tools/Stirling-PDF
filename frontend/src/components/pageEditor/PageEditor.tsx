@@ -4,6 +4,7 @@ import { useFileState, useFileActions } from "../../contexts/FileContext";
 import { useNavigationGuard } from "../../contexts/NavigationContext";
 import { usePageEditor } from "../../contexts/PageEditorContext";
 import { PDFDocument, PDFPage, PageEditorFunctions } from "../../types/pageEditor";
+import { StirlingFileStub } from "../../types/fileContext";
 import { pdfExportService } from "../../services/pdfExportService";
 import { documentManipulationService } from "../../services/documentManipulationService";
 import { exportProcessedDocumentsToFiles } from "../../services/pdfExportHelpers";
@@ -30,7 +31,6 @@ import { usePageDocument } from './hooks/usePageDocument';
 import { usePageEditorState } from './hooks/usePageEditorState';
 import { parseSelection } from "../../utils/bulkselection/parseSelection";
 import { usePageEditorRightRailButtons } from "./pageEditorRightRailButtons";
-import { PageBreakSettingsModal } from './PageBreakSettingsModal';
 
 export interface PageEditorProps {
   onFunctionsReady?: (functions: PageEditorFunctions) => void;
@@ -166,10 +166,6 @@ const PageEditor = ({
   // Undo/Redo state
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
-
-  // Page break modal state
-  const [pageBreakModalOpened, setPageBreakModalOpened] = useState(false);
-  const [pageBreakModalPageCount, setPageBreakModalPageCount] = useState(0);
 
   // Update undo/redo state
   const updateUndoRedoState = useCallback(() => {
@@ -462,22 +458,13 @@ const PageEditor = ({
   const handlePageBreak = useCallback(() => {
     if (!displayDocument || selectedPageIds.length === 0) return;
 
-    // Show modal to get page break settings
-    setPageBreakModalPageCount(selectedPageIds.length);
-    setPageBreakModalOpened(true);
-  }, [selectedPageIds, displayDocument]);
-
-  const handlePageBreakConfirm = useCallback((settings: PageBreakSettings) => {
-    if (!displayDocument || selectedPageIds.length === 0) return;
-
     // Convert selected page IDs to page numbers for the command
     const selectedPageNumbers = getPageNumbersFromIds(selectedPageIds);
 
     const pageBreakCommand = new PageBreakCommand(
       selectedPageNumbers,
       () => displayDocument,
-      setEditedDocument,
-      settings
+      setEditedDocument
     );
     executeCommandWithTracking(pageBreakCommand);
   }, [selectedPageIds, displayDocument, getPageNumbersFromIds, executeCommandWithTracking]);
@@ -496,14 +483,30 @@ const PageEditor = ({
     executeCommandWithTracking(pageBreakCommand);
   }, [selectedPageIds, displayDocument, getPageNumbersFromIds, executeCommandWithTracking]);
 
-  const handleInsertFiles = useCallback(async (files: File[], insertAfterPage: number) => {
+  const handleInsertFiles = useCallback(async (
+    files: File[] | StirlingFileStub[],
+    insertAfterPage: number,
+    isFromStorage?: boolean
+  ) => {
     if (!displayDocument || files.length === 0) return;
 
     try {
       const targetPage = displayDocument.pages.find(p => p.pageNumber === insertAfterPage);
       if (!targetPage) return;
 
-      await actions.addFiles(files, { insertAfterPageId: targetPage.id });
+      if (isFromStorage) {
+        // Files from storage - use addStirlingFileStubs to avoid re-storing
+        await actions.addStirlingFileStubs(
+          files as StirlingFileStub[],
+          { insertAfterPageId: targetPage.id, selectFiles: true }
+        );
+      } else {
+        // New uploaded files - use addFiles
+        await actions.addFiles(
+          files as File[],
+          { insertAfterPageId: targetPage.id, selectFiles: true }
+        );
+      }
     } catch (error) {
       console.error('Failed to insert files:', error);
     }
@@ -533,13 +536,8 @@ const PageEditor = ({
   const handleReorderPages = useCallback((sourcePageNumber: number, targetIndex: number, selectedPageIds?: string[]) => {
     if (!displayDocument) return;
 
-    console.log('=== HANDLE REORDER PAGES ===');
-    console.log('selectedPageIds:', selectedPageIds);
-
     // Convert selectedPageIds to page numbers for the reorder command
     const selectedPages = selectedPageIds ? getPageNumbersFromIds(selectedPageIds) : undefined;
-
-    console.log('selectedPages (converted to numbers):', selectedPages);
 
     const reorderCommand = new ReorderPagesCommand(
       sourcePageNumber,
@@ -994,7 +992,7 @@ const PageEditor = ({
               const gridOffset = Math.max(0, (containerWidth - gridWidth) / 2);
 
               const leftPosition = gridOffset + col * itemWithGap + ITEM_WIDTH + (ITEM_GAP / 2);
-              const topPosition = row * ITEM_HEIGHT + (ITEM_HEIGHT * 0.05); // Center vertically (5% offset since page is 90% height)
+              const topPosition = row * ITEM_HEIGHT + (ITEM_HEIGHT * 0.05) + ITEM_GAP; // Center vertically (5% offset since page is 90% height) + gap offset
 
               return (
                 <div
@@ -1084,12 +1082,6 @@ const PageEditor = ({
         }}
       />
 
-      <PageBreakSettingsModal
-        opened={pageBreakModalOpened}
-        onClose={() => setPageBreakModalOpened(false)}
-        onConfirm={handlePageBreakConfirm}
-        selectedPageCount={pageBreakModalPageCount}
-      />
     </Box>
   );
 };

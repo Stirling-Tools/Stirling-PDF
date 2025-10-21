@@ -6,7 +6,7 @@ import { fileStorage } from '../services/fileStorage';
 
 interface FilesModalContextType {
   isFilesModalOpen: boolean;
-  openFilesModal: (options?: { insertAfterPage?: number; customHandler?: (files: File[], insertAfterPage?: number) => void }) => void;
+  openFilesModal: (options?: { insertAfterPage?: number; customHandler?: (files: File[] | StirlingFileStub[], insertAfterPage?: number, isFromStorage?: boolean) => void }) => void;
   closeFilesModal: () => void;
   onFileUpload: (files: File[]) => void;
   onRecentFileSelect: (stirlingFileStubs: StirlingFileStub[]) => void;
@@ -22,9 +22,9 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [isFilesModalOpen, setIsFilesModalOpen] = useState(false);
   const [onModalClose, setOnModalClose] = useState<(() => void) | undefined>();
   const [insertAfterPage, setInsertAfterPage] = useState<number | undefined>();
-  const [customHandler, setCustomHandler] = useState<((files: File[], insertAfterPage?: number) => void) | undefined>();
+  const [customHandler, setCustomHandler] = useState<((files: File[] | StirlingFileStub[], insertAfterPage?: number, isFromStorage?: boolean) => void) | undefined>();
 
-  const openFilesModal = useCallback((options?: { insertAfterPage?: number; customHandler?: (files: File[], insertAfterPage?: number) => void }) => {
+  const openFilesModal = useCallback((options?: { insertAfterPage?: number; customHandler?: (files: File[] | StirlingFileStub[], insertAfterPage?: number, isFromStorage?: boolean) => void }) => {
     setInsertAfterPage(options?.insertAfterPage);
     setCustomHandler(() => options?.customHandler);
     setIsFilesModalOpen(true);
@@ -50,22 +50,8 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   const handleRecentFileSelect = useCallback(async (stirlingFileStubs: StirlingFileStub[]) => {
     if (customHandler) {
-      // Load the actual files from storage for custom handler
-      try {
-        const loadedFiles: File[] = [];
-        for (const stub of stirlingFileStubs) {
-          const stirlingFile = await fileStorage.getStirlingFile(stub.id);
-          if (stirlingFile) {
-            loadedFiles.push(stirlingFile);
-          }
-        }
-        
-        if (loadedFiles.length > 0) {
-          customHandler(loadedFiles, insertAfterPage);
-        }
-      } catch (error) {
-        console.error('Failed to load files for custom handler:', error);
-      }
+      // Pass stubs directly to custom handler with flag indicating they're from storage
+      customHandler(stirlingFileStubs, insertAfterPage, true);
     } else {
       // Normal case - use addStirlingFileStubs to preserve metadata
       if (actions.addStirlingFileStubs) {

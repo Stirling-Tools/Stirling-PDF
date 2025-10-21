@@ -14,6 +14,7 @@ import { useFilesModalContext } from '../../contexts/FilesModalContext';
 import { getFileColorWithOpacity } from './fileColors';
 import styles from './PageEditor.module.css';
 import HoverActionMenu, { HoverAction } from '../shared/HoverActionMenu';
+import { StirlingFileStub } from '../../types/fileContext';
 
 
 interface PageThumbnailProps {
@@ -47,7 +48,7 @@ interface PageThumbnailProps {
   pdfDocument: PDFDocument;
   setPdfDocument: (doc: PDFDocument) => void;
   splitPositions: Set<number>;
-  onInsertFiles?: (files: File[], insertAfterPage: number) => void;
+  onInsertFiles?: (files: File[] | StirlingFileStub[], insertAfterPage: number, isFromStorage?: boolean) => void;
   zoomLevel?: number;
 }
 
@@ -210,9 +211,9 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
       // Open file manager modal with custom handler for page insertion
       openFilesModal({
         insertAfterPage: page.pageNumber,
-        customHandler: (files: File[], insertAfterPage?: number) => {
+        customHandler: (files: File[] | StirlingFileStub[], insertAfterPage?: number, isFromStorage?: boolean) => {
           if (insertAfterPage !== undefined) {
-            onInsertFiles(files, insertAfterPage);
+            onInsertFiles(files, insertAfterPage, isFromStorage);
           }
         }
       });

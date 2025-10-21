@@ -172,7 +172,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
       const related = e.relatedTarget as Node | null;
 
       // Moving into the tooltip → keep open
-      if (related && tooltipRef.current && tooltipRef.current.contains(related)) {
+      if (related && related instanceof Node && tooltipRef.current && tooltipRef.current.contains(related)) {
         (children.props as any)?.onPointerLeave?.(e);
         return;
       }

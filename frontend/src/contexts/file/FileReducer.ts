@@ -82,13 +82,16 @@ export function fileContextReducer(state: FileContextState, action: FileContextA
         // Only add if not already present (dedupe by stable ID)
         if (!newById[record.id]) {
           newIds.push(record.id);
-          newById[record.id] = record;
 
           // Track if any file has an insertion position
           if (record.insertAfterPageId) {
             hasInsertionPosition = true;
             insertAfterPageId = record.insertAfterPageId;
           }
+
+          // Store record but clear insertAfterPageId (it's only used once)
+          const { insertAfterPageId: _, ...recordWithoutInsertPosition } = record;
+          newById[record.id] = recordWithoutInsertPosition;
         }
       });
 
