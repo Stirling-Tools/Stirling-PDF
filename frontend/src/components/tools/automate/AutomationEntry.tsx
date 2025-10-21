@@ -7,8 +7,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { Tooltip } from '../../shared/Tooltip';
 import { ToolIcon } from '../../shared/ToolIcon';
-import { ToolRegistry } from '../../../data/toolsTaxonomy';
-import { ToolId } from 'src/types/toolId';
+import { AutomateToolId, AutomateToolRegistry } from '../../../types/automation';
 
 interface AutomationEntryProps {
   /** Optional title for the automation (usually for custom ones) */
@@ -18,7 +17,7 @@ interface AutomationEntryProps {
   /** MUI Icon component for the badge */
   badgeIcon?: React.ComponentType<any>;
   /** Array of tool operation names in the workflow */
-  operations: string[];
+  operations: AutomateToolId[];
   /** Click handler */
   onClick: () => void;
   /** Whether to keep the icon at normal color (for special cases like "Add New") */
@@ -32,7 +31,7 @@ interface AutomationEntryProps {
   /** Copy handler (for suggested automations) */
   onCopy?: () => void;
   /** Tool registry to resolve operation names */
-  toolRegistry?: Partial<ToolRegistry>;
+  toolRegistry?: AutomateToolRegistry;
 }
 
 export default function AutomationEntry({
@@ -55,8 +54,8 @@ export default function AutomationEntry({
   const shouldShowMenu = isHovered || isMenuOpen;
 
   // Helper function to resolve tool display names
-  const getToolDisplayName = (operation: string): string => {
-    const entry = toolRegistry?.[operation as ToolId];
+  const getToolDisplayName = (operation: AutomateToolId): string => {
+    const entry = toolRegistry?.[operation];
     if (entry?.name) {
       return entry.name;
     }

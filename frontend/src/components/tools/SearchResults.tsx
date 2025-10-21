@@ -11,7 +11,7 @@ import "./toolPicker/ToolPicker.css";
 
 interface SearchResultsProps {
   filteredTools: Array<{ item: [ToolId, ToolRegistryEntry]; matchedText?: string }>;
-  onSelect: (id: string) => void;
+  onSelect: (id: ToolId) => void;
   searchQuery?: string;
 }
 
@@ -20,7 +20,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({ filteredTools, onSelect, 
   const { searchGroups } = useToolSections(filteredTools, searchQuery);
 
   // Create a map of matched text for quick lookup
-  const matchedTextMap = new Map<string, string>();
+  const matchedTextMap = new Map<ToolId, string>();
   if (filteredTools && Array.isArray(filteredTools)) {
     filteredTools.forEach(({ item: [id], matchedText }) => {
       if (matchedText) matchedTextMap.set(id, matchedText);

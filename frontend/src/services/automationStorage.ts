@@ -2,17 +2,11 @@
  * Service for managing automation configurations in IndexedDB
  */
 
-export interface AutomationConfig {
-  id: string;
-  name: string;
-  description?: string;
-  operations: Array<{
-    operation: string;
-    parameters: any;
-  }>;
-  createdAt: string;
-  updatedAt: string;
-}
+import type { AutomationConfig as DomainAutomationConfig } from '../types/automation';
+
+export type AutomationConfig = DomainAutomationConfig;
+
+type AutomationPayload = Omit<AutomationConfig, 'id' | 'createdAt' | 'updatedAt'>;
 
 class AutomationStorage {
   private dbName = 'StirlingPDF_Automations';
@@ -57,7 +51,7 @@ class AutomationStorage {
     return this.db;
   }
 
-  async saveAutomation(automation: Omit<AutomationConfig, 'id' | 'createdAt' | 'updatedAt'>): Promise<AutomationConfig> {
+  async saveAutomation(automation: AutomationPayload): Promise<AutomationConfig> {
     const db = await this.ensureDB();
     const timestamp = new Date().toISOString();
     

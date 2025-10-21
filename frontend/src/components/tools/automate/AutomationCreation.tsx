@@ -12,7 +12,7 @@ import {
 } from '@mantine/core';
 import { Z_INDEX_AUTOMATE_MODAL } from '../../../styles/zIndex';
 import CheckIcon from '@mui/icons-material/Check';
-import { ToolRegistry } from '../../../data/toolsTaxonomy';
+import { AutomateToolRegistry, AutomateToolId } from '../../../types/automation';
 import ToolConfigurationModal from './ToolConfigurationModal';
 import ToolList from './ToolList';
 import IconSelector from './IconSelector';
@@ -25,7 +25,7 @@ interface AutomationCreationProps {
   existingAutomation?: AutomationConfig;
   onBack: () => void;
   onComplete: (automation: AutomationConfig) => void;
-  toolRegistry: Partial<ToolRegistry>;
+  toolRegistry: AutomateToolRegistry;
 }
 
 export default function AutomationCreation({ mode, existingAutomation, onBack, onComplete, toolRegistry }: AutomationCreationProps) {
@@ -95,11 +95,15 @@ export default function AutomationCreation({ mode, existingAutomation, onBack, o
   const saveAutomation = async () => {
     if (!canSaveAutomation()) return;
 
+    const configuredTools = selectedTools.filter(
+      (tool): tool is AutomationTool & { operation: AutomateToolId } => tool.operation !== ''
+    );
+
     const automationData = {
       name: automationName.trim(),
       description: automationDescription.trim(),
       icon: automationIcon,
-      operations: selectedTools.map(tool => ({
+      operations: configuredTools.map(tool => ({
         operation: tool.operation,
         parameters: tool.parameters || {}
       }))
@@ -138,6 +142,8 @@ export default function AutomationCreation({ mode, existingAutomation, onBack, o
   };
 
   const currentConfigTool = configuraingToolIndex >= 0 ? selectedTools[configuraingToolIndex] : null;
+  const isConfigurableTool = (tool: AutomationTool | null): tool is AutomationTool & { operation: AutomateToolId } =>
+    !!tool && tool.operation !== '';
 
   return (
     <div>
@@ -206,7 +212,7 @@ export default function AutomationCreation({ mode, existingAutomation, onBack, o
       </Stack>
 
       {/* Tool Configuration Modal */}
-      {currentConfigTool && (
+      {isConfigurableTool(currentConfigTool) && (
         <ToolConfigurationModal
           opened={configModalOpen}
           tool={currentConfigTool}

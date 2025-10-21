@@ -2,8 +2,37 @@
  * Types for automation functionality
  */
 
+import type { ToolId, RegularToolId } from './toolId';
+import { TOOL_IDS, isLinkToolId, isSuperToolId } from './toolId';
+import type { ToolRegistryEntry } from '../data/toolsTaxonomy';
+
+const NON_AUTOMATABLE_TOOL_IDS = [
+  'multiTool',
+  'sign',
+  'getPdfInfo',
+  'read',
+  'showJS',
+  'devApi',
+  'devFolderScanning',
+  'devSsoGuide',
+  'devAirgapped',
+  'compare',
+] as const satisfies readonly ToolId[];
+
+type NonAutomatableToolId = typeof NON_AUTOMATABLE_TOOL_IDS[number];
+
+export type AutomateToolId = Exclude<RegularToolId, NonAutomatableToolId>;
+export type AutomateToolRegistry = Record<AutomateToolId, ToolRegistryEntry>;
+
+const nonAutomatableSet = new Set<NonAutomatableToolId>(NON_AUTOMATABLE_TOOL_IDS);
+
+export const isAutomateToolId = (toolId: ToolId): toolId is AutomateToolId =>
+  !isSuperToolId(toolId) && !isLinkToolId(toolId) && !nonAutomatableSet.has(toolId as NonAutomatableToolId);
+
+export const AUTOMATABLE_TOOL_IDS = TOOL_IDS.filter(isAutomateToolId) as AutomateToolId[];
+
 export interface AutomationOperation {
-  operation: string;
+  operation: AutomateToolId;
   parameters: Record<string, any>;
 }
 
@@ -19,7 +48,7 @@ export interface AutomationConfig {
 
 export interface AutomationTool {
   id: string;
-  operation: string;
+  operation: AutomateToolId | '';
   name: string;
   configured: boolean;
   parameters?: Record<string, any>;
@@ -35,14 +64,14 @@ export interface AutomationStepData {
 
 export interface ExecutionStep {
   id: string;
-  operation: string;
+  operation: AutomateToolId;
   name: string;
   status: 'pending' | 'running' | 'completed' | 'error';
   error?: string;
 }
 
 export interface AutomationExecutionCallbacks {
-  onStepStart?: (stepIndex: number, operationName: string) => void;
+  onStepStart?: (stepIndex: number, operationName: AutomateToolId) => void;
   onStepComplete?: (stepIndex: number, resultFiles: File[]) => void;
   onStepError?: (stepIndex: number, error: string) => void;
 }

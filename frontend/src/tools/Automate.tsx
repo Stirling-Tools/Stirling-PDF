@@ -12,7 +12,7 @@ import AutomationRun from "../components/tools/automate/AutomationRun";
 
 import { useAutomateOperation } from "../hooks/tools/automate/useAutomateOperation";
 import { BaseToolProps } from "../types/tool";
-import { useToolRegistry } from "../contexts/ToolRegistryContext";
+import { useAutomateToolRegistry } from "../hooks/tools/automate/useAutomateToolRegistry";
 import { useSavedAutomations } from "../hooks/tools/automate/useSavedAutomations";
 import { AutomationConfig, AutomationStepData, AutomationMode, AutomationStep } from "../types/automation";
 import { AUTOMATION_STEPS } from "../constants/automation";
@@ -27,8 +27,7 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const [stepData, setStepData] = useState<AutomationStepData>({ step: AUTOMATION_STEPS.SELECTION });
 
   const automateOperation = useAutomateOperation();
-  const { regularTools } = useToolRegistry();
-  const toolRegistry = regularTools;
+  const toolRegistry = useAutomateToolRegistry();
   const hasResults = automateOperation.files.length > 0 || automateOperation.downloadUrl !== null;
   const { savedAutomations, deleteAutomation, refreshAutomations, copyFromSuggested } = useSavedAutomations();
 
