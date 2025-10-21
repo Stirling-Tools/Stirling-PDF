@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Stack, Text, Loader, Group, Divider } from '@mantine/core';
+import { Stack, Text, Loader, Group, Divider, Paper, Switch, Badge } from '@mantine/core';
 import { alert } from '../../../toast';
 import RestartConfirmationModal from '../RestartConfirmationModal';
 import { useRestartServer } from '../useRestartServer';
@@ -39,6 +39,7 @@ interface ConnectionsSettingsData {
     password?: string;
     from?: string;
   };
+  ssoAutoLogin?: boolean;
 }
 
 export default function AdminConnectionsSection() {
@@ -61,10 +62,15 @@ export default function AdminConnectionsSection() {
       const mailResponse = await fetch('/api/v1/admin/settings/section/mail');
       const mailData = mailResponse.ok ? await mailResponse.json() : {};
 
+      // Fetch premium settings for SSO Auto Login
+      const premiumResponse = await fetch('/api/v1/admin/settings/section/premium');
+      const premiumData = premiumResponse.ok ? await premiumResponse.json() : {};
+
       setSettings({
         oauth2: securityData.oauth2 || {},
         saml2: securityData.saml2 || {},
-        mail: mailData || {}
+        mail: mailData || {},
+        ssoAutoLogin: premiumData.proFeatures?.ssoAutoLogin || false
       });
     } catch (error) {
       console.error('Failed to fetch connections settings:', error);
@@ -263,6 +269,37 @@ export default function AdminConnectionsSection() {
     );
   }
 
+  const handleSSOAutoLoginSave = async () => {
+    try {
+      const deltaSettings = {
+        'premium.proFeatures.ssoAutoLogin': settings.ssoAutoLogin
+      };
+
+      const response = await fetch('/api/v1/admin/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ settings: deltaSettings }),
+      });
+
+      if (response.ok) {
+        alert({
+          alertType: 'success',
+          title: t('admin.success', 'Success'),
+          body: t('admin.settings.saveSuccess', 'Settings saved successfully'),
+        });
+        showRestartModal();
+      } else {
+        throw new Error('Failed to save');
+      }
+    } catch (error) {
+      alert({
+        alertType: 'error',
+        title: t('admin.error', 'Error'),
+        body: t('admin.settings.saveError', 'Failed to save settings'),
+      });
+    }
+  };
+
   const linkedProviders = ALL_PROVIDERS.filter((p) => isProviderConfigured(p));
   const availableProviders = ALL_PROVIDERS.filter((p) => !isProviderConfigured(p));
 
@@ -280,6 +317,32 @@ export default function AdminConnectionsSection() {
           )}
         </Text>
       </div>
+
+      {/* SSO Auto Login - Premium Feature */}
+      <Paper withBorder p="md" radius="md">
+        <Stack gap="md">
+          <Group justify="space-between" align="center">
+            <Text fw={600} size="sm">{t('admin.settings.connections.ssoAutoLogin', 'SSO Auto Login')}</Text>
+            <Badge color="yellow" size="sm">PRO</Badge>
+          </Group>
+
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div>
+              <Text fw={500} size="sm">{t('admin.settings.connections.ssoAutoLogin.enable', 'Enable SSO Auto Login')}</Text>
+              <Text size="xs" c="dimmed" mt={4}>
+                {t('admin.settings.connections.ssoAutoLogin.description', 'Automatically redirect to SSO login when authentication is required')}
+              </Text>
+            </div>
+            <Switch
+              checked={settings.ssoAutoLogin || false}
+              onChange={(e) => {
+                setSettings({ ...settings, ssoAutoLogin: e.target.checked });
+                handleSSOAutoLoginSave();
+              }}
+            />
+          </div>
+        </Stack>
+      </Paper>
 
       {/* Linked Services Section - Only show if there are linked providers */}
       {linkedProviders.length > 0 && (

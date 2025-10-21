@@ -1,29 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { TextInput, NumberInput, Switch, Button, Stack, Paper, Text, Loader, Group } from '@mantine/core';
+import { TextInput, Switch, Button, Stack, Paper, Text, Loader, Group, Alert } from '@mantine/core';
 import { alert } from '../../../toast';
+import LocalIcon from '../../LocalIcon';
 import RestartConfirmationModal from '../RestartConfirmationModal';
 import { useRestartServer } from '../useRestartServer';
 
 interface PremiumSettingsData {
   key?: string;
   enabled?: boolean;
-  proFeatures?: {
-    SSOAutoLogin?: boolean;
-    CustomMetadata?: {
-      autoUpdateMetadata?: boolean;
-      author?: string;
-      creator?: string;
-      producer?: string;
-    };
-  };
-  enterpriseFeatures?: {
-    audit?: {
-      enabled?: boolean;
-      level?: number;
-      retentionDays?: number;
-    };
-  };
 }
 
 export default function AdminPremiumSection() {
@@ -94,14 +79,32 @@ export default function AdminPremiumSection() {
       <div>
         <Text fw={600} size="lg">{t('admin.settings.premium.title', 'Premium & Enterprise')}</Text>
         <Text size="sm" c="dimmed">
-          {t('admin.settings.premium.description', 'Configure premium and enterprise features.')}
+          {t('admin.settings.premium.description', 'Configure your premium or enterprise license key.')}
         </Text>
       </div>
 
-      {/* License */}
+      {/* Notice about moved features */}
+      <Alert
+        variant="light"
+        color="blue"
+        title={t('admin.settings.premium.movedFeatures.title', 'Premium Features Distributed')}
+        icon={<LocalIcon icon="info-rounded" width="1rem" height="1rem" />}
+      >
+        <Text size="sm">
+          {t('admin.settings.premium.movedFeatures.message', 'Premium and Enterprise features are now organized in their respective sections:')}
+        </Text>
+        <ul style={{ marginTop: '8px', marginBottom: 0, paddingLeft: '20px' }}>
+          <li><Text size="sm" component="span"><strong>SSO Auto Login</strong> (PRO) - Connections</Text></li>
+          <li><Text size="sm" component="span"><strong>Custom Metadata</strong> (PRO) - General</Text></li>
+          <li><Text size="sm" component="span"><strong>Audit Logging</strong> (ENTERPRISE) - Security</Text></li>
+          <li><Text size="sm" component="span"><strong>Database Configuration</strong> (ENTERPRISE) - Database</Text></li>
+        </ul>
+      </Alert>
+
+      {/* License Configuration */}
       <Paper withBorder p="md" radius="md">
         <Stack gap="md">
-          <Text fw={600} size="sm" mb="xs">{t('admin.settings.premium.license', 'License')}</Text>
+          <Text fw={600} size="sm" mb="xs">{t('admin.settings.premium.license', 'License Configuration')}</Text>
 
           <div>
             <TextInput
@@ -123,177 +126,6 @@ export default function AdminPremiumSection() {
             <Switch
               checked={settings.enabled || false}
               onChange={(e) => setSettings({ ...settings, enabled: e.target.checked })}
-            />
-          </div>
-        </Stack>
-      </Paper>
-
-      {/* Pro Features */}
-      <Paper withBorder p="md" radius="md">
-        <Stack gap="md">
-          <Text fw={600} size="sm" mb="xs">{t('admin.settings.premium.proFeatures', 'Pro Features')}</Text>
-
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div>
-              <Text fw={500} size="sm">{t('admin.settings.premium.ssoAutoLogin', 'SSO Auto Login')}</Text>
-              <Text size="xs" c="dimmed" mt={4}>
-                {t('admin.settings.premium.ssoAutoLogin.description', 'Automatically redirect to SSO login')}
-              </Text>
-            </div>
-            <Switch
-              checked={settings.proFeatures?.SSOAutoLogin || false}
-              onChange={(e) => setSettings({
-                ...settings,
-                proFeatures: { ...settings.proFeatures, SSOAutoLogin: e.target.checked }
-              })}
-            />
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div>
-              <Text fw={500} size="sm">{t('admin.settings.premium.customMetadata.autoUpdate', 'Auto Update Metadata')}</Text>
-              <Text size="xs" c="dimmed" mt={4}>
-                {t('admin.settings.premium.customMetadata.autoUpdate.description', 'Automatically update PDF metadata')}
-              </Text>
-            </div>
-            <Switch
-              checked={settings.proFeatures?.CustomMetadata?.autoUpdateMetadata || false}
-              onChange={(e) => setSettings({
-                ...settings,
-                proFeatures: {
-                  ...settings.proFeatures,
-                  CustomMetadata: {
-                    ...settings.proFeatures?.CustomMetadata,
-                    autoUpdateMetadata: e.target.checked
-                  }
-                }
-              })}
-            />
-          </div>
-
-          <div>
-            <TextInput
-              label={t('admin.settings.premium.customMetadata.author', 'Default Author')}
-              description={t('admin.settings.premium.customMetadata.author.description', 'Default author for PDF metadata')}
-              value={settings.proFeatures?.CustomMetadata?.author || ''}
-              onChange={(e) => setSettings({
-                ...settings,
-                proFeatures: {
-                  ...settings.proFeatures,
-                  CustomMetadata: {
-                    ...settings.proFeatures?.CustomMetadata,
-                    author: e.target.value
-                  }
-                }
-              })}
-              placeholder="username"
-            />
-          </div>
-
-          <div>
-            <TextInput
-              label={t('admin.settings.premium.customMetadata.creator', 'Default Creator')}
-              description={t('admin.settings.premium.customMetadata.creator.description', 'Default creator for PDF metadata')}
-              value={settings.proFeatures?.CustomMetadata?.creator || ''}
-              onChange={(e) => setSettings({
-                ...settings,
-                proFeatures: {
-                  ...settings.proFeatures,
-                  CustomMetadata: {
-                    ...settings.proFeatures?.CustomMetadata,
-                    creator: e.target.value
-                  }
-                }
-              })}
-              placeholder="Stirling-PDF"
-            />
-          </div>
-
-          <div>
-            <TextInput
-              label={t('admin.settings.premium.customMetadata.producer', 'Default Producer')}
-              description={t('admin.settings.premium.customMetadata.producer.description', 'Default producer for PDF metadata')}
-              value={settings.proFeatures?.CustomMetadata?.producer || ''}
-              onChange={(e) => setSettings({
-                ...settings,
-                proFeatures: {
-                  ...settings.proFeatures,
-                  CustomMetadata: {
-                    ...settings.proFeatures?.CustomMetadata,
-                    producer: e.target.value
-                  }
-                }
-              })}
-              placeholder="Stirling-PDF"
-            />
-          </div>
-        </Stack>
-      </Paper>
-
-      {/* Enterprise Features */}
-      <Paper withBorder p="md" radius="md">
-        <Stack gap="md">
-          <Text fw={600} size="sm" mb="xs">{t('admin.settings.premium.enterpriseFeatures', 'Enterprise Features')}</Text>
-
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div>
-              <Text fw={500} size="sm">{t('admin.settings.premium.audit.enabled', 'Enable Audit Logging')}</Text>
-              <Text size="xs" c="dimmed" mt={4}>
-                {t('admin.settings.premium.audit.enabled.description', 'Track user actions and system events')}
-              </Text>
-            </div>
-            <Switch
-              checked={settings.enterpriseFeatures?.audit?.enabled || false}
-              onChange={(e) => setSettings({
-                ...settings,
-                enterpriseFeatures: {
-                  ...settings.enterpriseFeatures,
-                  audit: {
-                    ...settings.enterpriseFeatures?.audit,
-                    enabled: e.target.checked
-                  }
-                }
-              })}
-            />
-          </div>
-
-          <div>
-            <NumberInput
-              label={t('admin.settings.premium.audit.level', 'Audit Level')}
-              description={t('admin.settings.premium.audit.level.description', '0=OFF, 1=BASIC, 2=STANDARD, 3=VERBOSE')}
-              value={settings.enterpriseFeatures?.audit?.level || 2}
-              onChange={(value) => setSettings({
-                ...settings,
-                enterpriseFeatures: {
-                  ...settings.enterpriseFeatures,
-                  audit: {
-                    ...settings.enterpriseFeatures?.audit,
-                    level: Number(value)
-                  }
-                }
-              })}
-              min={0}
-              max={3}
-            />
-          </div>
-
-          <div>
-            <NumberInput
-              label={t('admin.settings.premium.audit.retentionDays', 'Audit Retention (days)')}
-              description={t('admin.settings.premium.audit.retentionDays.description', 'Number of days to retain audit logs')}
-              value={settings.enterpriseFeatures?.audit?.retentionDays || 90}
-              onChange={(value) => setSettings({
-                ...settings,
-                enterpriseFeatures: {
-                  ...settings.enterpriseFeatures,
-                  audit: {
-                    ...settings.enterpriseFeatures?.audit,
-                    retentionDays: Number(value)
-                  }
-                }
-              })}
-              min={1}
-              max={3650}
             />
           </div>
         </Stack>

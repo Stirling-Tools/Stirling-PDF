@@ -6,9 +6,11 @@ import AdminGeneralSection from './configSections/AdminGeneralSection';
 import AdminSecuritySection from './configSections/AdminSecuritySection';
 import AdminConnectionsSection from './configSections/AdminConnectionsSection';
 import AdminPrivacySection from './configSections/AdminPrivacySection';
+import AdminDatabaseSection from './configSections/AdminDatabaseSection';
 import AdminAdvancedSection from './configSections/AdminAdvancedSection';
 import AdminLegalSection from './configSections/AdminLegalSection';
 import AdminPremiumSection from './configSections/AdminPremiumSection';
+import AdminFeaturesSection from './configSections/AdminFeaturesSection';
 import AdminEndpointsSection from './configSections/AdminEndpointsSection';
 
 export interface ConfigNavItem {
@@ -105,10 +107,22 @@ export const createConfigNavSections = (
           component: <AdminPrivacySection />
         },
         {
+          key: 'adminDatabase',
+          label: 'Database',
+          icon: 'storage-rounded',
+          component: <AdminDatabaseSection />
+        },
+        {
           key: 'adminPremium',
           label: 'Premium',
           icon: 'star-rounded',
           component: <AdminPremiumSection />
+        },
+        {
+          key: 'adminFeatures',
+          label: 'Features',
+          icon: 'extension-rounded',
+          component: <AdminFeaturesSection />
         },
         {
           key: 'adminEndpoints',

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { TextInput, NumberInput, Switch, Button, Stack, Paper, Text, Loader, Group, Select, PasswordInput, Alert } from '@mantine/core';
+import { TextInput, NumberInput, Switch, Button, Stack, Paper, Text, Loader, Group, Select, PasswordInput, Alert, Badge, Accordion, Textarea } from '@mantine/core';
 import { alert } from '../../../toast';
 import LocalIcon from '../../LocalIcon';
 import RestartConfirmationModal from '../RestartConfirmationModal';
@@ -19,6 +19,24 @@ interface SecuritySettingsData {
     keyRetentionDays?: number;
     secureCookie?: boolean;
   };
+  audit?: {
+    enabled?: boolean;
+    level?: number;
+    retentionDays?: number;
+  };
+  html?: {
+    urlSecurity?: {
+      enabled?: boolean;
+      level?: string;
+      allowedDomains?: string[];
+      blockedDomains?: string[];
+      internalTlds?: string[];
+      blockPrivateNetworks?: boolean;
+      blockLocalhost?: boolean;
+      blockLinkLocal?: boolean;
+      blockCloudMetadata?: boolean;
+    };
+  };
 }
 
 export default function AdminSecuritySection() {
@@ -34,11 +52,38 @@ export default function AdminSecuritySection() {
 
   const fetchSettings = async () => {
     try {
-      const response = await fetch('/api/v1/admin/settings/section/security');
-      if (response.ok) {
-        const data = await response.json();
-        setSettings(data);
-      }
+      const securityResponse = await fetch('/api/v1/admin/settings/section/security');
+      const securityData = securityResponse.ok ? await securityResponse.json() : {};
+
+      // Fetch premium settings for audit logging
+      const premiumResponse = await fetch('/api/v1/admin/settings/section/premium');
+      const premiumData = premiumResponse.ok ? await premiumResponse.json() : {};
+
+      // Fetch system settings for HTML URL security
+      const systemResponse = await fetch('/api/v1/admin/settings/section/system');
+      const systemData = systemResponse.ok ? await systemResponse.json() : {};
+
+      setSettings({
+        ...securityData,
+        audit: premiumData.enterpriseFeatures?.audit || {
+          enabled: false,
+          level: 2,
+          retentionDays: 90
+        },
+        html: systemData.html || {
+          urlSecurity: {
+            enabled: true,
+            level: 'MEDIUM',
+            allowedDomains: [],
+            blockedDomains: [],
+            internalTlds: ['.local', '.internal', '.corp', '.home'],
+            blockPrivateNetworks: true,
+            blockLocalhost: true,
+            blockLinkLocal: true,
+            blockCloudMetadata: true
+          }
+        }
+      });
     } catch (error) {
       console.error('Failed to fetch security settings:', error);
       alert({
@@ -54,13 +99,42 @@ export default function AdminSecuritySection() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const response = await fetch('/api/v1/admin/settings/section/security', {
+      // Save security settings (excluding audit and html)
+      const { audit, html, ...securitySettings } = settings;
+
+      const securityResponse = await fetch('/api/v1/admin/settings/section/security', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(settings),
+        body: JSON.stringify(securitySettings),
       });
 
-      if (response.ok) {
+      // Save audit settings via delta endpoint
+      const deltaSettings: Record<string, any> = {
+        'premium.enterpriseFeatures.audit.enabled': audit?.enabled,
+        'premium.enterpriseFeatures.audit.level': audit?.level,
+        'premium.enterpriseFeatures.audit.retentionDays': audit?.retentionDays
+      };
+
+      // Save HTML URL security settings via delta endpoint
+      if (html?.urlSecurity) {
+        deltaSettings['system.html.urlSecurity.enabled'] = html.urlSecurity.enabled;
+        deltaSettings['system.html.urlSecurity.level'] = html.urlSecurity.level;
+        deltaSettings['system.html.urlSecurity.allowedDomains'] = html.urlSecurity.allowedDomains;
+        deltaSettings['system.html.urlSecurity.blockedDomains'] = html.urlSecurity.blockedDomains;
+        deltaSettings['system.html.urlSecurity.internalTlds'] = html.urlSecurity.internalTlds;
+        deltaSettings['system.html.urlSecurity.blockPrivateNetworks'] = html.urlSecurity.blockPrivateNetworks;
+        deltaSettings['system.html.urlSecurity.blockLocalhost'] = html.urlSecurity.blockLocalhost;
+        deltaSettings['system.html.urlSecurity.blockLinkLocal'] = html.urlSecurity.blockLinkLocal;
+        deltaSettings['system.html.urlSecurity.blockCloudMetadata'] = html.urlSecurity.blockCloudMetadata;
+      }
+
+      const deltaResponse = await fetch('/api/v1/admin/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ settings: deltaSettings }),
+      });
+
+      if (securityResponse.ok && deltaResponse.ok) {
         showRestartModal();
       } else {
         throw new Error('Failed to save');
@@ -243,6 +317,257 @@ export default function AdminSecuritySection() {
               onChange={(e) => setSettings({ ...settings, jwt: { ...settings.jwt, secureCookie: e.target.checked } })}
             />
           </div>
+        </Stack>
+      </Paper>
+
+      {/* Audit Logging - Enterprise Feature */}
+      <Paper withBorder p="md" radius="md">
+        <Stack gap="md">
+          <Group justify="space-between" align="center">
+            <Text fw={600} size="sm">{t('admin.settings.security.audit', 'Audit Logging')}</Text>
+            <Badge color="grape" size="sm">ENTERPRISE</Badge>
+          </Group>
+
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div>
+              <Text fw={500} size="sm">{t('admin.settings.security.audit.enabled', 'Enable Audit Logging')}</Text>
+              <Text size="xs" c="dimmed" mt={4}>
+                {t('admin.settings.security.audit.enabled.description', 'Track user actions and system events for compliance and security monitoring')}
+              </Text>
+            </div>
+            <Switch
+              checked={settings.audit?.enabled || false}
+              onChange={(e) => setSettings({ ...settings, audit: { ...settings.audit, enabled: e.target.checked } })}
+            />
+          </div>
+
+          <div>
+            <NumberInput
+              label={t('admin.settings.security.audit.level', 'Audit Level')}
+              description={t('admin.settings.security.audit.level.description', '0=OFF, 1=BASIC, 2=STANDARD, 3=VERBOSE')}
+              value={settings.audit?.level || 2}
+              onChange={(value) => setSettings({ ...settings, audit: { ...settings.audit, level: Number(value) } })}
+              min={0}
+              max={3}
+            />
+          </div>
+
+          <div>
+            <NumberInput
+              label={t('admin.settings.security.audit.retentionDays', 'Audit Retention (days)')}
+              description={t('admin.settings.security.audit.retentionDays.description', 'Number of days to retain audit logs')}
+              value={settings.audit?.retentionDays || 90}
+              onChange={(value) => setSettings({ ...settings, audit: { ...settings.audit, retentionDays: Number(value) } })}
+              min={1}
+              max={3650}
+            />
+          </div>
+        </Stack>
+      </Paper>
+
+      {/* HTML URL Security */}
+      <Paper withBorder p="md" radius="md">
+        <Stack gap="md">
+          <div>
+            <Text fw={600} size="sm" mb="xs">{t('admin.settings.security.htmlUrlSecurity', 'HTML URL Security')}</Text>
+            <Text size="xs" c="dimmed">
+              {t('admin.settings.security.htmlUrlSecurity.description', 'Configure URL access restrictions for HTML processing to prevent SSRF attacks')}
+            </Text>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div>
+              <Text fw={500} size="sm">{t('admin.settings.security.htmlUrlSecurity.enabled', 'Enable URL Security')}</Text>
+              <Text size="xs" c="dimmed" mt={4}>
+                {t('admin.settings.security.htmlUrlSecurity.enabled.description', 'Enable URL security restrictions for HTML to PDF conversions')}
+              </Text>
+            </div>
+            <Switch
+              checked={settings.html?.urlSecurity?.enabled || false}
+              onChange={(e) => setSettings({
+                ...settings,
+                html: {
+                  ...settings.html,
+                  urlSecurity: { ...settings.html?.urlSecurity, enabled: e.target.checked }
+                }
+              })}
+            />
+          </div>
+
+          <div>
+            <Select
+              label={t('admin.settings.security.htmlUrlSecurity.level', 'Security Level')}
+              description={t('admin.settings.security.htmlUrlSecurity.level.description', 'MAX: whitelist only, MEDIUM: block internal networks, OFF: no restrictions')}
+              value={settings.html?.urlSecurity?.level || 'MEDIUM'}
+              onChange={(value) => setSettings({
+                ...settings,
+                html: {
+                  ...settings.html,
+                  urlSecurity: { ...settings.html?.urlSecurity, level: value || 'MEDIUM' }
+                }
+              })}
+              data={[
+                { value: 'MAX', label: t('admin.settings.security.htmlUrlSecurity.level.max', 'Maximum (Whitelist Only)') },
+                { value: 'MEDIUM', label: t('admin.settings.security.htmlUrlSecurity.level.medium', 'Medium (Block Internal)') },
+                { value: 'OFF', label: t('admin.settings.security.htmlUrlSecurity.level.off', 'Off (No Restrictions)') },
+              ]}
+              comboboxProps={{ zIndex: 1400 }}
+            />
+          </div>
+
+          <Accordion variant="separated">
+            <Accordion.Item value="advanced">
+              <Accordion.Control>{t('admin.settings.security.htmlUrlSecurity.advanced', 'Advanced Settings')}</Accordion.Control>
+              <Accordion.Panel>
+                <Stack gap="md">
+                  {/* Allowed Domains */}
+                  <div>
+                    <Textarea
+                      label={t('admin.settings.security.htmlUrlSecurity.allowedDomains', 'Allowed Domains (Whitelist)')}
+                      description={t('admin.settings.security.htmlUrlSecurity.allowedDomains.description', 'One domain per line (e.g., cdn.example.com). Only these domains allowed when level is MAX')}
+                      value={settings.html?.urlSecurity?.allowedDomains?.join('\n') || ''}
+                      onChange={(e) => setSettings({
+                        ...settings,
+                        html: {
+                          ...settings.html,
+                          urlSecurity: {
+                            ...settings.html?.urlSecurity,
+                            allowedDomains: e.target.value ? e.target.value.split('\n').filter(d => d.trim()) : []
+                          }
+                        }
+                      })}
+                      placeholder="cdn.example.com&#10;images.google.com"
+                      minRows={3}
+                      autosize
+                    />
+                  </div>
+
+                  {/* Blocked Domains */}
+                  <div>
+                    <Textarea
+                      label={t('admin.settings.security.htmlUrlSecurity.blockedDomains', 'Blocked Domains (Blacklist)')}
+                      description={t('admin.settings.security.htmlUrlSecurity.blockedDomains.description', 'One domain per line (e.g., malicious.com). Additional domains to block')}
+                      value={settings.html?.urlSecurity?.blockedDomains?.join('\n') || ''}
+                      onChange={(e) => setSettings({
+                        ...settings,
+                        html: {
+                          ...settings.html,
+                          urlSecurity: {
+                            ...settings.html?.urlSecurity,
+                            blockedDomains: e.target.value ? e.target.value.split('\n').filter(d => d.trim()) : []
+                          }
+                        }
+                      })}
+                      placeholder="malicious.com&#10;evil.org"
+                      minRows={3}
+                      autosize
+                    />
+                  </div>
+
+                  {/* Internal TLDs */}
+                  <div>
+                    <Textarea
+                      label={t('admin.settings.security.htmlUrlSecurity.internalTlds', 'Internal TLDs')}
+                      description={t('admin.settings.security.htmlUrlSecurity.internalTlds.description', 'One TLD per line (e.g., .local, .internal). Block domains with these TLD patterns')}
+                      value={settings.html?.urlSecurity?.internalTlds?.join('\n') || ''}
+                      onChange={(e) => setSettings({
+                        ...settings,
+                        html: {
+                          ...settings.html,
+                          urlSecurity: {
+                            ...settings.html?.urlSecurity,
+                            internalTlds: e.target.value ? e.target.value.split('\n').filter(d => d.trim()) : []
+                          }
+                        }
+                      })}
+                      placeholder=".local&#10;.internal&#10;.corp&#10;.home"
+                      minRows={3}
+                      autosize
+                    />
+                  </div>
+
+                  {/* Network Blocking Options */}
+                  <Text fw={600} size="sm" mt="md">{t('admin.settings.security.htmlUrlSecurity.networkBlocking', 'Network Blocking')}</Text>
+
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div>
+                      <Text fw={500} size="sm">{t('admin.settings.security.htmlUrlSecurity.blockPrivateNetworks', 'Block Private Networks')}</Text>
+                      <Text size="xs" c="dimmed" mt={4}>
+                        {t('admin.settings.security.htmlUrlSecurity.blockPrivateNetworks.description', 'Block RFC 1918 private networks (10.x.x.x, 192.168.x.x, 172.16-31.x.x)')}
+                      </Text>
+                    </div>
+                    <Switch
+                      checked={settings.html?.urlSecurity?.blockPrivateNetworks || false}
+                      onChange={(e) => setSettings({
+                        ...settings,
+                        html: {
+                          ...settings.html,
+                          urlSecurity: { ...settings.html?.urlSecurity, blockPrivateNetworks: e.target.checked }
+                        }
+                      })}
+                    />
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div>
+                      <Text fw={500} size="sm">{t('admin.settings.security.htmlUrlSecurity.blockLocalhost', 'Block Localhost')}</Text>
+                      <Text size="xs" c="dimmed" mt={4}>
+                        {t('admin.settings.security.htmlUrlSecurity.blockLocalhost.description', 'Block localhost and loopback addresses (127.x.x.x, ::1)')}
+                      </Text>
+                    </div>
+                    <Switch
+                      checked={settings.html?.urlSecurity?.blockLocalhost || false}
+                      onChange={(e) => setSettings({
+                        ...settings,
+                        html: {
+                          ...settings.html,
+                          urlSecurity: { ...settings.html?.urlSecurity, blockLocalhost: e.target.checked }
+                        }
+                      })}
+                    />
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div>
+                      <Text fw={500} size="sm">{t('admin.settings.security.htmlUrlSecurity.blockLinkLocal', 'Block Link-Local Addresses')}</Text>
+                      <Text size="xs" c="dimmed" mt={4}>
+                        {t('admin.settings.security.htmlUrlSecurity.blockLinkLocal.description', 'Block link-local addresses (169.254.x.x, fe80::/10)')}
+                      </Text>
+                    </div>
+                    <Switch
+                      checked={settings.html?.urlSecurity?.blockLinkLocal || false}
+                      onChange={(e) => setSettings({
+                        ...settings,
+                        html: {
+                          ...settings.html,
+                          urlSecurity: { ...settings.html?.urlSecurity, blockLinkLocal: e.target.checked }
+                        }
+                      })}
+                    />
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div>
+                      <Text fw={500} size="sm">{t('admin.settings.security.htmlUrlSecurity.blockCloudMetadata', 'Block Cloud Metadata Endpoints')}</Text>
+                      <Text size="xs" c="dimmed" mt={4}>
+                        {t('admin.settings.security.htmlUrlSecurity.blockCloudMetadata.description', 'Block cloud provider metadata endpoints (169.254.169.254)')}
+                      </Text>
+                    </div>
+                    <Switch
+                      checked={settings.html?.urlSecurity?.blockCloudMetadata || false}
+                      onChange={(e) => setSettings({
+                        ...settings,
+                        html: {
+                          ...settings.html,
+                          urlSecurity: { ...settings.html?.urlSecurity, blockCloudMetadata: e.target.checked }
+                        }
+                      })}
+                    />
+                  </div>
+                </Stack>
+              </Accordion.Panel>
+            </Accordion.Item>
+          </Accordion>
         </Stack>
       </Paper>
 

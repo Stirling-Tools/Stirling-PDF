@@ -18,9 +18,11 @@ export type NavKey =
   | 'adminSecurity'
   | 'adminConnections'
   | 'adminPrivacy'
+  | 'adminDatabase'
   | 'adminAdvanced'
   | 'adminLegal'
   | 'adminPremium'
+  | 'adminFeatures'
   | 'adminEndpoints';
 
 

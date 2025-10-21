@@ -4,6 +4,7 @@ import { useToolWorkflow } from "../contexts/ToolWorkflowContext";
 import { Group, useMantineColorScheme } from "@mantine/core";
 import { useSidebarContext } from "../contexts/SidebarContext";
 import { useDocumentMeta } from "../hooks/useDocumentMeta";
+import { useAppConfig } from "../hooks/useAppConfig";
 import { BASE_PATH, getBaseUrl } from "../constants/app";
 import { useMediaQuery } from "@mantine/hooks";
 import AppsIcon from '@mui/icons-material/AppsRounded';
