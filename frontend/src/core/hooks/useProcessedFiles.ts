@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { ProcessedFile, ProcessingState } from '../types/processing';
-import { pdfProcessingService } from '../services/pdfProcessingService';
+import { ProcessedFile, ProcessingState } from '@app/types/processing';
+import { pdfProcessingService } from '@app/services/pdfProcessingService';
 
 interface UseProcessedFilesResult {
   processedFiles: Map<File, ProcessedFile>;

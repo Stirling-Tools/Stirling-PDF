@@ -3,7 +3,7 @@
  * FileContext uses pure File objects with separate ID tracking
  */
 
-import { ToolId } from "./toolId";
+import { ToolId } from "@app/types/toolId";
 
 declare const tag: unique symbol;
 export type FileId = string & { readonly [tag]: 'FileId' };

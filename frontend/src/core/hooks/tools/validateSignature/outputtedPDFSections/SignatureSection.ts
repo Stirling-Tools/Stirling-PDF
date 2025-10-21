@@ -1,11 +1,11 @@
 import type { TFunction } from 'i18next';
 import { PDFFont, PDFPage } from 'pdf-lib';
-import { SignatureValidationSignature } from '../../../../types/validateSignature';
-import { drawFieldBox } from './FieldBoxSection';
-import { drawStatusBadge } from './StatusBadgeSection';
-import { computeSignatureStatus, statusKindToPdfColor } from '../utils/signatureStatus';
-import { formatDate } from '../utils/pdfText';
-import { colorPalette } from '../utils/pdfPalette';
+import { SignatureValidationSignature } from '@app/types/validateSignature';
+import { drawFieldBox } from '@app/hooks/tools/validateSignature/outputtedPDFSections/FieldBoxSection';
+import { drawStatusBadge } from '@app/hooks/tools/validateSignature/outputtedPDFSections/StatusBadgeSection';
+import { computeSignatureStatus, statusKindToPdfColor } from '@app/hooks/tools/validateSignature/utils/signatureStatus';
+import { formatDate } from '@app/hooks/tools/validateSignature/utils/pdfText';
+import { colorPalette } from '@app/hooks/tools/validateSignature/utils/pdfPalette';
 
 interface DrawSignatureSectionOptions {
   page: PDFPage;

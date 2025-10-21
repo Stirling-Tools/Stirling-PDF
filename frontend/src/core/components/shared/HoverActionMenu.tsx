@@ -1,6 +1,6 @@
 import React from 'react';
 import { ActionIcon, Tooltip } from '@mantine/core';
-import styles from './HoverActionMenu.module.css';
+import styles from '@app/components/shared/HoverActionMenu.module.css';
 
 export interface HoverAction {
   id: string;

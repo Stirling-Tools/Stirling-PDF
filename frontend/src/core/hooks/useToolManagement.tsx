@@ -1,9 +1,9 @@
 import { useState, useCallback, useMemo } from 'react';
-import { useToolRegistry } from "../contexts/ToolRegistryContext";
-import { getAllEndpoints, type ToolRegistryEntry, type ToolRegistry } from "../data/toolsTaxonomy";
-import { useMultipleEndpointsEnabled } from "./useEndpointConfig";
-import { FileId } from '../types/file';
-import { ToolId } from 'src/types/toolId';
+import { useToolRegistry } from "@app/contexts/ToolRegistryContext";
+import { getAllEndpoints, type ToolRegistryEntry, type ToolRegistry } from "@app/data/toolsTaxonomy";
+import { useMultipleEndpointsEnabled } from "@app/hooks/useEndpointConfig";
+import { FileId } from '@app/types/file';
+import { ToolId } from "@app/types/toolId";
 
 interface ToolManagementResult {
   selectedTool: ToolRegistryEntry | null;

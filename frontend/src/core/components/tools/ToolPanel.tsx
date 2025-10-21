@@ -1,23 +1,23 @@
 import { useEffect, useMemo } from 'react';
-import { useRainbowThemeContext } from '../shared/RainbowThemeProvider';
-import { useToolWorkflow } from '../../contexts/ToolWorkflowContext';
-import { usePreferences } from '../../contexts/PreferencesContext';
-import ToolPicker from './ToolPicker';
-import SearchResults from './SearchResults';
-import ToolRenderer from './ToolRenderer';
-import ToolSearch from './toolPicker/ToolSearch';
-import { useSidebarContext } from "../../contexts/SidebarContext";
-import rainbowStyles from '../../styles/rainbow.module.css';
+import { useRainbowThemeContext } from '@app/components/shared/RainbowThemeProvider';
+import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
+import { usePreferences } from '@app/contexts/PreferencesContext';
+import ToolPicker from '@app/components/tools/ToolPicker';
+import SearchResults from '@app/components/tools/SearchResults';
+import ToolRenderer from '@app/components/tools/ToolRenderer';
+import ToolSearch from '@app/components/tools/toolPicker/ToolSearch';
+import { useSidebarContext } from "@app/contexts/SidebarContext";
+import rainbowStyles from '@app/styles/rainbow.module.css';
 import { ActionIcon, ScrollArea } from '@mantine/core';
-import { ToolId } from '../../types/toolId';
+import { ToolId } from '@app/types/toolId';
 import { useMediaQuery } from '@mantine/hooks';
 import DoubleArrowIcon from '@mui/icons-material/DoubleArrow';
 import { useTranslation } from 'react-i18next';
-import FullscreenToolSurface from './FullscreenToolSurface';
-import { useToolPanelGeometry } from '../../hooks/tools/useToolPanelGeometry';
-import { useRightRail } from '../../contexts/RightRailContext';
-import { Tooltip } from '../shared/Tooltip';
-import './ToolPanel.css';
+import FullscreenToolSurface from '@app/components/tools/FullscreenToolSurface';
+import { useToolPanelGeometry } from '@app/hooks/tools/useToolPanelGeometry';
+import { useRightRail } from '@app/contexts/RightRailContext';
+import { Tooltip } from '@app/components/shared/Tooltip';
+import '@app/components/tools/ToolPanel.css';
 
 // No props needed - component uses context
 

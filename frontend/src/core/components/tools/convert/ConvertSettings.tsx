@@ -2,27 +2,27 @@ import { useMemo } from "react";
 import { Stack, Text, Group, Divider, UnstyledButton, useMantineTheme, useMantineColorScheme } from "@mantine/core";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { useTranslation } from "react-i18next";
-import { useMultipleEndpointsEnabled } from "../../../hooks/useEndpointConfig";
-import { isImageFormat, isWebFormat } from "../../../utils/convertUtils";
-import { getConversionEndpoints } from "../../../data/toolsTaxonomy";
-import { useFileSelection } from "../../../contexts/FileContext";
-import { useFileState } from "../../../contexts/FileContext";
-import { detectFileExtension } from "../../../utils/fileUtils";
-import GroupedFormatDropdown from "./GroupedFormatDropdown";
-import ConvertToImageSettings from "./ConvertToImageSettings";
-import ConvertFromImageSettings from "./ConvertFromImageSettings";
-import ConvertFromWebSettings from "./ConvertFromWebSettings";
-import ConvertFromEmailSettings from "./ConvertFromEmailSettings";
-import ConvertToPdfaSettings from "./ConvertToPdfaSettings";
-import { ConvertParameters } from "../../../hooks/tools/convert/useConvertParameters";
+import { useMultipleEndpointsEnabled } from "@app/hooks/useEndpointConfig";
+import { isImageFormat, isWebFormat } from "@app/utils/convertUtils";
+import { getConversionEndpoints } from "@app/data/toolsTaxonomy";
+import { useFileSelection } from "@app/contexts/FileContext";
+import { useFileState } from "@app/contexts/FileContext";
+import { detectFileExtension } from "@app/utils/fileUtils";
+import GroupedFormatDropdown from "@app/components/tools/convert/GroupedFormatDropdown";
+import ConvertToImageSettings from "@app/components/tools/convert/ConvertToImageSettings";
+import ConvertFromImageSettings from "@app/components/tools/convert/ConvertFromImageSettings";
+import ConvertFromWebSettings from "@app/components/tools/convert/ConvertFromWebSettings";
+import ConvertFromEmailSettings from "@app/components/tools/convert/ConvertFromEmailSettings";
+import ConvertToPdfaSettings from "@app/components/tools/convert/ConvertToPdfaSettings";
+import { ConvertParameters } from "@app/hooks/tools/convert/useConvertParameters";
 import {
   FROM_FORMAT_OPTIONS,
   EXTENSION_TO_ENDPOINT,
   COLOR_TYPES,
   OUTPUT_OPTIONS,
   FIT_OPTIONS
-} from "../../../constants/convertConstants";
-import { StirlingFile } from "../../../types/fileContext";
+} from "@app/constants/convertConstants";
+import { StirlingFile } from "@app/types/fileContext";
 
 interface ConvertSettingsProps {
   parameters: ConvertParameters;

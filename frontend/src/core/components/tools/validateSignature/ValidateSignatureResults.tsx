@@ -1,11 +1,11 @@
 import { useCallback, useMemo, useState } from 'react';
 import { Alert, Badge, Button, Divider, Group, Loader, Stack, Text, SegmentedControl } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import type { SignatureValidationReportEntry } from '../../../types/validateSignature';
-import type { ValidateSignatureOperationHook } from '../../../hooks/tools/validateSignature/useValidateSignatureOperation';
-import './reportView/styles.css';
-import FitText from '../../shared/FitText';
-import { SuggestedToolsSection } from '../shared/SuggestedToolsSection';
+import type { SignatureValidationReportEntry } from '@app/types/validateSignature';
+import type { ValidateSignatureOperationHook } from '@app/hooks/tools/validateSignature/useValidateSignatureOperation';
+import '@app/components/tools/validateSignature/reportView/styles.css';
+import FitText from '@app/components/shared/FitText';
+import { SuggestedToolsSection } from '@app/components/tools/shared/SuggestedToolsSection';
 
 interface ValidateSignatureResultsProps {
   operation: ValidateSignatureOperationHook;

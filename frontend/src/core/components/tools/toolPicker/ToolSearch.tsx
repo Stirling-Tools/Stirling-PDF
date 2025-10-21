@@ -1,12 +1,12 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import { Stack, Button, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import LocalIcon from '../../shared/LocalIcon';
-import { ToolRegistryEntry } from "../../../data/toolsTaxonomy";
-import { TextInput } from "../../shared/TextInput";
-import "./ToolPicker.css";
-import { rankByFuzzy, idToWords } from "../../../utils/fuzzySearch";
-import { ToolId } from "src/types/toolId";
+import LocalIcon from '@app/components/shared/LocalIcon';
+import { ToolRegistryEntry } from "@app/data/toolsTaxonomy";
+import { TextInput } from "@app/components/shared/TextInput";
+import "@app/components/tools/toolPicker/ToolPicker.css";
+import { rankByFuzzy, idToWords } from "@app/utils/fuzzySearch";
+import { ToolId } from "@app/types/toolId";
 
 interface ToolSearchProps {
   value: string;

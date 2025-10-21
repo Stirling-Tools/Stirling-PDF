@@ -6,15 +6,15 @@
 import React from 'react';
 import { describe, test, expect, vi, beforeEach, afterEach, Mock } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
-import { useConvertOperation } from '../../hooks/tools/convert/useConvertOperation';
-import { useConvertParameters } from '../../hooks/tools/convert/useConvertParameters';
-import { FileContextProvider } from '../../contexts/FileContext';
-import { PreferencesProvider } from '../../contexts/PreferencesContext';
+import { useConvertOperation } from '@app/hooks/tools/convert/useConvertOperation';
+import { useConvertParameters } from '@app/hooks/tools/convert/useConvertParameters';
+import { FileContextProvider } from '@app/contexts/FileContext';
+import { PreferencesProvider } from '@app/contexts/PreferencesContext';
 import { I18nextProvider } from 'react-i18next';
-import i18n from '../../i18n/config';
-import { detectFileExtension } from '../../utils/fileUtils';
-import { FIT_OPTIONS } from '../../constants/convertConstants';
-import { createTestStirlingFile, createTestFilesWithId } from '../utils/testFileHelpers';
+import i18n from '@app/i18n/config';
+import { detectFileExtension } from '@app/utils/fileUtils';
+import { FIT_OPTIONS } from '@app/constants/convertConstants';
+import { createTestStirlingFile, createTestFilesWithId } from '@app/tests/utils/testFileHelpers';
 
 // Mock axios (for static methods like CancelToken, isCancel)
 vi.mock('axios', () => ({
@@ -45,7 +45,7 @@ vi.mock('../../services/apiClient', () => ({
 }));
 
 // Import the mocked apiClient
-import apiClient from '../../services/apiClient';
+import apiClient from '@app/services/apiClient';
 const mockedApiClient = vi.mocked(apiClient);
 
 // Mock only essential services that are actually called by the tests

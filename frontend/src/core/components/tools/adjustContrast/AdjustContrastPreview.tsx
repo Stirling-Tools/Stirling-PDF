@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
-import { AdjustContrastParameters } from '../../../hooks/tools/adjustContrast/useAdjustContrastParameters';
-import { useThumbnailGeneration } from '../../../hooks/useThumbnailGeneration';
-import ObscuredOverlay from '../../shared/ObscuredOverlay';
+import { AdjustContrastParameters } from '@app/hooks/tools/adjustContrast/useAdjustContrastParameters';
+import { useThumbnailGeneration } from '@app/hooks/useThumbnailGeneration';
+import ObscuredOverlay from '@app/components/shared/ObscuredOverlay';
 import { Text } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import { applyAdjustmentsToCanvas } from './utils';
+import { applyAdjustmentsToCanvas } from '@app/components/tools/adjustContrast/utils';
 
 interface Props {
   file: File | null;

@@ -1,7 +1,7 @@
 import { Stack } from "@mantine/core";
 import { DateTimePicker } from "@mantine/dates";
 import { useTranslation } from "react-i18next";
-import { ChangeMetadataParameters } from "../../../../hooks/tools/changeMetadata/useChangeMetadataParameters";
+import { ChangeMetadataParameters } from "@app/hooks/tools/changeMetadata/useChangeMetadataParameters";
 
 interface DocumentDatesStepProps {
   parameters: ChangeMetadataParameters;

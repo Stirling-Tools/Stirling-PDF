@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
-import { springAuth } from './springAuthClient';
-import type { Session, User, AuthError } from './springAuthClient';
+import { springAuth } from '@app/auth/springAuthClient';
+import type { Session, User, AuthError } from '@app/auth/springAuthClient';
 
 /**
  * Auth Context Type

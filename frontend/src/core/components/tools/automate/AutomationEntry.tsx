@@ -5,10 +5,10 @@ import MoreVertIcon from '@mui/icons-material/MoreVert';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import { Tooltip } from '../../shared/Tooltip';
-import { ToolIcon } from '../../shared/ToolIcon';
-import { ToolRegistry } from '../../../data/toolsTaxonomy';
-import { ToolId } from 'src/types/toolId';
+import { Tooltip } from '@app/components/shared/Tooltip';
+import { ToolIcon } from '@app/components/shared/ToolIcon';
+import { ToolRegistry } from '@app/data/toolsTaxonomy';
+import { ToolId } from "@app/types/toolId";
 
 interface AutomationEntryProps {
   /** Optional title for the automation (usually for custom ones) */

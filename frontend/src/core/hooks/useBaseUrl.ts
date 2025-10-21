@@ -1,4 +1,4 @@
-import { useAppConfig } from '../contexts/AppConfigContext'
+import { useAppConfig } from '@app/contexts/AppConfigContext';
 
 export const useBaseUrl = (): string => {
   const { config } = useAppConfig();

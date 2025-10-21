@@ -1,4 +1,4 @@
-import { ProcessingError } from '../types/processing';
+import { ProcessingError } from '@app/types/processing';
 
 export class ProcessingErrorHandler {
   private static readonly DEFAULT_MAX_RETRIES = 3;

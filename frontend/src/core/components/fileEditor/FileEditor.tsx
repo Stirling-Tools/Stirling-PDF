@@ -3,17 +3,17 @@ import {
   Text, Center, Box, LoadingOverlay, Stack
 } from '@mantine/core';
 import { Dropzone } from '@mantine/dropzone';
-import { useFileSelection, useFileState, useFileManagement, useFileActions, useFileContext } from '../../contexts/FileContext';
-import { useNavigationActions } from '../../contexts/NavigationContext';
-import { zipFileService } from '../../services/zipFileService';
-import { detectFileExtension } from '../../utils/fileUtils';
-import FileEditorThumbnail from './FileEditorThumbnail';
-import AddFileCard from './AddFileCard';
-import FilePickerModal from '../shared/FilePickerModal';
-import { FileId, StirlingFile } from '../../types/fileContext';
-import { alert } from '../toast';
-import { downloadBlob } from '../../utils/downloadUtils';
-import { useFileEditorRightRailButtons } from './fileEditorRightRailButtons';
+import { useFileSelection, useFileState, useFileManagement, useFileActions, useFileContext } from '@app/contexts/FileContext';
+import { useNavigationActions } from '@app/contexts/NavigationContext';
+import { zipFileService } from '@app/services/zipFileService';
+import { detectFileExtension } from '@app/utils/fileUtils';
+import FileEditorThumbnail from '@app/components/fileEditor/FileEditorThumbnail';
+import AddFileCard from '@app/components/fileEditor/AddFileCard';
+import FilePickerModal from '@app/components/shared/FilePickerModal';
+import { FileId, StirlingFile } from '@app/types/fileContext';
+import { alert } from '@app/components/toast';
+import { downloadBlob } from '@app/utils/downloadUtils';
+import { useFileEditorRightRailButtons } from '@app/components/fileEditor/fileEditorRightRailButtons';
 
 
 interface FileEditorProps {

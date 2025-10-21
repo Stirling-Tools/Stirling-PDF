@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Box, TextInput, ActionIcon, Text, Group } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import { LocalIcon } from '../shared/LocalIcon';
-import { ViewerContext } from '../../contexts/ViewerContext';
+import { LocalIcon } from '@app/components/shared/LocalIcon';
+import { ViewerContext } from '@app/contexts/ViewerContext';
 
 interface SearchInterfaceProps {
   visible: boolean;

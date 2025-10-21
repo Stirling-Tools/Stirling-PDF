@@ -1,7 +1,7 @@
 import React from 'react';
-import { NavKey } from './types';
-import HotkeysSection from './configSections/HotkeysSection';
-import GeneralSection from './configSections/GeneralSection';
+import { NavKey } from '@app/components/shared/config/types';
+import HotkeysSection from '@app/components/shared/config/configSections/HotkeysSection';
+import GeneralSection from '@app/components/shared/config/configSections/GeneralSection';
 
 export interface ConfigNavItem {
   key: NavKey;

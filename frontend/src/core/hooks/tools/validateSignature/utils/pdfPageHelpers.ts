@@ -1,6 +1,6 @@
 import { PDFDocument, PDFFont, PDFImage } from 'pdf-lib';
 import type { TFunction } from 'i18next';
-import { colorPalette } from './pdfPalette';
+import { colorPalette } from '@app/hooks/tools/validateSignature/utils/pdfPalette';
 
 interface StartPageParams {
   doc: PDFDocument;

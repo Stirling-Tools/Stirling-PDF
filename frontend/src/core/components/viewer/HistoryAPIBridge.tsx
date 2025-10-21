@@ -1,9 +1,9 @@
 import { useImperativeHandle, forwardRef, useEffect } from 'react';
 import { useHistoryCapability } from '@embedpdf/plugin-history/react';
 import { useAnnotationCapability } from '@embedpdf/plugin-annotation/react';
-import { useSignature } from '../../contexts/SignatureContext';
+import { useSignature } from '@app/contexts/SignatureContext';
 import { uuidV4 } from '@embedpdf/models';
-import type { HistoryAPI } from './viewerTypes';
+import type { HistoryAPI } from '@app/components/viewer/viewerTypes';
 
 export const HistoryAPIBridge = forwardRef<HistoryAPI>(function HistoryAPIBridge(_, ref) {
   const { provides: historyApi } = useHistoryCapability();

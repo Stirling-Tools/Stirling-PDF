@@ -4,9 +4,9 @@
  * Called when files are added to FileContext, before any view sees them
  */
 
-import { generateThumbnailForFile } from '../utils/thumbnailUtils';
-import { pdfWorkerManager } from './pdfWorkerManager';
-import { FileId } from '../types/file';
+import { generateThumbnailForFile } from '@app/utils/thumbnailUtils';
+import { pdfWorkerManager } from '@app/services/pdfWorkerManager';
+import { FileId } from '@app/types/file';
 
 export interface ProcessedFileMetadata {
   totalPages: number;

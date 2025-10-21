@@ -1,4 +1,4 @@
-import { useBaseParameters } from '../shared/useBaseParameters';
+import { useBaseParameters } from '@app/hooks/tools/shared/useBaseParameters';
 
 export type RemoveAnnotationsParameters = Record<string, never>
 

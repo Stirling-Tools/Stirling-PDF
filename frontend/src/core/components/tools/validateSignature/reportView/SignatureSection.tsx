@@ -1,9 +1,9 @@
 import { Divider, Group, Stack, Text } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import type { SignatureValidationSignature } from '../../../../types/validateSignature';
-import SignatureStatusBadge from './SignatureStatusBadge';
-import FieldBlock from './FieldBlock';
-import './styles.css';
+import type { SignatureValidationSignature } from '@app/types/validateSignature';
+import SignatureStatusBadge from '@app/components/tools/validateSignature/reportView/SignatureStatusBadge';
+import FieldBlock from '@app/components/tools/validateSignature/reportView/FieldBlock';
+import '@app/components/tools/validateSignature/reportView/styles.css';
 
 const formatDate = (value?: string | null) => {
   if (!value) return '-';

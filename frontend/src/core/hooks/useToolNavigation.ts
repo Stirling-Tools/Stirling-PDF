@@ -1,8 +1,8 @@
 import { useCallback } from 'react';
-import { ToolRegistryEntry, getToolUrlPath } from '../data/toolsTaxonomy';
-import { useToolWorkflow } from '../contexts/ToolWorkflowContext';
-import { handleUnlessSpecialClick } from '../utils/clickHandlers';
-import { ToolId } from '../types/toolId';
+import { ToolRegistryEntry, getToolUrlPath } from '@app/data/toolsTaxonomy';
+import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
+import { handleUnlessSpecialClick } from '@app/utils/clickHandlers';
+import { ToolId } from '@app/types/toolId';
 
 export interface ToolNavigationProps {
   /** Full URL for the tool (for href attribute) */

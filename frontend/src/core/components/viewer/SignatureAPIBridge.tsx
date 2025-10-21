@@ -1,8 +1,8 @@
 import { useImperativeHandle, forwardRef, useEffect } from 'react';
 import { useAnnotationCapability } from '@embedpdf/plugin-annotation/react';
 import { PdfAnnotationSubtype, uuidV4 } from '@embedpdf/models';
-import { useSignature } from '../../contexts/SignatureContext';
-import type { SignatureAPI } from './viewerTypes';
+import { useSignature } from '@app/contexts/SignatureContext';
+import type { SignatureAPI } from '@app/components/viewer/viewerTypes';
 
 export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPIBridge(_, ref) {
   const { provides: annotationApi } = useAnnotationCapability();

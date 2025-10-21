@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { useMergeParameters, defaultParameters } from './useMergeParameters';
+import { useMergeParameters, defaultParameters } from '@app/hooks/tools/merge/useMergeParameters';
 
 describe('useMergeParameters', () => {
   test('should initialize with default parameters', () => {

@@ -1,11 +1,11 @@
 import { useTranslation } from "react-i18next";
-import { createToolFlow } from "../components/tools/shared/createToolFlow";
-import CompressSettings from "../components/tools/compress/CompressSettings";
-import { useCompressParameters } from "../hooks/tools/compress/useCompressParameters";
-import { useCompressOperation } from "../hooks/tools/compress/useCompressOperation";
-import { useBaseTool } from "../hooks/tools/shared/useBaseTool";
-import { BaseToolProps, ToolComponent } from "../types/tool";
-import { useCompressTips } from "../components/tooltips/useCompressTips";
+import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
+import CompressSettings from "@app/components/tools/compress/CompressSettings";
+import { useCompressParameters } from "@app/hooks/tools/compress/useCompressParameters";
+import { useCompressOperation } from "@app/hooks/tools/compress/useCompressOperation";
+import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
+import { BaseToolProps, ToolComponent } from "@app/types/tool";
+import { useCompressTips } from "@app/components/tooltips/useCompressTips";
 
 const Compress = (props: BaseToolProps) => {
   const { t } = useTranslation();

@@ -1,10 +1,10 @@
 import { useTranslation } from 'react-i18next';
-import { createToolFlow } from '../components/tools/shared/createToolFlow';
-import { useBaseTool } from '../hooks/tools/shared/useBaseTool';
-import { BaseToolProps, ToolComponent } from '../types/tool';
-import { usePageLayoutParameters } from '../hooks/tools/pageLayout/usePageLayoutParameters';
-import { usePageLayoutOperation } from '../hooks/tools/pageLayout/usePageLayoutOperation';
-import PageLayoutSettings from '../components/tools/pageLayout/PageLayoutSettings';
+import { createToolFlow } from '@app/components/tools/shared/createToolFlow';
+import { useBaseTool } from '@app/hooks/tools/shared/useBaseTool';
+import { BaseToolProps, ToolComponent } from '@app/types/tool';
+import { usePageLayoutParameters } from '@app/hooks/tools/pageLayout/usePageLayoutParameters';
+import { usePageLayoutOperation } from '@app/hooks/tools/pageLayout/usePageLayoutOperation';
+import PageLayoutSettings from '@app/components/tools/pageLayout/PageLayoutSettings';
 
 const PageLayout = (props: BaseToolProps) => {
   const { t } = useTranslation();

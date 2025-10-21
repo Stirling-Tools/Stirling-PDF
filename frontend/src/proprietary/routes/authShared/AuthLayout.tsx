@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
-import LoginRightCarousel from '../../components/shared/LoginRightCarousel';
-import loginSlides from '../../components/shared/loginSlides';
-import styles from './AuthLayout.module.css';
+import LoginRightCarousel from '@app/components/shared/LoginRightCarousel';
+import loginSlides from '@app/components/shared/loginSlides';
+import styles from '@app/routes/authShared/AuthLayout.module.css';
 
 interface AuthLayoutProps {
   children: React.ReactNode

@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
-import '../authShared/auth.css';
+import '@app/authShared/auth.css';
 import { useTranslation } from 'react-i18next';
-import { SignupFieldErrors } from './SignupFormValidation';
+import { SignupFieldErrors } from '@app/routes/signup/SignupFormValidation';
 
 interface SignupFormProps {
   name?: string

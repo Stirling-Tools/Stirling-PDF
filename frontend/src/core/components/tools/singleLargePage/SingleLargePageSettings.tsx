@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { SingleLargePageParameters } from '../../../hooks/tools/singleLargePage/useSingleLargePageParameters';
+import { SingleLargePageParameters } from '@app/hooks/tools/singleLargePage/useSingleLargePageParameters';
 
 interface SingleLargePageSettingsProps {
   parameters: SingleLargePageParameters;

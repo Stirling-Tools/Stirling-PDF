@@ -1,6 +1,6 @@
 import { Stack, Text, Button, TextInput, NumberInput } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { CertSignParameters } from "../../../hooks/tools/certSign/useCertSignParameters";
+import { CertSignParameters } from "@app/hooks/tools/certSign/useCertSignParameters";
 
 interface SignatureAppearanceSettingsProps {
   parameters: CertSignParameters;

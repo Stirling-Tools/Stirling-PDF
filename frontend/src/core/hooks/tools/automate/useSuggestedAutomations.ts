@@ -1,9 +1,9 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import React from 'react';
-import LocalIcon from '../../../components/shared/LocalIcon';
-import { SuggestedAutomation } from '../../../types/automation';
-import { SPLIT_METHODS } from '../../../constants/splitConstants';
+import LocalIcon from '@app/components/shared/LocalIcon';
+import { SuggestedAutomation } from '@app/types/automation';
+import { SPLIT_METHODS } from '@app/constants/splitConstants';
 
 // Create icon components
 const CompressIcon = () => React.createElement(LocalIcon, { icon: 'compress', width: '1.5rem', height: '1.5rem' });

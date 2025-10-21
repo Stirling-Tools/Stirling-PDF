@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import ButtonSelector from "../../shared/ButtonSelector";
+import ButtonSelector from "@app/components/shared/ButtonSelector";
 
 interface WatermarkTypeSettingsProps {
   watermarkType?: 'text' | 'image';

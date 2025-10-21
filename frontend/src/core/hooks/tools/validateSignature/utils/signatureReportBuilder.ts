@@ -1,8 +1,8 @@
-import { SignatureValidationFileResult, SignatureValidationReportEntry } from '../../../../types/validateSignature';
-import { FileContextSelectors } from '../../../../types/fileContext';
-import type { FileId } from '../../../../types/file';
+import { SignatureValidationFileResult, SignatureValidationReportEntry } from '@app/types/validateSignature';
+import { FileContextSelectors } from '@app/types/fileContext';
+import type { FileId } from '@app/types/file';
 import type { TFunction } from 'i18next';
-import { deriveEntryStatus } from './reportStatus';
+import { deriveEntryStatus } from '@app/hooks/tools/validateSignature/utils/reportStatus';
 
 interface BuildReportEntriesOptions {
   results: SignatureValidationFileResult[];

@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useExportCapability } from '@embedpdf/plugin-export/react';
-import { useViewer } from '../../contexts/ViewerContext';
+import { useViewer } from '@app/contexts/ViewerContext';
 
 /**
  * Component that runs inside EmbedPDF context and provides export functionality

@@ -1,8 +1,8 @@
 import React from 'react';
 import { Button, Group } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import { useFileState } from '../../contexts/FileContext';
-import { useFileActions } from '../../contexts/file/fileHooks';
+import { useFileState } from '@app/contexts/FileContext';
+import { useFileActions } from '@app/contexts/file/fileHooks';
 import CloseIcon from '@mui/icons-material/Close';
 
 interface DismissAllErrorsButtonProps {

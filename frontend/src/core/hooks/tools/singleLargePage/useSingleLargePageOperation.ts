@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
-import { ToolType, useToolOperation } from '../shared/useToolOperation';
-import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
-import { SingleLargePageParameters, defaultParameters } from './useSingleLargePageParameters';
+import { ToolType, useToolOperation } from '@app/hooks/tools/shared/useToolOperation';
+import { createStandardErrorHandler } from '@app/utils/toolErrorHandler';
+import { SingleLargePageParameters, defaultParameters } from '@app/hooks/tools/singleLargePage/useSingleLargePageParameters';
 
 // Static function that can be used by both the hook and automation executor
 export const buildSingleLargePageFormData = (_parameters: SingleLargePageParameters, file: File): FormData => {

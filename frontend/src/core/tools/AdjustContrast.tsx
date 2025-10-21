@@ -1,15 +1,15 @@
 import { useTranslation } from 'react-i18next';
 import { useEffect, useMemo, useState } from 'react';
-import { createToolFlow } from '../components/tools/shared/createToolFlow';
-import { BaseToolProps, ToolComponent } from '../types/tool';
-import { useBaseTool } from '../hooks/tools/shared/useBaseTool';
-import { useAdjustContrastParameters } from '../hooks/tools/adjustContrast/useAdjustContrastParameters';
-import { useAdjustContrastOperation } from '../hooks/tools/adjustContrast/useAdjustContrastOperation';
-import AdjustContrastBasicSettings from '../components/tools/adjustContrast/AdjustContrastBasicSettings';
-import AdjustContrastColorSettings from '../components/tools/adjustContrast/AdjustContrastColorSettings';
-import AdjustContrastPreview from '../components/tools/adjustContrast/AdjustContrastPreview';
-import { useAccordionSteps } from '../hooks/tools/shared/useAccordionSteps';
-import NavigationArrows from '../components/shared/filePreview/NavigationArrows';
+import { createToolFlow } from '@app/components/tools/shared/createToolFlow';
+import { BaseToolProps, ToolComponent } from '@app/types/tool';
+import { useBaseTool } from '@app/hooks/tools/shared/useBaseTool';
+import { useAdjustContrastParameters } from '@app/hooks/tools/adjustContrast/useAdjustContrastParameters';
+import { useAdjustContrastOperation } from '@app/hooks/tools/adjustContrast/useAdjustContrastOperation';
+import AdjustContrastBasicSettings from '@app/components/tools/adjustContrast/AdjustContrastBasicSettings';
+import AdjustContrastColorSettings from '@app/components/tools/adjustContrast/AdjustContrastColorSettings';
+import AdjustContrastPreview from '@app/components/tools/adjustContrast/AdjustContrastPreview';
+import { useAccordionSteps } from '@app/hooks/tools/shared/useAccordionSteps';
+import NavigationArrows from '@app/components/shared/filePreview/NavigationArrows';
 
 const AdjustContrast = (props: BaseToolProps) => {
   const { t } = useTranslation();

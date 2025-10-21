@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Stack, TextInput, Select, Combobox, useCombobox, Group, Box } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import { ColorPicker } from './ColorPicker';
+import { ColorPicker } from '@app/components/annotation/shared/ColorPicker';
 
 interface TextInputWithFontProps {
   text: string;

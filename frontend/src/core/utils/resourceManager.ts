@@ -3,7 +3,7 @@
  */
 
 import { useCallback } from 'react';
-import { AUTOMATION_CONSTANTS } from '../constants/automation';
+import { AUTOMATION_CONSTANTS } from '@app/constants/automation';
 
 export class ResourceManager {
   private static blobUrls = new Set<string>();

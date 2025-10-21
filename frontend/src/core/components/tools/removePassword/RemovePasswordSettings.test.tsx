@@ -1,8 +1,8 @@
 import { describe, expect, test, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { MantineProvider } from '@mantine/core';
-import RemovePasswordSettings from './RemovePasswordSettings';
-import { defaultParameters } from '../../../hooks/tools/removePassword/useRemovePasswordParameters';
+import RemovePasswordSettings from '@app/components/tools/removePassword/RemovePasswordSettings';
+import { defaultParameters } from '@app/hooks/tools/removePassword/useRemovePasswordParameters';
 
 // Mock useTranslation with predictable return values
 const mockT = vi.fn((key: string) => `mock-${key}`);

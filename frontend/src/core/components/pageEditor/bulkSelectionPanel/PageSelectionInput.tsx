@@ -1,9 +1,9 @@
 import { TextInput, Button, Text, Flex, Switch } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import LocalIcon from '../../shared/LocalIcon';
-import { Tooltip } from '../../shared/Tooltip';
-import { usePageSelectionTips } from '../../tooltips/usePageSelectionTips';
-import classes from './BulkSelectionPanel.module.css';
+import LocalIcon from '@app/components/shared/LocalIcon';
+import { Tooltip } from '@app/components/shared/Tooltip';
+import { usePageSelectionTips } from '@app/components/tooltips/usePageSelectionTips';
+import classes from '@app/components/pageEditor/bulkSelectionPanel/BulkSelectionPanel.module.css';
 
 interface PageSelectionInputProps {
   csvInput: string;

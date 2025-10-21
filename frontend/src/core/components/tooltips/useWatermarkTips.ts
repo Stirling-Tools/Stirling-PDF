@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { TooltipContent, TooltipTip } from '../../types/tips';
+import { TooltipContent, TooltipTip } from '@app/types/tips';
 
 // Shared tooltip content to reduce duplication
 const useSharedWatermarkContent = () => {

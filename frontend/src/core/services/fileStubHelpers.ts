@@ -1,7 +1,7 @@
-import { StirlingFile, StirlingFileStub } from '../types/fileContext';
-import { createChildStub, generateProcessedFileMetadata } from '../contexts/file/fileActions';
-import { createStirlingFile } from '../types/fileContext';
-import { ToolId } from '../types/toolId';
+import { StirlingFile, StirlingFileStub } from '@app/types/fileContext';
+import { createChildStub, generateProcessedFileMetadata } from '@app/contexts/file/fileActions';
+import { createStirlingFile } from '@app/types/fileContext';
+import { ToolId } from '@app/types/toolId';
 
 /**
  * Create StirlingFiles and StirlingFileStubs from exported files

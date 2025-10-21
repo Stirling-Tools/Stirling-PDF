@@ -1,8 +1,8 @@
 import { describe, expect, test, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { MantineProvider } from '@mantine/core';
-import RedactAdvancedSettings from './RedactAdvancedSettings';
-import { defaultParameters } from '../../../hooks/tools/redact/useRedactParameters';
+import RedactAdvancedSettings from '@app/components/tools/redact/RedactAdvancedSettings';
+import { defaultParameters } from '@app/hooks/tools/redact/useRedactParameters';
 
 // Mock useTranslation
 const mockT = vi.fn((_key: string, fallback: string) => fallback);

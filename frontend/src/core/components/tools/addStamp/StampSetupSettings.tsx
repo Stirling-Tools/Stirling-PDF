@@ -1,9 +1,9 @@
 import { useTranslation } from "react-i18next";
 import { Stack, Textarea, TextInput, Select, Button, Text, Divider } from "@mantine/core";
-import { AddStampParameters } from "./useAddStampParameters";
-import ButtonSelector from "../../shared/ButtonSelector";
-import styles from "./StampPreview.module.css";
-import { getDefaultFontSizeForAlphabet } from "./StampPreviewUtils";
+import { AddStampParameters } from "@app/components/tools/addStamp/useAddStampParameters";
+import ButtonSelector from "@app/components/shared/ButtonSelector";
+import styles from "@app/components/tools/addStamp/StampPreview.module.css";
+import { getDefaultFontSizeForAlphabet } from "@app/components/tools/addStamp/StampPreviewUtils";
 
 interface StampSetupSettingsProps {
   parameters: AddStampParameters;

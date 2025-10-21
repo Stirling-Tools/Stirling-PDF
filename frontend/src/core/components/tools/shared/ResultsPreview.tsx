@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Box, Text, Loader, Stack, Center, Flex } from '@mantine/core';
-import FilePreview from '../../shared/FilePreview';
-import FileMetadata from './FileMetadata';
-import NavigationControls from './NavigationControls';
+import FilePreview from '@app/components/shared/FilePreview';
+import FileMetadata from '@app/components/tools/shared/FileMetadata';
+import NavigationControls from '@app/components/tools/shared/NavigationControls';
 
 export interface ReviewFile {
   file: File;

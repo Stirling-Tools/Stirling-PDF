@@ -1,5 +1,5 @@
-import { springAuth } from '../../auth/springAuthClient';
-import { BASE_PATH } from '../../constants/app';
+import { springAuth } from '@app/auth/springAuthClient';
+import { BASE_PATH } from '@app/constants/app';
 
 export const useAuthService = () => {
 
@@ -51,4 +51,5 @@ export const useAuthService = () => {
     signUp,
     signInWithProvider
   };
-};
+}
+;

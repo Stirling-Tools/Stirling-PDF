@@ -1,10 +1,10 @@
 import { useTranslation } from "react-i18next";
-import { createToolFlow } from "../components/tools/shared/createToolFlow";
-import ExtractImagesSettings from "../components/tools/extractImages/ExtractImagesSettings";
-import { useExtractImagesParameters } from "../hooks/tools/extractImages/useExtractImagesParameters";
-import { useExtractImagesOperation } from "../hooks/tools/extractImages/useExtractImagesOperation";
-import { useBaseTool } from "../hooks/tools/shared/useBaseTool";
-import { BaseToolProps, ToolComponent } from "../types/tool";
+import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
+import ExtractImagesSettings from "@app/components/tools/extractImages/ExtractImagesSettings";
+import { useExtractImagesParameters } from "@app/hooks/tools/extractImages/useExtractImagesParameters";
+import { useExtractImagesOperation } from "@app/hooks/tools/extractImages/useExtractImagesOperation";
+import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
+import { BaseToolProps, ToolComponent } from "@app/types/tool";
 
 const ExtractImages = (props: BaseToolProps) => {
   const { t } = useTranslation();

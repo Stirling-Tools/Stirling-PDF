@@ -1,17 +1,17 @@
 import React from "react";
 import { Button } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { Tooltip } from "../../shared/Tooltip";
-import { ToolIcon } from "../../shared/ToolIcon";
-import { ToolRegistryEntry } from "../../../data/toolsTaxonomy";
-import { useToolNavigation } from "../../../hooks/useToolNavigation";
-import { handleUnlessSpecialClick } from "../../../utils/clickHandlers";
-import FitText from "../../shared/FitText";
-import { useHotkeys } from "../../../contexts/HotkeyContext";
-import HotkeyDisplay from "../../hotkeys/HotkeyDisplay";
-import FavoriteStar from "./FavoriteStar";
-import { useToolWorkflow } from "../../../contexts/ToolWorkflowContext";
-import { ToolId } from "../../../types/toolId";
+import { Tooltip } from "@app/components/shared/Tooltip";
+import { ToolIcon } from "@app/components/shared/ToolIcon";
+import { ToolRegistryEntry } from "@app/data/toolsTaxonomy";
+import { useToolNavigation } from "@app/hooks/useToolNavigation";
+import { handleUnlessSpecialClick } from "@app/utils/clickHandlers";
+import FitText from "@app/components/shared/FitText";
+import { useHotkeys } from "@app/contexts/HotkeyContext";
+import HotkeyDisplay from "@app/components/hotkeys/HotkeyDisplay";
+import FavoriteStar from "@app/components/tools/toolPicker/FavoriteStar";
+import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
+import { ToolId } from "@app/types/toolId";
 
 interface ToolButtonProps {
   id: ToolId;

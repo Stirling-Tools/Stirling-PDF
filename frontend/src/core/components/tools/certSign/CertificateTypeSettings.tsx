@@ -1,6 +1,6 @@
 import { Stack, Button } from "@mantine/core";
-import { CertSignParameters } from "../../../hooks/tools/certSign/useCertSignParameters";
-import { useAppConfig } from "../../../contexts/AppConfigContext";
+import { CertSignParameters } from "@app/hooks/tools/certSign/useCertSignParameters";
+import { useAppConfig } from "@app/contexts/AppConfigContext";
 
 interface CertificateTypeSettingsProps {
   parameters: CertSignParameters;

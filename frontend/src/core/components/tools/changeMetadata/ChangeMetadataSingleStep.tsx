@@ -1,11 +1,11 @@
 import { Stack, Divider, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { ChangeMetadataParameters, createCustomMetadataFunctions } from "../../../hooks/tools/changeMetadata/useChangeMetadataParameters";
-import { useMetadataExtraction } from "../../../hooks/tools/changeMetadata/useMetadataExtraction";
-import DeleteAllStep from "./steps/DeleteAllStep";
-import StandardMetadataStep from "./steps/StandardMetadataStep";
-import DocumentDatesStep from "./steps/DocumentDatesStep";
-import AdvancedOptionsStep from "./steps/AdvancedOptionsStep";
+import { ChangeMetadataParameters, createCustomMetadataFunctions } from "@app/hooks/tools/changeMetadata/useChangeMetadataParameters";
+import { useMetadataExtraction } from "@app/hooks/tools/changeMetadata/useMetadataExtraction";
+import DeleteAllStep from "@app/components/tools/changeMetadata/steps/DeleteAllStep";
+import StandardMetadataStep from "@app/components/tools/changeMetadata/steps/StandardMetadataStep";
+import DocumentDatesStep from "@app/components/tools/changeMetadata/steps/DocumentDatesStep";
+import AdvancedOptionsStep from "@app/components/tools/changeMetadata/steps/AdvancedOptionsStep";
 
 interface ChangeMetadataSingleStepProps {
   parameters: ChangeMetadataParameters;

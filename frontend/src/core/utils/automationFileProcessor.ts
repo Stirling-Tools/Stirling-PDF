@@ -3,9 +3,9 @@
  */
 
 import axios from 'axios';
-import { zipFileService } from '../services/zipFileService';
-import { ResourceManager } from './resourceManager';
-import { AUTOMATION_CONSTANTS } from '../constants/automation';
+import { zipFileService } from '@app/services/zipFileService';
+import { ResourceManager } from '@app/utils/resourceManager';
+import { AUTOMATION_CONSTANTS } from '@app/constants/automation';
 
 export interface AutomationProcessingOptions {
   timeout?: number;

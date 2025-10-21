@@ -1,14 +1,14 @@
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { useFileSelection } from "../contexts/FileContext";
-import { createToolFlow } from "../components/tools/shared/createToolFlow";
-import { BaseToolProps, ToolComponent } from "../types/tool";
-import { useEndpointEnabled } from "../hooks/useEndpointConfig";
-import { useAddPageNumbersParameters } from "../components/tools/addPageNumbers/useAddPageNumbersParameters";
-import { useAddPageNumbersOperation } from "../components/tools/addPageNumbers/useAddPageNumbersOperation";
-import { useAccordionSteps } from "../hooks/tools/shared/useAccordionSteps";
-import AddPageNumbersPositionSettings from "../components/tools/addPageNumbers/AddPageNumbersPositionSettings";
-import AddPageNumbersAppearanceSettings from "../components/tools/addPageNumbers/AddPageNumbersAppearanceSettings";
+import { useFileSelection } from "@app/contexts/FileContext";
+import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
+import { BaseToolProps, ToolComponent } from "@app/types/tool";
+import { useEndpointEnabled } from "@app/hooks/useEndpointConfig";
+import { useAddPageNumbersParameters } from "@app/components/tools/addPageNumbers/useAddPageNumbersParameters";
+import { useAddPageNumbersOperation } from "@app/components/tools/addPageNumbers/useAddPageNumbersOperation";
+import { useAccordionSteps } from "@app/hooks/tools/shared/useAccordionSteps";
+import AddPageNumbersPositionSettings from "@app/components/tools/addPageNumbers/AddPageNumbersPositionSettings";
+import AddPageNumbersAppearanceSettings from "@app/components/tools/addPageNumbers/AddPageNumbersAppearanceSettings";
 
 const AddPageNumbers = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();

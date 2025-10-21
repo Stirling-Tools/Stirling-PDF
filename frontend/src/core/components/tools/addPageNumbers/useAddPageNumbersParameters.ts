@@ -1,5 +1,5 @@
-import { BaseParameters } from '../../../types/parameters';
-import { useBaseParameters, type BaseParametersHook } from '../../../hooks/tools/shared/useBaseParameters';
+import { BaseParameters } from '@app/types/parameters';
+import { useBaseParameters, type BaseParametersHook } from '@app/hooks/tools/shared/useBaseParameters';
 
 export interface AddPageNumbersParameters extends BaseParameters {
   customMargin: 'small' | 'medium' | 'large' | 'x-large';

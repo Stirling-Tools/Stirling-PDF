@@ -1,7 +1,7 @@
 import React from 'react';
 import { Flex, Text, Divider } from '@mantine/core';
-import LocalIcon from '../../shared/LocalIcon';
-import { Tooltip } from '../../shared/Tooltip';
+import LocalIcon from '@app/components/shared/LocalIcon';
+import { Tooltip } from '@app/components/shared/Tooltip';
 
 export interface ToolWorkflowTitleProps {
   title: string;

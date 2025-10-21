@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useReducer, useCallback } from 'react';
-import { WorkbenchType, getDefaultWorkbench } from '../types/workbench';
-import { ToolId, isValidToolId } from '../types/toolId';
-import { useToolRegistry } from './ToolRegistryContext';
+import { WorkbenchType, getDefaultWorkbench } from '@app/types/workbench';
+import { ToolId, isValidToolId } from '@app/types/toolId';
+import { useToolRegistry } from '@app/contexts/ToolRegistryContext';
 
 /**
  * NavigationContext - Complete navigation management system

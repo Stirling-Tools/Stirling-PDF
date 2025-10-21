@@ -1,4 +1,4 @@
-import { FileId } from './file';
+import { FileId } from '@app/types/file';
 
 export interface PDFPage {
   id: string;

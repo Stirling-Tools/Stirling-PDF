@@ -1,21 +1,21 @@
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useFileSelection } from "../contexts/FileContext";
-import { useNavigationActions } from "../contexts/NavigationContext";
-import { useToolWorkflow } from "../contexts/ToolWorkflowContext";
+import { useFileSelection } from "@app/contexts/FileContext";
+import { useNavigationActions } from "@app/contexts/NavigationContext";
+import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 
-import { createToolFlow } from "../components/tools/shared/createToolFlow";
-import { createFilesToolStep } from "../components/tools/shared/FilesToolStep";
-import AutomationSelection from "../components/tools/automate/AutomationSelection";
-import AutomationCreation from "../components/tools/automate/AutomationCreation";
-import AutomationRun from "../components/tools/automate/AutomationRun";
+import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
+import { createFilesToolStep } from "@app/components/tools/shared/FilesToolStep";
+import AutomationSelection from "@app/components/tools/automate/AutomationSelection";
+import AutomationCreation from "@app/components/tools/automate/AutomationCreation";
+import AutomationRun from "@app/components/tools/automate/AutomationRun";
 
-import { useAutomateOperation } from "../hooks/tools/automate/useAutomateOperation";
-import { BaseToolProps } from "../types/tool";
-import { useToolRegistry } from "../contexts/ToolRegistryContext";
-import { useSavedAutomations } from "../hooks/tools/automate/useSavedAutomations";
-import { AutomationConfig, AutomationStepData, AutomationMode, AutomationStep } from "../types/automation";
-import { AUTOMATION_STEPS } from "../constants/automation";
+import { useAutomateOperation } from "@app/hooks/tools/automate/useAutomateOperation";
+import { BaseToolProps } from "@app/types/tool";
+import { useToolRegistry } from "@app/contexts/ToolRegistryContext";
+import { useSavedAutomations } from "@app/hooks/tools/automate/useSavedAutomations";
+import { AutomationConfig, AutomationStepData, AutomationMode, AutomationStep } from "@app/types/automation";
+import { AUTOMATION_STEPS } from "@app/constants/automation";
 
 const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();

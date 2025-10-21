@@ -1,9 +1,9 @@
 import { Stack, Text, Group, Select, SegmentedControl, NumberInput, Button, ActionIcon, Divider } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import { type OverlayPdfsParameters, type OverlayMode } from '../../../hooks/tools/overlayPdfs/useOverlayPdfsParameters';
-import LocalIcon from '../../shared/LocalIcon';
-import { useFilesModalContext } from '../../../contexts/FilesModalContext';
-import styles from './OverlayPdfsSettings.module.css';
+import { type OverlayPdfsParameters, type OverlayMode } from '@app/hooks/tools/overlayPdfs/useOverlayPdfsParameters';
+import LocalIcon from '@app/components/shared/LocalIcon';
+import { useFilesModalContext } from '@app/contexts/FilesModalContext';
+import styles from '@app/components/tools/overlayPdfs/OverlayPdfsSettings.module.css';
 
 interface OverlayPdfsSettingsProps {
   parameters: OverlayPdfsParameters;

@@ -3,7 +3,7 @@
  */
 
 import { createContext } from 'react';
-import { FileContextStateValue, FileContextActionsValue } from '../../types/fileContext';
+import { FileContextStateValue, FileContextActionsValue } from '@app/types/fileContext';
 
 // Split contexts for performance
 export const FileStateContext = createContext<FileContextStateValue | undefined>(undefined);

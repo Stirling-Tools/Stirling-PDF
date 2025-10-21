@@ -1,9 +1,9 @@
 import { useTranslation } from 'react-i18next';
-import { ToolType, useToolOperation } from '../shared/useToolOperation';
-import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
-import { AddPasswordFullParameters, defaultParameters } from './useAddPasswordParameters';
-import { defaultParameters as permissionsDefaults } from '../changePermissions/useChangePermissionsParameters';
-import { getFormData } from '../changePermissions/useChangePermissionsOperation';
+import { ToolType, useToolOperation } from '@app/hooks/tools/shared/useToolOperation';
+import { createStandardErrorHandler } from '@app/utils/toolErrorHandler';
+import { AddPasswordFullParameters, defaultParameters } from '@app/hooks/tools/addPassword/useAddPasswordParameters';
+import { defaultParameters as permissionsDefaults } from '@app/hooks/tools/changePermissions/useChangePermissionsParameters';
+import { getFormData } from '@app/hooks/tools/changePermissions/useChangePermissionsOperation';
 
 // Static function that can be used by both the hook and automation executor
 export const buildAddPasswordFormData = (parameters: AddPasswordFullParameters, file: File): FormData => {

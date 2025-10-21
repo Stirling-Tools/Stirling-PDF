@@ -2,8 +2,8 @@
  * File lifecycle management - Resource cleanup and memory management
  */
 
-import { FileId } from '../../types/file';
-import { FileContextAction, StirlingFileStub, ProcessedFilePage } from '../../types/fileContext';
+import { FileId } from '@app/types/file';
+import { FileContextAction, StirlingFileStub, ProcessedFilePage } from '@app/types/fileContext';
 
 const DEBUG = process.env.NODE_ENV === 'development';
 

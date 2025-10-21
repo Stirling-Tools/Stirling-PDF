@@ -1,5 +1,5 @@
 import { Modal, Text, Button, Group, Stack } from "@mantine/core";
-import { useNavigationGuard } from "../../contexts/NavigationContext";
+import { useNavigationGuard } from "@app/contexts/NavigationContext";
 import { useTranslation } from "react-i18next";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";

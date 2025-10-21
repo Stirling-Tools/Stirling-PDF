@@ -1,7 +1,7 @@
 import { describe, expect, test, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { MantineProvider } from '@mantine/core';
-import ButtonSelector from './ButtonSelector';
+import ButtonSelector from '@app/components/shared/ButtonSelector';
 
 // Wrapper component to provide Mantine context
 const TestWrapper = ({ children }: { children: React.ReactNode }) => (

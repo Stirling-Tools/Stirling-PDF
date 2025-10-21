@@ -1,25 +1,25 @@
 import React, { useState, useRef, forwardRef, useEffect } from "react";
 import { ActionIcon, Stack, Divider } from "@mantine/core";
 import { useTranslation } from 'react-i18next';
-import LocalIcon from './LocalIcon';
-import { useRainbowThemeContext } from "./RainbowThemeProvider";
-import { useIsOverflowing } from '../../hooks/useIsOverflowing';
-import { useFilesModalContext } from '../../contexts/FilesModalContext';
-import { useToolWorkflow } from '../../contexts/ToolWorkflowContext';
-import { useSidebarNavigation } from '../../hooks/useSidebarNavigation';
-import { handleUnlessSpecialClick } from '../../utils/clickHandlers';
-import { ButtonConfig } from '../../types/sidebar';
-import './quickAccessBar/QuickAccessBar.css';
-import AllToolsNavButton from './AllToolsNavButton';
-import ActiveToolButton from "./quickAccessBar/ActiveToolButton";
-import AppConfigModal from './AppConfigModal';
-import { useAppConfig } from '../../contexts/AppConfigContext';
-import { useOnboarding } from '../../contexts/OnboardingContext';
+import LocalIcon from '@app/components/shared/LocalIcon';
+import { useRainbowThemeContext } from "@app/components/shared/RainbowThemeProvider";
+import { useIsOverflowing } from '@app/hooks/useIsOverflowing';
+import { useFilesModalContext } from '@app/contexts/FilesModalContext';
+import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
+import { useSidebarNavigation } from '@app/hooks/useSidebarNavigation';
+import { handleUnlessSpecialClick } from '@app/utils/clickHandlers';
+import { ButtonConfig } from '@app/types/sidebar';
+import '@app/components/shared/quickAccessBar/QuickAccessBar.css';
+import AllToolsNavButton from '@app/components/shared/AllToolsNavButton';
+import ActiveToolButton from "@app/components/shared/quickAccessBar/ActiveToolButton";
+import AppConfigModal from '@app/components/shared/AppConfigModal';
+import { useAppConfig } from '@app/contexts/AppConfigContext';
+import { useOnboarding } from '@app/contexts/OnboardingContext';
 import {
   isNavButtonActive,
   getNavButtonStyle,
   getActiveNavButton,
-} from './quickAccessBar/QuickAccessBar';
+} from '@app/components/shared/quickAccessBar/QuickAccessBar';
 
 const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
   const { t } = useTranslation();

@@ -1,12 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Alert, Badge, Box, Button, Divider, Group, Paper, Stack, Text, TextInput } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import { useToolWorkflow } from '../../../../contexts/ToolWorkflowContext';
-import { useHotkeys } from '../../../../contexts/HotkeyContext';
-import { ToolId } from '../../../../types/toolId';
-import HotkeyDisplay from '../../../hotkeys/HotkeyDisplay';
-import { bindingEquals, eventToBinding, HotkeyBinding } from '../../../../utils/hotkeys';
-import { ToolRegistryEntry } from 'src/data/toolsTaxonomy';
+import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
+import { useHotkeys } from '@app/contexts/HotkeyContext';
+import { ToolId } from '@app/types/toolId';
+import HotkeyDisplay from '@app/components/hotkeys/HotkeyDisplay';
+import { bindingEquals, eventToBinding, HotkeyBinding } from '@app/utils/hotkeys';
+import { ToolRegistryEntry } from "@app/data/toolsTaxonomy";
 
 const rowStyle: React.CSSProperties = {
   display: 'flex',

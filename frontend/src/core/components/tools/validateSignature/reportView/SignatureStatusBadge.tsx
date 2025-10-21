@@ -1,8 +1,8 @@
 import { Badge, Popover, Text } from '@mantine/core';
-import './styles.css';
+import '@app/components/tools/validateSignature/reportView/styles.css';
 import { useTranslation } from 'react-i18next';
-import { computeSignatureStatus } from '../../../../hooks/tools/validateSignature/utils/signatureStatus';
-import type { SignatureValidationSignature } from '../../../../types/validateSignature';
+import { computeSignatureStatus } from '@app/hooks/tools/validateSignature/utils/signatureStatus';
+import type { SignatureValidationSignature } from '@app/types/validateSignature';
 
 const SignatureStatusBadge = ({ signature }: { signature: SignatureValidationSignature }) => {
   const { t } = useTranslation();

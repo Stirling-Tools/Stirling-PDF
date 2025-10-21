@@ -1,5 +1,5 @@
 import { Button, Group, Stack, Text } from "@mantine/core";
-import FitText from "./FitText";
+import FitText from "@app/components/shared/FitText";
 
 export interface ButtonOption<T> {
   value: T;

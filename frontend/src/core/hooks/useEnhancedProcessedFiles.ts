@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
-import { ProcessedFile, ProcessingState, ProcessingConfig } from '../types/processing';
-import { enhancedPDFProcessingService } from '../services/enhancedPDFProcessingService';
-import { FileHasher } from '../utils/fileHash';
+import { ProcessedFile, ProcessingState, ProcessingConfig } from '@app/types/processing';
+import { enhancedPDFProcessingService } from '@app/services/enhancedPDFProcessingService';
+import { FileHasher } from '@app/utils/fileHash';
 
 interface UseEnhancedProcessedFilesResult {
   processedFiles: Map<File, ProcessedFile>;

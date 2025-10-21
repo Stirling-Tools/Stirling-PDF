@@ -2,13 +2,13 @@
  * URL routing utilities for tool navigation with registry support
  */
 
-import { ToolRoute } from '../types/navigation';
-import { ToolId, isValidToolId } from '../types/toolId';
-import { getDefaultWorkbench } from '../types/workbench';
-import { ToolRegistry, getToolWorkbench, getToolUrlPath } from '../data/toolsTaxonomy';
-import { firePixel } from './scarfTracking';
-import { URL_TO_TOOL_MAP } from './urlMapping';
-import { BASE_PATH, withBasePath } from '../constants/app';
+import { ToolRoute } from '@app/types/navigation';
+import { ToolId, isValidToolId } from '@app/types/toolId';
+import { getDefaultWorkbench } from '@app/types/workbench';
+import { ToolRegistry, getToolWorkbench, getToolUrlPath } from '@app/data/toolsTaxonomy';
+import { firePixel } from '@app/utils/scarfTracking';
+import { URL_TO_TOOL_MAP } from '@app/utils/urlMapping';
+import { BASE_PATH, withBasePath } from '@app/constants/app';
 
 /**
  * Parse the current URL to extract tool routing information

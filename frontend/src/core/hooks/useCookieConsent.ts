@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { BASE_PATH } from '../constants/app';
-import { useAppConfig } from '../contexts/AppConfigContext';
+import { BASE_PATH } from '@app/constants/app';
+import { useAppConfig } from '@app/contexts/AppConfigContext';
 
 declare global {
   interface Window {

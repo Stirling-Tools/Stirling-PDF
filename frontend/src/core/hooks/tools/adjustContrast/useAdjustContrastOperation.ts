@@ -1,10 +1,10 @@
 import { useTranslation } from 'react-i18next';
-import { ToolType, useToolOperation } from '../shared/useToolOperation';
-import { AdjustContrastParameters, defaultParameters } from './useAdjustContrastParameters';
+import { ToolType, useToolOperation } from '@app/hooks/tools/shared/useToolOperation';
+import { AdjustContrastParameters, defaultParameters } from '@app/hooks/tools/adjustContrast/useAdjustContrastParameters';
 import { PDFDocument as PDFLibDocument } from 'pdf-lib';
-import { applyAdjustmentsToCanvas } from '../../../components/tools/adjustContrast/utils';
-import { pdfWorkerManager } from '../../../services/pdfWorkerManager';
-import { createFileFromApiResponse } from '../../../utils/fileResponseUtils';
+import { applyAdjustmentsToCanvas } from '@app/components/tools/adjustContrast/utils';
+import { pdfWorkerManager } from '@app/services/pdfWorkerManager';
+import { createFileFromApiResponse } from '@app/utils/fileResponseUtils';
 
 async function renderPdfPageToCanvas(pdf: any, pageNumber: number, scale: number): Promise<HTMLCanvasElement> {
   const page = await pdf.getPage(pageNumber);

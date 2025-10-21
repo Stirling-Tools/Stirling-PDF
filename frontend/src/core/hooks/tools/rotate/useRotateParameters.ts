@@ -1,5 +1,5 @@
-import { BaseParameters } from '../../../types/parameters';
-import { useBaseParameters, BaseParametersHook } from '../shared/useBaseParameters';
+import { BaseParameters } from '@app/types/parameters';
+import { useBaseParameters, BaseParametersHook } from '@app/hooks/tools/shared/useBaseParameters';
 import { useMemo, useCallback } from 'react';
 
 // Normalize angle to number between 0 and 359

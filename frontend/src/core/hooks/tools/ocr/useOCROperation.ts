@@ -1,9 +1,9 @@
 import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { OCRParameters, defaultParameters } from './useOCRParameters';
-import { useToolOperation, ToolOperationConfig, ToolType } from '../shared/useToolOperation';
-import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
-import { useToolResources } from '../shared/useToolResources';
+import { OCRParameters, defaultParameters } from '@app/hooks/tools/ocr/useOCRParameters';
+import { useToolOperation, ToolOperationConfig, ToolType } from '@app/hooks/tools/shared/useToolOperation';
+import { createStandardErrorHandler } from '@app/utils/toolErrorHandler';
+import { useToolResources } from '@app/hooks/tools/shared/useToolResources';
 
 // Helper: get MIME type based on file extension
 function getMimeType(filename: string): string {

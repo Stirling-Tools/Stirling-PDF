@@ -1,8 +1,8 @@
 import { useTranslation } from 'react-i18next';
-import { ToolType, useToolOperation, ToolOperationConfig } from '../shared/useToolOperation';
-import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
-import { RemovePagesParameters, defaultParameters } from './useRemovePagesParameters';
-// import { useToolResources } from '../shared/useToolResources';
+import { ToolType, useToolOperation, ToolOperationConfig } from '@app/hooks/tools/shared/useToolOperation';
+import { createStandardErrorHandler } from '@app/utils/toolErrorHandler';
+import { RemovePagesParameters, defaultParameters } from '@app/hooks/tools/removePages/useRemovePagesParameters';
+// import { useToolResources } from '@app/hooks/tools/shared/useToolResources';
 
 export const buildRemovePagesFormData = (parameters: RemovePagesParameters, file: File): FormData => {
   const formData = new FormData();

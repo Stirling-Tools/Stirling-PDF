@@ -1,17 +1,17 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { Modal } from '@mantine/core';
 import { Dropzone } from '@mantine/dropzone';
-import { StirlingFileStub } from '../types/fileContext';
-import { useFileManager } from '../hooks/useFileManager';
-import { useFilesModalContext } from '../contexts/FilesModalContext';
-import { Tool } from '../types/tool';
-import MobileLayout from './fileManager/MobileLayout';
-import DesktopLayout from './fileManager/DesktopLayout';
-import DragOverlay from './fileManager/DragOverlay';
-import { FileManagerProvider } from '../contexts/FileManagerContext';
-import { Z_INDEX_FILE_MANAGER_MODAL } from '../styles/zIndex';
-import { isGoogleDriveConfigured } from '../services/googleDrivePickerService';
-import { loadScript } from '../utils/scriptLoader';
+import { StirlingFileStub } from '@app/types/fileContext';
+import { useFileManager } from '@app/hooks/useFileManager';
+import { useFilesModalContext } from '@app/contexts/FilesModalContext';
+import { Tool } from '@app/types/tool';
+import MobileLayout from '@app/components/fileManager/MobileLayout';
+import DesktopLayout from '@app/components/fileManager/DesktopLayout';
+import DragOverlay from '@app/components/fileManager/DragOverlay';
+import { FileManagerProvider } from '@app/contexts/FileManagerContext';
+import { Z_INDEX_FILE_MANAGER_MODAL } from '@app/styles/zIndex';
+import { isGoogleDriveConfigured } from '@app/services/googleDrivePickerService';
+import { loadScript } from '@app/utils/scriptLoader';
 
 interface FileManagerProps {
   selectedTool?: Tool | null;

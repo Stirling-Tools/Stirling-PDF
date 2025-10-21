@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode, useRef } from 'react';
 import { SpreadMode } from '@embedpdf/plugin-spread/react';
-import { useNavigation } from './NavigationContext';
+import { useNavigation } from '@app/contexts/NavigationContext';
 
 // Bridge API interfaces - these match what the bridges provide
 interface ScrollAPIWrapper {

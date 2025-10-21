@@ -1,17 +1,17 @@
 import { useCallback, useRef, useEffect } from 'react';
-import apiClient from '../../../services/apiClient';
+import apiClient from '@app/services/apiClient';
 import { useTranslation } from 'react-i18next';
-import { useFileContext } from '../../../contexts/FileContext';
-import { useToolState, type ProcessingProgress } from './useToolState';
-import { useToolApiCalls, type ApiCallsConfig } from './useToolApiCalls';
-import { useToolResources } from './useToolResources';
-import { extractErrorMessage } from '../../../utils/toolErrorHandler';
-import { StirlingFile, extractFiles, FileId, StirlingFileStub, createStirlingFile } from '../../../types/fileContext';
-import { FILE_EVENTS } from '../../../services/errorUtils';
-import { ResponseHandler } from '../../../utils/toolResponseProcessor';
-import { createChildStub, generateProcessedFileMetadata } from '../../../contexts/file/fileActions';
-import { ToolOperation } from '../../../types/file';
-import { ToolId } from '../../../types/toolId';
+import { useFileContext } from '@app/contexts/FileContext';
+import { useToolState, type ProcessingProgress } from '@app/hooks/tools/shared/useToolState';
+import { useToolApiCalls, type ApiCallsConfig } from '@app/hooks/tools/shared/useToolApiCalls';
+import { useToolResources } from '@app/hooks/tools/shared/useToolResources';
+import { extractErrorMessage } from '@app/utils/toolErrorHandler';
+import { StirlingFile, extractFiles, FileId, StirlingFileStub, createStirlingFile } from '@app/types/fileContext';
+import { FILE_EVENTS } from '@app/services/errorUtils';
+import { ResponseHandler } from '@app/utils/toolResponseProcessor';
+import { createChildStub, generateProcessedFileMetadata } from '@app/contexts/file/fileActions';
+import { ToolOperation } from '@app/types/file';
+import { ToolId } from '@app/types/toolId';
 
 // Re-export for backwards compatibility
 export type { ProcessingProgress, ResponseHandler };
@@ -127,7 +127,7 @@ export interface ToolOperationHook<TParams = void> {
 }
 
 // Re-export for backwards compatibility
-export { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
+export { createStandardErrorHandler } from '@app/utils/toolErrorHandler';
 
 /**
  * Shared hook for tool operations providing consistent error handling, progress tracking,

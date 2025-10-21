@@ -1,27 +1,27 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useToolWorkflow } from "../contexts/ToolWorkflowContext";
+import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { Group, useMantineColorScheme } from "@mantine/core";
-import { useSidebarContext } from "../contexts/SidebarContext";
-import { useDocumentMeta } from "../hooks/useDocumentMeta";
-import { BASE_PATH } from "../constants/app";
-import { useBaseUrl } from "../hooks/useBaseUrl";
+import { useSidebarContext } from "@app/contexts/SidebarContext";
+import { useDocumentMeta } from "@app/hooks/useDocumentMeta";
+import { BASE_PATH } from "@app/constants/app";
+import { useBaseUrl } from "@app/hooks/useBaseUrl";
 import { useMediaQuery } from "@mantine/hooks";
-import { useAppConfig } from "../contexts/AppConfigContext";
+import { useAppConfig } from "@app/contexts/AppConfigContext";
 import AppsIcon from '@mui/icons-material/AppsRounded';
 
-import ToolPanel from "../components/tools/ToolPanel";
-import Workbench from "../components/layout/Workbench";
-import QuickAccessBar from "../components/shared/QuickAccessBar";
-import RightRail from "../components/shared/RightRail";
-import FileManager from "../components/FileManager";
-import LocalIcon from "../components/shared/LocalIcon";
-import { useFilesModalContext } from "../contexts/FilesModalContext";
-import AppConfigModal from "../components/shared/AppConfigModal";
-import ToolPanelModePrompt from "../components/tools/ToolPanelModePrompt";
-import AdminAnalyticsChoiceModal from "../components/shared/AdminAnalyticsChoiceModal";
+import ToolPanel from "@app/components/tools/ToolPanel";
+import Workbench from "@app/components/layout/Workbench";
+import QuickAccessBar from "@app/components/shared/QuickAccessBar";
+import RightRail from "@app/components/shared/RightRail";
+import FileManager from "@app/components/FileManager";
+import LocalIcon from "@app/components/shared/LocalIcon";
+import { useFilesModalContext } from "@app/contexts/FilesModalContext";
+import AppConfigModal from "@app/components/shared/AppConfigModal";
+import ToolPanelModePrompt from "@app/components/tools/ToolPanelModePrompt";
+import AdminAnalyticsChoiceModal from "@app/components/shared/AdminAnalyticsChoiceModal";
 
-import "./HomePage.css";
+import "@app/pages/HomePage.css";
 
 type MobileView = "tools" | "workbench";
 

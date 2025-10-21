@@ -3,9 +3,9 @@ import path from 'path';
 import ts from 'typescript';
 import { describe, expect, test } from 'vitest';
 
-const REPO_ROOT = path.join(__dirname, '../../../');
-const SRC_ROOT = path.join(__dirname, '..');
-const EN_GB_FILE = path.join(__dirname, '../../public/locales/en-GB/translation.json');
+const REPO_ROOT = path.join(__dirname, '../../../..');
+const SRC_ROOT = path.join(__dirname, '../..');
+const EN_GB_FILE = path.join(__dirname, '../../../public/locales/en-GB/translation.json');
 
 const IGNORED_DIRS = new Set([
   'tests',

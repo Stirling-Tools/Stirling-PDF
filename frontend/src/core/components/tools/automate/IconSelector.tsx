@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Box, Text, Stack, Button, SimpleGrid, Tooltip, Popover } from "@mantine/core";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
-import { iconMap, iconOptions } from './iconMap';
+import { iconMap, iconOptions } from '@app/components/tools/automate/iconMap';
 
 interface IconSelectorProps {
   value?: string;

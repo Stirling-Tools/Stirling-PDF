@@ -1,7 +1,7 @@
 import { Stack, TextInput } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { RemovePagesParameters } from "../../../hooks/tools/removePages/useRemovePagesParameters";
-import { validatePageNumbers } from "../../../utils/pageSelection";
+import { RemovePagesParameters } from "@app/hooks/tools/removePages/useRemovePagesParameters";
+import { validatePageNumbers } from "@app/utils/pageSelection";
 
 interface RemovePagesSettingsProps {
   parameters: RemovePagesParameters;

@@ -1,6 +1,6 @@
-import { SPLIT_METHODS, ENDPOINTS, type SplitMethod } from '../../../constants/splitConstants';
-import { BaseParameters } from '../../../types/parameters';
-import { useBaseParameters, BaseParametersHook } from '../shared/useBaseParameters';
+import { SPLIT_METHODS, ENDPOINTS, type SplitMethod } from '@app/constants/splitConstants';
+import { BaseParameters } from '@app/types/parameters';
+import { useBaseParameters, BaseParametersHook } from '@app/hooks/tools/shared/useBaseParameters';
 
 export interface SplitParameters extends BaseParameters {
   method: SplitMethod | '';

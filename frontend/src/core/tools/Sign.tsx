@@ -1,16 +1,16 @@
 import { useEffect, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { createToolFlow } from "../components/tools/shared/createToolFlow";
-import { useSignParameters } from "../hooks/tools/sign/useSignParameters";
-import { useSignOperation } from "../hooks/tools/sign/useSignOperation";
-import { useBaseTool } from "../hooks/tools/shared/useBaseTool";
-import { BaseToolProps, ToolComponent } from "../types/tool";
-import SignSettings from "../components/tools/sign/SignSettings";
-import { useNavigation } from "../contexts/NavigationContext";
-import { useSignature } from "../contexts/SignatureContext";
-import { useFileContext } from "../contexts/FileContext";
-import { useViewer } from "../contexts/ViewerContext";
-import { flattenSignatures } from "../utils/signatureFlattening";
+import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
+import { useSignParameters } from "@app/hooks/tools/sign/useSignParameters";
+import { useSignOperation } from "@app/hooks/tools/sign/useSignOperation";
+import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
+import { BaseToolProps, ToolComponent } from "@app/types/tool";
+import SignSettings from "@app/components/tools/sign/SignSettings";
+import { useNavigation } from "@app/contexts/NavigationContext";
+import { useSignature } from "@app/contexts/SignatureContext";
+import { useFileContext } from "@app/contexts/FileContext";
+import { useViewer } from "@app/contexts/ViewerContext";
+import { flattenSignatures } from "@app/utils/signatureFlattening";
 
 const Sign = (props: BaseToolProps) => {
   const { t } = useTranslation();

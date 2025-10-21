@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Stack } from '@mantine/core';
-import { BaseAnnotationTool } from '../shared/BaseAnnotationTool';
-import { ImageUploader } from '../shared/ImageUploader';
+import { BaseAnnotationTool } from '@app/components/annotation/shared/BaseAnnotationTool';
+import { ImageUploader } from '@app/components/annotation/shared/ImageUploader';
 
 interface ImageToolProps {
   onImageChange?: (data: string | null) => void;

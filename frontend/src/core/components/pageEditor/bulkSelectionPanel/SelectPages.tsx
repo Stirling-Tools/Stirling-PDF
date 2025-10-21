@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Button, Text, NumberInput, Group } from '@mantine/core';
-import classes from './BulkSelectionPanel.module.css';
+import classes from '@app/components/pageEditor/bulkSelectionPanel/BulkSelectionPanel.module.css';
 
 interface SelectPagesProps {
   title: string;

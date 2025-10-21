@@ -9,9 +9,9 @@ import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 
-import styles from './PageEditor.module.css';
-import { useFileContext } from '../../contexts/FileContext';
-import { FileId } from '../../types/file';
+import styles from '@app/components/pageEditor/PageEditor.module.css';
+import { useFileContext } from '@app/contexts/FileContext';
+import { FileId } from '@app/types/file';
 
 interface FileItem {
   id: FileId;

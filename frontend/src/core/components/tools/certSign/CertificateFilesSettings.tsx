@@ -1,7 +1,7 @@
 import { Stack, Text, TextInput } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { CertSignParameters } from "../../../hooks/tools/certSign/useCertSignParameters";
-import FileUploadButton from "../../shared/FileUploadButton";
+import { CertSignParameters } from "@app/hooks/tools/certSign/useCertSignParameters";
+import FileUploadButton from "@app/components/shared/FileUploadButton";
 
 interface CertificateFilesSettingsProps {
   parameters: CertSignParameters;

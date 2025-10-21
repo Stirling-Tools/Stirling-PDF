@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { BASE_PATH } from '../../constants/app';
+import { BASE_PATH } from '@app/constants/app';
 
 type ImageSlide = { src: string; alt?: string; cornerModelUrl?: string; title?: string; subtitle?: string; followMouseTilt?: boolean; tiltMaxDeg?: number }
 

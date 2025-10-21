@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useThumbnailCapability } from '@embedpdf/plugin-thumbnail/react';
-import { useViewer } from '../../contexts/ViewerContext';
+import { useViewer } from '@app/contexts/ViewerContext';
 
 /**
  * ThumbnailAPIBridge provides thumbnail generation functionality.

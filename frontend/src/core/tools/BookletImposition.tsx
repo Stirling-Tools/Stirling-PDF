@@ -1,11 +1,11 @@
 import { useTranslation } from "react-i18next";
-import { createToolFlow } from "../components/tools/shared/createToolFlow";
-import BookletImpositionSettings from "../components/tools/bookletImposition/BookletImpositionSettings";
-import { useBookletImpositionParameters } from "../hooks/tools/bookletImposition/useBookletImpositionParameters";
-import { useBookletImpositionOperation } from "../hooks/tools/bookletImposition/useBookletImpositionOperation";
-import { useBaseTool } from "../hooks/tools/shared/useBaseTool";
-import { useBookletImpositionTips } from "../components/tooltips/useBookletImpositionTips";
-import { BaseToolProps, ToolComponent } from "../types/tool";
+import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
+import BookletImpositionSettings from "@app/components/tools/bookletImposition/BookletImpositionSettings";
+import { useBookletImpositionParameters } from "@app/hooks/tools/bookletImposition/useBookletImpositionParameters";
+import { useBookletImpositionOperation } from "@app/hooks/tools/bookletImposition/useBookletImpositionOperation";
+import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
+import { useBookletImpositionTips } from "@app/components/tooltips/useBookletImpositionTips";
+import { BaseToolProps, ToolComponent } from "@app/types/tool";
 
 const BookletImposition = (props: BaseToolProps) => {
   const { t } = useTranslation();

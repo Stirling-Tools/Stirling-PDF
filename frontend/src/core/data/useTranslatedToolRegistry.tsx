@@ -1,18 +1,18 @@
 import { useMemo } from "react";
-import LocalIcon from "../components/shared/LocalIcon";
+import LocalIcon from "@app/components/shared/LocalIcon";
 import { useTranslation } from "react-i18next";
-import SplitPdfPanel from "../tools/Split";
-import CompressPdfPanel from "../tools/Compress";
-import OCRPanel from "../tools/OCR";
-import ConvertPanel from "../tools/Convert";
-import Sanitize from "../tools/Sanitize";
-import AddPassword from "../tools/AddPassword";
-import ChangePermissions from "../tools/ChangePermissions";
-import RemoveBlanks from "../tools/RemoveBlanks";
-import RemovePages from "../tools/RemovePages";
-import ReorganizePages from "../tools/ReorganizePages";
-import { reorganizePagesOperationConfig } from "../hooks/tools/reorganizePages/useReorganizePagesOperation";
-import RemovePassword from "../tools/RemovePassword";
+import SplitPdfPanel from "@app/tools/Split";
+import CompressPdfPanel from "@app/tools/Compress";
+import OCRPanel from "@app/tools/OCR";
+import ConvertPanel from "@app/tools/Convert";
+import Sanitize from "@app/tools/Sanitize";
+import AddPassword from "@app/tools/AddPassword";
+import ChangePermissions from "@app/tools/ChangePermissions";
+import RemoveBlanks from "@app/tools/RemoveBlanks";
+import RemovePages from "@app/tools/RemovePages";
+import ReorganizePages from "@app/tools/ReorganizePages";
+import { reorganizePagesOperationConfig } from "@app/hooks/tools/reorganizePages/useReorganizePagesOperation";
+import RemovePassword from "@app/tools/RemovePassword";
 import {
   SubcategoryId,
   ToolCategoryId,
@@ -20,105 +20,106 @@ import {
   RegularToolRegistry,
   SuperToolRegistry,
   LinkToolRegistry,
-} from "./toolsTaxonomy";
-import { isSuperToolId, isLinkToolId } from '../types/toolId';
-import AdjustContrast from "../tools/AdjustContrast";
-import AdjustContrastSingleStepSettings from "../components/tools/adjustContrast/AdjustContrastSingleStepSettings";
-import { adjustContrastOperationConfig } from "../hooks/tools/adjustContrast/useAdjustContrastOperation";
-import { getSynonyms } from "../utils/toolSynonyms";
-import AddWatermark from "../tools/AddWatermark";
-import AddStamp from "../tools/AddStamp";
-import AddAttachments from "../tools/AddAttachments";
-import Merge from '../tools/Merge';
-import Repair from "../tools/Repair";
-import AutoRename from "../tools/AutoRename";
-import SingleLargePage from "../tools/SingleLargePage";
-import PageLayout from "../tools/PageLayout";
-import UnlockPdfForms from "../tools/UnlockPdfForms";
-import RemoveCertificateSign from "../tools/RemoveCertificateSign";
-import RemoveImage from "../tools/RemoveImage";
-import CertSign from "../tools/CertSign";
-import BookletImposition from "../tools/BookletImposition";
-import Flatten from "../tools/Flatten";
-import Rotate from "../tools/Rotate";
-import ChangeMetadata from "../tools/ChangeMetadata";
-import Crop from "../tools/Crop";
-import Sign from "../tools/Sign";
-import { compressOperationConfig } from "../hooks/tools/compress/useCompressOperation";
-import { splitOperationConfig } from "../hooks/tools/split/useSplitOperation";
-import { addPasswordOperationConfig } from "../hooks/tools/addPassword/useAddPasswordOperation";
-import { removePasswordOperationConfig } from "../hooks/tools/removePassword/useRemovePasswordOperation";
-import { sanitizeOperationConfig } from "../hooks/tools/sanitize/useSanitizeOperation";
-import { repairOperationConfig } from "../hooks/tools/repair/useRepairOperation";
-import { addWatermarkOperationConfig } from "../hooks/tools/addWatermark/useAddWatermarkOperation";
-import { addStampOperationConfig } from "../components/tools/addStamp/useAddStampOperation";
-import { addAttachmentsOperationConfig } from "../hooks/tools/addAttachments/useAddAttachmentsOperation";
-import { unlockPdfFormsOperationConfig } from "../hooks/tools/unlockPdfForms/useUnlockPdfFormsOperation";
-import { singleLargePageOperationConfig } from "../hooks/tools/singleLargePage/useSingleLargePageOperation";
-import { ocrOperationConfig } from "../hooks/tools/ocr/useOCROperation";
-import { convertOperationConfig } from "../hooks/tools/convert/useConvertOperation";
-import { removeCertificateSignOperationConfig } from "../hooks/tools/removeCertificateSign/useRemoveCertificateSignOperation";
-import { changePermissionsOperationConfig } from "../hooks/tools/changePermissions/useChangePermissionsOperation";
-import { certSignOperationConfig } from "../hooks/tools/certSign/useCertSignOperation";
-import { bookletImpositionOperationConfig } from "../hooks/tools/bookletImposition/useBookletImpositionOperation";
-import { mergeOperationConfig } from '../hooks/tools/merge/useMergeOperation';
-import { autoRenameOperationConfig } from "../hooks/tools/autoRename/useAutoRenameOperation";
-import { flattenOperationConfig } from "../hooks/tools/flatten/useFlattenOperation";
-import { redactOperationConfig } from "../hooks/tools/redact/useRedactOperation";
-import { rotateOperationConfig } from "../hooks/tools/rotate/useRotateOperation";
-import { changeMetadataOperationConfig } from "../hooks/tools/changeMetadata/useChangeMetadataOperation";
-import { signOperationConfig } from "../hooks/tools/sign/useSignOperation";
-import { cropOperationConfig } from "../hooks/tools/crop/useCropOperation";
-import { removeAnnotationsOperationConfig } from "../hooks/tools/removeAnnotations/useRemoveAnnotationsOperation";
-import { extractImagesOperationConfig } from "../hooks/tools/extractImages/useExtractImagesOperation";
-import { replaceColorOperationConfig } from "../hooks/tools/replaceColor/useReplaceColorOperation";
-import { removePagesOperationConfig } from "../hooks/tools/removePages/useRemovePagesOperation";
-import { removeBlanksOperationConfig } from "../hooks/tools/removeBlanks/useRemoveBlanksOperation";
-import { overlayPdfsOperationConfig } from "../hooks/tools/overlayPdfs/useOverlayPdfsOperation";
-import { adjustPageScaleOperationConfig } from "../hooks/tools/adjustPageScale/useAdjustPageScaleOperation";
-import { scannerImageSplitOperationConfig } from "../hooks/tools/scannerImageSplit/useScannerImageSplitOperation";
-import { addPageNumbersOperationConfig } from "../components/tools/addPageNumbers/useAddPageNumbersOperation";
-import CompressSettings from "../components/tools/compress/CompressSettings";
-import AddPasswordSettings from "../components/tools/addPassword/AddPasswordSettings";
-import RemovePasswordSettings from "../components/tools/removePassword/RemovePasswordSettings";
-import SanitizeSettings from "../components/tools/sanitize/SanitizeSettings";
-import AddWatermarkSingleStepSettings from "../components/tools/addWatermark/AddWatermarkSingleStepSettings";
-import OCRSettings from "../components/tools/ocr/OCRSettings";
-import ConvertSettings from "../components/tools/convert/ConvertSettings";
-import ChangePermissionsSettings from "../components/tools/changePermissions/ChangePermissionsSettings";
-import BookletImpositionSettings from "../components/tools/bookletImposition/BookletImpositionSettings";
-import FlattenSettings from "../components/tools/flatten/FlattenSettings";
-import RedactSingleStepSettings from "../components/tools/redact/RedactSingleStepSettings";
-import Redact from "../tools/Redact";
-import AdjustPageScale from "../tools/AdjustPageScale";
-import ReplaceColor from "../tools/ReplaceColor";
-import ScannerImageSplit from "../tools/ScannerImageSplit";
-import OverlayPdfs from "../tools/OverlayPdfs";
-import { ToolId } from "../types/toolId";
-import MergeSettings from '../components/tools/merge/MergeSettings';
-import AdjustPageScaleSettings from "../components/tools/adjustPageScale/AdjustPageScaleSettings";
-import ScannerImageSplitSettings from "../components/tools/scannerImageSplit/ScannerImageSplitSettings";
-import ChangeMetadataSingleStep from "../components/tools/changeMetadata/ChangeMetadataSingleStep";
-import SignSettings from "../components/tools/sign/SignSettings";
-import AddPageNumbers from "../tools/AddPageNumbers";
-import RemoveAnnotations from "../tools/RemoveAnnotations";
-import PageLayoutSettings from "../components/tools/pageLayout/PageLayoutSettings";
-import ExtractImages from "../tools/ExtractImages";
-import ExtractImagesSettings from "../components/tools/extractImages/ExtractImagesSettings";
-import ReplaceColorSettings from "../components/tools/replaceColor/ReplaceColorSettings";
-import AddStampAutomationSettings from "../components/tools/addStamp/AddStampAutomationSettings";
-import CertSignAutomationSettings from "../components/tools/certSign/CertSignAutomationSettings";
-import CropAutomationSettings from "../components/tools/crop/CropAutomationSettings";
-import RotateAutomationSettings from "../components/tools/rotate/RotateAutomationSettings";
-import SplitAutomationSettings from "../components/tools/split/SplitAutomationSettings";
-import AddAttachmentsSettings from "../components/tools/addAttachments/AddAttachmentsSettings";
-import RemovePagesSettings from "../components/tools/removePages/RemovePagesSettings";
-import RemoveBlanksSettings from "../components/tools/removeBlanks/RemoveBlanksSettings";
-import AddPageNumbersAutomationSettings from "../components/tools/addPageNumbers/AddPageNumbersAutomationSettings";
-import OverlayPdfsSettings from "../components/tools/overlayPdfs/OverlayPdfsSettings";
-import ValidateSignature from "../tools/ValidateSignature";
-import Automate from "../tools/Automate";
-import { CONVERT_SUPPORTED_FORMATS } from "../constants/convertSupportedFornats";
+} from "@app/data/toolsTaxonomy";
+import { isSuperToolId, isLinkToolId } from '@app/types/toolId';
+import AdjustContrast from "@app/tools/AdjustContrast";
+import AdjustContrastSingleStepSettings from "@app/components/tools/adjustContrast/AdjustContrastSingleStepSettings";
+import { adjustContrastOperationConfig } from "@app/hooks/tools/adjustContrast/useAdjustContrastOperation";
+import { getSynonyms } from "@app/utils/toolSynonyms";
+import { useProprietaryToolRegistry } from "@app/data/useProprietaryToolRegistry";
+import AddWatermark from "@app/tools/AddWatermark";
+import AddStamp from "@app/tools/AddStamp";
+import AddAttachments from "@app/tools/AddAttachments";
+import Merge from '@app/tools/Merge';
+import Repair from "@app/tools/Repair";
+import AutoRename from "@app/tools/AutoRename";
+import SingleLargePage from "@app/tools/SingleLargePage";
+import PageLayout from "@app/tools/PageLayout";
+import UnlockPdfForms from "@app/tools/UnlockPdfForms";
+import RemoveCertificateSign from "@app/tools/RemoveCertificateSign";
+import RemoveImage from "@app/tools/RemoveImage";
+import CertSign from "@app/tools/CertSign";
+import BookletImposition from "@app/tools/BookletImposition";
+import Flatten from "@app/tools/Flatten";
+import Rotate from "@app/tools/Rotate";
+import ChangeMetadata from "@app/tools/ChangeMetadata";
+import Crop from "@app/tools/Crop";
+import Sign from "@app/tools/Sign";
+import { compressOperationConfig } from "@app/hooks/tools/compress/useCompressOperation";
+import { splitOperationConfig } from "@app/hooks/tools/split/useSplitOperation";
+import { addPasswordOperationConfig } from "@app/hooks/tools/addPassword/useAddPasswordOperation";
+import { removePasswordOperationConfig } from "@app/hooks/tools/removePassword/useRemovePasswordOperation";
+import { sanitizeOperationConfig } from "@app/hooks/tools/sanitize/useSanitizeOperation";
+import { repairOperationConfig } from "@app/hooks/tools/repair/useRepairOperation";
+import { addWatermarkOperationConfig } from "@app/hooks/tools/addWatermark/useAddWatermarkOperation";
+import { addStampOperationConfig } from "@app/components/tools/addStamp/useAddStampOperation";
+import { addAttachmentsOperationConfig } from "@app/hooks/tools/addAttachments/useAddAttachmentsOperation";
+import { unlockPdfFormsOperationConfig } from "@app/hooks/tools/unlockPdfForms/useUnlockPdfFormsOperation";
+import { singleLargePageOperationConfig } from "@app/hooks/tools/singleLargePage/useSingleLargePageOperation";
+import { ocrOperationConfig } from "@app/hooks/tools/ocr/useOCROperation";
+import { convertOperationConfig } from "@app/hooks/tools/convert/useConvertOperation";
+import { removeCertificateSignOperationConfig } from "@app/hooks/tools/removeCertificateSign/useRemoveCertificateSignOperation";
+import { changePermissionsOperationConfig } from "@app/hooks/tools/changePermissions/useChangePermissionsOperation";
+import { certSignOperationConfig } from "@app/hooks/tools/certSign/useCertSignOperation";
+import { bookletImpositionOperationConfig } from "@app/hooks/tools/bookletImposition/useBookletImpositionOperation";
+import { mergeOperationConfig } from '@app/hooks/tools/merge/useMergeOperation';
+import { autoRenameOperationConfig } from "@app/hooks/tools/autoRename/useAutoRenameOperation";
+import { flattenOperationConfig } from "@app/hooks/tools/flatten/useFlattenOperation";
+import { redactOperationConfig } from "@app/hooks/tools/redact/useRedactOperation";
+import { rotateOperationConfig } from "@app/hooks/tools/rotate/useRotateOperation";
+import { changeMetadataOperationConfig } from "@app/hooks/tools/changeMetadata/useChangeMetadataOperation";
+import { signOperationConfig } from "@app/hooks/tools/sign/useSignOperation";
+import { cropOperationConfig } from "@app/hooks/tools/crop/useCropOperation";
+import { removeAnnotationsOperationConfig } from "@app/hooks/tools/removeAnnotations/useRemoveAnnotationsOperation";
+import { extractImagesOperationConfig } from "@app/hooks/tools/extractImages/useExtractImagesOperation";
+import { replaceColorOperationConfig } from "@app/hooks/tools/replaceColor/useReplaceColorOperation";
+import { removePagesOperationConfig } from "@app/hooks/tools/removePages/useRemovePagesOperation";
+import { removeBlanksOperationConfig } from "@app/hooks/tools/removeBlanks/useRemoveBlanksOperation";
+import { overlayPdfsOperationConfig } from "@app/hooks/tools/overlayPdfs/useOverlayPdfsOperation";
+import { adjustPageScaleOperationConfig } from "@app/hooks/tools/adjustPageScale/useAdjustPageScaleOperation";
+import { scannerImageSplitOperationConfig } from "@app/hooks/tools/scannerImageSplit/useScannerImageSplitOperation";
+import { addPageNumbersOperationConfig } from "@app/components/tools/addPageNumbers/useAddPageNumbersOperation";
+import CompressSettings from "@app/components/tools/compress/CompressSettings";
+import AddPasswordSettings from "@app/components/tools/addPassword/AddPasswordSettings";
+import RemovePasswordSettings from "@app/components/tools/removePassword/RemovePasswordSettings";
+import SanitizeSettings from "@app/components/tools/sanitize/SanitizeSettings";
+import AddWatermarkSingleStepSettings from "@app/components/tools/addWatermark/AddWatermarkSingleStepSettings";
+import OCRSettings from "@app/components/tools/ocr/OCRSettings";
+import ConvertSettings from "@app/components/tools/convert/ConvertSettings";
+import ChangePermissionsSettings from "@app/components/tools/changePermissions/ChangePermissionsSettings";
+import BookletImpositionSettings from "@app/components/tools/bookletImposition/BookletImpositionSettings";
+import FlattenSettings from "@app/components/tools/flatten/FlattenSettings";
+import RedactSingleStepSettings from "@app/components/tools/redact/RedactSingleStepSettings";
+import Redact from "@app/tools/Redact";
+import AdjustPageScale from "@app/tools/AdjustPageScale";
+import ReplaceColor from "@app/tools/ReplaceColor";
+import ScannerImageSplit from "@app/tools/ScannerImageSplit";
+import OverlayPdfs from "@app/tools/OverlayPdfs";
+import { ToolId } from "@app/types/toolId";
+import MergeSettings from '@app/components/tools/merge/MergeSettings';
+import AdjustPageScaleSettings from "@app/components/tools/adjustPageScale/AdjustPageScaleSettings";
+import ScannerImageSplitSettings from "@app/components/tools/scannerImageSplit/ScannerImageSplitSettings";
+import ChangeMetadataSingleStep from "@app/components/tools/changeMetadata/ChangeMetadataSingleStep";
+import SignSettings from "@app/components/tools/sign/SignSettings";
+import AddPageNumbers from "@app/tools/AddPageNumbers";
+import RemoveAnnotations from "@app/tools/RemoveAnnotations";
+import PageLayoutSettings from "@app/components/tools/pageLayout/PageLayoutSettings";
+import ExtractImages from "@app/tools/ExtractImages";
+import ExtractImagesSettings from "@app/components/tools/extractImages/ExtractImagesSettings";
+import ReplaceColorSettings from "@app/components/tools/replaceColor/ReplaceColorSettings";
+import AddStampAutomationSettings from "@app/components/tools/addStamp/AddStampAutomationSettings";
+import CertSignAutomationSettings from "@app/components/tools/certSign/CertSignAutomationSettings";
+import CropAutomationSettings from "@app/components/tools/crop/CropAutomationSettings";
+import RotateAutomationSettings from "@app/components/tools/rotate/RotateAutomationSettings";
+import SplitAutomationSettings from "@app/components/tools/split/SplitAutomationSettings";
+import AddAttachmentsSettings from "@app/components/tools/addAttachments/AddAttachmentsSettings";
+import RemovePagesSettings from "@app/components/tools/removePages/RemovePagesSettings";
+import RemoveBlanksSettings from "@app/components/tools/removeBlanks/RemoveBlanksSettings";
+import AddPageNumbersAutomationSettings from "@app/components/tools/addPageNumbers/AddPageNumbersAutomationSettings";
+import OverlayPdfsSettings from "@app/components/tools/overlayPdfs/OverlayPdfsSettings";
+import ValidateSignature from "@app/tools/ValidateSignature";
+import Automate from "@app/tools/Automate";
+import { CONVERT_SUPPORTED_FORMATS } from "@app/constants/convertSupportedFornats";
 
 export interface TranslatedToolCatalog {
   allTools: ToolRegistry;
@@ -130,9 +131,12 @@ export interface TranslatedToolCatalog {
 // Hook to get the translated tool registry
 export function useTranslatedToolCatalog(): TranslatedToolCatalog {
   const { t } = useTranslation();
+  const proprietaryTools = useProprietaryToolRegistry();
 
   return useMemo(() => {
     const allTools: ToolRegistry = {
+      // Proprietary tools (if any)
+      ...proprietaryTools,
       // Recommended Tools in order
       multiTool: {
         icon: <LocalIcon icon="dashboard-customize-rounded" width="1.5rem" height="1.5rem" />,
@@ -862,5 +866,5 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       superTools,
       linkTools,
     };
-  }, [t]); // Only re-compute when translations change
+  }, [t, proprietaryTools]); // Re-compute when translations or proprietary tools change
 }

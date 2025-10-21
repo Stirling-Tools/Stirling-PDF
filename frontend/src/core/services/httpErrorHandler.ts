@@ -1,8 +1,8 @@
 // frontend/src/services/httpErrorHandler.ts
 import axios from 'axios';
-import { alert } from '../components/toast';
-import { broadcastErroredFiles, extractErrorFileIds, normalizeAxiosErrorData } from './errorUtils';
-import { showSpecialErrorToast } from './specialErrorToasts';
+import { alert } from '@app/components/toast';
+import { broadcastErroredFiles, extractErrorFileIds, normalizeAxiosErrorData } from '@app/services/errorUtils';
+import { showSpecialErrorToast } from '@app/services/specialErrorToasts';
 
 const FRIENDLY_FALLBACK = 'There was an error processing your request.';
 const MAX_TOAST_BODY_CHARS = 400; // avoid massive, unreadable toasts

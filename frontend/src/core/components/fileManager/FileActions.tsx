@@ -4,7 +4,7 @@ import SelectAllIcon from "@mui/icons-material/SelectAll";
 import DeleteIcon from "@mui/icons-material/Delete";
 import DownloadIcon from "@mui/icons-material/Download";
 import { useTranslation } from "react-i18next";
-import { useFileManagerContext } from "../../contexts/FileManagerContext";
+import { useFileManagerContext } from "@app/contexts/FileManagerContext";
 
 const FileActions: React.FC = () => {
   const { t } = useTranslation();

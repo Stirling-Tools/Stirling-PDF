@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Paper, Stack, Switch, Text, Tooltip, NumberInput, SegmentedControl } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import { usePreferences } from '../../../../contexts/PreferencesContext';
-import type { ToolPanelMode } from '../../../../constants/toolPanel';
+import { usePreferences } from '@app/contexts/PreferencesContext';
+import type { ToolPanelMode } from '@app/constants/toolPanel';
 
 const DEFAULT_AUTO_UNZIP_FILE_LIMIT = 4;
 

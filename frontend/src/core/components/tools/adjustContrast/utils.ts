@@ -1,4 +1,4 @@
-import { AdjustContrastParameters } from '../../../hooks/tools/adjustContrast/useAdjustContrastParameters';
+import { AdjustContrastParameters } from '@app/hooks/tools/adjustContrast/useAdjustContrastParameters';
 
 export function applyAdjustmentsToCanvas(src: HTMLCanvasElement, params: AdjustContrastParameters): HTMLCanvasElement {
   const out = document.createElement('canvas');

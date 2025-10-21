@@ -1,5 +1,5 @@
 import React from 'react';
-import { useFileManagerContext } from '../../contexts/FileManagerContext';
+import { useFileManagerContext } from '@app/contexts/FileManagerContext';
 
 const HiddenFileInput: React.FC = () => {
   const { fileInputRef, onFileInputChange } = useFileManagerContext();

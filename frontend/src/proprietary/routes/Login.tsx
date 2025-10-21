@@ -1,19 +1,19 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { springAuth } from '../auth/springAuthClient';
-import { useAuth } from '../auth/UseSession';
+import { springAuth } from '@app/auth/springAuthClient';
+import { useAuth } from '@app/auth/UseSession';
 import { useTranslation } from 'react-i18next';
-import { useDocumentMeta } from '../hooks/useDocumentMeta';
-import AuthLayout from './authShared/AuthLayout';
+import { useDocumentMeta } from '@app/hooks/useDocumentMeta';
+import AuthLayout from '@app/routes/authShared/AuthLayout';
 
 // Import login components
-import LoginHeader from './login/LoginHeader';
-import ErrorMessage from './login/ErrorMessage';
-import EmailPasswordForm from './login/EmailPasswordForm';
-import OAuthButtons from './login/OAuthButtons';
-import DividerWithText from '../components/shared/DividerWithText';
-import LoggedInState from './login/LoggedInState';
-import { BASE_PATH } from '../constants/app';
+import LoginHeader from '@app/routes/login/LoginHeader';
+import ErrorMessage from '@app/routes/login/ErrorMessage';
+import EmailPasswordForm from '@app/routes/login/EmailPasswordForm';
+import OAuthButtons from '@app/routes/login/OAuthButtons';
+import DividerWithText from '@app/components/shared/DividerWithText';
+import LoggedInState from '@app/routes/login/LoggedInState';
+import { BASE_PATH } from '@app/constants/app';
 
 export default function Login() {
   const navigate = useNavigate();

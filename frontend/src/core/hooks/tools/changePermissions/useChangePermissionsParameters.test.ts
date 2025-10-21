@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { useChangePermissionsParameters, defaultParameters, ChangePermissionsParameters } from './useChangePermissionsParameters';
+import { useChangePermissionsParameters, defaultParameters, ChangePermissionsParameters } from '@app/hooks/tools/changePermissions/useChangePermissionsParameters';
 
 describe('useChangePermissionsParameters', () => {
   test('should initialize with default parameters', () => {

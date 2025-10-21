@@ -1,6 +1,6 @@
 import { Stack, Text, Select, ColorInput } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { ReplaceColorParameters } from "../../../hooks/tools/replaceColor/useReplaceColorParameters";
+import { ReplaceColorParameters } from "@app/hooks/tools/replaceColor/useReplaceColorParameters";
 
 interface ReplaceColorSettingsProps {
   parameters: ReplaceColorParameters;

@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
-import { ToolType, useToolOperation } from '../shared/useToolOperation';
-import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
-import { ChangePermissionsParameters, defaultParameters } from './useChangePermissionsParameters';
+import { ToolType, useToolOperation } from '@app/hooks/tools/shared/useToolOperation';
+import { createStandardErrorHandler } from '@app/utils/toolErrorHandler';
+import { ChangePermissionsParameters, defaultParameters } from '@app/hooks/tools/changePermissions/useChangePermissionsParameters';
 
 export const getFormData = ((parameters: ChangePermissionsParameters) =>
   Object.entries(parameters).map(([key, value]) =>

@@ -1,5 +1,5 @@
-import { BaseParameters } from '../../../types/parameters';
-import { useBaseParameters, type BaseParametersHook } from '../shared/useBaseParameters';
+import { BaseParameters } from '@app/types/parameters';
+import { useBaseParameters, type BaseParametersHook } from '@app/hooks/tools/shared/useBaseParameters';
 
 export type OverlayMode = 'SequentialOverlay' | 'InterleavedOverlay' | 'FixedRepeatOverlay';
 

@@ -1,6 +1,6 @@
 import type { TFunction } from 'i18next';
-import type { SignatureValidationSignature } from '../../../../types/validateSignature';
-import { colorPalette } from './pdfPalette';
+import type { SignatureValidationSignature } from '@app/types/validateSignature';
+import { colorPalette } from '@app/hooks/tools/validateSignature/utils/pdfPalette';
 
 export type SignatureStatusKind = 'valid' | 'warning' | 'invalid' | 'neutral';
 

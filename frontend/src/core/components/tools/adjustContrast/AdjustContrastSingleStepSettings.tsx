@@ -1,7 +1,7 @@
 import { Stack } from '@mantine/core';
-import { AdjustContrastParameters } from '../../../hooks/tools/adjustContrast/useAdjustContrastParameters';
-import AdjustContrastBasicSettings from './AdjustContrastBasicSettings';
-import AdjustContrastColorSettings from './AdjustContrastColorSettings';
+import { AdjustContrastParameters } from '@app/hooks/tools/adjustContrast/useAdjustContrastParameters';
+import AdjustContrastBasicSettings from '@app/components/tools/adjustContrast/AdjustContrastBasicSettings';
+import AdjustContrastColorSettings from '@app/components/tools/adjustContrast/AdjustContrastColorSettings';
 
 interface Props {
   parameters: AdjustContrastParameters;

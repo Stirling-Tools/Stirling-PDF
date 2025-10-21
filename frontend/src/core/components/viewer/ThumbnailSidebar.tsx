@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Box, ScrollArea } from '@mantine/core';
-import { useViewer } from '../../contexts/ViewerContext';
+import { useViewer } from '@app/contexts/ViewerContext';
 
 interface ThumbnailSidebarProps {
   visible: boolean;

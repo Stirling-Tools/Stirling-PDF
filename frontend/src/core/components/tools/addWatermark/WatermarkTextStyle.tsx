@@ -1,7 +1,7 @@
 import { Stack, Text, Select, ColorInput } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { AddWatermarkParameters } from "../../../hooks/tools/addWatermark/useAddWatermarkParameters";
-import { alphabetOptions } from "../../../constants/addWatermarkConstants";
+import { AddWatermarkParameters } from "@app/hooks/tools/addWatermark/useAddWatermarkParameters";
+import { alphabetOptions } from "@app/constants/addWatermarkConstants";
 
 interface WatermarkTextStyleProps {
   parameters: AddWatermarkParameters;

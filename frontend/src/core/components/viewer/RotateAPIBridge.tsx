@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useRotate } from '@embedpdf/plugin-rotate/react';
-import { useViewer } from '../../contexts/ViewerContext';
+import { useViewer } from '@app/contexts/ViewerContext';
 
 /**
  * Component that runs inside EmbedPDF context and updates rotation state in ViewerContext

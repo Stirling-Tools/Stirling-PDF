@@ -1,4 +1,4 @@
-import { BASE_PATH } from '../../constants/app';
+import { BASE_PATH } from '@app/constants/app';
 
 export type LoginCarouselSlide = {
   src: string

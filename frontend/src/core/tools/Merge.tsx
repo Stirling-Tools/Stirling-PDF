@@ -1,14 +1,14 @@
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { createToolFlow } from "../components/tools/shared/createToolFlow";
-import MergeSettings from "../components/tools/merge/MergeSettings";
-import MergeFileSorter from "../components/tools/merge/MergeFileSorter";
-import { useMergeParameters } from "../hooks/tools/merge/useMergeParameters";
-import { useMergeOperation } from "../hooks/tools/merge/useMergeOperation";
-import { useBaseTool } from "../hooks/tools/shared/useBaseTool";
-import { BaseToolProps, ToolComponent } from "../types/tool";
-import { useMergeTips } from "../components/tooltips/useMergeTips";
-import { useFileManagement, useSelectedFiles, useAllFiles } from "../contexts/FileContext";
+import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
+import MergeSettings from "@app/components/tools/merge/MergeSettings";
+import MergeFileSorter from "@app/components/tools/merge/MergeFileSorter";
+import { useMergeParameters } from "@app/hooks/tools/merge/useMergeParameters";
+import { useMergeOperation } from "@app/hooks/tools/merge/useMergeOperation";
+import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
+import { BaseToolProps, ToolComponent } from "@app/types/tool";
+import { useMergeTips } from "@app/components/tooltips/useMergeTips";
+import { useFileManagement, useSelectedFiles, useAllFiles } from "@app/contexts/FileContext";
 
 const Merge = (props: BaseToolProps) => {
   const { t } = useTranslation();

@@ -1,8 +1,8 @@
 import { Stack, Divider } from "@mantine/core";
-import { RedactParameters } from "../../../hooks/tools/redact/useRedactParameters";
-import RedactModeSelector from "./RedactModeSelector";
-import WordsToRedactInput from "./WordsToRedactInput";
-import RedactAdvancedSettings from "./RedactAdvancedSettings";
+import { RedactParameters } from "@app/hooks/tools/redact/useRedactParameters";
+import RedactModeSelector from "@app/components/tools/redact/RedactModeSelector";
+import WordsToRedactInput from "@app/components/tools/redact/WordsToRedactInput";
+import RedactAdvancedSettings from "@app/components/tools/redact/RedactAdvancedSettings";
 
 interface RedactSingleStepSettingsProps {
   parameters: RedactParameters;

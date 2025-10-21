@@ -1,10 +1,10 @@
 import React from 'react';
 import { Text } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import HotkeyDisplay from '../../hotkeys/HotkeyDisplay';
-import FavoriteStar from '../toolPicker/FavoriteStar';
-import { ToolRegistryEntry, getSubcategoryColor } from '../../../data/toolsTaxonomy';
-import { getIconBackground, getIconStyle, getItemClasses, useToolMeta } from './shared';
+import HotkeyDisplay from '@app/components/hotkeys/HotkeyDisplay';
+import FavoriteStar from '@app/components/tools/toolPicker/FavoriteStar';
+import { ToolRegistryEntry, getSubcategoryColor } from '@app/data/toolsTaxonomy';
+import { getIconBackground, getIconStyle, getItemClasses, useToolMeta } from '@app/components/tools/fullscreen/shared';
 
 interface DetailedToolItemProps {
   id: string;

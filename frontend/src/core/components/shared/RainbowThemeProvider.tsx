@@ -1,12 +1,12 @@
 import { createContext, useContext, ReactNode } from 'react';
 import { MantineProvider } from '@mantine/core';
-import { useRainbowTheme } from '../../hooks/useRainbowTheme';
-import { mantineTheme } from '../../theme/mantineTheme';
-import rainbowStyles from '../../styles/rainbow.module.css';
-import { ToastProvider } from '../toast';
-import ToastRenderer from '../toast/ToastRenderer';
-import { ToastPortalBinder } from '../toast';
-import type { ThemeMode } from '../../constants/theme';
+import { useRainbowTheme } from '@app/hooks/useRainbowTheme';
+import { mantineTheme } from '@app/theme/mantineTheme';
+import rainbowStyles from '@app/styles/rainbow.module.css';
+import { ToastProvider } from '@app/components/toast';
+import ToastRenderer from '@app/components/toast/ToastRenderer';
+import { ToastPortalBinder } from '@app/components/toast';
+import type { ThemeMode } from '@app/constants/theme';
 
 interface RainbowThemeContextType {
   themeMode: ThemeMode;

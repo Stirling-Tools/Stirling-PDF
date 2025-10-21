@@ -1,5 +1,5 @@
-import { BaseParameters } from '../../../types/parameters';
-import { BaseParametersHook, useBaseParameters } from '../shared/useBaseParameters';
+import { BaseParameters } from '@app/types/parameters';
+import { BaseParametersHook, useBaseParameters } from '@app/hooks/tools/shared/useBaseParameters';
 
 export interface MergeParameters extends BaseParameters {
   removeDigitalSignature: boolean;

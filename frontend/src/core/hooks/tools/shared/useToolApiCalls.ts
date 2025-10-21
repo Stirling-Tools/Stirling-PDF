@@ -1,9 +1,9 @@
 import { useCallback, useRef } from 'react';
 import axios, {type CancelTokenSource} from 'axios'; // Real axios for static methods (CancelToken, isCancel)
-import apiClient from '../../../services/apiClient'; // Our configured instance
-import { processResponse, ResponseHandler } from '../../../utils/toolResponseProcessor';
-import { isEmptyOutput } from '../../../services/errorUtils';
-import type { ProcessingProgress } from './useToolState';
+import apiClient from '@app/services/apiClient'; // Our configured instance
+import { processResponse, ResponseHandler } from '@app/utils/toolResponseProcessor';
+import { isEmptyOutput } from '@app/services/errorUtils';
+import type { ProcessingProgress } from '@app/hooks/tools/shared/useToolState';
 
 export interface ApiCallsConfig<TParams = void> {
   endpoint: string | ((params: TParams) => string);

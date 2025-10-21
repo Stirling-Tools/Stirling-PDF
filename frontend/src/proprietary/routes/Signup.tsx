@@ -1,18 +1,18 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useDocumentMeta } from '../hooks/useDocumentMeta';
-import AuthLayout from './authShared/AuthLayout';
-import './authShared/auth.css';
-import { BASE_PATH } from '../constants/app';
+import { useDocumentMeta } from '@app/hooks/useDocumentMeta';
+import AuthLayout from '@app/routes/authShared/AuthLayout';
+import '@app/authShared/auth.css';
+import { BASE_PATH } from '@app/constants/app';
 
 // Import signup components
-import LoginHeader from './login/LoginHeader';
-import ErrorMessage from './login/ErrorMessage';
-import DividerWithText from '../components/shared/DividerWithText';
-import SignupForm from './signup/SignupForm';
-import { useSignupFormValidation, SignupFieldErrors } from './signup/SignupFormValidation';
-import { useAuthService } from './signup/AuthService';
+import LoginHeader from '@app/routes/login/LoginHeader';
+import ErrorMessage from '@app/routes/login/ErrorMessage';
+import DividerWithText from '@app/components/shared/DividerWithText';
+import SignupForm from '@app/routes/signup/SignupForm';
+import { useSignupFormValidation, SignupFieldErrors } from '@app/routes/signup/SignupFormValidation';
+import { useAuthService } from '@app/routes/signup/AuthService';
 
 export default function Signup() {
   const navigate = useNavigate();

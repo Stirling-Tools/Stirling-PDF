@@ -1,8 +1,8 @@
 import React from 'react';
 import { Box, Text, Collapse, Group } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import { StirlingFileStub } from '../../types/fileContext';
-import FileListItem from './FileListItem';
+import { StirlingFileStub } from '@app/types/fileContext';
+import FileListItem from '@app/components/fileManager/FileListItem';
 
 interface FileHistoryGroupProps {
   leafFile: StirlingFileStub;

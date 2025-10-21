@@ -1,14 +1,14 @@
 import React, { useState, useCallback } from "react";
 import { SegmentedControl, Loader } from "@mantine/core";
-import { useRainbowThemeContext } from "./RainbowThemeProvider";
-import rainbowStyles from '../../styles/rainbow.module.css';
+import { useRainbowThemeContext } from "@app/components/shared/RainbowThemeProvider";
+import rainbowStyles from '@app/styles/rainbow.module.css';
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import EditNoteIcon from "@mui/icons-material/EditNote";
 import FolderIcon from "@mui/icons-material/Folder";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
-import { WorkbenchType, isValidWorkbench } from '../../types/workbench';
-import type { CustomWorkbenchViewInstance } from '../../contexts/ToolWorkflowContext';
-import { FileDropdownMenu } from './FileDropdownMenu';
+import { WorkbenchType, isValidWorkbench } from '@app/types/workbench';
+import type { CustomWorkbenchViewInstance } from '@app/contexts/ToolWorkflowContext';
+import { FileDropdownMenu } from '@app/components/shared/FileDropdownMenu';
 
 
 const viewOptionStyle: React.CSSProperties = {

@@ -1,7 +1,7 @@
 import JSZip, { JSZipObject } from 'jszip';
-import { StirlingFileStub, createStirlingFile } from '../types/fileContext';
-import { generateThumbnailForFile } from '../utils/thumbnailUtils';
-import { fileStorage } from './fileStorage';
+import { StirlingFileStub, createStirlingFile } from '@app/types/fileContext';
+import { generateThumbnailForFile } from '@app/utils/thumbnailUtils';
+import { fileStorage } from '@app/services/fileStorage';
 
 // Undocumented interface in JSZip for JSZipObject._data
 interface CompressedObject {

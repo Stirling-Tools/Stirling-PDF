@@ -7,12 +7,12 @@ import HistoryIcon from '@mui/icons-material/History';
 import RestoreIcon from '@mui/icons-material/Restore';
 import UnarchiveIcon from '@mui/icons-material/Unarchive';
 import { useTranslation } from 'react-i18next';
-import { getFileSize, getFileDate } from '../../utils/fileUtils';
-import { FileId, StirlingFileStub } from '../../types/fileContext';
-import { useFileManagerContext } from '../../contexts/FileManagerContext';
-import { zipFileService } from '../../services/zipFileService';
-import ToolChain from '../shared/ToolChain';
-import { Z_INDEX_OVER_FILE_MANAGER_MODAL } from '../../styles/zIndex';
+import { getFileSize, getFileDate } from '@app/utils/fileUtils';
+import { FileId, StirlingFileStub } from '@app/types/fileContext';
+import { useFileManagerContext } from '@app/contexts/FileManagerContext';
+import { zipFileService } from '@app/services/zipFileService';
+import ToolChain from '@app/components/shared/ToolChain';
+import { Z_INDEX_OVER_FILE_MANAGER_MODAL } from '@app/styles/zIndex';
 
 interface FileListItemProps {
   file: StirlingFileStub;

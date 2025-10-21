@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, Center, Image } from '@mantine/core';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
-import { StirlingFileStub } from '../../../types/fileContext';
+import { StirlingFileStub } from '@app/types/fileContext';
 
 export interface DocumentThumbnailProps {
   file: File | StirlingFileStub | null;

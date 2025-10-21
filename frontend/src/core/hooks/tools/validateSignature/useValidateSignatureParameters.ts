@@ -1,4 +1,4 @@
-import { useBaseParameters, BaseParametersHook } from '../shared/useBaseParameters';
+import { useBaseParameters, BaseParametersHook } from '@app/hooks/tools/shared/useBaseParameters';
 
 export interface ValidateSignatureParameters {
   certFile: File | null;

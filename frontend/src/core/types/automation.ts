@@ -25,7 +25,7 @@ export interface AutomationTool {
   parameters?: Record<string, any>;
 }
 
-export type AutomationStep = typeof import('../constants/automation').AUTOMATION_STEPS[keyof typeof import('../constants/automation').AUTOMATION_STEPS];
+export type AutomationStep = typeof import('@app/constants/automation').AUTOMATION_STEPS[keyof typeof import('@app/constants/automation').AUTOMATION_STEPS];
 
 export interface AutomationStepData {
   step: AutomationStep;

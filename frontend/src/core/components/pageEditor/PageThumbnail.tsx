@@ -9,11 +9,11 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import ContentCutIcon from '@mui/icons-material/ContentCut';
 import AddIcon from '@mui/icons-material/Add';
 import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-import { PDFPage, PDFDocument } from '../../types/pageEditor';
-import { useThumbnailGeneration } from '../../hooks/useThumbnailGeneration';
-import { useFilesModalContext } from '../../contexts/FilesModalContext';
-import styles from './PageEditor.module.css';
-import HoverActionMenu, { HoverAction } from '../shared/HoverActionMenu';
+import { PDFPage, PDFDocument } from '@app/types/pageEditor';
+import { useThumbnailGeneration } from '@app/hooks/useThumbnailGeneration';
+import { useFilesModalContext } from '@app/contexts/FilesModalContext';
+import styles from '@app/components/pageEditor/PageEditor.module.css';
+import HoverActionMenu, { HoverAction } from '@app/components/shared/HoverActionMenu';
 
 
 interface PageThumbnailProps {

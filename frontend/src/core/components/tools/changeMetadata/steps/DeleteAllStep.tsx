@@ -1,6 +1,6 @@
 import { Checkbox } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { ChangeMetadataParameters } from "../../../../hooks/tools/changeMetadata/useChangeMetadataParameters";
+import { ChangeMetadataParameters } from "@app/hooks/tools/changeMetadata/useChangeMetadataParameters";
 
 interface DeleteAllStepProps {
   parameters: ChangeMetadataParameters;

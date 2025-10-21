@@ -3,11 +3,11 @@
  */
 
 import { useEffect, useCallback, useRef } from 'react';
-import { ToolId } from '../types/toolId';
-import { parseToolRoute, updateToolRoute, clearToolRoute } from '../utils/urlRouting';
-import { ToolRegistry } from '../data/toolsTaxonomy';
-import { firePixel } from '../utils/scarfTracking';
-import { withBasePath } from '../constants/app';
+import { ToolId } from '@app/types/toolId';
+import { parseToolRoute, updateToolRoute, clearToolRoute } from '@app/utils/urlRouting';
+import { ToolRegistry } from '@app/data/toolsTaxonomy';
+import { firePixel } from '@app/utils/scarfTracking';
+import { withBasePath } from '@app/constants/app';
 
 /**
  * Hook to sync workbench and tool with URL using registry

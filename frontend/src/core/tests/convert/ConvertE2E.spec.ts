@@ -11,7 +11,7 @@ import { test, expect, Page } from '@playwright/test';
 import {
   conversionDiscovery,
   type ConversionEndpoint
-} from '../helpers/conversionEndpointDiscovery';
+} from '@app/tests/helpers/conversionEndpointDiscovery';
 import * as path from 'path';
 import * as fs from 'fs';
 

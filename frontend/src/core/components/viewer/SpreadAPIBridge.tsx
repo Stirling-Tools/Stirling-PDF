@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useSpread, SpreadMode } from '@embedpdf/plugin-spread/react';
-import { useViewer } from '../../contexts/ViewerContext';
+import { useViewer } from '@app/contexts/ViewerContext';
 
 /**
  * Component that runs inside EmbedPDF context and updates spread state in ViewerContext

@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../auth/UseSession';
+import { useAuth } from '@app/auth/UseSession';
 import { useTranslation } from 'react-i18next';
 
 export default function LoggedInState() {

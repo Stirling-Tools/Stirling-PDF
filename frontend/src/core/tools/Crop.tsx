@@ -1,11 +1,11 @@
 import { useTranslation } from "react-i18next";
-import { createToolFlow } from "../components/tools/shared/createToolFlow";
-import CropSettings from "../components/tools/crop/CropSettings";
-import { useCropParameters } from "../hooks/tools/crop/useCropParameters";
-import { useCropOperation } from "../hooks/tools/crop/useCropOperation";
-import { useBaseTool } from "../hooks/tools/shared/useBaseTool";
-import { useCropTooltips } from "../components/tooltips/useCropTooltips";
-import { BaseToolProps, ToolComponent } from "../types/tool";
+import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
+import CropSettings from "@app/components/tools/crop/CropSettings";
+import { useCropParameters } from "@app/hooks/tools/crop/useCropParameters";
+import { useCropOperation } from "@app/hooks/tools/crop/useCropOperation";
+import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
+import { useCropTooltips } from "@app/components/tooltips/useCropTooltips";
+import { BaseToolProps, ToolComponent } from "@app/types/tool";
 
 const Crop = (props: BaseToolProps) => {
   const { t } = useTranslation();

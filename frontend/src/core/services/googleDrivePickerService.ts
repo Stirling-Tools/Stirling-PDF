@@ -3,7 +3,7 @@
  * Handles Google Drive file picker integration
  */
 
-import { loadScript } from '../utils/scriptLoader';
+import { loadScript } from '@app/utils/scriptLoader';
 
 const SCOPES = 'https://www.googleapis.com/auth/drive.readonly';
 const SESSION_STORAGE_ID = 'googleDrivePickerAccessToken';

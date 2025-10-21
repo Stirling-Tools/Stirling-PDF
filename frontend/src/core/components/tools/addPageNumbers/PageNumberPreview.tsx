@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AddPageNumbersParameters } from './useAddPageNumbersParameters';
-import { pdfWorkerManager } from '../../../services/pdfWorkerManager';
-import { useThumbnailGeneration } from '../../../hooks/useThumbnailGeneration';
-import styles from './PageNumberPreview.module.css';
+import { AddPageNumbersParameters } from '@app/components/tools/addPageNumbers/useAddPageNumbersParameters';
+import { pdfWorkerManager } from '@app/services/pdfWorkerManager';
+import { useThumbnailGeneration } from '@app/hooks/useThumbnailGeneration';
+import styles from '@app/components/tools/addPageNumbers/PageNumberPreview.module.css';
 
 // Simple utilities for page numbers (adapted from stamp)
 const A4_ASPECT_RATIO = 0.707;

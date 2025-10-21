@@ -1,7 +1,7 @@
 import { describe, expect, test, vi, beforeEach } from 'vitest';
 import { renderHook } from '@testing-library/react';
-import { useAddPasswordOperation } from './useAddPasswordOperation';
-import type { AddPasswordFullParameters } from './useAddPasswordParameters';
+import { useAddPasswordOperation } from '@app/hooks/tools/addPassword/useAddPasswordOperation';
+import type { AddPasswordFullParameters } from '@app/hooks/tools/addPassword/useAddPasswordParameters';
 
 // Mock the useToolOperation hook
 vi.mock('../shared/useToolOperation', async () => {
@@ -24,7 +24,7 @@ vi.mock('../../../utils/toolErrorHandler', () => ({
 }));
 
 // Import the mocked function
-import { SingleFileToolOperationConfig, ToolOperationHook, ToolType, useToolOperation } from '../shared/useToolOperation';
+import { SingleFileToolOperationConfig, ToolOperationHook, ToolType, useToolOperation } from '@app/hooks/tools/shared/useToolOperation';
 
 
 describe('useAddPasswordOperation', () => {

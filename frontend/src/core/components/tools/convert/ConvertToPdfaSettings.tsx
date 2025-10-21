@@ -1,8 +1,8 @@
 import { Stack, Text, Select, Alert } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import { ConvertParameters } from '../../../hooks/tools/convert/useConvertParameters';
-import { usePdfSignatureDetection } from '../../../hooks/usePdfSignatureDetection';
-import { StirlingFile } from '../../../types/fileContext';
+import { ConvertParameters } from '@app/hooks/tools/convert/useConvertParameters';
+import { usePdfSignatureDetection } from '@app/hooks/usePdfSignatureDetection';
+import { StirlingFile } from '@app/types/fileContext';
 
 interface ConvertToPdfaSettingsProps {
   parameters: ConvertParameters;

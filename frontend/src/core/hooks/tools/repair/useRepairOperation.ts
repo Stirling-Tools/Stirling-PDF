@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
-import { ToolType, useToolOperation } from '../shared/useToolOperation';
-import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
-import { RepairParameters, defaultParameters } from './useRepairParameters';
+import { ToolType, useToolOperation } from '@app/hooks/tools/shared/useToolOperation';
+import { createStandardErrorHandler } from '@app/utils/toolErrorHandler';
+import { RepairParameters, defaultParameters } from '@app/hooks/tools/repair/useRepairParameters';
 
 // Static function that can be used by both the hook and automation executor
 export const buildRepairFormData = (_parameters: RepairParameters, file: File): FormData => {

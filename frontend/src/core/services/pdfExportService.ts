@@ -1,5 +1,5 @@
 import { PDFDocument as PDFLibDocument, degrees, PageSizes } from 'pdf-lib';
-import { PDFDocument, PDFPage } from '../types/pageEditor';
+import { PDFDocument, PDFPage } from '@app/types/pageEditor';
 
 export interface ExportOptions {
   selectedOnly?: boolean;

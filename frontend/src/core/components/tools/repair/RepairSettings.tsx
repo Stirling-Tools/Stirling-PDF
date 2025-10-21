@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { RepairParameters } from '../../../hooks/tools/repair/useRepairParameters';
+import { RepairParameters } from '@app/hooks/tools/repair/useRepairParameters';
 
 interface RepairSettingsProps {
   parameters: RepairParameters;

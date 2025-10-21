@@ -1,4 +1,4 @@
-import { alert } from '../components/toast';
+import { alert } from '@app/components/toast';
 
 interface ErrorToastMapping {
   regex: RegExp;

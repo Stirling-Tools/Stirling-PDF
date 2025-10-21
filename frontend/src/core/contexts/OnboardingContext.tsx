@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { usePreferences } from './PreferencesContext';
+import { usePreferences } from '@app/contexts/PreferencesContext';
 import { useMediaQuery } from '@mantine/hooks';
-import { useAuth } from '../auth/UseSession';
+import { useAuth } from '@app/auth/UseSession';
 
 interface OnboardingContextValue {
   isOpen: boolean;

@@ -1,6 +1,6 @@
 import { Stack, Text, Checkbox } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { SanitizeParameters, defaultParameters } from "../../../hooks/tools/sanitize/useSanitizeParameters";
+import { SanitizeParameters, defaultParameters } from "@app/hooks/tools/sanitize/useSanitizeParameters";
 
 interface SanitizeSettingsProps {
   parameters: SanitizeParameters;

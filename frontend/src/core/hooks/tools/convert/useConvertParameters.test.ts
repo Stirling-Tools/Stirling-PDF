@@ -4,8 +4,8 @@
 
 import { describe, test, expect } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { useConvertParameters } from './useConvertParameters';
-import { FIT_OPTIONS } from '../../../constants/convertConstants';
+import { useConvertParameters } from '@app/hooks/tools/convert/useConvertParameters';
+import { FIT_OPTIONS } from '@app/constants/convertConstants';
 
 describe('useConvertParameters', () => {
 

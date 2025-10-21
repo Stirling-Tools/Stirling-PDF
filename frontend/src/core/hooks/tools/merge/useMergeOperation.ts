@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
-import { useToolOperation, ToolOperationConfig, ToolType } from '../shared/useToolOperation';
-import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
-import { MergeParameters } from './useMergeParameters';
+import { useToolOperation, ToolOperationConfig, ToolType } from '@app/hooks/tools/shared/useToolOperation';
+import { createStandardErrorHandler } from '@app/utils/toolErrorHandler';
+import { MergeParameters } from '@app/hooks/tools/merge/useMergeParameters';
 
 const buildFormData = (parameters: MergeParameters, files: File[]): FormData => {
   const formData = new FormData();

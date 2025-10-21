@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
-import { useToolOperation, ToolType } from '../shared/useToolOperation';
-import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
-import { RemoveAnnotationsParameters, defaultParameters } from './useRemoveAnnotationsParameters';
+import { useToolOperation, ToolType } from '@app/hooks/tools/shared/useToolOperation';
+import { createStandardErrorHandler } from '@app/utils/toolErrorHandler';
+import { RemoveAnnotationsParameters, defaultParameters } from '@app/hooks/tools/removeAnnotations/useRemoveAnnotationsParameters';
 import { PDFDocument, PDFName, PDFRef, PDFDict } from 'pdf-lib';
 // Client-side PDF processing using PDF-lib
 const removeAnnotationsProcessor = async (_parameters: RemoveAnnotationsParameters, files: File[]): Promise<File[]> => {

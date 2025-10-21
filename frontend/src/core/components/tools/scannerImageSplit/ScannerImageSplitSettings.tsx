@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { NumberInput, Stack } from '@mantine/core';
-import { ScannerImageSplitParameters } from '../../../hooks/tools/scannerImageSplit/useScannerImageSplitParameters';
+import { ScannerImageSplitParameters } from '@app/hooks/tools/scannerImageSplit/useScannerImageSplitParameters';
 
 interface ScannerImageSplitSettingsProps {
   parameters: ScannerImageSplitParameters;

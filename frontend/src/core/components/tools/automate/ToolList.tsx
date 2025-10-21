@@ -4,11 +4,11 @@ import { Text, Stack, Group, ActionIcon } from "@mantine/core";
 import SettingsIcon from "@mui/icons-material/Settings";
 import CloseIcon from "@mui/icons-material/Close";
 import AddCircleOutline from "@mui/icons-material/AddCircleOutline";
-import { AutomationTool } from "../../../types/automation";
-import { ToolRegistry } from "../../../data/toolsTaxonomy";
-import { ToolId } from "../../../types/toolId";
-import ToolSelector from "./ToolSelector";
-import AutomationEntry from "./AutomationEntry";
+import { AutomationTool } from "@app/types/automation";
+import { ToolRegistry } from "@app/data/toolsTaxonomy";
+import { ToolId } from "@app/types/toolId";
+import ToolSelector from "@app/components/tools/automate/ToolSelector";
+import AutomationEntry from "@app/components/tools/automate/AutomationEntry";
 
 interface ToolListProps {
   tools: AutomationTool[];

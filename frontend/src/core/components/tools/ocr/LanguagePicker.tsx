@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Text, Loader } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import { tempOcrLanguages, getAutoOcrLanguage } from '../../../utils/languageMapping';
-import DropdownListWithFooter, { DropdownItem } from '../../shared/DropdownListWithFooter';
+import { tempOcrLanguages, getAutoOcrLanguage } from '@app/utils/languageMapping';
+import DropdownListWithFooter, { DropdownItem } from '@app/components/shared/DropdownListWithFooter';
 
 export interface LanguageOption {
   value: string;

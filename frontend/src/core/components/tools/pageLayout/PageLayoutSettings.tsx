@@ -1,7 +1,7 @@
 import { Divider, Select, Stack, Switch } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import { PageLayoutParameters } from '../../../hooks/tools/pageLayout/usePageLayoutParameters';
-import { getPagesPerSheetOptions } from './constants';
+import { PageLayoutParameters } from '@app/hooks/tools/pageLayout/usePageLayoutParameters';
+import { getPagesPerSheetOptions } from '@app/components/tools/pageLayout/constants';
 
 export default function PageLayoutSettings({
   parameters,

@@ -1,8 +1,8 @@
 import { describe, expect, test, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { MantineProvider } from '@mantine/core';
-import SanitizeSettings from './SanitizeSettings';
-import { SanitizeParameters } from '../../../hooks/tools/sanitize/useSanitizeParameters';
+import SanitizeSettings from '@app/components/tools/sanitize/SanitizeSettings';
+import { SanitizeParameters } from '@app/hooks/tools/sanitize/useSanitizeParameters';
 
 // Mock useTranslation with predictable return values
 const mockT = vi.fn((key: string) => `mock-${key}`);

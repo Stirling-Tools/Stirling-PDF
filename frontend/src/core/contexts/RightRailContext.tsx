@@ -1,5 +1,5 @@
 import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
-import { RightRailAction, RightRailButtonConfig } from '../types/rightRail';
+import { RightRailAction, RightRailButtonConfig } from '@app/types/rightRail';
 
 interface RightRailContextValue {
 	buttons: RightRailButtonConfig[];

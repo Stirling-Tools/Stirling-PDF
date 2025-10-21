@@ -1,6 +1,6 @@
 import React from 'react';
-import { HotkeyBinding } from '../../utils/hotkeys';
-import { useHotkeys } from '../../contexts/HotkeyContext';
+import { HotkeyBinding } from '@app/utils/hotkeys';
+import { useHotkeys } from '@app/contexts/HotkeyContext';
 
 interface HotkeyDisplayProps {
   binding: HotkeyBinding | null | undefined;

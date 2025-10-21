@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
-import { ToolType, useToolOperation } from '../shared/useToolOperation';
-import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
-import { FlattenParameters, defaultParameters } from './useFlattenParameters';
+import { ToolType, useToolOperation } from '@app/hooks/tools/shared/useToolOperation';
+import { createStandardErrorHandler } from '@app/utils/toolErrorHandler';
+import { FlattenParameters, defaultParameters } from '@app/hooks/tools/flatten/useFlattenParameters';
 
 // Static function that can be used by both the hook and automation executor
 export const buildFlattenFormData = (parameters: FlattenParameters, file: File): FormData => {

@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
-import { ToolOperationConfig, ToolType, useToolOperation } from '../shared/useToolOperation';
-import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
-import { ReorganizePagesParameters } from './useReorganizePagesParameters';
+import { ToolOperationConfig, ToolType, useToolOperation } from '@app/hooks/tools/shared/useToolOperation';
+import { createStandardErrorHandler } from '@app/utils/toolErrorHandler';
+import { ReorganizePagesParameters } from '@app/hooks/tools/reorganizePages/useReorganizePagesParameters';
 
 const buildFormData = (parameters: ReorganizePagesParameters, file: File): FormData => {
   const formData = new FormData();

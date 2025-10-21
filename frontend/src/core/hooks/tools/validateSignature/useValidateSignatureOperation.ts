@@ -1,20 +1,20 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import apiClient from '../../../services/apiClient';
-import { useFileContext } from '../../../contexts/file/fileHooks';
-import { ToolOperationHook } from '../shared/useToolOperation';
-import type { StirlingFile } from '../../../types/fileContext';
-import { extractErrorMessage } from '../../../utils/toolErrorHandler';
+import apiClient from '@app/services/apiClient';
+import { useFileContext } from '@app/contexts/file/fileHooks';
+import { ToolOperationHook } from '@app/hooks/tools/shared/useToolOperation';
+import type { StirlingFile } from '@app/types/fileContext';
+import { extractErrorMessage } from '@app/utils/toolErrorHandler';
 import {
   SignatureValidationBackendResult,
   SignatureValidationFileResult,
   SignatureValidationReportEntry,
-} from '../../../types/validateSignature';
-import { ValidateSignatureParameters } from './useValidateSignatureParameters';
-import { buildReportEntries } from './utils/signatureReportBuilder';
-import { createReportPdf } from './signatureReportPdf';
-import { createCsvFile as buildCsvFile } from './utils/signatureCsv';
-import { normalizeBackendResult, RESULT_JSON_FILENAME } from './utils/signatureUtils';
+} from '@app/types/validateSignature';
+import { ValidateSignatureParameters } from '@app/hooks/tools/validateSignature/useValidateSignatureParameters';
+import { buildReportEntries } from '@app/hooks/tools/validateSignature/utils/signatureReportBuilder';
+import { createReportPdf } from '@app/hooks/tools/validateSignature/signatureReportPdf';
+import { createCsvFile as buildCsvFile } from '@app/hooks/tools/validateSignature/utils/signatureCsv';
+import { normalizeBackendResult, RESULT_JSON_FILENAME } from '@app/hooks/tools/validateSignature/utils/signatureUtils';
 
 export interface ValidateSignatureOperationHook extends ToolOperationHook<ValidateSignatureParameters> {
   results: SignatureValidationReportEntry[];

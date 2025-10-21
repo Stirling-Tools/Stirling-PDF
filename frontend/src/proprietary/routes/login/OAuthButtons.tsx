@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { BASE_PATH } from '../../constants/app';
+import { BASE_PATH } from '@app/constants/app';
 
 // OAuth provider configuration
 const oauthProviders = [

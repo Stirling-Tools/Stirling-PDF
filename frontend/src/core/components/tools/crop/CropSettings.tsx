@@ -2,19 +2,19 @@ import { useMemo, useState, useEffect } from "react";
 import { Stack, Text, Box, Group, ActionIcon, Center, Alert } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
-import { CropParametersHook } from "../../../hooks/tools/crop/useCropParameters";
-import { useSelectedFiles } from "../../../contexts/file/fileHooks";
-import CropAreaSelector from "./CropAreaSelector";
-import CropCoordinateInputs from "./CropCoordinateInputs";
-import { DEFAULT_CROP_AREA } from "../../../constants/cropConstants";
-import { PAGE_SIZES } from "../../../constants/pageSizeConstants";
+import { CropParametersHook } from "@app/hooks/tools/crop/useCropParameters";
+import { useSelectedFiles } from "@app/contexts/file/fileHooks";
+import CropAreaSelector from "@app/components/tools/crop/CropAreaSelector";
+import CropCoordinateInputs from "@app/components/tools/crop/CropCoordinateInputs";
+import { DEFAULT_CROP_AREA } from "@app/constants/cropConstants";
+import { PAGE_SIZES } from "@app/constants/pageSizeConstants";
 import {
   calculatePDFBounds,
   PDFBounds,
   Rectangle
-} from "../../../utils/cropCoordinates";
-import { pdfWorkerManager } from "../../../services/pdfWorkerManager";
-import DocumentThumbnail from "../../shared/filePreview/DocumentThumbnail";
+} from "@app/utils/cropCoordinates";
+import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
+import DocumentThumbnail from "@app/components/shared/filePreview/DocumentThumbnail";
 
 interface CropSettingsProps {
   parameters: CropParametersHook;

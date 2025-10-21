@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { ActionIcon, Popover } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import LocalIcon from '../LocalIcon';
-import { Tooltip } from '../Tooltip';
-import { ViewerContext } from '../../../contexts/ViewerContext';
-import { useSignature } from '../../../contexts/SignatureContext';
-import { ColorSwatchButton, ColorPicker } from '../../annotation/shared/ColorPicker';
-import { useFileState, useFileContext } from '../../../contexts/FileContext';
-import { generateThumbnailWithMetadata } from '../../../utils/thumbnailUtils';
-import { createProcessedFile } from '../../../contexts/file/fileActions';
-import { createStirlingFile, createNewStirlingFileStub } from '../../../types/fileContext';
-import { useNavigationState } from '../../../contexts/NavigationContext';
+import LocalIcon from '@app/components/shared/LocalIcon';
+import { Tooltip } from '@app/components/shared/Tooltip';
+import { ViewerContext } from '@app/contexts/ViewerContext';
+import { useSignature } from '@app/contexts/SignatureContext';
+import { ColorSwatchButton, ColorPicker } from '@app/components/annotation/shared/ColorPicker';
+import { useFileState, useFileContext } from '@app/contexts/FileContext';
+import { generateThumbnailWithMetadata } from '@app/utils/thumbnailUtils';
+import { createProcessedFile } from '@app/contexts/file/fileActions';
+import { createStirlingFile, createNewStirlingFileStub } from '@app/types/fileContext';
+import { useNavigationState } from '@app/contexts/NavigationContext';
 
 interface ViewerAnnotationControlsProps {
   currentView: string;

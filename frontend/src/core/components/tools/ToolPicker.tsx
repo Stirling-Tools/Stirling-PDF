@@ -1,18 +1,18 @@
 import React, { useMemo, useRef, useLayoutEffect, useState } from "react";
 import { Box, Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { ToolRegistryEntry } from "../../data/toolsTaxonomy";
-import "./toolPicker/ToolPicker.css";
-import { useToolSections } from "../../hooks/useToolSections";
-import type { SubcategoryGroup } from "../../hooks/useToolSections";
-import { useFavoriteToolItems } from "../../hooks/tools/useFavoriteToolItems";
-import NoToolsFound from "./shared/NoToolsFound";
-import { renderToolButtons } from "./shared/renderToolButtons";
-import Badge from "../shared/Badge";
-import SubcategoryHeader from "./shared/SubcategoryHeader";
-import ToolButton from "./toolPicker/ToolButton";
-import { useToolWorkflow } from "../../contexts/ToolWorkflowContext";
-import { ToolId } from "../../types/toolId";
+import { ToolRegistryEntry } from "@app/data/toolsTaxonomy";
+import "@app/components/tools/toolPicker/ToolPicker.css";
+import { useToolSections } from "@app/hooks/useToolSections";
+import type { SubcategoryGroup } from "@app/hooks/useToolSections";
+import { useFavoriteToolItems } from "@app/hooks/tools/useFavoriteToolItems";
+import NoToolsFound from "@app/components/tools/shared/NoToolsFound";
+import { renderToolButtons } from "@app/components/tools/shared/renderToolButtons";
+import Badge from "@app/components/shared/Badge";
+import SubcategoryHeader from "@app/components/tools/shared/SubcategoryHeader";
+import ToolButton from "@app/components/tools/toolPicker/ToolButton";
+import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
+import { ToolId } from "@app/types/toolId";
 
 interface ToolPickerProps {
   selectedToolKey: string | null;

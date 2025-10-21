@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
 
-import { SUBCATEGORY_ORDER, SubcategoryId, ToolCategoryId, ToolRegistryEntry } from '../data/toolsTaxonomy';
+import { SUBCATEGORY_ORDER, SubcategoryId, ToolCategoryId, ToolRegistryEntry } from '@app/data/toolsTaxonomy';
 import { useTranslation } from 'react-i18next';
-import { ToolId } from 'src/types/toolId';
+import { ToolId } from "@app/types/toolId";
 
 type SubcategoryIdMap = {
   [subcategoryId in SubcategoryId]: Array<{ id: ToolId; tool: ToolRegistryEntry }>;

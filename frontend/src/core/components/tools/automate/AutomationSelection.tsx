@@ -2,11 +2,11 @@ import { useTranslation } from "react-i18next";
 import { Title, Stack, Divider } from "@mantine/core";
 import AddCircleOutline from "@mui/icons-material/AddCircleOutline";
 import SettingsIcon from "@mui/icons-material/Settings";
-import AutomationEntry from "./AutomationEntry";
-import { useSuggestedAutomations } from "../../../hooks/tools/automate/useSuggestedAutomations";
-import { AutomationConfig, SuggestedAutomation } from "../../../types/automation";
-import { iconMap } from './iconMap';
-import { ToolRegistry } from '../../../data/toolsTaxonomy';
+import AutomationEntry from "@app/components/tools/automate/AutomationEntry";
+import { useSuggestedAutomations } from "@app/hooks/tools/automate/useSuggestedAutomations";
+import { AutomationConfig, SuggestedAutomation } from "@app/types/automation";
+import { iconMap } from '@app/components/tools/automate/iconMap';
+import { ToolRegistry } from '@app/data/toolsTaxonomy';
 
 interface AutomationSelectionProps {
   savedAutomations: AutomationConfig[];

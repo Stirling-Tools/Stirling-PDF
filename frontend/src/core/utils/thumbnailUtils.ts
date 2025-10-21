@@ -1,4 +1,4 @@
-import { pdfWorkerManager } from '../services/pdfWorkerManager';
+import { pdfWorkerManager } from '@app/services/pdfWorkerManager';
 
 export interface ThumbnailWithMetadata {
   thumbnail: string; // Always returns a thumbnail (placeholder if needed)

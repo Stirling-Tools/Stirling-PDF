@@ -1,11 +1,11 @@
 import { useTranslation } from "react-i18next";
-import { createToolFlow } from "../components/tools/shared/createToolFlow";
-import { BaseToolProps, ToolComponent } from "../types/tool";
-import { useBaseTool } from "../hooks/tools/shared/useBaseTool";
-import { useRemovePagesParameters } from "../hooks/tools/removePages/useRemovePagesParameters";
-import { useRemovePagesOperation } from "../hooks/tools/removePages/useRemovePagesOperation";
-import RemovePagesSettings from "../components/tools/removePages/RemovePagesSettings";
-import { useRemovePagesTips } from "../components/tooltips/useRemovePagesTips";
+import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
+import { BaseToolProps, ToolComponent } from "@app/types/tool";
+import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
+import { useRemovePagesParameters } from "@app/hooks/tools/removePages/useRemovePagesParameters";
+import { useRemovePagesOperation } from "@app/hooks/tools/removePages/useRemovePagesOperation";
+import RemovePagesSettings from "@app/components/tools/removePages/RemovePagesSettings";
+import { useRemovePagesTips } from "@app/components/tooltips/useRemovePagesTips";
 
 const RemovePages = (props: BaseToolProps) => {
   const { t } = useTranslation();

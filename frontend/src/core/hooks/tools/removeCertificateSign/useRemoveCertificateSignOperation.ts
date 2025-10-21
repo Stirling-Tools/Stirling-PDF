@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
-import { ToolType, useToolOperation } from '../shared/useToolOperation';
-import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
-import { RemoveCertificateSignParameters, defaultParameters } from './useRemoveCertificateSignParameters';
+import { ToolType, useToolOperation } from '@app/hooks/tools/shared/useToolOperation';
+import { createStandardErrorHandler } from '@app/utils/toolErrorHandler';
+import { RemoveCertificateSignParameters, defaultParameters } from '@app/hooks/tools/removeCertificateSign/useRemoveCertificateSignParameters';
 
 // Static function that can be used by both the hook and automation executor
 export const buildRemoveCertificateSignFormData = (_parameters: RemoveCertificateSignParameters, file: File): FormData => {

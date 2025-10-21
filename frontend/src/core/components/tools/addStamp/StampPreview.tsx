@@ -1,9 +1,9 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { AddStampParameters } from './useAddStampParameters';
-import { pdfWorkerManager } from '../../../services/pdfWorkerManager';
-import { useThumbnailGeneration } from '../../../hooks/useThumbnailGeneration';
-import { A4_ASPECT_RATIO, getFirstSelectedPage, getFontFamily, computeStampPreviewStyle, getAlphabetPreviewScale } from './StampPreviewUtils';
-import styles from './StampPreview.module.css';
+import { AddStampParameters } from '@app/components/tools/addStamp/useAddStampParameters';
+import { pdfWorkerManager } from '@app/services/pdfWorkerManager';
+import { useThumbnailGeneration } from '@app/hooks/useThumbnailGeneration';
+import { A4_ASPECT_RATIO, getFirstSelectedPage, getFontFamily, computeStampPreviewStyle, getAlphabetPreviewScale } from '@app/components/tools/addStamp/StampPreviewUtils';
+import styles from '@app/components/tools/addStamp/StampPreview.module.css';
 
 type Props = {
   parameters: AddStampParameters;

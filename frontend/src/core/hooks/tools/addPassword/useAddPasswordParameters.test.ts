@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { useAddPasswordParameters, defaultParameters, AddPasswordParametersHook } from './useAddPasswordParameters';
-import { defaultParameters as defaultChangePermissionsParameters, ChangePermissionsParameters } from '../changePermissions/useChangePermissionsParameters';
+import { useAddPasswordParameters, defaultParameters, AddPasswordParametersHook } from '@app/hooks/tools/addPassword/useAddPasswordParameters';
+import { defaultParameters as defaultChangePermissionsParameters, ChangePermissionsParameters } from '@app/hooks/tools/changePermissions/useChangePermissionsParameters';
 
 describe('useAddPasswordParameters', () => {
   test('should initialize with default parameters', () => {

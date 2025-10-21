@@ -1,12 +1,12 @@
 import React from 'react';
 import { Grid } from '@mantine/core';
-import FileSourceButtons from './FileSourceButtons';
-import FileDetails from './FileDetails';
-import SearchInput from './SearchInput';
-import FileListArea from './FileListArea';
-import FileActions from './FileActions';
-import HiddenFileInput from './HiddenFileInput';
-import { useFileManagerContext } from '../../contexts/FileManagerContext';
+import FileSourceButtons from '@app/components/fileManager/FileSourceButtons';
+import FileDetails from '@app/components/fileManager/FileDetails';
+import SearchInput from '@app/components/fileManager/SearchInput';
+import FileListArea from '@app/components/fileManager/FileListArea';
+import FileActions from '@app/components/fileManager/FileActions';
+import HiddenFileInput from '@app/components/fileManager/HiddenFileInput';
+import { useFileManagerContext } from '@app/contexts/FileManagerContext';
 
 const DesktopLayout: React.FC = () => {
   const {

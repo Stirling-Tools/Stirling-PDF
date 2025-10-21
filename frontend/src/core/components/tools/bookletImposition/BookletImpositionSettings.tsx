@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Stack, Text, Divider, Collapse, Button, NumberInput } from "@mantine/core";
-import { BookletImpositionParameters } from "../../../hooks/tools/bookletImposition/useBookletImpositionParameters";
-import ButtonSelector from "../../shared/ButtonSelector";
+import { BookletImpositionParameters } from "@app/hooks/tools/bookletImposition/useBookletImpositionParameters";
+import ButtonSelector from "@app/components/shared/ButtonSelector";
 
 interface BookletImpositionSettingsProps {
   parameters: BookletImpositionParameters;

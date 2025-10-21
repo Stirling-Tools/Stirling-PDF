@@ -1,21 +1,21 @@
 import { useTranslation } from "react-i18next";
-import { createToolFlow } from "../components/tools/shared/createToolFlow";
-import { useAccordionSteps } from "../hooks/tools/shared/useAccordionSteps";
-import DeleteAllStep from "../components/tools/changeMetadata/steps/DeleteAllStep";
-import StandardMetadataStep from "../components/tools/changeMetadata/steps/StandardMetadataStep";
-import DocumentDatesStep from "../components/tools/changeMetadata/steps/DocumentDatesStep";
-import AdvancedOptionsStep from "../components/tools/changeMetadata/steps/AdvancedOptionsStep";
-import { useChangeMetadataParameters } from "../hooks/tools/changeMetadata/useChangeMetadataParameters";
-import { useChangeMetadataOperation } from "../hooks/tools/changeMetadata/useChangeMetadataOperation";
-import { useMetadataExtraction } from "../hooks/tools/changeMetadata/useMetadataExtraction";
-import { useBaseTool } from "../hooks/tools/shared/useBaseTool";
-import { BaseToolProps, ToolComponent } from "../types/tool";
+import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
+import { useAccordionSteps } from "@app/hooks/tools/shared/useAccordionSteps";
+import DeleteAllStep from "@app/components/tools/changeMetadata/steps/DeleteAllStep";
+import StandardMetadataStep from "@app/components/tools/changeMetadata/steps/StandardMetadataStep";
+import DocumentDatesStep from "@app/components/tools/changeMetadata/steps/DocumentDatesStep";
+import AdvancedOptionsStep from "@app/components/tools/changeMetadata/steps/AdvancedOptionsStep";
+import { useChangeMetadataParameters } from "@app/hooks/tools/changeMetadata/useChangeMetadataParameters";
+import { useChangeMetadataOperation } from "@app/hooks/tools/changeMetadata/useChangeMetadataOperation";
+import { useMetadataExtraction } from "@app/hooks/tools/changeMetadata/useMetadataExtraction";
+import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
+import { BaseToolProps, ToolComponent } from "@app/types/tool";
 import {
   useDeleteAllTips,
   useStandardMetadataTips,
   useDocumentDatesTips,
   useAdvancedOptionsTips
-} from "../components/tooltips/useChangeMetadataTips";
+} from "@app/components/tooltips/useChangeMetadataTips";
 
 enum MetadataStep {
   NONE = 'none',

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { AutomationConfig } from '../../../services/automationStorage';
-import { SuggestedAutomation } from '../../../types/automation';
+import { AutomationConfig } from '@app/services/automationStorage';
+import { SuggestedAutomation } from '@app/types/automation';
 
 export interface SavedAutomation extends AutomationConfig {}
 
@@ -13,7 +13,7 @@ export function useSavedAutomations() {
     try {
       setLoading(true);
       setError(null);
-      const { automationStorage } = await import('../../../services/automationStorage');
+      const { automationStorage } = await import('@app/services/automationStorage');
       const automations = await automationStorage.getAllAutomations();
       setSavedAutomations(automations);
     } catch (err) {
@@ -31,7 +31,7 @@ export function useSavedAutomations() {
 
   const deleteAutomation = useCallback(async (id: string) => {
     try {
-      const { automationStorage } = await import('../../../services/automationStorage');
+      const { automationStorage } = await import('@app/services/automationStorage');
       await automationStorage.deleteAutomation(id);
       // Refresh the list after deletion
       refreshAutomations();
@@ -43,7 +43,7 @@ export function useSavedAutomations() {
 
   const copyFromSuggested = useCallback(async (suggestedAutomation: SuggestedAutomation) => {
     try {
-      const { automationStorage } = await import('../../../services/automationStorage');
+      const { automationStorage } = await import('@app/services/automationStorage');
 
       // Map suggested automation icons to MUI icon keys
       const getIconKey = (_suggestedIcon: {id: string}): string => {

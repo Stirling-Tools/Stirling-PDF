@@ -3,9 +3,9 @@ import { Stack, Text, Box, ActionIcon, Group, Center } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import RotateLeftIcon from "@mui/icons-material/RotateLeft";
 import RotateRightIcon from "@mui/icons-material/RotateRight";
-import { RotateParametersHook } from "../../../hooks/tools/rotate/useRotateParameters";
-import { useSelectedFiles } from "../../../contexts/file/fileHooks";
-import DocumentThumbnail from "../../shared/filePreview/DocumentThumbnail";
+import { RotateParametersHook } from "@app/hooks/tools/rotate/useRotateParameters";
+import { useSelectedFiles } from "@app/contexts/file/fileHooks";
+import DocumentThumbnail from "@app/components/shared/filePreview/DocumentThumbnail";
 
 interface RotateSettingsProps {
   parameters: RotateParametersHook;

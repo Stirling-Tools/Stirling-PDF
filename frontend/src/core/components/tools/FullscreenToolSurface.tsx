@@ -2,16 +2,16 @@ import { useState, useRef } from 'react';
 import { ActionIcon, ScrollArea, Switch, useMantineColorScheme } from '@mantine/core';
 import DoubleArrowIcon from '@mui/icons-material/DoubleArrow';
 import { useTranslation } from 'react-i18next';
-import ToolSearch from './toolPicker/ToolSearch';
-import FullscreenToolList from './FullscreenToolList';
-import { ToolRegistryEntry } from '../../data/toolsTaxonomy';
-import { ToolId } from '../../types/toolId';
-import { useFocusTrap } from '../../hooks/useFocusTrap';
-import { BASE_PATH } from '../../constants/app';
-import { Tooltip } from '../shared/Tooltip';
-import './ToolPanel.css';
-import { ToolPanelGeometry } from '../../hooks/tools/useToolPanelGeometry';
-import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from '../../styles/zIndex';
+import ToolSearch from '@app/components/tools/toolPicker/ToolSearch';
+import FullscreenToolList from '@app/components/tools/FullscreenToolList';
+import { ToolRegistryEntry } from '@app/data/toolsTaxonomy';
+import { ToolId } from '@app/types/toolId';
+import { useFocusTrap } from '@app/hooks/useFocusTrap';
+import { BASE_PATH } from '@app/constants/app';
+import { Tooltip } from '@app/components/shared/Tooltip';
+import '@app/components/tools/ToolPanel.css';
+import { ToolPanelGeometry } from '@app/hooks/tools/useToolPanelGeometry';
+import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from '@app/styles/zIndex';
 
 interface FullscreenToolSurfaceProps {
   searchQuery: string;

@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
-import { StirlingFileStub } from "../types/fileContext";
-import { useIndexedDB } from "../contexts/IndexedDBContext";
-import { generateThumbnailForFile } from "../utils/thumbnailUtils";
-import { FileId } from "../types/fileContext";
+import { StirlingFileStub } from "@app/types/fileContext";
+import { useIndexedDB } from "@app/contexts/IndexedDBContext";
+import { generateThumbnailForFile } from "@app/utils/thumbnailUtils";
+import { FileId } from "@app/types/fileContext";
 
 
 /**

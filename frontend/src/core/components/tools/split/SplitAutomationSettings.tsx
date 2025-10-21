@@ -7,9 +7,9 @@
 
 import { Stack, Text, Select } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { SplitParameters } from "../../../hooks/tools/split/useSplitParameters";
-import { METHOD_OPTIONS, SplitMethod } from "../../../constants/splitConstants";
-import SplitSettings from "./SplitSettings";
+import { SplitParameters } from "@app/hooks/tools/split/useSplitParameters";
+import { METHOD_OPTIONS, SplitMethod } from "@app/constants/splitConstants";
+import SplitSettings from "@app/components/tools/split/SplitSettings";
 
 interface SplitAutomationSettingsProps {
   parameters: SplitParameters;

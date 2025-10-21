@@ -3,10 +3,10 @@ import { Text, Anchor } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import FolderIcon from '@mui/icons-material/Folder';
 import UploadIcon from '@mui/icons-material/Upload';
-import { useFilesModalContext } from "../../../contexts/FilesModalContext";
-import { useAllFiles } from "../../../contexts/FileContext";
-import { useFileManager } from "../../../hooks/useFileManager";
-import { StirlingFile } from "../../../types/fileContext";
+import { useFilesModalContext } from "@app/contexts/FilesModalContext";
+import { useAllFiles } from "@app/contexts/FileContext";
+import { useFileManager } from "@app/hooks/useFileManager";
+import { StirlingFile } from "@app/types/fileContext";
 
 export interface FileStatusIndicatorProps {
   selectedFiles?: StirlingFile[];

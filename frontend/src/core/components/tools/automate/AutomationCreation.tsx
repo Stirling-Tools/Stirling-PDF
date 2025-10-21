@@ -10,14 +10,14 @@ import {
   Divider,
   Modal
 } from '@mantine/core';
-import { Z_INDEX_AUTOMATE_MODAL } from '../../../styles/zIndex';
+import { Z_INDEX_AUTOMATE_MODAL } from '@app/styles/zIndex';
 import CheckIcon from '@mui/icons-material/Check';
-import { ToolRegistry } from '../../../data/toolsTaxonomy';
-import ToolConfigurationModal from './ToolConfigurationModal';
-import ToolList from './ToolList';
-import IconSelector from './IconSelector';
-import { AutomationConfig, AutomationMode, AutomationTool } from '../../../types/automation';
-import { useAutomationForm } from '../../../hooks/tools/automate/useAutomationForm';
+import { ToolRegistry } from '@app/data/toolsTaxonomy';
+import ToolConfigurationModal from '@app/components/tools/automate/ToolConfigurationModal';
+import ToolList from '@app/components/tools/automate/ToolList';
+import IconSelector from '@app/components/tools/automate/IconSelector';
+import { AutomationConfig, AutomationMode, AutomationTool } from '@app/types/automation';
+import { useAutomationForm } from '@app/hooks/tools/automate/useAutomationForm';
 
 
 interface AutomationCreationProps {
@@ -106,7 +106,7 @@ export default function AutomationCreation({ mode, existingAutomation, onBack, o
     };
 
     try {
-      const { automationStorage } = await import('../../../services/automationStorage');
+      const { automationStorage } = await import('@app/services/automationStorage');
       let savedAutomation;
 
       if (mode === AutomationMode.EDIT && existingAutomation) {

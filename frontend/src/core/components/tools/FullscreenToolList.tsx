@@ -1,18 +1,18 @@
 import { useMemo } from 'react';
 import { Text } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import { ToolRegistryEntry, getSubcategoryLabel, getSubcategoryColor, getSubcategoryIcon } from '../../data/toolsTaxonomy';
-import { ToolId } from '../../types/toolId';
-import { useToolSections } from '../../hooks/useToolSections';
-import NoToolsFound from './shared/NoToolsFound';
-import { useToolWorkflow } from '../../contexts/ToolWorkflowContext';
+import { ToolRegistryEntry, getSubcategoryLabel, getSubcategoryColor, getSubcategoryIcon } from '@app/data/toolsTaxonomy';
+import { ToolId } from '@app/types/toolId';
+import { useToolSections } from '@app/hooks/useToolSections';
+import NoToolsFound from '@app/components/tools/shared/NoToolsFound';
+import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
 import StarRoundedIcon from '@mui/icons-material/StarRounded';
 import ThumbUpRoundedIcon from '@mui/icons-material/ThumbUpRounded';
-import Badge from '../shared/Badge';
-import './ToolPanel.css';
-import DetailedToolItem from './fullscreen/DetailedToolItem';
-import CompactToolItem from './fullscreen/CompactToolItem';
-import { useFavoriteToolItems } from '../../hooks/tools/useFavoriteToolItems';
+import Badge from '@app/components/shared/Badge';
+import '@app/components/tools/ToolPanel.css';
+import DetailedToolItem from '@app/components/tools/fullscreen/DetailedToolItem';
+import CompactToolItem from '@app/components/tools/fullscreen/CompactToolItem';
+import { useFavoriteToolItems } from '@app/hooks/tools/useFavoriteToolItems';
 
 interface FullscreenToolListProps {
   filteredTools: Array<{ item: [ToolId, ToolRegistryEntry]; matchedText?: string }>;

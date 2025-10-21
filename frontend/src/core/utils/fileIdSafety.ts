@@ -2,7 +2,7 @@
  * Runtime validation utilities for FileId safety
  */
 
-import { FileId } from '../types/fileContext';
+import { FileId } from '@app/types/fileContext';
 
 // Validate that a string is a proper FileId (has UUID format)
 export function isValidFileId(id: string): id is FileId {

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { AutoRenameParameters } from '../../../hooks/tools/autoRename/useAutoRenameParameters';
+import { AutoRenameParameters } from '@app/hooks/tools/autoRename/useAutoRenameParameters';
 
 interface AutoRenameSettingsProps {
   parameters: AutoRenameParameters;

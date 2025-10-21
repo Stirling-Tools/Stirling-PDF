@@ -15,11 +15,11 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { ActionIcon } from '@mantine/core';
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
-import { useToolWorkflow } from '../../../contexts/ToolWorkflowContext';
-import { useSidebarNavigation } from '../../../hooks/useSidebarNavigation';
-import { handleUnlessSpecialClick } from '../../../utils/clickHandlers';
-import FitText from '../FitText';
-import { Tooltip } from '../Tooltip';
+import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
+import { useSidebarNavigation } from '@app/hooks/useSidebarNavigation';
+import { handleUnlessSpecialClick } from '@app/utils/clickHandlers';
+import FitText from '@app/components/shared/FitText';
+import { Tooltip } from '@app/components/shared/Tooltip';
 
 interface ActiveToolButtonProps {
   activeButton: string;

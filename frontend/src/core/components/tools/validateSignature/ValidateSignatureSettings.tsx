@@ -1,7 +1,7 @@
 import { Card, Group, Stack, Text, Button } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import FileUploadButton from '../../shared/FileUploadButton';
-import { ValidateSignatureParameters } from '../../../hooks/tools/validateSignature/useValidateSignatureParameters';
+import FileUploadButton from '@app/components/shared/FileUploadButton';
+import { ValidateSignatureParameters } from '@app/hooks/tools/validateSignature/useValidateSignatureParameters';
 
 interface ValidateSignatureSettingsProps {
   parameters: ValidateSignatureParameters;

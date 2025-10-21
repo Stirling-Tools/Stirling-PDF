@@ -1,11 +1,11 @@
 import { useTranslation } from "react-i18next";
-import { createToolFlow } from "../components/tools/shared/createToolFlow";
-import AdjustPageScaleSettings from "../components/tools/adjustPageScale/AdjustPageScaleSettings";
-import { useAdjustPageScaleParameters } from "../hooks/tools/adjustPageScale/useAdjustPageScaleParameters";
-import { useAdjustPageScaleOperation } from "../hooks/tools/adjustPageScale/useAdjustPageScaleOperation";
-import { useBaseTool } from "../hooks/tools/shared/useBaseTool";
-import { BaseToolProps, ToolComponent } from "../types/tool";
-import { useAdjustPageScaleTips } from "../components/tooltips/useAdjustPageScaleTips";
+import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
+import AdjustPageScaleSettings from "@app/components/tools/adjustPageScale/AdjustPageScaleSettings";
+import { useAdjustPageScaleParameters } from "@app/hooks/tools/adjustPageScale/useAdjustPageScaleParameters";
+import { useAdjustPageScaleOperation } from "@app/hooks/tools/adjustPageScale/useAdjustPageScaleOperation";
+import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
+import { BaseToolProps, ToolComponent } from "@app/types/tool";
+import { useAdjustPageScaleTips } from "@app/components/tooltips/useAdjustPageScaleTips";
 
 const AdjustPageScale = (props: BaseToolProps) => {
   const { t } = useTranslation();

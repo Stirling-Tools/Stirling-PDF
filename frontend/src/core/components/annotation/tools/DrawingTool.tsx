@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Stack } from '@mantine/core';
-import { BaseAnnotationTool } from '../shared/BaseAnnotationTool';
-import { DrawingCanvas } from '../shared/DrawingCanvas';
+import { BaseAnnotationTool } from '@app/components/annotation/shared/BaseAnnotationTool';
+import { DrawingCanvas } from '@app/components/annotation/shared/DrawingCanvas';
 
 interface DrawingToolProps {
   onDrawingChange?: (data: string | null) => void;
