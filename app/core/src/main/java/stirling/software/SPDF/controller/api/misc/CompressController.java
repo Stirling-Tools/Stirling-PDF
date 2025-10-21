@@ -203,7 +203,10 @@ public class CompressController {
         ref.name = name;
 
         String imageHash = generateImageHash(image);
-        uniqueImages.computeIfAbsent(imageHash, k -> new ArrayList<>()).add(ref);
+        // Create composite key including page context to preserve annotations
+        // Even identical pixel data on different pages should not share compressed versions
+        String compositeKey = imageHash + "_page_" + pageNum;
+        uniqueImages.computeIfAbsent(compositeKey, k -> new ArrayList<>()).add(ref);
 
         return ref;
     }
@@ -247,7 +250,17 @@ public class CompressController {
                 nestedRef.imageName = nestedName;
 
                 String imageHash = generateImageHash(nestedImage);
-                uniqueImages.computeIfAbsent(imageHash, k -> new ArrayList<>()).add(nestedRef);
+                // Create composite key including full context: page, form name, and image name
+                // This ensures nested images with different annotations remain distinct
+                String compositeKey =
+                        imageHash
+                                + "_page_"
+                                + pageNum
+                                + "_form_"
+                                + formName.getName()
+                                + "_img_"
+                                + nestedName.getName();
+                uniqueImages.computeIfAbsent(compositeKey, k -> new ArrayList<>()).add(nestedRef);
             }
         }
     }
