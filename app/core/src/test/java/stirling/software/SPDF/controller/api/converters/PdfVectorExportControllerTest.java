@@ -116,7 +116,7 @@ class PdfVectorExportControllerTest {
     void convertGhostscript_pdfPassThrough_success() throws Exception {
         when(endpointConfiguration.isGroupEnabled("Ghostscript")).thenReturn(false);
 
-        byte[] content = new byte[] {1};
+        byte[] content = {1};
         MockMultipartFile file =
                 new MockMultipartFile(
                         "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, content);
@@ -131,7 +131,7 @@ class PdfVectorExportControllerTest {
     }
 
     @Test
-    void convertGhostscript_unsupportedFormatThrows() throws Exception {
+    void convertGhostscript_unsupportedFormatThrows() {
         when(endpointConfiguration.isGroupEnabled("Ghostscript")).thenReturn(false);
         MockMultipartFile file =
                 new MockMultipartFile(

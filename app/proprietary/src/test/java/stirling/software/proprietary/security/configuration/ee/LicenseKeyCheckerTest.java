@@ -55,7 +55,7 @@ class LicenseKeyCheckerTest {
 
         ApplicationProperties props = new ApplicationProperties();
         props.getPremium().setEnabled(true);
-        props.getPremium().setKey("file:" + file.toString());
+        props.getPremium().setKey("file:" + file);
         when(verifier.verifyLicense("filekey")).thenReturn(License.ENTERPRISE);
 
         LicenseKeyChecker checker = new LicenseKeyChecker(verifier, props);
@@ -69,7 +69,7 @@ class LicenseKeyCheckerTest {
         Path file = temp.resolve("missing.txt");
         ApplicationProperties props = new ApplicationProperties();
         props.getPremium().setEnabled(true);
-        props.getPremium().setKey("file:" + file.toString());
+        props.getPremium().setKey("file:" + file);
 
         LicenseKeyChecker checker = new LicenseKeyChecker(verifier, props);
 

@@ -138,9 +138,7 @@ class JwtServiceTest {
 
         assertThrows(
                 AuthenticationFailureException.class,
-                () -> {
-                    jwtService.validateToken("invalid-token");
-                });
+                () -> jwtService.validateToken("invalid-token"));
     }
 
     @Test
@@ -152,9 +150,7 @@ class JwtServiceTest {
         AuthenticationFailureException exception =
                 assertThrows(
                         AuthenticationFailureException.class,
-                        () -> {
-                            jwtService.validateToken("malformed.token");
-                        });
+                        () -> jwtService.validateToken("malformed.token"));
 
         assertTrue(exception.getMessage().contains("Invalid"));
     }
@@ -167,10 +163,7 @@ class JwtServiceTest {
 
         AuthenticationFailureException exception =
                 assertThrows(
-                        AuthenticationFailureException.class,
-                        () -> {
-                            jwtService.validateToken("");
-                        });
+                        AuthenticationFailureException.class, () -> jwtService.validateToken(""));
 
         assertTrue(
                 exception.getMessage().contains("Claims are empty")
@@ -296,7 +289,7 @@ class JwtServiceTest {
     }
 
     @Test
-    void testGenerateTokenWithKeyId() throws Exception {
+    void testGenerateTokenWithKeyId() {
         String username = "testuser";
         Map<String, Object> claims = new HashMap<>();
 

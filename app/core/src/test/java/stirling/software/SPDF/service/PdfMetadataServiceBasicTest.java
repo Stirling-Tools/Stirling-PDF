@@ -26,19 +26,17 @@ import stirling.software.common.service.UserServiceInterface;
 
 class PdfMetadataServiceBasicTest {
 
-    private ApplicationProperties applicationProperties;
-    private UserServiceInterface userService;
     private PdfMetadataService pdfMetadataService;
     private final String STIRLING_PDF_LABEL = "Stirling PDF";
 
     @BeforeEach
     void setUp() {
         // Set up mocks for application properties' nested objects
-        applicationProperties = mock(ApplicationProperties.class);
+        ApplicationProperties applicationProperties = mock(ApplicationProperties.class);
         Premium premium = mock(Premium.class);
         ProFeatures proFeatures = mock(ProFeatures.class);
         CustomMetadata customMetadata = mock(CustomMetadata.class);
-        userService = mock(UserServiceInterface.class);
+        UserServiceInterface userService = mock(UserServiceInterface.class);
 
         when(applicationProperties.getPremium()).thenReturn(premium);
         when(premium.getProFeatures()).thenReturn(proFeatures);

@@ -7,7 +7,6 @@ import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.KeyPair;
@@ -84,7 +83,7 @@ class KeyPersistenceServiceInterfaceTest {
         String privateKeyBase64 =
                 Base64.getEncoder().encodeToString(testKeyPair.getPrivate().getEncoded());
 
-        JwtVerificationKey existingKey = new JwtVerificationKey(keyId, publicKeyBase64);
+        new JwtVerificationKey(keyId, publicKeyBase64);
 
         Path keyFile = tempDir.resolve(keyId + ".key");
         Files.writeString(keyFile, privateKeyBase64);
@@ -129,6 +128,7 @@ class KeyPersistenceServiceInterfaceTest {
                     .getDeclaredField("verifyingKeyCache")
                     .setAccessible(true);
             var cache = cacheManager.getCache("verifyingKeys");
+            assertNotNull(cache);
             cache.put(keyId, signingKey);
 
             Optional<KeyPair> result = keyPersistenceService.getKeyPair(keyId);
@@ -174,7 +174,7 @@ class KeyPersistenceServiceInterfaceTest {
     }
 
     @Test
-    void testInitializeKeystoreCreatesDirectory() throws IOException {
+    void testInitializeKeystoreCreatesDirectory() {
         try (MockedStatic<InstallationPathConfig> mockedStatic =
                 mockStatic(InstallationPathConfig.class)) {
             mockedStatic
@@ -189,12 +189,12 @@ class KeyPersistenceServiceInterfaceTest {
     }
 
     @Test
-    void testLoadExistingKeypairWithMissingPrivateKeyFile() throws Exception {
+    void testLoadExistingKeypairWithMissingPrivateKeyFile() {
         String keyId = "test-key-missing-file";
         String publicKeyBase64 =
                 Base64.getEncoder().encodeToString(testKeyPair.getPublic().getEncoded());
 
-        JwtVerificationKey existingKey = new JwtVerificationKey(keyId, publicKeyBase64);
+        new JwtVerificationKey(keyId, publicKeyBase64);
 
         try (MockedStatic<InstallationPathConfig> mockedStatic =
                 mockStatic(InstallationPathConfig.class)) {

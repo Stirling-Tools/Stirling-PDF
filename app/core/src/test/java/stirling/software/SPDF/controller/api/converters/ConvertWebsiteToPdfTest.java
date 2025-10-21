@@ -213,7 +213,6 @@ public class ConvertWebsiteToPdfTest {
             assertNotNull(outPathStr);
 
             // Temp file must be deleted in finally
-            Path outPath = Path.of(outPathStr);
             assertFalse(
                     Files.exists(Path.of(htmlPathStr)),
                     "Temp HTML file should be deleted after the call");
@@ -283,6 +282,24 @@ public class ConvertWebsiteToPdfTest {
         }
     }
 
+    private static MockedStatic<HttpClient> mockHttpClientReturning(String body) throws Exception {
+        MockedStatic<HttpClient> httpClientStatic = Mockito.mockStatic(HttpClient.class);
+        HttpClient.Builder builder = Mockito.mock(HttpClient.Builder.class);
+        HttpClient client = Mockito.mock(HttpClient.class);
+        HttpResponse<String> response = Mockito.mock();
+
+        httpClientStatic.when(HttpClient::newBuilder).thenReturn(builder);
+        when(builder.followRedirects(HttpClient.Redirect.NORMAL)).thenReturn(builder);
+        when(builder.connectTimeout(any(Duration.class))).thenReturn(builder);
+        when(builder.build()).thenReturn(client);
+
+        Mockito.doReturn(response).when(client).send(any(HttpRequest.class), any());
+        when(response.statusCode()).thenReturn(200);
+        when(response.body()).thenReturn(body);
+
+        return httpClientStatic;
+    }
+
     @Test
     void redirect_with_error_when_disallowed_content_detected() throws Exception {
         UrlToPdfRequest request = new UrlToPdfRequest();
@@ -291,7 +308,7 @@ public class ConvertWebsiteToPdfTest {
         try (MockedStatic<GeneralUtils> gu = Mockito.mockStatic(GeneralUtils.class);
                 MockedStatic<HttpClient> httpClient =
                         mockHttpClientReturning(
-                                "<link rel=\"attachment\" href=\"file:///etc/passwd\">"); ) {
+                                "<link rel=\"attachment\" href=\"file:///etc/passwd\">")) {
 
             gu.when(() -> GeneralUtils.isValidURL("https://example.com")).thenReturn(true);
             gu.when(() -> GeneralUtils.isURLReachable("https://example.com")).thenReturn(true);
@@ -305,24 +322,5 @@ public class ConvertWebsiteToPdfTest {
                     location.getQuery() != null
                             && location.getQuery().contains("error=error.disallowedUrlContent"));
         }
-    }
-
-    private MockedStatic<HttpClient> mockHttpClientReturning(String body) throws Exception {
-        MockedStatic<HttpClient> httpClientStatic = Mockito.mockStatic(HttpClient.class);
-        HttpClient.Builder builder = Mockito.mock(HttpClient.Builder.class);
-        HttpClient client = Mockito.mock(HttpClient.class);
-        HttpResponse<String> response = Mockito.mock(HttpResponse.class);
-
-        httpClientStatic.when(HttpClient::newBuilder).thenReturn(builder);
-        when(builder.followRedirects(HttpClient.Redirect.NORMAL)).thenReturn(builder);
-        when(builder.connectTimeout(any(Duration.class))).thenReturn(builder);
-        when(builder.build()).thenReturn(client);
-
-        when(client.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
-                .thenReturn(response);
-        when(response.statusCode()).thenReturn(200);
-        when(response.body()).thenReturn(body);
-
-        return httpClientStatic;
     }
 }

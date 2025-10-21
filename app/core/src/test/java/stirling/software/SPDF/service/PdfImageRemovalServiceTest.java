@@ -24,6 +24,24 @@ class PdfImageRemovalServiceTest {
         service = new PdfImageRemovalService();
     }
 
+    // Helper method for matching COSName in verification
+    private static COSName eq(final COSName value) {
+        return Mockito.argThat(
+                new org.mockito.ArgumentMatcher<>() {
+                    @Override
+                    public boolean matches(COSName argument) {
+                        if (argument == null && value == null) return true;
+                        if (argument == null || value == null) return false;
+                        return argument.getName().equals(value.getName());
+                    }
+
+                    @Override
+                    public String toString() {
+                        return "eq(" + (value != null ? value.getName() : "null") + ")";
+                    }
+                });
+    }
+
     @Test
     void testRemoveImagesFromPdf_WithImages() throws IOException {
         // Mock PDF document and its components
@@ -54,7 +72,7 @@ class PdfImageRemovalServiceTest {
         when(resources.isImageXObject(nonImg)).thenReturn(false);
 
         // Execute the method
-        PDDocument result = service.removeImagesFromPdf(document);
+        service.removeImagesFromPdf(document);
 
         // Verify that images were removed
         verify(resources, times(1)).put(eq(img1), Mockito.<PDXObject>isNull());
@@ -83,7 +101,7 @@ class PdfImageRemovalServiceTest {
         when(resources.getXObjectNames()).thenReturn(emptyList);
 
         // Execute the method
-        PDDocument result = service.removeImagesFromPdf(document);
+        service.removeImagesFromPdf(document);
 
         // Verify that no modifications were made
         verify(resources, never()).put(any(COSName.class), any(PDXObject.class));
@@ -119,28 +137,10 @@ class PdfImageRemovalServiceTest {
         when(resources2.isImageXObject(img2)).thenReturn(true);
 
         // Execute the method
-        PDDocument result = service.removeImagesFromPdf(document);
+        service.removeImagesFromPdf(document);
 
         // Verify that images were removed from both pages
         verify(resources1, times(1)).put(eq(img1), Mockito.<PDXObject>isNull());
         verify(resources2, times(1)).put(eq(img2), Mockito.<PDXObject>isNull());
-    }
-
-    // Helper method for matching COSName in verification
-    private static COSName eq(final COSName value) {
-        return Mockito.argThat(
-                new org.mockito.ArgumentMatcher<COSName>() {
-                    @Override
-                    public boolean matches(COSName argument) {
-                        if (argument == null && value == null) return true;
-                        if (argument == null || value == null) return false;
-                        return argument.getName().equals(value.getName());
-                    }
-
-                    @Override
-                    public String toString() {
-                        return "eq(" + (value != null ? value.getName() : "null") + ")";
-                    }
-                });
     }
 }

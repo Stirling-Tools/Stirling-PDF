@@ -37,10 +37,8 @@ class MergeControllerTest {
     private MockMultipartFile mockFile1;
     private MockMultipartFile mockFile2;
     private MockMultipartFile mockFile3;
-    private PDDocument mockDocument;
     private PDDocument mockMergedDocument;
     private PDDocumentCatalog mockCatalog;
-    private PDPageTree mockPages;
     private PDPage mockPage1;
     private PDPage mockPage2;
 
@@ -65,10 +63,10 @@ class MergeControllerTest {
                         MediaType.APPLICATION_PDF_VALUE,
                         "PDF content 3".getBytes());
 
-        mockDocument = mock(PDDocument.class);
+        PDDocument mockDocument = mock(PDDocument.class);
         mockMergedDocument = mock(PDDocument.class);
         mockCatalog = mock(PDDocumentCatalog.class);
-        mockPages = mock(PDPageTree.class);
+        PDPageTree mockPages = mock(PDPageTree.class);
         mockPage1 = mock(PDPage.class);
         mockPage2 = mock(PDPage.class);
     }
