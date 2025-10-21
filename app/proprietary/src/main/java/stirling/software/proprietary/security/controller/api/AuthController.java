@@ -25,9 +25,7 @@ import stirling.software.proprietary.security.service.CustomUserDetailsService;
 import stirling.software.proprietary.security.service.JwtServiceInterface;
 import stirling.software.proprietary.security.service.UserService;
 
-/**
- * REST API Controller for authentication operations.
- */
+/** REST API Controller for authentication operations. */
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor

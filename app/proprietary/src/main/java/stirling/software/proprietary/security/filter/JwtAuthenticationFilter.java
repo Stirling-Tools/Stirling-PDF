@@ -1,14 +1,14 @@
 package stirling.software.proprietary.security.filter;
 
-import static stirling.software.common.util.RequestUriUtils.isStaticResource;
-import static stirling.software.proprietary.security.model.AuthenticationType.*;
-import static stirling.software.proprietary.security.model.AuthenticationType.SAML2;
-
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Map;
 import java.util.Optional;
-
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -18,14 +18,6 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.web.filter.OncePerRequestFilter;
-
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-
-import lombok.extern.slf4j.Slf4j;
-
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.exception.UnsupportedProviderException;
 import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
@@ -35,6 +27,10 @@ import stirling.software.proprietary.security.model.exception.AuthenticationFail
 import stirling.software.proprietary.security.service.CustomUserDetailsService;
 import stirling.software.proprietary.security.service.JwtServiceInterface;
 import stirling.software.proprietary.security.service.UserService;
+import static stirling.software.common.util.RequestUriUtils.isStaticResource;
+import static stirling.software.proprietary.security.model.AuthenticationType.OAUTH2;
+import static stirling.software.proprietary.security.model.AuthenticationType.SAML2;
+import static stirling.software.proprietary.security.model.AuthenticationType.WEB;
 
 @Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -206,7 +202,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private void processUserAuthenticationType(Map<String, Object> claims, String username)
             throws SQLException, UnsupportedProviderException {
         AuthenticationType authenticationType =
-                AuthenticationType.valueOf(claims.getOrDefault("authType", WEB).toString());
+                AuthenticationType.valueOf(
+                        claims.getOrDefault("authType", WEB).toString().toUpperCase());
         log.debug("Processing {} login for {} user", authenticationType, username);
 
         switch (authenticationType) {

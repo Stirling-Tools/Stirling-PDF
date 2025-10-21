@@ -12,7 +12,6 @@ import { PreferencesProvider } from "./contexts/PreferencesContext";
 import { OnboardingProvider } from "./contexts/OnboardingContext";
 import { TourOrchestrationProvider } from "./contexts/TourOrchestrationContext";
 import ErrorBoundary from "./components/shared/ErrorBoundary";
-import HomePage from "./pages/HomePage";
 import OnboardingTour from "./components/onboarding/OnboardingTour";
 
 // Import auth components
