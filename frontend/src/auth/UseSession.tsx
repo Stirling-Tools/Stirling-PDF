@@ -94,6 +94,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const initializeAuth = async () => {
       try {
         console.debug('[Auth] Initializing auth...');
+
+        // First check if login is enabled
+        const configResponse = await fetch('/api/v1/config/app-config');
+        if (configResponse.ok) {
+          const config = await configResponse.json();
+
+          // If login is disabled, skip authentication entirely
+          if (config.enableLogin === false) {
+            console.debug('[Auth] Login disabled - skipping authentication');
+            if (mounted) {
+              setSession(null);
+              setLoading(false);
+            }
+            return;
+          }
+        }
+
+        // Login is enabled, proceed with normal auth check
         const { data, error } = await springAuth.getSession();
 
         if (!mounted) return;

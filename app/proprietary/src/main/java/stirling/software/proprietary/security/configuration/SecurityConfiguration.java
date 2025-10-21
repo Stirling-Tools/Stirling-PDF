@@ -258,6 +258,7 @@ public class SecurityConfiguration {
                                                         || trimmedUri.startsWith("/favicon")
                                                         || trimmedUri.startsWith(
                                                                 "/api/v1/info/status")
+                                                        || trimmedUri.startsWith("/api/v1/config")
                                                         || trimmedUri.startsWith(
                                                                 "/api/v1/auth/register")
                                                         || trimmedUri.startsWith(
