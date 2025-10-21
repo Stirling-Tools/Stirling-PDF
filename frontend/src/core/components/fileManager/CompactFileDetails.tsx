@@ -4,8 +4,8 @@ import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { useTranslation } from 'react-i18next';
-import { getFileSize } from '../../utils/fileUtils';
-import { StirlingFileStub } from '../../types/fileContext';
+import { getFileSize } from '@app/utils/fileUtils';
+import { StirlingFileStub } from '@app/types/fileContext';
 
 interface CompactFileDetailsProps {
   currentFile: StirlingFileStub | null;

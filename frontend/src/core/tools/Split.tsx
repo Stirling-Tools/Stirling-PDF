@@ -1,14 +1,14 @@
 import { useTranslation } from "react-i18next";
-import { createToolFlow } from "../components/tools/shared/createToolFlow";
-import CardSelector from "../components/shared/CardSelector";
-import SplitSettings from "../components/tools/split/SplitSettings";
-import { useSplitParameters } from "../hooks/tools/split/useSplitParameters";
-import { useSplitOperation } from "../hooks/tools/split/useSplitOperation";
-import { useBaseTool } from "../hooks/tools/shared/useBaseTool";
-import { useSplitMethodTips } from "../components/tooltips/useSplitMethodTips";
-import { useSplitSettingsTips } from "../components/tooltips/useSplitSettingsTips";
-import { BaseToolProps, ToolComponent } from "../types/tool";
-import { type SplitMethod, METHOD_OPTIONS, type MethodOption } from "../constants/splitConstants";
+import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
+import CardSelector from "@app/components/shared/CardSelector";
+import SplitSettings from "@app/components/tools/split/SplitSettings";
+import { useSplitParameters } from "@app/hooks/tools/split/useSplitParameters";
+import { useSplitOperation } from "@app/hooks/tools/split/useSplitOperation";
+import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
+import { useSplitMethodTips } from "@app/components/tooltips/useSplitMethodTips";
+import { useSplitSettingsTips } from "@app/components/tooltips/useSplitSettingsTips";
+import { BaseToolProps, ToolComponent } from "@app/types/tool";
+import { type SplitMethod, METHOD_OPTIONS, type MethodOption } from "@app/constants/splitConstants";
 
 const Split = (props: BaseToolProps) => {
   const { t } = useTranslation();

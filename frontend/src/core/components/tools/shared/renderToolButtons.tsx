@@ -1,11 +1,11 @@
 import { Box } from '@mantine/core';
-import ToolButton from '../toolPicker/ToolButton';
-import SubcategoryHeader from './SubcategoryHeader';
+import ToolButton from '@app/components/tools/toolPicker/ToolButton';
+import SubcategoryHeader from '@app/components/tools/shared/SubcategoryHeader';
 
-import { getSubcategoryLabel } from "../../../data/toolsTaxonomy";
+import { getSubcategoryLabel } from "@app/data/toolsTaxonomy";
 import { TFunction } from 'i18next';
-import { SubcategoryGroup } from '../../../hooks/useToolSections';
-import { ToolId } from 'src/types/toolId';
+import { SubcategoryGroup } from '@app/hooks/useToolSections';
+import { ToolId } from "@app/types/toolId";
 
 // Helper function to render tool buttons for a subcategory
 export const renderToolButtons = (

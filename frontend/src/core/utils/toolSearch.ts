@@ -1,6 +1,6 @@
-import { ToolId } from "src/types/toolId";
-import { ToolRegistryEntry, ToolRegistry } from "../data/toolsTaxonomy";
-import { scoreMatch, minScoreForQuery, normalizeForSearch } from "./fuzzySearch";
+import { ToolId } from "@app/types/toolId";
+import { ToolRegistryEntry, ToolRegistry } from "@app/data/toolsTaxonomy";
+import { scoreMatch, minScoreForQuery, normalizeForSearch } from "@app/utils/fuzzySearch";
 
 export interface RankedToolItem {
   item: [ToolId, ToolRegistryEntry];

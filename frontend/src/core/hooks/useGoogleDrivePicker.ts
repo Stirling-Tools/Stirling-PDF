@@ -7,7 +7,7 @@ import {
   getGoogleDrivePickerService,
   isGoogleDriveConfigured,
   getGoogleDriveConfig,
-} from '../services/googleDrivePickerService';
+} from '@app/services/googleDrivePickerService';
 
 interface UseGoogleDrivePickerOptions {
   multiple?: boolean;

@@ -1,7 +1,7 @@
 import { describe, expect, test, vi, beforeEach } from 'vitest';
 import { renderHook } from '@testing-library/react';
-import { useMergeOperation } from './useMergeOperation';
-import type { MergeParameters } from './useMergeParameters';
+import { useMergeOperation } from '@app/hooks/tools/merge/useMergeOperation';
+import type { MergeParameters } from '@app/hooks/tools/merge/useMergeParameters';
 
 // Mock the useToolOperation hook
 vi.mock('../shared/useToolOperation', async () => {
@@ -24,7 +24,7 @@ vi.mock('../../../utils/toolErrorHandler', () => ({
 }));
 
 // Import the mocked function
-import { MultiFileToolOperationConfig, ToolOperationHook, useToolOperation } from '../shared/useToolOperation';
+import { MultiFileToolOperationConfig, ToolOperationHook, useToolOperation } from '@app/hooks/tools/shared/useToolOperation';
 
 describe('useMergeOperation', () => {
   const mockUseToolOperation = vi.mocked(useToolOperation<MergeParameters>);

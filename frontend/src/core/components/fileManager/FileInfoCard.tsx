@@ -1,9 +1,9 @@
 import React from 'react';
 import { Stack, Card, Box, Text, Badge, Group, Divider, ScrollArea } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import { detectFileExtension, getFileSize } from '../../utils/fileUtils';
-import { StirlingFileStub } from '../../types/fileContext';
-import ToolChain from '../shared/ToolChain';
+import { detectFileExtension, getFileSize } from '@app/utils/fileUtils';
+import { StirlingFileStub } from '@app/types/fileContext';
+import ToolChain from '@app/components/shared/ToolChain';
 
 interface FileInfoCardProps {
   currentFile: StirlingFileStub | null;

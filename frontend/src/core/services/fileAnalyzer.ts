@@ -1,5 +1,5 @@
-import { FileAnalysis, ProcessingStrategy } from '../types/processing';
-import { pdfWorkerManager } from './pdfWorkerManager';
+import { FileAnalysis, ProcessingStrategy } from '@app/types/processing';
+import { pdfWorkerManager } from '@app/services/pdfWorkerManager';
 
 export class FileAnalyzer {
   private static readonly SIZE_THRESHOLDS = {

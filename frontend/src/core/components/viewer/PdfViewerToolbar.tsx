@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Button, Paper, Group, NumberInput } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import { useViewer } from '../../contexts/ViewerContext';
+import { useViewer } from '@app/contexts/ViewerContext';
 import FirstPageIcon from '@mui/icons-material/FirstPage';
 import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';

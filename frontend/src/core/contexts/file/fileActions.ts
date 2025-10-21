@@ -11,14 +11,14 @@ import {
   createQuickKey,
   createStirlingFile,
   ProcessedFileMetadata,
-} from '../../types/fileContext';
-import { FileId, ToolOperation } from '../../types/file';
-import { generateThumbnailWithMetadata } from '../../utils/thumbnailUtils';
-import { FileLifecycleManager } from './lifecycle';
-import { buildQuickKeySet } from './fileSelectors';
-import { StirlingFile } from '../../types/fileContext';
-import { fileStorage } from '../../services/fileStorage';
-import { zipFileService } from '../../services/zipFileService';
+} from '@app/types/fileContext';
+import { FileId, ToolOperation } from '@app/types/file';
+import { generateThumbnailWithMetadata } from '@app/utils/thumbnailUtils';
+import { FileLifecycleManager } from '@app/contexts/file/lifecycle';
+import { buildQuickKeySet } from '@app/contexts/file/fileSelectors';
+import { StirlingFile } from '@app/types/fileContext';
+import { fileStorage } from '@app/services/fileStorage';
+import { zipFileService } from '@app/services/zipFileService';
 const DEBUG = process.env.NODE_ENV === 'development';
 
 /**
@@ -281,7 +281,7 @@ export async function addFiles(
       // Non-PDF files: simple thumbnail generation, no processedFile metadata
       try {
         if (DEBUG) console.log(`📄 Generating simple thumbnail for non-PDF file ${file.name}`);
-        const { generateThumbnailForFile } = await import('../../utils/thumbnailUtils');
+        const { generateThumbnailForFile } = await import('@app/utils/thumbnailUtils');
         thumbnail = await generateThumbnailForFile(file);
         if (DEBUG) console.log(`📄 Generated simple thumbnail for ${file.name}: no page count, thumbnail: SUCCESS`);
       } catch (error) {

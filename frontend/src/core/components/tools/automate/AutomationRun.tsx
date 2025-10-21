@@ -3,11 +3,11 @@ import { useTranslation } from "react-i18next";
 import { Button, Text, Stack, Group, Card, Progress } from "@mantine/core";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import CheckIcon from "@mui/icons-material/Check";
-import { useFileSelection } from "../../../contexts/FileContext";
-import { useToolRegistry } from "../../../contexts/ToolRegistryContext";
-import { AutomationConfig, ExecutionStep } from "../../../types/automation";
-import { AUTOMATION_CONSTANTS, EXECUTION_STATUS } from "../../../constants/automation";
-import { useResourceCleanup } from "../../../utils/resourceManager";
+import { useFileSelection } from "@app/contexts/FileContext";
+import { useToolRegistry } from "@app/contexts/ToolRegistryContext";
+import { AutomationConfig, ExecutionStep } from "@app/types/automation";
+import { AUTOMATION_CONSTANTS, EXECUTION_STATUS } from "@app/constants/automation";
+import { useResourceCleanup } from "@app/utils/resourceManager";
 
 interface AutomationRunProps {
   automation: AutomationConfig;

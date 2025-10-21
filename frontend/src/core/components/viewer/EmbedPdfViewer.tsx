@@ -2,18 +2,18 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Box, Center, Text, ActionIcon } from '@mantine/core';
 import CloseIcon from '@mui/icons-material/Close';
 
-import { useFileState, useFileActions } from "../../contexts/FileContext";
-import { useFileWithUrl } from "../../hooks/useFileWithUrl";
-import { useViewer } from "../../contexts/ViewerContext";
-import { LocalEmbedPDF } from './LocalEmbedPDF';
-import { PdfViewerToolbar } from './PdfViewerToolbar';
-import { ThumbnailSidebar } from './ThumbnailSidebar';
-import { useNavigationGuard, useNavigationState } from '../../contexts/NavigationContext';
-import { useSignature } from '../../contexts/SignatureContext';
-import { createStirlingFilesAndStubs } from '../../services/fileStubHelpers';
-import NavigationWarningModal from '../shared/NavigationWarningModal';
-import { isStirlingFile } from '../../types/fileContext';
-import { useViewerRightRailButtons } from './useViewerRightRailButtons';
+import { useFileState, useFileActions } from "@app/contexts/FileContext";
+import { useFileWithUrl } from "@app/hooks/useFileWithUrl";
+import { useViewer } from "@app/contexts/ViewerContext";
+import { LocalEmbedPDF } from '@app/components/viewer/LocalEmbedPDF';
+import { PdfViewerToolbar } from '@app/components/viewer/PdfViewerToolbar';
+import { ThumbnailSidebar } from '@app/components/viewer/ThumbnailSidebar';
+import { useNavigationGuard, useNavigationState } from '@app/contexts/NavigationContext';
+import { useSignature } from '@app/contexts/SignatureContext';
+import { createStirlingFilesAndStubs } from '@app/services/fileStubHelpers';
+import NavigationWarningModal from '@app/components/shared/NavigationWarningModal';
+import { isStirlingFile } from '@app/types/fileContext';
+import { useViewerRightRailButtons } from '@app/components/viewer/useViewerRightRailButtons';
 
 export interface EmbedPdfViewerProps {
   sidebarsVisible: boolean;

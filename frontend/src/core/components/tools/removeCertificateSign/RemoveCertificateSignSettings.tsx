@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { RemoveCertificateSignParameters } from '../../../hooks/tools/removeCertificateSign/useRemoveCertificateSignParameters';
+import { RemoveCertificateSignParameters } from '@app/hooks/tools/removeCertificateSign/useRemoveCertificateSignParameters';
 
 interface RemoveCertificateSignSettingsProps {
   parameters: RemoveCertificateSignParameters;

@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
-import { useToolOperation, ToolType } from '../shared/useToolOperation';
-import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
-import { CropParameters, defaultParameters } from './useCropParameters';
+import { useToolOperation, ToolType } from '@app/hooks/tools/shared/useToolOperation';
+import { createStandardErrorHandler } from '@app/utils/toolErrorHandler';
+import { CropParameters, defaultParameters } from '@app/hooks/tools/crop/useCropParameters';
 
 // Static configuration that can be used by both the hook and automation executor
 export const buildCropFormData = (parameters: CropParameters, file: File): FormData => {

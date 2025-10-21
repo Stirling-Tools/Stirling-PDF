@@ -1,8 +1,8 @@
-import { ToolType, useToolOperation } from '../shared/useToolOperation';
+import { ToolType, useToolOperation } from '@app/hooks/tools/shared/useToolOperation';
 import { useCallback } from 'react';
-import { executeAutomationSequence } from '../../../utils/automationExecutor';
-import { useToolRegistry } from '../../../contexts/ToolRegistryContext';
-import { AutomateParameters } from '../../../types/automation';
+import { executeAutomationSequence } from '@app/utils/automationExecutor';
+import { useToolRegistry } from '@app/contexts/ToolRegistryContext';
+import { AutomateParameters } from '@app/types/automation';
 
 export function useAutomateOperation() {
   const { allTools } = useToolRegistry();

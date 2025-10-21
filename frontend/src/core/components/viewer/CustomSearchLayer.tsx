@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useSearch } from '@embedpdf/plugin-search/react';
-import { useViewer } from '../../contexts/ViewerContext';
-import { SEARCH_CONSTANTS } from './constants/search';
+import { useViewer } from '@app/contexts/ViewerContext';
+import { SEARCH_CONSTANTS } from '@app/components/viewer/constants/search';
 
 interface SearchLayerProps {
   pageIndex: number;

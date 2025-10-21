@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode, useCallback, useRef } from 'react';
-import { SignParameters } from '../hooks/tools/sign/useSignParameters';
-import type { SignatureAPI, HistoryAPI } from '../components/viewer/viewerTypes';
+import { SignParameters } from '@app/hooks/tools/sign/useSignParameters';
+import type { SignatureAPI, HistoryAPI } from '@app/components/viewer/viewerTypes';
 
 // Signature state interface
 interface SignatureState {

@@ -1,18 +1,18 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useEndpointEnabled } from "../hooks/useEndpointConfig";
-import { useFileSelection } from "../contexts/FileContext";
+import { useEndpointEnabled } from "@app/hooks/useEndpointConfig";
+import { useFileSelection } from "@app/contexts/FileContext";
 
-import { createToolFlow } from "../components/tools/shared/createToolFlow";
+import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
 
-import AddPasswordSettings from "../components/tools/addPassword/AddPasswordSettings";
-import ChangePermissionsSettings from "../components/tools/changePermissions/ChangePermissionsSettings";
+import AddPasswordSettings from "@app/components/tools/addPassword/AddPasswordSettings";
+import ChangePermissionsSettings from "@app/components/tools/changePermissions/ChangePermissionsSettings";
 
-import { useAddPasswordParameters } from "../hooks/tools/addPassword/useAddPasswordParameters";
-import { useAddPasswordOperation } from "../hooks/tools/addPassword/useAddPasswordOperation";
-import { useAddPasswordTips } from "../components/tooltips/useAddPasswordTips";
-import { useAddPasswordPermissionsTips } from "../components/tooltips/useAddPasswordPermissionsTips";
-import { BaseToolProps, ToolComponent } from "../types/tool";
+import { useAddPasswordParameters } from "@app/hooks/tools/addPassword/useAddPasswordParameters";
+import { useAddPasswordOperation } from "@app/hooks/tools/addPassword/useAddPasswordOperation";
+import { useAddPasswordTips } from "@app/components/tooltips/useAddPasswordTips";
+import { useAddPasswordPermissionsTips } from "@app/components/tooltips/useAddPasswordPermissionsTips";
+import { BaseToolProps, ToolComponent } from "@app/types/tool";
 
 const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();

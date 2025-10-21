@@ -2,7 +2,7 @@ import { describe, test, expect } from 'vitest';
 import fs from 'fs';
 import path from 'path';
 
-const LOCALES_DIR = path.join(__dirname, '../../public/locales');
+const LOCALES_DIR = path.join(__dirname, '../../../public/locales');
 
 // Get all locale directories for parameterized tests
 const getLocaleDirectories = () => {

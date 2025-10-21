@@ -1,15 +1,15 @@
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { useEndpointEnabled } from "../hooks/useEndpointConfig";
-import { useFileState, useFileSelection } from "../contexts/FileContext";
+import { useEndpointEnabled } from "@app/hooks/useEndpointConfig";
+import { useFileState, useFileSelection } from "@app/contexts/FileContext";
 
-import { createToolFlow } from "../components/tools/shared/createToolFlow";
+import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
 
-import ConvertSettings from "../components/tools/convert/ConvertSettings";
+import ConvertSettings from "@app/components/tools/convert/ConvertSettings";
 
-import { useConvertParameters } from "../hooks/tools/convert/useConvertParameters";
-import { useConvertOperation } from "../hooks/tools/convert/useConvertOperation";
-import { BaseToolProps, ToolComponent } from "../types/tool";
+import { useConvertParameters } from "@app/hooks/tools/convert/useConvertParameters";
+import { useConvertOperation } from "@app/hooks/tools/convert/useConvertOperation";
+import { BaseToolProps, ToolComponent } from "@app/types/tool";
 
 const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();

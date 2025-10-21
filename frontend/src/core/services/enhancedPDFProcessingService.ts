@@ -1,10 +1,10 @@
-import { ProcessedFile, ProcessingState, PDFPage, ProcessingConfig, ProcessingMetrics } from '../types/processing';
-import { ProcessingCache } from './processingCache';
-import { FileHasher } from '../utils/fileHash';
-import { FileAnalyzer } from './fileAnalyzer';
-import { ProcessingErrorHandler } from './processingErrorHandler';
-import { pdfWorkerManager } from './pdfWorkerManager';
-import { createQuickKey } from '../types/fileContext';
+import { ProcessedFile, ProcessingState, PDFPage, ProcessingConfig, ProcessingMetrics } from '@app/types/processing';
+import { ProcessingCache } from '@app/services/processingCache';
+import { FileHasher } from '@app/utils/fileHash';
+import { FileAnalyzer } from '@app/services/fileAnalyzer';
+import { ProcessingErrorHandler } from '@app/services/processingErrorHandler';
+import { pdfWorkerManager } from '@app/services/pdfWorkerManager';
+import { createQuickKey } from '@app/types/fileContext';
 
 export class EnhancedPDFProcessingService {
   private static instance: EnhancedPDFProcessingService;

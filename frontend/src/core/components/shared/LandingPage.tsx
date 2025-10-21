@@ -1,11 +1,11 @@
 import React from 'react';
 import { Container, Button, Group, useMantineColorScheme } from '@mantine/core';
 import { Dropzone } from '@mantine/dropzone';
-import LocalIcon from './LocalIcon';
+import LocalIcon from '@app/components/shared/LocalIcon';
 import { useTranslation } from 'react-i18next';
-import { useFileHandler } from '../../hooks/useFileHandler';
-import { useFilesModalContext } from '../../contexts/FilesModalContext';
-import { BASE_PATH } from '../../constants/app';
+import { useFileHandler } from '@app/hooks/useFileHandler';
+import { useFilesModalContext } from '@app/contexts/FilesModalContext';
+import { BASE_PATH } from '@app/constants/app';
 
 const LandingPage = () => {
   const { addFiles } = useFileHandler();

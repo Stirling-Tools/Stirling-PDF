@@ -4,9 +4,9 @@
  * Forces correct usage patterns through service API design
  */
 
-import { FileId, BaseFileMetadata } from '../types/file';
-import { StirlingFile, StirlingFileStub, createStirlingFile } from '../types/fileContext';
-import { indexedDBManager, DATABASE_CONFIGS } from './indexedDBManager';
+import { FileId, BaseFileMetadata } from '@app/types/file';
+import { StirlingFile, StirlingFileStub, createStirlingFile } from '@app/types/fileContext';
+import { indexedDBManager, DATABASE_CONFIGS } from '@app/services/indexedDBManager';
 
 /**
  * Storage record - single source of truth

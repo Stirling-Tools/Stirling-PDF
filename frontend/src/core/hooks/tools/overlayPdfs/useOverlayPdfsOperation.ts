@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
-import { useToolOperation, ToolType, type ToolOperationConfig } from '../shared/useToolOperation';
-import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
-import { type OverlayPdfsParameters } from './useOverlayPdfsParameters';
+import { useToolOperation, ToolType, type ToolOperationConfig } from '@app/hooks/tools/shared/useToolOperation';
+import { createStandardErrorHandler } from '@app/utils/toolErrorHandler';
+import { type OverlayPdfsParameters } from '@app/hooks/tools/overlayPdfs/useOverlayPdfsParameters';
 
 const buildFormData = (parameters: OverlayPdfsParameters, file: File): FormData => {
   const formData = new FormData();

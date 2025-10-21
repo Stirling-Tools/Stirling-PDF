@@ -1,11 +1,11 @@
 import { useTranslation } from 'react-i18next';
-import { createToolFlow } from '../components/tools/shared/createToolFlow';
-import { useBaseTool } from '../hooks/tools/shared/useBaseTool';
-import { BaseToolProps, ToolComponent } from '../types/tool';
-import OverlayPdfsSettings from '../components/tools/overlayPdfs/OverlayPdfsSettings';
-import { useOverlayPdfsParameters } from '../hooks/tools/overlayPdfs/useOverlayPdfsParameters';
-import { useOverlayPdfsOperation } from '../hooks/tools/overlayPdfs/useOverlayPdfsOperation';
-import { useOverlayPdfsTips } from '../components/tooltips/useOverlayPdfsTips';
+import { createToolFlow } from '@app/components/tools/shared/createToolFlow';
+import { useBaseTool } from '@app/hooks/tools/shared/useBaseTool';
+import { BaseToolProps, ToolComponent } from '@app/types/tool';
+import OverlayPdfsSettings from '@app/components/tools/overlayPdfs/OverlayPdfsSettings';
+import { useOverlayPdfsParameters } from '@app/hooks/tools/overlayPdfs/useOverlayPdfsParameters';
+import { useOverlayPdfsOperation } from '@app/hooks/tools/overlayPdfs/useOverlayPdfsOperation';
+import { useOverlayPdfsTips } from '@app/components/tooltips/useOverlayPdfsTips';
 
 const OverlayPdfs = (props: BaseToolProps) => {
   const { t } = useTranslation();

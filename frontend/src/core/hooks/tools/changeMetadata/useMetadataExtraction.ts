@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
-import { extractPDFMetadata } from "../../../services/pdfMetadataService";
-import { useSelectedFiles } from "../../../contexts/file/fileHooks";
-import { ChangeMetadataParameters } from "./useChangeMetadataParameters";
+import { extractPDFMetadata } from "@app/services/pdfMetadataService";
+import { useSelectedFiles } from "@app/contexts/file/fileHooks";
+import { ChangeMetadataParameters } from "@app/hooks/tools/changeMetadata/useChangeMetadataParameters";
 
 interface MetadataExtractionParams {
   updateParameter: <K extends keyof ChangeMetadataParameters>(key: K, value: ChangeMetadataParameters[K]) => void;

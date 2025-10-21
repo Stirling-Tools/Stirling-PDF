@@ -1,6 +1,6 @@
 import React from 'react';
 import { Text } from '@mantine/core';
-import './styles.css';
+import '@app/components/tools/validateSignature/reportView/styles.css';
 
 const FieldBlock = (label: string, value: React.ReactNode) => {
   const displayValue =

@@ -2,10 +2,10 @@ import React, { useRef, useState } from 'react';
 import { Button, Group, useMantineColorScheme } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import AddIcon from '@mui/icons-material/Add';
-import { useFilesModalContext } from '../../contexts/FilesModalContext';
-import LocalIcon from '../shared/LocalIcon';
-import { BASE_PATH } from '../../constants/app';
-import styles from './FileEditor.module.css';
+import { useFilesModalContext } from '@app/contexts/FilesModalContext';
+import LocalIcon from '@app/components/shared/LocalIcon';
+import { BASE_PATH } from '@app/constants/app';
+import styles from '@app/components/fileEditor/FileEditor.module.css';
 
 interface AddFileCardProps {
   onFileSelect: (files: File[]) => void;

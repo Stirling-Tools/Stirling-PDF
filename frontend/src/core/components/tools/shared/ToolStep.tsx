@@ -1,10 +1,10 @@
 import React, { createContext, useContext, useMemo } from 'react';
 import { Text, Stack, Flex, Divider } from '@mantine/core';
-import LocalIcon from '../../shared/LocalIcon';
-import { Tooltip } from '../../shared/Tooltip';
-import { TooltipTip } from '../../../types/tips';
-import { createFilesToolStep, FilesToolStepProps } from './FilesToolStep';
-import { createReviewToolStep, ReviewToolStepProps } from './ReviewToolStep';
+import LocalIcon from '@app/components/shared/LocalIcon';
+import { Tooltip } from '@app/components/shared/Tooltip';
+import { TooltipTip } from '@app/types/tips';
+import { createFilesToolStep, FilesToolStepProps } from '@app/components/tools/shared/FilesToolStep';
+import { createReviewToolStep, ReviewToolStepProps } from '@app/components/tools/shared/ReviewToolStep';
 
 interface ToolStepContextType {
   visibleStepCount: number;
@@ -227,6 +227,6 @@ export function ToolStepProvider({ children, forceStepNumbers }: { children: Rea
   );
 }
 
-export type { FilesToolStepProps } from './FilesToolStep';
-export type { ReviewToolStepProps } from './ReviewToolStep';
+export type { FilesToolStepProps } from '@app/components/tools/shared/FilesToolStep';
+export type { ReviewToolStepProps } from '@app/components/tools/shared/ReviewToolStep';
 export default ToolStep;

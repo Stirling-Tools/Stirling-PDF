@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { useRotateParameters, defaultParameters, normalizeAngle } from './useRotateParameters';
+import { useRotateParameters, defaultParameters, normalizeAngle } from '@app/hooks/tools/rotate/useRotateParameters';
 
 describe('useRotateParameters', () => {
   test('should initialize with default parameters', () => {

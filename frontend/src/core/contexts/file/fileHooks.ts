@@ -8,9 +8,9 @@ import {
   FileActionsContext,
   FileContextStateValue,
   FileContextActionsValue
-} from './contexts';
-import { StirlingFileStub, StirlingFile } from '../../types/fileContext';
-import { FileId } from '../../types/file';
+} from '@app/contexts/file/contexts';
+import { StirlingFileStub, StirlingFile } from '@app/types/fileContext';
+import { FileId } from '@app/types/file';
 
 /**
  * Hook for accessing file state (will re-render on any state change)

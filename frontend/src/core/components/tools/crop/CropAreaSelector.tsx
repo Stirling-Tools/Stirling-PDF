@@ -7,8 +7,8 @@ import {
   pdfToDOMCoordinates,
   constrainDOMRectToThumbnail,
   isPointInThumbnail
-} from '../../../utils/cropCoordinates';
-import { type ResizeHandle } from '../../../constants/cropConstants';
+} from '@app/utils/cropCoordinates';
+import { type ResizeHandle } from '@app/constants/cropConstants';
 
 interface CropAreaSelectorProps {
   /** PDF bounds for coordinate conversion */

@@ -1,8 +1,8 @@
 import { Stack, Select, Divider } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { ChangeMetadataParameters } from "../../../../hooks/tools/changeMetadata/useChangeMetadataParameters";
-import { TrappedStatus } from "../../../../types/metadata";
-import CustomMetadataStep from "./CustomMetadataStep";
+import { ChangeMetadataParameters } from "@app/hooks/tools/changeMetadata/useChangeMetadataParameters";
+import { TrappedStatus } from "@app/types/metadata";
+import CustomMetadataStep from "@app/components/tools/changeMetadata/steps/CustomMetadataStep";
 
 interface AdvancedOptionsStepProps {
   parameters: ChangeMetadataParameters;

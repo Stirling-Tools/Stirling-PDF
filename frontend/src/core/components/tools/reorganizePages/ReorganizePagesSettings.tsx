@@ -1,7 +1,7 @@
 import { Divider, Select, Stack, TextInput } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import { ReorganizePagesParameters } from '../../../hooks/tools/reorganizePages/useReorganizePagesParameters';
-import { getReorganizePagesModeData } from './constants';
+import { ReorganizePagesParameters } from '@app/hooks/tools/reorganizePages/useReorganizePagesParameters';
+import { getReorganizePagesModeData } from '@app/components/tools/reorganizePages/constants';
 
 export default function ReorganizePagesSettings({
   parameters,

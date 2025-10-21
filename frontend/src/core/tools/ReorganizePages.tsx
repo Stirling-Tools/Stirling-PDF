@@ -1,13 +1,13 @@
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { createToolFlow } from "../components/tools/shared/createToolFlow";
-import { BaseToolProps, ToolComponent } from "../types/tool";
-import { useEndpointEnabled } from "../hooks/useEndpointConfig";
-import { useFileSelection } from "../contexts/FileContext";
-import { useAccordionSteps } from "../hooks/tools/shared/useAccordionSteps";
-import ReorganizePagesSettings from "../components/tools/reorganizePages/ReorganizePagesSettings";
-import { useReorganizePagesParameters } from "../hooks/tools/reorganizePages/useReorganizePagesParameters";
-import { useReorganizePagesOperation } from "../hooks/tools/reorganizePages/useReorganizePagesOperation";
+import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
+import { BaseToolProps, ToolComponent } from "@app/types/tool";
+import { useEndpointEnabled } from "@app/hooks/useEndpointConfig";
+import { useFileSelection } from "@app/contexts/FileContext";
+import { useAccordionSteps } from "@app/hooks/tools/shared/useAccordionSteps";
+import ReorganizePagesSettings from "@app/components/tools/reorganizePages/ReorganizePagesSettings";
+import { useReorganizePagesParameters } from "@app/hooks/tools/reorganizePages/useReorganizePagesParameters";
+import { useReorganizePagesOperation } from "@app/hooks/tools/reorganizePages/useReorganizePagesOperation";
 
 const ReorganizePages = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();

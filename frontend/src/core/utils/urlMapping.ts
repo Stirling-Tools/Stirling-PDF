@@ -1,4 +1,4 @@
-import { ToolId } from '../types/toolId';
+import { ToolId } from '@app/types/toolId';
 
 // Map URL paths to tool keys (multiple URLs can map to same tool)
 export const URL_TO_TOOL_MAP: Record<string, ToolId> = {

@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
-import { ToolType, useToolOperation } from '../shared/useToolOperation';
-import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
-import { AutoRenameParameters, defaultParameters } from './useAutoRenameParameters';
+import { ToolType, useToolOperation } from '@app/hooks/tools/shared/useToolOperation';
+import { createStandardErrorHandler } from '@app/utils/toolErrorHandler';
+import { AutoRenameParameters, defaultParameters } from '@app/hooks/tools/autoRename/useAutoRenameParameters';
 
 export const getFormData = ((parameters: AutoRenameParameters) =>
   Object.entries(parameters).map(([key, value]) =>

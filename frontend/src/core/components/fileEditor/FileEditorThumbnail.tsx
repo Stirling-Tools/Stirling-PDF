@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useRef, useMemo } from 'react';
 import { Text, ActionIcon, CheckboxIndicator, Tooltip, Modal, Button, Group, Stack } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
-import { alert } from '../toast';
+import { alert } from '@app/components/toast';
 import { useTranslation } from 'react-i18next';
 import DownloadOutlinedIcon from '@mui/icons-material/DownloadOutlined';
 import CloseIcon from '@mui/icons-material/Close';
@@ -11,16 +11,16 @@ import PushPinIcon from '@mui/icons-material/PushPin';
 import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-import { StirlingFileStub } from '../../types/fileContext';
-import { zipFileService } from '../../services/zipFileService';
+import { StirlingFileStub } from '@app/types/fileContext';
+import { zipFileService } from '@app/services/zipFileService';
 
-import styles from './FileEditor.module.css';
-import { useFileContext } from '../../contexts/FileContext';
-import { useFileState } from '../../contexts/file/fileHooks';
-import { FileId } from '../../types/file';
-import { formatFileSize } from '../../utils/fileUtils';
-import ToolChain from '../shared/ToolChain';
-import HoverActionMenu, { HoverAction } from '../shared/HoverActionMenu';
+import styles from '@app/components/fileEditor/FileEditor.module.css';
+import { useFileContext } from '@app/contexts/FileContext';
+import { useFileState } from '@app/contexts/file/fileHooks';
+import { FileId } from '@app/types/file';
+import { formatFileSize } from '@app/utils/fileUtils';
+import ToolChain from '@app/components/shared/ToolChain';
+import HoverActionMenu, { HoverAction } from '@app/components/shared/HoverActionMenu';
 
 
 

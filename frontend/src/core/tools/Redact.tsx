@@ -1,14 +1,14 @@
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
-import { createToolFlow } from "../components/tools/shared/createToolFlow";
-import RedactModeSelector from "../components/tools/redact/RedactModeSelector";
-import { useRedactParameters } from "../hooks/tools/redact/useRedactParameters";
-import { useRedactOperation } from "../hooks/tools/redact/useRedactOperation";
-import { useBaseTool } from "../hooks/tools/shared/useBaseTool";
-import { BaseToolProps, ToolComponent } from "../types/tool";
-import { useRedactModeTips, useRedactWordsTips, useRedactAdvancedTips } from "../components/tooltips/useRedactTips";
-import RedactAdvancedSettings from "../components/tools/redact/RedactAdvancedSettings";
-import WordsToRedactInput from "../components/tools/redact/WordsToRedactInput";
+import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
+import RedactModeSelector from "@app/components/tools/redact/RedactModeSelector";
+import { useRedactParameters } from "@app/hooks/tools/redact/useRedactParameters";
+import { useRedactOperation } from "@app/hooks/tools/redact/useRedactOperation";
+import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
+import { BaseToolProps, ToolComponent } from "@app/types/tool";
+import { useRedactModeTips, useRedactWordsTips, useRedactAdvancedTips } from "@app/components/tooltips/useRedactTips";
+import RedactAdvancedSettings from "@app/components/tools/redact/RedactAdvancedSettings";
+import WordsToRedactInput from "@app/components/tools/redact/WordsToRedactInput";
 
 const Redact = (props: BaseToolProps) => {
   const { t } = useTranslation();

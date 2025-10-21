@@ -1,8 +1,8 @@
 import { describe, expect, test, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { MantineProvider } from '@mantine/core';
-import MergeSettings from './MergeSettings';
-import { MergeParameters } from '../../../hooks/tools/merge/useMergeParameters';
+import MergeSettings from '@app/components/tools/merge/MergeSettings';
+import { MergeParameters } from '@app/hooks/tools/merge/useMergeParameters';
 
 // Mock useTranslation with predictable return values
 const mockT = vi.fn((key: string) => `mock-${key}`);

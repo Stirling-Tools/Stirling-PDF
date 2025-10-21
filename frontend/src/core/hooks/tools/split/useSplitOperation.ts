@@ -1,10 +1,10 @@
 import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ToolType, useToolOperation, ToolOperationConfig } from '../shared/useToolOperation';
-import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
-import { SplitParameters, defaultParameters } from './useSplitParameters';
-import { SPLIT_METHODS } from '../../../constants/splitConstants';
-import { useToolResources } from '../shared/useToolResources';
+import { ToolType, useToolOperation, ToolOperationConfig } from '@app/hooks/tools/shared/useToolOperation';
+import { createStandardErrorHandler } from '@app/utils/toolErrorHandler';
+import { SplitParameters, defaultParameters } from '@app/hooks/tools/split/useSplitParameters';
+import { SPLIT_METHODS } from '@app/constants/splitConstants';
+import { useToolResources } from '@app/hooks/tools/shared/useToolResources';
 
 // Static functions that can be used by both the hook and automation executor
 export const buildSplitFormData = (parameters: SplitParameters, file: File): FormData => {

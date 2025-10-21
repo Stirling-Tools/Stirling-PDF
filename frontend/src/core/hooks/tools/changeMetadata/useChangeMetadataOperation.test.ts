@@ -1,6 +1,6 @@
-import { buildChangeMetadataFormData } from './useChangeMetadataOperation';
-import { ChangeMetadataParameters } from './useChangeMetadataParameters';
-import { TrappedStatus } from '../../../types/metadata';
+import { buildChangeMetadataFormData } from '@app/hooks/tools/changeMetadata/useChangeMetadataOperation';
+import { ChangeMetadataParameters } from '@app/hooks/tools/changeMetadata/useChangeMetadataParameters';
+import { TrappedStatus } from '@app/types/metadata';
 import { describe, expect, test } from 'vitest';
 
 describe('buildChangeMetadataFormData', () => {

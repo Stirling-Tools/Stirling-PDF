@@ -1,7 +1,7 @@
 import { describe, expect, test, vi, beforeEach } from 'vitest';
 import { renderHook } from '@testing-library/react';
-import { useRotateOperation } from './useRotateOperation';
-import type { RotateParameters } from './useRotateParameters';
+import { useRotateOperation } from '@app/hooks/tools/rotate/useRotateOperation';
+import type { RotateParameters } from '@app/hooks/tools/rotate/useRotateParameters';
 
 // Mock the useToolOperation hook
 vi.mock('../shared/useToolOperation', async () => {
@@ -24,7 +24,7 @@ vi.mock('../../../utils/toolErrorHandler', () => ({
 }));
 
 // Import the mocked function
-import { SingleFileToolOperationConfig, ToolOperationHook, ToolType, useToolOperation } from '../shared/useToolOperation';
+import { SingleFileToolOperationConfig, ToolOperationHook, ToolType, useToolOperation } from '@app/hooks/tools/shared/useToolOperation';
 
 describe('useRotateOperation', () => {
   const mockUseToolOperation = vi.mocked(useToolOperation);

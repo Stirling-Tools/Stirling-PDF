@@ -1,4 +1,4 @@
-import EmbedPdfViewer from './EmbedPdfViewer';
+import EmbedPdfViewer from '@app/components/viewer/EmbedPdfViewer';
 
 export interface ViewerProps {
   sidebarsVisible: boolean;

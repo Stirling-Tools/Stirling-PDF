@@ -1,6 +1,6 @@
 import { Modal, Title, Text, Button, Stack, Group } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from '../../styles/zIndex';
+import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from '@app/styles/zIndex';
 
 interface TourWelcomeModalProps {
   opened: boolean;

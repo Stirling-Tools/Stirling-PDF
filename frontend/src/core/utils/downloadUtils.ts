@@ -1,6 +1,6 @@
-import { StirlingFileStub } from '../types/fileContext';
-import { fileStorage } from '../services/fileStorage';
-import { zipFileService } from '../services/zipFileService';
+import { StirlingFileStub } from '@app/types/fileContext';
+import { fileStorage } from '@app/services/fileStorage';
+import { zipFileService } from '@app/services/zipFileService';
 
 /**
  * Downloads a blob as a file using browser download API

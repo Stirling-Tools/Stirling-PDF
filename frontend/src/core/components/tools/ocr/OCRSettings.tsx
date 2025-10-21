@@ -1,8 +1,8 @@
 import React from 'react';
 import { Stack, Select, Divider } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import LanguagePicker from './LanguagePicker';
-import { OCRParameters } from '../../../hooks/tools/ocr/useOCRParameters';
+import LanguagePicker from '@app/components/tools/ocr/LanguagePicker';
+import { OCRParameters } from '@app/hooks/tools/ocr/useOCRParameters';
 
 interface OCRSettingsProps {
   parameters: OCRParameters;

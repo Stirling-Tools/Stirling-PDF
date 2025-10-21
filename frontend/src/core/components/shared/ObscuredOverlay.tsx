@@ -1,5 +1,5 @@
 import React from 'react';
-import styles from './ObscuredOverlay/ObscuredOverlay.module.css';
+import styles from '@app/components/shared/ObscuredOverlay/ObscuredOverlay.module.css';
 
 type ObscuredOverlayProps = {
   obscured: boolean;

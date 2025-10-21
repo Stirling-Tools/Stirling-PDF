@@ -1,7 +1,7 @@
 import { Stack, Checkbox, Group } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { AddWatermarkParameters } from "../../../hooks/tools/addWatermark/useAddWatermarkParameters";
-import NumberInputWithUnit from "../shared/NumberInputWithUnit";
+import { AddWatermarkParameters } from "@app/hooks/tools/addWatermark/useAddWatermarkParameters";
+import NumberInputWithUnit from "@app/components/tools/shared/NumberInputWithUnit";
 
 interface WatermarkFormattingProps {
   parameters: AddWatermarkParameters;

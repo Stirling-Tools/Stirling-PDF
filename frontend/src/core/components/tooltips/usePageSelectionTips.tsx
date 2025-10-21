@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { TooltipContent } from '../../types/tips';
+import { TooltipContent } from '@app/types/tips';
 
 /**
  * Reusable tooltip for page selection functionality.

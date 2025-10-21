@@ -1,4 +1,4 @@
-import { useAppConfig } from './useAppConfig';
+import { useAppConfig } from '@app/hooks/useAppConfig';
 
 export const useBaseUrl = (): string => {
   const { config } = useAppConfig();

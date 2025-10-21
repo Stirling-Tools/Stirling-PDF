@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useZoom } from '@embedpdf/plugin-zoom/react';
-import { useViewer } from '../../contexts/ViewerContext';
+import { useViewer } from '@app/contexts/ViewerContext';
 
 /**
  * Component that runs inside EmbedPDF context and manages zoom state locally

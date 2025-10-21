@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
-import { useToolOperation, ToolType } from '../shared/useToolOperation';
-import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
-import { ChangeMetadataParameters, defaultParameters } from './useChangeMetadataParameters';
+import { useToolOperation, ToolType } from '@app/hooks/tools/shared/useToolOperation';
+import { createStandardErrorHandler } from '@app/utils/toolErrorHandler';
+import { ChangeMetadataParameters, defaultParameters } from '@app/hooks/tools/changeMetadata/useChangeMetadataParameters';
 
 // Helper function to format Date object to string
 const formatDateForBackend = (date: Date | null): string => {

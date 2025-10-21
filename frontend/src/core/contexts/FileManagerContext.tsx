@@ -1,10 +1,10 @@
 import React, { createContext, useContext, useState, useRef, useCallback, useEffect, useMemo } from 'react';
-import { fileStorage } from '../services/fileStorage';
-import { zipFileService } from '../services/zipFileService';
-import { StirlingFileStub } from '../types/fileContext';
-import { downloadFiles } from '../utils/downloadUtils';
-import { FileId } from '../types/file';
-import { groupFilesByOriginal } from '../utils/fileHistoryUtils';
+import { fileStorage } from '@app/services/fileStorage';
+import { zipFileService } from '@app/services/zipFileService';
+import { StirlingFileStub } from '@app/types/fileContext';
+import { downloadFiles } from '@app/utils/downloadUtils';
+import { FileId } from '@app/types/file';
+import { groupFilesByOriginal } from '@app/utils/fileHistoryUtils';
 
 // Type for the context value - now contains everything directly
 interface FileManagerContextValue {

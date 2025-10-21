@@ -22,15 +22,15 @@ import {
   FileId,
   StirlingFileStub,
   StirlingFile,
-} from '../types/fileContext';
+} from '@app/types/fileContext';
 
 // Import modular components
-import { fileContextReducer, initialFileContextState } from './file/FileReducer';
-import { createFileSelectors } from './file/fileSelectors';
-import { addFiles, addStirlingFileStubs, consumeFiles, undoConsumeFiles, createFileActions } from './file/fileActions';
-import { FileLifecycleManager } from './file/lifecycle';
-import { FileStateContext, FileActionsContext } from './file/contexts';
-import { IndexedDBProvider, useIndexedDB } from './IndexedDBContext';
+import { fileContextReducer, initialFileContextState } from '@app/contexts/file/FileReducer';
+import { createFileSelectors } from '@app/contexts/file/fileSelectors';
+import { addFiles, addStirlingFileStubs, consumeFiles, undoConsumeFiles, createFileActions } from '@app/contexts/file/fileActions';
+import { FileLifecycleManager } from '@app/contexts/file/lifecycle';
+import { FileStateContext, FileActionsContext } from '@app/contexts/file/contexts';
+import { IndexedDBProvider, useIndexedDB } from '@app/contexts/IndexedDBContext';
 
 const DEBUG = process.env.NODE_ENV === 'development';
 
@@ -284,4 +284,4 @@ export {
   useSelectedFiles,
   // Primary API hooks for tools
   useFileContext
-} from './file/fileHooks';
+} from '@app/contexts/file/fileHooks';

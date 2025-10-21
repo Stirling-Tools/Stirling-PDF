@@ -1,6 +1,6 @@
 import { Stack, Text, NumberInput, Slider } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import { ConvertParameters } from '../../../hooks/tools/convert/useConvertParameters';
+import { ConvertParameters } from '@app/hooks/tools/convert/useConvertParameters';
 
 interface ConvertFromWebSettingsProps {
   parameters: ConvertParameters;

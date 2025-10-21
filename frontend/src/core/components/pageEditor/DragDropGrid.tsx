@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { Box } from '@mantine/core';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { GRID_CONSTANTS } from './constants';
+import { GRID_CONSTANTS } from '@app/components/pageEditor/constants';
 
 interface DragDropItem {
   id: string;

@@ -1,6 +1,6 @@
 import { PDFFont, PDFPage, rgb } from 'pdf-lib';
-import { wrapText } from '../utils/pdfText';
-import { colorPalette } from '../utils/pdfPalette';
+import { wrapText } from '@app/hooks/tools/validateSignature/utils/pdfText';
+import { colorPalette } from '@app/hooks/tools/validateSignature/utils/pdfPalette';
 
 interface DrawCenteredMessageOptions {
   page: PDFPage;

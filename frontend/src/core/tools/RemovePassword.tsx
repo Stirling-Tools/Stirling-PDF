@@ -1,11 +1,11 @@
 import { useTranslation } from "react-i18next";
-import { createToolFlow } from "../components/tools/shared/createToolFlow";
-import RemovePasswordSettings from "../components/tools/removePassword/RemovePasswordSettings";
-import { useRemovePasswordParameters } from "../hooks/tools/removePassword/useRemovePasswordParameters";
-import { useRemovePasswordOperation } from "../hooks/tools/removePassword/useRemovePasswordOperation";
-import { useRemovePasswordTips } from "../components/tooltips/useRemovePasswordTips";
-import { useBaseTool } from "../hooks/tools/shared/useBaseTool";
-import { BaseToolProps, ToolComponent } from "../types/tool";
+import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
+import RemovePasswordSettings from "@app/components/tools/removePassword/RemovePasswordSettings";
+import { useRemovePasswordParameters } from "@app/hooks/tools/removePassword/useRemovePasswordParameters";
+import { useRemovePasswordOperation } from "@app/hooks/tools/removePassword/useRemovePasswordOperation";
+import { useRemovePasswordTips } from "@app/components/tooltips/useRemovePasswordTips";
+import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
+import { BaseToolProps, ToolComponent } from "@app/types/tool";
 
 const RemovePassword = (props: BaseToolProps) => {
   const { t } = useTranslation();

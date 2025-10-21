@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { Button, Group, Text, Stack, useMantineColorScheme } from '@mantine/core';
 import HistoryIcon from '@mui/icons-material/History';
 import { useTranslation } from 'react-i18next';
-import { useFileManagerContext } from '../../contexts/FileManagerContext';
-import LocalIcon from '../shared/LocalIcon';
-import { BASE_PATH } from '../../constants/app';
+import { useFileManagerContext } from '@app/contexts/FileManagerContext';
+import LocalIcon from '@app/components/shared/LocalIcon';
+import { BASE_PATH } from '@app/constants/app';
 
 const EmptyFilesState: React.FC = () => {
   const { t } = useTranslation();

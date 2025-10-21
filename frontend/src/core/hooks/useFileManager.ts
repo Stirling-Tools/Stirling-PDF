@@ -1,8 +1,8 @@
 import { useState, useCallback } from 'react';
-import { useIndexedDB } from '../contexts/IndexedDBContext';
-import { fileStorage } from '../services/fileStorage';
-import { StirlingFileStub, StirlingFile } from '../types/fileContext';
-import { FileId } from '../types/fileContext';
+import { useIndexedDB } from '@app/contexts/IndexedDBContext';
+import { fileStorage } from '@app/services/fileStorage';
+import { StirlingFileStub, StirlingFile } from '@app/types/fileContext';
+import { FileId } from '@app/types/fileContext';
 
 export const useFileManager = () => {
   const [loading, setLoading] = useState(false);

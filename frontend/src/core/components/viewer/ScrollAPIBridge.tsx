@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useScroll } from '@embedpdf/plugin-scroll/react';
-import { useViewer } from '../../contexts/ViewerContext';
+import { useViewer } from '@app/contexts/ViewerContext';
 
 /**
  * ScrollAPIBridge manages scroll state and exposes scroll actions.

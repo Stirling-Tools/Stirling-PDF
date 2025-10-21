@@ -1,10 +1,10 @@
 import axios from 'axios';
-import { ToolRegistry } from '../data/toolsTaxonomy';
-import { ToolId } from '../types/toolId';
-import { AUTOMATION_CONSTANTS } from '../constants/automation';
-import { AutomationFileProcessor } from './automationFileProcessor';
-import { ToolType } from '../hooks/tools/shared/useToolOperation';
-import { processResponse } from './toolResponseProcessor';
+import { ToolRegistry } from '@app/data/toolsTaxonomy';
+import { ToolId } from '@app/types/toolId';
+import { AUTOMATION_CONSTANTS } from '@app/constants/automation';
+import { AutomationFileProcessor } from '@app/utils/automationFileProcessor';
+import { ToolType } from '@app/hooks/tools/shared/useToolOperation';
+import { processResponse } from '@app/utils/toolResponseProcessor';
 
 /**
  * Process multi-file tool response (handles ZIP or single PDF responses)

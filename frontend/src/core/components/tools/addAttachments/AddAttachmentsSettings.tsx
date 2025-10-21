@@ -6,8 +6,8 @@
 
 import { Stack, Text, Group, ActionIcon, Alert, ScrollArea, Button } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { AddAttachmentsParameters } from "../../../hooks/tools/addAttachments/useAddAttachmentsParameters";
-import LocalIcon from "../../shared/LocalIcon";
+import { AddAttachmentsParameters } from "@app/hooks/tools/addAttachments/useAddAttachmentsParameters";
+import LocalIcon from "@app/components/shared/LocalIcon";
 
 interface AddAttachmentsSettingsProps {
   parameters: AddAttachmentsParameters;

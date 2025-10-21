@@ -1,11 +1,11 @@
 import { useTranslation } from "react-i18next";
-import { createToolFlow } from "../components/tools/shared/createToolFlow";
-import ChangePermissionsSettings from "../components/tools/changePermissions/ChangePermissionsSettings";
-import { useChangePermissionsParameters } from "../hooks/tools/changePermissions/useChangePermissionsParameters";
-import { useChangePermissionsOperation } from "../hooks/tools/changePermissions/useChangePermissionsOperation";
-import { useChangePermissionsTips } from "../components/tooltips/useChangePermissionsTips";
-import { useBaseTool } from "../hooks/tools/shared/useBaseTool";
-import { BaseToolProps, ToolComponent } from "../types/tool";
+import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
+import ChangePermissionsSettings from "@app/components/tools/changePermissions/ChangePermissionsSettings";
+import { useChangePermissionsParameters } from "@app/hooks/tools/changePermissions/useChangePermissionsParameters";
+import { useChangePermissionsOperation } from "@app/hooks/tools/changePermissions/useChangePermissionsOperation";
+import { useChangePermissionsTips } from "@app/components/tooltips/useChangePermissionsTips";
+import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
+import { BaseToolProps, ToolComponent } from "@app/types/tool";
 
 const ChangePermissions = (props: BaseToolProps) => {
   const { t } = useTranslation();

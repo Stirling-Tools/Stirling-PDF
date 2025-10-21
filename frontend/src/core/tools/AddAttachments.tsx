@@ -1,13 +1,13 @@
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { useFileSelection } from "../contexts/FileContext";
-import { createToolFlow } from "../components/tools/shared/createToolFlow";
-import { BaseToolProps, ToolComponent } from "../types/tool";
-import { useEndpointEnabled } from "../hooks/useEndpointConfig";
-import { useAddAttachmentsParameters } from "../hooks/tools/addAttachments/useAddAttachmentsParameters";
-import { useAddAttachmentsOperation } from "../hooks/tools/addAttachments/useAddAttachmentsOperation";
-import { useAccordionSteps } from "../hooks/tools/shared/useAccordionSteps";
-import AddAttachmentsSettings from "../components/tools/addAttachments/AddAttachmentsSettings";
+import { useFileSelection } from "@app/contexts/FileContext";
+import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
+import { BaseToolProps, ToolComponent } from "@app/types/tool";
+import { useEndpointEnabled } from "@app/hooks/useEndpointConfig";
+import { useAddAttachmentsParameters } from "@app/hooks/tools/addAttachments/useAddAttachmentsParameters";
+import { useAddAttachmentsOperation } from "@app/hooks/tools/addAttachments/useAddAttachmentsOperation";
+import { useAccordionSteps } from "@app/hooks/tools/shared/useAccordionSteps";
+import AddAttachmentsSettings from "@app/components/tools/addAttachments/AddAttachmentsSettings";
 
 const AddAttachments = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();

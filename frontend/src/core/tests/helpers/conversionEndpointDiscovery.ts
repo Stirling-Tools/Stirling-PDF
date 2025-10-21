@@ -4,7 +4,7 @@
  * Uses the backend's endpoint configuration API to discover available conversions
  */
 
-import { useMultipleEndpointsEnabled } from '../../hooks/useEndpointConfig';
+import { useMultipleEndpointsEnabled } from '@app/hooks/useEndpointConfig';
 
 export interface ConversionEndpoint {
   endpoint: string;

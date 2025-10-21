@@ -1,5 +1,5 @@
 import { Stack, Text } from '@mantine/core';
-import { formatFileSize, getFileDate } from '../../../utils/fileUtils';
+import { formatFileSize, getFileDate } from '@app/utils/fileUtils';
 
 export interface FileMetadataProps {
   file: File;

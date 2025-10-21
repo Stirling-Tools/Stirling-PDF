@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
-import { useFileState } from '../../../contexts/FileContext';
-import { PDFDocument, PDFPage } from '../../../types/pageEditor';
-import { FileId } from '../../../types/file';
+import { useFileState } from '@app/contexts/FileContext';
+import { PDFDocument, PDFPage } from '@app/types/pageEditor';
+import { FileId } from '@app/types/file';
 
 export interface PageDocumentHook {
   document: PDFDocument | null;

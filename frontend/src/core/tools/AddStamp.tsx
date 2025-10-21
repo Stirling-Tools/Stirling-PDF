@@ -1,19 +1,19 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useFileSelection } from "../contexts/FileContext";
-import { createToolFlow } from "../components/tools/shared/createToolFlow";
-import { BaseToolProps, ToolComponent } from "../types/tool";
-import { useEndpointEnabled } from "../hooks/useEndpointConfig";
-import { useAddStampParameters } from "../components/tools/addStamp/useAddStampParameters";
-import { useAddStampOperation } from "../components/tools/addStamp/useAddStampOperation";
+import { useFileSelection } from "@app/contexts/FileContext";
+import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
+import { BaseToolProps, ToolComponent } from "@app/types/tool";
+import { useEndpointEnabled } from "@app/hooks/useEndpointConfig";
+import { useAddStampParameters } from "@app/components/tools/addStamp/useAddStampParameters";
+import { useAddStampOperation } from "@app/components/tools/addStamp/useAddStampOperation";
 import { Stack, Text } from "@mantine/core";
-import StampPreview from "../components/tools/addStamp/StampPreview";
-import styles from "../components/tools/addStamp/StampPreview.module.css";
-import ButtonSelector from "../components/shared/ButtonSelector";
-import { useAccordionSteps } from "../hooks/tools/shared/useAccordionSteps";
-import ObscuredOverlay from "../components/shared/ObscuredOverlay";
-import StampSetupSettings from "../components/tools/addStamp/StampSetupSettings";
-import StampPositionFormattingSettings from "../components/tools/addStamp/StampPositionFormattingSettings";
+import StampPreview from "@app/components/tools/addStamp/StampPreview";
+import styles from "@app/components/tools/addStamp/StampPreview.module.css";
+import ButtonSelector from "@app/components/shared/ButtonSelector";
+import { useAccordionSteps } from "@app/hooks/tools/shared/useAccordionSteps";
+import ObscuredOverlay from "@app/components/shared/ObscuredOverlay";
+import StampSetupSettings from "@app/components/tools/addStamp/StampSetupSettings";
+import StampPositionFormattingSettings from "@app/components/tools/addStamp/StampPositionFormattingSettings";
 
 const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();

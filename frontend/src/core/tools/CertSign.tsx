@@ -1,16 +1,16 @@
 import { useTranslation } from "react-i18next";
-import { createToolFlow } from "../components/tools/shared/createToolFlow";
-import CertificateTypeSettings from "../components/tools/certSign/CertificateTypeSettings";
-import CertificateFormatSettings from "../components/tools/certSign/CertificateFormatSettings";
-import CertificateFilesSettings from "../components/tools/certSign/CertificateFilesSettings";
-import SignatureAppearanceSettings from "../components/tools/certSign/SignatureAppearanceSettings";
-import { useCertSignParameters } from "../hooks/tools/certSign/useCertSignParameters";
-import { useCertSignOperation } from "../hooks/tools/certSign/useCertSignOperation";
-import { useCertificateTypeTips } from "../components/tooltips/useCertificateTypeTips";
-import { useSignatureAppearanceTips } from "../components/tooltips/useSignatureAppearanceTips";
-import { useSignModeTips } from "../components/tooltips/useSignModeTips";
-import { useBaseTool } from "../hooks/tools/shared/useBaseTool";
-import { BaseToolProps, ToolComponent } from "../types/tool";
+import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
+import CertificateTypeSettings from "@app/components/tools/certSign/CertificateTypeSettings";
+import CertificateFormatSettings from "@app/components/tools/certSign/CertificateFormatSettings";
+import CertificateFilesSettings from "@app/components/tools/certSign/CertificateFilesSettings";
+import SignatureAppearanceSettings from "@app/components/tools/certSign/SignatureAppearanceSettings";
+import { useCertSignParameters } from "@app/hooks/tools/certSign/useCertSignParameters";
+import { useCertSignOperation } from "@app/hooks/tools/certSign/useCertSignOperation";
+import { useCertificateTypeTips } from "@app/components/tooltips/useCertificateTypeTips";
+import { useSignatureAppearanceTips } from "@app/components/tooltips/useSignatureAppearanceTips";
+import { useSignModeTips } from "@app/components/tooltips/useSignModeTips";
+import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
+import { BaseToolProps, ToolComponent } from "@app/types/tool";
 
 const CertSign = (props: BaseToolProps) => {
   const { t } = useTranslation();

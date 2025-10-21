@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
-import { useToolOperation, ToolType } from '../shared/useToolOperation';
-import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
-import { AdjustPageScaleParameters, defaultParameters } from './useAdjustPageScaleParameters';
+import { useToolOperation, ToolType } from '@app/hooks/tools/shared/useToolOperation';
+import { createStandardErrorHandler } from '@app/utils/toolErrorHandler';
+import { AdjustPageScaleParameters, defaultParameters } from '@app/hooks/tools/adjustPageScale/useAdjustPageScaleParameters';
 
 export const buildAdjustPageScaleFormData = (parameters: AdjustPageScaleParameters, file: File): FormData => {
   const formData = new FormData();

@@ -1,11 +1,11 @@
 import { useTranslation } from "react-i18next";
-import { createToolFlow } from "../components/tools/shared/createToolFlow";
-import ReplaceColorSettings from "../components/tools/replaceColor/ReplaceColorSettings";
-import { useReplaceColorParameters } from "../hooks/tools/replaceColor/useReplaceColorParameters";
-import { useReplaceColorOperation } from "../hooks/tools/replaceColor/useReplaceColorOperation";
-import { useBaseTool } from "../hooks/tools/shared/useBaseTool";
-import { BaseToolProps, ToolComponent } from "../types/tool";
-import { useReplaceColorTips } from "../components/tooltips/useReplaceColorTips";
+import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
+import ReplaceColorSettings from "@app/components/tools/replaceColor/ReplaceColorSettings";
+import { useReplaceColorParameters } from "@app/hooks/tools/replaceColor/useReplaceColorParameters";
+import { useReplaceColorOperation } from "@app/hooks/tools/replaceColor/useReplaceColorOperation";
+import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
+import { BaseToolProps, ToolComponent } from "@app/types/tool";
+import { useReplaceColorTips } from "@app/components/tooltips/useReplaceColorTips";
 
 const ReplaceColor = (props: BaseToolProps) => {
   const { t } = useTranslation();

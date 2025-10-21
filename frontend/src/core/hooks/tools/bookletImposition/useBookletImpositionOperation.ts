@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
-import { useToolOperation, ToolType } from '../shared/useToolOperation';
-import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
-import { BookletImpositionParameters, defaultParameters } from './useBookletImpositionParameters';
+import { useToolOperation, ToolType } from '@app/hooks/tools/shared/useToolOperation';
+import { createStandardErrorHandler } from '@app/utils/toolErrorHandler';
+import { BookletImpositionParameters, defaultParameters } from '@app/hooks/tools/bookletImposition/useBookletImpositionParameters';
 
 // Static configuration that can be used by both the hook and automation executor
 export const buildBookletImpositionFormData = (parameters: BookletImpositionParameters, file: File): FormData => {

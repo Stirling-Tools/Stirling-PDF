@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
-import { useToolOperation, ToolOperationHook, ToolType } from '../shared/useToolOperation';
-import { SignParameters, DEFAULT_PARAMETERS } from './useSignParameters';
-import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
+import { useToolOperation, ToolOperationHook, ToolType } from '@app/hooks/tools/shared/useToolOperation';
+import { SignParameters, DEFAULT_PARAMETERS } from '@app/hooks/tools/sign/useSignParameters';
+import { createStandardErrorHandler } from '@app/utils/toolErrorHandler';
 
 // Static configuration that can be used by both the hook and automation executor
 export const buildSignFormData = (params: SignParameters, file: File): FormData => {

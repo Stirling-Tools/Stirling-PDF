@@ -1,9 +1,9 @@
 import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useToolOperation, ToolType } from '../shared/useToolOperation';
-import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
-import { ExtractImagesParameters, defaultParameters } from './useExtractImagesParameters';
-import { useToolResources } from '../shared/useToolResources';
+import { useToolOperation, ToolType } from '@app/hooks/tools/shared/useToolOperation';
+import { createStandardErrorHandler } from '@app/utils/toolErrorHandler';
+import { ExtractImagesParameters, defaultParameters } from '@app/hooks/tools/extractImages/useExtractImagesParameters';
+import { useToolResources } from '@app/hooks/tools/shared/useToolResources';
 
 // Static configuration that can be used by both the hook and automation executor
 export const buildExtractImagesFormData = (parameters: ExtractImagesParameters, file: File): FormData => {

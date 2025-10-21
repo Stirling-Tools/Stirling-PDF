@@ -1,4 +1,4 @@
-import { PDFDocument, PDFPage } from '../types/pageEditor';
+import { PDFDocument, PDFPage } from '@app/types/pageEditor';
 
 /**
  * Service for applying DOM changes to PDF document state

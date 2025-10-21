@@ -5,7 +5,7 @@
 
 import { describe, test, expect } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { useConvertParameters } from './useConvertParameters';
+import { useConvertParameters } from '@app/hooks/tools/convert/useConvertParameters';
 
 describe('useConvertParameters - Auto Detection & Smart Conversion', () => {
 

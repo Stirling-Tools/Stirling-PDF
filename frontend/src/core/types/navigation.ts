@@ -2,8 +2,8 @@
  * Navigation types for workbench and tool separation
  */
 
-import { WorkbenchType } from './workbench';
-import { ToolId } from './toolId';
+import { WorkbenchType } from '@app/types/workbench';
+import { ToolId } from '@app/types/toolId';
 
 // Navigation state
 export interface NavigationState {

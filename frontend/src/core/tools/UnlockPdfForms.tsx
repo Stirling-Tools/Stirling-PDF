@@ -1,9 +1,9 @@
 import { useTranslation } from "react-i18next";
-import { createToolFlow } from "../components/tools/shared/createToolFlow";
-import { useUnlockPdfFormsParameters } from "../hooks/tools/unlockPdfForms/useUnlockPdfFormsParameters";
-import { useUnlockPdfFormsOperation } from "../hooks/tools/unlockPdfForms/useUnlockPdfFormsOperation";
-import { useBaseTool } from "../hooks/tools/shared/useBaseTool";
-import { BaseToolProps, ToolComponent } from "../types/tool";
+import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
+import { useUnlockPdfFormsParameters } from "@app/hooks/tools/unlockPdfForms/useUnlockPdfFormsParameters";
+import { useUnlockPdfFormsOperation } from "@app/hooks/tools/unlockPdfForms/useUnlockPdfFormsOperation";
+import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
+import { BaseToolProps, ToolComponent } from "@app/types/tool";
 
 const UnlockPdfForms = (props: BaseToolProps) => {
   const { t } = useTranslation();

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { clamp } from '../utils/genericUtils';
-import { getSidebarInfo } from '../utils/sidebarUtils';
-import { SidebarRefs, SidebarState } from '../types/sidebar';
+import { clamp } from '@app/utils/genericUtils';
+import { getSidebarInfo } from '@app/utils/sidebarUtils';
+import { SidebarRefs, SidebarState } from '@app/types/sidebar';
 
 type Position = 'right' | 'left' | 'top' | 'bottom';
 

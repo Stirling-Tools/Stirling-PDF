@@ -1,9 +1,9 @@
 import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ToolType, useToolOperation, ToolOperationConfig } from '../shared/useToolOperation';
-import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
-import { ScannerImageSplitParameters, defaultParameters } from './useScannerImageSplitParameters';
-import { useToolResources } from '../shared/useToolResources';
+import { ToolType, useToolOperation, ToolOperationConfig } from '@app/hooks/tools/shared/useToolOperation';
+import { createStandardErrorHandler } from '@app/utils/toolErrorHandler';
+import { ScannerImageSplitParameters, defaultParameters } from '@app/hooks/tools/scannerImageSplit/useScannerImageSplitParameters';
+import { useToolResources } from '@app/hooks/tools/shared/useToolResources';
 
 export const buildScannerImageSplitFormData = (parameters: ScannerImageSplitParameters, file: File): FormData => {
   const formData = new FormData();

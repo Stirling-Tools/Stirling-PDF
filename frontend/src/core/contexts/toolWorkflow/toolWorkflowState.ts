@@ -1,5 +1,5 @@
-import { PageEditorFunctions } from '../../types/pageEditor';
-import { type ToolPanelMode, DEFAULT_TOOL_PANEL_MODE } from '../../constants/toolPanel';
+import { PageEditorFunctions } from '@app/types/pageEditor';
+import { type ToolPanelMode, DEFAULT_TOOL_PANEL_MODE } from '@app/constants/toolPanel';
 
 export interface ToolWorkflowState {
   // UI State

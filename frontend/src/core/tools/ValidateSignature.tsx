@@ -1,17 +1,17 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
-import { createToolFlow } from '../components/tools/shared/createToolFlow';
-import { useBaseTool } from '../hooks/tools/shared/useBaseTool';
-import { BaseToolProps, ToolComponent } from '../types/tool';
-import { useValidateSignatureParameters, defaultParameters } from '../hooks/tools/validateSignature/useValidateSignatureParameters';
-import ValidateSignatureSettings from '../components/tools/validateSignature/ValidateSignatureSettings';
-import ValidateSignatureResults from '../components/tools/validateSignature/ValidateSignatureResults';
-import { useValidateSignatureOperation, ValidateSignatureOperationHook } from '../hooks/tools/validateSignature/useValidateSignatureOperation';
-import ValidateSignatureReportView from '../components/tools/validateSignature/ValidateSignatureReportView';
-import { useToolWorkflow } from '../contexts/ToolWorkflowContext';
-import { useNavigationActions, useNavigationState } from '../contexts/NavigationContext';
-import type { SignatureValidationReportData } from '../types/validateSignature';
+import { createToolFlow } from '@app/components/tools/shared/createToolFlow';
+import { useBaseTool } from '@app/hooks/tools/shared/useBaseTool';
+import { BaseToolProps, ToolComponent } from '@app/types/tool';
+import { useValidateSignatureParameters, defaultParameters } from '@app/hooks/tools/validateSignature/useValidateSignatureParameters';
+import ValidateSignatureSettings from '@app/components/tools/validateSignature/ValidateSignatureSettings';
+import ValidateSignatureResults from '@app/components/tools/validateSignature/ValidateSignatureResults';
+import { useValidateSignatureOperation, ValidateSignatureOperationHook } from '@app/hooks/tools/validateSignature/useValidateSignatureOperation';
+import ValidateSignatureReportView from '@app/components/tools/validateSignature/ValidateSignatureReportView';
+import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
+import { useNavigationActions, useNavigationState } from '@app/contexts/NavigationContext';
+import type { SignatureValidationReportData } from '@app/types/validateSignature';
 
 const ValidateSignature = (props: BaseToolProps) => {
   const { t } = useTranslation();

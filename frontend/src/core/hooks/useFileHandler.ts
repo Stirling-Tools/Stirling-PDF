@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { useFileActions } from '../contexts/FileContext';
+import { useFileActions } from '@app/contexts/FileContext';
 
 export const useFileHandler = () => {
   const { actions } = useFileActions();

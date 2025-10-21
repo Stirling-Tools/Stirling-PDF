@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import FileStatusIndicator from './FileStatusIndicator';
-import { StirlingFile } from '../../../types/fileContext';
+import FileStatusIndicator from '@app/components/tools/shared/FileStatusIndicator';
+import { StirlingFile } from '@app/types/fileContext';
 
 export interface FilesToolStepProps {
   selectedFiles: StirlingFile[];

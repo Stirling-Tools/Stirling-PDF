@@ -1,5 +1,5 @@
-import { type ToolPanelMode, DEFAULT_TOOL_PANEL_MODE } from '../constants/toolPanel';
-import { type ThemeMode, getSystemTheme } from '../constants/theme';
+import { type ToolPanelMode, DEFAULT_TOOL_PANEL_MODE } from '@app/constants/toolPanel';
+import { type ThemeMode, getSystemTheme } from '@app/constants/theme';
 
 export interface UserPreferences {
   autoUnzip: boolean;

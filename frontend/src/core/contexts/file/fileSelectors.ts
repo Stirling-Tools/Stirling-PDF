@@ -2,14 +2,14 @@
  * File selectors - Pure functions for accessing file state
  */
 
-import { FileId } from '../../types/file';
+import { FileId } from '@app/types/file';
 import {
   StirlingFileStub,
   FileContextState,
   FileContextSelectors,
   StirlingFile,
   createStirlingFile
-} from '../../types/fileContext';
+} from '@app/types/fileContext';
 
 /**
  * Create stable selectors using stateRef and filesRef

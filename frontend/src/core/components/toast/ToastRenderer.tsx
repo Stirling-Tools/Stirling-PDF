@@ -1,7 +1,7 @@
-import { useToast } from './ToastContext';
-import { ToastInstance, ToastLocation } from './types';
-import { LocalIcon } from '../shared/LocalIcon';
-import './ToastRenderer.css';
+import { useToast } from '@app/components/toast/ToastContext';
+import { ToastInstance, ToastLocation } from '@app/components/toast/types';
+import { LocalIcon } from '@app/components/shared/LocalIcon';
+import '@app/components/toast/ToastRenderer.css';
 
 const locationToClass: Record<ToastLocation, string> = {
   'top-left': 'toast-container--top-left',

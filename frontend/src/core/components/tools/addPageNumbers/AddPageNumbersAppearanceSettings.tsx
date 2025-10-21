@@ -4,8 +4,8 @@
 
 import { Stack, Select, TextInput, NumberInput } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { AddPageNumbersParameters } from "./useAddPageNumbersParameters";
-import { Tooltip } from "../../shared/Tooltip";
+import { AddPageNumbersParameters } from "@app/components/tools/addPageNumbers/useAddPageNumbersParameters";
+import { Tooltip } from "@app/components/shared/Tooltip";
 
 interface AddPageNumbersAppearanceSettingsProps {
   parameters: AddPageNumbersParameters;

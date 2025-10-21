@@ -1,6 +1,6 @@
 import { Stack, NumberInput, ColorInput, Checkbox } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { RedactParameters } from "../../../hooks/tools/redact/useRedactParameters";
+import { RedactParameters } from "@app/hooks/tools/redact/useRedactParameters";
 
 interface RedactAdvancedSettingsProps {
   parameters: RedactParameters;

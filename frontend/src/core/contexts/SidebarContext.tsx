@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useRef, useMemo } from 'react';
-import { SidebarState, SidebarRefs, SidebarContextValue, SidebarProviderProps } from '../types/sidebar';
+import { SidebarState, SidebarRefs, SidebarContextValue, SidebarProviderProps } from '@app/types/sidebar';
 
 const SidebarContext = createContext<SidebarContextValue | undefined>(undefined);
 

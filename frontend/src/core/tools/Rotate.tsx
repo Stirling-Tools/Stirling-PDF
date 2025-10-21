@@ -1,11 +1,11 @@
 import { useTranslation } from "react-i18next";
-import { createToolFlow } from "../components/tools/shared/createToolFlow";
-import RotateSettings from "../components/tools/rotate/RotateSettings";
-import { useRotateParameters } from "../hooks/tools/rotate/useRotateParameters";
-import { useRotateOperation } from "../hooks/tools/rotate/useRotateOperation";
-import { useBaseTool } from "../hooks/tools/shared/useBaseTool";
-import { BaseToolProps, ToolComponent } from "../types/tool";
-import { useRotateTips } from "../components/tooltips/useRotateTips";
+import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
+import RotateSettings from "@app/components/tools/rotate/RotateSettings";
+import { useRotateParameters } from "@app/hooks/tools/rotate/useRotateParameters";
+import { useRotateOperation } from "@app/hooks/tools/rotate/useRotateOperation";
+import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
+import { BaseToolProps, ToolComponent } from "@app/types/tool";
+import { useRotateTips } from "@app/components/tooltips/useRotateTips";
 
 const Rotate = (props: BaseToolProps) => {
   const { t } = useTranslation();

@@ -1,11 +1,11 @@
 import React from 'react';
 import { ActionIcon } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import { Tooltip } from './Tooltip';
+import { Tooltip } from '@app/components/shared/Tooltip';
 import AppsIcon from '@mui/icons-material/AppsRounded';
-import { useToolWorkflow } from '../../contexts/ToolWorkflowContext';
-import { useSidebarNavigation } from '../../hooks/useSidebarNavigation';
-import { handleUnlessSpecialClick } from '../../utils/clickHandlers';
+import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
+import { useSidebarNavigation } from '@app/hooks/useSidebarNavigation';
+import { handleUnlessSpecialClick } from '@app/utils/clickHandlers';
 
 interface AllToolsNavButtonProps {
   activeButton: string;

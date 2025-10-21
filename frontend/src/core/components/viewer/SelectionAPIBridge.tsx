@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useSelectionCapability, SelectionRangeX } from '@embedpdf/plugin-selection/react';
-import { useViewer } from '../../contexts/ViewerContext';
+import { useViewer } from '@app/contexts/ViewerContext';
 
 /**
  * Component that runs inside EmbedPDF context and updates selection state in ViewerContext

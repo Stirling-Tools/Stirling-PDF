@@ -1,4 +1,4 @@
-import { PAGE_SIZES } from "./pageSizeConstants";
+import { PAGE_SIZES } from "@app/constants/pageSizeConstants";
 
 // Default crop area (covers entire page)
 export const DEFAULT_CROP_AREA = {

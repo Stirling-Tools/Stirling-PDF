@@ -1,8 +1,8 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { HotkeyBinding, bindingEquals, bindingMatchesEvent, deserializeBindings, getDisplayParts, isMacLike, normalizeBinding, serializeBindings } from '../utils/hotkeys';
-import { useToolWorkflow } from './ToolWorkflowContext';
-import { ToolId } from '../types/toolId';
-import { ToolCategoryId, ToolRegistryEntry } from '../data/toolsTaxonomy';
+import { HotkeyBinding, bindingEquals, bindingMatchesEvent, deserializeBindings, getDisplayParts, isMacLike, normalizeBinding, serializeBindings } from '@app/utils/hotkeys';
+import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
+import { ToolId } from '@app/types/toolId';
+import { ToolCategoryId, ToolRegistryEntry } from '@app/data/toolsTaxonomy';
 
 type Bindings = Partial<Record<ToolId, HotkeyBinding>>;
 

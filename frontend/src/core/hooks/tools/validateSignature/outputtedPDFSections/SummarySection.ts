@@ -1,10 +1,10 @@
 import type { TFunction } from 'i18next';
 import { PDFFont, PDFImage, PDFPage } from 'pdf-lib';
-import { SignatureValidationReportEntry } from '../../../../types/validateSignature';
-import { drawFieldBox } from './FieldBoxSection';
-import { drawThumbnailImage, drawThumbnailPlaceholder } from './ThumbnailSection';
-import { colorPalette } from '../utils/pdfPalette';
-import { formatFileSize } from '../utils/pdfText';
+import { SignatureValidationReportEntry } from '@app/types/validateSignature';
+import { drawFieldBox } from '@app/hooks/tools/validateSignature/outputtedPDFSections/FieldBoxSection';
+import { drawThumbnailImage, drawThumbnailPlaceholder } from '@app/hooks/tools/validateSignature/outputtedPDFSections/ThumbnailSection';
+import { colorPalette } from '@app/hooks/tools/validateSignature/utils/pdfPalette';
+import { formatFileSize } from '@app/hooks/tools/validateSignature/utils/pdfText';
 
 interface DrawSummarySectionOptions {
   page: PDFPage;

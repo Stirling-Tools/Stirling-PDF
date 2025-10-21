@@ -1,7 +1,7 @@
 import { describe, expect, test, vi, beforeEach } from 'vitest';
 import { renderHook } from '@testing-library/react';
-import { useRemovePasswordOperation } from './useRemovePasswordOperation';
-import type { RemovePasswordParameters } from './useRemovePasswordParameters';
+import { useRemovePasswordOperation } from '@app/hooks/tools/removePassword/useRemovePasswordOperation';
+import type { RemovePasswordParameters } from '@app/hooks/tools/removePassword/useRemovePasswordParameters';
 
 vi.mock('../shared/useToolOperation', async () => {
   const actual = await vi.importActual('../shared/useToolOperation');  // Need to keep ToolType etc.
@@ -23,7 +23,7 @@ vi.mock('../../../utils/toolErrorHandler', () => ({
 }));
 
 // Import the mocked function
-import { SingleFileToolOperationConfig, ToolOperationHook, ToolType, useToolOperation } from '../shared/useToolOperation';
+import { SingleFileToolOperationConfig, ToolOperationHook, ToolType, useToolOperation } from '@app/hooks/tools/shared/useToolOperation';
 
 describe('useRemovePasswordOperation', () => {
   const mockUseToolOperation = vi.mocked(useToolOperation);

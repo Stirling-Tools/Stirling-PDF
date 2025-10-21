@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AutomationTool, AutomationConfig, AutomationMode } from '../../../types/automation';
-import { AUTOMATION_CONSTANTS } from '../../../constants/automation';
-import { ToolRegistry } from '../../../data/toolsTaxonomy';
-import { ToolId } from 'src/types/toolId';
+import { AutomationTool, AutomationConfig, AutomationMode } from '@app/types/automation';
+import { AUTOMATION_CONSTANTS } from '@app/constants/automation';
+import { ToolRegistry } from '@app/data/toolsTaxonomy';
+import { ToolId } from "@app/types/toolId";
 
 
 interface UseAutomationFormProps {

@@ -1,5 +1,5 @@
 import React, { createContext, useCallback, useContext, useMemo, useRef, useState, useEffect } from 'react';
-import { ToastApi, ToastInstance, ToastOptions } from './types';
+import { ToastApi, ToastInstance, ToastOptions } from '@app/components/toast/types';
 
 function normalizeProgress(value: number | undefined): number | undefined {
   if (typeof value !== 'number' || Number.isNaN(value)) return undefined;

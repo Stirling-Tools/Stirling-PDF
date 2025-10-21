@@ -1,7 +1,7 @@
 import React, { forwardRef } from 'react';
 import { useMantineColorScheme } from '@mantine/core';
-import LocalIcon from './LocalIcon';
-import styles from './textInput/TextInput.module.css';
+import LocalIcon from '@app/components/shared/LocalIcon';
+import styles from '@app/components/shared/textInput/TextInput.module.css';
 
 /**
  * Props for the TextInput component

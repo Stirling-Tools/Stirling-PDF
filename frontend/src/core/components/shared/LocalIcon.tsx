@@ -1,6 +1,6 @@
 import React from 'react';
 import { addCollection, Icon } from '@iconify/react';
-import iconSet from '../../assets/material-symbols-icons.json';
+import iconSet from '../../../assets/material-symbols-icons.json';
 
 // Load icons synchronously at import time - guaranteed to be ready on first render
 let iconsLoaded = false;

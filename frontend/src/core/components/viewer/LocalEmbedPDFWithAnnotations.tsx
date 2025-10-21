@@ -24,17 +24,17 @@ import { HistoryPluginPackage } from '@embedpdf/plugin-history/react';
 import { AnnotationLayer, AnnotationPluginPackage } from '@embedpdf/plugin-annotation/react';
 import { PdfAnnotationSubtype } from '@embedpdf/models';
 
-import { CustomSearchLayer } from './CustomSearchLayer';
-import { ZoomAPIBridge } from './ZoomAPIBridge';
-import ToolLoadingFallback from '../tools/ToolLoadingFallback';
+import { CustomSearchLayer } from '@app/components/viewer/CustomSearchLayer';
+import { ZoomAPIBridge } from '@app/components/viewer/ZoomAPIBridge';
+import ToolLoadingFallback from '@app/components/tools/ToolLoadingFallback';
 import { Center, Stack, Text } from '@mantine/core';
-import { ScrollAPIBridge } from './ScrollAPIBridge';
-import { SelectionAPIBridge } from './SelectionAPIBridge';
-import { PanAPIBridge } from './PanAPIBridge';
-import { SpreadAPIBridge } from './SpreadAPIBridge';
-import { SearchAPIBridge } from './SearchAPIBridge';
-import { ThumbnailAPIBridge } from './ThumbnailAPIBridge';
-import { RotateAPIBridge } from './RotateAPIBridge';
+import { ScrollAPIBridge } from '@app/components/viewer/ScrollAPIBridge';
+import { SelectionAPIBridge } from '@app/components/viewer/SelectionAPIBridge';
+import { PanAPIBridge } from '@app/components/viewer/PanAPIBridge';
+import { SpreadAPIBridge } from '@app/components/viewer/SpreadAPIBridge';
+import { SearchAPIBridge } from '@app/components/viewer/SearchAPIBridge';
+import { ThumbnailAPIBridge } from '@app/components/viewer/ThumbnailAPIBridge';
+import { RotateAPIBridge } from '@app/components/viewer/RotateAPIBridge';
 
 interface LocalEmbedPDFWithAnnotationsProps {
   file?: File | Blob;

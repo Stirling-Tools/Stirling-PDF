@@ -1,6 +1,6 @@
 import type { TFunction } from 'i18next';
-import { SignatureValidationReportEntry } from '../../../../types/validateSignature';
-import { colorPalette } from './pdfPalette';
+import { SignatureValidationReportEntry } from '@app/types/validateSignature';
+import { colorPalette } from '@app/hooks/tools/validateSignature/utils/pdfPalette';
 
 export const deriveEntryStatus = (
   entry: Pick<SignatureValidationReportEntry, 'error' | 'signatures'>,

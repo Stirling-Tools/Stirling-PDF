@@ -1,5 +1,5 @@
 import { PDFFont, PDFPage, PDFImage } from 'pdf-lib';
-import { colorPalette } from '../utils/pdfPalette';
+import { colorPalette } from '@app/hooks/tools/validateSignature/utils/pdfPalette';
 
 export const drawThumbnailPlaceholder = (
   page: PDFPage,

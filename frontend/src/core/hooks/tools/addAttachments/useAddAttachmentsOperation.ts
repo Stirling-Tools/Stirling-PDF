@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
-import { useToolOperation, ToolOperationConfig, ToolType } from '../shared/useToolOperation';
-import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
-import { AddAttachmentsParameters } from './useAddAttachmentsParameters';
+import { useToolOperation, ToolOperationConfig, ToolType } from '@app/hooks/tools/shared/useToolOperation';
+import { createStandardErrorHandler } from '@app/utils/toolErrorHandler';
+import { AddAttachmentsParameters } from '@app/hooks/tools/addAttachments/useAddAttachmentsParameters';
 
 const buildFormData = (parameters: AddAttachmentsParameters, file: File): FormData => {
   const formData = new FormData();

@@ -1,7 +1,7 @@
 import { Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { AddWatermarkParameters } from "../../../hooks/tools/addWatermark/useAddWatermarkParameters";
-import FileUploadButton from "../../shared/FileUploadButton";
+import { AddWatermarkParameters } from "@app/hooks/tools/addWatermark/useAddWatermarkParameters";
+import FileUploadButton from "@app/components/shared/FileUploadButton";
 
 interface WatermarkImageFileProps {
   parameters: AddWatermarkParameters;

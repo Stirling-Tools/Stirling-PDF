@@ -9,14 +9,14 @@ import {
   Text,
   Alert
 } from '@mantine/core';
-import { Z_INDEX_AUTOMATE_MODAL } from '../../../styles/zIndex';
+import { Z_INDEX_AUTOMATE_MODAL } from '@app/styles/zIndex';
 import SettingsIcon from '@mui/icons-material/Settings';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
 import WarningIcon from '@mui/icons-material/Warning';
-import { ToolRegistry } from '../../../data/toolsTaxonomy';
-import { ToolId } from '../../../types/toolId';
-import { getAvailableToExtensions } from '../../../utils/convertUtils';
+import { ToolRegistry } from '@app/data/toolsTaxonomy';
+import { ToolId } from '@app/types/toolId';
+import { getAvailableToExtensions } from '@app/utils/convertUtils';
 interface ToolConfigurationModalProps {
   opened: boolean;
   tool: {

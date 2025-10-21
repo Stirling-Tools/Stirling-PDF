@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
-import { ToolType, useToolOperation } from '../shared/useToolOperation';
-import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
-import { CertSignParameters, defaultParameters } from './useCertSignParameters';
+import { ToolType, useToolOperation } from '@app/hooks/tools/shared/useToolOperation';
+import { createStandardErrorHandler } from '@app/utils/toolErrorHandler';
+import { CertSignParameters, defaultParameters } from '@app/hooks/tools/certSign/useCertSignParameters';
 
 // Build form data for signing
 export const buildCertSignFormData = (parameters: CertSignParameters, file: File): FormData => {

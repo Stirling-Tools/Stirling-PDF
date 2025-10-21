@@ -2,8 +2,9 @@
  * High-performance thumbnail generation service using main thread processing
  */
 
-import { FileId } from '../types/file';
-import { pdfWorkerManager } from './pdfWorkerManager';
+import { FileId } from '@app/types/file';
+import { pdfWorkerManager } from '@app/services/pdfWorkerManager';
+import { PDFDocumentProxy } from 'pdfjs-dist';
 
 interface ThumbnailResult {
   pageNumber: number;
@@ -26,7 +27,7 @@ interface CachedThumbnail {
 }
 
 interface CachedPDFDocument {
-  pdf: any; // PDFDocumentProxy from pdfjs-dist
+  pdf: PDFDocumentProxy;
   lastUsed: number;
   refCount: number;
 }

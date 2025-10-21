@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Stack } from '@mantine/core';
-import { BaseAnnotationTool } from '../shared/BaseAnnotationTool';
-import { TextInputWithFont } from '../shared/TextInputWithFont';
+import { BaseAnnotationTool } from '@app/components/annotation/shared/BaseAnnotationTool';
+import { TextInputWithFont } from '@app/components/annotation/shared/TextInputWithFont';
 
 interface TextToolProps {
   onTextChange?: (text: string) => void;

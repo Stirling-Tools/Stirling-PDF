@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
-import { useToolOperation, ToolOperationConfig, ToolType } from '../shared/useToolOperation';
-import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
-import type { RemoveImageParameters } from './useRemoveImageParameters';
+import { useToolOperation, ToolOperationConfig, ToolType } from '@app/hooks/tools/shared/useToolOperation';
+import { createStandardErrorHandler } from '@app/utils/toolErrorHandler';
+import type { RemoveImageParameters } from '@app/hooks/tools/removeImage/useRemoveImageParameters';
 
 export const buildRemoveImageFormData = (_params: RemoveImageParameters, file: File): FormData => {
   const formData = new FormData();

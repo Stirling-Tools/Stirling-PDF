@@ -1,5 +1,5 @@
 import React from 'react';
-import { ToolOperationHook } from '../hooks/tools/shared/useToolOperation';
+import { ToolOperationHook } from '@app/hooks/tools/shared/useToolOperation';
 
 export type MaxFiles = number; // 1=single, >1=limited, -1=unlimited
 export type ToolCategory = 'manipulation' | 'conversion' | 'analysis' | 'utility' | 'optimization' | 'security';

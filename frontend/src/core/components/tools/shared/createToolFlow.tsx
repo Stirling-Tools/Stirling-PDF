@@ -1,10 +1,10 @@
 import React from 'react';
 import { Stack } from '@mantine/core';
-import { createToolSteps, ToolStepProvider } from './ToolStep';
-import OperationButton from './OperationButton';
-import { ToolOperationHook } from '../../../hooks/tools/shared/useToolOperation';
-import { ToolWorkflowTitle, ToolWorkflowTitleProps } from './ToolWorkflowTitle';
-import { StirlingFile } from '../../../types/fileContext';
+import { createToolSteps, ToolStepProvider } from '@app/components/tools/shared/ToolStep';
+import OperationButton from '@app/components/tools/shared/OperationButton';
+import { ToolOperationHook } from '@app/hooks/tools/shared/useToolOperation';
+import { ToolWorkflowTitle, ToolWorkflowTitleProps } from '@app/components/tools/shared/ToolWorkflowTitle';
+import { StirlingFile } from '@app/types/fileContext';
 
 export interface FilesStepConfig {
   selectedFiles: StirlingFile[];

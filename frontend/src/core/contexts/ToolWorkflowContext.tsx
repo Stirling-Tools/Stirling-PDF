@@ -4,23 +4,23 @@
  */
 
 import React, { createContext, useContext, useReducer, useCallback, useMemo, useEffect } from 'react';
-import { useToolManagement } from '../hooks/useToolManagement';
-import { PageEditorFunctions } from '../types/pageEditor';
-import { ToolRegistryEntry, ToolRegistry } from '../data/toolsTaxonomy';
-import { useNavigationActions, useNavigationState } from './NavigationContext';
-import { ToolId, isValidToolId } from '../types/toolId';
-import { WorkbenchType, getDefaultWorkbench, isBaseWorkbench } from '../types/workbench';
-import { useNavigationUrlSync } from '../hooks/useUrlSync';
-import { filterToolRegistryByQuery } from '../utils/toolSearch';
-import { useToolHistory } from '../hooks/tools/useUserToolActivity';
+import { useToolManagement } from '@app/hooks/useToolManagement';
+import { PageEditorFunctions } from '@app/types/pageEditor';
+import { ToolRegistryEntry, ToolRegistry } from '@app/data/toolsTaxonomy';
+import { useNavigationActions, useNavigationState } from '@app/contexts/NavigationContext';
+import { ToolId, isValidToolId } from '@app/types/toolId';
+import { WorkbenchType, getDefaultWorkbench, isBaseWorkbench } from '@app/types/workbench';
+import { useNavigationUrlSync } from '@app/hooks/useUrlSync';
+import { filterToolRegistryByQuery } from '@app/utils/toolSearch';
+import { useToolHistory } from '@app/hooks/tools/useUserToolActivity';
 import {
   ToolWorkflowState,
   createInitialState,
   toolWorkflowReducer,
-} from './toolWorkflow/toolWorkflowState';
-import type { ToolPanelMode } from '../constants/toolPanel';
-import { usePreferences } from './PreferencesContext';
-import { useToolRegistry } from './ToolRegistryContext';
+} from '@app/contexts/toolWorkflow/toolWorkflowState';
+import type { ToolPanelMode } from '@app/constants/toolPanel';
+import { usePreferences } from '@app/contexts/PreferencesContext';
+import { useToolRegistry } from '@app/contexts/ToolRegistryContext';
 
 // State interface
 // Types and reducer/state moved to './toolWorkflow/state'

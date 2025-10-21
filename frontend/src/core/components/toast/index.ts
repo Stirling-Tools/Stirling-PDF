@@ -1,6 +1,6 @@
-import { ToastOptions } from './types';
-import { useToast, ToastProvider } from './ToastContext';
-import ToastRenderer from './ToastRenderer';
+import { ToastOptions } from '@app/components/toast/types';
+import { useToast, ToastProvider } from '@app/components/toast/ToastContext';
+import ToastRenderer from '@app/components/toast/ToastRenderer';
 
 export { useToast, ToastProvider, ToastRenderer };
 

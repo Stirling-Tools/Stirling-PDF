@@ -1,14 +1,14 @@
 import React from "react";
 import { TourProvider, useTour, type StepType } from '@reactour/tour';
-import { useOnboarding } from '../../contexts/OnboardingContext';
+import { useOnboarding } from '@app/contexts/OnboardingContext';
 import { useTranslation } from 'react-i18next';
 import { CloseButton, ActionIcon } from '@mantine/core';
-import { useFilesModalContext } from '../../contexts/FilesModalContext';
-import { useTourOrchestration } from '../../contexts/TourOrchestrationContext';
+import { useFilesModalContext } from '@app/contexts/FilesModalContext';
+import { useTourOrchestration } from '@app/contexts/TourOrchestrationContext';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import CheckIcon from '@mui/icons-material/Check';
-import TourWelcomeModal from './TourWelcomeModal';
-import './OnboardingTour.css';
+import TourWelcomeModal from '@app/components/onboarding/TourWelcomeModal';
+import '@app/components/onboarding/OnboardingTour.css';
 
 // Enum case order defines order steps will appear
 enum TourStep {

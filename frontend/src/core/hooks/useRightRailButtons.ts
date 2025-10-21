@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from 'react';
-import { useRightRail } from '../contexts/RightRailContext';
-import { RightRailAction, RightRailButtonConfig } from '../types/rightRail';
+import { useRightRail } from '@app/contexts/RightRailContext';
+import { RightRailAction, RightRailButtonConfig } from '@app/types/rightRail';
 
 export interface RightRailButtonWithAction extends RightRailButtonConfig {
   onClick?: RightRailAction;

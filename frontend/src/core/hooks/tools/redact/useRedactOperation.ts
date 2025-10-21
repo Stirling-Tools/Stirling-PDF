@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
-import { useToolOperation, ToolType } from '../shared/useToolOperation';
-import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
-import { RedactParameters, defaultParameters } from './useRedactParameters';
+import { useToolOperation, ToolType } from '@app/hooks/tools/shared/useToolOperation';
+import { createStandardErrorHandler } from '@app/utils/toolErrorHandler';
+import { RedactParameters, defaultParameters } from '@app/hooks/tools/redact/useRedactParameters';
 
 // Static configuration that can be used by both the hook and automation executor
 export const buildRedactFormData = (parameters: RedactParameters, file: File): FormData => {

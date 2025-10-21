@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
-import { useToolOperation, ToolType } from '../shared/useToolOperation';
-import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
-import { CompressParameters, defaultParameters } from './useCompressParameters';
+import { useToolOperation, ToolType } from '@app/hooks/tools/shared/useToolOperation';
+import { createStandardErrorHandler } from '@app/utils/toolErrorHandler';
+import { CompressParameters, defaultParameters } from '@app/hooks/tools/compress/useCompressParameters';
 
 // Static configuration that can be used by both the hook and automation executor
 export const buildCompressFormData = (parameters: CompressParameters, file: File): FormData => {

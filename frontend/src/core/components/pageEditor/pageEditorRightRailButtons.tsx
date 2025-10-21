@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useRightRailButtons, RightRailButtonWithAction } from '../../hooks/useRightRailButtons';
-import LocalIcon from '../shared/LocalIcon';
-import PageSelectByNumberButton from './PageSelectByNumberButton';
+import { useRightRailButtons, RightRailButtonWithAction } from '@app/hooks/useRightRailButtons';
+import LocalIcon from '@app/components/shared/LocalIcon';
+import PageSelectByNumberButton from '@app/components/pageEditor/PageSelectByNumberButton';
 
 interface PageEditorRightRailButtonsParams {
   totalPages: number;

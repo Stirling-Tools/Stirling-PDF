@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { Paper, Button, Modal, Stack, Text, Popover, ColorPicker as MantineColorPicker } from '@mantine/core';
-import { ColorSwatchButton } from './ColorPicker';
-import PenSizeSelector from '../../tools/sign/PenSizeSelector';
+import { ColorSwatchButton } from '@app/components/annotation/shared/ColorPicker';
+import PenSizeSelector from '@app/components/tools/sign/PenSizeSelector';
 import SignaturePad from 'signature_pad';
 
 interface DrawingCanvasProps {

@@ -4,7 +4,7 @@
  * Helper functions for IndexedDB-based file history management.
  * Handles file history operations and lineage tracking.
  */
-import { StirlingFileStub } from '../types/fileContext';
+import { StirlingFileStub } from '@app/types/fileContext';
 
 /**
  * Group files by processing branches - each branch ends in a leaf file

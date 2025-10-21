@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { Stack, Alert, Text } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import { DrawingControls } from './DrawingControls';
-import { ColorPicker } from './ColorPicker';
-import { usePDFAnnotation } from '../providers/PDFAnnotationProvider';
+import { DrawingControls } from '@app/components/annotation/shared/DrawingControls';
+import { ColorPicker } from '@app/components/annotation/shared/ColorPicker';
+import { usePDFAnnotation } from '@app/components/annotation/providers/PDFAnnotationProvider';
 
 export interface AnnotationToolConfig {
   enableDrawing?: boolean;

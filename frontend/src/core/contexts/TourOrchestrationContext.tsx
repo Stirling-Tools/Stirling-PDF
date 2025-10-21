@@ -1,11 +1,11 @@
 import React, { createContext, useContext, useCallback, useRef } from 'react';
-import { useFileHandler } from '../hooks/useFileHandler';
-import { useFilesModalContext } from './FilesModalContext';
-import { useNavigationActions } from './NavigationContext';
-import { useToolWorkflow } from './ToolWorkflowContext';
-import { useAllFiles, useFileManagement } from './FileContext';
-import { StirlingFile } from '../types/fileContext';
-import { fileStorage } from '../services/fileStorage';
+import { useFileHandler } from '@app/hooks/useFileHandler';
+import { useFilesModalContext } from '@app/contexts/FilesModalContext';
+import { useNavigationActions } from '@app/contexts/NavigationContext';
+import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
+import { useAllFiles, useFileManagement } from '@app/contexts/FileContext';
+import { StirlingFile } from '@app/types/fileContext';
+import { fileStorage } from '@app/services/fileStorage';
 
 interface TourOrchestrationContextType {
   // State management

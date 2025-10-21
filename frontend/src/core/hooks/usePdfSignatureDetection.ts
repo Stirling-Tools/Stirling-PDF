@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { pdfWorkerManager } from '../services/pdfWorkerManager';
-import { StirlingFile } from '../types/fileContext';
+import { pdfWorkerManager } from '@app/services/pdfWorkerManager';
+import { StirlingFile } from '@app/types/fileContext';
 
 export interface PdfSignatureDetectionResult {
   hasDigitalSignatures: boolean;

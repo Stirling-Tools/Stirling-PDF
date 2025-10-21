@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
-import { ToolType, useToolOperation } from '../shared/useToolOperation';
-import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
-import { PageLayoutParameters, defaultParameters } from './usePageLayoutParameters';
+import { ToolType, useToolOperation } from '@app/hooks/tools/shared/useToolOperation';
+import { createStandardErrorHandler } from '@app/utils/toolErrorHandler';
+import { PageLayoutParameters, defaultParameters } from '@app/hooks/tools/pageLayout/usePageLayoutParameters';
 
 export const buildPageLayoutFormData = (parameters: PageLayoutParameters, file: File): FormData => {
   const formData = new FormData();

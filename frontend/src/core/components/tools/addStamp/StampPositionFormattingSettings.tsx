@@ -1,9 +1,9 @@
 import { useTranslation } from "react-i18next";
 import { Group, Select, Stack, ColorInput, Button, Slider, Text, NumberInput } from "@mantine/core";
-import { AddStampParameters } from "./useAddStampParameters";
-import LocalIcon from "../../shared/LocalIcon";
-import styles from "./StampPreview.module.css";
-import { Tooltip } from "../../shared/Tooltip";
+import { AddStampParameters } from "@app/components/tools/addStamp/useAddStampParameters";
+import LocalIcon from "@app/components/shared/LocalIcon";
+import styles from "@app/components/tools/addStamp/StampPreview.module.css";
+import { Tooltip } from "@app/components/shared/Tooltip";
 
 interface StampPositionFormattingSettingsProps {
   parameters: AddStampParameters;

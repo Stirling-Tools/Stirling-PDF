@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { generateThumbnailForFile, generateThumbnailWithMetadata, ThumbnailWithMetadata } from '../../../utils/thumbnailUtils';
-import { zipFileService } from '../../../services/zipFileService';
-import { usePreferences } from '../../../contexts/PreferencesContext';
+import { generateThumbnailForFile, generateThumbnailWithMetadata, ThumbnailWithMetadata } from '@app/utils/thumbnailUtils';
+import { zipFileService } from '@app/services/zipFileService';
+import { usePreferences } from '@app/contexts/PreferencesContext';
 
 
 export const useToolResources = () => {

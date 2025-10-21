@@ -2,7 +2,7 @@ import React from 'react';
 import { Menu, Loader, Group, Text } from '@mantine/core';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import FitText from './FitText';
+import FitText from '@app/components/shared/FitText';
 
 interface FileDropdownMenuProps {
   displayName: string;

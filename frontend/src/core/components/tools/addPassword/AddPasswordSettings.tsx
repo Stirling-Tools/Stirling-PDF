@@ -1,6 +1,6 @@
 import { Stack, PasswordInput, Select } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { AddPasswordParameters } from "../../../hooks/tools/addPassword/useAddPasswordParameters";
+import { AddPasswordParameters } from "@app/hooks/tools/addPassword/useAddPasswordParameters";
 
 interface AddPasswordSettingsProps {
   parameters: AddPasswordParameters;

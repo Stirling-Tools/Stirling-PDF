@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { Stack, Select, Checkbox } from '@mantine/core';
-import { ExtractImagesParameters } from '../../../hooks/tools/extractImages/useExtractImagesParameters';
+import { ExtractImagesParameters } from '@app/hooks/tools/extractImages/useExtractImagesParameters';
 
 interface ExtractImagesSettingsProps {
   parameters: ExtractImagesParameters;

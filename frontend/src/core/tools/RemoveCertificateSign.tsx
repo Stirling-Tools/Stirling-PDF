@@ -1,9 +1,9 @@
 import { useTranslation } from "react-i18next";
-import { createToolFlow } from "../components/tools/shared/createToolFlow";
-import { useRemoveCertificateSignParameters } from "../hooks/tools/removeCertificateSign/useRemoveCertificateSignParameters";
-import { useRemoveCertificateSignOperation } from "../hooks/tools/removeCertificateSign/useRemoveCertificateSignOperation";
-import { useBaseTool } from "../hooks/tools/shared/useBaseTool";
-import { BaseToolProps, ToolComponent } from "../types/tool";
+import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
+import { useRemoveCertificateSignParameters } from "@app/hooks/tools/removeCertificateSign/useRemoveCertificateSignParameters";
+import { useRemoveCertificateSignOperation } from "@app/hooks/tools/removeCertificateSign/useRemoveCertificateSignOperation";
+import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
+import { BaseToolProps, ToolComponent } from "@app/types/tool";
 
 const RemoveCertificateSign = (props: BaseToolProps) => {
   const { t } = useTranslation();

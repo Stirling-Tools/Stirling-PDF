@@ -4,10 +4,10 @@
  */
 
 import React, { createContext, useContext, useCallback, useRef } from 'react';
-import { fileStorage } from '../services/fileStorage';
-import { FileId } from '../types/file';
-import { StirlingFileStub, createStirlingFile, createQuickKey } from '../types/fileContext';
-import { generateThumbnailForFile } from '../utils/thumbnailUtils';
+import { fileStorage } from '@app/services/fileStorage';
+import { FileId } from '@app/types/file';
+import { StirlingFileStub, createStirlingFile, createQuickKey } from '@app/types/fileContext';
+import { generateThumbnailForFile } from '@app/utils/thumbnailUtils';
 
 const DEBUG = process.env.NODE_ENV === 'development';
 

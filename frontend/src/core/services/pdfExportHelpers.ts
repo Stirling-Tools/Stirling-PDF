@@ -1,6 +1,6 @@
-import { PDFDocument } from '../types/pageEditor';
-import { pdfExportService } from './pdfExportService';
-import { FileId } from '../types/file';
+import { PDFDocument } from '@app/types/pageEditor';
+import { pdfExportService } from '@app/services/pdfExportService';
+import { FileId } from '@app/types/file';
 
 /**
  * Export processed documents to File objects

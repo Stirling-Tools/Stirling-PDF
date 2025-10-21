@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
-import { thumbnailGenerationService } from '../services/thumbnailGenerationService';
-import { createQuickKey } from '../types/fileContext';
-import { FileId } from '../types/file';
+import { thumbnailGenerationService } from '@app/services/thumbnailGenerationService';
+import { createQuickKey } from '@app/types/fileContext';
+import { FileId } from '@app/types/file';
 
 // Request queue to handle concurrent thumbnail requests
 interface ThumbnailRequest {

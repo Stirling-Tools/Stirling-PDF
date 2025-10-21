@@ -1,7 +1,7 @@
 import React from 'react';
 import { Stack, Checkbox } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import { MergeParameters } from '../../../hooks/tools/merge/useMergeParameters';
+import { MergeParameters } from '@app/hooks/tools/merge/useMergeParameters';
 
 interface MergeSettingsProps {
   parameters: MergeParameters;

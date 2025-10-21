@@ -1,16 +1,16 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from "react-i18next";
 import { Stack, Button, Text, Alert, Tabs, SegmentedControl } from '@mantine/core';
-import { SignParameters } from "../../../hooks/tools/sign/useSignParameters";
-import { SuggestedToolsSection } from "../shared/SuggestedToolsSection";
-import { useSignature } from "../../../contexts/SignatureContext";
+import { SignParameters } from "@app/hooks/tools/sign/useSignParameters";
+import { SuggestedToolsSection } from "@app/components/tools/shared/SuggestedToolsSection";
+import { useSignature } from "@app/contexts/SignatureContext";
 
 // Import the new reusable components
-import { DrawingCanvas } from "../../annotation/shared/DrawingCanvas";
-import { DrawingControls } from "../../annotation/shared/DrawingControls";
-import { ImageUploader } from "../../annotation/shared/ImageUploader";
-import { TextInputWithFont } from "../../annotation/shared/TextInputWithFont";
-import { ColorPicker } from "../../annotation/shared/ColorPicker";
+import { DrawingCanvas } from "@app/components/annotation/shared/DrawingCanvas";
+import { DrawingControls } from "@app/components/annotation/shared/DrawingControls";
+import { ImageUploader } from "@app/components/annotation/shared/ImageUploader";
+import { TextInputWithFont } from "@app/components/annotation/shared/TextInputWithFont";
+import { ColorPicker } from "@app/components/annotation/shared/ColorPicker";
 
 interface SignSettingsProps {
   parameters: SignParameters;

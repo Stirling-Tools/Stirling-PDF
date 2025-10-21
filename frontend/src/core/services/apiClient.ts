@@ -1,6 +1,6 @@
 // frontend/src/services/http.ts
 import axios from 'axios';
-import { handleHttpError } from './httpErrorHandler';
+import { handleHttpError } from '@app/services/httpErrorHandler';
 
 // Create axios instance with default config
 const apiClient = axios.create({

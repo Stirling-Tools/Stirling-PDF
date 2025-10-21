@@ -1,7 +1,7 @@
 import { describe, expect, test, vi, beforeEach } from 'vitest';
 import { renderHook } from '@testing-library/react';
-import { useChangePermissionsOperation } from './useChangePermissionsOperation';
-import type { ChangePermissionsParameters } from './useChangePermissionsParameters';
+import { useChangePermissionsOperation } from '@app/hooks/tools/changePermissions/useChangePermissionsOperation';
+import type { ChangePermissionsParameters } from '@app/hooks/tools/changePermissions/useChangePermissionsParameters';
 
 // Mock the useToolOperation hook
 vi.mock('../shared/useToolOperation', async () => {
@@ -24,7 +24,7 @@ vi.mock('../../../utils/toolErrorHandler', () => ({
 }));
 
 // Import the mocked function
-import { SingleFileToolOperationConfig, ToolOperationHook, ToolType, useToolOperation } from '../shared/useToolOperation';
+import { SingleFileToolOperationConfig, ToolOperationHook, ToolType, useToolOperation } from '@app/hooks/tools/shared/useToolOperation';
 
 describe('useChangePermissionsOperation', () => {
   const mockUseToolOperation = vi.mocked(useToolOperation);

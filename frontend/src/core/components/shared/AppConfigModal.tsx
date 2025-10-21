@@ -1,12 +1,12 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { Modal, Text, ActionIcon } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
-import LocalIcon from './LocalIcon';
-import Overview from './config/configSections/Overview';
-import { createConfigNavSections } from './config/configNavSections';
-import { NavKey } from './config/types';
-import './AppConfigModal.css';
-import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from '../../styles/zIndex';
+import LocalIcon from '@app/components/shared/LocalIcon';
+import Overview from '@app/components/shared/config/configSections/Overview';
+import { createConfigNavSections } from '@app/components/shared/config/configNavSections';
+import { NavKey } from '@app/components/shared/config/types';
+import '@app/components/shared/AppConfigModal.css';
+import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from '@app/styles/zIndex';
 
 interface AppConfigModalProps {
   opened: boolean;

@@ -2,10 +2,10 @@ import React from 'react';
 import { Center, ScrollArea, Text, Stack } from '@mantine/core';
 import CloudIcon from '@mui/icons-material/Cloud';
 import { useTranslation } from 'react-i18next';
-import FileListItem from './FileListItem';
-import FileHistoryGroup from './FileHistoryGroup';
-import EmptyFilesState from './EmptyFilesState';
-import { useFileManagerContext } from '../../contexts/FileManagerContext';
+import FileListItem from '@app/components/fileManager/FileListItem';
+import FileHistoryGroup from '@app/components/fileManager/FileHistoryGroup';
+import EmptyFilesState from '@app/components/fileManager/EmptyFilesState';
+import { useFileManagerContext } from '@app/contexts/FileManagerContext';
 
 interface FileListAreaProps {
   scrollAreaHeight: string;

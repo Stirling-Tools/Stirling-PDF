@@ -2,7 +2,7 @@
  * Test utilities for creating StirlingFile objects in tests
  */
 
-import { StirlingFile, createStirlingFile } from '../../types/fileContext';
+import { StirlingFile, createStirlingFile } from '@app/types/fileContext';
 
 /**
  * Create a StirlingFile object for testing purposes

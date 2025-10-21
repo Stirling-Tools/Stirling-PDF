@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import { preferencesService, UserPreferences } from '../services/preferencesService';
+import { preferencesService, UserPreferences } from '@app/services/preferencesService';
 
 interface PreferencesContextValue {
   preferences: UserPreferences;

@@ -6,9 +6,9 @@
 
 import { Stack, Divider, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { AddPageNumbersParameters } from "./useAddPageNumbersParameters";
-import AddPageNumbersPositionSettings from "./AddPageNumbersPositionSettings";
-import AddPageNumbersAppearanceSettings from "./AddPageNumbersAppearanceSettings";
+import { AddPageNumbersParameters } from "@app/components/tools/addPageNumbers/useAddPageNumbersParameters";
+import AddPageNumbersPositionSettings from "@app/components/tools/addPageNumbers/AddPageNumbersPositionSettings";
+import AddPageNumbersAppearanceSettings from "@app/components/tools/addPageNumbers/AddPageNumbersAppearanceSettings";
 
 interface AddPageNumbersAutomationSettingsProps {
   parameters: AddPageNumbersParameters;

@@ -1,14 +1,14 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import LocalIcon from './LocalIcon';
-import { addEventListenerWithCleanup } from '../../utils/genericUtils';
-import { useTooltipPosition } from '../../hooks/useTooltipPosition';
-import { TooltipTip } from '../../types/tips';
-import { TooltipContent } from './tooltip/TooltipContent';
-import { useSidebarContext } from '../../contexts/SidebarContext';
-import { BASE_PATH } from '../../constants/app';
-import styles from './tooltip/Tooltip.module.css';
-import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from '../../styles/zIndex';
+import LocalIcon from '@app/components/shared/LocalIcon';
+import { addEventListenerWithCleanup } from '@app/utils/genericUtils';
+import { useTooltipPosition } from '@app/hooks/useTooltipPosition';
+import { TooltipTip } from '@app/types/tips';
+import { TooltipContent } from '@app/components/shared/tooltip/TooltipContent';
+import { useSidebarContext } from '@app/contexts/SidebarContext';
+import { BASE_PATH } from '@app/constants/app';
+import styles from '@app/components/shared/tooltip/Tooltip.module.css';
+import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from '@app/styles/zIndex';
 
 export interface TooltipProps {
   sidebarTooltip?: boolean;

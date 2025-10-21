@@ -1,21 +1,21 @@
 import React, { useCallback, useMemo } from 'react';
 import { ActionIcon, Divider } from '@mantine/core';
-import './rightRail/RightRail.css';
-import { useToolWorkflow } from '../../contexts/ToolWorkflowContext';
-import { useRightRail } from '../../contexts/RightRailContext';
-import { useFileState, useFileSelection } from '../../contexts/FileContext';
-import { useNavigationState } from '../../contexts/NavigationContext';
+import '@app/components/shared/rightRail/RightRail.css';
+import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
+import { useRightRail } from '@app/contexts/RightRailContext';
+import { useFileState, useFileSelection } from '@app/contexts/FileContext';
+import { useNavigationState } from '@app/contexts/NavigationContext';
 import { useTranslation } from 'react-i18next';
 
-import LanguageSelector from '../shared/LanguageSelector';
-import { useRainbowThemeContext } from '../shared/RainbowThemeProvider';
-import { Tooltip } from '../shared/Tooltip';
-import { ViewerContext } from '../../contexts/ViewerContext';
-import { useSignature } from '../../contexts/SignatureContext';
-import LocalIcon from './LocalIcon';
+import LanguageSelector from '@app/components/shared/LanguageSelector';
+import { useRainbowThemeContext } from '@app/components/shared/RainbowThemeProvider';
+import { Tooltip } from '@app/components/shared/Tooltip';
+import { ViewerContext } from '@app/contexts/ViewerContext';
+import { useSignature } from '@app/contexts/SignatureContext';
+import LocalIcon from '@app/components/shared/LocalIcon';
 
-import { useSidebarContext } from '../../contexts/SidebarContext';
-import { RightRailButtonConfig, RightRailRenderContext, RightRailSection } from '../../types/rightRail';
+import { useSidebarContext } from '@app/contexts/SidebarContext';
+import { RightRailButtonConfig, RightRailRenderContext, RightRailSection } from '@app/types/rightRail';
 
 const SECTION_ORDER: RightRailSection[] = ['top', 'middle', 'bottom'];
 

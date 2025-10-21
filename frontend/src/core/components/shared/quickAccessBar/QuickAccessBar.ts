@@ -1,4 +1,4 @@
-import { ButtonConfig } from '../../../types/sidebar';
+import { ButtonConfig } from '@app/types/sidebar';
 
 // Border radius constants
 export const ROUND_BORDER_RADIUS = '0.5rem';

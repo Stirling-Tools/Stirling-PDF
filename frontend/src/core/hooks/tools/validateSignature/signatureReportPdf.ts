@@ -1,13 +1,13 @@
 import { PDFDocument, PDFPage, StandardFonts } from 'pdf-lib';
 import type { TFunction } from 'i18next';
-import { SignatureValidationReportEntry } from '../../../types/validateSignature';
-import { REPORT_PDF_FILENAME } from './utils/signatureUtils';
-import { colorPalette } from './utils/pdfPalette';
-import { startReportPage, createThumbnailLoader } from './utils/pdfPageHelpers';
-import { deriveEntryStatus } from './utils/reportStatus';
-import { drawCenteredMessage } from './outputtedPDFSections/CenteredMessageSection';
-import { drawSummarySection } from './outputtedPDFSections/SummarySection';
-import { drawSignatureSection } from './outputtedPDFSections/SignatureSection';
+import { SignatureValidationReportEntry } from '@app/types/validateSignature';
+import { REPORT_PDF_FILENAME } from '@app/hooks/tools/validateSignature/utils/signatureUtils';
+import { colorPalette } from '@app/hooks/tools/validateSignature/utils/pdfPalette';
+import { startReportPage, createThumbnailLoader } from '@app/hooks/tools/validateSignature/utils/pdfPageHelpers';
+import { deriveEntryStatus } from '@app/hooks/tools/validateSignature/utils/reportStatus';
+import { drawCenteredMessage } from '@app/hooks/tools/validateSignature/outputtedPDFSections/CenteredMessageSection';
+import { drawSummarySection } from '@app/hooks/tools/validateSignature/outputtedPDFSections/SummarySection';
+import { drawSignatureSection } from '@app/hooks/tools/validateSignature/outputtedPDFSections/SignatureSection';
 
 const PAGE_WIDTH = 612;
 const PAGE_HEIGHT = 792;

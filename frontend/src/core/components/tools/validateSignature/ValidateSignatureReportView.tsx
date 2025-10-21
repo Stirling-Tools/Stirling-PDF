@@ -1,11 +1,11 @@
 import React, { useMemo } from 'react';
 import { Badge, Group, Stack, Text, Divider } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import type { SignatureValidationReportData } from '../../../types/validateSignature';
-import './reportView/styles.css';
-import ThumbnailPreview from './reportView/ThumbnailPreview';
-import FileSummaryHeader from './reportView/FileSummaryHeader';
-import SignatureSection from './reportView/SignatureSection';
+import type { SignatureValidationReportData } from '@app/types/validateSignature';
+import '@app/components/tools/validateSignature/reportView/styles.css';
+import ThumbnailPreview from '@app/components/tools/validateSignature/reportView/ThumbnailPreview';
+import FileSummaryHeader from '@app/components/tools/validateSignature/reportView/FileSummaryHeader';
+import SignatureSection from '@app/components/tools/validateSignature/reportView/SignatureSection';
 
 interface ValidateSignatureReportViewProps {
   data: SignatureValidationReportData;

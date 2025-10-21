@@ -24,7 +24,7 @@ export const isSplitMethod = (value: string | null): value is SplitMethod => {
   return Object.values(SPLIT_METHODS).includes(value as SplitMethod);
 };
 
-import { CardOption } from '../components/shared/CardSelector';
+import { CardOption } from '@app/components/shared/CardSelector';
 
 export interface MethodOption extends CardOption<SplitMethod> {
   tooltipKey: string;

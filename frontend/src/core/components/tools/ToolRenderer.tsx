@@ -1,8 +1,8 @@
 import { Suspense } from "react";
-import { useToolWorkflow } from "../../contexts/ToolWorkflowContext";
-import { BaseToolProps } from "../../types/tool";
-import { ToolId } from "../../types/toolId";
-import ToolLoadingFallback from "./ToolLoadingFallback";
+import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
+import { BaseToolProps } from "@app/types/tool";
+import { ToolId } from "@app/types/toolId";
+import ToolLoadingFallback from "@app/components/tools/ToolLoadingFallback";
 
 interface ToolRendererProps extends BaseToolProps {
   selectedToolKey: ToolId;

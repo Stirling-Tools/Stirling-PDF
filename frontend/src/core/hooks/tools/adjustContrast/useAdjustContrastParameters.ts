@@ -1,4 +1,4 @@
-import { useBaseParameters, BaseParametersHook } from '../shared/useBaseParameters';
+import { useBaseParameters, BaseParametersHook } from '@app/hooks/tools/shared/useBaseParameters';
 
 export interface AdjustContrastParameters {
   contrast: number; // 0-200 (%), 100 = neutral

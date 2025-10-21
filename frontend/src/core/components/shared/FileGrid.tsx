@@ -3,9 +3,9 @@ import { Box, Flex, Group, Text, Button, TextInput, Select } from "@mantine/core
 import { useTranslation } from "react-i18next";
 import SearchIcon from "@mui/icons-material/Search";
 import SortIcon from "@mui/icons-material/Sort";
-import FileCard from "./FileCard";
-import { StirlingFileStub } from "../../types/fileContext";
-import { FileId } from "../../types/file";
+import FileCard from "@app/components/shared/FileCard";
+import { StirlingFileStub } from "@app/types/fileContext";
+import { FileId } from "@app/types/file";
 
 interface FileGridProps {
   files: Array<{ file: File; record?: StirlingFileStub }>;

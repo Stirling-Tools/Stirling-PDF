@@ -1,10 +1,10 @@
 import { useCallback } from 'react';
-import apiClient from '../../../services/apiClient';
+import apiClient from '@app/services/apiClient';
 import { useTranslation } from 'react-i18next';
-import { ConvertParameters, defaultParameters } from './useConvertParameters';
-import { createFileFromApiResponse } from '../../../utils/fileResponseUtils';
-import { useToolOperation, ToolType } from '../shared/useToolOperation';
-import { getEndpointUrl, isImageFormat, isWebFormat } from '../../../utils/convertUtils';
+import { ConvertParameters, defaultParameters } from '@app/hooks/tools/convert/useConvertParameters';
+import { createFileFromApiResponse } from '@app/utils/fileResponseUtils';
+import { useToolOperation, ToolType } from '@app/hooks/tools/shared/useToolOperation';
+import { getEndpointUrl, isImageFormat, isWebFormat } from '@app/utils/convertUtils';
 
 // Static function that can be used by both the hook and automation executor
 export const shouldProcessFilesSeparately = (

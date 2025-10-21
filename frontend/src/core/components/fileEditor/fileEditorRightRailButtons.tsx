@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useRightRailButtons, RightRailButtonWithAction } from '../../hooks/useRightRailButtons';
-import LocalIcon from '../shared/LocalIcon';
+import { useRightRailButtons, RightRailButtonWithAction } from '@app/hooks/useRightRailButtons';
+import LocalIcon from '@app/components/shared/LocalIcon';
 
 interface FileEditorRightRailButtonsParams {
   totalItems: number;

@@ -1,8 +1,8 @@
 import { describe, expect, test, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { MantineProvider } from '@mantine/core';
-import RedactSingleStepSettings from './RedactSingleStepSettings';
-import { defaultParameters } from '../../../hooks/tools/redact/useRedactParameters';
+import RedactSingleStepSettings from '@app/components/tools/redact/RedactSingleStepSettings';
+import { defaultParameters } from '@app/hooks/tools/redact/useRedactParameters';
 
 // Mock useTranslation
 vi.mock('react-i18next', () => ({

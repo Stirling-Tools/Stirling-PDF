@@ -3,7 +3,7 @@
  */
 
 import { describe, test, expect } from 'vitest';
-import { getFilenameFromHeaders, createFileFromApiResponse } from './fileResponseUtils';
+import { getFilenameFromHeaders, createFileFromApiResponse } from '@app/utils/fileResponseUtils';
 
 describe('fileResponseUtils', () => {
   

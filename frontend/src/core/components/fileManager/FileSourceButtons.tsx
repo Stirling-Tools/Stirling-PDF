@@ -4,8 +4,8 @@ import HistoryIcon from '@mui/icons-material/History';
 import UploadIcon from '@mui/icons-material/Upload';
 import CloudIcon from '@mui/icons-material/Cloud';
 import { useTranslation } from 'react-i18next';
-import { useFileManagerContext } from '../../contexts/FileManagerContext';
-import { useGoogleDrivePicker } from '../../hooks/useGoogleDrivePicker';
+import { useFileManagerContext } from '@app/contexts/FileManagerContext';
+import { useGoogleDrivePicker } from '@app/hooks/useGoogleDrivePicker';
 
 interface FileSourceButtonsProps {
   horizontal?: boolean;

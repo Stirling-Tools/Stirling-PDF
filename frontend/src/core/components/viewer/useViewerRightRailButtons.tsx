@@ -1,12 +1,12 @@
 import { useMemo, useState } from 'react';
 import { ActionIcon, Popover } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import { useViewer } from '../../contexts/ViewerContext';
-import { useRightRailButtons, RightRailButtonWithAction } from '../../hooks/useRightRailButtons';
-import LocalIcon from '../shared/LocalIcon';
-import { Tooltip } from '../shared/Tooltip';
-import { SearchInterface } from './SearchInterface';
-import ViewerAnnotationControls from '../shared/rightRail/ViewerAnnotationControls';
+import { useViewer } from '@app/contexts/ViewerContext';
+import { useRightRailButtons, RightRailButtonWithAction } from '@app/hooks/useRightRailButtons';
+import LocalIcon from '@app/components/shared/LocalIcon';
+import { Tooltip } from '@app/components/shared/Tooltip';
+import { SearchInterface } from '@app/components/viewer/SearchInterface';
+import ViewerAnnotationControls from '@app/components/shared/rightRail/ViewerAnnotationControls';
 
 export function useViewerRightRailButtons() {
   const { t } = useTranslation();

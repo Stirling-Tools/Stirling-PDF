@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
-import { ToolType, useToolOperation } from '../../../hooks/tools/shared/useToolOperation';
-import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
-import { AddStampParameters, defaultParameters } from './useAddStampParameters';
+import { ToolType, useToolOperation } from '@app/hooks/tools/shared/useToolOperation';
+import { createStandardErrorHandler } from '@app/utils/toolErrorHandler';
+import { AddStampParameters, defaultParameters } from '@app/components/tools/addStamp/useAddStampParameters';
 
 export const buildAddStampFormData = (parameters: AddStampParameters, file: File): FormData => {
   const formData = new FormData();

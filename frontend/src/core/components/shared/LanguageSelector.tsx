@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Menu, Button, ScrollArea, ActionIcon, Tooltip } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import { supportedLanguages } from '../../i18n';
-import LocalIcon from './LocalIcon';
-import styles from './LanguageSelector.module.css';
-import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from '../../styles/zIndex';
+import { supportedLanguages } from '@app/i18n';
+import LocalIcon from '@app/components/shared/LocalIcon';
+import styles from '@app/components/shared/LanguageSelector.module.css';
+import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from '@app/styles/zIndex';
 
 // Types
 interface LanguageSelectorProps {

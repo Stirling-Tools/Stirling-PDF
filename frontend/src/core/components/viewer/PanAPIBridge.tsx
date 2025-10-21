@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { usePan } from '@embedpdf/plugin-pan/react';
-import { useViewer } from '../../contexts/ViewerContext';
+import { useViewer } from '@app/contexts/ViewerContext';
 
 /**
  * Component that runs inside EmbedPDF context and updates pan state in ViewerContext

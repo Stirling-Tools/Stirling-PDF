@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { Stack, Button, Box } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import { useIndexedDBThumbnail } from '../../hooks/useIndexedDBThumbnail';
-import { useFileManagerContext } from '../../contexts/FileManagerContext';
-import FilePreview from '../shared/FilePreview';
-import FileInfoCard from './FileInfoCard';
-import CompactFileDetails from './CompactFileDetails';
+import { useIndexedDBThumbnail } from '@app/hooks/useIndexedDBThumbnail';
+import { useFileManagerContext } from '@app/contexts/FileManagerContext';
+import FilePreview from '@app/components/shared/FilePreview';
+import FileInfoCard from '@app/components/fileManager/FileInfoCard';
+import CompactFileDetails from '@app/components/fileManager/CompactFileDetails';
 
 interface FileDetailsProps {
   compact?: boolean;

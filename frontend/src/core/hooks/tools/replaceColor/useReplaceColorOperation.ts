@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
-import { ToolType, useToolOperation } from '../shared/useToolOperation';
-import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
-import { ReplaceColorParameters, defaultParameters } from './useReplaceColorParameters';
+import { ToolType, useToolOperation } from '@app/hooks/tools/shared/useToolOperation';
+import { createStandardErrorHandler } from '@app/utils/toolErrorHandler';
+import { ReplaceColorParameters, defaultParameters } from '@app/hooks/tools/replaceColor/useReplaceColorParameters';
 
 export const buildReplaceColorFormData = (parameters: ReplaceColorParameters, file: File): FormData => {
   const formData = new FormData();

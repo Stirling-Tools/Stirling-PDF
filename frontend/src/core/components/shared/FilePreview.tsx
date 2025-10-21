@@ -1,11 +1,11 @@
 import React from 'react';
 import { Box, Center } from '@mantine/core';
 import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
-import { StirlingFileStub } from '../../types/fileContext';
-import DocumentThumbnail from './filePreview/DocumentThumbnail';
-import DocumentStack from './filePreview/DocumentStack';
-import HoverOverlay from './filePreview/HoverOverlay';
-import NavigationArrows from './filePreview/NavigationArrows';
+import { StirlingFileStub } from '@app/types/fileContext';
+import DocumentThumbnail from '@app/components/shared/filePreview/DocumentThumbnail';
+import DocumentStack from '@app/components/shared/filePreview/DocumentStack';
+import HoverOverlay from '@app/components/shared/filePreview/HoverOverlay';
+import NavigationArrows from '@app/components/shared/filePreview/NavigationArrows';
 
 export interface FilePreviewProps {
   // Core file data

@@ -1,6 +1,6 @@
 import { Flex } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import { useCookieConsent } from '../../hooks/useCookieConsent';
+import { useCookieConsent } from '@app/hooks/useCookieConsent';
 
 interface FooterProps {
   privacyPolicy?: string;

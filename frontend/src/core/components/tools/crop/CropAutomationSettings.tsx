@@ -6,9 +6,9 @@
  */
 
 import { Stack } from "@mantine/core";
-import { CropParameters } from "../../../hooks/tools/crop/useCropParameters";
-import { Rectangle } from "../../../utils/cropCoordinates";
-import CropCoordinateInputs from "./CropCoordinateInputs";
+import { CropParameters } from "@app/hooks/tools/crop/useCropParameters";
+import { Rectangle } from "@app/utils/cropCoordinates";
+import CropCoordinateInputs from "@app/components/tools/crop/CropCoordinateInputs";
 
 interface CropAutomationSettingsProps {
   parameters: CropParameters;

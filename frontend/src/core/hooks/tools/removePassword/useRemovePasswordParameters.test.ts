@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { useRemovePasswordParameters, defaultParameters } from './useRemovePasswordParameters';
+import { useRemovePasswordParameters, defaultParameters } from '@app/hooks/tools/removePassword/useRemovePasswordParameters';
 
 describe('useRemovePasswordParameters', () => {
   test('should initialize with default parameters', () => {

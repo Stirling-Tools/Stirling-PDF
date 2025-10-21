@@ -1,7 +1,7 @@
 import React from 'react';
 import { Stack, Text, Code, Group, Badge, Alert, Loader, Button } from '@mantine/core';
-import { useAppConfig } from '../../../../hooks/useAppConfig';
-import { useAuth } from '../../../../auth/UseSession';
+import { useAppConfig } from '@app/hooks/useAppConfig';
+import { useAuth } from '@app/auth/UseSession';
 import { useNavigate } from 'react-router-dom';
 
 const Overview: React.FC = () => {

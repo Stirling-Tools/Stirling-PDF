@@ -1,7 +1,7 @@
 import { Stack, Text, Select, Switch } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { COLOR_TYPES, FIT_OPTIONS } from "../../../constants/convertConstants";
-import { ConvertParameters } from "../../../hooks/tools/convert/useConvertParameters";
+import { COLOR_TYPES, FIT_OPTIONS } from "@app/constants/convertConstants";
+import { ConvertParameters } from "@app/hooks/tools/convert/useConvertParameters";
 
 interface ConvertFromImageSettingsProps {
   parameters: ConvertParameters;

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { usePreferences } from './PreferencesContext';
+import { usePreferences } from '@app/contexts/PreferencesContext';
 import { useMediaQuery } from '@mantine/hooks';
 import { useAuth } from '../auth/UseSession';
 

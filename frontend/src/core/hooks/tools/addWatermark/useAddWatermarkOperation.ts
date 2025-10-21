@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
-import { ToolType, useToolOperation } from '../shared/useToolOperation';
-import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
-import { AddWatermarkParameters, defaultParameters } from './useAddWatermarkParameters';
+import { ToolType, useToolOperation } from '@app/hooks/tools/shared/useToolOperation';
+import { createStandardErrorHandler } from '@app/utils/toolErrorHandler';
+import { AddWatermarkParameters, defaultParameters } from '@app/hooks/tools/addWatermark/useAddWatermarkParameters';
 
 // Static function that can be used by both the hook and automation executor
 export const buildAddWatermarkFormData = (parameters: AddWatermarkParameters, file: File): FormData => {

@@ -1,8 +1,8 @@
 import { useCallback } from 'react';
-import { useToolNavigation } from './useToolNavigation';
-import { useToolWorkflow } from '../contexts/ToolWorkflowContext';
-import { handleUnlessSpecialClick } from '../utils/clickHandlers';
-import { ToolId } from 'src/types/toolId';
+import { useToolNavigation } from '@app/hooks/useToolNavigation';
+import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
+import { handleUnlessSpecialClick } from '@app/utils/clickHandlers';
+import { ToolId } from "@app/types/toolId";
 
 export interface SidebarNavigationProps {
   /** Full URL for the navigation (for href attribute) */

@@ -1,6 +1,6 @@
-import { pdfWorkerManager } from './pdfWorkerManager';
-import { FileAnalyzer } from './fileAnalyzer';
-import { TrappedStatus, CustomMetadataEntry, ExtractedPDFMetadata } from '../types/metadata';
+import { pdfWorkerManager } from '@app/services/pdfWorkerManager';
+import { FileAnalyzer } from '@app/services/fileAnalyzer';
+import { TrappedStatus, CustomMetadataEntry, ExtractedPDFMetadata } from '@app/types/metadata';
 import { PDFDocumentProxy } from 'pdfjs-dist/types/src/display/api';
 
 export interface MetadataExtractionResult {

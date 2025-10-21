@@ -7,8 +7,8 @@
 
 import { Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { RotateParameters } from "../../../hooks/tools/rotate/useRotateParameters";
-import ButtonSelector from "../../shared/ButtonSelector";
+import { RotateParameters } from "@app/hooks/tools/rotate/useRotateParameters";
+import ButtonSelector from "@app/components/shared/ButtonSelector";
 
 interface RotateAutomationSettingsProps {
   parameters: RotateParameters;

@@ -7,11 +7,11 @@
  */
 
 import { Stack } from "@mantine/core";
-import { CertSignParameters } from "../../../hooks/tools/certSign/useCertSignParameters";
-import CertificateTypeSettings from "./CertificateTypeSettings";
-import CertificateFormatSettings from "./CertificateFormatSettings";
-import CertificateFilesSettings from "./CertificateFilesSettings";
-import SignatureAppearanceSettings from "./SignatureAppearanceSettings";
+import { CertSignParameters } from "@app/hooks/tools/certSign/useCertSignParameters";
+import CertificateTypeSettings from "@app/components/tools/certSign/CertificateTypeSettings";
+import CertificateFormatSettings from "@app/components/tools/certSign/CertificateFormatSettings";
+import CertificateFilesSettings from "@app/components/tools/certSign/CertificateFilesSettings";
+import SignatureAppearanceSettings from "@app/components/tools/certSign/SignatureAppearanceSettings";
 
 interface CertSignAutomationSettingsProps {
   parameters: CertSignParameters;

@@ -1,4 +1,4 @@
-import { ProcessedFile, CacheConfig, CacheEntry, CacheStats } from '../types/processing';
+import { ProcessedFile, CacheConfig, CacheEntry, CacheStats } from '@app/types/processing';
 
 export class ProcessingCache {
   private cache = new Map<string, CacheEntry>();

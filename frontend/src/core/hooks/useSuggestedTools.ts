@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
-import { useNavigationState } from '../contexts/NavigationContext';
-import { useToolNavigation } from './useToolNavigation';
-import { useToolWorkflow } from '../contexts/ToolWorkflowContext';
-import { ToolId } from '../types/toolId';
+import { useNavigationState } from '@app/contexts/NavigationContext';
+import { useToolNavigation } from '@app/hooks/useToolNavigation';
+import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
+import { ToolId } from '@app/types/toolId';
 
 // Material UI Icons
 import CompressIcon from '@mui/icons-material/Compress';

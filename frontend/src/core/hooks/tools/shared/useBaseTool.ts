@@ -1,10 +1,10 @@
 import { useEffect, useCallback, useRef } from 'react';
-import { useFileSelection } from '../../../contexts/FileContext';
-import { useEndpointEnabled } from '../../useEndpointConfig';
-import { BaseToolProps } from '../../../types/tool';
-import { ToolOperationHook } from './useToolOperation';
-import { BaseParametersHook } from './useBaseParameters';
-import { StirlingFile } from '../../../types/fileContext';
+import { useFileSelection } from '@app/contexts/FileContext';
+import { useEndpointEnabled } from '@app/hooks/useEndpointConfig';
+import { BaseToolProps } from '@app/types/tool';
+import { ToolOperationHook } from '@app/hooks/tools/shared/useToolOperation';
+import { BaseParametersHook } from '@app/hooks/tools/shared/useBaseParameters';
+import { StirlingFile } from '@app/types/fileContext';
 
 interface BaseToolReturn<TParams, TParamsHook extends BaseParametersHook<TParams>> {
   // File management

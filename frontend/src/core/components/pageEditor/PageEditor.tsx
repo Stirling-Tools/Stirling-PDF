@@ -1,19 +1,19 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { Text, Center, Box, LoadingOverlay, Stack } from "@mantine/core";
-import { useFileState, useFileActions } from "../../contexts/FileContext";
-import { useNavigationGuard } from "../../contexts/NavigationContext";
-import { PDFDocument, PageEditorFunctions } from "../../types/pageEditor";
-import { pdfExportService } from "../../services/pdfExportService";
-import { documentManipulationService } from "../../services/documentManipulationService";
-import { exportProcessedDocumentsToFiles } from "../../services/pdfExportHelpers";
-import { createStirlingFilesAndStubs } from "../../services/fileStubHelpers";
+import { useFileState, useFileActions } from "@app/contexts/FileContext";
+import { useNavigationGuard } from "@app/contexts/NavigationContext";
+import { PDFDocument, PageEditorFunctions } from "@app/types/pageEditor";
+import { pdfExportService } from "@app/services/pdfExportService";
+import { documentManipulationService } from "@app/services/documentManipulationService";
+import { exportProcessedDocumentsToFiles } from "@app/services/pdfExportHelpers";
+import { createStirlingFilesAndStubs } from "@app/services/fileStubHelpers";
 // Thumbnail generation is now handled by individual PageThumbnail components
-import './PageEditor.module.css';
-import PageThumbnail from './PageThumbnail';
-import DragDropGrid from './DragDropGrid';
-import SkeletonLoader from '../shared/SkeletonLoader';
-import NavigationWarningModal from '../shared/NavigationWarningModal';
-import { FileId } from "../../types/file";
+import '@app/components/pageEditor/PageEditor.module.css';
+import PageThumbnail from '@app/components/pageEditor/PageThumbnail';
+import DragDropGrid from '@app/components/pageEditor/DragDropGrid';
+import SkeletonLoader from '@app/components/shared/SkeletonLoader';
+import NavigationWarningModal from '@app/components/shared/NavigationWarningModal';
+import { FileId } from "@app/types/file";
 
 import {
   DeletePagesCommand,
@@ -22,12 +22,12 @@ import {
   BulkRotateCommand,
   PageBreakCommand,
   UndoManager
-} from './commands/pageCommands';
-import { GRID_CONSTANTS } from './constants';
-import { usePageDocument } from './hooks/usePageDocument';
-import { usePageEditorState } from './hooks/usePageEditorState';
-import { parseSelection } from "../../utils/bulkselection/parseSelection";
-import { usePageEditorRightRailButtons } from "./pageEditorRightRailButtons";
+} from '@app/components/pageEditor/commands/pageCommands';
+import { GRID_CONSTANTS } from '@app/components/pageEditor/constants';
+import { usePageDocument } from '@app/components/pageEditor/hooks/usePageDocument';
+import { usePageEditorState } from '@app/components/pageEditor/hooks/usePageEditorState';
+import { parseSelection } from "@app/utils/bulkselection/parseSelection";
+import { usePageEditorRightRailButtons } from "@app/components/pageEditor/pageEditorRightRailButtons";
 
 export interface PageEditorProps {
   onFunctionsReady?: (functions: PageEditorFunctions) => void;

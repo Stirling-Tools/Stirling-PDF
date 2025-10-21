@@ -1,7 +1,7 @@
-import { ProcessedFile, ProcessingState, PDFPage } from '../types/processing';
-import { ProcessingCache } from './processingCache';
-import { pdfWorkerManager } from './pdfWorkerManager';
-import { createQuickKey } from '../types/fileContext';
+import { ProcessedFile, ProcessingState, PDFPage } from '@app/types/processing';
+import { ProcessingCache } from '@app/services/processingCache';
+import { pdfWorkerManager } from '@app/services/pdfWorkerManager';
+import { createQuickKey } from '@app/types/fileContext';
 
 export class PDFProcessingService {
   private static instance: PDFProcessingService;

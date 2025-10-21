@@ -8,7 +8,7 @@ import {
   getEndpointUrl, 
   isConversionSupported, 
   isImageFormat 
-} from './convertUtils';
+} from '@app/utils/convertUtils';
 
 describe('convertUtils', () => {
   

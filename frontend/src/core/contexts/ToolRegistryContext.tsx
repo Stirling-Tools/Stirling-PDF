@@ -6,8 +6,8 @@ import type {
   RegularToolRegistry,
   SuperToolRegistry,
   LinkToolRegistry,
-} from '../data/toolsTaxonomy';
-import type { ToolId } from '../types/toolId';
+} from '@app/data/toolsTaxonomy';
+import type { ToolId } from '@app/types/toolId';
 
 export interface ToolRegistryCatalog {
   regularTools: RegularToolRegistry;

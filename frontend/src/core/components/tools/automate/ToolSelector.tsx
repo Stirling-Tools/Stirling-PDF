@@ -1,12 +1,12 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Stack, Text, ScrollArea } from '@mantine/core';
-import { ToolRegistryEntry, ToolRegistry, getToolSupportsAutomate } from '../../../data/toolsTaxonomy';
-import { useToolSections } from '../../../hooks/useToolSections';
-import { renderToolButtons } from '../shared/renderToolButtons';
-import ToolSearch from '../toolPicker/ToolSearch';
-import ToolButton from '../toolPicker/ToolButton';
-import { ToolId } from '../../../types/toolId';
+import { ToolRegistryEntry, ToolRegistry, getToolSupportsAutomate } from '@app/data/toolsTaxonomy';
+import { useToolSections } from '@app/hooks/useToolSections';
+import { renderToolButtons } from '@app/components/tools/shared/renderToolButtons';
+import ToolSearch from '@app/components/tools/toolPicker/ToolSearch';
+import ToolButton from '@app/components/tools/toolPicker/ToolButton';
+import { ToolId } from '@app/types/toolId';
 
 interface ToolSelectorProps {
   onSelect: (toolKey: string) => void;

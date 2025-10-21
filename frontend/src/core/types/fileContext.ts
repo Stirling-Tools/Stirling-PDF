@@ -2,8 +2,8 @@
  * Types for global file context management across views and tools
  */
 
-import { PageOperation } from './pageEditor';
-import { FileId, BaseFileMetadata } from './file';
+import { PageOperation } from '@app/types/pageEditor';
+import { FileId, BaseFileMetadata } from '@app/types/file';
 
 // Re-export FileId for convenience
 export type { FileId };

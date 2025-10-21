@@ -1,8 +1,8 @@
 import { Stack, TextInput, Checkbox, Anchor, Text } from '@mantine/core';
-import LocalIcon from '../../shared/LocalIcon';
+import LocalIcon from '@app/components/shared/LocalIcon';
 import { useTranslation } from 'react-i18next';
-import { SPLIT_METHODS } from '../../../constants/splitConstants';
-import { SplitParameters } from '../../../hooks/tools/split/useSplitParameters';
+import { SPLIT_METHODS } from '@app/constants/splitConstants';
+import { SplitParameters } from '@app/hooks/tools/split/useSplitParameters';
 
 export interface SplitSettingsProps {
   parameters: SplitParameters;

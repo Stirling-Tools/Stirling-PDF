@@ -1,7 +1,7 @@
 import { describe, expect, test, vi, beforeEach } from 'vitest';
 import { renderHook } from '@testing-library/react';
-import { buildRedactFormData, redactOperationConfig, useRedactOperation } from './useRedactOperation';
-import { defaultParameters, RedactParameters } from './useRedactParameters';
+import { buildRedactFormData, redactOperationConfig, useRedactOperation } from '@app/hooks/tools/redact/useRedactOperation';
+import { defaultParameters, RedactParameters } from '@app/hooks/tools/redact/useRedactParameters';
 
 // Mock the useToolOperation hook
 vi.mock('../shared/useToolOperation', async () => {
@@ -119,7 +119,7 @@ describe('useRedactOperation', () => {
   });
 
   test('should call useToolOperation with correct configuration', async () => {
-    const { useToolOperation } = await import('../shared/useToolOperation');
+    const { useToolOperation } = await import('@app/hooks/tools/shared/useToolOperation');
     const mockUseToolOperation = vi.mocked(useToolOperation);
 
     renderHook(() => useRedactOperation());
@@ -131,7 +131,7 @@ describe('useRedactOperation', () => {
   });
 
   test('should provide error handler to useToolOperation', async () => {
-    const { useToolOperation } = await import('../shared/useToolOperation');
+    const { useToolOperation } = await import('@app/hooks/tools/shared/useToolOperation');
     const mockUseToolOperation = vi.mocked(useToolOperation);
 
     renderHook(() => useRedactOperation());

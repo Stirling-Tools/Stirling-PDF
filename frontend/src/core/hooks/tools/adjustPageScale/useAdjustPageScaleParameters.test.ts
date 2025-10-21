@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { useAdjustPageScaleParameters, defaultParameters, PageSize, AdjustPageScaleParametersHook } from './useAdjustPageScaleParameters';
+import { useAdjustPageScaleParameters, defaultParameters, PageSize, AdjustPageScaleParametersHook } from '@app/hooks/tools/adjustPageScale/useAdjustPageScaleParameters';
 
 describe('useAdjustPageScaleParameters', () => {
   test('should initialize with default parameters', () => {
