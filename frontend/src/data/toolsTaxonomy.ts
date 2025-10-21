@@ -3,7 +3,7 @@ import React from 'react';
 import { ToolOperationConfig } from '../hooks/tools/shared/useToolOperation';
 import { BaseToolProps } from '../types/tool';
 import { WorkbenchType } from '../types/workbench';
-import { ToolId } from '../types/toolId';
+import { LinkToolId, RegularToolId, SuperToolId, ToolId, ToolKind } from '../types/toolId';
 import DrawRoundedIcon from '@mui/icons-material/DrawRounded';
 import SecurityRoundedIcon from '@mui/icons-material/SecurityRounded';
 import VerifiedUserRoundedIcon from '@mui/icons-material/VerifiedUserRounded';
@@ -47,7 +47,7 @@ export type ToolRegistryEntry = {
 	supportedFormats?: string[];
 	endpoints?: string[];
 	link?: string;
-	type?: string;
+	kind?: ToolKind;
 	// Workbench type for navigation
 	workbench?: WorkbenchType;
 	// Operation configuration for automation
@@ -60,6 +60,9 @@ export type ToolRegistryEntry = {
 	synonyms?: string[];
 }
 
+export type RegularToolRegistry = Record<RegularToolId, ToolRegistryEntry>;
+export type SuperToolRegistry = Record<SuperToolId, ToolRegistryEntry>;
+export type LinkToolRegistry = Record<LinkToolId, ToolRegistryEntry>;
 export type ToolRegistry = Record<ToolId, ToolRegistryEntry>;
 
 export const SUBCATEGORY_ORDER: SubcategoryId[] = [

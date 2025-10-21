@@ -3,13 +3,7 @@ import { useHistoryCapability } from '@embedpdf/plugin-history/react';
 import { useAnnotationCapability } from '@embedpdf/plugin-annotation/react';
 import { useSignature } from '../../contexts/SignatureContext';
 import { uuidV4 } from '@embedpdf/models';
-
-export interface HistoryAPI {
-  undo: () => void;
-  redo: () => void;
-  canUndo: () => boolean;
-  canRedo: () => boolean;
-}
+import type { HistoryAPI } from './viewerTypes';
 
 export const HistoryAPIBridge = forwardRef<HistoryAPI>(function HistoryAPIBridge(_, ref) {
   const { provides: historyApi } = useHistoryCapability();
@@ -42,7 +36,7 @@ export const HistoryAPIBridge = forwardRef<HistoryAPI>(function HistoryAPIBridge
             const currentStoredData = getImageData(annotation.id);
             // Check if the annotation lacks image data but we have it stored
             if (currentStoredData && (!annotation.imageSrc || annotation.imageSrc !== currentStoredData)) {
-              
+
               // Generate new ID to avoid React key conflicts
               const newId = uuidV4();
 

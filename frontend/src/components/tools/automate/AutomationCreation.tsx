@@ -25,7 +25,7 @@ interface AutomationCreationProps {
   existingAutomation?: AutomationConfig;
   onBack: () => void;
   onComplete: (automation: AutomationConfig) => void;
-  toolRegistry: ToolRegistry;
+  toolRegistry: Partial<ToolRegistry>;
 }
 
 export default function AutomationCreation({ mode, existingAutomation, onBack, onComplete, toolRegistry }: AutomationCreationProps) {

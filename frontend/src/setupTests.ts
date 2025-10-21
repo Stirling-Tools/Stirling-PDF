@@ -119,5 +119,49 @@ Object.defineProperty(window, 'matchMedia', {
   })),
 });
 
+// Provide a minimal DOMMatrix implementation for pdf.js in the test environment
+if (typeof globalThis.DOMMatrix === 'undefined') {
+  class DOMMatrixStub {
+    a = 1;
+    b = 0;
+    c = 0;
+    d = 1;
+    e = 0;
+    f = 0;
+
+    constructor(init?: string | number[]) {
+      if (Array.isArray(init) && init.length === 6) {
+        [this.a, this.b, this.c, this.d, this.e, this.f] = init as [number, number, number, number, number, number];
+      }
+    }
+
+    multiplySelf(): this {
+      return this;
+    }
+
+    translateSelf(): this {
+      return this;
+    }
+
+    scaleSelf(): this {
+      return this;
+    }
+
+    rotateSelf(): this {
+      return this;
+    }
+
+    inverse(): this {
+      return this;
+    }
+  }
+
+  Object.defineProperty(globalThis, 'DOMMatrix', {
+    value: DOMMatrixStub,
+    writable: false,
+    configurable: true,
+  });
+}
+
 // Set global test timeout to prevent hangs
 vi.setConfig({ testTimeout: 5000, hookTimeout: 5000 });
