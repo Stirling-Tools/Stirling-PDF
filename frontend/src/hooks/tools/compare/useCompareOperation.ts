@@ -433,31 +433,50 @@ const extractContentFromPdf = async (file: StirlingFile): Promise<ExtractedConte
         for (let i = 0; i < totalLen; i += 1) prefix[i + 1] = prefix[i] + weights[i];
         const totalWeight = prefix[totalLen] || 1;
 
-        const [rawX, rawY] = [item.transform[4], item.transform[5]];
-        const [x1, y1] = viewport.convertToViewportPoint(rawX, rawY);
-        const [x2, y2] = viewport.convertToViewportPoint(rawX + item.width, rawY + item.height);
+        const rawX = item.transform[4];
+        const rawY = item.transform[5];
+        const transformed = [
+          viewport.convertToViewportPoint(rawX, rawY),
+          viewport.convertToViewportPoint(rawX + item.width, rawY),
+          viewport.convertToViewportPoint(rawX, rawY + item.height),
+          viewport.convertToViewportPoint(rawX + item.width, rawY + item.height),
+        ];
+        const xs = transformed.map(([px]) => px);
+        const ys = transformed.map(([, py]) => py);
+        const left = Math.min(...xs);
+        const right = Math.max(...xs);
+        const top = Math.min(...ys);
+        const bottom = Math.max(...ys);
 
-        const left = Math.min(x1, x2);
-        const right = Math.max(x1, x2);
-        const top = Math.min(y1, y2);
-        const bottom = Math.max(y1, y2);
+        if (
+          !Number.isFinite(left) ||
+          !Number.isFinite(right) ||
+          !Number.isFinite(top) ||
+          !Number.isFinite(bottom)
+        ) {
+          prevItem = item;
+          continue;
+        }
 
-          let normalizedTop = clamp(top / viewport.height);
-          let normalizedBottom = clamp(bottom / viewport.height);
-          let height = Math.max(normalizedBottom - normalizedTop, 0);
+        const [baselineStart, baselineEnd, verticalEnd] = transformed;
+        const baselineVector: [number, number] = [
+          baselineEnd[0] - baselineStart[0],
+          baselineEnd[1] - baselineStart[1],
+        ];
+        const verticalVector: [number, number] = [
+          verticalEnd[0] - baselineStart[0],
+          verticalEnd[1] - baselineStart[1],
+        ];
+        const baselineMagnitude = Math.hypot(baselineVector[0], baselineVector[1]);
+        const verticalMagnitude = Math.hypot(verticalVector[0], verticalVector[1]);
+        const hasOrientationVectors = baselineMagnitude > 1e-6 && verticalMagnitude > 1e-6;
 
-          // Tighten vertical box using font ascent/descent when available
-          const fontName: string | undefined = (item as any).fontName;
-          const font = fontName ? styles[fontName] : undefined;
-          const ascent = typeof font?.ascent === 'number' ? Math.max(0.7, Math.min(1.1, font.ascent)) : 0.9;
-          const descent = typeof font?.descent === 'number' ? Math.max(0.0, Math.min(0.5, Math.abs(font.descent))) : 0.2;
-          const vFactor = Math.min(1, Math.max(0.75, ascent + descent));
-          const shrink = height * (1 - vFactor);
-          if (shrink > 0) {
-            normalizedTop += shrink / 2;
-            height = height * vFactor;
-            normalizedBottom = normalizedTop + height;
-          }
+        // Tighten vertical boxes using font ascent/descent when available
+        const fontName: string | undefined = (item as any).fontName;
+        const font = fontName ? styles[fontName] : undefined;
+        const ascent = typeof font?.ascent === 'number' ? Math.max(0.7, Math.min(1.1, font.ascent)) : 0.9;
+        const descent = typeof font?.descent === 'number' ? Math.max(0.0, Math.min(0.5, Math.abs(font.descent))) : 0.2;
+        const verticalScale = Math.min(1, Math.max(0.75, ascent + descent));
 
         const wordRegex = /[A-Za-z0-9]+|[^\sA-Za-z0-9]/g;
         let match: RegExpExecArray | null;
@@ -472,14 +491,59 @@ const extractContentFromPdf = async (file: StirlingFile): Promise<ExtractedConte
 
           const relStart = prefix[startIndex] / totalWeight;
           const relEnd = prefix[endIndex] / totalWeight;
-          const segLeft = left + (right - left) * relStart;
-          const segRight = left + (right - left) * relEnd;
 
-          const normalizedLeft = clamp(Math.min(segLeft, segRight) / viewport.width);
-          const normalizedRight = clamp(Math.max(segLeft, segRight) / viewport.width);
-          const width = Math.max(normalizedRight - normalizedLeft, 0);
+          let wordLeftAbs: number;
+          let wordRightAbs: number;
+          let wordTopAbs: number;
+          let wordBottomAbs: number;
 
-          const bbox = adjustBoundingBox(normalizedLeft, normalizedTop, width, height);
+          if (hasOrientationVectors) {
+            const segStart: [number, number] = [
+              baselineStart[0] + baselineVector[0] * relStart,
+              baselineStart[1] + baselineVector[1] * relStart,
+            ];
+            const segEnd: [number, number] = [
+              baselineStart[0] + baselineVector[0] * relEnd,
+              baselineStart[1] + baselineVector[1] * relEnd,
+            ];
+            const cornerPoints: Array<[number, number]> = [
+              segStart,
+              [segStart[0] + verticalVector[0], segStart[1] + verticalVector[1]],
+              [segEnd[0] + verticalVector[0], segEnd[1] + verticalVector[1]],
+              segEnd,
+            ];
+            const cornerXs = cornerPoints.map(([px]) => px);
+            const cornerYs = cornerPoints.map(([, py]) => py);
+            wordLeftAbs = Math.min(...cornerXs);
+            wordRightAbs = Math.max(...cornerXs);
+            wordTopAbs = Math.min(...cornerYs);
+            wordBottomAbs = Math.max(...cornerYs);
+          } else {
+            const segLeftAbs = left + (right - left) * relStart;
+            const segRightAbs = left + (right - left) * relEnd;
+            wordLeftAbs = Math.min(segLeftAbs, segRightAbs);
+            wordRightAbs = Math.max(segLeftAbs, segRightAbs);
+            wordTopAbs = top;
+            wordBottomAbs = bottom;
+          }
+
+          let wordLeft = clamp(wordLeftAbs / viewport.width);
+          let wordRight = clamp(wordRightAbs / viewport.width);
+          let wordTop = clamp(wordTopAbs / viewport.height);
+          let wordBottom = clamp(wordBottomAbs / viewport.height);
+          const wordWidth = Math.max(0, wordRight - wordLeft);
+          let wordHeight = Math.max(0, wordBottom - wordTop);
+
+          if (wordHeight > 0 && verticalScale < 1) {
+            const midY = (wordTop + wordBottom) / 2;
+            const shrunkHeight = Math.max(0, wordHeight * verticalScale);
+            const half = shrunkHeight / 2;
+            wordTop = clamp(midY - half);
+            wordBottom = clamp(midY + half);
+            wordHeight = Math.max(0, wordBottom - wordTop);
+          }
+
+          const bbox = adjustBoundingBox(wordLeft, wordTop, wordWidth, wordHeight);
 
           tokens.push(normalizedWord);
           metadata.push({
