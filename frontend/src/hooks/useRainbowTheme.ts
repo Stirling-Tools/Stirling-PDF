@@ -12,7 +12,7 @@ interface RainbowThemeHook {
   deactivateRainbow: () => void;
 }
 
-const allowRainbowMode = false; // Override to allow/disallow fun
+const allowRainbowMode = true; // Override to allow/disallow fun
 
 export function useRainbowTheme(): RainbowThemeHook {
   const { preferences, updatePreference } = usePreferences();
