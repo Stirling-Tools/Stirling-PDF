@@ -37,8 +37,9 @@ public class InitialSecuritySetup {
 
     @PostConstruct
     public void init() {
-        try {
 
+        databaseService.migrateDatabase();
+        try {
             if (!userService.hasUsers()) {
                 if (databaseService.hasBackup()) {
                     databaseService.importDatabase();
@@ -142,7 +143,7 @@ public class InitialSecuritySetup {
             if (internalApiUserOpt.isPresent()) {
                 User internalApiUser = internalApiUserOpt.get();
                 // move to team internal API user
-                if (!internalApiUser.getTeam().getName().equals(TeamService.INTERNAL_TEAM_NAME)) {
+                if (!TeamService.INTERNAL_TEAM_NAME.equals(internalApiUser.getTeam().getName())) {
                     log.info(
                             "Moving internal API user to team: {}", TeamService.INTERNAL_TEAM_NAME);
                     Team internalTeam = teamService.getOrCreateInternalTeam();
