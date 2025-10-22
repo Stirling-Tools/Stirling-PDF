@@ -1,6 +1,7 @@
 import { useCallback, useRef, useEffect } from 'react';
 import { usePreferences } from '../contexts/PreferencesContext';
 import type { ThemeMode } from '../constants/theme';
+import rainbowStyles from '../styles/rainbow.module.css';
 
 interface RainbowThemeHook {
   themeMode: ThemeMode;
@@ -21,15 +22,56 @@ export function useRainbowTheme(): RainbowThemeHook {
   const toggleCount = useRef(0);
   const lastToggleTime = useRef(Date.now());
   const isToggleDisabled = useRef(false);
+  const rainbowIntervalRef = useRef<number | null>(null);
 
   // Apply rainbow class to body whenever theme changes
   useEffect(() => {
+    const root = document.documentElement;
+
+    const clearRainbowInterval = () => {
+      if (rainbowIntervalRef.current !== null) {
+        window.clearInterval(rainbowIntervalRef.current);
+        rainbowIntervalRef.current = null;
+      }
+    };
+
+    const resetRainbowVariables = () => {
+      root.style.removeProperty('--rainbow-hue');
+      root.style.removeProperty('--rainbow-angle');
+      root.style.removeProperty('--rainbow-sparkle-opacity');
+      root.style.removeProperty('--rainbow-glow-strength');
+    };
+
     if (themeMode === 'rainbow') {
       document.body.classList.add('rainbow-mode-active');
       showRainbowNotification();
+
+      const applyRainbowVariables = () => {
+        const hue = Math.floor(Math.random() * 360);
+        const angle = Math.floor(Math.random() * 360);
+        const sparkle = (Math.random() * 0.4 + 0.4).toFixed(2);
+        const glow = (Math.random() * 0.3 + 0.35).toFixed(2);
+
+        root.style.setProperty('--rainbow-hue', hue.toString());
+        root.style.setProperty('--rainbow-angle', `${angle}deg`);
+        root.style.setProperty('--rainbow-sparkle-opacity', sparkle);
+        root.style.setProperty('--rainbow-glow-strength', glow);
+      };
+
+      applyRainbowVariables();
+      clearRainbowInterval();
+      rainbowIntervalRef.current = window.setInterval(applyRainbowVariables, 1400);
     } else {
       document.body.classList.remove('rainbow-mode-active');
+      clearRainbowInterval();
+      resetRainbowVariables();
     }
+
+    return () => {
+      clearRainbowInterval();
+      resetRainbowVariables();
+      document.body.classList.remove('rainbow-mode-active');
+    };
   }, [themeMode]);
 
   const showRainbowNotification = () => {
@@ -42,26 +84,8 @@ export function useRainbowTheme(): RainbowThemeHook {
     // Create and show rainbow notification
     const notification = document.createElement('div');
     notification.id = 'rainbow-notification';
+    notification.className = rainbowStyles.rainbowNotification;
     notification.innerHTML = '🌈 RAINBOW MODE ACTIVATED! 🌈<br><small>Button disabled for 3 seconds, then click to exit</small>';
-    notification.style.cssText = `
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background: linear-gradient(45deg, #ff0000, #ff8800, #ffff00, #88ff00, #00ff88, #00ffff, #0088ff, #8800ff);
-      background-size: 300% 300%;
-      animation: rainbowBackground 1s ease infinite;
-      color: white;
-      padding: 15px 20px;
-      border-radius: 25px;
-      font-weight: bold;
-      font-size: 16px;
-      z-index: 1000;
-      border: 2px solid white;
-      box-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
-      user-select: none;
-      pointer-events: none;
-      transition: opacity 0.3s ease;
-    `;
 
     document.body.appendChild(notification);
 
@@ -88,20 +112,31 @@ export function useRainbowTheme(): RainbowThemeHook {
     // Create and show exit notification
     const notification = document.createElement('div');
     notification.id = 'rainbow-exit-notification';
-    notification.innerHTML = '🌙 Rainbow mode deactivated';
+
+    const rootStyles = getComputedStyle(document.documentElement);
+    const hueValue = rootStyles.getPropertyValue('--rainbow-hue').trim();
+    const baseHue = Number.isNaN(Number.parseFloat(hueValue))
+      ? 0
+      : Number.parseFloat(hueValue);
+    const exitHue = (baseHue + 200) % 360;
+    const accentHue = (exitHue + 45) % 360;
+
+    notification.innerHTML = '🌙 Rainbow mode deactivated — back to reality';
     notification.style.cssText = `
       position: fixed;
       top: 20px;
       right: 20px;
-      background: linear-gradient(45deg, #333, #666);
+      background: linear-gradient(135deg, hsla(${exitHue}deg, 85%, 40%, 0.85), hsla(${accentHue}deg, 90%, 45%, 0.9));
+      background-size: 220% 220%;
+      animation: rainbowBackground 1.8s ease infinite;
       color: white;
       padding: 15px 20px;
       border-radius: 25px;
       font-weight: bold;
       font-size: 16px;
       z-index: 1000;
-      border: 2px solid #999;
-      box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+      border: 2px solid hsla(${accentHue}deg, 95%, 75%, 0.9);
+      box-shadow: 0 0 25px hsla(${accentHue}deg, 100%, 65%, 0.45);
       user-select: none;
       pointer-events: none;
       transition: opacity 0.3s ease;

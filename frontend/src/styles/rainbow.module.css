@@ -1,8 +1,27 @@
 /* Rainbow Mode Styles - Easter Egg! */
+:global(:root) {
+  --rainbow-hue: 0;
+  --rainbow-angle: -45deg;
+  --rainbow-sparkle-opacity: 0.45;
+  --rainbow-glow-strength: 0.4;
+}
+
 @keyframes rainbowBackground {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+  0% {
+    background-position: 0% 50%;
+  }
+  25% {
+    background-position: 50% 0%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  75% {
+    background-position: 50% 100%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
 @keyframes rainbowBorder {
@@ -32,16 +51,102 @@
   50% { transform: scale(1.05); }
 }
 
+@keyframes rainbowAurora {
+  0% {
+    transform: rotate(0deg) scale(1);
+    opacity: calc(var(--rainbow-glow-strength) * 0.9);
+  }
+  50% {
+    transform: rotate(180deg) scale(1.05);
+    opacity: calc(var(--rainbow-glow-strength) * 1.15);
+  }
+  100% {
+    transform: rotate(360deg) scale(1);
+    opacity: calc(var(--rainbow-glow-strength) * 0.9);
+  }
+}
+
+@keyframes rainbowSparkle {
+  0% {
+    background-position: 0% 0%, 50% 50%, 100% 100%;
+    opacity: calc(var(--rainbow-sparkle-opacity) * 0.6);
+  }
+  50% {
+    background-position: 50% 50%, 100% 0%, 0% 100%;
+    opacity: calc(var(--rainbow-sparkle-opacity) * 1.1);
+  }
+  100% {
+    background-position: 100% 100%, 0% 0%, 50% 50%;
+    opacity: calc(var(--rainbow-sparkle-opacity) * 0.6);
+  }
+}
+
 /* Main rainbow theme class */
 .rainbowMode {
+  position: relative;
+  z-index: 0;
+  isolation: isolate;
   background: linear-gradient(
-    -45deg,
-    #ff0000, #ff8800, #ffff00, #88ff00, #00ff88, #00ffff, #0088ff, #8800ff, #ff0088, #ff0000
+    var(--rainbow-angle),
+    #ff0000,
+    #ff8800,
+    #ffff00,
+    #88ff00,
+    #00ff88,
+    #00ffff,
+    #0088ff,
+    #8800ff,
+    #ff0088,
+    #ff0000
   ) !important;
-  background-size: 400% 400% !important;
+  background-size: 500% 500% !important;
   animation: rainbowBackground 3s ease infinite !important;
   color: white !important;
   overflow-x: hidden;
+  filter: hue-rotate(calc(var(--rainbow-hue) * 1deg));
+  box-shadow: inset 0 0 45px rgba(255, 255, 255, 0.25);
+}
+
+.rainbowMode::before,
+.rainbowMode::after {
+  content: '';
+  position: fixed;
+  inset: -40vh;
+  pointer-events: none;
+  z-index: -1;
+  transition: opacity 1s ease;
+}
+
+.rainbowMode::before {
+  background: conic-gradient(
+    from calc(var(--rainbow-angle) + 90deg),
+    rgba(255, 0, 0, 0.5),
+    rgba(255, 154, 0, 0.5),
+    rgba(208, 222, 33, 0.5),
+    rgba(79, 220, 74, 0.5),
+    rgba(63, 218, 216, 0.5),
+    rgba(47, 201, 226, 0.5),
+    rgba(28, 127, 238, 0.5),
+    rgba(95, 21, 242, 0.5),
+    rgba(186, 12, 248, 0.5),
+    rgba(251, 7, 217, 0.5),
+    rgba(255, 0, 0, 0.5)
+  );
+  mix-blend-mode: screen;
+  filter: blur(80px);
+  animation: rainbowAurora 14s linear infinite;
+  opacity: var(--rainbow-glow-strength);
+}
+
+.rainbowMode::after {
+  background-image:
+    radial-gradient(circle at 10% 20%, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0) 45%),
+    radial-gradient(circle at 80% 30%, rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0) 40%),
+    radial-gradient(circle at 30% 75%, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0) 35%);
+  background-size: 250px 250px, 320px 320px, 280px 280px;
+  mix-blend-mode: screen;
+  animation: rainbowSparkle 9s ease-in-out infinite;
+  opacity: var(--rainbow-sparkle-opacity);
 }
 
 /* Rainbow components */
@@ -55,7 +160,13 @@
   color: white !important;
   border: 2px solid !important;
   border-radius: 15px !important;
-  box-shadow: 0 0 20px rgba(255, 255, 255, 0.3) !important;
+  box-shadow: 0 0 25px rgba(255, 255, 255, 0.35) !important;
+  filter: hue-rotate(calc(var(--rainbow-hue) * 1deg));
+  transition: transform 0.4s ease, filter 0.8s ease;
+}
+
+.rainbowCard:hover {
+  transform: translateY(-6px) scale(1.02);
 }
 
 .rainbowButton {
@@ -70,12 +181,15 @@
   border-radius: 8px !important;
   transition: all 0.3s ease !important;
   font-weight: bold !important;
+  filter: hue-rotate(calc(var(--rainbow-hue) * 1deg));
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25) !important;
 }
 
 .rainbowButton:hover {
   transform: scale(1.05) !important;
   animation: rainbowBackground 1s ease infinite, rainbowBorder 0.5s linear infinite, rainbowPulse 0.5s ease infinite !important;
   box-shadow: 0 0 25px rgba(255, 255, 255, 0.6) !important;
+  filter: saturate(140%) hue-rotate(calc((var(--rainbow-hue) + 40) * 1deg));
 }
 
 .rainbowInput {
@@ -88,6 +202,9 @@
   border: 2px solid !important;
   color: white !important;
   border-radius: 8px !important;
+  filter: hue-rotate(calc(var(--rainbow-hue) * 1deg));
+  box-shadow: inset 0 0 12px rgba(255, 255, 255, 0.25) !important;
+  transition: filter 0.6s ease;
 }
 
 .rainbowInput::placeholder {
@@ -98,6 +215,7 @@
   animation: rainbowText 3s linear infinite !important;
   font-weight: bold !important;
   text-shadow: 0 0 10px currentColor !important;
+  filter: hue-rotate(calc(var(--rainbow-hue) * 1deg));
 }
 
 .rainbowSegmentedControl {
@@ -110,6 +228,8 @@
   border: 2px solid !important;
   border-radius: 12px !important;
   padding: 4px !important;
+  filter: hue-rotate(calc(var(--rainbow-hue) * 1deg));
+  box-shadow: 0 0 18px rgba(255, 255, 255, 0.35) !important;
 }
 
 .rainbowPaper {
@@ -122,6 +242,7 @@
   border: 2px solid !important;
   color: white !important;
   border-radius: 12px !important;
+  filter: hue-rotate(calc(var(--rainbow-hue) * 1deg));
 }
 
 /* Easter egg notification */
@@ -129,7 +250,12 @@
   position: fixed !important;
   top: 20px !important;
   right: 20px !important;
-  background: linear-gradient(45deg,#ffff00, #88ff00, #00ff88, #00ffff) !important;
+  background: linear-gradient(
+    135deg,
+    hsla(calc(var(--rainbow-hue) * 1deg), 100%, 65%, 0.95),
+    hsla(calc((var(--rainbow-hue) + 60) * 1deg), 100%, 70%, 0.95),
+    hsla(calc((var(--rainbow-hue) + 120) * 1deg), 100%, 72%, 0.95)
+  ) !important;
   background-size: 300% 300% !important;
   animation: rainbowBackground 1s ease infinite, rainbowBorder 0.5s linear infinite !important;
   color: white !important;
@@ -142,22 +268,24 @@
   box-shadow: 0 0 20px rgba(255, 255, 255, 0.8) !important;
   user-select: none !important;
   pointer-events: none !important;
+  transition: opacity 0.4s ease !important;
 }
 
 /* Specific component overrides */
 .rainbowMode [data-mantine-color-scheme] {
   background: linear-gradient(
-    -45deg,
+    var(--rainbow-angle),
     #ff0000, #ff8800, #ffff00, #88ff00, #00ff88, #00ffff, #0088ff, #8800ff, #ff0088, #ff0000
   ) !important;
   background-size: 400% 400% !important;
   animation: rainbowBackground 3s ease infinite !important;
+  filter: hue-rotate(calc(var(--rainbow-hue) * 1deg));
 }
 
 /* Make all buttons rainbow in rainbow mode */
 .rainbowMode button {
   background: linear-gradient(
-    45deg,
+    calc(var(--rainbow-angle) + 45deg),
      #ffff00, #88ff00, #00ff88, #00ffff
   ) !important;
   background-size: 100% 100% !important;
@@ -166,6 +294,8 @@
   animation: rainbowBackground 2s ease infinite, rainbowBorder 1.5s linear infinite !important;
   color: white !important;
   font-weight: bold !important;
+  filter: hue-rotate(calc(var(--rainbow-hue) * 1deg));
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25) !important;
 }
 
 /* Make all inputs rainbow in rainbow mode */
@@ -173,7 +303,7 @@
 .rainbowMode select,
 .rainbowMode textarea {
   background: linear-gradient(
-    90deg,
+    calc(var(--rainbow-angle) + 90deg),
     #ffff00, #88ff00, #00ff88, #00ffff
   ) !important;
   background-size: 100% 100% !important;
@@ -181,6 +311,8 @@
   border: 2px solid !important;
   animation: rainbowBackground 2.5s ease infinite, rainbowBorder 1.5s linear infinite !important;
   color: white !important;
+  filter: hue-rotate(calc(var(--rainbow-hue) * 1deg));
+  box-shadow: inset 0 0 12px rgba(255, 255, 255, 0.25) !important;
 }
 
 /* Rainbow text class */
@@ -188,6 +320,7 @@
   animation: rainbowText 3s linear infinite !important;
   font-weight: bold !important;
   text-shadow: 0 0 10px currentColor !important;
+  filter: hue-rotate(calc(var(--rainbow-hue) * 1deg));
 }
 
 /* Make all text rainbow */
@@ -199,4 +332,5 @@
 .rainbowMode h6 {
   animation: rainbowText 3s linear infinite !important;
   font-weight: bold !important;
+  filter: hue-rotate(calc(var(--rainbow-hue) * 1deg));
 }
