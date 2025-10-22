@@ -10,7 +10,7 @@ plugins {
     id "com.github.jk1.dependency-license-report" version "2.9"
     //id "nebula.lint" version "19.0.3"
     id "org.panteleyev.jpackageplugin" version "1.7.5"
-    id "org.sonarqube" version "6.3.1.5724"
+    id "org.sonarqube" version "7.0.0.6105"
 }
 
 import com.github.jk1.license.render.*
@@ -22,7 +22,7 @@ import java.time.Year
 
 ext {
     springBootVersion = "3.5.6"
-    pdfboxVersion = "3.0.5"
+    pdfboxVersion = "3.0.6"
     imageioVersion = "3.12.0"
     lombokVersion = "1.18.42"
     bouncycastleVersion = "1.82"
