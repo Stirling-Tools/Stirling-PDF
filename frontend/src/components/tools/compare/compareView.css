@@ -1,0 +1,411 @@
+.compare-workbench {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1rem;
+  height: 100%;
+  min-height: 0;
+  /* Allow the custom workbench to shrink within flex parents (prevents pushing right rail off-screen) */
+  min-width: 0;
+}
+
+.compare-workbench__mode {
+  align-self: center;
+}
+
+.compare-workbench__columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  align-items: start;
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  min-height: 0;
+  grid-auto-rows: 1fr;
+}
+
+/* Stacked mode: two rows with synchronized scroll panes */
+.compare-workbench__columns--stacked {
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr 1fr;
+}
+
+.compare-workbench__columns > div {
+  /* Critical for responsive flex children inside non-wrapping layouts */
+  min-height: 0;
+  min-width: 0;
+}
+
+.compare-legend {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* Sticky header styling overrides */
+.compare-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--mantine-color-gray-3);
+  padding: 0.5rem;
+  margin: -0.5rem -0.5rem 0.5rem -0.5rem;
+}
+
+/* Dropdown badge-like style - only style the dropdowns, not titles */
+.compare-changes-select {
+  background: rgba(255, 59, 48, 0.15) !important;
+  color: #b91c1c !important;
+  border: none !important;
+  border-radius: 8px !important;
+  font-weight: 500 !important;
+}
+
+.compare-changes-select--comparison {
+  background: rgba(52, 199, 89, 0.18) !important;
+  color: #1b5e20 !important;
+  border: none !important;
+  border-radius: 8px !important;
+  font-weight: 500 !important;
+}
+
+/* Style the dropdown container */
+.compare-changes-select .mantine-Combobox-dropdown {
+  border: 1px solid var(--mantine-color-gray-3) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+}
+
+.compare-changes-select--comparison .mantine-Combobox-dropdown {
+  border: 1px solid var(--mantine-color-gray-3) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Custom scrollbar for ScrollArea */
+.compare-changes-select .mantine-ScrollArea-viewport::-webkit-scrollbar {
+  width: 6px !important;
+}
+
+.compare-changes-select .mantine-ScrollArea-viewport::-webkit-scrollbar-track {
+  background: var(--mantine-color-gray-1) !important;
+  border-radius: 3px !important;
+}
+
+.compare-changes-select .mantine-ScrollArea-viewport::-webkit-scrollbar-thumb {
+  background: var(--mantine-color-gray-4) !important;
+  border-radius: 3px !important;
+}
+
+.compare-changes-select .mantine-ScrollArea-viewport::-webkit-scrollbar-thumb:hover {
+  background: var(--mantine-color-gray-5) !important;
+}
+
+.compare-changes-select--comparison .mantine-ScrollArea-viewport::-webkit-scrollbar {
+  width: 6px !important;
+}
+
+.compare-changes-select--comparison .mantine-ScrollArea-viewport::-webkit-scrollbar-track {
+  background: var(--mantine-color-gray-1) !important;
+  border-radius: 3px !important;
+}
+
+.compare-changes-select--comparison .mantine-ScrollArea-viewport::-webkit-scrollbar-thumb {
+  background: var(--mantine-color-gray-4) !important;
+  border-radius: 3px !important;
+}
+
+.compare-changes-select--comparison .mantine-ScrollArea-viewport::-webkit-scrollbar-thumb:hover {
+  background: var(--mantine-color-gray-5) !important;
+}
+
+/* Style the dropdown options */
+.compare-changes-select .mantine-Combobox-option {
+  font-size: 0.875rem !important;
+  padding: 8px 12px !important;
+}
+
+.compare-changes-select--comparison .mantine-Combobox-option {
+  font-size: 0.875rem !important;
+  padding: 8px 12px !important;
+}
+
+.compare-changes-select .mantine-Combobox-option:hover {
+  background-color: rgba(255, 59, 48, 0.1) !important;
+}
+
+.compare-changes-select--comparison .mantine-Combobox-option:hover {
+  background-color: rgba(52, 199, 89, 0.15) !important;
+}
+
+/* Style the search input */
+.compare-changes-select .mantine-Combobox-search {
+  font-size: 0.875rem !important;
+  padding: 8px 12px !important;
+  border-bottom: 1px solid var(--mantine-color-gray-3) !important;
+}
+
+.compare-changes-select--comparison .mantine-Combobox-search {
+  font-size: 0.875rem !important;
+  padding: 8px 12px !important;
+  border-bottom: 1px solid var(--mantine-color-gray-3) !important;
+}
+
+.compare-changes-select .mantine-Combobox-search::placeholder {
+  color: var(--mantine-color-gray-5) !important;
+}
+
+.compare-changes-select--comparison .mantine-Combobox-search::placeholder {
+  color: var(--mantine-color-gray-5) !important;
+}
+
+/* Style the chevron - ensure proper coloring */
+.compare-changes-select .mantine-Combobox-chevron {
+  color: inherit !important;
+}
+
+.compare-changes-select--comparison .mantine-Combobox-chevron {
+  color: inherit !important;
+}
+
+/* Flash/pulse highlight for navigated change */
+@keyframes compare-flash {
+  0% {
+    outline: 4px solid rgba(255, 235, 59, 0.0);
+    box-shadow: 0 0 0 rgba(255, 235, 59, 0.0);
+    background-color: rgba(255, 235, 59, 0.2) !important;
+  }
+  25% {
+    outline: 4px solid rgba(255, 235, 59, 1.0);
+    box-shadow: 0 0 20px rgba(255, 235, 59, 0.8);
+    background-color: rgba(255, 235, 59, 0.4) !important;
+  }
+  50% {
+    outline: 4px solid rgba(255, 235, 59, 1.0);
+    box-shadow: 0 0 30px rgba(255, 235, 59, 0.9);
+    background-color: rgba(255, 235, 59, 0.5) !important;
+  }
+  75% {
+    outline: 4px solid rgba(255, 235, 59, 0.8);
+    box-shadow: 0 0 15px rgba(255, 235, 59, 0.6);
+    background-color: rgba(255, 235, 59, 0.3) !important;
+  }
+  100% {
+    outline: 4px solid rgba(255, 235, 59, 0.0);
+    box-shadow: 0 0 0 rgba(255, 235, 59, 0.0);
+    background-color: rgba(255, 235, 59, 0.0) !important;
+  }
+}
+
+.compare-diff-highlight--flash {
+  animation: compare-flash 1.5s ease-in-out 1;
+  z-index: 1000;
+  position: relative;
+  /* Bonus: temporarily override red/green to yellow during flash for clarity */
+  background-color: rgba(255, 235, 59, 0.5) !important;
+}
+
+.compare-legend__item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  color: var(--mantine-color-dimmed);
+}
+
+.compare-legend__swatch {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 999px;
+  border: 1px solid rgba(15, 23, 42, 0.15);
+}
+
+.compare-summary__stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.compare-summary__stat-card {
+  flex: 1;
+  min-width: 12rem;
+}
+
+.compare-summary__segment {
+  border: 1px solid var(--mantine-color-gray-3);
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  background-color: var(--mantine-color-gray-0);
+}
+
+.compare-diff-page {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.compare-diff-page__canvas {
+  position: relative;
+  border: 1px solid var(--mantine-color-gray-4);
+  border-radius: 0.75rem;
+  overflow: hidden;
+  background-color: var(--mantine-color-white);
+  width: 100%;
+}
+
+/* Ensure the image scales to the container width without overflowing (handles rotation/landscape) */
+.compare-diff-page__canvas img {
+  display: block;
+  max-width: 100%;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+/* Ensure inner page wrapper centers and scales within container */
+.compare-diff-page__canvas > div {
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 100%;
+}
+
+.compare-diff-page__canvas img {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+.compare-diff-highlight {
+  position: absolute;
+  pointer-events: none;
+  mix-blend-mode: multiply;
+}
+
+/* Inline paragraph highlights in summary */
+.compare-inline {
+  border-radius: 0.2rem;
+  padding: 0.05rem 0.15rem;
+}
+.compare-inline--removed {
+  background-color: rgba(255, 59, 48, 0.25);
+}
+.compare-inline--added {
+  background-color: rgba(52, 199, 89, 0.25);
+}
+
+.compare-workbench--upload {
+  padding: 2.5rem 1.5rem;
+}
+
+.compare-pane-header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--bg-background);
+  padding: 0.25rem 0;
+}
+
+.compare-upload-layout {
+  display: flex;
+  align-items: stretch;
+  gap: 2rem;
+  width: 100%;
+}
+
+.compare-upload-divider {
+  width: 1px;
+  background: rgba(148, 163, 184, 0.5);
+}
+
+.compare-upload-column {
+  flex: 1;
+  display: flex;
+}
+
+.compare-upload-dropzone {
+  flex: 1;
+  border: 1px dashed rgba(148, 163, 184, 0.6);
+  border-radius: 1rem;
+  background: rgba(241, 245, 249, 0.45);
+  padding: 0;
+  transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.compare-upload-dropzone[data-accept] {
+  border-color: rgba(52, 199, 89, 0.6);
+  background: rgba(52, 199, 89, 0.12);
+  box-shadow: 0 0 0 2px rgba(52, 199, 89, 0.2);
+}
+
+.compare-upload-dropzone[data-reject] {
+  border-color: rgba(255, 59, 48, 0.6);
+  background: rgba(255, 59, 48, 0.12);
+  box-shadow: 0 0 0 2px rgba(255, 59, 48, 0.2);
+}
+
+.compare-upload-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  text-align: center;
+  padding: 2.5rem 2rem;
+  min-height: 20rem;
+  width: 100%;
+}
+
+.compare-upload-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 999px;
+  color: rgba(17, 24, 39, 0.75);
+  background: rgba(148, 163, 184, 0.2);
+}
+
+.compare-upload-icon--base {
+  color: rgba(255, 59, 48, 0.8);
+  background: rgba(255, 59, 48, 0.12);
+}
+
+.compare-upload-icon--comparison {
+  color: rgba(52, 199, 89, 0.85);
+  background: rgba(52, 199, 89, 0.14);
+}
+
+.compare-upload-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: min(18rem, 100%);
+}
+
+.compare-upload-selection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: min(20rem, 100%);
+  align-items: center;
+}
+
+@media (max-width: 960px) {
+  .compare-upload-layout {
+    flex-direction: column;
+  }
+
+  .compare-upload-divider {
+    display: none;
+  }
+
+  .compare-upload-card {
+    min-height: 18rem;
+  }
+}

@@ -222,10 +222,10 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     if (isBaseWorkbench(navigationState.workbench)) {
       return;
     }
-
+    // Keep guard lightweight; remove verbose logging
     const currentCustomView = customWorkbenchViews.find(view => view.workbenchId === navigationState.workbench);
     if (!currentCustomView || currentCustomView.data == null) {
-      actions.setWorkbench(getDefaultWorkbench());
+      return;
     }
   }, [actions, customWorkbenchViews, navigationState.workbench]);
 

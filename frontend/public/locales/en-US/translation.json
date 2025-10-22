@@ -352,6 +352,11 @@
     "refreshPage": "Refresh Page"
   },
   "home": {
+    "compare": {
+      "tags": "difference,changes,review",
+      "title": "Compare",
+      "desc": "Compare two PDF documents and highlight differences"
+    },
     "desc": "Your locally hosted one-stop-shop for all your PDF needs.",
     "searchBar": "Search for features...",
     "viewPdf": {
@@ -1276,15 +1281,61 @@
     "tags": "differentiate,contrast,changes,analysis",
     "title": "Compare",
     "header": "Compare PDFs",
-    "highlightColor": {
-      "1": "Highlight Color 1:",
-      "2": "Highlight Color 2:"
+    "description": "Select the base and comparison PDF to highlight differences.",
+    "view": {
+      "title": "Compare view",
+      "noData": "Run a comparison to view the summary and diff."
     },
-    "document": {
-      "1": "Document 1",
-      "2": "Document 2"
+    "base": {
+      "label": "Base Document",
+      "placeholder": "Select a base PDF"
     },
-    "submit": "Compare",
+    "comparison": {
+      "label": "Comparison Document",
+      "placeholder": "Select a comparison PDF"
+    },
+    "cta": "Compare",
+    "loading": "Comparing...",
+    "review": {
+      "title": "Comparison Result",
+      "actionsHint": "Review the comparison, switch document roles, or export the summary.",
+      "switchOrder": "Switch order",
+      "exportSummary": "Export summary"
+    },
+    "addFile": "Add File",
+    "replaceFile": "Replace File",
+    "pages": "Pages",
+    "toggleLayout": "Toggle layout",
+    "upload": {
+      "title": "Set up your comparison",
+      "baseTitle": "Base document",
+      "baseDescription": "This version acts as the reference for differences.",
+      "comparisonTitle": "Comparison document",
+      "comparisonDescription": "Differences from this version will be highlighted.",
+      "browse": "Browse files",
+      "selectExisting": "Select existing",
+      "clearSelection": "Clear selection",
+      "instructions": "Drag & drop here or use the buttons to choose a file."
+    },
+    "legend": {
+      "removed": "Removed from base",
+      "added": "Added in comparison"
+    },
+    "summary": {
+      "baseHeading": "Base document",
+      "comparisonHeading": "Comparison document",
+      "pageLabel": "Page"
+    },
+    "status": {
+      "extracting": "Extracting text...",
+      "processing": "Analyzing differences...",
+      "complete": "Comparison ready"
+    },
+    "error": {
+      "selectRequired": "Select a base and comparison document.",
+      "filesMissing": "Unable to locate the selected files. Please re-select them.",
+      "generic": "Unable to compare these files."
+    },
     "complex": {
       "message": "One or both of the provided documents are large files, accuracy of comparison may be reduced"
     },
@@ -1297,7 +1348,15 @@
       "text": {
         "message": "One or both of the selected PDFs have no text content. Please choose PDFs with text for comparison."
       }
-    }
+    },
+    "no": {
+      "text": {
+        "message": "One or both of the selected PDFs have no text content. Please choose PDFs with text for comparison."
+      }
+    },
+    "large.file.message": "One or Both of the provided documents are too large to process",
+    "complex.message": "One or both of the provided documents are large files, accuracy of comparison may be reduced",
+    "no.text.message": "One or both of the selected PDFs have no text content. Please choose PDFs with text for comparison."
   },
   "certSign": {
     "tags": "authenticate,PEM,P12,official,encrypt",

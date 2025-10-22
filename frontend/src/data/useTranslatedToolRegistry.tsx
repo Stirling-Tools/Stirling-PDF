@@ -109,6 +109,7 @@ import RemoveBlanksSettings from "../components/tools/removeBlanks/RemoveBlanksS
 import AddPageNumbersAutomationSettings from "../components/tools/addPageNumbers/AddPageNumbersAutomationSettings";
 import OverlayPdfsSettings from "../components/tools/overlayPdfs/OverlayPdfsSettings";
 import ValidateSignature from "../tools/ValidateSignature";
+import Compare from "../tools/Compare";
 
 const showPlaceholderTools = true; // Show all tools; grey out unavailable ones in UI
 
@@ -751,13 +752,15 @@ export function useFlatToolRegistry(): ToolRegistry {
       compare: {
         icon: <LocalIcon icon="compare-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.compare.title", "Compare"),
-        component: null,
+        component: Compare,
         description: t("home.compare.desc", "Compare two PDF documents and highlight differences"),
-        categoryId: ToolCategoryId.STANDARD_TOOLS /* TODO: Change to RECOMMENDED_TOOLS when component is implemented */,
+        categoryId: ToolCategoryId.RECOMMENDED_TOOLS,
         subcategoryId: SubcategoryId.GENERAL,
+        maxFiles: 2,
+        operationConfig: undefined,
+        automationSettings: null,
         synonyms: getSynonyms(t, "compare"),
-        supportsAutomate: false,
-        automationSettings: null
+        supportsAutomate: false
       },
       compress: {
         icon: <LocalIcon icon="zoom-in-map-rounded" width="1.5rem" height="1.5rem" />,

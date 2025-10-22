@@ -31,6 +31,13 @@
   flex-direction: column-reverse;
 }
 
+.toast-container--bottom-center {
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  flex-direction: column-reverse;
+}
+
 /* Toast Item Styles */
 .toast-item {
   min-width: 320px;
