@@ -32,6 +32,50 @@
   50% { transform: scale(1.05); }
 }
 
+@keyframes rainbowNebula {
+  0% {
+    transform: rotate(0deg) scale(1);
+    opacity: 0.22;
+  }
+  35% {
+    transform: rotate(130deg) scale(1.1);
+    opacity: 0.35;
+  }
+  70% {
+    transform: rotate(260deg) scale(1.05);
+    opacity: 0.28;
+  }
+  100% {
+    transform: rotate(360deg) scale(1);
+    opacity: 0.22;
+  }
+}
+
+@keyframes rainbowSheen {
+  0% { background-position: 0% 0%; }
+  50% { background-position: 100% 100%; }
+  100% { background-position: 0% 0%; }
+}
+
+@keyframes rainbowSparkle {
+  0%, 100% {
+    opacity: 0.15;
+    transform: translate3d(-4%, -2%, 0) scale(1);
+  }
+  25% {
+    opacity: 0.35;
+    transform: translate3d(3%, -6%, 0) scale(1.05);
+  }
+  50% {
+    opacity: 0.45;
+    transform: translate3d(6%, 4%, 0) scale(1.08);
+  }
+  75% {
+    opacity: 0.28;
+    transform: translate3d(-2%, 6%, 0) scale(0.98);
+  }
+}
+
 /* Main rainbow theme class */
 .rainbowMode {
   background: linear-gradient(
@@ -41,7 +85,40 @@
   background-size: 400% 400% !important;
   animation: rainbowBackground 3s ease infinite !important;
   color: white !important;
+  position: relative;
+  isolation: isolate;
   overflow-x: hidden;
+  filter: saturate(1.25) brightness(1.05) contrast(1.05);
+}
+
+.rainbowMode::before {
+  content: '';
+  position: fixed;
+  inset: -25vh;
+  z-index: -2;
+  background: conic-gradient(from 90deg at 50% 50%, #ff0088, #ff8800, #ffff00, #88ff00, #00ff88, #00ffff, #0088ff, #8800ff, #ff0088);
+  background-size: 120% 120%;
+  filter: blur(160px);
+  mix-blend-mode: screen;
+  opacity: 0.3;
+  animation: rainbowNebula 18s linear infinite;
+  pointer-events: none;
+}
+
+.rainbowMode::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-image:
+    radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.55) 0, rgba(255, 255, 255, 0) 45%),
+    radial-gradient(circle at 80% 70%, rgba(255, 255, 255, 0.45) 0, rgba(255, 255, 255, 0) 40%),
+    repeating-linear-gradient(120deg, rgba(255, 255, 255, 0.35) 0, rgba(255, 255, 255, 0.1) 8px, rgba(255, 255, 255, 0) 12px);
+  background-size: 300px 300px, 240px 240px, 500% 500%;
+  opacity: 0.22;
+  mix-blend-mode: screen;
+  animation: rainbowSparkle 14s ease-in-out infinite, rainbowSheen 24s linear infinite;
+  pointer-events: none;
 }
 
 /* Rainbow components */
@@ -55,7 +132,8 @@
   color: white !important;
   border: 2px solid !important;
   border-radius: 15px !important;
-  box-shadow: 0 0 20px rgba(255, 255, 255, 0.3) !important;
+  box-shadow: 0 0 25px rgba(255, 255, 255, 0.35), 0 0 60px rgba(255, 0, 136, 0.25) !important;
+  backdrop-filter: blur(4px);
 }
 
 .rainbowButton {
@@ -76,6 +154,13 @@
   transform: scale(1.05) !important;
   animation: rainbowBackground 1s ease infinite, rainbowBorder 0.5s linear infinite, rainbowPulse 0.5s ease infinite !important;
   box-shadow: 0 0 25px rgba(255, 255, 255, 0.6) !important;
+  filter: drop-shadow(0 0 18px rgba(255, 0, 136, 0.45));
+}
+
+.rainbowButton:focus-visible {
+  outline: none !important;
+  box-shadow: 0 0 25px rgba(255, 255, 255, 0.9), 0 0 20px rgba(255, 0, 136, 0.5) !important;
+  transform: translateY(-2px) scale(1.04) !important;
 }
 
 .rainbowInput {
@@ -88,6 +173,7 @@
   border: 2px solid !important;
   color: white !important;
   border-radius: 8px !important;
+  box-shadow: inset 0 0 12px rgba(255, 255, 255, 0.2), 0 0 20px rgba(0, 255, 255, 0.35) !important;
 }
 
 .rainbowInput::placeholder {
@@ -110,18 +196,20 @@
   border: 2px solid !important;
   border-radius: 12px !important;
   padding: 4px !important;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.4), 0 0 35px rgba(0, 136, 255, 0.35) !important;
 }
 
 .rainbowPaper {
   background: linear-gradient(
     90deg,
-  #00ffff, #0088ff, #8800ff, #ff0088
+    #00ffff, #0088ff, #8800ff, #ff0088
   ) !important;
   background-size: 100% 100% !important;
   animation: rainbowBackground 3.5s ease infinite, rainbowBorder 2s linear infinite !important;
   border: 2px solid !important;
   color: white !important;
   border-radius: 12px !important;
+  box-shadow: 0 0 30px rgba(255, 255, 255, 0.35), 0 0 50px rgba(136, 0, 255, 0.35) !important;
 }
 
 /* Easter egg notification */
@@ -139,9 +227,30 @@
   font-size: 16px !important;
   z-index: 10000 !important;
   border: 2px solid white !important;
-  box-shadow: 0 0 20px rgba(255, 255, 255, 0.8) !important;
+  box-shadow: 0 0 25px rgba(255, 255, 255, 0.9), 0 0 35px rgba(255, 136, 0, 0.45) !important;
   user-select: none !important;
   pointer-events: none !important;
+}
+
+:global(body.rainbow-mode-active) {
+  background: radial-gradient(circle at top, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0) 55%),
+    linear-gradient(135deg, rgba(255, 0, 136, 0.35), rgba(0, 136, 255, 0.2), rgba(0, 255, 136, 0.35));
+  background-attachment: fixed;
+  animation: rainbowBackground 18s ease infinite;
+}
+
+:global(body.rainbow-mode-active)::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at 10% 10%, rgba(255, 255, 255, 0.3), transparent 55%),
+    radial-gradient(circle at 90% 20%, rgba(255, 255, 255, 0.35), transparent 60%),
+    radial-gradient(circle at 50% 90%, rgba(255, 255, 255, 0.25), transparent 55%);
+  mix-blend-mode: screen;
+  opacity: 0.2;
+  animation: rainbowSparkle 26s ease-in-out infinite;
+  z-index: -1;
 }
 
 /* Specific component overrides */
@@ -166,6 +275,7 @@
   animation: rainbowBackground 2s ease infinite, rainbowBorder 1.5s linear infinite !important;
   color: white !important;
   font-weight: bold !important;
+  letter-spacing: 0.4px !important;
 }
 
 /* Make all inputs rainbow in rainbow mode */
@@ -181,6 +291,7 @@
   border: 2px solid !important;
   animation: rainbowBackground 2.5s ease infinite, rainbowBorder 1.5s linear infinite !important;
   color: white !important;
+  box-shadow: inset 0 0 12px rgba(255, 255, 255, 0.15), 0 0 20px rgba(136, 0, 255, 0.25) !important;
 }
 
 /* Rainbow text class */
@@ -199,4 +310,30 @@
 .rainbowMode h6 {
   animation: rainbowText 3s linear infinite !important;
   font-weight: bold !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rainbowMode,
+  .rainbowCard,
+  .rainbowButton,
+  .rainbowInput,
+  .rainbowSegmentedControl,
+  .rainbowPaper,
+  .rainbowNotification,
+  .rainbowMode button,
+  .rainbowMode input,
+  .rainbowMode select,
+  .rainbowMode textarea,
+  .rainbowText,
+  :global(body.rainbow-mode-active) {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .rainbowMode::before,
+  .rainbowMode::after,
+  :global(body.rainbow-mode-active)::before {
+    animation: none !important;
+    opacity: 0.12 !important;
+  }
 }

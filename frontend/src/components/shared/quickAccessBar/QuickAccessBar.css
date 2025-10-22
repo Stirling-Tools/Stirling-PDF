@@ -33,12 +33,32 @@
 
 /* Rainbow mode container */
 .quick-access-bar-main.rainbow-mode {
-  background-color: var(--bg-muted);
+  background: linear-gradient(180deg, rgba(255, 0, 136, 0.65), rgba(0, 191, 255, 0.55), rgba(0, 255, 170, 0.65)),
+    radial-gradient(circle at 20% 15%, rgba(255, 255, 255, 0.35), transparent 55%);
+  background-size: 200% 200%, 120% 120%;
+  animation: rainbowBackground 14s linear infinite;
   width: 5rem;
   min-width: 5rem;
   max-width: 5rem;
   position: relative;
   z-index: 10;
+  border-radius: 2.25rem;
+  box-shadow: 0 0 25px rgba(255, 255, 255, 0.25), 0 0 45px rgba(255, 0, 136, 0.25);
+  border: 2px solid rgba(255, 255, 255, 0.55);
+  isolation: isolate;
+}
+
+.quick-access-bar-main.rainbow-mode::before {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  border-radius: 2rem;
+  background: rgba(255, 255, 255, 0.15);
+  box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.35);
+  mix-blend-mode: screen;
+  animation: rainbowPulse 3.5s ease-in-out infinite;
+  pointer-events: none;
+  z-index: -1;
 }
 
 /* Header padding */
