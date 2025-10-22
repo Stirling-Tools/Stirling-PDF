@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -242,7 +243,7 @@ public class SplitPdfByChaptersController {
                 // split files will be named as "[FILE_NUMBER] [BOOKMARK_TITLE].pdf"
 
                 String fileName =
-                        String.format(fileNumberFormatter, i)
+                        String.format(Locale.ROOT, fileNumberFormatter, i)
                                 + bookmarks.get(i).getTitle()
                                 + ".pdf";
                 ByteArrayOutputStream baos = splitDocumentsBoas.get(i);

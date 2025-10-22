@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.Locale;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.pdfbox.Loader;
@@ -249,7 +250,7 @@ public class CustomPDFDocumentFactory {
         log.debug(
                 "Memory status - Free: {}MB ({}%), Used: {}MB, Max: {}MB",
                 actualFreeMemory / (1024 * 1024),
-                String.format("%.2f", freeMemoryPercent),
+                String.format(Locale.ROOT, "%.2f", freeMemoryPercent),
                 usedMemory / (1024 * 1024),
                 maxMemory / (1024 * 1024));
 
@@ -258,7 +259,7 @@ public class CustomPDFDocumentFactory {
                 || actualFreeMemory < MIN_FREE_MEMORY_BYTES) {
             log.debug(
                     "Low memory detected ({}%), forcing file-based cache",
-                    String.format("%.2f", freeMemoryPercent));
+                    String.format(Locale.ROOT, "%.2f", freeMemoryPercent));
             return createScratchFileCacheFunction(MemoryUsageSetting.setupTempFileOnly());
         } else if (contentSize < SMALL_FILE_THRESHOLD) {
             log.debug("Using memory-only cache for small document ({}KB)", contentSize / 1024);

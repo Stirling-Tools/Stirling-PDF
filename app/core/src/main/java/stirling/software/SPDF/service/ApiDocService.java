@@ -3,6 +3,7 @@ package stirling.software.SPDF.service;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Matcher;
 
@@ -88,7 +89,7 @@ public class ApiDocService {
                                 : RegexPatternUtils.getInstance().getApiDocInputTypePattern())
                         .matcher(description);
         while (matcher.find()) {
-            String type = matcher.group(1).toUpperCase();
+            String type = matcher.group(1).toUpperCase(Locale.ROOT);
             if (outputToFileTypes.containsKey(type)) {
                 return outputToFileTypes.get(type);
             }
