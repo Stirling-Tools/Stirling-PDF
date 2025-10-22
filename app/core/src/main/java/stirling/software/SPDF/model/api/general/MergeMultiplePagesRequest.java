@@ -15,9 +15,32 @@ public class MergeMultiplePagesRequest extends PDFFile {
             description = "The number of pages to fit onto a single sheet in the output PDF.",
             type = "number",
             defaultValue = "2",
-            requiredMode = Schema.RequiredMode.REQUIRED,
             allowableValues = {"2", "3", "4", "9", "16"})
     private int pagesPerSheet;
+
+    @Schema(
+        description = "The layout direction of content on the page",
+        type = "string",
+        defaultValue = "TOP_DOWN_LEFT_RIGHT",
+        allowableValues = {
+            "TOP_DOWN_LEFT_RIGHT",
+            "TOP_DOWN_RIGHT_LEFT",
+            "BOTTOM_UP_LEFT_RIGHT",
+            "BOTTOM_UP_RIGHT_LEFT"
+        })
+    private String direction;
+
+    @Schema(
+        description = "Number of rows in the page layout",
+        type = "integer",
+        example = "3")
+    private Integer rows;
+
+    @Schema(
+        description = "Number of columns in the page layout",
+        type = "integer",
+        example = "2")
+    private Integer columns;
 
     @Schema(
             description = "The orientation of the output PDF pages",
