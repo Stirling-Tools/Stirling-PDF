@@ -12,12 +12,14 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.TimeZone;
 
+import org.apache.pdfbox.cos.COSBase;
+import org.apache.pdfbox.cos.COSDictionary;
+import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -32,6 +34,7 @@ import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.apache.pdfbox.pdmodel.graphics.state.RenderingMode;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.pdfbox.text.TextPosition;
+import org.apache.pdfbox.util.Matrix;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -234,18 +237,9 @@ public class PdfJsonConversionService {
                 return PDType0Font.load(document, fontStream, true);
             } catch (IOException ex) {
                 log.debug(
-                        Locale.ROOT,
-                        "Unable to load font as Type0 ({}), trying Type1: {}",
+                        "Unable to load font as Type0 ({}): {}",
                         fontModel.getName(),
                         ex.getMessage());
-                try (InputStream fontStream = new ByteArrayInputStream(fontBytes)) {
-                    return PDType1Font.load(document, fontStream);
-                } catch (IOException innerEx) {
-                    log.warn(
-                            Locale.ROOT,
-                            "Failed to load embedded font {}, falling back to Standard 14 if available",
-                            fontModel.getName());
-                }
             }
         }
         String standardName = fontModel.getStandard14Name();
@@ -255,10 +249,7 @@ public class PdfJsonConversionService {
                         Standard14Fonts.getMappedFontName(standardName);
                 return new PDType1Font(fontName);
             } catch (IllegalArgumentException ex) {
-                log.warn(
-                        Locale.ROOT,
-                        "Unknown Standard 14 font {}, using Helvetica",
-                        standardName);
+                log.warn("Unknown Standard 14 font {}, using Helvetica", standardName);
             }
         }
         return new PDType1Font(Standard14Fonts.FontName.HELVETICA);
@@ -269,17 +260,18 @@ public class PdfJsonConversionService {
         List<Float> matrix = element.getTextMatrix();
         if (matrix != null && matrix.size() == 6) {
             contentStream.setTextMatrix(
-                    matrix.get(0),
-                    matrix.get(1),
-                    matrix.get(2),
-                    matrix.get(3),
-                    matrix.get(4),
-                    matrix.get(5));
+                    new Matrix(
+                            matrix.get(0),
+                            matrix.get(1),
+                            matrix.get(2),
+                            matrix.get(3),
+                            matrix.get(4),
+                            matrix.get(5)));
             return;
         }
         float x = safeFloat(element.getX(), 0f);
         float y = safeFloat(element.getY(), 0f);
-        contentStream.setTextMatrix(1, 0, 0, 1, x, y);
+        contentStream.setTextMatrix(new Matrix(1, 0, 0, 1, x, y));
     }
 
     private void applyRenderingMode(PDPageContentStream contentStream, Integer renderingMode)
@@ -287,15 +279,16 @@ public class PdfJsonConversionService {
         if (renderingMode == null) {
             return;
         }
+        RenderingMode mode = toRenderingMode(renderingMode);
+        if (mode == null) {
+            log.debug("Ignoring unsupported rendering mode {}", renderingMode);
+            return;
+        }
         try {
-            RenderingMode mode = RenderingMode.fromInt(renderingMode);
             contentStream.setRenderingMode(mode);
         } catch (IllegalArgumentException ex) {
             log.debug(
-                    Locale.ROOT,
-                    "Ignoring unsupported rendering mode {}: {}",
-                    renderingMode,
-                    ex.getMessage());
+                    "Failed to apply rendering mode {}: {}", renderingMode, ex.getMessage());
         }
     }
 
@@ -317,7 +310,7 @@ public class PdfJsonConversionService {
         try {
             return Optional.of(Instant.parse(value));
         } catch (DateTimeParseException ex) {
-            log.warn(Locale.ROOT, "Failed to parse instant '{}': {}", value, ex.getMessage());
+            log.warn("Failed to parse instant '{}': {}", value, ex.getMessage());
             return Optional.empty();
         }
     }
@@ -367,7 +360,6 @@ public class PdfJsonConversionService {
                 element.setY(position.getYDirAdj());
                 element.setWidth(position.getWidthDirAdj());
                 element.setHeight(position.getHeightDir());
-                element.setRenderingMode(position.getRenderingMode().intValue());
                 element.setTextMatrix(extractMatrix(position));
                 pageElements.add(element);
             }
@@ -394,9 +386,9 @@ public class PdfJsonConversionService {
                 PdfJsonFont fontModel = new PdfJsonFont();
                 fontModel.setId(id);
                 fontModel.setName(font.getName());
-                fontModel.setSubtype(font.getSubtype());
-                fontModel.setEncoding(font.getEncoding() != null ? font.getEncoding().getClass().getName() : null);
-                fontModel.setEmbedded(!font.isStandard14Font());
+                fontModel.setSubtype(resolveSubtype(font));
+                fontModel.setEncoding(resolveEncoding(font));
+                fontModel.setEmbedded(!isStandard14Font(font));
                 fontModel.setStandard14Name(resolveStandard14Name(font));
                 fontModel.setFontDescriptorFlags(
                         font.getFontDescriptor() != null
@@ -412,7 +404,7 @@ public class PdfJsonConversionService {
             if (font == null) {
                 return null;
             }
-            if (font.isStandard14Font()) {
+            if (isStandard14Font(font)) {
                 return font.getName();
             }
             try {
@@ -425,7 +417,7 @@ public class PdfJsonConversionService {
         }
 
         private String extractFontData(PDFont font) throws IOException {
-            if (font == null || font.isStandard14Font()) {
+            if (font == null || isStandard14Font(font)) {
                 return null;
             }
             PDFontDescriptor descriptor = font.getFontDescriptor();
@@ -447,6 +439,70 @@ public class PdfJsonConversionService {
                 inputStream.transferTo(baos);
                 return Base64.getEncoder().encodeToString(baos.toByteArray());
             }
+        }
+
+        private String resolveSubtype(PDFont font) {
+            if (font == null) {
+                return null;
+            }
+            COSDictionary dictionary = font.getCOSObject();
+            return dictionary != null ? dictionary.getNameAsString(COSName.SUBTYPE) : null;
+        }
+
+        private String resolveEncoding(PDFont font) {
+            if (font == null) {
+                return null;
+            }
+            COSDictionary dictionary = font.getCOSObject();
+            if (dictionary == null) {
+                return null;
+            }
+            COSBase encoding = dictionary.getDictionaryObject(COSName.ENCODING);
+            if (encoding instanceof COSName) {
+                return ((COSName) encoding).getName();
+            }
+            if (encoding instanceof COSDictionary) {
+                return ((COSDictionary) encoding).getNameAsString(COSName.BASE_ENCODING);
+            }
+            return null;
+        }
+
+        private boolean isStandard14Font(PDFont font) {
+            if (font == null) {
+                return false;
+            }
+            try {
+                Standard14Fonts.getMappedFontName(font.getName());
+                return true;
+            } catch (IllegalArgumentException ex) {
+                return false;
+            }
+        }
+    }
+
+    private RenderingMode toRenderingMode(Integer renderingMode) {
+        if (renderingMode == null) {
+            return null;
+        }
+        switch (renderingMode) {
+            case 0:
+                return RenderingMode.FILL;
+            case 1:
+                return RenderingMode.STROKE;
+            case 2:
+                return RenderingMode.FILL_STROKE;
+            case 3:
+                return RenderingMode.NEITHER;
+            case 4:
+                return RenderingMode.FILL_CLIP;
+            case 5:
+                return RenderingMode.STROKE_CLIP;
+            case 6:
+                return RenderingMode.FILL_STROKE_CLIP;
+            case 7:
+                return RenderingMode.NEITHER_CLIP;
+            default:
+                return null;
         }
     }
 }
