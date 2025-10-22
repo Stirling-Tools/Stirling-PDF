@@ -29,6 +29,23 @@
                   </select>
                 </div>
                 <div class="mb-3">
+                  <label for="rows" th:text="#{pageLayout.rows}"></label>
+                  <input type="text" class="form-control" id="rows" name="rows" required>
+                </div>
+                <div class="mb-3">
+                  <label for="columns" th:text="#{pageLayout.columns}"></label>
+                  <input type="text" class="form-control" id="columns" name="columns" required>
+                </div>
+                <div class="mb-3">
+                  <label for="direction" th:text="#{pageLayout.direction}"></label>
+                  <select class="form-control" id="direction" name="direction">
+                    <option value="TOP_DOWN_LEFT_RIGHT" th:text="#{pageLayout.topDownLeftRight}"></option>
+                    <option value="TOP_DOWN_RIGHT_LEFT" th:text="#{pageLayout.topDownRightLeft}"></option>
+                    <option value="BOTTOM_UP_RIGHT_LEFT" th:text="#{pageLayout.bottomUpRightLeft}"></option>
+                    <option value="BOTTOM_UP_LEFT_RIGHT" th:text="#{pageLayout.bottomUpLeftRight}"></option>
+                  </select>
+                </div>
+                <div class="mb-3">
                   <label for="orientation" th:text="#{pageLayout.orientation}"></label>
                   <select class="form-control" id="orientation" name="orientation">
                     <option value="PORTRAIT" th:text="#{pageLayout.portrait}"></option>
