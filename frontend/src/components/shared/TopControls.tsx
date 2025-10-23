@@ -275,19 +275,9 @@ const TopControls = ({
 
   // Memoize the reorder handler
   const handleReorder = useCallback((fromIndex: number, toIndex: number) => {
-    // Reorder files in PageEditorContext (updates fileOrder)
+    // Single source of truth: PageEditorContext handles file->page reorder propagation
     pageEditorReorderFiles(fromIndex, toIndex);
-
-    // Also reorder pages directly
-    const newOrder = [...pageEditorFileOrder];
-    const [movedFileId] = newOrder.splice(fromIndex, 1);
-    newOrder.splice(toIndex, 0, movedFileId);
-
-    // Call reorderPagesByFileOrder if available
-    if (pageEditorFunctions?.reorderPagesByFileOrder) {
-      pageEditorFunctions.reorderPagesByFileOrder(newOrder);
-    }
-  }, [pageEditorReorderFiles, pageEditorFileOrder, pageEditorFunctions]);
+  }, [pageEditorReorderFiles]);
 
   const handleViewChange = useCallback((view: string) => {
     if (!isValidWorkbench(view)) {

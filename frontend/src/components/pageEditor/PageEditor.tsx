@@ -27,6 +27,7 @@ import {
   PageBreakSettings
 } from './commands/pageCommands';
 import { GRID_CONSTANTS } from './constants';
+import { useInitialPageDocument } from './hooks/useInitialPageDocument';
 import { usePageDocument } from './hooks/usePageDocument';
 import { usePageEditorState } from './hooks/usePageEditorState';
 import { parseSelection } from "../../utils/bulkselection/parseSelection";
@@ -48,7 +49,7 @@ const PageEditor = ({
   const { setHasUnsavedChanges } = useNavigationGuard();
 
   // Get PageEditor coordination functions
-  const { updateFileOrderFromPages, fileOrder } = usePageEditor();
+  const { updateFileOrderFromPages, fileOrder, reorderedPages, clearReorderedPages, updateCurrentPages } = usePageEditor();
 
   // Zoom state management
   const [zoomLevel, setZoomLevel] = useState(1.0);
@@ -141,8 +142,103 @@ const PageEditor = ({
   const undoManagerRef = useRef(new UndoManager());
 
   // Document state management
+  // Get initial document ONCE - useInitialPageDocument captures first value only
+  const initialDocument = useInitialPageDocument();
+
+  // Also get live mergedPdfDocument for delta sync (source of truth for page existence)
   const { document: mergedPdfDocument } = usePageDocument();
 
+  // Initialize editedDocument from initial document
+  useEffect(() => {
+    if (!initialDocument || editedDocument) return;
+
+    console.log('📄 Initializing editedDocument from initial document:', initialDocument.pages.length, 'pages');
+
+    // Clone to avoid mutation
+    setEditedDocument({
+      ...initialDocument,
+      pages: initialDocument.pages.map(p => ({ ...p }))
+    });
+  }, [initialDocument, editedDocument]);
+
+  // Apply file reordering from PageEditorContext
+  useEffect(() => {
+    if (reorderedPages && editedDocument) {
+      setEditedDocument({
+        ...editedDocument,
+        pages: reorderedPages
+      });
+      clearReorderedPages();
+    }
+  }, [reorderedPages, editedDocument, clearReorderedPages]);
+
+  // Live delta sync: reflect external add/remove without touching existing order
+  useEffect(() => {
+    if (!mergedPdfDocument || !editedDocument) return;
+
+    const sourcePages = mergedPdfDocument.pages;
+    const sourceIds = new Set(sourcePages.map(p => p.id));
+
+    // Group new pages by file (preserve within-file order from source)
+    const prevIds = new Set(editedDocument.pages.map(p => p.id));
+    const newByFile = new Map<FileId, typeof sourcePages>();
+    for (const p of sourcePages) {
+      if (!prevIds.has(p.id)) {
+        const fileId = p.originalFileId;
+        if (!fileId) continue;
+        const list = newByFile.get(fileId) ?? [];
+        list.push(p);
+        newByFile.set(fileId, list);
+      }
+    }
+
+    // Fast check: changes exist?
+    let hasAdditions = newByFile.size > 0;
+    let hasRemovals = false;
+    for (const p of editedDocument.pages) {
+      if (!sourceIds.has(p.id)) {
+        hasRemovals = true;
+        break;
+      }
+    }
+    if (!hasAdditions && !hasRemovals) return;
+
+    setEditedDocument(prev => {
+      if (!prev) return prev;
+      let pages = [...prev.pages];
+
+      // Remove pages that no longer exist in source
+      if (hasRemovals) {
+        pages = pages.filter(p => sourceIds.has(p.id));
+      }
+
+      // Insert new pages while preserving current interleaving
+      if (hasAdditions) {
+        // Insert file-by-file at the correct anchors
+        for (const [, additions] of newByFile) {
+          // Check if any page has insertAfterPageId (specific insertion point)
+          const hasSpecificInsertPoint = additions.some(p => (p as any).insertAfterPageId);
+
+          if (hasSpecificInsertPoint) {
+            // Insert after specific page (ignores file order)
+            const insertAfterPageId = (additions[0] as any).insertAfterPageId;
+            const insertAfterIndex = pages.findIndex(p => p.id === insertAfterPageId);
+            const insertAt = insertAfterIndex >= 0 ? insertAfterIndex + 1 : pages.length;
+            pages.splice(insertAt, 0, ...additions);
+          } else {
+            // Normal add: append to end
+            pages.push(...additions);
+          }
+        }
+      }
+
+      // Renumber without reordering
+      pages = pages.map((p, i) => ({ ...p, pageNumber: i + 1 }));
+      return { ...prev, pages };
+    });
+    // Only depend on identifiers to avoid loops; do not depend on editedDocument itself
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mergedPdfDocument && mergedPdfDocument.pages.map(p => p.id).join(','), fileOrder.join(',')]);
 
   // UI state management
   const {
@@ -209,7 +305,12 @@ const PageEditor = ({
   }, []);
 
   // Interface functions for parent component
-  const displayDocument = editedDocument || mergedPdfDocument;
+  const displayDocument = editedDocument || initialDocument;
+
+  // Feed current pages to PageEditorContext so file reordering can compute page-level changes
+  useEffect(() => {
+    updateCurrentPages(displayDocument?.pages ?? null);
+  }, [displayDocument, updateCurrentPages]);
 
   // Derived values for right rail and usePageEditorRightRailButtons (must be after displayDocument)
   const totalPages = displayDocument?.pages.length || 0;
@@ -409,51 +510,8 @@ const PageEditor = ({
     executeCommandWithTracking(smartSplitCommand);
   }, [selectedPageIds, displayDocument, splitPositions, setSplitPositions, getPageNumbersFromIds, executeCommandWithTracking]);
 
-  const handleSplitAll = useCallback(() => {
-    if (!displayDocument || selectedPageIds.length === 0) return;
-
-    // Convert selected page IDs to page numbers, then to split positions (0-based indices)
-    const selectedPageNumbers = getPageNumbersFromIds(selectedPageIds);
-    const selectedPositions: number[] = [];
-    selectedPageNumbers.forEach(pageNum => {
-      const pageIndex = displayDocument.pages.findIndex(p => p.pageNumber === pageNum);
-      if (pageIndex !== -1 && pageIndex < displayDocument.pages.length - 1) {
-        // Only allow splits before the last page
-        selectedPositions.push(pageIndex);
-      }
-    });
-
-    if (selectedPositions.length === 0) return;
-
-    // Smart toggle logic: follow the majority, default to adding splits if equal
-    const existingSplitsCount = selectedPositions.filter(pos => splitPositions.has(pos)).length;
-    const noSplitsCount = selectedPositions.length - existingSplitsCount;
-
-    // Remove splits only if majority already have splits
-    // If equal (50/50), default to adding splits
-    const shouldRemoveSplits = existingSplitsCount > noSplitsCount;
-
-    const newSplitPositions = new Set(splitPositions);
-
-    if (shouldRemoveSplits) {
-      // Remove splits from all selected positions
-      selectedPositions.forEach(pos => newSplitPositions.delete(pos));
-    } else {
-      // Add splits to all selected positions
-      selectedPositions.forEach(pos => newSplitPositions.add(pos));
-    }
-
-    // Create a custom command that sets the final state directly
-    const smartSplitCommand = {
-      execute: () => setSplitPositions(newSplitPositions),
-      undo: () => setSplitPositions(splitPositions),
-      description: shouldRemoveSplits
-        ? `Remove ${selectedPositions.length} split(s)`
-        : `Add ${selectedPositions.length - existingSplitsCount} split(s)`
-    };
-
-    executeCommandWithTracking(smartSplitCommand);
-  }, [selectedPageIds, displayDocument, splitPositions, setSplitPositions, getPageNumbersFromIds, executeCommandWithTracking]);
+  // Alias for consistency - handleSplitAll is the same as handleSplit (both have smart toggle logic)
+  const handleSplitAll = handleSplit;
 
   const handlePageBreak = useCallback(() => {
     if (!displayDocument || selectedPageIds.length === 0) return;
@@ -469,48 +527,89 @@ const PageEditor = ({
     executeCommandWithTracking(pageBreakCommand);
   }, [selectedPageIds, displayDocument, getPageNumbersFromIds, executeCommandWithTracking]);
 
-  const handlePageBreakAll = useCallback(() => {
-    if (!displayDocument || selectedPageIds.length === 0) return;
-
-    // Convert selected page IDs to page numbers for the command
-    const selectedPageNumbers = getPageNumbersFromIds(selectedPageIds);
-
-    const pageBreakCommand = new PageBreakCommand(
-      selectedPageNumbers,
-      () => displayDocument,
-      setEditedDocument
-    );
-    executeCommandWithTracking(pageBreakCommand);
-  }, [selectedPageIds, displayDocument, getPageNumbersFromIds, executeCommandWithTracking]);
+  // Alias for consistency - handlePageBreakAll is the same as handlePageBreak
+  const handlePageBreakAll = handlePageBreak;
 
   const handleInsertFiles = useCallback(async (
     files: File[] | StirlingFileStub[],
     insertAfterPage: number,
     isFromStorage?: boolean
   ) => {
-    if (!displayDocument || files.length === 0) return;
+    if (!editedDocument || files.length === 0) return;
 
     try {
-      const targetPage = displayDocument.pages.find(p => p.pageNumber === insertAfterPage);
+      const targetPage = editedDocument.pages.find(p => p.pageNumber === insertAfterPage);
       if (!targetPage) return;
 
+      console.log('📄 handleInsertFiles: Inserting files after page', insertAfterPage, 'targetPage:', targetPage.id);
+
+      // Add files to FileContext for metadata tracking (without insertAfterPageId)
+      let addedFileIds: FileId[] = [];
       if (isFromStorage) {
-        // Files from storage - use addStirlingFileStubs to avoid re-storing
-        await actions.addStirlingFileStubs(
-          files as StirlingFileStub[],
-          { insertAfterPageId: targetPage.id, selectFiles: true }
-        );
+        const stubs = files as StirlingFileStub[];
+        const result = await actions.addStirlingFileStubs(stubs, { selectFiles: true });
+        addedFileIds = result.map(f => f.fileId);
+        console.log('📄 handleInsertFiles: Added stubs, IDs:', addedFileIds);
       } else {
-        // New uploaded files - use addFiles
-        await actions.addFiles(
-          files as File[],
-          { insertAfterPageId: targetPage.id, selectFiles: true }
-        );
+        const result = await actions.addFiles(files as File[], { selectFiles: true });
+        addedFileIds = result.map(f => f.fileId);
+        console.log('📄 handleInsertFiles: Added files, IDs:', addedFileIds);
+      }
+
+      // Wait a moment for files to be processed
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      // Extract pages from newly added files and insert them into editedDocument
+      const newPages: PDFPage[] = [];
+      for (const fileId of addedFileIds) {
+        const stub = selectors.getStirlingFileStub(fileId);
+        console.log('📄 handleInsertFiles: File', fileId, 'stub:', stub?.name, 'processedFile:', stub?.processedFile?.totalPages, 'pages:', stub?.processedFile?.pages?.length);
+        if (stub?.processedFile?.pages) {
+          // Clone pages and ensure proper PDFPage structure
+          const clonedPages = stub.processedFile.pages.map((page, idx) => ({
+            ...page,
+            id: `${fileId}-${page.pageNumber ?? idx + 1}`,
+            pageNumber: page.pageNumber ?? idx + 1,
+            originalFileId: fileId,
+            originalPageNumber: page.originalPageNumber ?? page.pageNumber ?? idx + 1,
+            rotation: page.rotation ?? 0,
+            thumbnail: page.thumbnail ?? null,
+            selected: false,
+            splitAfter: page.splitAfter ?? false,
+          }));
+          newPages.push(...clonedPages);
+        }
+      }
+
+      console.log('📄 handleInsertFiles: Collected', newPages.length, 'new pages');
+
+      if (newPages.length > 0) {
+        // Find insertion index in editedDocument
+        const targetIndex = editedDocument.pages.findIndex(p => p.id === targetPage.id);
+        console.log('📄 handleInsertFiles: Target index in editedDocument:', targetIndex);
+
+        if (targetIndex >= 0) {
+          // Clone pages and insert
+          const updatedPages = [...editedDocument.pages];
+          updatedPages.splice(targetIndex + 1, 0, ...newPages);
+
+          // Renumber all pages
+          updatedPages.forEach((page, index) => {
+            page.pageNumber = index + 1;
+          });
+
+          console.log('📄 handleInsertFiles: Updated pages:', updatedPages.map(p => `${p.id}(${p.pageNumber})`));
+
+          setEditedDocument({
+            ...editedDocument,
+            pages: updatedPages
+          });
+        }
       }
     } catch (error) {
       console.error('Failed to insert files:', error);
     }
-  }, [displayDocument, actions]);
+  }, [editedDocument, actions, selectors]);
 
   const handleSelectAll = useCallback(() => {
     if (!displayDocument) return;
@@ -545,7 +644,7 @@ const PageEditor = ({
       selectedPages,
       () => displayDocument,
       setEditedDocument,
-      (newPages) => updateFileOrderFromPages(newPages)
+      (newPages) => updateFileOrderFromPages(newPages) // Sync file order when pages are reordered
     );
     executeCommandWithTracking(reorderCommand);
   }, [displayDocument, getPageNumbersFromIds, executeCommandWithTracking, updateFileOrderFromPages]);
@@ -597,7 +696,7 @@ const PageEditor = ({
     try {
       // Step 1: Apply DOM changes to document state first
       const processedDocuments = documentManipulationService.applyDOMChangesToDocument(
-        mergedPdfDocument || displayDocument, // Original order
+        displayDocument, // Original order (editedDocument is our working doc now)
         displayDocument, // Current display order (includes reordering)
         splitPositions // Position-based splits
       );
@@ -637,7 +736,7 @@ const PageEditor = ({
       console.error('Export failed:', error);
       setExportLoading(false);
     }
-  }, [displayDocument, selectedPageIds, mergedPdfDocument, splitPositions, getSourceFiles, getExportFilename, setHasUnsavedChanges]);
+  }, [displayDocument, selectedPageIds, initialDocument, splitPositions, getSourceFiles, getExportFilename, setHasUnsavedChanges]);
 
   const onExportAll = useCallback(async () => {
     if (!displayDocument) return;
@@ -646,7 +745,7 @@ const PageEditor = ({
     try {
       // Step 1: Apply DOM changes to document state first
       const processedDocuments = documentManipulationService.applyDOMChangesToDocument(
-        mergedPdfDocument || displayDocument,
+        displayDocument,
         displayDocument,
         splitPositions
       );
@@ -683,7 +782,7 @@ const PageEditor = ({
       console.error('Export failed:', error);
       setExportLoading(false);
     }
-  }, [displayDocument, mergedPdfDocument, splitPositions, getSourceFiles, getExportFilename, setHasUnsavedChanges]);
+  }, [displayDocument, initialDocument, splitPositions, getSourceFiles, getExportFilename, setHasUnsavedChanges]);
 
   // Apply DOM changes to document state using dedicated service
   const applyChanges = useCallback(async () => {
@@ -693,7 +792,7 @@ const PageEditor = ({
     try {
       // Step 1: Apply DOM changes to document state first
       const processedDocuments = documentManipulationService.applyDOMChangesToDocument(
-        mergedPdfDocument || displayDocument,
+        displayDocument,
         displayDocument,
         splitPositions
       );
@@ -718,7 +817,7 @@ const PageEditor = ({
       console.error('Apply changes failed:', error);
       setExportLoading(false);
     }
-  }, [displayDocument, mergedPdfDocument, splitPositions, selectedFileIds, getSourceFiles, getExportFilename, actions, selectors, setHasUnsavedChanges]);
+  }, [displayDocument, initialDocument, splitPositions, selectedFileIds, getSourceFiles, getExportFilename, actions, selectors, setHasUnsavedChanges]);
 
 
   const closePdf = useCallback(() => {
@@ -728,44 +827,6 @@ const PageEditor = ({
     setSelectedPageIds([]);
     setSelectionMode(false);
   }, [actions]);
-
-  // Function to reorder pages based on new file order
-  const reorderPagesByFileOrder = useCallback((newFileOrder: FileId[]) => {
-    const docToUpdate = editedDocument || mergedPdfDocument;
-    if (!docToUpdate) return;
-
-    // Group pages by originalFileId
-    const pagesByFileId = new Map<FileId, PDFPage[]>();
-    docToUpdate.pages.forEach(page => {
-      if (page.originalFileId) {
-        if (!pagesByFileId.has(page.originalFileId)) {
-          pagesByFileId.set(page.originalFileId, []);
-        }
-        pagesByFileId.get(page.originalFileId)!.push(page);
-      }
-    });
-
-    // Rebuild pages array in new file order
-    const reorderedPages: PDFPage[] = [];
-    newFileOrder.forEach(fileId => {
-      const filePages = pagesByFileId.get(fileId);
-      if (filePages) {
-        reorderedPages.push(...filePages);
-      }
-    });
-
-    // Renumber pages
-    const renumberedPages = reorderedPages.map((page, idx) => ({
-      ...page,
-      pageNumber: idx + 1
-    }));
-
-    setEditedDocument({
-      ...docToUpdate,
-      pages: renumberedPages,
-      totalPages: renumberedPages.length
-    });
-  }, [editedDocument, mergedPdfDocument]);
 
   usePageEditorRightRailButtons({
     totalPages,
@@ -818,7 +879,6 @@ const PageEditor = ({
         onExportSelected,
         onExportAll,
         applyChanges,
-        reorderPagesByFileOrder,
         exportLoading,
         selectionMode,
         selectedPageIds,
@@ -830,7 +890,7 @@ const PageEditor = ({
     }
   }, [
     onFunctionsReady, handleUndo, handleRedo, canUndo, canRedo, handleRotate, handleDelete, handleSplit, handleSplitAll,
-    handlePageBreak, handlePageBreakAll, handleSelectAll, handleDeselectAll, handleSetSelectedPages, handleExportPreview, onExportSelected, onExportAll, applyChanges, reorderPagesByFileOrder, exportLoading,
+    handlePageBreak, handlePageBreakAll, handleSelectAll, handleDeselectAll, handleSetSelectedPages, handleExportPreview, onExportSelected, onExportAll, applyChanges, exportLoading,
     selectionMode, selectedPageIds, splitPositions, displayDocument?.pages.length, closePdf
   ]);
 
@@ -933,9 +993,9 @@ const PageEditor = ({
       onMouseEnter={() => setIsContainerHovered(true)}
       onMouseLeave={() => setIsContainerHovered(false)}
     >
-      <LoadingOverlay visible={globalProcessing && !mergedPdfDocument} />
+      <LoadingOverlay visible={globalProcessing && !initialDocument} />
 
-      {!mergedPdfDocument && !globalProcessing && selectedFileIds.length === 0 && (
+      {!initialDocument && !globalProcessing && selectedFileIds.length === 0 && (
         <Center h='100%'>
           <Stack align="center" gap="md">
             <Text size="lg" c="dimmed">📄</Text>
@@ -945,7 +1005,7 @@ const PageEditor = ({
         </Center>
       )}
 
-      {!mergedPdfDocument && globalProcessing && (
+      {!initialDocument && globalProcessing && (
         <Box p={0}>
           <SkeletonLoader type="controls" />
           <SkeletonLoader type="pageGrid" count={8} />

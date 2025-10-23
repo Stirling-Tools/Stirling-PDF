@@ -26,6 +26,7 @@ export function usePageDocument(): PageDocumentHook {
   // Filter to only include PDF files (PageEditor only supports PDFs)
   // Use stable string keys to prevent infinite loops
   const allFileIdsKey = allFileIds.join(',');
+  const selectedFileIdsKey = [...state.ui.selectedFileIds].sort().join(',');
   const activeFilesSignature = selectors.getFilesSignature();
 
   // Get ALL PDF files (selected or not) for document building with placeholders
@@ -192,7 +193,7 @@ export function usePageDocument(): PageDocumentHook {
     };
 
     return mergedDoc;
-  }, [activeFileIds, primaryFileId, primaryStirlingFileStub, processedFilePages, processedFileTotalPages, selectors, activeFilesSignature]);
+  }, [activeFileIds, primaryFileId, primaryStirlingFileStub, processedFilePages, processedFileTotalPages, selectors, activeFilesSignature, selectedFileIdsKey, state.ui.selectedFileIds]);
 
   // Large document detection for smart loading
   const isVeryLargeDocument = useMemo(() => {

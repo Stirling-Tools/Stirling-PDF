@@ -197,7 +197,13 @@ export class ReorderPagesCommand extends DOMCommand {
     } else {
       // Single page reorder
       const [movedPage] = newPages.splice(sourceIndex, 1);
-      newPages.splice(this.targetIndex, 0, movedPage);
+
+      // Adjust target index if moving forward (after removal, indices shift)
+      const adjustedTargetIndex = sourceIndex < this.targetIndex
+        ? this.targetIndex - 1
+        : this.targetIndex;
+
+      newPages.splice(adjustedTargetIndex, 0, movedPage);
 
       newPages.forEach((page, index) => {
         page.pageNumber = index + 1;

@@ -65,7 +65,6 @@ export interface PageEditorFunctions {
   onExportSelected: () => void;
   onExportAll: () => void;
   applyChanges: () => void;
-  reorderPagesByFileOrder: (newFileOrder: FileId[]) => void;
   exportLoading: boolean;
   selectionMode: boolean;
   selectedPageIds: string[];

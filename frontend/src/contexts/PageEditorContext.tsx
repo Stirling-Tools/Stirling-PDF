@@ -67,9 +67,12 @@ function reorderPagesForFileMove(
   let insertionIndex = 0;
 
   if (fromIndex < toIndex) {
-    // Moving down: insert AFTER the last page of target file
+    // Moving down: insert AFTER the last page of ANY file that should come before us
+    // We need to find the last page belonging to any file at index <= toIndex in orderedFileIds
+    const filesBeforeUs = new Set(orderedFileIds.slice(0, toIndex + 1));
     for (let i = remainingPages.length - 1; i >= 0; i--) {
-      if (remainingPages[i].originalFileId === targetFileId) {
+      const pageFileId = remainingPages[i].originalFileId;
+      if (pageFileId && filesBeforeUs.has(pageFileId)) {
         insertionIndex = i + 1;
         break;
       }
@@ -151,51 +154,56 @@ export function PageEditorProvider({ children }: PageEditorProviderProps) {
     stateRef.current = state;
   }, [state]);
 
+  // Track the previous FileContext order to detect actual changes
+  const prevFileContextIdsRef = React.useRef<FileId[]>([]);
+
   // Initialize fileOrder from FileContext when files change (add/remove only)
   React.useEffect(() => {
     const currentFileIds = state.files.ids;
+    const prevFileIds = prevFileContextIdsRef.current;
 
-    // Identify new files
-    const newFileIds = currentFileIds.filter(id => !fileOrder.includes(id));
+    // Only react to FileContext changes, not our own fileOrder changes
+    const fileContextChanged =
+      currentFileIds.length !== prevFileIds.length ||
+      !currentFileIds.every((id, idx) => id === prevFileIds[idx]);
 
-    // Remove deleted files
-    const validFileOrder = fileOrder.filter(id => currentFileIds.includes(id));
+    if (!fileContextChanged) {
+      return;
+    }
 
-    if (newFileIds.length > 0 || validFileOrder.length !== fileOrder.length) {
-      // Check if new files have insertion positions
-      let hasInsertionPosition = false;
-      for (const fileId of newFileIds) {
+    prevFileContextIdsRef.current = currentFileIds;
+
+    // Collect new file IDs outside the setState callback so we can clear them after
+    let newFileIdsToProcess: FileId[] = [];
+
+    // Use functional setState to read latest fileOrder without depending on it
+    setFileOrder(currentOrder => {
+      // Identify new files
+      const newFileIds = currentFileIds.filter(id => !currentOrder.includes(id));
+      newFileIdsToProcess = newFileIds; // Store for cleanup
+
+      // Remove deleted files
+      const validFileOrder = currentOrder.filter(id => currentFileIds.includes(id));
+
+      if (newFileIds.length === 0 && validFileOrder.length === currentOrder.length) {
+        return currentOrder; // No changes needed
+      }
+
+      // Always append new files to end
+      // If files have insertAfterPageId, page-level insertion is handled by usePageDocument
+      return [...validFileOrder, ...newFileIds];
+    });
+
+    // Clear insertAfterPageId after a delay to allow usePageDocument to consume it first
+    setTimeout(() => {
+      newFileIdsToProcess.forEach(fileId => {
         const stub = state.files.byId[fileId];
         if (stub?.insertAfterPageId) {
-          hasInsertionPosition = true;
-          break;
+          fileActions.updateStirlingFileStub(fileId, { insertAfterPageId: undefined });
         }
-      }
-
-      if (hasInsertionPosition) {
-        // Respect FileContext order when files have insertion positions
-        // FileContext already handled the positioning logic
-        const orderedNewFiles = currentFileIds.filter(id => newFileIds.includes(id));
-        const orderedValidFiles = currentFileIds.filter(id => validFileOrder.includes(id));
-
-        // Merge while preserving FileContext order
-        const newOrder: FileId[] = [];
-        const newFilesSet = new Set(orderedNewFiles);
-        const validFilesSet = new Set(orderedValidFiles);
-
-        currentFileIds.forEach(id => {
-          if (newFilesSet.has(id) || validFilesSet.has(id)) {
-            newOrder.push(id);
-          }
-        });
-
-        setFileOrder(newOrder);
-      } else {
-        // No insertion positions - append new files to end
-        setFileOrder([...validFileOrder, ...newFileIds]);
-      }
-    }
-  }, [state.files.ids, state.files.byId, fileOrder]);
+      });
+    }, 100);
+  }, [state.files.ids, state.files.byId, fileActions]);
 
   const updateCurrentPages = useCallback((pages: PDFPage[] | null) => {
     setCurrentPages(pages);
@@ -276,9 +284,12 @@ export function PageEditorProvider({ children }: PageEditorProviderProps) {
         }
       });
 
-      // Get the moved and target file IDs
-      const movedFileId = fileOrder[fromIndex];
-      const targetFileId = fileOrder[toIndex];
+      // Get the target file ID from the NEW order (after the move)
+      // When moving down: we want to position after the file at toIndex-1 (file just before insertion)
+      // When moving up: we want to position before the file at toIndex+1 (file just after insertion)
+      const targetFileId = fromIndex < toIndex
+        ? newOrder[toIndex - 1]  // Moving down: target is the file just before where we inserted
+        : newOrder[toIndex + 1];  // Moving up: target is the file just after where we inserted
 
       // Find their positions in the current page order (not the full file list)
       const pageOrderFromIndex = currentFileOrder.findIndex(id => id === movedFileId);

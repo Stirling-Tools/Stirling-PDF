@@ -89,47 +89,16 @@ export function fileContextReducer(state: FileContextState, action: FileContextA
             insertAfterPageId = record.insertAfterPageId;
           }
 
-          // Store record but clear insertAfterPageId (it's only used once)
-          const { insertAfterPageId: _, ...recordWithoutInsertPosition } = record;
-          newById[record.id] = recordWithoutInsertPosition;
+          // Store record WITH insertAfterPageId temporarily
+          // PageEditorContext will read it and clear it
+          newById[record.id] = record;
         }
       });
 
       // Determine final file order
-      let finalIds: FileId[];
-
-      if (hasInsertionPosition && insertAfterPageId) {
-        // Find the file that contains the page with insertAfterPageId
-        let insertIndex = state.files.ids.length; // Default to end
-
-        for (let i = 0; i < state.files.ids.length; i++) {
-          const fileId = state.files.ids[i];
-          const fileStub = state.files.byId[fileId];
-
-          if (fileStub?.processedFile?.pages) {
-            const hasPage = fileStub.processedFile.pages.some(page => {
-              // Page ID format: fileId-pageNumber
-              const pageId = `${fileId}-${page.pageNumber}`;
-              return pageId === insertAfterPageId;
-            });
-
-            if (hasPage) {
-              insertIndex = i + 1; // Insert after this file
-              break;
-            }
-          }
-        }
-
-        // Insert new files at the calculated position
-        finalIds = [
-          ...state.files.ids.slice(0, insertIndex),
-          ...newIds,
-          ...state.files.ids.slice(insertIndex)
-        ];
-      } else {
-        // No insertion position - append to end
-        finalIds = [...state.files.ids, ...newIds];
-      }
+      // NOTE: If files have insertAfterPageId, we just append to end
+      // The page-level insertion is handled by usePageDocument
+      const finalIds = [...state.files.ids, ...newIds];
 
       // Auto-select inserted files
       const newSelectedFileIds = hasInsertionPosition
