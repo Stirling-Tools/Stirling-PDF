@@ -1,10 +1,12 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
+  ActionIcon,
   Alert,
   Badge,
   Box,
   Button,
   Card,
+  Collapse,
   Divider,
   FileButton,
   Group,
@@ -21,16 +23,81 @@ import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdfOutlined';
 import AutorenewIcon from '@mui/icons-material/Autorenew';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import UploadIcon from '@mui/icons-material/Upload';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { Rnd } from 'react-rnd';
 
 import {
   PdfJsonEditorViewData,
+  PdfJsonFont,
   PdfJsonPage,
 } from '../../../tools/pdfJsonEditorTypes';
 import { getImageBounds, pageDimensions } from '../../../tools/pdfJsonEditorUtils';
 
 const MAX_RENDER_WIDTH = 820;
 const MIN_BOX_SIZE = 18;
+
+const normalizeFontFormat = (format?: string | null): string => {
+  if (!format) {
+    return 'ttf';
+  }
+  const lower = format.toLowerCase();
+  if (lower.includes('woff2')) {
+    return 'woff2';
+  }
+  if (lower.includes('woff')) {
+    return 'woff';
+  }
+  if (lower.includes('otf')) {
+    return 'otf';
+  }
+  if (lower.includes('cff')) {
+    return 'otf';
+  }
+  return 'ttf';
+};
+
+const getFontMimeType = (format: string): string => {
+  switch (format) {
+    case 'woff2':
+      return 'font/woff2';
+    case 'woff':
+      return 'font/woff';
+    case 'otf':
+      return 'font/otf';
+    default:
+      return 'font/ttf';
+  }
+};
+
+const getFontFormatHint = (format: string): string | null => {
+  switch (format) {
+    case 'woff2':
+      return 'woff2';
+    case 'woff':
+      return 'woff';
+    case 'otf':
+      return 'opentype';
+    case 'ttf':
+      return 'truetype';
+    default:
+      return null;
+  }
+};
+
+const decodeBase64ToUint8Array = (value: string): Uint8Array => {
+  const binary = window.atob(value);
+  const bytes = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index += 1) {
+    bytes[index] = binary.charCodeAt(index);
+  }
+  return bytes;
+};
+
+const buildFontFamilyName = (font: PdfJsonFont): string => {
+  const base = (font.uid ?? font.id ?? 'font').toString();
+  return `pdf-font-${base.replace(/[^a-zA-Z0-9_-]/g, '')}`;
+};
 
 const getCaretOffset = (element: HTMLElement): number => {
   const selection = window.getSelection();
@@ -85,11 +152,13 @@ const toCssBounds = (
   bounds: { left: number; right: number; top: number; bottom: number },
 ) => {
   const width = Math.max(bounds.right - bounds.left, 1);
+  // Note: This codebase uses inverted naming where bounds.bottom > bounds.top
+  // bounds.bottom = visually upper edge (larger Y in PDF coords)
+  // bounds.top = visually lower edge (smaller Y in PDF coords)
   const height = Math.max(bounds.bottom - bounds.top, 1);
-  // Add 20% buffer to width to account for padding and font rendering variations
-  const bufferedWidth = width * 1.2;
-  const scaledWidth = Math.max(bufferedWidth * scale, MIN_BOX_SIZE);
+  const scaledWidth = Math.max(width * scale, MIN_BOX_SIZE);
   const scaledHeight = Math.max(height * scale, MIN_BOX_SIZE / 2);
+  // Convert PDF's visually upper edge (bounds.bottom) to CSS top
   const top = Math.max(pageHeight - bounds.bottom, 0) * scale;
 
   return {
@@ -105,6 +174,8 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
   const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
   const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
   const [activeImageId, setActiveImageId] = useState<string | null>(null);
+  const [fontFamilies, setFontFamilies] = useState<Map<string, string>>(new Map());
+  const [textGroupsExpanded, setTextGroupsExpanded] = useState(false);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const editorRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const caretOffsetsRef = useRef<Map<string, number>>(new Map());
@@ -135,6 +206,10 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
     if (!fontId || !pdfDocument?.fonts) {
       return 'sans-serif';
     }
+    const loadedFamily = fontFamilies.get(fontId);
+    if (loadedFamily) {
+      return `'${loadedFamily}', sans-serif`;
+    }
     const font = pdfDocument.fonts.find((f) => f.id === fontId);
     if (!font) {
       return 'sans-serif';
@@ -161,10 +236,134 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
     return 'Arial, Helvetica, sans-serif';
   };
 
+  const getLineHeightPx = (fontId: string | null | undefined, fontSizePx: number): number => {
+    if (fontSizePx <= 0) {
+      return fontSizePx;
+    }
+    const metrics = fontId ? fontMetrics.get(fontId) : undefined;
+    if (!metrics || metrics.unitsPerEm <= 0) {
+      return fontSizePx * 1.2;
+    }
+    const totalUnits = metrics.ascent - metrics.descent;
+    if (totalUnits <= 0) {
+      return fontSizePx * 1.2;
+    }
+    const lineHeight = (totalUnits / metrics.unitsPerEm) * fontSizePx;
+    return Math.max(lineHeight, fontSizePx * 1.05);
+  };
+
+  const getFontWeight = (fontId: string | null | undefined): number | 'normal' | 'bold' => {
+    if (!fontId || !pdfDocument?.fonts) {
+      return 'normal';
+    }
+    const font = pdfDocument.fonts.find((f) => f.id === fontId);
+    if (!font || !font.fontDescriptorFlags) {
+      return 'normal';
+    }
+
+    // PDF font descriptor flag bit 18 (value 262144 = 0x40000) indicates ForceBold
+    const FORCE_BOLD_FLAG = 262144;
+    if ((font.fontDescriptorFlags & FORCE_BOLD_FLAG) !== 0) {
+      return 'bold';
+    }
+
+    // Also check if font name contains "Bold"
+    const fontName = font.standard14Name || font.baseName || '';
+    if (fontName.toLowerCase().includes('bold')) {
+      return 'bold';
+    }
+
+    return 'normal';
+  };
+
   const pages = pdfDocument?.pages ?? [];
   const currentPage = pages[selectedPage] ?? null;
   const pageGroups = groupsByPage[selectedPage] ?? [];
   const pageImages = imagesByPage[selectedPage] ?? [];
+
+  const fontMetrics = useMemo(() => {
+    const metrics = new Map<string, { unitsPerEm: number; ascent: number; descent: number }>();
+    pdfDocument?.fonts?.forEach((font) => {
+      if (!font?.id) {
+        return;
+      }
+      const unitsPerEm = font.unitsPerEm && font.unitsPerEm > 0 ? font.unitsPerEm : 1000;
+      const ascent = font.ascent ?? unitsPerEm;
+      const descent = font.descent ?? -(unitsPerEm * 0.2);
+      metrics.set(font.id, { unitsPerEm, ascent, descent });
+    });
+    return metrics;
+  }, [pdfDocument?.fonts]);
+
+  useEffect(() => {
+    if (typeof FontFace === 'undefined') {
+      setFontFamilies(new Map());
+      return undefined;
+    }
+
+    let disposed = false;
+    const active: { fontFace: FontFace; url?: string }[] = [];
+
+    const registerFonts = async () => {
+      const fonts = pdfDocument?.fonts ?? [];
+      if (fonts.length === 0) {
+        setFontFamilies(new Map());
+        return;
+      }
+
+      const next = new Map<string, string>();
+      for (const font of fonts) {
+        if (!font?.id || !font.program) {
+          continue;
+        }
+        try {
+          const format = normalizeFontFormat(font.programFormat);
+          const data = decodeBase64ToUint8Array(font.program);
+          const blob = new Blob([data as BlobPart], { type: getFontMimeType(format) });
+          const url = URL.createObjectURL(blob);
+          const formatHint = getFontFormatHint(format);
+          const familyName = buildFontFamilyName(font);
+          const source = formatHint ? `url(${url}) format('${formatHint}')` : `url(${url})`;
+          const fontFace = new FontFace(familyName, source);
+          await fontFace.load();
+          if (disposed) {
+            document.fonts.delete(fontFace);
+            URL.revokeObjectURL(url);
+            continue;
+          }
+          document.fonts.add(fontFace);
+          active.push({ fontFace, url });
+          next.set(font.id, familyName);
+        } catch (error) {
+          // Silently ignore font loading failures - embedded PDF fonts often lack web font tables
+          // Fallback to web-safe fonts is already implemented via getFontFamily()
+        }
+      }
+
+      if (!disposed) {
+        setFontFamilies(next);
+      } else {
+        active.forEach(({ fontFace, url }) => {
+          document.fonts.delete(fontFace);
+          if (url) {
+            URL.revokeObjectURL(url);
+          }
+        });
+      }
+    };
+
+    registerFonts();
+
+    return () => {
+      disposed = true;
+      active.forEach(({ fontFace, url }) => {
+        document.fonts.delete(fontFace);
+        if (url) {
+          URL.revokeObjectURL(url);
+        }
+      });
+    };
+  }, [pdfDocument?.fonts]);
   const visibleGroups = useMemo(
     () =>
       pageGroups.filter((group) => {
@@ -419,25 +618,33 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
             <ScrollArea h="100%" offsetScrollbars>
               <Box
                 style={{
-                  margin: '0 auto',
-                  background: '#f3f4f6',
-                  padding: '1.5rem',
-                  borderRadius: '0.75rem',
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'flex-start',
+                  width: '100%',
+                  minHeight: '100%',
                 }}
-                onClick={handleBackgroundClick}
               >
                 <Box
                   style={{
-                    position: 'relative',
-                    width: `${scaledWidth}px`,
-                    height: `${scaledHeight}px`,
-                    backgroundColor: '#ffffff',
-                    boxShadow: '0 0 12px rgba(15, 23, 42, 0.12)',
-                    borderRadius: '0.5rem',
-                    overflow: 'hidden',
+                    background: '#f3f4f6',
+                    padding: '0.5rem',
+                    borderRadius: '0.75rem',
                   }}
-                  ref={containerRef}
+                  onClick={handleBackgroundClick}
                 >
+                  <Box
+                    style={{
+                      position: 'relative',
+                      width: `${scaledWidth}px`,
+                      height: `${scaledHeight}px`,
+                      backgroundColor: '#ffffff',
+                      boxShadow: '0 0 12px rgba(15, 23, 42, 0.12)',
+                      borderRadius: '0.5rem',
+                      overflow: 'hidden',
+                    }}
+                    ref={containerRef}
+                  >
                   {orderedImages.map((image, imageIndex) => {
                     if (!image?.imageData) {
                       return null;
@@ -466,7 +673,7 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
                           setEditingGroupId(null);
                           setActiveImageId(imageId);
                         }}
-                        onDrag={(event, data) => {
+                        onDrag={(_event, data) => {
                           emitImageTransform(
                             imageId,
                             data.x,
@@ -475,7 +682,7 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
                             cssHeight,
                           );
                         }}
-                        onDragStop={(event, data) => {
+                        onDragStop={(_event, data) => {
                           emitImageTransform(
                             imageId,
                             data.x,
@@ -489,7 +696,7 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
                           setActiveGroupId(null);
                           setEditingGroupId(null);
                         }}
-                        onResize={(event, _direction, ref, _delta, position) => {
+                        onResize={(_event, _direction, ref, _delta, position) => {
                           const nextWidth = parseFloat(ref.style.width);
                           const nextHeight = parseFloat(ref.style.height);
                           emitImageTransform(
@@ -500,7 +707,7 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
                             nextHeight,
                           );
                         }}
-                        onResizeStop={(event, _direction, ref, _delta, position) => {
+                        onResizeStop={(_event, _direction, ref, _delta, position) => {
                           const nextWidth = parseFloat(ref.style.width);
                           const nextHeight = parseFloat(ref.style.height);
                           emitImageTransform(
@@ -567,21 +774,48 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
                       const baseFontSize = group.fontMatrixSize ?? group.fontSize ?? 12;
                       const fontSizePx = Math.max(baseFontSize * scale, 6);
                       const fontFamily = getFontFamily(group.fontId);
+                      const lineHeightPx = getLineHeightPx(group.fontId, fontSizePx);
+                      const lineHeightRatio = fontSizePx > 0 ? Math.max(lineHeightPx / fontSizePx, 1.05) : 1.2;
+                      const hasRotation = group.rotation != null && Math.abs(group.rotation) > 0.5;
+                      const baselineLength = group.baselineLength ?? Math.max(group.bounds.right - group.bounds.left, 0);
 
-                      const visualHeight = Math.max(bounds.height, fontSizePx * 1.2);
+                      let containerLeft = bounds.left;
+                      let containerTop = bounds.top;
+                      let containerWidth = Math.max(bounds.width, fontSizePx);
+                      let containerHeight = Math.max(bounds.height, lineHeightPx);
+                      let transform: string | undefined;
+                      let transformOrigin: React.CSSProperties['transformOrigin'];
+
+                      if (hasRotation) {
+                        const anchorX = group.anchor?.x ?? group.bounds.left;
+                        const anchorY = group.anchor?.y ?? group.bounds.bottom;
+                        containerLeft = anchorX * scale;
+                        containerTop = Math.max(pageHeight - anchorY, 0) * scale;
+                        containerWidth = Math.max(baselineLength * scale, MIN_BOX_SIZE);
+                        containerHeight = Math.max(lineHeightPx, fontSizePx * lineHeightRatio);
+                        transformOrigin = 'left bottom';
+                        // Negate rotation because Y-axis is flipped from PDF to web coordinates
+                        transform = `rotate(${-group.rotation}deg)`;
+                      }
+
+                      // Extract styling from group
+                      const textColor = group.color || '#111827';
+                      const fontWeight = group.fontWeight || getFontWeight(group.fontId);
 
                       const containerStyle: React.CSSProperties = {
                         position: 'absolute',
-                        left: `${bounds.left}px`,
-                        top: `${bounds.top}px`,
-                        width: `${bounds.width}px`,
-                        height: `${visualHeight}px`,
+                        left: `${containerLeft}px`,
+                        top: `${containerTop}px`,
+                        width: `${containerWidth}px`,
+                        height: `${containerHeight}px`,
                         display: 'flex',
                         alignItems: 'flex-start',
                         justifyContent: 'flex-start',
                         pointerEvents: 'auto',
                         cursor: 'text',
                         zIndex: 2_000_000,
+                        transform,
+                        transformOrigin,
                       };
 
                       if (isEditing) {
@@ -628,17 +862,17 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
                                 style={{
                                   width: '100%',
                                   height: '100%',
-                                  padding: '3px 4px',
+                                  padding: 0,
                                   backgroundColor: 'rgba(255,255,255,0.95)',
-                                  color: '#111827',
+                                  color: textColor,
                                   fontSize: `${fontSizePx}px`,
                                   fontFamily,
-                                  lineHeight: 1.25,
+                                  fontWeight,
+                                  lineHeight: lineHeightRatio,
                                   outline: 'none',
                                   border: 'none',
                                   display: 'block',
-                                  whiteSpace: 'pre-wrap',
-                                  overflowWrap: 'anywhere',
+                                  whiteSpace: 'nowrap',
                                   cursor: 'text',
                                   overflow: 'visible',
                                 }}
@@ -660,12 +894,13 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
                               style={{
                                 width: '100%',
                                 minHeight: '100%',
-                                padding: '2px 4px',
-                                whiteSpace: 'pre-wrap',
+                                padding: 0,
+                                whiteSpace: 'nowrap',
                                 fontSize: `${fontSizePx}px`,
                                 fontFamily,
-                                lineHeight: 1.25,
-                                color: '#111827',
+                                fontWeight,
+                                lineHeight: lineHeightRatio,
+                                color: textColor,
                                 display: 'block',
                                 cursor: 'text',
                                 overflow: 'visible',
@@ -682,6 +917,7 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
                       );
                     })
                   )}
+                  </Box>
                 </Box>
               </Box>
             </ScrollArea>
@@ -689,48 +925,61 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
 
           <Card padding="md" withBorder radius="md">
             <Stack gap="xs">
-              <Text fw={500}>{t('pdfJsonEditor.groupList', 'Detected Text Groups')}</Text>
-              <Divider />
-              <ScrollArea h={180} offsetScrollbars>
-                <Stack gap="sm">
-                  {visibleGroups.map((group) => {
-                    const changed = group.text !== group.originalText;
-                    return (
-                      <Card
-                        key={`list-${group.id}`}
-                        padding="sm"
-                        radius="md"
-                        withBorder
-                        shadow={changed ? 'sm' : 'none'}
-                        onMouseEnter={() => setActiveGroupId(group.id)}
-                        onMouseLeave={() => setActiveGroupId((current) => (current === group.id ? null : current))}
-                        style={{ cursor: 'pointer' }}
-                        onClick={() => {
-                          setActiveGroupId(group.id);
-                          setEditingGroupId(group.id);
-                        }}
-                      >
-                        <Stack gap={4}>
-                          <Group gap="xs">
-                            {changed && <Badge color="yellow" size="xs">{t('pdfJsonEditor.badges.modified', 'Edited')}</Badge>}
-                            {group.fontId && (
-                              <Badge size="xs" variant="outline">{group.fontId}</Badge>
-                            )}
-                            {group.fontSize && (
-                              <Badge size="xs" variant="light">
-                                {t('pdfJsonEditor.fontSizeValue', '{{size}}pt', { size: group.fontSize.toFixed(1) })}
-                              </Badge>
-                            )}
-                          </Group>
-                          <Text size="sm" c="dimmed" lineClamp={2}>
-                            {group.text || t('pdfJsonEditor.emptyGroup', '[Empty Group]')}
-                          </Text>
-                        </Stack>
-                      </Card>
-                    );
-                  })}
+              <Group justify="space-between" align="center">
+                <Text fw={500}>{t('pdfJsonEditor.groupList', 'Detected Text Groups')}</Text>
+                <ActionIcon
+                  variant="subtle"
+                  onClick={() => setTextGroupsExpanded(!textGroupsExpanded)}
+                  aria-label={textGroupsExpanded ? 'Collapse' : 'Expand'}
+                >
+                  {textGroupsExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                </ActionIcon>
+              </Group>
+              <Collapse in={textGroupsExpanded}>
+                <Stack gap="xs">
+                  <Divider />
+                  <ScrollArea h={180} offsetScrollbars>
+                    <Stack gap="sm">
+                      {visibleGroups.map((group) => {
+                        const changed = group.text !== group.originalText;
+                        return (
+                          <Card
+                            key={`list-${group.id}`}
+                            padding="sm"
+                            radius="md"
+                            withBorder
+                            shadow={changed ? 'sm' : 'none'}
+                            onMouseEnter={() => setActiveGroupId(group.id)}
+                            onMouseLeave={() => setActiveGroupId((current) => (current === group.id ? null : current))}
+                            style={{ cursor: 'pointer' }}
+                            onClick={() => {
+                              setActiveGroupId(group.id);
+                              setEditingGroupId(group.id);
+                            }}
+                          >
+                            <Stack gap={4}>
+                              <Group gap="xs">
+                                {changed && <Badge color="yellow" size="xs">{t('pdfJsonEditor.badges.modified', 'Edited')}</Badge>}
+                                {group.fontId && (
+                                  <Badge size="xs" variant="outline">{group.fontId}</Badge>
+                                )}
+                                {group.fontSize && (
+                                  <Badge size="xs" variant="light">
+                                    {t('pdfJsonEditor.fontSizeValue', '{{size}}pt', { size: group.fontSize.toFixed(1) })}
+                                  </Badge>
+                                )}
+                              </Group>
+                              <Text size="sm" c="dimmed" lineClamp={2}>
+                                {group.text || t('pdfJsonEditor.emptyGroup', '[Empty Group]')}
+                              </Text>
+                            </Stack>
+                          </Card>
+                        );
+                      })}
+                    </Stack>
+                  </ScrollArea>
                 </Stack>
-              </ScrollArea>
+              </Collapse>
             </Stack>
           </Card>
         </Stack>

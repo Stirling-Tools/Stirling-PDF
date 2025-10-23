@@ -69,9 +69,15 @@ const getHeight = (element: PdfJsonTextElement): number => {
 const getElementBounds = (element: PdfJsonTextElement): BoundingBox => {
   const left = getX(element);
   const width = getWidth(element);
-  const bottom = getBaseline(element);
+  const baseline = getBaseline(element);
   const height = getHeight(element);
-  const top = bottom - height;
+  // In PDF coordinates, baseline is where text sits
+  // Typical typography: ~80% of height above baseline (ascenders), ~20% below (descenders)
+  // Using codebase's inverted naming: bottom (visual top) > top (visual bottom)
+  const ascent = height * 0.8;
+  const descent = height * 0.2;
+  const bottom = baseline + ascent;  // Visual top of text
+  const top = baseline - descent;    // Visual bottom (includes descenders)
   return {
     left,
     right: left + width,
@@ -181,6 +187,136 @@ const buildGroupText = (elements: PdfJsonTextElement[]): string => {
   return result;
 };
 
+const rgbToCss = (components: number[]): string => {
+  if (components.length >= 3) {
+    const r = Math.round(Math.max(0, Math.min(1, components[0])) * 255);
+    const g = Math.round(Math.max(0, Math.min(1, components[1])) * 255);
+    const b = Math.round(Math.max(0, Math.min(1, components[2])) * 255);
+    return `rgb(${r}, ${g}, ${b})`;
+  }
+  return 'rgb(0, 0, 0)';
+};
+
+const cmykToCss = (components: number[]): string => {
+  if (components.length >= 4) {
+    const c = Math.max(0, Math.min(1, components[0]));
+    const m = Math.max(0, Math.min(1, components[1]));
+    const y = Math.max(0, Math.min(1, components[2]));
+    const k = Math.max(0, Math.min(1, components[3]));
+    const r = Math.round(255 * (1 - c) * (1 - k));
+    const g = Math.round(255 * (1 - m) * (1 - k));
+    const b = Math.round(255 * (1 - y) * (1 - k));
+    return `rgb(${r}, ${g}, ${b})`;
+  }
+  return 'rgb(0, 0, 0)';
+};
+
+const grayToCss = (components: number[]): string => {
+  if (components.length >= 1) {
+    const gray = Math.round(Math.max(0, Math.min(1, components[0])) * 255);
+    return `rgb(${gray}, ${gray}, ${gray})`;
+  }
+  return 'rgb(0, 0, 0)';
+};
+
+const extractColor = (element: PdfJsonTextElement): string | null => {
+  const fillColor = element.fillColor;
+  if (!fillColor || !fillColor.components || fillColor.components.length === 0) {
+    return null;
+  }
+
+  const colorSpace = (fillColor.colorSpace ?? '').toLowerCase();
+
+  if (colorSpace.includes('rgb') || colorSpace.includes('srgb')) {
+    return rgbToCss(fillColor.components);
+  }
+  if (colorSpace.includes('cmyk')) {
+    return cmykToCss(fillColor.components);
+  }
+  if (colorSpace.includes('gray') || colorSpace.includes('grey')) {
+    return grayToCss(fillColor.components);
+  }
+
+  // Default to RGB interpretation
+  if (fillColor.components.length >= 3) {
+    return rgbToCss(fillColor.components);
+  }
+  if (fillColor.components.length === 1) {
+    return grayToCss(fillColor.components);
+  }
+
+  return null;
+};
+
+const RAD_TO_DEG = 180 / Math.PI;
+
+const normalizeAngle = (angle: number): number => {
+  let normalized = angle % 360;
+  if (normalized > 180) {
+    normalized -= 360;
+  } else if (normalized <= -180) {
+    normalized += 360;
+  }
+  return normalized;
+};
+
+const extractElementRotation = (element: PdfJsonTextElement): number | null => {
+  const matrix = element.textMatrix;
+  if (!matrix || matrix.length !== 6) {
+    return null;
+  }
+  const a = matrix[0];
+  const b = matrix[1];
+  if (Math.abs(a) < 1e-6 && Math.abs(b) < 1e-6) {
+    return null;
+  }
+  const angle = Math.atan2(b, a) * RAD_TO_DEG;
+  if (Math.abs(angle) < 0.5) {
+    return null;
+  }
+  return normalizeAngle(angle);
+};
+
+const computeGroupRotation = (elements: PdfJsonTextElement[]): number | null => {
+  const angles = elements
+    .map(extractElementRotation)
+    .filter((angle): angle is number => angle !== null);
+  if (angles.length === 0) {
+    return null;
+  }
+  const vector = angles.reduce(
+    (acc, angle) => {
+      const radians = (angle * Math.PI) / 180;
+      acc.x += Math.cos(radians);
+      acc.y += Math.sin(radians);
+      return acc;
+    },
+    { x: 0, y: 0 },
+  );
+  if (Math.abs(vector.x) < 1e-6 && Math.abs(vector.y) < 1e-6) {
+    return null;
+  }
+  const average = Math.atan2(vector.y, vector.x) * RAD_TO_DEG;
+  const normalized = normalizeAngle(average);
+  return Math.abs(normalized) < 0.5 ? null : normalized;
+};
+
+const getAnchorPoint = (element: PdfJsonTextElement): { x: number; y: number } => {
+  if (element.textMatrix && element.textMatrix.length === 6) {
+    return {
+      x: valueOr(element.textMatrix[4]),
+      y: valueOr(element.textMatrix[5]),
+    };
+  }
+  return {
+    x: valueOr(element.x),
+    y: valueOr(element.y),
+  };
+};
+
+const computeBaselineLength = (elements: PdfJsonTextElement[]): number =>
+  elements.reduce((acc, current) => acc + getWidth(current), 0);
+
 const createGroup = (
   pageIndex: number,
   idSuffix: number,
@@ -189,13 +325,22 @@ const createGroup = (
   const clones = elements.map(cloneTextElement);
   const originalClones = clones.map(cloneTextElement);
   const bounds = mergeBounds(elements.map(getElementBounds));
+  const firstElement = elements[0];
+  const rotation = computeGroupRotation(elements);
+  const anchor = rotation !== null ? getAnchorPoint(firstElement) : null;
+  const baselineLength = computeBaselineLength(elements);
 
   return {
     id: `${pageIndex}-${idSuffix}`,
     pageIndex,
-    fontId: elements[0]?.fontId,
-    fontSize: elements[0]?.fontSize,
-    fontMatrixSize: elements[0]?.fontMatrixSize,
+    fontId: firstElement?.fontId,
+    fontSize: firstElement?.fontSize,
+    fontMatrixSize: firstElement?.fontMatrixSize,
+    color: firstElement ? extractColor(firstElement) : null,
+    fontWeight: null, // Will be determined from font descriptor
+    rotation,
+    anchor,
+    baselineLength,
     elements: clones,
     originalElements: originalClones,
     text: buildGroupText(elements),
@@ -253,7 +398,18 @@ export const groupPageTextElements = (page: PdfJsonPage | null | undefined, page
       const splitThreshold = Math.max(SPACE_MIN_GAP, avgFontSize * GAP_FACTOR);
 
       const sameFont = previous.fontId === element.fontId;
-      const shouldSplit = gap > splitThreshold * (sameFont ? 1.4 : 1.0);
+      let shouldSplit = gap > splitThreshold * (sameFont ? 1.4 : 1.0);
+
+      const previousRotation = extractElementRotation(previous);
+      const currentRotation = extractElementRotation(element);
+      if (
+        shouldSplit &&
+        previousRotation !== null &&
+        currentRotation !== null &&
+        Math.abs(normalizeAngle(previousRotation - currentRotation)) < 1
+      ) {
+        shouldSplit = false;
+      }
 
       if (shouldSplit) {
         groups.push(createGroup(pageIndex, groupCounter, currentBucket));

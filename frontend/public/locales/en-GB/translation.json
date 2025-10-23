@@ -4031,6 +4031,7 @@
     "fontSizeValue": "{{size}}pt",
     "noTextOnPage": "No editable text was detected on this page.",
     "emptyGroup": "[Empty Group]",
+    "imageLabel": "Placed image",
     "empty": {
       "title": "No document loaded",
       "subtitle": "Load a PDF or JSON file to begin editing text content."

@@ -23,6 +23,12 @@ export interface PdfJsonFont {
   toUnicode?: string | null;
   standard14Name?: string | null;
   fontDescriptorFlags?: number | null;
+  ascent?: number | null;
+  descent?: number | null;
+  capHeight?: number | null;
+  xHeight?: number | null;
+  italicAngle?: number | null;
+  unitsPerEm?: number | null;
 }
 
 export interface PdfJsonTextElement {
@@ -117,6 +123,11 @@ export interface TextGroup {
   fontId?: string | null;
   fontSize?: number | null;
   fontMatrixSize?: number | null;
+  color?: string | null;
+  fontWeight?: number | 'normal' | 'bold' | null;
+  rotation?: number | null;
+  anchor?: { x: number; y: number } | null;
+  baselineLength?: number | null;
   elements: PdfJsonTextElement[];
   originalElements: PdfJsonTextElement[];
   text: string;

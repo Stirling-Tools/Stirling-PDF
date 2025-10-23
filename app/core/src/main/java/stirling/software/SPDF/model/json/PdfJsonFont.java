@@ -52,4 +52,22 @@ public class PdfJsonFont {
 
     /** Font descriptor flags copied from the source document. */
     private Integer fontDescriptorFlags;
+
+    /** Font ascent in glyph units (typically 1/1000). */
+    private Float ascent;
+
+    /** Font descent in glyph units (typically negative). */
+    private Float descent;
+
+    /** Capital height when available. */
+    private Float capHeight;
+
+    /** x-height when available. */
+    private Float xHeight;
+
+    /** Italic angle reported by the font descriptor. */
+    private Float italicAngle;
+
+    /** Units per em extracted from the font matrix. */
+    private Integer unitsPerEm;
 }

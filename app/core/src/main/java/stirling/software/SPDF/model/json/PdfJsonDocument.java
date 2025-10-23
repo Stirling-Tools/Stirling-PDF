@@ -25,4 +25,7 @@ public class PdfJsonDocument {
     @Builder.Default private List<PdfJsonFont> fonts = new ArrayList<>();
 
     @Builder.Default private List<PdfJsonPage> pages = new ArrayList<>();
+
+    /** Form fields (AcroForm) at document level */
+    @Builder.Default private List<PdfJsonFormField> formFields = new ArrayList<>();
 }

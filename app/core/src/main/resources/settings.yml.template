@@ -168,6 +168,16 @@ system:
     startupCleanup: true # Clean up old temp files on startup
     cleanupSystemTemp: false # Whether to clean broader system temp directory
 
+stirling:
+  pdf:
+    fallback-font: classpath:/static/fonts/NotoSans-Regular.ttf # Override to point at a custom fallback font
+    json:
+      font-normalization:
+        enabled: true # Run Ghostscript preflight to normalize fonts before PDF→JSON
+      cff-converter:
+        enabled: true # Attempt to transcode CFF/Type1C programs to OTF using FontForge when available
+        fontforge-command: fontforge # Override if FontForge is installed under a different name/path
+
 ui:
   appName: '' # application's visible name
   homeDescription: '' # short description or tagline shown on the homepage

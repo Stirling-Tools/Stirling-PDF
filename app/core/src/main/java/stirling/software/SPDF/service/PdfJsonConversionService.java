@@ -3,12 +3,16 @@ package stirling.software.SPDF.service;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
+import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Instant;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
@@ -17,15 +21,19 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.TimeZone;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.imageio.ImageIO;
 
@@ -66,8 +74,13 @@ import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.pdmodel.graphics.state.PDGraphicsState;
 import org.apache.pdfbox.pdmodel.graphics.state.PDTextState;
 import org.apache.pdfbox.pdmodel.graphics.state.RenderingMode;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationWidget;
+import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
+import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.pdfbox.text.TextPosition;
+import org.apache.pdfbox.util.DateConverter;
 import org.apache.pdfbox.util.Matrix;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
@@ -80,10 +93,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.SPDF.config.EndpointConfiguration;
+import stirling.software.SPDF.model.json.PdfJsonAnnotation;
 import stirling.software.SPDF.model.json.PdfJsonCosValue;
 import stirling.software.SPDF.model.json.PdfJsonDocument;
 import stirling.software.SPDF.model.json.PdfJsonFont;
 import stirling.software.SPDF.model.json.PdfJsonFontCidSystemInfo;
+import stirling.software.SPDF.model.json.PdfJsonFormField;
 import stirling.software.SPDF.model.json.PdfJsonImageElement;
 import stirling.software.SPDF.model.json.PdfJsonMetadata;
 import stirling.software.SPDF.model.json.PdfJsonPage;
@@ -92,6 +108,10 @@ import stirling.software.SPDF.model.json.PdfJsonTextColor;
 import stirling.software.SPDF.model.json.PdfJsonTextElement;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
+import stirling.software.common.util.ProcessExecutor;
+import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
+import stirling.software.common.util.TempFile;
+import stirling.software.common.util.TempFileManager;
 
 @Slf4j
 @Service
@@ -101,62 +121,139 @@ public class PdfJsonConversionService {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final ObjectMapper objectMapper;
     private final ResourceLoader resourceLoader;
+    private final EndpointConfiguration endpointConfiguration;
+    private final TempFileManager tempFileManager;
 
     private static final String FALLBACK_FONT_ID = "fallback-noto-sans";
     private static final String DEFAULT_FALLBACK_FONT_LOCATION =
             "classpath:/static/fonts/NotoSans-Regular.ttf";
+    private static final String FALLBACK_FONT_CJK_ID = "fallback-noto-cjk";
+    private static final String FALLBACK_FONT_JP_ID = "fallback-noto-jp";
+    private static final String FALLBACK_FONT_KR_ID = "fallback-noto-korean";
+    private static final String FALLBACK_FONT_AR_ID = "fallback-noto-arabic";
+    private static final String FALLBACK_FONT_TH_ID = "fallback-noto-thai";
+
+    private static final Map<String, FallbackFontSpec> BUILT_IN_FALLBACK_FONTS =
+            Map.ofEntries(
+                    Map.entry(
+                            FALLBACK_FONT_CJK_ID,
+                            new FallbackFontSpec(
+                                    "classpath:/static/fonts/NotoSansSC-Regular.ttf",
+                                    "NotoSansSC-Regular",
+                                    "ttf")),
+                    Map.entry(
+                            FALLBACK_FONT_JP_ID,
+                            new FallbackFontSpec(
+                                    "classpath:/static/fonts/NotoSansJP-Regular.ttf",
+                                    "NotoSansJP-Regular",
+                                    "ttf")),
+                    Map.entry(
+                            FALLBACK_FONT_KR_ID,
+                            new FallbackFontSpec(
+                                    "classpath:/static/fonts/malgun.ttf", "MalgunGothic", "ttf")),
+                    Map.entry(
+                            FALLBACK_FONT_AR_ID,
+                            new FallbackFontSpec(
+                                    "classpath:/static/fonts/NotoSansArabic-Regular.ttf",
+                                    "NotoSansArabic-Regular",
+                                    "ttf")),
+                    Map.entry(
+                            FALLBACK_FONT_TH_ID,
+                            new FallbackFontSpec(
+                                    "classpath:/static/fonts/NotoSansThai-Regular.ttf",
+                                    "NotoSansThai-Regular",
+                                    "ttf")));
 
     @Value("${stirling.pdf.fallback-font:" + DEFAULT_FALLBACK_FONT_LOCATION + "}")
     private String fallbackFontLocation;
 
-    private byte[] fallbackFontBytes;
+    @Value("${stirling.pdf.json.font-normalization.enabled:true}")
+    private boolean fontNormalizationEnabled;
+
+    @Value("${stirling.pdf.json.cff-converter.enabled:true}")
+    private boolean cffConversionEnabled;
+
+    @Value("${stirling.pdf.json.cff-converter.fontforge-command:fontforge}")
+    private String fontforgeCommand;
+
+    private final Map<String, byte[]> fallbackFontCache = new ConcurrentHashMap<>();
 
     public byte[] convertPdfToJson(MultipartFile file) throws IOException {
         if (file == null) {
             throw ExceptionUtils.createNullArgumentException("fileInput");
         }
-        try (PDDocument document = pdfDocumentFactory.load(file.getInputStream(), true)) {
-            int totalPages = document.getNumberOfPages();
-            log.info("Converting PDF to JSON ({} pages)", totalPages);
-            Map<String, PdfJsonFont> fonts = new LinkedHashMap<>();
-            Map<Integer, List<PdfJsonTextElement>> textByPage = new LinkedHashMap<>();
 
-            Map<Integer, Map<PDFont, String>> pageFontResources = new HashMap<>();
-            int pageNumber = 1;
-            for (PDPage page : document.getPages()) {
-                Map<PDFont, String> resourceMap =
-                        collectFontsForPage(document, page, pageNumber, fonts);
-                pageFontResources.put(pageNumber, resourceMap);
-                log.debug(
-                        "PDF→JSON: collected {} font resources on page {}",
-                        resourceMap.size(),
-                        pageNumber);
-                pageNumber++;
+        TempFile normalizedFile = null;
+        try (TempFile originalFile = new TempFile(tempFileManager, ".pdf")) {
+            file.transferTo(originalFile.getFile());
+            Path workingPath = originalFile.getPath();
+
+            if (fontNormalizationEnabled && canRunGhostscript()) {
+                try {
+                    normalizedFile = normalizePdfFonts(workingPath);
+                    if (normalizedFile != null && normalizedFile.exists()) {
+                        workingPath = normalizedFile.getPath();
+                        log.info("Using Ghostscript-normalized PDF for JSON export");
+                    }
+                } catch (IOException ex) {
+                    log.warn(
+                            "Ghostscript font normalization failed ({}); using original PDF",
+                            ex.getMessage());
+                    closeQuietly(normalizedFile);
+                    normalizedFile = null;
+                }
             }
 
-            TextCollectingStripper stripper =
-                    new TextCollectingStripper(document, fonts, textByPage, pageFontResources);
-            stripper.setSortByPosition(true);
-            stripper.getText(document);
+            try (PDDocument document = pdfDocumentFactory.load(workingPath, true)) {
+                int totalPages = document.getNumberOfPages();
+                log.info("Converting PDF to JSON ({} pages)", totalPages);
+                Map<String, PdfJsonFont> fonts = new LinkedHashMap<>();
+                Map<Integer, List<PdfJsonTextElement>> textByPage = new LinkedHashMap<>();
 
-            Map<Integer, List<PdfJsonImageElement>> imagesByPage = collectImages(document);
+                Map<Integer, Map<PDFont, String>> pageFontResources = new HashMap<>();
+                int pageNumber = 1;
+                for (PDPage page : document.getPages()) {
+                    Map<PDFont, String> resourceMap =
+                            collectFontsForPage(document, page, pageNumber, fonts);
+                    pageFontResources.put(pageNumber, resourceMap);
+                    log.debug(
+                            "PDF→JSON: collected {} font resources on page {}",
+                            resourceMap.size(),
+                            pageNumber);
+                    pageNumber++;
+                }
 
-            PdfJsonDocument pdfJson = new PdfJsonDocument();
-            pdfJson.setMetadata(extractMetadata(document));
-            pdfJson.setXmpMetadata(extractXmpMetadata(document));
-            List<PdfJsonFont> serializedFonts = new ArrayList<>(fonts.values());
-            serializedFonts.sort(
-                    Comparator.comparing(
-                            PdfJsonFont::getUid, Comparator.nullsLast(Comparator.naturalOrder())));
-            pdfJson.setFonts(serializedFonts);
-            pdfJson.setPages(extractPages(document, textByPage, imagesByPage));
+                TextCollectingStripper stripper =
+                        new TextCollectingStripper(document, fonts, textByPage, pageFontResources);
+                stripper.setSortByPosition(true);
+                stripper.getText(document);
 
-            log.info(
-                    "PDF→JSON conversion complete (fonts: {}, pages: {})",
-                    serializedFonts.size(),
-                    pdfJson.getPages().size());
+                Map<Integer, List<PdfJsonImageElement>> imagesByPage = collectImages(document);
+                Map<Integer, List<PdfJsonAnnotation>> annotationsByPage =
+                        collectAnnotations(document);
 
-            return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsBytes(pdfJson);
+                PdfJsonDocument pdfJson = new PdfJsonDocument();
+                pdfJson.setMetadata(extractMetadata(document));
+                pdfJson.setXmpMetadata(extractXmpMetadata(document));
+                List<PdfJsonFont> serializedFonts = new ArrayList<>(fonts.values());
+                serializedFonts.sort(
+                        Comparator.comparing(
+                                PdfJsonFont::getUid,
+                                Comparator.nullsLast(Comparator.naturalOrder())));
+                pdfJson.setFonts(serializedFonts);
+                pdfJson.setPages(
+                        extractPages(document, textByPage, imagesByPage, annotationsByPage));
+                pdfJson.setFormFields(collectFormFields(document));
+
+                log.info(
+                        "PDF→JSON conversion complete (fonts: {}, pages: {})",
+                        serializedFonts.size(),
+                        pdfJson.getPages().size());
+
+                return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsBytes(pdfJson);
+            }
+        } finally {
+            closeQuietly(normalizedFile);
         }
     }
 
@@ -210,16 +307,23 @@ public class PdfJsonConversionService {
                     page.setContents(preservedStreams);
                 }
 
-                List<PdfJsonTextElement> elements =
-                        pageModel.getTextElements() != null
-                                ? pageModel.getTextElements()
-                                : new ArrayList<>();
                 List<PdfJsonImageElement> imageElements =
                         pageModel.getImageElements() != null
                                 ? pageModel.getImageElements()
                                 : new ArrayList<>();
 
-                boolean fallbackAssigned =
+                // Reconstruct image XObjects if content streams are preserved
+                // (images were filtered out during serialization to avoid duplication)
+                if (!preservedStreams.isEmpty() && !imageElements.isEmpty()) {
+                    reconstructImageXObjects(document, page, preservedStreams, imageElements);
+                }
+
+                List<PdfJsonTextElement> elements =
+                        pageModel.getTextElements() != null
+                                ? pageModel.getTextElements()
+                                : new ArrayList<>();
+
+                PreflightResult preflightResult =
                         preflightTextElements(
                                 document, fontMap, fontModels, elements, pageNumberValue);
 
@@ -227,11 +331,14 @@ public class PdfJsonConversionService {
                         "Page {} preflight complete (elements={}, fallbackApplied={})",
                         pageNumberValue,
                         elements.size(),
-                        fallbackAssigned);
+                        preflightResult.usesFallback());
 
-                if (elements.stream().anyMatch(el -> FALLBACK_FONT_ID.equals(el.getFontId()))) {
-                    ensureFallbackResource(page, fontMap.get(buildFontKey(-1, FALLBACK_FONT_ID)));
-                    log.info("Page {} uses fallback font for some elements", pageNumberValue);
+                if (!preflightResult.fallbackFontIds().isEmpty()) {
+                    ensureFallbackResources(page, preflightResult.fallbackFontIds(), fontMap);
+                    log.info(
+                            "Page {} registered fallback fonts: {}",
+                            pageNumberValue,
+                            preflightResult.fallbackFontIds());
                 }
 
                 boolean hasText = !elements.isEmpty();
@@ -239,7 +346,7 @@ public class PdfJsonConversionService {
                 boolean rewriteSucceeded = true;
 
                 if (hasText) {
-                    if (fallbackAssigned) {
+                    if (preflightResult.usesFallback()) {
                         rewriteSucceeded = false;
                     } else if (!preservedStreams.isEmpty()) {
                         log.info("Attempting token rewrite for page {}", pageNumberValue);
@@ -272,11 +379,30 @@ public class PdfJsonConversionService {
                 if (shouldRegenerate) {
                     log.info("Regenerating page content for page {}", pageNumberValue);
                     regeneratePageContent(
-                            document, page, elements, imageElements, fontMap, pageNumberValue);
+                            document,
+                            page,
+                            elements,
+                            imageElements,
+                            fontMap,
+                            fontModels,
+                            pageNumberValue);
                     log.info("Page content regeneration complete for page {}", pageNumberValue);
                 }
+
+                // Restore annotations for this page
+                List<PdfJsonAnnotation> annotations =
+                        pageModel.getAnnotations() != null
+                                ? pageModel.getAnnotations()
+                                : new ArrayList<>();
+                restoreAnnotations(document, page, annotations);
+
                 pageIndex++;
             }
+
+            // Restore form fields
+            List<PdfJsonFormField> formFields =
+                    pdfJson.getFormFields() != null ? pdfJson.getFormFields() : new ArrayList<>();
+            restoreFormFields(document, formFields);
 
             try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
                 document.save(baos);
@@ -321,6 +447,7 @@ public class PdfJsonConversionService {
 
     private PdfJsonFont buildFontModel(
             PDDocument document, PDFont font, String fontId, int pageNumber) throws IOException {
+        PDFontDescriptor descriptor = font.getFontDescriptor();
         String subtype = font.getCOSObject().getNameAsString(COSName.SUBTYPE);
         String encoding = resolveEncoding(font);
         PdfJsonFontCidSystemInfo cidInfo = extractCidSystemInfo(font.getCOSObject());
@@ -328,8 +455,7 @@ public class PdfJsonConversionService {
         FontProgramData programData = embedded ? extractFontProgram(font) : null;
         String toUnicode = extractToUnicode(font.getCOSObject());
         String standard14Name = resolveStandard14Name(font);
-        Integer flags =
-                font.getFontDescriptor() != null ? font.getFontDescriptor().getFlags() : null;
+        Integer flags = descriptor != null ? descriptor.getFlags() : null;
 
         return PdfJsonFont.builder()
                 .id(fontId)
@@ -345,10 +471,16 @@ public class PdfJsonConversionService {
                 .toUnicode(toUnicode)
                 .standard14Name(standard14Name)
                 .fontDescriptorFlags(flags)
+                .ascent(descriptor != null ? descriptor.getAscent() : null)
+                .descent(descriptor != null ? descriptor.getDescent() : null)
+                .capHeight(descriptor != null ? descriptor.getCapHeight() : null)
+                .xHeight(descriptor != null ? descriptor.getXHeight() : null)
+                .italicAngle(descriptor != null ? descriptor.getItalicAngle() : null)
+                .unitsPerEm(extractUnitsPerEm(font))
                 .build();
     }
 
-    private boolean preflightTextElements(
+    private PreflightResult preflightTextElements(
             PDDocument document,
             Map<String, PDFont> fontMap,
             List<PdfJsonFont> fontModels,
@@ -356,11 +488,12 @@ public class PdfJsonConversionService {
             int pageNumber)
             throws IOException {
         if (elements == null || elements.isEmpty()) {
-            return false;
+            return PreflightResult.empty();
         }
 
-        PDFont fallbackFont = fontMap.get(buildFontKey(-1, FALLBACK_FONT_ID));
-        boolean fallbackApplied = false;
+        Set<String> fallbackIds = new LinkedHashSet<>();
+        boolean fallbackNeeded = false;
+
         for (PdfJsonTextElement element : elements) {
             String text = Objects.toString(element.getText(), "");
             if (text.isEmpty()) {
@@ -368,57 +501,99 @@ public class PdfJsonConversionService {
             }
 
             PDFont font = fontMap.get(buildFontKey(pageNumber, element.getFontId()));
-            boolean encodable = false;
-            if (font != null) {
-                try {
-                    font.encode(text);
-                    encodable = true;
-                } catch (IOException | IllegalArgumentException ex) {
-                    log.debug(
-                            "Font {} missing glyphs for text '{}': {}",
-                            element.getFontId(),
-                            text,
-                            ex.getMessage());
-                }
+            if (font == null && element.getFontId() != null) {
+                font = fontMap.get(buildFontKey(-1, element.getFontId()));
             }
 
-            if (encodable) {
+            if (font == null) {
+                fallbackNeeded = true;
+                fallbackIds.add(FALLBACK_FONT_ID);
                 continue;
             }
 
-            element.setFontId(FALLBACK_FONT_ID);
-            log.info(
-                    "Assigning fallback font to text element on page {} (text='{}')",
-                    pageNumber,
-                    abbreviate(text));
-            if (fallbackFont == null) {
-                fallbackFont = loadFallbackPdfFont(document);
-                fontMap.put(buildFontKey(-1, FALLBACK_FONT_ID), fallbackFont);
-                if (fontModels.stream().noneMatch(f -> FALLBACK_FONT_ID.equals(f.getId()))) {
-                    fontModels.add(buildFallbackFontModel());
+            if (!canEncodeFully(font, text)) {
+                fallbackNeeded = true;
+                for (int offset = 0; offset < text.length(); ) {
+                    int codePoint = text.codePointAt(offset);
+                    offset += Character.charCount(codePoint);
+                    if (!canEncode(font, codePoint)) {
+                        String fallbackId = resolveFallbackFontId(codePoint);
+                        fallbackIds.add(fallbackId != null ? fallbackId : FALLBACK_FONT_ID);
+                    }
                 }
             }
-            fallbackApplied = true;
         }
-        return fallbackApplied;
+
+        for (String fallbackId : fallbackIds) {
+            ensureFallbackFont(document, fontMap, fontModels, fallbackId);
+        }
+
+        if (fallbackNeeded && fallbackIds.isEmpty()) {
+            fallbackIds.add(FALLBACK_FONT_ID);
+            ensureFallbackFont(document, fontMap, fontModels, FALLBACK_FONT_ID);
+        }
+
+        return new PreflightResult(fallbackNeeded, fallbackIds);
     }
 
     private PdfJsonFont buildFallbackFontModel() throws IOException {
-        byte[] bytes = loadFallbackFontBytes();
+        return buildFallbackFontModel(FALLBACK_FONT_ID);
+    }
+
+    private PdfJsonFont buildFallbackFontModel(String fallbackId) throws IOException {
+        FallbackFontSpec spec = getFallbackFontSpec(fallbackId);
+        if (spec == null) {
+            throw new IOException("Unknown fallback font id " + fallbackId);
+        }
+        byte[] bytes = loadFallbackFontBytes(fallbackId, spec);
         String base64 = Base64.getEncoder().encodeToString(bytes);
         return PdfJsonFont.builder()
-                .id(FALLBACK_FONT_ID)
-                .uid(FALLBACK_FONT_ID)
-                .baseName("NotoSans-Regular")
+                .id(fallbackId)
+                .uid(fallbackId)
+                .baseName(spec.baseName())
                 .subtype("TrueType")
                 .embedded(true)
                 .program(base64)
-                .programFormat("ttf")
+                .programFormat(spec.format())
                 .build();
     }
 
-    private void ensureFallbackResource(PDPage page, PDFont fallbackFont) {
-        if (fallbackFont == null) {
+    private FallbackFontSpec getFallbackFontSpec(String fallbackId) {
+        if (FALLBACK_FONT_ID.equals(fallbackId)) {
+            String baseName = inferBaseName(fallbackFontLocation, "NotoSans-Regular");
+            String format = inferFormat(fallbackFontLocation, "ttf");
+            return new FallbackFontSpec(fallbackFontLocation, baseName, format);
+        }
+        return BUILT_IN_FALLBACK_FONTS.get(fallbackId);
+    }
+
+    private String inferBaseName(String location, String defaultName) {
+        if (location == null || location.isBlank()) {
+            return defaultName;
+        }
+        int slash = location.lastIndexOf('/');
+        String fileName = slash >= 0 ? location.substring(slash + 1) : location;
+        int dot = fileName.lastIndexOf('.');
+        if (dot > 0) {
+            fileName = fileName.substring(0, dot);
+        }
+        return fileName.isEmpty() ? defaultName : fileName;
+    }
+
+    private String inferFormat(String location, String defaultFormat) {
+        if (location == null || location.isBlank()) {
+            return defaultFormat;
+        }
+        int dot = location.lastIndexOf('.');
+        if (dot >= 0 && dot < location.length() - 1) {
+            return location.substring(dot + 1).toLowerCase(Locale.ROOT);
+        }
+        return defaultFormat;
+    }
+
+    private void ensureFallbackResources(
+            PDPage page, Set<String> fallbackFontIds, Map<String, PDFont> fontMap) {
+        if (fallbackFontIds == null || fallbackFontIds.isEmpty()) {
             return;
         }
         PDResources resources = page.getResources();
@@ -426,40 +601,204 @@ public class PdfJsonConversionService {
             resources = new PDResources();
             page.setResources(resources);
         }
-        COSName fallbackName = COSName.getPDFName(FALLBACK_FONT_ID);
-        boolean exists = false;
-        for (COSName name : resources.getFontNames()) {
-            if (fallbackName.equals(name)) {
-                exists = true;
-                break;
+        for (String fallbackId : fallbackFontIds) {
+            if (fallbackId == null) {
+                continue;
             }
-        }
-        if (!exists) {
-            resources.put(fallbackName, fallbackFont);
+            PDFont fallbackFont = fontMap.get(buildFontKey(-1, fallbackId));
+            if (fallbackFont == null) {
+                continue;
+            }
+            COSName fallbackName = COSName.getPDFName(fallbackId);
+            boolean exists = false;
+            for (COSName name : resources.getFontNames()) {
+                if (fallbackName.equals(name)) {
+                    exists = true;
+                    break;
+                }
+            }
+            if (!exists) {
+                resources.put(fallbackName, fallbackFont);
+            }
         }
     }
 
     private PDFont loadFallbackPdfFont(PDDocument document) throws IOException {
-        byte[] bytes = loadFallbackFontBytes();
+        return loadFallbackPdfFont(document, FALLBACK_FONT_ID);
+    }
+
+    private PDFont loadFallbackPdfFont(PDDocument document, String fallbackId) throws IOException {
+        FallbackFontSpec spec = getFallbackFontSpec(fallbackId);
+        if (spec == null) {
+            throw new IOException("Unknown fallback font id " + fallbackId);
+        }
+        byte[] bytes = loadFallbackFontBytes(fallbackId, spec);
         try (InputStream stream = new ByteArrayInputStream(bytes)) {
             return PDType0Font.load(document, stream, true);
         }
     }
 
-    private byte[] loadFallbackFontBytes() throws IOException {
-        if (fallbackFontBytes == null) {
-            Resource resource = resourceLoader.getResource(fallbackFontLocation);
-            if (!resource.exists()) {
-                throw new IOException(
-                        "Fallback font resource not found at " + fallbackFontLocation);
-            }
-            try (InputStream inputStream = resource.getInputStream();
-                    ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-                inputStream.transferTo(baos);
-                fallbackFontBytes = baos.toByteArray();
-            }
+    private PDFont ensureFallbackFont(
+            PDDocument document,
+            Map<String, PDFont> fontMap,
+            List<PdfJsonFont> fontModels,
+            String fallbackId)
+            throws IOException {
+        String effectiveId = fallbackId != null ? fallbackId : FALLBACK_FONT_ID;
+        String key = buildFontKey(-1, effectiveId);
+        PDFont font = fontMap.get(key);
+        if (font != null) {
+            return font;
         }
-        return fallbackFontBytes;
+        PDFont loaded = loadFallbackPdfFont(document, effectiveId);
+        fontMap.put(key, loaded);
+        if (fontModels != null
+                && fontModels.stream().noneMatch(f -> effectiveId.equals(f.getId()))) {
+            fontModels.add(buildFallbackFontModel(effectiveId));
+        }
+        return loaded;
+    }
+
+    private byte[] loadFallbackFontBytes(String fallbackId, FallbackFontSpec spec)
+            throws IOException {
+        if (spec == null) {
+            throw new IOException("No fallback font specification for " + fallbackId);
+        }
+        byte[] cached = fallbackFontCache.get(fallbackId);
+        if (cached != null) {
+            return cached;
+        }
+        Resource resource = resourceLoader.getResource(spec.resourceLocation());
+        if (!resource.exists()) {
+            throw new IOException("Fallback font resource not found at " + spec.resourceLocation());
+        }
+        try (InputStream inputStream = resource.getInputStream();
+                ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            inputStream.transferTo(baos);
+            byte[] bytes = baos.toByteArray();
+            fallbackFontCache.put(fallbackId, bytes);
+            return bytes;
+        }
+    }
+
+    private boolean canRunGhostscript() {
+        try {
+            return endpointConfiguration != null
+                    && endpointConfiguration.isGroupEnabled("Ghostscript");
+        } catch (Exception ex) {
+            log.debug("Ghostscript availability check failed: {}", ex.getMessage());
+            return false;
+        }
+    }
+
+    private TempFile normalizePdfFonts(Path sourcePath) throws IOException {
+        if (sourcePath == null || !Files.exists(sourcePath)) {
+            return null;
+        }
+        TempFile outputFile = new TempFile(tempFileManager, ".pdf");
+        List<String> command = new ArrayList<>();
+        command.add("gs");
+        command.add("-sDEVICE=pdfwrite");
+        command.add("-dCompatibilityLevel=1.7");
+        command.add("-dPDFSETTINGS=/prepress");
+        command.add("-dEmbedAllFonts=true");
+        command.add("-dSubsetFonts=true");
+        command.add("-dCompressFonts=true");
+        command.add("-dNOPAUSE");
+        command.add("-dBATCH");
+        command.add("-dQUIET");
+        command.add("-o");
+        command.add(outputFile.getAbsolutePath());
+        command.add("-c");
+        command.add("<</NeverEmbed[]>> setdistillerparams");
+        command.add("-f");
+        command.add(sourcePath.toString());
+        try {
+            ProcessExecutorResult result =
+                    ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT)
+                            .runCommandWithOutputHandling(command);
+            if (result.getRc() == 0
+                    && Files.exists(outputFile.getPath())
+                    && Files.size(outputFile.getPath()) > 0) {
+                return outputFile;
+            }
+            log.warn("Ghostscript normalization exited with code {}", result.getRc());
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            closeQuietly(outputFile);
+            throw new IOException("Ghostscript normalization interrupted", ex);
+        } catch (IOException ex) {
+            closeQuietly(outputFile);
+            throw ex;
+        }
+
+        closeQuietly(outputFile);
+        return null;
+    }
+
+    private byte[] convertCffProgramToTrueType(byte[] fontBytes) {
+        if (!cffConversionEnabled
+                || fontforgeCommand == null
+                || fontforgeCommand.isBlank()
+                || fontBytes == null
+                || fontBytes.length == 0) {
+            return null;
+        }
+
+        try (TempFile inputFile = new TempFile(tempFileManager, ".cff");
+                TempFile outputFile = new TempFile(tempFileManager, ".ttf")) {
+            Files.write(inputFile.getPath(), fontBytes);
+
+            List<String> command = new ArrayList<>();
+            command.add(fontforgeCommand);
+            command.add("-lang=ff");
+            command.add("-c");
+            command.add(
+                    "Open($1); SelectWorthOutputting(); SetFontOrder(2); Reencode(\"unicode\"); "
+                            + "Generate($2); Close(); Quit()");
+            command.add(inputFile.getAbsolutePath());
+            command.add(outputFile.getAbsolutePath());
+
+            ProcessBuilder builder = new ProcessBuilder(command);
+            builder.redirectErrorStream(true);
+            Process process = builder.start();
+
+            StringBuilder output = new StringBuilder();
+            Thread reader =
+                    new Thread(
+                            () -> {
+                                try (BufferedReader br =
+                                        new BufferedReader(
+                                                new InputStreamReader(
+                                                        process.getInputStream(),
+                                                        StandardCharsets.UTF_8))) {
+                                    String line;
+                                    while ((line = br.readLine()) != null) {
+                                        output.append(line).append('\n');
+                                    }
+                                } catch (IOException ignored) {
+                                }
+                            });
+            reader.start();
+            int exitCode = process.waitFor();
+            reader.join();
+
+            if (exitCode == 0 && Files.exists(outputFile.getPath())) {
+                return Files.readAllBytes(outputFile.getPath());
+            }
+
+            log.warn(
+                    "FontForge conversion exited with code {}: {}",
+                    exitCode,
+                    output.toString().trim());
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            log.warn("FontForge conversion interrupted");
+        } catch (IOException ex) {
+            log.warn("FontForge conversion failed: {}", ex.getMessage());
+        }
+
+        return null;
     }
 
     private PdfJsonFontCidSystemInfo extractCidSystemInfo(COSDictionary fontDictionary) {
@@ -599,7 +938,8 @@ public class PdfJsonConversionService {
     private List<PdfJsonPage> extractPages(
             PDDocument document,
             Map<Integer, List<PdfJsonTextElement>> textByPage,
-            Map<Integer, List<PdfJsonImageElement>> imagesByPage)
+            Map<Integer, List<PdfJsonImageElement>> imagesByPage,
+            Map<Integer, List<PdfJsonAnnotation>> annotationsByPage)
             throws IOException {
         List<PdfJsonPage> pages = new ArrayList<>();
         int pageIndex = 0;
@@ -612,8 +952,13 @@ public class PdfJsonConversionService {
             pageModel.setRotation(page.getRotation());
             pageModel.setTextElements(textByPage.getOrDefault(pageIndex + 1, new ArrayList<>()));
             pageModel.setImageElements(imagesByPage.getOrDefault(pageIndex + 1, new ArrayList<>()));
-            pageModel.setResources(
-                    serializeCosValue(page.getCOSObject().getDictionaryObject(COSName.RESOURCES)));
+            pageModel.setAnnotations(
+                    annotationsByPage.getOrDefault(pageIndex + 1, new ArrayList<>()));
+            // Serialize resources but exclude image XObject streams to avoid duplication with
+            // imageElements
+            COSBase resourcesBase = page.getCOSObject().getDictionaryObject(COSName.RESOURCES);
+            COSBase filteredResources = filterImageXObjectsFromResources(resourcesBase);
+            pageModel.setResources(serializeCosValue(filteredResources));
             pageModel.setContentStreams(extractContentStreams(page));
             pages.add(pageModel);
             pageIndex++;
@@ -632,6 +977,215 @@ public class PdfJsonConversionService {
             pageNumber++;
         }
         return imagesByPage;
+    }
+
+    private Map<Integer, List<PdfJsonAnnotation>> collectAnnotations(PDDocument document)
+            throws IOException {
+        Map<Integer, List<PdfJsonAnnotation>> annotationsByPage = new LinkedHashMap<>();
+        int pageNumber = 1;
+        for (PDPage page : document.getPages()) {
+            List<PdfJsonAnnotation> annotations = new ArrayList<>();
+            for (PDAnnotation annotation : page.getAnnotations()) {
+                try {
+                    PdfJsonAnnotation ann = new PdfJsonAnnotation();
+                    ann.setSubtype(annotation.getSubtype());
+                    ann.setContents(annotation.getContents());
+
+                    PDRectangle rect = annotation.getRectangle();
+                    if (rect != null) {
+                        ann.setRect(
+                                List.of(
+                                        rect.getLowerLeftX(),
+                                        rect.getLowerLeftY(),
+                                        rect.getUpperRightX(),
+                                        rect.getUpperRightY()));
+                    }
+
+                    COSName appearanceState = annotation.getAppearanceState();
+                    if (appearanceState != null) {
+                        ann.setAppearanceState(appearanceState.getName());
+                    }
+
+                    if (annotation.getColor() != null) {
+                        float[] colorComponents = annotation.getColor().getComponents();
+                        List<Float> colorList = new ArrayList<>(colorComponents.length);
+                        for (float c : colorComponents) {
+                            colorList.add(c);
+                        }
+                        ann.setColor(colorList);
+                    }
+
+                    COSDictionary annotDict = annotation.getCOSObject();
+                    COSString title = (COSString) annotDict.getDictionaryObject(COSName.T);
+                    if (title != null) {
+                        ann.setAuthor(title.getString());
+                    }
+
+                    COSString subj = (COSString) annotDict.getDictionaryObject(COSName.SUBJ);
+                    if (subj != null) {
+                        ann.setSubject(subj.getString());
+                    }
+
+                    COSString creationDateStr =
+                            (COSString) annotDict.getDictionaryObject(COSName.CREATION_DATE);
+                    if (creationDateStr != null) {
+                        try {
+                            Calendar creationDate =
+                                    DateConverter.toCalendar(creationDateStr.getString());
+                            ann.setCreationDate(formatCalendar(creationDate));
+                        } catch (Exception e) {
+                            log.debug(
+                                    "Failed to parse annotation creation date: {}", e.getMessage());
+                        }
+                    }
+
+                    COSString modDateStr = (COSString) annotDict.getDictionaryObject(COSName.M);
+                    if (modDateStr != null) {
+                        try {
+                            Calendar modDate = DateConverter.toCalendar(modDateStr.getString());
+                            ann.setModificationDate(formatCalendar(modDate));
+                        } catch (Exception e) {
+                            log.debug(
+                                    "Failed to parse annotation modification date: {}",
+                                    e.getMessage());
+                        }
+                    }
+
+                    // Store raw dictionary for lossless round-trip
+                    ann.setRawData(serializeCosValue(annotDict));
+
+                    annotations.add(ann);
+                } catch (Exception e) {
+                    log.warn(
+                            "Failed to extract annotation on page {}: {}",
+                            pageNumber,
+                            e.getMessage());
+                }
+            }
+            if (!annotations.isEmpty()) {
+                annotationsByPage.put(pageNumber, annotations);
+            }
+            pageNumber++;
+        }
+        return annotationsByPage;
+    }
+
+    private List<PdfJsonFormField> collectFormFields(PDDocument document) {
+        List<PdfJsonFormField> formFields = new ArrayList<>();
+        PDAcroForm acroForm = document.getDocumentCatalog().getAcroForm();
+        if (acroForm == null) {
+            return formFields;
+        }
+
+        try {
+            for (PDField field : acroForm.getFields()) {
+                try {
+                    PdfJsonFormField formField = new PdfJsonFormField();
+                    formField.setName(field.getFullyQualifiedName());
+                    formField.setPartialName(field.getPartialName());
+                    formField.setFieldType(field.getFieldType());
+                    formField.setValue(field.getValueAsString());
+
+                    // Get default value from COS dictionary
+                    COSBase dv = field.getCOSObject().getDictionaryObject(COSName.DV);
+                    if (dv != null) {
+                        if (dv instanceof COSString) {
+                            formField.setDefaultValue(((COSString) dv).getString());
+                        } else if (dv instanceof COSName) {
+                            formField.setDefaultValue(((COSName) dv).getName());
+                        }
+                    }
+
+                    formField.setFlags(field.getFieldFlags());
+                    formField.setAlternateFieldName(field.getAlternateFieldName());
+                    formField.setMappingName(field.getMappingName());
+
+                    // Find which page the field is on
+                    PDAnnotationWidget widget =
+                            field.getWidgets().isEmpty() ? null : field.getWidgets().get(0);
+                    if (widget != null) {
+                        PDPage fieldPage = widget.getPage();
+                        if (fieldPage != null) {
+                            int pageNum = document.getPages().indexOf(fieldPage) + 1;
+                            formField.setPageNumber(pageNum);
+
+                            PDRectangle rect = widget.getRectangle();
+                            if (rect != null) {
+                                formField.setRect(
+                                        List.of(
+                                                rect.getLowerLeftX(),
+                                                rect.getLowerLeftY(),
+                                                rect.getUpperRightX(),
+                                                rect.getUpperRightY()));
+                            }
+                        }
+                    }
+
+                    // Store raw dictionary for lossless round-trip
+                    formField.setRawData(serializeCosValue(field.getCOSObject()));
+
+                    formFields.add(formField);
+                } catch (Exception e) {
+                    log.warn(
+                            "Failed to extract form field {}: {}",
+                            field.getFullyQualifiedName(),
+                            e.getMessage());
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Failed to extract form fields: {}", e.getMessage());
+        }
+
+        return formFields;
+    }
+
+    /**
+     * Filters out image XObject streams from resources to avoid duplication with imageElements.
+     * Images are already captured in imageElements[] with their base64 data, so we don't need them
+     * in the resources dictionary.
+     */
+    private COSBase filterImageXObjectsFromResources(COSBase resourcesBase) {
+        if (!(resourcesBase instanceof COSDictionary)) {
+            return resourcesBase;
+        }
+
+        // Clone the resources dictionary
+        COSDictionary resources = new COSDictionary((COSDictionary) resourcesBase);
+
+        // Get the XObject dictionary
+        COSBase xobjectBase = resources.getDictionaryObject(COSName.XOBJECT);
+        if (!(xobjectBase instanceof COSDictionary)) {
+            return resources;
+        }
+
+        COSDictionary xobjects = (COSDictionary) xobjectBase;
+        COSDictionary filteredXObjects = new COSDictionary();
+
+        // Copy all XObjects except images
+        for (COSName key : xobjects.keySet()) {
+            COSBase value = xobjects.getDictionaryObject(key);
+            if (value instanceof COSStream) {
+                COSStream stream = (COSStream) value;
+                COSName type = (COSName) stream.getDictionaryObject(COSName.TYPE);
+                COSName subtype = (COSName) stream.getDictionaryObject(COSName.SUBTYPE);
+
+                // Skip if this is an Image XObject
+                if (COSName.XOBJECT.equals(type) && COSName.IMAGE.equals(subtype)) {
+                    continue;
+                }
+            }
+            // Keep non-image XObjects (Form XObjects, etc.)
+            filteredXObjects.setItem(key, value);
+        }
+
+        // If all XObjects were images, remove the XObject entry entirely
+        if (filteredXObjects.keySet().isEmpty()) {
+            resources.removeItem(COSName.XOBJECT);
+        } else {
+            resources.setItem(COSName.XOBJECT, filteredXObjects);
+        }
+
+        return resources;
     }
 
     private PdfJsonMetadata extractMetadata(PDDocument document) {
@@ -709,6 +1263,93 @@ public class PdfJsonConversionService {
         }
     }
 
+    private void restoreAnnotations(
+            PDDocument document, PDPage page, List<PdfJsonAnnotation> annotations) {
+        if (annotations == null || annotations.isEmpty()) {
+            return;
+        }
+
+        for (PdfJsonAnnotation annModel : annotations) {
+            try {
+                // Restore from raw COS data if available for lossless round-trip
+                if (annModel.getRawData() != null) {
+                    COSBase rawAnnot = deserializeCosValue(annModel.getRawData(), document);
+                    if (rawAnnot instanceof COSDictionary) {
+                        PDAnnotation annotation =
+                                PDAnnotation.createAnnotation((COSDictionary) rawAnnot);
+                        page.getAnnotations().add(annotation);
+                        log.debug("Restored annotation from raw data: {}", annModel.getSubtype());
+                        continue;
+                    }
+                }
+
+                // Fallback: reconstruct from structured fields
+                // Note: This is simplified - full annotation reconstruction is complex
+                // Most use cases should rely on rawData for lossless round-trip
+                log.debug(
+                        "Warning: Annotation {} has no rawData, basic reconstruction may lose information",
+                        annModel.getSubtype());
+
+            } catch (Exception e) {
+                log.warn(
+                        "Failed to restore annotation {}: {}",
+                        annModel.getSubtype(),
+                        e.getMessage());
+            }
+        }
+    }
+
+    private void restoreFormFields(PDDocument document, List<PdfJsonFormField> formFields) {
+        if (formFields == null || formFields.isEmpty()) {
+            return;
+        }
+
+        try {
+            PDAcroForm acroForm = document.getDocumentCatalog().getAcroForm();
+            if (acroForm == null) {
+                acroForm = new PDAcroForm(document);
+                document.getDocumentCatalog().setAcroForm(acroForm);
+            }
+
+            COSArray fieldsArray =
+                    (COSArray) acroForm.getCOSObject().getDictionaryObject(COSName.FIELDS);
+            if (fieldsArray == null) {
+                fieldsArray = new COSArray();
+                acroForm.getCOSObject().setItem(COSName.FIELDS, fieldsArray);
+            }
+
+            for (PdfJsonFormField fieldModel : formFields) {
+                try {
+                    // Restore from raw COS data if available for lossless round-trip
+                    if (fieldModel.getRawData() != null) {
+                        COSBase rawField = deserializeCosValue(fieldModel.getRawData(), document);
+                        if (rawField instanceof COSDictionary) {
+                            // Add the field dictionary directly to the fields array
+                            fieldsArray.add(rawField);
+                            log.debug(
+                                    "Restored form field from raw data: {}", fieldModel.getName());
+                            continue;
+                        }
+                    }
+
+                    // Fallback: reconstruct from structured fields
+                    // Note: This is simplified - full field reconstruction is complex
+                    log.debug(
+                            "Warning: Form field {} has no rawData, basic reconstruction may lose information",
+                            fieldModel.getName());
+
+                } catch (Exception e) {
+                    log.warn(
+                            "Failed to restore form field {}: {}",
+                            fieldModel.getName(),
+                            e.getMessage());
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Failed to restore form fields: {}", e.getMessage());
+        }
+    }
+
     private void applyPageResources(
             PDDocument document, PDPage page, PdfJsonCosValue resourcesModel) throws IOException {
         if (resourcesModel == null) {
@@ -717,6 +1358,81 @@ public class PdfJsonConversionService {
         COSBase base = deserializeCosValue(resourcesModel, document);
         if (base instanceof COSDictionary dictionary) {
             page.setResources(new PDResources(dictionary));
+        }
+    }
+
+    /**
+     * Reconstructs image XObjects from imageElements when content streams are preserved. During
+     * serialization, image streams are filtered out from resources to avoid duplication. This
+     * method adds them back by scanning content streams for XObject references and matching them
+     * with imageElements by objectName.
+     */
+    private void reconstructImageXObjects(
+            PDDocument document,
+            PDPage page,
+            List<PDStream> contentStreams,
+            List<PdfJsonImageElement> imageElements)
+            throws IOException {
+
+        // Build map of objectName -> imageElement
+        Map<String, PdfJsonImageElement> imageMap = new HashMap<>();
+        for (PdfJsonImageElement img : imageElements) {
+            if (img.getObjectName() != null && !img.getObjectName().isBlank()) {
+                imageMap.put(img.getObjectName(), img);
+            }
+        }
+
+        if (imageMap.isEmpty()) {
+            return;
+        }
+
+        // Scan content streams for image XObject references
+        Set<String> referencedXObjects = new HashSet<>();
+        for (PDStream stream : contentStreams) {
+            try {
+                byte[] contentBytes = stream.toByteArray();
+                PDFStreamParser parser = new PDFStreamParser(contentBytes);
+                List<Object> tokens = parser.parse();
+
+                for (int i = 0; i < tokens.size(); i++) {
+                    Object token = tokens.get(i);
+                    if (token instanceof Operator op
+                            && OperatorName.DRAW_OBJECT.equals(op.getName())) {
+                        if (i > 0 && tokens.get(i - 1) instanceof COSName name) {
+                            referencedXObjects.add(name.getName());
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                log.warn("Failed to parse content stream for image references: {}", e.getMessage());
+            }
+        }
+
+        // Reconstruct referenced image XObjects
+        PDResources resources = page.getResources();
+        if (resources == null) {
+            resources = new PDResources();
+            page.setResources(resources);
+        }
+
+        for (String xobjName : referencedXObjects) {
+            PdfJsonImageElement imageElement = imageMap.get(xobjName);
+            if (imageElement == null) {
+                log.warn(
+                        "Content stream references image XObject '{}' but no matching imageElement found",
+                        xobjName);
+                continue;
+            }
+
+            try {
+                PDImageXObject image = createImageXObject(document, imageElement);
+                if (image != null) {
+                    resources.put(COSName.getPDFName(xobjName), image);
+                    log.debug("Reconstructed image XObject: {}", xobjName);
+                }
+            } catch (Exception e) {
+                log.warn("Failed to reconstruct image XObject '{}': {}", xobjName, e.getMessage());
+            }
         }
     }
 
@@ -959,6 +1675,7 @@ public class PdfJsonConversionService {
             List<PdfJsonTextElement> textElements,
             List<PdfJsonImageElement> imageElements,
             Map<String, PDFont> fontMap,
+            List<PdfJsonFont> fontModels,
             int pageNumber)
             throws IOException {
         List<DrawableElement> drawables = mergeDrawables(textElements, imageElements);
@@ -974,50 +1691,39 @@ public class PdfJsonConversionService {
                         if (element == null) {
                             continue;
                         }
-                        PDFont font = fontMap.get(buildFontKey(pageNumber, element.getFontId()));
-                        if (font == null && FALLBACK_FONT_ID.equals(element.getFontId())) {
-                            font = fontMap.get(buildFontKey(-1, FALLBACK_FONT_ID));
-                        }
-                        float fontScale = resolveFontMatrixSize(element);
                         String text = Objects.toString(element.getText(), "");
-
-                        if (font != null) {
-                            try {
-                                font.encode(text);
-                            } catch (IOException | IllegalArgumentException ex) {
-                                log.debug(
-                                        "Edited text contains glyphs missing from font {} ({}), switching to fallback",
-                                        element.getFontId(),
-                                        ex.getMessage());
-                                font = fontMap.get(buildFontKey(-1, FALLBACK_FONT_ID));
-                                element.setFontId(FALLBACK_FONT_ID);
-                                if (font == null) {
-                                    font = loadFallbackPdfFont(document);
-                                    fontMap.put(buildFontKey(-1, FALLBACK_FONT_ID), font);
-                                }
-                            }
-                        }
-                        if (font == null) {
-                            element.setFontId(FALLBACK_FONT_ID);
-                            font = fontMap.get(buildFontKey(-1, FALLBACK_FONT_ID));
-                            if (font == null) {
-                                font = loadFallbackPdfFont(document);
-                                fontMap.put(buildFontKey(-1, FALLBACK_FONT_ID), font);
-                            }
-                        }
 
                         if (!textOpen) {
                             contentStream.beginText();
                             textOpen = true;
                         }
 
+                        PDFont baseFont =
+                                fontMap.get(buildFontKey(pageNumber, element.getFontId()));
+                        if (baseFont == null && element.getFontId() != null) {
+                            baseFont = fontMap.get(buildFontKey(-1, element.getFontId()));
+                        }
+
+                        float fontScale = resolveFontMatrixSize(element);
+
                         applyTextState(contentStream, element);
-                        contentStream.setFont(font, fontScale);
                         applyRenderingMode(contentStream, element.getRenderingMode());
                         applyTextMatrix(contentStream, element);
-                        String sanitized = sanitizeForFont(font, text);
-                        if (!sanitized.isEmpty()) {
-                            contentStream.showText(sanitized);
+
+                        List<FontRun> runs =
+                                buildFontRuns(
+                                        document, fontMap, fontModels, baseFont, text, element);
+
+                        PDFont activeFont = null;
+                        for (FontRun run : runs) {
+                            if (run == null || run.text().isEmpty()) {
+                                continue;
+                            }
+                            if (run.font() != activeFont) {
+                                contentStream.setFont(run.font(), fontScale);
+                                activeFont = run.font();
+                            }
+                            contentStream.showText(run.text());
                         }
                     }
                     case IMAGE -> {
@@ -1039,39 +1745,156 @@ public class PdfJsonConversionService {
         }
     }
 
-    private String sanitizeForFont(PDFont font, String text) {
+    private List<FontRun> buildFontRuns(
+            PDDocument document,
+            Map<String, PDFont> fontMap,
+            List<PdfJsonFont> fontModels,
+            PDFont primaryFont,
+            String text,
+            PdfJsonTextElement element)
+            throws IOException {
+        List<FontRun> runs = new ArrayList<>();
         if (text == null || text.isEmpty()) {
-            return "";
+            return runs;
         }
-        StringBuilder builder = new StringBuilder(text.length());
-        text.codePoints()
-                .forEach(
-                        codePoint -> {
-                            String candidate = new String(Character.toChars(codePoint));
-                            try {
-                                font.encode(candidate);
-                                builder.append(candidate);
-                                return;
-                            } catch (IOException | IllegalArgumentException ex) {
-                                String mapped = mapUnsupportedGlyph(codePoint);
-                                if (mapped != null) {
-                                    try {
-                                        font.encode(mapped);
-                                        builder.append(mapped);
-                                        return;
-                                    } catch (IOException | IllegalArgumentException ignore) {
-                                        // fall through to generic replacement
-                                    }
-                                }
-                                log.debug(
-                                        "Replacing unsupported glyph {} ({}) with '?' for font {}",
-                                        candidate,
-                                        String.format("U+%04X", codePoint),
-                                        font.getName());
-                                builder.append('?');
-                            }
-                        });
-        return builder.toString();
+
+        PDFont baseFont = primaryFont;
+        if (baseFont == null) {
+            baseFont = ensureFallbackFont(document, fontMap, fontModels, FALLBACK_FONT_ID);
+        }
+        if (baseFont == null) {
+            log.warn("Unable to resolve a base font for text element; skipping text content");
+            return runs;
+        }
+
+        StringBuilder buffer = new StringBuilder();
+        PDFont currentFont = baseFont;
+
+        for (int offset = 0; offset < text.length(); ) {
+            int codePoint = text.codePointAt(offset);
+            offset += Character.charCount(codePoint);
+            String glyph = new String(Character.toChars(codePoint));
+            PDFont targetFont = currentFont;
+
+            if (!canEncode(baseFont, codePoint)) {
+                String fallbackId = resolveFallbackFontId(codePoint);
+                targetFont = ensureFallbackFont(document, fontMap, fontModels, fallbackId);
+                if (targetFont == null || !canEncode(targetFont, glyph)) {
+                    String mapped = mapUnsupportedGlyph(codePoint);
+                    if (mapped != null) {
+                        if (canEncode(baseFont, mapped)) {
+                            glyph = mapped;
+                            targetFont = baseFont;
+                        } else if (targetFont != null && canEncode(targetFont, mapped)) {
+                            glyph = mapped;
+                        }
+                    }
+                }
+                if (targetFont == null || !canEncode(targetFont, glyph)) {
+                    glyph = "?";
+                    targetFont =
+                            ensureFallbackFont(document, fontMap, fontModels, FALLBACK_FONT_ID);
+                    if (targetFont == null || !canEncode(targetFont, glyph)) {
+                        log.debug(
+                                "Dropping unsupported glyph U+{} for text element",
+                                Integer.toHexString(codePoint));
+                        continue;
+                    }
+                }
+                if (targetFont != baseFont) {
+                    log.trace(
+                            "Using fallback font '{}' for code point U+{}",
+                            targetFont.getName(),
+                            Integer.toHexString(codePoint));
+                }
+            }
+
+            if (targetFont != currentFont) {
+                if (buffer.length() > 0) {
+                    runs.add(new FontRun(currentFont, buffer.toString()));
+                    buffer.setLength(0);
+                }
+                currentFont = targetFont;
+            }
+            buffer.append(glyph);
+        }
+
+        if (buffer.length() > 0) {
+            runs.add(new FontRun(currentFont, buffer.toString()));
+        }
+
+        return runs;
+    }
+
+    private Integer extractUnitsPerEm(PDFont font) {
+        if (font == null) {
+            return null;
+        }
+        Matrix matrix = font.getFontMatrix();
+        if (matrix != null) {
+            float scaleX = matrix.getScaleX();
+            if (scaleX != 0f) {
+                int units = Math.round(Math.abs(1f / scaleX));
+                if (units > 0 && units < 10_000) {
+                    return units;
+                }
+            }
+        }
+        return 1000;
+    }
+
+    private boolean canEncodeFully(PDFont font, String text) {
+        return canEncode(font, text);
+    }
+
+    private boolean canEncode(PDFont font, int codePoint) {
+        return canEncode(font, new String(Character.toChars(codePoint)));
+    }
+
+    private boolean canEncode(PDFont font, String text) {
+        if (font == null || text == null || text.isEmpty()) {
+            return false;
+        }
+        try {
+            font.encode(text);
+            return true;
+        } catch (IOException | IllegalArgumentException ex) {
+            return false;
+        }
+    }
+
+    private String resolveFallbackFontId(int codePoint) {
+        Character.UnicodeBlock block = Character.UnicodeBlock.of(codePoint);
+        if (block == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS
+                || block == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS_EXTENSION_A
+                || block == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS_EXTENSION_B
+                || block == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS_EXTENSION_C
+                || block == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS_EXTENSION_D
+                || block == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS_EXTENSION_E
+                || block == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS_EXTENSION_F
+                || block == Character.UnicodeBlock.CJK_SYMBOLS_AND_PUNCTUATION
+                || block == Character.UnicodeBlock.BOPOMOFO
+                || block == Character.UnicodeBlock.BOPOMOFO_EXTENDED
+                || block == Character.UnicodeBlock.HALFWIDTH_AND_FULLWIDTH_FORMS) {
+            return FALLBACK_FONT_CJK_ID;
+        }
+
+        Character.UnicodeScript script = Character.UnicodeScript.of(codePoint);
+        switch (script) {
+            case HAN:
+                return FALLBACK_FONT_CJK_ID;
+            case HIRAGANA:
+            case KATAKANA:
+                return FALLBACK_FONT_JP_ID;
+            case HANGUL:
+                return FALLBACK_FONT_KR_ID;
+            case ARABIC:
+                return FALLBACK_FONT_AR_ID;
+            case THAI:
+                return FALLBACK_FONT_TH_ID;
+            default:
+                return FALLBACK_FONT_ID;
+        }
     }
 
     private String mapUnsupportedGlyph(int codePoint) {
@@ -1080,6 +1903,17 @@ public class PdfJsonConversionService {
             case 0x276F -> ">";
             default -> null;
         };
+    }
+
+    private void closeQuietly(TempFile tempFile) {
+        if (tempFile == null) {
+            return;
+        }
+        try {
+            tempFile.close();
+        } catch (Exception ex) {
+            log.debug("Failed to close temporary file: {}", ex.getMessage());
+        }
     }
 
     private void applyTextState(PDPageContentStream contentStream, PdfJsonTextElement element)
@@ -1197,6 +2031,72 @@ public class PdfJsonConversionService {
 
         private String getFormat() {
             return format;
+        }
+    }
+
+    private static final class PreflightResult {
+        private static final PreflightResult EMPTY = new PreflightResult(false, Set.of());
+
+        private final boolean usesFallback;
+        private final Set<String> fallbackFontIds;
+
+        private PreflightResult(boolean usesFallback, Set<String> fallbackFontIds) {
+            this.usesFallback = usesFallback;
+            this.fallbackFontIds = fallbackFontIds != null ? Set.copyOf(fallbackFontIds) : Set.of();
+        }
+
+        private static PreflightResult empty() {
+            return EMPTY;
+        }
+
+        private boolean usesFallback() {
+            return usesFallback;
+        }
+
+        private Set<String> fallbackFontIds() {
+            return fallbackFontIds;
+        }
+    }
+
+    private static final class FallbackFontSpec {
+        private final String resourceLocation;
+        private final String baseName;
+        private final String format;
+
+        private FallbackFontSpec(String resourceLocation, String baseName, String format) {
+            this.resourceLocation = resourceLocation;
+            this.baseName = baseName;
+            this.format = format;
+        }
+
+        private String resourceLocation() {
+            return resourceLocation;
+        }
+
+        private String baseName() {
+            return baseName;
+        }
+
+        private String format() {
+            return format;
+        }
+    }
+
+    private static final class FontRun {
+        private final PDFont font;
+        private final String text;
+
+        private FontRun(PDFont font, String text) {
+            this.font = font;
+            this.text = text;
+        }
+
+        private PDFont font() {
+            return font;
+        }
+
+        private String text() {
+            return text;
         }
     }
 
@@ -1479,6 +2379,20 @@ public class PdfJsonConversionService {
                             ? fontModel.getProgramFormat().toLowerCase(Locale.ROOT)
                             : "";
             try {
+                if (isCffFormat(format)) {
+                    byte[] converted = convertCffProgramToTrueType(fontBytes);
+                    if (converted != null) {
+                        fontBytes = converted;
+                        format = "ttf";
+                        log.debug(
+                                "Converted CFF font {} to TrueType outlines for embedding",
+                                fontModel.getId());
+                    } else {
+                        log.debug(
+                                "Unable to convert CFF font {} to TrueType; attempting direct load",
+                                fontModel.getId());
+                    }
+                }
                 if (isType1Format(format)) {
                     try (InputStream stream = new ByteArrayInputStream(fontBytes)) {
                         PDFont font = new PDType1Font(document, stream);
@@ -1526,6 +2440,16 @@ public class PdfJsonConversionService {
             return false;
         }
         return "type1".equals(format) || format.endsWith("pfb");
+    }
+
+    private boolean isCffFormat(String format) {
+        if (format == null) {
+            return false;
+        }
+        String normalized = format.toLowerCase(Locale.ROOT);
+        return normalized.contains("type1c")
+                || normalized.contains("cidfonttype0c")
+                || "cff".equals(normalized);
     }
 
     private void applyAdditionalFontMetadata(
@@ -1593,9 +2517,13 @@ public class PdfJsonConversionService {
             float b = matrix.get(1);
             float c = matrix.get(2);
             float d = matrix.get(3);
-            float scale = (float) Math.max(Math.hypot(a, c), Math.hypot(b, d));
-            if (scale > 0f) {
-                return scale;
+            float verticalScale = (float) Math.hypot(b, d);
+            if (verticalScale > 0f) {
+                return verticalScale;
+            }
+            float horizontalScale = (float) Math.hypot(a, c);
+            if (horizontalScale > 0f) {
+                return horizontalScale;
             }
         }
         return safeFloat(element.getFontSize(), 12f);
@@ -1943,6 +2871,20 @@ public class PdfJsonConversionService {
                 return;
             }
             cache.put(cacheKey, image);
+        }
+
+        List<Float> transform = element.getTransform();
+        if (transform != null && transform.size() == 6) {
+            Matrix matrix =
+                    new Matrix(
+                            safeFloat(transform.get(0), 1f),
+                            safeFloat(transform.get(1), 0f),
+                            safeFloat(transform.get(2), 0f),
+                            safeFloat(transform.get(3), 1f),
+                            safeFloat(transform.get(4), 0f),
+                            safeFloat(transform.get(5), 0f));
+            contentStream.drawImage(image, matrix);
+            return;
         }
 
         float width = safeFloat(element.getWidth(), fallbackWidth(element));
