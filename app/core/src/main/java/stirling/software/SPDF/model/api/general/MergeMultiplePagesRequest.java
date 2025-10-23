@@ -21,12 +21,12 @@ public class MergeMultiplePagesRequest extends PDFFile {
     @Schema(
         description = "The layout direction of content on the page",
         type = "string",
-        defaultValue = "TOP_DOWN_LEFT_RIGHT",
+        defaultValue = "LR_TD",
         allowableValues = {
-            "TOP_DOWN_LEFT_RIGHT",
-            "TOP_DOWN_RIGHT_LEFT",
-            "BOTTOM_UP_LEFT_RIGHT",
-            "BOTTOM_UP_RIGHT_LEFT"
+            "LR_TD",
+            "RL_TD",
+            "TD_LR",
+            "TD_RL"
         })
     private String direction;
 
