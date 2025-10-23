@@ -28,7 +28,7 @@ const AuthContext = createContext<AuthContextType>({
  * Auth Provider Component
  *
  * Manages authentication state and provides it to the entire app.
- * Replaces Supabase's AuthProvider with Spring Security + JWT integration.
+ * Integrates with Spring Security + JWT backend.
  */
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);

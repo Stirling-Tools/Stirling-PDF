@@ -20,7 +20,7 @@ security:
     username: '' # initial username for the first login
     password: '' # initial password for the first login
   oauth2:
-    enabled: true # set to 'true' to enable login (Note: enableLogin must also be 'true' for this to work)
+    enabled: false # set to 'true' to enable login (Note: enableLogin must also be 'true' for this to work)
     client:
       keycloak:
         issuer: '' # URL of the Keycloak realm's OpenID Connect Discovery endpoint

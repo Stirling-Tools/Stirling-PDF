@@ -1,16 +1,13 @@
 /**
- * Spring Auth Client - Replaces Supabase client
+ * Spring Auth Client
  *
- * This client provides the same API surface as Supabase for authentication,
- * but integrates with the Spring Security + JWT backend instead.
- *
- * Main differences from Supabase:
+ * This client integrates with the Spring Security + JWT backend.
  * - Uses localStorage for JWT storage (sent via Authorization header)
  * - JWT validation handled server-side
  * - No email confirmation flow (auto-confirmed on registration)
  */
 
-// Types matching Supabase structure for compatibility
+// Auth types
 export interface User {
   id: string;
   email: string;
@@ -47,10 +44,6 @@ export type AuthChangeEvent =
 
 type AuthChangeCallback = (event: AuthChangeEvent, session: Session | null) => void;
 
-/**
- * Spring Auth Client - Replaces Supabase client
- * Maintains same API surface as Supabase for easy migration
- */
 class SpringAuthClient {
   private listeners: AuthChangeCallback[] = [];
   private sessionCheckInterval: NodeJS.Timeout | null = null;
@@ -338,7 +331,7 @@ class SpringAuthClient {
   }
 
   /**
-   * Listen to auth state changes (mimics Supabase onAuthStateChange)
+   * Listen to auth state changes
    */
   onAuthStateChange(callback: AuthChangeCallback): { data: { subscription: { unsubscribe: () => void } } } {
     this.listeners.push(callback);
@@ -401,22 +394,7 @@ class SpringAuthClient {
   }
 }
 
-// Export singleton instance (mimics Supabase pattern)
 export const springAuth = new SpringAuthClient();
-
-// Export helper functions (matching Supabase exports)
-
-/**
- * Anonymous sign-in
- * Note: Not implemented yet - returns error
- */
-export const signInAnonymously = async () => {
-  // For now, return error - implement anonymous auth if needed
-  return {
-    data: { user: null, session: null },
-    error: { message: 'Anonymous authentication not implemented' },
-  };
-};
 
 /**
  * Get current user
