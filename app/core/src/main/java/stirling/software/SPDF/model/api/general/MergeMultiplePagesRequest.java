@@ -19,7 +19,7 @@ public class MergeMultiplePagesRequest extends PDFFile {
     private int pagesPerSheet;
 
     @Schema(
-        description = "The layout direction of content on the page",
+        description = "Options for the ordering of pages",
         type = "string",
         defaultValue = "LR_TD",
         allowableValues = {
@@ -28,7 +28,7 @@ public class MergeMultiplePagesRequest extends PDFFile {
             "TD_LR",
             "TD_RL"
         })
-    private String direction;
+    private String pageOrder;
 
     @Schema(
         description = "Number of rows in the page layout",
@@ -40,7 +40,7 @@ public class MergeMultiplePagesRequest extends PDFFile {
         description = "Number of columns in the page layout",
         type = "integer",
         example = "2")
-    private Integer columns;
+    private Integer cols;
 
     @Schema(
             description = "The orientation of the output PDF pages",
