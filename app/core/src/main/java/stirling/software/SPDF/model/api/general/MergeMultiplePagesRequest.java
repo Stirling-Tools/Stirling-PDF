@@ -10,6 +10,13 @@ import stirling.software.common.model.api.PDFFile;
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class MergeMultiplePagesRequest extends PDFFile {
+    @Schema(
+            description = "Input mode: DEFAULT uses pagesPerSheet; CUSTOM uses explicit cols×rows.",
+            requiredMode = Schema.RequiredMode.REQUIRED,
+            type = "string",
+            defaultValue = "DEFAULT",
+            allowableValues = {"DEFAULT", "CUSTOM"})
+    private String mode;
 
     @Schema(
             description = "The number of pages to fit onto a single sheet in the output PDF.",
@@ -19,27 +26,16 @@ public class MergeMultiplePagesRequest extends PDFFile {
     private int pagesPerSheet;
 
     @Schema(
-        description = "Options for the ordering of pages",
-        type = "string",
-        defaultValue = "LR_TD",
-        allowableValues = {
-            "LR_TD",
-            "RL_TD",
-            "TD_LR",
-            "TD_RL"
-        })
+            description = "Options for the ordering of pages",
+            type = "string",
+            defaultValue = "LR_TD",
+            allowableValues = {"LR_TD", "RL_TD", "TD_LR", "TD_RL"})
     private String pageOrder;
 
-    @Schema(
-        description = "Number of rows in the page layout",
-        type = "integer",
-        example = "3")
+    @Schema(description = "Number of rows", type = "integer", defaultValue = "1", example = "3")
     private Integer rows;
 
-    @Schema(
-        description = "Number of columns in the page layout",
-        type = "integer",
-        example = "2")
+    @Schema(description = "Number of columns", type = "integer", defaultValue = "2", example = "2")
     private Integer cols;
 
     @Schema(
