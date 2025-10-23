@@ -19,8 +19,20 @@
               <form id="multiPdfForm" th:action="@{'/api/v1/general/multi-page-layout'}" method="post" enctype="multipart/form-data">
                 <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
                 <div class="mb-3">
+                  <label class="form-label" th:text="#{pageLayout.mode}"></label>
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" id="modeDefault" name="mode" value="DEFAULT" checked>
+                    <label class="form-check-label" for="modeDefault" th:text="#{pageLayout.default}">Default</label>
+                  </div>
+
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" id="modeCustom" name="mode" value="CUSTOM">
+                    <label class="form-check-label" for="modeCustom" th:text="#{pageLayout.custom}">Custom</label>
+                  </div>
+                </div>
+                <div id="defaultSection" class="mb-3">
                   <label for="pagesPerSheet" th:text="#{pageLayout.pagesPerSheet}"></label>
-                  <select class="form-control" id="pagesPerSheet" name="pagesPerSheet">
+                  <select class="form-control" id="pagesPerSheet" name="pagesPerSheet" required>
                     <option value="2">2</option>
                     <option value="3">3</option>
                     <option value="4">4</option>
@@ -28,17 +40,19 @@
                     <option value="16">16</option>
                   </select>
                 </div>
+                <div id="customSection" class="mb-3">
+                  <div class="mb-3">
+                    <label for="rows" th:text="#{pageLayout.rows}"></label>
+                    <input class="form-control" type="number" id="rows" name="rows" step="any" min="1" value="1" required>
+                  </div>
+                  <div class="mb-3">
+                    <label for="cols" th:text="#{pageLayout.columns}"></label>
+                    <input class="form-control" type="number" id="cols" name="cols" step="any" min="1" value="1" required>
+                  </div>
+                </div> 
                 <div class="mb-3">
-                  <label for="rows" th:text="#{pageLayout.rows}"></label>
-                  <input type="text" class="form-control" id="rows" name="rows" required>
-                </div>
-                <div class="mb-3">
-                  <label for="columns" th:text="#{pageLayout.columns}"></label>
-                  <input type="text" class="form-control" id="columns" name="columns" required>
-                </div>
-                <div class="mb-3">
-                  <label for="page-order" th:text="#{pageLayout.pageOrder}"></label>
-                  <select class="form-control" id="page-order" name="page-order">
+                  <label for="pageOrder" th:text="#{pageLayout.pageOrder}"></label>
+                  <select class="form-control" id="pageOrder" name="pageOrder">
                     <option value="LR_TD" th:text="#{pageLayout.leftRightTopDown}"></option>
                     <option value="RL_TD" th:text="#{pageLayout.rightLeftTopDown}"></option>
                     <option value="TD_LR" th:text="#{pageLayout.topDownLeftRight}"></option>
@@ -58,6 +72,41 @@
                 </div>
                 <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{pageLayout.submit}"></button>
               </form>
+              
+              <script>
+                (function(){
+                  const form = document.getElementById('multiPdfForm');
+                  const modeRadios = form.querySelectorAll('input[name="mode"]');
+                  const defaultSection = document.getElementById('defaultSection');
+                  const customSection  = document.getElementById('customSection');
+                  const pagesPerSheet  = document.getElementById('pagesPerSheet');
+                  const rowsInput      = document.getElementById('rows');
+                  const colsInput      = document.getElementById('cols');
+
+                  function sync() {
+                    const mode = [...modeRadios].find(r => r.checked)?.value || 'DEFAULT';
+                    const isDefault = mode === 'DEFAULT';
+
+                    // Enable/disable relevant fields
+                    pagesPerSheet.disabled = !isDefault;
+                    rowsInput.disabled     =  isDefault;
+                    colsInput.disabled     =  isDefault;
+
+                    if (isDefault) {
+                      defaultSection.style.display = 'block';  // show Default
+                      customSection.style.display  = 'none';   // hide Custom
+                    } else {
+                      defaultSection.style.display = 'none';   // hide Default
+                      customSection.style.display  = 'block';  // show Custom
+                    }
+                  }
+
+                  modeRadios.forEach(r => r.addEventListener('change', sync));
+                  // initial state
+                  sync();
+                })();
+              </script>
+              
             </div>
           </div>
         </div>
