@@ -101,27 +101,34 @@ const renderPdfDocumentToImages = async (file: File): Promise<PagePreview[]> => 
 
   try {
     const previews: PagePreview[] = [];
-    const scale = 1.25;
+    // High-DPI rendering while keeping logical display size constant
+    const DISPLAY_SCALE = 1; // logical CSS size for layout
+    // Render at very high pixel density so zooming into words remains sharp
+    const dpr = (typeof window !== 'undefined' ? window.devicePixelRatio : 1);
+    // Faster initial load; still crisp on common zoom levels. We can re-tune if needed.
+    const RENDER_SCALE = Math.max(2, Math.min(3, dpr * 2));
 
     for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
       const page = await pdf.getPage(pageNumber);
-      const viewport = page.getViewport({ scale });
+      const displayViewport = page.getViewport({ scale: DISPLAY_SCALE });
+      const renderViewport = page.getViewport({ scale: RENDER_SCALE });
       const canvas = document.createElement('canvas');
       const context = canvas.getContext('2d');
 
-      canvas.width = viewport.width;
-      canvas.height = viewport.height;
+      canvas.width = Math.round(renderViewport.width);
+      canvas.height = Math.round(renderViewport.height);
 
       if (!context) {
         page.cleanup();
         continue;
       }
 
-      await page.render({ canvasContext: context, viewport, canvas }).promise;
+      await page.render({ canvasContext: context, viewport: renderViewport, canvas }).promise;
       previews.push({
         pageNumber,
-        width: viewport.width,
-        height: viewport.height,
+        width: Math.round(displayViewport.width),
+        height: Math.round(displayViewport.height),
+        rotation: (page.rotate || 0) % 360,
         url: canvas.toDataURL(),
       });
 
@@ -165,12 +172,15 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
   const [basePan, setBasePan] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [comparisonPan, setComparisonPan] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const ZOOM_MIN = 0.5;
-  const ZOOM_MAX = 3;
+  const ZOOM_MAX = 100000;
   const ZOOM_STEP = 0.1;
   const wheelZoomAccumRef = useRef<{ base: number; comparison: number }>({ base: 0, comparison: 0 });
   const pinchRef = useRef<{ active: boolean; pane: 'base' | 'comparison' | null; startDistance: number; startZoom: number }>(
     { active: false, pane: null, startDistance: 0, startZoom: 1 }
   );
+
+  // Compute maximum canvas size (unzoomed) across pages for pan bounds
+  
 
   const result = data?.result ?? null;
   const baseFileId = data?.baseFileId ?? null;
@@ -258,9 +268,12 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
       section: 'top' as const,
       order: 13,
       onClick: () => {
-        // Zoom always applies to both panes, regardless of link state
-        setBaseZoom(z => Math.max(ZOOM_MIN, +(z - ZOOM_STEP).toFixed(2)));
-        setComparisonZoom(z => Math.max(ZOOM_MIN, +(z - ZOOM_STEP).toFixed(2)));
+        const nextBase = Math.max(ZOOM_MIN, +(baseZoom - ZOOM_STEP).toFixed(2));
+        const nextComp = Math.max(ZOOM_MIN, +(comparisonZoom - ZOOM_STEP).toFixed(2));
+        setBaseZoom(nextBase);
+        setComparisonZoom(nextComp);
+        centerPanForZoom('base', nextBase);
+        centerPanForZoom('comparison', nextComp);
       },
     },
     {
@@ -271,9 +284,12 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
       section: 'top' as const,
       order: 14,
       onClick: () => {
-        // Zoom always applies to both panes, regardless of link state
-        setBaseZoom(z => Math.min(ZOOM_MAX, +(z + ZOOM_STEP).toFixed(2)));
-        setComparisonZoom(z => Math.min(ZOOM_MAX, +(z + ZOOM_STEP).toFixed(2)));
+        const nextBase = Math.min(ZOOM_MAX, +(baseZoom + ZOOM_STEP).toFixed(2));
+        const nextComp = Math.min(ZOOM_MAX, +(comparisonZoom + ZOOM_STEP).toFixed(2));
+        setBaseZoom(nextBase);
+        setComparisonZoom(nextComp);
+        clampPanForZoom('base', nextBase);
+        clampPanForZoom('comparison', nextComp);
       },
     },
     {
@@ -287,6 +303,9 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
         // Reset zoom on both panes; keep current scroll positions unchanged
         setBaseZoom(1);
         setComparisonZoom(1);
+        // Center content for default zoom
+        centerPanForZoom('base', 1);
+        centerPanForZoom('comparison', 1);
         // Clear any stored link delta; next link will recompute from current scrolls
         scrollLinkDeltaRef.current = { vertical: 0, horizontal: 0 };
       },
@@ -334,7 +353,7 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
         setIsScrollLinked(next);
       },
     },
-  ], [layout, t, toggleLayout, isScrollLinked, isPanMode]);
+  ], [layout, t, toggleLayout, isScrollLinked, isPanMode, baseZoom, comparisonZoom]);
 
   useRightRailButtons(rightRailButtons);
 
@@ -652,13 +671,111 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
     return { maxW, maxH };
   }, [basePages, comparisonPages]);
 
-  const getPanBounds = useCallback((pane: 'base' | 'comparison') => {
-    const { maxW, maxH } = getMaxCanvasSize(pane);
-    const zoom = pane === 'base' ? baseZoom : comparisonZoom;
-    const extraX = Math.max(0, Math.round(maxW * (zoom - 1)));
-    const extraY = Math.max(0, Math.round(maxH * (zoom - 1)));
+  const getPanBounds = useCallback((pane: 'base' | 'comparison', zoomOverride?: number) => {
+    // Prefer actual canvas size from DOM for the current pane; fallback to precomputed max
+    const container = pane === 'base' ? baseScrollRef.current : comparisonScrollRef.current;
+    const canvasEl = container?.querySelector('.compare-diff-page__canvas') as HTMLElement | null;
+    let canvasW: number | null = null;
+    let canvasH: number | null = null;
+    if (canvasEl) {
+      const rect = canvasEl.getBoundingClientRect();
+      canvasW = Math.max(0, Math.round(rect.width));
+      canvasH = Math.max(0, Math.round(rect.height));
+    }
+
+    const fallback = getMaxCanvasSize(pane);
+    const W = canvasW ?? fallback.maxW;
+    const H = canvasH ?? fallback.maxH;
+    const zoom = zoomOverride !== undefined ? zoomOverride : (pane === 'base' ? baseZoom : comparisonZoom);
+    // Content grows by (zoom - 1) relative to viewport (transform-origin: top-left)
+    // So the maximum pan equals contentWidth - viewportWidth = W * (zoom - 1)
+    const extraX = Math.max(0, W * (Math.max(zoom, 1) - 1));
+    const extraY = Math.max(0, H * (Math.max(zoom, 1) - 1));
     return { maxX: extraX, maxY: extraY };
   }, [getMaxCanvasSize, baseZoom, comparisonZoom]);
+
+  const getPaneRotation = useCallback((pane: 'base' | 'comparison') => {
+    const pages = pane === 'base' ? basePages : comparisonPages;
+    // Use first page rotation (assume uniform in compare context)
+    const r = pages[0]?.rotation ?? 0;
+    const norm = ((r % 360) + 360) % 360;
+    return norm as 0 | 90 | 180 | 270 | number;
+  }, [basePages, comparisonPages]);
+
+  // Map pan from source pane to equivalent logical location in target pane accounting for rotation
+  const mapPanBetweenOrientations = useCallback((
+    source: 'base' | 'comparison',
+    target: 'base' | 'comparison',
+    sourcePan: { x: number; y: number }
+  ) => {
+    const sRot = getPaneRotation(source);
+    const tRot = getPaneRotation(target);
+    const sBounds = getPanBounds(source);
+    const tBounds = getPanBounds(target);
+
+    // Use symmetric normalized coordinates with origin at content center to improve perceptual alignment
+    const sx = sBounds.maxX === 0 ? 0 : (sourcePan.x / sBounds.maxX) * 2 - 1; // [-1, 1]
+    const sy = sBounds.maxY === 0 ? 0 : (sourcePan.y / sBounds.maxY) * 2 - 1; // [-1, 1]
+
+    // Convert to logical normalized coords with origin at top-left regardless of rotation
+    // For a zoomed canvas, pan (x,y) means how far we've moved from origin within extra space
+    // Normalized mapping across rotations:
+    // rot 0: (nx, ny)
+    // rot 90: (ny, 1 - nx)
+    // rot 180: (1 - nx, 1 - ny)
+    // rot 270: (1 - ny, nx)
+    const apply = (nx: number, ny: number, rot: number) => {
+      const r = ((rot % 360) + 360) % 360;
+      if (r === 0) return { nx, ny };
+      if (r === 90) return { nx: ny, ny: -nx };
+      if (r === 180) return { nx: -nx, ny: -ny };
+      if (r === 270) return { nx: -ny, ny: nx };
+      // Fallback for non-right-angle rotations (shouldn't occur here)
+      return { nx, ny };
+    };
+
+    const logical = apply(sx, sy, sRot);
+    const targetCentered = apply(logical.nx, logical.ny, (360 - tRot));
+
+    // Map back from [-1,1] centered to [0,1] top-left origin before scaling
+    const targetNormX = (targetCentered.nx + 1) / 2;
+    const targetNormY = (targetCentered.ny + 1) / 2;
+
+    const tx = Math.max(0, Math.min(tBounds.maxX, targetNormX * tBounds.maxX));
+    const ty = Math.max(0, Math.min(tBounds.maxY, targetNormY * tBounds.maxY));
+    return { x: tx, y: ty };
+  }, [getPaneRotation, getPanBounds]);
+
+  const reconcileLinkedPan = useCallback((
+    source: 'base' | 'comparison',
+    desiredActive: { x: number; y: number }
+  ) => {
+    const other: 'base' | 'comparison' = source === 'base' ? 'comparison' : 'base';
+    const desiredOther = mapPanBetweenOrientations(source, other, desiredActive);
+    const otherBounds = getPanBounds(other);
+    const clampedOther = {
+      x: Math.max(0, Math.min(otherBounds.maxX, desiredOther.x)),
+      y: Math.max(0, Math.min(otherBounds.maxY, desiredOther.y)),
+    };
+    // Do NOT constrain the active pane due to peer clamp; keep desiredActive (already clamped to source bounds earlier)
+    return { active: desiredActive, other: clampedOther };
+  }, [getPanBounds, mapPanBetweenOrientations]);
+
+  const centerPanForZoom = useCallback((pane: 'base' | 'comparison', zoomValue: number) => {
+    const bounds = getPanBounds(pane, zoomValue);
+    const center = { x: Math.round(bounds.maxX / 2), y: Math.round(bounds.maxY / 2) };
+    if (pane === 'base') setBasePan(center); else setComparisonPan(center);
+  }, [getPanBounds]);
+
+  const clampPanForZoom = useCallback((pane: 'base' | 'comparison', zoomValue: number) => {
+    const bounds = getPanBounds(pane, zoomValue);
+    const current = pane === 'base' ? basePan : comparisonPan;
+    const clamped = {
+      x: Math.max(0, Math.min(bounds.maxX, current.x)),
+      y: Math.max(0, Math.min(bounds.maxY, current.y)),
+    };
+    if (pane === 'base') setBasePan(clamped); else setComparisonPan(clamped);
+  }, [getPanBounds, basePan, comparisonPan]);
 
   const beginPan = (pane: 'base' | 'comparison', e: React.MouseEvent<HTMLDivElement>) => {
     if (!isPanMode) return;
@@ -696,18 +813,23 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
 
     const isBase = drag.source === 'base';
     const bounds = getPanBounds(drag.source);
-    const nextX = Math.max(0, Math.min(bounds.maxX, drag.startPanX - dx));
-    const nextY = Math.max(0, Math.min(bounds.maxY, drag.startPanY - dy));
-    if (isBase) setBasePan({ x: nextX, y: nextY }); else setComparisonPan({ x: nextX, y: nextY });
-
+    const desired = {
+      x: Math.max(0, Math.min(bounds.maxX, drag.startPanX - dx)),
+      y: Math.max(0, Math.min(bounds.maxY, drag.startPanY - dy)),
+    };
     if (isScrollLinked) {
+      // Active-dominant: always set the active pane to desired; map and clamp peer only
+      if (isBase) setBasePan(desired); else setComparisonPan(desired);
       const otherPane: 'base' | 'comparison' = isBase ? 'comparison' : 'base';
-      const otherBounds = getPanBounds(otherPane);
-      const scaleX = bounds.maxX > 0 ? otherBounds.maxX / bounds.maxX : 0;
-      const scaleY = bounds.maxY > 0 ? otherBounds.maxY / bounds.maxY : 0;
-      const otherNextX = Math.max(0, Math.min(otherBounds.maxX, panDragRef.current.targetStartPanX - dx * scaleX));
-      const otherNextY = Math.max(0, Math.min(otherBounds.maxY, panDragRef.current.targetStartPanY - dy * scaleY));
-      if (isBase) setComparisonPan({ x: otherNextX, y: otherNextY }); else setBasePan({ x: otherNextX, y: otherNextY });
+      const mappedPeer = mapPanBetweenOrientations(drag.source, otherPane, desired);
+      const peerBounds = getPanBounds(otherPane);
+      const clampedPeer = {
+        x: Math.max(0, Math.min(peerBounds.maxX, mappedPeer.x)),
+        y: Math.max(0, Math.min(peerBounds.maxY, mappedPeer.y)),
+      };
+      if (isBase) setComparisonPan(clampedPeer); else setBasePan(clampedPeer);
+    } else {
+      if (isBase) setBasePan(desired); else setComparisonPan(desired);
     }
   };
 
@@ -742,9 +864,16 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
       return next;
     };
     if (pane === 'base') {
-      setBaseZoom(applySteps);
+      const prev = baseZoom;
+      const next = applySteps(prev);
+      setBaseZoom(next);
+      // Recenter when zooming out; clamp when zooming in
+      if (next < prev) centerPanForZoom('base', next); else clampPanForZoom('base', next);
     } else {
-      setComparisonZoom(applySteps);
+      const prev = comparisonZoom;
+      const next = applySteps(prev);
+      setComparisonZoom(next);
+      if (next < prev) centerPanForZoom('comparison', next); else clampPanForZoom('comparison', next);
     }
   };
 
@@ -793,8 +922,18 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
       const dampened = 1 + (scale - 1) * 0.6;
       const pane = pinchRef.current.pane!;
       const startZoom = pinchRef.current.startZoom;
+      const prevZoom = pane === 'base' ? baseZoom : comparisonZoom;
       const nextZoom = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, +(startZoom * dampened).toFixed(2)));
-      if (pane === 'base') setBaseZoom(nextZoom); else setComparisonZoom(nextZoom);
+      if (pane === 'base') {
+        setBaseZoom(nextZoom);
+        if (nextZoom < prevZoom) centerPanForZoom('base', nextZoom); // zoom out => center
+        // zoom in: preserve current focal area by not jumping; just clamp within new bounds
+        if (nextZoom > prevZoom) clampPanForZoom('base', nextZoom);
+      } else {
+        setComparisonZoom(nextZoom);
+        if (nextZoom < prevZoom) centerPanForZoom('comparison', nextZoom);
+        if (nextZoom > prevZoom) clampPanForZoom('comparison', nextZoom);
+      }
       e.preventDefault();
       return;
     }
@@ -805,17 +944,22 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
       const dy = touch.clientY - panDragRef.current.startY;
       const isBase = panDragRef.current.source === 'base';
       const bounds = getPanBounds(panDragRef.current.source!);
-      const nextX = Math.max(0, Math.min(bounds.maxX, panDragRef.current.startPanX - dx));
-      const nextY = Math.max(0, Math.min(bounds.maxY, panDragRef.current.startPanY - dy));
-      if (isBase) setBasePan({ x: nextX, y: nextY }); else setComparisonPan({ x: nextX, y: nextY });
+      const desired = {
+        x: Math.max(0, Math.min(bounds.maxX, panDragRef.current.startPanX - dx)),
+        y: Math.max(0, Math.min(bounds.maxY, panDragRef.current.startPanY - dy)),
+      };
       if (isScrollLinked) {
+        if (isBase) setBasePan(desired); else setComparisonPan(desired);
         const otherPane: 'base' | 'comparison' = isBase ? 'comparison' : 'base';
-        const otherBounds = getPanBounds(otherPane);
-        const scaleX = bounds.maxX > 0 ? otherBounds.maxX / bounds.maxX : 0;
-        const scaleY = bounds.maxY > 0 ? otherBounds.maxY / bounds.maxY : 0;
-        const otherNextX = Math.max(0, Math.min(otherBounds.maxX, panDragRef.current.targetStartPanX - dx * scaleX));
-        const otherNextY = Math.max(0, Math.min(otherBounds.maxY, panDragRef.current.targetStartPanY - dy * scaleY));
-        if (isBase) setComparisonPan({ x: otherNextX, y: otherNextY }); else setBasePan({ x: otherNextX, y: otherNextY });
+        const mappedPeer = mapPanBetweenOrientations(isBase ? 'base' : 'comparison', otherPane, desired);
+        const peerBounds = getPanBounds(otherPane);
+        const clampedPeer = {
+          x: Math.max(0, Math.min(peerBounds.maxX, mappedPeer.x)),
+          y: Math.max(0, Math.min(peerBounds.maxY, mappedPeer.y)),
+        };
+        if (isBase) setComparisonPan(clampedPeer); else setBasePan(clampedPeer);
+      } else {
+        if (isBase) setBasePan(desired); else setComparisonPan(desired);
       }
       e.preventDefault();
     }

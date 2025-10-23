@@ -4,6 +4,7 @@ export interface PagePreview {
   pageNumber: number;
   width: number;
   height: number;
+  rotation: number;
   url: string;
 }
 
