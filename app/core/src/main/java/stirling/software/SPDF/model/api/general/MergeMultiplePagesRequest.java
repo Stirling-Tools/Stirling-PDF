@@ -32,10 +32,18 @@ public class MergeMultiplePagesRequest extends PDFFile {
             allowableValues = {"LR_TD", "RL_TD", "TD_LR", "TD_RL"})
     private String pageOrder;
 
-    @Schema(description = "Number of rows", type = "integer", defaultValue = "1", example = "3")
+    @Schema(
+        description = "Number of rows",
+        type = "integer",
+        defaultValue = "1",
+        example = "3")
     private Integer rows;
 
-    @Schema(description = "Number of columns", type = "integer", defaultValue = "2", example = "2")
+    @Schema(
+        description = "Number of columns",
+        type = "integer",
+        defaultValue = "2",
+        example = "2")
     private Integer cols;
 
     @Schema(
