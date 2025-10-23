@@ -371,6 +371,7 @@ public class ApplicationProperties {
         private CustomPaths customPaths = new CustomPaths();
         private String fileUploadLimit;
         private TempFileManagement tempFileManagement = new TempFileManagement();
+        private List<String> corsAllowedOrigins = new ArrayList<>();
 
         public boolean isAnalyticsEnabled() {
             return this.getEnableAnalytics() != null && this.getEnableAnalytics();

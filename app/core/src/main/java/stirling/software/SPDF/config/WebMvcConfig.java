@@ -7,11 +7,14 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.common.model.ApplicationProperties;
+
 @Configuration
 @RequiredArgsConstructor
 public class WebMvcConfig implements WebMvcConfigurer {
 
     private final EndpointInterceptor endpointInterceptor;
+    private final ApplicationProperties applicationProperties;
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
@@ -20,13 +23,23 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        // Allow frontend dev server (Vite on localhost:5173) to access backend
-        registry.addMapping("/**")
-                .allowedOrigins("http://localhost:5173", "http://127.0.0.1:5173")
-                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
-                .allowedHeaders("*")
-                .allowCredentials(true)
-                .maxAge(3600);
+        // Only configure CORS if allowed origins are specified
+        if (applicationProperties.getSystem() != null
+                && applicationProperties.getSystem().getCorsAllowedOrigins() != null
+                && !applicationProperties.getSystem().getCorsAllowedOrigins().isEmpty()) {
+
+            String[] allowedOrigins = applicationProperties.getSystem()
+                    .getCorsAllowedOrigins()
+                    .toArray(new String[0]);
+
+            registry.addMapping("/**")
+                    .allowedOrigins(allowedOrigins)
+                    .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
+                    .allowedHeaders("*")
+                    .allowCredentials(true)
+                    .maxAge(3600);
+        }
+        // If no origins are configured, CORS is not enabled (secure by default)
     }
 
     // @Override
