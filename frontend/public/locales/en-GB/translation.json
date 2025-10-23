@@ -3076,6 +3076,10 @@
     "passwordsDoNotMatch": "Passwords do not match",
     "passwordTooShort": "Password must be at least 6 characters long",
     "invalidEmail": "Please enter a valid email address",
+    "nameRequired": "Name is required",
+    "emailRequired": "Email is required",
+    "passwordRequired": "Password is required",
+    "confirmPasswordRequired": "Confirm password is required",
     "checkEmailConfirmation": "Check your email for a confirmation link to complete your registration.",
     "accountCreatedSuccessfully": "Account created successfully! You can now sign in.",
     "unexpectedError": "Unexpected error: {{message}}"

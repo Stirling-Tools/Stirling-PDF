@@ -20,7 +20,7 @@ security:
     username: '' # initial username for the first login
     password: '' # initial password for the first login
   oauth2:
-    enabled: false # set to 'true' to enable login (Note: enableLogin must also be 'true' for this to work)
+    enabled: true # set to 'true' to enable login (Note: enableLogin must also be 'true' for this to work)
     client:
       keycloak:
         issuer: '' # URL of the Keycloak realm's OpenID Connect Discovery endpoint
@@ -65,7 +65,6 @@ security:
     enableKeyRotation: true # Set to 'true' to enable key pair rotation
     enableKeyCleanup: true # Set to 'true' to enable key pair cleanup
     keyRetentionDays: 7 # Number of days to retain old keys. The default is 7 days.
-    secureCookie: false # Set to 'true' to use secure cookies for JWTs
   validation: # PDF signature validation settings
     trust:
       serverAsAnchor: true # Trust server certificate as anchor for PDF signatures (if configured and self-signed or CA)
