@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../auth/UseSession'
 import { useTranslation } from 'react-i18next'
 import { useDocumentMeta } from '../hooks/useDocumentMeta'
 import AuthLayout from './authShared/AuthLayout'
@@ -17,7 +16,6 @@ import { useAuthService } from './signup/AuthService'
 
 export default function Signup() {
   const navigate = useNavigate()
-  const { session, loading } = useAuth()
   const { t } = useTranslation()
   const [isSigningUp, setIsSigningUp] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -70,7 +68,7 @@ export default function Signup() {
   }
 
   return (
-    <AuthLayout isEmailFormExpanded={true}>
+    <AuthLayout>
       <LoginHeader title={t('signup.title', 'Create an account')} subtitle={t('signup.subtitle', 'Join Stirling PDF')} />
 
       <ErrorMessage error={error} />

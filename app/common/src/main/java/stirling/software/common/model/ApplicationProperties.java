@@ -343,7 +343,6 @@ public class ApplicationProperties {
                 private boolean hardFail = false;
             }
         }
-
     }
 
     @Data

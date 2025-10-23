@@ -28,9 +28,11 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 && applicationProperties.getSystem().getCorsAllowedOrigins() != null
                 && !applicationProperties.getSystem().getCorsAllowedOrigins().isEmpty()) {
 
-            String[] allowedOrigins = applicationProperties.getSystem()
-                    .getCorsAllowedOrigins()
-                    .toArray(new String[0]);
+            String[] allowedOrigins =
+                    applicationProperties
+                            .getSystem()
+                            .getCorsAllowedOrigins()
+                            .toArray(new String[0]);
 
             registry.addMapping("/**")
                     .allowedOrigins(allowedOrigins)

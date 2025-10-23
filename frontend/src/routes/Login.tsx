@@ -118,7 +118,7 @@ export default function Login() {
   }
 
   return (
-    <AuthLayout isEmailFormExpanded={showEmailForm}>
+    <AuthLayout>
       <LoginHeader title={t('login.login') || 'Sign in'} />
 
       <ErrorMessage error={error} />
