@@ -4008,6 +4008,29 @@
     "startTourDescription": "Take a guided tour of Stirling PDF's key features"
   },
   "pdfJsonEditor": {
-    "viewLabel": "JSON Editor"
+    "viewLabel": "PDF Editor",
+    "title": "PDF Editor",
+    "badges": {
+      "unsaved": "Edited",
+      "modified": "Edited"
+    },
+    "actions": {
+      "load": "Load File",
+      "reset": "Reset Changes",
+      "downloadJson": "Download JSON",
+      "generatePdf": "Generate PDF"
+    },
+    "currentFile": "Current file: {{name}}",
+    "pageSummary": "Page {{number}} of {{total}}",
+    "groupList": "Detected Text Groups",
+    "fontSizeValue": "{{size}}pt",
+    "noTextOnPage": "No editable text was detected on this page.",
+    "emptyGroup": "[Empty Group]",
+    "empty": {
+      "title": "No document loaded",
+      "subtitle": "Load a PDF or JSON file to begin editing text content."
+    },
+    "converting": "Converting PDF to editable format...",
+    "conversionFailed": "Failed to convert PDF. Please try again."
   }
 }

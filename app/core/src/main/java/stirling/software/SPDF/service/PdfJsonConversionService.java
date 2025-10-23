@@ -51,6 +51,10 @@ import org.apache.pdfbox.pdmodel.font.PDFontDescriptor;
 import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
+import org.apache.pdfbox.pdmodel.graphics.color.PDColor;
+import org.apache.pdfbox.pdmodel.graphics.color.PDColorSpace;
+import org.apache.pdfbox.pdmodel.graphics.state.PDGraphicsState;
+import org.apache.pdfbox.pdmodel.graphics.state.PDTextState;
 import org.apache.pdfbox.pdmodel.graphics.state.RenderingMode;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.pdfbox.text.TextPosition;
@@ -73,6 +77,7 @@ import stirling.software.SPDF.model.json.PdfJsonFontCidSystemInfo;
 import stirling.software.SPDF.model.json.PdfJsonMetadata;
 import stirling.software.SPDF.model.json.PdfJsonPage;
 import stirling.software.SPDF.model.json.PdfJsonStream;
+import stirling.software.SPDF.model.json.PdfJsonTextColor;
 import stirling.software.SPDF.model.json.PdfJsonTextElement;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
@@ -921,10 +926,7 @@ public class PdfJsonConversionService {
                 if (font == null && FALLBACK_FONT_ID.equals(element.getFontId())) {
                     font = fontMap.get(buildFontKey(-1, FALLBACK_FONT_ID));
                 }
-                float fontScale = safeFloat(element.getFontMatrixSize(), 0f);
-                if (fontScale == 0f) {
-                    fontScale = safeFloat(element.getFontSize(), 12f);
-                }
+                float fontScale = resolveFontMatrixSize(element);
                 String text = Objects.toString(element.getText(), "");
 
                 if (font != null) {
@@ -958,6 +960,7 @@ public class PdfJsonConversionService {
                     textOpen = true;
                 }
 
+                applyTextState(contentStream, element);
                 contentStream.setFont(font, fontScale);
                 applyRenderingMode(contentStream, element.getRenderingMode());
                 applyTextMatrix(contentStream, element);
@@ -974,6 +977,95 @@ public class PdfJsonConversionService {
             return;
         }
         font.encode(text);
+    }
+
+    private void applyTextState(PDPageContentStream contentStream, PdfJsonTextElement element)
+            throws IOException {
+        if (element.getCharacterSpacing() != null) {
+            contentStream.setCharacterSpacing(element.getCharacterSpacing());
+        }
+        if (element.getWordSpacing() != null) {
+            contentStream.setWordSpacing(element.getWordSpacing());
+        }
+        if (element.getHorizontalScaling() != null) {
+            contentStream.setHorizontalScaling(element.getHorizontalScaling());
+        }
+        if (element.getLeading() != null) {
+            contentStream.setLeading(element.getLeading());
+        }
+        if (element.getRise() != null) {
+            contentStream.setTextRise(element.getRise());
+        }
+        applyColor(contentStream, element.getFillColor(), true);
+        applyColor(contentStream, element.getStrokeColor(), false);
+    }
+
+    private void applyColor(
+            PDPageContentStream contentStream, PdfJsonTextColor color, boolean nonStroking)
+            throws IOException {
+        if (color == null || color.getComponents() == null) {
+            return;
+        }
+        float[] components = new float[color.getComponents().size()];
+        for (int i = 0; i < components.length; i++) {
+            components[i] = color.getComponents().get(i);
+        }
+        String space = color.getColorSpace();
+        if (space == null) {
+            // Infer color space from component count
+            PDColorSpace colorSpace;
+            if (components.length == 1) {
+                colorSpace = PDColorSpace.create(COSName.DEVICEGRAY);
+            } else if (components.length == 3) {
+                colorSpace = PDColorSpace.create(COSName.DEVICERGB);
+            } else if (components.length == 4) {
+                colorSpace = PDColorSpace.create(COSName.DEVICECMYK);
+            } else {
+                // Default to RGB if unsure
+                colorSpace = PDColorSpace.create(COSName.DEVICERGB);
+            }
+            PDColor pdColor = new PDColor(components, colorSpace);
+            if (nonStroking) {
+                contentStream.setNonStrokingColor(pdColor);
+            } else {
+                contentStream.setStrokingColor(pdColor);
+            }
+            return;
+        }
+        switch (space) {
+            case "DeviceRGB":
+                if (components.length >= 3) {
+                    if (nonStroking) {
+                        contentStream.setNonStrokingColor(
+                                components[0], components[1], components[2]);
+                    } else {
+                        contentStream.setStrokingColor(components[0], components[1], components[2]);
+                    }
+                }
+                break;
+            case "DeviceCMYK":
+                if (components.length >= 4) {
+                    if (nonStroking) {
+                        contentStream.setNonStrokingColor(
+                                components[0], components[1], components[2], components[3]);
+                    } else {
+                        contentStream.setStrokingColor(
+                                components[0], components[1], components[2], components[3]);
+                    }
+                }
+                break;
+            case "DeviceGray":
+                if (components.length >= 1) {
+                    if (nonStroking) {
+                        contentStream.setNonStrokingColor(components[0]);
+                    } else {
+                        contentStream.setStrokingColor(components[0]);
+                    }
+                }
+                break;
+            default:
+                log.debug("Skipping unsupported color space {}", space);
+        }
     }
 
     private String abbreviate(String value) {
@@ -1362,10 +1454,7 @@ public class PdfJsonConversionService {
             throws IOException {
         List<Float> matrix = element.getTextMatrix();
         if (matrix != null && matrix.size() == 6) {
-            float fontScale = safeFloat(element.getFontMatrixSize(), 0f);
-            if (fontScale == 0f) {
-                fontScale = safeFloat(element.getFontSize(), 1f);
-            }
+            float fontScale = resolveFontMatrixSize(element);
             float a = matrix.get(0);
             float b = matrix.get(1);
             float c = matrix.get(2);
@@ -1386,6 +1475,25 @@ public class PdfJsonConversionService {
         float x = safeFloat(element.getX(), 0f);
         float y = safeFloat(element.getY(), 0f);
         contentStream.setTextMatrix(new Matrix(1, 0, 0, 1, x, y));
+    }
+
+    private float resolveFontMatrixSize(PdfJsonTextElement element) {
+        Float fromElement = element.getFontMatrixSize();
+        if (fromElement != null && fromElement > 0f) {
+            return fromElement;
+        }
+        List<Float> matrix = element.getTextMatrix();
+        if (matrix != null && matrix.size() >= 4) {
+            float a = matrix.get(0);
+            float b = matrix.get(1);
+            float c = matrix.get(2);
+            float d = matrix.get(3);
+            float scale = (float) Math.max(Math.hypot(a, c), Math.hypot(b, d));
+            if (scale > 0f) {
+                return scale;
+            }
+        }
+        return safeFloat(element.getFontSize(), 12f);
     }
 
     private void applyRenderingMode(PDPageContentStream contentStream, Integer renderingMode)
@@ -1480,12 +1588,29 @@ public class PdfJsonConversionService {
                 element.setText(position.getUnicode());
                 element.setFontId(fontId);
                 element.setFontSize(position.getFontSizeInPt());
-                element.setFontMatrixSize(position.getFontSize());
+                element.setFontSizeInPt(position.getFontSizeInPt());
                 element.setX(position.getXDirAdj());
                 element.setY(position.getYDirAdj());
                 element.setWidth(position.getWidthDirAdj());
                 element.setHeight(position.getHeightDir());
                 element.setTextMatrix(extractMatrix(position));
+                element.setFontMatrixSize(computeFontMatrixSize(element.getTextMatrix()));
+                PDGraphicsState graphicsState = getGraphicsState();
+                if (graphicsState != null) {
+                    PDTextState textState = graphicsState.getTextState();
+                    if (textState != null) {
+                        element.setCharacterSpacing(textState.getCharacterSpacing());
+                        element.setWordSpacing(textState.getWordSpacing());
+                        element.setHorizontalScaling(textState.getHorizontalScaling());
+                        element.setLeading(textState.getLeading());
+                        element.setRise(textState.getRise());
+                        if (textState.getRenderingMode() != null) {
+                            element.setRenderingMode(textState.getRenderingMode().intValue());
+                        }
+                    }
+                    element.setFillColor(toTextColor(graphicsState.getNonStrokingColor()));
+                    element.setStrokeColor(toTextColor(graphicsState.getStrokingColor()));
+                }
                 pageElements.add(element);
             }
         }
@@ -1505,6 +1630,20 @@ public class PdfJsonConversionService {
             return matrix;
         }
 
+        private Float computeFontMatrixSize(List<Float> matrix) {
+            if (matrix == null || matrix.size() < 4) {
+                return null;
+            }
+            float a = matrix.get(0);
+            float b = matrix.get(1);
+            float c = matrix.get(2);
+            float d = matrix.get(3);
+            float scaleX = (float) Math.hypot(a, c);
+            float scaleY = (float) Math.hypot(b, d);
+            float scale = Math.max(scaleX, scaleY);
+            return scale > 0 ? scale : null;
+        }
+
         private String registerFont(PDFont font) throws IOException {
             String fontId = currentFontResources.get(font);
             if (fontId == null || fontId.isBlank()) {
@@ -1515,6 +1654,25 @@ public class PdfJsonConversionService {
                 fonts.put(key, buildFontModel(document, font, fontId, currentPage));
             }
             return fontId;
+        }
+
+        private PdfJsonTextColor toTextColor(PDColor color) {
+            if (color == null) {
+                return null;
+            }
+            PDColorSpace colorSpace = color.getColorSpace();
+            if (colorSpace == null) {
+                return null;
+            }
+            float[] components = color.getComponents();
+            List<Float> values = new ArrayList<>(components.length);
+            for (float component : components) {
+                values.add(component);
+            }
+            return PdfJsonTextColor.builder()
+                    .colorSpace(colorSpace.getName())
+                    .components(values)
+                    .build();
         }
     }
 

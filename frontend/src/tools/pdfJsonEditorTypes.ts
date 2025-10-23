@@ -4,6 +4,11 @@ export interface PdfJsonFontCidSystemInfo {
   supplement?: number | null;
 }
 
+export interface PdfJsonTextColor {
+  colorSpace?: string | null;
+  components?: number[] | null;
+}
+
 export interface PdfJsonFont {
   id?: string;
   pageNumber?: number | null;
@@ -26,12 +31,19 @@ export interface PdfJsonTextElement {
   fontSize?: number | null;
   fontMatrixSize?: number | null;
   fontSizeInPt?: number | null;
+  characterSpacing?: number | null;
+  wordSpacing?: number | null;
+  horizontalScaling?: number | null;
+  leading?: number | null;
+  rise?: number | null;
   renderingMode?: number | null;
   x?: number | null;
   y?: number | null;
   width?: number | null;
   height?: number | null;
   textMatrix?: number[] | null;
+  fillColor?: PdfJsonTextColor | null;
+  strokeColor?: PdfJsonTextColor | null;
 }
 
 export interface PdfJsonStream {
@@ -81,6 +93,7 @@ export interface TextGroup {
   pageIndex: number;
   fontId?: string | null;
   fontSize?: number | null;
+  fontMatrixSize?: number | null;
   elements: PdfJsonTextElement[];
   originalElements: PdfJsonTextElement[];
   text: string;
@@ -100,6 +113,7 @@ export interface PdfJsonEditorViewData {
   fileName: string;
   errorMessage: string | null;
   isGeneratingPdf: boolean;
+  isConverting: boolean;
   hasChanges: boolean;
   onLoadJson: (file: File | null) => Promise<void> | void;
   onSelectPage: (pageIndex: number) => void;

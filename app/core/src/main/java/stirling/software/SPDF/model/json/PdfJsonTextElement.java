@@ -22,10 +22,17 @@ public class PdfJsonTextElement {
     private Float fontSize;
     private Float fontMatrixSize;
     private Float fontSizeInPt;
+    private Float characterSpacing;
+    private Float wordSpacing;
+    private Float horizontalScaling;
+    private Float leading;
+    private Float rise;
     private Float x;
     private Float y;
     private Float width;
     private Float height;
     @Builder.Default private List<Float> textMatrix = new ArrayList<>();
+    private PdfJsonTextColor fillColor;
+    private PdfJsonTextColor strokeColor;
     private Integer renderingMode;
 }

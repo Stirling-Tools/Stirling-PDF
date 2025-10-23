@@ -47,7 +47,7 @@ const getWidth = (element: PdfJsonTextElement): number => {
   return width;
 };
 
-const getFontSize = (element: PdfJsonTextElement): number => valueOr(element.fontSize, 12);
+const getFontSize = (element: PdfJsonTextElement): number => valueOr(element.fontMatrixSize ?? element.fontSize, 12);
 
 const getHeight = (element: PdfJsonTextElement): number => {
   const height = valueOr(element.height);
@@ -129,6 +129,7 @@ const createGroup = (
     pageIndex,
     fontId: elements[0]?.fontId,
     fontSize: elements[0]?.fontSize,
+    fontMatrixSize: elements[0]?.fontMatrixSize,
     elements: clones,
     originalElements: originalClones,
     text: buildGroupText(elements),
@@ -286,7 +287,6 @@ export const buildUpdatedDocument = (
       return page;
     }
 
-    const hasPageChanges = groups.some((group) => group.text !== group.originalText);
     const updatedElements: PdfJsonTextElement[] = groups.flatMap((group) => {
       if (group.text === group.originalText) {
         return group.originalElements.map(cloneTextElement);
@@ -318,12 +318,10 @@ export const restoreGlyphElements = (
     }
 
     const rebuiltElements: PdfJsonTextElement[] = [];
-    let pageChanged = false;
 
     groups.forEach((group) => {
       const originals = group.originalElements.map(cloneTextElement);
       if (group.text !== group.originalText) {
-        pageChanged = true;
         distributeTextAcrossElements(group.text, originals);
       }
       rebuiltElements.push(...originals);

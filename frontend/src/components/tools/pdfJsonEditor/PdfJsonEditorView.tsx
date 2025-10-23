@@ -36,14 +36,16 @@ interface PdfJsonEditorViewProps {
 }
 
 const toCssBounds = (
-  page: PdfJsonPage | null | undefined,
+  _page: PdfJsonPage | null | undefined,
   pageHeight: number,
   scale: number,
   bounds: { left: number; right: number; top: number; bottom: number },
 ) => {
   const width = Math.max(bounds.right - bounds.left, 1);
   const height = Math.max(bounds.bottom - bounds.top, 1);
-  const scaledWidth = Math.max(width * scale, MIN_BOX_SIZE);
+  // Add 20% buffer to width to account for padding and font rendering variations
+  const bufferedWidth = width * 1.2;
+  const scaledWidth = Math.max(bufferedWidth * scale, MIN_BOX_SIZE);
   const scaledHeight = Math.max(height * scale, MIN_BOX_SIZE / 2);
   const top = Math.max(pageHeight - bounds.bottom, 0) * scale;
 
@@ -69,6 +71,7 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
     fileName,
     errorMessage,
     isGeneratingPdf,
+    isConverting,
     hasChanges,
     onLoadJson,
     onSelectPage,
@@ -77,6 +80,36 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
     onDownloadJson,
     onGeneratePdf,
   } = data;
+
+  const getFontFamily = (fontId: string | null | undefined): string => {
+    if (!fontId || !pdfDocument?.fonts) {
+      return 'sans-serif';
+    }
+    const font = pdfDocument.fonts.find((f) => f.id === fontId);
+    if (!font) {
+      return 'sans-serif';
+    }
+
+    // Map PDF fonts to web-safe fonts based on name
+    // Note: Embedded font data from PDFs often lacks tables required for web rendering (OS/2 table)
+    const fontName = font.standard14Name || font.baseName || '';
+    const lowerName = fontName.toLowerCase();
+
+    if (lowerName.includes('times')) {
+      return '"Times New Roman", Times, serif';
+    }
+    if (lowerName.includes('helvetica') || lowerName.includes('arial')) {
+      return 'Arial, Helvetica, sans-serif';
+    }
+    if (lowerName.includes('courier')) {
+      return '"Courier New", Courier, monospace';
+    }
+    if (lowerName.includes('symbol')) {
+      return 'Symbol, serif';
+    }
+
+    return 'Arial, Helvetica, sans-serif';
+  };
 
   const pages = pdfDocument?.pages ?? [];
   const currentPage = pages[selectedPage] ?? null;
@@ -141,20 +174,21 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
       style={{
         width: '100%',
         height: '100%',
-        border: isActive
+        outline: isActive
           ? '2px solid var(--mantine-color-blue-5)'
           : isChanged
             ? '1px solid var(--mantine-color-yellow-5)'
-            : '1px solid transparent',
+            : 'none',
+        outlineOffset: '-1px',
         borderRadius: 6,
         backgroundColor: isChanged || isActive ? 'rgba(250,255,189,0.28)' : 'transparent',
-        transition: 'border 120ms ease, background-color 120ms ease',
+        transition: 'outline 120ms ease, background-color 120ms ease',
         pointerEvents: 'auto',
-        overflow: 'hidden',
+        overflow: 'visible',
         display: 'flex',
         alignItems: 'flex-start',
         justifyContent: 'flex-start',
-      padding: 0,
+        padding: 0,
       }}
       onClick={(event) => {
         event.stopPropagation();
@@ -182,10 +216,15 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
               {hasChanges && <Badge color="yellow" size="sm">{t('pdfJsonEditor.badges.unsaved', 'Edited')}</Badge>}
             </Group>
             <Group gap="sm">
-              <FileButton onChange={onLoadJson} accept="application/json">
+              <FileButton onChange={onLoadJson} accept="application/pdf,application/json,.pdf,.json">
                 {(props) => (
-                  <Button variant="light" leftSection={<UploadIcon fontSize="small" />} {...props}>
-                    {t('pdfJsonEditor.actions.load', 'Load JSON')}
+                  <Button
+                    variant="light"
+                    leftSection={<UploadIcon fontSize="small" />}
+                    loading={isConverting}
+                    {...props}
+                  >
+                    {t('pdfJsonEditor.actions.load', 'Load File')}
                   </Button>
                 )}
               </FileButton>
@@ -193,7 +232,7 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
                 variant="subtle"
                 leftSection={<AutorenewIcon fontSize="small" />}
                 onClick={onReset}
-                disabled={!hasDocument}
+                disabled={!hasDocument || isConverting}
               >
                 {t('pdfJsonEditor.actions.reset', 'Reset Changes')}
               </Button>
@@ -201,7 +240,7 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
                 variant="default"
                 leftSection={<FileDownloadIcon fontSize="small" />}
                 onClick={onDownloadJson}
-                disabled={!hasDocument}
+                disabled={!hasDocument || isConverting}
               >
                 {t('pdfJsonEditor.actions.downloadJson', 'Download JSON')}
               </Button>
@@ -209,7 +248,7 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
                 leftSection={<PictureAsPdfIcon fontSize="small" />}
                 onClick={onGeneratePdf}
                 loading={isGeneratingPdf}
-                disabled={!hasDocument || !hasChanges}
+                disabled={!hasDocument || !hasChanges || isConverting}
               >
                 {t('pdfJsonEditor.actions.generatePdf', 'Generate PDF')}
               </Button>
@@ -230,15 +269,26 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
         </Alert>
       )}
 
-      {!hasDocument && (
+      {!hasDocument && !isConverting && (
         <Card withBorder radius="md" padding="xl">
           <Stack align="center" gap="md">
             <DescriptionIcon sx={{ fontSize: 48 }} />
             <Text size="lg" fw={600}>
-              {t('pdfJsonEditor.empty.title', 'No JSON loaded yet')}
+              {t('pdfJsonEditor.empty.title', 'No document loaded')}
             </Text>
             <Text size="sm" c="dimmed" ta="center" maw={420}>
-              {t('pdfJsonEditor.empty.subtitle', 'Use the Load JSON button above to open a file generated by the PDF → JSON converter.')}
+              {t('pdfJsonEditor.empty.subtitle', 'Load a PDF or JSON file to begin editing text content.')}
+            </Text>
+          </Stack>
+        </Card>
+      )}
+
+      {isConverting && (
+        <Card withBorder radius="md" padding="xl">
+          <Stack align="center" gap="md">
+            <AutorenewIcon sx={{ fontSize: 48 }} className="animate-spin" />
+            <Text size="lg" fw={600}>
+              {t('pdfJsonEditor.converting', 'Converting PDF to editable format...')}
             </Text>
           </Stack>
         </Card>
@@ -306,9 +356,11 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
                       const changed = group.text !== group.originalText;
                       const isActive = activeGroupId === group.id || editingGroupId === group.id;
                       const isEditing = editingGroupId === group.id;
-                      const fontSizePx = Math.max((group.fontSize ?? 12) * scale, 8);
+                      const baseFontSize = group.fontMatrixSize ?? group.fontSize ?? 12;
+                      const fontSizePx = Math.max(baseFontSize * scale, 6);
+                      const fontFamily = getFontFamily(group.fontId);
 
-                      const visualHeight = Math.max(bounds.height, fontSizePx * 1.35);
+                      const visualHeight = Math.max(bounds.height, fontSizePx * 1.2);
 
                       const containerStyle: React.CSSProperties = {
                         position: 'absolute',
@@ -323,14 +375,9 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
                         cursor: 'text',
                       };
 
-                      const commonProps = {
-                        key: group.id,
-                        style: containerStyle,
-                      };
-
                       if (isEditing) {
                         return (
-                          <Box {...commonProps}>
+                          <Box key={group.id} style={containerStyle}>
                             {renderGroupContainer(
                               group.id,
                               true,
@@ -355,6 +402,7 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
                                   backgroundColor: 'rgba(255,255,255,0.95)',
                                   color: '#111827',
                                   fontSize: `${fontSizePx}px`,
+                                  fontFamily,
                                   lineHeight: 1.25,
                                   outline: 'none',
                                   border: 'none',
@@ -362,6 +410,7 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
                                   whiteSpace: 'pre-wrap',
                                   overflowWrap: 'anywhere',
                                   cursor: 'text',
+                                  overflow: 'visible',
                                 }}
                               >
                                 {group.text || '\u00A0'}
@@ -372,9 +421,7 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
                       }
 
                       return (
-                        <Box
-                          {...commonProps}
-                        >
+                        <Box key={group.id} style={containerStyle}>
                           {renderGroupContainer(
                             group.id,
                             isActive,
@@ -386,10 +433,12 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
                                 padding: '2px 4px',
                                 whiteSpace: 'pre-wrap',
                                 fontSize: `${fontSizePx}px`,
+                                fontFamily,
                                 lineHeight: 1.25,
                                 color: '#111827',
                                 display: 'block',
                                 cursor: 'text',
+                                overflow: 'visible',
                               }}
                             >
                               <span style={{ pointerEvents: 'none' }}>{group.text || '\u00A0'}</span>
