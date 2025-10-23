@@ -1099,19 +1099,21 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
       if (token.type === 'removed') {
         const startIndex = baseIndex;
         const parts: string[] = [];
+        const runIndices: number[] = [];
         let pageNumber = result.tokenMetadata.base[baseIndex]?.page ?? 1;
-        // accumulate contiguous removed tokens
+        // accumulate contiguous removed tokens (record indices first)
         while (i < result.tokens.length && result.tokens[i].type === 'removed') {
           parts.push(result.tokens[i].text);
-          baseTokenIndexToGroupId.set(baseIndex, `base-group-${startIndex}-${baseIndex}`);
+          runIndices.push(baseIndex);
           baseIndex += 1;
           i += 1;
         }
-        // step back one because for-loop will ++
-        i -= 1;
+        i -= 1; // step back because for-loop will ++
         const endIndex = baseIndex - 1;
+        const groupId = `base-group-${startIndex}-${endIndex}`;
+        runIndices.forEach(idx => baseTokenIndexToGroupId.set(idx, groupId));
         const label = parts.join(' ').trim();
-        items.push({ value: `base-group-${startIndex}-${endIndex}`, label: label || '(…)', pageNumber });
+        items.push({ value: groupId, label: label || '(…)', pageNumber });
         continue;
       }
       if (token.type !== 'added') {
@@ -1132,17 +1134,20 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
       if (token.type === 'added') {
         const startIndex = comparisonIndex;
         const parts: string[] = [];
+        const runIndices: number[] = [];
         let pageNumber = result.tokenMetadata.comparison[comparisonIndex]?.page ?? 1;
         while (i < result.tokens.length && result.tokens[i].type === 'added') {
           parts.push(result.tokens[i].text);
-          comparisonTokenIndexToGroupId.set(comparisonIndex, `comparison-group-${startIndex}-${comparisonIndex}`);
+          runIndices.push(comparisonIndex);
           comparisonIndex += 1;
           i += 1;
         }
         i -= 1;
         const endIndex = comparisonIndex - 1;
+        const groupId = `comparison-group-${startIndex}-${endIndex}`;
+        runIndices.forEach(idx => comparisonTokenIndexToGroupId.set(idx, groupId));
         const label = parts.join(' ').trim();
-        items.push({ value: `comparison-group-${startIndex}-${endIndex}`, label: label || '(…)', pageNumber });
+        items.push({ value: groupId, label: label || '(…)', pageNumber });
         continue;
       }
       if (token.type !== 'removed') {
@@ -1233,12 +1238,43 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
 
       container.scrollTo({ top: desiredTop, left: desiredLeft, behavior: 'smooth' });
 
-      // Retrigger flash for EVERY node in the group
+      // Create per-page overlays using percentage coordinates to cover the entire group
+      const groupsByInner = new Map<HTMLElement, HTMLElement[]>();
+      nodes.forEach((el) => {
+        const inner = el.closest('.compare-diff-page__inner') as HTMLElement | null;
+        if (!inner) return;
+        const arr = groupsByInner.get(inner) || [];
+        arr.push(el as HTMLElement);
+        groupsByInner.set(inner, arr);
+      });
+      groupsByInner.forEach((els, inner) => {
+        let minL = 100, minT = 100, maxR = 0, maxB = 0;
+        els.forEach((el) => {
+          const l = parseFloat((el as HTMLElement).style.left) || 0; // %
+          const t = parseFloat((el as HTMLElement).style.top) || 0; // %
+          const w = parseFloat((el as HTMLElement).style.width) || 0; // %
+          const h = parseFloat((el as HTMLElement).style.height) || 0; // %
+          minL = Math.min(minL, l);
+          minT = Math.min(minT, t);
+          maxR = Math.max(maxR, l + w);
+          maxB = Math.max(maxB, t + h);
+        });
+        const overlay = document.createElement('span');
+        overlay.className = 'compare-diff-flash-overlay';
+        overlay.style.position = 'absolute';
+        overlay.style.left = `${minL}%`;
+        overlay.style.top = `${minT}%`;
+        overlay.style.width = `${Math.max(0.1, maxR - minL)}%`;
+        overlay.style.height = `${Math.max(0.1, maxB - minT)}%`;
+        inner.appendChild(overlay);
+        window.setTimeout(() => overlay.remove(), 1600);
+      });
+
+      // Also retrigger per-rect flash for accessibility (keeps ARIA relationships intact)
       nodes.forEach((el) => {
         el.classList.remove('compare-diff-highlight--flash');
       });
-      // Force reflow to restart animation
-      void container.clientWidth;
+      void container.clientWidth; // Force reflow to restart animation
       nodes.forEach((el) => {
         el.classList.add('compare-diff-highlight--flash');
         window.setTimeout(() => el.classList.remove('compare-diff-highlight--flash'), 1600);

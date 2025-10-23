@@ -40,30 +40,37 @@ interface CompareDocumentPaneProps {
   altLabel: string;
 }
 
-const mergeSameLineRects = (rects: TokenBoundingBox[]): TokenBoundingBox[] => {
-  if (rects.length === 0) {
-    return rects;
-  }
-  const EPS_X = 0.02;
-  const EPS_Y = 0.006;
-  const sorted = rects
-    .slice()
-    .sort((a, b) => (a.top !== b.top ? a.top - b.top : a.left - b.left));
-
+// Merge overlapping or touching rects into larger non-overlapping blocks.
+// This is more robust across rotations (vertical "lines" etc.) and prevents dark spots.
+const mergeConnectedRects = (rects: TokenBoundingBox[]): TokenBoundingBox[] => {
+  if (rects.length === 0) return rects;
+  const EPS = 0.004; // small tolerance in normalized page coords
+  const sorted = rects.slice().sort((a, b) => (a.top !== b.top ? a.top - b.top : a.left - b.left));
   const merged: TokenBoundingBox[] = [];
-  for (const rect of sorted) {
-    const last = merged[merged.length - 1];
-    if (last && Math.abs(rect.top - last.top) < EPS_Y && rect.left <= last.left + last.width + EPS_X) {
-      const left = Math.min(last.left, rect.left);
-      const right = Math.max(last.left + last.width, rect.left + rect.width);
-      const top = Math.min(last.top, rect.top);
-      const bottom = Math.max(last.top + last.height, rect.top + rect.height);
-      last.left = left;
-      last.top = top;
-      last.width = Math.max(0, right - left);
-      last.height = Math.max(0, bottom - top);
-    } else {
-      merged.push({ ...rect });
+  const overlapsOrTouches = (a: TokenBoundingBox, b: TokenBoundingBox) => {
+    const aR = a.left + a.width;
+    const aB = a.top + a.height;
+    const bR = b.left + b.width;
+    const bB = b.top + b.height;
+    // Overlap or touch within EPS gap
+    return !(b.left > aR + EPS || bR < a.left - EPS || b.top > aB + EPS || bB < a.top - EPS);
+  };
+  for (const r of sorted) {
+    let mergedIntoExisting = false;
+    for (let i = 0; i < merged.length; i += 1) {
+      const m = merged[i];
+      if (overlapsOrTouches(m, r)) {
+        const left = Math.min(m.left, r.left);
+        const top = Math.min(m.top, r.top);
+        const right = Math.max(m.left + m.width, r.left + r.width);
+        const bottom = Math.max(m.top + m.height, r.top + r.height);
+        merged[i] = { left, top, width: Math.max(0, right - left), height: Math.max(0, bottom - top) };
+        mergedIntoExisting = true;
+        break;
+      }
+    }
+    if (!mergedIntoExisting) {
+      merged.push({ ...r });
     }
   }
   return merged;
@@ -194,20 +201,24 @@ const CompareDocumentPane = ({
                       className="compare-diff-page__image"
                     />
                     {[...groupedRects.entries()].flatMap(([id, rects]) =>
-                      mergeSameLineRects(rects).map((rect, index) => (
-                        <span
-                          key={`${pane}-highlight-${page.pageNumber}-${id}-${index}`}
-                          data-change-id={id}
-                          className="compare-diff-highlight"
-                          style={{
-                            left: `${rect.left * 100}%`,
-                            top: `${(rect.top + highlightOffset) * 100}%`,
-                            width: `${rect.width * 100}%`,
-                            height: `${rect.height * 100}%`,
-                            backgroundColor: toRgba(highlightColor, highlightOpacity),
-                          }}
-                        />
-                      ))
+                      mergeConnectedRects(rects).map((rect, index) => {
+                        const rotation = ((page.rotation ?? 0) % 360 + 360) % 360;
+                        const verticalOffset = rotation === 180 ? -highlightOffset : highlightOffset;
+                        return (
+                          <span
+                            key={`${pane}-highlight-${page.pageNumber}-${id}-${index}`}
+                            data-change-id={id}
+                            className="compare-diff-highlight"
+                            style={{
+                              left: `${rect.left * 100}%`,
+                              top: `${(rect.top + verticalOffset) * 100}%`,
+                              width: `${rect.width * 100}%`,
+                              height: `${rect.height * 100}%`,
+                              backgroundColor: toRgba(highlightColor, highlightOpacity),
+                            }}
+                          />
+                        );
+                      })
                     )}
                   </div>
                 </div>

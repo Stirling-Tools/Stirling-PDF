@@ -1,4 +1,5 @@
 import { Combobox, ScrollArea, useCombobox } from '@mantine/core';
+import { useMemo, useState } from 'react';
 
 interface NavigationDropdownProps {
   changes: Array<{ value: string; label: string }>;
@@ -17,6 +18,34 @@ const CompareNavigationDropdown = ({
     onDropdownClose: () => combobox.resetSelectedOption(),
   });
 
+  const sanitize = (s: string) => s
+    .normalize('NFKC')
+    .replace(/[\u0000-\u001F\u007F-\u00A0\u2000-\u206F\u2190-\u21FF\u25A0-\u25FF]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  const isMeaningful = (s: string) => {
+    const t = sanitize(s);
+    // Keep only items that have at least one letter or digit (unicode-aware)
+    try {
+      if (!/[\p{L}\p{N}]/u.test(t)) return false;
+    } catch {
+      if (!/[A-Za-z0-9]/.test(t)) return false;
+    }
+    return t.length > 0;
+  };
+
+  const [query, setQuery] = useState('');
+
+  const normalizedChanges = useMemo(() => {
+    const cleaned = changes
+      .map((c) => ({ value: c.value, label: sanitize(c.label) }))
+      .filter((c) => isMeaningful(c.label));
+    const q = sanitize(query).toLowerCase();
+    if (!q) return cleaned;
+    return cleaned.filter((c) => c.label.toLowerCase().includes(q));
+  }, [changes, query]);
+
   return (
     <Combobox
       store={combobox}
@@ -25,6 +54,7 @@ const CompareNavigationDropdown = ({
         onNavigate(value);
         combobox.closeDropdown();
       }}
+      // Mantine Combobox does not accept controlled search props; handle via Combobox.Search directly
     >
       <Combobox.Target>
         <div
@@ -38,10 +68,10 @@ const CompareNavigationDropdown = ({
 
       <Combobox.Dropdown>
         <ScrollArea.Autosize mah={300}>
-          <Combobox.Search placeholder="Search changes..." />
+          <Combobox.Search placeholder="Search changes..." value={query} onChange={(e) => setQuery(e.currentTarget.value)} />
           <Combobox.Options>
-            {changes.length > 0 ? (
-              changes.map((item) => (
+            {normalizedChanges.length > 0 ? (
+              normalizedChanges.map((item) => (
                 <Combobox.Option
                   value={item.value}
                   key={item.value}

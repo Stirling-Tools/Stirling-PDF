@@ -236,6 +236,15 @@
   background-color: rgba(255, 235, 59, 0.5) !important;
 }
 
+/* Union overlay for group flash */
+.compare-diff-flash-overlay {
+  animation: compare-flash 1.5s ease-in-out 1;
+  z-index: 999;
+  background-color: rgba(255, 235, 59, 0.4);
+  pointer-events: none;
+  border-radius: 2px;
+}
+
 .compare-legend__item {
   display: flex;
   align-items: center;
@@ -307,7 +316,7 @@
 .compare-diff-highlight {
   position: absolute;
   pointer-events: none;
-  mix-blend-mode: multiply;
+  mix-blend-mode: normal; /* reduce dark spots on overlap */
 }
 
 /* Inline paragraph highlights in summary */
