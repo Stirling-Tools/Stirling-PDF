@@ -374,7 +374,8 @@ public class SecurityConfiguration {
 
     @Bean
     public IPRateLimitingFilter rateLimitingFilter() {
-        int maxRequestsPerIp = securityProperties.getRateLimit().getMaxRequests();
+        // Example limit TODO add config level
+        int maxRequestsPerIp = 1000000;
         return new IPRateLimitingFilter(maxRequestsPerIp, maxRequestsPerIp);
     }
 

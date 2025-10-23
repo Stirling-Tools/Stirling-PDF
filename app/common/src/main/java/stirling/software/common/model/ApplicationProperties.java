@@ -121,7 +121,6 @@ public class ApplicationProperties {
         private String customGlobalAPIKey;
         private Jwt jwt = new Jwt();
         private Validation validation = new Validation();
-        private RateLimit rateLimit = new RateLimit();
 
         public Boolean isAltLogin() {
             return saml2.getEnabled() || oauth2.getEnabled();
@@ -345,12 +344,6 @@ public class ApplicationProperties {
             }
         }
 
-        @Data
-        public static class RateLimit {
-            private int maxRequests = 1000;
-            private String resetSchedule =
-                    "0 0 0 * * MON"; // Cron expression: At 00:00 every Monday
-        }
     }
 
     @Data
