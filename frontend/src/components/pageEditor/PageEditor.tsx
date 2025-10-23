@@ -265,9 +265,14 @@ const PageEditor = ({
 
   // Update undo/redo state
   const updateUndoRedoState = useCallback(() => {
-    setCanUndo(undoManagerRef.current.canUndo());
-    setCanRedo(undoManagerRef.current.canRedo());
-  }, []);
+    const undoManager = undoManagerRef.current;
+    setCanUndo(undoManager.canUndo());
+    setCanRedo(undoManager.canRedo());
+
+    if (!undoManager.hasHistory()) {
+      setHasUnsavedChanges(false);
+    }
+  }, [setHasUnsavedChanges]);
 
   // Set up undo manager callback
   useEffect(() => {
@@ -1074,9 +1079,6 @@ const PageEditor = ({
           {/* Pages Grid */}
           <DragDropGrid
             items={displayedPages}
-            selectedItems={selectedPageIds}
-            selectionMode={selectionMode}
-            isAnimating={isAnimating}
             onReorderPages={handleReorderPages}
             zoomLevel={zoomLevel}
             getThumbnailData={(pageId) => {

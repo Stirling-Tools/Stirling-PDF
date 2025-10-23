@@ -905,6 +905,10 @@ export class UndoManager {
     return this.redoStack.length > 0;
   }
 
+  hasHistory(): boolean {
+    return this.undoStack.length > 0;
+  }
+
   clear(): void {
     this.undoStack = [];
     this.redoStack = [];

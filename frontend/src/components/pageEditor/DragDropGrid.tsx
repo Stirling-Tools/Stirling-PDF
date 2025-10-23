@@ -23,12 +23,8 @@ interface DragDropItem {
 
 interface DragDropGridProps<T extends DragDropItem> {
   items: T[];
-  selectedItems: string[];
-  selectionMode: boolean;
-  isAnimating: boolean;
   onReorderPages: (sourcePageNumber: number, targetIndex: number, selectedPageIds?: string[]) => void;
   renderItem: (item: T, index: number, refs: React.MutableRefObject<Map<string, HTMLDivElement>>, boxSelectedIds: string[], clearBoxSelection: () => void, getBoxSelection: () => string[], activeId: string | null, isOver: boolean, dragHandleProps?: any, zoomLevel?: number) => React.ReactNode;
-  renderSplitMarker?: (item: T, index: number) => React.ReactNode;
   getThumbnailData?: (itemId: string) => { src: string; rotation: number } | null;
   zoomLevel?: number;
 }
@@ -108,6 +104,10 @@ const DragDropGrid = <T extends DragDropItem>({
 }: DragDropGridProps<T>) => {
   const itemRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const getScrollElement = useCallback(() => {
+    return containerRef.current?.closest('[data-scrolling-container]') as HTMLElement | null;
+  }, []);
 
   // Filter out placeholder items (invisible pages for deselected files)
   const visibleItems = items.filter(item => !item.isPlaceholder);
@@ -286,7 +286,7 @@ const DragDropGrid = <T extends DragDropItem>({
   // Virtualization with react-virtual library
   const rowVirtualizer = useVirtualizer({
     count: Math.ceil(visibleItems.length / itemsPerRow),
-    getScrollElement: () => containerRef.current?.closest('[data-scrolling-container]') as Element,
+    getScrollElement,
     estimateSize: () => {
       const remToPx = parseFloat(getComputedStyle(document.documentElement).fontSize);
       return parseFloat(GRID_CONSTANTS.ITEM_HEIGHT) * remToPx * zoomLevel;
@@ -495,6 +495,24 @@ const DragDropGrid = <T extends DragDropItem>({
     };
   }, [hoveredItemId, dropSide, activeId, itemGap, zoomLevel]);
 
+  const handleWheelWhileDragging = useCallback((event: React.WheelEvent<HTMLDivElement>) => {
+    if (!activeId) {
+      return;
+    }
+
+    const scrollElement = getScrollElement();
+    if (!scrollElement) {
+      return;
+    }
+
+    scrollElement.scrollBy({
+      top: event.deltaY,
+      left: event.deltaX,
+    });
+
+    event.preventDefault();
+  }, [activeId, getScrollElement]);
+
   return (
     <DndContext
       sensors={sensors}
@@ -508,6 +526,7 @@ const DragDropGrid = <T extends DragDropItem>({
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
+        onWheel={handleWheelWhileDragging}
         style={{
           // Basic container styles
           width: '100%',
