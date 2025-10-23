@@ -20,6 +20,7 @@ import type { FileId } from '../types/file';
 import { createToolFlow } from '../components/tools/shared/createToolFlow';
 import DocumentThumbnail from '../components/shared/filePreview/DocumentThumbnail';
 import { useFilesModalContext } from '../contexts/FilesModalContext';
+import './compareTool.css';
 
 const CUSTOM_VIEW_ID = 'compareWorkbenchView';
 const CUSTOM_WORKBENCH_ID = 'custom:compareWorkbenchView' as const;
@@ -178,10 +179,10 @@ const Compare = (props: BaseToolProps) => {
       return (
         <Card withBorder padding="md" radius="md">
           <Group align="flex-start" wrap="nowrap" gap="md">
-            <Box style={{ width: 64, height: 84, flexShrink: 0 }}>
+            <Box className="compare-tool__thumbnail">
               <DocumentThumbnail file={stub as any} thumbnail={stub?.thumbnailUrl || null} />
             </Box>
-            <Stack gap={4} style={{ flex: 1, minWidth: 0 }}>
+            <Stack gap={4} className="compare-tool__details">
               <Text fw={600} truncate>
                 {stub?.name}
               </Text>

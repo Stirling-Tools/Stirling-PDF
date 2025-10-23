@@ -1,5 +1,5 @@
 import React, { ForwardedRef, JSX, MutableRefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, Button, Group, Loader, Stack, Text, Paper, Combobox, useCombobox, ScrollArea, ActionIcon } from '@mantine/core';
+import { Alert, Button, Group, Loader, Stack, Text, Paper, ActionIcon } from '@mantine/core';
 import { Dropzone } from '@mantine/dropzone';
 import { useTranslation } from 'react-i18next';
 import {
@@ -8,7 +8,6 @@ import {
   CompareResultData,
   CompareTokenMetadata,
   REMOVAL_HIGHLIGHT,
-  TokenBoundingBox,
 } from '../../../types/compare';
 import type { FileId } from '../../../types/file';
 import type { StirlingFileStub, StirlingFile } from '../../../types/fileContext';
@@ -23,8 +22,9 @@ import { useRightRailButtons } from '../../../hooks/useRightRailButtons';
 import { alert } from '../../toast';
 import type { ToastLocation } from '../../toast/types';
 import { useMediaQuery } from '@mantine/hooks';
-
-type ViewMode = 'diff';
+import { toRgba } from './compareUtils';
+import { PagePreview, WordHighlightEntry } from './types';
+import CompareDocumentPane from './CompareDocumentPane';
 
 interface CompareWorkbenchData {
   result: CompareResultData | null;
@@ -42,25 +42,6 @@ interface CompareWorkbenchViewProps {
   data: CompareWorkbenchData | null;
 }
 
-interface PagePreview {
-  pageNumber: number;
-  width: number;
-  height: number;
-  url: string;
-}
-
-type HighlightMap = Map<number, TokenBoundingBox[]>;
-
-const toRgba = (hexColor: string, alpha: number): string => {
-  const hex = hexColor.replace('#', '');
-  if (hex.length !== 6) {
-    return hexColor;
-  }
-  const r = parseInt(hex.slice(0, 2), 16);
-  const g = parseInt(hex.slice(2, 4), 16);
-  const b = parseInt(hex.slice(4, 6), 16);
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-};
 
 
 const renderInlineParagraph = (baseText: string, comparisonText: string, side: 'base' | 'comparison') => {
@@ -110,110 +91,6 @@ const renderInlineParagraph = (baseText: string, comparisonText: string, side: '
   );
 };
 
-// Reuse summary inline algorithm to generate absolute positioned overlays for PDF pages
-const computeInlineWordRects = (
-  pageNumber: number,
-  side: 'base' | 'comparison',
-  tokens: CompareDiffToken[],
-  metadata: CompareTokenMetadata[]
-) => {
-  const rects: { bbox: TokenBoundingBox; type: 'added' | 'removed' }[] = [];
-  let index = 0;
-  for (const token of tokens) {
-    const meta = metadata[index] ?? null;
-    if (token.type !== 'unchanged' && meta?.bbox && meta.page === pageNumber) {
-      rects.push({ bbox: meta.bbox, type: token.type === 'added' ? 'added' : 'removed' });
-    }
-    if (side === 'base' && token.type !== 'added') index += 1;
-    if (side === 'comparison' && token.type !== 'removed') index += 1;
-  }
-  return rects;
-};
-
-const buildHighlightMaps = (
-  tokens: CompareDiffToken[],
-  baseMetadata: CompareTokenMetadata[],
-  comparisonMetadata: CompareTokenMetadata[]
-): { base: HighlightMap; comparison: HighlightMap } => {
-  const baseHighlights: HighlightMap = new Map();
-  const comparisonHighlights: HighlightMap = new Map();
-
-  let baseIndex = 0;
-  let comparisonIndex = 0;
-
-  tokens.forEach((token) => {
-    if (token.type === 'removed') {
-      if (baseIndex < baseMetadata.length) {
-        const meta = baseMetadata[baseIndex];
-        if (meta?.bbox) {
-          const entry = baseHighlights.get(meta.page) ?? [];
-          entry.push(meta.bbox);
-          baseHighlights.set(meta.page, entry);
-        }
-      }
-      baseIndex += 1;
-      return;
-    }
-
-    if (token.type === 'added') {
-      if (comparisonIndex < comparisonMetadata.length) {
-        const meta = comparisonMetadata[comparisonIndex];
-        if (meta?.bbox) {
-          const entry = comparisonHighlights.get(meta.page) ?? [];
-          entry.push(meta.bbox);
-          comparisonHighlights.set(meta.page, entry);
-        }
-      }
-      comparisonIndex += 1;
-      return;
-    }
-
-    if (baseIndex < baseMetadata.length) {
-      baseIndex += 1;
-    }
-    if (comparisonIndex < comparisonMetadata.length) {
-      comparisonIndex += 1;
-    }
-  });
-
-  // Merge overlapping/adjacent rectangles to avoid overpainting
-  const mergeRects = (rects: TokenBoundingBox[]): TokenBoundingBox[] => {
-    if (rects.length === 0) return rects;
-    const EPS_X = 0.004; // ~0.4% width tolerance
-    const EPS_Y = 0.006; // vertical tolerance to treat as same line
-    const sorted = rects.slice().sort((r1, r2) => (r1.top !== r2.top ? r1.top - r2.top : r1.left - r2.left));
-    const merged: TokenBoundingBox[] = [];
-    for (const r of sorted) {
-      const last = merged[merged.length - 1];
-      if (
-        last && Math.abs(r.top - last.top) < EPS_Y &&
-        r.left <= last.left + last.width + EPS_X &&
-        r.top + r.height >= last.top - EPS_Y && last.top + last.height >= r.top - EPS_Y
-      ) {
-        const left = Math.min(last.left, r.left);
-        const right = Math.max(last.left + last.width, r.left + r.width);
-        const top = Math.min(last.top, r.top);
-        const bottom = Math.max(last.top + last.height, r.top + r.height);
-        last.left = left;
-        last.top = top;
-        last.width = Math.max(0, right - left);
-        last.height = Math.max(0, bottom - top);
-      } else {
-        merged.push({ ...r });
-      }
-    }
-    return merged;
-  };
-
-  for (const [page, rects] of baseHighlights) {
-    baseHighlights.set(page, mergeRects(rects));
-  }
-  for (const [page, rects] of comparisonHighlights) {
-    comparisonHighlights.set(page, mergeRects(rects));
-  }
-
-  return { base: baseHighlights, comparison: comparisonHighlights };
-};
 
 const renderPdfDocumentToImages = async (file: File): Promise<PagePreview[]> => {
   const arrayBuffer = await file.arrayBuffer();
@@ -264,7 +141,6 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
   const { openFilesModal } = useFilesModalContext();
   const { actions: fileActions } = useFileActions();
   const { selectors } = useFileContext();
-  const [mode, setMode] = useState<ViewMode>('diff');
   const prefersStacked = useMediaQuery('(max-width: 1024px)');
   const [layout, setLayout] = useState<'side-by-side' | 'stacked'>(prefersStacked ? 'stacked' : 'side-by-side');
 
@@ -280,10 +156,14 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
   // Maintain normalized deltas so panes keep their relative positions when re-linked
   const scrollLinkDeltaRef = useRef<{ vertical: number; horizontal: number }>({ vertical: 0, horizontal: 0 });
   const [isPanMode, setIsPanMode] = useState(false);
-  const panDragRef = useRef<{ active: boolean; source: 'base' | 'comparison' | null; startX: number; startY: number; startScrollLeft: number; startScrollTop: number; targetStartScrollLeft: number; targetStartScrollTop: number }>({ active: false, source: null, startX: 0, startY: 0, startScrollLeft: 0, startScrollTop: 0, targetStartScrollLeft: 0, targetStartScrollTop: 0 });
+  const panDragRef = useRef<{ active: boolean; source: 'base' | 'comparison' | null; startX: number; startY: number; startPanX: number; startPanY: number; targetStartPanX: number; targetStartPanY: number }>(
+    { active: false, source: null, startX: 0, startY: 0, startPanX: 0, startPanY: 0, targetStartPanX: 0, targetStartPanY: 0 }
+  );
   const lastActivePaneRef = useRef<'base' | 'comparison'>('base');
   const [baseZoom, setBaseZoom] = useState(1);
   const [comparisonZoom, setComparisonZoom] = useState(1);
+  const [basePan, setBasePan] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const [comparisonPan, setComparisonPan] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const ZOOM_MIN = 0.5;
   const ZOOM_MAX = 3;
   const ZOOM_STEP = 0.1;
@@ -635,10 +515,6 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
   );
 
   useEffect(() => {
-    setMode('diff');
-  }, [result?.totals.processedAt, data?.baseFileId, data?.comparisonFileId]);
-
-  useEffect(() => {
     let cancelled = false;
 
     const render = async () => {
@@ -712,70 +588,13 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
     processedAt: Date.now(),
   };
 
-  const highlightMaps = useMemo(() => {
-    if (!result) {
-      return { base: new Map(), comparison: new Map() };
-    }
-    // Build per-page rectangles directly from the token stream we used for summary
-    const baseMap: HighlightMap = new Map();
-    const comparisonMap: HighlightMap = new Map();
-    // Precompute rects for each page using token metadata
-    const byPageBase: Map<number, TokenBoundingBox[]> = new Map();
-    const byPageComparison: Map<number, TokenBoundingBox[]> = new Map();
+  const processingMessage = t('compare.status.processing', 'Analyzing differences...');
+  const emptyMessage = t('compare.view.noData', 'Run a comparison to view the summary and diff.');
+  const baseDocumentLabel = t('compare.summary.baseHeading', 'Base document');
+  const comparisonDocumentLabel = t('compare.summary.comparisonHeading', 'Comparison document');
+  const pageLabel = t('compare.summary.pageLabel', 'Page');
 
-    let baseIndex = 0;
-    let comparisonIndex = 0;
-    for (const token of result.tokens) {
-      if (token.type === 'removed') {
-        const meta = result.tokenMetadata.base[baseIndex];
-        if (meta?.bbox) {
-          const arr = byPageBase.get(meta.page) ?? [];
-          arr.push(meta.bbox);
-          byPageBase.set(meta.page, arr);
-        }
-        baseIndex += 1;
-      } else if (token.type === 'added') {
-        const meta = result.tokenMetadata.comparison[comparisonIndex];
-        if (meta?.bbox) {
-          const arr = byPageComparison.get(meta.page) ?? [];
-          arr.push(meta.bbox);
-          byPageComparison.set(meta.page, arr);
-        }
-        comparisonIndex += 1;
-      } else {
-        baseIndex += 1;
-        comparisonIndex += 1;
-      }
-    }
 
-    const toMerged = (rects: TokenBoundingBox[]): TokenBoundingBox[] => {
-      const EPS_X = 0.02; // merge gaps up to ~2% of page width
-      const EPS_Y = 0.006;
-      const sorted = rects.slice().sort((a, b) => (a.top !== b.top ? a.top - b.top : a.left - b.left));
-      const merged: TokenBoundingBox[] = [];
-      for (const r of sorted) {
-        const last = merged[merged.length - 1];
-        if (
-          last && Math.abs(r.top - last.top) < EPS_Y && r.left <= last.left + last.width + EPS_X
-        ) {
-          const left = Math.min(last.left, r.left);
-          const right = Math.max(last.left + last.width, r.left + r.width);
-          last.left = left;
-          last.width = Math.max(0, right - left);
-          last.top = Math.min(last.top, r.top);
-          last.height = Math.max(last.height, r.height);
-        } else {
-          merged.push({ ...r });
-        }
-      }
-      return merged;
-    };
-
-    for (const [page, rects] of byPageBase) baseMap.set(page, toMerged(rects));
-    for (const [page, rects] of byPageComparison) comparisonMap.set(page, toMerged(rects));
-
-    return { base: baseMap, comparison: comparisonMap };
-  }, [result]);
 
   const handleScrollSync = (source: HTMLDivElement | null, target: HTMLDivElement | null) => {
     // Do not sync while panning; panning should only affect the active pane
@@ -789,49 +608,79 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
 
     const sourceIsBase = source === baseScrollRef.current;
     const deltaV = scrollLinkDeltaRef.current.vertical;
-    const deltaH = scrollLinkDeltaRef.current.horizontal;
 
     // Normalize positions (guard against zero scroll ranges)
     const sVMax = Math.max(1, source.scrollHeight - source.clientHeight);
     const sHMax = Math.max(1, source.scrollWidth - source.clientWidth);
     const tVMax = Math.max(1, target.scrollHeight - target.clientHeight);
-    const tHMax = Math.max(1, target.scrollWidth - target.clientWidth);
+    // If target cannot scroll vertically, skip syncing to avoid jumps
+    if (tVMax <= 1) {
+      return;
+    }
 
     const sV = source.scrollTop / sVMax;
     const sH = source.scrollLeft / sHMax;
 
     // If base is source, comp = base + delta; if comp is source, base = comp - delta
     const desiredTV = sourceIsBase ? sV + deltaV : sV - deltaV;
-    const desiredTH = sourceIsBase ? sH + deltaH : sH - deltaH;
+    // Only sync vertical scrolling to avoid layout-induced jumps with differing orientations
 
     const clampedTV = Math.max(0, Math.min(1, desiredTV));
-    const clampedTH = Math.max(0, Math.min(1, desiredTH));
+    // Horizontal sync disabled intentionally
 
     isSyncingRef.current = true;
     target.scrollTop = clampedTV * tVMax;
-    target.scrollLeft = clampedTH * tHMax;
     requestAnimationFrame(() => {
       isSyncingRef.current = false;
     });
   };
 
+  const getMaxCanvasSize = useCallback((pane: 'base' | 'comparison') => {
+    const pages = pane === 'base' ? basePages : comparisonPages;
+    const peers = pane === 'base' ? comparisonPages : basePages;
+    let maxW = 0;
+    let maxH = 0;
+    for (const page of pages) {
+      const peer = peers.find(p => p.pageNumber === page.pageNumber);
+      const targetHeight = peer ? Math.max(page.height, peer.height) : page.height;
+      const fit = targetHeight / page.height;
+      const width = Math.round(page.width * fit);
+      const height = Math.round(targetHeight);
+      if (width > maxW) maxW = width;
+      if (height > maxH) maxH = height;
+    }
+    return { maxW, maxH };
+  }, [basePages, comparisonPages]);
+
+  const getPanBounds = useCallback((pane: 'base' | 'comparison') => {
+    const { maxW, maxH } = getMaxCanvasSize(pane);
+    const zoom = pane === 'base' ? baseZoom : comparisonZoom;
+    const extraX = Math.max(0, Math.round(maxW * (zoom - 1)));
+    const extraY = Math.max(0, Math.round(maxH * (zoom - 1)));
+    return { maxX: extraX, maxY: extraY };
+  }, [getMaxCanvasSize, baseZoom, comparisonZoom]);
+
   const beginPan = (pane: 'base' | 'comparison', e: React.MouseEvent<HTMLDivElement>) => {
     if (!isPanMode) return;
-    // Only enable panning when zoomed beyond 1 (i.e., content larger than viewport)
-    if (pane === 'base' ? baseZoom <= 1 : comparisonZoom <= 1) return;
+    const zoom = pane === 'base' ? baseZoom : comparisonZoom;
+    if (zoom <= 1) return;
     const container = pane === 'base' ? baseScrollRef.current : comparisonScrollRef.current;
     const other = pane === 'base' ? comparisonScrollRef.current : baseScrollRef.current;
     if (!container) return;
+    // Only start inner-content panning when the drag starts over the image content
+    const targetEl = e.target as HTMLElement | null;
+    const isOnImage = !!targetEl?.closest('.compare-diff-page__inner');
+    if (!isOnImage) return; // allow normal scrolling outside the image
     e.preventDefault();
     panDragRef.current = {
       active: true,
       source: pane,
       startX: e.clientX,
       startY: e.clientY,
-      startScrollLeft: container.scrollLeft,
-      startScrollTop: container.scrollTop,
-      targetStartScrollLeft: other?.scrollLeft ?? 0,
-      targetStartScrollTop: other?.scrollTop ?? 0,
+      startPanX: pane === 'base' ? basePan.x : comparisonPan.x,
+      startPanY: pane === 'base' ? basePan.y : comparisonPan.y,
+      targetStartPanX: pane === 'base' ? comparisonPan.x : basePan.x,
+      targetStartPanY: pane === 'base' ? comparisonPan.y : basePan.y,
     };
     lastActivePaneRef.current = pane;
     (container as HTMLDivElement).style.cursor = 'grabbing';
@@ -842,34 +691,24 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
     const drag = panDragRef.current;
     if (!drag.active || !drag.source) return;
 
-    const sourceEl = drag.source === 'base' ? baseScrollRef.current : comparisonScrollRef.current;
-    const targetEl = drag.source === 'base' ? comparisonScrollRef.current : baseScrollRef.current;
-    if (!sourceEl) return;
-
     const dx = e.clientX - drag.startX;
     const dy = e.clientY - drag.startY;
 
-    isSyncingRef.current = true;
-    sourceEl.scrollLeft = drag.startScrollLeft - dx;
-    sourceEl.scrollTop = drag.startScrollTop - dy;
+    const isBase = drag.source === 'base';
+    const bounds = getPanBounds(drag.source);
+    const nextX = Math.max(0, Math.min(bounds.maxX, drag.startPanX - dx));
+    const nextY = Math.max(0, Math.min(bounds.maxY, drag.startPanY - dy));
+    if (isBase) setBasePan({ x: nextX, y: nextY }); else setComparisonPan({ x: nextX, y: nextY });
 
-    // If linked, pan the other pane proportionally; else only pan the active pane
-    if (isScrollLinked && targetEl) {
-      const sHMax = Math.max(1, sourceEl.scrollWidth - sourceEl.clientWidth);
-      const tHMax = Math.max(1, targetEl.scrollWidth - targetEl.clientWidth);
-      const sVMax = Math.max(1, sourceEl.scrollHeight - sourceEl.clientHeight);
-      const tVMax = Math.max(1, targetEl.scrollHeight - targetEl.clientHeight);
-
-      const scaledDx = dx * (tHMax / sHMax);
-      const scaledDy = dy * (tVMax / sVMax);
-
-      targetEl.scrollLeft = panDragRef.current.targetStartScrollLeft - scaledDx;
-      targetEl.scrollTop = panDragRef.current.targetStartScrollTop - scaledDy;
+    if (isScrollLinked) {
+      const otherPane: 'base' | 'comparison' = isBase ? 'comparison' : 'base';
+      const otherBounds = getPanBounds(otherPane);
+      const scaleX = bounds.maxX > 0 ? otherBounds.maxX / bounds.maxX : 0;
+      const scaleY = bounds.maxY > 0 ? otherBounds.maxY / bounds.maxY : 0;
+      const otherNextX = Math.max(0, Math.min(otherBounds.maxX, panDragRef.current.targetStartPanX - dx * scaleX));
+      const otherNextY = Math.max(0, Math.min(otherBounds.maxY, panDragRef.current.targetStartPanY - dy * scaleY));
+      if (isBase) setComparisonPan({ x: otherNextX, y: otherNextY }); else setBasePan({ x: otherNextX, y: otherNextY });
     }
-
-    requestAnimationFrame(() => {
-      isSyncingRef.current = false;
-    });
   };
 
   const endPan = () => {
@@ -922,28 +761,70 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
         startZoom: pane === 'base' ? baseZoom : comparisonZoom,
       };
       e.preventDefault();
+    } else if (e.touches.length === 1) {
+      if (!isPanMode) return;
+      const zoom = pane === 'base' ? baseZoom : comparisonZoom;
+      if (zoom <= 1) return;
+      const targetEl = e.target as HTMLElement | null;
+      const isOnImage = !!targetEl?.closest('.compare-diff-page__inner');
+      if (!isOnImage) return;
+      const touch = e.touches[0];
+      panDragRef.current = {
+        active: true,
+        source: pane,
+        startX: touch.clientX,
+        startY: touch.clientY,
+        startPanX: pane === 'base' ? basePan.x : comparisonPan.x,
+        startPanY: pane === 'base' ? basePan.y : comparisonPan.y,
+        targetStartPanX: pane === 'base' ? comparisonPan.x : basePan.x,
+        targetStartPanY: pane === 'base' ? comparisonPan.y : basePan.y,
+      };
+      e.preventDefault();
     }
   };
 
   const onTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
-    if (!pinchRef.current.active || e.touches.length !== 2) return;
-    const [t1, t2] = [e.touches[0], e.touches[1]];
-    const dx = t1.clientX - t2.clientX;
-    const dy = t1.clientY - t2.clientY;
-    const distance = Math.hypot(dx, dy);
-    const scale = distance / Math.max(1, pinchRef.current.startDistance);
-    // Dampen sensitivity
-    const dampened = 1 + (scale - 1) * 0.6;
-    const pane = pinchRef.current.pane!;
-    const startZoom = pinchRef.current.startZoom;
-    const nextZoom = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, +(startZoom * dampened).toFixed(2)));
-    if (pane === 'base') setBaseZoom(nextZoom); else setComparisonZoom(nextZoom);
-    e.preventDefault();
+    if (pinchRef.current.active && e.touches.length === 2) {
+      const [t1, t2] = [e.touches[0], e.touches[1]];
+      const dx = t1.clientX - t2.clientX;
+      const dy = t1.clientY - t2.clientY;
+      const distance = Math.hypot(dx, dy);
+      const scale = distance / Math.max(1, pinchRef.current.startDistance);
+      const dampened = 1 + (scale - 1) * 0.6;
+      const pane = pinchRef.current.pane!;
+      const startZoom = pinchRef.current.startZoom;
+      const nextZoom = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, +(startZoom * dampened).toFixed(2)));
+      if (pane === 'base') setBaseZoom(nextZoom); else setComparisonZoom(nextZoom);
+      e.preventDefault();
+      return;
+    }
+    // One-finger pan
+    if (panDragRef.current.active && e.touches.length === 1) {
+      const touch = e.touches[0];
+      const dx = touch.clientX - panDragRef.current.startX;
+      const dy = touch.clientY - panDragRef.current.startY;
+      const isBase = panDragRef.current.source === 'base';
+      const bounds = getPanBounds(panDragRef.current.source!);
+      const nextX = Math.max(0, Math.min(bounds.maxX, panDragRef.current.startPanX - dx));
+      const nextY = Math.max(0, Math.min(bounds.maxY, panDragRef.current.startPanY - dy));
+      if (isBase) setBasePan({ x: nextX, y: nextY }); else setComparisonPan({ x: nextX, y: nextY });
+      if (isScrollLinked) {
+        const otherPane: 'base' | 'comparison' = isBase ? 'comparison' : 'base';
+        const otherBounds = getPanBounds(otherPane);
+        const scaleX = bounds.maxX > 0 ? otherBounds.maxX / bounds.maxX : 0;
+        const scaleY = bounds.maxY > 0 ? otherBounds.maxY / bounds.maxY : 0;
+        const otherNextX = Math.max(0, Math.min(otherBounds.maxX, panDragRef.current.targetStartPanX - dx * scaleX));
+        const otherNextY = Math.max(0, Math.min(otherBounds.maxY, panDragRef.current.targetStartPanY - dy * scaleY));
+        if (isBase) setComparisonPan({ x: otherNextX, y: otherNextY }); else setBasePan({ x: otherNextX, y: otherNextY });
+      }
+      e.preventDefault();
+    }
   };
 
   const onTouchEnd = () => {
     pinchRef.current.active = false;
     pinchRef.current.pane = null;
+    panDragRef.current.active = false;
   };
 
   // Keyboard handler: when unlinked, ArrowUp/Down scroll both panes in the same direction
@@ -1129,9 +1010,14 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
 
   // Precompute word highlight rects by page with their token indices (no merging)
   const wordHighlightMaps = useMemo(() => {
-    if (!result) return { base: new Map<number, { rect: TokenBoundingBox; index: number }[]>(), comparison: new Map<number, { rect: TokenBoundingBox; index: number }[]>() };
-    const baseMap = new Map<number, { rect: TokenBoundingBox; index: number }[]>();
-    const comparisonMap = new Map<number, { rect: TokenBoundingBox; index: number }[]>();
+    if (!result) {
+      return {
+        base: new Map<number, WordHighlightEntry[]>(),
+        comparison: new Map<number, WordHighlightEntry[]>(),
+      };
+    }
+    const baseMap = new Map<number, WordHighlightEntry[]>();
+    const comparisonMap = new Map<number, WordHighlightEntry[]>();
 
     let baseIndex = 0;
     let comparisonIndex = 0;
@@ -1165,11 +1051,12 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
   const getRowHeightPx = useCallback((pageNumber: number) => {
     const basePage = basePages.find(p => p.pageNumber === pageNumber);
     const compPage = comparisonPages.find(p => p.pageNumber === pageNumber);
-    const baseHeight = basePage ? basePage.height * baseZoom : 0;
-    const compHeight = compPage ? compPage.height * comparisonZoom : 0;
+    // Row height must remain constant regardless of zoom.
+    const baseHeight = basePage ? basePage.height : 0;
+    const compHeight = compPage ? compPage.height : 0;
     const rowHeight = Math.max(baseHeight, compHeight);
     return Math.round(rowHeight);
-  }, [basePages, comparisonPages, baseZoom, comparisonZoom]);
+  }, [basePages, comparisonPages]);
 
   const handleChangeNavigation = useCallback((changeValue: string, pane: 'base' | 'comparison') => {
     const targetRef = pane === 'base' ? baseScrollRef : comparisonScrollRef;
@@ -1216,80 +1103,6 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
     }
   }, []);
 
-  // Custom navigation dropdown component
-  const NavigationDropdown = ({
-    changes,
-    placeholder,
-    className,
-    onNavigate,
-  }: {
-    changes: Array<{ value: string; label: string; pageNumber: number }>;
-    placeholder: string;
-    className?: string;
-    onNavigate: (value: string) => void;
-  }) => {
-    const combobox = useCombobox({
-      onDropdownClose: () => combobox.resetSelectedOption(),
-    });
-
-    const options = changes.map((item) => (
-      <Combobox.Option
-        value={item.value}
-        key={item.value}
-        onClick={() => {
-          console.log('Dropdown option clicked:', item.value);
-          onNavigate(item.value);
-          combobox.closeDropdown();
-        }}
-      >
-        <span style={{ fontSize: '0.875rem' }}>{item.label}</span>
-      </Combobox.Option>
-    ));
-
-    return (
-      <Combobox
-        store={combobox}
-        withinPortal={false}
-        onOptionSubmit={(val) => {
-          console.log('Dropdown option submitted:', val);
-          onNavigate(val);
-          combobox.closeDropdown();
-        }}
-      >
-        <Combobox.Target>
-          <div
-            className={`compare-changes-select ${className || ''}`}
-            style={{
-              cursor: 'pointer',
-              minWidth: '200px',
-              padding: '6px 12px',
-              borderRadius: '8px',
-              fontSize: '0.875rem',
-              fontWeight: 500,
-              border: 'none',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-            }}
-            onClick={() => combobox.toggleDropdown()}
-          >
-            <span>{placeholder}</span>
-            <Combobox.Chevron style={{ marginLeft: '8px' }} />
-          </div>
-        </Combobox.Target>
-
-        <Combobox.Dropdown>
-          <ScrollArea.Autosize mah={300}>
-            <Combobox.Search placeholder="Search changes..." />
-            <Combobox.Options>
-              {options.length > 0 ? options : <Combobox.Empty>No changes found</Combobox.Empty>}
-            </Combobox.Options>
-          </ScrollArea.Autosize>
-        </Combobox.Dropdown>
-      </Combobox>
-    );
-  };
-
   // Drag-to-pan: adjust scroll positions directly for smooth, synced panning
   // No pan/zoom handlers in simplified mode
 
@@ -1297,8 +1110,14 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
     return renderUploadLayout();
   }
 
+  // Safe to access result and the computed arrays below this point
+  const baseTitle = `${result.base.fileName} - ${basePages.length} pages`;
+  const comparisonTitle = `${result.comparison.fileName} - ${comparisonPages.length} pages`;
+  const baseDropdownPlaceholder = `Deletions (${baseWordChanges.length})`;
+  const comparisonDropdownPlaceholder = `Additions (${comparisonWordChanges.length})`;
+
   return (
-    <Stack className="compare-workbench" style={{ height: '100%', minHeight: 0 }}>
+    <Stack className="compare-workbench">
       {result.warnings.length > 0 && (
         <Alert color="yellow" variant="light">
           <Stack gap={4}>
@@ -1312,295 +1131,79 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
       )}
 
       {/* Diff view only */}
-        <Stack gap="lg" style={{ flex: 1, minHeight: 0 }}>
-          <Group gap="md" className="compare-legend">
-            <div className="compare-legend__item">
-              <span className="compare-legend__swatch" style={{ backgroundColor: toRgba(result.base.highlightColor, 0.35) }} />
-              <Text size="xs">{t('compare.legend.removed', 'Removed from base')}</Text>
-            </div>
-            <div className="compare-legend__item">
-              <span
-                className="compare-legend__swatch"
-                style={{ backgroundColor: toRgba(result.comparison.highlightColor, 0.35) }}
-              />
-              <Text size="xs">{t('compare.legend.added', 'Added in comparison')}</Text>
-            </div>
-          </Group>
+        <Stack gap="lg" className="compare-workbench__content">
 
           <div
             className={`compare-workbench__columns ${layout === 'stacked' ? 'compare-workbench__columns--stacked' : ''}`}
-            style={{
-              minHeight: 0,
-              height: '100%',
-            }}
           >
-            {/** Compute pane styles: in stacked mode, force each pane to exactly half height */}
-            <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-              {/* Sticky Header - Outside scroll container */}
-              <div className="compare-header">
-                <Group justify="space-between" align="center">
-                  <Text fw={600} size="lg">
-                    {result.base.fileName} - {basePages.length} pages
-                  </Text>
-                    {baseWordChanges.length > 0 && (
-                      <NavigationDropdown
-                        changes={baseWordChanges}
-                        placeholder={`Deletions (${baseWordChanges.length})`}
-                        className=""
-                        onNavigate={(value) => handleChangeNavigation(value, 'base')}
-                      />
-                    )}
-                </Group>
-              </div>
-              
-              {/* Scrollable content */}
-              <div
-                ref={baseScrollRef}
-                onScroll={(event) => handleScrollSync(event.currentTarget, comparisonScrollRef.current)}
-                onMouseDown={(e) => beginPan('base', e)}
-                onMouseMove={continuePan}
-                onMouseUp={endPan}
-                onMouseLeave={endPan}
-                onWheel={(e) => handleWheelZoom('base', e)}
-                onTouchStart={(e) => onTouchStart('base', e)}
-                onTouchMove={onTouchMove}
-                onTouchEnd={onTouchEnd}
-                style={{ minHeight: 0, flex: 1, overflow: 'auto', cursor: isPanMode ? (baseZoom > 1 ? 'grab' : 'auto') : 'auto' }}
-              >
-                <Stack gap="sm" style={{ position: 'relative' }}>
-
-                {baseLoading && (
-                  <Group justify="center" gap="xs" py="md">
-                    <Loader size="sm" />
-                    <Text size="sm">{t('compare.status.processing', 'Analyzing differences...')}</Text>
-                  </Group>
-                )}
-
-                {!baseLoading && basePages.length === 0 && (
-                  <Alert color="gray" variant="light">
-                    <Text size="sm">{t('compare.view.noData', 'Run a comparison to view the summary and diff.')}</Text>
-                  </Alert>
-                )}
-
-                {basePages.map((page) => {
-                  const highlights = highlightMaps.base.get(page.pageNumber) ?? [];
-                  const vOffset = 4 / page.height; // ~2px downward adjustment
-                  // Compute a per-row fit so both sides share the same (larger) height for this page number
-                  const compPage = comparisonPages.find(p => p.pageNumber === page.pageNumber);
-                  const targetHeight = compPage ? Math.max(page.height, compPage.height) : page.height;
-                  const fit = targetHeight / page.height;
-                  const rowHeightPx = getRowHeightPx(page.pageNumber);
-
-                  return (
-                    <div key={`base-page-${page.pageNumber}`} className="compare-diff-page" style={{ minHeight: `${rowHeightPx}px` }}>
-                      <Text size="xs" fw={600} c="dimmed">
-                        {t('compare.summary.baseHeading', 'Base document')} · {t('compare.summary.pageLabel', 'Page')} {page.pageNumber}
-                      </Text>
-                      <div className="compare-diff-page__canvas" style={{ width: `${Math.round(page.width * fit * baseZoom)}px`, maxWidth: '100%', overflow: 'visible' }}>
-                        <div style={{ position: 'relative', width: '100%', aspectRatio: `${page.width} / ${page.height}` }}>
-                          <img src={page.url} alt={t('compare.summary.baseHeading', 'Base document')} loading="lazy" style={{ width: '100%', height: '100%' }} />
-                          {(() => {
-                            // Render per-word highlights with stable IDs
-                            const wordRects = wordHighlightMaps.base.get(page.pageNumber) ?? [];
-
-                            // Group rects by change id, then merge contiguous rects on the same line
-                            const byGroup = new Map<string, TokenBoundingBox[]>();
-                            for (const { rect, index } of wordRects) {
-                              const id = baseTokenIndexToGroupId.get(index) ?? `base-token-${index}`;
-                              const arr = byGroup.get(id) ?? [];
-                              arr.push(rect);
-                              byGroup.set(id, arr);
-                            }
-
-                            const EPS_X = 0.02; // merge gaps up to ~2% of page width
-                            const EPS_Y = 0.006; // consider same text line
-                            const mergeSameLine = (rects: TokenBoundingBox[]): TokenBoundingBox[] => {
-                              if (rects.length === 0) return rects;
-                              const sorted = rects.slice().sort((a, b) => (a.top !== b.top ? a.top - b.top : a.left - b.left));
-                              const merged: TokenBoundingBox[] = [];
-                              for (const r of sorted) {
-                                const last = merged[merged.length - 1];
-                                if (
-                                  last && Math.abs(r.top - last.top) < EPS_Y && r.left <= last.left + last.width + EPS_X
-                                ) {
-                                  const left = Math.min(last.left, r.left);
-                                  const right = Math.max(last.left + last.width, r.left + r.width);
-                                  const top = Math.min(last.top, r.top);
-                                  const bottom = Math.max(last.top + last.height, r.top + r.height);
-                                  last.left = left;
-                                  last.top = top;
-                                  last.width = Math.max(0, right - left);
-                                  last.height = Math.max(0, bottom - top);
-                                } else {
-                                  merged.push({ ...r });
-                                }
-                              }
-                              return merged;
-                            };
-
-                            const spans: JSX.Element[] = [];
-                            byGroup.forEach((rects, id) => {
-                              const mergedRects = mergeSameLine(rects);
-                              mergedRects.forEach((rect, mIndex) => {
-                                spans.push(
-                                  <span
-                                    key={`base-highlight-${page.pageNumber}-${id}-${mIndex}`}
-                                    data-change-id={id}
-                                    className="compare-diff-highlight"
-                                    style={{
-                                      left: `${rect.left * 100}%`,
-                                      top: `${(rect.top + vOffset) * 100}%`,
-                                      width: `${rect.width * 100}%`,
-                                      height: `${rect.height * 100}%`,
-                                      backgroundColor: toRgba(REMOVAL_HIGHLIGHT, 0.45),
-                                    }}
-                                  />
-                                );
-                              });
-                            });
-
-                            return spans;
-                          })()}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-                </Stack>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-              {/* Sticky Header - Outside scroll container */}
-              <div className="compare-header">
-                <Group justify="space-between" align="center">
-                  <Text fw={600} size="lg">
-                    {result.comparison.fileName} - {comparisonPages.length} pages
-                  </Text>
-                    {comparisonWordChanges.length > 0 && (
-                      <NavigationDropdown
-                        changes={comparisonWordChanges}
-                        placeholder={`Additions (${comparisonWordChanges.length})`}
-                        className="compare-changes-select--comparison"
-                        onNavigate={(value) => handleChangeNavigation(value, 'comparison')}
-                      />
-                    )}
-                </Group>
-              </div>
-              
-              {/* Scrollable content */}
-              <div
-                ref={comparisonScrollRef}
-                onScroll={(event) => handleScrollSync(event.currentTarget, baseScrollRef.current)}
-                onMouseDown={(e) => beginPan('comparison', e)}
-                onMouseMove={continuePan}
-                onMouseUp={endPan}
-                onMouseLeave={endPan}
-                onWheel={(e) => handleWheelZoom('comparison', e)}
-                onTouchStart={(e) => onTouchStart('comparison', e)}
-                onTouchMove={onTouchMove}
-                onTouchEnd={onTouchEnd}
-                style={{ minHeight: 0, flex: 1, overflow: 'auto', cursor: isPanMode ? 'grab' : 'auto' }}
-              >
-                <Stack gap="sm" style={{ position: 'relative' }}>
-
-                {comparisonLoading && (
-                  <Group justify="center" gap="xs" py="md">
-                    <Loader size="sm" />
-                    <Text size="sm">{t('compare.status.processing', 'Analyzing differences...')}</Text>
-                  </Group>
-                )}
-
-                {!comparisonLoading && comparisonPages.length === 0 && (
-                  <Alert color="gray" variant="light">
-                    <Text size="sm">{t('compare.view.noData', 'Run a comparison to view the summary and diff.')}</Text>
-                  </Alert>
-                )}
-
-                {comparisonPages.map((page) => {
-                  const highlights = highlightMaps.comparison.get(page.pageNumber) ?? [];
-                  const vOffset = 2 / page.height; // ~2px downward adjustment
-                  const basePage = basePages.find(p => p.pageNumber === page.pageNumber);
-                  const targetHeight = basePage ? Math.max(page.height, basePage.height) : page.height;
-                  const fit = targetHeight / page.height;
-                  const rowHeightPx = getRowHeightPx(page.pageNumber);
-
-                  return (
-                    <div key={`comparison-page-${page.pageNumber}`} className="compare-diff-page" style={{ minHeight: `${rowHeightPx}px` }}>
-                      <Text size="xs" fw={600} c="dimmed">
-                        {t('compare.summary.comparisonHeading', 'Comparison document')} · {t('compare.summary.pageLabel', 'Page')}{' '}
-                        {page.pageNumber}
-                      </Text>
-                      <div className="compare-diff-page__canvas" style={{ width: `${Math.round(page.width * fit * comparisonZoom)}px`, maxWidth: '100%', overflow: 'visible' }}>
-                        <div style={{ position: 'relative', width: '100%', aspectRatio: `${page.width} / ${page.height}` }}>
-                          <img src={page.url} alt={t('compare.summary.comparisonHeading', 'Comparison document')} loading="lazy" style={{ width: '100%', height: '100%' }} />
-                          {(() => {
-                            // Render per-word highlights with stable IDs
-                            const wordRects = wordHighlightMaps.comparison.get(page.pageNumber) ?? [];
-
-                            const byGroup = new Map<string, TokenBoundingBox[]>();
-                            for (const { rect, index } of wordRects) {
-                              const id = comparisonTokenIndexToGroupId.get(index) ?? `comparison-token-${index}`;
-                              const arr = byGroup.get(id) ?? [];
-                              arr.push(rect);
-                              byGroup.set(id, arr);
-                            }
-
-                            const EPS_X = 0.02;
-                            const EPS_Y = 0.006;
-                            const mergeSameLine = (rects: TokenBoundingBox[]): TokenBoundingBox[] => {
-                              if (rects.length === 0) return rects;
-                              const sorted = rects.slice().sort((a, b) => (a.top !== b.top ? a.top - b.top : a.left - b.left));
-                              const merged: TokenBoundingBox[] = [];
-                              for (const r of sorted) {
-                                const last = merged[merged.length - 1];
-                                if (last && Math.abs(r.top - last.top) < EPS_Y && r.left <= last.left + last.width + EPS_X) {
-                                  const left = Math.min(last.left, r.left);
-                                  const right = Math.max(last.left + last.width, r.left + r.width);
-                                  const top = Math.min(last.top, r.top);
-                                  const bottom = Math.max(last.top + last.height, r.top + r.height);
-                                  last.left = left;
-                                  last.top = top;
-                                  last.width = Math.max(0, right - left);
-                                  last.height = Math.max(0, bottom - top);
-                                } else {
-                                  merged.push({ ...r });
-                                }
-                              }
-                              return merged;
-                            };
-
-                            const spans: JSX.Element[] = [];
-                            byGroup.forEach((rects, id) => {
-                              const mergedRects = mergeSameLine(rects);
-                              mergedRects.forEach((rect, mIndex) => {
-                                spans.push(
-                                  <span
-                                    key={`comparison-highlight-${page.pageNumber}-${id}-${mIndex}`}
-                                    data-change-id={id}
-                                    className="compare-diff-highlight"
-                                    style={{
-                                      left: `${rect.left * 100}%`,
-                                      top: `${(rect.top + vOffset) * 100}%`,
-                                      width: `${rect.width * 100}%`,
-                                      height: `${rect.height * 100}%`,
-                                      backgroundColor: toRgba(ADDITION_HIGHLIGHT, 0.35),
-                                    }}
-                                  />
-                                );
-                              });
-                            });
-
-                            return spans;
-                          })()}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-                </Stack>
-              </div>
-            </div>
+            <CompareDocumentPane
+              pane="base"
+              scrollRef={baseScrollRef}
+              peerScrollRef={comparisonScrollRef}
+              handleScrollSync={handleScrollSync}
+              beginPan={beginPan}
+              continuePan={continuePan}
+              endPan={endPan}
+              handleWheelZoom={handleWheelZoom}
+              onTouchStart={onTouchStart}
+              onTouchMove={onTouchMove}
+              onTouchEnd={onTouchEnd}
+              isPanMode={isPanMode}
+              zoom={baseZoom}
+              pan={basePan}
+              title={baseTitle}
+              dropdownPlaceholder={baseDropdownPlaceholder}
+              changes={baseWordChanges.map(({ value, label }) => ({ value, label }))}
+              onNavigateChange={(value) => handleChangeNavigation(value, 'base')}
+              isLoading={baseLoading}
+              processingMessage={processingMessage}
+              emptyMessage={emptyMessage}
+              pages={basePages}
+              pairedPages={comparisonPages}
+              getRowHeightPx={getRowHeightPx}
+              highlightColor={REMOVAL_HIGHLIGHT}
+              highlightOpacity={0.45}
+              offsetPixels={4}
+              wordHighlightMap={wordHighlightMaps.base}
+              tokenIndexToGroupId={baseTokenIndexToGroupId}
+              documentLabel={baseDocumentLabel}
+              pageLabel={pageLabel}
+              altLabel={baseDocumentLabel}
+            />
+            <CompareDocumentPane
+              pane="comparison"
+              scrollRef={comparisonScrollRef}
+              peerScrollRef={baseScrollRef}
+              handleScrollSync={handleScrollSync}
+              beginPan={beginPan}
+              continuePan={continuePan}
+              endPan={endPan}
+              handleWheelZoom={handleWheelZoom}
+              onTouchStart={onTouchStart}
+              onTouchMove={onTouchMove}
+              onTouchEnd={onTouchEnd}
+              isPanMode={isPanMode}
+              zoom={comparisonZoom}
+              pan={comparisonPan}
+              title={comparisonTitle}
+              dropdownPlaceholder={comparisonDropdownPlaceholder}
+              changes={comparisonWordChanges.map(({ value, label }) => ({ value, label }))}
+              onNavigateChange={(value) => handleChangeNavigation(value, 'comparison')}
+              isLoading={comparisonLoading}
+              processingMessage={processingMessage}
+              emptyMessage={emptyMessage}
+              pages={comparisonPages}
+              pairedPages={basePages}
+              getRowHeightPx={getRowHeightPx}
+              highlightColor={ADDITION_HIGHLIGHT}
+              highlightOpacity={0.35}
+              offsetPixels={2}
+              wordHighlightMap={wordHighlightMaps.comparison}
+              tokenIndexToGroupId={comparisonTokenIndexToGroupId}
+              documentLabel={comparisonDocumentLabel}
+              pageLabel={pageLabel}
+              altLabel={comparisonDocumentLabel}
+            />
           </div>
         </Stack>
     </Stack>

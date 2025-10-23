@@ -9,6 +9,27 @@
   min-width: 0;
 }
 
+.compare-workbench__content {
+  flex: 1;
+  min-height: 0;
+}
+
+.compare-pane {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.compare-pane__scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.compare-pane__content {
+  position: relative;
+}
+
 .compare-workbench__mode {
   align-self: center;
 }
@@ -63,6 +84,14 @@
   border: none !important;
   border-radius: 8px !important;
   font-weight: 500 !important;
+  cursor: pointer;
+  min-width: 200px;
+  padding: 0.375rem 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.875rem !important;
+  box-sizing: border-box;
 }
 
 .compare-changes-select--comparison {
@@ -164,12 +193,10 @@
 }
 
 /* Style the chevron - ensure proper coloring */
-.compare-changes-select .mantine-Combobox-chevron {
-  color: inherit !important;
-}
-
+.compare-changes-select .mantine-Combobox-chevron,
 .compare-changes-select--comparison .mantine-Combobox-chevron {
   color: inherit !important;
+  margin-left: 0.5rem;
 }
 
 /* Flash/pulse highlight for navigated change */
@@ -257,26 +284,23 @@
   width: 100%;
 }
 
-/* Ensure the image scales to the container width without overflowing (handles rotation/landscape) */
-.compare-diff-page__canvas img {
-  display: block;
+.compare-diff-page__canvas--zoom {
+  overflow: hidden;
   max-width: 100%;
-  width: 100%;
-  height: auto;
-  object-fit: contain;
 }
 
-/* Ensure inner page wrapper centers and scales within container */
-.compare-diff-page__canvas > div {
+.compare-diff-page__inner {
+  position: relative;
+  width: 100%;
   margin-left: auto;
   margin-right: auto;
   max-width: 100%;
 }
 
-.compare-diff-page__canvas img {
+.compare-diff-page__image {
   display: block;
   width: 100%;
-  height: auto;
+  height: 100%;
   object-fit: contain;
 }
 
