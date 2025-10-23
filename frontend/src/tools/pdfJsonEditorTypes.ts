@@ -33,6 +33,8 @@ export interface PdfJsonTextElement {
   fontSizeInPt?: number | null;
   characterSpacing?: number | null;
   wordSpacing?: number | null;
+  spaceWidth?: number | null;
+  zOrder?: number | null;
   horizontalScaling?: number | null;
   leading?: number | null;
   rise?: number | null;
@@ -46,6 +48,26 @@ export interface PdfJsonTextElement {
   strokeColor?: PdfJsonTextColor | null;
 }
 
+export interface PdfJsonImageElement {
+  id?: string | null;
+  objectName?: string | null;
+  inlineImage?: boolean | null;
+  nativeWidth?: number | null;
+  nativeHeight?: number | null;
+  x?: number | null;
+  y?: number | null;
+  width?: number | null;
+  height?: number | null;
+  left?: number | null;
+  right?: number | null;
+  top?: number | null;
+  bottom?: number | null;
+  transform?: number[] | null;
+  zOrder?: number | null;
+  imageData?: string | null;
+  imageFormat?: string | null;
+}
+
 export interface PdfJsonStream {
   dictionary?: Record<string, unknown> | null;
   rawData?: string | null;
@@ -57,6 +79,7 @@ export interface PdfJsonPage {
   height?: number | null;
   rotation?: number | null;
   textElements?: PdfJsonTextElement[] | null;
+  imageElements?: PdfJsonImageElement[] | null;
   resources?: unknown;
   contentStreams?: PdfJsonStream[] | null;
 }
@@ -107,6 +130,7 @@ export const DEFAULT_PAGE_HEIGHT = 792;
 export interface PdfJsonEditorViewData {
   document: PdfJsonDocument | null;
   groupsByPage: TextGroup[][];
+  imagesByPage: PdfJsonImageElement[][];
   selectedPage: number;
   dirtyPages: boolean[];
   hasDocument: boolean;
@@ -118,6 +142,18 @@ export interface PdfJsonEditorViewData {
   onLoadJson: (file: File | null) => Promise<void> | void;
   onSelectPage: (pageIndex: number) => void;
   onGroupEdit: (pageIndex: number, groupId: string, value: string) => void;
+  onImageTransform: (
+    pageIndex: number,
+    imageId: string,
+    next: {
+      left: number;
+      bottom: number;
+      width: number;
+      height: number;
+      transform: number[];
+    },
+  ) => void;
+  onImageReset: (pageIndex: number, imageId: string) => void;
   onReset: () => void;
   onDownloadJson: () => void;
   onGeneratePdf: () => void;

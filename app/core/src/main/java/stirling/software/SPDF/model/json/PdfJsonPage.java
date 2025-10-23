@@ -23,6 +23,7 @@ public class PdfJsonPage {
     private Integer rotation;
 
     @Builder.Default private List<PdfJsonTextElement> textElements = new ArrayList<>();
+    @Builder.Default private List<PdfJsonImageElement> imageElements = new ArrayList<>();
 
     /** Serialized representation of the page resources dictionary. */
     private PdfJsonCosValue resources;

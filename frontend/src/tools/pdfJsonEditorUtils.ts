@@ -3,6 +3,7 @@ import {
   PdfJsonDocument,
   PdfJsonPage,
   PdfJsonTextElement,
+  PdfJsonImageElement,
   TextGroup,
   DEFAULT_PAGE_HEIGHT,
   DEFAULT_PAGE_WIDTH,
@@ -11,6 +12,9 @@ import {
 const LINE_TOLERANCE = 2;
 const GAP_FACTOR = 0.6;
 const SPACE_MIN_GAP = 1.5;
+const MIN_CHAR_WIDTH_FACTOR = 0.35;
+const MAX_CHAR_WIDTH_FACTOR = 1.25;
+const EXTRA_GAP_RATIO = 0.8;
 
 export const valueOr = (value: number | null | undefined, fallback = 0): number => {
   if (value === null || value === undefined || Number.isNaN(value)) {
@@ -22,6 +26,11 @@ export const valueOr = (value: number | null | undefined, fallback = 0): number 
 export const cloneTextElement = (element: PdfJsonTextElement): PdfJsonTextElement => ({
   ...element,
   textMatrix: element.textMatrix ? [...element.textMatrix] : element.textMatrix ?? undefined,
+});
+
+export const cloneImageElement = (element: PdfJsonImageElement): PdfJsonImageElement => ({
+  ...element,
+  transform: element.transform ? [...element.transform] : element.transform ?? undefined,
 });
 
 const getBaseline = (element: PdfJsonTextElement): number => {
@@ -71,6 +80,41 @@ const getElementBounds = (element: PdfJsonTextElement): BoundingBox => {
   };
 };
 
+export const getImageBounds = (element: PdfJsonImageElement): BoundingBox => {
+  const left = valueOr(element.left ?? element.x, 0);
+  const computedWidth = valueOr(element.width, Math.max(valueOr(element.right, left) - left, 0));
+  const right = valueOr(element.right ?? left + computedWidth, left + computedWidth);
+  const bottom = valueOr(element.bottom ?? element.y, 0);
+  const computedHeight = valueOr(element.height, Math.max(valueOr(element.top, bottom) - bottom, 0));
+  const top = valueOr(element.top ?? bottom + computedHeight, bottom + computedHeight);
+  return {
+    left,
+    right,
+    bottom,
+    top,
+  };
+};
+
+const getSpacingHint = (element: PdfJsonTextElement): number => {
+  const spaceWidth = valueOr(element.spaceWidth, 0);
+  if (spaceWidth > 0) {
+    return spaceWidth;
+  }
+  const wordSpacing = valueOr(element.wordSpacing, 0);
+  if (wordSpacing > 0) {
+    return wordSpacing;
+  }
+  const characterSpacing = valueOr(element.characterSpacing, 0);
+  return Math.max(characterSpacing, 0);
+};
+
+const estimateCharWidth = (element: PdfJsonTextElement, avgFontSize: number): number => {
+  const rawWidth = getWidth(element);
+  const minWidth = avgFontSize * MIN_CHAR_WIDTH_FACTOR;
+  const maxWidth = avgFontSize * MAX_CHAR_WIDTH_FACTOR;
+  return Math.min(Math.max(rawWidth, minWidth), maxWidth);
+};
+
 const mergeBounds = (bounds: BoundingBox[]): BoundingBox => {
   if (bounds.length === 0) {
     return { left: 0, right: 0, top: 0, bottom: 0 };
@@ -88,10 +132,32 @@ const mergeBounds = (bounds: BoundingBox[]): BoundingBox => {
 
 const shouldInsertSpace = (prev: PdfJsonTextElement, current: PdfJsonTextElement): boolean => {
   const prevRight = getX(prev) + getWidth(prev);
-  const gap = getX(current) - prevRight;
+  const trailingGap = Math.max(0, getX(current) - prevRight);
   const avgFontSize = (getFontSize(prev) + getFontSize(current)) / 2;
-  const threshold = Math.max(SPACE_MIN_GAP, avgFontSize * GAP_FACTOR);
-  return gap > threshold;
+  const baselineAdvance = Math.max(0, getX(current) - getX(prev));
+  const charWidthEstimate = estimateCharWidth(prev, avgFontSize);
+  const inferredGap = Math.max(0, baselineAdvance - charWidthEstimate);
+  const spacingHint = Math.max(
+    SPACE_MIN_GAP,
+    getSpacingHint(prev),
+    getSpacingHint(current),
+    avgFontSize * GAP_FACTOR,
+  );
+
+  if (trailingGap > spacingHint) {
+    return true;
+  }
+
+  if (inferredGap > spacingHint * EXTRA_GAP_RATIO) {
+    return true;
+  }
+
+  const prevText = (prev.text ?? '').trimEnd();
+  if (prevText.endsWith('-')) {
+    return false;
+  }
+
+  return false;
 };
 
 const buildGroupText = (elements: PdfJsonTextElement[]): string => {
@@ -212,6 +278,27 @@ export const groupDocumentText = (document: PdfJsonDocument | null | undefined):
   return pages.map((page, index) => groupPageTextElements(page, index));
 };
 
+export const extractPageImages = (
+  page: PdfJsonPage | null | undefined,
+  pageIndex: number,
+): PdfJsonImageElement[] => {
+  const images = page?.imageElements ?? [];
+  return images.map((image, imageIndex) => {
+    const clone = cloneImageElement(image);
+    if (!clone.id || clone.id.trim().length === 0) {
+      clone.id = `page-${pageIndex}-image-${imageIndex}`;
+    }
+    return clone;
+  });
+};
+
+export const extractDocumentImages = (
+  document: PdfJsonDocument | null | undefined,
+): PdfJsonImageElement[][] => {
+  const pages = document?.pages ?? [];
+  return pages.map((page, index) => extractPageImages(page, index));
+};
+
 export const deepCloneDocument = (document: PdfJsonDocument): PdfJsonDocument => {
   if (typeof structuredClone === 'function') {
     return structuredClone(document);
@@ -277,14 +364,19 @@ const distributeTextAcrossElements = (text: string | undefined, elements: PdfJso
 export const buildUpdatedDocument = (
   source: PdfJsonDocument,
   groupsByPage: TextGroup[][],
+  imagesByPage: PdfJsonImageElement[][],
 ): PdfJsonDocument => {
   const updated = deepCloneDocument(source);
   const pages = updated.pages ?? [];
 
   updated.pages = pages.map((page, pageIndex) => {
     const groups = groupsByPage[pageIndex] ?? [];
+    const images = imagesByPage[pageIndex] ?? [];
     if (!groups.length) {
-      return page;
+      return {
+        ...page,
+        imageElements: images.map(cloneImageElement),
+      };
     }
 
     const updatedElements: PdfJsonTextElement[] = groups.flatMap((group) => {
@@ -297,6 +389,7 @@ export const buildUpdatedDocument = (
     return {
       ...page,
       textElements: updatedElements,
+      imageElements: images.map(cloneImageElement),
       contentStreams: page.contentStreams ?? [],
     };
   });
@@ -307,14 +400,22 @@ export const buildUpdatedDocument = (
 export const restoreGlyphElements = (
   source: PdfJsonDocument,
   groupsByPage: TextGroup[][],
+  imagesByPage: PdfJsonImageElement[][],
+  originalImagesByPage: PdfJsonImageElement[][],
 ): PdfJsonDocument => {
   const updated = deepCloneDocument(source);
   const pages = updated.pages ?? [];
 
   updated.pages = pages.map((page, pageIndex) => {
     const groups = groupsByPage[pageIndex] ?? [];
+    const images = imagesByPage[pageIndex] ?? [];
+    const baselineImages = originalImagesByPage[pageIndex] ?? [];
+
     if (!groups.length) {
-      return page;
+      return {
+        ...page,
+        imageElements: images.map(cloneImageElement),
+      };
     }
 
     const rebuiltElements: PdfJsonTextElement[] = [];
@@ -327,16 +428,105 @@ export const restoreGlyphElements = (
       rebuiltElements.push(...originals);
     });
 
+    const textDirty = groups.some((group) => group.text !== group.originalText);
+    const imageDirty = areImageListsDifferent(images, baselineImages);
+    const nextStreams = textDirty || imageDirty ? [] : page.contentStreams ?? [];
+
     return {
       ...page,
       textElements: rebuiltElements,
-      contentStreams: page.contentStreams ?? [],
+      imageElements: images.map(cloneImageElement),
+      contentStreams: nextStreams,
     };
   });
 
   return updated;
 };
 
-export const getDirtyPages = (groupsByPage: TextGroup[][]): boolean[] => {
-  return groupsByPage.map((groups) => groups.some((group) => group.text !== group.originalText));
+const approxEqual = (a: number | null | undefined, b: number | null | undefined, tolerance = 0.25): boolean => {
+  const first = typeof a === 'number' && Number.isFinite(a) ? a : 0;
+  const second = typeof b === 'number' && Number.isFinite(b) ? b : 0;
+  return Math.abs(first - second) <= tolerance;
+};
+
+const arrayApproxEqual = (
+  first: number[] | null | undefined,
+  second: number[] | null | undefined,
+  tolerance = 0.25,
+): boolean => {
+  if (!first && !second) {
+    return true;
+  }
+  if (!first || !second) {
+    return false;
+  }
+  if (first.length !== second.length) {
+    return false;
+  }
+  for (let index = 0; index < first.length; index += 1) {
+    if (!approxEqual(first[index], second[index], tolerance)) {
+      return false;
+    }
+  }
+  return true;
+};
+
+const areImageElementsEqual = (
+  current: PdfJsonImageElement,
+  original: PdfJsonImageElement,
+): boolean => {
+  if (current === original) {
+    return true;
+  }
+  if (!current || !original) {
+    return false;
+  }
+
+  const sameData = (current.imageData ?? null) === (original.imageData ?? null);
+  const sameFormat = (current.imageFormat ?? null) === (original.imageFormat ?? null);
+
+  return (
+    sameData &&
+    sameFormat &&
+    approxEqual(current.x, original.x) &&
+    approxEqual(current.y, original.y) &&
+    approxEqual(current.width, original.width) &&
+    approxEqual(current.height, original.height) &&
+    approxEqual(current.left, original.left) &&
+    approxEqual(current.right, original.right) &&
+    approxEqual(current.top, original.top) &&
+    approxEqual(current.bottom, original.bottom) &&
+    (current.zOrder ?? null) === (original.zOrder ?? null) &&
+    arrayApproxEqual(current.transform, original.transform)
+  );
+};
+
+export const areImageListsDifferent = (
+  current: PdfJsonImageElement[],
+  original: PdfJsonImageElement[],
+): boolean => {
+  if (current.length !== original.length) {
+    return true;
+  }
+  for (let index = 0; index < current.length; index += 1) {
+    if (!areImageElementsEqual(current[index], original[index])) {
+      return true;
+    }
+  }
+  return false;
+};
+
+export const getDirtyPages = (
+  groupsByPage: TextGroup[][],
+  imagesByPage: PdfJsonImageElement[][],
+  originalImagesByPage: PdfJsonImageElement[][],
+): boolean[] => {
+  return groupsByPage.map((groups, index) => {
+    const textDirty = groups.some((group) => group.text !== group.originalText);
+    const imageDirty = areImageListsDifferent(
+      imagesByPage[index] ?? [],
+      originalImagesByPage[index] ?? [],
+    );
+    return textDirty || imageDirty;
+  });
 };

@@ -1,5 +1,8 @@
 package stirling.software.SPDF.service;
 
+import java.awt.geom.AffineTransform;
+import java.awt.geom.Point2D;
+import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -22,8 +25,13 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.TimeZone;
+import java.util.UUID;
 
+import javax.imageio.ImageIO;
+
+import org.apache.pdfbox.contentstream.PDFGraphicsStreamEngine;
 import org.apache.pdfbox.contentstream.operator.Operator;
+import org.apache.pdfbox.contentstream.operator.OperatorName;
 import org.apache.pdfbox.cos.COSArray;
 import org.apache.pdfbox.cos.COSBase;
 import org.apache.pdfbox.cos.COSBoolean;
@@ -53,6 +61,8 @@ import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.apache.pdfbox.pdmodel.graphics.color.PDColor;
 import org.apache.pdfbox.pdmodel.graphics.color.PDColorSpace;
+import org.apache.pdfbox.pdmodel.graphics.image.PDImage;
+import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.pdmodel.graphics.state.PDGraphicsState;
 import org.apache.pdfbox.pdmodel.graphics.state.PDTextState;
 import org.apache.pdfbox.pdmodel.graphics.state.RenderingMode;
@@ -74,6 +84,7 @@ import stirling.software.SPDF.model.json.PdfJsonCosValue;
 import stirling.software.SPDF.model.json.PdfJsonDocument;
 import stirling.software.SPDF.model.json.PdfJsonFont;
 import stirling.software.SPDF.model.json.PdfJsonFontCidSystemInfo;
+import stirling.software.SPDF.model.json.PdfJsonImageElement;
 import stirling.software.SPDF.model.json.PdfJsonMetadata;
 import stirling.software.SPDF.model.json.PdfJsonPage;
 import stirling.software.SPDF.model.json.PdfJsonStream;
@@ -128,6 +139,8 @@ public class PdfJsonConversionService {
             stripper.setSortByPosition(true);
             stripper.getText(document);
 
+            Map<Integer, List<PdfJsonImageElement>> imagesByPage = collectImages(document);
+
             PdfJsonDocument pdfJson = new PdfJsonDocument();
             pdfJson.setMetadata(extractMetadata(document));
             pdfJson.setXmpMetadata(extractXmpMetadata(document));
@@ -136,7 +149,7 @@ public class PdfJsonConversionService {
                     Comparator.comparing(
                             PdfJsonFont::getUid, Comparator.nullsLast(Comparator.naturalOrder())));
             pdfJson.setFonts(serializedFonts);
-            pdfJson.setPages(extractPages(document, textByPage));
+            pdfJson.setPages(extractPages(document, textByPage, imagesByPage));
 
             log.info(
                     "PDF→JSON conversion complete (fonts: {}, pages: {})",
@@ -201,6 +214,10 @@ public class PdfJsonConversionService {
                         pageModel.getTextElements() != null
                                 ? pageModel.getTextElements()
                                 : new ArrayList<>();
+                List<PdfJsonImageElement> imageElements =
+                        pageModel.getImageElements() != null
+                                ? pageModel.getImageElements()
+                                : new ArrayList<>();
 
                 boolean fallbackAssigned =
                         preflightTextElements(
@@ -218,15 +235,13 @@ public class PdfJsonConversionService {
                 }
 
                 boolean hasText = !elements.isEmpty();
-                boolean rewriteSucceeded = false;
+                boolean hasImages = !imageElements.isEmpty();
+                boolean rewriteSucceeded = true;
 
-                if (!preservedStreams.isEmpty() && hasText) {
+                if (hasText) {
                     if (fallbackAssigned) {
-                        log.info(
-                                "Skipping token rewrite for page {} because fallback font was applied",
-                                pageNumberValue);
                         rewriteSucceeded = false;
-                    } else {
+                    } else if (!preservedStreams.isEmpty()) {
                         log.info("Attempting token rewrite for page {}", pageNumberValue);
                         rewriteSucceeded = rewriteTextOperators(document, page, elements);
                         if (!rewriteSucceeded) {
@@ -236,18 +251,29 @@ public class PdfJsonConversionService {
                         } else {
                             log.info("Token rewrite succeeded for page {}", pageNumberValue);
                         }
+                    } else {
+                        rewriteSucceeded = false;
                     }
                 }
 
-                if (!hasText) {
+                boolean shouldRegenerate = preservedStreams.isEmpty();
+                if (hasText && !rewriteSucceeded) {
+                    shouldRegenerate = true;
+                }
+                if (hasImages && preservedStreams.isEmpty()) {
+                    shouldRegenerate = true;
+                }
+
+                if (!(hasText || hasImages)) {
                     pageIndex++;
                     continue;
                 }
 
-                if (!rewriteSucceeded) {
-                    log.info("Regenerating text content for page {}", pageNumberValue);
-                    regenerateTextContent(document, page, elements, fontMap, pageNumberValue);
-                    log.info("Text regeneration complete for page {}", pageNumberValue);
+                if (shouldRegenerate) {
+                    log.info("Regenerating page content for page {}", pageNumberValue);
+                    regeneratePageContent(
+                            document, page, elements, imageElements, fontMap, pageNumberValue);
+                    log.info("Page content regeneration complete for page {}", pageNumberValue);
                 }
                 pageIndex++;
             }
@@ -571,7 +597,9 @@ public class PdfJsonConversionService {
     }
 
     private List<PdfJsonPage> extractPages(
-            PDDocument document, Map<Integer, List<PdfJsonTextElement>> textByPage)
+            PDDocument document,
+            Map<Integer, List<PdfJsonTextElement>> textByPage,
+            Map<Integer, List<PdfJsonImageElement>> imagesByPage)
             throws IOException {
         List<PdfJsonPage> pages = new ArrayList<>();
         int pageIndex = 0;
@@ -583,6 +611,7 @@ public class PdfJsonConversionService {
             pageModel.setHeight(mediaBox.getHeight());
             pageModel.setRotation(page.getRotation());
             pageModel.setTextElements(textByPage.getOrDefault(pageIndex + 1, new ArrayList<>()));
+            pageModel.setImageElements(imagesByPage.getOrDefault(pageIndex + 1, new ArrayList<>()));
             pageModel.setResources(
                     serializeCosValue(page.getCOSObject().getDictionaryObject(COSName.RESOURCES)));
             pageModel.setContentStreams(extractContentStreams(page));
@@ -590,6 +619,19 @@ public class PdfJsonConversionService {
             pageIndex++;
         }
         return pages;
+    }
+
+    private Map<Integer, List<PdfJsonImageElement>> collectImages(PDDocument document)
+            throws IOException {
+        Map<Integer, List<PdfJsonImageElement>> imagesByPage = new LinkedHashMap<>();
+        int pageNumber = 1;
+        for (PDPage page : document.getPages()) {
+            ImageCollectingEngine engine =
+                    new ImageCollectingEngine(page, pageNumber, imagesByPage);
+            engine.processPage(page);
+            pageNumber++;
+        }
+        return imagesByPage;
     }
 
     private PdfJsonMetadata extractMetadata(PDDocument document) {
@@ -911,60 +953,85 @@ public class PdfJsonConversionService {
         }
     }
 
-    private void regenerateTextContent(
+    private void regeneratePageContent(
             PDDocument document,
             PDPage page,
-            List<PdfJsonTextElement> elements,
+            List<PdfJsonTextElement> textElements,
+            List<PdfJsonImageElement> imageElements,
             Map<String, PDFont> fontMap,
             int pageNumber)
             throws IOException {
+        List<DrawableElement> drawables = mergeDrawables(textElements, imageElements);
+        Map<String, PDImageXObject> imageCache = new HashMap<>();
+
         try (PDPageContentStream contentStream =
                 new PDPageContentStream(document, page, AppendMode.OVERWRITE, true, true)) {
             boolean textOpen = false;
-            for (PdfJsonTextElement element : elements) {
-                PDFont font = fontMap.get(buildFontKey(pageNumber, element.getFontId()));
-                if (font == null && FALLBACK_FONT_ID.equals(element.getFontId())) {
-                    font = fontMap.get(buildFontKey(-1, FALLBACK_FONT_ID));
-                }
-                float fontScale = resolveFontMatrixSize(element);
-                String text = Objects.toString(element.getText(), "");
-
-                if (font != null) {
-                    try {
-                        encodeWithTest(font, text);
-                    } catch (IOException | IllegalArgumentException ex) {
-                        log.debug(
-                                "Edited text contains glyphs missing from font {} ({}), switching to fallback",
-                                element.getFontId(),
-                                ex.getMessage());
-                        font = fontMap.get(buildFontKey(-1, FALLBACK_FONT_ID));
-                        element.setFontId(FALLBACK_FONT_ID);
-                        if (font == null) {
-                            font = loadFallbackPdfFont(document);
-                            fontMap.put(buildFontKey(-1, FALLBACK_FONT_ID), font);
+            for (DrawableElement drawable : drawables) {
+                switch (drawable.type()) {
+                    case TEXT -> {
+                        PdfJsonTextElement element = drawable.textElement();
+                        if (element == null) {
+                            continue;
                         }
-                        encodeWithTest(font, text);
-                    }
-                } else {
-                    element.setFontId(FALLBACK_FONT_ID);
-                    font = fontMap.get(buildFontKey(-1, FALLBACK_FONT_ID));
-                    if (font == null) {
-                        font = loadFallbackPdfFont(document);
-                        fontMap.put(buildFontKey(-1, FALLBACK_FONT_ID), font);
-                    }
-                    encodeWithTest(font, text);
-                }
+                        PDFont font = fontMap.get(buildFontKey(pageNumber, element.getFontId()));
+                        if (font == null && FALLBACK_FONT_ID.equals(element.getFontId())) {
+                            font = fontMap.get(buildFontKey(-1, FALLBACK_FONT_ID));
+                        }
+                        float fontScale = resolveFontMatrixSize(element);
+                        String text = Objects.toString(element.getText(), "");
 
-                if (!textOpen) {
-                    contentStream.beginText();
-                    textOpen = true;
-                }
+                        if (font != null) {
+                            try {
+                                font.encode(text);
+                            } catch (IOException | IllegalArgumentException ex) {
+                                log.debug(
+                                        "Edited text contains glyphs missing from font {} ({}), switching to fallback",
+                                        element.getFontId(),
+                                        ex.getMessage());
+                                font = fontMap.get(buildFontKey(-1, FALLBACK_FONT_ID));
+                                element.setFontId(FALLBACK_FONT_ID);
+                                if (font == null) {
+                                    font = loadFallbackPdfFont(document);
+                                    fontMap.put(buildFontKey(-1, FALLBACK_FONT_ID), font);
+                                }
+                            }
+                        }
+                        if (font == null) {
+                            element.setFontId(FALLBACK_FONT_ID);
+                            font = fontMap.get(buildFontKey(-1, FALLBACK_FONT_ID));
+                            if (font == null) {
+                                font = loadFallbackPdfFont(document);
+                                fontMap.put(buildFontKey(-1, FALLBACK_FONT_ID), font);
+                            }
+                        }
 
-                applyTextState(contentStream, element);
-                contentStream.setFont(font, fontScale);
-                applyRenderingMode(contentStream, element.getRenderingMode());
-                applyTextMatrix(contentStream, element);
-                contentStream.showText(text);
+                        if (!textOpen) {
+                            contentStream.beginText();
+                            textOpen = true;
+                        }
+
+                        applyTextState(contentStream, element);
+                        contentStream.setFont(font, fontScale);
+                        applyRenderingMode(contentStream, element.getRenderingMode());
+                        applyTextMatrix(contentStream, element);
+                        String sanitized = sanitizeForFont(font, text);
+                        if (!sanitized.isEmpty()) {
+                            contentStream.showText(sanitized);
+                        }
+                    }
+                    case IMAGE -> {
+                        if (textOpen) {
+                            contentStream.endText();
+                            textOpen = false;
+                        }
+                        PdfJsonImageElement element = drawable.imageElement();
+                        if (element == null) {
+                            continue;
+                        }
+                        drawImageElement(contentStream, document, element, imageCache);
+                    }
+                }
             }
             if (textOpen) {
                 contentStream.endText();
@@ -972,11 +1039,47 @@ public class PdfJsonConversionService {
         }
     }
 
-    private void encodeWithTest(PDFont font, String text) throws IOException {
+    private String sanitizeForFont(PDFont font, String text) {
         if (text == null || text.isEmpty()) {
-            return;
+            return "";
         }
-        font.encode(text);
+        StringBuilder builder = new StringBuilder(text.length());
+        text.codePoints()
+                .forEach(
+                        codePoint -> {
+                            String candidate = new String(Character.toChars(codePoint));
+                            try {
+                                font.encode(candidate);
+                                builder.append(candidate);
+                                return;
+                            } catch (IOException | IllegalArgumentException ex) {
+                                String mapped = mapUnsupportedGlyph(codePoint);
+                                if (mapped != null) {
+                                    try {
+                                        font.encode(mapped);
+                                        builder.append(mapped);
+                                        return;
+                                    } catch (IOException | IllegalArgumentException ignore) {
+                                        // fall through to generic replacement
+                                    }
+                                }
+                                log.debug(
+                                        "Replacing unsupported glyph {} ({}) with '?' for font {}",
+                                        candidate,
+                                        String.format("U+%04X", codePoint),
+                                        font.getName());
+                                builder.append('?');
+                            }
+                        });
+        return builder.toString();
+    }
+
+    private String mapUnsupportedGlyph(int codePoint) {
+        return switch (codePoint) {
+            case 0x276E -> "<";
+            case 0x276F -> ">";
+            default -> null;
+        };
     }
 
     private void applyTextState(PDPageContentStream contentStream, PdfJsonTextElement element)
@@ -1198,7 +1301,7 @@ public class PdfJsonConversionService {
             byte[] encoded = font.encode(replacement);
             cosString.setValue(encoded);
             return true;
-        } catch (IOException | IllegalArgumentException ex) {
+        } catch (IOException | IllegalArgumentException | UnsupportedOperationException ex) {
             log.debug("Failed to encode replacement text: {}", ex.getMessage());
             return false;
         }
@@ -1222,7 +1325,9 @@ public class PdfJsonConversionService {
                 try {
                     byte[] encoded = font.encode(replacement);
                     array.set(i, new COSString(encoded));
-                } catch (IOException | IllegalArgumentException ex) {
+                } catch (IOException
+                        | IllegalArgumentException
+                        | UnsupportedOperationException ex) {
                     log.debug("Failed to encode replacement text in TJ array: {}", ex.getMessage());
                     return false;
                 }
@@ -1542,6 +1647,377 @@ public class PdfJsonConversionService {
         return calendar;
     }
 
+    private class ImageCollectingEngine extends PDFGraphicsStreamEngine {
+
+        private final int pageNumber;
+        private final Map<Integer, List<PdfJsonImageElement>> imagesByPage;
+
+        private COSName currentXObjectName;
+        private int imageCounter = 0;
+
+        protected ImageCollectingEngine(
+                PDPage page, int pageNumber, Map<Integer, List<PdfJsonImageElement>> imagesByPage)
+                throws IOException {
+            super(page);
+            this.pageNumber = pageNumber;
+            this.imagesByPage = imagesByPage;
+        }
+
+        @Override
+        public void processPage(PDPage page) throws IOException {
+            super.processPage(page);
+        }
+
+        @Override
+        public void drawImage(PDImage pdImage) throws IOException {
+            EncodedImage encoded = encodeImage(pdImage);
+            if (encoded == null) {
+                return;
+            }
+            Matrix ctm = getGraphicsState().getCurrentTransformationMatrix();
+            Bounds bounds = computeBounds(ctm);
+            List<Float> matrixValues = toMatrixValues(ctm);
+
+            PdfJsonImageElement element =
+                    PdfJsonImageElement.builder()
+                            .id(UUID.randomUUID().toString())
+                            .objectName(
+                                    currentXObjectName != null
+                                            ? currentXObjectName.getName()
+                                            : null)
+                            .inlineImage(!(pdImage instanceof PDImageXObject))
+                            .nativeWidth(pdImage.getWidth())
+                            .nativeHeight(pdImage.getHeight())
+                            .x(bounds.left)
+                            .y(bounds.bottom)
+                            .width(bounds.width())
+                            .height(bounds.height())
+                            .left(bounds.left)
+                            .right(bounds.right)
+                            .top(bounds.top)
+                            .bottom(bounds.bottom)
+                            .transform(matrixValues)
+                            .zOrder(-1_000_000 + imageCounter)
+                            .imageData(encoded.base64())
+                            .imageFormat(encoded.format())
+                            .build();
+            imageCounter++;
+            imagesByPage.computeIfAbsent(pageNumber, key -> new ArrayList<>()).add(element);
+        }
+
+        @Override
+        public void appendRectangle(Point2D p0, Point2D p1, Point2D p2, Point2D p3)
+                throws IOException {
+            // Not needed for image extraction
+        }
+
+        @Override
+        public void clip(int windingRule) throws IOException {
+            // Not needed for image extraction
+        }
+
+        @Override
+        public void moveTo(float x, float y) throws IOException {
+            // Not needed for image extraction
+        }
+
+        @Override
+        public void lineTo(float x, float y) throws IOException {
+            // Not needed for image extraction
+        }
+
+        @Override
+        public void curveTo(float x1, float y1, float x2, float y2, float x3, float y3)
+                throws IOException {
+            // Not needed for image extraction
+        }
+
+        @Override
+        public Point2D getCurrentPoint() throws IOException {
+            return new Point2D.Float();
+        }
+
+        @Override
+        public void closePath() throws IOException {
+            // Not needed for image extraction
+        }
+
+        @Override
+        public void endPath() throws IOException {
+            // Not needed for image extraction
+        }
+
+        @Override
+        public void shadingFill(COSName shadingName) throws IOException {
+            // Not needed for image extraction
+        }
+
+        @Override
+        public void fillAndStrokePath(int windingRule) throws IOException {
+            // Not needed for image extraction
+        }
+
+        @Override
+        public void fillPath(int windingRule) throws IOException {
+            // Not needed for image extraction
+        }
+
+        @Override
+        public void strokePath() throws IOException {
+            // Not needed for image extraction
+        }
+
+        @Override
+        protected void processOperator(Operator operator, List<COSBase> operands)
+                throws IOException {
+            if (OperatorName.DRAW_OBJECT.equals(operator.getName())
+                    && !operands.isEmpty()
+                    && operands.get(0) instanceof COSName name) {
+                currentXObjectName = name;
+            }
+            super.processOperator(operator, operands);
+            currentXObjectName = null;
+        }
+
+        private Bounds computeBounds(Matrix ctm) {
+            AffineTransform transform = ctm.createAffineTransform();
+            Point2D.Float p0 = new Point2D.Float(0, 0);
+            Point2D.Float p1 = new Point2D.Float(1, 0);
+            Point2D.Float p2 = new Point2D.Float(0, 1);
+            Point2D.Float p3 = new Point2D.Float(1, 1);
+            transform.transform(p0, p0);
+            transform.transform(p1, p1);
+            transform.transform(p2, p2);
+            transform.transform(p3, p3);
+
+            float minX = Math.min(Math.min(p0.x, p1.x), Math.min(p2.x, p3.x));
+            float maxX = Math.max(Math.max(p0.x, p1.x), Math.max(p2.x, p3.x));
+            float minY = Math.min(Math.min(p0.y, p1.y), Math.min(p2.y, p3.y));
+            float maxY = Math.max(Math.max(p0.y, p1.y), Math.max(p2.y, p3.y));
+
+            if (!Float.isFinite(minX) || !Float.isFinite(minY)) {
+                return new Bounds(0f, 0f, 0f, 0f);
+            }
+            return new Bounds(minX, maxX, minY, maxY);
+        }
+    }
+
+    private record Bounds(float left, float right, float bottom, float top) {
+        float width() {
+            return Math.max(0f, right - left);
+        }
+
+        float height() {
+            return Math.max(0f, top - bottom);
+        }
+    }
+
+    private enum DrawableType {
+        TEXT,
+        IMAGE
+    }
+
+    private record DrawableElement(
+            DrawableType type,
+            PdfJsonTextElement textElement,
+            PdfJsonImageElement imageElement,
+            int zOrder,
+            int sequence) {}
+
+    private record EncodedImage(String base64, String format) {}
+
+    private List<Float> toMatrixValues(Matrix matrix) {
+        List<Float> values = new ArrayList<>(6);
+        values.add(matrix.getValue(0, 0));
+        values.add(matrix.getValue(0, 1));
+        values.add(matrix.getValue(1, 0));
+        values.add(matrix.getValue(1, 1));
+        values.add(matrix.getValue(2, 0));
+        values.add(matrix.getValue(2, 1));
+        return values;
+    }
+
+    private EncodedImage encodeImage(PDImage image) {
+        try {
+            BufferedImage bufferedImage = image.getImage();
+            if (bufferedImage == null) {
+                return null;
+            }
+            String format = resolveImageFormat(image);
+            if (format == null || format.isBlank()) {
+                format = "png";
+            }
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            boolean written = ImageIO.write(bufferedImage, format, baos);
+            if (!written) {
+                if (!"png".equalsIgnoreCase(format)) {
+                    baos.reset();
+                    if (!ImageIO.write(bufferedImage, "png", baos)) {
+                        return null;
+                    }
+                    format = "png";
+                } else {
+                    return null;
+                }
+            }
+            return new EncodedImage(Base64.getEncoder().encodeToString(baos.toByteArray()), format);
+        } catch (IOException ex) {
+            log.debug("Failed to encode image: {}", ex.getMessage());
+            return null;
+        }
+    }
+
+    private String resolveImageFormat(PDImage image) {
+        if (image instanceof PDImageXObject xObject) {
+            String suffix = xObject.getSuffix();
+            if (suffix != null && !suffix.isBlank()) {
+                return suffix.toLowerCase(Locale.ROOT);
+            }
+        }
+        return "png";
+    }
+
+    private List<DrawableElement> mergeDrawables(
+            List<PdfJsonTextElement> textElements, List<PdfJsonImageElement> imageElements) {
+        List<DrawableElement> drawables = new ArrayList<>();
+        int sequence = 0;
+
+        if (imageElements != null) {
+            int imageIndex = 0;
+            for (PdfJsonImageElement imageElement : imageElements) {
+                if (imageElement == null) {
+                    continue;
+                }
+                int order =
+                        imageElement.getZOrder() != null
+                                ? imageElement.getZOrder()
+                                : Integer.MIN_VALUE / 2 + imageIndex;
+                drawables.add(
+                        new DrawableElement(
+                                DrawableType.IMAGE, null, imageElement, order, sequence++));
+                imageIndex++;
+            }
+        }
+
+        if (textElements != null) {
+            int textIndex = 0;
+            for (PdfJsonTextElement textElement : textElements) {
+                if (textElement == null) {
+                    continue;
+                }
+                int order =
+                        textElement.getZOrder() != null
+                                ? textElement.getZOrder()
+                                : 1_000_000 + textIndex;
+                drawables.add(
+                        new DrawableElement(
+                                DrawableType.TEXT, textElement, null, order, sequence++));
+                textIndex++;
+            }
+        }
+
+        drawables.sort(
+                Comparator.comparingInt(DrawableElement::zOrder)
+                        .thenComparingInt(DrawableElement::sequence));
+        return drawables;
+    }
+
+    private void drawImageElement(
+            PDPageContentStream contentStream,
+            PDDocument document,
+            PdfJsonImageElement element,
+            Map<String, PDImageXObject> cache)
+            throws IOException {
+        if (element == null || element.getImageData() == null || element.getImageData().isBlank()) {
+            return;
+        }
+
+        String cacheKey =
+                element.getId() != null && !element.getId().isBlank()
+                        ? element.getId()
+                        : Integer.toHexString(System.identityHashCode(element));
+        PDImageXObject image = cache.get(cacheKey);
+        if (image == null) {
+            image = createImageXObject(document, element);
+            if (image == null) {
+                return;
+            }
+            cache.put(cacheKey, image);
+        }
+
+        float width = safeFloat(element.getWidth(), fallbackWidth(element));
+        float height = safeFloat(element.getHeight(), fallbackHeight(element));
+        if (width <= 0f) {
+            width = Math.max(1f, fallbackWidth(element));
+        }
+        if (height <= 0f) {
+            height = Math.max(1f, fallbackHeight(element));
+        }
+        float left = resolveLeft(element, width);
+        float bottom = resolveBottom(element, height);
+
+        contentStream.drawImage(image, left, bottom, width, height);
+    }
+
+    private PDImageXObject createImageXObject(PDDocument document, PdfJsonImageElement element)
+            throws IOException {
+        byte[] data;
+        try {
+            data = Base64.getDecoder().decode(element.getImageData());
+        } catch (IllegalArgumentException ex) {
+            log.debug("Failed to decode image element: {}", ex.getMessage());
+            return null;
+        }
+        String name = element.getId() != null ? element.getId() : UUID.randomUUID().toString();
+        return PDImageXObject.createFromByteArray(document, data, name);
+    }
+
+    private float fallbackWidth(PdfJsonImageElement element) {
+        if (element.getRight() != null && element.getLeft() != null) {
+            return Math.max(0f, element.getRight() - element.getLeft());
+        }
+        if (element.getNativeWidth() != null) {
+            return element.getNativeWidth();
+        }
+        return 1f;
+    }
+
+    private float resolveLeft(PdfJsonImageElement element, float width) {
+        if (element.getLeft() != null) {
+            return element.getLeft();
+        }
+        if (element.getX() != null) {
+            return element.getX();
+        }
+        if (element.getRight() != null) {
+            return element.getRight() - width;
+        }
+        return 0f;
+    }
+
+    private float resolveBottom(PdfJsonImageElement element, float height) {
+        if (element.getBottom() != null) {
+            return element.getBottom();
+        }
+        if (element.getY() != null) {
+            return element.getY();
+        }
+        if (element.getTop() != null) {
+            return element.getTop() - height;
+        }
+        return 0f;
+    }
+
+    private float fallbackHeight(PdfJsonImageElement element) {
+        if (element.getTop() != null && element.getBottom() != null) {
+            return Math.max(0f, element.getTop() - element.getBottom());
+        }
+        if (element.getNativeHeight() != null) {
+            return element.getNativeHeight();
+        }
+        return 1f;
+    }
+
     private class TextCollectingStripper extends PDFTextStripper {
 
         private final PDDocument document;
@@ -1595,6 +2071,7 @@ public class PdfJsonConversionService {
                 element.setHeight(position.getHeightDir());
                 element.setTextMatrix(extractMatrix(position));
                 element.setFontMatrixSize(computeFontMatrixSize(element.getTextMatrix()));
+                element.setSpaceWidth(position.getWidthOfSpace());
                 PDGraphicsState graphicsState = getGraphicsState();
                 if (graphicsState != null) {
                     PDTextState textState = graphicsState.getTextState();
@@ -1611,6 +2088,7 @@ public class PdfJsonConversionService {
                     element.setFillColor(toTextColor(graphicsState.getNonStrokingColor()));
                     element.setStrokeColor(toTextColor(graphicsState.getStrokingColor()));
                 }
+                element.setZOrder(1_000_000 + pageElements.size());
                 pageElements.add(element);
             }
         }

@@ -11,6 +11,7 @@ import { downloadBlob, downloadTextAsFile } from '../utils/downloadUtils';
 import { getFilenameFromHeaders } from '../utils/fileResponseUtils';
 import {
   PdfJsonDocument,
+  PdfJsonImageElement,
   TextGroup,
   PdfJsonEditorViewData,
 } from './pdfJsonEditorTypes';
@@ -19,6 +20,9 @@ import {
   getDirtyPages,
   groupDocumentText,
   restoreGlyphElements,
+  extractDocumentImages,
+  cloneImageElement,
+  valueOr,
 } from './pdfJsonEditorUtils';
 import PdfJsonEditorView from '../components/tools/pdfJsonEditor/PdfJsonEditorView';
 
@@ -46,13 +50,19 @@ const PdfJsonEditor = ({ onComplete, onError }: BaseToolProps) => {
 
   const [loadedDocument, setLoadedDocument] = useState<PdfJsonDocument | null>(null);
   const [groupsByPage, setGroupsByPage] = useState<TextGroup[][]>([]);
+  const [imagesByPage, setImagesByPage] = useState<PdfJsonImageElement[][]>([]);
   const [selectedPage, setSelectedPage] = useState(0);
   const [fileName, setFileName] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [isConverting, setIsConverting] = useState(false);
 
-  const dirtyPages = useMemo(() => getDirtyPages(groupsByPage), [groupsByPage]);
+  const originalImagesRef = useRef<PdfJsonImageElement[][]>([]);
+
+  const dirtyPages = useMemo(
+    () => getDirtyPages(groupsByPage, imagesByPage, originalImagesRef.current),
+    [groupsByPage, imagesByPage],
+  );
   const hasChanges = useMemo(() => dirtyPages.some(Boolean), [dirtyPages]);
   const hasDocument = loadedDocument !== null;
   const viewLabel = useMemo(() => t('pdfJsonEditor.viewLabel', 'PDF Editor'), [t]);
@@ -60,12 +70,17 @@ const PdfJsonEditor = ({ onComplete, onError }: BaseToolProps) => {
   const resetToDocument = useCallback((document: PdfJsonDocument | null) => {
     if (!document) {
       setGroupsByPage([]);
+      setImagesByPage([]);
+      originalImagesRef.current = [];
       setSelectedPage(0);
       return;
     }
     const cloned = deepCloneDocument(document);
     const groups = groupDocumentText(cloned);
+    const images = extractDocumentImages(cloned);
+    originalImagesRef.current = images.map((page) => page.map(cloneImageElement));
     setGroupsByPage(groups);
+    setImagesByPage(images);
     setSelectedPage(0);
   }, []);
 
@@ -108,6 +123,8 @@ const PdfJsonEditor = ({ onComplete, onError }: BaseToolProps) => {
         console.error('Failed to load file', error);
         setLoadedDocument(null);
         setGroupsByPage([]);
+        setImagesByPage([]);
+        originalImagesRef.current = [];
 
         if (isPdf) {
           setErrorMessage(
@@ -142,6 +159,80 @@ const PdfJsonEditor = ({ onComplete, onError }: BaseToolProps) => {
     );
   }, []);
 
+  const handleImageTransform = useCallback(
+    (
+      pageIndex: number,
+      imageId: string,
+      next: { left: number; bottom: number; width: number; height: number; transform: number[] },
+    ) => {
+      setImagesByPage((previous) =>
+        previous.map((images, idx) => {
+          if (idx !== pageIndex) {
+            return images;
+          }
+          let changed = false;
+          const updated = images.map((image) => {
+            if ((image.id ?? '') !== imageId) {
+              return image;
+            }
+            const originalTransform = image.transform ?? originalImagesRef.current[idx]?.find((base) => (base.id ?? '') === imageId)?.transform;
+            const scaleXSign = originalTransform && originalTransform.length >= 6 ? Math.sign(originalTransform[0]) || 1 : 1;
+            const scaleYSign = originalTransform && originalTransform.length >= 6 ? Math.sign(originalTransform[3]) || 1 : 1;
+            const right = next.left + next.width;
+            const top = next.bottom + next.height;
+            const updatedImage: PdfJsonImageElement = {
+              ...image,
+              x: next.left,
+              y: next.bottom,
+              left: next.left,
+              bottom: next.bottom,
+              right,
+              top,
+              width: next.width,
+              height: next.height,
+              transform: scaleXSign < 0 || scaleYSign < 0 ? [
+                next.width * scaleXSign,
+                0,
+                0,
+                next.height * scaleYSign,
+                next.left,
+                scaleYSign >= 0 ? next.bottom : next.bottom + next.height,
+              ] : null,
+            };
+
+            const isSame =
+              Math.abs(valueOr(image.left, 0) - next.left) < 1e-4 &&
+              Math.abs(valueOr(image.bottom, 0) - next.bottom) < 1e-4 &&
+              Math.abs(valueOr(image.width, 0) - next.width) < 1e-4 &&
+              Math.abs(valueOr(image.height, 0) - next.height) < 1e-4;
+
+            if (!isSame) {
+              changed = true;
+            }
+            return updatedImage;
+          });
+          return changed ? updated : images;
+        }),
+      );
+    },
+    [],
+  );
+
+  const handleImageReset = useCallback((pageIndex: number, imageId: string) => {
+    const baseline = originalImagesRef.current[pageIndex]?.find((image) => (image.id ?? '') === imageId);
+    if (!baseline) {
+      return;
+    }
+    setImagesByPage((previous) =>
+      previous.map((images, idx) => {
+        if (idx !== pageIndex) {
+          return images;
+        }
+        return images.map((image) => ((image.id ?? '') === imageId ? cloneImageElement(baseline) : image));
+      }),
+    );
+  }, []);
+
   const handleResetEdits = useCallback(() => {
     if (!loadedDocument) {
       return;
@@ -155,13 +246,18 @@ const PdfJsonEditor = ({ onComplete, onError }: BaseToolProps) => {
       return null;
     }
 
-    const updatedDocument = restoreGlyphElements(loadedDocument, groupsByPage);
+    const updatedDocument = restoreGlyphElements(
+      loadedDocument,
+      groupsByPage,
+      imagesByPage,
+      originalImagesRef.current,
+    );
     const baseName = sanitizeBaseName(fileName || loadedDocument.metadata?.title || undefined);
     return {
       document: updatedDocument,
       filename: `${baseName}.json`,
     };
-  }, [fileName, groupsByPage, loadedDocument]);
+  }, [fileName, groupsByPage, imagesByPage, loadedDocument]);
 
   const handleDownloadJson = useCallback(() => {
     const payload = buildPayload();
@@ -229,6 +325,7 @@ const PdfJsonEditor = ({ onComplete, onError }: BaseToolProps) => {
   const viewData = useMemo<PdfJsonEditorViewData>(() => ({
     document: loadedDocument,
     groupsByPage,
+    imagesByPage,
     selectedPage,
     dirtyPages,
     hasDocument,
@@ -240,10 +337,14 @@ const PdfJsonEditor = ({ onComplete, onError }: BaseToolProps) => {
     onLoadJson: handleLoadFile,
     onSelectPage: handleSelectPage,
     onGroupEdit: handleGroupTextChange,
+    onImageTransform: handleImageTransform,
+    onImageReset: handleImageReset,
     onReset: handleResetEdits,
     onDownloadJson: handleDownloadJson,
     onGeneratePdf: handleGeneratePdf,
   }), [
+    handleImageTransform,
+    imagesByPage,
     dirtyPages,
     errorMessage,
     fileName,
@@ -251,6 +352,7 @@ const PdfJsonEditor = ({ onComplete, onError }: BaseToolProps) => {
     handleDownloadJson,
     handleGeneratePdf,
     handleGroupTextChange,
+    handleImageReset,
     handleLoadFile,
     handleResetEdits,
     handleSelectPage,

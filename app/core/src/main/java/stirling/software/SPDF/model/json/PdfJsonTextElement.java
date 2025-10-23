@@ -24,6 +24,8 @@ public class PdfJsonTextElement {
     private Float fontSizeInPt;
     private Float characterSpacing;
     private Float wordSpacing;
+    private Float spaceWidth;
+    private Integer zOrder;
     private Float horizontalScaling;
     private Float leading;
     private Float rise;
