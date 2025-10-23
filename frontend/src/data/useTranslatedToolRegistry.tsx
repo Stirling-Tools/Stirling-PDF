@@ -5,6 +5,7 @@ import SplitPdfPanel from "../tools/Split";
 import CompressPdfPanel from "../tools/Compress";
 import OCRPanel from "../tools/OCR";
 import ConvertPanel from "../tools/Convert";
+import PdfJsonEditor from "../tools/PdfJsonEditor";
 import Sanitize from "../tools/Sanitize";
 import AddPassword from "../tools/AddPassword";
 import ChangePermissions from "../tools/ChangePermissions";
@@ -707,6 +708,19 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.DEVELOPER_TOOLS,
         synonyms: getSynonyms(t, "showJS"),
+        supportsAutomate: false,
+        automationSettings: null
+      },
+      pdfJsonEditor: {
+        icon: <LocalIcon icon="code-rounded" width="1.5rem" height="1.5rem" />,
+        name: t("home.pdfJsonEditor.title", "PDF JSON Editor"),
+        component: PdfJsonEditor,
+        description: t("home.pdfJsonEditor.desc", "Review and edit Stirling PDF JSON exports with grouped text editing and PDF regeneration"),
+        categoryId: ToolCategoryId.ADVANCED_TOOLS,
+        subcategoryId: SubcategoryId.DEVELOPER_TOOLS,
+        workbench: 'custom:pdfJsonEditor',
+        endpoints: ["json-pdf"],
+        synonyms: getSynonyms(t, "pdfJsonEditor"),
         supportsAutomate: false,
         automationSettings: null
       },

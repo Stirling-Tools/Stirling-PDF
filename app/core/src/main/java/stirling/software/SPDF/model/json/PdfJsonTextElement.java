@@ -20,6 +20,8 @@ public class PdfJsonTextElement {
     private String text;
     private String fontId;
     private Float fontSize;
+    private Float fontMatrixSize;
+    private Float fontSizeInPt;
     private Float x;
     private Float y;
     private Float width;

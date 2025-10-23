@@ -4006,5 +4006,8 @@
     "finish": "Finish",
     "startTour": "Start Tour",
     "startTourDescription": "Take a guided tour of Stirling PDF's key features"
+  },
+  "pdfJsonEditor": {
+    "viewLabel": "JSON Editor"
   }
 }
