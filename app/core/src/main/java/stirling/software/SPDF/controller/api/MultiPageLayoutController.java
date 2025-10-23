@@ -49,22 +49,45 @@ public class MultiPageLayoutController {
     public ResponseEntity<byte[]> mergeMultiplePagesIntoOne(
             @ModelAttribute MergeMultiplePagesRequest request) throws IOException {
 
-        int pagesPerSheet = request.getPagesPerSheet();
-        MultipartFile file = request.getFileInput();
-        String orientation = request.getOrientation();
-        boolean addBorder = Boolean.TRUE.equals(request.getAddBorder());
+        String mode = request.getMode();
+        int rows = 0;
+        int cols = 0;
+        int pagesPerSheet = 0;
+        switch (mode) {
+            case "DEFAULT":
+                pagesPerSheet = request.getPagesPerSheet();
+                if (pagesPerSheet != 2
+                        && pagesPerSheet != 3
+                        && pagesPerSheet
+                                != (int) Math.sqrt(pagesPerSheet) * Math.sqrt(pagesPerSheet)) {
+                    throw new IllegalArgumentException(
+                            "pagesPerSheet must be 2, 3 or a perfect square");
+                }
 
-        if (pagesPerSheet != 2
-                && pagesPerSheet != 3
-                && pagesPerSheet != (int) Math.sqrt(pagesPerSheet) * Math.sqrt(pagesPerSheet)) {
-            throw new IllegalArgumentException("pagesPerSheet must be 2, 3 or a perfect square");
+                cols =
+                        pagesPerSheet == 2 || pagesPerSheet == 3
+                                ? pagesPerSheet
+                                : (int) Math.sqrt(pagesPerSheet);
+                rows =
+                        pagesPerSheet == 2 || pagesPerSheet == 3
+                                ? 1
+                                : (int) Math.sqrt(pagesPerSheet);
+                break;
+            case "CUSTOM":
+                rows = request.getRows();
+                cols = request.getCols();
+                if (rows <= 0 || cols <= 0) {
+                    throw new IllegalArgumentException(
+                            "rows and cols must be greater than 0 in CUSTOM mode");
+                }
+                pagesPerSheet = cols * rows;
+                break;
         }
 
-        int cols =
-                pagesPerSheet == 2 || pagesPerSheet == 3
-                        ? pagesPerSheet
-                        : (int) Math.sqrt(pagesPerSheet);
-        int rows = pagesPerSheet == 2 || pagesPerSheet == 3 ? 1 : (int) Math.sqrt(pagesPerSheet);
+        MultipartFile file = request.getFileInput();
+        String orientation = request.getOrientation();
+        String pageOrder = request.getPageOrder();
+        boolean addBorder = Boolean.TRUE.equals(request.getAddBorder());
 
         PDDocument sourceDocument = pdfDocumentFactory.load(file);
         PDDocument newDocument =
@@ -120,8 +143,30 @@ public class MultiPageLayoutController {
             int adjustedPageIndex =
                     i % pagesPerSheet; // Close the current content stream and create a new
             // page and content stream
-            int rowIndex = adjustedPageIndex / cols;
-            int colIndex = adjustedPageIndex % cols;
+            int rowIndex = 0;
+            int colIndex = 0;
+
+            switch (pageOrder) {
+                case "LR_TD": // Left→Right, then Top→Down
+                    rowIndex = adjustedPageIndex / cols;
+                    colIndex = adjustedPageIndex % cols;
+                    break;
+
+                case "RL_TD": // Right→Left, then Top→Down
+                    rowIndex = adjustedPageIndex / cols;
+                    colIndex = cols - 1 - (adjustedPageIndex % cols);
+                    break;
+
+                case "TD_LR": // Top→Down, then Left→Right
+                    colIndex = adjustedPageIndex / rows;
+                    rowIndex = adjustedPageIndex % rows;
+                    break;
+
+                case "TD_RL": // Top→Down, then Right→Left
+                    colIndex = cols - 1 - (adjustedPageIndex / rows);
+                    rowIndex = adjustedPageIndex % rows;
+                    break;
+            }
 
             float x = colIndex * cellWidth + (cellWidth - rect.getWidth() * scale) / 2;
             float y =
