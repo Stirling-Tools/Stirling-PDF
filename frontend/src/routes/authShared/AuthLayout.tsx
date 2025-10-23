@@ -5,9 +5,10 @@ import styles from './AuthLayout.module.css'
 
 interface AuthLayoutProps {
   children: React.ReactNode
+  isEmailFormExpanded?: boolean
 }
 
-export default function AuthLayout({ children }: AuthLayoutProps) {
+export default function AuthLayout({ children, isEmailFormExpanded = false }: AuthLayoutProps) {
   const cardRef = useRef<HTMLDivElement | null>(null)
   const [hideRightPanel, setHideRightPanel] = useState(false)
 

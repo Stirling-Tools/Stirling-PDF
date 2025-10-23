@@ -65,11 +65,6 @@ class JwtServiceTest {
         testVerificationKey = new JwtVerificationKey("test-key-id", encodedPublicKey);
 
         jwtService = new JwtService(true, keystoreService);
-
-        // Set the issuer field using reflection since @Value annotation isn't populated in tests
-        java.lang.reflect.Field issuerField = JwtService.class.getDeclaredField("issuer");
-        issuerField.setAccessible(true);
-        issuerField.set(jwtService, "https://stirling.com");
     }
 
     @Test
@@ -223,8 +218,8 @@ class JwtServiceTest {
         assertEquals("admin", extractedClaims.get("role"));
         assertEquals("IT", extractedClaims.get("department"));
         assertEquals(username, extractedClaims.get("sub"));
-        // Issuer is now configurable, so check it exists rather than exact value
-        assertNotNull(extractedClaims.get("iss"));
+        // Verify the constant issuer is set correctly
+        assertEquals("https://stirling.com", extractedClaims.get("iss"));
     }
 
     @Test

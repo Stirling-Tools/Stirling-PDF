@@ -5,11 +5,15 @@ import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
+
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -17,10 +21,9 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.common.annotations.api.UserApi;
-import stirling.software.common.model.enumeration.Role;
 import stirling.software.proprietary.security.model.AuthenticationType;
 import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.security.model.api.user.UsernameAndPass;
 import stirling.software.proprietary.security.service.CustomUserDetailsService;
 import stirling.software.proprietary.security.service.JwtServiceInterface;
 import stirling.software.proprietary.security.service.UserService;
@@ -30,7 +33,7 @@ import stirling.software.proprietary.security.service.UserService;
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
 @Slf4j
-@UserApi
+@Tag(name = "Authentication", description = "Endpoints for user authentication and registration")
 public class AuthController {
 
     private final UserService userService;
@@ -44,23 +47,40 @@ public class AuthController {
      * @param response HTTP response to set JWT cookie
      * @return User and session information
      */
+    @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/login")
     public ResponseEntity<?> login(
-            @RequestBody LoginRequest request, HttpServletResponse response) {
+            @RequestBody UsernameAndPass request, HttpServletResponse response) {
         try {
-            log.debug("Login attempt for user: {}", request.email());
+            // Validate input parameters
+            if (request.getUsername() == null || request.getUsername().trim().isEmpty()) {
+                log.warn("Login attempt with null or empty username");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(Map.of("error", "Username is required"));
+            }
 
-            UserDetails userDetails = userDetailsService.loadUserByUsername(request.email());
+            if (request.getPassword() == null || request.getPassword().isEmpty()) {
+                log.warn(
+                        "Login attempt with null or empty password for user: {}",
+                        request.getUsername());
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(Map.of("error", "Password is required"));
+            }
+
+            log.debug("Login attempt for user: {}", request.getUsername());
+
+            UserDetails userDetails =
+                    userDetailsService.loadUserByUsername(request.getUsername().trim());
             User user = (User) userDetails;
 
-            if (!userService.isPasswordCorrect(user, request.password())) {
-                log.warn("Invalid password for user: {}", request.email());
+            if (!userService.isPasswordCorrect(user, request.getPassword())) {
+                log.warn("Invalid password for user: {}", request.getUsername());
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(Map.of("error", "Invalid credentials"));
             }
 
             if (!user.isEnabled()) {
-                log.warn("Disabled user attempted login: {}", request.email());
+                log.warn("Disabled user attempted login: {}", request.getUsername());
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(Map.of("error", "User account is disabled"));
             }
@@ -71,79 +91,25 @@ public class AuthController {
 
             String token = jwtService.generateToken(user.getUsername(), claims);
 
-            log.info("Login successful for user: {}", request.email());
+            log.info("Login successful for user: {}", request.getUsername());
 
             return ResponseEntity.ok(
                     Map.of(
                             "user", buildUserResponse(user),
                             "session", Map.of("access_token", token, "expires_in", 3600)));
 
+        } catch (UsernameNotFoundException e) {
+            log.warn("User not found: {}", request.getUsername());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "Invalid username or password"));
         } catch (AuthenticationException e) {
-            log.error("Authentication failed for user: {}", request.email(), e);
+            log.error("Authentication failed for user: {}", request.getUsername(), e);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("error", "Invalid credentials"));
         } catch (Exception e) {
-            log.error("Login error for user: {}", request.email(), e);
+            log.error("Login error for user: {}", request.getUsername(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Internal server error"));
-        }
-    }
-
-    /**
-     * Registration endpoint
-     *
-     * @param request Registration details (email, password, name)
-     * @return User information or error
-     */
-    @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
-        try {
-            log.debug("Registration attempt for user: {}", request.email());
-
-            if (userService.usernameExistsIgnoreCase(request.email())) {
-                log.warn("Registration failed: username already exists: {}", request.email());
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(Map.of("error", "User already exists"));
-            }
-
-            if (!userService.isUsernameValid(request.email())) {
-                log.warn("Registration failed: invalid username format: {}", request.email());
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(Map.of("error", "Invalid username format"));
-            }
-
-            if (request.password() == null || request.password().length() < 6) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(Map.of("error", "Password must be at least 6 characters"));
-            }
-
-            User user =
-                    userService.saveUser(
-                            request.email(),
-                            request.password(),
-                            (Long) null, // team
-                            Role.USER.getRoleId(),
-                            false // first login not required
-                            );
-
-            log.info("User registered successfully: {}", request.email());
-
-            return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(
-                            Map.of(
-                                    "user",
-                                    buildUserResponse(user),
-                                    "message",
-                                    "Account created successfully. Please log in."));
-
-        } catch (IllegalArgumentException e) {
-            log.error("Registration validation error: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", e.getMessage()));
-        } catch (Exception e) {
-            log.error("Registration error for user: {}", request.email(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Registration failed: " + e.getMessage()));
         }
     }
 
@@ -152,6 +118,7 @@ public class AuthController {
      *
      * @return Current authenticated user information
      */
+    @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     @GetMapping("/me")
     public ResponseEntity<?> getCurrentUser() {
         try {
@@ -182,6 +149,7 @@ public class AuthController {
      * @param response HTTP response
      * @return Success message
      */
+    @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpServletResponse response) {
         try {
@@ -205,6 +173,7 @@ public class AuthController {
      * @param response HTTP response to set new JWT cookie
      * @return New token information
      */
+    @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/refresh")
     public ResponseEntity<?> refresh(HttpServletRequest request, HttpServletResponse response) {
         try {
@@ -266,7 +235,4 @@ public class AuthController {
 
     /** Login request DTO */
     public record LoginRequest(String email, String password) {}
-
-    /** Registration request DTO */
-    public record RegisterRequest(String email, String password, String name) {}
 }

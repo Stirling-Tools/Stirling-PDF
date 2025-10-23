@@ -132,7 +132,10 @@ class SpringAuthClient {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include', // Include cookies for CSRF
-        body: JSON.stringify(credentials),
+        body: JSON.stringify({
+          username: credentials.email,
+          password: credentials.password
+        }),
       });
 
       if (!response.ok) {
@@ -177,14 +180,13 @@ class SpringAuthClient {
     options?: { data?: { full_name?: string }; emailRedirectTo?: string };
   }): Promise<AuthResponse> {
     try {
-      const response = await fetch('/api/v1/auth/register', {
+      const response = await fetch('/api/v1/user/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({
-          email: credentials.email,
+          username: credentials.email,
           password: credentials.password,
-          name: credentials.options?.data?.full_name || '',
         }),
       });
 

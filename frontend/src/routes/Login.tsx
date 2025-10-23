@@ -12,7 +12,6 @@ import ErrorMessage from './login/ErrorMessage'
 import EmailPasswordForm from './login/EmailPasswordForm'
 import OAuthButtons from './login/OAuthButtons'
 import DividerWithText from '../components/shared/DividerWithText'
-import NavigationLink from './login/NavigationLink'
 import LoggedInState from './login/LoggedInState'
 import { BASE_PATH } from '../constants/app'
 
@@ -22,6 +21,7 @@ export default function Login() {
   const { t } = useTranslation()
   const [isSigningIn, setIsSigningIn] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [showEmailForm, setShowEmailForm] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
 
@@ -113,35 +113,77 @@ export default function Login() {
     }
   }
 
+  const handleForgotPassword = () => {
+    navigate('/auth/reset')
+  }
+
   return (
-    <AuthLayout>
+    <AuthLayout isEmailFormExpanded={showEmailForm}>
       <LoginHeader title={t('login.login') || 'Sign in'} />
 
       <ErrorMessage error={error} />
 
-      <EmailPasswordForm
-        email={email}
-        password={password}
-        setEmail={setEmail}
-        setPassword={setPassword}
-        onSubmit={signInWithEmail}
-        isSubmitting={isSigningIn}
-        submitButtonText={isSigningIn ? (t('login.loggingIn') || 'Signing in...') : (t('login.login') || 'Sign in')}
-      />
-
-      <DividerWithText text={t('login.or', 'or')} respondsToDarkMode={false} opacity={0.4} />
-
+      {/* OAuth first */}
       <OAuthButtons
         onProviderClick={signInWithProvider}
         isSubmitting={isSigningIn}
-        layout="icons"
+        layout="vertical"
       />
 
-      <NavigationLink
-        onClick={() => navigate('/signup')}
-        text={t('login.dontHaveAccount') || "Don't have an account? Sign up"}
-        isDisabled={isSigningIn}
-      />
+      {/* Divider between OAuth and Email */}
+      <DividerWithText text={t('signup.or', 'or')} respondsToDarkMode={false} opacity={0.4} />
+
+      {/* Sign in with email button (primary color to match signup CTA) */}
+      <div className="auth-section">
+        <button
+          type="button"
+          onClick={() => setShowEmailForm(true)}
+          disabled={isSigningIn}
+          className="w-full px-4 py-[0.75rem] rounded-[0.625rem] text-base font-semibold mb-2 cursor-pointer border-0 disabled:opacity-50 disabled:cursor-not-allowed auth-cta-button"
+        >
+          {t('login.useEmailInstead', 'Login with email')}
+        </button>
+      </div>
+
+      {showEmailForm && (
+        <div style={{ marginTop: '1rem' }}>
+          <EmailPasswordForm
+            email={email}
+            password={password}
+            setEmail={setEmail}
+            setPassword={setPassword}
+            onSubmit={signInWithEmail}
+            isSubmitting={isSigningIn}
+            submitButtonText={isSigningIn ? (t('login.loggingIn') || 'Signing in...') : (t('login.login') || 'Sign in')}
+          />
+        </div>
+      )}
+
+      {showEmailForm && (
+        <div className="auth-section-sm">
+          <button
+            type="button"
+            onClick={handleForgotPassword}
+            className="auth-link-black"
+          >
+            {t('login.forgotPassword', 'Forgot your password?')}
+          </button>
+        </div>
+      )}
+
+      {/* Divider then signup link */}
+      <DividerWithText text={t('signup.or', 'or')} respondsToDarkMode={false} opacity={0.4} />
+
+      <div style={{ textAlign: 'center', margin: '0.5rem 0 0.25rem' }}>
+        <button
+          type="button"
+          onClick={() => navigate('/signup')}
+          className="auth-link-black"
+        >
+          {t('signup.signUp', 'Sign up')}
+        </button>
+      </div>
+
     </AuthLayout>
   )
 }

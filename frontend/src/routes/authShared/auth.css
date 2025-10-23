@@ -186,15 +186,15 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.875rem 1rem; /* 14px 16px */
+  padding: 1rem 1rem; /* 16px 16px */
   border: 1px solid #d1d5db;
   border-radius: 0.75rem; /* 12px */
   background-color: var(--auth-card-bg-light-only);
-  font-size: 0.875rem; /* 14px */
+  font-size: 1rem; /* 16px */
   font-weight: 500;
   color: var(--auth-text-primary-light-only);
   cursor: pointer;
-  gap: 0.5rem; /* 8px */
+  gap: 0.75rem; /* 12px */
 }
 
 .oauth-button-vertical:disabled {
@@ -215,8 +215,8 @@
 }
 
 .oauth-icon-tiny {
-  width: 1rem; /* 16px */
-  height: 1rem; /* 16px */
+  width: 1.25rem; /* 20px */
+  height: 1.25rem; /* 20px */
 }
 
 /* Login Header Styles */
@@ -318,4 +318,61 @@
 .auth-input-error:focus {
   border-color: #dc2626 !important;
   box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1) !important;
+}
+
+/* Shared auth styles extracted from inline */
+.auth-section {
+  margin: 0.75rem 0;
+}
+
+.auth-section-sm {
+  margin: 0.5rem 0;
+}
+
+.auth-bottom-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0.5rem 0 0.25rem;
+}
+
+.auth-bottom-right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-top: 0.5rem;
+}
+
+.auth-link-black {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: 0.875rem; /* 14px */
+  color: #000;
+}
+
+.auth-dot-black {
+  opacity: 0.5;
+  padding: 0 0.5rem;
+  color: #000;
+}
+
+/* Email login button - red CTA style matching SaaS version */
+.auth-cta-button {
+  background-color: #AF3434 !important;
+  color: white !important;
+  border: none !important;
+  font-weight: 600 !important;
+}
+
+.auth-cta-button:hover:not(:disabled) {
+  background-color: #9a2e2e !important;
+}
+
+.auth-cta-button:disabled {
+  background-color: #AF3434 !important;
+  opacity: 0.6 !important;
 }

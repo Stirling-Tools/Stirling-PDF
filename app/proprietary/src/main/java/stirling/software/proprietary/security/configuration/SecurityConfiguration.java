@@ -262,6 +262,8 @@ public class SecurityConfiguration {
                                                         || trimmedUri.startsWith(
                                                                 "/api/v1/auth/register")
                                                         || trimmedUri.startsWith(
+                                                                "/api/v1/user/register")
+                                                        || trimmedUri.startsWith(
                                                                 "/api/v1/auth/login")
                                                         || trimmedUri.startsWith(
                                                                 "/api/v1/auth/refresh")

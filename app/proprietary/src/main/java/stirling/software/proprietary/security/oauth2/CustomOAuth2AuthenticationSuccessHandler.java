@@ -114,18 +114,8 @@ public class CustomOAuth2AuthenticationSuccessHandler
                             jwtService.generateToken(
                                     authentication, Map.of("authType", AuthenticationType.OAUTH2));
 
-                    // Check if backend is running on port 8080 (dev mode indicator)
-                    String serverPort = String.valueOf(request.getServerPort());
-                    String redirectUrl;
-
-                    if ("8080".equals(serverPort)) {
-                        // Dev mode: assume frontend is on 5173 or 5174
-                        // Try 5173 first (default Vite port)
-                        redirectUrl = "http://localhost:5173/auth/callback#access_token=" + jwt;
-                    } else {
-                        // Prod mode: same origin
-                        redirectUrl = contextPath + "/auth/callback#access_token=" + jwt;
-                    }
+                    // Build context-aware redirect URL based on the original request
+                    String redirectUrl = buildContextAwareRedirectUrl(request, contextPath, jwt);
 
                     response.sendRedirect(redirectUrl);
                 } else {
@@ -149,5 +139,49 @@ public class CustomOAuth2AuthenticationSuccessHandler
             return oauth2Token.getAuthorizedClientRegistrationId();
         }
         return null;
+    }
+
+    /**
+     * Builds a context-aware redirect URL based on the request's origin
+     *
+     * @param request The HTTP request
+     * @param contextPath The application context path
+     * @param jwt The JWT token to include
+     * @return The appropriate redirect URL
+     */
+    private String buildContextAwareRedirectUrl(
+            HttpServletRequest request, String contextPath, String jwt) {
+        // Try to get the origin from the Referer header first
+        String referer = request.getHeader("Referer");
+        if (referer != null && !referer.isEmpty()) {
+            try {
+                java.net.URL refererUrl = new java.net.URL(referer);
+                String origin = refererUrl.getProtocol() + "://" + refererUrl.getHost();
+                if (refererUrl.getPort() != -1
+                        && refererUrl.getPort() != 80
+                        && refererUrl.getPort() != 443) {
+                    origin += ":" + refererUrl.getPort();
+                }
+                return origin + "/auth/callback#access_token=" + jwt;
+            } catch (java.net.MalformedURLException e) {
+                // Fall back to other methods if referer is malformed
+            }
+        }
+
+        // Fall back to building from request host/port
+        String scheme = request.getScheme();
+        String serverName = request.getServerName();
+        int serverPort = request.getServerPort();
+
+        StringBuilder origin = new StringBuilder();
+        origin.append(scheme).append("://").append(serverName);
+
+        // Only add port if it's not the default port for the scheme
+        if ((!"http".equals(scheme) || serverPort != 80)
+                && (!"https".equals(scheme) || serverPort != 443)) {
+            origin.append(":").append(serverPort);
+        }
+
+        return origin.toString() + "/auth/callback#access_token=" + jwt;
     }
 }

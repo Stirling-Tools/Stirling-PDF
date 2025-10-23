@@ -4,27 +4,29 @@ import { useTranslation } from 'react-i18next'
 import { SignupFieldErrors } from './SignupFormValidation'
 
 interface SignupFormProps {
-  name: string
+  name?: string
   email: string
   password: string
   confirmPassword: string
-  agree: boolean
-  setName: (name: string) => void
+  agree?: boolean
+  setName?: (name: string) => void
   setEmail: (email: string) => void
   setPassword: (password: string) => void
   setConfirmPassword: (password: string) => void
-  setAgree: (agree: boolean) => void
+  setAgree?: (agree: boolean) => void
   onSubmit: () => void
   isSubmitting: boolean
   fieldErrors?: SignupFieldErrors
+  showName?: boolean
+  showTerms?: boolean
 }
 
 export default function SignupForm({
-  name,
+  name = '',
   email,
   password,
   confirmPassword,
-  agree,
+  agree = true,
   setName,
   setEmail,
   setPassword,
@@ -32,7 +34,9 @@ export default function SignupForm({
   setAgree,
   onSubmit,
   isSubmitting,
-  fieldErrors = {}
+  fieldErrors = {},
+  showName = false,
+  showTerms = false
 }: SignupFormProps) {
   const { t } = useTranslation()
   const showConfirm = password.length >= 4
@@ -46,22 +50,24 @@ export default function SignupForm({
   return (
     <>
       <div className="auth-fields">
-        <div className="auth-field">
-          <label htmlFor="name" className="auth-label">{t('signup.name')}</label>
-          <input
-            id="name"
-            type="text"
-            name="name"
-            autoComplete="name"
-            placeholder={t('signup.enterName')}
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className={`auth-input ${fieldErrors.name ? 'auth-input-error' : ''}`}
-          />
-          {fieldErrors.name && (
-            <div className="auth-field-error">{fieldErrors.name}</div>
-          )}
-        </div>
+        {showName && (
+          <div className="auth-field">
+            <label htmlFor="name" className="auth-label">{t('signup.name')}</label>
+            <input
+              id="name"
+              type="text"
+              name="name"
+              autoComplete="name"
+              placeholder={t('signup.enterName')}
+              value={name}
+              onChange={(e) => setName?.(e.target.value)}
+              className={`auth-input ${fieldErrors.name ? 'auth-input-error' : ''}`}
+            />
+            {fieldErrors.name && (
+              <div className="auth-field-error">{fieldErrors.name}</div>
+            )}
+          </div>
+        )}
 
         <div className="auth-field">
           <label htmlFor="email" className="auth-label">{t('signup.email')}</label>
@@ -124,27 +130,29 @@ export default function SignupForm({
         </div>
       </div>
 
-      {/* Terms */}
-      <div className="auth-terms">
-        <input
-          id="agree"
-          type="checkbox"
-          checked={agree}
-          onChange={(e) => setAgree(e.target.checked)}
-          className="auth-checkbox"
-        />
-        <label htmlFor="agree" className="auth-terms-label">
-          {t("legal.iAgreeToThe", 'I agree to all of the')} {" "}
-          <a href="https://www.stirlingpdf.com/terms" target="_blank" rel="noopener noreferrer">
-            {t('legal.terms', 'Terms and Conditions')}
-          </a>
-        </label>
-      </div>
+      {/* Terms - only show if showTerms is true */}
+      {showTerms && (
+        <div className="auth-terms">
+          <input
+            id="agree"
+            type="checkbox"
+            checked={agree}
+            onChange={(e) => setAgree?.(e.target.checked)}
+            className="auth-checkbox"
+          />
+          <label htmlFor="agree" className="auth-terms-label">
+            {t("legal.iAgreeToThe", 'I agree to all of the')} {" "}
+            <a href="https://www.stirlingpdf.com/terms" target="_blank" rel="noopener noreferrer">
+              {t('legal.terms', 'Terms and Conditions')}
+            </a>
+          </label>
+        </div>
+      )}
 
       {/* Sign Up Button */}
       <button
         onClick={onSubmit}
-        disabled={isSubmitting || !email || !password || !confirmPassword || !agree}
+        disabled={isSubmitting || !email || !password || !confirmPassword || (showTerms && !agree)}
         className="auth-button"
       >
         {isSubmitting ? t('signup.creatingAccount') : t('signup.signUp')}

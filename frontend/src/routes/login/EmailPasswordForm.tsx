@@ -38,13 +38,13 @@ export default function EmailPasswordForm({
     <form onSubmit={handleSubmit}>
       <div className="auth-fields">
         <div className="auth-field">
-          <label htmlFor="email" className="auth-label">{t('login.email')}</label>
+          <label htmlFor="email" className="auth-label">{t('login.username', 'Username')}</label>
           <input
             id="email"
-            type="email"
-            name="email"
-            autoComplete="username email"
-            placeholder={t('login.enterEmail')}
+            type="text"
+            name="username"
+            autoComplete="username"
+            placeholder={t('login.enterUsername', 'Enter username')}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className={`auth-input ${fieldErrors.email ? 'auth-input-error' : ''}`}
