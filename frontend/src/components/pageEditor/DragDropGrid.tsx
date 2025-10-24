@@ -24,7 +24,7 @@ interface DragDropItem {
 interface DragDropGridProps<T extends DragDropItem> {
   items: T[];
   onReorderPages: (sourcePageNumber: number, targetIndex: number, selectedPageIds?: string[]) => void;
-  renderItem: (item: T, index: number, refs: React.MutableRefObject<Map<string, HTMLDivElement>>, boxSelectedIds: string[], clearBoxSelection: () => void, getBoxSelection: () => string[], activeId: string | null, isOver: boolean, dragHandleProps?: any, zoomLevel?: number) => React.ReactNode;
+  renderItem: (item: T, index: number, refs: React.MutableRefObject<Map<string, HTMLDivElement>>, boxSelectedIds: string[], clearBoxSelection: () => void, getBoxSelection: () => string[], activeId: string | null, activeDragIds: string[], justMoved: boolean, isOver: boolean, dragHandleProps?: any, zoomLevel?: number) => React.ReactNode;
   getThumbnailData?: (itemId: string) => { src: string; rotation: number } | null;
   zoomLevel?: number;
 }
@@ -38,13 +38,15 @@ interface DraggableItemProps<T extends DragDropItem> {
   clearBoxSelection: () => void;
   getBoxSelection: () => string[];
   activeId: string | null;
+  activeDragIds: string[];
+  justMoved: boolean;
   getThumbnailData?: (itemId: string) => { src: string; rotation: number } | null;
   onUpdateDropTarget: (itemId: string | null) => void;
-  renderItem: (item: T, index: number, refs: React.MutableRefObject<Map<string, HTMLDivElement>>, boxSelectedIds: string[], clearBoxSelection: () => void, getBoxSelection: () => string[], activeId: string | null, isOver: boolean, dragHandleProps?: any, zoomLevel?: number) => React.ReactNode;
+  renderItem: (item: T, index: number, refs: React.MutableRefObject<Map<string, HTMLDivElement>>, boxSelectedIds: string[], clearBoxSelection: () => void, getBoxSelection: () => string[], activeId: string | null, activeDragIds: string[], justMoved: boolean, isOver: boolean, dragHandleProps?: any, zoomLevel?: number) => React.ReactNode;
   zoomLevel: number;
 }
 
-const DraggableItem = <T extends DragDropItem>({ item, index, itemRefs, boxSelectedPageIds, clearBoxSelection, getBoxSelection, activeId, getThumbnailData, renderItem, onUpdateDropTarget, zoomLevel }: DraggableItemProps<T>) => {
+const DraggableItem = <T extends DragDropItem>({ item, index, itemRefs, boxSelectedPageIds, clearBoxSelection, getBoxSelection, activeId, activeDragIds, justMoved, getThumbnailData, renderItem, onUpdateDropTarget, zoomLevel }: DraggableItemProps<T>) => {
   const { attributes, listeners, setNodeRef: setDraggableRef } = useDraggable({
     id: item.id,
     data: {
@@ -90,7 +92,7 @@ const DraggableItem = <T extends DragDropItem>({ item, index, itemRefs, boxSelec
 
   return (
     <>
-      {renderItem(item, index, itemRefs, boxSelectedPageIds, clearBoxSelection, getBoxSelection, activeId, isOver, { ref: setNodeRef, ...attributes, ...listeners }, zoomLevel)}
+      {renderItem(item, index, itemRefs, boxSelectedPageIds, clearBoxSelection, getBoxSelection, activeId, activeDragIds, justMoved, isOver, { ref: setNodeRef, ...attributes, ...listeners }, zoomLevel)}
     </>
   );
 };
@@ -117,6 +119,8 @@ const DragDropGrid = <T extends DragDropItem>({
   const [boxSelectEnd, setBoxSelectEnd] = useState<{ x: number; y: number } | null>(null);
   const [isBoxSelecting, setIsBoxSelecting] = useState(false);
   const [boxSelectedPageIds, setBoxSelectedPageIds] = useState<string[]>([]);
+  const justMovedIdsRef = useRef(new Set<string>());
+  const [, forceUpdate] = useState(0);
 
   // Drag state
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -301,24 +305,37 @@ const DragDropGrid = <T extends DragDropItem>({
 
   // Box selection handlers
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    // Only start box select if Ctrl/Cmd is held
-    if (e.ctrlKey || e.metaKey) {
-      e.preventDefault();
-      const rect = containerRef.current?.getBoundingClientRect();
-      if (!rect) return;
+    if (e.button !== 0) return; // Only respond to primary button
 
-      // Clear previous box selection when starting new one
-      setIsBoxSelecting(true);
-      setBoxSelectStart({ x: e.clientX - rect.left, y: e.clientY - rect.top });
-      setBoxSelectEnd({ x: e.clientX - rect.left, y: e.clientY - rect.top });
-      setBoxSelectedPageIds([]);
-    } else {
-      // Clear box selection when clicking without Ctrl
-      if (boxSelectedPageIds.length > 0) {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const clickTarget = e.target as Node;
+    let clickedPageId: string | null = null;
+
+    itemRefs.current.forEach((element, pageId) => {
+      if (element.contains(clickTarget)) {
+        clickedPageId = pageId;
+      }
+    });
+
+    if (clickedPageId) {
+      // Clicking directly on a page shouldn't initiate box selection
+      // but clear previous box selection if clicking outside current group
+      if (boxSelectedPageIds.length > 0 && !boxSelectedPageIds.includes(clickedPageId)) {
         setBoxSelectedPageIds([]);
       }
+      return;
     }
-  }, [boxSelectedPageIds.length]);
+
+    e.preventDefault();
+
+    const rect = container.getBoundingClientRect();
+    setIsBoxSelecting(true);
+    setBoxSelectStart({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+    setBoxSelectEnd({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+    setBoxSelectedPageIds([]);
+  }, [boxSelectedPageIds]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     if (!isBoxSelecting || !boxSelectStart) return;
@@ -421,17 +438,31 @@ const DragDropGrid = <T extends DragDropItem>({
 
     // Get data from hooks
     const activeData = active.data.current;
-    const overData = over.data.current;
-
-    if (!activeData || !overData) return;
+    if (!activeData) return;
 
     const sourcePageNumber = activeData.pageNumber;
-    let targetIndex = overData.index;
 
-    // Use the final drop side to adjust target index
-    if (finalDropSide === 'right') {
-      targetIndex = targetIndex + 1;
+    let targetIndex: number | null = null;
+
+    if (hoveredItemId) {
+      const hoveredIndex = visibleItems.findIndex(item => item.id === hoveredItemId);
+      if (hoveredIndex !== -1) {
+        targetIndex = hoveredIndex + (finalDropSide === 'right' ? 1 : 0);
+      }
     }
+
+    if (targetIndex === null && over) {
+      const overData = over.data.current;
+      if (overData) {
+        targetIndex = overData.index + (finalDropSide === 'right' ? 1 : 0);
+      }
+    }
+
+    if (targetIndex === null) return;
+
+    // Clamp to bounds
+    if (targetIndex < 0) targetIndex = 0;
+    if (targetIndex > visibleItems.length) targetIndex = visibleItems.length;
 
     // Check if this page is box-selected
     const isBoxSelected = boxSelectedPageIds.includes(active.id as string);
@@ -439,6 +470,17 @@ const DragDropGrid = <T extends DragDropItem>({
 
     // Call reorder with page number and target index
     onReorderPages(sourcePageNumber, targetIndex, pagesToDrag);
+
+    // Highlight moved pages briefly
+    const movedIds = new Set(pagesToDrag ?? [active.id as string]);
+    justMovedIdsRef.current = movedIds;
+    forceUpdate(prev => prev + 1);
+    window.setTimeout(() => {
+      if (justMovedIdsRef.current === movedIds) {
+        justMovedIdsRef.current = new Set();
+        forceUpdate(prev => prev + 1);
+      }
+    }, 1200);
 
     // Clear box selection after drag
     if (pagesToDrag) {
@@ -494,6 +536,14 @@ const DragDropGrid = <T extends DragDropItem>({
       pointerEvents: 'none' as const,
     };
   }, [hoveredItemId, dropSide, activeId, itemGap, zoomLevel]);
+
+  const activeDragIds = useMemo(() => {
+    if (!activeId) return [];
+    if (boxSelectedPageIds.includes(activeId)) {
+      return boxSelectedPageIds;
+    }
+    return [activeId];
+  }, [activeId, boxSelectedPageIds]);
 
   const handleWheelWhileDragging = useCallback((event: React.WheelEvent<HTMLDivElement>) => {
     if (!activeId) {
@@ -589,6 +639,8 @@ const DragDropGrid = <T extends DragDropItem>({
                       clearBoxSelection={clearBoxSelection}
                       getBoxSelection={getBoxSelection}
                       activeId={activeId}
+                      activeDragIds={activeDragIds}
+                      justMoved={justMovedIdsRef.current.has(item.id)}
                       getThumbnailData={getThumbnailData}
                       onUpdateDropTarget={setHoveredItemId}
                       renderItem={renderItem}

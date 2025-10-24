@@ -32,6 +32,8 @@ interface PageThumbnailProps {
   clearBoxSelection?: () => void;
   getBoxSelection?: () => string[];
   activeId: string | null;
+  activeDragIds: string[];
+  justMoved?: boolean;
   isOver: boolean;
   pageRefs: React.MutableRefObject<Map<string, HTMLDivElement>>;
   dragHandleProps?: any;
@@ -67,6 +69,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
   clearBoxSelection,
   // getBoxSelection,
   activeId,
+  activeDragIds,
   // isOver,
   pageRefs,
   dragHandleProps,
@@ -82,6 +85,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
   splitPositions,
   onInsertFiles,
   zoomLevel = 1.0,
+  justMoved = false,
 }: PageThumbnailProps) => {
   const [isMouseDown, setIsMouseDown] = useState(false);
   const [mouseStartPos, setMouseStartPos] = useState<{x: number, y: number} | null>(null);
@@ -94,7 +98,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
   const { openFilesModal } = useFilesModalContext();
 
   // Check if this page is currently being dragged
-  const isDragging = activeId === page.id;
+  const isDragging = activeDragIds.includes(page.id);
 
   // Calculate document aspect ratio from first non-blank page
   const getDocumentAspectRatio = useCallback(() => {
@@ -415,6 +419,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
 
       <div className="page-container w-[90%] h-[90%]" draggable={false}>
         <div
+          className={`${styles.pageSurface} ${justMoved ? styles.pageJustMoved : ''}`}
           style={{
             width: '100%',
             height: '100%',

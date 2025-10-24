@@ -350,6 +350,20 @@ const PageEditor = ({
     }
   }, [displayDocument, setSelectedPageIds, setSelectionMode]);
 
+  // Automatically include newly added pages in the current selection
+  useEffect(() => {
+    if (!displayDocument || displayDocument.pages.length === 0) return;
+
+    const currentSelection = new Set(selectedPageIds);
+    const newlyAddedPageIds = displayDocument.pages
+      .map(page => page.id)
+      .filter(pageId => !currentSelection.has(pageId));
+
+    if (newlyAddedPageIds.length > 0) {
+      setSelectedPageIds([...selectedPageIds, ...newlyAddedPageIds]);
+    }
+  }, [displayDocument, selectedPageIds, setSelectedPageIds]);
+
   // DOM-first command handlers
   const handleRotatePages = useCallback((pageIds: string[], rotation: number) => {
     const bulkRotateCommand = new BulkRotateCommand(pageIds, rotation);
@@ -845,6 +859,7 @@ const PageEditor = ({
     handleDeselectAll,
     handleDelete,
     onExportSelected,
+    onSaveChanges: applyChanges,
     exportLoading,
     activeFileCount: activeFileIds.length,
     closePdf,
@@ -970,22 +985,25 @@ const PageEditor = ({
 
   // Create a stable mapping of fileId to color index (preserves colors on reorder)
   const fileColorIndexMap = useMemo(() => {
+    const assignments = fileColorAssignments.current;
+
+    // Remove colors for files that no longer exist
+    const activeIds = new Set(orderedFileIds);
+    for (const fileId of Array.from(assignments.keys())) {
+      if (!activeIds.has(fileId)) {
+        assignments.delete(fileId);
+      }
+    }
+
     // Assign colors to new files based on insertion order
     orderedFileIds.forEach(fileId => {
-      if (!fileColorAssignments.current.has(fileId)) {
-        fileColorAssignments.current.set(fileId, fileColorAssignments.current.size);
+      if (!assignments.has(fileId)) {
+        assignments.set(fileId, assignments.size);
       }
     });
 
     // Clean up removed files (only remove files that are completely gone, not just deselected)
-    const allFilesSet = new Set(orderedFileIds);
-    for (const fileId of fileColorAssignments.current.keys()) {
-      if (!allFilesSet.has(fileId)) {
-        fileColorAssignments.current.delete(fileId);
-      }
-    }
-
-    return fileColorAssignments.current;
+    return assignments;
   }, [orderedFileIds.join(',')]); // Only recalculate when the set of files changes, not the order
 
   return (
@@ -1089,7 +1107,7 @@ const PageEditor = ({
                 rotation: page.rotation || 0
               };
             }}
-            renderItem={(page, index, refs, boxSelectedIds, clearBoxSelection, getBoxSelection, activeId, isOver, dragHandleProps, zoomLevel) => {
+            renderItem={(page, index, refs, boxSelectedIds, clearBoxSelection, getBoxSelection, activeId, activeDragIds, justMoved, isOver, dragHandleProps, zoomLevel) => {
               const fileColorIndex = page.originalFileId ? fileColorIndexMap.get(page.originalFileId) ?? 0 : 0;
               const isBoxSelected = boxSelectedIds.includes(page.id);
               return (
@@ -1109,6 +1127,8 @@ const PageEditor = ({
                   clearBoxSelection={clearBoxSelection}
                   getBoxSelection={getBoxSelection}
                   activeId={activeId}
+                  activeDragIds={activeDragIds}
+                  justMoved={justMoved}
                   isOver={isOver}
                   pageRefs={refs}
                   dragHandleProps={dragHandleProps}
