@@ -1,4 +1,4 @@
-mport React from "react";
+import React from "react";
 import { TourProvider, useTour, type StepType } from '@reactour/tour';
 import { useOnboarding } from '../../contexts/OnboardingContext';
 import { useTranslation } from 'react-i18next';
@@ -13,17 +13,6 @@ import './OnboardingTour.css';
 // Enum case order defines order steps will appear
 enum TourStep {
   ALL_TOOLS,
-
-    
-        
-          
-    
-
-        
-        Expand All
-    
-    @@ -31,27 +30,22 @@ enum TourStep {
-  
   SELECT_CROP_TOOL,
   TOOL_INTERFACE,
   FILES_BUTTON,
@@ -66,17 +55,6 @@ function TourContent() {
 export default function OnboardingTour() {
   const { t } = useTranslation();
   const { completeTour, showWelcomeModal, setShowWelcomeModal, startTour } = useOnboarding();
-
-    
-        
-          
-    
-
-        
-        Expand All
-    
-    @@ -70,7 +64,6 @@ export default function OnboardingTour() {
-  
   const { openFilesModal, closeFilesModal } = useFilesModalContext();
   const {
     saveWorkbenchState,
@@ -116,23 +94,6 @@ export default function OnboardingTour() {
     [TourStep.TOOL_INTERFACE]: {
       selector: '[data-tour="tool-panel"]',
       content: t('onboarding.toolInterface', "This is the <strong>Crop</strong> tool interface. As you can see, there's not much there because we haven't added any PDF files to work with yet."),
-
-    
-          
-            
-    
-
-          
-          Expand Down
-          
-            
-    
-
-          
-          Expand Up
-    
-    @@ -141,70 +134,68 @@
-  
       position: 'center',
       padding: 0,
     },
