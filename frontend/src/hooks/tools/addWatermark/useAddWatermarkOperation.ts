@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { ToolType, useToolOperation } from '../shared/useToolOperation';
 import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
 import { AddWatermarkParameters, defaultParameters } from './useAddWatermarkParameters';
+import { addWatermarkClientSide } from '../../../utils/pdfOperations/addWatermark';
 
 // Static function that can be used by both the hook and automation executor
 export const buildAddWatermarkFormData = (parameters: AddWatermarkParameters, file: File): FormData => {
@@ -40,6 +41,19 @@ export const addWatermarkOperationConfig = {
   operationType: 'watermark',
   endpoint: '/api/v1/security/add-watermark',
   defaultParameters,
+  frontendProcessing: {
+    process: addWatermarkClientSide,
+    shouldUseFrontend: (params: AddWatermarkParameters) => {
+      if (params.convertPDFToImage) return false;
+      if (!params.watermarkType) return false;
+      if (params.watermarkType === 'image') {
+        const type = params.watermarkImage?.type || '';
+        return /png|jpe?g/i.test(type);
+      }
+      return true;
+    },
+    statusMessage: 'Adding watermark in browser...'
+  }
 } as const;
 
 export const useAddWatermarkOperation = () => {

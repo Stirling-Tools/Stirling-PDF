@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { ToolOperationConfig, ToolType, useToolOperation } from '../shared/useToolOperation';
 import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
 import { ReorganizePagesParameters } from './useReorganizePagesParameters';
+import { reorganizePagesClientSide } from '../../../utils/pdfOperations/reorganizePages';
 
 const buildFormData = (parameters: ReorganizePagesParameters, file: File): FormData => {
   const formData = new FormData();
@@ -21,6 +22,18 @@ export const reorganizePagesOperationConfig: ToolOperationConfig<ReorganizePages
   buildFormData,
   operationType: 'reorganizePages',
   endpoint: '/api/v1/general/rearrange-pages',
+  frontendProcessing: {
+    process: reorganizePagesClientSide,
+    shouldUseFrontend: (params) => {
+      if (params.processingMode !== 'frontend') return false;
+      if (!params.customMode || params.customMode === '' || params.customMode === 'CUSTOM') {
+        if (!params.pageNumbers.trim()) return true;
+        return !params.pageNumbers.toLowerCase().includes('n');
+      }
+      return true;
+    },
+    statusMessage: 'Reordering pages in browser...'
+  }
 };
 
 export const useReorganizePagesOperation = () => {

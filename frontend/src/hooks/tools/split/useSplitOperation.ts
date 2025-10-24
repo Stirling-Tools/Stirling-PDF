@@ -5,6 +5,8 @@ import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
 import { SplitParameters, defaultParameters } from './useSplitParameters';
 import { SPLIT_METHODS } from '../../../constants/splitConstants';
 import { useToolResources } from '../shared/useToolResources';
+import { splitPdfClientSide } from '../../../utils/pdfOperations/split';
+import { validatePageNumbers } from '../../../utils/pageSelection';
 
 // Static functions that can be used by both the hook and automation executor
 export const buildSplitFormData = (parameters: SplitParameters, file: File): FormData => {
@@ -74,7 +76,19 @@ export const splitOperationConfig = {
   operationType: 'split',
   endpoint: getSplitEndpoint,
   defaultParameters,
-} as const;
+  frontendProcessing: {
+    process: splitPdfClientSide,
+    shouldUseFrontend: (params: SplitParameters) => {
+      if (params.processingMode !== 'frontend') return false;
+      if (params.method !== SPLIT_METHODS.BY_PAGES) return false;
+      const token = params.pages?.trim();
+      if (!token) return true;
+      if (token.toLowerCase().includes('n')) return false;
+      return validatePageNumbers(token);
+    },
+    statusMessage: 'Splitting PDF in browser...'
+  }
+} as const satisfies ToolOperationConfig<SplitParameters>;
 
 export const useSplitOperation = () => {
   const { t } = useTranslation();

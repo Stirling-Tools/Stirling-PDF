@@ -1,4 +1,4 @@
-import { Divider, Select, Stack, TextInput } from '@mantine/core';
+import { Divider, Select, Stack, TextInput, SegmentedControl, Text } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { ReorganizePagesParameters } from '../../../hooks/tools/reorganizePages/useReorganizePagesParameters';
 import { getReorganizePagesModeData } from './constants';
@@ -22,6 +22,27 @@ export default function ReorganizePagesSettings({
   const selectedMode = modeData.find(mode => mode.value === parameters.customMode) || modeData[0];
   return (
     <Stack gap="sm">
+      <Stack gap="xs">
+        <Text size="sm" fw={500}>
+          {t('reorganizePages.processingMode.label', 'Processing mode')}
+        </Text>
+        <SegmentedControl
+          value={parameters.processingMode}
+          onChange={(value) => onParameterChange('processingMode', value as ReorganizePagesParameters['processingMode'])}
+          data={[
+            { label: t('reorganizePages.processingMode.backend', 'Backend'), value: 'backend' },
+            { label: t('reorganizePages.processingMode.frontend', 'Browser'), value: 'frontend' }
+          ]}
+          fullWidth
+          disabled={disabled}
+        />
+        <Text size="xs" c="dimmed">
+          {parameters.processingMode === 'frontend'
+            ? t('reorganizePages.processingMode.frontendDescription', 'Reorder or transform pages locally for supported modes.')
+            : t('reorganizePages.processingMode.backendDescription', 'Use the server for advanced or scripted page arrangements.')}
+        </Text>
+      </Stack>
+
       <Select
         label={t('pdfOrganiser.mode._value', 'Organization mode')}
         data={modeData}

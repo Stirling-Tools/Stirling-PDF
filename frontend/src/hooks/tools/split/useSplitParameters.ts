@@ -1,8 +1,8 @@
 import { SPLIT_METHODS, ENDPOINTS, type SplitMethod } from '../../../constants/splitConstants';
-import { BaseParameters } from '../../../types/parameters';
+import { BaseParameters, ToggleableProcessingParameters } from '../../../types/parameters';
 import { useBaseParameters, BaseParametersHook } from '../shared/useBaseParameters';
 
-export interface SplitParameters extends BaseParameters {
+export interface SplitParameters extends BaseParameters, ToggleableProcessingParameters {
   method: SplitMethod | '';
   pages: string;
   hDiv: string;
@@ -28,12 +28,14 @@ export const defaultParameters: SplitParameters = {
   includeMetadata: false,
   allowDuplicates: false,
   duplexMode: false,
+  processingMode: 'backend',
 };
 
 export const useSplitParameters = (): SplitParametersHook => {
   return useBaseParameters({
     defaultParameters,
     endpointName: (params) => {
+      if (params.processingMode === 'frontend') return '';
       if (!params.method) return ENDPOINTS[SPLIT_METHODS.BY_PAGES];
       return ENDPOINTS[params.method as SplitMethod];
     },

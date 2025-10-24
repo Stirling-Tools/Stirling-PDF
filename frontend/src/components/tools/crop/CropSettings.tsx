@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect } from "react";
-import { Stack, Text, Box, Group, ActionIcon, Center, Alert } from "@mantine/core";
+import { Stack, Text, Box, Group, ActionIcon, Center, Alert, SegmentedControl } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import { CropParametersHook } from "../../../hooks/tools/crop/useCropParameters";
@@ -151,6 +151,23 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
 
   return (
     <Stack gap="md" data-tour="crop-settings">
+      <Stack gap="xs">
+        <Text size="sm" fw={500}>{t('crop.processingMode.label', 'Processing mode')}</Text>
+        <SegmentedControl
+          value={parameters.parameters.processingMode}
+          onChange={(value) => parameters.updateParameter('processingMode', value as 'backend' | 'frontend')}
+          data={[
+            { label: t('crop.processingMode.backend', 'Backend'), value: 'backend' },
+            { label: t('crop.processingMode.frontend', 'Browser'), value: 'frontend' },
+          ]}
+          disabled={disabled}
+        />
+        <Text size="xs" c="dimmed">
+          {parameters.parameters.processingMode === 'frontend'
+            ? t('crop.processingMode.frontendDescription', 'Crop each page locally without uploading the PDF.')
+            : t('crop.processingMode.backendDescription', 'Use the server to crop pages (recommended for very large files).')}
+        </Text>
+      </Stack>
       {/* PDF Preview with Crop Selector */}
       <Stack gap="xs">
         <Group justify="space-between" align="center">

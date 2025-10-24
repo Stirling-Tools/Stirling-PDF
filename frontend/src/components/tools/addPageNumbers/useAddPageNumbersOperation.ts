@@ -1,7 +1,9 @@
 import { useTranslation } from 'react-i18next';
-import { ToolType, useToolOperation } from '../../../hooks/tools/shared/useToolOperation';
+import { ToolType, useToolOperation, ToolOperationConfig } from '../../../hooks/tools/shared/useToolOperation';
 import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
 import { AddPageNumbersParameters, defaultParameters } from './useAddPageNumbersParameters';
+import { addPageNumbersClientSide } from '../../../utils/pdfOperations/addPageNumbers';
+import { validatePageNumbers } from '../../../utils/pageSelection';
 
 export const buildAddPageNumbersFormData = (parameters: AddPageNumbersParameters, file: File): FormData => {
   const formData = new FormData();
@@ -23,7 +25,18 @@ export const addPageNumbersOperationConfig = {
   operationType: 'addPageNumbers',
   endpoint: '/api/v1/misc/add-page-numbers',
   defaultParameters,
-} as const;
+  frontendProcessing: {
+    process: addPageNumbersClientSide,
+    shouldUseFrontend: (params) => {
+      if (params.processingMode !== 'frontend') return false;
+      const selection = params.pagesToNumber?.trim();
+      if (!selection) return true;
+      if (selection.toLowerCase().includes('n')) return false;
+      return validatePageNumbers(selection);
+    },
+    statusMessage: 'Adding page numbers in browser...'
+  }
+} as const satisfies ToolOperationConfig<AddPageNumbersParameters>;
 
 export const useAddPageNumbersOperation = () => {
   const { t } = useTranslation();

@@ -1,4 +1,4 @@
-import { Stack, TextInput } from "@mantine/core";
+import { Stack, TextInput, SegmentedControl, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { RemovePagesParameters } from "../../../hooks/tools/removePages/useRemovePagesParameters";
 import { validatePageNumbers } from "../../../utils/pageSelection";
@@ -16,7 +16,6 @@ const RemovePagesSettings = ({ parameters, onParameterChange, disabled = false }
     // Allow user to type naturally - don't normalize input in real-time
     onParameterChange('pageNumbers', value);
   };
-  console.log('Current pageNumbers input:', parameters.pageNumbers, disabled);
 
   // Check if current input is valid
   const isValid = validatePageNumbers(parameters.pageNumbers || '');
@@ -24,6 +23,23 @@ const RemovePagesSettings = ({ parameters, onParameterChange, disabled = false }
 
   return (
     <Stack gap="md">
+      <Stack gap="xs">
+        <Text size="sm" fw={500}>{t('removePages.processingMode.label', 'Processing mode')}</Text>
+        <SegmentedControl
+          value={parameters.processingMode}
+          onChange={(value) => onParameterChange('processingMode', value as 'backend' | 'frontend')}
+          data={[
+            { label: t('removePages.processingMode.backend', 'Backend'), value: 'backend' },
+            { label: t('removePages.processingMode.frontend', 'Browser'), value: 'frontend' },
+          ]}
+          disabled={disabled}
+        />
+        <Text size="xs" c="dimmed">
+          {parameters.processingMode === 'frontend'
+            ? t('removePages.processingMode.frontendDescription', 'Remove the selected pages locally in your browser.')
+            : t('removePages.processingMode.backendDescription', 'Use the server to remove pages (required for complex formulas).')}
+        </Text>
+      </Stack>
       <TextInput
         label={t('removePages.pageNumbers.label', 'Pages to Remove')}
         value={parameters.pageNumbers || ''}

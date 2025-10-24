@@ -46,10 +46,13 @@ describe('useRotateOperation', () => {
     clearError: vi.fn(),
     cancelOperation: vi.fn(),
     undoOperation: vi.fn(),
+    supportsFrontendProcessing: false,
+    evaluateShouldUseFrontend: vi.fn(() => false),
   };
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockToolOperationReturn.evaluateShouldUseFrontend.mockReturnValue(false);
     mockUseToolOperation.mockReturnValue(mockToolOperationReturn);
   });
 
@@ -68,7 +71,7 @@ describe('useRotateOperation', () => {
 
     const callArgs = getToolConfig();
 
-    const testParameters: RotateParameters = { angle };
+    const testParameters: RotateParameters = { angle, processingMode: 'backend' };
     const testFile = new File(['test content'], 'test.pdf', { type: 'application/pdf' });
     const formData = callArgs.buildFormData(testParameters, testFile);
 
@@ -97,5 +100,13 @@ describe('useRotateOperation', () => {
 
     const callArgs = getToolConfig();
     expect(callArgs[property]).toBe(expectedValue);
+  });
+
+  test('should expose frontend processing handler', () => {
+    renderHook(() => useRotateOperation());
+
+    const callArgs = getToolConfig();
+    expect(callArgs.frontendProcessing).toBeDefined();
+    expect(typeof callArgs.frontendProcessing?.process).toBe('function');
   });
 });

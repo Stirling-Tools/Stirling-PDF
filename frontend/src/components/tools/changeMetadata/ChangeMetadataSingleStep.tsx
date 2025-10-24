@@ -1,4 +1,4 @@
-import { Stack, Divider, Text } from "@mantine/core";
+import { Stack, Divider, Text, SegmentedControl } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { ChangeMetadataParameters, createCustomMetadataFunctions } from "../../../hooks/tools/changeMetadata/useChangeMetadataParameters";
 import { useMetadataExtraction } from "../../../hooks/tools/changeMetadata/useMetadataExtraction";
@@ -36,6 +36,27 @@ const ChangeMetadataSingleStep = ({
 
   return (
     <Stack gap="md">
+      <Stack gap="xs">
+        <Text size="sm" fw={500}>
+          {t('changeMetadata.processingMode.label', 'Processing mode')}
+        </Text>
+        <SegmentedControl
+          value={parameters.processingMode}
+          onChange={(value) => onParameterChange('processingMode', value as ChangeMetadataParameters['processingMode'])}
+          data={[
+            { label: t('changeMetadata.processingMode.backend', 'Backend'), value: 'backend' },
+            { label: t('changeMetadata.processingMode.frontend', 'Browser'), value: 'frontend' }
+          ]}
+          fullWidth
+          disabled={disabled}
+        />
+        <Text size="xs" c="dimmed">
+          {parameters.processingMode === 'frontend'
+            ? t('changeMetadata.processingMode.frontendDescription', 'Update standard and custom metadata without uploading the document.')
+            : t('changeMetadata.processingMode.backendDescription', 'Use the server for metadata changes and legacy XMP cleanup.')}
+        </Text>
+      </Stack>
+
       {/* Delete All */}
       <Stack gap="md">
         <Text size="sm" fw={500}>

@@ -18,6 +18,7 @@ describe('buildChangeMetadataFormData', () => {
     trapped: TrappedStatus.UNKNOWN,
     customMetadata: [],
     deleteAll: false,
+    processingMode: 'backend',
   };
 
   test.each([

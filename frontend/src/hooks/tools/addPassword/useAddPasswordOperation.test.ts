@@ -47,10 +47,13 @@ describe('useAddPasswordOperation', () => {
     clearError: vi.fn(),
     cancelOperation: vi.fn(),
     undoOperation: vi.fn(),
+    supportsFrontendProcessing: false,
+    evaluateShouldUseFrontend: vi.fn(() => false),
   };
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockToolOperationReturn.evaluateShouldUseFrontend.mockReturnValue(false);
     mockUseToolOperation.mockReturnValue(mockToolOperationReturn);
   });
 

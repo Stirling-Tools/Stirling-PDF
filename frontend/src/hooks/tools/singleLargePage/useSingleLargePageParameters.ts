@@ -1,12 +1,13 @@
-import { BaseParameters } from '../../../types/parameters';
+import { BaseParameters, ToggleableProcessingParameters } from '../../../types/parameters';
 import { useBaseParameters, BaseParametersHook } from '../shared/useBaseParameters';
 
-export interface SingleLargePageParameters extends BaseParameters {
+export interface SingleLargePageParameters extends BaseParameters, ToggleableProcessingParameters {
   // Extends BaseParameters - ready for future parameter additions if needed
 }
 
 export const defaultParameters: SingleLargePageParameters = {
   // No parameters needed
+  processingMode: 'backend',
 };
 
 export type SingleLargePageParametersHook = BaseParametersHook<SingleLargePageParameters>;
@@ -14,6 +15,6 @@ export type SingleLargePageParametersHook = BaseParametersHook<SingleLargePagePa
 export const useSingleLargePageParameters = (): SingleLargePageParametersHook => {
   return useBaseParameters({
     defaultParameters,
-    endpointName: 'pdf-to-single-page',
+    endpointName: (params) => (params.processingMode === 'frontend' ? '' : 'pdf-to-single-page'),
   });
 };

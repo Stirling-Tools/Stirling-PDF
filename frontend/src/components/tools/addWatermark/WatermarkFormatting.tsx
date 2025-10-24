@@ -1,4 +1,4 @@
-import { Stack, Checkbox, Group } from "@mantine/core";
+import { Stack, Checkbox, Group, SegmentedControl, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { AddWatermarkParameters } from "../../../hooks/tools/addWatermark/useAddWatermarkParameters";
 import NumberInputWithUnit from "../shared/NumberInputWithUnit";
@@ -14,6 +14,26 @@ const WatermarkFormatting = ({ parameters, onParameterChange, disabled = false }
 
   return (
     <Stack gap="md">
+      <Stack gap="xs">
+        <Text size="sm" fw={500}>
+          {t("watermark.processingMode.label", "Processing mode")}
+        </Text>
+        <SegmentedControl
+          value={parameters.processingMode}
+          onChange={(value) => onParameterChange('processingMode', value as 'backend' | 'frontend')}
+          data={[
+            { label: t('watermark.processingMode.backend', 'Backend'), value: 'backend' },
+            { label: t('watermark.processingMode.frontend', 'Browser'), value: 'frontend' },
+          ]}
+          disabled={disabled}
+        />
+        <Text size="xs" c="dimmed">
+          {parameters.processingMode === 'frontend'
+            ? t('watermark.processingMode.frontendDescription', 'Process the watermark directly in your browser without uploading files.')
+            : t('watermark.processingMode.backendDescription', 'Use the server to apply the watermark (recommended for large files or flattening).')}
+        </Text>
+      </Stack>
+
       {/* Size - single row */}
       <NumberInputWithUnit
         label={t('watermark.settings.size', 'Size')}

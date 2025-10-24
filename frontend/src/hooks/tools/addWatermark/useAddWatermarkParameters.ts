@@ -1,7 +1,7 @@
-import { BaseParameters } from '../../../types/parameters';
+import { BaseParameters, ToggleableProcessingParameters } from '../../../types/parameters';
 import { useBaseParameters, BaseParametersHook } from '../shared/useBaseParameters';
 
-export interface AddWatermarkParameters extends BaseParameters {
+export interface AddWatermarkParameters extends BaseParameters, ToggleableProcessingParameters {
   watermarkType?: 'text' | 'image';
   watermarkText: string;
   watermarkImage?: File;
@@ -25,7 +25,8 @@ export const defaultParameters: AddWatermarkParameters = {
   heightSpacer: 50,
   alphabet: 'roman',
   customColor: '#d3d3d3',
-  convertPDFToImage: false
+  convertPDFToImage: false,
+  processingMode: 'backend',
 };
 
 export type AddWatermarkParametersHook = BaseParametersHook<AddWatermarkParameters>;
@@ -33,7 +34,7 @@ export type AddWatermarkParametersHook = BaseParametersHook<AddWatermarkParamete
 export const useAddWatermarkParameters = (): AddWatermarkParametersHook => {
   return useBaseParameters({
     defaultParameters: defaultParameters,
-    endpointName: 'add-watermark',
+    endpointName: (params) => params.processingMode === 'frontend' ? '' : 'add-watermark',
     validateFn: (params): boolean => {
       if (!params.watermarkType) {
         return false;

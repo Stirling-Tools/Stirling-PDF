@@ -47,11 +47,14 @@ describe('useMergeOperation', () => {
     cancelOperation: vi.fn(),
     undoOperation: function (): Promise<void> {
       throw new Error('Function not implemented.');
-    }
+    },
+    supportsFrontendProcessing: false,
+    evaluateShouldUseFrontend: vi.fn(() => false),
   };
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockToolOperationReturn.evaluateShouldUseFrontend.mockReturnValue(false);
     mockUseToolOperation.mockReturnValue(mockToolOperationReturn);
   });
 

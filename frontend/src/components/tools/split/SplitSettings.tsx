@@ -1,4 +1,4 @@
-import { Stack, TextInput, Checkbox, Anchor, Text } from '@mantine/core';
+import { Stack, TextInput, Checkbox, Anchor, Text, SegmentedControl } from '@mantine/core';
 import LocalIcon from '../../shared/LocalIcon';
 import { useTranslation } from 'react-i18next';
 import { SPLIT_METHODS } from '../../../constants/splitConstants';
@@ -148,6 +148,27 @@ const SplitSettings = ({
 
   return (
     <Stack gap="md">
+      <Stack gap="xs">
+        <Text size="sm" fw={500}>
+          {t('split.processingMode.label', 'Processing mode')}
+        </Text>
+        <SegmentedControl
+          value={parameters.processingMode}
+          onChange={(value) => onParameterChange('processingMode', value as SplitParameters['processingMode'])}
+          data={[
+            { label: t('split.processingMode.backend', 'Backend'), value: 'backend' },
+            { label: t('split.processingMode.frontend', 'Browser'), value: 'frontend' }
+          ]}
+          fullWidth
+          disabled={disabled}
+        />
+        <Text size="xs" c="dimmed">
+          {parameters.processingMode === 'frontend'
+            ? t('split.processingMode.frontendDescription', 'Split the selected ranges without uploading your PDF (page list only).')
+            : t('split.processingMode.backendDescription', 'Use the server for advanced split modes and very large files.')}
+        </Text>
+      </Stack>
+
       {/* Method-Specific Form */}
       {parameters.method === SPLIT_METHODS.BY_PAGES && renderByPagesForm()}
       {parameters.method === SPLIT_METHODS.BY_SECTIONS && renderBySectionsForm()}

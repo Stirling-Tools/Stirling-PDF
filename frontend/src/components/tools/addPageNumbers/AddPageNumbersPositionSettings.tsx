@@ -2,7 +2,7 @@
  * AddPageNumbersPositionSettings - Position & Pages step
  */
 
-import { Stack, TextInput, NumberInput, Divider, Text } from "@mantine/core";
+import { Stack, TextInput, NumberInput, Divider, Text, SegmentedControl } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { AddPageNumbersParameters } from "./useAddPageNumbersParameters";
 import { Tooltip } from "../../shared/Tooltip";
@@ -27,6 +27,27 @@ const AddPageNumbersPositionSettings = ({
 
   return (
     <Stack gap="lg">
+      <Stack gap="xs">
+        <Text size="sm" fw={500}>
+          {t('addPageNumbers.processingMode.label', 'Processing mode')}
+        </Text>
+        <SegmentedControl
+          value={parameters.processingMode}
+          onChange={(value) => onParameterChange('processingMode', value as AddPageNumbersParameters['processingMode'])}
+          data={[
+            { label: t('addPageNumbers.processingMode.backend', 'Backend'), value: 'backend' },
+            { label: t('addPageNumbers.processingMode.frontend', 'Browser'), value: 'frontend' }
+          ]}
+          fullWidth
+          disabled={disabled}
+        />
+        <Text size="xs" c="dimmed">
+          {parameters.processingMode === 'frontend'
+            ? t('addPageNumbers.processingMode.frontendDescription', 'Stamp page numbers locally (page lists only).')
+            : t('addPageNumbers.processingMode.backendDescription', 'Use the server for formula-based selection and heavy PDFs.')}
+        </Text>
+      </Stack>
+
       {/* Position Selection */}
       <Stack gap="md">
         <PageNumberPreview
