@@ -2,34 +2,76 @@
  * Types for automation functionality
  */
 
-import type { ToolId, RegularToolId } from './toolId';
+import type { ConditionalKeys } from 'type-fest';
+import type { ToolId } from './toolId';
 import { TOOL_IDS, isLinkToolId, isSuperToolId } from './toolId';
 import type { ToolRegistryEntry } from '../data/toolsTaxonomy';
+import { AUTOMATION_STEPS } from '../constants/automation';
 
-const NON_AUTOMATABLE_TOOL_IDS = [
-  'multiTool',
-  'sign',
-  'getPdfInfo',
-  'read',
-  'showJS',
-  'devApi',
-  'devFolderScanning',
-  'devSsoGuide',
-  'devAirgapped',
-  'compare',
-] as const satisfies readonly ToolId[];
+const IS_AUTOMATABLE = {
+  certSign: true,
+  sign: false,
+  addPassword: true,
+  removePassword: true,
+  removePages: true,
+  removeBlanks: true,
+  removeAnnotations: true,
+  removeImage: true,
+  changePermissions: true,
+  watermark: true,
+  sanitize: true,
+  split: true,
+  merge: true,
+  convert: true,
+  ocr: true,
+  addImage: true,
+  rotate: true,
+  scannerImageSplit: true,
+  editTableOfContents: true,
+  scannerEffect: true,
+  autoRename: true,
+  pageLayout: true,
+  scalePages: true,
+  adjustContrast: true,
+  crop: true,
+  pdfToSinglePage: true,
+  repair: true,
+  compare: false,
+  addPageNumbers: true,
+  redact: true,
+  flatten: true,
+  removeCertSign: true,
+  unlockPDFForms: true,
+  compress: true,
+  extractPages: true,
+  reorganizePages: true,
+  extractImages: true,
+  addStamp: true,
+  addAttachments: true,
+  changeMetadata: true,
+  overlayPdfs: true,
+  getPdfInfo: false,
+  validateSignature: true,
+  replaceColor: true,
+  showJS: false,
+  bookletImposition: true,
+  multiTool: false,
+  read: false,
+  automate: false,
+  devApi: false,
+  devFolderScanning: false,
+  devSsoGuide: false,
+  devAirgapped: false,
+} as const satisfies Record<ToolId, boolean>;
 
-type NonAutomatableToolId = typeof NON_AUTOMATABLE_TOOL_IDS[number];
+export type AutomateToolId = ConditionalKeys<typeof IS_AUTOMATABLE, true>;
 
-export type AutomateToolId = Exclude<RegularToolId, NonAutomatableToolId>;
 export type AutomateToolRegistry = Record<AutomateToolId, ToolRegistryEntry>;
 
-const nonAutomatableSet = new Set<NonAutomatableToolId>(NON_AUTOMATABLE_TOOL_IDS);
-
 export const isAutomateToolId = (toolId: ToolId): toolId is AutomateToolId =>
-  !isSuperToolId(toolId) && !isLinkToolId(toolId) && !nonAutomatableSet.has(toolId as NonAutomatableToolId);
+  !isSuperToolId(toolId) && !isLinkToolId(toolId) && IS_AUTOMATABLE[toolId];
 
-export const AUTOMATABLE_TOOL_IDS = TOOL_IDS.filter(isAutomateToolId) as AutomateToolId[];
+export const AUTOMATABLE_TOOL_IDS: AutomateToolId[] = TOOL_IDS.filter(isAutomateToolId);
 
 export interface AutomationOperation {
   operation: AutomateToolId;
@@ -54,7 +96,7 @@ export interface AutomationTool {
   parameters?: Record<string, any>;
 }
 
-export type AutomationStep = typeof import('../constants/automation').AUTOMATION_STEPS[keyof typeof import('../constants/automation').AUTOMATION_STEPS];
+export type AutomationStep = typeof AUTOMATION_STEPS[keyof typeof AUTOMATION_STEPS];
 
 export interface AutomationStepData {
   step: AutomationStep;
