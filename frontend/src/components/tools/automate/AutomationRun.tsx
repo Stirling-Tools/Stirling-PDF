@@ -4,8 +4,8 @@ import { Button, Text, Stack, Group, Card, Progress } from "@mantine/core";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import CheckIcon from "@mui/icons-material/Check";
 import { useFileSelection } from "../../../contexts/FileContext";
-import { useToolRegistry } from "../../../contexts/ToolRegistryContext";
-import { AutomationConfig, ExecutionStep } from "../../../types/automation";
+import { useAutomateToolRegistry } from "../../../hooks/tools/automate/useAutomateToolRegistry";
+import { AutomationConfig, ExecutionStep, AutomateToolId } from "../../../types/automation";
 import { AUTOMATION_CONSTANTS, EXECUTION_STATUS } from "../../../constants/automation";
 import { useResourceCleanup } from "../../../utils/resourceManager";
 
@@ -18,8 +18,7 @@ interface AutomationRunProps {
 export default function AutomationRun({ automation, onComplete, automateOperation }: AutomationRunProps) {
   const { t } = useTranslation();
   const { selectedFiles } = useFileSelection();
-  const { regularTools } = useToolRegistry();
-  const toolRegistry = regularTools;
+  const toolRegistry = useAutomateToolRegistry();
   const cleanup = useResourceCleanup();
 
   // Progress tracking state
@@ -33,8 +32,8 @@ export default function AutomationRun({ automation, onComplete, automateOperatio
   // Initialize execution steps from automation
   useEffect(() => {
     if (automation?.operations) {
-      const steps = automation.operations.map((op: any, index: number) => {
-        const tool = toolRegistry[op.operation as keyof typeof toolRegistry];
+      const steps = automation.operations.map((op, index: number) => {
+        const tool = toolRegistry[op.operation];
         return {
           id: `${op.operation}-${index}`,
           operation: op.operation,
@@ -77,7 +76,7 @@ export default function AutomationRun({ automation, onComplete, automateOperatio
       await automateOperation.executeOperation(
         {
           automationConfig: automation,
-          onStepStart: (stepIndex: number, _operationName: string) => {
+          onStepStart: (stepIndex: number, _operationName: AutomateToolId) => {
             setCurrentStepIndex(stepIndex);
             setExecutionSteps(prev => prev.map((step, idx) =>
               idx === stepIndex ? { ...step, status: EXECUTION_STATUS.RUNNING } : step

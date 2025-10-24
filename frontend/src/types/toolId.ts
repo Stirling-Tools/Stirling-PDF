@@ -55,14 +55,14 @@ export const SUPER_TOOL_IDS = [
   'automate',
 ] as const;
 
-const LINK_TOOL_IDS = [
+export const LINK_TOOL_IDS = [
   'devApi',
   'devFolderScanning',
   'devSsoGuide',
   'devAirgapped',
 ] as const;
 
-const TOOL_IDS = [
+export const TOOL_IDS = [
   ...REGULAR_TOOL_IDS,
   ...SUPER_TOOL_IDS,
   ...LINK_TOOL_IDS,

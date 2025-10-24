@@ -8,18 +8,18 @@ import { SubcategoryGroup } from '../../../hooks/useToolSections';
 import { ToolId } from 'src/types/toolId';
 
 // Helper function to render tool buttons for a subcategory
-export const renderToolButtons = (
+export const renderToolButtons = <T extends ToolId>(
   t: TFunction,
-  subcategory: SubcategoryGroup,
-  selectedToolKey: string | null,
+  subcategory: SubcategoryGroup<T>,
+  selectedToolKey: T | null,
   onSelect: (id: ToolId) => void,
   showSubcategoryHeader: boolean = true,
   disableNavigation: boolean = false,
-  searchResults?: Array<{ item: [string, any]; matchedText?: string }>,
+  searchResults?: Array<{ item: [T, any]; matchedText?: string }>,
   hasStars: boolean = false
 ) => {
   // Create a map of matched text for quick lookup
-  const matchedTextMap = new Map<string, string>();
+  const matchedTextMap = new Map<T, string>();
   if (searchResults) {
     searchResults.forEach(({ item: [id], matchedText }) => {
       if (matchedText) matchedTextMap.set(id, matchedText);

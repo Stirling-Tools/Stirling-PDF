@@ -6,7 +6,7 @@ import AutomationEntry from "./AutomationEntry";
 import { useSuggestedAutomations } from "../../../hooks/tools/automate/useSuggestedAutomations";
 import { AutomationConfig, SuggestedAutomation } from "../../../types/automation";
 import { iconMap } from './iconMap';
-import { ToolRegistry } from '../../../data/toolsTaxonomy';
+import { AutomateToolRegistry } from '../../../types/automation';
 
 interface AutomationSelectionProps {
   savedAutomations: AutomationConfig[];
@@ -15,7 +15,7 @@ interface AutomationSelectionProps {
   onEdit: (automation: AutomationConfig) => void;
   onDelete: (automation: AutomationConfig) => void;
   onCopyFromSuggested: (automation: SuggestedAutomation) => void;
-  toolRegistry: Partial<ToolRegistry>;
+  toolRegistry: AutomateToolRegistry;
 }
 
 export default function AutomationSelection({
@@ -54,7 +54,7 @@ export default function AutomationSelection({
             title={automation.name}
             description={automation.description}
             badgeIcon={IconComponent || SettingsIcon}
-            operations={automation.operations.map(op => typeof op === 'string' ? op : op.operation)}
+            operations={automation.operations.map(op => op.operation)}
             onClick={() => onRun(automation)}
             showMenu={true}
             onEdit={() => onEdit(automation)}

@@ -5,20 +5,19 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import CloseIcon from "@mui/icons-material/Close";
 import AddCircleOutline from "@mui/icons-material/AddCircleOutline";
 import { AutomationTool } from "../../../types/automation";
-import { ToolRegistry } from "../../../data/toolsTaxonomy";
-import { ToolId } from "../../../types/toolId";
+import { AutomateToolId, AutomateToolRegistry } from '../../../types/automation';
 import ToolSelector from "./ToolSelector";
 import AutomationEntry from "./AutomationEntry";
 
 interface ToolListProps {
   tools: AutomationTool[];
-  toolRegistry: Partial<ToolRegistry>;
+  toolRegistry: AutomateToolRegistry;
   onToolUpdate: (index: number, updates: Partial<AutomationTool>) => void;
   onToolRemove: (index: number) => void;
   onToolConfigure: (index: number) => void;
   onToolAdd: () => void;
-  getToolName: (operation: string) => string;
-  getToolDefaultParameters: (operation: string) => Record<string, any>;
+  getToolName: (operation: AutomateToolId) => string;
+  getToolDefaultParameters: (operation: AutomateToolId) => Record<string, any>;
 }
 
 export default function ToolList({
@@ -33,9 +32,9 @@ export default function ToolList({
 }: ToolListProps) {
   const { t } = useTranslation();
 
-  const handleToolSelect = (index: number, newOperation: string) => {
+  const handleToolSelect = (index: number, newOperation: AutomateToolId) => {
     const defaultParams = getToolDefaultParameters(newOperation);
-    const toolEntry = toolRegistry[newOperation as ToolId];
+    const toolEntry = toolRegistry[newOperation];
     // If tool has no settingsComponent, it's automatically configured
     const isConfigured = !toolEntry?.automationSettings;
 
@@ -93,9 +92,8 @@ export default function ToolList({
                     <ToolSelector
                       key={`tool-selector-${tool.id}`}
                       onSelect={(newOperation) => handleToolSelect(index, newOperation)}
-                      excludeTools={["automate"]}
                       toolRegistry={toolRegistry}
-                      selectedValue={tool.operation}
+                      selectedValue={tool.operation || undefined}
                       placeholder={tool.name}
                     />
                   </div>

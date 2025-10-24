@@ -15,8 +15,8 @@ import { useToolWorkflow } from "../../contexts/ToolWorkflowContext";
 import { ToolId } from "../../types/toolId";
 
 interface ToolPickerProps {
-  selectedToolKey: string | null;
-  onSelect: (id: string) => void;
+  selectedToolKey: ToolId | null;
+  onSelect: (id: ToolId) => void;
   filteredTools: Array<{ item: [ToolId, ToolRegistryEntry]; matchedText?: string }>;
   isSearching?: boolean;
 }
