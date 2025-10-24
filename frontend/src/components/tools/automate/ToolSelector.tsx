@@ -1,19 +1,18 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Stack, Text, ScrollArea } from '@mantine/core';
-import { ToolRegistryEntry } from '../../../data/toolsTaxonomy';
-import { AutomateToolId, AutomateToolRegistry, AUTOMATABLE_TOOL_IDS, isAutomateToolId } from '../../../types/automation';
+import { AutomateToolId, AutomateToolRegistry, isAutomateToolId } from '../../../types/automation';
 import { useToolSections } from '../../../hooks/useToolSections';
 import { renderToolButtons } from '../shared/renderToolButtons';
 import ToolSearch from '../toolPicker/ToolSearch';
 import ToolButton from '../toolPicker/ToolButton';
 import { ToolId } from '../../../types/toolId';
+import { Entry } from 'type-fest';
 
-type AutomateToolEntry = [AutomateToolId, ToolRegistryEntry];
+type AutomateToolEntry = Entry<AutomateToolRegistry>;
 
 interface ToolSelectorProps {
   onSelect: (toolKey: AutomateToolId) => void;
-  excludeTools?: AutomateToolId[];
   toolRegistry: AutomateToolRegistry; // Pass registry as prop to break circular dependency
   selectedValue?: AutomateToolId; // For showing current selection when editing existing tool
   placeholder?: string; // Custom placeholder text
@@ -21,7 +20,6 @@ interface ToolSelectorProps {
 
 export default function ToolSelector({
   onSelect,
-  excludeTools = [],
   toolRegistry,
   selectedValue,
   placeholder
@@ -32,44 +30,36 @@ export default function ToolSelector({
   const [shouldAutoFocus, setShouldAutoFocus] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Filter out excluded tools (like 'automate' itself) and tools that don't support automation
-  const baseFilteredTools = useMemo<AutomateToolEntry[]>(() => {
-    return AUTOMATABLE_TOOL_IDS.reduce<AutomateToolEntry[]>((acc, id) => {
-      if (excludeTools.includes(id)) {
-        return acc;
-      }
-      const tool = toolRegistry[id];
-      if (tool) {
-        acc.push([id, tool]);
-      }
-      return acc;
-    }, []);
-  }, [toolRegistry, excludeTools]);
+  // Collect all automatable tools that exist in the registry
+  const registryEntries = useMemo(
+    () => Object.entries(toolRegistry) as AutomateToolEntry[],
+    [toolRegistry]
+  );
 
   // Apply search filter
-  const filteredTools = useMemo<AutomateToolEntry[]>(() => {
+  const filteredTools = useMemo(() => {
     if (!searchTerm.trim()) {
-      return baseFilteredTools;
+      return registryEntries;
     }
 
     const lowercaseSearch = searchTerm.toLowerCase();
-    return baseFilteredTools.filter(([key, tool]) => {
+    return registryEntries.filter(([key, tool]) => {
       return (
         tool.name.toLowerCase().includes(lowercaseSearch) ||
         tool.description?.toLowerCase().includes(lowercaseSearch) ||
         key.toLowerCase().includes(lowercaseSearch)
       );
     });
-  }, [baseFilteredTools, searchTerm]);
+  }, [registryEntries, searchTerm]);
 
   // Create filtered tool registry for ToolSearch
   const filteredToolRegistry = useMemo<Partial<AutomateToolRegistry>>(() => {
     const registry: Partial<AutomateToolRegistry> = {};
-    baseFilteredTools.forEach(([key, tool]) => {
+    registryEntries.forEach(([key, tool]) => {
       registry[key] = tool;
     });
     return registry;
-  }, [baseFilteredTools]);
+  }, [registryEntries]);
 
   // Transform filteredTools to the expected format for useToolSections
   const transformedFilteredTools = useMemo(() => {
