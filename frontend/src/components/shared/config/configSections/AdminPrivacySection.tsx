@@ -1,9 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Switch, Button, Stack, Paper, Text, Loader, Group } from '@mantine/core';
 import { alert } from '../../../toast';
 import RestartConfirmationModal from '../RestartConfirmationModal';
 import { useRestartServer } from '../useRestartServer';
+import { useAdminSettings } from '../../../../hooks/useAdminSettings';
+import PendingBadge from '../PendingBadge';
+import apiClient from '../../../../services/apiClient';
 
 interface PrivacySettingsData {
   enableAnalytics?: boolean;
@@ -13,74 +16,79 @@ interface PrivacySettingsData {
 
 export default function AdminPrivacySection() {
   const { t } = useTranslation();
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [settings, setSettings] = useState<PrivacySettingsData>({});
   const { restartModalOpened, showRestartModal, closeRestartModal, restartServer } = useRestartServer();
 
-  useEffect(() => {
-    fetchSettings();
-  }, []);
-
-  const fetchSettings = async () => {
-    try {
-      // Fetch metrics and system sections
+  const {
+    settings,
+    setSettings,
+    loading,
+    saving,
+    fetchSettings,
+    saveSettings,
+    isFieldPending,
+  } = useAdminSettings<PrivacySettingsData>({
+    sectionName: 'privacy',
+    fetchTransformer: async () => {
       const [metricsResponse, systemResponse] = await Promise.all([
-        fetch('/api/v1/admin/settings/section/metrics'),
-        fetch('/api/v1/admin/settings/section/system')
+        apiClient.get('/api/v1/admin/settings/section/metrics'),
+        apiClient.get('/api/v1/admin/settings/section/system')
       ]);
 
-      if (metricsResponse.ok && systemResponse.ok) {
-        const metrics = await metricsResponse.json();
-        const system = await systemResponse.json();
+      const metrics = metricsResponse.data;
+      const system = systemResponse.data;
 
-        setSettings({
-          enableAnalytics: system.enableAnalytics || false,
-          googleVisibility: system.googlevisibility || false,
-          metricsEnabled: metrics.enabled || false
-        });
+      const result: any = {
+        enableAnalytics: system.enableAnalytics || false,
+        googleVisibility: system.googlevisibility || false,
+        metricsEnabled: metrics.enabled || false
+      };
+
+      // Merge pending blocks from both endpoints
+      const pendingBlock: any = {};
+      if (system._pending?.enableAnalytics !== undefined) {
+        pendingBlock.enableAnalytics = system._pending.enableAnalytics;
       }
-    } catch (error) {
-      console.error('Failed to fetch privacy settings:', error);
-      alert({
-        alertType: 'error',
-        title: t('admin.error', 'Error'),
-        body: t('admin.settings.fetchError', 'Failed to load settings'),
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+      if (system._pending?.googlevisibility !== undefined) {
+        pendingBlock.googleVisibility = system._pending.googlevisibility;
+      }
+      if (metrics._pending?.enabled !== undefined) {
+        pendingBlock.metricsEnabled = metrics._pending.enabled;
+      }
 
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      // Use delta update endpoint with dot notation for cross-section settings
+      if (Object.keys(pendingBlock).length > 0) {
+        result._pending = pendingBlock;
+      }
+
+      return result;
+    },
+    saveTransformer: (settings) => {
       const deltaSettings = {
         'system.enableAnalytics': settings.enableAnalytics,
         'system.googlevisibility': settings.googleVisibility,
         'metrics.enabled': settings.metricsEnabled
       };
 
-      const response = await fetch('/api/v1/admin/settings', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ settings: deltaSettings }),
-      });
+      return {
+        sectionData: {},
+        deltaSettings
+      };
+    }
+  });
 
-      if (response.ok) {
-        showRestartModal();
-      } else {
-        throw new Error('Failed to save');
-      }
+  useEffect(() => {
+    fetchSettings();
+  }, []);
+
+  const handleSave = async () => {
+    try {
+      await saveSettings();
+      showRestartModal();
     } catch (error) {
       alert({
         alertType: 'error',
         title: t('admin.error', 'Error'),
         body: t('admin.settings.saveError', 'Failed to save settings'),
       });
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -113,10 +121,13 @@ export default function AdminPrivacySection() {
                 {t('admin.settings.privacy.enableAnalytics.description', 'Collect anonymous usage analytics to help improve the application')}
               </Text>
             </div>
-            <Switch
-              checked={settings.enableAnalytics || false}
-              onChange={(e) => setSettings({ ...settings, enableAnalytics: e.target.checked })}
-            />
+            <Group gap="xs">
+              <Switch
+                checked={settings.enableAnalytics || false}
+                onChange={(e) => setSettings({ ...settings, enableAnalytics: e.target.checked })}
+              />
+              <PendingBadge show={isFieldPending('enableAnalytics')} />
+            </Group>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -126,10 +137,13 @@ export default function AdminPrivacySection() {
                 {t('admin.settings.privacy.metricsEnabled.description', 'Enable collection of performance and usage metrics')}
               </Text>
             </div>
-            <Switch
-              checked={settings.metricsEnabled || false}
-              onChange={(e) => setSettings({ ...settings, metricsEnabled: e.target.checked })}
-            />
+            <Group gap="xs">
+              <Switch
+                checked={settings.metricsEnabled || false}
+                onChange={(e) => setSettings({ ...settings, metricsEnabled: e.target.checked })}
+              />
+              <PendingBadge show={isFieldPending('metricsEnabled')} />
+            </Group>
           </div>
         </Stack>
       </Paper>
@@ -146,10 +160,13 @@ export default function AdminPrivacySection() {
                 {t('admin.settings.privacy.googleVisibility.description', 'Allow search engines to index this application')}
               </Text>
             </div>
-            <Switch
-              checked={settings.googleVisibility || false}
-              onChange={(e) => setSettings({ ...settings, googleVisibility: e.target.checked })}
-            />
+            <Group gap="xs">
+              <Switch
+                checked={settings.googleVisibility || false}
+                onChange={(e) => setSettings({ ...settings, googleVisibility: e.target.checked })}
+              />
+              <PendingBadge show={isFieldPending('googleVisibility')} />
+            </Group>
           </div>
         </Stack>
       </Paper>

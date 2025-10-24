@@ -3505,6 +3505,13 @@
       "saveSuccess": "Settings saved successfully",
       "save": "Save Changes",
       "restartRequired": "Settings changes require a server restart to take effect.",
+      "restart": {
+        "title": "Restart Required",
+        "message": "Settings have been saved successfully. A server restart is required for the changes to take effect.",
+        "question": "Would you like to restart the server now or later?",
+        "now": "Restart Now",
+        "later": "Restart Later"
+      },
       "general": {
         "title": "General",
         "description": "Configure general application settings including branding and default behaviour.",
@@ -3770,6 +3777,10 @@
       "legal": {
         "title": "Legal Documents",
         "description": "Configure links to legal documents and policies.",
+        "disclaimer": {
+          "title": "Legal Responsibility Warning",
+          "message": "By customizing these legal documents, you assume full responsibility for ensuring compliance with all applicable laws and regulations, including but not limited to GDPR and other EU data protection requirements. Only modify these settings if: (1) you are operating a personal/private instance, (2) you are outside EU jurisdiction and understand your local legal obligations, or (3) you have obtained proper legal counsel and accept sole responsibility for all user data and legal compliance. Stirling-PDF and its developers assume no liability for your legal obligations."
+        },
         "termsAndConditions": "Terms and Conditions",
         "termsAndConditions.description": "URL or filename to terms and conditions",
         "privacyPolicy": "Privacy Policy",

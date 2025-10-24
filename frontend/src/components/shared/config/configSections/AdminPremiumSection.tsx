@@ -1,10 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { TextInput, Switch, Button, Stack, Paper, Text, Loader, Group, Alert } from '@mantine/core';
 import { alert } from '../../../toast';
 import LocalIcon from '../../LocalIcon';
 import RestartConfirmationModal from '../RestartConfirmationModal';
 import { useRestartServer } from '../useRestartServer';
+import { useAdminSettings } from '../../../../hooks/useAdminSettings';
+import PendingBadge from '../PendingBadge';
 
 interface PremiumSettingsData {
   key?: string;
@@ -13,56 +15,34 @@ interface PremiumSettingsData {
 
 export default function AdminPremiumSection() {
   const { t } = useTranslation();
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [settings, setSettings] = useState<PremiumSettingsData>({});
   const { restartModalOpened, showRestartModal, closeRestartModal, restartServer } = useRestartServer();
+
+  const {
+    settings,
+    setSettings,
+    loading,
+    saving,
+    fetchSettings,
+    saveSettings,
+    isFieldPending,
+  } = useAdminSettings<PremiumSettingsData>({
+    sectionName: 'premium',
+  });
 
   useEffect(() => {
     fetchSettings();
   }, []);
 
-  const fetchSettings = async () => {
-    try {
-      const response = await fetch('/api/v1/admin/settings/section/premium');
-      if (response.ok) {
-        const data = await response.json();
-        setSettings(data);
-      }
-    } catch (error) {
-      console.error('Failed to fetch premium settings:', error);
-      alert({
-        alertType: 'error',
-        title: t('admin.error', 'Error'),
-        body: t('admin.settings.fetchError', 'Failed to load settings'),
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleSave = async () => {
-    setSaving(true);
     try {
-      const response = await fetch('/api/v1/admin/settings/section/premium', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(settings),
-      });
-
-      if (response.ok) {
-        showRestartModal();
-      } else {
-        throw new Error('Failed to save');
-      }
+      await saveSettings();
+      showRestartModal();
     } catch (error) {
       alert({
         alertType: 'error',
         title: t('admin.error', 'Error'),
         body: t('admin.settings.saveError', 'Failed to save settings'),
       });
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -107,13 +87,17 @@ export default function AdminPremiumSection() {
           <Text fw={600} size="sm" mb="xs">{t('admin.settings.premium.license', 'License Configuration')}</Text>
 
           <div>
-            <TextInput
-              label={t('admin.settings.premium.key', 'License Key')}
-              description={t('admin.settings.premium.key.description', 'Enter your premium or enterprise license key')}
-              value={settings.key || ''}
-              onChange={(e) => setSettings({ ...settings, key: e.target.value })}
-              placeholder="00000000-0000-0000-0000-000000000000"
-            />
+            <Group gap="xs" align="flex-end">
+              <TextInput
+                label={t('admin.settings.premium.key', 'License Key')}
+                description={t('admin.settings.premium.key.description', 'Enter your premium or enterprise license key')}
+                value={settings.key || ''}
+                onChange={(e) => setSettings({ ...settings, key: e.target.value })}
+                placeholder="00000000-0000-0000-0000-000000000000"
+                style={{ flex: 1 }}
+              />
+              <PendingBadge show={isFieldPending('key')} />
+            </Group>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -123,10 +107,13 @@ export default function AdminPremiumSection() {
                 {t('admin.settings.premium.enabled.description', 'Enable license key checks for pro/enterprise features')}
               </Text>
             </div>
-            <Switch
-              checked={settings.enabled || false}
-              onChange={(e) => setSettings({ ...settings, enabled: e.target.checked })}
-            />
+            <Group gap="xs">
+              <Switch
+                checked={settings.enabled || false}
+                onChange={(e) => setSettings({ ...settings, enabled: e.target.checked })}
+              />
+              <PendingBadge show={isFieldPending('enabled')} />
+            </Group>
           </div>
         </Stack>
       </Paper>

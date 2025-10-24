@@ -107,7 +107,8 @@ public class ServerCertificateService implements ServerCertificateServiceInterfa
 
     public KeyStore getServerKeyStore() throws Exception {
         if (!hasProOrEnterpriseAccess()) {
-            throw new IllegalStateException("Server certificate feature requires Pro or Enterprise license");
+            throw new IllegalStateException(
+                    "Server certificate feature requires Pro or Enterprise license");
         }
 
         if (!enabled || !hasServerCertificate()) {
@@ -137,7 +138,8 @@ public class ServerCertificateService implements ServerCertificateServiceInterfa
 
     public void uploadServerCertificate(InputStream p12Stream, String password) throws Exception {
         if (!hasProOrEnterpriseAccess()) {
-            throw new IllegalStateException("Server certificate feature requires Pro or Enterprise license");
+            throw new IllegalStateException(
+                    "Server certificate feature requires Pro or Enterprise license");
         }
 
         // Validate the uploaded certificate
@@ -201,7 +203,8 @@ public class ServerCertificateService implements ServerCertificateServiceInterfa
 
     private void generateServerCertificate() throws Exception {
         if (!hasProOrEnterpriseAccess()) {
-            throw new IllegalStateException("Server certificate feature requires Pro or Enterprise license");
+            throw new IllegalStateException(
+                    "Server certificate feature requires Pro or Enterprise license");
         }
 
         // Generate key pair

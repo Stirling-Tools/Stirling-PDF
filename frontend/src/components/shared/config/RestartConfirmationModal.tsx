@@ -2,6 +2,7 @@ import { Modal, Text, Group, Button, Stack } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import ScheduleIcon from '@mui/icons-material/Schedule';
+import { Z_INDEX_OVER_CONFIG_MODAL } from '../../../styles/zIndex';
 
 interface RestartConfirmationModalProps {
   opened: boolean;
@@ -27,6 +28,8 @@ export default function RestartConfirmationModal({
       }
       centered
       size="md"
+      zIndex={Z_INDEX_OVER_CONFIG_MODAL}
+      withinPortal
     >
       <Stack gap="lg">
         <Text size="sm">

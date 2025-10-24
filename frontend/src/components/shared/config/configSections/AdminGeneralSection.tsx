@@ -1,9 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { TextInput, Switch, Button, Stack, Paper, Text, Loader, Group, MultiSelect, Badge } from '@mantine/core';
 import { alert } from '../../../toast';
 import RestartConfirmationModal from '../RestartConfirmationModal';
 import { useRestartServer } from '../useRestartServer';
+import { useAdminSettings } from '../../../../hooks/useAdminSettings';
+import PendingBadge from '../PendingBadge';
+import apiClient from '../../../../services/apiClient';
 
 interface GeneralSettingsData {
   ui: {
@@ -37,32 +40,30 @@ interface GeneralSettingsData {
 
 export default function AdminGeneralSection() {
   const { t } = useTranslation();
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
   const { restartModalOpened, showRestartModal, closeRestartModal, restartServer } = useRestartServer();
-  const [settings, setSettings] = useState<GeneralSettingsData>({
-    ui: {},
-    system: {},
-  });
 
-  useEffect(() => {
-    fetchSettings();
-  }, []);
-
-  const fetchSettings = async () => {
-    try {
-      // Fetch both ui and system sections from proprietary admin API
+  const {
+    settings,
+    setSettings,
+    loading,
+    saving,
+    fetchSettings,
+    saveSettings,
+    isFieldPending,
+  } = useAdminSettings<GeneralSettingsData>({
+    sectionName: 'general',
+    fetchTransformer: async () => {
       const [uiResponse, systemResponse, premiumResponse] = await Promise.all([
-        fetch('/api/v1/admin/settings/section/ui'),
-        fetch('/api/v1/admin/settings/section/system'),
-        fetch('/api/v1/admin/settings/section/premium')
+        apiClient.get('/api/v1/admin/settings/section/ui'),
+        apiClient.get('/api/v1/admin/settings/section/system'),
+        apiClient.get('/api/v1/admin/settings/section/premium')
       ]);
 
-      const ui = uiResponse.ok ? await uiResponse.json() : {};
-      const system = systemResponse.ok ? await systemResponse.json() : {};
-      const premium = premiumResponse.ok ? await premiumResponse.json() : {};
+      const ui = uiResponse.data || {};
+      const system = systemResponse.data || {};
+      const premium = premiumResponse.data || {};
 
-      setSettings({
+      const result: any = {
         ui,
         system,
         customPaths: system.customPaths || {
@@ -81,45 +82,47 @@ export default function AdminGeneralSection() {
           creator: '',
           producer: ''
         }
-      });
-    } catch (error) {
-      console.error('Failed to fetch general settings:', error);
-      alert({
-        alertType: 'error',
-        title: t('admin.error', 'Error'),
-        body: t('admin.settings.fetchError', 'Failed to load settings'),
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+      };
 
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      // Save both ui and system sections separately using proprietary admin API
-      const [uiResponse, systemResponse] = await Promise.all([
-        fetch('/api/v1/admin/settings/section/ui', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(settings.ui),
-        }),
-        fetch('/api/v1/admin/settings/section/system', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(settings.system),
-        })
-      ]);
+      // Merge pending blocks from all three endpoints
+      const pendingBlock: any = {};
+      if (ui._pending) {
+        pendingBlock.ui = ui._pending;
+      }
+      if (system._pending) {
+        pendingBlock.system = system._pending;
+      }
+      if (system._pending?.customPaths) {
+        pendingBlock.customPaths = system._pending.customPaths;
+      }
+      if (premium._pending?.proFeatures?.customMetadata) {
+        pendingBlock.customMetadata = premium._pending.proFeatures.customMetadata;
+      }
 
-      // Save custom metadata and custom paths via delta endpoint
+      if (Object.keys(pendingBlock).length > 0) {
+        result._pending = pendingBlock;
+      }
+
+      return result;
+    },
+    saveTransformer: (settings) => {
       const deltaSettings: Record<string, any> = {
+        // UI settings
+        'ui.appNameNavbar': settings.ui.appNameNavbar,
+        'ui.languages': settings.ui.languages,
+        // System settings
+        'system.defaultLocale': settings.system.defaultLocale,
+        'system.showUpdate': settings.system.showUpdate,
+        'system.showUpdateOnlyAdmin': settings.system.showUpdateOnlyAdmin,
+        'system.customHTMLFiles': settings.system.customHTMLFiles,
+        'system.fileUploadLimit': settings.system.fileUploadLimit,
+        // Premium custom metadata
         'premium.proFeatures.customMetadata.autoUpdateMetadata': settings.customMetadata?.autoUpdateMetadata,
         'premium.proFeatures.customMetadata.author': settings.customMetadata?.author,
         'premium.proFeatures.customMetadata.creator': settings.customMetadata?.creator,
         'premium.proFeatures.customMetadata.producer': settings.customMetadata?.producer
       };
 
-      // Add custom paths settings
       if (settings.customPaths) {
         deltaSettings['system.customPaths.pipeline.watchedFoldersDir'] = settings.customPaths.pipeline?.watchedFoldersDir;
         deltaSettings['system.customPaths.pipeline.finishedFoldersDir'] = settings.customPaths.pipeline?.finishedFoldersDir;
@@ -127,26 +130,27 @@ export default function AdminGeneralSection() {
         deltaSettings['system.customPaths.operations.unoconvert'] = settings.customPaths.operations?.unoconvert;
       }
 
-      const deltaResponse = await fetch('/api/v1/admin/settings', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ settings: deltaSettings }),
-      });
+      return {
+        sectionData: {},
+        deltaSettings
+      };
+    }
+  });
 
-      if (uiResponse.ok && systemResponse.ok && deltaResponse.ok) {
-        // Show restart confirmation modal
-        showRestartModal();
-      } else {
-        throw new Error('Failed to save');
-      }
+  useEffect(() => {
+    fetchSettings();
+  }, []);
+
+  const handleSave = async () => {
+    try {
+      await saveSettings();
+      showRestartModal();
     } catch (error) {
       alert({
         alertType: 'error',
         title: t('admin.error', 'Error'),
         body: t('admin.settings.saveError', 'Failed to save settings'),
       });
-    } finally {
-      setSaving(false);
     }
   };
 

@@ -63,12 +63,19 @@ public class ConfigController {
             // Check if user is admin based on authentication
             boolean isAdmin = false;
             try {
-                Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-                if (authentication != null && authentication.isAuthenticated()
+                Authentication authentication =
+                        SecurityContextHolder.getContext().getAuthentication();
+                if (authentication != null
+                        && authentication.isAuthenticated()
                         && !"anonymousUser".equals(authentication.getPrincipal())) {
                     // Check if user has ROLE_ADMIN authority
-                    isAdmin = authentication.getAuthorities().stream()
-                            .anyMatch(auth -> Role.ADMIN.getRoleId().equals(auth.getAuthority()));
+                    isAdmin =
+                            authentication.getAuthorities().stream()
+                                    .anyMatch(
+                                            auth ->
+                                                    Role.ADMIN
+                                                            .getRoleId()
+                                                            .equals(auth.getAuthority()));
                 }
             } catch (Exception e) {
                 // If security is not enabled or there's an error, isAdmin remains false

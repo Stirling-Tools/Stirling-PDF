@@ -22,6 +22,8 @@ public class AppArgsCapture implements ApplicationRunner {
     @Override
     public void run(ApplicationArguments args) {
         APP_ARGS.set(List.of(args.getSourceArgs()));
-        log.debug("Captured {} application arguments for restart capability", args.getSourceArgs().length);
+        log.debug(
+                "Captured {} application arguments for restart capability",
+                args.getSourceArgs().length);
     }
 }

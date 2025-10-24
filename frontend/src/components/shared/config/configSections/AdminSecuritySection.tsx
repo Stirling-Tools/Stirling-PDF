@@ -1,10 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { TextInput, NumberInput, Switch, Button, Stack, Paper, Text, Loader, Group, Select, PasswordInput, Alert, Badge, Accordion, Textarea } from '@mantine/core';
 import { alert } from '../../../toast';
 import LocalIcon from '../../LocalIcon';
 import RestartConfirmationModal from '../RestartConfirmationModal';
 import { useRestartServer } from '../useRestartServer';
+import { useAdminSettings } from '../../../../hooks/useAdminSettings';
+import PendingBadge from '../PendingBadge';
+import apiClient from '../../../../services/apiClient';
 
 interface SecuritySettingsData {
   enableLogin?: boolean;
@@ -41,36 +44,41 @@ interface SecuritySettingsData {
 
 export default function AdminSecuritySection() {
   const { t } = useTranslation();
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
   const { restartModalOpened, showRestartModal, closeRestartModal, restartServer } = useRestartServer();
-  const [settings, setSettings] = useState<SecuritySettingsData>({});
 
-  useEffect(() => {
-    fetchSettings();
-  }, []);
+  const {
+    settings,
+    setSettings,
+    loading,
+    saving,
+    fetchSettings,
+    saveSettings,
+    isFieldPending,
+  } = useAdminSettings<SecuritySettingsData>({
+    sectionName: 'security',
+    fetchTransformer: async () => {
+      const [securityResponse, premiumResponse, systemResponse] = await Promise.all([
+        apiClient.get('/api/v1/admin/settings/section/security'),
+        apiClient.get('/api/v1/admin/settings/section/premium'),
+        apiClient.get('/api/v1/admin/settings/section/system')
+      ]);
 
-  const fetchSettings = async () => {
-    try {
-      const securityResponse = await fetch('/api/v1/admin/settings/section/security');
-      const securityData = securityResponse.ok ? await securityResponse.json() : {};
+      const securityData = securityResponse.data || {};
+      const premiumData = premiumResponse.data || {};
+      const systemData = systemResponse.data || {};
 
-      // Fetch premium settings for audit logging
-      const premiumResponse = await fetch('/api/v1/admin/settings/section/premium');
-      const premiumData = premiumResponse.ok ? await premiumResponse.json() : {};
+      const { _pending: securityPending, ...securityActive } = securityData;
+      const { _pending: premiumPending, ...premiumActive } = premiumData;
+      const { _pending: systemPending, ...systemActive } = systemData;
 
-      // Fetch system settings for HTML URL security
-      const systemResponse = await fetch('/api/v1/admin/settings/section/system');
-      const systemData = systemResponse.ok ? await systemResponse.json() : {};
-
-      setSettings({
-        ...securityData,
-        audit: premiumData.enterpriseFeatures?.audit || {
+      const combined: any = {
+        ...securityActive,
+        audit: premiumActive.enterpriseFeatures?.audit || {
           enabled: false,
           level: 2,
           retentionDays: 90
         },
-        html: systemData.html || {
+        html: systemActive.html || {
           urlSecurity: {
             enabled: true,
             level: 'MEDIUM',
@@ -83,39 +91,35 @@ export default function AdminSecuritySection() {
             blockCloudMetadata: true
           }
         }
-      });
-    } catch (error) {
-      console.error('Failed to fetch security settings:', error);
-      alert({
-        alertType: 'error',
-        title: t('admin.error', 'Error'),
-        body: t('admin.settings.fetchError', 'Failed to load settings'),
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+      };
 
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      // Save security settings (excluding audit and html)
+      // Merge all _pending blocks
+      const mergedPending: any = {};
+      if (securityPending) {
+        Object.assign(mergedPending, securityPending);
+      }
+      if (premiumPending?.enterpriseFeatures?.audit) {
+        mergedPending.audit = premiumPending.enterpriseFeatures.audit;
+      }
+      if (systemPending?.html) {
+        mergedPending.html = systemPending.html;
+      }
+
+      if (Object.keys(mergedPending).length > 0) {
+        combined._pending = mergedPending;
+      }
+
+      return combined;
+    },
+    saveTransformer: (settings) => {
       const { audit, html, ...securitySettings } = settings;
 
-      const securityResponse = await fetch('/api/v1/admin/settings/section/security', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(securitySettings),
-      });
-
-      // Save audit settings via delta endpoint
       const deltaSettings: Record<string, any> = {
         'premium.enterpriseFeatures.audit.enabled': audit?.enabled,
         'premium.enterpriseFeatures.audit.level': audit?.level,
         'premium.enterpriseFeatures.audit.retentionDays': audit?.retentionDays
       };
 
-      // Save HTML URL security settings via delta endpoint
       if (html?.urlSecurity) {
         deltaSettings['system.html.urlSecurity.enabled'] = html.urlSecurity.enabled;
         deltaSettings['system.html.urlSecurity.level'] = html.urlSecurity.level;
@@ -128,25 +132,27 @@ export default function AdminSecuritySection() {
         deltaSettings['system.html.urlSecurity.blockCloudMetadata'] = html.urlSecurity.blockCloudMetadata;
       }
 
-      const deltaResponse = await fetch('/api/v1/admin/settings', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ settings: deltaSettings }),
-      });
+      return {
+        sectionData: securitySettings,
+        deltaSettings
+      };
+    }
+  });
 
-      if (securityResponse.ok && deltaResponse.ok) {
-        showRestartModal();
-      } else {
-        throw new Error('Failed to save');
-      }
+  useEffect(() => {
+    fetchSettings();
+  }, []);
+
+  const handleSave = async () => {
+    try {
+      await saveSettings();
+      showRestartModal();
     } catch (error) {
       alert({
         alertType: 'error',
         title: t('admin.error', 'Error'),
         body: t('admin.settings.saveError', 'Failed to save settings'),
       });
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -179,10 +185,13 @@ export default function AdminSecuritySection() {
                 {t('admin.settings.security.enableLogin.description', 'Require users to log in before accessing the application')}
               </Text>
             </div>
-            <Switch
-              checked={settings.enableLogin || false}
-              onChange={(e) => setSettings({ ...settings, enableLogin: e.target.checked })}
-            />
+            <Group gap="xs">
+              <Switch
+                checked={settings.enableLogin || false}
+                onChange={(e) => setSettings({ ...settings, enableLogin: e.target.checked })}
+              />
+              <PendingBadge show={isFieldPending(rawSettings, 'enableLogin')} />
+            </Group>
           </div>
 
           <div>
@@ -199,6 +208,11 @@ export default function AdminSecuritySection() {
               ]}
               comboboxProps={{ zIndex: 1400 }}
             />
+            {isFieldPending(rawSettings, 'loginMethod') && (
+              <Group mt="xs">
+                <PendingBadge show={true} />
+              </Group>
+            )}
           </div>
 
           <div>
@@ -230,10 +244,13 @@ export default function AdminSecuritySection() {
                 {t('admin.settings.security.csrfDisabled.description', 'Disable Cross-Site Request Forgery protection (not recommended)')}
               </Text>
             </div>
-            <Switch
-              checked={settings.csrfDisabled || false}
-              onChange={(e) => setSettings({ ...settings, csrfDisabled: e.target.checked })}
-            />
+            <Group gap="xs">
+              <Switch
+                checked={settings.csrfDisabled || false}
+                onChange={(e) => setSettings({ ...settings, csrfDisabled: e.target.checked })}
+              />
+              <PendingBadge show={isFieldPending(rawSettings, 'csrfDisabled')} />
+            </Group>
           </div>
         </Stack>
       </Paper>
@@ -262,10 +279,13 @@ export default function AdminSecuritySection() {
                 {t('admin.settings.security.jwt.persistence.description', 'Store JWT keys persistently (required for multi-instance deployments)')}
               </Text>
             </div>
-            <Switch
-              checked={settings.jwt?.persistence || false}
-              onChange={(e) => setSettings({ ...settings, jwt: { ...settings.jwt, persistence: e.target.checked } })}
-            />
+            <Group gap="xs">
+              <Switch
+                checked={settings.jwt?.persistence || false}
+                onChange={(e) => setSettings({ ...settings, jwt: { ...settings.jwt, persistence: e.target.checked } })}
+              />
+              <PendingBadge show={isFieldPending(rawSettings, 'jwt.persistence')} />
+            </Group>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -312,10 +332,13 @@ export default function AdminSecuritySection() {
                 {t('admin.settings.security.jwt.secureCookie.description', 'Require HTTPS for JWT cookies (recommended for production)')}
               </Text>
             </div>
-            <Switch
-              checked={settings.jwt?.secureCookie || false}
-              onChange={(e) => setSettings({ ...settings, jwt: { ...settings.jwt, secureCookie: e.target.checked } })}
-            />
+            <Group gap="xs">
+              <Switch
+                checked={settings.jwt?.secureCookie || false}
+                onChange={(e) => setSettings({ ...settings, jwt: { ...settings.jwt, secureCookie: e.target.checked } })}
+              />
+              <PendingBadge show={isFieldPending(rawSettings, 'jwt.secureCookie')} />
+            </Group>
           </div>
         </Stack>
       </Paper>
@@ -335,10 +358,13 @@ export default function AdminSecuritySection() {
                 {t('admin.settings.security.audit.enabled.description', 'Track user actions and system events for compliance and security monitoring')}
               </Text>
             </div>
-            <Switch
-              checked={settings.audit?.enabled || false}
-              onChange={(e) => setSettings({ ...settings, audit: { ...settings.audit, enabled: e.target.checked } })}
-            />
+            <Group gap="xs">
+              <Switch
+                checked={settings.audit?.enabled || false}
+                onChange={(e) => setSettings({ ...settings, audit: { ...settings.audit, enabled: e.target.checked } })}
+              />
+              <PendingBadge show={isFieldPending(rawSettings, 'audit.enabled')} />
+            </Group>
           </div>
 
           <div>
@@ -382,16 +408,19 @@ export default function AdminSecuritySection() {
                 {t('admin.settings.security.htmlUrlSecurity.enabled.description', 'Enable URL security restrictions for HTML to PDF conversions')}
               </Text>
             </div>
-            <Switch
-              checked={settings.html?.urlSecurity?.enabled || false}
-              onChange={(e) => setSettings({
-                ...settings,
-                html: {
-                  ...settings.html,
-                  urlSecurity: { ...settings.html?.urlSecurity, enabled: e.target.checked }
-                }
-              })}
-            />
+            <Group gap="xs">
+              <Switch
+                checked={settings.html?.urlSecurity?.enabled || false}
+                onChange={(e) => setSettings({
+                  ...settings,
+                  html: {
+                    ...settings.html,
+                    urlSecurity: { ...settings.html?.urlSecurity, enabled: e.target.checked }
+                  }
+                })}
+              />
+              <PendingBadge show={isFieldPending(rawSettings, 'html.urlSecurity.enabled')} />
+            </Group>
           </div>
 
           <div>

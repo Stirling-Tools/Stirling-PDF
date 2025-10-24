@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button, Stack, Paper, Text, Loader, Group, MultiSelect } from '@mantine/core';
 import { alert } from '../../../toast';
 import RestartConfirmationModal from '../RestartConfirmationModal';
 import { useRestartServer } from '../useRestartServer';
+import { useAdminSettings } from '../../../../hooks/useAdminSettings';
+import PendingBadge from '../PendingBadge';
 
 interface EndpointsSettingsData {
   toRemove?: string[];
@@ -12,56 +14,34 @@ interface EndpointsSettingsData {
 
 export default function AdminEndpointsSection() {
   const { t } = useTranslation();
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [settings, setSettings] = useState<EndpointsSettingsData>({});
   const { restartModalOpened, showRestartModal, closeRestartModal, restartServer } = useRestartServer();
+
+  const {
+    settings,
+    setSettings,
+    loading,
+    saving,
+    fetchSettings,
+    saveSettings,
+    isFieldPending,
+  } = useAdminSettings<EndpointsSettingsData>({
+    sectionName: 'endpoints',
+  });
 
   useEffect(() => {
     fetchSettings();
   }, []);
 
-  const fetchSettings = async () => {
-    try {
-      const response = await fetch('/api/v1/admin/settings/section/endpoints');
-      if (response.ok) {
-        const data = await response.json();
-        setSettings(data);
-      }
-    } catch (error) {
-      console.error('Failed to fetch endpoints settings:', error);
-      alert({
-        alertType: 'error',
-        title: t('admin.error', 'Error'),
-        body: t('admin.settings.fetchError', 'Failed to load settings'),
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleSave = async () => {
-    setSaving(true);
     try {
-      const response = await fetch('/api/v1/admin/settings/section/endpoints', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(settings),
-      });
-
-      if (response.ok) {
-        showRestartModal();
-      } else {
-        throw new Error('Failed to save');
-      }
+      await saveSettings();
+      showRestartModal();
     } catch (error) {
       alert({
         alertType: 'error',
         title: t('admin.error', 'Error'),
         body: t('admin.settings.saveError', 'Failed to save settings'),
       });
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -134,31 +114,39 @@ export default function AdminEndpointsSection() {
           <Text fw={600} size="sm" mb="xs">{t('admin.settings.endpoints.management', 'Endpoint Management')}</Text>
 
           <div>
-            <MultiSelect
-              label={t('admin.settings.endpoints.toRemove', 'Disabled Endpoints')}
-              description={t('admin.settings.endpoints.toRemove.description', 'Select individual endpoints to disable')}
-              value={settings.toRemove || []}
-              onChange={(value) => setSettings({ ...settings, toRemove: value })}
-              data={commonEndpoints.map(endpoint => ({ value: endpoint, label: endpoint }))}
-              searchable
-              clearable
-              placeholder="Select endpoints to disable"
-              comboboxProps={{ zIndex: 1400 }}
-            />
+            <Group gap="xs" align="flex-start">
+              <MultiSelect
+                label={t('admin.settings.endpoints.toRemove', 'Disabled Endpoints')}
+                description={t('admin.settings.endpoints.toRemove.description', 'Select individual endpoints to disable')}
+                value={settings.toRemove || []}
+                onChange={(value) => setSettings({ ...settings, toRemove: value })}
+                data={commonEndpoints.map(endpoint => ({ value: endpoint, label: endpoint }))}
+                searchable
+                clearable
+                placeholder="Select endpoints to disable"
+                comboboxProps={{ zIndex: 1400 }}
+                style={{ flex: 1 }}
+              />
+              <PendingBadge show={isFieldPending('toRemove')} />
+            </Group>
           </div>
 
           <div>
-            <MultiSelect
-              label={t('admin.settings.endpoints.groupsToRemove', 'Disabled Endpoint Groups')}
-              description={t('admin.settings.endpoints.groupsToRemove.description', 'Select endpoint groups to disable')}
-              value={settings.groupsToRemove || []}
-              onChange={(value) => setSettings({ ...settings, groupsToRemove: value })}
-              data={commonGroups.map(group => ({ value: group, label: group }))}
-              searchable
-              clearable
-              placeholder="Select groups to disable"
-              comboboxProps={{ zIndex: 1400 }}
-            />
+            <Group gap="xs" align="flex-start">
+              <MultiSelect
+                label={t('admin.settings.endpoints.groupsToRemove', 'Disabled Endpoint Groups')}
+                description={t('admin.settings.endpoints.groupsToRemove.description', 'Select endpoint groups to disable')}
+                value={settings.groupsToRemove || []}
+                onChange={(value) => setSettings({ ...settings, groupsToRemove: value })}
+                data={commonGroups.map(group => ({ value: group, label: group }))}
+                searchable
+                clearable
+                placeholder="Select groups to disable"
+                comboboxProps={{ zIndex: 1400 }}
+                style={{ flex: 1 }}
+              />
+              <PendingBadge show={isFieldPending('groupsToRemove')} />
+            </Group>
           </div>
 
           <Paper bg="var(--mantine-color-blue-light)" p="sm" radius="sm">

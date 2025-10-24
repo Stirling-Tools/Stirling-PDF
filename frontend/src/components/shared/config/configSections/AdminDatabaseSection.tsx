@@ -1,9 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { NumberInput, Switch, Button, Stack, Paper, Text, Loader, Group, TextInput, PasswordInput, Select, Badge } from '@mantine/core';
 import { alert } from '../../../toast';
 import RestartConfirmationModal from '../RestartConfirmationModal';
 import { useRestartServer } from '../useRestartServer';
+import { useAdminSettings } from '../../../../hooks/useAdminSettings';
+import PendingBadge from '../PendingBadge';
+import apiClient from '../../../../services/apiClient';
 
 interface DatabaseSettingsData {
   enableCustomDatabase?: boolean;
@@ -18,21 +21,24 @@ interface DatabaseSettingsData {
 
 export default function AdminDatabaseSection() {
   const { t } = useTranslation();
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [settings, setSettings] = useState<DatabaseSettingsData>({});
   const { restartModalOpened, showRestartModal, closeRestartModal, restartServer } = useRestartServer();
 
-  useEffect(() => {
-    fetchSettings();
-  }, []);
+  const {
+    settings,
+    setSettings,
+    loading,
+    saving,
+    fetchSettings,
+    saveSettings,
+    isFieldPending,
+  } = useAdminSettings<DatabaseSettingsData>({
+    sectionName: 'database',
+    fetchTransformer: async () => {
+      const response = await apiClient.get('/api/v1/admin/settings/section/system');
+      const systemData = response.data || {};
 
-  const fetchSettings = async () => {
-    try {
-      const response = await fetch('/api/v1/admin/settings/section/system');
-      const systemData = response.ok ? await response.json() : {};
-
-      setSettings(systemData.datasource || {
+      // Extract datasource from system response and handle pending
+      const datasource = systemData.datasource || {
         enableCustomDatabase: false,
         customDatabaseUrl: '',
         username: '',
@@ -41,22 +47,18 @@ export default function AdminDatabaseSection() {
         hostName: 'localhost',
         port: 5432,
         name: 'postgres'
-      });
-    } catch (error) {
-      console.error('Failed to fetch database settings:', error);
-      alert({
-        alertType: 'error',
-        title: t('admin.error', 'Error'),
-        body: t('admin.settings.fetchError', 'Failed to load settings'),
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+      };
 
-  const handleSave = async () => {
-    setSaving(true);
-    try {
+      // Map pending changes from system._pending.datasource to root level
+      const result: any = { ...datasource };
+      if (systemData._pending?.datasource) {
+        result._pending = systemData._pending.datasource;
+      }
+
+      return result;
+    },
+    saveTransformer: (settings) => {
+      // Convert flat settings to dot-notation for delta endpoint
       const deltaSettings: Record<string, any> = {
         'system.datasource.enableCustomDatabase': settings.enableCustomDatabase,
         'system.datasource.customDatabaseUrl': settings.customDatabaseUrl,
@@ -68,25 +70,27 @@ export default function AdminDatabaseSection() {
         'system.datasource.name': settings.name
       };
 
-      const response = await fetch('/api/v1/admin/settings', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ settings: deltaSettings }),
-      });
+      return {
+        sectionData: {},
+        deltaSettings
+      };
+    }
+  });
 
-      if (response.ok) {
-        showRestartModal();
-      } else {
-        throw new Error('Failed to save');
-      }
+  useEffect(() => {
+    fetchSettings();
+  }, []);
+
+  const handleSave = async () => {
+    try {
+      await saveSettings();
+      showRestartModal();
     } catch (error) {
       alert({
         alertType: 'error',
         title: t('admin.error', 'Error'),
         body: t('admin.settings.saveError', 'Failed to save settings'),
       });
-    } finally {
-      setSaving(false);
     }
   };
 

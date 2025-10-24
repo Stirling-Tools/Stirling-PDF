@@ -206,7 +206,8 @@ public class AdminSettingsController {
     @Operation(
             summary = "Get specific settings section",
             description =
-                    "Retrieve settings for a specific section (e.g., security, system, ui). Admin access required.")
+                    "Retrieve settings for a specific section (e.g., security, system, ui). "
+                            + "By default includes pending changes with awaitingRestart flags. Admin access required.")
     @ApiResponses(
             value = {
                 @ApiResponse(
@@ -217,7 +218,9 @@ public class AdminSettingsController {
                         responseCode = "403",
                         description = "Access denied - Admin role required")
             })
-    public ResponseEntity<?> getSettingsSection(@PathVariable String sectionName) {
+    public ResponseEntity<?> getSettingsSection(
+            @PathVariable String sectionName,
+            @RequestParam(defaultValue = "true") boolean includePending) {
         try {
             Object sectionData = getSectionData(sectionName);
             if (sectionData == null) {
@@ -228,8 +231,24 @@ public class AdminSettingsController {
                                         + ". Valid sections: "
                                         + String.join(", ", VALID_SECTION_NAMES));
             }
-            log.debug("Admin requested settings section: {}", sectionName);
-            return ResponseEntity.ok(sectionData);
+
+            // Convert to Map for manipulation
+            @SuppressWarnings("unchecked")
+            Map<String, Object> sectionMap = objectMapper.convertValue(sectionData, Map.class);
+
+            if (includePending && !pendingChanges.isEmpty()) {
+                // Add pending changes block for this section
+                Map<String, Object> sectionPending = extractPendingForSection(sectionName);
+                if (!sectionPending.isEmpty()) {
+                    sectionMap.put("_pending", sectionPending);
+                }
+            }
+
+            log.debug(
+                    "Admin requested settings section: {} (includePending={})",
+                    sectionName,
+                    includePending);
+            return ResponseEntity.ok(sectionMap);
         } catch (IllegalArgumentException e) {
             log.error("Invalid section name {}: {}", sectionName, e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -406,15 +425,11 @@ public class AdminSettingsController {
                     "Triggers a graceful restart of the Spring Boot application to apply pending settings changes. Uses a restart helper to ensure proper restart. Admin access required.")
     @ApiResponses(
             value = {
-                @ApiResponse(
-                        responseCode = "200",
-                        description = "Restart initiated successfully"),
+                @ApiResponse(responseCode = "200", description = "Restart initiated successfully"),
                 @ApiResponse(
                         responseCode = "403",
                         description = "Access denied - Admin role required"),
-                @ApiResponse(
-                        responseCode = "500",
-                        description = "Failed to initiate restart")
+                @ApiResponse(responseCode = "500", description = "Failed to initiate restart")
             })
     public ResponseEntity<String> restartApplication() {
         try {
@@ -434,8 +449,7 @@ public class AdminSettingsController {
             if (helperJar == null || !Files.isRegularFile(helperJar)) {
                 log.error("Cannot restart: restart-helper.jar not found at expected location");
                 return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-                        .body(
-                                "Restart helper not found. Please restart the application manually.");
+                        .body("Restart helper not found. Please restart the application manually.");
             }
 
             // Get current application arguments
@@ -736,5 +750,63 @@ public class AdminSettingsController {
         }
 
         return mergedSettings;
+    }
+
+    /**
+     * Extract pending changes for a specific section
+     *
+     * @param sectionName The section name (e.g., "security", "system")
+     * @return Map of pending changes with nested structure for this section
+     */
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> extractPendingForSection(String sectionName) {
+        Map<String, Object> result = new HashMap<>();
+        String sectionPrefix = sectionName.toLowerCase() + ".";
+
+        // Find all pending changes for this section
+        for (Map.Entry<String, Object> entry : pendingChanges.entrySet()) {
+            String pendingKey = entry.getKey();
+
+            if (pendingKey.toLowerCase().startsWith(sectionPrefix)) {
+                // Extract the path within the section (e.g., "security.enableLogin" ->
+                // "enableLogin")
+                String pathInSection = pendingKey.substring(sectionPrefix.length());
+                Object pendingValue = entry.getValue();
+
+                // Build nested structure from dot notation
+                setNestedValue(result, pathInSection, pendingValue);
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Set a value in a nested map using dot notation
+     *
+     * @param map The root map
+     * @param dotPath The dot notation path (e.g., "oauth2.clientSecret")
+     * @param value The value to set
+     */
+    @SuppressWarnings("unchecked")
+    private void setNestedValue(Map<String, Object> map, String dotPath, Object value) {
+        String[] parts = dotPath.split("\\.");
+        Map<String, Object> current = map;
+
+        // Navigate/create nested maps for all parts except the last
+        for (int i = 0; i < parts.length - 1; i++) {
+            String part = parts[i];
+            Object nested = current.get(part);
+
+            if (!(nested instanceof Map)) {
+                nested = new HashMap<String, Object>();
+                current.put(part, nested);
+            }
+
+            current = (Map<String, Object>) nested;
+        }
+
+        // Set the final value
+        current.put(parts[parts.length - 1], value);
     }
 }

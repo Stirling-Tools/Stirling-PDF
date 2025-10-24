@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Stack, Text, Loader, Group, Divider, Paper, Switch, Badge } from '@mantine/core';
 import { alert } from '../../../toast';
 import RestartConfirmationModal from '../RestartConfirmationModal';
 import { useRestartServer } from '../useRestartServer';
+import { useAdminSettings } from '../../../../hooks/useAdminSettings';
+import PendingBadge from '../PendingBadge';
 import ProviderCard from './ProviderCard';
 import {
   ALL_PROVIDERS,
@@ -12,6 +14,7 @@ import {
   SAML2_PROVIDER,
   Provider,
 } from './providerDefinitions';
+import apiClient from '../../../../services/apiClient';
 
 interface ConnectionsSettingsData {
   oauth2?: {
@@ -44,45 +47,70 @@ interface ConnectionsSettingsData {
 
 export default function AdminConnectionsSection() {
   const { t } = useTranslation();
-  const [loading, setLoading] = useState(true);
-  const [settings, setSettings] = useState<ConnectionsSettingsData>({});
   const { restartModalOpened, showRestartModal, closeRestartModal, restartServer } = useRestartServer();
 
-  useEffect(() => {
-    fetchSettings();
-  }, []);
-
-  const fetchSettings = async () => {
-    try {
+  const {
+    settings,
+    setSettings,
+    loading,
+    fetchSettings,
+    isFieldPending,
+  } = useAdminSettings<ConnectionsSettingsData>({
+    sectionName: 'connections',
+    fetchTransformer: async () => {
       // Fetch security settings (oauth2, saml2)
-      const securityResponse = await fetch('/api/v1/admin/settings/section/security');
-      const securityData = securityResponse.ok ? await securityResponse.json() : {};
+      const securityResponse = await apiClient.get('/api/v1/admin/settings/section/security');
+      const securityData = securityResponse.data || {};
 
       // Fetch mail settings
-      const mailResponse = await fetch('/api/v1/admin/settings/section/mail');
-      const mailData = mailResponse.ok ? await mailResponse.json() : {};
+      const mailResponse = await apiClient.get('/api/v1/admin/settings/section/mail');
+      const mailData = mailResponse.data || {};
 
       // Fetch premium settings for SSO Auto Login
-      const premiumResponse = await fetch('/api/v1/admin/settings/section/premium');
-      const premiumData = premiumResponse.ok ? await premiumResponse.json() : {};
+      const premiumResponse = await apiClient.get('/api/v1/admin/settings/section/premium');
+      const premiumData = premiumResponse.data || {};
 
-      setSettings({
+      const result: any = {
         oauth2: securityData.oauth2 || {},
         saml2: securityData.saml2 || {},
         mail: mailData || {},
         ssoAutoLogin: premiumData.proFeatures?.ssoAutoLogin || false
-      });
-    } catch (error) {
-      console.error('Failed to fetch connections settings:', error);
-      alert({
-        alertType: 'error',
-        title: t('admin.error', 'Error'),
-        body: t('admin.settings.fetchError', 'Failed to load settings'),
-      });
-    } finally {
-      setLoading(false);
+      };
+
+      // Merge pending blocks from all three endpoints
+      const pendingBlock: any = {};
+      if (securityData._pending?.oauth2) {
+        pendingBlock.oauth2 = securityData._pending.oauth2;
+      }
+      if (securityData._pending?.saml2) {
+        pendingBlock.saml2 = securityData._pending.saml2;
+      }
+      if (mailData._pending) {
+        pendingBlock.mail = mailData._pending;
+      }
+      if (premiumData._pending?.proFeatures?.ssoAutoLogin !== undefined) {
+        pendingBlock.ssoAutoLogin = premiumData._pending.proFeatures.ssoAutoLogin;
+      }
+
+      if (Object.keys(pendingBlock).length > 0) {
+        result._pending = pendingBlock;
+      }
+
+      return result;
+    },
+    saveTransformer: (settings) => {
+      // This section doesn't have a global save button
+      // Individual providers save through their own handlers
+      return {
+        sectionData: {},
+        deltaSettings: {}
+      };
     }
-  };
+  });
+
+  useEffect(() => {
+    fetchSettings();
+  }, []);
 
   const isProviderConfigured = (provider: Provider): boolean => {
     if (provider.id === 'saml2') {
@@ -134,13 +162,9 @@ export default function AdminConnectionsSection() {
     try {
       if (provider.id === 'smtp') {
         // Mail settings use a different endpoint
-        const response = await fetch('/api/v1/admin/settings/section/mail', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(providerSettings),
-        });
+        const response = await apiClient.put('/api/v1/admin/settings/section/mail', providerSettings);
 
-        if (response.ok) {
+        if (response.status === 200) {
           await fetchSettings(); // Refresh settings
           alert({
             alertType: 'success',
@@ -172,13 +196,9 @@ export default function AdminConnectionsSection() {
           });
         }
 
-        const response = await fetch('/api/v1/admin/settings', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ settings: deltaSettings }),
-        });
+        const response = await apiClient.put('/api/v1/admin/settings', { settings: deltaSettings });
 
-        if (response.ok) {
+        if (response.status === 200) {
           await fetchSettings(); // Refresh settings
           alert({
             alertType: 'success',
@@ -203,13 +223,9 @@ export default function AdminConnectionsSection() {
     try {
       if (provider.id === 'smtp') {
         // Mail settings use a different endpoint
-        const response = await fetch('/api/v1/admin/settings/section/mail', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ enabled: false }),
-        });
+        const response = await apiClient.put('/api/v1/admin/settings/section/mail', { enabled: false });
 
-        if (response.ok) {
+        if (response.status === 200) {
           await fetchSettings();
           alert({
             alertType: 'success',
@@ -234,13 +250,9 @@ export default function AdminConnectionsSection() {
           });
         }
 
-        const response = await fetch('/api/v1/admin/settings', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ settings: deltaSettings }),
-        });
+        const response = await apiClient.put('/api/v1/admin/settings', { settings: deltaSettings });
 
-        if (response.ok) {
+        if (response.status === 200) {
           await fetchSettings();
           alert({
             alertType: 'success',
@@ -275,13 +287,9 @@ export default function AdminConnectionsSection() {
         'premium.proFeatures.ssoAutoLogin': settings.ssoAutoLogin
       };
 
-      const response = await fetch('/api/v1/admin/settings', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ settings: deltaSettings }),
-      });
+      const response = await apiClient.put('/api/v1/admin/settings', { settings: deltaSettings });
 
-      if (response.ok) {
+      if (response.status === 200) {
         alert({
           alertType: 'success',
           title: t('admin.success', 'Success'),
@@ -333,13 +341,16 @@ export default function AdminConnectionsSection() {
                 {t('admin.settings.connections.ssoAutoLogin.description', 'Automatically redirect to SSO login when authentication is required')}
               </Text>
             </div>
-            <Switch
-              checked={settings.ssoAutoLogin || false}
-              onChange={(e) => {
-                setSettings({ ...settings, ssoAutoLogin: e.target.checked });
-                handleSSOAutoLoginSave();
-              }}
-            />
+            <Group gap="xs">
+              <Switch
+                checked={settings.ssoAutoLogin || false}
+                onChange={(e) => {
+                  setSettings({ ...settings, ssoAutoLogin: e.target.checked });
+                  handleSSOAutoLoginSave();
+                }}
+              />
+              <PendingBadge show={isFieldPending('ssoAutoLogin')} />
+            </Group>
           </div>
         </Stack>
       </Paper>

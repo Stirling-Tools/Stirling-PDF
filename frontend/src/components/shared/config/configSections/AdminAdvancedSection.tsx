@@ -1,9 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { NumberInput, Switch, Button, Stack, Paper, Text, Loader, Group, Accordion, TextInput } from '@mantine/core';
 import { alert } from '../../../toast';
 import RestartConfirmationModal from '../RestartConfirmationModal';
 import { useRestartServer } from '../useRestartServer';
+import { useAdminSettings } from '../../../../hooks/useAdminSettings';
+import PendingBadge from '../PendingBadge';
+import apiClient from '../../../../services/apiClient';
 
 interface AdvancedSettingsData {
   enableAlphaFunctionality?: boolean;
@@ -51,26 +54,28 @@ interface AdvancedSettingsData {
 
 export default function AdminAdvancedSection() {
   const { t } = useTranslation();
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [settings, setSettings] = useState<AdvancedSettingsData>({});
   const { restartModalOpened, showRestartModal, closeRestartModal, restartServer } = useRestartServer();
 
-  useEffect(() => {
-    fetchSettings();
-  }, []);
-
-  const fetchSettings = async () => {
-    try {
+  const {
+    settings,
+    setSettings,
+    loading,
+    saving,
+    fetchSettings,
+    saveSettings,
+    isFieldPending,
+  } = useAdminSettings<AdvancedSettingsData>({
+    sectionName: 'advanced',
+    fetchTransformer: async () => {
       const [systemResponse, processExecutorResponse] = await Promise.all([
-        fetch('/api/v1/admin/settings/section/system'),
-        fetch('/api/v1/admin/settings/section/processExecutor')
+        apiClient.get('/api/v1/admin/settings/section/system'),
+        apiClient.get('/api/v1/admin/settings/section/processExecutor')
       ]);
 
-      const systemData = systemResponse.ok ? await systemResponse.json() : {};
-      const processExecutorData = processExecutorResponse.ok ? await processExecutorResponse.json() : {};
+      const systemData = systemResponse.data || {};
+      const processExecutorData = processExecutorResponse.data || {};
 
-      setSettings({
+      const result: any = {
         enableAlphaFunctionality: systemData.enableAlphaFunctionality || false,
         maxDPI: systemData.maxDPI || 0,
         enableUrlToPDF: systemData.enableUrlToPDF || false,
@@ -87,23 +92,39 @@ export default function AdminAdvancedSection() {
           cleanupSystemTemp: false
         },
         processExecutor: processExecutorData || {}
-      });
-    } catch (error) {
-      console.error('Failed to fetch advanced settings:', error);
-      alert({
-        alertType: 'error',
-        title: t('admin.error', 'Error'),
-        body: t('admin.settings.fetchError', 'Failed to load settings'),
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+      };
 
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      // Use delta update endpoint with dot notation
+      // Merge pending blocks from both endpoints
+      const pendingBlock: any = {};
+      if (systemData._pending?.enableAlphaFunctionality !== undefined) {
+        pendingBlock.enableAlphaFunctionality = systemData._pending.enableAlphaFunctionality;
+      }
+      if (systemData._pending?.maxDPI !== undefined) {
+        pendingBlock.maxDPI = systemData._pending.maxDPI;
+      }
+      if (systemData._pending?.enableUrlToPDF !== undefined) {
+        pendingBlock.enableUrlToPDF = systemData._pending.enableUrlToPDF;
+      }
+      if (systemData._pending?.tessdataDir !== undefined) {
+        pendingBlock.tessdataDir = systemData._pending.tessdataDir;
+      }
+      if (systemData._pending?.disableSanitize !== undefined) {
+        pendingBlock.disableSanitize = systemData._pending.disableSanitize;
+      }
+      if (systemData._pending?.tempFileManagement) {
+        pendingBlock.tempFileManagement = systemData._pending.tempFileManagement;
+      }
+      if (processExecutorData._pending) {
+        pendingBlock.processExecutor = processExecutorData._pending;
+      }
+
+      if (Object.keys(pendingBlock).length > 0) {
+        result._pending = pendingBlock;
+      }
+
+      return result;
+    },
+    saveTransformer: (settings) => {
       const deltaSettings: Record<string, any> = {
         'system.enableAlphaFunctionality': settings.enableAlphaFunctionality,
         'system.maxDPI': settings.maxDPI,
@@ -136,25 +157,27 @@ export default function AdminAdvancedSection() {
         });
       }
 
-      const response = await fetch('/api/v1/admin/settings', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ settings: deltaSettings }),
-      });
+      return {
+        sectionData: {},
+        deltaSettings
+      };
+    }
+  });
 
-      if (response.ok) {
-        showRestartModal();
-      } else {
-        throw new Error('Failed to save');
-      }
+  useEffect(() => {
+    fetchSettings();
+  }, []);
+
+  const handleSave = async () => {
+    try {
+      await saveSettings();
+      showRestartModal();
     } catch (error) {
       alert({
         alertType: 'error',
         title: t('admin.error', 'Error'),
         body: t('admin.settings.saveError', 'Failed to save settings'),
       });
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -187,10 +210,13 @@ export default function AdminAdvancedSection() {
                 {t('admin.settings.advanced.enableAlphaFunctionality.description', 'Enable experimental and alpha-stage features (may be unstable)')}
               </Text>
             </div>
-            <Switch
-              checked={settings.enableAlphaFunctionality || false}
-              onChange={(e) => setSettings({ ...settings, enableAlphaFunctionality: e.target.checked })}
-            />
+            <Group gap="xs">
+              <Switch
+                checked={settings.enableAlphaFunctionality || false}
+                onChange={(e) => setSettings({ ...settings, enableAlphaFunctionality: e.target.checked })}
+              />
+              <PendingBadge show={isFieldPending('enableAlphaFunctionality')} />
+            </Group>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -200,10 +226,13 @@ export default function AdminAdvancedSection() {
                 {t('admin.settings.advanced.enableUrlToPDF.description', 'Allow conversion of web pages to PDF documents (internal use only)')}
               </Text>
             </div>
-            <Switch
-              checked={settings.enableUrlToPDF || false}
-              onChange={(e) => setSettings({ ...settings, enableUrlToPDF: e.target.checked })}
-            />
+            <Group gap="xs">
+              <Switch
+                checked={settings.enableUrlToPDF || false}
+                onChange={(e) => setSettings({ ...settings, enableUrlToPDF: e.target.checked })}
+              />
+              <PendingBadge show={isFieldPending('enableUrlToPDF')} />
+            </Group>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -213,10 +242,13 @@ export default function AdminAdvancedSection() {
                 {t('admin.settings.advanced.disableSanitize.description', 'Disable HTML sanitization (WARNING: Security risk - can lead to XSS injections)')}
               </Text>
             </div>
-            <Switch
-              checked={settings.disableSanitize || false}
-              onChange={(e) => setSettings({ ...settings, disableSanitize: e.target.checked })}
-            />
+            <Group gap="xs">
+              <Switch
+                checked={settings.disableSanitize || false}
+                onChange={(e) => setSettings({ ...settings, disableSanitize: e.target.checked })}
+              />
+              <PendingBadge show={isFieldPending('disableSanitize')} />
+            </Group>
           </div>
         </Stack>
       </Paper>
@@ -227,24 +259,32 @@ export default function AdminAdvancedSection() {
           <Text fw={600} size="sm" mb="xs">{t('admin.settings.advanced.processing', 'Processing')}</Text>
 
           <div>
-            <NumberInput
-              label={t('admin.settings.advanced.maxDPI', 'Maximum DPI')}
-              description={t('admin.settings.advanced.maxDPI.description', 'Maximum DPI for image processing (0 = unlimited)')}
-              value={settings.maxDPI || 0}
-              onChange={(value) => setSettings({ ...settings, maxDPI: Number(value) })}
-              min={0}
-              max={3000}
-            />
+            <Group gap="xs" align="flex-end">
+              <NumberInput
+                label={t('admin.settings.advanced.maxDPI', 'Maximum DPI')}
+                description={t('admin.settings.advanced.maxDPI.description', 'Maximum DPI for image processing (0 = unlimited)')}
+                value={settings.maxDPI || 0}
+                onChange={(value) => setSettings({ ...settings, maxDPI: Number(value) })}
+                min={0}
+                max={3000}
+                style={{ flex: 1 }}
+              />
+              <PendingBadge show={isFieldPending('maxDPI')} />
+            </Group>
           </div>
 
           <div>
-            <TextInput
-              label={t('admin.settings.advanced.tessdataDir', 'Tessdata Directory')}
-              description={t('admin.settings.advanced.tessdataDir.description', 'Path to the directory containing Tessdata files for OCR')}
-              value={settings.tessdataDir || ''}
-              onChange={(e) => setSettings({ ...settings, tessdataDir: e.target.value })}
-              placeholder="/usr/share/tessdata"
-            />
+            <Group gap="xs" align="flex-end">
+              <TextInput
+                label={t('admin.settings.advanced.tessdataDir', 'Tessdata Directory')}
+                description={t('admin.settings.advanced.tessdataDir.description', 'Path to the directory containing Tessdata files for OCR')}
+                value={settings.tessdataDir || ''}
+                onChange={(e) => setSettings({ ...settings, tessdataDir: e.target.value })}
+                placeholder="/usr/share/tessdata"
+                style={{ flex: 1 }}
+              />
+              <PendingBadge show={isFieldPending('tessdataDir')} />
+            </Group>
           </div>
         </Stack>
       </Paper>
@@ -346,13 +386,16 @@ export default function AdminAdvancedSection() {
                 {t('admin.settings.advanced.tempFileManagement.startupCleanup.description', 'Clean up old temp files on application startup')}
               </Text>
             </div>
-            <Switch
-              checked={settings.tempFileManagement?.startupCleanup ?? true}
-              onChange={(e) => setSettings({
-                ...settings,
-                tempFileManagement: { ...settings.tempFileManagement, startupCleanup: e.target.checked }
-              })}
-            />
+            <Group gap="xs">
+              <Switch
+                checked={settings.tempFileManagement?.startupCleanup ?? true}
+                onChange={(e) => setSettings({
+                  ...settings,
+                  tempFileManagement: { ...settings.tempFileManagement, startupCleanup: e.target.checked }
+                })}
+              />
+              <PendingBadge show={isFieldPending('tempFileManagement.startupCleanup')} />
+            </Group>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -362,13 +405,16 @@ export default function AdminAdvancedSection() {
                 {t('admin.settings.advanced.tempFileManagement.cleanupSystemTemp.description', 'Whether to clean broader system temp directory (use with caution)')}
               </Text>
             </div>
-            <Switch
-              checked={settings.tempFileManagement?.cleanupSystemTemp ?? false}
-              onChange={(e) => setSettings({
-                ...settings,
-                tempFileManagement: { ...settings.tempFileManagement, cleanupSystemTemp: e.target.checked }
-              })}
-            />
+            <Group gap="xs">
+              <Switch
+                checked={settings.tempFileManagement?.cleanupSystemTemp ?? false}
+                onChange={(e) => setSettings({
+                  ...settings,
+                  tempFileManagement: { ...settings.tempFileManagement, cleanupSystemTemp: e.target.checked }
+                })}
+              />
+              <PendingBadge show={isFieldPending('tempFileManagement.cleanupSystemTemp')} />
+            </Group>
           </div>
         </Stack>
       </Paper>

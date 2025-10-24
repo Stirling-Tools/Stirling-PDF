@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { TextInput, NumberInput, Switch, Button, Stack, Paper, Text, Loader, Group, PasswordInput } from '@mantine/core';
 import { alert } from '../../../toast';
 import RestartConfirmationModal from '../RestartConfirmationModal';
 import { useRestartServer } from '../useRestartServer';
+import { useAdminSettings } from '../../../../hooks/useAdminSettings';
+import PendingBadge from '../PendingBadge';
 
 interface MailSettingsData {
   enabled?: boolean;
@@ -16,56 +18,34 @@ interface MailSettingsData {
 
 export default function AdminMailSection() {
   const { t } = useTranslation();
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [settings, setSettings] = useState<MailSettingsData>({});
   const { restartModalOpened, showRestartModal, closeRestartModal, restartServer } = useRestartServer();
+
+  const {
+    settings,
+    setSettings,
+    loading,
+    saving,
+    fetchSettings,
+    saveSettings,
+    isFieldPending,
+  } = useAdminSettings<MailSettingsData>({
+    sectionName: 'mail',
+  });
 
   useEffect(() => {
     fetchSettings();
   }, []);
 
-  const fetchSettings = async () => {
-    try {
-      const response = await fetch('/api/v1/admin/settings/section/mail');
-      if (response.ok) {
-        const data = await response.json();
-        setSettings(data);
-      }
-    } catch (error) {
-      console.error('Failed to fetch mail settings:', error);
-      alert({
-        alertType: 'error',
-        title: t('admin.error', 'Error'),
-        body: t('admin.settings.fetchError', 'Failed to load settings'),
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleSave = async () => {
-    setSaving(true);
     try {
-      const response = await fetch('/api/v1/admin/settings/section/mail', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(settings),
-      });
-
-      if (response.ok) {
-        showRestartModal();
-      } else {
-        throw new Error('Failed to save');
-      }
+      await saveSettings();
+      showRestartModal();
     } catch (error) {
       alert({
         alertType: 'error',
         title: t('admin.error', 'Error'),
         body: t('admin.settings.saveError', 'Failed to save settings'),
       });
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -95,59 +75,82 @@ export default function AdminMailSection() {
                 {t('admin.settings.mail.enabled.description', 'Enable email notifications and SMTP functionality')}
               </Text>
             </div>
-            <Switch
-              checked={settings.enabled || false}
-              onChange={(e) => setSettings({ ...settings, enabled: e.target.checked })}
-            />
+            <Group gap="xs">
+              <Switch
+                checked={settings.enabled || false}
+                onChange={(e) => setSettings({ ...settings, enabled: e.target.checked })}
+              />
+              <PendingBadge show={isFieldPending('enabled')} />
+            </Group>
           </div>
 
           <div>
-            <TextInput
-              label={t('admin.settings.mail.host', 'SMTP Host')}
-              description={t('admin.settings.mail.host.description', 'SMTP server hostname')}
-              value={settings.host || ''}
-              onChange={(e) => setSettings({ ...settings, host: e.target.value })}
-              placeholder="smtp.example.com"
-            />
+            <Group gap="xs" align="flex-end">
+              <TextInput
+                label={t('admin.settings.mail.host', 'SMTP Host')}
+                description={t('admin.settings.mail.host.description', 'SMTP server hostname')}
+                value={settings.host || ''}
+                onChange={(e) => setSettings({ ...settings, host: e.target.value })}
+                placeholder="smtp.example.com"
+                style={{ flex: 1 }}
+              />
+              <PendingBadge show={isFieldPending('host')} />
+            </Group>
           </div>
 
           <div>
-            <NumberInput
-              label={t('admin.settings.mail.port', 'SMTP Port')}
-              description={t('admin.settings.mail.port.description', 'SMTP server port (typically 587 for TLS, 465 for SSL)')}
-              value={settings.port || 587}
-              onChange={(value) => setSettings({ ...settings, port: Number(value) })}
-              min={1}
-              max={65535}
-            />
+            <Group gap="xs" align="flex-end">
+              <NumberInput
+                label={t('admin.settings.mail.port', 'SMTP Port')}
+                description={t('admin.settings.mail.port.description', 'SMTP server port (typically 587 for TLS, 465 for SSL)')}
+                value={settings.port || 587}
+                onChange={(value) => setSettings({ ...settings, port: Number(value) })}
+                min={1}
+                max={65535}
+                style={{ flex: 1 }}
+              />
+              <PendingBadge show={isFieldPending('port')} />
+            </Group>
           </div>
 
           <div>
-            <TextInput
-              label={t('admin.settings.mail.username', 'SMTP Username')}
-              description={t('admin.settings.mail.username.description', 'SMTP authentication username')}
-              value={settings.username || ''}
-              onChange={(e) => setSettings({ ...settings, username: e.target.value })}
-            />
+            <Group gap="xs" align="flex-end">
+              <TextInput
+                label={t('admin.settings.mail.username', 'SMTP Username')}
+                description={t('admin.settings.mail.username.description', 'SMTP authentication username')}
+                value={settings.username || ''}
+                onChange={(e) => setSettings({ ...settings, username: e.target.value })}
+                style={{ flex: 1 }}
+              />
+              <PendingBadge show={isFieldPending('username')} />
+            </Group>
           </div>
 
           <div>
-            <PasswordInput
-              label={t('admin.settings.mail.password', 'SMTP Password')}
-              description={t('admin.settings.mail.password.description', 'SMTP authentication password')}
-              value={settings.password || ''}
-              onChange={(e) => setSettings({ ...settings, password: e.target.value })}
-            />
+            <Group gap="xs" align="flex-end">
+              <PasswordInput
+                label={t('admin.settings.mail.password', 'SMTP Password')}
+                description={t('admin.settings.mail.password.description', 'SMTP authentication password')}
+                value={settings.password || ''}
+                onChange={(e) => setSettings({ ...settings, password: e.target.value })}
+                style={{ flex: 1 }}
+              />
+              <PendingBadge show={isFieldPending('password')} />
+            </Group>
           </div>
 
           <div>
-            <TextInput
-              label={t('admin.settings.mail.from', 'From Address')}
-              description={t('admin.settings.mail.from.description', 'Email address to use as sender')}
-              value={settings.from || ''}
-              onChange={(e) => setSettings({ ...settings, from: e.target.value })}
-              placeholder="noreply@example.com"
-            />
+            <Group gap="xs" align="flex-end">
+              <TextInput
+                label={t('admin.settings.mail.from', 'From Address')}
+                description={t('admin.settings.mail.from.description', 'Email address to use as sender')}
+                value={settings.from || ''}
+                onChange={(e) => setSettings({ ...settings, from: e.target.value })}
+                placeholder="noreply@example.com"
+                style={{ flex: 1 }}
+              />
+              <PendingBadge show={isFieldPending('from')} />
+            </Group>
           </div>
         </Stack>
       </Paper>

@@ -8,9 +8,7 @@ import java.nio.file.Paths;
 
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Utility class to locate JAR files at runtime for restart operations
- */
+/** Utility class to locate JAR files at runtime for restart operations */
 @Slf4j
 public class JarPathUtil {
 
@@ -45,8 +43,8 @@ public class JarPathUtil {
     }
 
     /**
-     * Gets the path to the restart-helper.jar file Expected to be in the same directory as the
-     * main JAR
+     * Gets the path to the restart-helper.jar file Expected to be in the same directory as the main
+     * JAR
      *
      * @return Path to restart-helper.jar, or null if not found
      */
