@@ -1,11 +1,12 @@
 import { useMemo, useState, useEffect } from "react";
-import { Stack, Text, Box, ActionIcon, Group, Center, SegmentedControl } from "@mantine/core";
+import { Stack, Text, Box, ActionIcon, Group, Center } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import RotateLeftIcon from "@mui/icons-material/RotateLeft";
 import RotateRightIcon from "@mui/icons-material/RotateRight";
 import { RotateParametersHook } from "../../../hooks/tools/rotate/useRotateParameters";
 import { useSelectedFiles } from "../../../contexts/file/fileHooks";
 import DocumentThumbnail from "../../shared/filePreview/DocumentThumbnail";
+import ProcessingModeToggle from "../../shared/ProcessingModeToggle";
 
 interface RotateSettingsProps {
   parameters: RotateParametersHook;
@@ -33,26 +34,11 @@ const RotateSettings = ({ parameters, disabled = false }: RotateSettingsProps) =
 
   return (
     <Stack gap="md">
-      <Stack gap="xs">
-        <Text size="sm" fw={500}>
-          {t("rotate.processingMode.label", "Processing mode")}
-        </Text>
-        <SegmentedControl
-          value={parameters.parameters.processingMode}
-          onChange={(value) => parameters.updateParameter('processingMode', value as 'backend' | 'frontend')}
-          data={[
-            { label: t('rotate.processingMode.backend', 'Backend'), value: 'backend' },
-            { label: t('rotate.processingMode.frontend', 'Browser'), value: 'frontend' },
-          ]}
-          fullWidth
-          disabled={disabled}
-        />
-        <Text size="xs" c="dimmed">
-          {parameters.parameters.processingMode === 'frontend'
-            ? t('rotate.processingMode.frontendDescription', 'Process the rotation directly in your browser without uploading files.')
-            : t('rotate.processingMode.backendDescription', 'Use the server to perform the rotation (recommended for large files).')}
-        </Text>
-      </Stack>
+      <ProcessingModeToggle
+        value={parameters.parameters.processingMode}
+        onChange={(mode) => parameters.updateParameter('processingMode', mode)}
+        disabled={disabled}
+      />
 
       {/* Thumbnail Preview Section */}
       <Stack gap="xs">

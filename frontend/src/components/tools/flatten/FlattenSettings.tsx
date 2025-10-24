@@ -1,6 +1,7 @@
-import { Stack, Text, Checkbox, SegmentedControl } from "@mantine/core";
+import { Stack, Text, Checkbox } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { FlattenParameters } from "../../../hooks/tools/flatten/useFlattenParameters";
+import ProcessingModeToggle from "../../shared/ProcessingModeToggle";
 
 interface FlattenSettingsProps {
   parameters: FlattenParameters;
@@ -13,26 +14,13 @@ const FlattenSettings = ({ parameters, onParameterChange, disabled = false }: Fl
 
   return (
     <Stack gap="md">
-      <Stack gap="xs">
-        <Text size="sm" fw={500}>
-          {t('flatten.processingMode.label', 'Processing mode')}
-        </Text>
-        <SegmentedControl
-          value={parameters.processingMode}
-          onChange={(value) => onParameterChange('processingMode', value as FlattenParameters['processingMode'])}
-          data={[
-            { label: t('flatten.processingMode.backend', 'Backend'), value: 'backend' },
-            { label: t('flatten.processingMode.frontend', 'Browser'), value: 'frontend' }
-          ]}
-          fullWidth
-          disabled={disabled}
-        />
-        <Text size="xs" c="dimmed">
-          {parameters.processingMode === 'frontend'
-            ? t('flatten.processingMode.frontendDescription', 'Flatten form fields directly in your browser (forms only).')
-            : t('flatten.processingMode.backendDescription', 'Use the server for full flattening, including rasterising pages.')}
-        </Text>
-      </Stack>
+      <ProcessingModeToggle
+        value={parameters.processingMode}
+        onChange={(mode) => onParameterChange('processingMode', mode)}
+        disabled={disabled}
+        frontendDescriptionKey="flatten.processingMode.frontendDescription"
+        backendDescriptionKey="flatten.processingMode.backendDescription"
+      />
 
       <Stack gap="sm">
         <Checkbox

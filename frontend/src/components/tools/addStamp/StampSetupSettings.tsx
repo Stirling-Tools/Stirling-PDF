@@ -1,9 +1,10 @@
 import { useTranslation } from "react-i18next";
-import { Stack, Textarea, TextInput, Select, Button, Text, Divider, SegmentedControl } from "@mantine/core";
+import { Stack, Textarea, TextInput, Select, Button, Text, Divider } from "@mantine/core";
 import { AddStampParameters } from "./useAddStampParameters";
 import ButtonSelector from "../../shared/ButtonSelector";
 import styles from "./StampPreview.module.css";
 import { getDefaultFontSizeForAlphabet } from "./StampPreviewUtils";
+import ProcessingModeToggle from "../../shared/ProcessingModeToggle";
 
 interface StampSetupSettingsProps {
   parameters: AddStampParameters;
@@ -22,23 +23,11 @@ const StampSetupSettings = ({ parameters, onParameterChange, disabled = false }:
         onChange={(e) => onParameterChange('pageNumbers', e.currentTarget.value)}
         disabled={disabled}
       />
-      <Stack gap="xs">
-        <Text size="sm" fw={500}>{t('addStamp.processingMode.label', 'Processing mode')}</Text>
-        <SegmentedControl
-          value={parameters.processingMode}
-          onChange={(value) => onParameterChange('processingMode', value as 'backend' | 'frontend')}
-          data={[
-            { label: t('addStamp.processingMode.backend', 'Backend'), value: 'backend' },
-            { label: t('addStamp.processingMode.frontend', 'Browser'), value: 'frontend' },
-          ]}
-          disabled={disabled}
-        />
-        <Text size="xs" c="dimmed">
-          {parameters.processingMode === 'frontend'
-            ? t('addStamp.processingMode.frontendDescription', 'Stamp selected pages directly in your browser.')
-            : t('addStamp.processingMode.backendDescription', 'Use the server to stamp pages (required for custom page formulas).')}
-        </Text>
-      </Stack>
+      <ProcessingModeToggle
+        value={parameters.processingMode}
+        onChange={(mode) => onParameterChange('processingMode', mode)}
+        disabled={disabled}
+      />
       <Divider/>
       <div>
         <Text size="sm" fw={500} mb="xs">{t('AddStampRequest.stampType', 'Stamp Type')}</Text>

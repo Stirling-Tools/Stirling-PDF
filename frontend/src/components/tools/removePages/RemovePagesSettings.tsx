@@ -1,7 +1,8 @@
-import { Stack, TextInput, SegmentedControl, Text } from "@mantine/core";
+import { Stack, TextInput } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { RemovePagesParameters } from "../../../hooks/tools/removePages/useRemovePagesParameters";
 import { validatePageNumbers } from "../../../utils/pageSelection";
+import ProcessingModeToggle from "../../shared/ProcessingModeToggle";
 
 interface RemovePagesSettingsProps {
   parameters: RemovePagesParameters;
@@ -23,23 +24,11 @@ const RemovePagesSettings = ({ parameters, onParameterChange, disabled = false }
 
   return (
     <Stack gap="md">
-      <Stack gap="xs">
-        <Text size="sm" fw={500}>{t('removePages.processingMode.label', 'Processing mode')}</Text>
-        <SegmentedControl
-          value={parameters.processingMode}
-          onChange={(value) => onParameterChange('processingMode', value as 'backend' | 'frontend')}
-          data={[
-            { label: t('removePages.processingMode.backend', 'Backend'), value: 'backend' },
-            { label: t('removePages.processingMode.frontend', 'Browser'), value: 'frontend' },
-          ]}
-          disabled={disabled}
-        />
-        <Text size="xs" c="dimmed">
-          {parameters.processingMode === 'frontend'
-            ? t('removePages.processingMode.frontendDescription', 'Remove the selected pages locally in your browser.')
-            : t('removePages.processingMode.backendDescription', 'Use the server to remove pages (required for complex formulas).')}
-        </Text>
-      </Stack>
+      <ProcessingModeToggle
+        value={parameters.processingMode}
+        onChange={(mode) => onParameterChange('processingMode', mode)}
+        disabled={disabled}
+      />
       <TextInput
         label={t('removePages.pageNumbers.label', 'Pages to Remove')}
         value={parameters.pageNumbers || ''}

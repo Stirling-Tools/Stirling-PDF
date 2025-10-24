@@ -1,7 +1,8 @@
-import { Divider, Select, Stack, Switch, SegmentedControl, Text } from '@mantine/core';
+import { Divider, Select, Stack, Switch } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { PageLayoutParameters } from '../../../hooks/tools/pageLayout/usePageLayoutParameters';
 import { getPagesPerSheetOptions } from './constants';
+import ProcessingModeToggle from '../../shared/ProcessingModeToggle';
 
 export default function PageLayoutSettings({
   parameters,
@@ -22,26 +23,11 @@ export default function PageLayoutSettings({
 
   return (
     <Stack gap="sm">
-      <Stack gap="xs">
-        <Text size="sm" fw={500}>
-          {t('pageLayout.processingMode.label', 'Processing mode')}
-        </Text>
-        <SegmentedControl
-          value={parameters.processingMode}
-          onChange={(value) => onParameterChange('processingMode', value as PageLayoutParameters['processingMode'])}
-          data={[
-            { label: t('pageLayout.processingMode.backend', 'Backend'), value: 'backend' },
-            { label: t('pageLayout.processingMode.frontend', 'Browser'), value: 'frontend' }
-          ]}
-          fullWidth
-          disabled={disabled}
-        />
-        <Text size="xs" c="dimmed">
-          {parameters.processingMode === 'frontend'
-            ? t('pageLayout.processingMode.frontendDescription', 'Lay out pages directly in your browser for quick previews.')
-            : t('pageLayout.processingMode.backendDescription', 'Use the server for large documents or advanced layouts.')}
-        </Text>
-      </Stack>
+      <ProcessingModeToggle
+        value={parameters.processingMode}
+        onChange={(mode) => onParameterChange('processingMode', mode)}
+        disabled={disabled}
+      />
 
       <Select
         label={t('pageLayout.pagesPerSheet', 'Pages per sheet:')}

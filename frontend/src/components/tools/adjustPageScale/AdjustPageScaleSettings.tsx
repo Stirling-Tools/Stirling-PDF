@@ -1,6 +1,7 @@
-import { Stack, NumberInput, Select, SegmentedControl, Text } from "@mantine/core";
+import { Stack, NumberInput, Select } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { AdjustPageScaleParameters, PageSize } from "../../../hooks/tools/adjustPageScale/useAdjustPageScaleParameters";
+import ProcessingModeToggle from "../../shared/ProcessingModeToggle";
 
 interface AdjustPageScaleSettingsProps {
   parameters: AdjustPageScaleParameters;
@@ -26,26 +27,11 @@ const AdjustPageScaleSettings = ({ parameters, onParameterChange, disabled = fal
 
   return (
     <Stack gap="md">
-      <Stack gap="xs">
-        <Text size="sm" fw={500}>
-          {t('adjustPageScale.processingMode.label', 'Processing mode')}
-        </Text>
-        <SegmentedControl
-          value={parameters.processingMode}
-          onChange={(value) => onParameterChange('processingMode', value as AdjustPageScaleParameters['processingMode'])}
-          data={[
-            { label: t('adjustPageScale.processingMode.backend', 'Backend'), value: 'backend' },
-            { label: t('adjustPageScale.processingMode.frontend', 'Browser'), value: 'frontend' }
-          ]}
-          fullWidth
-          disabled={disabled}
-        />
-        <Text size="xs" c="dimmed">
-          {parameters.processingMode === 'frontend'
-            ? t('adjustPageScale.processingMode.frontendDescription', 'Resize pages locally using pdf-lib.')
-            : t('adjustPageScale.processingMode.backendDescription', 'Use the server for complex scaling workflows.')}
-        </Text>
-      </Stack>
+      <ProcessingModeToggle
+        value={parameters.processingMode}
+        onChange={(mode) => onParameterChange('processingMode', mode)}
+        disabled={disabled}
+      />
 
       <NumberInput
         label={t('adjustPageScale.scaleFactor.label', 'Scale Factor')}
