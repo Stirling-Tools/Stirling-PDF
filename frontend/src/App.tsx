@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { Routes, Route } from "react-router-dom";
 import { RainbowThemeProvider } from "./components/shared/RainbowThemeProvider";
 import { FileContextProvider } from "./contexts/FileContext";
 import { NavigationProvider } from "./contexts/NavigationContext";
@@ -11,8 +12,14 @@ import { PreferencesProvider } from "./contexts/PreferencesContext";
 import { OnboardingProvider } from "./contexts/OnboardingContext";
 import { TourOrchestrationProvider } from "./contexts/TourOrchestrationContext";
 import ErrorBoundary from "./components/shared/ErrorBoundary";
-import HomePage from "./pages/HomePage";
 import OnboardingTour from "./components/onboarding/OnboardingTour";
+
+// Import auth components
+import { AuthProvider } from "./auth/UseSession";
+import Landing from "./routes/Landing";
+import Login from "./routes/Login";
+import Signup from "./routes/Signup";
+import AuthCallback from "./routes/AuthCallback";
 
 // Import global styles
 import "./styles/tailwind.css";
@@ -44,35 +51,50 @@ const LoadingFallback = () => (
 export default function App() {
   return (
     <Suspense fallback={<LoadingFallback />}>
-      <PreferencesProvider>
+    <PreferencesProvider>
         <RainbowThemeProvider>
           <ErrorBoundary>
-            <OnboardingProvider>
-              <FileContextProvider enableUrlSync={true} enablePersistence={true}>
-                <ToolRegistryProvider>
-                  <NavigationProvider>
-                    <FilesModalProvider>
-                      <ToolWorkflowProvider>
-                        <HotkeyProvider>
-                          <SidebarProvider>
-                            <ViewerProvider>
-                              <SignatureProvider>
-                                <RightRailProvider>
-                                  <TourOrchestrationProvider>
-                                    <HomePage />
-                                    <OnboardingTour />
-                                  </TourOrchestrationProvider>
-                                </RightRailProvider>
-                              </SignatureProvider>
-                            </ViewerProvider>
-                          </SidebarProvider>
-                        </HotkeyProvider>
-                      </ToolWorkflowProvider>
-                    </FilesModalProvider>
-                  </NavigationProvider>
-                </ToolRegistryProvider>
-              </FileContextProvider>
-            </OnboardingProvider>
+            <AuthProvider>
+              <Routes>
+                {/* Auth routes - no FileContext or other providers needed */}
+                <Route path="/login" element={<Login />} />
+                <Route path="/signup" element={<Signup />} />
+                <Route path="/auth/callback" element={<AuthCallback />} />
+
+                {/* Main app routes - wrapped with all providers */}
+                <Route
+                  path="/*"
+                  element={
+                    <OnboardingProvider>
+                      <FileContextProvider enableUrlSync={true} enablePersistence={true}>
+                        <ToolRegistryProvider>
+                          <NavigationProvider>
+                            <FilesModalProvider>
+                              <ToolWorkflowProvider>
+                                <HotkeyProvider>
+                                  <SidebarProvider>
+                                    <ViewerProvider>
+                                      <SignatureProvider>
+                                        <RightRailProvider>
+                                          <TourOrchestrationProvider>
+                                            <Landing />
+                                            <OnboardingTour />
+                                          </TourOrchestrationProvider>
+                                        </RightRailProvider>
+                                        </SignatureProvider>
+                                      </ViewerProvider>
+                                    </SidebarProvider>
+                                  </HotkeyProvider>
+                                </ToolWorkflowProvider>
+                              </FilesModalProvider>
+                            </NavigationProvider>
+                          </ToolRegistryProvider>
+                        </FileContextProvider>
+                      </OnboardingProvider>
+                  }
+                />
+              </Routes>
+            </AuthProvider>
           </ErrorBoundary>
         </RainbowThemeProvider>
       </PreferencesProvider>
