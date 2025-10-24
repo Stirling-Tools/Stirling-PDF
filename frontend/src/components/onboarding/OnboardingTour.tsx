@@ -1,19 +1,31 @@
 import React from "react";
-import {
-  TourProvider,
-  useTour,
-  type StepType
-} from '@reactour/tour';
+import { TourProvider, useTour, type StepType } from '@reactour/tour';
 import { useOnboarding } from '../../contexts/OnboardingContext';
 import { useTranslation } from 'react-i18next';
 import { CloseButton, ActionIcon } from '@mantine/core';
+
+    
+          
+            
+    
+
+          
+          Expand Down
+          
+            
+    
+
+          
+          Expand Up
+    
+    @@ -250,14 +254,14 @@ export default function OnboardingTour() {
+  
 import { useFilesModalContext } from '../../contexts/FilesModalContext';
 import { useTourOrchestration } from '../../contexts/TourOrchestrationContext';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import CheckIcon from '@mui/icons-material/Check';
 import TourWelcomeModal from './TourWelcomeModal';
 import './OnboardingTour.css';
-
 // Enum case order defines order steps will appear
 enum TourStep {
   ALL_TOOLS,
@@ -35,27 +47,22 @@ enum TourStep {
   PIN_BUTTON,
   WRAP_UP,
 }
-
 function TourContent() {
   const { isOpen } = useOnboarding();
   const { setIsOpen, setCurrentStep } = useTour();
   const previousIsOpenRef = React.useRef(isOpen);
-
   // Sync tour open state with context and reset to step 0 when reopening
   React.useEffect(() => {
     const wasClosedNowOpen = !previousIsOpenRef.current && isOpen;
     previousIsOpenRef.current = isOpen;
-
     if (wasClosedNowOpen) {
       // Tour is being opened (Help button pressed), reset to first step
       setCurrentStep(0);
     }
     setIsOpen(isOpen);
   }, [isOpen, setIsOpen, setCurrentStep]);
-
   return null;
 }
-
 export default function OnboardingTour() {
   const { t } = useTranslation();
   const { completeTour, showWelcomeModal, setShowWelcomeModal, startTour } = useOnboarding();
@@ -74,7 +81,6 @@ export default function OnboardingTour() {
     modifyCropSettings,
     executeTool,
   } = useTourOrchestration();
-
   // Define steps as object keyed by enum - TypeScript ensures all keys are present
   const stepsConfig: Record<TourStep, StepType> = {
     [TourStep.ALL_TOOLS]: {
@@ -205,10 +211,8 @@ export default function OnboardingTour() {
       padding: 10,
     },
   };
-
   // Convert to array using enum's numeric ordering
   const steps = Object.values(stepsConfig);
-
   const advanceTour = ({ setCurrentStep, currentStep, steps, setIsOpen }: {
     setCurrentStep: (value: number | ((prev: number) => number)) => void;
     currentStep: number;
@@ -223,13 +227,11 @@ export default function OnboardingTour() {
       setCurrentStep((s) => (s === steps.length - 1 ? 0 : s + 1));
     }
   };
-
   const handleCloseTour = ({ setIsOpen }: { setIsOpen: (value: boolean) => void }) => {
     setIsOpen(false);
     restoreWorkbenchState();
     completeTour();
   };
-
   return (
     <>
       <TourWelcomeModal
@@ -254,14 +256,14 @@ export default function OnboardingTour() {
           e.stopPropagation();
           advanceTour(clickProps);
         }}
-        keyboardHandler={(e, clickProps) => {
+        keyboardHandler={(e, clickProps, status) => {
           // Handle right arrow key to advance tour
-          if (e.key === 'ArrowRight' && clickProps) {
+          if (e.key === 'ArrowRight' && !status?.isRightDisabled && clickProps) {
             e.preventDefault();
             advanceTour(clickProps);
           }
           // Handle escape key to close tour
-          else if (e.key === 'Escape' && clickProps) {
+          else if (e.key === 'Escape' && !status?.isEscDisabled && clickProps) {
             e.preventDefault();
             handleCloseTour(clickProps);
           }
@@ -295,23 +297,6 @@ export default function OnboardingTour() {
         showCloseButton={true}
         disableInteraction={true}
         disableDotsNavigation={true}
-        prevButton={() => null}
-        nextButton={({ currentStep, stepsLength, setCurrentStep, setIsOpen }) => {
-          const isLast = currentStep === stepsLength - 1;
-
-          return (
-            <ActionIcon
-              onClick={() => {
-                advanceTour({ setCurrentStep, currentStep, steps, setIsOpen });
-              }}
-              variant="subtle"
-              size="lg"
-              aria-label={isLast ? t('onboarding.finish', 'Finish') : t('onboarding.next', 'Next')}
-            >
-              {isLast ? <CheckIcon /> : <ArrowForwardIcon />}
-            </ActionIcon>
-          );
-        }}
         components={{
           Close: ({ onClick }) => (
             <CloseButton
