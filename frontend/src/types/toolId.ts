@@ -46,6 +46,7 @@ export const REGULAR_TOOL_IDS = [
   'validateSignature',
   'replaceColor',
   'showJS',
+  'pdfJsonEditor',
   'bookletImposition',
 ] as const;
 
@@ -92,4 +93,3 @@ type Disjoint<A, B> = [A & B] extends [never] ? true : false;
 type _Check1 = Assert<Disjoint<RegularToolId, SuperToolId>>;
 type _Check2 = Assert<Disjoint<RegularToolId, LinkToolId>>;
 type _Check3 = Assert<Disjoint<SuperToolId, LinkToolId>>;
-
