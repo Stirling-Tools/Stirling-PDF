@@ -3,23 +3,6 @@ import { TourProvider, useTour, type StepType } from '@reactour/tour';
 import { useOnboarding } from '../../contexts/OnboardingContext';
 import { useTranslation } from 'react-i18next';
 import { CloseButton, ActionIcon } from '@mantine/core';
-
-    
-          
-            
-    
-
-          
-          Expand Down
-          
-            
-    
-
-          
-          Expand Up
-    
-    @@ -250,14 +254,14 @@ export default function OnboardingTour() {
-  
 import { useFilesModalContext } from '../../contexts/FilesModalContext';
 import { useTourOrchestration } from '../../contexts/TourOrchestrationContext';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
