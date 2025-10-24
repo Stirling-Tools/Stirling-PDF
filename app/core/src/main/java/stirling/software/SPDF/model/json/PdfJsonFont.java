@@ -44,6 +44,12 @@ public class PdfJsonFont {
     /** Hint describing the font program type (ttf, otf, cff, pfb, etc.). */
     private String programFormat;
 
+    /** Web-optimized font program (e.g. converted TrueType) encoded as Base64. */
+    private String webProgram;
+
+    /** Format hint for the webProgram payload. */
+    private String webProgramFormat;
+
     /** ToUnicode stream encoded as Base64 when present. */
     private String toUnicode;
 
@@ -70,4 +76,7 @@ public class PdfJsonFont {
 
     /** Units per em extracted from the font matrix. */
     private Integer unitsPerEm;
+
+    /** Serialized COS dictionary describing the original font resource. */
+    private PdfJsonCosValue cosDictionary;
 }

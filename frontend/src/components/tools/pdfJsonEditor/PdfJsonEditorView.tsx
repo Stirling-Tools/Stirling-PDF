@@ -95,8 +95,9 @@ const decodeBase64ToUint8Array = (value: string): Uint8Array => {
 };
 
 const buildFontFamilyName = (font: PdfJsonFont): string => {
-  const base = (font.uid ?? font.id ?? 'font').toString();
-  return `pdf-font-${base.replace(/[^a-zA-Z0-9_-]/g, '')}`;
+  const preferred = (font.baseName ?? '').trim();
+  const identifier = preferred.length > 0 ? preferred : (font.uid ?? font.id ?? 'font').toString();
+  return `pdf-font-${identifier.replace(/[^a-zA-Z0-9_-]/g, '')}`;
 };
 
 const getCaretOffset = (element: HTMLElement): number => {
@@ -313,18 +314,34 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
 
       const next = new Map<string, string>();
       for (const font of fonts) {
-        if (!font?.id || !font.program) {
+        if (!font?.id) {
+          continue;
+        }
+        const programSource = font.webProgram && font.webProgram.length > 0 ? font.webProgram : font.program;
+        if (!programSource) {
           continue;
         }
         try {
-          const format = normalizeFontFormat(font.programFormat);
-          const data = decodeBase64ToUint8Array(font.program);
+          const formatSource = font.webProgram && font.webProgram.length > 0 ? font.webProgramFormat : font.programFormat;
+          const format = normalizeFontFormat(formatSource);
+          const data = decodeBase64ToUint8Array(programSource);
           const blob = new Blob([data as BlobPart], { type: getFontMimeType(format) });
           const url = URL.createObjectURL(blob);
           const formatHint = getFontFormatHint(format);
           const familyName = buildFontFamilyName(font);
           const source = formatHint ? `url(${url}) format('${formatHint}')` : `url(${url})`;
           const fontFace = new FontFace(familyName, source);
+
+          console.debug(`[FontLoader] Loading font ${font.id} (${font.baseName}):`, {
+            formatSource,
+            format,
+            formatHint,
+            familyName,
+            dataLength: data.length,
+            hasWebProgram: !!font.webProgram,
+            hasProgram: !!font.program
+          });
+
           await fontFace.load();
           if (disposed) {
             document.fonts.delete(fontFace);
@@ -334,8 +351,14 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
           document.fonts.add(fontFace);
           active.push({ fontFace, url });
           next.set(font.id, familyName);
+          console.debug(`[FontLoader] Successfully loaded font ${font.id}`);
         } catch (error) {
-          // Silently ignore font loading failures - embedded PDF fonts often lack web font tables
+          console.warn(`[FontLoader] Failed to load font ${font.id} (${font.baseName}):`, {
+            error: error instanceof Error ? error.message : String(error),
+            formatSource: font.webProgram && font.webProgram.length > 0 ? font.webProgramFormat : font.programFormat,
+            hasWebProgram: !!font.webProgram,
+            hasProgram: !!font.program
+          });
           // Fallback to web-safe fonts is already implemented via getFontFamily()
         }
       }
@@ -776,7 +799,8 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
                       const fontFamily = getFontFamily(group.fontId);
                       const lineHeightPx = getLineHeightPx(group.fontId, fontSizePx);
                       const lineHeightRatio = fontSizePx > 0 ? Math.max(lineHeightPx / fontSizePx, 1.05) : 1.2;
-                      const hasRotation = group.rotation != null && Math.abs(group.rotation) > 0.5;
+                      const rotation = group.rotation ?? 0;
+                      const hasRotation = Math.abs(rotation) > 0.5;
                       const baselineLength = group.baselineLength ?? Math.max(group.bounds.right - group.bounds.left, 0);
 
                       let containerLeft = bounds.left;
@@ -795,7 +819,7 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
                         containerHeight = Math.max(lineHeightPx, fontSizePx * lineHeightRatio);
                         transformOrigin = 'left bottom';
                         // Negate rotation because Y-axis is flipped from PDF to web coordinates
-                        transform = `rotate(${-group.rotation}deg)`;
+                        transform = `rotate(${-rotation}deg)`;
                       }
 
                       // Extract styling from group

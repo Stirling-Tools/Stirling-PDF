@@ -9,6 +9,14 @@ export interface PdfJsonTextColor {
   components?: number[] | null;
 }
 
+export interface PdfJsonCosValue {
+  type?: string | null;
+  value?: unknown;
+  items?: PdfJsonCosValue[] | null;
+  entries?: Record<string, PdfJsonCosValue | null> | null;
+  stream?: PdfJsonStream | null;
+}
+
 export interface PdfJsonFont {
   id?: string;
   pageNumber?: number | null;
@@ -20,6 +28,8 @@ export interface PdfJsonFont {
   embedded?: boolean | null;
   program?: string | null;
   programFormat?: string | null;
+  webProgram?: string | null;
+  webProgramFormat?: string | null;
   toUnicode?: string | null;
   standard14Name?: string | null;
   fontDescriptorFlags?: number | null;
@@ -29,6 +39,7 @@ export interface PdfJsonFont {
   xHeight?: number | null;
   italicAngle?: number | null;
   unitsPerEm?: number | null;
+  cosDictionary?: PdfJsonCosValue | null;
 }
 
 export interface PdfJsonTextElement {
@@ -52,6 +63,7 @@ export interface PdfJsonTextElement {
   textMatrix?: number[] | null;
   fillColor?: PdfJsonTextColor | null;
   strokeColor?: PdfJsonTextColor | null;
+  fallbackUsed?: boolean | null;
 }
 
 export interface PdfJsonImageElement {

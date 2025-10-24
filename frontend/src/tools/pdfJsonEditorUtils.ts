@@ -16,6 +16,48 @@ const MIN_CHAR_WIDTH_FACTOR = 0.35;
 const MAX_CHAR_WIDTH_FACTOR = 1.25;
 const EXTRA_GAP_RATIO = 0.8;
 
+type FontMetrics = {
+  unitsPerEm: number;
+  ascent: number;
+  descent: number;
+};
+
+type FontMetricsMap = Map<string, FontMetrics>;
+
+const countGraphemes = (text: string): number => {
+  if (!text) {
+    return 0;
+  }
+  return Array.from(text).length;
+};
+
+const metricsFor = (metrics: FontMetricsMap | undefined, fontId?: string | null): FontMetrics | undefined => {
+  if (!metrics || !fontId) {
+    return undefined;
+  }
+  return metrics.get(fontId) ?? undefined;
+};
+
+const buildFontMetrics = (document: PdfJsonDocument | null | undefined): FontMetricsMap => {
+  const metrics: FontMetricsMap = new Map();
+  document?.fonts?.forEach((font) => {
+    if (!font) {
+      return;
+    }
+    const unitsPerEm = font.unitsPerEm && font.unitsPerEm > 0 ? font.unitsPerEm : 1000;
+    const ascent = font.ascent ?? unitsPerEm * 0.8;
+    const descent = font.descent ?? -(unitsPerEm * 0.2);
+    const metric: FontMetrics = { unitsPerEm, ascent, descent };
+    if (font.id) {
+      metrics.set(font.id, metric);
+    }
+    if (font.uid) {
+      metrics.set(font.uid, metric);
+    }
+  });
+  return metrics;
+};
+
 export const valueOr = (value: number | null | undefined, fallback = 0): number => {
   if (value === null || value === undefined || Number.isNaN(value)) {
     return fallback;
@@ -47,37 +89,87 @@ const getX = (element: PdfJsonTextElement): number => {
   return valueOr(element.x);
 };
 
-const getWidth = (element: PdfJsonTextElement): number => {
+const getWidth = (element: PdfJsonTextElement, metrics?: FontMetricsMap): number => {
   const width = valueOr(element.width, 0);
-  if (width === 0 && element.text) {
-    const fontSize = valueOr(element.fontSize, 12);
-    return fontSize * Math.max(element.text.length * 0.45, 0.5);
+  if (width > 0) {
+    return width;
   }
-  return width;
+
+  const text = element.text ?? '';
+  const glyphCount = Math.max(1, countGraphemes(text));
+  const spacingFallback = Math.max(
+    valueOr(element.spaceWidth, 0),
+    valueOr(element.wordSpacing, 0),
+    valueOr(element.characterSpacing, 0),
+  );
+
+  if (spacingFallback > 0 && text.trim().length === 0) {
+    return spacingFallback;
+  }
+
+  const fontSize = getFontSize(element);
+  const fontMetrics = metricsFor(metrics, element.fontId);
+  if (fontMetrics) {
+    const unitsPerEm = fontMetrics.unitsPerEm > 0 ? fontMetrics.unitsPerEm : 1000;
+    const ascentUnits = fontMetrics.ascent ?? unitsPerEm * 0.8;
+    const descentUnits = Math.abs(fontMetrics.descent ?? -(unitsPerEm * 0.2));
+    const combinedUnits = Math.max(unitsPerEm * 0.8, ascentUnits + descentUnits);
+    const averageAdvanceUnits = Math.max(unitsPerEm * 0.5, combinedUnits / Math.max(1, glyphCount));
+    const fallbackWidth = (averageAdvanceUnits / unitsPerEm) * glyphCount * fontSize;
+    if (fallbackWidth > 0) {
+      return fallbackWidth;
+    }
+  }
+
+  return fontSize * glyphCount * 0.5;
 };
 
 const getFontSize = (element: PdfJsonTextElement): number => valueOr(element.fontMatrixSize ?? element.fontSize, 12);
 
-const getHeight = (element: PdfJsonTextElement): number => {
-  const height = valueOr(element.height);
-  if (height === 0) {
-    return getFontSize(element) * 1.05;
+const getHeight = (element: PdfJsonTextElement, metrics?: FontMetricsMap): number => {
+  const height = valueOr(element.height, 0);
+  if (height > 0) {
+    return height;
   }
-  return height;
+  const fontSize = getFontSize(element);
+  const fontMetrics = metricsFor(metrics, element.fontId);
+  if (fontMetrics) {
+    const unitsPerEm = fontMetrics.unitsPerEm > 0 ? fontMetrics.unitsPerEm : 1000;
+    const ascentUnits = fontMetrics.ascent ?? unitsPerEm * 0.8;
+    const descentUnits = Math.abs(fontMetrics.descent ?? -(unitsPerEm * 0.2));
+    const totalUnits = Math.max(unitsPerEm, ascentUnits + descentUnits);
+    if (totalUnits > 0) {
+      return (totalUnits / unitsPerEm) * fontSize;
+    }
+  }
+  return fontSize;
 };
 
-const getElementBounds = (element: PdfJsonTextElement): BoundingBox => {
+const getElementBounds = (
+  element: PdfJsonTextElement,
+  metrics?: FontMetricsMap,
+): BoundingBox => {
   const left = getX(element);
-  const width = getWidth(element);
+  const width = getWidth(element, metrics);
   const baseline = getBaseline(element);
-  const height = getHeight(element);
-  // In PDF coordinates, baseline is where text sits
-  // Typical typography: ~80% of height above baseline (ascenders), ~20% below (descenders)
-  // Using codebase's inverted naming: bottom (visual top) > top (visual bottom)
-  const ascent = height * 0.8;
-  const descent = height * 0.2;
-  const bottom = baseline + ascent;  // Visual top of text
-  const top = baseline - descent;    // Visual bottom (includes descenders)
+  const height = getHeight(element, metrics);
+
+  let ascentRatio = 0.8;
+  let descentRatio = 0.2;
+  const fontMetrics = metricsFor(metrics, element.fontId);
+  if (fontMetrics) {
+    const unitsPerEm = fontMetrics.unitsPerEm > 0 ? fontMetrics.unitsPerEm : 1000;
+    const ascentUnits = fontMetrics.ascent ?? unitsPerEm * 0.8;
+    const descentUnits = Math.abs(fontMetrics.descent ?? -(unitsPerEm * 0.2));
+    const totalUnits = Math.max(unitsPerEm, ascentUnits + descentUnits);
+    if (totalUnits > 0) {
+      ascentRatio = ascentUnits / totalUnits;
+      descentRatio = descentUnits / totalUnits;
+    }
+  }
+
+  const bottom = baseline + height * ascentRatio;
+  const top = baseline - height * descentRatio;
   return {
     left,
     right: left + width,
@@ -114,8 +206,12 @@ const getSpacingHint = (element: PdfJsonTextElement): number => {
   return Math.max(characterSpacing, 0);
 };
 
-const estimateCharWidth = (element: PdfJsonTextElement, avgFontSize: number): number => {
-  const rawWidth = getWidth(element);
+const estimateCharWidth = (
+  element: PdfJsonTextElement,
+  avgFontSize: number,
+  metrics?: FontMetricsMap,
+): number => {
+  const rawWidth = getWidth(element, metrics);
   const minWidth = avgFontSize * MIN_CHAR_WIDTH_FACTOR;
   const maxWidth = avgFontSize * MAX_CHAR_WIDTH_FACTOR;
   return Math.min(Math.max(rawWidth, minWidth), maxWidth);
@@ -136,12 +232,16 @@ const mergeBounds = (bounds: BoundingBox[]): BoundingBox => {
   );
 };
 
-const shouldInsertSpace = (prev: PdfJsonTextElement, current: PdfJsonTextElement): boolean => {
-  const prevRight = getX(prev) + getWidth(prev);
+const shouldInsertSpace = (
+  prev: PdfJsonTextElement,
+  current: PdfJsonTextElement,
+  metrics?: FontMetricsMap,
+): boolean => {
+  const prevRight = getX(prev) + getWidth(prev, metrics);
   const trailingGap = Math.max(0, getX(current) - prevRight);
   const avgFontSize = (getFontSize(prev) + getFontSize(current)) / 2;
   const baselineAdvance = Math.max(0, getX(current) - getX(prev));
-  const charWidthEstimate = estimateCharWidth(prev, avgFontSize);
+  const charWidthEstimate = estimateCharWidth(prev, avgFontSize, metrics);
   const inferredGap = Math.max(0, baselineAdvance - charWidthEstimate);
   const spacingHint = Math.max(
     SPACE_MIN_GAP,
@@ -166,7 +266,7 @@ const shouldInsertSpace = (prev: PdfJsonTextElement, current: PdfJsonTextElement
   return false;
 };
 
-const buildGroupText = (elements: PdfJsonTextElement[]): string => {
+const buildGroupText = (elements: PdfJsonTextElement[], metrics?: FontMetricsMap): string => {
   let result = '';
   elements.forEach((element, index) => {
     const value = element.text ?? '';
@@ -176,7 +276,7 @@ const buildGroupText = (elements: PdfJsonTextElement[]): string => {
     }
 
     const previous = elements[index - 1];
-    const needsSpace = shouldInsertSpace(previous, element);
+    const needsSpace = shouldInsertSpace(previous, element, metrics);
     const startsWithWhitespace = /^\s/u.test(value);
 
     if (needsSpace && !startsWithWhitespace) {
@@ -314,21 +414,24 @@ const getAnchorPoint = (element: PdfJsonTextElement): { x: number; y: number } =
   };
 };
 
-const computeBaselineLength = (elements: PdfJsonTextElement[]): number =>
-  elements.reduce((acc, current) => acc + getWidth(current), 0);
+const computeBaselineLength = (
+  elements: PdfJsonTextElement[],
+  metrics?: FontMetricsMap,
+): number => elements.reduce((acc, current) => acc + getWidth(current, metrics), 0);
 
 const createGroup = (
   pageIndex: number,
   idSuffix: number,
   elements: PdfJsonTextElement[],
+  metrics?: FontMetricsMap,
 ): TextGroup => {
   const clones = elements.map(cloneTextElement);
   const originalClones = clones.map(cloneTextElement);
-  const bounds = mergeBounds(elements.map(getElementBounds));
+  const bounds = mergeBounds(elements.map((element) => getElementBounds(element, metrics)));
   const firstElement = elements[0];
   const rotation = computeGroupRotation(elements);
   const anchor = rotation !== null ? getAnchorPoint(firstElement) : null;
-  const baselineLength = computeBaselineLength(elements);
+  const baselineLength = computeBaselineLength(elements, metrics);
 
   return {
     id: `${pageIndex}-${idSuffix}`,
@@ -343,13 +446,17 @@ const createGroup = (
     baselineLength,
     elements: clones,
     originalElements: originalClones,
-    text: buildGroupText(elements),
-    originalText: buildGroupText(elements),
+    text: buildGroupText(elements, metrics),
+    originalText: buildGroupText(elements, metrics),
     bounds,
   };
 };
 
-export const groupPageTextElements = (page: PdfJsonPage | null | undefined, pageIndex: number): TextGroup[] => {
+export const groupPageTextElements = (
+  page: PdfJsonPage | null | undefined,
+  pageIndex: number,
+  metrics?: FontMetricsMap,
+): TextGroup[] => {
   if (!page?.textElements || page.textElements.length === 0) {
     return [];
   }
@@ -393,7 +500,7 @@ export const groupPageTextElements = (page: PdfJsonPage | null | undefined, page
       }
 
       const previous = currentBucket[currentBucket.length - 1];
-      const gap = getX(element) - (getX(previous) + getWidth(previous));
+      const gap = getX(element) - (getX(previous) + getWidth(previous, metrics));
       const avgFontSize = (getFontSize(previous) + getFontSize(element)) / 2;
       const splitThreshold = Math.max(SPACE_MIN_GAP, avgFontSize * GAP_FACTOR);
 
@@ -412,7 +519,7 @@ export const groupPageTextElements = (page: PdfJsonPage | null | undefined, page
       }
 
       if (shouldSplit) {
-        groups.push(createGroup(pageIndex, groupCounter, currentBucket));
+        groups.push(createGroup(pageIndex, groupCounter, currentBucket, metrics));
         groupCounter += 1;
         currentBucket = [element];
       } else {
@@ -421,7 +528,7 @@ export const groupPageTextElements = (page: PdfJsonPage | null | undefined, page
     });
 
     if (currentBucket.length > 0) {
-      groups.push(createGroup(pageIndex, groupCounter, currentBucket));
+      groups.push(createGroup(pageIndex, groupCounter, currentBucket, metrics));
       groupCounter += 1;
     }
   });
@@ -431,7 +538,8 @@ export const groupPageTextElements = (page: PdfJsonPage | null | undefined, page
 
 export const groupDocumentText = (document: PdfJsonDocument | null | undefined): TextGroup[][] => {
   const pages = document?.pages ?? [];
-  return pages.map((page, index) => groupPageTextElements(page, index));
+  const metrics = buildFontMetrics(document);
+  return pages.map((page, index) => groupPageTextElements(page, index, metrics));
 };
 
 export const extractPageImages = (
