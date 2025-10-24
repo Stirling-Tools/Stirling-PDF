@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { usePreferences } from '@app/contexts/PreferencesContext';
-import { useMediaQuery } from '@mantine/hooks';
-import { useAuth } from '@app/auth/UseSession';
+import { useShouldShowWelcomeModal } from '@app/hooks/useShouldShowWelcomeModal';
 
 interface OnboardingContextValue {
   isOpen: boolean;
@@ -18,26 +17,18 @@ interface OnboardingContextValue {
 const OnboardingContext = createContext<OnboardingContextValue | undefined>(undefined);
 
 export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { preferences, updatePreference } = usePreferences();
-  const { session, loading } = useAuth();
+  const { updatePreference } = usePreferences();
   const [isOpen, setIsOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
-  const isMobile = useMediaQuery("(max-width: 1024px)");
+  const shouldShow = useShouldShowWelcomeModal();
 
-  // Auto-show welcome modal for first-time users after preferences load
-  // Only show after user has seen the tool panel mode prompt
-  // Also, don't show tour on mobile devices because it feels clunky
-  // IMPORTANT: Only show welcome modal if user is authenticated or login is disabled
+  // Auto-show welcome modal for first-time users
   useEffect(() => {
-    if (!loading && !preferences.hasCompletedOnboarding && preferences.toolPanelModePromptSeen && !isMobile) {
-      // Only show welcome modal if user is authenticated (session exists)
-      // This prevents the modal from showing on login screens when security is enabled
-      if (session) {
-        setShowWelcomeModal(true);
-      }
+    if (shouldShow) {
+      setShowWelcomeModal(true);
     }
-  }, [preferences.hasCompletedOnboarding, preferences.toolPanelModePromptSeen, isMobile, session, loading]);
+  }, [shouldShow]);
 
   const startTour = useCallback(() => {
     setCurrentStep(0);

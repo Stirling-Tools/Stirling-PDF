@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import '@app/authShared/auth.css';
+import '@app/routes/authShared/auth.css';
 import { useTranslation } from 'react-i18next';
 import { SignupFieldErrors } from '@app/routes/signup/SignupFormValidation';
 

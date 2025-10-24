@@ -1,12 +1,12 @@
 import '@mantine/core/styles.css';
 import '@mantine/dates/styles.css';
 import '../vite-env.d.ts';
-import './index.css'; // Import Tailwind CSS
+import '@app/styles/index.css'; // Import global styles
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { ColorSchemeScript } from '@mantine/core';
 import { BrowserRouter } from 'react-router-dom';
-import App from './App';
+import App from '@app/App';
 import '@app/i18n'; // Initialize i18next
 import posthog from 'posthog-js';
 import { PostHogProvider } from 'posthog-js/react';

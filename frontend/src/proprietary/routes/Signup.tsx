@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useDocumentMeta } from '@app/hooks/useDocumentMeta';
 import AuthLayout from '@app/routes/authShared/AuthLayout';
-import '@app/authShared/auth.css';
+import '@app/routes/authShared/auth.css';
 import { BASE_PATH } from '@app/constants/app';
 
 // Import signup components

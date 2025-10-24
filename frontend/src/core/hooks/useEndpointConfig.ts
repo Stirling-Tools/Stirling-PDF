@@ -1,10 +1,5 @@
 import { useState, useEffect } from 'react';
-
-// Helper to get JWT from localStorage for Authorization header
-function getAuthHeaders(): HeadersInit {
-  const token = localStorage.getItem('stirling_jwt');
-  return token ? { 'Authorization': `Bearer ${token}` } : {};
-}
+import { useRequestHeaders } from '@app/hooks/useRequestHeaders';
 
 /**
  * Hook to check if a specific endpoint is enabled
@@ -18,6 +13,7 @@ export function useEndpointEnabled(endpoint: string): {
   const [enabled, setEnabled] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const headers = useRequestHeaders();
 
   const fetchEndpointStatus = async () => {
     if (!endpoint) {
@@ -31,7 +27,7 @@ export function useEndpointEnabled(endpoint: string): {
       setError(null);
 
       const response = await fetch(`/api/v1/config/endpoint-enabled?endpoint=${encodeURIComponent(endpoint)}`, {
-        headers: getAuthHeaders(),
+        headers,
       });
 
       if (!response.ok) {
@@ -73,6 +69,7 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
   const [endpointStatus, setEndpointStatus] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const headers = useRequestHeaders();
 
   const fetchAllEndpointStatuses = async () => {
     if (!endpoints || endpoints.length === 0) {
@@ -89,7 +86,7 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
       const endpointsParam = endpoints.join(',');
 
       const response = await fetch(`/api/v1/config/endpoints-enabled?endpoints=${encodeURIComponent(endpointsParam)}`, {
-        headers: getAuthHeaders(),
+        headers,
       });
 
       if (!response.ok) {
