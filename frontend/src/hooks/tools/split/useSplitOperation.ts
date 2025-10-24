@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { ToolType, useToolOperation, ToolOperationConfig } from '../shared/useToolOperation';
 import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
 import { SplitParameters, defaultParameters } from './useSplitParameters';
-import { SPLIT_METHODS } from '../../../constants/splitConstants';
+import { SPLIT_METHODS, type SplitMethod} from '../../../constants/splitConstants';
 import { useToolResources } from '../shared/useToolResources';
 import { splitPdfClientSide } from '../../../utils/pdfOperations/split';
 import { validatePageNumbers } from '../../../utils/pageSelection';
@@ -87,8 +87,8 @@ export const splitOperationConfig = {
         SPLIT_METHODS.BY_PAGE_COUNT,
         SPLIT_METHODS.BY_DOC_COUNT,
         SPLIT_METHODS.BY_SIZE
-      ];
-      if (!browserMethods.includes(params.method)) return false;
+      ] as SplitMethod[];
+      if (!params.method || !browserMethods.includes(params.method)) return false;
 
       // Method-specific validation
       switch (params.method) {

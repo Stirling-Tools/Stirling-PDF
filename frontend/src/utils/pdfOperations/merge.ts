@@ -5,7 +5,7 @@ import { createFileFromApiResponse } from '../fileResponseUtils';
 const PDF_MIME_TYPE = 'application/pdf';
 
 export async function mergePdfClientSide(
-  params: MergeParameters,
+  _params: MergeParameters, // Cant use params in browser implementation
   files: File[]
 ): Promise<File[]> {
   if (files.length === 0) {

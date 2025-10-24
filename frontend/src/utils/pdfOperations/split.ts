@@ -88,7 +88,6 @@ async function splitPdfBySize(
 
       const outputs: File[] = [];
       let currentDoc = await PDFDocument.create();
-      let currentPageStart = 0;
       let partIndex = 1;
 
       for (let i = 0; i < totalPages; i++) {
@@ -117,7 +116,7 @@ async function splitPdfBySize(
           currentDoc = await PDFDocument.create();
           const [pageToAdd] = await currentDoc.copyPages(sourcePdf, [i]);
           currentDoc.addPage(pageToAdd);
-          currentPageStart = i;
+
           partIndex++;
         }
       }

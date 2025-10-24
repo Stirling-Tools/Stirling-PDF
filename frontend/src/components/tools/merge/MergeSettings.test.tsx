@@ -19,6 +19,7 @@ describe('MergeSettings', () => {
   const defaultParameters: MergeParameters = {
     removeDigitalSignature: false,
     generateTableOfContents: false,
+    processingMode: 'backend',
   };
 
   const mockOnParameterChange = vi.fn();
