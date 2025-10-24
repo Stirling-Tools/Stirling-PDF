@@ -21,6 +21,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.exception.UnsupportedProviderException;
@@ -30,6 +31,7 @@ import stirling.software.proprietary.security.service.JwtServiceInterface;
 import stirling.software.proprietary.security.service.LoginAttemptService;
 import stirling.software.proprietary.security.service.UserService;
 
+@Slf4j
 @RequiredArgsConstructor
 public class CustomOAuth2AuthenticationSuccessHandler
         extends SavedRequestAwareAuthenticationSuccessHandler {
@@ -38,6 +40,7 @@ public class CustomOAuth2AuthenticationSuccessHandler
     private final ApplicationProperties.Security.OAUTH2 oauth2Properties;
     private final UserService userService;
     private final JwtServiceInterface jwtService;
+    private final ApplicationProperties applicationProperties;
 
     @Override
     public void onAuthenticationSuccess(
@@ -114,8 +117,11 @@ public class CustomOAuth2AuthenticationSuccessHandler
                             jwtService.generateToken(
                                     authentication, Map.of("authType", AuthenticationType.OAUTH2));
 
-                    // Build context-aware redirect URL based on the original request
-                    String redirectUrl = buildContextAwareRedirectUrl(request, contextPath, jwt);
+                    // Set JWT as HttpOnly cookie for security
+                    setJwtCookie(response, jwt, contextPath);
+
+                    // Build context-aware redirect URL (without JWT in URL)
+                    String redirectUrl = buildContextAwareRedirectUrl(request, contextPath);
 
                     response.sendRedirect(redirectUrl);
                 } else {
@@ -142,16 +148,50 @@ public class CustomOAuth2AuthenticationSuccessHandler
     }
 
     /**
+     * Sets JWT as an HttpOnly cookie for security
+     * Prevents XSS attacks by making token inaccessible to JavaScript
+     *
+     * @param response HTTP response to set cookie
+     * @param jwt JWT token to store
+     * @param contextPath Application context path for cookie path
+     */
+    private void setJwtCookie(HttpServletResponse response, String jwt, String contextPath) {
+        jakarta.servlet.http.Cookie cookie = new jakarta.servlet.http.Cookie("stirling_jwt", jwt);
+        cookie.setHttpOnly(true); // Prevent JavaScript access (XSS protection)
+        cookie.setSecure(true); // Only send over HTTPS (set to false for local dev if needed)
+        cookie.setPath(contextPath.isEmpty() ? "/" : contextPath); // Cookie available for entire app
+        cookie.setMaxAge(3600); // 1 hour (matches JWT expiration)
+        cookie.setAttribute("SameSite", "Lax"); // CSRF protection
+        response.addCookie(cookie);
+    }
+
+    /**
+     * Validates if the origin is in the CORS whitelist
+     *
+     * @param origin Origin to validate
+     * @return true if origin is whitelisted or no whitelist configured
+     */
+    private boolean isOriginWhitelisted(String origin) {
+        if (applicationProperties.getSystem() == null
+                || applicationProperties.getSystem().getCorsAllowedOrigins() == null
+                || applicationProperties.getSystem().getCorsAllowedOrigins().isEmpty()) {
+            // No whitelist configured - only trust request origin
+            return false;
+        }
+
+        return applicationProperties.getSystem().getCorsAllowedOrigins().contains(origin);
+    }
+
+    /**
      * Builds a context-aware redirect URL based on the request's origin
+     * Validates Referer against CORS whitelist to prevent token leakage to third parties
      *
      * @param request The HTTP request
      * @param contextPath The application context path
-     * @param jwt The JWT token to include
      * @return The appropriate redirect URL
      */
-    private String buildContextAwareRedirectUrl(
-            HttpServletRequest request, String contextPath, String jwt) {
-        // Try to get the origin from the Referer header first
+    private String buildContextAwareRedirectUrl(HttpServletRequest request, String contextPath) {
+        // Try to get the origin from the Referer header
         String referer = request.getHeader("Referer");
         if (referer != null && !referer.isEmpty()) {
             try {
@@ -162,13 +202,25 @@ public class CustomOAuth2AuthenticationSuccessHandler
                         && refererUrl.getPort() != 443) {
                     origin += ":" + refererUrl.getPort();
                 }
-                return origin + "/auth/callback#access_token=" + jwt;
+
+                // SECURITY: Only trust Referer if it's in the CORS whitelist
+                // This prevents redirecting with JWT to untrusted domains (e.g., IdP domain)
+                if (isOriginWhitelisted(origin)) {
+                    log.debug(
+                            "Using whitelisted Referer origin for redirect: {}",
+                            origin);
+                    return origin + "/auth/callback";
+                } else {
+                    log.warn(
+                            "Referer origin {} not in CORS whitelist, falling back to request origin",
+                            origin);
+                }
             } catch (java.net.MalformedURLException e) {
-                // Fall back to other methods if referer is malformed
+                log.warn("Malformed Referer URL, falling back to request origin: {}", referer);
             }
         }
 
-        // Fall back to building from request host/port
+        // Fall back to building from request host/port (always safe)
         String scheme = request.getScheme();
         String serverName = request.getServerName();
         int serverPort = request.getServerPort();
@@ -182,6 +234,7 @@ public class CustomOAuth2AuthenticationSuccessHandler
             origin.append(":").append(serverPort);
         }
 
-        return origin.toString() + "/auth/callback#access_token=" + jwt;
+        log.debug("Using request origin for redirect: {}", origin);
+        return origin + "/auth/callback";
     }
 }

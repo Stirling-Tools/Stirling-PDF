@@ -41,14 +41,9 @@ public class JwtService implements JwtServiceInterface {
     private static final String ISSUER = "https://stirling.com";
     private static final long EXPIRATION = 3600000;
 
-    private final KeyPersistenceServiceInterface keyPersistenceService;
-    private final boolean v2Enabled;
-
+    private final
     @Autowired
-    public JwtService(
-            @Qualifier("v2Enabled") boolean v2Enabled,
-            KeyPersistenceServiceInterface keyPersistenceService) {
-        this.v2Enabled = v2Enabled;
+    public JwtService(KeyPersistenceServiceInterface keyPersistenceService) {
         this.keyPersistenceService = keyPersistenceService;
         log.info("JwtService initialized");
     }
@@ -266,7 +261,7 @@ public class JwtService implements JwtServiceInterface {
 
     @Override
     public boolean isJwtEnabled() {
-        return v2Enabled;
+        return true; // JWT is always enabled now (V2 is the default)
     }
 
     private String extractKeyId(String token) {
