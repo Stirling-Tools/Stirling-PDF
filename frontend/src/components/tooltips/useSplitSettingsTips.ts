@@ -2,10 +2,12 @@ import { useTranslation } from 'react-i18next';
 import { TooltipContent } from '../../types/tips';
 import { SPLIT_METHODS, type SplitMethod } from '../../constants/splitConstants';
 
-export const useSplitSettingsTips = (method: SplitMethod | ''): TooltipContent | null => {
+/**
+ * Hook that returns tooltip content for ALL split methods
+ * Can be called once and then looked up by method
+ */
+export const useSplitSettingsTips = (): Record<SplitMethod, TooltipContent> => {
   const { t } = useTranslation();
-
-  if (!method) return null;
 
   const tooltipMap: Record<SplitMethod, TooltipContent> = {
     [SPLIT_METHODS.BY_PAGES]: {
@@ -130,5 +132,5 @@ export const useSplitSettingsTips = (method: SplitMethod | ''): TooltipContent |
     }
   };
 
-  return tooltipMap[method];
+  return tooltipMap;
 };

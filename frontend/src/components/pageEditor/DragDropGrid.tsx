@@ -29,6 +29,98 @@ interface DragDropGridProps<T extends DragDropItem> {
   zoomLevel?: number;
 }
 
+type DropSide = 'left' | 'right' | null;
+
+interface DropHint {
+  hoveredId: string | null;
+  dropSide: DropSide;
+}
+
+function resolveDropHint(
+  activeId: string | null,
+  itemRefs: React.MutableRefObject<Map<string, HTMLDivElement>>,
+  cursorX: number,
+  cursorY: number,
+): DropHint {
+  if (!activeId) {
+    return { hoveredId: null, dropSide: null };
+  }
+
+  const rows = new Map<number, Array<{ id: string; rect: DOMRect }>>();
+
+  itemRefs.current.forEach((element, itemId) => {
+    if (!element || itemId === activeId) return;
+
+    const rect = element.getBoundingClientRect();
+    const rowCenter = rect.top + rect.height / 2;
+
+    let row = rows.get(rowCenter);
+    if (!row) {
+      row = [];
+      rows.set(rowCenter, row);
+    }
+    row.push({ id: itemId, rect });
+  });
+
+  let hoveredId: string | null = null;
+  let dropSide: DropSide = null;
+
+  let closestRowY = 0;
+  let closestRowDistance = Infinity;
+
+  rows.forEach((_items, rowY) => {
+    const distance = Math.abs(cursorY - rowY);
+    if (distance < closestRowDistance) {
+      closestRowDistance = distance;
+      closestRowY = rowY;
+    }
+  });
+
+  const closestRow = rows.get(closestRowY);
+  if (!closestRow || closestRow.length === 0) {
+    return { hoveredId: null, dropSide: null };
+  }
+
+  let closestDistance = Infinity;
+  closestRow.forEach(({ id, rect }) => {
+    const distanceToLeft = Math.abs(cursorX - rect.left);
+    const distanceToRight = Math.abs(cursorX - rect.right);
+
+    if (distanceToLeft < closestDistance) {
+      closestDistance = distanceToLeft;
+      hoveredId = id;
+      dropSide = 'left';
+    }
+    if (distanceToRight < closestDistance) {
+      closestDistance = distanceToRight;
+      hoveredId = id;
+      dropSide = 'right';
+    }
+  });
+
+  return { hoveredId, dropSide };
+}
+
+function resolveTargetIndex<T extends DragDropItem>(
+  hoveredId: string | null,
+  dropSide: DropSide,
+  items: T[],
+  fallbackIndex: number | null,
+): number | null {
+  if (hoveredId) {
+    const hoveredIndex = items.findIndex(item => item.id === hoveredId);
+    if (hoveredIndex !== -1) {
+      return hoveredIndex + (dropSide === 'right' ? 1 : 0);
+    }
+  }
+
+  if (fallbackIndex !== null && fallbackIndex !== undefined) {
+    return fallbackIndex + (dropSide === 'right' ? 1 : 0);
+  }
+
+  return null;
+}
+
 // Lightweight wrapper that handles dnd-kit hooks for each visible item
 interface DraggableItemProps<T extends DragDropItem> {
   item: T;
@@ -126,7 +218,7 @@ const DragDropGrid = <T extends DragDropItem>({
   const [activeId, setActiveId] = useState<string | null>(null);
   const [dragPreview, setDragPreview] = useState<{ src: string; rotation: number } | null>(null);
   const [hoveredItemId, setHoveredItemId] = useState<string | null>(null);
-  const [dropSide, setDropSide] = useState<'left' | 'right' | null>(null);
+  const [dropSide, setDropSide] = useState<DropSide>(null);
 
   // Configure sensors for dnd-kit with activation constraint
   // Require 10px movement before drag starts to allow clicks for selection
@@ -156,74 +248,9 @@ const DragDropGrid = <T extends DragDropItem>({
 
       if (rafId === null) {
         rafId = requestAnimationFrame(() => {
-          // Step 1: Group items by rows and find closest row to cursor
-          const rows = new Map<number, Array<{ id: string; element: HTMLDivElement; rect: DOMRect }>>();
-
-          itemRefs.current.forEach((element, itemId) => {
-            // Skip the item being dragged
-            if (itemId === activeId) return;
-
-            const rect = element.getBoundingClientRect();
-            const rowCenter = rect.top + rect.height / 2;
-
-            // Group items by their vertical center position (items in same row will have similar centers)
-            let foundRow = false;
-            rows.forEach((items, rowY) => {
-              if (Math.abs(rowY - rowCenter) < rect.height / 4) {
-                items.push({ id: itemId, element, rect });
-                foundRow = true;
-              }
-            });
-
-            if (!foundRow) {
-              rows.set(rowCenter, [{ id: itemId, element, rect }]);
-            }
-          });
-
-          // Step 2: Find the closest row to cursor Y position
-          let closestRowY = 0;
-          let closestRowDistance = Infinity;
-          Array.from(rows.keys()).forEach((rowY) => {
-            const distance = Math.abs(cursorY - rowY);
-            if (distance < closestRowDistance) {
-              closestRowDistance = distance;
-              closestRowY = rowY;
-            }
-          });
-
-          const closestRow = rows.get(closestRowY);
-          if (!closestRow || closestRow.length === 0) {
-            setHoveredItemId(null);
-            setDropSide(null);
-            rafId = null;
-            return;
-          }
-
-          // Step 3: Within the closest row, find the closest edge to cursor X position
-          let closestItemId: string | null = null;
-          let closestDistance = Infinity;
-          let closestSide: 'left' | 'right' = 'left';
-
-          closestRow.forEach(({ id, rect }) => {
-            // Calculate distance to left and right edges
-            const distanceToLeft = Math.abs(cursorX - rect.left);
-            const distanceToRight = Math.abs(cursorX - rect.right);
-
-            // Find the closest edge
-            if (distanceToLeft < closestDistance) {
-              closestDistance = distanceToLeft;
-              closestItemId = id;
-              closestSide = 'left';
-            }
-            if (distanceToRight < closestDistance) {
-              closestDistance = distanceToRight;
-              closestItemId = id;
-              closestSide = 'right';
-            }
-          });
-
-          setHoveredItemId(closestItemId);
-          setDropSide(closestSide);
+          const hint = resolveDropHint(activeId, itemRefs, cursorX, cursorY);
+          setHoveredItemId(hint.hoveredId);
+          setDropSide(hint.dropSide);
           rafId = null;
         });
       }
@@ -442,21 +469,13 @@ const DragDropGrid = <T extends DragDropItem>({
 
     const sourcePageNumber = activeData.pageNumber;
 
-    let targetIndex: number | null = null;
-
-    if (hoveredItemId) {
-      const hoveredIndex = visibleItems.findIndex(item => item.id === hoveredItemId);
-      if (hoveredIndex !== -1) {
-        targetIndex = hoveredIndex + (finalDropSide === 'right' ? 1 : 0);
-      }
-    }
-
-    if (targetIndex === null && over) {
-      const overData = over.data.current;
-      if (overData) {
-        targetIndex = overData.index + (finalDropSide === 'right' ? 1 : 0);
-      }
-    }
+    const overData = over?.data.current;
+    const targetIndex = resolveTargetIndex(
+      hoveredItemId,
+      finalDropSide,
+      visibleItems,
+      overData ? overData.index : null
+    );
 
     if (targetIndex === null) return;
 

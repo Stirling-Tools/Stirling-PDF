@@ -8,29 +8,9 @@ import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import { LocalIcon } from "./LocalIcon";
 import { WorkbenchType, isValidWorkbench } from '../../types/workbench';
 import { PageEditorFileDropdown } from './PageEditorFileDropdown';
-import { usePageEditor } from '../../contexts/PageEditorContext';
-import { useFileState } from '../../contexts/FileContext';
-import { useToolWorkflow } from '../../contexts/ToolWorkflowContext';
-import { FileId } from '../../types/file';
 import type { CustomWorkbenchViewInstance } from '../../contexts/ToolWorkflowContext';
 import { FileDropdownMenu } from './FileDropdownMenu';
-
-// Local interface for PageEditor file display
-interface PageEditorFile {
-  fileId: FileId;
-  name: string;
-  versionNumber?: number;
-  isSelected: boolean;
-}
-
-interface PageEditorState {
-  files: PageEditorFile[];
-  selectedCount: number;
-  totalCount: number;
-  onToggleSelection: (fileId: FileId) => void;
-  onReorder: (fromIndex: number, toIndex: number) => void;
-  fileColorMap: Map<string, number>;
-}
+import { usePageEditorDropdownState, PageEditorDropdownState } from '../pageEditor/hooks/usePageEditorDropdownState';
 
 const viewOptionStyle: React.CSSProperties = {
   display: 'inline-flex',
@@ -48,7 +28,7 @@ const createViewOptions = (
   activeFiles: Array<{ fileId: string; name: string; versionNumber?: number }>,
   currentFileIndex: number,
   onFileSelect?: (index: number) => void,
-  pageEditorState?: PageEditorState,
+  pageEditorState?: PageEditorDropdownState,
   customViews?: CustomWorkbenchViewInstance[]
 ) => {
   // Viewer dropdown logic
@@ -169,115 +149,7 @@ const TopControls = ({
   const { isRainbowMode } = useRainbowThemeContext();
   const [switchingTo, setSwitchingTo] = useState<WorkbenchType | null>(null);
 
-  // Get FileContext state and PageEditor coordination functions
-  const { state, selectors } = useFileState();
-  const pageEditorContext = usePageEditor();
-  const {
-    toggleFileSelection,
-    reorderFiles: pageEditorReorderFiles,
-    fileOrder: pageEditorFileOrder,
-  } = pageEditorContext;
-
-  // Derive page editor files from PageEditorContext.fileOrder (page editor workspace order)
-  // Filter to only show PDF files (PageEditor only supports PDFs)
-  // Use stable string keys to prevent infinite loops
-  // Cache file objects to prevent infinite re-renders from new object references
-  const fileOrderKey = pageEditorFileOrder.join(',');
-  const selectedIdsKey = [...state.ui.selectedFileIds].sort().join(',');
-  const filesSignature = selectors.getFilesSignature();
-
-  const fileObjectsRef = React.useRef(new Map<FileId, PageEditorFile>());
-
-  const pageEditorFiles = useMemo<PageEditorFile[]>(() => {
-    const cache = fileObjectsRef.current;
-    const newFiles: PageEditorFile[] = [];
-
-    // Use PageEditorContext.fileOrder instead of state.files.ids
-    pageEditorFileOrder.forEach(fileId => {
-      const stub = selectors.getStirlingFileStub(fileId);
-      const isSelected = state.ui.selectedFileIds.includes(fileId);
-      const isPdf = stub?.name?.toLowerCase().endsWith('.pdf') ?? false;
-
-      if (!isPdf) return; // Skip non-PDFs
-
-      const cached = cache.get(fileId);
-
-      // Check if data actually changed (compare by fileId, not position)
-      if (cached &&
-          cached.fileId === fileId &&
-          cached.name === (stub?.name || '') &&
-          cached.versionNumber === stub?.versionNumber &&
-          cached.isSelected === isSelected) {
-        // Reuse existing object reference
-        newFiles.push(cached);
-      } else {
-        // Create new object only if data changed
-        const newFile: PageEditorFile = {
-          fileId,
-          name: stub?.name || '',
-          versionNumber: stub?.versionNumber,
-          isSelected,
-        };
-        cache.set(fileId, newFile);
-        newFiles.push(newFile);
-      }
-    });
-
-    // Clean up removed files from cache
-    const activeIds = new Set(newFiles.map(f => f.fileId));
-    for (const cachedId of cache.keys()) {
-      if (!activeIds.has(cachedId)) {
-        cache.delete(cachedId);
-      }
-    }
-
-    return newFiles;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fileOrderKey, selectedIdsKey, filesSignature, pageEditorFileOrder, state.ui.selectedFileIds, selectors]);
-
-  // Convert to counts
-  const selectedCount = pageEditorFiles?.filter(f => f.isSelected).length || 0;
-  const totalCount = pageEditorFiles?.length || 0;
-
-  // Create stable file IDs string for dependency (only changes when file set changes)
-  const fileIdsString = (pageEditorFiles || []).map(f => f.fileId).sort().join(',');
-
-  // Track color assignments by insertion order (files keep their color)
-  const fileColorAssignments = React.useRef(new Map<string, number>());
-
-  // Create stable file color mapping (preserves colors on reorder)
-  const fileColorMap = useMemo(() => {
-    const map = new Map<string, number>();
-    if (!pageEditorFiles || pageEditorFiles.length === 0) return map;
-
-    const allFileIds = (pageEditorFiles || []).map(f => f.fileId as string);
-
-    // Assign colors to new files based on insertion order
-    allFileIds.forEach(fileId => {
-      if (!fileColorAssignments.current.has(fileId)) {
-        fileColorAssignments.current.set(fileId, fileColorAssignments.current.size);
-      }
-    });
-
-    // Clean up removed files
-    const activeSet = new Set(allFileIds);
-    for (const fileId of fileColorAssignments.current.keys()) {
-      if (!activeSet.has(fileId)) {
-        fileColorAssignments.current.delete(fileId);
-      }
-    }
-
-    return fileColorAssignments.current;
-  }, [fileIdsString]);
-
-  // Get pageEditorFunctions from ToolWorkflowContext
-  const { pageEditorFunctions } = useToolWorkflow();
-
-  // Memoize the reorder handler
-  const handleReorder = useCallback((fromIndex: number, toIndex: number) => {
-    // Single source of truth: PageEditorContext handles file->page reorder propagation
-    pageEditorReorderFiles(fromIndex, toIndex);
-  }, [pageEditorReorderFiles]);
+  const pageEditorState = usePageEditorDropdownState();
 
   const handleViewChange = useCallback((view: string) => {
     if (!isValidWorkbench(view)) {
@@ -300,16 +172,6 @@ const TopControls = ({
       });
     });
   }, [setCurrentView]);
-
-  // Memoize pageEditorState object to prevent recreating on every render
-  const pageEditorState = useMemo<PageEditorState>(() => ({
-    files: pageEditorFiles,
-    selectedCount,
-    totalCount,
-    onToggleSelection: toggleFileSelection,
-    onReorder: handleReorder,
-    fileColorMap,
-  }), [pageEditorFiles, selectedCount, totalCount, toggleFileSelection, handleReorder, fileColorMap]);
 
   // Memoize view options to prevent SegmentedControl re-renders
   const viewOptions = useMemo(() => createViewOptions(

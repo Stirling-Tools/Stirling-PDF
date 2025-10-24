@@ -32,6 +32,7 @@ import { usePageDocument } from './hooks/usePageDocument';
 import { usePageEditorState } from './hooks/usePageEditorState';
 import { parseSelection } from "../../utils/bulkselection/parseSelection";
 import { usePageEditorRightRailButtons } from "./pageEditorRightRailButtons";
+import { useFileColorMap } from "./hooks/useFileColorMap";
 
 export interface PageEditorProps {
   onFunctionsReady?: (functions: PageEditorFunctions) => void;
@@ -981,30 +982,7 @@ const PageEditor = ({
   const displayedPages = displayDocument?.pages || [];
 
   // Track color assignments by insertion order (files keep their color)
-  const fileColorAssignments = useRef(new Map<FileId, number>());
-
-  // Create a stable mapping of fileId to color index (preserves colors on reorder)
-  const fileColorIndexMap = useMemo(() => {
-    const assignments = fileColorAssignments.current;
-
-    // Remove colors for files that no longer exist
-    const activeIds = new Set(orderedFileIds);
-    for (const fileId of Array.from(assignments.keys())) {
-      if (!activeIds.has(fileId)) {
-        assignments.delete(fileId);
-      }
-    }
-
-    // Assign colors to new files based on insertion order
-    orderedFileIds.forEach(fileId => {
-      if (!assignments.has(fileId)) {
-        assignments.set(fileId, assignments.size);
-      }
-    });
-
-    // Clean up removed files (only remove files that are completely gone, not just deselected)
-    return assignments;
-  }, [orderedFileIds.join(',')]); // Only recalculate when the set of files changes, not the order
+  const fileColorIndexMap = useFileColorMap(orderedFileIds);
 
   return (
     <Box
