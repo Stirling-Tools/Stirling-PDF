@@ -178,15 +178,6 @@ subprojects {
         dependsOn(rootProject.tasks.writeVersion)
     }
 
-    tasks.named("clean") {
-        doLast {
-            File sonarDir = new File(buildDir, "sonar-resolver")
-            if (!sonarDir.exists()) {
-                sonarDir.mkdirs()
-            }
-        }
-    }
-
     if (name == 'stirling-pdf') {
         apply plugin: 'org.springdoc.openapi-gradle-plugin'
 
@@ -232,6 +223,21 @@ tasks.withType(JavaCompile).configureEach {
 }
 
 def allProjects = ((subprojects as Set<Project>) + project) as Set<Project>
+
+def ensureSonarResolverDir = { Project proj ->
+    File sonarDir = new File(proj.buildDir, "sonar-resolver")
+    if (!sonarDir.exists()) {
+        sonarDir.mkdirs()
+    }
+}
+
+configure(allprojects) {
+    tasks.matching { it.name == "sonarResolver" }.configureEach {
+        doFirst {
+            ensureSonarResolverDir(project)
+        }
+    }
+}
 
 licenseReport {
     projects = allProjects
