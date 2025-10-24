@@ -1,36 +1,34 @@
 import { Suspense } from "react";
 import { Routes, Route } from "react-router-dom";
-import { RainbowThemeProvider } from "./components/shared/RainbowThemeProvider";
-import { FileContextProvider } from "./contexts/FileContext";
-import { NavigationProvider } from "./contexts/NavigationContext";
-import { ToolRegistryProvider } from "./contexts/ToolRegistryProvider";
-import { FilesModalProvider } from "./contexts/FilesModalContext";
-import { ToolWorkflowProvider } from "./contexts/ToolWorkflowContext";
-import { HotkeyProvider } from "./contexts/HotkeyContext";
-import { SidebarProvider } from "./contexts/SidebarContext";
-import { PreferencesProvider } from "./contexts/PreferencesContext";
-import { OnboardingProvider } from "./contexts/OnboardingContext";
-import { TourOrchestrationProvider } from "./contexts/TourOrchestrationContext";
-import ErrorBoundary from "./components/shared/ErrorBoundary";
-import OnboardingTour from "./components/onboarding/OnboardingTour";
+import { RainbowThemeProvider } from "@app/components/shared/RainbowThemeProvider";
+import { FileContextProvider } from "@app/contexts/FileContext";
+import { NavigationProvider } from "@app/contexts/NavigationContext";
+import { ToolRegistryProvider } from "@app/contexts/ToolRegistryProvider";
+import { FilesModalProvider } from "@app/contexts/FilesModalContext";
+import { ToolWorkflowProvider } from "@app/contexts/ToolWorkflowContext";
+import { HotkeyProvider } from "@app/contexts/HotkeyContext";
+import { SidebarProvider } from "@app/contexts/SidebarContext";
+import { PreferencesProvider } from "@app/contexts/PreferencesContext";
+import { OnboardingProvider } from "@app/contexts/OnboardingContext";
+import { TourOrchestrationProvider } from "@app/contexts/TourOrchestrationContext";
+import ErrorBoundary from "@app/components/shared/ErrorBoundary";
+import OnboardingTour from "@app/components/onboarding/OnboardingTour";
 
 // Import auth components
-import { AuthProvider } from "./auth/UseSession";
-import Landing from "./routes/Landing";
-import Login from "./routes/Login";
-import Signup from "./routes/Signup";
-import AuthCallback from "./routes/AuthCallback";
+import { AuthBoundary } from "@app/auth/AuthBoundary";
+import Landing from "@app/routes/Landing";
+import { getAuthRoutes } from "@app/routes/AuthRoutes";
 
 // Import global styles
-import "./styles/tailwind.css";
-import "./styles/cookieconsent.css";
+import "@app/styles/tailwind.css";
+import "@app/styles/cookieconsent.css";
 import "./index.css";
-import { RightRailProvider } from "./contexts/RightRailContext";
-import { ViewerProvider } from "./contexts/ViewerContext";
-import { SignatureProvider } from "./contexts/SignatureContext";
+import { RightRailProvider } from "@app/contexts/RightRailContext";
+import { ViewerProvider } from "@app/contexts/ViewerContext";
+import { SignatureProvider } from "@app/contexts/SignatureContext";
 
 // Import file ID debugging helpers (development only)
-import "./utils/fileIdSafety";
+import "@app/utils/fileIdSafety";
 
 // Loading component for i18next suspense
 const LoadingFallback = () => (
@@ -49,18 +47,16 @@ const LoadingFallback = () => (
 );
 
 export default function App() {
+  const authRoutes = getAuthRoutes();
+
   return (
     <Suspense fallback={<LoadingFallback />}>
     <PreferencesProvider>
         <RainbowThemeProvider>
           <ErrorBoundary>
-            <AuthProvider>
+            <AuthBoundary>
               <Routes>
-                {/* Auth routes - no FileContext or other providers needed */}
-                <Route path="/login" element={<Login />} />
-                <Route path="/signup" element={<Signup />} />
-                <Route path="/auth/callback" element={<AuthCallback />} />
-
+                {authRoutes}
                 {/* Main app routes - wrapped with all providers */}
                 <Route
                   path="/*"
@@ -94,7 +90,7 @@ export default function App() {
                   }
                 />
               </Routes>
-            </AuthProvider>
+            </AuthBoundary>
           </ErrorBoundary>
         </RainbowThemeProvider>
       </PreferencesProvider>
