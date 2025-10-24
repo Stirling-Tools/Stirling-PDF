@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { usePreferences } from '@app/contexts/PreferencesContext';
 import { useMediaQuery } from '@mantine/hooks';
-import { useAuth } from '@app/auth/UseSession';
+import { useOnboardingAccess } from '@app/onboarding/useOnboardingAccess';
 
 interface OnboardingContextValue {
   isOpen: boolean;
@@ -19,11 +19,18 @@ const OnboardingContext = createContext<OnboardingContextValue | undefined>(unde
 
 export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { preferences, updatePreference } = usePreferences();
-  const { session, loading } = useAuth();
+  const { allowed, loading } = useOnboardingAccess();
   const [isOpen, setIsOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const isMobile = useMediaQuery("(max-width: 1024px)");
+
+  useEffect(() => {
+    if (!allowed) {
+      setShowWelcomeModal(false);
+      setIsOpen(false);
+    }
+  }, [allowed]);
 
   // Auto-show welcome modal for first-time users after preferences load
   // Only show after user has seen the tool panel mode prompt
@@ -31,13 +38,11 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   // IMPORTANT: Only show welcome modal if user is authenticated or login is disabled
   useEffect(() => {
     if (!loading && !preferences.hasCompletedOnboarding && preferences.toolPanelModePromptSeen && !isMobile) {
-      // Only show welcome modal if user is authenticated (session exists)
-      // This prevents the modal from showing on login screens when security is enabled
-      if (session) {
+      if (allowed) {
         setShowWelcomeModal(true);
       }
     }
-  }, [preferences.hasCompletedOnboarding, preferences.toolPanelModePromptSeen, isMobile, session, loading]);
+  }, [preferences.hasCompletedOnboarding, preferences.toolPanelModePromptSeen, isMobile, allowed, loading]);
 
   const startTour = useCallback(() => {
     setCurrentStep(0);
