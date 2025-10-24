@@ -470,7 +470,7 @@ const DragDropGrid = <T extends DragDropItem>({
     const sourcePageNumber = activeData.pageNumber;
 
     const overData = over?.data.current;
-    const targetIndex = resolveTargetIndex(
+    let targetIndex = resolveTargetIndex(
       hoveredItemId,
       finalDropSide,
       visibleItems,

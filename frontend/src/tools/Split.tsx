@@ -55,8 +55,7 @@ const Split = (props: BaseToolProps) => {
       {
         title: t("split.steps.chooseMethod", "Choose Method"),
         isCollapsed: !!base.params.parameters.method, // Collapse when method is selected
-        onCollapsedClick: () => base.params.updateParameter('method', '')
-        ,
+        onCollapsedClick: () => base.params.updateParameter('method', ''),
         tooltip: methodTips,
         content: (
           <CardSelector<SplitMethod, MethodOption>
@@ -91,7 +90,7 @@ const Split = (props: BaseToolProps) => {
     review: {
       isVisible: base.hasResults,
       operation: base.operation,
-      title: "Split Results",
+      title: t("split.resultsTitle", "Split Results"),
       onFileClick: base.handleThumbnailClick,
       onUndo: base.handleUndo,
     },
