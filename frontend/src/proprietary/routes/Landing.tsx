@@ -1,8 +1,8 @@
 import { Navigate, useLocation } from 'react-router-dom'
-import { useAuth } from '../auth/UseSession'
-import { useAppConfig } from '../hooks/useAppConfig'
-import HomePage from '../pages/HomePage'
-import Login from './Login'
+import { useAuth } from '@app/auth/UseSession'
+import { useAppConfig } from '@app/hooks/useAppConfig'
+import HomePage from '@app/pages/HomePage'
+import Login from '@app/routes/Login'
 
 /**
  * Landing component - Smart router based on authentication status

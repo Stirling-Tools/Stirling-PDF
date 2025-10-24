@@ -1,5 +1,5 @@
 
-import { BASE_PATH } from '../../constants/app';
+import { BASE_PATH } from '@app/constants/app';
 
 interface LoginHeaderProps {
   title: string
