@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { usePreferences } from './PreferencesContext';
 import { useMediaQuery } from '@mantine/hooks';
+import { useAuth } from '../auth/UseSession';
 
 interface OnboardingContextValue {
   isOpen: boolean;
@@ -18,6 +19,7 @@ const OnboardingContext = createContext<OnboardingContextValue | undefined>(unde
 
 export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { preferences, updatePreference } = usePreferences();
+  const { session, loading } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
@@ -26,11 +28,16 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   // Auto-show welcome modal for first-time users after preferences load
   // Only show after user has seen the tool panel mode prompt
   // Also, don't show tour on mobile devices because it feels clunky
+  // IMPORTANT: Only show welcome modal if user is authenticated or login is disabled
   useEffect(() => {
-    if (!preferences.hasCompletedOnboarding && preferences.toolPanelModePromptSeen && !isMobile) {
-      setShowWelcomeModal(true);
+    if (!loading && !preferences.hasCompletedOnboarding && preferences.toolPanelModePromptSeen && !isMobile) {
+      // Only show welcome modal if user is authenticated (session exists)
+      // This prevents the modal from showing on login screens when security is enabled
+      if (session) {
+        setShowWelcomeModal(true);
+      }
     }
-  }, [preferences.hasCompletedOnboarding, preferences.toolPanelModePromptSeen, isMobile]);
+  }, [preferences.hasCompletedOnboarding, preferences.toolPanelModePromptSeen, isMobile, session, loading]);
 
   const startTour = useCallback(() => {
     setCurrentStep(0);

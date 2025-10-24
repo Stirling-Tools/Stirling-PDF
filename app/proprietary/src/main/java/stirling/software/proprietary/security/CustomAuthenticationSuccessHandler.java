@@ -57,7 +57,6 @@ public class CustomAuthenticationSuccessHandler
             String jwt =
                     jwtService.generateToken(
                             authentication, Map.of("authType", AuthenticationType.WEB));
-            jwtService.addToken(response, jwt);
             log.debug("JWT generated for user: {}", userName);
 
             getRedirectStrategy().sendRedirect(request, response, "/");

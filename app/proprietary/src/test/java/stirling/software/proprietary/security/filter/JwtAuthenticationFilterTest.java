@@ -127,7 +127,6 @@ class JwtAuthenticationFilterTest {
                     .setAuthentication(any(UsernamePasswordAuthenticationToken.class));
             verify(jwtService)
                     .generateToken(any(UsernamePasswordAuthenticationToken.class), eq(claims));
-            verify(jwtService).addToken(response, newToken);
             verify(filterChain).doFilter(request, response);
         }
     }
