@@ -8,7 +8,6 @@ import { StirlingFileStub } from "../../types/fileContext";
 import { pdfExportService } from "../../services/pdfExportService";
 import { documentManipulationService } from "../../services/documentManipulationService";
 import { exportProcessedDocumentsToFiles } from "../../services/pdfExportHelpers";
-import { createStirlingFilesAndStubs } from "../../services/fileStubHelpers";
 // Thumbnail generation is now handled by individual PageThumbnail components
 import './PageEditor.module.css';
 import PageThumbnail from './PageThumbnail';
@@ -821,14 +820,11 @@ const PageEditor = ({
       const exportFilename = getExportFilename();
       const files = await exportProcessedDocumentsToFiles(processedDocuments, sourceFiles, exportFilename);
 
-      // Step 3: Create StirlingFiles and stubs for version history
-      const parentStub = selectors.getStirlingFileStub(selectedFileIds[0]);
-      if (!parentStub) throw new Error('Parent stub not found');
-
-      const { stirlingFiles, stubs } = await createStirlingFilesAndStubs(files, parentStub, 'multiTool');
-
-      // Step 4: Consume files (replace in context)
-      await actions.consumeFiles(selectedFileIds, stirlingFiles, stubs);
+      // Step 3: Add merged output as new files while keeping originals
+      const newStirlingFiles = await actions.addFiles(files, { selectFiles: true });
+      if (newStirlingFiles.length > 0) {
+        actions.setSelectedFiles(newStirlingFiles.map(file => file.fileId));
+      }
 
       setHasUnsavedChanges(false);
       setExportLoading(false);
@@ -836,7 +832,7 @@ const PageEditor = ({
       console.error('Apply changes failed:', error);
       setExportLoading(false);
     }
-  }, [displayDocument, initialDocument, splitPositions, selectedFileIds, getSourceFiles, getExportFilename, actions, selectors, setHasUnsavedChanges]);
+  }, [displayDocument, initialDocument, splitPositions, getSourceFiles, getExportFilename, actions, setHasUnsavedChanges]);
 
 
   const closePdf = useCallback(() => {
