@@ -178,6 +178,15 @@ subprojects {
         dependsOn(rootProject.tasks.writeVersion)
     }
 
+    tasks.named("clean") {
+        doLast {
+            File sonarDir = new File(buildDir, "sonar-resolver")
+            if (!sonarDir.exists()) {
+                sonarDir.mkdirs()
+            }
+        }
+    }
+
     if (name == 'stirling-pdf') {
         apply plugin: 'org.springdoc.openapi-gradle-plugin'
 
