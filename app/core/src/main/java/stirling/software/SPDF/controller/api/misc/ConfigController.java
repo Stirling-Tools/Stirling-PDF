@@ -5,6 +5,8 @@ import java.util.Map;
 
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -14,6 +16,7 @@ import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.common.annotations.api.ConfigApi;
 import stirling.software.common.configuration.AppConfig;
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.model.enumeration.Role;
 import stirling.software.common.service.ServerCertificateServiceInterface;
 
 @ConfigApi
@@ -56,6 +59,21 @@ public class ConfigController {
 
             // Security settings
             configData.put("enableLogin", applicationProperties.getSecurity().getEnableLogin());
+
+            // Check if user is admin based on authentication
+            boolean isAdmin = false;
+            try {
+                Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+                if (authentication != null && authentication.isAuthenticated()
+                        && !"anonymousUser".equals(authentication.getPrincipal())) {
+                    // Check if user has ROLE_ADMIN authority
+                    isAdmin = authentication.getAuthorities().stream()
+                            .anyMatch(auth -> Role.ADMIN.getRoleId().equals(auth.getAuthority()));
+                }
+            } catch (Exception e) {
+                // If security is not enabled or there's an error, isAdmin remains false
+            }
+            configData.put("isAdmin", isAdmin);
 
             // System settings
             configData.put(

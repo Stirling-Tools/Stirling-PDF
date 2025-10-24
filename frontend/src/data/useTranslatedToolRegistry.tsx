@@ -13,7 +13,15 @@ import RemovePages from "../tools/RemovePages";
 import ReorganizePages from "../tools/ReorganizePages";
 import { reorganizePagesOperationConfig } from "../hooks/tools/reorganizePages/useReorganizePagesOperation";
 import RemovePassword from "../tools/RemovePassword";
-import { SubcategoryId, ToolCategoryId, ToolRegistry } from "./toolsTaxonomy";
+import {
+  SubcategoryId,
+  ToolCategoryId,
+  ToolRegistry,
+  RegularToolRegistry,
+  SuperToolRegistry,
+  LinkToolRegistry,
+} from "./toolsTaxonomy";
+import { isSuperToolId, isLinkToolId } from '../types/toolId';
 import AdjustContrast from "../tools/AdjustContrast";
 import AdjustContrastSingleStepSettings from "../components/tools/adjustContrast/AdjustContrastSingleStepSettings";
 import { adjustContrastOperationConfig } from "../hooks/tools/adjustContrast/useAdjustContrastOperation";
@@ -108,14 +116,19 @@ import RemovePagesSettings from "../components/tools/removePages/RemovePagesSett
 import RemoveBlanksSettings from "../components/tools/removeBlanks/RemoveBlanksSettings";
 import AddPageNumbersAutomationSettings from "../components/tools/addPageNumbers/AddPageNumbersAutomationSettings";
 import OverlayPdfsSettings from "../components/tools/overlayPdfs/OverlayPdfsSettings";
-
-const showPlaceholderTools = true; // Show all tools; grey out unavailable ones in UI
-
-// Convert tool supported file formats
+import ValidateSignature from "../tools/ValidateSignature";
+import Automate from "../tools/Automate";
 import { CONVERT_SUPPORTED_FORMATS } from "../constants/convertSupportedFornats";
 
+export interface TranslatedToolCatalog {
+  allTools: ToolRegistry;
+  regularTools: RegularToolRegistry;
+  superTools: SuperToolRegistry;
+  linkTools: LinkToolRegistry;
+}
+
 // Hook to get the translated tool registry
-export function useFlatToolRegistry(): ToolRegistry {
+export function useTranslatedToolCatalog(): TranslatedToolCatalog {
   const { t } = useTranslation();
 
   return useMemo(() => {
@@ -281,10 +294,12 @@ export function useFlatToolRegistry(): ToolRegistry {
       validateSignature: {
         icon: <LocalIcon icon="verified-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.validateSignature.title", "Validate PDF Signature"),
-        component: null,
+        component: ValidateSignature,
         description: t("home.validateSignature.desc", "Verify digital signatures and certificates in PDF documents"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.VERIFICATION,
+        maxFiles: -1,
+        endpoints: ["validate-signature"],
         synonyms: getSynonyms(t, "validateSignature"),
         automationSettings: null
       },
@@ -561,7 +576,7 @@ export function useFlatToolRegistry(): ToolRegistry {
       automate: {
         icon: <LocalIcon icon="automation-outline" width="1.5rem" height="1.5rem" />,
         name: t("home.automate.title", "Automate"),
-        component: React.lazy(() => import("../tools/Automate")),
+        component: Automate,
         description: t(
           "home.automate.desc",
           "Build multi-step workflows by chaining together PDF actions. Ideal for recurring tasks."
@@ -826,15 +841,26 @@ export function useFlatToolRegistry(): ToolRegistry {
       },
     };
 
-    if (showPlaceholderTools) {
-      return allTools;
-    }
-    const filteredTools = Object.keys(allTools)
-      .filter((key) => allTools[key as ToolId].component !== null || allTools[key as ToolId].link)
-      .reduce((obj, key) => {
-        obj[key as ToolId] = allTools[key as ToolId];
-        return obj;
-      }, {} as ToolRegistry);
-    return filteredTools;
+    const regularTools = {} as RegularToolRegistry;
+    const superTools = {} as SuperToolRegistry;
+    const linkTools = {} as LinkToolRegistry;
+
+    Object.entries(allTools).forEach(([key, entry]) => {
+      const toolId = key as ToolId;
+      if (isSuperToolId(toolId)) {
+        superTools[toolId] = entry;
+      } else if (isLinkToolId(toolId)) {
+        linkTools[toolId] = entry;
+      } else {
+        regularTools[toolId] = entry;
+      }
+    });
+
+    return {
+      allTools,
+      regularTools,
+      superTools,
+      linkTools,
+    };
   }, [t]); // Only re-compute when translations change
 }

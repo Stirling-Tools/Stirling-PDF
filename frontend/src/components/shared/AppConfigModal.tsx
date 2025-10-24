@@ -5,6 +5,7 @@ import LocalIcon from './LocalIcon';
 import Overview from './config/configSections/Overview';
 import { createConfigNavSections } from './config/configNavSections';
 import { NavKey } from './config/types';
+import { useAppConfig } from '../../hooks/useAppConfig';
 import './AppConfigModal.css';
 import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from '../../styles/zIndex';
 
@@ -16,6 +17,7 @@ interface AppConfigModalProps {
 const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
   const [active, setActive] = useState<NavKey>('overview');
   const isMobile = useMediaQuery("(max-width: 1024px)");
+  const { config } = useAppConfig();
 
   useEffect(() => {
     const handler = (ev: Event) => {
@@ -44,8 +46,8 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
     console.log('Logout placeholder for SaaS compatibility');
   };
 
-  // TODO: Replace with actual role check from JWT/auth context
-  const isAdmin = true; // Emulated admin role for now
+  // Get isAdmin from app config (based on JWT role)
+  const isAdmin = config?.isAdmin ?? false;
 
   // Left navigation structure and icons
   const configNavSections = useMemo(() =>

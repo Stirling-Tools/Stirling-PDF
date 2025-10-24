@@ -5,7 +5,8 @@ import { Group, useMantineColorScheme } from "@mantine/core";
 import { useSidebarContext } from "../contexts/SidebarContext";
 import { useDocumentMeta } from "../hooks/useDocumentMeta";
 import { useAppConfig } from "../hooks/useAppConfig";
-import { BASE_PATH, getBaseUrl } from "../constants/app";
+import { BASE_PATH } from "../constants/app";
+import { useBaseUrl } from "../hooks/useBaseUrl";
 import { useMediaQuery } from "@mantine/hooks";
 import AppsIcon from '@mui/icons-material/AppsRounded';
 
@@ -137,7 +138,7 @@ export default function HomePage() {
     }
   }, [isMobile, activeMobileView, selectedTool, setLeftPanelView]);
 
-  const baseUrl = getBaseUrl();
+  const baseUrl = useBaseUrl();
 
   // Update document meta when tool changes
   const appName = config?.appNameNavbar || 'Stirling PDF';

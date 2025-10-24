@@ -5,6 +5,7 @@ import { useToolWorkflow } from '../../contexts/ToolWorkflowContext';
 import { useFileHandler } from '../../hooks/useFileHandler';
 import { useFileState } from '../../contexts/FileContext';
 import { useNavigationState, useNavigationActions } from '../../contexts/NavigationContext';
+import { isBaseWorkbench } from '../../types/workbench';
 import { useViewer } from '../../contexts/ViewerContext';
 import { useAppConfig } from '../../hooks/useAppConfig';
 import './Workbench.css';
@@ -35,7 +36,8 @@ export default function Workbench() {
     sidebarsVisible,
     setPreviewFile,
     setPageEditorFunctions,
-    setSidebarsVisible
+    setSidebarsVisible,
+    customWorkbenchViews,
   } = useToolWorkflow();
 
   const { handleToolSelect } = useToolWorkflow();
@@ -139,15 +141,21 @@ export default function Workbench() {
         );
 
       default:
-        return (
-          <LandingPage/>
-        );
+        if (!isBaseWorkbench(currentView)) {
+          const customView = customWorkbenchViews.find((view) => view.workbenchId === currentView && view.data != null);
+          if (customView) {
+            const CustomComponent = customView.component;
+            return <CustomComponent data={customView.data} />;
+          }
+        }
+        return <LandingPage />;
     }
   };
 
   return (
     <Box
       className="flex-1 h-full min-w-80 relative flex flex-col"
+      data-tour="workbench"
       style={
         isRainbowMode
           ? {} // No background color in rainbow mode
@@ -159,6 +167,7 @@ export default function Workbench() {
         <TopControls
           currentView={currentView}
           setCurrentView={setCurrentView}
+          customViews={customWorkbenchViews}
           activeFiles={activeFiles.map(f => {
             const stub = selectors.getStirlingFileStub(f.fileId);
             return { fileId: f.fileId, name: f.name, versionNumber: stub?.versionNumber };

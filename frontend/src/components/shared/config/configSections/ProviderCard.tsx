@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Paper, Group, Text, Badge, Button, Collapse, Stack, TextInput, Switch, PasswordInput } from '@mantine/core';
+import { Paper, Group, Text, Badge, Button, Collapse, Stack, TextInput, Textarea, Switch, PasswordInput } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import LocalIcon from '../../LocalIcon';
 import { Provider, ProviderField } from './providerDefinitions';
@@ -81,14 +81,13 @@ export default function ProviderCard({
 
       case 'textarea':
         return (
-          <TextInput
+          <Textarea
             key={field.key}
             label={field.label}
             description={field.description}
             placeholder={field.placeholder}
             value={value}
             onChange={(e) => handleFieldChange(field.key, e.target.value)}
-            multiline
           />
         );
 

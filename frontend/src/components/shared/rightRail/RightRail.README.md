@@ -84,14 +84,48 @@ useRightRailButtons([
 ```typescript
 interface RightRailButtonWithAction {
   id: string;                    // Unique identifier
-  icon: React.ReactNode;         // Icon component
-  tooltip: string;               // Hover tooltip
+  icon?: React.ReactNode;        // Icon component (omit when using render)
+  tooltip?: React.ReactNode;     // Hover tooltip / description
   section?: 'top' | 'middle' | 'bottom'; // Section (default: 'top')
   order?: number;                // Sort order (default: 0)
   disabled?: boolean;            // Disabled state (default: false)
   visible?: boolean;             // Visibility (default: true)
-  onClick: () => void;           // Click handler
+  render?: (ctx: RightRailRenderContext) => React.ReactNode; // Custom renderer
+  onClick?: () => void;          // Click handler (optional if using render)
 }
+
+interface RightRailRenderContext {
+  id: string;
+  disabled: boolean;
+  allButtonsDisabled: boolean;
+  action?: () => void;
+  triggerAction: () => void;
+}
+```
+
+### Custom Rendering (Popovers, Multi-button Blocks)
+
+```tsx
+useRightRailButtons([
+  {
+    id: 'viewer-search',
+    tooltip: t('rightRail.search', 'Search PDF'),
+    render: ({ disabled }) => (
+      <Tooltip content={t('rightRail.search', 'Search PDF')}>
+        <Popover position="left">
+          <Popover.Target>
+            <ActionIcon disabled={disabled}>
+              <SearchIcon />
+            </ActionIcon>
+          </Popover.Target>
+          <Popover.Dropdown>
+            <SearchInterface />
+          </Popover.Dropdown>
+        </Popover>
+      </Tooltip>
+    ),
+  },
+]);
 ```
 
 ## Built-in Features
@@ -106,3 +140,4 @@ interface RightRailButtonWithAction {
 - Choose appropriate Material-UI icons
 - Keep tooltips concise: `'Compress PDF'`, `'Process with OCR'`
 - Use `useCallback` for click handlers to prevent re-registration
+- Reach for `render` when you need popovers or multi-control groups inside the rail

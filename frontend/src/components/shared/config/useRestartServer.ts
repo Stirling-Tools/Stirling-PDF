@@ -19,7 +19,7 @@ export function useRestartServer() {
       setRestartModalOpened(false);
 
       alert({
-        alertType: 'info',
+        alertType: 'neutral',
         title: t('admin.settings.restarting', 'Restarting Server'),
         body: t(
           'admin.settings.restartingMessage',
