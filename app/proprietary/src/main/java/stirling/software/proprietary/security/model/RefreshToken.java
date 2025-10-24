@@ -19,9 +19,9 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * Refresh Token entity for implementing secure token rotation
- * Refresh tokens are long-lived tokens that can be used to obtain new access tokens
- * This prevents stolen access tokens from being kept alive indefinitely
+ * Refresh Token entity for implementing secure token rotation Refresh tokens are long-lived tokens
+ * that can be used to obtain new access tokens This prevents stolen access tokens from being kept
+ * alive indefinitely
  */
 @Entity
 @Table(
@@ -42,33 +42,26 @@ public class RefreshToken {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /** User ID this refresh token belongs to */
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
-    /** SHA-256 hash of the refresh token (never store tokens in plaintext) */
     @Column(name = "token_hash", nullable = false, unique = true, length = 64)
     private String tokenHash;
 
-    /** When this refresh token expires */
     @Column(name = "expires_at", nullable = false)
     private LocalDateTime expiresAt;
 
-    /** When this refresh token was created */
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    /** Whether this refresh token has been revoked (for logout/security events) */
     @Column(name = "revoked", nullable = false)
     @Builder.Default
     private boolean revoked = false;
 
-    /** IP address from which the token was issued (optional, for audit trail) */
     @Column(name = "issued_ip", length = 45)
     private String issuedIp;
 
-    /** User agent from which the token was issued (optional, for audit trail) */
     @Column(name = "user_agent", length = 255)
     private String userAgent;
 

@@ -68,7 +68,7 @@ public class SecurityConfiguration {
     private final boolean loginEnabledValue;
     private final boolean runningProOrHigher;
 
-    private final ApplicationProperties.Security securityProperties;
+    private final ApplicationProperties applicationProperties;
     private final AppConfig appConfig;
     private final UserAuthenticationFilter userAuthenticationFilter;
     private final JwtServiceInterface jwtService;
@@ -88,7 +88,7 @@ public class SecurityConfiguration {
             @Qualifier("loginEnabled") boolean loginEnabledValue,
             @Qualifier("runningProOrHigher") boolean runningProOrHigher,
             AppConfig appConfig,
-            ApplicationProperties.Security securityProperties,
+            ApplicationProperties applicationProperties,
             UserAuthenticationFilter userAuthenticationFilter,
             JwtServiceInterface jwtService,
             JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint,
@@ -105,7 +105,7 @@ public class SecurityConfiguration {
         this.loginEnabledValue = loginEnabledValue;
         this.runningProOrHigher = runningProOrHigher;
         this.appConfig = appConfig;
-        this.securityProperties = securityProperties;
+        this.applicationProperties = applicationProperties;
         this.userAuthenticationFilter = userAuthenticationFilter;
         this.jwtService = jwtService;
         this.jwtAuthenticationEntryPoint = jwtAuthenticationEntryPoint;
@@ -125,24 +125,19 @@ public class SecurityConfiguration {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        if (securityProperties.getCsrfDisabled() || !loginEnabledValue) {
+        if (applicationProperties.getSecurity().getCsrfDisabled() || !loginEnabledValue) {
             http.csrf(CsrfConfigurer::disable);
         }
 
         if (loginEnabledValue) {
-            boolean v2Enabled = appConfig.v2Enabled();
-
             http.addFilterBefore(
                             userAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                     .addFilterBefore(
                             rateLimitingFilter(), UsernamePasswordAuthenticationFilter.class)
-                    .addFilterAfter(firstLoginFilter, IPRateLimitingFilter.class);
+                    .addFilterAfter(firstLoginFilter, IPRateLimitingFilter.class)
+                    .addFilterBefore(jwtAuthenticationFilter(), UserAuthenticationFilter.class);
 
-            if (v2Enabled) {
-                http.addFilterBefore(jwtAuthenticationFilter(), UserAuthenticationFilter.class);
-            }
-
-            if (!securityProperties.getCsrfDisabled()) {
+            if (!applicationProperties.getSecurity().getCsrfDisabled()) {
                 CookieCsrfTokenRepository cookieRepo =
                         CookieCsrfTokenRepository.withHttpOnlyFalse();
                 CsrfTokenRequestAttributeHandler requestHandler =
@@ -185,21 +180,12 @@ public class SecurityConfiguration {
             }
 
             http.sessionManagement(
-                    sessionManagement -> {
-                        if (v2Enabled) {
-                            sessionManagement.sessionCreationPolicy(
-                                    SessionCreationPolicy.STATELESS);
-                        } else {
-                            sessionManagement
-                                    .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
-                                    .maximumSessions(10)
-                                    .maxSessionsPreventsLogin(false)
-                                    .sessionRegistry(sessionRegistry)
-                                    .expiredUrl("/login?logout=true");
-                        }
-                    });
-            http.authenticationProvider(daoAuthenticationProvider());
-            http.requestCache(requestCache -> requestCache.requestCache(new NullRequestCache()));
+                            sessionManagement ->
+                                    sessionManagement.sessionCreationPolicy(
+                                            SessionCreationPolicy.STATELESS))
+                    .authenticationProvider(daoAuthenticationProvider())
+                    .requestCache(
+                            requestCache -> requestCache.requestCache(new NullRequestCache()));
             http.logout(
                     logout ->
                             logout.logoutRequestMatcher(
@@ -207,7 +193,9 @@ public class SecurityConfiguration {
                                                     .matcher("/logout"))
                                     .logoutSuccessHandler(
                                             new CustomLogoutSuccessHandler(
-                                                    securityProperties, appConfig, jwtService))
+                                                    applicationProperties.getSecurity(),
+                                                    appConfig,
+                                                    jwtService))
                                     .clearAuthentication(true)
                                     .invalidateHttpSession(true)
                                     .deleteCookies("JSESSIONID", "remember-me", "stirling_jwt"));
@@ -275,7 +263,7 @@ public class SecurityConfiguration {
                                     .anyRequest()
                                     .authenticated());
             // Handle User/Password Logins
-            if (securityProperties.isUserPass()) {
+            if (applicationProperties.getSecurity().isUserPass()) {
                 http.formLogin(
                         formLogin ->
                                 formLogin
@@ -291,45 +279,40 @@ public class SecurityConfiguration {
                                         .permitAll());
             }
             // Handle OAUTH2 Logins
-            if (securityProperties.isOauth2Active()) {
+            if (applicationProperties.getSecurity().isOauth2Active()) {
                 http.oauth2Login(
-                        oauth2 -> {
-                            // v1: Use /oauth2 as login page for Thymeleaf templates
-                            if (!v2Enabled) {
-                                oauth2.loginPage("/oauth2");
-                            }
-
-                            // v2: Don't set loginPage, let default OAuth2 flow handle it
-                            oauth2
-                                    /*
-                                       This Custom handler is used to check if the OAUTH2 user trying to log in, already exists in the database.
-                                       If user exists, login proceeds as usual. If user does not exist, then it is auto-created but only if 'OAUTH2AutoCreateUser'
-                                       is set as true, else login fails with an error message advising the same.
-                                    */
-                                    .successHandler(
-                                            new CustomOAuth2AuthenticationSuccessHandler(
-                                                    loginAttemptService,
-                                                    securityProperties.getOauth2(),
-                                                    userService,
-                                                    jwtService))
-                                    .failureHandler(new CustomOAuth2AuthenticationFailureHandler())
-                                    // Add existing Authorities from the database
-                                    .userInfoEndpoint(
-                                            userInfoEndpoint ->
-                                                    userInfoEndpoint
-                                                            .oidcUserService(
-                                                                    new CustomOAuth2UserService(
-                                                                            securityProperties
-                                                                                    .getOauth2(),
-                                                                            userService,
-                                                                            loginAttemptService))
-                                                            .userAuthoritiesMapper(
-                                                                    oAuth2userAuthoritiesMapper))
-                                    .permitAll();
-                        });
+                        oauth2 ->
+                                oauth2
+                                        /*
+                                           This Custom handler is used to check if the OAUTH2 user trying to log in, already exists in the database.
+                                           If user exists, login proceeds as usual. If user does not exist, then it is auto-created but only if 'OAUTH2AutoCreateUser'
+                                           is set as true, else login fails with an error message advising the same.
+                                        */
+                                        .successHandler(
+                                                new CustomOAuth2AuthenticationSuccessHandler(
+                                                        applicationProperties,
+                                                        loginAttemptService,
+                                                        userService,
+                                                        jwtService))
+                                        .failureHandler(
+                                                new CustomOAuth2AuthenticationFailureHandler())
+                                        // Add existing Authorities from the database
+                                        .userInfoEndpoint(
+                                                userInfoEndpoint ->
+                                                        userInfoEndpoint
+                                                                .oidcUserService(
+                                                                        new CustomOAuth2UserService(
+                                                                                applicationProperties
+                                                                                        .getSecurity()
+                                                                                        .getOauth2(),
+                                                                                userService,
+                                                                                loginAttemptService))
+                                                                .userAuthoritiesMapper(
+                                                                        oAuth2userAuthoritiesMapper))
+                                        .permitAll());
             }
             // Handle SAML
-            if (securityProperties.isSaml2Active() && runningProOrHigher) {
+            if (applicationProperties.getSecurity().isSaml2Active() && runningProOrHigher) {
                 OpenSaml4AuthenticationProvider authenticationProvider =
                         new OpenSaml4AuthenticationProvider();
                 authenticationProvider.setResponseAuthenticationConverter(
@@ -345,8 +328,8 @@ public class SecurityConfiguration {
                                                         new ProviderManager(authenticationProvider))
                                                 .successHandler(
                                                         new CustomSaml2AuthenticationSuccessHandler(
+                                                                applicationProperties,
                                                                 loginAttemptService,
-                                                                securityProperties.getSaml2(),
                                                                 userService,
                                                                 jwtService))
                                                 .failureHandler(
@@ -391,6 +374,6 @@ public class SecurityConfiguration {
                 userService,
                 userDetailsService,
                 jwtAuthenticationEntryPoint,
-                securityProperties);
+                applicationProperties.getSecurity());
     }
 }

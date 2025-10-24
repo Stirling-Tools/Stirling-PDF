@@ -10,12 +10,17 @@ import java.sql.SQLException;
 import java.util.Map;
 import java.util.Optional;
 
+import java.time.Instant;
+import java.util.HashMap;
+
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -128,7 +133,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             log.debug("JWT token username: {}", tokenUsername);
 
             try {
-                authenticate(request, claims);
+                authenticate(request, jwtToken, claims);
                 log.debug("Authentication successful for user: {}", tokenUsername);
             } catch (SQLException | UnsupportedProviderException e) {
                 log.error("Error processing user authentication for user: {}", tokenUsername, e);
@@ -183,7 +188,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         return true;
     }
 
-    private void authenticate(HttpServletRequest request, Map<String, Object> claims)
+    private void authenticate(
+            HttpServletRequest request, String jwtToken, Map<String, Object> claims)
             throws SQLException, UnsupportedProviderException {
         String username = claims.get("sub").toString();
 
@@ -192,16 +198,50 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
             if (userDetails != null) {
-                UsernamePasswordAuthenticationToken authToken =
-                        new UsernamePasswordAuthenticationToken(
-                                userDetails, null, userDetails.getAuthorities());
+                // Create a Jwt object from the token string and claims
+                Jwt jwt = createJwtFromClaims(jwtToken, claims);
 
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                JwtAuthenticationToken authToken =
+                        new JwtAuthenticationToken(jwt, userDetails.getAuthorities());
+
+                authToken.setDetails(
+                        new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             } else {
                 throw new UsernameNotFoundException("User not found: " + username);
             }
         }
+    }
+
+    /**
+     * Creates a Spring Security Jwt object from the token string and claims This is needed for
+     * JwtAuthenticationToken
+     *
+     * @param tokenValue The JWT token string
+     * @param claims The extracted claims from the token
+     * @return A Jwt object
+     */
+    private Jwt createJwtFromClaims(String tokenValue, Map<String, Object> claims) {
+        // Extract standard claims
+        Instant issuedAt =
+                claims.containsKey("iat")
+                        ? Instant.ofEpochSecond(((Number) claims.get("iat")).longValue())
+                        : Instant.now();
+
+        Instant expiresAt =
+                claims.containsKey("exp")
+                        ? Instant.ofEpochSecond(((Number) claims.get("exp")).longValue())
+                        : Instant.now().plusSeconds(3600);
+
+        // Extract headers (kid if present)
+        Map<String, Object> headers = new HashMap<>();
+        if (claims.containsKey("kid")) {
+            headers.put("kid", claims.get("kid"));
+        }
+        headers.put("alg", "RS256");
+
+        // Create and return the Jwt object
+        return new Jwt(tokenValue, issuedAt, expiresAt, headers, claims);
     }
 
     private void processUserAuthenticationType(Map<String, Object> claims, String username)

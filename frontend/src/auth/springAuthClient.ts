@@ -2,9 +2,10 @@
  * Spring Auth Client
  *
  * This client integrates with the Spring Security + JWT backend.
- * - Uses localStorage for JWT storage (sent via Authorization header)
+ * - Uses HttpOnly cookies for JWT storage (automatic secure storage)
  * - JWT validation handled server-side
  * - No email confirmation flow (auto-confirmed on registration)
+ * - Refresh tokens stored in separate HttpOnly cookie
  */
 
 // Auth types
@@ -44,15 +45,50 @@ export type AuthChangeEvent =
 
 type AuthChangeCallback = (event: AuthChangeEvent, session: Session | null) => void;
 
+export interface AuthConfig {
+  secureCookie: boolean;
+  jwtEnabled: boolean;
+}
+
 class SpringAuthClient {
   private listeners: AuthChangeCallback[] = [];
   private sessionCheckInterval: NodeJS.Timeout | null = null;
   private readonly SESSION_CHECK_INTERVAL = 60000; // 1 minute
   private readonly TOKEN_REFRESH_THRESHOLD = 300000; // 5 minutes before expiry
+  private authConfig: AuthConfig | null = null;
 
   constructor() {
+    // Load auth config
+    this.loadAuthConfig();
     // Start periodic session validation
     this.startSessionMonitoring();
+  }
+
+  /**
+   * Load authentication configuration from backend
+   */
+  private async loadAuthConfig() {
+    try {
+      const response = await fetch('/api/v1/auth/config', {
+        credentials: 'include',
+      });
+
+      if (response.ok) {
+        this.authConfig = await response.json();
+        console.debug('[SpringAuth] Auth config loaded:', this.authConfig);
+      } else {
+        console.warn('[SpringAuth] Failed to load auth config');
+      }
+    } catch (error) {
+      console.error('[SpringAuth] Error loading auth config:', error);
+    }
+  }
+
+  /**
+   * Get authentication configuration
+   */
+  getAuthConfig(): AuthConfig | null {
+    return this.authConfig;
   }
 
   /**
@@ -71,38 +107,26 @@ class SpringAuthClient {
 
   /**
    * Get current session
-   * JWT is stored in localStorage and sent via Authorization header
+   * JWT is stored in HttpOnly cookie (automatic with credentials: 'include')
    */
   async getSession(): Promise<{ data: { session: Session | null }; error: AuthError | null }> {
     try {
-      // Get JWT from localStorage
-      const token = localStorage.getItem('stirling_jwt');
-
-      if (!token) {
-        console.debug('[SpringAuth] getSession: No JWT in localStorage');
-        return { data: { session: null }, error: null };
-      }
-
-      // Verify with backend
+      // Verify with backend (JWT automatically sent via HttpOnly cookie)
       const response = await fetch('/api/v1/auth/me', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+        credentials: 'include', // Include cookies
       });
 
       if (!response.ok) {
-        // Token invalid or expired - clear it
-        localStorage.removeItem('stirling_jwt');
         console.debug('[SpringAuth] getSession: Not authenticated (status:', response.status, ')');
         return { data: { session: null }, error: null };
       }
 
       const data = await response.json();
 
-      // Create session object
+      // Create session object (no access_token in JS - it's in HttpOnly cookie)
       const session: Session = {
         user: data.user,
-        access_token: token,
+        access_token: '', // Not accessible to JavaScript (stored in HttpOnly cookie)
         expires_in: 3600,
         expires_at: Date.now() + 3600 * 1000,
       };
@@ -111,8 +135,6 @@ class SpringAuthClient {
       return { data: { session }, error: null };
     } catch (error) {
       console.error('[SpringAuth] getSession error:', error);
-      // Clear potentially invalid token
-      localStorage.removeItem('stirling_jwt');
       return {
         data: { session: null },
         error: { message: error instanceof Error ? error.message : 'Unknown error' },
@@ -144,15 +166,13 @@ class SpringAuthClient {
       }
 
       const data = await response.json();
-      const token = data.session.access_token;
 
-      // Store JWT in localStorage
-      localStorage.setItem('stirling_jwt', token);
-      console.log('[SpringAuth] JWT stored in localStorage');
+      // JWT is now stored in HttpOnly cookie by backend (no localStorage needed)
+      console.log('[SpringAuth] JWT stored in HttpOnly cookie by backend');
 
       const session: Session = {
         user: data.user,
-        access_token: token,
+        access_token: '', // Not accessible to JavaScript (stored in HttpOnly cookie)
         expires_in: data.session.expires_in,
         expires_at: Date.now() + data.session.expires_in * 1000,
       };
@@ -233,13 +253,11 @@ class SpringAuthClient {
   }
 
   /**
-   * Sign out
+   * Sign out - revokes refresh tokens and clears HttpOnly cookies
    */
   async signOut(): Promise<{ error: AuthError | null }> {
     try {
-      // Clear JWT from localStorage immediately
-      localStorage.removeItem('stirling_jwt');
-      console.log('[SpringAuth] JWT removed from localStorage');
+      console.log('[SpringAuth] Signing out, clearing HttpOnly cookies');
 
       const csrfToken = this.getCsrfToken();
       const headers: HeadersInit = {};
@@ -248,7 +266,7 @@ class SpringAuthClient {
         headers['X-XSRF-TOKEN'] = csrfToken;
       }
 
-      // Notify backend (optional - mainly for session cleanup)
+      // Notify backend to revoke refresh tokens and clear cookies
       await fetch('/api/v1/auth/logout', {
         method: 'POST',
         credentials: 'include',
@@ -261,8 +279,6 @@ class SpringAuthClient {
       return { error: null };
     } catch (error) {
       console.error('[SpringAuth] signOut error:', error);
-      // Still remove token even if backend call fails
-      localStorage.removeItem('stirling_jwt');
       return {
         error: { message: error instanceof Error ? error.message : 'Sign out failed' },
       };
@@ -270,50 +286,35 @@ class SpringAuthClient {
   }
 
   /**
-   * Refresh session token
+   * Refresh session token using refresh token (automatically sent via HttpOnly cookie)
    */
   async refreshSession(): Promise<{ data: { session: Session | null }; error: AuthError | null }> {
     try {
-      const currentToken = localStorage.getItem('stirling_jwt');
-
-      if (!currentToken) {
-        return { data: { session: null }, error: { message: 'No token to refresh' } };
-      }
-
+      // Refresh token is automatically sent via HttpOnly cookie
       const response = await fetch('/api/v1/auth/refresh', {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${currentToken}`,
-        },
+        credentials: 'include',
       });
 
       if (!response.ok) {
-        localStorage.removeItem('stirling_jwt');
         return { data: { session: null }, error: { message: 'Token refresh failed' } };
       }
 
-      const refreshData = await response.json();
-      const newToken = refreshData.access_token;
-
-      // Store new token
-      localStorage.setItem('stirling_jwt', newToken);
+      // Backend sets new access token and refresh token in HttpOnly cookies
 
       // Get updated user info
       const userResponse = await fetch('/api/v1/auth/me', {
-        headers: {
-          'Authorization': `Bearer ${newToken}`,
-        },
+        credentials: 'include',
       });
 
       if (!userResponse.ok) {
-        localStorage.removeItem('stirling_jwt');
         return { data: { session: null }, error: { message: 'Failed to get user info' } };
       }
 
       const userData = await userResponse.json();
       const session: Session = {
         user: userData.user,
-        access_token: newToken,
+        access_token: '', // Not accessible to JavaScript (stored in HttpOnly cookie)
         expires_in: 3600,
         expires_at: Date.now() + 3600 * 1000,
       };
@@ -324,7 +325,6 @@ class SpringAuthClient {
       return { data: { session }, error: null };
     } catch (error) {
       console.error('[SpringAuth] refreshSession error:', error);
-      localStorage.removeItem('stirling_jwt');
       return {
         data: { session: null },
         error: { message: error instanceof Error ? error.message : 'Refresh failed' },

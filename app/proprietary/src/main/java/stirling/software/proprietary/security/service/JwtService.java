@@ -13,7 +13,7 @@ import java.util.Optional;
 import java.util.function.Function;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -26,7 +26,9 @@ import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.security.SignatureException;
 
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -40,8 +42,14 @@ public class JwtService implements JwtServiceInterface {
 
     private static final String ISSUER = "https://stirling.com";
     private static final long EXPIRATION = 3600000;
+    private static final String JWT_COOKIE_NAME = "stirling_jwt";
+    private static final String REFRESH_TOKEN_COOKIE_NAME = "stirling_refresh";
 
-    private final
+    private final KeyPersistenceServiceInterface keyPersistenceService;
+
+    @Value("${security.jwt.secureCookie:true}")
+    private boolean secureCookie;
+
     @Autowired
     public JwtService(KeyPersistenceServiceInterface keyPersistenceService) {
         this.keyPersistenceService = keyPersistenceService;
@@ -284,5 +292,98 @@ public class JwtService implements JwtServiceInterface {
             log.warn("Failed to extract key ID from token header: {}", e.getMessage());
             return null;
         }
+    }
+
+    /**
+     * Sets JWT as an HttpOnly cookie for security. Prevents XSS attacks by making token
+     * inaccessible to JavaScript.
+     *
+     * @param response HTTP response to set cookie
+     * @param jwt JWT token to store
+     * @param contextPath Application context path for cookie path
+     */
+    public void setJwtCookie(HttpServletResponse response, String jwt, String contextPath) {
+        Cookie cookie = new Cookie(JWT_COOKIE_NAME, jwt);
+
+        cookie.setHttpOnly(true);
+        cookie.setSecure(secureCookie);
+        cookie.setPath(contextPath.isEmpty() ? "/" : contextPath);
+        cookie.setMaxAge((int) (EXPIRATION / 1000));
+        cookie.setAttribute("SameSite", "Lax");
+        response.addCookie(cookie);
+
+        log.debug(
+                "JWT cookie set with secure={}, maxAge={}, path={}",
+                secureCookie,
+                (EXPIRATION / 1000),
+                contextPath.isEmpty() ? "/" : contextPath);
+    }
+
+    /**
+     * Sets refresh token as an HttpOnly cookie for security.
+     *
+     * @param response HTTP response to set cookie
+     * @param refreshToken Refresh token to store
+     * @param contextPath Application context path for cookie path
+     * @param maxAge Maximum age in seconds
+     */
+    public void setRefreshTokenCookie(
+            HttpServletResponse response, String refreshToken, String contextPath, int maxAge) {
+        Cookie cookie = new Cookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken);
+        cookie.setHttpOnly(true); // Prevent JavaScript access (XSS protection)
+        cookie.setSecure(secureCookie); // Only send over HTTPS (configurable for local dev)
+        cookie.setPath(
+                contextPath.isEmpty() ? "/" : contextPath); // Cookie available for entire app
+        cookie.setMaxAge(maxAge);
+        cookie.setAttribute("SameSite", "Lax"); // CSRF protection
+        response.addCookie(cookie);
+        log.debug(
+                "Refresh token cookie set with secure={}, maxAge={}, path={}",
+                secureCookie,
+                maxAge,
+                contextPath.isEmpty() ? "/" : contextPath);
+    }
+
+    /**
+     * Removes JWT cookie from the response (used for logout).
+     *
+     * @param response HTTP response to remove cookie
+     * @param contextPath Application context path for cookie path
+     */
+    public void removeJwtCookie(HttpServletResponse response, String contextPath) {
+        Cookie cookie = new Cookie(JWT_COOKIE_NAME, "");
+        cookie.setHttpOnly(true);
+        cookie.setSecure(secureCookie);
+        cookie.setPath(contextPath.isEmpty() ? "/" : contextPath);
+        cookie.setMaxAge(0); // Expire immediately
+        cookie.setAttribute("SameSite", "Lax");
+        response.addCookie(cookie);
+        log.debug("JWT cookie removed");
+    }
+
+    /**
+     * Removes refresh token cookie from the response (used for logout).
+     *
+     * @param response HTTP response to remove cookie
+     * @param contextPath Application context path for cookie path
+     */
+    public void removeRefreshTokenCookie(HttpServletResponse response, String contextPath) {
+        Cookie cookie = new Cookie(REFRESH_TOKEN_COOKIE_NAME, "");
+        cookie.setHttpOnly(true);
+        cookie.setSecure(secureCookie);
+        cookie.setPath(contextPath.isEmpty() ? "/" : contextPath);
+        cookie.setMaxAge(0); // Expire immediately
+        cookie.setAttribute("SameSite", "Lax");
+        response.addCookie(cookie);
+        log.debug("Refresh token cookie removed");
+    }
+
+    /**
+     * Gets the configured secureCookie flag.
+     *
+     * @return true if cookies should be set with Secure flag, false otherwise
+     */
+    public boolean isSecureCookie() {
+        return secureCookie;
     }
 }

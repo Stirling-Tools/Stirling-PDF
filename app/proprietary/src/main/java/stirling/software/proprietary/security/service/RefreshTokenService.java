@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,8 +21,8 @@ import stirling.software.proprietary.security.model.RefreshToken;
 import stirling.software.proprietary.security.repository.RefreshTokenRepository;
 
 /**
- * Service for managing refresh tokens
- * Implements secure token generation, validation, and revocation
+ * Service for managing refresh tokens. Implements secure token generation, validation, and
+ * revocation
  */
 @Slf4j
 @Service
@@ -31,10 +32,9 @@ public class RefreshTokenService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final SecureRandom secureRandom = new SecureRandom();
 
-    /** Refresh token validity: 7 days */
-    private static final long REFRESH_TOKEN_VALIDITY_DAYS = 7;
+    @Value("${security.jwt.refreshTokenDays:7}")
+    private long refreshTokenValidityDays;
 
-    /** Refresh token length in bytes (before base64 encoding) */
     private static final int TOKEN_LENGTH = 32;
 
     /**
@@ -46,12 +46,11 @@ public class RefreshTokenService {
      */
     @Transactional
     public String generateRefreshToken(Long userId, HttpServletRequest request) {
-        // Generate cryptographically secure random token
         byte[] tokenBytes = new byte[TOKEN_LENGTH];
         secureRandom.nextBytes(tokenBytes);
         String token = Base64.getUrlEncoder().withoutPadding().encodeToString(tokenBytes);
 
-        // Hash the token for storage (never store plaintext tokens)
+        // Hash the token for storage
         String tokenHash = hashToken(token);
 
         // Build refresh token entity
@@ -59,7 +58,7 @@ public class RefreshTokenService {
                 RefreshToken.builder()
                         .userId(userId)
                         .tokenHash(tokenHash)
-                        .expiresAt(LocalDateTime.now().plusDays(REFRESH_TOKEN_VALIDITY_DAYS))
+                        .expiresAt(LocalDateTime.now().plusDays(refreshTokenValidityDays))
                         .issuedIp(extractIpAddress(request))
                         .userAgent(extractUserAgent(request))
                         .revoked(false)
@@ -102,7 +101,9 @@ public class RefreshTokenService {
                 return Optional.empty();
             }
 
-            log.debug("Refresh token validated successfully for user ID: {}", refreshToken.getUserId());
+            log.debug(
+                    "Refresh token validated successfully for user ID: {}",
+                    refreshToken.getUserId());
             return Optional.of(refreshToken);
 
         } catch (Exception e) {
@@ -144,8 +145,8 @@ public class RefreshTokenService {
     }
 
     /**
-     * Rotates a refresh token (revokes old, generates new)
-     * Best practice for security: rotate tokens on each refresh
+     * Rotates a refresh token (revokes old, generates new) Best practice for security: rotate
+     * tokens on each refresh
      *
      * @param oldToken The old refresh token to revoke
      * @param userId User ID
@@ -185,15 +186,14 @@ public class RefreshTokenService {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             byte[] hash = digest.digest(token.getBytes(StandardCharsets.UTF_8));
+
             return bytesToHex(hash);
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException("SHA-256 algorithm not available", e);
         }
     }
 
-    /**
-     * Converts byte array to hex string
-     */
+    /** Converts byte array to hex string */
     private String bytesToHex(byte[] bytes) {
         StringBuilder result = new StringBuilder();
         for (byte b : bytes) {
@@ -202,9 +202,7 @@ public class RefreshTokenService {
         return result.toString();
     }
 
-    /**
-     * Extracts IP address from request
-     */
+    /** Extracts IP address from request */
     private String extractIpAddress(HttpServletRequest request) {
         if (request == null) {
             return null;
@@ -232,9 +230,7 @@ public class RefreshTokenService {
         return ip;
     }
 
-    /**
-     * Extracts user agent from request
-     */
+    /** Extracts user agent from request */
     private String extractUserAgent(HttpServletRequest request) {
         if (request == null) {
             return null;

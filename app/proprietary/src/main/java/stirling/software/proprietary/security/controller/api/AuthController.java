@@ -3,6 +3,7 @@ package stirling.software.proprietary.security.controller.api;
 import java.util.HashMap;
 import java.util.Map;
 
+import jakarta.servlet.http.Cookie;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -97,7 +98,8 @@ public class AuthController {
             String token = jwtService.generateToken(user.getUsername(), claims);
 
             // Generate refresh token for token rotation
-            String refreshToken = refreshTokenService.generateRefreshToken(user.getId(), servletRequest);
+            String refreshToken =
+                    refreshTokenService.generateRefreshToken(user.getId(), servletRequest);
 
             // Set JWT as HttpOnly cookie for security
             setJwtCookie(response, token);
@@ -173,7 +175,10 @@ public class AuthController {
             if (authentication != null && authentication.getPrincipal() instanceof User user) {
                 // Revoke all refresh tokens for this user
                 int revokedCount = refreshTokenService.revokeAllTokensForUser(user.getId());
-                log.info("Revoked {} refresh token(s) for user: {}", revokedCount, user.getUsername());
+                log.info(
+                        "Revoked {} refresh token(s) for user: {}",
+                        revokedCount,
+                        user.getUsername());
             }
 
             // Clear cookies
@@ -194,12 +199,12 @@ public class AuthController {
     }
 
     /**
-     * Refresh token endpoint - validates refresh token and issues new access token
+     * Refresh token endpoint - validates refresh token and issues new access token.
      * Implements token rotation for security: revokes old refresh token and issues new one
      *
-     * @param request HTTP request containing refresh token cookie
-     * @param response HTTP response to set new cookies
-     * @return New token information
+     * @param request HTTP request
+     * @param response HTTP response
+     * @return the refreshed token
      */
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/refresh")
@@ -214,7 +219,6 @@ public class AuthController {
                         .body(Map.of("error", "No refresh token found"));
             }
 
-            // Validate refresh token
             var refreshTokenOpt = refreshTokenService.validateRefreshToken(refreshToken);
 
             if (refreshTokenOpt.isEmpty()) {
@@ -226,8 +230,8 @@ public class AuthController {
             var refreshTokenEntity = refreshTokenOpt.get();
             Long userId = refreshTokenEntity.getUserId();
 
-            // Load user
             User user = userService.findById(userId).orElse(null);
+
             if (user == null) {
                 log.warn("Token refresh failed: user not found for ID: {}", userId);
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -277,7 +281,7 @@ public class AuthController {
             return null;
         }
 
-        for (jakarta.servlet.http.Cookie cookie : request.getCookies()) {
+        for (Cookie cookie : request.getCookies()) {
             if ("stirling_refresh_token".equals(cookie.getName())) {
                 return cookie.getValue();
             }
@@ -287,20 +291,14 @@ public class AuthController {
     }
 
     /**
-     * Sets JWT as an HttpOnly cookie for security
-     * Prevents XSS attacks by making token inaccessible to JavaScript
+     * Sets JWT as an HttpOnly cookie for security Prevents XSS attacks by making token inaccessible
+     * to JavaScript
      *
      * @param response HTTP response to set cookie
      * @param jwt JWT token to store
      */
     private void setJwtCookie(HttpServletResponse response, String jwt) {
-        jakarta.servlet.http.Cookie cookie = new jakarta.servlet.http.Cookie("stirling_jwt", jwt);
-        cookie.setHttpOnly(true); // Prevent JavaScript access (XSS protection)
-        cookie.setSecure(true); // Only send over HTTPS (set to false for local dev if needed)
-        cookie.setPath("/"); // Cookie available for entire app
-        cookie.setMaxAge(3600); // 1 hour (matches JWT expiration)
-        cookie.setAttribute("SameSite", "Lax"); // CSRF protection
-        response.addCookie(cookie);
+        jwtService.setJwtCookie(response, jwt, "");
     }
 
     /**
@@ -310,14 +308,7 @@ public class AuthController {
      * @param refreshToken Refresh token to store
      */
     private void setRefreshTokenCookie(HttpServletResponse response, String refreshToken) {
-        jakarta.servlet.http.Cookie cookie =
-                new jakarta.servlet.http.Cookie("stirling_refresh_token", refreshToken);
-        cookie.setHttpOnly(true); // Prevent JavaScript access
-        cookie.setSecure(true); // Only send over HTTPS
-        cookie.setPath("/"); // Cookie available for entire app
-        cookie.setMaxAge(7 * 24 * 3600); // 7 days (matches refresh token expiration)
-        cookie.setAttribute("SameSite", "Lax"); // CSRF protection
-        response.addCookie(cookie);
+        jwtService.setRefreshTokenCookie(response, refreshToken, "", 7 * 24 * 3600);
     }
 
     /**
@@ -326,22 +317,8 @@ public class AuthController {
      * @param response HTTP response
      */
     private void clearAuthCookies(HttpServletResponse response) {
-        // Clear access token cookie
-        jakarta.servlet.http.Cookie jwtCookie = new jakarta.servlet.http.Cookie("stirling_jwt", "");
-        jwtCookie.setHttpOnly(true);
-        jwtCookie.setSecure(true);
-        jwtCookie.setPath("/");
-        jwtCookie.setMaxAge(0); // Delete immediately
-        response.addCookie(jwtCookie);
-
-        // Clear refresh token cookie
-        jakarta.servlet.http.Cookie refreshCookie =
-                new jakarta.servlet.http.Cookie("stirling_refresh_token", "");
-        refreshCookie.setHttpOnly(true);
-        refreshCookie.setSecure(true);
-        refreshCookie.setPath("/");
-        refreshCookie.setMaxAge(0); // Delete immediately
-        response.addCookie(refreshCookie);
+        jwtService.removeJwtCookie(response, "");
+        jwtService.removeRefreshTokenCookie(response, "");
     }
 
     /**
@@ -364,6 +341,21 @@ public class AuthController {
         userMap.put("app_metadata", appMetadata);
 
         return userMap;
+    }
+
+    /**
+     * Get security configuration (including secureCookie flag)
+     *
+     * @return Security configuration
+     */
+    @GetMapping("/config")
+    public ResponseEntity<Map<String, Object>> getAuthConfig() {
+        Map<String, Object> config = new HashMap<>();
+        config.put("secureCookie", jwtService.isSecureCookie());
+        config.put("jwtEnabled", jwtService.isJwtEnabled());
+
+        log.debug("Auth config requested: secureCookie={}", jwtService.isSecureCookie());
+        return ResponseEntity.ok(config);
     }
 
     // ===========================

@@ -59,6 +59,9 @@ public class CustomAuthenticationSuccessHandler
                             authentication, Map.of("authType", AuthenticationType.WEB));
             log.debug("JWT generated for user: {}", userName);
 
+            // Set JWT as HttpOnly cookie for security
+            jwtService.setJwtCookie(response, jwt, request.getContextPath());
+
             getRedirectStrategy().sendRedirect(request, response, "/");
         } else {
             // Get the saved request

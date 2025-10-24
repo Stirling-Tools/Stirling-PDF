@@ -43,6 +43,7 @@ dependencies {
     api "org.springframework.security:spring-security-core:$springSecuritySamlVersion"
     api "org.springframework.security:spring-security-web:$springSecuritySamlVersion"
     api "org.springframework.security:spring-security-config:$springSecuritySamlVersion"
+    api("org.springframework.boot:spring-boot-starter-oauth2-resource-server:3.5.7")
     api "org.springframework.security:spring-security-saml2-service-provider:$springSecuritySamlVersion"
     api 'org.springframework.boot:spring-boot-starter-jetty'
     api 'org.springframework.boot:spring-boot-starter-security'

@@ -33,11 +33,10 @@ import stirling.software.proprietary.security.service.UserService;
 public class CustomSaml2AuthenticationSuccessHandler
         extends SavedRequestAwareAuthenticationSuccessHandler {
 
+    private final ApplicationProperties applicationProperties;
     private LoginAttemptService loginAttemptService;
-    private ApplicationProperties.Security.SAML2 saml2Properties;
     private UserService userService;
     private final JwtServiceInterface jwtService;
-    private final ApplicationProperties applicationProperties;
 
     @Override
     public void onAuthenticationSuccess(
@@ -73,7 +72,7 @@ public class CustomSaml2AuthenticationSuccessHandler
             } else {
                 log.debug(
                         "Processing SAML2 authentication with autoCreateUser: {}",
-                        saml2Properties.getAutoCreateUser());
+                        applicationProperties.getSecurity().getSaml2().getAutoCreateUser());
 
                 if (loginAttemptService.isBlocked(username)) {
                     log.debug("User {} is blocked due to too many login attempts", username);
@@ -101,7 +100,7 @@ public class CustomSaml2AuthenticationSuccessHandler
                 if (userExists
                         && hasPassword
                         && (!isSSOUser || !isSAML2User)
-                        && saml2Properties.getAutoCreateUser()) {
+                        && applicationProperties.getSecurity().getSaml2().getAutoCreateUser()) {
                     log.debug(
                             "User {} exists with password but is not SSO user, redirecting to logout",
                             username);
@@ -111,7 +110,11 @@ public class CustomSaml2AuthenticationSuccessHandler
                 }
 
                 try {
-                    if (!userExists || saml2Properties.getBlockRegistration()) {
+                    if (!userExists
+                            || applicationProperties
+                                    .getSecurity()
+                                    .getSaml2()
+                                    .getBlockRegistration()) {
                         log.debug("Registration blocked for new user: {}", username);
                         response.sendRedirect(
                                 contextPath + "/login?errorOAuth=oAuth2AdminBlockedUser");
@@ -132,7 +135,7 @@ public class CustomSaml2AuthenticationSuccessHandler
                             username,
                             ssoProviderId,
                             ssoProvider,
-                            saml2Properties.getAutoCreateUser(),
+                            applicationProperties.getSecurity().getSaml2().getAutoCreateUser(),
                             SAML2);
                     log.debug("Successfully processed authentication for user: {}", username);
 
@@ -144,7 +147,7 @@ public class CustomSaml2AuthenticationSuccessHandler
                                         Map.of("authType", AuthenticationType.SAML2));
 
                         // Set JWT as HttpOnly cookie for security
-                        setJwtCookie(response, jwt, contextPath);
+                        jwtService.setJwtCookie(response, jwt, contextPath);
 
                         // Build context-aware redirect URL (without JWT in URL)
                         String redirectUrl = buildContextAwareRedirectUrl(request, contextPath);
@@ -168,24 +171,6 @@ public class CustomSaml2AuthenticationSuccessHandler
     }
 
     /**
-     * Sets JWT as an HttpOnly cookie for security
-     * Prevents XSS attacks by making token inaccessible to JavaScript
-     *
-     * @param response HTTP response to set cookie
-     * @param jwt JWT token to store
-     * @param contextPath Application context path for cookie path
-     */
-    private void setJwtCookie(HttpServletResponse response, String jwt, String contextPath) {
-        jakarta.servlet.http.Cookie cookie = new jakarta.servlet.http.Cookie("stirling_jwt", jwt);
-        cookie.setHttpOnly(true); // Prevent JavaScript access (XSS protection)
-        cookie.setSecure(true); // Only send over HTTPS (set to false for local dev if needed)
-        cookie.setPath(contextPath.isEmpty() ? "/" : contextPath); // Cookie available for entire app
-        cookie.setMaxAge(3600); // 1 hour (matches JWT expiration)
-        cookie.setAttribute("SameSite", "Lax"); // CSRF protection
-        response.addCookie(cookie);
-    }
-
-    /**
      * Validates if the origin is in the CORS whitelist
      *
      * @param origin Origin to validate
@@ -203,8 +188,8 @@ public class CustomSaml2AuthenticationSuccessHandler
     }
 
     /**
-     * Builds a context-aware redirect URL based on the request's origin
-     * Validates Referer against CORS whitelist to prevent token leakage to third parties
+     * Builds a context-aware redirect URL based on the request's origin Validates Referer against
+     * CORS whitelist to prevent token leakage to third parties
      *
      * @param request The HTTP request
      * @param contextPath The application context path
@@ -226,9 +211,7 @@ public class CustomSaml2AuthenticationSuccessHandler
                 // SECURITY: Only trust Referer if it's in the CORS whitelist
                 // This prevents redirecting with JWT to untrusted domains (e.g., IdP domain)
                 if (isOriginWhitelisted(origin)) {
-                    log.debug(
-                            "Using whitelisted Referer origin for redirect: {}",
-                            origin);
+                    log.debug("Using whitelisted Referer origin for redirect: {}", origin);
                     return origin + "/auth/callback";
                 } else {
                     log.warn(

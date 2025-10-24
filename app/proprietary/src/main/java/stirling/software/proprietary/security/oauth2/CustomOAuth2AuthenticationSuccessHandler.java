@@ -36,11 +36,10 @@ import stirling.software.proprietary.security.service.UserService;
 public class CustomOAuth2AuthenticationSuccessHandler
         extends SavedRequestAwareAuthenticationSuccessHandler {
 
+    private final ApplicationProperties applicationProperties;
     private final LoginAttemptService loginAttemptService;
-    private final ApplicationProperties.Security.OAUTH2 oauth2Properties;
     private final UserService userService;
     private final JwtServiceInterface jwtService;
-    private final ApplicationProperties applicationProperties;
 
     @Override
     public void onAuthenticationSuccess(
@@ -69,6 +68,9 @@ public class CustomOAuth2AuthenticationSuccessHandler
             // Redirect to the original destination
             super.onAuthenticationSuccess(request, response, authentication);
         } else {
+            ApplicationProperties.Security.OAUTH2 oauth2Properties =
+                    applicationProperties.getSecurity().getOauth2();
+
             if (loginAttemptService.isBlocked(username)) {
                 if (session != null) {
                     session.removeAttribute("SPRING_SECURITY_SAVED_REQUEST");
@@ -118,7 +120,7 @@ public class CustomOAuth2AuthenticationSuccessHandler
                                     authentication, Map.of("authType", AuthenticationType.OAUTH2));
 
                     // Set JWT as HttpOnly cookie for security
-                    setJwtCookie(response, jwt, contextPath);
+                    jwtService.setJwtCookie(response, jwt, contextPath);
 
                     // Build context-aware redirect URL (without JWT in URL)
                     String redirectUrl = buildContextAwareRedirectUrl(request, contextPath);
@@ -148,30 +150,13 @@ public class CustomOAuth2AuthenticationSuccessHandler
     }
 
     /**
-     * Sets JWT as an HttpOnly cookie for security
-     * Prevents XSS attacks by making token inaccessible to JavaScript
-     *
-     * @param response HTTP response to set cookie
-     * @param jwt JWT token to store
-     * @param contextPath Application context path for cookie path
-     */
-    private void setJwtCookie(HttpServletResponse response, String jwt, String contextPath) {
-        jakarta.servlet.http.Cookie cookie = new jakarta.servlet.http.Cookie("stirling_jwt", jwt);
-        cookie.setHttpOnly(true); // Prevent JavaScript access (XSS protection)
-        cookie.setSecure(true); // Only send over HTTPS (set to false for local dev if needed)
-        cookie.setPath(contextPath.isEmpty() ? "/" : contextPath); // Cookie available for entire app
-        cookie.setMaxAge(3600); // 1 hour (matches JWT expiration)
-        cookie.setAttribute("SameSite", "Lax"); // CSRF protection
-        response.addCookie(cookie);
-    }
-
-    /**
      * Validates if the origin is in the CORS whitelist
      *
      * @param origin Origin to validate
      * @return true if origin is whitelisted or no whitelist configured
      */
     private boolean isOriginWhitelisted(String origin) {
+        ApplicationProperties applicationProperties = new ApplicationProperties();
         if (applicationProperties.getSystem() == null
                 || applicationProperties.getSystem().getCorsAllowedOrigins() == null
                 || applicationProperties.getSystem().getCorsAllowedOrigins().isEmpty()) {
@@ -183,8 +168,8 @@ public class CustomOAuth2AuthenticationSuccessHandler
     }
 
     /**
-     * Builds a context-aware redirect URL based on the request's origin
-     * Validates Referer against CORS whitelist to prevent token leakage to third parties
+     * Builds a context-aware redirect URL based on the request's origin Validates Referer against
+     * CORS whitelist to prevent token leakage to third parties
      *
      * @param request The HTTP request
      * @param contextPath The application context path
@@ -206,9 +191,7 @@ public class CustomOAuth2AuthenticationSuccessHandler
                 // SECURITY: Only trust Referer if it's in the CORS whitelist
                 // This prevents redirecting with JWT to untrusted domains (e.g., IdP domain)
                 if (isOriginWhitelisted(origin)) {
-                    log.debug(
-                            "Using whitelisted Referer origin for redirect: {}",
-                            origin);
+                    log.debug("Using whitelisted Referer origin for redirect: {}", origin);
                     return origin + "/auth/callback";
                 } else {
                     log.warn(

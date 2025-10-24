@@ -64,7 +64,7 @@ class JwtServiceTest {
                 Base64.getEncoder().encodeToString(testKeyPair.getPublic().getEncoded());
         testVerificationKey = new JwtVerificationKey("test-key-id", encodedPublicKey);
 
-        jwtService = new JwtService(true, keystoreService);
+        jwtService = new JwtService(keystoreService);
     }
 
     @Test
