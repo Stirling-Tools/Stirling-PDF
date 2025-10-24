@@ -76,7 +76,6 @@ export function fileContextReducer(state: FileContextState, action: FileContextA
       const newIds: FileId[] = [];
       const newById: Record<FileId, StirlingFileStub> = { ...state.files.byId };
       let hasInsertionPosition = false;
-      let insertAfterPageId: string | undefined;
 
       stirlingFileStubs.forEach(record => {
         // Only add if not already present (dedupe by stable ID)
@@ -86,7 +85,6 @@ export function fileContextReducer(state: FileContextState, action: FileContextA
           // Track if any file has an insertion position
           if (record.insertAfterPageId) {
             hasInsertionPosition = true;
-            insertAfterPageId = record.insertAfterPageId;
           }
 
           // Store record WITH insertAfterPageId temporarily

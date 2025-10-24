@@ -23,8 +23,7 @@ import {
   SplitCommand,
   BulkRotateCommand,
   PageBreakCommand,
-  UndoManager,
-  PageBreakSettings
+  UndoManager
 } from './commands/pageCommands';
 import { GRID_CONSTANTS } from './constants';
 import { useInitialPageDocument } from './hooks/useInitialPageDocument';
@@ -194,7 +193,7 @@ const PageEditor = ({
     }
 
     // Fast check: changes exist?
-    let hasAdditions = newByFile.size > 0;
+    const hasAdditions = newByFile.size > 0;
     let hasRemovals = false;
     for (const p of editedDocument.pages) {
       if (!sourceIds.has(p.id)) {

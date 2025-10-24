@@ -66,11 +66,6 @@ const createViewOptions = (
   const hasPageEditorFiles = pageEditorState && pageEditorState.totalCount > 0;
   const showPageEditorDropdown = isInPageEditor && hasPageEditorFiles;
 
-  let pageEditorDisplayName = 'Page Editor';
-  if (isInPageEditor && pageEditorState) {
-    pageEditorDisplayName = `${pageEditorState.selectedCount}/${pageEditorState.totalCount} selected`;
-  }
-
   const pageEditorOption = {
     label: showPageEditorDropdown ? (
       <PageEditorFileDropdown

@@ -68,7 +68,6 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
   // boxSelectedPageIds,
   clearBoxSelection,
   // getBoxSelection,
-  activeId,
   activeDragIds,
   // isOver,
   pageRefs,

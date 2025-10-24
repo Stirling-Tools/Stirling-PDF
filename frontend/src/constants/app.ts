@@ -1,10 +1,3 @@
-// Get base URL from window location
-export const getBaseUrl = (): string => {
-  if (typeof window !== 'undefined') {
-    return `${window.location.protocol}//${window.location.host}`;
-  }
-  return 'https://stirling.com';
-};
 
 // Base path from Vite config - build-time constant, normalized (no trailing slash)
 // When no subpath, use empty string instead of '.' to avoid relative path issues

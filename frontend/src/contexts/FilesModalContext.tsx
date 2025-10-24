@@ -2,7 +2,6 @@ import React, { createContext, useContext, useState, useCallback, useMemo } from
 import { useFileHandler } from '../hooks/useFileHandler';
 import { useFileActions } from './FileContext';
 import { StirlingFileStub } from '../types/fileContext';
-import { fileStorage } from '../services/fileStorage';
 
 interface FilesModalContextType {
   isFilesModalOpen: boolean;

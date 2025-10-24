@@ -99,7 +99,7 @@ const FileMenuItem: React.FC<FileMenuItemProps> = ({
         setIsDragOver((p) => (p ? false : p));
         setDropPosition('below');
       },
-      onDrag: ({ source, self }) => {
+      onDrag: ({ source }) => {
         // Determine drop position based on cursor location
         const element = itemRef.current;
         if (!element) return;
@@ -141,8 +141,8 @@ const FileMenuItem: React.FC<FileMenuItemProps> = ({
     });
 
     return () => {
-      try { dragCleanup(); } catch {}
-      try { dropCleanup(); } catch {}
+      try { dragCleanup(); } catch { /* cleanup */ }
+      try { dropCleanup(); } catch { /* cleanup */ }
     };
   }, []); // NOTE: no `onReorder` here
 
