@@ -15,11 +15,11 @@ import ErrorBoundary from "@app/components/shared/ErrorBoundary";
 import OnboardingTour from "@app/components/onboarding/OnboardingTour";
 
 // Import auth components
-import { AuthProvider } from "./auth/UseSession";
-import Landing from "./routes/Landing";
-import Login from "./routes/Login";
-import Signup from "./routes/Signup";
-import AuthCallback from "./routes/AuthCallback";
+import { AuthProvider } from "@app/auth/UseSession";
+import Landing from "@app/routes/Landing";
+import Login from "@app/routes/Login";
+import Signup from "@app/routes/Signup";
+import AuthCallback from "@app/routes/AuthCallback";
 
 // Import global styles
 import "@app/styles/tailwind.css";
