@@ -1,14 +1,15 @@
 import { Alert, Group, Loader, Stack, Text } from '@mantine/core';
-import { MutableRefObject } from 'react';
+import { RefObject } from 'react';
 import type { PagePreview, WordHighlightEntry } from './types';
 import type { TokenBoundingBox } from '../../../types/compare';
 import CompareNavigationDropdown from './CompareNavigationDropdown';
 import { toRgba } from './compareUtils';
+import LazyLoadContainer from '../../shared/LazyLoadContainer';
 
 interface CompareDocumentPaneProps {
   pane: 'base' | 'comparison';
-  scrollRef: MutableRefObject<HTMLDivElement | null>;
-  peerScrollRef: MutableRefObject<HTMLDivElement | null>;
+  scrollRef: RefObject<HTMLDivElement | null>;
+  peerScrollRef: RefObject<HTMLDivElement | null>;
   handleScrollSync: (source: HTMLDivElement | null, target: HTMLDivElement | null) => void;
   beginPan: (pane: 'base' | 'comparison', event: React.MouseEvent<HTMLDivElement>) => void;
   continuePan: (event: React.MouseEvent<HTMLDivElement>) => void;
@@ -22,17 +23,14 @@ interface CompareDocumentPaneProps {
   pan?: { x: number; y: number };
   title: string;
   dropdownPlaceholder?: string;
-  changes: Array<{ value: string; label: string }>;
-  onNavigateChange: (id: string) => void;
+  changes: Array<{ value: string; label: string; pageNumber?: number }>;
+  onNavigateChange: (id: string, pageNumber?: number) => void;
   isLoading: boolean;
   processingMessage: string;
   emptyMessage: string;
   pages: PagePreview[];
   pairedPages: PagePreview[];
   getRowHeightPx: (pageNumber: number) => number;
-  highlightColor: string;
-  highlightOpacity: number;
-  offsetPixels: number;
   wordHighlightMap: Map<number, WordHighlightEntry[]>;
   tokenIndexToGroupId: Map<number, string>;
   documentLabel: string;
@@ -101,15 +99,16 @@ const CompareDocumentPane = ({
   pages,
   pairedPages,
   getRowHeightPx,
-  highlightColor,
-  highlightOpacity,
-  offsetPixels,
   wordHighlightMap,
   tokenIndexToGroupId,
   documentLabel,
   pageLabel,
   altLabel,
 }: CompareDocumentPaneProps) => {
+  // Constants that vary by pane
+  const HIGHLIGHT_COLOR = pane === 'base' ? '#ff6b6b' : '#51cf66'; // red for base (removals), green for comparison (additions)
+  const HIGHLIGHT_OPACITY = pane === 'base' ? 0.45 : 0.35;
+  const OFFSET_PIXELS = pane === 'base' ? 4 : 2;
   const cursorStyle = isPanMode && zoom > 1 ? 'grab' : 'auto';
   const panX = (pan?.x ?? 0);
   const panY = (pan?.y ?? 0);
@@ -165,7 +164,7 @@ const CompareDocumentPane = ({
             const targetHeight = peerPage ? Math.max(page.height, peerPage.height) : page.height;
             const fit = targetHeight / page.height;
             const rowHeightPx = getRowHeightPx(page.pageNumber);
-            const highlightOffset = offsetPixels / page.height;
+            const highlightOffset = OFFSET_PIXELS / page.height;
 
             const wordRects = wordHighlightMap.get(page.pageNumber) ?? [];
             const groupedRects = new Map<string, TokenBoundingBox[]>();
@@ -178,51 +177,91 @@ const CompareDocumentPane = ({
             }
 
             return (
-              <div
+              <LazyLoadContainer
                 key={`${pane}-page-${page.pageNumber}`}
-                className="compare-diff-page"
-                style={{ minHeight: `${rowHeightPx}px` }}
-              >
-                <Text size="xs" fw={600} c="dimmed">
-                  {documentLabel} · {pageLabel} {page.pageNumber}
-                </Text>
-                <div
-                  className="compare-diff-page__canvas compare-diff-page__canvas--zoom"
-                  style={{ width: `${Math.round(page.width * fit)}px` }}
-                >
+                rootMargin="100px"
+                threshold={0.1}
+                fallback={
                   <div
-                    className="compare-diff-page__inner"
-                    style={{ transform: `translate(${-panX}px, ${-panY}px) scale(${zoom})`, transformOrigin: 'top left' }}
+                    className="compare-diff-page"
+                    data-page-number={page.pageNumber}
+                    style={{ minHeight: `${rowHeightPx}px` }}
                   >
-                    <img
-                      src={page.url}
-                      alt={altLabel}
-                      loading="lazy"
-                      className="compare-diff-page__image"
-                    />
-                    {[...groupedRects.entries()].flatMap(([id, rects]) =>
-                      mergeConnectedRects(rects).map((rect, index) => {
-                        const rotation = ((page.rotation ?? 0) % 360 + 360) % 360;
-                        const verticalOffset = rotation === 180 ? -highlightOffset : highlightOffset;
-                        return (
-                          <span
-                            key={`${pane}-highlight-${page.pageNumber}-${id}-${index}`}
-                            data-change-id={id}
-                            className="compare-diff-highlight"
-                            style={{
-                              left: `${rect.left * 100}%`,
-                              top: `${(rect.top + verticalOffset) * 100}%`,
-                              width: `${rect.width * 100}%`,
-                              height: `${rect.height * 100}%`,
-                              backgroundColor: toRgba(highlightColor, highlightOpacity),
-                            }}
-                          />
-                        );
-                      })
-                    )}
+                    <Text size="xs" fw={600} c="dimmed">
+                      {documentLabel} · {pageLabel} {page.pageNumber}
+                    </Text>
+                    <div
+                      className="compare-diff-page__canvas compare-diff-page__canvas--zoom"
+                      style={{ width: `${Math.round(page.width * fit)}px` }}
+                    >
+                      <div
+                        className="compare-diff-page__inner"
+                        style={{ transform: `translate(${-panX}px, ${-panY}px) scale(${zoom})`, transformOrigin: 'top left' }}
+                      >
+                        <div
+                          style={{
+                            width: '100%',
+                            height: `${Math.round(page.height * fit)}px`,
+                            backgroundColor: '#f8f9fa',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            border: '1px solid #e9ecef',
+                          }}
+                        >
+                          <Loader size="sm" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                }
+              >
+                <div
+                  className="compare-diff-page"
+                  data-page-number={page.pageNumber}
+                  style={{ minHeight: `${rowHeightPx}px` }}
+                >
+                  <Text size="xs" fw={600} c="dimmed">
+                    {documentLabel} · {pageLabel} {page.pageNumber}
+                  </Text>
+                  <div
+                    className="compare-diff-page__canvas compare-diff-page__canvas--zoom"
+                    style={{ width: `${Math.round(page.width * fit)}px` }}
+                  >
+                    <div
+                      className="compare-diff-page__inner"
+                      style={{ transform: `translate(${-panX}px, ${-panY}px) scale(${zoom})`, transformOrigin: 'top left' }}
+                    >
+                      <img
+                        src={page.url}
+                        alt={altLabel}
+                        loading="lazy"
+                        className="compare-diff-page__image"
+                      />
+                      {[...groupedRects.entries()].flatMap(([id, rects]) =>
+                        mergeConnectedRects(rects).map((rect, index) => {
+                          const rotation = ((page.rotation ?? 0) % 360 + 360) % 360;
+                          const verticalOffset = rotation === 180 ? -highlightOffset : highlightOffset;
+                          return (
+                            <span
+                              key={`${pane}-highlight-${page.pageNumber}-${id}-${index}`}
+                              data-change-id={id}
+                              className="compare-diff-highlight"
+                              style={{
+                                left: `${rect.left * 100}%`,
+                                top: `${(rect.top + verticalOffset) * 100}%`,
+                                width: `${rect.width * 100}%`,
+                                height: `${rect.height * 100}%`,
+                                backgroundColor: toRgba(HIGHLIGHT_COLOR, HIGHLIGHT_OPACITY),
+                              }}
+                            />
+                          );
+                        })
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
+              </LazyLoadContainer>
             );
           })}
         </Stack>

@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import CompareRoundedIcon from '@mui/icons-material/CompareRounded';
-import { Box, Card, Group, Stack, Text, Button } from '@mantine/core';
+import { Box, Group, Stack, Text, Button } from '@mantine/core';
+import { createToolFlow } from '../components/tools/shared/createToolFlow';
 import { useBaseTool } from '../hooks/tools/shared/useBaseTool';
 import { BaseToolProps, ToolComponent } from '../types/tool';
 import {
@@ -15,12 +16,12 @@ import {
 import CompareWorkbenchView from '../components/tools/compare/CompareWorkbenchView';
 import { useToolWorkflow } from '../contexts/ToolWorkflowContext';
 import { useNavigationActions, useNavigationState } from '../contexts/NavigationContext';
-import { useFileActions, useFileContext } from '../contexts/file/fileHooks';
+import { useFileContext } from '../contexts/file/fileHooks';
 import type { FileId } from '../types/file';
-import { createToolFlow } from '../components/tools/shared/createToolFlow';
+import type { StirlingFile } from '../types/fileContext';
 import DocumentThumbnail from '../components/shared/filePreview/DocumentThumbnail';
-import { useFilesModalContext } from '../contexts/FilesModalContext';
 import './compareTool.css';
+import type { CompareWorkbenchData } from '../types/compareWorkbench';
 
 const CUSTOM_VIEW_ID = 'compareWorkbenchView';
 const CUSTOM_WORKBENCH_ID = 'custom:compareWorkbenchView' as const;
@@ -36,8 +37,6 @@ const Compare = (props: BaseToolProps) => {
     clearCustomWorkbenchViewData,
   } = useToolWorkflow();
   const { selectors } = useFileContext();
-  const { actions: fileActions } = useFileActions();
-  const { openFilesModal } = useFilesModalContext();
 
   const base = useBaseTool(
     'compare',
@@ -59,7 +58,7 @@ const Compare = (props: BaseToolProps) => {
       // Use a static label at registration time to avoid re-registering on i18n changes
       label: 'Compare view',
       icon: compareIcon,
-      component: CompareWorkbenchView,
+      component: CompareWorkbenchView as any,
     });
 
     return () => {
@@ -69,18 +68,26 @@ const Compare = (props: BaseToolProps) => {
   // Register once; avoid re-registering on translation/prop changes which clears data mid-flight
   }, []);
 
-  // Map the first two selected workbench files into base/comparison in order
+  // Auto-map from workbench selection: always reflect the first two selected files in order.
+  // This also handles deselection by promoting the remaining selection to base and clearing comparison.
   useEffect(() => {
-    const first = base.selectedFiles[0]?.fileId as FileId | undefined;
-    const second = base.selectedFiles[1]?.fileId as FileId | undefined;
+    const selectedIds = base.selectedFiles.map(f => f.fileId as FileId);
 
-    const nextBase: FileId | null = first ?? null;
-    const nextComp: FileId | null = second ?? null;
+    // Determine next base: keep current if still selected; otherwise use the first selected id
+    const nextBase: FileId | null = params.baseFileId && selectedIds.includes(params.baseFileId)
+      ? (params.baseFileId as FileId)
+      : (selectedIds[0] ?? null);
 
-    // Removed verbose diagnostics
+    // Determine next comparison: keep current if still selected and distinct; otherwise use the first other selected id
+    let nextComp: FileId | null = null;
+    if (params.comparisonFileId && selectedIds.includes(params.comparisonFileId) && params.comparisonFileId !== nextBase) {
+      nextComp = params.comparisonFileId as FileId;
+    } else {
+      nextComp = (selectedIds.find(id => id !== nextBase) ?? null) as FileId | null;
+    }
 
-    if (params.baseFileId !== nextBase || params.comparisonFileId !== nextComp) {
-      base.params.setParameters((prev: any) => ({
+    if (nextBase !== params.baseFileId || nextComp !== params.comparisonFileId) {
+      base.params.setParameters(prev => ({
         ...prev,
         baseFileId: nextBase,
         comparisonFileId: nextComp,
@@ -105,13 +112,14 @@ const Compare = (props: BaseToolProps) => {
 
     if (matchesSelection && result && processedAt !== null && processedAt !== lastProcessedAtRef.current) {
       
-      setCustomWorkbenchViewData(CUSTOM_VIEW_ID, {
+      const workbenchData: CompareWorkbenchData = {
         result,
         baseFileId,
         comparisonFileId,
         baseLocalFile: null,
         comparisonLocalFile: null,
-      });
+      };
+      setCustomWorkbenchViewData(CUSTOM_VIEW_ID, workbenchData);
       // Defer workbench switch to the next frame so the data update is visible to the provider
       requestAnimationFrame(() => {
           
@@ -136,21 +144,47 @@ const Compare = (props: BaseToolProps) => {
     params,
   ]);
 
-  const handleOpenWorkbench = useCallback(() => {
-    navigationActions.setWorkbench(CUSTOM_WORKBENCH_ID);
-  }, [navigationActions]);
+  // const handleOpenWorkbench = useCallback(() => {
+  //   navigationActions.setWorkbench(CUSTOM_WORKBENCH_ID);
+  // }, [navigationActions]);
 
   const handleExecuteCompare = useCallback(async () => {
-    const selected: any[] = [];
+    const selected: StirlingFile[] = [];
     const baseSel = params.baseFileId ? selectors.getFile(params.baseFileId) : null;
     const compSel = params.comparisonFileId ? selectors.getFile(params.comparisonFileId) : null;
     if (baseSel) selected.push(baseSel);
     if (compSel) selected.push(compSel);
     await operation.executeOperation(
-      { ...params } as any,
-      selected as any
+      { ...params },
+      selected
     );
   }, [operation, params, selectors]);
+
+  // Run compare with explicit ids (used after swap so we don't depend on async state propagation)
+  const runCompareWithIds = useCallback(async (baseId: FileId | null, compId: FileId | null) => {
+    const nextParams = { ...params, baseFileId: baseId, comparisonFileId: compId };
+    const selected: StirlingFile[] = [];
+    const baseSel = baseId ? selectors.getFile(baseId) : null;
+    const compSel = compId ? selectors.getFile(compId) : null;
+    if (baseSel) selected.push(baseSel);
+    if (compSel) selected.push(compSel);
+    await operation.executeOperation(nextParams, selected);
+  }, [operation, params, selectors]);
+
+  const handleSwap = useCallback(() => {
+    const baseId = params.baseFileId as FileId | null;
+    const compId = params.comparisonFileId as FileId | null;
+    if (!baseId || !compId) return;
+    base.params.setParameters((prev) => ({
+      ...prev,
+      baseFileId: compId,
+      comparisonFileId: baseId,
+    }));
+    // If we already have a comparison result, re-run automatically using the swapped ids.
+    if (operation.result) {
+      runCompareWithIds(compId, baseId);
+    }
+  }, [base.params, params.baseFileId, params.comparisonFileId, operation.result, runCompareWithIds]);
 
   const renderSelectedFile = useCallback(
     (role: 'base' | 'comparison') => {
@@ -159,11 +193,21 @@ const Compare = (props: BaseToolProps) => {
 
       if (!stub) {
         return (
-          <Card withBorder padding="md" radius="md">
+          <Box
+            style={{
+              border: '1px solid var(--border-default)',
+              borderRadius: 'var(--radius-md)',
+              padding: '0.75rem 1rem',
+              background: 'var(--bg-surface)'
+            }}
+          >
             <Text size="sm" c="dimmed">
-              {t(role === 'base' ? 'compare.base.placeholder' : 'compare.comparison.placeholder', role === 'base' ? 'Select a base PDF' : 'Select a comparison PDF')}
+              {t(
+                role === 'base' ? 'compare.base.placeholder' : 'compare.comparison.placeholder',
+                role === 'base' ? 'Select a base PDF' : 'Select a comparison PDF'
+              )}
             </Text>
-          </Card>
+          </Box>
         );
       }
 
@@ -177,10 +221,17 @@ const Compare = (props: BaseToolProps) => {
         .join(' - ');
 
       return (
-        <Card withBorder padding="md" radius="md">
+        <Box
+          style={{
+            border: '1px solid var(--border-default)',
+            borderRadius: 'var(--radius-md)',
+            padding: '0.75rem 1rem',
+            background: 'var(--bg-surface)'
+          }}
+        >
           <Group align="flex-start" wrap="nowrap" gap="md">
             <Box className="compare-tool__thumbnail">
-              <DocumentThumbnail file={stub as any} thumbnail={stub?.thumbnailUrl || null} />
+              <DocumentThumbnail file={stub ?? null} thumbnail={stub?.thumbnailUrl || null} />
             </Box>
             <Stack gap={4} className="compare-tool__details">
               <Text fw={600} truncate>
@@ -191,36 +242,9 @@ const Compare = (props: BaseToolProps) => {
                   {meta}
                 </Text>
               )}
-              <Button
-                variant="light"
-                size="xs"
-                onClick={() => {
-                  openFilesModal({
-                    maxNumberOfFiles: 1,
-                    customHandler: async (files: File[]) => {
-                      if (!files.length) return;
-                      try {
-                        const added = await fileActions.addFiles(files, { selectFiles: true });
-                        const primary = added[0];
-                        if (!primary) return;
-                        base.params.setParameters((prev: any) => ({
-                          ...prev,
-                          baseFileId: role === 'base' ? (primary.fileId as FileId) : prev.baseFileId,
-                          comparisonFileId: role === 'comparison' ? (primary.fileId as FileId) : prev.comparisonFileId,
-                        }));
-                      } catch (e) {
-                        console.error('[compare] replace file failed', e);
-                      }
-                    },
-                  });
-                }}
-                disabled={base.operation.isLoading}
-              >
-                {t('compare.upload.replaceFile', 'Replace file')}
-              </Button>
             </Stack>
           </Group>
-        </Card>
+        </Box>
       );
     },
     [params.baseFileId, params.comparisonFileId, selectors, t]
@@ -231,23 +255,30 @@ const Compare = (props: BaseToolProps) => {
   );
 
   return createToolFlow({
-    title: {
-      title: t('compare.title', 'Compare Documents'),
-      description: t('compare.description', 'Select the base and comparison PDF to highlight differences.'),
-    },
     files: {
       selectedFiles: base.selectedFiles,
+      isCollapsed: false,
+      autoExpandNextOnFiles: true, // Next step (selection) opens as soon as files exist
     },
     steps: [
       {
-        title: t('compare.base.label', 'Base Document'),
+        title: t('compare.selection.title', 'Select Base and Comparison'),
         isVisible: true,
-        content: renderSelectedFile('base'),
-      },
-      {
-        title: t('compare.comparison.label', 'Comparison Document'),
-        isVisible: true,
-        content: renderSelectedFile('comparison'),
+        content: (
+          <Stack gap="md">
+            {renderSelectedFile('base')}
+            {renderSelectedFile('comparison')}
+            <Group justify="flex-start">
+              <Button
+                variant="outline"
+                onClick={handleSwap}
+                disabled={!params.baseFileId || !params.comparisonFileId || base.operation.isLoading}
+              >
+                {t('compare.swap', 'Swap PDFs')}
+              </Button>
+            </Group>
+          </Stack>
+        ),
       },
     ],
     executeButton: {

@@ -1,4 +1,4 @@
-import { ToastOptions } from './types';
+import type { ToastApi, ToastInstance, ToastOptions } from './types';
 import { useToast, ToastProvider } from './ToastContext';
 import ToastRenderer from './ToastRenderer';
 
@@ -7,18 +7,26 @@ export { useToast, ToastProvider, ToastRenderer };
 // Global imperative API via module singleton
 let _api: ReturnType<typeof createImperativeApi> | null = null;
 
+type ToastContextApi = ToastApi & { toasts: ToastInstance[] };
+
 function createImperativeApi() {
-  const subscribers: Array<(fn: any) => void> = [];
-  let api: any = null;
+  const subscribers: Array<(fn: ToastContextApi) => void> = [];
+  let api: ToastContextApi | null = null;
   return {
-    provide(instance: any) {
+    provide(instance: ToastContextApi) {
       api = instance;
-      subscribers.splice(0).forEach(cb => cb(api));
+      subscribers.splice(0).forEach(cb => cb(instance));
     },
-    get(): any | null { return api; },
-    onReady(cb: (api: any) => void) {
-      if (api) cb(api); else subscribers.push(cb);
-    }
+    get(): ToastContextApi | null {
+      return api;
+    },
+    onReady(cb: (readyApi: ToastContextApi) => void) {
+      if (api) {
+        cb(api);
+      } else {
+        subscribers.push(cb);
+      }
+    },
   };
 }
 
@@ -57,5 +65,4 @@ export function dismissToast(id: string) {
 export function dismissAllToasts() {
   _api?.get()?.dismissAll();
 }
-
 

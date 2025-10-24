@@ -3,7 +3,7 @@
 export const PARAGRAPH_SENTINEL = '\uE000¶';
 
 export const shouldConcatWithoutSpace = (word: string) => {
-  return /^[.,!?;:)\]\}]/.test(word) || word.startsWith("'") || word === "'s";
+  return /^[.,!?;:)\]}]/.test(word) || word.startsWith("'") || word === "'s";
 };
 
 export const appendWord = (existing: string, word: string) => {

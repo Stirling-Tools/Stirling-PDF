@@ -2,10 +2,10 @@ import { Combobox, ScrollArea, useCombobox } from '@mantine/core';
 import { useMemo, useState } from 'react';
 
 interface NavigationDropdownProps {
-  changes: Array<{ value: string; label: string }>;
+  changes: Array<{ value: string; label: string; pageNumber?: number }>;
   placeholder: string;
   className?: string;
-  onNavigate: (value: string) => void;
+  onNavigate: (value: string, pageNumber?: number) => void;
 }
 
 const CompareNavigationDropdown = ({
@@ -18,11 +18,23 @@ const CompareNavigationDropdown = ({
     onDropdownClose: () => combobox.resetSelectedOption(),
   });
 
-  const sanitize = (s: string) => s
-    .normalize('NFKC')
-    .replace(/[\u0000-\u001F\u007F-\u00A0\u2000-\u206F\u2190-\u21FF\u25A0-\u25FF]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
+  const sanitize = (s: string) => {
+    // Normalize and remove control/separator characters without regex ranges
+    return s
+      .normalize('NFKC')
+      .split('')
+      .map(char => {
+        const code = char.charCodeAt(0);
+        // Replace control chars (0-31, 127) and special separators with space
+        if (code <= 31 || code === 127 || code === 0x2028 || code === 0x2029 || (code >= 0x200B && code <= 0x200F)) {
+          return ' ';
+        }
+        return char;
+      })
+      .join('')
+      .replace(/\s+/g, ' ')
+      .trim();
+  };
 
   const isMeaningful = (s: string) => {
     const t = sanitize(s);
@@ -39,7 +51,7 @@ const CompareNavigationDropdown = ({
 
   const normalizedChanges = useMemo(() => {
     const cleaned = changes
-      .map((c) => ({ value: c.value, label: sanitize(c.label) }))
+      .map((c) => ({ value: c.value, label: sanitize(c.label), pageNumber: c.pageNumber }))
       .filter((c) => isMeaningful(c.label));
     const q = sanitize(query).toLowerCase();
     if (!q) return cleaned;
@@ -51,7 +63,8 @@ const CompareNavigationDropdown = ({
       store={combobox}
       withinPortal={false}
       onOptionSubmit={(value) => {
-        onNavigate(value);
+        const pn = normalizedChanges.find((c) => c.value === value)?.pageNumber;
+        onNavigate(value, pn);
         combobox.closeDropdown();
       }}
       // Mantine Combobox does not accept controlled search props; handle via Combobox.Search directly
@@ -76,7 +89,7 @@ const CompareNavigationDropdown = ({
                   value={item.value}
                   key={item.value}
                   onClick={() => {
-                    onNavigate(item.value);
+                    onNavigate(item.value, item.pageNumber);
                     combobox.closeDropdown();
                   }}
                 >

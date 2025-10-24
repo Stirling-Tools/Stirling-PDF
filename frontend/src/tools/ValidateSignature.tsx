@@ -39,13 +39,18 @@ const ValidateSignature = (props: BaseToolProps) => {
   const hasResults = operation.results.length > 0;
   const showResultsStep = hasResults || base.operation.isLoading || !!base.operation.errorMessage;
 
+  // Adapter to satisfy ComponentType<{ data: unknown }>
+  const ReportAdapter: React.ComponentType<{ data: unknown }> = ({ data }) => (
+    <ValidateSignatureReportView data={data as SignatureValidationReportData} />
+  );
+
   useEffect(() => {
     registerCustomWorkbenchView({
       id: REPORT_VIEW_ID,
       workbenchId: REPORT_WORKBENCH_ID,
       label: t('validateSignature.report.shortTitle', 'Signature Report'),
       icon: reportIcon,
-      component: ValidateSignatureReportView,
+      component: ReportAdapter,
     });
 
     return () => {

@@ -12,6 +12,7 @@ export interface FilesStepConfig {
   minFiles?: number;
   onCollapsedClick?: () => void;
   isVisible?: boolean;
+  autoExpandNextOnFiles?: boolean;
 }
 
 export interface MiddleStepConfig {
@@ -67,6 +68,7 @@ export interface ToolFlowConfig {
  */
 export function createToolFlow(config: ToolFlowConfig) {
   const steps = createToolSteps();
+  const hasFiles = (config.files.selectedFiles?.length ?? 0) > 0;
 
   return (
     <Stack gap="sm" p="sm" >
@@ -83,10 +85,11 @@ export function createToolFlow(config: ToolFlowConfig) {
         })}
 
         {/* Middle Steps */}
-        {config.steps.map((stepConfig) =>
+        {config.steps.map((stepConfig, index) =>
           steps.create(stepConfig.title, {
             isVisible: stepConfig.isVisible,
-            isCollapsed: stepConfig.isCollapsed,
+            // If enabled, auto-expand the first middle step when files exist
+            isCollapsed: index === 0 && config.files.autoExpandNextOnFiles ? !hasFiles : stepConfig.isCollapsed,
             onCollapsedClick: stepConfig.onCollapsedClick,
             tooltip: stepConfig.tooltip
           }, stepConfig.content)
