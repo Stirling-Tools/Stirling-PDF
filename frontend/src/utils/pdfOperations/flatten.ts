@@ -8,6 +8,13 @@ export async function flattenPdfClientSide(
   params: FlattenParameters,
   files: File[]
 ): Promise<File[]> {
+  // Frontend processing only supports flattening forms (not full page rasterization)
+  // The shouldUseFrontend check in the operation config ensures this is only called
+  // when flattenOnlyForms is true, but we verify here for safety
+  if (!params.flattenOnlyForms) {
+    throw new Error('Frontend flattening only supports form flattening. Use backend for full flattening.');
+  }
+
   return Promise.all(
     files.map(async (file) => {
       const sourceBytes = await file.arrayBuffer();

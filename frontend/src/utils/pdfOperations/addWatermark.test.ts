@@ -8,7 +8,7 @@ async function createSamplePdf(): Promise<File> {
   const page = pdf.addPage([400, 400]);
   page.drawText('Sample content', { x: 50, y: 350, size: 18 });
   const bytes = await pdf.save();
-  return new File([bytes], 'sample.pdf', { type: 'application/pdf' });
+  return new File([bytes as BlobPart], 'sample.pdf', { type: 'application/pdf' });
 }
 
 describe('addWatermarkClientSide', () => {

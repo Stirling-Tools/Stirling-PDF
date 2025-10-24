@@ -10,7 +10,7 @@ async function createPdf(pages: number): Promise<File> {
     page.drawText(`Page ${i + 1}`, { x: 20, y: 260, size: 12 });
   }
   const bytes = await pdf.save();
-  return new File([bytes], 'remove.pdf', { type: 'application/pdf' });
+  return new File([bytes as BlobPart], 'remove.pdf', { type: 'application/pdf' });
 }
 
 describe('removePagesClientSide', () => {

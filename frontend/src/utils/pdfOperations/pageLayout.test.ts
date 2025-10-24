@@ -9,7 +9,7 @@ async function createPdf(pages: number): Promise<File> {
     doc.addPage([200, 200]);
   }
   const bytes = await doc.save();
-  return new File([bytes], 'layout.pdf', { type: 'application/pdf' });
+  return new File([bytes as BlobPart], 'layout.pdf', { type: 'application/pdf' });
 }
 
 describe('pageLayoutClientSide', () => {

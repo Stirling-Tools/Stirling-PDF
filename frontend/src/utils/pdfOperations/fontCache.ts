@@ -17,7 +17,7 @@ const fontBytesCache = new Map<string, Uint8Array>();
 
 const embeddedFontCache = new WeakMap<PDFDocument, Map<string, Promise<PDFFont>>>();
 
-const FALLBACK_FONT: FontSource = { type: 'standard', name: StandardFonts.Helvetica };
+const FALLBACK_FONT = { type: 'standard', name: StandardFonts.Helvetica } as const;
 
 async function fetchFontBytes(url: string): Promise<Uint8Array> {
   const cached = fontBytesCache.get(url);
@@ -63,7 +63,7 @@ export async function loadFontForAlphabet(
       .then(bytes => pdfDoc.embedFont(bytes, { subset: true }))
       .catch(async () => {
         // Fall back to a standard font if remote font loading fails
-        return pdfDoc.embedFont(FALLBACK_FONT.name, { subset: true });
+        return pdfDoc.embedFont(StandardFonts.Helvetica, { subset: true });
       });
   }
 

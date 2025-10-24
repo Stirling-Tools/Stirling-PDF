@@ -80,11 +80,35 @@ export const splitOperationConfig = {
     process: splitPdfClientSide,
     shouldUseFrontend: (params: SplitParameters) => {
       if (params.processingMode !== 'frontend') return false;
-      if (params.method !== SPLIT_METHODS.BY_PAGES) return false;
-      const token = params.pages?.trim();
-      if (!token) return true;
-      if (token.toLowerCase().includes('n')) return false;
-      return validatePageNumbers(token);
+
+      // Check if method supports browser processing
+      const browserMethods = [
+        SPLIT_METHODS.BY_PAGES,
+        SPLIT_METHODS.BY_PAGE_COUNT,
+        SPLIT_METHODS.BY_DOC_COUNT,
+        SPLIT_METHODS.BY_SIZE
+      ];
+      if (!browserMethods.includes(params.method)) return false;
+
+      // Method-specific validation
+      switch (params.method) {
+        case SPLIT_METHODS.BY_PAGES: {
+          const token = params.pages?.trim();
+          if (!token) return true; // Empty means split all pages
+          if (token.toLowerCase().includes('n')) return false; // "n-2" syntax not supported
+          return validatePageNumbers(token);
+        }
+
+        case SPLIT_METHODS.BY_PAGE_COUNT:
+        case SPLIT_METHODS.BY_DOC_COUNT:
+        case SPLIT_METHODS.BY_SIZE: {
+          const value = parseInt(params.splitValue, 10);
+          return !isNaN(value) && value > 0;
+        }
+
+        default:
+          return false;
+      }
     },
     statusMessage: 'Splitting PDF in browser...'
   }

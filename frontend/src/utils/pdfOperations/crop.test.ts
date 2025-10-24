@@ -7,7 +7,7 @@ async function createPdf(width: number, height: number): Promise<File> {
   const pdf = await PDFDocument.create();
   pdf.addPage([width, height]);
   const bytes = await pdf.save();
-  return new File([bytes], 'crop.pdf', { type: 'application/pdf' });
+  return new File([bytes as BlobPart], 'crop.pdf', { type: 'application/pdf' });
 }
 
 describe('cropPdfClientSide', () => {

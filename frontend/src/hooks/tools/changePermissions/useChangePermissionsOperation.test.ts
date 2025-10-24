@@ -47,12 +47,12 @@ describe('useChangePermissionsOperation', () => {
     cancelOperation: vi.fn(),
     undoOperation: vi.fn(),
     supportsFrontendProcessing: false,
-    evaluateShouldUseFrontend: vi.fn(() => false),
+    evaluateShouldUseFrontend: vi.fn(),
   };
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockToolOperationReturn.evaluateShouldUseFrontend.mockReturnValue(false);
+    (mockToolOperationReturn.evaluateShouldUseFrontend as any).mockReturnValue(false);
     mockUseToolOperation.mockReturnValue(mockToolOperationReturn);
   });
 
@@ -100,7 +100,7 @@ describe('useChangePermissionsOperation', () => {
     expect(formData.get('fileInput')).toBe(testFile);
 
     (Object.keys(testParameters) as Array<keyof ChangePermissionsParameters>).forEach(key => {
-      expect(formData.get(key), `Parameter ${key} should be set correctly`).toBe(testParameters[key].toString());
+      expect(formData.get(String(key)), `Parameter ${String(key)} should be set correctly`).toBe(String(testParameters[key]));
     });
   });
 

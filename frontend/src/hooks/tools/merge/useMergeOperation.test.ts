@@ -49,12 +49,12 @@ describe('useMergeOperation', () => {
       throw new Error('Function not implemented.');
     },
     supportsFrontendProcessing: false,
-    evaluateShouldUseFrontend: vi.fn(() => false),
+    evaluateShouldUseFrontend: vi.fn(),
   };
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockToolOperationReturn.evaluateShouldUseFrontend.mockReturnValue(false);
+    (mockToolOperationReturn.evaluateShouldUseFrontend as any).mockReturnValue(false);
     mockUseToolOperation.mockReturnValue(mockToolOperationReturn);
   });
 

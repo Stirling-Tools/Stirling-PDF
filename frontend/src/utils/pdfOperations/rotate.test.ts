@@ -8,7 +8,7 @@ async function createSamplePdf(rotation: number = 0): Promise<File> {
   const page = pdf.addPage([200, 200]);
   page.setRotation(degrees(rotation));
   const bytes = await pdf.save();
-  return new File([bytes], 'sample.pdf', { type: 'application/pdf' });
+  return new File([bytes as BlobPart], 'sample.pdf', { type: 'application/pdf' });
 }
 
 describe('rotatePdfClientSide', () => {

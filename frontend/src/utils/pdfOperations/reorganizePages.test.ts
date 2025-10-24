@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import { describe, expect, it } from 'vitest';
 import { PDFDocument } from 'pdf-lib';
 import { reorganizePagesClientSide } from './reorganizePages';
 import type { ReorganizePagesParameters } from '../../hooks/tools/reorganizePages/useReorganizePagesParameters';
@@ -10,7 +9,7 @@ async function createPdf(pages: number): Promise<File> {
     doc.addPage([200 + i * 20, 200]);
   }
   const bytes = await doc.save();
-  return new File([bytes], 'reorder.pdf', { type: 'application/pdf' });
+  return new File([bytes as BlobPart], 'reorder.pdf', { type: 'application/pdf' });
 }
 
 describe('reorganizePagesClientSide', () => {

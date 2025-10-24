@@ -32,11 +32,11 @@ const formatPdfDate = (date: Date): string => {
 };
 
 const ensureInfoDict = (pdfDoc: PDFDocument): PDFDict => {
-  const infoRef = pdfDoc.context.trailer.get(PDFName.of('Info'));
+  const infoRef = pdfDoc.context.trailerInfo.Info;
   let info = infoRef ? pdfDoc.context.lookup(infoRef, PDFDict) : undefined;
   if (!info) {
     info = pdfDoc.context.obj({});
-    pdfDoc.context.trailer.set(PDFName.of('Info'), info);
+    pdfDoc.context.trailerInfo.Info = info;
   }
   return info;
 };
@@ -80,7 +80,7 @@ export async function changeMetadataClientSide(
 
       if (params.deleteAll) {
         info = pdfDoc.context.obj({});
-        pdfDoc.context.trailer.set(PDFName.of('Info'), info);
+        pdfDoc.context.trailerInfo.Info = info;
         const catalogDict = (pdfDoc.catalog as any)?.dict;
         if (catalogDict) {
           catalogDict.delete(PDFName.of('Metadata'));
@@ -95,7 +95,7 @@ export async function changeMetadataClientSide(
         setInfoString(info, 'Keywords', params.keywords);
         setInfoString(info, 'Creator', params.creator);
         setInfoString(info, 'Producer', params.producer);
-        setInfoString(info, 'Trapped', params.trapped && params.trapped !== 'UNKNOWN' ? params.trapped : undefined);
+        setInfoString(info, 'Trapped', params.trapped && params.trapped !== ('UNKNOWN' as any) ? params.trapped : undefined);
         setInfoDate(info, 'CreationDate', params.creationDate);
         setInfoDate(info, 'ModDate', params.modificationDate);
 

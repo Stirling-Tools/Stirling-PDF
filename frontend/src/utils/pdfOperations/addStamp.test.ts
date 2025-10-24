@@ -8,7 +8,7 @@ async function createPdf(): Promise<File> {
   const page = pdf.addPage([300, 300]);
   page.drawText('Page 1', { x: 20, y: 260, size: 18 });
   const bytes = await pdf.save();
-  return new File([bytes], 'stamp.pdf', { type: 'application/pdf' });
+  return new File([bytes as BlobPart], 'stamp.pdf', { type: 'application/pdf' });
 }
 
 describe('addStampClientSide', () => {

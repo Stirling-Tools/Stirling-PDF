@@ -11,7 +11,7 @@ async function createFormPdf(): Promise<File> {
   textField.setText('Stirling');
   textField.addToPage(page, { x: 20, y: 120, width: 160, height: 24 });
   const bytes = await pdfDoc.save();
-  return new File([bytes], 'form.pdf', { type: 'application/pdf' });
+  return new File([bytes as BlobPart], 'form.pdf', { type: 'application/pdf' });
 }
 
 describe('flattenPdfClientSide', () => {

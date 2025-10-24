@@ -8,7 +8,7 @@ async function createPdf(): Promise<File> {
   const doc = await PDFDocument.create();
   doc.addPage([300, 400]);
   const bytes = await doc.save();
-  return new File([bytes], 'scale.pdf', { type: 'application/pdf' });
+  return new File([bytes as BlobPart], 'scale.pdf', { type: 'application/pdf' });
 }
 
 describe('adjustPageScaleClientSide', () => {

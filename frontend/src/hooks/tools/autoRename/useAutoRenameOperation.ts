@@ -5,7 +5,7 @@ import { AutoRenameParameters, defaultParameters } from './useAutoRenameParamete
 
 export const getFormData = ((parameters: AutoRenameParameters) =>
   Object.entries(parameters).map(([key, value]) =>
-    [key, value.toString()]
+    [key, String(value)]
   ) as string[][]
 );
 

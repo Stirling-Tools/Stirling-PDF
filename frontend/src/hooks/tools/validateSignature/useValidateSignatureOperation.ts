@@ -212,6 +212,8 @@ export const useValidateSignatureOperation = (): ValidateSignatureOperationHook 
       clearError,
       cancelOperation,
       undoOperation,
+      supportsFrontendProcessing: false,
+      evaluateShouldUseFrontend: () => false,
       results,
     }),
     [

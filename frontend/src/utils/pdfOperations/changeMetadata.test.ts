@@ -7,7 +7,7 @@ async function createEmptyPdf(): Promise<File> {
   const pdf = await PDFDocument.create();
   pdf.addPage([200, 200]);
   const bytes = await pdf.save();
-  return new File([bytes], 'sample.pdf', { type: 'application/pdf' });
+  return new File([bytes as BlobPart], 'sample.pdf', { type: 'application/pdf' });
 }
 
 describe('changeMetadataClientSide', () => {
@@ -30,10 +30,15 @@ describe('changeMetadataClientSide', () => {
 
     const [result] = await changeMetadataClientSide(params, [file]);
     const doc = await PDFDocument.load(await result.arrayBuffer());
-    const info = (doc.context.lookup(doc.context.trailer.get(PDFName.of('Info')), PDFDict) as PDFDict);
+    const infoRef = doc.context.trailerInfo.Info;
+    const info = infoRef ? (doc.context.lookup(infoRef, PDFDict) as PDFDict) : undefined;
 
-    expect(info.get(PDFName.of('Title'))?.value).toContain('Browser Title');
-    expect(info.get(PDFName.of('Author'))?.value).toContain('Frontend Author');
-    expect(info.get(PDFName.of('CustomKey'))?.value).toContain('CustomValue');
+    expect(info).toBeDefined();
+    const titleObj = info?.get(PDFName.of('Title'));
+    expect((titleObj as any)?.decodeText()).toContain('Browser Title');
+    const authorObj = info?.get(PDFName.of('Author'));
+    expect((authorObj as any)?.decodeText()).toContain('Frontend Author');
+    const customKeyObj = info?.get(PDFName.of('CustomKey'));
+    expect((customKeyObj as any)?.decodeText()).toContain('CustomValue');
   });
 });
