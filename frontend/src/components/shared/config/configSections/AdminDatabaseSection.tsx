@@ -128,17 +128,25 @@ export default function AdminDatabaseSection() {
                 {t('admin.settings.database.enableCustom.description', 'Use your own custom database configuration instead of the default embedded database')}
               </Text>
             </div>
-            <Switch
-              checked={settings.enableCustomDatabase || false}
-              onChange={(e) => setSettings({ ...settings, enableCustomDatabase: e.target.checked })}
-            />
+            <Group gap="xs">
+              <Switch
+                checked={settings.enableCustomDatabase || false}
+                onChange={(e) => setSettings({ ...settings, enableCustomDatabase: e.target.checked })}
+              />
+              <PendingBadge show={isFieldPending('enableCustomDatabase')} />
+            </Group>
           </div>
 
           {settings.enableCustomDatabase && (
             <>
               <div>
                 <TextInput
-                  label={t('admin.settings.database.customUrl', 'Custom Database URL')}
+                  label={
+                    <Group gap="xs">
+                      <span>{t('admin.settings.database.customUrl', 'Custom Database URL')}</span>
+                      <PendingBadge show={isFieldPending('customDatabaseUrl')} />
+                    </Group>
+                  }
                   description={t('admin.settings.database.customUrl.description', 'Full JDBC connection string (e.g., jdbc:postgresql://localhost:5432/postgres). If provided, individual connection settings below are not used.')}
                   value={settings.customDatabaseUrl || ''}
                   onChange={(e) => setSettings({ ...settings, customDatabaseUrl: e.target.value })}
@@ -148,7 +156,12 @@ export default function AdminDatabaseSection() {
 
               <div>
                 <Select
-                  label={t('admin.settings.database.type', 'Database Type')}
+                  label={
+                    <Group gap="xs">
+                      <span>{t('admin.settings.database.type', 'Database Type')}</span>
+                      <PendingBadge show={isFieldPending('type')} />
+                    </Group>
+                  }
                   description={t('admin.settings.database.type.description', 'Type of database (not used if custom URL is provided)')}
                   value={settings.type || 'postgresql'}
                   onChange={(value) => setSettings({ ...settings, type: value || 'postgresql' })}
@@ -163,7 +176,12 @@ export default function AdminDatabaseSection() {
 
               <div>
                 <TextInput
-                  label={t('admin.settings.database.hostName', 'Host Name')}
+                  label={
+                    <Group gap="xs">
+                      <span>{t('admin.settings.database.hostName', 'Host Name')}</span>
+                      <PendingBadge show={isFieldPending('hostName')} />
+                    </Group>
+                  }
                   description={t('admin.settings.database.hostName.description', 'Database server hostname (not used if custom URL is provided)')}
                   value={settings.hostName || ''}
                   onChange={(e) => setSettings({ ...settings, hostName: e.target.value })}
@@ -173,7 +191,12 @@ export default function AdminDatabaseSection() {
 
               <div>
                 <NumberInput
-                  label={t('admin.settings.database.port', 'Port')}
+                  label={
+                    <Group gap="xs">
+                      <span>{t('admin.settings.database.port', 'Port')}</span>
+                      <PendingBadge show={isFieldPending('port')} />
+                    </Group>
+                  }
                   description={t('admin.settings.database.port.description', 'Database server port (not used if custom URL is provided)')}
                   value={settings.port || 5432}
                   onChange={(value) => setSettings({ ...settings, port: Number(value) })}
@@ -184,7 +207,12 @@ export default function AdminDatabaseSection() {
 
               <div>
                 <TextInput
-                  label={t('admin.settings.database.name', 'Database Name')}
+                  label={
+                    <Group gap="xs">
+                      <span>{t('admin.settings.database.name', 'Database Name')}</span>
+                      <PendingBadge show={isFieldPending('name')} />
+                    </Group>
+                  }
                   description={t('admin.settings.database.name.description', 'Name of the database (not used if custom URL is provided)')}
                   value={settings.name || ''}
                   onChange={(e) => setSettings({ ...settings, name: e.target.value })}
@@ -194,7 +222,12 @@ export default function AdminDatabaseSection() {
 
               <div>
                 <TextInput
-                  label={t('admin.settings.database.username', 'Username')}
+                  label={
+                    <Group gap="xs">
+                      <span>{t('admin.settings.database.username', 'Username')}</span>
+                      <PendingBadge show={isFieldPending('username')} />
+                    </Group>
+                  }
                   description={t('admin.settings.database.username.description', 'Database authentication username')}
                   value={settings.username || ''}
                   onChange={(e) => setSettings({ ...settings, username: e.target.value })}
@@ -204,7 +237,12 @@ export default function AdminDatabaseSection() {
 
               <div>
                 <PasswordInput
-                  label={t('admin.settings.database.password', 'Password')}
+                  label={
+                    <Group gap="xs">
+                      <span>{t('admin.settings.database.password', 'Password')}</span>
+                      <PendingBadge show={isFieldPending('password')} />
+                    </Group>
+                  }
                   description={t('admin.settings.database.password.description', 'Database authentication password')}
                   value={settings.password || ''}
                   onChange={(e) => setSettings({ ...settings, password: e.target.value })}

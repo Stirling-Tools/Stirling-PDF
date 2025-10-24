@@ -134,38 +134,40 @@ export default function AdminFeaturesSection() {
           </div>
 
           <div>
-            <Group gap="xs" align="flex-end">
-              <TextInput
-                label={t('admin.settings.features.serverCertificate.organizationName', 'Organization Name')}
-                description={t('admin.settings.features.serverCertificate.organizationName.description', 'Organization name for generated certificates')}
-                value={settings.serverCertificate?.organizationName || 'Stirling-PDF'}
-                onChange={(e) => setSettings({
-                  ...settings,
-                  serverCertificate: { ...settings.serverCertificate, organizationName: e.target.value }
-                })}
-                placeholder="Stirling-PDF"
-                style={{ flex: 1 }}
-              />
-              <PendingBadge show={isFieldPending('serverCertificate.organizationName')} />
-            </Group>
+            <TextInput
+              label={
+                <Group gap="xs">
+                  <span>{t('admin.settings.features.serverCertificate.organizationName', 'Organization Name')}</span>
+                  <PendingBadge show={isFieldPending('serverCertificate.organizationName')} />
+                </Group>
+              }
+              description={t('admin.settings.features.serverCertificate.organizationName.description', 'Organization name for generated certificates')}
+              value={settings.serverCertificate?.organizationName || 'Stirling-PDF'}
+              onChange={(e) => setSettings({
+                ...settings,
+                serverCertificate: { ...settings.serverCertificate, organizationName: e.target.value }
+              })}
+              placeholder="Stirling-PDF"
+            />
           </div>
 
           <div>
-            <Group gap="xs" align="flex-end">
-              <NumberInput
-                label={t('admin.settings.features.serverCertificate.validity', 'Certificate Validity (days)')}
-                description={t('admin.settings.features.serverCertificate.validity.description', 'Number of days the certificate will be valid')}
-                value={settings.serverCertificate?.validity ?? 365}
-                onChange={(value) => setSettings({
-                  ...settings,
-                  serverCertificate: { ...settings.serverCertificate, validity: Number(value) }
-                })}
-                min={1}
-                max={3650}
-                style={{ flex: 1 }}
-              />
-              <PendingBadge show={isFieldPending('serverCertificate.validity')} />
-            </Group>
+            <NumberInput
+              label={
+                <Group gap="xs">
+                  <span>{t('admin.settings.features.serverCertificate.validity', 'Certificate Validity (days)')}</span>
+                  <PendingBadge show={isFieldPending('serverCertificate.validity')} />
+                </Group>
+              }
+              description={t('admin.settings.features.serverCertificate.validity.description', 'Number of days the certificate will be valid')}
+              value={settings.serverCertificate?.validity ?? 365}
+              onChange={(value) => setSettings({
+                ...settings,
+                serverCertificate: { ...settings.serverCertificate, validity: Number(value) }
+              })}
+              min={1}
+              max={3650}
+            />
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>

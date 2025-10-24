@@ -259,32 +259,34 @@ export default function AdminAdvancedSection() {
           <Text fw={600} size="sm" mb="xs">{t('admin.settings.advanced.processing', 'Processing')}</Text>
 
           <div>
-            <Group gap="xs" align="flex-end">
-              <NumberInput
-                label={t('admin.settings.advanced.maxDPI', 'Maximum DPI')}
-                description={t('admin.settings.advanced.maxDPI.description', 'Maximum DPI for image processing (0 = unlimited)')}
-                value={settings.maxDPI || 0}
-                onChange={(value) => setSettings({ ...settings, maxDPI: Number(value) })}
-                min={0}
-                max={3000}
-                style={{ flex: 1 }}
-              />
-              <PendingBadge show={isFieldPending('maxDPI')} />
-            </Group>
+            <NumberInput
+              label={
+                <Group gap="xs">
+                  <span>{t('admin.settings.advanced.maxDPI', 'Maximum DPI')}</span>
+                  <PendingBadge show={isFieldPending('maxDPI')} />
+                </Group>
+              }
+              description={t('admin.settings.advanced.maxDPI.description', 'Maximum DPI for image processing (0 = unlimited)')}
+              value={settings.maxDPI || 0}
+              onChange={(value) => setSettings({ ...settings, maxDPI: Number(value) })}
+              min={0}
+              max={3000}
+            />
           </div>
 
           <div>
-            <Group gap="xs" align="flex-end">
-              <TextInput
-                label={t('admin.settings.advanced.tessdataDir', 'Tessdata Directory')}
-                description={t('admin.settings.advanced.tessdataDir.description', 'Path to the directory containing Tessdata files for OCR')}
-                value={settings.tessdataDir || ''}
-                onChange={(e) => setSettings({ ...settings, tessdataDir: e.target.value })}
-                placeholder="/usr/share/tessdata"
-                style={{ flex: 1 }}
-              />
-              <PendingBadge show={isFieldPending('tessdataDir')} />
-            </Group>
+            <TextInput
+              label={
+                <Group gap="xs">
+                  <span>{t('admin.settings.advanced.tessdataDir', 'Tessdata Directory')}</span>
+                  <PendingBadge show={isFieldPending('tessdataDir')} />
+                </Group>
+              }
+              description={t('admin.settings.advanced.tessdataDir.description', 'Path to the directory containing Tessdata files for OCR')}
+              value={settings.tessdataDir || ''}
+              onChange={(e) => setSettings({ ...settings, tessdataDir: e.target.value })}
+              placeholder="/usr/share/tessdata"
+            />
           </div>
         </Stack>
       </Paper>

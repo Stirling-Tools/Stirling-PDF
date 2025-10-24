@@ -178,7 +178,12 @@ export default function AdminGeneralSection() {
 
           <div>
             <TextInput
-              label={t('admin.settings.general.appNameNavbar', 'Navbar Brand')}
+              label={
+                <Group gap="xs">
+                  <span>{t('admin.settings.general.appNameNavbar', 'Navbar Brand')}</span>
+                  <PendingBadge show={isFieldPending('ui.appNameNavbar')} />
+                </Group>
+              }
               description={t('admin.settings.general.appNameNavbar.description', 'The name displayed in the navigation bar')}
               value={settings.ui.appNameNavbar || ''}
               onChange={(e) => setSettings({ ...settings, ui: { ...settings.ui, appNameNavbar: e.target.value } })}
@@ -188,7 +193,12 @@ export default function AdminGeneralSection() {
 
           <div>
             <MultiSelect
-              label={t('admin.settings.general.languages', 'Available Languages')}
+              label={
+                <Group gap="xs">
+                  <span>{t('admin.settings.general.languages', 'Available Languages')}</span>
+                  <PendingBadge show={isFieldPending('ui.languages')} />
+                </Group>
+              }
               description={t('admin.settings.general.languages.description', 'Limit which languages are available (empty = all languages)')}
               value={settings.ui.languages || []}
               onChange={(value) => setSettings({ ...settings, ui: { ...settings.ui, languages: value } })}
@@ -213,7 +223,12 @@ export default function AdminGeneralSection() {
 
           <div>
             <TextInput
-              label={t('admin.settings.general.defaultLocale', 'Default Locale')}
+              label={
+                <Group gap="xs">
+                  <span>{t('admin.settings.general.defaultLocale', 'Default Locale')}</span>
+                  <PendingBadge show={isFieldPending('system.defaultLocale')} />
+                </Group>
+              }
               description={t('admin.settings.general.defaultLocale.description', 'The default language for new users (e.g., en_US, es_ES)')}
               value={settings.system.defaultLocale || ''}
               onChange={(e) => setSettings({ ...settings, system: { ...settings.system, defaultLocale: e.target.value } })}
@@ -223,7 +238,12 @@ export default function AdminGeneralSection() {
 
           <div>
             <TextInput
-              label={t('admin.settings.general.fileUploadLimit', 'File Upload Limit')}
+              label={
+                <Group gap="xs">
+                  <span>{t('admin.settings.general.fileUploadLimit', 'File Upload Limit')}</span>
+                  <PendingBadge show={isFieldPending('system.fileUploadLimit')} />
+                </Group>
+              }
               description={t('admin.settings.general.fileUploadLimit.description', 'Maximum file upload size (e.g., 100MB, 1GB)')}
               value={settings.system.fileUploadLimit || ''}
               onChange={(e) => setSettings({ ...settings, system: { ...settings.system, fileUploadLimit: e.target.value } })}
@@ -238,10 +258,13 @@ export default function AdminGeneralSection() {
                 {t('admin.settings.general.showUpdate.description', 'Display notifications when a new version is available')}
               </Text>
             </div>
-            <Switch
-              checked={settings.system.showUpdate || false}
-              onChange={(e) => setSettings({ ...settings, system: { ...settings.system, showUpdate: e.target.checked } })}
-            />
+            <Group gap="xs">
+              <Switch
+                checked={settings.system.showUpdate || false}
+                onChange={(e) => setSettings({ ...settings, system: { ...settings.system, showUpdate: e.target.checked } })}
+              />
+              <PendingBadge show={isFieldPending('system.showUpdate')} />
+            </Group>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -251,10 +274,13 @@ export default function AdminGeneralSection() {
                 {t('admin.settings.general.showUpdateOnlyAdmin.description', 'Restrict update notifications to admin users only')}
               </Text>
             </div>
-            <Switch
-              checked={settings.system.showUpdateOnlyAdmin || false}
-              onChange={(e) => setSettings({ ...settings, system: { ...settings.system, showUpdateOnlyAdmin: e.target.checked } })}
-            />
+            <Group gap="xs">
+              <Switch
+                checked={settings.system.showUpdateOnlyAdmin || false}
+                onChange={(e) => setSettings({ ...settings, system: { ...settings.system, showUpdateOnlyAdmin: e.target.checked } })}
+              />
+              <PendingBadge show={isFieldPending('system.showUpdateOnlyAdmin')} />
+            </Group>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -264,10 +290,13 @@ export default function AdminGeneralSection() {
                 {t('admin.settings.general.customHTMLFiles.description', 'Allow serving custom HTML files from the customFiles directory')}
               </Text>
             </div>
-            <Switch
-              checked={settings.system.customHTMLFiles || false}
-              onChange={(e) => setSettings({ ...settings, system: { ...settings.system, customHTMLFiles: e.target.checked } })}
-            />
+            <Group gap="xs">
+              <Switch
+                checked={settings.system.customHTMLFiles || false}
+                onChange={(e) => setSettings({ ...settings, system: { ...settings.system, customHTMLFiles: e.target.checked } })}
+              />
+              <PendingBadge show={isFieldPending('system.customHTMLFiles')} />
+            </Group>
           </div>
         </Stack>
       </Paper>
@@ -287,21 +316,29 @@ export default function AdminGeneralSection() {
                 {t('admin.settings.general.customMetadata.autoUpdate.description', 'Automatically update PDF metadata on all processed documents')}
               </Text>
             </div>
-            <Switch
-              checked={settings.customMetadata?.autoUpdateMetadata || false}
-              onChange={(e) => setSettings({
-                ...settings,
-                customMetadata: {
-                  ...settings.customMetadata,
-                  autoUpdateMetadata: e.target.checked
-                }
-              })}
-            />
+            <Group gap="xs">
+              <Switch
+                checked={settings.customMetadata?.autoUpdateMetadata || false}
+                onChange={(e) => setSettings({
+                  ...settings,
+                  customMetadata: {
+                    ...settings.customMetadata,
+                    autoUpdateMetadata: e.target.checked
+                  }
+                })}
+              />
+              <PendingBadge show={isFieldPending('customMetadata.autoUpdateMetadata')} />
+            </Group>
           </div>
 
           <div>
             <TextInput
-              label={t('admin.settings.general.customMetadata.author', 'Default Author')}
+              label={
+                <Group gap="xs">
+                  <span>{t('admin.settings.general.customMetadata.author', 'Default Author')}</span>
+                  <PendingBadge show={isFieldPending('customMetadata.author')} />
+                </Group>
+              }
               description={t('admin.settings.general.customMetadata.author.description', 'Default author for PDF metadata (e.g., username)')}
               value={settings.customMetadata?.author || ''}
               onChange={(e) => setSettings({
@@ -317,7 +354,12 @@ export default function AdminGeneralSection() {
 
           <div>
             <TextInput
-              label={t('admin.settings.general.customMetadata.creator', 'Default Creator')}
+              label={
+                <Group gap="xs">
+                  <span>{t('admin.settings.general.customMetadata.creator', 'Default Creator')}</span>
+                  <PendingBadge show={isFieldPending('customMetadata.creator')} />
+                </Group>
+              }
               description={t('admin.settings.general.customMetadata.creator.description', 'Default creator for PDF metadata')}
               value={settings.customMetadata?.creator || ''}
               onChange={(e) => setSettings({
@@ -333,7 +375,12 @@ export default function AdminGeneralSection() {
 
           <div>
             <TextInput
-              label={t('admin.settings.general.customMetadata.producer', 'Default Producer')}
+              label={
+                <Group gap="xs">
+                  <span>{t('admin.settings.general.customMetadata.producer', 'Default Producer')}</span>
+                  <PendingBadge show={isFieldPending('customMetadata.producer')} />
+                </Group>
+              }
               description={t('admin.settings.general.customMetadata.producer.description', 'Default producer for PDF metadata')}
               value={settings.customMetadata?.producer || ''}
               onChange={(e) => setSettings({
@@ -363,7 +410,12 @@ export default function AdminGeneralSection() {
 
           <div>
             <TextInput
-              label={t('admin.settings.general.customPaths.pipeline.watchedFoldersDir', 'Watched Folders Directory')}
+              label={
+                <Group gap="xs">
+                  <span>{t('admin.settings.general.customPaths.pipeline.watchedFoldersDir', 'Watched Folders Directory')}</span>
+                  <PendingBadge show={isFieldPending('customPaths.pipeline.watchedFoldersDir')} />
+                </Group>
+              }
               description={t('admin.settings.general.customPaths.pipeline.watchedFoldersDir.description', 'Directory where pipeline monitors for incoming PDFs (leave empty for default: /pipeline/watchedFolders)')}
               value={settings.customPaths?.pipeline?.watchedFoldersDir || ''}
               onChange={(e) => setSettings({
@@ -382,7 +434,12 @@ export default function AdminGeneralSection() {
 
           <div>
             <TextInput
-              label={t('admin.settings.general.customPaths.pipeline.finishedFoldersDir', 'Finished Folders Directory')}
+              label={
+                <Group gap="xs">
+                  <span>{t('admin.settings.general.customPaths.pipeline.finishedFoldersDir', 'Finished Folders Directory')}</span>
+                  <PendingBadge show={isFieldPending('customPaths.pipeline.finishedFoldersDir')} />
+                </Group>
+              }
               description={t('admin.settings.general.customPaths.pipeline.finishedFoldersDir.description', 'Directory where processed PDFs are outputted (leave empty for default: /pipeline/finishedFolders)')}
               value={settings.customPaths?.pipeline?.finishedFoldersDir || ''}
               onChange={(e) => setSettings({
@@ -403,7 +460,12 @@ export default function AdminGeneralSection() {
 
           <div>
             <TextInput
-              label={t('admin.settings.general.customPaths.operations.weasyprint', 'WeasyPrint Executable')}
+              label={
+                <Group gap="xs">
+                  <span>{t('admin.settings.general.customPaths.operations.weasyprint', 'WeasyPrint Executable')}</span>
+                  <PendingBadge show={isFieldPending('customPaths.operations.weasyprint')} />
+                </Group>
+              }
               description={t('admin.settings.general.customPaths.operations.weasyprint.description', 'Path to WeasyPrint executable for HTML to PDF conversion (leave empty for default: /opt/venv/bin/weasyprint)')}
               value={settings.customPaths?.operations?.weasyprint || ''}
               onChange={(e) => setSettings({
@@ -422,7 +484,12 @@ export default function AdminGeneralSection() {
 
           <div>
             <TextInput
-              label={t('admin.settings.general.customPaths.operations.unoconvert', 'Unoconvert Executable')}
+              label={
+                <Group gap="xs">
+                  <span>{t('admin.settings.general.customPaths.operations.unoconvert', 'Unoconvert Executable')}</span>
+                  <PendingBadge show={isFieldPending('customPaths.operations.unoconvert')} />
+                </Group>
+              }
               description={t('admin.settings.general.customPaths.operations.unoconvert.description', 'Path to LibreOffice unoconvert for document conversions (leave empty for default: /opt/venv/bin/unoconvert)')}
               value={settings.customPaths?.operations?.unoconvert || ''}
               onChange={(e) => setSettings({

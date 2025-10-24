@@ -114,39 +114,41 @@ export default function AdminEndpointsSection() {
           <Text fw={600} size="sm" mb="xs">{t('admin.settings.endpoints.management', 'Endpoint Management')}</Text>
 
           <div>
-            <Group gap="xs" align="flex-start">
-              <MultiSelect
-                label={t('admin.settings.endpoints.toRemove', 'Disabled Endpoints')}
-                description={t('admin.settings.endpoints.toRemove.description', 'Select individual endpoints to disable')}
-                value={settings.toRemove || []}
-                onChange={(value) => setSettings({ ...settings, toRemove: value })}
-                data={commonEndpoints.map(endpoint => ({ value: endpoint, label: endpoint }))}
-                searchable
-                clearable
-                placeholder="Select endpoints to disable"
-                comboboxProps={{ zIndex: 1400 }}
-                style={{ flex: 1 }}
-              />
-              <PendingBadge show={isFieldPending('toRemove')} />
-            </Group>
+            <MultiSelect
+              label={
+                <Group gap="xs">
+                  <span>{t('admin.settings.endpoints.toRemove', 'Disabled Endpoints')}</span>
+                  <PendingBadge show={isFieldPending('toRemove')} />
+                </Group>
+              }
+              description={t('admin.settings.endpoints.toRemove.description', 'Select individual endpoints to disable')}
+              value={settings.toRemove || []}
+              onChange={(value) => setSettings({ ...settings, toRemove: value })}
+              data={commonEndpoints.map(endpoint => ({ value: endpoint, label: endpoint }))}
+              searchable
+              clearable
+              placeholder="Select endpoints to disable"
+              comboboxProps={{ zIndex: 1400 }}
+            />
           </div>
 
           <div>
-            <Group gap="xs" align="flex-start">
-              <MultiSelect
-                label={t('admin.settings.endpoints.groupsToRemove', 'Disabled Endpoint Groups')}
-                description={t('admin.settings.endpoints.groupsToRemove.description', 'Select endpoint groups to disable')}
-                value={settings.groupsToRemove || []}
-                onChange={(value) => setSettings({ ...settings, groupsToRemove: value })}
-                data={commonGroups.map(group => ({ value: group, label: group }))}
-                searchable
-                clearable
-                placeholder="Select groups to disable"
-                comboboxProps={{ zIndex: 1400 }}
-                style={{ flex: 1 }}
-              />
-              <PendingBadge show={isFieldPending('groupsToRemove')} />
-            </Group>
+            <MultiSelect
+              label={
+                <Group gap="xs">
+                  <span>{t('admin.settings.endpoints.groupsToRemove', 'Disabled Endpoint Groups')}</span>
+                  <PendingBadge show={isFieldPending('groupsToRemove')} />
+                </Group>
+              }
+              description={t('admin.settings.endpoints.groupsToRemove.description', 'Select endpoint groups to disable')}
+              value={settings.groupsToRemove || []}
+              onChange={(value) => setSettings({ ...settings, groupsToRemove: value })}
+              data={commonGroups.map(group => ({ value: group, label: group }))}
+              searchable
+              clearable
+              placeholder="Select groups to disable"
+              comboboxProps={{ zIndex: 1400 }}
+            />
           </div>
 
           <Paper bg="var(--mantine-color-blue-light)" p="sm" radius="sm">

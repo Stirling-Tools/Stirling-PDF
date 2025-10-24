@@ -3504,7 +3504,7 @@
       "saved": "Settings saved successfully",
       "saveSuccess": "Settings saved successfully",
       "save": "Save Changes",
-      "restartRequired": "Settings changes require a server restart to take effect.",
+      "restartRequired": "Restart Required",
       "restart": {
         "title": "Restart Required",
         "message": "Settings have been saved successfully. A server restart is required for the changes to take effect.",

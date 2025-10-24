@@ -85,72 +85,77 @@ export default function AdminMailSection() {
           </div>
 
           <div>
-            <Group gap="xs" align="flex-end">
-              <TextInput
-                label={t('admin.settings.mail.host', 'SMTP Host')}
-                description={t('admin.settings.mail.host.description', 'SMTP server hostname')}
-                value={settings.host || ''}
-                onChange={(e) => setSettings({ ...settings, host: e.target.value })}
-                placeholder="smtp.example.com"
-                style={{ flex: 1 }}
-              />
-              <PendingBadge show={isFieldPending('host')} />
-            </Group>
+            <TextInput
+              label={
+                <Group gap="xs">
+                  <span>{t('admin.settings.mail.host', 'SMTP Host')}</span>
+                  <PendingBadge show={isFieldPending('host')} />
+                </Group>
+              }
+              description={t('admin.settings.mail.host.description', 'SMTP server hostname')}
+              value={settings.host || ''}
+              onChange={(e) => setSettings({ ...settings, host: e.target.value })}
+              placeholder="smtp.example.com"
+            />
           </div>
 
           <div>
-            <Group gap="xs" align="flex-end">
-              <NumberInput
-                label={t('admin.settings.mail.port', 'SMTP Port')}
-                description={t('admin.settings.mail.port.description', 'SMTP server port (typically 587 for TLS, 465 for SSL)')}
-                value={settings.port || 587}
-                onChange={(value) => setSettings({ ...settings, port: Number(value) })}
-                min={1}
-                max={65535}
-                style={{ flex: 1 }}
-              />
-              <PendingBadge show={isFieldPending('port')} />
-            </Group>
+            <NumberInput
+              label={
+                <Group gap="xs">
+                  <span>{t('admin.settings.mail.port', 'SMTP Port')}</span>
+                  <PendingBadge show={isFieldPending('port')} />
+                </Group>
+              }
+              description={t('admin.settings.mail.port.description', 'SMTP server port (typically 587 for TLS, 465 for SSL)')}
+              value={settings.port || 587}
+              onChange={(value) => setSettings({ ...settings, port: Number(value) })}
+              min={1}
+              max={65535}
+            />
           </div>
 
           <div>
-            <Group gap="xs" align="flex-end">
-              <TextInput
-                label={t('admin.settings.mail.username', 'SMTP Username')}
-                description={t('admin.settings.mail.username.description', 'SMTP authentication username')}
-                value={settings.username || ''}
-                onChange={(e) => setSettings({ ...settings, username: e.target.value })}
-                style={{ flex: 1 }}
-              />
-              <PendingBadge show={isFieldPending('username')} />
-            </Group>
+            <TextInput
+              label={
+                <Group gap="xs">
+                  <span>{t('admin.settings.mail.username', 'SMTP Username')}</span>
+                  <PendingBadge show={isFieldPending('username')} />
+                </Group>
+              }
+              description={t('admin.settings.mail.username.description', 'SMTP authentication username')}
+              value={settings.username || ''}
+              onChange={(e) => setSettings({ ...settings, username: e.target.value })}
+            />
           </div>
 
           <div>
-            <Group gap="xs" align="flex-end">
-              <PasswordInput
-                label={t('admin.settings.mail.password', 'SMTP Password')}
-                description={t('admin.settings.mail.password.description', 'SMTP authentication password')}
-                value={settings.password || ''}
-                onChange={(e) => setSettings({ ...settings, password: e.target.value })}
-                style={{ flex: 1 }}
-              />
-              <PendingBadge show={isFieldPending('password')} />
-            </Group>
+            <PasswordInput
+              label={
+                <Group gap="xs">
+                  <span>{t('admin.settings.mail.password', 'SMTP Password')}</span>
+                  <PendingBadge show={isFieldPending('password')} />
+                </Group>
+              }
+              description={t('admin.settings.mail.password.description', 'SMTP authentication password')}
+              value={settings.password || ''}
+              onChange={(e) => setSettings({ ...settings, password: e.target.value })}
+            />
           </div>
 
           <div>
-            <Group gap="xs" align="flex-end">
-              <TextInput
-                label={t('admin.settings.mail.from', 'From Address')}
-                description={t('admin.settings.mail.from.description', 'Email address to use as sender')}
-                value={settings.from || ''}
-                onChange={(e) => setSettings({ ...settings, from: e.target.value })}
-                placeholder="noreply@example.com"
-                style={{ flex: 1 }}
-              />
-              <PendingBadge show={isFieldPending('from')} />
-            </Group>
+            <TextInput
+              label={
+                <Group gap="xs">
+                  <span>{t('admin.settings.mail.from', 'From Address')}</span>
+                  <PendingBadge show={isFieldPending('from')} />
+                </Group>
+              }
+              description={t('admin.settings.mail.from.description', 'Email address to use as sender')}
+              value={settings.from || ''}
+              onChange={(e) => setSettings({ ...settings, from: e.target.value })}
+              placeholder="noreply@example.com"
+            />
           </div>
         </Stack>
       </Paper>

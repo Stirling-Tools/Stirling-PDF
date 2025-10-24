@@ -87,17 +87,18 @@ export default function AdminPremiumSection() {
           <Text fw={600} size="sm" mb="xs">{t('admin.settings.premium.license', 'License Configuration')}</Text>
 
           <div>
-            <Group gap="xs" align="flex-end">
-              <TextInput
-                label={t('admin.settings.premium.key', 'License Key')}
-                description={t('admin.settings.premium.key.description', 'Enter your premium or enterprise license key')}
-                value={settings.key || ''}
-                onChange={(e) => setSettings({ ...settings, key: e.target.value })}
-                placeholder="00000000-0000-0000-0000-000000000000"
-                style={{ flex: 1 }}
-              />
-              <PendingBadge show={isFieldPending('key')} />
-            </Group>
+            <TextInput
+              label={
+                <Group gap="xs">
+                  <span>{t('admin.settings.premium.key', 'License Key')}</span>
+                  <PendingBadge show={isFieldPending('key')} />
+                </Group>
+              }
+              description={t('admin.settings.premium.key.description', 'Enter your premium or enterprise license key')}
+              value={settings.key || ''}
+              onChange={(e) => setSettings({ ...settings, key: e.target.value })}
+              placeholder="00000000-0000-0000-0000-000000000000"
+            />
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>

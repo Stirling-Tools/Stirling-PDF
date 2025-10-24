@@ -84,73 +84,78 @@ export default function AdminLegalSection() {
       <Paper withBorder p="md" radius="md">
         <Stack gap="md">
           <div>
-            <Group gap="xs" align="flex-end">
-              <TextInput
-                label={t('admin.settings.legal.termsAndConditions', 'Terms and Conditions')}
-                description={t('admin.settings.legal.termsAndConditions.description', 'URL or filename to terms and conditions')}
-                value={settings.termsAndConditions || ''}
-                onChange={(e) => setSettings({ ...settings, termsAndConditions: e.target.value })}
-                placeholder="https://example.com/terms"
-                style={{ flex: 1 }}
-              />
-              <PendingBadge show={isFieldPending('termsAndConditions')} />
-            </Group>
+            <TextInput
+              label={
+                <Group gap="xs">
+                  <span>{t('admin.settings.legal.termsAndConditions', 'Terms and Conditions')}</span>
+                  <PendingBadge show={isFieldPending('termsAndConditions')} />
+                </Group>
+              }
+              description={t('admin.settings.legal.termsAndConditions.description', 'URL or filename to terms and conditions')}
+              value={settings.termsAndConditions || ''}
+              onChange={(e) => setSettings({ ...settings, termsAndConditions: e.target.value })}
+              placeholder="https://example.com/terms"
+            />
           </div>
 
           <div>
-            <Group gap="xs" align="flex-end">
-              <TextInput
-                label={t('admin.settings.legal.privacyPolicy', 'Privacy Policy')}
-                description={t('admin.settings.legal.privacyPolicy.description', 'URL or filename to privacy policy')}
-                value={settings.privacyPolicy || ''}
-                onChange={(e) => setSettings({ ...settings, privacyPolicy: e.target.value })}
-                placeholder="https://example.com/privacy"
-                style={{ flex: 1 }}
-              />
-              <PendingBadge show={isFieldPending('privacyPolicy')} />
-            </Group>
+            <TextInput
+              label={
+                <Group gap="xs">
+                  <span>{t('admin.settings.legal.privacyPolicy', 'Privacy Policy')}</span>
+                  <PendingBadge show={isFieldPending('privacyPolicy')} />
+                </Group>
+              }
+              description={t('admin.settings.legal.privacyPolicy.description', 'URL or filename to privacy policy')}
+              value={settings.privacyPolicy || ''}
+              onChange={(e) => setSettings({ ...settings, privacyPolicy: e.target.value })}
+              placeholder="https://example.com/privacy"
+            />
           </div>
 
           <div>
-            <Group gap="xs" align="flex-end">
-              <TextInput
-                label={t('admin.settings.legal.accessibilityStatement', 'Accessibility Statement')}
-                description={t('admin.settings.legal.accessibilityStatement.description', 'URL or filename to accessibility statement')}
-                value={settings.accessibilityStatement || ''}
-                onChange={(e) => setSettings({ ...settings, accessibilityStatement: e.target.value })}
-                placeholder="https://example.com/accessibility"
-                style={{ flex: 1 }}
-              />
-              <PendingBadge show={isFieldPending('accessibilityStatement')} />
-            </Group>
+            <TextInput
+              label={
+                <Group gap="xs">
+                  <span>{t('admin.settings.legal.accessibilityStatement', 'Accessibility Statement')}</span>
+                  <PendingBadge show={isFieldPending('accessibilityStatement')} />
+                </Group>
+              }
+              description={t('admin.settings.legal.accessibilityStatement.description', 'URL or filename to accessibility statement')}
+              value={settings.accessibilityStatement || ''}
+              onChange={(e) => setSettings({ ...settings, accessibilityStatement: e.target.value })}
+              placeholder="https://example.com/accessibility"
+            />
           </div>
 
           <div>
-            <Group gap="xs" align="flex-end">
-              <TextInput
-                label={t('admin.settings.legal.cookiePolicy', 'Cookie Policy')}
-                description={t('admin.settings.legal.cookiePolicy.description', 'URL or filename to cookie policy')}
-                value={settings.cookiePolicy || ''}
-                onChange={(e) => setSettings({ ...settings, cookiePolicy: e.target.value })}
-                placeholder="https://example.com/cookies"
-                style={{ flex: 1 }}
-              />
-              <PendingBadge show={isFieldPending('cookiePolicy')} />
-            </Group>
+            <TextInput
+              label={
+                <Group gap="xs">
+                  <span>{t('admin.settings.legal.cookiePolicy', 'Cookie Policy')}</span>
+                  <PendingBadge show={isFieldPending('cookiePolicy')} />
+                </Group>
+              }
+              description={t('admin.settings.legal.cookiePolicy.description', 'URL or filename to cookie policy')}
+              value={settings.cookiePolicy || ''}
+              onChange={(e) => setSettings({ ...settings, cookiePolicy: e.target.value })}
+              placeholder="https://example.com/cookies"
+            />
           </div>
 
           <div>
-            <Group gap="xs" align="flex-end">
-              <TextInput
-                label={t('admin.settings.legal.impressum', 'Impressum')}
-                description={t('admin.settings.legal.impressum.description', 'URL or filename to impressum (required in some jurisdictions)')}
-                value={settings.impressum || ''}
-                onChange={(e) => setSettings({ ...settings, impressum: e.target.value })}
-                placeholder="https://example.com/impressum"
-                style={{ flex: 1 }}
-              />
-              <PendingBadge show={isFieldPending('impressum')} />
-            </Group>
+            <TextInput
+              label={
+                <Group gap="xs">
+                  <span>{t('admin.settings.legal.impressum', 'Impressum')}</span>
+                  <PendingBadge show={isFieldPending('impressum')} />
+                </Group>
+              }
+              description={t('admin.settings.legal.impressum.description', 'URL or filename to impressum (required in some jurisdictions)')}
+              value={settings.impressum || ''}
+              onChange={(e) => setSettings({ ...settings, impressum: e.target.value })}
+              placeholder="https://example.com/impressum"
+            />
           </div>
         </Stack>
       </Paper>
