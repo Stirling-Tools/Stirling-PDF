@@ -51,26 +51,27 @@ export default function App() {
               <FileContextProvider enableUrlSync={true} enablePersistence={true}>
                 <ToolRegistryProvider>
                   <ToolRegistryProvider>
-                <NavigationProvider>
-                  <FilesModalProvider>
-                    <ToolWorkflowProvider>
-                      <HotkeyProvider>
-                        <SidebarProvider>
-                          <ViewerProvider>
-                            <SignatureProvider>
-                              <RightRailProvider><TourOrchestrationProvider>
-                                <HomePage />
-                              <OnboardingTour />
-                                  </TourOrchestrationProvider>
-                                </RightRailProvider>
-                            </SignatureProvider>
-                          </ViewerProvider>
-                        </SidebarProvider>
-                      </HotkeyProvider>
-                    </ToolWorkflowProvider>
-                  </FilesModalProvider>
-                </NavigationProvider>
-              </ToolRegistryProvider>
+                    <NavigationProvider>
+                      <FilesModalProvider>
+                        <ToolWorkflowProvider>
+                          <HotkeyProvider>
+                            <SidebarProvider>
+                              <ViewerProvider>
+                                <SignatureProvider>
+                                  <RightRailProvider>
+                                    <TourOrchestrationProvider>
+                                      <HomePage />
+                                      <OnboardingTour />
+                                    </TourOrchestrationProvider>
+                                  </RightRailProvider>
+                                </SignatureProvider>
+                              </ViewerProvider>
+                            </SidebarProvider>
+                          </HotkeyProvider>
+                        </ToolWorkflowProvider>
+                      </FilesModalProvider>
+                    </NavigationProvider>
+                  </ToolRegistryProvider>
                 </ToolRegistryProvider>
               </FileContextProvider>
             </OnboardingProvider>
