@@ -1,4 +1,4 @@
-import React from "react";
+mport React from "react";
 import { TourProvider, useTour, type StepType } from '@reactour/tour';
 import { useOnboarding } from '../../contexts/OnboardingContext';
 import { useTranslation } from 'react-i18next';
@@ -9,9 +9,21 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import CheckIcon from '@mui/icons-material/Check';
 import TourWelcomeModal from './TourWelcomeModal';
 import './OnboardingTour.css';
+
 // Enum case order defines order steps will appear
 enum TourStep {
   ALL_TOOLS,
+
+    
+        
+          
+    
+
+        
+        Expand All
+    
+    @@ -31,27 +30,22 @@ enum TourStep {
+  
   SELECT_CROP_TOOL,
   TOOL_INTERFACE,
   FILES_BUTTON,
@@ -30,25 +42,41 @@ enum TourStep {
   PIN_BUTTON,
   WRAP_UP,
 }
+
 function TourContent() {
   const { isOpen } = useOnboarding();
   const { setIsOpen, setCurrentStep } = useTour();
   const previousIsOpenRef = React.useRef(isOpen);
+
   // Sync tour open state with context and reset to step 0 when reopening
   React.useEffect(() => {
     const wasClosedNowOpen = !previousIsOpenRef.current && isOpen;
     previousIsOpenRef.current = isOpen;
+
     if (wasClosedNowOpen) {
       // Tour is being opened (Help button pressed), reset to first step
       setCurrentStep(0);
     }
     setIsOpen(isOpen);
   }, [isOpen, setIsOpen, setCurrentStep]);
+
   return null;
 }
+
 export default function OnboardingTour() {
   const { t } = useTranslation();
   const { completeTour, showWelcomeModal, setShowWelcomeModal, startTour } = useOnboarding();
+
+    
+        
+          
+    
+
+        
+        Expand All
+    
+    @@ -70,7 +64,6 @@ export default function OnboardingTour() {
+  
   const { openFilesModal, closeFilesModal } = useFilesModalContext();
   const {
     saveWorkbenchState,
@@ -64,6 +92,7 @@ export default function OnboardingTour() {
     modifyCropSettings,
     executeTool,
   } = useTourOrchestration();
+
   // Define steps as object keyed by enum - TypeScript ensures all keys are present
   const stepsConfig: Record<TourStep, StepType> = {
     [TourStep.ALL_TOOLS]: {
@@ -87,6 +116,23 @@ export default function OnboardingTour() {
     [TourStep.TOOL_INTERFACE]: {
       selector: '[data-tour="tool-panel"]',
       content: t('onboarding.toolInterface', "This is the <strong>Crop</strong> tool interface. As you can see, there's not much there because we haven't added any PDF files to work with yet."),
+
+    
+          
+            
+    
+
+          
+          Expand Down
+          
+            
+    
+
+          
+          Expand Up
+    
+    @@ -141,70 +134,68 @@
+  
       position: 'center',
       padding: 0,
     },
@@ -194,8 +240,10 @@ export default function OnboardingTour() {
       padding: 10,
     },
   };
+
   // Convert to array using enum's numeric ordering
   const steps = Object.values(stepsConfig);
+
   const advanceTour = ({ setCurrentStep, currentStep, steps, setIsOpen }: {
     setCurrentStep: (value: number | ((prev: number) => number)) => void;
     currentStep: number;
@@ -210,11 +258,13 @@ export default function OnboardingTour() {
       setCurrentStep((s) => (s === steps.length - 1 ? 0 : s + 1));
     }
   };
+
   const handleCloseTour = ({ setIsOpen }: { setIsOpen: (value: boolean) => void }) => {
     setIsOpen(false);
     restoreWorkbenchState();
     completeTour();
   };
+
   return (
     <>
       <TourWelcomeModal
@@ -280,6 +330,23 @@ export default function OnboardingTour() {
         showCloseButton={true}
         disableInteraction={true}
         disableDotsNavigation={true}
+        prevButton={() => null}
+        nextButton={({ currentStep, stepsLength, setCurrentStep, setIsOpen }) => {
+          const isLast = currentStep === stepsLength - 1;
+
+          return (
+            <ActionIcon
+              onClick={() => {
+                advanceTour({ setCurrentStep, currentStep, steps, setIsOpen });
+              }}
+              variant="subtle"
+              size="lg"
+              aria-label={isLast ? t('onboarding.finish', 'Finish') : t('onboarding.next', 'Next')}
+            >
+              {isLast ? <CheckIcon /> : <ArrowForwardIcon />}
+            </ActionIcon>
+          );
+        }}
         components={{
           Close: ({ onClick }) => (
             <CloseButton
