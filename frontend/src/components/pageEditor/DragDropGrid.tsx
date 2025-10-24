@@ -104,18 +104,38 @@ function resolveDropHint(
 function resolveTargetIndex<T extends DragDropItem>(
   hoveredId: string | null,
   dropSide: DropSide,
-  items: T[],
+  filteredItems: T[],
+  filteredToOriginalIndex: number[],
+  originalItemsLength: number,
   fallbackIndex: number | null,
 ): number | null {
+  const convertFilteredIndexToOriginal = (filteredIndex: number): number => {
+    if (filteredToOriginalIndex.length === 0) {
+      return 0;
+    }
+
+    if (filteredIndex <= 0) {
+      return filteredToOriginalIndex[0];
+    }
+
+    if (filteredIndex >= filteredToOriginalIndex.length) {
+      return originalItemsLength;
+    }
+
+    return filteredToOriginalIndex[filteredIndex];
+  };
+
   if (hoveredId) {
-    const hoveredIndex = items.findIndex(item => item.id === hoveredId);
-    if (hoveredIndex !== -1) {
-      return hoveredIndex + (dropSide === 'right' ? 1 : 0);
+    const filteredIndex = filteredItems.findIndex(item => item.id === hoveredId);
+    if (filteredIndex !== -1) {
+      const adjustedIndex = filteredIndex + (dropSide === 'right' ? 1 : 0);
+      return convertFilteredIndexToOriginal(adjustedIndex);
     }
   }
 
   if (fallbackIndex !== null && fallbackIndex !== undefined) {
-    return fallbackIndex + (dropSide === 'right' ? 1 : 0);
+    const adjustedIndex = fallbackIndex + (dropSide === 'right' ? 1 : 0);
+    return convertFilteredIndexToOriginal(adjustedIndex);
   }
 
   return null;
@@ -203,16 +223,27 @@ const DragDropGrid = <T extends DragDropItem>({
     return containerRef.current?.closest('[data-scrolling-container]') as HTMLElement | null;
   }, []);
 
-  // Filter out placeholder items (invisible pages for deselected files)
-  const visibleItems = items.filter(item => !item.isPlaceholder);
+  const { filteredItems: visibleItems, filteredToOriginalIndex } = useMemo(() => {
+    const filtered: T[] = [];
+    const indexMap: number[] = [];
+
+    items.forEach((item, index) => {
+      if (!item.isPlaceholder) {
+        filtered.push(item);
+        indexMap.push(index);
+      }
+    });
+
+    return { filteredItems: filtered, filteredToOriginalIndex: indexMap };
+  }, [items]);
 
   // Box selection state
   const [boxSelectStart, setBoxSelectStart] = useState<{ x: number; y: number } | null>(null);
   const [boxSelectEnd, setBoxSelectEnd] = useState<{ x: number; y: number } | null>(null);
   const [isBoxSelecting, setIsBoxSelecting] = useState(false);
   const [boxSelectedPageIds, setBoxSelectedPageIds] = useState<string[]>([]);
-  const justMovedIdsRef = useRef(new Set<string>());
-  const [, forceUpdate] = useState(0);
+  const [justMovedIds, setJustMovedIds] = useState<string[]>([]);
+  const highlightTimeoutRef = useRef<number | null>(null);
 
   // Drag state
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -329,6 +360,16 @@ const DragDropGrid = <T extends DragDropItem>({
   useEffect(() => {
     rowVirtualizer.measure();
   }, [zoomLevel, itemsPerRow]);
+
+  // Cleanup highlight timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (highlightTimeoutRef.current) {
+        window.clearTimeout(highlightTimeoutRef.current);
+        highlightTimeoutRef.current = null;
+      }
+    };
+  }, []);
 
   // Box selection handlers
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
@@ -470,18 +511,16 @@ const DragDropGrid = <T extends DragDropItem>({
     const sourcePageNumber = activeData.pageNumber;
 
     const overData = over?.data.current;
-    let targetIndex = resolveTargetIndex(
+    const targetIndex = resolveTargetIndex(
       hoveredItemId,
       finalDropSide,
       visibleItems,
+      filteredToOriginalIndex,
+      items.length,
       overData ? overData.index : null
     );
 
     if (targetIndex === null) return;
-
-    // Clamp to bounds
-    if (targetIndex < 0) targetIndex = 0;
-    if (targetIndex > visibleItems.length) targetIndex = visibleItems.length;
 
     // Check if this page is box-selected
     const isBoxSelected = boxSelectedPageIds.includes(active.id as string);
@@ -491,21 +530,21 @@ const DragDropGrid = <T extends DragDropItem>({
     onReorderPages(sourcePageNumber, targetIndex, pagesToDrag);
 
     // Highlight moved pages briefly
-    const movedIds = new Set(pagesToDrag ?? [active.id as string]);
-    justMovedIdsRef.current = movedIds;
-    forceUpdate(prev => prev + 1);
-    window.setTimeout(() => {
-      if (justMovedIdsRef.current === movedIds) {
-        justMovedIdsRef.current = new Set();
-        forceUpdate(prev => prev + 1);
-      }
+    const movedIds = pagesToDrag ?? [active.id as string];
+    setJustMovedIds(movedIds);
+    if (highlightTimeoutRef.current) {
+      window.clearTimeout(highlightTimeoutRef.current);
+    }
+    highlightTimeoutRef.current = window.setTimeout(() => {
+      setJustMovedIds([]);
+      highlightTimeoutRef.current = null;
     }, 1200);
 
     // Clear box selection after drag
     if (pagesToDrag) {
       clearBoxSelection();
     }
-  }, [boxSelectedPageIds, dropSide, onReorderPages, clearBoxSelection]);
+  }, [boxSelectedPageIds, dropSide, hoveredItemId, visibleItems, filteredToOriginalIndex, items, onReorderPages, clearBoxSelection]);
 
   // Calculate optimal width for centering
   const remToPx = parseFloat(getComputedStyle(document.documentElement).fontSize);
@@ -659,7 +698,7 @@ const DragDropGrid = <T extends DragDropItem>({
                       getBoxSelection={getBoxSelection}
                       activeId={activeId}
                       activeDragIds={activeDragIds}
-                      justMoved={justMovedIdsRef.current.has(item.id)}
+                      justMoved={justMovedIds.includes(item.id)}
                       getThumbnailData={getThumbnailData}
                       onUpdateDropTarget={setHoveredItemId}
                       renderItem={renderItem}
