@@ -142,10 +142,21 @@ export function usePageDocument(): PageDocumentHook {
       return filePages;
     };
 
-    // Collect all pages from original files (without renumbering yet)
+    // Collect all pages from original files, respecting their previous positions
     const selectedFileIdsSet = new Set(state.ui.selectedFileIds);
+
+    // Sort original files by their position in fileOrder (so placeholders stay in correct spot)
+    // Use fileOrder as source of truth since it persists across page editor sessions
+    const fileOrderMap = new Map(allFileIds.map((id, index) => [id, index]));
+
+    const sortedOriginalFileIds = [...originalFileIds].sort((a, b) => {
+      const posA = fileOrderMap.get(a) ?? Number.MAX_SAFE_INTEGER;
+      const posB = fileOrderMap.get(b) ?? Number.MAX_SAFE_INTEGER;
+      return posA - posB;
+    });
+
     const originalFilePages: PDFPage[] = [];
-    originalFileIds.forEach(fileId => {
+    sortedOriginalFileIds.forEach(fileId => {
       const isSelected = selectedFileIdsSet.has(fileId);
       const filePages = createPagesFromFile(fileId, 1, isSelected); // Temporary numbering
       originalFilePages.push(...filePages);
@@ -184,6 +195,13 @@ export function usePageDocument(): PageDocumentHook {
       return null;
     }
 
+    // Pages are already in the correct order from the sorted assembly above
+    // Just ensure page numbers are sequential
+    pages = pages.map((page, index) => ({
+      ...page,
+      pageNumber: index + 1,
+    }));
+
     const mergedDoc: PDFDocument = {
       id: activeFileIds.join('-'),
       name,
@@ -193,7 +211,7 @@ export function usePageDocument(): PageDocumentHook {
     };
 
     return mergedDoc;
-  }, [activeFileIds, primaryFileId, primaryStirlingFileStub, processedFilePages, processedFileTotalPages, selectors, activeFilesSignature, selectedFileIdsKey, state.ui.selectedFileIds]);
+  }, [activeFileIds, primaryFileId, primaryStirlingFileStub, processedFilePages, processedFileTotalPages, selectors, activeFilesSignature, selectedFileIdsKey, state.ui.selectedFileIds, allFileIds]);
 
   // Large document detection for smart loading
   const isVeryLargeDocument = useMemo(() => {

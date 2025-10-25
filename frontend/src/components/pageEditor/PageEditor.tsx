@@ -200,6 +200,7 @@ const PageEditor = ({
         break;
       }
     }
+
     if (!hasAdditions && !hasRemovals) return;
 
     setEditedDocument(prev => {
@@ -213,22 +214,18 @@ const PageEditor = ({
 
       // Insert new pages while preserving current interleaving
       if (hasAdditions) {
-        // Insert file-by-file at the correct anchors
-        for (const [, additions] of newByFile) {
-          // Check if any page has insertAfterPageId (specific insertion point)
-          const hasSpecificInsertPoint = additions.some(p => (p as any).insertAfterPageId);
+        // Rebuild pages array respecting the order from mergedPdfDocument
+        // This handles file selection/deselection correctly (placeholder positioning)
+        const mergedOrder = mergedPdfDocument.pages.map(p => p.id);
+        const pageById = new Map(pages.map(p => [p.id, p]));
 
-          if (hasSpecificInsertPoint) {
-            // Insert after specific page (ignores file order)
-            const insertAfterPageId = (additions[0] as any).insertAfterPageId;
-            const insertAfterIndex = pages.findIndex(p => p.id === insertAfterPageId);
-            const insertAt = insertAfterIndex >= 0 ? insertAfterIndex + 1 : pages.length;
-            pages.splice(insertAt, 0, ...additions);
-          } else {
-            // Normal add: append to end
-            pages.push(...additions);
-          }
+        // Add new pages to the map
+        for (const [, additions] of newByFile) {
+          additions.forEach(p => pageById.set(p.id, p));
         }
+
+        // Rebuild in mergedPdfDocument order
+        pages = mergedOrder.map(id => pageById.get(id)!).filter(Boolean);
       }
 
       // Renumber without reordering
@@ -350,17 +347,28 @@ const PageEditor = ({
   }, [displayDocument, setSelectedPageIds, setSelectionMode]);
 
   // Automatically include newly added pages in the current selection
+  const previousPageIdsRef = useRef<Set<string>>(new Set());
   useEffect(() => {
-    if (!displayDocument || displayDocument.pages.length === 0) return;
+    if (!displayDocument || displayDocument.pages.length === 0) {
+      previousPageIdsRef.current = new Set();
+      return;
+    }
 
-    const currentSelection = new Set(selectedPageIds);
-    const newlyAddedPageIds = displayDocument.pages
-      .map(page => page.id)
-      .filter(pageId => !currentSelection.has(pageId));
+    const currentIds = new Set(displayDocument.pages.map(page => page.id));
+    const newlyAddedPageIds: string[] = [];
+    currentIds.forEach(id => {
+      if (!previousPageIdsRef.current.has(id)) {
+        newlyAddedPageIds.push(id);
+      }
+    });
 
     if (newlyAddedPageIds.length > 0) {
-      setSelectedPageIds([...selectedPageIds, ...newlyAddedPageIds]);
+      const next = new Set(selectedPageIds);
+      newlyAddedPageIds.forEach(id => next.add(id));
+      setSelectedPageIds(Array.from(next));
     }
+
+    previousPageIdsRef.current = currentIds;
   }, [displayDocument, selectedPageIds, setSelectedPageIds]);
 
   // DOM-first command handlers

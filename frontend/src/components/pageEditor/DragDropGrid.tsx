@@ -511,7 +511,7 @@ const DragDropGrid = <T extends DragDropItem>({
     const sourcePageNumber = activeData.pageNumber;
 
     const overData = over?.data.current;
-    const targetIndex = resolveTargetIndex(
+    let targetIndex = resolveTargetIndex(
       hoveredItemId,
       finalDropSide,
       visibleItems,
@@ -521,6 +521,8 @@ const DragDropGrid = <T extends DragDropItem>({
     );
 
     if (targetIndex === null) return;
+    if (targetIndex < 0) targetIndex = 0;
+    if (targetIndex > items.length) targetIndex = items.length;
 
     // Check if this page is box-selected
     const isBoxSelected = boxSelectedPageIds.includes(active.id as string);

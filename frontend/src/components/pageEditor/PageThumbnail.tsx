@@ -445,7 +445,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
                 backgroundColor: 'white',
                 border: '1px solid #e9ecef',
                 borderRadius: 2
-              }}></div>
+              }} />
             </div>
           ) : thumbnailUrl ? (
             <img
