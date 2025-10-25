@@ -252,6 +252,6 @@ class ApplicationPropertiesLogicTest {
         assertTrue(
                 oauth2.isValid(oneBlank, "scopes"),
                 "Documents current behavior: non-empty list is considered valid, even if an element"
-                    + " is empty/blank");
+                        + " is empty/blank");
     }
 }

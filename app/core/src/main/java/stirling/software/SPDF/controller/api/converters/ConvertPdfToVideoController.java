@@ -37,6 +37,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.converters.PdfToVideoRequest;
 import stirling.software.common.model.ApplicationProperties;
@@ -55,6 +56,7 @@ import stirling.software.common.util.WebResponseUtils;
 @RequestMapping("/api/v1/convert")
 @Tag(name = "Convert", description = "Convert APIs")
 @RequiredArgsConstructor
+@Slf4j
 public class ConvertPdfToVideoController {
 
     private static final Set<String> SUPPORTED_FORMATS = Set.of("mp4", "webm");
@@ -64,10 +66,11 @@ public class ConvertPdfToVideoController {
                     "1080P", "scale=-2:1080,setsar=1",
                     "720P", "scale=-2:720,setsar=1",
                     "480P", "scale=-2:480,setsar=1");
-    private static final String WATERMARK_TEXT = "Stirling-PDF";
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
+
+    private boolean isWatermarkEnabled = true;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/video")
     @Operation(
@@ -126,6 +129,12 @@ public class ConvertPdfToVideoController {
             resolution = "ORIGINAL";
         }
 
+        String watermarkText = request.getWatermarkText();
+        log.info("Watermark text: {}", watermarkText);
+        if (watermarkText == null || watermarkText.isBlank()) {
+            isWatermarkEnabled = false;
+        }
+
         String originalPdfFileName = Filenames.toSimpleFileName(inputFile.getOriginalFilename());
         if (originalPdfFileName == null || originalPdfFileName.isBlank()) {
             originalPdfFileName = "document.pdf";
@@ -141,7 +150,12 @@ public class ConvertPdfToVideoController {
 
             inputFile.transferTo(inputTempFile.getFile());
 
-            generateFrames(inputTempFile.getPath(), framesDirectory.getPath(), dpi, opacity);
+            generateFrames(
+                    inputTempFile.getPath(),
+                    framesDirectory.getPath(),
+                    dpi,
+                    opacity,
+                    watermarkText);
 
             DecimalFormat decimalFormat =
                     new DecimalFormat("0.######", DecimalFormatSymbols.getInstance(Locale.ROOT));
@@ -160,7 +174,8 @@ public class ConvertPdfToVideoController {
         }
     }
 
-    private void generateFrames(Path inputPdf, Path outputDir, int dpi, float opacity)
+    private void generateFrames(
+            Path inputPdf, Path outputDir, int dpi, float opacity, String watermarkText)
             throws IOException {
         try (PDDocument document = pdfDocumentFactory.load(inputPdf.toFile())) {
             PDFRenderer renderer = new PDFRenderer(document);
@@ -172,7 +187,9 @@ public class ConvertPdfToVideoController {
             }
             for (int pageIndex = 0; pageIndex < pageCount; pageIndex++) {
                 BufferedImage image = renderer.renderImageWithDPI(pageIndex, dpi, ImageType.RGB);
-                applyWatermark(image, opacity);
+                if (isWatermarkEnabled) {
+                    applyWatermark(image, opacity, watermarkText);
+                }
                 Path framePath =
                         outputDir.resolve(
                                 String.format(Locale.ROOT, "frame_%05d.png", pageIndex + 1));
@@ -181,7 +198,7 @@ public class ConvertPdfToVideoController {
         }
     }
 
-    private void applyWatermark(BufferedImage image, float opacity) {
+    private void applyWatermark(BufferedImage image, float opacity, String watermarkText) {
         Graphics2D graphics = image.createGraphics();
         try {
             graphics.setRenderingHint(
@@ -193,7 +210,7 @@ public class ConvertPdfToVideoController {
             graphics.setFont(font);
 
             FontMetrics metrics = graphics.getFontMetrics(font);
-            int textWidth = metrics.stringWidth(WATERMARK_TEXT);
+            int textWidth = metrics.stringWidth(watermarkText);
             int textHeight = metrics.getAscent();
 
             AffineTransform originalTransform = graphics.getTransform();
@@ -204,12 +221,12 @@ public class ConvertPdfToVideoController {
             // Draw shadow
             graphics.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, opacity / 2));
             graphics.setColor(Color.BLACK);
-            graphics.drawString(WATERMARK_TEXT, -textWidth / 2f + 3, textHeight / 2f + 3);
+            graphics.drawString(watermarkText, -textWidth / 2f + 3, textHeight / 2f + 3);
 
             // Draw main text
             graphics.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, opacity));
             graphics.setColor(Color.WHITE);
-            graphics.drawString(WATERMARK_TEXT, -textWidth / 2f, textHeight / 2f);
+            graphics.drawString(watermarkText, -textWidth / 2f, textHeight / 2f);
 
             graphics.setTransform(originalTransform);
         } finally {

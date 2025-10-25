@@ -66,6 +66,11 @@
                   th:disabled="${!isFfmpegAvailable}">
               </div>
               <div class="mb-3">
+                <label for="watermarkText" th:text="#{pdfToVideo.watermarkText}"></label>
+                <input id="watermarkText" type="text" class="form-control" name="watermarkText" placeholder="Stirling Software"
+                  th:disabled="${!isFfmpegAvailable}">
+              </div>
+              <div class="mb-3">
                 <label for="opacity" th:text="#{pdfToVideo.opacity}"></label>
                 <input id="opacity" type="number" step="0.01" class="form-control" name="opacity" min="0.0" max="1.0" value="0.1"
                   required th:disabled="${!isFfmpegAvailable}">

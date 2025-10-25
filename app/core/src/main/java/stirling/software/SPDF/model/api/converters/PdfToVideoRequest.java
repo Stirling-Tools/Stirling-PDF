@@ -38,9 +38,16 @@ public class PdfToVideoRequest extends PDFFile {
     private Integer dpi = 150;
 
     @Schema(
-            description = "Opacity of the PDF pages in the video (0.0 to 1.0)",
+            description =
+                    "Opacity of the watermark (only applied if a watermark text is specified)",
             minimum = "0.0",
             maximum = "1.0",
             defaultValue = "0.1")
     private Float opacity = 0.1f;
+
+    @Schema(
+            description = "Watermark text to overlay on the video",
+            example = "Stirling Software",
+            defaultValue = "Stirling Software")
+    private String watermarkText;
 }
