@@ -28,13 +28,9 @@ interface PageThumbnailProps {
   movingPage: number | null;
   isAnimating: boolean;
   isBoxSelected?: boolean;
-  boxSelectedPageIds?: string[];
   clearBoxSelection?: () => void;
-  getBoxSelection?: () => string[];
-  activeId: string | null;
   activeDragIds: string[];
   justMoved?: boolean;
-  isOver: boolean;
   pageRefs: React.MutableRefObject<Map<string, HTMLDivElement>>;
   dragHandleProps?: any;
   onReorderPages: (sourcePageNumber: number, targetIndex: number, selectedPageIds?: string[]) => void;
@@ -65,11 +61,8 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
   movingPage,
   isAnimating,
   isBoxSelected = false,
-  // boxSelectedPageIds,
   clearBoxSelection,
-  // getBoxSelection,
   activeDragIds,
-  // isOver,
   pageRefs,
   dragHandleProps,
   onReorderPages,

@@ -30,7 +30,7 @@ export default function Workbench() {
   const setCurrentView = navActions.setWorkbench;
 
   // Create stable reference for activeFiles based on file IDs
-  const activeFiles = useMemo(() => selectors.getFiles(), [state.files.ids.join(',')]);
+  const activeFiles = useMemo(() => selectors.getFiles(), [state.files.ids]);
   const {
     previewFile,
     pageEditorFunctions,
