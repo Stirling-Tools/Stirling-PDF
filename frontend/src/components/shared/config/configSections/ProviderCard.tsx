@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Paper, Group, Text, Badge, Button, Collapse, Stack, TextInput, Textarea, Switch, PasswordInput } from '@mantine/core';
+import { Paper, Group, Text, Button, Collapse, Stack, TextInput, Textarea, Switch, PasswordInput } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import LocalIcon from '../../LocalIcon';
 import { Provider, ProviderField } from './providerDefinitions';

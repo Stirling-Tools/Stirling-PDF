@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { TextInput, NumberInput, Switch, Button, Stack, Paper, Text, Loader, Group, Select, PasswordInput, Alert, Badge, Accordion, Textarea } from '@mantine/core';
+import { NumberInput, Switch, Button, Stack, Paper, Text, Loader, Group, Select, Alert, Badge, Accordion, Textarea } from '@mantine/core';
 import { alert } from '../../../toast';
 import LocalIcon from '../../LocalIcon';
 import RestartConfirmationModal from '../RestartConfirmationModal';
@@ -147,7 +147,7 @@ export default function AdminSecuritySection() {
     try {
       await saveSettings();
       showRestartModal();
-    } catch (error) {
+    } catch (_error) {
       alert({
         alertType: 'error',
         title: t('admin.error', 'Error'),

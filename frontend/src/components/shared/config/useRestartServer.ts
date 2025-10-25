@@ -39,7 +39,7 @@ export function useRestartServer() {
       } else {
         throw new Error('Failed to restart');
       }
-    } catch (error) {
+    } catch (_error) {
       alert({
         alertType: 'error',
         title: t('admin.error', 'Error'),

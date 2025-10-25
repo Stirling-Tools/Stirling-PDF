@@ -172,7 +172,7 @@ export default function AdminAdvancedSection() {
     try {
       await saveSettings();
       showRestartModal();
-    } catch (error) {
+    } catch (_error) {
       alert({
         alertType: 'error',
         title: t('admin.error', 'Error'),

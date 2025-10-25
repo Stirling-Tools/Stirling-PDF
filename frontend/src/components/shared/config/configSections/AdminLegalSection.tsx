@@ -40,7 +40,7 @@ export default function AdminLegalSection() {
     try {
       await saveSettings();
       showRestartModal();
-    } catch (error) {
+    } catch (_error) {
       alert({
         alertType: 'error',
         title: t('admin.error', 'Error'),

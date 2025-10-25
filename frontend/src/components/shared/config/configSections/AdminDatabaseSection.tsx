@@ -85,7 +85,7 @@ export default function AdminDatabaseSection() {
     try {
       await saveSettings();
       showRestartModal();
-    } catch (error) {
+    } catch (_error) {
       alert({
         alertType: 'error',
         title: t('admin.error', 'Error'),

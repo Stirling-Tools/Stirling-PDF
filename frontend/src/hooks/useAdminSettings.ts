@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import apiClient from '../services/apiClient';
-import { mergePendingSettings, isFieldPending, hasPendingChanges, getCurrentValue } from '../utils/settingsPendingHelper';
+import { mergePendingSettings, isFieldPending, hasPendingChanges } from '../utils/settingsPendingHelper';
 
 interface UseAdminSettingsOptions<T> {
   sectionName: string;
@@ -152,7 +152,7 @@ function computeDelta(original: any, current: any): any {
   const delta: any = {};
 
   for (const key in current) {
-    if (!current.hasOwnProperty(key)) continue;
+    if (!Object.prototype.hasOwnProperty.call(current, key)) continue;
 
     const originalValue = original[key];
     const currentValue = current[key];

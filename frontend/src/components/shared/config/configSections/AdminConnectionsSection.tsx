@@ -9,9 +9,6 @@ import PendingBadge from '../PendingBadge';
 import ProviderCard from './ProviderCard';
 import {
   ALL_PROVIDERS,
-  OAUTH2_PROVIDERS,
-  GENERIC_OAUTH2_PROVIDER,
-  SAML2_PROVIDER,
   Provider,
 } from './providerDefinitions';
 import apiClient from '../../../../services/apiClient';
@@ -98,7 +95,7 @@ export default function AdminConnectionsSection() {
 
       return result;
     },
-    saveTransformer: (settings) => {
+    saveTransformer: () => {
       // This section doesn't have a global save button
       // Individual providers save through their own handlers
       return {
@@ -210,7 +207,7 @@ export default function AdminConnectionsSection() {
           throw new Error('Failed to save');
         }
       }
-    } catch (error) {
+    } catch (_error) {
       alert({
         alertType: 'error',
         title: t('admin.error', 'Error'),
@@ -264,7 +261,7 @@ export default function AdminConnectionsSection() {
           throw new Error('Failed to disconnect');
         }
       }
-    } catch (error) {
+    } catch (_error) {
       alert({
         alertType: 'error',
         title: t('admin.error', 'Error'),
@@ -299,7 +296,7 @@ export default function AdminConnectionsSection() {
       } else {
         throw new Error('Failed to save');
       }
-    } catch (error) {
+    } catch (_error) {
       alert({
         alertType: 'error',
         title: t('admin.error', 'Error'),
