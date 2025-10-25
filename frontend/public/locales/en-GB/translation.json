@@ -3512,6 +3512,9 @@
         "now": "Restart Now",
         "later": "Restart Later"
       },
+      "restarting": "Restarting Server",
+      "restartingMessage": "The server is restarting. Please wait a moment...",
+      "restartError": "Failed to restart server. Please restart manually.",
       "general": {
         "title": "General",
         "description": "Configure general application settings including branding and default behaviour.",

@@ -85,7 +85,7 @@ export default function Footer({
               rel="noopener noreferrer"
               href={cookiePolicy}
             >
-              {t('legal.cookiePolicy', 'Cookie Policy')}
+              {t('legal.cookie', 'Cookie Policy')}
             </a>
           )}
           {isValidLink(impressum) && (
