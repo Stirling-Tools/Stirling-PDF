@@ -190,7 +190,7 @@ export default function AdminSecuritySection() {
                 checked={settings.enableLogin || false}
                 onChange={(e) => setSettings({ ...settings, enableLogin: e.target.checked })}
               />
-              <PendingBadge show={isFieldPending(rawSettings, 'enableLogin')} />
+              <PendingBadge show={isFieldPending('enableLogin')} />
             </Group>
           </div>
 
@@ -208,7 +208,7 @@ export default function AdminSecuritySection() {
               ]}
               comboboxProps={{ zIndex: 1400 }}
             />
-            {isFieldPending(rawSettings, 'loginMethod') && (
+            {isFieldPending('loginMethod') && (
               <Group mt="xs">
                 <PendingBadge show={true} />
               </Group>
@@ -249,7 +249,7 @@ export default function AdminSecuritySection() {
                 checked={settings.csrfDisabled || false}
                 onChange={(e) => setSettings({ ...settings, csrfDisabled: e.target.checked })}
               />
-              <PendingBadge show={isFieldPending(rawSettings, 'csrfDisabled')} />
+              <PendingBadge show={isFieldPending('csrfDisabled')} />
             </Group>
           </div>
         </Stack>
@@ -284,7 +284,7 @@ export default function AdminSecuritySection() {
                 checked={settings.jwt?.persistence || false}
                 onChange={(e) => setSettings({ ...settings, jwt: { ...settings.jwt, persistence: e.target.checked } })}
               />
-              <PendingBadge show={isFieldPending(rawSettings, 'jwt.persistence')} />
+              <PendingBadge show={isFieldPending('jwt.persistence')} />
             </Group>
           </div>
 
@@ -337,7 +337,7 @@ export default function AdminSecuritySection() {
                 checked={settings.jwt?.secureCookie || false}
                 onChange={(e) => setSettings({ ...settings, jwt: { ...settings.jwt, secureCookie: e.target.checked } })}
               />
-              <PendingBadge show={isFieldPending(rawSettings, 'jwt.secureCookie')} />
+              <PendingBadge show={isFieldPending('jwt.secureCookie')} />
             </Group>
           </div>
         </Stack>
@@ -363,7 +363,7 @@ export default function AdminSecuritySection() {
                 checked={settings.audit?.enabled || false}
                 onChange={(e) => setSettings({ ...settings, audit: { ...settings.audit, enabled: e.target.checked } })}
               />
-              <PendingBadge show={isFieldPending(rawSettings, 'audit.enabled')} />
+              <PendingBadge show={isFieldPending('audit.enabled')} />
             </Group>
           </div>
 
@@ -419,7 +419,7 @@ export default function AdminSecuritySection() {
                   }
                 })}
               />
-              <PendingBadge show={isFieldPending(rawSettings, 'html.urlSecurity.enabled')} />
+              <PendingBadge show={isFieldPending('html.urlSecurity.enabled')} />
             </Group>
           </div>
 
