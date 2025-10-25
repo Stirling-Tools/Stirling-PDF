@@ -112,19 +112,11 @@ class ApplicationPropertiesLogicTest {
     @Test
     void ui_getters_return_null_for_blank() {
         ApplicationProperties.Ui ui = new ApplicationProperties.Ui();
-        ui.setAppName("   ");
-        ui.setHomeDescription("");
         ui.setAppNameNavbar(null);
 
-        assertNull(ui.getAppName());
-        assertNull(ui.getHomeDescription());
         assertNull(ui.getAppNameNavbar());
 
-        ui.setAppName("Stirling-PDF");
-        ui.setHomeDescription("Home");
         ui.setAppNameNavbar("Nav");
-        assertEquals("Stirling-PDF", ui.getAppName());
-        assertEquals("Home", ui.getHomeDescription());
         assertEquals("Nav", ui.getAppNameNavbar());
     }
 

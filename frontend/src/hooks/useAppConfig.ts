@@ -10,11 +10,10 @@ export interface AppConfig {
   baseUrl?: string;
   contextPath?: string;
   serverPort?: number;
-  appName?: string;
   appNameNavbar?: string;
-  homeDescription?: string;
   languages?: string[];
   enableLogin?: boolean;
+  isAdmin?: boolean;
   enableAlphaFunctionality?: boolean;
   enableAnalytics?: boolean;
   premiumEnabled?: boolean;

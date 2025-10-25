@@ -38,7 +38,6 @@ const Overview: React.FC = () => {
   };
 
   const basicConfig = config ? {
-    appName: config.appName,
     appNameNavbar: config.appNameNavbar,
     baseUrl: config.baseUrl,
     contextPath: config.contextPath,
@@ -62,7 +61,7 @@ const Overview: React.FC = () => {
     try {
       await signOut();
       navigate('/login');
-    } catch (error) {
+    } catch (_error) {
       console.error('Logout error:', error);
     }
   };

@@ -4,6 +4,7 @@ import { useToolWorkflow } from "../contexts/ToolWorkflowContext";
 import { Group, useMantineColorScheme } from "@mantine/core";
 import { useSidebarContext } from "../contexts/SidebarContext";
 import { useDocumentMeta } from "../hooks/useDocumentMeta";
+import { useAppConfig } from "../hooks/useAppConfig";
 import { BASE_PATH } from "../constants/app";
 import { useBaseUrl } from "../hooks/useBaseUrl";
 import { useMediaQuery } from "@mantine/hooks";
@@ -43,6 +44,7 @@ export default function HomePage() {
 
   const { openFilesModal } = useFilesModalContext();
   const { colorScheme } = useMantineColorScheme();
+  const { config } = useAppConfig();
   const isMobile = useMediaQuery("(max-width: 1024px)");
   const sliderRef = useRef<HTMLDivElement | null>(null);
   const [activeMobileView, setActiveMobileView] = useState<MobileView>("tools");
@@ -139,10 +141,11 @@ export default function HomePage() {
   const baseUrl = useBaseUrl();
 
   // Update document meta when tool changes
+  const appName = config?.appNameNavbar || 'Stirling PDF';
   useDocumentMeta({
-    title: selectedTool ? `${selectedTool.name} - Stirling PDF` : 'Stirling PDF',
+    title: selectedTool ? `${selectedTool.name} - ${appName}` : appName,
     description: selectedTool?.description || t('app.description', 'The Free Adobe Acrobat alternative (10M+ Downloads)'),
-    ogTitle: selectedTool ? `${selectedTool.name} - Stirling PDF` : 'Stirling PDF',
+    ogTitle: selectedTool ? `${selectedTool.name} - ${appName}` : appName,
     ogDescription: selectedTool?.description || t('app.description', 'The Free Adobe Acrobat alternative (10M+ Downloads)'),
     ogImage: selectedToolKey ? `${baseUrl}/og_images/${selectedToolKey}.png` : `${baseUrl}/og_images/home.png`,
     ogUrl: selectedTool ? `${baseUrl}${window.location.pathname}` : baseUrl
