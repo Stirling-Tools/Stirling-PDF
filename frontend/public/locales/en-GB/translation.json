@@ -3103,6 +3103,9 @@
     },
     "results": {
       "title": "Single Page Results"
+    },
+    "settings": {
+      "title": "Single page options"
     }
   },
   "pageExtracter": {
@@ -3840,7 +3843,14 @@
     "used": "used",
     "available": "available",
     "cancel": "Cancel",
-    "preview": "Preview"
+    "preview": "Preview",
+    "processingMode": {
+      "label": "Processing mode",
+      "backend": "Backend",
+      "frontend": "Browser",
+      "defaultFrontendDesc": "Process locally in your browser without uploading files.",
+      "defaultBackendDesc": "Use the server to process files."
+    }
   },
   "config": {
     "account": {

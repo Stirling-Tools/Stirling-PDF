@@ -38,8 +38,8 @@ describe('MergeSettings', () => {
       </TestWrapper>
     );
 
-    // Should render one checkbox for each parameter
-    const expectedCheckboxCount = Object.keys(defaultParameters).length;
+    // Should render one checkbox for each parameter (excluding processingMode which is a SegmentedControl)
+    const expectedCheckboxCount = Object.keys(defaultParameters).filter(k => k !== 'processingMode').length;
     const checkboxes = screen.getAllByRole('checkbox');
     expect(checkboxes).toHaveLength(expectedCheckboxCount);
   });
