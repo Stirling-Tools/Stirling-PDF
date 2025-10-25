@@ -15,6 +15,7 @@ import {
 } from "../../../utils/cropCoordinates";
 import { pdfWorkerManager } from "../../../services/pdfWorkerManager";
 import DocumentThumbnail from "../../shared/filePreview/DocumentThumbnail";
+import ProcessingModeToggle from "../../shared/ProcessingModeToggle";
 
 interface CropSettingsProps {
   parameters: CropParametersHook;
@@ -151,6 +152,11 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
 
   return (
     <Stack gap="md" data-tour="crop-settings">
+      <ProcessingModeToggle
+        value={parameters.parameters.processingMode}
+        onChange={(mode) => parameters.updateParameter('processingMode', mode)}
+        disabled={disabled}
+      />
       {/* PDF Preview with Crop Selector */}
       <Stack gap="xs">
         <Group justify="space-between" align="center">

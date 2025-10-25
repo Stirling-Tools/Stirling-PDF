@@ -1,4 +1,4 @@
-import { BaseParameters } from '../../../types/parameters';
+import { BaseParameters, ToggleableProcessingParameters } from '../../../types/parameters';
 import { useBaseParameters, BaseParametersHook } from '../shared/useBaseParameters';
 
 export enum PageSize {
@@ -14,7 +14,7 @@ export enum PageSize {
   LEGAL = 'LEGAL'
 }
 
-export interface AdjustPageScaleParameters extends BaseParameters {
+export interface AdjustPageScaleParameters extends BaseParameters, ToggleableProcessingParameters {
   scaleFactor: number;
   pageSize: PageSize;
 }
@@ -22,6 +22,7 @@ export interface AdjustPageScaleParameters extends BaseParameters {
 export const defaultParameters: AdjustPageScaleParameters = {
   scaleFactor: 1.0,
   pageSize: PageSize.KEEP,
+  processingMode: 'backend',
 };
 
 export type AdjustPageScaleParametersHook = BaseParametersHook<AdjustPageScaleParameters>;
@@ -29,7 +30,7 @@ export type AdjustPageScaleParametersHook = BaseParametersHook<AdjustPageScalePa
 export const useAdjustPageScaleParameters = (): AdjustPageScaleParametersHook => {
   return useBaseParameters({
     defaultParameters,
-    endpointName: 'scale-pages',
+    endpointName: (params) => (params.processingMode === 'frontend' ? '' : 'scale-pages'),
     validateFn: (params) => {
       return params.scaleFactor > 0;
     },

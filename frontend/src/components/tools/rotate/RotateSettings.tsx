@@ -6,6 +6,7 @@ import RotateRightIcon from "@mui/icons-material/RotateRight";
 import { RotateParametersHook } from "../../../hooks/tools/rotate/useRotateParameters";
 import { useSelectedFiles } from "../../../contexts/file/fileHooks";
 import DocumentThumbnail from "../../shared/filePreview/DocumentThumbnail";
+import ProcessingModeToggle from "../../shared/ProcessingModeToggle";
 
 interface RotateSettingsProps {
   parameters: RotateParametersHook;
@@ -33,6 +34,12 @@ const RotateSettings = ({ parameters, disabled = false }: RotateSettingsProps) =
 
   return (
     <Stack gap="md">
+      <ProcessingModeToggle
+        value={parameters.parameters.processingMode}
+        onChange={(mode) => parameters.updateParameter('processingMode', mode)}
+        disabled={disabled}
+      />
+
       {/* Thumbnail Preview Section */}
       <Stack gap="xs">
         <Text size="sm" fw={500}>

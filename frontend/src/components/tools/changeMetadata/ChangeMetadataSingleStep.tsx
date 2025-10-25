@@ -2,6 +2,7 @@ import { Stack, Divider, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { ChangeMetadataParameters, createCustomMetadataFunctions } from "../../../hooks/tools/changeMetadata/useChangeMetadataParameters";
 import { useMetadataExtraction } from "../../../hooks/tools/changeMetadata/useMetadataExtraction";
+import ProcessingModeToggle from "../../shared/ProcessingModeToggle";
 import DeleteAllStep from "./steps/DeleteAllStep";
 import StandardMetadataStep from "./steps/StandardMetadataStep";
 import DocumentDatesStep from "./steps/DocumentDatesStep";
@@ -36,6 +37,12 @@ const ChangeMetadataSingleStep = ({
 
   return (
     <Stack gap="md">
+      <ProcessingModeToggle
+        value={parameters.processingMode}
+        onChange={(mode) => onParameterChange('processingMode', mode)}
+        disabled={disabled}
+      />
+
       {/* Delete All */}
       <Stack gap="md">
         <Text size="sm" fw={500}>

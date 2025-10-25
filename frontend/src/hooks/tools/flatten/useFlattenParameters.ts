@@ -1,12 +1,13 @@
-import { BaseParameters } from '../../../types/parameters';
+import { BaseParameters, ToggleableProcessingParameters } from '../../../types/parameters';
 import { useBaseParameters, BaseParametersHook } from '../shared/useBaseParameters';
 
-export interface FlattenParameters extends BaseParameters {
+export interface FlattenParameters extends BaseParameters, ToggleableProcessingParameters {
   flattenOnlyForms: boolean;
 }
 
 export const defaultParameters: FlattenParameters = {
   flattenOnlyForms: false,
+  processingMode: 'backend',
 };
 
 export type FlattenParametersHook = BaseParametersHook<FlattenParameters>;
@@ -14,6 +15,6 @@ export type FlattenParametersHook = BaseParametersHook<FlattenParameters>;
 export const useFlattenParameters = (): FlattenParametersHook => {
   return useBaseParameters({
     defaultParameters,
-    endpointName: 'flatten',
+    endpointName: (params) => (params.processingMode === 'frontend' ? '' : 'flatten'),
   });
 };

@@ -4,6 +4,7 @@ import { AddStampParameters } from "./useAddStampParameters";
 import ButtonSelector from "../../shared/ButtonSelector";
 import styles from "./StampPreview.module.css";
 import { getDefaultFontSizeForAlphabet } from "./StampPreviewUtils";
+import ProcessingModeToggle from "../../shared/ProcessingModeToggle";
 
 interface StampSetupSettingsProps {
   parameters: AddStampParameters;
@@ -20,6 +21,11 @@ const StampSetupSettings = ({ parameters, onParameterChange, disabled = false }:
         label={t('pageSelectionPrompt', 'Page Selection (e.g. 1,3,2 or 4-8,2,10-12 or 2n-1)')}
         value={parameters.pageNumbers}
         onChange={(e) => onParameterChange('pageNumbers', e.currentTarget.value)}
+        disabled={disabled}
+      />
+      <ProcessingModeToggle
+        value={parameters.processingMode}
+        onChange={(mode) => onParameterChange('processingMode', mode)}
         disabled={disabled}
       />
       <Divider/>

@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { useToolOperation, ToolType } from '../shared/useToolOperation';
 import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
 import { RotateParameters, defaultParameters, normalizeAngle } from './useRotateParameters';
+import { rotatePdfClientSide } from '../../../utils/pdfOperations/rotate';
 
 // Static configuration that can be used by both the hook and automation executor
 export const buildRotateFormData = (parameters: RotateParameters, file: File): FormData => {
@@ -19,6 +20,9 @@ export const rotateOperationConfig = {
   operationType: 'rotate',
   endpoint: '/api/v1/general/rotate-pdf',
   defaultParameters,
+  frontendProcessing: {
+    process: rotatePdfClientSide,
+  }
 } as const;
 
 export const useRotateOperation = () => {

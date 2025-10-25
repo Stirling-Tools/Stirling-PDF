@@ -2,6 +2,7 @@ import { Stack, Checkbox, Group } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { AddWatermarkParameters } from "../../../hooks/tools/addWatermark/useAddWatermarkParameters";
 import NumberInputWithUnit from "../shared/NumberInputWithUnit";
+import ProcessingModeToggle from "../../shared/ProcessingModeToggle";
 
 interface WatermarkFormattingProps {
   parameters: AddWatermarkParameters;
@@ -14,6 +15,12 @@ const WatermarkFormatting = ({ parameters, onParameterChange, disabled = false }
 
   return (
     <Stack gap="md">
+      <ProcessingModeToggle
+        value={parameters.processingMode}
+        onChange={(mode) => onParameterChange('processingMode', mode)}
+        disabled={disabled}
+      />
+
       {/* Size - single row */}
       <NumberInputWithUnit
         label={t('watermark.settings.size', 'Size')}

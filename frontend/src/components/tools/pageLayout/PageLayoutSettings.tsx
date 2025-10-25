@@ -2,6 +2,7 @@ import { Divider, Select, Stack, Switch } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { PageLayoutParameters } from '../../../hooks/tools/pageLayout/usePageLayoutParameters';
 import { getPagesPerSheetOptions } from './constants';
+import ProcessingModeToggle from '../../shared/ProcessingModeToggle';
 
 export default function PageLayoutSettings({
   parameters,
@@ -22,6 +23,12 @@ export default function PageLayoutSettings({
 
   return (
     <Stack gap="sm">
+      <ProcessingModeToggle
+        value={parameters.processingMode}
+        onChange={(mode) => onParameterChange('processingMode', mode)}
+        disabled={disabled}
+      />
+
       <Select
         label={t('pageLayout.pagesPerSheet', 'Pages per sheet:')}
         data={options.map(o => ({ value: String(o.value), label: o.label }))}

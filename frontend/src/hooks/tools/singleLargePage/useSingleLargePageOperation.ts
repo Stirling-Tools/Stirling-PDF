@@ -1,7 +1,8 @@
 import { useTranslation } from 'react-i18next';
-import { ToolType, useToolOperation } from '../shared/useToolOperation';
+import { ToolType, useToolOperation, ToolOperationConfig } from '../shared/useToolOperation';
 import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
 import { SingleLargePageParameters, defaultParameters } from './useSingleLargePageParameters';
+import { singleLargePageClientSide } from '../../../utils/pdfOperations/singleLargePage';
 
 // Static function that can be used by both the hook and automation executor
 export const buildSingleLargePageFormData = (_parameters: SingleLargePageParameters, file: File): FormData => {
@@ -17,7 +18,12 @@ export const singleLargePageOperationConfig = {
   operationType: 'pdfToSinglePage',
   endpoint: '/api/v1/general/pdf-to-single-page',
   defaultParameters,
-} as const;
+  frontendProcessing: {
+    process: singleLargePageClientSide,
+    shouldUseFrontend: (params) => params.processingMode === 'frontend',
+    statusMessage: 'Merging pages into a single page in browser...'
+  }
+} as const satisfies ToolOperationConfig<SingleLargePageParameters>;
 
 export const useSingleLargePageOperation = () => {
   const { t } = useTranslation();

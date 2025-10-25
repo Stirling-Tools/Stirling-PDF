@@ -1,15 +1,16 @@
-import { BaseParameters } from '../../../types/parameters';
+import { BaseParameters, ToggleableProcessingParameters } from '../../../types/parameters';
 import { useBaseParameters, BaseParametersHook } from '../shared/useBaseParameters';
 import { useCallback } from 'react';
 import { Rectangle, PDFBounds, constrainCropAreaToPDF, createFullPDFCropArea, roundCropArea, isRectangle } from '../../../utils/cropCoordinates';
 import { DEFAULT_CROP_AREA } from '../../../constants/cropConstants';
 
-export interface CropParameters extends BaseParameters {
+export interface CropParameters extends BaseParameters, ToggleableProcessingParameters {
   cropArea: Rectangle;
 }
 
 export const defaultParameters: CropParameters = {
   cropArea: DEFAULT_CROP_AREA,
+  processingMode: 'backend',
 };
 
 export type CropParametersHook = BaseParametersHook<CropParameters> & {
@@ -30,7 +31,7 @@ export type CropParametersHook = BaseParametersHook<CropParameters> & {
 export const useCropParameters = (): CropParametersHook => {
   const baseHook = useBaseParameters({
     defaultParameters,
-    endpointName: 'crop',
+    endpointName: (params) => params.processingMode === 'frontend' ? '' : 'crop',
     validateFn: (params) => {
       const rect = params.cropArea;
       // Basic validation - coordinates and dimensions must be positive

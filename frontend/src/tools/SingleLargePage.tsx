@@ -4,6 +4,7 @@ import { useSingleLargePageParameters } from "../hooks/tools/singleLargePage/use
 import { useSingleLargePageOperation } from "../hooks/tools/singleLargePage/useSingleLargePageOperation";
 import { useBaseTool } from "../hooks/tools/shared/useBaseTool";
 import { BaseToolProps, ToolComponent } from "../types/tool";
+import SingleLargePageSettings from "../components/tools/singleLargePage/SingleLargePageSettings";
 
 const SingleLargePage = (props: BaseToolProps) => {
   const { t } = useTranslation();
@@ -20,7 +21,20 @@ const SingleLargePage = (props: BaseToolProps) => {
       selectedFiles: base.selectedFiles,
       isCollapsed: base.hasResults,
     },
-    steps: [],
+    steps: [
+      {
+        title: t('pdfToSinglePage.settings.title', 'Single page options'),
+        isCollapsed: base.settingsCollapsed,
+        onCollapsedClick: base.settingsCollapsed ? base.handleSettingsReset : undefined,
+        content: (
+          <SingleLargePageSettings
+            parameters={base.params.parameters}
+            onParameterChange={base.params.updateParameter}
+            disabled={base.endpointLoading}
+          />
+        ),
+      }
+    ],
     executeButton: {
       text: t("pdfToSinglePage.submit", "Convert To Single Page"),
       isVisible: !base.hasResults,

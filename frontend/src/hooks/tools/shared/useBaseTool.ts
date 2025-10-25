@@ -52,7 +52,13 @@ export function useBaseTool<TParams, TParamsHook extends BaseParametersHook<TPar
   const operation = useOperation();
 
   // Endpoint validation using parameters hook
-  const { enabled: endpointEnabled, loading: endpointLoading } = useEndpointEnabled(params.getEndpointName());
+  const { enabled: rawEndpointEnabled, loading: rawEndpointLoading } = useEndpointEnabled(params.getEndpointName());
+
+  const supportsFrontend = operation.supportsFrontendProcessing;
+  const usingFrontend = supportsFrontend ? operation.evaluateShouldUseFrontend(params.parameters) : false;
+
+  const endpointEnabled = usingFrontend ? true : (rawEndpointEnabled ?? false);
+  const endpointLoading = usingFrontend ? false : rawEndpointLoading;
 
   // Reset results when parameters change
   useEffect(() => {

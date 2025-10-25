@@ -1,7 +1,8 @@
 import { useTranslation } from 'react-i18next';
-import { ToolType, useToolOperation } from '../shared/useToolOperation';
+import { ToolType, useToolOperation, ToolOperationConfig } from '../shared/useToolOperation';
 import { createStandardErrorHandler } from '../../../utils/toolErrorHandler';
 import { PageLayoutParameters, defaultParameters } from './usePageLayoutParameters';
+import { pageLayoutClientSide } from '../../../utils/pdfOperations/pageLayout';
 
 export const buildPageLayoutFormData = (parameters: PageLayoutParameters, file: File): FormData => {
   const formData = new FormData();
@@ -17,7 +18,12 @@ export const pageLayoutOperationConfig = {
   operationType: 'pageLayout',
   endpoint: '/api/v1/general/multi-page-layout',
   defaultParameters,
-} as const;
+  frontendProcessing: {
+    process: pageLayoutClientSide,
+    shouldUseFrontend: (params) => params.processingMode === 'frontend',
+    statusMessage: 'Creating multi-page layout in browser...'
+  }
+} as const satisfies ToolOperationConfig<PageLayoutParameters>;
 
 export const usePageLayoutOperation = () => {
   const { t } = useTranslation();

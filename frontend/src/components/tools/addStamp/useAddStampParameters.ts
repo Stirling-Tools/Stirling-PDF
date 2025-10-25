@@ -1,7 +1,7 @@
-import { BaseParameters } from '../../../types/parameters';
+import { BaseParameters, ToggleableProcessingParameters } from '../../../types/parameters';
 import { useBaseParameters, type BaseParametersHook } from '../../../hooks/tools/shared/useBaseParameters';
 
-export interface AddStampParameters extends BaseParameters {
+export interface AddStampParameters extends BaseParameters, ToggleableProcessingParameters {
   stampType?: 'text' | 'image';
   stampText: string;
   stampImage?: File;
@@ -32,6 +32,7 @@ export const defaultParameters: AddStampParameters = {
   customColor: '#d3d3d3',
   pageNumbers: '1',
   _activePill: 'fontSize',
+  processingMode: 'backend',
 };
 
 export type AddStampParametersHook = BaseParametersHook<AddStampParameters>;
@@ -39,7 +40,7 @@ export type AddStampParametersHook = BaseParametersHook<AddStampParameters>;
 export const useAddStampParameters = (): AddStampParametersHook => {
   return useBaseParameters<AddStampParameters>({
     defaultParameters,
-    endpointName: 'add-stamp',
+    endpointName: (params) => params.processingMode === 'frontend' ? '' : 'add-stamp',
     validateFn: (params): boolean => {
       if (!params.stampType) return false;
       if (params.stampType === 'text') {

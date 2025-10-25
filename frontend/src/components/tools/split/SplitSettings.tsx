@@ -3,6 +3,7 @@ import LocalIcon from '../../shared/LocalIcon';
 import { useTranslation } from 'react-i18next';
 import { SPLIT_METHODS } from '../../../constants/splitConstants';
 import { SplitParameters } from '../../../hooks/tools/split/useSplitParameters';
+import ProcessingModeToggle from '../../shared/ProcessingModeToggle';
 
 export interface SplitSettingsProps {
   parameters: SplitParameters;
@@ -148,6 +149,12 @@ const SplitSettings = ({
 
   return (
     <Stack gap="md">
+      <ProcessingModeToggle
+        value={parameters.processingMode}
+        onChange={(mode) => onParameterChange('processingMode', mode)}
+        disabled={disabled}
+      />
+
       {/* Method-Specific Form */}
       {parameters.method === SPLIT_METHODS.BY_PAGES && renderByPagesForm()}
       {parameters.method === SPLIT_METHODS.BY_SECTIONS && renderBySectionsForm()}

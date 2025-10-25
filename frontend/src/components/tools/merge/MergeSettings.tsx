@@ -2,6 +2,7 @@ import React from 'react';
 import { Stack, Checkbox } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { MergeParameters } from '../../../hooks/tools/merge/useMergeParameters';
+import ProcessingModeToggle from '../../shared/ProcessingModeToggle';
 
 interface MergeSettingsProps {
   parameters: MergeParameters;
@@ -18,6 +19,12 @@ const MergeSettings: React.FC<MergeSettingsProps> = ({
 
   return (
     <Stack gap="md">
+      <ProcessingModeToggle
+        value={parameters.processingMode}
+        onChange={(mode) => onParameterChange('processingMode', mode)}
+        disabled={disabled}
+      />
+
       <Checkbox
         label={t('merge.removeDigitalSignature', 'Remove digital signature in the merged file?')}
         checked={parameters.removeDigitalSignature}

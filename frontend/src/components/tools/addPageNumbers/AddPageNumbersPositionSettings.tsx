@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import { AddPageNumbersParameters } from "./useAddPageNumbersParameters";
 import { Tooltip } from "../../shared/Tooltip";
 import PageNumberPreview from "./PageNumberPreview";
+import ProcessingModeToggle from "../../shared/ProcessingModeToggle";
 
 interface AddPageNumbersPositionSettingsProps {
   parameters: AddPageNumbersParameters;
@@ -27,6 +28,12 @@ const AddPageNumbersPositionSettings = ({
 
   return (
     <Stack gap="lg">
+      <ProcessingModeToggle
+        value={parameters.processingMode}
+        onChange={(mode) => onParameterChange('processingMode', mode)}
+        disabled={disabled}
+      />
+
       {/* Position Selection */}
       <Stack gap="md">
         <PageNumberPreview

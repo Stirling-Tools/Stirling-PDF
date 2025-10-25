@@ -5,7 +5,7 @@ import { ChangePermissionsParameters, defaultParameters } from './useChangePermi
 
 export const getFormData = ((parameters: ChangePermissionsParameters) =>
   Object.entries(parameters).map(([key, value]) =>
-    [key, value.toString()]
+    [key, String(value)]
   ) as string[][]
 );
 

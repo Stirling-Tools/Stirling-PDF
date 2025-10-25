@@ -1,8 +1,8 @@
-import { BaseParameters } from '../../../types/parameters';
+import { BaseParameters, ToggleableProcessingParameters } from '../../../types/parameters';
 import { TrappedStatus, CustomMetadataEntry } from '../../../types/metadata';
 import { useBaseParameters, BaseParametersHook } from '../shared/useBaseParameters';
 
-export interface ChangeMetadataParameters extends BaseParameters {
+export interface ChangeMetadataParameters extends BaseParameters, ToggleableProcessingParameters {
   // Standard PDF metadata fields
   title: string;
   author: string;
@@ -37,6 +37,7 @@ export const defaultParameters: ChangeMetadataParameters = {
   trapped: TrappedStatus.UNKNOWN,
   customMetadata: [],
   deleteAll: false,
+  processingMode: 'backend',
 };
 
 // Global counter for custom metadata IDs
@@ -117,7 +118,7 @@ export type ChangeMetadataParametersHook = BaseParametersHook<ChangeMetadataPara
 export const useChangeMetadataParameters = (): ChangeMetadataParametersHook => {
   const base = useBaseParameters({
     defaultParameters,
-    endpointName: 'update-metadata',
+    endpointName: (params) => (params.processingMode === 'frontend' ? '' : 'update-metadata'),
     validateFn: validateParameters,
   });
 
