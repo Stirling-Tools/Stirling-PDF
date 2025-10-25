@@ -662,37 +662,6 @@ public class CompressController {
         }
     }
 
-    // Generate hash of image metadata
-    private static String generateMetadataHash(PDImageXObject image) {
-        try {
-            StringBuilder metadata = new StringBuilder();
-
-            // Add image dimensions
-            metadata.append(image.getWidth()).append("x").append(image.getHeight());
-
-            // Add color space info
-            metadata.append("_").append(image.getColorSpace().getName());
-
-            // Add bits per component
-            metadata.append("_").append(image.getBitsPerComponent());
-
-            // Add stream length
-            metadata.append("_").append(image.getCOSObject().getLength());
-
-            // Add mask information
-            if (image.getMask() != null) {
-                metadata.append("_mask");
-            }
-            if (image.getSoftMask() != null) {
-                metadata.append("_softmask");
-            }
-
-            return bytesToHexString(generateMD5(metadata.toString().getBytes()));
-        } catch (Exception e) {
-            return "fallback-meta-" + System.identityHashCode(image);
-        }
-    }
-
     public Path compressImagesInPDF(
             Path pdfFile, double scaleFactor, float jpegQuality, boolean convertToGrayscale)
             throws Exception {
@@ -755,6 +724,15 @@ public class CompressController {
         long totalCompressedBytes = 0;
     }
 
+    private static byte[] generateMD5(byte[] data) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("MD5");
+            return md.digest(data); // Get the MD5 hash of the image bytes
+        } catch (NoSuchAlgorithmException e) {
+            throw ExceptionUtils.createMd5AlgorithmException(e);
+        }
+    }
+
     private static class ImageIdentity {
         private final String pixelHash; // Hash of pixel data
         private final String colorSpace; // e.g., "DeviceRGB", "DeviceCMYK"
@@ -783,7 +761,38 @@ public class CompressController {
             this.streamLength = image.getCOSObject().getLength();
             this.imageType = getImageType(image);
             this.decodeParams = generateDecodeParamsHash(image);
-            this.metadataHash = generateMetadataHash(image);
+            this.metadataHash = this.generateMetadataHash(image);
+        }
+
+        // Generate hash of image metadata
+        private String generateMetadataHash(PDImageXObject image) {
+            try {
+                StringBuilder metadata = new StringBuilder();
+
+                // Add image dimensions
+                metadata.append(image.getWidth()).append("x").append(image.getHeight());
+
+                // Add color space info
+                metadata.append("_").append(image.getColorSpace().getName());
+
+                // Add bits per component
+                metadata.append("_").append(image.getBitsPerComponent());
+
+                // Add stream length
+                metadata.append("_").append(image.getCOSObject().getLength());
+
+                // Add mask information
+                if (image.getMask() != null) {
+                    metadata.append("_mask");
+                }
+                if (image.getSoftMask() != null) {
+                    metadata.append("_softmask");
+                }
+
+                return bytesToHexString(generateMD5(metadata.toString().getBytes()));
+            } catch (Exception e) {
+                return "fallback-meta-" + System.identityHashCode(image);
+            }
         }
 
         @Override
@@ -838,15 +847,6 @@ public class CompressController {
                     hasMask ? "masked" : "nomask",
                     decodeParams.substring(0, Math.min(4, decodeParams.length())),
                     metadataHash.substring(0, Math.min(4, metadataHash.length())));
-        }
-    }
-
-    private static byte[] generateMD5(byte[] data) throws IOException {
-        try {
-            MessageDigest md = MessageDigest.getInstance("MD5");
-            return md.digest(data); // Get the MD5 hash of the image bytes
-        } catch (NoSuchAlgorithmException e) {
-            throw ExceptionUtils.createMd5AlgorithmException(e);
         }
     }
 
