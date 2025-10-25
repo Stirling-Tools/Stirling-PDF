@@ -75,20 +75,43 @@ export function fileContextReducer(state: FileContextState, action: FileContextA
       const { stirlingFileStubs } = action.payload;
       const newIds: FileId[] = [];
       const newById: Record<FileId, StirlingFileStub> = { ...state.files.byId };
+      let hasInsertionPosition = false;
 
       stirlingFileStubs.forEach(record => {
         // Only add if not already present (dedupe by stable ID)
         if (!newById[record.id]) {
           newIds.push(record.id);
+
+          // Track if any file has an insertion position
+          if (record.insertAfterPageId) {
+            hasInsertionPosition = true;
+          }
+
+          // Store record WITH insertAfterPageId temporarily
+          // PageEditorContext will read it and clear it
           newById[record.id] = record;
         }
       });
 
+      // Determine final file order
+      // NOTE: If files have insertAfterPageId, we just append to end
+      // The page-level insertion is handled by usePageDocument
+      const finalIds = [...state.files.ids, ...newIds];
+
+      // Auto-select inserted files
+      const newSelectedFileIds = hasInsertionPosition
+        ? [...state.ui.selectedFileIds, ...newIds]
+        : state.ui.selectedFileIds;
+
       return {
         ...state,
         files: {
-          ids: [...state.files.ids, ...newIds],
+          ids: finalIds,
           byId: newById
+        },
+        ui: {
+          ...state.ui,
+          selectedFileIds: newSelectedFileIds
         }
       };
     }
@@ -149,17 +172,13 @@ export function fileContextReducer(state: FileContextState, action: FileContextA
 
       // Validate that all IDs exist in current state
       const validIds = orderedFileIds.filter(id => state.files.byId[id]);
-      // Reorder selected files by passed order
-      const selectedFileIds = orderedFileIds.filter(id => state.ui.selectedFileIds.includes(id));
+
+      // Don't touch selectedFileIds - it's just a reference list, order doesn't matter
       return {
         ...state,
         files: {
           ...state.files,
           ids: validIds
-        },
-        ui: {
-          ...state.ui,
-          selectedFileIds,
         }
       };
     }

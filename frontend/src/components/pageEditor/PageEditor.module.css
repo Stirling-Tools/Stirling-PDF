@@ -11,6 +11,26 @@
   transform: scale(1.02) translateZ(0);
 }
 
+.pageSurface {
+  transition: background-color 0.4s ease;
+}
+
+.pageJustMoved {
+  animation: pageMovedHighlight 1.2s ease-out;
+}
+
+@keyframes pageMovedHighlight {
+  0% {
+    background-color: rgba(59, 130, 246, 0.32);
+  }
+  60% {
+    background-color: rgba(59, 130, 246, 0.12);
+  }
+  100% {
+    background-color: rgba(59, 130, 246, 0);
+  }
+}
+
 .pageContainer:hover .pageNumber {
   opacity: 1 !important;
 }

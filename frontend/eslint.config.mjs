@@ -4,6 +4,9 @@ import eslint from '@eslint/js';
 import globals from 'globals';
 import { defineConfig } from 'eslint/config';
 import tseslint from 'typescript-eslint';
+// @ts-expect-error - plugin has no types
+import reactHooks from 'eslint-plugin-react-hooks';
+// @ts-expect-error - plugin has no types
 import importPlugin from 'eslint-plugin-import';
 
 const srcGlobs = [
@@ -26,7 +29,13 @@ export default defineConfig(
   eslint.configs.recommended,
   tseslint.configs.recommended,
   {
+    plugins: {
+      'react-hooks': reactHooks,
+    },
     rules: {
+      // React Hooks rules
+      ...reactHooks.configs.recommended.rules,
+      // TypeScript rules
       '@typescript-eslint/no-empty-object-type': [
         'error',
         {
@@ -39,13 +48,13 @@ export default defineConfig(
       '@typescript-eslint/no-unused-vars': [
         'error',
         {
-          'args': 'all', // All function args must be used (or explicitly ignored)
-          'argsIgnorePattern': '^_', // Allow unused variables beginning with an underscore
-          'caughtErrors': 'all', // Caught errors must be used (or explicitly ignored)
-          'caughtErrorsIgnorePattern': '^_', // Allow unused variables beginning with an underscore
-          'destructuredArrayIgnorePattern': '^_', // Allow unused variables beginning with an underscore
-          'varsIgnorePattern': '^_', // Allow unused variables beginning with an underscore
-          'ignoreRestSiblings': true, // Allow unused variables when removing attributes from objects (otherwise this requires explicit renaming like `({ x: _x, ...y }) => y`, which is clunky)
+          args: 'all', // All function args must be used (or explicitly ignored)
+          argsIgnorePattern: '^_', // Allow unused variables beginning with an underscore
+          caughtErrors: 'all', // Caught errors must be used (or explicitly ignored)
+          caughtErrorsIgnorePattern: '^_', // Allow unused variables beginning with an underscore
+          destructuredArrayIgnorePattern: '^_', // Allow unused variables beginning with an underscore
+          varsIgnorePattern: '^_', // Allow unused variables beginning with an underscore
+          ignoreRestSiblings: true, // Allow unused variables when removing attributes from objects (otherwise this requires explicit renaming like `({ x: _x, ...y }) => y`, which is clunky)
         },
       ],
     },
@@ -68,12 +77,13 @@ export default defineConfig(
       }
     }
   },
-  // Config for import plugin
+  // Config for import plugin (rules only; do not override parser)
   {
-    ...importPlugin.flatConfigs.recommended,
-    ...importPlugin.flatConfigs.typescript,
+    plugins: {
+      import: importPlugin,
+    },
     rules: {
-      // ...importPlugin.flatConfigs.recommended.rules, // Temporarily disabled until codebase conformant
+      // Include TypeScript-aware import rules; omit base recommended to reduce churn
       ...importPlugin.flatConfigs.typescript.rules,
       'import/no-cycle': 'error',
     },
@@ -83,6 +93,13 @@ export default defineConfig(
           project: './tsconfig.json',
         },
       },
+    },
+  },
+  // Ensure TS parser for TS/TSX files (in case later configs override parser)
+  {
+    files: ['**/*.{ts,tsx}'],
+    languageOptions: {
+      parser: tseslint.parser,
     },
   },
 );

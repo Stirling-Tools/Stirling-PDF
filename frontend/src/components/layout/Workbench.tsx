@@ -1,12 +1,13 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Box } from '@mantine/core';
 import { useRainbowThemeContext } from '../shared/RainbowThemeProvider';
 import { useToolWorkflow } from '../../contexts/ToolWorkflowContext';
 import { useFileHandler } from '../../hooks/useFileHandler';
 import { useFileState } from '../../contexts/FileContext';
 import { useNavigationState, useNavigationActions } from '../../contexts/NavigationContext';
-import { isBaseWorkbench } from '../../types/workbench';
 import { useViewer } from '../../contexts/ViewerContext';
+import { PageEditorProvider } from '../../contexts/PageEditorContext';
+import { isBaseWorkbench } from '../../types/workbench';
 import './Workbench.css';
 
 import TopControls from '../shared/TopControls';
@@ -23,11 +24,13 @@ export default function Workbench() {
   const { isRainbowMode } = useRainbowThemeContext();
 
   // Use context-based hooks to eliminate all prop drilling
-  const { selectors } = useFileState();
+  const { state, selectors } = useFileState();
   const { workbench: currentView } = useNavigationState();
   const { actions: navActions } = useNavigationActions();
   const setCurrentView = navActions.setWorkbench;
-  const activeFiles = selectors.getFiles();
+
+  // Create stable reference for activeFiles based on file IDs
+  const activeFiles = useMemo(() => selectors.getFiles(), [state.files.ids]);
   const {
     previewFile,
     pageEditorFunctions,
@@ -151,45 +154,45 @@ export default function Workbench() {
   };
 
   return (
-    <Box
-      className="flex-1 h-full min-w-80 relative flex flex-col"
-      data-tour="workbench"
-      style={
-        isRainbowMode
-          ? {} // No background color in rainbow mode
-          : { backgroundColor: 'var(--bg-background)' }
-      }
-    >
-      {/* Top Controls */}
-      {activeFiles.length > 0 && (
-        <TopControls
-          currentView={currentView}
-          setCurrentView={setCurrentView}
-          customViews={customWorkbenchViews}
-          activeFiles={activeFiles.map(f => {
+    <PageEditorProvider>
+      <Box
+        className="flex-1 h-full min-w-80 relative flex flex-col"
+        style={
+          isRainbowMode
+            ? {} // No background color in rainbow mode
+            : { backgroundColor: 'var(--bg-background)' }
+        }
+      >
+        {/* Top Controls */}
+        {activeFiles.length > 0 && (
+          <TopControls
+            currentView={currentView}
+            setCurrentView={setCurrentView}
+            customViews={customWorkbenchViews}
+            activeFiles={activeFiles.map(f => {
             const stub = selectors.getStirlingFileStub(f.fileId);
             return { fileId: f.fileId, name: f.name, versionNumber: stub?.versionNumber };
-          })}
-          currentFileIndex={activeFileIndex}
-          onFileSelect={setActiveFileIndex}
+            })}
+            currentFileIndex={activeFileIndex}
+            onFileSelect={setActiveFileIndex}
         />
-      )}
+        )}
 
-      {/* Dismiss All Errors Button */}
-      <DismissAllErrorsButton />
+        {/* Dismiss All Errors Button */}
+        <DismissAllErrorsButton />
 
-      {/* Main content area */}
-      <Box
-        className="flex-1 min-h-0 relative z-10 workbench-scrollable "
-        style={{
-          transition: 'opacity 0.15s ease-in-out',
-          paddingTop: currentView === 'viewer' ? '0' : (activeFiles.length > 0 ? '3.5rem' : '0'),
-        }}
-      >
-        {renderMainContent()}
+        {/* Main content area */}
+        <Box
+          className="flex-1 min-h-0 relative z-10 workbench-scrollable "
+          style={{
+            transition: 'opacity 0.15s ease-in-out',
+          }}
+        >
+          {renderMainContent()}
+        </Box>
+
+        <Footer analyticsEnabled />
       </Box>
-
-      <Footer analyticsEnabled />
-    </Box>
+    </PageEditorProvider>
   );
 }
