@@ -14,6 +14,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Objects;
 
 import javax.imageio.IIOImage;
 import javax.imageio.ImageIO;
@@ -88,71 +89,10 @@ public class CompressController {
         COSName imageName; // Name of the image within the form
     }
 
-    // Tracks compression stats for reporting
-    private static class CompressionStats {
-        int totalImages = 0;
-        int nestedImages = 0;
-        int uniqueImagesCount = 0;
-        int compressedImages = 0;
-        int skippedImages = 0;
-        long totalOriginalBytes = 0;
-        long totalCompressedBytes = 0;
-    }
-
-    public Path compressImagesInPDF(
-            Path pdfFile, double scaleFactor, float jpegQuality, boolean convertToGrayscale)
-            throws Exception {
-        Path newCompressedPDF = Files.createTempFile("compressedPDF", ".pdf");
-        long originalFileSize = Files.size(pdfFile);
-        log.info(
-                "Starting image compression with scale factor: {}, JPEG quality: {}, grayscale: {} on file size: {}",
-                scaleFactor,
-                jpegQuality,
-                convertToGrayscale,
-                GeneralUtils.formatBytes(originalFileSize));
-
-        try (PDDocument doc = pdfDocumentFactory.load(pdfFile)) {
-            // Find all unique images in the document
-            Map<String, List<ImageReference>> uniqueImages = findImages(doc);
-
-            // Get statistics
-            CompressionStats stats = new CompressionStats();
-            stats.uniqueImagesCount = uniqueImages.size();
-            calculateImageStats(uniqueImages, stats);
-
-            // Create compressed versions of unique images
-            Map<String, PDImageXObject> compressedVersions =
-                    createCompressedImages(
-                            doc, uniqueImages, scaleFactor, jpegQuality, convertToGrayscale, stats);
-
-            // Replace all instances with compressed versions
-            replaceImages(doc, uniqueImages, compressedVersions, stats);
-
-            // Log compression statistics
-            logCompressionStats(stats, originalFileSize);
-
-            // Free memory before saving
-            compressedVersions.clear();
-            uniqueImages.clear();
-
-            log.info("Saving compressed PDF to {}", newCompressedPDF.toString());
-            doc.save(newCompressedPDF.toString());
-
-            // Log overall file size reduction
-            long compressedFileSize = Files.size(newCompressedPDF);
-            double overallReduction = 100.0 - ((compressedFileSize * 100.0) / originalFileSize);
-            log.info(
-                    "Overall PDF compression: {} → {} (reduced by {}%)",
-                    GeneralUtils.formatBytes(originalFileSize),
-                    GeneralUtils.formatBytes(compressedFileSize),
-                    String.format("%.1f", overallReduction));
-            return newCompressedPDF;
-        }
-    }
-
     // Find all images in the document, both direct and nested within forms
-    private static Map<String, List<ImageReference>> findImages(PDDocument doc) throws IOException {
-        Map<String, List<ImageReference>> uniqueImages = new HashMap<>();
+    private static Map<ImageIdentity, List<ImageReference>> findImages(PDDocument doc)
+            throws IOException {
+        Map<ImageIdentity, List<ImageReference>> uniqueImages = new HashMap<>();
 
         // Scan through all pages in the document
         for (int pageNum = 0; pageNum < doc.getNumberOfPages(); pageNum++) {
@@ -184,29 +124,18 @@ public class CompressController {
         return uniqueImages;
     }
 
-    private static boolean isImage(PDXObject xobj) {
-        return xobj instanceof PDImageXObject;
-    }
-
-    private static boolean isForm(PDXObject xobj) {
-        return xobj instanceof PDFormXObject;
-    }
-
     private static ImageReference addDirectImage(
             int pageNum,
             COSName name,
             PDImageXObject image,
-            Map<String, List<ImageReference>> uniqueImages)
+            Map<ImageIdentity, List<ImageReference>> uniqueImages)
             throws IOException {
         ImageReference ref = new ImageReference();
         ref.pageNum = pageNum;
         ref.name = name;
 
-        String imageHash = generateImageHash(image);
-        // Create composite key including page context to preserve annotations
-        // Even identical pixel data on different pages should not share compressed versions
-        String compositeKey = imageHash + "_page_" + pageNum;
-        uniqueImages.computeIfAbsent(compositeKey, k -> new ArrayList<>()).add(ref);
+        ImageIdentity identity = new ImageIdentity(image);
+        uniqueImages.computeIfAbsent(identity, k -> new ArrayList<>()).add(ref);
 
         return ref;
     }
@@ -216,7 +145,7 @@ public class CompressController {
             int pageNum,
             COSName formName,
             PDFormXObject formXObj,
-            Map<String, List<ImageReference>> uniqueImages)
+            Map<ImageIdentity, List<ImageReference>> uniqueImages)
             throws IOException {
         PDResources formResources = formXObj.getResources();
         if (formResources == null || formResources.getXObjectNames() == null) {
@@ -249,25 +178,15 @@ public class CompressController {
                 nestedRef.formName = formName;
                 nestedRef.imageName = nestedName;
 
-                String imageHash = generateImageHash(nestedImage);
-                // Create composite key including full context: page, form name, and image name
-                // This ensures nested images with different annotations remain distinct
-                String compositeKey =
-                        imageHash
-                                + "_page_"
-                                + pageNum
-                                + "_form_"
-                                + formName.getName()
-                                + "_img_"
-                                + nestedName.getName();
-                uniqueImages.computeIfAbsent(compositeKey, k -> new ArrayList<>()).add(nestedRef);
+                ImageIdentity identity = new ImageIdentity(nestedImage);
+                uniqueImages.computeIfAbsent(identity, k -> new ArrayList<>()).add(nestedRef);
             }
         }
     }
 
     // Count total images and nested images
     private static void calculateImageStats(
-            Map<String, List<ImageReference>> uniqueImages, CompressionStats stats) {
+            Map<ImageIdentity, List<ImageReference>> uniqueImages, CompressionStats stats) {
         for (List<ImageReference> references : uniqueImages.values()) {
             for (ImageReference ref : references) {
                 stats.totalImages++;
@@ -278,21 +197,29 @@ public class CompressController {
         }
     }
 
+    private static boolean isImage(PDXObject xobj) {
+        return xobj instanceof PDImageXObject;
+    }
+
+    private static boolean isForm(PDXObject xobj) {
+        return xobj instanceof PDFormXObject;
+    }
+
     // Create compressed versions of all unique images
-    private static Map<String, PDImageXObject> createCompressedImages(
+    private static Map<ImageIdentity, PDImageXObject> createCompressedImages(
             PDDocument doc,
-            Map<String, List<ImageReference>> uniqueImages,
+            Map<ImageIdentity, List<ImageReference>> uniqueImages,
             double scaleFactor,
             float jpegQuality,
             boolean convertToGrayscale,
             CompressionStats stats)
             throws IOException {
 
-        Map<String, PDImageXObject> compressedVersions = new HashMap<>();
+        Map<ImageIdentity, PDImageXObject> compressedVersions = new HashMap<>();
 
         // Process each unique image exactly once
-        for (Entry<String, List<ImageReference>> entry : uniqueImages.entrySet()) {
-            String imageHash = entry.getKey();
+        for (Entry<ImageIdentity, List<ImageReference>> entry : uniqueImages.entrySet()) {
+            ImageIdentity imageIdentity = entry.getKey();
             List<ImageReference> references = entry.getValue();
 
             if (references.isEmpty()) continue;
@@ -316,7 +243,7 @@ public class CompressController {
 
             if (compressedImage != null) {
                 // Store the compressed version in our map
-                compressedVersions.put(imageHash, compressedImage);
+                compressedVersions.put(imageIdentity, compressedImage);
                 stats.compressedImages++;
 
                 // Update compression stats
@@ -325,19 +252,104 @@ public class CompressController {
 
                 double reductionPercentage = 100.0 - ((compressedSize * 100.0) / originalSize);
                 log.info(
-                        "Image hash {}: Compressed from {} to {} (reduced by {}%)",
-                        imageHash,
+                        "Image identity {}: Compressed from {} to {} (reduced by {}%)",
+                        imageIdentity,
                         GeneralUtils.formatBytes(originalSize),
                         GeneralUtils.formatBytes(compressedSize),
                         String.format("%.1f", reductionPercentage));
             } else {
-                log.info("Image hash {}: Not suitable for compression, skipping", imageHash);
+                log.info(
+                        "Image identity {}: Not suitable for compression, skipping", imageIdentity);
                 stats.totalCompressedBytes += (long) originalSize * references.size();
                 stats.skippedImages++;
             }
         }
 
         return compressedVersions;
+    }
+
+    // Replace all instances of original images with their compressed versions
+    private static void replaceImages(
+            PDDocument doc,
+            Map<ImageIdentity, List<ImageReference>> uniqueImages,
+            Map<ImageIdentity, PDImageXObject> compressedVersions,
+            CompressionStats stats)
+            throws IOException {
+
+        for (Entry<ImageIdentity, List<ImageReference>> entry : uniqueImages.entrySet()) {
+            ImageIdentity imageIdentity = entry.getKey();
+            List<ImageReference> references = entry.getValue();
+
+            // Skip if no compressed version exists
+            PDImageXObject compressedImage = compressedVersions.get(imageIdentity);
+            if (compressedImage == null) continue;
+
+            // Replace ALL instances with the compressed version
+            for (ImageReference ref : references) {
+                replaceImageReference(doc, ref, compressedImage);
+            }
+        }
+    }
+
+    // Enhanced hash function to identify identical images with more data
+    private static String generateImageHash(PDImageXObject image) {
+        try {
+            // Create a stream for the raw stream data
+            try (InputStream stream = image.getCOSObject().createRawInputStream()) {
+                // Read more data for better hash accuracy (16KB instead of 8KB)
+                byte[] buffer = new byte[16384];
+                int bytesRead = stream.read(buffer);
+                if (bytesRead > 0) {
+                    byte[] dataToHash =
+                            bytesRead == buffer.length ? buffer : Arrays.copyOf(buffer, bytesRead);
+
+                    // Also include image dimensions and color space in the hash
+                    StringBuilder enhancedData = new StringBuilder();
+                    enhancedData.append(new String(dataToHash));
+                    enhancedData.append("_").append(image.getWidth());
+                    enhancedData.append("_").append(image.getHeight());
+                    enhancedData.append("_").append(image.getColorSpace().getName());
+                    enhancedData.append("_").append(image.getBitsPerComponent());
+
+                    return bytesToHexString(generateMD5(enhancedData.toString().getBytes()));
+                }
+                return "empty-stream";
+            }
+        } catch (Exception e) {
+            ExceptionUtils.logException("image hash generation", e);
+            return "fallback-" + System.identityHashCode(image);
+        }
+    }
+
+    // Hash function to identify identical masks
+    private static String generateMaskHash(PDImageXObject image) {
+        try {
+            // Try to get mask data from either getMask() or getSoftMask()
+            PDImageXObject mask = image.getMask();
+            if (mask == null) {
+                mask = image.getSoftMask();
+            }
+
+            if (mask != null) {
+                try (InputStream stream = mask.getCOSObject().createRawInputStream()) {
+                    // Read up to first 4KB of mask data for the hash
+                    byte[] buffer = new byte[4096];
+                    int bytesRead = stream.read(buffer);
+                    if (bytesRead > 0) {
+                        byte[] dataToHash =
+                                bytesRead == buffer.length
+                                        ? buffer
+                                        : Arrays.copyOf(buffer, bytesRead);
+                        return bytesToHexString(generateMD5(dataToHash));
+                    }
+                    return "empty-mask";
+                }
+            }
+            return "no-mask";
+        } catch (Exception e) {
+            ExceptionUtils.logException("mask hash generation", e);
+            return "fallback-mask-" + System.identityHashCode(image);
+        }
     }
 
     // Get original image from a reference
@@ -393,27 +405,12 @@ public class CompressController {
         return null;
     }
 
-    // Replace all instances of original images with their compressed versions
-    private static void replaceImages(
-            PDDocument doc,
-            Map<String, List<ImageReference>> uniqueImages,
-            Map<String, PDImageXObject> compressedVersions,
-            CompressionStats stats)
-            throws IOException {
-
-        for (Entry<String, List<ImageReference>> entry : uniqueImages.entrySet()) {
-            String imageHash = entry.getKey();
-            List<ImageReference> references = entry.getValue();
-
-            // Skip if no compressed version exists
-            PDImageXObject compressedImage = compressedVersions.get(imageHash);
-            if (compressedImage == null) continue;
-
-            // Replace ALL instances with the compressed version
-            for (ImageReference ref : references) {
-                replaceImageReference(doc, ref, compressedImage);
-            }
+    private static String bytesToHexString(byte[] bytes) {
+        StringBuilder sb = new StringBuilder();
+        for (byte b : bytes) {
+            sb.append(String.format("%02x", b));
         }
+        return sb.toString();
     }
 
     // Replace a specific image reference with a compressed version
@@ -595,33 +592,253 @@ public class CompressController {
         return outputStream.toByteArray();
     }
 
-    // Hash function to identify identical images
-    private static String generateImageHash(PDImageXObject image) {
+    // Get image filter/compression type
+    private static String getImageFilter(PDImageXObject image) {
         try {
-            // Create a stream for the raw stream data
-            try (InputStream stream = image.getCOSObject().createRawInputStream()) {
-                // Read up to first 8KB of data for the hash
-                byte[] buffer = new byte[8192];
-                int bytesRead = stream.read(buffer);
-                if (bytesRead > 0) {
-                    byte[] dataToHash =
-                            bytesRead == buffer.length ? buffer : Arrays.copyOf(buffer, bytesRead);
-                    return bytesToHexString(generateMD5(dataToHash));
-                }
-                return "empty-stream";
-            }
+            return image.getCOSObject().getDictionaryObject(COSName.FILTER).toString();
         } catch (Exception e) {
-            ExceptionUtils.logException("image hash generation", e);
-            return "fallback-" + System.identityHashCode(image);
+            return "unknown";
         }
     }
 
-    private static String bytesToHexString(byte[] bytes) {
-        StringBuilder sb = new StringBuilder();
-        for (byte b : bytes) {
-            sb.append(String.format("%02x", b));
+    // Get color profile information
+    private static String getColorProfileInfo(PDImageXObject image) {
+        try {
+            // Try to get ICC profile information
+            if (image.getColorSpace() != null) {
+                return image.getColorSpace().getName()
+                        + "_"
+                        + image.getColorSpace().getNumberOfComponents();
+            }
+            return "no-profile";
+        } catch (Exception e) {
+            return "error-profile";
         }
-        return sb.toString();
+    }
+
+    // Determine image type from stream data
+    private static String getImageType(PDImageXObject image) {
+        try {
+            String filter = getImageFilter(image);
+            if (filter.contains("DCTDecode") || filter.contains("JPXDecode")) {
+                return "JPEG";
+            } else if (filter.contains("FlateDecode")) {
+                return "PNG";
+            } else if (filter.contains("CCITTFaxDecode")) {
+                return "TIFF";
+            } else if (filter.contains("JBIG2Decode")) {
+                return "JBIG2";
+            } else {
+                return "RAW";
+            }
+        } catch (Exception e) {
+            return "unknown";
+        }
+    }
+
+    // Generate hash of decode parameters
+    private static String generateDecodeParamsHash(PDImageXObject image) {
+        try {
+            // Get decode parameters that affect how the image is processed
+            StringBuilder params = new StringBuilder();
+
+            // Add filter information
+            params.append(getImageFilter(image));
+
+            // Add color space components
+            params.append("_").append(image.getColorSpace().getNumberOfComponents());
+
+            // Add bits per component
+            params.append("_").append(image.getBitsPerComponent());
+
+            // Add any decode array parameters
+            if (image.getDecode() != null) {
+                params.append("_").append(image.getDecode().toString());
+            }
+
+            return bytesToHexString(generateMD5(params.toString().getBytes()));
+        } catch (Exception e) {
+            return "fallback-decode-" + System.identityHashCode(image);
+        }
+    }
+
+    // Generate hash of image metadata
+    private static String generateMetadataHash(PDImageXObject image) {
+        try {
+            StringBuilder metadata = new StringBuilder();
+
+            // Add image dimensions
+            metadata.append(image.getWidth()).append("x").append(image.getHeight());
+
+            // Add color space info
+            metadata.append("_").append(image.getColorSpace().getName());
+
+            // Add bits per component
+            metadata.append("_").append(image.getBitsPerComponent());
+
+            // Add stream length
+            metadata.append("_").append(image.getCOSObject().getLength());
+
+            // Add mask information
+            if (image.getMask() != null) {
+                metadata.append("_mask");
+            }
+            if (image.getSoftMask() != null) {
+                metadata.append("_softmask");
+            }
+
+            return bytesToHexString(generateMD5(metadata.toString().getBytes()));
+        } catch (Exception e) {
+            return "fallback-meta-" + System.identityHashCode(image);
+        }
+    }
+
+    public Path compressImagesInPDF(
+            Path pdfFile, double scaleFactor, float jpegQuality, boolean convertToGrayscale)
+            throws Exception {
+        Path newCompressedPDF = Files.createTempFile("compressedPDF", ".pdf");
+        long originalFileSize = Files.size(pdfFile);
+        log.info(
+                "Starting image compression with scale factor: {}, JPEG quality: {}, grayscale: {} on file size: {}",
+                scaleFactor,
+                jpegQuality,
+                convertToGrayscale,
+                GeneralUtils.formatBytes(originalFileSize));
+
+        try (PDDocument doc = pdfDocumentFactory.load(pdfFile)) {
+            // Find all unique images in the document
+            Map<ImageIdentity, List<ImageReference>> uniqueImages = findImages(doc);
+
+            // Get statistics
+            CompressionStats stats = new CompressionStats();
+            stats.uniqueImagesCount = uniqueImages.size();
+            calculateImageStats(uniqueImages, stats);
+
+            // Create compressed versions of unique images
+            Map<ImageIdentity, PDImageXObject> compressedVersions =
+                    createCompressedImages(
+                            doc, uniqueImages, scaleFactor, jpegQuality, convertToGrayscale, stats);
+
+            // Replace all instances with compressed versions
+            replaceImages(doc, uniqueImages, compressedVersions, stats);
+
+            // Log compression statistics
+            logCompressionStats(stats, originalFileSize);
+
+            // Free memory before saving
+            compressedVersions.clear();
+            uniqueImages.clear();
+
+            log.info("Saving compressed PDF to {}", newCompressedPDF.toString());
+            doc.save(newCompressedPDF.toString());
+
+            // Log overall file size reduction
+            long compressedFileSize = Files.size(newCompressedPDF);
+            double overallReduction = 100.0 - ((compressedFileSize * 100.0) / originalFileSize);
+            log.info(
+                    "Overall PDF compression: {} → {} (reduced by {}%)",
+                    GeneralUtils.formatBytes(originalFileSize),
+                    GeneralUtils.formatBytes(compressedFileSize),
+                    String.format("%.1f", overallReduction));
+            return newCompressedPDF;
+        }
+    }
+
+    // Tracks compression stats for reporting
+    private static class CompressionStats {
+        int totalImages = 0;
+        int nestedImages = 0;
+        int uniqueImagesCount = 0;
+        int compressedImages = 0;
+        int skippedImages = 0;
+        long totalOriginalBytes = 0;
+        long totalCompressedBytes = 0;
+    }
+
+    private static class ImageIdentity {
+        private final String pixelHash; // Hash of pixel data
+        private final String colorSpace; // e.g., "DeviceRGB", "DeviceCMYK"
+        private final int bitsPerComponent;
+        private final boolean hasMask; // Has transparency
+        private final String maskHash; // Hash of mask data if present
+        private final int width; // Image width in pixels
+        private final int height; // Image height in pixels
+        private final String filter; // Image filter/compression type
+        private final String colorProfile; // Color profile information
+        private final long streamLength; // Original stream length
+        private final String imageType; // Image type (JPEG, PNG, etc.)
+        private final String decodeParams; // Decode parameters hash
+        private final String metadataHash; // Hash of image metadata
+
+        public ImageIdentity(PDImageXObject image) throws IOException {
+            this.pixelHash = generateImageHash(image);
+            this.colorSpace = image.getColorSpace().getName();
+            this.bitsPerComponent = image.getBitsPerComponent();
+            this.hasMask = image.getMask() != null || image.getSoftMask() != null;
+            this.maskHash = hasMask ? generateMaskHash(image) : null;
+            this.width = image.getWidth();
+            this.height = image.getHeight();
+            this.filter = getImageFilter(image);
+            this.colorProfile = getColorProfileInfo(image);
+            this.streamLength = image.getCOSObject().getLength();
+            this.imageType = getImageType(image);
+            this.decodeParams = generateDecodeParamsHash(image);
+            this.metadataHash = generateMetadataHash(image);
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof ImageIdentity that)) return false;
+            return bitsPerComponent == that.bitsPerComponent
+                    && hasMask == that.hasMask
+                    && width == that.width
+                    && height == that.height
+                    && streamLength == that.streamLength
+                    && Objects.equals(pixelHash, that.pixelHash)
+                    && Objects.equals(colorSpace, that.colorSpace)
+                    && Objects.equals(maskHash, that.maskHash)
+                    && Objects.equals(filter, that.filter)
+                    && Objects.equals(colorProfile, that.colorProfile)
+                    && Objects.equals(imageType, that.imageType)
+                    && Objects.equals(decodeParams, that.decodeParams)
+                    && Objects.equals(metadataHash, that.metadataHash);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(
+                    pixelHash,
+                    colorSpace,
+                    bitsPerComponent,
+                    hasMask,
+                    maskHash,
+                    width,
+                    height,
+                    filter,
+                    colorProfile,
+                    streamLength,
+                    imageType,
+                    decodeParams,
+                    metadataHash);
+        }
+
+        @Override
+        public String toString() {
+            return String.format(
+                    "%s_%s_%d_%dx%d_%s_%s_%d_%s_%s_%s",
+                    pixelHash.substring(0, Math.min(8, pixelHash.length())),
+                    colorSpace,
+                    bitsPerComponent,
+                    width,
+                    height,
+                    filter,
+                    imageType,
+                    streamLength,
+                    hasMask ? "masked" : "nomask",
+                    decodeParams.substring(0, Math.min(4, decodeParams.length())),
+                    metadataHash.substring(0, Math.min(4, metadataHash.length())));
+        }
     }
 
     private static byte[] generateMD5(byte[] data) throws IOException {
