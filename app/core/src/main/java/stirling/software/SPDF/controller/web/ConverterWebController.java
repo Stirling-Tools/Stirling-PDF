@@ -186,4 +186,19 @@ public class ConverterWebController {
         model.addAttribute("currentPage", "eml-to-pdf");
         return "convert/eml-to-pdf";
     }
+
+    @GetMapping("/pdf-to-video")
+    @Hidden
+    public String pdfToVideo(Model model) {
+        ApplicationProperties properties =
+                ApplicationContextProvider.getBean(ApplicationProperties.class);
+        if (properties != null && properties.getSystem() != null) {
+            model.addAttribute("maxDPI", properties.getSystem().getMaxDPI());
+        } else {
+            model.addAttribute("maxDPI", 500);
+        }
+        model.addAttribute("isFfmpegAvailable", CheckProgramInstall.isFfmpegAvailable());
+        model.addAttribute("currentPage", "pdf-to-video");
+        return "convert/pdf-to-video";
+    }
 }

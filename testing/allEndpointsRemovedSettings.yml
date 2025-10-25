@@ -182,6 +182,7 @@ processExecutor:
     calibreSessionLimit: 1
     ghostscriptSessionLimit: 8
     ocrMyPdfSessionLimit: 2
+    ffmpegSessionLimit: 2
   timeoutMinutes: # Process executor timeout in minutes
     libreOfficetimeoutMinutes: 30
     pdfToHtmltimeoutMinutes: 20
@@ -193,3 +194,4 @@ processExecutor:
     qpdfTimeoutMinutes: 30
     ghostscriptTimeoutMinutes: 30
     ocrMyPdfTimeoutMinutes: 30
+    ffmpegTimeoutMinutes: 30

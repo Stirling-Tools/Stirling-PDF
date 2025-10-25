@@ -44,6 +44,7 @@ public class ExternalAppDepConfig {
                         put("qpdf", List.of("qpdf"));
                         put("tesseract", List.of("tesseract"));
                         put("rar", List.of("rar")); // Required for real CBR output
+                        put("ffmpeg", List.of("FFmpeg"));
                     }
                 };
     }
@@ -122,6 +123,7 @@ public class ExternalAppDepConfig {
         checkDependencyAndDisableGroup("pdftohtml");
         checkDependencyAndDisableGroup(unoconvPath);
         checkDependencyAndDisableGroup("rar");
+        checkDependencyAndDisableGroup("ffmpeg");
         // Special handling for Python/OpenCV dependencies
         boolean pythonAvailable = isCommandAvailable("python3") || isCommandAvailable("python");
         if (!pythonAvailable) {
