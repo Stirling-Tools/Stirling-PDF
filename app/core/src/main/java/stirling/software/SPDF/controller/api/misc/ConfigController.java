@@ -62,6 +62,9 @@ public class ConfigController {
             // Security settings
             configData.put("enableLogin", applicationProperties.getSecurity().getEnableLogin());
 
+            // Mail settings
+            configData.put("enableEmailInvites", applicationProperties.getMail().isEnableInvites());
+
             // Check if user is admin using UserServiceInterface
             boolean isAdmin = false;
             if (userService != null) {

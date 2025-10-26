@@ -13,6 +13,7 @@ export interface AppConfig {
   appNameNavbar?: string;
   languages?: string[];
   enableLogin?: boolean;
+  enableEmailInvites?: boolean;
   isAdmin?: boolean;
   enableAlphaFunctionality?: boolean;
   enableAnalytics?: boolean;

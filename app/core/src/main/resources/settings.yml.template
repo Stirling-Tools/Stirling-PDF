@@ -99,6 +99,7 @@ premium:
 
 mail:
   enabled: false # set to 'true' to enable sending emails
+  enableInvites: false # set to 'true' to enable email invites for user management (requires mail.enabled and security.enableLogin)
   host: smtp.example.com # SMTP server hostname
   port: 587 # SMTP server port
   username: '' # SMTP server username

@@ -88,6 +88,10 @@ const SPECIAL_SUPPRESS_MS = 1500; // brief window to suppress generic duplicate 
  * Returns true if the error should be suppressed (deduplicated), false otherwise
  */
 export async function handleHttpError(error: any): Promise<boolean> {
+  // Check if this error should skip the global toast (component will handle it)
+  if (error?.config?.suppressErrorToast === true) {
+    return false; // Don't show global toast, but continue rejection
+  }
   // Compute title/body (friendly) from the error object
   const { title, body } = extractAxiosErrorMessage(error);
 

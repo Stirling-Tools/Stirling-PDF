@@ -9,6 +9,7 @@ import PendingBadge from '../PendingBadge';
 
 interface MailSettingsData {
   enabled?: boolean;
+  enableInvites?: boolean;
   host?: string;
   port?: number;
   username?: string;
@@ -68,7 +69,7 @@ export default function AdminMailSection() {
 
       <Paper withBorder p="md" radius="md">
         <Stack gap="md">
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Group justify="space-between" align="flex-start" wrap="nowrap">
             <div>
               <Text fw={500} size="sm">{t('admin.settings.mail.enabled', 'Enable Mail')}</Text>
               <Text size="xs" c="dimmed" mt={4}>
@@ -82,7 +83,24 @@ export default function AdminMailSection() {
               />
               <PendingBadge show={isFieldPending('enabled')} />
             </Group>
-          </div>
+          </Group>
+
+          <Group justify="space-between" align="flex-start" wrap="nowrap">
+            <div>
+              <Text fw={500} size="sm">{t('admin.settings.mail.enableInvites', 'Enable Email Invites')}</Text>
+              <Text size="xs" c="dimmed" mt={4}>
+                {t('admin.settings.mail.enableInvites.description', 'Allow admins to invite users via email with auto-generated passwords')}
+              </Text>
+            </div>
+            <Group gap="xs">
+              <Switch
+                checked={settings.enableInvites || false}
+                onChange={(e) => setSettings({ ...settings, enableInvites: e.target.checked })}
+                disabled={!settings.enabled}
+              />
+              <PendingBadge show={isFieldPending('enableInvites')} />
+            </Group>
+          </Group>
 
           <div>
             <TextInput

@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useFileState } from '../../contexts/FileContext';
 import { useFileActions } from '../../contexts/file/fileHooks';
 import CloseIcon from '@mui/icons-material/Close';
+import { Z_INDEX_TOAST } from '../../styles/zIndex';
 
 interface DismissAllErrorsButtonProps {
   className?: string;
@@ -38,7 +39,7 @@ const DismissAllErrorsButton: React.FC<DismissAllErrorsButtonProps> = ({ classNa
           position: 'absolute',
           top: '1rem',
           right: '1rem',
-          zIndex: 1000,
+          zIndex: Z_INDEX_TOAST,
           pointerEvents: 'auto'
         }}
       >

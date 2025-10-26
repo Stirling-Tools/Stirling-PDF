@@ -2,6 +2,8 @@ import React from 'react';
 import { NavKey } from './types';
 import HotkeysSection from './configSections/HotkeysSection';
 import GeneralSection from './configSections/GeneralSection';
+import PeopleSection from './configSections/PeopleSection';
+import TeamsSection from './configSections/TeamsSection';
 import AdminGeneralSection from './configSections/AdminGeneralSection';
 import AdminSecuritySection from './configSections/AdminSecuritySection';
 import AdminConnectionsSection from './configSections/AdminConnectionsSection';
@@ -49,6 +51,23 @@ export const createConfigNavSections = (
           label: 'Overview',
           icon: 'person-rounded',
           component: <Overview onLogoutClick={onLogoutClick} />
+        },
+      ],
+    },
+    {
+      title: 'Workspace',
+      items: [
+        {
+          key: 'people',
+          label: 'People',
+          icon: 'group-rounded',
+          component: <PeopleSection />
+        },
+        {
+          key: 'teams',
+          label: 'Teams',
+          icon: 'groups-rounded',
+          component: <TeamsSection />
         },
       ],
     },

@@ -33,6 +33,7 @@ interface ConnectionsSettingsData {
   };
   mail?: {
     enabled?: boolean;
+    enableInvites?: boolean;
     host?: string;
     port?: number;
     username?: string;
