@@ -108,6 +108,30 @@ def read_json(path: Path) -> Any:
         return json.load(f)
 
 
+# --- NEU: JSON lesen + doppelte Keys erkennen ---
+def read_json_with_duplicates(path: Path) -> Tuple[Any, list[str]]:
+    """Read JSON while detecting duplicate keys; returns (data, duplicate_keys)."""
+    duplicates: list[str] = []
+
+    def object_pairs_hook(pairs):
+        obj = {}
+        seen = set()
+        for k, v in pairs:
+            if k in seen:
+                duplicates.append(k)
+            else:
+                seen.add(k)
+                obj[k] = v
+        return obj
+
+    with path.open("r", encoding="utf-8") as f:
+        data = json.load(f, object_pairs_hook=object_pairs_hook)
+    return data, duplicates
+
+
+# --- ENDE neu ---
+
+
 def write_json(path: Path, data: Any) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8") as f:
@@ -161,22 +185,29 @@ def process_file(
     dry_run: bool,
     check_only: bool,
     backup: bool,
-) -> Tuple[MergeStats, bool]:
-    ref = read_json(ref_path)
-    target = read_json(target_path)
+) -> Tuple[MergeStats, bool, List[str]]:
+    # --- doppelte Keys berücksichtigen ---
+    ref, _ref_dupes = read_json_with_duplicates(ref_path)
+    target, target_dupes = read_json_with_duplicates(target_path)
+    # -------------------------------------
 
     stats = MergeStats()
     merged = deep_merge_and_collect(ref, target, prune_extras=prune, stats=stats)
     merged = order_like_reference(ref, merged)
 
-    success = not stats.missing_keys and (not prune or not stats.extra_keys)
+    # Erfolg nur wenn: keine fehlenden Keys, (optional) keine Extras, und KEINE Duplikate
+    success = (
+        not stats.missing_keys
+        and (not prune or not stats.extra_keys)
+        and not target_dupes
+    )
 
     if not check_only and not dry_run:
         if backup:
             backup_file(target_path)
         write_json(target_path, merged)
 
-    return stats, success
+    return stats, success, target_dupes
 
 
 def find_all_locale_files(branch_root: Path, ref_path: Path) -> List[Path]:
@@ -311,7 +342,7 @@ def main() -> None:
             any_failed = True
             continue
 
-        stats, success = process_file(
+        stats, success, dupes = process_file(
             ref_path,
             target_path,
             prune=args.prune,
@@ -341,6 +372,8 @@ def main() -> None:
                     report.append(
                         f"- Extra keys present ({len(stats.extra_keys)}): `{', '.join(stats.extra_keys)}`"
                     )
+            if dupes:
+                report.append(f"- Duplicate keys ({len(dupes)}): `{', '.join(dupes)}`")
 
         report.append(f"- Added: {stats.added}, Pruned: {stats.pruned}")
         report.append("---")
