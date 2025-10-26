@@ -197,7 +197,6 @@ public class ConverterWebController {
         } else {
             model.addAttribute("maxDPI", 500);
         }
-        model.addAttribute("isFfmpegAvailable", CheckProgramInstall.isFfmpegAvailable());
         model.addAttribute("currentPage", "pdf-to-video");
         return "convert/pdf-to-video";
     }
