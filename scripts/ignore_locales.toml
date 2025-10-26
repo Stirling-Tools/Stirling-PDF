@@ -1,6 +1,7 @@
 # Keys and paths to ignore for locale synchronization checks.
 # The structure mirrors scripts/ignore_translation.toml and is consumed by
 # .github/scripts/sync_translations.py.
+
 [ar_AR]
 ignore = [
     'lang.div',
@@ -319,7 +320,8 @@ ignore = [
 ]
 
 [fa_IR]
-ignore = []
+ignore = [
+]
 
 [fr_FR]
 ignore = [

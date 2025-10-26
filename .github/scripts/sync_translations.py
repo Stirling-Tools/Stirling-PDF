@@ -26,7 +26,14 @@ from copy import deepcopy
 from dataclasses import dataclass
 from typing import Any, Dict, Tuple, List
 
+try:
+    import tomllib  # Python 3.11+
+except ModuleNotFoundError:  # pragma: no cover - fallback for older versions
+    import tomli as tomllib  # type: ignore
+
 JsonDict = Dict[str, Any]
+
+IGNORE_LOCALES_FILE = Path("scripts/ignore_locales.toml")
 
 
 @dataclass
@@ -37,7 +44,7 @@ class MergeStats:
     extra_keys: list[str] | None = None
     # Missing translatable leaf nodes (non-dict values)
     missing_leafs: int = 0
-    # NEW: untranslated values (same as reference English)
+    # Untranslated values (same as reference English)
     untranslated_leafs: int = 0
     untranslated_keys: list[str] | None = None
 
@@ -58,6 +65,84 @@ def count_leaves(obj: Any) -> int:
     return 1
 
 
+def collect_leaf_paths(obj: Any, base_path: str) -> list[str]:
+    if is_mapping(obj):
+        paths: list[str] = []
+        for k, v in obj.items():
+            new_path = f"{base_path}.{k}" if base_path else k
+            paths.extend(collect_leaf_paths(v, new_path))
+        return paths
+    return [base_path]
+
+
+def record_missing_leaf(
+    path: str, *, stats: MergeStats, ignored_paths: set[str]
+) -> None:
+    if not path or path in ignored_paths:
+        return
+    stats.missing_leafs += 1
+    if path not in stats.missing_keys:
+        stats.missing_keys.append(path)
+
+
+def load_ignore_locales(path: Path) -> tuple[dict[str, set[str]], list[str], list[str]]:
+    if not path.exists():
+        return {}, [], []
+
+    text = path.read_text(encoding="utf-8")
+    header_lines: list[str] = []
+    for line in text.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("#") or (stripped == "" and header_lines):
+            header_lines.append(line)
+            continue
+        break
+
+    parsed = tomllib.loads(text)
+    locales: dict[str, set[str]] = {}
+    order: list[str] = []
+    for locale, table in parsed.items():
+        order.append(locale)
+        ignore_values = table.get("ignore", []) if isinstance(table, dict) else []
+        locales[locale] = (
+            set(ignore_values) if isinstance(ignore_values, list) else set()
+        )
+    return locales, header_lines, order
+
+
+def write_ignore_locales(
+    path: Path,
+    data: dict[str, set[str]],
+    header_lines: list[str],
+    order: list[str],
+) -> list[str]:
+    ordered_locales = [locale for locale in order if locale in data]
+    extras = sorted(locale for locale in data.keys() if locale not in ordered_locales)
+    ordered_locales.extend(extras)
+
+    lines: list[str] = []
+    if header_lines:
+        lines.extend(header_lines)
+        if header_lines[-1].strip() != "":
+            lines.append("")
+
+    for locale in ordered_locales:
+        if lines and lines[-1] != "":
+            lines.append("")
+        lines.append(f"[{locale}]")
+        lines.append("ignore = [")
+        for item in sorted(data[locale]):
+            lines.append(f"    '{item}',")
+        lines.append("]")
+
+    content = "\n".join(lines)
+    if not content.endswith("\n"):
+        content += "\n"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(content, encoding="utf-8")
+    return ordered_locales
+
+
 def normalize_text(s: str) -> str:
     """Normalize strings for a strict-but-fair equality check."""
     # Trim, collapse whitespace, lower-case. Keep placeholders intact.
@@ -67,7 +152,13 @@ def normalize_text(s: str) -> str:
 
 
 def collect_untranslated_values(
-    ref: Any, tgt: Any, *, path: str = "", stats: MergeStats
+    ref: Any,
+    tgt: Any,
+    *,
+    path: str = "",
+    stats: MergeStats,
+    ignored_paths: set[str],
+    translated_ignored_paths: set[str],
 ) -> None:
     """
     Walk ref + target without mutating anything and find values that are present
@@ -77,18 +168,37 @@ def collect_untranslated_values(
         for k, ref_val in ref.items():
             new_path = f"{path}.{k}" if path else k
             if k in tgt:
-                collect_untranslated_values(ref_val, tgt[k], path=new_path, stats=stats)
+                collect_untranslated_values(
+                    ref_val,
+                    tgt[k],
+                    path=new_path,
+                    stats=stats,
+                    ignored_paths=ignored_paths,
+                    translated_ignored_paths=translated_ignored_paths,
+                )
         return
 
     # Only compare leaf strings
     if isinstance(ref, str) and isinstance(tgt, str):
+        if path in ignored_paths:
+            if normalize_text(ref) != normalize_text(tgt):
+                translated_ignored_paths.add(path)
+            return
         if normalize_text(ref) == normalize_text(tgt):
             stats.untranslated_leafs += 1
-            stats.untranslated_keys.append(path)
+
+            if path not in stats.untranslated_keys:
+                stats.untranslated_keys.append(path)
 
 
 def deep_merge_and_collect(
-    ref: Any, target: Any, *, prune_extras: bool, path: str = "", stats: MergeStats
+    ref: Any,
+    target: Any,
+    *,
+    prune_extras: bool,
+    path: str = "",
+    stats: MergeStats,
+    ignored_paths: set[str],
 ) -> Any:
     """
     Recursively ensure `target` contains at least the structure/keys of `ref`.
@@ -109,14 +219,27 @@ def deep_merge_and_collect(
                     prune_extras=prune_extras,
                     path=new_path,
                     stats=stats,
+                    ignored_paths=ignored_paths,
                 )
             else:
                 # Entire key (possibly subtree) is missing → copy from ref
                 merged[k] = deepcopy(ref_val)
                 stats.added += 1
-                stats.missing_keys.append(new_path)
-                # Count how many translatable leaves this missing subtree contains
                 stats.missing_leafs += count_leaves(ref_val)
+                leaf_paths = collect_leaf_paths(ref_val, new_path)
+                if leaf_paths:
+                    for leaf_path in leaf_paths:
+                        record_missing_leaf(
+                            leaf_path,
+                            stats=stats,
+                            ignored_paths=ignored_paths,
+                        )
+                else:
+                    record_missing_leaf(
+                        new_path,
+                        stats=stats,
+                        ignored_paths=ignored_paths,
+                    )
 
         # Handle keys that exist in target but not in ref
         if prune_extras:
@@ -136,7 +259,7 @@ def deep_merge_and_collect(
 
     # Non-dict values → keep existing translation; if it's None, count it as missing
     if target is None:
-        stats.missing_leafs += count_leaves(ref)
+        record_missing_leaf(path, stats=stats, ignored_paths=ignored_paths)
     return deepcopy(target if target is not None else ref)
 
 
@@ -240,7 +363,8 @@ def process_file(
     dry_run: bool,
     check_only: bool,
     backup: bool,
-) -> Tuple[MergeStats, bool, List[str], int]:
+    ignored_paths: set[str] | None = None,
+) -> Tuple[MergeStats, bool, List[str], int, set[str]]:
     # Load both files, capturing duplicate keys in the target
     ref, _ref_dupes = read_json_with_duplicates(ref_path)
     target, target_dupes = read_json_with_duplicates(target_path)
@@ -249,11 +373,26 @@ def process_file(
     total_ref_leaves = count_leaves(ref)
 
     stats = MergeStats()
+    translated_ignored_paths: set[str] = set()
+    ignored = ignored_paths or set()
 
-    # NEW: detect untranslated values before we mutate/merge anything
-    collect_untranslated_values(ref, target, path="", stats=stats)
+    # Detect untranslated values before we mutate/merge anything
+    collect_untranslated_values(
+        ref,
+        target,
+        path="",
+        stats=stats,
+        ignored_paths=ignored,
+        translated_ignored_paths=translated_ignored_paths,
+    )
 
-    merged = deep_merge_and_collect(ref, target, prune_extras=prune, stats=stats)
+    merged = deep_merge_and_collect(
+        ref,
+        target,
+        prune_extras=prune,
+        stats=stats,
+        ignored_paths=ignored,
+    )
     merged = order_like_reference(ref, merged)
 
     # "Success" means: no missing keys, (if pruning) no extras, no duplicate keys, no untranslated values
@@ -268,7 +407,7 @@ def process_file(
             backup_file(target_path)
         write_json(target_path, merged)
 
-    return stats, success, target_dupes, total_ref_leaves
+    return stats, success, target_dupes, total_ref_leaves, translated_ignored_paths
 
 
 def find_all_locale_files(branch_root: Path, ref_path: Path) -> List[Path]:
@@ -344,6 +483,19 @@ def main() -> None:
     branch_str = sanitize_branch(args.branch) if args.branch else ""
     branch_base: Path | None = Path(branch_str).resolve() if branch_str else Path.cwd()
 
+    ignore_file_path = resolve_in_branch(branch_base, IGNORE_LOCALES_FILE)
+    if not ignore_file_path.exists():
+        alt_ignore = (Path.cwd() / IGNORE_LOCALES_FILE).resolve()
+        if alt_ignore.exists():
+            ignore_file_path = alt_ignore
+        else:
+            script_root = Path(__file__).resolve().parents[2]
+            candidate_ignore = (script_root / IGNORE_LOCALES_FILE).resolve()
+            if candidate_ignore.exists():
+                ignore_file_path = candidate_ignore
+    ignore_locales_map, ignore_header_lines, ignore_order = load_ignore_locales(ignore_file_path)
+    ignore_locales_modified = False
+
     # Resolve the reference path. First try under branch root, then fall back to raw path.
     ref_path = resolve_in_branch(branch_base, args.ref)
     if not ref_path.exists():
@@ -398,13 +550,29 @@ def main() -> None:
             any_failed = True
             continue
 
-        stats, success, dupes, total_ref_leaves = process_file(
+        locale_segment: str | None = None
+        parts = list(target_rel_path.parts)
+        if "locales" in parts:
+            try:
+                idx = parts.index("locales")
+                if idx + 1 < len(parts):
+                    locale_segment = parts[idx + 1]
+            except ValueError:
+                locale_segment = None
+        if locale_segment is None:
+            locale_segment = target_rel_path.parent.name if target_rel_path.parent else None
+        locale_key = locale_segment.replace("-", "_") if locale_segment else ""
+        existing_ignore = ignore_locales_map.get(locale_key, set())
+        ignored_paths = set(existing_ignore) if existing_ignore else set()
+
+        stats, success, dupes, total_ref_leaves, translated_ignored_paths = process_file(
             ref_path,
             target_path,
             prune=args.prune,
             dry_run=args.dry_run,
             check_only=args.check,
             backup=args.backup,
+            ignored_paths=ignored_paths,
         )
 
         total_added += stats.added
@@ -447,20 +615,41 @@ def main() -> None:
             #     )
 
         _target_rel_path = str(target_rel_path).replace("\\", "/").replace("//", "/")
-        if not _target_rel_path.endswith(
-            "en-GB/translation.json"
-        ) and not _target_rel_path.endswith("en-US/translation.json"):
+        if not _target_rel_path.endswith("en-GB/translation.json"):
             report.append(
                 f"- Missing translations: {missing_abs} / {total_abs} ({missing_pct:.2f}%)"
             )
             report.append(
                 f"- Untranslated values: {untranslated_abs} / {total_abs} ({untranslated_pct:.2f}%)"
             )
+        removed_entries = sorted(translated_ignored_paths & ignored_paths)
+        if removed_entries:
+            if args.check or args.dry_run:
+                report.append(
+                    "- Translation provided for previously ignored keys: "
+                    + f"`{', '.join(removed_entries)}` (update `scripts/ignore_locales.toml`)"
+                )
+            else:
+                report.append(
+                    f"- Cleared ignore entries: `{', '.join(removed_entries)}`"
+                )
+                if existing_ignore is not None:
+                    updated_ignore = existing_ignore - set(removed_entries)
+                    if updated_ignore:
+                        ignore_locales_map[locale_key] = updated_ignore
+                    else:
+                        ignore_locales_map.pop(locale_key, None)
+                    ignore_locales_modified = True
         report.append(f"- Added: {stats.added}, Pruned: {stats.pruned}")
         report.append("---")
         report.append("")
         if not success:
             any_failed = True
+
+    if ignore_locales_modified and not args.check and not args.dry_run:
+        ignore_order = write_ignore_locales(
+            ignore_file_path, ignore_locales_map, ignore_header_lines, ignore_order
+        )
 
     # Final summary
     report.append("## 🧾 Summary")

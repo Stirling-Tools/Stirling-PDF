@@ -455,16 +455,6 @@
     "alphabetical": "Alphabetisch",
     "globalPopularity": "Beliebtheit",
     "sortBy": "Sortieren nach:",
-    "mobile": {
-      "brandAlt": "Stirling PDF logo",
-      "openFiles": "Open files",
-      "swipeHint": "Swipe left or right to switch views",
-      "tools": "Tools",
-      "toolsSlide": "Tool selection panel",
-      "viewSwitcher": "Switch workspace view",
-      "workbenchSlide": "Workspace panel",
-      "workspace": "Workspace"
-    },
     "multiTool": {
       "tags": "mehrere,werkzeuge",
       "title": "PDF-Multitool",
@@ -754,6 +744,16 @@
       "tags": "arbeitsablauf,sequenz,automatisierung",
       "title": "Automatisieren",
       "desc": "Mehrstufige Arbeitsabläufe durch Verkettung von PDF-Aktionen erstellen. Ideal für wiederkehrende Aufgaben."
+    },
+    "mobile": {
+      "brandAlt": "Stirling PDF logo",
+      "openFiles": "Open files",
+      "swipeHint": "Swipe left or right to switch views",
+      "tools": "Tools",
+      "toolsSlide": "Tool selection panel",
+      "viewSwitcher": "Switch workspace view",
+      "workbenchSlide": "Workspace panel",
+      "workspace": "Workspace"
     },
     "overlay-pdfs": {
       "desc": "Overlay one PDF on top of another",
