@@ -24,6 +24,7 @@ import shutil
 from pathlib import Path
 from copy import deepcopy
 from dataclasses import dataclass
+import sys
 from typing import Any, Dict, Tuple, List
 
 try:
@@ -558,6 +559,11 @@ def main() -> None:
         help="Dry run: do not write changes (useful for local testing).",
     )
     parser.add_argument(
+        "--procent-translations",
+        action="store_true",
+        help="Report percentage of translated values (not same as English).",
+    )
+    parser.add_argument(
         "--no-backup",
         dest="backup",
         action="store_false",
@@ -713,6 +719,11 @@ def main() -> None:
             (untranslated_abs / total_abs * 100.0) if total_abs > 0 else 0.0
         )
 
+        translated_pct = 100.0 - untranslated_pct
+        if args.procent_translations:
+            print(f"{translated_pct:.2f}")
+            sys.exit(0)
+
         report.append(f"#### 📄 File: `{target_rel_path}`")
         if success:
             report.append("✅ **Passed:** All keys in sync.")
@@ -733,20 +744,21 @@ def main() -> None:
                     )
             if dupes:
                 report.append(f"- Duplicate keys ({len(dupes)}): `{', '.join(dupes)}`")
-            # if stats.untranslated_keys:
-            #     report.append(
-            #         f"- Untranslated keys:{len(stats.untranslated_keys)}"
-            #     )
 
         _target_rel_path = str(target_rel_path).replace("\\", "/").replace("//", "/")
         if not _target_rel_path.endswith("en-GB/translation.json"):
-            report.append(
-                f"- Missing translations keys: {missing_abs} / {total_abs} ({missing_pct:.2f}%)"
-            )
-            if not _target_rel_path.endswith("en-US/translation.json"):
+            if missing_abs > 0:
                 report.append(
-                    f"- Untranslated values: {untranslated_abs} / {total_abs} ({untranslated_pct:.2f}%)"
+                    f"- Missing translations keys: {missing_abs} / {total_abs} ({missing_pct:.2f}%)"
                 )
+            if not _target_rel_path.endswith("en-US/translation.json"):
+                if untranslated_abs > 0:
+                    report.append(
+                        f"- Untranslated values: {untranslated_abs} / {total_abs} ({untranslated_pct:.2f}%)"
+                    )
+                if translated_pct == 100.0:
+                    report.append(f"- 🎉 All values translated! Thank you @{actor}!")
+
         removed_entries = sorted(translated_ignored_paths & ignored_paths)
         if removed_entries:
             if args.check or args.dry_run:
