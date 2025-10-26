@@ -178,7 +178,7 @@ jobs:
                 ref: branch,
               });
 
-              referenceFilePath = "pr-branch-messages_en_GB.properties";
+              referenceFilePath = "pr-branch-translation.json";
               const content = Buffer.from(fileContent.content, "base64").toString("utf-8");
               fs.writeFileSync(referenceFilePath, content);
             } else {
@@ -190,7 +190,7 @@ jobs:
                 ref: "V2",
               });
 
-              referenceFilePath = "main-branch-messages_en_GB.properties";
+              referenceFilePath = "main-branch-translation.json";
               const content = Buffer.from(fileContent.content, "base64").toString("utf-8");
               fs.writeFileSync(referenceFilePath, content);
             }
@@ -287,6 +287,6 @@ jobs:
         run: |
           echo "Cleaning up temporary files..."
           rm -rf pr-branch
-          rm -f pr-branch-messages_en_GB.properties main-branch-messages_en_GB.properties changed_files.txt result.txt
+          rm -f pr-branch-translation.json main-branch-translation.json changed_files.txt result.txt
           echo "Cleanup complete."
         continue-on-error: true # Ensure cleanup runs even if previous steps fail
