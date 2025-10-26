@@ -385,16 +385,13 @@ public class PipelineProcessor {
         }
         if (filename != null) {
             String lower = filename.toLowerCase();
-            if (lower.endsWith(".cbz") || lower.endsWith(".cbr")) {
-                // Treat CBZ/CBR as non-zip for our unzipping purposes
+            if (lower.endsWith(".cbz")) {
+                // Treat CBZ as non-zip for our unzipping purposes
                 return false;
             }
         }
         // Check the first four bytes of the data against the standard zip magic number
-        return (data[0] & 0xFF) == 0x50
-                && (data[1] & 0xFF) == 0x4B
-                && (data[2] & 0xFF) == 0x03
-                && (data[3] & 0xFF) == 0x04;
+        return data[0] == 0x50 && data[1] == 0x4B && data[2] == 0x03 && data[3] == 0x04;
     }
 
     private boolean isZip(byte[] data) {
