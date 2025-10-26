@@ -745,9 +745,10 @@ def main() -> None:
             report.append(
                 f"- Missing translations: {missing_abs} / {total_abs} ({missing_pct:.2f}%)"
             )
-            report.append(
-                f"- Untranslated values: {untranslated_abs} / {total_abs} ({untranslated_pct:.2f}%)"
-            )
+            if not _target_rel_path.endswith("en-US/translation.json"):
+                report.append(
+                    f"- Untranslated values: {untranslated_abs} / {total_abs} ({untranslated_pct:.2f}%)"
+                )
         removed_entries = sorted(translated_ignored_paths & ignored_paths)
         if removed_entries:
             if args.check or args.dry_run:
@@ -766,9 +767,9 @@ def main() -> None:
                     else:
                         ignore_locales_map.pop(locale_key, None)
                     ignore_locales_modified = True
-        report.append(f"- Added: {stats.added}, Pruned: {stats.pruned}")
-        report.append("---")
-        report.append("")
+        # report.append(f"- Added: {stats.added}, Pruned: {stats.pruned}")
+        # report.append("---")
+        # report.append("")
         if not success:
             any_failed = True
 
@@ -778,10 +779,10 @@ def main() -> None:
         )
 
     # Final summary
-    report.append("## 🧾 Summary")
-    report.append(f"- Total added: {total_added}")
-    report.append(f"- Total pruned: {total_pruned}")
-    report.append("")
+    # report.append("## 🧾 Summary")
+    # report.append(f"- Total added: {total_added}")
+    # report.append(f"- Total pruned: {total_pruned}")
+    # report.append("")
     if any_failed:
         report.append("## ❌ Overall Status: **Failed**")
         report.append(f"@{actor} please check and sync the missing translations.")
