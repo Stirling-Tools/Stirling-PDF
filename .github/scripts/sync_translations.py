@@ -261,7 +261,6 @@ def process_file(
         not stats.missing_keys
         and (not prune or not stats.extra_keys)
         and not target_dupes
-        and stats.untranslated_leafs == 0
     )
 
     if not check_only and not dry_run:
