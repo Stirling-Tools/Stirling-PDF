@@ -5,17 +5,14 @@
 Author: Ludy87
 Description: Checks and synchronizes JSON translation files against a reference file.
 It does two things:
-1) CI check: verifies that all keys from the reference exist in the target (recursively).
-   Optionally flags extras.
+1) CI check: verifies that all keys from the reference exist in the target (recursively),
+   flags extras, duplicate keys, and now also flags untranslated values (same as English).
 2) Sync/update: adds missing keys (and optionally prunes extras).
 
 Also prints a CI-friendly report (intended for PR comments).
 
 Usage:
     python sync_translations.py --reference-file <path_to_reference_json> [--branch <branch_root>] [--actor <actor_name>] [--files <list_of_target_jsons>] [--check] [--prune] [--dry-run]
-
-# Sample for Windows:
-# python .github\\scripts\\sync_translations.py --reference-file frontend\\public\\locales\\en-GB\\translation.json --branch "" --files frontend\\public\\locales\\de-DE\\translation.json --check --actor Ludy87
 """
 
 from __future__ import annotations
@@ -38,12 +35,16 @@ class MergeStats:
     pruned: int = 0
     missing_keys: list[str] | None = None
     extra_keys: list[str] | None = None
-    # How many translatable leaf nodes (non-dict values) are missing in total
+    # Missing translatable leaf nodes (non-dict values)
     missing_leafs: int = 0
+    # NEW: untranslated values (same as reference English)
+    untranslated_leafs: int = 0
+    untranslated_keys: list[str] | None = None
 
     def __post_init__(self):
         self.missing_keys = []
         self.extra_keys = []
+        self.untranslated_keys = []
 
 
 def is_mapping(v: Any) -> bool:
@@ -57,13 +58,40 @@ def count_leaves(obj: Any) -> int:
     return 1
 
 
+def normalize_text(s: str) -> str:
+    """Normalize strings for a strict-but-fair equality check."""
+    # Trim, collapse whitespace, lower-case. Keep placeholders intact.
+    s = s.strip()
+    s = re.sub(r"\s+", " ", s)
+    return s.lower()
+
+
+def collect_untranslated_values(ref: Any, tgt: Any, *, path: str = "", stats: MergeStats) -> None:
+    """
+    Walk ref + target without mutating anything and find values that are present
+    but not translated (target string equals reference string).
+    """
+    if is_mapping(ref) and is_mapping(tgt):
+        for k, ref_val in ref.items():
+            new_path = f"{path}.{k}" if path else k
+            if k in tgt:
+                collect_untranslated_values(ref_val, tgt[k], path=new_path, stats=stats)
+        return
+
+    # Only compare leaf strings
+    if isinstance(ref, str) and isinstance(tgt, str):
+        if normalize_text(ref) == normalize_text(tgt):
+            stats.untranslated_leafs += 1
+            stats.untranslated_keys.append(path)
+
+
 def deep_merge_and_collect(
     ref: Any, target: Any, *, prune_extras: bool, path: str = "", stats: MergeStats
 ) -> Any:
     """
     Recursively ensure `target` contains at least the structure/keys of `ref`.
     - Adds any missing keys using the reference values.
-    - Tracks missing keys and how many leaf nodes are missing (useful for progress %).
+    - Tracks missing keys and how many leaf nodes are missing (for %).
     - Optionally prunes extra keys that don't exist in the reference.
     """
     if is_mapping(ref) and is_mapping(target):
@@ -219,14 +247,19 @@ def process_file(
     total_ref_leaves = count_leaves(ref)
 
     stats = MergeStats()
+
+    # NEW: detect untranslated values before we mutate/merge anything
+    collect_untranslated_values(ref, target, path="", stats=stats)
+
     merged = deep_merge_and_collect(ref, target, prune_extras=prune, stats=stats)
     merged = order_like_reference(ref, merged)
 
-    # "Success" means: no missing keys, (if pruning) no extras, and no duplicate keys
+    # "Success" means: no missing keys, (if pruning) no extras, no duplicate keys, no untranslated values
     success = (
         not stats.missing_keys
         and (not prune or not stats.extra_keys)
         and not target_dupes
+        and stats.untranslated_leafs == 0
     )
 
     if not check_only and not dry_run:
@@ -376,10 +409,14 @@ def main() -> None:
         total_added += stats.added
         total_pruned += stats.pruned
 
-        # Missing translations: absolute + percentage based on total leaves in reference
+        # Missing translations (absolute + % of total reference leaves)
         missing_abs = stats.missing_leafs
         total_abs = total_ref_leaves if total_ref_leaves > 0 else 0
         missing_pct = (missing_abs / total_abs * 100.0) if total_abs > 0 else 0.0
+
+        # Untranslated values (absolute + % of total reference leaves)
+        untranslated_abs = stats.untranslated_leafs
+        untranslated_pct = (untranslated_abs / total_abs * 100.0) if total_abs > 0 else 0.0
 
         report.append(f"#### 📄 File: `{target_rel_path}`")
         if success:
@@ -401,10 +438,13 @@ def main() -> None:
                     )
             if dupes:
                 report.append(f"- Duplicate keys ({len(dupes)}): `{', '.join(dupes)}`")
+            if stats.untranslated_keys:
+                report.append(
+                    f"- Untranslated keys ({len(stats.untranslated_keys)}): `{', '.join(stats.untranslated_keys)}`"
+                )
 
-        report.append(
-            f"- Missing translations: {missing_abs} / {total_abs} ({missing_pct:.2f}%)"
-        )
+        report.append(f"- Missing translations: {missing_abs} / {total_abs} ({missing_pct:.2f}%)")
+        report.append(f"- Untranslated values: {untranslated_abs} / {total_abs} ({untranslated_pct:.2f}%)")
         report.append(f"- Added: {stats.added}, Pruned: {stats.pruned}")
         report.append("---")
         report.append("")
