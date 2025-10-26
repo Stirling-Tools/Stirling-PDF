@@ -79,7 +79,7 @@ jobs:
             exit 1
           fi
           # Get changed files and filter for properties files, handle case where no matches are found
-          gh pr view ${{ steps.get-pr-data.outputs.pr_number }} --json files -q ".files[].path" | grep -E '^frontend/public/locales/[a-zA-Z_]{2}-[a-zA-Z_]{2,7}/translation.json$' > changed_files.txt || echo "No matching properties files found in PR"
+          gh pr view ${{ steps.get-pr-data.outputs.pr_number }} --json files -q ".files[].path" | grep -E '^frontend/public/locales/[a-zA-Z_]{2}-[a-zA-Z-]{2,7}/translation.json$' > changed_files.txt || echo "No matching properties files found in PR"
           # Check if any files were found
           if [ ! -s changed_files.txt ]; then
             echo "No properties files changed in this PR"
@@ -129,7 +129,7 @@ jobs:
             const changedFiles = files
               .filter(file =>
                 file.status !== "removed" &&
-                /^frontend\/public\/locales\/[a-zA-Z_]{2}-[a-zA-Z_]{2,7}\/translation\.json$/.test(file.filename)
+                /^frontend\/public\/locales\/[a-zA-Z_]{2}-[a-zA-Z-]{2,7}\/translation\.json$/.test(file.filename)
               )
               .map(file => file.filename);
 
