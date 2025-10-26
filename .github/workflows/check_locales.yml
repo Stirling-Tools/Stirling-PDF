@@ -1,7 +1,7 @@
 name: Check Localization Files on PR
 
 on:
-  pull_request:
+  pull_request_target:
     types: [opened, synchronize, reopened]
     paths:
       - "frontend/public/locales/*-*/translation.json"
@@ -23,7 +23,7 @@ permissions:
 
 jobs:
   check-files:
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request_target'
     runs-on: ubuntu-latest
     permissions:
       issues: write # Allow posting comments on issues/PRs
