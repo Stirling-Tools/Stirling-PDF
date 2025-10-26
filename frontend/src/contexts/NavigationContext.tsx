@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useReducer, useCallback } from 'react';
 import { WorkbenchType, getDefaultWorkbench } from '../types/workbench';
 import { ToolId, isValidToolId } from '../types/toolId';
-import { useFlatToolRegistry } from '../data/useTranslatedToolRegistry';
+import { useToolRegistry } from './ToolRegistryContext';
 
 /**
  * NavigationContext - Complete navigation management system
@@ -107,7 +107,7 @@ export const NavigationProvider: React.FC<{
   enableUrlSync?: boolean;
 }> = ({ children }) => {
   const [state, dispatch] = useReducer(navigationReducer, initialState);
-  const toolRegistry = useFlatToolRegistry();
+  const { allTools: toolRegistry } = useToolRegistry();
   const unsavedChangesCheckerRef = React.useRef<(() => boolean) | null>(null);
 
   const actions: NavigationContextActions = {

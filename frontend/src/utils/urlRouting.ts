@@ -115,4 +115,3 @@ export function getToolDisplayName(toolId: ToolId, registry: ToolRegistry): stri
   const tool = registry[toolId];
   return tool ? tool.name : toolId;
 }
-
