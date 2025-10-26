@@ -55,6 +55,7 @@ labels:
       - 'scripts/ignore_translation.toml'
       - 'app/core/src/main/resources/templates/fragments/languages.html'
       - '.github/scripts/check_language_properties.py'
+      - '.github/scripts/sync_translations.py'
 
   - label: 'Front End'
     files:
