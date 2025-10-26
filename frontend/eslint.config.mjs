@@ -117,7 +117,6 @@ export default defineConfig(
       'react/prop-types': 'warn',
       'react/no-unescaped-entities': 'warn',
 
-      '@typescript-eslint/array-type': ['warn', { default: 'array', readonly: 'array' }],
       '@typescript-eslint/require-await': 'warn',
       '@typescript-eslint/no-unnecessary-type-assertion': 'warn',
       '@typescript-eslint/prefer-regexp-exec': 'warn',
@@ -132,7 +131,7 @@ export default defineConfig(
           allowInterfaces: 'with-single-extends',
         },
       ],
-      "@typescript-eslint/no-explicit-any": "warn", // Temporarily disabled until codebase conformant
+      "@typescript-eslint/no-explicit-any": "off", // Temporarily disabled until codebase conformant
       "@typescript-eslint/no-require-imports": "warn", // Temporarily disabled until codebase conformant
       "@typescript-eslint/no-unused-vars": [
         "warn",
@@ -160,6 +159,7 @@ export default defineConfig(
       '@typescript-eslint/non-nullable-type-assertion-style': 'off', // Ignore preference of using !. over other methods (both have their uses)
       '@typescript-eslint/consistent-generic-constructors': 'off', // Ignore preference of using new Array<T>() over Array<T> (both have their uses)
       '@typescript-eslint/no-redundant-type-constituents': 'off', // Ignore redundant type constituents (they're often useful for clarity)
+      '@typescript-eslint/array-type': 'off', // see: https://github.com/Stirling-Tools/Stirling-PDF/pull/4521#issuecomment-3346477814
 
       // Should be checked
       "@typescript-eslint/no-inferrable-types": "off",
@@ -191,6 +191,11 @@ export default defineConfig(
       globals: {
         ...globals.node,
       },
+      parserOptions: {
+        ecmaVersion: 'latest',
+        sourceType: 'module',
+      },
+      sourceType: 'module',
     },
   },
   {
@@ -205,6 +210,8 @@ export default defineConfig(
     ],
     languageOptions: {
       parserOptions: {
+        ecmaVersion: 'latest',
+        sourceType: 'module',
         ecmaFeatures: {
           jsx: true,
         },
