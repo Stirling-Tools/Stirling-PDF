@@ -18,5 +18,5 @@ export default function LoginHeader({ title, subtitle }: LoginHeaderProps) {
         <p className="login-subtitle">{subtitle}</p>
       )}
     </div>
-  )
+  );
 }
