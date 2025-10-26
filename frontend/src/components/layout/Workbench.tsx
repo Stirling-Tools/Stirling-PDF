@@ -1,4 +1,3 @@
-import React from 'react';
 import { Box } from '@mantine/core';
 import { useRainbowThemeContext } from '../shared/RainbowThemeProvider';
 import { useToolWorkflow } from '../../contexts/ToolWorkflowContext';
