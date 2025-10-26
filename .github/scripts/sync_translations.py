@@ -597,16 +597,6 @@ def main() -> None:
 
         invalid_for_locale = invalid_ignore_entries.get(locale_key, [])
         if invalid_for_locale:
-            if args.check or args.dry_run:
-                report.append(
-                    "- Ignore entries referencing missing reference keys: "
-                    + f"`{', '.join(invalid_for_locale)}` (update `scripts/ignore_locales.toml`)"
-                )
-            else:
-                report.append(
-                    "- Removed ignore entries referencing missing reference keys: "
-                    + f"`{', '.join(invalid_for_locale)}`"
-                )
             ignored_paths -= set(invalid_for_locale)
 
         stats, success, dupes, total_ref_leaves, translated_ignored_paths = (
