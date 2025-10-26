@@ -75,9 +75,7 @@ def collect_leaf_paths(obj: Any, base_path: str) -> list[str]:
     return [base_path]
 
 
-def _prune_empty_parent_stack(
-    stack: list[tuple[JsonDict, str, Any]]
-) -> None:
+def _prune_empty_parent_stack(stack: list[tuple[JsonDict, str, Any]]) -> None:
     """Remove empty dictionaries along a captured parent stack."""
 
     child_empty = True
@@ -743,7 +741,7 @@ def main() -> None:
         _target_rel_path = str(target_rel_path).replace("\\", "/").replace("//", "/")
         if not _target_rel_path.endswith("en-GB/translation.json"):
             report.append(
-                f"- Missing translations: {missing_abs} / {total_abs} ({missing_pct:.2f}%)"
+                f"- Missing translations keys: {missing_abs} / {total_abs} ({missing_pct:.2f}%)"
             )
             if not _target_rel_path.endswith("en-US/translation.json"):
                 report.append(
@@ -768,6 +766,7 @@ def main() -> None:
                         ignore_locales_map.pop(locale_key, None)
                     ignore_locales_modified = True
         # report.append(f"- Added: {stats.added}, Pruned: {stats.pruned}")
+        report.append("")
         report.append("---")
         report.append("")
         if not success:
@@ -782,7 +781,8 @@ def main() -> None:
     # report.append("## 🧾 Summary")
     # report.append(f"- Total added: {total_added}")
     # report.append(f"- Total pruned: {total_pruned}")
-    # report.append("")
+    report.append("")
+
     if any_failed:
         report.append("## ❌ Overall Status: **Failed**")
         report.append(f"@{actor} please check and sync the missing translations.")
