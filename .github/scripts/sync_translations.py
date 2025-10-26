@@ -493,7 +493,9 @@ def main() -> None:
             candidate_ignore = (script_root / IGNORE_LOCALES_FILE).resolve()
             if candidate_ignore.exists():
                 ignore_file_path = candidate_ignore
-    ignore_locales_map, ignore_header_lines, ignore_order = load_ignore_locales(ignore_file_path)
+    ignore_locales_map, ignore_header_lines, ignore_order = load_ignore_locales(
+        ignore_file_path
+    )
     ignore_locales_modified = False
 
     # Resolve the reference path. First try under branch root, then fall back to raw path.
@@ -506,6 +508,32 @@ def main() -> None:
             ref_path = alt
         if not ref_path.exists():
             raise SystemExit(f"Reference file not found: {ref_path}")
+
+    # Pre-load the reference so we can identify valid translation paths (used for
+    # trimming ignore entries that no longer exist in the reference).
+    ref_data, _ = read_json_with_duplicates(ref_path)
+    reference_leaf_paths = set(collect_leaf_paths(ref_data, ""))
+
+    # Track ignore entries that reference non-existent keys in the reference
+    # translation so we can report (and optionally prune) them.
+    invalid_ignore_entries: dict[str, list[str]] = {}
+
+    for locale_key, ignored_paths in list(ignore_locales_map.items()):
+        current_ignored = set(ignored_paths)
+        invalid_entries = sorted(
+            path for path in current_ignored if path not in reference_leaf_paths
+        )
+        if not invalid_entries:
+            continue
+        invalid_ignore_entries[locale_key] = invalid_entries
+        if args.check or args.dry_run:
+            continue
+        updated_ignore = current_ignored - set(invalid_entries)
+        if updated_ignore:
+            ignore_locales_map[locale_key] = updated_ignore
+        else:
+            ignore_locales_map.pop(locale_key, None)
+        ignore_locales_modified = True
 
     # Build the targets list. If CI passed a single space-separated string, split it.
     files_list: List[Path] = []
@@ -560,19 +588,37 @@ def main() -> None:
             except ValueError:
                 locale_segment = None
         if locale_segment is None:
-            locale_segment = target_rel_path.parent.name if target_rel_path.parent else None
+            locale_segment = (
+                target_rel_path.parent.name if target_rel_path.parent else None
+            )
         locale_key = locale_segment.replace("-", "_") if locale_segment else ""
         existing_ignore = ignore_locales_map.get(locale_key, set())
         ignored_paths = set(existing_ignore) if existing_ignore else set()
 
-        stats, success, dupes, total_ref_leaves, translated_ignored_paths = process_file(
-            ref_path,
-            target_path,
-            prune=args.prune,
-            dry_run=args.dry_run,
-            check_only=args.check,
-            backup=args.backup,
-            ignored_paths=ignored_paths,
+        invalid_for_locale = invalid_ignore_entries.get(locale_key, [])
+        if invalid_for_locale:
+            if args.check or args.dry_run:
+                report.append(
+                    "- Ignore entries referencing missing reference keys: "
+                    + f"`{', '.join(invalid_for_locale)}` (update `scripts/ignore_locales.toml`)"
+                )
+            else:
+                report.append(
+                    "- Removed ignore entries referencing missing reference keys: "
+                    + f"`{', '.join(invalid_for_locale)}`"
+                )
+            ignored_paths -= set(invalid_for_locale)
+
+        stats, success, dupes, total_ref_leaves, translated_ignored_paths = (
+            process_file(
+                ref_path,
+                target_path,
+                prune=args.prune,
+                dry_run=args.dry_run,
+                check_only=args.check,
+                backup=args.backup,
+                ignored_paths=ignored_paths,
+            )
         )
 
         total_added += stats.added
