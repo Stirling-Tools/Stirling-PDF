@@ -192,6 +192,7 @@ jobs:
 
               referenceFilePath = "main-branch-translation.json";
               const content = Buffer.from(fileContent.content, "base64").toString("utf-8");
+              console.log(`Content of ${referenceFilePath}:`, content);
               fs.writeFileSync(referenceFilePath, content);
             }
 
