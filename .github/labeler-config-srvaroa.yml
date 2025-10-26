@@ -56,6 +56,7 @@ labels:
       - 'app/core/src/main/resources/templates/fragments/languages.html'
       - '.github/scripts/check_language_properties.py'
       - '.github/scripts/sync_translations.py'
+      - 'frontend/public/locales/[a-zA-Z]{2}-[a-zA-Z-]{2,7}/translation.json'
 
   - label: 'Front End'
     files:
