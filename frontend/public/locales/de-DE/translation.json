@@ -797,18 +797,8 @@
   "merge": {
     "tags": "zusammenführen,seitenvorgänge,back end,serverseitig",
     "title": "Zusammenführen",
-    "removeDigitalSignature": {
-      "tooltip": {
-        "description": "Digitale Signaturen werden beim Zusammenführen von Dateien ungültig. Aktivieren Sie diese Option, um sie aus der endgültigen zusammengeführten PDF zu entfernen.",
-        "title": "Digitale Signatur entfernen"
-      }
-    },
-    "generateTableOfContents": {
-      "tooltip": {
-        "description": "Erstellt automatisch ein klickbares Inhaltsverzeichnis in der zusammengeführten PDF basierend auf den ursprünglichen Dateinamen und Seitenzahlen.",
-        "title": "Inhaltsverzeichnis generieren"
-      }
-    },
+    "removeDigitalSignature": "Remove digital signature in the merged file?",
+    "generateTableOfContents": "Generate table of contents in the merged file?",
     "removeDigitalSignature.tooltip": {
       "title": "Remove Digital Signature",
       "description": "Digital signatures will be invalidated when merging files. Check this to remove them from the final merged PDF."
@@ -2506,10 +2496,22 @@
     "reset": "Auf vollständiges PDF zurücksetzen",
     "coordinates": {
       "title": "Position und Größe",
-      "x": "X-Position",
-      "y": "Y-Position",
-      "width": "Breite",
-      "height": "Höhe"
+      "x": {
+        "label": "X Position",
+        "desc": "Left edge (points)"
+      },
+      "y": {
+        "label": "Y Position",
+        "desc": "Bottom edge (points)"
+      },
+      "width": {
+        "label": "Width",
+        "desc": "Crop width (points)"
+      },
+      "height": {
+        "label": "Height",
+        "desc": "Crop height (points)"
+      }
     },
     "error": {
       "invalidArea": "Zuschneidebereich überschreitet die PDF-Grenzen",
@@ -3575,29 +3577,17 @@
     "options": {
       "title": "Bereinigungs-Optionen",
       "note": "Wählen Sie die Elemente aus, die Sie aus der PDF entfernen möchten. Mindestens eine Option muss ausgewählt werden.",
-      "removeJavaScript": {
-        "desc": "JavaScript-Aktionen und Skripte aus der PDF entfernen"
-      },
+      "removeJavaScript": "Remove JavaScript",
       "removeJavaScript.desc": "Remove JavaScript actions and scripts from the PDF",
-      "removeEmbeddedFiles": {
-        "desc": "Alle in der PDF eingebetteten Dateien entfernen"
-      },
+      "removeEmbeddedFiles": "Remove Embedded Files",
       "removeEmbeddedFiles.desc": "Remove any files embedded within the PDF",
-      "removeXMPMetadata": {
-        "desc": "XMP-Metadaten aus der PDF entfernen"
-      },
+      "removeXMPMetadata": "Remove XMP Metadata",
       "removeXMPMetadata.desc": "Remove XMP metadata from the PDF",
-      "removeMetadata": {
-        "desc": "Dokumentinformations-Metadaten (Titel, Autor usw.) entfernen"
-      },
+      "removeMetadata": "Remove Document Metadata",
       "removeMetadata.desc": "Remove document information metadata (title, author, etc.)",
-      "removeLinks": {
-        "desc": "Externe Links und Launch-Aktionen aus der PDF entfernen"
-      },
+      "removeLinks": "Remove Links",
       "removeLinks.desc": "Remove external links and launch actions from the PDF",
-      "removeFonts": {
-        "desc": "Eingebettete Schriftarten aus der PDF entfernen"
-      },
+      "removeFonts": "Remove Fonts",
       "removeFonts.desc": "Remove embedded fonts from the PDF"
     }
   },

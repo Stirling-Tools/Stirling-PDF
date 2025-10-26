@@ -75,6 +75,66 @@ def collect_leaf_paths(obj: Any, base_path: str) -> list[str]:
     return [base_path]
 
 
+def _prune_empty_parent_stack(
+    stack: list[tuple[JsonDict, str, Any]]
+) -> None:
+    """Remove empty dictionaries along a captured parent stack."""
+
+    child_empty = True
+    for idx in range(len(stack) - 1, -1, -1):
+        parent, key, child = stack[idx]
+        if idx == len(stack) - 1:
+            parent.pop(key, None)
+            child_empty = len(parent) == 0
+        else:
+            if child_empty and isinstance(child, dict) and len(child) == 0:
+                parent.pop(key, None)
+                child_empty = len(parent) == 0
+            else:
+                child_empty = False
+
+        if not child_empty:
+            break
+
+
+def relocate_dotted_reference_keys(ref: Any, target: Any) -> None:
+    """Align target structure with dotted keys defined in the reference."""
+
+    if not (is_mapping(ref) and is_mapping(target)):
+        return
+
+    for key in ref:
+        if "." not in key:
+            continue
+        if key in target:
+            continue
+
+        segments = key.split(".")
+        current = target
+        stack: list[tuple[JsonDict, str, Any]] = []
+        valid_path = True
+
+        for segment in segments:
+            if not (is_mapping(current) and segment in current):
+                valid_path = False
+                break
+            next_current = current[segment]
+            stack.append((current, segment, next_current))
+            current = next_current
+
+        if not valid_path:
+            continue
+
+        target[key] = deepcopy(current)
+        _prune_empty_parent_stack(stack)
+
+    for key, ref_val in ref.items():
+        if "." in key:
+            continue
+        if key in target:
+            relocate_dotted_reference_keys(ref_val, target[key])
+
+
 def record_missing_leaf(
     path: str, *, stats: MergeStats, ignored_paths: set[str]
 ) -> None:
@@ -206,7 +266,10 @@ def deep_merge_and_collect(
     - Tracks missing keys and how many leaf nodes are missing (for %).
     - Optionally prunes extra keys that don't exist in the reference.
     """
-    if is_mapping(ref) and is_mapping(target):
+    ref_is_mapping = is_mapping(ref)
+    target_is_mapping = is_mapping(target)
+
+    if ref_is_mapping and target_is_mapping:
         merged: JsonDict = {}
 
         # Walk reference keys in order so we keep the same structure/order
@@ -257,10 +320,37 @@ def deep_merge_and_collect(
 
         return merged
 
+    if ref_is_mapping != target_is_mapping:
+        stats.added += 1
+        stats.missing_leafs += count_leaves(ref)
+        leaf_paths = collect_leaf_paths(ref, path)
+        if leaf_paths:
+            for leaf_path in leaf_paths:
+                record_missing_leaf(
+                    leaf_path,
+                    stats=stats,
+                    ignored_paths=ignored_paths,
+                )
+        else:
+            record_missing_leaf(
+                path,
+                stats=stats,
+                ignored_paths=ignored_paths,
+            )
+        return deepcopy(ref)
+
     # Non-dict values → keep existing translation; if it's None, count it as missing
     if target is None:
         record_missing_leaf(path, stats=stats, ignored_paths=ignored_paths)
-    return deepcopy(target if target is not None else ref)
+        return deepcopy(ref)
+
+    if type(target) is not type(ref):
+        stats.added += 1
+        stats.missing_leafs += count_leaves(ref)
+        record_missing_leaf(path, stats=stats, ignored_paths=ignored_paths)
+        return deepcopy(ref)
+
+    return deepcopy(target)
 
 
 def order_like_reference(ref: Any, obj: Any) -> Any:
