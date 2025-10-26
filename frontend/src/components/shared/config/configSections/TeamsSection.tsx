@@ -18,7 +18,7 @@ import {
 } from '@mantine/core';
 import LocalIcon from '../../LocalIcon';
 import { alert } from '../../../toast';
-import { teamService, Team, TeamMember } from '../../../../services/teamService';
+import { teamService, Team } from '../../../../services/teamService';
 import { userManagementService, User } from '../../../../services/userManagementService';
 import { Z_INDEX_OVER_CONFIG_MODAL } from '../../../../styles/zIndex';
 import TeamDetailsSection from './TeamDetailsSection';
