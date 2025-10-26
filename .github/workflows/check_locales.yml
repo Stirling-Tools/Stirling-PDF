@@ -206,6 +206,8 @@ jobs:
             --actor ${{ github.event.pull_request.user.login }} \
             --reference-file "${REFERENCE_FILE}" \
             --branch "pr-branch" \
+            --prune \
+            --no-backup \
             --check \
             --files "${FILES_LIST[@]}" > result.txt
         continue-on-error: true # Continue the job even if this step fails
