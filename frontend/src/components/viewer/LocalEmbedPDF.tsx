@@ -34,8 +34,9 @@ import { SpreadAPIBridge } from './SpreadAPIBridge';
 import { SearchAPIBridge } from './SearchAPIBridge';
 import { ThumbnailAPIBridge } from './ThumbnailAPIBridge';
 import { RotateAPIBridge } from './RotateAPIBridge';
-import { SignatureAPIBridge, SignatureAPI } from './SignatureAPIBridge';
-import { HistoryAPIBridge, HistoryAPI } from './HistoryAPIBridge';
+import { SignatureAPIBridge } from './SignatureAPIBridge';
+import { HistoryAPIBridge } from './HistoryAPIBridge';
+import type { SignatureAPI, HistoryAPI } from './viewerTypes';
 import { ExportAPIBridge } from './ExportAPIBridge';
 
 interface LocalEmbedPDFProps {

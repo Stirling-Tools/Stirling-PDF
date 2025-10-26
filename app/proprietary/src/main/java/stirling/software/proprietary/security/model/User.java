@@ -1,12 +1,15 @@
 package stirling.software.proprietary.security.model;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -59,6 +62,12 @@ public class User implements UserDetails, Serializable {
     @Column(name = "authenticationtype")
     private String authenticationType;
 
+    @Column(name = "sso_provider_id")
+    private String ssoProviderId;
+
+    @Column(name = "sso_provider")
+    private String ssoProvider;
+
     @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL, mappedBy = "user")
     private Set<Authority> authorities = new HashSet<>();
 
@@ -73,6 +82,14 @@ public class User implements UserDetails, Serializable {
     @Column(name = "setting_value", columnDefinition = "text")
     @CollectionTable(name = "user_settings", joinColumns = @JoinColumn(name = "user_id"))
     private Map<String, String> settings = new HashMap<>(); // Key-value pairs of settings.
+
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 
     public String getRoleName() {
         return Role.getRoleNameByRoleId(getRolesAsString());
