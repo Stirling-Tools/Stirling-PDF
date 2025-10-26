@@ -768,8 +768,8 @@ def main() -> None:
                         ignore_locales_map.pop(locale_key, None)
                     ignore_locales_modified = True
         # report.append(f"- Added: {stats.added}, Pruned: {stats.pruned}")
-        # report.append("---")
-        # report.append("")
+        report.append("---")
+        report.append("")
         if not success:
             any_failed = True
 
