@@ -3,13 +3,13 @@
 
 """
 Author: Ludy87
-Description: This script processes JSON translation files for localization checks and synchronization.
-It compares target translation files in a branch with a reference JSON file to ensure consistency.
-The script performs two main tasks:
-1. CI check: Verifies that all keys present in the reference exist in the target (recursively). Optionally flags extras.
-2. Sync/update: Updates the target files to match the reference by adding missing keys (and optionally pruning extras).
+Description: Checks and synchronizes JSON translation files against a reference file.
+It does two things:
+1) CI check: verifies that all keys from the reference exist in the target (recursively).
+   Optionally flags extras.
+2) Sync/update: adds missing keys (and optionally prunes extras).
 
-The script also provides functionality to print a CI-friendly report (to be used as PR comment output).
+Also prints a CI-friendly report (intended for PR comments).
 
 Usage:
     python sync_translations.py --reference-file <path_to_reference_json> [--branch <branch_root>] [--actor <actor_name>] [--files <list_of_target_jsons>] [--check] [--prune] [--dry-run]
@@ -38,6 +38,8 @@ class MergeStats:
     pruned: int = 0
     missing_keys: list[str] | None = None
     extra_keys: list[str] | None = None
+    # How many translatable leaf nodes (non-dict values) are missing in total
+    missing_leafs: int = 0
 
     def __post_init__(self):
         self.missing_keys = []
@@ -48,14 +50,26 @@ def is_mapping(v: Any) -> bool:
     return isinstance(v, dict)
 
 
+# Count all translatable entries (non-dict values) in any nested structure
+def count_leaves(obj: Any) -> int:
+    if is_mapping(obj):
+        return sum(count_leaves(v) for v in obj.values())
+    return 1
+
+
 def deep_merge_and_collect(
     ref: Any, target: Any, *, prune_extras: bool, path: str = "", stats: MergeStats
 ) -> Any:
-    """Recursively ensure `target` contains at least the structure/keys of `ref`."""
+    """
+    Recursively ensure `target` contains at least the structure/keys of `ref`.
+    - Adds any missing keys using the reference values.
+    - Tracks missing keys and how many leaf nodes are missing (useful for progress %).
+    - Optionally prunes extra keys that don't exist in the reference.
+    """
     if is_mapping(ref) and is_mapping(target):
         merged: JsonDict = {}
 
-        # Merge reference keys
+        # Walk reference keys in order so we keep the same structure/order
         for k, ref_val in ref.items():
             new_path = f"{path}.{k}" if path else k
             if k in target:
@@ -67,17 +81,22 @@ def deep_merge_and_collect(
                     stats=stats,
                 )
             else:
+                # Entire key (possibly subtree) is missing → copy from ref
                 merged[k] = deepcopy(ref_val)
                 stats.added += 1
                 stats.missing_keys.append(new_path)
+                # Count how many translatable leaves this missing subtree contains
+                stats.missing_leafs += count_leaves(ref_val)
 
-        # Handle extras
+        # Handle keys that exist in target but not in ref
         if prune_extras:
             for k in target.keys():
                 if k not in ref:
                     stats.pruned += 1
                     stats.extra_keys.append(f"{path}.{k}" if path else k)
+            # Do not copy extras when pruning
         else:
+            # Keep extras (but still list them for the report)
             for k, v in target.items():
                 if k not in ref:
                     merged[k] = deepcopy(v)
@@ -85,12 +104,17 @@ def deep_merge_and_collect(
 
         return merged
 
-    # Non-dict values → keep target if it exists
+    # Non-dict values → keep existing translation; if it's None, count it as missing
+    if target is None:
+        stats.missing_leafs += count_leaves(ref)
     return deepcopy(target if target is not None else ref)
 
 
 def order_like_reference(ref: Any, obj: Any) -> Any:
-    """Reorder dict keys in `obj` to follow the order in `ref` recursively."""
+    """
+    Reorder dict keys in `obj` to match the order in `ref` (recursively).
+    Extra keys are appended at the end.
+    """
     if not (is_mapping(ref) and is_mapping(obj)):
         return obj
     ordered = {}
@@ -108,9 +132,11 @@ def read_json(path: Path) -> Any:
         return json.load(f)
 
 
-# --- NEU: JSON lesen + doppelte Keys erkennen ---
+# Read JSON while detecting duplicate keys (json.load would normally overwrite silently)
 def read_json_with_duplicates(path: Path) -> Tuple[Any, list[str]]:
-    """Read JSON while detecting duplicate keys; returns (data, duplicate_keys)."""
+    """
+    Returns: (data, duplicate_keys)
+    """
     duplicates: list[str] = []
 
     def object_pairs_hook(pairs):
@@ -127,9 +153,6 @@ def read_json_with_duplicates(path: Path) -> Tuple[Any, list[str]]:
     with path.open("r", encoding="utf-8") as f:
         data = json.load(f, object_pairs_hook=object_pairs_hook)
     return data, duplicates
-
-
-# --- ENDE neu ---
 
 
 def write_json(path: Path, data: Any) -> None:
@@ -157,14 +180,16 @@ def sanitize_branch(s: str | None) -> str | None:
 
 
 def resolve_in_branch(branch: Path | None, p: Path) -> Path:
+    # If no branch root or an absolute path is provided, use it as-is
     if p.is_absolute() or branch is None or str(branch) == "":
         return p
     return (branch / p).resolve()
 
 
 def is_within(base: Path | None, target: Path) -> bool:
+    # Allow everything if no base is provided
     if base is None or str(base) == "":
-        return True  # no restriction
+        return True
     base_resolved = base.resolve()
     target_resolved = target.resolve()
     if os.name == "nt":
@@ -185,17 +210,19 @@ def process_file(
     dry_run: bool,
     check_only: bool,
     backup: bool,
-) -> Tuple[MergeStats, bool, List[str]]:
-    # --- doppelte Keys berücksichtigen ---
+) -> Tuple[MergeStats, bool, List[str], int]:
+    # Load both files, capturing duplicate keys in the target
     ref, _ref_dupes = read_json_with_duplicates(ref_path)
     target, target_dupes = read_json_with_duplicates(target_path)
-    # -------------------------------------
+
+    # Total number of translatable leaves in the reference (for % calculation)
+    total_ref_leaves = count_leaves(ref)
 
     stats = MergeStats()
     merged = deep_merge_and_collect(ref, target, prune_extras=prune, stats=stats)
     merged = order_like_reference(ref, merged)
 
-    # Erfolg nur wenn: keine fehlenden Keys, (optional) keine Extras, und KEINE Duplikate
+    # "Success" means: no missing keys, (if pruning) no extras, and no duplicate keys
     success = (
         not stats.missing_keys
         and (not prune or not stats.extra_keys)
@@ -207,11 +234,14 @@ def process_file(
             backup_file(target_path)
         write_json(target_path, merged)
 
-    return stats, success, target_dupes
+    return stats, success, target_dupes, total_ref_leaves
 
 
 def find_all_locale_files(branch_root: Path, ref_path: Path) -> List[Path]:
-    """Find all translation.json files under locales/, excluding the reference file."""
+    """
+    Find all `translation.json` files under `frontend/public/locales/**`,
+    excluding the reference file itself.
+    """
     locales_dir = branch_root / "frontend" / "public" / "locales"
     if not locales_dir.exists():
         return []
@@ -275,44 +305,37 @@ def main() -> None:
     parser.set_defaults(backup=True)
     args = parser.parse_args()
 
-    # Sanitize inputs
+    # Normalize inputs
     actor = sanitize_actor(args.actor) if args.actor else "translator"
     branch_str = sanitize_branch(args.branch) if args.branch else ""
     branch_base: Path | None = Path(branch_str).resolve() if branch_str else Path.cwd()
 
-    # Resolve reference path
+    # Resolve the reference path. First try under branch root, then fall back to raw path.
     ref_path = resolve_in_branch(branch_base, args.ref)
-    # First try branch-prefixed location
-    if ref_path.exists() and is_within(branch_base, ref_path):
-        pass
-    else:
-        # Fallback: try raw path (relative to CWD)
+    if not ref_path.exists():
         alt = Path(args.ref)
         if not alt.is_absolute():
             alt = (Path.cwd() / alt).resolve()
         if alt.exists():
             ref_path = alt
-        # If still not found -> error
         if not ref_path.exists():
             raise SystemExit(f"Reference file not found: {ref_path}")
 
-    # ---- Build files list, supporting single string with spaces (ENV case)
+    # Build the targets list. If CI passed a single space-separated string, split it.
     files_list: List[Path] = []
     if args.files:
         if len(args.files) == 1 and " " in str(args.files[0]):
-            # Split single string into multiple paths
             files_list = [Path(p) for p in str(args.files[0]).split()]
         else:
             files_list = list(args.files)
     else:
-        # Auto-discover all locales if --files omitted
         base = branch_base if branch_base else Path.cwd()
         files_list = find_all_locale_files(base, ref_path)
 
     if not files_list:
         raise SystemExit("No translation.json files found under locales/.")
 
-    # CI report
+    # Build CI report
     report: list[str] = []
     total_added = total_pruned = 0
     any_failed = False
@@ -323,11 +346,10 @@ def main() -> None:
     report.append("")
 
     for target_rel in files_list:
-        # Ensure we can handle both Path and str
         target_rel_path = Path(target_rel)
         target_path = resolve_in_branch(branch_base, target_rel_path)
 
-        # For targets we enforce they are within branch (if branch specified)
+        # Keep target access inside branch (when branch is set)
         try:
             assert_within_branch(branch_base, target_path)
         except ValueError as e:
@@ -342,7 +364,7 @@ def main() -> None:
             any_failed = True
             continue
 
-        stats, success, dupes = process_file(
+        stats, success, dupes, total_ref_leaves = process_file(
             ref_path,
             target_path,
             prune=args.prune,
@@ -353,6 +375,11 @@ def main() -> None:
 
         total_added += stats.added
         total_pruned += stats.pruned
+
+        # Missing translations: absolute + percentage based on total leaves in reference
+        missing_abs = stats.missing_leafs
+        total_abs = total_ref_leaves if total_ref_leaves > 0 else 0
+        missing_pct = (missing_abs / total_abs * 100.0) if total_abs > 0 else 0.0
 
         report.append(f"#### 📄 File: `{target_rel_path}`")
         if success:
@@ -375,13 +402,16 @@ def main() -> None:
             if dupes:
                 report.append(f"- Duplicate keys ({len(dupes)}): `{', '.join(dupes)}`")
 
+        report.append(
+            f"- Missing translations: {missing_abs} / {total_abs} ({missing_pct:.2f}%)"
+        )
         report.append(f"- Added: {stats.added}, Pruned: {stats.pruned}")
         report.append("---")
         report.append("")
         if not success:
             any_failed = True
 
-    # Summary
+    # Final summary
     report.append("## 🧾 Summary")
     report.append(f"- Total added: {total_added}")
     report.append(f"- Total pruned: {total_pruned}")
@@ -393,7 +423,7 @@ def main() -> None:
         report.append("## ✅ Overall Status: **Success**")
         report.append(f"Thanks @{actor} for keeping translations in sync! 🎉")
 
-    # CI comment output
+    # CI comment output (for PR comment body)
     print("\n".join(report))
 
 
