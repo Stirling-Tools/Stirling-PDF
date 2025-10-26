@@ -138,17 +138,19 @@ def resolve_in_branch(branch: Path | None, p: Path) -> Path:
     return (branch / p).resolve()
 
 
-def assert_within_branch(base: Path | None, target: Path) -> None:
+def is_within(base: Path | None, target: Path) -> bool:
     if base is None or str(base) == "":
-        return
+        return True  # no restriction
     base_resolved = base.resolve()
     target_resolved = target.resolve()
     if os.name == "nt":
-        if not str(target_resolved).lower().startswith(str(base_resolved).lower()):
-            raise ValueError(f"Unsafe path outside branch: {target}")
-    else:
-        if not str(target_resolved).startswith(str(base_resolved)):
-            raise ValueError(f"Unsafe path outside branch: {target}")
+        return str(target_resolved).lower().startswith(str(base_resolved).lower())
+    return str(target_resolved).startswith(str(base_resolved))
+
+
+def assert_within_branch(base: Path | None, target: Path) -> None:
+    if not is_within(base, target):
+        raise ValueError(f"Unsafe path outside branch: {target}")
 
 
 def process_file(
@@ -249,15 +251,35 @@ def main() -> None:
 
     # Resolve reference path
     ref_path = resolve_in_branch(branch_base, args.ref)
-    assert_within_branch(branch_base, ref_path)
-    if not ref_path.exists():
-        raise SystemExit(f"Reference file not found: {ref_path}")
+    # First try branch-prefixed location
+    if ref_path.exists() and is_within(branch_base, ref_path):
+        pass
+    else:
+        # Fallback: try raw path (relative to CWD)
+        alt = Path(args.ref)
+        if not alt.is_absolute():
+            alt = (Path.cwd() / alt).resolve()
+        if alt.exists():
+            ref_path = alt
+        # If still not found -> error
+        if not ref_path.exists():
+            raise SystemExit(f"Reference file not found: {ref_path}")
 
-    # Auto-detect files if none provided
-    if not args.files:
-        args.files = find_all_locale_files(branch_base, ref_path)
-        if not args.files:
-            raise SystemExit("No translation.json files found under locales/.")
+    # ---- Build files list, supporting single string with spaces (ENV case)
+    files_list: List[Path] = []
+    if args.files:
+        if len(args.files) == 1 and " " in str(args.files[0]):
+            # Split single string into multiple paths
+            files_list = [Path(p) for p in str(args.files[0]).split()]
+        else:
+            files_list = list(args.files)
+    else:
+        # Auto-discover all locales if --files omitted
+        base = branch_base if branch_base else Path.cwd()
+        files_list = find_all_locale_files(base, ref_path)
+
+    if not files_list:
+        raise SystemExit("No translation.json files found under locales/.")
 
     # CI report
     report: list[str] = []
@@ -269,8 +291,12 @@ def main() -> None:
     )
     report.append("")
 
-    for target_rel in args.files:
-        target_path = resolve_in_branch(branch_base, target_rel)
+    for target_rel in files_list:
+        # Ensure we can handle both Path and str
+        target_rel_path = Path(target_rel)
+        target_path = resolve_in_branch(branch_base, target_rel_path)
+
+        # For targets we enforce they are within branch (if branch specified)
         try:
             assert_within_branch(branch_base, target_path)
         except ValueError as e:
@@ -280,7 +306,7 @@ def main() -> None:
 
         if not target_path.exists():
             report.append(
-                f"❌ File not found: `{target_rel}` (resolved: `{target_path}`)"
+                f"❌ File not found: `{target_rel_path}` (resolved: `{target_path}`)"
             )
             any_failed = True
             continue
@@ -297,7 +323,7 @@ def main() -> None:
         total_added += stats.added
         total_pruned += stats.pruned
 
-        report.append(f"#### 📄 File: `{target_rel}`")
+        report.append(f"#### 📄 File: `{target_rel_path}`")
         if success:
             report.append("✅ **Passed:** All keys in sync.")
         else:
