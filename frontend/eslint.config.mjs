@@ -7,6 +7,7 @@ import reactHooksPlugin from 'eslint-plugin-react-hooks';
 import reactPlugin from 'eslint-plugin-react';
 import tseslint from 'typescript-eslint';
 import { fileURLToPath } from 'node:url';
+import importPlugin from 'eslint-plugin-import';
 
 const ignorePatterns = [
   "__tests/**",
@@ -67,6 +68,7 @@ export default defineConfig(
 
   // Specific rules for different types of files
   {
+    // Everything that contains 3rd party code that we don't want to lint
     ignores: [
       ...ignorePatterns,
       ...jsGlobs,
@@ -224,5 +226,22 @@ export default defineConfig(
       'react/jsx-uses-react': 'error',
       'react/jsx-uses-vars': 'error',
     }
+  },
+  // Config for import plugin
+  {
+    ...importPlugin.flatConfigs.recommended,
+    ...importPlugin.flatConfigs.typescript,
+    rules: {
+      // ...importPlugin.flatConfigs.recommended.rules, // Temporarily disabled until codebase conformant
+      ...importPlugin.flatConfigs.typescript.rules,
+      'import/no-cycle': 'error',
+    },
+    settings: {
+      'import/resolver': {
+        typescript: {
+          project: './tsconfig.json',
+        },
+      },
+    },
   },
 );

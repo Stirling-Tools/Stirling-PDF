@@ -105,6 +105,7 @@ export function createToolFlow(config: ToolFlowConfig) {
             loadingText={config.executeButton.loadingText}
             submitText={config.executeButton.text}
             data-testid={config.executeButton.testId}
+            data-tour="run-button"
           />
         )}
 
