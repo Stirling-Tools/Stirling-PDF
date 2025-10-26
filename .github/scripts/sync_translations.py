@@ -66,7 +66,9 @@ def normalize_text(s: str) -> str:
     return s.lower()
 
 
-def collect_untranslated_values(ref: Any, tgt: Any, *, path: str = "", stats: MergeStats) -> None:
+def collect_untranslated_values(
+    ref: Any, tgt: Any, *, path: str = "", stats: MergeStats
+) -> None:
     """
     Walk ref + target without mutating anything and find values that are present
     but not translated (target string equals reference string).
@@ -416,7 +418,9 @@ def main() -> None:
 
         # Untranslated values (absolute + % of total reference leaves)
         untranslated_abs = stats.untranslated_leafs
-        untranslated_pct = (untranslated_abs / total_abs * 100.0) if total_abs > 0 else 0.0
+        untranslated_pct = (
+            (untranslated_abs / total_abs * 100.0) if total_abs > 0 else 0.0
+        )
 
         report.append(f"#### 📄 File: `{target_rel_path}`")
         if success:
@@ -438,13 +442,21 @@ def main() -> None:
                     )
             if dupes:
                 report.append(f"- Duplicate keys ({len(dupes)}): `{', '.join(dupes)}`")
-            if stats.untranslated_keys:
-                report.append(
-                    f"- Untranslated keys ({len(stats.untranslated_keys)}): `{', '.join(stats.untranslated_keys)}`"
-                )
+            # if stats.untranslated_keys:
+            #     report.append(
+            #         f"- Untranslated keys:{len(stats.untranslated_keys)}"
+            #     )
 
-        report.append(f"- Missing translations: {missing_abs} / {total_abs} ({missing_pct:.2f}%)")
-        report.append(f"- Untranslated values: {untranslated_abs} / {total_abs} ({untranslated_pct:.2f}%)")
+        _target_rel_path = str(target_rel_path).replace("\\", "/").replace("//", "/")
+        if not _target_rel_path.endswith(
+            "en-GB/translation.json"
+        ) and not _target_rel_path.endswith("en-US/translation.json"):
+            report.append(
+                f"- Missing translations: {missing_abs} / {total_abs} ({missing_pct:.2f}%)"
+            )
+            report.append(
+                f"- Untranslated values: {untranslated_abs} / {total_abs} ({untranslated_pct:.2f}%)"
+            )
         report.append(f"- Added: {stats.added}, Pruned: {stats.pruned}")
         report.append("---")
         report.append("")
