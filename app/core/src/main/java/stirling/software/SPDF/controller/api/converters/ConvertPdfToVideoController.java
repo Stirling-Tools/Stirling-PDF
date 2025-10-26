@@ -37,7 +37,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.converters.PdfToVideoRequest;
 import stirling.software.common.model.ApplicationProperties;
@@ -56,7 +55,6 @@ import stirling.software.common.util.WebResponseUtils;
 @RequestMapping("/api/v1/convert")
 @Tag(name = "Convert", description = "Convert APIs")
 @RequiredArgsConstructor
-@Slf4j
 public class ConvertPdfToVideoController {
 
     private static final Set<String> SUPPORTED_FORMATS = Set.of("mp4", "webm");
@@ -69,8 +67,6 @@ public class ConvertPdfToVideoController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
-
-    private boolean isWatermarkEnabled = true;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/video")
     @Operation(
@@ -130,10 +126,7 @@ public class ConvertPdfToVideoController {
         }
 
         String watermarkText = request.getWatermarkText();
-        log.info("Watermark text: {}", watermarkText);
-        if (watermarkText == null || watermarkText.isBlank()) {
-            isWatermarkEnabled = false;
-        }
+        boolean isWatermarkEnabled = watermarkText != null && !watermarkText.isBlank();
 
         String originalPdfFileName = Filenames.toSimpleFileName(inputFile.getOriginalFilename());
         if (originalPdfFileName == null || originalPdfFileName.isBlank()) {
@@ -155,7 +148,8 @@ public class ConvertPdfToVideoController {
                     framesDirectory.getPath(),
                     dpi,
                     opacity,
-                    watermarkText);
+                    watermarkText,
+                    isWatermarkEnabled);
 
             DecimalFormat decimalFormat =
                     new DecimalFormat("0.######", DecimalFormatSymbols.getInstance(Locale.ROOT));
@@ -175,7 +169,12 @@ public class ConvertPdfToVideoController {
     }
 
     private void generateFrames(
-            Path inputPdf, Path outputDir, int dpi, float opacity, String watermarkText)
+            Path inputPdf,
+            Path outputDir,
+            int dpi,
+            float opacity,
+            String watermarkText,
+            boolean isWatermarkEnabled)
             throws IOException {
         try (PDDocument document = pdfDocumentFactory.load(inputPdf.toFile())) {
             PDFRenderer renderer = new PDFRenderer(document);

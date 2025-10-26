@@ -70,9 +70,9 @@ public class CheckProgramInstall {
                 ProcessExecutorResult result =
                         ProcessExecutor.getInstance(ProcessExecutor.Processes.FFMPEG)
                                 .runCommandWithOutputHandling(Arrays.asList("ffmpeg", "-version"));
-                ffmpegAvailable = true; // Command succeeded, FFmpeg is available
+                ffmpegAvailable = true;
             } catch (IOException | InterruptedException e) {
-                ffmpegAvailable = false; // Command failed, FFmpeg is not available
+                ffmpegAvailable = false;
             } finally {
                 ffmpegAvailableChecked = true;
             }
