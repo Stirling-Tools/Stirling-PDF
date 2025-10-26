@@ -150,8 +150,8 @@ export default function TeamsSection() {
     setSelectedTeam(team);
     try {
       // Fetch all users to show in dropdown
-      const users = await userManagementService.getUsers();
-      setAvailableUsers(users);
+      const adminData = await userManagementService.getUsers();
+      setAvailableUsers(adminData.users);
       setAddMemberModalOpened(true);
     } catch (error) {
       console.error('Failed to fetch users:', error);
