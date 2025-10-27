@@ -1,7 +1,7 @@
 import { Navigate, useLocation } from 'react-router-dom'
 import { useState, useEffect } from 'react';
 import { useAuth } from '../auth/UseSession'
-import { useAppConfig } from '../hooks/useAppConfig'
+import { useAppConfig } from '../contexts/AppConfigContext'
 import HomePage from '../pages/HomePage'
 import Login from './Login'
 import { useOpenedFile } from '../hooks/useOpenedFile';
@@ -16,18 +16,18 @@ import { fileOpenService } from '../services/fileOpenService';
  * If user is not authenticated: Show Login or redirect to /login
  */
 export default function Landing() {
-  const { session, loading: authLoading } = useAuth()
-  const { config, loading: configLoading } = useAppConfig()
-  const location = useLocation()
+  const { session, loading: authLoading } = useAuth();
+  const { config, loading: configLoading } = useAppConfig();
+  const location = useLocation();
 
-  const loading = authLoading || configLoading
+  const loading = authLoading || configLoading;
 
   console.log('[Landing] State:', {
     pathname: location.pathname,
     loading,
     hasSession: !!session,
     loginEnabled: config?.enableLogin,
-  })
+  });
 
     // Initialize backend on app startup
     useBackendInitializer();
@@ -69,7 +69,7 @@ export default function Landing() {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   // If login is disabled, show app directly (anonymous mode)
@@ -85,11 +85,11 @@ export default function Landing() {
 
   // If we're at home route ("/"), show login directly (marketing/landing page)
   // Otherwise navigate to login (fixes URL mismatch for tool routes)
-  const isHome = location.pathname === '/' || location.pathname === ''
+  const isHome = location.pathname === '/' || location.pathname === '';
   if (isHome) {
-    return <Login />
+    return <Login />;
   }
 
   // For non-home routes without auth, navigate to login (preserves from location)
-  return <Navigate to="/login" replace state={{ from: location }} />
+  return <Navigate to="/login" replace state={{ from: location }} />;
 }

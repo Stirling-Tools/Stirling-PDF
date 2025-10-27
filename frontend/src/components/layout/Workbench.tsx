@@ -1,4 +1,3 @@
-import React from 'react';
 import { Box } from '@mantine/core';
 import { useRainbowThemeContext } from '../shared/RainbowThemeProvider';
 import { useToolWorkflow } from '../../contexts/ToolWorkflowContext';
@@ -7,6 +6,7 @@ import { useFileState } from '../../contexts/FileContext';
 import { useNavigationState, useNavigationActions } from '../../contexts/NavigationContext';
 import { isBaseWorkbench } from '../../types/workbench';
 import { useViewer } from '../../contexts/ViewerContext';
+import { useAppConfig } from '../../contexts/AppConfigContext';
 import './Workbench.css';
 
 import TopControls from '../shared/TopControls';
@@ -21,6 +21,7 @@ import DismissAllErrorsButton from '../shared/DismissAllErrorsButton';
 // No props needed - component uses contexts directly
 export default function Workbench() {
   const { isRainbowMode } = useRainbowThemeContext();
+  const { config } = useAppConfig();
 
   // Use context-based hooks to eliminate all prop drilling
   const { selectors } = useFileState();
@@ -189,7 +190,7 @@ export default function Workbench() {
         {renderMainContent()}
       </Box>
 
-      <Footer analyticsEnabled />
+      <Footer analyticsEnabled={config?.enableAnalytics === true} />
     </Box>
   );
 }
