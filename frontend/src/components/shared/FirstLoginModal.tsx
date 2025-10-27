@@ -10,7 +10,6 @@ import { useAuth } from '../../auth/UseSession';
 
 interface FirstLoginModalProps {
   opened: boolean;
-  onPasswordChanged: () => void;
   username: string;
 }
 
@@ -20,7 +19,7 @@ interface FirstLoginModalProps {
  * Forces first-time users to change their password.
  * Cannot be dismissed until password is successfully changed.
  */
-export default function FirstLoginModal({ opened, onPasswordChanged, username }: FirstLoginModalProps) {
+export default function FirstLoginModal({ opened, username }: FirstLoginModalProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { signOut } = useAuth();

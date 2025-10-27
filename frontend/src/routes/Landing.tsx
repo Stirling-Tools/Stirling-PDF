@@ -46,13 +46,6 @@ export default function Landing() {
     checkFirstLogin()
   }, [session, config])
 
-  const handlePasswordChanged = async () => {
-    // After password change, backend logs out the user
-    // Refresh session to detect logout and redirect to login
-    setIsFirstLogin(false) // Close modal first
-    await refreshSession()
-    // The auth system will automatically redirect to login when session is null
-  }
 
   console.log('[Landing] State:', {
     pathname: location.pathname,
@@ -87,7 +80,6 @@ export default function Landing() {
       <>
         <FirstLoginModal
           opened={isFirstLogin}
-          onPasswordChanged={handlePasswordChanged}
           username={username}
         />
         <HomePage />
