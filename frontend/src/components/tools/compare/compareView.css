@@ -70,9 +70,9 @@
   position: sticky;
   top: 0;
   z-index: 10;
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--bg-toolbar);  
   backdrop-filter: blur(8px);
-  border-bottom: 1px solid var(--mantine-color-gray-3);
+  border-bottom: 1px solid var(--border-default);
   padding: 0.5rem;
   margin: -0.5rem -0.5rem 0.5rem -0.5rem;
 }
