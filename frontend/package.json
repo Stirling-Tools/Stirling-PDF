@@ -105,7 +105,6 @@
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2.5.0",
-    "@types/react-dom": "^19.1.5",
     "@eslint/js": "^9.36.0",
     "@iconify-json/material-symbols": "^1.2.37",
     "@iconify/utils": "^3.0.2",
