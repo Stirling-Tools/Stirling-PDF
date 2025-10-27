@@ -5,9 +5,11 @@ import type { TokenBoundingBox } from '../../../types/compare';
 import CompareNavigationDropdown from './CompareNavigationDropdown';
 import { toRgba } from './compareUtils';
 import LazyLoadContainer from '../../shared/LazyLoadContainer';
+import { useMediaQuery } from '@mantine/hooks';
 
 interface CompareDocumentPaneProps {
   pane: 'base' | 'comparison';
+  layout: 'side-by-side' | 'stacked';
   scrollRef: RefObject<HTMLDivElement | null>;
   peerScrollRef: RefObject<HTMLDivElement | null>;
   handleScrollSync: (source: HTMLDivElement | null, target: HTMLDivElement | null) => void;
@@ -76,6 +78,7 @@ const mergeConnectedRects = (rects: TokenBoundingBox[]): TokenBoundingBox[] => {
 
 const CompareDocumentPane = ({
   pane,
+  layout,
   scrollRef,
   peerScrollRef,
   handleScrollSync,
@@ -165,6 +168,16 @@ const CompareDocumentPane = ({
             const fit = targetHeight / page.height;
             const rowHeightPx = getRowHeightPx(page.pageNumber);
             const highlightOffset = OFFSET_PIXELS / page.height;
+            const rotationNorm = ((page.rotation ?? 0) % 360 + 360) % 360;
+            const isPortrait = rotationNorm === 0 || rotationNorm === 180;
+            const isStackedPortrait = layout === 'stacked' && isPortrait;
+            const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 1200;
+            const isMobile = useMediaQuery('(max-width: 1024px)');
+            const containerW = scrollRef.current?.clientWidth ?? viewportWidth;
+            const stackedWidth = isMobile
+              ? Math.max(320, Math.round(containerW))
+              : Math.max(320, Math.round(viewportWidth * 0.5));
+            const stackedHeight = Math.round(stackedWidth * 1.4142);
 
             const wordRects = wordHighlightMap.get(page.pageNumber) ?? [];
             const groupedRects = new Map<string, TokenBoundingBox[]>();
@@ -226,7 +239,9 @@ const CompareDocumentPane = ({
                   </Text>
                   <div
                     className="compare-diff-page__canvas compare-diff-page__canvas--zoom"
-                    style={{ width: `${Math.round(page.width * fit)}px` }}
+                    style={isStackedPortrait
+                      ? { width: `${stackedWidth}px`, height: `${stackedHeight}px`, marginLeft: 'auto', marginRight: 'auto' }
+                      : { width: `${Math.round(page.width * fit)}px` }}
                   >
                     <div
                       className={`compare-diff-page__inner compare-diff-page__inner--${pane}`}

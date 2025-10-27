@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from "react";
 import { SegmentedControl, Loader } from "@mantine/core";
+import { useMediaQuery } from "@mantine/hooks";
 import { useRainbowThemeContext } from "./RainbowThemeProvider";
 import rainbowStyles from '../../styles/rainbow.module.css';
 import VisibilityIcon from "@mui/icons-material/Visibility";
@@ -21,14 +22,15 @@ const viewOptionStyle: React.CSSProperties = {
 };
 
 
-// Build view options showing text always
+// Build view options; in compact mode, only the selected shows text, others show icon only
 const createViewOptions = (
   currentView: WorkbenchType,
   switchingTo: WorkbenchType | null,
   activeFiles: Array<{ fileId: string; name: string; versionNumber?: number }>,
   currentFileIndex: number,
   onFileSelect?: (index: number) => void,
-  customViews?: CustomWorkbenchViewInstance[]
+  customViews?: CustomWorkbenchViewInstance[],
+  compactNonSelected?: boolean
 ) => {
   const currentFile = activeFiles[currentFileIndex];
   const isInViewer = currentView === 'viewer';
@@ -54,7 +56,9 @@ const createViewOptions = (
         ) : (
           <VisibilityIcon fontSize="small" />
         )}
-        <span className="ph-no-capture">{displayName}</span>
+        {compactNonSelected && currentView !== ("viewer" as WorkbenchType) ? null : (
+          <span className="ph-no-capture">{displayName}</span>
+        )}
       </div>
     ),
     value: "viewer",
@@ -66,12 +70,12 @@ const createViewOptions = (
         {currentView === "pageEditor" ? (
           <>
             {switchingTo === "pageEditor" ? <Loader size="xs" /> : <EditNoteIcon fontSize="small" />}
-            <span>Page Editor</span>
+            {compactNonSelected && currentView !== ("pageEditor" as WorkbenchType) ? null : <span>Page Editor</span>}
           </>
         ) : (
           <>
             {switchingTo === "pageEditor" ? <Loader size="xs" /> : <EditNoteIcon fontSize="small" />}
-            <span>Page Editor</span>
+            {compactNonSelected && currentView !== ("pageEditor" as WorkbenchType) ? null : <span>Page Editor</span>}
           </>
         )}
       </div>
@@ -85,12 +89,12 @@ const createViewOptions = (
         {currentView === "fileEditor" ? (
           <>
             {switchingTo === "fileEditor" ? <Loader size="xs" /> : <FolderIcon fontSize="small" />}
-            <span>Active Files</span>
+            {compactNonSelected && currentView !== ("fileEditor" as WorkbenchType) ? null : <span>Active Files</span>}
           </>
         ) : (
           <>
             {switchingTo === "fileEditor" ? <Loader size="xs" /> : <FolderIcon fontSize="small" />}
-            <span>Active Files</span>
+            {compactNonSelected && currentView !== ("fileEditor" as WorkbenchType) ? null : <span>Active Files</span>}
           </>
         )}
       </div>
@@ -114,7 +118,7 @@ const createViewOptions = (
           ) : (
             view.icon || <PictureAsPdfIcon fontSize="small" />
           )}
-          <span>{view.label}</span>
+          {compactNonSelected && currentView !== view.workbenchId ? null : <span>{view.label}</span>}
         </div>
       ),
       value: view.workbenchId,
@@ -142,6 +146,7 @@ const TopControls = ({
 }: TopControlsProps) => {
   const { isRainbowMode } = useRainbowThemeContext();
   const [switchingTo, setSwitchingTo] = useState<WorkbenchType | null>(null);
+  const isMobile = useMediaQuery('(max-width: 768px)') ?? false;
 
   const handleViewChange = useCallback((view: string) => {
     if (!isValidWorkbench(view)) {
@@ -165,39 +170,42 @@ const TopControls = ({
     });
   }, [setCurrentView]);
 
+  const totalOptions = 3 + (customViews?.filter((v) => v.data != null).length ?? 0);
+  const compactNonSelected = isMobile && totalOptions > 3;
+
   return (
     <div className="absolute left-0 w-full top-0 z-[100] pointer-events-none">
-      <div className="flex justify-center mt-[0.5rem]">
-        <SegmentedControl
-          data-tour="view-switcher"
-          data={createViewOptions(currentView, switchingTo, activeFiles, currentFileIndex, onFileSelect, customViews)}
-          value={currentView}
-          onChange={handleViewChange}
-          color="blue"
-          fullWidth
-          className={isRainbowMode ? rainbowStyles.rainbowSegmentedControl : ''}
-          style={{
-            transition: 'all 0.2s ease',
-            opacity: switchingTo ? 0.8 : 1,
-            pointerEvents: 'auto'
-          }}
-          styles={{
-            root: {
-              borderRadius: 9999,
-              maxHeight: '2.6rem',
-            },
-            control: {
-              borderRadius: 9999,
-            },
-            indicator: {
-              borderRadius: 9999,
-              maxHeight: '2rem',
-            },
-            label: {
-              paddingTop: '0rem',
-            }
-          }}
-        />
+      <div className="flex justify-center mt-[0.5rem]" style={{ pointerEvents: 'auto' }}>
+          <SegmentedControl
+            data-tour="view-switcher"
+            data={createViewOptions(currentView, switchingTo, activeFiles, currentFileIndex, onFileSelect, customViews, compactNonSelected)}
+            value={currentView}
+            onChange={handleViewChange}
+            color="blue"
+            fullWidth
+            className={isRainbowMode ? rainbowStyles.rainbowSegmentedControl : ''}
+            style={{
+              transition: 'all 0.2s ease',
+              opacity: switchingTo ? 0.8 : 1,
+              pointerEvents: 'auto'
+            }}
+            styles={{
+              root: {
+                borderRadius: 9999,
+                maxHeight: '2.6rem',
+              },
+              control: {
+                borderRadius: 9999,
+              },
+              indicator: {
+                borderRadius: 9999,
+                maxHeight: '2rem',
+              },
+              label: {
+                paddingTop: '0rem',
+              }
+            }}
+          />
       </div>
     </div>
   );

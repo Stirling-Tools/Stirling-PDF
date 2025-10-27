@@ -290,6 +290,7 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
           >
             <CompareDocumentPane
               pane="base"
+              layout={layout}
               scrollRef={baseScrollRef}
               peerScrollRef={comparisonScrollRef}
               handleScrollSync={handleScrollSync}
@@ -321,6 +322,7 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
             />
             <CompareDocumentPane
               pane="comparison"
+              layout={layout}
               scrollRef={comparisonScrollRef}
               peerScrollRef={baseScrollRef}
               handleScrollSync={handleScrollSync}

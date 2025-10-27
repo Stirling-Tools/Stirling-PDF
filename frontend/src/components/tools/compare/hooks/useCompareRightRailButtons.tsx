@@ -6,6 +6,7 @@ import { Tooltip } from '../../../shared/Tooltip';
 import { alert } from '../../../toast';
 import type { ToastLocation } from '../../../toast/types';
 import type { RightRailButtonWithAction } from '../../../../hooks/useRightRailButtons';
+import { useMediaQuery } from '@mantine/hooks';
 
 type Pane = 'base' | 'comparison';
 
@@ -45,6 +46,7 @@ export const useCompareRightRailButtons = ({
   zoomLimits,
 }: UseCompareRightRailButtonsOptions): RightRailButtonWithAction[] => {
   const { t } = useTranslation();
+  const isMobile = useMediaQuery('(max-width: 768px)') ?? false;
 
   return useMemo<RightRailButtonWithAction[]>(() => [
     {
@@ -65,26 +67,6 @@ export const useCompareRightRailButtons = ({
       section: 'top',
       order: 10,
       onClick: toggleLayout,
-    },
-    {
-      id: 'compare-pan-mode',
-      section: 'top',
-      order: 12,
-      render: ({ disabled }: { disabled: boolean }) => (
-        <Tooltip content={t('rightRail.panMode', 'Pan Mode')} position="left" offset={12} arrow portalTarget={document.body}>
-          <ActionIcon
-            variant={isPanMode ? 'default' : 'subtle'}
-            radius="md"
-            className="right-rail-icon"
-            onClick={() => setIsPanMode(!isPanMode)}
-            disabled={disabled}
-            aria-label={t('rightRail.panMode', 'Pan Mode')}
-            style={isPanMode ? { backgroundColor: 'var(--right-rail-pan-active-bg)' } : undefined}
-          >
-            <LocalIcon icon="pan-tool-rounded" width="1.5rem" height="1.5rem" />
-          </ActionIcon>
-        </Tooltip>
-      ),
     },
     {
       id: 'compare-zoom-out',
@@ -127,6 +109,7 @@ export const useCompareRightRailButtons = ({
       ariaLabel: t('compare.actions.resetView', 'Reset zoom and pan'),
       section: 'top',
       order: 14.5,
+      disabled: baseZoom === 1 && comparisonZoom === 1,
       onClick: () => {
         setBaseZoom(1);
         setComparisonZoom(1);
@@ -157,14 +140,16 @@ export const useCompareRightRailButtons = ({
         if (next) {
           captureScrollLinkDelta();
         } else {
-          alert({
-            alertType: 'neutral',
-            title: t('compare.toasts.unlinkedTitle', 'Independent scroll & pan enabled'),
-            body: t('compare.toasts.unlinkedBody', 'Tip: Arrow Up/Down scroll both panes; panning only moves the active pane.'),
-            durationMs: 5000,
-            location: 'bottom-center' as ToastLocation,
-            expandable: false,
-          });
+          if (!isMobile) {
+            alert({
+              alertType: 'neutral',
+              title: t('compare.toasts.unlinkedTitle', 'Independent scroll & pan enabled'),
+              body: t('compare.toasts.unlinkedBody', 'Tip: Arrow Up/Down scroll both panes; panning only moves the active pane.'),
+              durationMs: 5000,
+              location: 'bottom-center' as ToastLocation,
+              expandable: false,
+            });
+          }
         }
         setIsScrollLinked(next);
       },
@@ -186,6 +171,7 @@ export const useCompareRightRailButtons = ({
     setIsScrollLinked,
     zoomLimits,
     t,
+    isMobile,
   ]);
 };
 

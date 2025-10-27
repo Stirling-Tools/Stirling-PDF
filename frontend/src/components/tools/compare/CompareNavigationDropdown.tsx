@@ -1,5 +1,5 @@
 import { Combobox, ScrollArea, useCombobox } from '@mantine/core';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 interface NavigationDropdownProps {
@@ -18,7 +18,33 @@ const CompareNavigationDropdown = ({
   const { t } = useTranslation();
   const newLineLabel = t('compare.newLine', 'new-line');
   const combobox = useCombobox({
-    onDropdownClose: () => combobox.resetSelectedOption(),
+    onDropdownClose: () => {
+      combobox.resetSelectedOption();
+      // Reset sticky header state when dropdown closes
+      setStickyPage(null);
+      groupOffsetsRef.current = [];
+      const viewport = viewportRef.current;
+      if (viewport) viewport.scrollTop = 0;
+    },
+    onDropdownOpen: () => {
+      // Ensure we start at the top and initialize sticky to first page
+      const viewport = viewportRef.current;
+      if (viewport) viewport.scrollTop = 0;
+      requestAnimationFrame(() => {
+        const headers = Array.from((viewportRef.current?.querySelectorAll('.compare-dropdown-group') ?? [])) as HTMLElement[];
+        // Rebuild offsets so scrolling after reopen updates correctly
+        groupOffsetsRef.current = headers.map((el) => {
+          const text = el.textContent || '';
+          const page = parseInt(text.replace(/[^0-9]/g, ''), 10) || 0;
+          return { top: el.offsetTop, page };
+        });
+        if (groupOffsetsRef.current.length > 0) {
+          setStickyPage(groupOffsetsRef.current[0].page);
+        } else {
+          setStickyPage(null);
+        }
+      });
+    },
   });
 
   const sanitize = (s: string) => {
@@ -51,6 +77,11 @@ const CompareNavigationDropdown = ({
   };
 
   const [query, setQuery] = useState('');
+  const viewportRef = useRef<HTMLDivElement | null>(null);
+  const searchRef = useRef<HTMLDivElement | null>(null);
+  const [stickyPage, setStickyPage] = useState<number | null>(null);
+  const [searchHeight, setSearchHeight] = useState(0);
+  const groupOffsetsRef = useRef<Array<{ top: number; page: number }>>([]);
 
   const normalizedChanges = useMemo(() => {
     // Helper to strip localized new-line marker occurrences from labels
@@ -68,6 +99,49 @@ const CompareNavigationDropdown = ({
     if (!q) return cleaned;
     return cleaned.filter((c) => c.label.toLowerCase().includes(q));
   }, [changes, query, newLineLabel]);
+
+  useEffect(() => {
+    // Measure search height for sticky offset
+    setSearchHeight(searchRef.current?.offsetHeight ?? 0);
+  }, []);
+
+  useEffect(() => {
+    // Build offsets for group headers whenever list changes
+    const viewport = viewportRef.current;
+    if (!viewport) return;
+    const headers = Array.from(viewport.querySelectorAll('.compare-dropdown-group')) as HTMLElement[];
+    groupOffsetsRef.current = headers.map((el) => {
+      const text = el.textContent || '';
+      const page = parseInt(text.replace(/[^0-9]/g, ''), 10) || 0;
+      return { top: el.offsetTop, page };
+    });
+    // Initialize sticky label
+    if (groupOffsetsRef.current.length > 0) {
+      setStickyPage(groupOffsetsRef.current[0].page);
+    } else {
+      setStickyPage(null);
+    }
+  }, [normalizedChanges]);
+
+  const handleScrollPos = ({ y }: { x: number; y: number }) => {
+    const offsets = groupOffsetsRef.current;
+    if (offsets.length === 0) return;
+    // Find the last header whose top is <= scroll, so the next header replaces it
+    let low = 0;
+    let high = offsets.length - 1;
+    let idx = 0;
+    while (low <= high) {
+      const mid = (low + high) >> 1;
+      if (offsets[mid].top <= y + 1) { // +1 to avoid jitter at exact boundary
+        idx = mid;
+        low = mid + 1;
+      } else {
+        high = mid - 1;
+      }
+    }
+    const page = offsets[idx]?.page ?? offsets[0].page;
+    if (page !== stickyPage) setStickyPage(page);
+  };
 
   return (
     <Combobox
@@ -91,27 +165,54 @@ const CompareNavigationDropdown = ({
       </Combobox.Target>
 
       <Combobox.Dropdown>
-        <ScrollArea.Autosize mah={300}>
-          <Combobox.Search placeholder="Search changes..." value={query} onChange={(e) => setQuery(e.currentTarget.value)} />
-          <Combobox.Options>
+        <div className="compare-dropdown-scrollwrap">
+          <ScrollArea.Autosize mah={300} viewportRef={viewportRef} onScrollPositionChange={handleScrollPos}>
+            <div ref={searchRef}>
+              <Combobox.Search placeholder="Search changes..." value={query} onChange={(e) => setQuery(e.currentTarget.value)} />
+            </div>
+            {stickyPage != null && (
+              <div className="compare-dropdown-sticky" style={{ top: searchHeight }}>{`Page ${stickyPage}`}</div>
+            )}
+            <Combobox.Options className="compare-dropdown-options">
             {normalizedChanges.length > 0 ? (
-              normalizedChanges.map((item) => (
-                <Combobox.Option
-                  value={item.value}
-                  key={item.value}
-                  onClick={() => {
-                    onNavigate(item.value, item.pageNumber);
-                    combobox.closeDropdown();
-                  }}
-                >
-                  {item.label}
-                </Combobox.Option>
-              ))
+              (() => {
+                const nodes: React.ReactNode[] = [];
+                let lastPage: number | null = null;
+                for (const item of normalizedChanges) {
+                  if (item.pageNumber && item.pageNumber !== lastPage) {
+                    lastPage = item.pageNumber;
+                    nodes.push(
+                      <div
+                        className={["compare-dropdown-group", stickyPage === lastPage ? "compare-dropdown-group--hidden" : ""].filter(Boolean).join(" ")}
+                        key={`group-${lastPage}`}
+                      >
+                        {`Page ${lastPage}`}
+                      </div>
+                    );
+                  }
+                  nodes.push(
+                    <Combobox.Option
+                      value={item.value}
+                      key={item.value}
+                      onClick={() => {
+                        onNavigate(item.value, item.pageNumber);
+                        combobox.closeDropdown();
+                      }}
+                    >
+                      <div className="compare-dropdown-option">
+                        <span className="compare-dropdown-option__text">{item.label}</span>
+                      </div>
+                    </Combobox.Option>
+                  );
+                }
+                return nodes;
+              })()
             ) : (
               <Combobox.Empty>No changes found</Combobox.Empty>
             )}
-          </Combobox.Options>
-        </ScrollArea.Autosize>
+            </Combobox.Options>
+          </ScrollArea.Autosize>
+        </div>
       </Combobox.Dropdown>
     </Combobox>
   );

@@ -1,3 +1,23 @@
+.compare-dropdown-scrollwrap {
+  position: relative;
+}
+
+.compare-dropdown-sticky {
+  position: sticky;
+  z-index: 2;
+  background: var(--bg-surface);
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  border-bottom: 1px solid var(--border-subtle);
+  pointer-events: none;
+}
+
+[data-mantine-color-scheme="dark"] .compare-dropdown-sticky {
+  background: var(--bg-toolbar);
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border-default);
+}
 .compare-workbench {
   display: flex;
   flex-direction: column;
@@ -293,6 +313,11 @@
   width: 100%;
 }
 
+/* Center canvas in stacked portrait mode (width/height set inline) */
+.compare-diff-page__canvas[style*="margin-left: auto"] {
+  display: block;
+}
+
 .compare-diff-page__canvas--zoom {
   overflow: hidden;
   max-width: 100%;
@@ -317,6 +342,49 @@
   position: absolute;
   pointer-events: none;
   mix-blend-mode: normal; /* reduce dark spots on overlap */
+}
+
+/* Compare dropdown option formatting (page + clamped text) */
+.compare-dropdown-option {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+.compare-dropdown-option__page {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+.compare-dropdown-option__text {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-clamp: 3;
+}
+
+/* Non-sticky in-flow group headers; sticky handled by floating header */
+.compare-dropdown-group {
+  position: static;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.compare-dropdown-group.compare-dropdown-group--hidden {
+  height: 0;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  overflow: hidden;
+}
+
+[data-mantine-color-scheme="dark"] .compare-dropdown-group {
+  background: transparent;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border-default);
 }
 
 /* Inline paragraph highlights in summary */
@@ -440,5 +508,21 @@
 
   .compare-upload-card {
     min-height: 18rem;
+  }
+}
+
+/* Mobile: remove side margins and let canvases take full width inside column */
+@media (max-width: 768px) {
+  .compare-workbench__columns {
+    grid-template-columns: 1fr;
+  }
+  .compare-diff-page__canvas.compare-diff-page__canvas--zoom {
+    width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+  .compare-diff-page__inner {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
   }
 }
