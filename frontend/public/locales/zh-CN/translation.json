@@ -25,9 +25,9 @@
   "multiPdfDropPrompt": "选择（或拖拽）所需的 PDF",
   "imgPrompt": "选择图像",
   "genericSubmit": "提交",
-  "uploadLimit": "Maximum file size:",
-  "uploadLimitExceededSingular": "is too large. Maximum allowed size is",
-  "uploadLimitExceededPlural": "are too large. Maximum allowed size is",
+  "uploadLimit": "最大文件大小：",
+  "uploadLimitExceededSingular": "文件过大。最大允许大小为",
+  "uploadLimitExceededPlural": "文件过大。最大允许大小为",
   "processTimeWarning": "警告：此过程可能需要多达一分钟，具体时间取决于文件大小",
   "pageOrderPrompt": "页面顺序（输入逗号分隔的页码列表或函数）：",
   "pageSelectionPrompt": "自定义页面选择（输入以逗号分隔的页码列表或函数：1,5,6、2n+1）：",
@@ -35,10 +35,28 @@
   "true": "对",
   "false": "错",
   "unknown": "未知",
+  "app": {
+    "description": "免费的 Adobe Acrobat 替代品（下载量 1000 万+）"
+  },
   "save": "保存",
   "saveToBrowser": "保存到浏览器",
+  "download": "下载",
+  "undoOperationTooltip": "点击撤销上一次操作并还原原始文件",
+  "undo": "撤销",
+  "moreOptions": "更多选项",
+  "editYourNewFiles": "编辑您的新文件",
   "close": "关闭",
+  "fileSelected": "已选：{{filename}}",
+  "chooseFile": "选择文件",
   "filesSelected": "选中的文件",
+  "files": {
+    "title": "文件",
+    "upload": "上传",
+    "uploadFiles": "上传文件",
+    "addFiles": "添加文件",
+    "selectFromWorkbench": "从工作台中选择文件或 ",
+    "selectMultipleFromWorkbench": "从工作台中至少选择 {{count}} 个文件或 "
+  },
   "noFavourites": "没有添加收藏夹",
   "downloadComplete": "下载完成",
   "bored": "等待时觉得无聊？",
@@ -69,8 +87,15 @@
     "showStack": "显示堆栈跟踪",
     "copyStack": "复制堆栈跟踪",
     "githubSubmit": "GitHub - 提交工单",
-    "discordSubmit": "Discord - 提交支持帖子"
+    "discordSubmit": "Discord - 提交支持帖子",
+    "dismissAllErrors": "关闭所有错误",
+    "encryptedPdfMustRemovePassword": "此 PDF 已加密或受密码保护。请在转换为 PDF/A 之前将其解锁。",
+    "incorrectPasswordProvided": "PDF 密码不正确或未提供。"
   },
+  "warning": {
+    "tooltipTitle": "警告"
+  },
+  "edit": "编辑",
   "delete": "删除",
   "username": "用户名",
   "password": "密码",
@@ -82,6 +107,7 @@
   "green": "绿色",
   "blue": "蓝色",
   "custom": "自定义...",
+  "comingSoon": "即将推出",
   "WorkInProgess": "工作正在进行中，可能无法工作或有错误，请报告任何问题！",
   "poweredBy": "服务来源：",
   "yes": "是",
@@ -115,17 +141,19 @@
   "page": "页面",
   "pages": "页码",
   "loading": "加载中...",
+  "review": "审核",
   "addToDoc": "添加至文件",
   "reset": "重置",
   "apply": "应用",
-  "noFileSelected": "No file selected. Please upload one.",
+  "noFileSelected": "未选择文件，请上传一个文件。",
   "legal": {
     "privacy": "隐私政策",
+    "iAgreeToThe": "我同意所有",
     "terms": "服务条款",
     "accessibility": "无障碍",
     "cookie": "Cookie 政策",
-    "impressum": "Impressum",
-    "showCookieBanner": "Cookie Preferences"
+    "impressum": "版权声明",
+    "showCookieBanner": "Cookie 偏好设置"
   },
   "pipeline": {
     "header": "流水线菜单（Beta）",
@@ -265,32 +293,32 @@
     "disabledUsers": "禁用用户:",
     "totalUsers": "总用户:",
     "lastRequest": "最后登录",
-    "usage": "View Usage"
+    "usage": "查看使用情况"
   },
   "endpointStatistics": {
-    "title": "Endpoint Statistics",
-    "header": "Endpoint Statistics",
-    "top10": "Top 10",
-    "top20": "Top 20",
-    "all": "All",
-    "refresh": "Refresh",
-    "includeHomepage": "Include Homepage ('/')",
-    "includeLoginPage": "Include Login Page ('/login')",
-    "totalEndpoints": "Total Endpoints",
-    "totalVisits": "Total Visits",
-    "showing": "Showing",
-    "selectedVisits": "Selected Visits",
-    "endpoint": "Endpoint",
-    "visits": "Visits",
-    "percentage": "Percentage",
-    "loading": "Loading...",
-    "failedToLoad": "Failed to load endpoint data. Please try refreshing.",
-    "home": "Home",
-    "login": "Login",
-    "top": "Top",
-    "numberOfVisits": "Number of Visits",
-    "visitsTooltip": "Visits: {0} ({1}% of total)",
-    "retry": "Retry"
+    "title": "端点统计",
+    "header": "端点统计",
+    "top10": "前10",
+    "top20": "前20",
+    "all": "全部",
+    "refresh": "刷新",
+    "includeHomepage": "包含主页('/')",
+    "includeLoginPage": "包含登录页('/login')",
+    "totalEndpoints": "端点总数",
+    "totalVisits": "访问总数",
+    "showing": "显示",
+    "selectedVisits": "选中访问数",
+    "endpoint": "端点",
+    "visits": "访问次数",
+    "percentage": "百分比",
+    "loading": "加载中...",
+    "failedToLoad": "加载端点数据失败。请尝试刷新。",
+    "home": "主页",
+    "login": "登录",
+    "top": "顶部",
+    "numberOfVisits": "访问次数",
+    "visitsTooltip": "访问次数：{0}(占总数的{1}%)",
+    "retry": "重试"
   },
   "database": {
     "title": "数据库 导入/导出",
@@ -320,7 +348,7 @@
     "desc": "本地部署的一站式服务，满足您的所有 PDF 需求。",
     "searchBar": "搜索您需要的功能...",
     "viewPdf": {
-      "title": "View/Edit PDF",
+      "title": "浏览/编辑 PDF",
       "desc": "浏览、注释、添加文本或图像"
     },
     "setFavorites": "编辑收藏夹",
@@ -333,256 +361,315 @@
     "sortBy": "排序:",
     "multiTool": {
       "title": "PDF 多功能工具",
-      "desc": "合并、旋转、重新排列和删除 PDF 页面"
+      "desc": "合并、旋转、重新排列和删除 PDF 页面",
+      "tags": "多个,工具"
     },
     "merge": {
       "title": "合并",
-      "desc": "轻松将多个 PDF 合并成一个。"
+      "desc": "轻松将多个 PDF 合并成一个。",
+      "tags": "组合,合并,联合"
     },
     "split": {
       "title": "拆分",
-      "desc": "将 PDF 拆分为多个文档。"
+      "desc": "将 PDF 拆分为多个文档。",
+      "tags": "分割,分离,拆分"
     },
     "rotate": {
       "title": "旋转",
-      "desc": "旋转 PDF。"
+      "desc": "旋转 PDF。",
+      "tags": "旋转,翻转,定向"
     },
-    "imageToPdf": {
-      "title": "转换图像到 PDF",
-      "desc": "将图像（PNG、JPEG、GIF）转换为 PDF。"
-    },
-    "pdfToImage": {
-      "title": "转换 PDF 到图像",
-      "desc": "将 PDF 转换为图像（PNG、JPEG、GIF）。"
+    "convert": {
+      "title": "转换",
+      "desc": "在不同格式之间转换文件",
+      "tags": "转换,更改"
     },
     "pdfOrganiser": {
       "title": "整理",
-      "desc": "按任意顺序删除/重新排列页面。"
+      "desc": "按任意顺序删除/重新排列页面。",
+      "tags": "组织,重新排列,重新排序"
     },
     "addImage": {
       "title": "在 PDF 中添加图片",
-      "desc": "将图像添加到 PDF 的指定位置。"
+      "desc": "将图像添加到 PDF 的指定位置。",
+      "tags": "插入,嵌入,放置"
+    },
+    "addAttachments": {
+      "title": "添加附件",
+      "desc": "向 PDF 添加或移除嵌入文件（附件）",
+      "tags": "嵌入,附加,包含"
     },
     "watermark": {
       "title": "添加水印",
-      "desc": "在 PDF 中添加自定义水印。"
+      "desc": "在 PDF 中添加自定义水印。",
+      "tags": "印章,标记,叠加"
     },
-    "permissions": {
-      "title": "更改权限",
-      "desc": "更改 PDF 文档的权限。"
+    "removePassword": {
+      "title": "删除密码",
+      "desc": "从 PDF 文档中移除密码保护。",
+      "tags": "解锁"
+    },
+    "compress": {
+      "title": "压缩",
+      "desc": "压缩 PDF 文件以减小文件大小。",
+      "tags": "缩小,减少,优化"
+    },
+    "unlockPDFForms": {
+      "title": "解锁PDF表单",
+      "desc": "移除表单字段只读属性",
+      "tags": "解锁,启用,编辑"
+    },
+    "changeMetadata": {
+      "title": "更改元数据",
+      "desc": "更改/删除/添加 PDF 文档的元数据。",
+      "tags": "编辑,修改,更新"
+    },
+    "ocr": {
+      "title": "运行 OCR /清理扫描",
+      "desc": "清理和识别 PDF 中的图像文本，并将其转换为可编辑文本。",
+      "tags": "提取,扫描"
+    },
+    "extractImages": {
+      "title": "提取图像",
+      "desc": "从 PDF 中提取所有图像并保存到压缩包中。",
+      "tags": "提取,保存,导出"
+    },
+    "scannerImageSplit": {
+      "title": "检测/拆分扫描照片",
+      "desc": "从照片/PDF 中拆分出多张照片",
+      "tags": "检测,拆分,照片"
+    },
+    "sign": {
+      "title": "签名",
+      "desc": "通过绘图、文字或图像向 PDF 添加签名",
+      "tags": "签名,亲笔签名"
+    },
+    "flatten": {
+      "title": "展平",
+      "desc": "从 PDF 中删除所有互动元素和表单",
+      "tags": "简化,删除,交互式"
+    },
+    "certSign": {
+      "title": "使用证书签名",
+      "desc": "使用证书/密钥（PEM/P12）对PDF进行签名",
+      "tags": "认证,PEM,P12,官方,加密,签名,证书,PKCS12,JKS,服务器,手动,自动"
+    },
+    "repair": {
+      "title": "修复",
+      "desc": "尝试修复损坏/损坏的 PDF",
+      "tags": "修复,恢复"
+    },
+    "removeBlanks": {
+      "title": "删除空白页",
+      "desc": "检测并删除文档中的空白页",
+      "tags": "删除,清理,空白"
+    },
+    "removeAnnotations": {
+      "title": "删除标注",
+      "desc": "删除 PDF 中的所有标注/评论",
+      "tags": "删除,清理,删除"
+    },
+    "compare": {
+      "title": "比较",
+      "desc": "比较并显示两个 PDF 文档之间的差异",
+      "tags": "差异"
+    },
+    "removeCertSign": {
+      "title": "移除证书签名",
+      "desc": "移除 PDF 的证书签名",
+      "tags": "删除,删除,解锁"
+    },
+    "pageLayout": {
+      "title": "多页布局",
+      "desc": "将 PDF 文档的多个页面合并成一页",
+      "tags": "布局,排列,组合"
+    },
+    "bookletImposition": {
+      "title": "小册子拼版",
+      "desc": "创建具有正确页面顺序和多页布局的小册子，用于打印和装订",
+      "tags": "小册子,打印,装订"
+    },
+    "scalePages": {
+      "title": "调整页面尺寸/缩放",
+      "desc": "调整页面及/或其内容的尺寸/缩放",
+      "tags": "调整大小,调整,缩放"
+    },
+    "addPageNumbers": {
+      "title": "添加页码",
+      "desc": "在文档的指定位置添加页码",
+      "tags": "编号,分页,计数"
+    },
+    "autoRename": {
+      "title": "自动重命名 PDF 文件",
+      "desc": "基于检测到的页眉自动重命名 PDF 文件",
+      "tags": "自动检测,基于标题,组织,重新标记"
+    },
+    "adjustContrast": {
+      "title": "调整颜色/对比度",
+      "desc": "调整 PDF 的对比度、饱和度和亮度",
+      "tags": "对比度,亮度,饱和度"
+    },
+    "crop": {
+      "title": "裁剪 PDF",
+      "desc": "裁剪 PDF 以减小其文件大小（保留文本！）",
+      "tags": "裁剪,剪切,调整大小"
+    },
+    "autoSplitPDF": {
+      "title": "自动拆分页面",
+      "desc": "使用物理扫描页面分割器 QR 代码自动拆分扫描的 PDF",
+      "tags": "自动,拆分,QR"
+    },
+    "sanitize": {
+      "title": "安全清理",
+      "desc": "移除 PDF 文件中的潜在有害元素",
+      "tags": "清理,清除,删除"
+    },
+    "getPdfInfo": {
+      "title": "获取 PDF 的所有信息",
+      "desc": "获取 PDF 的所有可能的信息",
+      "tags": "信息,元数据,详细信息"
+    },
+    "pdfToSinglePage": {
+      "title": "PDF 转单一大页",
+      "desc": "将所有 PDF 页面合并为一个大的单页",
+      "tags": "组合,合并,单页"
+    },
+    "showJS": {
+      "title": "显示 JavaScript",
+      "desc": "搜索并显示嵌入到 PDF 中的任何 JavaScript 代码",
+      "tags": "javascript,代码,脚本"
+    },
+    "redact": {
+      "title": "手动修订",
+      "desc": "根据选定的文本、绘制的形状和/或选定的页面编辑PDF",
+      "tags": "审查,涂黑,隐藏"
+    },
+    "overlayPdfs": {
+      "title": "叠加 PDF",
+      "desc": "将一个 PDF 叠加到另一个 PDF 之上",
+      "tags": "叠加,组合,堆叠"
+    },
+    "splitBySections": {
+      "title": "按区块拆分 PDF",
+      "desc": "将 PDF 的每一页分割为更小的横向与纵向区块",
+      "tags": "拆分,部分,分割"
+    },
+    "addStamp": {
+      "title": "向 PDF 添加印章",
+      "desc": "在指定位置添加文本或图像印章",
+      "tags": "印章,标记,盖章"
+    },
+    "removeImage": {
+      "title": "删除图像",
+      "desc": "删除图像减少 PDF 大小",
+      "tags": "删除,删除,清理"
+    },
+    "splitByChapters": {
+      "title": "按章节拆分 PDF",
+      "desc": "根据其章节结构将 PDF 拆分为多个文件。",
+      "tags": "拆分,章节,结构"
+    },
+    "validateSignature": {
+      "title": "验证 PDF 签名",
+      "desc": "验证 PDF 文档中的数字签名和证书",
+      "tags": "验证,核实,证书"
+    },
+    "swagger": {
+      "title": "API 文档",
+      "desc": "查看 API 文档并测试端点",
+      "tags": "API,文档,测试"
+    },
+    "fakeScan": {
+      "title": "伪扫描",
+      "desc": "创建看起来像扫描件的 PDF"
+    },
+    "editTableOfContents": {
+      "title": "编辑目录",
+      "desc": "为 PDF 文档添加或编辑目录和书签",
+      "tags": "书签,目录,编辑"
+    },
+    "manageCertificates": {
+      "title": "管理证书",
+      "desc": "导入、导出或删除用于签名 PDF 的数字证书文件。",
+      "tags": "证书,导入,导出"
+    },
+    "read": {
+      "title": "阅读",
+      "desc": "查看与批注 PDF。高亮、绘制或插入评论以便审阅协作。",
+      "tags": "查看,打开,显示"
+    },
+    "reorganizePages": {
+      "title": "重组页面",
+      "desc": "通过可视化拖放控制重新排列、复制或删除 PDF 页面。",
+      "tags": "重新排列,重新排序,组织"
+    },
+    "extractPages": {
+      "title": "提取页面",
+      "desc": "从 PDF 文档中提取特定页面",
+      "tags": "提取,选择,复制"
     },
     "removePages": {
       "title": "删除",
-      "desc": "从 PDF 文档中删除不需要的页面。"
+      "desc": "从 PDF 文档中删除不需要的页面。",
+      "tags": "删除,提取,排除"
+    },
+    "autoSizeSplitPDF": {
+      "title": "自动根据大小/数目拆分 PDF",
+      "desc": "将单个 PDF 拆分为多个文档，基于大小、页数或文档数",
+      "tags": "自动,拆分,大小"
+    },
+    "replaceColorPdf": {
+      "title": "替换和反转颜色",
+      "desc": "替换 PDF 中文本和背景的颜色，并将PDF反转颜色以减小文件大小"
+    },
+    "devApi": {
+      "title": "API",
+      "desc": "跳转至 API 文档",
+      "tags": "API,开发,文档"
+    },
+    "devFolderScanning": {
+      "title": "自动文件夹扫描",
+      "desc": "跳转至自动文件夹扫描指南",
+      "tags": "自动化,文件夹,扫描"
+    },
+    "devSsoGuide": {
+      "title": "SSO 指南",
+      "desc": "跳转至 SSO 指南"
+    },
+    "devAirgapped": {
+      "title": "离线/隔离部署",
+      "desc": "跳转至隔离部署指南"
     },
     "addPassword": {
       "title": "添加密码",
       "desc": "使用密码对 PDF 文档进行加密。"
     },
-    "removePassword": {
-      "title": "删除密码",
-      "desc": "从 PDF 文档中移除密码保护。"
+    "changePermissions": {
+      "title": "更改权限",
+      "desc": "更改文档限制与权限"
     },
-    "compressPdfs": {
-      "title": "压缩",
-      "desc": "压缩 PDF 文件以减小文件大小。"
+    "automate": {
+      "title": "自动化",
+      "desc": "通过串联 PDF 操作构建多步工作流。适合重复性任务。",
+      "tags": "工作流,序列,自动化"
     },
-    "unlockPDFForms": {
-      "title": "Unlock PDF Forms",
-      "desc": "Remove read-only property of form fields in a PDF document."
+    "replaceColor": {
+      "desc": "替换或反转 PDF 文档中的颜色",
+      "title": "替换和反转颜色"
     },
-    "changeMetadata": {
-      "title": "更改元数据",
-      "desc": "更改/删除/添加 PDF 文档的元数据。"
-    },
-    "fileToPDF": {
-      "title": "将文件转换为 PDF 文件",
-      "desc": "将几乎所有文件转换为 PDF （DOCX、PNG、XLS、PPT、TXT等）。"
-    },
-    "ocr": {
-      "title": "运行 OCR /清理扫描",
-      "desc": "清理和识别 PDF 中的图像文本，并将其转换为可编辑文本。"
-    },
-    "extractImages": {
-      "title": "提取图像",
-      "desc": "从 PDF 中提取所有图像并保存到压缩包中。"
-    },
-    "pdfToPDFA": {
-      "title": "PDF 转 PDF/A",
-      "desc": "将 PDF 转换为 PDF/A 以进行长期保存。"
-    },
-    "PDFToWord": {
-      "title": "PDF 转 Word",
-      "desc": "将PDF转换为Word格式（DOC、DOCX和ODT）。"
-    },
-    "PDFToPresentation": {
-      "title": "PDF 转演示文稿",
-      "desc": "将 PDF 转换为演示文稿格式（PPT、PPTX 和 ODP）。"
-    },
-    "PDFToText": {
-      "title": "PDF 转 RTF（文本）",
-      "desc": "将PDF转换为文本或 RTF 格式。"
-    },
-    "PDFToHTML": {
-      "title": "PDF 转 HTML",
-      "desc": "将 PDF 转换为 HTML 格式。"
-    },
-    "PDFToXML": {
-      "title": "PDF 转 XML",
-      "desc": "将 PDF 转换为 XML 格式。"
-    },
-    "ScannerImageSplit": {
-      "title": "检测/分割扫描图像",
-      "desc": "从一张照片或 PDF 中分割出多张照片。"
-    },
-    "sign": {
-      "title": "签名",
-      "desc": "通过绘图、文字或图像向 PDF 添加签名"
-    },
-    "flatten": {
-      "title": "展平",
-      "desc": "从 PDF 中删除所有互动元素和表单"
-    },
-    "repair": {
-      "title": "修复",
-      "desc": "尝试修复损坏/损坏的 PDF"
-    },
-    "removeBlanks": {
-      "title": "删除空白页",
-      "desc": "检测并删除文档中的空白页"
-    },
-    "removeAnnotations": {
-      "title": "删除标注",
-      "desc": "删除 PDF 中的所有标注/评论"
-    },
-    "compare": {
-      "title": "比较",
-      "desc": "比较并显示两个 PDF 文档之间的差异"
-    },
-    "certSign": {
-      "title": "使用证书签名",
-      "desc": "使用证书/密钥（PEM/P12）对PDF进行签名"
-    },
-    "removeCertSign": {
-      "title": "移除证书签名",
-      "desc": "移除 PDF 的证书签名"
-    },
-    "pageLayout": {
-      "title": "多页布局",
-      "desc": "将 PDF 文档的多个页面合并成一页"
-    },
-    "scalePages": {
-      "title": "调整页面尺寸/缩放",
-      "desc": "调整页面及/或其内容的尺寸/缩放"
-    },
-    "pipeline": {
-      "title": "流水线（高级版）",
-      "desc": "通过定义流水线脚本在 PDF 上运行多个操作"
-    },
-    "add-page-numbers": {
-      "title": "添加页码",
-      "desc": "在文档的指定位置添加页码"
-    },
-    "auto-rename": {
-      "title": "自动重命名 PDF 文件",
-      "desc": "根据检测到的标题自动对 PDF 文件进行重命名"
-    },
-    "adjust-contrast": {
-      "title": "调整颜色/对比度",
-      "desc": "调整 PDF 的对比度、饱和度和亮度"
-    },
-    "crop": {
-      "title": "裁剪 PDF",
-      "desc": "裁剪 PDF 以减小其文件大小（保留文本！）"
-    },
-    "autoSplitPDF": {
-      "title": "自动拆分页面",
-      "desc": "使用物理扫描页面分割器 QR 代码自动拆分扫描的 PDF"
-    },
-    "sanitizePdf": {
-      "title": "清理",
-      "desc": "从 PDF 文件中删除脚本和其他元素"
-    },
-    "URLToPDF": {
-      "title": "URL/网站转 PDF",
-      "desc": "将任何 http(s)URL 转换为PDF"
-    },
-    "HTMLToPDF": {
-      "title": "HTML 转 PDF",
-      "desc": "将任何 HTML 文件或 zip 文件转换为 PDF"
-    },
-    "MarkdownToPDF": {
-      "title": "Markdown 转 PDF",
-      "desc": "将任何 Markdown 文件转换为 PDF"
-    },
-    "PDFToMarkdown": {
-      "title": "PDF 转 Markdown",
-      "desc": "将任何pdf文件转换为Markdown文件"
-    },
-    "getPdfInfo": {
-      "title": "获取 PDF 的所有信息",
-      "desc": "获取 PDF 的所有可能的信息"
-    },
-    "extractPage": {
-      "title": "提取页面",
-      "desc": "从 PDF 中提取选定的页面"
-    },
-    "PdfToSinglePage": {
-      "title": "PDF 转单一大页",
-      "desc": "将所有 PDF 页面合并为一个大的单页"
-    },
-    "showJS": {
-      "title": "显示 JavaScript",
-      "desc": "搜索并显示嵌入到 PDF 中的任何 JavaScript 代码"
-    },
-    "autoRedact": {
-      "title": "自动删除",
-      "desc": "根据输入文本自动删除（覆盖）PDF 中的文本"
-    },
-    "redact": {
-      "title": "手动修订",
-      "desc": "根据选定的文本、绘制的形状和/或选定的页面编辑PDF"
-    },
-    "tableExtraxt": {
-      "title": "PDF 转 CSV",
-      "desc": "从 PDF 中提取表格并将其转换为 CSV"
-    },
-    "autoSizeSplitPDF": {
-      "title": "自动根据大小/数目拆分 PDF",
-      "desc": "将单个 PDF 拆分为多个文档，基于大小、页数或文档数"
-    },
-    "overlay-pdfs": {
-      "title": "叠加 PDF",
-      "desc": "将 PDF 叠加在另一个 PDF 上"
-    },
-    "split-by-sections": {
-      "title": "拆分 PDF 成小块",
-      "desc": "将 PDF 的每一页分割成更小的水平和垂直的部分"
-    },
-    "AddStampRequest": {
-      "title": "添加图章",
-      "desc": "在指定位置添加文本或图片图章"
-    },
-    "removeImagePdf": {
-      "title": "删除图像",
-      "desc": "删除图像减少 PDF 大小"
-    },
-    "splitPdfByChapters": {
-      "title": "按章节拆分 PDF",
-      "desc": "根据其章节结构将 PDF 拆分为多个文件。"
-    },
-    "validateSignature": {
-      "title": "验证 PDF 签名",
-      "desc": "验证 PDF 文档中的数字签名和证书"
-    },
-    "replaceColorPdf": {
-      "title": "替换和反转颜色",
-      "desc": "替换 PDF 中文本和背景的颜色，并将PDF全色反转以减小文件大小"
+    "scannerEffect": {
+      "desc": "创建看起来像扫描的 PDF",
+      "tags": "扫描,模拟,创建",
+      "title": "扫描仪效果"
     }
+  },
+  "landing": {
+    "addFiles": "添加文件",
+    "uploadFromComputer": "从电脑上传"
   },
   "viewPdf": {
     "tags": "浏览、阅读、注释、文本、图像",
-    "title": "View/Edit PDF",
+    "title": "浏览/编辑 PDF",
     "header": "浏览 PDF"
   },
   "multiTool": {
@@ -592,9 +679,9 @@
     "uploadPrompts": "文件名",
     "selectAll": "选择所有",
     "deselectAll": "取消选择所有",
-    "selectPages": "Page Select",
+    "selectPages": "页面选择",
     "selectedPages": "已选择的页面",
-    "page": "Page",
+    "page": "页面",
     "deleteSelected": "删除已选",
     "downloadAll": "导出全部",
     "downloadSelected": "导出已选",
@@ -613,11 +700,29 @@
   "merge": {
     "tags": "合并，页面操作，后端，服务器端",
     "title": "合并",
-    "header": "合并多个 PDF（2个以上）。",
-    "sortByName": "按名称排序",
-    "sortByDate": "按日期排序",
-    "removeCertSign": "删除合并文件的数字签名吗？",
-    "submit": "合并"
+    "removeDigitalSignature.tooltip": {
+      "title": "移除数字签名",
+      "description": "合并文件时数字签名会失效。勾选此项以从最终合并的 PDF 中移除它们。"
+    },
+    "generateTableOfContents.tooltip": {
+      "title": "生成目录",
+      "description": "根据原始文件名和页码，自动在合并后的 PDF 中创建可点击的目录。"
+    },
+    "submit": "合并",
+    "sortBy": {
+      "description": "文件将按选择顺序合并。您可以拖动重新排序，或在下方进行排序。",
+      "label": "排序方式",
+      "filename": "文件名",
+      "dateModified": "修改日期",
+      "ascending": "升序",
+      "descending": "降序",
+      "sort": "排序"
+    },
+    "error": {
+      "failed": "合并 PDF 时发生错误。"
+    },
+    "generateTableOfContents": "在合并的文件中生成目录?",
+    "removeDigitalSignature": "在合并的文件中删除数字签名?"
   },
   "split": {
     "tags": "页面操作，划分，多页面，剪切，服务器端",
@@ -634,14 +739,209 @@
       "8": "文档 #6：第 9 页和第 10 页"
     },
     "splitPages": "输入要分割的页面：",
-    "submit": "拆分"
+    "submit": "拆分",
+    "steps": {
+      "chooseMethod": "选择方式",
+      "settings": "设置"
+    },
+    "settings": {
+      "selectMethodFirst": "请先选择一种拆分方式"
+    },
+    "error": {
+      "failed": "拆分 PDF 时发生错误。"
+    },
+    "method": {
+      "label": "选择拆分方式",
+      "placeholder": "选择如何拆分 PDF"
+    },
+    "methods": {
+      "prefix": {
+        "splitAt": "拆分于",
+        "splitBy": "拆分依据"
+      },
+      "byPages": {
+        "name": "页码",
+        "desc": "提取特定页面（1,3,5-10）",
+        "tooltip": "输入用逗号分隔的页码或带连字符的范围"
+      },
+      "bySections": {
+        "name": "区块",
+        "desc": "将页面划分为网格区块",
+        "tooltip": "将每一页拆分为横向与纵向的多个区块"
+      },
+      "bySize": {
+        "name": "文件大小",
+        "desc": "限制最大文件大小",
+        "tooltip": "指定最大文件大小（如 10MB、500KB）"
+      },
+      "byPageCount": {
+        "name": "页数",
+        "desc": "每个文件固定页数",
+        "tooltip": "输入每个拆分文件的页数"
+      },
+      "byDocCount": {
+        "name": "文件数量",
+        "desc": "创建指定数量的文件",
+        "tooltip": "输入您想创建的文件数量"
+      },
+      "byChapters": {
+        "name": "章节",
+        "desc": "在书签边界处拆分",
+        "tooltip": "使用 PDF 书签来确定拆分位置"
+      },
+      "byPageDivider": {
+        "name": "分隔页",
+        "desc": "使用分隔页自动拆分",
+        "tooltip": "扫描时在文档间放置带二维码的分隔页"
+      }
+    },
+    "value": {
+      "fileSize": {
+        "label": "文件大小",
+        "placeholder": "例如：10MB，500KB"
+      },
+      "pageCount": {
+        "label": "每个文件的页数",
+        "placeholder": "例如：5，10"
+      },
+      "docCount": {
+        "label": "文件数量",
+        "placeholder": "例如：3，5"
+      }
+    },
+    "tooltip": {
+      "header": {
+        "title": "拆分方式概览"
+      },
+      "byPages": {
+        "title": "按页码拆分",
+        "text": "在指定页码处拆分 PDF。使用“n”表示在第 n 页之后拆分；使用“n-m”表示在第 n 页之前与第 m 页之后拆分。",
+        "bullet1": "单一拆分点：3,7（在第 3 与第 7 页后拆分）",
+        "bullet2": "范围拆分点：3-8（在第 3 页前与第 8 页后拆分）",
+        "bullet3": "混合：2,5-10,15（在第 2 页后、第 5 页前、第 10 页后与第 15 页后拆分）"
+      },
+      "bySections": {
+        "title": "按网格区块拆分",
+        "text": "将每一页划分为网格区块。适用于多栏文档的拆分或提取特定区域。",
+        "bullet1": "水平：要创建的行数",
+        "bullet2": "垂直：要创建的列数",
+        "bullet3": "合并：将所有区块合并为一个 PDF"
+      },
+      "bySize": {
+        "title": "按文件大小拆分",
+        "text": "创建多个不超过指定大小的 PDF。适用于大小限制或邮件附件。",
+        "bullet1": "较大文件使用 MB（如 10MB）",
+        "bullet2": "较小文件使用 KB（如 500KB）",
+        "bullet3": "系统会在页面边界进行拆分"
+      },
+      "byCount": {
+        "title": "按数量拆分",
+        "text": "创建多个 PDF，每个包含特定页数或生成特定数量的文档。",
+        "bullet1": "页数：每个文件固定页数",
+        "bullet2": "文件数量：固定输出文件数量",
+        "bullet3": "适合批处理工作流"
+      },
+      "byChapters": {
+        "title": "按章节拆分",
+        "text": "使用 PDF 书签在章节边界处自动拆分。需要 PDF 具有书签结构。",
+        "bullet1": "书签层级：在第几级书签处拆分（1=顶级）",
+        "bullet2": "包含元数据：保留文档属性",
+        "bullet3": "允许重复：处理重复的书签名称"
+      }
+    }
   },
   "rotate": {
     "tags": "服务器端",
     "title": "旋转 PDF",
-    "header": "旋转 PDF",
-    "selectAngle": "选择旋转角度（以 90 度的倍数）：",
-    "submit": "旋转"
+    "submit": "旋转",
+    "error": {
+      "failed": "旋转 PDF 时发生错误。"
+    },
+    "preview": {
+      "title": "旋转预览"
+    },
+    "rotateLeft": "逆时针旋转",
+    "rotateRight": "顺时针旋转",
+    "tooltip": {
+      "header": {
+        "title": "旋转设置概览"
+      },
+      "description": {
+        "text": "以 90° 为增量顺时针或逆时针旋转 PDF 页面。PDF 中所有页面都会被旋转。预览会显示旋转后的效果。"
+      },
+      "controls": {
+        "title": "控件",
+        "text": "使用旋转按钮调整方向。左键逆时针，右键顺时针。每次点击旋转 90°。"
+      }
+    }
+  },
+  "convert": {
+    "title": "转换",
+    "desc": "在不同格式之间转换文件",
+    "files": "文件",
+    "selectFilesPlaceholder": "在主视图中选择文件以开始",
+    "settings": "设置",
+    "conversionCompleted": "转换完成",
+    "results": "结果",
+    "defaultFilename": "已转换文件",
+    "conversionResults": "转换结果",
+    "convertFrom": "转换来源",
+    "convertTo": "转换为",
+    "sourceFormatPlaceholder": "源格式",
+    "targetFormatPlaceholder": "目标格式",
+    "selectSourceFormatFirst": "请先选择源格式",
+    "outputOptions": "输出选项",
+    "pdfOptions": "PDF 选项",
+    "imageOptions": "图像选项",
+    "colorType": "颜色类型",
+    "color": "颜色",
+    "greyscale": "灰度",
+    "blackwhite": "黑白",
+    "dpi": "DPI",
+    "output": "输出",
+    "single": "单个",
+    "multiple": "多个",
+    "fitOption": "适配选项",
+    "maintainAspectRatio": "保持纵横比",
+    "fitDocumentToPage": "适配页面",
+    "fillPage": "填充页面",
+    "autoRotate": "自动旋转",
+    "autoRotateDescription": "自动旋转图像以更好地适配 PDF 页面",
+    "combineImages": "合并图像",
+    "combineImagesDescription": "将所有图像合并为一个 PDF，或为每个图像创建单独的 PDF",
+    "webOptions": "网页转 PDF 选项",
+    "zoomLevel": "缩放级别",
+    "emailOptions": "邮件转 PDF 选项",
+    "includeAttachments": "包含邮件附件",
+    "maxAttachmentSize": "最大附件大小（MB）",
+    "includeAllRecipients": "在页眉中包含抄送（CC）与密送（BCC）收件人",
+    "downloadHtml": "下载 HTML 中间文件（而非 PDF）",
+    "pdfaOptions": "PDF/A 选项",
+    "outputFormat": "输出格式",
+    "pdfaNote": "PDF/A-1b 兼容性更好，PDF/A-2b 支持的功能更多。",
+    "pdfaDigitalSignatureWarning": "该PDF包含数字签名，下一步将移除该签名。",
+    "fileFormat": "文件格式",
+    "wordDoc": "Word 文档",
+    "wordDocExt": "Word 文档（.docx）",
+    "odtExt": "OpenDocument 文本（.odt）",
+    "pptExt": "PowerPoint（.pptx）",
+    "odpExt": "OpenDocument 演示文稿（.odp）",
+    "txtExt": "纯文本（.txt）",
+    "rtfExt": "富文本（.rtf）",
+    "selectedFiles": "已选文件",
+    "noFileSelected": "未选择文件。请使用文件面板添加文件。",
+    "convertFiles": "转换文件",
+    "converting": "正在转换…",
+    "downloadConverted": "下载转换后的文件",
+    "errorNoFiles": "请至少选择一个要转换的文件。",
+    "errorNoFormat": "请选择源格式和目标格式。",
+    "errorNotSupported": "不支持从 {{from}} 转换为 {{to}}。",
+    "images": "图像",
+    "officeDocs": "Office 文档（Word、Excel、PowerPoint）",
+    "imagesExt": "图像（JPG、PNG 等）",
+    "markdown": "Markdown",
+    "textRtf": "文本/RTF",
+    "grayscale": "灰度"
   },
   "imageToPdf": {
     "tags": "转换、图像、JPG、图片、照片"
@@ -679,9 +979,22 @@
       "8": "删除最后一页",
       "9": "删除第一页和最后一页",
       "10": "奇偶合并",
-      "11": "Duplicate all pages"
+      "11": "复制所有页面"
     },
-    "placeholder": "（例如：1,3,2 或 4-8,2,10-12 或 2n-1）"
+    "placeholder": "（例如：1,3,2 或 4-8,2,10-12 或 2n-1）",
+    "desc": {
+      "BOOKLET_SORT": "排列页面以进行小册子打印(最后,第一,第二,倒数第二,...)。",
+      "CUSTOM": "使用自定义的页码序列或表达式来定义新顺序。",
+      "DUPLEX_SORT": "交错正面然后背面,就像双面扫描仪扫描了所有正面,然后所有背面(1, n, 2, n-1, ...)。",
+      "DUPLICATE": "根据自定义顺序计数复制每页(例如,4 复制每页 4×)。",
+      "ODD_EVEN_MERGE": "通过交替页面合并两个 PDF:第一个的奇数页,第二个的偶数页。",
+      "ODD_EVEN_SPLIT": "将文档拆分为两个输出:所有奇数页和所有偶数页。",
+      "REMOVE_FIRST": "从文档中删除第一页。",
+      "REMOVE_FIRST_AND_LAST": "从文档中删除第一页和最后一页。",
+      "REMOVE_LAST": "从文档中删除最后一页。",
+      "REVERSE_ORDER": "翻转文档,使最后一页变为第一页,依此类推。",
+      "SIDE_STITCH_BOOKLET_SORT": "排列页面以进行侧缝小册子打印(针对侧面装订进行了优化)。"
+    }
   },
   "addImage": {
     "tags": "图像、JPG、图片、照片",
@@ -691,27 +1004,190 @@
     "upload": "添加图片",
     "submit": "添加图片"
   },
+  "attachments": {
+    "tags": "嵌入、附件、文件、附加",
+    "title": "添加附件",
+    "header": "添加附件",
+    "add": "添加附件",
+    "remove": "移除附件",
+    "embed": "嵌入附件",
+    "submit": "添加附件"
+  },
   "watermark": {
-    "tags": "文本、重复、标签、自定义、版权、商标、图像、JPG、图片、照片",
     "title": "添加水印",
-    "header": "添加水印",
-    "customColor": "自定义文本颜色",
-    "selectText": {
-      "1": "选择要添加水印的 PDF：",
-      "2": "水印文本：",
-      "3": "字体大小：",
-      "4": "旋转（0-360）：",
-      "5": "水平间距（每个水印之间的水平距离）：",
-      "6": "垂直间距（每个水印之间的垂直距离）：",
-      "7": "透明度（0% - 100%）：",
-      "8": "水印类型：",
-      "9": "水印图片：",
-      "10": "将 PDF 转换为 PDF-Image"
-    },
+    "desc": "向 PDF 添加文本或图像水印",
+    "completed": "已添加水印",
     "submit": "添加水印",
-    "type": {
-      "1": "文字",
-      "2": "图片"
+    "filenamePrefix": "已加水印",
+    "error": {
+      "failed": "向 PDF 添加水印时发生错误。"
+    },
+    "watermarkType": {
+      "text": "文本",
+      "image": "图像"
+    },
+    "settings": {
+      "type": "水印类型",
+      "text": {
+        "label": "水印文本",
+        "placeholder": "输入水印文本"
+      },
+      "image": {
+        "label": "水印图像",
+        "choose": "选择图像",
+        "selected": "已选：{{filename}}"
+      },
+      "fontSize": "字体大小",
+      "size": "大小",
+      "alphabet": "字体/语言",
+      "color": "水印颜色",
+      "rotation": "旋转（度）",
+      "opacity": "不透明度（%）",
+      "spacing": {
+        "horizontal": "水平间距",
+        "vertical": "垂直间距"
+      },
+      "convertToImage": "将 PDF 页面转为图像"
+    },
+    "alphabet": {
+      "roman": "罗马/拉丁",
+      "arabic": "阿拉伯语",
+      "japanese": "日语",
+      "korean": "韩语",
+      "chinese": "中文",
+      "thai": "泰语"
+    },
+    "steps": {
+      "type": "水印类型",
+      "wording": "措辞",
+      "textStyle": "样式",
+      "formatting": "格式",
+      "file": "水印文件"
+    },
+    "results": {
+      "title": "水印结果"
+    },
+    "tooltip": {
+      "language": {
+        "title": "语言支持",
+        "text": "选择合适的语言设置以确保文本的正确字体呈现。"
+      },
+      "appearance": {
+        "title": "外观设置",
+        "text": "控制水印的外观及与文档的融合效果。",
+        "bullet1": "旋转：-360° 至 360°，可创建倾斜水印",
+        "bullet2": "不透明度：0-100% 控制透明度",
+        "bullet3": "较低不透明度可获得更柔和的水印"
+      },
+      "spacing": {
+        "title": "间距控制",
+        "text": "调整页面上重复水印之间的间距。",
+        "bullet1": "宽度间距：水平方向的距离",
+        "bullet2": "高度间距：垂直方向的距离",
+        "bullet3": "数值越大，图案越稀疏"
+      },
+      "type": {
+        "header": {
+          "title": "水印类型选择"
+        },
+        "description": {
+          "title": "选择您的水印类型",
+          "text": "根据需求在文本水印与图像水印之间进行选择。"
+        },
+        "text": {
+          "title": "文本水印",
+          "text": "非常适合添加版权声明、公司名称或保密标记。支持多语言与自定义颜色。",
+          "bullet1": "可自定义字体与语言",
+          "bullet2": "可调整颜色与透明度",
+          "bullet3": "适用于法律声明或品牌文字"
+        },
+        "image": {
+          "title": "图像水印",
+          "text": "使用徽标、印章或任意图像作为水印。非常适合品牌与视觉识别。",
+          "bullet1": "上传任意图像格式",
+          "bullet2": "保持图像质量",
+          "bullet3": "非常适合徽标与印章"
+        }
+      },
+      "wording": {
+        "header": {
+          "title": "文本内容"
+        },
+        "text": {
+          "title": "水印文本",
+          "text": "输入将作为水印显示在整个文档上的文本。",
+          "bullet1": "保持简洁以提升可读性",
+          "bullet2": "常见示例：“CONFIDENTIAL”“DRAFT”、公司名称",
+          "bullet3": "不支持表情符号字符，会被过滤"
+        }
+      },
+      "textStyle": {
+        "header": {
+          "title": "文本样式"
+        },
+        "color": {
+          "title": "颜色选择",
+          "text": "选择与文档内容形成良好对比的颜色。",
+          "bullet1": "浅灰（#d3d3d3）用于柔和水印",
+          "bullet2": "黑色或深色用于高对比度",
+          "bullet3": "自定义颜色用于品牌诉求"
+        },
+        "language": {
+          "title": "语言支持",
+          "text": "选择合适的语言设置以确保正确的字体渲染。"
+        }
+      },
+      "file": {
+        "header": {
+          "title": "图像上传"
+        },
+        "upload": {
+          "title": "选择图像",
+          "text": "上传一张图像作为水印。",
+          "bullet1": "支持常见格式：PNG、JPG、GIF、BMP",
+          "bullet2": "带透明背景的 PNG 效果最佳",
+          "bullet3": "更高分辨率可更好地保持质量"
+        },
+        "recommendations": {
+          "title": "最佳实践",
+          "text": "获得最佳图像水印效果的提示。",
+          "bullet1": "使用带透明背景的徽标或印章",
+          "bullet2": "简单设计优于复杂图形",
+          "bullet3": "选择分辨率时请考虑最终文档大小"
+        }
+      },
+      "formatting": {
+        "header": {
+          "title": "格式与布局"
+        },
+        "size": {
+          "title": "大小控制",
+          "text": "调整水印（文本或图像）的大小。",
+          "bullet1": "更大的尺寸会使水印更显眼"
+        },
+        "appearance": {
+          "title": "外观设置",
+          "text": "控制水印的外观及与文档的融合效果。",
+          "bullet1": "旋转：-360° 至 360°，用于倾斜水印",
+          "bullet2": "不透明度：0-100% 控制透明度",
+          "bullet3": "较低不透明度可获得更柔和的水印"
+        },
+        "spacing": {
+          "title": "间距控制",
+          "text": "调整页面上重复水印之间的间距。",
+          "bullet1": "水平间距：水印左右间的距离",
+          "bullet2": "垂直间距：水印上下间的距离",
+          "bullet3": "更高数值会使图案更稀疏"
+        },
+        "security": {
+          "title": "安全选项",
+          "text": "将最终 PDF 转换为基于图像的格式以增强安全性。",
+          "bullet1": "防止文本选择与复制",
+          "bullet2": "使水印更难移除",
+          "bullet3": "会导致文件体积增大",
+          "bullet4": "适用于敏感或受版权保护的内容"
+        }
+      }
     }
   },
   "permissions": {
@@ -734,71 +1210,295 @@
     "submit": "改变"
   },
   "removePages": {
-    "tags": "删除页面、删除"
-  },
-  "addPassword": {
-    "tags": "安全、密码、加密",
-    "title": "添加密码",
-    "header": "添加密码（加密）。",
-    "selectText": {
-      "1": "选择要加密的 PDF。",
-      "2": "密码",
-      "3": "加密密钥长度",
-      "4": "值越高越强，但值越低兼容性越好。",
-      "5": "要设置的权限",
-      "6": "防止文件的拼接。",
-      "7": "防止内容提取",
-      "8": "防止为可访问性提取内容",
-      "9": "防止填写表格",
-      "10": "防止修改",
-      "11": "防止修改注释",
-      "12": "防止打印",
-      "13": "防止打印不同的格式",
-      "14": "所有者密码",
-      "15": "限制打开后对文档的操作（不被所有阅读器支持）",
-      "16": "限制打开文档本身"
+    "tags": "删除页面、删除",
+    "title": "删除",
+    "pageNumbers": {
+      "label": "要移除的页面",
+      "placeholder": "例如：1,3,5-8,10",
+      "error": "无效的页码格式。使用数字、范围（1-5）或数学表达式（2n+1）"
     },
-    "submit": "加密"
-  },
-  "removePassword": {
-    "tags": "安全、解密、密码、安全性、删除密码",
-    "title": "删除密码",
-    "header": "移除密码（解密）。",
-    "selectText": {
-      "1": "选择要解密的 PDF",
-      "2": "密码"
+    "filenamePrefix": "已删除页面",
+    "files": {
+      "placeholder": "在主视图中选择一个 PDF 文件以开始"
+    },
+    "settings": {
+      "title": "设置"
+    },
+    "tooltip": {
+      "header": {
+        "title": "移除页面设置"
+      },
+      "pageNumbers": {
+        "title": "页面选择",
+        "text": "指定要从 PDF 中移除的页面。您可以选择单个页、范围，或使用数学表达式。",
+        "bullet1": "单个页面：1,3,5（移除第 1、3、5 页）",
+        "bullet2": "页码范围：1-5,10-15（移除第 1-5 与 10-15 页）",
+        "bullet3": "数学表达：2n+1（移除奇数页）",
+        "bullet4": "开放范围：5-（移除从第 5 页至末尾）"
+      },
+      "examples": {
+        "title": "常见示例",
+        "text": "以下是一些常见的页面选择模式：",
+        "bullet1": "移除第一页：1",
+        "bullet2": "移除最后 3 页：-3",
+        "bullet3": "每隔一页移除：2n",
+        "bullet4": "移除散落的特定页：1,5,10,15"
+      },
+      "safety": {
+        "title": "安全提示",
+        "text": "移除页面时的重要注意事项：",
+        "bullet1": "处理前请始终预览您的选择",
+        "bullet2": "保留原文件的备份",
+        "bullet3": "页码从 1 开始而非 0",
+        "bullet4": "无效页码将被忽略"
+      }
+    },
+    "error": {
+      "failed": "移除页面时发生错误。"
+    },
+    "results": {
+      "title": "移除页面结果"
     },
     "submit": "删除"
+  },
+  "pageSelection": {
+    "tooltip": {
+      "header": {
+        "title": "页面选择指南"
+      },
+      "basic": {
+        "title": "基础用法",
+        "text": "使用简单语法从 PDF 文档中选择特定页面。",
+        "bullet1": "单页：1,3,5",
+        "bullet2": "范围：3-6 或 10-15",
+        "bullet3": "全部：all"
+      },
+      "advanced": {
+        "title": "高级功能"
+      },
+      "tips": {
+        "title": "提示",
+        "text": "请牢记以下指南：",
+        "bullet1": "页码从 1 开始（不是 0）",
+        "bullet2": "空格会被自动移除",
+        "bullet3": "无效表达式会被忽略"
+      },
+      "syntax": {
+        "title": "语法基础",
+        "text": "使用数字、范围、关键字和等差表达式（n 从 0 开始）。支持括号。",
+        "bullets": {
+          "numbers": "数字/范围：5，10-20",
+          "keywords": "关键字：odd、even",
+          "progressions": "等差：3n，4n+1"
+        }
+      },
+      "operators": {
+        "title": "运算符",
+        "text": "AND 优先级高于逗号。NOT 在文档范围内生效。",
+        "and": "AND：& 或 “and” — 同时满足（如 1-50 & even）",
+        "comma": "逗号：, 或 | — 合并选择（如 1-10, 20）",
+        "not": "NOT：! 或 “not” — 排除（如 3n & not 30）"
+      },
+      "examples": {
+        "title": "示例"
+      }
+    }
+  },
+  "bulkSelection": {
+    "header": {
+      "title": "页面选择指南"
+    },
+    "syntax": {
+      "title": "语法基础",
+      "text": "使用数字、范围、关键字与等差表达式（n 从 0 开始）。支持括号。",
+      "bullets": {
+        "numbers": "数字/范围：5，10-20",
+        "keywords": "关键字：odd、even",
+        "progressions": "等差：3n，4n+1"
+      }
+    },
+    "operators": {
+      "title": "运算符",
+      "text": "AND 优先级高于逗号。NOT 在文档范围内生效。",
+      "and": "AND：& 或 “and” — 同时满足（如 1-50 & even）",
+      "comma": "逗号：, 或 | — 合并选择（如 1-10, 20）",
+      "not": "NOT：! 或 “not” — 排除（如 3n & not 30）"
+    },
+    "examples": {
+      "title": "示例",
+      "first50": "前 50 页",
+      "last50": "后 50 页",
+      "every3rd": "每隔 3 页",
+      "oddWithinExcluding": "1-20 内的奇数页，排除 5-7",
+      "combineSets": "合并集合"
+    },
+    "firstNPages": {
+      "title": "前 N 页",
+      "placeholder": "页数"
+    },
+    "lastNPages": {
+      "title": "后 N 页",
+      "placeholder": "页数"
+    },
+    "everyNthPage": {
+      "title": "每 N 页",
+      "placeholder": "步长"
+    },
+    "range": {
+      "title": "范围",
+      "fromPlaceholder": "起始",
+      "toPlaceholder": "结束"
+    },
+    "keywords": {
+      "title": "关键字"
+    },
+    "advanced": {
+      "title": "高级"
+    }
   },
   "compressPdfs": {
     "tags": "压缩、小、微小"
   },
   "unlockPDFForms": {
-    "tags": "remove,delete,form,field,readonly",
-    "title": "Remove Read-Only from Form Fields",
-    "header": "Unlock PDF Forms",
-    "submit": "Remove"
+    "tags": "移除,删除,表单,字段,只读",
+    "title": "移除表单字段只读属性",
+    "header": "解锁 PDF 表单",
+    "submit": "Remove",
+    "description": "该工具将移除 PDF 表单字段的只读限制，使其可编辑、可填写。",
+    "filenamePrefix": "已解锁表单",
+    "files": {
+      "placeholder": "在主视图中选择一个 PDF 文件以开始"
+    },
+    "error": {
+      "failed": "解锁 PDF 表单时发生错误。"
+    },
+    "results": {
+      "title": "表单解锁结果"
+    }
   },
   "changeMetadata": {
     "tags": "标题、作者、日期、创建、时间、发布者、制作人、统计数据",
-    "title": "标题：",
     "header": "更改元数据",
-    "selectText": {
-      "1": "请编辑你想要改变的变量。",
-      "2": "删除所有元数据",
-      "3": "显示自定义元数据：",
-      "4": "其他元数据：",
-      "5": "添加自定义元数据条目"
+    "submit": "更改",
+    "filenamePrefix": "元数据",
+    "settings": {
+      "title": "元数据设置"
     },
-    "author": "作者：",
-    "creationDate": "创建日期（yyyy/MM/dd HH:mm:ss）：",
-    "creator": "创建者：",
-    "keywords": "关键词：",
-    "modDate": "修改日期（yyyy/MM/dd HH:mm:ss）：",
-    "producer": "生产者：",
-    "subject": "主题：",
-    "trapped": "被困：",
-    "submit": "更改"
+    "standardFields": {
+      "title": "标准字段"
+    },
+    "deleteAll": {
+      "label": "移除现有元数据",
+      "checkbox": "删除所有元数据"
+    },
+    "title": {
+      "label": "标题",
+      "placeholder": "文档标题"
+    },
+    "author": {
+      "label": "作者",
+      "placeholder": "文档作者"
+    },
+    "subject": {
+      "label": "主题",
+      "placeholder": "文档主题"
+    },
+    "keywords": {
+      "label": "关键字",
+      "placeholder": "文档关键字"
+    },
+    "creator": {
+      "label": "创建者",
+      "placeholder": "文档创建者"
+    },
+    "producer": {
+      "label": "生产者",
+      "placeholder": "文档生产者"
+    },
+    "dates": {
+      "title": "日期字段"
+    },
+    "creationDate": {
+      "label": "创建日期",
+      "placeholder": "创建日期"
+    },
+    "modificationDate": {
+      "label": "修改日期",
+      "placeholder": "修改日期"
+    },
+    "trapped": {
+      "label": "陷印状态",
+      "unknown": "未知",
+      "true": "True",
+      "false": "False"
+    },
+    "advanced": {
+      "title": "高级选项"
+    },
+    "customFields": {
+      "title": "自定义元数据",
+      "description": "向文档添加自定义元数据字段",
+      "add": "添加字段",
+      "key": "键",
+      "keyPlaceholder": "自定义键",
+      "value": "值",
+      "valuePlaceholder": "自定义值",
+      "remove": "移除"
+    },
+    "results": {
+      "title": "已更新的 PDF"
+    },
+    "error": {
+      "failed": "更改 PDF 元数据时发生错误。"
+    },
+    "tooltip": {
+      "header": {
+        "title": "PDF 元数据概览"
+      },
+      "standardFields": {
+        "title": "标准字段",
+        "text": "描述文档的常见 PDF 元数据字段。",
+        "bullet1": "标题：文档名称或题名",
+        "bullet2": "作者：创建文档的人",
+        "bullet3": "主题：对内容的简要描述",
+        "bullet4": "关键字：文档的搜索词",
+        "bullet5": "创建者/生产者：用于创建 PDF 的软件"
+      },
+      "dates": {
+        "title": "日期字段",
+        "text": "文档的创建与修改时间。",
+        "bullet1": "创建日期：文档最初创建的时间",
+        "bullet2": "修改日期：文档上次更改的时间"
+      },
+      "options": {
+        "title": "附加选项",
+        "text": "自定义字段与隐私控制。",
+        "bullet1": "自定义元数据：添加自定义键值对",
+        "bullet2": "陷印状态：高质量印刷设置",
+        "bullet3": "全部删除：为隐私移除所有元数据"
+      },
+      "deleteAll": {
+        "title": "移除现有元数据",
+        "text": "完全删除元数据以确保隐私。"
+      },
+      "customFields": {
+        "title": "自定义元数据",
+        "text": "添加您自己的自定义键值对元数据。",
+        "bullet1": "添加与文档相关的任何自定义字段",
+        "bullet2": "示例：部门、项目、版本、状态",
+        "bullet3": "每个条目都需要键和值"
+      },
+      "advanced": {
+        "title": "高级选项",
+        "trapped": {
+          "title": "陷印状态",
+          "description": "指示文档是否已为高质量印刷做准备。",
+          "bullet1": "True：文档已进行陷印处理",
+          "bullet2": "False：文档未进行陷印处理",
+          "bullet3": "Unknown：未指定陷印状态"
+        }
+      }
+    }
   },
   "fileToPDF": {
     "tags": "转换、格式、文档、图片、幻灯片、文本、转换、Office、Docs、Word、Excel、PowerPoint",
@@ -812,6 +1512,7 @@
   "ocr": {
     "tags": "识别、文本、图像、扫描、阅读、识别、检测、可编辑",
     "title": "OCR/扫描清理",
+    "desc": "清理和识别 PDF 中的图像文本，并将其转换为可编辑文本。",
     "header": "清理扫描件/OCR（光学字符识别）。",
     "selectText": {
       "1": "选择要在 PDF 中检测的语言（列出的语言是目前检测到的）：",
@@ -829,7 +1530,88 @@
     },
     "help": "请阅读此文档，了解如何将其用于其他语言和/或不在 docker 中使用。",
     "credit": "此服务使用 qpdf 和 Tesseract 进行 OCR。",
-    "submit": "用 OCR 处理 PDF"
+    "submit": "用 OCR 处理 PDF",
+    "operation": {
+      "submit": "处理 OCR 并预览"
+    },
+    "results": {
+      "title": "OCR 结果"
+    },
+    "languagePicker": {
+      "additionalLanguages": "需要更多语言？",
+      "viewSetupGuide": "查看设置指南 →"
+    },
+    "settings": {
+      "title": "设置",
+      "ocrMode": {
+        "label": "OCR 模式",
+        "auto": "自动（跳过已有文本层）",
+        "force": "强制（重新识别全部并替换文本）",
+        "strict": "严格（发现文本即中止）"
+      },
+      "languages": {
+        "label": "语言",
+        "placeholder": "选择语言"
+      },
+      "compatibilityMode": {
+        "label": "兼容模式"
+      },
+      "advancedOptions": {
+        "label": "处理选项",
+        "sidecar": "创建文本文件",
+        "deskew": "页面纠偏",
+        "clean": "清理输入文件",
+        "cleanFinal": "清理最终输出"
+      }
+    },
+    "tooltip": {
+      "header": {
+        "title": "OCR 设置概览"
+      },
+      "mode": {
+        "title": "OCR 模式",
+        "text": "光学字符识别（OCR）可将扫描或截图页面转换为可搜索、可复制或可高亮的文本。",
+        "bullet1": "自动：跳过已包含文本层的页面。",
+        "bullet2": "强制：重新识别每一页并替换所有文本。",
+        "bullet3": "严格：若发现可选择文本则终止。"
+      },
+      "languages": {
+        "title": "语言",
+        "text": "指定预期语言可提升 OCR 准确度。可选择一种或多种语言以引导识别。"
+      },
+      "output": {
+        "title": "输出",
+        "text": "决定文本输出的格式：",
+        "bullet1": "可搜索 PDF：在原图像背后嵌入文本。",
+        "bullet2": "HOCR XML：返回结构化机器可读文件。",
+        "bullet3": "纯文本边车：创建包含原始内容的独立 .txt 文件。"
+      },
+      "advanced": {
+        "header": {
+          "title": "高级 OCR 处理"
+        },
+        "compatibility": {
+          "title": "兼容模式",
+          "text": "使用 OCR “夹层 PDF” 模式：文件更大，但在某些语言和旧版软件上更可靠。默认使用 hOCR，适合更小、更现代的 PDF。"
+        },
+        "sidecar": {
+          "title": "创建文本文件",
+          "text": "在 PDF 旁生成一个独立的 .txt 文件，包含所有提取的文本，便于访问与处理。"
+        },
+        "deskew": {
+          "title": "页面纠偏",
+          "text": "自动校正倾斜页面以提升 OCR 准确度。适合未完美对齐的扫描文档。"
+        },
+        "clean": {
+          "title": "清理输入文件",
+          "text": "在处理前通过去噪、增强对比度和优化图像来提升 OCR 识别效果。"
+        },
+        "cleanFinal": {
+          "title": "清理最终输出",
+          "text": "在生成的 PDF 上进行后处理，移除 OCR 伪影并优化文本层以提高可读性并减小体积。"
+        }
+      }
+    }
   },
   "extractImages": {
     "tags": "图片、照片、保存、归档、压缩包、截取、抓取",
@@ -837,7 +1619,13 @@
     "header": "提取图像",
     "selectText": "选择图像格式，将提取的图像转换为",
     "allowDuplicates": "保存重复图像",
-    "submit": "提取"
+    "submit": "提取",
+    "error": {
+      "failed": "从 PDF 提取图像时发生错误。"
+    },
+    "settings": {
+      "title": "设置"
+    }
   },
   "pdfToPDFA": {
     "tags": "归档、长期、标准、转换、存储、保存",
@@ -914,8 +1702,14 @@
     "title": "签名",
     "header": "签署 PDF",
     "upload": "上传图片",
-    "draw": "绘制签名",
-    "text": "文本输入",
+    "draw": {
+      "clear": "清除",
+      "title": "绘制您的签名"
+    },
+    "text": {
+      "name": "签署人姓名",
+      "placeholder": "输入您的全名"
+    },
     "clear": "清除",
     "add": "添加",
     "saved": "已保存签名",
@@ -931,36 +1725,161 @@
     "previous": "上一页",
     "maintainRatio": "切换保持长宽比",
     "undo": "撤销",
-    "redo": "重做"
+    "redo": "重做",
+    "activate": "激活签名放置",
+    "applySignatures": "应用签名",
+    "deactivate": "停止放置签名",
+    "error": {
+      "failed": "签署 PDF 时发生错误。"
+    },
+    "image": {
+      "hint": "上传 PNG 或 JPG 格式的签名图像",
+      "label": "上传签名图像",
+      "placeholder": "选择图像文件"
+    },
+    "instructions": {
+      "title": "如何添加签名"
+    },
+    "results": {
+      "title": "签名结果"
+    },
+    "steps": {
+      "configure": "配置签名"
+    },
+    "submit": "签署文档",
+    "type": {
+      "canvas": "画布",
+      "draw": "绘制",
+      "image": "图像",
+      "text": "文本",
+      "title": "签名类型"
+    }
   },
   "flatten": {
     "tags": "静态、停用、非交互、简化",
     "title": "展平",
     "header": "展平 PDF",
     "flattenOnlyForms": "仅展平表格",
-    "submit": "展平"
+    "submit": "展平",
+    "filenamePrefix": "已扁平化",
+    "files": {
+      "placeholder": "在主视图中选择一个 PDF 文件以开始"
+    },
+    "steps": {
+      "settings": "设置"
+    },
+    "options": {
+      "stepTitle": "扁平化选项",
+      "title": "扁平化选项",
+      "flattenOnlyForms.desc": "仅扁平化表单字段，保留其他交互元素",
+      "note": "扁平化会移除 PDF 的交互元素，使其不可编辑。",
+      "flattenOnlyForms": "仅扁平化表单"
+    },
+    "results": {
+      "title": "扁平化结果"
+    },
+    "error": {
+      "failed": "扁平化 PDF 时发生错误。"
+    },
+    "tooltip": {
+      "header": {
+        "title": "关于 PDF 扁平化"
+      },
+      "description": {
+        "title": "扁平化有什么作用？",
+        "text": "扁平化会将可填写的表单和按钮转换为普通文本和图像，使 PDF 不可编辑。外观保持不变，但不能再更改或填写表单。适合共享完成的表单、创建存档文件或确保各处显示一致。",
+        "bullet1": "文本框会变为普通文本（不可编辑）",
+        "bullet2": "复选框和按钮会变为图片",
+        "bullet3": "适用于不希望再更改的最终版本",
+        "bullet4": "确保在所有设备上外观一致"
+      },
+      "formsOnly": {
+        "title": "“仅扁平化表单”是什么意思？",
+        "text": "此选项仅移除填写表单的能力，保留其它功能，如点击链接、查看书签与批注等。",
+        "bullet1": "表单将不可编辑",
+        "bullet2": "链接仍可点击",
+        "bullet3": "批注与备注仍可见",
+        "bullet4": "书签仍可用于导航"
+      }
+    }
   },
   "repair": {
     "tags": "修复、恢复、纠正、恢复",
     "title": "修复",
     "header": "修复 PDF",
-    "submit": "修复"
+    "submit": "修复",
+    "description": "该工具将尝试修复损坏或受损的 PDF 文件。无需额外设置。",
+    "filenamePrefix": "已修复",
+    "files": {
+      "placeholder": "在主视图中选择一个 PDF 文件以开始"
+    },
+    "error": {
+      "failed": "修复 PDF 时发生错误。"
+    },
+    "results": {
+      "title": "修复结果"
+    }
   },
   "removeBlanks": {
     "tags": "清理、简化、非内容、整理",
     "title": "删除空白",
     "header": "删除空白页",
-    "threshold": "阈值：",
-    "thresholdDesc": "确定白色像素必须有多白的阈值",
-    "whitePercent": "白色百分比（%）：",
-    "whitePercentDesc": "必须为白色才能删除的页面百分比",
+    "settings": {
+      "title": "设置"
+    },
+    "threshold": {
+      "label": "像素白度阈值"
+    },
+    "whitePercent": {
+      "label": "白色百分比阈值",
+      "unit": "%"
+    },
+    "includeBlankPages": {
+      "label": "包含检测到的空白页"
+    },
+    "tooltip": {
+      "header": {
+        "title": "移除空白页设置"
+      },
+      "threshold": {
+        "title": "像素白度阈值",
+        "text": "控制像素被视为“白色”的标准。这有助于判断页面上哪些区域算作空白。",
+        "bullet1": "0 = 纯黑（最严格）",
+        "bullet2": "128 = 中灰",
+        "bullet3": "255 = 纯白（最宽松）"
+      },
+      "whitePercent": {
+        "title": "白色百分比阈值",
+        "text": "设置页面被视为空白并移除所需的最小白色像素百分比。",
+        "bullet1": "较低值（如 80%）= 移除更多页面",
+        "bullet2": "较高值（如 95%）= 仅移除非常空白的页面",
+        "bullet3": "浅色背景文档建议使用较高值"
+      },
+      "includeBlankPages": {
+        "title": "包含已检测空白页",
+        "text": "启用后，将创建一个单独的 PDF，包含从原文档中检测并移除的所有空白页。",
+        "bullet1": "有助于审查被移除的内容",
+        "bullet2": "有助于验证检测准确性",
+        "bullet3": "可关闭以减小输出文件大小"
+      }
+    },
     "submit": "删除空白"
   },
   "removeAnnotations": {
     "tags": "评论、高亮、笔记、标注、删除",
     "title": "删除标注",
     "header": "删除标注",
-    "submit": "删除"
+    "submit": "删除",
+    "error": {
+      "failed": "从 PDF 删除注释时发生错误。"
+    },
+    "info": {
+      "description": "此工具将从您的 PDF 文档中删除所有注释(评论、高亮、笔记等)。",
+      "title": "关于删除注释"
+    },
+    "settings": {
+      "title": "设置"
+    }
   },
   "compare": {
     "tags": "区分、对比、更改、分析",
@@ -992,28 +1911,140 @@
   "certSign": {
     "tags": "身份验证、PEM、P12、官方、加密",
     "title": "证书签名",
-    "header": "使用您的证书签名 PDF（进行中）",
-    "selectPDF": "选择要签名的 PDF 文件：",
-    "jksNote": "注意：如果您的证书类型未在下面列出，请使用keytool命令行工具将其转换为 Java Keystore（.jks）文件。 然后，选择下面的.jks文件选项。",
-    "selectKey": "选择您的私钥文件（PKCS#8格式，可以是.pem或.der）：",
-    "selectCert": "选择您的证书文件（X.509格式，可以是.pem或.der）：",
-    "selectP12": "选择您的 PKCS#12 密钥库文件（.p12或.pfx）（可选，如果提供，它应该包含您的私钥和证书）：",
-    "selectJKS": "选择你的 Java Keystore 文件 (.jks或.keystore):",
-    "certType": "证书类型",
-    "password": "输入您的密钥库或私钥密码（如果有）：",
-    "showSig": "显示签名",
-    "reason": "原因",
-    "location": "位置",
-    "name": "名称",
-    "showLogo": "显示 Logo",
-    "submit": "给 PDF 签名"
+    "filenamePrefix": "已签名",
+    "signMode": {
+      "stepTitle": "签名模式",
+      "tooltip": {
+        "header": {
+          "title": "关于 PDF 签名"
+        },
+        "overview": {
+          "title": "签名工作原理",
+          "text": "两种模式都会为文档加封（任何编辑都会被标记为篡改），并记录签署人/时间/方式以供审计。查看器的信任状态取决于证书链。"
+        },
+        "manual": {
+          "title": "手动——自带证书",
+          "text": "使用您自己的证书文件以符合品牌身份。当 CA/链被识别时可显示<b>受信任</b>。",
+          "use": "适用：面向客户、法律、合规场景。"
+        },
+        "auto": {
+          "title": "自动——零配置，系统即时封印",
+          "text": "使用服务器<b>自签名</b>证书签署。提供相同的<b>防篡改封印</b>与<b>审计追踪</b>；在查看器中通常显示为<b>未验证</b>。",
+          "use": "适用场景：需要快速、且在内部评审与归档中保持一致身份。"
+        },
+        "rule": {
+          "title": "经验法则",
+          "text": "需要收件人显示<b>受信任</b>？选<b>手动</b>。需要零配置、快速的防篡改封印与审计追踪？选<b>自动</b>。"
+        }
+      }
+    },
+    "certTypeStep": {
+      "stepTitle": "证书格式"
+    },
+    "certFiles": {
+      "stepTitle": "证书文件"
+    },
+    "appearance": {
+      "stepTitle": "签名外观",
+      "tooltip": {
+        "header": {
+          "title": "关于签名外观"
+        },
+        "invisible": {
+          "title": "不可见签名",
+          "text": "签名会添加到 PDF 中以提升安全性，但在查看文档时不可见。适合满足合规要求而不改变外观的场景。",
+          "bullet1": "在不改变视觉的情况下提供安全性",
+          "bullet2": "满足数字签名的法律要求",
+          "bullet3": "不影响文档版式或设计"
+        },
+        "visible": {
+          "title": "可见签名",
+          "text": "在 PDF 上显示包含您的姓名、日期和可选信息的签名块。用于让读者清楚看到文档已签署。",
+          "bullet1": "在文档上显示签署人姓名与日期",
+          "bullet2": "可包含签署原因与地点",
+          "bullet3": "可选择放置签名的页面",
+          "bullet4": "可选添加徽标"
+        }
+      }
+    },
+    "sign": {
+      "submit": "签署 PDF",
+      "results": "已签名 PDF"
+    },
+    "error": {
+      "failed": "处理签名时发生错误。"
+    },
+    "tooltip": {
+      "header": {
+        "title": "签名管理说明"
+      },
+      "overview": {
+        "title": "该工具能做什么？",
+        "text": "此工具可检查您的 PDF 是否已数字签名，并可添加新的数字签名。数字签名可证明文档的创建者或批准者，并显示签署后是否被更改。",
+        "bullet1": "检查现有签名及其有效性",
+        "bullet2": "查看签署人和证书的详细信息",
+        "bullet3": "添加新的数字签名以保护文档",
+        "bullet4": "支持多个文件并便于导航"
+      },
+      "validation": {
+        "title": "检查签名",
+        "text": "检查签名时，工具会告诉您签名是否有效、谁签了名、何时签的，以及自签署后文档是否被更改。",
+        "bullet1": "显示签名是否有效",
+        "bullet2": "显示签署人信息与签署日期",
+        "bullet3": "检查文档在签署后是否被修改",
+        "bullet4": "可使用自定义证书进行验证"
+      },
+      "signing": {
+        "title": "添加签名",
+        "text": "要对 PDF 进行签名，您需要数字证书（如 PEM、PKCS12 或 JKS）。您可以选择让签名在文档上可见，或仅用于安全而不可见。",
+        "bullet1": "支持 PEM、PKCS12、JKS 以及服务器证书格式",
+        "bullet2": "可选择在 PDF 上显示或隐藏签名",
+        "bullet3": "可添加原因、地点和签署人姓名",
+        "bullet4": "可选择放置可见签名的页面",
+        "bullet5": "可使用服务器证书实现简便的“使用 Stirling-PDF 签名”选项"
+      }
+    },
+    "certType": {
+      "tooltip": {
+        "header": {
+          "title": "关于证书类型"
+        },
+        "what": {
+          "title": "什么是证书？",
+          "text": "它是您签名的安全身份标识，证明是您签署。除非要求使用证书签名，我们建议使用“键入、手写或上传”等其他安全方式。"
+        },
+        "which": {
+          "title": "我该选哪种格式？",
+          "text": "选择与您的证书文件格式相匹配的选项：",
+          "bullet1": "PKCS#12（.p12 / .pfx）— 合并文件（最常见）",
+          "bullet2": "PFX（.pfx）— 微软的 PKCS12 版本",
+          "bullet3": "PEM — 独立的私钥与证书 .pem 文件",
+          "bullet4": "JKS — 面向开发/CI-CD 的 Java .jks 密钥库"
+        },
+        "convert": {
+          "title": "未看到密钥？",
+          "text": "使用 keytool 将文件转换为 Java 密钥库（.jks），然后选择 JKS。"
+        }
+      }
+    }
   },
   "removeCertSign": {
     "tags": "身份验证、PEM、P12、官方、加密",
     "title": "移除证书签名",
     "header": "移除 PDF 的证书签名",
     "selectPDF": "选择 PDF 文件：",
-    "submit": "移除签名"
+    "submit": "移除签名",
+    "description": "该工具将从您的 PDF 文档中移除数字证书签名。",
+    "filenamePrefix": "未签名",
+    "files": {
+      "placeholder": "在主视图中选择一个 PDF 文件以开始"
+    },
+    "error": {
+      "failed": "移除证书签名时发生错误。"
+    },
+    "results": {
+      "title": "证书移除结果"
+    }
   },
   "pageLayout": {
     "tags": "合并、组合、单视图、整理",
@@ -1023,14 +2054,144 @@
     "addBorder": "添加边框",
     "submit": "提交"
   },
+  "bookletImposition": {
+    "tags": "小册子,拼版,打印,装订,折叠,签名",
+    "title": "小册子拼版",
+    "header": "小册子拼版",
+    "submit": "创建小册子",
+    "spineLocation": {
+      "label": "书脊位置",
+      "left": "左侧（标准）",
+      "right": "右侧（RTL）"
+    },
+    "doubleSided": {
+      "label": "双面打印",
+      "tooltip": "生成正反两面，以便正确的小册子打印"
+    },
+    "manualDuplex": {
+      "title": "手动双面模式",
+      "instructions": "适用于无自动双面的打印机。您需要运行两次："
+    },
+    "duplexPass": {
+      "label": "打印走纸",
+      "first": "第 1 次走纸",
+      "second": "第 2 次走纸",
+      "firstInstructions": "先打印正面 → 叠放纸张（正面朝下）→ 进行第 2 次走纸",
+      "secondInstructions": "将已打印纸叠正面朝下放入 → 打印背面"
+    },
+    "rtlBinding": {
+      "label": "从右向左装订",
+      "tooltip": "适用于阿拉伯语、希伯来语等从右到左的语言"
+    },
+    "addBorder": {
+      "label": "在页面周围添加边框",
+      "tooltip": "在每个页面区块周围添加边框，便于裁切与对齐"
+    },
+    "addGutter": {
+      "label": "添加装订边距",
+      "tooltip": "为装订添加内侧边距空间"
+    },
+    "gutterSize": {
+      "label": "装订边距（点）"
+    },
+    "flipOnShortEdge": {
+      "label": "短边翻转（仅自动双面）",
+      "tooltip": "用于短边翻转的自动双面打印（手动模式下忽略）",
+      "manualNote": "手动模式不需要——您将自行翻转纸堆"
+    },
+    "advanced": {
+      "toggle": "高级选项"
+    },
+    "paperSizeNote": "纸张大小将自动取自第一页。",
+    "tooltip": {
+      "header": {
+        "title": "小册子制作指南"
+      },
+      "description": {
+        "title": "什么是小册子拼版？",
+        "text": "通过按正确的打印顺序排列页面来创建专业小册子。您的 PDF 页面将以横向纸张 2 合 1 的方式排布，折叠并装订后即可按顺序阅读。"
+      },
+      "example": {
+        "title": "示例：8 页小册子",
+        "text": "您的 8 页文档将变为 2 张纸：",
+        "bullet1": "第 1 张正面：第 8、1 页 | 反面：第 2、7 页",
+        "bullet2": "第 2 张正面：第 6、3 页 | 反面：第 4、5 页",
+        "bullet3": "折叠并堆叠后：阅读顺序 1→2→3→4→5→6→7→8"
+      },
+      "printing": {
+        "title": "打印与组装指南",
+        "text": "按照以下步骤获得完美小册子：",
+        "bullet1": "使用“长边翻转”的双面打印",
+        "bullet2": "按顺序堆叠纸张，对折",
+        "bullet3": "沿折痕装订或粘贴",
+        "bullet4": "短边翻转打印机：启用“短边翻转”选项"
+      },
+      "manualDuplex": {
+        "title": "手动双面（单面打印机）",
+        "text": "适用于无自动双面的打印机：",
+        "bullet1": "关闭“双面打印”",
+        "bullet2": "选择“第 1 次走纸”→ 打印 → 纸堆正面朝下",
+        "bullet3": "选择“第 2 次走纸”→ 装入纸堆 → 打印背面",
+        "bullet4": "如常折叠与装订"
+      },
+      "advanced": {
+        "title": "高级选项",
+        "text": "精细调整您的小册子：",
+        "bullet1": "RTL 装订：适用于阿拉伯语、希伯来语等",
+        "bullet2": "边框：显示用于修边的裁切线",
+        "bullet3": "装订边距：为装订/订书留出空间",
+        "bullet4": "短边翻转：仅适用于自动双面打印机"
+      }
+    },
+    "error": {
+      "failed": "创建小册子拼版时发生错误。"
+    }
+  },
   "scalePages": {
-    "tags": "调整大小、修改、尺寸、适应",
     "title": "调整页面缩放比例",
     "header": "调整页面缩放比例",
     "pageSize": "文档页面的尺寸。",
     "keepPageSize": "保持页面原尺寸",
     "scaleFactor": "页面的缩放级别（裁剪）。",
     "submit": "提交"
+  },
+  "adjustPageScale": {
+    "tags": "调整大小,修改,尺寸,适应",
+    "title": "调整页面比例",
+    "header": "调整页面比例",
+    "scaleFactor": {
+      "label": "缩放系数"
+    },
+    "pageSize": {
+      "label": "目标页面大小",
+      "keep": "保持原始大小",
+      "letter": "Letter（美式信纸）",
+      "legal": "Legal（美式政府纸）"
+    },
+    "submit": "调整页面比例",
+    "error": {
+      "failed": "调整页面比例时发生错误。"
+    },
+    "tooltip": {
+      "header": {
+        "title": "页面比例设置概览"
+      },
+      "description": {
+        "title": "说明",
+        "text": "调整 PDF 内容尺寸并更改页面尺寸。"
+      },
+      "scaleFactor": {
+        "title": "缩放系数",
+        "text": "控制页面上内容显示的大小。内容会按比例缩放并居中——若缩放后大于页面尺寸，可能会被裁切。",
+        "bullet1": "1.0 = 原始大小",
+        "bullet2": "0.5 = 一半大小（缩小 50%）",
+        "bullet3": "2.0 = 两倍大小（放大 200%，可能裁切）"
+      },
+      "pageSize": {
+        "title": "目标页面大小",
+        "text": "设置输出 PDF 页面的尺寸。“保持原始大小”维持当前尺寸，其它选项会调整为标准纸张大小。"
+      }
+    }
   },
   "add-page-numbers": {
     "tags": "分页、标签、整理、索引"
@@ -1039,7 +2200,29 @@
     "tags": "自动检测、基于标题、整理、重新标记",
     "title": "自动重命名",
     "header": "自动重命名 PDF",
-    "submit": "自动重命名"
+    "description": "自动从 PDF 内容中查找标题，并将其用作文件名。",
+    "submit": "自动重命名",
+    "files": {
+      "placeholder": "在主视图中选择一个 PDF 文件以开始"
+    },
+    "error": {
+      "failed": "自动重命名 PDF 时发生错误。"
+    },
+    "results": {
+      "title": "自动重命名结果"
+    },
+    "tooltip": {
+      "header": {
+        "title": "自动重命名原理"
+      },
+      "howItWorks": {
+        "title": "智能重命名",
+        "text": "自动从 PDF 内容中查找标题，并将其用作文件名。",
+        "bullet1": "查找看起来像标题或标题级文本",
+        "bullet2": "根据检测到的标题创建干净、合法的文件名",
+        "bullet3": "若未找到合适标题，则保留原文件名"
+      }
+    }
   },
   "adjust-contrast": {
     "tags": "颜色校正、调节、修改、增强"
@@ -1048,7 +2231,36 @@
     "tags": "修剪、缩小、编辑、形状",
     "title": "裁剪",
     "header": "裁剪 PDF",
-    "submit": "提交"
+    "submit": "提交",
+    "noFileSelected": "选择一个 PDF 文件开始裁剪",
+    "preview": {
+      "title": "裁剪区域选择"
+    },
+    "reset": "重置为整页",
+    "coordinates": {
+      "title": "位置与尺寸",
+      "x": "X 位置",
+      "y": "Y 位置",
+      "width": "宽度",
+      "height": "高度"
+    },
+    "error": {
+      "invalidArea": "裁剪区域超出 PDF 边界",
+      "failed": "裁剪 PDF 失败"
+    },
+    "steps": {
+      "selectArea": "选择裁剪区域"
+    },
+    "tooltip": {
+      "title": "如何裁剪 PDF",
+      "description": "通过拖拽并调整缩略图上的蓝色覆盖层选择要裁剪的区域。",
+      "drag": "拖动覆盖层以移动裁剪区域",
+      "resize": "拖动角与边的手柄来调整大小",
+      "precision": "使用坐标输入以获得精确位置"
+    },
+    "results": {
+      "title": "裁剪结果"
+    }
   },
   "autoSplitPDF": {
     "tags": "基于 QR 码、分离、扫描分割、整理",
@@ -1131,50 +2343,123 @@
     "downloadJS": "下载 JavaScript",
     "submit": "显示"
   },
-  "autoRedact": {
-    "tags": "脱敏、隐藏、涂黑、标记、不可见",
-    "title": "自动删除",
-    "header": "自动删除",
-    "colorLabel": "颜色",
-    "textsToRedactLabel": "要删除的文本（每行一个）",
-    "textsToRedactPlaceholder": "例如：\\n保密\\n绝密",
-    "useRegexLabel": "使用正则表达式",
-    "wholeWordSearchLabel": "全字匹配",
-    "customPaddingLabel": "自定义额外间距",
-    "convertPDFToImageLabel": "将PDF转换为PDF-Image（用于删除方框后面的文本）",
-    "submitButton": "提交"
-  },
   "redact": {
     "tags": "涂改,隐藏,涂黑,黑色,标记,遮蔽,手动",
     "title": "手动纠正",
-    "header": "手动纠正",
     "submit": "纠正",
-    "textBasedRedaction": "基于文本的纠正",
-    "pageBasedRedaction": "基于页面的纠正",
-    "convertPDFToImageLabel": "将PDF转换为PDF图像（用于删除框后的文本）",
-    "pageRedactionNumbers": {
-      "title": "页面",
-      "placeholder": "(例如 1,2,8 或 4,7,12-16 或 2n-1)"
+    "error": {
+      "failed": "涂黑 PDF 时发生错误。"
     },
-    "redactionColor": {
-      "title": "编辑颜色"
+    "modeSelector": {
+      "title": "涂黑方式",
+      "mode": "模式",
+      "automatic": "自动",
+      "automaticDesc": "基于搜索词涂黑文本",
+      "manual": "手动",
+      "manualDesc": "点击并拖拽以涂黑特定区域",
+      "manualComingSoon": "手动涂黑即将推出"
     },
-    "export": "导出",
-    "upload": "上传",
-    "boxRedaction": "框选区域涂黑",
-    "zoom": "缩放",
-    "zoomIn": "放大",
-    "zoomOut": "缩小",
-    "nextPage": "下一页",
-    "previousPage": "上一页",
-    "toggleSidebar": "切换侧边栏",
-    "showThumbnails": "显示缩略图",
-    "showDocumentOutline": "显示文档大纲（双击展开/折叠所有项目）",
-    "showAttatchments": "显示附件",
-    "showLayers": "显示图层（双击将所有图层重置为默认状态）",
-    "colourPicker": "颜色选择器",
-    "findCurrentOutlineItem": "查找当前大纲项目",
-    "applyChanges": "应用"
+    "auto": {
+      "header": "自动涂黑",
+      "settings": {
+        "title": "涂黑设置",
+        "advancedTitle": "高级功能"
+      },
+      "colorLabel": "框颜色",
+      "wordsToRedact": {
+        "title": "要涂黑的词语",
+        "placeholder": "输入一个词",
+        "add": "添加",
+        "examples": "示例：Confidential、Top-Secret"
+      },
+      "useRegexLabel": "使用正则表达式",
+      "wholeWordSearchLabel": "整词匹配",
+      "customPaddingLabel": "自定义额外留白",
+      "convertPDFToImageLabel": "将 PDF 转为图像 PDF"
+    },
+    "tooltip": {
+      "mode": {
+        "header": {
+          "title": "涂黑方式"
+        },
+        "automatic": {
+          "title": "自动涂黑",
+          "text": "在整个文档中自动查找并涂黑指定文本。非常适合移除一致的敏感信息，如姓名、地址或机密标记。"
+        },
+        "manual": {
+          "title": "手动涂黑",
+          "text": "点击并拖拽以手动选择特定区域进行涂黑。可精确控制需要涂黑的内容。（即将推出）"
+        }
+      },
+      "words": {
+        "header": {
+          "title": "要涂黑的词语"
+        },
+        "description": {
+          "title": "文本匹配",
+          "text": "输入要在文档中查找并涂黑的词语或短语。每个词会单独搜索。"
+        },
+        "bullet1": "一次添加一个词",
+        "bullet2": "按 Enter 或点击“添加另一个”以添加",
+        "bullet3": "点击 × 以移除词语",
+        "examples": {
+          "title": "常见示例",
+          "text": "常见涂黑词包括：银行信息、电子邮箱地址或特定姓名。"
+        }
+      },
+      "advanced": {
+        "header": {
+          "title": "高级涂黑设置"
+        },
+        "color": {
+          "title": "框颜色与留白",
+          "text": "自定义涂黑框的外观。黑色为标准，但您可选择任意颜色。“留白”可在找到的文本周围添加额外空间。"
+        },
+        "regex": {
+          "title": "使用正则",
+          "text": "启用正则表达式以进行高级模式匹配。适用于查找电话号码、邮箱或复杂模式。",
+          "bullet1": "示例：\\d{4}-\\d{2}-\\d{2} 匹配任意 YYYY-MM-DD 日期",
+          "bullet2": "谨慎使用——请充分测试"
+        },
+        "wholeWord": {
+          "title": "整词匹配",
+          "text": "仅匹配完整单词，而非部分匹配。启用后，“John”不会匹配“Johnson”。"
+        },
+        "convert": {
+          "title": "转为图像 PDF",
+          "text": "在涂黑后将 PDF 转换为基于图像的 PDF。确保框下文字被完全移除且不可恢复。"
+        }
+      }
+    },
+    "manual": {
+      "header": "手动涂黑",
+      "textBasedRedaction": "基于文本的涂黑",
+      "pageBasedRedaction": "基于页面的涂黑",
+      "convertPDFToImageLabel": "将 PDF 转为图像 PDF（用于移除框后面的文字）",
+      "pageRedactionNumbers": {
+        "title": "页码",
+        "placeholder": "（例如：1,2,8 或 4,7,12-16 或 2n-1）"
+      },
+      "redactionColor": {
+        "title": "涂黑颜色"
+      },
+      "export": "导出全部",
+      "upload": "上传",
+      "boxRedaction": "框选涂黑",
+      "zoom": "缩放",
+      "zoomIn": "放大",
+      "zoomOut": "缩小",
+      "nextPage": "下一页",
+      "previousPage": "上一页",
+      "toggleSidebar": "切换侧边栏",
+      "showThumbnails": "显示缩略图",
+      "showDocumentOutline": "显示文档大纲（双击可展开/折叠所有项目）",
+      "showAttachments": "显示附件",
+      "showLayers": "显示图层（双击可重置所有图层到默认状态）",
+      "colourPicker": "取色器",
+      "findCurrentOutlineItem": "定位当前大纲项",
+      "applyChanges": "应用更改"
+    }
   },
   "tableExtraxt": {
     "tags": "CSV、表格提取、提取、转换"
@@ -1227,6 +2512,7 @@
     "tags": "图章、添加图片、图片居中、水印、PDF、嵌入、自定义",
     "header": "添加图章",
     "title": "添加图章",
+    "stampSetup": "印章设置",
     "stampType": "图章类型",
     "stampText": "图章文字",
     "stampImage": "图章图片",
@@ -1239,7 +2525,8 @@
     "overrideY": "覆盖Y坐标",
     "customMargin": "自定义外边距",
     "customColor": "自定义文本颜色",
-    "submit": "提交"
+    "submit": "提交",
+    "noStampSelected": "未选择印章。返回到第 1 步。"
   },
   "removeImagePdf": {
     "tags": "删除图像, 页面操作, 后端, 服务端"
@@ -1318,6 +2605,8 @@
     "title": "登录",
     "header": "登录",
     "signin": "登录",
+    "signInWith": "使用以下方式登录",
+    "signInAnonymously": "以访客身份注册",
     "rememberme": "记住我",
     "invalid": "用户名或密码无效。",
     "locked": "您的账户已被锁定。",
@@ -1331,17 +2620,75 @@
     "oauth2AccessDenied": "拒绝访问",
     "oauth2InvalidTokenResponse": "无效的 Token 响应",
     "oauth2InvalidIdToken": "无效的 Token",
-    "relyingPartyRegistrationNotFound": "No relying party registration found",
+    "relyingPartyRegistrationNotFound": "未找到依赖方注册信息",
     "userIsDisabled": "用户被禁用，登录已被阻止。请联系管理员。",
     "alreadyLoggedIn": "您已经登录到了",
     "alreadyLoggedIn2": "设备，请注销设备后重试。",
     "toManySessions": "你已经有太多的会话了。请注销一些设备后重试。",
-    "logoutMessage": "You have been logged out."
+    "logoutMessage": "您已退出登录。",
+    "youAreLoggedIn": "您已登录！",
+    "email": "邮箱",
+    "password": "密码",
+    "enterEmail": "输入您的邮箱",
+    "enterPassword": "输入您的密码",
+    "loggingIn": "正在登录…",
+    "signingIn": "正在登录…",
+    "login": "登录",
+    "or": "或",
+    "useMagicLink": "改用魔法链接",
+    "enterEmailForMagicLink": "输入您的邮箱以获取魔法链接",
+    "sending": "正在发送…",
+    "sendMagicLink": "发送魔法链接",
+    "cancel": "取消",
+    "dontHaveAccount": "还没有账户？去注册",
+    "home": "首页",
+    "debug": "调试",
+    "signOut": "退出登录",
+    "pleaseEnterBoth": "请同时输入邮箱和密码",
+    "pleaseEnterEmail": "请输入您的邮箱地址",
+    "magicLinkSent": "魔法链接已发送至 {{email}}！请检查邮箱并点击链接登录。",
+    "passwordResetSent": "密码重置链接已发送至 {{email}}！请检查邮箱并按指引操作。",
+    "failedToSignIn": "使用 {{provider}} 登录失败：{{message}}",
+    "unexpectedError": "意外错误：{{message}}"
+  },
+  "signup": {
+    "title": "创建账户",
+    "subtitle": "加入 Stirling PDF 开始使用",
+    "name": "姓名",
+    "email": "邮箱",
+    "password": "密码",
+    "confirmPassword": "确认密码",
+    "enterName": "输入您的姓名",
+    "enterEmail": "输入您的邮箱",
+    "enterPassword": "输入您的密码",
+    "confirmPasswordPlaceholder": "确认密码",
+    "or": "或",
+    "creatingAccount": "正在创建账户…",
+    "signUp": "注册",
+    "alreadyHaveAccount": "已经有账户？去登录",
+    "pleaseFillAllFields": "请填写所有字段",
+    "passwordsDoNotMatch": "两次输入的密码不一致",
+    "passwordTooShort": "密码至少为 6 个字符",
+    "invalidEmail": "请输入有效的邮箱地址",
+    "checkEmailConfirmation": "请检查邮箱中的确认链接以完成注册。",
+    "accountCreatedSuccessfully": "账户创建成功！您现在可以登录。",
+    "unexpectedError": "意外错误：{{message}}"
   },
   "pdfToSinglePage": {
     "title": "PDF 转单页",
     "header": "将 PDF 转换为单页",
-    "submit": "转为单页"
+    "submit": "转为单页",
+    "description": "该工具会将 PDF 的所有页面合并为一张超长单页。宽度保持与原页面相同，高度为所有页面高度之和。",
+    "filenamePrefix": "单页",
+    "files": {
+      "placeholder": "在主视图中选择一个 PDF 文件以开始"
+    },
+    "error": {
+      "failed": "转换为单页时发生错误。"
+    },
+    "results": {
+      "title": "单页结果"
+    }
   },
   "pageExtracter": {
     "title": "提取页面",
@@ -1355,10 +2702,10 @@
     "selectText": {
       "1": "移除 JavaScript 操作",
       "2": "移除嵌入的文件",
-      "3": "Remove XMP metadata",
+      "3": "移除 XMP 元数据",
       "4": "移除链接",
       "5": "移除字体",
-      "6": "Remove Document Info Metadata"
+      "6": "移除文档信息元数据"
     },
     "submit": "清理PDF"
   },
@@ -1372,15 +2719,43 @@
   },
   "compress": {
     "title": "压缩",
+    "desc": "压缩 PDF 以减小文件大小。",
     "header": "压缩 PDF",
+    "method": {
+      "title": "压缩方式",
+      "quality": "质量",
+      "filesize": "文件大小"
+    },
     "credit": "此服务使用qpdf进行 PDF 压缩/优化。",
     "grayscale": {
       "label": "应用灰度进行压缩"
     },
+    "tooltip": {
+      "header": {
+        "title": "压缩设置概览"
+      },
+      "description": {
+        "title": "说明",
+        "text": "压缩是减小文件大小的简便方法。选择“文件大小”可输入目标大小，我们将为您自动调整质量；选择“质量”可手动设置压缩强度。"
+      },
+      "qualityAdjustment": {
+        "title": "质量调整",
+        "text": "拖动滑块以调整压缩强度。较低值（1-3）可保留质量但文件较大；较高值（7-9）能缩小体积但会降低图像清晰度。",
+        "bullet1": "较低数值更能保留质量",
+        "bullet2": "较高数值能更大幅度减小文件"
+      },
+      "grayscale": {
+        "title": "灰度",
+        "text": "选择此选项将所有图像转换为黑白，这对扫描 PDF 或图片较多的文档可显著减小体积。"
+      }
+    },
+    "error": {
+      "failed": "压缩 PDF 时发生错误。"
+    },
     "selectText": {
       "1": {
-        "_value": "Compression Settings",
-        "1": "1-3 PDF compression,</br> 4-6 lite image compression,</br> 7-9 intense image compression Will dramatically reduce image quality"
+        "_value": "压缩设置",
+        "1": "1-3 PDF 压缩，</br> 4-6 轻度图像压缩，</br> 7-9 深度图像压缩（将显著降低图像质量）"
       },
       "2": "优化级别：",
       "4": "自动模式 - 自动调整质量以获得精确大小的PDF",
@@ -1472,15 +2847,15 @@
     "button": "参与调查",
     "dontShowAgain": "不再显示",
     "meeting": {
-      "1": "If you're using Stirling PDF at work, we'd love to speak to you. We're offering technical support sessions in exchange for a 15 minute user discovery session.",
-      "2": "This is a chance to:",
-      "3": "Get help with deployment, integrations, or troubleshooting",
-      "4": "Provide direct feedback on performance, edge cases, and feature gaps",
-      "5": "Help us refine Stirling PDF for real-world enterprise use",
-      "6": "If you're interested, you can book time with our team directly. (English speaking only)",
-      "7": "Looking forward to digging into your use cases and making Stirling PDF even better!",
-      "notInterested": "Not a business and/or interested in a meeting?",
-      "button": "Book meeting"
+      "1": "如果您在工作中使用 Stirling PDF，我们非常希望与您交流。我们正在提供技术支持服务，以换取一次 15 分钟的用户访谈。",
+      "2": "这是一个机会：",
+      "3": "获取部署、集成或故障排除方面的帮助",
+      "4": "提供直接反馈，包括性能、边缘案例和功能差距",
+      "5": "帮助我们改进 Stirling PDF 以满足实际的企业使用需求",
+      "6": "如果您有兴趣，可以直接与我们团队预约时间。（仅限英语）",
+      "7": "期待深入了解您的使用案例，并使 Stirling PDF 变得更好！",
+      "notInterested": "不是企业或对会议不感兴趣？",
+      "button": "预约会议"
     }
   },
   "removeImage": {
@@ -1521,41 +2896,592 @@
     },
     "note": "版本说明仅提供英文版本"
   },
+  "swagger": {
+    "title": "API 文档",
+    "header": "API 文档",
+    "desc": "查看并测试 Stirling PDF 的 API 端点",
+    "tags": "api,文档,swagger,端点,开发"
+  },
   "cookieBanner": {
     "popUp": {
-      "title": "How we use Cookies",
+      "title": "我们如何使用 Cookie",
       "description": {
-        "1": "We use cookies and other technologies to make Stirling PDF work better for you—helping us improve our tools and keep building features you'll love.",
+        "1": "我们使用 Cookie 和其他技术来使 Stirling PDF 更好地为您服务——帮助我们改进工具并构建您喜爱的功能。",
         "2": "If you’d rather not, clicking 'No Thanks' will only enable the essential cookies needed to keep things running smoothly."
       },
-      "acceptAllBtn": "Okay",
-      "acceptNecessaryBtn": "No Thanks",
-      "showPreferencesBtn": "Manage preferences"
+      "acceptAllBtn": "全部接受",
+      "acceptNecessaryBtn": "拒绝",
+      "showPreferencesBtn": "管理偏好设置"
     },
     "preferencesModal": {
-      "title": "Consent Preferences Center",
-      "acceptAllBtn": "Accept all",
-      "acceptNecessaryBtn": "Reject all",
-      "savePreferencesBtn": "Save preferences",
-      "closeIconLabel": "Close modal",
-      "serviceCounterLabel": "Service|Services",
-      "subtitle": "Cookie Usage",
+      "title": "隐私偏好设置中心",
+      "acceptAllBtn": "全部接受",
+      "acceptNecessaryBtn": "拒绝所有",
+      "savePreferencesBtn": "保存设置",
+      "closeIconLabel": "关闭弹窗",
+      "serviceCounterLabel": "服务",
+      "subtitle": "Cookie使用说明",
       "description": {
-        "1": "Stirling PDF uses cookies and similar technologies to enhance your experience and understand how our tools are used. This helps us improve performance, develop the features you care about, and provide ongoing support to our users.",
-        "2": "Stirling PDF cannot—and will never—track or access the content of the documents you use.",
-        "3": "Your privacy and trust are at the core of what we do."
+        "1": "Stirling PDF通过Cookie及类似技术优化用户体验并分析工具使用情况，帮助我们提升性能、开发实用功能并提供持续支持。",
+        "2": "我们承诺：Stirling PDF永远不会追踪或访问您使用的文档内容。",
+        "3": "用户隐私与信任是我们一切工作的核心。"
       },
       "necessary": {
         "title": {
-          "1": "Strictly Necessary Cookies",
-          "2": "Always Enabled"
+          "1": "必要Cookie",
+          "2": "始终启用"
         },
         "description": "These cookies are essential for the website to function properly. They enable core features like setting your privacy preferences, logging in, and filling out forms—which is why they can’t be turned off."
       },
       "analytics": {
-        "title": "Analytics",
-        "description": "These cookies help us understand how our tools are being used, so we can focus on building the features our community values most. Rest assured—Stirling PDF cannot and will never track the content of the documents you work with."
+        "title": "分析统计",
+        "description": "这些Cookie帮助我们分析工具使用情况，以便聚焦开发用户最需要的功能。再次强调：Stirling PDF绝不会追踪您处理的文档内容。"
       }
     }
-  }
+  },
+  "removeMetadata": {
+    "submit": "移除元数据"
+  },
+  "sidebar": {
+    "toggle": "切换侧栏"
+  },
+  "theme": {
+    "toggle": "切换主题"
+  },
+  "view": {
+    "viewer": "查看器",
+    "pageEditor": "页面编辑器",
+    "fileManager": "文件管理器"
+  },
+  "pageEditor": {
+    "title": "页面编辑器",
+    "save": "保存更改",
+    "noPdfLoaded": "未加载 PDF。请先上传以进行编辑。",
+    "rotatedLeft": "已向左旋转：",
+    "rotatedRight": "已向右旋转：",
+    "deleted": "已删除：",
+    "movedLeft": "向左移动：",
+    "movedRight": "向右移动：",
+    "splitAt": "拆分于：",
+    "insertedPageBreak": "已插入分页位置：",
+    "addFileNotImplemented": "演示中未实现“添加文件”",
+    "closePdf": "关闭 PDF",
+    "reset": "重置更改",
+    "zoomIn": "放大",
+    "zoomOut": "缩小",
+    "fitToWidth": "适配宽度",
+    "actualSize": "实际大小"
+  },
+  "viewer": {
+    "firstPage": "第一页",
+    "lastPage": "最后一页",
+    "previousPage": "上一页",
+    "nextPage": "下一页",
+    "zoomIn": "放大",
+    "zoomOut": "缩小",
+    "singlePageView": "单页视图",
+    "dualPageView": "双页视图"
+  },
+  "rightRail": {
+    "closeSelected": "关闭所选文件",
+    "selectAll": "选择所有",
+    "deselectAll": "取消选择所有",
+    "selectByNumber": "按页码选择",
+    "deleteSelected": "删除所选页面",
+    "closePdf": "关闭 PDF",
+    "exportAll": "导出 PDF",
+    "downloadSelected": "下载所选文件",
+    "downloadAll": "全部下载",
+    "toggleTheme": "切换主题",
+    "language": "语言",
+    "search": "搜索 PDF",
+    "panMode": "平移模式",
+    "rotateLeft": "向左旋转",
+    "rotateRight": "向右旋转",
+    "toggleSidebar": "切换侧边栏"
+  },
+  "search": {
+    "title": "搜索 PDF",
+    "placeholder": "输入搜索词…"
+  },
+  "guestBanner": {
+    "title": "您正在以访客身份使用 Stirling PDF！",
+    "message": "创建免费账户以保存您的工作、获取更多功能并支持项目。",
+    "dismiss": "关闭横幅",
+    "signUp": "免费注册"
+  },
+  "toolPicker": {
+    "searchPlaceholder": "搜索工具…",
+    "noToolsFound": "未找到工具",
+    "allTools": "所有工具",
+    "quickAccess": "快速访问",
+    "categories": {
+      "standardTools": "标准工具",
+      "advancedTools": "高级工具",
+      "recommendedTools": "推荐工具"
+    },
+    "subcategories": {
+      "signing": "签署",
+      "documentSecurity": "文档安全",
+      "verification": "验证",
+      "documentReview": "文档审阅",
+      "pageFormatting": "页面格式",
+      "extraction": "提取",
+      "removal": "移除",
+      "automation": "自动化",
+      "general": "通用",
+      "advancedFormatting": "高级排版",
+      "developerTools": "开发者工具"
+    }
+  },
+  "quickAccess": {
+    "read": "阅读",
+    "sign": "签名",
+    "automate": "自动化",
+    "files": "文件",
+    "activity": "活动",
+    "config": "配置",
+    "allTools": "全部工具"
+  },
+  "fileUpload": {
+    "selectFile": "选择文件",
+    "selectFiles": "选择文件",
+    "selectPdfToView": "选择一个 PDF 进行查看",
+    "selectPdfToEdit": "选择一个 PDF 进行编辑",
+    "chooseFromStorage": "从存储中选择或上传新的 PDF",
+    "chooseFromStorageMultiple": "从存储中选择文件或上传新的 PDF",
+    "loadFromStorage": "从存储加载",
+    "filesAvailable": "个可用文件",
+    "loading": "加载中...",
+    "or": "或",
+    "dropFileHere": "将文件拖到此处或点击上传",
+    "dropFilesHere": "将文件拖到此处或点击上传按钮",
+    "pdfFilesOnly": "仅限 PDF 文件",
+    "supportedFileTypes": "支持的文件类型",
+    "upload": "上传",
+    "uploadFile": "上传文件",
+    "uploadFiles": "上传文件",
+    "noFilesInStorage": "存储中没有可用文件。请先上传。",
+    "selectFromStorage": "从存储中选择",
+    "backToTools": "返回工具",
+    "addFiles": "添加文件",
+    "dragFilesInOrClick": "拖入文件或点击“添加文件”浏览"
+  },
+  "fileManager": {
+    "title": "上传 PDF 文件",
+    "subtitle": "将文件添加到您的存储，以便在各工具之间轻松访问",
+    "filesSelected": "个文件已选",
+    "clearSelection": "清除所选",
+    "openInFileEditor": "在文件编辑器中打开",
+    "uploadError": "部分文件上传失败。",
+    "failedToOpen": "无法打开文件。可能已从存储中移除。",
+    "failedToLoad": "无法将文件加载到活动集合。",
+    "storageCleared": "浏览器已清空存储。文件已被移除。请重新上传。",
+    "clearAll": "全部清除",
+    "reloadFiles": "重新加载文件",
+    "dragDrop": "拖放文件到此处",
+    "clickToUpload": "点击以上传文件",
+    "selectedFiles": "已选文件",
+    "storage": "存储",
+    "filesStored": "个文件已存储",
+    "storageError": "发生存储错误",
+    "storageLow": "存储空间不足。请考虑移除旧文件。",
+    "supportMessage": "由浏览器数据库存储提供支持，容量无限",
+    "noFileSelected": "未选择任何文件",
+    "showHistory": "显示历史",
+    "hideHistory": "隐藏历史",
+    "fileHistory": "文件历史",
+    "loadingHistory": "正在加载历史…",
+    "lastModified": "上次修改",
+    "toolChain": "已应用工具",
+    "restore": "恢复",
+    "searchFiles": "搜索文件…",
+    "recent": "最近",
+    "localFiles": "本地文件",
+    "googleDrive": "Google 云端硬盘",
+    "googleDriveShort": "Drive",
+    "myFiles": "我的文件",
+    "noRecentFiles": "未找到最近文件",
+    "dropFilesHint": "将文件拖到此处即可上传",
+    "googleDriveNotAvailable": "不可使用 Google 云端硬盘集成",
+    "openFiles": "打开文件",
+    "openFile": "打开文件",
+    "details": "文件详情",
+    "fileName": "名称",
+    "fileFormat": "格式",
+    "fileSize": "大小",
+    "fileVersion": "版本",
+    "totalSelected": "合计已选",
+    "dropFilesHere": "将文件拖放到此处",
+    "selectAll": "选择所有",
+    "deselectAll": "取消选择所有",
+    "deleteSelected": "删除已选",
+    "downloadSelected": "下载所选",
+    "selectedCount": "已选 {{count}}",
+    "download": "下载",
+    "delete": "删除",
+    "unsupported": "不支持"
+  },
+  "storage": {
+    "temporaryNotice": "文件临时存储在您的浏览器中，可能会被自动清除",
+    "storageLimit": "存储限制",
+    "storageUsed": "已用临时存储",
+    "storageFull": "存储空间几乎已满。请考虑移除部分文件。",
+    "fileTooLarge": "文件过大。单个文件的最大大小为",
+    "storageQuotaExceeded": "超出存储配额。请移除部分文件后再上传。",
+    "approximateSize": "大约大小"
+  },
+  "sanitize": {
+    "title": "安全清理",
+    "desc": "移除 PDF 文件中的潜在有害元素。",
+    "submit": "清理 PDF",
+    "completed": "安全清理成功完成",
+    "error.generic": "安全清理失败",
+    "error.failed": "安全清理 PDF 时发生错误。",
+    "filenamePrefix": "已清理",
+    "sanitizationResults": "安全清理结果",
+    "steps": {
+      "files": "文件",
+      "settings": "设置",
+      "results": "结果"
+    },
+    "files": {
+      "placeholder": "在主视图中选择一个 PDF 文件以开始"
+    },
+    "options": {
+      "title": "安全清理选项",
+      "note": "请选择要从 PDF 中移除的元素。至少需要选择一个选项。",
+      "removeJavaScript.desc": "移除 PDF 中的 JavaScript 操作与脚本",
+      "removeEmbeddedFiles.desc": "移除嵌入在 PDF 中的任何文件",
+      "removeXMPMetadata.desc": "从 PDF 中移除 XMP 元数据",
+      "removeMetadata.desc": "移除文档信息元数据（标题、作者等）",
+      "removeLinks.desc": "移除外部链接与启动动作",
+      "removeFonts.desc": "从 PDF 中移除嵌入字体",
+      "removeEmbeddedFiles": "删除嵌入文件",
+      "removeFonts": "删除字体",
+      "removeJavaScript": "删除 JavaScript",
+      "removeLinks": "删除链接",
+      "removeMetadata": "删除文档元数据",
+      "removeXMPMetadata": "删除 XMP 元数据"
+    }
+  },
+  "addPassword": {
+    "title": "添加密码",
+    "desc": "使用密码加密您的 PDF 文档。",
+    "completed": "已应用密码保护",
+    "submit": "加密",
+    "filenamePrefix": "已加密",
+    "error": {
+      "failed": "加密 PDF 时发生错误。"
+    },
+    "passwords": {
+      "stepTitle": "密码与加密",
+      "completed": "密码已配置",
+      "user": {
+        "label": "用户密码",
+        "placeholder": "输入用户密码"
+      },
+      "owner": {
+        "label": "所有者密码",
+        "placeholder": "输入所有者密码"
+      }
+    },
+    "encryption": {
+      "keyLength": {
+        "label": "加密密钥长度",
+        "40bit": "40 位（低）",
+        "128bit": "128 位（标准）",
+        "256bit": "256 位（高）"
+      }
+    },
+    "results": {
+      "title": "已加密的 PDF"
+    },
+    "tooltip": {
+      "header": {
+        "title": "密码保护概览"
+      },
+      "passwords": {
+        "title": "密码类型",
+        "text": "用户密码限制打开文档；所有者密码控制打开后可执行的操作。您可以同时设置或仅设置其中之一。",
+        "bullet1": "用户密码：打开 PDF 时需要",
+        "bullet2": "所有者密码：控制文档权限（并非所有查看器都支持）"
+      },
+      "encryption": {
+        "title": "加密级别",
+        "text": "更高的加密级别提供更好的安全性，但可能不被较旧的 PDF 查看器支持。",
+        "bullet1": "40 位：基础安全性，与旧版查看器兼容",
+        "bullet2": "128 位：标准安全性，广泛支持",
+        "bullet3": "256 位：最高安全性，需要现代查看器"
+      },
+      "permissions": {
+        "title": "更改权限",
+        "text": "这些权限控制用户对 PDF 的操作。与所有者密码配合时效果最佳。"
+      }
+    }
+  },
+  "changePermissions": {
+    "title": "更改权限",
+    "desc": "更改文档限制与权限。",
+    "completed": "权限已更改",
+    "submit": "更改权限",
+    "error": {
+      "failed": "更改 PDF 权限时发生错误。"
+    },
+    "permissions": {
+      "preventAssembly": {
+        "label": "防止文件的拼接"
+      },
+      "preventExtractContent": {
+        "label": "防止内容提取"
+      },
+      "preventExtractForAccessibility": {
+        "label": "防止提取内容的可访问性"
+      },
+      "preventFillInForm": {
+        "label": "防止填写表格"
+      },
+      "preventModify": {
+        "label": "防止修改"
+      },
+      "preventModifyAnnotations": {
+        "label": "防止修改注释"
+      },
+      "preventPrinting": {
+        "label": "防止打印"
+      },
+      "preventPrintingFaithful": {
+        "label": "防止打印不同的格式"
+      }
+    },
+    "results": {
+      "title": "已修改的 PDF"
+    },
+    "tooltip": {
+      "header": {
+        "title": "更改权限"
+      },
+      "description": {
+        "text": "更改文档权限，允许/禁止在 PDF 阅读器中的不同功能。"
+      },
+      "warning": {
+        "text": "要使这些权限不可更改，请使用“添加密码”工具设置所有者密码。"
+      }
+    }
+  },
+  "removePassword": {
+    "title": "删除密码",
+    "desc": "从 PDF 文档中移除密码保护。",
+    "tags": "安全、解密、密码、安全性、删除密码",
+    "password": {
+      "stepTitle": "删除密码",
+      "label": "当前密码",
+      "placeholder": "输入当前密码",
+      "completed": "密码已配置"
+    },
+    "filenamePrefix": "已解密",
+    "error": {
+      "failed": "移除 PDF 密码时发生错误。"
+    },
+    "tooltip": {
+      "description": "移除密码保护需要用于加密 PDF 的原始密码。这样会解密文档，使其无需密码即可访问。"
+    },
+    "submit": "删除",
+    "results": {
+      "title": "已解密的 PDF"
+    }
+  },
+  "automate": {
+    "title": "自动化",
+    "desc": "通过串联 PDF 操作构建多步工作流。适合重复性任务。",
+    "invalidStep": "无效步骤",
+    "files": {
+      "placeholder": "选择要用此自动化处理的文件"
+    },
+    "selection": {
+      "title": "自动化选择",
+      "saved": {
+        "title": "已保存"
+      },
+      "createNew": {
+        "title": "新建自动化"
+      },
+      "suggested": {
+        "title": "推荐"
+      }
+    },
+    "creation": {
+      "createTitle": "创建自动化",
+      "editTitle": "编辑自动化",
+      "intro": "自动化会按顺序运行工具。开始前，请按希望的顺序添加工具。",
+      "name": {
+        "label": "自动化名称",
+        "placeholder": "我的自动化"
+      },
+      "description": {
+        "label": "描述（可选）",
+        "placeholder": "描述此自动化的作用…"
+      },
+      "tools": {
+        "selectTool": "选择工具…",
+        "selected": "已选工具",
+        "remove": "移除工具",
+        "configure": "配置工具",
+        "notConfigured": "！未配置",
+        "addTool": "添加工具",
+        "add": "添加工具…"
+      },
+      "save": "保存自动化",
+      "unsavedChanges": {
+        "title": "未保存的更改",
+        "message": "您有未保存的更改。确定要返回吗？所有更改都将丢失。",
+        "cancel": "取消",
+        "confirm": "返回"
+      },
+      "icon": {
+        "label": "图标"
+      }
+    },
+    "run": {
+      "title": "运行自动化"
+    },
+    "sequence": {
+      "unnamed": "未命名自动化",
+      "steps": "{{count}} 个步骤",
+      "running": "正在运行自动化…",
+      "run": "运行自动化",
+      "finish": "完成"
+    },
+    "reviewTitle": "自动化结果",
+    "config": {
+      "loading": "正在加载工具配置…",
+      "noSettings": "此工具没有可配置的设置。",
+      "title": "配置 {{toolName}}",
+      "description": "配置此工具的设置。这些设置将在自动化运行时应用。",
+      "cancel": "取消",
+      "save": "保存配置"
+    },
+    "copyToSaved": "复制到“已保存”"
+  },
+  "automation": {
+    "suggested": {
+      "securePdfIngestion": "安全 PDF 采集",
+      "securePdfIngestionDesc": "全面的 PDF 处理流程：清理潜在风险内容、执行 OCR（含清理）、转换为 PDF/A 以便长期存档，并优化文件大小。",
+      "emailPreparation": "邮件准备",
+      "emailPreparationDesc": "通过压缩文件、将大型文档拆分为适合邮件的 20MB 块，并移除元数据来优化用于邮件分发的 PDF。",
+      "secureWorkflow": "安全工作流",
+      "secureWorkflowDesc": "通过移除可能的恶意内容（如 JavaScript 和嵌入文件），再添加密码保护来保护 PDF。默认密码为“password”。",
+      "processImages": "处理图像",
+      "processImagesDesc": "将多个图像文件合并为一个 PDF，然后应用 OCR 技术从图像中提取可搜索文本。"
+    }
+  },
+  "common": {
+    "copy": "复制",
+    "copied": "已复制！",
+    "refresh": "刷新",
+    "retry": "重试",
+    "remaining": "剩余",
+    "used": "已用",
+    "available": "可用",
+    "cancel": "取消"
+  },
+  "config": {
+    "account": {
+      "overview": {
+        "title": "账户设置",
+        "manageAccountPreferences": "管理您的账户偏好",
+        "guestDescription": "您以访客身份登录。可考虑在上方升级您的账户。"
+      },
+      "upgrade": {
+        "title": "升级访客账户",
+        "description": "关联您的账户以保留历史并获得更多功能！",
+        "socialLogin": "使用社交账号升级",
+        "linkWith": "关联方式",
+        "emailPassword": "或输入您的邮箱与密码",
+        "email": "邮箱",
+        "emailPlaceholder": "输入您的邮箱",
+        "password": "密码（可选）",
+        "passwordPlaceholder": "设置密码",
+        "passwordNote": "留空则仅使用邮箱验证",
+        "upgradeButton": "升级账户"
+      }
+    },
+    "apiKeys": {
+      "description": "用于访问 Stirling 一系列 PDF 工具的 API 密钥。可复制到您的项目，或刷新以生成新密钥。",
+      "publicKeyAriaLabel": "公共 API 密钥",
+      "copyKeyAriaLabel": "复制 API 密钥",
+      "refreshAriaLabel": "刷新 API 密钥",
+      "includedCredits": "包含积分",
+      "purchasedCredits": "已购积分",
+      "totalCredits": "总积分",
+      "chartAriaLabel": "积分使用：已用包含 {{includedUsed}} / {{includedTotal}}，已用购买 {{purchasedUsed}} / {{purchasedTotal}}",
+      "nextReset": "下次重置",
+      "lastApiUse": "上次 API 使用",
+      "overlayMessage": "生成密钥后可查看积分与可用额度",
+      "label": "API 密钥",
+      "guestInfo": "访客用户不提供 API 密钥。创建账户以获取可在应用中使用的密钥。",
+      "goToAccount": "前往账户",
+      "refreshModal": {
+        "title": "刷新 API 密钥",
+        "warning": "⚠️ 警告：此操作将生成新的 API 密钥并使之前的密钥失效。",
+        "impact": "任何当前使用这些密钥的应用或服务将停止工作，直至您更新为新密钥。",
+        "confirmPrompt": "确定要继续吗？",
+        "confirmCta": "刷新密钥"
+      },
+      "generateError": "我们无法生成您的 API 密钥。"
+    }
+  },
+  "termsAndConditions": "条款与条件",
+  "logOut": "退出登录",
+  "AddAttachmentsRequest": {
+    "addMoreFiles": "添加更多文件...",
+    "attachments": "选择附件",
+    "info": "选择要附加到 PDF 的文件。这些文件将被嵌入并可通过 PDF 的附件面板访问。",
+    "placeholder": "选择文件...",
+    "results": {
+      "title": "附件结果"
+    },
+    "selectFiles": "选择要附加的文件",
+    "selectedFiles": "已选择的文件",
+    "submit": "添加附件"
+  },
+  "applyAndContinue": "应用并继续",
+  "discardChanges": "放弃更改",
+  "exportAndContinue": "导出并继续",
+  "keepWorking": "继续工作",
+  "replaceColor": {
+    "tags": "替换颜色,页面操作,后端,服务器端"
+  },
+  "scannerImageSplit": {
+    "error": {
+      "failed": "提取图像扫描时发生错误。"
+    },
+    "submit": "提取图像扫描",
+    "title": "已提取的图像",
+    "tooltip": {
+      "headsUp": "注意",
+      "headsUpDesc": "重叠的照片或颜色与照片非常接近的背景会降低准确性 - 尝试使用更浅或更深的背景并留出更多空间。",
+      "problem1": "未检测到照片 → 将容差增加到 30-50",
+      "problem2": "误检测太多 → 将最小面积增加到 15,000-20,000",
+      "problem3": "裁剪太紧 → 将边框大小增加到 5-10",
+      "problem4": "倾斜的照片未矫正 → 将角度阈值降低到 ~5°",
+      "problem5": "灰尘/噪声框 → 将最小轮廓面积增加到 1000-2000",
+      "quickFixes": "快速修复",
+      "setupTips": "设置提示",
+      "tip1": "使用简单的浅色背景",
+      "tip2": "在照片之间留出小间隙(≈1 厘米)",
+      "tip3": "以 300-600 DPI 扫描",
+      "tip4": "清洁扫描仪玻璃",
+      "title": "照片分割器",
+      "useCase1": "一次扫描整个相册页面",
+      "useCase2": "将平板批次拆分为单独的文件",
+      "useCase3": "将拼贴画拆分为单独的照片",
+      "useCase4": "从文档中提取照片",
+      "whatThisDoes": "功能说明",
+      "whatThisDoesDesc": "自动查找并从扫描页面或合成图像中提取每张照片 - 无需手动裁剪。",
+      "whenToUse": "何时使用"
+    }
+  },
+  "unsavedChanges": "您的 PDF 有未保存的更改。您想做什么?",
+  "unsavedChangesTitle": "未保存的更改"
 }

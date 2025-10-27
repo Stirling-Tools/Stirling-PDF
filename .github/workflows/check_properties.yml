@@ -6,6 +6,18 @@ on:
     paths:
       - "app/core/src/main/resources/messages_*.properties"
 
+# cancel in-progress jobs if a new job is triggered
+# This is useful to avoid running multiple builds for the same branch if a new commit is pushed
+# or a pull request is updated.
+# It helps to save resources and time by ensuring that only the latest commit is built and tested
+# This is particularly useful for long-running jobs that may take a while to complete.
+# The `group` is set to a combination of the workflow name, event name, and branch name.
+# This ensures that jobs are grouped by the workflow and branch, allowing for cancellation of
+# in-progress jobs when a new commit is pushed to the same branch or a new pull request is opened.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref_name || github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read # Allow read access to repository content
 
@@ -18,12 +30,12 @@ jobs:
       pull-requests: write # Allow writing to pull requests
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@6c439dc8bdf85cadbbce9ed30d1c7b959517bc49 # v2.12.2
+        uses: step-security/harden-runner@ec9f2d5744a09debf3a187a3f4f675c53b671911 # v2.13.0
         with:
           egress-policy: audit
 
       - name: Checkout main branch first
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
 
       - name: Setup GitHub App Bot
         id: setup-bot
@@ -115,7 +127,7 @@ jobs:
 
             // Filter for relevant files based on the PR changes
             const changedFiles = files
-              .filter(file => 
+              .filter(file =>
                 file.status !== "removed" &&
                 /^app\/core\/src\/main\/resources\/messages_[a-zA-Z_]{2}_[a-zA-Z_]{2,7}\.properties$/.test(file.filename)
               )

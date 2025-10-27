@@ -1,17 +1,14 @@
-import React from "react";
 import {
   Tooltip,
   ActionIcon,
-  Paper
 } from "@mantine/core";
 import UndoIcon from "@mui/icons-material/Undo";
 import RedoIcon from "@mui/icons-material/Redo";
 import ContentCutIcon from "@mui/icons-material/ContentCut";
-import DownloadIcon from "@mui/icons-material/Download";
 import RotateLeftIcon from "@mui/icons-material/RotateLeft";
 import RotateRightIcon from "@mui/icons-material/RotateRight";
 import DeleteIcon from "@mui/icons-material/Delete";
-import CloseIcon from "@mui/icons-material/Close";
+import InsertPageBreakIcon from "@mui/icons-material/InsertPageBreak";
 
 interface PageEditorControlsProps {
   // Close/Reset functions
@@ -27,19 +24,25 @@ interface PageEditorControlsProps {
   onRotate: (direction: 'left' | 'right') => void;
   onDelete: () => void;
   onSplit: () => void;
+  onSplitAll: () => void;
+  onPageBreak: () => void;
+  onPageBreakAll: () => void;
 
-  // Export functions
-  onExportSelected: () => void;
+  // Export functions (moved to right rail)
   onExportAll: () => void;
   exportLoading: boolean;
 
   // Selection state
   selectionMode: boolean;
-  selectedPages: string[];
+  selectedPageIds: string[];
+  displayDocument?: { pages: { id: string; pageNumber: number }[] };
+
+  // Split state (for tooltip logic)
+  splitPositions?: Set<number>;
+  totalPages?: number;
 }
 
 const PageEditorControls = ({
-  onClosePdf,
   onUndo,
   onRedo,
   canUndo,
@@ -47,19 +50,62 @@ const PageEditorControls = ({
   onRotate,
   onDelete,
   onSplit,
-  onExportSelected,
-  onExportAll,
-  exportLoading,
-  selectionMode,
-  selectedPages
+  onPageBreak,
+  selectedPageIds,
+  displayDocument,
+  splitPositions,
+  totalPages
 }: PageEditorControlsProps) => {
+  // Calculate split tooltip text using smart toggle logic
+  const getSplitTooltip = () => {
+    if (!splitPositions || !totalPages || selectedPageIds.length === 0) {
+      return "Split Selected";
+    }
+
+    // Convert selected pages to split positions (same logic as handleSplit)
+    const selectedPageNumbers = displayDocument ? selectedPageIds.map(id => {
+      const page = displayDocument.pages.find(p => p.id === id);
+      return page?.pageNumber || 0;
+    }).filter(num => num > 0) : [];
+    const selectedSplitPositions = selectedPageNumbers.map(pageNum => pageNum - 1).filter(pos => pos < totalPages - 1);
+
+    if (selectedSplitPositions.length === 0) {
+      return "Split Selected";
+    }
+
+    // Smart toggle logic: follow the majority, default to adding splits if equal
+    const existingSplitsCount = selectedSplitPositions.filter(pos => splitPositions.has(pos)).length;
+    const noSplitsCount = selectedSplitPositions.length - existingSplitsCount;
+
+    // Remove splits only if majority already have splits
+    // If equal (50/50), default to adding splits
+    const willRemoveSplits = existingSplitsCount > noSplitsCount;
+
+    if (willRemoveSplits) {
+      return existingSplitsCount === selectedSplitPositions.length
+        ? "Remove All Selected Splits"
+        : "Remove Selected Splits";
+    } else {
+      return existingSplitsCount === 0
+        ? "Split Selected"
+        : "Complete Selected Splits";
+    }
+  };
+
+  // Calculate page break tooltip text
+  const getPageBreakTooltip = () => {
+    return selectedPageIds.length > 0
+      ? `Insert ${selectedPageIds.length} Page Break${selectedPageIds.length > 1 ? 's' : ''}`
+      : "Insert Page Breaks";
+  };
+
   return (
     <div
       style={{
         position: 'absolute',
-        left: '50%',
-        bottom: '20px',
-        transform: 'translateX(-50%)',
+        left: 0,
+        right: 0,
+        bottom: 0,
         zIndex: 50,
         display: 'flex',
         justifyContent: 'center',
@@ -67,43 +113,37 @@ const PageEditorControls = ({
         background: 'transparent',
       }}
     >
-      <Paper
-        radius="xl"
-        shadow="lg"
-        p={16}
+      <div
         style={{
           display: 'flex',
           alignItems: 'center',
           gap: 12,
-          borderRadius: 32,
-          boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
+          borderTopLeftRadius: 16,
+          borderTopRightRadius: 16,
+          borderBottomLeftRadius: 0,
+          borderBottomRightRadius: 0,
+          boxShadow: '0 -2px 8px rgba(0,0,0,0.04)',
+          backgroundColor: 'var(--bg-toolbar)',
+          border: '1px solid var(--border-default)',
+          borderRadius: '16px 16px 0 0',
           pointerEvents: 'auto',
-          minWidth: 400,
-          justifyContent: 'center'
+          minWidth: 360,
+          maxWidth: 700,
+          flexWrap: 'wrap',
+          justifyContent: 'center',
+          padding: "1rem",
+          paddingBottom: "1rem"
         }}
       >
-        {/* Close PDF */}
-        <Tooltip label="Close PDF">
-          <ActionIcon
-            onClick={onClosePdf}
-            color="red"
-            variant="light"
-            size="lg"
-          >
-            <CloseIcon />
-          </ActionIcon>
-        </Tooltip>
-
-        <div style={{ width: 1, height: 28, backgroundColor: 'var(--mantine-color-gray-3)', margin: '0 8px' }} />
 
         {/* Undo/Redo */}
         <Tooltip label="Undo">
-          <ActionIcon onClick={onUndo} disabled={!canUndo} size="lg">
+          <ActionIcon onClick={onUndo} disabled={!canUndo} variant="subtle" radius="md" size="lg">
             <UndoIcon />
           </ActionIcon>
         </Tooltip>
         <Tooltip label="Redo">
-          <ActionIcon onClick={onRedo} disabled={!canRedo} size="lg">
+          <ActionIcon onClick={onRedo} disabled={!canRedo} variant="subtle" radius="md" size="lg">
             <RedoIcon />
           </ActionIcon>
         </Tooltip>
@@ -111,79 +151,67 @@ const PageEditorControls = ({
         <div style={{ width: 1, height: 28, backgroundColor: 'var(--mantine-color-gray-3)', margin: '0 8px' }} />
 
         {/* Page Operations */}
-        <Tooltip label={selectionMode ? "Rotate Selected Left" : "Rotate All Left"}>
+        <Tooltip label="Rotate Selected Left">
           <ActionIcon
             onClick={() => onRotate('left')}
-            disabled={selectionMode && selectedPages.length === 0}
-            variant={selectionMode && selectedPages.length > 0 ? "light" : "default"}
-            color={selectionMode && selectedPages.length > 0 ? "blue" : undefined}
+            disabled={selectedPageIds.length === 0}
+            variant="subtle"
+            style={{ color: 'var(--mantine-color-dimmed)' }}
+            radius="md"
             size="lg"
           >
             <RotateLeftIcon />
           </ActionIcon>
         </Tooltip>
-        <Tooltip label={selectionMode ? "Rotate Selected Right" : "Rotate All Right"}>
+        <Tooltip label="Rotate Selected Right">
           <ActionIcon
             onClick={() => onRotate('right')}
-            disabled={selectionMode && selectedPages.length === 0}
-            variant={selectionMode && selectedPages.length > 0 ? "light" : "default"}
-            color={selectionMode && selectedPages.length > 0 ? "blue" : undefined}
+            disabled={selectedPageIds.length === 0}
+            variant="subtle"
+            style={{ color: 'var(--mantine-color-dimmed)' }}
+            radius="md"
             size="lg"
           >
             <RotateRightIcon />
           </ActionIcon>
         </Tooltip>
-        <Tooltip label={selectionMode ? "Delete Selected" : "Delete All"}>
+        <Tooltip label="Delete Selected">
           <ActionIcon
             onClick={onDelete}
-            disabled={selectionMode && selectedPages.length === 0}
-            color="red"
-            variant={selectionMode && selectedPages.length > 0 ? "light" : "default"}
+            disabled={selectedPageIds.length === 0}
+            variant="subtle"
+            style={{ color: 'var(--mantine-color-dimmed)' }}
+            radius="md"
             size="lg"
           >
             <DeleteIcon />
           </ActionIcon>
         </Tooltip>
-        <Tooltip label={selectionMode ? "Split Selected" : "Split All"}>
+        <Tooltip label={getSplitTooltip()}>
           <ActionIcon
             onClick={onSplit}
-            disabled={selectionMode && selectedPages.length === 0}
-            variant={selectionMode && selectedPages.length > 0 ? "light" : "default"}
-            color={selectionMode && selectedPages.length > 0 ? "blue" : undefined}
+            disabled={selectedPageIds.length === 0}
+            variant="subtle"
+            style={{ color: 'var(--mantine-color-dimmed)' }}
+            radius="md"
             size="lg"
           >
             <ContentCutIcon />
           </ActionIcon>
         </Tooltip>
-
-        <div style={{ width: 1, height: 28, backgroundColor: 'var(--mantine-color-gray-3)', margin: '0 8px' }} />
-
-        {/* Export Controls */}
-        {selectionMode && selectedPages.length > 0 && (
-          <Tooltip label="Export Selected">
-            <ActionIcon
-              onClick={onExportSelected}
-              disabled={exportLoading}
-              color="blue"
-              variant="light"
-              size="lg"
-            >
-              <DownloadIcon />
-            </ActionIcon>
-          </Tooltip>
-        )}
-        <Tooltip label="Export All">
+        <Tooltip label={getPageBreakTooltip()}>
           <ActionIcon
-            onClick={onExportAll}
-            disabled={exportLoading}
-            color="green"
-            variant="light"
+            onClick={onPageBreak}
+            disabled={selectedPageIds.length === 0}
+            variant="subtle"
+            style={{ color: 'var(--mantine-color-dimmed)' }}
+            radius="md"
             size="lg"
           >
-            <DownloadIcon />
+            <InsertPageBreakIcon />
           </ActionIcon>
         </Tooltip>
-      </Paper>
+      </div>
     </div>
   );
 };

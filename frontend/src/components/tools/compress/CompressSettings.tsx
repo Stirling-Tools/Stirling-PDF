@@ -1,18 +1,12 @@
-import React, { useState } from "react";
-import { Button, Stack, Text, NumberInput, Select } from "@mantine/core";
+import { useState } from "react";
+import { Stack, Text, NumberInput, Select, Divider } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-
-interface CompressParameters {
-  compressionMethod: 'quality' | 'filesize';
-  compressionLevel: number;
-  fileSizeValue: string;
-  fileSizeUnit: 'KB' | 'MB';
-  grayscale: boolean;
-}
+import { CompressParameters } from "../../../hooks/tools/compress/useCompressParameters";
+import ButtonSelector from "../../shared/ButtonSelector";
 
 interface CompressSettingsProps {
   parameters: CompressParameters;
-  onParameterChange: (key: keyof CompressParameters, value: any) => void;
+  onParameterChange: <K extends keyof CompressParameters>(key: K, value: CompressParameters[K]) => void;
   disabled?: boolean;
 }
 
@@ -22,38 +16,24 @@ const CompressSettings = ({ parameters, onParameterChange, disabled = false }: C
 
   return (
     <Stack gap="md">
+
+      <Divider ml='-md'></Divider>
       {/* Compression Method */}
-      <Stack gap="sm">
-        <Text size="sm" fw={500}>Compression Method</Text>
-        <div style={{ display: 'flex', gap: '4px' }}>
-          <Button
-            variant={parameters.compressionMethod === 'quality' ? 'filled' : 'outline'}
-            color={parameters.compressionMethod === 'quality' ? 'blue' : 'gray'}
-            onClick={() => onParameterChange('compressionMethod', 'quality')}
-            disabled={disabled}
-            style={{ flex: 1, height: 'auto', minHeight: '40px', fontSize: '11px' }}
-          >
-            <div style={{ textAlign: 'center', lineHeight: '1.1', fontSize: '11px' }}>
-              Quality
-            </div>
-          </Button>
-          <Button
-            variant={parameters.compressionMethod === 'filesize' ? 'filled' : 'outline'}
-            color={parameters.compressionMethod === 'filesize' ? 'blue' : 'gray'}
-            onClick={() => onParameterChange('compressionMethod', 'filesize')}
-            disabled={disabled}
-            style={{ flex: 1, height: 'auto', minHeight: '40px', fontSize: '11px' }}
-          >
-            <div style={{ textAlign: 'center', lineHeight: '1.1', fontSize: '11px' }}>
-              File Size
-            </div>
-          </Button>
-        </div>
-      </Stack>
+      <ButtonSelector
+        label={t('compress.method.title', 'Compression Method')}
+        value={parameters.compressionMethod}
+        onChange={(value) => onParameterChange('compressionMethod', value)}
+        options={[
+          { value: 'quality', label: t('compress.method.quality', 'Quality') },
+          { value: 'filesize', label: t('compress.method.filesize', 'File Size') },
+        ]}
+        disabled={disabled}
+      />
 
       {/* Quality Adjustment */}
       {parameters.compressionMethod === 'quality' && (
         <Stack gap="sm">
+          <Divider />
           <Text size="sm" fw={500}>Compression Level</Text>
           <div style={{ position: 'relative' }}>
             <input
@@ -68,7 +48,7 @@ const CompressSettings = ({ parameters, onParameterChange, disabled = false }: C
               onTouchStart={() => setIsSliding(true)}
               onTouchEnd={() => setIsSliding(false)}
               disabled={disabled}
-              style={{ 
+              style={{
                 width: '100%',
                 height: '6px',
                 borderRadius: '3px',
@@ -107,6 +87,8 @@ const CompressSettings = ({ parameters, onParameterChange, disabled = false }: C
         </Stack>
       )}
 
+      <Divider/>
+
       {/* File Size Input */}
       {parameters.compressionMethod === 'filesize' && (
         <Stack gap="sm">
@@ -141,7 +123,7 @@ const CompressSettings = ({ parameters, onParameterChange, disabled = false }: C
 
       {/* Compression Options */}
       <Stack gap="sm">
-        <label 
+        <label
           style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
           title="Converts all images in the PDF to grayscale, which can significantly reduce file size while maintaining readability"
         >

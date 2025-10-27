@@ -1,135 +1,156 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { Box } from '@mantine/core';
-import styles from './PageEditor.module.css';
+import { useVirtualizer } from '@tanstack/react-virtual';
+import { GRID_CONSTANTS } from './constants';
 
 interface DragDropItem {
   id: string;
-  splitBefore?: boolean;
+  splitAfter?: boolean;
 }
 
 interface DragDropGridProps<T extends DragDropItem> {
   items: T[];
-  selectedItems: number[];
+  selectedItems: string[];
   selectionMode: boolean;
   isAnimating: boolean;
-  onDragStart: (pageNumber: number) => void;
-  onDragEnd: () => void;
-  onDragOver: (e: React.DragEvent) => void;
-  onDragEnter: (pageNumber: number) => void;
-  onDragLeave: () => void;
-  onDrop: (e: React.DragEvent, targetPageNumber: number | 'end') => void;
-  onEndZoneDragEnter: () => void;
+  onReorderPages: (sourcePageNumber: number, targetIndex: number, selectedPageIds?: string[]) => void;
   renderItem: (item: T, index: number, refs: React.MutableRefObject<Map<string, HTMLDivElement>>) => React.ReactNode;
   renderSplitMarker?: (item: T, index: number) => React.ReactNode;
-  draggedItem: number | null;
-  dropTarget: number | null;
-  multiItemDrag: {pageNumbers: number[], count: number} | null;
-  dragPosition: {x: number, y: number} | null;
 }
 
 const DragDropGrid = <T extends DragDropItem>({
   items,
-  selectedItems,
-  selectionMode,
-  isAnimating,
-  onDragStart,
-  onDragEnd,
-  onDragOver,
-  onDragEnter,
-  onDragLeave,
-  onDrop,
-  onEndZoneDragEnter,
   renderItem,
-  renderSplitMarker,
-  draggedItem,
-  dropTarget,
-  multiItemDrag,
-  dragPosition,
 }: DragDropGridProps<T>) => {
   const itemRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  // Global drag cleanup
+  // Responsive grid configuration
+  const [itemsPerRow, setItemsPerRow] = useState(4);
+  const OVERSCAN = items.length > 1000 ? GRID_CONSTANTS.OVERSCAN_LARGE : GRID_CONSTANTS.OVERSCAN_SMALL;
+
+  // Calculate items per row based on container width
+  const calculateItemsPerRow = useCallback(() => {
+    if (!containerRef.current) return 4; // Default fallback
+
+    const containerWidth = containerRef.current.offsetWidth;
+    if (containerWidth === 0) return 4; // Container not measured yet
+
+    // Convert rem to pixels for calculation
+    const remToPx = parseFloat(getComputedStyle(document.documentElement).fontSize);
+    const ITEM_WIDTH = parseFloat(GRID_CONSTANTS.ITEM_WIDTH) * remToPx;
+    const ITEM_GAP = parseFloat(GRID_CONSTANTS.ITEM_GAP) * remToPx;
+
+    // Calculate how many items fit: (width - gap) / (itemWidth + gap)
+    const availableWidth = containerWidth - ITEM_GAP; // Account for first gap
+    const itemWithGap = ITEM_WIDTH + ITEM_GAP;
+    const calculated = Math.floor(availableWidth / itemWithGap);
+
+    return Math.max(1, calculated); // At least 1 item per row
+  }, []);
+
+  // Update items per row when container resizes
   useEffect(() => {
-    const handleGlobalDragEnd = () => {
-      onDragEnd();
+    const updateLayout = () => {
+      const newItemsPerRow = calculateItemsPerRow();
+      setItemsPerRow(newItemsPerRow);
     };
 
-    const handleGlobalDrop = (e: DragEvent) => {
-      e.preventDefault();
-    };
+    // Initial calculation
+    updateLayout();
 
-    if (draggedItem) {
-      document.addEventListener('dragend', handleGlobalDragEnd);
-      document.addEventListener('drop', handleGlobalDrop);
+    // Listen for window resize
+    window.addEventListener('resize', updateLayout);
+
+    // Use ResizeObserver for container size changes
+    const resizeObserver = new ResizeObserver(updateLayout);
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current);
     }
 
     return () => {
-      document.removeEventListener('dragend', handleGlobalDragEnd);
-      document.removeEventListener('drop', handleGlobalDrop);
+      window.removeEventListener('resize', updateLayout);
+      resizeObserver.disconnect();
     };
-  }, [draggedItem, onDragEnd]);
+  }, [calculateItemsPerRow]);
+
+  // Virtualization with react-virtual library
+  const rowVirtualizer = useVirtualizer({
+    count: Math.ceil(items.length / itemsPerRow),
+    getScrollElement: () => containerRef.current?.closest('[data-scrolling-container]') as Element,
+    estimateSize: () => {
+      const remToPx = parseFloat(getComputedStyle(document.documentElement).fontSize);
+      return parseFloat(GRID_CONSTANTS.ITEM_HEIGHT) * remToPx;
+    },
+    overscan: OVERSCAN,
+  });
+
+  // Calculate optimal width for centering
+  const remToPx = parseFloat(getComputedStyle(document.documentElement).fontSize);
+  const itemWidth = parseFloat(GRID_CONSTANTS.ITEM_WIDTH) * remToPx;
+  const itemGap = parseFloat(GRID_CONSTANTS.ITEM_GAP) * remToPx;
+  const gridWidth = itemsPerRow * itemWidth + (itemsPerRow - 1) * itemGap;
 
   return (
-    <Box>
+    <Box
+      ref={containerRef}
+      style={{
+        // Basic container styles
+        width: '100%',
+        height: '100%',
+      }}
+    >
       <div
         style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: '1.5rem',
-          justifyContent: 'flex-start',
-          paddingBottom: '100px',
-          // Performance optimizations for smooth scrolling
-          willChange: 'scroll-position',
-          transform: 'translateZ(0)', // Force hardware acceleration
-          backfaceVisibility: 'hidden',
-          // Use containment for better rendering performance
-          contain: 'layout style paint',
+          height: `${rowVirtualizer.getTotalSize()}px`,
+          width: '100%',
+          position: 'relative',
+          margin: '0 auto',
+          maxWidth: `${gridWidth}px`,
         }}
       >
-        {items.map((item, index) => (
-          <React.Fragment key={item.id}>
-            {/* Split marker */}
-            {renderSplitMarker && item.splitBefore && index > 0 && renderSplitMarker(item, index)}
+        {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+          const startIndex = virtualRow.index * itemsPerRow;
+          const endIndex = Math.min(startIndex + itemsPerRow, items.length);
+          const rowItems = items.slice(startIndex, endIndex);
 
-            {/* Item */}
-            {renderItem(item, index, itemRefs)}
-          </React.Fragment>
-        ))}
+          return (
+            <div
+              key={virtualRow.index}
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: `${virtualRow.size}px`,
+                transform: `translateY(${virtualRow.start}px)`,
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  gap: GRID_CONSTANTS.ITEM_GAP,
+                  justifyContent: 'flex-start',
+                  height: '100%',
+                  alignItems: 'center',
+                  position: 'relative'
+                }}
+              >
+                {rowItems.map((item, itemIndex) => {
+                  const actualIndex = startIndex + itemIndex;
+                  return (
+                    <React.Fragment key={item.id}>
+                      {/* Item */}
+                      {renderItem(item, actualIndex, itemRefs)}
+                    </React.Fragment>
+                  );
+                })}
 
-        {/* End drop zone */}
-        <div className="w-[20rem] h-[20rem] flex items-center justify-center flex-shrink-0">
-          <div
-            data-drop-zone="end"
-            className={`cursor-pointer select-none w-[15rem] h-[15rem] flex items-center justify-center flex-shrink-0 shadow-sm hover:shadow-md transition-all relative ${
-              dropTarget === 'end'
-                ? 'ring-2 ring-green-500 bg-green-50'
-                : 'bg-white hover:bg-blue-50 border-2 border-dashed border-gray-300 hover:border-blue-400'
-            }`}
-            style={{ borderRadius: '12px' }}
-            onDragOver={onDragOver}
-            onDragEnter={onEndZoneDragEnter}
-            onDragLeave={onDragLeave}
-            onDrop={(e) => onDrop(e, 'end')}
-          >
-            <div className="text-gray-500 text-sm text-center font-medium">
-              Drop here to<br />move to end
+              </div>
             </div>
-          </div>
-        </div>
+          );
+        })}
       </div>
-
-      {/* Multi-item drag indicator */}
-      {multiItemDrag && dragPosition && (
-        <div
-          className={styles.multiDragIndicator}
-          style={{
-            left: dragPosition.x,
-            top: dragPosition.y,
-          }}
-        >
-          {multiItemDrag.count} items
-        </div>
-      )}
     </Box>
   );
 };

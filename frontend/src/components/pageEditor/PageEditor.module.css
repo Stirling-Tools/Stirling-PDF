@@ -16,7 +16,7 @@
 }
 
 .pageContainer:hover .pageHoverControls {
-  opacity: 1 !important;
+  opacity: 0.95 !important;
 }
 
 /* Checkbox container - prevent transform inheritance */
@@ -62,6 +62,40 @@
   }
 }
 
-.pulse {
-  animation: pulse 1s infinite;
+/* Action styles */
+.actionRow:hover { 
+  background: var(--hover-bg); 
+}
+
+.actionDanger { 
+  color: var(--text-brand-accent); 
+}
+
+.actionsDivider { 
+  height: 1px; 
+  background: var(--border-default); 
+  margin: 4px 0; 
+}
+
+.pinIndicator {
+  position: absolute;
+  bottom: 4px;
+  left: 4px;
+  z-index: 1;
+  color: rgba(0, 0, 0, 0.35); /* match drag handle color */
+}
+
+.unsupportedPill {
+  margin-left: 1.75rem;
+  background: #6B7280;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 80px;
+  height: 20px;
 }

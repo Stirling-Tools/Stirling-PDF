@@ -1,168 +1,98 @@
-import React, { useState, useEffect } from "react";
-import { Paper, Button, Checkbox, Stack, Text, Group, Loader, Alert } from "@mantine/core";
+import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { FileWithUrl } from "../types/file";
-import { fileStorage } from "../services/fileStorage";
-import { makeApiUrl } from "../utils/api";
-import { useEndpointEnabledWithHealthCheck } from "../hooks/useEndpointConfig";
+import { createToolFlow } from "../components/tools/shared/createToolFlow";
+import MergeSettings from "../components/tools/merge/MergeSettings";
+import MergeFileSorter from "../components/tools/merge/MergeFileSorter";
+import { useMergeParameters } from "../hooks/tools/merge/useMergeParameters";
+import { useMergeOperation } from "../hooks/tools/merge/useMergeOperation";
+import { useBaseTool } from "../hooks/tools/shared/useBaseTool";
+import { BaseToolProps, ToolComponent } from "../types/tool";
+import { useMergeTips } from "../components/tooltips/useMergeTips";
+import { useFileManagement, useSelectedFiles, useAllFiles } from "../contexts/FileContext";
 
-export interface MergePdfPanelProps {
-  files: FileWithUrl[];
-  setDownloadUrl: (url: string) => void;
-  params: {
-    order: string;
-    removeDuplicates: boolean;
-  };
-  updateParams: (newParams: Partial<MergePdfPanelProps["params"]>) => void;
-}
-
-const MergePdfPanel: React.FC<MergePdfPanelProps> = ({
-  files,
-  setDownloadUrl,
-  params,
-  updateParams,
-}) => {
+const Merge = (props: BaseToolProps) => {
   const { t } = useTranslation();
-  const [selectedFiles, setSelectedFiles] = useState<boolean[]>([]);
-  const [downloadUrl, setLocalDownloadUrl] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const { enabled: endpointEnabled, loading: endpointLoading, backendHealthy } = useEndpointEnabledWithHealthCheck("merge-pdfs");
+  const mergeTips = useMergeTips();
 
-  useEffect(() => {
-    setSelectedFiles(files.map(() => true));
-  }, [files]);
+  // File selection hooks for custom sorting
+  const { fileIds } = useAllFiles();
+  const { selectedFileStubs } = useSelectedFiles();
+  const { reorderFiles } = useFileManagement();
 
-  const handleMerge = async () => {
-    const filesToMerge = files.filter((_, index) => selectedFiles[index]);
-    if (filesToMerge.length < 2) {
-      setErrorMessage(t("multiPdfPrompt")); // "Select PDFs (2+)"
-      return;
-    }
-
-    const formData = new FormData();
-
-    // Handle IndexedDB files
-    for (const file of filesToMerge) {
-      if (!file.id) {
-        continue; // Skip files without an id
-      }
-      const storedFile = await fileStorage.getFile(file?.id);
-      if (storedFile) {
-        const blob = new Blob([storedFile.data], { type: storedFile.type });
-        const actualFile = new File([blob], storedFile.name, {
-          type: storedFile.type,
-          lastModified: storedFile.lastModified
-        });
-        formData.append("fileInput", actualFile);
-      }
-    }
-
-    setIsLoading(true);
-    setErrorMessage(null);
-
-    try {
-      const response = await fetch(makeApiUrl("/api/v1/general/merge-pdfs"), {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Failed to merge PDFs: ${errorText}`);
-      }
-
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      setDownloadUrl(url);
-      setLocalDownloadUrl(url);
-    } catch (error: any) {
-      setErrorMessage(error.message || "Unknown error occurred.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleCheckboxChange = (index: number) => {
-    setSelectedFiles((prev) =>
-      prev.map((selected, i) => (i === index ? !selected : selected))
-    );
-  };
-
-  const selectedCount = selectedFiles.filter(Boolean).length;
-
-  const { order, removeDuplicates } = params;
-
-  if (endpointLoading) {
-    return (
-      <Stack align="center" justify="center" h={200}>
-        <Loader size="md" />
-        <Text size="sm" c="dimmed">{t("loading", "Loading...")}</Text>
-      </Stack>
-    );
-  }
-
-  if (endpointEnabled === false) {
-    return (
-      <Stack align="center" justify="center" h={200}>
-        <Alert color="red" title={t("error._value", "Error")} variant="light">
-          {t("endpointDisabled", "This feature is currently disabled.")}
-        </Alert>
-      </Stack>
-    );
-  }
-
-  return (
-      <Stack>
-        <Text fw={500} size="lg">{t("merge.header")}</Text>
-        <Stack gap={4}>
-          {files.map((file, index) => (
-            <Group key={index} gap="xs">
-              <Checkbox
-                checked={selectedFiles[index] || false}
-                onChange={() => handleCheckboxChange(index)}
-              />
-              <Text size="sm">{file.name}</Text>
-            </Group>
-          ))}
-        </Stack>
-        {selectedCount < 2 && (
-          <Text size="sm" c="red">
-            {t("multiPdfPrompt")}
-          </Text>
-        )}
-        <Button
-          onClick={handleMerge}
-          loading={isLoading}
-          disabled={selectedCount < 2 || isLoading}
-          mt="md"
-        >
-{t("merge.submit")}
-        </Button>
-        {errorMessage && (
-          <Alert color="red" mt="sm">
-            {errorMessage}
-          </Alert>
-        )}
-        {downloadUrl && (
-          <Button
-            component="a"
-            href={downloadUrl}
-            download="merged.pdf"
-            color="green"
-            variant="light"
-            mt="md"
-          >
-{t("downloadPdf")}
-          </Button>
-        )}
-        <Checkbox
-          label={t("merge.removeCertSign")}
-          checked={removeDuplicates}
-          onChange={() => updateParams({ removeDuplicates: !removeDuplicates })}
-        />
-      </Stack>
+  const base = useBaseTool(
+    'merge',
+    useMergeParameters,
+    useMergeOperation,
+    props,
+    { minFiles: 2 }
   );
+
+  // Custom file sorting logic for merge tool
+  const sortFiles = useCallback((sortType: 'filename' | 'dateModified', ascending: boolean = true) => {
+    const sortedStubs = [...selectedFileStubs].sort((stubA, stubB) => {
+      let comparison = 0;
+      switch (sortType) {
+        case 'filename':
+          comparison = stubA.name.localeCompare(stubB.name);
+          break;
+        case 'dateModified':
+          comparison = stubA.lastModified - stubB.lastModified;
+          break;
+      }
+      return ascending ? comparison : -comparison;
+    });
+
+    const selectedIds = sortedStubs.map(record => record.id);
+    const deselectedIds = fileIds.filter(id => !selectedIds.includes(id));
+    reorderFiles([...selectedIds, ...deselectedIds]);
+  }, [selectedFileStubs, fileIds, reorderFiles]);
+
+  return createToolFlow({
+    files: {
+      selectedFiles: base.selectedFiles,
+      isCollapsed: base.hasResults,
+      minFiles: 2,
+    },
+    steps: [
+      {
+        title: "Sort Files",
+        isCollapsed: base.settingsCollapsed,
+        content: (
+          <MergeFileSorter
+            onSortFiles={sortFiles}
+            disabled={!base.hasFiles || base.endpointLoading}
+          />
+        ),
+      },
+      {
+        title: "Settings",
+        isCollapsed: base.settingsCollapsed,
+        onCollapsedClick: base.settingsCollapsed ? base.handleSettingsReset : undefined,
+        tooltip: mergeTips,
+        content: (
+          <MergeSettings
+            parameters={base.params.parameters}
+            onParameterChange={base.params.updateParameter}
+            disabled={base.endpointLoading}
+          />
+        ),
+      },
+    ],
+    executeButton: {
+      text: t("merge.submit", "Merge PDFs"),
+      isVisible: !base.hasResults,
+      loadingText: t("loading"),
+      onClick: base.handleExecute,
+      disabled: !base.params.validateParameters() || !base.hasFiles || !base.endpointEnabled,
+    },
+    review: {
+      isVisible: base.hasResults,
+      operation: base.operation,
+      title: t("merge.title", "Merge Results"),
+      onFileClick: base.handleThumbnailClick,
+      onUndo: base.handleUndo,
+    },
+  });
 };
 
-export default MergePdfPanel;
+export default Merge as ToolComponent;

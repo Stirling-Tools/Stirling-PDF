@@ -5,6 +5,7 @@ import Backend from 'i18next-http-backend';
 
 // Define supported languages (based on your existing translations)
 export const supportedLanguages = {
+  'en': 'English',
   'en-GB': 'English (UK)',
   'en-US': 'English (US)',
   'ar-AR': 'العربية',
@@ -57,25 +58,44 @@ i18n
   .use(initReactI18next)
   .init({
     fallbackLng: 'en-GB',
+    supportedLngs: Object.keys(supportedLanguages),
+    load: 'currentOnly',
+    nonExplicitSupportedLngs: false,
     debug: process.env.NODE_ENV === 'development',
-    
+
+    // Ensure synchronous loading to prevent timing issues
+    initImmediate: false,
+
     interpolation: {
       escapeValue: false, // React already escapes values
     },
-    
+
     backend: {
-      loadPath: '/locales/{{lng}}/{{ns}}.json',
+      loadPath: (lngs: string[], namespaces: string[]) => {
+        // Map 'en' to 'en-GB' for loading translations
+        const lng = lngs[0] === 'en' ? 'en-GB' : lngs[0];
+        const basePath = import.meta.env.BASE_URL || '/';
+        const cleanBasePath = basePath.endsWith('/') ? basePath.slice(0, -1) : basePath;
+        return `${cleanBasePath}/locales/${lng}/${namespaces[0]}.json`;
+      },
     },
-    
+
     detection: {
       order: ['localStorage', 'navigator', 'htmlTag'],
       caches: ['localStorage'],
+      convertDetectedLanguage: (lng: string) => lng === 'en' ? 'en-GB' : lng,
     },
-    
+
     react: {
-      useSuspense: false, // Set to false to avoid suspense issues with SSR
+      useSuspense: true, // Enable suspense to prevent premature rendering
+      bindI18n: 'languageChanged loaded',
+      bindI18nStore: 'added removed',
+      transEmptyNodeValue: '', // Return empty string for missing keys instead of key name
+      transSupportBasicHtmlNodes: true,
+      transKeepBasicHtmlNodesFor: ['br', 'strong', 'i', 'p'],
     },
   });
+
 
 // Set document direction based on language
 i18n.on('languageChanged', (lng) => {

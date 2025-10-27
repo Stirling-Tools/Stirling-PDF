@@ -3,21 +3,46 @@ package stirling.software.common.util;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.util.stream.Stream;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import stirling.software.common.service.SsrfProtectionService;
+
 class CustomHtmlSanitizerTest {
+
+    private CustomHtmlSanitizer customHtmlSanitizer;
+
+    @BeforeEach
+    void setUp() {
+        SsrfProtectionService mockSsrfProtectionService = mock(SsrfProtectionService.class);
+        stirling.software.common.model.ApplicationProperties mockApplicationProperties =
+                mock(stirling.software.common.model.ApplicationProperties.class);
+        stirling.software.common.model.ApplicationProperties.System mockSystem =
+                mock(stirling.software.common.model.ApplicationProperties.System.class);
+
+        // Allow all URLs by default for basic tests
+        when(mockSsrfProtectionService.isUrlAllowed(org.mockito.ArgumentMatchers.anyString()))
+                .thenReturn(true);
+        when(mockApplicationProperties.getSystem()).thenReturn(mockSystem);
+        when(mockSystem.getDisableSanitize()).thenReturn(false); // Enable sanitization for tests
+
+        customHtmlSanitizer =
+                new CustomHtmlSanitizer(mockSsrfProtectionService, mockApplicationProperties);
+    }
 
     @ParameterizedTest
     @MethodSource("provideHtmlTestCases")
     void testSanitizeHtml(String inputHtml, String[] expectedContainedTags) {
         // Act
-        String sanitizedHtml = CustomHtmlSanitizer.sanitize(inputHtml);
+        String sanitizedHtml = customHtmlSanitizer.sanitize(inputHtml);
 
         // Assert
         for (String tag : expectedContainedTags) {
@@ -58,7 +83,7 @@ class CustomHtmlSanitizerTest {
                 "<p style=\"color: blue; font-size: 16px; margin-top: 10px;\">Styled text</p>";
 
         // Act
-        String sanitizedHtml = CustomHtmlSanitizer.sanitize(htmlWithStyles);
+        String sanitizedHtml = customHtmlSanitizer.sanitize(htmlWithStyles);
 
         // Assert
         // The OWASP HTML Sanitizer might filter some specific styles, so we only check that
@@ -75,7 +100,7 @@ class CustomHtmlSanitizerTest {
                 "<a href=\"https://example.com\" title=\"Example Site\">Example Link</a>";
 
         // Act
-        String sanitizedHtml = CustomHtmlSanitizer.sanitize(htmlWithLink);
+        String sanitizedHtml = customHtmlSanitizer.sanitize(htmlWithLink);
 
         // Assert
         // The most important aspect is that the link content is preserved
@@ -97,7 +122,7 @@ class CustomHtmlSanitizerTest {
         String htmlWithJsLink = "<a href=\"javascript:alert('XSS')\">Malicious Link</a>";
 
         // Act
-        String sanitizedHtml = CustomHtmlSanitizer.sanitize(htmlWithJsLink);
+        String sanitizedHtml = customHtmlSanitizer.sanitize(htmlWithJsLink);
 
         // Assert
         assertFalse(sanitizedHtml.contains("javascript:"), "JavaScript URLs should be removed");
@@ -116,7 +141,7 @@ class CustomHtmlSanitizerTest {
                         + "</table>";
 
         // Act
-        String sanitizedHtml = CustomHtmlSanitizer.sanitize(htmlWithTable);
+        String sanitizedHtml = customHtmlSanitizer.sanitize(htmlWithTable);
 
         // Assert
         assertTrue(sanitizedHtml.contains("<table"), "Table should be preserved");
@@ -143,7 +168,7 @@ class CustomHtmlSanitizerTest {
                 "<img src=\"image.jpg\" alt=\"An image\" width=\"100\" height=\"100\">";
 
         // Act
-        String sanitizedHtml = CustomHtmlSanitizer.sanitize(htmlWithImage);
+        String sanitizedHtml = customHtmlSanitizer.sanitize(htmlWithImage);
 
         // Assert
         assertTrue(sanitizedHtml.contains("<img"), "Image tag should be preserved");
@@ -160,7 +185,7 @@ class CustomHtmlSanitizerTest {
                 "<img src=\"data:image/svg+xml;base64,PHN2ZyBvbmxvYWQ9ImFsZXJ0KDEpIj48L3N2Zz4=\" alt=\"SVG with XSS\">";
 
         // Act
-        String sanitizedHtml = CustomHtmlSanitizer.sanitize(htmlWithDataUrlImage);
+        String sanitizedHtml = customHtmlSanitizer.sanitize(htmlWithDataUrlImage);
 
         // Assert
         assertFalse(
@@ -175,7 +200,7 @@ class CustomHtmlSanitizerTest {
                 "<a href=\"#\" onclick=\"alert('XSS')\" onmouseover=\"alert('XSS')\">Click me</a>";
 
         // Act
-        String sanitizedHtml = CustomHtmlSanitizer.sanitize(htmlWithJsEvent);
+        String sanitizedHtml = customHtmlSanitizer.sanitize(htmlWithJsEvent);
 
         // Assert
         assertFalse(
@@ -192,7 +217,7 @@ class CustomHtmlSanitizerTest {
         String htmlWithScript = "<p>Safe content</p><script>alert('XSS');</script>";
 
         // Act
-        String sanitizedHtml = CustomHtmlSanitizer.sanitize(htmlWithScript);
+        String sanitizedHtml = customHtmlSanitizer.sanitize(htmlWithScript);
 
         // Assert
         assertFalse(sanitizedHtml.contains("<script>"), "Script tags should be removed");
@@ -206,7 +231,7 @@ class CustomHtmlSanitizerTest {
         String htmlWithNoscript = "<p>Safe content</p><noscript>JavaScript is disabled</noscript>";
 
         // Act
-        String sanitizedHtml = CustomHtmlSanitizer.sanitize(htmlWithNoscript);
+        String sanitizedHtml = customHtmlSanitizer.sanitize(htmlWithNoscript);
 
         // Assert
         assertFalse(sanitizedHtml.contains("<noscript>"), "Noscript tags should be removed");
@@ -220,7 +245,7 @@ class CustomHtmlSanitizerTest {
         String htmlWithIframe = "<p>Safe content</p><iframe src=\"https://example.com\"></iframe>";
 
         // Act
-        String sanitizedHtml = CustomHtmlSanitizer.sanitize(htmlWithIframe);
+        String sanitizedHtml = customHtmlSanitizer.sanitize(htmlWithIframe);
 
         // Assert
         assertFalse(sanitizedHtml.contains("<iframe"), "Iframe tags should be removed");
@@ -237,7 +262,7 @@ class CustomHtmlSanitizerTest {
                         + "<embed src=\"embed.swf\" type=\"application/x-shockwave-flash\">";
 
         // Act
-        String sanitizedHtml = CustomHtmlSanitizer.sanitize(htmlWithObjects);
+        String sanitizedHtml = customHtmlSanitizer.sanitize(htmlWithObjects);
 
         // Assert
         assertFalse(sanitizedHtml.contains("<object"), "Object tags should be removed");
@@ -256,7 +281,7 @@ class CustomHtmlSanitizerTest {
                         + "<link rel=\"stylesheet\" href=\"evil.css\">";
 
         // Act
-        String sanitizedHtml = CustomHtmlSanitizer.sanitize(htmlWithMetaTags);
+        String sanitizedHtml = customHtmlSanitizer.sanitize(htmlWithMetaTags);
 
         // Assert
         assertFalse(sanitizedHtml.contains("<meta"), "Meta tags should be removed");
@@ -283,7 +308,7 @@ class CustomHtmlSanitizerTest {
                         + "</div>";
 
         // Act
-        String sanitizedHtml = CustomHtmlSanitizer.sanitize(complexHtml);
+        String sanitizedHtml = customHtmlSanitizer.sanitize(complexHtml);
 
         // Assert
         assertTrue(sanitizedHtml.contains("<div"), "Div should be preserved");
@@ -314,7 +339,7 @@ class CustomHtmlSanitizerTest {
     @Test
     void testSanitizeHandlesEmpty() {
         // Act
-        String sanitizedHtml = CustomHtmlSanitizer.sanitize("");
+        String sanitizedHtml = customHtmlSanitizer.sanitize("");
 
         // Assert
         assertEquals("", sanitizedHtml, "Empty input should result in empty string");
@@ -323,7 +348,7 @@ class CustomHtmlSanitizerTest {
     @Test
     void testSanitizeHandlesNull() {
         // Act
-        String sanitizedHtml = CustomHtmlSanitizer.sanitize(null);
+        String sanitizedHtml = customHtmlSanitizer.sanitize(null);
 
         // Assert
         assertEquals("", sanitizedHtml, "Null input should result in empty string");

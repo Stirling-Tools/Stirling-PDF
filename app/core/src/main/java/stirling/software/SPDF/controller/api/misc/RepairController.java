@@ -6,19 +6,18 @@ import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.EndpointConfiguration;
+import stirling.software.SPDF.config.swagger.StandardPdfResponse;
+import stirling.software.common.annotations.AutoJobPostMapping;
+import stirling.software.common.annotations.api.MiscApi;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ProcessExecutor;
@@ -27,9 +26,7 @@ import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
-@RestController
-@RequestMapping("/api/v1/misc")
-@Tag(name = "Misc", description = "Miscellaneous APIs")
+@MiscApi
 @Slf4j
 @RequiredArgsConstructor
 public class RepairController {
@@ -46,7 +43,8 @@ public class RepairController {
         return endpointConfiguration.isGroupEnabled("qpdf");
     }
 
-    @PostMapping(consumes = "multipart/form-data", value = "/repair")
+    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/repair")
+    @StandardPdfResponse
     @Operation(
             summary = "Repair a PDF file",
             description =

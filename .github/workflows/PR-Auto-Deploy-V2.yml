@@ -3,7 +3,15 @@ name: Auto PR V2 Deployment
 on:
   pull_request:
     types: [opened, synchronize, reopened, closed]
-
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: "PR number to deploy"
+        required: true
+      allow_fork:
+        description: "Allow deploying fork PR?"
+        required: false
+        default: "false"
 
 permissions:
   contents: read
@@ -12,101 +20,93 @@ permissions:
 
 jobs:
   check-pr:
-    if: github.event.action != 'closed'
+    if: (github.event_name == 'pull_request' && github.event.action != 'closed') || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     outputs:
-      should_deploy: ${{ steps.check-conditions.outputs.should_deploy }}
-      pr_number: ${{ github.event.number }}
-      pr_repository: ${{ steps.get-pr-info.outputs.repository }}
-      pr_ref: ${{ steps.get-pr-info.outputs.ref }}
+      should_deploy: ${{ steps.decide.outputs.should_deploy }}
+      is_fork: ${{ steps.resolve.outputs.is_fork }}
+      allow_fork: ${{ steps.decide.outputs.allow_fork }}
+      pr_number: ${{ steps.resolve.outputs.pr_number }}
+      pr_repository: ${{ steps.resolve.outputs.repository }}
+      pr_ref: ${{ steps.resolve.outputs.ref }}
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@002fdce3c6a235733a90a27c80493a3241e56863 # v2.12.1
+        uses: step-security/harden-runner@6c439dc8bdf85cadbbce9ed30d1c7b959517bc49 # v2.12.2
         with:
           egress-policy: audit
 
-      - name: Check deployment conditions
-        id: check-conditions
+      - name: Resolve PR info
+        id: resolve
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            let prNumber = context.eventName === 'workflow_dispatch'
+              ? parseInt(process.env.INPUT_PR, 10)
+              : context.payload.number;
+
+            if (!Number.isInteger(prNumber)) { core.setFailed('Invalid PR number'); return; }
+
+            const { data: pr } = await github.rest.pulls.get({ owner, repo, pull_number: prNumber });
+            core.setOutput('pr_number', String(prNumber));
+            core.setOutput('repository', pr.head.repo.full_name);
+            core.setOutput('ref', pr.head.ref);
+            core.setOutput('is_fork', String(pr.head.repo.fork));
+            core.setOutput('base_ref', pr.base.ref);
+            core.setOutput('author', pr.user.login);
+            core.setOutput('state', pr.state);
+
+      - name: Decide deploy
+        id: decide
+        shell: bash
         env:
+          EVENT_NAME: ${{ github.event_name }}
+          STATE: ${{ steps.resolve.outputs.state }}
+          IS_FORK: ${{ steps.resolve.outputs.is_fork }}
+          # nur bei workflow_dispatch gesetzt:
+          ALLOW_FORK_INPUT: ${{ inputs.allow_fork }}
+          # für Auto-PR-Logik:
           PR_TITLE: ${{ github.event.pull_request.title }}
-          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
           PR_BRANCH: ${{ github.event.pull_request.head.ref }}
+          PR_BASE: ${{ steps.resolve.outputs.base_ref }}
+          PR_AUTHOR: ${{ steps.resolve.outputs.author }}
         run: |
-          echo "PR Title: $PR_TITLE"
-          echo "PR Author: $PR_AUTHOR"
-          echo "PR Branch: $PR_BRANCH"
-          echo "PR Base Branch: ${{ github.event.pull_request.base.ref }}"
-          
-          # Define authorized users
-          authorized_users=(
-            "Frooodle"
-            "sf298"
-            "Ludy87"
-            "LaserKaspar"
-            "sbplat"
-            "reecebrowne"
-            "DarioGii"
-            "ConnorYoh"
-            "EthanHealy01"
-          )
-          
-          # Check if author is in the authorized list
-          is_authorized=false
-          for user in "${authorized_users[@]}"; do
-            if [[ "$PR_AUTHOR" == "$user" ]]; then
-              is_authorized=true
-              break
+          set -e
+          # Standard: nichts deployen
+          should=false
+          allow_fork="$(echo "${ALLOW_FORK_INPUT:-false}" | tr '[:upper:]' '[:lower:]')"
+
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            if [ "$STATE" != "open" ]; then
+              echo "PR not open -> skip"
+            else
+              if [ "$IS_FORK" = "true" ] && [ "$allow_fork" != "true" ]; then
+                echo "Fork PR and allow_fork=false -> skip"
+              else
+                should=true
+              fi
             fi
-          done
-          
-          # If PR is targeting V2 and user is authorized, deploy unconditionally
-          PR_BASE_BRANCH="${{ github.event.pull_request.base.ref }}"
-          if [[ "$PR_BASE_BRANCH" == "V2" && "$is_authorized" == "true" ]]; then
-            echo "✅ Deployment forced: PR targets V2 and author is authorized."
-            echo "should_deploy=true" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-          
-          # Otherwise, continue with original keyword checks
-          has_v2_keyword=false
-          if [[ "$PR_TITLE" =~ [Vv]2 ]] || [[ "$PR_TITLE" =~ [Vv]ersion.?2 ]] || [[ "$PR_TITLE" =~ [Vv]ersion.?[Tt]wo ]]; then
-            has_v2_keyword=true
-          fi
-          
-          has_branch_keyword=false
-          if [[ "$PR_BRANCH" =~ [Vv]2 ]] || [[ "$PR_BRANCH" =~ [Rr]eact ]]; then
-            has_branch_keyword=true
-          fi
-          
-          if [[ "$is_authorized" == "true" && ( "$has_v2_keyword" == "true" || "$has_branch_keyword" == "true" ) ]]; then
-            echo "✅ Deployment conditions met"
-            echo "should_deploy=true" >> $GITHUB_OUTPUT
           else
-            echo "❌ Deployment conditions not met"
-            echo "  - Authorized user: $is_authorized"
-            echo "  - Has V2 keyword in title: $has_v2_keyword"
-            echo "  - Has V2/React keyword in branch: $has_branch_keyword"
-            echo "should_deploy=false" >> $GITHUB_OUTPUT
+            auth_users=("Frooodle" "sf298" "Ludy87" "LaserKaspar" "sbplat" "reecebrowne" "DarioGii" "ConnorYoh" "EthanHealy01" "jbrunton96")
+            is_auth=false; for u in "${auth_users[@]}"; do [ "$u" = "$PR_AUTHOR" ] && is_auth=true && break; done
+            if [ "$PR_BASE" = "V2" ] && [ "$is_auth" = true ]; then
+              should=true
+            else
+              title_has_v2=false; echo "$PR_TITLE" | grep -qiE 'v2|version.?2|version.?two' && title_has_v2=true
+              branch_has_kw=false; echo "$PR_BRANCH" | grep -qiE 'v2|react' && branch_has_kw=true
+              if [ "$is_auth" = true ] && { [ "$title_has_v2" = true ] || [ "$branch_has_kw" = true ]; }; then
+                should=true
+              fi
+            fi
           fi
 
-      - name: Get PR repository and ref
-        id: get-pr-info
-        if: steps.check-conditions.outputs.should_deploy == 'true'
-        run: |
-          # For forks, use the full repository name, for internal PRs use the current repo
-          if [[ "${{ github.event.pull_request.head.repo.fork }}" == "true" ]]; then
-            repository="${{ github.event.pull_request.head.repo.full_name }}"
-          else
-            repository="${{ github.repository }}"
-          fi
-          
-          echo "repository=$repository" >> $GITHUB_OUTPUT
-          echo "ref=${{ github.event.pull_request.head.ref }}" >> $GITHUB_OUTPUT
+          echo "should_deploy=$should" >> $GITHUB_OUTPUT
+          echo "allow_fork=${allow_fork:-false}" >> $GITHUB_OUTPUT
 
   deploy-v2-pr:
     needs: check-pr
     runs-on: ubuntu-latest
-    if: needs.check-pr.outputs.should_deploy == 'true'
+    if: needs.check-pr.outputs.should_deploy == 'true' && (needs.check-pr.outputs.is_fork == 'false' || needs.check-pr.outputs.allow_fork == 'true')
     # Concurrency control - only one deployment per PR at a time
     concurrency:
       group: v2-deploy-pr-${{ needs.check-pr.outputs.pr_number }}
@@ -118,7 +118,7 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@002fdce3c6a235733a90a27c80493a3241e56863 # v2.12.1
+        uses: step-security/harden-runner@6c439dc8bdf85cadbbce9ed30d1c7b959517bc49 # v2.12.2
         with:
           egress-policy: audit
 
@@ -153,13 +153,13 @@ jobs:
               issue_number: prNumber,
               per_page: 100
             });
-            
+
             const v2Comments = comments.filter(comment => 
               comment.body.includes('🚀 **Auto-deploying V2 version**') ||
               comment.body.includes('## 🚀 V2 Auto-Deployment Complete!') ||
               comment.body.includes('❌ **V2 Auto-deployment failed**')
             );
-            
+
             for (const comment of v2Comments) {
               console.log(`Deleting old V2 comment: ${comment.id}`);
               await github.rest.issues.deleteComment({
@@ -176,7 +176,6 @@ jobs:
               issue_number: prNumber,
               body: `🚀 **Auto-deploying V2 version** for PR #${prNumber}...\n\n_This is an automated deployment triggered by V2/version2 keywords in the PR title or V2/React keywords in the branch name._\n\n⚠️ **Note:** If new commits are pushed during deployment, this build will be cancelled and replaced with the latest version.`
             });
-            
             return newComment.id;
 
       - name: Checkout PR
@@ -186,7 +185,6 @@ jobs:
           ref: ${{ needs.check-pr.outputs.pr_ref }}
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0  # Fetch full history for commit hash detection
-
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
@@ -211,7 +209,7 @@ jobs:
           if [ -z "$FRONTEND_HASH" ]; then
             FRONTEND_HASH="no-frontend-changes"
           fi
-          
+
           # Get last commit that touched backend code, docker/backend, or docker/compose
           BACKEND_HASH=$(git log -1 --format="%H" -- app/ docker/backend/ docker/compose/ 2>/dev/null || echo "")
           if [ -z "$BACKEND_HASH" ]; then
@@ -317,8 +315,10 @@ jobs:
                 SYSTEM_MAXFILESIZE: "100"
                 METRICS_ENABLED: "true"
                 SYSTEM_GOOGLEVISIBILITY: "false"
+                SWAGGER_SERVER_URL: "https://${V2_PORT}.ssl.stirlingpdf.cloud"
+                baseUrl: "https://${V2_PORT}.ssl.stirlingpdf.cloud"
               restart: on-failure:5
-              
+
             stirling-pdf-v2-frontend:
               container_name: stirling-pdf-v2-frontend-pr-${{ needs.check-pr.outputs.pr_number }}
               image: ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-frontend-${{ steps.commit-hashes.outputs.frontend_short }}
@@ -350,10 +350,10 @@ jobs:
             docker-compose up -d
             
             # Clean up unused Docker resources to save space
-            docker system prune -af --volumes
-            
+            docker system prune -af --volumes || true
+
             # Clean up old backend/frontend images (older than 2 weeks)
-            docker image prune -af --filter "until=336h" --filter "label!=keep=true"
+            docker image prune -af --filter "until=336h" --filter "label!=keep=true" || true
           ENDSSH
 
           # Set port for output
@@ -385,10 +385,12 @@ jobs:
             }
             
             const deploymentUrl = `http://${{ secrets.VPS_HOST }}:${v2Port}`;
-            
+            const httpsUrl = `https://${v2Port}.ssl.stirlingpdf.cloud`;
+
             const commentBody = `## 🚀 V2 Auto-Deployment Complete!\n\n` +
                               `Your V2 PR with the new frontend/backend split architecture has been deployed!\n\n` +
-                              `🔗 **V2 Test URL:** [${deploymentUrl}](${deploymentUrl})\n\n` +
+                              `🔗 **Direct Test URL (non-SSL)** [${deploymentUrl}](${deploymentUrl})\n\n` +
+                              `🔐 **Secure HTTPS URL**: [${httpsUrl}](${httpsUrl})\n\n` +
                               `_This deployment will be automatically cleaned up when the PR is closed._\n\n` +
                               `🔄 **Auto-deployed** because PR title or branch name contains V2/version2/React keywords.`;
 
@@ -486,8 +488,8 @@ jobs:
             fi
             
             # Clean up old unused images (older than 2 weeks) but keep recent ones for reuse
-            docker image prune -af --filter "until=336h" --filter "label!=keep=true"
-            
+            docker image prune -af --filter "until=336h" --filter "label!=keep=true" || true
+
             # Note: We don't remove the commit-based images since they can be reused across PRs
             # Only remove PR-specific containers and directories
           ENDSSH
@@ -497,4 +499,3 @@ jobs:
         run: |
           rm -f ../private.key
         continue-on-error: true
-

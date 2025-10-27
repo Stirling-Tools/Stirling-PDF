@@ -9,7 +9,6 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.session.SessionInformation;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -64,6 +63,7 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
         String requestURI = request.getRequestURI();
+
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         // Check for session expiration (unsure if needed)
@@ -92,14 +92,9 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
                         response.getWriter().write("Invalid API Key.");
                         return;
                     }
-                    List<SimpleGrantedAuthority> authorities =
-                            user.get().getAuthorities().stream()
-                                    .map(
-                                            authority ->
-                                                    new SimpleGrantedAuthority(
-                                                            authority.getAuthority()))
-                                    .toList();
-                    authentication = new ApiKeyAuthenticationToken(user.get(), apiKey, authorities);
+                    authentication =
+                            new ApiKeyAuthenticationToken(
+                                    user.get(), apiKey, user.get().getAuthorities());
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 } catch (AuthenticationException e) {
                     // If API key authentication fails, deny the request
@@ -115,20 +110,19 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
             String method = request.getMethod();
             String contextPath = request.getContextPath();
 
-            if ("GET".equalsIgnoreCase(method) && !(contextPath + "/login").equals(requestURI)) {
+            if ("GET".equalsIgnoreCase(method) && !requestURI.startsWith(contextPath + "/login")) {
                 response.sendRedirect(contextPath + "/login"); // redirect to the login page
-                return;
             } else {
                 response.setStatus(HttpStatus.UNAUTHORIZED.value());
                 response.getWriter()
                         .write(
-                                "Authentication required. Please provide a X-API-KEY in request"
-                                        + " header.\n"
-                                        + "This is found in Settings -> Account Settings -> API Key\n"
-                                        + "Alternatively you can disable authentication if this is"
-                                        + " unexpected");
-                return;
+                                """
+                                Authentication required. Please provide a X-API-KEY in request header.
+                                This is found in Settings -> Account Settings -> API Key
+                                Alternatively you can disable authentication if this is unexpected.
+                                """);
             }
+            return;
         }
 
         // Check if the authenticated user is disabled and invalidate their session if so
@@ -226,11 +220,12 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+    protected boolean shouldNotFilter(HttpServletRequest request) {
         String uri = request.getRequestURI();
         String contextPath = request.getContextPath();
         String[] permitAllPatterns = {
             contextPath + "/login",
+            contextPath + "/signup",
             contextPath + "/register",
             contextPath + "/error",
             contextPath + "/images/",
@@ -241,12 +236,17 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
             contextPath + "/pdfjs/",
             contextPath + "/pdfjs-legacy/",
             contextPath + "/api/v1/info/status",
+            contextPath + "/api/v1/auth/login",
+            contextPath + "/api/v1/auth/register",
+            contextPath + "/api/v1/auth/refresh",
+            contextPath + "/api/v1/auth/me",
             contextPath + "/site.webmanifest"
         };
 
         for (String pattern : permitAllPatterns) {
             if (uri.startsWith(pattern)
                     || uri.endsWith(".svg")
+                    || uri.endsWith(".mjs")
                     || uri.endsWith(".png")
                     || uri.endsWith(".ico")) {
                 return true;

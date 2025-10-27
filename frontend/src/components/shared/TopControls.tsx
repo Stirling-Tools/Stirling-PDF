@@ -1,137 +1,204 @@
 import React, { useState, useCallback } from "react";
-import { Button, SegmentedControl, Loader } from "@mantine/core";
+import { SegmentedControl, Loader } from "@mantine/core";
 import { useRainbowThemeContext } from "./RainbowThemeProvider";
-import LanguageSelector from "./LanguageSelector";
 import rainbowStyles from '../../styles/rainbow.module.css';
-import DarkModeIcon from '@mui/icons-material/DarkMode';
-import LightModeIcon from '@mui/icons-material/LightMode';
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import EditNoteIcon from "@mui/icons-material/EditNote";
 import FolderIcon from "@mui/icons-material/Folder";
-import { Group } from "@mantine/core";
+import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
+import { WorkbenchType, isValidWorkbench } from '../../types/workbench';
+import type { CustomWorkbenchViewInstance } from '../../contexts/ToolWorkflowContext';
+import { FileDropdownMenu } from './FileDropdownMenu';
 
-// This will be created inside the component to access switchingTo
-const createViewOptions = (switchingTo: string | null) => [
-  {
-    label: (
-      <Group gap={5}>
+
+const viewOptionStyle: React.CSSProperties = {
+  display: 'inline-flex',
+  flexDirection: 'row',
+  alignItems: 'center',
+  gap: 6,
+  whiteSpace: 'nowrap',
+  paddingTop: '0.3rem',
+};
+
+
+// Build view options showing text always
+const createViewOptions = (
+  currentView: WorkbenchType,
+  switchingTo: WorkbenchType | null,
+  activeFiles: Array<{ fileId: string; name: string; versionNumber?: number }>,
+  currentFileIndex: number,
+  onFileSelect?: (index: number) => void,
+  customViews?: CustomWorkbenchViewInstance[]
+) => {
+  const currentFile = activeFiles[currentFileIndex];
+  const isInViewer = currentView === 'viewer';
+  const fileName = currentFile?.name || '';
+  const displayName = isInViewer && fileName ? fileName : 'Viewer';
+  const hasMultipleFiles = activeFiles.length > 1;
+  const showDropdown = isInViewer && hasMultipleFiles;
+
+  const viewerOption = {
+    label: showDropdown ? (
+      <FileDropdownMenu
+        displayName={displayName}
+        activeFiles={activeFiles}
+        currentFileIndex={currentFileIndex}
+        onFileSelect={onFileSelect}
+        switchingTo={switchingTo}
+        viewOptionStyle={viewOptionStyle}
+      />
+    ) : (
+      <div style={viewOptionStyle}>
         {switchingTo === "viewer" ? (
           <Loader size="xs" />
         ) : (
           <VisibilityIcon fontSize="small" />
         )}
-      </Group>
+        <span className="ph-no-capture">{displayName}</span>
+      </div>
     ),
     value: "viewer",
-  },
-  {
+  };
+
+  const pageEditorOption = {
     label: (
-      <Group gap={4}>
-        {switchingTo === "pageEditor" ? (
-          <Loader size="xs" />
+      <div style={viewOptionStyle}>
+        {currentView === "pageEditor" ? (
+          <>
+            {switchingTo === "pageEditor" ? <Loader size="xs" /> : <EditNoteIcon fontSize="small" />}
+            <span>Page Editor</span>
+          </>
         ) : (
-          <EditNoteIcon fontSize="small" />
+          <>
+            {switchingTo === "pageEditor" ? <Loader size="xs" /> : <EditNoteIcon fontSize="small" />}
+            <span>Page Editor</span>
+          </>
         )}
-      </Group>
+      </div>
     ),
     value: "pageEditor",
-  },
-  {
+  };
+
+  const fileEditorOption = {
     label: (
-      <Group gap={4}>
-        {switchingTo === "fileEditor" ? (
-          <Loader size="xs" />
+      <div style={viewOptionStyle}>
+        {currentView === "fileEditor" ? (
+          <>
+            {switchingTo === "fileEditor" ? <Loader size="xs" /> : <FolderIcon fontSize="small" />}
+            <span>Active Files</span>
+          </>
         ) : (
-          <FolderIcon fontSize="small" />
+          <>
+            {switchingTo === "fileEditor" ? <Loader size="xs" /> : <FolderIcon fontSize="small" />}
+            <span>Active Files</span>
+          </>
         )}
-      </Group>
+      </div>
     ),
     value: "fileEditor",
-  },
-];
+  };
+
+  const baseOptions = [
+    viewerOption,
+    pageEditorOption,
+    fileEditorOption,
+  ];
+
+  const customOptions = (customViews ?? [])
+    .filter((view) => view.data != null)
+    .map((view) => ({
+      label: (
+        <div style={viewOptionStyle as React.CSSProperties}>
+          {switchingTo === view.workbenchId ? (
+            <Loader size="xs" />
+          ) : (
+            view.icon || <PictureAsPdfIcon fontSize="small" />
+          )}
+          <span>{view.label}</span>
+        </div>
+      ),
+      value: view.workbenchId,
+    }));
+
+  return [...baseOptions, ...customOptions];
+};
 
 interface TopControlsProps {
-  currentView: string;
-  setCurrentView: (view: string) => void;
-  selectedToolKey?: string | null;
+  currentView: WorkbenchType;
+  setCurrentView: (view: WorkbenchType) => void;
+  customViews?: CustomWorkbenchViewInstance[];
+  activeFiles?: Array<{ fileId: string; name: string; versionNumber?: number }>;
+  currentFileIndex?: number;
+  onFileSelect?: (index: number) => void;
 }
 
 const TopControls = ({
   currentView,
   setCurrentView,
-  selectedToolKey,
+  customViews = [],
+  activeFiles = [],
+  currentFileIndex = 0,
+  onFileSelect,
 }: TopControlsProps) => {
-  const { themeMode, isRainbowMode, isToggleDisabled, toggleTheme } = useRainbowThemeContext();
-  const [switchingTo, setSwitchingTo] = useState<string | null>(null);
-  
-  const isToolSelected = selectedToolKey !== null;
+  const { isRainbowMode } = useRainbowThemeContext();
+  const [switchingTo, setSwitchingTo] = useState<WorkbenchType | null>(null);
 
   const handleViewChange = useCallback((view: string) => {
+    if (!isValidWorkbench(view)) {
+      return;
+    }
+
+    const workbench = view;
+
     // Show immediate feedback
-    setSwitchingTo(view);
-    
+    setSwitchingTo(workbench);
+
     // Defer the heavy view change to next frame so spinner can render
     requestAnimationFrame(() => {
       // Give the spinner one more frame to show
       requestAnimationFrame(() => {
-        setCurrentView(view);
-        
+        setCurrentView(workbench);
+
         // Clear the loading state after view change completes
         setTimeout(() => setSwitchingTo(null), 300);
       });
     });
   }, [setCurrentView]);
 
-  const getThemeIcon = () => {
-    if (isRainbowMode) return <AutoAwesomeIcon className={rainbowStyles.rainbowText} />;
-    if (themeMode === "dark") return <LightModeIcon />;
-    return <DarkModeIcon />;
-  };
-
   return (
     <div className="absolute left-0 w-full top-0 z-[100] pointer-events-none">
-      <div className={`absolute left-4 pointer-events-auto flex gap-2 items-center ${
-        isToolSelected ? 'top-4' : 'top-1/2 -translate-y-1/2'
-      }`}>
-        <Button
-          onClick={toggleTheme}
-          variant="subtle"
-          size="md"
-          aria-label="Toggle theme"
-          disabled={isToggleDisabled}
-          className={isRainbowMode ? rainbowStyles.rainbowButton : ''}
-          title={
-            isToggleDisabled
-              ? "Button disabled for 3 seconds..."
-              : isRainbowMode
-                ? "Rainbow Mode Active! Click to exit"
-                : "Toggle theme (click rapidly 6 times for a surprise!)"
-          }
-          style={isToggleDisabled ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
-        >
-          {getThemeIcon()}
-        </Button>
-        <LanguageSelector />
+      <div className="flex justify-center mt-[0.5rem]">
+        <SegmentedControl
+          data-tour="view-switcher"
+          data={createViewOptions(currentView, switchingTo, activeFiles, currentFileIndex, onFileSelect, customViews)}
+          value={currentView}
+          onChange={handleViewChange}
+          color="blue"
+          fullWidth
+          className={isRainbowMode ? rainbowStyles.rainbowSegmentedControl : ''}
+          style={{
+            transition: 'all 0.2s ease',
+            opacity: switchingTo ? 0.8 : 1,
+            pointerEvents: 'auto'
+          }}
+          styles={{
+            root: {
+              borderRadius: 9999,
+              maxHeight: '2.6rem',
+            },
+            control: {
+              borderRadius: 9999,
+            },
+            indicator: {
+              borderRadius: 9999,
+              maxHeight: '2rem',
+            },
+            label: {
+              paddingTop: '0rem',
+            }
+          }}
+        />
       </div>
-      {!isToolSelected && (
-        <div className="flex justify-center items-center h-full pointer-events-auto">
-            <SegmentedControl
-              data={createViewOptions(switchingTo)}
-              value={currentView}
-              onChange={handleViewChange}
-              color="blue"
-              radius="xl"
-              size="md"
-              fullWidth
-              className={isRainbowMode ? rainbowStyles.rainbowSegmentedControl : ''}
-              style={{
-                transition: 'all 0.2s ease',
-                opacity: switchingTo ? 0.8 : 1,
-              }}
-            />
-        </div>
-      )}
     </div>
   );
 };

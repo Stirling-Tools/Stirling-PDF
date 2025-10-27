@@ -1,5 +1,5 @@
-import { getDocument } from 'pdfjs-dist';
 import { FileAnalysis, ProcessingStrategy } from '../types/processing';
+import { pdfWorkerManager } from './pdfWorkerManager';
 
 export class FileAnalyzer {
   private static readonly SIZE_THRESHOLDS = {
@@ -36,11 +36,11 @@ export class FileAnalyzer {
 
       // Determine strategy based on file characteristics
       analysis.recommendedStrategy = this.determineStrategy(file.size, quickAnalysis.pageCount);
-      
+
       // Estimate processing time
       analysis.estimatedProcessingTime = this.estimateProcessingTime(
-        file.size, 
-        quickAnalysis.pageCount, 
+        file.size,
+        quickAnalysis.pageCount,
         analysis.recommendedStrategy
       );
 
@@ -66,17 +66,16 @@ export class FileAnalyzer {
       // For large files, try the whole file first (PDF.js needs the complete structure)
       const arrayBuffer = await file.arrayBuffer();
 
-      const pdf = await getDocument({ 
-        data: arrayBuffer,
+      const pdf = await pdfWorkerManager.createDocument(arrayBuffer, {
         stopAtErrors: false, // Don't stop at minor errors
         verbosity: 0 // Suppress PDF.js warnings
-      }).promise;
+      });
 
       const pageCount = pdf.numPages;
-      const isEncrypted = pdf.isEncrypted;
-      
-      // Clean up
-      pdf.destroy();
+      const isEncrypted = (pdf as any).isEncrypted;
+
+      // Clean up using worker manager
+      pdfWorkerManager.destroyDocument(pdf);
 
       return {
         pageCount,
@@ -88,7 +87,7 @@ export class FileAnalyzer {
       // Try to determine if it's corruption vs encryption
       const errorMessage = error instanceof Error ? error.message.toLowerCase() : '';
       const isEncrypted = errorMessage.includes('password') || errorMessage.includes('encrypted');
-      
+
       return {
         pageCount: 0,
         isEncrypted,
@@ -129,8 +128,8 @@ export class FileAnalyzer {
    * Estimate processing time based on file characteristics and strategy
    */
   private static estimateProcessingTime(
-    fileSize: number, 
-    pageCount: number = 0, 
+    _fileSize: number,
+    pageCount: number = 0,
     strategy: ProcessingStrategy
   ): number {
     const baseTimes = {
@@ -145,20 +144,22 @@ export class FileAnalyzer {
     switch (strategy) {
       case 'metadata_only':
         return baseTime;
-      
+
       case 'immediate_full':
         return pageCount * baseTime;
-      
-      case 'priority_pages':
+
+      case 'priority_pages': {
         // Estimate time for priority pages (first 10)
         const priorityPages = Math.min(pageCount, 10);
         return priorityPages * baseTime;
-      
-      case 'progressive_chunked':
+      }
+
+      case 'progressive_chunked': {
         // Estimate time for first chunk (20 pages)
         const firstChunk = Math.min(pageCount, 20);
         return firstChunk * baseTime;
-      
+      }
+
       default:
         return pageCount * baseTime;
     }
@@ -209,11 +210,11 @@ export class FileAnalyzer {
     if (totalSize > this.SIZE_THRESHOLDS.LARGE) {
       return Math.max(1, Math.floor(fileCount / 4));
     }
-    
+
     if (totalSize > this.SIZE_THRESHOLDS.MEDIUM) {
       return Math.max(2, Math.floor(fileCount / 2));
     }
-    
+
     // Process all at once for smaller total sizes
     return fileCount;
   }
@@ -231,9 +232,9 @@ export class FileAnalyzer {
       const header = file.slice(0, 8);
       const headerBytes = new Uint8Array(await header.arrayBuffer());
       const headerString = String.fromCharCode(...headerBytes);
-      
+
       return headerString.startsWith('%PDF-');
-    } catch (error) {
+    } catch {
       return false;
     }
   }

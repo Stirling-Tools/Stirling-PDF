@@ -6,35 +6,33 @@ import java.util.List;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.api.misc.AddAttachmentRequest;
 import stirling.software.SPDF.service.AttachmentServiceInterface;
+import stirling.software.common.annotations.AutoJobPostMapping;
+import stirling.software.common.annotations.api.MiscApi;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.WebResponseUtils;
 
+@MiscApi
 @Slf4j
-@RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/misc")
-@Tag(name = "Misc", description = "Miscellaneous APIs")
 public class AttachmentController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
     private final AttachmentServiceInterface pdfAttachmentService;
 
-    @PostMapping(consumes = "multipart/form-data", value = "/add-attachments")
+    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/add-attachments")
+    @StandardPdfResponse
     @Operation(
             summary = "Add attachments to PDF",
             description =

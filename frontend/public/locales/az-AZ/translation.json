@@ -283,7 +283,7 @@
     "endpoint": "Endpoint",
     "visits": "Visits",
     "percentage": "Percentage",
-    "loading": "Loading...",
+    "loading": "Yüklənir...",
     "failedToLoad": "Failed to load endpoint data. Please try refreshing.",
     "home": "Home",
     "login": "Login",
@@ -347,7 +347,7 @@
       "title": "Çevir",
       "desc": "PDF-lərinizi asanlıqla çevirin."
     },
-    "imageToPdf": {
+    "imageToPDF": {
       "title": "Şəkildən PDF-ə",
       "desc": "Şəkli (PNG, JPEG, GIF) PDF-ə Çevir."
     },
@@ -371,7 +371,7 @@
       "title": "İcazəni Dəyiş",
       "desc": "PDF Sənədinin icazələrini dəyiş"
     },
-    "removePages": {
+    "pageRemover": {
       "title": "Sil",
       "desc": "PDF Sənədindən istəmədiyin şəkilləri sil."
     },
@@ -383,7 +383,7 @@
       "title": "Şifri Sil",
       "desc": "PDF Sənədindən şifr qorumasını götür."
     },
-    "compressPdfs": {
+    "compress": {
       "title": "Sıx",
       "desc": "PDF fayllarını sıxaraq onların ölçüsünü azalt."
     },
@@ -479,7 +479,7 @@
       "title": "Pipeline",
       "desc": "Pipeline Skriptləri təyin edərək PDF-lər üzərində bir neçə prosesi eyni vaxtda reallaşdırın."
     },
-    "add-page-numbers": {
+    "addPageNumbers": {
       "title": "Səhifələri Nömrələ",
       "desc": "Sənədin səhifələrinə təyin edilmiş yerdə nömrələr əlavə edin"
     },
@@ -487,7 +487,7 @@
       "title": "PDF Faylını Avtomatik Yenidən Adlandır",
       "desc": "Tapılmış başlığa əsasən PDF faylının adını dəyişir"
     },
-    "adjust-contrast": {
+    "adjustContrast": {
       "title": "Rəngləri/Kontrastı Tənzimlə",
       "desc": "PDF-in kontrastını, parlaqlığını, rəng doyğunluğunu tənzimlə"
     },
@@ -499,7 +499,7 @@
       "title": "Səhifələri Avtomatik Ayır",
       "desc": "Fiziki skan olunmuş səhifələri QR koda əsasən ayır"
     },
-    "sanitizePdf": {
+    "sanitizePDF": {
       "title": "Təmizlə",
       "desc": "Skriptləri və digər elementləri PDF faylından sil"
     },
@@ -523,11 +523,11 @@
       "title": "PDF-in Bütün Məlumatları",
       "desc": "PDF barədə mümkün olan bütün məlumatları əldə edir"
     },
-    "extractPage": {
+    "pageExtracter": {
       "title": "Səhifə(lər)i xaric et",
       "desc": "Seçilmiş səhifələri PDF-dən xaric edərək əldə et"
     },
-    "PdfToSinglePage": {
+    "pdfToSinglePage": {
       "title": "PDF-dən 1 Böyük Səhifəyə",
       "desc": "Bütün PDF səhifələrini bir böyük səhifəyə çevirir"
     },
@@ -543,11 +543,11 @@
       "title": "Manual Redaction",
       "desc": "Redacts a PDF based on selected text, drawn shapes and/or selected page(s)"
     },
-    "tableExtraxt": {
+    "PDFToCSV": {
       "title": "PDF-dən CSV-ə",
       "desc": "PDF-dən cədvəlləri CSV-ə çevirərək xaric edir"
     },
-    "autoSizeSplitPDF": {
+    "split-by-size-or-count": {
       "title": "Say/Ölçüyə Əsasən Avtomatik Ayır",
       "desc": "PDF-i ölçüyə, səhifə sayına və ya sənəd sayına əsasən bir neçə PDF-ə ayır."
     },
@@ -563,11 +563,11 @@
       "title": "PDF-i Möhürlə",
       "desc": "Təyin edilmiş hissələrə mətn və ya şəkil möhürləri əlavə edin"
     },
-    "removeImagePdf": {
+    "removeImage": {
       "title": "Şəkli Sil",
       "desc": "Fayl ölçüsünü azaltmaq üçün PDF-dən şəkil sil"
     },
-    "splitPdfByChapters": {
+    "splitByChapters": {
       "title": "PDF-i Fəsillərə Əsasən Böl",
       "desc": "Fəsil strukturuna əsasən PDF-i bir neçə fayla böl."
     },
@@ -575,9 +575,41 @@
       "title": "Validate PDF Signature",
       "desc": "Verify digital signatures and certificates in PDF documents"
     },
+    "replace-color": {
+      "title": "Qabaqcıl Rəng Seçimləri",
+      "desc": "Replace color for text and background in PDF and invert full color of pdf to reduce file size"
+    },
+    "convert": {
+      "title": "Çevir"
+    },
+    "attachments": {
+      "title": "Add attachments"
+    },
+    "extractPages": {
+      "title": "Səhifələri çıxar"
+    },
+    "removePages": {
+      "title": "Sil",
+      "desc": "PDF Sənədindən istəmədiyin şəkilləri sil."
+    },
+    "removeImagePdf": {
+      "title": "Şəkli Sil",
+      "desc": "Fayl ölçüsünü azaltmaq üçün PDF-dən şəkil sil"
+    },
+    "autoSizeSplitPDF": {
+      "title": "Say/Ölçüyə Əsasən Avtomatik Ayır",
+      "desc": "PDF-i ölçüyə, səhifə sayına və ya sənəd sayına əsasən bir neçə PDF-ə ayır."
+    },
+    "adjust-contrast": {
+      "title": "Rəngləri/Kontrastı Tənzimlə",
+      "desc": "PDF-in kontrastını, parlaqlığını, rəng doyğunluğunu tənzimlə"
+    },
     "replaceColorPdf": {
       "title": "Qabaqcıl Rəng Seçimləri",
       "desc": "Replace color for text and background in PDF and invert full color of pdf to reduce file size"
+    },
+    "changePermissions": {
+      "title": "İcazələri Dəyişdir"
     }
   },
   "viewPdf": {
@@ -602,10 +634,10 @@
     "addFile": "Add File",
     "rotateLeft": "Rotate Left",
     "rotateRight": "Rotate Right",
-    "split": "Split",
+    "split": "Böl",
     "moveLeft": "Move Left",
     "moveRight": "Move Right",
-    "delete": "Delete",
+    "delete": "Sil",
     "dragDropMessage": "Seçilmiş Səhifə(lər)",
     "undo": "Undo",
     "redo": "Redo"
@@ -617,7 +649,10 @@
     "sortByName": "Ada görə çeşidləyin",
     "sortByDate": "Tarixə görə çeşidləyin",
     "removeCertSign": "Birləşdirilmiş faylda rəqəmsal imza silinsin?",
-    "submit": "Birləşdirin"
+    "submit": "Birləşdirin",
+    "sortBy": {
+      "filename": "Fayl Adı"
+    }
   },
   "split": {
     "tags": "Səhifə əməliyyarları,böl,Çoxlu Səhifə,kəs,server-tərəf",
@@ -634,7 +669,20 @@
       "8": "Sənəd #6: Səhifə 10"
     },
     "splitPages": "Bölünəcək Səhifələri Daxil Edin:",
-    "submit": "Bölün"
+    "submit": "Bölün",
+    "steps": {
+      "settings": "Parametrlər"
+    },
+    "methods": {
+      "bySize": {
+        "name": "Fayl Ölçüsü"
+      }
+    },
+    "value": {
+      "fileSize": {
+        "label": "Fayl Ölçüsü"
+      }
+    }
   },
   "rotate": {
     "tags": "server-tərəf",
@@ -712,6 +760,12 @@
     "type": {
       "1": "Mətn",
       "2": "Şəkil"
+    },
+    "watermarkType": {
+      "text": "Yazı"
+    },
+    "settings": {
+      "fontSize": "Şrift Ölçüsü"
     }
   },
   "permissions": {
@@ -734,7 +788,9 @@
     "submit": "Dəyiş"
   },
   "removePages": {
-    "tags": "Səhifələri təmizlə,səhifələri sil"
+    "tags": "Səhifələri təmizlə,səhifələri sil",
+    "title": "Sil",
+    "submit": "Sil"
   },
   "addPassword": {
     "tags": "təhlükəsiz,təhlükəsizlik",
@@ -758,7 +814,12 @@
       "15": "Sənəd açıldıqdan sonra onunla nə edilə biləcəyini limitləndir (Bütün oxuyucular dəstəkləmir)",
       "16": "Sənədin özünün açılmağını limitləndirir"
     },
-    "submit": "Şifrlə"
+    "submit": "Şifrlə",
+    "tooltip": {
+      "permissions": {
+        "title": "İcazələri Dəyişdir"
+      }
+    }
   },
   "removePassword": {
     "tags": "təhlükəsiz,deşifr,təhlükəsizlik,kodu aç,kodu sil",
@@ -768,7 +829,12 @@
       "1": "Deşifr Üçün PDF-i Seç",
       "2": "Şifr"
     },
-    "submit": "Sil"
+    "submit": "Sil",
+    "desc": "PDF Sənədindən şifr qorumasını götür.",
+    "password": {
+      "stepTitle": "Şifri Sil",
+      "label": "Cari Şifr"
+    }
   },
   "compressPdfs": {
     "tags": "sıx,balaca,kiçik"
@@ -829,7 +895,25 @@
     },
     "help": "Bunu digər dillər üçün necə istifadə etmək və/və ya docker-də istifadə etməmək üçün bu dokumentasiyanı oxuyun",
     "credit": "Bu servis OST (OCR) üçün \"OCRmyPDF\" və \"Tesseract\" istifadə edir.",
-    "submit": "PDF-i OST ilə işlə"
+    "submit": "PDF-i OST ilə işlə",
+    "desc": "Skanları təmizləyir və PDF-in içərisindəki şəkillərdəki yazını tapıb mətn olaraq əlavə edir.",
+    "settings": {
+      "title": "Parametrlər",
+      "ocrMode": {
+        "label": "OST (OCR) Rejimi"
+      },
+      "languages": {
+        "label": "Dillər"
+      }
+    },
+    "tooltip": {
+      "mode": {
+        "title": "OST (OCR) Rejimi"
+      },
+      "languages": {
+        "title": "Dillər"
+      }
+    }
   },
   "extractImages": {
     "tags": "şəkil,foto,saxla,arxiv,zip,çək,götür",
@@ -938,7 +1022,13 @@
     "title": "Düzləşdirin",
     "header": "PDF-i düzləşdirin",
     "flattenOnlyForms": "Yalnız formaları düzəldin",
-    "submit": "Düzləşdirin"
+    "submit": "Düzləşdirin",
+    "steps": {
+      "settings": "Parametrlər"
+    },
+    "options": {
+      "flattenOnlyForms": "Yalnız formaları düzəldin"
+    }
   },
   "repair": {
     "tags": "düzəlt,bərpa et,korreksiya et,geri qaytar",
@@ -1106,10 +1196,10 @@
     "credit": "WeasyPrint İstifadə Edir"
   },
   "PDFToMarkdown": {
-    "tags": "markup,web-content,transformation,convert,md",
+    "tags": "işarələmə,web-məzmun,dəyişmə,çevirmə",
     "title": "PDF To Markdown",
     "header": "PDF To Markdown",
-    "submit": "Convert"
+    "submit": "Çevir"
   },
   "getPdfInfo": {
     "tags": "informasiy,data,məlumatlar,statistika",
@@ -1148,7 +1238,7 @@
     "tags": "Redact,Hide,black out,black,marker,hidden,manual",
     "title": "Manual Redaction",
     "header": "Manual Redaction",
-    "submit": "Redact",
+    "submit": "Manual Redaction",
     "textBasedRedaction": "Text based Redaction",
     "pageBasedRedaction": "Page-based Redaction",
     "convertPDFToImageLabel": "Convert PDF to PDF-Image (Used to remove text behind the box)",
@@ -1174,7 +1264,22 @@
     "showLayers": "Show Layers (double-click to reset all layers to the default state)",
     "colourPicker": "Colour Picker",
     "findCurrentOutlineItem": "Find current outline item",
-    "applyChanges": "Apply Changes"
+    "applyChanges": "Apply Changes",
+    "auto": {
+      "settings": {
+        "advancedTitle": "Qabaqcıl"
+      },
+      "wordsToRedact": {
+        "add": "Əlavə et"
+      }
+    },
+    "manual": {
+      "pageRedactionNumbers": {
+        "title": "Səhifələr",
+        "placeholder": "(məsələn, 1,2,8 və ya 4,7,12-16 və ya 2n-1)"
+      },
+      "export": "İxrac Et"
+    }
   },
   "tableExtraxt": {
     "tags": "CSV,Cədvəl xaricetmə,xaric et,çevir"
@@ -1261,8 +1366,8 @@
     },
     "signer": "Signer",
     "date": "Date",
-    "reason": "Reason",
-    "location": "Location",
+    "reason": "Səbəb",
+    "location": "Məkan",
     "noSignatures": "No digital signatures found in this document",
     "chain": {
       "invalid": "Certificate chain validation failed - cannot verify signer's identity"
@@ -1281,7 +1386,7 @@
       "validUntil": "Valid Until",
       "algorithm": "Algorithm",
       "keySize": "Key Size",
-      "version": "Version",
+      "version": "Versiya",
       "keyUsage": "Key Usage",
       "selfSigned": "Self-Signed",
       "bits": "bits"
@@ -1386,7 +1491,10 @@
       "4": "Avto mod - PDF-in dəqiq ölçüsünü əldə etmək üçün keyfiyyəti avtomatik tənzimləyir",
       "5": "Gözlənilən PDF Ölçüsü (məsələn, 25MB, 10.8MB, 25KB)"
     },
-    "submit": "Sıxışdır"
+    "submit": "Sıxışdır",
+    "method": {
+      "filesize": "Fayl Ölçüsü"
+    }
   },
   "decrypt": {
     "passwordPrompt": "This file is password-protected. Please enter the password:",
@@ -1555,6 +1663,82 @@
       "analytics": {
         "title": "Analytics",
         "description": "These cookies help us understand how our tools are being used, so we can focus on building the features our community values most. Rest assured—Stirling PDF cannot and will never track the content of the documents you work with."
+      }
+    }
+  },
+  "download": "Endir",
+  "convert": {
+    "title": "Çevir",
+    "settings": "Parametrlər",
+    "color": "Rəng",
+    "greyscale": "Boz Tonlama",
+    "fillPage": "Səhifəni Doldur",
+    "pdfaDigitalSignatureWarning": "PDF Rəqəmsal İmza Ehtiva Edir.Bu, növbəti addımda silinəcək.",
+    "grayscale": "Boz Tonlama"
+  },
+  "attachments": {
+    "tags": "embed,attach,file,attachment,attachments",
+    "title": "Add attachments",
+    "header": "Add attachments",
+    "submit": "Add attachments"
+  },
+  "rightRail": {
+    "selectAll": "Hamısını Seç",
+    "deselectAll": "Hamısını Seçməni Ləğv Et"
+  },
+  "quickAccess": {
+    "sign": "İmzala"
+  },
+  "fileUpload": {
+    "loading": "Yüklənir..."
+  },
+  "fileManager": {
+    "fileName": "Ad",
+    "fileVersion": "Versiya",
+    "selectAll": "Hamısını Seç",
+    "deselectAll": "Hamısını Seçməni Ləğv Et",
+    "deleteSelected": "Seçilmişi Sil",
+    "download": "Endir",
+    "delete": "Sil"
+  },
+  "sanitize": {
+    "submit": "PDF-i Təmizlə",
+    "steps": {
+      "settings": "Parametrlər"
+    }
+  },
+  "changePermissions": {
+    "title": "İcazələri Dəyişdir",
+    "submit": "İcazələri Dəyişdir",
+    "permissions": {
+      "preventAssembly": {
+        "label": "Sənədin Yığılmasının Qarşısını Al"
+      },
+      "preventExtractContent": {
+        "label": "Məzmunun Çıxarılmasının Qarşısını Al"
+      },
+      "preventExtractForAccessibility": {
+        "label": "Əlçatanlıq Üçün Çıxarılmasının Qarşısını Alın"
+      },
+      "preventFillInForm": {
+        "label": "Formanın Doldurulmasının Qarşısını Alır"
+      },
+      "preventModify": {
+        "label": "Modifikasiyanın Qarşısını Al"
+      },
+      "preventModifyAnnotations": {
+        "label": "Annotasiyanın Dəyişdirilməsinin Qarşısını Almaq"
+      },
+      "preventPrinting": {
+        "label": "Çapın Qarşısını Al"
+      },
+      "preventPrintingFaithful": {
+        "label": "Fərqli Formatlarda Çapın Qarşısını Al"
+      }
+    },
+    "tooltip": {
+      "header": {
+        "title": "İcazələri Dəyişdir"
       }
     }
   }

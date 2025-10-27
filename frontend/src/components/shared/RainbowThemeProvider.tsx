@@ -1,11 +1,15 @@
-import React, { createContext, useContext, ReactNode } from 'react';
-import { MantineProvider, ColorSchemeScript } from '@mantine/core';
+import { createContext, useContext, ReactNode } from 'react';
+import { MantineProvider } from '@mantine/core';
 import { useRainbowTheme } from '../../hooks/useRainbowTheme';
 import { mantineTheme } from '../../theme/mantineTheme';
 import rainbowStyles from '../../styles/rainbow.module.css';
+import { ToastProvider } from '../toast';
+import ToastRenderer from '../toast/ToastRenderer';
+import { ToastPortalBinder } from '../toast';
+import type { ThemeMode } from '../../constants/theme';
 
 interface RainbowThemeContextType {
-  themeMode: 'light' | 'dark' | 'rainbow';
+  themeMode: ThemeMode;
   isRainbowMode: boolean;
   isToggleDisabled: boolean;
   toggleTheme: () => void;
@@ -34,22 +38,23 @@ export function RainbowThemeProvider({ children }: RainbowThemeProviderProps) {
   const mantineColorScheme = rainbowTheme.themeMode === 'rainbow' ? 'dark' : rainbowTheme.themeMode;
 
   return (
-    <>
-      <ColorSchemeScript defaultColorScheme={mantineColorScheme} />
-      <RainbowThemeContext.Provider value={rainbowTheme}>
-        <MantineProvider
-          theme={mantineTheme}
-          defaultColorScheme={mantineColorScheme}
-          forceColorScheme={mantineColorScheme}
+    <RainbowThemeContext.Provider value={rainbowTheme}>
+      <MantineProvider
+        theme={mantineTheme}
+        defaultColorScheme={mantineColorScheme}
+        forceColorScheme={mantineColorScheme}
+      >
+        <div
+          className={rainbowTheme.isRainbowMode ? rainbowStyles.rainbowMode : ''}
+          style={{ minHeight: '100vh' }}
         >
-          <div
-            className={rainbowTheme.isRainbowMode ? rainbowStyles.rainbowMode : ''}
-            style={{ minHeight: '100vh' }}
-          >
+          <ToastProvider>
+            <ToastPortalBinder />
             {children}
-          </div>
-        </MantineProvider>
-      </RainbowThemeContext.Provider>
-    </>
+            <ToastRenderer />
+          </ToastProvider>
+        </div>
+      </MantineProvider>
+    </RainbowThemeContext.Provider>
   );
 }

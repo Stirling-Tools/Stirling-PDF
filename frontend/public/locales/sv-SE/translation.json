@@ -137,7 +137,7 @@
     "scanHelp": "Hjälp för mappskanning",
     "deletePrompt": "Är du säker på att du vill ta bort pipeline",
     "tags": "automatisera,sekvens,skriptad,batchprocess",
-    "title": "Pipeline"
+    "title": "Pipeline (Avancerat)"
   },
   "pipelineOptions": {
     "header": "Pipeline-konfiguration",
@@ -283,7 +283,7 @@
     "endpoint": "Endpoint",
     "visits": "Visits",
     "percentage": "Percentage",
-    "loading": "Loading...",
+    "loading": "Laddar...",
     "failedToLoad": "Failed to load endpoint data. Please try refreshing.",
     "home": "Home",
     "login": "Login",
@@ -347,7 +347,7 @@
       "title": "Rotera",
       "desc": "Rotera enkelt dina PDF-filer."
     },
-    "imageToPdf": {
+    "imageToPDF": {
       "title": "Bild till PDF",
       "desc": "Konvertera en bild (PNG, JPEG, GIF) till PDF."
     },
@@ -371,7 +371,7 @@
       "title": "Ändra behörigheter",
       "desc": "Ändra behörigheterna för ditt PDF-dokument"
     },
-    "removePages": {
+    "pageRemover": {
       "title": "Ta bort",
       "desc": "Ta bort oönskade sidor från ditt PDF-dokument."
     },
@@ -383,7 +383,7 @@
       "title": "Ta bort lösenord",
       "desc": "Ta bort lösenordsskydd från ditt PDF-dokument."
     },
-    "compressPdfs": {
+    "compress": {
       "title": "Komprimera",
       "desc": "Komprimera PDF-filer för att minska deras filstorlek."
     },
@@ -479,7 +479,7 @@
       "title": "Pipeline (Avancerat)",
       "desc": "Kör flera åtgärder på PDF:er genom att definiera pipeline-skript"
     },
-    "add-page-numbers": {
+    "addPageNumbers": {
       "title": "Lägg till sidnummer",
       "desc": "Lägg till sidnummer genom hela dokumentet på en angiven plats"
     },
@@ -487,7 +487,7 @@
       "title": "Automatiskt byt namn på PDF-fil",
       "desc": "Byter automatiskt namn på en PDF-fil baserat på dess detekterade rubrik"
     },
-    "adjust-contrast": {
+    "adjustContrast": {
       "title": "Justera färger/kontrast",
       "desc": "Justera kontrast, mättnad och ljusstyrka i en PDF"
     },
@@ -499,7 +499,7 @@
       "title": "Auto-dela sidor",
       "desc": "Auto-dela skannad PDF med fysisk skannad sidseparator QR-kod"
     },
-    "sanitizePdf": {
+    "sanitizePDF": {
       "title": "Sanera",
       "desc": "Ta bort skript och andra element från PDF-filer"
     },
@@ -523,11 +523,11 @@
       "title": "Hämta ALL information om PDF",
       "desc": "Hämtar all möjlig information om PDF:er"
     },
-    "extractPage": {
+    "pageExtracter": {
       "title": "Extrahera sida(or)",
       "desc": "Extraherar valda sidor från PDF"
     },
-    "PdfToSinglePage": {
+    "pdfToSinglePage": {
       "title": "PDF till en enda stor sida",
       "desc": "Slår samman alla PDF-sidor till en enda stor sida"
     },
@@ -543,11 +543,11 @@
       "title": "Manual Redaction",
       "desc": "Redacts a PDF based on selected text, drawn shapes and/or selected page(s)"
     },
-    "tableExtraxt": {
+    "PDFToCSV": {
       "title": "PDF till CSV",
       "desc": "Extraherar tabeller från en PDF och konverterar dem till CSV"
     },
-    "autoSizeSplitPDF": {
+    "split-by-size-or-count": {
       "title": "Auto-dela efter storlek/antal",
       "desc": "Dela en enda PDF till flera dokument baserat på storlek, sidantal eller dokumentantal"
     },
@@ -563,11 +563,11 @@
       "title": "Lägg till stämpel på PDF",
       "desc": "Lägg till text eller bildstämplar på angivna platser"
     },
-    "removeImagePdf": {
+    "removeImage": {
       "title": "Ta bort bild",
       "desc": "Ta bort bild från PDF för att minska filstorlek"
     },
-    "splitPdfByChapters": {
+    "splitByChapters": {
       "title": "Dela upp PDF efter kapitel",
       "desc": "Dela upp en PDF till flera filer baserat på dess kapitelstruktur."
     },
@@ -575,9 +575,41 @@
       "title": "Validera PDF signature",
       "desc": "Verifiera digitala signaturer och certifiakt i PDF dokument"
     },
+    "replace-color": {
+      "title": "Ersätt och Invertera färg",
+      "desc": "Ersätt färg för text och bakgrund i PDF och invertera hela färgen på PDF för att minska filstorlek"
+    },
+    "convert": {
+      "title": "Konvertera"
+    },
+    "attachments": {
+      "title": "Add attachments"
+    },
+    "extractPages": {
+      "title": "Extrahera sidor"
+    },
+    "removePages": {
+      "title": "Ta bort",
+      "desc": "Ta bort oönskade sidor från ditt PDF-dokument."
+    },
+    "removeImagePdf": {
+      "title": "Ta bort bild",
+      "desc": "Ta bort bild från PDF för att minska filstorlek"
+    },
+    "autoSizeSplitPDF": {
+      "title": "Auto-dela efter storlek/antal",
+      "desc": "Dela en enda PDF till flera dokument baserat på storlek, sidantal eller dokumentantal"
+    },
+    "adjust-contrast": {
+      "title": "Justera färger/kontrast",
+      "desc": "Justera kontrast, mättnad och ljusstyrka i en PDF"
+    },
     "replaceColorPdf": {
       "title": "Ersätt och Invertera färg",
       "desc": "Ersätt färg för text och bakgrund i PDF och invertera hela färgen på PDF för att minska filstorlek"
+    },
+    "changePermissions": {
+      "title": "Ändra behörigheter"
     }
   },
   "viewPdf": {
@@ -617,7 +649,10 @@
     "sortByName": "Sortera efter namn",
     "sortByDate": "Sortera efter datum",
     "removeCertSign": "Ta bort digital signatur i den sammanslagna filen?",
-    "submit": "Slå samman"
+    "submit": "Slå samman",
+    "sortBy": {
+      "filename": "Filnamn"
+    }
   },
   "split": {
     "tags": "Sidoperationer,dela,Multisida,klippa,serversida",
@@ -634,7 +669,20 @@
       "8": "Dokument #6: Sida 10"
     },
     "splitPages": "Ange sidor att dela på:",
-    "submit": "Dela"
+    "submit": "Dela",
+    "steps": {
+      "settings": "Inställningar"
+    },
+    "methods": {
+      "bySize": {
+        "name": "Filstorlek"
+      }
+    },
+    "value": {
+      "fileSize": {
+        "label": "Filstorlek"
+      }
+    }
   },
   "rotate": {
     "tags": "serversida",
@@ -712,6 +760,9 @@
     "type": {
       "1": "Text",
       "2": "Bild"
+    },
+    "settings": {
+      "fontSize": "Teckenstorlek"
     }
   },
   "permissions": {
@@ -734,7 +785,9 @@
     "submit": "Ändra"
   },
   "removePages": {
-    "tags": "Ta bort sidor,radera sidor"
+    "tags": "Ta bort sidor,radera sidor",
+    "title": "Ta bort",
+    "submit": "Ta bort"
   },
   "addPassword": {
     "tags": "säkra,säkerhet",
@@ -758,7 +811,12 @@
       "15": "Begränsar vad som kan göras med dokumentet när det väl är öppnat (Stöds inte av alla läsare)",
       "16": "Begränsar öppnandet av själva dokumentet"
     },
-    "submit": "Kryptera"
+    "submit": "Kryptera",
+    "tooltip": {
+      "permissions": {
+        "title": "Ändra behörigheter"
+      }
+    }
   },
   "removePassword": {
     "tags": "säkra,Dekryptera,säkerhet,ta bort lösenord,radera lösenord",
@@ -768,7 +826,12 @@
       "1": "Välj PDF att dekryptera",
       "2": "Lösenord"
     },
-    "submit": "Ta bort"
+    "submit": "Ta bort",
+    "desc": "Ta bort lösenordsskydd från ditt PDF-dokument.",
+    "password": {
+      "stepTitle": "Ta bort lösenord",
+      "label": "Nuvarande lösenord"
+    }
   },
   "compressPdfs": {
     "tags": "pressa ihop,liten,minimal"
@@ -829,7 +892,25 @@
     },
     "help": "Vänligen läs denna dokumentation om hur du använder detta för andra språk och/eller använder inte i docker",
     "credit": "Denna tjänst använder qpdf och Tesseract för OCR.",
-    "submit": "Bearbeta PDF med OCR"
+    "submit": "Bearbeta PDF med OCR",
+    "desc": "Rengör skanningar och upptäcker text från bilder i en PDF och lägger till den igen som text.",
+    "settings": {
+      "title": "Inställningar",
+      "ocrMode": {
+        "label": "OCR-läge"
+      },
+      "languages": {
+        "label": "Språk"
+      }
+    },
+    "tooltip": {
+      "mode": {
+        "title": "OCR-läge"
+      },
+      "languages": {
+        "title": "Språk"
+      }
+    }
   },
   "extractImages": {
     "tags": "bild,foto,spara,arkiv,zip,fånga,ta",
@@ -938,7 +1019,13 @@
     "title": "Platta till",
     "header": "Platta till PDF-filer",
     "flattenOnlyForms": "Platta till endast formulär",
-    "submit": "Platta till"
+    "submit": "Platta till",
+    "steps": {
+      "settings": "Inställningar"
+    },
+    "options": {
+      "flattenOnlyForms": "Platta till endast formulär"
+    }
   },
   "repair": {
     "tags": "fixa,återställa,korrigering,återhämta",
@@ -1106,7 +1193,7 @@
     "credit": "Använder WeasyPrint"
   },
   "PDFToMarkdown": {
-    "tags": "markup,web-content,transformation,convert,md",
+    "tags": "markup,webbinnehåll,transformation,konvertera",
     "title": "PDF Till Markdown",
     "header": "PDF Till Markdown",
     "submit": "Konvertera"
@@ -1148,7 +1235,7 @@
     "tags": "Redact,Hide,black out,black,marker,hidden,manual",
     "title": "Manual Redaction",
     "header": "Manual Redaction",
-    "submit": "Redact",
+    "submit": "Manual Redaction",
     "textBasedRedaction": "Text based Redaction",
     "pageBasedRedaction": "Page-based Redaction",
     "convertPDFToImageLabel": "Convert PDF to PDF-Image (Used to remove text behind the box)",
@@ -1174,7 +1261,22 @@
     "showLayers": "Show Layers (double-click to reset all layers to the default state)",
     "colourPicker": "Colour Picker",
     "findCurrentOutlineItem": "Find current outline item",
-    "applyChanges": "Apply Changes"
+    "applyChanges": "Apply Changes",
+    "auto": {
+      "settings": {
+        "advancedTitle": "Avancerat"
+      },
+      "wordsToRedact": {
+        "add": "Lägg till"
+      }
+    },
+    "manual": {
+      "pageRedactionNumbers": {
+        "title": "Sidor",
+        "placeholder": "(t.ex. 1,2,8 eller 4,7,12-16 eller 2n-1)"
+      },
+      "export": "Exportera"
+    }
   },
   "tableExtraxt": {
     "tags": "CSV,Tabellextraktion,extrahera,konvertera"
@@ -1386,7 +1488,10 @@
       "4": "Autoläge - Autojusterar kvaliteten för att få PDF till exakt storlek",
       "5": "Förväntad PDF-storlek (t.ex. 25MB, 10,8MB, 25KB)"
     },
-    "submit": "Komprimera"
+    "submit": "Komprimera",
+    "method": {
+      "filesize": "Filstorlek"
+    }
   },
   "decrypt": {
     "passwordPrompt": "Denna fil är lösenordsskyddad. Fyll i lösenord:",
@@ -1555,6 +1660,80 @@
       "analytics": {
         "title": "Analytics",
         "description": "These cookies help us understand how our tools are being used, so we can focus on building the features our community values most. Rest assured—Stirling PDF cannot and will never track the content of the documents you work with."
+      }
+    }
+  },
+  "download": "Ladda ner",
+  "convert": {
+    "title": "Konvertera",
+    "settings": "Inställningar",
+    "color": "Färg",
+    "greyscale": "Gråskala",
+    "fillPage": "Fyll sida",
+    "pdfaDigitalSignatureWarning": "PDF:en innehåller en digital signatur. Denna kommer att tas bort i nästa steg.",
+    "grayscale": "Gråskala"
+  },
+  "attachments": {
+    "tags": "embed,attach,file,attachment,attachments",
+    "title": "Add attachments",
+    "header": "Add attachments",
+    "submit": "Add attachments"
+  },
+  "rightRail": {
+    "selectAll": "Välj allt"
+  },
+  "quickAccess": {
+    "sign": "Signera"
+  },
+  "fileUpload": {
+    "loading": "Laddar...",
+    "or": "eller"
+  },
+  "fileManager": {
+    "fileName": "Namn",
+    "selectAll": "Välj allt",
+    "deleteSelected": "Ta bort valda",
+    "download": "Ladda ner",
+    "delete": "Radera"
+  },
+  "sanitize": {
+    "submit": "Sanera PDF",
+    "steps": {
+      "settings": "Inställningar"
+    }
+  },
+  "changePermissions": {
+    "title": "Ändra behörigheter",
+    "submit": "Ändra behörigheter",
+    "permissions": {
+      "preventAssembly": {
+        "label": "Förhindra sammansättning av dokument"
+      },
+      "preventExtractContent": {
+        "label": "Förhindra innehållsextraktion"
+      },
+      "preventExtractForAccessibility": {
+        "label": "Förhindra extraktion för tillgänglighet"
+      },
+      "preventFillInForm": {
+        "label": "Förhindra att fylla i formulär"
+      },
+      "preventModify": {
+        "label": "Förhindra ändring"
+      },
+      "preventModifyAnnotations": {
+        "label": "Förhindra anteckningsändring"
+      },
+      "preventPrinting": {
+        "label": "Förhindra utskrift"
+      },
+      "preventPrintingFaithful": {
+        "label": "Förhindra utskrift av olika format"
+      }
+    },
+    "tooltip": {
+      "header": {
+        "title": "Ändra behörigheter"
       }
     }
   }

@@ -1,4 +1,4 @@
-import { invoke } from '@tauri-apps/api/core';
+import { invoke, isTauri } from '@tauri-apps/api/core';
 
 export interface FileOpenService {
   getOpenedFile(): Promise<string | null>;
@@ -59,7 +59,7 @@ class TauriFileOpenService implements FileOpenService {
         }
         
         // Only import if in Tauri environment
-        if (typeof window !== 'undefined' && ('__TAURI__' in window || '__TAURI_INTERNALS__' in window)) {
+        if (isTauri()) {
           const { listen } = await import('@tauri-apps/api/event');
           
           // Check again after async import
@@ -142,7 +142,6 @@ class WebFileOpenService implements FileOpenService {
 }
 
 // Export the appropriate service based on environment
-export const fileOpenService: FileOpenService = 
-  typeof window !== 'undefined' && ('__TAURI__' in window || '__TAURI_INTERNALS__' in window)
-    ? new TauriFileOpenService()
-    : new WebFileOpenService();
+export const fileOpenService: FileOpenService = isTauri()
+  ? new TauriFileOpenService()
+  : new WebFileOpenService();

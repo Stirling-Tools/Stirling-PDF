@@ -3,18 +3,18 @@ package stirling.software.SPDF.config;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
-import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import lombok.RequiredArgsConstructor;
 
-import stirling.software.common.configuration.InstallationPathConfig;
+import stirling.software.common.model.ApplicationProperties;
 
 @Configuration
 @RequiredArgsConstructor
 public class WebMvcConfig implements WebMvcConfigurer {
 
     private final EndpointInterceptor endpointInterceptor;
+    private final ApplicationProperties applicationProperties;
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
@@ -22,24 +22,25 @@ public class WebMvcConfig implements WebMvcConfigurer {
     }
 
     @Override
-    public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        // Handler for external static resources
-        registry.addResourceHandler("/**")
-                .addResourceLocations(
-                        "file:" + InstallationPathConfig.getStaticPath(), "classpath:/static/");
-        // .setCachePeriod(0); // Optional: disable caching
-    }
-
-    @Override
     public void addCorsMappings(CorsRegistry registry) {
-        if (Boolean.parseBoolean(System.getProperty("STIRLING_PDF_TAURI_MODE", "false"))) {
-            // Tauri mode CORS configuration
+        // Only configure CORS if allowed origins are specified
+        if (applicationProperties.getSystem() != null
+                && applicationProperties.getSystem().getCorsAllowedOrigins() != null
+                && !applicationProperties.getSystem().getCorsAllowedOrigins().isEmpty()) {
+
+            String[] allowedOrigins =
+                    applicationProperties
+                            .getSystem()
+                            .getCorsAllowedOrigins()
+                            .toArray(new String[0]);
+
             registry.addMapping("/**")
-                    .allowedOrigins(
-                            "http://localhost:5173", "http://tauri.localhost", "tauri://localhost")
-                    .allowedMethods("*")
-                    .allowedHeaders("*");
-            return;
+                    .allowedOrigins(allowedOrigins)
+                    .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
+                    .allowedHeaders("*")
+                    .allowCredentials(true)
+                    .maxAge(3600);
         }
+        // If no origins are configured, CORS is not enabled (secure by default)
     }
 }

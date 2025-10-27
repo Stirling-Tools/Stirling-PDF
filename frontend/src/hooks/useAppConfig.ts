@@ -1,6 +1,12 @@
 import { useState, useEffect } from 'react';
 import { makeApiUrl } from '../utils/api';
 
+// Helper to get JWT from localStorage for Authorization header
+function getAuthHeaders(): HeadersInit {
+  const token = localStorage.getItem('stirling_jwt');
+  return token ? { 'Authorization': `Bearer ${token}` } : {};
+}
+
 export interface AppConfig {
   baseUrl?: string;
   contextPath?: string;
@@ -22,8 +28,8 @@ export interface AppConfig {
   runningProOrHigher?: boolean;
   runningEE?: boolean;
   license?: string;
-  GoogleDriveEnabled?: boolean;
   SSOAutoLogin?: boolean;
+  serverCertificateEnabled?: boolean;
   error?: string;
 }
 
@@ -46,13 +52,15 @@ export function useAppConfig(): UseAppConfigReturn {
     try {
       setLoading(true);
       setError(null);
-      
-      const response = await fetch(makeApiUrl('/api/v1/config/app-config'));
-      
+
+      const response = await fetch('/api/v1/config/app-config', {
+        headers: getAuthHeaders(),
+      });
+
       if (!response.ok) {
         throw new Error(`Failed to fetch config: ${response.status} ${response.statusText}`);
       }
-      
+
       const data: AppConfig = await response.json();
       setConfig(data);
     } catch (err) {

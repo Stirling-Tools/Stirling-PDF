@@ -8,9 +8,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
@@ -19,9 +19,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
-import org.springframework.core.io.ResourceLoader;
 import org.springframework.util.ClassUtils;
-import org.thymeleaf.spring6.SpringTemplateEngine;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -51,6 +49,15 @@ public class AppConfig {
     @Value("${server.port:8080}")
     private String serverPort;
 
+    @Value("${v2}")
+    public boolean v2Enabled;
+
+    @Bean
+    public boolean v2Enabled() {
+        return v2Enabled;
+    }
+
+    /* Commented out Thymeleaf template engine bean - to be removed when frontend migration is complete
     @Bean
     @ConditionalOnProperty(name = "system.customHTMLFiles", havingValue = "true")
     public SpringTemplateEngine templateEngine(ResourceLoader resourceLoader) {
@@ -58,6 +65,7 @@ public class AppConfig {
         templateEngine.addTemplateResolver(new FileFallbackTemplateResolver(resourceLoader));
         return templateEngine;
     }
+    */
 
     @Bean(name = "loginEnabled")
     public boolean loginEnabled() {
@@ -120,7 +128,7 @@ public class AppConfig {
     public boolean rateLimit() {
         String rateLimit = System.getProperty("rateLimit");
         if (rateLimit == null) rateLimit = System.getenv("rateLimit");
-        return (rateLimit != null) ? Boolean.valueOf(rateLimit) : false;
+        return Boolean.parseBoolean(rateLimit);
     }
 
     @Bean(name = "RunningInDocker")
@@ -140,8 +148,8 @@ public class AppConfig {
         if (!Files.exists(mountInfo)) {
             return true;
         }
-        try {
-            return Files.lines(mountInfo).anyMatch(line -> line.contains(" /configs "));
+        try (Stream<String> lines = Files.lines(mountInfo)) {
+            return lines.anyMatch(line -> line.contains(" /configs "));
         } catch (IOException e) {
             return false;
         }
@@ -247,12 +255,6 @@ public class AppConfig {
     @Bean(name = "runningEE")
     @Profile("default")
     public boolean runningEnterprise() {
-        return false;
-    }
-
-    @Bean(name = "GoogleDriveEnabled")
-    @Profile("default")
-    public boolean googleDriveEnabled() {
         return false;
     }
 

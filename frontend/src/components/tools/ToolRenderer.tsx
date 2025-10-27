@@ -1,27 +1,30 @@
-import { FileWithUrl } from "../../types/file";
-import { useToolManagement } from "../../hooks/useToolManagement";
+import { Suspense } from "react";
+import { useToolWorkflow } from "../../contexts/ToolWorkflowContext";
+import { BaseToolProps } from "../../types/tool";
+import { ToolId } from "../../types/toolId";
+import ToolLoadingFallback from "./ToolLoadingFallback";
 
-interface ToolRendererProps {
-  selectedToolKey: string;
-  pdfFile: any;
-  files: FileWithUrl[];
-  toolParams: any;
-  updateParams: (params: any) => void;
-  toolSelectedFiles?: File[];
-  onPreviewFile?: (file: File | null) => void;
+interface ToolRendererProps extends BaseToolProps {
+  selectedToolKey: ToolId;
 }
+
 
 const ToolRenderer = ({
   selectedToolKey,
-files,
-  toolParams,
-  updateParams,
-  toolSelectedFiles = [],
   onPreviewFile,
+  onComplete,
+  onError,
 }: ToolRendererProps) => {
-  // Get the tool from registry
-  const { toolRegistry } = useToolManagement();
-  const selectedTool = toolRegistry[selectedToolKey];
+  // Get the tool from context (instead of direct hook call)
+  const { toolRegistry } = useToolWorkflow();
+  const selectedTool = (selectedToolKey in toolRegistry)
+    ? toolRegistry[selectedToolKey as ToolId]
+    : undefined;
+
+  // Handle tools that only work in workbenches (read, multiTool)
+  if (selectedTool && !selectedTool.component && selectedTool.workbench) {
+    return null; // These tools render in their workbench, not in the sidebar
+  }
 
   if (!selectedTool || !selectedTool.component) {
     return <div>Tool not found: {selectedToolKey}</div>;
@@ -29,39 +32,16 @@ files,
 
   const ToolComponent = selectedTool.component;
 
-  // Pass tool-specific props
-  switch (selectedToolKey) {
-    case "split":
-      return (
-        <ToolComponent
-          selectedFiles={toolSelectedFiles}
-          onPreviewFile={onPreviewFile}
-        />
-      );
-    case "compress":
-      return (
-        <ToolComponent
-          selectedFiles={toolSelectedFiles}
-          onPreviewFile={onPreviewFile}
-        />
-      );
-    case "merge":
-      return (
-        <ToolComponent
-          files={files}
-          params={toolParams}
-          updateParams={updateParams}
-        />
-      );
-    default:
-      return (
-        <ToolComponent
-          files={files}
-          params={toolParams}
-          updateParams={updateParams}
-        />
-      );
-  }
+  // Wrap lazy-loaded component with Suspense
+  return (
+    <Suspense fallback={<ToolLoadingFallback toolName={selectedTool.name} />}>
+      <ToolComponent
+        onPreviewFile={onPreviewFile}
+        onComplete={onComplete}
+        onError={onError}
+      />
+    </Suspense>
+  );
 };
 
 export default ToolRenderer;

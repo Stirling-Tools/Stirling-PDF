@@ -2,41 +2,39 @@ package stirling.software.SPDF.controller.api.converters;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.SPDF.config.swagger.StandardPdfResponse;
+import stirling.software.common.annotations.AutoJobPostMapping;
+import stirling.software.common.annotations.api.ConvertApi;
 import stirling.software.common.configuration.RuntimePathConfig;
-import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.api.converters.HTMLToPdfRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.CustomHtmlSanitizer;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.FileToPdf;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
-@RestController
-@Tag(name = "Convert", description = "Convert APIs")
-@RequestMapping("/api/v1/convert")
+@ConvertApi
 @RequiredArgsConstructor
 public class ConvertHtmlToPDF {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    private final ApplicationProperties applicationProperties;
-
     private final RuntimePathConfig runtimePathConfig;
 
     private final TempFileManager tempFileManager;
 
-    @PostMapping(consumes = "multipart/form-data", value = "/html/pdf")
+    private final CustomHtmlSanitizer customHtmlSanitizer;
+
+    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/html/pdf")
+    @StandardPdfResponse
     @Operation(
             summary = "Convert an HTML or ZIP (containing HTML and CSS) to PDF",
             description =
@@ -57,17 +55,14 @@ public class ConvertHtmlToPDF {
                     "error.fileFormatRequired", "File must be in {0} format", ".html or .zip");
         }
 
-        boolean disableSanitize =
-                Boolean.TRUE.equals(applicationProperties.getSystem().getDisableSanitize());
-
         byte[] pdfBytes =
                 FileToPdf.convertHtmlToPdf(
                         runtimePathConfig.getWeasyPrintPath(),
                         request,
                         fileInput.getBytes(),
                         originalFilename,
-                        disableSanitize,
-                        tempFileManager);
+                        tempFileManager,
+                        customHtmlSanitizer);
 
         pdfBytes = pdfDocumentFactory.createNewBytesBasedOnOldDocument(pdfBytes);
 

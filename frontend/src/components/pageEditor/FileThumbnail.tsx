@@ -1,19 +1,25 @@
-import React, { useState } from 'react';
-import { Text, Checkbox, Tooltip, ActionIcon, Badge, Modal } from '@mantine/core';
-import CloseIcon from '@mui/icons-material/Close';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import HistoryIcon from '@mui/icons-material/History';
+import React, { useState, useCallback, useRef, useMemo, useEffect } from 'react';
+import { ActionIcon, CheckboxIndicator } from '@mantine/core';
+import { useTranslation } from 'react-i18next';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
+import DownloadOutlinedIcon from '@mui/icons-material/DownloadOutlined';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import PushPinIcon from '@mui/icons-material/PushPin';
+import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
+import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+
 import styles from './PageEditor.module.css';
-import FileOperationHistory from '../history/FileOperationHistory';
+import { useFileContext } from '../../contexts/FileContext';
+import { FileId } from '../../types/file';
 
 interface FileItem {
-  id: string;
+  id: FileId;
   name: string;
   pageCount: number;
-  thumbnail: string;
+  thumbnail: string | null;
   size: number;
-  splitBefore?: boolean;
+  modifiedAt?: number | string | Date;
 }
 
 interface FileThumbnailProps {
@@ -22,129 +28,272 @@ interface FileThumbnailProps {
   totalFiles: number;
   selectedFiles: string[];
   selectionMode: boolean;
-  draggedFile: string | null;
-  dropTarget: string | null;
-  isAnimating: boolean;
-  fileRefs: React.MutableRefObject<Map<string, HTMLDivElement>>;
-  onDragStart: (fileId: string) => void;
-  onDragEnd: () => void;
-  onDragOver: (e: React.DragEvent) => void;
-  onDragEnter: (fileId: string) => void;
-  onDragLeave: () => void;
-  onDrop: (e: React.DragEvent, fileId: string) => void;
-  onToggleFile: (fileId: string) => void;
-  onDeleteFile: (fileId: string) => void;
-  onViewFile: (fileId: string) => void;
+  onToggleFile: (fileId: FileId) => void;
+  onDeleteFile: (fileId: FileId) => void;
+  onViewFile: (fileId: FileId) => void;
   onSetStatus: (status: string) => void;
+  onReorderFiles?: (sourceFileId: FileId, targetFileId: FileId, selectedFileIds: FileId[]) => void;
+  onDownloadFile?: (fileId: FileId) => void;
   toolMode?: boolean;
+  isSupported?: boolean;
 }
 
 const FileThumbnail = ({
   file,
   index,
-  totalFiles,
   selectedFiles,
-  selectionMode,
-  draggedFile,
-  dropTarget,
-  isAnimating,
-  fileRefs,
-  onDragStart,
-  onDragEnd,
-  onDragOver,
-  onDragEnter,
-  onDragLeave,
-  onDrop,
   onToggleFile,
   onDeleteFile,
-  onViewFile,
   onSetStatus,
-  toolMode = false,
+  onReorderFiles,
+  onDownloadFile,
+  isSupported = true,
 }: FileThumbnailProps) => {
-  const [showHistory, setShowHistory] = useState(false);
+  const { t } = useTranslation();
+  const { pinFile, unpinFile, isFilePinned, activeFiles } = useFileContext();
 
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 B';
-    const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  // ---- Drag state ----
+  const [isDragging, setIsDragging] = useState(false);
+  const dragElementRef = useRef<HTMLDivElement | null>(null);
+  const [actionsWidth, setActionsWidth] = useState<number | undefined>(undefined);
+  const [showActions, setShowActions] = useState(false);
+
+  // Resolve the actual File object for pin/unpin operations
+  const actualFile = useMemo(() => {
+    return activeFiles.find(f => f.fileId === file.id);
+  }, [activeFiles, file.id]);
+  const isPinned = actualFile ? isFilePinned(actualFile) : false;
+
+  const downloadSelectedFile = useCallback(() => {
+    // Prefer parent-provided handler if available
+    if (typeof onDownloadFile === 'function') {
+      onDownloadFile(file.id);
+      return;
+    }
+
+    // Fallback: attempt to download using the File object if provided
+    const maybeFile = (file as unknown as { file?: File }).file;
+    if (maybeFile instanceof File) {
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(maybeFile);
+      link.download = maybeFile.name || file.name || 'download';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(link.href);
+      return;
+    }
+
+    // If we can't find a way to download, surface a status message
+    onSetStatus?.(typeof t === 'function' ? t('downloadUnavailable', 'Download unavailable for this item') : 'Download unavailable for this item');
+  }, [file, onDownloadFile, onSetStatus, t]);
+  const handleRef = useRef<HTMLSpanElement | null>(null);
+
+  // ---- Selection ----
+  const isSelected = selectedFiles.includes(file.id);
+
+  // ---- Drag & drop wiring ----
+  const fileElementRef = useCallback((element: HTMLDivElement | null) => {
+    if (!element) return;
+
+    dragElementRef.current = element;
+
+    const dragCleanup = draggable({
+      element,
+      getInitialData: () => ({
+        type: 'file',
+        fileId: file.id,
+        fileName: file.name,
+        selectedFiles: [file.id]  // Always drag only this file, ignore selection state
+      }),
+      onDragStart: () => {
+        setIsDragging(true);
+      },
+      onDrop: () => {
+        setIsDragging(false);
+      }
+    });
+
+    const dropCleanup = dropTargetForElements({
+      element,
+      getData: () => ({
+        type: 'file',
+        fileId: file.id
+      }),
+      canDrop: ({ source }) => {
+        const sourceData = source.data;
+        return sourceData.type === 'file' && sourceData.fileId !== file.id;
+      },
+      onDrop: ({ source }) => {
+        const sourceData = source.data;
+        if (sourceData.type === 'file' && onReorderFiles) {
+          const sourceFileId = sourceData.fileId as FileId;
+          const selectedFileIds = sourceData.selectedFiles as FileId[];
+          onReorderFiles(sourceFileId, file.id, selectedFileIds);
+        }
+      }
+    });
+
+    return () => {
+      dragCleanup();
+      dropCleanup();
+    };
+  }, [file.id, file.name, selectedFiles, onReorderFiles]);
+
+  // Update dropdown width on resize
+  useEffect(() => {
+    const update = () => {
+      if (dragElementRef.current) setActionsWidth(dragElementRef.current.offsetWidth);
+    };
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
+
+  // Close the actions dropdown when hovering outside this file card (and its dropdown)
+  useEffect(() => {
+    if (!showActions) return;
+
+    const isInsideCard = (target: EventTarget | null) => {
+      const container = dragElementRef.current;
+      if (!container) return false;
+      return target instanceof Node && container.contains(target);
+    };
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isInsideCard(e.target)) {
+        setShowActions(false);
+      }
+    };
+
+    const handleTouchStart = (e: TouchEvent) => {
+      // On touch devices, close if the touch target is outside the card
+      if (!isInsideCard(e.target)) {
+        setShowActions(false);
+      }
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('touchstart', handleTouchStart, { passive: true });
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('touchstart', handleTouchStart);
+    };
+  }, [showActions]);
+
+  // ---- Card interactions ----
+  const handleCardClick = () => {
+    if (!isSupported) return;
+    onToggleFile(file.id);
   };
+
 
   return (
     <div
-      ref={(el) => {
-        if (el) {
-          fileRefs.current.set(file.id, el);
-        } else {
-          fileRefs.current.delete(file.id);
-        }
-      }}
+      ref={fileElementRef}
       data-file-id={file.id}
-      className={`
-        ${styles.pageContainer}
-        !rounded-lg
-        cursor-grab
-        select-none
-        w-[20rem]
-        h-[24rem]
-        flex flex-col items-center justify-center
-        flex-shrink-0
-        shadow-sm
-        hover:shadow-md
-        transition-all
-        relative
-        ${selectionMode
-          ? 'bg-white hover:bg-gray-50'
-          : 'bg-white hover:bg-gray-50'}
-        ${draggedFile === file.id ? 'opacity-50 scale-95' : ''}
-      `}
+      data-testid="file-thumbnail"
+      data-selected={isSelected}
+      data-supported={isSupported}
+      className={`${styles.card} w-[18rem] h-[22rem] select-none flex flex-col shadow-sm transition-all relative`}
       style={{
-        transform: (() => {
-          if (!isAnimating && draggedFile && file.id !== draggedFile && dropTarget === file.id) {
-            return 'translateX(20px)';
-          }
-          return 'translateX(0)';
-        })(),
-        transition: isAnimating ? 'none' : 'transform 0.2s ease-in-out'
+        opacity: isSupported ? (isDragging ? 0.9 : 1) : 0.5,
+        filter: isSupported ? 'none' : 'grayscale(50%)',
       }}
-      draggable
-      onDragStart={() => onDragStart(file.id)}
-      onDragEnd={onDragEnd}
-      onDragOver={onDragOver}
-      onDragEnter={() => onDragEnter(file.id)}
-      onDragLeave={onDragLeave}
-      onDrop={(e) => onDrop(e, file.id)}
+      tabIndex={0}
+      role="listitem"
+      aria-selected={isSelected}
+      onClick={handleCardClick}
     >
-      {selectionMode && (
-        <div
-          className={styles.checkboxContainer}
-          style={{
-            position: 'absolute',
-            top: 8,
-            right: 8,
-            zIndex: 4,
-            backgroundColor: 'white',
-            borderRadius: '4px',
-            padding: '2px',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-            pointerEvents: 'auto'
-          }}
-          onMouseDown={(e) => e.stopPropagation()}
-          onDragStart={(e) => {
-            e.preventDefault();
+      {/* Header bar */}
+      <div
+        className={`${styles.header} ${
+          isSelected ? styles.headerSelected : styles.headerResting
+        }`}
+      >
+        {/* Logo/checkbox area */}
+        <div className={styles.logoMark}>
+          {isSupported ? (
+            <CheckboxIndicator
+              checked={isSelected}
+              onChange={() => onToggleFile(file.id)}
+              color="var(--checkbox-checked-bg)"
+            />
+          ) : (
+            <div className={styles.unsupportedPill}>
+              <span>
+                {t('unsupported', 'Unsupported')}
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* Centered index */}
+        <div className={styles.headerIndex} aria-label={`Position ${index + 1}`}>
+          {index + 1}
+        </div>
+
+        {/* Kebab menu */}
+        <ActionIcon
+          aria-label={t('moreOptions', 'More options')}
+          variant="subtle"
+          className={styles.kebab}
+          onClick={(e) => {
             e.stopPropagation();
+            setShowActions((v) => !v);
           }}
         >
-          <Checkbox
-            checked={selectedFiles.includes(file.id)}
-            onChange={(event) => {
-              event.stopPropagation();
-              onToggleFile(file.id);
+          <MoreVertIcon fontSize="small" />
+        </ActionIcon>
+      </div>
+
+      {/* Actions overlay */}
+      {showActions && (
+        <div
+          className={styles.actionsOverlay}
+          style={{ width: actionsWidth }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            className={styles.actionRow}
+            onClick={() => {
+              if (actualFile) {
+                if (isPinned) {
+                  unpinFile(actualFile);
+                  onSetStatus?.(`Unpinned ${file.name}`);
+                } else {
+                  pinFile(actualFile);
+                  onSetStatus?.(`Pinned ${file.name}`);
+                }
+              }
+              setShowActions(false);
             }}
-            onClick={(e) => e.stopPropagation()}
-            size="sm"
-          />
+          >
+            {isPinned ? <PushPinIcon fontSize="small" /> : <PushPinOutlinedIcon fontSize="small" />}
+            <span>{isPinned ? t('unpin', 'Unpin') : t('pin', 'Pin')}</span>
+          </button>
+
+          <button
+            className={styles.actionRow}
+            onClick={() => { downloadSelectedFile(); setShowActions(false); }}
+          >
+            <DownloadOutlinedIcon fontSize="small" />
+            <span>{t('download', 'Download')}</span>
+          </button>
+
+          <div className={styles.actionsDivider} />
+
+          <button
+            className={`${styles.actionRow} ${styles.actionDanger}`}
+            onClick={() => {
+              onDeleteFile(file.id);
+              onSetStatus(`Deleted ${file.name}`);
+              setShowActions(false);
+            }}
+          >
+            <DeleteOutlineIcon fontSize="small" />
+            <span>{t('delete', 'Delete')}</span>
+          </button>
         </div>
       )}
 
@@ -166,167 +315,47 @@ const FileThumbnail = ({
             boxShadow: '2px 2px 0 rgba(0,0,0,0.1), 4px 4px 0 rgba(0,0,0,0.05)'
           }}
         >
-          <img
-            src={file.thumbnail}
-            alt={file.name}
+          {file.thumbnail && (
+            <img
+              className="ph-no-capture"
+              src={file.thumbnail}
+              alt={file.name}
+              draggable={false}
+              onError={(e) => {
+                // Hide broken image if blob URL was revoked
+                const img = e.target as HTMLImageElement;
+                img.style.display = 'none';
+              }}
             style={{
-              maxWidth: '100%',
-              maxHeight: '100%',
+              maxWidth: '80%',
+              maxHeight: '80%',
               objectFit: 'contain',
-              borderRadius: 2,
+              borderRadius: 0,
+              background: '#ffffff',
+              border: '1px solid var(--border-default)',
+              display: 'block',
+              marginLeft: 'auto',
+              marginRight: 'auto',
+              alignSelf: 'start'
             }}
           />
-        </div>
-
-        {/* Page count badge */}
-        <Badge
-          size="sm"
-          variant="filled"
-          color="blue"
-          style={{
-            position: 'absolute',
-            top: 8,
-            left: 8,
-            zIndex: 3,
-          }}
-        >
-          {file.pageCount} pages
-        </Badge>
-
-        {/* File name overlay */}
-        <Text
-          className={styles.pageNumber}
-          size="xs"
-          fw={500}
-          c="white"
-          style={{
-            position: 'absolute',
-            bottom: 5,
-            left: 5,
-            right: 5,
-            background: 'rgba(0, 0, 0, 0.8)',
-            padding: '4px 6px',
-            borderRadius: 4,
-            zIndex: 2,
-            opacity: 0,
-            transition: 'opacity 0.2s ease-in-out',
-            textOverflow: 'ellipsis',
-            overflow: 'hidden',
-            whiteSpace: 'nowrap'
-          }}
-        >
-          {file.name}
-        </Text>
-
-        {/* Hover controls */}
-        <div
-          className={styles.pageHoverControls}
-          style={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            background: 'rgba(0, 0, 0, 0.8)',
-            padding: '8px 12px',
-            borderRadius: 20,
-            opacity: 0,
-            transition: 'opacity 0.2s ease-in-out',
-            zIndex: 3,
-            display: 'flex',
-            gap: '8px',
-            alignItems: 'center',
-            whiteSpace: 'nowrap'
-          }}
-        >
-          {!toolMode && (
-            <>
-              <Tooltip label="View File">
-                <ActionIcon
-                  size="md"
-                  variant="subtle"
-                  c="white"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onViewFile(file.id);
-                    onSetStatus(`Opened ${file.name}`);
-                  }}
-                >
-                  <VisibilityIcon style={{ fontSize: 20 }} />
-                </ActionIcon>
-              </Tooltip>
-
-            </>
           )}
-
-          <Tooltip label="View History">
-            <ActionIcon
-              size="md"
-              variant="subtle"
-              c="white"
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowHistory(true);
-                onSetStatus(`Viewing history for ${file.name}`);
-              }}
-            >
-              <HistoryIcon style={{ fontSize: 20 }} />
-            </ActionIcon>
-          </Tooltip>
-
-          <Tooltip label="Close File">
-            <ActionIcon
-              size="md"
-              variant="subtle"
-              c="orange"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDeleteFile(file.id);
-                onSetStatus(`Closed ${file.name}`);
-              }}
-            >
-              <CloseIcon style={{ fontSize: 20 }} />
-            </ActionIcon>
-          </Tooltip>
         </div>
 
-        <DragIndicatorIcon
-          style={{
-            position: 'absolute',
-            bottom: 4,
-            right: 4,
-            color: 'rgba(0,0,0,0.3)',
-            fontSize: 16,
-            zIndex: 1
-          }}
-        />
-      </div>
+        {/* Pin indicator (bottom-left) */}
+        {isPinned && (
+          <span className={styles.pinIndicator} aria-hidden>
+            <PushPinIcon fontSize="small" />
+          </span>
+        )}
 
-      {/* File info */}
-      <div className="w-full px-4 py-2 text-center">
-        <Text size="sm" fw={500} truncate>
-          {file.name}
-        </Text>
-        <Text size="xs" c="dimmed">
-          {formatFileSize(file.size)}
-        </Text>
+        {/* Drag handle (span wrapper so we can attach a ref reliably) */}
+        <span ref={handleRef} className={styles.dragHandle} aria-hidden>
+          <DragIndicatorIcon fontSize="small" />
+        </span>
       </div>
-
-      {/* History Modal */}
-      <Modal
-        opened={showHistory}
-        onClose={() => setShowHistory(false)}
-        title={`Operation History - ${file.name}`}
-        size="lg"
-        scrollAreaComponent="div"
-      >
-        <FileOperationHistory 
-          fileId={file.name} 
-          showOnlyApplied={true}
-          maxHeight={500}
-        />
-      </Modal>
     </div>
   );
 };
 
-export default FileThumbnail;
+export default React.memo(FileThumbnail);

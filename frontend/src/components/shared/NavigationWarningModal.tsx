@@ -1,23 +1,19 @@
-import React from 'react';
-import { Modal, Text, Button, Group, Stack } from '@mantine/core';
-import { useFileContext } from '../../contexts/FileContext';
+import { Modal, Text, Button, Group, Stack } from "@mantine/core";
+import { useNavigationGuard } from "../../contexts/NavigationContext";
+import { useTranslation } from "react-i18next";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 
 interface NavigationWarningModalProps {
   onApplyAndContinue?: () => Promise<void>;
   onExportAndContinue?: () => Promise<void>;
 }
 
-const NavigationWarningModal = ({
-  onApplyAndContinue,
-  onExportAndContinue
-}: NavigationWarningModalProps) => {
-  const { 
-    showNavigationWarning, 
-    hasUnsavedChanges,
-    confirmNavigation, 
-    cancelNavigation,
-    setHasUnsavedChanges
-  } = useFileContext();
+const NavigationWarningModal = ({ onApplyAndContinue, onExportAndContinue }: NavigationWarningModalProps) => {
+  const { t } = useTranslation();
+  const { showNavigationWarning, hasUnsavedChanges, cancelNavigation, confirmNavigation, setHasUnsavedChanges } =
+    useNavigationGuard();
 
   const handleKeepWorking = () => {
     cancelNavigation();
@@ -36,13 +32,14 @@ const NavigationWarningModal = ({
     confirmNavigation();
   };
 
-  const handleExportAndContinue = async () => {
+  const _handleExportAndContinue = async () => {
     if (onExportAndContinue) {
       await onExportAndContinue();
     }
     setHasUnsavedChanges(false);
     confirmNavigation();
   };
+  const BUTTON_WIDTH = "10rem";
 
   if (!hasUnsavedChanges) {
     return null;
@@ -52,52 +49,55 @@ const NavigationWarningModal = ({
     <Modal
       opened={showNavigationWarning}
       onClose={handleKeepWorking}
-      title="Unsaved Changes"
+      title={t("unsavedChangesTitle", "Unsaved Changes")}
       centered
-      closeOnClickOutside={false}
-      closeOnEscape={false}
+      size="auto"
+      closeOnClickOutside={true}
+      closeOnEscape={true}
     >
-      <Stack gap="md">
-        <Text>
-          You have unsaved changes to your PDF. What would you like to do?
+      <Stack>
+        <Stack  ta="center"  p="md">
+        <Text size="md" fw="300">
+          {t("unsavedChanges", "You have unsaved changes to your PDF.")}
         </Text>
-        
-        <Group justify="flex-end" gap="sm">
-          <Button
-            variant="light"
-            color="gray"
-            onClick={handleKeepWorking}
-          >
-            Keep Working
-          </Button>
-          
-          <Button
-            variant="light"
-            color="red"
-            onClick={handleDiscardChanges}
-          >
-            Discard Changes
-          </Button>
-          
-          {onApplyAndContinue && (
-            <Button
-              variant="light"
-              color="blue"
-              onClick={handleApplyAndContinue}
-            >
-              Apply & Continue
+        <Text size="lg" fw="500" >
+          {t("areYouSure", "Are you sure you want to leave?")}
+        </Text>
+        </Stack>
+
+        {/* Desktop layout: 2 groups side by side */}
+        <Group justify="space-between" gap="xl" visibleFrom="md">
+          <Group gap="sm">
+            <Button variant="light" color="var(--mantine-color-gray-8)" onClick={handleKeepWorking} w={BUTTON_WIDTH} leftSection={<ArrowBackIcon fontSize="small" />}>
+              {t("keepWorking", "Keep Working")}
             </Button>
-          )}
-          
-          {onExportAndContinue && (
-            <Button
-              color="green"
-              onClick={handleExportAndContinue}
-            >
-              Export & Continue
+          </Group>
+          <Group gap="sm">
+            <Button variant="filled" color="var(--mantine-color-red-9)" onClick={handleDiscardChanges} w={BUTTON_WIDTH} leftSection={<DeleteOutlineIcon fontSize="small" />}>
+              {t("discardChanges", "Discard Changes")}
             </Button>
-          )}
+            {onApplyAndContinue && (
+              <Button variant="filled"  onClick={handleApplyAndContinue} w={BUTTON_WIDTH} leftSection={<CheckCircleOutlineIcon fontSize="small" />}>
+                {t("applyAndContinue", "Apply & Leave")}
+              </Button>
+            )}
+          </Group>
         </Group>
+
+        {/* Mobile layout: centered stack of 4 buttons */}
+        <Stack align="center" gap="sm" hiddenFrom="md">
+           <Button variant="light" color="var(--mantine-color-gray-8)"  onClick={handleKeepWorking} w={BUTTON_WIDTH} leftSection={<ArrowBackIcon fontSize="small" />}>
+            {t("keepWorking", "Keep Working")}
+          </Button>
+          <Button variant="filled" color="var(--mantine-color-red-9)" onClick={handleDiscardChanges} w={BUTTON_WIDTH} leftSection={<DeleteOutlineIcon fontSize="small" />}>
+            {t("discardChanges", "Discard Changes")}
+          </Button>
+          {onApplyAndContinue && (
+            <Button variant="filled" onClick={handleApplyAndContinue} w={BUTTON_WIDTH} leftSection={<CheckCircleOutlineIcon fontSize="small" />}>
+              {t("applyAndContinue", "Apply & Leave")}
+            </Button>
+          )}
+        </Stack>
       </Stack>
     </Modal>
   );

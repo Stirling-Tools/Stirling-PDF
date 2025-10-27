@@ -14,7 +14,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -22,20 +21,18 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.annotations.api.DatabaseApi;
 import stirling.software.proprietary.security.database.H2SQLCondition;
 import stirling.software.proprietary.security.service.DatabaseService;
 
 @Slf4j
-@Controller
-@RequestMapping("/api/v1/database")
+@DatabaseApi
 @PreAuthorize("hasRole('ROLE_ADMIN')")
 @Conditional(H2SQLCondition.class)
-@Tag(name = "Database", description = "Database APIs for backup, import, and management")
 @RequiredArgsConstructor
 public class DatabaseController {
 

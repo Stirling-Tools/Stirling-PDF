@@ -1,30 +1,16 @@
-import { Stack, TextInput, Select, Checkbox } from '@mantine/core';
+import { Stack, TextInput, Checkbox, Anchor, Text } from '@mantine/core';
+import LocalIcon from '../../shared/LocalIcon';
 import { useTranslation } from 'react-i18next';
-import { SPLIT_MODES, SPLIT_TYPES, type SplitMode, type SplitType } from '../../../constants/splitConstants';
-
-export interface SplitParameters {
-  pages: string;
-  hDiv: string;
-  vDiv: string;
-  merge: boolean;
-  splitType: SplitType | '';
-  splitValue: string;
-  bookmarkLevel: string;
-  includeMetadata: boolean;
-  allowDuplicates: boolean;
-}
+import { SPLIT_METHODS } from '../../../constants/splitConstants';
+import { SplitParameters } from '../../../hooks/tools/split/useSplitParameters';
 
 export interface SplitSettingsProps {
-  mode: SplitMode | '';
-  onModeChange: (mode: SplitMode | '') => void;
   parameters: SplitParameters;
-  onParameterChange: (parameter: keyof SplitParameters, value: string | boolean) => void;
+  onParameterChange: <K extends keyof SplitParameters>(key: K, value: SplitParameters[K]) => void;
   disabled?: boolean;
 }
 
 const SplitSettings = ({
-  mode,
-  onModeChange,
   parameters,
   onParameterChange,
   disabled = false
@@ -72,28 +58,37 @@ const SplitSettings = ({
     </Stack>
   );
 
-  const renderBySizeOrCountForm = () => (
-    <Stack gap="sm">
-      <Select
-        label={t("split-by-size-or-count.type.label", "Split Type")}
-        value={parameters.splitType}
-        onChange={(v) => v && onParameterChange('splitType', v)}
-        disabled={disabled}
-        data={[
-          { value: SPLIT_TYPES.SIZE, label: t("split-by-size-or-count.type.size", "By Size") },
-          { value: SPLIT_TYPES.PAGES, label: t("split-by-size-or-count.type.pageCount", "By Page Count") },
-          { value: SPLIT_TYPES.DOCS, label: t("split-by-size-or-count.type.docCount", "By Document Count") },
-        ]}
-      />
+  const renderSplitValueForm = () => {
+    let label, placeholder;
+
+    switch (parameters.method) {
+      case SPLIT_METHODS.BY_SIZE:
+        label = t("split.value.fileSize.label", "File Size");
+        placeholder = t("split.value.fileSize.placeholder", "e.g. 10MB, 500KB");
+        break;
+      case SPLIT_METHODS.BY_PAGE_COUNT:
+        label = t("split.value.pageCount.label", "Pages per File");
+        placeholder = t("split.value.pageCount.placeholder", "e.g. 5, 10");
+        break;
+      case SPLIT_METHODS.BY_DOC_COUNT:
+        label = t("split.value.docCount.label", "Number of Files");
+        placeholder = t("split.value.docCount.placeholder", "e.g. 3, 5");
+        break;
+      default:
+        label = t("split-by-size-or-count.value.label", "Split Value");
+        placeholder = t("split-by-size-or-count.value.placeholder", "e.g. 10MB or 5 pages");
+    }
+
+    return (
       <TextInput
-        label={t("split-by-size-or-count.value.label", "Split Value")}
-        placeholder={t("split-by-size-or-count.value.placeholder", "e.g. 10MB or 5 pages")}
+        label={label}
+        placeholder={placeholder}
         value={parameters.splitValue}
         onChange={(e) => onParameterChange('splitValue', e.target.value)}
         disabled={disabled}
       />
-    </Stack>
-  );
+    );
+  };
 
   const renderByChaptersForm = () => (
     <Stack gap="sm">
@@ -119,30 +114,50 @@ const SplitSettings = ({
     </Stack>
   );
 
-  return (
-    <Stack gap="md">
-      {/* Mode Selector */}
-      <Select
-        label="Choose split method"
-        placeholder="Select how to split the PDF"
-        value={mode}
-        onChange={(v) => v && onModeChange(v)}
-        disabled={disabled}
-        data={[
-          { value: SPLIT_MODES.BY_PAGES, label: t("split.header", "Split by Pages") + " (e.g. 1,3,5-10)" },
-          { value: SPLIT_MODES.BY_SECTIONS, label: t("split-by-sections.title", "Split by Grid Sections") },
-          { value: SPLIT_MODES.BY_SIZE_OR_COUNT, label: t("split-by-size-or-count.title", "Split by Size or Count") },
-          { value: SPLIT_MODES.BY_CHAPTERS, label: t("splitByChapters.title", "Split by Chapters") },
-        ]}
-      />
+  const renderByPageDividerForm = () => (
+    <Stack gap="sm">
+      <Anchor
+        href="https://stirlingpdf.io/files/Auto%20Splitter%20Divider%20(with%20instructions).pdf"
+        target="_blank"
+        size="sm"
+        style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+      >
+        <LocalIcon icon="download-rounded" width="2rem" height="2rem" />
+        {t("autoSplitPDF.dividerDownload2", "Download 'Auto Splitter Divider (with instructions).pdf'")}
+      </Anchor>
 
-      {/* Parameter Form */}
-      {mode === SPLIT_MODES.BY_PAGES && renderByPagesForm()}
-      {mode === SPLIT_MODES.BY_SECTIONS && renderBySectionsForm()}
-      {mode === SPLIT_MODES.BY_SIZE_OR_COUNT && renderBySizeOrCountForm()}
-      {mode === SPLIT_MODES.BY_CHAPTERS && renderByChaptersForm()}
+      <Checkbox
+        label={t("autoSplitPDF.duplexMode", "Duplex Mode (Front and back scanning)")}
+        checked={parameters.duplexMode}
+        onChange={(e) => onParameterChange('duplexMode', e.currentTarget.checked)}
+        disabled={disabled}
+      />
     </Stack>
   );
-}
+
+  // Don't render anything if no method is selected
+  if (!parameters.method) {
+    return (
+      <Stack gap="sm">
+        <Text c="dimmed" ta="center">
+          {t("split.settings.selectMethodFirst", "Please select a split method first")}
+        </Text>
+      </Stack>
+    );
+  }
+
+  return (
+    <Stack gap="md">
+      {/* Method-Specific Form */}
+      {parameters.method === SPLIT_METHODS.BY_PAGES && renderByPagesForm()}
+      {parameters.method === SPLIT_METHODS.BY_SECTIONS && renderBySectionsForm()}
+      {(parameters.method === SPLIT_METHODS.BY_SIZE ||
+        parameters.method === SPLIT_METHODS.BY_PAGE_COUNT ||
+        parameters.method === SPLIT_METHODS.BY_DOC_COUNT) && renderSplitValueForm()}
+      {parameters.method === SPLIT_METHODS.BY_CHAPTERS && renderByChaptersForm()}
+      {parameters.method === SPLIT_METHODS.BY_PAGE_DIVIDER && renderByPageDividerForm()}
+    </Stack>
+  );
+};
 
 export default SplitSettings;

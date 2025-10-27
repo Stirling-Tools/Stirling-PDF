@@ -320,7 +320,7 @@
     "desc": "Twoja lokalna aplikacja do kompleksowej obsługi Twoich potrzeb związanych z dokumentami PDF.",
     "searchBar": "Szukaj opcji ...",
     "viewPdf": {
-      "title": "View/Edit PDF",
+      "title": "Przeglądaj/Edytuj PDF",
       "desc": "Wyświetl, adnotuj, dodaj tekst lub obrazy"
     },
     "setFavorites": "Ustaw ulubione",
@@ -347,7 +347,7 @@
       "title": "Obróć",
       "desc": "Łatwo obracaj dokumenty PDF."
     },
-    "imageToPdf": {
+    "imageToPDF": {
       "title": "Obraz na PDF",
       "desc": "Konwertuj obraz (PNG, JPEG, GIF) do dokumentu PDF."
     },
@@ -371,7 +371,7 @@
       "title": "Zmień uprawnienia",
       "desc": "Zmień uprawnienia dokumentu PDF"
     },
-    "removePages": {
+    "pageRemover": {
       "title": "Usuń",
       "desc": "Usuń niechciane strony z dokumentu PDF."
     },
@@ -383,7 +383,7 @@
       "title": "Usuń hasło",
       "desc": "Usuń ochronę hasłem z dokumentu PDF."
     },
-    "compressPdfs": {
+    "compress": {
       "title": "Kompresuj",
       "desc": "Kompresuj dokumenty PDF, aby zmniejszyć ich rozmiar."
     },
@@ -479,7 +479,7 @@
       "title": "Automatyzacja",
       "desc": "Wykonaj wiele akcji na dokumentach PDF, tworząc automatyzację"
     },
-    "add-page-numbers": {
+    "addPageNumbers": {
       "title": "Dodaj numery stron",
       "desc": "Dodaj numery strony w dokumencie PDF w podanej lokalizacji"
     },
@@ -487,7 +487,7 @@
       "title": "Automatycznie zmień nazwę PDF",
       "desc": "Automatycznie zmień nazwę PDF bazując na nagłówku"
     },
-    "adjust-contrast": {
+    "adjustContrast": {
       "title": "Zmień kolor/nasycenie/jasność",
       "desc": "Zmień kolor/nasycenie/jasność w dokumencie PDF"
     },
@@ -499,7 +499,7 @@
       "title": "Automatycznie podziel strony",
       "desc": "Automatycznie podziel dokument na strony"
     },
-    "sanitizePdf": {
+    "sanitizePDF": {
       "title": "Dezynfekcja",
       "desc": "Usuń skrypt i inne elementy z dokumentu PDF"
     },
@@ -523,11 +523,11 @@
       "title": "Pobierz informacje o pliku PDF",
       "desc": "Pobiera wszelkie informacje o pliku PDF"
     },
-    "extractPage": {
+    "pageExtracter": {
       "title": "Wyciągnij stronę z PDF",
       "desc": "Wyciąga stronę z dokumentu PDF"
     },
-    "PdfToSinglePage": {
+    "pdfToSinglePage": {
       "title": "PDF do jednej strony",
       "desc": "Łączy wszystkie strony PDFa w jedną wielką stronę PDF"
     },
@@ -543,11 +543,11 @@
       "title": "Manual Redaction",
       "desc": "Redacts a PDF based on selected text, drawn shapes and/or selected page(s)"
     },
-    "tableExtraxt": {
+    "PDFToCSV": {
       "title": "PDF do CSV",
       "desc": "Konwertuje tabele z PDF do pliku CSV"
     },
-    "autoSizeSplitPDF": {
+    "split-by-size-or-count": {
       "title": "Podziel (Rozmiar/Ilość stron)",
       "desc": "Rozdziela dokument PDF na wiele dokumentów bazując na podanym rozmiarze, ilości stron bądź ilości dokumentów"
     },
@@ -563,11 +563,11 @@
       "title": "Dodaj pieczęć",
       "desc": "Dodaj pieczęć tekstową/obrazową w wyznaczonej lokalizacji dokumentu"
     },
-    "removeImagePdf": {
+    "removeImage": {
       "title": "Usuń obraz",
       "desc": "Usuń obraz z pliku PDF, aby zmniejszyć rozmiar pliku"
     },
-    "splitPdfByChapters": {
+    "splitByChapters": {
       "title": "Podziel PDF według rozdziałów",
       "desc": "Podział pliku PDF na wiele plików na podstawie struktury rozdziałów."
     },
@@ -575,9 +575,41 @@
       "title": "Sprawdź poprawność podpisu PDF",
       "desc": "Weryfikuj podpisy cyfrowe i certyfikaty w dokumentach PDF"
     },
+    "replace-color": {
+      "title": "Zastąp i Odwróć Kolor",
+      "desc": "Zastąp kolor tekstu i tła w pliku PDF i odwróć pełen kolor pliku PDF, aby zmniejszyć rozmiar pliku"
+    },
+    "convert": {
+      "title": "Konwertuj"
+    },
+    "attachments": {
+      "title": "Add attachments"
+    },
+    "extractPages": {
+      "title": "Wyciągnij stronę"
+    },
+    "removePages": {
+      "title": "Usuń",
+      "desc": "Usuń niechciane strony z dokumentu PDF."
+    },
+    "removeImagePdf": {
+      "title": "Usuń obraz",
+      "desc": "Usuń obraz z pliku PDF, aby zmniejszyć rozmiar pliku"
+    },
+    "autoSizeSplitPDF": {
+      "title": "Podziel (Rozmiar/Ilość stron)",
+      "desc": "Rozdziela dokument PDF na wiele dokumentów bazując na podanym rozmiarze, ilości stron bądź ilości dokumentów"
+    },
+    "adjust-contrast": {
+      "title": "Zmień kolor/nasycenie/jasność",
+      "desc": "Zmień kolor/nasycenie/jasność w dokumencie PDF"
+    },
     "replaceColorPdf": {
       "title": "Zastąp i Odwróć Kolor",
       "desc": "Zastąp kolor tekstu i tła w pliku PDF i odwróć pełen kolor pliku PDF, aby zmniejszyć rozmiar pliku"
+    },
+    "changePermissions": {
+      "title": "Zmień uprawnienia"
     }
   },
   "viewPdf": {
@@ -617,7 +649,10 @@
     "sortByName": "Sortuj po nazwie",
     "sortByDate": "Sortuj po dacie",
     "removeCertSign": "Usuń podpis cyfrowy w scalonym pliku?",
-    "submit": "Połącz"
+    "submit": "Połącz",
+    "sortBy": {
+      "filename": "Nazwa pliku"
+    }
   },
   "split": {
     "tags": "Operacje na stronach, dzielenie, wiele stron, cięcie, po stronie serwera",
@@ -634,7 +669,20 @@
       "8": "Dokument #6: Strona 10"
     },
     "splitPages": "Wprowadź strony do podziału na:",
-    "submit": "Podziel"
+    "submit": "Podziel",
+    "steps": {
+      "settings": "Ustawienia"
+    },
+    "methods": {
+      "bySize": {
+        "name": "Rozmiar pliku"
+      }
+    },
+    "value": {
+      "fileSize": {
+        "label": "Rozmiar pliku"
+      }
+    }
   },
   "rotate": {
     "tags": "strona serwera",
@@ -712,6 +760,12 @@
     "type": {
       "1": "Tekst",
       "2": "Obraz"
+    },
+    "watermarkType": {
+      "text": "Tekst"
+    },
+    "settings": {
+      "fontSize": "Rozmiar Czcionki"
     }
   },
   "permissions": {
@@ -734,7 +788,9 @@
     "submit": "Zmień"
   },
   "removePages": {
-    "tags": "Usuń strony,usuwaj strony"
+    "tags": "Usuń strony,usuwaj strony",
+    "title": "Usuń",
+    "submit": "Usuń"
   },
   "addPassword": {
     "tags": "bezpieczeństwo,ochrona",
@@ -758,7 +814,12 @@
       "15": "Ogranicza akcje, które można wykonać na dokumencie, kiedy jest otwarty (nie wspierany przez wszystkie przeglądarki)",
       "16": "Ogranicza otwarcie dokumentu"
     },
-    "submit": "Zablokuj"
+    "submit": "Zablokuj",
+    "tooltip": {
+      "permissions": {
+        "title": "Zmień uprawnienia"
+      }
+    }
   },
   "removePassword": {
     "tags": "zabezpieczenie,odszyfrowanie,bezpieczeństwo,odhasłowanie,usunięcie hasła",
@@ -768,7 +829,12 @@
       "1": "Wybierz dokument PDF do odszyfrowania",
       "2": "Hasło"
     },
-    "submit": "Usuń"
+    "submit": "Usuń",
+    "desc": "Usuń ochronę hasłem z dokumentu PDF.",
+    "password": {
+      "stepTitle": "Usuń hasło",
+      "label": "Obecne hasło"
+    }
   },
   "compressPdfs": {
     "tags": "zgniatać,mały,malutki"
@@ -829,7 +895,25 @@
     },
     "help": "Przeczytaj tę dokumentację, aby dowiedzieć się, jak używać tego w innych językach i/lub nie używać docker",
     "credit": "Ta usługa używa qpdf i Tesseract do OCR.",
-    "submit": "Przetwarzaj PDF za pomocą OCR"
+    "submit": "Przetwarzaj PDF za pomocą OCR",
+    "desc": "OCR skanuje i wykrywa tekst z obrazów w dokumencie PDF i zamienia go na tekst.",
+    "settings": {
+      "title": "Ustawienia",
+      "ocrMode": {
+        "label": "Tryb OCR"
+      },
+      "languages": {
+        "label": "Języki"
+      }
+    },
+    "tooltip": {
+      "mode": {
+        "title": "Tryb OCR"
+      },
+      "languages": {
+        "title": "Języki"
+      }
+    }
   },
   "extractImages": {
     "tags": "obraz, zdjęcie, zapisz, archiwum, zip, przechwyć, złap",
@@ -938,7 +1022,13 @@
     "title": "Spłaszcz",
     "header": "Spłaszcz dokument(y) PDF",
     "flattenOnlyForms": "Spłaszcz tylko formularze",
-    "submit": "Spłaszcz"
+    "submit": "Spłaszcz",
+    "steps": {
+      "settings": "Ustawienia"
+    },
+    "options": {
+      "flattenOnlyForms": "Spłaszcz tylko formularze"
+    }
   },
   "repair": {
     "tags": "naprawianie, naprawa, przywracanie, poprawianie, odzyskiwanie",
@@ -1174,7 +1264,22 @@
     "showLayers": "Pokaż warstwy (kliknij dwukrotnie, aby przywrócić domyślny stan warstw)",
     "colourPicker": "Selektor kolorów",
     "findCurrentOutlineItem": "Znajdź bieżący element zarysu",
-    "applyChanges": "Zastosuj zmiany"
+    "applyChanges": "Zastosuj zmiany",
+    "auto": {
+      "settings": {
+        "advancedTitle": "Zaawansowane"
+      },
+      "wordsToRedact": {
+        "add": "Dodaj"
+      }
+    },
+    "manual": {
+      "pageRedactionNumbers": {
+        "title": "Strony",
+        "placeholder": "(przykład 1,2,8 lub 2n-1)"
+      },
+      "export": "Eksportuj"
+    }
   },
   "tableExtraxt": {
     "tags": "CSV, ekstrakcja tabeli, ekstrakcja, konwersja, wydobywanie"
@@ -1386,7 +1491,10 @@
       "4": "Tryb automatyczny - Automatycznie dostosowuje jakość, aby uzyskać dokładny rozmiar pliku PDF",
       "5": "Oczekiwany rozmiar pliku PDF (np. 25 MB, 10,8 MB, 25 KB)"
     },
-    "submit": "Kompresuj"
+    "submit": "Kompresuj",
+    "method": {
+      "filesize": "Rozmiar pliku"
+    }
   },
   "decrypt": {
     "passwordPrompt": "Ten plik jest chroniony hasłem. Wprowadź hasło:",
@@ -1555,6 +1663,84 @@
       "analytics": {
         "title": "Analytics",
         "description": "These cookies help us understand how our tools are being used, so we can focus on building the features our community values most. Rest assured—Stirling PDF cannot and will never track the content of the documents you work with."
+      }
+    }
+  },
+  "download": "Pobierz",
+  "undo": "Cofnij",
+  "convert": {
+    "title": "Konwertuj",
+    "settings": "Ustawienia",
+    "color": "kolor",
+    "greyscale": "Odcień szarości",
+    "fillPage": "Wypełnij stronę",
+    "pdfaDigitalSignatureWarning": "Dokument zawiera podpis cyfrowy, nie zostanie on wczytany.",
+    "grayscale": "Odcień szarości"
+  },
+  "attachments": {
+    "tags": "embed,attach,file,attachment,attachments",
+    "title": "Add attachments",
+    "header": "Add attachments",
+    "submit": "Add attachments"
+  },
+  "rightRail": {
+    "selectAll": "Zaznacz wszystko",
+    "deselectAll": "Odznacz wszystko"
+  },
+  "quickAccess": {
+    "sign": "Podpis"
+  },
+  "fileUpload": {
+    "loading": "Ładowanie...",
+    "or": "lub"
+  },
+  "fileManager": {
+    "fileName": "Nazwa",
+    "fileVersion": "Wersja",
+    "selectAll": "Zaznacz wszystko",
+    "deselectAll": "Odznacz wszystko",
+    "deleteSelected": "Usuń zaznaczone",
+    "download": "Pobierz",
+    "delete": "usuń"
+  },
+  "sanitize": {
+    "submit": "Dezynfekuj PDF",
+    "steps": {
+      "settings": "Ustawienia"
+    }
+  },
+  "changePermissions": {
+    "title": "Zmień uprawnienia",
+    "submit": "Zmień uprawnienia",
+    "permissions": {
+      "preventAssembly": {
+        "label": "Zablokuj zmiany w dokumencie"
+      },
+      "preventExtractContent": {
+        "label": "Zablokuj zmiany w treści"
+      },
+      "preventExtractForAccessibility": {
+        "label": "Zablokuj zmiany w celu ułatwienia dostępu"
+      },
+      "preventFillInForm": {
+        "label": "Zablokuj wypełnianie formularzy"
+      },
+      "preventModify": {
+        "label": "Zablokuj modyfikacje"
+      },
+      "preventModifyAnnotations": {
+        "label": "Zablokuj modyfikacje adnotacji"
+      },
+      "preventPrinting": {
+        "label": "Zablokuj drukowanie"
+      },
+      "preventPrintingFaithful": {
+        "label": "Zablokuj drukowanie różnych formatów"
+      }
+    },
+    "tooltip": {
+      "header": {
+        "title": "Zmień uprawnienia"
       }
     }
   }

@@ -1,71 +1,61 @@
-import { useState } from 'react';
-import { SPLIT_MODES, SPLIT_TYPES, ENDPOINTS, type SplitMode, type SplitType } from '../../../constants/splitConstants';
-import { SplitParameters } from '../../../components/tools/split/SplitSettings';
+import { SPLIT_METHODS, ENDPOINTS, type SplitMethod } from '../../../constants/splitConstants';
+import { BaseParameters } from '../../../types/parameters';
+import { useBaseParameters, BaseParametersHook } from '../shared/useBaseParameters';
 
-export interface SplitParametersHook {
-  mode: SplitMode | '';
-  parameters: SplitParameters;
-  setMode: (mode: SplitMode | '') => void;
-  updateParameter: (parameter: keyof SplitParameters, value: string | boolean) => void;
-  resetParameters: () => void;
-  validateParameters: () => boolean;
-  getEndpointName: () => string;
+export interface SplitParameters extends BaseParameters {
+  method: SplitMethod | '';
+  pages: string;
+  hDiv: string;
+  vDiv: string;
+  merge: boolean;
+  splitValue: string;
+  bookmarkLevel: string;
+  includeMetadata: boolean;
+  allowDuplicates: boolean;
+  duplexMode: boolean;
 }
 
-const initialParameters: SplitParameters = {
+export type SplitParametersHook = BaseParametersHook<SplitParameters>;
+
+export const defaultParameters: SplitParameters = {
+  method: '',
   pages: '',
   hDiv: '2',
   vDiv: '2',
   merge: false,
-  splitType: SPLIT_TYPES.SIZE,
   splitValue: '',
   bookmarkLevel: '1',
   includeMetadata: false,
   allowDuplicates: false,
+  duplexMode: false,
 };
 
 export const useSplitParameters = (): SplitParametersHook => {
-  const [mode, setMode] = useState<SplitMode | ''>('');
-  const [parameters, setParameters] = useState<SplitParameters>(initialParameters);
+  return useBaseParameters({
+    defaultParameters,
+    endpointName: (params) => {
+      if (!params.method) return ENDPOINTS[SPLIT_METHODS.BY_PAGES];
+      return ENDPOINTS[params.method as SplitMethod];
+    },
+    validateFn: (params) => {
+      if (!params.method) return false;
 
-  const updateParameter = (parameter: keyof SplitParameters, value: string | boolean) => {
-    setParameters(prev => ({ ...prev, [parameter]: value }));
-  };
-
-  const resetParameters = () => {
-    setParameters(initialParameters);
-    setMode('');
-  };
-
-  const validateParameters = () => {
-    if (!mode) return false;
-
-    switch (mode) {
-      case SPLIT_MODES.BY_PAGES:
-        return parameters.pages.trim() !== "";
-      case SPLIT_MODES.BY_SECTIONS:
-        return parameters.hDiv !== "" && parameters.vDiv !== "";
-      case SPLIT_MODES.BY_SIZE_OR_COUNT:
-        return parameters.splitValue.trim() !== "";
-      case SPLIT_MODES.BY_CHAPTERS:
-        return parameters.bookmarkLevel !== "";
-      default:
-        return false;
-    }
-  };
-
-  const getEndpointName = () => {
-    if (!mode) return ENDPOINTS[SPLIT_MODES.BY_PAGES];
-    return ENDPOINTS[mode as SplitMode];
-  };
-
-  return {
-    mode,
-    parameters,
-    setMode,
-    updateParameter,
-    resetParameters,
-    validateParameters,
-    getEndpointName,
-  };
+      switch (params.method) {
+        case SPLIT_METHODS.BY_PAGES:
+          return params.pages.trim() !== "";
+        case SPLIT_METHODS.BY_SECTIONS:
+          return params.hDiv !== "" && params.vDiv !== "";
+        case SPLIT_METHODS.BY_SIZE:
+        case SPLIT_METHODS.BY_PAGE_COUNT:
+        case SPLIT_METHODS.BY_DOC_COUNT:
+          return params.splitValue.trim() !== "";
+        case SPLIT_METHODS.BY_CHAPTERS:
+          return params.bookmarkLevel !== "";
+        case SPLIT_METHODS.BY_PAGE_DIVIDER:
+          return true; // No required parameters
+        default:
+          return false;
+      }
+    },
+  });
 };

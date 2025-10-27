@@ -1,15 +1,18 @@
-import { Grid, Paper, Box, Image, Text, Loader, Stack, Center } from '@mantine/core';
+import { useState } from 'react';
+import { Box, Text, Loader, Stack, Center, Flex } from '@mantine/core';
+import FilePreview from '../../shared/FilePreview';
+import FileMetadata from './FileMetadata';
+import NavigationControls from './NavigationControls';
 
-export interface ResultFile {
+export interface ReviewFile {
   file: File;
   thumbnail?: string;
 }
 
 export interface ResultsPreviewProps {
-  files: ResultFile[];
+  files: ReviewFile[];
   isGeneratingThumbnails?: boolean;
   onFileClick?: (file: File) => void;
-  title?: string;
   emptyMessage?: string;
   loadingMessage?: string;
 }
@@ -18,14 +21,17 @@ const ResultsPreview = ({
   files,
   isGeneratingThumbnails = false,
   onFileClick,
-  title,
   emptyMessage = "No files to preview",
   loadingMessage = "Generating previews..."
 }: ResultsPreviewProps) => {
-  const formatSize = (size: number) => {
-    if (size > 1024 * 1024) return `${(size / (1024 * 1024)).toFixed(1)} MB`;
-    if (size > 1024) return `${(size / 1024).toFixed(1)} KB`;
-    return `${size} B`;
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  const handlePrevious = () => {
+    setCurrentIndex((prev) => (prev === 0 ? files.length - 1 : prev - 1));
+  };
+
+  const handleNext = () => {
+    setCurrentIndex((prev) => (prev === files.length - 1 ? 0 : prev + 1));
   };
 
   if (files.length === 0 && !isGeneratingThumbnails) {
@@ -36,77 +42,60 @@ const ResultsPreview = ({
     );
   }
 
-  return (
-    <Box mt="lg" p="md" style={{ backgroundColor: 'var(--mantine-color-gray-0)', borderRadius: 8 }}>
-      {title && (
-        <Text fw={500} size="md" mb="sm">
-          {title} ({files.length} files)
-        </Text>
-      )}
+  if (isGeneratingThumbnails) {
+    return (
+      <Center p="lg" data-testid="review-panel-loading">
+        <Stack align="center" gap="sm">
+          <Loader size="sm" />
+          <Text size="sm" c="dimmed">{loadingMessage}</Text>
+        </Stack>
+      </Center>
+    );
+  }
 
-      {isGeneratingThumbnails ? (
-        <Center p="lg">
-          <Stack align="center" gap="sm">
-            <Loader size="sm" />
-            <Text size="sm" c="dimmed">{loadingMessage}</Text>
-          </Stack>
-        </Center>
-      ) : (
-        <Grid>
-          {files.map((result, index) => (
-            <Grid.Col span={{ base: 6, sm: 4, md: 3 }} key={index}>
-              <Paper
-                p="xs"
-                withBorder
-                onClick={() => onFileClick?.(result.file)}
-                style={{
-                  textAlign: 'center',
-                  height: '10rem',
-                  width:'5rem',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  cursor: onFileClick ? 'pointer' : 'default',
-                  transition: 'all 0.2s ease'
-                }}
-              >
-                <Box style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  {result.thumbnail ? (
-                    <Image
-                      src={result.thumbnail}
-                      alt={`Preview of ${result.file.name}`}
-                      style={{
-                        maxWidth: '100%',
-                        maxHeight: '9rem',
-                        objectFit: 'contain'
-                      }}
-                    />
-                  ) : (
-                    <Text size="xs" c="dimmed">No preview</Text>
-                  )}
-                </Box>
-                <Text
-                  size="xs"
-                  c="dimmed"
-                  mt="xs"
-                  style={{
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap'
-                  }}
-                  title={result.file.name}
-                >
-                  {result.file.name}
-                </Text>
-                <Text size="xs" c="dimmed">
-                  {formatSize(result.file.size)}
-                </Text>
-              </Paper>
-            </Grid.Col>
-          ))}
-        </Grid>
-      )}
+  const currentFile = files[currentIndex];
+  if (!currentFile) return null;
+
+  return (
+    <Box p="sm" style={{ backgroundColor: 'var(--mantine-color-gray-1)', borderRadius: '0.5rem', maxWidth: '100%' }} data-testid="review-panel-container">
+
+      {/* File name at the top */}
+      <Box mb="sm" style={{ minHeight: '3rem', display: 'flex', alignItems: 'flex-start' }}>
+        <Text
+          className='ph-no-capture'
+          size="sm"
+          fw={500}
+          style={{
+            wordBreak: 'break-word',
+            lineHeight: 1.4
+          }}
+          title={currentFile.file.name}
+        >
+          {currentFile.file.name}
+        </Text>
+      </Box>
+
+      <Flex gap="md" align="flex-start" style={{ minHeight: '7.5rem', maxWidth: '100%' }} data-testid={`review-panel-item-${currentIndex}`}>
+        <Box style={{ width: '6.25rem', height: '7.5rem', flexShrink: 0 }}>
+          <FilePreview
+            file={currentFile.file}
+            thumbnail={currentFile.thumbnail}
+            showHoverOverlay={true}
+            onFileClick={onFileClick ? (file) => file && onFileClick(file as File) : undefined}
+          />
+        </Box>
+        <FileMetadata file={currentFile.file} />
+      </Flex>
+
+      {/* Navigation controls */}
+      <NavigationControls
+        currentIndex={currentIndex}
+        totalFiles={files.length}
+        onPrevious={handlePrevious}
+        onNext={handleNext}
+      />
     </Box>
   );
-}
+};
 
 export default ResultsPreview;

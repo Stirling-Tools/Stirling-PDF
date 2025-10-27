@@ -25,7 +25,6 @@ services:
     environment:
       DISABLE_ADDITIONAL_FEATURES: "true"
       SECURITY_ENABLELOGIN: "false"
-      LANGS: "en_GB,en_US,ar_AR,de_DE,fr_FR,es_ES,zh_CN,zh_TW,ca_CA,it_IT,sv_SE,pl_PL,ro_RO,ko_KR,pt_BR,ru_RU,el_GR,hi_IN,hu_HU,tr_TR,id_ID"
       SYSTEM_DEFAULTLOCALE: en-US
       UI_APPNAME: Stirling-PDF
       UI_HOMEDESCRIPTION: Demo site for Stirling-PDF Latest
@@ -47,6 +46,9 @@ services:
       - "3000:80"
     environment:
       BACKEND_URL: http://backend:8080
+      #VITE_GOOGLE_DRIVE_CLIENT_ID: <INSERT_YOUR_CLIENT_ID_HERE>
+      #VITE_GOOGLE_DRIVE_API_KEY: <INSERT_YOUR_API_KEY_HERE>
+      #VITE_GOOGLE_DRIVE_APP_ID: <INSERT_YOUR_APP_ID_HERE>
     depends_on:
       - backend
     networks:

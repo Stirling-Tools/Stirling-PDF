@@ -1,4 +1,10 @@
 {
+  "unsavedChanges": "لديك تغييرات غير محفوظة على ملف PDF. ماذا تريد أن تفعل؟",
+  "unsavedChangesTitle": "تغييرات غير محفوظة",
+  "keepWorking": "واصل العمل",
+  "discardChanges": "تجاهل التغييرات",
+  "applyAndContinue": "تطبيق والمتابعة",
+  "exportAndContinue": "تصدير ومتابعة",
   "language": {
     "direction": "rtl"
   },
@@ -25,9 +31,9 @@
   "multiPdfDropPrompt": "حدد (أو اسحب وأفلت) جميع ملفات PDF التي تحتاجها",
   "imgPrompt": "اختر صورة",
   "genericSubmit": "إرسال",
-  "uploadLimit": "Maximum file size:",
-  "uploadLimitExceededSingular": "is too large. Maximum allowed size is",
-  "uploadLimitExceededPlural": "are too large. Maximum allowed size is",
+  "uploadLimit": "الحد الأقصى لحجم الملف:",
+  "uploadLimitExceededSingular": "كبير جدًا. الحد الأقصى المسموح به هو",
+  "uploadLimitExceededPlural": "كبيرة جدًا. الحد الأقصى المسموح به هو",
   "processTimeWarning": "تحذير: يمكن أن تستغرق هذه العملية ما يصل إلى دقيقة حسب حجم الملف",
   "pageOrderPrompt": "ترتيب الصفحات (أدخل قائمة بأرقام الصفحات مفصولة بفواصل):",
   "pageSelectionPrompt": "اختيار الصفحات المخصص (أدخل قائمة بأرقام الصفحات مفصولة بفواصل 1،5،6 أو دوال مثل 2n+1):",
@@ -35,10 +41,28 @@
   "true": "صحيح",
   "false": "خطأ",
   "unknown": "غير معروف",
+  "app": {
+    "description": "بديل Adobe Acrobat المجاني (10M+ تنزيلات)"
+  },
   "save": "حفظ",
   "saveToBrowser": "حفظ في المتصفح",
+  "download": "تنزيل",
+  "undoOperationTooltip": "انقر للتراجع عن آخر عملية واستعادة الملفات الأصلية",
+  "undo": "تراجع",
+  "moreOptions": "خيارات إضافية",
+  "editYourNewFiles": "حرّر ملفاتك الجديدة",
   "close": "إغلاق",
+  "fileSelected": "المحدد: {{filename}}",
+  "chooseFile": "اختر ملفًا",
   "filesSelected": "الملفات المحددة",
+  "files": {
+    "title": "الملفات",
+    "upload": "تحميل",
+    "uploadFiles": "تحميل ملفات",
+    "addFiles": "إضافة ملفات",
+    "selectFromWorkbench": "اختر ملفات من طاولة العمل أو ",
+    "selectMultipleFromWorkbench": "اختر على الأقل {{count}} ملفًا من طاولة العمل أو "
+  },
   "noFavourites": "لم تتم إضافة أي مفضلات",
   "downloadComplete": "إكتمل التحميل",
   "bored": "الانتظار بالملل؟",
@@ -56,7 +80,10 @@
   },
   "error": {
     "pdfPassword": "ملف PDF محمي بكلمة مرور ولم يتم تقديم كلمة المرور أو كانت غير صحيحة",
+    "encryptedPdfMustRemovePassword": "هذا PDF مشفّر أو محمي بكلمة مرور. يرجى فتحه قبل التحويل إلى PDF/A.",
+    "incorrectPasswordProvided": "كلمة مرور PDF غير صحيحة أو غير مذكورة.",
     "_value": "خطأ",
+    "dismissAllErrors": "تجاهل كل الأخطاء",
     "sorry": "نأسف على المشكلة!",
     "needHelp": "هل تحتاج إلى مساعدة / وجدت مشكلة؟",
     "contactTip": "إذا كنت ما زلت تواجه صعوبة، لا تتردد في التواصل معنا للحصول على المساعدة. يمكنك إرسال تذكرة على صفحة GitHub الخاصة بنا أو الاتصال بنا عبر Discord:",
@@ -71,6 +98,10 @@
     "githubSubmit": "GitHub - إرسال تذكرة",
     "discordSubmit": "Discord - إرسال منشور دعم"
   },
+  "warning": {
+    "tooltipTitle": "تحذير"
+  },
+  "edit": "تحرير",
   "delete": "حذف",
   "username": "اسم المستخدم",
   "password": "كلمة المرور",
@@ -82,6 +113,7 @@
   "green": "أخضر",
   "blue": "أزرق",
   "custom": "مخصص...",
+  "comingSoon": "قريبًا",
   "WorkInProgess": "العمل قيد التقدم، قد لا يعمل أو يحتوي على أخطاء، يرجى الإبلاغ عن أي مشاكل!",
   "poweredBy": "مدعوم بواسطة",
   "yes": "نعم",
@@ -115,17 +147,19 @@
   "page": "صفحة",
   "pages": "صفحات",
   "loading": "جارٍ التحميل...",
+  "review": "مراجعة",
   "addToDoc": "إضافة إلى المستند",
   "reset": "إعداة ضبط",
-  "apply": "Apply",
-  "noFileSelected": "No file selected. Please upload one.",
+  "apply": "تطبيق",
+  "noFileSelected": "لا يوجد ملف محدد. يرجى رفع واحد.",
   "legal": {
     "privacy": "سياسة الخصوصية",
+    "iAgreeToThe": "أوافق على جميع",
     "terms": "شروط الاستخدام",
     "accessibility": "إمكانية الوصول",
     "cookie": "سياسة ملفات تعريف الارتباط",
     "impressum": "بيان الهوية",
-    "showCookieBanner": "Cookie Preferences"
+    "showCookieBanner": "تفضيلات ملفات الارتباط"
   },
   "pipeline": {
     "header": "قائمة خط الأنابيب (تجريبي)",
@@ -166,7 +200,7 @@
   },
   "navbar": {
     "favorite": "المفضلة",
-    "recent": "New and recently updated",
+    "recent": "الجديد والمحدّث حديثًا",
     "darkmode": "الوضع الداكن",
     "language": "اللغات",
     "settings": "إعدادات",
@@ -265,32 +299,32 @@
     "disabledUsers": "المستخدمين المعطلين:",
     "totalUsers": "إجمالي المستخدمين:",
     "lastRequest": "آخر طلب",
-    "usage": "View Usage"
+    "usage": "عرض الاستخدام"
   },
   "endpointStatistics": {
-    "title": "Endpoint Statistics",
-    "header": "Endpoint Statistics",
-    "top10": "Top 10",
-    "top20": "Top 20",
-    "all": "All",
-    "refresh": "Refresh",
-    "includeHomepage": "Include Homepage ('/')",
-    "includeLoginPage": "Include Login Page ('/login')",
-    "totalEndpoints": "Total Endpoints",
-    "totalVisits": "Total Visits",
-    "showing": "Showing",
-    "selectedVisits": "Selected Visits",
-    "endpoint": "Endpoint",
-    "visits": "Visits",
-    "percentage": "Percentage",
-    "loading": "Loading...",
-    "failedToLoad": "Failed to load endpoint data. Please try refreshing.",
-    "home": "Home",
-    "login": "Login",
-    "top": "Top",
-    "numberOfVisits": "Number of Visits",
-    "visitsTooltip": "Visits: {0} ({1}% of total)",
-    "retry": "Retry"
+    "title": "إحصاءات المسارات",
+    "header": "إحصاءات المسارات",
+    "top10": "أعلى 10",
+    "top20": "أعلى 20",
+    "all": "الكل",
+    "refresh": "تحديث",
+    "includeHomepage": "تضمين الصفحة الرئيسية ('/')",
+    "includeLoginPage": "تضمين صفحة تسجيل الدخول ('/login')",
+    "totalEndpoints": "إجمالي المسارات",
+    "totalVisits": "إجمالي الزيارات",
+    "showing": "يعرض",
+    "selectedVisits": "الزيارات المحددة",
+    "endpoint": "المسار النهائي",
+    "visits": "الزيارات",
+    "percentage": "النسبة المئوية",
+    "loading": "جارٍ التحميل...",
+    "failedToLoad": "فشل تحميل بيانات المسارات. حاول التحديث.",
+    "home": "الصفحة الرئيسية",
+    "login": "تسجيل الدخول",
+    "top": "الأعلى",
+    "numberOfVisits": "عدد الزيارات",
+    "visitsTooltip": "الزيارات: {0} ({1}% من الإجمالي)",
+    "retry": "إعادة المحاولة"
   },
   "database": {
     "title": "استيراد/تصدير قاعدة البيانات",
@@ -300,17 +334,17 @@
     "fileSize": "حجم الملف",
     "deleteBackupFile": "حذف ملف النسخ الاحتياطي",
     "importBackupFile": "استيراد ملف النسخ الاحتياطي",
-    "createBackupFile": "Create Backup File",
+    "createBackupFile": "إنشاء ملف نسخة احتياطية",
     "downloadBackupFile": "تنزيل ملف النسخ الاحتياطي",
     "info_1": "عند استيراد البيانات، من الضروري ضمان الهيكل الصحيح. إذا كنت غير متأكد مما تفعله، اطلب المشورة والدعم من محترف. يمكن أن يؤدي الخطأ في الهيكل إلى حدوث أعطال في التطبيق، حتى عدم القدرة على تشغيل التطبيق بالكامل.",
     "info_2": "لا يهم اسم الملف عند التحميل. سيتم إعادة تسميته بعد ذلك لاتباع التنسيق backup_user_yyyyMMddHHmm.sql، مما يضمن اتساق تسمية متناسق.",
     "submit": "استيراد النسخة الاحتياطية",
     "importIntoDatabaseSuccessed": "تم استيراد قاعدة البيانات بنجاح",
-    "backupCreated": "Database backup successful",
+    "backupCreated": "تم إنشاء نسخة احتياطية لقاعدة البيانات بنجاح",
     "fileNotFound": "لم يتم العثور على الملف",
     "fileNullOrEmpty": "يجب ألا يكون الملف فارغًا أو خاليًا",
     "failedImportFile": "فشل استيراد الملف",
-    "notSupported": "This function is not available for your database connection."
+    "notSupported": "هذه الوظيفة غير متاحة لاتصال قاعدة البيانات لديك."
   },
   "session": {
     "expired": "لقد انتهت جلستك. يرجى تحديث الصفحة والمحاولة مرة أخرى",
@@ -320,269 +354,320 @@
     "desc": "متجرك الشامل المستضاف محليًا لجميع احتياجات PDF الخاصة بك.",
     "searchBar": "البحث عن الميزات...",
     "viewPdf": {
-      "title": "View/Edit PDF",
+      "title": "عرض/تحرير PDF",
       "desc": "عرض وتعليق وإضافة نص أو صور"
     },
-    "setFavorites": "Set Favourites",
-    "hideFavorites": "Hide Favourites",
-    "showFavorites": "Show Favourites",
-    "legacyHomepage": "Old homepage",
-    "newHomePage": "Try our new homepage!",
-    "alphabetical": "Alphabetical",
-    "globalPopularity": "Global Popularity",
-    "sortBy": "Sort by:",
+    "setFavorites": "تعيين المفضلة",
+    "hideFavorites": "إخفاء المفضلة",
+    "showFavorites": "إظهار المفضلة",
+    "legacyHomepage": "الصفحة الرئيسية القديمة",
+    "newHomePage": "جرّب صفحتنا الرئيسية الجديدة!",
+    "alphabetical": "أبجدي",
+    "globalPopularity": "الشعبية العالمية",
+    "sortBy": "فرز حسب:",
     "multiTool": {
+      "tags": "متعدد،أدوات",
       "title": "أداة متعددة PDF",
       "desc": "دمج الصفحات وتدويرها وإعادة ترتيبها وإزالتها"
     },
     "merge": {
+      "tags": "دمج،جمع،توحيد",
       "title": "دمج ملفات",
       "desc": "دمج ملفات PDF متعددة في ملف واحد بسهولة."
     },
     "split": {
+      "tags": "تقسيم،فصل،تجزئة",
       "title": "تقسيم ملفات",
       "desc": "تقسيم ملفات PDF إلى مستندات متعددة"
     },
     "rotate": {
+      "tags": "تدوير،قلب،توجيه",
       "title": "تدوير ملفات",
       "desc": "قم بتدوير ملفات PDF الخاصة بك بسهولة."
     },
-    "imageToPdf": {
-      "title": "صورة إلى PDF",
-      "desc": "تحويل الصور (PNG ، JPEG ، GIF) إلى PDF."
-    },
-    "pdfToImage": {
-      "title": "تحويل PDF إلى صورة",
-      "desc": "تحويل ملف PDF إلى صورة. (PNG ، JPEG ، GIF)"
+    "convert": {
+      "tags": "تحويل،تغيير",
+      "title": "تحويل",
+      "desc": "تحويل الملفات بين صيغ مختلفة"
     },
     "pdfOrganiser": {
+      "tags": "تنظيم،إعادة ترتيب،إعادة فرز",
       "title": "منظم",
       "desc": "إزالة / إعادة ترتيب الصفحات بأي ترتيب"
     },
     "addImage": {
+      "tags": "إدراج،تضمين،وضع",
       "title": "إضافة صورة إلى ملف PDF",
       "desc": "إضافة صورة إلى موقع معين في PDF (العمل قيد التقدم)"
     },
+    "addAttachments": {
+      "tags": "تضمين،إرفاق،إدراج",
+      "title": "إضافة مرفقات",
+      "desc": "إضافة أو إزالة الملفات المضمّنة (المرفقات) إلى/من PDF"
+    },
     "watermark": {
+      "tags": "ختم،وسم،تراكب",
       "title": "إضافة علامة مائية",
       "desc": "أضف علامة مائية مخصصة إلى مستند PDF الخاص بك."
     },
-    "permissions": {
-      "title": "تغيير الأذونات",
-      "desc": "قم بتغيير أذونات مستند PDF الخاص بك"
+    "removePassword": {
+      "tags": "فتح",
+      "title": "إزالة كلمة المرور",
+      "desc": "إزالة الحماية بكلمة مرور من مستند PDF الخاص بك."
+    },
+    "compress": {
+      "tags": "تصغير،تقليل،تحسين",
+      "title": "ضغط ملفات",
+      "desc": "ضغط ملفات PDF لتقليل حجم الملف."
+    },
+    "unlockPDFForms": {
+      "tags": "فتح،تمكين،تحرير",
+      "title": "إلغاء قفل نماذج PDF",
+      "desc": "إزالة خاصية القراءة فقط لحقول النماذج في مستند PDF."
+    },
+    "changeMetadata": {
+      "tags": "تحرير،تعديل،تحديث",
+      "title": "تغيير البيانات الوصفية",
+      "desc": "تغيير / إزالة / إضافة بيانات أولية من مستند PDF"
+    },
+    "ocr": {
+      "tags": "استخراج،مسح",
+      "title": "تشغيل OCR على PDF و / أو مسح ضوئي",
+      "desc": "يقوم برنامج التنظيف بمسح واكتشاف النص من الصور داخل ملف PDF ويعيد إضافته كنص"
+    },
+    "extractImages": {
+      "tags": "استخراج،حفظ،تصدير",
+      "title": "استخراج الصور",
+      "desc": "يستخرج جميع الصور من ملف PDF ويحفظها في الرمز البريدي"
+    },
+    "scannerImageSplit": {
+      "tags": "كشف،تقسيم،صور",
+      "title": "اكتشاف وتقسيم الصور الممسوحة",
+      "desc": "اكتشاف الصور الممسوحة وتقسيمها إلى صفحات منفصلة"
+    },
+    "sign": {
+      "tags": "توقيع،إمضاء",
+      "title": "توقيع",
+      "desc": "إضافة التوقيع إلى PDF عن طريق الرسم أو النص أو الصورة"
+    },
+    "flatten": {
+      "tags": "تبسيط،إزالة،تفاعلي",
+      "title": "تسطيح",
+      "desc": "قم بإزالة كافة العناصر والنماذج التفاعلية من ملف PDF"
+    },
+    "certSign": {
+      "tags": "تحقّق،PEM،P12،رسمي،تشفير،توقيع،شهادة،PKCS12،JKS،خادم،يدوي،تلقائي",
+      "title": "التوقيع بالشهادة",
+      "desc": "يوقع ملف PDF بشهادة/مفتاح (PEM/P12)"
+    },
+    "repair": {
+      "tags": "إصلاح،استعادة",
+      "title": "إصلاح",
+      "desc": "يحاول إصلاح ملف PDF تالف / معطل"
+    },
+    "removeBlanks": {
+      "tags": "حذف،تنظيف،فارغ",
+      "title": "إزالة الصفحات الفارغة",
+      "desc": "يكتشف ويزيل الصفحات الفارغة من المستند"
+    },
+    "removeAnnotations": {
+      "tags": "حذف،تنظيف،إزالة",
+      "title": "إزالة التعليقات التوضيحية",
+      "desc": "يزيل جميع التعليقات/التعليقات التوضيحية من ملف PDF"
+    },
+    "compare": {
+      "tags": "اختلاف",
+      "title": "مقارنة",
+      "desc": "يقارن ويظهر الاختلافات بين مستندين PDF"
+    },
+    "removeCertSign": {
+      "tags": "إزالة،حذف،فتح",
+      "title": "إزالة توقيع الشهادة",
+      "desc": "إزالة توقيع الشهادة من ملف PDF"
+    },
+    "pageLayout": {
+      "tags": "تخطيط،ترتيب،دمج",
+      "title": "تخطيط متعدد الصفحات",
+      "desc": "دمج صفحات متعددة من مستند PDF في صفحة واحدة"
+    },
+    "bookletImposition": {
+      "tags": "كتيّب،طباعة،تجليد",
+      "title": "ترتيب الكتيّب",
+      "desc": "إنشاء كتيّبات بترتيب صفحات صحيح وتخطيط متعدد الصفحات للطباعة والتجليد"
+    },
+    "scalePages": {
+      "tags": "تغيير حجم،ضبط،تحجيم",
+      "title": "ضبط حجم/مقياس الصفحة",
+      "desc": "تغيير حجم/مقياس الصفحة و/أو محتواها."
+    },
+    "addPageNumbers": {
+      "tags": "ترقيم،صفحات،عدّ",
+      "title": "إضافة أرقام الصفحات",
+      "desc": "إضافة أرقام الصفحات في جميع أنحاء المستند في موقع محدد"
+    },
+    "autoRename": {
+      "tags": "كشف تلقائي،مستند للعناوين،تنظيم،إعادة وسم",
+      "title": "إعادة تسمية ملف PDF تلقائيًا",
+      "desc": "إعادة تسمية ملف PDF تلقائيًا استنادًا إلى العنوان المكتشف"
+    },
+    "adjustContrast": {
+      "tags": "تباين،سطوع،تشبّع",
+      "title": "ضبط الألوان/التباين",
+      "desc": "ضبط التباين والتشبع والسطوع لملف PDF"
+    },
+    "crop": {
+      "tags": "قص،قطع،تغيير حجم",
+      "title": "اقتصاص PDF",
+      "desc": "اقتصاص ملف PDF لتقليل حجمه (مع الحفاظ على النص!)"
+    },
+    "autoSplitPDF": {
+      "tags": "تلقائي،تقسيم،QR",
+      "title": "تقسيم الصفحات تلقائيًا",
+      "desc": "تقسيم PDF الممسوح ضوئيًا تلقائيًا باستخدام رمز QR لتقسيم الصفحات الممسوحة ضوئيًا فعليًا"
+    },
+    "sanitize": {
+      "tags": "تنظيف،تطهير،إزالة",
+      "title": "تنقية",
+      "desc": "إزالة العناصر المحتملة الضرر من ملفات PDF"
+    },
+    "getPdfInfo": {
+      "tags": "معلومات،بيانات وصفية،تفاصيل",
+      "title": "الحصول على جميع المعلومات عن PDF",
+      "desc": "يجمع أي وكل المعلومات الممكنة عن ملفات PDF"
+    },
+    "pdfToSinglePage": {
+      "tags": "دمج،تجميع،صفحة واحدة",
+      "title": "PDF إلى صفحة واحدة كبيرة",
+      "desc": "يدمج جميع صفحات PDF في صفحة واحدة كبيرة"
+    },
+    "showJS": {
+      "tags": "JavaScript،كود،سكريبت",
+      "title": "إظهار جافا سكريبت",
+      "desc": "يبحث ويعرض أي جافا سكريبت مدرج في PDF"
+    },
+    "redact": {
+      "tags": "تنقيح،طمس،إخفاء",
+      "title": "Manual Redaction",
+      "desc": "Redacts a PDF based on selected text, drawn shapes and/or selected page(s)"
+    },
+    "overlayPdfs": {
+      "tags": "تراكب،دمج،تكديس",
+      "title": "تراكب ملفات PDF",
+      "desc": "تراكب ملفات PDF فوق ملف PDF آخر"
+    },
+    "splitBySections": {
+      "tags": "تقسيم،أقسام،تجزئة",
+      "title": "تقسيم PDF حسب الأقسام",
+      "desc": "قسّم كل صفحة من PDF إلى أقسام أصغر أفقية ورأسية"
+    },
+    "addStamp": {
+      "tags": "ختم،وسم،خاتم",
+      "title": "إضافة ختم إلى PDF",
+      "desc": "أضف نصًا أو طوابع صور في مواقع محددة"
+    },
+    "removeImage": {
+      "tags": "إزالة،حذف،تنظيف",
+      "title": "إزالة الصورة",
+      "desc": "إزالة الصورة من PDF لتقليل حجم الملف"
+    },
+    "splitByChapters": {
+      "tags": "تقسيم،فصول،بنية",
+      "title": "تجزئة المستندات PDF حسب الفصول",
+      "desc": "قسم مستند PDF إلى ملفات متعددة بناءً على هيكل فصوله."
+    },
+    "validateSignature": {
+      "tags": "تحقق،تأكيد،شهادة",
+      "title": "التحقق من توقيع PDF",
+      "desc": "التحقق من التواقيع الرقمية والشهادات في مستندات PDF"
+    },
+    "swagger": {
+      "tags": "API،توثيق،اختبار",
+      "title": "توثيق API",
+      "desc": "عرض توثيق API واختبار المسارات النهائية"
+    },
+    "scannerEffect": {
+      "tags": "مسح،محاكاة،إنشاء",
+      "title": "تأثير الماسح",
+      "desc": "إنشاء PDF يبدو وكأنه مُسح ضوئيًا"
+    },
+    "editTableOfContents": {
+      "tags": "علامات مرجعية،محتويات،تحرير",
+      "title": "تحرير جدول المحتويات",
+      "desc": "أضف أو حرّر العلامات المرجعية وجدول المحتويات في مستندات PDF"
+    },
+    "manageCertificates": {
+      "tags": "شهادات،استيراد،تصدير",
+      "title": "إدارة الشهادات",
+      "desc": "استيراد أو تصدير أو حذف ملفات الشهادات الرقمية المستخدمة لتوقيع ملفات PDF."
+    },
+    "read": {
+      "tags": "عرض،فتح،إظهار",
+      "title": "قراءة",
+      "desc": "عرض ووسم ملفات PDF. تمييز النص، الرسم، أو إدراج التعليقات للمراجعة والتعاون."
+    },
+    "reorganizePages": {
+      "tags": "إعادة ترتيب،إعادة فرز،تنظيم",
+      "title": "إعادة تنظيم الصفحات",
+      "desc": "إعادة ترتيب أو تكرار أو حذف صفحات PDF بتحكم مرئي بالسحب والإفلات."
+    },
+    "extractPages": {
+      "tags": "سحب،تحديد،نسخ",
+      "title": "استخراج الصفحات",
+      "desc": "استخراج صفحات محددة من مستند PDF"
     },
     "removePages": {
+      "tags": "حذف،استخراج،استبعاد",
       "title": "إزالة الصفحات",
       "desc": "حذف الصفحات غير المرغوب فيها من مستند PDF الخاص بك."
+    },
+    "autoSizeSplitPDF": {
+      "tags": "تلقائي،تقسيم،حجم",
+      "title": "تقسيم تلقائي حسب الحجم/العدد",
+      "desc": "تقسيم ملف PDF واحد إلى مستندات متعددة بناءً على الحجم أو عدد الصفحات أو عدد المستندات"
+    },
+    "replaceColor": {
+      "title": "استبدال وعكس الألوان",
+      "desc": "استبدال الألوان أو عكسها في مستندات PDF"
+    },
+    "devApi": {
+      "tags": "API،تطوير،توثيق",
+      "title": "API",
+      "desc": "رابط إلى توثيق API"
+    },
+    "devFolderScanning": {
+      "tags": "أتمتة،مجلد،مسح",
+      "title": "المسح الآلي للمجلدات",
+      "desc": "رابط إلى دليل المسح الآلي للمجلدات"
+    },
+    "devSsoGuide": {
+      "title": "دليل SSO",
+      "desc": "رابط إلى دليل SSO"
+    },
+    "devAirgapped": {
+      "title": "إعداد معزول",
+      "desc": "رابط إلى دليل الإعداد المعزول"
     },
     "addPassword": {
       "title": "إضافة كلمة مرور",
       "desc": "تشفير مستند PDF الخاص بك بكلمة مرور."
     },
-    "removePassword": {
-      "title": "إزالة كلمة المرور",
-      "desc": "إزالة الحماية بكلمة مرور من مستند PDF الخاص بك."
+    "changePermissions": {
+      "title": "تغيير الأذونات",
+      "desc": "تغيير قيود المستند وأذوناته"
     },
-    "compressPdfs": {
-      "title": "ضغط ملفات",
-      "desc": "ضغط ملفات PDF لتقليل حجم الملف."
-    },
-    "unlockPDFForms": {
-      "title": "Unlock PDF Forms",
-      "desc": "Remove read-only property of form fields in a PDF document."
-    },
-    "changeMetadata": {
-      "title": "تغيير البيانات الوصفية",
-      "desc": "تغيير / إزالة / إضافة بيانات أولية من مستند PDF"
-    },
-    "fileToPDF": {
-      "title": "تحويل الملف إلى PDF",
-      "desc": "تحويل أي ملف تقريبا إلى PDF (DOCX وPNG وXLS وPPT وTXT والمزيد)"
-    },
-    "ocr": {
-      "title": "تشغيل OCR على PDF و / أو مسح ضوئي",
-      "desc": "يقوم برنامج التنظيف بمسح واكتشاف النص من الصور داخل ملف PDF ويعيد إضافته كنص"
-    },
-    "extractImages": {
-      "title": "استخراج الصور",
-      "desc": "يستخرج جميع الصور من ملف PDF ويحفظها في الرمز البريدي"
-    },
-    "pdfToPDFA": {
-      "title": "تحويل ملفات PDF إلى PDF / A",
-      "desc": "تحويل PDF إلى PDF / A للتخزين طويل المدى"
-    },
-    "PDFToWord": {
-      "title": "تحويل PDF إلى Word",
-      "desc": "تحويل PDF إلى تنسيقات Word (DOC و DOCX و ODT)"
-    },
-    "PDFToPresentation": {
-      "title": "PDF للعرض التقديمي",
-      "desc": "تحويل PDF إلى تنسيقات عرض تقديمي (PPT و PPTX و ODP)"
-    },
-    "PDFToText": {
-      "title": "تحويل PDF إلى نص / RTF",
-      "desc": "تحويل PDF إلى تنسيق نص أو RTF"
-    },
-    "PDFToHTML": {
-      "title": "تحويل PDF إلى HTML",
-      "desc": "تحويل PDF إلى تنسيق HTML"
-    },
-    "PDFToXML": {
-      "title": "تحويل PDF إلى XML",
-      "desc": "تحويل PDF إلى تنسيق XML"
-    },
-    "ScannerImageSplit": {
-      "title": "كشف / انقسام الصور الممسوحة ضوئيًا",
-      "desc": "تقسيم عدة صور من داخل صورة / ملف PDF"
-    },
-    "sign": {
-      "title": "توقيع",
-      "desc": "إضافة التوقيع إلى PDF عن طريق الرسم أو النص أو الصورة"
-    },
-    "flatten": {
-      "title": "تسطيح",
-      "desc": "قم بإزالة كافة العناصر والنماذج التفاعلية من ملف PDF"
-    },
-    "repair": {
-      "title": "إصلاح",
-      "desc": "يحاول إصلاح ملف PDF تالف / معطل"
-    },
-    "removeBlanks": {
-      "title": "إزالة الصفحات الفارغة",
-      "desc": "يكتشف ويزيل الصفحات الفارغة من المستند"
-    },
-    "removeAnnotations": {
-      "title": "إزالة التعليقات التوضيحية",
-      "desc": "يزيل جميع التعليقات/التعليقات التوضيحية من ملف PDF"
-    },
-    "compare": {
-      "title": "مقارنة",
-      "desc": "يقارن ويظهر الاختلافات بين مستندين PDF"
-    },
-    "certSign": {
-      "title": "التوقيع بالشهادة",
-      "desc": "يوقع ملف PDF بشهادة/مفتاح (PEM/P12)"
-    },
-    "removeCertSign": {
-      "title": "إزالة توقيع الشهادة",
-      "desc": "إزالة توقيع الشهادة من ملف PDF"
-    },
-    "pageLayout": {
-      "title": "تخطيط متعدد الصفحات",
-      "desc": "دمج صفحات متعددة من مستند PDF في صفحة واحدة"
-    },
-    "scalePages": {
-      "title": "ضبط حجم/مقياس الصفحة",
-      "desc": "تغيير حجم/مقياس الصفحة و/أو محتواها."
-    },
-    "pipeline": {
-      "title": "خط الأنابيب",
-      "desc": "تشغيل إجراءات متعددة على ملفات PDF عن طريق تحديد نصوص خط الأنابيب"
-    },
-    "add-page-numbers": {
-      "title": "إضافة أرقام الصفحات",
-      "desc": "إضافة أرقام الصفحات في جميع أنحاء المستند في موقع محدد"
-    },
-    "auto-rename": {
-      "title": "إعادة تسمية ملف PDF تلقائيًا",
-      "desc": "إعادة تسمية ملف PDF تلقائيًا بناءً على الرأس المكتشف"
-    },
-    "adjust-contrast": {
-      "title": "ضبط الألوان/التباين",
-      "desc": "ضبط التباين والتشبع والسطوع لملف PDF"
-    },
-    "crop": {
-      "title": "اقتصاص PDF",
-      "desc": "اقتصاص ملف PDF لتقليل حجمه (مع الحفاظ على النص!)"
-    },
-    "autoSplitPDF": {
-      "title": "تقسيم الصفحات تلقائيًا",
-      "desc": "تقسيم PDF الممسوح ضوئيًا تلقائيًا باستخدام رمز QR لتقسيم الصفحات الممسوحة ضوئيًا فعليًا"
-    },
-    "sanitizePdf": {
-      "title": "تنظيف",
-      "desc": "إزالة البرامج النصية والعناصر الأخرى من ملفات PDF"
-    },
-    "URLToPDF": {
-      "title": "URL/موقع ويب إلى PDF",
-      "desc": "يحول أي عنوان URL للـ http(s) إلى PDF"
-    },
-    "HTMLToPDF": {
-      "title": "HTML إلى PDF",
-      "desc": "يحول أي ملف HTML أو ملف مضغوط يحتوي"
-    },
-    "MarkdownToPDF": {
-      "title": "Markdown إلى PDF",
-      "desc": "يحول أي ملف Markdown إلى PDF"
-    },
-    "PDFToMarkdown": {
-      "title": "PDF to Markdown",
-      "desc": "Converts any PDF to Markdown"
-    },
-    "getPdfInfo": {
-      "title": "الحصول على جميع المعلومات عن PDF",
-      "desc": "يجمع أي وكل المعلومات الممكنة عن ملفات PDF"
-    },
-    "extractPage": {
-      "title": "استخراج الصفحة (الصفحات)",
-      "desc": "يستخرج صفحات محددة من PDF"
-    },
-    "PdfToSinglePage": {
-      "title": "PDF إلى صفحة واحدة كبيرة",
-      "desc": "يدمج جميع صفحات PDF في صفحة واحدة كبيرة"
-    },
-    "showJS": {
-      "title": "إظهار جافا سكريبت",
-      "desc": "يبحث ويعرض أي جافا سكريبت مدرج في PDF"
-    },
-    "autoRedact": {
-      "title": "حجب تلقائي",
-      "desc": "يحجب (يسود) النص في PDF تلقائيًا بناءً على النص المدخل"
-    },
-    "redact": {
-      "title": "Manual Redaction",
-      "desc": "Redacts a PDF based on selected text, drawn shapes and/or selected page(s)"
-    },
-    "tableExtraxt": {
-      "title": "PDF إلى CSV",
-      "desc": "يستخرج الجداول من PDF ويحولها إلى CSV"
-    },
-    "autoSizeSplitPDF": {
-      "title": "تقسيم تلقائي حسب الحجم/العدد",
-      "desc": "تقسيم ملف PDF واحد إلى مستندات متعددة بناءً على الحجم أو عدد الصفحات أو عدد المستندات"
-    },
-    "overlay-pdfs": {
-      "title": "تراكب ملفات PDF",
-      "desc": "يضع ملفات PDF فوق ملف PDF آخر"
-    },
-    "split-by-sections": {
-      "title": "تقسيم PDF حسب الأقسام",
-      "desc": "تقسيم كل صفحة من PDF إلى أقسام أفقية وعمودية أصغر"
-    },
-    "AddStampRequest": {
-      "title": "إضافة ختم إلى PDF",
-      "desc": "إضافة نص أو إضافة أختام الصور في مواقع محددة"
-    },
-    "removeImagePdf": {
-      "title": "إزالة الصورة",
-      "desc": "إزالة الصورة من PDF لتقليل حجم الملف"
-    },
-    "splitPdfByChapters": {
-      "title": "تجزئة المستندات PDF حسب الفصول",
-      "desc": "قسم مستند PDF إلى ملفات متعددة بناءً على هيكل فصوله."
-    },
-    "validateSignature": {
-      "title": "Validate PDF Signature",
-      "desc": "Verify digital signatures and certificates in PDF documents"
-    },
-    "replaceColorPdf": {
-      "title": "إستبدال و عكس الألوان",
-      "desc": "استبدال الألوان للنصوص والخلفيات في المستندات PDF وإلغاء تعكير اللون الكامل للمستند لتقليل حجم الملف"
+    "automate": {
+      "tags": "سير عمل،تسلسل،أتمتة",
+      "title": "أتمتة",
+      "desc": "ابنِ تدفّقات عمل متعددة الخطوات بسلسلة إجراءات PDF. مثالي للمهام المتكررة."
     }
+  },
+  "landing": {
+    "addFiles": "إضافة ملفات",
+    "uploadFromComputer": "الرفع من الكمبيوتر"
   },
   "viewPdf": {
     "tags": "عرض,قراءة,تعليق,نص,صورة",
-    "title": "View/Edit PDF",
+    "title": "عرض/تحرير PDF",
     "header": "عرض PDF"
   },
   "multiTool": {
@@ -613,14 +698,29 @@
   "merge": {
     "tags": "دمج,عمليات الصفحة,الخلفية,جانب الخادم",
     "title": "دمج",
-    "header": "دمج ملفات PDF متعددة (2+)",
-    "sortByName": "الترتيب حسب الاسم",
-    "sortByDate": "الترتيب حسب التاريخ",
-    "removeCertSign": "إزالة التوقيع الرقمي في الملف المدمج؟",
-    "submit": "دمج"
+    "removeDigitalSignature.tooltip": {
+      "title": "إزالة التوقيع الرقمي",
+      "description": "سيتم إبطال التواقيع الرقمية عند دمج الملفات. حدّد هذا لإزالتها من ملف PDF النهائي."
+    },
+    "generateTableOfContents.tooltip": {
+      "title": "إنشاء جدول المحتويات",
+      "description": "ينشئ تلقائيًا جدول محتويات قابلًا للنقر في PDF المدمج استنادًا إلى أسماء الملفات الأصلية وأرقام الصفحات."
+    },
+    "submit": "دمج",
+    "sortBy": {
+      "description": "سيتم دمج الملفات بترتيب اختيارها. اسحب لإعادة الترتيب أو فرز أدناه.",
+      "label": "الفرز حسب",
+      "filename": "اسم الملف",
+      "dateModified": "تاريخ التعديل",
+      "ascending": "تصاعدي",
+      "descending": "تنازلي",
+      "sort": "فرز"
+    },
+    "error": {
+      "failed": "حدث خطأ أثناء دمج ملفات PDF."
+    }
   },
   "split": {
-    "tags": "عمليات الصفحة,تقسيم,صفحات متعددة,قص,جانب الخادم",
     "title": "تقسيم PDF",
     "header": "تقسيم PDF",
     "desc": {
@@ -634,14 +734,208 @@
       "8": "المستند رقم 6: الصفحة 10"
     },
     "splitPages": "أدخل الصفحات المراد تقسيمها:",
-    "submit": "تقسيم"
+    "submit": "تقسيم",
+    "steps": {
+      "chooseMethod": "اختر الطريقة",
+      "settings": "إعدادات"
+    },
+    "settings": {
+      "selectMethodFirst": "يرجى اختيار طريقة التقسيم أولًا"
+    },
+    "error": {
+      "failed": "حدث خطأ أثناء تقسيم PDF."
+    },
+    "method": {
+      "label": "اختر طريقة التقسيم",
+      "placeholder": "حدّد كيفية تقسيم PDF"
+    },
+    "methods": {
+      "prefix": {
+        "splitAt": "تقسيم عند",
+        "splitBy": "تقسيم حسب"
+      },
+      "byPages": {
+        "name": "أرقام الصفحات",
+        "desc": "استخراج صفحات محددة (1,3,5-10)",
+        "tooltip": "أدخل أرقام الصفحات مفصولة بفواصل أو نطاقات بشرطة"
+      },
+      "bySections": {
+        "name": "الأقسام",
+        "desc": "تقسيم الصفحات إلى أقسام شبكية",
+        "tooltip": "قسّم كل صفحة إلى أقسام أفقية ورأسية"
+      },
+      "bySize": {
+        "name": "حجم الملف",
+        "desc": "تحديد الحد الأقصى لحجم الملف",
+        "tooltip": "حدّد أقصى حجم للملف (مثل 10MB، 500KB)"
+      },
+      "byPageCount": {
+        "name": "عدد الصفحات",
+        "desc": "عدد ثابت من الصفحات لكل ملف",
+        "tooltip": "أدخل عدد الصفحات لكل ملف مقسّم"
+      },
+      "byDocCount": {
+        "name": "عدد المستندات",
+        "desc": "إنشاء عدد محدد من الملفات",
+        "tooltip": "أدخل عدد الملفات التي تريد إنشاءها"
+      },
+      "byChapters": {
+        "name": "الفصول",
+        "desc": "التقسيم عند حدود الإشارات المرجعية",
+        "tooltip": "يستخدم إشارات PDF المرجعية لتحديد نقاط التقسيم"
+      },
+      "byPageDivider": {
+        "name": "فاصل الصفحات",
+        "desc": "تقسيم تلقائي باستخدام أوراق فاصلة",
+        "tooltip": "استخدم أوراق فواصل برمز QR بين المستندات عند المسح"
+      }
+    },
+    "value": {
+      "fileSize": {
+        "label": "حجم الملف",
+        "placeholder": "مثال: 10MB، 500KB"
+      },
+      "pageCount": {
+        "label": "صفحات لكل ملف",
+        "placeholder": "مثال: 5، 10"
+      },
+      "docCount": {
+        "label": "عدد الملفات",
+        "placeholder": "مثال: 3، 5"
+      }
+    },
+    "tooltip": {
+      "header": {
+        "title": "نظرة عامة على طرق التقسيم"
+      },
+      "byPages": {
+        "title": "التقسيم عند أرقام الصفحات",
+        "text": "قسّم ملفك عند أرقام صفحات محددة. استخدام 'n' يقسم بعد الصفحة n. استخدام 'n-m' يقسم قبل n وبعد m.",
+        "bullet1": "نقاط تقسيم مفردة: 3,7 (يقسم بعد الصفحتين 3 و7)",
+        "bullet2": "نقاط تقسيم بالنطاق: 3-8 (يقسم قبل الصفحة 3 وبعد الصفحة 8)",
+        "bullet3": "مختلط: 2,5-10,15 (يقسم بعد 2، قبل 5، بعد 10، وبعد 15)"
+      },
+      "bySections": {
+        "title": "التقسيم حسب الأقسام الشبكية",
+        "text": "قسّم كل صفحة إلى شبكة من الأقسام. مفيد للمستندات متعددة الأعمدة أو لاستخراج مناطق محددة.",
+        "bullet1": "أفقي: عدد الصفوف المطلوب إنشاؤها",
+        "bullet2": "رأسي: عدد الأعمدة المطلوب إنشاؤها",
+        "bullet3": "دمج: جمع جميع الأقسام في ملف PDF واحد"
+      },
+      "bySize": {
+        "title": "التقسيم حسب حجم الملف",
+        "text": "أنشئ عدة ملفات PDF لا تتجاوز حجمًا محددًا. مثالي لقيود الحجم أو مرفقات البريد.",
+        "bullet1": "استخدم MB للملفات الكبيرة (مثل 10MB)",
+        "bullet2": "استخدم KB للملفات الصغيرة (مثل 500KB)",
+        "bullet3": "سيتم التقسيم عند حدود الصفحات"
+      },
+      "byCount": {
+        "title": "التقسيم حسب العدد",
+        "text": "أنشئ عدة ملفات PDF بعدد محدد من الصفحات أو المستندات لكلٍ منها.",
+        "bullet1": "عدد الصفحات: عدد ثابت من الصفحات لكل ملف",
+        "bullet2": "عدد المستندات: عدد ثابت من ملفات الإخراج",
+        "bullet3": "مفيد لتدفّقات المعالجة الدُّفعية"
+      },
+      "byChapters": {
+        "title": "التقسيم حسب الفصول",
+        "text": "استخدم إشارات PDF المرجعية للتقسيم تلقائيًا عند حدود الفصول. يتطلب ملفات PDF تحتوي على بنية إشارات مرجعية.",
+        "bullet1": "مستوى الإشارة المرجعية: المستوى الذي سيتم التقسيم عنده (1 = المستوى الأعلى)",
+        "bullet2": "تضمين البيانات الوصفية: الحفاظ على خصائص المستند",
+        "bullet3": "السماح بالتكرارات: معالجة أسماء الإشارات المرجعية المكررة"
+      }
+    }
   },
   "rotate": {
-    "tags": "جانب الخادم",
     "title": "تدوير PDF",
-    "header": "تدوير PDF",
-    "selectAngle": "حدد زاوية الدوران (بمضاعفات 90 درجة):",
-    "submit": "تدوير"
+    "submit": "تدوير",
+    "error": {
+      "failed": "حدث خطأ أثناء تدوير PDF."
+    },
+    "preview": {
+      "title": "معاينة التدوير"
+    },
+    "rotateLeft": "تدوير عكس عقارب الساعة",
+    "rotateRight": "تدوير مع عقارب الساعة",
+    "tooltip": {
+      "header": {
+        "title": "نظرة عامة على إعدادات التدوير"
+      },
+      "description": {
+        "text": "دوّر صفحات PDF بزيادات 90 درجة مع أو عكس عقارب الساعة. سيتم تدوير كل الصفحات. تعرض المعاينة شكل المستند بعد التدوير."
+      },
+      "controls": {
+        "title": "عناصر التحكم",
+        "text": "استخدم أزرار التدوير لضبط الاتجاه. الزر الأيسر يدور عكس عقارب الساعة، والأيمن مع عقارب الساعة. كل نقرة تدور 90 درجة."
+      }
+    }
+  },
+  "convert": {
+    "title": "تحويل",
+    "desc": "حوّل الملفات بين صيغ مختلفة",
+    "files": "الملفات",
+    "selectFilesPlaceholder": "حدّد الملفات في العرض الرئيسي للبدء",
+    "settings": "إعدادات",
+    "conversionCompleted": "اكتمل التحويل",
+    "results": "النتائج",
+    "defaultFilename": "converted_file",
+    "conversionResults": "نتائج التحويل",
+    "convertFrom": "التحويل من",
+    "convertTo": "التحويل إلى",
+    "sourceFormatPlaceholder": "صيغة المصدر",
+    "targetFormatPlaceholder": "صيغة الهدف",
+    "selectSourceFormatFirst": "حدّد أولًا صيغة المصدر",
+    "outputOptions": "خيارات الناتج",
+    "pdfOptions": "خيارات PDF",
+    "imageOptions": "خيارات الصور",
+    "colorType": "نوع اللون",
+    "color": "لون",
+    "greyscale": "تدرج الرمادي",
+    "blackwhite": "أبيض وأسود",
+    "dpi": "DPI",
+    "output": "الناتج",
+    "single": "مفرد",
+    "multiple": "متعدد",
+    "fitOption": "خيار الملاءمة",
+    "maintainAspectRatio": "الحفاظ على نسبة العرض إلى الارتفاع",
+    "fitDocumentToPage": "ملاءمة المستند للصفحة",
+    "fillPage": "ملء الصفحة",
+    "autoRotate": "تدوير تلقائي",
+    "autoRotateDescription": "تدوير الصور تلقائيًا لتناسب صفحة PDF بشكل أفضل",
+    "combineImages": "دمج الصور",
+    "combineImagesDescription": "ادمج جميع الصور في ملف PDF واحد، أو أنشئ ملفات PDF منفصلة لكل صورة",
+    "webOptions": "خيارات الويب إلى PDF",
+    "zoomLevel": "مستوى التكبير",
+    "emailOptions": "خيارات البريد إلى PDF",
+    "includeAttachments": "تضمين مرفقات البريد",
+    "maxAttachmentSize": "الحد الأقصى لحجم المرفق (MB)",
+    "includeAllRecipients": "تضمين مستلمي CC وBCC في الترويسة",
+    "downloadHtml": "تنزيل ملف HTML الوسيط بدلًا من PDF",
+    "pdfaOptions": "خيارات PDF/A",
+    "outputFormat": "صيغة الناتج",
+    "pdfaNote": "‏PDF/A-1b أكثر توافقًا، وPDF/A-2b يدعم مزيدًا من الميزات.",
+    "pdfaDigitalSignatureWarning": "يحتوي PDF على توقيع رقمي. سيتم إزالة هذا في الخطوة التالية.",
+    "fileFormat": "صيغة الملف",
+    "wordDoc": "مستند Word",
+    "wordDocExt": "مستند Word (.docx)",
+    "odtExt": "نص OpenDocument (.odt)",
+    "pptExt": "PowerPoint (.pptx)",
+    "odpExt": "عرض OpenDocument (.odp)",
+    "txtExt": "نص عادي (.txt)",
+    "rtfExt": "Rich Text Format (.rtf)",
+    "selectedFiles": "الملفات المحددة",
+    "noFileSelected": "لا يوجد ملف محدد. استخدم لوحة الملفات لإضافة ملفات.",
+    "convertFiles": "تحويل الملفات",
+    "converting": "جارٍ التحويل...",
+    "downloadConverted": "تنزيل الملف المحوّل",
+    "errorNoFiles": "يرجى اختيار ملف واحد على الأقل للتحويل.",
+    "errorNoFormat": "يرجى اختيار صيغتَي المصدر والهدف.",
+    "errorNotSupported": "التحويل من {{from}} إلى {{to}} غير مدعوم.",
+    "images": "الصور",
+    "officeDocs": "مستندات Office (Word, Excel, PowerPoint)",
+    "imagesExt": "صور (JPG, PNG، إلخ.)",
+    "markdown": "Markdown",
+    "textRtf": "نص/RTF",
+    "grayscale": "تدرج الرمادي"
   },
   "imageToPdf": {
     "tags": "تحويل,صورة,jpg,صورة,صورة فوتوغرافية"
@@ -679,7 +973,20 @@
       "8": "إزالة الأخير",
       "9": "إزالة",
       "10": "دمج فردي-زوجي",
-      "11": "Duplicate all pages"
+      "11": "تكرار كل الصفحات"
+    },
+    "desc": {
+      "CUSTOM": "استخدم تسلسلًا مخصصًا لأرقام الصفحات أو التعابير لتعريف ترتيب جديد.",
+      "REVERSE_ORDER": "عكس ترتيب المستند بحيث تصبح الصفحة الأخيرة أولى وهكذا.",
+      "DUPLEX_SORT": "تشابك الواجهات ثم الخلفيات كما لو أن ماسحًا مزدوجًا مسح كل الواجهات ثم كل الخلفيات (1، n، 2، n-1، …).",
+      "BOOKLET_SORT": "ترتيب الصفحات لطباعة الكتيّب (الأخيرة، الأولى، الثانية، قبل الأخيرة، …).",
+      "SIDE_STITCH_BOOKLET_SORT": "ترتيب الصفحات لطباعة كتيّب بخياطة جانبية (محسّن للتجليد من الجانب).",
+      "ODD_EVEN_SPLIT": "تقسيم المستند إلى مخرجيْن: كل الصفحات الفردية وكل الصفحات الزوجية.",
+      "ODD_EVEN_MERGE": "دمج ملفي PDF بالتناوب: الصفحات الفردية من الأول، والزوجية من الثاني.",
+      "DUPLICATE": "تكرار كل صفحة بحسب عدد الترتيب المخصص (مثلًا 4 نسخ لكل صفحة ×4).",
+      "REMOVE_FIRST": "إزالة الصفحة الأولى من المستند.",
+      "REMOVE_LAST": "إزالة الصفحة الأخيرة من المستند.",
+      "REMOVE_FIRST_AND_LAST": "إزالة الصفحتين الأولى والأخيرة من المستند."
     },
     "placeholder": "(مثال: 1,3,2 أو 4-8,2,10-12 أو 2n-1)"
   },
@@ -691,27 +998,190 @@
     "upload": "إضافة صورة",
     "submit": "إضافة صورة"
   },
+  "attachments": {
+    "tags": "embed,attach,file,attachment,attachments",
+    "title": "Add attachments",
+    "header": "Add attachments",
+    "add": "إضافة مرفق",
+    "remove": "إزالة المرفق",
+    "embed": "تضمين مرفق",
+    "submit": "Add attachments"
+  },
   "watermark": {
-    "tags": "نص,تكرار,تسمية,خاص,حقوق النشر,علامة تجارية,صورة,jpg,صورة,صورة فوتوغرافية",
     "title": "إضافة علامة مائية",
-    "header": "إضافة علامة مائية",
-    "customColor": "لون نص مخصص",
-    "selectText": {
-      "1": "حدد PDF لإضافة العلامة المائية إليه:",
-      "2": "نص العلامة المائية:",
-      "3": "حجم الخط:",
-      "4": "دوران (0-360):",
-      "5": "المباعدة الأفقية (مسافة بين كل علامة مائية أفقيًا):",
-      "6": "المباعدة العمودية (مسافة بين كل علامة مائية عموديًا):",
-      "7": "الشفافية (0٪ - 100٪):",
-      "8": "نوع العلامة المائية:",
-      "9": "صورة العلامة المائية:",
-      "10": "تحويل PDF إلى صورة PDF"
-    },
+    "desc": "أضف علامات مائية نصية أو صورية إلى ملفات PDF",
+    "completed": "تمت إضافة العلامة المائية",
     "submit": "إضافة علامة مائية",
-    "type": {
-      "1": "نص",
-      "2": "صورة"
+    "filenamePrefix": "watermarked",
+    "error": {
+      "failed": "حدث خطأ أثناء إضافة العلامة المائية إلى PDF."
+    },
+    "watermarkType": {
+      "text": "نص",
+      "image": "صورة"
+    },
+    "settings": {
+      "type": "نوع العلامة المائية",
+      "text": {
+        "label": "نص العلامة المائية",
+        "placeholder": "أدخل نص العلامة المائية"
+      },
+      "image": {
+        "label": "صورة العلامة المائية",
+        "choose": "اختر صورة",
+        "selected": "المحدّد: {{filename}}"
+      },
+      "fontSize": "حجم الخط",
+      "size": "الحجم",
+      "alphabet": "الخط/اللغة",
+      "color": "لون العلامة المائية",
+      "rotation": "الدوران (بالدرجات)",
+      "opacity": "الشفافية (%)",
+      "spacing": {
+        "horizontal": "التباعد الأفقي",
+        "vertical": "التباعد الرأسي"
+      },
+      "convertToImage": "تسطيح صفحات PDF إلى صور"
+    },
+    "alphabet": {
+      "roman": "اللاتينية/الرومانية",
+      "arabic": "العربية",
+      "japanese": "اليابانية",
+      "korean": "الكورية",
+      "chinese": "الصينية",
+      "thai": "التايلاندية"
+    },
+    "steps": {
+      "type": "نوع العلامة المائية",
+      "wording": "الصياغة",
+      "textStyle": "النمط",
+      "formatting": "التنسيق",
+      "file": "ملف العلامة المائية"
+    },
+    "results": {
+      "title": "نتائج العلامة المائية"
+    },
+    "tooltip": {
+      "language": {
+        "title": "دعم اللغة",
+        "text": "اختر إعداد اللغة المناسب لضمان عرض صحيح للخطوط في نصك."
+      },
+      "appearance": {
+        "title": "إعدادات المظهر",
+        "text": "تحكم في مظهر علامتك المائية وكيف تمتزج مع المستند.",
+        "bullet1": "الدوران: من -360° إلى 360° لوضع العلامة بزاوية",
+        "bullet2": "الشفافية: 0-100% للتحكم في الشفافية",
+        "bullet3": "الشفافية الأقل تنتج علامات مائية أكثر لطفًا"
+      },
+      "spacing": {
+        "title": "التحكم في التباعد",
+        "text": "اضبط التباعد بين العلامات المائية المتكررة عبر الصفحة.",
+        "bullet1": "تباعد العرض: المسافة الأفقية بين العلامات",
+        "bullet2": "تباعد الارتفاع: المسافة الرأسية بين العلامات",
+        "bullet3": "القيم الأعلى تخلق نمطًا أكثر تفرّقًا"
+      },
+      "type": {
+        "header": {
+          "title": "اختيار نوع العلامة المائية"
+        },
+        "description": {
+          "title": "اختر علامتك المائية",
+          "text": "اختر بين علامات مائية نصية أو صورية حسب احتياجاتك."
+        },
+        "text": {
+          "title": "علامات مائية نصية",
+          "text": "مثالية لإضافة إشعارات حقوق النشر أو أسماء الشركات أو ملصقات السرية. تدعم لغات متعددة وألوانًا مخصّصة.",
+          "bullet1": "خطوط ولغات قابلة للتخصيص",
+          "bullet2": "ألوان وشفافية قابلة للضبط",
+          "bullet3": "مثالية للنصوص القانونية أو الخاصة بالعلامة التجارية"
+        },
+        "image": {
+          "title": "علامات مائية صورية",
+          "text": "استخدم الشعارات أو الأختام أو أي صورة كعلامة مائية. رائع للعلامة التجارية والتعرّف البصري.",
+          "bullet1": "ارفع أي صيغة صورة",
+          "bullet2": "تحافظ على جودة الصورة",
+          "bullet3": "مثالية للشعارات والأختام"
+        }
+      },
+      "wording": {
+        "header": {
+          "title": "محتوى النص"
+        },
+        "text": {
+          "title": "نص العلامة المائية",
+          "text": "أدخل النص الذي سيظهر كعلامة مائية عبر المستند.",
+          "bullet1": "اجعله موجزًا لقراءة أفضل",
+          "bullet2": "أمثلة شائعة: 'CONFIDENTIAL'، 'DRAFT'، اسم الشركة",
+          "bullet3": "الرموز التعبيرية غير مدعومة وسيتم حذفها"
+        }
+      },
+      "textStyle": {
+        "header": {
+          "title": "نمط النص"
+        },
+        "color": {
+          "title": "اختيار اللون",
+          "text": "اختر لونًا يوفّر تباينًا جيدًا مع محتوى مستندك.",
+          "bullet1": "رمادي فاتح (#d3d3d3) لعلامات مائية خفيفة",
+          "bullet2": "أسود أو ألوان داكنة لتباين عالٍ",
+          "bullet3": "ألوان مخصّصة لأغراض الهوية البصرية"
+        },
+        "language": {
+          "title": "دعم اللغة",
+          "text": "اختر إعداد اللغة المناسب لضمان عرض صحيح للخطوط."
+        }
+      },
+      "file": {
+        "header": {
+          "title": "رفع الصورة"
+        },
+        "upload": {
+          "title": "اختيار الصورة",
+          "text": "ارفع ملف صورة لاستخدامه كعلامة مائية.",
+          "bullet1": "يدعم الصيغ الشائعة: PNG, JPG, GIF, BMP",
+          "bullet2": "‏PNG مع شفافية هو الأفضل",
+          "bullet3": "الصور عالية الدقة تحافظ على الجودة بشكل أفضل"
+        },
+        "recommendations": {
+          "title": "أفضل الممارسات",
+          "text": "نصائح للحصول على أفضل نتائج للعلامات المائية الصورية.",
+          "bullet1": "استخدم شعارات أو أختام بخلفيات شفافة",
+          "bullet2": "التصاميم البسيطة تعمل أفضل من الصور المعقّدة",
+          "bullet3": "ضع في الاعتبار حجم المستند النهائي عند اختيار الدقة"
+        }
+      },
+      "formatting": {
+        "header": {
+          "title": "التنسيق والتخطيط"
+        },
+        "size": {
+          "title": "التحكم في الحجم",
+          "text": "اضبط حجم العلامة المائية (نص أو صورة).",
+          "bullet1": "الأحجام الأكبر تنتج علامات أكثر بروزًا"
+        },
+        "appearance": {
+          "title": "إعدادات المظهر",
+          "text": "تحكم في مظهر علامتك المائية وكيف تمتزج مع المستند.",
+          "bullet1": "الدوران: من -360° إلى 360° لوضع العلامات بزاوية",
+          "bullet2": "الشفافية: 0-100% للتحكم في الشفافية",
+          "bullet3": "الشفافية الأقل تنتج علامات مائية أكثر لطفًا"
+        },
+        "spacing": {
+          "title": "التحكم في التباعد",
+          "text": "اضبط التباعد بين العلامات المائية المتكررة عبر الصفحة.",
+          "bullet1": "التباعد الأفقي: المسافة بين العلامات من اليسار إلى اليمين",
+          "bullet2": "التباعد الرأسي: المسافة بين العلامات من الأعلى إلى الأسفل",
+          "bullet3": "القيم الأعلى تخلق نمطًا أكثر تفرّقًا"
+        },
+        "security": {
+          "title": "خيار الأمان",
+          "text": "حوّل PDF النهائي إلى صيغة قائمة على الصور لتعزيز الأمان.",
+          "bullet1": "يمنع تحديد النص ونسخه",
+          "bullet2": "يجعل إزالة العلامات المائية أصعب",
+          "bullet3": "ينتج ملفات أكبر حجمًا",
+          "bullet4": "أفضل للمحتوى الحساس أو المحمي بحقوق"
+        }
+      }
     }
   },
   "permissions": {
@@ -734,71 +1204,294 @@
     "submit": "تغيير"
   },
   "removePages": {
-    "tags": "إزالة الصفحات,حذف الصفحات"
-  },
-  "addPassword": {
-    "tags": "تأمين,أمان",
-    "title": "إضافة كلمة مرور",
-    "header": "إضافة كلمة مرور (تشفير)",
-    "selectText": {
-      "1": "حدد ملف PDF للتشفير",
-      "2": "كلمة المرور",
-      "3": "طول مفتاح التشفير",
-      "4": "القيم الأعلى تكون أقوى، لكن القيم الأقل لها توافق أفضل.",
-      "5": "أذونات للتعيين",
-      "6": "منع تجميع المستند",
-      "7": "منع استخراج المحتوى",
-      "8": "منع الاستخراج للوصول",
-      "9": "منع ملء النموذج",
-      "10": "منع التعديل",
-      "11": "منع تعديل التعليقات التوضيحية",
-      "12": "منع الطباعة",
-      "13": "منع طباعة تنسيقات مختلفة",
-      "14": "كلمة مرور المالك",
-      "15": "يقيد ما يمكن القيام به بالمستند بمجرد فتحه (غير مدعوم من قبل جميع القراء)",
-      "16": "يقيد فتح المستند نفسه"
+    "tags": "إزالة الصفحات,حذف الصفحات",
+    "title": "إزالة الصفحات",
+    "pageNumbers": {
+      "label": "الصفحات المراد إزالتها",
+      "placeholder": "مثال: 1,3,5-8,10",
+      "error": "صيغة أرقام الصفحات غير صالحة. استخدم الأرقام أو النطاقات (1-5) أو التعابير الرياضية (2n+1)"
     },
-    "submit": "تشفير"
-  },
-  "removePassword": {
-    "tags": "تأمين,فك التشفير,أمان,إزالة كلمة المرور,حذف كلمة المرور",
-    "title": "إزالة كلمة المرور",
-    "header": "إزالة كلمة المرور (فك التشفير)",
-    "selectText": {
-      "1": "حدد PDF لفك التشفير",
-      "2": "كلمة المرور"
+    "filenamePrefix": "pages_removed",
+    "files": {
+      "placeholder": "حدّد ملف PDF في العرض الرئيسي للبدء"
     },
-    "submit": "إزالة"
+    "settings": {
+      "title": "الإعدادات"
+    },
+    "tooltip": {
+      "header": {
+        "title": "إعدادات إزالة الصفحات"
+      },
+      "pageNumbers": {
+        "title": "اختيار الصفحات",
+        "text": "حدّد الصفحات التي تريد إزالتها من PDF. يمكنك اختيار صفحات فردية أو نطاقات أو استخدام تعابير رياضية.",
+        "bullet1": "صفحات فردية: 1,3,5 (يزيل الصفحات 1 و3 و5)",
+        "bullet2": "نطاقات صفحات: 1-5,10-15 (يزيل الصفحات 1-5 و10-15)",
+        "bullet3": "رياضي: 2n+1 (يزيل الصفحات الفردية)",
+        "bullet4": "نطاقات مفتوحة: 5- (يزيل من الصفحة 5 حتى النهاية)"
+      },
+      "examples": {
+        "title": "أمثلة شائعة",
+        "text": "فيما يلي بعض أنماط اختيار الصفحات الشائعة:",
+        "bullet1": "إزالة الصفحة الأولى: 1",
+        "bullet2": "إزالة آخر 3 صفحات: -3",
+        "bullet3": "إزالة كل صفحة أخرى: 2n",
+        "bullet4": "إزالة صفحات متفرقة محددة: 1,5,10,15"
+      },
+      "safety": {
+        "title": "نصائح الأمان",
+        "text": "اعتبارات مهمة عند إزالة الصفحات:",
+        "bullet1": "عاين اختيارك دائمًا قبل المعالجة",
+        "bullet2": "احتفظ بنسخة احتياطية من ملفك الأصلي",
+        "bullet3": "ترقيم الصفحات يبدأ من 1 وليس 0",
+        "bullet4": "سيتم تجاهل أرقام الصفحات غير الصالحة"
+      }
+    },
+    "error": {
+      "failed": "حدث خطأ أثناء إزالة الصفحات."
+    },
+    "results": {
+      "title": "نتائج إزالة الصفحات"
+    },
+    "submit": "إزالة الصفحات"
+  },
+  "pageSelection": {
+    "tooltip": {
+      "header": {
+        "title": "دليل اختيار الصفحات"
+      },
+      "basic": {
+        "title": "الاستخدام الأساسي",
+        "text": "حدّد صفحات معينة من مستند PDF باستخدام صياغة بسيطة.",
+        "bullet1": "صفحات فردية: 1,3,5",
+        "bullet2": "نطاقات صفحات: 3-6 أو 10-15",
+        "bullet3": "كل الصفحات: all"
+      },
+      "advanced": {
+        "title": "ميزات متقدمة"
+      },
+      "tips": {
+        "title": "نصائح",
+        "text": "ضع هذه الإرشادات في الاعتبار:",
+        "bullet1": "ترقيم الصفحات يبدأ من 1 (ليس 0)",
+        "bullet2": "تُزال المسافات تلقائيًا",
+        "bullet3": "تُتجاهل التعابير غير الصالحة"
+      },
+      "syntax": {
+        "title": "أساسيات الصياغة",
+        "text": "استخدم الأرقام والنطاقات والكلمات المفتاحية والتتابعات (تبدأ n من 0). الأقواس مدعومة.",
+        "bullets": {
+          "numbers": "الأرقام/النطاقات: 5، 10-20",
+          "keywords": "الكلمات المفتاحية: odd, even",
+          "progressions": "التتابعات: 3n، 4n+1"
+        }
+      },
+      "operators": {
+        "title": "العوامل",
+        "text": "للـ AND أسبقية أعلى من الفاصلة. ينطبق NOT ضمن نطاق المستند.",
+        "and": "AND: & أو \"and\" — يتطلب الشرطين معًا (مثال: 1-50 & even)",
+        "comma": "Comma: , أو | — دمج التحديدات (مثال: 1-10, 20)",
+        "not": "NOT: ! أو \"not\" — استبعاد الصفحات (مثال: 3n & not 30)"
+      },
+      "examples": {
+        "title": "أمثلة"
+      }
+    }
+  },
+  "bulkSelection": {
+    "header": {
+      "title": "دليل اختيار الصفحات"
+    },
+    "syntax": {
+      "title": "أساسيات الصياغة",
+      "text": "استخدم الأرقام والنطاقات والكلمات والتقدّمات (n تبدأ من 0). الأقواس مدعومة.",
+      "bullets": {
+        "numbers": "الأرقام/النطاقات: 5, 10-20",
+        "keywords": "الكلمات: odd, even",
+        "progressions": "التقدّم: 3n, 4n+1"
+      }
+    },
+    "operators": {
+      "title": "العوامل",
+      "text": "AND له أسبقية أعلى من الفاصلة. يتم تطبيق NOT داخل نطاق المستند.",
+      "and": "AND: & أو \"and\" — يتطلب الشرطين معًا (مثال: 1-50 & even)",
+      "comma": "الفاصلة: , أو | — دمج الاختيارات (مثال: 1-10, 20)",
+      "not": "NOT: ! أو \"not\" — استبعاد صفحات (مثال: 3n & not 30)"
+    },
+    "examples": {
+      "title": "أمثلة",
+      "first50": "أول 50",
+      "last50": "آخر 50",
+      "every3rd": "كل ثالثة",
+      "oddWithinExcluding": "الفردية ضمن 1-20 باستثناء 5-7",
+      "combineSets": "اجمع المجموعات"
+    },
+    "firstNPages": {
+      "title": "أول N صفحة",
+      "placeholder": "عدد الصفحات"
+    },
+    "lastNPages": {
+      "title": "آخر N صفحة",
+      "placeholder": "عدد الصفحات"
+    },
+    "everyNthPage": {
+      "title": "كل N صفحة",
+      "placeholder": "حجم الخطوة"
+    },
+    "range": {
+      "title": "نطاق",
+      "fromPlaceholder": "من",
+      "toPlaceholder": "إلى"
+    },
+    "keywords": {
+      "title": "كلمات مفتاحية"
+    },
+    "advanced": {
+      "title": "متقدم"
+    }
   },
   "compressPdfs": {
     "tags": "ضغط,صغير,ضئيل"
   },
   "unlockPDFForms": {
     "tags": "remove,delete,form,field,readonly",
-    "title": "Remove Read-Only from Form Fields",
-    "header": "Unlock PDF Forms",
-    "submit": "Remove"
+    "title": "إزالة خاصية القراءة فقط من حقول النماذج",
+    "header": "إلغاء قفل نماذج PDF",
+    "submit": "Remove",
+    "description": "ستزيل هذه الأداة قيود القراءة فقط من حقول نماذج PDF، لتصبح قابلة للتحرير والملء.",
+    "filenamePrefix": "unlocked_forms",
+    "files": {
+      "placeholder": "حدّد ملف PDF في العرض الرئيسي للبدء"
+    },
+    "error": {
+      "failed": "حدث خطأ أثناء إلغاء قفل نماذج PDF."
+    },
+    "results": {
+      "title": "نتائج قفل النماذج"
+    }
   },
   "changeMetadata": {
-    "tags": "عنوان,مؤلف,تاريخ,إنشاء,وقت,ناشر,منتج,إحصائيات",
-    "title": "العنوان:",
     "header": "تغيير البيانات الوصفية",
-    "selectText": {
-      "1": "يرجى تعديل المتغيرات التي ترغب في تغييرها",
-      "2": "حذف كل البيانات الأولية",
-      "3": "إظهار البيانات الأولية المخصصة:",
-      "4": "بيانات وصفية أخرى:",
-      "5": "إضافة إدخال بيانات أولية مخصص"
+    "submit": "تغيير",
+    "filenamePrefix": "بيانات_وصفية",
+    "settings": {
+      "title": "إعدادات البيانات الوصفية"
     },
-    "author": "المؤلف:",
-    "creationDate": "تاريخ الإنشاء (yyyy/MM/dd HH:mm:ss):",
-    "creator": "المنشئ:",
-    "keywords": "الكلمات الرئيسية:",
-    "modDate": "تاريخ التعديل (yyyy/MM/dd HH:mm:ss):",
-    "producer": "المنتج:",
-    "subject": "الموضوع:",
-    "trapped": "محاصر:",
-    "submit": "تغيير"
+    "standardFields": {
+      "title": "الحقول القياسية"
+    },
+    "deleteAll": {
+      "label": "إزالة البيانات الوصفية الحالية",
+      "checkbox": "حذف كل البيانات الوصفية"
+    },
+    "title": {
+      "label": "العنوان",
+      "placeholder": "عنوان المستند"
+    },
+    "author": {
+      "label": "المؤلف",
+      "placeholder": "مؤلف المستند"
+    },
+    "subject": {
+      "label": "الموضوع",
+      "placeholder": "موضوع المستند"
+    },
+    "keywords": {
+      "label": "الكلمات المفتاحية",
+      "placeholder": "كلمات مفتاحية للمستند"
+    },
+    "creator": {
+      "label": "المنشئ",
+      "placeholder": "منشئ المستند"
+    },
+    "producer": {
+      "label": "المنتِج",
+      "placeholder": "منتِج المستند"
+    },
+    "dates": {
+      "title": "حقول التاريخ"
+    },
+    "creationDate": {
+      "label": "تاريخ الإنشاء",
+      "placeholder": "تاريخ الإنشاء"
+    },
+    "modificationDate": {
+      "label": "تاريخ التعديل",
+      "placeholder": "تاريخ التعديل"
+    },
+    "trapped": {
+      "label": "حالة Trapped",
+      "unknown": "غير معروف",
+      "true": "صحيح",
+      "false": "خطأ"
+    },
+    "advanced": {
+      "title": "خيارات متقدمة"
+    },
+    "customFields": {
+      "title": "بيانات وصفية مخصّصة",
+      "description": "أضف حقول بيانات وصفية مخصّصة للمستند",
+      "add": "إضافة حقل",
+      "key": "المفتاح",
+      "keyPlaceholder": "مفتاح مخصّص",
+      "value": "القيمة",
+      "valuePlaceholder": "قيمة مخصّصة",
+      "remove": "إزالة"
+    },
+    "results": {
+      "title": "ملفات PDF المحدّثة"
+    },
+    "error": {
+      "failed": "حدث خطأ أثناء تغيير بيانات PDF الوصفية."
+    },
+    "tooltip": {
+      "header": {
+        "title": "نظرة عامة على بيانات PDF الوصفية"
+      },
+      "standardFields": {
+        "title": "الحقول القياسية",
+        "text": "حقول بيانات وصفية شائعة لـ PDF تصف المستند.",
+        "bullet1": "العنوان: اسم المستند أو ترويسته",
+        "bullet2": "المؤلف: من أنشأ المستند",
+        "bullet3": "الموضوع: وصف موجز للمحتوى",
+        "bullet4": "الكلمات المفتاحية: مصطلحات البحث",
+        "bullet5": "المنشئ/المنتِج: البرمجيات المستخدمة لإنشاء PDF"
+      },
+      "dates": {
+        "title": "حقول التاريخ",
+        "text": "متى تم إنشاء المستند وتعديله.",
+        "bullet1": "تاريخ الإنشاء: وقت إنشاء المستند الأصلي",
+        "bullet2": "تاريخ التعديل: وقت آخر تعديل"
+      },
+      "options": {
+        "title": "خيارات إضافية",
+        "text": "حقول مخصّصة وعناصر للتحكم في الخصوصية.",
+        "bullet1": "بيانات مخصّصة: أضف حقولك الخاصة",
+        "bullet2": "حالة التجهيز: إعداد الطباعة عالية الجودة",
+        "bullet3": "حذف الكل: إزالة كل البيانات للخصوصية"
+      },
+      "deleteAll": {
+        "title": "إزالة البيانات الوصفية الحالية",
+        "text": "حذف كامل للبيانات الوصفية لضمان الخصوصية."
+      },
+      "customFields": {
+        "title": "بيانات وصفية مخصّصة",
+        "text": "أضف أزواج مفتاح-قيمة مخصّصة.",
+        "bullet1": "أضف أي حقول مخصّصة ذات صلة بمستندك",
+        "bullet2": "أمثلة: القسم، المشروع، الإصدار، الحالة",
+        "bullet3": "كل إدخال يتطلب مفتاحًا وقيمة"
+      },
+      "advanced": {
+        "title": "خيارات متقدمة",
+        "trapped": {
+          "title": "حالة التجهيز للطباعة",
+          "description": "يشير إلى ما إذا كان المستند مُحضّرًا للطباعة عالية الجودة.",
+          "bullet1": "True: تم تجهيز المستند للطباعة عالية الجودة",
+          "bullet2": "False: لم يتم تجهيز المستند",
+          "bullet3": "Unknown: لم يُذكر وضع التجهيز"
+        }
+      }
+    }
   },
   "fileToPDF": {
     "tags": "تحويل,تنسيق,مستند,صورة,شريحة,نص,تحويل,مكتب,مستندات,وورد,إكسل,باوربوينت",
@@ -812,6 +1505,7 @@
   "ocr": {
     "tags": "تعرف,نص,صورة,مسح,قراءة,تحديد,كشف,قابل للتحرير",
     "title": "التعرف الضوئي على الحروف / تنظيف المسح الضوئي",
+    "desc": "يقوم برنامج التنظيف بمسح واكتشاف النص من الصور داخل ملف PDF ويعيد إضافته كنص",
     "header": "مسح المسح الضوئي / التعرف الضوئي على الحروف (OCR)",
     "selectText": {
       "1": "حدد اللغات التي سيتم اكتشافها داخل ملف PDF (اللغات المدرجة هي تلك التي تم اكتشافها حاليًا):",
@@ -829,7 +1523,88 @@
     },
     "help": "يرجى قراءة هذه الوثائق حول كيفية استخدام هذا للغات أخرى و/أو الاستخدام ليس في Docker",
     "credit": "تستخدم هذه الخدمة qpdf و Tesseract للتعرف الضوئي على الحروف.",
-    "submit": "معالجة PDF باستخدام OCR"
+    "submit": "معالجة PDF باستخدام OCR",
+    "operation": {
+      "submit": "معالجة OCR ومراجعة"
+    },
+    "results": {
+      "title": "نتائج OCR"
+    },
+    "languagePicker": {
+      "additionalLanguages": "تبحث عن لغات إضافية؟",
+      "viewSetupGuide": "عرض دليل الإعداد →"
+    },
+    "settings": {
+      "title": "إعدادات",
+      "ocrMode": {
+        "label": "وضع التعرف الضوئي على الحروف",
+        "auto": "تلقائي (تخطي طبقات النص)",
+        "force": "إجباري (إعادة OCR لكل الصفحات واستبدال النص)",
+        "strict": "صارم (إلغاء إذا وُجد نص)"
+      },
+      "languages": {
+        "label": "اللغات",
+        "placeholder": "اختر اللغات"
+      },
+      "compatibilityMode": {
+        "label": "وضع التوافق"
+      },
+      "advancedOptions": {
+        "label": "خيارات المعالجة",
+        "sidecar": "إنشاء ملف نصي",
+        "deskew": "تصحيح ميل الصفحات",
+        "clean": "تنظيف ملف الإدخال",
+        "cleanFinal": "تنظيف الناتج النهائي"
+      }
+    },
+    "tooltip": {
+      "header": {
+        "title": "نظرة عامة على إعدادات OCR"
+      },
+      "mode": {
+        "title": "وضع التعرف الضوئي على الحروف",
+        "text": "التعرّف البصري على الحروف (OCR) يساعدك على تحويل الصفحات الممسوحة أو المصوّرة إلى نص يمكنك البحث فيه أو نسخه أو تمييزه.",
+        "bullet1": "التلقائي يتخطى الصفحات التي تحتوي بالفعل على طبقات نص.",
+        "bullet2": "الإجباري يعيد OCR لكل صفحة ويستبدل كل النص.",
+        "bullet3": "الصارم يوقف التنفيذ إذا عُثر على أي نص قابل للتحديد."
+      },
+      "languages": {
+        "title": "اللغات",
+        "text": "حسّن دقة OCR بتحديد اللغات المتوقعة. اختر لغة أو أكثر لتوجيه الاكتشاف."
+      },
+      "output": {
+        "title": "الناتج",
+        "text": "قرّر كيف تريد تنسيق ناتج النص:",
+        "bullet1": "PDF قابل للبحث يضمّن النص خلف الصورة الأصلية.",
+        "bullet2": "HOCR XML يُرجع ملفًا مُنظّمًا قابلًا للقراءة آليًا.",
+        "bullet3": "الملف النصي العادي ينشئ ملف .txt منفصلًا بالمحتوى الخام."
+      },
+      "advanced": {
+        "header": {
+          "title": "معالجة OCR المتقدمة"
+        },
+        "compatibility": {
+          "title": "وضع التوافق",
+          "text": "يستخدم وضع OCR 'sandwich PDF': ينتج ملفات أكبر، لكنه أكثر موثوقية مع بعض اللغات وبرامج PDF القديمة. افتراضيًا نستخدم hOCR لملفات PDF أصغر وحديثة."
+        },
+        "sidecar": {
+          "title": "إنشاء ملف نصي",
+          "text": "ينشئ ملف .txt منفصلًا بجانب PDF يحتوي على كل النص المستخرج للوصول والمعالجة بسهولة."
+        },
+        "deskew": {
+          "title": "تصحيح الميل",
+          "text": "يصحّح الصفحات المائلة تلقائيًا لتحسين دقة OCR. مفيد للمستندات الممسوحة غير المحاذاة تمامًا."
+        },
+        "clean": {
+          "title": "تنظيف ملف الإدخال",
+          "text": "يقوم بتهيئة الإدخال بإزالة الضوضاء وتعزيز التباين وتحسين الصورة للتعرّف الأفضل بواسطة OCR قبل المعالجة."
+        },
+        "cleanFinal": {
+          "title": "تنظيف الناتج النهائي",
+          "text": "يعالج ملف PDF النهائي بإزالة شوائب OCR وتحسين طبقة النص لقراءة أفضل وحجم أصغر."
+        }
+      }
+    }
   },
   "extractImages": {
     "tags": "صورة,صورة فوتوغرافية,حفظ,أرشيف,ملف مضغوط,التقاط,انتزاع",
@@ -837,7 +1612,13 @@
     "header": "استخراج الصور",
     "selectText": "حدد تنسيق الصورة لتحويل الصور المستخرجة إليه",
     "allowDuplicates": "حفظ الصور المكررة",
-    "submit": "استخراج"
+    "submit": "استخراج",
+    "settings": {
+      "title": "الإعدادات"
+    },
+    "error": {
+      "failed": "حدث خطأ أثناء استخراج الصور من PDF."
+    }
   },
   "pdfToPDFA": {
     "tags": "أرشيف,طويل الأجل,معيار,تحويل,تخزين,حفظ",
@@ -909,58 +1690,215 @@
     },
     "info": "Python غير مثبت. مطلوب للتشغيل."
   },
+  "scannerImageSplit": {
+    "title": "الصور المُستخرجة",
+    "submit": "استخراج صور المسح",
+    "error": {
+      "failed": "حدث خطأ أثناء استخراج صور المسح."
+    },
+    "tooltip": {
+      "title": "أداة تقسيم الصور",
+      "whatThisDoes": "ما الذي تفعله",
+      "whatThisDoesDesc": "يعثر تلقائيًا على كل صورة ويستخرجها من صفحة ممسوحة أو صورة مركبة—دون قص يدوي.",
+      "whenToUse": "متى تُستخدم",
+      "useCase1": "مسح صفحات ألبوم كاملة دفعة واحدة",
+      "useCase2": "تقسيم دفعات المنضدة المسطحة إلى ملفات منفصلة",
+      "useCase3": "تفكيك الكولاج إلى صور فردية",
+      "useCase4": "سحب الصور من المستندات",
+      "quickFixes": "حلول سريعة",
+      "problem1": "الصور غير مُكتشفة → زد التسامح إلى 30-50",
+      "problem2": "الكثير من الاكتشافات الخاطئة → زد المساحة الدنيا إلى 15000-20000",
+      "problem3": "اقتطاعات ضيقة جدًا → زد حجم الحافة إلى 5-10",
+      "problem4": "صور مائلة لم تُقوَّم → خفّض حد الزاوية إلى ~5°",
+      "problem5": "مربعات غبار/ضوضاء → زد المساحة الدنيا للمحيط إلى 1000-2000",
+      "setupTips": "نصائح الإعداد",
+      "tip1": "استخدم خلفية بسيطة وفاتحة",
+      "tip2": "اترك فجوة صغيرة (≈1 سم) بين الصور",
+      "tip3": "امسح عند 300-600 DPI",
+      "tip4": "نظّف زجاج الماسح",
+      "headsUp": "تنبيه",
+      "headsUpDesc": "الصور المتداخلة أو الخلفيات القريبة جدًا في اللون من الصور قد تقلل الدقة—جرّب خلفية أفتح أو أغمق واترك مساحة أكبر."
+    }
+  },
   "sign": {
-    "tags": "تخويل,الأحرف الأولى,توقيع مرسوم,توقيع نصي,توقيع بالصورة",
     "title": "توقيع",
     "header": "توقيع ملفات PDF",
     "upload": "تحميل الصورة",
-    "draw": "رسم التوقيع",
-    "text": "إدخال النص",
+    "draw": {
+      "title": "ارسم توقيعك",
+      "clear": "مسح"
+    },
+    "text": {
+      "name": "اسم الموقّع",
+      "placeholder": "أدخل اسمك الكامل"
+    },
     "clear": "مسح",
     "add": "إضافة",
     "saved": "توقيعات تم حفظها",
     "save": "حفظ توقيع",
+    "applySignatures": "تطبيق التواقيع",
     "personalSigs": "توقيعات شخصية",
     "sharedSigs": "توقيعات مشتركة",
     "noSavedSigs": "لم يتم العثور على توقيعات محفوظة",
-    "addToAll": "Add to all pages",
-    "delete": "Delete",
-    "first": "First page",
-    "last": "Last page",
-    "next": "Next page",
-    "previous": "Previous page",
-    "maintainRatio": "Toggle maintain aspect ratio",
-    "undo": "Undo",
-    "redo": "Redo"
+    "addToAll": "إضافة إلى كل الصفحات",
+    "delete": "حذف",
+    "first": "الصفحة الأولى",
+    "last": "الصفحة الأخيرة",
+    "next": "الصفحة التالية",
+    "previous": "الصفحة السابقة",
+    "maintainRatio": "تبديل الحفاظ على نسبة الأبعاد",
+    "undo": "تراجع",
+    "redo": "إعادة",
+    "submit": "توقيع المستند",
+    "steps": {
+      "configure": "تهيئة التوقيع"
+    },
+    "type": {
+      "title": "نوع التوقيع",
+      "draw": "رسم",
+      "canvas": "لوحة Canvas",
+      "image": "صورة",
+      "text": "نص"
+    },
+    "image": {
+      "label": "رفع صورة التوقيع",
+      "placeholder": "اختر ملف صورة",
+      "hint": "ارفع صورة PNG أو JPG لتوقيعك"
+    },
+    "instructions": {
+      "title": "كيفية إضافة توقيع"
+    },
+    "activate": "تفعيل وضع وضع التوقيع",
+    "deactivate": "إيقاف وضع التوقيع",
+    "results": {
+      "title": "نتائج التوقيع"
+    },
+    "error": {
+      "failed": "حدث خطأ أثناء توقيع PDF."
+    }
   },
   "flatten": {
-    "tags": "ثابت,إلغاء التنشيط,غير تفاعلي,تبسيط",
     "title": "تسطيح",
     "header": "تسطيح ملفات PDF",
     "flattenOnlyForms": "تسطيح النماذج فقط",
-    "submit": "تسطيح"
+    "submit": "تسطيح",
+    "filenamePrefix": "flattened",
+    "files": {
+      "placeholder": "حدد ملف PDF في العرض الرئيسي للبدء"
+    },
+    "steps": {
+      "settings": "إعدادات"
+    },
+    "options": {
+      "stepTitle": "خيارات التسطيح",
+      "title": "خيارات التسطيح",
+      "flattenOnlyForms.desc": "تسطيح حقول النماذج فقط مع إبقاء العناصر التفاعلية الأخرى كما هي",
+      "note": "التسطيح يزيل العناصر التفاعلية من PDF ويجعله غير قابل للتحرير."
+    },
+    "results": {
+      "title": "نتائج التسطيح"
+    },
+    "error": {
+      "failed": "حدث خطأ أثناء تسطيح PDF."
+    },
+    "tooltip": {
+      "header": {
+        "title": "حول تسطيح ملفات PDF"
+      },
+      "description": {
+        "title": "ماذا يفعل التسطيح؟",
+        "text": "يجعل التسطيح ملف PDF غير قابل للتحرير بتحويل النماذج القابلة للتعبئة والأزرار إلى نصوص وصور عادية. سيبدو PDF كما هو تمامًا، لكن لا يمكن لأحد تغييره أو تعبئة النماذج. مثالي لمشاركة النماذج المكتملة، وإنشاء مستندات نهائية للأرشفة، أو ضمان ظهور PDF بنفس الشكل في كل مكان.",
+        "bullet1": "تتحول مربعات النص إلى نص عادي (غير قابل للتحرير)",
+        "bullet2": "تتحول خانات الاختيار والأزرار إلى صور",
+        "bullet3": "ممتاز للإصدارات النهائية التي لا تريد تغييرها",
+        "bullet4": "يضمن مظهرًا متسقًا عبر جميع الأجهزة"
+      },
+      "formsOnly": {
+        "title": "ماذا يعني 'تسطيح النماذج فقط'؟",
+        "text": "يزيل هذا الخيار فقط القدرة على تعبئة النماذج، لكنه يبقي الميزات الأخرى تعمل مثل النقر على الروابط، وعرض العلامات المرجعية، وقراءة التعليقات.",
+        "bullet1": "تصبح النماذج غير قابلة للتحرير",
+        "bullet2": "تظل الروابط تعمل عند النقر",
+        "bullet3": "تبقى التعليقات والملاحظات مرئية",
+        "bullet4": "تستمر العلامات المرجعية في مساعدتك على التنقل"
+      }
+    }
   },
   "repair": {
     "tags": "إصلاح,استعادة,تصحيح,استرداد",
     "title": "إصلاح",
     "header": "إصلاح ملفات PDF",
-    "submit": "إصلاح"
+    "submit": "إصلاح",
+    "description": "ستحاول هذه الأداة إصلاح ملفات PDF التالفة أو المعطوبة. لا إعدادات إضافية مطلوبة.",
+    "filenamePrefix": "repaired",
+    "files": {
+      "placeholder": "حدّد ملف PDF في العرض الرئيسي للبدء"
+    },
+    "error": {
+      "failed": "حدث خطأ أثناء إصلاح PDF."
+    },
+    "results": {
+      "title": "نتائج الإصلاح"
+    }
   },
   "removeBlanks": {
-    "tags": "تنظيف,تبسيط,بدون محتوى,تنظيم",
     "title": "إزالة الفراغات",
     "header": "إزالة الصفحات الفارغة",
-    "threshold": "العتبة:",
-    "thresholdDesc": "الحد الفاصل لتحديد مدى بياض البكسل الأبيض",
-    "whitePercent": "نسبة الأبيض (%):",
-    "whitePercentDesc": "النسبة المئوية للصفحة التي يجب أن تكون بيضاء لتتم إزالتها",
+    "settings": {
+      "title": "الإعدادات"
+    },
+    "threshold": {
+      "label": "عتبة بياض البكسل"
+    },
+    "whitePercent": {
+      "label": "حد نسبة البياض",
+      "unit": "%"
+    },
+    "includeBlankPages": {
+      "label": "تضمين الصفحات الفارغة المُكتشفة"
+    },
+    "tooltip": {
+      "header": {
+        "title": "إعدادات إزالة الصفحات الفارغة"
+      },
+      "threshold": {
+        "title": "عتبة بياض البكسل",
+        "text": "يتحكم في مدى بياض البكسل ليُعتبر «أبيض». يساعد في تحديد ما يُعد منطقة فارغة على الصفحة.",
+        "bullet1": "0 = أسود خالص (الأكثر تقييدًا)",
+        "bullet2": "128 = رمادي متوسط",
+        "bullet3": "255 = أبيض خالص (الأقل تقييدًا)"
+      },
+      "whitePercent": {
+        "title": "حد نسبة البياض",
+        "text": "يضبط الحد الأدنى لنسبة البكسلات البيضاء المطلوبة لاعتبار الصفحة فارغة وإزالتها.",
+        "bullet1": "قيم أقل (مثل 80%) = إزالة المزيد من الصفحات",
+        "bullet2": "قيم أعلى (مثل 95%) = إزالة الصفحات الفارغة جدًا فقط",
+        "bullet3": "استخدم قيمًا أعلى للمستندات ذات الخلفيات الفاتحة"
+      },
+      "includeBlankPages": {
+        "title": "تضمين الصفحات الفارغة المكتشفة",
+        "text": "عند التفعيل، ينشئ PDF منفصلًا يحتوي على جميع الصفحات الفارغة التي تم اكتشافها وإزالتها من المستند الأصلي.",
+        "bullet1": "مفيد لمراجعة ما تمت إزالته",
+        "bullet2": "يساعد على التحقق من دقة الاكتشاف",
+        "bullet3": "يمكن تعطيله لتقليل حجم ملف الناتج"
+      }
+    },
     "submit": "إزالة الفراغات"
   },
   "removeAnnotations": {
     "tags": "تعليقات,تظليل,ملاحظات,علامات,إزالة",
     "title": "إزالة التعليقات التوضيحية",
     "header": "إزالة التعليقات التوضيحية",
-    "submit": "إزالة"
+    "submit": "إزالة",
+    "settings": {
+      "title": "الإعدادات"
+    },
+    "info": {
+      "title": "حول إزالة التعليقات",
+      "description": "ستزيل هذه الأداة جميع التعليقات (تعليقات، تمييزات، ملاحظات، إلخ) من ملفات PDF."
+    },
+    "error": {
+      "failed": "حدث خطأ أثناء إزالة التعليقات من PDF."
+    }
   },
   "compare": {
     "tags": "تمييز الاختلافات,مقارنة,تغييرات,تحليل",
@@ -992,28 +1930,140 @@
   "certSign": {
     "tags": "مصادقة,PEM,P12,رسمي,تشفير",
     "title": "توقيع الشهادة",
-    "header": "قم بتوقيع ملف PDF بشهادتك (العمل قيد التقدم)",
-    "selectPDF": "حدد ملف PDF للتوقيع:",
-    "jksNote": "ملاحظة: إذا لم يكن نوع شهادتك مدرجًا أدناه، يرجى تحويلها إلى ملف مخزن مفاتيح جافا (.jks) باستخدام أداة سطر الأوامر keytool. ثم اختر خيار ملف .jks أدناه.",
-    "selectKey": "حدد ملف المفتاح الخاص (تنسيق PKCS # 8 ، يمكن أن يكون .pem أو .der):",
-    "selectCert": "حدد ملف الشهادة الخاص بك (تنسيق X.509 ، يمكن أن يكون .pem أو .der):",
-    "selectP12": "حدد ملف تخزين المفاتيح PKCS # 12 (.p12 أو .pfx) (اختياري ، إذا تم توفيره ، يجب أن يحتوي على مفتاحك الخاص وشهادتك):",
-    "selectJKS": "حدد ملف مخزن مفاتيح جافا الخاص بك (.jks أو .keystore):",
-    "certType": "نوع الشهادة",
-    "password": "أدخل كلمة مرور مخزن المفاتيح أو المفتاح الخاص (إن وجدت):",
-    "showSig": "إظهار التوقيع",
-    "reason": "السبب",
-    "location": "الموقع",
-    "name": "الاسم",
-    "showLogo": "عرض الشعار",
-    "submit": "توقيع PDF"
+    "filenamePrefix": "موقّع",
+    "signMode": {
+      "stepTitle": "وضع التوقيع",
+      "tooltip": {
+        "header": {
+          "title": "حول تواقيع PDF"
+        },
+        "overview": {
+          "title": "كيف تعمل التوقيعات",
+          "text": "كلا الوضعين يختم المستند (أي تعديل يُعلَّم كعبث) ويسجل من/متى/كيف للمراجعة. ثقة العارض تعتمد على سلسلة الشهادة."
+        },
+        "manual": {
+          "title": "يدوي — أحضر شهادتك",
+          "text": "استخدم ملفات شهادتك لهوية متوافقة مع علامتك التجارية. قد تعرض حالة <b>موثوق</b> عند التعرّف على السلسلة/هيئة الإصدار.",
+          "use": "للاستخدام: أمام العملاء، قانوني، امتثال."
+        },
+        "auto": {
+          "title": "تلقائي — ختم نظام فوري بلا إعداد",
+          "text": "يوقّع بشهادة <b>موقّعة ذاتيًا</b> على الخادم. نفس <b>ختم كشف العبث</b> و<b>سجل تدقيق</b>؛ عادةً ما يظهر <b>غير مُتحقق</b> في العارضين.",
+          "use": "يُستخدم عندما: تحتاج سرعة وهوية داخلية متسقة عبر المراجعات والسجلات."
+        },
+        "rule": {
+          "title": "قاعدة عامة",
+          "text": "تحتاج حالة <b>موثوق</b> للمتلقّي؟ اختر <b>يدوي</b>. تحتاج ختمًا سريعًا وكشف عبث وتدقيق بلا إعداد؟ اختر <b>تلقائي</b>."
+        }
+      }
+    },
+    "certTypeStep": {
+      "stepTitle": "تنسيق الشهادة"
+    },
+    "certFiles": {
+      "stepTitle": "ملفات الشهادة"
+    },
+    "appearance": {
+      "stepTitle": "مظهر التوقيع",
+      "tooltip": {
+        "header": {
+          "title": "حول مظهر التوقيع"
+        },
+        "invisible": {
+          "title": "تواقيع غير مرئية",
+          "text": "يُضاف التوقيع إلى PDF للأمان لكنه لن يكون مرئيًا عند العرض. مثالي للمتطلبات القانونية دون تغيير مظهر المستند.",
+          "bullet1": "يوفّر الأمان دون تغييرات مرئية",
+          "bullet2": "يلبّي المتطلبات القانونية للتوقيع الرقمي",
+          "bullet3": "لا يؤثر في تخطيط المستند أو تصميمه"
+        },
+        "visible": {
+          "title": "تواقيع مرئية",
+          "text": "يعرض كتلة توقيع على PDF باسمك وتاريخك وتفاصيل اختيارية. مفيد لإيضاح أن المستند موقّع.",
+          "bullet1": "يُظهِر اسم الموقّع والتاريخ على المستند",
+          "bullet2": "يمكن تضمين السبب والموقع للتوقيع",
+          "bullet3": "اختر الصفحة التي يوضع فيها التوقيع",
+          "bullet4": "يمكن تضمين شعار اختياري"
+        }
+      }
+    },
+    "sign": {
+      "submit": "توقيع PDF",
+      "results": "PDF الموقَّع"
+    },
+    "error": {
+      "failed": "حدث خطأ أثناء معالجة التواقيع."
+    },
+    "tooltip": {
+      "header": {
+        "title": "حول إدارة التواقيع"
+      },
+      "overview": {
+        "title": "ما الذي تستطيع هذه الأداة فعله؟",
+        "text": "تتيح لك هذه الأداة التحقق مما إذا كانت ملفات PDF موقّعة رقميًا وإضافة تواقيع رقمية جديدة. التواقيع الرقمية تثبت من أنشأ أو وافق على المستند وتكشف ما إذا تم تغييره بعد التوقيع.",
+        "bullet1": "تحقق من التواقيع القائمة وصحتها",
+        "bullet2": "اعرض معلومات الموقّعين والشهادات بالتفصيل",
+        "bullet3": "أضف تواقيع رقمية جديدة لتأمين مستنداتك",
+        "bullet4": "يدعم ملفات متعددة مع تنقّل سهل"
+      },
+      "validation": {
+        "title": "التحقق من التواقيع",
+        "text": "عند التحقق من التواقيع، تُظهر الأداة صلاحيتها، ومن وقّع ومتى، وما إذا تم تعديل المستند بعد التوقيع.",
+        "bullet1": "يعرض إن كانت التواقيع صالحة أم لا",
+        "bullet2": "يعرض معلومات الموقّع وتاريخ التوقيع",
+        "bullet3": "يتحقق مما إذا تم تعديل المستند بعد التوقيع",
+        "bullet4": "يمكن استخدام شهادات مخصّصة للتحقق"
+      },
+      "signing": {
+        "title": "إضافة التواقيع",
+        "text": "للتوقيع على PDF تحتاج إلى شهادة رقمية (مثل PEM أو PKCS12 أو JKS). يمكنك جعل التوقيع مرئيًا على المستند أو إبقاءه غير مرئي للأمان فقط.",
+        "bullet1": "يدعم PEM وPKCS12 وJKS وشهادات الخادم",
+        "bullet2": "خيار إظهار/إخفاء التوقيع على PDF",
+        "bullet3": "إضافة السبب والموقع واسم الموقّع",
+        "bullet4": "اختر الصفحة لوضع التواقيع المرئية",
+        "bullet5": "استخدم شهادة الخادم لخيار بسيط 'وقّع مع Stirling-PDF'"
+      }
+    },
+    "certType": {
+      "tooltip": {
+        "header": {
+          "title": "حول أنواع الشهادات"
+        },
+        "what": {
+          "title": "ما هي الشهادة؟",
+          "text": "هو هوية آمنة لتوقيعك تثبت أنك وقّعت. ما لم يُطلب منك التوقيع عبر شهادة، نوصي باستخدام طريقة أخرى آمنة مثل الكتابة أو الرسم أو التحميل."
+        },
+        "which": {
+          "title": "أي خيار أستخدم؟",
+          "text": "اختر التنسيق الذي يطابق ملف شهادتك:",
+          "bullet1": "PKCS#12 (.p12 / .pfx) – ملف واحد مدمج (الأكثر شيوعًا)",
+          "bullet2": "PFX (.pfx) – نسخة Microsoft من PKCS12",
+          "bullet3": "PEM – ملفات .pem منفصلة للمفتاح الخاص والشهادة",
+          "bullet4": "JKS – مخزن مفاتيح .jks لـ Java لبيئات التطوير/CI-CD"
+        },
+        "convert": {
+          "title": "المفتاح غير موجود؟",
+          "text": "حوّل ملفك إلى مخزن مفاتيح Java (.jks) باستخدام keytool، ثم اختر JKS."
+        }
+      }
+    }
   },
   "removeCertSign": {
     "tags": "مصادقة,PEM,P12,رسمي,فك التشفير",
     "title": "إزالة توقيع الشهادة",
     "header": "إزالة الشهادة الرقمية من PDF",
     "selectPDF": "حدد ملف PDF:",
-    "submit": "إزالة التوقيع"
+    "submit": "إزالة التوقيع",
+    "description": "ستزيل هذه الأداة توقيعات الشهادات الرقمية من مستند PDF.",
+    "filenamePrefix": "unsigned",
+    "files": {
+      "placeholder": "حدّد ملف PDF في العرض الرئيسي للبدء"
+    },
+    "error": {
+      "failed": "حدث خطأ أثناء إزالة توقيعات الشهادات."
+    },
+    "results": {
+      "title": "نتائج إزالة الشهادة"
+    }
   },
   "pageLayout": {
     "tags": "دمج,مركب,عرض واحد,تنظيم",
@@ -1023,14 +2073,144 @@
     "addBorder": "إضافة حدود",
     "submit": "إرسال"
   },
+  "bookletImposition": {
+    "tags": "كتيّب,ترتيب,طباعة,تجليد,تواقيع",
+    "title": "ترتيب الكتيّب",
+    "header": "ترتيب الكتيّب",
+    "submit": "إنشاء كتيّب",
+    "spineLocation": {
+      "label": "موضع الكعب",
+      "left": "يسار (قياسي)",
+      "right": "يمين (RTL)"
+    },
+    "doubleSided": {
+      "label": "طباعة على الوجهين",
+      "tooltip": "ينشئ وجهيْن أمامي وخلفي لطباعة كتيّب صحيحة"
+    },
+    "manualDuplex": {
+      "title": "وضع الازدواج اليدوي",
+      "instructions": "للطابعات بدون ازدواجية تلقائية. ستحتاج للتشغيل مرتيْن:"
+    },
+    "duplexPass": {
+      "label": "تمرير الطباعة",
+      "first": "التمرير 1",
+      "second": "التمرير 2",
+      "firstInstructions": "اطبع الوجوه الأمامية → صفّ الأوراق مقلوبة → شغّل مرة أخرى مع التمرير 2",
+      "secondInstructions": "حمّل الرزمة مقلوبة → اطبع الوجوه الخلفية"
+    },
+    "rtlBinding": {
+      "label": "تجليد من اليمين إلى اليسار",
+      "tooltip": "للغة العربية أو العبرية أو اللغات RTL الأخرى"
+    },
+    "addBorder": {
+      "label": "إضافة حدود حول الصفحات",
+      "tooltip": "يضيف حدودًا حول كل مقطع صفحة للمساعدة في القص والمحاذاة"
+    },
+    "addGutter": {
+      "label": "إضافة هامش تجليد",
+      "tooltip": "يضيف مساحة داخلية للتجليد"
+    },
+    "gutterSize": {
+      "label": "حجم الهامش الداخلي (نقاط)"
+    },
+    "flipOnShortEdge": {
+      "label": "قلب على الحافة القصيرة (الازدواجية التلقائية فقط)",
+      "tooltip": "فعّلها للطباعة مزدوجة على الحافة القصيرة (تجاهَلها في الوضع اليدوي)",
+      "manualNote": "غير مطلوب في الوضع اليدوي — ستقلب الرزمة بنفسك"
+    },
+    "advanced": {
+      "toggle": "خيارات متقدمة"
+    },
+    "paperSizeNote": "يُستمد حجم الورق تلقائيًا من صفحتك الأولى.",
+    "tooltip": {
+      "header": {
+        "title": "دليل إنشاء الكتيّب"
+      },
+      "description": {
+        "title": "ما هو ترتيب الكتيّب؟",
+        "text": "ينشئ كتيّبات احترافية بترتيب صفحات صحيح للطباعة. توضع صفحات PDF بمخطط 2-في-صفحة على أوراق أفقية بحيث تُقرأ بالترتيب الصحيح بعد الطيّ والتجليد."
+      },
+      "example": {
+        "title": "مثال: كتيّب من 8 صفحات",
+        "text": "مستندك المكوّن من 8 صفحات يصبح ورقتيْن:",
+        "bullet1": "ورقة 1 أمام: الصفحات 8، 1 | خلف: الصفحات 2، 7",
+        "bullet2": "ورقة 2 أمام: الصفحات 6، 3 | خلف: الصفحات 4، 5",
+        "bullet3": "عند الطيّ والتكديس: تُقرأ 1→2→3→4→5→6→7→8"
+      },
+      "printing": {
+        "title": "كيفية الطباعة والتجميع",
+        "text": "اتبع هذه الخطوات لكتيّبات مثالية:",
+        "bullet1": "اطبع على الوجهين مع 'القلب على الحافة الطويلة'",
+        "bullet2": "صفّ الأوراق بالترتيب، واطوِ إلى النصف",
+        "bullet3": "دبّس أو اجعل التجليد على الكعب المطوي",
+        "bullet4": "للطابعات بحافة قصيرة: فعّل خيار 'القلب على الحافة القصيرة'"
+      },
+      "manualDuplex": {
+        "title": "ازدواج يدوي (طابعات أحادية الوجه)",
+        "text": "للطابعات بدون ازدواج تلقائي:",
+        "bullet1": "أوقف 'الطباعة على الوجهين'",
+        "bullet2": "اختر 'التمرير 1' → اطبع → صفّ الأوراق مقلوبة",
+        "bullet3": "اختر 'التمرير 2' → حمّل الرزمة → اطبع الخلفيات",
+        "bullet4": "اطوِ وجمّع كالمعتاد"
+      },
+      "advanced": {
+        "title": "خيارات متقدمة",
+        "text": "اضبط كتيّبك بدقّة:",
+        "bullet1": "تجليد من اليمين إلى اليسار: للغات RTL",
+        "bullet2": "الحدود: تعرض خطوط القطع",
+        "bullet3": "هامش التجليد: يضيف مساحة للتجليد/التدبيس",
+        "bullet4": "قلب الحافة القصيرة: للطابعات التلقائية فقط"
+      }
+    },
+    "error": {
+      "failed": "حدث خطأ أثناء إنشاء ترتيب الكتيّب."
+    }
+  },
   "scalePages": {
-    "tags": "تغيير الحجم,تعديل,الأبعاد,تكييف",
     "title": "ضبط مقياس الصفحة",
     "header": "ضبط مقياس الصفحة",
     "pageSize": "حجم صفحة المستند.",
     "keepPageSize": "الحجم الأصلي",
     "scaleFactor": "مستوى التكبير (الاقتصاص) للصفحة.",
     "submit": "إرسال"
+  },
+  "adjustPageScale": {
+    "tags": "تغيير الحجم,تعديل,أبعاد,تكييف",
+    "title": "ضبط مقياس الصفحة",
+    "header": "ضبط مقياس الصفحة",
+    "scaleFactor": {
+      "label": "عامل المقياس"
+    },
+    "pageSize": {
+      "label": "حجم الصفحة المستهدف",
+      "keep": "الإبقاء على الحجم الأصلي",
+      "letter": "ليتر",
+      "legal": "ليجال"
+    },
+    "submit": "ضبط مقياس الصفحة",
+    "error": {
+      "failed": "حدث خطأ أثناء ضبط مقياس الصفحة."
+    },
+    "tooltip": {
+      "header": {
+        "title": "نظرة عامة على إعدادات مقياس الصفحة"
+      },
+      "description": {
+        "title": "الوصف",
+        "text": "اضبط حجم محتوى PDF وغيّر أبعاد الصفحة."
+      },
+      "scaleFactor": {
+        "title": "عامل المقياس",
+        "text": "يتحكم في مدى كِبر أو صِغر ظهور المحتوى على الصفحة. يُعاد تحجيم المحتوى ويتم توسيطه — إذا كان أكبر من حجم الصفحة فقد يتم قصّه.",
+        "bullet1": "1.0 = الحجم الأصلي",
+        "bullet2": "0.5 = نصف الحجم (أصغر 50%)",
+        "bullet3": "2.0 = ضعف الحجم (أكبر 200% وقد يُقصّ)"
+      },
+      "pageSize": {
+        "title": "حجم الصفحة المستهدف",
+        "text": "تُحدِّد أبعاد صفحات PDF الناتجة. يحافظ خيار 'الإبقاء على الحجم الأصلي' على الأبعاد الحالية، بينما تُعيد الخيارات الأخرى التحجيم إلى مقاسات ورق قياسية."
+      }
+    }
   },
   "add-page-numbers": {
     "tags": "ترقيم,تسمية,تنظيم,فهرسة"
@@ -1039,16 +2219,66 @@
     "tags": "كشف تلقائي,مبني على الرأس,تنظيم,إعادة تسمية",
     "title": "إعادة تسمية تلقائية",
     "header": "إعادة تسمية PDF تلقائيًا",
-    "submit": "إعادة تسمية تلقائية"
+    "description": "يجد تلقائيًا العنوان من محتوى PDF ويستخدمه كاسم الملف.",
+    "submit": "إعادة تسمية تلقائية",
+    "files": {
+      "placeholder": "حدد ملف PDF في العرض الرئيسي للبدء"
+    },
+    "error": {
+      "failed": "حدث خطأ أثناء إعادة تسمية PDF تلقائيًا."
+    },
+    "results": {
+      "title": "نتائج إعادة التسمية التلقائية"
+    },
+    "tooltip": {
+      "header": {
+        "title": "كيف تعمل إعادة التسمية التلقائية"
+      },
+      "howItWorks": {
+        "title": "إعادة تسمية ذكية",
+        "text": "يجد تلقائيًا العنوان من محتوى PDF ويستخدمه كاسم الملف.",
+        "bullet1": "يبحث عن نص يبدو كعنوان أو ترويسة",
+        "bullet2": "ينشئ اسم ملف نظيفًا وصالحًا من العنوان المُكتشف",
+        "bullet3": "يبقي الاسم الأصلي إذا لم يُعثر على عنوان مناسب"
+      }
+    }
   },
   "adjust-contrast": {
     "tags": "تصحيح الألوان,ضبط,تعديل,تحسين"
   },
   "crop": {
-    "tags": "تقليم,تقليص,تحرير,تشكيل",
     "title": "اقتصاص",
     "header": "اقتصاص PDF",
-    "submit": "إرسال"
+    "submit": "إرسال",
+    "noFileSelected": "حدّد ملف PDF لبدء القص",
+    "preview": {
+      "title": "معاينة منطقة القص"
+    },
+    "reset": "إعادة التعيين إلى كامل PDF",
+    "coordinates": {
+      "title": "الموضع والحجم",
+      "x": "موضع X",
+      "y": "موضع Y",
+      "width": "العرض",
+      "height": "الارتفاع"
+    },
+    "error": {
+      "invalidArea": "منطقة القص تتجاوز حدود PDF",
+      "failed": "فشل قصّ PDF"
+    },
+    "steps": {
+      "selectArea": "تحديد منطقة القص"
+    },
+    "tooltip": {
+      "title": "كيفية قص ملفات PDF",
+      "description": "حدّد المنطقة المراد قصّها من PDF بسحب وتغيير حجم التراكب الأزرق على الصورة المصغّرة.",
+      "drag": "اسحب التراكب لتحريك منطقة القص",
+      "resize": "اسحب مقابض الزوايا والحواف لتغيير الحجم",
+      "precision": "استخدم مدخلات الإحداثيات للتموضع الدقيق"
+    },
+    "results": {
+      "title": "نتائج القص"
+    }
   },
   "autoSplitPDF": {
     "tags": "مبني على QR,فصل,تقسيم المسح الضوئي,تنظيم",
@@ -1106,10 +2336,10 @@
     "credit": "يستخدم WeasyPrint"
   },
   "PDFToMarkdown": {
-    "tags": "markup,web-content,transformation,convert,md",
-    "title": "PDF To Markdown",
-    "header": "PDF To Markdown",
-    "submit": "Convert"
+    "tags": "لغة الترميز,محتوى الويب,تحويل,تحويل",
+    "title": "PDF إلى Markdown",
+    "header": "PDF إلى Markdown",
+    "submit": "تحويل"
   },
   "getPdfInfo": {
     "tags": "معلومات,بيانات,إحصائيات,إحصاءات",
@@ -1131,50 +2361,123 @@
     "downloadJS": "تنزيل جافا سكريبت",
     "submit": "إظهار"
   },
-  "autoRedact": {
-    "tags": "حجب,إخفاء,تسويد,أسود,علامة,مخفي",
-    "title": "حجب تلقائي",
-    "header": "حجب تلقائي",
-    "colorLabel": "اللون",
-    "textsToRedactLabel": "النص المراد حجبه (مفصول بأسطر)",
-    "textsToRedactPlaceholder": "مثال: \\nسري \\nسري للغاية",
-    "useRegexLabel": "استخدام التعبيرات العادية",
-    "wholeWordSearchLabel": "بحث الكلمة الكاملة",
-    "customPaddingLabel": "حشو إضافي مخصص",
-    "convertPDFToImageLabel": "تحويل PDF إلى صورة PDF (يستخدم لإزالة النص خلف المربع)",
-    "submitButton": "إرسال"
-  },
   "redact": {
     "tags": "Redact,Hide,black out,black,marker,hidden,manual",
     "title": "Manual Redaction",
-    "header": "Manual Redaction",
-    "submit": "Redact",
-    "textBasedRedaction": "Text based Redaction",
-    "pageBasedRedaction": "Page-based Redaction",
-    "convertPDFToImageLabel": "Convert PDF to PDF-Image (Used to remove text behind the box)",
-    "pageRedactionNumbers": {
-      "title": "Pages",
-      "placeholder": "(e.g. 1,2,8 or 4,7,12-16 or 2n-1)"
+    "submit": "Manual Redaction",
+    "error": {
+      "failed": "حدث خطأ أثناء توقيع PDF."
     },
-    "redactionColor": {
-      "title": "Redaction Color"
+    "modeSelector": {
+      "title": "طريقة التنقيح",
+      "mode": "الوضع",
+      "automatic": "تلقائي",
+      "automaticDesc": "تنقيح النص بناءً على مصطلحات البحث",
+      "manual": "يدوي",
+      "manualDesc": "انقر واسحب لتنقيح مناطق محددة",
+      "manualComingSoon": "التنقيح اليدوي قريبًا"
     },
-    "export": "Export",
-    "upload": "Upload",
-    "boxRedaction": "Box draw redaction",
-    "zoom": "Zoom",
-    "zoomIn": "Zoom in",
-    "zoomOut": "Zoom out",
-    "nextPage": "Next Page",
-    "previousPage": "Previous Page",
-    "toggleSidebar": "Toggle Sidebar",
-    "showThumbnails": "Show Thumbnails",
-    "showDocumentOutline": "Show Document Outline (double-click to expand/collapse all items)",
-    "showAttatchments": "Show Attachments",
-    "showLayers": "Show Layers (double-click to reset all layers to the default state)",
-    "colourPicker": "Colour Picker",
-    "findCurrentOutlineItem": "Find current outline item",
-    "applyChanges": "Apply Changes"
+    "auto": {
+      "header": "تنقيح تلقائي",
+      "settings": {
+        "title": "إعدادات التنقيح",
+        "advancedTitle": "متقدم"
+      },
+      "colorLabel": "لون الصندوق",
+      "wordsToRedact": {
+        "title": "كلمات للتنقيح",
+        "placeholder": "أدخل كلمة",
+        "add": "إضافة",
+        "examples": "أمثلة: Confidential, Top-Secret"
+      },
+      "useRegexLabel": "استخدام Regex",
+      "wholeWordSearchLabel": "بحث عن كلمة كاملة",
+      "customPaddingLabel": "حشو إضافي مخصّص",
+      "convertPDFToImageLabel": "تحويل PDF إلى PDF-Image"
+    },
+    "tooltip": {
+      "mode": {
+        "header": {
+          "title": "طريقة التنقيح"
+        },
+        "automatic": {
+          "title": "تنقيح تلقائي",
+          "text": "يعثر تلقائيًا على النص المحدد وينقّحه عبر المستند. مثالي لإزالة المعلومات الحساسة المتكررة مثل الأسماء أو العناوين أو إشعارات السرية."
+        },
+        "manual": {
+          "title": "تنقيح يدوي",
+          "text": "انقر واسحب لتحديد مناطق معينة يدويًا لتنقيحها. يمنحك تحكمًا دقيقًا فيما يتم تنقيحه. (قريبًا)"
+        }
+      },
+      "words": {
+        "header": {
+          "title": "كلمات للتنقيح"
+        },
+        "description": {
+          "title": "مطابقة النص",
+          "text": "أدخل كلمات أو عبارات للعثور عليها وتنقيحها في مستندك. سيتم البحث عن كل كلمة بشكل منفصل."
+        },
+        "bullet1": "أضف كلمة واحدة كل مرة",
+        "bullet2": "اضغط Enter أو انقر «أضف أخرى» للإضافة",
+        "bullet3": "انقر × لإزالة الكلمات",
+        "examples": {
+          "title": "أمثلة شائعة",
+          "text": "تشمل الكلمات المعتادة لتنقيحها: بيانات بنكية، عناوين بريد إلكتروني، أو أسماء محددة."
+        }
+      },
+      "advanced": {
+        "header": {
+          "title": "إعدادات التنقيح المتقدمة"
+        },
+        "color": {
+          "title": "لون الصندوق والحشو",
+          "text": "خصّص مظهر صناديق التنقيح. الأسود قياسي، ويمكنك اختيار أي لون. يضيف الحشو مساحة إضافية حول النص المعثور عليه."
+        },
+        "regex": {
+          "title": "استخدام Regex",
+          "text": "فعّل التعابير النمطية للمطابقة المتقدمة. مفيد للعثور على أرقام الهواتف أو رسائل البريد أو الأنماط المعقّدة.",
+          "bullet1": "مثال: \\d{4}-\\d{2}-\\d{2} لمطابقة أي تاريخ بصيغة YYYY-MM-DD",
+          "bullet2": "استخدم بحذر — اختبر جيدًا"
+        },
+        "wholeWord": {
+          "title": "بحث كلمة كاملة",
+          "text": "مطابقة الكلمات الكاملة فقط، وليس المطابقات الجزئية. لن تطابق 'John' كلمة 'Johnson' عند التفعيل."
+        },
+        "convert": {
+          "title": "التحويل إلى PDF-Image",
+          "text": "يحوّل PDF إلى PDF قائم على الصور بعد التنقيح. يضمن إزالة النص خلف صناديق التنقيح تمامًا وعدم إمكانية استعادته."
+        }
+      }
+    },
+    "manual": {
+      "header": "تنقيح يدوي",
+      "textBasedRedaction": "تنقيح قائم على النص",
+      "pageBasedRedaction": "تنقيح حسب الصفحة",
+      "convertPDFToImageLabel": "تحويل PDF إلى PDF-Image (لإزالة النص خلف الصندوق)",
+      "pageRedactionNumbers": {
+        "title": "صفحات",
+        "placeholder": "(مثال: 1,2,8 أو 4,7,12-16 أو 2n-1)"
+      },
+      "redactionColor": {
+        "title": "لون التنقيح"
+      },
+      "export": "تصدير",
+      "upload": "رفع",
+      "boxRedaction": "تنقيح بالرسم بصندوق",
+      "zoom": "تكبير/تصغير",
+      "zoomIn": "تكبير",
+      "zoomOut": "تصغير",
+      "nextPage": "الصفحة التالية",
+      "previousPage": "الصفحة السابقة",
+      "toggleSidebar": "تبديل الشريط الجانبي",
+      "showThumbnails": "إظهار المصغّرات",
+      "showDocumentOutline": "إظهار مخطط المستند (نقر مزدوج لتوسيع/طي جميع العناصر)",
+      "showAttachments": "إظهار المرفقات",
+      "showLayers": "إظهار الطبقات (نقر مزدوج لإعادة كل الطبقات للوضع الافتراضي)",
+      "colourPicker": "منتقي الألوان",
+      "findCurrentOutlineItem": "ابحث عن عنصر المخطط الحالي",
+      "applyChanges": "تطبيق التغييرات"
+    }
   },
   "tableExtraxt": {
     "tags": "CSV,استخراج الجدول,استخراج,تحويل"
@@ -1227,6 +2530,7 @@
     "tags": "ختم, إضافة صورة, صورة وسط, علامة مائية, PDF, تضمين, تخصيص",
     "header": "ختم PDF",
     "title": "ختم PDF",
+    "stampSetup": "إعداد الختم",
     "stampType": "نوع الختم",
     "stampText": "نص الختم",
     "stampImage": "صورة الختم",
@@ -1239,7 +2543,8 @@
     "overrideY": "تجاوز الإحداثي Y",
     "customMargin": "هامش مخصص",
     "customColor": "لون نص مخصص",
-    "submit": "إرسال"
+    "submit": "إرسال",
+    "noStampSelected": "لم يتم اختيار ختم. ارجع إلى الخطوة 1."
   },
   "removeImagePdf": {
     "tags": "إزالة الصورة,عمليات الصفحة,الخلفية,جانب الخادم"
@@ -1248,76 +2553,60 @@
     "tags": "تجزئة، فصول، علامات تبويب، تنظيم"
   },
   "validateSignature": {
-    "tags": "signature,verify,validate,pdf,certificate,digital signature,Validate Signature,Validate certificate",
-    "title": "Validate PDF Signatures",
-    "header": "Validate Digital Signatures",
-    "selectPDF": "Select signed PDF file",
-    "submit": "Validate Signatures",
-    "results": "Validation Results",
+    "tags": "توقيع،تحقق،تصديق،pdf،شهادة،توقيع رقمي،Validate Signature،Validate certificate",
+    "title": "التحقق من تواقيع PDF",
+    "header": "التحقق من التواقيع الرقمية",
+    "selectPDF": "اختر ملف PDF موقّع",
+    "submit": "تحقق من التواقيع",
+    "results": "نتائج التحقق",
     "status": {
-      "_value": "Status",
-      "valid": "Valid",
-      "invalid": "Invalid"
+      "_value": "الحالة",
+      "valid": "صالح",
+      "invalid": "غير صالح"
     },
-    "signer": "Signer",
-    "date": "Date",
-    "reason": "Reason",
-    "location": "Location",
-    "noSignatures": "No digital signatures found in this document",
+    "signer": "الموقّع",
+    "date": "التاريخ",
+    "reason": "السبب",
+    "location": "الموقع",
+    "noSignatures": "لا توجد تواقيع رقمية في هذا المستند",
     "chain": {
-      "invalid": "Certificate chain validation failed - cannot verify signer's identity"
+      "invalid": "فشل التحقق من سلسلة الشهادات - لا يمكن التحقق من هوية الموقّع"
     },
     "trust": {
-      "invalid": "Certificate not in trust store - source cannot be verified"
+      "invalid": "الشهادة غير موجودة في مخزن الثقة - المصدر غير قابل للتحقق"
     },
     "cert": {
-      "expired": "Certificate has expired",
-      "revoked": "Certificate has been revoked",
-      "info": "Certificate Details",
-      "issuer": "Issuer",
-      "subject": "Subject",
-      "serialNumber": "Serial Number",
-      "validFrom": "Valid From",
-      "validUntil": "Valid Until",
-      "algorithm": "Algorithm",
-      "keySize": "Key Size",
-      "version": "Version",
-      "keyUsage": "Key Usage",
-      "selfSigned": "Self-Signed",
-      "bits": "bits"
+      "expired": "الشهادة منتهية الصلاحية",
+      "revoked": "تم إلغاء الشهادة",
+      "info": "تفاصيل الشهادة",
+      "issuer": "الجهة المُصدِرة",
+      "subject": "الموضوع",
+      "serialNumber": "الرقم التسلسلي",
+      "validFrom": "صالح من",
+      "validUntil": "صالح حتى",
+      "algorithm": "الخوارزمية",
+      "keySize": "حجم المفتاح",
+      "version": "الإصدار",
+      "keyUsage": "استخدام المفتاح",
+      "selfSigned": "موقّعة ذاتيًا",
+      "bits": "بت"
     },
     "signature": {
-      "info": "Signature Information",
-      "_value": "Signature",
-      "mathValid": "Signature is mathematically valid BUT:"
+      "info": "معلومات التوقيع",
+      "_value": "التوقيع",
+      "mathValid": "التوقيع صالح رياضيًا لكن:"
     },
-    "selectCustomCert": "Custom Certificate File X.509 (Optional)"
+    "selectCustomCert": "ملف شهادة X.509 مخصص (اختياري)"
   },
-  "replace-color": {
-    "title": "إستبدال-عكس اللون",
-    "header": "استبدال-عكس لون PDF",
-    "selectText": {
-      "1": "خيارات استبدال أو عكس الألوان",
-      "2": "افتراضي(ألوان التباين العالي الافتراضية)",
-      "3": "خصيصة (ألوان شخصية)",
-      "4": "عكس كامل(عكس جميع الألوان)",
-      "5": "خيارات ألوان التباين العالي",
-      "6": "نص أبيض على خلفية سوداء",
-      "7": "نص أسود على خلفية بيضاء",
-      "8": "نص صفرة على خلفية سوداء",
-      "9": "نص أخضر على خلفية سوداء",
-      "10": "اختر لون النص",
-      "11": "اختر لون الخلفية"
-    },
-    "submit": "استبدال"
-  },
-  "replaceColorPdf": {
-    "tags": "استبدال اللون، عمليات الصفحة، الخلفية، جانب الخادم"
+  "replaceColor": {
+    "tags": "استبدال اللون،عمليات الصفحة،الواجهة الخلفية،جهة الخادم"
   },
   "login": {
     "title": "تسجيل الدخول",
     "header": "تسجيل الدخول",
     "signin": "تسجيل الدخول",
+    "signInWith": "تسجيل الدخول بواسطة",
+    "signInAnonymously": "التسجيل كضيف",
     "rememberme": "تذكرني",
     "invalid": "اسم المستخدم أو كلمة المرور غير صالحة.",
     "locked": "تم قفل حسابك.",
@@ -1331,17 +2620,75 @@
     "oauth2AccessDenied": "تم رفض الوصول",
     "oauth2InvalidTokenResponse": "استجابة الرمز المميز غير صالحة",
     "oauth2InvalidIdToken": "رمز الهوية غير صالح",
-    "relyingPartyRegistrationNotFound": "No relying party registration found",
+    "relyingPartyRegistrationNotFound": "لم يتم العثور على تسجيل الطرف المعتمد",
     "userIsDisabled": "تم تعطيل المستخدم، تم حظر تسجيل الدخول حاليًا باستخدام اسم المستخدم هذا. يرجى الاتصال بالمسؤول.",
     "alreadyLoggedIn": "لقد تسجل دخولًا إلى",
     "alreadyLoggedIn2": "أجهزة أخرى. يرجى تسجيل الخروج من الأجهزة وحاول مرة أخرى.",
     "toManySessions": "لديك عدة جلسات نشطة",
-    "logoutMessage": "You have been logged out."
+    "logoutMessage": "تم تسجيل خروجك.",
+    "youAreLoggedIn": "لقد سجّلت الدخول!",
+    "email": "البريد الإلكتروني",
+    "password": "كلمة المرور",
+    "enterEmail": "أدخل بريدك الإلكتروني",
+    "enterPassword": "أدخل كلمة المرور",
+    "loggingIn": "جارٍ تسجيل الدخول...",
+    "signingIn": "جارٍ تسجيل الدخول...",
+    "login": "تسجيل الدخول",
+    "or": "أو",
+    "useMagicLink": "استخدم الرابط السحري بدلًا من ذلك",
+    "enterEmailForMagicLink": "أدخل بريدك الإلكتروني للحصول على رابط سحري",
+    "sending": "جارٍ الإرسال…",
+    "sendMagicLink": "إرسال الرابط السحري",
+    "cancel": "إلغاء",
+    "dontHaveAccount": "لا تملك حسابًا؟ سجّل",
+    "home": "الصفحة الرئيسية",
+    "debug": "تصحيح",
+    "signOut": "تسجيل الخروج",
+    "pleaseEnterBoth": "يرجى إدخال البريد الإلكتروني وكلمة المرور معًا",
+    "pleaseEnterEmail": "يرجى إدخال عنوان بريدك الإلكتروني",
+    "magicLinkSent": "تم إرسال الرابط السحري إلى {{email}}! تفقد بريدك واضغط الرابط لتسجيل الدخول.",
+    "passwordResetSent": "تم إرسال رابط إعادة تعيين كلمة المرور إلى {{email}}! تفقد بريدك واتبع التعليمات.",
+    "failedToSignIn": "فشل تسجيل الدخول بواسطة {{provider}}: {{message}}",
+    "unexpectedError": "خطأ غير متوقع: {{message}}"
+  },
+  "signup": {
+    "title": "إنشاء حساب",
+    "subtitle": "انضم إلى Stirling PDF للبدء",
+    "name": "الاسم",
+    "email": "البريد الإلكتروني",
+    "password": "كلمة المرور",
+    "confirmPassword": "تأكيد كلمة المرور",
+    "enterName": "أدخل اسمك",
+    "enterEmail": "أدخل بريدك الإلكتروني",
+    "enterPassword": "أدخل كلمة المرور",
+    "confirmPasswordPlaceholder": "أكّد كلمة المرور",
+    "or": "أو",
+    "creatingAccount": "جارٍ إنشاء الحساب...",
+    "signUp": "إنشاء حساب",
+    "alreadyHaveAccount": "هل لديك حساب بالفعل؟ سجّل الدخول",
+    "pleaseFillAllFields": "يرجى ملء جميع الحقول",
+    "passwordsDoNotMatch": "كلمتا المرور غير متطابقتين",
+    "passwordTooShort": "يجب أن تتكون كلمة المرور من 6 أحرف على الأقل",
+    "invalidEmail": "يرجى إدخال عنوان بريد إلكتروني صالح",
+    "checkEmailConfirmation": "تحقّق من بريدك الإلكتروني للعثور على رابط التأكيد لإكمال التسجيل.",
+    "accountCreatedSuccessfully": "تم إنشاء الحساب بنجاح! يمكنك الآن تسجيل الدخول.",
+    "unexpectedError": "خطأ غير متوقع: {{message}}"
   },
   "pdfToSinglePage": {
     "title": "PDF إلى صفحة واحدة",
     "header": "PDF إلى صفحة واحدة",
-    "submit": "تحويل إلى صفحة واحدة"
+    "submit": "تحويل إلى صفحة واحدة",
+    "description": "هذه الأداة ستدمج كل صفحات PDF في صفحة واحدة كبيرة. سيبقى العرض كما هو في الصفحات الأصلية، لكن الارتفاع سيكون مجموع ارتفاعات جميع الصفحات.",
+    "filenamePrefix": "single_page",
+    "files": {
+      "placeholder": "حدّد ملف PDF في العرض الرئيسي للبدء"
+    },
+    "error": {
+      "failed": "حدث خطأ أثناء التحويل إلى صفحة واحدة."
+    },
+    "results": {
+      "title": "نتائج الصفحة الواحدة"
+    }
   },
   "pageExtracter": {
     "title": "استخراج الصفحات",
@@ -1355,10 +2702,10 @@
     "selectText": {
       "1": "إزالة إجراءات جافا سكريبت",
       "2": "إزالة الملفات المضمنة",
-      "3": "Remove XMP metadata",
+      "3": "إزالة بيانات XMP الوصفية",
       "4": "إزالة الروابط",
       "5": "إزالة الخطوط",
-      "6": "Remove Document Info Metadata"
+      "6": "إزالة بيانات معلومات المستند"
     },
     "submit": "تنظيف PDF"
   },
@@ -1372,15 +2719,43 @@
   },
   "compress": {
     "title": "ضغط",
+    "desc": "اضغط ملفات PDF لتقليل حجمها.",
     "header": "ضغط ملف PDF",
+    "method": {
+      "title": "طريقة الضغط",
+      "quality": "الجودة",
+      "filesize": "حجم الملف"
+    },
     "credit": "تستخدم هذه الخدمة qpdf لضغط / تحسين PDF.",
     "grayscale": {
       "label": "تطبيق التدرج الرمادي للضغط"
     },
+    "tooltip": {
+      "header": {
+        "title": "نظرة عامة على إعدادات الضغط"
+      },
+      "description": {
+        "title": "الوصف",
+        "text": "الضغط طريقة سهلة لتقليل حجم ملفك. اختر حجم الملف لإدخال حجم مستهدف وسنعدّل الجودة من أجلك. اختر الجودة لضبط قوة الضغط يدويًا."
+      },
+      "qualityAdjustment": {
+        "title": "ضبط الجودة",
+        "text": "اسحب شريط التمرير لضبط قوة الضغط. القيم المنخفضة (1-3) تحافظ على الجودة لكنها تنتج ملفات أكبر. القيم المرتفعة (7-9) تصغّر الملف أكثر لكنها تقلّل وضوح الصور.",
+        "bullet1": "القيم المنخفضة تحافظ على الجودة",
+        "bullet2": "القيم المرتفعة تقلّل حجم الملف"
+      },
+      "grayscale": {
+        "title": "تدرّج رمادي",
+        "text": "حدد هذا الخيار لتحويل جميع الصور إلى الأبيض والأسود، ما قد يقلّل حجم الملف بشكل ملحوظ خاصة لملفات PDF الممسوحة أو الكثيرة الصور."
+      }
+    },
+    "error": {
+      "failed": "حدث خطأ أثناء ضغط PDF."
+    },
     "selectText": {
       "1": {
-        "_value": "Compression Settings",
-        "1": "1-3 PDF compression,</br> 4-6 lite image compression,</br> 7-9 intense image compression Will dramatically reduce image quality"
+        "_value": "إعدادات الضغط",
+        "1": "1-3 ضغط PDF،</br> 4-6 ضغط صور خفيف،</br> 7-9 ضغط صور قوي سيقلّل جودة الصور بشكل كبير"
       },
       "2": "مستوى التحسين:",
       "4": "الوضع التلقائي - يضبط الجودة تلقائيًا للحصول على ملف PDF بالحجم المحدد",
@@ -1389,14 +2764,14 @@
     "submit": "ضغط"
   },
   "decrypt": {
-    "passwordPrompt": "This file is password-protected. Please enter the password:",
-    "cancelled": "Operation cancelled for PDF: {0}",
-    "noPassword": "No password provided for encrypted PDF: {0}",
-    "invalidPassword": "Please try again with the correct password.",
-    "invalidPasswordHeader": "Incorrect password or unsupported encryption for PDF: {0}",
-    "unexpectedError": "There was an error processing the file. Please try again.",
-    "serverError": "Server error while decrypting: {0}",
-    "success": "File decrypted successfully."
+    "passwordPrompt": "هذا الملف محمي بكلمة مرور. يرجى إدخال كلمة المرور:",
+    "cancelled": "تم إلغاء العملية لـ PDF: {0}",
+    "noPassword": "لم تُوفَّر كلمة مرور لملف PDF المشفّر: {0}",
+    "invalidPassword": "يرجى المحاولة مرة أخرى باستخدام كلمة المرور الصحيحة.",
+    "invalidPasswordHeader": "كلمة المرور غير صحيحة أو التشفير غير مدعوم لـ PDF: {0}",
+    "unexpectedError": "حدث خطأ أثناء معالجة الملف. يرجى المحاولة مرة أخرى.",
+    "serverError": "خطأ في الخادم أثناء فك التشفير: {0}",
+    "success": "تم فك تشفير الملف بنجاح."
   },
   "multiTool-advert": {
     "message": "هذه الميزة متوفرة في <a href=\"{0}\">صفحة الأدوات المتعددة</a> لدينا. اطلع عليها للحصول على واجهة مستخدم محسّنة لكل صفحة وميزات إضافية!"
@@ -1472,15 +2847,15 @@
     "button": "المشاركة في الاستطلاع",
     "dontShowAgain": "عدم الإظهار مرة أخرى",
     "meeting": {
-      "1": "If you're using Stirling PDF at work, we'd love to speak to you. We're offering technical support sessions in exchange for a 15 minute user discovery session.",
-      "2": "This is a chance to:",
-      "3": "Get help with deployment, integrations, or troubleshooting",
-      "4": "Provide direct feedback on performance, edge cases, and feature gaps",
-      "5": "Help us refine Stirling PDF for real-world enterprise use",
-      "6": "If you're interested, you can book time with our team directly. (English speaking only)",
-      "7": "Looking forward to digging into your use cases and making Stirling PDF even better!",
-      "notInterested": "Not a business and/or interested in a meeting?",
-      "button": "Book meeting"
+      "1": "إذا كنت تستخدم Stirling PDF في العمل، يسعدنا التحدث معك. نقدّم جلسات دعم تقني مقابل جلسة اكتشاف مستخدم مدتها 15 دقيقة.",
+      "2": "هذه فرصة لـ:",
+      "3": "الحصول على مساعدة في النشر، التكاملات، أو استكشاف الأخطاء",
+      "4": "تقديم ملاحظات مباشرة حول الأداء والحالات الحدّية وثغرات الميزات",
+      "5": "مساعدتنا على تحسين Stirling PDF للاستخدام المؤسسي الواقعي",
+      "6": "إذا كنت مهتمًا، يمكنك حجز وقت مع فريقنا مباشرةً. (اللغة الإنجليزية فقط)",
+      "7": "نتطلع للتعمّق في استخداماتك وجعل Stirling PDF أفضل!",
+      "notInterested": "لست شركة و/أو غير مهتم بالاجتماع؟",
+      "button": "احجز موعدًا"
     }
   },
   "removeImage": {
@@ -1507,55 +2882,561 @@
     "click": "انقر هنا",
     "or": "أو",
     "dragAndDrop": "قم بسحب الملفات وإفلاتها",
-    "dragAndDropPDF": "Drag & Drop PDF file",
-    "dragAndDropImage": "Drag & Drop Image file",
+    "dragAndDropPDF": "اسحب وأفلت ملف PDF",
+    "dragAndDropImage": "اسحب وأفلت ملف صورة",
     "hoveredDragAndDrop": "قم بسحب المفات وإفلاتها هنا",
     "extractPDF": "جاري الاستخراج..."
   },
   "releases": {
-    "footer": "Releases",
-    "title": "Release Notes",
-    "header": "Release Notes",
+    "footer": "الإصدارات",
+    "title": "ملاحظات الإصدار",
+    "header": "ملاحظات الإصدار",
     "current": {
-      "version": "Current Release"
+      "version": "الإصدار الحالي"
     },
-    "note": "Release notes are only available in English"
+    "note": "ملاحظات الإصدارات متاحة باللغة الإنجليزية فقط"
+  },
+  "swagger": {
+    "title": "توثيق API",
+    "header": "توثيق API",
+    "desc": "عرض واختبار نقاط نهاية Stirling PDF API",
+    "tags": "api,documentation,swagger,endpoints,development"
   },
   "cookieBanner": {
     "popUp": {
-      "title": "How we use Cookies",
+      "title": "كيف نستخدم ملفات تعريف الارتباط",
       "description": {
-        "1": "We use cookies and other technologies to make Stirling PDF work better for you—helping us improve our tools and keep building features you'll love.",
+        "1": "نستخدم ملفات تعريف الارتباط وتقنيات أخرى لجعل Stirling PDF يعمل بشكل أفضل لك—نساعدنا على تحسين أدواتنا والاستمرار في بناء ميزات ستحبها.",
         "2": "If you’d rather not, clicking 'No Thanks' will only enable the essential cookies needed to keep things running smoothly."
       },
-      "acceptAllBtn": "Okay",
-      "acceptNecessaryBtn": "No Thanks",
-      "showPreferencesBtn": "Manage preferences"
+      "acceptAllBtn": "حسنًا",
+      "acceptNecessaryBtn": "لا شكرًا",
+      "showPreferencesBtn": "إدارة التفضيلات"
     },
     "preferencesModal": {
-      "title": "Consent Preferences Center",
-      "acceptAllBtn": "Accept all",
-      "acceptNecessaryBtn": "Reject all",
-      "savePreferencesBtn": "Save preferences",
-      "closeIconLabel": "Close modal",
-      "serviceCounterLabel": "Service|Services",
-      "subtitle": "Cookie Usage",
+      "title": "مركز تفضيلات الموافقة",
+      "acceptAllBtn": "قبول الكل",
+      "acceptNecessaryBtn": "رفض الكل",
+      "savePreferencesBtn": "حفظ التفضيلات",
+      "closeIconLabel": "إغلاق النافذة",
+      "serviceCounterLabel": "خدمة|خدمات",
+      "subtitle": "استخدام ملفات تعريف الارتباط",
       "description": {
-        "1": "Stirling PDF uses cookies and similar technologies to enhance your experience and understand how our tools are used. This helps us improve performance, develop the features you care about, and provide ongoing support to our users.",
-        "2": "Stirling PDF cannot—and will never—track or access the content of the documents you use.",
-        "3": "Your privacy and trust are at the core of what we do."
+        "1": "يستخدم Stirling PDF ملفات تعريف الارتباط وتقنيات مشابهة لتحسين تجربتك وفهم كيفية استخدام أدواتنا. يساعدنا ذلك على تحسين الأداء وتطوير الميزات التي تهمك وتقديم دعم مستمر لمستخدمينا.",
+        "2": "لا يمكن لـ Stirling PDF—ولن—يتتبع أو يصل إلى محتوى المستندات التي تستخدمها.",
+        "3": "خصوصيتك وثقتك في صميم ما نقوم به."
       },
       "necessary": {
         "title": {
-          "1": "Strictly Necessary Cookies",
-          "2": "Always Enabled"
+          "1": "ملفات تعريف الارتباط الضرورية للغاية",
+          "2": "مفعّلة دائمًا"
         },
         "description": "These cookies are essential for the website to function properly. They enable core features like setting your privacy preferences, logging in, and filling out forms—which is why they can’t be turned off."
       },
       "analytics": {
-        "title": "Analytics",
-        "description": "These cookies help us understand how our tools are being used, so we can focus on building the features our community values most. Rest assured—Stirling PDF cannot and will never track the content of the documents you work with."
+        "title": "التحليلات",
+        "description": "تساعدنا هذه الملفات على فهم كيفية استخدام أدواتنا، كي نركّز على بناء الميزات الأكثر قيمة لمجتمعنا. كن مطمئنًا—‏Stirling PDF لا يمكنه ولن يتتبع محتوى المستندات التي تعمل عليها."
       }
     }
-  }
+  },
+  "removeMetadata": {
+    "submit": "إزالة البيانات الوصفية"
+  },
+  "sidebar": {
+    "toggle": "تبديل الشريط الجانبي"
+  },
+  "theme": {
+    "toggle": "تبديل السِمة"
+  },
+  "view": {
+    "viewer": "عارض",
+    "pageEditor": "محرر الصفحات",
+    "fileManager": "مدير الملفات"
+  },
+  "pageEditor": {
+    "title": "محرر الصفحات",
+    "save": "حفظ التغييرات",
+    "noPdfLoaded": "لا يوجد PDF محمّل. يرجى رفع PDF لتحريره.",
+    "rotatedLeft": "تم التدوير يسارًا:",
+    "rotatedRight": "تم التدوير يمينًا:",
+    "deleted": "تم الحذف:",
+    "movedLeft": "تم النقل يسارًا:",
+    "movedRight": "تم النقل يمينًا:",
+    "splitAt": "تقسيم عند:",
+    "insertedPageBreak": "إدراج فاصل صفحة عند:",
+    "addFileNotImplemented": "إضافة ملف غير متاحة في العرض التجريبي",
+    "closePdf": "إغلاق PDF",
+    "reset": "إعادة التعيين",
+    "zoomIn": "تكبير",
+    "zoomOut": "تصغير",
+    "fitToWidth": "ملاءمة للعرض",
+    "actualSize": "الحجم الفعلي"
+  },
+  "viewer": {
+    "firstPage": "الصفحة الأولى",
+    "lastPage": "الصفحة الأخيرة",
+    "previousPage": "الصفحة السابقة",
+    "nextPage": "الصفحة التالية",
+    "zoomIn": "تكبير",
+    "zoomOut": "تصغير",
+    "singlePageView": "عرض صفحة واحدة",
+    "dualPageView": "عرض صفحتين"
+  },
+  "rightRail": {
+    "closeSelected": "إغلاق الصفحات المحددة",
+    "selectAll": "تحديد الكل",
+    "deselectAll": "إلغاء تحديد الكل",
+    "selectByNumber": "تحديد حسب أرقام الصفحات",
+    "deleteSelected": "حذف الصفحات المحددة",
+    "closePdf": "إغلاق PDF",
+    "exportAll": "تصدير PDF",
+    "downloadSelected": "تنزيل الملفات المحددة",
+    "downloadAll": "تنزيل الكل",
+    "toggleTheme": "تبديل السِمة",
+    "language": "اللغة",
+    "search": "بحث في PDF",
+    "panMode": "وضع السحب",
+    "rotateLeft": "تدوير لليسار",
+    "rotateRight": "تدوير لليمين",
+    "toggleSidebar": "تبديل الشريط الجانبي"
+  },
+  "search": {
+    "title": "بحث PDF",
+    "placeholder": "أدخل مصطلح البحث..."
+  },
+  "guestBanner": {
+    "title": "أنت تستخدم Stirling PDF كضيف!",
+    "message": "أنشئ حسابًا مجانيًا لحفظ عملك، والوصول إلى مزيد من الميزات، ودعم المشروع.",
+    "dismiss": "إخفاء الشريط",
+    "signUp": "سجل مجانًا"
+  },
+  "toolPicker": {
+    "searchPlaceholder": "ابحث عن الأدوات...",
+    "noToolsFound": "لم يتم العثور على أدوات",
+    "allTools": "كل الأدوات",
+    "quickAccess": "وصول سريع",
+    "categories": {
+      "standardTools": "أدوات قياسية",
+      "advancedTools": "أدوات متقدمة",
+      "recommendedTools": "أدوات موصى بها"
+    },
+    "subcategories": {
+      "signing": "توقيع",
+      "documentSecurity": "أمان المستند",
+      "verification": "تحقق",
+      "documentReview": "مراجعة المستند",
+      "pageFormatting": "تنسيق الصفحات",
+      "extraction": "استخراج",
+      "removal": "إزالة",
+      "automation": "أتمتة",
+      "general": "عام",
+      "advancedFormatting": "تنسيق متقدم",
+      "developerTools": "أدوات المطوّر"
+    }
+  },
+  "quickAccess": {
+    "read": "قراءة",
+    "sign": "توقيع",
+    "automate": "أتمتة",
+    "files": "الملفات",
+    "activity": "النشاط",
+    "config": "الإعداد",
+    "allTools": "كل الأدوات"
+  },
+  "fileUpload": {
+    "selectFile": "حدد ملفًا",
+    "selectFiles": "حدد ملفات",
+    "selectPdfToView": "حدد ملف PDF لعرضه",
+    "selectPdfToEdit": "حدد ملف PDF لتحريره",
+    "chooseFromStorage": "اختر ملفًا من التخزين أو ارفع PDF جديدًا",
+    "chooseFromStorageMultiple": "اختر ملفات من التخزين أو ارفع ملفات PDF جديدة",
+    "loadFromStorage": "التحميل من التخزين",
+    "filesAvailable": "ملفات متاحة",
+    "loading": "جارٍ التحميل...",
+    "or": "أو",
+    "dropFileHere": "أسقط الملف هنا أو انقر للتحميل",
+    "dropFilesHere": "أسقط الملفات هنا أو انقر زر التحميل",
+    "pdfFilesOnly": "ملفات PDF فقط",
+    "supportedFileTypes": "أنواع الملفات المدعومة",
+    "upload": "تحميل",
+    "uploadFile": "تحميل ملف",
+    "uploadFiles": "تحميل ملفات",
+    "noFilesInStorage": "لا توجد ملفات في التخزين. ارفع بعض الملفات أولًا.",
+    "selectFromStorage": "الاختيار من التخزين",
+    "backToTools": "عودة إلى الأدوات",
+    "addFiles": "إضافة ملفات",
+    "dragFilesInOrClick": "اسحب الملفات أو انقر \"إضافة ملفات\" للتصفّح"
+  },
+  "fileManager": {
+    "title": "تحميل ملفات PDF",
+    "subtitle": "أضف ملفاتك إلى التخزين للوصول إليها بسهولة عبر الأدوات",
+    "filesSelected": "ملفات محددة",
+    "clearSelection": "مسح التحديد",
+    "openInFileEditor": "فتح في محرر الملفات",
+    "uploadError": "فشل تحميل بعض الملفات.",
+    "failedToOpen": "فشل فتح الملف. ربما تمت إزالته من التخزين.",
+    "failedToLoad": "فشل تحميل الملف إلى المجموعة النشطة.",
+    "storageCleared": "مسح المتصفح التخزين. تمت إزالة الملفات. يرجى إعادة الرفع.",
+    "clearAll": "مسح الكل",
+    "reloadFiles": "إعادة تحميل الملفات",
+    "dragDrop": "اسحب وأفلت الملفات هنا",
+    "clickToUpload": "انقر لتحميل الملفات",
+    "selectedFiles": "الملفات المحددة",
+    "storage": "التخزين",
+    "filesStored": "ملفات مخزّنة",
+    "storageError": "حدث خطأ في التخزين",
+    "storageLow": "سعة التخزين توشك على النفاد. فكّر في إزالة الملفات القديمة.",
+    "supportMessage": "مدعوم بتخزين قاعدة بيانات المتصفح لسعة غير محدودة",
+    "noFileSelected": "لا توجد ملفات محددة",
+    "showHistory": "عرض السجلّ",
+    "hideHistory": "إخفاء السجلّ",
+    "fileHistory": "سجلّ الملف",
+    "loadingHistory": "جارٍ تحميل السجلّ...",
+    "lastModified": "آخر تعديل",
+    "toolChain": "الأدوات المطبّقة",
+    "restore": "استعادة",
+    "searchFiles": "ابحث في الملفات...",
+    "recent": "الأخيرة",
+    "localFiles": "الملفات المحلية",
+    "googleDrive": "Google Drive",
+    "googleDriveShort": "Drive",
+    "myFiles": "ملفاتي",
+    "noRecentFiles": "لم يتم العثور على ملفات حديثة",
+    "dropFilesHint": "أسقط الملفات هنا للتحميل",
+    "googleDriveNotAvailable": "تكامل Google Drive غير متاح",
+    "openFiles": "فتح ملفات",
+    "openFile": "فتح ملف",
+    "details": "تفاصيل الملف",
+    "fileName": "الاسم",
+    "fileFormat": "الصيغة",
+    "fileSize": "الحجم",
+    "fileVersion": "الإصدار",
+    "totalSelected": "الإجمالي المحدد",
+    "dropFilesHere": "أسقط الملفات هنا",
+    "selectAll": "تحديد الكل",
+    "deselectAll": "إلغاء تحديد الكل",
+    "deleteSelected": "حذف المحدد",
+    "downloadSelected": "تنزيل المحدّد",
+    "selectedCount": "{{count}} محدد",
+    "download": "تنزيل",
+    "delete": "حذف",
+    "unsupported": "غير مدعوم"
+  },
+  "storage": {
+    "temporaryNotice": "تُخزَّن الملفات مؤقتًا في متصفحك وقد تُمسح تلقائيًا",
+    "storageLimit": "حدّ التخزين",
+    "storageUsed": "التخزين المؤقت المستخدم",
+    "storageFull": "التخزين يوشك على الامتلاء. فكّر في إزالة بعض الملفات.",
+    "fileTooLarge": "الملف كبير جدًا. الحد الأقصى للحجم لكل ملف هو",
+    "storageQuotaExceeded": "تم تجاوز حصة التخزين. يرجى إزالة بعض الملفات قبل رفع المزيد.",
+    "approximateSize": "الحجم التقريبي"
+  },
+  "sanitize": {
+    "title": "تنقية",
+    "desc": "إزالة العناصر المحتملة الضرر من ملفات PDF.",
+    "submit": "تنظيف PDF",
+    "completed": "اكتملت عملية التنقية بنجاح",
+    "error.generic": "فشلت عملية التنقية",
+    "error.failed": "حدث خطأ أثناء تنقية PDF.",
+    "filenamePrefix": "sanitised",
+    "sanitizationResults": "نتائج التنقية",
+    "steps": {
+      "files": "الملفات",
+      "settings": "إعدادات",
+      "results": "النتائج"
+    },
+    "files": {
+      "placeholder": "حدّد ملف PDF في العرض الرئيسي للبدء"
+    },
+    "options": {
+      "title": "خيارات التنقية",
+      "note": "اختر العناصر التي تريد إزالتها من PDF. يجب اختيار خيار واحد على الأقل.",
+      "removeJavaScript.desc": "إزالة إجراءات JavaScript والسكريبتات من PDF",
+      "removeEmbeddedFiles.desc": "إزالة أي ملفات مضمّنة داخل PDF",
+      "removeXMPMetadata.desc": "إزالة بيانات XMP الوصفية من PDF",
+      "removeMetadata.desc": "إزالة معلومات بيانات المستند (العنوان، المؤلف، إلخ)",
+      "removeLinks.desc": "إزالة الروابط الخارجية وإجراءات التشغيل من PDF",
+      "removeFonts.desc": "إزالة الخطوط المضمّنة من PDF"
+    }
+  },
+  "addPassword": {
+    "title": "إضافة كلمة مرور",
+    "desc": "قم بتشفير مستند PDF بكلمة مرور.",
+    "completed": "تم تطبيق حماية كلمة المرور",
+    "submit": "تشفير",
+    "filenamePrefix": "مشفر",
+    "error": {
+      "failed": "حدث خطأ أثناء تشفير PDF."
+    },
+    "passwords": {
+      "stepTitle": "كلمات المرور والتشفير",
+      "completed": "تم ضبط كلمات المرور",
+      "user": {
+        "label": "كلمة مرور المستخدم",
+        "placeholder": "أدخل كلمة مرور المستخدم"
+      },
+      "owner": {
+        "label": "كلمة مرور المالك",
+        "placeholder": "أدخل كلمة مرور المالك"
+      }
+    },
+    "encryption": {
+      "keyLength": {
+        "label": "طول مفتاح التشفير",
+        "40bit": "40-بت (منخفض)",
+        "128bit": "128-بت (قياسي)",
+        "256bit": "256-بت (عالي)"
+      }
+    },
+    "results": {
+      "title": "ملفات PDF المشفرة"
+    },
+    "tooltip": {
+      "header": {
+        "title": "نظرة عامة على حماية كلمة المرور"
+      },
+      "passwords": {
+        "title": "أنواع كلمات المرور",
+        "text": "تقيّد كلمة مرور المستخدم فتح المستند، بينما تتحكم كلمة مرور المالك فيما يمكن فعله بالمستند بعد فتحه. يمكنك تعيين كليهما أو واحدٍ منهما.",
+        "bullet1": "كلمة مرور المستخدم: مطلوبة لفتح ملف PDF",
+        "bullet2": "كلمة مرور المالك: تتحكم في أذونات المستند (قد لا تدعمها جميع عارضات PDF)"
+      },
+      "encryption": {
+        "title": "مستويات التشفير",
+        "text": "توفّر مستويات التشفير الأعلى أمانًا أفضل، لكنها قد لا تكون مدعومة من عارضات PDF الأقدم.",
+        "bullet1": "40-بت: أمان أساسي، متوافق مع العارضين الأقدم",
+        "bullet2": "128-بت: أمان قياسي، مدعوم على نطاق واسع",
+        "bullet3": "256-بت: أقصى أمان، يتطلب عارضين حديثين"
+      },
+      "permissions": {
+        "title": "تغيير الأذونات",
+        "text": "تتحكم هذه الأذونات فيما يمكن للمستخدمين فعله في PDF. تكون أكثر فاعلية عند دمجها مع كلمة مرور المالك."
+      }
+    }
+  },
+  "changePermissions": {
+    "title": "تغيير الأذونات",
+    "desc": "غيّر قيود المستند وأذوناته.",
+    "completed": "تم تغيير الأذونات",
+    "submit": "تغيير الأذونات",
+    "error": {
+      "failed": "حدث خطأ أثناء تغيير أذونات PDF."
+    },
+    "permissions": {
+      "preventAssembly": {
+        "label": "منع تجميع المستند"
+      },
+      "preventExtractContent": {
+        "label": "منع استخراج المحتوى"
+      },
+      "preventExtractForAccessibility": {
+        "label": "منع الاستخراج للوصول"
+      },
+      "preventFillInForm": {
+        "label": "منع ملء النموذج"
+      },
+      "preventModify": {
+        "label": "منع التعديل"
+      },
+      "preventModifyAnnotations": {
+        "label": "منع تعديل التعليق التوضيحي"
+      },
+      "preventPrinting": {
+        "label": "منع الطباعة"
+      },
+      "preventPrintingFaithful": {
+        "label": "منع طباعة التنسيقات المختلفة"
+      }
+    },
+    "results": {
+      "title": "ملفات PDF المعدَّلة"
+    },
+    "tooltip": {
+      "header": {
+        "title": "تغيير الأذونات"
+      },
+      "description": {
+        "text": "يغيّر أذونات المستند، مما يسمح/يمنع الوصول إلى ميزات مختلفة في قارئات PDF."
+      },
+      "warning": {
+        "text": "لجعل هذه الأذونات غير قابلة للتغيير، استخدم أداة إضافة كلمة مرور لتعيين كلمة مرور للمالك."
+      }
+    }
+  },
+  "removePassword": {
+    "title": "إزالة كلمة المرور",
+    "desc": "إزالة الحماية بكلمة مرور من مستند PDF الخاص بك.",
+    "tags": "تأمين,فك التشفير,أمان,إزالة كلمة المرور,حذف كلمة المرور",
+    "password": {
+      "stepTitle": "إزالة كلمة المرور",
+      "label": "كلمة المرور الحالية",
+      "placeholder": "أدخل كلمة المرور الحالية",
+      "completed": "تم إعداد كلمة المرور"
+    },
+    "filenamePrefix": "decrypted",
+    "error": {
+      "failed": "حدث خطأ أثناء إزالة كلمة المرور من PDF."
+    },
+    "tooltip": {
+      "description": "إزالة حماية كلمة المرور تتطلب الكلمة المستخدمة لتشفير PDF. سيؤدي ذلك إلى فك تشفير المستند، مما يجعله متاحًا بدون كلمة مرور."
+    },
+    "submit": "إزالة",
+    "results": {
+      "title": "ملفات PDF مُفككة التشفير"
+    }
+  },
+  "automate": {
+    "title": "أتمتة",
+    "desc": "ابنِ مهامًا متعددة الخطوات عبر ربط إجراءات PDF. مثالي للمهام المتكررة.",
+    "invalidStep": "خطوة غير صالحة",
+    "files": {
+      "placeholder": "اختر ملفات لمعالجتها بهذه الأتمتة"
+    },
+    "selection": {
+      "title": "اختيار الأتمتة",
+      "saved": {
+        "title": "المحفوظ"
+      },
+      "createNew": {
+        "title": "إنشاء أتمتة جديدة"
+      },
+      "suggested": {
+        "title": "المقترح"
+      }
+    },
+    "creation": {
+      "createTitle": "إنشاء أتمتة",
+      "editTitle": "تحرير الأتمتة",
+      "intro": "تشغّل الأتمتات الأدوات بالتتابع. للبدء، أضف الأدوات بالترتيب الذي تريد تشغيلها.",
+      "name": {
+        "label": "اسم الأتمتة",
+        "placeholder": "أتمتتي"
+      },
+      "description": {
+        "label": "الوصف (اختياري)",
+        "placeholder": "صِف ما تفعله هذه الأتمتة..."
+      },
+      "tools": {
+        "selectTool": "اختر أداة...",
+        "selected": "الأدوات المحددة",
+        "remove": "إزالة الأداة",
+        "configure": "تهيئة الأداة",
+        "notConfigured": "! غير مُهيأ",
+        "addTool": "إضافة أداة",
+        "add": "أضف أداة..."
+      },
+      "save": "حفظ الأتمتة",
+      "unsavedChanges": {
+        "title": "تغييرات غير محفوظة",
+        "message": "لديك تغييرات غير محفوظة. هل أنت متأكد أنك تريد الرجوع؟ ستُفقد كل التغييرات.",
+        "cancel": "إلغاء",
+        "confirm": "عودة"
+      },
+      "icon": {
+        "label": "الأيقونة"
+      }
+    },
+    "run": {
+      "title": "تشغيل الأتمتة"
+    },
+    "sequence": {
+      "unnamed": "أتمتة بدون اسم",
+      "steps": "{{count}} خطوة",
+      "running": "جارٍ تشغيل الأتمتة...",
+      "run": "تشغيل الأتمتة",
+      "finish": "إنهاء"
+    },
+    "reviewTitle": "نتائج الأتمتة",
+    "config": {
+      "loading": "جارٍ تحميل إعدادات الأداة...",
+      "noSettings": "لا تحتوي هذه الأداة على إعدادات قابلة للضبط.",
+      "title": "تهيئة {{toolName}}",
+      "description": "اضبط الإعدادات لهذه الأداة. ستُطبَّق عند تشغيل الأتمتة.",
+      "cancel": "إلغاء",
+      "save": "حفظ الإعدادات"
+    },
+    "copyToSaved": "نسخ إلى المحفوظ"
+  },
+  "automation": {
+    "suggested": {
+      "securePdfIngestion": "استيعاب PDF الآمن",
+      "securePdfIngestionDesc": "سير عمل شامل لمعالجة PDF ينظّف المستندات، ويطبّق OCR مع تنظيف، ويحوّل إلى PDF/A للأرشفة طويلة الأمد، ويُحسّن حجم الملف.",
+      "emailPreparation": "تحضير البريد الإلكتروني",
+      "emailPreparationDesc": "تحسّن PDFs للتوزيع عبر البريد الإلكتروني بضغط الملفات، وتقسيم المستندات الكبيرة إلى أجزاء 20MB للتوافق مع البريد، وإزالة البيانات الوصفية للخصوصية.",
+      "secureWorkflow": "سير عمل الأمان",
+      "secureWorkflowDesc": "يؤمّن مستندات PDF بإزالة المحتوى المحتمل الضرر مثل JavaScript والملفات المضمّنة، ثم يضيف حماية بكلمة مرور لمنع الوصول غير المصرح به. كلمة المرور الافتراضية 'password'.",
+      "processImages": "معالجة الصور",
+      "processImagesDesc": "تحوّل ملفات صور متعددة إلى ملف PDF واحد، ثم تطبّق تقنية OCR لاستخراج نص قابل للبحث من الصور."
+    }
+  },
+  "common": {
+    "copy": "نسخ",
+    "copied": "تم النسخ!",
+    "refresh": "تحديث",
+    "retry": "إعادة المحاولة",
+    "remaining": "متبقّي",
+    "used": "مستخدم",
+    "available": "متاح",
+    "cancel": "إلغاء"
+  },
+  "config": {
+    "account": {
+      "overview": {
+        "title": "إعدادات الحساب",
+        "manageAccountPreferences": "إدارة تفضيلات الحساب",
+        "guestDescription": "أنت مسجّل كضيف. فكّر في ترقية حسابك أعلاه."
+      },
+      "upgrade": {
+        "title": "ترقية حساب الضيف",
+        "description": "اربط حسابك للحفاظ على تاريخك والوصول إلى مزيد من الميزات!",
+        "socialLogin": "الترقية بحساب اجتماعي",
+        "linkWith": "ربط مع",
+        "emailPassword": "أو أدخل بريدك وكلمة المرور",
+        "email": "البريد الإلكتروني",
+        "emailPlaceholder": "أدخل بريدك الإلكتروني",
+        "password": "كلمة المرور (اختياري)",
+        "passwordPlaceholder": "عيّن كلمة مرور",
+        "passwordNote": "اتركه فارغًا لاستخدام التحقق عبر البريد فقط",
+        "upgradeButton": "ترقية الحساب"
+      }
+    },
+    "apiKeys": {
+      "description": "مفتاح API للوصول إلى مجموعة أدوات Stirling الخاصة بـ PDF. انسخه إلى مشروعك أو حدّثه لإنشاء مفتاح جديد.",
+      "publicKeyAriaLabel": "مفتاح API عام",
+      "copyKeyAriaLabel": "نسخ مفتاح API",
+      "refreshAriaLabel": "تحديث مفتاح API",
+      "includedCredits": "الأرصدة المشمولة",
+      "purchasedCredits": "أرصدة مشتراة",
+      "totalCredits": "إجمالي الأرصدة",
+      "chartAriaLabel": "استخدام الأرصدة: شُمِل {{includedUsed}} من {{includedTotal}}، المُشتَرى {{purchasedUsed}} من {{purchasedTotal}}",
+      "nextReset": "إعادة التعيين التالية",
+      "lastApiUse": "آخر استخدام لـ API",
+      "overlayMessage": "أنشئ مفتاحًا لعرض الأرصدة والأرصدة المتاحة",
+      "label": "مفتاح API",
+      "guestInfo": "لا يتلقى المستخدمون الضيوف مفاتيح API. أنشئ حسابًا للحصول على مفتاح API لاستخدامه في تطبيقاتك.",
+      "goToAccount": "الانتقال إلى الحساب",
+      "refreshModal": {
+        "title": "تحديث مفاتيح API",
+        "warning": "⚠️ تحذير: سيؤدي هذا الإجراء إلى إنشاء مفاتيح API جديدة وجعل المفاتيح السابقة غير صالحة.",
+        "impact": "أي تطبيقات أو خدمات تستخدم هذه المفاتيح ستتوقف عن العمل حتى تحدّثها بالمفاتيح الجديدة.",
+        "confirmPrompt": "هل أنت متأكد أنك تريد المتابعة؟",
+        "confirmCta": "تحديث المفاتيح"
+      },
+      "generateError": "تعذّر علينا إنشاء مفتاح API."
+    }
+  },
+  "AddAttachmentsRequest": {
+    "attachments": "اختر المرفقات",
+    "info": "اختر ملفات لإرفاقها بملف PDF الخاص بك. سيتم تضمين هذه الملفات وإتاحتها عبر لوحة مرفقات PDF.",
+    "selectFiles": "اختر ملفات للإرفاق",
+    "placeholder": "اختر ملفات...",
+    "addMoreFiles": "أضف مزيدًا من الملفات...",
+    "selectedFiles": "الملفات المحددة",
+    "submit": "إضافة المرفقات",
+    "results": {
+      "title": "نتائج المرفقات"
+    }
+  },
+  "termsAndConditions": "الشروط والأحكام",
+  "logOut": "تسجيل الخروج"
 }

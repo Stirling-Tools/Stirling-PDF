@@ -1,15 +1,21 @@
 /**
- * IndexedDB File Storage Service
- * Provides high-capacity file storage for PDF processing
+ * Stirling File Storage Service
+ * Single-table architecture with typed query methods
+ * Forces correct usage patterns through service API design
  */
 
-export interface StoredFile {
-  id: string;
-  name: string;
-  type: string;
-  size: number;
-  lastModified: number;
+import { FileId, BaseFileMetadata } from '../types/file';
+import { StirlingFile, StirlingFileStub, createStirlingFile } from '../types/fileContext';
+import { indexedDBManager, DATABASE_CONFIGS } from './indexedDBManager';
+
+/**
+ * Storage record - single source of truth
+ * Contains all data needed for both StirlingFile and StirlingFileStub
+ */
+export interface StoredStirlingFileRecord extends BaseFileMetadata {
   data: ArrayBuffer;
+  fileId: FileId; // Matches runtime StirlingFile.fileId exactly
+  quickKey: string; // Matches runtime StirlingFile.quickKey exactly
   thumbnail?: string;
   url?: string; // For compatibility with existing components
 }
@@ -22,107 +28,60 @@ export interface StorageStats {
 }
 
 class FileStorageService {
-  private dbName = 'stirling-pdf-files';
-  private dbVersion = 2; // Increment version to force schema update
-  private storeName = 'files';
-  private db: IDBDatabase | null = null;
-  private initPromise: Promise<void> | null = null;
+  private readonly dbConfig = DATABASE_CONFIGS.FILES;
+  private readonly storeName = 'files';
 
   /**
-   * Initialize the IndexedDB database (singleton pattern)
+   * Get database connection using centralized manager
    */
-  async init(): Promise<void> {
-    if (this.db) {
-      return Promise.resolve();
-    }
-    
-    if (this.initPromise) {
-      return this.initPromise;
-    }
-    
-    this.initPromise = new Promise((resolve, reject) => {
-      const request = indexedDB.open(this.dbName, this.dbVersion);
-
-      request.onerror = () => {
-        this.initPromise = null;
-        reject(request.error);
-      };
-      
-      request.onsuccess = () => {
-        this.db = request.result;
-        console.log('IndexedDB connection established');
-        resolve();
-      };
-
-      request.onupgradeneeded = (event) => {
-        const db = (event.target as IDBOpenDBRequest).result;
-        const oldVersion = (event as any).oldVersion;
-        
-        console.log('IndexedDB upgrade needed from version', oldVersion, 'to', this.dbVersion);
-        
-        // Only recreate object store if it doesn't exist or if upgrading from version < 2
-        if (!db.objectStoreNames.contains(this.storeName)) {
-          const store = db.createObjectStore(this.storeName, { keyPath: 'id' });
-          store.createIndex('name', 'name', { unique: false });
-          store.createIndex('lastModified', 'lastModified', { unique: false });
-          console.log('IndexedDB object store created with keyPath: id');
-        } else if (oldVersion < 2) {
-          // Only delete and recreate if upgrading from version 1 to 2
-          db.deleteObjectStore(this.storeName);
-          const store = db.createObjectStore(this.storeName, { keyPath: 'id' });
-          store.createIndex('name', 'name', { unique: false });
-          store.createIndex('lastModified', 'lastModified', { unique: false });
-          console.log('IndexedDB object store recreated with keyPath: id (version upgrade)');
-        }
-      };
-    });
-    
-    return this.initPromise;
+  private async getDatabase(): Promise<IDBDatabase> {
+    return indexedDBManager.openDatabase(this.dbConfig);
   }
 
   /**
-   * Store a file in IndexedDB
+   * Store a StirlingFile with its metadata from StirlingFileStub
    */
-  async storeFile(file: File, thumbnail?: string): Promise<StoredFile> {
-    if (!this.db) await this.init();
+  async storeStirlingFile(stirlingFile: StirlingFile, stub: StirlingFileStub): Promise<void> {
+    const db = await this.getDatabase();
+    const arrayBuffer = await stirlingFile.arrayBuffer();
 
-    const id = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    const arrayBuffer = await file.arrayBuffer();
-    
-    const storedFile: StoredFile = {
-      id,
-      name: file.name,
-      type: file.type,
-      size: file.size,
-      lastModified: file.lastModified,
+    const record: StoredStirlingFileRecord = {
+      id: stirlingFile.fileId,
+      fileId: stirlingFile.fileId, // Explicit field for clarity
+      quickKey: stirlingFile.quickKey,
+      name: stirlingFile.name,
+      type: stirlingFile.type,
+      size: stirlingFile.size,
+      lastModified: stirlingFile.lastModified,
       data: arrayBuffer,
-      thumbnail
+      thumbnail: stub.thumbnailUrl,
+      isLeaf: stub.isLeaf ?? true,
+
+      // History data from stub
+      versionNumber: stub.versionNumber ?? 1,
+      originalFileId: stub.originalFileId ?? stirlingFile.fileId,
+      parentFileId: stub.parentFileId ?? undefined,
+      toolHistory: stub.toolHistory ?? []
     };
 
     return new Promise((resolve, reject) => {
       try {
-        const transaction = this.db!.transaction([this.storeName], 'readwrite');
+        // Verify store exists before creating transaction
+        if (!db.objectStoreNames.contains(this.storeName)) {
+          throw new Error(`Object store '${this.storeName}' not found. Available stores: ${Array.from(db.objectStoreNames).join(', ')}`);
+        }
+
+        const transaction = db.transaction([this.storeName], 'readwrite');
         const store = transaction.objectStore(this.storeName);
-        
-        // Debug logging
-        console.log('Object store keyPath:', store.keyPath);
-        console.log('Storing file:', { 
-          id: storedFile.id, 
-          name: storedFile.name, 
-          hasData: !!storedFile.data,
-          dataSize: storedFile.data.byteLength 
-        });
-        
-        const request = store.add(storedFile);
+
+        const request = store.add(record);
 
         request.onerror = () => {
           console.error('IndexedDB add error:', request.error);
-          console.error('Failed object:', storedFile);
           reject(request.error);
         };
         request.onsuccess = () => {
-          console.log('File stored successfully with ID:', storedFile.id);
-          resolve(storedFile);
+          resolve();
         };
       } catch (error) {
         console.error('Transaction error:', error);
@@ -132,91 +91,181 @@ class FileStorageService {
   }
 
   /**
-   * Retrieve a file from IndexedDB
+   * Get StirlingFile with full data - for loading into workbench
    */
-  async getFile(id: string): Promise<StoredFile | null> {
-    if (!this.db) await this.init();
+  async getStirlingFile(id: FileId): Promise<StirlingFile | null> {
+    const db = await this.getDatabase();
 
     return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction([this.storeName], 'readonly');
+      const transaction = db.transaction([this.storeName], 'readonly');
       const store = transaction.objectStore(this.storeName);
       const request = store.get(id);
 
       request.onerror = () => reject(request.error);
-      request.onsuccess = () => resolve(request.result || null);
-    });
-  }
-
-  /**
-   * Get all stored files (WARNING: loads all data into memory)
-   */
-  async getAllFiles(): Promise<StoredFile[]> {
-    if (!this.db) await this.init();
-
-    return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction([this.storeName], 'readonly');
-      const store = transaction.objectStore(this.storeName);
-      const request = store.getAll();
-
-      request.onerror = () => reject(request.error);
       request.onsuccess = () => {
-        // Filter out null/corrupted entries
-        const files = request.result.filter(file => 
-          file && 
-          file.data && 
-          file.name && 
-          typeof file.size === 'number'
-        );
-        resolve(files);
+        const record = request.result as StoredStirlingFileRecord | undefined;
+        if (!record) {
+          resolve(null);
+          return;
+        }
+
+        // Create File from stored data
+        const blob = new Blob([record.data], { type: record.type });
+        const file = new File([blob], record.name, {
+          type: record.type,
+          lastModified: record.lastModified
+        });
+
+        // Convert to StirlingFile with preserved IDs
+        const stirlingFile = createStirlingFile(file, record.fileId);
+        resolve(stirlingFile);
       };
     });
   }
 
   /**
-   * Get metadata of all stored files (without loading data into memory)
+   * Get multiple StirlingFiles - for batch loading
    */
-  async getAllFileMetadata(): Promise<Omit<StoredFile, 'data'>[]> {
-    if (!this.db) await this.init();
+  async getStirlingFiles(ids: FileId[]): Promise<StirlingFile[]> {
+    const results = await Promise.all(ids.map(id => this.getStirlingFile(id)));
+    return results.filter((file): file is StirlingFile => file !== null);
+  }
+
+  /**
+   * Get StirlingFileStub (metadata only) - for UI browsing
+   */
+  async getStirlingFileStub(id: FileId): Promise<StirlingFileStub | null> {
+    const db = await this.getDatabase();
 
     return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction([this.storeName], 'readonly');
+      const transaction = db.transaction([this.storeName], 'readonly');
+      const store = transaction.objectStore(this.storeName);
+      const request = store.get(id);
+
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => {
+        const record = request.result as StoredStirlingFileRecord | undefined;
+        if (!record) {
+          resolve(null);
+          return;
+        }
+
+        // Create StirlingFileStub from metadata (no file data)
+        const stub: StirlingFileStub = {
+          id: record.id,
+          name: record.name,
+          type: record.type,
+          size: record.size,
+          lastModified: record.lastModified,
+          quickKey: record.quickKey,
+          thumbnailUrl: record.thumbnail,
+          isLeaf: record.isLeaf,
+          versionNumber: record.versionNumber,
+          originalFileId: record.originalFileId,
+          parentFileId: record.parentFileId,
+          toolHistory: record.toolHistory,
+          createdAt: Date.now() // Current session
+        };
+
+        resolve(stub);
+      };
+    });
+  }
+
+  /**
+   * Get all StirlingFileStubs (metadata only) - for FileManager browsing
+   */
+  async getAllStirlingFileStubs(): Promise<StirlingFileStub[]> {
+    const db = await this.getDatabase();
+
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction([this.storeName], 'readonly');
       const store = transaction.objectStore(this.storeName);
       const request = store.openCursor();
-      const files: Omit<StoredFile, 'data'>[] = [];
+      const stubs: StirlingFileStub[] = [];
 
       request.onerror = () => reject(request.error);
       request.onsuccess = (event) => {
         const cursor = (event.target as IDBRequest).result;
         if (cursor) {
-          const storedFile = cursor.value;
-          // Only extract metadata, skip the data field
-          if (storedFile && storedFile.name && typeof storedFile.size === 'number') {
-            files.push({
-              id: storedFile.id,
-              name: storedFile.name,
-              type: storedFile.type,
-              size: storedFile.size,
-              lastModified: storedFile.lastModified,
-              thumbnail: storedFile.thumbnail
+          const record = cursor.value as StoredStirlingFileRecord;
+          if (record && record.name && typeof record.size === 'number') {
+            // Extract metadata only - no file data
+            stubs.push({
+              id: record.id,
+              name: record.name,
+              type: record.type,
+              size: record.size,
+              lastModified: record.lastModified,
+              quickKey: record.quickKey,
+              thumbnailUrl: record.thumbnail,
+              isLeaf: record.isLeaf,
+              versionNumber: record.versionNumber || 1,
+              originalFileId: record.originalFileId || record.id,
+              parentFileId: record.parentFileId,
+              toolHistory: record.toolHistory || [],
+              createdAt: Date.now()
             });
           }
           cursor.continue();
         } else {
-          console.log('Loaded metadata for', files.length, 'files without loading data');
-          resolve(files);
+          resolve(stubs);
         }
       };
     });
   }
 
   /**
-   * Delete a file from IndexedDB
+   * Get leaf StirlingFileStubs only - for unprocessed files
    */
-  async deleteFile(id: string): Promise<void> {
-    if (!this.db) await this.init();
+  async getLeafStirlingFileStubs(): Promise<StirlingFileStub[]> {
+    const db = await this.getDatabase();
 
     return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction([this.storeName], 'readwrite');
+      const transaction = db.transaction([this.storeName], 'readonly');
+      const store = transaction.objectStore(this.storeName);
+      const request = store.openCursor();
+      const leafStubs: StirlingFileStub[] = [];
+
+      request.onerror = () => reject(request.error);
+      request.onsuccess = (event) => {
+        const cursor = (event.target as IDBRequest).result;
+        if (cursor) {
+          const record = cursor.value as StoredStirlingFileRecord;
+          // Only include leaf files (default to true if undefined)
+          if (record && record.name && typeof record.size === 'number' && record.isLeaf !== false) {
+            leafStubs.push({
+              id: record.id,
+              name: record.name,
+              type: record.type,
+              size: record.size,
+              lastModified: record.lastModified,
+              quickKey: record.quickKey,
+              thumbnailUrl: record.thumbnail,
+              isLeaf: record.isLeaf,
+              versionNumber: record.versionNumber || 1,
+              originalFileId: record.originalFileId || record.id,
+              parentFileId: record.parentFileId,
+              toolHistory: record.toolHistory || [],
+              createdAt: Date.now()
+            });
+          }
+          cursor.continue();
+        } else {
+          resolve(leafStubs);
+        }
+      };
+    });
+  }
+
+  /**
+   * Delete StirlingFile - single operation, no sync issues
+   */
+  async deleteStirlingFile(id: FileId): Promise<void> {
+    const db = await this.getDatabase();
+
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction([this.storeName], 'readwrite');
       const store = transaction.objectStore(this.storeName);
       const request = store.delete(id);
 
@@ -226,295 +275,24 @@ class FileStorageService {
   }
 
   /**
-   * Clear all stored files
+   * Update thumbnail for existing file
    */
-  async clearAll(): Promise<void> {
-    if (!this.db) await this.init();
+  async updateThumbnail(id: FileId, thumbnail: string): Promise<boolean> {
+    const db = await this.getDatabase();
 
-    return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction([this.storeName], 'readwrite');
-      const store = transaction.objectStore(this.storeName);
-      const request = store.clear();
-
-      request.onerror = () => reject(request.error);
-      request.onsuccess = () => resolve();
-    });
-  }
-
-  /**
-   * Get storage statistics (only our IndexedDB usage)
-   */
-  async getStorageStats(): Promise<StorageStats> {
-    if (!this.db) await this.init();
-
-    let used = 0;
-    let available = 0;
-    let quota: number | undefined;
-    let fileCount = 0;
-    
-    try {
-      // Get browser quota for context
-      if ('storage' in navigator && 'estimate' in navigator.storage) {
-        const estimate = await navigator.storage.estimate();
-        quota = estimate.quota;
-        available = estimate.quota || 0;
-      }
-      
-      // Calculate our actual IndexedDB usage from file metadata
-      const files = await this.getAllFileMetadata();
-      used = files.reduce((total, file) => total + (file?.size || 0), 0);
-      fileCount = files.length;
-      
-      // Adjust available space
-      if (quota) {
-        available = quota - used;
-      }
-      
-    } catch (error) {
-      console.warn('Could not get storage stats:', error);
-      // If we can't read metadata, database might be purged
-      used = 0;
-      fileCount = 0;
-    }
-
-    return {
-      used,
-      available,
-      fileCount,
-      quota
-    };
-  }
-
-  /**
-   * Get file count quickly without loading metadata
-   */
-  async getFileCount(): Promise<number> {
-    if (!this.db) await this.init();
-
-    return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction([this.storeName], 'readonly');
-      const store = transaction.objectStore(this.storeName);
-      const request = store.count();
-
-      request.onerror = () => reject(request.error);
-      request.onsuccess = () => resolve(request.result);
-    });
-  }
-
-  /**
-   * Check all IndexedDB databases to see if files are in another version
-   */
-  async debugAllDatabases(): Promise<void> {
-    console.log('=== Checking All IndexedDB Databases ===');
-    
-    if ('databases' in indexedDB) {
+    return new Promise((resolve, _reject) => {
       try {
-        const databases = await indexedDB.databases();
-        console.log('Found databases:', databases);
-        
-        for (const dbInfo of databases) {
-          if (dbInfo.name?.includes('stirling') || dbInfo.name?.includes('pdf')) {
-            console.log(`Checking database: ${dbInfo.name} (version: ${dbInfo.version})`);
-            try {
-              const db = await new Promise<IDBDatabase>((resolve, reject) => {
-                const request = indexedDB.open(dbInfo.name!, dbInfo.version);
-                request.onsuccess = () => resolve(request.result);
-                request.onerror = () => reject(request.error);
-              });
-              
-              console.log(`Database ${dbInfo.name} object stores:`, Array.from(db.objectStoreNames));
-              db.close();
-            } catch (error) {
-              console.error(`Failed to open database ${dbInfo.name}:`, error);
-            }
-          }
-        }
-      } catch (error) {
-        console.error('Failed to list databases:', error);
-      }
-    } else {
-      console.log('indexedDB.databases() not supported');
-    }
-    
-    // Also check our specific database with different versions
-    for (let version = 1; version <= 3; version++) {
-      try {
-        console.log(`Trying to open ${this.dbName} version ${version}...`);
-        const db = await new Promise<IDBDatabase>((resolve, reject) => {
-          const request = indexedDB.open(this.dbName, version);
-          request.onsuccess = () => resolve(request.result);
-          request.onerror = () => reject(request.error);
-          request.onupgradeneeded = () => {
-            // Don't actually upgrade, just check
-            request.transaction?.abort();
-          };
-        });
-        
-        console.log(`Version ${version} object stores:`, Array.from(db.objectStoreNames));
-        
-        if (db.objectStoreNames.contains('files')) {
-          const transaction = db.transaction(['files'], 'readonly');
-          const store = transaction.objectStore('files');
-          const countRequest = store.count();
-          countRequest.onsuccess = () => {
-            console.log(`Version ${version} files store has ${countRequest.result} entries`);
-          };
-        }
-        
-        db.close();
-      } catch (error) {
-        console.log(`Version ${version} not accessible:`, error.message);
-      }
-    }
-  }
-
-  /**
-   * Debug method to check what's actually in the database
-   */
-  async debugDatabaseContents(): Promise<void> {
-    if (!this.db) await this.init();
-
-    return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction([this.storeName], 'readonly');
-      const store = transaction.objectStore(this.storeName);
-      
-      // First try getAll to see if there's anything
-      const getAllRequest = store.getAll();
-      getAllRequest.onsuccess = () => {
-        console.log('=== Raw getAll() result ===');
-        console.log('Raw entries found:', getAllRequest.result.length);
-        getAllRequest.result.forEach((item, index) => {
-          console.log(`Raw entry ${index}:`, {
-            keys: Object.keys(item || {}),
-            id: item?.id,
-            name: item?.name,
-            size: item?.size,
-            type: item?.type,
-            hasData: !!item?.data,
-            dataSize: item?.data?.byteLength,
-            fullObject: item
-          });
-        });
-      };
-      
-      // Then try cursor
-      const cursorRequest = store.openCursor();
-      console.log('=== IndexedDB Cursor Debug ===');
-      let count = 0;
-
-      cursorRequest.onerror = () => {
-        console.error('Cursor error:', cursorRequest.error);
-        reject(cursorRequest.error);
-      };
-      
-      cursorRequest.onsuccess = (event) => {
-        const cursor = (event.target as IDBRequest).result;
-        if (cursor) {
-          count++;
-          const value = cursor.value;
-          console.log(`Cursor File ${count}:`, {
-            id: value?.id,
-            name: value?.name,
-            size: value?.size,
-            type: value?.type,
-            hasData: !!value?.data,
-            dataSize: value?.data?.byteLength,
-            hasThumbnail: !!value?.thumbnail,
-            allKeys: Object.keys(value || {})
-          });
-          cursor.continue();
-        } else {
-          console.log(`=== End Cursor Debug - Found ${count} files ===`);
-          resolve();
-        }
-      };
-    });
-  }
-
-  /**
-   * Convert StoredFile back to File object for compatibility
-   */
-  createFileFromStored(storedFile: StoredFile): File {
-    if (!storedFile || !storedFile.data) {
-      throw new Error('Invalid stored file: missing data');
-    }
-    
-    if (!storedFile.name || typeof storedFile.size !== 'number') {
-      throw new Error('Invalid stored file: missing metadata');
-    }
-    
-    const blob = new Blob([storedFile.data], { type: storedFile.type });
-    const file = new File([blob], storedFile.name, {
-      type: storedFile.type,
-      lastModified: storedFile.lastModified
-    });
-    
-    // Add custom properties for compatibility
-    Object.defineProperty(file, 'id', { value: storedFile.id, writable: false });
-    Object.defineProperty(file, 'thumbnail', { value: storedFile.thumbnail, writable: false });
-    
-    return file;
-  }
-
-  /**
-   * Create blob URL for stored file
-   */
-  createBlobUrl(storedFile: StoredFile): string {
-    const blob = new Blob([storedFile.data], { type: storedFile.type });
-    return URL.createObjectURL(blob);
-  }
-
-  /**
-   * Get file data as ArrayBuffer for streaming/chunked processing
-   */
-  async getFileData(id: string): Promise<ArrayBuffer | null> {
-    try {
-      const storedFile = await this.getFile(id);
-      return storedFile ? storedFile.data : null;
-    } catch (error) {
-      console.warn(`Failed to get file data for ${id}:`, error);
-      return null;
-    }
-  }
-
-  /**
-   * Create a temporary blob URL that gets revoked automatically
-   */
-  async createTemporaryBlobUrl(id: string): Promise<string | null> {
-    const data = await this.getFileData(id);
-    if (!data) return null;
-    
-    const blob = new Blob([data], { type: 'application/pdf' });
-    const url = URL.createObjectURL(blob);
-    
-    // Auto-revoke after a short delay to free memory
-    setTimeout(() => {
-      URL.revokeObjectURL(url);
-    }, 10000); // 10 seconds
-    
-    return url;
-  }
-
-  /**
-   * Update thumbnail for an existing file
-   */
-  async updateThumbnail(id: string, thumbnail: string): Promise<boolean> {
-    if (!this.db) await this.init();
-
-    return new Promise((resolve, reject) => {
-      try {
-        const transaction = this.db!.transaction([this.storeName], 'readwrite');
+        const transaction = db.transaction([this.storeName], 'readwrite');
         const store = transaction.objectStore(this.storeName);
         const getRequest = store.get(id);
 
         getRequest.onsuccess = () => {
-          const storedFile = getRequest.result;
-          if (storedFile) {
-            storedFile.thumbnail = thumbnail;
-            const updateRequest = store.put(storedFile);
-            
+          const record = getRequest.result as StoredStirlingFileRecord;
+          if (record) {
+            record.thumbnail = thumbnail;
+            const updateRequest = store.put(record);
+
             updateRequest.onsuccess = () => {
-              console.log('Thumbnail updated for file:', id);
               resolve(true);
             };
             updateRequest.onerror = () => {
@@ -538,31 +316,161 @@ class FileStorageService {
   }
 
   /**
-   * Check if storage quota is running low
+   * Clear all stored files
    */
-  async isStorageLow(): Promise<boolean> {
-    const stats = await this.getStorageStats();
-    if (!stats.quota) return false;
-    
-    const usagePercent = stats.used / stats.quota;
-    return usagePercent > 0.8; // Consider low if over 80% used
+  async clearAll(): Promise<void> {
+    const db = await this.getDatabase();
+
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction([this.storeName], 'readwrite');
+      const store = transaction.objectStore(this.storeName);
+      const request = store.clear();
+
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve();
+    });
   }
 
   /**
-   * Clean up old files if storage is low
+   * Get storage statistics
    */
-  async cleanupOldFiles(maxFiles: number = 50): Promise<void> {
-    const files = await this.getAllFileMetadata();
-    
-    if (files.length <= maxFiles) return;
-    
-    // Sort by last modified (oldest first)
-    files.sort((a, b) => a.lastModified - b.lastModified);
-    
-    // Delete oldest files
-    const filesToDelete = files.slice(0, files.length - maxFiles);
-    for (const file of filesToDelete) {
-      await this.deleteFile(file.id);
+  async getStorageStats(): Promise<StorageStats> {
+    let used = 0;
+    let available = 0;
+    let quota: number | undefined;
+    let fileCount = 0;
+
+    try {
+      // Get browser quota for context
+      if ('storage' in navigator && 'estimate' in navigator.storage) {
+        const estimate = await navigator.storage.estimate();
+        quota = estimate.quota;
+        available = estimate.quota || 0;
+      }
+
+      // Calculate our actual IndexedDB usage from file metadata
+      const stubs = await this.getAllStirlingFileStubs();
+      used = stubs.reduce((total, stub) => total + (stub?.size || 0), 0);
+      fileCount = stubs.length;
+
+      // Adjust available space
+      if (quota) {
+        available = quota - used;
+      }
+
+    } catch (error) {
+      console.warn('Could not get storage stats:', error);
+      used = 0;
+      fileCount = 0;
+    }
+
+    return {
+      used,
+      available,
+      fileCount,
+      quota
+    };
+  }
+
+  /**
+   * Create blob URL for stored file data
+   */
+  async createBlobUrl(id: FileId): Promise<string | null> {
+    try {
+      const db = await this.getDatabase();
+
+      return new Promise((resolve, reject) => {
+        const transaction = db.transaction([this.storeName], 'readonly');
+        const store = transaction.objectStore(this.storeName);
+        const request = store.get(id);
+
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => {
+          const record = request.result as StoredStirlingFileRecord | undefined;
+          if (record) {
+            const blob = new Blob([record.data], { type: record.type });
+            const url = URL.createObjectURL(blob);
+            resolve(url);
+          } else {
+            resolve(null);
+          }
+        };
+      });
+    } catch (error) {
+      console.warn(`Failed to create blob URL for ${id}:`, error);
+      return null;
+    }
+  }
+
+  /**
+   * Mark a file as processed (no longer a leaf file)
+   * Used when a file becomes input to a tool operation
+   */
+  async markFileAsProcessed(fileId: FileId): Promise<boolean> {
+    try {
+      const db = await this.getDatabase();
+      const transaction = db.transaction([this.storeName], 'readwrite');
+      const store = transaction.objectStore(this.storeName);
+
+      const record = await new Promise<StoredStirlingFileRecord | undefined>((resolve, reject) => {
+        const request = store.get(fileId);
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+
+      if (!record) {
+        return false; // File not found
+      }
+
+      // Update the isLeaf flag to false
+      record.isLeaf = false;
+
+      await new Promise<void>((resolve, reject) => {
+        const request = store.put(record);
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject(request.error);
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Failed to mark file as processed:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Mark a file as leaf (opposite of markFileAsProcessed)
+   * Used when promoting a file back to "recent" status
+   */
+  async markFileAsLeaf(fileId: FileId): Promise<boolean> {
+    try {
+      const db = await this.getDatabase();
+      const transaction = db.transaction([this.storeName], 'readwrite');
+      const store = transaction.objectStore(this.storeName);
+
+      const record = await new Promise<StoredStirlingFileRecord | undefined>((resolve, reject) => {
+        const request = store.get(fileId);
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+
+      if (!record) {
+        return false; // File not found
+      }
+
+      // Update the isLeaf flag to true
+      record.isLeaf = true;
+
+      await new Promise<void>((resolve, reject) => {
+        const request = store.put(record);
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject(request.error);
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Failed to mark file as leaf:', error);
+      return false;
     }
   }
 }

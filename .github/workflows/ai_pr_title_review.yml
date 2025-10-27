@@ -19,11 +19,11 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@6c439dc8bdf85cadbbce9ed30d1c7b959517bc49 # v2.12.2
+        uses: step-security/harden-runner@ec9f2d5744a09debf3a187a3f4f675c53b671911 # v2.13.0
         with:
           egress-policy: audit
 
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
         with:
           fetch-depth: 0
 
@@ -87,7 +87,7 @@ jobs:
       - name: AI PR Title Analysis
         if: steps.actor.outputs.is_repo_dev == 'true'
         id: ai-title-analysis
-        uses: actions/ai-inference@d645f067d89ee1d5d736a5990e327e504d1c5a4a # v1.1.0
+        uses: actions/ai-inference@b81b2afb8390ee6839b494a404766bef6493c7d9 # v1.2.8
         with:
           model: openai/gpt-4o
           system-prompt-file: ".github/config/system-prompt.txt"

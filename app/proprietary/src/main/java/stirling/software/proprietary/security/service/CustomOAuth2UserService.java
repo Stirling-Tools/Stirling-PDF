@@ -14,7 +14,6 @@ import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
-import stirling.software.common.model.ApplicationProperties.Security.OAUTH2;
 import stirling.software.common.model.enumeration.UsernameAttribute;
 import stirling.software.proprietary.security.model.User;
 
@@ -27,13 +26,13 @@ public class CustomOAuth2UserService implements OAuth2UserService<OidcUserReques
 
     private final LoginAttemptService loginAttemptService;
 
-    private final ApplicationProperties applicationProperties;
+    private final ApplicationProperties.Security.OAUTH2 oauth2Properties;
 
     public CustomOAuth2UserService(
-            ApplicationProperties applicationProperties,
+            ApplicationProperties.Security.OAUTH2 oauth2Properties,
             UserService userService,
             LoginAttemptService loginAttemptService) {
-        this.applicationProperties = applicationProperties;
+        this.oauth2Properties = oauth2Properties;
         this.userService = userService;
         this.loginAttemptService = loginAttemptService;
     }
@@ -42,14 +41,22 @@ public class CustomOAuth2UserService implements OAuth2UserService<OidcUserReques
     public OidcUser loadUser(OidcUserRequest userRequest) throws OAuth2AuthenticationException {
         try {
             OidcUser user = delegate.loadUser(userRequest);
-            OAUTH2 oauth2 = applicationProperties.getSecurity().getOauth2();
-            UsernameAttribute usernameAttribute =
-                    UsernameAttribute.valueOf(oauth2.getUseAsUsername().toUpperCase());
-            String usernameAttributeKey = usernameAttribute.getName();
+            String usernameAttributeKey =
+                    UsernameAttribute.valueOf(oauth2Properties.getUseAsUsername().toUpperCase())
+                            .getName();
 
-            // todo: save user by OIDC ID instead of username
-            Optional<User> internalUser =
-                    userService.findByUsernameIgnoreCase(user.getAttribute(usernameAttributeKey));
+            // Extract SSO provider information
+            String ssoProviderId = user.getSubject(); // Standard OIDC 'sub' claim
+            String ssoProvider = userRequest.getClientRegistration().getRegistrationId();
+            String username = user.getAttribute(usernameAttributeKey);
+
+            log.debug(
+                    "OAuth2 login - Provider: {}, ProviderId: {}, Username: {}",
+                    ssoProvider,
+                    ssoProviderId,
+                    username);
+
+            Optional<User> internalUser = userService.findByUsernameIgnoreCase(username);
 
             if (internalUser.isPresent()) {
                 String internalUsername = internalUser.get().getUsername();

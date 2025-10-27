@@ -1,46 +1,41 @@
 import { useState, useCallback } from 'react';
+import { useIndexedDB } from '../contexts/IndexedDBContext';
 import { fileStorage } from '../services/fileStorage';
-import { FileWithUrl } from '../types/file';
+import { StirlingFileStub, StirlingFile } from '../types/fileContext';
+import { FileId } from '../types/fileContext';
 
 export const useFileManager = () => {
   const [loading, setLoading] = useState(false);
+  const indexedDB = useIndexedDB();
 
-  const convertToFile = useCallback(async (fileWithUrl: FileWithUrl): Promise<File> => {
-    if (fileWithUrl.url && fileWithUrl.url.startsWith('blob:')) {
-      const response = await fetch(fileWithUrl.url);
-      const data = await response.arrayBuffer();
-      const file = new File([data], fileWithUrl.name, {
-        type: fileWithUrl.type || 'application/pdf',
-        lastModified: fileWithUrl.lastModified || Date.now()
-      });
-      // Preserve the ID if it exists
-      if (fileWithUrl.id) {
-        Object.defineProperty(file, 'id', { value: fileWithUrl.id, writable: false });
+  const convertToFile = useCallback(async (fileStub: StirlingFileStub): Promise<File> => {
+    if (!indexedDB) {
+      throw new Error('IndexedDB context not available');
+    }
+
+    // Regular file loading
+    if (fileStub.id) {
+      const file = await indexedDB.loadFile(fileStub.id);
+      if (file) {
+        return file;
       }
-      return file;
     }
+    throw new Error(`File not found in storage: ${fileStub.name} (ID: ${fileStub.id})`);
+  }, [indexedDB]);
 
-    // Always use ID first, fallback to name only if ID doesn't exist
-    const lookupKey = fileWithUrl.id || fileWithUrl.name;
-    const storedFile = await fileStorage.getFile(lookupKey);
-    if (storedFile) {
-      const file = new File([storedFile.data], storedFile.name, {
-        type: storedFile.type,
-        lastModified: storedFile.lastModified
-      });
-      // Add the ID to the file object
-      Object.defineProperty(file, 'id', { value: storedFile.id, writable: false });
-      return file;
-    }
-
-    throw new Error('File not found in storage');
-  }, []);
-
-  const loadRecentFiles = useCallback(async (): Promise<FileWithUrl[]> => {
+  const loadRecentFiles = useCallback(async (): Promise<StirlingFileStub[]> => {
     setLoading(true);
     try {
-      const files = await fileStorage.getAllFiles();
-      const sortedFiles = files.sort((a, b) => (b.lastModified || 0) - (a.lastModified || 0));
+      if (!indexedDB) {
+        return [];
+      }
+
+      // Load only leaf files metadata (processed files that haven't been used as input for other tools)
+      const stirlingFileStubs = await fileStorage.getLeafStirlingFileStubs();
+
+      // For now, only regular files - drafts will be handled separately in the future
+      const sortedFiles = stirlingFileStubs.sort((a, b) => (b.lastModified || 0) - (a.lastModified || 0));
+
       return sortedFiles;
     } catch (error) {
       console.error('Failed to load recent files:', error);
@@ -48,36 +43,57 @@ export const useFileManager = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [indexedDB]);
 
-  const handleRemoveFile = useCallback(async (index: number, files: FileWithUrl[], setFiles: (files: FileWithUrl[]) => void) => {
+  const handleRemoveFile = useCallback(async (index: number, files: StirlingFileStub[], setFiles: (files: StirlingFileStub[]) => void) => {
     const file = files[index];
+    if (!file.id) {
+      throw new Error('File ID is required for removal');
+    }
+    if (!indexedDB) {
+      throw new Error('IndexedDB context not available');
+    }
     try {
-      await fileStorage.deleteFile(file.id || file.name);
+      await indexedDB.deleteFile(file.id);
       setFiles(files.filter((_, i) => i !== index));
     } catch (error) {
       console.error('Failed to remove file:', error);
       throw error;
     }
-  }, []);
+  }, [indexedDB]);
 
-  const storeFile = useCallback(async (file: File) => {
+  const storeFile = useCallback(async (file: File, fileId: FileId) => {
+    if (!indexedDB) {
+      throw new Error('IndexedDB context not available');
+    }
     try {
-      const storedFile = await fileStorage.storeFile(file);
-      // Add the ID to the file object
-      Object.defineProperty(file, 'id', { value: storedFile.id, writable: false });
-      return storedFile;
+      // Store file with provided UUID from FileContext (thumbnail generated internally)
+      const metadata = await indexedDB.saveFile(file, fileId);
+
+      // Convert file to ArrayBuffer for storage compatibility
+      const arrayBuffer = await file.arrayBuffer();
+
+      // This method is deprecated - use FileStorage directly instead
+      return {
+        id: fileId,
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        lastModified: file.lastModified,
+        data: arrayBuffer,
+        thumbnail: metadata.thumbnailUrl
+      };
     } catch (error) {
       console.error('Failed to store file:', error);
       throw error;
     }
-  }, []);
+  }, [indexedDB]);
 
   const createFileSelectionHandlers = useCallback((
-    selectedFiles: string[],
-    setSelectedFiles: (files: string[]) => void
+    selectedFiles: FileId[],
+    setSelectedFiles: (files: FileId[]) => void
   ) => {
-    const toggleSelection = (fileId: string) => {
+    const toggleSelection = (fileId: FileId) => {
       setSelectedFiles(
         selectedFiles.includes(fileId)
           ? selectedFiles.filter(id => id !== fileId)
@@ -89,14 +105,24 @@ export const useFileManager = () => {
       setSelectedFiles([]);
     };
 
-    const selectMultipleFiles = async (files: FileWithUrl[], onFilesSelect: (files: File[]) => void) => {
+    const selectMultipleFiles = async (files: StirlingFileStub[], onStirlingFilesSelect: (stirlingFiles: StirlingFile[]) => void) => {
       if (selectedFiles.length === 0) return;
 
       try {
-        const selectedFileObjects = files.filter(f => selectedFiles.includes(f.id || f.name));
-        const filePromises = selectedFileObjects.map(convertToFile);
-        const convertedFiles = await Promise.all(filePromises);
-        onFilesSelect(convertedFiles);
+        // Filter by UUID and load full StirlingFile objects directly
+        const selectedFileObjects = files.filter(f => selectedFiles.includes(f.id));
+
+        const stirlingFiles = await Promise.all(
+          selectedFileObjects.map(async (stub) => {
+            const stirlingFile = await fileStorage.getStirlingFile(stub.id);
+            if (!stirlingFile) {
+              throw new Error(`File not found in storage: ${stub.name}`);
+            }
+            return stirlingFile;
+          })
+        );
+
+        onStirlingFilesSelect(stirlingFiles);
         clearSelection();
       } catch (error) {
         console.error('Failed to load selected files:', error);
@@ -111,12 +137,27 @@ export const useFileManager = () => {
     };
   }, [convertToFile]);
 
+  const touchFile = useCallback(async (id: FileId) => {
+    if (!indexedDB) {
+      console.warn('IndexedDB context not available for touch operation');
+      return;
+    }
+    try {
+      // Update access time - this will be handled by the cache in IndexedDBContext
+      // when the file is loaded, so we can just load it briefly to "touch" it
+      await indexedDB.loadFile(id);
+    } catch (error) {
+      console.error('Failed to touch file:', error);
+    }
+  }, [indexedDB]);
+
   return {
     loading,
     convertToFile,
     loadRecentFiles,
     handleRemoveFile,
     storeFile,
+    touchFile,
     createFileSelectionHandlers
   };
 };

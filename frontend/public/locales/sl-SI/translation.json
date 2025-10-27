@@ -332,7 +332,7 @@
     "globalPopularity": "Globalna priljubljenost",
     "sortBy": "Razvrsti po:",
     "multiTool": {
-      "title": "PDF Multi Tool",
+      "title": "PDF večnamensko orodje",
       "desc": "Spoji, zavrti, prerazporedi, razdeli in odstrani strani"
     },
     "merge": {
@@ -347,7 +347,7 @@
       "title": "Zavrti",
       "desc": "Preprosto zavrtite svoje PDF-je."
     },
-    "imageToPdf": {
+    "imageToPDF": {
       "title": "Slika v PDF",
       "desc": "Pretvori sliko (PNG, JPEG, GIF) v PDF."
     },
@@ -371,7 +371,7 @@
       "title": "Spremeni dovoljenja",
       "desc": "Spremenite dovoljenja vašega dokumenta PDF"
     },
-    "removePages": {
+    "pageRemover": {
       "title": "Odstrani",
       "desc": "Izbrišite neželene strani iz dokumenta PDF."
     },
@@ -383,7 +383,7 @@
       "title": "Odstrani geslo",
       "desc": "Odstranite zaščito z geslom iz vašega dokumenta PDF."
     },
-    "compressPdfs": {
+    "compress": {
       "title": "Stisni",
       "desc": "Stisnite PDF-je, da zmanjšate njihovo velikost."
     },
@@ -479,7 +479,7 @@
       "title": "Cevovod",
       "desc": "Zaženi več dejanj na PDF-jih z definiranjem cevovodnih skriptov"
     },
-    "add-page-numbers": {
+    "addPageNumbers": {
       "title": "Dodaj številke strani",
       "desc": "Dodaj številke strani skozi dokument na določeno mesto"
     },
@@ -487,7 +487,7 @@
       "title": "Samodejno preimenuj datoteko PDF",
       "desc": "Samodejno preimenuje datoteko PDF glede na zaznano glavo"
     },
-    "adjust-contrast": {
+    "adjustContrast": {
       "title": "Prilagodi barve/kontrast",
       "desc": "Prilagodi kontrast, nasičenost in svetlost PDF-ja"
     },
@@ -499,7 +499,7 @@
       "title": "Samodejno razdeli strani",
       "desc": "Samodejno razdeli optično prebrane PDF-je s fizično QR kodo razdelilnika optično prebranih strani"
     },
-    "sanitizePdf": {
+    "sanitizePDF": {
       "title": "Razkuži",
       "desc": "Odstrani skripte in druge elemente iz datotek PDF"
     },
@@ -523,11 +523,11 @@
       "title": "Pridobite VSE informacije o PDF-ju",
       "desc": "Zgrabi vse možne informacije o PDF-jih"
     },
-    "extractPage": {
+    "pageExtracter": {
       "title": "Izvleček strani(e)",
       "desc": "Izvleče izbrane strani iz PDF-ja"
     },
-    "PdfToSinglePage": {
+    "pdfToSinglePage": {
       "title": "PDF na eno veliko stran",
       "desc": "Združi vse strani PDF v eno samo veliko stran"
     },
@@ -543,11 +543,11 @@
       "title": "Ročna redakcija",
       "desc": "Preredi PDF na podlagi izbranega besedila, narisanih oblik in/ali izbranih strani(-e)"
     },
-    "tableExtraxt": {
+    "PDFToCSV": {
       "title": "PDF v CSV",
       "desc": "Izvleče tabele iz PDF in jih pretvori v CSV"
     },
-    "autoSizeSplitPDF": {
+    "split-by-size-or-count": {
       "title": "Samodejna razdelitev po velikosti/številu",
       "desc": "Razdeli en PDF na več dokumentov glede na velikost, število strani ali število dokumentov"
     },
@@ -563,11 +563,11 @@
       "title": "Dodaj žig v PDF",
       "desc": "Dodaj besedilo ali slikovne žige na nastavljenih lokacijah"
     },
-    "removeImagePdf": {
+    "removeImage": {
       "title": "Odstrani sliko",
       "desc": "Odstranite sliko iz PDF-ja, da zmanjšate velikost datoteke"
     },
-    "splitPdfByChapters": {
+    "splitByChapters": {
       "title": "Razdeli PDF po poglavjih",
       "desc": "Razdeli PDF na več datotek glede na strukturo poglavij."
     },
@@ -575,9 +575,41 @@
       "title": "Preveri podpis PDF",
       "desc": "Preveri digitalne podpise in potrdila v dokumentih PDF"
     },
+    "replace-color": {
+      "title": "Napredne barvne možnosti",
+      "desc": "Zamenjaj barvo besedila in ozadja v PDF-ju in obrni celotno barvo PDF-ja, da zmanjšaš velikost datoteke"
+    },
+    "convert": {
+      "title": "Pretvori"
+    },
+    "attachments": {
+      "title": "Add attachments"
+    },
+    "extractPages": {
+      "title": "Izvleči strani"
+    },
+    "removePages": {
+      "title": "Odstrani",
+      "desc": "Izbrišite neželene strani iz dokumenta PDF."
+    },
+    "removeImagePdf": {
+      "title": "Odstrani sliko",
+      "desc": "Odstranite sliko iz PDF-ja, da zmanjšate velikost datoteke"
+    },
+    "autoSizeSplitPDF": {
+      "title": "Samodejna razdelitev po velikosti/številu",
+      "desc": "Razdeli en PDF na več dokumentov glede na velikost, število strani ali število dokumentov"
+    },
+    "adjust-contrast": {
+      "title": "Prilagodi barve/kontrast",
+      "desc": "Prilagodi kontrast, nasičenost in svetlost PDF-ja"
+    },
     "replaceColorPdf": {
       "title": "Napredne barvne možnosti",
       "desc": "Zamenjaj barvo besedila in ozadja v PDF-ju in obrni celotno barvo PDF-ja, da zmanjšaš velikost datoteke"
+    },
+    "changePermissions": {
+      "title": "Spremeni dovoljenja"
     }
   },
   "viewPdf": {
@@ -588,7 +620,7 @@
   "multiTool": {
     "tags": "Več orodij, več operacij, uporabniški vmesnik, klik povleci, sprednji del, odjemalska stran, interaktivno, nepremagljivo, premakni, izbriši, preseli, razdeli",
     "title": "PDF večnamensko orodje",
-    "header": "PDF Multi Tool",
+    "header": "PDF večnamensko orodje",
     "uploadPrompts": "Ime datoteke",
     "selectAll": "Izberi vse",
     "deselectAll": "Prekliči izbor vseh",
@@ -617,7 +649,10 @@
     "sortByName": "Razvrsti po imenu",
     "sortByDate": "Razvrsti po datumu",
     "removeCertSign": "Odstraniti digitalni podpis v združeni datoteki?",
-    "submit": "Združi"
+    "submit": "Združi",
+    "sortBy": {
+      "filename": "Ime datoteke"
+    }
   },
   "split": {
     "tags": "Operacije strani,deli,Multi Page,cut,strežniška stran",
@@ -634,7 +669,20 @@
       "8": "Dokument #6: stran 10"
     },
     "splitPages": "Vnesite strani za razdelitev:",
-    "submit": "Razdeli"
+    "submit": "Razdeli",
+    "steps": {
+      "settings": "Nastavitve"
+    },
+    "methods": {
+      "bySize": {
+        "name": "Velikost datoteke"
+      }
+    },
+    "value": {
+      "fileSize": {
+        "label": "Velikost datoteke"
+      }
+    }
   },
   "rotate": {
     "tags": "strežniška stran",
@@ -712,6 +760,12 @@
     "type": {
       "1": "Besedilo",
       "2": "Slika"
+    },
+    "watermarkType": {
+      "text": "Besedilo"
+    },
+    "settings": {
+      "fontSize": "Velikost pisave"
     }
   },
   "permissions": {
@@ -734,7 +788,9 @@
     "submit": "Spremeni"
   },
   "removePages": {
-    "tags": "Odstrani strani, izbriši strani"
+    "tags": "Odstrani strani, izbriši strani",
+    "title": "Odstrani",
+    "submit": "Odstrani"
   },
   "addPassword": {
     "tags": "varno,varnost",
@@ -758,7 +814,12 @@
       "15": "Omejuje, kaj je mogoče storiti z dokumentom, ko je odprt (ni podprt za vse bralnike)",
       "16": "Omeji odpiranje samega dokumenta"
     },
-    "submit": "Šifriraj"
+    "submit": "Šifriraj",
+    "tooltip": {
+      "permissions": {
+        "title": "Spremeni dovoljenja"
+      }
+    }
   },
   "removePassword": {
     "tags": "varno,dešifriranje,varnost,odstranitev gesla,brisanje gesla",
@@ -768,7 +829,12 @@
       "1": "Izberite PDF za dešifriranje",
       "2": "Geslo"
     },
-    "submit": "Odstrani"
+    "submit": "Odstrani",
+    "desc": "Odstranite zaščito z geslom iz vašega dokumenta PDF.",
+    "password": {
+      "stepTitle": "Odstrani geslo",
+      "label": "Trenutno geslo"
+    }
   },
   "compressPdfs": {
     "tags": "squish,small,tiny"
@@ -829,7 +895,25 @@
     },
     "help": "Prosimo, preberite to dokumentacijo o uporabi tega za druge jezike in/ali uporabi ne v dockerju",
     "credit": "Ta storitev uporablja qpdf in Tesseract za OCR.",
-    "submit": "Obdelaj PDF z OCR"
+    "submit": "Obdelaj PDF z OCR",
+    "desc": "Cleanup skenira in zazna besedilo iz slik znotraj PDF-ja in ga ponovno doda kot besedilo.",
+    "settings": {
+      "title": "Nastavitve",
+      "ocrMode": {
+        "label": "Način OCR"
+      },
+      "languages": {
+        "label": "Jeziki"
+      }
+    },
+    "tooltip": {
+      "mode": {
+        "title": "Način OCR"
+      },
+      "languages": {
+        "title": "Jeziki"
+      }
+    }
   },
   "extractImages": {
     "tags": "slika,fotografija,shrani,arhiv,zip,zajemi,zgrabi",
@@ -938,7 +1022,13 @@
     "title": "Zravnaj",
     "header": "Zravnaj PDF",
     "flattenOnlyForms": "Splošči samo obrazce",
-    "submit": "Zravnaj"
+    "submit": "Zravnaj",
+    "steps": {
+      "settings": "Nastavitve"
+    },
+    "options": {
+      "flattenOnlyForms": "Splošči samo obrazce"
+    }
   },
   "repair": {
     "tags": "popravi,obnovi,popravi,obnovi",
@@ -1174,7 +1264,22 @@
     "showLayers": "Prikaži plasti (dvokliknite za ponastavitev vseh plasti na privzeto stanje)",
     "colourPicker": "Izbirnik barv",
     "findCurrentOutlineItem": "Poišči trenutno postavko orisa",
-    "applyChanges": "Uporabi spremembe"
+    "applyChanges": "Uporabi spremembe",
+    "auto": {
+      "settings": {
+        "advancedTitle": "Napredno"
+      },
+      "wordsToRedact": {
+        "add": "Dodaj"
+      }
+    },
+    "manual": {
+      "pageRedactionNumbers": {
+        "title": "Strani",
+        "placeholder": "(npr. 1,2,8 ali 4,7,12-16 ali 2n-1)"
+      },
+      "export": "Izvozi"
+    }
   },
   "tableExtraxt": {
     "tags": "CSV, ekstrakcija tabele, ekstrah, pretvorba"
@@ -1386,7 +1491,10 @@
       "4": "Samodejni način - Samodejno prilagodi kakovost, da dobi PDF na natančno velikost",
       "5": "Pričakovana velikost PDF (npr. 25 MB, 10,8 MB, 25 KB)"
     },
-    "submit": "Stisnite"
+    "submit": "Stisnite",
+    "method": {
+      "filesize": "Velikost datoteke"
+    }
   },
   "decrypt": {
     "passwordPrompt": "Ta datoteka je zaščitena z geslom. Prosim vnesite geslo:",
@@ -1555,6 +1663,84 @@
       "analytics": {
         "title": "Analytics",
         "description": "These cookies help us understand how our tools are being used, so we can focus on building the features our community values most. Rest assured—Stirling PDF cannot and will never track the content of the documents you work with."
+      }
+    }
+  },
+  "download": "Prenos",
+  "undo": "Razveljavi",
+  "convert": {
+    "title": "Pretvori",
+    "settings": "Nastavitve",
+    "color": "Barva",
+    "greyscale": "Sivine",
+    "fillPage": "Izpolni stran",
+    "pdfaDigitalSignatureWarning": "PDF vsebuje digitalni podpis. To bo odstranjeno v naslednjem koraku.",
+    "grayscale": "Sivine"
+  },
+  "attachments": {
+    "tags": "embed,attach,file,attachment,attachments",
+    "title": "Add attachments",
+    "header": "Add attachments",
+    "submit": "Add attachments"
+  },
+  "rightRail": {
+    "selectAll": "Izberi vse",
+    "deselectAll": "Prekliči izbor vseh"
+  },
+  "quickAccess": {
+    "sign": "Podpiši"
+  },
+  "fileUpload": {
+    "loading": "Nalaganje...",
+    "or": "ali"
+  },
+  "fileManager": {
+    "fileName": "Ime",
+    "fileVersion": "Različica",
+    "selectAll": "Izberi vse",
+    "deselectAll": "Prekliči izbor vseh",
+    "deleteSelected": "Izbriši izbrano",
+    "download": "Prenos",
+    "delete": "Izbriši"
+  },
+  "sanitize": {
+    "submit": "Prečisti PDF",
+    "steps": {
+      "settings": "Nastavitve"
+    }
+  },
+  "changePermissions": {
+    "title": "Spremeni dovoljenja",
+    "submit": "Spremeni dovoljenja",
+    "permissions": {
+      "preventAssembly": {
+        "label": "Prepreči sestavljanje dokumenta"
+      },
+      "preventExtractContent": {
+        "label": "Prepreči ekstrakcijo vsebine"
+      },
+      "preventExtractForAccessibility": {
+        "label": "Prepreči ekstrakcijo za dostopnost"
+      },
+      "preventFillInForm": {
+        "label": "Prepreči izpolnjevanje obrazca"
+      },
+      "preventModify": {
+        "label": "Prepreči spreminjanje"
+      },
+      "preventModifyAnnotations": {
+        "label": "Prepreči spreminjanje pripisov"
+      },
+      "preventPrinting": {
+        "label": "Prepreči tiskanje"
+      },
+      "preventPrintingFaithful": {
+        "label": "Prepreči tiskanje različnih formatov"
+      }
+    },
+    "tooltip": {
+      "header": {
+        "title": "Spremeni dovoljenja"
       }
     }
   }

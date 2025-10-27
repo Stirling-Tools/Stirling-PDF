@@ -9,36 +9,34 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.SortTypes;
 import stirling.software.SPDF.model.api.PDFWithPageNums;
 import stirling.software.SPDF.model.api.general.RearrangePagesRequest;
+import stirling.software.common.annotations.AutoJobPostMapping;
+import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.WebResponseUtils;
 
-@RestController
-@RequestMapping("/api/v1/general")
+@GeneralApi
 @Slf4j
-@Tag(name = "General", description = "General APIs")
 @RequiredArgsConstructor
 public class RearrangePagesPDFController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @PostMapping(consumes = "multipart/form-data", value = "/remove-pages")
+    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/remove-pages")
+    @StandardPdfResponse
     @Operation(
             summary = "Remove pages from a PDF file",
             description =
@@ -237,7 +235,8 @@ public class RearrangePagesPDFController {
         }
     }
 
-    @PostMapping(consumes = "multipart/form-data", value = "/rearrange-pages")
+    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/rearrange-pages")
+    @StandardPdfResponse
     @Operation(
             summary = "Rearrange pages in a PDF file",
             description =

@@ -172,7 +172,7 @@
     "settings": "Ayarlar",
     "allTools": "Araçlar",
     "multiTool": "Çoklu Araçlar",
-    "search": "Search",
+    "search": "Ara",
     "sections": {
       "organize": "Düzenle",
       "convertTo": "PDF'ye dönüştür",
@@ -320,7 +320,7 @@
     "desc": "Yerel olarak barındırılan tüm PDF ihtiyaçlarınız için tek durak noktanız.",
     "searchBar": "Özellikleri arayın...",
     "viewPdf": {
-      "title": "View/Edit PDF",
+      "title": "PDF Görüntüle/Düzenle",
       "desc": "Görüntüleyin, açıklama ekleyin, metin veya resim ekleyin"
     },
     "setFavorites": "Favorilere Ekle",
@@ -347,7 +347,7 @@
       "title": "Döndür",
       "desc": "PDF'lerinizi kolayca döndürün."
     },
-    "imageToPdf": {
+    "imageToPDF": {
       "title": "Resimden PDF'e",
       "desc": "Bir resmi (PNG, JPEG, GIF) PDF'e dönüştürün."
     },
@@ -371,7 +371,7 @@
       "title": "İzinleri Değiştir",
       "desc": "PDF belgenizin izinlerini değiştirin"
     },
-    "removePages": {
+    "pageRemover": {
       "title": "Kaldır",
       "desc": "PDF belgenizden istenmeyen sayfaları silin."
     },
@@ -383,13 +383,13 @@
       "title": "Parolayı Kaldır",
       "desc": "PDF belgenizden parola korumasını kaldırın."
     },
-    "compressPdfs": {
+    "compress": {
       "title": "Sıkıştır",
       "desc": "PDF'lerin dosya boyutunu azaltmak için sıkıştırın."
     },
     "unlockPDFForms": {
-      "title": "Unlock PDF Forms",
-      "desc": "Remove read-only property of form fields in a PDF document."
+      "title": "PDF Formlarının Kilidini Kaldır",
+      "desc": "Form alanlarını düzenlenebilir hâle getir."
     },
     "changeMetadata": {
       "title": "Metaveriyi Değiştir",
@@ -479,7 +479,7 @@
       "title": "Çoklu İşlemler",
       "desc": "Çoklu İşlemler tanımlayarak PDF'lere birden fazla işlemi çalıştır"
     },
-    "add-page-numbers": {
+    "addPageNumbers": {
       "title": "Sayfa Numaraları Ekle",
       "desc": "Bir belgeye belirli bir konuma sayfa numaraları ekler"
     },
@@ -487,7 +487,7 @@
       "title": "PDF Dosyasını Otomatik Yeniden Adlandır",
       "desc": "Tespit edilen başlığa dayanarak bir PDF dosyasını otomatik olarak yeniden adlandırır"
     },
-    "adjust-contrast": {
+    "adjustContrast": {
       "title": "Renkleri/Kontrastı Ayarla",
       "desc": "Bir PDF'in Kontrastını, Doygunluğunu ve Parlaklığını ayarlar"
     },
@@ -499,7 +499,7 @@
       "title": "Sayfaları Otomatik Böl",
       "desc": "Fiziksel taranmış sayfa bölücü QR Kod ile Taranmış PDF'i Otomatik Böl"
     },
-    "sanitizePdf": {
+    "sanitizePDF": {
       "title": "Temizle",
       "desc": "PDF dosyalarından betikleri ve diğer öğeleri kaldırır"
     },
@@ -523,11 +523,11 @@
       "title": "PDF Hakkında TÜM Bilgiyi Al",
       "desc": "PDF'ler hakkında mümkün olan her türlü bilgiyi toplar"
     },
-    "extractPage": {
+    "pageExtracter": {
       "title": "Sayfa(ları) Çıkar",
       "desc": "PDF'ten seçili sayfaları çıkarır"
     },
-    "PdfToSinglePage": {
+    "pdfToSinglePage": {
       "title": "PDF'i Tek Büyük Sayfaya",
       "desc": "Tüm PDF sayfalarını tek büyük bir sayfada birleştirir"
     },
@@ -543,11 +543,11 @@
       "title": "Manuel Sansürleme",
       "desc": "Seçilen metinler, çizilen şekiller ve/veya belirli sayfalar üzerinden PDF'yi sansürler"
     },
-    "tableExtraxt": {
+    "PDFToCSV": {
       "title": "PDF'den CSV'ye",
       "desc": "PDF'den Tabloları çıkarır ve CSV'ye dönüştürür"
     },
-    "autoSizeSplitPDF": {
+    "split-by-size-or-count": {
       "title": "Boyut/Sayıya Göre Otomatik Bölme",
       "desc": "Tek bir PDF'yi boyut, sayfa sayısı veya belge sayısına göre birden fazla belgeye bölün"
     },
@@ -563,11 +563,11 @@
       "title": "PDF'ye Damga Ekleme",
       "desc": "Belirlenen konumlara metin veya resim damgaları ekleyin"
     },
-    "removeImagePdf": {
+    "removeImage": {
       "title": "Resmi kaldır",
       "desc": "Dosya boyutunu küçültmek için PDF'den resmi kaldırın"
     },
-    "splitPdfByChapters": {
+    "splitByChapters": {
       "title": "PDF'yi Bölümlere Göre Böl",
       "desc": "PDF'yi bölüm yapısına göre birden fazla dosyaya ayırın."
     },
@@ -575,14 +575,50 @@
       "title": "PDF İmzasını Doğrula",
       "desc": "PDF belgelerindeki dijital imzaları ve sertifikaları doğrulayın"
     },
+    "replace-color": {
+      "title": "Renkleri Değiştir ve Tersine Çevir",
+      "desc": "PDF'deki metin ve arka plan renklerini değiştirin ve PDF'nin tüm renklerini tersine çevirerek dosya boyutunu azaltın"
+    },
+    "convert": {
+      "title": "Dönüştür"
+    },
+    "attachments": {
+      "title": "Add attachments"
+    },
+    "editTableOfContents": {
+      "title": "İçindekiler Tablosunu Düzenle",
+      "desc": "PDF belgelerinde yer işaretleri ve içindekiler tablosu ekleyin veya düzenleyin"
+    },
+    "extractPages": {
+      "title": "Sayfaları Çıkar"
+    },
+    "removePages": {
+      "title": "Kaldır",
+      "desc": "PDF belgenizden istenmeyen sayfaları silin."
+    },
+    "removeImagePdf": {
+      "title": "Resmi kaldır",
+      "desc": "Dosya boyutunu küçültmek için PDF'den resmi kaldırın"
+    },
+    "autoSizeSplitPDF": {
+      "title": "Boyut/Sayıya Göre Otomatik Bölme",
+      "desc": "Tek bir PDF'yi boyut, sayfa sayısı veya belge sayısına göre birden fazla belgeye bölün"
+    },
+    "adjust-contrast": {
+      "title": "Renkleri/Kontrastı Ayarla",
+      "desc": "Bir PDF'in Kontrastını, Doygunluğunu ve Parlaklığını ayarlar"
+    },
     "replaceColorPdf": {
       "title": "Renkleri Değiştir ve Tersine Çevir",
       "desc": "PDF'deki metin ve arka plan renklerini değiştirin ve PDF'nin tüm renklerini tersine çevirerek dosya boyutunu azaltın"
+    },
+    "changePermissions": {
+      "title": "İzinleri Değiştir"
     }
   },
   "viewPdf": {
     "tags": "görüntüle,oku,açıklama ekle,metin,görüntü",
-    "title": "View/Edit PDF",
+    "title": "PDF Görüntüle/Düzenle",
     "header": "PDF Görüntüle"
   },
   "multiTool": {
@@ -617,7 +653,10 @@
     "sortByName": "İsme göre sırala",
     "sortByDate": "Tarihe göre sırala",
     "removeCertSign": "Birleştirilen dosyadaki dijital imza kaldırılsın mı?",
-    "submit": "Birleştir"
+    "submit": "Birleştir",
+    "sortBy": {
+      "filename": "Dosya Adı"
+    }
   },
   "split": {
     "tags": "Sayfa işlemleri,böl,Çoklu Sayfa,kes,sunucu tarafı",
@@ -634,7 +673,20 @@
       "8": "Belge #6: Sayfa 10"
     },
     "splitPages": "Ayrılacak sayfaları girin:",
-    "submit": "Ayır"
+    "submit": "Ayır",
+    "steps": {
+      "settings": "Ayarlar"
+    },
+    "methods": {
+      "bySize": {
+        "name": "Dosya Boyutu"
+      }
+    },
+    "value": {
+      "fileSize": {
+        "label": "Dosya Boyutu"
+      }
+    }
   },
   "rotate": {
     "tags": "sunucu tarafı",
@@ -712,6 +764,12 @@
     "type": {
       "1": "Metin",
       "2": "Resim"
+    },
+    "watermarkType": {
+      "text": "Metin"
+    },
+    "settings": {
+      "fontSize": "Font Büyüklüğü"
     }
   },
   "permissions": {
@@ -734,7 +792,9 @@
     "submit": "Değiştir"
   },
   "removePages": {
-    "tags": "Sayfaları kaldır,sayfaları sil"
+    "tags": "Sayfaları kaldır,sayfaları sil",
+    "title": "Kaldır",
+    "submit": "Kaldır"
   },
   "addPassword": {
     "tags": "güvenli, güvenlik",
@@ -758,7 +818,12 @@
       "15": "Açıldığında belgeyle ne yapılacağını kısıtlar (Tüm okuyucular tarafından desteklenmez)",
       "16": "Belgenin kendisinin açılmasını kısıtlar"
     },
-    "submit": "Şifrele"
+    "submit": "Şifrele",
+    "tooltip": {
+      "permissions": {
+        "title": "İzinleri Değiştir"
+      }
+    }
   },
   "removePassword": {
     "tags": "güvenli,Şifreyi çöz,güvenlik,parolasız,parolayı sil",
@@ -768,15 +833,20 @@
       "1": "Şifreyi Çözmek için PDF Seçin",
       "2": "Parola"
     },
-    "submit": "Kaldır"
+    "submit": "Kaldır",
+    "desc": "PDF belgenizden parola korumasını kaldırın.",
+    "password": {
+      "stepTitle": "Parolayı Kaldır",
+      "label": "Mevcut Şifre"
+    }
   },
   "compressPdfs": {
     "tags": "sıkıştır,küçük,minik"
   },
   "unlockPDFForms": {
     "tags": "remove,delete,form,field,readonly",
-    "title": "Remove Read-Only from Form Fields",
-    "header": "Unlock PDF Forms",
+    "title": "Form Alanlarının Salt Okunur Özelliğini Kaldır",
+    "header": "PDF Formlarının Kilidini Aç",
     "submit": "Remove"
   },
   "changeMetadata": {
@@ -829,7 +899,25 @@
     },
     "help": "Lütfen bu belgede başka dillerde nasıl kullanılacağı ve/veya docker'da kullanılmaması hakkında bilgi edinin",
     "credit": "Bu hizmet OCR için qpdf ve Tesseract'ı kullanır.",
-    "submit": "PDF'i OCR(Metin Tanıma) ile İşle"
+    "submit": "PDF'i OCR(Metin Tanıma) ile İşle",
+    "desc": "Taramaları temizler ve bir PDF içindeki resimlerden metni algılar ve tekrar metin olarak ekler.",
+    "settings": {
+      "title": "Ayarlar",
+      "ocrMode": {
+        "label": "OCR Modu"
+      },
+      "languages": {
+        "label": "Diller"
+      }
+    },
+    "tooltip": {
+      "mode": {
+        "title": "OCR Modu"
+      },
+      "languages": {
+        "title": "Diller"
+      }
+    }
   },
   "extractImages": {
     "tags": "fotoğraf,resim,kaydet,arşiv,zip,yakala,al",
@@ -938,7 +1026,13 @@
     "title": "Düzleştir",
     "header": "PDF'leri Düzleştir",
     "flattenOnlyForms": "Yalnızca formları düzleştir",
-    "submit": "Düzleştir"
+    "submit": "Düzleştir",
+    "steps": {
+      "settings": "Ayarlar"
+    },
+    "options": {
+      "flattenOnlyForms": "Yalnızca formları düzleştir"
+    }
   },
   "repair": {
     "tags": "onar,geri yükle,düzelt,geri getir",
@@ -1109,7 +1203,7 @@
     "tags": "biçimlendirme,web-içeriği,dönüşüm,dönüştür,md",
     "title": "PDF To Markdown",
     "header": "PDF To Markdown",
-    "submit": "Convert"
+    "submit": "Dönüştür"
   },
   "getPdfInfo": {
     "tags": "bilgi,veri,istatistikler,istatistik",
@@ -1174,7 +1268,22 @@
     "showLayers": "Katmanları Göster (tüm katmanları varsayılana döndürmek için çift tıklayın)",
     "colourPicker": "Renk Seçici",
     "findCurrentOutlineItem": "Geçerli Anahat Öğesini Bul",
-    "applyChanges": "Değişiklikleri Uygula"
+    "applyChanges": "Değişiklikleri Uygula",
+    "auto": {
+      "settings": {
+        "advancedTitle": "Gelişmiş"
+      },
+      "wordsToRedact": {
+        "add": "Ekle"
+      }
+    },
+    "manual": {
+      "pageRedactionNumbers": {
+        "title": "Sayfalar",
+        "placeholder": "(örneğin 1,2,8 veya 4,7,12-16 ya da 2n-1)"
+      },
+      "export": "Dışa Aktar"
+    }
   },
   "tableExtraxt": {
     "tags": "CSV, Tablo Çıkarma, ayıklama, dönüştürme"
@@ -1386,7 +1495,10 @@
       "4": "Otomatik mod - PDF'in tam boyutuna ulaşmak için kaliteyi otomatik ayarlar",
       "5": "Beklenen PDF Boyutu (örn. 25MB, 10.8MB, 25KB)"
     },
-    "submit": "Sıkıştır"
+    "submit": "Sıkıştır",
+    "method": {
+      "filesize": "Dosya Boyutu"
+    }
   },
   "decrypt": {
     "passwordPrompt": "Bu dosya parola korumalı. Lütfen parolayı girin:",
@@ -1555,6 +1667,84 @@
       "analytics": {
         "title": "Analitik",
         "description": "Bu çerezler, araçlarımızın nasıl kullanıldığını anlamamıza yardımcı olur, böylece topluluğumuzun en çok değer verdiği özellikleri geliştirmeye odaklanabiliriz. İçiniz rahat olsun — Stirling PDF, belgelerinizin içeriğini asla takip etmez ve etmeyecektir."
+      }
+    }
+  },
+  "download": "İndir",
+  "undo": "Geri Al",
+  "convert": {
+    "title": "Dönüştür",
+    "settings": "Ayarlar",
+    "color": "Renk",
+    "greyscale": "Gri tonlama",
+    "fillPage": "Sayfayı Doldur",
+    "pdfaDigitalSignatureWarning": "PDF dijital imza içeriyor. Bu bir sonraki adımda kaldırılacak.",
+    "grayscale": "Gri tonlama"
+  },
+  "attachments": {
+    "tags": "embed,attach,file,attachment,attachments",
+    "title": "Add attachments",
+    "header": "Add attachments",
+    "submit": "Add attachments"
+  },
+  "rightRail": {
+    "selectAll": "Tümünü Seç",
+    "deselectAll": "Seçimi Kaldır"
+  },
+  "quickAccess": {
+    "sign": "İmzala"
+  },
+  "fileUpload": {
+    "loading": "Yükleniyor...",
+    "or": "veya"
+  },
+  "fileManager": {
+    "fileName": "İsim",
+    "fileVersion": "Sürüm",
+    "selectAll": "Tümünü Seç",
+    "deselectAll": "Seçimi Kaldır",
+    "deleteSelected": "Seçilenleri Sil",
+    "download": "İndir",
+    "delete": "Sil"
+  },
+  "sanitize": {
+    "submit": "PDF'i Temizle",
+    "steps": {
+      "settings": "Ayarlar"
+    }
+  },
+  "changePermissions": {
+    "title": "İzinleri Değiştir",
+    "submit": "İzinleri Değiştir",
+    "permissions": {
+      "preventAssembly": {
+        "label": "Belgenin birleştirilmesini önle"
+      },
+      "preventExtractContent": {
+        "label": "İçeriğin çıkarılmasını önle"
+      },
+      "preventExtractForAccessibility": {
+        "label": "Erişilebilirlik için çıkarmanın önlenmesi"
+      },
+      "preventFillInForm": {
+        "label": "Formun doldurulmasını önle"
+      },
+      "preventModify": {
+        "label": "Değişikliği önle"
+      },
+      "preventModifyAnnotations": {
+        "label": "Açıklama değişikliğini önle"
+      },
+      "preventPrinting": {
+        "label": "Yazdırmayı önle"
+      },
+      "preventPrintingFaithful": {
+        "label": "Farklı formatlarda yazdırmayı önle"
+      }
+    },
+    "tooltip": {
+      "header": {
+        "title": "İzinleri Değiştir"
       }
     }
   }

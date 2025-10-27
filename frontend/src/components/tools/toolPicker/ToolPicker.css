@@ -1,0 +1,95 @@
+.tool-picker-scrollable {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+.tool-picker-scrollable::-webkit-scrollbar {
+  width: 0.375rem;
+}
+
+.tool-picker-scrollable::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.tool-picker-scrollable::-webkit-scrollbar-thumb {
+  background-color: var(--mantine-color-gray-4);
+  border-radius: 0.1875rem;
+}
+
+.tool-picker-scrollable::-webkit-scrollbar-thumb:hover {
+  background-color: var(--mantine-color-gray-5);
+}
+
+.search-input {
+  margin: 1rem;
+}
+
+.tool-subcategory-title {
+  text-transform: uppercase;
+  padding-bottom: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--tool-subcategory-text-color);
+  /* Align the text with tool labels to account for icon gutter */
+  padding-left: 1rem;
+}
+
+/* New row-style subcategory header with rule */
+.tool-subcategory-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.tool-subcategory-row-title {
+  text-transform: uppercase;
+  font-weight: 600;
+  font-size: 0.75rem;
+  color: var(--tool-subcategory-text-color);
+  white-space: nowrap;
+  overflow: visible;
+}
+
+.tool-subcategory-row-rule {
+  height: 1px;
+  background-color: var(--tool-subcategory-rule-color);
+  flex: 1 1 auto;
+}
+
+/* Compact tool buttons */
+.tool-button {
+  font-size: 0.875rem; /* default 1rem - 0.125rem? We'll apply exact -0.25rem via calc below */
+  padding-top: 0.375rem;
+  padding-bottom: 0.375rem;
+}
+
+.tool-button .mantine-Button-label {
+  font-size: .85rem;
+}
+
+.tool-button-icon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+/* Container to enable hover-only favourite star overlay */
+.tool-button-container {
+  position: relative;
+}
+
+.tool-button-star {
+  position: absolute;
+  top: 0.35rem;
+  right: 0.35rem;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: var(--z-toolpicker-star); /* lower than sticky section headers */
+}
+
+.tool-button-container:hover .tool-button-star {
+  opacity: 1;
+}
+
+.search-input-container {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}

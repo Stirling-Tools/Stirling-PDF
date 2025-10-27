@@ -1,4 +1,3 @@
-import React from 'react';
 import { Button } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 
@@ -13,6 +12,8 @@ export interface OperationButtonProps {
   fullWidth?: boolean;
   mt?: string;
   type?: 'button' | 'submit' | 'reset';
+  'data-testid'?: string;
+  'data-tour'?: string;
 }
 
 const OperationButton = ({
@@ -23,9 +24,11 @@ const OperationButton = ({
   submitText,
   variant = 'filled',
   color = 'blue',
-  fullWidth = true,
+  fullWidth = false,
   mt = 'md',
-  type = 'button'
+  type = 'button',
+  'data-testid': dataTestId,
+  'data-tour': dataTour
 }: OperationButtonProps) => {
   const { t } = useTranslation();
 
@@ -34,18 +37,23 @@ const OperationButton = ({
       type={type}
       onClick={onClick}
       fullWidth={fullWidth}
+      mr='md'
+      ml='md'
       mt={mt}
       loading={isLoading}
       disabled={disabled}
       variant={variant}
       color={color}
+      data-testid={dataTestId}
+      data-tour={dataTour}
+      style={{ minHeight: '2.5rem'  }}
     >
-      {isLoading 
+      {isLoading
         ? (loadingText || t("loading", "Loading..."))
         : (submitText || t("submit", "Submit"))
       }
     </Button>
   );
-}
+};
 
 export default OperationButton;

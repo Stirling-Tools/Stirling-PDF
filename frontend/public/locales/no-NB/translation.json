@@ -137,7 +137,7 @@
     "scanHelp": "Mappe skanning hjelp",
     "deletePrompt": "Er du sikker på at du vil slette denne pipelinen?",
     "tags": "automatisere,sekvens,skriptet,batch-prosess",
-    "title": "Pipeline"
+    "title": "Pipeline (Avansert)"
   },
   "pipelineOptions": {
     "header": "Pipeline konfigurasjon",
@@ -283,7 +283,7 @@
     "endpoint": "Endpoint",
     "visits": "Visits",
     "percentage": "Percentage",
-    "loading": "Loading...",
+    "loading": "Laster...",
     "failedToLoad": "Failed to load endpoint data. Please try refreshing.",
     "home": "Home",
     "login": "Login",
@@ -347,7 +347,7 @@
       "title": "Roter",
       "desc": "Roter enkelt dine PDF-er."
     },
-    "imageToPdf": {
+    "imageToPDF": {
       "title": "Bilde til PDF",
       "desc": "Konverter et bilde (PNG, JPEG, GIF) til PDF."
     },
@@ -371,7 +371,7 @@
       "title": "Endre Tillatelser",
       "desc": "Endre tillatelsene til din PDF-dokument"
     },
-    "removePages": {
+    "pageRemover": {
       "title": "Fjern",
       "desc": "Slett uønskede sider fra din PDF-dokument."
     },
@@ -383,7 +383,7 @@
       "title": "Fjern Passord",
       "desc": "Fjern passordbeskyttelse fra din PDF-dokument."
     },
-    "compressPdfs": {
+    "compress": {
       "title": "Komprimer",
       "desc": "Komprimer PDF-er for å redusere filstørrelsen."
     },
@@ -479,7 +479,7 @@
       "title": "Pipeline (Avansert)",
       "desc": "Utfør flere handlinger på PDF-er ved å definere pipelineskripter"
     },
-    "add-page-numbers": {
+    "addPageNumbers": {
       "title": "Legg til Sidetall",
       "desc": "Legg til sidetall gjennom et dokument på en angitt plassering"
     },
@@ -487,7 +487,7 @@
       "title": "Auto Omdøp PDF Fil",
       "desc": "Omdøper automatisk en PDF-fil basert på dens oppdagede overskrift"
     },
-    "adjust-contrast": {
+    "adjustContrast": {
       "title": "Juster Farger/Kontrast",
       "desc": "Juster kontrast, metning og lysstyrke i en PDF"
     },
@@ -499,7 +499,7 @@
       "title": "Auto Del Sider",
       "desc": "Auto Del Skannet PDF med fysisk skannet sidesplitter QR-kode"
     },
-    "sanitizePdf": {
+    "sanitizePDF": {
       "title": "Sanitiser",
       "desc": "Fjern skript og andre elementer fra PDF-filer"
     },
@@ -523,11 +523,11 @@
       "title": "Få ALL informasjon om PDF",
       "desc": "Fanger opp all tilgjengelig informasjon om PDF-er"
     },
-    "extractPage": {
+    "pageExtracter": {
       "title": "Ekstraher side(r)",
       "desc": "Ekstraher valgte sider fra PDF"
     },
-    "PdfToSinglePage": {
+    "pdfToSinglePage": {
       "title": "PDF til Enkelt Stor Side",
       "desc": "Slår sammen alle PDF-sider til en stor enkeltside"
     },
@@ -543,11 +543,11 @@
       "title": "Manuell Sensurering",
       "desc": "Sensurerer en PDF basert på valgt tekst, tegnede former og/eller valgte side(r)"
     },
-    "tableExtraxt": {
+    "PDFToCSV": {
       "title": "PDF til CSV",
       "desc": "Ekstraherer tabeller fra en PDF og konverterer dem til CSV"
     },
-    "autoSizeSplitPDF": {
+    "split-by-size-or-count": {
       "title": "Auto Del etter Størrelse/Antall",
       "desc": "Del en enkelt PDF i flere dokumenter basert på størrelse, antall sider eller dokumenter"
     },
@@ -563,11 +563,11 @@
       "title": "Legg til Stempel i PDF",
       "desc": "Legg til tekst eller bilde stempler på angitte steder"
     },
-    "removeImagePdf": {
+    "removeImage": {
       "title": "Fjern bilde",
       "desc": "Fjern bilde fra PDF for å redusere filstørrelsen"
     },
-    "splitPdfByChapters": {
+    "splitByChapters": {
       "title": "Split PDF by Chapters",
       "desc": "Split a PDF into multiple files based on its chapter structure."
     },
@@ -575,9 +575,41 @@
       "title": "Valider PDF-signatur",
       "desc": "Verifiser digitale signaturer og sertifikater i PDF-dokumenter"
     },
+    "replace-color": {
+      "title": "Erstatt og Inverter Farge",
+      "desc": "Erstatt farge for tekst og bakgrunn i PDF og inverter full farge av pdf for å redusere filstørrelsen"
+    },
+    "convert": {
+      "title": "Konverter"
+    },
+    "attachments": {
+      "title": "Add attachments"
+    },
+    "extractPages": {
+      "title": "Trekk ut Sider"
+    },
+    "removePages": {
+      "title": "Fjern",
+      "desc": "Slett uønskede sider fra din PDF-dokument."
+    },
+    "removeImagePdf": {
+      "title": "Fjern bilde",
+      "desc": "Fjern bilde fra PDF for å redusere filstørrelsen"
+    },
+    "autoSizeSplitPDF": {
+      "title": "Auto Del etter Størrelse/Antall",
+      "desc": "Del en enkelt PDF i flere dokumenter basert på størrelse, antall sider eller dokumenter"
+    },
+    "adjust-contrast": {
+      "title": "Juster Farger/Kontrast",
+      "desc": "Juster kontrast, metning og lysstyrke i en PDF"
+    },
     "replaceColorPdf": {
       "title": "Erstatt og Inverter Farge",
       "desc": "Erstatt farge for tekst og bakgrunn i PDF og inverter full farge av pdf for å redusere filstørrelsen"
+    },
+    "changePermissions": {
+      "title": "Endre tillatelser"
     }
   },
   "viewPdf": {
@@ -594,7 +626,7 @@
     "deselectAll": "Deselect All",
     "selectPages": "Page Select",
     "selectedPages": "Selected Pages",
-    "page": "Page",
+    "page": "Side",
     "deleteSelected": "Delete Selected",
     "downloadAll": "Export",
     "downloadSelected": "Export Selected",
@@ -602,10 +634,10 @@
     "addFile": "Add File",
     "rotateLeft": "Rotate Left",
     "rotateRight": "Rotate Right",
-    "split": "Split",
+    "split": "Del opp",
     "moveLeft": "Move Left",
     "moveRight": "Move Right",
-    "delete": "Delete",
+    "delete": "Slett",
     "dragDropMessage": "Page(s) Selected",
     "undo": "Undo",
     "redo": "Redo"
@@ -617,7 +649,10 @@
     "sortByName": "Sorter etter navn",
     "sortByDate": "Sorter etter dato",
     "removeCertSign": "Fjern digital signatur i den sammenslåtte filen?",
-    "submit": "Slå sammen"
+    "submit": "Slå sammen",
+    "sortBy": {
+      "filename": "Fil navn"
+    }
   },
   "split": {
     "tags": "sideoperasjoner,del,flersidig,kutt,serverside",
@@ -634,7 +669,20 @@
       "8": "Dokument #6: Side 10"
     },
     "splitPages": "Skriv inn sidene som skal deles på:",
-    "submit": "Del"
+    "submit": "Del",
+    "steps": {
+      "settings": "Innstillinger"
+    },
+    "methods": {
+      "bySize": {
+        "name": "Filstørrelse"
+      }
+    },
+    "value": {
+      "fileSize": {
+        "label": "Filstørrelse"
+      }
+    }
   },
   "rotate": {
     "tags": "serverside",
@@ -712,6 +760,12 @@
     "type": {
       "1": "Tekst",
       "2": "Bilde"
+    },
+    "watermarkType": {
+      "text": "Tekst"
+    },
+    "settings": {
+      "fontSize": "Skriftstørrelse"
     }
   },
   "permissions": {
@@ -734,7 +788,9 @@
     "submit": "Endre"
   },
   "removePages": {
-    "tags": "fjern sider,slett sider"
+    "tags": "fjern sider,slett sider",
+    "title": "Fjern",
+    "submit": "Fjern"
   },
   "addPassword": {
     "tags": "sikker,trygghet",
@@ -758,7 +814,12 @@
       "15": "Begrenser hva som kan gjøres med dokumentet når det er åpnet (Støttes ikke av alle leserprogrammer)",
       "16": "Begrenser åpningen av dokumentet selv"
     },
-    "submit": "Krypter"
+    "submit": "Krypter",
+    "tooltip": {
+      "permissions": {
+        "title": "Endre tillatelser"
+      }
+    }
   },
   "removePassword": {
     "tags": "sikker,dekrypter,trygghet,upassord,slett passord",
@@ -768,7 +829,12 @@
       "1": "Velg PDF for å dekryptere",
       "2": "Passord"
     },
-    "submit": "Fjern"
+    "submit": "Fjern",
+    "desc": "Fjern passordbeskyttelse fra din PDF-dokument.",
+    "password": {
+      "stepTitle": "Fjern Passord",
+      "label": "Nåværende Passord"
+    }
   },
   "compressPdfs": {
     "tags": "komprimer,liten,tiny"
@@ -829,7 +895,25 @@
     },
     "help": "Vennligst les denne dokumentasjonen for hvordan du bruker dette for andre språk og/eller bruk utenfor Docker.",
     "credit": "Denne tjenesten bruker qpdf og Tesseract for OCR.",
-    "submit": "Behandle PDF med OCR"
+    "submit": "Behandle PDF med OCR",
+    "desc": "Rydd opp skanninger og oppdag tekst fra bilder i en PDF og legg den til som tekst.",
+    "settings": {
+      "title": "Innstillinger",
+      "ocrMode": {
+        "label": "OCR-modus"
+      },
+      "languages": {
+        "label": "Språk"
+      }
+    },
+    "tooltip": {
+      "mode": {
+        "title": "OCR-modus"
+      },
+      "languages": {
+        "title": "Språk"
+      }
+    }
   },
   "extractImages": {
     "tags": "bilde,foto,lagre,arkiv,zip,fangst,hent",
@@ -938,7 +1022,13 @@
     "title": "Utjevning",
     "header": "Utjevning av PDf",
     "flattenOnlyForms": "Utjevning av kun skjemaer",
-    "submit": "Utjevn"
+    "submit": "Utjevn",
+    "steps": {
+      "settings": "Innstillinger"
+    },
+    "options": {
+      "flattenOnlyForms": "Utjevning av kun skjemaer"
+    }
   },
   "repair": {
     "tags": "fiks,gjenopprett,korreksjon,gjenoppretting",
@@ -1106,10 +1196,10 @@
     "credit": "Bruker WeasyPrint"
   },
   "PDFToMarkdown": {
-    "tags": "markup,web-content,transformation,convert,md",
+    "tags": "markup,web-innhold,transformasjon,konverter",
     "title": "PDF To Markdown",
     "header": "PDF To Markdown",
-    "submit": "Convert"
+    "submit": "Konverter"
   },
   "getPdfInfo": {
     "tags": "informasjon,data,statistikk",
@@ -1174,7 +1264,21 @@
     "showLayers": "Vis lag (dobbeltklikk for å tilbakestille alle lag til standardtilstand)",
     "colourPicker": "Fargevelger",
     "findCurrentOutlineItem": "Finn gjeldende punkt i strukturen",
-    "applyChanges": "Bruk endringer"
+    "applyChanges": "Bruk endringer",
+    "auto": {
+      "settings": {
+        "advancedTitle": "Avansert"
+      },
+      "wordsToRedact": {
+        "add": "Legg til"
+      }
+    },
+    "manual": {
+      "pageRedactionNumbers": {
+        "title": "Sider",
+        "placeholder": "(f.eks. 1,2,8 eller 4,7,12-16 eller 2n-1)"
+      }
+    }
   },
   "tableExtraxt": {
     "tags": "CSV,tabelluttrekk,ekstrahere,konvertere"
@@ -1386,7 +1490,10 @@
       "4": "Automatisk modus - Justerer automatisk kvaliteten for å få PDF til nøyaktig størrelse",
       "5": "Forventet PDF-størrelse (f.eks. 25MB, 10.8MB, 25KB)"
     },
-    "submit": "Komprimer"
+    "submit": "Komprimer",
+    "method": {
+      "filesize": "Filstørrelse"
+    }
   },
   "decrypt": {
     "passwordPrompt": "This file is password-protected. Please enter the password:",
@@ -1501,7 +1608,7 @@
       "3": "Include Metadata: If checked, the original PDF's metadata will be included in each split PDF.",
       "4": "Allow Duplicates: If checked, allows multiple bookmarks on the same page to create separate PDFs."
     },
-    "submit": "Split PDF"
+    "submit": "Del PDF"
   },
   "fileChooser": {
     "click": "Click",
@@ -1555,6 +1662,76 @@
       "analytics": {
         "title": "Analytics",
         "description": "These cookies help us understand how our tools are being used, so we can focus on building the features our community values most. Rest assured—Stirling PDF cannot and will never track the content of the documents you work with."
+      }
+    }
+  },
+  "download": "Last ned",
+  "undo": "Angre",
+  "convert": {
+    "title": "Konverter",
+    "settings": "Innstillinger",
+    "color": "Farge",
+    "greyscale": "Gråtone",
+    "fillPage": "Fyll side",
+    "pdfaDigitalSignatureWarning": "PDFen inneholder en digital signatur. Denne vil bli fjernet i neste steg.",
+    "grayscale": "Gråtone"
+  },
+  "attachments": {
+    "tags": "embed,attach,file,attachment,attachments",
+    "title": "Add attachments",
+    "header": "Add attachments",
+    "submit": "Add attachments"
+  },
+  "quickAccess": {
+    "sign": "Signer"
+  },
+  "fileUpload": {
+    "loading": "Laster..."
+  },
+  "fileManager": {
+    "fileName": "Navn",
+    "fileVersion": "Versjon",
+    "download": "Last ned",
+    "delete": "Slett"
+  },
+  "sanitize": {
+    "submit": "Rensker PDF",
+    "steps": {
+      "settings": "Innstillinger"
+    }
+  },
+  "changePermissions": {
+    "title": "Endre tillatelser",
+    "submit": "Endre tillatelser",
+    "permissions": {
+      "preventAssembly": {
+        "label": "Forhindre sammenstilling av dokumentet"
+      },
+      "preventExtractContent": {
+        "label": "Forhindre innholdsekstraksjon"
+      },
+      "preventExtractForAccessibility": {
+        "label": "Forhindre ekstraksjon for tilgjengelighet"
+      },
+      "preventFillInForm": {
+        "label": "Forhindre utfylling av skjema"
+      },
+      "preventModify": {
+        "label": "Forhindre modifisering"
+      },
+      "preventModifyAnnotations": {
+        "label": "Forhindre annotasjonsmodifisering"
+      },
+      "preventPrinting": {
+        "label": "Forhindre utskrift"
+      },
+      "preventPrintingFaithful": {
+        "label": "Forhindre utskrift i ulike formater"
+      }
+    },
+    "tooltip": {
+      "header": {
+        "title": "Endre tillatelser"
       }
     }
   }

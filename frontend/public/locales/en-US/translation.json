@@ -2,6 +2,23 @@
   "language": {
     "direction": "ltr"
   },
+  "toolPanel": {
+    "modePrompt": {
+      "title": "Choose how you browse tools",
+      "description": "Preview both layouts and decide how you want to explore Stirling PDF tools.",
+      "sidebarTitle": "Sidebar mode",
+      "sidebarDescription": "Keep tools alongside your workspace for quick switching.",
+      "recommended": "Recommended",
+      "chooseSidebar": "Use sidebar mode",
+      "fullscreenTitle": "Fullscreen mode - (legacy)",
+      "fullscreenDescription": "Browse every tool in a catalogue that covers the workspace until you pick one.",
+      "chooseFullscreen": "Use fullscreen mode",
+      "dismiss": "Maybe later"
+    },
+    "fullscreen": {
+      "showDetails": "Show Details"
+    }
+  },
   "addPageNumbers": {
     "fontSize": "Font Size",
     "fontName": "Font Name",
@@ -35,15 +52,27 @@
   "true": "True",
   "false": "False",
   "unknown": "Unknown",
+  "app": {
+    "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+  },
   "save": "Save",
   "saveToBrowser": "Save to Browser",
+  "download": "Download",
+  "editYourNewFiles": "Edit your new file(s)",
   "close": "Close",
-  "filesSelected": "files selected",
+  "chooseFile": "Choose File",
+  "fileSelected": "Selected: {{filename}}",
+  "filesSelected": "{{count}} files selected",
+  "files": {
+    "title": "Files",
+    "placeholder": "Select a PDF file in the main view to get started"
+  },
   "noFavourites": "No favorites added",
   "downloadComplete": "Download Complete",
   "bored": "Bored Waiting?",
   "alphabet": "Alphabet",
   "downloadPdf": "Download PDF",
+
   "text": "Text",
   "font": "Font",
   "selectFillter": "-- Select --",
@@ -56,6 +85,8 @@
   },
   "error": {
     "pdfPassword": "The PDF Document is passworded and either the password was not provided or was incorrect",
+    "encryptedPdfMustRemovePassword": "This PDF is encrypted or password-protected. Please unlock it before converting to PDF/A.",
+    "incorrectPasswordProvided": "The PDF password is incorrect or not provided.",
     "_value": "Error",
     "sorry": "Sorry for the issue!",
     "needHelp": "Need help / Found an issue?",
@@ -70,6 +101,9 @@
     "copyStack": "Copy Stack Trace",
     "githubSubmit": "GitHub - Submit a ticket",
     "discordSubmit": "Discord - Submit Support post"
+  },
+  "warning": {
+    "tooltipTitle": "Warning"
   },
   "delete": "Delete",
   "username": "Username",
@@ -115,6 +149,7 @@
   "page": "Page",
   "pages": "Pages",
   "loading": "Loading...",
+  "review": "Review",
   "addToDoc": "Add to Document",
   "reset": "Reset",
   "apply": "Apply",
@@ -332,202 +367,265 @@
     "globalPopularity": "Global Popularity",
     "sortBy": "Sort by:",
     "multiTool": {
+      "tags": "multiple,tools",
       "title": "PDF Multi Tool",
       "desc": "Merge, Rotate, Rearrange, Split, and Remove pages"
     },
     "merge": {
+      "tags": "combine,join,unite",
       "title": "Merge",
       "desc": "Easily merge multiple PDFs into one."
     },
     "split": {
+      "tags": "divide,separate,break",
       "title": "Split",
       "desc": "Split PDFs into multiple documents"
     },
     "rotate": {
+      "tags": "turn,flip,orient",
       "title": "Rotate",
       "desc": "Easily rotate your PDFs."
     },
-    "imageToPdf": {
+    "imageToPDF": {
+      "tags": "convert,image,transform",
       "title": "Image to PDF",
       "desc": "Convert a image (PNG, JPEG, GIF) to PDF."
     },
     "pdfToImage": {
+      "tags": "convert,image,extract",
       "title": "PDF to Image",
       "desc": "Convert a PDF to a image. (PNG, JPEG, GIF)"
     },
     "pdfOrganiser": {
+      "tags": "organize,rearrange,reorder",
       "title": "Organize",
       "desc": "Remove/Rearrange pages in any order"
     },
     "addImage": {
+      "tags": "insert,embed,place",
       "title": "Add image",
       "desc": "Adds a image onto a set location on the PDF"
     },
     "watermark": {
+      "tags": "stamp,mark,overlay",
       "title": "Add Watermark",
       "desc": "Add a custom watermark to your PDF document."
     },
     "permissions": {
+      "tags": "permissions,security,access",
       "title": "Change Permissions",
       "desc": "Change the permissions of your PDF document"
     },
-    "removePages": {
+    "pageRemover": {
+      "tags": "remove,delete,pages",
       "title": "Remove",
       "desc": "Delete unwanted pages from your PDF document."
     },
     "addPassword": {
+      "tags": "password,encrypt,secure",
       "title": "Add Password",
       "desc": "Encrypt your PDF document with a password."
     },
+    "changePermissions": {
+      "tags": "permissions,restrictions,security",
+      "title": "Change Permissions",
+      "desc": "Change document restrictions and permissions."
+    },
     "removePassword": {
+      "tags": "unlock,remove,password",
       "title": "Remove Password",
       "desc": "Remove password protection from your PDF document."
     },
-    "compressPdfs": {
+    "compress": {
+      "tags": "shrink,reduce,optimize",
       "title": "Compress",
       "desc": "Compress PDFs to reduce their file size."
     },
+    "sanitize": {
+      "tags": "clean,purge,remove",
+      "title": "Sanitize",
+      "desc": "Remove potentially harmful elements from PDF files."
+    },
     "unlockPDFForms": {
+      "tags": "unlock,enable,edit",
       "title": "Unlock PDF Forms",
       "desc": "Remove read-only property of form fields in a PDF document."
     },
     "changeMetadata": {
+      "tags": "edit,modify,update",
       "title": "Change Metadata",
       "desc": "Change/Remove/Add metadata from a PDF document"
     },
     "fileToPDF": {
+      "tags": "convert,transform,change",
       "title": "Convert file to PDF",
       "desc": "Convert nearly any file to PDF (DOCX, PNG, XLS, PPT, TXT and more)"
     },
     "ocr": {
+      "tags": "extract,scan",
       "title": "OCR / Cleanup scans",
       "desc": "Cleanup scans and detects text from images within a PDF and re-adds it as text."
     },
     "extractImages": {
+      "tags": "pull,save,export",
       "title": "Extract Images",
       "desc": "Extracts all images from a PDF and saves them to zip"
     },
     "pdfToPDFA": {
+      "tags": "convert,archive,long-term",
       "title": "PDF to PDF/A",
       "desc": "Convert PDF to PDF/A for long-term storage"
     },
     "PDFToWord": {
+      "tags": "convert,word,doc",
       "title": "PDF to Word",
       "desc": "Convert PDF to Word formats (DOC, DOCX and ODT)"
     },
     "PDFToPresentation": {
+      "tags": "convert,presentation,ppt",
       "title": "PDF to Presentation",
       "desc": "Convert PDF to Presentation formats (PPT, PPTX and ODP)"
     },
     "PDFToText": {
+      "tags": "convert,text,rtf",
       "title": "PDF to RTF (Text)",
       "desc": "Convert PDF to Text or RTF format"
     },
     "PDFToHTML": {
+      "tags": "convert,html,web",
       "title": "PDF to HTML",
       "desc": "Convert PDF to HTML format"
     },
     "PDFToXML": {
+      "tags": "convert,xml,data",
       "title": "PDF to XML",
       "desc": "Convert PDF to XML format"
     },
     "ScannerImageSplit": {
+      "tags": "detect,split,photos",
       "title": "Detect/Split Scanned photos",
       "desc": "Splits multiple photos from within a photo/PDF"
     },
     "sign": {
+      "tags": "signature,autograph",
       "title": "Sign",
       "desc": "Adds signature to PDF by drawing, text or image"
     },
     "flatten": {
+      "tags": "simplify,remove,interactive",
       "title": "Flatten",
       "desc": "Remove all interactive elements and forms from a PDF"
     },
     "repair": {
+      "tags": "fix,restore",
       "title": "Repair",
       "desc": "Tries to repair a corrupt/broken PDF"
     },
     "removeBlanks": {
+      "tags": "delete,clean,empty",
       "title": "Remove Blank pages",
       "desc": "Detects and removes blank pages from a document"
     },
     "removeAnnotations": {
+      "tags": "delete,clean,strip",
       "title": "Remove Annotations",
       "desc": "Removes all comments/annotations from a PDF"
     },
     "compare": {
+      "tags": "difference",
       "title": "Compare",
       "desc": "Compares and shows the differences between 2 PDF Documents"
     },
     "certSign": {
+      "tags": "authenticate,PEM,P12,official,encrypt,sign,certificate,PKCS12,JKS,server,manual,auto",
       "title": "Sign with Certificate",
       "desc": "Signs a PDF with a Certificate/Key (PEM/P12)"
     },
     "removeCertSign": {
+      "tags": "remove,delete,unlock",
       "title": "Remove Certificate Sign",
       "desc": "Remove certificate signature from PDF"
     },
     "pageLayout": {
+      "tags": "layout,arrange,combine",
       "title": "Multi-Page Layout",
       "desc": "Merge multiple pages of a PDF document into a single page"
     },
+    "bookletImposition": {
+      "tags": "booklet,print,binding",
+      "title": "Booklet Imposition",
+      "desc": "Create booklets with proper page ordering and multi-page layout for printing and binding"
+    },
     "scalePages": {
+      "tags": "resize,adjust,scale",
       "title": "Adjust page size/scale",
       "desc": "Change the size/scale of a page and/or its contents."
     },
     "pipeline": {
+      "tags": "automation,script,workflow",
       "title": "Pipeline",
       "desc": "Run multiple actions on PDFs by defining pipeline scripts"
     },
-    "add-page-numbers": {
+    "addPageNumbers": {
+      "tags": "number,pagination,count",
       "title": "Add Page Numbers",
       "desc": "Add Page numbers throughout a document in a set location"
     },
     "auto-rename": {
+      "tags": "auto-detect,header-based,organize,relabel",
       "title": "Auto Rename PDF File",
       "desc": "Auto renames a PDF file based on its detected header"
     },
-    "adjust-contrast": {
+    "adjustContrast": {
+      "tags": "contrast,brightness,saturation",
       "title": "Adjust Colors/Contrast",
-      "desc": "Adjust Contrast, Saturation and Brightness of a PDF"
+      "desc": "Adjust Colors/Contrast, Saturation and Brightness of a PDF"
     },
     "crop": {
+      "tags": "trim,cut,resize",
       "title": "Crop PDF",
       "desc": "Crop a PDF to reduce its size (maintains text!)"
     },
     "autoSplitPDF": {
+      "tags": "auto,split,QR",
       "title": "Auto Split Pages",
       "desc": "Auto Split Scanned PDF with physical scanned page splitter QR Code"
     },
-    "sanitizePdf": {
+    "sanitizePDF": {
+      "tags": "clean,purge,remove",
       "title": "Sanitize",
       "desc": "Remove scripts and other elements from PDF files"
     },
     "URLToPDF": {
+      "tags": "convert,url,website",
       "title": "URL/Website To PDF",
       "desc": "Converts any http(s)URL to PDF"
     },
     "HTMLToPDF": {
+      "tags": "convert,html,web",
       "title": "HTML to PDF",
       "desc": "Converts any HTML file or zip to PDF"
     },
     "MarkdownToPDF": {
+      "tags": "convert,markdown,md",
       "title": "Markdown to PDF",
       "desc": "Converts any Markdown file to PDF"
     },
     "PDFToMarkdown": {
+      "tags": "convert,markdown,md",
       "title": "PDF to Markdown",
       "desc": "Converts any PDF to Markdown"
     },
     "getPdfInfo": {
+      "tags": "info,metadata,details",
       "title": "Get ALL Info on PDF",
       "desc": "Grabs any and all information possible on PDFs"
     },
-    "extractPage": {
+    "pageExtracter": {
       "title": "Extract page(s)",
       "desc": "Extracts select pages from PDF"
     },
-    "PdfToSinglePage": {
+    "pdfToSinglePage": {
       "title": "Single Large Page",
       "desc": "Merges all PDF pages into one large single page"
     },
@@ -536,49 +634,69 @@
       "desc": "Searches and displays any JS injected into a PDF"
     },
     "autoRedact": {
+      "tags": "auto,redact,censor",
       "title": "Auto Redact",
       "desc": "Auto Redacts(Blacks out) text in a PDF based on input text"
     },
     "redact": {
+      "tags": "censor,blackout,hide",
       "title": "Manual Redaction",
       "desc": "Redacts a PDF based on selected text, drawn shapes and/or selected page(s)"
     },
-    "tableExtraxt": {
+    "PDFToCSV": {
+      "tags": "convert,csv,table",
       "title": "PDF to CSV",
       "desc": "Extracts Tables from a PDF converting it to CSV"
     },
-    "autoSizeSplitPDF": {
+    "split-by-size-or-count": {
+      "tags": "auto,split,size",
       "title": "Auto Split by Size/Count",
       "desc": "Split a single PDF into multiple documents based on size, page count, or document count"
     },
     "overlay-pdfs": {
+      "tags": "overlay,combine,stack",
       "title": "Overlay PDFs",
       "desc": "Overlays PDFs on-top of another PDF"
     },
     "split-by-sections": {
+      "tags": "split,sections,divide",
       "title": "Split PDF by Sections",
       "desc": "Divide each page of a PDF into smaller horizontal and vertical sections"
     },
     "AddStampRequest": {
+      "tags": "stamp,mark,seal",
       "title": "Add Stamp to PDF",
       "desc": "Add text or add image stamps at set locations"
     },
-    "removeImagePdf": {
+    "removeImage": {
+      "tags": "remove,delete,clean",
       "title": "Remove image",
       "desc": "Remove image from PDF to reduce file size"
     },
-    "splitPdfByChapters": {
+    "splitByChapters": {
+      "tags": "split,chapters,structure",
       "title": "Split PDF by Chapters",
       "desc": "Split a PDF into multiple files based on its chapter structure."
     },
     "validateSignature": {
+      "tags": "validate,verify,certificate",
       "title": "Validate PDF Signature",
       "desc": "Verify digital signatures and certificates in PDF documents"
     },
-    "replaceColorPdf": {
+    "swagger": {
+      "tags": "API,documentation,test",
+      "title": "API Documentation",
+      "desc": "View API documentation and test endpoints"
+    },
+    "replace-color": {
+      "tags": "color,replace,invert",
       "title": "Replace and Invert Color",
       "desc": "Replace color for text and background in PDF and invert full color of pdf to reduce file size"
     }
+  },
+  "landing": {
+    "addFiles": "Add Files",
+    "uploadFromComputer": "Upload from computer"
   },
   "viewPdf": {
     "tags": "view,read,annotate,text,image,highlight,edit",
@@ -668,7 +786,7 @@
     "header": "PDF Page Organizer",
     "submit": "Rearrange Pages",
     "mode": {
-      "_value": "Mode",
+      "_value": "Organization mode",
       "1": "Custom Page Order",
       "2": "Reverse Order",
       "3": "Duplex Sort",
@@ -681,6 +799,19 @@
       "10": "Odd-Even Merge",
       "11": "Duplicate all pages"
     },
+    "desc": {
+      "CUSTOM": "Use a custom sequence of page numbers or expressions to define a new order.",
+      "REVERSE_ORDER": "Flip the document so the last page becomes first and so on.",
+      "DUPLEX_SORT": "Interleave fronts then backs as if a duplex scanner scanned all fronts, then all backs (1, n, 2, n-1, …).",
+      "BOOKLET_SORT": "Arrange pages for booklet printing (last, first, second, second last, …).",
+      "SIDE_STITCH_BOOKLET_SORT": "Arrange pages for side‑stitch booklet printing (optimized for binding on the side).",
+      "ODD_EVEN_SPLIT": "Split the document into two outputs: all odd pages and all even pages.",
+      "ODD_EVEN_MERGE": "Merge two PDFs by alternating pages: odd from the first, even from the second.",
+      "DUPLICATE": "Duplicate each page according to the custom order count (e.g., 4 duplicates each page 4×).",
+      "REMOVE_FIRST": "Remove the first page from the document.",
+      "REMOVE_LAST": "Remove the last page from the document.",
+      "REMOVE_FIRST_AND_LAST": "Remove both the first and last pages from the document."
+    },
     "placeholder": "(e.g. 1,3,2 or 4-8,2,10-12 or 2n-1)"
   },
   "addImage": {
@@ -690,29 +821,6 @@
     "everyPage": "Every Page?",
     "upload": "Add image",
     "submit": "Add image"
-  },
-  "watermark": {
-    "tags": "Text,repeating,label,own,copyright,trademark,img,jpg,picture,photo",
-    "title": "Add Watermark",
-    "header": "Add Watermark",
-    "customColor": "Custom Text Color",
-    "selectText": {
-      "1": "Select PDF to add watermark to:",
-      "2": "Watermark Text:",
-      "3": "Font Size:",
-      "4": "Rotation (0-360):",
-      "5": "Width Spacer (Space between each watermark horizontally):",
-      "6": "Height Spacer (Space between each watermark vertically):",
-      "7": "Opacity (0% - 100%):",
-      "8": "Watermark Type:",
-      "9": "Watermark Image:",
-      "10": "Convert PDF to PDF-Image"
-    },
-    "submit": "Add Watermark",
-    "type": {
-      "1": "Text",
-      "2": "Image"
-    }
   },
   "permissions": {
     "tags": "read,write,edit,print",
@@ -734,41 +842,170 @@
     "submit": "Change"
   },
   "removePages": {
-    "tags": "Remove pages,delete pages"
-  },
-  "addPassword": {
-    "tags": "secure,security",
-    "title": "Add Password",
-    "header": "Add password (Encrypt)",
-    "selectText": {
-      "1": "Select PDF to encrypt",
-      "2": "User Password",
-      "3": "Encryption Key Length",
-      "4": "Higher values are stronger, but lower values have better compatibility.",
-      "5": "Permissions to set (Recommended to be used along with Owner password)",
-      "6": "Prevent assembly of document",
-      "7": "Prevent content extraction",
-      "8": "Prevent extraction for accessibility",
-      "9": "Prevent filling in form",
-      "10": "Prevent modification",
-      "11": "Prevent annotation modification",
-      "12": "Prevent printing",
-      "13": "Prevent printing different formats",
-      "14": "Owner Password",
-      "15": "Restricts what can be done with the document once it is opened (Not supported by all readers)",
-      "16": "Restricts the opening of the document itself"
+    "tags": "Remove pages,delete pages",
+    "title": "Remove Pages",
+    "pageNumbers": {
+      "label": "Pages to Remove",
+      "placeholder": "e.g., 1,3,5-8,10",
+      "error": "Invalid page number format. Use numbers, ranges (1-5), or mathematical expressions (2n+1)"
     },
-    "submit": "Encrypt"
-  },
-  "removePassword": {
-    "tags": "secure,Decrypt,security,unpassword,delete password",
-    "title": "Remove password",
-    "header": "Remove password (Decrypt)",
-    "selectText": {
-      "1": "Select PDF to Decrypt",
-      "2": "Password"
+    "filenamePrefix": "pages_removed",
+    "files": {
+      "placeholder": "Select a PDF file in the main view to get started"
     },
-    "submit": "Remove"
+    "settings": {
+      "title": "Settings"
+    },
+    "tooltip": {
+      "header": {
+        "title": "Remove Pages Settings"
+      },
+      "pageNumbers": {
+        "title": "Page Selection",
+        "text": "Specify which pages to remove from your PDF. You can select individual pages, ranges, or use mathematical expressions.",
+        "bullet1": "Individual pages: 1,3,5 (removes pages 1, 3, and 5)",
+        "bullet2": "Page ranges: 1-5,10-15 (removes pages 1-5 and 10-15)",
+        "bullet3": "Mathematical: 2n+1 (removes odd pages)",
+        "bullet4": "Open ranges: 5- (removes from page 5 to end)"
+      },
+      "examples": {
+        "title": "Common Examples",
+        "text": "Here are some common page selection patterns:",
+        "bullet1": "Remove first page: 1",
+        "bullet2": "Remove last 3 pages: -3",
+        "bullet3": "Remove every other page: 2n",
+        "bullet4": "Remove specific scattered pages: 1,5,10,15"
+      },
+      "safety": {
+        "title": "Safety Tips",
+        "text": "Important considerations when removing pages:",
+        "bullet1": "Always preview your selection before processing",
+        "bullet2": "Keep a backup of your original file",
+        "bullet3": "Page numbers start from 1, not 0",
+        "bullet4": "Invalid page numbers will be ignored"
+      }
+    },
+    "error": {
+      "failed": "An error occurred while removing pages."
+    },
+    "results": {
+      "title": "Page Removal Results"
+    },
+    "submit": "Remove Pages"
+  },
+  "pageSelection": {
+    "tooltip": {
+      "header": {
+        "title": "Page Selection Guide"
+      },
+      "basic": {
+        "title": "Basic Usage",
+        "text": "Select specific pages from your PDF document using simple syntax.",
+        "bullet1": "Individual pages: 1,3,5",
+        "bullet2": "Page ranges: 3-6 or 10-15",
+        "bullet3": "All pages: all"
+      },
+      "advanced": {
+        "title": "Advanced Features",
+        "expandText": "▶ Show advanced options",
+        "collapseText": "▼ Hide advanced options",
+        "mathematical": {
+          "title": "Mathematical Functions",
+          "text": "Use mathematical expressions to select page patterns:",
+          "bullet1": "2n - all even pages (2, 4, 6, 8...)",
+          "bullet2": "2n+1 - all odd pages (1, 3, 5, 7...)",
+          "bullet3": "3n - every 3rd page (3, 6, 9, 12...)",
+          "bullet4": "4n-1 - pages 3, 7, 11, 15..."
+        },
+        "ranges": {
+          "title": "Open-ended Ranges",
+          "text": "Select from a starting point to the end:",
+          "bullet1": "5- selects pages 5 to end of document",
+          "bullet2": "10- selects pages 10 to end"
+        },
+        "combinations": {
+          "title": "Complex Combinations",
+          "text": "Combine different selection methods:",
+          "bullet1": "1,3-5,8,2n - pages 1, 3-5, 8, and all even pages",
+          "bullet2": "10-,2n+1 - pages 10 to end plus all odd pages",
+          "bullet3": "1-5,15-,3n - pages 1-5, 15 to end, and every 3rd page"
+        }
+      },
+      "tips": {
+        "title": "Tips",
+        "text": "Keep these guidelines in mind:",
+        "bullet1": "Page numbers start from 1 (not 0)",
+        "bullet2": "Spaces are automatically removed",
+        "bullet3": "Invalid expressions are ignored"
+      },
+      "syntax": {
+        "title": "Syntax Basics",
+        "text": "Use numbers, ranges, keywords, and progressions (n starts at 0). Parentheses are supported.",
+        "bullets": {
+          "numbers": "Numbers/ranges: 5, 10-20",
+          "keywords": "Keywords: odd, even",
+          "progressions": "Progressions: 3n, 4n+1"
+        }
+      },
+      "operators": {
+        "title": "Operators",
+        "text": "AND has higher precedence than comma. NOT applies within the document range.",
+        "and": "AND: & or \"and\" — require both conditions (e.g., 1-50 & even)",
+        "comma": "Comma: , or | — combine selections (e.g., 1-10, 20)",
+        "not": "NOT: ! or \"not\" — exclude pages (e.g., 3n & not 30)"
+      },
+      "examples": { "title": "Examples" }
+    }
+  },
+  "bulkSelection": {
+    "header": { "title": "Page Selection Guide" },
+    "syntax": {
+      "title": "Syntax Basics",
+      "text": "Use numbers, ranges, keywords, and progressions (n starts at 0). Parentheses are supported.",
+      "bullets": {
+        "numbers": "Numbers/ranges: 5, 10-20",
+        "keywords": "Keywords: odd, even",
+        "progressions": "Progressions: 3n, 4n+1"
+      }
+    },
+    "operators": {
+      "title": "Operators",
+      "text": "AND has higher precedence than comma. NOT applies within the document range.",
+      "and": "AND: & or \"and\" — require both conditions (e.g., 1-50 & even)",
+      "comma": "Comma: , or | — combine selections (e.g., 1-10, 20)",
+      "not": "NOT: ! or \"not\" — exclude pages (e.g., 3n & not 30)"
+    },
+    "examples": {
+      "title": "Examples",
+      "first50": "First 50",
+      "last50": "Last 50",
+      "every3rd": "Every 3rd",
+      "oddWithinExcluding": "Odd within 1-20 excluding 5-7",
+      "combineSets": "Combine sets"
+    },
+    "firstNPages": {
+      "title": "First N Pages",
+      "placeholder": "Number of pages"
+    },
+    "lastNPages": {
+      "title": "Last N Pages",
+      "placeholder": "Number of pages"
+    },
+    "everyNthPage": {
+      "title": "Every Nth Page",
+      "placeholder": "Step size"
+    },
+    "range": {
+      "title": "Range",
+      "fromPlaceholder": "From",
+      "toPlaceholder": "To"
+    },
+    "keywords": {
+      "title": "Keywords"
+    },
+    "advanced": {
+      "title": "Advanced"
+    }
   },
   "compressPdfs": {
     "tags": "squish,small,tiny"
@@ -777,7 +1014,18 @@
     "tags": "remove,delete,form,field,readonly",
     "title": "Remove Read-Only from Form Fields",
     "header": "Unlock PDF Forms",
-    "submit": "Remove"
+    "submit": "Unlock Forms",
+    "description": "This tool will remove read-only restrictions from PDF form fields, making them editable and fillable.",
+    "filenamePrefix": "unlocked_forms",
+    "files": {
+      "placeholder": "Select a PDF file in the main view to get started"
+    },
+    "error": {
+      "failed": "An error occurred while unlocking PDF forms."
+    },
+    "results": {
+      "title": "Unlocked Forms Results"
+    }
   },
   "changeMetadata": {
     "tags": "Title,author,date,creation,time,publisher,producer,stats",
@@ -812,6 +1060,7 @@
   "ocr": {
     "tags": "recognition,text,image,scan,read,identify,detection,editable",
     "title": "OCR / Scan Cleanup",
+    "desc": "Cleanup scans and detects text from images within a PDF and re-adds it as text.",
     "header": "Cleanup Scans / OCR (Optical Character Recognition)",
     "selectText": {
       "1": "Select languages that are to be detected within the PDF (Ones listed are the ones currently detected):",
@@ -837,7 +1086,13 @@
     "header": "Extract Images",
     "selectText": "Select image format to convert extracted images to",
     "allowDuplicates": "Save duplicate images",
-    "submit": "Extract"
+    "submit": "Extract",
+    "settings": {
+      "title": "Settings"
+    },
+    "error": {
+      "failed": "An error occurred while extracting images from the PDF."
+    }
   },
   "pdfToPDFA": {
     "tags": "archive,long-term,standard,conversion,storage,preservation",
@@ -910,7 +1165,6 @@
     "info": "Python is not installed. It is required to run."
   },
   "sign": {
-    "tags": "authorize,initials,drawn-signature,text-sign,image-signature",
     "title": "Sign",
     "header": "Sign PDFs",
     "upload": "Upload Image",
@@ -944,23 +1198,79 @@
     "tags": "fix,restore,correction,recover",
     "title": "Repair",
     "header": "Repair PDFs",
-    "submit": "Repair"
+    "submit": "Repair",
+    "description": "This tool will attempt to repair corrupted or damaged PDF files. No additional settings are required.",
+    "filenamePrefix": "repaired",
+    "files": {
+      "placeholder": "Select a PDF file in the main view to get started"
+    },
+    "error": {
+      "failed": "An error occurred while repairing the PDF."
+    },
+    "results": {
+      "title": "Repair Results"
+    }
   },
   "removeBlanks": {
     "tags": "cleanup,streamline,non-content,organize",
     "title": "Remove Blanks",
     "header": "Remove Blank Pages",
-    "threshold": "Pixel Whiteness Threshold:",
-    "thresholdDesc": "Threshold for determining how white a white pixel must be to be classed as 'White'. 0 = Black, 255 pure white.",
-    "whitePercent": "White Percent (%):",
-    "whitePercentDesc": "Percent of page that must be 'white' pixels to be removed",
-    "submit": "Remove Blanks"
+    "settings": {
+      "title": "Settings"
+    },
+    "threshold": {
+      "label": "Pixel Whiteness Threshold"
+    },
+    "whitePercent": {
+      "label": "White Percentage Threshold",
+      "unit": "%"
+    },
+    "includeBlankPages": {
+      "label": "Include detected blank pages"
+    },
+    "tooltip": {
+      "header": {
+        "title": "Remove Blank Pages Settings"
+      },
+      "threshold": {
+        "title": "Pixel Whiteness Threshold",
+        "text": "Controls how white a pixel must be to be considered 'white'. This helps determine what counts as a blank area on the page.",
+        "bullet1": "0 = Pure black (most restrictive)",
+        "bullet2": "128 = Medium gray",
+        "bullet3": "255 = Pure white (least restrictive)"
+      },
+      "whitePercent": {
+        "title": "White Percentage Threshold",
+        "text": "Sets the minimum percentage of white pixels required for a page to be considered blank and removed.",
+        "bullet1": "Lower values (e.g., 80%) = More pages removed",
+        "bullet2": "Higher values (e.g., 95%) = Only very blank pages removed",
+        "bullet3": "Use higher values for documents with light backgrounds"
+      },
+      "includeBlankPages": {
+        "title": "Include Detected Blank Pages",
+        "text": "When enabled, creates a separate PDF containing all the blank pages that were detected and removed from the original document.",
+        "bullet1": "Useful for reviewing what was removed",
+        "bullet2": "Helps verify the detection accuracy",
+        "bullet3": "Can be disabled to reduce output file size"
+      }
+    },
+    "submit": "Remove blank pages"
   },
   "removeAnnotations": {
     "tags": "comments,highlight,notes,markup,remove",
     "title": "Remove Annotations",
     "header": "Remove Annotations",
-    "submit": "Remove"
+    "submit": "Remove",
+    "settings": {
+      "title": "Settings"
+    },
+    "info": {
+      "title": "About Remove Annotations",
+      "description": "This tool will remove all annotations (comments, highlights, notes, etc.) from your PDF documents."
+    },
+    "error": {
+      "failed": "An error occurred while removing annotations from the PDF."
+    }
   },
   "compare": {
     "tags": "differentiate,contrast,changes,analysis",
@@ -1013,7 +1323,18 @@
     "title": "Remove Certificate Signature",
     "header": "Remove the digital certificate from the PDF",
     "selectPDF": "Select a PDF file:",
-    "submit": "Remove Signature"
+    "submit": "Remove Signature",
+    "description": "This tool will remove digital certificate signatures from your PDF document.",
+    "filenamePrefix": "unsigned",
+    "files": {
+      "placeholder": "Select a PDF file in the main view to get started"
+    },
+    "error": {
+      "failed": "An error occurred while removing certificate signatures."
+    },
+    "results": {
+      "title": "Certificate Removal Results"
+    }
   },
   "pageLayout": {
     "tags": "merge,composite,single-view,organize",
@@ -1022,6 +1343,17 @@
     "pagesPerSheet": "Pages per sheet:",
     "addBorder": "Add Borders",
     "submit": "Submit"
+  },
+  "bookletImposition": {
+    "tags": "booklet,imposition,printing,binding,folding,signature",
+    "title": "Booklet Imposition",
+    "header": "Booklet Imposition",
+    "submit": "Create Booklet",
+    "files": {
+    },
+    "error": {
+      "failed": "An error occurred while creating the booklet imposition."
+    }
   },
   "scalePages": {
     "tags": "resize,modify,dimension,adapt",
@@ -1039,7 +1371,28 @@
     "tags": "auto-detect,header-based,organize,relabel",
     "title": "Auto Rename",
     "header": "Auto Rename PDF",
-    "submit": "Auto Rename"
+    "submit": "Auto Rename",
+    "files": {
+      "placeholder": "Select a PDF file in the main view to get started"
+    },
+    "error": {
+      "failed": "An error occurred while auto-renaming the PDF."
+    },
+    "results": {
+      "title": "Auto-Rename Results"
+    },
+    "tooltip": {
+      "header": {
+        "title": "How Auto-Rename Works"
+      },
+      "howItWorks": {
+        "title": "Smart Renaming",
+        "text": "Automatically finds the best title from your PDF content and uses it as the filename.",
+        "bullet1": "Looks for text that appears to be a title or heading",
+        "bullet2": "Creates a clean, valid filename from the detected title",
+        "bullet3": "Keeps the original name if no suitable title is found"
+      }
+    }
   },
   "adjust-contrast": {
     "tags": "color-correction,tune,modify,enhance"
@@ -1185,11 +1538,15 @@
   "overlay-pdfs": {
     "tags": "Overlay",
     "header": "Overlay PDF Files",
+    "title": "Overlay PDFs",
+    "desc": "Overlay one PDF on top of another",
     "baseFile": {
       "label": "Select Base PDF File"
     },
     "overlayFiles": {
-      "label": "Select Overlay PDF Files"
+      "label": "Select Overlay PDF Files",
+      "placeholder": "Choose PDF(s)...",
+      "addMore": "Add more PDFs..."
     },
     "mode": {
       "label": "Select Overlay Mode",
@@ -1199,14 +1556,49 @@
     },
     "counts": {
       "label": "Overlay Counts (for Fixed Repeat Mode)",
-      "placeholder": "Enter comma-separated counts (e.g., 2,3,1)"
+      "placeholder": "Enter comma-separated counts (e.g., 2,3,1)",
+      "item": "Count for file"
     },
     "position": {
       "label": "Select Overlay Position",
       "foreground": "Foreground",
       "background": "Background"
     },
-    "submit": "Submit"
+    "submit": "Submit",
+    "settings": {
+      "title": "Settings"
+    },
+    "results": {
+      "title": "Overlay Results"
+    },
+    "tooltip": {
+      "header": {
+        "title": "Overlay PDFs Overview"
+      },
+      "description": {
+        "title": "Description",
+        "text": "Combine a base PDF with one or more overlay PDFs. Overlays can be applied page-by-page in different modes and placed in the foreground or background."
+      },
+      "mode": {
+        "title": "Overlay Mode",
+        "text": "Choose how to distribute overlay pages across the base PDF pages.",
+        "sequential": "Sequential Overlay: Use pages from the first overlay PDF until it ends, then move to the next.",
+        "interleaved": "Interleaved Overlay: Take one page from each overlay in turn.",
+        "fixedRepeat": "Fixed Repeat Overlay: Take a set number of pages from each overlay before moving to the next. Use Counts to set the numbers."
+      },
+      "position": {
+        "title": "Overlay Position",
+        "text": "Foreground places the overlay on top of the page. Background places it behind."
+      },
+      "overlayFiles": {
+        "title": "Overlay Files",
+        "text": "Select one or more PDFs to overlay on the base. The order of these files affects how pages are applied in Sequential and Fixed Repeat modes."
+      },
+      "counts": {
+        "title": "Counts (Fixed Repeat only)",
+        "text": "Provide a positive number for each overlay file showing how many pages to take before moving to the next. Required when mode is Fixed Repeat."
+      }
+    }
   },
   "split-by-sections": {
     "tags": "Section Split, Divide, Customize",
@@ -1227,6 +1619,7 @@
     "tags": "Stamp, Add image, center image, Watermark, PDF, Embed, Customize",
     "header": "Stamp PDF",
     "title": "Stamp PDF",
+    "stampSetup": "Stamp Setup",
     "stampType": "Stamp Type",
     "stampText": "Stamp Text",
     "stampImage": "Stamp Image",
@@ -1239,7 +1632,8 @@
     "overrideY": "Override Y Coordinate",
     "customMargin": "Custom Margin",
     "customColor": "Custom Text Color",
-    "submit": "Submit"
+    "submit": "Submit",
+    "noStampSelected": "No stamp selected. Return to Step 1."
   },
   "removeImagePdf": {
     "tags": "Remove Image,Page operations,Back end,server side"
@@ -1341,7 +1735,18 @@
   "pdfToSinglePage": {
     "title": "PDF To Single Page",
     "header": "PDF To Single Page",
-    "submit": "Convert To Single Page"
+    "submit": "Convert To Single Page",
+    "description": "This tool will merge all pages of your PDF into one large single page. The width will remain the same as the original pages, but the height will be the sum of all page heights.",
+    "filenamePrefix": "single_page",
+    "files": {
+      "placeholder": "Select a PDF file in the main view to get started"
+    },
+    "error": {
+      "failed": "An error occurred while converting to single page."
+    },
+    "results": {
+      "title": "Single Page Results"
+    }
   },
   "pageExtracter": {
     "title": "Extract Pages",
@@ -1363,8 +1768,9 @@
     "submit": "Sanitize PDF"
   },
   "adjustContrast": {
-    "title": "Adjust Contrast",
-    "header": "Adjust Contrast",
+    "title": "Adjust Colors/Contrast",
+    "header": "Adjust Colors/Contrast",
+    "basic": "Basic Adjustments",
     "contrast": "Contrast:",
     "brightness": "Brightness:",
     "saturation": "Saturation:",
@@ -1484,10 +1890,16 @@
     }
   },
   "removeImage": {
-    "title": "Remove image",
-    "header": "Remove image",
-    "removeImage": "Remove image",
-    "submit": "Remove image"
+    "title": "Remove Images",
+    "header": "Remove Images",
+    "removeImage": "Remove Images",
+    "submit": "Remove Images",
+    "results": {
+      "title": "Remove Images Results"
+    },
+    "error": {
+      "failed": "Failed to remove images from the PDF."
+    }
   },
   "splitByChapters": {
     "title": "Split PDF by Chapters",
@@ -1521,12 +1933,18 @@
     },
     "note": "Release notes are only available in English"
   },
+  "swagger": {
+    "title": "API Documentation",
+    "header": "API Documentation",
+    "desc": "View and test the Stirling PDF API endpoints",
+    "tags": "api,documentation,swagger,endpoints,development"
+  },
   "cookieBanner": {
     "popUp": {
       "title": "How we use Cookies",
       "description": {
         "1": "We use cookies and other technologies to make Stirling PDF work better for you—helping us improve our tools and keep building features you'll love.",
-        "2": "If you’d rather not, clicking 'No Thanks' will only enable the essential cookies needed to keep things running smoothly."
+        "2": "If you'd rather not, clicking 'No Thanks' will only enable the essential cookies needed to keep things running smoothly."
       },
       "acceptAllBtn": "Okay",
       "acceptNecessaryBtn": "No Thanks",
@@ -1550,12 +1968,502 @@
           "1": "Strictly Necessary Cookies",
           "2": "Always Enabled"
         },
-        "description": "These cookies are essential for the website to function properly. They enable core features like setting your privacy preferences, logging in, and filling out forms—which is why they can’t be turned off."
+        "description": "These cookies are essential for the website to function properly. They enable core features like setting your privacy preferences, logging in, and filling out forms—which is why they can't be turned off."
       },
       "analytics": {
         "title": "Analytics",
         "description": "These cookies help us understand how our tools are being used, so we can focus on building the features our community values most. Rest assured—Stirling PDF cannot and will never track the content of the documents you work with."
       }
+    }
+  },
+  "convert": {
+    "files": "Files",
+    "selectFilesPlaceholder": "Select files in the main view to get started",
+    "settings": "Settings",
+    "conversionCompleted": "Conversion completed",
+    "results": "Results",
+    "defaultFilename": "converted_file",
+    "conversionResults": "Conversion Results",
+    "converting": "Converting...",
+    "convertFiles": "Convert Files",
+    "downloadConverted": "Download Converted File",
+    "convertFrom": "Convert from",
+    "convertTo": "Convert to",
+    "sourceFormatPlaceholder": "Source format",
+    "targetFormatPlaceholder": "Target format",
+    "selectSourceFormatFirst": "Select a source format first",
+    "imageOptions": "Image Options",
+    "colorType": "Color Type",
+    "color": "Color",
+    "greyscale": "Greyscale",
+    "blackwhite": "Black & White",
+    "dpi": "DPI",
+    "output": "Output",
+    "single": "Single",
+    "multiple": "Multiple",
+    "pdfOptions": "PDF Options",
+    "fitOption": "Fit Option",
+    "maintainAspectRatio": "Maintain Aspect Ratio",
+    "fitDocumentToPage": "Fit Document to Page",
+    "fillPage": "Fill Page",
+    "autoRotate": "Auto Rotate",
+    "autoRotateDescription": "Automatically rotate images to better fit the PDF page",
+    "combineImages": "Combine Images",
+    "combineImagesDescription": "Combine all images into one PDF, or create separate PDFs for each image",
+    "webOptions": "Web to PDF Options",
+    "zoomLevel": "Zoom Level",
+    "emailOptions": "Email to PDF Options",
+    "includeAttachments": "Include email attachments",
+    "maxAttachmentSize": "Maximum attachment size (MB)",
+    "includeAllRecipients": "Include CC and BCC recipients in header",
+    "downloadHtml": "Download HTML intermediate file instead of PDF",
+    "pdfaOptions": "PDF/A Options",
+    "outputFormat": "Output Format",
+    "pdfaNote": "PDF/A-1b is more compatible, PDF/A-2b supports more features.",
+    "pdfaDigitalSignatureWarning": "The PDF contains a digital signature. This will be removed in the next step.",
+    "sanitize": {
+      "submit": "Sanitize PDF",
+      "completed": "Sanitization completed successfully",
+      "error.generic": "Sanitization failed",
+      "error.failed": "An error occurred while sanitizing the PDF.",
+      "filenamePrefix": "sanitized",
+      "sanitizationResults": "Sanitization Results",
+      "steps": {
+        "files": "Files",
+        "settings": "Settings",
+        "results": "Results"
+      },
+      "files": {
+        "placeholder": "Select a PDF file in the main view to get started"
+      },
+      "options": {
+        "title": "Sanitization Options",
+        "note": "Select the elements you want to remove from the PDF. At least one option must be selected.",
+        "removeJavaScript": "Remove JavaScript",
+        "removeJavaScript.desc": "Remove JavaScript actions and scripts from the PDF",
+        "removeEmbeddedFiles": "Remove Embedded Files",
+        "removeEmbeddedFiles.desc": "Remove any files embedded within the PDF",
+        "removeXMPMetadata": "Remove XMP Metadata",
+        "removeXMPMetadata.desc": "Remove XMP metadata from the PDF",
+        "removeMetadata": "Remove Document Metadata",
+        "removeMetadata.desc": "Remove document information metadata (title, author, etc.)",
+        "removeLinks": "Remove Links",
+        "removeLinks.desc": "Remove external links and launch actions from the PDF",
+        "removeFonts": "Remove Fonts",
+        "removeFonts.desc": "Remove embedded fonts from the PDF"
+      }
+    }
+  },
+  "addPassword": {
+    "title": "Add Password",
+    "desc": "Encrypt your PDF document with a password.",
+    "completed": "Password protection applied",
+    "submit": "Encrypt",
+    "filenamePrefix": "encrypted",
+    "error": {
+      "failed": "An error occurred while encrypting the PDF."
+    },
+    "passwords": {
+      "title": "Passwords",
+      "stepTitle": "Passwords & Encryption",
+      "completed": "Passwords configured",
+      "user": {
+        "label": "User Password",
+        "placeholder": "Enter user password"
+      },
+      "owner": {
+        "label": "Owner Password",
+        "placeholder": "Enter owner password"
+      }
+    },
+    "permissions": {
+      "stepTitle": "Document Permissions"
+    },
+    "encryption": {
+      "keyLength": {
+        "label": "Encryption Key Length",
+        "40bit": "40-bit (Low)",
+        "128bit": "128-bit (Standard)",
+        "256bit": "256-bit (High)"
+      }
+    },
+    "results": {
+      "title": "Password Protected PDFs"
+    },
+    "tooltip": {
+      "header": {
+        "title": "Password Protection Overview"
+      },
+      "passwords": {
+        "title": "Password Types",
+        "text": "User passwords restrict opening the document, while owner passwords control what can be done with the document once opened. You can set both or just one.",
+        "bullet1": "User Password: Required to open the PDF",
+        "bullet2": "Owner Password: Controls document permissions (not supported by all PDF viewers)"
+      },
+      "encryption": {
+        "title": "Encryption Levels",
+        "text": "Higher encryption levels provide better security but may not be supported by older PDF viewers.",
+        "bullet1": "40-bit: Basic security, compatible with older viewers",
+        "bullet2": "128-bit: Standard security, widely supported",
+        "bullet3": "256-bit: Maximum security, requires modern viewers"
+      },
+      "permissions": {
+        "title": "Change Permissions",
+        "text": "These permissions control what users can do with the PDF. Most effective when combined with an owner password."
+      }
+    }
+  },
+  "changePermissions": {
+    "completed": "Permissions changed",
+    "submit": "Change Permissions",
+    "title": "Document Permissions",
+    "error": {
+      "failed": "An error occurred while changing PDF permissions."
+    },
+    "permissions": {
+      "preventAssembly": {
+        "label": "Prevent assembly of document"
+      },
+      "preventExtractContent": {
+        "label": "Prevent content extraction"
+      },
+      "preventExtractForAccessibility": {
+        "label": "Prevent extraction for accessibility"
+      },
+      "preventFillInForm": {
+        "label": "Prevent filling in form"
+      },
+      "preventModify": {
+        "label": "Prevent modification"
+      },
+      "preventModifyAnnotations": {
+        "label": "Prevent annotation modification"
+      },
+      "preventPrinting": {
+        "label": "Prevent printing"
+      },
+      "preventPrintingFaithful": {
+        "label": "Prevent printing different formats"
+      }
+    },
+    "results": {
+      "title": "Modified PDFs"
+    },
+    "tooltip": {
+      "header": {
+        "title": "Change Permissions"
+      },
+      "description": {
+        "text": "Changes document permissions, allowing/disallowing access to different features in PDF readers."
+      },
+      "warning": {
+        "text": "To make these permissions unchangeable, use the Add Password tool to set an owner password."
+      }
+    }
+  },
+  "watermark": {
+    "tags": "Text,repeating,label,own,copyright,trademark,img,jpg,picture,photo",
+    "title": "Add Watermark",
+    "desc": "Add text or image watermarks to PDF files",
+    "header": "Add Watermark",
+    "completed": "Watermark added",
+    "submit": "Add Watermark",
+    "filenamePrefix": "watermarked",
+    "error": {
+      "failed": "An error occurred while adding watermark to the PDF."
+    },
+    "watermarkType": {
+      "text": "Text",
+      "image": "Image"
+    },
+    "settings": {
+      "type": "Watermark Type",
+      "text": {
+        "label": "Watermark Text",
+        "placeholder": "Enter watermark text"
+      },
+      "image": {
+        "label": "Watermark Image",
+        "choose": "Choose Image",
+        "selected": "Selected: {{filename}}"
+      },
+      "fontSize": "Font Size",
+      "alphabet": "Font/Language",
+      "color": "Watermark Color",
+      "rotation": "Rotation (degrees)",
+      "opacity": "Opacity (%)",
+      "spacing": {
+        "horizontal": "Horizontal Spacing",
+        "vertical": "Vertical Spacing"
+      },
+      "convertToImage": "Flatten PDF pages to images"
+    },
+    "alphabet": {
+      "roman": "Roman/Latin",
+      "arabic": "Arabic",
+      "japanese": "Japanese",
+      "korean": "Korean",
+      "chinese": "Chinese",
+      "thai": "Thai"
+    },
+    "steps": {
+      "type": "Watermark Type",
+      "wording": "Wording",
+      "textStyle": "Style",
+      "file": "Watermark File",
+      "formatting": "Formatting"
+    },
+    "results": {
+      "title": "Watermark Results"
+    },
+    "tooltip": {
+      "language": {
+        "title": "Language Support",
+        "text": "Choose the appropriate language setting to ensure proper font rendering for your text."
+      },
+      "appearance": {
+        "title": "Appearance Settings",
+        "text": "Control how your watermark looks and blends with the document.",
+        "bullet1": "Rotation: -360° to 360° for angled watermarks",
+        "bullet2": "Opacity: 0-100% for transparency control",
+        "bullet3": "Lower opacity creates subtle watermarks"
+      },
+      "spacing": {
+        "title": "Spacing Control",
+        "text": "Adjust the spacing between repeated watermarks across the page.",
+        "bullet1": "Width spacing: Horizontal distance between watermarks",
+        "bullet2": "Height spacing: Vertical distance between watermarks",
+        "bullet3": "Higher values create more spread out patterns"
+      },
+      "type": {
+        "header": {
+          "title": "Watermark Type Selection"
+        },
+        "description": {
+          "title": "Choose Your Watermark",
+          "text": "Select between text or image watermarks based on your needs."
+        },
+        "text": {
+          "title": "Text Watermarks",
+          "text": "Perfect for adding copyright notices, company names, or confidentiality labels. Supports multiple languages and custom colors.",
+          "bullet1": "Customizable fonts and languages",
+          "bullet2": "Adjustable colors and transparency",
+          "bullet3": "Ideal for legal or branding text"
+        },
+        "image": {
+          "title": "Image Watermarks",
+          "text": "Use logos, stamps, or any image as a watermark. Great for branding and visual identification.",
+          "bullet1": "Upload any image format",
+          "bullet2": "Maintains image quality",
+          "bullet3": "Perfect for logos and stamps"
+        }
+      },
+      "content": {
+        "header": {
+          "title": "Content Configuration"
+        },
+        "text": {
+          "title": "Text Settings",
+          "text": "Configure your text watermark appearance and language support.",
+          "bullet1": "Enter your watermark text",
+          "bullet2": "Adjust font size (8-72pt)",
+          "bullet3": "Select language/script support",
+          "bullet4": "Choose custom colors"
+        },
+        "language": {
+          "title": "Language Support",
+          "text": "Choose the appropriate language setting to ensure proper font rendering for your text.",
+          "bullet1": "Roman/Latin for Western languages",
+          "bullet2": "Arabic for Arabic script",
+          "bullet3": "Japanese, Korean, Chinese for Asian languages",
+          "bullet4": "Thai for Thai script"
+        }
+      },
+      "style": {
+        "header": {
+          "title": "Style & Positioning"
+        },
+        "appearance": {
+          "title": "Appearance Settings",
+          "text": "Control how your watermark looks and blends with the document.",
+          "bullet1": "Rotation: -360° to 360° for angled watermarks",
+          "bullet2": "Opacity: 0-100% for transparency control",
+          "bullet3": "Lower opacity creates subtle watermarks"
+        },
+        "spacing": {
+          "title": "Spacing Control",
+          "text": "Adjust the spacing between repeated watermarks across the page.",
+          "bullet1": "Width spacing: Horizontal distance between watermarks",
+          "bullet2": "Height spacing: Vertical distance between watermarks",
+          "bullet3": "Higher values create more spread out patterns"
+        }
+      },
+      "wording": {
+        "header": {
+          "title": "Text Content"
+        },
+        "text": {
+          "title": "Watermark Text",
+          "text": "Enter the text that will appear as your watermark across the document.",
+          "bullet1": "Keep it concise for better readability",
+          "bullet2": "Common examples: 'CONFIDENTIAL', 'DRAFT', company name",
+          "bullet3": "Emoji characters are not supported and will be filtered out"
+        }
+      },
+      "textStyle": {
+        "header": {
+          "title": "Text Style"
+        },
+        "language": {
+          "title": "Language Support",
+          "text": "Choose the appropriate language setting to ensure proper font rendering.",
+          "bullet1": "Roman/Latin for Western languages",
+          "bullet2": "Arabic for Arabic script",
+          "bullet3": "Japanese, Korean, Chinese for Asian languages",
+          "bullet4": "Thai for Thai script"
+        },
+        "color": {
+          "title": "Color Selection",
+          "text": "Choose a color that provides good contrast with your document content.",
+          "bullet1": "Light gray (#d3d3d3) for subtle watermarks",
+          "bullet2": "Black or dark colors for high contrast",
+          "bullet3": "Custom colors for branding purposes"
+        }
+      },
+      "file": {
+        "header": {
+          "title": "Image Upload"
+        },
+        "upload": {
+          "title": "Image Selection",
+          "text": "Upload an image file to use as your watermark.",
+          "bullet1": "Supports common formats: PNG, JPG, GIF, BMP",
+          "bullet2": "PNG with transparency works best",
+          "bullet3": "Higher resolution images maintain quality better"
+        },
+        "recommendations": {
+          "title": "Best Practices",
+          "text": "Tips for optimal image watermark results.",
+          "bullet1": "Use logos or stamps with transparent backgrounds",
+          "bullet2": "Simple designs work better than complex images",
+          "bullet3": "Consider the final document size when choosing resolution"
+        }
+      },
+      "formatting": {
+        "header": {
+          "title": "Formatting & Layout"
+        },
+        "size": {
+          "title": "Size Control",
+          "text": "Adjust the size of your watermark (text or image).",
+          "bullet1": "Larger sizes create more prominent watermarks"
+        },
+        "appearance": {
+          "title": "Appearance Settings",
+          "text": "Control how your watermark looks and blends with the document.",
+          "bullet1": "Rotation: -360° to 360° for angled watermarks",
+          "bullet2": "Opacity: 0-100% for transparency control",
+          "bullet3": "Lower opacity creates subtle watermarks"
+        },
+        "spacing": {
+          "title": "Spacing Control",
+          "text": "Adjust the spacing between repeated watermarks across the page.",
+          "bullet1": "Horizontal spacing: Distance between watermarks left to right",
+          "bullet2": "Vertical spacing: Distance between watermarks top to bottom",
+          "bullet3": "Higher values create more spread out patterns"
+        },
+        "security": {
+          "title": "Security Option",
+          "text": "Flatten PDF pages to images for enhanced security.",
+          "bullet1": "Prevents text selection and copying",
+          "bullet2": "Makes watermarks harder to remove",
+          "bullet3": "Results in larger file sizes",
+          "bullet4": "Best for sensitive or copyrighted content"
+        }
+      },
+      "advanced": {
+        "header": {
+          "title": "Advanced Options"
+        },
+        "conversion": {
+          "title": "PDF to Image Conversion",
+          "text": "Convert the final PDF to an image-based format for enhanced security.",
+          "bullet1": "Prevents text selection and copying",
+          "bullet2": "Makes watermarks harder to remove",
+          "bullet3": "Results in larger file sizes",
+          "bullet4": "Best for sensitive or copyrighted content"
+        },
+        "security": {
+          "title": "Security Considerations",
+          "text": "Image-based PDFs provide additional protection against unauthorized editing and content extraction."
+        }
+      }
+    }
+  },
+  "rightRail": {
+    "closePdf": "Close PDF",
+    "closeSelected": "Close Selected Files",
+    "selectAll": "Select All",
+    "deselectAll": "Deselect All",
+    "selectByNumber": "Select by Page Numbers",
+    "deleteSelected": "Delete Selected Pages",
+    "toggleTheme": "Toggle Theme",
+    "exportAll": "Export PDF",
+    "downloadSelected": "Download Selected Files",
+    "downloadAll": "Download All"
+  },
+  "removePassword": {
+    "title": "Remove Password",
+    "desc": "Remove password protection from your PDF document.",
+    "tags": "secure,Decrypt,security,unpassword,delete password",
+    "password": {
+      "stepTitle": "Remove Password",
+      "label": "Current Password",
+      "placeholder": "Enter current password",
+      "completed": "Password configured"
+    },
+    "filenamePrefix": "decrypted",
+    "error": {
+      "failed": "An error occurred while removing the password from the PDF."
+    },
+    "tooltip": {
+      "description": "Removing password protection requires the password that was used to encrypt the PDF. This will decrypt the document, making it accessible without a password."
+    },
+    "submit": "Remove Password",
+    "results": {
+      "title": "Decrypted PDFs"
+    }
+  },
+  "automation": {
+    "suggested": {
+      "securePdfIngestion": "Secure PDF Ingestion",
+      "securePdfIngestionDesc": "Comprehensive PDF processing workflow that sanitizes documents, applies OCR with cleanup, converts to PDF/A format for long-term archival, and optimizes file size.",
+      "emailPreparation": "Email Preparation",
+      "emailPreparationDesc": "Optimizes PDFs for email distribution by compressing files, splitting large documents into 20MB chunks for email compatibility, and removing metadata for privacy.",
+      "secureWorkflow": "Security Workflow",
+      "secureWorkflowDesc": "Secures PDF documents by removing potentially malicious content like JavaScript and embedded files, then adds password protection to prevent unauthorized access. Password is set to 'password' by default.",
+      "processImages": "Process Images",
+      "processImagesDesc": "Converts multiple image files into a single PDF document, then applies OCR technology to extract searchable text from the images."
+    }
+  },
+  "automate": {
+    "copyToSaved": "Copy to Saved"
+  },
+  "AddAttachmentsRequest": {
+    "attachments": "Select Attachments",
+    "info": "Select files to attach to your PDF. These files will be embedded and accessible through the PDF's attachment panel.",
+    "selectFiles": "Select Files to Attach",
+    "placeholder": "Choose files...",
+    "addMoreFiles": "Add more files...",
+    "selectedFiles": "Selected Files",
+    "submit": "Add Attachments",
+    "results": {
+      "title": "Attachment Results"
+    }
+  },
+  "addAttachments": {
+    "error": {
+      "failed": "An error occurred while adding attachments to the PDF."
     }
   }
 }

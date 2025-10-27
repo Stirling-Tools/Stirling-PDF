@@ -15,7 +15,6 @@ import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.session.SessionInformation;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -61,29 +60,46 @@ public class UserService implements UserServiceInterface {
 
     private final ApplicationProperties.Security.OAUTH2 oAuth2;
 
-    @Transactional
-    public void migrateOauth2ToSSO() {
-        userRepository
-                .findByAuthenticationTypeIgnoreCase("OAUTH2")
-                .forEach(
-                        user -> {
-                            user.setAuthenticationType(AuthenticationType.SSO);
-                            userRepository.save(user);
-                        });
-    }
-
-    // Handle OAUTH2 login and user auto creation.
-    public void processSSOPostLogin(String username, boolean autoCreateUser)
+    public void processSSOPostLogin(
+            String username,
+            String ssoProviderId,
+            String ssoProvider,
+            boolean autoCreateUser,
+            AuthenticationType type)
             throws IllegalArgumentException, SQLException, UnsupportedProviderException {
         if (!isUsernameValid(username)) {
             return;
         }
-        Optional<User> existingUser = findByUsernameIgnoreCase(username);
+
+        // Find user by SSO provider ID first
+        Optional<User> existingUser;
+        if (ssoProviderId != null && ssoProvider != null) {
+            existingUser =
+                    userRepository.findBySsoProviderAndSsoProviderId(ssoProvider, ssoProviderId);
+
+            if (existingUser.isPresent()) {
+                log.debug("User found by SSO provider ID: {}", ssoProviderId);
+                return;
+            }
+        }
+
+        existingUser = findByUsernameIgnoreCase(username);
         if (existingUser.isPresent()) {
+            User user = existingUser.get();
+
+            // Migrate existing user to use provider ID if not already set
+            if (user.getSsoProviderId() == null && ssoProviderId != null && ssoProvider != null) {
+                log.info("Migrating user {} to use SSO provider ID: {}", username, ssoProviderId);
+                user.setSsoProviderId(ssoProviderId);
+                user.setSsoProvider(ssoProvider);
+                userRepository.save(user);
+                databaseService.exportDatabase();
+            }
             return;
         }
+
         if (autoCreateUser) {
-            saveUser(username, AuthenticationType.SSO);
+            saveUser(username, ssoProviderId, ssoProvider, type);
         }
     }
 
@@ -100,10 +116,7 @@ public class UserService implements UserServiceInterface {
     }
 
     private Collection<? extends GrantedAuthority> getAuthorities(User user) {
-        // Convert each Authority object into a SimpleGrantedAuthority object.
-        return user.getAuthorities().stream()
-                .map((Authority authority) -> new SimpleGrantedAuthority(authority.getAuthority()))
-                .toList();
+        return user.getAuthorities();
     }
 
     private String generateApiKey() {
@@ -168,6 +181,21 @@ public class UserService implements UserServiceInterface {
         saveUser(username, authenticationType, (Long) null, Role.USER.getRoleId());
     }
 
+    public void saveUser(
+            String username,
+            String ssoProviderId,
+            String ssoProvider,
+            AuthenticationType authenticationType)
+            throws IllegalArgumentException, SQLException, UnsupportedProviderException {
+        saveUser(
+                username,
+                ssoProviderId,
+                ssoProvider,
+                authenticationType,
+                (Long) null,
+                Role.USER.getRoleId());
+    }
+
     private User saveUser(Optional<User> user, String apiKey) {
         if (user.isPresent()) {
             user.get().setApiKey(apiKey);
@@ -182,6 +210,30 @@ public class UserService implements UserServiceInterface {
         return saveUserCore(
                 username, // username
                 null, // password
+                null, // ssoProviderId
+                null, // ssoProvider
+                authenticationType, // authenticationType
+                teamId, // teamId
+                null, // team
+                role, // role
+                false, // firstLogin
+                true // enabled
+                );
+    }
+
+    public User saveUser(
+            String username,
+            String ssoProviderId,
+            String ssoProvider,
+            AuthenticationType authenticationType,
+            Long teamId,
+            String role)
+            throws IllegalArgumentException, SQLException, UnsupportedProviderException {
+        return saveUserCore(
+                username, // username
+                null, // password
+                ssoProviderId, // ssoProviderId
+                ssoProvider, // ssoProvider
                 authenticationType, // authenticationType
                 teamId, // teamId
                 null, // team
@@ -197,6 +249,8 @@ public class UserService implements UserServiceInterface {
         return saveUserCore(
                 username, // username
                 null, // password
+                null, // ssoProviderId
+                null, // ssoProvider
                 authenticationType, // authenticationType
                 null, // teamId
                 team, // team
@@ -211,6 +265,8 @@ public class UserService implements UserServiceInterface {
         return saveUserCore(
                 username, // username
                 password, // password
+                null, // ssoProviderId
+                null, // ssoProvider
                 AuthenticationType.WEB, // authenticationType
                 teamId, // teamId
                 null, // team
@@ -226,6 +282,8 @@ public class UserService implements UserServiceInterface {
         return saveUserCore(
                 username, // username
                 password, // password
+                null, // ssoProviderId
+                null, // ssoProvider
                 AuthenticationType.WEB, // authenticationType
                 null, // teamId
                 team, // team
@@ -241,6 +299,8 @@ public class UserService implements UserServiceInterface {
         return saveUserCore(
                 username, // username
                 password, // password
+                null, // ssoProviderId
+                null, // ssoProvider
                 AuthenticationType.WEB, // authenticationType
                 teamId, // teamId
                 null, // team
@@ -261,6 +321,8 @@ public class UserService implements UserServiceInterface {
         saveUserCore(
                 username, // username
                 password, // password
+                null, // ssoProviderId
+                null, // ssoProvider
                 AuthenticationType.WEB, // authenticationType
                 teamId, // teamId
                 null, // team
@@ -425,6 +487,8 @@ public class UserService implements UserServiceInterface {
      *
      * @param username Username for the new user
      * @param password Password for the user (may be null for SSO/OAuth users)
+     * @param ssoProviderId Unique identifier from SSO provider (may be null for non-SSO users)
+     * @param ssoProvider Name of the SSO provider (may be null for non-SSO users)
      * @param authenticationType Type of authentication (WEB, SSO, etc.)
      * @param teamId ID of the team to assign (may be null to use default)
      * @param team Team object to assign (takes precedence over teamId if both provided)
@@ -439,6 +503,8 @@ public class UserService implements UserServiceInterface {
     private User saveUserCore(
             String username,
             String password,
+            String ssoProviderId,
+            String ssoProvider,
             AuthenticationType authenticationType,
             Long teamId,
             Team team,
@@ -457,6 +523,12 @@ public class UserService implements UserServiceInterface {
         // Set password if provided
         if (password != null && !password.isEmpty()) {
             user.setPassword(passwordEncoder.encode(password));
+        }
+
+        // Set SSO provider details if provided
+        if (ssoProviderId != null && ssoProvider != null) {
+            user.setSsoProviderId(ssoProviderId);
+            user.setSsoProvider(ssoProvider);
         }
 
         // Set authentication type

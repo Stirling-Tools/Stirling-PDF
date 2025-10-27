@@ -1,163 +1,96 @@
-import React, { useEffect, useMemo } from "react";
-import { Button, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import DownloadIcon from "@mui/icons-material/Download";
-import { useEndpointEnabled } from "../hooks/useEndpointConfig";
-import { useFileContext } from "../contexts/FileContext";
-
-import ToolStep, { ToolStepContainer } from "../components/tools/shared/ToolStep";
-import OperationButton from "../components/tools/shared/OperationButton";
-import ErrorNotification from "../components/tools/shared/ErrorNotification";
-import FileStatusIndicator from "../components/tools/shared/FileStatusIndicator";
-import ResultsPreview from "../components/tools/shared/ResultsPreview";
-
+import { createToolFlow } from "../components/tools/shared/createToolFlow";
+import CardSelector from "../components/shared/CardSelector";
 import SplitSettings from "../components/tools/split/SplitSettings";
-
 import { useSplitParameters } from "../hooks/tools/split/useSplitParameters";
 import { useSplitOperation } from "../hooks/tools/split/useSplitOperation";
+import { useBaseTool } from "../hooks/tools/shared/useBaseTool";
+import { useSplitMethodTips } from "../components/tooltips/useSplitMethodTips";
+import { useSplitSettingsTips } from "../components/tooltips/useSplitSettingsTips";
+import { BaseToolProps, ToolComponent } from "../types/tool";
+import { type SplitMethod, METHOD_OPTIONS, type MethodOption } from "../constants/splitConstants";
 
-interface SplitProps {
-  selectedFiles?: File[];
-  onPreviewFile?: (file: File | null) => void;
-}
-
-const Split = ({ selectedFiles = [], onPreviewFile }: SplitProps) => {
+const Split = (props: BaseToolProps) => {
   const { t } = useTranslation();
-  const { setCurrentMode } = useFileContext();
 
-  const splitParams = useSplitParameters();
-  const splitOperation = useSplitOperation();
-
-  // Endpoint validation
-  const { enabled: endpointEnabled, loading: endpointLoading } = useEndpointEnabled(
-    splitParams.getEndpointName()
+  const base = useBaseTool(
+    'split',
+    useSplitParameters,
+    useSplitOperation,
+    props
   );
 
-  useEffect(() => {
-    splitOperation.resetResults();
-    onPreviewFile?.(null);
-  }, [splitParams.mode, splitParams.parameters, selectedFiles]);
+  const methodTips = useSplitMethodTips();
+  const settingsTips = useSplitSettingsTips(base.params.parameters.method);
 
-  const handleSplit = async () => {
-    await splitOperation.executeOperation(
-      splitParams.mode,
-      splitParams.parameters,
-      selectedFiles
-    );
+  // Get tooltip content for a specific method
+  const getMethodTooltip = (option: MethodOption) => {
+    const tooltipContent = useSplitSettingsTips(option.value);
+    return tooltipContent?.tips || [];
   };
 
-  const handleThumbnailClick = (file: File) => {
-    onPreviewFile?.(file);
-    sessionStorage.setItem('previousMode', 'split');
-    setCurrentMode('viewer');
+  // Get the method name for the settings step title
+  const getSettingsTitle = () => {
+    if (!base.params.parameters.method) return t("split.steps.settings", "Settings");
+
+    const methodOption = METHOD_OPTIONS.find(option => option.value === base.params.parameters.method);
+    if (!methodOption) return t("split.steps.settings", "Settings");
+
+    const prefix = t(methodOption.prefixKey, "Split by");
+    const name = t(methodOption.nameKey, "Method Name");
+    return `${prefix} ${name}`;
   };
 
-  const handleSettingsReset = () => {
-    splitOperation.resetResults();
-    onPreviewFile?.(null);
-    setCurrentMode('split');
-  };
-
-  const hasFiles = selectedFiles.length > 0;
-  const hasResults = splitOperation.downloadUrl !== null;
-  const filesCollapsed = hasFiles;
-  const settingsCollapsed = hasResults;
-
-  const previewResults = useMemo(() =>
-    splitOperation.files?.map((file, index) => ({
-      file,
-      thumbnail: splitOperation.thumbnails[index]
-    })) || [],
-    [splitOperation.files, splitOperation.thumbnails]
-  );
-
-  return (
-    <ToolStepContainer>
-      <Stack gap="sm" h="100%" p="sm" style={{ overflow: 'auto' }}>
-        {/* Files Step */}
-        <ToolStep
-          title="Files"
-          isVisible={true}
-          isCollapsed={filesCollapsed}
-          isCompleted={filesCollapsed}
-          completedMessage={hasFiles ? `Selected: ${selectedFiles[0]?.name}` : undefined}
-        >
-          <FileStatusIndicator
-            selectedFiles={selectedFiles}
-            placeholder="Select a PDF file in the main view to get started"
+  return createToolFlow({
+    files: {
+      selectedFiles: base.selectedFiles,
+      isCollapsed: base.hasResults,
+    },
+    steps: [
+      {
+        title: t("split.steps.chooseMethod", "Choose Method"),
+        isCollapsed: !!base.params.parameters.method, // Collapse when method is selected
+        onCollapsedClick: () => base.params.updateParameter('method', '')
+        ,
+        tooltip: methodTips,
+        content: (
+          <CardSelector<SplitMethod, MethodOption>
+            options={METHOD_OPTIONS}
+            onSelect={(method) => base.params.updateParameter('method', method)}
+            disabled={base.endpointLoading}
+            getTooltipContent={getMethodTooltip}
           />
-        </ToolStep>
+        ),
+      },
+      {
+        title: getSettingsTitle(),
+        isCollapsed: !base.params.parameters.method, // Collapsed until method selected
+        onCollapsedClick: base.hasResults ? base.handleSettingsReset : undefined,
+        tooltip: settingsTips || undefined,
+        content: (
+          <SplitSettings
+            parameters={base.params.parameters}
+            onParameterChange={base.params.updateParameter}
+            disabled={base.endpointLoading}
+          />
+        ),
+      },
+    ],
+    executeButton: {
+      text: t("split.submit", "Split PDF"),
+      loadingText: t("loading"),
+      onClick: base.handleExecute,
+      isVisible: !base.hasResults,
+      disabled: !base.params.validateParameters() || !base.hasFiles || !base.endpointEnabled,
+    },
+    review: {
+      isVisible: base.hasResults,
+      operation: base.operation,
+      title: "Split Results",
+      onFileClick: base.handleThumbnailClick,
+      onUndo: base.handleUndo,
+    },
+  });
+};
 
-        {/* Settings Step */}
-        <ToolStep
-          title="Settings"
-          isVisible={hasFiles}
-          isCollapsed={settingsCollapsed}
-          isCompleted={settingsCollapsed}
-          onCollapsedClick={settingsCollapsed ? handleSettingsReset : undefined}
-          completedMessage={settingsCollapsed ? "Split completed" : undefined}
-        >
-          <Stack gap="sm">
-            <SplitSettings
-              mode={splitParams.mode}
-              onModeChange={splitParams.setMode}
-              parameters={splitParams.parameters}
-              onParameterChange={splitParams.updateParameter}
-              disabled={endpointLoading}
-            />
-
-            {splitParams.mode && (
-              <OperationButton
-                onClick={handleSplit}
-                isLoading={splitOperation.isLoading}
-                disabled={!splitParams.validateParameters() || !hasFiles || !endpointEnabled}
-                loadingText={t("loading")}
-                submitText={t("split.submit", "Split PDF")}
-              />
-            )}
-          </Stack>
-        </ToolStep>
-
-        {/* Results Step */}
-        <ToolStep
-          title="Results"
-          isVisible={hasResults}
-        >
-          <Stack gap="sm">
-            {splitOperation.status && (
-              <Text size="sm" c="dimmed">{splitOperation.status}</Text>
-            )}
-
-            <ErrorNotification
-              error={splitOperation.errorMessage}
-              onClose={splitOperation.clearError}
-            />
-
-            {splitOperation.downloadUrl && (
-              <Button
-                component="a"
-                href={splitOperation.downloadUrl}
-                download="split_output.zip"
-                leftSection={<DownloadIcon />}
-                color="green"
-                fullWidth
-                mb="md"
-              >
-                {t("download", "Download")}
-              </Button>
-            )}
-
-            <ResultsPreview
-              files={previewResults}
-              onFileClick={handleThumbnailClick}
-              isGeneratingThumbnails={splitOperation.isGeneratingThumbnails}
-              title="Split Results"
-            />
-          </Stack>
-        </ToolStep>
-      </Stack>
-    </ToolStepContainer>
-  );
-}
-
-export default Split;
+export default Split as ToolComponent;

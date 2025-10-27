@@ -283,7 +283,7 @@
     "endpoint": "Endpoint",
     "visits": "Visits",
     "percentage": "Percentage",
-    "loading": "Loading...",
+    "loading": "در حال بارگذاری...",
     "failedToLoad": "Failed to load endpoint data. Please try refreshing.",
     "home": "Home",
     "login": "Login",
@@ -347,7 +347,7 @@
       "title": "چرخش",
       "desc": "چرخش آسان فایل‌های PDF."
     },
-    "imageToPdf": {
+    "imageToPDF": {
       "title": "تصویر به PDF",
       "desc": "تبدیل یک تصویر (PNG، JPEG، GIF) به PDF."
     },
@@ -371,7 +371,7 @@
       "title": "تغییر مجوزها",
       "desc": "تغییر مجوزهای سند PDF شما"
     },
-    "removePages": {
+    "pageRemover": {
       "title": "حذف",
       "desc": "حذف صفحات ناخواسته از سند PDF شما."
     },
@@ -383,7 +383,7 @@
       "title": "حذف رمز عبور",
       "desc": "حذف حفاظت رمز عبور از سند PDF شما."
     },
-    "compressPdfs": {
+    "compress": {
       "title": "فشرده‌سازی",
       "desc": "فشرده‌سازی فایل‌های PDF برای کاهش اندازه آن‌ها."
     },
@@ -479,7 +479,7 @@
       "title": "خط لوله",
       "desc": "اجرای چندین عملیات بر روی PDFها با تعریف اسکریپت‌های خط لوله"
     },
-    "add-page-numbers": {
+    "addPageNumbers": {
       "title": "افزودن شماره صفحات",
       "desc": "افزودن شماره صفحات به تمام سند در یک مکان مشخص"
     },
@@ -487,7 +487,7 @@
       "title": "تغییر نام خودکار فایل PDF",
       "desc": "تغییر نام خودکار یک فایل PDF بر اساس سربرگ تشخیص داده‌شده آن"
     },
-    "adjust-contrast": {
+    "adjustContrast": {
       "title": "تنظیم رنگ‌ها/کنتراست",
       "desc": "تنظیم کنتراست، اشباع و روشنایی یک PDF"
     },
@@ -499,7 +499,7 @@
       "title": "تقسیم خودکار صفحات",
       "desc": "تقسیم خودکار فایل اسکن‌شده PDF با استفاده از کد QR تقسیم‌کننده فیزیکی"
     },
-    "sanitizePdf": {
+    "sanitizePDF": {
       "title": "پاکسازی",
       "desc": "حذف اسکریپت‌ها و سایر عناصر از فایل‌های PDF"
     },
@@ -523,11 +523,11 @@
       "title": "دریافت تمام اطلاعات در مورد PDF",
       "desc": "گرفتن هر اطلاعات ممکن در مورد PDF"
     },
-    "extractPage": {
+    "pageExtracter": {
       "title": "استخراج صفحه(ها)",
       "desc": "استخراج صفحات انتخابی از PDF"
     },
-    "PdfToSinglePage": {
+    "pdfToSinglePage": {
       "title": "صفحه بزرگ واحد",
       "desc": "ادغام تمام صفحات PDF در یک صفحه بزرگ واحد"
     },
@@ -543,11 +543,11 @@
       "title": "Manual Redaction",
       "desc": "Redacts a PDF based on selected text, drawn shapes and/or selected page(s)"
     },
-    "tableExtraxt": {
+    "PDFToCSV": {
       "title": "PDF به CSV",
       "desc": "جداول را از PDF استخراج کرده و به CSV تبدیل می‌کند"
     },
-    "autoSizeSplitPDF": {
+    "split-by-size-or-count": {
       "title": "تقسیم خودکار بر اساس اندازه/تعداد",
       "desc": "تقسیم یک PDF به چند سند بر اساس اندازه، تعداد صفحات، یا تعداد اسناد"
     },
@@ -563,11 +563,11 @@
       "title": "افزودن مهر به PDF",
       "desc": "افزودن مهر متنی یا تصویری در مکان‌های مشخص"
     },
-    "removeImagePdf": {
+    "removeImage": {
       "title": "حذف تصویر",
       "desc": "حذف تصاویر از PDF برای کاهش حجم فایل"
     },
-    "splitPdfByChapters": {
+    "splitByChapters": {
       "title": "تقسیم PDF بر اساس فصل‌ها",
       "desc": "تقسیم PDF به چند فایل بر اساس ساختار فصل‌ها"
     },
@@ -575,9 +575,41 @@
       "title": "اعتبارسنجی امضای PDF",
       "desc": "تأیید امضاها و گواهی‌های دیجیتال در اسناد PDF"
     },
+    "replace-color": {
+      "title": "جایگزینی و معکوس کردن رنگ",
+      "desc": "جایگزینی رنگ متن و پس‌زمینه در PDF و معکوس کردن کل رنگ‌ها برای کاهش حجم فایل"
+    },
+    "convert": {
+      "title": "تبدیل"
+    },
+    "attachments": {
+      "title": "Add attachments"
+    },
+    "extractPages": {
+      "title": "استخراج صفحات"
+    },
+    "removePages": {
+      "title": "حذف",
+      "desc": "حذف صفحات ناخواسته از سند PDF شما."
+    },
+    "removeImagePdf": {
+      "title": "حذف تصویر",
+      "desc": "حذف تصاویر از PDF برای کاهش حجم فایل"
+    },
+    "autoSizeSplitPDF": {
+      "title": "تقسیم خودکار بر اساس اندازه/تعداد",
+      "desc": "تقسیم یک PDF به چند سند بر اساس اندازه، تعداد صفحات، یا تعداد اسناد"
+    },
+    "adjust-contrast": {
+      "title": "تنظیم رنگ‌ها/کنتراست",
+      "desc": "تنظیم کنتراست، اشباع و روشنایی یک PDF"
+    },
     "replaceColorPdf": {
       "title": "جایگزینی و معکوس کردن رنگ",
       "desc": "جایگزینی رنگ متن و پس‌زمینه در PDF و معکوس کردن کل رنگ‌ها برای کاهش حجم فایل"
+    },
+    "changePermissions": {
+      "title": "تغییر مجوزها"
     }
   },
   "viewPdf": {
@@ -617,7 +649,10 @@
     "sortByName": "مرتب‌سازی بر اساس نام",
     "sortByDate": "مرتب‌سازی بر اساس تاریخ",
     "removeCertSign": "حذف امضای دیجیتال در فایل ادغام‌شده؟",
-    "submit": "ادغام"
+    "submit": "ادغام",
+    "sortBy": {
+      "filename": "نام فایل"
+    }
   },
   "split": {
     "tags": "عملیات صفحات،تقسیم،چند صفحه،برش،سمت سرور",
@@ -634,7 +669,20 @@
       "8": "سند #6: صفحه ۱۰"
     },
     "splitPages": "صفحات برای تقسیم را وارد کنید:",
-    "submit": "تقسیم"
+    "submit": "تقسیم",
+    "steps": {
+      "settings": "تنظیمات"
+    },
+    "methods": {
+      "bySize": {
+        "name": "اندازه فایل"
+      }
+    },
+    "value": {
+      "fileSize": {
+        "label": "اندازه فایل"
+      }
+    }
   },
   "rotate": {
     "tags": "سمت سرور",
@@ -712,6 +760,12 @@
     "type": {
       "1": "متن",
       "2": "تصویر"
+    },
+    "watermarkType": {
+      "text": "متن"
+    },
+    "settings": {
+      "fontSize": "اندازه فونت"
     }
   },
   "permissions": {
@@ -734,7 +788,9 @@
     "submit": "تغییر"
   },
   "removePages": {
-    "tags": "حذف صفحات،پاک کردن صفحات"
+    "tags": "حذف صفحات،پاک کردن صفحات",
+    "title": "حذف",
+    "submit": "حذف"
   },
   "addPassword": {
     "tags": "امن،امنیت",
@@ -758,7 +814,12 @@
       "15": "محدودیت‌هایی که می‌توان بر روی سند اعمال کرد هنگامی که باز است (پشتیبانی‌شده توسط همه خوانندگان نیست)",
       "16": "محدودیت‌های باز شدن خود سند"
     },
-    "submit": "رمزنگاری"
+    "submit": "رمزنگاری",
+    "tooltip": {
+      "permissions": {
+        "title": "تغییر مجوزها"
+      }
+    }
   },
   "removePassword": {
     "tags": "امن،رمزگشایی،امنیت،حذف رمز عبور",
@@ -768,7 +829,12 @@
       "1": "PDFی را برای رمزگشایی انتخاب کنید",
       "2": "گذرواژه"
     },
-    "submit": "حذف"
+    "submit": "حذف",
+    "desc": "حذف حفاظت رمز عبور از سند PDF شما.",
+    "password": {
+      "stepTitle": "حذف رمز عبور",
+      "label": "رمز عبور فعلی"
+    }
   },
   "compressPdfs": {
     "tags": "فشرده،کوچک،ریز"
@@ -829,7 +895,25 @@
     },
     "help": "لطفاً این مستندات را بخوانید تا نحوه استفاده از این سرویس برای زبان‌های دیگر و/یا استفاده از آن که در داخل داکر نیست را بدانید",
     "credit": "این سرویس از qpdf و Tesseract برای OCR استفاده می‌کند.",
-    "submit": "پردازش PDF با OCR"
+    "submit": "پردازش PDF با OCR",
+    "desc": "پاکسازی اسکن‌ها و تشخیص متن از تصاویر درون یک فایل PDF و بازافزودن آن به عنوان متن.",
+    "settings": {
+      "title": "تنظیمات",
+      "ocrMode": {
+        "label": "حالت OCR"
+      },
+      "languages": {
+        "label": "زبان‌ها"
+      }
+    },
+    "tooltip": {
+      "mode": {
+        "title": "حالت OCR"
+      },
+      "languages": {
+        "title": "زبان‌ها"
+      }
+    }
   },
   "extractImages": {
     "tags": "عکس،عکس،ذخیره،آرشیو،زیپ،گرفتن،برداشتن",
@@ -938,7 +1022,13 @@
     "title": "یکپارچه‌سازی",
     "header": "یکپارچه‌سازی PDFها",
     "flattenOnlyForms": "فقط فرم‌ها را یکپارچه کن",
-    "submit": "یکپارچه‌سازی"
+    "submit": "یکپارچه‌سازی",
+    "steps": {
+      "settings": "تنظیمات"
+    },
+    "options": {
+      "flattenOnlyForms": "فقط فرم‌ها را یکپارچه کن"
+    }
   },
   "repair": {
     "tags": "ترمیم،بازیابی،اصلاح،بازیابی",
@@ -1106,10 +1196,10 @@
     "credit": "از WeasyPrint استفاده می‌کند"
   },
   "PDFToMarkdown": {
-    "tags": "markup,web-content,transformation,convert,md",
+    "tags": "مارک‌آپ،محتوای وب،تبدیل،تغییر",
     "title": "PDF To Markdown",
     "header": "PDF To Markdown",
-    "submit": "Convert"
+    "submit": "تبدیل"
   },
   "getPdfInfo": {
     "tags": "اطلاعات،داده،آمار،آمارها",
@@ -1148,7 +1238,7 @@
     "tags": "Redact,Hide,black out,black,marker,hidden,manual",
     "title": "Manual Redaction",
     "header": "Manual Redaction",
-    "submit": "Redact",
+    "submit": "Manual Redaction",
     "textBasedRedaction": "Text based Redaction",
     "pageBasedRedaction": "Page-based Redaction",
     "convertPDFToImageLabel": "Convert PDF to PDF-Image (Used to remove text behind the box)",
@@ -1174,7 +1264,22 @@
     "showLayers": "Show Layers (double-click to reset all layers to the default state)",
     "colourPicker": "Colour Picker",
     "findCurrentOutlineItem": "Find current outline item",
-    "applyChanges": "Apply Changes"
+    "applyChanges": "Apply Changes",
+    "auto": {
+      "settings": {
+        "advancedTitle": "پیشرفته"
+      },
+      "wordsToRedact": {
+        "add": "اضافه کردن"
+      }
+    },
+    "manual": {
+      "pageRedactionNumbers": {
+        "title": "صفحات",
+        "placeholder": "(مثال: 1,2,8 یا 4,7,12-16 یا 2n-1)"
+      },
+      "export": "صادر کردن"
+    }
   },
   "tableExtraxt": {
     "tags": "CSV، استخراج جدول، استخراج، تبدیل"
@@ -1386,7 +1491,10 @@
       "4": "حالت خودکار - کیفیت را به طور خودکار تنظیم می‌کند تا PDF به اندازه دقیق برسد",
       "5": "اندازه PDF مورد انتظار (مثلاً ۲۵MB، ۱۰.۸MB، ۲۵KB)"
     },
-    "submit": "فشرده‌سازی"
+    "submit": "فشرده‌سازی",
+    "method": {
+      "filesize": "اندازه فایل"
+    }
   },
   "decrypt": {
     "passwordPrompt": "This file is password-protected. Please enter the password:",
@@ -1555,6 +1663,83 @@
       "analytics": {
         "title": "Analytics",
         "description": "These cookies help us understand how our tools are being used, so we can focus on building the features our community values most. Rest assured—Stirling PDF cannot and will never track the content of the documents you work with."
+      }
+    }
+  },
+  "download": "دانلود",
+  "convert": {
+    "title": "تبدیل",
+    "settings": "تنظیمات",
+    "color": "رنگ",
+    "greyscale": "خاکستری",
+    "fillPage": "پر کردن صفحه",
+    "pdfaDigitalSignatureWarning": "PDF حاوی یک امضای دیجیتال است. این در مرحله بعد حذف خواهد شد.",
+    "grayscale": "خاکستری"
+  },
+  "attachments": {
+    "tags": "embed,attach,file,attachment,attachments",
+    "title": "Add attachments",
+    "header": "Add attachments",
+    "submit": "Add attachments"
+  },
+  "rightRail": {
+    "selectAll": "انتخاب همه",
+    "deselectAll": "لغو انتخاب همه"
+  },
+  "quickAccess": {
+    "sign": "امضا"
+  },
+  "fileUpload": {
+    "loading": "در حال بارگذاری...",
+    "or": "یا"
+  },
+  "fileManager": {
+    "fileName": "نام",
+    "fileVersion": "نسخه",
+    "selectAll": "انتخاب همه",
+    "deselectAll": "لغو انتخاب همه",
+    "deleteSelected": "حذف انتخاب شده‌ها",
+    "download": "دانلود",
+    "delete": "حذف"
+  },
+  "sanitize": {
+    "submit": "پاکسازی PDF",
+    "steps": {
+      "settings": "تنظیمات"
+    }
+  },
+  "changePermissions": {
+    "title": "تغییر مجوزها",
+    "submit": "تغییر مجوزها",
+    "permissions": {
+      "preventAssembly": {
+        "label": "جلوگیری از مونتاژ سند"
+      },
+      "preventExtractContent": {
+        "label": "جلوگیری از استخراج محتوا"
+      },
+      "preventExtractForAccessibility": {
+        "label": "جلوگیری از استخراج برای دسترسی‌پذیری"
+      },
+      "preventFillInForm": {
+        "label": "جلوگیری از پرکردن فرم"
+      },
+      "preventModify": {
+        "label": "جلوگیری از اصلاح"
+      },
+      "preventModifyAnnotations": {
+        "label": "جلوگیری از اصلاح حاشیه‌نویسی"
+      },
+      "preventPrinting": {
+        "label": "جلوگیری از چاپ"
+      },
+      "preventPrintingFaithful": {
+        "label": "جلوگیری از چاپ فرمت‌های مختلف"
+      }
+    },
+    "tooltip": {
+      "header": {
+        "title": "تغییر مجوزها"
       }
     }
   }

@@ -6,29 +6,36 @@ import java.util.Map;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.Hidden;
-import io.swagger.v3.oas.annotations.tags.Tag;
-
-import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.config.EndpointConfiguration;
+import stirling.software.common.annotations.api.ConfigApi;
 import stirling.software.common.configuration.AppConfig;
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.service.ServerCertificateServiceInterface;
 
-@RestController
-@Tag(name = "Config", description = "Configuration APIs")
-@RequestMapping("/api/v1/config")
-@RequiredArgsConstructor
+@ConfigApi
 @Hidden
 public class ConfigController {
 
     private final ApplicationProperties applicationProperties;
     private final ApplicationContext applicationContext;
     private final EndpointConfiguration endpointConfiguration;
+    private final ServerCertificateServiceInterface serverCertificateService;
+
+    public ConfigController(
+            ApplicationProperties applicationProperties,
+            ApplicationContext applicationContext,
+            EndpointConfiguration endpointConfiguration,
+            @org.springframework.beans.factory.annotation.Autowired(required = false)
+                    ServerCertificateServiceInterface serverCertificateService) {
+        this.applicationProperties = applicationProperties;
+        this.applicationContext = applicationContext;
+        this.endpointConfiguration = endpointConfiguration;
+        this.serverCertificateService = serverCertificateService;
+    }
 
     @GetMapping("/app-config")
     public ResponseEntity<Map<String, Object>> getAppConfig() {
@@ -62,6 +69,11 @@ public class ConfigController {
             // Premium/Enterprise settings
             configData.put("premiumEnabled", applicationProperties.getPremium().isEnabled());
 
+            // Server certificate settings
+            configData.put(
+                    "serverCertificateEnabled",
+                    serverCertificateService != null && serverCertificateService.isEnabled());
+
             // Legal settings
             configData.put(
                     "termsAndConditions", applicationProperties.getLegal().getTermsAndConditions());
@@ -86,11 +98,6 @@ public class ConfigController {
                 if (applicationContext.containsBean("license")) {
                     configData.put("license", applicationContext.getBean("license", String.class));
                 }
-                if (applicationContext.containsBean("GoogleDriveEnabled")) {
-                    configData.put(
-                            "GoogleDriveEnabled",
-                            applicationContext.getBean("GoogleDriveEnabled", Boolean.class));
-                }
                 if (applicationContext.containsBean("SSOAutoLogin")) {
                     configData.put(
                             "SSOAutoLogin",
@@ -110,14 +117,15 @@ public class ConfigController {
     }
 
     @GetMapping("/endpoint-enabled")
-    public ResponseEntity<Boolean> isEndpointEnabled(@RequestParam String endpoint) {
+    public ResponseEntity<Boolean> isEndpointEnabled(
+            @RequestParam(name = "endpoint") String endpoint) {
         boolean enabled = endpointConfiguration.isEndpointEnabled(endpoint);
         return ResponseEntity.ok(enabled);
     }
 
     @GetMapping("/endpoints-enabled")
     public ResponseEntity<Map<String, Boolean>> areEndpointsEnabled(
-            @RequestParam String endpoints) {
+            @RequestParam(name = "endpoints") String endpoints) {
         Map<String, Boolean> result = new HashMap<>();
         String[] endpointArray = endpoints.split(",");
         for (String endpoint : endpointArray) {

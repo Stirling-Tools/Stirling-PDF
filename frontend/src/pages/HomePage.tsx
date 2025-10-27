@@ -1,20 +1,28 @@
-import React, { useState, useCallback, useEffect} from "react";
-import { useTranslation } from 'react-i18next';
-import { useFileContext } from "../contexts/FileContext";
-import { useToolManagement } from "../hooks/useToolManagement";
-import { Group, Box, Button, Container } from "@mantine/core";
-import { useRainbowThemeContext } from "../components/shared/RainbowThemeProvider";
-import rainbowStyles from '../styles/rainbow.module.css';
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { useToolWorkflow } from "../contexts/ToolWorkflowContext";
+import { Group, useMantineColorScheme } from "@mantine/core";
+import { useSidebarContext } from "../contexts/SidebarContext";
+import { useDocumentMeta } from "../hooks/useDocumentMeta";
+import { BASE_PATH } from "../constants/app";
+import { useBaseUrl } from "../hooks/useBaseUrl";
+import { useMediaQuery } from "@mantine/hooks";
+import AppsIcon from '@mui/icons-material/AppsRounded';
 
-import ToolPicker from "../components/tools/ToolPicker";
-import TopControls from "../components/shared/TopControls";
-import FileEditor from "../components/fileEditor/FileEditor";
-import PageEditor from "../components/pageEditor/PageEditor";
-import PageEditorControls from "../components/pageEditor/PageEditorControls";
-import Viewer from "../components/viewer/Viewer";
-import FileUploadSelector from "../components/shared/FileUploadSelector";
-import ToolRenderer from "../components/tools/ToolRenderer";
+import ToolPanel from "../components/tools/ToolPanel";
+import Workbench from "../components/layout/Workbench";
 import QuickAccessBar from "../components/shared/QuickAccessBar";
+import RightRail from "../components/shared/RightRail";
+import FileManager from "../components/FileManager";
+import LocalIcon from "../components/shared/LocalIcon";
+import { useFilesModalContext } from "../contexts/FilesModalContext";
+import AppConfigModal from "../components/shared/AppConfigModal";
+import ToolPanelModePrompt from "../components/tools/ToolPanelModePrompt";
+
+import "./HomePage.css";
+
+type MobileView = "tools" | "workbench";
+
 
 interface HomePageProps {
   openedFile?: File | null;
@@ -22,305 +30,267 @@ interface HomePageProps {
 
 export default function HomePage({ openedFile }: HomePageProps) {
   const { t } = useTranslation();
-  const { isRainbowMode } = useRainbowThemeContext();
+  const {
+    sidebarRefs,
+  } = useSidebarContext();
 
-  // Get file context
-  const fileContext = useFileContext();
-  const { activeFiles, currentView, currentMode, setCurrentView, addFiles } = fileContext;
+  const { quickAccessRef } = sidebarRefs;
 
 
   const {
-    selectedToolKey,
     selectedTool,
-    toolParams,
-    toolRegistry,
-    selectTool,
-    clearToolSelection,
-    updateToolParams,
-  } = useToolManagement();
+    selectedToolKey,
+    handleToolSelect,
+    handleBackToTools,
+    readerMode,
+    setLeftPanelView,
+  } = useToolWorkflow();
 
-  const [toolSelectedFiles, setToolSelectedFiles] = useState<File[]>([]);
-  const [sidebarsVisible, setSidebarsVisible] = useState(true);
-  const [leftPanelView, setLeftPanelView] = useState<'toolPicker' | 'toolContent'>('toolPicker');
-  const [readerMode, setReaderMode] = useState(false);
-  const [pageEditorFunctions, setPageEditorFunctions] = useState<any>(null);
-  const [previewFile, setPreviewFile] = useState<File | null>(null);
+  const { openFilesModal } = useFilesModalContext();
+  const { colorScheme } = useMantineColorScheme();
+  const isMobile = useMediaQuery("(max-width: 1024px)");
+  const sliderRef = useRef<HTMLDivElement | null>(null);
+  const [activeMobileView, setActiveMobileView] = useState<MobileView>("tools");
+  const isProgrammaticScroll = useRef(false);
+  const [configModalOpen, setConfigModalOpen] = useState(false);
 
+  const brandAltText = t("home.mobile.brandAlt", "Stirling PDF logo");
+  const brandIconSrc = `${BASE_PATH}/branding/StirlingPDFLogoNoText${
+    colorScheme === "dark" ? "Dark" : "Light"
+  }.svg`;
+  const brandTextSrc = `${BASE_PATH}/branding/StirlingPDFLogo${
+    colorScheme === "dark" ? "White" : "Black"
+  }Text.svg`;
 
+  const handleSelectMobileView = useCallback((view: MobileView) => {
+    setActiveMobileView(view);
+  }, []);
 
+  useEffect(() => {
+    if (isMobile) {
+      const container = sliderRef.current;
+      if (container) {
+        isProgrammaticScroll.current = true;
+        const offset = activeMobileView === "tools" ? 0 : container.offsetWidth;
+        container.scrollTo({ left: offset, behavior: "smooth" });
 
-
-  const handleToolSelect = useCallback(
-    (id: string) => {
-      selectTool(id);
-      if (toolRegistry[id]?.view) setCurrentView(toolRegistry[id].view);
-      setLeftPanelView('toolContent');
-      setReaderMode(false);
-    },
-    [selectTool, toolRegistry, setCurrentView]
-  );
-
-  const handleQuickAccessTools = useCallback(() => {
-    setLeftPanelView('toolPicker');
-    setReaderMode(false);
-    clearToolSelection();
-  }, [clearToolSelection]);
-
-  const handleReaderToggle = useCallback(() => {
-    setReaderMode(!readerMode);
-  }, [readerMode]);
-
-  const handleViewChange = useCallback((view: string) => {
-    setCurrentView(view as any);
-  }, [setCurrentView]);
-
-  const addToActiveFiles = useCallback(async (file: File) => {
-    const exists = activeFiles.some(f => f.name === file.name && f.size === file.size);
-    if (!exists) {
-      await addFiles([file]);
+        // Re-enable scroll listener after animation completes
+        setTimeout(() => {
+          isProgrammaticScroll.current = false;
+        }, 500);
+      }
+      return;
     }
-  }, [activeFiles, addFiles]);
+
+    setActiveMobileView("tools");
+    const container = sliderRef.current;
+    if (container) {
+      container.scrollTo({ left: 0, behavior: "auto" });
+    }
+  }, [activeMobileView, isMobile]);
+
+  useEffect(() => {
+    if (!isMobile) return;
+
+    const container = sliderRef.current;
+    if (!container) return;
+
+    let animationFrame = 0;
+
+    const handleScroll = () => {
+      if (isProgrammaticScroll.current) {
+        return;
+      }
 
   // Handle file opened with app (Tauri mode)
   useEffect(() => {
     if (openedFile) {
       const loadOpenedFile = async () => {
         try {
-          // Add to active files if not already present
-          await addToActiveFiles(openedFile);
-          
-          // Switch to viewer mode to show the opened file
-          setCurrentView('viewer');
-          setReaderMode(true);
+          // TAURI NOTE: Implement file opening logic here
+          // // Add to active files if not already present
+          // await addToActiveFiles(openedFile);
+
+          // // Switch to viewer mode to show the opened file
+          // setCurrentView('viewer');
+          // setReaderMode(true);
         } catch (error) {
           console.error('Failed to load opened file:', error);
         }
       };
-      
+
       loadOpenedFile();
     }
   }, [openedFile]);
 
+      if (animationFrame) {
+        cancelAnimationFrame(animationFrame);
+      }
 
+      animationFrame = window.requestAnimationFrame(() => {
+        const { scrollLeft, offsetWidth } = container;
+        const threshold = offsetWidth / 2;
+        const nextView: MobileView = scrollLeft >= threshold ? "workbench" : "tools";
+        setActiveMobileView((current) => (current === nextView ? current : nextView));
+      });
+    };
+
+    container.addEventListener("scroll", handleScroll, { passive: true });
+
+    return () => {
+      container.removeEventListener("scroll", handleScroll);
+      if (animationFrame) {
+        cancelAnimationFrame(animationFrame);
+      }
+    };
+  }, [isMobile]);
+
+  // Automatically switch to workbench when read mode or multiTool is activated in mobile
+  useEffect(() => {
+    if (isMobile && (readerMode || selectedToolKey === 'multiTool')) {
+      setActiveMobileView('workbench');
+    }
+  }, [isMobile, readerMode, selectedToolKey]);
+
+  // When navigating back to tools view in mobile with a workbench-only tool, show tool picker
+  useEffect(() => {
+    if (isMobile && activeMobileView === 'tools' && selectedTool) {
+      // Check if this is a workbench-only tool (has workbench but no component)
+      if (selectedTool.workbench && !selectedTool.component) {
+        setLeftPanelView('toolPicker');
+      }
+    }
+  }, [isMobile, activeMobileView, selectedTool, setLeftPanelView]);
+
+  const baseUrl = useBaseUrl();
+
+  // Update document meta when tool changes
+  useDocumentMeta({
+    title: selectedTool ? `${selectedTool.name} - Stirling PDF` : 'Stirling PDF',
+    description: selectedTool?.description || t('app.description', 'The Free Adobe Acrobat alternative (10M+ Downloads)'),
+    ogTitle: selectedTool ? `${selectedTool.name} - Stirling PDF` : 'Stirling PDF',
+    ogDescription: selectedTool?.description || t('app.description', 'The Free Adobe Acrobat alternative (10M+ Downloads)'),
+    ogImage: selectedToolKey ? `${baseUrl}/og_images/${selectedToolKey}.png` : `${baseUrl}/og_images/home.png`,
+    ogUrl: selectedTool ? `${baseUrl}${window.location.pathname}` : baseUrl
+  });
+
+  // Note: File selection limits are now handled directly by individual tools
 
   return (
-    <Group
-      align="flex-start"
-      gap={0}
-      className="min-h-screen w-screen overflow-hidden flex-nowrap flex"
-    >
-      {/* Quick Access Bar */}
-      <QuickAccessBar
-        onToolsClick={handleQuickAccessTools}
-        onReaderToggle={handleReaderToggle}
-        selectedToolKey={selectedToolKey}
-        toolRegistry={toolRegistry}
-        leftPanelView={leftPanelView}
-        readerMode={readerMode}
-      />
-
-      {/* Left: Tool Picker or Selected Tool Panel */}
-      <div
-        className={`h-screen flex flex-col overflow-hidden bg-[var(--bg-surface)] border-r border-[var(--border-subtle)] transition-all duration-300 ease-out ${isRainbowMode ? rainbowStyles.rainbowPaper : ''}`}
-        style={{
-          width: sidebarsVisible && !readerMode ? '14vw' : '0',
-          padding: sidebarsVisible && !readerMode ? '0.5rem' : '0'
-        }}
-      >
-          <div
-            style={{
-              opacity: sidebarsVisible && !readerMode ? 1 : 0,
-              transition: 'opacity 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-              height: '100%',
-              display: 'flex',
-              flexDirection: 'column'
-            }}
-          >
-            {leftPanelView === 'toolPicker' ? (
-              // Tool Picker View
-              <div className="flex-1 flex flex-col">
-                <ToolPicker
-                  selectedToolKey={selectedToolKey}
-                  onSelect={handleToolSelect}
-                  toolRegistry={toolRegistry}
-                />
+    <div className="h-screen overflow-hidden">
+      <ToolPanelModePrompt />
+      {isMobile ? (
+        <div className="mobile-layout">
+          <div className="mobile-toggle">
+            <div className="mobile-header">
+              <div className="mobile-brand">
+                <img src={brandIconSrc} alt="" className="mobile-brand-icon" />
+                <img src={brandTextSrc} alt={brandAltText} className="mobile-brand-text" />
               </div>
-            ) : (
-              // Selected Tool Content View
-              <div className="flex-1 flex flex-col">
-                {/* Back button */}
-                <div className="mb-4">
-                  <Button
-                    variant="subtle"
-                    size="sm"
-                    onClick={handleQuickAccessTools}
-                    className="text-sm"
-                  >
-                    ← {t("fileUpload.backToTools", "Back to Tools")}
-                  </Button>
-                </div>
-
-                {/* Tool title */}
-                <div className="mb-4" style={{ marginLeft: '0.5rem' }}>
-                  <h2 className="text-lg font-semibold">{selectedTool?.name}</h2>
-                </div>
-
-                {/* Tool content */}
-                <div className="flex-1 min-h-0">
-                  <ToolRenderer
-                    selectedToolKey={selectedToolKey}
-                    toolSelectedFiles={toolSelectedFiles}
-                    onPreviewFile={setPreviewFile}
-                  />
-                </div>
-              </div>
-            )}
+            </div>
+            <div className="mobile-toggle-buttons" role="tablist" aria-label={t('home.mobile.viewSwitcher', 'Switch workspace view')}>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={activeMobileView === "tools"}
+                className={`mobile-toggle-button ${activeMobileView === "tools" ? "active" : ""}`}
+                onClick={() => handleSelectMobileView("tools")}
+              >
+                {t('home.mobile.tools', 'Tools')}
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={activeMobileView === "workbench"}
+                className={`mobile-toggle-button ${activeMobileView === "workbench" ? "active" : ""}`}
+                onClick={() => handleSelectMobileView("workbench")}
+              >
+                {t('home.mobile.workspace', 'Workspace')}
+              </button>
+            </div>
+            <span className="mobile-toggle-hint">
+              {t('home.mobile.swipeHint', 'Swipe left or right to switch views')}
+            </span>
           </div>
-      </div>
-
-      {/* Main View */}
-      <Box
-        className="flex-1 h-screen min-w-80 relative flex flex-col"
-        style={{
-          backgroundColor: 'var(--bg-background)'
-        }}
-      >
-        {/* Top Controls */}
-        <TopControls
-          currentView={currentView}
-          setCurrentView={handleViewChange}
-          selectedToolKey={selectedToolKey}
-        />
-        {/* Main content area */}
-          <Box
-            className="flex-1 min-h-0 relative z-10"
-            style={{
-              transition: 'opacity 0.15s ease-in-out',
-            }}
-          >
-            {!activeFiles[0] ? (
-              <Container size="lg" p="xl" h="100%" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <FileUploadSelector
-                  title={currentView === "viewer"
-                    ? t("fileUpload.selectPdfToView", "Select a PDF to view")
-                    : t("fileUpload.selectPdfToEdit", "Select a PDF to edit")
-                  }
-                  subtitle={t("fileUpload.chooseFromStorage", "Choose a file from storage or upload a new PDF")}
-                  onFileSelect={(file) => {
-                    addToActiveFiles(file);
-                  }}
-                  onFilesSelect={(files) => {
-                    files.forEach(addToActiveFiles);
-                  }}
-                  accept={["application/pdf"]}
-                  loading={false}
-                  showRecentFiles={true}
-                  maxRecentFiles={8}
-                />
-              </Container>
-            ) : currentView === "fileEditor" ? (
-              <FileEditor
-                onOpenPageEditor={(file) => {
-                  handleViewChange("pageEditor");
-                }}
-                onMergeFiles={(filesToMerge) => {
-                  // Add merged files to active set
-                  filesToMerge.forEach(addToActiveFiles);
-                  handleViewChange("viewer");
-                }}
-              />
-            ) :  currentView === "viewer" ? (
-              <Viewer
-                sidebarsVisible={sidebarsVisible}
-                setSidebarsVisible={setSidebarsVisible}
-                previewFile={previewFile}
-                {...(previewFile && {
-                  onClose: () => {
-                    setPreviewFile(null); // Clear preview file
-                    const previousMode = sessionStorage.getItem('previousMode');
-                    if (previousMode === 'split') {
-                      selectTool('split');
-                      setCurrentView('split');
-                      setLeftPanelView('toolContent');
-                      sessionStorage.removeItem('previousMode');
-                    } else if (previousMode === 'compress') {
-                      selectTool('compress');
-                      setCurrentView('compress');
-                      setLeftPanelView('toolContent');
-                      sessionStorage.removeItem('previousMode');
-                    } else {
-                      setCurrentView('fileEditor');
-                    }
-                  }
-                })}
-              />
-            ) : currentView === "pageEditor" ? (
-              <>
-                <PageEditor
-                  onFunctionsReady={setPageEditorFunctions}
-                />
-                {pageEditorFunctions && (
-                  <PageEditorControls
-                    onClosePdf={pageEditorFunctions.closePdf}
-                    onUndo={pageEditorFunctions.handleUndo}
-                    onRedo={pageEditorFunctions.handleRedo}
-                    canUndo={pageEditorFunctions.canUndo}
-                    canRedo={pageEditorFunctions.canRedo}
-                    onRotate={pageEditorFunctions.handleRotate}
-                    onDelete={pageEditorFunctions.handleDelete}
-                    onSplit={pageEditorFunctions.handleSplit}
-                    onExportSelected={pageEditorFunctions.onExportSelected}
-                    onExportAll={pageEditorFunctions.onExportAll}
-                    exportLoading={pageEditorFunctions.exportLoading}
-                    selectionMode={pageEditorFunctions.selectionMode}
-                    selectedPages={pageEditorFunctions.selectedPages}
-                  />
-                )}
-              </>
-            ) : currentView === "split" ? (
-              <FileEditor
-                toolMode={true}
-                multiSelect={false} 
-                showUpload={true}
-                showBulkActions={true}
-                onFileSelect={(files) => {
-                  setToolSelectedFiles(files);
-                }}
-              />
-            ) : currentView === "compress" ? (
-              <FileEditor
-                toolMode={true}
-                multiSelect={false} // TODO: make this work with multiple files
-                showUpload={true}
-                showBulkActions={true}
-                onFileSelect={(files) => {
-                  setToolSelectedFiles(files);
-                }}
-              />
-            ) : selectedToolKey && selectedTool ? (
-              <ToolRenderer
-                selectedToolKey={selectedToolKey}
-              />
-            ) : (
-              <Container size="lg" p="xl" h="100%" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <FileUploadSelector
-                  title="File Management"
-                  subtitle="Choose files from storage or upload new PDFs"
-                  onFileSelect={(file) => {
-                    addToActiveFiles(file);
-                  }}
-                  onFilesSelect={(files) => {
-                    files.forEach(addToActiveFiles);
-                  }}
-                  accept={["application/pdf"]}
-                  loading={false}
-                  showRecentFiles={true}
-                  maxRecentFiles={8}
-                />
-              </Container>
-            )}
-          </Box>
-      </Box>
-    </Group>
+          <div ref={sliderRef} className="mobile-slider">
+            <div className="mobile-slide" aria-label={t('home.mobile.toolsSlide', 'Tool selection panel')}>
+              <div className="mobile-slide-content">
+                <ToolPanel />
+              </div>
+            </div>
+            <div className="mobile-slide" aria-label={t('home.mobile.workbenchSlide', 'Workspace panel')}>
+              <div className="mobile-slide-content">
+                <div className="flex-1 min-h-0 flex">
+                  <Workbench />
+                  <RightRail />
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="mobile-bottom-bar">
+            <button
+              className="mobile-bottom-button"
+              aria-label={t('quickAccess.allTools', 'All Tools')}
+              onClick={() => {
+                handleBackToTools();
+                if (isMobile) {
+                  setActiveMobileView('tools');
+                }
+              }}
+            >
+              <AppsIcon sx={{ fontSize: '1.5rem' }} />
+              <span className="mobile-bottom-button-label">{t('quickAccess.allTools', 'All Tools')}</span>
+            </button>
+            <button
+              className="mobile-bottom-button"
+              aria-label={t('quickAccess.automate', 'Automate')}
+              onClick={() => {
+                handleToolSelect('automate');
+                if (isMobile) {
+                  setActiveMobileView('tools');
+                }
+              }}
+            >
+              <LocalIcon icon="automation-outline" width="1.5rem" height="1.5rem" />
+              <span className="mobile-bottom-button-label">{t('quickAccess.automate', 'Automate')}</span>
+            </button>
+            <button
+              className="mobile-bottom-button"
+              aria-label={t('home.mobile.openFiles', 'Open files')}
+              onClick={() => openFilesModal()}
+            >
+              <LocalIcon icon="folder-rounded" width="1.5rem" height="1.5rem" />
+              <span className="mobile-bottom-button-label">{t('quickAccess.files', 'Files')}</span>
+            </button>
+            <button
+              className="mobile-bottom-button"
+              aria-label={t('quickAccess.config', 'Config')}
+              onClick={() => setConfigModalOpen(true)}
+            >
+              <LocalIcon icon="settings-rounded" width="1.5rem" height="1.5rem" />
+              <span className="mobile-bottom-button-label">{t('quickAccess.config', 'Config')}</span>
+            </button>
+          </div>
+          <FileManager selectedTool={selectedTool as any /* FIX ME */} />
+          <AppConfigModal
+            opened={configModalOpen}
+            onClose={() => setConfigModalOpen(false)}
+          />
+        </div>
+      ) : (
+        <Group
+          align="flex-start"
+          gap={0}
+          h="100%"
+          className="flex-nowrap flex"
+        >
+          <QuickAccessBar ref={quickAccessRef} />
+          <ToolPanel />
+          <Workbench />
+          <RightRail />
+          <FileManager selectedTool={selectedTool as any /* FIX ME */} />
+        </Group>
+      )}
+    </div>
   );
 }

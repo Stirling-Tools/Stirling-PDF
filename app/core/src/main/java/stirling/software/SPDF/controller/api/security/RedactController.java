@@ -18,22 +18,21 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.PDFText;
 import stirling.software.SPDF.model.api.security.ManualRedactPdfRequest;
 import stirling.software.SPDF.model.api.security.RedactPdfRequest;
 import stirling.software.SPDF.pdf.TextFinder;
+import stirling.software.common.annotations.AutoJobPostMapping;
+import stirling.software.common.annotations.api.SecurityApi;
 import stirling.software.common.model.api.security.RedactionArea;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
@@ -41,10 +40,8 @@ import stirling.software.common.util.PdfUtils;
 import stirling.software.common.util.WebResponseUtils;
 import stirling.software.common.util.propertyeditor.StringToArrayListPropertyEditor;
 
-@RestController
-@RequestMapping("/api/v1/security")
+@SecurityApi
 @Slf4j
-@Tag(name = "Security", description = "Security APIs")
 @RequiredArgsConstructor
 public class RedactController {
 
@@ -56,14 +53,16 @@ public class RedactController {
                 List.class, "redactions", new StringToArrayListPropertyEditor());
     }
 
-    @PostMapping(value = "/redact", consumes = "multipart/form-data")
+    @AutoJobPostMapping(value = "/redact", consumes = "multipart/form-data")
+    @StandardPdfResponse
     @Operation(
+            operationId = "redactPdfManual",
             summary = "Redacts areas and pages in a PDF document",
             description =
                     "This operation takes an input PDF file with a list of areas, page"
                             + " number(s)/range(s)/function(s) to redact. Input:PDF, Output:PDF,"
                             + " Type:SISO")
-    public ResponseEntity<byte[]> redactPDF(@ModelAttribute ManualRedactPdfRequest request)
+    public ResponseEntity<byte[]> redactPdfManual(@ModelAttribute ManualRedactPdfRequest request)
             throws IOException {
         MultipartFile file = request.getFileInput();
         List<RedactionArea> redactionAreas = request.getRedactions();
@@ -190,8 +189,10 @@ public class RedactController {
         return pageNumbers;
     }
 
-    @PostMapping(value = "/auto-redact", consumes = "multipart/form-data")
+    @AutoJobPostMapping(value = "/auto-redact", consumes = "multipart/form-data")
+    @StandardPdfResponse
     @Operation(
+            operationId = "redactPdfAuto",
             summary = "Redacts listOfText in a PDF document",
             description =
                     "This operation takes an input PDF file and redacts the provided listOfText."

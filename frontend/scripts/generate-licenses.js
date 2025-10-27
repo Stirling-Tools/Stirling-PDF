@@ -1,8 +1,15 @@
 #!/usr/bin/env node
 
-const { execSync } = require('child_process');
-const fs = require('fs');
-const path = require('path');
+const { execSync } = require('node:child_process');
+const { existsSync, mkdirSync, writeFileSync, readFileSync } = require('node:fs');
+const path = require('node:path');
+
+const { argv } = require('node:process');
+const inputIdx = argv.indexOf('--input');
+const INPUT_FILE = inputIdx > -1 ? argv[inputIdx + 1] : null;
+const POSTPROCESS_ONLY = !!INPUT_FILE;
+
+// __dirname is available in CommonJS by default
 
 /**
  * Generate 3rd party licenses for frontend dependencies
@@ -14,96 +21,95 @@ const PACKAGE_JSON = path.join(__dirname, '..', 'package.json');
 
 // Ensure the output directory exists
 const outputDir = path.dirname(OUTPUT_FILE);
-if (!fs.existsSync(outputDir)) {
-    fs.mkdirSync(outputDir, { recursive: true });
+if (!existsSync(outputDir)) {
+    mkdirSync(outputDir, { recursive: true });
 }
 
 console.log('🔍 Generating frontend license report...');
 
 try {
-    // Install license-checker if not present
-    try {
-        require.resolve('license-checker');
-    } catch (e) {
-        console.log('📦 Installing license-checker...');
-        execSync('npm install --save-dev license-checker', { stdio: 'inherit' });
+    // Safety guard: don't run this script on fork PRs (workflow setzt PR_IS_FORK)
+    if (process.env.PR_IS_FORK === 'true' && !POSTPROCESS_ONLY) {
+        console.error('Fork PR detected: only --input (postprocess-only) mode is allowed.');
+        process.exit(2);
     }
 
-    // Generate license report using license-checker (more reliable)
-    const licenseReport = execSync('npx license-checker --production --json', { 
-        encoding: 'utf8',
-        cwd: path.dirname(PACKAGE_JSON)
-    });
-    
     let licenseData;
-    try {
-        licenseData = JSON.parse(licenseReport);
-    } catch (parseError) {
-        console.error('❌ Failed to parse license data:', parseError.message);
-        console.error('Raw output:', licenseReport.substring(0, 500) + '...');
+    // Generate license report using pinned license-checker; disable lifecycle scripts
+    if (POSTPROCESS_ONLY) {
+      if (!INPUT_FILE || !existsSync(INPUT_FILE)) {
+        console.error('❌ --input file missing or not found');
         process.exit(1);
+      }
+      licenseData = JSON.parse(readFileSync(INPUT_FILE, 'utf8'));
+    } else {
+      const licenseReport = execSync(
+          // 'npx --yes license-checker@25.0.1 --production --json',
+          'npx --yes license-report --only=prod --output=json',
+          {
+              encoding: 'utf8',
+              cwd: path.dirname(PACKAGE_JSON),
+              env: { ...process.env, NPM_CONFIG_IGNORE_SCRIPTS: 'true' }
+          }
+      );
+      try {
+          licenseData = JSON.parse(licenseReport);
+      } catch (parseError) {
+          console.error('❌ Failed to parse license data:', parseError.message);
+          console.error('Raw output:', licenseReport.substring(0, 500) + '...');
+          process.exit(1);
+      }
     }
-    
-    if (!licenseData || typeof licenseData !== 'object') {
+
+    if (!Array.isArray(licenseData)) {
         console.error('❌ Invalid license data structure');
         process.exit(1);
     }
-    
+
     // Convert license-checker format to array
-    const licenseArray = Object.entries(licenseData).map(([key, value]) => {
-        let name, version;
-        
-        // Handle scoped packages like @mantine/core@1.0.0
-        if (key.startsWith('@')) {
-            const parts = key.split('@');
-            name = `@${parts[1]}`;
-            version = parts[2];
-        } else {
-            // Handle regular packages like react@18.0.0
-            const lastAtIndex = key.lastIndexOf('@');
-            name = key.substring(0, lastAtIndex);
-            version = key.substring(lastAtIndex + 1);
-        }
-        
-        // Normalize license types for edge cases
-        let licenseType = value.licenses;
-        
+    const licenseArray = licenseData.map(dep => {
+        let licenseType = dep.licenseType;
+
         // Handle missing or null licenses
         if (!licenseType || licenseType === null || licenseType === undefined) {
             licenseType = 'Unknown';
         }
-        
+
         // Handle empty string licenses
         if (licenseType === '') {
             licenseType = 'Unknown';
         }
-        
+
         // Handle array licenses (rare but possible)
         if (Array.isArray(licenseType)) {
             licenseType = licenseType.join(' AND ');
         }
-        
+
         // Handle object licenses (fallback)
         if (typeof licenseType === 'object' && licenseType !== null) {
             licenseType = 'Unknown';
         }
-        
+
+        if ( "posthog-js" === dep.name && licenseType.startsWith("SEE LICENSE IN LICENSE")) {
+            licenseType = "SEE LICENSE IN LICENSE https://github.com/PostHog/posthog-js/blob/main/LICENSE";
+        }
+
         return {
-            name: name,
-            version: version || value.version || 'unknown',
+            name: dep.name,
+            version: dep.installedVersion || dep.definedVersion || dep.remoteVersion || 'unknown',
             licenseType: licenseType,
-            repository: value.repository,
-            url: value.url,
-            link: value.licenseUrl
+            repository: dep.link,
+            url: dep.link,
+            link: dep.link
         };
     });
-    
+
     // Transform to match Java backend format
     const transformedData = {
         dependencies: licenseArray.map(dep => {
             const licenseType = Array.isArray(dep.licenseType) ? dep.licenseType.join(', ') : (dep.licenseType || 'Unknown');
             const licenseUrl = dep.link || getLicenseUrl(licenseType);
-            
+
             return {
                 moduleName: dep.name,
                 moduleUrl: dep.repository || dep.url || `https://www.npmjs.com/package/${dep.name}`,
@@ -113,29 +119,29 @@ try {
             };
         })
     };
-    
+
     // Log summary of license types found
     const licenseSummary = licenseArray.reduce((acc, dep) => {
         const license = Array.isArray(dep.licenseType) ? dep.licenseType.join(', ') : (dep.licenseType || 'Unknown');
         acc[license] = (acc[license] || 0) + 1;
         return acc;
     }, {});
-    
+
     console.log('📊 License types found:');
     Object.entries(licenseSummary).forEach(([license, count]) => {
         console.log(`   ${license}: ${count} packages`);
     });
-    
+
     // Log any complex or unusual license formats for debugging
-    const complexLicenses = licenseArray.filter(dep => 
+    const complexLicenses = licenseArray.filter(dep =>
         dep.licenseType && (
-            dep.licenseType.includes('AND') || 
-            dep.licenseType.includes('OR') || 
+            dep.licenseType.includes('AND') ||
+            dep.licenseType.includes('OR') ||
             dep.licenseType === 'Unknown' ||
             dep.licenseType.includes('SEE LICENSE')
         )
     );
-    
+
     if (complexLicenses.length > 0) {
         console.log('\n🔍 Complex/Edge case licenses detected:');
         complexLicenses.forEach(dep => {
@@ -150,10 +156,10 @@ try {
         problematicLicenses.forEach(warning => {
             console.log(`   ${warning.message}`);
         });
-        
+
         // Write license warnings to a separate file for CI/CD
         const warningsFile = path.join(__dirname, '..', 'src', 'assets', 'license-warnings.json');
-        fs.writeFileSync(warningsFile, JSON.stringify({
+        writeFileSync(warningsFile, JSON.stringify({
             warnings: problematicLicenses,
             generated: new Date().toISOString()
         }, null, 2));
@@ -163,12 +169,12 @@ try {
     }
 
     // Write to file
-    fs.writeFileSync(OUTPUT_FILE, JSON.stringify(transformedData, null, 4));
-    
+    writeFileSync(OUTPUT_FILE, JSON.stringify(transformedData, null, 4));
+
     console.log(`✅ License report generated successfully!`);
     console.log(`📄 Found ${transformedData.dependencies.length} dependencies`);
     console.log(`💾 Saved to: ${OUTPUT_FILE}`);
-    
+
 } catch (error) {
     console.error('❌ Error generating license report:', error.message);
     process.exit(1);
@@ -179,9 +185,10 @@ try {
  */
 function getLicenseUrl(licenseType) {
     if (!licenseType || licenseType === 'Unknown') return '';
-    
+
     const licenseUrls = {
         'MIT': 'https://opensource.org/licenses/MIT',
+        'MIT*': 'https://opensource.org/licenses/MIT',
         'Apache-2.0': 'https://www.apache.org/licenses/LICENSE-2.0',
         'Apache License 2.0': 'https://www.apache.org/licenses/LICENSE-2.0',
         'BSD-3-Clause': 'https://opensource.org/licenses/BSD-3-Clause',
@@ -206,12 +213,12 @@ function getLicenseUrl(licenseType) {
         'Public Domain': 'https://creativecommons.org/publicdomain/zero/1.0/',
         'UNLICENSED': ''
     };
-    
+
     // Try exact match first
     if (licenseUrls[licenseType]) {
         return licenseUrls[licenseType];
     }
-    
+
     // Try case-insensitive match
     const lowerType = licenseType.toLowerCase();
     for (const [key, url] of Object.entries(licenseUrls)) {
@@ -219,16 +226,16 @@ function getLicenseUrl(licenseType) {
             return url;
         }
     }
-    
+
     // Handle complex SPDX expressions like "(MIT AND Zlib)" or "(MIT OR CC0-1.0)"
     if (licenseType.includes('AND') || licenseType.includes('OR')) {
         // Extract the first license from compound expressions for URL
-        const match = licenseType.match(/\(?\s*([A-Za-z0-9\-\.]+)/);
+        const match = licenseType.match(/\(?\s*([A-Za-z0-9\-.]+)/);
         if (match && licenseUrls[match[1]]) {
             return licenseUrls[match[1]];
         }
     }
-    
+
     // For non-standard licenses, return empty string (will use package link if available)
     return '';
 }
@@ -238,7 +245,7 @@ function getLicenseUrl(licenseType) {
  */
 function checkLicenseCompatibility(licenseSummary, licenseArray) {
     const warnings = [];
-    
+
     // Define problematic license patterns
     const problematicLicenses = {
         // Copyleft licenses
@@ -248,7 +255,7 @@ function checkLicenseCompatibility(licenseSummary, licenseArray) {
         'LGPL-3.0': 'Weak copyleft license - may require source disclosure for modifications',
         'AGPL-3.0': 'Network copyleft license - requires source disclosure for network use',
         'AGPL-1.0': 'Network copyleft license - requires source disclosure for network use',
-        
+
         // Other potentially problematic licenses
         'WTFPL': 'Potentially problematic license - legal uncertainty',
         'CC-BY-SA-4.0': 'ShareAlike license - requires derivative works to use same license',
@@ -267,47 +274,48 @@ function checkLicenseCompatibility(licenseSummary, licenseArray) {
         'UNLICENSED': 'No license specified - usage rights unclear',
         'Unknown': 'License not detected - manual review required'
     };
-    
+
     // Known good licenses (no warnings needed)
     const goodLicenses = new Set([
-        'MIT', 'Apache-2.0', 'Apache License 2.0', 'BSD-2-Clause', 'BSD-3-Clause', 'BSD',
+        'MIT', 'MIT*', 'Apache-2.0', 'Apache License 2.0', 'BSD-2-Clause', 'BSD-3-Clause', 'BSD',
         'ISC', 'CC0-1.0', 'Public Domain', 'Unlicense', '0BSD', 'BlueOak-1.0.0',
         'Zlib', 'Artistic-2.0', 'Python-2.0', 'Ruby', 'MPL-2.0', 'CC-BY-4.0',
-        'SEE LICENSE IN https://raw.githubusercontent.com/Stirling-Tools/Stirling-PDF/refs/heads/main/proprietary/LICENSE'
+        'SEE LICENSE IN https://raw.githubusercontent.com/Stirling-Tools/Stirling-PDF/refs/heads/main/proprietary/LICENSE',
+        'SEE LICENSE IN LICENSE https://github.com/PostHog/posthog-js/blob/main/LICENSE'
     ]);
-    
+
     // Helper function to normalize license names for comparison
     function normalizeLicense(license) {
         return license
             .replace(/-or-later$/, '') // Remove -or-later suffix
-            .replace(/\+$/, '') // Remove + suffix  
+            .replace(/\+$/, '') // Remove + suffix
             .trim();
     }
-    
+
     // Check each license type
     Object.entries(licenseSummary).forEach(([license, count]) => {
         // Skip known good licenses
         if (goodLicenses.has(license)) {
             return;
         }
-        
+
         // Check if this license only affects our own packages
         const affectedPackages = licenseArray.filter(dep => {
             const depLicense = Array.isArray(dep.licenseType) ? dep.licenseType.join(', ') : dep.licenseType;
             return depLicense === license;
         });
-        
-        const isOnlyOurPackages = affectedPackages.every(dep => 
-            dep.name === 'frontend' || 
+
+        const isOnlyOurPackages = affectedPackages.every(dep =>
+            dep.name === 'frontend' ||
             dep.name.toLowerCase().includes('stirling-pdf') ||
             dep.name.toLowerCase().includes('stirling_pdf') ||
             dep.name.toLowerCase().includes('stirlingpdf')
         );
-        
+
         if (isOnlyOurPackages && (license === 'UNLICENSED' || license.startsWith('SEE LICENSE IN'))) {
             return; // Skip warnings for our own Stirling-PDF packages
         }
-        
+
         // Check for compound licenses like "(MIT AND Zlib)" or "(MIT OR CC0-1.0)"
         if (license.includes('AND') || license.includes('OR')) {
             // For OR licenses, check if there's at least one acceptable license option
@@ -317,23 +325,23 @@ function checkLicenseCompatibility(licenseSummary, licenseArray) {
                     .replace(/[()]/g, '') // Remove parentheses
                     .split(' OR ')
                     .map(component => component.trim());
-                
+
                 // Check if any component is in the goodLicenses set (with normalization)
                 const hasGoodLicense = orComponents.some(component => {
                     const normalized = normalizeLicense(component);
                     return goodLicenses.has(component) || goodLicenses.has(normalized);
                 });
-                
+
                 if (hasGoodLicense) {
                     return; // Skip warning - can use the good license option
                 }
             }
-            
+
             // For AND licenses or OR licenses with no good options, check for problematic components
-            const hasProblematicComponent = Object.keys(problematicLicenses).some(problematic => 
+            const hasProblematicComponent = Object.keys(problematicLicenses).some(problematic =>
                 license.includes(problematic)
             );
-            
+
             if (hasProblematicComponent) {
                 const affectedPackages = licenseArray
                     .filter(dep => {
@@ -345,12 +353,12 @@ function checkLicenseCompatibility(licenseSummary, licenseArray) {
                         version: dep.version,
                         url: dep.repository || dep.url || `https://www.npmjs.com/package/${dep.name}`
                     }));
-                
+
                 const licenseType = license.includes('AND') ? 'AND' : 'OR';
-                const reason = licenseType === 'AND' 
+                const reason = licenseType === 'AND'
                     ? 'Compound license with AND requirement - all components must be compatible'
                     : 'Compound license with potentially problematic components and no good fallback options';
-                
+
                 warnings.push({
                     message: `📋 This PR contains ${count} package${count > 1 ? 's' : ''} with compound license "${license}" - manual review recommended`,
                     licenseType: license,
@@ -362,7 +370,7 @@ function checkLicenseCompatibility(licenseSummary, licenseArray) {
             }
             return;
         }
-        
+
         // Check for exact matches with problematic licenses
         if (problematicLicenses[license]) {
             const affectedPackages = licenseArray
@@ -375,10 +383,10 @@ function checkLicenseCompatibility(licenseSummary, licenseArray) {
                     version: dep.version,
                     url: dep.repository || dep.url || `https://www.npmjs.com/package/${dep.name}`
                 }));
-            
+
             const packageList = affectedPackages.map(pkg => pkg.name).slice(0, 5).join(', ') + (affectedPackages.length > 5 ? `, and ${affectedPackages.length - 5} more` : '');
             const licenseUrl = getLicenseUrl(license) || 'https://opensource.org/licenses';
-            
+
             warnings.push({
                 message: `⚠️  This PR contains ${count} package${count > 1 ? 's' : ''} with license type [${license}](${licenseUrl}) - ${problematicLicenses[license]}. Affected packages: ${packageList}`,
                 licenseType: license,
@@ -399,7 +407,7 @@ function checkLicenseCompatibility(licenseSummary, licenseArray) {
                     version: dep.version,
                     url: dep.repository || dep.url || `https://www.npmjs.com/package/${dep.name}`
                 }));
-            
+
             warnings.push({
                 message: `❓ This PR contains ${count} package${count > 1 ? 's' : ''} with unknown license type "${license}" - manual review required`,
                 licenseType: license,
@@ -410,6 +418,6 @@ function checkLicenseCompatibility(licenseSummary, licenseArray) {
             });
         }
     });
-    
+
     return warnings;
 }

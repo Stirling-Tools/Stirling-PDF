@@ -27,7 +27,7 @@ clientWebUI/
 !cucumber/exampleFiles/
 !cucumber/exampleFiles/example_html.zip
 exampleYmlFiles/stirling/
-stirling/
+/stirling/
 /testing/file_snapshots
 SwaggerDoc.json
 
@@ -125,10 +125,10 @@ SwaggerDoc.json
 *.tar.gz
 *.rar
 *.db
-/build
-/app/core/build
-/app/common/build
-/app/proprietary/build
+build
+app/core/build
+app/common/build
+app/proprietary/build
 common/build
 proprietary/build
 stirling-pdf/build
@@ -203,3 +203,10 @@ id_ed25519.pub
 
 # node_modules
 node_modules/
+
+# Translation temp files
+*_compact.json
+*compact*.json
+test_batch.json
+*.backup.*.json
+frontend/public/locales/*/translation.backup*.json

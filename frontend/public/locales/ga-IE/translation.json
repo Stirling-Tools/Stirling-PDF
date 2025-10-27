@@ -283,7 +283,7 @@
     "endpoint": "Endpoint",
     "visits": "Visits",
     "percentage": "Percentage",
-    "loading": "Loading...",
+    "loading": "Á lódáil...",
     "failedToLoad": "Failed to load endpoint data. Please try refreshing.",
     "home": "Home",
     "login": "Login",
@@ -347,7 +347,7 @@
       "title": "Rothlaigh",
       "desc": "Rothlaigh do PDFanna go héasca."
     },
-    "imageToPdf": {
+    "imageToPDF": {
       "title": "Íomhá go PDF",
       "desc": "Tiontaigh íomhá (PNG, JPEG, GIF) go PDF."
     },
@@ -371,7 +371,7 @@
       "title": "Athrú Ceadanna",
       "desc": "Athraigh ceadanna do dhoiciméad PDF"
     },
-    "removePages": {
+    "pageRemover": {
       "title": "Bain",
       "desc": "Scrios leathanaigh nach dteastaíonn ó do dhoiciméad PDF."
     },
@@ -383,7 +383,7 @@
       "title": "Bain Pasfhocal",
       "desc": "Bain cosaint phasfhocal ó do dhoiciméad PDF."
     },
-    "compressPdfs": {
+    "compress": {
       "title": "Comhbhrúigh",
       "desc": "Comhbhrúigh PDFanna chun a méid comhaid a laghdú."
     },
@@ -479,7 +479,7 @@
       "title": "Píblíne (Ardleibhéal)",
       "desc": "Rith gníomhartha iolracha ar PDFanna trí scripteanna píblíne a shainiú"
     },
-    "add-page-numbers": {
+    "addPageNumbers": {
       "title": "Cuir Uimhreacha Leathanaigh leis",
       "desc": "Cuir uimhreacha Leathanach leis an doiciméad i suíomh socraithe"
     },
@@ -487,7 +487,7 @@
       "title": "Comhad PDF a athainmniú go huathoibríoch",
       "desc": "Athainmníonn Auto comhad PDF bunaithe ar a cheanntásc braite"
     },
-    "adjust-contrast": {
+    "adjustContrast": {
       "title": "Coigeartaigh Dathanna/Codarsnacht",
       "desc": "Coigeartaigh Codarsnacht, Sáithiú agus Gile PDF"
     },
@@ -499,7 +499,7 @@
       "title": "Leathanaigh Scoilte Uathoibríoch",
       "desc": "Auto Scoilt PDF Scanta le Cód QR scoilteoir leathanach scanadh fisiciúil"
     },
-    "sanitizePdf": {
+    "sanitizePDF": {
       "title": "Sláintíocht",
       "desc": "Bain scripteanna agus gnéithe eile ó chomhaid PDF"
     },
@@ -523,11 +523,11 @@
       "title": "Faigh GACH Eolas ar PDF",
       "desc": "Grab aon fhaisnéis agus is féidir ar PDFs"
     },
-    "extractPage": {
+    "pageExtracter": {
       "title": "Sliocht leathanach(eacha)",
       "desc": "Sleachta roghnaigh leathanaigh ó PDF"
     },
-    "PdfToSinglePage": {
+    "pdfToSinglePage": {
       "title": "PDF go leathanach mór amháin",
       "desc": "Cumasc gach leathanach PDF isteach i leathanach mór amháin"
     },
@@ -543,11 +543,11 @@
       "title": "Athchóiriú de Láimh",
       "desc": "Réiteann sé PDF bunaithe ar théacs roghnaithe, cruthanna tarraingthe agus/nó leathanaigh roghnaithe"
     },
-    "tableExtraxt": {
+    "PDFToCSV": {
       "title": "Ó CSV go PDF",
       "desc": "Sleachta Táblaí ó PDF agus é a thiontú go CSV"
     },
-    "autoSizeSplitPDF": {
+    "split-by-size-or-count": {
       "title": "Auto Scoilte de réir Méid/Comhaireamh",
       "desc": "Scoilt PDF amháin i ndoiciméid iolracha bunaithe ar mhéid, líon na leathanach, nó comhaireamh doiciméad"
     },
@@ -563,11 +563,11 @@
       "title": "Cuir Stampa go PDF",
       "desc": "Cuir téacs leis nó cuir stampaí íomhá leis ag láithreacha socraithe"
     },
-    "removeImagePdf": {
+    "removeImage": {
       "title": "Bain íomhá",
       "desc": "Bain íomhá de PDF chun méid comhaid a laghdú"
     },
-    "splitPdfByChapters": {
+    "splitByChapters": {
       "title": "Scoil PDF ar Chaibidlí",
       "desc": "Scoilt PDF ina chomhaid iolracha bunaithe ar a struchtúr caibidle."
     },
@@ -575,9 +575,41 @@
       "title": "Bailíochtaigh Síniú PDF",
       "desc": "Fíoraigh sínithe digiteacha agus teastais i gcáipéisí PDF"
     },
+    "replace-color": {
+      "title": "Athchuir agus Inbhéartaigh Dath",
+      "desc": "Athchuir dath an téacs agus an chúlra i bhformáid PDF agus inbhéartaigh dath iomlán pdf chun méid comhaid a laghdú"
+    },
+    "convert": {
+      "title": "Tiontaigh"
+    },
+    "attachments": {
+      "title": "Add attachments"
+    },
+    "extractPages": {
+      "title": "Leathanaigh Sliocht"
+    },
+    "removePages": {
+      "title": "Bain",
+      "desc": "Scrios leathanaigh nach dteastaíonn ó do dhoiciméad PDF."
+    },
+    "removeImagePdf": {
+      "title": "Bain íomhá",
+      "desc": "Bain íomhá de PDF chun méid comhaid a laghdú"
+    },
+    "autoSizeSplitPDF": {
+      "title": "Auto Scoilte de réir Méid/Comhaireamh",
+      "desc": "Scoilt PDF amháin i ndoiciméid iolracha bunaithe ar mhéid, líon na leathanach, nó comhaireamh doiciméad"
+    },
+    "adjust-contrast": {
+      "title": "Coigeartaigh Dathanna/Codarsnacht",
+      "desc": "Coigeartaigh Codarsnacht, Sáithiú agus Gile PDF"
+    },
     "replaceColorPdf": {
       "title": "Athchuir agus Inbhéartaigh Dath",
       "desc": "Athchuir dath an téacs agus an chúlra i bhformáid PDF agus inbhéartaigh dath iomlán pdf chun méid comhaid a laghdú"
+    },
+    "changePermissions": {
+      "title": "Athrú Ceadanna"
     }
   },
   "viewPdf": {
@@ -617,7 +649,10 @@
     "sortByName": "Sórtáil de réir ainm",
     "sortByDate": "Sórtáil de réir dáta",
     "removeCertSign": "Bain síniú digiteach sa chomhad cumaiscthe?",
-    "submit": "Cumaisc"
+    "submit": "Cumaisc",
+    "sortBy": {
+      "filename": "Ainm comhaid"
+    }
   },
   "split": {
     "tags": "Oibríochtaí leathanach, roinnt, Leathanach Il, gearrtha, taobh freastalaí",
@@ -634,7 +669,20 @@
       "8": "Doiciméad #6: Leathanach 10"
     },
     "splitPages": "Iontráil leathanaigh le scoilt ar:",
-    "submit": "Scoilt"
+    "submit": "Scoilt",
+    "steps": {
+      "settings": "Socruithe"
+    },
+    "methods": {
+      "bySize": {
+        "name": "Méid an Chomhaid"
+      }
+    },
+    "value": {
+      "fileSize": {
+        "label": "Méid an Chomhaid"
+      }
+    }
   },
   "rotate": {
     "tags": "taobh freastalaí",
@@ -712,6 +760,12 @@
     "type": {
       "1": "Téacs",
       "2": "Íomha"
+    },
+    "watermarkType": {
+      "text": "Téacs"
+    },
+    "settings": {
+      "fontSize": "Méid an Chló"
     }
   },
   "permissions": {
@@ -734,7 +788,9 @@
     "submit": "Athrú"
   },
   "removePages": {
-    "tags": "Bain leathanaigh, scrios leathanaigh"
+    "tags": "Bain leathanaigh, scrios leathanaigh",
+    "title": "Bain",
+    "submit": "Bain"
   },
   "addPassword": {
     "tags": "slán, slándáil",
@@ -758,7 +814,12 @@
       "15": "Cuireann sé srian lenar féidir a dhéanamh leis an doiciméad nuair a osclaítear é (Ní thacaíonn gach léitheoir leis)",
       "16": "Cuireann sé srian le hoscailt an doiciméid féin"
     },
-    "submit": "Criptigh"
+    "submit": "Criptigh",
+    "tooltip": {
+      "permissions": {
+        "title": "Athrú Ceadanna"
+      }
+    }
   },
   "removePassword": {
     "tags": "slán, Díchriptiú, slándáil, Unpassword, scrios pasfhocal",
@@ -768,7 +829,12 @@
       "1": "Roghnaigh PDF le Díchriptiú",
       "2": "Pasfhocal"
     },
-    "submit": "Bain"
+    "submit": "Bain",
+    "desc": "Bain cosaint phasfhocal ó do dhoiciméad PDF.",
+    "password": {
+      "stepTitle": "Bain Pasfhocal",
+      "label": "Pasfhocal reatha"
+    }
   },
   "compressPdfs": {
     "tags": "squish, beag, beag bídeach"
@@ -829,7 +895,25 @@
     },
     "help": "Léigh le do thoil an doiciméadú seo ar conas é seo a úsáid do theangacha eile agus/nó úsáid nach bhfuil i ndugairí",
     "credit": "Úsáideann an tseirbhís seo qpdf agus Tesseract le haghaidh OCR.",
-    "submit": "Próiseáil PDF le OCR"
+    "submit": "Próiseáil PDF le OCR",
+    "desc": "Scanann glantachán agus aimsíonn sé téacs ó íomhánna laistigh de PDF agus cuireann sé isteach arís é mar théacs.",
+    "settings": {
+      "title": "Socruithe",
+      "ocrMode": {
+        "label": "Mód OCR"
+      },
+      "languages": {
+        "label": "Teangacha"
+      }
+    },
+    "tooltip": {
+      "mode": {
+        "title": "Mód OCR"
+      },
+      "languages": {
+        "title": "Teangacha"
+      }
+    }
   },
   "extractImages": {
     "tags": "pictiúr, grianghraf, shábháil, cartlann, zip, gabháil, grab",
@@ -935,10 +1019,16 @@
   },
   "flatten": {
     "tags": "statach, díghníomhachtú, neamh-idirghníomhach, sruthlíniú",
-    "title": "Flatten",
+    "title": "Comhcheangail",
     "header": "PDF cothromú",
     "flattenOnlyForms": "Flatten foirmeacha amháin",
-    "submit": "Flatten"
+    "submit": "Comhcheangail",
+    "steps": {
+      "settings": "Socruithe"
+    },
+    "options": {
+      "flattenOnlyForms": "Flatten foirmeacha amháin"
+    }
   },
   "repair": {
     "tags": "deisiú, athchóiriú, ceartú, aisghabháil",
@@ -1174,7 +1264,22 @@
     "showLayers": "Taispeáin Sraitheanna (cliceáil faoi dhó chun gach sraith a athshocrú go dtí an staid réamhshocraithe)",
     "colourPicker": "Roghnóir Dathanna",
     "findCurrentOutlineItem": "Faigh imlíne reatha",
-    "applyChanges": "Apply Changes"
+    "applyChanges": "Apply Changes",
+    "auto": {
+      "settings": {
+        "advancedTitle": "Casta"
+      },
+      "wordsToRedact": {
+        "add": "Cuir"
+      }
+    },
+    "manual": {
+      "pageRedactionNumbers": {
+        "title": "Leathanaigh",
+        "placeholder": "(m.sh. 1,2,8 nó 4,7,12-16 nó 2n-1)"
+      },
+      "export": "Easpórtáil"
+    }
   },
   "tableExtraxt": {
     "tags": "CSV, Eastóscadh Tábla, sliocht, tiontú"
@@ -1386,7 +1491,10 @@
       "4": "Mód uathoibríoch - Coigeartaíonn Auto cáilíocht chun PDF a fháil go dtí an méid cruinn",
       "5": "Méid PDF a bhfuiltear ag súil leis (m.sh. 25MB, 10.8MB, 25KB)"
     },
-    "submit": "Comhbhrúigh"
+    "submit": "Comhbhrúigh",
+    "method": {
+      "filesize": "Méid an Chomhaid"
+    }
   },
   "decrypt": {
     "passwordPrompt": "Tá an comhad seo cosanta ag pasfhocal. Cuir isteach an pasfhocal le do thoil:",
@@ -1555,6 +1663,83 @@
       "analytics": {
         "title": "Analytics",
         "description": "These cookies help us understand how our tools are being used, so we can focus on building the features our community values most. Rest assured—Stirling PDF cannot and will never track the content of the documents you work with."
+      }
+    }
+  },
+  "download": "Íosluchtaigh",
+  "convert": {
+    "title": "Tiontaigh",
+    "settings": "Socruithe",
+    "color": "Dath",
+    "greyscale": "Scála Liath",
+    "fillPage": "Líon Leathanach",
+    "pdfaDigitalSignatureWarning": "Tá síniú digiteach ar an PDF. Bainfear é seo sa chéad chéim eile.",
+    "grayscale": "Scála Liath"
+  },
+  "attachments": {
+    "tags": "embed,attach,file,attachment,attachments",
+    "title": "Add attachments",
+    "header": "Add attachments",
+    "submit": "Add attachments"
+  },
+  "rightRail": {
+    "selectAll": "Roghnaigh Uile",
+    "deselectAll": "Díroghnaigh Uile"
+  },
+  "quickAccess": {
+    "sign": "Comhartha"
+  },
+  "fileUpload": {
+    "loading": "Á lódáil...",
+    "or": "nó"
+  },
+  "fileManager": {
+    "fileName": "Ainm",
+    "fileVersion": "Leagan",
+    "selectAll": "Roghnaigh Uile",
+    "deselectAll": "Díroghnaigh Uile",
+    "deleteSelected": "Scrios Roghnaithe",
+    "download": "Íosluchtaigh",
+    "delete": "Scrios"
+  },
+  "sanitize": {
+    "submit": "PDF sláintíocht",
+    "steps": {
+      "settings": "Socruithe"
+    }
+  },
+  "changePermissions": {
+    "title": "Athrú Ceadanna",
+    "submit": "Athrú Ceadanna",
+    "permissions": {
+      "preventAssembly": {
+        "label": "Cosc a chur le chéile doiciméad"
+      },
+      "preventExtractContent": {
+        "label": "Cosc a chur ar eastóscadh ábhar"
+      },
+      "preventExtractForAccessibility": {
+        "label": "Cosc a chur ar eastóscadh le haghaidh inrochtaineachta"
+      },
+      "preventFillInForm": {
+        "label": "Cosc ar fhoirm a líonadh"
+      },
+      "preventModify": {
+        "label": "Cosc a chur ar mhodhnú"
+      },
+      "preventModifyAnnotations": {
+        "label": "Cosc a chur ar mhodhnú anótála"
+      },
+      "preventPrinting": {
+        "label": "Cosc a chur ar phriontáil"
+      },
+      "preventPrintingFaithful": {
+        "label": "Cosc a chur ar phriontáil bhformáidí éagsúla"
+      }
+    },
+    "tooltip": {
+      "header": {
+        "title": "Athrú Ceadanna"
       }
     }
   }

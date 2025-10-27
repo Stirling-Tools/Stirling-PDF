@@ -347,7 +347,7 @@
       "title": "旋轉",
       "desc": "輕鬆旋轉您的 PDF。"
     },
-    "imageToPdf": {
+    "imageToPDF": {
       "title": "圖片轉 PDF",
       "desc": "將圖片（PNG、JPEG、GIF）轉換為 PDF。"
     },
@@ -371,7 +371,7 @@
       "title": "修改權限",
       "desc": "修改您的 PDF 檔案權限"
     },
-    "removePages": {
+    "pageRemover": {
       "title": "移除",
       "desc": "從您的 PDF 檔案中刪除不需要的頁面。"
     },
@@ -383,13 +383,13 @@
       "title": "移除密碼",
       "desc": "從您的 PDF 檔案中移除密碼保護。"
     },
-    "compressPdfs": {
+    "compress": {
       "title": "壓縮",
       "desc": "壓縮 PDF 以減少其檔案大小。"
     },
     "unlockPDFForms": {
-      "title": "Unlock PDF Forms",
-      "desc": "Remove read-only property of form fields in a PDF document."
+      "title": "解鎖 PDF 表單",
+      "desc": "移除 PDF 文件中表單欄位的唯讀屬性"
     },
     "changeMetadata": {
       "title": "變更中繼資料",
@@ -479,7 +479,7 @@
       "title": "管道（進階）",
       "desc": "透過定義管道指令碼在 PDF 上執行多個操作"
     },
-    "add-page-numbers": {
+    "addPageNumbers": {
       "title": "新增頁碼",
       "desc": "在文件的設定位置新增頁碼"
     },
@@ -487,7 +487,7 @@
       "title": "自動重新命名 PDF 檔案",
       "desc": "根據其偵測到的標頭自動重新命名 PDF 檔案"
     },
-    "adjust-contrast": {
+    "adjustContrast": {
       "title": "調整顏色/對比度",
       "desc": "調整 PDF 的對比度、飽和度和亮度"
     },
@@ -499,7 +499,7 @@
       "title": "自動分割頁面",
       "desc": "自動分割掃描的 PDF，使用實體掃描頁面分割器 QR Code"
     },
-    "sanitizePdf": {
+    "sanitizePDF": {
       "title": "清理",
       "desc": "從 PDF 檔案中移除指令碼和其他元素"
     },
@@ -523,11 +523,11 @@
       "title": "取得 PDF 的所有資訊",
       "desc": "取得 PDF 的所有可能資訊"
     },
-    "extractPage": {
+    "pageExtracter": {
       "title": "提取多個頁面",
       "desc": "從 PDF 中提取選定的頁面"
     },
-    "PdfToSinglePage": {
+    "pdfToSinglePage": {
       "title": "PDF 轉單一大頁面",
       "desc": "將所有 PDF 頁面合併為一個大的單一頁面"
     },
@@ -543,11 +543,11 @@
       "title": "手動塗黑",
       "desc": "依據選取的文字、繪製的形狀和選取的頁面塗黑 PDF"
     },
-    "tableExtraxt": {
+    "PDFToCSV": {
       "title": "PDF 轉 CSV",
       "desc": "從 PDF 中提取表格並將其轉換為 CSV"
     },
-    "autoSizeSplitPDF": {
+    "split-by-size-or-count": {
       "title": "根據大小/數量自動分割",
       "desc": "根據大小、頁數或文件數將單一 PDF 分割為多個文件"
     },
@@ -563,11 +563,11 @@
       "title": "將圖章新增到 PDF",
       "desc": "在設定位置新增文字或新增影像圖章"
     },
-    "removeImagePdf": {
+    "removeImage": {
       "title": "移除圖片",
       "desc": "從 PDF 中移除圖片以減少檔案大小"
     },
-    "splitPdfByChapters": {
+    "splitByChapters": {
       "title": "依章節分割 PDF",
       "desc": "根據 PDF 的章節結構將其分割成多個檔案。"
     },
@@ -575,9 +575,46 @@
       "title": "驗證 PDF 簽章",
       "desc": "驗證 PDF 文件中的數位簽章與憑證"
     },
+    "replace-color": {
+      "title": "取代與反轉顏色",
+      "desc": "取代 PDF 中文字和背景的顏色，並反轉整個 PDF 的顏色以減少檔案大小"
+    },
+    "convert": {
+      "title": "轉換"
+    },
+    "attachments": {
+      "title": "新增附件",
+      "desc": "將檔案（附件）新增或移除至/從 PDF"
+    },
+    "editTableOfContents": {
+      "title": "編輯目錄",
+      "desc": "在 PDF 文件中新增或編輯書籤和目錄"
+    },
+    "extractPages": {
+      "title": "提取頁面"
+    },
+    "removePages": {
+      "title": "移除",
+      "desc": "從您的 PDF 檔案中刪除不需要的頁面。"
+    },
+    "removeImagePdf": {
+      "title": "移除圖片",
+      "desc": "從 PDF 中移除圖片以減少檔案大小"
+    },
+    "autoSizeSplitPDF": {
+      "title": "根據大小/數量自動分割",
+      "desc": "根據大小、頁數或文件數將單一 PDF 分割為多個文件"
+    },
+    "adjust-contrast": {
+      "title": "調整顏色/對比",
+      "desc": "調整 PDF 的對比、飽和度和亮度"
+    },
     "replaceColorPdf": {
       "title": "取代與反轉顏色",
       "desc": "取代 PDF 中文字和背景的顏色，並反轉整個 PDF 的顏色以減少檔案大小"
+    },
+    "changePermissions": {
+      "title": "變更權限"
     }
   },
   "viewPdf": {
@@ -617,7 +654,10 @@
     "sortByName": "依名稱排序",
     "sortByDate": "依日期排序",
     "removeCertSign": "是否移除合併後檔案的憑證簽章？",
-    "submit": "合併"
+    "submit": "合併",
+    "sortBy": {
+      "filename": "檔案名稱"
+    }
   },
   "split": {
     "tags": "頁面操作,劃分,多頁,剪下,伺服器端",
@@ -634,7 +674,20 @@
       "8": "文件 #6：頁面 10"
     },
     "splitPages": "輸入要分割的頁面：",
-    "submit": "分割"
+    "submit": "分割",
+    "steps": {
+      "settings": "設定"
+    },
+    "methods": {
+      "bySize": {
+        "name": "檔案大小"
+      }
+    },
+    "value": {
+      "fileSize": {
+        "label": "檔案大小"
+      }
+    }
   },
   "rotate": {
     "tags": "伺服器端",
@@ -712,6 +765,12 @@
     "type": {
       "1": "文字",
       "2": "圖片"
+    },
+    "watermarkType": {
+      "text": "文字"
+    },
+    "settings": {
+      "fontSize": "字型大小"
     }
   },
   "permissions": {
@@ -734,7 +793,9 @@
     "submit": "變更"
   },
   "removePages": {
-    "tags": "移除頁面,刪除頁面"
+    "tags": "移除頁面,刪除頁面",
+    "title": "移除",
+    "submit": "移除"
   },
   "addPassword": {
     "tags": "安全,安全性",
@@ -758,7 +819,12 @@
       "15": "限制一旦開啟文件可以做什麼（並非所有軟體都支援）",
       "16": "限制開啟文件本身"
     },
-    "submit": "加密"
+    "submit": "加密",
+    "tooltip": {
+      "permissions": {
+        "title": "變更權限"
+      }
+    }
   },
   "removePassword": {
     "tags": "安全,解密,安全性,取消密碼,刪除密碼",
@@ -768,15 +834,20 @@
       "1": "選擇要解密的 PDF",
       "2": "密碼"
     },
-    "submit": "移除"
+    "submit": "移除",
+    "desc": "從您的 PDF 檔案中移除密碼保護。",
+    "password": {
+      "stepTitle": "移除密碼",
+      "label": "目前密碼"
+    }
   },
   "compressPdfs": {
     "tags": "壓縮,小,微小"
   },
   "unlockPDFForms": {
-    "tags": "remove,delete,form,field,readonly",
-    "title": "Remove Read-Only from Form Fields",
-    "header": "Unlock PDF Forms",
+    "tags": "移除,刪除,表格,欄位,唯讀",
+    "title": "移除表單欄位的唯讀限制",
+    "header": "解鎖 PDF 表單",
     "submit": "Remove"
   },
   "changeMetadata": {
@@ -829,7 +900,25 @@
     },
     "help": "請閱讀此文件，了解如何使用其他語言和/或在 Docker 中使用",
     "credit": "此服務使用 qpdf 和 Tesseract 進行 OCR。",
-    "submit": "使用 OCR 處理 PDF"
+    "submit": "使用 OCR 處理 PDF",
+    "desc": "清理掃描並從 PDF 中的影像中偵測文字並重新新增為文字。",
+    "settings": {
+      "title": "設定",
+      "ocrMode": {
+        "label": "OCR 模式"
+      },
+      "languages": {
+        "label": "語言"
+      }
+    },
+    "tooltip": {
+      "mode": {
+        "title": "OCR 模式"
+      },
+      "languages": {
+        "title": "語言"
+      }
+    }
   },
   "extractImages": {
     "tags": "圖片,照片,儲存,存檔,壓縮檔,捕獲,抓取",
@@ -938,7 +1027,13 @@
     "title": "平坦化",
     "header": "PDF 平坦化",
     "flattenOnlyForms": "僅將表單平坦化",
-    "submit": "平坦化"
+    "submit": "平坦化",
+    "steps": {
+      "settings": "設定"
+    },
+    "options": {
+      "flattenOnlyForms": "僅將表單平坦化"
+    }
   },
   "repair": {
     "tags": "修復,恢復,修正,復原",
@@ -1174,7 +1269,22 @@
     "showLayers": "顯示圖層（按兩下可將所有圖層重設為預設狀態）",
     "colourPicker": "顏色選擇器",
     "findCurrentOutlineItem": "尋找目前的大綱項目",
-    "applyChanges": "套用變更"
+    "applyChanges": "套用變更",
+    "auto": {
+      "settings": {
+        "advancedTitle": "進階"
+      },
+      "wordsToRedact": {
+        "add": "新增"
+      }
+    },
+    "manual": {
+      "pageRedactionNumbers": {
+        "title": "頁面",
+        "placeholder": "（例如 1,2,8 或 4,7,12-16 或 2n-1）"
+      },
+      "export": "匯出"
+    }
   },
   "tableExtraxt": {
     "tags": "CSV,表格提取,提取,轉換"
@@ -1336,7 +1446,7 @@
     "alreadyLoggedIn": "您已經登入了",
     "alreadyLoggedIn2": "部裝置。請先從這些裝置登出後再試一次。",
     "toManySessions": "您有太多使用中的工作階段",
-    "logoutMessage": "You have been logged out."
+    "logoutMessage": "您已登出。"
   },
   "pdfToSinglePage": {
     "title": "PDF 轉為單一頁面",
@@ -1386,7 +1496,10 @@
       "4": "自動模式 - 自動調整品質使 PDF 達到指定的檔案大小",
       "5": "指定的 PDF 檔案大小（例如 25MB, 10.8MB, 25KB）"
     },
-    "submit": "壓縮"
+    "submit": "壓縮",
+    "method": {
+      "filesize": "檔案大小"
+    }
   },
   "decrypt": {
     "passwordPrompt": "此檔案已受密碼保護。請輸入密碼：",
@@ -1555,6 +1668,84 @@
       "analytics": {
         "title": "分析 Cookies",
         "description": "這些 Cookies 幫助我們分析您如何使用我們的工具，好讓我們能專注在構建社群最重視的功能。儘管放心—— Stirling PDF 不會且永不追蹤您的文件"
+      }
+    }
+  },
+  "download": "下載",
+  "undo": "撤銷",
+  "convert": {
+    "title": "轉換",
+    "settings": "設定",
+    "color": "顏色",
+    "greyscale": "灰度",
+    "fillPage": "填充頁面",
+    "pdfaDigitalSignatureWarning": "該 PDF 的憑證簽章將會在下一步被移除",
+    "grayscale": "灰度"
+  },
+  "attachments": {
+    "tags": "嵌入,附件,檔案,附加,附件管理",
+    "title": "新增附件",
+    "header": "新增附件",
+    "submit": "新增附件"
+  },
+  "rightRail": {
+    "selectAll": "全選",
+    "deselectAll": "取消全選"
+  },
+  "quickAccess": {
+    "sign": "簽章"
+  },
+  "fileUpload": {
+    "loading": "載入中...",
+    "or": "或"
+  },
+  "fileManager": {
+    "fileName": "名稱",
+    "fileVersion": "版本",
+    "selectAll": "全選",
+    "deselectAll": "取消全選",
+    "deleteSelected": "刪除已選取的項目",
+    "download": "下載",
+    "delete": "刪除"
+  },
+  "sanitize": {
+    "submit": "清理 PDF",
+    "steps": {
+      "settings": "設定"
+    }
+  },
+  "changePermissions": {
+    "title": "變更權限",
+    "submit": "變更權限",
+    "permissions": {
+      "preventAssembly": {
+        "label": "防止文件組裝"
+      },
+      "preventExtractContent": {
+        "label": "防止內容提取"
+      },
+      "preventExtractForAccessibility": {
+        "label": "防止為了無障礙使用而提取資料"
+      },
+      "preventFillInForm": {
+        "label": "防止填寫表單"
+      },
+      "preventModify": {
+        "label": "防止修改"
+      },
+      "preventModifyAnnotations": {
+        "label": "防止註釋修改"
+      },
+      "preventPrinting": {
+        "label": "防止列印"
+      },
+      "preventPrintingFaithful": {
+        "label": "防止列印不同格式"
+      }
+    },
+    "tooltip": {
+      "header": {
+        "title": "變更權限"
       }
     }
   }
