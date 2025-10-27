@@ -12,8 +12,8 @@ interface FooterProps {
 }
 
 export default function Footer({
-  privacyPolicy = '/privacy',
-  termsAndConditions = '/terms',
+  privacyPolicy = 'https://www.stirling.com/legal/privacy-policy',
+  termsAndConditions = 'https://www.stirling.com/legal/terms-of-service',
   accessibilityStatement = 'accessibility',
   analyticsEnabled = false
 }: FooterProps) {
