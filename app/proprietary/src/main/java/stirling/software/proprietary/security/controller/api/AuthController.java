@@ -21,11 +21,15 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.proprietary.audit.AuditEventType;
+import stirling.software.proprietary.audit.AuditLevel;
+import stirling.software.proprietary.audit.Audited;
 import stirling.software.proprietary.security.model.AuthenticationType;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.model.api.user.UsernameAndPass;
 import stirling.software.proprietary.security.service.CustomUserDetailsService;
 import stirling.software.proprietary.security.service.JwtServiceInterface;
+import stirling.software.proprietary.security.service.LoginAttemptService;
 import stirling.software.proprietary.security.service.UserService;
 
 /** REST API Controller for authentication operations. */
@@ -39,6 +43,7 @@ public class AuthController {
     private final UserService userService;
     private final JwtServiceInterface jwtService;
     private final CustomUserDetailsService userDetailsService;
+    private final LoginAttemptService loginAttemptService;
 
     /**
      * Login endpoint - replaces Supabase signInWithPassword
@@ -49,8 +54,11 @@ public class AuthController {
      */
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/login")
+    @Audited(type = AuditEventType.USER_LOGIN, level = AuditLevel.BASIC)
     public ResponseEntity<?> login(
-            @RequestBody UsernameAndPass request, HttpServletResponse response) {
+            @RequestBody UsernameAndPass request,
+            HttpServletRequest httpRequest,
+            HttpServletResponse response) {
         try {
             // Validate input parameters
             if (request.getUsername() == null || request.getUsername().trim().isEmpty()) {
@@ -67,20 +75,30 @@ public class AuthController {
                         .body(Map.of("error", "Password is required"));
             }
 
-            log.debug("Login attempt for user: {}", request.getUsername());
+            String username = request.getUsername().trim();
+            String ip = httpRequest.getRemoteAddr();
 
-            UserDetails userDetails =
-                    userDetailsService.loadUserByUsername(request.getUsername().trim());
+            // Check if account is blocked due to too many failed attempts
+            if (loginAttemptService.isBlocked(username)) {
+                log.warn("Blocked account login attempt for user: {} from IP: {}", username, ip);
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("error", "Account is locked due to too many failed attempts"));
+            }
+
+            log.debug("Login attempt for user: {} from IP: {}", username, ip);
+
+            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
             User user = (User) userDetails;
 
             if (!userService.isPasswordCorrect(user, request.getPassword())) {
-                log.warn("Invalid password for user: {}", request.getUsername());
+                log.warn("Invalid password for user: {} from IP: {}", username, ip);
+                loginAttemptService.loginFailed(username);
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(Map.of("error", "Invalid credentials"));
             }
 
             if (!user.isEnabled()) {
-                log.warn("Disabled user attempted login: {}", request.getUsername());
+                log.warn("Disabled user attempted login: {} from IP: {}", username, ip);
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(Map.of("error", "User account is disabled"));
             }
@@ -91,7 +109,9 @@ public class AuthController {
 
             String token = jwtService.generateToken(user.getUsername(), claims);
 
-            log.info("Login successful for user: {}", request.getUsername());
+            // Record successful login
+            loginAttemptService.loginSucceeded(username);
+            log.info("Login successful for user: {} from IP: {}", username, ip);
 
             return ResponseEntity.ok(
                     Map.of(
@@ -99,11 +119,15 @@ public class AuthController {
                             "session", Map.of("access_token", token, "expires_in", 3600)));
 
         } catch (UsernameNotFoundException e) {
-            log.warn("User not found: {}", request.getUsername());
+            String username = request.getUsername();
+            log.warn("User not found: {}", username);
+            loginAttemptService.loginFailed(username);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("error", "Invalid username or password"));
         } catch (AuthenticationException e) {
-            log.error("Authentication failed for user: {}", request.getUsername(), e);
+            String username = request.getUsername();
+            log.error("Authentication failed for user: {}", username, e);
+            loginAttemptService.loginFailed(username);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("error", "Invalid credentials"));
         } catch (Exception e) {

@@ -24,10 +24,18 @@ export const useToolManagement = (): ToolManagementResult => {
   const { endpointStatus, loading: endpointsLoading } = useMultipleEndpointsEnabled(allEndpoints);
 
   const isToolAvailable = useCallback((toolKey: string): boolean => {
+    // Keep tools enabled during loading (optimistic UX)
     if (endpointsLoading) return true;
+
     const tool = baseRegistry[toolKey as ToolId];
     const endpoints = tool?.endpoints || [];
-    return endpoints.length === 0 || endpoints.some((endpoint: string) => endpointStatus[endpoint] === true);
+
+    // Tools without endpoints are always available
+    if (endpoints.length === 0) return true;
+
+    // Check if at least one endpoint is enabled
+    // If endpoint is not in status map, assume enabled (optimistic fallback)
+    return endpoints.some((endpoint: string) => endpointStatus[endpoint] !== false);
   }, [endpointsLoading, endpointStatus, baseRegistry]);
 
   const toolRegistry: Partial<ToolRegistry> = useMemo(() => {

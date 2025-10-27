@@ -165,12 +165,7 @@ public class OAuth2Configuration {
                         githubClient.getUseAsUsername());
 
         boolean isValid = validateProvider(github);
-        log.info(
-                "GitHub OAuth2 provider validation: {} (clientId: {}, clientSecret: {}, scopes: {})",
-                isValid,
-                githubClient.getClientId(),
-                githubClient.getClientSecret() != null ? "***" : "null",
-                githubClient.getScopes());
+        log.info("Initialised GitHub OAuth2 provider");
 
         return isValid
                 ? Optional.of(
