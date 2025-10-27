@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { ToolRegistry } from '../data/toolsTaxonomy';
+import { ToolId } from '../types/toolId';
 import { AUTOMATION_CONSTANTS } from '../constants/automation';
 import { AutomationFileProcessor } from './automationFileProcessor';
 import { ToolType } from '../hooks/tools/shared/useToolOperation';
@@ -149,7 +150,7 @@ export const executeToolOperationWithPrefix = async (
   toolRegistry: ToolRegistry,
   filePrefix: string = AUTOMATION_CONSTANTS.FILE_PREFIX
 ): Promise<File[]> => {
-  const config = toolRegistry[operationName as keyof ToolRegistry]?.operationConfig;
+  const config = toolRegistry[operationName as ToolId]?.operationConfig;
   if (!config) {
     throw new Error(`Tool operation not supported: ${operationName}`);
   }

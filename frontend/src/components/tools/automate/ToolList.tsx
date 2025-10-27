@@ -5,14 +5,14 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import CloseIcon from "@mui/icons-material/Close";
 import AddCircleOutline from "@mui/icons-material/AddCircleOutline";
 import { AutomationTool } from "../../../types/automation";
-import { ToolRegistryEntry } from "../../../data/toolsTaxonomy";
+import { ToolRegistry } from "../../../data/toolsTaxonomy";
 import { ToolId } from "../../../types/toolId";
 import ToolSelector from "./ToolSelector";
 import AutomationEntry from "./AutomationEntry";
 
 interface ToolListProps {
   tools: AutomationTool[];
-  toolRegistry: Record<ToolId, ToolRegistryEntry>;
+  toolRegistry: Partial<ToolRegistry>;
   onToolUpdate: (index: number, updates: Partial<AutomationTool>) => void;
   onToolRemove: (index: number) => void;
   onToolConfigure: (index: number) => void;

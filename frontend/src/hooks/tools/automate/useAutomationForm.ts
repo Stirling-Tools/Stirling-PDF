@@ -9,7 +9,7 @@ import { ToolId } from 'src/types/toolId';
 interface UseAutomationFormProps {
   mode: AutomationMode;
   existingAutomation?: AutomationConfig;
-  toolRegistry: ToolRegistry;
+  toolRegistry: Partial<ToolRegistry>;
 }
 
 export function useAutomationForm({ mode, existingAutomation, toolRegistry }: UseAutomationFormProps) {
@@ -21,12 +21,12 @@ export function useAutomationForm({ mode, existingAutomation, toolRegistry }: Us
   const [selectedTools, setSelectedTools] = useState<AutomationTool[]>([]);
 
   const getToolName = useCallback((operation: string) => {
-    const tool = toolRegistry?.[operation as keyof ToolRegistry] as any;
+    const tool = toolRegistry?.[operation as ToolId] as any;
     return tool?.name || t(`tools.${operation}.name`, operation);
   }, [toolRegistry, t]);
 
   const getToolDefaultParameters = useCallback((operation: string): Record<string, any> => {
-    const config = toolRegistry[operation as keyof ToolRegistry]?.operationConfig;
+    const config = toolRegistry[operation as ToolId]?.operationConfig;
     if (config?.defaultParameters) {
       return { ...config.defaultParameters };
     }
