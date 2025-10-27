@@ -18,7 +18,6 @@ import { SearchPluginPackage } from '@embedpdf/plugin-search/react';
 import { ThumbnailPluginPackage } from '@embedpdf/plugin-thumbnail/react';
 import { RotatePluginPackage, Rotate } from '@embedpdf/plugin-rotate/react';
 import { ExportPluginPackage } from '@embedpdf/plugin-export/react';
-import { Rotation } from '@embedpdf/models';
 
 // Import annotation plugins
 import { HistoryPluginPackage } from '@embedpdf/plugin-history/react';
@@ -35,8 +34,9 @@ import { SpreadAPIBridge } from './SpreadAPIBridge';
 import { SearchAPIBridge } from './SearchAPIBridge';
 import { ThumbnailAPIBridge } from './ThumbnailAPIBridge';
 import { RotateAPIBridge } from './RotateAPIBridge';
-import { SignatureAPIBridge, SignatureAPI } from './SignatureAPIBridge';
-import { HistoryAPIBridge, HistoryAPI } from './HistoryAPIBridge';
+import { SignatureAPIBridge } from './SignatureAPIBridge';
+import { HistoryAPIBridge } from './HistoryAPIBridge';
+import type { SignatureAPI, HistoryAPI } from './viewerTypes';
 import { ExportAPIBridge } from './ExportAPIBridge';
 
 interface LocalEmbedPDFProps {
@@ -67,6 +67,10 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
   const plugins = useMemo(() => {
     if (!pdfUrl) return [];
 
+    // Calculate 3.5rem in pixels dynamically based on root font size
+    const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
+    const viewportGap = rootFontSize * 3.5;
+
     return [
       createPluginRegistration(LoaderPluginPackage, {
         loadingOptions: {
@@ -78,7 +82,7 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
         },
       }),
       createPluginRegistration(ViewportPluginPackage, {
-        viewportGap: 10,
+        viewportGap,
       }),
       createPluginRegistration(ScrollPluginPackage, {
         strategy: ScrollStrategy.Vertical,
@@ -134,9 +138,7 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
       createPluginRegistration(ThumbnailPluginPackage),
 
       // Register rotate plugin
-      createPluginRegistration(RotatePluginPackage, {
-        defaultRotation: Rotation.Degree0, // Start with no rotation
-      }),
+      createPluginRegistration(RotatePluginPackage),
 
       // Register export plugin for downloading PDFs
       createPluginRegistration(ExportPluginPackage, {
@@ -288,48 +290,50 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
             }}
           >
           <Scroller
-            renderPage={({ width, height, pageIndex, scale, rotation }: { width: number; height: number; pageIndex: number; scale: number; rotation?: number }) => (
-              <Rotate pageSize={{ width, height }}>
-                <PagePointerProvider {...{ pageWidth: width, pageHeight: height, pageIndex, scale, rotation: rotation || 0 }}>
-                  <div
-                    style={{
-                      width,
-                      height,
-                      position: 'relative',
-                      userSelect: 'none',
-                      WebkitUserSelect: 'none',
-                      MozUserSelect: 'none',
-                      msUserSelect: 'none',
-                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)'
-                    }}
-                    draggable={false}
-                    onDragStart={(e) => e.preventDefault()}
-                    onDrop={(e) => e.preventDefault()}
-                    onDragOver={(e) => e.preventDefault()}
-                  >
-                    {/* High-resolution tile layer */}
-                    <TilingLayer pageIndex={pageIndex} scale={scale} />
+            renderPage={({ document, width, height, pageIndex, scale, rotation }) => {
+              return (
+                <Rotate key={document?.id} pageSize={{ width, height }}>
+                  <PagePointerProvider pageIndex={pageIndex} pageWidth={width} pageHeight={height} scale={scale} rotation={rotation}>
+                    <div
+                      style={{
+                        width,
+                        height,
+                        position: 'relative',
+                        userSelect: 'none',
+                        WebkitUserSelect: 'none',
+                        MozUserSelect: 'none',
+                        msUserSelect: 'none',
+                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)'
+                      }}
+                      draggable={false}
+                      onDragStart={(e) => e.preventDefault()}
+                      onDrop={(e) => e.preventDefault()}
+                      onDragOver={(e) => e.preventDefault()}
+                    >
+                      {/* High-resolution tile layer */}
+                      <TilingLayer pageIndex={pageIndex} scale={scale} />
 
-                    {/* Search highlight layer */}
-                    <CustomSearchLayer pageIndex={pageIndex} scale={scale} />
+                      {/* Search highlight layer */}
+                      <CustomSearchLayer pageIndex={pageIndex} scale={scale} />
 
-                    {/* Selection layer for text interaction */}
-                    <SelectionLayer pageIndex={pageIndex} scale={scale} />
-                    {/* Annotation layer for signatures (only when enabled) */}
-                    {enableAnnotations && (
-                      <AnnotationLayer
-                        pageIndex={pageIndex}
-                        scale={scale}
-                        pageWidth={width}
-                        pageHeight={height}
-                        rotation={rotation || 0}
-                        selectionOutlineColor="#007ACC"
-                      />
-                    )}
-                  </div>
-                </PagePointerProvider>
-              </Rotate>
-            )}
+                      {/* Selection layer for text interaction */}
+                      <SelectionLayer pageIndex={pageIndex} scale={scale} />
+                      {/* Annotation layer for signatures (only when enabled) */}
+                      {enableAnnotations && (
+                        <AnnotationLayer
+                          pageIndex={pageIndex}
+                          scale={scale}
+                          pageWidth={width}
+                          pageHeight={height}
+                          rotation={rotation}
+                          selectionOutlineColor="#007ACC"
+                        />
+                      )}
+                    </div>
+                  </PagePointerProvider>
+                </Rotate>
+              );
+            }}
           />
           </Viewport>
         </GlobalPointerProvider>

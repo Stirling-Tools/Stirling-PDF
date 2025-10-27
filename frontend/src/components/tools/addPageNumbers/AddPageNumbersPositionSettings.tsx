@@ -43,7 +43,7 @@ const AddPageNumbersPositionSettings = ({
       <Stack gap="md">
         <Text size="sm" fw={500} mb="xs">{t('addPageNumbers.pagesAndStarting', 'Pages & Starting Number')}</Text>
 
-        <Tooltip content={t('pageSelectionPrompt', 'Specify which pages to add numbers to. Examples: "1,3,5" for specific pages, "1-5" for ranges, "2n" for even pages, or leave blank for all pages.')}>
+        <Tooltip content={t('pageSelectionPrompt', 'Custom Page Selection (Enter a comma-separated list of page numbers 1,5,6 or Functions like 2n+1)')}>
           <TextInput
             label={t('addPageNumbers.selectText.5', 'Pages to Number')}
             value={parameters.pagesToNumber || ''}

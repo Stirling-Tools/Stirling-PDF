@@ -1,6 +1,5 @@
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Box, Center, Text, ActionIcon } from '@mantine/core';
-import { useMantineTheme, useMantineColorScheme } from '@mantine/core';
 import CloseIcon from '@mui/icons-material/Close';
 
 import { useFileState, useFileActions } from "../../contexts/FileContext";
@@ -14,12 +13,15 @@ import { useSignature } from '../../contexts/SignatureContext';
 import { createStirlingFilesAndStubs } from '../../services/fileStubHelpers';
 import NavigationWarningModal from '../shared/NavigationWarningModal';
 import { isStirlingFile } from '../../types/fileContext';
+import { useViewerRightRailButtons } from './useViewerRightRailButtons';
 
 export interface EmbedPdfViewerProps {
   sidebarsVisible: boolean;
   setSidebarsVisible: (v: boolean) => void;
   onClose?: () => void;
   previewFile?: File | null;
+  activeFileIndex?: number;
+  setActiveFileIndex?: (index: number) => void;
 }
 
 const EmbedPdfViewerContent = ({
@@ -27,13 +29,16 @@ const EmbedPdfViewerContent = ({
   setSidebarsVisible: _setSidebarsVisible,
   onClose,
   previewFile,
+  activeFileIndex: externalActiveFileIndex,
+  setActiveFileIndex: externalSetActiveFileIndex,
 }: EmbedPdfViewerProps) => {
-  const theme = useMantineTheme();
-  const { colorScheme: _colorScheme } = useMantineColorScheme();
   const viewerRef = React.useRef<HTMLDivElement>(null);
   const [isViewerHovered, setIsViewerHovered] = React.useState(false);
 
   const { isThumbnailSidebarVisible, toggleThumbnailSidebar, zoomActions, spreadActions, panActions: _panActions, rotationActions: _rotationActions, getScrollState, getZoomState, getSpreadState, getRotationState, isAnnotationMode, isAnnotationsVisible, exportActions } = useViewer();
+
+  // Register viewer right-rail buttons
+  useViewerRightRailButtons();
 
   const scrollState = getScrollState();
   const zoomState = getZoomState();
@@ -52,10 +57,11 @@ const EmbedPdfViewerContent = ({
   const { signatureApiRef, historyApiRef } = useSignature();
 
   // Get current file from FileContext
-  const { selectors } = useFileState();
+  const { selectors, state } = useFileState();
   const { actions } = useFileActions();
   const activeFiles = selectors.getFiles();
   const activeFileIds = activeFiles.map(f => f.fileId);
+  const selectedFileIds = state.ui.selectedFileIds;
 
   // Navigation guard for unsaved changes
   const { setHasUnsavedChanges, registerUnsavedChangesChecker, unregisterUnsavedChangesChecker } = useNavigationGuard();
@@ -67,15 +73,40 @@ const EmbedPdfViewerContent = ({
   // Enable annotations when: in sign mode, OR annotation mode is active, OR we want to show existing annotations
   const shouldEnableAnnotations = isSignatureMode || isAnnotationMode || isAnnotationsVisible;
 
+  // Track which file tab is active
+  const [internalActiveFileIndex, setInternalActiveFileIndex] = useState(0);
+  const activeFileIndex = externalActiveFileIndex ?? internalActiveFileIndex;
+  const setActiveFileIndex = externalSetActiveFileIndex ?? setInternalActiveFileIndex;
+  const hasInitializedFromSelection = useRef(false);
+
+  // When viewer opens with a selected file, switch to that file
+  useEffect(() => {
+    if (!hasInitializedFromSelection.current && selectedFileIds.length > 0 && activeFiles.length > 0) {
+      const selectedFileId = selectedFileIds[0];
+      const index = activeFiles.findIndex(f => f.fileId === selectedFileId);
+      if (index !== -1 && index !== activeFileIndex) {
+        setActiveFileIndex(index);
+      }
+      hasInitializedFromSelection.current = true;
+    }
+  }, [selectedFileIds, activeFiles, activeFileIndex]);
+
+  // Reset active tab if it's out of bounds
+  useEffect(() => {
+    if (activeFileIndex >= activeFiles.length && activeFiles.length > 0) {
+      setActiveFileIndex(0);
+    }
+  }, [activeFiles.length, activeFileIndex]);
+
   // Determine which file to display
   const currentFile = React.useMemo(() => {
     if (previewFile) {
       return previewFile;
     } else if (activeFiles.length > 0) {
-      return activeFiles[0]; // Use first file for simplicity
+      return activeFiles[activeFileIndex] || activeFiles[0];
     }
     return null;
-  }, [previewFile, activeFiles]);
+  }, [previewFile, activeFiles, activeFileIndex]);
 
   // Get file with URL for rendering
   const fileWithUrl = useFileWithUrl(currentFile);
@@ -94,7 +125,7 @@ const EmbedPdfViewerContent = ({
   }, [previewFile, fileWithUrl]);
 
   // Handle scroll wheel zoom with accumulator for smooth trackpad pinch
-  React.useEffect(() => {
+  useEffect(() => {
     let accumulator = 0;
 
     const handleWheel = (event: WheelEvent) => {
@@ -128,7 +159,7 @@ const EmbedPdfViewerContent = ({
   }, [zoomActions]);
 
   // Handle keyboard zoom shortcuts
-  React.useEffect(() => {
+  useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (!isViewerHovered) return;
 
@@ -244,15 +275,6 @@ const EmbedPdfViewerContent = ({
         </Center>
       ) : (
         <>
-          {/* Tabs for multiple files */}
-          {activeFiles.length > 1 && !previewFile && (
-            <Box p="md" style={{ borderBottom: `1px solid ${theme.colors.gray[3]}` }}>
-              <Text size="sm" c="dimmed">
-                Multiple files loaded - showing first file for now
-              </Text>
-            </Box>
-          )}
-
           {/* EmbedPDF Viewer */}
           <Box style={{
             position: 'relative',
@@ -317,6 +339,7 @@ const EmbedPdfViewerContent = ({
       <ThumbnailSidebar
         visible={isThumbnailSidebarVisible}
         onToggle={toggleThumbnailSidebar}
+        activeFileIndex={activeFileIndex}
       />
 
       {/* Navigation Warning Modal */}

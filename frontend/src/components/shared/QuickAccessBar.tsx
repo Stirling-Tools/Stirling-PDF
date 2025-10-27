@@ -14,6 +14,7 @@ import AllToolsNavButton from './AllToolsNavButton';
 import ActiveToolButton from "./quickAccessBar/ActiveToolButton";
 import AppConfigModal from './AppConfigModal';
 import { useAppConfig } from '../../hooks/useAppConfig';
+import { useOnboarding } from '../../contexts/OnboardingContext';
 import {
   isNavButtonActive,
   getNavButtonStyle,
@@ -24,9 +25,10 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
   const { t } = useTranslation();
   const { isRainbowMode } = useRainbowThemeContext();
   const { openFilesModal, isFilesModalOpen } = useFilesModalContext();
-  const { handleReaderToggle, handleBackToTools, handleToolSelect, selectedToolKey, leftPanelView, toolRegistry, readerMode, resetTool } = useToolWorkflow();
+  const { handleReaderToggle, handleToolSelect, selectedToolKey, leftPanelView, toolRegistry, readerMode, resetTool } = useToolWorkflow();
   const { getToolNavigation } = useSidebarNavigation();
   const { config } = useAppConfig();
+  const { startTour } = useOnboarding();
   const [configModalOpen, setConfigModalOpen] = useState(false);
   const [activeButton, setActiveButton] = useState<string>('tools');
   const scrollableRef = useRef<HTMLDivElement>(null);
@@ -60,7 +62,12 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
 
     // Render navigation button with conditional URL support
     return (
-      <div key={config.id} className="flex flex-col items-center gap-1" style={{ marginTop: index === 0 ? '0.5rem' : "0rem" }}>
+      <div
+        key={config.id}
+        className="flex flex-col items-center gap-1"
+        style={{ marginTop: index === 0 ? '0.5rem' : "0rem" }}
+        data-tour={`${config.id}-button`}
+      >
         <ActionIcon
           {...(navProps ? {
             component: "a" as const,
@@ -68,7 +75,8 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
             onClick: (e: React.MouseEvent) => handleClick(e),
             'aria-label': config.name
           } : {
-            onClick: () => handleClick()
+            onClick: () => handleClick(),
+            'aria-label': config.name
           })}
           size={isActive ? (config.size || 'lg') : 'lg'}
           variant="subtle"
@@ -87,8 +95,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
     );
   };
 
-
-  const buttonConfigs: ButtonConfig[] = [
+  const mainButtons: ButtonConfig[] = [
     {
       id: 'read',
       name: t("quickAccess.read", "Read"),
@@ -98,12 +105,10 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
       type: 'navigation',
       onClick: () => {
         setActiveButton('read');
-        handleBackToTools();
         handleReaderToggle();
       }
     },
-    // TODO: Add sign
-    //{
+    // {
     //  id: 'sign',
     //  name: t("quickAccess.sign", "Sign"),
     //  icon: <LocalIcon icon="signature-rounded" width="1.25rem" height="1.25rem" />,
@@ -114,7 +119,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
     //    setActiveButton('sign');
     //    handleToolSelect('sign');
     //  }
-    //},
+    // },
     {
       id: 'automate',
       name: t("quickAccess.automate", "Automate"),
@@ -132,6 +137,9 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
         }
       }
     },
+  ];
+
+  const middleButtons: ButtonConfig[] = [
     {
       id: 'files',
       name: t("quickAccess.files", "Files"),
@@ -151,6 +159,20 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
     //  type: 'navigation',
     //  onClick: () => setActiveButton('activity')
     //},
+  ];
+
+  const bottomButtons: ButtonConfig[] = [
+    {
+      id: 'help',
+      name: t("quickAccess.help", "Help"),
+      icon: <LocalIcon icon="help-rounded" width="1.5rem" height="1.5rem" />,
+      isRound: true,
+      size: 'lg',
+      type: 'action',
+      onClick: () => {
+        startTour();
+      },
+    },
     {
       id: 'config',
       name: config?.enableLogin ? t("quickAccess.account", "Account") : t("quickAccess.config", "Config"),
@@ -162,8 +184,6 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
       }
     }
   ];
-
-
 
   return (
     <div
@@ -199,48 +219,41 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
         }}
       >
         <div className="scrollable-content">
-          {/* Top section with main buttons */}
+          {/* Main navigation section */}
           <Stack gap="lg" align="center">
-            {buttonConfigs.slice(0, -1).map((config, index) => (
+            {mainButtons.map((config, index) => (
               <React.Fragment key={config.id}>
                 {renderNavButton(config, index)}
-
-                {/* Add divider after Automate button (index 1) and Files button (index 2) */}
-                {index === 1 && (
-                  <Divider
-                    size="xs"
-                    className="content-divider"
-                  />
-                )}
               </React.Fragment>
             ))}
           </Stack>
 
-          {/* Spacer to push Config button to bottom */}
+          {/* Divider after main buttons */}
+          <Divider
+            size="xs"
+            className="content-divider"
+          />
+
+          {/* Middle section */}
+          <Stack gap="lg" align="center">
+            {middleButtons.map((config, index) => (
+              <React.Fragment key={config.id}>
+                {renderNavButton(config, index)}
+              </React.Fragment>
+            ))}
+          </Stack>
+
+          {/* Spacer to push bottom buttons to bottom */}
           <div className="spacer" />
 
-          {/* Config button at the bottom */}
-          {buttonConfigs
-            .filter(config => config.id === 'config')
-            .map(config => (
-                <div key={config.id} className="flex flex-col items-center gap-1">
-                  <ActionIcon
-                    size={config.size || 'lg'}
-                    variant="subtle"
-                    onClick={config.onClick}
-                    style={getNavButtonStyle(config, activeButton, isFilesModalOpen, configModalOpen, selectedToolKey, leftPanelView)}
-                    className={isNavButtonActive(config, activeButton, isFilesModalOpen, configModalOpen, selectedToolKey, leftPanelView) ? 'activeIconScale' : ''}
-                    data-testid={`${config.id}-button`}
-                  >
-                    <span className="iconContainer">
-                      {config.icon}
-                    </span>
-                  </ActionIcon>
-                  <span className={`button-text ${isNavButtonActive(config, activeButton, isFilesModalOpen, configModalOpen, selectedToolKey, leftPanelView) ? 'active' : 'inactive'}`}>
-                    {config.name}
-                  </span>
-                </div>
+          {/* Bottom section */}
+          <Stack gap="lg" align="center">
+            {bottomButtons.map((config, index) => (
+              <React.Fragment key={config.id}>
+                {renderNavButton(config, index)}
+              </React.Fragment>
             ))}
+          </Stack>
         </div>
       </div>
 

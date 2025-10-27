@@ -7,7 +7,8 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { Tooltip } from '../../shared/Tooltip';
 import { ToolIcon } from '../../shared/ToolIcon';
-import { ToolRegistryEntry } from '../../../data/toolsTaxonomy';
+import { ToolRegistry } from '../../../data/toolsTaxonomy';
+import { ToolId } from 'src/types/toolId';
 
 interface AutomationEntryProps {
   /** Optional title for the automation (usually for custom ones) */
@@ -31,7 +32,7 @@ interface AutomationEntryProps {
   /** Copy handler (for suggested automations) */
   onCopy?: () => void;
   /** Tool registry to resolve operation names */
-  toolRegistry?: Record<string, ToolRegistryEntry>;
+  toolRegistry?: Partial<ToolRegistry>;
 }
 
 export default function AutomationEntry({
@@ -55,8 +56,9 @@ export default function AutomationEntry({
 
   // Helper function to resolve tool display names
   const getToolDisplayName = (operation: string): string => {
-    if (toolRegistry?.[operation]?.name) {
-      return toolRegistry[operation].name;
+    const entry = toolRegistry?.[operation as ToolId];
+    if (entry?.name) {
+      return entry.name;
     }
     // Fallback to translation or operation key
     return t(`${operation}.title`, operation);

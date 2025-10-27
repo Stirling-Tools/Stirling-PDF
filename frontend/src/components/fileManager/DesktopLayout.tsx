@@ -23,7 +23,7 @@ const DesktopLayout: React.FC = () => {
         width: '13.625rem',
         flexShrink: 0,
         height: '100%',
-      }}>
+      }} data-tour="file-sources">
         <FileSourceButtons />
       </Grid.Col>
 

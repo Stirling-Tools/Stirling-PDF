@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useFileSelection } from "../contexts/FileContext";
 import { useNavigationActions } from "../contexts/NavigationContext";
@@ -12,7 +12,7 @@ import AutomationRun from "../components/tools/automate/AutomationRun";
 
 import { useAutomateOperation } from "../hooks/tools/automate/useAutomateOperation";
 import { BaseToolProps } from "../types/tool";
-import { useFlatToolRegistry } from "../data/useTranslatedToolRegistry";
+import { useToolRegistry } from "../contexts/ToolRegistryContext";
 import { useSavedAutomations } from "../hooks/tools/automate/useSavedAutomations";
 import { AutomationConfig, AutomationStepData, AutomationMode, AutomationStep } from "../types/automation";
 import { AUTOMATION_STEPS } from "../constants/automation";
@@ -27,7 +27,7 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const [stepData, setStepData] = useState<AutomationStepData>({ step: AUTOMATION_STEPS.SELECTION });
 
   const automateOperation = useAutomateOperation();
-  const toolRegistry = useFlatToolRegistry();
+  const { regularTools: toolRegistry } = useToolRegistry();
   const hasResults = automateOperation.files.length > 0 || automateOperation.downloadUrl !== null;
   const { savedAutomations, deleteAutomation, refreshAutomations, copyFromSuggested } = useSavedAutomations();
 
@@ -48,7 +48,7 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   };
 
   // Register reset function with the tool workflow context - only once on mount
-  React.useEffect(() => {
+  useEffect(() => {
     const stableResetFunction = () => {
       if (resetFunctionRef.current) {
         resetFunctionRef.current();

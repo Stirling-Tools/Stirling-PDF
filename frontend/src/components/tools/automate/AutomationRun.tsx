@@ -1,10 +1,10 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button, Text, Stack, Group, Card, Progress } from "@mantine/core";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import CheckIcon from "@mui/icons-material/Check";
 import { useFileSelection } from "../../../contexts/FileContext";
-import { useFlatToolRegistry } from "../../../data/useTranslatedToolRegistry";
+import { useToolRegistry } from "../../../contexts/ToolRegistryContext";
 import { AutomationConfig, ExecutionStep } from "../../../types/automation";
 import { AUTOMATION_CONSTANTS, EXECUTION_STATUS } from "../../../constants/automation";
 import { useResourceCleanup } from "../../../utils/resourceManager";
@@ -18,7 +18,8 @@ interface AutomationRunProps {
 export default function AutomationRun({ automation, onComplete, automateOperation }: AutomationRunProps) {
   const { t } = useTranslation();
   const { selectedFiles } = useFileSelection();
-  const toolRegistry = useFlatToolRegistry();
+  const { regularTools } = useToolRegistry();
+  const toolRegistry = regularTools;
   const cleanup = useResourceCleanup();
 
   // Progress tracking state
@@ -30,7 +31,7 @@ export default function AutomationRun({ automation, onComplete, automateOperatio
   const hasResults = automateOperation?.files.length > 0 || automateOperation?.downloadUrl !== null;
 
   // Initialize execution steps from automation
-  React.useEffect(() => {
+  useEffect(() => {
     if (automation?.operations) {
       const steps = automation.operations.map((op: any, index: number) => {
         const tool = toolRegistry[op.operation as keyof typeof toolRegistry];
@@ -47,7 +48,7 @@ export default function AutomationRun({ automation, onComplete, automateOperatio
   }, [automation, toolRegistry]);
 
   // Cleanup when component unmounts
-  React.useEffect(() => {
+  useEffect(() => {
     return () => {
       // Reset progress state when component unmounts
       setExecutionSteps([]);

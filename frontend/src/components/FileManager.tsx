@@ -9,6 +9,7 @@ import MobileLayout from './fileManager/MobileLayout';
 import DesktopLayout from './fileManager/DesktopLayout';
 import DragOverlay from './fileManager/DragOverlay';
 import { FileManagerProvider } from '../contexts/FileManagerContext';
+import { Z_INDEX_FILE_MANAGER_MODAL } from '../styles/zIndex';
 import { isGoogleDriveConfigured } from '../services/googleDrivePickerService';
 import { loadScript } from '../utils/scriptLoader';
 
@@ -87,6 +88,7 @@ const FileManager: React.FC<FileManagerProps> = ({ selectedTool }) => {
   }, []);
 
   // Preload Google Drive scripts if configured
+
   useEffect(() => {
     if (isGoogleDriveConfigured()) {
       // Load scripts in parallel without blocking
@@ -125,6 +127,7 @@ const FileManager: React.FC<FileManagerProps> = ({ selectedTool }) => {
       radius="md"
       className="overflow-hidden p-0"
       withCloseButton={false}
+      zIndex={Z_INDEX_FILE_MANAGER_MODAL}
       styles={{
         content: {
           position: 'relative',

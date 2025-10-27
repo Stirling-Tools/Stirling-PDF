@@ -4,7 +4,8 @@ import { useToolWorkflow } from "../contexts/ToolWorkflowContext";
 import { Group, useMantineColorScheme } from "@mantine/core";
 import { useSidebarContext } from "../contexts/SidebarContext";
 import { useDocumentMeta } from "../hooks/useDocumentMeta";
-import { BASE_PATH, getBaseUrl } from "../constants/app";
+import { BASE_PATH } from "../constants/app";
+import { useBaseUrl } from "../hooks/useBaseUrl";
 import { useMediaQuery } from "@mantine/hooks";
 import AppsIcon from '@mui/icons-material/AppsRounded';
 
@@ -16,6 +17,7 @@ import FileManager from "../components/FileManager";
 import LocalIcon from "../components/shared/LocalIcon";
 import { useFilesModalContext } from "../contexts/FilesModalContext";
 import AppConfigModal from "../components/shared/AppConfigModal";
+import ToolPanelModePrompt from "../components/tools/ToolPanelModePrompt";
 
 import "./HomePage.css";
 
@@ -30,7 +32,14 @@ export default function HomePage() {
 
   const { quickAccessRef } = sidebarRefs;
 
-  const { selectedTool, selectedToolKey, handleToolSelect, handleBackToTools } = useToolWorkflow();
+  const {
+    selectedTool,
+    selectedToolKey,
+    handleToolSelect,
+    handleBackToTools,
+    readerMode,
+    setLeftPanelView,
+  } = useToolWorkflow();
 
   const { openFilesModal } = useFilesModalContext();
   const { colorScheme } = useMantineColorScheme();
@@ -110,7 +119,24 @@ export default function HomePage() {
     };
   }, [isMobile]);
 
-  const baseUrl = getBaseUrl();
+  // Automatically switch to workbench when read mode or multiTool is activated in mobile
+  useEffect(() => {
+    if (isMobile && (readerMode || selectedToolKey === 'multiTool')) {
+      setActiveMobileView('workbench');
+    }
+  }, [isMobile, readerMode, selectedToolKey]);
+
+  // When navigating back to tools view in mobile with a workbench-only tool, show tool picker
+  useEffect(() => {
+    if (isMobile && activeMobileView === 'tools' && selectedTool) {
+      // Check if this is a workbench-only tool (has workbench but no component)
+      if (selectedTool.workbench && !selectedTool.component) {
+        setLeftPanelView('toolPicker');
+      }
+    }
+  }, [isMobile, activeMobileView, selectedTool, setLeftPanelView]);
+
+  const baseUrl = useBaseUrl();
 
   // Update document meta when tool changes
   useDocumentMeta({
@@ -126,6 +152,7 @@ export default function HomePage() {
 
   return (
     <div className="h-screen overflow-hidden">
+      <ToolPanelModePrompt />
       {isMobile ? (
         <div className="mobile-layout">
           <div className="mobile-toggle">
@@ -231,8 +258,7 @@ export default function HomePage() {
           h="100%"
           className="flex-nowrap flex"
         >
-          <QuickAccessBar
-            ref={quickAccessRef} />
+          <QuickAccessBar ref={quickAccessRef} />
           <ToolPanel />
           <Workbench />
           <RightRail />

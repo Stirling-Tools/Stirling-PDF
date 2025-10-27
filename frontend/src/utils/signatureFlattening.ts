@@ -2,7 +2,7 @@ import { PDFDocument, rgb } from 'pdf-lib';
 import { generateThumbnailWithMetadata } from './thumbnailUtils';
 import { createProcessedFile, createChildStub } from '../contexts/file/fileActions';
 import { createStirlingFile, StirlingFile, FileId, StirlingFileStub } from '../types/fileContext';
-import type { SignatureAPI } from '../components/viewer/SignatureAPIBridge';
+import type { SignatureAPI } from '../components/viewer/viewerTypes';
 
 interface MinimalFileContextSelectors {
   getAllFileIds: () => FileId[];
@@ -19,6 +19,7 @@ interface SignatureFlatteningOptions {
   selectors: MinimalFileContextSelectors;
   originalFile?: StirlingFile;
   getScrollState: () => { currentPage: number; totalPages: number };
+  activeFileIndex?: number;
 }
 
 export interface SignatureFlatteningResult {
@@ -28,7 +29,7 @@ export interface SignatureFlatteningResult {
 }
 
 export async function flattenSignatures(options: SignatureFlatteningOptions): Promise<SignatureFlatteningResult | null> {
-  const { signatureApiRef, getImageData, exportActions, selectors, originalFile, getScrollState } = options;
+  const { signatureApiRef, getImageData, exportActions, selectors, originalFile, getScrollState, activeFileIndex } = options;
 
   try {
     // Step 1: Extract all annotations from EmbedPDF before export
@@ -104,10 +105,12 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
       if (!currentFile) {
         const allFileIds = selectors.getAllFileIds();
         if (allFileIds.length > 0) {
-          const fileStub = selectors.getStirlingFileStub(allFileIds[0]);
-          const fileObject = selectors.getFile(allFileIds[0]);
+          // Use activeFileIndex if provided, otherwise default to 0
+          const fileIndex = activeFileIndex !== undefined && activeFileIndex < allFileIds.length ? activeFileIndex : 0;
+          const fileStub = selectors.getStirlingFileStub(allFileIds[fileIndex]);
+          const fileObject = selectors.getFile(allFileIds[fileIndex]);
           if (fileStub && fileObject) {
-            currentFile = createStirlingFile(fileObject, allFileIds[0] as FileId);
+            currentFile = createStirlingFile(fileObject, allFileIds[fileIndex] as FileId);
           }
         }
       }

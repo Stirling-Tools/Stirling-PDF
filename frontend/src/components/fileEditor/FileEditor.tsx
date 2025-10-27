@@ -1,19 +1,19 @@
-import React, { useState, useCallback, useRef, useMemo } from 'react';
+import React, { useState, useCallback, useRef, useMemo, useEffect } from 'react';
 import {
-  Text, Center, Box, LoadingOverlay, Stack, Group
+  Text, Center, Box, LoadingOverlay, Stack
 } from '@mantine/core';
 import { Dropzone } from '@mantine/dropzone';
-import { useFileSelection, useFileState, useFileManagement, useFileActions } from '../../contexts/FileContext';
+import { useFileSelection, useFileState, useFileManagement, useFileActions, useFileContext } from '../../contexts/FileContext';
 import { useNavigationActions } from '../../contexts/NavigationContext';
 import { zipFileService } from '../../services/zipFileService';
 import { detectFileExtension } from '../../utils/fileUtils';
 import FileEditorThumbnail from './FileEditorThumbnail';
 import AddFileCard from './AddFileCard';
 import FilePickerModal from '../shared/FilePickerModal';
-import SkeletonLoader from '../shared/SkeletonLoader';
 import { FileId, StirlingFile } from '../../types/fileContext';
 import { alert } from '../toast';
 import { downloadBlob } from '../../utils/downloadUtils';
+import { useFileEditorRightRailButtons } from './fileEditorRightRailButtons';
 
 
 interface FileEditorProps {
@@ -37,11 +37,15 @@ const FileEditor = ({
   // Use optimized FileContext hooks
   const { state, selectors } = useFileState();
   const { addFiles, removeFiles, reorderFiles } = useFileManagement();
-  const { actions } = useFileActions();
+  const { actions: fileActions } = useFileActions();
+  const { actions: fileContextActions } = useFileContext();
+  const { clearAllFileErrors } = fileContextActions;
 
   // Extract needed values from state (memoized to prevent infinite loops)
   const activeStirlingFileStubs = useMemo(() => selectors.getStirlingFileStubs(), [selectors.getFilesSignature()]);
   const selectedFileIds = state.ui.selectedFileIds;
+  const totalItems = state.files.ids.length;
+  const selectedCount = selectedFileIds.length;
 
   // Get navigation actions
   const { actions: navActions } = useNavigationActions();
@@ -62,25 +66,12 @@ const FileEditor = ({
   const [selectionMode, setSelectionMode] = useState(toolMode);
 
   // Enable selection mode automatically in tool mode
-  React.useEffect(() => {
+  useEffect(() => {
     if (toolMode) {
       setSelectionMode(true);
     }
   }, [toolMode]);
   const [showFilePickerModal, setShowFilePickerModal] = useState(false);
-  const [zipExtractionProgress, setZipExtractionProgress] = useState<{
-    isExtracting: boolean;
-    currentFile: string;
-    progress: number;
-    extractedCount: number;
-    totalFiles: number;
-  }>({
-    isExtracting: false,
-    currentFile: '',
-    progress: 0,
-    extractedCount: 0,
-    totalFiles: 0
-  });
   // Get selected file IDs from context (defensive programming)
   const contextSelectedIds = Array.isArray(selectedFileIds) ? selectedFileIds : [];
 
@@ -91,107 +82,63 @@ const FileEditor = ({
   // Use activeStirlingFileStubs directly - no conversion needed
   const localSelectedIds = contextSelectedIds;
 
+  const handleSelectAllFiles = useCallback(() => {
+    setSelectedFiles(state.files.ids);
+    try {
+      clearAllFileErrors();
+    } catch (error) {
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('Failed to clear file errors on select all:', error);
+      }
+    }
+  }, [state.files.ids, setSelectedFiles, clearAllFileErrors]);
+
+  const handleDeselectAllFiles = useCallback(() => {
+    setSelectedFiles([]);
+    try {
+      clearAllFileErrors();
+    } catch (error) {
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('Failed to clear file errors on deselect:', error);
+      }
+    }
+  }, [setSelectedFiles, clearAllFileErrors]);
+
+  const handleCloseSelectedFiles = useCallback(() => {
+    if (selectedFileIds.length === 0) return;
+    void removeFiles(selectedFileIds, false);
+    setSelectedFiles([]);
+  }, [selectedFileIds, removeFiles, setSelectedFiles]);
+
+  useFileEditorRightRailButtons({
+    totalItems,
+    selectedCount,
+    onSelectAll: handleSelectAllFiles,
+    onDeselectAll: handleDeselectAllFiles,
+    onCloseSelected: handleCloseSelectedFiles,
+  });
+
   // Process uploaded files using context
+  // ZIP extraction is now handled automatically in FileContext based on user preferences
   const handleFileUpload = useCallback(async (uploadedFiles: File[]) => {
     _setError(null);
 
     try {
-      const allExtractedFiles: File[] = [];
-      const errors: string[] = [];
-
-      for (const file of uploadedFiles) {
-        if (file.type === 'application/pdf') {
-          // Handle PDF files normally
-          allExtractedFiles.push(file);
-        } else if (file.type === 'application/zip' || file.type === 'application/x-zip-compressed' || file.name.toLowerCase().endsWith('.zip')) {
-          // Handle ZIP files - only expand if they contain PDFs
-          try {
-            // Validate ZIP file first
-            const validation = await zipFileService.validateZipFile(file);
-
-            if (validation.isValid && validation.containsPDFs) {
-              // ZIP contains PDFs - extract them
-              setZipExtractionProgress({
-                isExtracting: true,
-                currentFile: file.name,
-                progress: 0,
-                extractedCount: 0,
-                totalFiles: validation.fileCount
-              });
-
-              const extractionResult = await zipFileService.extractPdfFiles(file, (progress) => {
-                setZipExtractionProgress({
-                  isExtracting: true,
-                  currentFile: progress.currentFile,
-                  progress: progress.progress,
-                  extractedCount: progress.extractedCount,
-                  totalFiles: progress.totalFiles
-                });
-              });
-
-              // Reset extraction progress
-              setZipExtractionProgress({
-                isExtracting: false,
-                currentFile: '',
-                progress: 0,
-                extractedCount: 0,
-                totalFiles: 0
-              });
-
-              if (extractionResult.success) {
-                allExtractedFiles.push(...extractionResult.extractedFiles);
-
-                if (extractionResult.errors.length > 0) {
-                  errors.push(...extractionResult.errors);
-                }
-              } else {
-                errors.push(`Failed to extract ZIP file "${file.name}": ${extractionResult.errors.join(', ')}`);
-              }
-            } else {
-              // ZIP doesn't contain PDFs or is invalid - treat as regular file
-              allExtractedFiles.push(file);
-            }
-          } catch (zipError) {
-            errors.push(`Failed to process ZIP file "${file.name}": ${zipError instanceof Error ? zipError.message : 'Unknown error'}`);
-            setZipExtractionProgress({
-              isExtracting: false,
-              currentFile: '',
-              progress: 0,
-              extractedCount: 0,
-              totalFiles: 0
-            });
-          }
-        } else {
-          allExtractedFiles.push(file);
-        }
-      }
-
-      // Show any errors
-      if (errors.length > 0) {
-        showError(errors.join('\n'));
-      }
-
-      // Process all extracted files
-      if (allExtractedFiles.length > 0) {
-        // Add files to context and select them automatically
-        await addFiles(allExtractedFiles, { selectFiles: true });
-        showStatus(`Added ${allExtractedFiles.length} files`, 'success');
+      if (uploadedFiles.length > 0) {
+        // FileContext will automatically handle ZIP extraction based on user preferences
+        // - Respects autoUnzip setting
+        // - Respects autoUnzipFileLimit
+        // - HTML ZIPs stay intact
+        // - Non-ZIP files pass through unchanged
+        await addFiles(uploadedFiles, { selectFiles: true });
+        showStatus(`Added ${uploadedFiles.length} file(s)`, 'success');
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to process files';
       showError(errorMessage);
       console.error('File processing error:', err);
-
-      // Reset extraction progress on error
-      setZipExtractionProgress({
-        isExtracting: false,
-        currentFile: '',
-        progress: 0,
-        extractedCount: 0,
-        totalFiles: 0
-      });
     }
-  }, [addFiles]);
+  }, [addFiles, showStatus, showError]);
 
   const toggleFile = useCallback((fileId: FileId) => {
     const currentSelectedIds = contextSelectedIdsRef.current;
@@ -320,7 +267,7 @@ const FileEditor = ({
 
         if (result.success && result.extractedStubs.length > 0) {
           // Add extracted file stubs to FileContext
-          await actions.addStirlingFileStubs(result.extractedStubs);
+          await fileActions.addStirlingFileStubs(result.extractedStubs);
 
           // Remove the original ZIP file
           removeFiles([fileId], false);
@@ -350,7 +297,7 @@ const FileEditor = ({
         });
       }
     }
-  }, [activeStirlingFileStubs, selectors, actions, removeFiles]);
+  }, [activeStirlingFileStubs, selectors, fileActions, removeFiles]);
 
   const handleViewFile = useCallback((fileId: FileId) => {
     const record = activeStirlingFileStubs.find(r => r.id === fileId);
@@ -394,7 +341,7 @@ const FileEditor = ({
         <Box p="md">
 
 
-        {activeStirlingFileStubs.length === 0 && !zipExtractionProgress.isExtracting ? (
+        {activeStirlingFileStubs.length === 0 ? (
           <Center h="60vh">
             <Stack align="center" gap="md">
               <Text size="lg" c="dimmed">📁</Text>
@@ -402,43 +349,6 @@ const FileEditor = ({
               <Text size="sm" c="dimmed">Upload PDF files, ZIP archives, or load from storage to get started</Text>
             </Stack>
           </Center>
-        ) : activeStirlingFileStubs.length === 0 && zipExtractionProgress.isExtracting ? (
-          <Box>
-            <SkeletonLoader type="controls" />
-
-            {/* ZIP Extraction Progress */}
-            {zipExtractionProgress.isExtracting && (
-              <Box mb="md" p="sm" style={{ backgroundColor: 'var(--mantine-color-orange-0)', borderRadius: 8 }}>
-                <Group justify="space-between" mb="xs">
-                  <Text size="sm" fw={500}>Extracting ZIP archive...</Text>
-                  <Text size="sm" c="dimmed">{Math.round(zipExtractionProgress.progress)}%</Text>
-                </Group>
-                <Text size="xs" c="dimmed" mb="xs">
-                  {zipExtractionProgress.currentFile || 'Processing files...'}
-                </Text>
-                <Text size="xs" c="dimmed" mb="xs">
-                  {zipExtractionProgress.extractedCount} of {zipExtractionProgress.totalFiles} files extracted
-                </Text>
-                <div style={{
-                  width: '100%',
-                  height: '4px',
-                  backgroundColor: 'var(--mantine-color-gray-2)',
-                  borderRadius: '2px',
-                  overflow: 'hidden'
-                }}>
-                  <div style={{
-                    width: `${Math.round(zipExtractionProgress.progress)}%`,
-                    height: '100%',
-                    backgroundColor: 'var(--mantine-color-orange-6)',
-                    transition: 'width 0.3s ease'
-                  }} />
-                </div>
-              </Box>
-            )}
-
-
-            <SkeletonLoader type="fileGrid" count={6} />
-          </Box>
         ) : (
           <div
             style={{
