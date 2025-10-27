@@ -122,6 +122,17 @@
   font-weight: 500 !important;
 }
 
+/* Wider dropdown menu for long block text */
+.compare-changes-dropdown {
+  min-width: 520px !important;
+  max-width: 70vw !important;
+}
+
+/* Ensure options text uses full width inside wider dropdown */
+.compare-dropdown-option__text {
+  max-width: 100%;
+}
+
 /* Style the dropdown container */
 .compare-changes-select .mantine-Combobox-dropdown {
   border: 1px solid var(--mantine-color-gray-3) !important;

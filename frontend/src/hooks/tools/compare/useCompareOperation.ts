@@ -19,6 +19,7 @@ import {
   createSummaryFile,
   extractContentFromPdf,
   getWorkerErrorCode,
+  filterTokensForDiff,
 } from './operationUtils';
 
 export interface CompareOperationHook extends ToolOperationHook<CompareParameters> {
@@ -207,17 +208,21 @@ export const useCompareOperation = (): CompareOperationHook => {
 
         setStatus(t('compare.status.processing', 'Analyzing differences...'));
 
+        // Filter out paragraph sentinels before diffing to avoid large false-positive runs
+        const baseFiltered = filterTokensForDiff(baseContent.tokens, baseContent.metadata);
+        const comparisonFiltered = filterTokensForDiff(comparisonContent.tokens, comparisonContent.metadata);
+
         const { tokens, stats, warnings: workerWarnings } = await runCompareWorker(
-          baseContent.tokens,
-          comparisonContent.tokens,
+          baseFiltered.tokens,
+          comparisonFiltered.tokens,
           warningMessages
         );
 
         const totals = aggregateTotals(tokens);
         const processedAt = Date.now();
 
-        const baseMetadata = baseContent.metadata;
-        const comparisonMetadata = comparisonContent.metadata;
+        const baseMetadata = baseFiltered.metadata;
+        const comparisonMetadata = comparisonFiltered.metadata;
 
         const changes = buildChanges(tokens, baseMetadata, comparisonMetadata);
 

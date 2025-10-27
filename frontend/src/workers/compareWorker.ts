@@ -80,11 +80,14 @@ const chunkedDiff = (
   const tokens: CompareDiffToken[] = [];
   let start1 = 0;
   let start2 = 0;
+  const overlap = Math.max(0, Math.min(500, Math.floor(chunkSize * 0.1)));
 
   // Advance by the actual number of tokens consumed per chunk to maintain alignment
   while (start1 < words1.length || start2 < words2.length) {
-    const slice1 = words1.slice(start1, Math.min(start1 + chunkSize, words1.length));
-    const slice2 = words2.slice(start2, Math.min(start2 + chunkSize, words2.length));
+    const end1 = Math.min(start1 + chunkSize, words1.length);
+    const end2 = Math.min(start2 + chunkSize, words2.length);
+    const slice1 = words1.slice(start1, end1);
+    const slice2 = words2.slice(start2, end2);
 
     const chunkTokens = diff(slice1, slice2);
     tokens.push(...chunkTokens);
@@ -93,23 +96,22 @@ const chunkedDiff = (
     let consumed1 = 0;
     let consumed2 = 0;
     for (const t of chunkTokens) {
-      if (t.type === 'unchanged') {
-        consumed1 += 1; consumed2 += 1;
-      } else if (t.type === 'removed') {
-        consumed1 += 1;
-      } else if (t.type === 'added') {
-        consumed2 += 1;
-      }
+      if (t.type === 'unchanged') { consumed1 += 1; consumed2 += 1; }
+      else if (t.type === 'removed') { consumed1 += 1; }
+      else if (t.type === 'added') { consumed2 += 1; }
     }
 
-    // Fallback to progress by a small step if diff returned nothing (shouldn't happen)
+    // Fallback to ensure forward progress
     if (consumed1 === 0 && consumed2 === 0) {
       consumed1 = Math.min(chunkSize, words1.length - start1);
       consumed2 = Math.min(chunkSize, words2.length - start2);
     }
 
-    start1 += consumed1;
-    start2 += consumed2;
+    // Advance with overlap to allow re-synchronization across chunk boundaries
+    const nextStart1 = Math.min(words1.length, Math.max(start1 + consumed1 - overlap, start1 + 1));
+    const nextStart2 = Math.min(words2.length, Math.max(start2 + consumed2 - overlap, start2 + 1));
+    start1 = nextStart1;
+    start2 = nextStart2;
   }
 
   return tokens;

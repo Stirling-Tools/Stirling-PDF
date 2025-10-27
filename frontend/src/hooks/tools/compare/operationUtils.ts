@@ -1,5 +1,6 @@
 import { pdfWorkerManager } from '../../../services/pdfWorkerManager';
 import { appendWord as sharedAppendWord } from '../../../utils/textDiff';
+import { PARAGRAPH_SENTINEL } from '../../../types/compare';
 import type { StirlingFile } from '../../../types/fileContext';
 import type { PDFPageProxy, TextContent, TextItem } from 'pdfjs-dist/types/src/display/api';
 import type {
@@ -266,6 +267,27 @@ export const getWorkerErrorCode = (value: unknown): 'EMPTY_TEXT' | 'TOO_LARGE' |
   return undefined;
 };
 
+// Produce a filtered view of tokens/metadata that excludes paragraph sentinel markers,
+// returning a mapping to original indices for potential future use.
+export const filterTokensForDiff = (
+  tokens: string[],
+  metadata: TokenMetadata[],
+): { tokens: string[]; metadata: TokenMetadata[]; filteredToOriginal: number[] } => {
+  const outTokens: string[] = [];
+  const outMeta: TokenMetadata[] = [];
+  const map: number[] = [];
+  for (let i = 0; i < tokens.length; i += 1) {
+    const t = tokens[i];
+    const isPara = t === PARAGRAPH_SENTINEL || t.startsWith('\uE000') || t.includes('PARA');
+    if (!isPara) {
+      outTokens.push(t);
+      if (metadata[i]) outMeta.push(metadata[i]);
+      map.push(i);
+    }
+  }
+  return { tokens: outTokens, metadata: outMeta, filteredToOriginal: map };
+};
+
 export const extractContentFromPdf = async (file: StirlingFile): Promise<ExtractedContent> => {
   const arrayBuffer = await file.arrayBuffer();
   const pdfDoc = await pdfWorkerManager.createDocument(arrayBuffer, {
@@ -299,16 +321,23 @@ export const extractContentFromPdf = async (file: StirlingFile): Promise<Extract
           .replace(/[“”]/g, '"')
           .replace(/[‘’]/g, "'")
           .replace(/[–—]/g, '-')
+          .replace(/\u00A0/g, ' ')
           .replace(/\s+/g, ' ')
           .trim();
 
-      const isParagraphBreak = (curr: TextItem, prev: TextItem | null, yJumpThreshold = 6) => {
+      const isParagraphBreak = (curr: TextItem, prev: TextItem | null) => {
         const hasHardBreak = 'hasEOL' in curr && (curr as TextItem).hasEOL;
         if (hasHardBreak) return true;
         if (!prev) return false;
         const prevY = prev.transform[5];
         const currY = curr.transform[5];
-        return Math.abs(currY - prevY) > yJumpThreshold;
+        const dy = Math.abs(currY - prevY);
+        const currX = curr.transform[4];
+        const prevX = prev.transform[4];
+        const approxLine = Math.max(10, Math.abs((curr as any).height ?? 0) * 0.9);
+        const looksLikeParagraph = dy > approxLine * 1.8;
+        const likelySoftWrap = currX < prevX && dy < approxLine * 0.6;
+        return looksLikeParagraph && !likelySoftWrap;
       };
 
       const adjustBoundingBox = (left: number, top: number, width: number, height: number): TokenBoundingBox | null => {

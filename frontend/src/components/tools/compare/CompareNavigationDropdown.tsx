@@ -164,7 +164,7 @@ const CompareNavigationDropdown = ({
         </div>
       </Combobox.Target>
 
-      <Combobox.Dropdown>
+      <Combobox.Dropdown className="compare-changes-dropdown">
         <div className="compare-dropdown-scrollwrap">
           <ScrollArea.Autosize mah={300} viewportRef={viewportRef} onScrollPositionChange={handleScrollPos}>
             <div ref={searchRef}>
