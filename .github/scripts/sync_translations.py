@@ -12,7 +12,7 @@ It does two things:
 Also prints a CI-friendly report (intended for PR comments).
 
 Usage:
-    python sync_translations.py --reference-file <path_to_reference_json> [--branch <branch_root>] [--actor <actor_name>] [--files <list_of_target_jsons>] [--check] [--prune] [--dry-run]
+    python sync_translations.py --reference-file <path_to_reference_json> [--branch <branch_root>] [--actor <actor_name>] [--files <list_of_target_jsons>] [--check] [--prune] [--procent-translations] [--dry-run]
 """
 
 from __future__ import annotations

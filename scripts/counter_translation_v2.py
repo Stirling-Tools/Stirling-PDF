@@ -1,204 +1,119 @@
-"""A script to update language progress status in README.md based on
-JSON translation file comparison.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
-This script compares the default translation JSON file with others in the locales directory to
-determine language progress.
-It then updates README.md based on provided progress list.
+"""
+A tiny helper that updates README.md translation progress by asking
+.sync_translations.py for the per-locale percentage (via --procent-translations).
 
 Author: Ludy87
+"""
 
-Example:
-    To use this script, simply run it from command line:
-        $ python counter_translation_v2.py
-"""  # noqa: D205
-
+from __future__ import annotations
 import glob
 import os
 import re
-import json
-
-import tomlkit
-import tomlkit.toml_file
-
-
-def convert_to_multiline(data: tomlkit.TOMLDocument) -> tomlkit.TOMLDocument:
-    """Converts 'ignore' and 'missing' arrays to multiline arrays and sorts the first-level keys of the TOML document.
-    Enhances readability and consistency in the TOML file by ensuring arrays contain unique and sorted entries.
-
-    Parameters:
-        data (tomlkit.TOMLDocument): The original TOML document containing the data.
-
-    Returns:
-        tomlkit.TOMLDocument: A new TOML document with sorted keys and properly formatted arrays.
-    """  # noqa: D205
-    sorted_data = tomlkit.document()
-    for key in sorted(data.keys()):
-        value = data[key]
-        if isinstance(value, dict):
-            new_table = tomlkit.table()
-            for subkey in ("ignore", "missing"):
-                if subkey in value:
-                    # Convert the list to a set to remove duplicates, sort it, and convert to multiline for readability
-                    unique_sorted_array = sorted(set(value[subkey]))
-                    array = tomlkit.array()
-                    array.multiline(True)
-                    for item in unique_sorted_array:
-                        array.append(item)
-                    new_table[subkey] = array
-            sorted_data[key] = new_table
-        else:
-            # Add other types of data unchanged
-            sorted_data[key] = value
-    return sorted_data
+import subprocess
+from pathlib import Path
+from typing import List, Tuple
 
 
-def write_readme(progress_list: list[tuple[str, int]]) -> None:
-    """Updates the progress status in the README.md file based
-    on the provided progress list.
-
-    Parameters:
-        progress_list (list[tuple[str, int]]): A list of tuples containing
-        language and progress percentage.
-
-    Returns:
-        None
-    """  # noqa: D205
-    with open("README.md", encoding="utf-8") as file:
-        content = file.readlines()
-
-    for i, line in enumerate(content[2:], start=2):
-        for progress in progress_list:
-            language, value = progress
-            if language in line:
-                if match := re.search(r"\!\[(\d+(\.\d+)?)%\]\(.*\)", line):
-                    content[i] = line.replace(
-                        match.group(0),
-                        f"![{value}%](https://geps.dev/progress/{value})",
-                    )
-
-    with open("README.md", "w", encoding="utf-8", newline="\n") as file:
-        file.writelines(content)
+REPO_ROOT = Path(os.getcwd())
+LOCALES_DIR = REPO_ROOT / "frontend" / "public" / "locales"
+REF_FILE = LOCALES_DIR / "en-GB" / "translation.json"
+SYNC_SCRIPT = REPO_ROOT / ".github" / "scripts" / "sync_translations.py"
+README = REPO_ROOT / "README.md"
 
 
-def parse_json_file(file_path):
+def find_locale_files() -> List[Path]:
+    return sorted(
+        Path(p) for p in glob.glob(str(LOCALES_DIR / "*" / "translation.json"))
+    )
+
+
+def percent_done_for_file(file_path: Path) -> int:
     """
-    Parses a JSON translation file and returns a flat dictionary of all keys.
-    :param file_path: Path to the JSON file.
-    :return: Dictionary with flattened keys and values.
+    Calls sync_translations.py --procent-translations for a single locale file.
+    Returns an int 0..100.
     """
-    with open(file_path, "r", encoding="utf-8") as file:
-        data = json.load(file)
+    # en-GB / en-US are always 100% by definition
+    norm = str(file_path).replace("\\", "/")
+    if norm.endswith("en-GB/translation.json") or norm.endswith(
+        "en-US/translation.json"
+    ):
+        return 100
 
-    def flatten_dict(d, parent_key="", sep="."):
-        items = {}
-        for k, v in d.items():
-            new_key = f"{parent_key}{sep}{k}" if parent_key else k
-            if isinstance(v, dict):
-                items.update(flatten_dict(v, new_key, sep=sep))
-            else:
-                items[new_key] = v
-        return items
+    cmd = [
+        "python",
+        str(SYNC_SCRIPT),
+        "--reference-file",
+        str(REF_FILE),
+        "--files",
+        str(file_path),
+        "--check",
+        "--procent-translations",
+    ]
+    res = subprocess.run(cmd, capture_output=True, text=True, check=True)
+    out = res.stdout.strip()
+    return int(float(out))
 
-    return flatten_dict(data)
+
+def update_readme(progress_list: List[Tuple[str, int]]) -> None:
+    """
+    Update README badges. Expects lines like:
+      ... [xx%](https://geps.dev/progress/xx)
+    and replaces xx with the new percent.
+    """
+    if not README.exists():
+        print("README.md not found — skipping write.")
+        return
+
+    content = README.read_text(encoding="utf-8").splitlines(keepends=True)
+
+    # we start at line 2 like your original (skip title, etc.)
+    for i in range(2, len(content)):
+        line = content[i]
+        for lang, value in progress_list:
+            if lang in line:
+                content[i] = re.sub(
+                    r"!\[(\d+(?:\.\d+)?)%\]\(https://geps\.dev/progress/\d+\)",
+                    f"![{value}%](https://geps.dev/progress/{value})",
+                    line,
+                )
+                break
+
+    README.write_text("".join(content), encoding="utf-8", newline="\n")
 
 
-def compare_files(
-    default_file_path, file_paths, ignore_translation_file
-) -> list[tuple[str, int]]:
-    """Compares the default JSON translation file with other
-    translation files in the locales directory.
+def main() -> None:
+    files = find_locale_files()
+    if not files:
+        print("No translation.json files found.")
+        return
 
-    Parameters:
-        default_file_path (str): The path to the default translation JSON file.
-        file_paths (list): List of paths to translation JSON files.
-        ignore_translation_file (str): Path to the TOML file with ignore rules.
+    results: List[Tuple[str, int]] = []
+    for f in files:
+        # language label from folder, e.g. de-DE, sr-LATN-RS
+        lang = f.parent.name.replace(
+            "-", "_"
+        )  # keep hyphenated form to match README lines
+        pct = percent_done_for_file(f)
+        results.append((lang, pct))
 
-    Returns:
-        list[tuple[str, int]]: A list of tuples containing
-        language and progress percentage.
-    """  # noqa: D205
-    default_keys = parse_json_file(default_file_path)
-    num_keys = len(default_keys)
+    # ensure en-GB/en-US are included & set to 100
+    have = {lang for lang, _ in results}
+    for hard in ("en-GB", "en-US"):
+        if hard not in have:
+            results.append((hard, 100))
 
-    result_list = []
-    sort_ignore_translation: tomlkit.TOMLDocument
+    # optional: sort by percent desc (nice to have)
+    results.sort(key=lambda x: x[1], reverse=True)
 
-    # read toml
-    with open(ignore_translation_file, encoding="utf-8") as f:
-        sort_ignore_translation = tomlkit.parse(f.read())
+    update_readme(results)
 
-    for file_path in file_paths:
-        # Extract language code from directory name
-        locale_dir = os.path.basename(os.path.dirname(file_path))
-
-        # Convert locale format from hyphen to underscore for TOML compatibility
-        # e.g., en-GB -> en_GB, sr-LATN-RS -> sr_LATN_RS
-        language = locale_dir.replace("-", "_")
-
-        fails = 0
-        if language in ["en_GB", "en_US"]:
-            result_list.append(("en_GB", 100))
-            result_list.append(("en_US", 100))
-            continue
-
-        if language not in sort_ignore_translation:
-            sort_ignore_translation[language] = tomlkit.table()
-
-        if (
-            "ignore" not in sort_ignore_translation[language]
-            or len(sort_ignore_translation[language].get("ignore", [])) < 1
-        ):
-            sort_ignore_translation[language]["ignore"] = tomlkit.array(
-                ["language.direction"]
-            )
-
-        current_keys = parse_json_file(file_path)
-
-        # Compare keys
-        for default_key, default_value in default_keys.items():
-            if default_key not in current_keys:
-                # Key is missing entirely
-                if default_key not in sort_ignore_translation[language]["ignore"]:
-                    print(f"{language}: Key '{default_key}' is missing.")
-                    fails += 1
-            elif (
-                default_value == current_keys[default_key]
-                and default_key not in sort_ignore_translation[language]["ignore"]
-            ):
-                # Key exists but value is untranslated (same as reference)
-                print(f"{language}: Key '{default_key}' is missing the translation.")
-                fails += 1
-            elif default_value != current_keys[default_key]:
-                # Key is translated, remove from ignore list if present
-                if default_key in sort_ignore_translation[language]["ignore"]:
-                    sort_ignore_translation[language]["ignore"].remove(default_key)
-
-        print(f"{language}: {fails} out of {num_keys} keys are not translated.")
-        result_list.append(
-            (
-                language,
-                int((num_keys - fails) * 100 / num_keys),
-            )
-        )
-
-    ignore_translation = convert_to_multiline(sort_ignore_translation)
-    with open(ignore_translation_file, "w", encoding="utf-8", newline="\n") as file:
-        file.write(tomlkit.dumps(ignore_translation))
-
-    unique_data = list(set(result_list))
-    unique_data.sort(key=lambda x: x[1], reverse=True)
-
-    return unique_data
+    # also print a compact summary to stdout (useful in CI logs)
+    # for lang, pct in results:
+    #     print(f"{lang}: {pct}%")
 
 
 if __name__ == "__main__":
-    directory = os.path.join(os.getcwd(), "frontend", "public", "locales")
-    translation_file_paths = glob.glob(os.path.join(directory, "*", "translation.json"))
-    reference_file = os.path.join(directory, "en-GB", "translation.json")
-
-    scripts_directory = os.path.join(os.getcwd(), "scripts")
-    translation_state_file = os.path.join(scripts_directory, "ignore_translation.toml")
-
-    write_readme(
-        compare_files(reference_file, translation_file_paths, translation_state_file)
-    )
+    main()
