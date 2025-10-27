@@ -1,5 +1,6 @@
 import { Combobox, ScrollArea, useCombobox } from '@mantine/core';
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface NavigationDropdownProps {
   changes: Array<{ value: string; label: string; pageNumber?: number }>;
@@ -14,6 +15,8 @@ const CompareNavigationDropdown = ({
   className,
   onNavigate,
 }: NavigationDropdownProps) => {
+  const { t } = useTranslation();
+  const newLineLabel = t('compare.newLine', 'new-line');
   const combobox = useCombobox({
     onDropdownClose: () => combobox.resetSelectedOption(),
   });
@@ -50,13 +53,21 @@ const CompareNavigationDropdown = ({
   const [query, setQuery] = useState('');
 
   const normalizedChanges = useMemo(() => {
+    // Helper to strip localized new-line marker occurrences from labels
+    const esc = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const stripNewLine = (s: string) =>
+      s
+        .replace(new RegExp(`\\b${esc(newLineLabel)}\\b`, 'gi'), ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+
     const cleaned = changes
-      .map((c) => ({ value: c.value, label: sanitize(c.label), pageNumber: c.pageNumber }))
-      .filter((c) => isMeaningful(c.label));
+      .map((c) => ({ value: c.value, label: stripNewLine(sanitize(c.label)), pageNumber: c.pageNumber }))
+      .filter((c) => isMeaningful(c.label) && c.label.length > 0 && c.label.toLowerCase() !== newLineLabel.toLowerCase());
     const q = sanitize(query).toLowerCase();
     if (!q) return cleaned;
     return cleaned.filter((c) => c.label.toLowerCase().includes(q));
-  }, [changes, query]);
+  }, [changes, query, newLineLabel]);
 
   return (
     <Combobox

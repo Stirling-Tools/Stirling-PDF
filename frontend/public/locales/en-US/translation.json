@@ -1321,6 +1321,7 @@
       "removed": "Removed from base",
       "added": "Added in comparison"
     },
+    "newLine": "new-line",
     "summary": {
       "baseHeading": "Base document",
       "comparisonHeading": "Comparison document",

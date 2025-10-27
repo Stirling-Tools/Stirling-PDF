@@ -229,7 +229,7 @@ const CompareDocumentPane = ({
                     style={{ width: `${Math.round(page.width * fit)}px` }}
                   >
                     <div
-                      className="compare-diff-page__inner"
+                      className={`compare-diff-page__inner compare-diff-page__inner--${pane}`}
                       style={{ transform: `translate(${-panX}px, ${-panY}px) scale(${zoom})`, transformOrigin: 'top left' }}
                     >
                       <img

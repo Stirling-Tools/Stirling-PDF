@@ -72,6 +72,39 @@ export const useCompareChangeNavigation = (
 
         container.scrollTo({ top: desiredTop, left: desiredLeft, behavior: 'smooth' });
 
+        // Also scroll the peer container to the corresponding location in the
+        // other PDF (same page and approximate vertical position within page),
+        // not just the same list/scroll position.
+        const peerRef = pane === 'base' ? comparisonScrollRef : baseScrollRef;
+        const peer = peerRef.current;
+        if (peer) {
+          // Use the first node as the anchor
+          const anchor = nodes[0];
+          const pageEl = anchor.closest('.compare-diff-page') as HTMLElement | null;
+          const pageNumAttr = pageEl?.getAttribute('data-page-number');
+          const topPercent = parseFloat((anchor as HTMLElement).style.top || '0');
+          if (pageNumAttr) {
+            const peerPageEl = peer.querySelector(
+              `.compare-diff-page[data-page-number="${pageNumAttr}"]`
+            ) as HTMLElement | null;
+            const peerInner = peerPageEl?.querySelector('.compare-diff-page__inner') as HTMLElement | null;
+            if (peerPageEl && peerInner) {
+              const innerRect = peerInner.getBoundingClientRect();
+              const innerHeight = Math.max(1, innerRect.height);
+              const absoluteTopInPage = (topPercent / 100) * innerHeight;
+              const peerDesiredTop = Math.max(
+                0,
+                peerPageEl.offsetTop + absoluteTopInPage - peer.clientHeight / 2
+              );
+              peer.scrollTo({ top: peerDesiredTop, behavior: 'smooth' });
+            } else if (peerPageEl) {
+              // Fallback: Scroll to page top
+              const top = Math.max(0, peerPageEl.offsetTop - Math.round(peer.clientHeight * 0.2));
+              peer.scrollTo({ top, behavior: 'smooth' });
+            }
+          }
+        }
+
         const groupsByInner = new Map<HTMLElement, HTMLElement[]>();
         nodes.forEach((element) => {
           const inner = element.closest('.compare-diff-page__inner') as HTMLElement | null;

@@ -1992,6 +1992,7 @@
       "2": "Document 2"
     },
     "submit": "Compare",
+    "newLine": "new-line",
     "complex": {
       "message": "One or both of the provided documents are large files, accuracy of comparison may be reduced"
     },

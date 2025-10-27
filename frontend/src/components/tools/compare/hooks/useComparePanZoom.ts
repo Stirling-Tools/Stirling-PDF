@@ -29,6 +29,13 @@ interface ScrollLinkDelta {
   horizontal: number;
 }
 
+// Pixel-based anchors captured when linking scroll, to preserve the
+// visual offset between panes and avoid an initial snap.
+interface ScrollLinkAnchors {
+  deltaPixelsBaseToComp: number;
+  deltaPixelsCompToBase: number;
+}
+
 interface PanDragState {
   active: boolean;
   source: Pane | null;
@@ -93,6 +100,10 @@ export const useComparePanZoom = ({
   const comparisonScrollRef = useRef<HTMLDivElement>(null);
   const isSyncingRef = useRef(false);
   const scrollLinkDeltaRef = useRef<ScrollLinkDelta>({ vertical: 0, horizontal: 0 });
+  const scrollLinkAnchorsRef = useRef<ScrollLinkAnchors>({
+    deltaPixelsBaseToComp: 0,
+    deltaPixelsCompToBase: 0,
+  });
   const [isScrollLinked, setIsScrollLinked] = useState(true);
   const [isPanMode, setIsPanMode] = useState(false);
   const panDragRef = useRef<PanDragState>({
@@ -328,12 +339,16 @@ export const useComparePanZoom = ({
       lastActivePaneRef.current = source === baseScrollRef.current ? 'base' : 'comparison';
 
       const sourceIsBase = source === baseScrollRef.current;
-      const deltaV = scrollLinkDeltaRef.current.vertical;
 
       const targetVerticalRange = Math.max(1, target.scrollHeight - target.clientHeight);
       const mappedTop = mapScrollTopBetweenPanes(source.scrollTop, sourceIsBase);
-      const offset = deltaV * targetVerticalRange;
-      const desiredTop = Math.max(0, Math.min(targetVerticalRange, mappedTop + (sourceIsBase ? offset : -offset)));
+
+      // Use pixel anchors captured at link time to preserve offset
+      const deltaPx = sourceIsBase
+        ? scrollLinkAnchorsRef.current.deltaPixelsBaseToComp
+        : scrollLinkAnchorsRef.current.deltaPixelsCompToBase;
+
+      const desiredTop = Math.max(0, Math.min(targetVerticalRange, mappedTop + deltaPx));
 
       isSyncingRef.current = true;
       target.scrollTop = desiredTop;
@@ -623,6 +638,7 @@ export const useComparePanZoom = ({
     const compEl = comparisonScrollRef.current;
     if (!baseEl || !compEl) {
       scrollLinkDeltaRef.current = { vertical: 0, horizontal: 0 };
+      scrollLinkAnchorsRef.current = { deltaPixelsBaseToComp: 0, deltaPixelsCompToBase: 0 };
       return;
     }
     const baseVMax = Math.max(1, baseEl.scrollHeight - baseEl.clientHeight);
@@ -639,10 +655,19 @@ export const useComparePanZoom = ({
       vertical: compV - baseV,
       horizontal: compH - baseH,
     };
-  }, []);
+
+    // Capture pixel anchors in mapped space
+    const mappedBaseToComp = mapScrollTopBetweenPanes(baseEl.scrollTop, true);
+    const mappedCompToBase = mapScrollTopBetweenPanes(compEl.scrollTop, false);
+    scrollLinkAnchorsRef.current = {
+      deltaPixelsBaseToComp: compEl.scrollTop - mappedBaseToComp,
+      deltaPixelsCompToBase: baseEl.scrollTop - mappedCompToBase,
+    };
+  }, [mapScrollTopBetweenPanes]);
 
   const clearScrollLinkDelta = useCallback(() => {
     scrollLinkDeltaRef.current = { vertical: 0, horizontal: 0 };
+    scrollLinkAnchorsRef.current = { deltaPixelsBaseToComp: 0, deltaPixelsCompToBase: 0 };
   }, []);
 
   const zoomLimits = useMemo(() => ({ min: ZOOM_MIN, max: ZOOM_MAX, step: ZOOM_STEP }), []);

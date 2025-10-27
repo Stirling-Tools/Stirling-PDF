@@ -7,6 +7,7 @@ import type {
 import type { CompareChangeOption } from '../../../../types/compareWorkbench';
 import type { PagePreview } from '../../../../hooks/useProgressivePagePreviews';
 import type { WordHighlightEntry } from '../types';
+import { PARAGRAPH_SENTINEL } from '../../../../types/compare';
 
 interface TokenGroupMap {
   base: Map<number, string>;
@@ -42,22 +43,32 @@ const buildWordChanges = (
   for (let i = 0; i < tokens.length; i += 1) {
     const token = tokens[i];
     if (token.type === targetType) {
-      const startIndex = metadataIndex;
       const parts: string[] = [];
       const runIndices: number[] = [];
       const pageNumber = metadata[metadataIndex]?.page ?? 1;
       while (i < tokens.length && tokens[i].type === targetType) {
-        parts.push(tokens[i].text);
-        runIndices.push(metadataIndex);
+        const t = tokens[i].text;
+        const isPara = t === PARAGRAPH_SENTINEL || t.startsWith('\uE000') || t.includes('PARA');
+        // Skip paragraph sentinel tokens entirely from labels and grouping
+        if (!isPara) {
+          parts.push(t);
+          // Only add to grouping if there is a corresponding metadata index
+          if (metadata[metadataIndex]) {
+            runIndices.push(metadataIndex);
+          }
+        }
         metadataIndex += 1;
         i += 1;
       }
       i -= 1;
-      const endIndex = metadataIndex - 1;
-      const groupId = `${groupPrefix}-${startIndex}-${endIndex}`;
-      runIndices.forEach((idx) => tokenIndexToGroupId.set(idx, groupId));
       const label = parts.join(' ').trim();
-      items.push({ value: groupId, label: label || '(…)', pageNumber });
+      if (label.length > 0 && runIndices.length > 0) {
+        const startIndexForId = runIndices[0];
+        const endIndexForId = runIndices[runIndices.length - 1];
+        const groupId = `${groupPrefix}-${startIndexForId}-${endIndexForId}`;
+        runIndices.forEach((idx) => tokenIndexToGroupId.set(idx, groupId));
+        items.push({ value: groupId, label, pageNumber });
+      }
       continue;
     }
     if (token.type !== (targetType === 'added' ? 'removed' : 'added')) {

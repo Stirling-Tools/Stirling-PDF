@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import CompareRoundedIcon from '@mui/icons-material/CompareRounded';
 import { Box, Group, Stack, Text, Button } from '@mantine/core';
+import { Tooltip } from '../components/shared/Tooltip';
 import { createToolFlow } from '../components/tools/shared/createToolFlow';
 import { useBaseTool } from '../hooks/tools/shared/useBaseTool';
 import { BaseToolProps, ToolComponent } from '../types/tool';
@@ -22,6 +23,7 @@ import type { StirlingFile } from '../types/fileContext';
 import DocumentThumbnail from '../components/shared/filePreview/DocumentThumbnail';
 import './compareTool.css';
 import type { CompareWorkbenchData } from '../types/compareWorkbench';
+import FitText from '../components/shared/FitText';
 
 const CUSTOM_VIEW_ID = 'compareWorkbenchView';
 const CUSTOM_WORKBENCH_ID = 'custom:compareWorkbenchView' as const;
@@ -234,9 +236,14 @@ const Compare = (props: BaseToolProps) => {
               <DocumentThumbnail file={stub ?? null} thumbnail={stub?.thumbnailUrl || null} />
             </Box>
             <Stack gap={4} className="compare-tool__details">
-              <Text fw={600} truncate>
-                {stub?.name}
-              </Text>
+              <Tooltip content={stub?.name || ''} position="top" arrow>
+                <FitText 
+                  text={stub?.name || ''} 
+                  minimumFontScale={0.5} 
+                  lines={2}
+                  style={{ fontWeight: 600 }}
+                />
+              </Tooltip>
               {meta && (
                 <Text size="sm" c="dimmed">
                   {meta}
