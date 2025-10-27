@@ -3778,7 +3778,9 @@
         "password": "SMTP Password",
         "password.description": "Password for SMTP authentication",
         "from": "From Address",
-        "from.description": "The email address to use as the sender"
+        "from.description": "The email address to use as the sender",
+        "enableInvites": "Enable Email Invites",
+        "enableInvites.description": "Allow admins to invite users via email with auto-generated passwords"
       },
       "legal": {
         "title": "Legal Documents",
@@ -4400,6 +4402,7 @@
     "people": {
       "title": "People",
       "description": "Manage workspace members and their permissions",
+      "loading": "Loading people...",
       "searchMembers": "Search members...",
       "addMembers": "Add Members",
       "inviteMembers": "Invite Members",
