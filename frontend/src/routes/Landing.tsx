@@ -15,7 +15,7 @@ import { accountService } from '../services/accountService'
  * If user is not authenticated: Show Login or redirect to /login
  */
 export default function Landing() {
-  const { session, loading: authLoading, refreshSession } = useAuth()
+  const { session, loading: authLoading } = useAuth()
   const { config, loading: configLoading } = useAppConfig()
   const location = useLocation()
   const [isFirstLogin, setIsFirstLogin] = useState(false)
