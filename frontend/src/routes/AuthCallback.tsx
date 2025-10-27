@@ -1,6 +1,6 @@
-import { useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../auth/UseSession'
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../auth/UseSession';
 
 /**
  * OAuth Callback Handler
@@ -10,50 +10,50 @@ import { useAuth } from '../auth/UseSession'
  * We extract it, store in localStorage, and redirect to the home page.
  */
 export default function AuthCallback() {
-  const navigate = useNavigate()
-  const { refreshSession } = useAuth()
+  const navigate = useNavigate();
+  const { refreshSession } = useAuth();
 
   useEffect(() => {
     const handleCallback = async () => {
       try {
-        console.log('[AuthCallback] Handling OAuth callback...')
+        console.log('[AuthCallback] Handling OAuth callback...');
 
         // Extract JWT from URL fragment (#access_token=...)
-        const hash = window.location.hash.substring(1) // Remove '#'
-        const params = new URLSearchParams(hash)
-        const token = params.get('access_token')
+        const hash = window.location.hash.substring(1); // Remove '#'
+        const params = new URLSearchParams(hash);
+        const token = params.get('access_token');
 
         if (!token) {
-          console.error('[AuthCallback] No access_token in URL fragment')
+          console.error('[AuthCallback] No access_token in URL fragment');
           navigate('/login', {
             replace: true,
             state: { error: 'OAuth login failed - no token received.' }
-          })
-          return
+          });
+          return;
         }
 
         // Store JWT in localStorage
-        localStorage.setItem('stirling_jwt', token)
-        console.log('[AuthCallback] JWT stored in localStorage')
+        localStorage.setItem('stirling_jwt', token);
+        console.log('[AuthCallback] JWT stored in localStorage');
 
         // Refresh session to load user info into state
-        await refreshSession()
+        await refreshSession();
 
-        console.log('[AuthCallback] Session refreshed, redirecting to home')
+        console.log('[AuthCallback] Session refreshed, redirecting to home');
 
         // Clear the hash from URL and redirect to home page
-        navigate('/', { replace: true })
+        navigate('/', { replace: true });
       } catch (error) {
-        console.error('[AuthCallback] Error:', error)
+        console.error('[AuthCallback] Error:', error);
         navigate('/login', {
           replace: true,
           state: { error: 'OAuth login failed. Please try again.' }
-        })
+        });
       }
-    }
+    };
 
-    handleCallback()
-  }, [navigate, refreshSession])
+    handleCallback();
+  }, [navigate, refreshSession]);
 
   return (
     <div style={{
@@ -69,5 +69,5 @@ export default function AuthCallback() {
         </div>
       </div>
     </div>
-  )
+  );
 }

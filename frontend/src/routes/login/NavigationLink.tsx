@@ -15,5 +15,5 @@ export default function NavigationLink({ onClick, text, isDisabled = false }: Na
         {text}
       </button>
     </div>
-  )
+  );
 }

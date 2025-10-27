@@ -38,6 +38,6 @@ export const loginSlides: LoginCarouselSlide[] = [
     followMouseTilt: true,
     tiltMaxDeg: 5,
   },
-]
+];
 
-export default loginSlides
+export default loginSlides;

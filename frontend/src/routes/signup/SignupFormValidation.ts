@@ -1,4 +1,4 @@
-import { useTranslation } from 'react-i18next'
+import { useTranslation } from 'react-i18next';
 
 export interface SignupFieldErrors {
   name?: string
@@ -14,7 +14,7 @@ export interface SignupValidationResult {
 }
 
 export const useSignupFormValidation = () => {
-  const { t } = useTranslation()
+  const { t } = useTranslation();
 
   const validateSignupForm = (
     email: string,
@@ -22,45 +22,45 @@ export const useSignupFormValidation = () => {
     confirmPassword: string,
     name?: string
   ): SignupValidationResult => {
-    const fieldErrors: SignupFieldErrors = {}
+    const fieldErrors: SignupFieldErrors = {};
 
     // Validate name
     if (name !== undefined && name !== null && !name.trim()) {
-      fieldErrors.name = t('signup.nameRequired', 'Name is required')
+      fieldErrors.name = t('signup.nameRequired', 'Name is required');
     }
 
     // Validate email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!email) {
-      fieldErrors.email = t('signup.emailRequired', 'Email is required')
+      fieldErrors.email = t('signup.emailRequired', 'Email is required');
     } else if (!emailRegex.test(email)) {
-      fieldErrors.email = t('signup.invalidEmail')
+      fieldErrors.email = t('signup.invalidEmail');
     }
 
     // Validate password
     if (!password) {
-      fieldErrors.password = t('signup.passwordRequired', 'Password is required')
+      fieldErrors.password = t('signup.passwordRequired', 'Password is required');
     } else if (password.length < 6) {
-      fieldErrors.password = t('signup.passwordTooShort')
+      fieldErrors.password = t('signup.passwordTooShort');
     }
 
     // Validate confirm password
     if (!confirmPassword) {
-      fieldErrors.confirmPassword = t('signup.confirmPasswordRequired', 'Please confirm your password')
+      fieldErrors.confirmPassword = t('signup.confirmPasswordRequired', 'Please confirm your password');
     } else if (password !== confirmPassword) {
-      fieldErrors.confirmPassword = t('signup.passwordsDoNotMatch')
+      fieldErrors.confirmPassword = t('signup.passwordsDoNotMatch');
     }
 
-    const hasErrors = Object.keys(fieldErrors).length > 0
+    const hasErrors = Object.keys(fieldErrors).length > 0;
 
     return {
       isValid: !hasErrors,
       error: null, // Don't show generic error, field errors are more specific
       fieldErrors: hasErrors ? fieldErrors : undefined
-    }
-  }
+    };
+  };
 
   return {
     validateSignupForm
-  }
-}
+  };
+};

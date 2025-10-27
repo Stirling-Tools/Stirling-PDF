@@ -1,20 +1,20 @@
-import { useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../../auth/UseSession'
-import { useTranslation } from 'react-i18next'
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../auth/UseSession';
+import { useTranslation } from 'react-i18next';
 
 export default function LoggedInState() {
-  const navigate = useNavigate()
-  const { user } = useAuth()
-  const { t } = useTranslation()
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { t } = useTranslation();
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      navigate('/')
-    }, 2000)
+      navigate('/');
+    }, 2000);
 
-    return () => clearTimeout(timer)
-  }, [navigate])
+    return () => clearTimeout(timer);
+  }, [navigate]);
 
   return (
     <div style={{
@@ -50,5 +50,5 @@ export default function LoggedInState() {
         </div>
       </div>
     </div>
-  )
+  );
 }

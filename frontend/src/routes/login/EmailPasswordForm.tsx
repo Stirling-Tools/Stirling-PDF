@@ -1,5 +1,5 @@
-import { useTranslation } from 'react-i18next'
-import '../authShared/auth.css'
+import { useTranslation } from 'react-i18next';
+import '../authShared/auth.css';
 
 interface EmailPasswordFormProps {
   email: string
@@ -27,12 +27,12 @@ export default function EmailPasswordForm({
   showPasswordField = true,
   fieldErrors = {}
 }: EmailPasswordFormProps) {
-  const { t } = useTranslation()
+  const { t } = useTranslation();
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    onSubmit()
-  }
+    e.preventDefault();
+    onSubmit();
+  };
 
   return (
     <form onSubmit={handleSubmit}>
@@ -82,5 +82,5 @@ export default function EmailPasswordForm({
         {submitButtonText}
       </button>
     </form>
-  )
+  );
 }

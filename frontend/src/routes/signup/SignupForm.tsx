@@ -1,7 +1,7 @@
-import { useEffect } from 'react'
-import '../authShared/auth.css'
-import { useTranslation } from 'react-i18next'
-import { SignupFieldErrors } from './SignupFormValidation'
+import { useEffect } from 'react';
+import '../authShared/auth.css';
+import { useTranslation } from 'react-i18next';
+import { SignupFieldErrors } from './SignupFormValidation';
 
 interface SignupFormProps {
   name?: string
@@ -38,14 +38,14 @@ export default function SignupForm({
   showName = false,
   showTerms = false
 }: SignupFormProps) {
-  const { t } = useTranslation()
-  const showConfirm = password.length >= 4
+  const { t } = useTranslation();
+  const showConfirm = password.length >= 4;
 
   useEffect(() => {
     if (!showConfirm && confirmPassword) {
-      setConfirmPassword('')
+      setConfirmPassword('');
     }
-  }, [showConfirm, confirmPassword, setConfirmPassword])
+  }, [showConfirm, confirmPassword, setConfirmPassword]);
 
   return (
     <>
@@ -158,5 +158,5 @@ export default function SignupForm({
         {isSubmitting ? t('signup.creatingAccount') : t('signup.signUp')}
       </button>
     </>
-  )
+  );
 }

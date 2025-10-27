@@ -1,5 +1,5 @@
-import { useTranslation } from 'react-i18next'
-import { BASE_PATH } from '../../constants/app'
+import { useTranslation } from 'react-i18next';
+import { BASE_PATH } from '../../constants/app';
 
 // OAuth provider configuration
 const oauthProviders = [
@@ -7,7 +7,7 @@ const oauthProviders = [
   { id: 'github', label: 'GitHub', file: 'github.svg', isDisabled: false },
   { id: 'apple', label: 'Apple', file: 'apple.svg', isDisabled: true },
   { id: 'azure', label: 'Microsoft', file: 'microsoft.svg', isDisabled: true }
-]
+];
 
 interface OAuthButtonsProps {
   onProviderClick: (provider: 'github' | 'google' | 'apple' | 'azure') => void
@@ -16,10 +16,10 @@ interface OAuthButtonsProps {
 }
 
 export default function OAuthButtons({ onProviderClick, isSubmitting, layout = 'vertical' }: OAuthButtonsProps) {
-  const { t } = useTranslation()
+  const { t } = useTranslation();
 
   // Filter out disabled providers - don't show them at all
-  const enabledProviders = oauthProviders.filter(p => !p.isDisabled)
+  const enabledProviders = oauthProviders.filter(p => !p.isDisabled);
 
   if (layout === 'icons') {
     return (
@@ -37,7 +37,7 @@ export default function OAuthButtons({ onProviderClick, isSubmitting, layout = '
           </div>
         ))}
       </div>
-    )
+    );
   }
 
   if (layout === 'grid') {
@@ -56,7 +56,7 @@ export default function OAuthButtons({ onProviderClick, isSubmitting, layout = '
           </div>
         ))}
       </div>
-    )
+    );
   }
 
   return (
@@ -74,5 +74,5 @@ export default function OAuthButtons({ onProviderClick, isSubmitting, layout = '
         </button>
       ))}
     </div>
-  )
+  );
 }
