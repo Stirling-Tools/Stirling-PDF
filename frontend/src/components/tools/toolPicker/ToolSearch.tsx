@@ -82,15 +82,17 @@ const ToolSearch = ({
   }, [autoFocus]);
 
   const searchInput = (
-        <TextInput
-          ref={searchRef}
-          value={value}
-          onChange={handleSearchChange}
-          placeholder={placeholder || t("toolPicker.searchPlaceholder", "Search tools...")}
-          icon={hideIcon ? undefined : <LocalIcon icon="search-rounded" width="1.5rem" height="1.5rem" />}
-          autoComplete="off"
-          onFocus={onFocus}
-        />
+      <TextInput
+        id="tool-search-input"
+        name="tool-search-input"
+        ref={searchRef}
+        value={value}
+        onChange={handleSearchChange}
+        placeholder={placeholder || t("toolPicker.searchPlaceholder", "Search tools...")}
+        icon={hideIcon ? undefined : <LocalIcon icon="search-rounded" width="1.5rem" height="1.5rem" />}
+        autoComplete="off"
+        onFocus={onFocus}
+      />
   );
 
   if (mode === "filter") {
