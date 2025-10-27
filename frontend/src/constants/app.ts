@@ -1,10 +1,3 @@
-import { useAppConfig } from '../hooks/useAppConfig';
-
-// Get base URL from app config with fallback
-export const getBaseUrl = (): string => {
-  const { config } = useAppConfig();
-  return config?.baseUrl || 'https://stirling.com';
-};
 
 // Base path from Vite config - build-time constant, normalized (no trailing slash)
 // When no subpath, use empty string instead of '.' to avoid relative path issues

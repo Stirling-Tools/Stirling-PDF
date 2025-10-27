@@ -1,5 +1,5 @@
 import { ToolId } from "src/types/toolId";
-import { ToolRegistryEntry } from "../data/toolsTaxonomy";
+import { ToolRegistryEntry, ToolRegistry } from "../data/toolsTaxonomy";
 import { scoreMatch, minScoreForQuery, normalizeForSearch } from "./fuzzySearch";
 
 export interface RankedToolItem {
@@ -8,7 +8,7 @@ export interface RankedToolItem {
 }
 
 export function filterToolRegistryByQuery(
-  toolRegistry: Record<ToolId, ToolRegistryEntry>,
+  toolRegistry: Partial<ToolRegistry>,
   query: string
 ): RankedToolItem[] {
   const entries = Object.entries(toolRegistry) as [ToolId, ToolRegistryEntry][];
@@ -95,6 +95,4 @@ export function filterToolRegistryByQuery(
   // Fallback: return everything unchanged
   return entries.map(([id, tool]) => ({ item: [id, tool] as [ToolId, ToolRegistryEntry] }));
 }
-
-
 

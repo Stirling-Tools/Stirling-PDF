@@ -20,6 +20,7 @@ import {
 } from './toolWorkflow/toolWorkflowState';
 import type { ToolPanelMode } from '../constants/toolPanel';
 import { usePreferences } from './PreferencesContext';
+import { useToolRegistry } from './ToolRegistryContext';
 
 // State interface
 // Types and reducer/state moved to './toolWorkflow/state'
@@ -116,10 +117,8 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
   const navigationState = useNavigationState();
 
   // Tool management hook
-  const {
-    toolRegistry,
-    getSelectedTool,
-  } = useToolManagement();
+  const { toolRegistry, getSelectedTool } = useToolManagement();
+  const { allTools } = useToolRegistry();
 
   // Tool history hook
   const {
@@ -320,7 +319,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
   // Filter tools based on search query with fuzzy matching (name, description, id, synonyms)
   const filteredTools = useMemo(() => {
     if (!toolRegistry) return [];
-    return filterToolRegistryByQuery(toolRegistry as ToolRegistry, state.searchQuery);
+    return filterToolRegistryByQuery(toolRegistry, state.searchQuery);
   }, [toolRegistry, state.searchQuery]);
 
   const isPanelVisible = useMemo(() =>
@@ -332,7 +331,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     navigationState.selectedTool,
     handleToolSelect,
     handleBackToTools,
-    toolRegistry as ToolRegistry,
+    allTools,
     true
   );
 
