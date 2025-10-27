@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AdjustContrastParameters } from '../../../hooks/tools/adjustContrast/useAdjustContrastParameters';
 import { useThumbnailGeneration } from '../../../hooks/useThumbnailGeneration';
 import ObscuredOverlay from '../../shared/ObscuredOverlay';

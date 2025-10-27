@@ -1,4 +1,3 @@
-import React from 'react';
 import { Slider, Text, Group, NumberInput } from '@mantine/core';
 
 interface Props {

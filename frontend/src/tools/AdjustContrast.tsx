@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { createToolFlow } from '../components/tools/shared/createToolFlow';
 import { BaseToolProps, ToolComponent } from '../types/tool';
 import { useBaseTool } from '../hooks/tools/shared/useBaseTool';

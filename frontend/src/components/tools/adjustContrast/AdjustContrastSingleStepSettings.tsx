@@ -1,4 +1,3 @@
-import React from 'react';
 import { Stack } from '@mantine/core';
 import { AdjustContrastParameters } from '../../../hooks/tools/adjustContrast/useAdjustContrastParameters';
 import AdjustContrastBasicSettings from './AdjustContrastBasicSettings';

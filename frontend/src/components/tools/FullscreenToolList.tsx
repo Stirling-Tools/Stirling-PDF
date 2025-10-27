@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { Text } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { ToolRegistryEntry, getSubcategoryLabel, getSubcategoryColor, getSubcategoryIcon } from '../../data/toolsTaxonomy';
@@ -104,7 +104,7 @@ const FullscreenToolList = ({
       {showRecentFavorites && (
         <>
           {favoriteToolItems.length > 0 && (
-            <section 
+            <section
               className="tool-panel__fullscreen-group tool-panel__fullscreen-group--special"
               style={{
                 borderColor: 'var(--fullscreen-border-favorites)',
@@ -146,7 +146,7 @@ const FullscreenToolList = ({
           )}
 
           {recommendedItems.length > 0 && (
-            <section 
+            <section
               className="tool-panel__fullscreen-group tool-panel__fullscreen-group--special"
               style={{
                 borderColor: 'var(--fullscreen-border-recommended)',
