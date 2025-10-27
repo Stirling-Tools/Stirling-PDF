@@ -2125,6 +2125,75 @@
       "2": "Document 2"
     },
     "submit": "Compare",
+    "review": {
+      "title": "Comparison Result",
+      "actionsHint": "Review the comparison, switch document roles, or export the summary.",
+      "switchOrder": "Switch order",
+      "exportSummary": "Export summary"
+    },
+    "base": {
+      "label": "Base document",
+      "placeholder": "Select a base PDF"
+    },
+    "comparison": {
+      "label": "Comparison document",
+      "placeholder": "Select a comparison PDF"
+    },
+    "addFilesHint": "Add PDFs in the Files step to enable selection.",
+    "noFiles": "No PDFs available yet",
+    "pages": "Pages",
+    "selection": {
+      "title": "Select Base and Comparison"
+    },
+    "swap": "Swap PDFs",
+    "cta": "Compare",
+    "loading": "Comparing...",
+    "upload": {
+      "title": "Set up your comparison",
+      "subtitle": "Add a base document on the left and a comparison document on the right to highlight their differences.",
+      "browse": "Browse files",
+      "selectExisting": "Select existing",
+      "clearSelection": "Clear selection",
+      "instructions": "Drag & drop here or use the buttons to choose a file.",
+      "baseTitle": "Base document",
+      "baseDescription": "This version acts as the reference for differences.",
+      "comparisonTitle": "Comparison document",
+      "comparisonDescription": "Differences from this version will be highlighted."
+    },
+    "summary": {
+      "baseHeading": "Base document",
+      "comparisonHeading": "Comparison document",
+      "pageLabel": "Page"
+    },
+    "dropdown": {
+      "deletions": "Deletions ({{count}})",
+      "additions": "Additions ({{count}})"
+    },
+    "actions": {
+      "stackVertically": "Stack vertically",
+      "placeSideBySide": "Place side by side",
+      "zoomOut": "Zoom out",
+      "zoomIn": "Zoom in",
+      "resetView": "Reset view",
+      "unlinkScrollPan": "Unlink scroll and pan",
+      "linkScrollPan": "Link scroll and pan"
+    },
+    "toasts": {
+      "unlinkedTitle": "Independent scroll & pan enabled",
+      "unlinkedBody": "Tip: Arrow Up/Down scroll both panes; panning only moves the active pane."
+    },
+    "error": {
+      "selectRequired": "Select a base and comparison document.",
+      "filesMissing": "Unable to locate the selected files. Please re-select them.",
+      "generic": "Unable to compare these files."
+    },
+    "status": {
+      "extracting": "Extracting text...",
+      "processing": "Analysing differences...",
+      "complete": "Comparison ready"
+    },
+    "pageCount": "{{count}} pages",
+    "lastModified": "Last modified",
     "newLine": "new-line",
     "complex": {
       "message": "One or both of the provided documents are large files, accuracy of comparison may be reduced"
