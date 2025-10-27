@@ -23,12 +23,22 @@ export const accountService = {
   },
 
   /**
-   * Change user password
+   * Change user password (for regular password changes)
    */
   async changePassword(currentPassword: string, newPassword: string): Promise<void> {
     const formData = new FormData();
     formData.append('currentPassword', currentPassword);
     formData.append('newPassword', newPassword);
     await apiClient.post('/api/v1/user/change-password', formData);
+  },
+
+  /**
+   * Change password on first login (clears the first-use flag)
+   */
+  async changePasswordOnLogin(currentPassword: string, newPassword: string): Promise<void> {
+    const formData = new FormData();
+    formData.append('currentPassword', currentPassword);
+    formData.append('newPassword', newPassword);
+    await apiClient.post('/api/v1/user/change-password-on-login', formData);
   },
 };

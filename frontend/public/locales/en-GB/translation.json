@@ -3060,7 +3060,10 @@
     "magicLinkSent": "Magic link sent to {{email}}! Check your email and click the link to sign in.",
     "passwordResetSent": "Password reset link sent to {{email}}! Check your email and follow the instructions.",
     "failedToSignIn": "Failed to sign in with {{provider}}: {{message}}",
-    "unexpectedError": "Unexpected error: {{message}}"
+    "unexpectedError": "Unexpected error: {{message}}",
+    "accountCreatedSuccess": "Account created successfully! You can now sign in.",
+    "passwordChangedSuccess": "Password changed successfully! Please sign in with your new password.",
+    "credentialsUpdated": "Your credentials have been updated. Please sign in again."
   },
   "signup": {
     "title": "Create an account",
@@ -4474,10 +4477,31 @@
       "directInvite": {
         "tab": "Direct Create"
       },
+      "inviteLinkTab": {
+        "tab": "Invite Link"
+      },
+      "inviteLink": {
+        "description": "Generate a secure link that allows the user to set their own password",
+        "email": "Email Address",
+        "emailRequired": "Email address is required",
+        "emailOptional": "Optional - leave blank for a general invite link",
+        "emailRequiredForSend": "Email address is required to send email notification",
+        "expiryHours": "Expiry Hours",
+        "expiryDescription": "How many hours until the link expires",
+        "sendEmail": "Send invite link via email",
+        "smtpRequired": "SMTP not configured",
+        "generate": "Generate Link",
+        "generated": "Invite Link Generated",
+        "copied": "Link copied to clipboard",
+        "success": "Invite link generated successfully",
+        "successWithEmail": "Invite link generated and sent via email",
+        "emailFailed": "Email failed to send",
+        "error": "Failed to generate invite link"
+      },
       "inviteMode": {
         "username": "Username",
         "email": "Email",
-        "emailDisabled": "Email invites require SMTP configuration and mail.enableInvites=true in settings"
+        "emailDisabled": "SMTP not configured"
       }
     },
     "teams": {
@@ -4580,5 +4604,33 @@
     "passwordMustBeDifferent": "New password must be different from current password",
     "passwordChangedSuccess": "Password changed successfully! Please log in again.",
     "passwordChangeFailed": "Failed to change password. Please check your current password."
+  },
+  "invite": {
+    "welcome": "Welcome to Stirling PDF",
+    "invalidToken": "Invalid invitation link",
+    "validationError": "Failed to validate invitation link",
+    "passwordRequired": "Password is required",
+    "passwordTooShort": "Password must be at least 6 characters",
+    "passwordMismatch": "Passwords do not match",
+    "acceptError": "Failed to create account",
+    "validating": "Validating invitation...",
+    "invalidInvitation": "Invalid Invitation",
+    "goToLogin": "Go to Login",
+    "welcomeTitle": "You've been invited!",
+    "welcomeSubtitle": "Complete your account setup to get started",
+    "accountFor": "Creating account for",
+    "linkExpires": "Link expires",
+    "email": "Email address",
+    "emailPlaceholder": "Enter your email address",
+    "emailRequired": "Email address is required",
+    "invalidEmail": "Invalid email address",
+    "choosePassword": "Choose a password",
+    "passwordPlaceholder": "Enter your password",
+    "confirmPassword": "Confirm password",
+    "confirmPasswordPlaceholder": "Re-enter your password",
+    "createAccount": "Create Account",
+    "creating": "Creating Account...",
+    "alreadyHaveAccount": "Already have an account?",
+    "signIn": "Sign in"
   }
 }

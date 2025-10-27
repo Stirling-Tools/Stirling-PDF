@@ -62,6 +62,35 @@ export interface InviteUsersResponse {
   error?: string;
 }
 
+export interface InviteLinkRequest {
+  email: string;
+  role: string;
+  teamId?: number;
+  expiryHours?: number;
+  sendEmail?: boolean;
+}
+
+export interface InviteLinkResponse {
+  token: string;
+  inviteUrl: string;
+  email: string;
+  expiresAt: string;
+  expiryHours: number;
+  emailSent?: boolean;
+  emailError?: string;
+  error?: string;
+}
+
+export interface InviteToken {
+  id: number;
+  email: string;
+  role: string;
+  teamId?: number;
+  createdBy: string;
+  createdAt: string;
+  expiresAt: string;
+}
+
 /**
  * User Management Service
  * Provides functions to interact with user management backend APIs
@@ -161,6 +190,62 @@ export const userManagementService = {
       } as any
     );
 
+    return response.data;
+  },
+
+  /**
+   * Generate an invite link (admin only)
+   */
+  async generateInviteLink(data: InviteLinkRequest): Promise<InviteLinkResponse> {
+    const formData = new FormData();
+    // Only append email if it's provided and not empty
+    if (data.email && data.email.trim()) {
+      formData.append('email', data.email);
+    }
+    formData.append('role', data.role);
+    if (data.teamId) {
+      formData.append('teamId', data.teamId.toString());
+    }
+    if (data.expiryHours) {
+      formData.append('expiryHours', data.expiryHours.toString());
+    }
+    if (data.sendEmail !== undefined) {
+      formData.append('sendEmail', data.sendEmail.toString());
+    }
+
+    const response = await apiClient.post<InviteLinkResponse>(
+      '/api/v1/invite/generate',
+      formData,
+      {
+        suppressErrorToast: true,
+      } as any
+    );
+
+    return response.data;
+  },
+
+  /**
+   * Get list of active invite links (admin only)
+   */
+  async getInviteLinks(): Promise<InviteToken[]> {
+    const response = await apiClient.get<{ invites: InviteToken[] }>('/api/v1/invite/list');
+    return response.data.invites;
+  },
+
+  /**
+   * Revoke an invite link (admin only)
+   */
+  async revokeInviteLink(inviteId: number): Promise<void> {
+    await apiClient.delete(`/api/v1/invite/revoke/${inviteId}`, {
+      suppressErrorToast: true,
+    } as any);
+  },
+
+  /**
+   * Clean up expired invite links (admin only)
+   */
+  async cleanupExpiredInvites(): Promise<{ deletedCount: number }> {
+    const response = await apiClient.post<{ deletedCount: number }>('/api/v1/invite/cleanup');
     return response.data;
   },
 };

@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { Modal, Stack, Text, PasswordInput, Button, Alert } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import LocalIcon from './LocalIcon';
 import { accountService } from '../../services/accountService';
 import { alert } from '../toast';
 import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from '../../styles/zIndex';
+import { useAuth } from '../../auth/UseSession';
 
 interface FirstLoginModalProps {
   opened: boolean;
@@ -20,6 +22,8 @@ interface FirstLoginModalProps {
  */
 export default function FirstLoginModal({ opened, onPasswordChanged, username }: FirstLoginModalProps) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const { signOut } = useAuth();
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -38,11 +42,6 @@ export default function FirstLoginModal({ opened, onPasswordChanged, username }:
       return;
     }
 
-    if (newPassword.length < 8) {
-      setError(t('firstLogin.passwordTooShort', 'Password must be at least 8 characters'));
-      return;
-    }
-
     if (newPassword === currentPassword) {
       setError(t('firstLogin.passwordMustBeDifferent', 'New password must be different from current password'));
       return;
@@ -52,7 +51,8 @@ export default function FirstLoginModal({ opened, onPasswordChanged, username }:
       setLoading(true);
       setError('');
 
-      await accountService.changePassword(currentPassword, newPassword);
+      // Use changePasswordOnLogin to clear the first-use flag
+      await accountService.changePasswordOnLogin(currentPassword, newPassword);
 
       alert({
         alertType: 'success',
@@ -64,11 +64,9 @@ export default function FirstLoginModal({ opened, onPasswordChanged, username }:
       setNewPassword('');
       setConfirmPassword('');
 
-      // Wait a moment for the user to see the success message
-      // Then the backend will have logged them out, and onPasswordChanged will handle redirect
-      setTimeout(() => {
-        onPasswordChanged();
-      }, 1500);
+      // Backend has logged us out, so clear frontend auth state and redirect to login
+      await signOut();
+      navigate('/login?messageType=passwordChanged');
     } catch (err: any) {
       console.error('Failed to change password:', err);
       setError(
@@ -130,7 +128,7 @@ export default function FirstLoginModal({ opened, onPasswordChanged, username }:
 
         <PasswordInput
           label={t('firstLogin.newPassword', 'New Password')}
-          placeholder={t('firstLogin.enterNewPassword', 'Enter new password (min 8 characters)')}
+          placeholder={t('firstLogin.enterNewPassword', 'Enter new password')}
           value={newPassword}
           onChange={(e) => setNewPassword(e.currentTarget.value)}
           required

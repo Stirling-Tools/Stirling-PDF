@@ -40,8 +40,6 @@ export const useSignupFormValidation = () => {
     // Validate password
     if (!password) {
       fieldErrors.password = t('signup.passwordRequired', 'Password is required')
-    } else if (password.length < 6) {
-      fieldErrors.password = t('signup.passwordTooShort')
     }
 
     // Validate confirm password

@@ -77,10 +77,9 @@ public class UserController {
                         .body(Map.of("error", "Invalid username format"));
             }
 
-            if (usernameAndPass.getPassword() == null
-                    || usernameAndPass.getPassword().length() < 6) {
+            if (usernameAndPass.getPassword() == null || usernameAndPass.getPassword().isEmpty()) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(Map.of("error", "Password must be at least 6 characters"));
+                        .body(Map.of("error", "Password is required"));
             }
 
             Team team = teamRepository.findByName(TeamService.DEFAULT_TEAM_NAME).orElse(null);
@@ -366,10 +365,6 @@ public class UserController {
             if (password == null || password.isBlank()) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(Map.of("error", "Password is required."));
-            }
-            if (password.length() < 6) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(Map.of("error", "Password must be at least 6 characters."));
             }
             userService.saveUser(username, password, effectiveTeamId, role, forceChange);
         }

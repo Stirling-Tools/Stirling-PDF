@@ -241,6 +241,7 @@ public class SecurityConfiguration {
                                                         || trimmedUri.endsWith(".svg")
                                                         || trimmedUri.startsWith("/register")
                                                         || trimmedUri.startsWith("/signup")
+                                                        || trimmedUri.startsWith("/invite")
                                                         || trimmedUri.startsWith("/auth/callback")
                                                         || trimmedUri.startsWith("/error")
                                                         || trimmedUri.startsWith("/images/")
@@ -263,6 +264,10 @@ public class SecurityConfiguration {
                                                         || trimmedUri.startsWith(
                                                                 "/api/v1/auth/refresh")
                                                         || trimmedUri.startsWith("/api/v1/auth/me")
+                                                        || trimmedUri.startsWith(
+                                                                "/api/v1/invite/validate")
+                                                        || trimmedUri.startsWith(
+                                                                "/api/v1/invite/accept")
                                                         || trimmedUri.startsWith("/v1/api-docs")
                                                         || uri.contains("/v1/api-docs");
                                             })

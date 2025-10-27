@@ -20,11 +20,26 @@ import Landing from "./routes/Landing";
 import Login from "./routes/Login";
 import Signup from "./routes/Signup";
 import AuthCallback from "./routes/AuthCallback";
+import InviteAccept from "./routes/InviteAccept";
 
 // Import global styles
 import "./styles/tailwind.css";
-import "./styles/cookieconsent.css";
 import "./index.css";
+
+// Load cookieconsent.css optionally - won't block UI if ad blocker blocks it
+const loadOptionalCSS = () => {
+  const link = document.createElement('link');
+  link.rel = 'stylesheet';
+  link.href = '/src/styles/cookieconsent.css';
+  link.onerror = () => {
+    console.debug('Cookie consent styles blocked by ad blocker - continuing without them');
+  };
+  document.head.appendChild(link);
+};
+// Load it once when app initializes
+if (typeof document !== 'undefined') {
+  loadOptionalCSS();
+}
 import { RightRailProvider } from "./contexts/RightRailContext";
 import { ViewerProvider } from "./contexts/ViewerContext";
 import { SignatureProvider } from "./contexts/SignatureContext";
@@ -59,6 +74,7 @@ export default function App() {
                 {/* Auth routes - no FileContext or other providers needed */}
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<Signup />} />
+                <Route path="/invite" element={<InviteAccept />} />
                 <Route path="/auth/callback" element={<AuthCallback />} />
 
                 {/* Main app routes - wrapped with all providers */}

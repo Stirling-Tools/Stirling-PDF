@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { springAuth } from '../auth/springAuthClient'
 import { useAuth } from '../auth/UseSession'
 import { useTranslation } from 'react-i18next'
@@ -17,26 +17,42 @@ import { BASE_PATH } from '../constants/app'
 
 export default function Login() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const { session, loading } = useAuth()
   const { t } = useTranslation()
   const [isSigningIn, setIsSigningIn] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [showEmailForm, setShowEmailForm] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
 
-  // Prefill email from query param (e.g. after password reset)
+  // Handle query params (email prefill and success messages)
   useEffect(() => {
     try {
-      const url = new URL(window.location.href)
-      const emailFromQuery = url.searchParams.get('email')
+      const emailFromQuery = searchParams.get('email')
       if (emailFromQuery) {
         setEmail(emailFromQuery)
+      }
+
+      const messageType = searchParams.get('messageType')
+      if (messageType) {
+        switch (messageType) {
+          case 'accountCreated':
+            setSuccessMessage(t('login.accountCreatedSuccess', 'Account created successfully! You can now sign in.'))
+            break
+          case 'passwordChanged':
+            setSuccessMessage(t('login.passwordChangedSuccess', 'Password changed successfully! Please sign in with your new password.'))
+            break
+          case 'credsUpdated':
+            setSuccessMessage(t('login.credentialsUpdated', 'Your credentials have been updated. Please sign in again.'))
+            break
+        }
       }
     } catch (_) {
       // ignore
     }
-  }, [])
+  }, [searchParams, t])
 
   const baseUrl = window.location.origin + BASE_PATH;
 
@@ -120,6 +136,22 @@ export default function Login() {
   return (
     <AuthLayout>
       <LoginHeader title={t('login.login') || 'Sign in'} />
+
+      {/* Success message */}
+      {successMessage && (
+        <div style={{
+          padding: '1rem',
+          marginBottom: '1rem',
+          backgroundColor: 'rgba(34, 197, 94, 0.1)',
+          border: '1px solid rgba(34, 197, 94, 0.3)',
+          borderRadius: '0.5rem',
+          color: '#16a34a'
+        }}>
+          <p style={{ margin: 0, fontSize: '0.875rem', textAlign: 'center' }}>
+            {successMessage}
+          </p>
+        </div>
+      )}
 
       <ErrorMessage error={error} />
 

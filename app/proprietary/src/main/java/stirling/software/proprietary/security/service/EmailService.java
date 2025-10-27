@@ -158,4 +158,57 @@ public class EmailService {
 
         sendPlainEmail(to, subject, body, true);
     }
+
+    /**
+     * Sends an invitation link email to a new user.
+     *
+     * @param to The recipient email address
+     * @param inviteUrl The full URL for accepting the invite
+     * @param expiresAt The expiration timestamp
+     * @throws MessagingException If there is an issue with creating or sending the email.
+     */
+    @Async
+    public void sendInviteLinkEmail(String to, String inviteUrl, String expiresAt)
+            throws MessagingException {
+        String subject = "You've been invited to Stirling PDF";
+
+        String body =
+                String.format(
+                        "<html><body style=\"margin: 0; padding: 0;\">"
+                                + "<div style=\"font-family: Arial, sans-serif; background-color: #f8f9fa; padding: 20px;\">"
+                                + "  <div style=\"max-width: 600px; margin: auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; border: 1px solid #e0e0e0;\">"
+                                + "    <!-- Logo -->"
+                                + "    <div style=\"text-align: center; padding: 20px; background-color: #222;\">"
+                                + "      <img src=\"https://raw.githubusercontent.com/Stirling-Tools/Stirling-PDF/main/docs/stirling-transparent.svg\" alt=\"Stirling PDF\" style=\"max-height: 60px;\">"
+                                + "    </div>"
+                                + "    <!-- Content -->"
+                                + "    <div style=\"padding: 30px; color: #333;\">"
+                                + "      <h2 style=\"color: #222; margin-top: 0;\">Welcome to Stirling PDF!</h2>"
+                                + "      <p>Hi there,</p>"
+                                + "      <p>You have been invited to join the Stirling PDF workspace. Click the button below to set up your account:</p>"
+                                + "      <!-- CTA Button -->"
+                                + "      <div style=\"text-align: center; margin: 30px 0;\">"
+                                + "        <a href=\"%s\" style=\"display: inline-block; background-color: #007bff; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 5px; font-weight: bold;\">Accept Invitation</a>"
+                                + "      </div>"
+                                + "      <p style=\"font-size: 14px; color: #666;\">Or copy and paste this link in your browser:</p>"
+                                + "      <div style=\"background-color: #f8f9fa; padding: 12px; margin: 15px 0; border-radius: 4px; word-break: break-all; font-size: 13px; color: #555;\">"
+                                + "        %s"
+                                + "      </div>"
+                                + "      <div style=\"background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 4px;\">"
+                                + "        <p style=\"margin: 0; color: #856404; font-size: 14px;\"><strong>⚠️ Important:</strong> This invitation link will expire on %s. Please complete your registration before then.</p>"
+                                + "      </div>"
+                                + "      <p>If you didn't expect this invitation, you can safely ignore this email.</p>"
+                                + "      <p style=\"margin-bottom: 0;\">— The Stirling PDF Team</p>"
+                                + "    </div>"
+                                + "    <!-- Footer -->"
+                                + "    <div style=\"text-align: center; padding: 15px; font-size: 12px; color: #777; background-color: #f0f0f0;\">"
+                                + "      &copy; 2025 Stirling PDF. All rights reserved."
+                                + "    </div>"
+                                + "  </div>"
+                                + "</div>"
+                                + "</body></html>",
+                        inviteUrl, inviteUrl, expiresAt);
+
+        sendPlainEmail(to, subject, body, true);
+    }
 }

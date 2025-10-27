@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { alert } from '../../toast';
+import apiClient from '../../../services/apiClient';
 
 export function useRestartServer() {
   const { t } = useTranslation();
@@ -27,18 +28,12 @@ export function useRestartServer() {
         ),
       });
 
-      const response = await fetch('/api/v1/admin/settings/restart', {
-        method: 'POST',
-      });
+      await apiClient.post('/api/v1/admin/settings/restart');
 
-      if (response.ok) {
-        // Wait a moment then reload the page
-        setTimeout(() => {
-          window.location.reload();
-        }, 3000);
-      } else {
-        throw new Error('Failed to restart');
-      }
+      // Wait a moment then reload the page
+      setTimeout(() => {
+        window.location.reload();
+      }, 3000);
     } catch (_error) {
       alert({
         alertType: 'error',
