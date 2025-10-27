@@ -110,20 +110,20 @@ export default defineConfig(
     },
     rules: {
       // Enabled rules
-      'react-hooks/exhaustive-deps': 'warn',
-      'react-hooks/rules-of-hooks': 'warn',
-      'react/display-name': 'warn',
-      'react/no-children-prop': 'warn',
-      'react/prop-types': 'warn',
-      'react/no-unescaped-entities': 'warn',
+      'react-hooks/exhaustive-deps': 'error',
+      'react-hooks/rules-of-hooks': 'error',
+      'react/display-name': 'error',
+      'react/no-children-prop': 'error',
+      'react/prop-types': 'error',
+      'react/no-unescaped-entities': 'error',
 
-      '@typescript-eslint/require-await': 'warn',
-      '@typescript-eslint/no-unnecessary-type-assertion': 'warn',
-      '@typescript-eslint/prefer-regexp-exec': 'warn',
-      '@typescript-eslint/prefer-includes': 'warn',
-      '@typescript-eslint/consistent-indexed-object-style': 'warn',
-      '@typescript-eslint/class-literal-property-style': 'warn',
-      '@typescript-eslint/consistent-type-definitions': 'warn',
+      '@typescript-eslint/require-await': 'error',
+      '@typescript-eslint/no-unnecessary-type-assertion': 'error',
+      '@typescript-eslint/prefer-regexp-exec': 'error',
+      '@typescript-eslint/prefer-includes': 'error',
+      '@typescript-eslint/consistent-indexed-object-style': 'error',
+      '@typescript-eslint/class-literal-property-style': 'error',
+      '@typescript-eslint/consistent-type-definitions': 'error',
       "@typescript-eslint/no-empty-object-type": [
         "error",
         {
@@ -131,10 +131,10 @@ export default defineConfig(
           allowInterfaces: 'with-single-extends',
         },
       ],
-      "@typescript-eslint/no-explicit-any": "off", // Temporarily disabled until codebase conformant
-      "@typescript-eslint/no-require-imports": "warn", // Temporarily disabled until codebase conformant
+      "@typescript-eslint/no-explicit-any": "error",
+      "@typescript-eslint/no-require-imports": "error",
       "@typescript-eslint/no-unused-vars": [
-        "warn",
+        "error",
         {
           args: 'all', // All function args must be used (or explicitly ignored)
           argsIgnorePattern: '^_', // Allow unused variables beginning with an underscore
@@ -145,7 +145,7 @@ export default defineConfig(
           ignoreRestSiblings: true, // Allow unused variables when removing attributes from objects (otherwise this requires explicit renaming like `({ x: _x, ...y }) => y`, which is clunky)
         },
       ],
-      "no-redeclare": "warn", // Disallow variable redeclaration
+      "no-redeclare": "error",
 
       // Disabled rules (too restrictive or not useful for this codebase)
       'react/react-in-jsx-scope': 'off', // Not needed with React 17+
@@ -162,20 +162,20 @@ export default defineConfig(
       '@typescript-eslint/array-type': 'off', // see: https://github.com/Stirling-Tools/Stirling-PDF/pull/4521#issuecomment-3346477814
 
       // Should be checked
-      "@typescript-eslint/no-inferrable-types": "off",
-      '@typescript-eslint/await-thenable': 'off',
-      '@typescript-eslint/no-unsafe-assignment': 'off',
-      '@typescript-eslint/no-unsafe-return': 'off',
-      '@typescript-eslint/no-unsafe-call': 'off',
-      '@typescript-eslint/no-unsafe-member-access': 'off',
-      '@typescript-eslint/no-unsafe-arguments': 'off',
-      '@typescript-eslint/no-unsafe-argument': 'off',
-      '@typescript-eslint/only-throw-error': 'off',
-      '@typescript-eslint/no-floating-promises': 'off',
-      '@typescript-eslint/prefer-promise-reject-errors': 'off',
-      '@typescript-eslint/prefer-optional-chain': 'off',
-      '@typescript-eslint/no-base-to-string': 'off',
-      '@typescript-eslint/no-misused-promises': 'off',
+      "@typescript-eslint/no-inferrable-types": "error",
+      '@typescript-eslint/await-thenable': 'error',
+      '@typescript-eslint/no-unsafe-assignment': 'error',
+      '@typescript-eslint/no-unsafe-return': 'error',
+      '@typescript-eslint/no-unsafe-call': 'error',
+      '@typescript-eslint/no-unsafe-member-access': 'error',
+      '@typescript-eslint/no-unsafe-arguments': 'error',
+      '@typescript-eslint/no-unsafe-argument': 'error',
+      '@typescript-eslint/only-throw-error': 'error',
+      '@typescript-eslint/no-floating-promises': 'error',
+      '@typescript-eslint/prefer-promise-reject-errors': 'error',
+      '@typescript-eslint/prefer-optional-chain': 'error',
+      '@typescript-eslint/no-base-to-string': 'error',
+      '@typescript-eslint/no-misused-promises': 'error',
     },
   },
   {
@@ -228,7 +228,7 @@ export default defineConfig(
     },
     settings: { react: { version: 'detect' } },
     rules: {
-      'no-unused-vars': 'warn',
+      'no-unused-vars': 'error',
       'no-console': 'error',
       'react/jsx-uses-react': 'error',
       'react/jsx-uses-vars': 'error',
