@@ -1,28 +1,28 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { useTranslation } from 'react-i18next'
-import { useDocumentMeta } from '../hooks/useDocumentMeta'
-import AuthLayout from './authShared/AuthLayout'
-import './authShared/auth.css'
-import { BASE_PATH } from '../constants/app'
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { useDocumentMeta } from '../hooks/useDocumentMeta';
+import AuthLayout from './authShared/AuthLayout';
+import './authShared/auth.css';
+import { BASE_PATH } from '../constants/app';
 
 // Import signup components
-import LoginHeader from './login/LoginHeader'
-import ErrorMessage from './login/ErrorMessage'
-import DividerWithText from '../components/shared/DividerWithText'
-import SignupForm from './signup/SignupForm'
-import { useSignupFormValidation, SignupFieldErrors } from './signup/SignupFormValidation'
-import { useAuthService } from './signup/AuthService'
+import LoginHeader from './login/LoginHeader';
+import ErrorMessage from './login/ErrorMessage';
+import DividerWithText from '../components/shared/DividerWithText';
+import SignupForm from './signup/SignupForm';
+import { useSignupFormValidation, SignupFieldErrors } from './signup/SignupFormValidation';
+import { useAuthService } from './signup/AuthService';
 
 export default function Signup() {
-  const navigate = useNavigate()
-  const { t } = useTranslation()
-  const [isSigningUp, setIsSigningUp] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [fieldErrors, setFieldErrors] = useState<SignupFieldErrors>({})
+  const navigate = useNavigate();
+  const { t } = useTranslation();
+  const [isSigningUp, setIsSigningUp] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<SignupFieldErrors>({});
 
   const baseUrl = window.location.origin + BASE_PATH;
 
@@ -34,38 +34,38 @@ export default function Signup() {
     ogDescription: t('app.description', 'The Free Adobe Acrobat alternative (10M+ Downloads)'),
     ogImage: `${baseUrl}/og_images/home.png`,
     ogUrl: `${window.location.origin}${window.location.pathname}`
-  })
+  });
 
-  const { validateSignupForm } = useSignupFormValidation()
-  const { signUp } = useAuthService()
+  const { validateSignupForm } = useSignupFormValidation();
+  const { signUp } = useAuthService();
 
   const handleSignUp = async () => {
-    const validation = validateSignupForm(email, password, confirmPassword)
+    const validation = validateSignupForm(email, password, confirmPassword);
     if (!validation.isValid) {
-      setError(validation.error)
-      setFieldErrors(validation.fieldErrors || {})
-      return
+      setError(validation.error);
+      setFieldErrors(validation.fieldErrors || {});
+      return;
     }
 
     try {
-      setIsSigningUp(true)
-      setError(null)
-      setFieldErrors({})
+      setIsSigningUp(true);
+      setError(null);
+      setFieldErrors({});
 
-      const result = await signUp(email, password, '')
+      const result = await signUp(email, password, '');
 
       if (result.user) {
         // Show success message and redirect to login
-        setError(null)
-        setTimeout(() => navigate('/login'), 2000)
+        setError(null);
+        setTimeout(() => navigate('/login'), 2000);
       }
     } catch (err) {
-      console.error('[Signup] Unexpected error:', err)
-      setError(err instanceof Error ? err.message : t('signup.unexpectedError', { message: 'Unknown error' }))
+      console.error('[Signup] Unexpected error:', err);
+      setError(err instanceof Error ? err.message : t('signup.unexpectedError', { message: 'Unknown error' }));
     } finally {
-      setIsSigningUp(false)
+      setIsSigningUp(false);
     }
-  }
+  };
 
   return (
     <AuthLayout>
@@ -101,5 +101,5 @@ export default function Signup() {
         </button>
       </div>
     </AuthLayout>
-  )
+  );
 }
