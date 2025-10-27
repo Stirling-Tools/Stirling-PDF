@@ -25,17 +25,17 @@ export const FileDropdownMenu: React.FC<FileDropdownMenuProps> = ({
   return (
     <Menu trigger="click" position="bottom" width="30rem">
       <Menu.Target>
-        <div style={{...viewOptionStyle, cursor: 'pointer'}}>
+        <div className="ph-no-capture" style={{...viewOptionStyle, cursor: 'pointer'}}>
           {switchingTo === "viewer" ? (
             <Loader size="xs" />
           ) : (
             <VisibilityIcon fontSize="small" />
           )}
-          <FitText text={displayName} fontSize={14} minimumFontScale={0.6} />
+          <FitText className="ph-no-capture" text={displayName} fontSize={14} minimumFontScale={0.6} />
           <KeyboardArrowDownIcon fontSize="small" />
         </div>
       </Menu.Target>
-      <Menu.Dropdown style={{
+      <Menu.Dropdown className="ph-no-capture" style={{
         backgroundColor: 'var(--right-rail-bg)',
         border: '1px solid var(--border-subtle)',
         borderRadius: '8px',
@@ -53,7 +53,7 @@ export const FileDropdownMenu: React.FC<FileDropdownMenuProps> = ({
                 e.stopPropagation();
                 onFileSelect?.(index);
               }}
-              className="viewer-file-tab"
+              className="viewer-file-tab ph-no-capture"
               {...(isActive && { 'data-active': true })}
               style={{
                 justifyContent: 'flex-start',
@@ -61,10 +61,10 @@ export const FileDropdownMenu: React.FC<FileDropdownMenuProps> = ({
             >
               <Group gap="xs" style={{ width: '100%', justifyContent: 'space-between' }}>
                 <div style={{ flex: 1, textAlign: 'left', minWidth: 0 }}>
-                  <FitText text={itemName} fontSize={14} minimumFontScale={0.7} />
+                  <FitText className="ph-no-capture" text={itemName} fontSize={14} minimumFontScale={0.7} />
                 </div>
                 {file.versionNumber && file.versionNumber > 1 && (
-                  <Text size="xs" c="dimmed">
+                  <Text size="xs" c="dimmed" className="ph-no-capture">
                     v{file.versionNumber}
                   </Text>
                 )}

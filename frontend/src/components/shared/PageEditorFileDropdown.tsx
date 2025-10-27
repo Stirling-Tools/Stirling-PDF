@@ -222,10 +222,10 @@ const FileMenuItem: React.FC<FileMenuItemProps> = ({
             size="sm"
           />
           <div style={{ flex: 1, textAlign: 'left', minWidth: 0 }}>
-            <FitText text={itemName} fontSize={14} minimumFontScale={0.7} />
+            <FitText className="ph-no-capture" text={itemName} fontSize={14} minimumFontScale={0.7} />
           </div>
           {file.versionNumber && file.versionNumber > 1 && (
-            <Text size="xs" c="dimmed">
+            <Text size="xs" c="dimmed" className="ph-no-capture">
               v{file.versionNumber}
             </Text>
           )}
@@ -261,17 +261,17 @@ export const PageEditorFileDropdown: React.FC<PageEditorFileDropdownProps> = ({
   return (
     <Menu trigger="click" position="bottom" width="40rem">
       <Menu.Target>
-        <div style={{...viewOptionStyle, cursor: 'pointer'}}>
+        <div className="ph-no-capture" style={{...viewOptionStyle, cursor: 'pointer'}}>
           {switchingTo === "pageEditor" ? (
             <Loader size="xs" />
           ) : (
             <LocalIcon icon="dashboard-customize-rounded" width="1.4rem" height="1.4rem" />
           )}
-          <span>{selectedCount}/{totalCount} files selected</span>
+          <span className="ph-no-capture">{selectedCount}/{totalCount} files selected</span>
           <KeyboardArrowDownIcon fontSize="small" />
         </div>
       </Menu.Target>
-      <Menu.Dropdown style={{
+      <Menu.Dropdown className="ph-no-capture" style={{
         backgroundColor: 'var(--right-rail-bg)',
         border: '1px solid var(--border-subtle)',
         borderRadius: '8px',
@@ -317,7 +317,7 @@ export const PageEditorFileDropdown: React.FC<PageEditorFileDropdownProps> = ({
         >
           <Group gap="xs" style={{ width: '100%' }}>
             <AddIcon fontSize="small" style={{ color: 'var(--mantine-color-text)' }} />
-            <Text size="sm" fw={500} style={{ color: 'var(--mantine-color-text)' }}>
+            <Text size="sm" fw={500} style={{ color: 'var(--mantine-color-text)' }} className="ph-no-capture">
               Add File
             </Text>
           </Group>
