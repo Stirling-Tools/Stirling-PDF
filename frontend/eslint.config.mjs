@@ -77,13 +77,12 @@ export default defineConfig(
       }
     }
   },
-  // Config for import plugin (rules only; do not override parser)
+  // Config for import plugin
   {
-    plugins: {
-      import: importPlugin,
-    },
+    ...importPlugin.flatConfigs.recommended,
+    ...importPlugin.flatConfigs.typescript,
     rules: {
-      // Include TypeScript-aware import rules; omit base recommended to reduce churn
+      // ...importPlugin.flatConfigs.recommended.rules, // Temporarily disabled until codebase conformant
       ...importPlugin.flatConfigs.typescript.rules,
       'import/no-cycle': 'error',
     },
@@ -93,13 +92,6 @@ export default defineConfig(
           project: './tsconfig.json',
         },
       },
-    },
-  },
-  // Ensure TS parser for TS/TSX files (in case later configs override parser)
-  {
-    files: ['**/*.{ts,tsx}'],
-    languageOptions: {
-      parser: tseslint.parser,
     },
   },
 );

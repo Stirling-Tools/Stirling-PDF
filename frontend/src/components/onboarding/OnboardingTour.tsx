@@ -1,5 +1,9 @@
 import React from "react";
-import { TourProvider, useTour, type StepType } from '@reactour/tour';
+import {
+  TourProvider,
+  useTour,
+  type StepType
+} from '@reactour/tour';
 import { useOnboarding } from '../../contexts/OnboardingContext';
 import { useTranslation } from 'react-i18next';
 import { CloseButton, ActionIcon } from '@mantine/core';
@@ -250,14 +254,14 @@ export default function OnboardingTour() {
           e.stopPropagation();
           advanceTour(clickProps);
         }}
-        keyboardHandler={(e, clickProps, status) => {
+        keyboardHandler={(e, clickProps) => {
           // Handle right arrow key to advance tour
-          if (e.key === 'ArrowRight' && !status?.isRightDisabled && clickProps) {
+          if (e.key === 'ArrowRight' && clickProps) {
             e.preventDefault();
             advanceTour(clickProps);
           }
           // Handle escape key to close tour
-          else if (e.key === 'Escape' && !status?.isEscDisabled && clickProps) {
+          else if (e.key === 'Escape' && clickProps) {
             e.preventDefault();
             handleCloseTour(clickProps);
           }
