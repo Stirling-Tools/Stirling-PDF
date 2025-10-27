@@ -1,6 +1,6 @@
 import React from 'react';
 import { Stack, Text, Code, Group, Badge, Alert, Loader, Button } from '@mantine/core';
-import { useAppConfig } from '../../../../hooks/useAppConfig';
+import { useAppConfig } from '../../../../contexts/AppConfigContext';
 import { useAuth } from '../../../../auth/UseSession';
 import { useNavigate } from 'react-router-dom';
 

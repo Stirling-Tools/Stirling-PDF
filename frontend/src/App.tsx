@@ -9,10 +9,12 @@ import { ToolWorkflowProvider } from "./contexts/ToolWorkflowContext";
 import { HotkeyProvider } from "./contexts/HotkeyContext";
 import { SidebarProvider } from "./contexts/SidebarContext";
 import { PreferencesProvider } from "./contexts/PreferencesContext";
+import { AppConfigProvider } from "./contexts/AppConfigContext";
 import { OnboardingProvider } from "./contexts/OnboardingContext";
 import { TourOrchestrationProvider } from "./contexts/TourOrchestrationContext";
 import ErrorBoundary from "./components/shared/ErrorBoundary";
 import OnboardingTour from "./components/onboarding/OnboardingTour";
+import { useScarfTracking } from "./hooks/useScarfTracking";
 
 // Import auth components
 import { AuthProvider } from "./auth/UseSession";
@@ -48,6 +50,12 @@ const LoadingFallback = () => (
   </div>
 );
 
+// Component to initialize scarf tracking (must be inside AppConfigProvider)
+function ScarfTrackingInitializer() {
+  useScarfTracking();
+  return null;
+}
+
 export default function App() {
   return (
     <Suspense fallback={<LoadingFallback />}>
@@ -66,30 +74,33 @@ export default function App() {
                   path="/*"
                   element={
                     <OnboardingProvider>
-                      <FileContextProvider enableUrlSync={true} enablePersistence={true}>
-                        <ToolRegistryProvider>
-                          <NavigationProvider>
-                            <FilesModalProvider>
-                              <ToolWorkflowProvider>
-                                <HotkeyProvider>
-                                  <SidebarProvider>
-                                    <ViewerProvider>
-                                      <SignatureProvider>
-                                        <RightRailProvider>
-                                          <TourOrchestrationProvider>
-                                            <Landing />
-                                            <OnboardingTour />
-                                          </TourOrchestrationProvider>
-                                        </RightRailProvider>
-                                        </SignatureProvider>
-                                      </ViewerProvider>
-                                    </SidebarProvider>
-                                  </HotkeyProvider>
-                                </ToolWorkflowProvider>
-                              </FilesModalProvider>
-                            </NavigationProvider>
-                          </ToolRegistryProvider>
-                        </FileContextProvider>
+                      <AppConfigProvider>
+                        <ScarfTrackingInitializer />
+                          <FileContextProvider enableUrlSync={true} enablePersistence={true}>
+                            <ToolRegistryProvider>
+                              <NavigationProvider>
+                                <FilesModalProvider>
+                                  <ToolWorkflowProvider>
+                                    <HotkeyProvider>
+                                      <SidebarProvider>
+                                        <ViewerProvider>
+                                          <SignatureProvider>
+                                            <RightRailProvider>
+                                              <TourOrchestrationProvider>
+                                                <Landing />
+                                                <OnboardingTour />
+                                              </TourOrchestrationProvider>
+                                            </RightRailProvider>
+                                            </SignatureProvider>
+                                          </ViewerProvider>
+                                        </SidebarProvider>
+                                      </HotkeyProvider>
+                                    </ToolWorkflowProvider>
+                                  </FilesModalProvider>
+                                </NavigationProvider>
+                              </ToolRegistryProvider>
+                            </FileContextProvider>
+                          </AppConfigProvider>
                       </OnboardingProvider>
                   }
                 />
