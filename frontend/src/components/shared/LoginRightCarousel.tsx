@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { BASE_PATH } from '../../constants/app';
 
 type ImageSlide = { src: string; alt?: string; cornerModelUrl?: string; title?: string; subtitle?: string; followMouseTilt?: boolean; tiltMaxDeg?: number }
@@ -14,53 +14,53 @@ export default function LoginRightCarousel({
   initialSeconds?: number
   slideSeconds?: number
 }) {
-  const totalSlides = imageSlides.length
-  const [index, setIndex] = useState(0)
-  const mouse = useRef({ x: 0, y: 0 })
+  const totalSlides = imageSlides.length;
+  const [index, setIndex] = useState(0);
+  const mouse = useRef({ x: 0, y: 0 });
 
   const durationsMs = useMemo(() => {
-    if (imageSlides.length === 0) return []
-    return imageSlides.map((_, i) => (i === 0 ? (initialSeconds ?? slideSeconds) : slideSeconds) * 1000)
-  }, [imageSlides, initialSeconds, slideSeconds])
+    if (imageSlides.length === 0) return [];
+    return imageSlides.map((_, i) => (i === 0 ? (initialSeconds ?? slideSeconds) : slideSeconds) * 1000);
+  }, [imageSlides, initialSeconds, slideSeconds]);
 
   useEffect(() => {
-    if (totalSlides <= 1) return
+    if (totalSlides <= 1) return;
     const timeout = setTimeout(() => {
-      setIndex((i) => (i + 1) % totalSlides)
-    }, durationsMs[index] ?? slideSeconds * 1000)
-    return () => clearTimeout(timeout)
-  }, [index, totalSlides, durationsMs, slideSeconds])
+      setIndex((i) => (i + 1) % totalSlides);
+    }, durationsMs[index] ?? slideSeconds * 1000);
+    return () => clearTimeout(timeout);
+  }, [index, totalSlides, durationsMs, slideSeconds]);
 
   useEffect(() => {
     const onMove = (e: MouseEvent) => {
-      mouse.current.x = (e.clientX / window.innerWidth) * 2 - 1
-      mouse.current.y = (e.clientY / window.innerHeight) * 2 - 1
-    }
-    window.addEventListener('mousemove', onMove)
-    return () => window.removeEventListener('mousemove', onMove)
-  }, [])
+      mouse.current.x = (e.clientX / window.innerWidth) * 2 - 1;
+      mouse.current.y = (e.clientY / window.innerHeight) * 2 - 1;
+    };
+    window.addEventListener('mousemove', onMove);
+    return () => window.removeEventListener('mousemove', onMove);
+  }, []);
 
   function TiltImage({ src, alt, enabled, maxDeg = 6 }: { src: string; alt?: string; enabled: boolean; maxDeg?: number }) {
-    const imgRef = useRef<HTMLImageElement | null>(null)
+    const imgRef = useRef<HTMLImageElement | null>(null);
 
     useEffect(() => {
-      const el = imgRef.current
-      if (!el) return
+      const el = imgRef.current;
+      if (!el) return;
 
-      let raf = 0
+      let raf = 0;
       const tick = () => {
         if (enabled) {
-          const rotY = (mouse.current.x || 0) * maxDeg
-          const rotX = -(mouse.current.y || 0) * maxDeg
-          el.style.transform = `translateY(-2rem) rotateX(${rotX.toFixed(2)}deg) rotateY(${rotY.toFixed(2)}deg)`
+          const rotY = (mouse.current.x || 0) * maxDeg;
+          const rotX = -(mouse.current.y || 0) * maxDeg;
+          el.style.transform = `translateY(-2rem) rotateX(${rotX.toFixed(2)}deg) rotateY(${rotY.toFixed(2)}deg)`;
         } else {
-          el.style.transform = 'translateY(-2rem)'
+          el.style.transform = 'translateY(-2rem)';
         }
-        raf = requestAnimationFrame(tick)
-      }
-      raf = requestAnimationFrame(tick)
-      return () => cancelAnimationFrame(raf)
-    }, [enabled, maxDeg])
+        raf = requestAnimationFrame(tick);
+      };
+      raf = requestAnimationFrame(tick);
+      return () => cancelAnimationFrame(raf);
+    }, [enabled, maxDeg]);
 
     return (
       <img
@@ -79,7 +79,7 @@ export default function LoginRightCarousel({
           transformOrigin: '50% 50%',
         }}
       />
-    )
+    );
   }
 
   return (
@@ -155,5 +155,5 @@ export default function LoginRightCarousel({
         ))}
       </div>
     </div>
-  )
+  );
 }
