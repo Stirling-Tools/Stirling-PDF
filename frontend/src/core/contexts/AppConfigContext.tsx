@@ -42,13 +42,13 @@ interface AppConfigContextValue {
   refetch: () => Promise<void>;
 }
 
-// Create context
 const AppConfigContext = createContext<AppConfigContextValue | undefined>({
   config: null,
   loading: true,
   error: null,
   refetch: async () => {},
 });
+
 /**
  * Provider component that fetches and provides app configuration
  * Should be placed at the top level of the app, before any components that need config
@@ -99,7 +99,7 @@ export const AppConfigProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       }
 
       const data: AppConfig = await response.json();
-      console.debug('[AppConfigContext] Config fetched successfully:', data);
+      console.debug('[AppConfig] Config fetched successfully:', data);
       setConfig(data);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
