@@ -73,6 +73,8 @@ const PageEditor = ({
   const filesSignature = selectors.getFilesSignature();
 
   const fileObjectsRef = useRef(new Map<FileId, any>());
+  const pagePositionCacheRef = useRef<Map<string, number>>(new Map());
+  const pageNeighborCacheRef = useRef<Map<string, string | null>>(new Map());
 
   const pageEditorFiles = useMemo(() => {
     const cache = fileObjectsRef.current;
@@ -171,6 +173,17 @@ const PageEditor = ({
     }
   }, [reorderedPages, editedDocument, clearReorderedPages]);
 
+  useEffect(() => {
+    if (!editedDocument) return;
+    const positionCache = pagePositionCacheRef.current;
+    const neighborCache = pageNeighborCacheRef.current;
+    const pages = editedDocument.pages;
+    pages.forEach((page, index) => {
+      positionCache.set(page.id, index);
+      neighborCache.set(page.id, index > 0 ? pages[index - 1].id : null);
+    });
+  }, [editedDocument]);
+
   // Live delta sync: reflect external add/remove without touching existing order
   useEffect(() => {
     if (!mergedPdfDocument || !editedDocument) return;
@@ -180,19 +193,15 @@ const PageEditor = ({
 
     // Group new pages by file (preserve within-file order from source)
     const prevIds = new Set(editedDocument.pages.map(p => p.id));
-    const newByFile = new Map<FileId, typeof sourcePages>();
+    const newPages: PDFPage[] = [];
     for (const p of sourcePages) {
       if (!prevIds.has(p.id)) {
-        const fileId = p.originalFileId;
-        if (!fileId) continue;
-        const list = newByFile.get(fileId) ?? [];
-        list.push(p);
-        newByFile.set(fileId, list);
+        newPages.push(p);
       }
     }
 
     // Fast check: changes exist?
-    const hasAdditions = newByFile.size > 0;
+    const hasAdditions = newPages.length > 0;
     let hasRemovals = false;
     for (const p of editedDocument.pages) {
       if (!sourceIds.has(p.id)) {
@@ -207,6 +216,17 @@ const PageEditor = ({
       if (!prev) return prev;
       let pages = [...prev.pages];
 
+      // Capture placeholder positions before they are removed so we can restore files without disrupting current order
+      const placeholderPositions = new Map<FileId, number>();
+      pages.forEach((page, index) => {
+        if (page.isPlaceholder && page.originalFileId) {
+          placeholderPositions.set(page.originalFileId, index);
+        }
+      });
+
+      // Track next insertion index per file when replacing placeholders
+      const nextInsertIndexByFile = new Map(placeholderPositions);
+
       // Remove pages that no longer exist in source
       if (hasRemovals) {
         pages = pages.filter(p => sourceIds.has(p.id));
@@ -214,18 +234,53 @@ const PageEditor = ({
 
       // Insert new pages while preserving current interleaving
       if (hasAdditions) {
-        // Rebuild pages array respecting the order from mergedPdfDocument
-        // This handles file selection/deselection correctly (placeholder positioning)
-        const mergedOrder = mergedPdfDocument.pages.map(p => p.id);
-        const pageById = new Map(pages.map(p => [p.id, p]));
+        const mergedIndexMap = new Map<string, number>();
+        sourcePages.forEach((page, index) => mergedIndexMap.set(page.id, index));
 
-        // Add new pages to the map
-        for (const [, additions] of newByFile) {
-          additions.forEach(p => pageById.set(p.id, p));
-        }
+        const additions = newPages
+          .map(page => ({
+            page,
+            cachedIndex: pagePositionCacheRef.current.get(page.id),
+            mergedIndex: mergedIndexMap.get(page.id) ?? sourcePages.length,
+            neighborId: pageNeighborCacheRef.current.get(page.id)
+          }))
+          .sort((a, b) => {
+            const aIndex = a.cachedIndex ?? a.mergedIndex;
+            const bIndex = b.cachedIndex ?? b.mergedIndex;
+            if (aIndex !== bIndex) return aIndex - bIndex;
+            return a.mergedIndex - b.mergedIndex;
+          });
 
-        // Rebuild in mergedPdfDocument order
-        pages = mergedOrder.map(id => pageById.get(id)!).filter(Boolean);
+        additions.forEach(({ page, neighborId, cachedIndex, mergedIndex }) => {
+          if (pages.some(existing => existing.id === page.id)) {
+            return;
+          }
+
+          let insertIndex: number;
+          const originalFileId = page.originalFileId;
+          const placeholderIndex = originalFileId ? nextInsertIndexByFile.get(originalFileId) : undefined;
+
+          if (originalFileId && placeholderIndex !== undefined) {
+            insertIndex = Math.min(placeholderIndex, pages.length);
+            nextInsertIndexByFile.set(originalFileId, insertIndex + 1);
+          } else if (neighborId === null) {
+            insertIndex = 0;
+          } else if (neighborId) {
+            const neighborIndex = pages.findIndex(p => p.id === neighborId);
+            if (neighborIndex !== -1) {
+              insertIndex = neighborIndex + 1;
+            } else {
+              const fallbackIndex = cachedIndex ?? mergedIndex ?? pages.length;
+              insertIndex = Math.min(fallbackIndex, pages.length);
+            }
+          } else {
+            const fallbackIndex = cachedIndex ?? mergedIndex ?? pages.length;
+            insertIndex = Math.min(fallbackIndex, pages.length);
+          }
+
+          const clonedPage = { ...page };
+          pages.splice(insertIndex, 0, clonedPage);
+        });
       }
 
       // Renumber without reordering
@@ -569,15 +624,22 @@ const PageEditor = ({
 
       console.log('📄 handleInsertFiles: Inserting files after page', insertAfterPage, 'targetPage:', targetPage.id);
 
-      // Add files to FileContext for metadata tracking (without insertAfterPageId)
+      // Add files to FileContext for metadata tracking and preserve insertion point
+      const insertAfterPageId = targetPage.id;
       let addedFileIds: FileId[] = [];
       if (isFromStorage) {
         const stubs = files as StirlingFileStub[];
-        const result = await actions.addStirlingFileStubs(stubs, { selectFiles: true });
+        const result = await actions.addStirlingFileStubs(stubs, {
+          selectFiles: true,
+          insertAfterPageId
+        });
         addedFileIds = result.map(f => f.fileId);
         console.log('📄 handleInsertFiles: Added stubs, IDs:', addedFileIds);
       } else {
-        const result = await actions.addFiles(files as File[], { selectFiles: true });
+        const result = await actions.addFiles(files as File[], {
+          selectFiles: true,
+          insertAfterPageId
+        });
         addedFileIds = result.map(f => f.fileId);
         console.log('📄 handleInsertFiles: Added files, IDs:', addedFileIds);
       }
@@ -630,12 +692,15 @@ const PageEditor = ({
             ...editedDocument,
             pages: updatedPages
           });
+
+          // Keep PageEditor file order in sync with newly inserted pages
+          updateFileOrderFromPages(updatedPages);
         }
       }
     } catch (error) {
       console.error('Failed to insert files:', error);
     }
-  }, [editedDocument, actions, selectors]);
+  }, [editedDocument, actions, selectors, updateFileOrderFromPages]);
 
   const handleSelectAll = useCallback(() => {
     if (!displayDocument) return;
