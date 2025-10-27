@@ -1,4 +1,3 @@
-import React from 'react';
 import { Badge, Popover, Text } from '@mantine/core';
 import './styles.css';
 import { useTranslation } from 'react-i18next';
