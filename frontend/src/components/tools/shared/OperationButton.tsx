@@ -13,6 +13,7 @@ export interface OperationButtonProps {
   mt?: string;
   type?: 'button' | 'submit' | 'reset';
   'data-testid'?: string;
+  'data-tour'?: string;
 }
 
 const OperationButton = ({
@@ -26,7 +27,8 @@ const OperationButton = ({
   fullWidth = false,
   mt = 'md',
   type = 'button',
-  'data-testid': dataTestId
+  'data-testid': dataTestId,
+  'data-tour': dataTour
 }: OperationButtonProps) => {
   const { t } = useTranslation();
 
@@ -43,6 +45,7 @@ const OperationButton = ({
       variant={variant}
       color={color}
       data-testid={dataTestId}
+      data-tour={dataTour}
       style={{ minHeight: '2.5rem'  }}
     >
       {isLoading

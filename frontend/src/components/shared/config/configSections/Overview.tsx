@@ -1,9 +1,13 @@
 import React from 'react';
-import { Stack, Text, Code, Group, Badge, Alert, Loader } from '@mantine/core';
+import { Stack, Text, Code, Group, Badge, Alert, Loader, Button } from '@mantine/core';
 import { useAppConfig } from '../../../../contexts/AppConfigContext';
+import { useAuth } from '../../../../auth/UseSession';
+import { useNavigate } from 'react-router-dom';
 
 const Overview: React.FC = () => {
   const { config, loading, error } = useAppConfig();
+  const { signOut, user } = useAuth();
+  const navigate = useNavigate();
 
   const renderConfigSection = (title: string, data: any) => {
     if (!data || typeof data !== 'object') return null;
@@ -54,6 +58,15 @@ const Overview: React.FC = () => {
     SSOAutoLogin: config.SSOAutoLogin,
   } : null;
 
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
+
   if (loading) {
     return (
       <Stack align="center" py="md">
@@ -74,10 +87,24 @@ const Overview: React.FC = () => {
   return (
     <Stack gap="lg">
       <div>
-        <Text fw={600} size="lg">Application Configuration</Text>
-        <Text size="sm" c="dimmed">
-          Current application settings and configuration details.
-        </Text>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+          <div>
+            <Text fw={600} size="lg">Application Configuration</Text>
+            <Text size="sm" c="dimmed">
+              Current application settings and configuration details.
+            </Text>
+            {user?.email && (
+              <Text size="xs" c="dimmed" mt="0.25rem">
+                Signed in as: {user.email}
+              </Text>
+            )}
+          </div>
+          {user && (
+            <Button color="red" variant="filled" onClick={handleLogout}>
+              Log out
+            </Button>
+          )}
+        </div>
       </div>
 
       {config && (

@@ -1,5 +1,11 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
+// Helper to get JWT from localStorage for Authorization header
+function getAuthHeaders(): HeadersInit {
+  const token = localStorage.getItem('stirling_jwt');
+  return token ? { 'Authorization': `Bearer ${token}` } : {};
+}
+
 export interface AppConfig {
   baseUrl?: string;
   contextPath?: string;
@@ -51,9 +57,11 @@ export const AppConfigProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     try {
       setLoading(true);
       setError(null);
-
-      const response = await fetch('/api/v1/config/app-config');
-
+      
+      const response = await fetch('/api/v1/config/app-config', {
+        headers: getAuthHeaders(),
+      });
+      
       if (!response.ok) {
         throw new Error(`Failed to fetch config: ${response.status} ${response.statusText}`);
       }

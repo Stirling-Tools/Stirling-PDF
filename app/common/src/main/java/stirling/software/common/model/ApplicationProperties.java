@@ -120,6 +120,7 @@ public class ApplicationProperties {
         private String loginMethod = "all";
         private String customGlobalAPIKey;
         private Jwt jwt = new Jwt();
+        private Validation validation = new Validation();
 
         public Boolean isAltLogin() {
             return saml2.getEnabled() || oauth2.getEnabled();
@@ -306,7 +307,41 @@ public class ApplicationProperties {
             private boolean enableKeyRotation = false;
             private boolean enableKeyCleanup = true;
             private int keyRetentionDays = 7;
-            private boolean secureCookie;
+        }
+
+        @Data
+        public static class Validation {
+            private Trust trust = new Trust();
+            private boolean allowAIA = false;
+            private Aatl aatl = new Aatl();
+            private Eutl eutl = new Eutl();
+            private Revocation revocation = new Revocation();
+
+            @Data
+            public static class Trust {
+                private boolean serverAsAnchor = true;
+                private boolean useSystemTrust = false;
+                private boolean useMozillaBundle = false;
+                private boolean useAATL = false;
+                private boolean useEUTL = false;
+            }
+
+            @Data
+            public static class Aatl {
+                private String url = "https://trustlist.adobe.com/tl.pdf";
+            }
+
+            @Data
+            public static class Eutl {
+                private String lotlUrl = "https://ec.europa.eu/tools/lotl/eu-lotl.xml";
+                private boolean acceptTransitional = false;
+            }
+
+            @Data
+            public static class Revocation {
+                private String mode = "none";
+                private boolean hardFail = false;
+            }
         }
     }
 
@@ -330,6 +365,7 @@ public class ApplicationProperties {
         private CustomPaths customPaths = new CustomPaths();
         private String fileUploadLimit;
         private TempFileManagement tempFileManagement = new TempFileManagement();
+        private List<String> corsAllowedOrigins = new ArrayList<>();
 
         public boolean isAnalyticsEnabled() {
             return this.getEnableAnalytics() != null && this.getEnableAnalytics();

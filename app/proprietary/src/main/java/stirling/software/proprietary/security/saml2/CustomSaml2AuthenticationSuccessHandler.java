@@ -116,13 +116,41 @@ public class CustomSaml2AuthenticationSuccessHandler
                                 contextPath + "/login?errorOAuth=oAuth2AdminBlockedUser");
                         return;
                     }
-                    log.debug("Processing SSO post-login for user: {}", username);
+
+                    // Extract SSO provider information from SAML2 assertion
+                    String ssoProviderId = saml2Principal.nameId();
+                    String ssoProvider = "saml2"; // fixme
+
+                    log.debug(
+                            "Processing SSO post-login for user: {} (Provider: {}, ProviderId: {})",
+                            username,
+                            ssoProvider,
+                            ssoProviderId);
+
                     userService.processSSOPostLogin(
-                            username, saml2Properties.getAutoCreateUser(), SAML2);
+                            username,
+                            ssoProviderId,
+                            ssoProvider,
+                            saml2Properties.getAutoCreateUser(),
+                            SAML2);
                     log.debug("Successfully processed authentication for user: {}", username);
 
-                    generateJwt(response, authentication);
-                    response.sendRedirect(contextPath + "/");
+                    // Generate JWT if v2 is enabled
+                    if (jwtService.isJwtEnabled()) {
+                        String jwt =
+                                jwtService.generateToken(
+                                        authentication,
+                                        Map.of("authType", AuthenticationType.SAML2));
+
+                        // Build context-aware redirect URL based on the original request
+                        String redirectUrl =
+                                buildContextAwareRedirectUrl(request, contextPath, jwt);
+
+                        response.sendRedirect(redirectUrl);
+                    } else {
+                        // v1: redirect directly to home
+                        response.sendRedirect(contextPath + "/");
+                    }
                 } catch (IllegalArgumentException | SQLException | UnsupportedProviderException e) {
                     log.debug(
                             "Invalid username detected for user: {}, redirecting to logout",
@@ -136,12 +164,48 @@ public class CustomSaml2AuthenticationSuccessHandler
         }
     }
 
-    private void generateJwt(HttpServletResponse response, Authentication authentication) {
-        if (jwtService.isJwtEnabled()) {
-            String jwt =
-                    jwtService.generateToken(
-                            authentication, Map.of("authType", AuthenticationType.SAML2));
-            jwtService.addToken(response, jwt);
+    /**
+     * Builds a context-aware redirect URL based on the request's origin
+     *
+     * @param request The HTTP request
+     * @param contextPath The application context path
+     * @param jwt The JWT token to include
+     * @return The appropriate redirect URL
+     */
+    private String buildContextAwareRedirectUrl(
+            HttpServletRequest request, String contextPath, String jwt) {
+        // Try to get the origin from the Referer header first
+        String referer = request.getHeader("Referer");
+        if (referer != null && !referer.isEmpty()) {
+            try {
+                java.net.URL refererUrl = new java.net.URL(referer);
+                String origin = refererUrl.getProtocol() + "://" + refererUrl.getHost();
+                if (refererUrl.getPort() != -1
+                        && refererUrl.getPort() != 80
+                        && refererUrl.getPort() != 443) {
+                    origin += ":" + refererUrl.getPort();
+                }
+                return origin + "/auth/callback#access_token=" + jwt;
+            } catch (java.net.MalformedURLException e) {
+                log.debug(
+                        "Malformed referer URL: {}, falling back to request-based origin", referer);
+            }
         }
+
+        // Fall back to building from request host/port
+        String scheme = request.getScheme();
+        String serverName = request.getServerName();
+        int serverPort = request.getServerPort();
+
+        StringBuilder origin = new StringBuilder();
+        origin.append(scheme).append("://").append(serverName);
+
+        // Only add port if it's not the default port for the scheme
+        if ((!"http".equals(scheme) || serverPort != 80)
+                && (!"https".equals(scheme) || serverPort != 443)) {
+            origin.append(":").append(serverPort);
+        }
+
+        return origin + "/auth/callback#access_token=" + jwt;
     }
 }
