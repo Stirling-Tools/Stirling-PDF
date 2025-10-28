@@ -8,7 +8,7 @@ export const useFileHandler = () => {
     // Merge default options with passed options - passed options take precedence
     const mergedOptions = { selectFiles: true, ...options };
     // Let FileContext handle deduplication with quickKey logic
-    return await actions.addFiles(files, mergedOptions);
+    await actions.addFiles(files, mergedOptions);
   }, [actions.addFiles]);
 
   return {

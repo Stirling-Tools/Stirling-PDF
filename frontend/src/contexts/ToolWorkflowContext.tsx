@@ -7,7 +7,7 @@ import React, { createContext, useContext, useReducer, useCallback, useMemo, use
 import { useToolManagement } from '../hooks/useToolManagement';
 import { PageEditorFunctions } from '../types/pageEditor';
 import { ToolRegistryEntry, ToolRegistry } from '../data/toolsTaxonomy';
-import { useNavigationActions, useNavigationState } from './NavigationContext';
+import { useNavigationActions, useNavigationState } from '../contexts/NavigationContext';
 import { ToolId, isValidToolId } from '../types/toolId';
 import { WorkbenchType, getDefaultWorkbench, isBaseWorkbench } from '../types/workbench';
 import { useNavigationUrlSync } from '../hooks/useUrlSync';
@@ -17,10 +17,10 @@ import {
   ToolWorkflowState,
   createInitialState,
   toolWorkflowReducer,
-} from './toolWorkflow/toolWorkflowState';
+} from '../contexts/toolWorkflow/toolWorkflowState';
 import type { ToolPanelMode } from '../constants/toolPanel';
-import { usePreferences } from './PreferencesContext';
-import { useToolRegistry } from './ToolRegistryContext';
+import { usePreferences } from '../contexts/PreferencesContext';
+import { useToolRegistry } from '../contexts/ToolRegistryContext';
 
 // State interface
 // Types and reducer/state moved to './toolWorkflow/state'
@@ -31,11 +31,11 @@ export interface CustomWorkbenchViewRegistration {
   workbenchId: WorkbenchType;
   label: string;
   icon?: React.ReactNode;
-  component: React.ComponentType<{ data: unknown }>;
+  component: React.ComponentType<{ data: any }>;
 }
 
 export interface CustomWorkbenchViewInstance extends CustomWorkbenchViewRegistration {
-  data: unknown | null;
+  data: any;
 }
 
 interface ToolWorkflowContextValue extends ToolWorkflowState {
@@ -80,21 +80,16 @@ interface ToolWorkflowContextValue extends ToolWorkflowState {
   customWorkbenchViews: CustomWorkbenchViewInstance[];
   registerCustomWorkbenchView: (view: CustomWorkbenchViewRegistration) => void;
   unregisterCustomWorkbenchView: (id: string) => void;
-  setCustomWorkbenchViewData: (id: string, data: unknown) => void;
+  setCustomWorkbenchViewData: (id: string, data: any) => void;
   clearCustomWorkbenchViewData: (id: string) => void;
 }
 
 // Ensure a single context instance across HMR to avoid provider/consumer mismatches
 const __GLOBAL_CONTEXT_KEY__ = '__ToolWorkflowContext__';
-type ToolWorkflowGlobalThis = typeof globalThis & {
-  [__GLOBAL_CONTEXT_KEY__]?: React.Context<ToolWorkflowContextValue | undefined>;
-};
-
-const toolWorkflowGlobal = globalThis as ToolWorkflowGlobalThis;
-const existingContext = toolWorkflowGlobal[__GLOBAL_CONTEXT_KEY__];
+const existingContext = (globalThis as any)[__GLOBAL_CONTEXT_KEY__] as React.Context<ToolWorkflowContextValue | undefined> | undefined;
 const ToolWorkflowContext = existingContext ?? createContext<ToolWorkflowContextValue | undefined>(undefined);
 if (!existingContext) {
-  toolWorkflowGlobal[__GLOBAL_CONTEXT_KEY__] = ToolWorkflowContext;
+  (globalThis as any)[__GLOBAL_CONTEXT_KEY__] = ToolWorkflowContext;
 }
 
 // Provider component
@@ -110,7 +105,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
   const [toolResetFunctions, setToolResetFunctions] = React.useState<Record<string, () => void>>({});
 
   const [customViewRegistry, setCustomViewRegistry] = React.useState<Record<string, CustomWorkbenchViewRegistration>>({});
-  const [customViewData, setCustomViewData] = React.useState<Record<string, unknown>>({});
+  const [customViewData, setCustomViewData] = React.useState<Record<string, any>>({});
 
   // Navigation actions and state are available since we're inside NavigationProvider
   const { actions } = useNavigationActions();
@@ -200,7 +195,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     }
   }, [actions, navigationState.workbench]);
 
-  const setCustomWorkbenchViewData = useCallback((id: string, data: unknown) => {
+  const setCustomWorkbenchViewData = useCallback((id: string, data: any) => {
     setCustomViewData(prev => ({ ...prev, [id]: data }));
   }, []);
 
@@ -226,10 +221,10 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     if (isBaseWorkbench(navigationState.workbench)) {
       return;
     }
-    // Keep guard lightweight; remove verbose logging
+
     const currentCustomView = customWorkbenchViews.find(view => view.workbenchId === navigationState.workbench);
     if (!currentCustomView || currentCustomView.data == null) {
-      return;
+      actions.setWorkbench(getDefaultWorkbench());
     }
   }, [actions, customWorkbenchViews, navigationState.workbench]);
 
