@@ -250,6 +250,7 @@
     "title": "Möchten Sie Stirling-PDF verbessern?",
     "paragraph1": "Stirling-PDF verfügt über Opt-in-Analytics, die uns helfen, das Produkt zu verbessern. Wir zeichnen keine persönlichen Informationen oder Dateiinhalte auf.",
     "paragraph2": "Bitte erwägen Sie die Analytics zu aktivieren, um Stirling-PDF beim Wachsen zu helfen und um unsere User besser zu verstehen.",
+    "learnMore": "Learn more",
     "enable": "Analytics aktivieren",
     "disable": "Analytics deaktivieren",
     "settings": "Sie können die Einstellungen für die Analytics in der config/settings.yml Datei bearbeiten"
@@ -3341,6 +3342,10 @@
         "title": "Analyse",
         "description": "Diese Cookies helfen uns zu verstehen, wie unsere Tools genutzt werden, damit wir uns darauf konzentrieren können, die Funktionen zu entwickeln, die unserer Community am meisten am Herzen liegen. Seien Sie beruhigt – Stirling PDF kann und wird niemals den Inhalt der Dokumente verfolgen, mit denen Sie arbeiten."
       }
+    },
+    "services": {
+      "posthog": "PostHog Analytics",
+      "scarf": "Scarf Pixel"
     }
   },
   "removeMetadata": {
