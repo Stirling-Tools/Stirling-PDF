@@ -29,7 +29,7 @@ interface LocalIconProps {
  * LocalIcon component that uses our locally bundled Material Symbols icons
  * instead of loading from CDN
  */
-export const LocalIcon: React.FC<LocalIconProps> = ({ icon, ...props }) => {
+export const LocalIcon: React.FC<LocalIconProps> = ({ icon, width, height, style, ...props }) => {
   // Convert our icon naming convention to the local collection format
   const iconName = icon.startsWith('material-symbols:')
     ? icon
@@ -45,8 +45,20 @@ export const LocalIcon: React.FC<LocalIconProps> = ({ icon, ...props }) => {
     }
   }
 
+  const iconStyle: React.CSSProperties = { ...style };
+
+  // Use width if provided, otherwise fall back to height
+  const size = width || height;
+  if (size && typeof size === 'string') {
+    // If it's a CSS unit string (like '1.5rem'), use it as fontSize
+    iconStyle.fontSize = size;
+  } else if (typeof size === 'number') {
+    // If it's a number, treat it as pixels
+    iconStyle.fontSize = `${size}px`;
+  }
+
   // Always render the icon - Iconify will use local if available, CDN if not
-  return <Icon icon={iconName} {...props} />;
+  return <Icon icon={iconName} style={iconStyle} {...props} />;
 };
 
 export default LocalIcon;
