@@ -1,4 +1,4 @@
-import apiClient from './apiClient';
+import apiClient from '@app/services/apiClient';
 
 export interface AccountData {
   username: string;

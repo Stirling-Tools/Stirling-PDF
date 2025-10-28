@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { alert } from '@app/components/shared/toast';
+import { alert } from '@app/components/toast';
 
 export function useRestartServer() {
   const { t } = useTranslation();

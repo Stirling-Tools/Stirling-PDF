@@ -3,10 +3,10 @@ import { useTranslation } from 'react-i18next';
 import { NumberInput, Switch, Button, Stack, Paper, Text, Loader, Group, Select, Alert, Badge, Accordion, Textarea } from '@mantine/core';
 import { alert } from '@app/components/toast';
 import LocalIcon from '@app/components/shared/LocalIcon';
-import RestartConfirmationModal from '../RestartConfirmationModal';
-import { useRestartServer } from '../useRestartServer';
+import RestartConfirmationModal from '@app/components/shared/config/RestartConfirmationModal';
+import { useRestartServer } from '@app/components/shared/config/useRestartServer';
 import { useAdminSettings } from '@app/hooks/useAdminSettings';
-import PendingBadge from '../PendingBadge';
+import PendingBadge from '@app/components/shared/config/PendingBadge';
 import apiClient from '@app/services/apiClient';
 
 interface SecuritySettingsData {

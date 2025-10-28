@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import apiClient from '../services/apiClient';
-import { mergePendingSettings, isFieldPending, hasPendingChanges } from '../utils/settingsPendingHelper';
+import apiClient from '@app/services/apiClient';
+import { mergePendingSettings, isFieldPending, hasPendingChanges } from '@app/utils/settingsPendingHelper';
 
 interface UseAdminSettingsOptions<T> {
   sectionName: string;

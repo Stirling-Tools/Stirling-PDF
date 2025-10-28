@@ -2,10 +2,10 @@ import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { TextInput, NumberInput, Switch, Button, Stack, Paper, Text, Loader, Group, Badge } from '@mantine/core';
 import { alert } from '@app/components/toast';
-import RestartConfirmationModal from '../RestartConfirmationModal';
-import { useRestartServer } from '../useRestartServer';
+import RestartConfirmationModal from '@app/components/shared/config/RestartConfirmationModal';
+import { useRestartServer } from '@app/components/shared/config/useRestartServer';
 import { useAdminSettings } from '@app/hooks/useAdminSettings';
-import PendingBadge from '../PendingBadge';
+import PendingBadge from '@app/components/shared/config/PendingBadge';
 import apiClient from '@app/services/apiClient';
 
 interface FeaturesSettingsData {
