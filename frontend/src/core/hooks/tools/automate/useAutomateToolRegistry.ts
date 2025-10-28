@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 
-import { useToolRegistry } from '../../../contexts/ToolRegistryContext';
-import { AutomateToolRegistry, AutomateToolId, AUTOMATABLE_TOOL_IDS } from '../../../types/automation';
+import { useToolRegistry } from '@app/contexts/ToolRegistryContext';
+import { AutomateToolRegistry, AutomateToolId, AUTOMATABLE_TOOL_IDS } from '@app/types/automation';
 
 export const useAutomateToolRegistry = (): AutomateToolRegistry => {
   const { regularTools } = useToolRegistry();
