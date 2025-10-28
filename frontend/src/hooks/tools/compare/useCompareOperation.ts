@@ -27,12 +27,6 @@ export interface CompareOperationHook extends ToolOperationHook<CompareParameter
   warnings: string[];
 }
 
-const DEFAULT_WORKER_SETTINGS = {
-  batchSize: 6000,
-  complexThreshold: 120000,
-  maxWordThreshold: 200000,
-};
-
 // extractContentFromPdf moved to utils
 
 export const useCompareOperation = (): CompareOperationHook => {
@@ -142,7 +136,12 @@ export const useCompareOperation = (): CompareOperationHook => {
             baseTokens,
             comparisonTokens,
             warnings: warningMessages,
-            settings: DEFAULT_WORKER_SETTINGS,
+            // Static worker settings to support large documents
+            settings: {
+              batchSize: 5000,
+              complexThreshold: 120000,
+              maxWordThreshold: 200000,
+            },
           },
         };
 

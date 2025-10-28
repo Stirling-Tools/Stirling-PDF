@@ -45,7 +45,8 @@ const buildWordChanges = (
     if (token.type === targetType) {
       const parts: string[] = [];
       const runIndices: number[] = [];
-      const pageNumber = metadata[metadataIndex]?.page ?? 1;
+      // We'll compute the page number from the first token in the run that has a bbox
+      let firstPageWithBox: number | null = null;
       while (i < tokens.length && tokens[i].type === targetType) {
         const t = tokens[i].text;
         const isPara = t === PARAGRAPH_SENTINEL || t.startsWith('\uE000') || t.includes('PARA');
@@ -53,8 +54,15 @@ const buildWordChanges = (
         if (!isPara) {
           parts.push(t);
           // Only add to grouping if there is a corresponding metadata index
-          if (metadata[metadataIndex]) {
-            runIndices.push(metadataIndex);
+          // AND there is a bounding box to anchor highlights to
+          const meta = metadata[metadataIndex];
+          if (meta) {
+            if (meta.bbox) {
+              runIndices.push(metadataIndex);
+              if (firstPageWithBox == null && typeof meta.page === 'number') {
+                firstPageWithBox = meta.page;
+              }
+            }
           }
         }
         metadataIndex += 1;
@@ -67,6 +75,7 @@ const buildWordChanges = (
         const endIndexForId = runIndices[runIndices.length - 1];
         const groupId = `${groupPrefix}-${startIndexForId}-${endIndexForId}`;
         runIndices.forEach((idx) => tokenIndexToGroupId.set(idx, groupId));
+        const pageNumber = firstPageWithBox ?? (metadata[startIndexForId]?.page ?? 1);
         items.push({ value: groupId, label, pageNumber });
       }
       continue;

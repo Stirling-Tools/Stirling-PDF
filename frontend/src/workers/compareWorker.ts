@@ -68,6 +68,21 @@ const diff = (words1: string[], words2: string[]): CompareDiffToken[] => {
   return backtrack(matrix, words1, words2);
 };
 
+const countBaseTokens = (segment: CompareDiffToken[]) =>
+  segment.reduce((acc, token) => acc + (token.type !== 'added' ? 1 : 0), 0);
+
+const countComparisonTokens = (segment: CompareDiffToken[]) =>
+  segment.reduce((acc, token) => acc + (token.type !== 'removed' ? 1 : 0), 0);
+
+const findLastUnchangedIndex = (segment: CompareDiffToken[]) => {
+  for (let i = segment.length - 1; i >= 0; i -= 1) {
+    if (segment[i].type === 'unchanged') {
+      return i;
+    }
+  }
+  return -1;
+};
+
 const chunkedDiff = (
   words1: string[],
   words2: string[],
@@ -78,42 +93,133 @@ const chunkedDiff = (
   }
 
   const tokens: CompareDiffToken[] = [];
-  let start1 = 0;
-  let start2 = 0;
-  const overlap = Math.max(0, Math.min(500, Math.floor(chunkSize * 0.1)));
+  const maxWindow = Math.max(chunkSize * 6, chunkSize + 512);
+  const minCommit = Math.max(1, Math.floor(chunkSize * 0.1));
 
-  // Advance by the actual number of tokens consumed per chunk to maintain alignment
-  while (start1 < words1.length || start2 < words2.length) {
-    const end1 = Math.min(start1 + chunkSize, words1.length);
-    const end2 = Math.min(start2 + chunkSize, words2.length);
-    const slice1 = words1.slice(start1, end1);
-    const slice2 = words2.slice(start2, end2);
+  let index1 = 0;
+  let index2 = 0;
+  let buffer1: string[] = [];
+  let buffer2: string[] = [];
 
-    const chunkTokens = diff(slice1, slice2);
-    tokens.push(...chunkTokens);
+  const flushRemainder = () => {
+    if (buffer1.length === 0 && buffer2.length === 0) {
+      return;
+    }
+    const finalTokens = diff(buffer1, buffer2);
+    tokens.push(...finalTokens);
+    buffer1 = [];
+    buffer2 = [];
+    index1 = words1.length;
+    index2 = words2.length;
+  };
 
-    // Count how many tokens from each side were consumed in this chunk
-    let consumed1 = 0;
-    let consumed2 = 0;
-    for (const t of chunkTokens) {
-      if (t.type === 'unchanged') { consumed1 += 1; consumed2 += 1; }
-      else if (t.type === 'removed') { consumed1 += 1; }
-      else if (t.type === 'added') { consumed2 += 1; }
+  while (
+    index1 < words1.length ||
+    index2 < words2.length ||
+    buffer1.length > 0 ||
+    buffer2.length > 0
+  ) {
+    const remaining1 = Math.max(0, words1.length - index1);
+    const remaining2 = Math.max(0, words2.length - index2);
+
+    let windowSize = Math.max(chunkSize, buffer1.length, buffer2.length);
+    let window1: string[] = [];
+    let window2: string[] = [];
+    let chunkTokens: CompareDiffToken[] = [];
+    let reachedEnd = false;
+
+    while (true) {
+      const take1 = Math.min(Math.max(0, windowSize - buffer1.length), remaining1);
+      const take2 = Math.min(Math.max(0, windowSize - buffer2.length), remaining2);
+
+      const slice1 = take1 > 0 ? words1.slice(index1, index1 + take1) : [];
+      const slice2 = take2 > 0 ? words2.slice(index2, index2 + take2) : [];
+
+      window1 = buffer1.length > 0 ? [...buffer1, ...slice1] : slice1;
+      window2 = buffer2.length > 0 ? [...buffer2, ...slice2] : slice2;
+
+      if (window1.length === 0 && window2.length === 0) {
+        flushRemainder();
+        return tokens;
+      }
+
+      chunkTokens = diff(window1, window2);
+      const lastStableIndex = findLastUnchangedIndex(chunkTokens);
+
+      reachedEnd =
+        index1 + take1 >= words1.length &&
+        index2 + take2 >= words2.length;
+
+      const windowTooLarge =
+        window1.length >= maxWindow ||
+        window2.length >= maxWindow;
+
+      if (lastStableIndex >= 0 || reachedEnd || windowTooLarge) {
+        break;
+      }
+
+      const canGrow1 = take1 < remaining1;
+      const canGrow2 = take2 < remaining2;
+
+      if (!canGrow1 && !canGrow2) {
+        break;
+      }
+
+      windowSize = Math.min(
+        maxWindow,
+        windowSize + Math.max(64, Math.floor(chunkSize * 0.5))
+      );
     }
 
-    // Fallback to ensure forward progress
-    if (consumed1 === 0 && consumed2 === 0) {
-      consumed1 = Math.min(chunkSize, words1.length - start1);
-      consumed2 = Math.min(chunkSize, words2.length - start2);
+    if (chunkTokens.length === 0) {
+      if (reachedEnd) {
+        flushRemainder();
+        return tokens;
+      }
+      windowSize = Math.min(windowSize + Math.max(64, Math.floor(chunkSize * 0.5)), maxWindow);
+      continue;
     }
 
-    // Advance with overlap to allow re-synchronization across chunk boundaries
-    const nextStart1 = Math.min(words1.length, Math.max(start1 + consumed1 - overlap, start1 + 1));
-    const nextStart2 = Math.min(words2.length, Math.max(start2 + consumed2 - overlap, start2 + 1));
-    start1 = nextStart1;
-    start2 = nextStart2;
+    let commitIndex = reachedEnd ? chunkTokens.length - 1 : findLastUnchangedIndex(chunkTokens);
+    if (commitIndex < 0) {
+      commitIndex = reachedEnd
+        ? chunkTokens.length - 1
+        : Math.min(chunkTokens.length - 1, minCommit - 1);
+    }
+
+    const commitTokens = commitIndex >= 0 ? chunkTokens.slice(0, commitIndex + 1) : [];
+    const baseConsumed = countBaseTokens(commitTokens);
+    const comparisonConsumed = countComparisonTokens(commitTokens);
+
+    tokens.push(...commitTokens);
+
+    const consumedFromNew1 = Math.max(0, baseConsumed - buffer1.length);
+    const consumedFromNew2 = Math.max(0, comparisonConsumed - buffer2.length);
+
+    index1 += consumedFromNew1;
+    index2 += consumedFromNew2;
+
+    buffer1 = window1.slice(baseConsumed);
+    buffer2 = window2.slice(comparisonConsumed);
+
+    if (reachedEnd) {
+      flushRemainder();
+      break;
+    }
+
+    // Prevent runaway buffers: if we made no progress, forcibly consume one token
+    if (commitTokens.length === 0 && buffer1.length + buffer2.length > 0) {
+      if (buffer1.length > 0 && index1 < words1.length) {
+        buffer1 = buffer1.slice(1);
+        index1 += 1;
+      } else if (buffer2.length > 0 && index2 < words2.length) {
+        buffer2 = buffer2.slice(1);
+        index2 += 1;
+      }
+    }
   }
 
+  flushRemainder();
   return tokens;
 };
 
