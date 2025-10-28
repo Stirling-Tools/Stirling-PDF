@@ -17,6 +17,11 @@ const ZOOM_MIN = 0.5;
 const ZOOM_MAX = 100000;
 const ZOOM_STEP = 0.1;
 
+// Default structural adjustments applied to each rendered page row. These are
+// refined at runtime via DOM measurements once the panes have mounted.
+const DEFAULT_ROW_STRUCTURAL_EXTRA = 32;
+const DEFAULT_ROW_GAP = 8;
+
 type Pane = 'base' | 'comparison';
 
 interface PanState {
@@ -85,6 +90,7 @@ export interface UseComparePanZoomReturn {
   continuePan: (event: ReactMouseEvent<HTMLDivElement>) => void;
   endPan: () => void;
   handleWheelZoom: (pane: Pane, event: ReactWheelEvent<HTMLDivElement>) => void;
+  handleWheelOverscroll: (pane: Pane, event: ReactWheelEvent<HTMLDivElement>) => void;
   onTouchStart: (pane: Pane, event: ReactTouchEvent<HTMLDivElement>) => void;
   onTouchMove: (event: ReactTouchEvent<HTMLDivElement>) => void;
   onTouchEnd: () => void;
@@ -125,6 +131,8 @@ export const useComparePanZoom = ({
   const wheelZoomAccumRef = useRef<{ base: number; comparison: number }>({ base: 0, comparison: 0 });
   const pinchRef = useRef<PinchState>({ active: false, pane: null, startDistance: 0, startZoom: 1 });
   const edgeOverscrollRef = useRef<{ base: number; comparison: number }>({ base: 0, comparison: 0 });
+  const [rowStructuralExtraPx, setRowStructuralExtraPx] = useState(DEFAULT_ROW_STRUCTURAL_EXTRA);
+  const [rowGapPx, setRowGapPx] = useState(DEFAULT_ROW_GAP);
 
   const [layout, setLayoutState] = useState<'side-by-side' | 'stacked'>(prefersStacked ? 'stacked' : 'side-by-side');
   const setLayout = useCallback((next: 'side-by-side' | 'stacked') => {
@@ -143,8 +151,12 @@ export const useComparePanZoom = ({
     [basePages, comparisonPages]
   );
 
-  // Build per-row heights using the same rule as the renderer: pair pages by pageNumber and use the max height
-  const rowHeights = useMemo(() => {
+  const canonicalLayout = useMemo(() => {
+    const baseMap = new Map<number, PagePreview>();
+    const compMap = new Map<number, PagePreview>();
+    for (const page of basePages) baseMap.set(page.pageNumber, page);
+    for (const page of comparisonPages) compMap.set(page.pageNumber, page);
+
     const allPageNumbers = Array.from(
       new Set([
         ...basePages.map(p => p.pageNumber),
@@ -152,22 +164,72 @@ export const useComparePanZoom = ({
       ])
     ).sort((a, b) => a - b);
 
+    const rows = allPageNumbers.map(pageNumber => {
+      const basePage = baseMap.get(pageNumber) ?? null;
+      const compPage = compMap.get(pageNumber) ?? null;
+      const canonicalHeight = Math.max(basePage?.height ?? 0, compPage?.height ?? 0);
+      return {
+        pageNumber,
+        canonicalHeight,
+        hasBase: Boolean(basePage),
+        hasComparison: Boolean(compPage),
+      };
+    });
+
+    const totalCanonicalHeight = rows.reduce((sum, row) => sum + Math.round(row.canonicalHeight), 0);
+    return { rows, totalCanonicalHeight };
+  }, [basePages, comparisonPages]);
+
+  // Measure structural padding (labels, internal gaps) and the inter-row gap
+  // so the scroll mapper can account for real DOM layout instead of relying on
+  // bare page image heights.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (canonicalLayout.rows.length === 0) return;
+
+    const raf = window.requestAnimationFrame(() => {
+      const sourceContent =
+        baseScrollRef.current?.querySelector<HTMLElement>('.compare-pane__content') ??
+        comparisonScrollRef.current?.querySelector<HTMLElement>('.compare-pane__content');
+      if (!sourceContent) return;
+
+      const style = window.getComputedStyle(sourceContent);
+      const gapStr = style.rowGap || style.gap;
+      const parsedGap = gapStr ? Number.parseFloat(gapStr) : Number.NaN;
+      const measuredGap = Number.isNaN(parsedGap) ? rowGapPx : Math.max(0, Math.round(parsedGap));
+      if (measuredGap !== rowGapPx) {
+        setRowGapPx(measuredGap);
+      }
+
+      const totalGap = Math.max(0, canonicalLayout.rows.length - 1) * measuredGap;
+      const contentHeight = Math.round(sourceContent.scrollHeight);
+      const available = contentHeight - totalGap - canonicalLayout.totalCanonicalHeight;
+      const candidate = canonicalLayout.rows.length > 0
+        ? Math.max(0, Math.round(available / canonicalLayout.rows.length))
+        : 0;
+
+      if (Math.abs(candidate - rowStructuralExtraPx) >= 1) {
+        setRowStructuralExtraPx(candidate);
+      }
+    });
+    return () => window.cancelAnimationFrame(raf);
+  }, [canonicalLayout, rowGapPx, rowStructuralExtraPx, layout]);
+
+  // Build per-row heights using the same rule as the renderer: pair pages by pageNumber and use the max height
+  const rowHeights = useMemo(() => {
+    const totalRows = canonicalLayout.rows.length;
     const base: number[] = [];
     const comp: number[] = [];
-    for (const pageNumber of allPageNumbers) {
-      const b = basePages.find(p => p.pageNumber === pageNumber) || null;
-      const c = comparisonPages.find(p => p.pageNumber === pageNumber) || null;
-      const h = Math.round(Math.max(b?.height ?? 0, c?.height ?? 0));
-      if (b) base.push(h);
-      if (c) comp.push(h);
-      if (!b && c) {
-        // base missing this page; still push height for mapping purposes
-        base.push(h);
-      }
-      if (!c && b) {
-        // comparison missing this page; still push height for mapping purposes
-        comp.push(h);
-      }
+    for (let index = 0; index < totalRows; index += 1) {
+      const row = canonicalLayout.rows[index];
+      const canonicalHeight = Math.round(row.canonicalHeight);
+      const structuralHeight = Math.max(0, Math.round(canonicalHeight + rowStructuralExtraPx));
+      const includeGap = index < totalRows - 1 ? rowGapPx : 0;
+      const totalHeight = structuralHeight + includeGap;
+      if (row.hasBase) base.push(totalHeight);
+      else if (row.hasComparison) base.push(totalHeight);
+      if (row.hasComparison) comp.push(totalHeight);
+      else if (row.hasBase) comp.push(totalHeight);
     }
 
     const prefix = (arr: number[]) => {
@@ -183,7 +245,7 @@ export const useComparePanZoom = ({
       basePrefix: prefix(base),
       compPrefix: prefix(comp),
     };
-  }, [basePages, comparisonPages]);
+  }, [canonicalLayout.rows, rowGapPx, rowStructuralExtraPx]);
 
   const mapScrollTopBetweenPanes = useCallback(
     (sourceTop: number, sourceIsBase: boolean): number => {
@@ -357,7 +419,17 @@ export const useComparePanZoom = ({
         ? scrollLinkAnchorsRef.current.deltaPixelsBaseToComp
         : scrollLinkAnchorsRef.current.deltaPixelsCompToBase;
 
-      const desiredTop = Math.max(0, Math.min(targetVerticalRange, mappedTop + deltaPx));
+      const rawDesired = mappedTop + deltaPx;
+      const desiredTop = Math.max(0, Math.min(targetVerticalRange, rawDesired));
+
+      // If the mapping requests a position beyond target bounds and the target is already
+      // at that bound, skip writing to avoid any subtle feedback that could impede
+      // continued scrolling in the source pane.
+      const atTopBound = desiredTop === 0 && target.scrollTop === 0 && rawDesired < 0;
+      const atBottomBound = desiredTop === targetVerticalRange && target.scrollTop === targetVerticalRange && rawDesired > targetVerticalRange;
+      if (atTopBound || atBottomBound) {
+        return;
+      }
 
       isSyncingRef.current = true;
       target.scrollTop = desiredTop;
@@ -581,6 +653,56 @@ export const useComparePanZoom = ({
     [baseZoom, clampPanForZoom, centerPanForZoom, comparisonZoom]
   );
 
+  // When the source pane hits its scroll limit but the peer still has room,
+  // propagate the wheel delta to the peer so it continues following.
+  const handleWheelOverscroll = useCallback(
+    (pane: Pane, event: ReactWheelEvent<HTMLDivElement>) => {
+      if (event.ctrlKey) return; // handled by zoom handler
+      if (!isScrollLinked) return;
+
+      const source = pane === 'base' ? baseScrollRef.current : comparisonScrollRef.current;
+      const target = pane === 'base' ? comparisonScrollRef.current : baseScrollRef.current;
+      if (!source || !target) return;
+
+      const deltaY = event.deltaY;
+      if (deltaY === 0) return;
+
+      const sourceMax = Math.max(0, source.scrollHeight - source.clientHeight);
+      const nextSource = Math.max(0, Math.min(sourceMax, source.scrollTop + deltaY));
+
+      // If the source can scroll, let the normal scroll event drive syncing
+      if (nextSource !== source.scrollTop) return;
+
+      // Source is at a bound; push mapped delta into the target
+      const sourceIsBase = pane === 'base';
+
+      // Map the desired new source position (scrollTop + deltaY) into target space
+      const mappedBefore = mapScrollTopBetweenPanes(source.scrollTop, sourceIsBase);
+      const mappedAfter = mapScrollTopBetweenPanes(source.scrollTop + deltaY, sourceIsBase);
+      const mappedDelta = mappedAfter - mappedBefore;
+
+      // Include the pixel anchor captured when linking
+      const deltaPx = sourceIsBase
+        ? scrollLinkAnchorsRef.current.deltaPixelsBaseToComp
+        : scrollLinkAnchorsRef.current.deltaPixelsCompToBase;
+
+      const targetMax = Math.max(0, target.scrollHeight - target.clientHeight);
+      const desired = Math.max(0, Math.min(targetMax, target.scrollTop + (mappedDelta || deltaY)));
+
+      if (desired !== target.scrollTop) {
+        isSyncingRef.current = true;
+        // Adjust relative to mapped space to keep the anchor consistent
+        const anchored = Math.max(0, Math.min(targetMax, mappedBefore + deltaPx + (mappedDelta || deltaY)));
+        target.scrollTop = anchored;
+        requestAnimationFrame(() => {
+          isSyncingRef.current = false;
+        });
+        event.preventDefault();
+      }
+    },
+    [isScrollLinked, mapScrollTopBetweenPanes]
+  );
+
   const onTouchStart = useCallback(
     (pane: Pane, event: ReactTouchEvent<HTMLDivElement>) => {
       if (event.touches.length === 2) {
@@ -746,6 +868,29 @@ export const useComparePanZoom = ({
     if (isPanMode !== shouldPan) setIsPanMode(shouldPan);
   }, [baseZoom, comparisonZoom, isPanMode]);
 
+  // When new pages render and extend scrollHeight, re-apply the mapping so
+  // the follower continues tracking instead of getting stuck at its prior max.
+  useEffect(() => {
+    if (!isScrollLinked) return;
+    const sourceIsBase = lastActivePaneRef.current === 'base';
+    const source = sourceIsBase ? baseScrollRef.current : comparisonScrollRef.current;
+    const target = sourceIsBase ? comparisonScrollRef.current : baseScrollRef.current;
+    if (!source || !target) return;
+
+    const mappedTop = mapScrollTopBetweenPanes(source.scrollTop, sourceIsBase);
+    const deltaPx = sourceIsBase
+      ? scrollLinkAnchorsRef.current.deltaPixelsBaseToComp
+      : scrollLinkAnchorsRef.current.deltaPixelsCompToBase;
+    const targetVerticalRange = Math.max(1, target.scrollHeight - target.clientHeight);
+    const desiredTop = Math.max(0, Math.min(targetVerticalRange, mappedTop + deltaPx));
+
+    if (Math.abs(target.scrollTop - desiredTop) > 1) {
+      isSyncingRef.current = true;
+      target.scrollTop = desiredTop;
+      requestAnimationFrame(() => { isSyncingRef.current = false; });
+    }
+  }, [basePages.length, comparisonPages.length, isScrollLinked, mapScrollTopBetweenPanes]);
+
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (isScrollLinked) return;
@@ -838,6 +983,7 @@ export const useComparePanZoom = ({
     continuePan,
     endPan,
     handleWheelZoom,
+    handleWheelOverscroll,
     onTouchStart,
     onTouchMove,
     onTouchEnd,

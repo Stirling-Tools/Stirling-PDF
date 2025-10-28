@@ -1,5 +1,5 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
-import { Alert, Progress, Stack, Text } from '@mantine/core';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { Stack } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { useMediaQuery } from '@mantine/hooks';
 import {
@@ -20,6 +20,8 @@ import { useCompareChangeNavigation } from './hooks/useCompareChangeNavigation';
 import type { CompareChangeOption } from '../../../types/compareWorkbench';
 import './compareView.css';
 import { useCompareRightRailButtons } from './hooks/useCompareRightRailButtons';
+import { alert, updateToast, updateToastProgress, dismissToast } from '../../toast';
+import type { ToastLocation } from '../../toast/types';
 
 interface CompareWorkbenchViewProps {
   data: CompareWorkbenchData | null;
@@ -113,6 +115,7 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
     continuePan,
     endPan,
     handleWheelZoom,
+    handleWheelOverscroll,
     onTouchStart,
     onTouchMove,
     onTouchEnd,
@@ -270,18 +273,22 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
 
   useRightRailButtons(rightRailButtons);
 
-  // Rendering progress banner for very large PDFs
+  // Rendering progress toast for very large PDFs
   const LARGE_PAGE_THRESHOLD = 400; // show banner when one or both exceed threshold
+  const totalsKnown = (baseTotal ?? 0) > 0 && (compTotal ?? 0) > 0;
   const showProgressBanner = useMemo(() => {
-    const totals = [baseTotal || basePages.length, compTotal || comparisonPages.length];
+    if (!totalsKnown) return false; // avoid premature 100% before totals are known
+    const totals = [baseTotal!, compTotal!];
     return Math.max(...totals) >= LARGE_PAGE_THRESHOLD && (baseLoading || comparisonLoading);
-  }, [baseTotal, compTotal, basePages.length, comparisonPages.length, baseLoading, comparisonLoading]);
+  }, [totalsKnown, baseTotal, compTotal, baseLoading, comparisonLoading]);
 
-  const totalCombined = (baseTotal || basePages.length) + (compTotal || comparisonPages.length);
+  const totalCombined = totalsKnown ? (baseTotal! + compTotal!) : 0;
   const renderedCombined = baseRendered + compRendered;
-  const progressPct = totalCombined > 0 ? Math.min(100, Math.round((renderedCombined / totalCombined) * 100)) : 0;
+  const progressPct = totalsKnown && totalCombined > 0
+    ? Math.min(100, Math.round((renderedCombined / totalCombined) * 100))
+    : 0;
 
-  const [hideBannerAfterDone, setHideBannerAfterDone] = useState(false);
+  const progressToastIdRef = useRef<string | null>(null);
   const completionTimerRef = useRef<number | null>(null);
 
   const allDone = useMemo(() => {
@@ -290,40 +297,76 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
     return baseDone && compDone;
   }, [baseRendered, compRendered, baseTotal, compTotal, basePages.length, comparisonPages.length]);
 
-  if (allDone && completionTimerRef.current == null && showProgressBanner) {
-    completionTimerRef.current = window.setTimeout(() => {
-      setHideBannerAfterDone(true);
+  // Drive toast lifecycle and progress updates
+  useEffect(() => {
+    // No toast needed
+    if (!showProgressBanner) {
+      if (progressToastIdRef.current) {
+        dismissToast(progressToastIdRef.current);
+        progressToastIdRef.current = null;
+      }
+      return;
+    }
+
+    const countsText = `${baseRendered}/${baseTotal || basePages.length} • ${compRendered}/${compTotal || comparisonPages.length}`;
+    if (!allDone) {
+      // Create toast if missing
+      if (!progressToastIdRef.current) {
+        const id = alert({
+          alertType: 'neutral',
+          title: t('compare.rendering.inProgress', "One or both of these PDFs are very large, scrolling won't be smooth until the rendering is complete"),
+          body: `${countsText} ${t('compare.rendering.pagesRendered', 'pages rendered')}`,
+          location: 'bottom-right' as ToastLocation,
+          isPersistentPopup: true,
+          durationMs: 0,
+          expandable: false,
+          progressBarPercentage: progressPct,
+        });
+        progressToastIdRef.current = id;
+      } else {
+        updateToast(progressToastIdRef.current, {
+          title: t('compare.rendering.inProgress', "One or both of these PDFs are very large, scrolling won't be smooth until the rendering is complete"),
+          body: `${countsText} ${t('compare.rendering.pagesRendered', 'pages rendered')}`,
+          location: 'bottom-right' as ToastLocation,
+          isPersistentPopup: true,
+          alertType: 'neutral', // ensure it stays neutral until completion
+        });
+        updateToastProgress(progressToastIdRef.current, progressPct);
+      }
+    } else {
+      // Completed: update then auto-dismiss after 3s
+      if (progressToastIdRef.current) {
+        updateToast(progressToastIdRef.current, {
+          title: t('compare.rendering.complete', 'Page rendering complete'),
+          body: undefined,
+          isPersistentPopup: false,
+          durationMs: 3000,
+        });
+        updateToastProgress(progressToastIdRef.current, 100);
+        if (completionTimerRef.current != null) window.clearTimeout(completionTimerRef.current);
+        completionTimerRef.current = window.setTimeout(() => {
+          if (progressToastIdRef.current) {
+            dismissToast(progressToastIdRef.current);
+            progressToastIdRef.current = null;
+          }
+          if (completionTimerRef.current != null) {
+            window.clearTimeout(completionTimerRef.current);
+            completionTimerRef.current = null;
+          }
+        }, 3000);
+      }
+    }
+
+    return () => {
       if (completionTimerRef.current != null) {
         window.clearTimeout(completionTimerRef.current);
         completionTimerRef.current = null;
       }
-    }, 3000);
-  }
+    };
+  }, [showProgressBanner, allDone, progressPct, baseRendered, compRendered, baseTotal, compTotal, basePages.length, comparisonPages.length, t]);
 
   return (
     <Stack className="compare-workbench">
-      {showProgressBanner && !hideBannerAfterDone && (
-        <Alert color="yellow" variant="light">
-          <Stack gap={6}>
-            {!allDone ? (
-              <>
-                <Text size="sm">
-                  {t('compare.rendering.inProgress', 'One or both of these PDFs are very large, scrolling won\'t be smooth until the rendering is complete')}
-                </Text>
-                <Text size="sm">
-                  {`${baseRendered}/${baseTotal || basePages.length} • ${compRendered}/${compTotal || comparisonPages.length} ${t('compare.rendering.pagesRendered', 'pages rendered')}`}
-                </Text>
-                <Progress value={progressPct} animated size="sm" />
-              </>
-            ) : (
-              <>
-                <Text size="sm">{t('compare.rendering.complete', 'Page rendering complete')}</Text>
-                <Progress value={100} size="sm" />
-              </>
-            )}
-          </Stack>
-        </Alert>
-      )}
 
         <Stack gap="lg" className="compare-workbench__content">
           <div
@@ -339,6 +382,7 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
               continuePan={continuePan}
               endPan={endPan}
               handleWheelZoom={handleWheelZoom}
+              handleWheelOverscroll={handleWheelOverscroll}
               onTouchStart={onTouchStart}
               onTouchMove={onTouchMove}
               onTouchEnd={onTouchEnd}
@@ -371,6 +415,7 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
               continuePan={continuePan}
               endPan={endPan}
               handleWheelZoom={handleWheelZoom}
+              handleWheelOverscroll={handleWheelOverscroll}
               onTouchStart={onTouchStart}
               onTouchMove={onTouchMove}
               onTouchEnd={onTouchEnd}

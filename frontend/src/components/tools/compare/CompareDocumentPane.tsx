@@ -17,6 +17,7 @@ interface CompareDocumentPaneProps {
   continuePan: (event: React.MouseEvent<HTMLDivElement>) => void;
   endPan: () => void;
   handleWheelZoom: (pane: 'base' | 'comparison', event: React.WheelEvent<HTMLDivElement>) => void;
+  handleWheelOverscroll: (pane: 'base' | 'comparison', event: React.WheelEvent<HTMLDivElement>) => void;
   onTouchStart: (pane: 'base' | 'comparison', event: React.TouchEvent<HTMLDivElement>) => void;
   onTouchMove: (event: React.TouchEvent<HTMLDivElement>) => void;
   onTouchEnd: (event: React.TouchEvent<HTMLDivElement>) => void;
@@ -86,6 +87,7 @@ const CompareDocumentPane = ({
   continuePan,
   endPan,
   handleWheelZoom,
+  handleWheelOverscroll,
   onTouchStart,
   onTouchMove,
   onTouchEnd,
@@ -149,7 +151,7 @@ const CompareDocumentPane = ({
         onMouseMove={continuePan}
         onMouseUp={endPan}
         onMouseLeave={endPan}
-        onWheel={(event) => handleWheelZoom(pane, event)}
+        onWheel={(event) => { handleWheelZoom(pane, event); handleWheelOverscroll(pane, event); }}
         onTouchStart={(event) => onTouchStart(pane, event)}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
