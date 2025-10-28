@@ -3848,6 +3848,10 @@
     "preview": "Preview"
   },
   "config": {
+    "overview": {
+      "title": "Application Configuration",
+      "description": "Current application settings and configuration details."
+    },
     "account": {
       "overview": {
         "title": "Account Settings",
