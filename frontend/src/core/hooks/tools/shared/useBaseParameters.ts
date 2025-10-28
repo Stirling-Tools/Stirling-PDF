@@ -34,17 +34,16 @@ export function useBaseParameters<T>(config: BaseParametersConfig<T>): BaseParam
   }, [parameters, config.validateFn]);
 
   const endpointName = config.endpointName;
-  const isStringEndpoint = typeof endpointName === "string";
-
-  const getEndpointNameString = useCallback(() => {
-    return endpointName as string;
-  }, [endpointName]);
-
-  const getEndpointNameFunction = useCallback(() => {
-    return (endpointName as (params: T) => string)(parameters);
-  }, [endpointName, parameters]);
-
-  const getEndpointName = isStringEndpoint ? getEndpointNameString : getEndpointNameFunction;
+  let getEndpointName: () => string;
+  if (typeof endpointName === "string") {
+    getEndpointName = useCallback(() => {
+      return endpointName;
+    }, []);
+  } else {
+    getEndpointName = useCallback(() => {
+      return endpointName(parameters);
+    }, [parameters]);
+  }
 
   return {
     parameters,
