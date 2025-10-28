@@ -1,9 +1,9 @@
 import { Modal, Stack, Button, Text, Title, Anchor } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
-import { Z_ANALYTICS_MODAL } from '../../styles/zIndex';
-import { useAppConfig } from '../../contexts/AppConfigContext';
-import apiClient from '../../services/apiClient';
+import { Z_ANALYTICS_MODAL } from '@app/styles/zIndex';
+import { useAppConfig } from '@app/contexts/AppConfigContext';
+import apiClient from '@app/services/apiClient';
 
 interface AdminAnalyticsChoiceModalProps {
   opened: boolean;
