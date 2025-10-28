@@ -719,7 +719,13 @@ def main() -> None:
             print(f"{translated_pct:.2f}")
             sys.exit(0)
 
+        _target_rel_path = str(target_rel_path).replace("\\", "/").replace("//", "/")
+
         report.append(f"#### 📄 File: `{target_rel_path}`")
+        if not _target_rel_path.endswith(
+            "en-GB/translation.json"
+        ) and not _target_rel_path.endswith("en-US/translation.json"):
+            report.append(f"💬 **Translated:** {translated_pct:.2f}%")
         if success:
             report.append("✅ **Passed:** All keys in sync.")
         else:
@@ -740,7 +746,6 @@ def main() -> None:
             if dupes:
                 report.append(f"- Duplicate keys ({len(dupes)}): `{', '.join(dupes)}`")
 
-        _target_rel_path = str(target_rel_path).replace("\\", "/").replace("//", "/")
         if not _target_rel_path.endswith("en-GB/translation.json"):
             if missing_abs > 0:
                 report.append(
