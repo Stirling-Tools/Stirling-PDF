@@ -99,6 +99,7 @@ premium:
 
 mail:
   enabled: false # set to 'true' to enable sending emails
+  enableInvites: false # set to 'true' to enable email invites for user management (requires mail.enabled and security.enableLogin)
   host: smtp.example.com # SMTP server hostname
   port: 587 # SMTP server port
   username: '' # SMTP server username
@@ -171,8 +172,6 @@ system:
     cleanupSystemTemp: false # Whether to clean broader system temp directory
 
 ui:
-  appName: '' # application's visible name
-  homeDescription: '' # short description or tagline shown on the homepage
   appNameNavbar: '' # name displayed on the navigation bar
   languages: [] # If empty, all languages are enabled. To display only German and Polish ["de_DE", "pl_PL"]. British English is always enabled.
 
