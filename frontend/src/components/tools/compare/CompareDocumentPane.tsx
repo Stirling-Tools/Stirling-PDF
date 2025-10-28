@@ -1,5 +1,5 @@
 import { Alert, Group, Loader, Stack, Text } from '@mantine/core';
-import { RefObject } from 'react';
+import { RefObject, useMemo } from 'react';
 import type { PagePreview, WordHighlightEntry } from './types';
 import type { TokenBoundingBox } from '../../../types/compare';
 import CompareNavigationDropdown from './CompareNavigationDropdown';
@@ -108,7 +108,15 @@ const CompareDocumentPane = ({
   pageLabel,
   altLabel,
 }: CompareDocumentPaneProps) => {
-  // Constants that vary by pane
+  const isMobileViewport = useMediaQuery('(max-width: 1024px)');
+  const pairedPageMap = useMemo(() => {
+    const map = new Map<number, PagePreview>();
+    pairedPages.forEach((item) => {
+      map.set(item.pageNumber, item);
+    });
+    return map;
+  }, [pairedPages]);
+
   const HIGHLIGHT_COLOR = pane === 'base' ? '#ff6b6b' : '#51cf66'; // red for base (removals), green for comparison (additions)
   const HIGHLIGHT_OPACITY = pane === 'base' ? 0.45 : 0.35;
   const OFFSET_PIXELS = pane === 'base' ? 4 : 2;
@@ -163,7 +171,7 @@ const CompareDocumentPane = ({
           )}
 
           {pages.map((page) => {
-            const peerPage = pairedPages.find((item) => item.pageNumber === page.pageNumber);
+            const peerPage = pairedPageMap.get(page.pageNumber);
             const targetHeight = peerPage ? Math.max(page.height, peerPage.height) : page.height;
             const fit = targetHeight / page.height;
             const rowHeightPx = getRowHeightPx(page.pageNumber);
@@ -172,9 +180,8 @@ const CompareDocumentPane = ({
             const isPortrait = rotationNorm === 0 || rotationNorm === 180;
             const isStackedPortrait = layout === 'stacked' && isPortrait;
             const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 1200;
-            const isMobile = useMediaQuery('(max-width: 1024px)');
             const containerW = scrollRef.current?.clientWidth ?? viewportWidth;
-            const stackedWidth = isMobile
+            const stackedWidth = isMobileViewport
               ? Math.max(320, Math.round(containerW))
               : Math.max(320, Math.round(viewportWidth * 0.5));
             const stackedHeight = Math.round(stackedWidth * 1.4142);

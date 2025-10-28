@@ -2117,6 +2117,9 @@
     "tags": "differentiate,contrast,changes,analysis",
     "title": "Compare",
     "header": "Compare PDFs",
+    "workbench": {
+      "label": "Compare view"
+    },
     "highlightColor": {
       "1": "Highlight Colour 1:",
       "2": "Highlight Colour 2:"
@@ -2168,7 +2171,9 @@
     },
     "dropdown": {
       "deletions": "Deletions ({{count}})",
-      "additions": "Additions ({{count}})"
+      "additions": "Additions ({{count}})",
+      "searchPlaceholder": "Search changes...",
+      "noResults": "No changes found"
     },
     "actions": {
       "stackVertically": "Stack vertically",

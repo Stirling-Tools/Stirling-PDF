@@ -17,6 +17,8 @@ const CompareNavigationDropdown = ({
 }: NavigationDropdownProps) => {
   const { t } = useTranslation();
   const newLineLabel = t('compare.newLine', 'new-line');
+  const formatPageLabel = (page: number) =>
+    t('compare.dropdown.pagePrefix', { page, defaultValue: 'Page {{page}}' });
   const combobox = useCombobox({
     onDropdownClose: () => {
       combobox.resetSelectedOption();
@@ -168,10 +170,16 @@ const CompareNavigationDropdown = ({
         <div className="compare-dropdown-scrollwrap">
           <ScrollArea.Autosize mah={300} viewportRef={viewportRef} onScrollPositionChange={handleScrollPos}>
             <div ref={searchRef}>
-              <Combobox.Search placeholder="Search changes..." value={query} onChange={(e) => setQuery(e.currentTarget.value)} />
+              <Combobox.Search
+                placeholder={t('compare.dropdown.searchPlaceholder', 'Search changes...')}
+                value={query}
+                onChange={(e) => setQuery(e.currentTarget.value)}
+              />
             </div>
             {stickyPage != null && (
-              <div className="compare-dropdown-sticky" style={{ top: searchHeight }}>{`Page ${stickyPage}`}</div>
+              <div className="compare-dropdown-sticky" style={{ top: searchHeight }}>
+                {t('compare.summary.pageLabel', 'Page')}{' '}{stickyPage}
+              </div>
             )}
             <Combobox.Options className="compare-dropdown-options">
             {normalizedChanges.length > 0 ? (
@@ -186,7 +194,7 @@ const CompareNavigationDropdown = ({
                         className={["compare-dropdown-group", stickyPage === lastPage ? "compare-dropdown-group--hidden" : ""].filter(Boolean).join(" ")}
                         key={`group-${lastPage}`}
                       >
-                        {`Page ${lastPage}`}
+                        {t('compare.summary.pageLabel', 'Page')}{' '}{lastPage}
                       </div>
                     );
                   }
@@ -208,7 +216,7 @@ const CompareNavigationDropdown = ({
                 return nodes;
               })()
             ) : (
-              <Combobox.Empty>No changes found</Combobox.Empty>
+              <Combobox.Empty>{t('compare.dropdown.noResults', 'No changes found')}</Combobox.Empty>
             )}
             </Combobox.Options>
           </ScrollArea.Autosize>

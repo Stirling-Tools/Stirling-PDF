@@ -1286,6 +1286,9 @@
       "title": "Compare view",
       "noData": "Run a comparison to view the summary and diff."
     },
+    "workbench": {
+      "label": "Compare view"
+    },
     "base": {
       "label": "Base Document",
       "placeholder": "Select a base PDF"
@@ -1322,6 +1325,12 @@
       "added": "Added in comparison"
     },
     "newLine": "new-line",
+    "dropdown": {
+      "deletions": "Deletions ({{count}})",
+      "additions": "Additions ({{count}})",
+      "searchPlaceholder": "Search changes...",
+      "noResults": "No changes found"
+    },
     "summary": {
       "baseHeading": "Base document",
       "comparisonHeading": "Comparison document",
