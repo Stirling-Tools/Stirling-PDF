@@ -256,7 +256,7 @@ const CompareDocumentPane = ({
                       style={{ transform: `translate(${-panX}px, ${-panY}px) scale(${zoom})`, transformOrigin: 'top left' }}
                     >
                       <img
-                        src={page.url}
+                        src={page.url ?? ''}
                         alt={altLabel}
                         loading="lazy"
                         className="compare-diff-page__image"
