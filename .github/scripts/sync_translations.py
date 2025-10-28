@@ -41,18 +41,13 @@ IGNORE_LOCALES_FILE = Path("scripts/ignore_locales.toml")
 class MergeStats:
     added: int = 0
     pruned: int = 0
-    missing_keys: list[str] | None = None
-    extra_keys: list[str] | None = None
+    missing_keys: list[str] = field(default_factory=list)
+    extra_keys: list[str] = field(default_factory=list)
     # Missing translatable leaf nodes (non-dict values)
     missing_leafs: int = 0
     # Untranslated values (same as reference English)
     untranslated_leafs: int = 0
-    untranslated_keys: list[str] | None = None
-
-    def __post_init__(self):
-        self.missing_keys = []
-        self.extra_keys = []
-        self.untranslated_keys = []
+    untranslated_keys: list[str] = field(default_factory=list)
 
 
 def is_mapping(v: Any) -> bool:
