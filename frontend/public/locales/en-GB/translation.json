@@ -2202,6 +2202,15 @@
       "processing": "Analysing differences...",
       "complete": "Comparison ready"
     },
+    "longJob": {
+      "title": "Large comparison in progress",
+      "body": "These PDFs together exceed 2,000 pages. Processing can take several minutes."
+    },
+    "slowOperation": {
+      "title": "Still working…",
+      "body": "This comparison is taking longer than usual. You can let it continue or cancel it.",
+      "cancel": "Cancel comparison"
+    },
     "pageCount": "{{count}} pages",
     "lastModified": "Last modified",
     "newLine": "new-line",

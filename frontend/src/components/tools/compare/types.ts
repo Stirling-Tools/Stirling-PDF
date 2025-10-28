@@ -5,7 +5,7 @@ export interface PagePreview {
   width: number;
   height: number;
   rotation: number;
-  url: string;
+  url: string | null;
 }
 
 export interface WordHighlightEntry {

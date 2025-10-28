@@ -1341,6 +1341,15 @@
       "processing": "Analyzing differences...",
       "complete": "Comparison ready"
     },
+    "longJob": {
+      "title": "Large comparison in progress",
+      "body": "These PDFs together exceed 2,000 pages. Processing can take several minutes."
+    },
+    "slowOperation": {
+      "title": "Still working…",
+      "body": "This comparison is taking longer than usual. You can let it continue or cancel it.",
+      "cancel": "Cancel comparison"
+    },
     "error": {
       "selectRequired": "Select a base and comparison document.",
       "filesMissing": "Unable to locate the selected files. Please re-select them.",
