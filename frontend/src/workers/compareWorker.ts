@@ -86,13 +86,13 @@ const findLastUnchangedIndex = (segment: CompareDiffToken[]) => {
 const chunkedDiff = (
   words1: string[],
   words2: string[],
-  chunkSize: number
-): CompareDiffToken[] => {
+  chunkSize: number,
+  emit: (tokens: CompareDiffToken[]) => void
+) => {
   if (words1.length === 0 && words2.length === 0) {
-    return [];
+    return;
   }
 
-  const tokens: CompareDiffToken[] = [];
   const maxWindow = Math.max(chunkSize * 6, chunkSize + 512);
   const minCommit = Math.max(1, Math.floor(chunkSize * 0.1));
 
@@ -106,7 +106,9 @@ const chunkedDiff = (
       return;
     }
     const finalTokens = diff(buffer1, buffer2);
-    tokens.push(...finalTokens);
+    if (finalTokens.length > 0) {
+      emit(finalTokens);
+    }
     buffer1 = [];
     buffer2 = [];
     index1 = words1.length;
@@ -140,7 +142,7 @@ const chunkedDiff = (
 
       if (window1.length === 0 && window2.length === 0) {
         flushRemainder();
-        return tokens;
+        return;
       }
 
       chunkTokens = diff(window1, window2);
@@ -174,7 +176,7 @@ const chunkedDiff = (
     if (chunkTokens.length === 0) {
       if (reachedEnd) {
         flushRemainder();
-        return tokens;
+        return;
       }
       windowSize = Math.min(windowSize + Math.max(64, Math.floor(chunkSize * 0.5)), maxWindow);
       continue;
@@ -191,7 +193,9 @@ const chunkedDiff = (
     const baseConsumed = countBaseTokens(commitTokens);
     const comparisonConsumed = countComparisonTokens(commitTokens);
 
-    tokens.push(...commitTokens);
+    if (commitTokens.length > 0) {
+      emit(commitTokens);
+    }
 
     const consumedFromNew1 = Math.max(0, baseConsumed - buffer1.length);
     const consumedFromNew2 = Math.max(0, comparisonConsumed - buffer2.length);
@@ -220,7 +224,6 @@ const chunkedDiff = (
   }
 
   flushRemainder();
-  return tokens;
 };
 
 self.onmessage = (event: MessageEvent<CompareWorkerRequest>) => {
@@ -266,12 +269,25 @@ self.onmessage = (event: MessageEvent<CompareWorkerRequest>) => {
   }
 
   const start = performance.now();
-  const tokens = chunkedDiff(baseTokens, comparisonTokens, batchSize);
+  chunkedDiff(
+    baseTokens,
+    comparisonTokens,
+    batchSize,
+    (tokens) => {
+      if (tokens.length === 0) {
+        return;
+      }
+      const response: CompareWorkerResponse = {
+        type: 'chunk',
+        tokens,
+      };
+      self.postMessage(response);
+    }
+  );
   const durationMs = performance.now() - start;
 
   const response: CompareWorkerResponse = {
     type: 'success',
-    tokens,
     stats: {
       baseWordCount: baseTokens.length,
       comparisonWordCount: comparisonTokens.length,

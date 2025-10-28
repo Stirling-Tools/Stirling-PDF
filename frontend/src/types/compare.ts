@@ -113,8 +113,11 @@ export interface CompareWorkerRequest {
 
 export type CompareWorkerResponse =
   | {
-      type: 'success';
+      type: 'chunk';
       tokens: CompareDiffToken[];
+    }
+  | {
+      type: 'success';
       stats: {
         baseWordCount: number;
         comparisonWordCount: number;

@@ -78,7 +78,7 @@ export const useCompareOperation = (): CompareOperationHook => {
   }, []);
 
   const runCompareWorker = useCallback(
-    async (baseTokens: string[], comparisonTokens: string[], warningMessages: CompareWorkerWarnings) => {
+    async (baseTokens: string[], comparisonTokens: string[], warningMessages: CompareWorkerWarnings, onChunk?: (chunk: CompareDiffToken[]) => void) => {
       const worker = ensureWorker();
 
       return await new Promise<{
@@ -87,6 +87,7 @@ export const useCompareOperation = (): CompareOperationHook => {
         warnings: string[];
       }>((resolve, reject) => {
         const collectedWarnings: string[] = [];
+        const collectedTokens: CompareDiffToken[] = [];
 
         const handleMessage = (event: MessageEvent<CompareWorkerResponse>) => {
           const message = event.data;
@@ -95,10 +96,17 @@ export const useCompareOperation = (): CompareOperationHook => {
           }
 
           switch (message.type) {
+            case 'chunk': {
+              if (message.tokens.length > 0) {
+                collectedTokens.push(...message.tokens);
+                onChunk?.(message.tokens);
+              }
+              break;
+            }
             case 'success':
               cleanup();
               resolve({
-                tokens: message.tokens,
+                tokens: collectedTokens,
                 stats: message.stats,
                 warnings: collectedWarnings,
               });
