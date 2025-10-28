@@ -150,12 +150,18 @@ export function fileContextReducer(state: FileContextState, action: FileContextA
       // Validate that all IDs exist in current state
       const validIds = orderedFileIds.filter(id => state.files.byId[id]);
 
-      // Don't touch selectedFileIds - it's just a reference list, order doesn't matter
+      // Reorder selected IDs to match the new order while dropping any that no longer exist
+      const reorderedSelectedIds = validIds.filter(id => state.ui.selectedFileIds.includes(id));
+
       return {
         ...state,
         files: {
           ...state.files,
           ids: validIds
+        },
+        ui: {
+          ...state.ui,
+          selectedFileIds: reorderedSelectedIds
         }
       };
     }
