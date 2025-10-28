@@ -22,6 +22,10 @@ import {
   getWorkerErrorCode,
   filterTokensForDiff,
 } from './operationUtils';
+import { alert, dismissToast } from '../../../components/toast';
+import type { ToastLocation } from '../../../components/toast/types';
+
+const LONG_RUNNING_PAGE_THRESHOLD = 2000;
 
 export interface CompareOperationHook extends ToolOperationHook<CompareParameters> {
   result: CompareResultData | null;
@@ -44,6 +48,7 @@ export const useCompareOperation = (): CompareOperationHook => {
   const [downloadFilename, setDownloadFilename] = useState('');
   const [result, setResult] = useState<CompareResultData | null>(null);
   const [warnings, setWarnings] = useState<string[]>([]);
+  const longRunningToastIdRef = useRef<string | null>(null);
 
   const ensureWorker = useCallback(() => {
     if (!workerRef.current) {
@@ -105,6 +110,10 @@ export const useCompareOperation = (): CompareOperationHook => {
             }
             case 'success':
               cleanup();
+              if (longRunningToastIdRef.current) {
+                dismissToast(longRunningToastIdRef.current);
+                longRunningToastIdRef.current = null;
+              }
               resolve({
                 tokens: collectedTokens,
                 stats: message.stats,
@@ -116,6 +125,10 @@ export const useCompareOperation = (): CompareOperationHook => {
               break;
             case 'error': {
               cleanup();
+              if (longRunningToastIdRef.current) {
+                dismissToast(longRunningToastIdRef.current);
+                longRunningToastIdRef.current = null;
+              }
               const error: Error & { code?: 'EMPTY_TEXT' | 'TOO_LARGE' } = new Error(message.message);
               error.code = message.code;
               reject(error);
@@ -216,6 +229,27 @@ export const useCompareOperation = (): CompareOperationHook => {
         // Filter out paragraph sentinels before diffing to avoid large false-positive runs
         const baseFiltered = filterTokensForDiff(baseContent.tokens, baseContent.metadata);
         const comparisonFiltered = filterTokensForDiff(comparisonContent.tokens, comparisonContent.metadata);
+
+        const combinedPageCount =
+          (baseContent.pageSizes?.length ?? 0) + (comparisonContent.pageSizes?.length ?? 0);
+
+        if (
+          combinedPageCount >= LONG_RUNNING_PAGE_THRESHOLD &&
+          !longRunningToastIdRef.current
+        ) {
+          const toastId = alert({
+            alertType: 'neutral',
+            title: t('compare.longJob.title', 'Large comparison in progress'),
+            body: t(
+              'compare.longJob.body',
+              'These PDFs together exceed 2,000 pages. Processing can take several minutes.'
+            ),
+            location: 'bottom-right' as ToastLocation,
+            isPersistentPopup: true,
+            expandable: false,
+          });
+          longRunningToastIdRef.current = toastId || null;
+        }
 
         const { tokens, stats, warnings: workerWarnings } = await runCompareWorker(
           baseFiltered.tokens,
@@ -349,6 +383,10 @@ export const useCompareOperation = (): CompareOperationHook => {
         const duration = performance.now() - operationStart;
         setStatus((prev) => (prev ? `${prev} (${Math.round(duration)} ms)` : prev));
         setIsLoading(false);
+        if (longRunningToastIdRef.current) {
+          dismissToast(longRunningToastIdRef.current);
+          longRunningToastIdRef.current = null;
+        }
       }
     },
     [cleanupDownloadUrl, runCompareWorker, selectors, t]
@@ -371,6 +409,10 @@ export const useCompareOperation = (): CompareOperationHook => {
       if (workerRef.current) {
         workerRef.current.terminate();
         workerRef.current = null;
+      }
+      if (longRunningToastIdRef.current) {
+        dismissToast(longRunningToastIdRef.current);
+        longRunningToastIdRef.current = null;
       }
     };
   }, [cleanupDownloadUrl]);

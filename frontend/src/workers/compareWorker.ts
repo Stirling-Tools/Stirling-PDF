@@ -93,8 +93,31 @@ const chunkedDiff = (
     return;
   }
 
-  const maxWindow = Math.max(chunkSize * 6, chunkSize + 512);
-  const minCommit = Math.max(1, Math.floor(chunkSize * 0.1));
+  const baseChunkSize = Math.max(1, chunkSize);
+  let dynamicChunkSize = baseChunkSize;
+  const baseMaxWindow = Math.max(baseChunkSize * 6, baseChunkSize + 512);
+  let dynamicMaxWindow = baseMaxWindow;
+  let dynamicMinCommit = Math.max(1, Math.floor(dynamicChunkSize * 0.1));
+  let dynamicStep = Math.max(64, Math.floor(dynamicChunkSize * 0.5));
+  let stallIterations = 0;
+
+  const increaseChunkSizes = () => {
+    const maxChunkSize = baseChunkSize * 8;
+    if (dynamicChunkSize >= maxChunkSize) {
+      return;
+    }
+    const nextChunk = Math.min(
+      maxChunkSize,
+      Math.max(dynamicChunkSize + dynamicStep, Math.floor(dynamicChunkSize * 1.5))
+    );
+    if (nextChunk === dynamicChunkSize) {
+      return;
+    }
+    dynamicChunkSize = nextChunk;
+    dynamicMaxWindow = Math.max(dynamicMaxWindow, Math.max(dynamicChunkSize * 6, dynamicChunkSize + 512));
+    dynamicMinCommit = Math.max(1, Math.floor(dynamicChunkSize * 0.1));
+    dynamicStep = Math.max(64, Math.floor(dynamicChunkSize * 0.5));
+  };
 
   let index1 = 0;
   let index2 = 0;
@@ -124,7 +147,7 @@ const chunkedDiff = (
     const remaining1 = Math.max(0, words1.length - index1);
     const remaining2 = Math.max(0, words2.length - index2);
 
-    let windowSize = Math.max(chunkSize, buffer1.length, buffer2.length);
+    let windowSize = Math.max(dynamicChunkSize, buffer1.length, buffer2.length);
     let window1: string[] = [];
     let window2: string[] = [];
     let chunkTokens: CompareDiffToken[] = [];
@@ -153,8 +176,8 @@ const chunkedDiff = (
         index2 + take2 >= words2.length;
 
       const windowTooLarge =
-        window1.length >= maxWindow ||
-        window2.length >= maxWindow;
+        window1.length >= dynamicMaxWindow ||
+        window2.length >= dynamicMaxWindow;
 
       if (lastStableIndex >= 0 || reachedEnd || windowTooLarge) {
         break;
@@ -168,8 +191,8 @@ const chunkedDiff = (
       }
 
       windowSize = Math.min(
-        maxWindow,
-        windowSize + Math.max(64, Math.floor(chunkSize * 0.5))
+        dynamicMaxWindow,
+        windowSize + dynamicStep
       );
     }
 
@@ -178,7 +201,12 @@ const chunkedDiff = (
         flushRemainder();
         return;
       }
-      windowSize = Math.min(windowSize + Math.max(64, Math.floor(chunkSize * 0.5)), maxWindow);
+      windowSize = Math.min(windowSize + dynamicStep, dynamicMaxWindow);
+      stallIterations += 1;
+      if (stallIterations >= 3) {
+        increaseChunkSizes();
+        stallIterations = 0;
+      }
       continue;
     }
 
@@ -186,7 +214,7 @@ const chunkedDiff = (
     if (commitIndex < 0) {
       commitIndex = reachedEnd
         ? chunkTokens.length - 1
-        : Math.min(chunkTokens.length - 1, minCommit - 1);
+        : Math.min(chunkTokens.length - 1, dynamicMinCommit - 1);
     }
 
     const commitTokens = commitIndex >= 0 ? chunkTokens.slice(0, commitIndex + 1) : [];
@@ -211,7 +239,12 @@ const chunkedDiff = (
       break;
     }
 
-    // Prevent runaway buffers: if we made no progress, forcibly consume one token
+    if (commitTokens.length < dynamicMinCommit) {
+      stallIterations += 1;
+    } else {
+      stallIterations = 0;
+    }
+
     if (commitTokens.length === 0 && buffer1.length + buffer2.length > 0) {
       if (buffer1.length > 0 && index1 < words1.length) {
         buffer1 = buffer1.slice(1);
@@ -220,6 +253,11 @@ const chunkedDiff = (
         buffer2 = buffer2.slice(1);
         index2 += 1;
       }
+    }
+
+    if (stallIterations >= 3) {
+      increaseChunkSizes();
+      stallIterations = 0;
     }
   }
 
