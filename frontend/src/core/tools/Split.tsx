@@ -21,16 +21,11 @@ const Split = (props: BaseToolProps) => {
   );
 
   const methodTips = useSplitMethodTips();
-  const allSettingsTips = useSplitSettingsTips();
-
-  // Get tooltip content for the currently selected method
-  const settingsTips = base.params.parameters.method
-    ? allSettingsTips[base.params.parameters.method]
-    : null;
+  const settingsTips = useSplitSettingsTips(base.params.parameters.method);
 
   // Get tooltip content for a specific method
   const getMethodTooltip = (option: MethodOption) => {
-    const tooltipContent = allSettingsTips[option.value];
+    const tooltipContent = useSplitSettingsTips(option.value);
     return tooltipContent?.tips || [];
   };
 
