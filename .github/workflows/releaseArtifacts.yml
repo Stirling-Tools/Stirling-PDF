@@ -63,7 +63,7 @@ jobs:
           ls -R ./build/launch4j
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
           name: binaries${{ matrix.file_suffix }}
           path: |
@@ -95,7 +95,7 @@ jobs:
         run: ls -R
 
       - name: Install Cosign
-        uses: sigstore/cosign-installer@d7543c93d881b35a8faa02e8e3605f69b7a1ce62 # v3.10.0
+        uses: sigstore/cosign-installer@faadad0cce49287aee09b3a48701e75088a2c6ad # v4.0.0
 
       - name: Generate key pair
         run: cosign generate-key-pair
@@ -139,7 +139,7 @@ jobs:
             ./launch4j/Stirling-PDF-Server${{ matrix.file_suffix }}.exe
 
       - name: Upload signed artifacts
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
           name: signed${{ matrix.file_suffix }}
           path: |
