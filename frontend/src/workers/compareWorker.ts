@@ -247,13 +247,12 @@ self.onmessage = (event: MessageEvent<CompareWorkerRequest>) => {
   }
 
   if (baseTokens.length > maxWordThreshold || comparisonTokens.length > maxWordThreshold) {
+    // For compare tool, do not fail hard; warn and continue with chunked diff
     const response: CompareWorkerResponse = {
-      type: 'error',
+      type: 'warning',
       message: warnings.tooLargeMessage ?? 'Documents are too large to compare.',
-      code: 'TOO_LARGE',
     };
     self.postMessage(response);
-    return;
   }
 
   const isComplex = baseTokens.length > complexThreshold || comparisonTokens.length > complexThreshold;
@@ -267,9 +266,7 @@ self.onmessage = (event: MessageEvent<CompareWorkerRequest>) => {
   }
 
   const start = performance.now();
-  const tokens = isComplex
-    ? chunkedDiff(baseTokens, comparisonTokens, batchSize)
-    : diff(baseTokens, comparisonTokens);
+  const tokens = chunkedDiff(baseTokens, comparisonTokens, batchSize);
   const durationMs = performance.now() - start;
 
   const response: CompareWorkerResponse = {

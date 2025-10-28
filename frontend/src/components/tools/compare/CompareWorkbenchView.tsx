@@ -1,5 +1,5 @@
-import { useCallback } from 'react';
-import { Alert, Stack, Text } from '@mantine/core';
+import { useCallback, useMemo, useRef, useState } from 'react';
+import { Alert, Progress, Stack, Text } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { useMediaQuery } from '@mantine/hooks';
 import {
@@ -91,13 +91,13 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
 
   const processedAt = result?.totals.processedAt ?? null;
 
-  const { pages: basePages, loading: baseLoading } = useComparePagePreviews({
+  const { pages: basePages, loading: baseLoading, totalPages: baseTotal, renderedPages: baseRendered } = useComparePagePreviews({
     file: baseFile,
     enabled: Boolean(result && baseFile),
     cacheKey: processedAt,
   });
 
-  const { pages: comparisonPages, loading: comparisonLoading } = useComparePagePreviews({
+  const { pages: comparisonPages, loading: comparisonLoading, totalPages: compTotal, renderedPages: compRendered } = useComparePagePreviews({
     file: comparisonFile,
     enabled: Boolean(result && comparisonFile),
     cacheKey: processedAt,
@@ -270,16 +270,57 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
 
   useRightRailButtons(rightRailButtons);
 
+  // Rendering progress banner for very large PDFs
+  const LARGE_PAGE_THRESHOLD = 400; // show banner when one or both exceed threshold
+  const showProgressBanner = useMemo(() => {
+    const totals = [baseTotal || basePages.length, compTotal || comparisonPages.length];
+    return Math.max(...totals) >= LARGE_PAGE_THRESHOLD && (baseLoading || comparisonLoading);
+  }, [baseTotal, compTotal, basePages.length, comparisonPages.length, baseLoading, comparisonLoading]);
+
+  const totalCombined = (baseTotal || basePages.length) + (compTotal || comparisonPages.length);
+  const renderedCombined = baseRendered + compRendered;
+  const progressPct = totalCombined > 0 ? Math.min(100, Math.round((renderedCombined / totalCombined) * 100)) : 0;
+
+  const [hideBannerAfterDone, setHideBannerAfterDone] = useState(false);
+  const completionTimerRef = useRef<number | null>(null);
+
+  const allDone = useMemo(() => {
+    const baseDone = (baseTotal || basePages.length) > 0 && baseRendered >= (baseTotal || basePages.length);
+    const compDone = (compTotal || comparisonPages.length) > 0 && compRendered >= (compTotal || comparisonPages.length);
+    return baseDone && compDone;
+  }, [baseRendered, compRendered, baseTotal, compTotal, basePages.length, comparisonPages.length]);
+
+  if (allDone && completionTimerRef.current == null && showProgressBanner) {
+    completionTimerRef.current = window.setTimeout(() => {
+      setHideBannerAfterDone(true);
+      if (completionTimerRef.current != null) {
+        window.clearTimeout(completionTimerRef.current);
+        completionTimerRef.current = null;
+      }
+    }, 3000);
+  }
+
   return (
     <Stack className="compare-workbench">
-      {result.warnings.length > 0 && (
+      {showProgressBanner && !hideBannerAfterDone && (
         <Alert color="yellow" variant="light">
-          <Stack gap={4}>
-            {result.warnings.map((warning, index) => (
-              <Text key={`warning-${index}`} size="sm">
-                {warning}
-              </Text>
-            ))}
+          <Stack gap={6}>
+            {!allDone ? (
+              <>
+                <Text size="sm">
+                  {t('compare.rendering.inProgress', 'One or both of these PDFs are very large, scrolling won\'t be smooth until the rendering is complete')}
+                </Text>
+                <Text size="sm">
+                  {`${baseRendered}/${baseTotal || basePages.length} • ${compRendered}/${compTotal || comparisonPages.length} ${t('compare.rendering.pagesRendered', 'pages rendered')}`}
+                </Text>
+                <Progress value={progressPct} animated size="sm" />
+              </>
+            ) : (
+              <>
+                <Text size="sm">{t('compare.rendering.complete', 'Page rendering complete')}</Text>
+                <Progress value={100} size="sm" />
+              </>
+            )}
           </Stack>
         </Alert>
       )}

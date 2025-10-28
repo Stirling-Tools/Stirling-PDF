@@ -67,7 +67,8 @@ export const useCompareChangeNavigation = (
         const boxWidth = Math.max(1, maxRight - minLeft);
         const absoluteTop = minTop - containerRect.top + container.scrollTop;
         const absoluteLeft = minLeft - containerRect.left + container.scrollLeft;
-        const desiredTop = Math.max(0, absoluteTop - (container.clientHeight - boxHeight) / 2);
+        const maxTop = Math.max(0, container.scrollHeight - container.clientHeight);
+        const desiredTop = Math.max(0, Math.min(maxTop, absoluteTop - (container.clientHeight - boxHeight) / 2));
         const desiredLeft = Math.max(0, absoluteLeft - (container.clientWidth - boxWidth) / 2);
 
         container.scrollTo({ top: desiredTop, left: desiredLeft, behavior: 'smooth' });
@@ -92,14 +93,16 @@ export const useCompareChangeNavigation = (
               const innerRect = peerInner.getBoundingClientRect();
               const innerHeight = Math.max(1, innerRect.height);
               const absoluteTopInPage = (topPercent / 100) * innerHeight;
+              const peerMaxTop = Math.max(0, peer.scrollHeight - peer.clientHeight);
               const peerDesiredTop = Math.max(
                 0,
-                peerPageEl.offsetTop + absoluteTopInPage - peer.clientHeight / 2
+                Math.min(peerMaxTop, peerPageEl.offsetTop + absoluteTopInPage - peer.clientHeight / 2)
               );
               peer.scrollTo({ top: peerDesiredTop, behavior: 'smooth' });
             } else if (peerPageEl) {
-              // Fallback: Scroll to page top
-              const top = Math.max(0, peerPageEl.offsetTop - Math.round(peer.clientHeight * 0.2));
+              // Fallback: Scroll to page top (clamped)
+              const peerMaxTop = Math.max(0, peer.scrollHeight - peer.clientHeight);
+              const top = Math.max(0, Math.min(peerMaxTop, peerPageEl.offsetTop - Math.round(peer.clientHeight * 0.2)));
               peer.scrollTo({ top, behavior: 'smooth' });
             }
           }

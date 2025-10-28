@@ -99,6 +99,7 @@ export const useComparePanZoom = ({
   const baseScrollRef = useRef<HTMLDivElement>(null);
   const comparisonScrollRef = useRef<HTMLDivElement>(null);
   const isSyncingRef = useRef(false);
+  const userScrollRef = useRef<{ base: boolean; comparison: boolean }>({ base: false, comparison: false });
   const scrollLinkDeltaRef = useRef<ScrollLinkDelta>({ vertical: 0, horizontal: 0 });
   const scrollLinkAnchorsRef = useRef<ScrollLinkAnchors>({
     deltaPixelsBaseToComp: 0,
@@ -337,9 +338,16 @@ export const useComparePanZoom = ({
         return;
       }
 
-      lastActivePaneRef.current = source === baseScrollRef.current ? 'base' : 'comparison';
-
       const sourceIsBase = source === baseScrollRef.current;
+      const sourceKey = sourceIsBase ? 'base' : 'comparison';
+
+      // Only sync if this scroll was initiated by the user (wheel/scrollbar/keyboard),
+      // not by our own programmatic scrolls.
+      if (!userScrollRef.current[sourceKey]) {
+        return;
+      }
+
+      lastActivePaneRef.current = sourceIsBase ? 'base' : 'comparison';
 
       const targetVerticalRange = Math.max(1, target.scrollHeight - target.clientHeight);
       const mappedTop = mapScrollTopBetweenPanes(source.scrollTop, sourceIsBase);
@@ -359,6 +367,43 @@ export const useComparePanZoom = ({
     },
     [isScrollLinked, mapScrollTopBetweenPanes]
   );
+
+  // Track user-initiated scroll state per pane
+  useEffect(() => {
+    const baseEl = baseScrollRef.current;
+    const compEl = comparisonScrollRef.current;
+    if (!baseEl || !compEl) return;
+
+    const onUserScrollStartBase = () => { userScrollRef.current.base = true; };
+    const onUserScrollStartComp = () => { userScrollRef.current.comparison = true; };
+    const onUserScrollEndBase = () => { userScrollRef.current.base = false; };
+    const onUserScrollEndComp = () => { userScrollRef.current.comparison = false; };
+
+    const addUserListeners = (el: HTMLDivElement, onStart: () => void, onEnd: () => void) => {
+      el.addEventListener('wheel', onStart, { passive: true });
+      el.addEventListener('mousedown', onStart, { passive: true });
+      el.addEventListener('touchstart', onStart, { passive: true });
+      // Heuristic: clear the flag shortly after scroll events settle
+      let timeout: number | null = null;
+      const onScroll = () => {
+        onStart();
+        if (timeout != null) window.clearTimeout(timeout);
+        timeout = window.setTimeout(onEnd, 120);
+      };
+      el.addEventListener('scroll', onScroll, { passive: true });
+      return () => {
+        el.removeEventListener('wheel', onStart as any);
+        el.removeEventListener('mousedown', onStart as any);
+        el.removeEventListener('touchstart', onStart as any);
+        el.removeEventListener('scroll', onScroll as any);
+        if (timeout != null) window.clearTimeout(timeout);
+      };
+    };
+
+    const cleanupBase = addUserListeners(baseEl, onUserScrollStartBase, onUserScrollEndBase);
+    const cleanupComp = addUserListeners(compEl, onUserScrollStartComp, onUserScrollEndComp);
+    return () => { cleanupBase(); cleanupComp(); };
+  }, []);
 
   const beginPan = useCallback(
     (pane: Pane, event: ReactMouseEvent<HTMLDivElement>) => {

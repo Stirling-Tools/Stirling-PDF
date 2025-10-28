@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { pdfWorkerManager } from '../../../../services/pdfWorkerManager';
 import type { PagePreview } from '../../../../hooks/useProgressivePagePreviews';
 
@@ -6,7 +6,12 @@ const DISPLAY_SCALE = 1;
 
 const getDevicePixelRatio = () => (typeof window !== 'undefined' ? window.devicePixelRatio : 1);
 
-const renderPdfDocumentToImages = async (file: File): Promise<PagePreview[]> => {
+const renderPdfDocumentToImages = async (
+  file: File,
+  onBatch?: (previews: PagePreview[]) => void,
+  batchSize: number = 12,
+  onInitTotal?: (totalPages: number) => void,
+): Promise<PagePreview[]> => {
   const arrayBuffer = await file.arrayBuffer();
   const pdf = await pdfWorkerManager.createDocument(arrayBuffer, {
     disableAutoFetch: true,
@@ -17,7 +22,9 @@ const renderPdfDocumentToImages = async (file: File): Promise<PagePreview[]> => 
     const previews: PagePreview[] = [];
     const dpr = getDevicePixelRatio();
     const renderScale = Math.max(2, Math.min(3, dpr * 2));
+    onInitTotal?.(pdf.numPages);
 
+    let batch: PagePreview[] = [];
     for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
       const page = await pdf.getPage(pageNumber);
       const displayViewport = page.getViewport({ scale: DISPLAY_SCALE });
@@ -34,19 +41,28 @@ const renderPdfDocumentToImages = async (file: File): Promise<PagePreview[]> => 
       }
 
       await page.render({ canvasContext: context, viewport: renderViewport, canvas }).promise;
-      previews.push({
+      const preview: PagePreview = {
         pageNumber,
         width: Math.round(displayViewport.width),
         height: Math.round(displayViewport.height),
         rotation: (page.rotate || 0) % 360,
         url: canvas.toDataURL(),
-      });
+      };
+      previews.push(preview);
+      if (onBatch) {
+        batch.push(preview);
+        if (batch.length >= batchSize) {
+          onBatch(batch);
+          batch = [];
+        }
+      }
 
       page.cleanup();
       canvas.width = 0;
       canvas.height = 0;
     }
 
+    if (onBatch && batch.length > 0) onBatch(batch);
     return previews;
   } finally {
     pdfWorkerManager.destroyDocument(pdf);
@@ -66,6 +82,8 @@ export const useComparePagePreviews = ({
 }: UseComparePagePreviewsOptions) => {
   const [pages, setPages] = useState<PagePreview[]>([]);
   const [loading, setLoading] = useState(false);
+  const [totalPages, setTotalPages] = useState(0);
+  const inFlightRef = useRef(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -81,7 +99,27 @@ export const useComparePagePreviews = ({
     const render = async () => {
       setLoading(true);
       try {
-        const previews = await renderPdfDocumentToImages(file);
+        inFlightRef.current += 1;
+        const current = inFlightRef.current;
+        const previews = await renderPdfDocumentToImages(
+          file,
+          (batch) => {
+            if (cancelled || current !== inFlightRef.current) return;
+            // Stream batches into state
+            setPages((prev) => {
+              const next = [...prev];
+              for (const p of batch) {
+                const idx = next.findIndex((x) => x.pageNumber > p.pageNumber);
+                if (idx === -1) next.push(p); else next.splice(idx, 0, p);
+              }
+              return next;
+            });
+          },
+          16,
+          (total) => {
+            if (!cancelled && current === inFlightRef.current) setTotalPages(total);
+          }
+        );
         if (!cancelled) {
           setPages(previews);
         }
@@ -104,7 +142,7 @@ export const useComparePagePreviews = ({
     };
   }, [file, enabled, cacheKey]);
 
-  return { pages, loading };
+  return { pages, loading, totalPages, renderedPages: pages.length };
 };
 
 export type UseComparePagePreviewsReturn = ReturnType<typeof useComparePagePreviews>;

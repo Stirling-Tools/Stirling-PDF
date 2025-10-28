@@ -180,13 +180,10 @@ export const useCompareOperation = (): CompareOperationHook => {
       setDownloadFilename('');
 
       const warningMessages: CompareWorkerWarnings = {
-        complexMessage: t(
-          'compare.complex.message',
-          'One or both of the provided documents are large files, accuracy of comparison may be reduced'
-        ),
+        // No accuracy warning any more
         tooLargeMessage: t(
           'compare.large.file.message',
-          'One or Both of the provided documents are too large to process'
+          'These documents are very large; comparison may take several minutes. Please keep this tab open.'
         ),
         emptyTextMessage: t(
           'compare.no.text.message',
@@ -328,9 +325,7 @@ export const useCompareOperation = (): CompareOperationHook => {
       } catch (error: unknown) {
         console.error('[compare] operation failed', error);
         const errorCode = getWorkerErrorCode(error);
-        if (errorCode === 'TOO_LARGE') {
-          setErrorMessage(warningMessages.tooLargeMessage ?? t('compare.error.generic', 'Unable to compare these files.'));
-        } else if (errorCode === 'EMPTY_TEXT') {
+        if (errorCode === 'EMPTY_TEXT') {
           setErrorMessage(warningMessages.emptyTextMessage ?? t('compare.error.generic', 'Unable to compare these files.'));
         } else {
           const fallbackMessage = t('compare.error.generic', 'Unable to compare these files.');

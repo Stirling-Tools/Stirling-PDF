@@ -189,8 +189,7 @@ const CompareDocumentPane = ({
             const wordRects = wordHighlightMap.get(page.pageNumber) ?? [];
             const groupedRects = new Map<string, TokenBoundingBox[]>();
             for (const { rect, metaIndex } of wordRects) {
-              const id =
-                metaIndexToGroupId.get(metaIndex) ?? `${pane}-token-${metaIndex}`;
+              const id = metaIndexToGroupId.get(metaIndex) ?? `${pane}-token-${metaIndex}`;
               const current = groupedRects.get(id) ?? [];
               current.push(rect);
               groupedRects.set(id, current);
