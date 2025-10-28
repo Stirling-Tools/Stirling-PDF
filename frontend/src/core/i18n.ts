@@ -104,4 +104,34 @@ i18n.on('languageChanged', (lng) => {
   document.documentElement.lang = lng;
 });
 
+/**
+ * Updates the supported languages list dynamically based on config
+ * If configLanguages is null/empty, all languages remain available
+ * Otherwise, only specified languages plus 'en-GB' fallback are enabled
+ */
+export function updateSupportedLanguages(configLanguages?: string[] | null) {
+  if (!configLanguages || configLanguages.length === 0) {
+    // No filter specified - keep all languages
+    return;
+  }
+
+  // Ensure fallback language is always included
+  const languagesToSupport = new Set(['en-GB', ...configLanguages]);
+
+  // Filter to only valid language codes that exist in our translations
+  const validLanguages = Array.from(languagesToSupport).filter(
+    lang => lang in supportedLanguages
+  );
+
+  if (validLanguages.length > 0) {
+    i18n.options.supportedLngs = validLanguages;
+
+    // If current language is not in the new supported list, switch to fallback
+    const currentLang = i18n.language;
+    if (currentLang && !validLanguages.includes(currentLang)) {
+      i18n.changeLanguage('en-GB');
+    }
+  }
+}
+
 export default i18n;

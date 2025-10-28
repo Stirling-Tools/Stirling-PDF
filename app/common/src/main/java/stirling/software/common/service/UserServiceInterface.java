@@ -6,4 +6,6 @@ public interface UserServiceInterface {
     String getCurrentUsername();
 
     long getTotalUsersCount();
+
+    boolean isCurrentUserAdmin();
 }

@@ -490,20 +490,8 @@ public class ApplicationProperties {
 
     @Data
     public static class Ui {
-        private String appName;
-        private String homeDescription;
         private String appNameNavbar;
         private List<String> languages;
-
-        public String getAppName() {
-            return appName != null && appName.trim().length() > 0 ? appName : null;
-        }
-
-        public String getHomeDescription() {
-            return homeDescription != null && homeDescription.trim().length() > 0
-                    ? homeDescription
-                    : null;
-        }
 
         public String getAppNameNavbar() {
             return appNameNavbar != null && appNameNavbar.trim().length() > 0
@@ -560,6 +548,7 @@ public class ApplicationProperties {
     @Data
     public static class Mail {
         private boolean enabled;
+        private boolean enableInvites = false;
         private String host;
         private int port;
         private String username;

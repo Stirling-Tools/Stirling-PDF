@@ -39,7 +39,6 @@ import stirling.software.proprietary.security.CustomLogoutSuccessHandler;
 import stirling.software.proprietary.security.JwtAuthenticationEntryPoint;
 import stirling.software.proprietary.security.database.repository.JPATokenRepositoryImpl;
 import stirling.software.proprietary.security.database.repository.PersistentLoginRepository;
-import stirling.software.proprietary.security.filter.FirstLoginFilter;
 import stirling.software.proprietary.security.filter.IPRateLimitingFilter;
 import stirling.software.proprietary.security.filter.JwtAuthenticationFilter;
 import stirling.software.proprietary.security.filter.UserAuthenticationFilter;
@@ -74,7 +73,6 @@ public class SecurityConfiguration {
     private final JwtServiceInterface jwtService;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     private final LoginAttemptService loginAttemptService;
-    private final FirstLoginFilter firstLoginFilter;
     private final SessionPersistentRegistry sessionRegistry;
     private final PersistentLoginRepository persistentLoginRepository;
     private final GrantedAuthoritiesMapper oAuth2userAuthoritiesMapper;
@@ -93,7 +91,6 @@ public class SecurityConfiguration {
             JwtServiceInterface jwtService,
             JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint,
             LoginAttemptService loginAttemptService,
-            FirstLoginFilter firstLoginFilter,
             SessionPersistentRegistry sessionRegistry,
             @Autowired(required = false) GrantedAuthoritiesMapper oAuth2userAuthoritiesMapper,
             @Autowired(required = false)
@@ -110,7 +107,6 @@ public class SecurityConfiguration {
         this.jwtService = jwtService;
         this.jwtAuthenticationEntryPoint = jwtAuthenticationEntryPoint;
         this.loginAttemptService = loginAttemptService;
-        this.firstLoginFilter = firstLoginFilter;
         this.sessionRegistry = sessionRegistry;
         this.persistentLoginRepository = persistentLoginRepository;
         this.oAuth2userAuthoritiesMapper = oAuth2userAuthoritiesMapper;
@@ -135,8 +131,7 @@ public class SecurityConfiguration {
             http.addFilterBefore(
                             userAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                     .addFilterBefore(
-                            rateLimitingFilter(), UsernamePasswordAuthenticationFilter.class)
-                    .addFilterAfter(firstLoginFilter, IPRateLimitingFilter.class);
+                            rateLimitingFilter(), UsernamePasswordAuthenticationFilter.class);
 
             if (v2Enabled) {
                 http.addFilterBefore(jwtAuthenticationFilter(), UserAuthenticationFilter.class);

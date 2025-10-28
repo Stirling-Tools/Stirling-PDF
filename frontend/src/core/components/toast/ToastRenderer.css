@@ -1,7 +1,7 @@
 /* Toast Container Styles */
 .toast-container {
   position: fixed;
-  z-index: 1200;
+  z-index: 10001; /* Always on top - must match Z_INDEX_TOAST in zIndex.ts */
   display: flex;
   gap: 12px;
   pointer-events: none;

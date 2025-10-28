@@ -15,6 +15,7 @@ export interface User {
   role: string;
   enabled?: boolean;
   is_anonymous?: boolean;
+  isFirstLogin?: boolean;
   app_metadata?: Record<string, any>;
 }
 

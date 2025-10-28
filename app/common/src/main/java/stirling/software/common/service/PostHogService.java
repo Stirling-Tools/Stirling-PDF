@@ -335,11 +335,6 @@ public class PostHogService {
                 applicationProperties.getSystem().isScarfEnabled());
 
         // Capture UI properties
-        addIfNotEmpty(properties, "ui_appName", applicationProperties.getUi().getAppName());
-        addIfNotEmpty(
-                properties,
-                "ui_homeDescription",
-                applicationProperties.getUi().getHomeDescription());
         addIfNotEmpty(
                 properties, "ui_appNameNavbar", applicationProperties.getUi().getAppNameNavbar());
 

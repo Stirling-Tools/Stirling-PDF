@@ -642,6 +642,21 @@ public class UserService implements UserServiceInterface {
         return null;
     }
 
+    public boolean isCurrentUserAdmin() {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication != null
+                    && authentication.isAuthenticated()
+                    && !"anonymousUser".equals(authentication.getPrincipal())) {
+                return authentication.getAuthorities().stream()
+                        .anyMatch(auth -> Role.ADMIN.getRoleId().equals(auth.getAuthority()));
+            }
+        } catch (Exception e) {
+            log.debug("Error checking admin status", e);
+        }
+        return false;
+    }
+
     @Transactional
     public void syncCustomApiUser(String customApiKey) {
         if (customApiKey == null || customApiKey.trim().isBlank()) {

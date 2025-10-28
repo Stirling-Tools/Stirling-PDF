@@ -150,10 +150,11 @@ export default function HomePage() {
   const baseUrl = useBaseUrl();
 
   // Update document meta when tool changes
+  const appName = config?.appNameNavbar || 'Stirling PDF';
   useDocumentMeta({
-    title: selectedTool ? `${selectedTool.name} - Stirling PDF` : 'Stirling PDF',
+    title: selectedTool ? `${selectedTool.name} - ${appName}` : appName,
     description: selectedTool?.description || t('app.description', 'The Free Adobe Acrobat alternative (10M+ Downloads)'),
-    ogTitle: selectedTool ? `${selectedTool.name} - Stirling PDF` : 'Stirling PDF',
+    ogTitle: selectedTool ? `${selectedTool.name} - ${appName}` : appName,
     ogDescription: selectedTool?.description || t('app.description', 'The Free Adobe Acrobat alternative (10M+ Downloads)'),
     ogImage: selectedToolKey ? `${baseUrl}/og_images/${selectedToolKey}.png` : `${baseUrl}/og_images/home.png`,
     ogUrl: selectedTool ? `${baseUrl}${window.location.pathname}` : baseUrl
