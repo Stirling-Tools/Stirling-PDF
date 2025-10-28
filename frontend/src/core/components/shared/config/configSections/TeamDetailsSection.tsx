@@ -16,12 +16,11 @@ import {
   Tooltip,
   Menu,
 } from '@mantine/core';
-import LocalIcon from '../../LocalIcon';
-import { alert } from '../../../toast';
-import { teamService, Team } from '../../../../services/teamService';
-import { User } from '../../../../services/userManagementService';
-import { userManagementService } from '../../../../services/userManagementService';
-import { Z_INDEX_OVER_CONFIG_MODAL } from '../../../../styles/zIndex';
+import LocalIcon from '@app/components/shared/LocalIcon';
+import { alert } from '@app/components/toast';
+import { teamService, Team } from '@app/services/teamService';
+import { User, userManagementService } from '@app/services/userManagementService';
+import { Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
 
 interface TeamDetailsSectionProps {
   teamId: number;

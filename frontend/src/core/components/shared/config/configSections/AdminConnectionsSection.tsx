@@ -1,17 +1,17 @@
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Stack, Text, Loader, Group, Divider, Paper, Switch, Badge } from '@mantine/core';
-import { alert } from '../../../toast';
+import { alert } from '@app/components/toast';
 import RestartConfirmationModal from '../RestartConfirmationModal';
 import { useRestartServer } from '../useRestartServer';
-import { useAdminSettings } from '../../../../hooks/useAdminSettings';
+import { useAdminSettings } from '@app/hooks/useAdminSettings';
 import PendingBadge from '../PendingBadge';
 import ProviderCard from './ProviderCard';
 import {
   ALL_PROVIDERS,
   Provider,
 } from './providerDefinitions';
-import apiClient from '../../../../services/apiClient';
+import apiClient from '@app/services/apiClient';
 
 interface ConnectionsSettingsData {
   oauth2?: {

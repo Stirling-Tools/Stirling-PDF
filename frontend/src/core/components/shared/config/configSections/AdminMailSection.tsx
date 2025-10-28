@@ -1,10 +1,10 @@
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { TextInput, NumberInput, Switch, Button, Stack, Paper, Text, Loader, Group, PasswordInput } from '@mantine/core';
-import { alert } from '../../../toast';
+import { alert } from '@app/components/toast';
 import RestartConfirmationModal from '../RestartConfirmationModal';
 import { useRestartServer } from '../useRestartServer';
-import { useAdminSettings } from '../../../../hooks/useAdminSettings';
+import { useAdminSettings } from '@app/hooks/useAdminSettings';
 import PendingBadge from '../PendingBadge';
 
 interface MailSettingsData {

@@ -1,12 +1,12 @@
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Switch, Button, Stack, Paper, Text, Loader, Group } from '@mantine/core';
-import { alert } from '../../../toast';
+import { alert } from '@app/components/toast';
 import RestartConfirmationModal from '../RestartConfirmationModal';
 import { useRestartServer } from '../useRestartServer';
-import { useAdminSettings } from '../../../../hooks/useAdminSettings';
+import { useAdminSettings } from '@app/hooks/useAdminSettings';
 import PendingBadge from '../PendingBadge';
-import apiClient from '../../../../services/apiClient';
+import apiClient from '@app/services/apiClient';
 
 interface PrivacySettingsData {
   enableAnalytics?: boolean;

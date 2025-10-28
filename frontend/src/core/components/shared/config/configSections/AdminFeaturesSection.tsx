@@ -1,12 +1,12 @@
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { TextInput, NumberInput, Switch, Button, Stack, Paper, Text, Loader, Group, Badge } from '@mantine/core';
-import { alert } from '../../../toast';
+import { alert } from '@app/components/toast';
 import RestartConfirmationModal from '../RestartConfirmationModal';
 import { useRestartServer } from '../useRestartServer';
-import { useAdminSettings } from '../../../../hooks/useAdminSettings';
+import { useAdminSettings } from '@app/hooks/useAdminSettings';
 import PendingBadge from '../PendingBadge';
-import apiClient from '../../../../services/apiClient';
+import apiClient from '@app/services/apiClient';
 
 interface FeaturesSettingsData {
   serverCertificate?: {

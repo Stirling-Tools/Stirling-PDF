@@ -20,12 +20,12 @@ import {
   Tooltip,
   CloseButton,
 } from '@mantine/core';
-import LocalIcon from '../../LocalIcon';
-import { alert } from '../../../toast';
-import { userManagementService, User } from '../../../../services/userManagementService';
-import { teamService, Team } from '../../../../services/teamService';
-import { Z_INDEX_OVER_CONFIG_MODAL } from '../../../../styles/zIndex';
-import { useAppConfig } from '../../../../hooks/useAppConfig';
+import LocalIcon from '@app/components/shared/LocalIcon';
+import { alert } from '@app/components/toast';
+import { userManagementService, User } from '@app/services/userManagementService';
+import { teamService, Team } from '@app/services/teamService';
+import { Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
+import { useAppConfig } from '@app/contexts/AppConfigContext';
 
 export default function PeopleSection() {
   const { t } = useTranslation();

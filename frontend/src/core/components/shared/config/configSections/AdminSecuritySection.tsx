@@ -1,13 +1,13 @@
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { NumberInput, Switch, Button, Stack, Paper, Text, Loader, Group, Select, Alert, Badge, Accordion, Textarea } from '@mantine/core';
-import { alert } from '../../../toast';
-import LocalIcon from '../../LocalIcon';
+import { alert } from '@app/components/toast';
+import LocalIcon from '@app/components/shared/LocalIcon';
 import RestartConfirmationModal from '../RestartConfirmationModal';
 import { useRestartServer } from '../useRestartServer';
-import { useAdminSettings } from '../../../../hooks/useAdminSettings';
+import { useAdminSettings } from '@app/hooks/useAdminSettings';
 import PendingBadge from '../PendingBadge';
-import apiClient from '../../../../services/apiClient';
+import apiClient from '@app/services/apiClient';
 
 interface SecuritySettingsData {
   enableLogin?: boolean;
