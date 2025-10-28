@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useFileState } from '@app/contexts/FileContext';
 import { useFileActions } from '@app/contexts/file/fileHooks';
 import CloseIcon from '@mui/icons-material/Close';
-import { Z_INDEX_TOAST } from '../../styles/zIndex';
+import { Z_INDEX_TOAST } from '@app/styles/zIndex';
 
 interface DismissAllErrorsButtonProps {
   className?: string;
