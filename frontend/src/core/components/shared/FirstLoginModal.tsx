@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { Modal, Stack, Text, PasswordInput, Button, Alert } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import LocalIcon from './LocalIcon';
-import { accountService } from '../../services/accountService';
-import { alert } from '../toast';
-import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from '../../styles/zIndex';
+import LocalIcon from '@app/components/shared/LocalIcon';
+import { accountService } from '@app/services/accountService';
+import { alert } from '@app/components/toast';
+import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from '@app/styles/zIndex';
 
 interface FirstLoginModalProps {
   opened: boolean;
