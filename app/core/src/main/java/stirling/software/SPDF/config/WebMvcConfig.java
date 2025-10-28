@@ -1,5 +1,7 @@
 package stirling.software.SPDF.config;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
@@ -16,6 +18,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
     private final EndpointInterceptor endpointInterceptor;
     private final ApplicationProperties applicationProperties;
 
+    private static final Logger logger = LoggerFactory.getLogger(WebMvcConfig.class);
+
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(endpointInterceptor);
@@ -27,6 +31,10 @@ public class WebMvcConfig implements WebMvcConfigurer {
         if (applicationProperties.getSystem() != null
                 && applicationProperties.getSystem().getCorsAllowedOrigins() != null
                 && !applicationProperties.getSystem().getCorsAllowedOrigins().isEmpty()) {
+
+            logger.info(
+                    "Configuring CORS with allowed origins: {}",
+                    applicationProperties.getSystem().getCorsAllowedOrigins());
 
             String[] allowedOrigins =
                     applicationProperties
