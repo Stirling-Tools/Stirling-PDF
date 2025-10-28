@@ -3,7 +3,7 @@
 
 """
 A tiny helper that updates README.md translation progress by asking
-.sync_translations.py for the per-locale percentage (via --procent-translations).
+.sync_translations.py for the per-locale percentage (via --report-percentages).
 
 Author: Ludy87
 """
@@ -32,7 +32,7 @@ def find_locale_files() -> List[Path]:
 
 def percent_done_for_file(file_path: Path) -> int:
     """
-    Calls sync_translations.py --procent-translations for a single locale file.
+    Calls sync_translations.py --report-percentages for a single locale file.
     Returns an int 0..100.
     """
     # en-GB / en-US are always 100% by definition
@@ -50,7 +50,7 @@ def percent_done_for_file(file_path: Path) -> int:
         "--files",
         str(file_path),
         "--check",
-        "--procent-translations",
+        "--report-percentages",
     ]
     res = subprocess.run(cmd, capture_output=True, text=True, check=True)
     out = res.stdout.strip()
