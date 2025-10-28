@@ -34,14 +34,14 @@ export const PreferencesProvider: React.FC<{ children: React.ReactNode }> = ({ c
     setPreferences(preferencesService.getAllPreferences());
   }, []);
 
+  const value = React.useMemo(() => ({
+    preferences,
+    updatePreference,
+    resetPreferences,
+  }), [preferences, updatePreference, resetPreferences]);
+
   return (
-    <PreferencesContext.Provider
-      value={{
-        preferences,
-        updatePreference,
-        resetPreferences,
-      }}
-    >
+    <PreferencesContext.Provider value={value}>
       {children}
     </PreferencesContext.Provider>
   );

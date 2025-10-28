@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode, useRef } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useRef, useMemo, useCallback } from 'react';
 import { SpreadMode } from '@embedpdf/plugin-spread/react';
 import { useNavigation } from '@app/contexts/NavigationContext';
 
@@ -280,21 +280,21 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     }
   };
 
-  const toggleThumbnailSidebar = () => {
+  const toggleThumbnailSidebar = useCallback(() => {
     setIsThumbnailSidebarVisible(prev => !prev);
-  };
+  }, []);
 
-  const toggleAnnotationsVisibility = () => {
+  const toggleAnnotationsVisibility = useCallback(() => {
     setIsAnnotationsVisible(prev => !prev);
-  };
+  }, []);
 
-  const setAnnotationMode = (enabled: boolean) => {
+  const setAnnotationMode = useCallback((enabled: boolean) => {
     setIsAnnotationModeState(enabled);
-  };
+  }, []);
 
-  const toggleAnnotationMode = () => {
+  const toggleAnnotationMode = useCallback(() => {
     setIsAnnotationModeState(prev => !prev);
-  };
+  }, []);
 
   // State getters - read from bridge refs
   const getScrollState = (): ScrollState => {
@@ -334,7 +334,7 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
   };
 
   // Action handlers - call APIs directly
-  const scrollActions = {
+  const scrollActions = useMemo(() => ({
     scrollToPage: (page: number) => {
       const api = bridgeRefs.current.scroll?.api;
       if (api?.scrollToPage) {
@@ -366,9 +366,9 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
         api.scrollToPage({ pageNumber: scrollState.totalPages });
       }
     }
-  };
+  }), []);
 
-  const zoomActions = {
+  const zoomActions = useMemo(() => ({
     zoomIn: () => {
       const api = bridgeRefs.current.zoom?.api;
       if (api?.zoomIn) {
@@ -405,9 +405,9 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
         api.requestZoom(level);
       }
     }
-  };
+  }), []);
 
-  const panActions = {
+  const panActions = useMemo(() => ({
     enablePan: () => {
       const api = bridgeRefs.current.pan?.api;
       if (api?.enable) {
@@ -426,9 +426,9 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
         api.toggle();
       }
     }
-  };
+  }), []);
 
-  const selectionActions = {
+  const selectionActions = useMemo(() => ({
     copyToClipboard: () => {
       const api = bridgeRefs.current.selection?.api;
       if (api?.copyToClipboard) {
@@ -449,9 +449,9 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
       }
       return null;
     }
-  };
+  }), []);
 
-  const spreadActions = {
+  const spreadActions = useMemo(() => ({
     setSpreadMode: (mode: SpreadMode) => {
       const api = bridgeRefs.current.spread?.api;
       if (api?.setSpreadMode) {
@@ -471,9 +471,9 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
         api.toggleSpreadMode();
       }
     }
-  };
+  }), []);
 
-  const rotationActions = {
+  const rotationActions = useMemo(() => ({
     rotateForward: () => {
       const api = bridgeRefs.current.rotation?.api;
       if (api?.rotateForward) {
@@ -499,9 +499,9 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
       }
       return 0;
     }
-  };
+  }), []);
 
-  const searchActions = {
+  const searchActions = useMemo(() => ({
     search: async (query: string) => {
       const api = bridgeRefs.current.search?.api;
       if (api?.search) {
@@ -526,9 +526,9 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
         api.clear();
       }
     }
-  };
+  }), []);
 
-  const exportActions = {
+  const exportActions = useMemo(() => ({
     download: () => {
       const api = bridgeRefs.current.export?.api;
       if (api?.download) {
@@ -548,29 +548,29 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
       }
       return null;
     }
-  };
+  }), []);
 
-  const registerImmediateZoomUpdate = (callback: (percent: number) => void) => {
+  const registerImmediateZoomUpdate = useCallback((callback: (percent: number) => void) => {
     immediateZoomUpdateCallback.current = callback;
-  };
+  }, []);
 
-  const registerImmediateScrollUpdate = (callback: (currentPage: number, totalPages: number) => void) => {
+  const registerImmediateScrollUpdate = useCallback((callback: (currentPage: number, totalPages: number) => void) => {
     immediateScrollUpdateCallback.current = callback;
-  };
+  }, []);
 
-  const triggerImmediateScrollUpdate = (currentPage: number, totalPages: number) => {
+  const triggerImmediateScrollUpdate = useCallback((currentPage: number, totalPages: number) => {
     if (immediateScrollUpdateCallback.current) {
       immediateScrollUpdateCallback.current(currentPage, totalPages);
     }
-  };
+  }, []);
 
-  const triggerImmediateZoomUpdate = (zoomPercent: number) => {
+  const triggerImmediateZoomUpdate = useCallback((zoomPercent: number) => {
     if (immediateZoomUpdateCallback.current) {
       immediateZoomUpdateCallback.current(zoomPercent);
     }
-  };
+  }, []);
 
-  const value: ViewerContextType = {
+  const value = useMemo<ViewerContextType>(() => ({
     // UI state
     isThumbnailSidebarVisible,
     toggleThumbnailSidebar,
@@ -615,7 +615,20 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
 
     // Bridge registration
     registerBridge,
-  };
+  }), [
+    isThumbnailSidebarVisible,
+    isAnnotationsVisible,
+    isAnnotationMode,
+    activeFileIndex,
+    scrollActions,
+    zoomActions,
+    panActions,
+    selectionActions,
+    spreadActions,
+    rotationActions,
+    searchActions,
+    exportActions,
+  ]);
 
   return (
     <ViewerContext.Provider value={value}>

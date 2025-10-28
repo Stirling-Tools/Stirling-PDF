@@ -21,11 +21,16 @@ const Split = (props: BaseToolProps) => {
   );
 
   const methodTips = useSplitMethodTips();
-  const settingsTips = useSplitSettingsTips(base.params.parameters.method);
+  const allSettingsTips = useSplitSettingsTips();
+
+  // Get tooltip content for the currently selected method
+  const settingsTips = base.params.parameters.method
+    ? allSettingsTips[base.params.parameters.method]
+    : null;
 
   // Get tooltip content for a specific method
   const getMethodTooltip = (option: MethodOption) => {
-    const tooltipContent = useSplitSettingsTips(option.value);
+    const tooltipContent = allSettingsTips[option.value];
     return tooltipContent?.tips || [];
   };
 
@@ -50,8 +55,7 @@ const Split = (props: BaseToolProps) => {
       {
         title: t("split.steps.chooseMethod", "Choose Method"),
         isCollapsed: !!base.params.parameters.method, // Collapse when method is selected
-        onCollapsedClick: () => base.params.updateParameter('method', '')
-        ,
+        onCollapsedClick: () => base.params.updateParameter('method', ''),
         tooltip: methodTips,
         content: (
           <CardSelector<SplitMethod, MethodOption>
@@ -86,7 +90,7 @@ const Split = (props: BaseToolProps) => {
     review: {
       isVisible: base.hasResults,
       operation: base.operation,
-      title: "Split Results",
+      title: t("split.resultsTitle", "Split Results"),
       onFileClick: base.handleThumbnailClick,
       onUndo: base.handleUndo,
     },

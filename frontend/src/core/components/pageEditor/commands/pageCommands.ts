@@ -161,7 +161,8 @@ export class ReorderPagesCommand extends DOMCommand {
     private targetIndex: number,
     private selectedPages: number[] | undefined,
     private getCurrentDocument: () => PDFDocument | null,
-    private setDocument: (doc: PDFDocument) => void
+    private setDocument: (doc: PDFDocument) => void,
+    private onReorderComplete?: (newPages: PDFPage[]) => void
   ) {
     super();
   }
@@ -196,7 +197,13 @@ export class ReorderPagesCommand extends DOMCommand {
     } else {
       // Single page reorder
       const [movedPage] = newPages.splice(sourceIndex, 1);
-      newPages.splice(this.targetIndex, 0, movedPage);
+
+      // Adjust target index if moving forward (after removal, indices shift)
+      const adjustedTargetIndex = sourceIndex < this.targetIndex
+        ? this.targetIndex - 1
+        : this.targetIndex;
+
+      newPages.splice(adjustedTargetIndex, 0, movedPage);
 
       newPages.forEach((page, index) => {
         page.pageNumber = index + 1;
@@ -210,6 +217,11 @@ export class ReorderPagesCommand extends DOMCommand {
     };
 
     this.setDocument(reorderedDocument);
+
+    // Notify that reordering is complete
+    if (this.onReorderComplete) {
+      this.onReorderComplete(newPages);
+    }
   }
 
   undo(): void {
@@ -408,6 +420,14 @@ export class SplitAllCommand extends DOMCommand {
   }
 }
 
+export type PageSize = 'A4' | 'Letter' | 'Legal' | 'A3' | 'A5';
+export type PageOrientation = 'portrait' | 'landscape';
+
+export interface PageBreakSettings {
+  size: PageSize;
+  orientation: PageOrientation;
+}
+
 export class PageBreakCommand extends DOMCommand {
   private insertedPages: PDFPage[] = [];
   private originalDocument: PDFDocument | null = null;
@@ -415,7 +435,8 @@ export class PageBreakCommand extends DOMCommand {
   constructor(
     private selectedPageNumbers: number[],
     private getCurrentDocument: () => PDFDocument | null,
-    private setDocument: (doc: PDFDocument) => void
+    private setDocument: (doc: PDFDocument) => void,
+    private settings?: PageBreakSettings
   ) {
     super();
   }
@@ -450,7 +471,8 @@ export class PageBreakCommand extends DOMCommand {
           rotation: 0,
           selected: false,
           splitAfter: false,
-          isBlankPage: true // Custom flag for blank pages
+          isBlankPage: true, // Custom flag for blank pages
+          pageBreakSettings: this.settings // Store settings for export
         };
         newPages.push(blankPage);
         this.insertedPages.push(blankPage);
@@ -694,7 +716,7 @@ export class InsertFilesCommand extends DOMCommand {
 
   private async generateThumbnailsForInsertedPages(updatedDocument: PDFDocument): Promise<void> {
     try {
-      const { thumbnailGenerationService } = await import('@app/services/thumbnailGenerationService');
+      const { thumbnailGenerationService } = await import('../../../services/thumbnailGenerationService');
 
       // Group pages by file ID to generate thumbnails efficiently
       const pagesByFileId = new Map<FileId, PDFPage[]>();
@@ -776,7 +798,7 @@ export class InsertFilesCommand extends DOMCommand {
           const clonedArrayBuffer = arrayBuffer.slice(0);
 
           // Use PDF.js via the worker manager to extract pages
-          const { pdfWorkerManager } = await import('@app/services/pdfWorkerManager');
+          const { pdfWorkerManager } = await import('../../../services/pdfWorkerManager');
           const pdf = await pdfWorkerManager.createDocument(clonedArrayBuffer);
 
           const pageCount = pdf.numPages;
@@ -881,6 +903,10 @@ export class UndoManager {
 
   canRedo(): boolean {
     return this.redoStack.length > 0;
+  }
+
+  hasHistory(): boolean {
+    return this.undoStack.length > 0;
   }
 
   clear(): void {

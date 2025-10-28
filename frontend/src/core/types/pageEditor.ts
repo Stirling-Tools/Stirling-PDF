@@ -1,4 +1,9 @@
+<<<<<<< HEAD:frontend/src/core/types/pageEditor.ts
 import { FileId } from '@app/types/file';
+=======
+import { FileId } from './file';
+import { PageBreakSettings } from '../components/pageEditor/commands/pageCommands';
+>>>>>>> feature/v2/selected-pageeditor:frontend/src/types/pageEditor.ts
 
 export interface PDFPage {
   id: string;
@@ -9,7 +14,9 @@ export interface PDFPage {
   selected: boolean;
   splitAfter?: boolean;
   isBlankPage?: boolean;
+  isPlaceholder?: boolean;
   originalFileId?: FileId;
+  pageBreakSettings?: PageBreakSettings;
 }
 
 export interface PDFDocument {
