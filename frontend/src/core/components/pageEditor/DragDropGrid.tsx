@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react'
 import { Box } from '@mantine/core';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { GRID_CONSTANTS } from './constants';
+import styles from './DragDropGrid.module.css';
 import {
   Z_INDEX_SELECTION_BOX,
   Z_INDEX_DROP_INDICATOR,
@@ -36,6 +37,8 @@ interface DragDropGridProps<T extends DragDropItem> {
 
 type DropSide = 'left' | 'right' | null;
 
+type ItemRect = { id: string; rect: DOMRect };
+
 interface DropHint {
   hoveredId: string | null;
   dropSide: DropSide;
@@ -51,59 +54,87 @@ function resolveDropHint(
     return { hoveredId: null, dropSide: null };
   }
 
-  const rows = new Map<number, Array<{ id: string; rect: DOMRect }>>();
+  const items: ItemRect[] = Array.from(itemRefs.current.entries())
+    .filter(([itemId, element]): element is HTMLDivElement => !!element && itemId !== activeId)
+    .map(([itemId, element]) => ({
+      id: itemId,
+      rect: element.getBoundingClientRect(),
+    }))
+    .filter(({ rect }) => rect.width > 0 && rect.height > 0);
 
-  itemRefs.current.forEach((element, itemId) => {
-    if (!element || itemId === activeId) return;
-
-    const rect = element.getBoundingClientRect();
-    const rowCenter = rect.top + rect.height / 2;
-
-    let row = rows.get(rowCenter);
-    if (!row) {
-      row = [];
-      rows.set(rowCenter, row);
-    }
-    row.push({ id: itemId, rect });
-  });
-
-  let hoveredId: string | null = null;
-  let dropSide: DropSide = null;
-
-  let closestRowY = 0;
-  let closestRowDistance = Infinity;
-
-  rows.forEach((_items, rowY) => {
-    const distance = Math.abs(cursorY - rowY);
-    if (distance < closestRowDistance) {
-      closestRowDistance = distance;
-      closestRowY = rowY;
-    }
-  });
-
-  const closestRow = rows.get(closestRowY);
-  if (!closestRow || closestRow.length === 0) {
+  if (items.length === 0) {
     return { hoveredId: null, dropSide: null };
   }
 
-  let closestDistance = Infinity;
-  closestRow.forEach(({ id, rect }) => {
-    const distanceToLeft = Math.abs(cursorX - rect.left);
-    const distanceToRight = Math.abs(cursorX - rect.right);
+  items.sort((a, b) => a.rect.top - b.rect.top);
 
-    if (distanceToLeft < closestDistance) {
-      closestDistance = distanceToLeft;
-      hoveredId = id;
-      dropSide = 'left';
+  const rows: ItemRect[][] = [];
+  const rowTolerance = items[0].rect.height / 2;
+
+  items.forEach((item) => {
+    const currentRow = rows[rows.length - 1];
+    if (!currentRow) {
+      rows.push([item]);
+      return;
     }
-    if (distanceToRight < closestDistance) {
-      closestDistance = distanceToRight;
-      hoveredId = id;
-      dropSide = 'right';
+
+    const isSameRow = Math.abs(item.rect.top - currentRow[0].rect.top) <= rowTolerance;
+    if (isSameRow) {
+      currentRow.push(item);
+    } else {
+      rows.push([item]);
     }
   });
 
-  return { hoveredId, dropSide };
+  let targetRow: ItemRect[] | undefined;
+  let smallestRowDistance = Infinity;
+
+  rows.forEach((row) => {
+    if (row.length === 0) {
+      return;
+    }
+    const top = row[0].rect.top;
+    const bottom = row[0].rect.bottom;
+    const centerY = top + (bottom - top) / 2;
+    const distance = Math.abs(cursorY - centerY);
+    if (distance < smallestRowDistance) {
+      smallestRowDistance = distance;
+      targetRow = row;
+    }
+  });
+
+  if (!targetRow || targetRow.length === 0) {
+    return { hoveredId: null, dropSide: null };
+  }
+
+  let hoveredItem = targetRow[0];
+  let smallestHorizontalDistance = Infinity;
+
+  targetRow.forEach((item) => {
+    const midpoint = item.rect.left + item.rect.width / 2;
+    const distance = Math.abs(cursorX - midpoint);
+    if (distance < smallestHorizontalDistance) {
+      smallestHorizontalDistance = distance;
+      hoveredItem = item;
+    }
+  });
+
+  const firstItem = targetRow[0];
+  const lastItem = targetRow[targetRow.length - 1];
+
+  let dropSide: DropSide;
+  if (cursorX < firstItem.rect.left) {
+    hoveredItem = firstItem;
+    dropSide = 'left';
+  } else if (cursorX > lastItem.rect.right) {
+    hoveredItem = lastItem;
+    dropSide = 'right';
+  } else {
+    const midpoint = hoveredItem.rect.left + hoveredItem.rect.width / 2;
+    dropSide = cursorX >= midpoint ? 'right' : 'left';
+  }
+
+  return { hoveredId: hoveredItem.id, dropSide };
 }
 
 function resolveTargetIndex<T extends DragDropItem>(
@@ -561,14 +592,10 @@ const DragDropGrid = <T extends DragDropItem>({
 
   // Calculate selection box dimensions
   const selectionBoxStyle = isBoxSelecting && boxSelectStart && boxSelectEnd ? {
-    position: 'absolute' as const,
     left: Math.min(boxSelectStart.x, boxSelectEnd.x),
     top: Math.min(boxSelectStart.y, boxSelectEnd.y),
     width: Math.abs(boxSelectEnd.x - boxSelectStart.x),
     height: Math.abs(boxSelectEnd.y - boxSelectStart.y),
-    border: '2px dashed #3b82f6',
-    backgroundColor: 'rgba(59, 130, 246, 0.1)',
-    pointerEvents: 'none' as const,
     zIndex: Z_INDEX_SELECTION_BOX,
   } : null;
 
@@ -590,15 +617,10 @@ const DragDropGrid = <T extends DragDropItem>({
       : itemRect.right - containerRect.left + itemGap / 2;
 
     return {
-      position: 'absolute' as const,
       left: `${left}px`,
       top: `${top}px`,
-      width: '4px',
       height: `${height}px`,
-      backgroundColor: 'rgba(96, 165, 250, 0.8)',
-      borderRadius: '2px',
       zIndex: Z_INDEX_DROP_INDICATOR,
-      pointerEvents: 'none' as const,
     };
   }, [hoveredItemId, dropSide, activeId, itemGap, zoomLevel]);
 
@@ -638,118 +660,94 @@ const DragDropGrid = <T extends DragDropItem>({
     >
       <Box
         ref={containerRef}
+        className={styles.gridContainer}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onWheel={handleWheelWhileDragging}
-        style={{
-          // Basic container styles
-          width: '100%',
-          height: '100%',
-          position: 'relative',
-          overflow: 'hidden',
-        }}
       >
-        {/* Selection box overlay */}
-        {selectionBoxStyle && <div style={selectionBoxStyle} />}
+        {selectionBoxStyle && (
+          <div
+            className={styles.selectionBox}
+            style={selectionBoxStyle}
+          />
+        )}
 
-        {/* Global drop indicator */}
-        {dropIndicatorStyle && <div style={dropIndicatorStyle} />}
+        {dropIndicatorStyle && (
+          <div
+            className={styles.dropIndicator}
+            style={dropIndicatorStyle}
+          />
+        )}
 
-      <div
-        style={{
-          height: `${rowVirtualizer.getTotalSize()}px`,
-          width: '100%',
-          maxWidth: `${gridWidth}px`,
-          position: 'relative',
-          margin: '0 auto',
-        }}
-      >
-        {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-          const startIndex = virtualRow.index * itemsPerRow;
-          const endIndex = Math.min(startIndex + itemsPerRow, visibleItems.length);
-          const rowItems = visibleItems.slice(startIndex, endIndex);
+        <div
+          className={styles.virtualRows}
+          style={{
+            height: `${rowVirtualizer.getTotalSize()}px`,
+            maxWidth: `${gridWidth}px`,
+            margin: '0 auto',
+          }}
+        >
+          {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+            const startIndex = virtualRow.index * itemsPerRow;
+            const endIndex = Math.min(startIndex + itemsPerRow, visibleItems.length);
+            const rowItems = visibleItems.slice(startIndex, endIndex);
 
-          return (
-            <div
-              key={virtualRow.index}
-              style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                width: '100%',
-                height: `${virtualRow.size}px`,
-                transform: `translateY(${virtualRow.start}px)`,
-              }}
-            >
+            return (
               <div
+                key={virtualRow.index}
+                className={styles.virtualRow}
                 style={{
-                  display: 'flex',
-                  gap: `calc(${GRID_CONSTANTS.ITEM_GAP} * ${zoomLevel})`,
-                  justifyContent: 'flex-start',
-                  height: '100%',
-                  alignItems: 'center',
-                  position: 'relative'
+                  height: `${virtualRow.size}px`,
+                  transform: `translateY(${virtualRow.start}px)`,
                 }}
               >
-                {rowItems.map((item, itemIndex) => {
-                  const actualIndex = startIndex + itemIndex;
-                  return (
-                    <DraggableItem
-                      key={item.id}
-                      item={item}
-                      index={actualIndex}
-                      itemRefs={itemRefs}
-                      boxSelectedPageIds={boxSelectedPageIds}
-                      clearBoxSelection={clearBoxSelection}
-                      getBoxSelection={getBoxSelection}
-                      activeId={activeId}
-                      activeDragIds={activeDragIds}
-                      justMoved={justMovedIds.includes(item.id)}
-                      getThumbnailData={getThumbnailData}
-                      onUpdateDropTarget={setHoveredItemId}
-                      renderItem={renderItem}
-                      zoomLevel={zoomLevel}
-                    />
-                  );
-                })}
-
+                <div
+                  className={styles.rowContent}
+                  style={{
+                    gap: `calc(${GRID_CONSTANTS.ITEM_GAP} * ${zoomLevel})`,
+                  }}
+                >
+                  {rowItems.map((item, itemIndex) => {
+                    const actualIndex = startIndex + itemIndex;
+                    return (
+                      <DraggableItem
+                        key={item.id}
+                        item={item}
+                        index={actualIndex}
+                        itemRefs={itemRefs}
+                        boxSelectedPageIds={boxSelectedPageIds}
+                        clearBoxSelection={clearBoxSelection}
+                        getBoxSelection={getBoxSelection}
+                        activeId={activeId}
+                        activeDragIds={activeDragIds}
+                        justMoved={justMovedIds.includes(item.id)}
+                        getThumbnailData={getThumbnailData}
+                        onUpdateDropTarget={setHoveredItemId}
+                        renderItem={renderItem}
+                        zoomLevel={zoomLevel}
+                      />
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
-    </Box>
+            );
+          })}
+        </div>
+      </Box>
 
       {/* Drag Overlay */}
       <DragOverlay>
         {activeId && (
-          <div style={{ position: 'relative', cursor: 'grabbing' }}>
-            {/* Multi-page badge */}
+          <div className={styles.dragOverlay}>
             {boxSelectedPageIds.includes(activeId) && boxSelectedPageIds.length > 1 && (
               <div
-                style={{
-                  position: 'absolute',
-                  top: '-8px',
-                  right: '-8px',
-                  backgroundColor: '#3b82f6',
-                  color: 'white',
-                  borderRadius: '50%',
-                  width: '32px',
-                  height: '32px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '14px',
-                  fontWeight: 'bold',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-                  zIndex: Z_INDEX_DRAG_BADGE
-                }}
+                className={styles.dragOverlayBadge}
+                style={{ zIndex: Z_INDEX_DRAG_BADGE }}
               >
                 {boxSelectedPageIds.length}
               </div>
             )}
-            {/* Just the thumbnail image */}
             {dragPreview ? (
               <img
                 src={dragPreview.src}
@@ -764,15 +762,13 @@ const DragDropGrid = <T extends DragDropItem>({
                 }}
               />
             ) : (
-              <div style={{
-                width: `calc(20rem * ${zoomLevel})`,
-                height: `calc(20rem * ${zoomLevel})`,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '48px',
-                opacity: 0.5,
-              }}>
+              <div
+                className={styles.dragOverlayPreview}
+                style={{
+                  width: `calc(20rem * ${zoomLevel})`,
+                  height: `calc(20rem * ${zoomLevel})`,
+                }}
+              >
                 ??
               </div>
             )}

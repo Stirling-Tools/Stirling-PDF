@@ -55,6 +55,17 @@ const PageEditor = ({
   const [zoomLevel, setZoomLevel] = useState(1.0);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isContainerHovered, setIsContainerHovered] = useState(false);
+  const rootFontSize = useMemo(() => {
+    if (typeof window === 'undefined') {
+      return 16;
+    }
+    const computed = getComputedStyle(document.documentElement).fontSize;
+    const parsed = parseFloat(computed);
+    return Number.isNaN(parsed) ? 16 : parsed;
+  }, []);
+  const itemGapPx = useMemo(() => {
+    return parseFloat(GRID_CONSTANTS.ITEM_GAP) * rootFontSize * zoomLevel;
+  }, [rootFontSize, zoomLevel]);
 
   // Zoom actions
   const zoomIn = useCallback(() => {
@@ -305,9 +316,6 @@ const PageEditor = ({
 
   // Grid container ref for positioning split indicators
   const gridContainerRef = useRef<HTMLDivElement>(null);
-
-  // State to trigger re-renders when container size changes
-  const [containerDimensions, setContainerDimensions] = useState({ width: 0, height: 0 });
 
   // Undo/Redo state
   const [canUndo, setCanUndo] = useState(false);
@@ -1100,11 +1108,13 @@ const PageEditor = ({
                     if (sameRow) {
                       lineLeft = (currentRect.right + nextRect.left) / 2;
                     } else {
-                      lineLeft = currentRect.right + nextRect.width * 0.1;
+                      lineLeft = currentRect.right + itemGapPx / 2;
                     }
+                  } else {
+                    lineLeft = currentRect.right + itemGapPx / 2;
                   }
                 } else {
-                  lineLeft = currentRect.right + currentRect.width * 0.1;
+                  lineLeft = currentRect.right + itemGapPx / 2;
                 }
 
                 return (
