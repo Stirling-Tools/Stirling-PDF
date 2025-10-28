@@ -463,41 +463,12 @@ public class UserController {
                 continue;
             }
 
-            try {
-                // Validate email format (basic check)
-                if (!email.contains("@") || !email.contains(".")) {
-                    errors.append(email).append(": Invalid email format; ");
-                    failureCount++;
-                    continue;
-                }
-
-                // Check if user already exists
-                if (userService.usernameExistsIgnoreCase(email)) {
-                    errors.append(email).append(": User already exists; ");
-                    failureCount++;
-                    continue;
-                }
-
-                // Generate random password
-                String temporaryPassword = java.util.UUID.randomUUID().toString().substring(0, 12);
-
-                // Create user with forceChange=true
-                userService.saveUser(email, temporaryPassword, effectiveTeamId, role, true);
-
-                // Send invite email
-                try {
-                    emailService.get().sendInviteEmail(email, email, temporaryPassword);
-                    successCount++;
-                    log.info("Sent invite email to: {}", email);
-                } catch (Exception emailEx) {
-                    log.error("Failed to send invite email to {}: {}", email, emailEx.getMessage());
-                    errors.append(email).append(": User created but email failed to send; ");
-                }
-
-            } catch (Exception e) {
-                log.error("Failed to invite user {}: {}", email, e.getMessage());
-                errors.append(email).append(": ").append(e.getMessage()).append("; ");
+            InviteResult result = processEmailInvite(email, effectiveTeamId, role);
+            if (result.isSuccess()) {
+                successCount++;
+            } else {
                 failureCount++;
+                errors.append(result.getErrorMessage()).append("; ");
             }
         }
 
@@ -689,5 +660,74 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("API key not found for user.");
         }
         return ResponseEntity.ok(apiKey);
+    }
+
+    /**
+     * Helper method to process a single email invitation.
+     *
+     * @param email The email address to invite
+     * @param teamId The team ID to assign the user to
+     * @param role The role to assign to the user
+     * @return InviteResult containing success status and optional error message
+     */
+    private InviteResult processEmailInvite(String email, Long teamId, String role) {
+        try {
+            // Validate email format (basic check)
+            if (!email.contains("@") || !email.contains(".")) {
+                return InviteResult.failure(email + ": Invalid email format");
+            }
+
+            // Check if user already exists
+            if (userService.usernameExistsIgnoreCase(email)) {
+                return InviteResult.failure(email + ": User already exists");
+            }
+
+            // Generate random password
+            String temporaryPassword = java.util.UUID.randomUUID().toString().substring(0, 12);
+
+            // Create user with forceChange=true
+            userService.saveUser(email, temporaryPassword, teamId, role, true);
+
+            // Send invite email
+            try {
+                emailService.get().sendInviteEmail(email, email, temporaryPassword);
+                log.info("Sent invite email to: {}", email);
+                return InviteResult.success();
+            } catch (Exception emailEx) {
+                log.error("Failed to send invite email to {}: {}", email, emailEx.getMessage());
+                return InviteResult.failure(email + ": User created but email failed to send");
+            }
+
+        } catch (Exception e) {
+            log.error("Failed to invite user {}: {}", email, e.getMessage());
+            return InviteResult.failure(email + ": " + e.getMessage());
+        }
+    }
+
+    /** Result object for individual email invite processing. */
+    private static class InviteResult {
+        private final boolean success;
+        private final String errorMessage;
+
+        private InviteResult(boolean success, String errorMessage) {
+            this.success = success;
+            this.errorMessage = errorMessage;
+        }
+
+        static InviteResult success() {
+            return new InviteResult(true, null);
+        }
+
+        static InviteResult failure(String errorMessage) {
+            return new InviteResult(false, errorMessage);
+        }
+
+        boolean isSuccess() {
+            return success;
+        }
+
+        String getErrorMessage() {
+            return errorMessage;
+        }
     }
 }
