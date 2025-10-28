@@ -250,6 +250,7 @@
     "title": "Do you want make Stirling PDF better?",
     "paragraph1": "Stirling PDF has opt in analytics to help us improve the product. We do not track any personal information or file contents.",
     "paragraph2": "Please consider enabling analytics to help Stirling-PDF grow and to allow us to understand our users better.",
+    "learnMore": "Learn more",
     "enable": "Enable analytics",
     "disable": "Disable analytics",
     "settings": "You can change the settings for analytics in the config/settings.yml file"
@@ -3038,6 +3039,11 @@
     "enterEmail": "Enter your email",
     "enterPassword": "Enter your password",
     "loggingIn": "Logging In...",
+    "username": "Username",
+    "enterUsername": "Enter username",
+    "useEmailInstead": "Login with email",
+    "forgotPassword": "Forgot your password?",
+    "logIn": "Log In",
     "signingIn": "Signing in...",
     "login": "Login",
     "or": "Or",
@@ -3076,6 +3082,10 @@
     "passwordsDoNotMatch": "Passwords do not match",
     "passwordTooShort": "Password must be at least 6 characters long",
     "invalidEmail": "Please enter a valid email address",
+    "nameRequired": "Name is required",
+    "emailRequired": "Email is required",
+    "passwordRequired": "Password is required",
+    "confirmPasswordRequired": "Confirm password is required",
     "checkEmailConfirmation": "Check your email for a confirmation link to complete your registration.",
     "accountCreatedSuccessfully": "Account created successfully! You can now sign in.",
     "unexpectedError": "Unexpected error: {{message}}"
@@ -3362,6 +3372,10 @@
         "title": "Analytics",
         "description": "These cookies help us understand how our tools are being used, so we can focus on building the features our community values most. Rest assured—Stirling PDF cannot and will never track the content of the documents you work with."
       }
+    },
+    "services": {
+      "posthog": "PostHog Analytics",
+      "scarf": "Scarf Pixel"
     }
   },
   "removeMetadata": {
@@ -3834,6 +3848,10 @@
     "preview": "Preview"
   },
   "config": {
+    "overview": {
+      "title": "Application Configuration",
+      "description": "Current application settings and configuration details."
+    },
     "account": {
       "overview": {
         "title": "Account Settings",
@@ -3974,6 +3992,34 @@
   "undoStorageError": "Undo completed but some files could not be saved to storage",
   "undoSuccess": "Operation undone successfully",
   "unsupported": "Unsupported",
+  "signup": {
+    "title": "Create an account",
+    "subtitle": "Join Stirling PDF to get started",
+    "name": "Name",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm password",
+    "enterName": "Enter your name",
+    "enterEmail": "Enter your email",
+    "enterPassword": "Enter your password",
+    "confirmPasswordPlaceholder": "Confirm password",
+    "or": "or",
+    "creatingAccount": "Creating Account...",
+    "signUp": "Sign Up",
+    "alreadyHaveAccount": "Already have an account? Sign in",
+    "pleaseFillAllFields": "Please fill in all fields",
+    "passwordsDoNotMatch": "Passwords do not match",
+    "passwordTooShort": "Password must be at least 6 characters long",
+    "invalidEmail": "Please enter a valid email address",
+    "checkEmailConfirmation": "Check your email for a confirmation link to complete your registration.",
+    "accountCreatedSuccessfully": "Account created successfully! You can now sign in.",
+    "unexpectedError": "Unexpected error: {{message}}",
+    "useEmailInstead": "Use Email Instead",
+    "nameRequired": "Name is required",
+    "emailRequired": "Email is required",
+    "passwordRequired": "Password is required",
+    "confirmPasswordRequired": "Please confirm your password"
+  },
   "onboarding": {
     "welcomeModal": {
       "title": "Welcome to Stirling PDF!",

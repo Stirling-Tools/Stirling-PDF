@@ -58,12 +58,15 @@
   },
   "scripts": {
     "predev": "npm run generate-icons",
-    "dev": "npm run typecheck && vite",
+    "dev": "vite",
     "prebuild": "npm run generate-icons",
-    "lint": "eslint",
-    "build": "npm run typecheck && vite build",
+    "lint": "eslint --max-warnings=0",
+    "build": "vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
+    "typecheck:core": "tsc --noEmit --project tsconfig.core.json",
+    "typecheck:proprietary": "tsc --noEmit --project tsconfig.proprietary.json",
+    "typecheck:all": "npm run typecheck:core && npm run typecheck:proprietary",
     "check": "npm run typecheck && npm run lint && npm run test:run",
     "generate-licenses": "node scripts/generate-licenses.js",
     "generate-icons": "node scripts/generate-icons.js",
@@ -135,6 +138,7 @@
     "typescript": "^5.9.2",
     "typescript-eslint": "^8.44.1",
     "vite": "^7.1.7",
+    "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^3.2.4"
   },
   "depcheck": {

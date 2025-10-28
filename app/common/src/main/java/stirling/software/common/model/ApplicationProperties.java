@@ -307,7 +307,6 @@ public class ApplicationProperties {
             private boolean enableKeyRotation = false;
             private boolean enableKeyCleanup = true;
             private int keyRetentionDays = 7;
-            private boolean secureCookie;
         }
 
         @Data
@@ -356,6 +355,8 @@ public class ApplicationProperties {
         private String tessdataDir;
         private Boolean enableAlphaFunctionality;
         private Boolean enableAnalytics;
+        private Boolean enablePosthog;
+        private Boolean enableScarf;
         private Datasource datasource;
         private Boolean disableSanitize;
         private int maxDPI;
@@ -364,9 +365,22 @@ public class ApplicationProperties {
         private CustomPaths customPaths = new CustomPaths();
         private String fileUploadLimit;
         private TempFileManagement tempFileManagement = new TempFileManagement();
+        private List<String> corsAllowedOrigins = new ArrayList<>();
 
         public boolean isAnalyticsEnabled() {
             return this.getEnableAnalytics() != null && this.getEnableAnalytics();
+        }
+
+        public boolean isPosthogEnabled() {
+            // Treat null as enabled when analytics is enabled
+            return this.isAnalyticsEnabled()
+                    && (this.getEnablePosthog() == null || this.getEnablePosthog());
+        }
+
+        public boolean isScarfEnabled() {
+            // Treat null as enabled when analytics is enabled
+            return this.isAnalyticsEnabled()
+                    && (this.getEnableScarf() == null || this.getEnableScarf());
         }
     }
 
