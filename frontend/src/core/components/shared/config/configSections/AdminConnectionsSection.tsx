@@ -2,15 +2,15 @@ import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Stack, Text, Loader, Group, Divider, Paper, Switch, Badge } from '@mantine/core';
 import { alert } from '@app/components/toast';
-import RestartConfirmationModal from '../RestartConfirmationModal';
-import { useRestartServer } from '../useRestartServer';
+import RestartConfirmationModal from '@app/components/shared/config/RestartConfirmationModal';
+import { useRestartServer } from '@app/components/shared/config/useRestartServer';
 import { useAdminSettings } from '@app/hooks/useAdminSettings';
-import PendingBadge from '../PendingBadge';
-import ProviderCard from './ProviderCard';
+import PendingBadge from '@app/components/shared/config/PendingBadge';
+import ProviderCard from '@app/components/shared/config/configSections/ProviderCard';
 import {
   ALL_PROVIDERS,
   Provider,
-} from './providerDefinitions';
+} from '@app/components/shared/config/configSections/providerDefinitions';
 import apiClient from '@app/services/apiClient';
 
 interface ConnectionsSettingsData {
