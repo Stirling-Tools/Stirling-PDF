@@ -80,7 +80,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 String requestURI = request.getRequestURI();
                 String contextPath = request.getContextPath();
 
-
                 if (!isPublicAuthEndpoint(requestURI, contextPath)) {
                     // For API requests, return 401 JSON
                     String acceptHeader = request.getHeader("Accept");
