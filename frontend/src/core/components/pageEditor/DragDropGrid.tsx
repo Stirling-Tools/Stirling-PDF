@@ -3,6 +3,11 @@ import { Box } from '@mantine/core';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { GRID_CONSTANTS } from './constants';
 import {
+  Z_INDEX_SELECTION_BOX,
+  Z_INDEX_DROP_INDICATOR,
+  Z_INDEX_DRAG_BADGE,
+} from '../../styles/zIndex';
+import {
   DndContext,
   DragEndEvent,
   DragStartEvent,
@@ -564,7 +569,7 @@ const DragDropGrid = <T extends DragDropItem>({
     border: '2px dashed #3b82f6',
     backgroundColor: 'rgba(59, 130, 246, 0.1)',
     pointerEvents: 'none' as const,
-    zIndex: 1000,
+    zIndex: Z_INDEX_SELECTION_BOX,
   } : null;
 
   // Calculate drop indicator position
@@ -592,7 +597,7 @@ const DragDropGrid = <T extends DragDropItem>({
       height: `${height}px`,
       backgroundColor: 'rgba(96, 165, 250, 0.8)',
       borderRadius: '2px',
-      zIndex: 1001,
+      zIndex: Z_INDEX_DROP_INDICATOR,
       pointerEvents: 'none' as const,
     };
   }, [hoveredItemId, dropSide, activeId, itemGap, zoomLevel]);
@@ -738,7 +743,7 @@ const DragDropGrid = <T extends DragDropItem>({
                   fontSize: '14px',
                   fontWeight: 'bold',
                   boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-                  zIndex: 1001
+                  zIndex: Z_INDEX_DRAG_BADGE
                 }}
               >
                 {boxSelectedPageIds.length}

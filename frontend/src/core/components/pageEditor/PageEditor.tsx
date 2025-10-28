@@ -31,6 +31,7 @@ import { usePageEditorState } from './hooks/usePageEditorState';
 import { parseSelection } from "@app/utils/bulkselection/parseSelection";
 import { usePageEditorRightRailButtons } from "@app/components/pageEditor/pageEditorRightRailButtons";
 import { useFileColorMap } from "@app/components/pageEditor/hooks/useFileColorMap";
+import { useWheelZoom } from "@app/hooks/useWheelZoom";
 
 export interface PageEditorProps {
   onFunctionsReady?: (functions: PageEditorFunctions) => void;
@@ -981,39 +982,12 @@ const PageEditor = ({
     selectionMode, selectedPageIds, splitPositions, displayDocument?.pages.length, closePdf
   ]);
 
-  // Handle scroll wheel zoom with accumulator for smooth trackpad pinch
-  useEffect(() => {
-    let accumulator = 0;
-
-    const handleWheel = (event: WheelEvent) => {
-      // Check if Ctrl (Windows/Linux) or Cmd (Mac) is pressed
-      if (event.ctrlKey || event.metaKey) {
-        event.preventDefault();
-        event.stopPropagation();
-
-        accumulator += event.deltaY;
-        const threshold = 10;
-
-        if (accumulator <= -threshold) {
-          // Accumulated scroll up - zoom in
-          zoomIn();
-          accumulator = 0;
-        } else if (accumulator >= threshold) {
-          // Accumulated scroll down - zoom out
-          zoomOut();
-          accumulator = 0;
-        }
-      }
-    };
-
-    const container = containerRef.current;
-    if (container) {
-      container.addEventListener('wheel', handleWheel, { passive: false });
-      return () => {
-        container.removeEventListener('wheel', handleWheel);
-      };
-    }
-  }, [zoomIn, zoomOut]);
+  useWheelZoom({
+    ref: containerRef,
+    onZoomIn: zoomIn,
+    onZoomOut: zoomOut,
+    enabled: !!displayDocument,
+  });
 
   // Handle keyboard zoom shortcuts
   useEffect(() => {
