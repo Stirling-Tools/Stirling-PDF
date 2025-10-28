@@ -75,6 +75,7 @@ const PageEditor = ({
   const fileObjectsRef = useRef(new Map<FileId, any>());
   const pagePositionCacheRef = useRef<Map<string, number>>(new Map());
   const pageNeighborCacheRef = useRef<Map<string, string | null>>(new Map());
+  const gridItemRefsRef = useRef<React.MutableRefObject<Map<string, HTMLDivElement>> | null>(null);
 
   const pageEditorFiles = useMemo(() => {
     const cache = fileObjectsRef.current;
@@ -1094,45 +1095,57 @@ const PageEditor = ({
               }}
             >
             {(() => {
-              // Calculate remToPx once outside the map to avoid layout thrashing
-              const containerWidth = containerDimensions.width;
-              const remToPx = parseFloat(getComputedStyle(document.documentElement).fontSize);
-              const ITEM_WIDTH = parseFloat(GRID_CONSTANTS.ITEM_WIDTH) * remToPx;
-              const ITEM_HEIGHT = parseFloat(GRID_CONSTANTS.ITEM_HEIGHT) * remToPx;
-              const ITEM_GAP = parseFloat(GRID_CONSTANTS.ITEM_GAP) * remToPx;
+              const refsMap = gridItemRefsRef.current?.current;
+              const containerEl = gridContainerRef.current;
+              if (!refsMap || !containerEl) {
+                return null;
+              }
+
+              const containerRect = containerEl.getBoundingClientRect();
 
               return Array.from(splitPositions).map((position) => {
+                const currentPage = displayedPages[position];
+                if (!currentPage) {
+                  return null;
+                }
 
-              // Calculate items per row using DragDropGrid's logic
-              const availableWidth = containerWidth - ITEM_GAP; // Account for first gap
-              const itemWithGap = ITEM_WIDTH + ITEM_GAP;
-              const itemsPerRow = Math.max(1, Math.floor(availableWidth / itemWithGap));
+                const currentEl = refsMap.get(currentPage.id);
+                if (!currentEl) {
+                  return null;
+                }
 
-              // Calculate position within the grid (same as DragDropGrid)
-              const row = Math.floor(position / itemsPerRow);
-              const col = position % itemsPerRow;
+                const currentRect = currentEl.getBoundingClientRect();
+                const nextPage = displayedPages[position + 1];
+                let lineLeft = currentRect.right;
 
-              // Position split line between pages (after the current page)
-              // Calculate grid centering offset (same as DragDropGrid)
-              const gridWidth = itemsPerRow * ITEM_WIDTH + (itemsPerRow - 1) * ITEM_GAP;
-              const gridOffset = Math.max(0, (containerWidth - gridWidth) / 2);
+                if (nextPage) {
+                  const nextEl = refsMap.get(nextPage.id);
+                  if (nextEl) {
+                    const nextRect = nextEl.getBoundingClientRect();
+                    const sameRow = Math.abs(nextRect.top - currentRect.top) < currentRect.height / 2;
+                    if (sameRow) {
+                      lineLeft = (currentRect.right + nextRect.left) / 2;
+                    } else {
+                      lineLeft = currentRect.right + nextRect.width * 0.1;
+                    }
+                  }
+                } else {
+                  lineLeft = currentRect.right + currentRect.width * 0.1;
+                }
 
-              const leftPosition = gridOffset + col * itemWithGap + ITEM_WIDTH + (ITEM_GAP / 2);
-              const topPosition = row * ITEM_HEIGHT + (ITEM_HEIGHT * 0.05) + ITEM_GAP; // Center vertically (5% offset since page is 90% height) + gap offset
-
-              return (
-                <div
-                  key={`split-${position}`}
-                  style={{
-                    position: 'absolute',
-                    left: leftPosition,
-                    top: topPosition,
-                    width: '1px',
-                    height: `calc(${GRID_CONSTANTS.ITEM_HEIGHT} * 0.9)`, // Match page container height (90%)
-                    borderLeft: '1px dashed #3b82f6'
-                  }}
-                />
-              );
+                return (
+                  <div
+                    key={`split-${position}`}
+                    style={{
+                      position: 'absolute',
+                      left: `${lineLeft - containerRect.left}px`,
+                      top: `${currentRect.top - containerRect.top}px`,
+                      width: '1px',
+                      height: `${currentRect.height}px`,
+                      borderLeft: '1px dashed #3b82f6',
+                    }}
+                  />
+                );
               });
             })()}
           </div>
@@ -1151,6 +1164,7 @@ const PageEditor = ({
               };
             }}
             renderItem={(page, index, refs, boxSelectedIds, clearBoxSelection, _getBoxSelection, _activeId, activeDragIds, justMoved, _isOver, dragHandleProps, zoomLevel) => {
+              gridItemRefsRef.current = refs;
               const fileColorIndex = page.originalFileId ? fileColorIndexMap.get(page.originalFileId) ?? 0 : 0;
               const isBoxSelected = boxSelectedIds.includes(page.id);
               return (
