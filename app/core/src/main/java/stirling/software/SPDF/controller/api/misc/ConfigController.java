@@ -84,6 +84,8 @@ public class ConfigController {
                     applicationProperties.getSystem().getEnableAlphaFunctionality());
             configData.put(
                     "enableAnalytics", applicationProperties.getSystem().getEnableAnalytics());
+            configData.put("enablePosthog", applicationProperties.getSystem().getEnablePosthog());
+            configData.put("enableScarf", applicationProperties.getSystem().getEnableScarf());
 
             // Premium/Enterprise settings
             configData.put("premiumEnabled", applicationProperties.getPremium().isEnabled());
