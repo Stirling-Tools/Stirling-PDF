@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { pdfWorkerManager } from '../../../../services/pdfWorkerManager';
-import type { PagePreview } from '../../../../hooks/useProgressivePagePreviews';
+import { pdfWorkerManager } from '@app/services/pdfWorkerManager';
+import type { PagePreview } from '@app/hooks/useProgressivePagePreviews';
 
 const DISPLAY_SCALE = 1;
 

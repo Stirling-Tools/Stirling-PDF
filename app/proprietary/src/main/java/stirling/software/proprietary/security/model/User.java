@@ -73,7 +73,6 @@ public class User implements UserDetails, Serializable {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "team_id")
-    @JsonIgnore
     private Team team;
 
     @ElementCollection
@@ -81,6 +80,7 @@ public class User implements UserDetails, Serializable {
     @Lob
     @Column(name = "setting_value", columnDefinition = "text")
     @CollectionTable(name = "user_settings", joinColumns = @JoinColumn(name = "user_id"))
+    @JsonIgnore
     private Map<String, String> settings = new HashMap<>(); // Key-value pairs of settings.
 
     @CreationTimestamp

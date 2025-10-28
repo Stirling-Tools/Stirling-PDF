@@ -2,9 +2,9 @@ import { useMemo, useRef } from 'react';
 import { Button, Stack, Text } from '@mantine/core';
 import type { ForwardedRef } from 'react';
 import { Dropzone } from '@mantine/dropzone';
-import { formatFileSize } from '../../../utils/fileUtils';
-import type { StirlingFileStub } from '../../../types/fileContext';
-import LocalIcon from '../../shared/LocalIcon';
+import { formatFileSize } from '@app/utils/fileUtils';
+import type { StirlingFileStub } from '@app/types/fileContext';
+import LocalIcon from '@app/components/shared/LocalIcon';
 import { useTranslation } from 'react-i18next';
 
 interface UploadColumnProps {

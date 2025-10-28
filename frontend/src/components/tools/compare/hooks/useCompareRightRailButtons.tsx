@@ -1,9 +1,9 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import LocalIcon from '../../../shared/LocalIcon';
-import { alert } from '../../../toast';
-import type { ToastLocation } from '../../../toast/types';
-import type { RightRailButtonWithAction } from '../../../../hooks/useRightRailButtons';
+import LocalIcon from '@app/components/shared/LocalIcon';
+import { alert } from '@app/components/toast';
+import type { ToastLocation } from '@app/components/toast/types';
+import type { RightRailButtonWithAction } from '@app/hooks/useRightRailButtons';
 import { useMediaQuery } from '@mantine/hooks';
 
 type Pane = 'base' | 'comparison';

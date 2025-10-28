@@ -4,24 +4,24 @@ import { useTranslation } from 'react-i18next';
 import { useMediaQuery } from '@mantine/hooks';
 import {
   CompareResultData,
-} from '../../../types/compare';
-import type { CompareWorkbenchData } from '../../../types/compareWorkbench';
-import type { FileId } from '../../../types/file';
-import type { StirlingFileStub, StirlingFile } from '../../../types/fileContext';
-import { useFilesModalContext } from '../../../contexts/FilesModalContext';
-import { useFileActions, useFileContext } from '../../../contexts/file/fileHooks';
-import { useRightRailButtons } from '../../../hooks/useRightRailButtons';
+} from '@app/types/compare';
+import type { CompareWorkbenchData } from '@app/types/compareWorkbench';
+import type { FileId } from '@app/types/file';
+import type { StirlingFileStub, StirlingFile } from '@app/types/fileContext';
+import { useFilesModalContext } from '@app/contexts/FilesModalContext';
+import { useFileActions, useFileContext } from '@app/contexts/file/fileHooks';
+import { useRightRailButtons } from '@app/hooks/useRightRailButtons';
 import CompareDocumentPane from './CompareDocumentPane';
 import CompareUploadSection from './CompareUploadSection';
 import { useComparePagePreviews } from './hooks/useComparePagePreviews';
 import { useComparePanZoom } from './hooks/useComparePanZoom';
 import { useCompareHighlights } from './hooks/useCompareHighlights';
 import { useCompareChangeNavigation } from './hooks/useCompareChangeNavigation';
-import type { CompareChangeOption } from '../../../types/compareWorkbench';
+import type { CompareChangeOption } from '@app/types/compareWorkbench';
 import './compareView.css';
 import { useCompareRightRailButtons } from './hooks/useCompareRightRailButtons';
-import { alert, updateToast, updateToastProgress, dismissToast } from '../../toast';
-import type { ToastLocation } from '../../toast/types';
+import { alert, updateToast, updateToastProgress, dismissToast } from '@app/components/toast';
+import type { ToastLocation } from '@app/components/toast/types';
 
 interface CompareWorkbenchViewProps {
   data: CompareWorkbenchData | null;

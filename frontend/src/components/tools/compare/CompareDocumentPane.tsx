@@ -1,10 +1,10 @@
 import { Alert, Group, Loader, Stack, Text } from '@mantine/core';
 import { RefObject, useMemo } from 'react';
 import type { PagePreview, WordHighlightEntry } from './types';
-import type { TokenBoundingBox } from '../../../types/compare';
+import type { TokenBoundingBox } from '@app/types/compare';
 import CompareNavigationDropdown from './CompareNavigationDropdown';
 import { toRgba } from './compareUtils';
-import LazyLoadContainer from '../../shared/LazyLoadContainer';
+import LazyLoadContainer from '@app/components/shared/LazyLoadContainer';
 import { useMediaQuery } from '@mantine/hooks';
 
 interface CompareDocumentPaneProps {
