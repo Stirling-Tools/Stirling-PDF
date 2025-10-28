@@ -27,11 +27,31 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        // Only configure CORS if allowed origins are specified
-        if (applicationProperties.getSystem() != null
-                && applicationProperties.getSystem().getCorsAllowedOrigins() != null
-                && !applicationProperties.getSystem().getCorsAllowedOrigins().isEmpty()) {
+        // Check if running in Tauri mode
+        boolean isTauriMode =
+                Boolean.parseBoolean(System.getProperty("STIRLING_PDF_TAURI_MODE", "false"));
 
+        // Check if user has configured custom origins
+        boolean hasConfiguredOrigins =
+                applicationProperties.getSystem() != null
+                        && applicationProperties.getSystem().getCorsAllowedOrigins() != null
+                        && !applicationProperties.getSystem().getCorsAllowedOrigins().isEmpty();
+
+        if (isTauriMode) {
+            // Automatically enable CORS for Tauri desktop app
+            // Tauri v1 uses tauri://localhost, v2 uses http(s)://tauri.localhost
+            logger.info("Tauri mode detected - enabling CORS for Tauri protocols (v1 and v2)");
+            registry.addMapping("/**")
+                    .allowedOrigins(
+                            "tauri://localhost",
+                            "http://tauri.localhost",
+                            "https://tauri.localhost")
+                    .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
+                    .allowedHeaders("*")
+                    .allowCredentials(true)
+                    .maxAge(3600);
+        } else if (hasConfiguredOrigins) {
+            // Use user-configured origins
             logger.info(
                     "Configuring CORS with allowed origins: {}",
                     applicationProperties.getSystem().getCorsAllowedOrigins());
@@ -49,6 +69,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
                     .allowCredentials(true)
                     .maxAge(3600);
         }
-        // If no origins are configured, CORS is not enabled (secure by default)
+        // If no origins are configured and not in Tauri mode, CORS is not enabled (secure by
+        // default)
     }
 }
