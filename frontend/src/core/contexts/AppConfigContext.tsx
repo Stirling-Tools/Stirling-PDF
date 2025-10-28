@@ -63,7 +63,6 @@ export const AppConfigProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setLoading(true);
     setError(null);
 
-    let lastError: unknown = null;
 
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
       try {
@@ -82,7 +81,6 @@ export const AppConfigProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         setLoading(false);
         return; // Success - exit function
       } catch (err: any) {
-        lastError = err;
         const status = err?.response?.status;
 
         // Check if we should retry (network errors or 5xx errors)

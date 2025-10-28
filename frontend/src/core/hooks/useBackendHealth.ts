@@ -29,21 +29,20 @@ export const useBackendHealth = (checkInterval: number = 2000) => {
       const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
 
       const response = await apiClient.get('/api/v1/info/status', {
-        signal: controller.signal,
-        skipErrorToast: true, // Don't show error toasts for health check failures
+        signal: controller.signal
       });
 
       clearTimeout(timeoutId);
 
       const isHealthy = response.status === 200;
-      
+
       setHealthState({
         isHealthy,
         isChecking: false,
         lastChecked: new Date(),
         error: null,
       });
-      
+
       if (isHealthy) {
         // Log success message if this is the first successful check after failures
         if (attemptCount > 0) {
@@ -71,7 +70,7 @@ export const useBackendHealth = (checkInterval: number = 2000) => {
       } else {
         errorMessage = isWithinStartupPeriod ? 'Backend starting up...' : (error.message || 'Health check failed');
       }
-      
+
       // Only log errors to console after startup period
       if (!isWithinStartupPeriod) {
         console.error('Backend health check failed:', {
@@ -91,7 +90,7 @@ export const useBackendHealth = (checkInterval: number = 2000) => {
           });
         }
       }
-      
+
       setHealthState({
         isHealthy: false,
         isChecking: false,

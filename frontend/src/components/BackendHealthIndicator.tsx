@@ -1,12 +1,12 @@
 import React from 'react';
 import '../index.css';
-import { useBackendHealth } from '../hooks/useBackendHealth';
+import { useBackendHealth } from '@app/hooks/useBackendHealth';
 
 interface BackendHealthIndicatorProps {
   className?: string;
 }
 
-export const BackendHealthIndicator: React.FC<BackendHealthIndicatorProps> = ({ 
+export const BackendHealthIndicator: React.FC<BackendHealthIndicatorProps> = ({
   className = ''
 }) => {
   const { isHealthy, isChecking, error, checkHealth } = useBackendHealth();
@@ -19,7 +19,7 @@ export const BackendHealthIndicator: React.FC<BackendHealthIndicatorProps> = ({
   }
 
   return (
-    <div 
+    <div
       className={`w-2xs h-2xs ${statusColor} rounded-full cursor-pointer ${isChecking ? 'animate-pulse' : ''} ${className}`}
       onClick={checkHealth}
       title={isHealthy ? 'Backend Online' : isChecking ? 'Checking...' : 'Backend Offline'}
