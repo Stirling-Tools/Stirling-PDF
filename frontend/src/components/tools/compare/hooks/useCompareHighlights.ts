@@ -1,15 +1,13 @@
 import { useCallback, useMemo } from 'react';
 import type {
-  CompareDiffToken,
+  CompareFilteredTokenInfo,
   CompareResultData,
-  CompareTokenMetadata,
 } from '../../../../types/compare';
 import type { CompareChangeOption } from '../../../../types/compareWorkbench';
 import type { PagePreview } from '../../../../hooks/useProgressivePagePreviews';
 import type { WordHighlightEntry } from '../types';
-import { PARAGRAPH_SENTINEL } from '../../../../types/compare';
 
-interface TokenGroupMap {
+interface MetaGroupMap {
   base: Map<number, string>;
   comparison: Map<number, string>;
 }
@@ -22,70 +20,63 @@ interface WordHighlightMaps {
 export interface UseCompareHighlightsResult {
   baseWordChanges: CompareChangeOption[];
   comparisonWordChanges: CompareChangeOption[];
-  tokenIndexToGroupId: TokenGroupMap;
+  metaIndexToGroupId: MetaGroupMap;
   wordHighlightMaps: WordHighlightMaps;
   getRowHeightPx: (pageNumber: number) => number;
 }
 
 const buildWordChanges = (
-  tokens: CompareDiffToken[],
-  metadata: CompareTokenMetadata[],
-  targetType: 'added' | 'removed',
-  tokenIndexToGroupId: Map<number, string>,
+  tokens: CompareFilteredTokenInfo[],
+  metaIndexToGroupId: Map<number, string>,
   groupPrefix: string
 ): CompareChangeOption[] => {
-  tokenIndexToGroupId.clear();
+  metaIndexToGroupId.clear();
   if (!tokens.length) return [];
 
   const items: CompareChangeOption[] = [];
-  let metadataIndex = 0;
+  let currentRun: CompareFilteredTokenInfo[] = [];
 
-  for (let i = 0; i < tokens.length; i += 1) {
-    const token = tokens[i];
-    if (token.type === targetType) {
-      const parts: string[] = [];
-      const runIndices: number[] = [];
-      // We'll compute the page number from the first token in the run that has a bbox
-      let firstPageWithBox: number | null = null;
-      while (i < tokens.length && tokens[i].type === targetType) {
-        const t = tokens[i].text;
-        const isPara = t === PARAGRAPH_SENTINEL || t.startsWith('\uE000') || t.includes('PARA');
-        // Skip paragraph sentinel tokens entirely from labels and grouping
-        if (!isPara) {
-          parts.push(t);
-          // Only add to grouping if there is a corresponding metadata index
-          // AND there is a bounding box to anchor highlights to
-          const meta = metadata[metadataIndex];
-          if (meta) {
-            if (meta.bbox) {
-              runIndices.push(metadataIndex);
-              if (firstPageWithBox == null && typeof meta.page === 'number') {
-                firstPageWithBox = meta.page;
-              }
-            }
-          }
-        }
-        metadataIndex += 1;
-        i += 1;
-      }
-      i -= 1;
-      const label = parts.join(' ').trim();
-      if (label.length > 0 && runIndices.length > 0) {
-        const startIndexForId = runIndices[0];
-        const endIndexForId = runIndices[runIndices.length - 1];
-        const groupId = `${groupPrefix}-${startIndexForId}-${endIndexForId}`;
-        runIndices.forEach((idx) => tokenIndexToGroupId.set(idx, groupId));
-        const pageNumber = firstPageWithBox ?? (metadata[startIndexForId]?.page ?? 1);
-        items.push({ value: groupId, label, pageNumber });
-      }
-      continue;
+  const flushRun = () => {
+    if (currentRun.length === 0) return;
+    const label = currentRun.map((token) => token.token).join(' ').trim();
+    if (label.length === 0) {
+      currentRun = [];
+      return;
     }
-    if (token.type !== (targetType === 'added' ? 'removed' : 'added')) {
-      metadataIndex += 1;
+    const first = currentRun[0];
+    const last = currentRun[currentRun.length - 1];
+    const groupId = `${groupPrefix}-t${first.metaIndex}-t${last.metaIndex}`;
+    currentRun.forEach((token) => {
+      metaIndexToGroupId.set(token.metaIndex, groupId);
+    });
+    const pageNumber = first.page ?? last.page ?? 1;
+    items.push({ value: groupId, label, pageNumber });
+    currentRun = [];
+  };
+
+  for (const token of tokens) {
+    if (token.hasHighlight && token.bbox) {
+      currentRun.push(token);
+    } else {
+      flushRun();
     }
   }
+  flushRun();
 
   return items;
+};
+
+const buildHighlightMap = (
+  tokens: CompareFilteredTokenInfo[]
+): Map<number, WordHighlightEntry[]> => {
+  const map = new Map<number, WordHighlightEntry[]>();
+  for (const token of tokens) {
+    if (!token.hasHighlight || !token.bbox || token.page == null) continue;
+    const list = map.get(token.page) ?? [];
+    list.push({ rect: token.bbox, metaIndex: token.metaIndex });
+    map.set(token.page, list);
+  }
+  return map;
 };
 
 export const useCompareHighlights = (
@@ -93,30 +84,26 @@ export const useCompareHighlights = (
   basePages: PagePreview[],
   comparisonPages: PagePreview[],
 ): UseCompareHighlightsResult => {
-  const baseTokenIndexToGroupId = useMemo(() => new Map<number, string>(), []);
-  const comparisonTokenIndexToGroupId = useMemo(() => new Map<number, string>(), []);
+  const baseMetaIndexToGroupId = useMemo(() => new Map<number, string>(), []);
+  const comparisonMetaIndexToGroupId = useMemo(() => new Map<number, string>(), []);
 
   const baseWordChanges = useMemo(() => {
     if (!result) return [];
     return buildWordChanges(
-      result.tokens,
-      result.tokenMetadata.base,
-      'removed',
-      baseTokenIndexToGroupId,
+      result.filteredTokenData.base,
+      baseMetaIndexToGroupId,
       'base-group'
     );
-  }, [baseTokenIndexToGroupId, result]);
+  }, [baseMetaIndexToGroupId, result]);
 
   const comparisonWordChanges = useMemo(() => {
     if (!result) return [];
     return buildWordChanges(
-      result.tokens,
-      result.tokenMetadata.comparison,
-      'added',
-      comparisonTokenIndexToGroupId,
+      result.filteredTokenData.comparison,
+      comparisonMetaIndexToGroupId,
       'comparison-group'
     );
-  }, [comparisonTokenIndexToGroupId, result]);
+  }, [comparisonMetaIndexToGroupId, result]);
 
   const wordHighlightMaps = useMemo(() => {
     if (!result) {
@@ -126,35 +113,10 @@ export const useCompareHighlights = (
       };
     }
 
-    const baseMap = new Map<number, WordHighlightEntry[]>();
-    const comparisonMap = new Map<number, WordHighlightEntry[]>();
-
-    let baseIndex = 0;
-    let comparisonIndex = 0;
-    for (const token of result.tokens) {
-      if (token.type === 'removed') {
-        const meta = result.tokenMetadata.base[baseIndex];
-        if (meta?.bbox) {
-          const list = baseMap.get(meta.page) ?? [];
-          list.push({ rect: meta.bbox, index: baseIndex });
-          baseMap.set(meta.page, list);
-        }
-        baseIndex += 1;
-      } else if (token.type === 'added') {
-        const meta = result.tokenMetadata.comparison[comparisonIndex];
-        if (meta?.bbox) {
-          const list = comparisonMap.get(meta.page) ?? [];
-          list.push({ rect: meta.bbox, index: comparisonIndex });
-          comparisonMap.set(meta.page, list);
-        }
-        comparisonIndex += 1;
-      } else {
-        baseIndex += 1;
-        comparisonIndex += 1;
-      }
-    }
-
-    return { base: baseMap, comparison: comparisonMap };
+    return {
+      base: buildHighlightMap(result.filteredTokenData.base),
+      comparison: buildHighlightMap(result.filteredTokenData.comparison),
+    };
   }, [result]);
 
   const getRowHeightPx = useCallback(
@@ -172,9 +134,9 @@ export const useCompareHighlights = (
   return {
     baseWordChanges,
     comparisonWordChanges,
-    tokenIndexToGroupId: {
-      base: baseTokenIndexToGroupId,
-      comparison: comparisonTokenIndexToGroupId,
+    metaIndexToGroupId: {
+      base: baseMetaIndexToGroupId,
+      comparison: comparisonMetaIndexToGroupId,
     },
     wordHighlightMaps,
     getRowHeightPx,

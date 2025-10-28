@@ -140,7 +140,7 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
   const {
     baseWordChanges,
     comparisonWordChanges,
-    tokenIndexToGroupId,
+    metaIndexToGroupId,
     wordHighlightMaps,
     getRowHeightPx,
   } = useCompareHighlights(result, basePages, comparisonPages);
@@ -315,7 +315,7 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
               pairedPages={comparisonPages}
               getRowHeightPx={getRowHeightPx}
               wordHighlightMap={wordHighlightMaps.base}
-            tokenIndexToGroupId={tokenIndexToGroupId.base}
+              metaIndexToGroupId={metaIndexToGroupId.base}
               documentLabel={baseDocumentLabel}
               pageLabel={pageLabel}
               altLabel={baseDocumentLabel}
@@ -347,7 +347,7 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
               pairedPages={basePages}
               getRowHeightPx={getRowHeightPx}
               wordHighlightMap={wordHighlightMaps.comparison}
-            tokenIndexToGroupId={tokenIndexToGroupId.comparison}
+              metaIndexToGroupId={metaIndexToGroupId.comparison}
               documentLabel={comparisonDocumentLabel}
               pageLabel={pageLabel}
               altLabel={comparisonDocumentLabel}

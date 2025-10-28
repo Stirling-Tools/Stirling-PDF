@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import {
   ADDITION_HIGHLIGHT,
   CompareDiffToken,
+  CompareFilteredTokenInfo,
   CompareResultData,
   CompareWorkerRequest,
   CompareWorkerResponse,
@@ -217,6 +218,49 @@ export const useCompareOperation = (): CompareOperationHook => {
           warningMessages
         );
 
+        const baseHasHighlight = new Array<boolean>(baseFiltered.tokens.length).fill(false);
+        const comparisonHasHighlight = new Array<boolean>(comparisonFiltered.tokens.length).fill(false);
+
+        let baseTokenPointer = 0;
+        let comparisonTokenPointer = 0;
+        for (const diffToken of tokens) {
+          if (diffToken.type === 'removed') {
+            if (baseTokenPointer < baseHasHighlight.length) {
+              baseHasHighlight[baseTokenPointer] = true;
+            }
+            baseTokenPointer += 1;
+          } else if (diffToken.type === 'added') {
+            if (comparisonTokenPointer < comparisonHasHighlight.length) {
+              comparisonHasHighlight[comparisonTokenPointer] = true;
+            }
+            comparisonTokenPointer += 1;
+          } else {
+            if (baseTokenPointer < baseHasHighlight.length) {
+              baseTokenPointer += 1;
+            }
+            if (comparisonTokenPointer < comparisonHasHighlight.length) {
+              comparisonTokenPointer += 1;
+            }
+          }
+        }
+
+        const buildFilteredTokenData = (
+          tokensList: typeof baseFiltered.tokens,
+          metadataList: typeof baseFiltered.metadata,
+          highlightFlags: boolean[]
+        ): CompareFilteredTokenInfo[] =>
+          tokensList.map((token, index) => {
+            const meta = metadataList[index];
+            return {
+              token,
+              page: meta?.page ?? null,
+              paragraph: meta?.paragraph ?? null,
+              bbox: meta?.bbox ?? null,
+              hasHighlight: highlightFlags[index] ?? false,
+              metaIndex: index,
+            };
+          });
+
         const totals = aggregateTotals(tokens);
         const processedAt = Date.now();
 
@@ -249,6 +293,14 @@ export const useCompareOperation = (): CompareOperationHook => {
           tokenMetadata: {
             base: baseMetadata,
             comparison: comparisonMetadata,
+          },
+          filteredTokenData: {
+            base: buildFilteredTokenData(baseFiltered.tokens, baseFiltered.metadata, baseHasHighlight),
+            comparison: buildFilteredTokenData(
+              comparisonFiltered.tokens,
+              comparisonFiltered.metadata,
+              comparisonHasHighlight
+            ),
           },
           sourceTokens: {
             base: baseContent.tokens,

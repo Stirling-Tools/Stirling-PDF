@@ -41,6 +41,15 @@ export interface CompareParagraph {
   text: string;
 }
 
+export interface CompareFilteredTokenInfo {
+  token: string;
+  page: number | null;
+  paragraph: number | null;
+  bbox: TokenBoundingBox | null;
+  hasHighlight: boolean;
+  metaIndex: number;
+}
+
 export interface CompareChangeSide {
   text: string;
   page: number | null;
@@ -67,6 +76,10 @@ export interface CompareResultData {
   tokenMetadata: {
     base: CompareTokenMetadata[];
     comparison: CompareTokenMetadata[];
+  };
+  filteredTokenData: {
+    base: CompareFilteredTokenInfo[];
+    comparison: CompareFilteredTokenInfo[];
   };
   sourceTokens: {
     base: string[];

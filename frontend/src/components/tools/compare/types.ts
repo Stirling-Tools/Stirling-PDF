@@ -10,5 +10,5 @@ export interface PagePreview {
 
 export interface WordHighlightEntry {
   rect: TokenBoundingBox;
-  index: number;
+  metaIndex: number;
 }

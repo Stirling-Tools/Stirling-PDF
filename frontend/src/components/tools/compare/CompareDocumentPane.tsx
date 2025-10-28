@@ -34,7 +34,7 @@ interface CompareDocumentPaneProps {
   pairedPages: PagePreview[];
   getRowHeightPx: (pageNumber: number) => number;
   wordHighlightMap: Map<number, WordHighlightEntry[]>;
-  tokenIndexToGroupId: Map<number, string>;
+  metaIndexToGroupId: Map<number, string>;
   documentLabel: string;
   pageLabel: string;
   altLabel: string;
@@ -103,7 +103,7 @@ const CompareDocumentPane = ({
   pairedPages,
   getRowHeightPx,
   wordHighlightMap,
-  tokenIndexToGroupId,
+  metaIndexToGroupId,
   documentLabel,
   pageLabel,
   altLabel,
@@ -181,9 +181,9 @@ const CompareDocumentPane = ({
 
             const wordRects = wordHighlightMap.get(page.pageNumber) ?? [];
             const groupedRects = new Map<string, TokenBoundingBox[]>();
-            for (const { rect, index } of wordRects) {
+            for (const { rect, metaIndex } of wordRects) {
               const id =
-                tokenIndexToGroupId.get(index) ?? `${pane}-token-${index}`;
+                metaIndexToGroupId.get(metaIndex) ?? `${pane}-token-${metaIndex}`;
               const current = groupedRects.get(id) ?? [];
               current.push(rect);
               groupedRects.set(id, current);
