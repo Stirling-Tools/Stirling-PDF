@@ -80,18 +80,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 String requestURI = request.getRequestURI();
                 String contextPath = request.getContextPath();
 
-                // Public auth endpoints that don't require JWT
-                boolean isPublicAuthEndpoint =
-                        requestURI.startsWith(contextPath + "/login")
-                                || requestURI.startsWith(contextPath + "/signup")
-                                || requestURI.startsWith(contextPath + "/auth/")
-                                || requestURI.startsWith(contextPath + "/oauth2")
-                                || requestURI.startsWith(contextPath + "/api/v1/auth/login")
-                                || requestURI.startsWith(contextPath + "/api/v1/auth/register")
-                                || requestURI.startsWith(contextPath + "/api/v1/auth/refresh")
-                                || requestURI.startsWith(contextPath + "/api/v1/config");
 
-                if (!isPublicAuthEndpoint) {
+                if (!isPublicAuthEndpoint(requestURI, contextPath)) {
                     // For API requests, return 401 JSON
                     String acceptHeader = request.getHeader("Accept");
                     if (requestURI.startsWith(contextPath + "/api/")
@@ -143,6 +133,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private static boolean isPublicAuthEndpoint(String requestURI, String contextPath) {
+        // Public auth endpoints that don't require JWT
+        boolean isPublicAuthEndpoint =
+                requestURI.startsWith(contextPath + "/login")
+                        || requestURI.startsWith(contextPath + "/signup")
+                        || requestURI.startsWith(contextPath + "/auth/")
+                        || requestURI.startsWith(contextPath + "/oauth2")
+                        || requestURI.startsWith(contextPath + "/api/v1/auth/login")
+                        || requestURI.startsWith(contextPath + "/api/v1/auth/register")
+                        || requestURI.startsWith(contextPath + "/api/v1/auth/refresh")
+                        || requestURI.startsWith(contextPath + "/api/v1/config");
+        return isPublicAuthEndpoint;
     }
 
     private boolean apiKeyExists(HttpServletRequest request, HttpServletResponse response)
