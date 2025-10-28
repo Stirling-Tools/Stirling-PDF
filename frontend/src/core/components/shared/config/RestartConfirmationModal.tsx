@@ -2,7 +2,7 @@ import { Modal, Text, Group, Button, Stack } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import ScheduleIcon from '@mui/icons-material/Schedule';
-import { Z_INDEX_OVER_CONFIG_MODAL } from '../../../styles/zIndex';
+import { Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
 
 interface RestartConfirmationModalProps {
   opened: boolean;
