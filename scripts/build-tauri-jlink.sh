@@ -62,13 +62,13 @@ fi
 print_step "Building Stirling-PDF JAR..."
 ./gradlew clean bootJar --no-daemon
 
-if [ ! -f "app\core\build\libs\stirling-pdf-*.jar"*.jar ]; then
+if [ ! -f compgen -G "app/core/build/libs/stirling-pdf-*.jar" ]; then
     print_error "Failed to build stirling-pdf JAR"
     exit 1
 fi
 
 # Find the built JAR
-STIRLING_JAR=$(ls app\core\build\libs\stirling-pdf-*.jar | head -n 1)
+STIRLING_JAR=$(ls app/core/build/libs/stirling-pdf-*.jar | head -n 1)
 print_success "Built JAR: $STIRLING_JAR"
 
 # Create directories for Tauri
