@@ -1,12 +1,23 @@
 import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react-swc';
+import tsconfigPaths from 'vite-tsconfig-paths';
+
+// When DISABLE_ADDITIONAL_FEATURES is false (or unset), enable proprietary features
+const isProprietary = process.env.DISABLE_ADDITIONAL_FEATURES !== 'true';
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    tsconfigPaths({
+      projects: [
+        isProprietary ? './tsconfig.proprietary.json' : './tsconfig.core.json',
+      ],
+    }),
+  ],
   test: {
     globals: true,
     environment: 'jsdom',
-    setupFiles: ['./src/setupTests.ts'],
+    setupFiles: ['./src/core/setupTests.ts'],
     css: false, // Disable CSS processing to speed up tests
     include: [
       'src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'
@@ -22,7 +33,7 @@ export default defineConfig({
       reporter: ['text', 'json', 'html'],
       exclude: [
         'node_modules/',
-        'src/setupTests.ts',
+        'src/core/setupTests.ts',
         '**/*.d.ts',
         'src/tests/test-fixtures/**',
         'src/**/*.spec.ts' // Exclude Playwright files from coverage
@@ -31,10 +42,5 @@ export default defineConfig({
   },
   esbuild: {
     target: 'es2020' // Use older target to avoid warnings
-  },
-  resolve: {
-    alias: {
-      '@': '/src'
-    }
   }
 });

@@ -56,7 +56,7 @@ public class PostHogService {
     }
 
     private void captureSystemInfo() {
-        if (!applicationProperties.getSystem().isAnalyticsEnabled()) {
+        if (!applicationProperties.getSystem().isPosthogEnabled()) {
             return;
         }
         try {
@@ -67,7 +67,7 @@ public class PostHogService {
     }
 
     public void captureEvent(String eventName, Map<String, Object> properties) {
-        if (!applicationProperties.getSystem().isAnalyticsEnabled()) {
+        if (!applicationProperties.getSystem().isPosthogEnabled()) {
             return;
         }
 
@@ -325,6 +325,14 @@ public class PostHogService {
                 properties,
                 "system_enableAnalytics",
                 applicationProperties.getSystem().isAnalyticsEnabled());
+        addIfNotEmpty(
+                properties,
+                "system_enablePosthog",
+                applicationProperties.getSystem().isPosthogEnabled());
+        addIfNotEmpty(
+                properties,
+                "system_enableScarf",
+                applicationProperties.getSystem().isScarfEnabled());
 
         // Capture UI properties
         addIfNotEmpty(

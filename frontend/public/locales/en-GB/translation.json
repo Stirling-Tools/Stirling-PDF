@@ -250,6 +250,7 @@
     "title": "Do you want make Stirling PDF better?",
     "paragraph1": "Stirling PDF has opt in analytics to help us improve the product. We do not track any personal information or file contents.",
     "paragraph2": "Please consider enabling analytics to help Stirling-PDF grow and to allow us to understand our users better.",
+    "learnMore": "Learn more",
     "enable": "Enable analytics",
     "disable": "Disable analytics",
     "settings": "You can change the settings for analytics in the config/settings.yml file"
@@ -3371,6 +3372,10 @@
         "title": "Analytics",
         "description": "These cookies help us understand how our tools are being used, so we can focus on building the features our community values most. Rest assured—Stirling PDF cannot and will never track the content of the documents you work with."
       }
+    },
+    "services": {
+      "posthog": "PostHog Analytics",
+      "scarf": "Scarf Pixel"
     }
   },
   "removeMetadata": {
@@ -4193,6 +4198,10 @@
     "preview": "Preview"
   },
   "config": {
+    "overview": {
+      "title": "Application Configuration",
+      "description": "Current application settings and configuration details."
+    },
     "account": {
       "overview": {
         "title": "Account Settings",
