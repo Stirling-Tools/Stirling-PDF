@@ -7,6 +7,8 @@
  * - No email confirmation flow (auto-confirmed on registration)
  */
 
+import apiClient from '../services/apiClient';
+
 // Auth types
 export interface User {
   id: string;
@@ -84,20 +86,14 @@ class SpringAuthClient {
       }
 
       // Verify with backend
-      const response = await fetch('/api/v1/auth/me', {
+      // Note: We pass the token explicitly here, overriding the interceptor's default
+      const response = await apiClient.get('/api/v1/auth/me', {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
       });
 
-      if (!response.ok) {
-        // Token invalid or expired - clear it
-        localStorage.removeItem('stirling_jwt');
-        console.debug('[SpringAuth] getSession: Not authenticated (status:', response.status, ')');
-        return { data: { session: null }, error: null };
-      }
-
-      const data = await response.json();
+      const data = response.data;
 
       // Create session object
       const session: Session = {
@@ -109,13 +105,21 @@ class SpringAuthClient {
 
       console.debug('[SpringAuth] getSession: Session retrieved successfully');
       return { data: { session }, error: null };
-    } catch (error) {
+    } catch (error: any) {
       console.error('[SpringAuth] getSession error:', error);
-      // Clear potentially invalid token
+
+      // If 401/403, token is invalid - clear it
+      if (error?.response?.status === 401 || error?.response?.status === 403) {
+        localStorage.removeItem('stirling_jwt');
+        console.debug('[SpringAuth] getSession: Not authenticated');
+        return { data: { session: null }, error: null };
+      }
+
+      // Clear potentially invalid token on other errors too
       localStorage.removeItem('stirling_jwt');
       return {
         data: { session: null },
-        error: { message: error instanceof Error ? error.message : 'Unknown error' },
+        error: { message: error?.response?.data?.message || error?.message || 'Unknown error' },
       };
     }
   }
@@ -128,22 +132,14 @@ class SpringAuthClient {
     password: string;
   }): Promise<AuthResponse> {
     try {
-      const response = await fetch('/api/v1/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include', // Include cookies for CSRF
-        body: JSON.stringify({
-          username: credentials.email,
-          password: credentials.password
-        }),
+      const response = await apiClient.post('/api/v1/auth/login', {
+        username: credentials.email,
+        password: credentials.password
+      }, {
+        withCredentials: true, // Include cookies for CSRF
       });
 
-      if (!response.ok) {
-        const error = await response.json();
-        return { user: null, session: null, error: { message: error.error || 'Login failed' } };
-      }
-
-      const data = await response.json();
+      const data = response.data;
       const token = data.session.access_token;
 
       // Store JWT in localStorage
@@ -161,12 +157,13 @@ class SpringAuthClient {
       this.notifyListeners('SIGNED_IN', session);
 
       return { user: data.user, session, error: null };
-    } catch (error) {
+    } catch (error: any) {
       console.error('[SpringAuth] signInWithPassword error:', error);
+      const errorMessage = error?.response?.data?.error || error?.message || 'Login failed';
       return {
         user: null,
         session: null,
-        error: { message: error instanceof Error ? error.message : 'Login failed' },
+        error: { message: errorMessage },
       };
     }
   }
@@ -180,32 +177,25 @@ class SpringAuthClient {
     options?: { data?: { full_name?: string }; emailRedirectTo?: string };
   }): Promise<AuthResponse> {
     try {
-      const response = await fetch('/api/v1/user/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          username: credentials.email,
-          password: credentials.password,
-        }),
+      const response = await apiClient.post('/api/v1/user/register', {
+        username: credentials.email,
+        password: credentials.password,
+      }, {
+        withCredentials: true,
       });
 
-      if (!response.ok) {
-        const error = await response.json();
-        return { user: null, session: null, error: { message: error.error || 'Registration failed' } };
-      }
-
-      const data = await response.json();
+      const data = response.data;
 
       // Note: Spring backend auto-confirms users (no email verification)
       // Return user but no session (user needs to login)
       return { user: data.user, session: null, error: null };
-    } catch (error) {
+    } catch (error: any) {
       console.error('[SpringAuth] signUp error:', error);
+      const errorMessage = error?.response?.data?.error || error?.message || 'Registration failed';
       return {
         user: null,
         session: null,
-        error: { message: error instanceof Error ? error.message : 'Registration failed' },
+        error: { message: errorMessage },
       };
     }
   }
@@ -242,16 +232,15 @@ class SpringAuthClient {
       console.log('[SpringAuth] JWT removed from localStorage');
 
       const csrfToken = this.getCsrfToken();
-      const headers: HeadersInit = {};
+      const headers: Record<string, string> = {};
 
       if (csrfToken) {
         headers['X-XSRF-TOKEN'] = csrfToken;
       }
 
       // Notify backend (optional - mainly for session cleanup)
-      await fetch('/api/v1/auth/logout', {
-        method: 'POST',
-        credentials: 'include',
+      await apiClient.post('/api/v1/auth/logout', {}, {
+        withCredentials: true,
         headers,
       });
 
@@ -280,37 +269,26 @@ class SpringAuthClient {
         return { data: { session: null }, error: { message: 'No token to refresh' } };
       }
 
-      const response = await fetch('/api/v1/auth/refresh', {
-        method: 'POST',
+      const response = await apiClient.post('/api/v1/auth/refresh', {}, {
         headers: {
           'Authorization': `Bearer ${currentToken}`,
         },
       });
 
-      if (!response.ok) {
-        localStorage.removeItem('stirling_jwt');
-        return { data: { session: null }, error: { message: 'Token refresh failed' } };
-      }
-
-      const refreshData = await response.json();
+      const refreshData = response.data;
       const newToken = refreshData.access_token;
 
       // Store new token
       localStorage.setItem('stirling_jwt', newToken);
 
       // Get updated user info
-      const userResponse = await fetch('/api/v1/auth/me', {
+      const userResponse = await apiClient.get('/api/v1/auth/me', {
         headers: {
           'Authorization': `Bearer ${newToken}`,
         },
       });
 
-      if (!userResponse.ok) {
-        localStorage.removeItem('stirling_jwt');
-        return { data: { session: null }, error: { message: 'Failed to get user info' } };
-      }
-
-      const userData = await userResponse.json();
+      const userData = userResponse.data;
       const session: Session = {
         user: userData.user,
         access_token: newToken,
@@ -322,12 +300,18 @@ class SpringAuthClient {
       this.notifyListeners('TOKEN_REFRESHED', session);
 
       return { data: { session }, error: null };
-    } catch (error) {
+    } catch (error: any) {
       console.error('[SpringAuth] refreshSession error:', error);
       localStorage.removeItem('stirling_jwt');
+
+      // Handle different error statuses
+      if (error?.response?.status === 401 || error?.response?.status === 403) {
+        return { data: { session: null }, error: { message: 'Token refresh failed - please log in again' } };
+      }
+
       return {
         data: { session: null },
-        error: { message: error instanceof Error ? error.message : 'Refresh failed' },
+        error: { message: error?.response?.data?.message || error?.message || 'Token refresh failed' },
       };
     }
   }

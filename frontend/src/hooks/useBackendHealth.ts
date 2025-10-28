@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { makeApiUrl } from '../utils/api';
+import apiClient from '../services/apiClient';
 
 export interface BackendHealthState {
   isHealthy: boolean;
@@ -22,25 +22,20 @@ export const useBackendHealth = (checkInterval: number = 2000) => {
   const checkHealth = useCallback(async () => {
     setHealthState(prev => ({ ...prev, isChecking: true, error: null }));
     setAttemptCount(prev => prev + 1);
-    
+
     try {
-      // Direct HTTP call to backend health endpoint using api.ts
-      const healthUrl = makeApiUrl('/api/v1/info/status');
-      
+      // Direct HTTP call to backend health endpoint using axios
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
-      
-      const response = await fetch(healthUrl, {
-        method: 'GET',
+
+      const response = await apiClient.get('/api/v1/info/status', {
         signal: controller.signal,
-        headers: {
-          'Accept': 'application/json',
-        },
+        skipErrorToast: true, // Don't show error toasts for health check failures
       });
-      
+
       clearTimeout(timeoutId);
-      
-      const isHealthy = response.ok;
+
+      const isHealthy = response.status === 200;
       
       setHealthState({
         isHealthy,
@@ -61,29 +56,28 @@ export const useBackendHealth = (checkInterval: number = 2000) => {
         }
         setAttemptCount(0); // Reset attempt count on success
       }
-    } catch (error) {
+    } catch (error: any) {
       const now = new Date();
       const timeSinceStartup = now.getTime() - startupTime.getTime();
       const isWithinStartupPeriod = timeSinceStartup < 60000; // 60 seconds
-      
+
       let errorMessage: string;
-      
-      if (error instanceof Error) {
-        if (error.name === 'AbortError') {
-          errorMessage = isWithinStartupPeriod ? 'Backend starting up...' : 'Health check timeout';
-        } else if (error.message.includes('fetch')) {
-          errorMessage = isWithinStartupPeriod ? 'Backend starting up...' : 'Cannot connect to backend';
-        } else {
-          errorMessage = isWithinStartupPeriod ? 'Backend starting up...' : error.message;
-        }
+
+      // Handle axios errors
+      if (error.name === 'CanceledError' || error.code === 'ECONNABORTED') {
+        errorMessage = isWithinStartupPeriod ? 'Backend starting up...' : 'Health check timeout';
+      } else if (error.code === 'ERR_NETWORK' || !error.response) {
+        errorMessage = isWithinStartupPeriod ? 'Backend starting up...' : 'Cannot connect to backend';
       } else {
-        errorMessage = isWithinStartupPeriod ? 'Backend starting up...' : 'Health check failed';
+        errorMessage = isWithinStartupPeriod ? 'Backend starting up...' : (error.message || 'Health check failed');
       }
       
       // Only log errors to console after startup period
       if (!isWithinStartupPeriod) {
         console.error('Backend health check failed:', {
-          error: error instanceof Error ? error.message : error,
+          error: error?.message || error,
+          code: error?.code,
+          status: error?.response?.status,
           timeSinceStartup: Math.round(timeSinceStartup / 1000) + 's',
           attemptCount,
         });

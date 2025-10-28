@@ -1,10 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-
-// Helper to get JWT from localStorage for Authorization header
-function getAuthHeaders(): HeadersInit {
-  const token = localStorage.getItem('stirling_jwt');
-  return token ? { 'Authorization': `Bearer ${token}` } : {};
-}
+import apiClient from '../services/apiClient';
 
 // Retry configuration
 const MAX_RETRIES = 5;
@@ -15,24 +10,6 @@ const INITIAL_DELAY = 1000; // 1 second
  */
 function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-/**
- * Determines if an error is retryable (network errors or server errors)
- */
-function isRetryableError(error: unknown, response?: Response): boolean {
-  // Network errors (fetch failures)
-  if (error instanceof TypeError) {
-    return true;
-  }
-
-  // Server errors (5xx)
-  if (response && response.status >= 500) {
-    return true;
-  }
-
-  // Don't retry client errors (4xx) or successful responses
-  return false;
 }
 
 export interface AppConfig {
@@ -87,7 +64,6 @@ export const AppConfigProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setError(null);
 
     let lastError: unknown = null;
-    let lastResponse: Response | undefined = undefined;
 
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
       try {
@@ -99,42 +75,26 @@ export const AppConfigProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           console.log('[AppConfig] Fetching app config...');
         }
 
-        const response = await fetch('/api/v1/config/app-config', {
-          headers: getAuthHeaders(),
-        });
+        const response = await apiClient.get<AppConfig>('/api/v1/config/app-config');
 
-        lastResponse = response;
-
-        if (!response.ok) {
-          const error = new Error(`Failed to fetch config: ${response.status} ${response.statusText}`);
-
-          // Check if we should retry
-          if (isRetryableError(error, response) && attempt < MAX_RETRIES) {
-            lastError = error;
-            console.warn(`[AppConfig] Attempt ${attempt + 1} failed with ${response.status}, will retry...`);
-            continue;
-          }
-
-          // Don't retry client errors (4xx)
-          throw error;
-        }
-
-        const data: AppConfig = await response.json();
-        setConfig(data);
+        setConfig(response.data);
         console.log('[AppConfig] Successfully fetched app config');
         setLoading(false);
         return; // Success - exit function
-      } catch (err) {
+      } catch (err: any) {
         lastError = err;
+        const status = err?.response?.status;
 
-        // Check if we should retry
-        if (isRetryableError(err, lastResponse) && attempt < MAX_RETRIES) {
-          console.warn(`[AppConfig] Attempt ${attempt + 1} failed:`, err, '- will retry...');
+        // Check if we should retry (network errors or 5xx errors)
+        const shouldRetry = (!status || status >= 500) && attempt < MAX_RETRIES;
+
+        if (shouldRetry) {
+          console.warn(`[AppConfig] Attempt ${attempt + 1} failed (status ${status || 'network error'}):`, err.message, '- will retry...');
           continue;
         }
 
-        // Final attempt failed or non-retryable error
-        const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+        // Final attempt failed or non-retryable error (4xx)
+        const errorMessage = err?.response?.data?.message || err?.message || 'Unknown error occurred';
         setError(errorMessage);
         console.error(`[AppConfig] Failed to fetch app config after ${attempt + 1} attempts:`, err);
         break;

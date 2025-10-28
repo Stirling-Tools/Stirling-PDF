@@ -1,10 +1,20 @@
 // frontend/src/services/http.ts
 import axios from 'axios';
+import { isTauri } from '@tauri-apps/api/core';
 import { handleHttpError } from './httpErrorHandler';
+
+// TypeScript module augmentation for custom config properties
+declare module 'axios' {
+  export interface AxiosRequestConfig {
+    skipErrorToast?: boolean;
+  }
+}
 
 // Create axios instance with default config
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || '/', // Use env var or relative path (proxied by Vite in dev)
+  // In Tauri mode, use absolute URL to localhost backend
+  // In web mode, use relative URL (same origin in production, proxied in dev)
+  baseURL: isTauri() ? 'http://localhost:8080' : (import.meta.env.VITE_API_BASE_URL || '/'),
   responseType: 'json',
 });
 
@@ -41,7 +51,10 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
-    await handleHttpError(error); // Handle error (shows toast unless suppressed)
+    // Check if this request wants to skip error toasts (e.g., health checks, background polls)
+    if (!error.config?.skipErrorToast) {
+      await handleHttpError(error); // Handle error (shows toast unless suppressed)
+    }
     return Promise.reject(error);
   }
 );
