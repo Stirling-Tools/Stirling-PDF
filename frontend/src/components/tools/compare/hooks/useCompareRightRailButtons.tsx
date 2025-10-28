@@ -1,8 +1,6 @@
 import { useMemo } from 'react';
-import { ActionIcon } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import LocalIcon from '../../../shared/LocalIcon';
-import { Tooltip } from '../../../shared/Tooltip';
 import { alert } from '../../../toast';
 import type { ToastLocation } from '../../../toast/types';
 import type { RightRailButtonWithAction } from '../../../../hooks/useRightRailButtons';

@@ -1,6 +1,5 @@
-import React, { useState, useCallback, useMemo } from "react";
-import { SegmentedControl, Loader, Menu, Button } from "@mantine/core";
-import { useMediaQuery } from "@mantine/hooks";
+import React, { useState, useCallback } from "react";
+import { SegmentedControl, Loader } from "@mantine/core";
 import { useRainbowThemeContext } from "./RainbowThemeProvider";
 import rainbowStyles from '../../styles/rainbow.module.css';
 import VisibilityIcon from "@mui/icons-material/Visibility";

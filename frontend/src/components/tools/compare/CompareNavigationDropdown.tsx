@@ -17,8 +17,6 @@ const CompareNavigationDropdown = ({
 }: NavigationDropdownProps) => {
   const { t } = useTranslation();
   const newLineLabel = t('compare.newLine', 'new-line');
-  const formatPageLabel = (page: number) =>
-    t('compare.dropdown.pagePrefix', { page, defaultValue: 'Page {{page}}' });
   const combobox = useCombobox({
     onDropdownClose: () => {
       combobox.resetSelectedOption();
