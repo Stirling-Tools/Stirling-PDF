@@ -1,4 +1,3 @@
-import React from 'react';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import './styles.css';
 

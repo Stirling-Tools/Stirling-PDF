@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 import LocalIcon from "../components/shared/LocalIcon";
 import { useTranslation } from "react-i18next";
 import SplitPdfPanel from "../tools/Split";

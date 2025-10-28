@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 
 import type { ToolId } from '../types/toolId';
 import type { ToolRegistry } from '../data/toolsTaxonomy';

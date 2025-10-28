@@ -1,12 +1,15 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { BASE_PATH } from '../constants/app';
+import { useAppConfig } from '../contexts/AppConfigContext';
 
 declare global {
   interface Window {
-    CookieConsent: {
+    CookieConsent?: {
       run: (config: any) => void;
       show: (show?: boolean) => void;
+      acceptedCategory: (category: string) => boolean;
+      acceptedService: (serviceName: string, category: string) => boolean;
     };
   }
 }
@@ -15,8 +18,11 @@ interface CookieConsentConfig {
   analyticsEnabled?: boolean;
 }
 
-export const useCookieConsent = ({ analyticsEnabled = false }: CookieConsentConfig = {}) => {
+export const useCookieConsent = ({
+  analyticsEnabled = false
+}: CookieConsentConfig = {}) => {
   const { t } = useTranslation();
+  const { config } = useAppConfig();
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
@@ -30,7 +36,7 @@ export const useCookieConsent = ({ analyticsEnabled = false }: CookieConsentConf
       setIsInitialized(true);
       // Force show the modal if it exists but isn't visible
       setTimeout(() => {
-        window.CookieConsent.show();
+        window.CookieConsent?.show();
       }, 100);
       return;
     }
@@ -130,7 +136,24 @@ export const useCookieConsent = ({ analyticsEnabled = false }: CookieConsentConf
               necessary: {
                 readOnly: true
               },
-              analytics: {}
+              analytics: {
+                services: {
+                  ...(config?.enablePosthog !== false && {
+                    posthog: {
+                      label: t('cookieBanner.services.posthog', 'PostHog Analytics'),
+                      onAccept: () => console.log('PostHog service accepted'),
+                      onReject: () => console.log('PostHog service rejected')
+                    }
+                  }),
+                  ...(config?.enableScarf !== false && {
+                    scarf: {
+                      label: t('cookieBanner.services.scarf', 'Scarf Pixel'),
+                      onAccept: () => console.log('Scarf service accepted'),
+                      onReject: () => console.log('Scarf service rejected')
+                    }
+                  })
+                }
+              }
             },
             language: {
               default: "en",
@@ -184,7 +207,7 @@ export const useCookieConsent = ({ analyticsEnabled = false }: CookieConsentConf
 
           // Force show after initialization
           setTimeout(() => {
-            window.CookieConsent.show();
+            window.CookieConsent?.show();
           }, 200);
 
         } catch (error) {
@@ -212,15 +235,23 @@ export const useCookieConsent = ({ analyticsEnabled = false }: CookieConsentConf
         document.head.removeChild(customCSS);
       }
     };
-  }, [analyticsEnabled, t]);
+  }, [analyticsEnabled, config?.enablePosthog, config?.enableScarf, t]);
 
   const showCookiePreferences = () => {
     if (isInitialized && window.CookieConsent) {
-      window.CookieConsent.show(true);
+      window.CookieConsent?.show(true);
     }
   };
 
+  const isServiceAccepted = useCallback((service: string, category: string): boolean => {
+    if (typeof window === 'undefined' || !window.CookieConsent) {
+      return false;
+    }
+    return window.CookieConsent.acceptedService(service, category);
+  }, []);
+
   return {
-    showCookiePreferences
+    showCookiePreferences,
+    isServiceAccepted
   };
 };
