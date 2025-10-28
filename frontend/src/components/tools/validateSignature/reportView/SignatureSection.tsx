@@ -1,4 +1,3 @@
-import React from 'react';
 import { Divider, Group, Stack, Text } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import type { SignatureValidationSignature } from '../../../../types/validateSignature';

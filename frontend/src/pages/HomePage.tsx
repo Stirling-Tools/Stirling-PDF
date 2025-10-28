@@ -7,6 +7,7 @@ import { useDocumentMeta } from "../hooks/useDocumentMeta";
 import { BASE_PATH } from "../constants/app";
 import { useBaseUrl } from "../hooks/useBaseUrl";
 import { useMediaQuery } from "@mantine/hooks";
+import { useAppConfig } from "../contexts/AppConfigContext";
 import AppsIcon from '@mui/icons-material/AppsRounded';
 
 import ToolPanel from "../components/tools/ToolPanel";
@@ -18,6 +19,7 @@ import LocalIcon from "../components/shared/LocalIcon";
 import { useFilesModalContext } from "../contexts/FilesModalContext";
 import AppConfigModal from "../components/shared/AppConfigModal";
 import ToolPanelModePrompt from "../components/tools/ToolPanelModePrompt";
+import AdminAnalyticsChoiceModal from "../components/shared/AdminAnalyticsChoiceModal";
 
 import "./HomePage.css";
 
@@ -43,11 +45,20 @@ export default function HomePage() {
 
   const { openFilesModal } = useFilesModalContext();
   const { colorScheme } = useMantineColorScheme();
+  const { config } = useAppConfig();
   const isMobile = useMediaQuery("(max-width: 1024px)");
   const sliderRef = useRef<HTMLDivElement | null>(null);
   const [activeMobileView, setActiveMobileView] = useState<MobileView>("tools");
   const isProgrammaticScroll = useRef(false);
   const [configModalOpen, setConfigModalOpen] = useState(false);
+  const [showAnalyticsModal, setShowAnalyticsModal] = useState(false);
+
+  // Show admin analytics choice modal if analytics settings not configured
+  useEffect(() => {
+    if (config && config.enableAnalytics === null) {
+      setShowAnalyticsModal(true);
+    }
+  }, [config]);
 
   const brandAltText = t("home.mobile.brandAlt", "Stirling PDF logo");
   const brandIconSrc = `${BASE_PATH}/branding/StirlingPDFLogoNoText${
@@ -152,6 +163,10 @@ export default function HomePage() {
 
   return (
     <div className="h-screen overflow-hidden">
+      <AdminAnalyticsChoiceModal
+        opened={showAnalyticsModal}
+        onClose={() => setShowAnalyticsModal(false)}
+      />
       <ToolPanelModePrompt />
       {isMobile ? (
         <div className="mobile-layout">

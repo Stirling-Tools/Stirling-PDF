@@ -3,11 +3,11 @@ interface ErrorMessageProps {
 }
 
 export default function ErrorMessage({ error }: ErrorMessageProps) {
-  if (!error) return null
+  if (!error) return null;
 
   return (
     <div className="error-message">
       <p className="error-message-text">{error}</p>
     </div>
-  )
+  );
 }
