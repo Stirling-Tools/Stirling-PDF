@@ -2120,6 +2120,10 @@
     "workbench": {
       "label": "Compare view"
     },
+    "view": {
+      "title": "Compare view",
+      "noData": "Run a comparison to view the summary and diff."
+    },
     "highlightColor": {
       "1": "Highlight Colour 1:",
       "2": "Highlight Colour 2:"
