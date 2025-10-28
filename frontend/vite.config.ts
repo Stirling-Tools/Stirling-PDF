@@ -1,8 +1,19 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react-swc';
+import tsconfigPaths from 'vite-tsconfig-paths';
+
+// When DISABLE_ADDITIONAL_FEATURES is false (or unset), enable proprietary features
+const isProprietary = process.env.DISABLE_ADDITIONAL_FEATURES !== 'true';
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    tsconfigPaths({
+      projects: [
+        isProprietary ? './tsconfig.proprietary.json' : './tsconfig.core.json',
+      ],
+    }),
+  ],
   server: {
     // make sure this port matches the devUrl port in tauri.conf.json file
     port: 5173,
