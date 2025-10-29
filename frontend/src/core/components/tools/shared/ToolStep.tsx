@@ -80,6 +80,8 @@ const ToolStep = ({
   alwaysShowTooltip = false,
   tooltip
 }: ToolStepProps) => {
+  if (!isVisible) return null;
+
   const parent = useContext(ToolStepContext);
 
   // Auto-detect if we should show numbers based on sibling count or force option
@@ -90,8 +92,6 @@ const ToolStep = ({
   }, [showNumber, parent]);
 
   const stepNumber = _stepNumber;
-
-  if (!isVisible) return null;
 
   return (
     <div>
