@@ -5,11 +5,11 @@ export interface AppConfig {
   baseUrl?: string;
   contextPath?: string;
   serverPort?: number;
-  appName?: string;
   appNameNavbar?: string;
-  homeDescription?: string;
   languages?: string[];
   enableLogin?: boolean;
+  enableEmailInvites?: boolean;
+  isAdmin?: boolean;
   enableAlphaFunctionality?: boolean;
   enableAnalytics?: boolean | null;
   enablePosthog?: boolean | null;

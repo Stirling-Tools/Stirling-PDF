@@ -629,9 +629,40 @@ tasks.named('bootRun') {
 tasks.named('build') {
     group = 'build'
     description = 'Delegates to :stirling-pdf:bootJar'
-    dependsOn ':stirling-pdf:bootJar'
+    dependsOn ':stirling-pdf:bootJar', 'buildRestartHelper'
 
     doFirst {
         println "Delegating to :stirling-pdf:bootJar"
+    }
+}
+
+// Task to compile RestartHelper.java
+tasks.register('compileRestartHelper', JavaCompile) {
+    group = 'build'
+    description = 'Compiles the RestartHelper utility'
+
+    source = fileTree(dir: 'scripts', include: 'RestartHelper.java')
+    classpath = files()
+    destinationDirectory = file("${buildDir}/restart-helper-classes")
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+// Task to create restart-helper.jar
+tasks.register('buildRestartHelper', Jar) {
+    group = 'build'
+    description = 'Builds the restart-helper.jar'
+    dependsOn 'compileRestartHelper'
+
+    from "${buildDir}/restart-helper-classes"
+    archiveFileName = 'restart-helper.jar'
+    destinationDirectory = file("${buildDir}/libs")
+
+    manifest {
+        attributes 'Main-Class': 'RestartHelper'
+    }
+
+    doLast {
+        println "restart-helper.jar created at: ${destinationDirectory.get()}/restart-helper.jar"
     }
 }
