@@ -645,10 +645,16 @@ public class WatermarkController {
         if (request.getBounds() != null && !request.getBounds().isEmpty()) {
             String[] boundsParts = request.getBounds().split(",");
             if (boundsParts.length == 4) {
-                boundsX = Float.parseFloat(boundsParts[0].trim());
-                boundsY = Float.parseFloat(boundsParts[1].trim());
-                boundsWidth = Float.parseFloat(boundsParts[2].trim());
-                boundsHeight = Float.parseFloat(boundsParts[3].trim());
+                try {
+                    boundsX = Float.parseFloat(boundsParts[0].trim());
+                    boundsY = Float.parseFloat(boundsParts[1].trim());
+                    boundsWidth = Float.parseFloat(boundsParts[2].trim());
+                    boundsHeight = Float.parseFloat(boundsParts[3].trim());
+                } catch (NumberFormatException e) {
+                    log.warn("Invalid bounds format: {}", request.getBounds(), e);
+                    return ResponseEntity.badRequest()
+                        .body(WebResponseUtils.error("Invalid bounds format. Expected four comma-separated numbers."));
+                }
             }
         }
 
