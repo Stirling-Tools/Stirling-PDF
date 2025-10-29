@@ -10,28 +10,20 @@ export interface FilesToolStepProps {
   minFiles?: number;
 }
 
-export function CreateFilesToolStep(props: FilesToolStepProps & {
-  createStep: (title: string, props: any, children?: React.ReactNode) => React.ReactElement
-}): React.ReactElement {
-  const { t } = useTranslation();
-  const { createStep, ...stepProps } = props;
-
-  return createStep(t("files.title", "Files"), {
-    isVisible: true,
-    isCollapsed: stepProps.isCollapsed,
-    onCollapsedClick: stepProps.onCollapsedClick
-  }, (
-    <FileStatusIndicator
-      selectedFiles={stepProps.selectedFiles}
-      minFiles={stepProps.minFiles}
-    />
-  ));
-}
-
-// Backwards compatibility wrapper
 export function createFilesToolStep(
   createStep: (title: string, props: any, children?: React.ReactNode) => React.ReactElement,
   props: FilesToolStepProps
 ): React.ReactElement {
-  return <CreateFilesToolStep createStep={createStep} {...props} />;
+  const { t } = useTranslation();
+
+  return createStep(t("files.title", "Files"), {
+    isVisible: true,
+    isCollapsed: props.isCollapsed,
+    onCollapsedClick: props.onCollapsedClick
+  }, (
+    <FileStatusIndicator
+      selectedFiles={props.selectedFiles}
+      minFiles={props.minFiles}
+    />
+  ));
 }

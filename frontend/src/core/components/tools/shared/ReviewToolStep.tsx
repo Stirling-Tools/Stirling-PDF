@@ -103,29 +103,21 @@ function ReviewStepContent<TParams = unknown>({
   );
 }
 
-export function CreateReviewToolStep<TParams = unknown>(props: ReviewToolStepProps<TParams> & {
-  createStep: (title: string, props: any, children?: React.ReactNode) => React.ReactElement
-}): React.ReactElement {
-  const { t } = useTranslation();
-  const { createStep, ...stepProps } = props;
-
-  return createStep(
-    t("review", "Review"),
-    {
-      isVisible: stepProps.isVisible,
-      isCollapsed: stepProps.isCollapsed,
-      onCollapsedClick: stepProps.onCollapsedClick,
-      _excludeFromCount: true,
-      _noPadding: true,
-    },
-    <ReviewStepContent operation={stepProps.operation} onFileClick={stepProps.onFileClick} onUndo={stepProps.onUndo} />
-  );
-}
-
-// Backwards compatibility wrapper
 export function createReviewToolStep<TParams = unknown>(
   createStep: (title: string, props: any, children?: React.ReactNode) => React.ReactElement,
   props: ReviewToolStepProps<TParams>
 ): React.ReactElement {
-  return <CreateReviewToolStep createStep={createStep} {...props} />;
+  const { t } = useTranslation();
+
+  return createStep(
+    t("review", "Review"),
+    {
+      isVisible: props.isVisible,
+      isCollapsed: props.isCollapsed,
+      onCollapsedClick: props.onCollapsedClick,
+      _excludeFromCount: true,
+      _noPadding: true,
+    },
+    <ReviewStepContent operation={props.operation} onFileClick={props.onFileClick} onUndo={props.onUndo} />
+  );
 }
