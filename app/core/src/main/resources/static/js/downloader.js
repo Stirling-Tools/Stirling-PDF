@@ -2,6 +2,12 @@
   if (window.isDownloadScriptInitialized) return; // Prevent re-execution
   window.isDownloadScriptInitialized = true;
 
+  const PDFJS_DEFAULT_OPTIONS = {
+    cMapUrl: pdfjsPath + 'cmaps/',
+    cMapPacked: true,
+    standardFontDataUrl: pdfjsPath + 'standard_fonts/',
+  };
+
   // Global PDF processing count tracking for survey system
   window.incrementPdfProcessingCount = function() {
     let pdfProcessingCount = parseInt(localStorage.getItem('pdfProcessingCount') || '0');
@@ -153,8 +159,13 @@
   async function getPDFPageCount(file) {
     try {
       const arrayBuffer = await file.arrayBuffer();
-      pdfjsLib.GlobalWorkerOptions.workerSrc = './pdfjs-legacy/pdf.worker.mjs';
-      const pdf = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
+      pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsPath + 'pdf.worker.mjs';
+      const pdf = await pdfjsLib
+        .getDocument({
+          ...PDFJS_DEFAULT_OPTIONS,
+          data: arrayBuffer,
+        })
+        .promise;
       return pdf.numPages;
     } catch (error) {
       console.error('Error getting PDF page count:', error);
@@ -164,7 +175,7 @@
 
   async function checkAndDecryptFiles(url, files) {
     const decryptedFiles = [];
-    pdfjsLib.GlobalWorkerOptions.workerSrc = './pdfjs-legacy/pdf.worker.mjs';
+    pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsPath + 'pdf.worker.mjs';
 
     // Extract the base URL
     const baseUrl = new URL(url);
@@ -190,7 +201,10 @@
       }
       try {
         const arrayBuffer = await file.arrayBuffer();
-        const loadingTask = pdfjsLib.getDocument({data: arrayBuffer});
+        const loadingTask = pdfjsLib.getDocument({
+          ...PDFJS_DEFAULT_OPTIONS,
+          data: arrayBuffer,
+        });
 
         console.log(`Attempting to load PDF: ${file.name}`);
         const pdf = await loadingTask.promise;

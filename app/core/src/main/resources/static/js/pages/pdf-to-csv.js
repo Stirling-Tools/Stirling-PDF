@@ -1,3 +1,9 @@
+const PDFJS_DEFAULT_OPTIONS = {
+  cMapUrl: pdfjsPath + 'cmaps/',
+  cMapPacked: true,
+  standardFontDataUrl: pdfjsPath + 'standard_fonts/',
+};
+
 let pdfCanvas = document.getElementById('cropPdfCanvas');
 let overlayCanvas = document.getElementById('overlayCanvas');
 let canvasesContainer = document.getElementById('canvasesContainer');
@@ -37,12 +43,17 @@ btn1Object.addEventListener('click', function (e) {
       let reader = new FileReader();
       reader.onload = function (ev) {
         let typedArray = new Uint8Array(reader.result);
-        pdfjsLib.GlobalWorkerOptions.workerSrc = './pdfjs-legacy/pdf.worker.mjs';
-        pdfjsLib.getDocument(typedArray).promise.then(function (pdf) {
-          pdfDoc = pdf;
-          totalPages = pdf.numPages;
-          renderPage(currentPage);
-        });
+        pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsPath + 'pdf.worker.mjs';
+        pdfjsLib
+          .getDocument({
+            ...PDFJS_DEFAULT_OPTIONS,
+            data: typedArray,
+          })
+          .promise.then(function (pdf) {
+            pdfDoc = pdf;
+            totalPages = pdf.numPages;
+            renderPage(currentPage);
+          });
       };
       reader.readAsArrayBuffer(file);
     }
@@ -58,12 +69,17 @@ btn2Object.addEventListener('click', function (e) {
       let reader = new FileReader();
       reader.onload = function (ev) {
         let typedArray = new Uint8Array(reader.result);
-        pdfjsLib.GlobalWorkerOptions.workerSrc = './pdfjs-legacy/pdf.worker.mjs';
-        pdfjsLib.getDocument(typedArray).promise.then(function (pdf) {
-          pdfDoc = pdf;
-          totalPages = pdf.numPages;
-          renderPage(currentPage);
-        });
+        pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsPath + 'pdf.worker.mjs';
+        pdfjsLib
+          .getDocument({
+            ...PDFJS_DEFAULT_OPTIONS,
+            data: typedArray,
+          })
+          .promise.then(function (pdf) {
+            pdfDoc = pdf;
+            totalPages = pdf.numPages;
+            renderPage(currentPage);
+          });
       };
       reader.readAsArrayBuffer(file);
     }
@@ -75,12 +91,17 @@ function renderPageFromFile(file) {
     let reader = new FileReader();
     reader.onload = function (ev) {
       let typedArray = new Uint8Array(reader.result);
-      pdfjsLib.GlobalWorkerOptions.workerSrc = './pdfjs-legacy/pdf.worker.mjs';
-      pdfjsLib.getDocument(typedArray).promise.then(function (pdf) {
-        pdfDoc = pdf;
-        totalPages = pdf.numPages;
-        renderPage(currentPage);
-      });
+      pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsPath + 'pdf.worker.mjs';
+      pdfjsLib
+        .getDocument({
+          ...PDFJS_DEFAULT_OPTIONS,
+          data: typedArray,
+        })
+        .promise.then(function (pdf) {
+          pdfDoc = pdf;
+          totalPages = pdf.numPages;
+          renderPage(currentPage);
+        });
       pageNumbers.value = currentPage;
     };
     reader.readAsArrayBuffer(file);

@@ -1,3 +1,9 @@
+const PDFJS_DEFAULT_OPTIONS = {
+  cMapUrl: pdfjsPath + 'cmaps/',
+  cMapPacked: true,
+  standardFontDataUrl: pdfjsPath + 'standard_fonts/',
+};
+
 let currentSort = {
   field: null,
   descending: false,
@@ -73,7 +79,13 @@ async function displayFiles(files) {
 
 async function getPDFPageCount(file) {
   const blobUrl = URL.createObjectURL(file);
-  const pdf = await pdfjsLib.getDocument(blobUrl).promise;
+  pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsPath + 'pdf.worker.mjs';
+  const pdf = await pdfjsLib
+    .getDocument({
+      ...PDFJS_DEFAULT_OPTIONS,
+      url: blobUrl,
+    })
+    .promise;
   URL.revokeObjectURL(blobUrl);
   return pdf.numPages;
 }
