@@ -118,7 +118,7 @@ public class CompressController {
 
         try (PDDocument doc = pdfDocumentFactory.load(pdfFile)) {
             // Find all unique images in the document
-            Map<String, List<ImageReference>> uniqueImages = findImages(doc);
+            Map<ImageIdentity, List<ImageReference>> uniqueImages = findImages(doc);
 
             // Get statistics
             CompressionStats stats = new CompressionStats();
@@ -126,7 +126,7 @@ public class CompressController {
             calculateImageStats(uniqueImages, stats);
 
             // Create compressed versions of unique images
-            Map<String, PDImageXObject> compressedVersions =
+            Map<ImageIdentity, PDImageXObject> compressedVersions =
                     createCompressedImages(
                             doc, uniqueImages, scaleFactor, jpegQuality, convertToGrayscale, stats);
 
