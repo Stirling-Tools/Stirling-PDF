@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Reusable ToolChain component with smart truncation and tooltip expansion
  * Used across FileListItem, FileDetails, and FileThumbnail for consistent display
  */
