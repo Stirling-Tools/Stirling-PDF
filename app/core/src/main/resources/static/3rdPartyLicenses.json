@@ -10,7 +10,7 @@
         {
             "moduleName": "ch.qos.logback:logback-classic",
             "moduleUrl": "http://www.qos.ch",
-            "moduleVersion": "1.5.19",
+            "moduleVersion": "1.5.20",
             "moduleLicense": "GNU Lesser General Public License",
             "moduleLicenseUrl": "http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html"
         },
@@ -24,7 +24,7 @@
         {
             "moduleName": "ch.qos.logback:logback-core",
             "moduleUrl": "http://www.qos.ch",
-            "moduleVersion": "1.5.19",
+            "moduleVersion": "1.5.20",
             "moduleLicense": "GNU Lesser General Public License",
             "moduleLicenseUrl": "http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html"
         },
@@ -168,7 +168,7 @@
         {
             "moduleName": "com.github.junrar:junrar",
             "moduleUrl": "https://github.com/junrar/junrar",
-            "moduleVersion": "7.5.5",
+            "moduleVersion": "7.5.7",
             "moduleLicense": "UnRar License",
             "moduleLicenseUrl": "https://github.com/junrar/junrar/blob/master/LICENSE"
         },
@@ -392,14 +392,14 @@
         {
             "moduleName": "com.unboundid.product.scim2:scim2-sdk-client",
             "moduleUrl": "https://github.com/pingidentity/scim2",
-            "moduleVersion": "4.0.0",
+            "moduleVersion": "4.1.0",
             "moduleLicense": "UnboundID SCIM2 SDK Free Use License",
             "moduleLicenseUrl": "https://github.com/pingidentity/scim2"
         },
         {
             "moduleName": "com.unboundid.product.scim2:scim2-sdk-common",
             "moduleUrl": "https://github.com/pingidentity/scim2",
-            "moduleVersion": "4.0.0",
+            "moduleVersion": "4.1.0",
             "moduleLicense": "UnboundID SCIM2 SDK Free Use License",
             "moduleLicenseUrl": "https://github.com/pingidentity/scim2"
         },
@@ -627,6 +627,13 @@
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
+            "moduleName": "io.micrometer:micrometer-core",
+            "moduleUrl": "https://github.com/micrometer-metrics/micrometer",
+            "moduleVersion": "1.15.5",
+            "moduleLicense": "The Apache Software License, Version 2.0",
+            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
             "moduleName": "io.micrometer:micrometer-jakarta9",
             "moduleUrl": "https://github.com/micrometer-metrics/micrometer",
             "moduleVersion": "1.15.4",
@@ -699,7 +706,7 @@
         {
             "moduleName": "io.swagger.core.v3:swagger-annotations-jakarta",
             "moduleUrl": "https://github.com/swagger-api/swagger-core/modules/swagger-annotations",
-            "moduleVersion": "2.2.38",
+            "moduleVersion": "2.2.40",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
@@ -713,7 +720,7 @@
         {
             "moduleName": "io.swagger.core.v3:swagger-core-jakarta",
             "moduleUrl": "https://github.com/swagger-api/swagger-core/modules/swagger-core",
-            "moduleVersion": "2.2.38",
+            "moduleVersion": "2.2.40",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
@@ -727,7 +734,7 @@
         {
             "moduleName": "io.swagger.core.v3:swagger-models-jakarta",
             "moduleUrl": "https://github.com/swagger-api/swagger-core/modules/swagger-models",
-            "moduleVersion": "2.2.38",
+            "moduleVersion": "2.2.40",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
@@ -982,7 +989,7 @@
         {
             "moduleName": "org.apache.pdfbox:fontbox",
             "moduleUrl": "https://pdfbox.apache.org",
-            "moduleVersion": "3.0.5",
+            "moduleVersion": "3.0.6",
             "moduleLicense": "Apache-2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
@@ -995,28 +1002,28 @@
         {
             "moduleName": "org.apache.pdfbox:pdfbox",
             "moduleUrl": "https://pdfbox.apache.org",
-            "moduleVersion": "3.0.5",
+            "moduleVersion": "3.0.6",
             "moduleLicense": "Apache-2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "org.apache.pdfbox:pdfbox-io",
             "moduleUrl": "https://pdfbox.apache.org",
-            "moduleVersion": "3.0.5",
+            "moduleVersion": "3.0.6",
             "moduleLicense": "Apache-2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "org.apache.pdfbox:preflight",
             "moduleUrl": "https://pdfbox.apache.org",
-            "moduleVersion": "3.0.5",
+            "moduleVersion": "3.0.6",
             "moduleLicense": "Apache-2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "org.apache.pdfbox:xmpbox",
             "moduleUrl": "https://pdfbox.apache.org",
-            "moduleVersion": "3.0.5",
+            "moduleVersion": "3.0.6",
             "moduleLicense": "Apache-2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
@@ -1775,6 +1782,13 @@
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
+            "moduleName": "org.springframework.security:spring-security-core",
+            "moduleUrl": "https://spring.io/projects/spring-security",
+            "moduleVersion": "6.5.6",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
             "moduleName": "org.springframework.security:spring-security-crypto",
             "moduleUrl": "https://spring.io/projects/spring-security",
             "moduleVersion": "6.5.5",
@@ -1806,6 +1820,13 @@
             "moduleName": "org.springframework.security:spring-security-saml2-service-provider",
             "moduleUrl": "https://spring.io/projects/spring-security",
             "moduleVersion": "6.5.5",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
+            "moduleName": "org.springframework.security:spring-security-saml2-service-provider",
+            "moduleUrl": "https://spring.io/projects/spring-security",
+            "moduleVersion": "6.5.6",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
