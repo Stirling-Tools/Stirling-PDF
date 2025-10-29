@@ -245,7 +245,6 @@ public class WatermarkController {
         validateWatermarkRequest(request);
 
         // Extract new fields with defaults for backward compatibility
-        Integer count = (request.getCount() != null) ? request.getCount() : 1;
         boolean convertPdfToImage = Boolean.TRUE.equals(request.getConvertPDFToImage());
 
         // Create a randomizer with optional seed for deterministic behavior
