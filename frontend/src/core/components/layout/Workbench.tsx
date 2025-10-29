@@ -192,7 +192,14 @@ export default function Workbench() {
           {renderMainContent()}
         </Box>
 
-        <Footer analyticsEnabled={config?.enableAnalytics === true} />
+        <Footer
+          analyticsEnabled={config?.enableAnalytics === true}
+          termsAndConditions={config?.termsAndConditions}
+          privacyPolicy={config?.privacyPolicy}
+          cookiePolicy={config?.cookiePolicy}
+          impressum={config?.impressum}
+          accessibilityStatement={config?.accessibilityStatement}
+        />
       </Box>
     </PageEditorProvider>
   );
