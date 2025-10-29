@@ -492,7 +492,6 @@ public class WatermarkController {
             if (perLetterFont || perLetterColor || perLetterSize || perLetterOrientation) {
                 renderTextWithPerLetterVariations(
                         contentStream,
-                        document,
                         textLines,
                         wmFont,
                         wmFontSize,
@@ -652,8 +651,6 @@ public class WatermarkController {
                     boundsHeight = Float.parseFloat(boundsParts[3].trim());
                 } catch (NumberFormatException e) {
                     log.warn("Invalid bounds format: {}", request.getBounds(), e);
-                    return ResponseEntity.badRequest()
-                        .body(WebResponseUtils.error("Invalid bounds format. Expected four comma-separated numbers."));
                 }
             }
         }
