@@ -284,7 +284,8 @@
           showSessionExpiredPrompt();
           return;
         }
-        if (contentType && contentType.includes('application/json')) {
+        // Handle JSON error responses (including Spring Boot ProblemDetail which uses application/problem+json)
+        if (contentType && (contentType.includes('application/json') || contentType.includes('application/problem+json'))) {
           console.error('Throwing error banner, response was not okay');
           return handleJsonResponse(response);
         }
@@ -358,7 +359,12 @@
         alert(pdfPasswordPrompt);
       }
     } else {
-      showErrorBanner(json.error + ':' + json.message, json.trace);
+      // Handle both legacy format (error/message/trace) and Spring Boot ProblemDetail format (title/detail)
+      const errorTitle = json.title || json.error || 'Error';
+      const errorDetail = json.detail || json.message || 'An error occurred';
+      const errorTrace = json.trace || (json.errorCode ? `Error Code: ${json.errorCode}` : '');
+
+      showErrorBanner(errorTitle + ': ' + errorDetail, errorTrace);
     }
   }
 

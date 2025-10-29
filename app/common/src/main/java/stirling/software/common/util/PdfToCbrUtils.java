@@ -34,7 +34,7 @@ public class PdfToCbrUtils {
 
         try (PDDocument document = pdfDocumentFactory.load(pdfFile)) {
             if (document.getNumberOfPages() == 0) {
-                throw new IllegalArgumentException("PDF file contains no pages");
+                throw ExceptionUtils.createPdfNoPages();
             }
 
             return createCbrFromPdf(document, dpi);
@@ -43,17 +43,17 @@ public class PdfToCbrUtils {
 
     private static void validatePdfFile(MultipartFile file) {
         if (file == null || file.isEmpty()) {
-            throw new IllegalArgumentException("File cannot be null or empty");
+            throw ExceptionUtils.createFileNullOrEmptyException();
         }
 
         String filename = file.getOriginalFilename();
         if (filename == null) {
-            throw new IllegalArgumentException("File must have a name");
+            throw ExceptionUtils.createFileNoNameException();
         }
 
         String extension = FilenameUtils.getExtension(filename).toLowerCase();
         if (!"pdf".equals(extension)) {
-            throw new IllegalArgumentException("File must be a PDF");
+            throw ExceptionUtils.createPdfFileRequiredException();
         }
     }
 

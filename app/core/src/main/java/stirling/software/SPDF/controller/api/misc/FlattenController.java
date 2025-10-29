@@ -111,6 +111,9 @@ public class FlattenController {
 
                         contentStream.drawImage(pdImage, 0, 0, pageWidth, pageHeight);
                     }
+                } catch (ExceptionUtils.OutOfMemoryDpiException e) {
+                    // Re-throw OutOfMemoryDpiException to be handled by GlobalExceptionHandler
+                    throw e;
                 } catch (IOException e) {
                     log.error("exception", e);
                 }

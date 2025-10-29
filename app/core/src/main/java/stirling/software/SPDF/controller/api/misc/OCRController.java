@@ -100,7 +100,7 @@ public class OCRController {
         }
 
         if (!"hocr".equals(ocrRenderType) && !"sandwich".equals(ocrRenderType)) {
-            throw new IOException("ocrRenderType wrong");
+            throw ExceptionUtils.createOcrInvalidRenderTypeException();
         }
 
         // Get available Tesseract languages
@@ -269,7 +269,7 @@ public class OCRController {
         }
 
         if (result.getRc() != 0) {
-            throw new IOException("OCRmyPDF failed with return code: " + result.getRc());
+            throw ExceptionUtils.createOcrProcessingFailedException(result.getRc());
         }
 
         // Remove images from the OCR processed PDF if the flag is set to true

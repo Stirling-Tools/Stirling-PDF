@@ -169,6 +169,9 @@ public class BlankPageController {
             return WebResponseUtils.baosToWebResponse(
                     baos, filename + "_processed.zip", MediaType.APPLICATION_OCTET_STREAM);
 
+        } catch (ExceptionUtils.OutOfMemoryDpiException e) {
+            // Re-throw OutOfMemoryDpiException to be handled by GlobalExceptionHandler
+            throw e;
         } catch (IOException e) {
             log.error("exception", e);
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);

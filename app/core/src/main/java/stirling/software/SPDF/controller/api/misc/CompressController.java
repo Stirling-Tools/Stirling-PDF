@@ -327,9 +327,8 @@ public class CompressController {
 
     // Get original image from a reference
     private PDImageXObject getOriginalImage(PDDocument doc, ImageReference ref) throws IOException {
-        if (ref instanceof NestedImageReference) {
+        if (ref instanceof NestedImageReference nestedRef) {
             // Get the nested image from within a form XObject
-            NestedImageReference nestedRef = (NestedImageReference) ref;
             PDPage page = doc.getPage(nestedRef.pageNum);
             PDResources pageResources = page.getResources();
 
@@ -405,9 +404,8 @@ public class CompressController {
     // Replace a specific image reference with a compressed version
     private void replaceImageReference(
             PDDocument doc, ImageReference ref, PDImageXObject compressedImage) throws IOException {
-        if (ref instanceof NestedImageReference) {
+        if (ref instanceof NestedImageReference nestedRef) {
             // Replace nested image within form XObject
-            NestedImageReference nestedRef = (NestedImageReference) ref;
             PDPage page = doc.getPage(nestedRef.pageNum);
             PDResources pageResources = page.getResources();
 
@@ -893,12 +891,12 @@ public class CompressController {
                         GeneralUtils.formatBytes(postGsSize), String.format("%.1f", gsReduction));
             } else {
                 log.warn("Ghostscript compression failed with return code: {}", returnCode.getRc());
-                throw new IOException("Ghostscript compression failed");
+                throw ExceptionUtils.createGhostscriptCompressionException();
             }
 
         } catch (Exception e) {
             log.warn("Ghostscript compression failed, will fallback to other methods", e);
-            throw new IOException("Ghostscript compression failed", e);
+            throw ExceptionUtils.createGhostscriptCompressionException(e);
         }
     }
 
@@ -957,7 +955,7 @@ public class CompressController {
 
         } catch (Exception e) {
             if (returnCode != null && returnCode.getRc() != 3) {
-                throw new IOException("QPDF command failed", e);
+                throw ExceptionUtils.createFileProcessingException("QPDF compression", e);
             }
             // If QPDF fails, keep using the current file
             log.warn("QPDF compression failed, continuing with current file", e);
