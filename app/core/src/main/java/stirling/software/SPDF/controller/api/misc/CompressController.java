@@ -6,6 +6,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InterruptedIOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -103,58 +104,25 @@ public class CompressController {
         long totalCompressedBytes = 0;
     }
 
-    public TempFile compressImagesInPDF(
-            Path pdfFile, double scaleFactor, float jpegQuality, boolean convertToGrayscale)
-            throws Exception {
-        TempFile newCompressedPDF = tempFileManager.createManagedTempFile(".pdf");
-        long originalFileSize = Files.size(pdfFile);
-        log.info(
-                "Starting image compression with scale factor: {}, JPEG quality: {}, grayscale: {}"
-                        + " on file size: {}",
-                scaleFactor,
-                jpegQuality,
-                convertToGrayscale,
-                GeneralUtils.formatBytes(originalFileSize));
+    // Replace all instances of original images with their compressed versions
+    private static void replaceImages(
+            PDDocument doc,
+            Map<ImageIdentity, List<ImageReference>> uniqueImages,
+            Map<ImageIdentity, PDImageXObject> compressedVersions)
+            throws IOException {
 
-        try (PDDocument doc = pdfDocumentFactory.load(pdfFile)) {
-            // Find all unique images in the document
-            Map<ImageIdentity, List<ImageReference>> uniqueImages = findImages(doc);
+        for (Entry<ImageIdentity, List<ImageReference>> entry : uniqueImages.entrySet()) {
+            ImageIdentity imageIdentity = entry.getKey();
+            List<ImageReference> references = entry.getValue();
 
-            // Get statistics
-            CompressionStats stats = new CompressionStats();
-            stats.uniqueImagesCount = uniqueImages.size();
-            calculateImageStats(uniqueImages, stats);
+            // Skip if no compressed version exists
+            PDImageXObject compressedImage = compressedVersions.get(imageIdentity);
+            if (compressedImage == null) continue;
 
-            // Create compressed versions of unique images
-            Map<ImageIdentity, PDImageXObject> compressedVersions =
-                    createCompressedImages(
-                            doc, uniqueImages, scaleFactor, jpegQuality, convertToGrayscale, stats);
-
-            // Replace all instances with compressed versions
-            replaceImages(doc, uniqueImages, compressedVersions, stats);
-
-            // Log compression statistics
-            logCompressionStats(stats, originalFileSize);
-
-            // Free memory before saving
-            compressedVersions.clear();
-            uniqueImages.clear();
-
-            log.info("Saving compressed PDF to {}", newCompressedPDF.getPath());
-            doc.save(newCompressedPDF.getAbsolutePath());
-
-            // Log overall file size reduction
-            long compressedFileSize = Files.size(newCompressedPDF.getPath());
-            double overallReduction = 100.0 - ((compressedFileSize * 100.0) / originalFileSize);
-            log.info(
-                    "Overall PDF compression: {} → {} (reduced by {}%)",
-                    GeneralUtils.formatBytes(originalFileSize),
-                    GeneralUtils.formatBytes(compressedFileSize),
-                    String.format("%.1f", overallReduction));
-            return newCompressedPDF;
-        } catch (Exception e) {
-            newCompressedPDF.close();
-            throw e;
+            // Replace ALL instances with the compressed version
+            for (ImageReference ref : references) {
+                replaceImageReference(doc, ref, compressedImage);
+            }
         }
     }
 
@@ -337,29 +305,6 @@ public class CompressController {
         return compressedVersions;
     }
 
-    // Replace all instances of original images with their compressed versions
-    private static void replaceImages(
-            PDDocument doc,
-            Map<ImageIdentity, List<ImageReference>> uniqueImages,
-            Map<ImageIdentity, PDImageXObject> compressedVersions,
-            CompressionStats stats)
-            throws IOException {
-
-        for (Entry<ImageIdentity, List<ImageReference>> entry : uniqueImages.entrySet()) {
-            ImageIdentity imageIdentity = entry.getKey();
-            List<ImageReference> references = entry.getValue();
-
-            // Skip if no compressed version exists
-            PDImageXObject compressedImage = compressedVersions.get(imageIdentity);
-            if (compressedImage == null) continue;
-
-            // Replace ALL instances with the compressed version
-            for (ImageReference ref : references) {
-                replaceImageReference(doc, ref, compressedImage);
-            }
-        }
-    }
-
     // Enhanced hash function to identify identical images with more data
     private static String generateImageHash(PDImageXObject image) {
         try {
@@ -373,20 +318,79 @@ public class CompressController {
                             bytesRead == buffer.length ? buffer : Arrays.copyOf(buffer, bytesRead);
 
                     // Also include image dimensions and color space in the hash
-                    StringBuilder enhancedData = new StringBuilder();
-                    enhancedData.append(new String(dataToHash));
-                    enhancedData.append("_").append(image.getWidth());
-                    enhancedData.append("_").append(image.getHeight());
-                    enhancedData.append("_").append(image.getColorSpace().getName());
-                    enhancedData.append("_").append(image.getBitsPerComponent());
+                    String enhancedData =
+                            new String(dataToHash, StandardCharsets.UTF_8)
+                                    + "_"
+                                    + image.getWidth()
+                                    + "_"
+                                    + image.getHeight()
+                                    + "_"
+                                    + image.getColorSpace().getName()
+                                    + "_"
+                                    + image.getBitsPerComponent();
 
-                    return bytesToHexString(generateMD5(enhancedData.toString().getBytes()));
+                    return bytesToHexString(generateMD5(enhancedData.getBytes()));
                 }
                 return "empty-stream";
             }
         } catch (Exception e) {
             ExceptionUtils.logException("image hash generation", e);
             return "fallback-" + System.identityHashCode(image);
+        }
+    }
+
+    public TempFile compressImagesInPDF(
+            Path pdfFile, double scaleFactor, float jpegQuality, boolean convertToGrayscale)
+            throws Exception {
+        TempFile newCompressedPDF = tempFileManager.createManagedTempFile(".pdf");
+        long originalFileSize = Files.size(pdfFile);
+        log.info(
+                "Starting image compression with scale factor: {}, JPEG quality: {}, grayscale: {}"
+                        + " on file size: {}",
+                scaleFactor,
+                jpegQuality,
+                convertToGrayscale,
+                GeneralUtils.formatBytes(originalFileSize));
+
+        try (PDDocument doc = pdfDocumentFactory.load(pdfFile)) {
+            // Find all unique images in the document
+            Map<ImageIdentity, List<ImageReference>> uniqueImages = findImages(doc);
+
+            // Get statistics
+            CompressionStats stats = new CompressionStats();
+            stats.uniqueImagesCount = uniqueImages.size();
+            calculateImageStats(uniqueImages, stats);
+
+            // Create compressed versions of unique images
+            Map<ImageIdentity, PDImageXObject> compressedVersions =
+                    createCompressedImages(
+                            doc, uniqueImages, scaleFactor, jpegQuality, convertToGrayscale, stats);
+
+            // Replace all instances with compressed versions
+            replaceImages(doc, uniqueImages, compressedVersions);
+
+            // Log compression statistics
+            logCompressionStats(stats, originalFileSize);
+
+            // Free memory before saving
+            compressedVersions.clear();
+            uniqueImages.clear();
+
+            log.info("Saving compressed PDF to {}", newCompressedPDF.getPath());
+            doc.save(newCompressedPDF.getAbsolutePath());
+
+            // Log overall file size reduction
+            long compressedFileSize = Files.size(newCompressedPDF.getPath());
+            double overallReduction = 100.0 - ((compressedFileSize * 100.0) / originalFileSize);
+            log.info(
+                    "Overall PDF compression: {} → {} (reduced by {}%)",
+                    GeneralUtils.formatBytes(originalFileSize),
+                    GeneralUtils.formatBytes(compressedFileSize),
+                    String.format("%.1f", overallReduction));
+            return newCompressedPDF;
+        } catch (Exception e) {
+            newCompressedPDF.close();
+            throw e;
         }
     }
 
@@ -966,40 +970,37 @@ public class CompressController {
 
             while (!sizeMet && optimizeLevel <= 9) {
                 // Apply external compression first
-                if (!externalCompressionApplied) {
-                    boolean ghostscriptSuccess = false;
+                boolean ghostscriptSuccess = false;
 
-                    if (isGhostscriptEnabled() && optimizeLevel >= 6) {
-                        try {
-                            applyGhostscriptCompression(request, optimizeLevel, currentFile);
-                            log.info("Ghostscript compression applied successfully");
-                            ghostscriptSuccess = true;
-                        } catch (IOException e) {
-                            log.warn(
-                                    "Ghostscript compression failed, continuing with other methods");
-                        }
+                if (isGhostscriptEnabled() && optimizeLevel >= 6) {
+                    try {
+                        applyGhostscriptCompression(request, optimizeLevel, currentFile);
+                        log.info("Ghostscript compression applied successfully");
+                        ghostscriptSuccess = true;
+                    } catch (IOException e) {
+                        log.warn("Ghostscript compression failed, continuing with other methods");
                     }
+                }
 
-                    // Always apply QPDF when enabled to recompress/optimize structure
-                    if (isQpdfEnabled()) {
-                        try {
-                            applyQpdfCompression(request, optimizeLevel, currentFile);
-                            log.info("QPDF compression applied successfully");
-                        } catch (IOException e) {
-                            log.warn("QPDF compression failed");
-                        }
-                    } else if (!ghostscriptSuccess) {
-                        log.info(
-                                "No external compression tools available, using image compression"
-                                        + " only");
+                // Always apply QPDF when enabled to recompress/optimize structure
+                if (isQpdfEnabled()) {
+                    try {
+                        applyQpdfCompression(request, optimizeLevel, currentFile);
+                        log.info("QPDF compression applied successfully");
+                    } catch (IOException e) {
+                        log.warn("QPDF compression failed");
                     }
+                } else if (!ghostscriptSuccess) {
+                    log.info(
+                            "No external compression tools available, using image compression"
+                                    + " only");
+                }
 
-                    externalCompressionApplied = true;
+                externalCompressionApplied = true;
 
-                    // Skip image compression if Ghostscript succeeded
-                    if (ghostscriptSuccess) {
-                        imageCompressionApplied = true;
-                    }
+                // Skip image compression if Ghostscript succeeded
+                if (ghostscriptSuccess) {
+                    imageCompressionApplied = true;
                 }
 
                 // Apply image compression for levels 4+ only if Ghostscript didn't run
