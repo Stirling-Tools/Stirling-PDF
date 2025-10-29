@@ -177,7 +177,6 @@ export default defineConfig(
       '@typescript-eslint/no-unsafe-return': 'error',
       '@typescript-eslint/no-unsafe-call': 'error',
       '@typescript-eslint/no-unsafe-member-access': 'error',
-      '@typescript-eslint/no-unsafe-arguments': 'error',
       '@typescript-eslint/no-unsafe-argument': 'error',
       '@typescript-eslint/only-throw-error': 'error',
       '@typescript-eslint/no-floating-promises': 'error',
