@@ -716,7 +716,7 @@ export class InsertFilesCommand extends DOMCommand {
 
   private async generateThumbnailsForInsertedPages(updatedDocument: PDFDocument): Promise<void> {
     try {
-      const { thumbnailGenerationService } = await import('../../../services/thumbnailGenerationService');
+      const { thumbnailGenerationService } = await import('@app/services/thumbnailGenerationService');
 
       // Group pages by file ID to generate thumbnails efficiently
       const pagesByFileId = new Map<FileId, PDFPage[]>();
