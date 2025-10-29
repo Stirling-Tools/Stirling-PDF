@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useRef, useMemo } from 'react';
 import { Text, ActionIcon, CheckboxIndicator, Tooltip, Modal, Button, Group, Stack } from '@mantine/core';
-import { useMediaQuery } from '@mantine/hooks';
+import { useIsMobile } from '@app/hooks/useIsMobile';
 import { alert } from '@app/components/toast';
 import { useTranslation } from 'react-i18next';
 import DownloadOutlinedIcon from '@mui/icons-material/DownloadOutlined';
@@ -63,7 +63,7 @@ const FileEditorThumbnail = ({
   const [isDragging, setIsDragging] = useState(false);
   const dragElementRef = useRef<HTMLDivElement | null>(null);
   const [showHoverMenu, setShowHoverMenu] = useState(false);
-  const isMobile = useMediaQuery('(max-width: 1024px)');
+  const isMobile = useIsMobile();
   const [showCloseModal, setShowCloseModal] = useState(false);
 
   // Resolve the actual File object for pin/unpin operations

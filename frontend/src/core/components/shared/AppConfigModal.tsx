@@ -1,6 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { Modal, Text, ActionIcon } from '@mantine/core';
-import { useMediaQuery } from '@mantine/hooks';
 import LocalIcon from '@app/components/shared/LocalIcon';
 import Overview from '@app/components/shared/config/configSections/Overview';
 import { createConfigNavSections } from '@app/components/shared/config/configNavSections';
@@ -8,6 +7,7 @@ import { NavKey } from '@app/components/shared/config/types';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
 import '@app/components/shared/AppConfigModal.css';
 import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from '@app/styles/zIndex';
+import { useIsMobile } from '@app/hooks/useIsMobile';
 
 interface AppConfigModalProps {
   opened: boolean;
@@ -16,7 +16,7 @@ interface AppConfigModalProps {
 
 const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
   const [active, setActive] = useState<NavKey>('overview');
-  const isMobile = useMediaQuery("(max-width: 1024px)");
+  const isMobile = useIsMobile();
   const { config } = useAppConfig();
 
   useEffect(() => {

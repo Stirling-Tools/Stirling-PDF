@@ -1,11 +1,11 @@
 import { useCallback, useMemo } from 'react';
 import type {
   CompareFilteredTokenInfo,
+  WordHighlightEntry,
   CompareResultData,
-} from '../../../../types/compare';
-import type { CompareChangeOption } from '../../../../types/compareWorkbench';
-import type { PagePreview } from '../../../../hooks/useProgressivePagePreviews';
-import type { WordHighlightEntry } from '../types';
+  CompareChangeOption,
+  PagePreview,
+} from '@app/types/compare';
 
 interface MetaGroupMap {
   base: Map<number, string>;

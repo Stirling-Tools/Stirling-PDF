@@ -1,19 +1,14 @@
 import { Combobox, ScrollArea, useCombobox } from '@mantine/core';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-
-interface NavigationDropdownProps {
-  changes: Array<{ value: string; label: string; pageNumber?: number }>;
-  placeholder: string;
-  className?: string;
-  onNavigate: (value: string, pageNumber?: number) => void;
-}
+import type { NavigationDropdownProps } from '@app/types/compare';
 
 const CompareNavigationDropdown = ({
   changes,
   placeholder,
   className,
   onNavigate,
+  renderedPageNumbers,
 }: NavigationDropdownProps) => {
   const { t } = useTranslation();
   const newLineLabel = t('compare.newLine', 'new-line');
@@ -63,15 +58,26 @@ const CompareNavigationDropdown = ({
 
   const isMeaningful = (s: string) => {
     const t = sanitize(s);
-    // Keep only items that have at least one letter or digit (unicode-aware)
-    try {
-      if (!/[\p{L}\p{N}]/u.test(t)) return false;
-    } catch {
-      if (!/[A-Za-z0-9]/.test(t)) return false;
-    }
+  
+    // Build a unicode-aware regex if supported; otherwise fall back to a plain ASCII class.
+    const rx =
+      (() => {
+        try {
+          // Construct at runtime so old engines don’t fail parse-time
+          console.debug('Using Unicode props');
+          return new RegExp('[\\p{L}\\p{N}\\p{P}\\p{S}]', 'u');
+        } catch {
+          // Fallback (no Unicode props): letters, digits, and common punctuation/symbols
+          console.debug('No Unicode props, falling back to ASCII class');
+          return /[A-Za-z0-9.,!?;:(){}"'`~@#$%^&*+=|<>/[\]]/;
+        }
+      })();
+  
+    if (!rx.test(t)) return false;
     return t.length > 0;
   };
 
+  
   const [query, setQuery] = useState('');
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const [stickyPage, setStickyPage] = useState<number | null>(null);
@@ -168,6 +174,9 @@ const CompareNavigationDropdown = ({
               {stickyPage != null && (
                 <div className="compare-dropdown-sticky" style={{ top: 0 }}>
                   {t('compare.summary.pageLabel', 'Page')}{' '}{stickyPage}
+                  {renderedPageNumbers && !renderedPageNumbers.has(stickyPage) && (
+                    <span className="compare-dropdown-rendering-flag"> — {t('compare.rendering.rendering', 'rendering')}</span>
+                  )}
                 </div>
               )}
               <Combobox.Options className="compare-dropdown-options">
@@ -184,6 +193,9 @@ const CompareNavigationDropdown = ({
                           key={`group-${lastPage}`}
                         >
                           {t('compare.summary.pageLabel', 'Page')}{' '}{lastPage}
+                          {renderedPageNumbers && !renderedPageNumbers.has(lastPage) && (
+                            <span className="compare-dropdown-rendering-flag"> — {t('compare.rendering.rendering', 'rendering')}</span>
+                          )}
                         </div>
                       );
                     }

@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { Stack } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import { useMediaQuery } from '@mantine/hooks';
+import { useIsMobile } from '@app/hooks/useIsMobile';
 import {
   CompareResultData,
+  CompareWorkbenchData,
+  CompareChangeOption,
 } from '@app/types/compare';
-import type { CompareWorkbenchData } from '@app/types/compareWorkbench';
 import type { FileId } from '@app/types/file';
 import type { StirlingFileStub, StirlingFile } from '@app/types/fileContext';
 import { useFilesModalContext } from '@app/contexts/FilesModalContext';
@@ -17,7 +18,6 @@ import { useComparePagePreviews } from './hooks/useComparePagePreviews';
 import { useComparePanZoom } from './hooks/useComparePanZoom';
 import { useCompareHighlights } from './hooks/useCompareHighlights';
 import { useCompareChangeNavigation } from './hooks/useCompareChangeNavigation';
-import type { CompareChangeOption } from '@app/types/compareWorkbench';
 import './compareView.css';
 import { useCompareRightRailButtons } from './hooks/useCompareRightRailButtons';
 import { alert, updateToast, updateToastProgress, dismissToast } from '@app/components/toast';
@@ -74,7 +74,7 @@ const mapChangesForDropdown = (changes: CompareChangeOption[]) =>
 
 const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
   const { t } = useTranslation();
-  const prefersStacked = useMediaQuery('(max-width: 1024px)') ?? false;
+  const prefersStacked = useIsMobile();
   const { openFilesModal } = useFilesModalContext();
   const { actions: fileActions } = useFileActions();
   const { selectors } = useFileContext();

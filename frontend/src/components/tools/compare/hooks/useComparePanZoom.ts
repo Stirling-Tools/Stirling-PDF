@@ -1,5 +1,4 @@
 import {
-  RefObject,
   useCallback,
   useEffect,
   useMemo,
@@ -11,7 +10,17 @@ import type {
   TouchEvent as ReactTouchEvent,
   WheelEvent as ReactWheelEvent,
 } from 'react';
-import type { PagePreview } from '../../../../hooks/useProgressivePagePreviews';
+import type {
+  PagePreview,
+  ComparePane as Pane,
+  PanState,
+  ScrollLinkDelta,
+  ScrollLinkAnchors,
+  PanDragState,
+  PinchState,
+  UseComparePanZoomOptions,
+  UseComparePanZoomReturn,
+} from '@app/types/compare';
 
 const ZOOM_MIN = 0.5;
 const ZOOM_MAX = 100000;
@@ -22,80 +31,7 @@ const ZOOM_STEP = 0.1;
 const DEFAULT_ROW_STRUCTURAL_EXTRA = 32;
 const DEFAULT_ROW_GAP = 8;
 
-type Pane = 'base' | 'comparison';
-
-interface PanState {
-  x: number;
-  y: number;
-}
-
-interface ScrollLinkDelta {
-  vertical: number;
-  horizontal: number;
-}
-
-// Pixel-based anchors captured when linking scroll, to preserve the
-// visual offset between panes and avoid an initial snap.
-interface ScrollLinkAnchors {
-  deltaPixelsBaseToComp: number;
-  deltaPixelsCompToBase: number;
-}
-
-interface PanDragState {
-  active: boolean;
-  source: Pane | null;
-  startX: number;
-  startY: number;
-  startPanX: number;
-  startPanY: number;
-  targetStartPanX: number;
-  targetStartPanY: number;
-}
-
-interface PinchState {
-  active: boolean;
-  pane: Pane | null;
-  startDistance: number;
-  startZoom: number;
-}
-
-export interface UseComparePanZoomOptions {
-  prefersStacked: boolean;
-  basePages: PagePreview[];
-  comparisonPages: PagePreview[];
-}
-
-export interface UseComparePanZoomReturn {
-  layout: 'side-by-side' | 'stacked';
-  setLayout: (layout: 'side-by-side' | 'stacked') => void;
-  toggleLayout: () => void;
-  baseScrollRef: RefObject<HTMLDivElement | null>;
-  comparisonScrollRef: RefObject<HTMLDivElement | null>;
-  isScrollLinked: boolean;
-  setIsScrollLinked: (value: boolean) => void;
-  captureScrollLinkDelta: () => void;
-  clearScrollLinkDelta: () => void;
-  isPanMode: boolean;
-  setIsPanMode: (value: boolean) => void;
-  baseZoom: number;
-  setBaseZoom: (value: number) => void;
-  comparisonZoom: number;
-  setComparisonZoom: (value: number) => void;
-  basePan: PanState;
-  comparisonPan: PanState;
-  centerPanForZoom: (pane: Pane, zoom: number) => void;
-  clampPanForZoom: (pane: Pane, zoom: number) => void;
-  handleScrollSync: (source: HTMLDivElement | null, target: HTMLDivElement | null) => void;
-  beginPan: (pane: Pane, event: ReactMouseEvent<HTMLDivElement>) => void;
-  continuePan: (event: ReactMouseEvent<HTMLDivElement>) => void;
-  endPan: () => void;
-  handleWheelZoom: (pane: Pane, event: ReactWheelEvent<HTMLDivElement>) => void;
-  handleWheelOverscroll: (pane: Pane, event: ReactWheelEvent<HTMLDivElement>) => void;
-  onTouchStart: (pane: Pane, event: ReactTouchEvent<HTMLDivElement>) => void;
-  onTouchMove: (event: ReactTouchEvent<HTMLDivElement>) => void;
-  onTouchEnd: () => void;
-  zoomLimits: { min: number; max: number; step: number };
-}
+// (Interfaces moved to @app/types/compare)
 
 export const useComparePanZoom = ({
   basePages,

@@ -1,14 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { pdfWorkerManager } from '@app/services/pdfWorkerManager';
-
-// Define PagePreview type locally since it's specific to this hook
-export interface PagePreview {
-  pageNumber: number;
-  width: number;
-  height: number;
-  rotation: number;
-  url: string;
-}
+import { PagePreview } from '@app/types/compare';
 
 const DISPLAY_SCALE = 1;
 const BATCH_SIZE = 10; // Render 10 pages at a time

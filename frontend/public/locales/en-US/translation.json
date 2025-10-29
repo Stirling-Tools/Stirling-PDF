@@ -1336,6 +1336,9 @@
       "comparisonHeading": "Comparison document",
       "pageLabel": "Page"
     },
+    "rendering": {
+      "rendering": "rendering"
+    },
     "status": {
       "extracting": "Extracting text...",
       "processing": "Analyzing differences...",

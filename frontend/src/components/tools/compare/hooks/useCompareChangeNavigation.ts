@@ -46,6 +46,22 @@ export const useCompareChangeNavigation = (
           return;
         }
         if (nodes.length === 0) {
+          // Fallback: ensure we at least scroll both panes to the page if available
+          if (pageNumber) {
+            // Main container already handled via scrollToPageIfNeeded; replicate for peer
+            const peerRef = pane === 'base' ? comparisonScrollRef : baseScrollRef;
+            const peer = peerRef.current;
+            if (peer) {
+              const peerPageEl = peer.querySelector(
+                `.compare-diff-page[data-page-number="${pageNumber}"]`
+              ) as HTMLElement | null;
+              if (peerPageEl) {
+                const peerMaxTop = Math.max(0, peer.scrollHeight - peer.clientHeight);
+                const top = Math.max(0, Math.min(peerMaxTop, peerPageEl.offsetTop - Math.round(peer.clientHeight * 0.2)));
+                peer.scrollTo({ top, behavior: 'auto' });
+              }
+            }
+          }
           return;
         }
 

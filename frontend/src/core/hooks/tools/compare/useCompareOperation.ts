@@ -39,9 +39,13 @@ export const useCompareOperation = (): CompareOperationHook => {
   const { selectors } = useFileContext();
   const workerRef = useRef<Worker | null>(null);
   const previousUrl = useRef<string | null>(null);
+  const activeRunIdRef = useRef(0);
+  const cancelledRef = useRef(false);
 
+  type OperationStatus = 'idle' | 'extracting' | 'processing' | 'complete' | 'cancelled' | 'error';
   const [isLoading, setIsLoading] = useState(false);
-  const [status, setStatus] = useState('');
+  const [statusState, setStatusState] = useState<OperationStatus>('idle');
+  const [statusDetailMs, setStatusDetailMs] = useState<number | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [files, setFiles] = useState<File[]>([]);
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
@@ -74,7 +78,8 @@ export const useCompareOperation = (): CompareOperationHook => {
     cleanupDownloadUrl();
     setDownloadUrl(null);
     setDownloadFilename('');
-    setStatus('');
+    setStatusState('idle');
+    setStatusDetailMs(null);
     setErrorMessage(null);
   }, [cleanupDownloadUrl]);
 
@@ -95,6 +100,11 @@ export const useCompareOperation = (): CompareOperationHook => {
         const collectedTokens: CompareDiffToken[] = [];
 
         const handleMessage = (event: MessageEvent<CompareWorkerResponse>) => {
+          if (cancelledRef.current) {
+            cleanup();
+            reject(Object.assign(new Error('Operation cancelled'), { code: 'CANCELLED' as const }));
+            return;
+          }
           const message = event.data;
           if (!message) {
             return;
@@ -141,7 +151,11 @@ export const useCompareOperation = (): CompareOperationHook => {
 
         const handleError = (event: ErrorEvent) => {
           cleanup();
-          reject(event.error ?? new Error(event.message));
+          if (cancelledRef.current) {
+            reject(Object.assign(new Error('Operation cancelled'), { code: 'CANCELLED' as const }));
+          } else {
+            reject(event.error ?? new Error(event.message));
+          }
         };
 
         const cleanup = () => {
@@ -175,6 +189,9 @@ export const useCompareOperation = (): CompareOperationHook => {
 
   const executeOperation = useCallback(
     async (params: CompareParameters, selectedFiles: StirlingFile[]) => {
+      // start new run
+      const runId = ++activeRunIdRef.current;
+      cancelledRef.current = false;
       if (!params.baseFileId || !params.comparisonFileId) {
         setErrorMessage(t('compare.error.selectRequired', 'Select a base and comparison document.'));
         return;
@@ -191,7 +208,8 @@ export const useCompareOperation = (): CompareOperationHook => {
       }
 
       setIsLoading(true);
-      setStatus(t('compare.status.extracting', 'Extracting text...'));
+      setStatusState('extracting');
+      setStatusDetailMs(null);
       setErrorMessage(null);
       setWarnings([]);
       setResult(null);
@@ -220,11 +238,13 @@ export const useCompareOperation = (): CompareOperationHook => {
           extractContentFromPdf(comparisonFile),
         ]);
 
+        if (cancelledRef.current || activeRunIdRef.current !== runId) return;
+
         if (baseContent.tokens.length === 0 || comparisonContent.tokens.length === 0) {
           throw Object.assign(new Error(warningMessages.emptyTextMessage), { code: 'EMPTY_TEXT' });
         }
 
-        setStatus(t('compare.status.processing', 'Analyzing differences...'));
+        setStatusState('processing');
 
         // Filter out paragraph sentinels before diffing to avoid large false-positive runs
         const baseFiltered = filterTokensForDiff(baseContent.tokens, baseContent.metadata);
@@ -256,6 +276,8 @@ export const useCompareOperation = (): CompareOperationHook => {
           comparisonFiltered.tokens,
           warningMessages
         );
+
+        if (cancelledRef.current || activeRunIdRef.current !== runId) return;
 
         const baseHasHighlight = new Array<boolean>(baseFiltered.tokens.length).fill(false);
         const comparisonHasHighlight = new Array<boolean>(comparisonFiltered.tokens.length).fill(false);
@@ -363,7 +385,7 @@ export const useCompareOperation = (): CompareOperationHook => {
         setDownloadUrl(blobUrl);
         setDownloadFilename(summaryFile.name);
 
-        setStatus(t('compare.status.complete', 'Comparison ready'));
+        setStatusState('complete');
       } catch (error: unknown) {
         console.error('[compare] operation failed', error);
         const errorCode = getWorkerErrorCode(error);
@@ -381,7 +403,7 @@ export const useCompareOperation = (): CompareOperationHook => {
         }
       } finally {
         const duration = performance.now() - operationStart;
-        setStatus((prev) => (prev ? `${prev} (${Math.round(duration)} ms)` : prev));
+        setStatusDetailMs(Math.round(duration));
         setIsLoading(false);
         if (longRunningToastIdRef.current) {
           dismissToast(longRunningToastIdRef.current);
@@ -393,11 +415,22 @@ export const useCompareOperation = (): CompareOperationHook => {
   );
 
   const cancelOperation = useCallback(() => {
-    if (isLoading) {
-      setIsLoading(false);
-      setStatus(t('operationCancelled', 'Operation cancelled'));
+    if (!isLoading) return;
+    cancelledRef.current = true;
+    setIsLoading(false);
+    setStatusState('cancelled');
+    if (workerRef.current) {
+      try {
+        workerRef.current.terminate();
+      // eslint-disable-next-line no-empty
+      } catch {}
+      workerRef.current = null;
     }
-  }, [isLoading, t]);
+    if (longRunningToastIdRef.current) {
+      dismissToast(longRunningToastIdRef.current);
+      longRunningToastIdRef.current = null;
+    }
+  }, [isLoading]);
 
   const undoOperation = useCallback(async () => {
     resetResults();
@@ -416,6 +449,18 @@ export const useCompareOperation = (): CompareOperationHook => {
       }
     };
   }, [cleanupDownloadUrl]);
+
+  const status = useMemo(() => {
+    const label =
+      statusState === 'idle' ? ''
+        : statusState === 'extracting' ? t('compare.status.extracting', 'Extracting text...')
+        : statusState === 'processing' ? t('compare.status.processing', 'Analyzing differences...')
+        : statusState === 'complete' ? t('compare.status.complete', 'Comparison ready')
+        : statusState === 'cancelled' ? t('operationCancelled', 'Operation cancelled')
+        : '';
+    if (label && statusDetailMs != null) return `${label} (${statusDetailMs} ms)`;
+    return label;
+  }, [statusState, statusDetailMs, t]);
 
   return useMemo<CompareOperationHook>(
     () => ({

@@ -3,30 +3,9 @@ import { Button, Stack, Text } from '@mantine/core';
 import type { ForwardedRef } from 'react';
 import { Dropzone } from '@mantine/dropzone';
 import { formatFileSize } from '@app/utils/fileUtils';
-import type { StirlingFileStub } from '@app/types/fileContext';
 import LocalIcon from '@app/components/shared/LocalIcon';
 import { useTranslation } from 'react-i18next';
-
-interface UploadColumnProps {
-  role: 'base' | 'comparison';
-  file: File | null;
-  stub: StirlingFileStub | null;
-  title: string;
-  description: string;
-  accentClass: string;
-  disabled: boolean;
-  onDrop: (files: File[]) => void;
-  onSelectExisting: () => void;
-  onClear: () => void;
-}
-
-interface CompareUploadSectionProps {
-  heading: string;
-  subheading: string;
-  disabled: boolean;
-  base: UploadColumnProps;
-  comparison: UploadColumnProps;
-}
+import type { UploadColumnProps, CompareUploadSectionProps } from '@app/types/compare';
 
 const CompareUploadColumn = ({
   role,

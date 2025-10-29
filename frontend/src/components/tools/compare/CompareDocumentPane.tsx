@@ -1,45 +1,21 @@
 import { Alert, Group, Loader, Stack, Text } from '@mantine/core';
-import { RefObject, useMemo } from 'react';
-import type { PagePreview, WordHighlightEntry } from './types';
-import type { TokenBoundingBox } from '@app/types/compare';
+import { useMemo } from 'react';
+import type { PagePreview } from '@app/types/compare';
+import type { TokenBoundingBox, CompareDocumentPaneProps } from '@app/types/compare';
 import CompareNavigationDropdown from './CompareNavigationDropdown';
-import { toRgba } from './compareUtils';
 import LazyLoadContainer from '@app/components/shared/LazyLoadContainer';
-import { useMediaQuery } from '@mantine/hooks';
+import { useIsMobile } from '@app/hooks/useIsMobile';
 
-interface CompareDocumentPaneProps {
-  pane: 'base' | 'comparison';
-  layout: 'side-by-side' | 'stacked';
-  scrollRef: RefObject<HTMLDivElement | null>;
-  peerScrollRef: RefObject<HTMLDivElement | null>;
-  handleScrollSync: (source: HTMLDivElement | null, target: HTMLDivElement | null) => void;
-  beginPan: (pane: 'base' | 'comparison', event: React.MouseEvent<HTMLDivElement>) => void;
-  continuePan: (event: React.MouseEvent<HTMLDivElement>) => void;
-  endPan: () => void;
-  handleWheelZoom: (pane: 'base' | 'comparison', event: React.WheelEvent<HTMLDivElement>) => void;
-  handleWheelOverscroll: (pane: 'base' | 'comparison', event: React.WheelEvent<HTMLDivElement>) => void;
-  onTouchStart: (pane: 'base' | 'comparison', event: React.TouchEvent<HTMLDivElement>) => void;
-  onTouchMove: (event: React.TouchEvent<HTMLDivElement>) => void;
-  onTouchEnd: (event: React.TouchEvent<HTMLDivElement>) => void;
-  isPanMode: boolean;
-  zoom: number;
-  pan?: { x: number; y: number };
-  title: string;
-  dropdownPlaceholder?: string;
-  changes: Array<{ value: string; label: string; pageNumber?: number }>;
-  onNavigateChange: (id: string, pageNumber?: number) => void;
-  isLoading: boolean;
-  processingMessage: string;
-  emptyMessage: string;
-  pages: PagePreview[];
-  pairedPages: PagePreview[];
-  getRowHeightPx: (pageNumber: number) => number;
-  wordHighlightMap: Map<number, WordHighlightEntry[]>;
-  metaIndexToGroupId: Map<number, string>;
-  documentLabel: string;
-  pageLabel: string;
-  altLabel: string;
-}
+const toRgba = (hexColor: string, alpha: number): string => {
+  const hex = hexColor.replace('#', '');
+  if (hex.length !== 6) {
+    return hexColor;
+  }
+  const r = parseInt(hex.slice(0, 2), 16);
+  const g = parseInt(hex.slice(2, 4), 16);
+  const b = parseInt(hex.slice(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+};
 
 // Merge overlapping or touching rects into larger non-overlapping blocks.
 // This is more robust across rotations (vertical "lines" etc.) and prevents dark spots.
@@ -110,7 +86,7 @@ const CompareDocumentPane = ({
   pageLabel,
   altLabel,
 }: CompareDocumentPaneProps) => {
-  const isMobileViewport = useMediaQuery('(max-width: 1024px)');
+  const isMobileViewport = useIsMobile();
   const pairedPageMap = useMemo(() => {
     const map = new Map<number, PagePreview>();
     pairedPages.forEach((item) => {
@@ -139,6 +115,7 @@ const CompareDocumentPane = ({
               placeholder={dropdownPlaceholder ?? ''}
               className={pane === 'comparison' ? 'compare-changes-select--comparison' : undefined}
               onNavigate={onNavigateChange}
+              renderedPageNumbers={useMemo(() => new Set(pages.map(p => p.pageNumber)), [pages])}
             />
           )}
         </Group>
@@ -180,7 +157,9 @@ const CompareDocumentPane = ({
             const highlightOffset = OFFSET_PIXELS / page.height;
             const rotationNorm = ((page.rotation ?? 0) % 360 + 360) % 360;
             const isPortrait = rotationNorm === 0 || rotationNorm === 180;
+            const isLandscape = rotationNorm === 90 || rotationNorm === 270;
             const isStackedPortrait = layout === 'stacked' && isPortrait;
+            const isStackedLandscape = layout === 'stacked' && isLandscape;
             const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 1200;
             const containerW = scrollRef.current?.clientWidth ?? viewportWidth;
             const stackedWidth = isMobileViewport
@@ -213,7 +192,11 @@ const CompareDocumentPane = ({
                     </Text>
                     <div
                       className="compare-diff-page__canvas compare-diff-page__canvas--zoom"
-                      style={{ width: `${Math.round(page.width * fit)}px` }}
+                      style={isStackedPortrait
+                        ? { width: `${stackedWidth}px`, height: `${stackedHeight}px`, marginLeft: 'auto', marginRight: 'auto' }
+                        : isStackedLandscape
+                        ? { width: `${Math.round(page.width * fit)}px`, marginLeft: 'auto', marginRight: 'auto' }
+                        : { width: `${Math.round(page.width * fit)}px` }}
                     >
                       <div
                         className="compare-diff-page__inner"
@@ -249,6 +232,8 @@ const CompareDocumentPane = ({
                     className="compare-diff-page__canvas compare-diff-page__canvas--zoom"
                     style={isStackedPortrait
                       ? { width: `${stackedWidth}px`, height: `${stackedHeight}px`, marginLeft: 'auto', marginRight: 'auto' }
+                      : isStackedLandscape
+                      ? { width: `${Math.round(page.width * fit)}px`, marginLeft: 'auto', marginRight: 'auto' }
                       : { width: `${Math.round(page.width * fit)}px` }}
                   >
                     <div

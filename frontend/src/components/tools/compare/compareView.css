@@ -135,15 +135,17 @@
 
 /* Style the dropdown container */
 .compare-changes-select .mantine-Combobox-dropdown {
-  border: 1px solid var(--mantine-color-gray-3) !important;
+  border: 1px solid var(--border-subtle) !important;
   border-radius: 8px !important;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+  box-shadow: var(--shadow-md) !important;
+  background-color: var(--bg-surface) !important;
 }
 
 .compare-changes-select--comparison .mantine-Combobox-dropdown {
-  border: 1px solid var(--mantine-color-gray-3) !important;
+  border: 1px solid var(--border-subtle) !important;
   border-radius: 8px !important;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+  box-shadow: var(--shadow-md) !important;
+  background-color: var(--bg-surface) !important;
 }
 
 /* Custom scrollbar for ScrollArea */
@@ -152,17 +154,17 @@
 }
 
 .compare-changes-select .mantine-ScrollArea-viewport::-webkit-scrollbar-track {
-  background: var(--mantine-color-gray-1) !important;
+  background: var(--bg-muted) !important;
   border-radius: 3px !important;
 }
 
 .compare-changes-select .mantine-ScrollArea-viewport::-webkit-scrollbar-thumb {
-  background: var(--mantine-color-gray-4) !important;
+  background: var(--border-strong) !important;
   border-radius: 3px !important;
 }
 
 .compare-changes-select .mantine-ScrollArea-viewport::-webkit-scrollbar-thumb:hover {
-  background: var(--mantine-color-gray-5) !important;
+  background: var(--text-muted) !important;
 }
 
 .compare-changes-select--comparison .mantine-ScrollArea-viewport::-webkit-scrollbar {
@@ -170,17 +172,17 @@
 }
 
 .compare-changes-select--comparison .mantine-ScrollArea-viewport::-webkit-scrollbar-track {
-  background: var(--mantine-color-gray-1) !important;
+  background: var(--bg-muted) !important;
   border-radius: 3px !important;
 }
 
 .compare-changes-select--comparison .mantine-ScrollArea-viewport::-webkit-scrollbar-thumb {
-  background: var(--mantine-color-gray-4) !important;
+  background: var(--border-strong) !important;
   border-radius: 3px !important;
 }
 
 .compare-changes-select--comparison .mantine-ScrollArea-viewport::-webkit-scrollbar-thumb:hover {
-  background: var(--mantine-color-gray-5) !important;
+  background: var(--text-muted) !important;
 }
 
 /* Style the dropdown options */
@@ -206,21 +208,21 @@
 .compare-changes-select .mantine-Combobox-search {
   font-size: 0.875rem !important;
   padding: 8px 12px !important;
-  border-bottom: 1px solid var(--mantine-color-gray-3) !important;
+  border-bottom: 1px solid var(--border-subtle) !important;
 }
 
 .compare-changes-select--comparison .mantine-Combobox-search {
   font-size: 0.875rem !important;
   padding: 8px 12px !important;
-  border-bottom: 1px solid var(--mantine-color-gray-3) !important;
+  border-bottom: 1px solid var(--border-subtle) !important;
 }
 
 .compare-changes-select .mantine-Combobox-search::placeholder {
-  color: var(--mantine-color-gray-5) !important;
+  color: var(--text-muted) !important;
 }
 
 .compare-changes-select--comparison .mantine-Combobox-search::placeholder {
-  color: var(--mantine-color-gray-5) !important;
+  color: var(--text-muted) !important;
 }
 
 /* Style the chevron - ensure proper coloring */
@@ -317,10 +319,10 @@
 
 .compare-diff-page__canvas {
   position: relative;
-  border: 1px solid var(--mantine-color-gray-4);
+  border: 1px solid var(--border-strong);
   border-radius: 0.75rem;
   overflow: hidden;
-  background-color: var(--mantine-color-white);
+  background-color: var(--bg-surface);
   width: 100%;
 }
 
@@ -352,7 +354,7 @@
 .compare-diff-highlight {
   position: absolute;
   pointer-events: none;
-  mix-blend-mode: normal; /* reduce dark spots on overlap */
+  mix-blend-mode: normal; 
 }
 
 /* Compare dropdown option formatting (page + clamped text) */
@@ -398,6 +400,12 @@
   border-bottom: 1px solid var(--border-default);
 }
 
+/* Light grey rendering flag next to page labels in the dropdown */
+.compare-dropdown-rendering-flag {
+  color: var(--text-muted);
+  margin-left: 0.25rem;
+}
+
 /* Inline paragraph highlights in summary */
 .compare-inline {
   border-radius: 0.2rem;
@@ -431,7 +439,7 @@
 
 .compare-upload-divider {
   width: 1px;
-  background: rgba(148, 163, 184, 0.5);
+  background: var(--compare-upload-divider);
 }
 
 .compare-upload-column {
@@ -441,9 +449,9 @@
 
 .compare-upload-dropzone {
   flex: 1;
-  border: 1px dashed rgba(148, 163, 184, 0.6);
+  border: 1px dashed var(--compare-upload-dropzone-border);
   border-radius: 1rem;
-  background: rgba(241, 245, 249, 0.45);
+  background: var(--compare-upload-dropzone-bg);
   padding: 0;
   transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
 }
@@ -479,8 +487,8 @@
   width: 3.25rem;
   height: 3.25rem;
   border-radius: 999px;
-  color: rgba(17, 24, 39, 0.75);
-  background: rgba(148, 163, 184, 0.2);
+  color: var(--compare-upload-icon-color);
+  background: var(--compare-upload-icon-bg);
 }
 
 .compare-upload-icon--base {

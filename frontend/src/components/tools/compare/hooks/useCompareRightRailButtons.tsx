@@ -4,7 +4,7 @@ import LocalIcon from '@app/components/shared/LocalIcon';
 import { alert } from '@app/components/toast';
 import type { ToastLocation } from '@app/components/toast/types';
 import type { RightRailButtonWithAction } from '@app/hooks/useRightRailButtons';
-import { useMediaQuery } from '@mantine/hooks';
+import { useIsMobile } from '@app/hooks/useIsMobile';
 
 type Pane = 'base' | 'comparison';
 
@@ -44,7 +44,7 @@ export const useCompareRightRailButtons = ({
   zoomLimits,
 }: UseCompareRightRailButtonsOptions): RightRailButtonWithAction[] => {
   const { t } = useTranslation();
-  const isMobile = useMediaQuery('(max-width: 768px)') ?? false;
+  const isMobile = useIsMobile();
 
   return useMemo<RightRailButtonWithAction[]>(() => [
     {

@@ -285,6 +285,13 @@
   --pdf-light-report-container-bg: 249 250 251;
   --pdf-light-simulated-page-bg: 255 255 255;
   --pdf-light-simulated-page-text: 15 23 42;
+
+  /* Compare tool specific colors - only for colors that don't have existing theme pairs */
+  --compare-upload-dropzone-bg: rgba(241, 245, 249, 0.45);
+  --compare-upload-dropzone-border: rgba(148, 163, 184, 0.6);
+  --compare-upload-icon-bg: rgba(148, 163, 184, 0.2);
+  --compare-upload-icon-color: rgba(17, 24, 39, 0.75);
+  --compare-upload-divider: rgba(148, 163, 184, 0.5);
 }
 
 [data-mantine-color-scheme="dark"] {
@@ -502,6 +509,13 @@
   --modal-nav-item-active-bg: rgba(10, 139, 255, 0.15);
   --modal-content-bg: #2A2F36;
   --modal-header-border: rgba(255, 255, 255, 0.08);
+
+  /* Compare tool specific colors (dark mode) - only for colors that don't have existing theme pairs */
+  --compare-upload-dropzone-bg: rgba(31, 35, 41, 0.45);
+  --compare-upload-dropzone-border: rgba(75, 85, 99, 0.6);
+  --compare-upload-icon-bg: rgba(75, 85, 99, 0.2);
+  --compare-upload-icon-color: rgba(243, 244, 246, 0.75);
+  --compare-upload-divider: rgba(75, 85, 99, 0.5);
 }
 
 /* Dropzone drop state styling */

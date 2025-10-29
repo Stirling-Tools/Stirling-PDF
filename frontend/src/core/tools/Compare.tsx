@@ -22,7 +22,7 @@ import type { FileId } from '@app/types/file';
 import type { StirlingFile } from '@app/types/fileContext';
 import DocumentThumbnail from '@app/components/shared/filePreview/DocumentThumbnail';
 import './compareTool.css';
-import type { CompareWorkbenchData } from '@app/types/compareWorkbench';
+import type { CompareWorkbenchData } from '@app/types/compare';
 import FitText from '@app/components/shared/FitText';
 
 const CUSTOM_VIEW_ID = 'compareWorkbenchView';
@@ -145,10 +145,6 @@ const Compare = (props: BaseToolProps) => {
     setCustomWorkbenchViewData,
     params,
   ]);
-
-  // const handleOpenWorkbench = useCallback(() => {
-  //   navigationActions.setWorkbench(CUSTOM_WORKBENCH_ID);
-  // }, [navigationActions]);
 
   const handleExecuteCompare = useCallback(async () => {
     const selected: StirlingFile[] = [];

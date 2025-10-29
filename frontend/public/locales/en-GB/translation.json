@@ -2173,6 +2173,9 @@
       "comparisonHeading": "Comparison document",
       "pageLabel": "Page"
     },
+    "rendering": {
+      "rendering": "rendering"
+    },
     "dropdown": {
       "deletions": "Deletions ({{count}})",
       "additions": "Additions ({{count}})",

@@ -6,7 +6,7 @@ import { fileStorage } from '@app/services/fileStorage';
 
 interface FilesModalContextType {
   isFilesModalOpen: boolean;
-  openFilesModal: (options?: { insertAfterPage?: number; customHandler?: (files: File[], insertAfterPage?: number) => void; maxNumberOfFiles?: number }) => void;
+  openFilesModal: (options?: { insertAfterPage?: number; customHandler?: (files: File[], insertAfterPage?: number) => void }) => void;
   closeFilesModal: () => void;
   onFileUpload: (files: File[]) => void;
   onRecentFileSelect: (stirlingFileStubs: StirlingFileStub[]) => void;
@@ -24,7 +24,7 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [insertAfterPage, setInsertAfterPage] = useState<number | undefined>();
   const [customHandler, setCustomHandler] = useState<((files: File[], insertAfterPage?: number) => void) | undefined>();
 
-  const openFilesModal = useCallback((options?: { insertAfterPage?: number; customHandler?: (files: File[], insertAfterPage?: number) => void; maxNumberOfFiles?: number }) => {
+  const openFilesModal = useCallback((options?: { insertAfterPage?: number; customHandler?: (files: File[], insertAfterPage?: number) => void }) => {
     setInsertAfterPage(options?.insertAfterPage);
     setCustomHandler(() => options?.customHandler);
     setIsFilesModalOpen(true);
