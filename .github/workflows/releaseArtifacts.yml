@@ -88,7 +88,7 @@ jobs:
           egress-policy: audit
 
       - name: Download build artifacts
-        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
+        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6.0.0
         with:
           name: binaries${{ matrix.file_suffix }}
       - name: Display structure of downloaded files
@@ -166,12 +166,12 @@ jobs:
           egress-policy: audit
 
       - name: Download signed artifacts
-        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
+        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6.0.0
         with:
           name: signed${{ matrix.file_suffix }}
 
       - name: Upload binaries, attestations and signatures to Release and create GitHub Release
-        uses: softprops/action-gh-release@62c96d0c4e8a889135c1f3a25910db8dbe0e85f7 # v2.3.4
+        uses: softprops/action-gh-release@6da8fa9354ddfdc4aeace5fc48d7f679b5214090 # v2.4.1
         with:
           tag_name: v${{ needs.build.outputs.version }}
           generate_release_notes: true
