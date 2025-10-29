@@ -1,5 +1,6 @@
 package stirling.software.proprietary.security.configuration;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +29,9 @@ import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.savedrequest.NullRequestCache;
 import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -120,7 +124,70 @@ public class SecurityConfiguration {
     }
 
     @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration cfg = new CorsConfiguration();
+
+        // Set allowed origin patterns
+        if (appConfig.v2Enabled()) {
+            // Development mode - allow common development ports
+            cfg.setAllowedOriginPatterns(
+                    List.of(
+                            "http://localhost:3000", // Common React dev server
+                            "http://localhost:5173", // Vite default port
+                            "http://localhost:5174", // Vite alternate port
+                            "http://localhost:8080", // Backend port
+                            "http://localhost:*", // Any localhost port
+                            "https://localhost:*" // HTTPS localhost
+                            ));
+            log.info("CORS configured for development mode (v2 enabled)");
+        } else {
+            // Production mode - be more restrictive
+            // You should configure production domains here
+            cfg.setAllowedOriginPatterns(
+                    List.of(
+                            "http://localhost:*", // Still allow localhost for local deployments
+                            "https://localhost:*"
+                            // Add your production domains here when deploying, e.g.:
+                            // "https://yourdomain.com",
+                            // "https://*.yourdomain.com"
+                            ));
+            log.info("CORS configured for production mode");
+        }
+
+        // Set allowed methods explicitly
+        cfg.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+
+        // Set allowed headers explicitly
+        cfg.setAllowedHeaders(
+                List.of(
+                        "Authorization",
+                        "Content-Type",
+                        "X-Requested-With",
+                        "Accept",
+                        "Origin",
+                        "X-API-KEY",
+                        "X-CSRF-TOKEN"));
+
+        // Set exposed headers (headers that the browser can access)
+        cfg.setExposedHeaders(
+                List.of("WWW-Authenticate", "X-Total-Count", "X-Page-Number", "X-Page-Size"));
+
+        // Allow credentials (cookies, authorization headers)
+        cfg.setAllowCredentials(true);
+
+        // Set max age for preflight cache
+        cfg.setMaxAge(3600L);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", cfg);
+        return source;
+    }
+
+    @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        // Enable CORS with our custom configuration
+        http.cors(cors -> cors.configurationSource(corsConfigurationSource()));
+
         if (securityProperties.getCsrfDisabled() || !loginEnabledValue) {
             http.csrf(CsrfConfigurer::disable);
         }
@@ -274,6 +341,8 @@ public class SecurityConfiguration {
                                                                 "/api/v1/auth/login")
                                                         || trimmedUri.startsWith(
                                                                 "/api/v1/auth/refresh")
+                                                        || trimmedUri.startsWith(
+                                                                "/api/v1/proprietary/ui-data/account")
                                                         || trimmedUri.startsWith("/v1/api-docs")
                                                         || uri.contains("/v1/api-docs");
                                             })

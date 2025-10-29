@@ -144,6 +144,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         || requestURI.startsWith(contextPath + "/api/v1/auth/login")
                         || requestURI.startsWith(contextPath + "/api/v1/auth/register")
                         || requestURI.startsWith(contextPath + "/api/v1/auth/refresh")
+                        || requestURI.startsWith(
+                                contextPath + "/api/v1/proprietary/ui-data/account")
                         || requestURI.startsWith(contextPath + "/api/v1/config");
         return isPublicAuthEndpoint;
     }
