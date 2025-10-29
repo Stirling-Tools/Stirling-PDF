@@ -147,7 +147,7 @@ JRE_DIR="$SCRIPT_DIR/jre"
 LIBS_DIR="$(dirname "$SCRIPT_DIR")/libs"
 
 # Find the Stirling-PDF JAR
-STIRLING_JAR=$(ls "$LIBS_DIR"/Stirling-PDF-*.jar | head -n 1)
+STIRLING_JAR=$(compgen -G "app/core/build/libs/stirling-pdf-*.jar")
 
 if [ ! -f "$STIRLING_JAR" ]; then
     echo "❌ Stirling-PDF JAR not found in $LIBS_DIR"
