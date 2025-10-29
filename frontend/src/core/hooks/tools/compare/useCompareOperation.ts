@@ -21,7 +21,7 @@ import {
   extractContentFromPdf,
   getWorkerErrorCode,
   filterTokensForDiff,
-} from './operationUtils';
+} from '@app/hooks/tools/compare/operationUtils';
 import { alert, dismissToast } from '@app/components/toast';
 import type { ToastLocation } from '@app/components/toast/types';
 

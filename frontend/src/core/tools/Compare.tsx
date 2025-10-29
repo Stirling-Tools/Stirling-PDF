@@ -14,7 +14,7 @@ import {
   useCompareOperation,
   CompareOperationHook,
 } from '@app/hooks/tools/compare/useCompareOperation';
-import CompareWorkbenchView from '../../components/tools/compare/CompareWorkbenchView';
+import CompareWorkbenchView from '@app/components/tools/compare/CompareWorkbenchView';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
 import { useNavigationActions, useNavigationState } from '@app/contexts/NavigationContext';
 import { useFileContext } from '@app/contexts/file/fileHooks';
