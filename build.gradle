@@ -10,7 +10,7 @@ plugins {
     id "com.github.jk1.dependency-license-report" version "2.9"
     //id "nebula.lint" version "19.0.3"
     id "org.panteleyev.jpackageplugin" version "1.7.5"
-    id "org.sonarqube" version "6.3.1.5724"
+    id "org.sonarqube" version "7.0.0.6105"
 }
 
 import com.github.jk1.license.render.*
@@ -22,11 +22,11 @@ import java.time.Year
 
 ext {
     springBootVersion = "3.5.6"
-    pdfboxVersion = "3.0.5"
+    pdfboxVersion = "3.0.6"
     imageioVersion = "3.12.0"
     lombokVersion = "1.18.42"
     bouncycastleVersion = "1.82"
-    springSecuritySamlVersion = "6.5.5"
+    springSecuritySamlVersion = "6.5.6"
     openSamlVersion = "4.3.2"
     commonmarkVersion = "0.27.0"
     googleJavaFormatVersion = "1.28.0"
@@ -127,8 +127,8 @@ subprojects {
         implementation 'io.github.pixee:java-security-toolkit:1.2.2'
 
         //tmp for security bumps
-        implementation 'ch.qos.logback:logback-core:1.5.19'
-        implementation 'ch.qos.logback:logback-classic:1.5.19'
+        implementation 'ch.qos.logback:logback-core:1.5.20'
+        implementation 'ch.qos.logback:logback-classic:1.5.20'
         compileOnly "org.projectlombok:lombok:$lombokVersion"
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
 
@@ -136,7 +136,7 @@ subprojects {
         testRuntimeOnly 'org.mockito:mockito-inline:5.2.0'
         testRuntimeOnly "org.junit.platform:junit-platform-launcher:$junitPlatformVersion"
 
-        testImplementation platform("com.squareup.okhttp3:okhttp-bom:5.1.0")
+        testImplementation platform("com.squareup.okhttp3:okhttp-bom:5.2.1")
         testImplementation "com.squareup.okhttp3:mockwebserver"
     }
 
@@ -561,7 +561,7 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly "org.junit.platform:junit-platform-launcher:$junitPlatformVersion"
 
-    testImplementation platform("com.squareup.okhttp3:okhttp-bom:5.1.0")
+    testImplementation platform("com.squareup.okhttp3:okhttp-bom:5.2.1")
     testImplementation "com.squareup.okhttp3:mockwebserver"
 }
 
