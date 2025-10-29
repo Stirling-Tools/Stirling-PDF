@@ -124,8 +124,17 @@ export default defineConfig(
       '@typescript-eslint/consistent-indexed-object-style': 'error',
       '@typescript-eslint/class-literal-property-style': 'error',
       '@typescript-eslint/consistent-type-definitions': 'error',
-      "@typescript-eslint/no-empty-object-type": [
-        "error",
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            ".*", // Disallow any relative imports (they should be '@app/x/y/z' or similar)
+            "src/*", // Disallow any absolute imports (they should be '@app/x/y/z' or similar)
+          ],
+        },
+      ],
+      '@typescript-eslint/no-empty-object-type': [
+        'error',
         {
           // Allow empty extending interfaces because there's no real reason not to, and it makes it obvious where to put extra attributes in the future
           allowInterfaces: 'with-single-extends',
