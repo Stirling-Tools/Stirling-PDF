@@ -349,10 +349,15 @@ public class WatermarkController {
         if (request.getBounds() != null && !request.getBounds().isEmpty()) {
             String[] boundsParts = request.getBounds().split(",");
             if (boundsParts.length == 4) {
-                boundsX = Float.parseFloat(boundsParts[0].trim());
-                boundsY = Float.parseFloat(boundsParts[1].trim());
-                boundsWidth = Float.parseFloat(boundsParts[2].trim());
-                boundsHeight = Float.parseFloat(boundsParts[3].trim());
+                try {
+                    boundsX = Float.parseFloat(boundsParts[0].trim());
+                    boundsY = Float.parseFloat(boundsParts[1].trim());
+                    boundsWidth = Float.parseFloat(boundsParts[2].trim());
+                    boundsHeight = Float.parseFloat(boundsParts[3].trim());
+                } catch (NumberFormatException e) {
+                    log.error("Invalid bounds format: {}", request.getBounds(), e);
+                    boundsX = boundsY = boundsWidth = boundsHeight = null;
+                }
             }
         }
 
