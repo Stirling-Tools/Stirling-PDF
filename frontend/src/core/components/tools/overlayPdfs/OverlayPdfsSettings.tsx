@@ -3,8 +3,6 @@ import { useTranslation } from 'react-i18next';
 import { type OverlayPdfsParameters, type OverlayMode } from '@app/hooks/tools/overlayPdfs/useOverlayPdfsParameters';
 import LocalIcon from '@app/components/shared/LocalIcon';
 import { useFilesModalContext } from '@app/contexts/FilesModalContext';
-import { StirlingFileStub } from '@app/types/fileContext';
-import { fileStorage } from '@app/services/fileStorage';
 import styles from '@app/components/tools/overlayPdfs/OverlayPdfsSettings.module.css';
 
 interface OverlayPdfsSettingsProps {
@@ -38,22 +36,8 @@ export default function OverlayPdfsSettings({ parameters, onParameterChange, dis
   const handleOpenOverlayFilesModal = () => {
     if (disabled) return;
     openFilesModal({
-      customHandler: async (files: File[] | StirlingFileStub[], _insertAfterPage?: number, isFromStorage?: boolean) => {
-        let resolvedFiles: File[] = [];
-
-        if (isFromStorage) {
-          // Load actual File objects from storage
-          for (const stub of files as StirlingFileStub[]) {
-            const stirlingFile = await fileStorage.getStirlingFile(stub.id);
-            if (stirlingFile) {
-              resolvedFiles.push(stirlingFile);
-            }
-          }
-        } else {
-          resolvedFiles = files as File[];
-        }
-
-        handleOverlayFilesChange([...(parameters.overlayFiles || []), ...resolvedFiles]);
+      customHandler: (files: File[]) => {
+        handleOverlayFilesChange([...(parameters.overlayFiles || []), ...files]);
       }
     });
   };
@@ -190,4 +174,3 @@ export default function OverlayPdfsSettings({ parameters, onParameterChange, dis
     </Stack>
   );
 }
-
