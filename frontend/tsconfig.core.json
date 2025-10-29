@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "@app/*": [
+        "src/core/*"
+      ],
+      "@core/*": ["src/core/*"]
+    }
+  },
+  "exclude": [
+    "src/proprietary",
+    "node_modules"
+  ]
+}
