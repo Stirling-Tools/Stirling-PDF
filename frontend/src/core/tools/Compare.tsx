@@ -21,7 +21,6 @@ import { useFileContext } from '@app/contexts/file/fileHooks';
 import type { FileId } from '@app/types/file';
 import type { StirlingFile } from '@app/types/fileContext';
 import DocumentThumbnail from '@app/components/shared/filePreview/DocumentThumbnail';
-import './compareTool.css';
 import type { CompareWorkbenchData } from '@app/types/compare';
 import FitText from '@app/components/shared/FitText';
 
@@ -261,7 +260,6 @@ const Compare = (props: BaseToolProps) => {
     files: {
       selectedFiles: base.selectedFiles,
       isCollapsed: false,
-      autoExpandNextOnFiles: true, // Next step (selection) opens as soon as files exist
     },
     steps: [
       {
