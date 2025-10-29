@@ -62,6 +62,7 @@
   <script type="module">
     import * as pdfjsLib from './pdfjs-legacy/pdf.mjs';
     pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsPath + 'pdf.worker.mjs';
+    window.pdfjsLib = pdfjsLib;
   </script>
   <script>
     const angleInput = document.getElementById("angleInput");

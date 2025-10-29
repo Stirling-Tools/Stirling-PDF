@@ -89,12 +89,18 @@ async function staggeredBatchDiff(words1, words2, color1, color2, batchSize, ove
     // If difference is too high decrease batch size for more granular check
     const dynamicBatchSize = Math.max(batchSize / Math.min(8, 1 + recentDiffs / 50), batchSize / 8);
 
-    const batchWords1 = words1.slice(start1, end1 + dynamicBatchSize);
-    const batchWords2 = words2.slice(start2, end2 + dynamicBatchSize);
+    const extendedEnd1 = Math.min(end1 + dynamicBatchSize, totalWords1);
+    const extendedEnd2 = Math.min(end2 + dynamicBatchSize, totalWords2);
+
+    const batchWords1 = words1.slice(start1, extendedEnd1);
+    const batchWords2 = words2.slice(start2, extendedEnd2);
 
     // Include overlap from the previous chunk
-    const overlapWords1 = previousEnd1 > 0 ? words1.slice(Math.max(0, previousEnd1 - overlapSize), previousEnd1).filter((w, idx) => !processed1.has(start1 + idx)) : [];
-    const overlapWords2 = previousEnd2 > 0 ? words2.slice(Math.max(0, previousEnd2 - overlapSize), previousEnd2).filter((w, idx) => !processed2.has(start2 + idx)) : [];
+    const overlapStart1 = Math.max(0, previousEnd1 - overlapSize);
+    const overlapStart2 = Math.max(0, previousEnd2 - overlapSize);
+    const overlapWords1 = previousEnd1 > 0 ? words1.slice(overlapStart1, previousEnd1) : [];
+    const overlapWords2 = previousEnd2 > 0 ? words2.slice(overlapStart2, previousEnd2) : [];
+
 
     // Combine overlaps and current batches for comparison
     const combinedWords1 = [...overlapWords1, ...batchWords1];
@@ -103,12 +109,61 @@ async function staggeredBatchDiff(words1, words2, color1, color2, batchSize, ove
     // Perform the diff on the combined words
     const batchDifferences = diff(combinedWords1, combinedWords2, color1, color2);
 
-    // Filter deduped (skip black words from overlap if already processed)
-    const filteredBatch = batchDifferences.filter(([color, word], idx) => {
-      if (color === 'black' && (start1 <= idx && idx < start1 + overlapSize)) {
-        return !processed1.has(idx); // Only add new ones
+    const combinedIndices1 = [];
+    for (let i = overlapStart1; i < previousEnd1; i++) {
+      combinedIndices1.push(i);
+    }
+    for (let i = start1; i < extendedEnd1; i++) {
+      combinedIndices1.push(i);
+    }
+
+    const combinedIndices2 = [];
+    for (let i = overlapStart2; i < previousEnd2; i++) {
+      combinedIndices2.push(i);
+    }
+    for (let i = start2; i < extendedEnd2; i++) {
+      combinedIndices2.push(i);
+    }
+
+    let pointer1 = 0;
+    let pointer2 = 0;
+
+    const filteredBatch = [];
+    batchDifferences.forEach(([color, word]) => {
+      if (color === color1) {
+        const globalIndex1 = combinedIndices1[pointer1];
+        if (globalIndex1 === undefined || !processed1.has(globalIndex1)) {
+          filteredBatch.push([color, word]);
+        }
+        if (globalIndex1 !== undefined) {
+          processed1.add(globalIndex1);
+        }
+        pointer1++;
+      } else if (color === color2) {
+        const globalIndex2 = combinedIndices2[pointer2];
+        if (globalIndex2 === undefined || !processed2.has(globalIndex2)) {
+          filteredBatch.push([color, word]);
+        }
+        if (globalIndex2 !== undefined) {
+          processed2.add(globalIndex2);
+        }
+        pointer2++;
+      } else {
+        const globalIndex1 = combinedIndices1[pointer1];
+        const globalIndex2 = combinedIndices2[pointer2];
+        const alreadyProcessed = (globalIndex1 !== undefined && processed1.has(globalIndex1)) && (globalIndex2 !== undefined && processed2.has(globalIndex2));
+        if (!alreadyProcessed) {
+          filteredBatch.push([color, word]);
+        }
+        if (globalIndex1 !== undefined) {
+          processed1.add(globalIndex1);
+        }
+        if (globalIndex2 !== undefined) {
+          processed2.add(globalIndex2);
+        }
+        pointer1++;
+        pointer2++;
       }
-      return true;
     });
 
     differences.push(...filteredBatch);
