@@ -526,7 +526,6 @@ public class WatermarkController {
 
     private void renderTextWithPerLetterVariations(
             PDPageContentStream contentStream,
-            PDDocument document,
             String[] textLines,
             PDFont baseFont,
             float baseFontSize,
