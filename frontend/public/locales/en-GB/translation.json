@@ -2174,7 +2174,10 @@
       "pageLabel": "Page"
     },
     "rendering": {
-      "rendering": "rendering"
+      "rendering": "rendering",
+      "inProgress": "One or both of these PDFs are very large, scrolling won't be smooth until the rendering is complete",
+      "pagesRendered": "pages rendered",
+      "complete": "Page rendering complete"
     },
     "dropdown": {
       "deletions": "Deletions ({{count}})",
