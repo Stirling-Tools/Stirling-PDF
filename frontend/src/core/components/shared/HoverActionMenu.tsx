@@ -1,6 +1,7 @@
 import React from 'react';
 import { ActionIcon, Tooltip } from '@mantine/core';
 import styles from '@app/components/shared/HoverActionMenu.module.css';
+import { Z_INDEX_HOVER_ACTION_MENU } from '@app/styles/zIndex';
 
 export interface HoverAction {
   id: string;
@@ -34,7 +35,7 @@ const HoverActionMenu: React.FC<HoverActionMenuProps> = ({
   return (
     <div
       className={`${styles.hoverMenu} ${position === 'outside' ? styles.outside : styles.inside} ${className}`}
-      style={{ opacity: show ? 1 : 0 }}
+      style={{ opacity: show ? 1 : 0, zIndex: Z_INDEX_HOVER_ACTION_MENU }}
       onMouseDown={(e) => e.stopPropagation()}
       onMouseUp={(e) => e.stopPropagation()}
       onClick={(e) => e.stopPropagation()}
