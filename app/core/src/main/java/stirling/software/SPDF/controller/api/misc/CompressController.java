@@ -157,6 +157,7 @@ public class CompressController {
             throw e;
         }
     }
+
     // Find all images in the document, both direct and nested within forms
     private static Map<ImageIdentity, List<ImageReference>> findImages(PDDocument doc)
             throws IOException {
@@ -421,7 +422,8 @@ public class CompressController {
     }
 
     // Get original image from a reference
-    private PDImageXObject getOriginalImage(PDDocument doc, ImageReference ref) throws IOException {
+    private static PDImageXObject getOriginalImage(PDDocument doc, ImageReference ref)
+            throws IOException {
         if (ref instanceof NestedImageReference nestedRef) {
             PDPage page = doc.getPage(nestedRef.pageNum);
             PDResources pageResources = page.getResources();
@@ -729,68 +731,6 @@ public class CompressController {
         } catch (Exception e) {
             return "fallback-decode-" + System.identityHashCode(image);
         }
-    }
-
-    public Path compressImagesInPDF(
-            Path pdfFile, double scaleFactor, float jpegQuality, boolean convertToGrayscale)
-            throws Exception {
-        Path newCompressedPDF = Files.createTempFile("compressedPDF", ".pdf");
-        long originalFileSize = Files.size(pdfFile);
-        log.info(
-                "Starting image compression with scale factor: {}, JPEG quality: {}, grayscale: {} on file size: {}",
-                scaleFactor,
-                jpegQuality,
-                convertToGrayscale,
-                GeneralUtils.formatBytes(originalFileSize));
-
-        try (PDDocument doc = pdfDocumentFactory.load(pdfFile)) {
-            // Find all unique images in the document
-            Map<ImageIdentity, List<ImageReference>> uniqueImages = findImages(doc);
-
-            // Get statistics
-            CompressionStats stats = new CompressionStats();
-            stats.uniqueImagesCount = uniqueImages.size();
-            calculateImageStats(uniqueImages, stats);
-
-            // Create compressed versions of unique images
-            Map<ImageIdentity, PDImageXObject> compressedVersions =
-                    createCompressedImages(
-                            doc, uniqueImages, scaleFactor, jpegQuality, convertToGrayscale, stats);
-
-            // Replace all instances with compressed versions
-            replaceImages(doc, uniqueImages, compressedVersions, stats);
-
-            // Log compression statistics
-            logCompressionStats(stats, originalFileSize);
-
-            // Free memory before saving
-            compressedVersions.clear();
-            uniqueImages.clear();
-
-            log.info("Saving compressed PDF to {}", newCompressedPDF.toString());
-            doc.save(newCompressedPDF.toString());
-
-            // Log overall file size reduction
-            long compressedFileSize = Files.size(newCompressedPDF);
-            double overallReduction = 100.0 - ((compressedFileSize * 100.0) / originalFileSize);
-            log.info(
-                    "Overall PDF compression: {} → {} (reduced by {}%)",
-                    GeneralUtils.formatBytes(originalFileSize),
-                    GeneralUtils.formatBytes(compressedFileSize),
-                    String.format("%.1f", overallReduction));
-            return newCompressedPDF;
-        }
-    }
-
-    // Tracks compression stats for reporting
-    private static class CompressionStats {
-        int totalImages = 0;
-        int nestedImages = 0;
-        int uniqueImagesCount = 0;
-        int compressedImages = 0;
-        int skippedImages = 0;
-        long totalOriginalBytes = 0;
-        long totalCompressedBytes = 0;
     }
 
     private static byte[] generateMD5(byte[] data) {
@@ -1160,46 +1100,46 @@ public class CompressController {
             command.add("-dBATCH");
 
             // General compression enhancements
-        command.add("-dDetectDuplicateImages=true");
-        command.add("-dDownsampleColorImages=true");
-        command.add("-dCompressFonts=true");
-        command.add("-dSubsetFonts=true");
+            command.add("-dDetectDuplicateImages=true");
+            command.add("-dDownsampleColorImages=true");
+            command.add("-dCompressFonts=true");
+            command.add("-dSubsetFonts=true");
 
-        // Map optimization levels to Ghostscript settings
-        switch (optimizeLevel) {
-            case 1:
-                command.add("-dPDFSETTINGS=/prepress");
-                break;
-            case 2:
-                command.add("-dPDFSETTINGS=/printer");
-                break;
-            case 3:
-                command.add("-dPDFSETTINGS=/ebook");
-                break;
-            case 4:
-            case 5:
-                command.add("-dPDFSETTINGS=/screen");
-                break;
-            case 6:
-            case 7:
-                command.add("-dPDFSETTINGS=/screen");
-                command.add("-dColorImageResolution=150");
-                command.add("-dGrayImageResolution=150");
-                command.add("-dMonoImageResolution=300");
-                break;
-            case 8:
-            case 9:
-                command.add("-dPDFSETTINGS=/screen");
-                // Use stronger downsampling at the highest level
-                if (optimizeLevel == 9) {
-                    command.add("-dColorImageResolution=72");
-                    command.add("-dGrayImageResolution=72");
-                    command.add("-dMonoImageResolution=150");
-                } else {
-                    command.add("-dColorImageResolution=100");
-                    command.add("-dGrayImageResolution=100");
-                    command.add("-dMonoImageResolution=200");
-                }
+            // Map optimization levels to Ghostscript settings
+            switch (optimizeLevel) {
+                case 1:
+                    command.add("-dPDFSETTINGS=/prepress");
+                    break;
+                case 2:
+                    command.add("-dPDFSETTINGS=/printer");
+                    break;
+                case 3:
+                    command.add("-dPDFSETTINGS=/ebook");
+                    break;
+                case 4:
+                case 5:
+                    command.add("-dPDFSETTINGS=/screen");
+                    break;
+                case 6:
+                case 7:
+                    command.add("-dPDFSETTINGS=/screen");
+                    command.add("-dColorImageResolution=150");
+                    command.add("-dGrayImageResolution=150");
+                    command.add("-dMonoImageResolution=300");
+                    break;
+                case 8:
+                case 9:
+                    command.add("-dPDFSETTINGS=/screen");
+                    // Use stronger downsampling at the highest level
+                    if (optimizeLevel == 9) {
+                        command.add("-dColorImageResolution=72");
+                        command.add("-dGrayImageResolution=72");
+                        command.add("-dMonoImageResolution=150");
+                    } else {
+                        command.add("-dColorImageResolution=100");
+                        command.add("-dGrayImageResolution=100");
+                        command.add("-dMonoImageResolution=200");
+                    }
                     break;
                 case 10:
                     command.add("-dPDFSETTINGS=/screen");
@@ -1213,18 +1153,19 @@ public class CompressController {
             }
 
             // If grayscale conversion requested, enforce grayscale color processing in Ghostscript
-        boolean grayscaleRequested = Boolean.TRUE.equals(request.getGrayscale());
-        if (grayscaleRequested) {
-            command.add("-dColorConversionStrategy=/Gray");
-            command.add("-dProcessColorModel=/DeviceGray");
-        }
+            boolean grayscaleRequested = Boolean.TRUE.equals(request.getGrayscale());
+            if (grayscaleRequested) {
+                command.add("-dColorConversionStrategy=/Gray");
+                command.add("-dProcessColorModel=/DeviceGray");
+            }
 
-        // Optional conversion: CMYK -> RGB for color output only (avoid conflict with grayscale)
-        if (optimizeLevel >= 7 && !grayscaleRequested) {
-            command.add("-dConvertCMYKImagesToRGB=true");
-        }
+            // Optional conversion: CMYK -> RGB for color output only (avoid conflict with
+            // grayscale)
+            if (optimizeLevel >= 7 && !grayscaleRequested) {
+                command.add("-dConvertCMYKImagesToRGB=true");
+            }
 
-        command.add("-sOutputFile=" + gsOutputPath.toString());
+            command.add("-sOutputFile=" + gsOutputPath.toString());
             command.add(currentFile.toString());
 
             ProcessExecutorResult returnCode;
@@ -1250,17 +1191,18 @@ public class CompressController {
                     throw new IOException("Ghostscript compression failed");
                 }
 
-            // replace the existing catch with these two catches
-        } catch (InterruptedException e) {
-            // restore interrupted status and propagate as an IOException
-            Thread.currentThread().interrupt();
-            InterruptedIOException ie =
-                    new InterruptedIOException("Ghostscript command interrupted");
-            ie.initCause(e);
-            throw ie;
-        } catch (Exception e) {
-            log.warn("Ghostscript compression failed, will fallback to other methods", e);
-            throw new IOException("Ghostscript compression failed", e);}
+                // replace the existing catch with these two catches
+            } catch (InterruptedException e) {
+                // restore interrupted status and propagate as an IOException
+                Thread.currentThread().interrupt();
+                InterruptedIOException ie =
+                        new InterruptedIOException("Ghostscript command interrupted");
+                ie.initCause(e);
+                throw ie;
+            } catch (Exception e) {
+                log.warn("Ghostscript compression failed, will fallback to other methods", e);
+                throw new IOException("Ghostscript compression failed", e);
+            }
         }
     }
 
@@ -1292,31 +1234,32 @@ public class CompressController {
             if (Boolean.TRUE.equals(request.getLinearize())) {
                 command.add("--linearize");
             }
-        // Decode/encode settings for maximal recompression
-        command.add("--decode-level=generalized");
+            // Decode/encode settings for maximal recompression
+            command.add("--decode-level=generalized");
             command.add("--recompress-flate");
             command.add("--compression-level=" + qpdfCompressionLevel);
             command.add("--compress-streams=y");
-        command.add("--stream-data=compress");
-        // Preserve unreferenced only at lower levels for safety; skip at highest levels for size
-        if (optimizeLevel <= 3) {
-            command.add("--preserve-unreferenced");
-        }
-        // Optional image optimization in qpdf (no resampling; lossy JPEG when beneficial)
-        // Enable qpdf image optimization at medium/high levels
-        if (optimizeLevel >= 5) {
-            command.add("--optimize-images");
-            // Map optimize level to JPEG quality (lower number => smaller size)
-            Integer jpegQuality =
-                    switch (optimizeLevel) {
-                        case 5 -> 78;
-                        case 6 -> 68;
-                        case 7 -> 58;
-                        case 8 -> 46;
-                        default -> 34; // 9+
-                    };
-            command.add("--jpeg-quality=" + jpegQuality);
-        }
+            command.add("--stream-data=compress");
+            // Preserve unreferenced only at lower levels for safety; skip at highest levels for
+            // size
+            if (optimizeLevel <= 3) {
+                command.add("--preserve-unreferenced");
+            }
+            // Optional image optimization in qpdf (no resampling; lossy JPEG when beneficial)
+            // Enable qpdf image optimization at medium/high levels
+            if (optimizeLevel >= 5) {
+                command.add("--optimize-images");
+                // Map optimize level to JPEG quality (lower number => smaller size)
+                Integer jpegQuality =
+                        switch (optimizeLevel) {
+                            case 5 -> 78;
+                            case 6 -> 68;
+                            case 7 -> 58;
+                            case 8 -> 46;
+                            default -> 34; // 9+
+                        };
+                command.add("--jpeg-quality=" + jpegQuality);
+            }
             command.add("--object-streams=generate");
             command.add(currentFile.toString());
             command.add(qpdfOutputPath.toString());
@@ -1324,20 +1267,20 @@ public class CompressController {
             ProcessExecutorResult returnCode = null;
             try {
                 // On high levels, prefer zopfli if platform supports env wrapper
-            if (optimizeLevel >= 8) {
-                String os = System.getProperty("os.name").toLowerCase(Locale.ROOT);
-                if (!os.contains("win")) {
-                    // Prepend env QPDF_ZOPFLI=silent for Unix-like systems
-                    List<String> zopfliCommand = new ArrayList<>();
-                    zopfliCommand.add("env");
-                    zopfliCommand.add("QPDF_ZOPFLI=silent");
-                    zopfliCommand.addAll(command);
-                    command = zopfliCommand;
+                if (optimizeLevel >= 8) {
+                    String os = System.getProperty("os.name").toLowerCase(Locale.ROOT);
+                    if (!os.contains("win")) {
+                        // Prepend env QPDF_ZOPFLI=silent for Unix-like systems
+                        List<String> zopfliCommand = new ArrayList<>();
+                        zopfliCommand.add("env");
+                        zopfliCommand.add("QPDF_ZOPFLI=silent");
+                        zopfliCommand.addAll(command);
+                        command = zopfliCommand;
+                    }
                 }
-            }
-            returnCode =
-                    ProcessExecutor.getInstance(ProcessExecutor.Processes.QPDF)
-                            .runCommandWithOutputHandling(command, null);
+                returnCode =
+                        ProcessExecutor.getInstance(ProcessExecutor.Processes.QPDF)
+                                .runCommandWithOutputHandling(command, null);
 
                 // Update current file to the QPDF output
                 Files.copy(qpdfOutputPath, currentFile, StandardCopyOption.REPLACE_EXISTING);
@@ -1349,18 +1292,19 @@ public class CompressController {
                         GeneralUtils.formatBytes(postQpdfSize),
                         String.format("%.1f", qpdfReduction));
 
-        } catch (IOException e) {
-            if (returnCode != null && returnCode.getRc() != 3) {
-                throw new IOException("QPDF command failed", e);
+            } catch (IOException e) {
+                if (returnCode != null && returnCode.getRc() != 3) {
+                    throw new IOException("QPDF command failed", e);
+                }
+                // If QPDF fails, keep using the current file
+                log.warn("QPDF compression failed, continuing with current file", e);
+            } catch (InterruptedException e) {
+                // restore interrupted status and propagate as an IOException
+                Thread.currentThread().interrupt();
+                InterruptedIOException ie = new InterruptedIOException("QPDF command interrupted");
+                ie.initCause(e);
+                throw ie;
             }
-            // If QPDF fails, keep using the current file
-            log.warn("QPDF compression failed, continuing with current file", e);
-        } catch (InterruptedException e) {
-            // restore interrupted status and propagate as an IOException
-            Thread.currentThread().interrupt();
-            InterruptedIOException ie = new InterruptedIOException("QPDF command interrupted");
-            ie.initCause(e);
-            throw ie;
         }
     }
 }
