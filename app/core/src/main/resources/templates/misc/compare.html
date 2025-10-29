@@ -167,8 +167,8 @@
                   result1.innerHTML = 'Extracting text from File 1...';
                   result2.innerHTML = 'Extracting text from File 2...';
                   const [text1, text2] = await Promise.all([
-                    extractText(pdf1, 'File 1'),
-                    extractText(pdf2, 'File 2')
+                    extractText(pdf1, 'File 1', result1),
+                    extractText(pdf2, 'File 2', result2)
                   ]);
 
                   if (text1.trim() === "" || text2.trim() === "") {
@@ -229,7 +229,7 @@
               }
 
               // Text extraction
-              async function extractText(pdf, fileName) {
+              async function extractText(pdf, fileName, statusElement) {
                 const pages = [];
                 const totalPages = pdf.numPages;
                 for (let i = 1; i <= totalPages; i++) {
@@ -237,8 +237,7 @@
                   const content = await page.getTextContent();
                   const strings = content.items.map(item => item.str).join(' ');
                   pages.push(strings);
-                  if (fileName === 'File 1') result1.innerHTML = `File 1: ${Math.round((i / totalPages) * 100)}%`;
-                  else result2.innerHTML = `File 2: ${Math.round((i / totalPages) * 100)}%`;
+                  statusElement.innerHTML = `${fileName}: ${Math.round((i / totalPages) * 100)}%`;
                 }
                 return pages.join(' ');
               }
