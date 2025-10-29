@@ -33,7 +33,9 @@ import stirling.software.common.configuration.InstallationPathConfig;
 @UtilityClass
 public class GeneralUtils {
 
-    /** Maximum number of resolved DNS addresses allowed for a host before it is considered unsafe. */
+    /**
+     * Maximum number of resolved DNS addresses allowed for a host before it is considered unsafe.
+     */
     private static final int MAX_DNS_ADDRESSES = 20;
 
     private final Set<String> DEFAULT_VALID_SCRIPTS = Set.of("png_to_webp.py", "split_photos.py");
@@ -298,8 +300,8 @@ public class GeneralUtils {
     }
 
     /**
-     * Checks whether a URL is reachable using configurable timeouts. Only {@code http} and
-     * {@code https} protocols are permitted, and local/private/multicast ranges are blocked.
+     * Checks whether a URL is reachable using configurable timeouts. Only {@code http} and {@code
+     * https} protocols are permitted, and local/private/multicast ranges are blocked.
      *
      * @param urlStr the URL to probe
      * @param connectTimeout connection timeout in milliseconds
@@ -417,8 +419,8 @@ public class GeneralUtils {
     }
 
     /**
-     * Checks whether an IPv4 address is private or reserved. Any malformed input defaults to
-     * {@code true} (conservative) to avoid misuse.
+     * Checks whether an IPv4 address is private or reserved. Any malformed input defaults to {@code
+     * true} (conservative) to avoid misuse.
      *
      * @param address 4-byte IPv4 address
      * @return {@code true} if private/reserved
@@ -488,8 +490,8 @@ public class GeneralUtils {
     }
 
     /**
-     * Checks whether an IPv6 address is an IPv4-mapped address (::ffff:0:0/96). Any malformed
-     * input defaults to {@code false} (conservative) to avoid misuse.
+     * Checks whether an IPv6 address is an IPv4-mapped address (::ffff:0:0/96). Any malformed input
+     * defaults to {@code false} (conservative) to avoid misuse.
      *
      * @param address 16-byte IPv6 address
      * @return {@code true} if IPv4-mapped
