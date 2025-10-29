@@ -31,6 +31,12 @@ export interface AdminSettingsData {
   roleDetails?: Record<string, string>;
   teams?: any[];
   maxPaidUsers?: number;
+  // License information
+  maxAllowedUsers: number;
+  availableSlots: number;
+  grandfatheredUserCount: number;
+  licenseMaxUsers: number;
+  premiumEnabled: boolean;
 }
 
 export interface CreateUserRequest {

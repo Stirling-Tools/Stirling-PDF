@@ -40,6 +40,16 @@ export default function PeopleSection() {
   const [processing, setProcessing] = useState(false);
   const [inviteMode, setInviteMode] = useState<'email' | 'direct'>('direct');
 
+  // License information
+  const [licenseInfo, setLicenseInfo] = useState<{
+    maxAllowedUsers: number;
+    availableSlots: number;
+    grandfatheredUserCount: number;
+    licenseMaxUsers: number;
+    premiumEnabled: boolean;
+    totalUsers: number;
+  } | null>(null);
+
   // Form state for direct invite
   const [inviteForm, setInviteForm] = useState({
     username: '',
@@ -89,6 +99,16 @@ export default function PeopleSection() {
 
       setUsers(enrichedUsers);
       setTeams(teamsData);
+
+      // Store license information
+      setLicenseInfo({
+        maxAllowedUsers: adminData.maxAllowedUsers,
+        availableSlots: adminData.availableSlots,
+        grandfatheredUserCount: adminData.grandfatheredUserCount,
+        licenseMaxUsers: adminData.licenseMaxUsers,
+        premiumEnabled: adminData.premiumEnabled,
+        totalUsers: adminData.totalUsers,
+      });
     } catch (error) {
       console.error('Failed to fetch people data:', error);
       alert({ alertType: 'error', title: 'Failed to load people data' });
@@ -325,6 +345,39 @@ export default function PeopleSection() {
         </Text>
       </div>
 
+      {/* License Information - Compact */}
+      {licenseInfo && (
+        <Group gap="md" c="dimmed" style={{ fontSize: '0.875rem' }}>
+          <Text size="sm" span>
+            <Text component="span" fw={600} c="inherit">{licenseInfo.totalUsers}</Text>
+            <Text component="span" c="dimmed"> / </Text>
+            <Text component="span" fw={600} c="inherit">{licenseInfo.maxAllowedUsers}</Text>
+            <Text component="span" c="dimmed" ml={4}>{t('workspace.people.license.users', 'users')}</Text>
+          </Text>
+
+          {licenseInfo.availableSlots === 0 && (
+            <Badge color="red" variant="light" size="sm">
+              {t('workspace.people.license.noSlotsAvailable', 'No slots available')}
+            </Badge>
+          )}
+
+          {licenseInfo.grandfatheredUserCount > 0 && (
+            <Text size="sm" c="dimmed" span>
+              •
+              <Text component="span" ml={4}>
+                {t('workspace.people.license.grandfatheredShort', '{{count}} grandfathered', { count: licenseInfo.grandfatheredUserCount })}
+              </Text>
+            </Text>
+          )}
+
+          {licenseInfo.premiumEnabled && licenseInfo.licenseMaxUsers > 0 && (
+            <Badge color="blue" variant="light" size="sm">
+              +{licenseInfo.licenseMaxUsers} {t('workspace.people.license.fromLicense', 'from license')}
+            </Badge>
+          )}
+        </Group>
+      )}
+
       {/* Header Actions */}
       <Group justify="space-between">
         <TextInput
@@ -334,77 +387,149 @@ export default function PeopleSection() {
           onChange={(e) => setSearchQuery(e.currentTarget.value)}
           style={{ maxWidth: 300 }}
         />
-        <Button leftSection={<LocalIcon icon="person-add" width="1rem" height="1rem" />} onClick={() => setInviteModalOpened(true)}>
-          {t('workspace.people.addMembers')}
-        </Button>
+        <Tooltip
+          label={t('workspace.people.license.noSlotsAvailable', 'No user slots available')}
+          disabled={!licenseInfo || licenseInfo.availableSlots > 0}
+          position="bottom"
+          withArrow
+        >
+          <Button
+            leftSection={<LocalIcon icon="person-add" width="1rem" height="1rem" />}
+            onClick={() => setInviteModalOpened(true)}
+            disabled={licenseInfo && licenseInfo.availableSlots === 0}
+          >
+            {t('workspace.people.addMembers')}
+          </Button>
+        </Tooltip>
       </Group>
 
       {/* Members Table */}
-      <Paper withBorder p="md">
-        <Table striped highlightOnHover>
-          <Table.Thead>
+      <Table
+        horizontalSpacing="md"
+        verticalSpacing="sm"
+        style={{
+          '--table-border-color': 'var(--mantine-color-gray-3)',
+        } as React.CSSProperties}
+      >
+        <Table.Thead>
+          <Table.Tr style={{ backgroundColor: 'var(--mantine-color-gray-0)' }}>
+            <Table.Th style={{ fontWeight: 600, color: 'var(--mantine-color-gray-7)' }} fz="sm">
+              {t('workspace.people.user')}
+            </Table.Th>
+            <Table.Th style={{ fontWeight: 600, color: 'var(--mantine-color-gray-7)' }} fz="sm" w={100}>
+              {t('workspace.people.role')}
+            </Table.Th>
+            <Table.Th style={{ fontWeight: 600, color: 'var(--mantine-color-gray-7)' }} fz="sm">
+              {t('workspace.people.team')}
+            </Table.Th>
+            <Table.Th w={50}></Table.Th>
+          </Table.Tr>
+        </Table.Thead>
+        <Table.Tbody>
+          {filteredUsers.length === 0 ? (
             <Table.Tr>
-              <Table.Th>{t('workspace.people.user')}</Table.Th>
-              <Table.Th>{t('workspace.people.role')}</Table.Th>
-              <Table.Th>{t('workspace.people.team')}</Table.Th>
-              <Table.Th>{t('workspace.people.status')}</Table.Th>
-              <Table.Th style={{ width: 50 }}></Table.Th>
+              <Table.Td colSpan={4}>
+                <Text ta="center" c="dimmed" py="xl">
+                  {t('workspace.people.noMembersFound')}
+                </Text>
+              </Table.Td>
             </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody>
-            {filteredUsers.length === 0 ? (
-              <Table.Tr>
-                <Table.Td colSpan={5}>
-                  <Text ta="center" c="dimmed" py="xl">
-                    {t('workspace.people.noMembersFound')}
-                  </Text>
-                </Table.Td>
-              </Table.Tr>
-            ) : (
-              filteredUsers.map((user) => (
-                <Table.Tr key={user.id}>
-                  <Table.Td>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      {user.isActive && (
-                        <div
+          ) : (
+            filteredUsers.map((user) => (
+              <Table.Tr
+                key={user.id}
+                style={{
+                  borderBottom: '1px solid var(--mantine-color-gray-3)',
+                }}
+              >
+                <Table.Td>
+                  <Group gap="xs" wrap="nowrap">
+                    <div
+                      style={{
+                        width: 32,
+                        height: 32,
+                        borderRadius: '50%',
+                        backgroundColor: user.enabled
+                          ? 'var(--mantine-color-blue-1)'
+                          : 'var(--mantine-color-gray-2)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontWeight: 600,
+                        fontSize: '0.875rem',
+                        color: user.enabled
+                          ? 'var(--mantine-color-blue-7)'
+                          : 'var(--mantine-color-gray-6)',
+                        flexShrink: 0,
+                        border: user.isActive ? '2px solid var(--mantine-color-green-6)' : 'none',
+                        opacity: user.enabled ? 1 : 0.5,
+                      }}
+                      title={
+                        !user.enabled
+                          ? t('workspace.people.disabled', 'Disabled')
+                          : user.isActive
+                            ? t('workspace.people.activeSession', 'Active session')
+                            : t('workspace.people.active', 'Active')
+                      }
+                    >
+                      {user.username.charAt(0).toUpperCase()}
+                    </div>
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <Tooltip label={user.username} disabled={user.username.length <= 20} zIndex={Z_INDEX_OVER_CONFIG_MODAL}>
+                        <Text
+                          size="sm"
+                          fw={500}
+                          maw={200}
                           style={{
-                            width: '6px',
-                            height: '6px',
-                            borderRadius: '50%',
-                            backgroundColor: 'var(--mantine-color-green-6)',
-                            flexShrink: 0,
+                            lineHeight: 1.3,
+                            opacity: user.enabled ? 1 : 0.6,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
                           }}
-                          title={t('workspace.people.activeSession', 'Active session')}
-                        />
-                      )}
-                      <div>
-                        <Text size="sm" fw={500}>
+                        >
                           {user.username}
                         </Text>
-                        {user.email && (
-                          <Text size="xs" c="dimmed">
-                            {user.email}
-                          </Text>
-                        )}
-                      </div>
+                      </Tooltip>
+                      {user.email && (
+                        <Text size="xs" c="dimmed" truncate style={{ lineHeight: 1.3 }}>
+                          {user.email}
+                        </Text>
+                      )}
                     </div>
-                  </Table.Td>
-                  <Table.Td>
-                    <Badge
-                      color={(user.rolesAsString || '').includes('ROLE_ADMIN') ? 'blue' : 'gray'}
-                      variant="light"
-                    >
-                      {(user.rolesAsString || '').includes('ROLE_ADMIN') ? t('workspace.people.admin') : t('workspace.people.member')}
-                    </Badge>
-                  </Table.Td>
-                  <Table.Td>
-                    <Text size="sm">{user.team?.name || '—'}</Text>
-                  </Table.Td>
-                  <Table.Td>
-                    <Badge color={user.enabled ? 'green' : 'red'} variant="light">
-                      {user.enabled ? t('workspace.people.active') : t('workspace.people.disabled')}
-                    </Badge>
-                  </Table.Td>
+                  </Group>
+                </Table.Td>
+                <Table.Td w={100}>
+                  <Badge
+                    size="sm"
+                    variant="light"
+                    color={(user.rolesAsString || '').includes('ROLE_ADMIN') ? 'blue' : 'gray'}
+                  >
+                    {(user.rolesAsString || '').includes('ROLE_ADMIN')
+                      ? t('workspace.people.admin', 'Admin')
+                      : t('workspace.people.member', 'Member')}
+                  </Badge>
+                </Table.Td>
+                <Table.Td>
+                  {user.team?.name ? (
+                    <Tooltip label={user.team.name} disabled={user.team.name.length <= 20} zIndex={Z_INDEX_OVER_CONFIG_MODAL}>
+                      <Text
+                        size="sm"
+                        c="dimmed"
+                        maw={150}
+                        style={{
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {user.team.name}
+                      </Text>
+                    </Tooltip>
+                  ) : (
+                    <Text size="sm" c="dimmed">—</Text>
+                  )}
+                </Table.Td>
                   <Table.Td>
                     <Group gap="xs" wrap="nowrap">
                       {/* Info icon with tooltip */}
@@ -456,9 +581,8 @@ export default function PeopleSection() {
                 </Table.Tr>
               ))
             )}
-          </Table.Tbody>
-        </Table>
-      </Paper>
+        </Table.Tbody>
+      </Table>
 
       {/* Add Member Modal */}
       <Modal
@@ -476,8 +600,8 @@ export default function PeopleSection() {
             size="lg"
             style={{
               position: 'absolute',
-              top: '-8px',
-              right: '-8px',
+              top: -8,
+              right: -8,
               zIndex: 1
             }}
           />
@@ -494,6 +618,32 @@ export default function PeopleSection() {
                 </Text>
               )}
             </Stack>
+
+            {/* License Warning/Info */}
+            {licenseInfo && (
+              <Paper withBorder p="sm" bg={licenseInfo.availableSlots === 0 ? 'var(--mantine-color-red-light)' : 'var(--mantine-color-blue-light)'}>
+                <Stack gap="xs">
+                  <Group gap="xs">
+                    <LocalIcon icon={licenseInfo.availableSlots > 0 ? 'info' : 'warning'} width="1rem" height="1rem" />
+                    <Text size="sm" fw={500}>
+                      {licenseInfo.availableSlots > 0
+                        ? t('workspace.people.license.slotsAvailable', {
+                            count: licenseInfo.availableSlots,
+                            defaultValue: `${licenseInfo.availableSlots} user slot(s) available`
+                          })
+                        : t('workspace.people.license.noSlotsAvailable', 'No user slots available')}
+                    </Text>
+                  </Group>
+                  <Text size="xs" c="dimmed">
+                    {t('workspace.people.license.currentUsage', {
+                      current: licenseInfo.totalUsers,
+                      max: licenseInfo.maxAllowedUsers,
+                      defaultValue: `Currently using ${licenseInfo.totalUsers} of ${licenseInfo.maxAllowedUsers} user licenses`
+                    })}
+                  </Text>
+                </Stack>
+              </Paper>
+            )}
 
             {/* Mode Toggle */}
             <Tooltip
@@ -629,8 +779,8 @@ export default function PeopleSection() {
             size="lg"
             style={{
               position: 'absolute',
-              top: '-8px',
-              right: '-8px',
+              top: -8,
+              right: -8,
               zIndex: 1
             }}
           />

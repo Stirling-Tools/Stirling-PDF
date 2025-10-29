@@ -1,13 +1,14 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { Modal, Text, ActionIcon } from '@mantine/core';
+import { Modal, Text, ActionIcon, Tooltip } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
+import { useNavigate, useLocation } from 'react-router-dom';
 import LocalIcon from '@app/components/shared/LocalIcon';
 import Overview from '@app/components/shared/config/configSections/Overview';
 import { createConfigNavSections } from '@app/components/shared/config/configNavSections';
 import { NavKey } from '@app/components/shared/config/types';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
 import '@app/components/shared/AppConfigModal.css';
-import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from '@app/styles/zIndex';
+import { Z_INDEX_OVER_FULLSCREEN_SURFACE, Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
 
 interface AppConfigModalProps {
   opened: boolean;
@@ -15,20 +16,50 @@ interface AppConfigModalProps {
 }
 
 const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [active, setActive] = useState<NavKey>('overview');
   const isMobile = useMediaQuery("(max-width: 1024px)");
   const { config } = useAppConfig();
 
+  // Extract section from URL path (e.g., /settings/people -> people)
+  const getSectionFromPath = (pathname: string): NavKey | null => {
+    const match = pathname.match(/\/settings\/([^/]+)/);
+    if (match && match[1]) {
+      const validSections: NavKey[] = [
+        'overview', 'people', 'teams', 'general', 'hotkeys',
+        'adminGeneral', 'adminSecurity', 'adminConnections', 'adminLegal',
+        'adminPrivacy', 'adminDatabase', 'adminPremium', 'adminFeatures',
+        'adminPlan', 'adminAudit', 'adminUsage', 'adminEndpoints', 'adminAdvanced'
+      ];
+      const section = match[1] as NavKey;
+      return validSections.includes(section) ? section : null;
+    }
+    return null;
+  };
+
+  // Sync active state with URL path
+  useEffect(() => {
+    const section = getSectionFromPath(location.pathname);
+    if (opened && section) {
+      setActive(section);
+    } else if (opened && location.pathname.startsWith('/settings') && !section) {
+      // If at /settings without a section, redirect to overview
+      navigate('/settings/overview', { replace: true });
+    }
+  }, [location.pathname, opened, navigate]);
+
+  // Handle custom events for backwards compatibility
   useEffect(() => {
     const handler = (ev: Event) => {
       const detail = (ev as CustomEvent).detail as { key?: NavKey } | undefined;
       if (detail?.key) {
-        setActive(detail.key);
+        navigate(`/settings/${detail.key}`);
       }
     };
     window.addEventListener('appConfig:navigate', handler as EventListener);
     return () => window.removeEventListener('appConfig:navigate', handler as EventListener);
-  }, []);
+  }, [navigate]);
 
   const colors = useMemo(() => ({
     navBg: 'var(--modal-nav-bg)',
@@ -46,17 +77,19 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
     console.log('Logout placeholder for SaaS compatibility');
   };
 
-  // Get isAdmin from app config (based on JWT role)
+  // Get isAdmin and runningEE from app config
   const isAdmin = config?.isAdmin ?? false;
+  const runningEE = config?.runningEE ?? false;
 
   // Left navigation structure and icons
   const configNavSections = useMemo(() =>
     createConfigNavSections(
       Overview,
       handleLogout,
-      isAdmin
+      isAdmin,
+      runningEE
     ),
-    [isAdmin]
+    [isAdmin, runningEE]
   );
 
   const activeLabel = useMemo(() => {
@@ -75,10 +108,16 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
     return null;
   }, [configNavSections, active]);
 
+  const handleClose = () => {
+    // Navigate back to home when closing modal
+    navigate('/', { replace: true });
+    onClose();
+  };
+
   return (
     <Modal
       opened={opened}
-      onClose={onClose}
+      onClose={handleClose}
       title={null}
       size={isMobile ? "100%" : 980}
       centered
@@ -109,15 +148,24 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
                 <div className="modal-nav-section-items">
                   {section.items.map(item => {
                     const isActive = active === item.key;
+                    const isDisabled = item.disabled ?? false;
                     const color = isActive ? colors.navItemActive : colors.navItem;
                     const iconSize = isMobile ? 28 : 18;
-                    return (
+
+                    const navItemContent = (
                       <div
                         key={item.key}
-                        onClick={() => setActive(item.key)}
+                        onClick={() => {
+                          if (!isDisabled) {
+                            setActive(item.key);
+                            navigate(`/settings/${item.key}`);
+                          }
+                        }}
                         className={`modal-nav-item ${isMobile ? 'mobile' : ''}`}
                         style={{
                           background: isActive ? colors.navItemActiveBg : 'transparent',
+                          opacity: isDisabled ? 0.5 : 1,
+                          cursor: isDisabled ? 'not-allowed' : 'pointer',
                         }}
                       >
                         <LocalIcon icon={item.icon} width={iconSize} height={iconSize} style={{ color }} />
@@ -127,6 +175,20 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
                           </Text>
                         )}
                       </div>
+                    );
+
+                    return isDisabled && item.disabledTooltip ? (
+                      <Tooltip
+                        key={item.key}
+                        label={item.disabledTooltip}
+                        position="right"
+                        withArrow
+                        zIndex={Z_INDEX_OVER_CONFIG_MODAL}
+                      >
+                        {navItemContent}
+                      </Tooltip>
+                    ) : (
+                      <React.Fragment key={item.key}>{navItemContent}</React.Fragment>
                     );
                   })}
                 </div>
@@ -147,7 +209,7 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
               }}
             >
               <Text fw={700} size="lg">{activeLabel}</Text>
-              <ActionIcon variant="subtle" onClick={onClose} aria-label="Close">
+              <ActionIcon variant="subtle" onClick={handleClose} aria-label="Close">
                 <LocalIcon icon="close-rounded" width={18} height={18} />
               </ActionIcon>
             </div>

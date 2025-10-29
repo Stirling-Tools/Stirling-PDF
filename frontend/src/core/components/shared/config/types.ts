@@ -23,6 +23,9 @@ export type NavKey =
   | 'adminLegal'
   | 'adminPremium'
   | 'adminFeatures'
+  | 'adminPlan'
+  | 'adminAudit'
+  | 'adminUsage'
   | 'adminEndpoints';
 
 

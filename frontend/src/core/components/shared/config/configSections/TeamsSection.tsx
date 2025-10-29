@@ -15,6 +15,7 @@ import {
   Paper,
   Select,
   CloseButton,
+  Tooltip,
 } from '@mantine/core';
 import LocalIcon from '@app/components/shared/LocalIcon';
 import { alert } from '@app/components/toast';
@@ -224,15 +225,24 @@ export default function TeamsSection() {
       </Group>
 
       {/* Teams Table */}
-      <Paper withBorder p="md">
-        <Table striped highlightOnHover>
-          <Table.Thead>
-            <Table.Tr>
-              <Table.Th>{t('workspace.teams.teamName')}</Table.Th>
-              <Table.Th>{t('workspace.teams.totalMembers')}</Table.Th>
-              <Table.Th style={{ width: 50 }}></Table.Th>
-            </Table.Tr>
-          </Table.Thead>
+      <Table
+        horizontalSpacing="md"
+        verticalSpacing="sm"
+        style={{
+          '--table-border-color': 'var(--mantine-color-gray-3)',
+        } as React.CSSProperties}
+      >
+        <Table.Thead>
+          <Table.Tr style={{ backgroundColor: 'var(--mantine-color-gray-0)' }}>
+            <Table.Th style={{ fontWeight: 600, fontSize: '0.875rem', color: 'var(--mantine-color-gray-7)' }}>
+              {t('workspace.teams.teamName')}
+            </Table.Th>
+            <Table.Th style={{ fontWeight: 600, fontSize: '0.875rem', color: 'var(--mantine-color-gray-7)' }}>
+              {t('workspace.teams.totalMembers')}
+            </Table.Th>
+            <Table.Th style={{ width: 50 }}></Table.Th>
+          </Table.Tr>
+        </Table.Thead>
           <Table.Tbody>
             {teams.length === 0 ? (
               <Table.Tr>
@@ -246,23 +256,44 @@ export default function TeamsSection() {
               teams.map((team) => (
                 <Table.Tr
                   key={team.id}
-                  style={{ cursor: 'pointer' }}
+                  style={{
+                    cursor: 'pointer',
+                    borderBottom: '1px solid var(--mantine-color-gray-3)',
+                  }}
                   onClick={() => setViewingTeamId(team.id)}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = 'var(--mantine-color-gray-0)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                  }}
                 >
                   <Table.Td>
                     <Group gap="xs">
-                      <Text size="sm" fw={500}>
-                        {team.name}
-                      </Text>
+                      <Tooltip label={team.name} disabled={team.name.length <= 20} zIndex={Z_INDEX_OVER_CONFIG_MODAL}>
+                        <Text
+                          size="sm"
+                          fw={500}
+                          c="dark"
+                          maw={200}
+                          style={{
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {team.name}
+                        </Text>
+                      </Tooltip>
                       {team.name === 'Internal' && (
-                        <Badge size="xs" color="gray">
+                        <Badge size="xs" color="gray" variant="light">
                           {t('workspace.teams.system')}
                         </Badge>
                       )}
                     </Group>
                   </Table.Td>
                   <Table.Td>
-                    <Text size="sm">{team.userCount || 0}</Text>
+                    <Text size="sm" c="dimmed">{team.userCount || 0}</Text>
                   </Table.Td>
                   <Table.Td onClick={(e) => e.stopPropagation()}>
                     <Menu position="bottom-end" withinPortal>
@@ -297,8 +328,7 @@ export default function TeamsSection() {
               ))
             )}
           </Table.Tbody>
-        </Table>
-      </Paper>
+      </Table>
 
       {/* Create Team Modal */}
       <Modal
@@ -316,8 +346,8 @@ export default function TeamsSection() {
             size="lg"
             style={{
               position: 'absolute',
-              top: '-8px',
-              right: '-8px',
+              top: -8,
+              right: -8,
               zIndex: 1
             }}
           />
@@ -361,8 +391,8 @@ export default function TeamsSection() {
             size="lg"
             style={{
               position: 'absolute',
-              top: '-8px',
-              right: '-8px',
+              top: -8,
+              right: -8,
               zIndex: 1
             }}
           />
@@ -409,8 +439,8 @@ export default function TeamsSection() {
             size="lg"
             style={{
               position: 'absolute',
-              top: '-8px',
-              right: '-8px',
+              top: -8,
+              right: -8,
               zIndex: 1
             }}
           />
