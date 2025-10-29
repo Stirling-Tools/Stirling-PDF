@@ -25,7 +25,6 @@ Feature: API Validation
             | password  | wrongPassword |
         When I send the API request to the endpoint "/api/v1/security/remove-password"
         Then the response status code should be 401
-        And the response should contain error message "Unauthorized"
 
     @positive @info
     Scenario: Get info

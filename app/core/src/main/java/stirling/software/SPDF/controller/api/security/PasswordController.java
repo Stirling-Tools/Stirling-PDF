@@ -43,7 +43,7 @@ public class PasswordController {
             throws IOException {
         MultipartFile fileInput = request.getFileInput();
         String password = request.getPassword();
-        
+
         PDDocument document;
         try {
             document = pdfDocumentFactory.load(fileInput, password);
