@@ -107,7 +107,7 @@ public class WatermarkController {
             throw new IllegalArgumentException(errorMsg);
         }
 
-        // Validate a color format when not using random color
+        // Validate color format when not using random color
         String customColor = request.getCustomColor();
         Boolean randomColor = request.getRandomColor();
         if (customColor != null && !Boolean.TRUE.equals(randomColor)) {
