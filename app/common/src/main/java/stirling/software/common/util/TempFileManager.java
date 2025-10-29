@@ -29,6 +29,17 @@ public class TempFileManager {
     private final ApplicationProperties applicationProperties;
 
     /**
+     * Create a managed temporary file that will be tracked by the TempFileManager.
+     *
+     * @param suffix The suffix for the temporary file
+     * @return The created temporary file wrapper
+     * @throws IOException If an I/O error occurs
+     */
+    public TempFile createManagedTempFile(String suffix) throws IOException {
+        return new TempFile(this, suffix);
+    }
+
+    /**
      * Create a temporary file with the Stirling-PDF prefix. The file is automatically registered
      * with the registry.
      *

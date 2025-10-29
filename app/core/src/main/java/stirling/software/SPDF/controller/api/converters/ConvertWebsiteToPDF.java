@@ -2,10 +2,18 @@ package stirling.software.SPDF.controller.api.converters;
 
 import java.io.IOException;
 import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.springframework.http.HttpStatus;
@@ -43,6 +51,11 @@ public class ConvertWebsiteToPDF {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final RuntimePathConfig runtimePathConfig;
     private final ApplicationProperties applicationProperties;
+
+    private static final Pattern FILE_SCHEME_PATTERN =
+            Pattern.compile("(?<![a-z0-9_])file\\s*:(?:/{1,3}|%2f|%5c|%3a|&#x2f;|&#47;)");
+
+    private static final Pattern NUMERIC_HTML_ENTITY_PATTERN = Pattern.compile("&#(x?[0-9a-f]+);");
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/url/pdf")
     @Operation(
@@ -91,14 +104,33 @@ public class ConvertWebsiteToPDF {
         }
 
         Path tempOutputFile = null;
+        Path tempHtmlInput = null;
         PDDocument doc = null;
         try {
+            // Download the remote content first to ensure we don't allow dangerous schemes
+            String htmlContent = fetchRemoteHtml(URL);
+
+            if (containsDisallowedUriScheme(htmlContent)) {
+                URI rejectionLocation =
+                        uriComponentsBuilder
+                                .queryParam("error", "error.disallowedUrlContent")
+                                .build()
+                                .toUri();
+                log.warn("Rejected URL to PDF conversion due to disallowed content references");
+                return ResponseEntity.status(status).location(rejectionLocation).build();
+            }
+
+            tempHtmlInput = Files.createTempFile("url_input_", ".html");
+            Files.writeString(tempHtmlInput, htmlContent, StandardCharsets.UTF_8);
+
             // Prepare the output file path
             tempOutputFile = Files.createTempFile("output_", ".pdf");
 
             // Prepare the WeasyPrint command
             List<String> command = new ArrayList<>();
             command.add(runtimePathConfig.getWeasyPrintPath());
+            command.add(tempHtmlInput.toString());
+            command.add("--base-url");
             command.add(URL);
             command.add("--pdf-forms");
             command.add(tempOutputFile.toString());
@@ -120,6 +152,13 @@ public class ConvertWebsiteToPDF {
             }
             return response;
         } finally {
+            if (tempHtmlInput != null) {
+                try {
+                    Files.deleteIfExists(tempHtmlInput);
+                } catch (IOException e) {
+                    log.error("Error deleting temporary HTML input file", e);
+                }
+            }
 
             if (tempOutputFile != null) {
                 try {
@@ -129,6 +168,90 @@ public class ConvertWebsiteToPDF {
                 }
             }
         }
+    }
+
+    private String fetchRemoteHtml(String url) throws IOException, InterruptedException {
+        HttpClient client =
+                HttpClient.newBuilder()
+                        .followRedirects(HttpClient.Redirect.NORMAL)
+                        .connectTimeout(Duration.ofSeconds(10))
+                        .build();
+
+        HttpRequest request =
+                HttpRequest.newBuilder(URI.create(url))
+                        .timeout(Duration.ofSeconds(20))
+                        .GET()
+                        .header("User-Agent", "Stirling-PDF/URL-to-PDF")
+                        .build();
+
+        HttpResponse<String> response =
+                client.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+
+        if (response.statusCode() >= 400 || response.body() == null) {
+            throw new IOException(
+                    "Failed to retrieve remote HTML. Status: " + response.statusCode());
+        }
+
+        return response.body();
+    }
+
+    private boolean containsDisallowedUriScheme(String htmlContent) {
+        if (htmlContent == null || htmlContent.isEmpty()) {
+            return false;
+        }
+
+        String normalized = normalizeForSchemeDetection(htmlContent);
+        return FILE_SCHEME_PATTERN.matcher(normalized).find();
+    }
+
+    private String normalizeForSchemeDetection(String htmlContent) {
+        String lowerCaseContent = htmlContent.toLowerCase(Locale.ROOT);
+        String decodedHtmlEntities = decodeNumericHtmlEntities(lowerCaseContent);
+        decodedHtmlEntities =
+                decodedHtmlEntities
+                        .replace("&colon;", ":")
+                        .replace("&sol;", "/")
+                        .replace("&frasl;", "/");
+        return percentDecode(decodedHtmlEntities);
+    }
+
+    private String percentDecode(String content) {
+        StringBuilder result = new StringBuilder(content.length());
+        for (int i = 0; i < content.length(); i++) {
+            char current = content.charAt(i);
+            if (current == '%' && i + 2 < content.length()) {
+                String hex = content.substring(i + 1, i + 3);
+                try {
+                    int value = Integer.parseInt(hex, 16);
+                    result.append((char) value);
+                    i += 2;
+                    continue;
+                } catch (NumberFormatException ignored) {
+                    // Fall through to append the literal characters when parsing fails
+                }
+            }
+            result.append(current);
+        }
+        return result.toString();
+    }
+
+    private String decodeNumericHtmlEntities(String content) {
+        Matcher matcher = NUMERIC_HTML_ENTITY_PATTERN.matcher(content);
+        StringBuffer decoded = new StringBuffer();
+        while (matcher.find()) {
+            String entityBody = matcher.group(1);
+            try {
+                int radix = entityBody.startsWith("x") ? 16 : 10;
+                int codePoint =
+                        Integer.parseInt(radix == 16 ? entityBody.substring(1) : entityBody, radix);
+                matcher.appendReplacement(
+                        decoded, Matcher.quoteReplacement(Character.toString((char) codePoint)));
+            } catch (NumberFormatException ex) {
+                matcher.appendReplacement(decoded, matcher.group(0));
+            }
+        }
+        matcher.appendTail(decoded);
+        return decoded.toString();
     }
 
     private String convertURLToFileName(String url) {

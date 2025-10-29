@@ -596,6 +596,25 @@ public class ApplicationProperties {
         public static class EnterpriseFeatures {
             private PersistentMetrics persistentMetrics = new PersistentMetrics();
             private Audit audit = new Audit();
+            private DatabaseNotifications databaseNotifications = new DatabaseNotifications();
+
+            @Data
+            public static class DatabaseNotifications {
+                private Backup backups = new Backup();
+                private Imports imports = new Imports();
+
+                @Data
+                public static class Backup {
+                    private boolean successful = false;
+                    private boolean failed = false;
+                }
+
+                @Data
+                public static class Imports {
+                    private boolean successful = false;
+                    private boolean failed = false;
+                }
+            }
 
             @Data
             public static class Audit {
