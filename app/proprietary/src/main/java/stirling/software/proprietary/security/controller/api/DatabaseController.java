@@ -6,6 +6,7 @@ import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.sql.SQLException;
 
 import org.springframework.context.annotation.Conditional;
 import org.springframework.core.io.InputStreamResource;
@@ -27,8 +28,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.exception.UnsupportedProviderException;
 import stirling.software.proprietary.security.database.H2SQLCondition;
-import stirling.software.proprietary.security.service.DatabaseService;
+import stirling.software.proprietary.security.service.DatabaseServiceInterface;
 
 @Slf4j
 @Controller
@@ -39,7 +41,7 @@ import stirling.software.proprietary.security.service.DatabaseService;
 @RequiredArgsConstructor
 public class DatabaseController {
 
-    private final DatabaseService databaseService;
+    private final DatabaseServiceInterface databaseService;
 
     @Operation(
             summary = "Import a database backup file",
@@ -157,7 +159,7 @@ public class DatabaseController {
                     "This endpoint triggers the creation of a database backup and redirects to the"
                             + " database management page.")
     @GetMapping("/createDatabaseBackup")
-    public String createDatabaseBackup() {
+    public String createDatabaseBackup() throws SQLException, UnsupportedProviderException {
         log.info("Starting database backup creation...");
         databaseService.exportDatabase();
         log.info("Database backup successfully created.");
