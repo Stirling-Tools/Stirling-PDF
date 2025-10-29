@@ -38,14 +38,17 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.security.AddWatermarkRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.PdfUtils;
 import stirling.software.common.util.RegexPatternUtils;
+import stirling.software.common.util.WatermarkRandomizer;
 import stirling.software.common.util.WebResponseUtils;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/v1/security")
 @Tag(name = "Security", description = "Security APIs")
@@ -66,6 +69,149 @@ public class WatermarkController {
                 });
     }
 
+    /**
+     * Validates watermark request parameters and enforces safety caps. Throws
+     * IllegalArgumentException with descriptive messages for validation failures.
+     */
+    private void validateWatermarkRequest(AddWatermarkRequest request) {
+        // Validate opacity bounds (0.0 - 1.0)
+        float opacity = request.getOpacity();
+        if (opacity < 0.0f || opacity > 1.0f) {
+            String errorMsg =
+                    String.format("Opacity must be between 0.0 and 1.0, but got: %.2f", opacity);
+            log.warn("Validation failed: {}", errorMsg);
+            throw new IllegalArgumentException(errorMsg);
+        }
+
+        // Validate rotation range: rotationMin <= rotationMax
+        Float rotationMin = request.getRotationMin();
+        Float rotationMax = request.getRotationMax();
+        if (rotationMin != null && rotationMax != null && rotationMin > rotationMax) {
+            String errorMsg =
+                    String.format(
+                            "Rotation minimum (%.2f) must be less than or equal to rotation maximum (%.2f)",
+                            rotationMin, rotationMax);
+            log.warn("Validation failed: {}", errorMsg);
+            throw new IllegalArgumentException(errorMsg);
+        }
+
+        // Validate font size range: fontSizeMin <= fontSizeMax
+        Float fontSizeMin = request.getFontSizeMin();
+        Float fontSizeMax = request.getFontSizeMax();
+        if (fontSizeMin != null && fontSizeMax != null && fontSizeMin > fontSizeMax) {
+            String errorMsg =
+                    String.format(
+                            "Font size minimum (%.2f) must be less than or equal to font size maximum (%.2f)",
+                            fontSizeMin, fontSizeMax);
+            log.warn("Validation failed: {}", errorMsg);
+            throw new IllegalArgumentException(errorMsg);
+        }
+
+        // Validate a color format when not using random color
+        String customColor = request.getCustomColor();
+        Boolean randomColor = request.getRandomColor();
+        if (customColor != null && !Boolean.TRUE.equals(randomColor)) {
+            // Check if color is valid hex format (#RRGGBB or #RRGGBBAA)
+            if (!customColor.matches("^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{8})$")) {
+                String errorMsg =
+                        String.format(
+                                "Invalid color format: '%s'. Expected hex format like #RRGGBB or #RRGGBBAA",
+                                customColor);
+                log.warn("Validation failed: {}", errorMsg);
+                throw new IllegalArgumentException(errorMsg);
+            }
+        }
+
+        // Validate mirroring probability bounds (0.0 - 1.0)
+        Float mirroringProbability = request.getMirroringProbability();
+        if (mirroringProbability != null
+                && (mirroringProbability < 0.0f || mirroringProbability > 1.0f)) {
+            String errorMsg =
+                    String.format(
+                            "Mirroring probability must be between 0.0 and 1.0, but got: %.2f",
+                            mirroringProbability);
+            log.warn("Validation failed: {}", errorMsg);
+            throw new IllegalArgumentException(errorMsg);
+        }
+
+        // Validate watermark type
+        String watermarkType = request.getWatermarkType();
+        if (watermarkType == null
+                || (!watermarkType.equalsIgnoreCase("text")
+                        && !watermarkType.equalsIgnoreCase("image"))) {
+            String errorMsg =
+                    String.format(
+                            "Watermark type must be 'text' or 'image', but got: '%s'",
+                            watermarkType);
+            log.warn("Validation failed: {}", errorMsg);
+            throw new IllegalArgumentException(errorMsg);
+        }
+
+        // Validate text watermark has text
+        if ("text".equalsIgnoreCase(watermarkType)) {
+            String watermarkText = request.getWatermarkText();
+            if (watermarkText == null || watermarkText.trim().isEmpty()) {
+                String errorMsg = "Watermark text is required when watermark type is 'text'";
+                log.warn("Validation failed: {}", errorMsg);
+                throw new IllegalArgumentException(errorMsg);
+            }
+        }
+
+        // Validate image watermark has image
+        if ("image".equalsIgnoreCase(watermarkType)) {
+            MultipartFile watermarkImage = request.getWatermarkImage();
+            if (watermarkImage == null || watermarkImage.isEmpty()) {
+                String errorMsg = "Watermark image is required when watermark type is 'image'";
+                log.warn("Validation failed: {}", errorMsg);
+                throw new IllegalArgumentException(errorMsg);
+            }
+
+            // Validate image type - only allow common image formats
+            String contentType = watermarkImage.getContentType();
+            String originalFilename = watermarkImage.getOriginalFilename();
+            if (contentType != null && !isSupportedImageType(contentType)) {
+                String errorMsg =
+                        String.format(
+                                "Unsupported image type: '%s'. Supported types: PNG, JPG, JPEG, GIF, BMP",
+                                contentType);
+                log.warn("Validation failed: {}", errorMsg);
+                throw new IllegalArgumentException(errorMsg);
+            }
+
+            // Additional check based on file extension
+            if (originalFilename != null && !hasSupportedImageExtension(originalFilename)) {
+                String errorMsg =
+                        String.format(
+                                "Unsupported image file extension in: '%s'. Supported extensions: .png, .jpg, .jpeg, .gif, .bmp",
+                                originalFilename);
+                log.warn("Validation failed: {}", errorMsg);
+                throw new IllegalArgumentException(errorMsg);
+            }
+        }
+
+        log.debug("Watermark request validation passed");
+    }
+
+    /** Checks if the content type is a supported image format. */
+    private boolean isSupportedImageType(String contentType) {
+        return contentType.equals("image/png")
+                || contentType.equals("image/jpeg")
+                || contentType.equals("image/jpg")
+                || contentType.equals("image/gif")
+                || contentType.equals("image/bmp")
+                || contentType.equals("image/x-ms-bmp");
+    }
+
+    /** Checks if the filename has a supported image extension. */
+    private boolean hasSupportedImageExtension(String filename) {
+        String lowerFilename = filename.toLowerCase();
+        return lowerFilename.endsWith(".png")
+                || lowerFilename.endsWith(".jpg")
+                || lowerFilename.endsWith(".jpeg")
+                || lowerFilename.endsWith(".gif")
+                || lowerFilename.endsWith(".bmp");
+    }
+
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/add-watermark")
     @Operation(
             summary = "Add watermark to a PDF file",
@@ -74,31 +220,36 @@ public class WatermarkController {
                             + " watermark type (text or image), rotation, opacity, width spacer, and"
                             + " height spacer. Input:PDF Output:PDF Type:SISO")
     public ResponseEntity<byte[]> addWatermark(@ModelAttribute AddWatermarkRequest request)
-            throws IOException, Exception {
+            throws IOException {
         MultipartFile pdfFile = request.getFileInput();
         String pdfFileName = pdfFile.getOriginalFilename();
         if (pdfFileName != null && (pdfFileName.contains("..") || pdfFileName.startsWith("/"))) {
+            log.error("Security violation: Invalid file path in pdfFile: {}", pdfFileName);
             throw new SecurityException("Invalid file path in pdfFile");
         }
         String watermarkType = request.getWatermarkType();
-        String watermarkText = request.getWatermarkText();
         MultipartFile watermarkImage = request.getWatermarkImage();
         if (watermarkImage != null) {
             String watermarkImageFileName = watermarkImage.getOriginalFilename();
             if (watermarkImageFileName != null
                     && (watermarkImageFileName.contains("..")
                             || watermarkImageFileName.startsWith("/"))) {
+                log.error(
+                        "Security violation: Invalid file path in watermarkImage: {}",
+                        watermarkImageFileName);
                 throw new SecurityException("Invalid file path in watermarkImage");
             }
         }
-        String alphabet = request.getAlphabet();
-        float fontSize = request.getFontSize();
-        float rotation = request.getRotation();
-        float opacity = request.getOpacity();
-        int widthSpacer = request.getWidthSpacer();
-        int heightSpacer = request.getHeightSpacer();
-        String customColor = request.getCustomColor();
+
+        // Validate request parameters and enforce safety caps
+        validateWatermarkRequest(request);
+
+        // Extract new fields with defaults for backward compatibility
+        Integer count = (request.getCount() != null) ? request.getCount() : 1;
         boolean convertPdfToImage = Boolean.TRUE.equals(request.getConvertPDFToImage());
+
+        // Create a randomizer with optional seed for deterministic behavior
+        WatermarkRandomizer randomizer = new WatermarkRandomizer(request.getSeed());
 
         // Load the input PDF
         PDDocument document = pdfDocumentFactory.load(pdfFile);
@@ -113,31 +264,13 @@ public class WatermarkController {
 
             // Set transparency
             PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
-            graphicsState.setNonStrokingAlphaConstant(opacity);
+            graphicsState.setNonStrokingAlphaConstant(request.getOpacity());
             contentStream.setGraphicsStateParameters(graphicsState);
 
             if ("text".equalsIgnoreCase(watermarkType)) {
-                addTextWatermark(
-                        contentStream,
-                        watermarkText,
-                        document,
-                        page,
-                        rotation,
-                        widthSpacer,
-                        heightSpacer,
-                        fontSize,
-                        alphabet,
-                        customColor);
+                addTextWatermark(contentStream, document, page, request, randomizer);
             } else if ("image".equalsIgnoreCase(watermarkType)) {
-                addImageWatermark(
-                        contentStream,
-                        watermarkImage,
-                        document,
-                        page,
-                        rotation,
-                        widthSpacer,
-                        heightSpacer,
-                        fontSize);
+                addImageWatermark(contentStream, document, page, request, randomizer);
             }
 
             // Close the content stream
@@ -158,19 +291,73 @@ public class WatermarkController {
 
     private void addTextWatermark(
             PDPageContentStream contentStream,
-            String watermarkText,
             PDDocument document,
             PDPage page,
-            float rotation,
-            int widthSpacer,
-            int heightSpacer,
-            float fontSize,
-            String alphabet,
-            String colorString)
+            AddWatermarkRequest request,
+            WatermarkRandomizer randomizer)
             throws IOException {
-        String resourceDir = "";
-        PDFont font = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
-        resourceDir =
+
+        String watermarkText = request.getWatermarkText();
+        String alphabet = request.getAlphabet();
+        String colorString = request.getCustomColor();
+        float rotation = request.getRotation();
+        int widthSpacer = request.getWidthSpacer();
+        int heightSpacer = request.getHeightSpacer();
+        float fontSize = request.getFontSize();
+
+        // Extract new fields with defaults
+        int count = (request.getCount() != null) ? request.getCount() : 1;
+        boolean randomPosition = Boolean.TRUE.equals(request.getRandomPosition());
+        boolean randomFont = Boolean.TRUE.equals(request.getRandomFont());
+        boolean randomColor = Boolean.TRUE.equals(request.getRandomColor());
+        boolean perLetterFont = Boolean.TRUE.equals(request.getPerLetterFont());
+        boolean perLetterColor = Boolean.TRUE.equals(request.getPerLetterColor());
+        boolean perLetterSize = Boolean.TRUE.equals(request.getPerLetterSize());
+        boolean perLetterOrientation = Boolean.TRUE.equals(request.getPerLetterOrientation());
+        boolean shadingRandom = Boolean.TRUE.equals(request.getShadingRandom());
+        String shading = request.getShading();
+
+        float rotationMin =
+                (request.getRotationMin() != null) ? request.getRotationMin() : rotation;
+        float rotationMax =
+                (request.getRotationMax() != null) ? request.getRotationMax() : rotation;
+        float fontSizeMin =
+                (request.getFontSizeMin() != null) ? request.getFontSizeMin() : fontSize;
+        float fontSizeMax =
+                (request.getFontSizeMax() != null) ? request.getFontSizeMax() : fontSize;
+        float margin = (request.getMargin() != null) ? request.getMargin() : 10f;
+
+        // Extract per-letter configuration with defaults
+        int perLetterFontCount =
+                (request.getPerLetterFontCount() != null) ? request.getPerLetterFontCount() : 2;
+        int perLetterColorCount =
+                (request.getPerLetterColorCount() != null) ? request.getPerLetterColorCount() : 4;
+        float perLetterSizeMin =
+                (request.getPerLetterSizeMin() != null) ? request.getPerLetterSizeMin() : 10f;
+        float perLetterSizeMax =
+                (request.getPerLetterSizeMax() != null) ? request.getPerLetterSizeMax() : 100f;
+        float perLetterOrientationMin =
+                (request.getPerLetterOrientationMin() != null)
+                        ? request.getPerLetterOrientationMin()
+                        : 0f;
+        float perLetterOrientationMax =
+                (request.getPerLetterOrientationMax() != null)
+                        ? request.getPerLetterOrientationMax()
+                        : 360f;
+
+        // Parse bounds if provided
+        Float boundsX = null, boundsY = null, boundsWidth = null, boundsHeight = null;
+        if (request.getBounds() != null && !request.getBounds().isEmpty()) {
+            String[] boundsParts = request.getBounds().split(",");
+            if (boundsParts.length == 4) {
+                boundsX = Float.parseFloat(boundsParts[0].trim());
+                boundsY = Float.parseFloat(boundsParts[1].trim());
+                boundsWidth = Float.parseFloat(boundsParts[2].trim());
+                boundsHeight = Float.parseFloat(boundsParts[3].trim());
+            }
+        }
+
+        String resourceDir =
                 switch (alphabet) {
                     case "arabic" -> "static/fonts/NotoSansArabic-Regular.ttf";
                     case "japanese" -> "static/fonts/Meiryo.ttf";
@@ -183,6 +370,8 @@ public class WatermarkController {
         ClassPathResource classPathResource = new ClassPathResource(resourceDir);
         String fileExtension = resourceDir.substring(resourceDir.lastIndexOf("."));
         File tempFile = Files.createTempFile("NotoSansFont", fileExtension).toFile();
+
+        PDFont font;
         try (InputStream is = classPathResource.getInputStream();
                 FileOutputStream os = new FileOutputStream(tempFile)) {
             IOUtils.copy(is, os);
@@ -191,63 +380,144 @@ public class WatermarkController {
             Files.deleteIfExists(tempFile.toPath());
         }
 
-        contentStream.setFont(font, fontSize);
-
-        Color redactColor;
-        try {
-            if (!colorString.startsWith("#")) {
-                colorString = "#" + colorString;
-            }
-            redactColor = Color.decode(colorString);
-        } catch (NumberFormatException e) {
-
-            redactColor = Color.LIGHT_GRAY;
-        }
-        contentStream.setNonStrokingColor(redactColor);
-
         String[] textLines =
                 RegexPatternUtils.getInstance().getEscapedNewlinePattern().split(watermarkText);
-        float maxLineWidth = 0;
 
-        for (int i = 0; i < textLines.length; ++i) {
-            maxLineWidth = Math.max(maxLineWidth, font.getStringWidth(textLines[i]));
-        }
-
-        // Set size and location of text watermark
-        float watermarkWidth = widthSpacer + maxLineWidth * fontSize / 1000;
-        float watermarkHeight = heightSpacer + fontSize * textLines.length;
         float pageWidth = page.getMediaBox().getWidth();
         float pageHeight = page.getMediaBox().getHeight();
 
-        // Calculating the new width and height depending on the angle.
-        float radians = (float) Math.toRadians(rotation);
-        float newWatermarkWidth =
-                (float)
-                        (Math.abs(watermarkWidth * Math.cos(radians))
-                                + Math.abs(watermarkHeight * Math.sin(radians)));
-        float newWatermarkHeight =
-                (float)
-                        (Math.abs(watermarkWidth * Math.sin(radians))
-                                + Math.abs(watermarkHeight * Math.cos(radians)));
+        // Determine positions based on a randomPosition flag
+        java.util.List<float[]> positions;
+        if (randomPosition) {
+            // Generate random positions
+            positions = new java.util.ArrayList<>();
+            for (int i = 0; i < count; i++) {
+                // Use approximate watermark dimensions for positioning
+                float approxWidth = widthSpacer + 100; // Approximate
+                float approxHeight = heightSpacer + fontSize * textLines.length;
+                float[] pos =
+                        randomizer.generateRandomPosition(
+                                pageWidth,
+                                pageHeight,
+                                approxWidth,
+                                approxHeight,
+                                margin,
+                                boundsX,
+                                boundsY,
+                                boundsWidth,
+                                boundsHeight);
+                positions.add(pos);
+            }
+        } else {
+            // Generate grid positions (backward compatible)
+            float watermarkWidth = 100 * fontSize / 1000;
+            float watermarkHeight = fontSize * textLines.length;
+            positions =
+                    randomizer.generateGridPositions(
+                            pageWidth,
+                            pageHeight,
+                            watermarkWidth,
+                            watermarkHeight,
+                            widthSpacer,
+                            heightSpacer,
+                            count);
+        }
 
-        // Calculating the number of rows and columns.
+        // Define available fonts for random selection
+        java.util.List<String> availableFonts =
+                java.util.Arrays.asList(
+                        "Helvetica",
+                        "Times-Roman",
+                        "Courier",
+                        "Helvetica-Bold",
+                        "Times-Bold",
+                        "Courier-Bold");
 
-        int watermarkRows = (int) (pageHeight / newWatermarkHeight + 1);
-        int watermarkCols = (int) (pageWidth / newWatermarkWidth + 1);
+        // Render each watermark instance
+        for (float[] pos : positions) {
+            float x = pos[0];
+            float y = pos[1];
 
-        // Add the text watermark
-        for (int i = 0; i <= watermarkRows; i++) {
-            for (int j = 0; j <= watermarkCols; j++) {
+            // Determine the font for this watermark instance
+            PDFont wmFont;
+            if (randomFont) {
+                try {
+                    String selectedFontName = randomizer.selectRandomFont(availableFonts);
+                    wmFont = new PDType1Font(Standard14Fonts.getMappedFontName(selectedFontName));
+                } catch (Exception e) {
+                    log.warn("Failed to load random font, using base font instead", e);
+                    wmFont = font; // Fall back to the base font loaded earlier
+                }
+            } else {
+                wmFont = font; // Use the base font loaded from alphabet selection
+            }
+
+            // Determine rotation for this watermark
+            float wmRotation = randomizer.generateRandomRotation(rotationMin, rotationMax);
+
+            // Determine font size for this watermark
+            float wmFontSize = randomizer.generateRandomFontSize(fontSizeMin, fontSizeMax);
+
+            // Determine color for this watermark
+            Color wmColor;
+            if (randomColor) {
+                wmColor = randomizer.generateRandomColor(true);
+            } else {
+                try {
+                    String colorStr = colorString;
+                    if (!colorStr.startsWith("#")) {
+                        colorStr = "#" + colorStr;
+                    }
+                    wmColor = Color.decode(colorStr);
+                } catch (Exception e) {
+                    wmColor = Color.LIGHT_GRAY;
+                }
+            }
+
+            // Determine and apply shading style
+            String wmShading =
+                    shadingRandom
+                            ? randomizer.selectRandomShading(
+                                    java.util.Arrays.asList("none", "light", "dark"))
+                            : (shading != null ? shading : "none");
+
+            // Apply shading by adjusting color intensity
+            wmColor = applyShadingToColor(wmColor, wmShading);
+
+            // Render text with per-letter variations if enabled
+            if (perLetterFont || perLetterColor || perLetterSize || perLetterOrientation) {
+                renderTextWithPerLetterVariations(
+                        contentStream,
+                        document,
+                        textLines,
+                        wmFont,
+                        wmFontSize,
+                        wmColor,
+                        wmRotation,
+                        x,
+                        y,
+                        perLetterFont,
+                        perLetterColor,
+                        perLetterSize,
+                        perLetterOrientation,
+                        perLetterSizeMin,
+                        perLetterSizeMax,
+                        perLetterFontCount,
+                        perLetterColorCount,
+                        perLetterOrientationMin,
+                        perLetterOrientationMax,
+                        randomizer);
+            } else {
+                // Standard rendering without per-letter variations
+                contentStream.setFont(wmFont, wmFontSize);
+                contentStream.setNonStrokingColor(wmColor);
                 contentStream.beginText();
                 contentStream.setTextMatrix(
-                        Matrix.getRotateInstance(
-                                (float) Math.toRadians(rotation),
-                                j * newWatermarkWidth,
-                                i * newWatermarkHeight));
+                        Matrix.getRotateInstance((float) Math.toRadians(wmRotation), x, y));
 
-                for (int k = 0; k < textLines.length; ++k) {
-                    contentStream.showText(textLines[k]);
-                    contentStream.newLineAtOffset(0, -fontSize);
+                for (String textLine : textLines) {
+                    contentStream.showText(textLine);
+                    contentStream.newLineAtOffset(0, -wmFontSize);
                 }
 
                 contentStream.endText();
@@ -255,25 +525,138 @@ public class WatermarkController {
         }
     }
 
+    private void renderTextWithPerLetterVariations(
+            PDPageContentStream contentStream,
+            PDDocument document,
+            String[] textLines,
+            PDFont baseFont,
+            float baseFontSize,
+            Color baseColor,
+            float baseRotation,
+            float startX,
+            float startY,
+            boolean perLetterFont,
+            boolean perLetterColor,
+            boolean perLetterSize,
+            boolean perLetterOrientation,
+            float fontSizeMin,
+            float fontSizeMax,
+            int perLetterFontCount,
+            int perLetterColorCount,
+            float perLetterOrientationMin,
+            float perLetterOrientationMax,
+            WatermarkRandomizer randomizer)
+            throws IOException {
+
+        float currentX = startX;
+        float currentY = startY;
+
+        for (String line : textLines) {
+            currentX = startX;
+            for (int i = 0; i < line.length(); i++) {
+                char c = line.charAt(i);
+                String charStr = String.valueOf(c);
+
+                // Determine per-letter attributes
+                float letterSize =
+                        perLetterSize
+                                ? randomizer.generateRandomFontSize(fontSizeMin, fontSizeMax)
+                                : baseFontSize;
+
+                Color letterColor =
+                        perLetterColor
+                                ? randomizer.generateRandomColorFromPalette(perLetterColorCount)
+                                : baseColor;
+
+                float letterRotation =
+                        perLetterOrientation
+                                ? randomizer.generatePerLetterRotationInRange(
+                                        perLetterOrientationMin, perLetterOrientationMax)
+                                : baseRotation;
+
+                // Determine per-letter font
+                PDFont letterFont = baseFont;
+                if (perLetterFont) {
+                    try {
+                        String randomFontName =
+                                randomizer.selectRandomFontFromCount(perLetterFontCount);
+                        letterFont =
+                                new PDType1Font(Standard14Fonts.getMappedFontName(randomFontName));
+                    } catch (Exception e) {
+                        // Fall back to base font if font loading fails
+                        log.warn("Failed to load random font, using base font instead", e);
+                    }
+                }
+
+                // Set font and color
+                contentStream.setFont(letterFont, letterSize);
+                contentStream.setNonStrokingColor(letterColor);
+
+                // Render the character
+                contentStream.beginText();
+                contentStream.setTextMatrix(
+                        Matrix.getRotateInstance(
+                                (float) Math.toRadians(letterRotation), currentX, currentY));
+                contentStream.showText(charStr);
+                contentStream.endText();
+
+                // Advance position
+                float charWidth = letterFont.getStringWidth(charStr) * letterSize / 1000;
+                currentX += charWidth;
+            }
+            currentY -= baseFontSize;
+        }
+    }
+
     private void addImageWatermark(
             PDPageContentStream contentStream,
-            MultipartFile watermarkImage,
             PDDocument document,
             PDPage page,
-            float rotation,
-            int widthSpacer,
-            int heightSpacer,
-            float fontSize)
+            AddWatermarkRequest request,
+            WatermarkRandomizer randomizer)
             throws IOException {
+
+        MultipartFile watermarkImage = request.getWatermarkImage();
+        float rotation = request.getRotation();
+        int widthSpacer = request.getWidthSpacer();
+        int heightSpacer = request.getHeightSpacer();
+        float fontSize = request.getFontSize();
+
+        // Extract new fields with defaults
+        int count = (request.getCount() != null) ? request.getCount() : 1;
+        boolean randomPosition = Boolean.TRUE.equals(request.getRandomPosition());
+        boolean randomMirroring = Boolean.TRUE.equals(request.getRandomMirroring());
+        float mirroringProbability =
+                (request.getMirroringProbability() != null)
+                        ? request.getMirroringProbability()
+                        : 0.5f;
+        float imageScale = (request.getImageScale() != null) ? request.getImageScale() : 1.0f;
+        float rotationMin =
+                (request.getRotationMin() != null) ? request.getRotationMin() : rotation;
+        float rotationMax =
+                (request.getRotationMax() != null) ? request.getRotationMax() : rotation;
+        float margin = (request.getMargin() != null) ? request.getMargin() : 10f;
+
+        // Parse bounds if provided
+        Float boundsX = null, boundsY = null, boundsWidth = null, boundsHeight = null;
+        if (request.getBounds() != null && !request.getBounds().isEmpty()) {
+            String[] boundsParts = request.getBounds().split(",");
+            if (boundsParts.length == 4) {
+                boundsX = Float.parseFloat(boundsParts[0].trim());
+                boundsY = Float.parseFloat(boundsParts[1].trim());
+                boundsWidth = Float.parseFloat(boundsParts[2].trim());
+                boundsHeight = Float.parseFloat(boundsParts[3].trim());
+            }
+        }
 
         // Load the watermark image
         BufferedImage image = ImageIO.read(watermarkImage.getInputStream());
 
-        // Compute width based on original aspect ratio
+        // Compute width based on an original aspect ratio
         float aspectRatio = (float) image.getWidth() / (float) image.getHeight();
 
-        // Desired physical height (in PDF points)
-        float desiredPhysicalHeight = fontSize;
+        // Desired physical height (in PDF points) with scale applied
+        float desiredPhysicalHeight = fontSize * imageScale;
 
         // Desired physical width based on the aspect ratio
         float desiredPhysicalWidth = desiredPhysicalHeight * aspectRatio;
@@ -281,35 +664,108 @@ public class WatermarkController {
         // Convert the BufferedImage to PDImageXObject
         PDImageXObject xobject = LosslessFactory.createFromImage(document, image);
 
-        // Calculate the number of rows and columns for watermarks
+        // Get page dimensions
         float pageWidth = page.getMediaBox().getWidth();
         float pageHeight = page.getMediaBox().getHeight();
-        int watermarkRows =
-                (int) ((pageHeight + heightSpacer) / (desiredPhysicalHeight + heightSpacer));
-        int watermarkCols =
-                (int) ((pageWidth + widthSpacer) / (desiredPhysicalWidth + widthSpacer));
 
-        for (int i = 0; i < watermarkRows; i++) {
-            for (int j = 0; j < watermarkCols; j++) {
-                float x = j * (desiredPhysicalWidth + widthSpacer);
-                float y = i * (desiredPhysicalHeight + heightSpacer);
-
-                // Save the graphics state
-                contentStream.saveGraphicsState();
-
-                // Create rotation matrix and rotate
-                contentStream.transform(
-                        Matrix.getTranslateInstance(
-                                x + desiredPhysicalWidth / 2, y + desiredPhysicalHeight / 2));
-                contentStream.transform(Matrix.getRotateInstance(Math.toRadians(rotation), 0, 0));
-                contentStream.transform(
-                        Matrix.getTranslateInstance(
-                                -desiredPhysicalWidth / 2, -desiredPhysicalHeight / 2));
-
-                // Draw the image and restore the graphics state
-                contentStream.drawImage(xobject, 0, 0, desiredPhysicalWidth, desiredPhysicalHeight);
-                contentStream.restoreGraphicsState();
+        // Determine positions based on a randomPosition flag
+        java.util.List<float[]> positions;
+        if (randomPosition) {
+            // Generate random positions
+            positions = new java.util.ArrayList<>();
+            for (int i = 0; i < count; i++) {
+                float[] pos =
+                        randomizer.generateRandomPosition(
+                                pageWidth,
+                                pageHeight,
+                                desiredPhysicalWidth,
+                                desiredPhysicalHeight,
+                                margin,
+                                boundsX,
+                                boundsY,
+                                boundsWidth,
+                                boundsHeight);
+                positions.add(pos);
             }
+        } else {
+            // Generate grid positions (backward compatible)
+            positions =
+                    randomizer.generateGridPositions(
+                            pageWidth,
+                            pageHeight,
+                            desiredPhysicalWidth + widthSpacer,
+                            desiredPhysicalHeight + heightSpacer,
+                            widthSpacer,
+                            heightSpacer,
+                            count);
         }
+
+        // Render each watermark instance
+        for (float[] pos : positions) {
+            float x = pos[0];
+            float y = pos[1];
+
+            // Determine rotation for this watermark
+            float wmRotation = randomizer.generateRandomRotation(rotationMin, rotationMax);
+
+            // Determine if this watermark should be mirrored
+            boolean shouldMirror = randomMirroring && randomizer.shouldMirror(mirroringProbability);
+
+            // Save the graphics state
+            contentStream.saveGraphicsState();
+
+            // Translate to center of image position
+            contentStream.transform(
+                    Matrix.getTranslateInstance(
+                            x + desiredPhysicalWidth / 2, y + desiredPhysicalHeight / 2));
+
+            // Apply rotation
+            contentStream.transform(Matrix.getRotateInstance(Math.toRadians(wmRotation), 0, 0));
+
+            // Apply mirroring if needed (horizontal flip)
+            if (shouldMirror) {
+                contentStream.transform(Matrix.getScaleInstance(-1, 1));
+            }
+
+            // Translate back to draw from corner
+            contentStream.transform(
+                    Matrix.getTranslateInstance(
+                            -desiredPhysicalWidth / 2, -desiredPhysicalHeight / 2));
+
+            // Draw the image and restore the graphics state
+            contentStream.drawImage(xobject, 0, 0, desiredPhysicalWidth, desiredPhysicalHeight);
+            contentStream.restoreGraphicsState();
+        }
+    }
+
+    /**
+     * Applies shading to a color by adjusting its intensity.
+     *
+     * @param color Original color
+     * @param shading Shading style: "none", "light", or "dark"
+     * @return Color with shading applied
+     */
+    private Color applyShadingToColor(Color color, String shading) {
+        if (shading == null || "none".equalsIgnoreCase(shading)) {
+            return color;
+        }
+
+        int r = color.getRed();
+        int g = color.getGreen();
+        int b = color.getBlue();
+
+        if ("light".equalsIgnoreCase(shading)) {
+            // Lighten the color by moving towards white
+            r = r + (255 - r) / 2;
+            g = g + (255 - g) / 2;
+            b = b + (255 - b) / 2;
+        } else if ("dark".equalsIgnoreCase(shading)) {
+            // Darken the color by moving towards black
+            r = r / 2;
+            g = g / 2;
+            b = b / 2;
+        }
+
+        return new Color(r, g, b);
     }
 }

@@ -30,6 +30,7 @@
                     <option value="image" th:text="#{watermark.type.2}"></option>
                   </select>
                 </div>
+
                 <div id="alphabetGroup" class="mb-3">
                   <label for="fontSize" th:text="#{alphabet} + ':'"></label>
                   <select class="form-control" name="alphabet" id="alphabet-select">
@@ -51,10 +52,11 @@
                   <input type="file" id="watermarkImage" name="watermarkImage" class="form-control-file" accept="image/*">
                 </div>
 
-                <div class="mb-3">
-                  <label for="fontSize" th:text="#{watermark.selectText.3}"></label>
-                  <input type="text" id="fontSize" name="fontSize" class="form-control" value="30">
+                <div id="fontSizeFixedGroup" class="mb-3">
+                  <label for="fontSize" th:text="#{watermark.selectText.3}">Font Size</label>
+                  <input type="number" id="fontSize" name="fontSize" class="form-control" value="30" min="1" max="500" step="0.1">
                 </div>
+
                 <div class="mb-3">
                   <label for="opacity" th:text="#{watermark.selectText.7}"></label>
                   <input type="text" id="opacity" name="opacityText" class="form-control" value="50" onblur="updateOpacityValue()">
@@ -93,38 +95,242 @@
                   appendPercentageSymbol();
                 </script>
 
-                        <div class="mb-3">
-                            <label for="rotation" th:text="#{watermark.selectText.4}"></label>
-                            <input type="text" id="rotation" name="rotation" class="form-control" value="45">
-                        </div>
-                        <div class="mb-3">
-                            <label for="widthSpacer" th:text="#{watermark.selectText.5}"></label>
-                            <input type="text" id="widthSpacer" name="widthSpacer" class="form-control" value="50">
-                        </div>
-                        <div class="mb-3">
-                            <label for="heightSpacer" th:text="#{watermark.selectText.6}"></label>
-                            <input type="text" id="heightSpacer" name="heightSpacer" class="form-control" value="50">
-                        </div>
-                        <div class="mb-3">
-                            <label for="customColor" class="form-label" th:text="#{watermark.customColor}">Custom
-                                Color</label>
-                            <div class="form-control form-control-color" style="background-color: #d3d3d3;">
-                                <input type="color" id="customColor" name="customColor" value="#d3d3d3">
-                            </div>
-                            <script>
-                                let colorInput = document.getElementById("customColor");
-                                if (colorInput) {
-                                  let colorInputContainer = colorInput.parentElement;
-                                  if (colorInputContainer) {
-                                    colorInput.onchange = function() {
-                                      colorInputContainer.style.backgroundColor = colorInput.value;
-                                    }
-                                    colorInputContainer.style.backgroundColor = colorInput.value;
-                                  }
-                                }
+                <div id="rotationFixedGroup" class="mb-3">
+                  <label for="rotation" th:text="#{watermark.selectText.4}">Rotation Angle (degrees)</label>
+                  <input type="number" id="rotation" name="rotation" class="form-control" value="45" min="-360" max="360" step="0.1">
+                </div>
 
-                            </script>
+                <div class="mb-3">
+                  <label for="widthSpacer" th:text="#{watermark.selectText.5}"></label>
+                  <input type="text" id="widthSpacer" name="widthSpacer" class="form-control" value="50">
+                </div>
+                <div class="mb-3">
+                  <label for="heightSpacer" th:text="#{watermark.selectText.6}"></label>
+                  <input type="text" id="heightSpacer" name="heightSpacer" class="form-control" value="50">
+                </div>
+
+                <div id="customColorGroup" class="mb-3">
+                  <label for="customColor" class="form-label" th:text="#{watermark.customColor}">Custom Color</label>
+                  <div class="form-control form-control-color" style="background-color: #d3d3d3;">
+                    <input type="color" id="customColor" name="customColor" value="#d3d3d3">
+                  </div>
+                  <script>
+                    let colorInput = document.getElementById("customColor");
+                    if (colorInput) {
+                      let colorInputContainer = colorInput.parentElement;
+                      if (colorInputContainer) {
+                        colorInput.onchange = function() {
+                          colorInputContainer.style.backgroundColor = colorInput.value;
+                        }
+                        colorInputContainer.style.backgroundColor = colorInput.value;
+                      }
+                    }
+                  </script>
+                </div>
+
+                <!-- Advanced Options -->
+                <div class="mb-3">
+                  <button type="button" class="btn btn-link" data-bs-toggle="collapse" data-bs-target="#advancedOptions">
+                    Advanced Options
+                  </button>
+                  <div id="advancedOptions" class="collapse">
+                    <!-- Watermark Count -->
+                    <div class="mb-3">
+                      <label for="count">Number of Watermarks</label>
+                      <input type="number" id="count" name="count" class="form-control" value="1" min="1" max="1000">
+                      <small class="form-text text-muted">Number of watermark instances per page (1-1000)</small>
+                    </div>
+
+                    <!-- Positioning Mode -->
+                    <div class="mb-3">
+                      <div class="form-check">
+                        <input type="checkbox" id="randomPosition" name="randomPosition" class="form-check-input">
+                        <label for="randomPosition" class="form-check-label">Random Positioning</label>
+                      </div>
+                      <small class="form-text text-muted">Enable random placement instead of grid layout</small>
+                    </div>
+
+                    <div id="marginGroup" class="mb-3">
+                      <label for="margin">Margin from Edges (points)</label>
+                      <input type="number" id="margin" name="margin" class="form-control" value="10" min="0" max="500" step="0.1">
+                      <small class="form-text text-muted">Minimum distance from page edges (0-500)</small>
+                    </div>
+
+                    <div id="boundsGroup" class="mb-3">
+                      <label for="bounds">Bounding Box (optional)</label>
+                      <input type="text" id="bounds" name="bounds" class="form-control" placeholder="x,y,width,height">
+                      <small class="form-text text-muted">Constrain placement to specific area (format: x,y,width,height)</small>
+                    </div>
+
+                    <!-- Rotation Controls -->
+                    <div class="mb-3">
+                      <label>Rotation Mode</label>
+                      <select class="form-control" id="rotationMode" onchange="toggleRotationMode()">
+                        <option value="fixed">Fixed Angle</option>
+                        <option value="range">Random Range</option>
+                      </select>
+                    </div>
+
+                    <div id="rotationRangeGroup" class="mb-3" style="display: none;">
+                      <label for="rotationMin">Rotation Min (degrees)</label>
+                      <input type="number" id="rotationMin" name="rotationMin" class="form-control" value="0" min="-360" max="360" step="0.1">
+                      <label for="rotationMax">Rotation Max (degrees)</label>
+                      <input type="number" id="rotationMax" name="rotationMax" class="form-control" value="45" min="-360" max="360" step="0.1">
+                      <small class="form-text text-muted">Random angle between min and max</small>
+                      <div id="rotationRangeError" class="invalid-feedback" style="display: none;">
+                        Minimum must be less than or equal to maximum
+                      </div>
+                    </div>
+
+                    <!-- Mirroring Controls -->
+                    <div class="mb-3">
+                      <div class="form-check">
+                        <input type="checkbox" id="randomMirroring" name="randomMirroring" class="form-check-input" onchange="toggleMirroringProbability()">
+                        <label for="randomMirroring" class="form-check-label">Random Mirroring</label>
+                        <small class="form-text text-muted">For images only</small>
+                      </div>
+                    </div>
+
+                    <div id="mirroringProbabilityGroup" class="mb-3" style="display: none;">
+                      <label for="mirroringProbability">Mirroring Probability</label>
+                      <input type="number" id="mirroringProbability" name="mirroringProbability" class="form-control" value="0.5" min="0" max="1" step="0.1">
+                      <small class="form-text text-muted">Probability of mirroring (0.0-1.0)</small>
+                    </div>
+
+                    <!-- Font Controls (for text watermarks) -->
+                    <div id="fontGroup" class="mb-3">
+                      <div class="form-check">
+                        <input type="checkbox" id="randomFont" name="randomFont" class="form-check-input" onchange="toggleFontMode()">
+                        <label for="randomFont" class="form-check-label">Random Font</label>
+                      </div>
+                      <small class="form-text text-muted">Enable random font selection for text watermarks</small>
+                    </div>
+
+                    <div id="fontNameGroup" class="mb-3">
+                      <label for="fontName">Font Name</label>
+                      <input type="text" id="fontName" name="fontName" class="form-control" placeholder="e.g., Helvetica, Times-Roman">
+                      <small class="form-text text-muted">Leave empty for default font</small>
+                    </div>
+
+                    <div class="mb-3">
+                      <label>Font Size Mode</label>
+                      <select class="form-control" id="fontSizeMode" onchange="toggleFontSizeMode()">
+                        <option value="fixed">Fixed Size</option>
+                        <option value="range">Random Range</option>
+                      </select>
+                    </div>
+
+                    <div id="fontSizeRangeGroup" class="mb-3" style="display: none;">
+                      <label for="fontSizeMin">Font Size Min</label>
+                      <input type="number" id="fontSizeMin" name="fontSizeMin" class="form-control" value="10" min="1" max="500" step="0.1">
+                      <label for="fontSizeMax">Font Size Max</label>
+                      <input type="number" id="fontSizeMax" name="fontSizeMax" class="form-control" value="100" min="1" max="500" step="0.1">
+                      <small class="form-text text-muted">Random size between min and max</small>
+                      <div id="fontSizeRangeError" class="invalid-feedback" style="display: none;">
+                        Minimum must be less than or equal to maximum
+                      </div>
+                    </div>
+
+                    <!-- Color Controls -->
+                    <div class="mb-3">
+                      <div class="form-check">
+                        <input type="checkbox" id="randomColor" name="randomColor" class="form-check-input" onchange="toggleColorMode()">
+                        <label for="randomColor" class="form-check-label">Random Color</label>
+                      </div>
+                    </div>
+
+                    <!-- Per-Letter Variation Controls (for text watermarks) -->
+                    <div id="perLetterGroup" class="mb-3">
+                      <label>Per-Letter Variations</label>
+                      
+                      <!-- Per-Letter Font -->
+                      <div class="form-check">
+                        <input type="checkbox" id="perLetterFont" name="perLetterFont" class="form-check-input" onchange="togglePerLetterFontConfig()">
+                        <label for="perLetterFont" class="form-check-label">Vary Font per Letter</label>
+                      </div>
+                      <div id="perLetterFontConfig" class="mb-2 ms-4" style="display: none;">
+                        <label for="perLetterFontCount">Number of Fonts</label>
+                        <input type="number" id="perLetterFontCount" name="perLetterFontCount" class="form-control" value="2" min="1" max="20">
+                        <small class="form-text text-muted">Number of fonts to randomly select from (1-20, default: 2)</small>
+                      </div>
+                      
+                      <!-- Per-Letter Color -->
+                      <div class="form-check">
+                        <input type="checkbox" id="perLetterColor" name="perLetterColor" class="form-check-input" onchange="togglePerLetterColorConfig()">
+                        <label for="perLetterColor" class="form-check-label">Vary Color per Letter</label>
+                      </div>
+                      <div id="perLetterColorConfig" class="mb-2 ms-4" style="display: none;">
+                        <label for="perLetterColorCount">Number of Colors</label>
+                        <input type="number" id="perLetterColorCount" name="perLetterColorCount" class="form-control" value="4" min="1" max="12">
+                        <small class="form-text text-muted">Number of colors to randomly select from (1-12, default: 4)</small>
+                      </div>
+                      
+                      <!-- Per-Letter Size -->
+                      <div class="form-check">
+                        <input type="checkbox" id="perLetterSize" name="perLetterSize" class="form-check-input" onchange="togglePerLetterSizeConfig()">
+                        <label for="perLetterSize" class="form-check-label">Vary Size per Letter</label>
+                      </div>
+                      <div id="perLetterSizeConfig" class="mb-2 ms-4" style="display: none;">
+                        <label for="perLetterSizeMin">Size Min</label>
+                        <input type="number" id="perLetterSizeMin" name="perLetterSizeMin" class="form-control" value="10" min="1" max="500" step="0.1">
+                        <label for="perLetterSizeMax">Size Max</label>
+                        <input type="number" id="perLetterSizeMax" name="perLetterSizeMax" class="form-control" value="100" min="1" max="500" step="0.1">
+                        <small class="form-text text-muted">Font size range (1-500, default: 10-100)</small>
+                        <div id="perLetterSizeError" class="invalid-feedback" style="display: none;">
+                          Minimum must be less than or equal to maximum
                         </div>
+                      </div>
+                      
+                      <!-- Per-Letter Orientation -->
+                      <div class="form-check">
+                        <input type="checkbox" id="perLetterOrientation" name="perLetterOrientation" class="form-check-input" onchange="togglePerLetterOrientationConfig()">
+                        <label for="perLetterOrientation" class="form-check-label">Vary Orientation per Letter</label>
+                      </div>
+                      <div id="perLetterOrientationConfig" class="mb-2 ms-4" style="display: none;">
+                        <label for="perLetterOrientationMin">Angle Min (degrees)</label>
+                        <input type="number" id="perLetterOrientationMin" name="perLetterOrientationMin" class="form-control" value="0" min="-360" max="360" step="1">
+                        <label for="perLetterOrientationMax">Angle Max (degrees)</label>
+                        <input type="number" id="perLetterOrientationMax" name="perLetterOrientationMax" class="form-control" value="360" min="-360" max="360" step="1">
+                        <small class="form-text text-muted">Rotation angle range (-360 to 360, default: 0-360)</small>
+                        <div id="perLetterOrientationError" class="invalid-feedback" style="display: none;">
+                          Minimum must be less than or equal to maximum
+                        </div>
+                      </div>
+                      
+                      <small class="form-text text-muted">Apply variations at the letter level for dynamic appearance</small>
+                    </div>
+
+                    <!-- Shading Controls (for text watermarks) -->
+                    <div id="shadingGroup" class="mb-3">
+                      <div class="form-check">
+                        <input type="checkbox" id="shadingRandom" name="shadingRandom" class="form-check-input" onchange="toggleShadingMode()">
+                        <label for="shadingRandom" class="form-check-label">Random Shading</label>
+                      </div>
+                    </div>
+
+                    <div id="shadingFixedGroup" class="mb-3">
+                      <label for="shading">Shading Style</label>
+                      <select class="form-control" id="shading" name="shading">
+                        <option value="none">None</option>
+                        <option value="light">Light</option>
+                        <option value="dark">Dark</option>
+                      </select>
+                    </div>
+
+                    <!-- Image Scale Control (for image watermarks) -->
+                    <div id="imageScaleGroup" class="mb-3" style="display: none;">
+                      <label for="imageScale">Image Scale Factor</label>
+                      <input type="number" id="imageScale" name="imageScale" class="form-control" value="1.0" min="0.1" max="10" step="0.1">
+                      <small class="form-text text-muted">Scale factor (1.0 = original size, 0.1-10.0)</small>
+                    </div>
+
+                    <div class="mb-3">
+                      <label for="seed">Random Seed (optional)</label>
+                      <input type="number" id="seed" name="seed" class="form-control" placeholder="Leave empty for random">
+                      <small class="form-text text-muted">For deterministic randomness (testing)</small>
+                    </div>
+                  </div>
+                </div>
 
 
                         <div class="form-check mb-3">
@@ -141,7 +347,7 @@
                   const watermarkType = document.getElementById('watermarkType').value;
                   const watermarkTextGroup = document.getElementById('watermarkTextGroup');
                   const watermarkImageGroup = document.getElementById('watermarkImageGroup');
-                  const alphabetGroup = document.getElementById('alphabetGroup'); // This is the new addition
+                  const alphabetGroup = document.getElementById('alphabetGroup');
                   const watermarkText = document.getElementById('watermarkText');
                   const watermarkImage = document.getElementById('watermarkImage');
 
@@ -154,6 +360,17 @@
                     watermarkImageGroup.style.display = 'none';
                     watermarkImage.required = false;
                     alphabetGroup.style.display = 'block';
+                    
+                    // Show text-specific controls
+                    const textSpecific = ['fontGroup', 'fontNameGroup', 'perLetterGroup', 'shadingGroup', 'shadingFixedGroup'];
+                    textSpecific.forEach(id => {
+                      const elem = document.getElementById(id);
+                      if (elem) elem.style.display = 'block';
+                    });
+                    
+                    // Hide image-specific controls
+                    const imageScaleGroup = document.getElementById('imageScaleGroup');
+                    if (imageScaleGroup) imageScaleGroup.style.display = 'none';
                   } else if (watermarkType === 'image') {
                     if (watermarkImage.hasAttribute('required')) {
                       watermarkImage.removeAttribute('required');
@@ -163,8 +380,266 @@
                     watermarkImageGroup.style.display = 'block';
                     watermarkImage.required = true;
                     alphabetGroup.style.display = 'none';
+                    
+                    // Hide text-specific controls
+                    const textSpecific = ['fontGroup', 'fontNameGroup', 'perLetterGroup', 'shadingGroup', 'shadingFixedGroup'];
+                    textSpecific.forEach(id => {
+                      const elem = document.getElementById(id);
+                      if (elem) elem.style.display = 'none';
+                    });
+                    
+                    // Show image-specific controls
+                    const imageScaleGroup = document.getElementById('imageScaleGroup');
+                    if (imageScaleGroup) imageScaleGroup.style.display = 'block';
                   }
                 }
+
+                function toggleRotationMode() {
+                  const mode = document.getElementById('rotationMode').value;
+                  const rotationFixed = document.getElementById('rotation');
+                  const rotationMin = document.getElementById('rotationMin');
+                  const rotationMax = document.getElementById('rotationMax');
+                  
+                  if (mode === 'fixed') {
+                    document.getElementById('rotationFixedGroup').style.display = 'block';
+                    document.getElementById('rotationRangeGroup').style.display = 'none';
+                    if (rotationFixed) rotationFixed.disabled = false;
+                    if (rotationMin) rotationMin.disabled = true;
+                    if (rotationMax) rotationMax.disabled = true;
+                  } else {
+                    document.getElementById('rotationFixedGroup').style.display = 'none';
+                    document.getElementById('rotationRangeGroup').style.display = 'block';
+                    if (rotationFixed) rotationFixed.disabled = true;
+                    if (rotationMin) rotationMin.disabled = false;
+                    if (rotationMax) rotationMax.disabled = false;
+                  }
+                }
+
+                function toggleMirroringProbability() {
+                  const enabled = document.getElementById('randomMirroring').checked;
+                  document.getElementById('mirroringProbabilityGroup').style.display = 
+                    enabled ? 'block' : 'none';
+                }
+
+                function toggleFontMode() {
+                  const randomFont = document.getElementById('randomFont').checked;
+                  document.getElementById('fontNameGroup').style.display = 
+                    randomFont ? 'none' : 'block';
+                }
+
+                function toggleFontSizeMode() {
+                  const mode = document.getElementById('fontSizeMode').value;
+                  const fontSizeFixed = document.getElementById('fontSize');
+                  const fontSizeMin = document.getElementById('fontSizeMin');
+                  const fontSizeMax = document.getElementById('fontSizeMax');
+                  
+                  if (mode === 'fixed') {
+                    document.getElementById('fontSizeFixedGroup').style.display = 'block';
+                    document.getElementById('fontSizeRangeGroup').style.display = 'none';
+                    if (fontSizeFixed) fontSizeFixed.disabled = false;
+                    if (fontSizeMin) fontSizeMin.disabled = true;
+                    if (fontSizeMax) fontSizeMax.disabled = true;
+                  } else {
+                    document.getElementById('fontSizeFixedGroup').style.display = 'none';
+                    document.getElementById('fontSizeRangeGroup').style.display = 'block';
+                    if (fontSizeFixed) fontSizeFixed.disabled = true;
+                    if (fontSizeMin) fontSizeMin.disabled = false;
+                    if (fontSizeMax) fontSizeMax.disabled = false;
+                  }
+                }
+
+                function toggleColorMode() {
+                  const random = document.getElementById('randomColor').checked;
+                  document.getElementById('customColorGroup').style.display = 
+                    random ? 'none' : 'block';
+                }
+
+                function toggleShadingMode() {
+                  const random = document.getElementById('shadingRandom').checked;
+                  document.getElementById('shadingFixedGroup').style.display = 
+                    random ? 'none' : 'block';
+                }
+
+                function togglePerLetterFontConfig() {
+                  const checkbox = document.getElementById('perLetterFont');
+                  const config = document.getElementById('perLetterFontConfig');
+                  config.style.display = checkbox.checked ? 'block' : 'none';
+                }
+
+                function togglePerLetterColorConfig() {
+                  const checkbox = document.getElementById('perLetterColor');
+                  const config = document.getElementById('perLetterColorConfig');
+                  config.style.display = checkbox.checked ? 'block' : 'none';
+                }
+
+                function togglePerLetterSizeConfig() {
+                  const checkbox = document.getElementById('perLetterSize');
+                  const config = document.getElementById('perLetterSizeConfig');
+                  config.style.display = checkbox.checked ? 'block' : 'none';
+                }
+
+                function togglePerLetterOrientationConfig() {
+                  const checkbox = document.getElementById('perLetterOrientation');
+                  const config = document.getElementById('perLetterOrientationConfig');
+                  config.style.display = checkbox.checked ? 'block' : 'none';
+                }
+
+                // Add range validation
+                function addRangeValidation(minId, maxId, errorMsgId) {
+                  const minInput = document.getElementById(minId);
+                  const maxInput = document.getElementById(maxId);
+                  const errorMsg = document.getElementById(errorMsgId);
+                  
+                  if (!minInput || !maxInput) return;
+                  
+                  function validate() {
+                    const min = parseFloat(minInput.value);
+                    const max = parseFloat(maxInput.value);
+                    
+                    if (min > max) {
+                      minInput.classList.add('is-invalid');
+                      maxInput.classList.add('is-invalid');
+                      if (errorMsg) errorMsg.style.display = 'block';
+                    } else {
+                      minInput.classList.remove('is-invalid');
+                      maxInput.classList.remove('is-invalid');
+                      if (errorMsg) errorMsg.style.display = 'none';
+                    }
+                  }
+                  
+                  minInput.addEventListener('input', validate);
+                  maxInput.addEventListener('input', validate);
+                }
+
+                // Apply range validations on page load
+                document.addEventListener('DOMContentLoaded', function() {
+                  addRangeValidation('rotationMin', 'rotationMax', 'rotationRangeError');
+                  addRangeValidation('fontSizeMin', 'fontSizeMax', 'fontSizeRangeError');
+                  addRangeValidation('perLetterSizeMin', 'perLetterSizeMax', 'perLetterSizeError');
+                  addRangeValidation('perLetterOrientationMin', 'perLetterOrientationMax', 'perLetterOrientationError');
+                  
+                  // Initialize toggle states to disable hidden inputs
+                  toggleRotationMode();
+                  toggleFontSizeMode();
+                });
+
+                // Form submission validation
+                document.querySelector('form').addEventListener('submit', function(e) {
+                  const errors = [];
+                  
+                  // Validate count
+                  const count = parseInt(document.getElementById('count').value);
+                  if (count < 1 || count > 1000) {
+                    errors.push('Count must be between 1 and 1000');
+                  }
+                  
+                  // Validate rotation range
+                  const rotationMode = document.getElementById('rotationMode').value;
+                  if (rotationMode === 'range') {
+                    const rotMin = parseFloat(document.getElementById('rotationMin').value);
+                    const rotMax = parseFloat(document.getElementById('rotationMax').value);
+                    if (rotMin > rotMax) {
+                      errors.push('Rotation minimum must be less than or equal to maximum');
+                    }
+                  }
+                  
+                  // Validate font size range
+                  const fontSizeMode = document.getElementById('fontSizeMode').value;
+                  if (fontSizeMode === 'range') {
+                    const sizeMin = parseFloat(document.getElementById('fontSizeMin').value);
+                    const sizeMax = parseFloat(document.getElementById('fontSizeMax').value);
+                    if (sizeMin > sizeMax) {
+                      errors.push('Font size minimum must be less than or equal to maximum');
+                    }
+                    if (sizeMin < 1 || sizeMax > 500) {
+                      errors.push('Font size must be between 1 and 500');
+                    }
+                  }
+                  
+                  // Validate margin
+                  const margin = parseFloat(document.getElementById('margin').value);
+                  if (margin < 0 || margin > 500) {
+                    errors.push('Margin must be between 0 and 500');
+                  }
+                  
+                  // Validate bounds format (if provided)
+                  const bounds = document.getElementById('bounds').value.trim();
+                  if (bounds) {
+                    const boundsPattern = /^(\d+(\.\d+)?),\s*(\d+(\.\d+)?),\s*(\d+(\.\d+)?),\s*(\d+(\.\d+)?)$/;
+                    if (!boundsPattern.test(bounds)) {
+                      errors.push('Bounds must be in format: x,y,width,height');
+                    }
+                  }
+                  
+                  // Validate mirroring probability
+                  if (document.getElementById('randomMirroring').checked) {
+                    const prob = parseFloat(document.getElementById('mirroringProbability').value);
+                    if (prob < 0 || prob > 1) {
+                      errors.push('Mirroring probability must be between 0.0 and 1.0');
+                    }
+                  }
+                  
+                  // Validate image scale
+                  const watermarkType = document.getElementById('watermarkType').value;
+                  if (watermarkType === 'image') {
+                    const scale = parseFloat(document.getElementById('imageScale').value);
+                    if (scale < 0.1 || scale > 10) {
+                      errors.push('Image scale must be between 0.1 and 10.0');
+                    }
+                  }
+                  
+                  // Validate opacity
+                  const opacity = parseFloat(document.getElementById('opacityReal').value);
+                  if (opacity < 0 || opacity > 1) {
+                    errors.push('Opacity must be between 0.0 and 1.0');
+                  }
+                  
+                  // Validate per-letter configurations
+                  if (document.getElementById('perLetterFont').checked) {
+                    const fontCount = parseInt(document.getElementById('perLetterFontCount').value);
+                    if (fontCount < 1 || fontCount > 20) {
+                      errors.push('Per-letter font count must be between 1 and 20');
+                    }
+                  }
+                  
+                  if (document.getElementById('perLetterColor').checked) {
+                    const colorCount = parseInt(document.getElementById('perLetterColorCount').value);
+                    if (colorCount < 1 || colorCount > 12) {
+                      errors.push('Per-letter color count must be between 1 and 12');
+                    }
+                  }
+                  
+                  if (document.getElementById('perLetterSize').checked) {
+                    const sizeMin = parseFloat(document.getElementById('perLetterSizeMin').value);
+                    const sizeMax = parseFloat(document.getElementById('perLetterSizeMax').value);
+                    if (sizeMin > sizeMax) {
+                      errors.push('Per-letter size minimum must be less than or equal to maximum');
+                    }
+                    if (sizeMin < 1 || sizeMax > 500) {
+                      errors.push('Per-letter size must be between 1 and 500');
+                    }
+                  }
+                  
+                  if (document.getElementById('perLetterOrientation').checked) {
+                    const orientMin = parseFloat(document.getElementById('perLetterOrientationMin').value);
+                    const orientMax = parseFloat(document.getElementById('perLetterOrientationMax').value);
+                    if (orientMin > orientMax) {
+                      errors.push('Per-letter orientation minimum must be less than or equal to maximum');
+                    }
+                    if (orientMin < -360 || orientMax > 360) {
+                      errors.push('Per-letter orientation must be between -360 and 360');
+                    }
+                  }
+                  
+                  // Display errors
+                  if (errors.length > 0) {
+                    e.preventDefault();
+                    alert('Please fix the following errors:\n\n' + errors.join('\n'));
+                    return false;
+                  }
+                  
+                  return true;
+                });
               </script>
             </div>
           </div>
