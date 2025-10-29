@@ -490,7 +490,8 @@ public class ScannerEffectController {
             float noise,
             boolean yellowish,
             int renderResolution,
-            ScannerEffectRequest.Colorspace colorspace) {
+            ScannerEffectRequest.Colorspace colorspace)
+            throws ExceptionUtils.OutOfMemoryDpiException {
 
         try {
             PDRectangle pageSize = renderingResources.getPageMediaBox(pageIndex);
