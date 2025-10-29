@@ -1,15 +1,15 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Menu, Loader, Group, Text, Checkbox } from '@mantine/core';
-import { LocalIcon } from '../shared/LocalIcon';
+import { LocalIcon } from '@app/components/shared/LocalIcon';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import AddIcon from '@mui/icons-material/Add';
 import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-import FitText from './FitText';
-import { getFileColorWithOpacity } from '../pageEditor/fileColors';
-import { useFilesModalContext } from '../../contexts/FilesModalContext';
+import FitText from '@app/components/shared/FitText';
+import { getFileColorWithOpacity } from '@app/components/pageEditor/fileColors';
+import { useFilesModalContext } from '@app/contexts/FilesModalContext';
 
-import { FileId } from '../../types/file';
+import { FileId } from '@app/types/file';
 
 // Local interface for PageEditor file display
 interface PageEditorFile {
