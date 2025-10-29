@@ -88,7 +88,7 @@
       }
 
       const url = URL.createObjectURL(fileInput.files[0]);
-      const pdf = await pdfjsLib.getDocument({ ...PDFJS_DEFAULT_OPTIONS, url }).promise;
+      const pdf = await window.pdfjsLib.getDocument({ ...PDFJS_DEFAULT_OPTIONS, url }).promise;
       const page = await pdf.getPage(1);
 
       const canvas = document.createElement("canvas");
