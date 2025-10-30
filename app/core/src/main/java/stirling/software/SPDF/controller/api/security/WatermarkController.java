@@ -42,11 +42,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.security.AddWatermarkRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
-import stirling.software.common.util.GeneralUtils;
-import stirling.software.common.util.PdfUtils;
-import stirling.software.common.util.RegexPatternUtils;
-import stirling.software.common.util.WatermarkRandomizer;
-import stirling.software.common.util.WebResponseUtils;
+import stirling.software.common.util.*;
 
 @Slf4j
 @RestController
@@ -77,34 +73,33 @@ public class WatermarkController {
         // Validate opacity bounds (0.0 - 1.0)
         float opacity = request.getOpacity();
         if (opacity < 0.0f || opacity > 1.0f) {
-            String errorMsg =
-                    String.format("Opacity must be between 0.0 and 1.0, but got: %.2f", opacity);
-            log.warn("Validation failed: {}", errorMsg);
-            throw new IllegalArgumentException(errorMsg);
+            log.error("Opacity must be between 0.0 and 1.0, but got: {}", opacity);
+            throw ExceptionUtils.createIllegalArgumentException(
+                "error.opacityOutOfRange" , //TODO
+                "Opacity must be between 0.0 and 1.0, but got: {0}",
+                opacity);
         }
 
         // Validate rotation range: rotationMin <= rotationMax
         Float rotationMin = request.getRotationMin();
         Float rotationMax = request.getRotationMax();
         if (rotationMin != null && rotationMax != null && rotationMin > rotationMax) {
-            String errorMsg =
-                    String.format(
-                            "Rotation minimum (%.2f) must be less than or equal to rotation maximum (%.2f)",
-                            rotationMin, rotationMax);
-            log.warn("Validation failed: {}", errorMsg);
-            throw new IllegalArgumentException(errorMsg);
+            log.error("Rotation minimum ({}) must be less than or equal to rotation maximum ({})", rotationMin, rotationMax);
+            throw ExceptionUtils.createIllegalArgumentException(
+                "error.rotationRangeInvalid" , //TODO
+                "Rotation minimum ({0}) must be less than or equal to rotation maximum ({1})",
+                rotationMin, rotationMax);
         }
 
         // Validate font size range: fontSizeMin <= fontSizeMax
         Float fontSizeMin = request.getFontSizeMin();
         Float fontSizeMax = request.getFontSizeMax();
         if (fontSizeMin != null && fontSizeMax != null && fontSizeMin > fontSizeMax) {
-            String errorMsg =
-                    String.format(
-                            "Font size minimum (%.2f) must be less than or equal to font size maximum (%.2f)",
-                            fontSizeMin, fontSizeMax);
-            log.warn("Validation failed: {}", errorMsg);
-            throw new IllegalArgumentException(errorMsg);
+            log.error("Font size minimum ({}) must be less than or equal to font size maximum ({})", fontSizeMin, fontSizeMax);
+            throw ExceptionUtils.createIllegalArgumentException(
+                "error.fontSizeRangeInvalid" , //TODO
+                "Font size minimum ({0}) must be less than or equal to font size maximum ({1})",
+                fontSizeMin, fontSizeMax);
         }
 
         // Validate color format when not using random color
@@ -113,12 +108,11 @@ public class WatermarkController {
         if (customColor != null && !Boolean.TRUE.equals(randomColor)) {
             // Check if color is valid hex format (#RRGGBB or #RRGGBBAA)
             if (!customColor.matches("^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{8})$")) {
-                String errorMsg =
-                        String.format(
-                                "Invalid color format: '%s'. Expected hex format like #RRGGBB or #RRGGBBAA",
-                                customColor);
-                log.warn("Validation failed: {}", errorMsg);
-                throw new IllegalArgumentException(errorMsg);
+                log.error("Invalid color format: {}. Expected hex format like #RRGGBB or #RRGGBBAA", customColor);
+                throw ExceptionUtils.createIllegalArgumentException(
+                    "error.invalidColorFormat" , //TODO
+                    "Invalid color format: {0}. Expected hex format like #RRGGBB or #RRGGBBAA",
+                    customColor);
             }
         }
 
@@ -126,12 +120,11 @@ public class WatermarkController {
         Float mirroringProbability = request.getMirroringProbability();
         if (mirroringProbability != null
                 && (mirroringProbability < 0.0f || mirroringProbability > 1.0f)) {
-            String errorMsg =
-                    String.format(
-                            "Mirroring probability must be between 0.0 and 1.0, but got: %.2f",
-                            mirroringProbability);
-            log.warn("Validation failed: {}", errorMsg);
-            throw new IllegalArgumentException(errorMsg);
+            log.error("Mirroring probability must be between 0.0 and 1.0, but got: {}", mirroringProbability);
+            throw ExceptionUtils.createIllegalArgumentException(
+                "error.mirroringProbabilityOutOfRange" , //TODO
+                "Mirroring probability must be between 0.0 and 1.0, but got: {0}",
+                mirroringProbability);
         }
 
         // Validate watermark type
@@ -139,21 +132,21 @@ public class WatermarkController {
         if (watermarkType == null
                 || (!watermarkType.equalsIgnoreCase("text")
                         && !watermarkType.equalsIgnoreCase("image"))) {
-            String errorMsg =
-                    String.format(
-                            "Watermark type must be 'text' or 'image', but got: '%s'",
-                            watermarkType);
-            log.warn("Validation failed: {}", errorMsg);
-            throw new IllegalArgumentException(errorMsg);
+            log.error( "Watermark type must be 'text' or 'image', but got: {}", watermarkType);
+            throw ExceptionUtils.createIllegalArgumentException(
+                "error.unsupportedWatermarkType" , //TODO
+                "Watermark type must be 'text' or 'image', but got: {0}",
+                watermarkType);
         }
 
         // Validate text watermark has text
         if ("text".equalsIgnoreCase(watermarkType)) {
             String watermarkText = request.getWatermarkText();
             if (watermarkText == null || watermarkText.trim().isEmpty()) {
-                String errorMsg = "Watermark text is required when watermark type is 'text'";
-                log.warn("Validation failed: {}", errorMsg);
-                throw new IllegalArgumentException(errorMsg);
+                log.error("Watermark text is required when watermark type is 'text'");
+                throw ExceptionUtils.createIllegalArgumentException(
+                    "error.watermarkTextRequired", //TODO
+                    "Watermark text is required when watermark type is 'text'");
             }
         }
 
@@ -161,31 +154,30 @@ public class WatermarkController {
         if ("image".equalsIgnoreCase(watermarkType)) {
             MultipartFile watermarkImage = request.getWatermarkImage();
             if (watermarkImage == null || watermarkImage.isEmpty()) {
-                String errorMsg = "Watermark image is required when watermark type is 'image'";
-                log.warn("Validation failed: {}", errorMsg);
-                throw new IllegalArgumentException(errorMsg);
+                log.error("Watermark image is required when watermark type is 'image'");
+                throw ExceptionUtils.createIllegalArgumentException(
+                    "error.watermarkImageRequired", //TODO
+                    "Watermark image is required when watermark type is 'image'");
             }
 
             // Validate image type - only allow common image formats
             String contentType = watermarkImage.getContentType();
             String originalFilename = watermarkImage.getOriginalFilename();
             if (contentType != null && !isSupportedImageType(contentType)) {
-                String errorMsg =
-                        String.format(
-                                "Unsupported image type: '%s'. Supported types: PNG, JPG, JPEG, GIF, BMP",
-                                contentType);
-                log.warn("Validation failed: {}", errorMsg);
-                throw new IllegalArgumentException(errorMsg);
+                log.error("Unsupported image type: {}. Supported types: PNG, JPG, JPEG, GIF, BMP", contentType);
+                throw ExceptionUtils.createIllegalArgumentException(
+                    "error.unsupportedContentType", //TODO
+                    "Unsupported image type: {0}. Supported types: PNG, JPG, JPEG, GIF, BMP",
+                    contentType);
             }
 
             // Additional check based on file extension
             if (originalFilename != null && !hasSupportedImageExtension(originalFilename)) {
-                String errorMsg =
-                        String.format(
-                                "Unsupported image file extension in: '%s'. Supported extensions: .png, .jpg, .jpeg, .gif, .bmp",
-                                originalFilename);
-                log.warn("Validation failed: {}", errorMsg);
-                throw new IllegalArgumentException(errorMsg);
+                log.error("Unsupported image file extension in: {}. Supported extensions: .png, .jpg, .jpeg, .gif, .bmp", originalFilename);
+                throw ExceptionUtils.createIllegalArgumentException(
+                    "error.unsupportedImageFileType", //TODO
+                    "Unsupported image file extension in: {0}. Supported extensions: .png, .jpg, .jpeg, .gif, .bmp",
+                    originalFilename);
             }
         }
 
