@@ -10,7 +10,7 @@ export default defineConfig({
     react(),
     tsconfigPaths({
       projects: [
-        isProprietary ? './tsconfig.proprietary.json' : './tsconfig.core.json',
+        isProprietary ? './src/proprietary/tsconfig.json' : './src/core/tsconfig.json',
       ],
     }),
   ],
