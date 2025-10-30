@@ -54,7 +54,7 @@ class CheckProgramInstallTest {
     }
 
     /** Reset static fields in the CheckProgramInstall class using reflection */
-    private void resetStaticFields() throws Exception {
+    private static void resetStaticFields() throws Exception {
         Field pythonAvailableCheckedField =
                 CheckProgramInstall.class.getDeclaredField("pythonAvailableChecked");
         pythonAvailableCheckedField.setAccessible(true);
@@ -122,8 +122,7 @@ class CheckProgramInstallTest {
     }
 
     @Test
-    void testGetAvailablePythonCommand_WhenPythonReturnsNonZeroExitCode()
-            throws IOException, InterruptedException, Exception {
+    void testGetAvailablePythonCommand_WhenPythonReturnsNonZeroExitCode() throws Exception {
         // Arrange
         // Reset the static fields again to ensure clean state
         resetStaticFields();
