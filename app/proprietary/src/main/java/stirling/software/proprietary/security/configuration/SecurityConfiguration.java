@@ -147,10 +147,7 @@ public class SecurityConfiguration {
                     List.of(
                             "http://localhost:*", // Still allow localhost for local deployments
                             "https://localhost:*"
-                            // Add your production domains here when deploying, e.g.:
-                            // "https://yourdomain.com",
-                            // "https://*.yourdomain.com"
-                            ));
+                    ));
             log.info("CORS configured for production mode");
         }
 
