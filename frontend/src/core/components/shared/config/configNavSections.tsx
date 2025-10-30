@@ -12,7 +12,6 @@ import AdminLegalSection from '@app/components/shared/config/configSections/Admi
 import AdminPremiumSection from '@app/components/shared/config/configSections/AdminPremiumSection';
 import AdminFeaturesSection from '@app/components/shared/config/configSections/AdminFeaturesSection';
 import AdminEndpointsSection from '@app/components/shared/config/configSections/AdminEndpointsSection';
-import AdminPlanSection from '@app/components/shared/config/configSections/AdminPlanSection';
 import AdminAuditSection from '@app/components/shared/config/configSections/AdminAuditSection';
 import AdminUsageSection from '@app/components/shared/config/configSections/AdminUsageSection';
 
@@ -133,12 +132,6 @@ export const createConfigNavSections = (
           label: 'Premium',
           icon: 'star-rounded',
           component: <AdminPremiumSection />
-        },
-        {
-          key: 'adminPlan',
-          label: 'Plan',
-          icon: 'receipt-long-rounded',
-          component: <AdminPlanSection />
         },
         {
           key: 'adminAudit',

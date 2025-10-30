@@ -11,8 +11,8 @@ import {
 } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import usageAnalyticsService, { EndpointStatisticsResponse } from '@app/services/usageAnalyticsService';
-import UsageAnalyticsChart from './usage/UsageAnalyticsChart';
-import UsageAnalyticsTable from './usage/UsageAnalyticsTable';
+import UsageAnalyticsChart from '@app/components/shared/config/configSections/usage/UsageAnalyticsChart';
+import UsageAnalyticsTable from '@app/components/shared/config/configSections/usage/UsageAnalyticsTable';
 import LocalIcon from '@app/components/shared/LocalIcon';
 
 const AdminUsageSection: React.FC = () => {

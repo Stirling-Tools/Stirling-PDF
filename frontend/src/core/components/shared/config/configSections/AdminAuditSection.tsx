@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Tabs, Loader, Alert, Stack } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import auditService, { AuditSystemStatus as AuditStatus } from '@app/services/auditService';
-import AuditSystemStatus from './audit/AuditSystemStatus';
-import AuditChartsSection from './audit/AuditChartsSection';
-import AuditEventsTable from './audit/AuditEventsTable';
-import AuditExportSection from './audit/AuditExportSection';
+import AuditSystemStatus from '@app/components/shared/config/configSections/audit/AuditSystemStatus';
+import AuditChartsSection from '@app/components/shared/config/configSections/audit/AuditChartsSection';
+import AuditEventsTable from '@app/components/shared/config/configSections/audit/AuditEventsTable';
+import AuditExportSection from '@app/components/shared/config/configSections/audit/AuditExportSection';
 
 const AdminAuditSection: React.FC = () => {
   const { t } = useTranslation();

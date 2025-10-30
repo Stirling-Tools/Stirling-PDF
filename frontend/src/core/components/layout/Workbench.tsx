@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box } from '@mantine/core';
-import { useRainbowThemeContext } from '../shared/RainbowThemeProvider';
+import { useRainbowThemeContext } from '@app/components/shared/RainbowThemeProvider';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
 import { useFileHandler } from '@app/hooks/useFileHandler';
 import { useFileState } from '@app/contexts/FileContext';
@@ -10,14 +10,14 @@ import { useViewer } from '@app/contexts/ViewerContext';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
 import './Workbench.css';
 
-import TopControls from '../shared/TopControls';
-import FileEditor from '../fileEditor/FileEditor';
-import PageEditor from '../pageEditor/PageEditor';
-import PageEditorControls from '../pageEditor/PageEditorControls';
-import Viewer from '../viewer/Viewer';
-import LandingPage from '../shared/LandingPage';
-import Footer from '../shared/Footer';
-import DismissAllErrorsButton from '../shared/DismissAllErrorsButton';
+import TopControls from '@app/components/shared/TopControls';
+import FileEditor from '@app/components/fileEditor/FileEditor';
+import PageEditor from '@app/components/pageEditor/PageEditor';
+import PageEditorControls from '@app/components/pageEditor/PageEditorControls';
+import Viewer from '@app/components/viewer/Viewer';
+import LandingPage from '@app/components/shared/LandingPage';
+import Footer from '@app/components/shared/Footer';
+import DismissAllErrorsButton from '@app/components/shared/DismissAllErrorsButton';
 
 // No props needed - component uses contexts directly
 export default function Workbench() {
