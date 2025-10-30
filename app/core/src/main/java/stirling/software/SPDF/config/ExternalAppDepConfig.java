@@ -67,6 +67,7 @@ public class ExternalAppDepConfig {
         tmp.put("qpdf", List.of("qpdf"));
         tmp.put("tesseract", List.of("tesseract"));
         tmp.put("rar", List.of("rar"));
+        tmp.put("ffmpeg", List.of("FFmpeg"));
         this.commandToGroupMapping = Collections.unmodifiableMap(tmp);
     }
 
