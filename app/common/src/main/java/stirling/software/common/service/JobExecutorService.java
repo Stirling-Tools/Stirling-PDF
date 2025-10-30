@@ -1,6 +1,7 @@
 package stirling.software.common.service;
 
 import java.io.IOException;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -440,7 +441,7 @@ public class JobExecutorService {
 
             double numericValue = Double.parseDouble(value);
 
-            return switch (unit.toLowerCase()) {
+            return switch (unit.toLowerCase(Locale.ROOT)) {
                 case "s" -> (long) (numericValue * 1000);
                 case "m" -> (long) (numericValue * 60 * 1000);
                 case "h" -> (long) (numericValue * 60 * 60 * 1000);

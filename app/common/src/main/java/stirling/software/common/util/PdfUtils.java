@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
@@ -50,36 +51,18 @@ public class PdfUtils {
 
     public PDRectangle textToPageSize(String size) {
 
-        switch (size.toUpperCase()) {
-            case "A0" -> {
-                return PDRectangle.A0;
-            }
-            case "A1" -> {
-                return PDRectangle.A1;
-            }
-            case "A2" -> {
-                return PDRectangle.A2;
-            }
-            case "A3" -> {
-                return PDRectangle.A3;
-            }
-            case "A4" -> {
-                return PDRectangle.A4;
-            }
-            case "A5" -> {
-                return PDRectangle.A5;
-            }
-            case "A6" -> {
-                return PDRectangle.A6;
-            }
-            case "LETTER" -> {
-                return PDRectangle.LETTER;
-            }
-            case "LEGAL" -> {
-                return PDRectangle.LEGAL;
-            }
+        return switch (size.toUpperCase(Locale.ROOT)) {
+            case "A0" -> PDRectangle.A0;
+            case "A1" -> PDRectangle.A1;
+            case "A2" -> PDRectangle.A2;
+            case "A3" -> PDRectangle.A3;
+            case "A4" -> PDRectangle.A4;
+            case "A5" -> PDRectangle.A5;
+            case "A6" -> PDRectangle.A6;
+            case "LETTER" -> PDRectangle.LETTER;
+            case "LEGAL" -> PDRectangle.LEGAL;
             default -> throw ExceptionUtils.createInvalidPageSizeException(size);
-        }
+        };
     }
 
     public List<RenderedImage> getAllImages(PDResources resources) throws IOException {
@@ -182,8 +165,8 @@ public class PdfUtils {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
             if (singleImage) {
-                if ("tiff".equals(imageType.toLowerCase())
-                        || "tif".equals(imageType.toLowerCase())) {
+                if ("tiff".equals(imageType.toLowerCase(Locale.ROOT))
+                        || "tif".equals(imageType.toLowerCase(Locale.ROOT))) {
                     // Write the images to the output stream as a TIFF with multiple frames
                     ImageWriter writer = ImageIO.getImageWritersByFormatName("tiff").next();
                     ImageWriteParam param = writer.getDefaultWriteParam();
@@ -361,9 +344,10 @@ public class PdfUtils {
                             zos.putNextEntry(
                                     new ZipEntry(
                                             String.format(
+                                                    Locale.ROOT,
                                                     filename + "_%d.%s",
                                                     i + 1,
-                                                    imageType.toLowerCase())));
+                                                    imageType.toLowerCase(Locale.ROOT))));
                             zos.write(baosImage.toByteArray());
                         }
                     }
@@ -463,8 +447,8 @@ public class PdfUtils {
                 String contentType = file.getContentType();
                 String originalFilename = Filenames.toSimpleFileName(file.getOriginalFilename());
                 if (originalFilename != null
-                        && (originalFilename.toLowerCase().endsWith(".tiff")
-                                || originalFilename.toLowerCase().endsWith(".tif"))) {
+                        && (originalFilename.toLowerCase(Locale.ROOT).endsWith(".tiff")
+                                || originalFilename.toLowerCase(Locale.ROOT).endsWith(".tif"))) {
                     ImageReader reader = ImageIO.getImageReadersByFormatName("tiff").next();
                     reader.setInput(ImageIO.createImageInputStream(file.getInputStream()));
                     int numPages = reader.getNumImages(true);
@@ -631,7 +615,7 @@ public class PdfUtils {
         int actualPageCount = pdfDocument.getNumberOfPages();
         pdfDocument.close();
 
-        return switch (comparator.toLowerCase()) {
+        return switch (comparator.toLowerCase(Locale.ROOT)) {
             case "greater" -> actualPageCount > pageCount;
             case "equal" -> actualPageCount == pageCount;
             case "less" -> actualPageCount < pageCount;
