@@ -80,7 +80,7 @@ def write_readme(progress_list: list[tuple[str, int]]) -> None:
 
 
 def load_reference_keys(default_file_path: str) -> set[str]:
-    """Liest ALLE Keys aus der Referenzdatei (ohne Kommentare/Leerzeilen)."""
+    """Reads ALL keys from the reference file (excluding comments and empty lines)."""
     keys: set[str] = set()
     with open(default_file_path, encoding="utf-8") as f:
         for _ in range(5):
@@ -94,7 +94,7 @@ def load_reference_keys(default_file_path: str) -> set[str]:
             if not s or s.startswith("#") or "=" not in s:
                 continue
             k, _ = s.split("=", 1)
-            keys.add(k.strip().replace("\ufeff", ""))  # BOM-Schutz
+            keys.add(k.strip().replace("\ufeff", ""))  # BOM protection
     return keys
 
 
