@@ -10,6 +10,40 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * Utility class for handling exceptions with internationalized error messages. Provides consistent
  * error handling and user-friendly messages across the application.
+ *
+ * <p>This class works in harmony with {@code GlobalExceptionHandler} to provide a complete
+ * exception handling solution:
+ *
+ * <h2>Integration Pattern:</h2>
+ *
+ * <ol>
+ *   <li><strong>Exception Creation:</strong> Use ExceptionUtils factory methods (e.g., {@link
+ *       #createPdfCorruptedException}) to create typed exceptions with error codes
+ *   <li><strong>HTTP Response:</strong> GlobalExceptionHandler catches these exceptions and
+ *       converts them to RFC 7807 Problem Details responses
+ *   <li><strong>Internationalization:</strong> Both use shared ResourceBundle (messages.properties)
+ *       for consistent localized messages
+ *   <li><strong>Error Codes:</strong> {@link ErrorCode} enum provides structured error tracking
+ * </ol>
+ *
+ * <h2>Usage Example:</h2>
+ *
+ * <pre>{@code
+ * // In service layer - create exception with ExceptionUtils
+ * try {
+ *     PDDocument doc = PDDocument.load(file);
+ * } catch (IOException e) {
+ *     throw ExceptionUtils.createPdfCorruptedException("during load", e);
+ * }
+ *
+ * // GlobalExceptionHandler automatically catches and converts to:
+ * // HTTP 422 with Problem Detail containing:
+ * // - error code: "E001"
+ * // - localized message from messages.properties
+ * // - RFC 7807 structured response
+ * }</pre>
+ *
+ * @see stirling.software.SPDF.exception.GlobalExceptionHandler
  */
 @Slf4j
 public class ExceptionUtils {
@@ -645,8 +679,181 @@ public class ExceptionUtils {
     }
 
     /**
+     * Get ErrorCode enum by its code string.
+     *
+     * @param code the error code (e.g., "E001")
+     * @return the matching ErrorCode, or null if not found
+     */
+    public static ErrorCode getErrorCodeByCode(String code) {
+        if (code == null) return null;
+        for (ErrorCode errorCode : ErrorCode.values()) {
+            if (errorCode.getCode().equals(code)) {
+                return errorCode;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Get ErrorCode enum by its message key.
+     *
+     * @param messageKey the i18n message key (e.g., "error.pdfCorrupted")
+     * @return the matching ErrorCode, or null if not found
+     */
+    public static ErrorCode getErrorCodeByMessageKey(String messageKey) {
+        if (messageKey == null) return null;
+        for (ErrorCode errorCode : ErrorCode.values()) {
+            if (errorCode.getMessageKey().equals(messageKey)) {
+                return errorCode;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Wrap a generic exception with appropriate context for better error reporting. This method is
+     * useful when catching exceptions in controllers and wanting to provide better context to
+     * GlobalExceptionHandler.
+     *
+     * @param e the exception to wrap
+     * @param operation the operation being performed (e.g., "PDF merge", "image extraction")
+     * @return a RuntimeException wrapping the original exception with operation context
+     */
+    public static RuntimeException wrapException(Exception e, String operation) {
+        requireNonNull(e, "exception");
+        requireNonNull(operation, "operation");
+
+        if (e instanceof RuntimeException) {
+            return (RuntimeException) e;
+        }
+
+        if (e instanceof IOException) {
+            IOException ioException = handlePdfException((IOException) e, operation);
+            // BaseAppException extends IOException, wrap it in RuntimeException for rethrowing
+            if (ioException instanceof BaseAppException) {
+                return new RuntimeException(ioException);
+            }
+            return new RuntimeException(createFileProcessingException(operation, e));
+        }
+
+        return new RuntimeException(
+                String.format("Error during %s: %s", operation, e.getMessage()), e);
+    }
+
+    /** Base exception with error code support for IO-related errors. */
+    @Getter
+    public abstract static class BaseAppException extends IOException {
+        private final String errorCode;
+
+        protected BaseAppException(String message, Throwable cause, String errorCode) {
+            super(message, cause);
+            this.errorCode = errorCode;
+        }
+    }
+
+    /** Base exception with error code support for illegal argument errors. */
+    @Getter
+    public abstract static class BaseValidationException extends IllegalArgumentException {
+        private final String errorCode;
+
+        protected BaseValidationException(String message, String errorCode) {
+            super(message);
+            this.errorCode = errorCode;
+        }
+
+        protected BaseValidationException(String message, Throwable cause, String errorCode) {
+            super(message, cause);
+            this.errorCode = errorCode;
+        }
+    }
+
+    /** Exception thrown when a PDF file is corrupted or damaged. */
+    public static class PdfCorruptedException extends BaseAppException {
+        public PdfCorruptedException(String message, Throwable cause, String errorCode) {
+            super(message, cause, errorCode);
+        }
+    }
+
+    /** Exception thrown when a PDF has encryption/decryption issues. */
+    public static class PdfEncryptionException extends BaseAppException {
+        public PdfEncryptionException(String message, Throwable cause, String errorCode) {
+            super(message, cause, errorCode);
+        }
+    }
+
+    /** Exception thrown when PDF password is incorrect or missing. */
+    public static class PdfPasswordException extends BaseAppException {
+        public PdfPasswordException(String message, Throwable cause, String errorCode) {
+            super(message, cause, errorCode);
+        }
+    }
+
+    /** Exception thrown when CBR/RAR archive is invalid or unsupported. */
+    public static class CbrFormatException extends BaseValidationException {
+        public CbrFormatException(String message, String errorCode) {
+            super(message, errorCode);
+        }
+
+        public CbrFormatException(String message, Throwable cause, String errorCode) {
+            super(message, cause, errorCode);
+        }
+    }
+
+    /** Exception thrown when CBZ/ZIP archive is invalid. */
+    public static class CbzFormatException extends BaseValidationException {
+        public CbzFormatException(String message, String errorCode) {
+            super(message, errorCode);
+        }
+
+        public CbzFormatException(String message, Throwable cause, String errorCode) {
+            super(message, cause, errorCode);
+        }
+    }
+
+    /** Exception thrown when EML file format is invalid. */
+    public static class EmlFormatException extends BaseValidationException {
+        public EmlFormatException(String message, String errorCode) {
+            super(message, errorCode);
+        }
+    }
+
+    /**
+     * Check if an exception indicates a PDF encryption/decryption error.
+     *
+     * @param e the exception to check
+     * @return true if it's an encryption error, false otherwise
+     */
+    public static boolean isEncryptionError(IOException e) {
+        String message = e.getMessage();
+        if (message == null) return false;
+
+        return message.contains("BadPaddingException")
+                || message.contains("Given final block not properly padded")
+                || message.contains("AES initialization vector not fully read")
+                || message.contains("Failed to decrypt");
+    }
+
+    /**
+     * Check if an exception indicates a PDF password error.
+     *
+     * @param e the exception to check
+     * @return true if it's a password error, false otherwise
+     */
+    public static boolean isPasswordError(IOException e) {
+        String message = e.getMessage();
+        if (message == null) return false;
+
+        return message.contains("password is incorrect")
+                || message.contains("Password is not provided")
+                || message.contains("PDF contains an encryption dictionary");
+    }
+
+    /**
      * Error codes for consistent error tracking and documentation. Each error code includes a
      * unique identifier, i18n message key, and default message.
+     *
+     * <p>These codes are used by {@link stirling.software.SPDF.exception.GlobalExceptionHandler} to
+     * provide consistent RFC 7807 Problem Details responses.
      */
     @Getter
     public enum ErrorCode {
@@ -761,114 +968,6 @@ public class ExceptionUtils {
             this.messageKey = messageKey;
             this.defaultMessage = defaultMessage;
         }
-    }
-
-    /** Base exception with error code support for IO-related errors. */
-    @Getter
-    public abstract static class BaseAppException extends IOException {
-        private final String errorCode;
-
-        protected BaseAppException(String message, Throwable cause, String errorCode) {
-            super(message, cause);
-            this.errorCode = errorCode;
-        }
-    }
-
-    /** Base exception with error code support for illegal argument errors. */
-    @Getter
-    public abstract static class BaseValidationException extends IllegalArgumentException {
-        private final String errorCode;
-
-        protected BaseValidationException(String message, String errorCode) {
-            super(message);
-            this.errorCode = errorCode;
-        }
-
-        protected BaseValidationException(String message, Throwable cause, String errorCode) {
-            super(message, cause);
-            this.errorCode = errorCode;
-        }
-    }
-
-    /** Exception thrown when a PDF file is corrupted or damaged. */
-    public static class PdfCorruptedException extends BaseAppException {
-        public PdfCorruptedException(String message, Throwable cause, String errorCode) {
-            super(message, cause, errorCode);
-        }
-    }
-
-    /** Exception thrown when a PDF has encryption/decryption issues. */
-    public static class PdfEncryptionException extends BaseAppException {
-        public PdfEncryptionException(String message, Throwable cause, String errorCode) {
-            super(message, cause, errorCode);
-        }
-    }
-
-    /** Exception thrown when PDF password is incorrect or missing. */
-    public static class PdfPasswordException extends BaseAppException {
-        public PdfPasswordException(String message, Throwable cause, String errorCode) {
-            super(message, cause, errorCode);
-        }
-    }
-
-    /** Exception thrown when CBR/RAR archive is invalid or unsupported. */
-    public static class CbrFormatException extends BaseValidationException {
-        public CbrFormatException(String message, String errorCode) {
-            super(message, errorCode);
-        }
-
-        public CbrFormatException(String message, Throwable cause, String errorCode) {
-            super(message, cause, errorCode);
-        }
-    }
-
-    /** Exception thrown when CBZ/ZIP archive is invalid. */
-    public static class CbzFormatException extends BaseValidationException {
-        public CbzFormatException(String message, String errorCode) {
-            super(message, errorCode);
-        }
-
-        public CbzFormatException(String message, Throwable cause, String errorCode) {
-            super(message, cause, errorCode);
-        }
-    }
-
-    /** Exception thrown when EML file format is invalid. */
-    public static class EmlFormatException extends BaseValidationException {
-        public EmlFormatException(String message, String errorCode) {
-            super(message, errorCode);
-        }
-    }
-
-    /**
-     * Check if an exception indicates a PDF encryption/decryption error.
-     *
-     * @param e the exception to check
-     * @return true if it's an encryption error, false otherwise
-     */
-    public static boolean isEncryptionError(IOException e) {
-        String message = e.getMessage();
-        if (message == null) return false;
-
-        return message.contains("BadPaddingException")
-                || message.contains("Given final block not properly padded")
-                || message.contains("AES initialization vector not fully read")
-                || message.contains("Failed to decrypt");
-    }
-
-    /**
-     * Check if an exception indicates a PDF password error.
-     *
-     * @param e the exception to check
-     * @return true if it's a password error, false otherwise
-     */
-    public static boolean isPasswordError(IOException e) {
-        String message = e.getMessage();
-        if (message == null) return false;
-
-        return message.contains("password is incorrect")
-                || message.contains("Password is not provided")
-                || message.contains("PDF contains an encryption dictionary");
     }
 
     /** Exception thrown when rendering PDF pages causes out-of-memory or array size errors. */
