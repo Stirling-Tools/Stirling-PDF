@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useRequestHeaders } from '@app/hooks/useRequestHeaders';
 
 // Helper to get JWT from localStorage for Authorization header
 function getAuthHeaders(): HeadersInit {
@@ -53,16 +52,15 @@ const AppConfigContext = createContext<AppConfigContextValue | undefined>({
  * Provider component that fetches and provides app configuration
  * Should be placed at the top level of the app, before any components that need config
  */
-export const AppConfigProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const AppConfigProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [config, setConfig] = useState<AppConfig | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const headers = useRequestHeaders();
-  const [hasFetched, setHasFetched] = useState(false);
+  const [fetchCount, setFetchCount] = useState(0);
 
-  const fetchConfig = async () => {
-    // Prevent duplicate fetches
-    if (hasFetched) {
+  const fetchConfig = async (force = false) => {
+    // Prevent duplicate fetches unless forced
+    if (!force && fetchCount > 0) {
       console.debug('[AppConfig] Already fetched, skipping');
       return;
     }
@@ -81,7 +79,6 @@ export const AppConfigProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     try {
       setLoading(true);
       setError(null);
-      setHasFetched(true);
 
       const response = await fetch('/api/v1/config/app-config', {
         headers: getAuthHeaders(),
@@ -101,6 +98,7 @@ export const AppConfigProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       const data: AppConfig = await response.json();
       console.debug('[AppConfig] Config fetched successfully:', data);
       setConfig(data);
+      setFetchCount(prev => prev + 1);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
       setError(errorMessage);
@@ -113,9 +111,6 @@ export const AppConfigProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   };
 
   useEffect(() => {
-    // Only fetch config if we have JWT or if checking for anonymous mode
-    const hasJwt = !!localStorage.getItem('stirling_jwt');
-
     // Always try to fetch config to check if login is disabled
     // The endpoint should be public and return proper JSON
     fetchConfig();
@@ -125,9 +120,8 @@ export const AppConfigProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   useEffect(() => {
     const handleJwtAvailable = () => {
       console.debug('[AppConfig] JWT available event - refetching config');
-      // Reset the flag to allow refetch with JWT
-      setHasFetched(false);
-      fetchConfig();
+      // Force refetch with JWT
+      fetchConfig(true);
     };
 
     window.addEventListener('jwt-available', handleJwtAvailable);
@@ -138,7 +132,7 @@ export const AppConfigProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     config,
     loading,
     error,
-    refetch: fetchConfig,
+    refetch: () => fetchConfig(true),
   };
 
   return (

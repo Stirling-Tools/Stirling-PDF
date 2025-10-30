@@ -146,8 +146,7 @@ public class SecurityConfiguration {
             cfg.setAllowedOriginPatterns(
                     List.of(
                             "http://localhost:*", // Still allow localhost for local deployments
-                            "https://localhost:*"
-                    ));
+                            "https://localhost:*"));
             log.info("CORS configured for production mode");
         }
 
