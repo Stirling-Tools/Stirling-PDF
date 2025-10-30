@@ -44,6 +44,8 @@ import stirling.software.SPDF.model.api.security.AddWatermarkRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.*;
 
+import static stirling.software.common.util.RegexPatternUtils.getColorPattern;
+
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/security")
@@ -107,7 +109,7 @@ public class WatermarkController {
         Boolean randomColor = request.getRandomColor();
         if (customColor != null && !Boolean.TRUE.equals(randomColor)) {
             // Check if color is valid hex format (#RRGGBB or #RRGGBBAA)
-            if (!customColor.matches("^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{8})$")) {
+            if (!getColorPattern().matcher(customColor).matches()) {
                 log.error("Invalid color format: {}. Expected hex format like #RRGGBB or #RRGGBBAA", customColor);
                 throw ExceptionUtils.createIllegalArgumentException(
                     "error.invalidColorFormat" , //TODO
