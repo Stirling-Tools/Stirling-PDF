@@ -76,7 +76,7 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
   const [endpointStatus, setEndpointStatus] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [_lastFetchedEndpoints, setLastFetchedEndpoints] = useState<string>('');
+  const [lastFetchedEndpoints, setLastFetchedEndpoints] = useState<string>('');
   const _headers = useRequestHeaders();
 
   const fetchAllEndpointStatuses = async () => {
