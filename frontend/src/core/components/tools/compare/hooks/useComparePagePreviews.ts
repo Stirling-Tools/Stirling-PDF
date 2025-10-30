@@ -6,11 +6,16 @@ const DISPLAY_SCALE = 1;
 
 const getDevicePixelRatio = () => (typeof window !== 'undefined' ? window.devicePixelRatio : 1);
 
+// Simple shared cache so rendering progress can resume across unmounts/remounts
+const previewCache: Map<string, { pages: PagePreview[]; total: number }> = new Map();
+
 const renderPdfDocumentToImages = async (
   file: File,
   onBatch?: (previews: PagePreview[]) => void,
   batchSize: number = 12,
   onInitTotal?: (totalPages: number) => void,
+  startAtPage: number = 1,
+  shouldAbort?: () => boolean,
 ): Promise<PagePreview[]> => {
   const arrayBuffer = await file.arrayBuffer();
   const pdf = await pdfWorkerManager.createDocument(arrayBuffer, {
@@ -25,7 +30,10 @@ const renderPdfDocumentToImages = async (
     onInitTotal?.(pdf.numPages);
 
     let batch: PagePreview[] = [];
-    for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
+    const shouldStop = () => Boolean(shouldAbort?.());
+
+    for (let pageNumber = Math.max(1, startAtPage); pageNumber <= pdf.numPages; pageNumber += 1) {
+      if (shouldStop()) break;
       const page = await pdf.getPage(pageNumber);
       const displayViewport = page.getViewport({ scale: DISPLAY_SCALE });
       const renderViewport = page.getViewport({ scale: renderScale });
@@ -40,26 +48,32 @@ const renderPdfDocumentToImages = async (
         continue;
       }
 
-      await page.render({ canvasContext: context, viewport: renderViewport, canvas }).promise;
-      const preview: PagePreview = {
-        pageNumber,
-        width: Math.round(displayViewport.width),
-        height: Math.round(displayViewport.height),
-        rotation: (page.rotate || 0) % 360,
-        url: canvas.toDataURL(),
-      };
-      previews.push(preview);
-      if (onBatch) {
-        batch.push(preview);
-        if (batch.length >= batchSize) {
-          onBatch(batch);
-          batch = [];
+      try {
+        await page.render({ canvasContext: context, viewport: renderViewport, canvas }).promise;
+        if (shouldStop()) break;
+
+        const preview: PagePreview = {
+          pageNumber,
+          width: Math.round(displayViewport.width),
+          height: Math.round(displayViewport.height),
+          rotation: (page.rotate || 0) % 360,
+          url: canvas.toDataURL(),
+        };
+        previews.push(preview);
+        if (onBatch) {
+          batch.push(preview);
+          if (batch.length >= batchSize) {
+            onBatch(batch);
+            batch = [];
+          }
         }
+      } finally {
+        page.cleanup();
+        canvas.width = 0;
+        canvas.height = 0;
       }
 
-      page.cleanup();
-      canvas.width = 0;
-      canvas.height = 0;
+      if (shouldStop()) break;
     }
 
     if (onBatch && batch.length > 0) onBatch(batch);
@@ -91,6 +105,28 @@ export const useComparePagePreviews = ({
     if (!file || !enabled) {
       setPages([]);
       setLoading(false);
+      setTotalPages(0);
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    const key = `${(file as any).name || 'file'}:${(file as any).size || 0}:${cacheKey ?? 'none'}`;
+    const cached = previewCache.get(key);
+    const cachedTotal = cached?.total ?? (cached?.pages.length ?? 0);
+    let lastKnownTotal = cachedTotal;
+    const isFullyCached = Boolean(cached && cached.pages.length > 0 && cachedTotal > 0 && cached.pages.length >= cachedTotal);
+
+    if (cached) {
+      setPages(cached.pages.slice());
+      setTotalPages(cachedTotal);
+    } else {
+      setTotalPages(0);
+    }
+
+    setLoading(!isFullyCached);
+
+    if (isFullyCached) {
       return () => {
         cancelled = true;
       };
@@ -101,6 +137,7 @@ export const useComparePagePreviews = ({
       try {
         inFlightRef.current += 1;
         const current = inFlightRef.current;
+        const startAt = (cached?.pages?.length ?? 0) + 1;
         const previews = await renderPdfDocumentToImages(
           file,
           (batch) => {
@@ -112,16 +149,32 @@ export const useComparePagePreviews = ({
                 const idx = next.findIndex((x) => x.pageNumber > p.pageNumber);
                 if (idx === -1) next.push(p); else next.splice(idx, 0, p);
               }
+              // Update shared cache
+              previewCache.set(key, { pages: next, total: lastKnownTotal || cachedTotal });
               return next;
             });
           },
           16,
           (total) => {
-            if (!cancelled && current === inFlightRef.current) setTotalPages(total);
-          }
+            if (!cancelled && current === inFlightRef.current) {
+              lastKnownTotal = total;
+              setTotalPages(total);
+              // Initialize or update cache record while preserving any pages
+              const existingPages = previewCache.get(key)?.pages ?? [];
+              previewCache.set(key, { pages: existingPages.slice(), total });
+            }
+          },
+          startAt,
+          () => cancelled || current !== inFlightRef.current
         );
-        if (!cancelled) {
-          setPages(previews);
+        if (!cancelled && current === inFlightRef.current) {
+          const cacheEntry = previewCache.get(key);
+          const finalTotal = lastKnownTotal || cachedTotal || cacheEntry?.total || previews.length;
+          lastKnownTotal = finalTotal;
+          const finalPages = cacheEntry ? cacheEntry.pages.slice() : previews.slice();
+          previewCache.set(key, { pages: finalPages.slice(), total: finalTotal });
+          setPages(finalPages);
+          setTotalPages(finalTotal);
         }
       } catch (error) {
         console.error('[compare] failed to render document preview', error);

@@ -1,5 +1,5 @@
-import { Alert, Group, Loader, Stack, Text } from '@mantine/core';
-import { useMemo } from 'react';
+import { Group, Loader, Stack, Text } from '@mantine/core';
+import { useMemo, useRef, useState } from 'react';
 import type { PagePreview } from '@app/types/compare';
 import type { TokenBoundingBox, CompareDocumentPaneProps } from '@app/types/compare';
 import CompareNavigationDropdown from './CompareNavigationDropdown';
@@ -76,7 +76,6 @@ const CompareDocumentPane = ({
   onNavigateChange,
   isLoading,
   processingMessage,
-  emptyMessage,
   pages,
   pairedPages,
   getRowHeightPx,
@@ -102,6 +101,10 @@ const CompareDocumentPane = ({
   const panX = (pan?.x ?? 0);
   const panY = (pan?.y ?? 0);
 
+  // Track which page images have finished loading to avoid flashing between states
+  const imageLoadedRef = useRef<Map<number, boolean>>(new Map());
+  const [, forceRerender] = useState(0);
+
   return (
     <div className="compare-pane">
       <div className="compare-header">
@@ -109,14 +112,14 @@ const CompareDocumentPane = ({
           <Text fw={600} size="lg">
             {title}
           </Text>
-          {changes.length > 0 && (
-            <CompareNavigationDropdown
-              changes={changes}
-              placeholder={dropdownPlaceholder ?? ''}
-              className={pane === 'comparison' ? 'compare-changes-select--comparison' : undefined}
-              onNavigate={onNavigateChange}
-              renderedPageNumbers={useMemo(() => new Set(pages.map(p => p.pageNumber)), [pages])}
-            />
+          {(changes.length > 0 || Boolean(dropdownPlaceholder)) && (
+              <CompareNavigationDropdown
+                changes={changes}
+                placeholder={dropdownPlaceholder ?? null}
+                className={pane === 'comparison' ? 'compare-changes-select--comparison' : undefined}
+                onNavigate={onNavigateChange}
+                renderedPageNumbers={useMemo(() => new Set(pages.map(p => p.pageNumber)), [pages])}
+              />
           )}
         </Group>
       </div>
@@ -141,12 +144,6 @@ const CompareDocumentPane = ({
               <Loader size="sm" />
               <Text size="sm">{processingMessage}</Text>
             </Group>
-          )}
-
-          {!isLoading && pages.length === 0 && (
-            <Alert color="gray" variant="light">
-              <Text size="sm">{emptyMessage}</Text>
-            </Alert>
           )}
 
           {pages.map((page) => {
@@ -175,11 +172,12 @@ const CompareDocumentPane = ({
               current.push(rect);
               groupedRects.set(id, current);
             }
+            const preloadMarginPx = Math.max(rowHeightPx * 5, 1200); // render several pages ahead to hide loading flashes
 
             return (
               <LazyLoadContainer
                 key={`${pane}-page-${page.pageNumber}`}
-                rootMargin="100px"
+                rootMargin={`${preloadMarginPx}px 0px ${preloadMarginPx}px 0px`}
                 threshold={0.1}
                 fallback={
                   <div
@@ -187,16 +185,25 @@ const CompareDocumentPane = ({
                     data-page-number={page.pageNumber}
                     style={{ minHeight: `${rowHeightPx}px` }}
                   >
-                    <Text size="xs" fw={600} c="dimmed">
-                      {documentLabel} · {pageLabel} {page.pageNumber}
-                    </Text>
+                  <div
+                    className="compare-page-title"
+                    style={isStackedPortrait
+                      ? { width: `${stackedWidth}px`, marginLeft: 'auto', marginRight: 'auto' }
+                      : isStackedLandscape
+                      ? { width: `${Math.round(page.width * fit)}px`, marginLeft: 'auto', marginRight: 'auto' }
+                      : { width: `${Math.round(page.width * fit)}px`, marginLeft: 'auto', marginRight: 'auto' }}
+                  >
+                      <Text size="xs" fw={600} c="dimmed" ta="center">
+                        {documentLabel} · {pageLabel} {page.pageNumber}
+                      </Text>
+                    </div>
                     <div
                       className="compare-diff-page__canvas compare-diff-page__canvas--zoom"
                       style={isStackedPortrait
                         ? { width: `${stackedWidth}px`, height: `${stackedHeight}px`, marginLeft: 'auto', marginRight: 'auto' }
                         : isStackedLandscape
                         ? { width: `${Math.round(page.width * fit)}px`, marginLeft: 'auto', marginRight: 'auto' }
-                        : { width: `${Math.round(page.width * fit)}px` }}
+                        : { width: `${Math.round(page.width * fit)}px`, marginLeft: 'auto', marginRight: 'auto' }}
                     >
                       <div
                         className="compare-diff-page__inner"
@@ -225,27 +232,52 @@ const CompareDocumentPane = ({
                   data-page-number={page.pageNumber}
                   style={{ minHeight: `${rowHeightPx}px` }}
                 >
-                  <Text size="xs" fw={600} c="dimmed">
-                    {documentLabel} · {pageLabel} {page.pageNumber}
-                  </Text>
+                  <div
+                    className="compare-page-title"
+                    style={isStackedPortrait
+                      ? { width: `${stackedWidth}px`, marginLeft: 'auto', marginRight: 'auto' }
+                      : isStackedLandscape
+                      ? { width: `${Math.round(page.width * fit)}px`, marginLeft: 'auto', marginRight: 'auto' }
+                      : { width: `${Math.round(page.width * fit)}px`, marginLeft: 'auto', marginRight: 'auto' }}
+                  >
+                    <Text size="xs" fw={600} c="dimmed" ta="center">
+                      {documentLabel} · {pageLabel} {page.pageNumber}
+                    </Text>
+                  </div>
                   <div
                     className="compare-diff-page__canvas compare-diff-page__canvas--zoom"
                     style={isStackedPortrait
                       ? { width: `${stackedWidth}px`, height: `${stackedHeight}px`, marginLeft: 'auto', marginRight: 'auto' }
                       : isStackedLandscape
                       ? { width: `${Math.round(page.width * fit)}px`, marginLeft: 'auto', marginRight: 'auto' }
-                      : { width: `${Math.round(page.width * fit)}px` }}
+                      : { width: `${Math.round(page.width * fit)}px`, marginLeft: 'auto', marginRight: 'auto' }}
                   >
                     <div
                       className={`compare-diff-page__inner compare-diff-page__inner--${pane}`}
-                      style={{ transform: `translate(${-panX}px, ${-panY}px) scale(${zoom})`, transformOrigin: 'top left' }}
+                      style={{
+                        transform: `translate(${-panX}px, ${-panY}px) scale(${zoom})`,
+                        transformOrigin: 'top left'
+                      }}
                     >
+                      {/* Image layer */}
                       <img
                         src={page.url ?? ''}
                         alt={altLabel}
                         loading="lazy"
                         className="compare-diff-page__image"
+                        onLoad={() => {
+                          if (!imageLoadedRef.current.get(page.pageNumber)) {
+                            imageLoadedRef.current.set(page.pageNumber, true);
+                            forceRerender(v => v + 1);
+                          }
+                        }}
                       />
+                      {/* Overlay loader until the page image is loaded */}
+                      {!((imageLoadedRef.current.get(page.pageNumber) ?? false)) && (
+                        <div className="compare-page-loader-overlay">
+                          <Loader size="sm" />
+                        </div>
+                      )}
                       {[...groupedRects.entries()].flatMap(([id, rects]) =>
                         mergeConnectedRects(rects).map((rect, index) => {
                           const rotation = ((page.rotation ?? 0) % 360 + 360) % 360;

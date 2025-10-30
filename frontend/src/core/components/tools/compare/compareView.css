@@ -114,6 +114,17 @@
   box-sizing: border-box;
 }
 
+.compare-changes-select__placeholder {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.compare-changes-select__placeholder .mantine-Loader-root {
+  display: inline-flex;
+  margin: 0 0.125rem;
+}
+
 .compare-changes-select--comparison {
   background: rgba(52, 199, 89, 0.18) !important;
   color: #1b5e20 !important;
@@ -342,6 +353,8 @@
   margin-left: auto;
   margin-right: auto;
   max-width: 100%;
+  background-color: #fff; /* ensure stable white backing during load */
+  border: 1px solid var(--border-subtle);
 }
 
 .compare-diff-page__image {
@@ -349,6 +362,24 @@
   width: 100%;
   height: 100%;
   object-fit: contain;
+}
+
+/* Centered per-page title wrapper */
+.compare-page-title {
+  text-align: center;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Overlay loader to avoid flash when image not yet loaded */
+.compare-page-loader-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  background-color: rgba(255, 255, 255, 0.9);
 }
 
 .compare-diff-highlight {
@@ -418,102 +449,12 @@
   background-color: rgba(52, 199, 89, 0.25);
 }
 
-.compare-workbench--upload {
-  padding: 2.5rem 1.5rem;
-}
-
 .compare-pane-header {
   position: sticky;
   top: 0;
   z-index: 2;
   background: var(--bg-background);
   padding: 0.25rem 0;
-}
-
-.compare-upload-layout {
-  display: flex;
-  align-items: stretch;
-  gap: 2rem;
-  width: 100%;
-}
-
-.compare-upload-divider {
-  width: 1px;
-  background: var(--compare-upload-divider);
-}
-
-.compare-upload-column {
-  flex: 1;
-  display: flex;
-}
-
-.compare-upload-dropzone {
-  flex: 1;
-  border: 1px dashed var(--compare-upload-dropzone-border);
-  border-radius: 1rem;
-  background: var(--compare-upload-dropzone-bg);
-  padding: 0;
-  transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.compare-upload-dropzone[data-accept] {
-  border-color: rgba(52, 199, 89, 0.6);
-  background: rgba(52, 199, 89, 0.12);
-  box-shadow: 0 0 0 2px rgba(52, 199, 89, 0.2);
-}
-
-.compare-upload-dropzone[data-reject] {
-  border-color: rgba(255, 59, 48, 0.6);
-  background: rgba(255, 59, 48, 0.12);
-  box-shadow: 0 0 0 2px rgba(255, 59, 48, 0.2);
-}
-
-.compare-upload-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  text-align: center;
-  padding: 2.5rem 2rem;
-  min-height: 20rem;
-  width: 100%;
-}
-
-.compare-upload-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 3.25rem;
-  height: 3.25rem;
-  border-radius: 999px;
-  color: var(--compare-upload-icon-color);
-  background: var(--compare-upload-icon-bg);
-}
-
-.compare-upload-icon--base {
-  color: rgba(255, 59, 48, 0.8);
-  background: rgba(255, 59, 48, 0.12);
-}
-
-.compare-upload-icon--comparison {
-  color: rgba(52, 199, 89, 0.85);
-  background: rgba(52, 199, 89, 0.14);
-}
-
-.compare-upload-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  width: min(18rem, 100%);
-}
-
-.compare-upload-selection {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  width: min(20rem, 100%);
-  align-items: center;
 }
 
 /* Compare tool thumbnail and details (moved from core/tools/compareTool.css) */
@@ -526,20 +467,6 @@
 .compare-tool__details {
   flex: 1;
   min-width: 0;
-}
-
-@media (max-width: 960px) {
-  .compare-upload-layout {
-    flex-direction: column;
-  }
-
-  .compare-upload-divider {
-    display: none;
-  }
-
-  .compare-upload-card {
-    min-height: 18rem;
-  }
 }
 
 /* Mobile: remove side margins and let canvases take full width inside column */

@@ -1281,59 +1281,30 @@
     "tags": "differentiate,contrast,changes,analysis",
     "title": "Compare",
     "header": "Compare PDFs",
-    "description": "Select the base and comparison PDF to highlight differences.",
-    "view": {
-      "title": "Compare view",
-      "noData": "Run a comparison to view the summary and diff."
-    },
-    "workbench": {
-      "label": "Compare view"
-    },
-    "base": {
-      "label": "Base Document",
-      "placeholder": "Select a base PDF"
-    },
-    "comparison": {
-      "label": "Comparison Document",
-      "placeholder": "Select a comparison PDF"
-    },
+    
     "cta": "Compare",
     "loading": "Comparing...",
     "review": {
-      "title": "Comparison Result",
-      "actionsHint": "Review the comparison, switch document roles, or export the summary.",
-      "switchOrder": "Switch order",
-      "exportSummary": "Export summary"
+      "title": "Comparison Result"
     },
-    "addFile": "Add File",
-    "replaceFile": "Replace File",
     "pages": "Pages",
-    "toggleLayout": "Toggle layout",
-    "upload": {
-      "title": "Set up your comparison",
-      "baseTitle": "Base document",
-      "baseDescription": "This version acts as the reference for differences.",
-      "comparisonTitle": "Comparison document",
-      "comparisonDescription": "Differences from this version will be highlighted.",
-      "browse": "Browse files",
-      "selectExisting": "Select existing",
-      "clearSelection": "Clear selection",
-      "instructions": "Drag & drop here or use the buttons to choose a file."
-    },
+    
     "legend": {
       "removed": "Removed from base",
       "added": "Added in comparison"
     },
     "newLine": "new-line",
     "dropdown": {
+      "deletionsLabel": "Deletions",
+      "additionsLabel": "Additions",
       "deletions": "Deletions ({{count}})",
       "additions": "Additions ({{count}})",
       "searchPlaceholder": "Search changes...",
       "noResults": "No changes found"
     },
     "summary": {
-      "baseHeading": "Base document",
-      "comparisonHeading": "Comparison document",
+      "baseHeading": "Original document",
+      "comparisonHeading": "Edited document",
       "pageLabel": "Page"
     },
     "rendering": {
@@ -1345,7 +1316,17 @@
     "status": {
       "extracting": "Extracting text...",
       "processing": "Analyzing differences...",
-      "complete": "Comparison ready"
+      "complete": "Edited ready"
+    },
+    "selection": {
+      "originalEditedTitle": "Select Original and Edited PDFs"
+    },
+    "original": { "label": "Original PDF" },
+    "edited": { "label": "Edited PDF" },
+    "swap": {
+      "confirmTitle": "Re-run comparison?",
+      "confirmBody": "This will rerun the tool. Are you sure you want to swap the order of Original and Edited?",
+      "confirm": "Swap and Re-run"
     },
     "longJob": {
       "title": "Large comparison in progress",
@@ -1357,7 +1338,7 @@
       "cancel": "Cancel comparison"
     },
     "error": {
-      "selectRequired": "Select a base and comparison document.",
+      "selectRequired": "Select a original and edited document.",
       "filesMissing": "Unable to locate the selected files. Please re-select them.",
       "generic": "Unable to compare these files."
     },
@@ -1367,11 +1348,6 @@
     "large": {
       "file": {
         "message": "One or Both of the provided documents are too large to process"
-      }
-    },
-    "no": {
-      "text": {
-        "message": "One or both of the selected PDFs have no text content. Please choose PDFs with text for comparison."
       }
     },
     "no": {
@@ -1625,7 +1601,7 @@
     "title": "Overlay PDFs",
     "desc": "Overlay one PDF on top of another",
     "baseFile": {
-      "label": "Select Base PDF File"
+      "label": "Select Original PDF File"
     },
     "overlayFiles": {
       "label": "Select Overlay PDF Files",

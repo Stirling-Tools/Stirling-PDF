@@ -64,11 +64,9 @@ const CompareNavigationDropdown = ({
       (() => {
         try {
           // Construct at runtime so old engines don’t fail parse-time
-          console.debug('Using Unicode props');
           return new RegExp('[\\p{L}\\p{N}\\p{P}\\p{S}]', 'u');
         } catch {
           // Fallback (no Unicode props): letters, digits, and common punctuation/symbols
-          console.debug('No Unicode props, falling back to ASCII class');
           return /[A-Za-z0-9.,!?;:(){}"'`~@#$%^&*+=|<>/[\]]/;
         }
       })();
@@ -153,7 +151,7 @@ const CompareNavigationDropdown = ({
           className={['compare-changes-select', className].filter(Boolean).join(' ')}
           onClick={() => combobox.toggleDropdown()}
         >
-          <span>{placeholder}</span>
+          <span className="compare-changes-select__placeholder">{placeholder}</span>
           <Combobox.Chevron />
         </div>
       </Combobox.Target>

@@ -156,12 +156,11 @@ export interface CompareDocumentPaneProps {
   zoom: number;
   pan?: { x: number; y: number };
   title: string;
-  dropdownPlaceholder?: string;
+  dropdownPlaceholder?: React.ReactNode;
   changes: Array<{ value: string; label: string; pageNumber?: number }>;
   onNavigateChange: (id: string, pageNumber?: number) => void;
   isLoading: boolean;
   processingMessage: string;
-  emptyMessage: string;
   pages: PagePreview[];
   pairedPages: PagePreview[];
   getRowHeightPx: (pageNumber: number) => number;
@@ -188,7 +187,7 @@ export interface WordHighlightEntry {
 
 export interface NavigationDropdownProps {
   changes: Array<{ value: string; label: string; pageNumber?: number }>;
-  placeholder: string;
+  placeholder: React.ReactNode;
   className?: string;
   onNavigate: (value: string, pageNumber?: number) => void;
   // Optional: pages that currently have previews rendered (1-based page numbers)
@@ -284,26 +283,7 @@ export interface WordHighlightEntry {
   metaIndex: number;
 }
 
-export interface UploadColumnProps {
-  role: 'base' | 'comparison';
-  file: File | null;
-  stub: StirlingFileStub | null;
-  title: string;
-  description: string;
-  accentClass: string;
-  disabled: boolean;
-  onDrop: (files: File[]) => void;
-  onSelectExisting: () => void;
-  onClear: () => void;
-}
-
-export interface CompareUploadSectionProps {
-  heading: string;
-  subheading: string;
-  disabled: boolean;
-  base: UploadColumnProps;
-  comparison: UploadColumnProps;
-}
+// Removed legacy upload section types; upload flow now uses the standard active files workbench
 
 export interface CompareWorkbenchData {
   result: CompareResultData | null;

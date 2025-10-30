@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef } from 'react';
-import { Stack } from '@mantine/core';
+import { useEffect, useMemo, useRef } from 'react';
+import { Loader, Stack } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { useIsMobile } from '@app/hooks/useIsMobile';
 import {
@@ -13,7 +13,6 @@ import { useFilesModalContext } from '@app/contexts/FilesModalContext';
 import { useFileActions, useFileContext } from '@app/contexts/file/fileHooks';
 import { useRightRailButtons } from '@app/hooks/useRightRailButtons';
 import CompareDocumentPane from '@app/components/tools/compare/CompareDocumentPane';
-import CompareUploadSection from '@app/components/tools/compare/CompareUploadSection';
 import { useComparePagePreviews } from '@app/components/tools/compare/hooks/useComparePagePreviews';
 import { useComparePanZoom } from '@app/components/tools/compare/hooks/useComparePanZoom';
 import { useCompareHighlights } from '@app/components/tools/compare/hooks/useCompareHighlights';
@@ -154,104 +153,21 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
   );
 
   const processingMessage = t('compare.status.processing', 'Analyzing differences...');
-  const emptyMessage = t('compare.view.noData', 'Run a comparison to view the summary and diff.');
-  const baseDocumentLabel = t('compare.summary.baseHeading', 'Base document');
-  const comparisonDocumentLabel = t('compare.summary.comparisonHeading', 'Comparison document');
+  const baseDocumentLabel = t('compare.summary.baseHeading', 'Original document');
+  const comparisonDocumentLabel = t('compare.summary.comparisonHeading', 'Edited document');
   const pageLabel = t('compare.summary.pageLabel', 'Page');
 
-  const handleFilesAdded = useCallback(async (files: File[], role: 'base' | 'comparison') => {
-      if (!files.length || isOperationLoading) {
-        return;
-      }
-      try {
-      const added = await fileActions.addFiles(files, { selectFiles: false });
-        const primary = added[0];
-        if (!primary) {
-          return;
-        }
-        if (role === 'base') {
-          onSelectBase?.(primary.fileId as FileId);
-        } else {
-          onSelectComparison?.(primary.fileId as FileId);
-        }
-      } catch (error) {
-        console.error('[compare] failed to add files from workbench dropzone', error);
-      }
-  }, [fileActions, isOperationLoading, onSelectBase, onSelectComparison]);
+  // Always show the selected file names from the sidebar; they are known before diff results
+  const baseTitle = baseStub?.name || result?.base?.fileName || '';
+  const comparisonTitle = comparisonStub?.name || result?.comparison?.fileName || '';
 
-  const handleSelectFromLibrary = useCallback((role: 'base' | 'comparison') => {
-      if (isOperationLoading) {
-        return;
-      }
-      openFilesModal({
-        customHandler: async (files: File[]) => {
-          await handleFilesAdded(files, role);
-        },
-      });
-  }, [handleFilesAdded, isOperationLoading, openFilesModal]);
-
-  const handleClearSelection = useCallback((role: 'base' | 'comparison') => {
-      if (isOperationLoading) {
-        return;
-      }
-      if (role === 'base') {
-        onSelectBase?.(null);
-      } else {
-        onSelectComparison?.(null);
-      }
-  }, [isOperationLoading, onSelectBase, onSelectComparison]);
-
-  const uploadSection = (
-    <CompareUploadSection
-      heading={t('compare.upload.title', 'Set up your comparison')}
-      subheading={t(
-            'compare.upload.subtitle',
-            'Add a base document on the left and a comparison document on the right to highlight their differences.'
-          )}
-      disabled={isOperationLoading}
-      base={getUploadConfig(
-        'base',
-        baseFile,
-        baseStub,
-        t('compare.upload.baseTitle', 'Base document'),
-        t('compare.upload.baseDescription', 'This version acts as the reference for differences.'),
-        'compare-upload-icon--base',
-        (files) => handleFilesAdded(files, 'base'),
-        () => handleSelectFromLibrary('base'),
-        () => handleClearSelection('base'),
-        isOperationLoading,
-      )}
-      comparison={getUploadConfig(
-        'comparison',
-        comparisonFile,
-        comparisonStub,
-        t('compare.upload.comparisonTitle', 'Comparison document'),
-        t('compare.upload.comparisonDescription', 'Differences from this version will be highlighted.'),
-        'compare-upload-icon--comparison',
-        (files) => handleFilesAdded(files, 'comparison'),
-        () => handleSelectFromLibrary('comparison'),
-        () => handleClearSelection('comparison'),
-        isOperationLoading,
-      )}
-    />
-  );
-
-  if (!result) {
-    return uploadSection;
-  }
-
-  const baseTitle = baseLoading
-    ? `${result.base.fileName} - ${t('loading', 'Loading')}…`
-    : `${result.base.fileName} - ${basePages.length} pages`;
-  const comparisonTitle = comparisonLoading
-    ? `${result.comparison.fileName} - ${t('loading', 'Loading')}…`
-    : `${result.comparison.fileName} - ${comparisonPages.length} pages`;
-  const baseDropdownPlaceholder = t('compare.dropdown.deletions', 'Deletions ({{count}})', {
-    count: baseWordChanges.length,
-  });
-  const comparisonDropdownPlaceholder = t('compare.dropdown.additions', 'Additions ({{count}})', {
-    count: comparisonWordChanges.length,
-  });
+  // During diff processing, show compact spinners in the dropdown badges
+  const baseDropdownPlaceholder = (isOperationLoading || !result)
+    ? (<span className="inline-flex flex-row items-center gap-1">{t('compare.dropdown.deletionsLabel', 'Deletions')} <Loader size="xs" color="currentColor" /></span>)
+    : t('compare.dropdown.deletions', 'Deletions ({{count}})', { count: baseWordChanges.length });
+  const comparisonDropdownPlaceholder = (isOperationLoading || !result)
+    ? (<span className="inline-flex flex-row items-center gap-1">{t('compare.dropdown.additionsLabel', 'Additions')} <Loader size="xs" color="currentColor" /></span>)
+    : t('compare.dropdown.additions', 'Additions ({{count}})', { count: comparisonWordChanges.length });
 
   const rightRailButtons = useCompareRightRailButtons({
     layout,
@@ -290,6 +206,19 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
 
   const progressToastIdRef = useRef<string | null>(null);
   const completionTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (completionTimerRef.current != null) {
+        window.clearTimeout(completionTimerRef.current);
+        completionTimerRef.current = null;
+      }
+      if (progressToastIdRef.current) {
+        dismissToast(progressToastIdRef.current);
+        progressToastIdRef.current = null;
+      }
+    };
+  }, []);
 
   const allDone = useMemo(() => {
     const baseDone = (baseTotal || basePages.length) > 0 && baseRendered >= (baseTotal || basePages.length);
@@ -393,9 +322,8 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
               dropdownPlaceholder={baseDropdownPlaceholder}
             changes={mapChangesForDropdown(baseWordChanges)}
               onNavigateChange={(value, pageNumber) => handleChangeNavigation(value, 'base', pageNumber)}
-              isLoading={baseLoading}
+              isLoading={isOperationLoading || baseLoading}
               processingMessage={processingMessage}
-              emptyMessage={emptyMessage}
               pages={basePages}
               pairedPages={comparisonPages}
               getRowHeightPx={getRowHeightPx}
@@ -426,9 +354,8 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
               dropdownPlaceholder={comparisonDropdownPlaceholder}
             changes={mapChangesForDropdown(comparisonWordChanges)}
               onNavigateChange={(value, pageNumber) => handleChangeNavigation(value, 'comparison', pageNumber)}
-              isLoading={comparisonLoading}
+              isLoading={isOperationLoading || comparisonLoading}
               processingMessage={processingMessage}
-              emptyMessage={emptyMessage}
               pages={comparisonPages}
               pairedPages={basePages}
               getRowHeightPx={getRowHeightPx}

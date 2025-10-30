@@ -193,7 +193,7 @@ export const useCompareOperation = (): CompareOperationHook => {
       const runId = ++activeRunIdRef.current;
       cancelledRef.current = false;
       if (!params.baseFileId || !params.comparisonFileId) {
-        setErrorMessage(t('compare.error.selectRequired', 'Select a base and comparison document.'));
+        setErrorMessage(t('compare.error.selectRequired', 'Select the original and edited document.'));
         return;
       }
 

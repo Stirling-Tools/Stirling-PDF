@@ -2117,22 +2117,6 @@
     "tags": "differentiate,contrast,changes,analysis",
     "title": "Compare",
     "header": "Compare PDFs",
-    "workbench": {
-      "label": "Compare view"
-    },
-    "view": {
-      "title": "Compare view",
-      "noData": "Run a comparison to view the summary and diff."
-    },
-    "highlightColor": {
-      "1": "Highlight Colour 1:",
-      "2": "Highlight Colour 2:"
-    },
-    "document": {
-      "1": "Document 1",
-      "2": "Document 2"
-    },
-    "submit": "Compare",
     "review": {
       "title": "Comparison Result",
       "actionsHint": "Review the comparison, switch document roles, or export the summary.",
@@ -2140,37 +2124,32 @@
       "exportSummary": "Export summary"
     },
     "base": {
-      "label": "Base document",
-      "placeholder": "Select a base PDF"
+      "label": "Original document",
+      "placeholder": "Select the original PDF"
     },
     "comparison": {
-      "label": "Comparison document",
-      "placeholder": "Select a comparison PDF"
+      "label": "Edited document",
+      "placeholder": "Select the edited PDF"
     },
     "addFilesHint": "Add PDFs in the Files step to enable selection.",
     "noFiles": "No PDFs available yet",
     "pages": "Pages",
     "selection": {
-      "title": "Select Base and Comparison"
+      "originalEditedTitle": "Select Original and Edited PDFs"
     },
-    "swap": "Swap PDFs",
+    "original": { "label": "Original PDF" },
+    "edited": { "label": "Edited PDF" },
+    "swap": {
+      "confirmTitle": "Re-run comparison?",
+      "confirmBody": "This will rerun the tool. Are you sure you want to swap the order of Original and Edited?",
+      "confirm": "Swap and Re-run"
+    },
     "cta": "Compare",
     "loading": "Comparing...",
-    "upload": {
-      "title": "Set up your comparison",
-      "subtitle": "Add a base document on the left and a comparison document on the right to highlight their differences.",
-      "browse": "Browse files",
-      "selectExisting": "Select existing",
-      "clearSelection": "Clear selection",
-      "instructions": "Drag & drop here or use the buttons to choose a file.",
-      "baseTitle": "Base document",
-      "baseDescription": "This version acts as the reference for differences.",
-      "comparisonTitle": "Comparison document",
-      "comparisonDescription": "Differences from this version will be highlighted."
-    },
+    
     "summary": {
-      "baseHeading": "Base document",
-      "comparisonHeading": "Comparison document",
+      "baseHeading": "Original document",
+      "comparisonHeading": "Edited document",
       "pageLabel": "Page"
     },
     "rendering": {
@@ -2180,6 +2159,8 @@
       "complete": "Page rendering complete"
     },
     "dropdown": {
+      "deletionsLabel": "Deletions",
+      "additionsLabel": "Additions",
       "deletions": "Deletions ({{count}})",
       "additions": "Additions ({{count}})",
       "searchPlaceholder": "Search changes...",
@@ -2199,7 +2180,7 @@
       "unlinkedBody": "Tip: Arrow Up/Down scroll both panes; panning only moves the active pane."
     },
     "error": {
-      "selectRequired": "Select a base and comparison document.",
+      "selectRequired": "Select a original and edited document.",
       "filesMissing": "Unable to locate the selected files. Please re-select them.",
       "generic": "Unable to compare these files."
     },
@@ -2217,8 +2198,7 @@
       "body": "This comparison is taking longer than usual. You can let it continue or cancel it.",
       "cancel": "Cancel comparison"
     },
-    "pageCount": "{{count}} pages",
-    "lastModified": "Last modified",
+    
     "newLine": "new-line",
     "complex": {
       "message": "One or both of the provided documents are large files, accuracy of comparison may be reduced"
