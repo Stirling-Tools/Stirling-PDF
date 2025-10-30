@@ -144,8 +144,8 @@
                     <!-- Positioning Mode -->
                     <div class="mb-3">
                       <div class="form-check">
-                        <input type="checkbox" id="randomPosition" name="randomPosition" class="form-check-input">
-                        <label for="randomPosition" class="form-check-label">Random Positioning</label>
+                        <input type="checkbox" id="randomPosition" name="randomPosition">
+                        <label for="randomPosition">Random Positioning</label>
                       </div>
                       <small class="form-text text-muted">Enable random placement instead of grid layout</small>
                     </div>
@@ -185,8 +185,8 @@
                     <!-- Mirroring Controls -->
                     <div class="mb-3">
                       <div class="form-check">
-                        <input type="checkbox" id="randomMirroring" name="randomMirroring" class="form-check-input" onchange="toggleMirroringProbability()">
-                        <label for="randomMirroring" class="form-check-label">Random Mirroring</label>
+                        <input type="checkbox" id="randomMirroring" name="randomMirroring" onchange="toggleMirroringProbability()">
+                        <label for="randomMirroring">Random Mirroring</label>
                         <small class="form-text text-muted">For images only</small>
                       </div>
                     </div>
@@ -200,8 +200,8 @@
                     <!-- Font Controls (for text watermarks) -->
                     <div id="fontGroup" class="mb-3">
                       <div class="form-check">
-                        <input type="checkbox" id="randomFont" name="randomFont" class="form-check-input" onchange="toggleFontMode()">
-                        <label for="randomFont" class="form-check-label">Random Font</label>
+                        <input type="checkbox" id="randomFont" name="randomFont" onchange="toggleFontMode()">
+                        <label for="randomFont">Random Font</label>
                       </div>
                       <small class="form-text text-muted">Enable random font selection for text watermarks</small>
                     </div>
@@ -234,8 +234,8 @@
                     <!-- Color Controls -->
                     <div class="mb-3">
                       <div class="form-check">
-                        <input type="checkbox" id="randomColor" name="randomColor" class="form-check-input" onchange="toggleColorMode()">
-                        <label for="randomColor" class="form-check-label">Random Color</label>
+                        <input type="checkbox" id="randomColor" name="randomColor" onchange="toggleColorMode()">
+                        <label for="randomColor">Random Color</label>
                       </div>
                     </div>
 
@@ -245,8 +245,8 @@
                       
                       <!-- Per-Letter Font -->
                       <div class="form-check">
-                        <input type="checkbox" id="perLetterFont" name="perLetterFont" class="form-check-input" onchange="togglePerLetterFontConfig()">
-                        <label for="perLetterFont" class="form-check-label">Vary Font per Letter</label>
+                        <input type="checkbox" id="perLetterFont" name="perLetterFont" onchange="togglePerLetterFontConfig()">
+                        <label for="perLetterFont">Vary Font per Letter</label>
                       </div>
                       <div id="perLetterFontConfig" class="mb-2 ms-4" style="display: none;">
                         <label for="perLetterFontCount">Number of Fonts</label>
@@ -256,8 +256,8 @@
                       
                       <!-- Per-Letter Color -->
                       <div class="form-check">
-                        <input type="checkbox" id="perLetterColor" name="perLetterColor" class="form-check-input" onchange="togglePerLetterColorConfig()">
-                        <label for="perLetterColor" class="form-check-label">Vary Color per Letter</label>
+                        <input type="checkbox" id="perLetterColor" name="perLetterColor" onchange="togglePerLetterColorConfig()">
+                        <label for="perLetterColor">Vary Color per Letter</label>
                       </div>
                       <div id="perLetterColorConfig" class="mb-2 ms-4" style="display: none;">
                         <label for="perLetterColorCount">Number of Colors</label>
@@ -267,8 +267,8 @@
                       
                       <!-- Per-Letter Size -->
                       <div class="form-check">
-                        <input type="checkbox" id="perLetterSize" name="perLetterSize" class="form-check-input" onchange="togglePerLetterSizeConfig()">
-                        <label for="perLetterSize" class="form-check-label">Vary Size per Letter</label>
+                        <input type="checkbox" id="perLetterSize" name="perLetterSize" onchange="togglePerLetterSizeConfig()">
+                        <label for="perLetterSize">Vary Size per Letter</label>
                       </div>
                       <div id="perLetterSizeConfig" class="mb-2 ms-4" style="display: none;">
                         <label for="perLetterSizeMin">Size Min</label>
@@ -283,8 +283,8 @@
                       
                       <!-- Per-Letter Orientation -->
                       <div class="form-check">
-                        <input type="checkbox" id="perLetterOrientation" name="perLetterOrientation" class="form-check-input" onchange="togglePerLetterOrientationConfig()">
-                        <label for="perLetterOrientation" class="form-check-label">Vary Orientation per Letter</label>
+                        <input type="checkbox" id="perLetterOrientation" name="perLetterOrientation" onchange="togglePerLetterOrientationConfig()">
+                        <label for="perLetterOrientation">Vary Orientation per Letter</label>
                       </div>
                       <div id="perLetterOrientationConfig" class="mb-2 ms-4" style="display: none;">
                         <label for="perLetterOrientationMin">Angle Min (degrees)</label>
@@ -303,10 +303,11 @@
                     <!-- Shading Controls (for text watermarks) -->
                     <div id="shadingGroup" class="mb-3">
                       <div class="form-check">
-                        <input type="checkbox" id="shadingRandom" name="shadingRandom" class="form-check-input" onchange="toggleShadingMode()">
-                        <label for="shadingRandom" class="form-check-label">Random Shading</label>
+                        <input id="shadingRandom" name="shadingRandom" type="checkbox" onchange="toggleShadingMode()">
+                        <label for="shadingRandom">Random Shading</label>
                       </div>
                     </div>
+                    
 
                     <div id="shadingFixedGroup" class="mb-3">
                       <label for="shading">Shading Style</label>
@@ -333,14 +334,14 @@
                 </div>
 
 
-                        <div class="form-check mb-3">
-              <input id="convertPDFToImage" name="convertPDFToImage" type="checkbox">
-              <label for="convertPDFToImage" th:text="#{watermark.selectText.10}"></label>
-                        </div>
-                        <div class="mb-3 text-left">
-                            <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{watermark.submit}"></button>
-                        </div>
-                    </form>
+                <div class="form-check mb-3">
+                  <input id="convertPDFToImage" name="convertPDFToImage" type="checkbox">
+                  <label for="convertPDFToImage" th:text="#{watermark.selectText.10}"></label>
+                </div>
+                <div class="mb-3 text-left">
+                  <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{watermark.submit}"></button>
+                </div>
+              </form>
 
               <script>
                 function toggleFileOption() {
