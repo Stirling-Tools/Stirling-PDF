@@ -1,9 +1,6 @@
 package stirling.software.common.util.propertyeditor;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Map;
 
@@ -30,7 +27,7 @@ class StringToMapPropertyEditorTest {
 
         // Assert
         assertNotNull(value, "Value should not be null");
-        assertTrue(value instanceof Map, "Value should be a Map");
+        assertInstanceOf(Map.class, value, "Value should be a Map");
 
         @SuppressWarnings("unchecked")
         Map<String, String> map = (Map<String, String>) value;
@@ -50,7 +47,7 @@ class StringToMapPropertyEditorTest {
 
         // Assert
         assertNotNull(value, "Value should not be null");
-        assertTrue(value instanceof Map, "Value should be a Map");
+        assertInstanceOf(Map.class, value, "Value should be a Map");
 
         @SuppressWarnings("unchecked")
         Map<String, String> map = (Map<String, String>) value;
@@ -68,7 +65,7 @@ class StringToMapPropertyEditorTest {
 
         // Assert
         assertNotNull(value, "Value should not be null");
-        assertTrue(value instanceof Map, "Value should be a Map");
+        assertInstanceOf(Map.class, value, "Value should be a Map");
 
         @SuppressWarnings("unchecked")
         Map<String, String> map = (Map<String, String>) value;
@@ -87,7 +84,7 @@ class StringToMapPropertyEditorTest {
 
         // Assert
         assertNotNull(value, "Value should not be null");
-        assertTrue(value instanceof Map, "Value should be a Map");
+        assertInstanceOf(Map.class, value, "Value should be a Map");
 
         @SuppressWarnings("unchecked")
         Map<String, String> map = (Map<String, String>) value;

@@ -14,7 +14,6 @@ import org.springframework.security.oauth2.client.authentication.OAuth2Authentic
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-import stirling.software.common.configuration.AppConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.security.service.JwtServiceInterface;
 
@@ -22,8 +21,6 @@ import stirling.software.proprietary.security.service.JwtServiceInterface;
 class CustomLogoutSuccessHandlerTest {
 
     @Mock private ApplicationProperties.Security securityProperties;
-
-    @Mock private AppConfig appConfig;
 
     @Mock private JwtServiceInterface jwtService;
 
