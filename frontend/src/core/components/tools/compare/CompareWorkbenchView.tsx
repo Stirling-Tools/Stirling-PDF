@@ -8,9 +8,8 @@ import {
   CompareChangeOption,
 } from '@app/types/compare';
 import type { FileId } from '@app/types/file';
-import type { StirlingFileStub, StirlingFile } from '@app/types/fileContext';
-import { useFilesModalContext } from '@app/contexts/FilesModalContext';
-import { useFileActions, useFileContext } from '@app/contexts/file/fileHooks';
+import type { StirlingFile } from '@app/types/fileContext';
+import { useFileContext } from '@app/contexts/file/fileHooks';
 import { useRightRailButtons } from '@app/hooks/useRightRailButtons';
 import CompareDocumentPane from '@app/components/tools/compare/CompareDocumentPane';
 import { useComparePagePreviews } from '@app/components/tools/compare/hooks/useComparePagePreviews';
@@ -44,45 +43,17 @@ const getStubFromSelection = (
   return selectors.getStirlingFileStub(fileId) ?? null;
 };
 
-const getUploadConfig = (
-  role: 'base' | 'comparison',
-  file: File | null,
-  stub: StirlingFileStub | null,
-  title: string,
-  description: string,
-  accentClass: string,
-  onDrop: (files: File[]) => void,
-  onSelectExisting: () => void,
-  onClear: () => void,
-  disabled: boolean,
-) => ({
-  role,
-  file,
-  stub,
-  title,
-  description,
-  accentClass,
-  onDrop,
-  onSelectExisting,
-  onClear,
-  disabled,
-});
-
 const mapChangesForDropdown = (changes: CompareChangeOption[]) =>
   changes.map(({ value, label, pageNumber }) => ({ value, label, pageNumber }));
 
 const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
   const { t } = useTranslation();
   const prefersStacked = useIsMobile();
-  const { openFilesModal } = useFilesModalContext();
-  const { actions: fileActions } = useFileActions();
   const { selectors } = useFileContext();
 
   const result: CompareResultData | null = data?.result ?? null;
   const baseFileId = data?.baseFileId ?? null;
   const comparisonFileId = data?.comparisonFileId ?? null;
-  const onSelectBase = data?.onSelectBase;
-  const onSelectComparison = data?.onSelectComparison;
   const isOperationLoading = data?.isLoading ?? false;
 
   const baseFile = getFileFromSelection(data?.baseLocalFile, baseFileId, selectors);

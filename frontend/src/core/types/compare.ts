@@ -1,4 +1,3 @@
-import type { StirlingFileStub } from '@app/types/fileContext';
 import type { FileId } from '@app/types/file';
 import type { StirlingFile } from '@app/types/fileContext';
 
