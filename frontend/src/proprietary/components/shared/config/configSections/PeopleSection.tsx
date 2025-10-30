@@ -19,6 +19,8 @@ import {
   SegmentedControl,
   Tooltip,
   CloseButton,
+  Avatar,
+  Box,
 } from '@mantine/core';
 import LocalIcon from '@app/components/shared/LocalIcon';
 import { alert } from '@app/components/toast';
@@ -38,7 +40,8 @@ export default function PeopleSection() {
   const [editUserModalOpened, setEditUserModalOpened] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [processing, setProcessing] = useState(false);
-  const [inviteMode, setInviteMode] = useState<'email' | 'direct'>('direct');
+  const [inviteMode, setInviteMode] = useState<'email' | 'direct' | 'link'>('direct');
+  const [generatedInviteLink, setGeneratedInviteLink] = useState<string | null>(null);
 
   // License information
   const [licenseInfo, setLicenseInfo] = useState<{
@@ -64,6 +67,15 @@ export default function PeopleSection() {
     emails: '',
     role: 'ROLE_USER',
     teamId: undefined as number | undefined,
+  });
+
+  // Form state for invite link
+  const [inviteLinkForm, setInviteLinkForm] = useState({
+    email: '',
+    role: 'ROLE_USER',
+    teamId: undefined as number | undefined,
+    expiryHours: 72,
+    sendEmail: false,
   });
 
   // Form state for edit user modal
@@ -209,6 +221,44 @@ export default function PeopleSection() {
     }
   };
 
+  const handleGenerateInviteLink = async () => {
+    try {
+      setProcessing(true);
+      const response = await userManagementService.generateInviteLink({
+        email: inviteLinkForm.email,
+        role: inviteLinkForm.role,
+        teamId: inviteLinkForm.teamId,
+        expiryHours: inviteLinkForm.expiryHours,
+        sendEmail: inviteLinkForm.sendEmail,
+      });
+
+      // Construct full frontend URL
+      const frontendUrl = `${window.location.origin}/invite/${response.token}`;
+      setGeneratedInviteLink(frontendUrl);
+
+      if (response.emailSent) {
+        alert({
+          alertType: 'success',
+          title: t('workspace.people.inviteLink.successWithEmail', 'Invite link generated and email sent!')
+        });
+      } else {
+        alert({
+          alertType: 'success',
+          title: t('workspace.people.inviteLink.success', 'Invite link generated successfully!')
+        });
+      }
+    } catch (error: any) {
+      console.error('Failed to generate invite link:', error);
+      const errorMessage = error.response?.data?.message ||
+                          error.response?.data?.error ||
+                          error.message ||
+                          t('workspace.people.inviteLink.error', 'Failed to generate invite link');
+      alert({ alertType: 'error', title: errorMessage });
+    } finally {
+      setProcessing(false);
+    }
+  };
+
   const handleUpdateUserRole = async () => {
     if (!selectedUser) return;
 
@@ -287,6 +337,18 @@ export default function PeopleSection() {
     });
   };
 
+  const closeInviteModal = () => {
+    setInviteModalOpened(false);
+    setGeneratedInviteLink(null);
+    setInviteLinkForm({
+      email: '',
+      role: 'ROLE_USER',
+      teamId: undefined,
+      expiryHours: 72,
+      sendEmail: false,
+    });
+  };
+
   const filteredUsers = users.filter((user) =>
     user.username.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -309,12 +371,12 @@ export default function PeopleSection() {
   const renderRoleOption = ({ option }: { option: any }) => (
     <Group gap="sm" wrap="nowrap">
       <LocalIcon icon={option.icon} width="1.25rem" height="1.25rem" style={{ flexShrink: 0 }} />
-      <div style={{ flex: 1 }}>
+      <Box style={{ flex: 1 }}>
         <Text size="sm" fw={500}>{option.label}</Text>
         <Text size="xs" c="dimmed" style={{ whiteSpace: 'normal', lineHeight: 1.4 }}>
           {option.description}
         </Text>
-      </div>
+      </Box>
     </Group>
   );
 
@@ -444,37 +506,30 @@ export default function PeopleSection() {
               >
                 <Table.Td>
                   <Group gap="xs" wrap="nowrap">
-                    <div
-                      style={{
-                        width: 32,
-                        height: 32,
-                        borderRadius: '50%',
-                        backgroundColor: user.enabled
-                          ? 'var(--mantine-color-blue-1)'
-                          : 'var(--mantine-color-gray-2)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontWeight: 600,
-                        fontSize: '0.875rem',
-                        color: user.enabled
-                          ? 'var(--mantine-color-blue-7)'
-                          : 'var(--mantine-color-gray-6)',
-                        flexShrink: 0,
-                        border: user.isActive ? '2px solid var(--mantine-color-green-6)' : 'none',
-                        opacity: user.enabled ? 1 : 0.5,
-                      }}
-                      title={
+                    <Tooltip
+                      label={
                         !user.enabled
                           ? t('workspace.people.disabled', 'Disabled')
                           : user.isActive
                             ? t('workspace.people.activeSession', 'Active session')
                             : t('workspace.people.active', 'Active')
                       }
+                      zIndex={Z_INDEX_OVER_CONFIG_MODAL}
                     >
-                      {user.username.charAt(0).toUpperCase()}
-                    </div>
-                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <Avatar
+                        size={32}
+                        color={user.enabled ? 'blue' : 'gray'}
+                        styles={{
+                          root: {
+                            border: user.isActive ? '2px solid var(--mantine-color-green-6)' : 'none',
+                            opacity: user.enabled ? 1 : 0.5,
+                          }
+                        }}
+                      >
+                        {user.username.charAt(0).toUpperCase()}
+                      </Avatar>
+                    </Tooltip>
+                    <Box style={{ minWidth: 0, flex: 1 }}>
                       <Tooltip label={user.username} disabled={user.username.length <= 20} zIndex={Z_INDEX_OVER_CONFIG_MODAL}>
                         <Text
                           size="sm"
@@ -496,7 +551,7 @@ export default function PeopleSection() {
                           {user.email}
                         </Text>
                       )}
-                    </div>
+                    </Box>
                   </Group>
                 </Table.Td>
                 <Table.Td w={100}>
@@ -587,16 +642,16 @@ export default function PeopleSection() {
       {/* Add Member Modal */}
       <Modal
         opened={inviteModalOpened}
-        onClose={() => setInviteModalOpened(false)}
+        onClose={closeInviteModal}
         size="md"
         zIndex={Z_INDEX_OVER_CONFIG_MODAL}
         centered
         padding="xl"
         withCloseButton={false}
       >
-        <div style={{ position: 'relative' }}>
+        <Box pos="relative">
           <CloseButton
-            onClick={() => setInviteModalOpened(false)}
+            onClick={closeInviteModal}
             size="lg"
             style={{
               position: 'absolute',
@@ -656,11 +711,18 @@ export default function PeopleSection() {
               <div>
                 <SegmentedControl
                   value={inviteMode}
-                  onChange={(value) => setInviteMode(value as 'email' | 'direct')}
+                  onChange={(value) => {
+                    setInviteMode(value as 'email' | 'direct' | 'link');
+                    setGeneratedInviteLink(null);
+                  }}
                   data={[
                     {
                       label: t('workspace.people.inviteMode.username', 'Username'),
                       value: 'direct',
+                    },
+                    {
+                      label: t('workspace.people.inviteMode.link', 'Link'),
+                      value: 'link',
                     },
                     {
                       label: t('workspace.people.inviteMode.email', 'Email'),
@@ -672,6 +734,90 @@ export default function PeopleSection() {
                 />
               </div>
             </Tooltip>
+
+            {/* Link Mode */}
+            {inviteMode === 'link' && (
+              <>
+                <TextInput
+                  label={t('workspace.people.inviteLink.email', 'Email (optional)')}
+                  placeholder={t('workspace.people.inviteLink.emailPlaceholder', 'user@example.com')}
+                  value={inviteLinkForm.email}
+                  onChange={(e) => setInviteLinkForm({ ...inviteLinkForm, email: e.currentTarget.value })}
+                  description={t('workspace.people.inviteLink.emailDescription', 'If provided, the link will be tied to this email address')}
+                />
+                <Select
+                  label={t('workspace.people.addMember.role')}
+                  data={roleOptions}
+                  value={inviteLinkForm.role}
+                  onChange={(value) => setInviteLinkForm({ ...inviteLinkForm, role: value || 'ROLE_USER' })}
+                  renderOption={renderRoleOption}
+                  comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_OVER_CONFIG_MODAL }}
+                />
+                <Select
+                  label={t('workspace.people.addMember.team')}
+                  placeholder={t('workspace.people.addMember.teamPlaceholder')}
+                  data={teamOptions}
+                  value={inviteLinkForm.teamId?.toString()}
+                  onChange={(value) => setInviteLinkForm({ ...inviteLinkForm, teamId: value ? parseInt(value) : undefined })}
+                  clearable
+                  comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_OVER_CONFIG_MODAL }}
+                />
+                <TextInput
+                  label={t('workspace.people.inviteLink.expiryHours', 'Link expires in (hours)')}
+                  type="number"
+                  value={inviteLinkForm.expiryHours}
+                  onChange={(e) => setInviteLinkForm({ ...inviteLinkForm, expiryHours: parseInt(e.currentTarget.value) || 72 })}
+                  min={1}
+                  max={720}
+                />
+                {inviteLinkForm.email && (
+                  <Checkbox
+                    label={t('workspace.people.inviteLink.sendEmail', 'Send invite link via email')}
+                    description={t('workspace.people.inviteLink.sendEmailDescription', 'Also send the link to the provided email address')}
+                    checked={inviteLinkForm.sendEmail}
+                    onChange={(e) => setInviteLinkForm({ ...inviteLinkForm, sendEmail: e.currentTarget.checked })}
+                  />
+                )}
+
+                {/* Display generated link */}
+                {generatedInviteLink && (
+                  <Paper withBorder p="md" bg="var(--mantine-color-green-light)">
+                    <Stack gap="sm">
+                      <Text size="sm" fw={500}>{t('workspace.people.inviteLink.generated', 'Invite Link Generated')}</Text>
+                      <Group gap="xs">
+                        <TextInput
+                          value={generatedInviteLink}
+                          readOnly
+                          style={{ flex: 1 }}
+                        />
+                        <Button
+                          variant="light"
+                          onClick={async () => {
+                            try {
+                              await navigator.clipboard.writeText(generatedInviteLink);
+                              alert({ alertType: 'success', title: t('workspace.people.inviteLink.copied', 'Link copied to clipboard!') });
+                            } catch {
+                              // Fallback for browsers without clipboard API
+                              const textArea = document.createElement('textarea');
+                              textArea.value = generatedInviteLink;
+                              textArea.style.position = 'fixed';
+                              textArea.style.opacity = '0';
+                              document.body.appendChild(textArea);
+                              textArea.select();
+                              document.execCommand('copy');
+                              document.body.removeChild(textArea);
+                              alert({ alertType: 'success', title: t('workspace.people.inviteLink.copied', 'Link copied to clipboard!') });
+                            }
+                          }}
+                        >
+                          <LocalIcon icon="content-copy" width="1rem" height="1rem" />
+                        </Button>
+                      </Group>
+                    </Stack>
+                  </Paper>
+                )}
+              </>
+            )}
 
             {/* Email Mode */}
             {inviteMode === 'email' && config?.enableEmailInvites && (
@@ -749,7 +895,7 @@ export default function PeopleSection() {
 
             {/* Action Button */}
             <Button
-              onClick={inviteMode === 'email' ? handleEmailInvite : handleInviteUser}
+              onClick={inviteMode === 'email' ? handleEmailInvite : inviteMode === 'link' ? handleGenerateInviteLink : handleInviteUser}
               loading={processing}
               fullWidth
               size="md"
@@ -757,10 +903,12 @@ export default function PeopleSection() {
             >
               {inviteMode === 'email'
                 ? t('workspace.people.emailInvite.submit', 'Send Invites')
-                : t('workspace.people.addMember.submit')}
+                : inviteMode === 'link'
+                  ? t('workspace.people.inviteLink.submit', 'Generate Link')
+                  : t('workspace.people.addMember.submit')}
             </Button>
           </Stack>
-        </div>
+        </Box>
       </Modal>
 
       {/* Edit User Modal */}
@@ -773,7 +921,7 @@ export default function PeopleSection() {
         padding="xl"
         withCloseButton={false}
       >
-        <div style={{ position: 'relative' }}>
+        <Box pos="relative">
           <CloseButton
             onClick={closeEditModal}
             size="lg"
@@ -816,7 +964,7 @@ export default function PeopleSection() {
               {t('workspace.people.editMember.submit')}
             </Button>
           </Stack>
-        </div>
+        </Box>
       </Modal>
     </Stack>
   );

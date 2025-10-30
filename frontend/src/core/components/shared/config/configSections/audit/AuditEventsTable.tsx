@@ -16,6 +16,7 @@ import {
 import { DateInput } from '@mantine/dates';
 import { useTranslation } from 'react-i18next';
 import auditService, { AuditEvent, AuditFilters } from '@app/services/auditService';
+import { Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
 
 interface AuditEventsTableProps {}
 
@@ -115,6 +116,7 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = () => {
             onChange={(value) => handleFilterChange('eventType', value || undefined)}
             clearable
             style={{ flex: 1, minWidth: 200 }}
+            comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_OVER_CONFIG_MODAL }}
           />
           <Select
             placeholder={t('audit.events.filterByUser', 'Filter by user')}
@@ -124,6 +126,7 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = () => {
             clearable
             searchable
             style={{ flex: 1, minWidth: 200 }}
+            comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_OVER_CONFIG_MODAL }}
           />
           <DateInput
             placeholder={t('audit.events.startDate', 'Start date')}
@@ -133,6 +136,7 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = () => {
             }
             clearable
             style={{ flex: 1, minWidth: 150 }}
+            popoverProps={{ withinPortal: true, zIndex: Z_INDEX_OVER_CONFIG_MODAL }}
           />
           <DateInput
             placeholder={t('audit.events.endDate', 'End date')}
@@ -142,6 +146,7 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = () => {
             }
             clearable
             style={{ flex: 1, minWidth: 150 }}
+            popoverProps={{ withinPortal: true, zIndex: Z_INDEX_OVER_CONFIG_MODAL }}
           />
           <Button variant="outline" onClick={handleClearFilters}>
             {t('audit.events.clearFilters', 'Clear')}
@@ -255,6 +260,7 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = () => {
         onClose={() => setSelectedEvent(null)}
         title={t('audit.events.eventDetails', 'Event Details')}
         size="lg"
+        zIndex={Z_INDEX_OVER_CONFIG_MODAL}
       >
         {selectedEvent && (
           <Stack gap="md">

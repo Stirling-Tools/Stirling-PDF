@@ -12,6 +12,7 @@ import { DateInput } from '@mantine/dates';
 import { useTranslation } from 'react-i18next';
 import auditService, { AuditFilters } from '@app/services/auditService';
 import LocalIcon from '@app/components/shared/LocalIcon';
+import { Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
 
 interface AuditExportSectionProps {}
 
@@ -126,6 +127,7 @@ const AuditExportSection: React.FC<AuditExportSectionProps> = () => {
                 onChange={(value) => handleFilterChange('eventType', value || undefined)}
                 clearable
                 style={{ flex: 1, minWidth: 200 }}
+                comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_OVER_CONFIG_MODAL }}
               />
               <Select
                 placeholder={t('audit.export.filterByUser', 'Filter by user')}
@@ -135,6 +137,7 @@ const AuditExportSection: React.FC<AuditExportSectionProps> = () => {
                 clearable
                 searchable
                 style={{ flex: 1, minWidth: 200 }}
+                comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_OVER_CONFIG_MODAL }}
               />
             </Group>
             <Group>
@@ -146,6 +149,7 @@ const AuditExportSection: React.FC<AuditExportSectionProps> = () => {
                 }
                 clearable
                 style={{ flex: 1, minWidth: 200 }}
+                popoverProps={{ withinPortal: true, zIndex: Z_INDEX_OVER_CONFIG_MODAL }}
               />
               <DateInput
                 placeholder={t('audit.export.endDate', 'End date')}
@@ -155,6 +159,7 @@ const AuditExportSection: React.FC<AuditExportSectionProps> = () => {
                 }
                 clearable
                 style={{ flex: 1, minWidth: 200 }}
+                popoverProps={{ withinPortal: true, zIndex: Z_INDEX_OVER_CONFIG_MODAL }}
               />
               <Button variant="outline" onClick={handleClearFilters}>
                 {t('audit.export.clearFilters', 'Clear')}
