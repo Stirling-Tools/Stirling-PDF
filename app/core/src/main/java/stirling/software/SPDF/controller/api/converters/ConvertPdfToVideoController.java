@@ -70,7 +70,7 @@ public class ConvertPdfToVideoController {
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/video")
     @Operation(
-            summary = "Convert PDF to video",
+            summary = "Convert PDF to Video Slideshow",
             description =
                     "This endpoint converts a PDF document into a slideshow-style video."
                             + " Input:PDF Output:Video Type:SISO")
