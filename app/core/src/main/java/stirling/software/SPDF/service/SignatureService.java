@@ -96,7 +96,8 @@ public class SignatureService {
         return fileName.endsWith(".jpg")
                 || fileName.endsWith(".jpeg")
                 || fileName.endsWith(".png")
-                || fileName.endsWith(".gif");
+                || fileName.endsWith(".gif")
+                || fileName.endsWith(".svg");
     }
 
     private void validateFileName(String fileName) {
