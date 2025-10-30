@@ -29,8 +29,6 @@ import stirling.software.common.aop.AutoJobAspect;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.FileStorage;
 import stirling.software.common.service.JobExecutorService;
-import stirling.software.common.service.JobQueue;
-import stirling.software.common.service.ResourceMonitor;
 
 @ExtendWith(MockitoExtension.class)
 class AutoJobPostMappingIntegrationTest {
@@ -42,10 +40,6 @@ class AutoJobPostMappingIntegrationTest {
     @Mock private HttpServletRequest request;
 
     @Mock private FileStorage fileStorage;
-
-    @Mock private ResourceMonitor resourceMonitor;
-
-    @Mock private JobQueue jobQueue;
 
     @BeforeEach
     void setUp() {
@@ -71,7 +65,7 @@ class AutoJobPostMappingIntegrationTest {
         // Given
         PDFFile pdfFile = new PDFFile();
         pdfFile.setFileId("test-file-id");
-        Object[] args = new Object[] {pdfFile};
+        Object[] args = {pdfFile};
 
         when(joinPoint.getArgs()).thenReturn(args);
         when(request.getParameter("async")).thenReturn("true");
@@ -151,7 +145,7 @@ class AutoJobPostMappingIntegrationTest {
         // Given
         PDFFile pdfFile = new PDFFile();
         pdfFile.setFileInput(mock(MultipartFile.class));
-        Object[] args = new Object[] {pdfFile};
+        Object[] args = {pdfFile};
 
         when(joinPoint.getArgs()).thenReturn(args);
         when(request.getParameter("async")).thenReturn("true");

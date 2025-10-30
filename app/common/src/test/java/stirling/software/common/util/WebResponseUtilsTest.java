@@ -46,7 +46,8 @@ public class WebResponseUtilsTest {
         try {
             byte[] fileContent = "Sample file content".getBytes();
             MockMultipartFile file =
-                    new MockMultipartFile("file", "sample.txt", "text/plain", fileContent);
+                    new MockMultipartFile(
+                            "file", "sample.txt", MediaType.TEXT_PLAIN_VALUE, fileContent);
 
             ResponseEntity<byte[]> responseEntity =
                     WebResponseUtils.multiPartFileToWebResponse(file);

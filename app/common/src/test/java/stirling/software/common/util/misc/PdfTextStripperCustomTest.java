@@ -15,7 +15,6 @@ class PdfTextStripperCustomTest {
 
     private PdfTextStripperCustom stripper;
     private PDPage mockPage;
-    private PDRectangle mockMediaBox;
 
     @BeforeEach
     void setUp() throws IOException {
@@ -24,7 +23,7 @@ class PdfTextStripperCustomTest {
 
         // Create mock objects
         mockPage = mock(PDPage.class);
-        mockMediaBox = mock(PDRectangle.class);
+        PDRectangle mockMediaBox = mock(PDRectangle.class);
 
         // Configure mock behavior
         when(mockPage.getMediaBox()).thenReturn(mockMediaBox);
@@ -42,14 +41,14 @@ class PdfTextStripperCustomTest {
     }
 
     @Test
-    void testBasicFunctionality() throws IOException {
+    void testBasicFunctionality() {
         // Simply test that the method runs without exceptions
         try {
             stripper.addRegion("testRegion", new java.awt.geom.Rectangle2D.Float(0, 0, 100, 100));
             stripper.extractRegions(mockPage);
             assertTrue(true, "Should execute without errors");
         } catch (Exception e) {
-            assertTrue(false, "Method should not throw exception: " + e.getMessage());
+            fail("Method should not throw exception: " + e.getMessage());
         }
     }
 }

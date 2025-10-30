@@ -59,7 +59,6 @@ class JwtSaml2AuthenticationRequestRepositoryTest {
         String id = "testId";
         String relayState = "testRelayState";
         String authnRequestUri = "example.com/authnRequest";
-        Map<String, Object> claims = Map.of();
         String samlRequest = "testSamlRequest";
         String relyingPartyRegistrationId = "stirling-pdf";
 

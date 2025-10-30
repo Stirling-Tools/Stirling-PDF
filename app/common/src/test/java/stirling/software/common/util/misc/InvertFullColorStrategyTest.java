@@ -22,6 +22,7 @@ import org.apache.pdfbox.pdmodel.graphics.color.PDDeviceRGB;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -30,20 +31,9 @@ import stirling.software.common.model.api.misc.ReplaceAndInvert;
 class InvertFullColorStrategyTest {
 
     private InvertFullColorStrategy strategy;
-    private MultipartFile mockPdfFile;
-
-    @BeforeEach
-    void setUp() throws Exception {
-        // Create a simple PDF document for testing
-        byte[] pdfBytes = createSimplePdfWithRectangle();
-        mockPdfFile = new MockMultipartFile("file", "test.pdf", "application/pdf", pdfBytes);
-
-        // Create the strategy instance
-        strategy = new InvertFullColorStrategy(mockPdfFile, ReplaceAndInvert.FULL_INVERSION);
-    }
 
     /** Helper method to create a simple PDF with a colored rectangle for testing */
-    private byte[] createSimplePdfWithRectangle() throws IOException {
+    private static byte[] createSimplePdfWithRectangle() throws IOException {
         PDDocument document = new PDDocument();
         PDPage page = new PDPage(PDRectangle.A4);
         document.addPage(page);
@@ -61,6 +51,18 @@ class InvertFullColorStrategyTest {
         document.close();
 
         return baos.toByteArray();
+    }
+
+    @BeforeEach
+    void setUp() throws Exception {
+        // Create a simple PDF document for testing
+        byte[] pdfBytes = createSimplePdfWithRectangle();
+        MultipartFile mockPdfFile =
+                new MockMultipartFile(
+                        "file", "test.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
+
+        // Create the strategy instance
+        strategy = new InvertFullColorStrategy(mockPdfFile, ReplaceAndInvert.FULL_INVERSION);
     }
 
     @Test

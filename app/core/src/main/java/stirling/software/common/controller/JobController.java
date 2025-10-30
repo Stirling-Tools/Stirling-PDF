@@ -26,6 +26,7 @@ import stirling.software.common.model.job.ResultFile;
 import stirling.software.common.service.FileStorage;
 import stirling.software.common.service.JobQueue;
 import stirling.software.common.service.TaskManager;
+import stirling.software.common.util.RegexPatternUtils;
 
 /** REST controller for job-related endpoints */
 @RestController
@@ -260,7 +261,7 @@ public class JobController {
                                 "fileName",
                                 "unknown",
                                 "contentType",
-                                "application/octet-stream",
+                                MediaType.APPLICATION_OCTET_STREAM_VALUE,
                                 "fileSize",
                                 fileSize));
             }
@@ -295,7 +296,9 @@ public class JobController {
 
             String fileName = resultFile != null ? resultFile.getFileName() : "download";
             String contentType =
-                    resultFile != null ? resultFile.getContentType() : "application/octet-stream";
+                    resultFile != null
+                            ? resultFile.getContentType()
+                            : MediaType.APPLICATION_OCTET_STREAM_VALUE;
 
             return ResponseEntity.ok()
                     .header("Content-Type", contentType)
@@ -317,8 +320,10 @@ public class JobController {
     private String createContentDispositionHeader(String fileName) {
         try {
             String encodedFileName =
-                    URLEncoder.encode(fileName, StandardCharsets.UTF_8)
-                            .replace("+", "%20"); // URLEncoder uses + for spaces, but we want %20
+                    RegexPatternUtils.getInstance()
+                            .getPlusSignPattern()
+                            .matcher(URLEncoder.encode(fileName, StandardCharsets.UTF_8))
+                            .replaceAll("%20"); // URLEncoder uses + for spaces, but we want %20
             return "attachment; filename=\"" + fileName + "\"; filename*=UTF-8''" + encodedFileName;
         } catch (Exception e) {
             // Fallback to basic filename if encoding fails

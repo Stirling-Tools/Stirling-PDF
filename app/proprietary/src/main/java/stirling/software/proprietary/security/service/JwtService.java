@@ -4,6 +4,7 @@ import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.HashMap;
@@ -92,8 +93,8 @@ public class JwtService implements JwtServiceInterface {
                             .claims(claims)
                             .subject(username)
                             .issuer(ISSUER)
-                            .issuedAt(new Date())
-                            .expiration(new Date(System.currentTimeMillis() + EXPIRATION))
+                            .issuedAt(Date.from(Instant.now()))
+                            .expiration(Date.from(Instant.now().plusMillis(EXPIRATION)))
                             .signWith(keyPair.getPrivate(), Jwts.SIG.RS256);
 
             String keyId = activeKey.getKeyId();
@@ -129,7 +130,7 @@ public class JwtService implements JwtServiceInterface {
 
     @Override
     public boolean isTokenExpired(String token) {
-        return extractExpiration(token).before(new Date());
+        return extractExpiration(token).before(Date.from(Instant.now()));
     }
 
     private Date extractExpiration(String token) {

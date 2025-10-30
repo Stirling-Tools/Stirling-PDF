@@ -61,7 +61,7 @@ class JobExecutorServiceTest {
     }
 
     @Test
-    void shouldRunSyncJobSuccessfully() throws Exception {
+    void shouldRunSyncJobSuccessfully() {
         // Given
         Supplier<Object> work = () -> "test-result";
 
@@ -77,7 +77,7 @@ class JobExecutorServiceTest {
     }
 
     @Test
-    void shouldRunAsyncJobSuccessfully() throws Exception {
+    void shouldRunAsyncJobSuccessfully() {
         // Given
         Supplier<Object> work = () -> "test-result";
 
@@ -86,7 +86,7 @@ class JobExecutorServiceTest {
 
         // Then
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertTrue(response.getBody() instanceof JobResponse);
+        assertInstanceOf(JobResponse.class, response.getBody());
         JobResponse<?> jobResponse = (JobResponse<?>) response.getBody();
         assertTrue(jobResponse.isAsync());
         assertNotNull(jobResponse.getJobId());
@@ -111,6 +111,7 @@ class JobExecutorServiceTest {
 
         @SuppressWarnings("unchecked")
         Map<String, String> errorMap = (Map<String, String>) response.getBody();
+        assertNotNull(errorMap);
         assertEquals("Job failed: Test error", errorMap.get("error"));
     }
 
@@ -131,7 +132,7 @@ class JobExecutorServiceTest {
 
         // Then
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertTrue(response.getBody() instanceof JobResponse);
+        assertInstanceOf(JobResponse.class, response.getBody());
 
         // Verify job was queued
         verify(jobQueue).queueJob(anyString(), eq(80), any(), eq(5000L));
@@ -184,7 +185,7 @@ class JobExecutorServiceTest {
         try {
             executeMethod.invoke(jobExecutorService, work, 1L); // Very short timeout
         } catch (Exception e) {
-            assertTrue(e.getCause() instanceof TimeoutException);
+            assertInstanceOf(TimeoutException.class, e.getCause());
         }
     }
 }

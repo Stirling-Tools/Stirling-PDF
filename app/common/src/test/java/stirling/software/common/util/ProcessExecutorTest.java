@@ -45,9 +45,7 @@ public class ProcessExecutorTest {
         IOException thrown =
                 assertThrows(
                         IOException.class,
-                        () -> {
-                            processExecutor.runCommandWithOutputHandling(command);
-                        });
+                        () -> processExecutor.runCommandWithOutputHandling(command));
 
         // Check the exception message to ensure it indicates the command was not found
         String errorMessage = thrown.getMessage();

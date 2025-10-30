@@ -7,6 +7,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Calendar;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -24,19 +26,17 @@ import stirling.software.common.service.UserServiceInterface;
 
 class PdfMetadataServiceBasicTest {
 
-    private ApplicationProperties applicationProperties;
-    private UserServiceInterface userService;
     private PdfMetadataService pdfMetadataService;
     private final String STIRLING_PDF_LABEL = "Stirling PDF";
 
     @BeforeEach
     void setUp() {
         // Set up mocks for application properties' nested objects
-        applicationProperties = mock(ApplicationProperties.class);
+        ApplicationProperties applicationProperties = mock(ApplicationProperties.class);
         Premium premium = mock(Premium.class);
         ProFeatures proFeatures = mock(ProFeatures.class);
         CustomMetadata customMetadata = mock(CustomMetadata.class);
-        userService = mock(UserServiceInterface.class);
+        UserServiceInterface userService = mock(UserServiceInterface.class);
 
         when(applicationProperties.getPremium()).thenReturn(premium);
         when(premium.getProFeatures()).thenReturn(proFeatures);
@@ -81,6 +81,12 @@ class PdfMetadataServiceBasicTest {
         // Act
         PdfMetadata metadata = pdfMetadataService.extractMetadataFromPdf(testDocument);
 
+        // Convert Calendar to ZonedDateTime for comparison
+        ZonedDateTime expectedCreationDate =
+                ZonedDateTime.ofInstant(creationDate.toInstant(), ZoneId.systemDefault());
+        ZonedDateTime expectedModificationDate =
+                ZonedDateTime.ofInstant(modificationDate.toInstant(), ZoneId.systemDefault());
+
         // Assert
         assertEquals(testAuthor, metadata.getAuthor(), "Author should match");
         assertEquals(testProducer, metadata.getProducer(), "Producer should match");
@@ -88,9 +94,12 @@ class PdfMetadataServiceBasicTest {
         assertEquals(testCreator, metadata.getCreator(), "Creator should match");
         assertEquals(testSubject, metadata.getSubject(), "Subject should match");
         assertEquals(testKeywords, metadata.getKeywords(), "Keywords should match");
-        assertEquals(creationDate, metadata.getCreationDate(), "Creation date should match");
         assertEquals(
-                modificationDate, metadata.getModificationDate(), "Modification date should match");
+                expectedCreationDate, metadata.getCreationDate(), "Creation date should match");
+        assertEquals(
+                expectedModificationDate,
+                metadata.getModificationDate(),
+                "Modification date should match");
     }
 
     @Test

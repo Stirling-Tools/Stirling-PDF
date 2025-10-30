@@ -6,14 +6,15 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import lombok.Getter;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.pdfbox.text.TextPosition;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.PDFText;
+import stirling.software.common.util.RegexPatternUtils;
 
 @Slf4j
 public class TextFinder extends PDFTextStripper {
@@ -21,8 +22,7 @@ public class TextFinder extends PDFTextStripper {
     private final String searchTerm;
     private final boolean useRegex;
     private final boolean wholeWordSearch;
-    @Getter
-    private final List<PDFText> foundTexts = new ArrayList<>();
+    @Getter private final List<PDFText> foundTexts = new ArrayList<>();
 
     private final List<TextPosition> pageTextPositions = new ArrayList<>();
     private final StringBuilder pageTextBuilder = new StringBuilder();
@@ -85,7 +85,8 @@ public class TextFinder extends PDFTextStripper {
             }
         }
 
-        Pattern pattern = Pattern.compile(regex, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+        // Use cached pattern compilation for better performance
+        Pattern pattern = RegexPatternUtils.getInstance().createSearchPattern(regex, true);
         Matcher matcher = pattern.matcher(text);
 
         log.debug(

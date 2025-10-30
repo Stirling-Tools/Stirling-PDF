@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.http.MediaType;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import stirling.software.common.model.job.JobResult;
@@ -77,7 +78,7 @@ class TaskManagerTest {
         taskManager.createTask(jobId);
         String fileId = "file-id";
         String originalFileName = "test.pdf";
-        String contentType = "application/pdf";
+        String contentType = MediaType.APPLICATION_PDF_VALUE;
         long fileSize = 1024L;
 
         // Mock the fileStorage.getFileSize() call
@@ -185,7 +186,8 @@ class TaskManagerTest {
         // 2. Create completed successful job with file
         String successFileJobId = "success-file-job";
         taskManager.createTask(successFileJobId);
-        taskManager.setFileResult(successFileJobId, "file-id", "test.pdf", "application/pdf");
+        taskManager.setFileResult(
+                successFileJobId, "file-id", "test.pdf", MediaType.APPLICATION_PDF_VALUE);
 
         // 3. Create completed successful job without file
         String successJobId = "success-job";
@@ -213,7 +215,7 @@ class TaskManagerTest {
     }
 
     @Test
-    void testCleanupOldJobs() throws Exception {
+    void testCleanupOldJobs() {
         // Arrange
         // 1. Create a recent completed job
         String recentJobId = "recent-job";
@@ -235,7 +237,7 @@ class TaskManagerTest {
                 ResultFile.builder()
                         .fileId("file-id")
                         .fileName("test.pdf")
-                        .contentType("application/pdf")
+                        .contentType(MediaType.APPLICATION_PDF_VALUE)
                         .fileSize(1024L)
                         .build();
         ReflectionTestUtils.setField(oldJob, "resultFiles", java.util.List.of(resultFile));
@@ -251,6 +253,7 @@ class TaskManagerTest {
         taskManager.createTask(activeJobId);
 
         // Verify all jobs are in the map
+        assertNotNull(jobResultsMap);
         assertTrue(jobResultsMap.containsKey(recentJobId));
         assertTrue(jobResultsMap.containsKey(oldJobId));
         assertTrue(jobResultsMap.containsKey(activeJobId));
@@ -266,7 +269,7 @@ class TaskManagerTest {
     }
 
     @Test
-    void testShutdown() throws Exception {
+    void testShutdown() {
         // This mainly tests that the shutdown method doesn't throw exceptions
         taskManager.shutdown();
 

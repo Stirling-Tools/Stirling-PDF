@@ -27,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
+import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.WebResponseUtils;
 
 @RestController
@@ -38,7 +39,7 @@ public class DecompressPdfController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @PostMapping(value = "/decompress-pdf", consumes = "multipart/form-data")
+    @PostMapping(value = "/decompress-pdf", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "Decompress PDF streams",
             description = "Fully decompresses all PDF streams including text content")
@@ -55,10 +56,10 @@ public class DecompressPdfController {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             document.save(baos, CompressParameters.NO_COMPRESSION);
 
-            String outputFilename =
-                    file.getOriginalFilename().replaceFirst("\\.(?=[^.]+$)", "_decompressed.");
+            // Return the PDF as a response
             return WebResponseUtils.bytesToWebResponse(
-                    baos.toByteArray(), outputFilename, MediaType.APPLICATION_PDF);
+                    baos.toByteArray(),
+                    GeneralUtils.generateFilename(file.getOriginalFilename(), "_decompressed.pdf"));
         }
     }
 

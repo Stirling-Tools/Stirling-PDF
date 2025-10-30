@@ -39,7 +39,7 @@ public class PageNumbersController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @PostMapping(value = "/add-page-numbers", consumes = "multipart/form-data")
+    @PostMapping(value = "/add-page-numbers", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "Add page numbers to a PDF document",
             description =
@@ -103,7 +103,11 @@ public class PageNumbersController {
                     customText
                             .replace("{n}", String.valueOf(pageNumber))
                             .replace("{total}", String.valueOf(document.getNumberOfPages()))
-                            .replace("{filename}", baseFilename);
+                            .replace(
+                                    "{filename}",
+                                    GeneralUtils.removeExtension(
+                                            Filenames.toSimpleFileName(
+                                                    file.getOriginalFilename())));
 
             PDType1Font currentFont =
                     switch (fontType == null ? "" : fontType.toLowerCase(Locale.ROOT)) {
@@ -169,8 +173,7 @@ public class PageNumbersController {
 
         return WebResponseUtils.bytesToWebResponse(
                 baos.toByteArray(),
-                Filenames.toSimpleFileName(file.getOriginalFilename()).replaceFirst("[.][^.]+$", "")
-                        + "_numbersAdded.pdf",
-                MediaType.APPLICATION_PDF);
+                GeneralUtils.generateFilename(
+                        file.getOriginalFilename(), "_page_numbers_added.pdf"));
     }
 }

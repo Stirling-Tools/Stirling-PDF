@@ -1,7 +1,6 @@
 package stirling.software.SPDF.controller.api;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import java.io.ByteArrayOutputStream;
@@ -24,6 +23,7 @@ import org.mockito.ArgumentMatchers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 
@@ -56,7 +56,10 @@ class EditTableOfContentsControllerTest {
     void setUp() {
         mockFile =
                 new MockMultipartFile(
-                        "file", "test.pdf", "application/pdf", "PDF content".getBytes());
+                        "file",
+                        "test.pdf",
+                        MediaType.APPLICATION_PDF_VALUE,
+                        "PDF content".getBytes());
         mockDocument = mock(PDDocument.class);
         mockCatalog = mock(PDDocumentCatalog.class);
         mockPages = mock(PDPageTree.class);

@@ -30,7 +30,7 @@ class StringToArrayListPropertyEditorTest {
 
         // Assert
         assertNotNull(value, "Value should not be null");
-        assertTrue(value instanceof List, "Value should be a List");
+        assertInstanceOf(List.class, value, "Value should be a List");
 
         @SuppressWarnings("unchecked")
         List<RedactionArea> list = (List<RedactionArea>) value;
@@ -60,7 +60,7 @@ class StringToArrayListPropertyEditorTest {
 
         // Assert
         assertNotNull(value, "Value should not be null");
-        assertTrue(value instanceof List, "Value should be a List");
+        assertInstanceOf(List.class, value, "Value should be a List");
 
         @SuppressWarnings("unchecked")
         List<RedactionArea> list = (List<RedactionArea>) value;
@@ -88,7 +88,7 @@ class StringToArrayListPropertyEditorTest {
 
         // Assert
         assertNotNull(value, "Value should not be null");
-        assertTrue(value instanceof List, "Value should be a List");
+        assertInstanceOf(List.class, value, "Value should be a List");
 
         @SuppressWarnings("unchecked")
         List<RedactionArea> list = (List<RedactionArea>) value;
@@ -103,7 +103,7 @@ class StringToArrayListPropertyEditorTest {
 
         // Assert
         assertNotNull(value, "Value should not be null");
-        assertTrue(value instanceof List, "Value should be a List");
+        assertInstanceOf(List.class, value, "Value should be a List");
 
         @SuppressWarnings("unchecked")
         List<RedactionArea> list = (List<RedactionArea>) value;
@@ -122,7 +122,7 @@ class StringToArrayListPropertyEditorTest {
 
         // Assert
         assertNotNull(value, "Value should not be null");
-        assertTrue(value instanceof List, "Value should be a List");
+        assertInstanceOf(List.class, value, "Value should be a List");
 
         @SuppressWarnings("unchecked")
         List<RedactionArea> list = (List<RedactionArea>) value;

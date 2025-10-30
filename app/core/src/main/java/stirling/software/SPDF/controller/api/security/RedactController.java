@@ -34,6 +34,7 @@ import org.apache.pdfbox.pdmodel.common.PDStream;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.graphics.PDXObject;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.InitBinder;
@@ -88,7 +89,7 @@ public class RedactController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
     private String removeFileExtension(String filename) {
-        return filename.replaceFirst("[.][^.]+$", "");
+        return GeneralUtils.removeExtension(filename);
     }
 
     @InitBinder
@@ -97,7 +98,7 @@ public class RedactController {
                 List.class, "redactions", new StringToArrayListPropertyEditor());
     }
 
-    @PostMapping(value = "/redact", consumes = "multipart/form-data")
+    @PostMapping(value = "/redact", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "Redact PDF manually",
             description =
@@ -494,7 +495,7 @@ public class RedactController {
         return pageNumbers;
     }
 
-    @PostMapping(value = "/auto-redact", consumes = "multipart/form-data")
+    @PostMapping(value = "/auto-redact", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "Redact PDF automatically",
             description =

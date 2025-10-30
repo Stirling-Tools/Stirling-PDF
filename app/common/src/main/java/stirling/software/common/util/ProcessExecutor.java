@@ -71,6 +71,11 @@ public class ProcessExecutor {
                                                 .getProcessExecutor()
                                                 .getSessionLimit()
                                                 .getInstallAppSessionLimit();
+                                case FFMPEG ->
+                                        applicationProperties
+                                                .getProcessExecutor()
+                                                .getSessionLimit()
+                                                .getFfmpegSessionLimit();
                                 case TESSERACT ->
                                         applicationProperties
                                                 .getProcessExecutor()
@@ -125,6 +130,11 @@ public class ProcessExecutor {
                                                 .getProcessExecutor()
                                                 .getTimeoutMinutes()
                                                 .getInstallAppTimeoutMinutes();
+                                case FFMPEG ->
+                                        applicationProperties
+                                                .getProcessExecutor()
+                                                .getTimeoutMinutes()
+                                                .getFfmpegTimeoutMinutes();
                                 case TESSERACT ->
                                         applicationProperties
                                                 .getProcessExecutor()
@@ -167,7 +177,7 @@ public class ProcessExecutor {
         semaphore.acquire();
         try {
 
-            log.info("Running command: " + String.join(" ", command));
+            log.info("Running command: {}", String.join(" ", command));
             ProcessBuilder processBuilder = new ProcessBuilder(command);
 
             // Use the working directory if it's set
@@ -252,7 +262,7 @@ public class ProcessExecutor {
                 String outputMessage = String.join("\n", outputLines);
                 messages += outputMessage;
                 if (!liveUpdates) {
-                    log.info("Command output:\n" + outputMessage);
+                    log.info("Command output:\n{}", outputMessage);
                 }
             }
 
@@ -260,7 +270,7 @@ public class ProcessExecutor {
                 String errorMessage = String.join("\n", errorLines);
                 messages += errorMessage;
                 if (!liveUpdates) {
-                    log.warn("Command error output:\n" + errorMessage);
+                    log.warn("Command error output:\n{}", errorMessage);
                 }
                 if (exitCode != 0) {
                     if (isQpdf && exitCode == 3) {
@@ -302,7 +312,8 @@ public class ProcessExecutor {
         TESSERACT,
         QPDF,
         GHOSTSCRIPT,
-        OCR_MY_PDF
+        OCR_MY_PDF,
+        FFMPEG
     }
 
     @Setter
@@ -315,6 +326,5 @@ public class ProcessExecutor {
             this.rc = rc;
             this.messages = messages;
         }
-
     }
 }

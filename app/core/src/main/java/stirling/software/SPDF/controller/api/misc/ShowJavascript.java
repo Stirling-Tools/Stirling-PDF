@@ -32,13 +32,14 @@ public class ShowJavascript {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @PostMapping(consumes = "multipart/form-data", value = "/show-javascript")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/show-javascript")
     @Operation(
             summary = "Grabs all JS from a PDF and returns a single JS file with all code",
             description = "desc. Input:PDF Output:JS Type:SISO")
     public ResponseEntity<byte[]> extractHeader(@ModelAttribute PDFFile file) throws Exception {
         MultipartFile inputFile = file.getFileInput();
-        String script = "";
+        StringBuilder script = new StringBuilder();
+        boolean foundScript = false;
 
         try (PDDocument document = pdfDocumentFactory.load(inputFile)) {
 
@@ -55,28 +56,31 @@ public class ShowJavascript {
                         PDActionJavaScript jsAction = entry.getValue();
                         String jsCodeStr = jsAction.getAction();
 
-                        script +=
-                                "// File: "
-                                        + Filenames.toSimpleFileName(
-                                                inputFile.getOriginalFilename())
-                                        + ", Script: "
-                                        + name
-                                        + "\n"
-                                        + jsCodeStr
-                                        + "\n";
+                        if (jsCodeStr != null && !jsCodeStr.trim().isEmpty()) {
+                            script.append("// File: ")
+                                    .append(
+                                            Filenames.toSimpleFileName(
+                                                    inputFile.getOriginalFilename()))
+                                    .append(", Script: ")
+                                    .append(name)
+                                    .append("\n")
+                                    .append(jsCodeStr)
+                                    .append("\n");
+                            foundScript = true;
+                        }
                     }
                 }
             }
 
-            if (script.isEmpty()) {
+            if (!foundScript) {
                 script =
-                        "PDF '"
-                                + Filenames.toSimpleFileName(inputFile.getOriginalFilename())
-                                + "' does not contain Javascript";
+                        new StringBuilder("PDF '")
+                                .append(Filenames.toSimpleFileName(inputFile.getOriginalFilename()))
+                                .append("' does not contain Javascript");
             }
 
             return WebResponseUtils.bytesToWebResponse(
-                    script.getBytes(StandardCharsets.UTF_8),
+                    script.toString().getBytes(StandardCharsets.UTF_8),
                     Filenames.toSimpleFileName(inputFile.getOriginalFilename()) + ".js",
                     MediaType.TEXT_PLAIN);
         }

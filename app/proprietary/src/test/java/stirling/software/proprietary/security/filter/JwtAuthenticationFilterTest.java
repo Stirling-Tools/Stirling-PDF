@@ -34,11 +34,9 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.security.model.exception.AuthenticationFailureException;
 import stirling.software.proprietary.security.service.CustomUserDetailsService;
 import stirling.software.proprietary.security.service.JwtServiceInterface;
-import stirling.software.proprietary.security.service.UserService;
 
 @Disabled
 @ExtendWith(MockitoExtension.class)
@@ -47,10 +45,6 @@ class JwtAuthenticationFilterTest {
     @Mock private JwtServiceInterface jwtService;
 
     @Mock private CustomUserDetailsService userDetailsService;
-
-    @Mock private UserService userService;
-
-    @Mock private ApplicationProperties.Security securityProperties;
 
     @Mock private HttpServletRequest request;
 

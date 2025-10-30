@@ -10,6 +10,7 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,6 +24,7 @@ import lombok.RequiredArgsConstructor;
 
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.WebResponseUtils;
 
 @RestController
@@ -33,7 +35,7 @@ public class ToSinglePageController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @PostMapping(consumes = "multipart/form-data", value = "/pdf-to-single-page")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf-to-single-page")
     @Operation(
             summary = "Convert a multi-page PDF into a single long page PDF",
             description =
@@ -91,7 +93,7 @@ public class ToSinglePageController {
         byte[] result = baos.toByteArray();
         return WebResponseUtils.bytesToWebResponse(
                 result,
-                request.getFileInput().getOriginalFilename().replaceFirst("[.][^.]+$", "")
-                        + "_singlePage.pdf");
+                GeneralUtils.generateFilename(
+                        request.getFileInput().getOriginalFilename(), "_singlePage.pdf"));
     }
 }
