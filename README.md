@@ -144,14 +144,14 @@ Stirling-PDF currently supports 40 languages!
 | Dutch (Nederlands) (nl_NL)                   | ![57%](https://geps.dev/progress/57)   |
 | English (English) (en_GB)                    | ![100%](https://geps.dev/progress/100) |
 | English (US) (en_US)                         | ![100%](https://geps.dev/progress/100) |
-| French (Français) (fr_FR)                    | ![90%](https://geps.dev/progress/90)   |
-| German (Deutsch) (de_DE)                     | ![98%](https://geps.dev/progress/98)   |
+| French (Français) (fr_FR)                    | ![91%](https://geps.dev/progress/91)   |
+| German (Deutsch) (de_DE)                     | ![97%](https://geps.dev/progress/97)   |
 | Greek (Ελληνικά) (el_GR)                     | ![64%](https://geps.dev/progress/64)   |
 | Hindi (हिंदी) (hi_IN)                        | ![63%](https://geps.dev/progress/63)   |
 | Hungarian (Magyar) (hu_HU)                   | ![97%](https://geps.dev/progress/97)   |
 | Indonesian (Bahasa Indonesia) (id_ID)        | ![59%](https://geps.dev/progress/59)   |
 | Irish (Gaeilge) (ga_IE)                      | ![64%](https://geps.dev/progress/64)   |
-| Italian (Italiano) (it_IT)                   | ![96%](https://geps.dev/progress/96)   |
+| Italian (Italiano) (it_IT)                   | ![95%](https://geps.dev/progress/95)   |
 | Japanese (日本語) (ja_JP)                       | ![92%](https://geps.dev/progress/92)   |
 | Korean (한국어) (ko_KR)                         | ![64%](https://geps.dev/progress/64)   |
 | Norwegian (Norsk) (no_NB)                    | ![62%](https://geps.dev/progress/62)   |
@@ -160,8 +160,8 @@ Stirling-PDF currently supports 40 languages!
 | Portuguese (Português) (pt_PT)               | ![65%](https://geps.dev/progress/65)   |
 | Portuguese Brazilian (Português) (pt_BR)     | ![72%](https://geps.dev/progress/72)   |
 | Romanian (Română) (ro_RO)                    | ![54%](https://geps.dev/progress/54)   |
-| Russian (Русский) (ru_RU)                    | ![87%](https://geps.dev/progress/87)   |
-| Serbian Latin alphabet (Srpski) (sr_LATN_RS) | ![95%](https://geps.dev/progress/95)   |
+| Russian (Русский) (ru_RU)                    | ![91%](https://geps.dev/progress/91)   |
+| Serbian Latin alphabet (Srpski) (sr_LATN_RS) | ![94%](https://geps.dev/progress/94)   |
 | Simplified Chinese (简体中文) (zh_CN)            | ![88%](https://geps.dev/progress/88)   |
 | Slovakian (Slovensky) (sk_SK)                | ![49%](https://geps.dev/progress/49)   |
 | Slovenian (Slovenščina) (sl_SI)              | ![67%](https://geps.dev/progress/67)   |
