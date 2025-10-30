@@ -79,6 +79,25 @@ def write_readme(progress_list: list[tuple[str, int]]) -> None:
         file.writelines(content)
 
 
+def load_reference_keys(default_file_path: str) -> set[str]:
+    """Liest ALLE Keys aus der Referenzdatei (ohne Kommentare/Leerzeilen)."""
+    keys: set[str] = set()
+    with open(default_file_path, encoding="utf-8") as f:
+        for _ in range(5):
+            try:
+                next(f)
+            except StopIteration:
+                break
+
+        for line in f:
+            s = line.strip()
+            if not s or s.startswith("#") or "=" not in s:
+                continue
+            k, _ = s.split("=", 1)
+            keys.add(k.strip().replace("\ufeff", ""))  # BOM-Schutz
+    return keys
+
+
 def compare_files(
     default_file_path, file_paths, ignore_translation_file
 ) -> list[tuple[str, int]]:
@@ -98,6 +117,8 @@ def compare_files(
         for line in open(default_file_path, encoding="utf-8")
         if line.strip() and not line.strip().startswith("#")
     )
+
+    ref_keys: set[str] = load_reference_keys(default_file_path)
 
     result_list = []
     sort_ignore_translation: tomlkit.TOMLDocument
@@ -153,6 +174,7 @@ def compare_files(
                     # Ignoring empty lines and lines start with #
                     if line_default.strip() == "" or line_default.startswith("#"):
                         continue
+
                     default_key, default_value = line_default.split("=", 1)
                     file_key, file_value = line_file.split("=", 1)
                     if (
@@ -188,6 +210,11 @@ def compare_files(
                     exit(1)
                 except IndexError:
                     pass
+            # sort_ignore_translation[language]["ignore"] = [
+            #     key for key in sort_ignore_translation[language]["ignore"]
+            #     if key in ref_keys or key == "language.direction"
+            # ]
+            # sort_ignore_translation[language]["ignore"] = list(ref_keys)
 
         print(f"{language}: {fails} out of {num_lines} lines are not translated.")
         result_list.append(
