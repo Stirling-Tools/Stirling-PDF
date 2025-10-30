@@ -1,5 +1,5 @@
 {
-  "extends": "./tsconfig.proprietary.json",
+  "extends": "../proprietary/tsconfig.json",
   "compilerOptions": {
     "paths": {
       "@app/*": [

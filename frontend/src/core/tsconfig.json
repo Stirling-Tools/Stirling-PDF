@@ -1,5 +1,5 @@
 {
-  "extends": "./tsconfig.json",
+  "extends": "../../tsconfig.json",
   "compilerOptions": {
     "paths": {
       "@app/*": [
@@ -9,8 +9,8 @@
     }
   },
   "exclude": [
-    "src/proprietary",
-    "src/desktop",
+    "../proprietary",
+    "../desktop",
     "node_modules"
   ]
 }
