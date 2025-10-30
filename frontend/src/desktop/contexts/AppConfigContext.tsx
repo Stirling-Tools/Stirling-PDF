@@ -1,5 +1,16 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useRequestHeaders } from '@app/hooks/useRequestHeaders';
+import apiClient from '@app/services/apiClient';
+
+// Retry configuration
+const MAX_RETRIES = 5;
+const INITIAL_DELAY = 1000; // 1 second
+
+/**
+ * Sleep utility for delays
+ */
+function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 export interface AppConfig {
   baseUrl?: string;
@@ -47,30 +58,48 @@ export const AppConfigProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [config, setConfig] = useState<AppConfig | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const headers = useRequestHeaders();
 
   const fetchConfig = async () => {
-    try {
-      setLoading(true);
-      setError(null);
+    setLoading(true);
+    setError(null);
 
-      const response = await fetch('/api/v1/config/app-config', {
-        headers,
-      });
 
-      if (!response.ok) {
-        throw new Error(`Failed to fetch config: ${response.status} ${response.statusText}`);
+    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        if (attempt > 0) {
+          const delay = INITIAL_DELAY * Math.pow(2, attempt - 1);
+          console.log(`[AppConfig] Retry attempt ${attempt}/${MAX_RETRIES} after ${delay}ms delay...`);
+          await sleep(delay);
+        } else {
+          console.log('[AppConfig] Fetching app config...');
+        }
+
+        const response = await apiClient.get<AppConfig>('/api/v1/config/app-config');
+
+        setConfig(response.data);
+        console.log('[AppConfig] Successfully fetched app config');
+        setLoading(false);
+        return; // Success - exit function
+      } catch (err: any) {
+        const status = err?.response?.status;
+
+        // Check if we should retry (network errors or 5xx errors)
+        const shouldRetry = (!status || status >= 500) && attempt < MAX_RETRIES;
+
+        if (shouldRetry) {
+          console.warn(`[AppConfig] Attempt ${attempt + 1} failed (status ${status || 'network error'}):`, err.message, '- will retry...');
+          continue;
+        }
+
+        // Final attempt failed or non-retryable error (4xx)
+        const errorMessage = err?.response?.data?.message || err?.message || 'Unknown error occurred';
+        setError(errorMessage);
+        console.error(`[AppConfig] Failed to fetch app config after ${attempt + 1} attempts:`, err);
+        break;
       }
-
-      const data: AppConfig = await response.json();
-      setConfig(data);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
-      setError(errorMessage);
-      console.error('[AppConfig] Failed to fetch app config:', err);
-    } finally {
-      setLoading(false);
     }
+
+    setLoading(false);
   };
 
   useEffect(() => {

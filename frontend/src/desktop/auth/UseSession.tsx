@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
+import apiClient from '@app/services/apiClient';
 import { springAuth } from '@app/auth/springAuthClient';
-import type { Session, User, AuthError } from '@app/auth/springAuthClient';
+import type { Session, User, AuthError, AuthChangeEvent } from '@app/auth/springAuthClient';
 
 /**
  * Auth Context Type
@@ -96,9 +97,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.debug('[Auth] Initializing auth...');
 
         // First check if login is enabled
-        const configResponse = await fetch('/api/v1/config/app-config');
-        if (configResponse.ok) {
-          const config = await configResponse.json();
+        const configResponse = await apiClient.get('/api/v1/config/app-config');
+        if (configResponse.status === 200) {
+          const config = configResponse.data;
 
           // If login is disabled, skip authentication entirely
           if (config.enableLogin === false) {
@@ -143,7 +144,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Subscribe to auth state changes
     const { data: { subscription } } = springAuth.onAuthStateChange(
-      async (event, newSession) => {
+      async (event: AuthChangeEvent, newSession: Session | null) => {
         if (!mounted) return;
 
         console.debug('[Auth] Auth state change:', {

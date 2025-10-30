@@ -1,10 +1,25 @@
 import axios from 'axios';
 import { handleHttpError } from '@app/services/httpErrorHandler';
+import { isTauri } from '@tauri-apps/api/core';
 import { setupApiInterceptors } from '@app/services/apiClientSetup';
+
+// Determine base URL depending on environment
+const desktopBaseUrl = (() => {
+  if (!isTauri()) {
+    return import.meta.env.VITE_API_BASE_URL || '/';
+  }
+
+  if (import.meta.env.DEV) {
+    // During tauri dev we rely on Vite proxy, so use relative path to avoid CORS preflight
+    return '/';
+  }
+
+  return import.meta.env.VITE_DESKTOP_BACKEND_URL || 'http://localhost:8080';
+})();
 
 // Create axios instance with default config
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || '/',
+  baseURL: desktopBaseUrl,
   responseType: 'json',
 });
 

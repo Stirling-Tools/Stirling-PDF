@@ -26,13 +26,18 @@ import "@app/pages/HomePage.css";
 type MobileView = "tools" | "workbench";
 
 
-export default function HomePage() {
+interface HomePageProps {
+  openedFile?: File | null;
+}
+
+export default function HomePage({ openedFile }: HomePageProps) {
   const { t } = useTranslation();
   const {
     sidebarRefs,
   } = useSidebarContext();
 
   const { quickAccessRef } = sidebarRefs;
+
 
   const {
     selectedTool,
@@ -107,6 +112,27 @@ export default function HomePage() {
       if (isProgrammaticScroll.current) {
         return;
       }
+
+  // Handle file opened with app (Tauri mode)
+  useEffect(() => {
+    if (openedFile) {
+      const loadOpenedFile = async () => {
+        try {
+          // TAURI NOTE: Implement file opening logic here
+          // // Add to active files if not already present
+          // await addToActiveFiles(openedFile);
+
+          // // Switch to viewer mode to show the opened file
+          // setCurrentView('viewer');
+          // setReaderMode(true);
+        } catch (error) {
+          console.error('Failed to load opened file:', error);
+        }
+      };
+
+      loadOpenedFile();
+    }
+  }, [openedFile]);
 
       if (animationFrame) {
         cancelAnimationFrame(animationFrame);

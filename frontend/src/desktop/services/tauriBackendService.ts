@@ -11,13 +11,17 @@ export class TauriBackendService {
     return TauriBackendService.instance;
   }
 
-  async startBackend(): Promise<void> {
+  isBackendRunning(): boolean {
+    return this.backendStarted;
+  }
+
+  async startBackend(backendUrl?: string): Promise<void> {
     if (this.backendStarted) {
       return;
     }
 
     try {
-      const result = await invoke('start_backend');
+      const result = await invoke('start_backend', { backendUrl });
       console.log('Backend started:', result);
       this.backendStarted = true;
       
@@ -29,7 +33,7 @@ export class TauriBackendService {
     }
   }
 
-  async checkHealth(): Promise<boolean> {
+  async checkBackendHealth(): Promise<boolean> {
     if (!this.backendStarted) {
       return false;
     }
@@ -43,7 +47,7 @@ export class TauriBackendService {
 
   private async waitForHealthy(maxAttempts = 60): Promise<void> {
     for (let i = 0; i < maxAttempts; i++) {
-      const isHealthy = await this.checkHealth();
+      const isHealthy = await this.checkBackendHealth();
       if (isHealthy) {
         console.log('Backend is healthy');
         return;

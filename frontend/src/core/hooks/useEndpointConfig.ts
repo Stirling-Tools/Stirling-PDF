@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
-import apiClient from '@app/services/apiClient';
+import { useRequestHeaders } from '@app/hooks/useRequestHeaders';
 
 /**
  * Hook to check if a specific endpoint is enabled
  */
-export function useEndpointEnabled(endpoint: string, backendHealthy?: boolean): {
+export function useEndpointEnabled(endpoint: string): {
   enabled: boolean | null;
   loading: boolean;
   error: string | null;
@@ -13,6 +13,7 @@ export function useEndpointEnabled(endpoint: string, backendHealthy?: boolean): 
   const [enabled, setEnabled] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const headers = useRequestHeaders();
 
   const fetchEndpointStatus = async () => {
     if (!endpoint) {
@@ -25,13 +26,18 @@ export function useEndpointEnabled(endpoint: string, backendHealthy?: boolean): 
       setLoading(true);
       setError(null);
 
-      const response = await apiClient.get<boolean>('/api/v1/config/endpoint-enabled', {
-        params: { endpoint },
+      const response = await fetch(`/api/v1/config/endpoint-enabled?endpoint=${encodeURIComponent(endpoint)}`, {
+        headers,
       });
 
-      setEnabled(response.data);
-    } catch (err: any) {
-      const errorMessage = err?.response?.data?.message || err?.message || 'Unknown error occurred';
+      if (!response.ok) {
+        throw new Error(`Failed to check endpoint: ${response.status} ${response.statusText}`);
+      }
+
+      const isEnabled: boolean = await response.json();
+      setEnabled(isEnabled);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -39,16 +45,8 @@ export function useEndpointEnabled(endpoint: string, backendHealthy?: boolean): 
   };
 
   useEffect(() => {
-    // Only fetch endpoint status if backend is healthy (or if backendHealthy is not provided)
-    if (backendHealthy === undefined || backendHealthy === true) {
-      fetchEndpointStatus();
-    } else {
-      // Backend is not healthy, reset state
-      setEnabled(null);
-      setLoading(false);
-      setError('Backend not available');
-    }
-  }, [endpoint, backendHealthy]);
+    fetchEndpointStatus();
+  }, [endpoint]);
 
   return {
     enabled,
@@ -62,7 +60,7 @@ export function useEndpointEnabled(endpoint: string, backendHealthy?: boolean): 
  * Hook to check multiple endpoints at once using batch API
  * Returns a map of endpoint -> enabled status
  */
-export function useMultipleEndpointsEnabled(endpoints: string[], backendHealthy?: boolean): {
+export function useMultipleEndpointsEnabled(endpoints: string[]): {
   endpointStatus: Record<string, boolean>;
   loading: boolean;
   error: string | null;
@@ -71,6 +69,7 @@ export function useMultipleEndpointsEnabled(endpoints: string[], backendHealthy?
   const [endpointStatus, setEndpointStatus] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const headers = useRequestHeaders();
 
   const fetchAllEndpointStatuses = async () => {
     if (!endpoints || endpoints.length === 0) {
@@ -86,13 +85,18 @@ export function useMultipleEndpointsEnabled(endpoints: string[], backendHealthy?
       // Use batch API for efficiency
       const endpointsParam = endpoints.join(',');
 
-      const response = await apiClient.get<Record<string, boolean>>('/api/v1/config/endpoints-enabled', {
-        params: { endpoints: endpointsParam },
+      const response = await fetch(`/api/v1/config/endpoints-enabled?endpoints=${encodeURIComponent(endpointsParam)}`, {
+        headers,
       });
 
-      setEndpointStatus(response.data);
-    } catch (err: any) {
-      const errorMessage = err?.response?.data?.message || err?.message || 'Unknown error occurred';
+      if (!response.ok) {
+        throw new Error(`Failed to check endpoints: ${response.status} ${response.statusText}`);
+      }
+
+      const statusMap: Record<string, boolean> = await response.json();
+      setEndpointStatus(statusMap);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
       setError(errorMessage);
       console.error('Failed to check multiple endpoints:', err);
 
@@ -108,16 +112,8 @@ export function useMultipleEndpointsEnabled(endpoints: string[], backendHealthy?
   };
 
   useEffect(() => {
-    // Only fetch endpoint statuses if backend is healthy (or if backendHealthy is not provided)
-    if (backendHealthy === undefined || backendHealthy === true) {
-      fetchAllEndpointStatuses();
-    } else {
-      // Backend is not healthy, reset state
-      setEndpointStatus({});
-      setLoading(false);
-      setError('Backend not available');
-    }
-  }, [endpoints.join(','), backendHealthy]); // Re-run when endpoints array changes or backend health changes
+    fetchAllEndpointStatuses();
+  }, [endpoints.join(',')]); // Re-run when endpoints array changes
 
   return {
     endpointStatus,

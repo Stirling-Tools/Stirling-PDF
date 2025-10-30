@@ -10,6 +10,7 @@
   },
   "exclude": [
     "src/proprietary",
+    "src/desktop",
     "node_modules"
   ]
 }
