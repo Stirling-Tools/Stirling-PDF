@@ -151,6 +151,16 @@ def compare_files(
                 ["language.direction"]
             )
 
+        # Clean up ignore list to only include keys present in reference
+        sort_ignore_translation[language]["ignore"] = [
+            key for key in sort_ignore_translation[language]["ignore"]
+            if key in ref_keys or key == "language.direction"
+        ]
+
+        # debug: add all keys from ref to ignore
+        # sort_ignore_translation[language]["ignore"] = list(ref_keys)
+        # continue  # debug end
+
         # if "missing" not in sort_ignore_translation[language]:
         #     sort_ignore_translation[language]["missing"] = tomlkit.array()
         # elif "language.direction" in sort_ignore_translation[language]["missing"]:
@@ -210,11 +220,6 @@ def compare_files(
                     exit(1)
                 except IndexError:
                     pass
-            # sort_ignore_translation[language]["ignore"] = [
-            #     key for key in sort_ignore_translation[language]["ignore"]
-            #     if key in ref_keys or key == "language.direction"
-            # ]
-            # sort_ignore_translation[language]["ignore"] = list(ref_keys)
 
         print(f"{language}: {fails} out of {num_lines} lines are not translated.")
         result_list.append(
