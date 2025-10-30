@@ -34,15 +34,13 @@ export const useRedactParameters = (): RedactParametersHook => {
       if (params.mode === 'automatic') {
         return '/api/v1/security/auto-redact';
       }
-      // Manual redaction endpoint would go here when implemented
-      throw new Error('Manual redaction not yet implemented');
+      return '';
     },
     validateFn: (params) => {
       if (params.mode === 'automatic') {
         return params.wordsToRedact.length > 0 && params.wordsToRedact.some(word => word.trim().length > 0);
       }
-      // Manual mode validation would go here when implemented
-      return false;
+      return true;
     }
   });
 };

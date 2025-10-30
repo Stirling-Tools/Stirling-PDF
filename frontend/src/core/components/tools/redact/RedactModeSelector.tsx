@@ -24,7 +24,6 @@ export default function RedactModeSelector({ mode, onModeChange, disabled }: Red
         {
           value: 'manual' as const,
           label: t('redact.modeSelector.manual', 'Manual'),
-          disabled: true, // Keep manual mode disabled until implemented
         },
       ]}
       disabled={disabled}

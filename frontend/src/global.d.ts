@@ -12,4 +12,10 @@ declare module 'assets/material-symbols-icons.json' {
   export default value;
 }
 
+declare module '@embedpdf/plugin-redaction/react' {
+  export const RedactionPluginPackage: any;
+  export const RedactionLayer: any;
+  export function useRedactionCapability(): { provides?: () => any } | undefined;
+}
+
 export {};

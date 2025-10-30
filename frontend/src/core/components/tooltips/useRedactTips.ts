@@ -15,7 +15,7 @@ export const useRedactModeTips = (): TooltipContent => {
       },
       {
         title: t("redact.tooltip.mode.manual.title", "Manual Redaction"),
-        description: t("redact.tooltip.mode.manual.text", "Click and drag to manually select specific areas to redact. Gives you precise control over what gets redacted. (Coming soon)")
+        description: t("redact.tooltip.mode.manual.text", "Click and drag to manually select specific areas or search for text to redact. Gives you precise control over what gets removed.")
       }
     ]
   };

@@ -68,6 +68,11 @@
   color: var(--right-rail-icon);
 }
 
+.right-rail-icon--active {
+  background-color: var(--accent-interactive) !important;
+  color: white !important;
+}
+
 .right-rail-icon[aria-disabled="true"],
 .right-rail-icon[disabled] {
   color: var(--right-rail-icon-disabled) !important;
