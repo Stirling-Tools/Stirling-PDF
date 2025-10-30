@@ -153,7 +153,8 @@ def compare_files(
 
         # Clean up ignore list to only include keys present in reference
         sort_ignore_translation[language]["ignore"] = [
-            key for key in sort_ignore_translation[language]["ignore"]
+            key
+            for key in sort_ignore_translation[language]["ignore"]
             if key in ref_keys or key == "language.direction"
         ]
 
