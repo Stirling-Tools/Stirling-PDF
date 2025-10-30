@@ -24,7 +24,6 @@ class LanguageServiceTest {
 
     private LanguageService languageService;
     private ApplicationProperties applicationProperties;
-    private PathMatchingResourcePatternResolver mockedResolver;
 
     @BeforeEach
     void setUp() throws Exception {
