@@ -2,11 +2,11 @@ package stirling.software.common.model;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.function.Function;
 
 import org.junit.jupiter.api.Test;
 
@@ -16,6 +16,14 @@ import stirling.software.common.model.ApplicationProperties.Security;
 import stirling.software.common.model.exception.UnsupportedProviderException;
 
 class ApplicationPropertiesLogicTest {
+
+    private static String normalize(String path) {
+        return normalize(Path.of(path));
+    }
+
+    private static String normalize(Path path) {
+        return path.normalize().toString().replace("\\", "/");
+    }
 
     @Test
     void system_isAnalyticsEnabled_null_false_true() {
@@ -33,23 +41,22 @@ class ApplicationPropertiesLogicTest {
 
     @Test
     void tempFileManagement_defaults_and_overrides() {
-        Function<String, String> normalize = s -> Paths.get(s).normalize().toString();
         ApplicationProperties.TempFileManagement tfm =
                 new ApplicationProperties.TempFileManagement();
 
         String expectedBase =
                 Paths.get(java.lang.System.getProperty("java.io.tmpdir"), "stirling-pdf")
                         .toString();
-        assertEquals(expectedBase, tfm.getBaseTmpDir());
+        assertEquals(normalize(expectedBase), normalize(tfm.getBaseTmpDir()));
 
         String expectedLibre = Paths.get(expectedBase, "libreoffice").toString();
-        assertEquals(expectedLibre, tfm.getLibreofficeDir());
+        assertEquals(normalize(expectedLibre), normalize(tfm.getLibreofficeDir()));
 
         tfm.setBaseTmpDir("/custom/base");
-        assertEquals("/custom/base", normalize.apply(tfm.getBaseTmpDir()));
+        assertEquals("/custom/base", normalize(tfm.getBaseTmpDir()));
 
         tfm.setLibreofficeDir("/opt/libre");
-        assertEquals("/opt/libre", normalize.apply(tfm.getLibreofficeDir()));
+        assertEquals("/opt/libre", normalize(tfm.getLibreofficeDir()));
     }
 
     @Test

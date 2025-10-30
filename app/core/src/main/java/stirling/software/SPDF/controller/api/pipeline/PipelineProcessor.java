@@ -6,10 +6,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -42,12 +41,16 @@ import stirling.software.common.service.UserServiceInterface;
 @Slf4j
 public class PipelineProcessor {
 
+    // ------------------------
+    // AUTOWIRED
+    // ------------------------
     private final ApiDocService apiDocService;
-
     private final UserServiceInterface userService;
-
     private final ServletContext servletContext;
 
+    // ------------------------
+    // CONSTRUCTORS
+    // ------------------------
     public PipelineProcessor(
             ApiDocService apiDocService,
             @Autowired(required = false) UserServiceInterface userService,
@@ -57,7 +60,92 @@ public class PipelineProcessor {
         this.servletContext = servletContext;
     }
 
-    public static String removeTrailingNaming(String filename) {
+    // ------------------------
+    // METHODS
+    // ------------------------
+    PipelineResult runPipelineAgainstFiles(Map<String, Resource> files, PipelineConfig config)
+            throws Exception {
+
+        ByteArrayOutputStream logStream = new ByteArrayOutputStream();
+        PrintStream logPrintStream = new PrintStream(logStream);
+        boolean hasErrors = false;
+        boolean filtersApplied = false;
+        List<Resource> lastOutputFiles = new ArrayList<>();
+
+        for (PipelineOperation pipelineOperation : config.getOperations()) {
+            // prepare operation
+            String operation = pipelineOperation.getOperation();
+            boolean isMultiInputOperation = apiDocService.isMultiInput(operation);
+            log.info(
+                    "Running operation: {} isMultiInputOperation {}",
+                    operation,
+                    isMultiInputOperation);
+            Map<String, Object> parameters = pipelineOperation.getParameters();
+            if (!apiDocService.isValidOperation(operation, parameters)) {
+                log.error("Invalid operation or parameters: o:{} p:{}", operation, parameters);
+                throw new IllegalArgumentException(
+                        "Invalid operation: " + operation + " with parameters: " + parameters);
+            }
+            String url = getBaseUrl() + operation;
+
+            // convert operation's parameters to Request Body
+            MultiValueMap<String, Object> body = this.convertToRequestBody(parameters);
+            // inject files (inputFile and others referenced in parameters)
+            this.replaceWithRessource(body, files);
+            if (!body.containsKey("inputFile") && !body.containsKey("fileId")) {
+                // retrieve inputFile from apiDoc
+                Map<String, Resource> inputFiles = this.extractInputFiles(files, operation);
+                inputFiles.forEach((k, file) -> body.add("fileInput", file));
+
+                if (inputFiles.isEmpty()) {
+                    String expectedTypes = String.join(", ", this.expectedTypes(operation));
+                    String fileNames = String.join(", ", files.keySet());
+                    logPrintStream.printf(
+                            "No files with extensions [%s] found for operation '%s'. Provided files [%s]%n",
+                            expectedTypes, operation, fileNames);
+                    hasErrors = true;
+                    continue;
+                }
+            }
+
+            // run request
+            ResponseEntity<byte[]> response = sendWebRequest(url, body);
+
+            // handle response
+            if (operation.startsWith("/api/v1/filter/filter-")
+                    && (response.getBody() == null || response.getBody().length == 0)) {
+                filtersApplied = true;
+                log.info("Skipping file due to filtering {}", operation);
+                continue;
+            }
+            if (!HttpStatus.OK.equals(response.getStatusCode())) {
+                logPrintStream.printf(
+                        "Error in operation: %s response: %s", operation, response.getBody());
+                hasErrors = true;
+                continue;
+            }
+
+            Map<String, Resource> outputFiles = processOutputFiles(operation, response);
+            lastOutputFiles = new ArrayList<>(outputFiles.values());
+            files.putAll(outputFiles); // add|replace for next operations
+        }
+
+        logPrintStream.close();
+        if (hasErrors) {
+            log.error("Errors occurred during processing. Log: {}", logStream);
+        }
+
+        PipelineResult result = new PipelineResult();
+        result.setHasErrors(hasErrors);
+        result.setFiltersApplied(filtersApplied);
+        result.setOutputFiles(lastOutputFiles);
+        return result;
+    }
+
+    // ------------------------
+    // UTILS
+    // ------------------------
+    private String removeTrailingNaming(String filename) {
         // Splitting filename into name and extension
         int dotIndex = filename.lastIndexOf(".");
         if (dotIndex == -1) {
@@ -87,177 +175,75 @@ public class PipelineProcessor {
         return "http://localhost:" + port + contextPath + "/";
     }
 
-    PipelineResult runPipelineAgainstFiles(List<Resource> outputFiles, PipelineConfig config)
-            throws Exception {
-        PipelineResult result = new PipelineResult();
+    private Set<String> expectedTypes(String operation) {
+        // get expected input types
+        List<String> inputFileTypes = apiDocService.getExtensionTypes(false, operation);
+        if (inputFileTypes == null) return Set.of("ALL"); // early exit (ALL files)
+        return new HashSet<>(inputFileTypes);
+    }
 
-        ByteArrayOutputStream logStream = new ByteArrayOutputStream();
-        PrintStream logPrintStream = new PrintStream(logStream);
-        boolean hasErrors = false;
-        boolean filtersApplied = false;
-        for (PipelineOperation pipelineOperation : config.getOperations()) {
-            String operation = pipelineOperation.getOperation();
-            boolean isMultiInputOperation = apiDocService.isMultiInput(operation);
-            log.info(
-                    "Running operation: {} isMultiInputOperation {}",
-                    operation,
-                    isMultiInputOperation);
-            Map<String, Object> parameters = pipelineOperation.getParameters();
-            List<String> inputFileTypes = apiDocService.getExtensionTypes(false, operation);
-            if (inputFileTypes == null) {
-                inputFileTypes = new ArrayList<>(List.of("ALL"));
-            }
+    /**
+     * Extracts and filters the input files based on the expected types for a given operation. The
+     * method checks the file extensions against the expected types and returns a map of the
+     * filtered files.
+     *
+     * @param files a map of file names as keys and their corresponding {@link Resource} as values
+     * @param operation the specific operation for which files need to be filtered
+     * @return a map containing only the files with extensions matching the expected types for the
+     *     given operation
+     */
+    private Map<String, Resource> extractInputFiles(Map<String, Resource> files, String operation) {
+        if (files == null) return Map.of(); // early exit
 
-            if (!apiDocService.isValidOperation(operation, parameters)) {
-                log.error("Invalid operation or parameters: o:{} p:{}", operation, parameters);
-                throw new IllegalArgumentException(
-                        "Invalid operation: " + operation + " with parameters: " + parameters);
-            }
+        // get expected input types from apiDoc
+        Set<String> types = this.expectedTypes(operation);
+        if (types.contains("ALL")) return files; // early exit
 
-            String url = getBaseUrl() + operation;
-            List<Resource> newOutputFiles = new ArrayList<>();
-            if (!isMultiInputOperation) {
-                for (Resource file : outputFiles) {
-                    boolean hasInputFileType = false;
-                    for (String extension : inputFileTypes) {
-                        if ("ALL".equals(extension)
-                                || file.getFilename().toLowerCase().endsWith(extension)) {
-                            hasInputFileType = true;
-                            MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-                            body.add("fileInput", file);
-                            for (Entry<String, Object> entry : parameters.entrySet()) {
-                                if (entry.getValue() instanceof List<?> entryList) {
-                                    for (Object item : entryList) {
-                                        body.add(entry.getKey(), item);
-                                    }
-                                } else {
-                                    body.add(entry.getKey(), entry.getValue());
-                                }
-                            }
-                            ResponseEntity<byte[]> response = sendWebRequest(url, body);
-                            // If the operation is filter and the response body is null or empty,
-                            // skip
-                            // this
-                            // file
-                            if (operation.startsWith("/api/v1/filter/filter-")
-                                    && (response.getBody() == null
-                                            || response.getBody().length == 0)) {
-                                filtersApplied = true;
-                                log.info("Skipping file due to filtering {}", operation);
-                                continue;
-                            }
-                            if (!HttpStatus.OK.equals(response.getStatusCode())) {
-                                logPrintStream.println("Error: " + response.getBody());
-                                hasErrors = true;
-                                continue;
-                            }
-                            processOutputFiles(operation, response, newOutputFiles);
-                        }
-                    }
-                    if (!hasInputFileType) {
-                        String filename = file.getFilename();
-                        String providedExtension = "no extension";
-                        if (filename != null && filename.contains(".")) {
-                            providedExtension =
-                                    filename.substring(filename.lastIndexOf(".")).toLowerCase();
-                        }
+        // filter out files that don't match the expected input types
+        return files.entrySet().stream()
+                .filter(
+                        entry -> {
+                            String filename = entry.getKey();
+                            String ext =
+                                    filename.substring(filename.lastIndexOf(".") + 1).toLowerCase();
+                            return types.contains(ext);
+                        })
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    }
 
-                        logPrintStream.println(
-                                "No files with extension "
-                                        + String.join(", ", inputFileTypes)
-                                        + " found for operation "
-                                        + operation
-                                        + ". Provided file '"
-                                        + filename
-                                        + "' has extension: "
-                                        + providedExtension);
-                        hasErrors = true;
-                    }
+    /**
+     * Converts a given map of parameters into a MultiValueMap to represent the request body. This
+     * is useful for preparing data for a form-data or application/x-www-form-urlencoded request.
+     */
+    private MultiValueMap<String, Object> convertToRequestBody(Map<String, Object> parameters) {
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        for (Entry<String, Object> entry : parameters.entrySet()) {
+            if (entry.getValue() instanceof List<?> entryList) {
+                for (Object item : entryList) {
+                    body.add(entry.getKey(), item);
                 }
             } else {
-                // Filter and collect all files that match the inputFileExtension
-                List<Resource> matchingFiles;
-                if (inputFileTypes.contains("ALL")) {
-                    matchingFiles = new ArrayList<>(outputFiles);
-                } else {
-                    final List<String> finalinputFileTypes = inputFileTypes;
-                    matchingFiles =
-                            outputFiles.stream()
-                                    .filter(
-                                            file ->
-                                                    finalinputFileTypes.stream()
-                                                            .anyMatch(
-                                                                    file.getFilename().toLowerCase()
-                                                                            ::endsWith))
-                                    .toList();
-                }
-                // Check if there are matching files
-                if (!matchingFiles.isEmpty()) {
-                    // Create a new MultiValueMap for the request body
-                    MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-                    // Add all matching files to the body
-                    for (Resource file : matchingFiles) {
-                        body.add("fileInput", file);
-                    }
-                    for (Entry<String, Object> entry : parameters.entrySet()) {
-                        if (entry.getValue() instanceof List<?> entryList) {
-                            for (Object item : entryList) {
-                                body.add(entry.getKey(), item);
-                            }
-                        } else {
-                            body.add(entry.getKey(), entry.getValue());
-                        }
-                    }
-                    ResponseEntity<byte[]> response = sendWebRequest(url, body);
-                    // Handle the response
-                    if (HttpStatus.OK.equals(response.getStatusCode())) {
-                        processOutputFiles(operation, response, newOutputFiles);
-                    } else {
-                        // Log error if the response status is not OK
-                        logPrintStream.println(
-                                "Error in multi-input operation: " + response.getBody());
-                        hasErrors = true;
-                    }
-                } else {
-                    // Get details about what files were actually provided
-                    List<String> providedExtensions =
-                            outputFiles.stream()
-                                    .map(
-                                            file -> {
-                                                String filename = file.getFilename();
-                                                if (filename != null && filename.contains(".")) {
-                                                    return filename.substring(
-                                                                    filename.lastIndexOf("."))
-                                                            .toLowerCase();
-                                                }
-                                                return "no extension";
-                                            })
-                                    .distinct()
-                                    .toList();
-
-                    logPrintStream.println(
-                            "No files with extension "
-                                    + String.join(", ", inputFileTypes)
-                                    + " found for multi-input operation "
-                                    + operation
-                                    + ". Provided files have extensions: "
-                                    + String.join(", ", providedExtensions)
-                                    + " (total files: "
-                                    + outputFiles.size()
-                                    + ")");
-                    hasErrors = true;
-                }
+                body.add(entry.getKey(), entry.getValue());
             }
-            logPrintStream.close();
-            outputFiles = newOutputFiles;
         }
-        if (hasErrors) {
-            log.error("Errors occurred during processing. Log: {}", logStream.toString());
-        }
-        result.setHasErrors(hasErrors);
-        result.setFiltersApplied(filtersApplied);
-        result.setOutputFiles(outputFiles);
-        return result;
+        return body;
+    }
+
+    /**
+     * Replaces occurrences of file names in the provided body with corresponding resource objects
+     * from the given files map.
+     */
+    private void replaceWithRessource(
+            MultiValueMap<String, Object> body, Map<String, Resource> files) {
+        Set<String> fileNames = files.keySet();
+        body.forEach(
+                (key, values) ->
+                        values.replaceAll(
+                                value ->
+                                        (value instanceof String && fileNames.contains(value))
+                                                ? files.get(value) // replace it
+                                                : value // keep it
+                                ));
     }
 
     /* package */ ResponseEntity<byte[]> sendWebRequest(
@@ -274,9 +260,11 @@ public class PipelineProcessor {
         return restTemplate.exchange(url, HttpMethod.POST, entity, byte[].class);
     }
 
-    private List<Resource> processOutputFiles(
-            String operation, ResponseEntity<byte[]> response, List<Resource> newOutputFiles)
-            throws IOException {
+    private Map<String, Resource> processOutputFiles(
+            String operation, ResponseEntity<byte[]> response) throws IOException {
+        if (response.getBody() == null || response.getBody().length == 0)
+            return Map.of(); // early exit
+
         // Define filename
         String newFilename;
         if (operation.contains("auto-rename")) {
@@ -286,12 +274,13 @@ public class PipelineProcessor {
             newFilename = extractFilename(response);
         } else {
             // Otherwise, keep the original filename.
-            newFilename = removeTrailingNaming(extractFilename(response));
+            newFilename = this.removeTrailingNaming(extractFilename(response));
         }
+        Map<String, Resource> outputFiles = new HashMap<>();
         // Check if the response body is a zip file
         if (isZip(response.getBody(), newFilename)) {
             // Unzip the file and add all the files to the new output files
-            newOutputFiles.addAll(unzip(response.getBody()));
+            unzip(response.getBody()).forEach(file -> outputFiles.put(file.getFilename(), file));
         } else {
             Resource outputResource =
                     new ByteArrayResource(response.getBody()) {
@@ -301,12 +290,12 @@ public class PipelineProcessor {
                             return newFilename;
                         }
                     };
-            newOutputFiles.add(outputResource);
+            outputFiles.put(newFilename, outputResource);
         }
-        return newOutputFiles;
+        return outputFiles;
     }
 
-    public String extractFilename(ResponseEntity<byte[]> response) {
+    private String extractFilename(ResponseEntity<byte[]> response) {
         // Default filename if not found
         String filename = "default-filename.ext";
         HttpHeaders headers = response.getHeaders();
@@ -325,12 +314,13 @@ public class PipelineProcessor {
         return filename;
     }
 
-    List<Resource> generateInputFiles(File[] files) throws Exception {
+    Map<String, Resource> generateInputFiles(File[] files) throws Exception {
         if (files == null || files.length == 0) {
             log.info("No files");
-            return null;
+            return Map.of(); // early exit
         }
-        List<Resource> outputFiles = new ArrayList<>();
+
+        Map<String, Resource> outputFiles = new HashMap<>();
         for (File file : files) {
             Path normalizedPath = Paths.get(file.getName()).normalize();
             if (normalizedPath.startsWith("..")) {
@@ -349,7 +339,7 @@ public class PipelineProcessor {
                                 return file.getName();
                             }
                         };
-                outputFiles.add(fileResource);
+                outputFiles.put(fileResource.getFilename(), fileResource);
             } else {
                 log.info("File not found: {}", path);
             }
@@ -358,12 +348,13 @@ public class PipelineProcessor {
         return outputFiles;
     }
 
-    List<Resource> generateInputFiles(MultipartFile[] files) throws Exception {
+    Map<String, Resource> generateInputFiles(MultipartFile[] files) throws Exception {
         if (files == null || files.length == 0) {
-            log.info("No files");
-            return null;
+            log.warn("No files");
+            return Map.of(); // early exit
         }
-        List<Resource> outputFiles = new ArrayList<>();
+
+        Map<String, Resource> outputFiles = new HashMap<>();
         for (MultipartFile file : files) {
             Resource fileResource =
                     new ByteArrayResource(file.getBytes()) {
@@ -373,7 +364,7 @@ public class PipelineProcessor {
                             return Filenames.toSimpleFileName(file.getOriginalFilename());
                         }
                     };
-            outputFiles.add(fileResource);
+            outputFiles.put(fileResource.getFilename(), fileResource);
         }
         log.info("Files successfully loaded. Starting processing...");
         return outputFiles;
