@@ -187,7 +187,6 @@
   border: 1px solid var(--fullscreen-border-subtle-65);
   box-shadow: 0 14px 32px var(--fullscreen-shadow-group);
   break-inside: avoid;
-  backdrop-filter: blur(10px);
 }
 
 .tool-panel__fullscreen-section-header {
@@ -230,7 +229,6 @@
   border: 1px solid var(--fullscreen-border-subtle-70);
   border-radius: 0.95rem;
   background: var(--fullscreen-bg-item);
-  backdrop-filter: blur(6px);
   cursor: pointer;
   transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
   width: 100%;
