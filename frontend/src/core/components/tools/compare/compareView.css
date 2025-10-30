@@ -5,8 +5,8 @@
 .compare-dropdown-sticky {
   position: sticky;
   z-index: 2;
-  background: var(--bg-surface);
-  color: var(--text-muted);
+  background: var(--compare-page-label-bg);
+  color: var(--compare-page-label-fg);
   font-size: 0.75rem;
   padding: 0.25rem 0.5rem;
   border-bottom: 1px solid var(--border-subtle);
@@ -14,8 +14,8 @@
 }
 
 [data-mantine-color-scheme="dark"] .compare-dropdown-sticky {
-  background: var(--bg-toolbar);
-  color: var(--text-secondary);
+  background: var(--compare-page-label-bg);
+  color: var(--compare-page-label-fg);
   border-bottom: 1px solid var(--border-default);
 }
 .compare-workbench {
@@ -137,11 +137,30 @@
 .compare-changes-dropdown {
   min-width: 520px !important;
   max-width: 70vw !important;
+  padding: 0 !important;
+  overflow: hidden; /* prevent inner elements from overflowing rounded edges */
+  border-radius: 8px !important; /* match dropdown container radius */
 }
 
 /* Ensure options text uses full width inside wider dropdown */
 .compare-dropdown-option__text {
   max-width: 100%;
+}
+
+/* Remove default padding inside Mantine options list so sticky header touches edges */
+.compare-changes-dropdown .mantine-Combobox-options {
+  padding: 0 !important;
+}
+
+.compare-dropdown-scrollwrap { margin: 0; }
+
+/* Ensure search field sits flush and does not overflow */
+.compare-changes-dropdown .mantine-Combobox-search {
+  box-sizing: border-box;
+  width: 100% !important;
+  margin: 0 !important;
+  border-top-left-radius: 8px !important;
+  border-top-right-radius: 8px !important;
 }
 
 /* Style the dropdown container */
@@ -371,6 +390,14 @@
   margin-right: auto;
 }
 
+.compare-page-title .mantine-Text-root {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 8px;
+  background-color: var(--compare-page-label-bg);
+  color: var(--compare-page-label-fg);
+}
+
 /* Overlay loader to avoid flash when image not yet loaded */
 .compare-page-loader-overlay {
   position: absolute;
@@ -410,8 +437,8 @@
 /* Non-sticky in-flow group headers; sticky handled by floating header */
 .compare-dropdown-group {
   position: static;
-  background: transparent;
-  color: var(--text-muted);
+  background: var(--compare-page-label-bg);
+  color: var(--compare-page-label-fg);
   font-size: 0.75rem;
   padding: 0.25rem 0.5rem;
   border-bottom: 1px solid var(--border-subtle);
@@ -426,8 +453,8 @@
 }
 
 [data-mantine-color-scheme="dark"] .compare-dropdown-group {
-  background: transparent;
-  color: var(--text-secondary);
+  background: var(--compare-page-label-bg);
+  color: var(--compare-page-label-fg);
   border-bottom: 1px solid var(--border-default);
 }
 

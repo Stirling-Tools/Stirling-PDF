@@ -292,6 +292,10 @@
   --compare-upload-icon-bg: rgba(148, 163, 184, 0.2);
   --compare-upload-icon-color: rgba(17, 24, 39, 0.75);
   --compare-upload-divider: rgba(148, 163, 184, 0.5);
+
+  /* Compare page label chip (light mode): slightly lighter than surrounding rows */
+  --compare-page-label-bg: var(--bg-muted);
+  --compare-page-label-fg: var(--text-secondary);
 }
 
 [data-mantine-color-scheme="dark"] {
@@ -516,6 +520,10 @@
   --compare-upload-icon-bg: rgba(75, 85, 99, 0.2);
   --compare-upload-icon-color: rgba(243, 244, 246, 0.75);
   --compare-upload-divider: rgba(75, 85, 99, 0.5);
+
+  /* Compare page label chip (dark mode): slightly darker than surrounding rows */
+  --compare-page-label-bg: #1F2329;
+  --compare-page-label-fg: var(--text-secondary);
 }
 
 /* Dropzone drop state styling */
