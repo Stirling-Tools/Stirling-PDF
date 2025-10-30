@@ -13,14 +13,14 @@ export const useOverlayPdfsTips = (): TooltipContent => {
         title: t('overlay-pdfs.tooltip.description.title', 'Description'),
         description: t(
           'overlay-pdfs.tooltip.description.text',
-          'Combine a base PDF with one or more overlay PDFs. Overlays can be applied page-by-page in different modes and placed in the foreground or background.'
+          'Combine a original PDF with one or more overlay PDFs. Overlays can be applied page-by-page in different modes and placed in the foreground or background.'
         )
       },
       {
         title: t('overlay-pdfs.tooltip.mode.title', 'Overlay Mode'),
         description: t(
           'overlay-pdfs.tooltip.mode.text',
-          'Choose how to distribute overlay pages across the base PDF pages.'
+          'Choose how to distribute overlay pages across the original PDF pages.'
         ),
         bullets: [
           t('overlay-pdfs.tooltip.mode.sequential', 'Sequential Overlay: Use pages from the first overlay PDF until it ends, then move to the next.'),
@@ -39,7 +39,7 @@ export const useOverlayPdfsTips = (): TooltipContent => {
         title: t('overlay-pdfs.tooltip.overlayFiles.title', 'Overlay Files'),
         description: t(
           'overlay-pdfs.tooltip.overlayFiles.text',
-          'Select one or more PDFs to overlay on the base. The order of these files affects how pages are applied in Sequential and Fixed Repeat modes.'
+          'Select one or more PDFs to overlay on the original. The order of these files affects how pages are applied in Sequential and Fixed Repeat modes.'
         )
       },
       {

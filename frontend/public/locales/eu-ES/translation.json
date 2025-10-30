@@ -1254,7 +1254,7 @@
     "tags": "Overlay",
     "header": "Overlay PDF Files",
     "baseFile": {
-      "label": "Select Base PDF File"
+      "label": "Select Original PDF File"
     },
     "overlayFiles": {
       "label": "Select Overlay PDF Files"

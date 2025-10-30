@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 
-export type ToastLocation = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+export type ToastLocation = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'bottom-center';
 export type ToastAlertType = 'success' | 'error' | 'warning' | 'neutral';
 
 export interface ToastOptions {

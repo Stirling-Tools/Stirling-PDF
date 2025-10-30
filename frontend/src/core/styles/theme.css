@@ -174,6 +174,7 @@
   --right-rail-foreground: #E3E4E5;   /* panel behind custom tool icons */
   --right-rail-icon: #4B5563;         /* icon color */
   --right-rail-icon-disabled: #CECECE;/* disabled icon */
+  --right-rail-pan-active-bg: #EAEAEA;
 
   /* Colors for tooltips */
   --tooltip-title-bg: #DBEFFF;
@@ -284,6 +285,17 @@
   --pdf-light-report-container-bg: 249 250 251;
   --pdf-light-simulated-page-bg: 255 255 255;
   --pdf-light-simulated-page-text: 15 23 42;
+
+  /* Compare tool specific colors - only for colors that don't have existing theme pairs */
+  --compare-upload-dropzone-bg: rgba(241, 245, 249, 0.45);
+  --compare-upload-dropzone-border: rgba(148, 163, 184, 0.6);
+  --compare-upload-icon-bg: rgba(148, 163, 184, 0.2);
+  --compare-upload-icon-color: rgba(17, 24, 39, 0.75);
+  --compare-upload-divider: rgba(148, 163, 184, 0.5);
+
+  /* Compare page label chip (light mode): slightly lighter than surrounding rows */
+  --compare-page-label-bg: var(--bg-muted);
+  --compare-page-label-fg: var(--text-secondary);
 }
 
 [data-mantine-color-scheme="dark"] {
@@ -415,6 +427,7 @@
   --right-rail-foreground: #2A2F36;   /* panel behind custom tool icons */
   --right-rail-icon: #BCBEBF;         /* icon color */
   --right-rail-icon-disabled: #43464B;/* disabled icon */
+  --right-rail-pan-active-bg: #EAEAEA;
 
   /* Dark mode tooltip colors */
   --tooltip-title-bg: #4B525A;
@@ -500,6 +513,17 @@
   --modal-nav-item-active-bg: rgba(10, 139, 255, 0.15);
   --modal-content-bg: #2A2F36;
   --modal-header-border: rgba(255, 255, 255, 0.08);
+
+  /* Compare tool specific colors (dark mode) - only for colors that don't have existing theme pairs */
+  --compare-upload-dropzone-bg: rgba(31, 35, 41, 0.45);
+  --compare-upload-dropzone-border: rgba(75, 85, 99, 0.6);
+  --compare-upload-icon-bg: rgba(75, 85, 99, 0.2);
+  --compare-upload-icon-color: rgba(243, 244, 246, 0.75);
+  --compare-upload-divider: rgba(75, 85, 99, 0.5);
+
+  /* Compare page label chip (dark mode): slightly darker than surrounding rows */
+  --compare-page-label-bg: #1F2329;
+  --compare-page-label-fg: var(--text-secondary);
 }
 
 /* Dropzone drop state styling */

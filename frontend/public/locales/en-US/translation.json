@@ -352,6 +352,11 @@
     "refreshPage": "Refresh Page"
   },
   "home": {
+    "compare": {
+      "tags": "difference,changes,review",
+      "title": "Compare",
+      "desc": "Compare two PDF documents and highlight differences"
+    },
     "desc": "Your locally hosted one-stop-shop for all your PDF needs.",
     "searchBar": "Search for features...",
     "viewPdf": {
@@ -1276,15 +1281,67 @@
     "tags": "differentiate,contrast,changes,analysis",
     "title": "Compare",
     "header": "Compare PDFs",
-    "highlightColor": {
-      "1": "Highlight Color 1:",
-      "2": "Highlight Color 2:"
+    
+    "cta": "Compare",
+    "loading": "Comparing...",
+    "review": {
+      "title": "Comparison Result"
     },
-    "document": {
-      "1": "Document 1",
-      "2": "Document 2"
+    "pages": "Pages",
+    
+    "legend": {
+      "removed": "Removed from base",
+      "added": "Added in comparison"
     },
-    "submit": "Compare",
+    "newLine": "new-line",
+    "dropdown": {
+      "deletionsLabel": "Deletions",
+      "additionsLabel": "Additions",
+      "deletions": "Deletions ({{count}})",
+      "additions": "Additions ({{count}})",
+      "searchPlaceholder": "Search changes...",
+      "noResults": "No changes found"
+    },
+    "summary": {
+      "baseHeading": "Original document",
+      "comparisonHeading": "Edited document",
+      "pageLabel": "Page"
+    },
+    "rendering": {
+      "rendering": "rendering",
+      "inProgress": "One or both of these PDFs are very large, scrolling won't be smooth until the rendering is complete",
+      "pagesRendered": "pages rendered",
+      "complete": "Page rendering complete"
+    },
+    "status": {
+      "extracting": "Extracting text...",
+      "processing": "Analyzing differences...",
+      "complete": "Edited ready"
+    },
+    "selection": {
+      "originalEditedTitle": "Select Original and Edited PDFs"
+    },
+    "original": { "label": "Original PDF" },
+    "edited": { "label": "Edited PDF" },
+    "swap": {
+      "confirmTitle": "Re-run comparison?",
+      "confirmBody": "This will rerun the tool. Are you sure you want to swap the order of Original and Edited?",
+      "confirm": "Swap and Re-run"
+    },
+    "longJob": {
+      "title": "Large comparison in progress",
+      "body": "These PDFs together exceed 2,000 pages. Processing can take several minutes."
+    },
+    "slowOperation": {
+      "title": "Still working…",
+      "body": "This comparison is taking longer than usual. You can let it continue or cancel it.",
+      "cancel": "Cancel comparison"
+    },
+    "error": {
+      "selectRequired": "Select a original and edited document.",
+      "filesMissing": "Unable to locate the selected files. Please re-select them.",
+      "generic": "Unable to compare these files."
+    },
     "complex": {
       "message": "One or both of the provided documents are large files, accuracy of comparison may be reduced"
     },
@@ -1297,7 +1354,10 @@
       "text": {
         "message": "One or both of the selected PDFs have no text content. Please choose PDFs with text for comparison."
       }
-    }
+    },
+    "large.file.message": "One or Both of the provided documents are too large to process",
+    "complex.message": "One or both of the provided documents are large files, accuracy of comparison may be reduced",
+    "no.text.message": "One or both of the selected PDFs have no text content. Please choose PDFs with text for comparison."
   },
   "certSign": {
     "tags": "authenticate,PEM,P12,official,encrypt",
@@ -1541,7 +1601,7 @@
     "title": "Overlay PDFs",
     "desc": "Overlay one PDF on top of another",
     "baseFile": {
-      "label": "Select Base PDF File"
+      "label": "Select Original PDF File"
     },
     "overlayFiles": {
       "label": "Select Overlay PDF Files",

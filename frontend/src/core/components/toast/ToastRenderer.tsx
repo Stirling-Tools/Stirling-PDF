@@ -8,6 +8,7 @@ const locationToClass: Record<ToastLocation, string> = {
   'top-right': 'toast-container--top-right',
   'bottom-left': 'toast-container--bottom-left',
   'bottom-right': 'toast-container--bottom-right',
+  'bottom-center': 'toast-container--bottom-center',
 };
 
 function getToastItemClass(t: ToastInstance): string {
@@ -44,7 +45,7 @@ export default function ToastRenderer() {
     if (!acc[key]) acc[key] = [] as ToastInstance[];
     acc[key].push(t);
     return acc;
-  }, { 'top-left': [], 'top-right': [], 'bottom-left': [], 'bottom-right': [] });
+  }, { 'top-left': [], 'top-right': [], 'bottom-left': [], 'bottom-right': [], 'bottom-center': [] });
 
   return (
     <>
