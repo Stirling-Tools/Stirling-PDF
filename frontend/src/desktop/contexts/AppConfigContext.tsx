@@ -21,6 +21,8 @@ export interface AppConfig {
   homeDescription?: string;
   languages?: string[];
   enableLogin?: boolean;
+  enableEmailInvites?: boolean;
+  isAdmin?: boolean;
   enableAlphaFunctionality?: boolean;
   enableAnalytics?: boolean | null;
   enablePosthog?: boolean | null;

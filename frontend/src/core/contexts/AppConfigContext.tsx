@@ -104,3 +104,4 @@ export function useAppConfig(): AppConfigContextValue {
 
   return context;
 }
+
