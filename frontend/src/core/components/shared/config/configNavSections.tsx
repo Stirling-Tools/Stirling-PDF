@@ -2,8 +2,6 @@ import React from 'react';
 import { NavKey } from '@app/components/shared/config/types';
 import HotkeysSection from '@app/components/shared/config/configSections/HotkeysSection';
 import GeneralSection from '@app/components/shared/config/configSections/GeneralSection';
-import PeopleSection from '@app/components/shared/config/configSections/PeopleSection';
-import TeamsSection from '@app/components/shared/config/configSections/TeamsSection';
 import AdminGeneralSection from '@app/components/shared/config/configSections/AdminGeneralSection';
 import AdminSecuritySection from '@app/components/shared/config/configSections/AdminSecuritySection';
 import AdminConnectionsSection from '@app/components/shared/config/configSections/AdminConnectionsSection';
@@ -50,34 +48,6 @@ export const createConfigNavSections = (
 ): ConfigNavSection[] => {
   const sections: ConfigNavSection[] = [
     {
-      title: 'Account',
-      items: [
-        {
-          key: 'overview',
-          label: 'Overview',
-          icon: 'person-rounded',
-          component: <Overview onLogoutClick={onLogoutClick} />
-        },
-      ],
-    },
-    {
-      title: 'Workspace',
-      items: [
-        {
-          key: 'people',
-          label: 'People',
-          icon: 'group-rounded',
-          component: <PeopleSection />
-        },
-        {
-          key: 'teams',
-          label: 'Teams',
-          icon: 'groups-rounded',
-          component: <TeamsSection />
-        },
-      ],
-    },
-    {
       title: 'Preferences',
       items: [
         {
@@ -104,7 +74,7 @@ export const createConfigNavSections = (
       items: [
         {
           key: 'adminGeneral',
-          label: 'General',
+          label: 'System Settings',
           icon: 'settings-rounded',
           component: <AdminGeneralSection />
         },

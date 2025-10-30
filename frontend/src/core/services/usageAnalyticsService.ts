@@ -23,16 +23,16 @@ const usageAnalyticsService = {
    */
   async getEndpointStatistics(
     limit?: number,
-    includeHome: boolean = true,
-    includeLogin: boolean = true
+    dataType: 'all' | 'api' | 'ui' = 'all'
   ): Promise<EndpointStatisticsResponse> {
-    const params: Record<string, any> = {
-      includeHome,
-      includeLogin,
-    };
+    const params: Record<string, any> = {};
 
     if (limit !== undefined) {
       params.limit = limit;
+    }
+
+    if (dataType !== 'all') {
+      params.dataType = dataType;
     }
 
     const response = await apiClient.get<EndpointStatisticsResponse>(
@@ -47,10 +47,9 @@ const usageAnalyticsService = {
    */
   async getChartData(
     limit?: number,
-    includeHome: boolean = true,
-    includeLogin: boolean = true
+    dataType: 'all' | 'api' | 'ui' = 'all'
   ): Promise<UsageChartData> {
-    const stats = await this.getEndpointStatistics(limit, includeHome, includeLogin);
+    const stats = await this.getEndpointStatistics(limit, dataType);
 
     return {
       labels: stats.endpoints.map((e) => e.endpoint),

@@ -298,6 +298,20 @@
     "general": {
       "title": "General",
       "description": "Configure general application preferences.",
+      "account": "Account",
+      "accountDescription": "Manage your account settings",
+      "user": "User",
+      "signedInAs": "Signed in as",
+      "logout": "Log out",
+      "enableFeatures": {
+        "title": "For System Administrators",
+        "intro": "Enable user authentication, team management, and workspace features for your organization.",
+        "action": "Configure",
+        "and": "and",
+        "benefit": "Enables user roles, team collaboration, admin controls, and enterprise features.",
+        "learnMore": "Learn more in documentation",
+        "dismiss": "Dismiss"
+      },
       "autoUnzip": "Auto-unzip API responses",
       "autoUnzipDescription": "Automatically extract files from ZIP responses",
       "autoUnzipTooltip": "Automatically extract ZIP files returned from API operations. Disable to keep ZIP files intact. This does not affect automation workflows.",
@@ -399,8 +413,10 @@
     "top20": "Top 20",
     "all": "All",
     "refresh": "Refresh",
-    "includeHomepage": "Include Homepage ('/')",
-    "includeLoginPage": "Include Login Page ('/login')",
+    "dataTypeLabel": "Data Type:",
+    "dataTypeAll": "All",
+    "dataTypeApi": "API",
+    "dataTypeUi": "UI",
     "totalEndpoints": "Total Endpoints",
     "totalVisits": "Total Visits",
     "showing": "Showing",
@@ -3524,8 +3540,8 @@
       "restartingMessage": "The server is restarting. Please wait a moment...",
       "restartError": "Failed to restart server. Please restart manually.",
       "general": {
-        "title": "General",
-        "description": "Configure general application settings including branding and default behaviour.",
+        "title": "System Settings",
+        "description": "Configure system-wide application settings including branding and default behaviour.",
         "ui": "User Interface",
         "system": "System",
         "appName": "Application Name",
@@ -4812,8 +4828,12 @@
       "top20": "Top 20",
       "all": "All",
       "refresh": "Refresh",
-      "includeHome": "Include Homepage ('/')",
-      "includeLogin": "Include Login Page ('/login')"
+      "dataTypeLabel": "Data Type:",
+      "dataType": {
+        "all": "All",
+        "api": "API",
+        "ui": "UI"
+      }
     },
     "showing": {
       "top10": "Top 10",

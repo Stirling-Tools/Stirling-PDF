@@ -36,15 +36,14 @@ public class UsageRestController {
      * events to generate usage statistics.
      *
      * @param limit Optional limit on number of endpoints to return
-     * @param includeHome Whether to include homepage ("/") in results
-     * @param includeLogin Whether to include login page ("/login") in results
+     * @param dataType Type of data to include: "all" (default), "api" (API endpoints excluding
+     *     auth), or "ui" (non-API endpoints)
      * @return Endpoint statistics response
      */
     @GetMapping("/usage-endpoint-statistics")
     public ResponseEntity<EndpointStatisticsResponse> getEndpointStatistics(
             @RequestParam(value = "limit", required = false) Integer limit,
-            @RequestParam(value = "includeHome", defaultValue = "true") boolean includeHome,
-            @RequestParam(value = "includeLogin", defaultValue = "true") boolean includeLogin) {
+            @RequestParam(value = "dataType", defaultValue = "all") String dataType) {
 
         // Get all HTTP_REQUEST audit events
         List<PersistentAuditEvent> httpEvents =
@@ -56,11 +55,8 @@ public class UsageRestController {
         for (PersistentAuditEvent event : httpEvents) {
             String endpoint = extractEndpointFromAuditData(event.getData());
             if (endpoint != null) {
-                // Apply filters
-                if (!includeHome && "/".equals(endpoint)) {
-                    continue;
-                }
-                if (!includeLogin && "/login".equals(endpoint)) {
+                // Apply data type filter
+                if (!shouldIncludeEndpoint(endpoint, dataType)) {
                     continue;
                 }
 
@@ -169,6 +165,55 @@ public class UsageRestController {
         }
 
         return endpoint;
+    }
+
+    /**
+     * Determine if an endpoint should be included based on the data type filter.
+     *
+     * @param endpoint The endpoint path to check
+     * @param dataType The filter type: "all", "api", or "ui"
+     * @return true if the endpoint should be included, false otherwise
+     */
+    private boolean shouldIncludeEndpoint(String endpoint, String dataType) {
+        if ("all".equalsIgnoreCase(dataType)) {
+            return true;
+        }
+
+        boolean isApiEndpoint = isApiEndpoint(endpoint);
+
+        if ("api".equalsIgnoreCase(dataType)) {
+            return isApiEndpoint;
+        } else if ("ui".equalsIgnoreCase(dataType)) {
+            return !isApiEndpoint;
+        }
+
+        // Default to including all if unrecognized type
+        return true;
+    }
+
+    /**
+     * Check if an endpoint is an API endpoint. API endpoints match /api/v1/* pattern but exclude
+     * /api/v1/auth/* paths.
+     *
+     * @param endpoint The endpoint path to check
+     * @return true if this is an API endpoint (excluding auth endpoints), false otherwise
+     */
+    private boolean isApiEndpoint(String endpoint) {
+        if (endpoint == null) {
+            return false;
+        }
+
+        // Check if it starts with /api/v1/
+        if (!endpoint.startsWith("/api/v1/")) {
+            return false;
+        }
+
+        // Exclude auth endpoints
+        if (endpoint.startsWith("/api/v1/auth/")) {
+            return false;
+        }
+
+        return true;
     }
 
     // DTOs for response formatting

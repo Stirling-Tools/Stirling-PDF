@@ -1,5 +1,4 @@
 export type NavKey =
-  | 'overview'
   | 'preferences'
   | 'notifications'
   | 'connections'

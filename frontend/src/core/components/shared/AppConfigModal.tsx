@@ -18,7 +18,7 @@ interface AppConfigModalProps {
 const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [active, setActive] = useState<NavKey>('overview');
+  const [active, setActive] = useState<NavKey>('general');
   const isMobile = useMediaQuery("(max-width: 1024px)");
   const { config } = useAppConfig();
 
@@ -27,7 +27,7 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
     const match = pathname.match(/\/settings\/([^/]+)/);
     if (match && match[1]) {
       const validSections: NavKey[] = [
-        'overview', 'people', 'teams', 'general', 'hotkeys',
+        'people', 'teams', 'general', 'hotkeys',
         'adminGeneral', 'adminSecurity', 'adminConnections', 'adminLegal',
         'adminPrivacy', 'adminDatabase', 'adminPremium', 'adminFeatures',
         'adminPlan', 'adminAudit', 'adminUsage', 'adminEndpoints', 'adminAdvanced'
@@ -44,8 +44,8 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
     if (opened && section) {
       setActive(section);
     } else if (opened && location.pathname.startsWith('/settings') && !section) {
-      // If at /settings without a section, redirect to overview
-      navigate('/settings/overview', { replace: true });
+      // If at /settings without a section, redirect to general
+      navigate('/settings/general', { replace: true });
     }
   }, [location.pathname, opened, navigate]);
 
@@ -80,6 +80,8 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
   // Get isAdmin and runningEE from app config
   const isAdmin = config?.isAdmin ?? false;
   const runningEE = config?.runningEE ?? false;
+
+  console.log('[AppConfigModal] Config:', { isAdmin, runningEE, fullConfig: config });
 
   // Left navigation structure and icons
   const configNavSections = useMemo(() =>

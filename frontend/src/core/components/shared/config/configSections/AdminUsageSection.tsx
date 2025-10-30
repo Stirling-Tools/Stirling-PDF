@@ -8,7 +8,6 @@ import {
   Loader,
   Alert,
   Card,
-  Checkbox,
 } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import usageAnalyticsService, { EndpointStatisticsResponse } from '@app/services/usageAnalyticsService';
@@ -22,8 +21,7 @@ const AdminUsageSection: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [displayMode, setDisplayMode] = useState<'top10' | 'top20' | 'all'>('top10');
-  const [includeHome, setIncludeHome] = useState(true);
-  const [includeLogin, setIncludeLogin] = useState(true);
+  const [dataType, setDataType] = useState<'all' | 'api' | 'ui'>('all');
 
   const fetchData = async () => {
     try {
@@ -31,11 +29,7 @@ const AdminUsageSection: React.FC = () => {
       setError(null);
 
       const limit = displayMode === 'all' ? undefined : displayMode === 'top10' ? 10 : 20;
-      const response = await usageAnalyticsService.getEndpointStatistics(
-        limit,
-        includeHome,
-        includeLogin
-      );
+      const response = await usageAnalyticsService.getEndpointStatistics(limit, dataType);
 
       setData(response);
     } catch (err) {
@@ -47,7 +41,7 @@ const AdminUsageSection: React.FC = () => {
 
   useEffect(() => {
     fetchData();
-  }, [displayMode, includeHome, includeLogin]);
+  }, [displayMode, dataType]);
 
   const handleRefresh = () => {
     fetchData();
@@ -136,15 +130,26 @@ const AdminUsageSection: React.FC = () => {
           </Group>
 
           <Group>
-            <Checkbox
-              label={t('usage.controls.includeHome', "Include Homepage ('/')")}
-              checked={includeHome}
-              onChange={(event) => setIncludeHome(event.currentTarget.checked)}
-            />
-            <Checkbox
-              label={t('usage.controls.includeLogin', "Include Login Page ('/login')")}
-              checked={includeLogin}
-              onChange={(event) => setIncludeLogin(event.currentTarget.checked)}
+            <Text size="sm" fw={500}>
+              {t('usage.controls.dataTypeLabel', 'Data Type:')}
+            </Text>
+            <SegmentedControl
+              value={dataType}
+              onChange={(value) => setDataType(value as 'all' | 'api' | 'ui')}
+              data={[
+                {
+                  value: 'all',
+                  label: t('usage.controls.dataType.all', 'All'),
+                },
+                {
+                  value: 'api',
+                  label: t('usage.controls.dataType.api', 'API'),
+                },
+                {
+                  value: 'ui',
+                  label: t('usage.controls.dataType.ui', 'UI'),
+                },
+              ]}
             />
           </Group>
 
