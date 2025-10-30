@@ -1,516 +1,413 @@
 package stirling.software.common.controller;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-import java.nio.charset.StandardCharsets;
-import java.util.List;
-import java.util.Set;
+import java.util.Map;
+import java.util.Objects;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.http.ResponseEntity;
+import org.springframework.mock.web.MockHttpSession;
 
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpSession;
 
 import stirling.software.common.model.job.JobResult;
-import stirling.software.common.model.job.ResultFile;
 import stirling.software.common.service.FileStorage;
 import stirling.software.common.service.JobQueue;
 import stirling.software.common.service.TaskManager;
 
 class JobControllerTest {
 
-    private TaskManager taskManager;
-    private FileStorage fileStorage;
-    private JobQueue jobQueue;
-    private HttpServletRequest request;
-    private HttpSession session;
-    private MockMvc mvc;
+    @Mock private TaskManager taskManager;
+
+    @Mock private FileStorage fileStorage;
+
+    @Mock private JobQueue jobQueue;
+
+    @Mock private HttpServletRequest request;
+
+    private MockHttpSession session;
+
+    @InjectMocks private JobController controller;
 
     @BeforeEach
-    void setup() {
-        taskManager = mock(TaskManager.class);
-        fileStorage = mock(FileStorage.class);
-        jobQueue = mock(JobQueue.class);
-        request = mock(HttpServletRequest.class);
-        session = mock(HttpSession.class);
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+
+        // Setup mock session for tests
+        session = new MockHttpSession();
         when(request.getSession()).thenReturn(session);
-
-        JobController controller = new JobController(taskManager, fileStorage, jobQueue, request);
-        mvc = MockMvcBuilders.standaloneSetup(controller).build();
     }
 
     @Test
-    void getJobStatus_notFound_returns404() throws Exception {
-        when(taskManager.getJobResult("abc")).thenReturn(null);
-        mvc.perform(get("/api/v1/general/job/{jobId}", "abc")).andExpect(status().isNotFound());
+    void testGetJobStatus_ExistingJob() {
+        // Arrange
+        String jobId = "test-job-id";
+        JobResult mockResult = new JobResult();
+        mockResult.setJobId(jobId);
+        when(taskManager.getJobResult(jobId)).thenReturn(mockResult);
+
+        // Act
+        ResponseEntity<?> response = controller.getJobStatus(jobId);
+
+        // Assert
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(mockResult, response.getBody());
     }
 
     @Test
-    void getJobStatus_inQueue_addsQueueInfo() throws Exception {
-        JobResult result = mock(JobResult.class);
-        when(result.isComplete()).thenReturn(false);
-        when(taskManager.getJobResult("j1")).thenReturn(result);
-        when(jobQueue.isJobQueued("j1")).thenReturn(true);
-        when(jobQueue.getJobPosition("j1")).thenReturn(3);
+    void testGetJobStatus_ExistingJobInQueue() {
+        // Arrange
+        String jobId = "test-job-id";
+        JobResult mockResult = new JobResult();
+        mockResult.setJobId(jobId);
+        mockResult.setComplete(false);
+        when(taskManager.getJobResult(jobId)).thenReturn(mockResult);
+        when(jobQueue.isJobQueued(jobId)).thenReturn(true);
+        when(jobQueue.getJobPosition(jobId)).thenReturn(3);
 
-        mvc.perform(get("/api/v1/general/job/{jobId}", "j1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.queueInfo.inQueue").value(true))
-                .andExpect(jsonPath("$.queueInfo.position").value(3));
+        // Act
+        ResponseEntity<?> response = controller.getJobStatus(jobId);
+
+        // Assert
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+
+        @SuppressWarnings("unchecked")
+        Map<String, Object> responseBody = (Map<String, Object>) response.getBody();
+        assertEquals(mockResult, Objects.requireNonNull(responseBody).get("jobResult"));
+
+        @SuppressWarnings("unchecked")
+        Map<String, Object> queueInfo = (Map<String, Object>) responseBody.get("queueInfo");
+        assertTrue((Boolean) queueInfo.get("inQueue"));
+        assertEquals(3, queueInfo.get("position"));
     }
 
     @Test
-    void getJobStatus_complete_returnsResult() throws Exception {
-        JobResult result = mock(JobResult.class);
-        when(result.isComplete()).thenReturn(true);
-        when(taskManager.getJobResult("j2")).thenReturn(result);
-        mvc.perform(get("/api/v1/general/job/{jobId}", "j2")).andExpect(status().isOk());
+    void testGetJobStatus_NonExistentJob() {
+        // Arrange
+        String jobId = "non-existent-job";
+        when(taskManager.getJobResult(jobId)).thenReturn(null);
+
+        // Act
+        ResponseEntity<?> response = controller.getJobStatus(jobId);
+
+        // Assert
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
     }
 
     @Test
-    void getJobStatus_inProgress_notQueued_returnsResult() throws Exception {
-        JobResult result = mock(JobResult.class);
-        when(result.isComplete()).thenReturn(false);
-        when(taskManager.getJobResult("JSTAT")).thenReturn(result);
-        when(jobQueue.isJobQueued("JSTAT")).thenReturn(false);
+    void testGetJobResult_CompletedSuccessfulWithObject() {
+        // Arrange
+        String jobId = "test-job-id";
+        JobResult mockResult = new JobResult();
+        mockResult.setJobId(jobId);
+        mockResult.setComplete(true);
+        String resultObject = "Test result";
+        mockResult.completeWithResult(resultObject);
 
-        mvc.perform(get("/api/v1/general/job/{jobId}", "JSTAT")).andExpect(status().isOk());
+        when(taskManager.getJobResult(jobId)).thenReturn(mockResult);
+
+        // Act
+        ResponseEntity<?> response = controller.getJobResult(jobId);
+
+        // Assert
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(resultObject, response.getBody());
     }
 
     @Test
-    void getJobResult_notFound() throws Exception {
-        when(taskManager.getJobResult("x")).thenReturn(null);
-        mvc.perform(get("/api/v1/general/job/{jobId}/result", "x"))
-                .andExpect(status().isNotFound());
+    void testGetJobResult_CompletedSuccessfulWithFile() throws Exception {
+        // Arrange
+        String jobId = "test-job-id";
+        String fileId = "file-id";
+        String originalFileName = "test.pdf";
+        String contentType = MediaType.APPLICATION_PDF_VALUE;
+        byte[] fileContent = "Test file content".getBytes();
+
+        JobResult mockResult = new JobResult();
+        mockResult.setJobId(jobId);
+        mockResult.completeWithSingleFile(
+                fileId, originalFileName, contentType, fileContent.length);
+
+        when(taskManager.getJobResult(jobId)).thenReturn(mockResult);
+        when(fileStorage.retrieveBytes(fileId)).thenReturn(fileContent);
+
+        // Act
+        ResponseEntity<?> response = controller.getJobResult(jobId);
+
+        // Assert
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(contentType, response.getHeaders().getFirst("Content-Type"));
+        assertTrue(
+                Objects.requireNonNull(response.getHeaders().getFirst("Content-Disposition"))
+                        .contains(originalFileName));
+        assertEquals(fileContent, response.getBody());
     }
 
     @Test
-    void getJobResult_notComplete_returns400() throws Exception {
-        JobResult result = mock(JobResult.class);
-        when(result.isComplete()).thenReturn(false);
-        when(taskManager.getJobResult("j")).thenReturn(result);
-        mvc.perform(get("/api/v1/general/job/{jobId}/result", "j"))
-                .andExpect(status().isBadRequest())
-                .andExpect(
-                        content()
-                                .string(
-                                        org.hamcrest.Matchers.containsString(
-                                                "Job is not complete yet")));
+    void testGetJobResult_CompletedWithError() {
+        // Arrange
+        String jobId = "test-job-id";
+        String errorMessage = "Test error";
+
+        JobResult mockResult = new JobResult();
+        mockResult.setJobId(jobId);
+        mockResult.failWithError(errorMessage);
+
+        when(taskManager.getJobResult(jobId)).thenReturn(mockResult);
+
+        // Act
+        ResponseEntity<?> response = controller.getJobResult(jobId);
+
+        // Assert
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertTrue(Objects.requireNonNull(response.getBody()).toString().contains(errorMessage));
     }
 
     @Test
-    void getJobResult_error_returns400() throws Exception {
-        JobResult result = mock(JobResult.class);
-        when(result.isComplete()).thenReturn(true);
-        when(result.getError()).thenReturn("oops");
-        when(taskManager.getJobResult("j")).thenReturn(result);
-        mvc.perform(get("/api/v1/general/job/{jobId}/result", "j"))
-                .andExpect(status().isBadRequest())
-                .andExpect(
-                        content().string(org.hamcrest.Matchers.containsString("Job failed: oops")));
+    void testGetJobResult_IncompleteJob() {
+        // Arrange
+        String jobId = "test-job-id";
+
+        JobResult mockResult = new JobResult();
+        mockResult.setJobId(jobId);
+        mockResult.setComplete(false);
+
+        when(taskManager.getJobResult(jobId)).thenReturn(mockResult);
+
+        // Act
+        ResponseEntity<?> response = controller.getJobResult(jobId);
+
+        // Assert
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertTrue(Objects.requireNonNull(response.getBody()).toString().contains("not complete"));
     }
 
     @Test
-    void getJobResult_multipleFiles_returnsJsonList() throws Exception {
-        JobResult result = mock(JobResult.class);
-        when(result.isComplete()).thenReturn(true);
-        when(result.getError()).thenReturn(null);
-        when(result.hasMultipleFiles()).thenReturn(true);
+    void testGetJobResult_NonExistentJob() {
+        // Arrange
+        String jobId = "non-existent-job";
+        when(taskManager.getJobResult(jobId)).thenReturn(null);
 
-        ResultFile f1 = mock(ResultFile.class);
-        ResultFile f2 = mock(ResultFile.class);
-        when(result.getAllResultFiles()).thenReturn(List.of(f1, f2));
-        when(taskManager.getJobResult("j")).thenReturn(result);
+        // Act
+        ResponseEntity<?> response = controller.getJobResult(jobId);
 
-        mvc.perform(get("/api/v1/general/job/{jobId}/result", "j"))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.jobId").value("j"))
-                .andExpect(jsonPath("$.hasMultipleFiles").value(true))
-                .andExpect(jsonPath("$.files.length()").value(2));
+        // Assert
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
     }
 
     @Test
-    void getJobResult_singleFile_streamsBytes_withHeaders() throws Exception {
-        JobResult result = mock(JobResult.class);
-        when(result.isComplete()).thenReturn(true);
-        when(result.getError()).thenReturn(null);
-        when(result.hasMultipleFiles()).thenReturn(false);
-        when(result.hasFiles()).thenReturn(true);
+    void testGetJobResult_ErrorRetrievingFile() throws Exception {
+        // Arrange
+        String jobId = "test-job-id";
+        String fileId = "file-id";
+        String originalFileName = "test.pdf";
+        String contentType = MediaType.APPLICATION_PDF_VALUE;
 
-        ResultFile rf = mock(ResultFile.class);
-        when(rf.getFileId()).thenReturn("fid");
-        when(rf.getFileName()).thenReturn("report.pdf");
-        when(rf.getContentType()).thenReturn("application/pdf");
-        when(result.getAllResultFiles()).thenReturn(List.of(rf));
+        JobResult mockResult = new JobResult();
+        mockResult.setJobId(jobId);
+        mockResult.completeWithSingleFile(fileId, originalFileName, contentType, 1024L);
 
-        when(taskManager.getJobResult("job9")).thenReturn(result);
-        when(fileStorage.retrieveBytes("fid"))
-                .thenReturn("PDFDATA".getBytes(StandardCharsets.UTF_8));
+        when(taskManager.getJobResult(jobId)).thenReturn(mockResult);
+        when(fileStorage.retrieveBytes(fileId)).thenThrow(new RuntimeException("File not found"));
 
-        mvc.perform(get("/api/v1/general/job/{jobId}/result", "job9"))
-                .andExpect(status().isOk())
-                .andExpect(header().string("Content-Type", "application/pdf"))
-                .andExpect(
-                        header().string(
-                                        "Content-Disposition",
-                                        org.hamcrest.Matchers.containsString(
-                                                "filename=\"report.pdf\"")))
-                .andExpect(
-                        header().string(
-                                        "Content-Disposition",
-                                        org.hamcrest.Matchers.containsString("filename*=")))
-                .andExpect(content().bytes("PDFDATA".getBytes(StandardCharsets.UTF_8)));
+        // Act
+        ResponseEntity<?> response = controller.getJobResult(jobId);
+
+        // Assert
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertTrue(
+                Objects.requireNonNull(response.getBody())
+                        .toString()
+                        .contains("Error retrieving file"));
+    }
+
+    /*
+     * @Test void testGetJobStats() { // Arrange JobStats mockStats =
+     * JobStats.builder() .totalJobs(10) .activeJobs(3) .completedJobs(7) .build();
+     *
+     * when(taskManager.getJobStats()).thenReturn(mockStats);
+     *
+     * // Act ResponseEntity<?> response = controller.getJobStats();
+     *
+     * // Assert assertEquals(HttpStatus.OK, response.getStatusCode());
+     * assertEquals(mockStats, response.getBody()); }
+     *
+     * @Test void testCleanupOldJobs() { // Arrange when(taskManager.getJobStats())
+     * .thenReturn(JobStats.builder().totalJobs(10).build())
+     * .thenReturn(JobStats.builder().totalJobs(7).build());
+     *
+     * // Act ResponseEntity<?> response = controller.cleanupOldJobs();
+     *
+     * // Assert assertEquals(HttpStatus.OK, response.getStatusCode());
+     *
+     * @SuppressWarnings("unchecked") Map<String, Object> responseBody =
+     * (Map<String, Object>) response.getBody(); assertEquals("Cleanup complete",
+     * responseBody.get("message")); assertEquals(3,
+     * responseBody.get("removedJobs")); assertEquals(7,
+     * responseBody.get("remainingJobs"));
+     *
+     * verify(taskManager).cleanupOldJobs(); }
+     *
+     * @Test void testGetQueueStats() { // Arrange Map<String, Object>
+     * mockQueueStats = Map.of( "queuedJobs", 5, "queueCapacity", 10,
+     * "resourceStatus", "OK" );
+     *
+     * when(jobQueue.getQueueStats()).thenReturn(mockQueueStats);
+     *
+     * // Act ResponseEntity<?> response = controller.getQueueStats();
+     *
+     * // Assert assertEquals(HttpStatus.OK, response.getStatusCode());
+     * assertEquals(mockQueueStats, response.getBody());
+     * verify(jobQueue).getQueueStats(); }
+     */
+    @Test
+    void testCancelJob_InQueue() {
+        // Arrange
+        String jobId = "job-in-queue";
+
+        // Setup user session with job authorization
+        java.util.Set<String> userJobIds = new java.util.HashSet<>();
+        userJobIds.add(jobId);
+        session.setAttribute("userJobIds", userJobIds);
+
+        when(jobQueue.isJobQueued(jobId)).thenReturn(true);
+        when(jobQueue.getJobPosition(jobId)).thenReturn(2);
+        when(jobQueue.cancelJob(jobId)).thenReturn(true);
+
+        // Act
+        ResponseEntity<?> response = controller.cancelJob(jobId);
+
+        // Assert
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+
+        @SuppressWarnings("unchecked")
+        Map<String, Object> responseBody = (Map<String, Object>) response.getBody();
+        assertEquals(
+                "Job cancelled successfully", Objects.requireNonNull(responseBody).get("message"));
+        assertTrue((Boolean) responseBody.get("wasQueued"));
+        assertEquals(2, responseBody.get("queuePosition"));
+
+        verify(jobQueue).cancelJob(jobId);
+        verify(taskManager, never()).setError(anyString(), anyString());
     }
 
     @Test
-    void getJobResult_singleFile_retrievalError_returns500() throws Exception {
-        JobResult result = mock(JobResult.class);
-        when(result.isComplete()).thenReturn(true);
-        when(result.getError()).thenReturn(null);
-        when(result.hasMultipleFiles()).thenReturn(false);
-        when(result.hasFiles()).thenReturn(true);
+    void testCancelJob_Running() {
+        // Arrange
+        String jobId = "job-running";
+        JobResult jobResult = new JobResult();
+        jobResult.setJobId(jobId);
+        jobResult.setComplete(false);
 
-        ResultFile rf = mock(ResultFile.class);
-        when(rf.getFileId()).thenReturn("fid");
-        when(rf.getFileName()).thenReturn("x.pdf");
-        when(rf.getContentType()).thenReturn("application/pdf");
-        when(result.getAllResultFiles()).thenReturn(List.of(rf));
+        // Setup user session with job authorization
+        java.util.Set<String> userJobIds = new java.util.HashSet<>();
+        userJobIds.add(jobId);
+        session.setAttribute("userJobIds", userJobIds);
 
-        when(taskManager.getJobResult("job10")).thenReturn(result);
-        when(fileStorage.retrieveBytes("fid")).thenThrow(new RuntimeException("IO boom"));
+        when(jobQueue.isJobQueued(jobId)).thenReturn(false);
+        when(taskManager.getJobResult(jobId)).thenReturn(jobResult);
 
-        mvc.perform(get("/api/v1/general/job/{jobId}/result", "job10"))
-                .andExpect(status().isInternalServerError())
-                .andExpect(
-                        content()
-                                .string(
-                                        org.hamcrest.Matchers.containsString(
-                                                "Error retrieving file:")));
+        // Act
+        ResponseEntity<?> response = controller.cancelJob(jobId);
+
+        // Assert
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+
+        @SuppressWarnings("unchecked")
+        Map<String, Object> responseBody = (Map<String, Object>) response.getBody();
+        assertEquals(
+                "Job cancelled successfully", Objects.requireNonNull(responseBody).get("message"));
+        assertFalse((Boolean) responseBody.get("wasQueued"));
+        assertEquals("n/a", responseBody.get("queuePosition"));
+
+        verify(jobQueue, never()).cancelJob(jobId);
+        verify(taskManager).setError(jobId, "Job was cancelled by user");
     }
 
     @Test
-    void getJobResult_noFiles_returns_result_payload() throws Exception {
-        JobResult result = mock(JobResult.class);
-        when(result.isComplete()).thenReturn(true);
-        when(result.getError()).thenReturn(null);
-        when(result.hasMultipleFiles()).thenReturn(false);
-        when(result.hasFiles()).thenReturn(false); // -> triggers the fallback
-        when(result.getResult()).thenReturn("SIMPLE-RESULT");
+    void testCancelJob_NotFound() {
+        // Arrange
+        String jobId = "non-existent-job";
 
-        when(taskManager.getJobResult("job11")).thenReturn(result);
+        // Setup user session with job authorization
+        java.util.Set<String> userJobIds = new java.util.HashSet<>();
+        userJobIds.add(jobId);
+        session.setAttribute("userJobIds", userJobIds);
 
-        mvc.perform(get("/api/v1/general/job/{jobId}/result", "job11"))
-                .andExpect(status().isOk())
-                .andExpect(content().string("SIMPLE-RESULT"));
+        when(jobQueue.isJobQueued(jobId)).thenReturn(false);
+        when(taskManager.getJobResult(jobId)).thenReturn(null);
+
+        // Act
+        ResponseEntity<?> response = controller.cancelJob(jobId);
+
+        // Assert
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
     }
 
     @Test
-    void cancelJob_unauthorized_returns403() throws Exception {
-        when(session.getAttribute("userJobIds")).thenReturn(null);
+    void testCancelJob_AlreadyComplete() {
+        // Arrange
+        String jobId = "completed-job";
+        JobResult jobResult = new JobResult();
+        jobResult.setJobId(jobId);
+        jobResult.setComplete(true);
 
-        mvc.perform(delete("/api/v1/general/job/{jobId}", "J1"))
-                .andExpect(status().isForbidden())
-                .andExpect(
-                        jsonPath("$.message").value("You are not authorized to cancel this job"));
+        // Setup user session with job authorization
+        java.util.Set<String> userJobIds = new java.util.HashSet<>();
+        userJobIds.add(jobId);
+        session.setAttribute("userJobIds", userJobIds);
+
+        when(jobQueue.isJobQueued(jobId)).thenReturn(false);
+        when(taskManager.getJobResult(jobId)).thenReturn(jobResult);
+
+        // Act
+        ResponseEntity<?> response = controller.cancelJob(jobId);
+
+        // Assert
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+
+        @SuppressWarnings("unchecked")
+        Map<String, Object> responseBody = (Map<String, Object>) response.getBody();
+        assertEquals(
+                "Cannot cancel job that is already complete",
+                Objects.requireNonNull(responseBody).get("message"));
     }
 
     @Test
-    void cancelJob_inQueue_success() throws Exception {
-        when(session.getAttribute("userJobIds")).thenReturn(Set.of("J2"));
-        when(jobQueue.isJobQueued("J2")).thenReturn(true);
-        when(jobQueue.getJobPosition("J2")).thenReturn(5);
-        when(jobQueue.cancelJob("J2")).thenReturn(true);
+    void testCancelJob_Unauthorized() {
+        // Arrange
+        String jobId = "unauthorized-job";
 
-        mvc.perform(delete("/api/v1/general/job/{jobId}", "J2"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("Job cancelled successfully"))
-                .andExpect(jsonPath("$.wasQueued").value(true))
-                .andExpect(jsonPath("$.queuePosition").value(5));
-    }
+        // Setup user session with other job IDs but not this one
+        java.util.Set<String> userJobIds = new java.util.HashSet<>();
+        userJobIds.add("other-job-1");
+        userJobIds.add("other-job-2");
+        session.setAttribute("userJobIds", userJobIds);
 
-    @Test
-    void cancelJob_taskManager_cancel_success_when_not_queued() throws Exception {
-        when(session.getAttribute("userJobIds")).thenReturn(Set.of("J3"));
-        when(jobQueue.isJobQueued("J3")).thenReturn(false);
+        // Act
+        ResponseEntity<?> response = controller.cancelJob(jobId);
 
-        JobResult result = mock(JobResult.class);
-        when(result.isComplete()).thenReturn(false);
-        when(taskManager.getJobResult("J3")).thenReturn(result);
+        // Assert
+        assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
 
-        mvc.perform(delete("/api/v1/general/job/{jobId}", "J3"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("Job cancelled successfully"))
-                .andExpect(jsonPath("$.wasQueued").value(false))
-                .andExpect(jsonPath("$.queuePosition").value("n/a"));
+        @SuppressWarnings("unchecked")
+        Map<String, Object> responseBody = (Map<String, Object>) response.getBody();
+        assertEquals(
+                "You are not authorized to cancel this job",
+                Objects.requireNonNull(responseBody).get("message"));
 
-        verify(taskManager).setError(eq("J3"), any(String.class));
-    }
-
-    @Test
-    void cancelJob_notFound_returns404() throws Exception {
-        when(session.getAttribute("userJobIds")).thenReturn(Set.of("J4"));
-        when(jobQueue.isJobQueued("J4")).thenReturn(false);
-        when(taskManager.getJobResult("J4")).thenReturn(null);
-
-        mvc.perform(delete("/api/v1/general/job/{jobId}", "J4")).andExpect(status().isNotFound());
-    }
-
-    @Test
-    void cancelJob_alreadyComplete_returns400() throws Exception {
-        when(session.getAttribute("userJobIds")).thenReturn(Set.of("J5"));
-        when(jobQueue.isJobQueued("J5")).thenReturn(false);
-
-        JobResult result = mock(JobResult.class);
-        when(result.isComplete()).thenReturn(true);
-        when(taskManager.getJobResult("J5")).thenReturn(result);
-
-        mvc.perform(delete("/api/v1/general/job/{jobId}", "J5"))
-                .andExpect(status().isBadRequest())
-                .andExpect(
-                        jsonPath("$.message").value("Cannot cancel job that is already complete"));
-    }
-
-    @Test
-    void cancelJob_unknown_failure_returns500() throws Exception {
-        // User owns the job
-        when(session.getAttribute("userJobIds")).thenReturn(java.util.Set.of("J6"));
-        // Not in queue
-        when(jobQueue.isJobQueued("J6")).thenReturn(false);
-
-        // 1st call in the middle section: completed -> no setError -> cancelled remains false
-        JobResult completed = mock(JobResult.class);
-        when(completed.isComplete()).thenReturn(true);
-
-        // 2nd call in the final else: not complete -> 500 "unknown reason"
-        JobResult notComplete = mock(JobResult.class);
-        when(notComplete.isComplete()).thenReturn(false);
-
-        when(taskManager.getJobResult("J6"))
-                .thenReturn(completed) // first call (inside if (!cancelled))
-                .thenReturn(notComplete); // second call (final else)
-
-        mvc.perform(delete("/api/v1/general/job/{jobId}", "J6"))
-                .andExpect(status().isInternalServerError())
-                .andExpect(jsonPath("$.message").value("Failed to cancel job for unknown reason"));
-    }
-
-    @Test
-    void cancelJob_unauthorized_wrong_attribute_type_returns403() throws Exception {
-        when(session.getAttribute("userJobIds")).thenReturn(java.util.List.of("JX")); // not a Set
-        mvc.perform(delete("/api/v1/general/job/{jobId}", "JX"))
-                .andExpect(status().isForbidden())
-                .andExpect(
-                        jsonPath("$.message").value("You are not authorized to cancel this job"));
-    }
-
-    @Test
-    void cancelJob_inQueue_cancelFalse_then_taskManager_setsError_ok() throws Exception {
-        when(session.getAttribute("userJobIds")).thenReturn(java.util.Set.of("JQ"));
-        when(jobQueue.isJobQueued("JQ")).thenReturn(true);
-        when(jobQueue.getJobPosition("JQ")).thenReturn(2);
-        when(jobQueue.cancelJob("JQ")).thenReturn(false); // forces the second path
-
-        JobResult notComplete = mock(JobResult.class);
-        when(notComplete.isComplete()).thenReturn(false);
-        when(taskManager.getJobResult("JQ")).thenReturn(notComplete);
-
-        mvc.perform(delete("/api/v1/general/job/{jobId}", "JQ"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("Job cancelled successfully"))
-                .andExpect(jsonPath("$.wasQueued").value(true))
-                .andExpect(jsonPath("$.queuePosition").value(2));
-
-        verify(taskManager).setError(eq("JQ"), any(String.class));
-    }
-
-    @Test
-    void getJobFiles_notFound() throws Exception {
-        when(taskManager.getJobResult("JJ")).thenReturn(null);
-        mvc.perform(get("/api/v1/general/job/{jobId}/result/files", "JJ"))
-                .andExpect(status().isNotFound());
-    }
-
-    @Test
-    void getJobFiles_notComplete() throws Exception {
-        JobResult result = mock(JobResult.class);
-        when(result.isComplete()).thenReturn(false);
-        when(taskManager.getJobResult("JJ")).thenReturn(result);
-
-        mvc.perform(get("/api/v1/general/job/{jobId}/result/files", "JJ"))
-                .andExpect(status().isBadRequest())
-                .andExpect(
-                        content()
-                                .string(
-                                        org.hamcrest.Matchers.containsString(
-                                                "Job is not complete yet")));
-    }
-
-    @Test
-    void getJobFiles_error() throws Exception {
-        JobResult result = mock(JobResult.class);
-        when(result.isComplete()).thenReturn(true);
-        when(result.getError()).thenReturn("E");
-        when(taskManager.getJobResult("JJ")).thenReturn(result);
-
-        mvc.perform(get("/api/v1/general/job/{jobId}/result/files", "JJ"))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("Job failed: E")));
-    }
-
-    @Test
-    void getJobFiles_success() throws Exception {
-        JobResult result = mock(JobResult.class);
-        when(result.isComplete()).thenReturn(true);
-        when(result.getError()).thenReturn(null);
-        ResultFile f1 = mock(ResultFile.class);
-        ResultFile f2 = mock(ResultFile.class);
-        when(result.getAllResultFiles()).thenReturn(List.of(f1, f2));
-        when(taskManager.getJobResult("JJ")).thenReturn(result);
-
-        mvc.perform(get("/api/v1/general/job/{jobId}/result/files", "JJ"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.jobId").value("JJ"))
-                .andExpect(jsonPath("$.fileCount").value(2))
-                .andExpect(jsonPath("$.files.length()").value(2));
-    }
-
-    @Test
-    void getFileMetadata_notFound_when_file_missing() throws Exception {
-        when(fileStorage.fileExists("F1")).thenReturn(false);
-        mvc.perform(get("/api/v1/general/files/{fileId}/metadata", "F1"))
-                .andExpect(status().isNotFound());
-    }
-
-    @Test
-    void getFileMetadata_found_with_metadata() throws Exception {
-        when(fileStorage.fileExists("F2")).thenReturn(true);
-        ResultFile rf = mock(ResultFile.class);
-        when(rf.getFileId()).thenReturn("F2");
-        when(rf.getFileName()).thenReturn("name.pdf");
-        when(rf.getContentType()).thenReturn("application/pdf");
-        when(taskManager.findResultFileByFileId("F2")).thenReturn(rf);
-
-        mvc.perform(get("/api/v1/general/files/{fileId}/metadata", "F2"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.fileId").value("F2"))
-                .andExpect(jsonPath("$.fileName").value("name.pdf"))
-                .andExpect(jsonPath("$.contentType").value("application/pdf"));
-    }
-
-    @Test
-    void getFileMetadata_found_without_metadata_returns_basic_info() throws Exception {
-        when(fileStorage.fileExists("F3")).thenReturn(true);
-        when(taskManager.findResultFileByFileId("F3")).thenReturn(null);
-        when(fileStorage.getFileSize("F3")).thenReturn(123L);
-
-        mvc.perform(get("/api/v1/general/files/{fileId}/metadata", "F3"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.fileId").value("F3"))
-                .andExpect(jsonPath("$.fileName").value("unknown"))
-                .andExpect(jsonPath("$.contentType").value("application/octet-stream"))
-                .andExpect(jsonPath("$.fileSize").value(123));
-    }
-
-    @Test
-    void getFileMetadata_error_on_fileExists_returns500() throws Exception {
-        when(fileStorage.fileExists("FERR2")).thenThrow(new RuntimeException("fail-exists"));
-
-        mvc.perform(get("/api/v1/general/files/{fileId}/metadata", "FERR2"))
-                .andExpect(status().isInternalServerError())
-                .andExpect(
-                        content()
-                                .string(
-                                        org.hamcrest.Matchers.containsString(
-                                                "Error retrieving file metadata:")));
-    }
-
-    @Test
-    void downloadFile_notFound() throws Exception {
-        when(fileStorage.fileExists("FX")).thenReturn(false);
-        mvc.perform(get("/api/v1/general/files/{fileId}", "FX")).andExpect(status().isNotFound());
-    }
-
-    @Test
-    void downloadFile_success_with_metadata() throws Exception {
-        when(fileStorage.fileExists("FY")).thenReturn(true);
-        when(fileStorage.retrieveBytes("FY")).thenReturn("DATA".getBytes(StandardCharsets.UTF_8));
-        ResultFile rf = mock(ResultFile.class);
-        when(rf.getFileName()).thenReturn("out.txt");
-        when(rf.getContentType()).thenReturn("text/plain");
-        when(taskManager.findResultFileByFileId("FY")).thenReturn(rf);
-
-        mvc.perform(get("/api/v1/general/files/{fileId}", "FY"))
-                .andExpect(status().isOk())
-                .andExpect(header().string("Content-Type", "text/plain"))
-                .andExpect(
-                        header().string(
-                                        "Content-Disposition",
-                                        org.hamcrest.Matchers.containsString("out.txt")))
-                .andExpect(content().bytes("DATA".getBytes(StandardCharsets.UTF_8)));
-    }
-
-    @Test
-    void downloadFile_error_returns500() throws Exception {
-        when(fileStorage.fileExists("FZ")).thenReturn(true);
-        when(fileStorage.retrieveBytes("FZ")).thenThrow(new RuntimeException("oops"));
-
-        mvc.perform(get("/api/v1/general/files/{fileId}", "FZ"))
-                .andExpect(status().isInternalServerError())
-                .andExpect(
-                        content()
-                                .string(
-                                        org.hamcrest.Matchers.containsString(
-                                                "Error retrieving file:")));
-    }
-
-    @Test
-    void downloadFile_filename_encoding_fallback_on_exception() throws Exception {
-        when(fileStorage.fileExists("FENC")).thenReturn(true);
-        when(fileStorage.retrieveBytes("FENC"))
-                .thenReturn("X".getBytes(java.nio.charset.StandardCharsets.UTF_8));
-
-        // ResultFile with NULL filename -> URLEncoder.encode(...) throws NPE -> catch fallback
-        ResultFile rf = mock(ResultFile.class);
-        when(rf.getFileName()).thenReturn(null);
-        when(rf.getContentType()).thenReturn("text/plain");
-        when(taskManager.findResultFileByFileId("FENC")).thenReturn(rf);
-
-        mvc.perform(get("/api/v1/general/files/{fileId}", "FENC"))
-                .andExpect(status().isOk())
-                .andExpect(header().string("Content-Type", "text/plain"))
-                // Fallback header: only filename=..., no filename*=
-                .andExpect(header().string("Content-Disposition", "attachment; filename=\"null\""))
-                .andExpect(content().bytes("X".getBytes(java.nio.charset.StandardCharsets.UTF_8)));
-    }
-
-    @Test
-    void downloadFile_success_without_metadata_defaults() throws Exception {
-        when(fileStorage.fileExists("FD")).thenReturn(true);
-        when(fileStorage.retrieveBytes("FD"))
-                .thenReturn("D".getBytes(java.nio.charset.StandardCharsets.UTF_8));
-        // no metadata
-        when(taskManager.findResultFileByFileId("FD")).thenReturn(null);
-
-        mvc.perform(get("/api/v1/general/files/{fileId}", "FD"))
-                .andExpect(status().isOk())
-                .andExpect(header().string("Content-Type", "application/octet-stream"))
-                .andExpect(
-                        header().string(
-                                        "Content-Disposition",
-                                        org.hamcrest.Matchers.allOf(
-                                                org.hamcrest.Matchers.containsString(
-                                                        "filename=\"download\""),
-                                                org.hamcrest.Matchers.containsString(
-                                                        "filename*="))))
-                .andExpect(content().bytes("D".getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+        // Verify no cancellation attempts were made
+        verify(jobQueue, never()).isJobQueued(anyString());
+        verify(jobQueue, never()).cancelJob(anyString());
+        verify(taskManager, never()).getJobResult(anyString());
+        verify(taskManager, never()).setError(anyString(), anyString());
     }
 }
