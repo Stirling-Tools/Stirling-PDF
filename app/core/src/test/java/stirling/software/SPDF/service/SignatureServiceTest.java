@@ -24,16 +24,14 @@ class SignatureServiceTest {
 
     @TempDir Path tempDir;
     private SignatureService signatureService;
-    private Path personalSignatureFolder;
-    private Path sharedSignatureFolder;
-    private final String ALL_USERS_FOLDER = "ALL_USERS";
     private final String TEST_USER = "testUser";
 
     @BeforeEach
     void setUp() throws IOException {
         // Set up our test directory structure
-        personalSignatureFolder = tempDir.resolve(TEST_USER);
-        sharedSignatureFolder = tempDir.resolve(ALL_USERS_FOLDER);
+        Path personalSignatureFolder = tempDir.resolve(TEST_USER);
+        String ALL_USERS_FOLDER = "ALL_USERS";
+        Path sharedSignatureFolder = tempDir.resolve(ALL_USERS_FOLDER);
 
         Files.createDirectories(personalSignatureFolder);
         Files.createDirectories(sharedSignatureFolder);
@@ -239,7 +237,7 @@ class SignatureServiceTest {
     }
 
     @Test
-    void testGetAvailableSignatures_EmptyUsername() throws IOException {
+    void testGetAvailableSignatures_EmptyUsername() {
         // Mock static method for each test
         try (MockedStatic<InstallationPathConfig> mockedConfig =
                 mockStatic(InstallationPathConfig.class)) {
@@ -265,7 +263,7 @@ class SignatureServiceTest {
     }
 
     @Test
-    void testGetAvailableSignatures_NonExistentUser() throws IOException {
+    void testGetAvailableSignatures_NonExistentUser() {
         // Mock static method for each test
         try (MockedStatic<InstallationPathConfig> mockedConfig =
                 mockStatic(InstallationPathConfig.class)) {

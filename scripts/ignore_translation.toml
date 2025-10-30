@@ -192,7 +192,6 @@ ignore = [
 ignore = [
     'AddStampRequest.alphabet',
     'AddStampRequest.position',
-    'PDFToBook.selectText.1',
     'PDFToText.tags',
     'addPageNumbers.selectText.3',
     'adminUserSettings.team',
@@ -322,17 +321,28 @@ ignore = [
     'AddStampRequest.alphabet',
     'AddStampRequest.position',
     'AddStampRequest.rotation',
-    'PDFToBook.selectText.1',
     'addPageNumbers.selectText.3',
     'adminUserSettings.actions',
     'alphabet',
+    'audit.dashboard.modal.id',
+    'audit.dashboard.modal.type',
+    'audit.dashboard.pagination.pageInfo1',
+    'audit.dashboard.table.type',
     'compare.document.1',
     'compare.document.2',
+    'cookieBanner.preferencesModal.analytics.posthog.label',
+    'cookieBanner.preferencesModal.analytics.scarf.label',
+    'cookieBanner.preferencesModal.serviceCounterLabel',
+    'endpointStatistics.top',
+    'home.pipeline.title',
     'lang.bre',
+    'lang.cat',
     'lang.ceb',
     'lang.chr',
     'lang.div',
     'lang.dzo',
+    'lang.epo',
+    'lang.equ',
     'lang.eus',
     'lang.guj',
     'lang.iku',
@@ -340,11 +350,11 @@ ignore = [
     'lang.kaz',
     'lang.khm',
     'lang.lao',
-    'lang.ltz',
     'lang.mal',
     'lang.mar',
     'lang.oci',
     'lang.ori',
+    'lang.osd',
     'lang.que',
     'lang.san',
     'lang.snd',
@@ -358,8 +368,17 @@ ignore = [
     'licenses.module',
     'licenses.nav',
     'licenses.version',
+    'multiTool.page',
     'pdfOrganiser.mode',
     'pipeline.title',
+    'split.desc.3',
+    'split.desc.6',
+    'split.desc.7',
+    'split.desc.8',
+    'validateSignature.cert.bits',
+    'validateSignature.cert.version',
+    'validateSignature.date',
+    'validateSignature.signature',
     'watermark.type.2',
 ]
 
@@ -393,7 +412,6 @@ ignore = [
 
 [hr_HR]
 ignore = [
-    'PDFToBook.selectText.1',
     'lang.ceb',
     'lang.chr',
     'lang.dzo',
@@ -568,7 +586,6 @@ ignore = [
 
 [no_NB]
 ignore = [
-    'PDFToBook.selectText.1',
     'adminUserSettings.admin',
     'info',
     'lang.afr',
@@ -621,7 +638,6 @@ ignore = [
 
 [pl_PL]
 ignore = [
-    'PDFToBook.selectText.1',
     'lang.afr',
     'lang.bre',
     'lang.ceb',
