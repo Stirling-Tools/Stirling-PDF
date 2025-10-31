@@ -216,8 +216,7 @@ def compare_files(
 
         # Hardcode English variants to 100%
         if "en_GB" in language or "en_US" in language:
-            result_list.append(("en_GB", 100))
-            result_list.append(("en_US", 100))
+            result_list.append((language, 100))
             continue
 
         # Initialize language table in TOML if missing
