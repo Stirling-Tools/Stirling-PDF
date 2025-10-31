@@ -17,7 +17,7 @@ export const BackendHealthIndicator: React.FC<BackendHealthIndicatorProps> = ({
 
   const label = useMemo(() => {
     if (isChecking) {
-      return t('backendHealth.checking', 'Checking backend status…');
+      return t('backendHealth.checking', 'Checking backend status...');
     }
 
     if (isHealthy) {
