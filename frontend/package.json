@@ -66,7 +66,7 @@
     "preview": "vite preview",
     "tauri-dev": "tauri dev --no-watch",
     "tauri-build": "tauri build",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "npm run typecheck:proprietary",
     "typecheck:core": "tsc --noEmit --project tsconfig.core.json",
     "typecheck:proprietary": "tsc --noEmit --project tsconfig.proprietary.json",
     "typecheck:desktop": "tsc --noEmit --project tsconfig.desktop.json",
