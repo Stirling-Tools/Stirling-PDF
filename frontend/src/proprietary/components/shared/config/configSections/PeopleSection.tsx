@@ -241,6 +241,13 @@ export default function PeopleSection() {
           alertType: 'success',
           title: t('workspace.people.inviteLink.successWithEmail', 'Invite link generated and email sent!')
         });
+      } else if (inviteLinkForm.sendEmail && response.emailError) {
+        // Email was requested but failed
+        alert({
+          alertType: 'warning',
+          title: t('workspace.people.inviteLink.emailFailed', 'Invite link generated, but email failed'),
+          body: t('workspace.people.inviteLink.emailFailedDetails', 'Error: {0}. Please share the invite link manually.').replace('{0}', response.emailError)
+        });
       } else {
         alert({
           alertType: 'success',

@@ -121,7 +121,11 @@ public class InviteLinkController {
                             .body(
                                     Map.of(
                                             "error",
-                                            "Maximum number of users reached for your license"));
+                                            "License limit reached ("
+                                                    + (currentUserCount + activeInvites)
+                                                    + "/"
+                                                    + maxUsers
+                                                    + " users). Contact your administrator to upgrade your license."));
                 }
             }
 

@@ -4525,7 +4525,8 @@
         "copied": "Link copied to clipboard",
         "success": "Invite link generated successfully",
         "successWithEmail": "Invite link generated and sent via email",
-        "emailFailed": "Email failed to send",
+        "emailFailed": "Invite link generated, but email failed",
+        "emailFailedDetails": "Error: {0}. Please share the invite link manually.",
         "error": "Failed to generate invite link"
       },
       "inviteMode": {
