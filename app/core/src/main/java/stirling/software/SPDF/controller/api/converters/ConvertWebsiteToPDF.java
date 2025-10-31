@@ -57,7 +57,12 @@ public class ConvertWebsiteToPDF {
 
     private static final Pattern NUMERIC_HTML_ENTITY_PATTERN = Pattern.compile("&#(x?[0-9a-f]+);");
 
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/url/pdf")
+     @PostMapping(
+            consumes = {
+                MediaType.MULTIPART_FORM_DATA_VALUE,
+                MediaType.APPLICATION_FORM_URLENCODED_VALUE
+            },
+            value = "/url/pdf")
     @Operation(
             summary = "Convert a URL to a PDF",
             description =
