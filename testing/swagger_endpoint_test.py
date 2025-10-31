@@ -79,6 +79,7 @@ CBR_SAMPLE_FILE = "testing/samples/sample.cbr"
 CHAPTERED_PDF_SAMPLE_FILE = "testing/samples/split_pdf_by_chapters_sample.pdf"
 CERT_SAMPLE_FILE = "app/core/src/test/resources/certs/test-cert.pem"
 PKCS12_SAMPLE_FILE = "app/core/src/test/resources/certs/test-cert.p12"
+PDF_WITH_ATTACHMENTS_SAMPLE_FILE = "testing/samples/pdf_with_attachments.pdf"
 
 DEFAULT_SPEC_ENDPOINT = "/v1/api-docs"
 
@@ -799,6 +800,11 @@ class SwaggerTester:
 
         if content_type and content_type.startswith("image/"):
             return self._open_file(IMAGE_SAMPLE_FILE, content_type)
+
+        if "extract-attachments" in path_lower:
+            return self._open_file(
+                PDF_WITH_ATTACHMENTS_SAMPLE_FILE, "application/pdf"
+            )
 
         if "image" in name_lower or "img" in path_lower:
             return self._open_file(IMAGE_SAMPLE_FILE, "image/png")
