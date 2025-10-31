@@ -1,5 +1,7 @@
 package stirling.software.proprietary.security.filter;
 
+import static stirling.software.common.util.RequestUriUtils.isPublicAuthEndpoint;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
@@ -105,10 +107,16 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
             }
         }
 
-        // If we still don't have any authentication, deny the request
+        // If we still don't have any authentication, check if it's a public endpoint
         if (authentication == null || !authentication.isAuthenticated()) {
             String method = request.getMethod();
             String contextPath = request.getContextPath();
+
+            // Allow public auth endpoints to pass through without authentication
+            if (isPublicAuthEndpoint(requestURI, contextPath)) {
+                filterChain.doFilter(request, response);
+                return;
+            }
 
             if ("GET".equalsIgnoreCase(method) && !requestURI.startsWith(contextPath + "/login")) {
                 response.sendRedirect(contextPath + "/login"); // redirect to the login page

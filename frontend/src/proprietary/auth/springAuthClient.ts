@@ -85,20 +85,44 @@ class SpringAuthClient {
       }
 
       // Verify with backend
+      console.debug('[SpringAuth] getSession: Verifying JWT with /api/v1/auth/me');
       const response = await fetch('/api/v1/auth/me', {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
       });
 
+      console.debug('[SpringAuth] /me response status:', response.status);
+      const contentType = response.headers.get('content-type');
+      console.debug('[SpringAuth] /me content-type:', contentType);
+
       if (!response.ok) {
+        // Log the error response for debugging
+        const errorBody = await response.text();
+        console.error('[SpringAuth] getSession: /api/v1/auth/me failed', {
+          status: response.status,
+          statusText: response.statusText,
+          body: errorBody
+        });
+
         // Token invalid or expired - clear it
         localStorage.removeItem('stirling_jwt');
-        console.debug('[SpringAuth] getSession: Not authenticated (status:', response.status, ')');
-        return { data: { session: null }, error: null };
+        console.warn('[SpringAuth] getSession: Cleared invalid JWT from localStorage');
+        return { data: { session: null }, error: { message: `Auth failed: ${response.status}` } };
+      }
+
+      // Check if response is JSON before parsing
+      if (!contentType?.includes('application/json')) {
+        const text = await response.text();
+        console.error('[SpringAuth] /me returned non-JSON:', {
+          contentType,
+          bodyPreview: text.substring(0, 200)
+        });
+        throw new Error(`/api/v1/auth/me returned HTML instead of JSON`);
       }
 
       const data = await response.json();
+      console.debug('[SpringAuth] /me response data:', data);
 
       // Create session object
       const session: Session = {
@@ -150,6 +174,9 @@ class SpringAuthClient {
       // Store JWT in localStorage
       localStorage.setItem('stirling_jwt', token);
       console.log('[SpringAuth] JWT stored in localStorage');
+
+      // Dispatch custom event for other components to react to JWT availability
+      window.dispatchEvent(new CustomEvent('jwt-available'));
 
       const session: Session = {
         user: data.user,
@@ -298,6 +325,9 @@ class SpringAuthClient {
 
       // Store new token
       localStorage.setItem('stirling_jwt', newToken);
+
+      // Dispatch custom event for other components to react to JWT availability
+      window.dispatchEvent(new CustomEvent('jwt-available'));
 
       // Get updated user info
       const userResponse = await fetch('/api/v1/auth/me', {
