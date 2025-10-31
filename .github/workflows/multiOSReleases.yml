@@ -139,8 +139,9 @@ jobs:
         include:
           - os: windows-latest
             platform: win-
-          - os: macos-latest
-            platform: mac-
+          # Disabled Mac builds
+          # - os: macos-latest
+          #   platform: mac-
           # - os: ubuntu-latest
           #   platform: linux-
     runs-on: ${{ matrix.os }}
@@ -179,22 +180,23 @@ jobs:
           STIRLING_PDF_DESKTOP_UI: true
           BROWSER_OPEN: true
 
-      - name: Set up JDK (x86_64)
-        if: matrix.os == 'macos-latest'
-        run: |
-          curl -L -o jdk.tar.gz https://cdn.azul.com/zulu/bin/zulu17.56.15-ca-jdk17.0.14-macosx_x64.tar.gz
-          mkdir -p zulu17
-          tar -xzf jdk.tar.gz -C zulu17 --strip-components=1
-          echo "JAVA_HOME=$PWD/zulu17" >> $GITHUB_ENV
-          echo "$PWD/zulu17/bin" >> $GITHUB_PATH
+      # Disabled Mac builds
+      # - name: Set up JDK (x86_64)
+      #   if: matrix.os == 'macos-latest'
+      #   run: |
+      #     curl -L -o jdk.tar.gz https://cdn.azul.com/zulu/bin/zulu17.56.15-ca-jdk17.0.14-macosx_x64.tar.gz
+      #     mkdir -p zulu17
+      #     tar -xzf jdk.tar.gz -C zulu17 --strip-components=1
+      #     echo "JAVA_HOME=$PWD/zulu17" >> $GITHUB_ENV
+      #     echo "$PWD/zulu17/bin" >> $GITHUB_PATH
 
-      -   name: Verify JDK architecture
-          if: matrix.os == 'macos-latest'
-          run: file $JAVA_HOME/bin/java
+      # -   name: Verify JDK architecture
+      #     if: matrix.os == 'macos-latest'
+      #     run: file $JAVA_HOME/bin/java
 
-      -   name: Build project and run jpackage (x86_64)
-          if: matrix.os == 'macos-latest'
-          run: arch -x86_64 ./gradlew jpackageMacX64
+      # -   name: Build project and run jpackage (x86_64)
+      #     if: matrix.os == 'macos-latest'
+      #     run: arch -x86_64 ./gradlew jpackageMacX64
 
       # Rename and collect artifacts based on OS
       - name: Prepare artifacts
@@ -205,9 +207,10 @@ jobs:
           mkdir ./binaries
           if [ "${{ matrix.os }}" = "windows-latest" ]; then
             mv "./build/jpackage/Stirling PDF-${{ needs.read_versions.outputs.version }}.exe" "./binaries/Stirling-PDF-win-installer.exe"
-          elif [ "${{ matrix.os }}" = "macos-latest" ]; then
-            mv "./build/jpackage/Stirling PDF-${{ needs.read_versions.outputs.versionMac }}.dmg" "./binaries/Stirling-PDF-mac-installer.dmg"
-            mv "./build/jpackage/x86_64/Stirling PDF (x86_64)-${{ needs.read_versions.outputs.versionMac }}.dmg" "./binaries/Stirling-PDF-mac-x86_64-installer.dmg"
+          # Disabled Mac builds
+          # elif [ "${{ matrix.os }}" = "macos-latest" ]; then
+          #   mv "./build/jpackage/Stirling PDF-${{ needs.read_versions.outputs.versionMac }}.dmg" "./binaries/Stirling-PDF-mac-installer.dmg"
+          #   mv "./build/jpackage/x86_64/Stirling PDF (x86_64)-${{ needs.read_versions.outputs.versionMac }}.dmg" "./binaries/Stirling-PDF-mac-x86_64-installer.dmg"
           else
             mv "./build/jpackage/stirling-pdf_${{ needs.read_versions.outputs.version }}-1_amd64.deb" "./binaries/Stirling-PDF-linux-installer.deb"
           fi
