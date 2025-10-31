@@ -126,11 +126,11 @@ export const useCompareRightRailButtons = ({
         />
       ),
       tooltip: isScrollLinked
-        ? t('compare.actions.unlinkScrollPan', 'Unlink scroll and pan')
-        : t('compare.actions.linkScrollPan', 'Link scroll and pan'),
+        ? t('compare.actions.unlinkScroll', 'Unlink scroll')
+        : t('compare.actions.linkScroll', 'Link scroll'),
       ariaLabel: isScrollLinked
-        ? t('compare.actions.unlinkScrollPan', 'Unlink scroll and pan')
-        : t('compare.actions.linkScrollPan', 'Link scroll and pan'),
+        ? t('compare.actions.unlinkScroll', 'Unlink scroll')
+        : t('compare.actions.linkScroll', 'Link scroll'),
       section: 'top',
       order: 15,
       onClick: () => {
@@ -141,8 +141,8 @@ export const useCompareRightRailButtons = ({
           if (!isMobile) {
             alert({
               alertType: 'neutral',
-              title: t('compare.toasts.unlinkedTitle', 'Independent scroll & pan enabled'),
-              body: t('compare.toasts.unlinkedBody', 'Tip: Arrow Up/Down scroll both panes; panning only moves the active pane.'),
+              title: t('compare.toasts.unlinkedTitle', 'Independent scroll enabled'),
+              body: t('compare.toasts.unlinkedBody', 'Tip: Arrow Up/Down scroll both panes when unlinked is off.'),
               durationMs: 5000,
               location: 'bottom-center' as ToastLocation,
               expandable: false,

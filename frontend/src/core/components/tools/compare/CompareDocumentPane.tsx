@@ -3,7 +3,6 @@ import { useMemo, useRef, useState } from 'react';
 import type { PagePreview } from '@app/types/compare';
 import type { TokenBoundingBox, CompareDocumentPaneProps } from '@app/types/compare';
 import CompareNavigationDropdown from './CompareNavigationDropdown';
-import LazyLoadContainer from '@app/components/shared/LazyLoadContainer';
 import { useIsMobile } from '@app/hooks/useIsMobile';
 
 const toRgba = (hexColor: string, alpha: number): string => {
@@ -84,6 +83,10 @@ const CompareDocumentPane = ({
   documentLabel,
   pageLabel,
   altLabel,
+  pageInputValue,
+  onPageInputChange,
+  maxSharedPages,
+  onVisiblePageChange,
 }: CompareDocumentPaneProps) => {
   const isMobileViewport = useIsMobile();
   const pairedPageMap = useMemo(() => {
@@ -98,12 +101,13 @@ const CompareDocumentPane = ({
   const HIGHLIGHT_OPACITY = pane === 'base' ? 0.45 : 0.35;
   const OFFSET_PIXELS = pane === 'base' ? 4 : 2;
   const cursorStyle = isPanMode && zoom > 1 ? 'grab' : 'auto';
-  const panX = (pan?.x ?? 0);
-  const panY = (pan?.y ?? 0);
+  const pagePanRef = useRef<Map<number, { x: number; y: number }>>(new Map());
+  const dragRef = useRef<{ active: boolean; page: number | null; startX: number; startY: number; startPanX: number; startPanY: number }>({ active: false, page: null, startX: 0, startY: 0, startPanX: 0, startPanY: 0 });
 
   // Track which page images have finished loading to avoid flashing between states
   const imageLoadedRef = useRef<Map<number, boolean>>(new Map());
   const [, forceRerender] = useState(0);
+  const visiblePageRafRef = useRef<number | null>(null);
 
   return (
     <div className="compare-pane">
@@ -112,7 +116,8 @@ const CompareDocumentPane = ({
           <Text fw={600} size="lg">
             {title}
           </Text>
-          {(changes.length > 0 || Boolean(dropdownPlaceholder)) && (
+          <Group justify="flex-end" align="center" gap="sm" wrap="nowrap"> 
+            {(changes.length > 0 || Boolean(dropdownPlaceholder)) && (
               <CompareNavigationDropdown
                 changes={changes}
                 placeholder={dropdownPlaceholder ?? null}
@@ -120,17 +125,45 @@ const CompareDocumentPane = ({
                 onNavigate={onNavigateChange}
                 renderedPageNumbers={useMemo(() => new Set(pages.map(p => p.pageNumber)), [pages])}
               />
-          )}
+            )}
+          </Group>
         </Group>
       </div>
 
       <div
         ref={scrollRef}
-        onScroll={(event) => handleScrollSync(event.currentTarget, peerScrollRef.current)}
-        onMouseDown={(event) => beginPan(pane, event)}
-        onMouseMove={continuePan}
-        onMouseUp={endPan}
-        onMouseLeave={endPan}
+        onScroll={(event) => {
+          handleScrollSync(event.currentTarget, peerScrollRef.current);
+          // Notify parent about the currently visible page (throttled via rAF)
+          if (visiblePageRafRef.current != null) cancelAnimationFrame(visiblePageRafRef.current);
+          visiblePageRafRef.current = requestAnimationFrame(() => {
+            const container = scrollRef.current;
+            if (!container) return;
+            const mid = container.scrollTop + container.clientHeight * 0.5;
+            let bestPage = pages[0]?.pageNumber ?? 1;
+            let bestDist = Number.POSITIVE_INFINITY;
+            const nodes = Array.from(container.querySelectorAll('.compare-diff-page')) as HTMLElement[];
+            for (const el of nodes) {
+              const top = el.offsetTop;
+              const height = el.clientHeight || 1;
+              const center = top + height / 2;
+              const dist = Math.abs(center - mid);
+              if (dist < bestDist) {
+                bestDist = dist;
+                const attr = el.getAttribute('data-page-number');
+                const pn = attr ? parseInt(attr, 10) : NaN;
+                if (!Number.isNaN(pn)) bestPage = pn;
+              }
+            }
+            if (typeof onVisiblePageChange === 'function') {
+              onVisiblePageChange(pane, bestPage);
+            }
+          });
+        }}
+        onMouseDown={undefined}
+        onMouseMove={undefined}
+        onMouseUp={undefined}
+        onMouseLeave={undefined}
         onWheel={(event) => { handleWheelZoom(pane, event); handleWheelOverscroll(pane, event); }}
         onTouchStart={(event) => onTouchStart(pane, event)}
         onTouchMove={onTouchMove}
@@ -138,7 +171,7 @@ const CompareDocumentPane = ({
         className="compare-pane__scroll"
         style={{ cursor: cursorStyle }}
       >
-        <Stack gap="sm" className="compare-pane__content">
+        <Stack gap={zoom <= 0.6 ? 2 : zoom <= 0.85 ? 'xs' : 'sm'} className="compare-pane__content">
           {isLoading && (
             <Group justify="center" gap="xs" py="md">
               <Loader size="sm" />
@@ -174,71 +207,30 @@ const CompareDocumentPane = ({
             }
             const preloadMarginPx = Math.max(rowHeightPx * 5, 1200); // render several pages ahead to hide loading flashes
 
+            const baseWidth = isStackedPortrait
+              ? stackedWidth
+              : Math.round(page.width * fit);
+            const baseHeight = isStackedPortrait
+              ? stackedHeight
+              : Math.round(targetHeight);
+            const desiredWidth = Math.max(1, Math.round(baseWidth * Math.max(0.1, zoom)));
+            const desiredHeight = Math.max(1, Math.round(baseHeight * Math.max(0.1, zoom)));
+            const containerMaxW = scrollRef.current?.clientWidth ?? (typeof window !== 'undefined' ? window.innerWidth : desiredWidth);
+            const containerWidth = Math.min(desiredWidth, Math.max(120, containerMaxW));
+            const containerHeight = Math.round(baseHeight * (containerWidth / baseWidth));
+            const innerScale = Math.max(1, desiredWidth / containerWidth);
+            const currentPan = pagePanRef.current.get(page.pageNumber) || { x: 0, y: 0 };
+
             return (
-              <LazyLoadContainer
-                key={`${pane}-page-${page.pageNumber}`}
-                rootMargin={`${preloadMarginPx}px 0px ${preloadMarginPx}px 0px`}
-                threshold={0.1}
-                fallback={
-                  <div
-                    className="compare-diff-page"
-                    data-page-number={page.pageNumber}
-                    style={{ minHeight: `${rowHeightPx}px` }}
-                  >
-                  <div
-                    className="compare-page-title"
-                    style={isStackedPortrait
-                      ? { width: `${stackedWidth}px`, marginLeft: 'auto', marginRight: 'auto' }
-                      : isStackedLandscape
-                      ? { width: `${Math.round(page.width * fit)}px`, marginLeft: 'auto', marginRight: 'auto' }
-                      : { width: `${Math.round(page.width * fit)}px`, marginLeft: 'auto', marginRight: 'auto' }}
-                  >
-                      <Text size="xs" fw={600} c="dimmed" ta="center">
-                        {documentLabel} · {pageLabel} {page.pageNumber}
-                      </Text>
-                    </div>
-                    <div
-                      className="compare-diff-page__canvas compare-diff-page__canvas--zoom"
-                      style={isStackedPortrait
-                        ? { width: `${stackedWidth}px`, height: `${stackedHeight}px`, marginLeft: 'auto', marginRight: 'auto' }
-                        : isStackedLandscape
-                        ? { width: `${Math.round(page.width * fit)}px`, marginLeft: 'auto', marginRight: 'auto' }
-                        : { width: `${Math.round(page.width * fit)}px`, marginLeft: 'auto', marginRight: 'auto' }}
-                    >
-                      <div
-                        className="compare-diff-page__inner"
-                        style={{ transform: `translate(${-panX}px, ${-panY}px) scale(${zoom})`, transformOrigin: 'top left' }}
-                      >
-                        <div
-                          style={{
-                            width: '100%',
-                            height: `${Math.round(page.height * fit)}px`,
-                            backgroundColor: '#f8f9fa',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            border: '1px solid #e9ecef',
-                          }}
-                        >
-                          <Loader size="sm" />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                }
-              >
+              <>
                 <div
                   className="compare-diff-page"
                   data-page-number={page.pageNumber}
-                  style={{ minHeight: `${rowHeightPx}px` }}
+                  style={{ minHeight: `${containerHeight}px` }}
                 >
                   <div
                     className="compare-page-title"
-                    style={isStackedPortrait
-                      ? { width: `${stackedWidth}px`, marginLeft: 'auto', marginRight: 'auto' }
-                      : isStackedLandscape
-                      ? { width: `${Math.round(page.width * fit)}px`, marginLeft: 'auto', marginRight: 'auto' }
-                      : { width: `${Math.round(page.width * fit)}px`, marginLeft: 'auto', marginRight: 'auto' }}
+                    style={{ width: `${containerWidth}px`, marginLeft: 'auto', marginRight: 'auto' }}
                   >
                     <Text size="xs" fw={600} c="dimmed" ta="center">
                       {documentLabel} · {pageLabel} {page.pageNumber}
@@ -246,16 +238,49 @@ const CompareDocumentPane = ({
                   </div>
                   <div
                     className="compare-diff-page__canvas compare-diff-page__canvas--zoom"
-                    style={isStackedPortrait
-                      ? { width: `${stackedWidth}px`, height: `${stackedHeight}px`, marginLeft: 'auto', marginRight: 'auto' }
-                      : isStackedLandscape
-                      ? { width: `${Math.round(page.width * fit)}px`, marginLeft: 'auto', marginRight: 'auto' }
-                      : { width: `${Math.round(page.width * fit)}px`, marginLeft: 'auto', marginRight: 'auto' }}
+                    style={{ width: `${containerWidth}px`, height: `${containerHeight}px`, marginLeft: 'auto', marginRight: 'auto', overflow: 'hidden' }}
+                    onMouseDown={(e) => {
+                      if (!isPanMode || zoom <= 1) return;
+                      dragRef.current.active = true;
+                      dragRef.current.page = page.pageNumber;
+                      dragRef.current.startX = e.clientX;
+                      dragRef.current.startY = e.clientY;
+                      const curr = pagePanRef.current.get(page.pageNumber) || { x: 0, y: 0 };
+                      dragRef.current.startPanX = curr.x;
+                      dragRef.current.startPanY = curr.y;
+                      (e.currentTarget as HTMLElement).style.cursor = 'grabbing';
+                      e.preventDefault();
+                    }}
+                    onMouseMove={(e) => {
+                      if (!dragRef.current.active || dragRef.current.page !== page.pageNumber) return;
+                      const dx = e.clientX - dragRef.current.startX;
+                      const dy = e.clientY - dragRef.current.startY;
+                      const maxX = Math.max(0, Math.round(baseWidth * innerScale - containerWidth));
+                      const maxY = Math.max(0, Math.round(baseHeight * innerScale - containerHeight));
+                      const candX = dragRef.current.startPanX - dx;
+                      const candY = dragRef.current.startPanY - dy;
+                      const next = { x: Math.max(0, Math.min(maxX, candX)), y: Math.max(0, Math.min(maxY, candY)) };
+                      pagePanRef.current.set(page.pageNumber, next);
+                      forceRerender(v => v + 1);
+                      e.preventDefault();
+                    }}
+                    onMouseUp={(e) => {
+                      if (dragRef.current.active) {
+                        dragRef.current.active = false;
+                        (e.currentTarget as HTMLElement).style.cursor = cursorStyle;
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (dragRef.current.active) {
+                        dragRef.current.active = false;
+                        (e.currentTarget as HTMLElement).style.cursor = cursorStyle;
+                      }
+                    }}
                   >
                     <div
                       className={`compare-diff-page__inner compare-diff-page__inner--${pane}`}
                       style={{
-                        transform: `translate(${-panX}px, ${-panY}px) scale(${zoom})`,
+                        transform: `scale(${innerScale}) translate(${-((pagePanRef.current.get(page.pageNumber)?.x || 0) / innerScale)}px, ${-((pagePanRef.current.get(page.pageNumber)?.y || 0) / innerScale)}px)`,
                         transformOrigin: 'top left'
                       }}
                     >
@@ -301,7 +326,7 @@ const CompareDocumentPane = ({
                     </div>
                   </div>
                 </div>
-              </LazyLoadContainer>
+                </>
             );
           })}
         </Stack>

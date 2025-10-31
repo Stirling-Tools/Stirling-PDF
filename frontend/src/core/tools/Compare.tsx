@@ -23,6 +23,7 @@ import type { StirlingFile } from '@app/types/fileContext';
 import DocumentThumbnail from '@app/components/shared/filePreview/DocumentThumbnail';
 import type { CompareWorkbenchData } from '@app/types/compare';
 import FitText from '@app/components/shared/FitText';
+import { getDefaultWorkbench } from '@app/types/workbench';
 
 const CUSTOM_VIEW_ID = 'compareWorkbenchView';
 const CUSTOM_WORKBENCH_ID = 'custom:compareWorkbenchView' as const;
@@ -36,7 +37,7 @@ const Compare = (props: BaseToolProps) => {
     setCustomWorkbenchViewData,
     clearCustomWorkbenchViewData,
   } = useToolWorkflow();
-  const { selectors } = useFileContext();
+  const { selectors, actions: fileActions } = useFileContext();
 
   const base = useBaseTool(
     'compare',
@@ -51,6 +52,7 @@ const Compare = (props: BaseToolProps) => {
 
   const compareIcon = useMemo(() => <CompareRoundedIcon fontSize="small" />, []);
   const [swapConfirmOpen, setSwapConfirmOpen] = useState(false);
+  const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
 
   useEffect(() => {
     registerCustomWorkbenchView({
@@ -120,23 +122,39 @@ const Compare = (props: BaseToolProps) => {
   );
 
   const prepareWorkbenchForRun = useCallback(
-    (baseId: FileId | null, compId: FileId | null) => {
+    (
+      baseId: FileId | null,
+      compId: FileId | null,
+      options?: { baseFile?: StirlingFile | null; comparisonFile?: StirlingFile | null }
+    ) => {
       if (!baseId || !compId) {
         return;
       }
+
+      const previous = lastWorkbenchDataRef.current;
+      const resolvedBaseFile =
+        options?.baseFile ??
+        (baseId ? selectors.getFile(baseId) : null) ??
+        previous?.baseLocalFile ??
+        null;
+      const resolvedComparisonFile =
+        options?.comparisonFile ??
+        (compId ? selectors.getFile(compId) : null) ??
+        previous?.comparisonLocalFile ??
+        null;
 
       updateWorkbenchData({
         result: null,
         baseFileId: baseId,
         comparisonFileId: compId,
-        baseLocalFile: lastWorkbenchDataRef.current?.baseLocalFile ?? null,
-        comparisonLocalFile: lastWorkbenchDataRef.current?.comparisonLocalFile ?? null,
+        baseLocalFile: resolvedBaseFile,
+        comparisonLocalFile: resolvedComparisonFile,
         isLoading: true,
       });
 
       lastProcessedAtRef.current = null;
     },
-    [operation.result, updateWorkbenchData]
+    [selectors, updateWorkbenchData]
   );
 
   useEffect(() => {
@@ -160,12 +178,21 @@ const Compare = (props: BaseToolProps) => {
       result.base.fileId === baseFileId &&
       result.comparison.fileId === comparisonFileId
     ) {
+      const previous = lastWorkbenchDataRef.current;
+      const baseLocalFile =
+        (baseFileId ? selectors.getFile(baseFileId) : null) ??
+        previous?.baseLocalFile ??
+        null;
+      const comparisonLocalFile =
+        (comparisonFileId ? selectors.getFile(comparisonFileId) : null) ??
+        previous?.comparisonLocalFile ??
+        null;
       updateWorkbenchData({
         result,
         baseFileId,
         comparisonFileId,
-        baseLocalFile: null,
-        comparisonLocalFile: null,
+        baseLocalFile,
+        comparisonLocalFile,
         isLoading: false,
       });
       lastProcessedAtRef.current = processedAt;
@@ -173,12 +200,21 @@ const Compare = (props: BaseToolProps) => {
     }
 
     if (base.operation.isLoading) {
+      const previous = lastWorkbenchDataRef.current;
+      const baseLocalFile =
+        (baseFileId ? selectors.getFile(baseFileId) : null) ??
+        previous?.baseLocalFile ??
+        null;
+      const comparisonLocalFile =
+        (comparisonFileId ? selectors.getFile(comparisonFileId) : null) ??
+        previous?.comparisonLocalFile ??
+        null;
       updateWorkbenchData({
         result: null,
         baseFileId,
         comparisonFileId,
-        baseLocalFile: lastWorkbenchDataRef.current?.baseLocalFile ?? null,
-        comparisonLocalFile: lastWorkbenchDataRef.current?.comparisonLocalFile ?? null,
+        baseLocalFile,
+        comparisonLocalFile,
         isLoading: true,
       });
       return;
@@ -189,19 +225,24 @@ const Compare = (props: BaseToolProps) => {
     operation.result,
     params.baseFileId,
     params.comparisonFileId,
+    selectors,
     updateWorkbenchData,
   ]);
 
   const handleExecuteCompare = useCallback(async () => {
+    const baseId = params.baseFileId as FileId | null;
+    const compId = params.comparisonFileId as FileId | null;
+    const baseSel =
+      base.selectedFiles.find((file) => file.fileId === baseId) ??
+      (baseId ? selectors.getFile(baseId) : null);
+    const compSel =
+      base.selectedFiles.find((file) => file.fileId === compId) ??
+      (compId ? selectors.getFile(compId) : null);
     const selected: StirlingFile[] = [];
-    const baseSel = params.baseFileId ? selectors.getFile(params.baseFileId) : null;
-    const compSel = params.comparisonFileId ? selectors.getFile(params.comparisonFileId) : null;
     if (baseSel) selected.push(baseSel);
     if (compSel) selected.push(compSel);
 
-    const baseId = params.baseFileId as FileId | null;
-    const compId = params.comparisonFileId as FileId | null;
-    prepareWorkbenchForRun(baseId, compId);
+    prepareWorkbenchForRun(baseId, compId, { baseFile: baseSel ?? null, comparisonFile: compSel ?? null });
     if (baseId && compId) {
       requestAnimationFrame(() => {
         navigationActions.setWorkbench(CUSTOM_WORKBENCH_ID);
@@ -212,19 +253,23 @@ const Compare = (props: BaseToolProps) => {
       { ...params },
       selected
     );
-  }, [navigationActions, operation, params, prepareWorkbenchForRun, selectors]);
+  }, [base.selectedFiles, navigationActions, operation, params, prepareWorkbenchForRun, selectors]);
 
   // Run compare with explicit ids (used after swap so we don't depend on async state propagation)
   const runCompareWithIds = useCallback(async (baseId: FileId | null, compId: FileId | null) => {
     const nextParams = { ...params, baseFileId: baseId, comparisonFileId: compId };
     const selected: StirlingFile[] = [];
-    const baseSel = baseId ? selectors.getFile(baseId) : null;
-    const compSel = compId ? selectors.getFile(compId) : null;
+    const baseSel =
+      base.selectedFiles.find((file) => file.fileId === baseId) ??
+      (baseId ? selectors.getFile(baseId) : null);
+    const compSel =
+      base.selectedFiles.find((file) => file.fileId === compId) ??
+      (compId ? selectors.getFile(compId) : null);
     if (baseSel) selected.push(baseSel);
     if (compSel) selected.push(compSel);
-    prepareWorkbenchForRun(baseId, compId);
+    prepareWorkbenchForRun(baseId, compId, { baseFile: baseSel ?? null, comparisonFile: compSel ?? null });
     await operation.executeOperation(nextParams, selected);
-  }, [operation, params, prepareWorkbenchForRun, selectors]);
+  }, [base.selectedFiles, operation, params, prepareWorkbenchForRun, selectors]);
 
   const performSwap = useCallback(() => {
     const baseId = params.baseFileId as FileId | null;
@@ -258,10 +303,7 @@ const Compare = (props: BaseToolProps) => {
 
       if (!stub) {
         return (
-          <Stack gap={6}>
-            <Text fw={700} size="sm">
-              {role === 'base' ? t('compare.original.label', 'Original PDF') : t('compare.edited.label', 'Edited PDF')}
-            </Text>
+        <Stack gap={6}>
             <Box
               style={{
                 border: '1px solid var(--border-default)',
@@ -290,9 +332,6 @@ const Compare = (props: BaseToolProps) => {
 
       return (
         <Stack gap={6}>
-          <Text fw={700} size="sm">
-            {role === 'base' ? t('compare.original.label', 'Original PDF') : t('compare.edited.label', 'Edited PDF')}
-          </Text>
           <Box
             style={{
               border: '1px solid var(--border-default)',
@@ -339,6 +378,7 @@ const Compare = (props: BaseToolProps) => {
   );
 
   const hasBothSelected = Boolean(params.baseFileId && params.comparisonFileId);
+  const hasAnyFiles = selectors.getFiles().length > 0;
 
   return createToolFlow({
     files: {
@@ -359,6 +399,25 @@ const Compare = (props: BaseToolProps) => {
               width: '100%', 
             }}
           >
+            {/* Header row: Original PDF + Clear selected aligned to swap column */}
+            <Box
+              style={{ gridColumn: hasBothSelected ? '1 / span 2' : '1', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '0.5rem' }}
+            >
+              <Text fw={700} size="sm">{t('compare.original.label', 'Original PDF')}</Text>
+              <Button
+                variant="subtle"
+                size="compact-xs"
+                onClick={() => setClearConfirmOpen(true)}
+                disabled={!hasAnyFiles}
+                styles={{ root: { textDecoration: 'underline' } }}
+                style={{
+                  background: !hasAnyFiles ? 'transparent' : undefined,
+                  color: !hasAnyFiles ? 'var(--spdf-clear-disabled-text)' : undefined
+                }}
+              >
+                {t('compare.clearSelected', 'Clear selected')}
+              </Button>
+            </Box>
             <Box
               style={{
                 gridColumn: '1',
@@ -368,18 +427,19 @@ const Compare = (props: BaseToolProps) => {
             >
               {renderSelectedFile('base')}
               <div style={{ height: '0.75rem' }} />
+              {/* Edited PDF section header */}
+              <Text fw={700} size="sm" style={{ marginBottom: '1rem', marginTop: '0.5rem'}}>{t('compare.edited.label', 'Edited PDF')}</Text>
               {renderSelectedFile('comparison')}
             </Box>
             {hasBothSelected && (
             <Box
               style={{
                 gridColumn: '2',
-                gridRow: '1',
+                gridRow: '2',
                 display: 'flex',
-                alignItems: 'stretch',
+                alignItems: 'center',
                 justifyContent: 'center',
                 alignSelf: 'stretch',
-                marginTop: '1.5rem',
               }}
             >
               <Button
@@ -421,6 +481,34 @@ const Compare = (props: BaseToolProps) => {
                     }}
                   >
                     {t('compare.swap.confirm', 'Swap and Re-run')}
+                  </Button>
+                </Group>
+              </Stack>
+            </Modal>
+            <Modal
+              opened={clearConfirmOpen}
+              onClose={() => setClearConfirmOpen(false)}
+              title={t('compare.clear.confirmTitle', 'Clear selected PDFs?')}
+              centered
+              size="sm"
+            >
+              <Stack gap="md">
+                <Text>{t('compare.clear.confirmBody', 'This will close the current comparison and take you back to Active Files.')}</Text>
+                <Group justify="flex-end" gap="sm">
+                  <Button variant="light" onClick={() => setClearConfirmOpen(false)}>{t('cancel', 'Cancel')}</Button>
+                  <Button
+                    variant="filled"
+                    onClick={() => {
+                      setClearConfirmOpen(false);
+                      try { base.operation.cancelOperation(); } catch {}
+                      try { base.operation.resetResults(); } catch {}
+                      base.params.setParameters(prev => ({ ...prev, baseFileId: null, comparisonFileId: null }));
+                      try { fileActions.clearSelections(); } catch {}
+                      clearCustomWorkbenchViewData(CUSTOM_VIEW_ID);
+                      navigationActions.setWorkbench(getDefaultWorkbench());
+                    }}
+                  >
+                    {t('compare.clear.confirm', 'Clear and return')}
                   </Button>
                 </Group>
               </Stack>

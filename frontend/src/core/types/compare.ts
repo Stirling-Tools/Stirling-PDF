@@ -168,6 +168,12 @@ export interface CompareDocumentPaneProps {
   documentLabel: string;
   pageLabel: string;
   altLabel: string;
+  // Page input/navigation props (optional to keep call sites flexible)
+  pageInputValue?: string;
+  onPageInputChange?: (next: string) => void;
+  maxSharedPages?: number; // min(baseTotal, compTotal)
+  renderedPageNumbers?: Set<number>;
+  onVisiblePageChange?: (pane: 'base' | 'comparison', pageNumber: number) => void;
 }
 
 // Import types that are referenced in CompareDocumentPaneProps

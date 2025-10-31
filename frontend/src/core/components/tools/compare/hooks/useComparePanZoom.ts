@@ -504,30 +504,10 @@ export const useComparePanZoom = ({
         }
       }
 
-      if (isScrollLinked) {
-        if (isBase) {
-          setBasePan(desired);
-        } else {
-          setComparisonPan(desired);
-        }
-        const otherPane: Pane = isBase ? 'comparison' : 'base';
-        const mappedPeer = mapPanBetweenOrientations(drag.source, otherPane, desired);
-        const peerBounds = getPanBounds(otherPane);
-        const clampedPeer = {
-          x: Math.max(0, Math.min(peerBounds.maxX, mappedPeer.x)),
-          y: Math.max(0, Math.min(peerBounds.maxY, mappedPeer.y)),
-        };
-        if (isBase) {
-          setComparisonPan(clampedPeer);
-        } else {
-          setBasePan(clampedPeer);
-        }
+      if (isBase) {
+        setBasePan(desired);
       } else {
-        if (isBase) {
-          setBasePan(desired);
-        } else {
-          setComparisonPan(desired);
-        }
+        setComparisonPan(desired);
       }
     },
     [getPanBounds, isPanMode, isScrollLinked, mapPanBetweenOrientations]
@@ -761,30 +741,10 @@ export const useComparePanZoom = ({
             edgeOverscrollRef.current[isBase ? 'base' : 'comparison'] = 0;
           }
         }
-        if (isScrollLinked) {
-          if (isBase) {
-            setBasePan(desired);
-          } else {
-            setComparisonPan(desired);
-          }
-          const otherPane: Pane = isBase ? 'comparison' : 'base';
-          const mappedPeer = mapPanBetweenOrientations(isBase ? 'base' : 'comparison', otherPane, desired);
-          const peerBounds = getPanBounds(otherPane);
-          const clampedPeer = {
-            x: Math.max(0, Math.min(peerBounds.maxX, mappedPeer.x)),
-            y: Math.max(0, Math.min(peerBounds.maxY, mappedPeer.y)),
-          };
-          if (isBase) {
-            setComparisonPan(clampedPeer);
-          } else {
-            setBasePan(clampedPeer);
-          }
+        if (isBase) {
+          setBasePan(desired);
         } else {
-          if (isBase) {
-            setBasePan(desired);
-          } else {
-            setComparisonPan(desired);
-          }
+          setComparisonPan(desired);
         }
         event.preventDefault();
       }

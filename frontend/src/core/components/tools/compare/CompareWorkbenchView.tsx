@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { Loader, Stack } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { useIsMobile } from '@app/hooks/useIsMobile';
@@ -265,6 +265,92 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
     };
   }, [showProgressBanner, allDone, progressPct, baseRendered, compRendered, baseTotal, compTotal, basePages.length, comparisonPages.length, t]);
 
+  // Shared page navigation state/input
+  const maxSharedPages = useMemo(() => {
+    const baseMax = baseTotal || basePages.length || 0;
+    const compMax = compTotal || comparisonPages.length || 0;
+    const minKnown = Math.min(baseMax || Infinity, compMax || Infinity);
+    if (!Number.isFinite(minKnown)) return 0;
+    return Math.max(0, minKnown);
+  }, [baseTotal, compTotal, basePages.length, comparisonPages.length]);
+
+  const [pageInputValue, setPageInputValue] = useState<string>('1');
+  const typingTimerRef = useRef<number | null>(null);
+  const isTypingRef = useRef(false);
+
+  // Clamp the displayed input if max changes smaller than current
+  useEffect(() => {
+    if (!pageInputValue) return;
+    const n = Math.max(1, parseInt(pageInputValue, 10) || 1);
+    if (maxSharedPages > 0 && n > maxSharedPages) {
+      setPageInputValue(String(maxSharedPages));
+    }
+  }, [maxSharedPages]);
+
+  const scrollBothToPage = useCallback((pageNum: number) => {
+    const scrollOne = (container: HTMLDivElement | null) => {
+      if (!container) return false;
+      const pageEl = container.querySelector(`.compare-diff-page[data-page-number="${pageNum}"]`) as HTMLElement | null;
+      if (!pageEl) return false;
+      const maxTop = Math.max(0, container.scrollHeight - container.clientHeight);
+      const desired = Math.max(0, Math.min(maxTop, pageEl.offsetTop - Math.round(container.clientHeight * 0.2)));
+      container.scrollTop = desired;
+      return true;
+    };
+
+    const hitBase = scrollOne(baseScrollRef.current);
+    const hitComp = scrollOne(comparisonScrollRef.current);
+
+    // Warn if one or both pages are not yet rendered
+    const baseHas = basePages.some(p => p.pageNumber === pageNum);
+    const compHas = comparisonPages.some(p => p.pageNumber === pageNum);
+    if (!baseHas || !compHas) {
+      alert({
+        alertType: 'warning',
+        title: t('compare.rendering.pageNotReadyTitle', 'Page not rendered yet'),
+        body: t('compare.rendering.pageNotReadyBody', 'Some pages are still rendering. Navigation will snap once they are ready.'),
+        location: 'bottom-right' as ToastLocation,
+        isPersistentPopup: false,
+        durationMs: 2500,
+      });
+    }
+
+    return hitBase || hitComp;
+  }, [basePages, comparisonPages, baseScrollRef, comparisonScrollRef, t]);
+
+  const handleTypingChange = useCallback((next: string) => {
+    // Only digits; allow empty while editing
+    const digits = next.replace(/[^0-9]/g, '');
+    if (digits.length === 0) {
+      setPageInputValue('');
+      if (typingTimerRef.current != null) {
+        window.clearTimeout(typingTimerRef.current);
+        typingTimerRef.current = null;
+      }
+      return;
+    }
+
+    const parsed = Math.max(1, parseInt(digits, 10));
+    const capped = maxSharedPages > 0 ? Math.min(parsed, maxSharedPages) : parsed;
+    const display = String(capped);
+    setPageInputValue(display);
+
+    isTypingRef.current = true;
+    if (typingTimerRef.current != null) window.clearTimeout(typingTimerRef.current);
+    typingTimerRef.current = window.setTimeout(() => {
+      isTypingRef.current = false;
+      scrollBothToPage(capped);
+    }, 300);
+  }, [maxSharedPages, scrollBothToPage]);
+
+  const handleVisiblePageChange = useCallback((pane: 'base' | 'comparison', page: number) => {
+    // Reflect scroll position in the input, but do not trigger navigation
+    if (isTypingRef.current) return; // ignore during typing debounce window
+    if (page <= 0) return;
+    const display = String(Math.min(maxSharedPages || page, page));
+    setPageInputValue(display);
+  }, [maxSharedPages]);
+
   return (
     <Stack className="compare-workbench">
 
@@ -303,6 +389,10 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
               documentLabel={baseDocumentLabel}
               pageLabel={pageLabel}
               altLabel={baseDocumentLabel}
+            pageInputValue={pageInputValue}
+            onPageInputChange={handleTypingChange}
+            maxSharedPages={maxSharedPages}
+            onVisiblePageChange={handleVisiblePageChange}
             />
             <CompareDocumentPane
               pane="comparison"
@@ -335,6 +425,10 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
               documentLabel={comparisonDocumentLabel}
               pageLabel={pageLabel}
               altLabel={comparisonDocumentLabel}
+            pageInputValue={pageInputValue}
+            onPageInputChange={handleTypingChange}
+            maxSharedPages={maxSharedPages}
+            onVisiblePageChange={handleVisiblePageChange}
             />
           </div>
         </Stack>

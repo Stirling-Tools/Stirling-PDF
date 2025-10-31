@@ -6,8 +6,57 @@ const DISPLAY_SCALE = 1;
 
 const getDevicePixelRatio = () => (typeof window !== 'undefined' ? window.devicePixelRatio : 1);
 
-// Simple shared cache so rendering progress can resume across unmounts/remounts
-const previewCache: Map<string, { pages: PagePreview[]; total: number }> = new Map();
+// Observable preview cache so rendering progress can resume across remounts and view switches
+type CacheEntry = { pages: PagePreview[]; total: number; subscribers: Set<() => void> };
+const previewCache: Map<string, CacheEntry> = new Map();
+const latestVersionMap: Map<string, symbol> = new Map();
+
+const getOrCreateEntry = (key: string): CacheEntry => {
+  let entry = previewCache.get(key);
+  if (!entry) {
+    entry = { pages: [], total: 0, subscribers: new Set() };
+    previewCache.set(key, entry);
+  }
+  return entry;
+};
+
+const notify = (entry: CacheEntry) => {
+  entry.subscribers.forEach((fn) => {
+    try { fn(); } catch { /* no-op */ }
+  });
+};
+
+const subscribe = (key: string, fn: () => void): (() => void) => {
+  const entry = getOrCreateEntry(key);
+  entry.subscribers.add(fn);
+  return () => entry.subscribers.delete(fn);
+};
+
+const appendBatchToCache = (key: string, batch: PagePreview[], provisionalTotal?: number) => {
+  const entry = getOrCreateEntry(key);
+  const next = entry.pages.slice();
+  for (const p of batch) {
+    const idx = next.findIndex((x) => x.pageNumber > p.pageNumber);
+    if (idx === -1) next.push(p); else next.splice(idx, 0, p);
+  }
+  entry.pages = next;
+  if (typeof provisionalTotal === 'number' && entry.total === 0) entry.total = provisionalTotal;
+  notify(entry);
+};
+
+const setTotalInCache = (key: string, total: number) => {
+  const entry = getOrCreateEntry(key);
+  entry.total = total;
+  notify(entry);
+};
+
+const replacePagesInCache = (key: string, pages: PagePreview[], total?: number) => {
+  const entry = getOrCreateEntry(key);
+  entry.pages = pages.slice();
+  if (typeof total === 'number') entry.total = total;
+  notify(entry);
+};
+
 
 const renderPdfDocumentToImages = async (
   file: File,
@@ -112,19 +161,30 @@ export const useComparePagePreviews = ({
     }
 
     const key = `${(file as any).name || 'file'}:${(file as any).size || 0}:${cacheKey ?? 'none'}`;
-    const cached = previewCache.get(key);
-    const cachedTotal = cached?.total ?? (cached?.pages.length ?? 0);
+    const refreshVersion = Symbol(key);
+    latestVersionMap.set(key, refreshVersion);
+    const entry = getOrCreateEntry(key);
+    const cachedTotal = entry.total ?? (entry.pages.length ?? 0);
     let lastKnownTotal = cachedTotal;
-    const isFullyCached = Boolean(cached && cached.pages.length > 0 && cachedTotal > 0 && cached.pages.length >= cachedTotal);
+    const isFullyCached = Boolean(entry.pages.length > 0 && cachedTotal > 0 && entry.pages.length >= cachedTotal);
 
-    if (cached) {
-      setPages(cached.pages.slice());
+    if (entry.pages.length > 0) {
+      const nextPages = entry.pages.slice();
+      setPages(nextPages);
       setTotalPages(cachedTotal);
     } else {
       setTotalPages(0);
     }
 
     setLoading(!isFullyCached);
+
+    const unsubscribe = subscribe(key, () => {
+      const e = getOrCreateEntry(key);
+      setPages(e.pages.slice());
+      setTotalPages(e.total);
+      const done = e.pages.length > 0 && e.total > 0 && e.pages.length >= e.total;
+      setLoading(!done);
+    });
 
     if (isFullyCached) {
       return () => {
@@ -137,44 +197,35 @@ export const useComparePagePreviews = ({
       try {
         inFlightRef.current += 1;
         const current = inFlightRef.current;
-        const startAt = (cached?.pages?.length ?? 0) + 1;
+        const startAt = (entry?.pages?.length ?? 0) + 1;
         const previews = await renderPdfDocumentToImages(
           file,
           (batch) => {
             if (cancelled || current !== inFlightRef.current) return;
-            // Stream batches into state
-            setPages((prev) => {
-              const next = [...prev];
-              for (const p of batch) {
-                const idx = next.findIndex((x) => x.pageNumber > p.pageNumber);
-                if (idx === -1) next.push(p); else next.splice(idx, 0, p);
-              }
-              // Update shared cache
-              previewCache.set(key, { pages: next, total: lastKnownTotal || cachedTotal });
-              return next;
-            });
+            appendBatchToCache(key, batch, lastKnownTotal || cachedTotal);
           },
           16,
           (total) => {
             if (!cancelled && current === inFlightRef.current) {
               lastKnownTotal = total;
-              setTotalPages(total);
-              // Initialize or update cache record while preserving any pages
-              const existingPages = previewCache.get(key)?.pages ?? [];
-              previewCache.set(key, { pages: existingPages.slice(), total });
+              setTotalInCache(key, total);
             }
           },
           startAt,
           () => cancelled || current !== inFlightRef.current
         );
         if (!cancelled && current === inFlightRef.current) {
-          const cacheEntry = previewCache.get(key);
-          const finalTotal = lastKnownTotal || cachedTotal || cacheEntry?.total || previews.length;
+          const stillLatest = latestVersionMap.get(key) === refreshVersion;
+          if (!stillLatest) {
+            return;
+          }
+          const cacheEntry = getOrCreateEntry(key);
+          const finalTotal = lastKnownTotal || cachedTotal || cacheEntry.total || previews.length;
           lastKnownTotal = finalTotal;
-          const finalPages = cacheEntry ? cacheEntry.pages.slice() : previews.slice();
-          previewCache.set(key, { pages: finalPages.slice(), total: finalTotal });
-          setPages(finalPages);
-          setTotalPages(finalTotal);
+          const cachePages = cacheEntry.pages ?? [];
+          const preferPreviews = previews.length > cachePages.length;
+          const finalPages = preferPreviews ? previews.slice() : cachePages.slice();
+          replacePagesInCache(key, finalPages, finalTotal);
         }
       } catch (error) {
         console.error('[compare] failed to render document preview', error);
@@ -192,6 +243,7 @@ export const useComparePagePreviews = ({
 
     return () => {
       cancelled = true;
+      unsubscribe();
     };
   }, [file, enabled, cacheKey]);
 
