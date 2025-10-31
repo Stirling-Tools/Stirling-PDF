@@ -3801,7 +3801,9 @@
         "from": "From Address",
         "from.description": "The email address to use as the sender",
         "enableInvites": "Enable Email Invites",
-        "enableInvites.description": "Allow admins to invite users via email with auto-generated passwords"
+        "enableInvites.description": "Allow admins to invite users via email with auto-generated passwords",
+        "frontendUrl": "Frontend URL",
+        "frontendUrl.description": "Base URL for frontend (e.g. https://pdf.example.com). Used for generating invite links in emails. Leave empty to use backend URL."
       },
       "legal": {
         "title": "Legal Documents",
