@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { createPluginRegistration } from '@embedpdf/core';
 import { EmbedPDF } from '@embedpdf/core/react';
 import { usePdfiumEngine } from '@embedpdf/engines/react';
+import { PrivateContent } from '@app/components/shared/PrivateContent';
 
 // Import the essential plugins
 import { Viewport, ViewportPluginPackage } from '@embedpdf/plugin-viewport/react';
@@ -184,18 +185,17 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
 
   // Wrap your UI with the <EmbedPDF> provider
   return (
-    <div
-      className='ph-no-capture'
-
-      style={{
-        height: '100%',
-        width: '100%',
-        position: 'relative',
-        overflow: 'hidden',
-        flex: 1,
-        minHeight: 0,
-        minWidth: 0,
-    }}>
+    <PrivateContent as="div">
+      <div
+        style={{
+          height: '100%',
+          width: '100%',
+          position: 'relative',
+          overflow: 'hidden',
+          flex: 1,
+          minHeight: 0,
+          minWidth: 0,
+      }}>
       <EmbedPDF
         engine={engine}
         plugins={plugins}
@@ -338,6 +338,7 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
           </Viewport>
         </GlobalPointerProvider>
       </EmbedPDF>
-    </div>
+      </div>
+    </PrivateContent>
   );
 }
