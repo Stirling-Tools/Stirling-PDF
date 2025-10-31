@@ -294,8 +294,8 @@ public class ApplicationProperties {
                                 throw new UnsupportedProviderException(
                                         "Logout from the provider "
                                                 + registrationId
-                                                + " is not supported. "
-                                                + "Report it at https://github.com/Stirling-Tools/Stirling-PDF/issues");
+                                                + " is not supported. Report it at"
+                                                + " https://github.com/Stirling-Tools/Stirling-PDF/issues");
                     };
                 }
             }
@@ -370,6 +370,7 @@ public class ApplicationProperties {
         public static class Operations {
             private String weasyprint;
             private String unoconvert;
+            private String calibre;
         }
     }
 
@@ -452,10 +453,10 @@ public class ApplicationProperties {
         @Override
         public String toString() {
             return """
-                Driver {
-                  driverName='%s'
-                }
-                """
+            Driver {
+              driverName='%s'
+            }
+            """
                     .formatted(driverName);
         }
     }
