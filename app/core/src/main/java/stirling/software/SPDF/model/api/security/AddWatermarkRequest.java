@@ -8,7 +8,6 @@ import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.Pattern;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -186,20 +185,6 @@ public class AddWatermarkRequest extends PDFFile {
 
     @Schema(description = "Random seed for deterministic randomness (optional, for testing)")
     private Long seed;
-
-    @Schema(description = "Minimum margin from page edges in points", defaultValue = "10")
-    @DecimalMin(value = "0.0", message = "Margin must be >= 0.0")
-    @DecimalMax(value = "500.0", message = "Margin must be <= 500.0")
-    private Float margin;
-
-    @Schema(
-            description =
-                    "Bounding box constraint for watermark placement (format: x,y,width,height)")
-    @Pattern(
-            regexp =
-                    "^(\\d+(\\.\\d+)?),\\s*(\\d+(\\.\\d+)?),\\s*(\\d+(\\.\\d+)?),\\s*(\\d+(\\.\\d+)?)$",
-            message = "Bounds must be in format: x,y,width,height")
-    private String bounds;
 
     @Schema(
             description = "Scale factor for image watermarks (1.0 = original size)",

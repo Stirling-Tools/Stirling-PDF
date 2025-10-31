@@ -25,21 +25,16 @@ class WatermarkRandomizerTest {
             WatermarkRandomizer randomizer1 = new WatermarkRandomizer(TEST_SEED);
             WatermarkRandomizer randomizer2 = new WatermarkRandomizer(TEST_SEED);
 
-            float[] pos1 =
-                    randomizer1.generateRandomPosition(
-                            800f, 600f, 100f, 50f, 10f, null, null, null, null);
-            float[] pos2 =
-                    randomizer2.generateRandomPosition(
-                            800f, 600f, 100f, 50f, 10f, null, null, null, null);
+            float[] pos1 = randomizer1.generateRandomPosition(800f, 600f, 100f, 50f);
+            float[] pos2 = randomizer2.generateRandomPosition(800f, 600f, 100f, 50f);
 
             assertArrayEquals(pos1, pos2, "Same seed should produce same position");
         }
 
         @Test
-        @DisplayName("Should respect margin constraints")
-        void testGenerateRandomPositionWithMargin() {
+        @DisplayName("Should keep watermark within page bounds")
+        void testGenerateRandomPositionWithinBounds() {
             WatermarkRandomizer randomizer = new WatermarkRandomizer(TEST_SEED);
-            float margin = 20f;
             float pageWidth = 800f;
             float pageHeight = 600f;
             float watermarkWidth = 100f;
@@ -48,59 +43,41 @@ class WatermarkRandomizerTest {
             for (int i = 0; i < 10; i++) {
                 float[] pos =
                         randomizer.generateRandomPosition(
-                                pageWidth,
-                                pageHeight,
-                                watermarkWidth,
-                                watermarkHeight,
-                                margin,
-                                null,
-                                null,
-                                null,
-                                null);
+                                pageWidth, pageHeight, watermarkWidth, watermarkHeight);
 
-                assertTrue(pos[0] >= margin, "X position should respect margin");
-                assertTrue(pos[1] >= margin, "Y position should respect margin");
+                assertTrue(pos[0] >= 0, "X position should be non-negative");
+                assertTrue(pos[1] >= 0, "Y position should be non-negative");
                 assertTrue(
-                        pos[0] <= pageWidth - margin - watermarkWidth,
-                        "X position should not exceed page width minus margin");
+                        pos[0] <= pageWidth - watermarkWidth,
+                        "X position should not exceed page width minus watermark width");
                 assertTrue(
-                        pos[1] <= pageHeight - margin - watermarkHeight,
-                        "Y position should not exceed page height minus margin");
+                        pos[1] <= pageHeight - watermarkHeight,
+                        "Y position should not exceed page height minus watermark height");
             }
         }
 
         @Test
-        @DisplayName("Should respect custom bounds")
-        void testGenerateRandomPositionWithBounds() {
+        @DisplayName("Should handle small watermarks on large pages")
+        void testGenerateRandomPositionSmallWatermark() {
             WatermarkRandomizer randomizer = new WatermarkRandomizer(TEST_SEED);
-            float boundsX = 100f;
-            float boundsY = 100f;
-            float boundsWidth = 400f;
-            float boundsHeight = 300f;
+            float pageWidth = 800f;
+            float pageHeight = 600f;
             float watermarkWidth = 50f;
             float watermarkHeight = 30f;
 
             for (int i = 0; i < 10; i++) {
                 float[] pos =
                         randomizer.generateRandomPosition(
-                                800f,
-                                600f,
-                                watermarkWidth,
-                                watermarkHeight,
-                                10f,
-                                boundsX,
-                                boundsY,
-                                boundsWidth,
-                                boundsHeight);
+                                pageWidth, pageHeight, watermarkWidth, watermarkHeight);
 
-                assertTrue(pos[0] >= boundsX, "X position should be within bounds");
-                assertTrue(pos[1] >= boundsY, "Y position should be within bounds");
+                assertTrue(pos[0] >= 0, "X position should be non-negative");
+                assertTrue(pos[1] >= 0, "Y position should be non-negative");
                 assertTrue(
-                        pos[0] <= boundsX + boundsWidth - watermarkWidth,
-                        "X position should not exceed bounds");
+                        pos[0] <= pageWidth - watermarkWidth,
+                        "X position should not exceed page width minus watermark width");
                 assertTrue(
-                        pos[1] <= boundsY + boundsHeight - watermarkHeight,
-                        "Y position should not exceed bounds");
+                        pos[1] <= pageHeight - watermarkHeight,
+                        "Y position should not exceed page height minus watermark height");
             }
         }
 
@@ -114,7 +91,7 @@ class WatermarkRandomizerTest {
             float watermarkHeight = 100f;
             int widthSpacer = 50;
             int heightSpacer = 50;
-            int count = 5;
+            int count = 150;
 
             List<float[]> positions =
                     randomizer.generateGridPositions(
@@ -137,20 +114,203 @@ class WatermarkRandomizerTest {
         }
 
         @Test
-        @DisplayName("Should generate unlimited grid when count is 0")
-        void testGenerateGridPositionsUnlimited() {
+        @DisplayName("Should keep watermarks within page boundaries for unlimited grid")
+        void testGenerateGridPositionsUnlimitedWithinBounds() {
             WatermarkRandomizer randomizer = new WatermarkRandomizer(TEST_SEED);
-            float pageWidth = 400f;
-            float pageHeight = 300f;
+            float pageWidth = 800f;
+            float pageHeight = 600f;
             float watermarkWidth = 100f;
-            float watermarkHeight = 100f;
+            float watermarkHeight = 80f;
+            int widthSpacer = 50;
+            int heightSpacer = 40;
 
             List<float[]> positions =
                     randomizer.generateGridPositions(
-                            pageWidth, pageHeight, watermarkWidth, watermarkHeight, 50, 50, 0);
+                            pageWidth,
+                            pageHeight,
+                            watermarkWidth,
+                            watermarkHeight,
+                            widthSpacer,
+                            heightSpacer,
+                            0);
 
             assertNotNull(positions, "Positions should not be null");
-            assertTrue(positions.size() > 0, "Should generate at least one position");
+            assertFalse(positions.isEmpty(), "Should generate at least one position");
+
+            // Verify all watermarks fit within page boundaries
+            for (float[] pos : positions) {
+                assertTrue(pos[0] >= 0, "X position should be non-negative");
+                assertTrue(pos[1] >= 0, "Y position should be non-negative");
+                assertTrue(
+                        pos[0] + watermarkWidth <= pageWidth,
+                        String.format(
+                                "Watermark right edge (%.2f) should not exceed page width (%.2f)",
+                                pos[0] + watermarkWidth, pageWidth));
+                assertTrue(
+                        pos[1] + watermarkHeight <= pageHeight,
+                        String.format(
+                                "Watermark top edge (%.2f) should not exceed page height (%.2f)",
+                                pos[1] + watermarkHeight, pageHeight));
+            }
+        }
+
+        @Test
+        @DisplayName("Should handle large watermarks on small pages")
+        void testGenerateGridPositionsLargeWatermark() {
+            WatermarkRandomizer randomizer = new WatermarkRandomizer(TEST_SEED);
+            float pageWidth = 300f;
+            float pageHeight = 200f;
+            float watermarkWidth = 150f;
+            float watermarkHeight = 100f;
+            int widthSpacer = 20;
+            int heightSpacer = 15;
+            int count = 4;
+
+            List<float[]> positions =
+                    randomizer.generateGridPositions(
+                            pageWidth,
+                            pageHeight,
+                            watermarkWidth,
+                            watermarkHeight,
+                            widthSpacer,
+                            heightSpacer,
+                            count);
+
+            assertNotNull(positions, "Positions should not be null");
+
+            // Verify all watermarks fit within page boundaries
+            for (float[] pos : positions) {
+                assertTrue(pos[0] >= 0, "X position should be non-negative");
+                assertTrue(pos[1] >= 0, "Y position should be non-negative");
+                assertTrue(
+                        pos[0] + watermarkWidth <= pageWidth,
+                        String.format(
+                                "Watermark right edge (%.2f) should not exceed page width (%.2f)",
+                                pos[0] + watermarkWidth, pageWidth));
+                assertTrue(
+                        pos[1] + watermarkHeight <= pageHeight,
+                        String.format(
+                                "Watermark top edge (%.2f) should not exceed page height (%.2f)",
+                                pos[1] + watermarkHeight, pageHeight));
+            }
+        }
+
+        @Test
+        @DisplayName("Should handle edge case with zero spacers")
+        void testGenerateGridPositionsZeroSpacers() {
+            WatermarkRandomizer randomizer = new WatermarkRandomizer(TEST_SEED);
+            float pageWidth = 600f;
+            float pageHeight = 400f;
+            float watermarkWidth = 100f;
+            float watermarkHeight = 80f;
+            int widthSpacer = 0;
+            int heightSpacer = 0;
+            int count = 6;
+
+            List<float[]> positions =
+                    randomizer.generateGridPositions(
+                            pageWidth,
+                            pageHeight,
+                            watermarkWidth,
+                            watermarkHeight,
+                            widthSpacer,
+                            heightSpacer,
+                            count);
+
+            assertNotNull(positions, "Positions should not be null");
+
+            // Verify all watermarks fit within page boundaries
+            for (float[] pos : positions) {
+                assertTrue(pos[0] >= 0, "X position should be non-negative");
+                assertTrue(pos[1] >= 0, "Y position should be non-negative");
+                assertTrue(
+                        pos[0] + watermarkWidth <= pageWidth,
+                        String.format(
+                                "Watermark right edge (%.2f) should not exceed page width (%.2f)",
+                                pos[0] + watermarkWidth, pageWidth));
+                assertTrue(
+                        pos[1] + watermarkHeight <= pageHeight,
+                        String.format(
+                                "Watermark top edge (%.2f) should not exceed page height (%.2f)",
+                                pos[1] + watermarkHeight, pageHeight));
+            }
+        }
+
+        @Test
+        @DisplayName("Should handle edge case with large spacers")
+        void testGenerateGridPositionsLargeSpacers() {
+            WatermarkRandomizer randomizer = new WatermarkRandomizer(TEST_SEED);
+            float pageWidth = 1000f;
+            float pageHeight = 800f;
+            float watermarkWidth = 80f;
+            float watermarkHeight = 60f;
+            int widthSpacer = 200;
+            int heightSpacer = 150;
+            int count = 0; // Unlimited
+
+            List<float[]> positions =
+                    randomizer.generateGridPositions(
+                            pageWidth,
+                            pageHeight,
+                            watermarkWidth,
+                            watermarkHeight,
+                            widthSpacer,
+                            heightSpacer,
+                            count);
+
+            assertNotNull(positions, "Positions should not be null");
+
+            // Verify all watermarks fit within page boundaries
+            for (float[] pos : positions) {
+                assertTrue(pos[0] >= 0, "X position should be non-negative");
+                assertTrue(pos[1] >= 0, "Y position should be non-negative");
+                assertTrue(
+                        pos[0] + watermarkWidth <= pageWidth,
+                        String.format(
+                                "Watermark right edge (%.2f) should not exceed page width (%.2f)",
+                                pos[0] + watermarkWidth, pageWidth));
+                assertTrue(
+                        pos[1] + watermarkHeight <= pageHeight,
+                        String.format(
+                                "Watermark top edge (%.2f) should not exceed page height (%.2f)",
+                                pos[1] + watermarkHeight, pageHeight));
+            }
+        }
+
+        @Test
+        @DisplayName("Should handle watermark exactly fitting page dimensions")
+        void testGenerateGridPositionsExactFit() {
+            WatermarkRandomizer randomizer = new WatermarkRandomizer(TEST_SEED);
+            float pageWidth = 400f;
+            float pageHeight = 300f;
+            float watermarkWidth = 400f;
+            float watermarkHeight = 300f;
+            int widthSpacer = 0;
+            int heightSpacer = 0;
+            int count = 1;
+
+            List<float[]> positions =
+                    randomizer.generateGridPositions(
+                            pageWidth,
+                            pageHeight,
+                            watermarkWidth,
+                            watermarkHeight,
+                            widthSpacer,
+                            heightSpacer,
+                            count);
+
+            assertNotNull(positions, "Positions should not be null");
+            assertEquals(1, positions.size(), "Should generate exactly one position");
+
+            float[] pos = positions.get(0);
+            assertEquals(0f, pos[0], 0.01f, "X position should be 0");
+            assertEquals(0f, pos[1], 0.01f, "Y position should be 0");
+            assertTrue(
+                    pos[0] + watermarkWidth <= pageWidth,
+                    "Watermark right edge should not exceed page width");
+            assertTrue(
+                    pos[1] + watermarkHeight <= pageHeight,
+                    "Watermark top edge should not exceed page height");
         }
     }
 
@@ -332,7 +492,7 @@ class WatermarkRandomizerTest {
         @DisplayName("Should return default when font list is empty")
         void testSelectRandomFontEmpty() {
             WatermarkRandomizer randomizer = new WatermarkRandomizer(TEST_SEED);
-            List<String> fonts = Arrays.asList();
+            List<String> fonts = List.of();
 
             String font = randomizer.selectRandomFont(fonts);
 
@@ -549,7 +709,7 @@ class WatermarkRandomizerTest {
         @DisplayName("Should return 'none' when shading list is empty")
         void testSelectRandomShadingEmpty() {
             WatermarkRandomizer randomizer = new WatermarkRandomizer(TEST_SEED);
-            List<String> shadings = Arrays.asList();
+            List<String> shadings = List.of();
 
             String shading = randomizer.selectRandomShading(shadings);
 

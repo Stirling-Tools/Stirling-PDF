@@ -182,7 +182,6 @@ class WatermarkControllerIntegrationTest {
             request.setConvertPDFToImage(false);
             request.setRandomPosition(true);
             request.setCount(5);
-            request.setMargin(10f);
             request.setSeed(12345L); // Use seed for deterministic testing
 
             ResponseEntity<byte[]> response = watermarkController.addWatermark(request);
@@ -467,29 +466,6 @@ class WatermarkControllerIntegrationTest {
             assertNotNull(response, "Response should not be null");
             assertEquals(200, response.getStatusCode().value(), "Should return 200 OK");
         }
-
-        @Test
-        @DisplayName("Should apply text watermark with custom bounds")
-        void testTextWatermarkWithBounds() throws Exception {
-            AddWatermarkRequest request = new AddWatermarkRequest();
-            request.setAlphabet("roman");
-            request.setFileInput(testPdfFile);
-            request.setWatermarkType("text");
-            request.setWatermarkText("Bounded");
-            request.setOpacity(0.5f);
-            request.setFontSize(25f);
-            request.setCustomColor("#00FF00");
-            request.setConvertPDFToImage(false);
-            request.setRandomPosition(true);
-            request.setCount(3);
-            request.setBounds("100,100,300,200");
-            request.setSeed(99000L);
-
-            ResponseEntity<byte[]> response = watermarkController.addWatermark(request);
-
-            assertNotNull(response, "Response should not be null");
-            assertEquals(200, response.getStatusCode().value(), "Should return 200 OK");
-        }
     }
 
     @Nested
@@ -625,7 +601,6 @@ class WatermarkControllerIntegrationTest {
             request.setOpacity(0.5f);
             request.setRandomPosition(true);
             request.setCount(5);
-            request.setMargin(20f);
             request.setSeed(45454L);
             request.setConvertPDFToImage(false);
 

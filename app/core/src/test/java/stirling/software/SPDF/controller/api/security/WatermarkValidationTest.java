@@ -926,56 +926,6 @@ class WatermarkValidationTest {
         }
 
         @Test
-        @DisplayName("Should reject margin below 0.0")
-        void testMarginBelowBound() {
-            // Arrange
-            request.setMargin(-1f);
-
-            // Act
-            Set<ConstraintViolation<AddWatermarkRequest>> violations = validator.validate(request);
-
-            // Assert
-            assertFalse(violations.isEmpty(), "Should have validation errors");
-            assertTrue(
-                    violations.stream()
-                            .anyMatch(v -> v.getPropertyPath().toString().equals("margin")),
-                    "Should have violation on 'margin' field");
-        }
-
-        @Test
-        @DisplayName("Should reject margin above 500.0")
-        void testMarginAboveBound() {
-            // Arrange
-            request.setMargin(501f);
-
-            // Act
-            Set<ConstraintViolation<AddWatermarkRequest>> violations = validator.validate(request);
-
-            // Assert
-            assertFalse(violations.isEmpty(), "Should have validation errors");
-            assertTrue(
-                    violations.stream()
-                            .anyMatch(v -> v.getPropertyPath().toString().equals("margin")),
-                    "Should have violation on 'margin' field");
-        }
-
-        @Test
-        @DisplayName("Should accept valid margin value")
-        void testMarginValid() {
-            // Arrange
-            request.setMargin(10f);
-
-            // Act
-            Set<ConstraintViolation<AddWatermarkRequest>> violations = validator.validate(request);
-
-            // Assert
-            assertTrue(
-                    violations.stream()
-                            .noneMatch(v -> v.getPropertyPath().toString().equals("margin")),
-                    "Should have no violations on 'margin' field");
-        }
-
-        @Test
         @DisplayName("Should reject imageScale below 0.1")
         void testImageScaleBelowBound() {
             // Arrange
@@ -1023,39 +973,6 @@ class WatermarkValidationTest {
                     violations.stream()
                             .noneMatch(v -> v.getPropertyPath().toString().equals("imageScale")),
                     "Should have no violations on 'imageScale' field");
-        }
-
-        @Test
-        @DisplayName("Should reject invalid bounds format")
-        void testBoundsInvalidFormat() {
-            // Arrange
-            request.setBounds("invalid");
-
-            // Act
-            Set<ConstraintViolation<AddWatermarkRequest>> violations = validator.validate(request);
-
-            // Assert
-            assertFalse(violations.isEmpty(), "Should have validation errors");
-            assertTrue(
-                    violations.stream()
-                            .anyMatch(v -> v.getPropertyPath().toString().equals("bounds")),
-                    "Should have violation on 'bounds' field");
-        }
-
-        @Test
-        @DisplayName("Should accept valid bounds format")
-        void testBoundsValidFormat() {
-            // Arrange
-            request.setBounds("100,100,200,200");
-
-            // Act
-            Set<ConstraintViolation<AddWatermarkRequest>> violations = validator.validate(request);
-
-            // Assert
-            assertTrue(
-                    violations.stream()
-                            .noneMatch(v -> v.getPropertyPath().toString().equals("bounds")),
-                    "Should have no violations on 'bounds' field");
         }
     }
 }

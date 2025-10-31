@@ -23,45 +23,24 @@ public class WatermarkRandomizer {
     }
 
     /**
-     * Generates a random position within the given bounds and margins.
+     * Generates a random position within the page.
      *
      * @param pageWidth Width of the page
      * @param pageHeight Height of the page
      * @param watermarkWidth Width of the watermark
      * @param watermarkHeight Height of the watermark
-     * @param margin Minimum margin from page edges
-     * @param boundsX Optional bounding box X coordinate (null for full page)
-     * @param boundsY Optional bounding box Y coordinate (null for full page)
-     * @param boundsWidth Optional bounding box width (null for full page)
-     * @param boundsHeight Optional bounding box height (null for full page)
      * @return Array with [x, y] coordinates
      */
     public float[] generateRandomPosition(
-            float pageWidth,
-            float pageHeight,
-            float watermarkWidth,
-            float watermarkHeight,
-            float margin,
-            Float boundsX,
-            Float boundsY,
-            Float boundsWidth,
-            Float boundsHeight) {
-
-        // Determine effective bounds
-        float effectiveX = (boundsX != null) ? boundsX : margin;
-        float effectiveY = (boundsY != null) ? boundsY : margin;
-        float effectiveWidth = (boundsWidth != null) ? boundsWidth : (pageWidth - 2 * margin);
-        float effectiveHeight = (boundsHeight != null) ? boundsHeight : (pageHeight - 2 * margin);
+            float pageWidth, float pageHeight, float watermarkWidth, float watermarkHeight) {
 
         // Calculate available space
-        float maxX = Math.max(effectiveX, effectiveX + effectiveWidth - watermarkWidth);
-        float maxY = Math.max(effectiveY, effectiveY + effectiveHeight - watermarkHeight);
-        float minX = effectiveX;
-        float minY = effectiveY;
+        float maxX = Math.max(0, pageWidth - watermarkWidth);
+        float maxY = Math.max(0, pageHeight - watermarkHeight);
 
-        // Generate random position within bounds
-        float x = minX + random.nextFloat() * Math.max(0, maxX - minX);
-        float y = minY + random.nextFloat() * Math.max(0, maxY - minY);
+        // Generate random position within page
+        float x = random.nextFloat() * maxX;
+        float y = random.nextFloat() * maxY;
 
         return new float[] {x, y};
     }
@@ -89,35 +68,49 @@ public class WatermarkRandomizer {
 
         List<float[]> positions = new ArrayList<>();
 
-        // Calculate how many rows and columns can fit on the page based on spacers
-        int maxRows = (int) (pageHeight / (watermarkHeight + heightSpacer) + 1);
-        int maxCols = (int) (pageWidth / (watermarkWidth + widthSpacer) + 1);
+        // Calculate automatic margins to keep watermarks within page boundaries
+        float maxX = Math.max(0, pageWidth - watermarkWidth);
+        float maxY = Math.max(0, pageHeight - watermarkHeight);
+
+        // Calculate how many rows and columns can fit within the page
+        // Note: watermarkWidth/Height are the actual watermark dimensions (not including spacers)
+        // We need to account for the spacing between watermarks when calculating grid capacity
+        int maxRows = (int) Math.floor(maxY / (watermarkHeight + heightSpacer));
+        int maxCols = (int) Math.floor(maxX / (watermarkWidth + widthSpacer));
 
         if (count == 0) {
-            // Unlimited grid: fill entire page using spacer-based grid
-            for (int i = 0; i <= maxRows; i++) {
-                for (int j = 0; j <= maxCols; j++) {
+            // Unlimited grid: fill page using spacer-based grid
+            // Ensure watermarks stay within visible area
+            for (int i = 0; i < maxRows; i++) {
+                for (int j = 0; j < maxCols; j++) {
                     float x = j * (watermarkWidth + widthSpacer);
                     float y = i * (watermarkHeight + heightSpacer);
+                    // Clamp to ensure within bounds
+                    x = Math.min(x, maxX);
+                    y = Math.min(y, maxY);
                     positions.add(new float[] {x, y});
                 }
             }
         } else {
-            // Limited count: distribute evenly across the page using spacer-based grid
-            // Calculate optimal distribution
-            int cols =
-                    Math.min((int) Math.ceil(Math.sqrt(count * pageWidth / pageHeight)), maxCols);
-            int rows = Math.min((int) Math.ceil((double) count / cols), maxRows);
+            // Limited count: distribute evenly across page
+            // Calculate optimal distribution based on page aspect ratio
+            // Don't use spacer-based limits; instead ensure positions fit within maxX/maxY
+            int cols = (int) Math.ceil(Math.sqrt(count * pageWidth / pageHeight));
+            int rows = (int) Math.ceil((double) count / cols);
 
-            // Calculate step sizes to distribute watermarks evenly across available grid
-            int colStep = Math.max(1, maxCols / cols);
-            int rowStep = Math.max(1, maxRows / rows);
+            // Calculate spacing to distribute watermarks evenly within the visible area
+            // Account for watermark dimensions to prevent overflow at edges
+            float xSpacing = (cols > 1) ? maxX / (cols - 1) : 0;
+            float ySpacing = (rows > 1) ? maxY / (rows - 1) : 0;
 
             int generated = 0;
-            for (int i = 0; i < maxRows && generated < count; i += rowStep) {
-                for (int j = 0; j < maxCols && generated < count; j += colStep) {
-                    float x = j * (watermarkWidth + widthSpacer);
-                    float y = i * (watermarkHeight + heightSpacer);
+            for (int i = 0; i < rows && generated < count; i++) {
+                for (int j = 0; j < cols && generated < count; j++) {
+                    float x = j * xSpacing;
+                    float y = i * ySpacing;
+                    // Clamp to ensure within bounds
+                    x = Math.min(x, maxX);
+                    y = Math.min(y, maxY);
                     positions.add(new float[] {x, y});
                     generated++;
                 }

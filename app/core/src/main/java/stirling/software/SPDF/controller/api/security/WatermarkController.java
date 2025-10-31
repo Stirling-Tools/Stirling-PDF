@@ -335,7 +335,6 @@ public class WatermarkController {
                 (request.getFontSizeMin() != null) ? request.getFontSizeMin() : fontSize;
         float fontSizeMax =
                 (request.getFontSizeMax() != null) ? request.getFontSizeMax() : fontSize;
-        float margin = (request.getMargin() != null) ? request.getMargin() : 10f;
 
         // Extract per-letter configuration with defaults
         int perLetterFontCount =
@@ -354,23 +353,6 @@ public class WatermarkController {
                 (request.getPerLetterOrientationMax() != null)
                         ? request.getPerLetterOrientationMax()
                         : 360f;
-
-        // Parse bounds if provided
-        Float boundsX = null, boundsY = null, boundsWidth = null, boundsHeight = null;
-        if (request.getBounds() != null && !request.getBounds().isEmpty()) {
-            String[] boundsParts = request.getBounds().split(",");
-            if (boundsParts.length == 4) {
-                try {
-                    boundsX = Float.parseFloat(boundsParts[0].trim());
-                    boundsY = Float.parseFloat(boundsParts[1].trim());
-                    boundsWidth = Float.parseFloat(boundsParts[2].trim());
-                    boundsHeight = Float.parseFloat(boundsParts[3].trim());
-                } catch (NumberFormatException e) {
-                    log.error("Invalid bounds format: {}", request.getBounds(), e);
-                    boundsX = boundsY = boundsWidth = boundsHeight = null;
-                }
-            }
-        }
 
         String resourceDir =
                 switch (alphabet) {
@@ -403,30 +385,31 @@ public class WatermarkController {
 
         // Determine positions based on a randomPosition flag
         java.util.List<float[]> positions;
+
+        // Calculate approximate watermark dimensions for positioning
+        // Estimate width based on average character width (more accurate than fixed 100)
+        float avgCharWidth = fontSize * 0.6f; // Approximate average character width
+        float maxLineWidth = 0;
+        for (String line : textLines) {
+            float lineWidth = line.length() * avgCharWidth;
+            if (lineWidth > maxLineWidth) {
+                maxLineWidth = lineWidth;
+            }
+        }
+        float watermarkWidth = maxLineWidth;
+        float watermarkHeight = fontSize * textLines.length;
+
         if (randomPosition) {
             // Generate random positions
             positions = new java.util.ArrayList<>();
             for (int i = 0; i < count; i++) {
-                // Use approximate watermark dimensions for positioning
-                float approxWidth = widthSpacer + 100; // Approximate
-                float approxHeight = heightSpacer + fontSize * textLines.length;
                 float[] pos =
                         randomizer.generateRandomPosition(
-                                pageWidth,
-                                pageHeight,
-                                approxWidth,
-                                approxHeight,
-                                margin,
-                                boundsX,
-                                boundsY,
-                                boundsWidth,
-                                boundsHeight);
+                                pageWidth, pageHeight, watermarkWidth, watermarkHeight);
                 positions.add(pos);
             }
         } else {
             // Generate grid positions (backward compatible)
-            float watermarkWidth = 100 * fontSize / 1000;
-            float watermarkHeight = fontSize * textLines.length;
             positions =
                     randomizer.generateGridPositions(
                             pageWidth,
@@ -648,23 +631,6 @@ public class WatermarkController {
                 (request.getRotationMin() != null) ? request.getRotationMin() : rotation;
         float rotationMax =
                 (request.getRotationMax() != null) ? request.getRotationMax() : rotation;
-        float margin = (request.getMargin() != null) ? request.getMargin() : 10f;
-
-        // Parse bounds if provided
-        Float boundsX = null, boundsY = null, boundsWidth = null, boundsHeight = null;
-        if (request.getBounds() != null && !request.getBounds().isEmpty()) {
-            String[] boundsParts = request.getBounds().split(",");
-            if (boundsParts.length == 4) {
-                try {
-                    boundsX = Float.parseFloat(boundsParts[0].trim());
-                    boundsY = Float.parseFloat(boundsParts[1].trim());
-                    boundsWidth = Float.parseFloat(boundsParts[2].trim());
-                    boundsHeight = Float.parseFloat(boundsParts[3].trim());
-                } catch (NumberFormatException e) {
-                    log.warn("Invalid bounds format: {}", request.getBounds(), e);
-                }
-            }
-        }
 
         // Load the watermark image
         BufferedImage image = ImageIO.read(watermarkImage.getInputStream());
@@ -693,15 +659,7 @@ public class WatermarkController {
             for (int i = 0; i < count; i++) {
                 float[] pos =
                         randomizer.generateRandomPosition(
-                                pageWidth,
-                                pageHeight,
-                                desiredPhysicalWidth,
-                                desiredPhysicalHeight,
-                                margin,
-                                boundsX,
-                                boundsY,
-                                boundsWidth,
-                                boundsHeight);
+                                pageWidth, pageHeight, desiredPhysicalWidth, desiredPhysicalHeight);
                 positions.add(pos);
             }
         } else {
@@ -710,8 +668,8 @@ public class WatermarkController {
                     randomizer.generateGridPositions(
                             pageWidth,
                             pageHeight,
-                            desiredPhysicalWidth + widthSpacer,
-                            desiredPhysicalHeight + heightSpacer,
+                            desiredPhysicalWidth,
+                            desiredPhysicalHeight,
                             widthSpacer,
                             heightSpacer,
                             count);

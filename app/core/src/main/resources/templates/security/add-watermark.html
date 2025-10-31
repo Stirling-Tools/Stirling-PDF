@@ -150,18 +150,6 @@
                       <small class="form-text text-muted" th:text="#{watermark.advanced.position.help}">Enable random placement instead of grid layout</small>
                     </div>
 
-                    <div id="marginGroup" class="mb-3">
-                      <label for="margin" th:text="#{watermark.advanced.margin.label}">Margin from Edges (points)</label>
-                      <input type="number" id="margin" name="margin" class="form-control" value="10" min="0" max="500" step="0.1">
-                      <small class="form-text text-muted" th:text="#{watermark.advanced.margin.help}">Minimum distance from page edges (0-500)</small>
-                    </div>
-
-                    <div id="boundsGroup" class="mb-3">
-                      <label for="bounds" th:text="#{watermark.advanced.bounds.label}">Bounding Box (optional)</label>
-                      <input type="text" id="bounds" name="bounds" class="form-control" placeholder="x,y,width,height">
-                      <small class="form-text text-muted" th:text="#{watermark.advanced.bounds.help}">Constrain placement to specific area (format: x,y,width,height)</small>
-                    </div>
-
                     <!-- Rotation Controls -->
                     <div class="mb-3">
                       <label th:text="#{watermark.advanced.rotation.mode.label}">Rotation Mode</label>
@@ -530,8 +518,8 @@
                   
                   // Validate count
                   const count = parseInt(document.getElementById('count').value);
-                  if (count < 1 || count > 1000) {
-                    errors.push('Count must be between 1 and 1000');
+                  if (count < 0 || count > 1000) {
+                    errors.push('Count must be between 0 and 1000');
                   }
                   
                   // Validate rotation range
@@ -554,21 +542,6 @@
                     }
                     if (sizeMin < 1 || sizeMax > 500) {
                       errors.push('Font size must be between 1 and 500');
-                    }
-                  }
-                  
-                  // Validate margin
-                  const margin = parseFloat(document.getElementById('margin').value);
-                  if (margin < 0 || margin > 500) {
-                    errors.push('Margin must be between 0 and 500');
-                  }
-                  
-                  // Validate bounds format (if provided)
-                  const bounds = document.getElementById('bounds').value.trim();
-                  if (bounds) {
-                    const boundsPattern = /^(\d+(\.\d+)?),\s*(\d+(\.\d+)?),\s*(\d+(\.\d+)?),\s*(\d+(\.\d+)?)$/;
-                    if (!boundsPattern.test(bounds)) {
-                      errors.push('Bounds must be in format: x,y,width,height');
                     }
                   }
                   
