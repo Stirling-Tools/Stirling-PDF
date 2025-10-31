@@ -73,7 +73,10 @@
     const traceEl = document.querySelector('#traceContent');
 
     if (heading) heading.textContent = error;
-    if (messageEl) messageEl.textContent = message;
+    if (messageEl) {
+      messageEl.style.whiteSpace = 'pre-wrap';
+      messageEl.textContent = message;
+    }
 
     // Format stack trace: if it looks like JSON, pretty-print with consistent key order; otherwise clean it up
     if (traceEl) {
@@ -276,11 +279,38 @@
 
           if (!password) {
             console.error(`No password provided for encrypted PDF: ${file.name}`);
-            showErrorBanner(
-              `${window.decrypt.noPassword.replace('{0}', file.name)}`,
-              `${window.decrypt.unexpectedError}`
-            );
-            throw error;
+
+            // Create a Problem Detail object matching the server's E004 response using localized strings
+            const passwordDetailTemplate =
+              window.stirlingPDF?.pdfPasswordDetail ||
+              `The PDF file "${file.name}" requires a password to proceed.`;
+            const hints = [
+              window.stirlingPDF?.pdfPasswordHint1,
+              window.stirlingPDF?.pdfPasswordHint2,
+              window.stirlingPDF?.pdfPasswordHint3,
+              window.stirlingPDF?.pdfPasswordHint4,
+              window.stirlingPDF?.pdfPasswordHint5,
+              window.stirlingPDF?.pdfPasswordHint6
+            ].filter(Boolean);
+            const noProblemDetail = {
+              errorCode: 'E004',
+              title: window.stirlingPDF?.pdfPasswordTitle || 'PDF Password Required',
+              detail: passwordDetailTemplate.includes('{0}')
+                ? passwordDetailTemplate.replace('{0}', file.name)
+                : passwordDetailTemplate,
+              hints,
+              actionRequired:
+                window.stirlingPDF?.pdfPasswordAction ||
+                'Provide the owner/permissions password, not just the document open password.'
+            };
+
+            const bannerMessage = formatUserFriendlyError(noProblemDetail);
+            const debugInfo = formatProblemDetailsJson(noProblemDetail);
+            showErrorBanner(bannerMessage, debugInfo);
+
+            const err = new Error(noProblemDetail.detail);
+            err.alreadyHandled = true;
+            throw err;
           }
 
           try {
@@ -292,18 +322,30 @@
             // Use handleSingleDownload to send the request
             const decryptionResult = await fetchWithCsrf(removePasswordUrl, {method: 'POST', body: formData});
 
+            // Check if we got an error response (RFC 7807 Problem Details)
+            if (!decryptionResult.ok) {
+              const contentType = decryptionResult.headers.get('content-type');
+              if (contentType && (contentType.includes('application/json') || contentType.includes('application/problem+json'))) {
+                // Parse the RFC 7807 error response
+                const errorJson = await decryptionResult.json();
+                const formattedError = formatUserFriendlyError(errorJson);
+                const debugInfo = formatProblemDetailsJson(errorJson);
+                const title = errorJson.title || 'Decryption Failed';
+                const detail = errorJson.detail || 'Failed to decrypt PDF';
+                const bannerMessage = formattedError || `${title}: ${detail}`;
+                showErrorBanner(bannerMessage, debugInfo);
+                const err = new Error(detail);
+                err.alreadyHandled = true; // Mark error as already handled
+                throw err;
+              } else {
+                throw new Error('Decryption failed: Invalid server response');
+              }
+            }
+
             if (decryptionResult && decryptionResult.blob) {
               const decryptedBlob = await decryptionResult.blob();
               const decryptedFile = new File([decryptedBlob], file.name, {type: 'application/pdf'});
 
-              /*    // Create a link element to download the file
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(decryptedBlob);
-            link.download = 'test.pdf';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-*/
               decryptedFiles.push(decryptedFile);
               console.log(`Successfully decrypted PDF: ${file.name}`);
             } else {
@@ -311,10 +353,7 @@
             }
           } catch (decryptError) {
             console.error(`Failed to decrypt PDF: ${file.name}`, decryptError);
-            showErrorBanner(
-              `${window.decrypt.invalidPasswordHeader.replace('{0}', file.name)}`,
-              `${window.decrypt.invalidPassword}`
-            );
+            // Error banner already shown above with formatted hints/actions
             throw decryptError;
           }
         } else if (error.name === 'InvalidPDFException' ||
@@ -322,10 +361,34 @@
           // Handle corrupted PDF files
           console.log(`Corrupted PDF detected: ${file.name}`, error);
           if (window.stirlingPDF.currentPage !== 'repair') {
-            showErrorBanner(
-              `${window.stirlingPDF.pdfCorruptedMessage.replace('{0}', file.name)}`,
-              `${window.stirlingPDF.tryRepairMessage}`
-            );
+            // Create a formatted error message using properties from language files
+            const errorMessage = window.stirlingPDF.pdfCorruptedMessage.replace('{0}', file.name);
+            const hints = [
+              window.stirlingPDF.pdfCorruptedHint1,
+              window.stirlingPDF.pdfCorruptedHint2,
+              window.stirlingPDF.pdfCorruptedHint3
+            ].filter((hint) => typeof hint === 'string' && hint.trim().length > 0);
+            const action = window.stirlingPDF.pdfCorruptedAction || window.stirlingPDF.tryRepairMessage;
+
+            const problemDetails = {
+              title: window.stirlingPDF.pdfCorruptedTitle || window.stirlingPDF.error || 'Error',
+              detail: errorMessage
+            };
+
+            if (hints.length > 0) {
+              problemDetails.hints = hints;
+            }
+
+            if (action) {
+              problemDetails.actionRequired = action;
+            }
+
+            const bannerMessage = formatUserFriendlyError(problemDetails);
+            const debugInfo = formatProblemDetailsJson(problemDetails);
+
+            showErrorBanner(bannerMessage, debugInfo);
+            // Mark error as already handled to prevent double display
+            error.alreadyHandled = true;
           } else {
             // On repair page, suppress banner; user already knows and is repairing
             console.log('Suppressing corrupted PDF banner on repair page');
@@ -435,6 +498,66 @@
     return filename;
   }
 
+  /**
+   * Format error details in a user-friendly way
+   * Extracts key information and presents hints/actions prominently
+   */
+  function formatUserFriendlyError(json) {
+    if (!json || typeof json !== 'object') {
+      return typeof json === 'string' ? json : '';
+    }
+
+    const lines = [];
+    const title = json.title || json.error || '';
+    const detail = json.detail || json.message || '';
+
+    const primaryLine = title && detail
+      ? `${title}: ${detail}`
+      : title || detail;
+
+    if (primaryLine) {
+      lines.push(primaryLine);
+    }
+
+    if (json.errorCode) {
+      lines.push('');
+      lines.push(`Error Code: ${json.errorCode}`);
+    }
+
+    const detailAlreadyIncluded = detail && primaryLine && primaryLine.includes(detail);
+
+    if (detail && !detailAlreadyIncluded) {
+      lines.push('');
+      lines.push(detail);
+    }
+
+    if (json.hints && Array.isArray(json.hints) && json.hints.length > 0) {
+      lines.push('');
+      lines.push('How to fix:');
+      json.hints.forEach((hint, index) => {
+        lines.push(`  ${index + 1}. ${hint}`);
+      });
+    }
+
+    if (json.actionRequired) {
+      lines.push('');
+      lines.push(json.actionRequired);
+    }
+
+    if (json.supportId) {
+      lines.push('');
+      lines.push(`Support ID: ${json.supportId}`);
+    }
+
+    return lines
+      .filter((line, index, arr) => {
+        if (line !== '') return true;
+        if (index === 0 || index === arr.length - 1) return false;
+        return arr[index - 1] !== '';
+      })
+      .join('\n');
+  }
+
   async function handleJsonResponse(response) {
     const json = await response.json();
 
@@ -452,26 +575,23 @@
         json.detail.toLowerCase().includes('pdf contains an encryption dictionary')
       ));
 
+    const fallbackTitle = json.title || json.error || 'Error';
+    const fallbackDetail = json.detail || json.message || '';
+    const fallbackMessage = fallbackDetail ? `${fallbackTitle}: ${fallbackDetail}` : fallbackTitle;
+    const bannerMessage = formatUserFriendlyError(json) || fallbackMessage;
+
     if (isPdfPasswordError) {
-      // Show PDF-specific password error, not session expiration
-      const title = json.title || 'PDF Password Required';
-      const detail = json.detail || 'The PDF document requires a password to open.';
-      const fullMessage = title + ': ' + detail;
-      // Show full JSON in stack trace for debugging
-      showErrorBanner(fullMessage, json.trace || formattedJson);
+      showErrorBanner(bannerMessage, formattedJson);
 
       // Show alert only once for user attention
       if (!firstErrorOccurred) {
         firstErrorOccurred = true;
+        const detail = json.detail || 'The PDF document requires a password to open.';
         alert(pdfPasswordPrompt + '\n\n' + detail);
       }
     } else {
-      // RFC 7807 Problem Details format uses 'title' and 'detail' fields
-      const title = json.title || json.error || 'Error';
-      const detail = json.detail || json.message || formattedJson;
-      // Show backend trace if available, otherwise show the full JSON response
-      const trace = json.trace ? formatProblemDetailsJson(json.trace) : formattedJson;
-      showErrorBanner(title + ': ' + detail, trace);
+      // Show user-friendly error, fallback to full JSON for debugging
+      showErrorBanner(bannerMessage, formattedJson);
     }
   }
 
@@ -496,6 +616,10 @@
   }
 
   function handleDownloadError(error) {
+    // Skip if error was already handled and displayed
+    if (error.alreadyHandled) {
+      return;
+    }
     const errorMessage = error.message;
     showErrorBanner(errorMessage);
   }

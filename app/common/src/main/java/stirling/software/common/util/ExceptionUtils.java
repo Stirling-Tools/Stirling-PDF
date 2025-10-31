@@ -3,10 +3,8 @@ package stirling.software.common.util;
 import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.List;
-import java.util.Map;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
-import java.util.concurrent.ConcurrentHashMap;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -54,47 +52,109 @@ public class ExceptionUtils {
 
     private static final String MESSAGES_BUNDLE = "messages";
     private static final Object LOCK = new Object();
-    // --- Hints and Action-Required registry (English only for now) ---
-    private static final Map<String, List<String>> ERROR_HINTS = new ConcurrentHashMap<>();
-    private static final Map<String, String> ERROR_ACTION_REQUIRED = new ConcurrentHashMap<>();
     private static volatile ResourceBundle messages;
 
-    static {
-        // ------------------------------
-        // PDF-related errors
-        // ------------------------------
-        // E001: PDF_CORRUPTED
-        ERROR_HINTS.put(
-                ErrorCode.PDF_CORRUPTED.code,
-                List.of(
-                        "Try the 'Repair PDF' feature, then retry this operation.",
-                        "Re-export the PDF from the original application if possible.",
-                        "Avoid transferring the file through tools that modify PDFs (e.g., fax/email converters)."));
-        ERROR_ACTION_REQUIRED.put(
-                ErrorCode.PDF_CORRUPTED.code, "Repair the PDF and retry the operation.");
+    // No static initialization block needed - hints and actions are now loaded from properties
+    // files
 
-        // E002: PDF_MULTIPLE_CORRUPTED
-        ERROR_HINTS.put(
-                ErrorCode.PDF_MULTIPLE_CORRUPTED.code,
-                List.of(
-                        "Identify which files are corrupted by processing them one by one.",
-                        "Run 'Repair PDF' on each problematic file before merging.",
-                        "If repair fails, re-export each source document to PDF again."));
-        ERROR_ACTION_REQUIRED.put(
-                ErrorCode.PDF_MULTIPLE_CORRUPTED.code,
-                "Repair or re-export the corrupted PDFs individually, then retry the operation.");
+    /**
+     * Load hints for a given error code from the resource bundle. Looks for keys like:
+     * error.E001.hint.1, error.E001.hint.2, etc.
+     *
+     * @param code the error code (e.g., "E001")
+     * @return list of hints
+     */
+    public static List<String> getHintsForErrorCode(String code) {
+        if (code == null) return List.of();
 
-        // E003: PDF_ENCRYPTION
-        ERROR_HINTS.put(
-                ErrorCode.PDF_ENCRYPTION.code,
-                List.of(
-                        "Use the 'Repair PDF' feature to normalize encryption metadata.",
-                        "If the file uses unusual encryption, re-save with a modern PDF tool.",
-                        "If the PDF is password-protected, provide the correct password first."));
-        ERROR_ACTION_REQUIRED.put(
-                ErrorCode.PDF_ENCRYPTION.code,
-                "Repair the PDF or re-export it with compatible encryption.");
+        ResourceBundle bundle = getMessages(java.util.Locale.getDefault());
+        List<String> hints = new java.util.ArrayList<>();
 
+        int index = 1;
+        while (true) {
+            String key = "error." + code + ".hint." + index;
+            try {
+                String hint = bundle.getString(key);
+                hints.add(hint);
+                index++;
+            } catch (MissingResourceException e) {
+                // No more hints for this code
+                break;
+            }
+        }
+
+        return hints.isEmpty() ? List.of() : List.copyOf(hints);
+    }
+
+    /**
+     * Load action required text for a given error code from the resource bundle. Looks for key
+     * like: error.E001.action
+     *
+     * @param code the error code (e.g., "E001")
+     * @return action required text, or null if not found
+     */
+    public static String getActionRequiredForErrorCode(String code) {
+        if (code == null) return null;
+
+        ResourceBundle bundle = getMessages(java.util.Locale.getDefault());
+        String key = "error." + code + ".action";
+
+        try {
+            return bundle.getString(key);
+        } catch (MissingResourceException e) {
+            return null;
+        }
+    }
+
+    // Old static initialization code removed - replaced with dynamic loading from properties
+    @Deprecated
+    @SuppressWarnings("unused")
+    private static void legacyStaticInitialization() {
+        // This method is deprecated and no longer used
+        // All hints and actions are now loaded dynamically from messages.properties
+        // See getHintsForErrorCode() and getActionRequiredForErrorCode() methods
+        /*
+        // All error hints and actions are now loaded from messages.properties
+        // See getHintsForErrorCode() and getActionRequiredForErrorCode() methods
+        */
+    }
+
+    /**
+     * Get or initialize the ResourceBundle with the specified locale. Uses double-checked locking
+     * for thread-safe lazy initialization.
+     *
+     * @param locale the locale for message retrieval
+     * @return the ResourceBundle instance
+     */
+    private static ResourceBundle getMessages(java.util.Locale locale) {
+        if (messages == null) {
+            synchronized (LOCK) {
+                if (messages == null) {
+                    try {
+                        messages = ResourceBundle.getBundle(MESSAGES_BUNDLE, locale);
+                    } catch (MissingResourceException e) {
+                        log.warn(
+                                "Could not load resource bundle '{}' for locale {}, using default",
+                                MESSAGES_BUNDLE,
+                                locale);
+                        // Create a fallback empty bundle
+                        messages =
+                                new java.util.ListResourceBundle() {
+                                    @Override
+                                    protected Object[][] getContents() {
+                                        return new Object[0][0];
+                                    }
+                                };
+                    }
+                }
+            }
+        }
+        return messages;
+    }
+
+    /* OLD LEGACY CODE REMOVED - OVER 400 LINES OF STATIC INITIALIZATION
+     * All hints are now dynamically loaded from messages_en_GB.properties
+     * Example:
         // E004: PDF_PASSWORD
         ERROR_HINTS.put(
                 ErrorCode.PDF_PASSWORD.code,
@@ -466,58 +526,8 @@ public class ExceptionUtils {
                 List.of(
                         "Reduce the DPI (try 150 or lower).",
                         "Process the document in smaller chunks or fewer pages at a time.",
-                        "Reduce page dimensions or image complexity before rendering.",
-                        "Increase available heap memory for the application if possible."));
-        ERROR_ACTION_REQUIRED.put(
-                ErrorCode.OUT_OF_MEMORY_DPI.code,
-                "Lower the DPI and retry; 150 DPI is recommended for large pages.");
-    }
-
-    /** Return English-only troubleshooting hints for a given error code. */
-    public static List<String> getHintsForErrorCode(String code) {
-        if (code == null) return List.of();
-        List<String> hints = ERROR_HINTS.get(code);
-        return hints != null ? hints : List.of();
-    }
-
-    /** Return English-only action required text for a given error code. */
-    public static String getActionRequiredForErrorCode(String code) {
-        if (code == null) return null;
-        return ERROR_ACTION_REQUIRED.get(code);
-    }
-
-    /**
-     * Get or initialize the ResourceBundle with the specified locale. Uses double-checked locking
-     * for thread-safe lazy initialization.
-     *
-     * @param locale the locale for message retrieval
-     * @return the ResourceBundle instance
-     */
-    private static ResourceBundle getMessages(java.util.Locale locale) {
-        if (messages == null) {
-            synchronized (LOCK) {
-                if (messages == null) {
-                    try {
-                        messages = ResourceBundle.getBundle(MESSAGES_BUNDLE, locale);
-                    } catch (MissingResourceException e) {
-                        log.warn(
-                                "Could not load resource bundle '{}' for locale {}, using default",
-                                MESSAGES_BUNDLE,
-                                locale);
-                        // Create a fallback empty bundle
-                        messages =
-                                new java.util.ListResourceBundle() {
-                                    @Override
-                                    protected Object[][] getContents() {
-                                        return new Object[0][0];
-                                    }
-                                };
-                    }
-                }
-            }
-        }
-        return messages;
-    }
+                        ... (over 400 lines removed) ...
+    */
 
     /**
      * Get internationalized message from resource bundle with fallback to default message.
