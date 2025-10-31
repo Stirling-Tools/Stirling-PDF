@@ -1,5 +1,7 @@
 package stirling.software.proprietary.security.filter;
 
+import static stirling.software.common.util.RequestUriUtils.isPublicAuthEndpoint;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
@@ -204,27 +206,6 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
-    }
-
-    private static boolean isPublicAuthEndpoint(String requestURI, String contextPath) {
-        // Remove context path from URI to normalize path matching
-        String trimmedUri =
-                requestURI.startsWith(contextPath)
-                        ? requestURI.substring(contextPath.length())
-                        : requestURI;
-
-        // Public auth endpoints that don't require authentication
-        return trimmedUri.startsWith("/login")
-                || trimmedUri.startsWith("/signup")
-                || trimmedUri.startsWith("/auth/")
-                || trimmedUri.startsWith("/oauth2")
-                || trimmedUri.startsWith("/saml2")
-                || trimmedUri.startsWith("/api/v1/auth/login")
-                || trimmedUri.startsWith("/api/v1/auth/register")
-                || trimmedUri.startsWith("/api/v1/auth/refresh")
-                || trimmedUri.startsWith("/api/v1/auth/logout")
-                || trimmedUri.startsWith("/api/v1/proprietary/ui-data/account")
-                || trimmedUri.startsWith("/api/v1/config");
     }
 
     private enum LoginMethod {
