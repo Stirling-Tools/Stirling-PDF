@@ -889,6 +889,15 @@ public class CompressController {
                         ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT)
                                 .runCommandWithOutputHandling(command);
 
+                ExceptionUtils.GhostscriptException detectedError =
+                        ExceptionUtils.detectGhostscriptCriticalError(returnCode.getMessages());
+                if (detectedError != null) {
+                    log.warn(
+                            "Ghostscript compression reported a critical error: {}",
+                            detectedError.getMessage());
+                    throw detectedError;
+                }
+
                 if (returnCode.getRc() == 0) {
                     // Update current file to the Ghostscript output
                     Files.copy(gsOutputPath, currentFile, StandardCopyOption.REPLACE_EXISTING);
@@ -903,11 +912,15 @@ public class CompressController {
                     log.warn(
                             "Ghostscript compression failed with return code: {}",
                             returnCode.getRc());
-                    throw ExceptionUtils.createGhostscriptCompressionException();
+                    throw ExceptionUtils.createGhostscriptCompressionException(
+                            returnCode.getMessages());
                 }
 
             } catch (Exception e) {
                 log.warn("Ghostscript compression failed, will fallback to other methods", e);
+                if (e instanceof ExceptionUtils.GhostscriptException ghostscriptException) {
+                    throw ghostscriptException;
+                }
                 throw ExceptionUtils.createGhostscriptCompressionException(e);
             }
         }

@@ -3,8 +3,11 @@ package stirling.software.common.util;
 import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.List;
+import java.util.Locale;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -53,6 +56,8 @@ public class ExceptionUtils {
     private static final String MESSAGES_BUNDLE = "messages";
     private static final Object LOCK = new Object();
     private static volatile ResourceBundle messages;
+    private static final Pattern GS_PAGE_PATTERN =
+            Pattern.compile("Page\\s+(\\d+)", Pattern.CASE_INSENSITIVE);
 
     // No static initialization block needed - hints and actions are now loaded from properties
     // files
@@ -151,383 +156,6 @@ public class ExceptionUtils {
         }
         return messages;
     }
-
-    /* OLD LEGACY CODE REMOVED - OVER 400 LINES OF STATIC INITIALIZATION
-     * All hints are now dynamically loaded from messages_en_GB.properties
-     * Example:
-        // E004: PDF_PASSWORD
-        ERROR_HINTS.put(
-                ErrorCode.PDF_PASSWORD.code,
-                List.of(
-                        "PDFs can have two passwords: a user password (opens the document) and an owner password (controls permissions). This operation requires the owner password.",
-                        "If you can open the PDF without a password, it may only have an owner password set. Try submitting the permissions password.",
-                        "Digitally signed PDFs cannot have security removed until the signature is removed.",
-                        "Passwords are case-sensitive. Verify capitalization, spaces, and special characters.",
-                        "Some creators use different encryption standards (40-bit, 128-bit, 256-bit AES). Ensure your password matches the encryption used.",
-                        "If you only have the user password, you cannot remove security restrictions. Contact the document owner for the permissions password."));
-        ERROR_ACTION_REQUIRED.put(
-                ErrorCode.PDF_PASSWORD.code,
-                "Provide the owner/permissions password, not just the document open password.");
-
-        // E005: PDF_NO_PAGES
-        ERROR_HINTS.put(
-                ErrorCode.PDF_NO_PAGES.code,
-                List.of(
-                        "Verify the PDF is not empty or contains only unsupported objects.",
-                        "Open the file in a PDF viewer to confirm it has pages.",
-                        "Recreate the PDF ensuring pages are included (not just attachments)."));
-        ERROR_ACTION_REQUIRED.put(
-                ErrorCode.PDF_NO_PAGES.code, "Provide a PDF that contains at least one page.");
-
-        // E006: PDF_NOT_PDF
-        ERROR_HINTS.put(
-                ErrorCode.PDF_NOT_PDF.code,
-                List.of(
-                        "Ensure the uploaded file is a valid PDF, not another format.",
-                        "If it has a .pdf extension, verify the file is not actually another type (e.g., Word, image).",
-                        "Try opening the file in a PDF reader to confirm validity."));
-        ERROR_ACTION_REQUIRED.put(ErrorCode.PDF_NOT_PDF.code, "Upload a valid PDF file.");
-
-        // ------------------------------
-        // CBR/CBZ errors
-        // ------------------------------
-        // E010: CBR_INVALID_FORMAT
-        ERROR_HINTS.put(
-                ErrorCode.CBR_INVALID_FORMAT.code,
-                List.of(
-                        "RAR5 archives are not supported. Repack the archive as RAR4 or convert to CBZ (ZIP).",
-                        "Ensure the archive is not encrypted and contains valid image files.",
-                        "Try extracting the archive with a desktop tool to verify integrity."));
-        ERROR_ACTION_REQUIRED.put(
-                ErrorCode.CBR_INVALID_FORMAT.code,
-                "Convert the archive to CBZ/ZIP or RAR4, then retry.");
-
-        // E012: CBR_NO_IMAGES
-        ERROR_HINTS.put(
-                ErrorCode.CBR_NO_IMAGES.code,
-                List.of(
-                        "Make sure the archive contains image files (e.g., .jpg, .png).",
-                        "Remove unsupported or corrupted files from the archive.",
-                        "Repack the archive ensuring images are at the root or in proper folders."));
-        ERROR_ACTION_REQUIRED.put(
-                ErrorCode.CBR_NO_IMAGES.code,
-                "Add at least one valid image to the archive and retry.");
-
-        // E014: CBR_NOT_CBR
-        ERROR_HINTS.put(
-                ErrorCode.CBR_NOT_CBR.code,
-                List.of(
-                        "Upload a CBR (RAR) file for this operation.",
-                        "If you have a ZIP/CBZ, use the CBZ conversion instead.",
-                        "Check the file extension and actual format with an archive tool."));
-        ERROR_ACTION_REQUIRED.put(ErrorCode.CBR_NOT_CBR.code, "Provide a valid CBR/RAR file.");
-
-        // E015: CBZ_INVALID_FORMAT
-        ERROR_HINTS.put(
-                ErrorCode.CBZ_INVALID_FORMAT.code,
-                List.of(
-                        "Ensure the ZIP/CBZ is not encrypted and is a valid archive.",
-                        "Verify the archive is not empty and contains image files.",
-                        "Try re-zipping the images using a standard ZIP tool (no compression anomalies)."));
-        ERROR_ACTION_REQUIRED.put(
-                ErrorCode.CBZ_INVALID_FORMAT.code,
-                "Recreate the CBZ/ZIP without encryption and with valid images, then retry.");
-
-        // E016: CBZ_NO_IMAGES
-        ERROR_HINTS.put(
-                ErrorCode.CBZ_NO_IMAGES.code,
-                List.of(
-                        "Add images (.jpg, .png, etc.) to the ZIP archive.",
-                        "Remove non-image files or nested archives that aren't supported.",
-                        "Ensure images are not corrupted and can be opened locally."));
-        ERROR_ACTION_REQUIRED.put(
-                ErrorCode.CBZ_NO_IMAGES.code, "Include at least one valid image in the CBZ file.");
-
-        // E018: CBZ_NOT_CBZ
-        ERROR_HINTS.put(
-                ErrorCode.CBZ_NOT_CBZ.code,
-                List.of(
-                        "Upload a CBZ (ZIP) file for this operation.",
-                        "If you have a RAR/CBR, use the CBR conversion instead.",
-                        "Check the file extension and actual format with an archive tool."));
-        ERROR_ACTION_REQUIRED.put(ErrorCode.CBZ_NOT_CBZ.code, "Provide a valid CBZ/ZIP file.");
-
-        // ------------------------------
-        // EML errors
-        // ------------------------------
-        // E020: EML_EMPTY
-        ERROR_HINTS.put(
-                ErrorCode.EML_EMPTY.code,
-                List.of(
-                        "Verify the uploaded file is not zero bytes.",
-                        "Export the EML again from your email client.",
-                        "Ensure the file hasn't been stripped of content by email/security tools."));
-        ERROR_ACTION_REQUIRED.put(ErrorCode.EML_EMPTY.code, "Upload a non-empty EML file.");
-
-        // E021: EML_INVALID_FORMAT
-        ERROR_HINTS.put(
-                ErrorCode.EML_INVALID_FORMAT.code,
-                List.of(
-                        "Ensure the file is a raw EML message, not MSG or another email format.",
-                        "Re-export the email as EML from your client.",
-                        "Open the file with a text editor to verify standard EML headers are present."));
-        ERROR_ACTION_REQUIRED.put(
-                ErrorCode.EML_INVALID_FORMAT.code, "Provide a valid EML file export.");
-
-        // ------------------------------
-        // File processing errors
-        // ------------------------------
-        // E030: FILE_NOT_FOUND
-        ERROR_HINTS.put(
-                ErrorCode.FILE_NOT_FOUND.code,
-                List.of(
-                        "Confirm the file ID or path is correct.",
-                        "Ensure the file wasn't deleted or moved.",
-                        "If using a temporary upload, re-upload the file and try again."));
-        ERROR_ACTION_REQUIRED.put(
-                ErrorCode.FILE_NOT_FOUND.code, "Provide an existing file reference and retry.");
-
-        // E031: FILE_PROCESSING
-        ERROR_HINTS.put(
-                ErrorCode.FILE_PROCESSING.code,
-                List.of(
-                        "Check that the file is not corrupted and is supported by this operation.",
-                        "Retry the operation; transient I/O issues can occur.",
-                        "If the problem persists, simplify the document (fewer pages, smaller images)."));
-        ERROR_ACTION_REQUIRED.put(
-                ErrorCode.FILE_PROCESSING.code,
-                "Verify the file and operation parameters, then retry.");
-
-        // E032: FILE_NULL_OR_EMPTY
-        ERROR_HINTS.put(
-                ErrorCode.FILE_NULL_OR_EMPTY.code,
-                List.of(
-                        "Attach a file in the request.",
-                        "Make sure the file is not zero bytes.",
-                        "If uploading multiple files, ensure at least one is provided."));
-        ERROR_ACTION_REQUIRED.put(
-                ErrorCode.FILE_NULL_OR_EMPTY.code, "Upload a non-empty file and retry.");
-
-        // E033: FILE_NO_NAME
-        ERROR_HINTS.put(
-                ErrorCode.FILE_NO_NAME.code,
-                List.of(
-                        "Provide a filename with an extension.",
-                        "Ensure your client includes the original filename during upload."));
-        ERROR_ACTION_REQUIRED.put(
-                ErrorCode.FILE_NO_NAME.code, "Include a filename for the uploaded file.");
-
-        // E034: IMAGE_READ_ERROR
-        ERROR_HINTS.put(
-                ErrorCode.IMAGE_READ_ERROR.code,
-                List.of(
-                        "Verify the image file is not corrupted and can be opened locally.",
-                        "Ensure the file format is a supported image type.",
-                        "Re-export or convert the image to a standard format (JPEG/PNG)."));
-        ERROR_ACTION_REQUIRED.put(
-                ErrorCode.IMAGE_READ_ERROR.code, "Provide a readable, supported image file.");
-
-        // ------------------------------
-        // OCR errors
-        // ------------------------------
-        // E040: OCR_LANGUAGE_REQUIRED
-        ERROR_HINTS.put(
-                ErrorCode.OCR_LANGUAGE_REQUIRED.code,
-                List.of(
-                        "Select at least one OCR language from the options.",
-                        "If unsure, choose the primary language of the document's text.",
-                        "Multiple languages can be selected if mixed text is present."));
-        ERROR_ACTION_REQUIRED.put(
-                ErrorCode.OCR_LANGUAGE_REQUIRED.code, "Specify one or more OCR languages.");
-
-        // E041: OCR_INVALID_LANGUAGES
-        ERROR_HINTS.put(
-                ErrorCode.OCR_INVALID_LANGUAGES.code,
-                List.of(
-                        "Use valid language codes (e.g., eng, fra, deu).",
-                        "Remove unsupported or misspelled language codes.",
-                        "Check installed OCR language packs and install missing ones."));
-        ERROR_ACTION_REQUIRED.put(
-                ErrorCode.OCR_INVALID_LANGUAGES.code,
-                "Provide valid OCR language codes or install missing language packs.");
-
-        // E042: OCR_TOOLS_UNAVAILABLE
-        ERROR_HINTS.put(
-                ErrorCode.OCR_TOOLS_UNAVAILABLE.code,
-                List.of(
-                        "Install OCR tools (e.g., OCRmyPDF/Tesseract) as per documentation.",
-                        "Verify the tools are on the PATH and accessible by the application.",
-                        "If running in Docker, use an image variant that includes OCR tools."));
-        ERROR_ACTION_REQUIRED.put(
-                ErrorCode.OCR_TOOLS_UNAVAILABLE.code, "Install and configure the OCR tools.");
-
-        // E043: OCR_INVALID_RENDER_TYPE
-        ERROR_HINTS.put(
-                ErrorCode.OCR_INVALID_RENDER_TYPE.code,
-                List.of(
-                        "Use 'hocr' for HTML OCR output or 'sandwich' to embed text in PDF.",
-                        "Check the API docs for valid render types.",
-                        "Avoid typos; values are case-sensitive."));
-        ERROR_ACTION_REQUIRED.put(
-                ErrorCode.OCR_INVALID_RENDER_TYPE.code,
-                "Choose either 'hocr' or 'sandwich' as render type.");
-
-        // E044: OCR_PROCESSING_FAILED
-        ERROR_HINTS.put(
-                ErrorCode.OCR_PROCESSING_FAILED.code,
-                List.of(
-                        "Check the server logs for the detailed OCRmyPDF error output.",
-                        "Ensure required OCR dependencies and language packs are installed.",
-                        "Try running OCR locally on the file to reproduce the issue."));
-        ERROR_ACTION_REQUIRED.put(
-                ErrorCode.OCR_PROCESSING_FAILED.code,
-                "Investigate OCR logs and fix missing dependencies or inputs, then retry.");
-
-        // ------------------------------
-        // Compression/processing errors
-        // ------------------------------
-        // E050: COMPRESSION_OPTIONS
-        ERROR_HINTS.put(
-                ErrorCode.COMPRESSION_OPTIONS.code,
-                List.of(
-                        "Provide both target output size and optimization level.",
-                        "Review API docs for required compression parameters.",
-                        "If unsure, start with default optimization and adjust."));
-        ERROR_ACTION_REQUIRED.put(
-                ErrorCode.COMPRESSION_OPTIONS.code,
-                "Specify expected output size and optimize level for compression.");
-
-        // E051: GHOSTSCRIPT_COMPRESSION
-        ERROR_HINTS.put(
-                ErrorCode.GHOSTSCRIPT_COMPRESSION.code,
-                List.of(
-                        "Confirm Ghostscript is installed and accessible.",
-                        "Simplify the PDF (e.g., reduce image sizes) and retry.",
-                        "Review command-line arguments generated for Ghostscript in logs."));
-        ERROR_ACTION_REQUIRED.put(
-                ErrorCode.GHOSTSCRIPT_COMPRESSION.code,
-                "Ensure Ghostscript is installed and the command executes successfully.");
-
-        // E052: QPDF_COMPRESSION
-        ERROR_HINTS.put(
-                ErrorCode.QPDF_COMPRESSION.code,
-                List.of(
-                        "Ensure qpdf is installed and on PATH.",
-                        "Verify that the PDF is not corrupted before compression.",
-                        "Adjust compression parameters if the command fails."));
-        ERROR_ACTION_REQUIRED.put(
-                ErrorCode.QPDF_COMPRESSION.code, "Install qpdf and retry with valid inputs.");
-
-        // E053: PROCESSING_INTERRUPTED
-        ERROR_HINTS.put(
-                ErrorCode.PROCESSING_INTERRUPTED.code,
-                List.of(
-                        "The operation was canceled or interrupted by the system.",
-                        "Avoid terminating the process or closing the browser mid-operation.",
-                        "Retry the operation; if it persists, check server resource limits."));
-        ERROR_ACTION_REQUIRED.put(
-                ErrorCode.PROCESSING_INTERRUPTED.code,
-                "Retry the operation and avoid interruption.");
-
-        // ------------------------------
-        // Conversion/System errors
-        // ------------------------------
-        // E060: PDFA_CONVERSION_FAILED
-        ERROR_HINTS.put(
-                ErrorCode.PDFA_CONVERSION_FAILED.code,
-                List.of(
-                        "Ensure the PDF is valid and supported by the converter.",
-                        "Try converting to a different PDF/A level or re-export the source to PDF first.",
-                        "Remove problematic elements (e.g., complex transparency) and retry."));
-        ERROR_ACTION_REQUIRED.put(
-                ErrorCode.PDFA_CONVERSION_FAILED.code,
-                "Adjust conversion settings or normalize the PDF, then retry.");
-
-        // E061: HTML_FILE_REQUIRED
-        ERROR_HINTS.put(
-                ErrorCode.HTML_FILE_REQUIRED.code,
-                List.of(
-                        "Provide either a single HTML file or a ZIP containing HTML and assets.",
-                        "Ensure relative links in HTML point to included assets in the ZIP."));
-        ERROR_ACTION_REQUIRED.put(
-                ErrorCode.HTML_FILE_REQUIRED.code,
-                "Upload an HTML file or a ZIP of the website content.");
-
-        // E062: PYTHON_REQUIRED_WEBP
-        ERROR_HINTS.put(
-                ErrorCode.PYTHON_REQUIRED_WEBP.code,
-                List.of(
-                        "Install Python and required WebP libraries to enable conversion.",
-                        "If using Docker, use an image variant with Python/WebP support.",
-                        "Check PATH and environment to ensure Python is available."));
-        ERROR_ACTION_REQUIRED.put(
-                ErrorCode.PYTHON_REQUIRED_WEBP.code, "Install Python and WebP dependencies.");
-
-        // ------------------------------
-        // Validation errors
-        // ------------------------------
-        // E070: INVALID_ARGUMENT
-        ERROR_HINTS.put(
-                ErrorCode.INVALID_ARGUMENT.code,
-                List.of(
-                        "Review the parameter's allowed values in the API docs.",
-                        "Ensure the value format matches expectations (case, range, pattern).",
-                        "Correct the argument and resend the request."));
-        ERROR_ACTION_REQUIRED.put(
-                ErrorCode.INVALID_ARGUMENT.code, "Provide a valid parameter value and retry.");
-
-        // E071: NULL_ARGUMENT
-        ERROR_HINTS.put(
-                ErrorCode.NULL_ARGUMENT.code,
-                List.of(
-                        "Include the missing parameter in the request.",
-                        "Verify your client sends all required fields."));
-        ERROR_ACTION_REQUIRED.put(
-                ErrorCode.NULL_ARGUMENT.code, "Add the required parameter and retry.");
-
-        // E072: INVALID_PAGE_SIZE
-        ERROR_HINTS.put(
-                ErrorCode.INVALID_PAGE_SIZE.code,
-                List.of(
-                        "Use formats like 'A4', 'Letter', or 'WIDTHxHEIGHT' (e.g., 800x600).",
-                        "Ensure units and separators are correct.",
-                        "Refer to docs for supported sizes."));
-        ERROR_ACTION_REQUIRED.put(
-                ErrorCode.INVALID_PAGE_SIZE.code, "Provide a supported page size value.");
-
-        // E073: INVALID_COMPARATOR
-        ERROR_HINTS.put(
-                ErrorCode.INVALID_COMPARATOR.code,
-                List.of(
-                        "Allowed values: 'greater', 'equal', 'less'.",
-                        "Check for typos and use lowercase.",
-                        "Consult API docs for comparator usage examples."));
-        ERROR_ACTION_REQUIRED.put(
-                ErrorCode.INVALID_COMPARATOR.code,
-                "Use one of 'greater', 'equal', or 'less' as comparator.");
-
-        // ------------------------------
-        // System errors
-        // ------------------------------
-        // E080: MD5_ALGORITHM
-        ERROR_HINTS.put(
-                ErrorCode.MD5_ALGORITHM.code,
-                List.of(
-                        "Your Java runtime may not include MD5. Use an alternative algorithm.",
-                        "If hashing is optional, switch to SHA-256 or another supported digest.",
-                        "Install appropriate security providers if MD5 is required."));
-        ERROR_ACTION_REQUIRED.put(
-                ErrorCode.MD5_ALGORITHM.code,
-                "Use a supported hash algorithm (e.g., SHA-256) or install MD5 provider.");
-
-        // E081: OUT_OF_MEMORY_DPI
-        ERROR_HINTS.put(
-                ErrorCode.OUT_OF_MEMORY_DPI.code,
-                List.of(
-                        "Reduce the DPI (try 150 or lower).",
-                        "Process the document in smaller chunks or fewer pages at a time.",
-                        ... (over 400 lines removed) ...
-    */
 
     /**
      * Get internationalized message from resource bundle with fallback to default message.
@@ -998,15 +626,283 @@ public class ExceptionUtils {
         return new RuntimeException(message, cause);
     }
 
-    public static IOException createGhostscriptCompressionException() {
-        String message = getMessage(ErrorCode.GHOSTSCRIPT_COMPRESSION);
-        return new IOException(message);
+    public static GhostscriptException createGhostscriptCompressionException() {
+        return createGhostscriptCompressionException(null, null);
     }
 
-    public static IOException createGhostscriptCompressionException(Exception cause) {
+    public static GhostscriptException createGhostscriptCompressionException(String processOutput) {
+        return createGhostscriptCompressionException(processOutput, null);
+    }
+
+    public static GhostscriptException createGhostscriptCompressionException(Exception cause) {
         requireNonNull(cause, "cause");
-        String message = getMessage(ErrorCode.GHOSTSCRIPT_COMPRESSION);
-        return new IOException(message, cause);
+        return createGhostscriptCompressionException(cause.getMessage(), cause);
+    }
+
+    public static GhostscriptException createGhostscriptCompressionException(
+            String processOutput, Exception cause) {
+        GhostscriptErrorInfo errorInfo = analyzeGhostscriptOutput(processOutput, cause);
+        return buildGhostscriptException(errorInfo, processOutput, cause);
+    }
+
+    public static GhostscriptException detectGhostscriptCriticalError(String processOutput) {
+        GhostscriptErrorInfo errorInfo = analyzeGhostscriptOutput(processOutput, null);
+        if (errorInfo.isCritical()) {
+            return buildGhostscriptException(errorInfo, processOutput, null);
+        }
+        return null;
+    }
+
+    private static GhostscriptException buildGhostscriptException(
+            GhostscriptErrorInfo errorInfo, String processOutput, Exception cause) {
+        String targetDescription =
+                errorInfo.pageNumber() != null
+                        ? "page " + errorInfo.pageNumber()
+                        : "the input file";
+
+        String diagnostic =
+                errorInfo.diagnostic() != null
+                        ? errorInfo.diagnostic()
+                        : deriveDefaultGhostscriptDiagnostic(processOutput);
+
+        String message;
+        if (errorInfo.errorCode() == ErrorCode.GHOSTSCRIPT_PAGE_DRAWING) {
+            message =
+                    getMessage(
+                            errorInfo.errorCode().getMessageKey(),
+                            errorInfo.errorCode().getDefaultMessage(),
+                            targetDescription,
+                            diagnostic);
+        } else {
+            message = getMessage(errorInfo.errorCode());
+            if (errorInfo.diagnostic() != null && !errorInfo.diagnostic().isBlank()) {
+                message = message + " " + errorInfo.diagnostic();
+            }
+        }
+
+        return new GhostscriptException(message, cause, errorInfo.errorCode().getCode());
+    }
+
+    private static GhostscriptErrorInfo analyzeGhostscriptOutput(
+            String processOutput, Exception cause) {
+        String combinedOutput = processOutput;
+        if ((combinedOutput == null || combinedOutput.isBlank()) && cause != null) {
+            combinedOutput = cause.getMessage();
+        }
+
+        if (combinedOutput == null || combinedOutput.isBlank()) {
+            return GhostscriptErrorInfo.unknown();
+        }
+
+        String[] lines = combinedOutput.split("\\R");
+        Integer pageNumber = null;
+        StringBuilder diagnosticBuilder = new StringBuilder();
+        boolean recognized = false;
+
+        for (String rawLine : lines) {
+            String line = rawLine == null ? "" : rawLine.trim();
+            if (line.isEmpty()) {
+                continue;
+            }
+
+            if (pageNumber == null) {
+                Matcher pageMatcher = GS_PAGE_PATTERN.matcher(line);
+                if (pageMatcher.find()) {
+                    try {
+                        pageNumber = Integer.parseInt(pageMatcher.group(1));
+                    } catch (NumberFormatException ignore) {
+                        // Ignore invalid page numbers and continue parsing
+                    }
+                }
+            }
+
+            String lowerLine = line.toLowerCase(Locale.ROOT);
+            if (lowerLine.contains("page drawing error")
+                    || lowerLine.contains("could not draw this page")
+                    || lowerLine.contains("eps files may not contain multiple pages")) {
+                recognized = true;
+                String normalized = normalizeGhostscriptLine(line);
+                if (!normalized.isEmpty()) {
+                    if (diagnosticBuilder.length() > 0) {
+                        diagnosticBuilder.append(' ');
+                    }
+                    diagnosticBuilder.append(normalized);
+                }
+            }
+        }
+
+        if (recognized) {
+            String diagnostic =
+                    diagnosticBuilder.length() > 0 ? diagnosticBuilder.toString() : null;
+            return new GhostscriptErrorInfo(
+                    ErrorCode.GHOSTSCRIPT_PAGE_DRAWING, pageNumber, diagnostic, true);
+        }
+
+        // Fallback: capture the first non-empty informative line for context
+        if (diagnosticBuilder.length() == 0) {
+            for (String rawLine : lines) {
+                String line = rawLine == null ? "" : rawLine.trim();
+                if (line.isEmpty()) {
+                    continue;
+                }
+                if (line.startsWith("GPL Ghostscript")) {
+                    continue;
+                }
+                String normalized = normalizeGhostscriptLine(line);
+                if (!normalized.isEmpty()) {
+                    diagnosticBuilder.append(normalized);
+                    break;
+                }
+            }
+        }
+
+        String fallbackDiagnostic =
+                diagnosticBuilder.length() > 0 ? diagnosticBuilder.toString() : null;
+        return new GhostscriptErrorInfo(
+                ErrorCode.GHOSTSCRIPT_COMPRESSION, pageNumber, fallbackDiagnostic, false);
+    }
+
+    private static String normalizeGhostscriptLine(String line) {
+        if (line == null) {
+            return "";
+        }
+        String trimmed = line.trim();
+        if (trimmed.isEmpty()) {
+            return "";
+        }
+        String withoutStars = trimmed.replaceFirst("^[*\\s]+", "");
+        return withoutStars;
+    }
+
+    private static String deriveDefaultGhostscriptDiagnostic(String processOutput) {
+        if (processOutput == null || processOutput.isBlank()) {
+            return "The source file contains content Ghostscript cannot render.";
+        }
+        return "The source file contains content Ghostscript cannot render.";
+    }
+
+    /**
+     * Error codes for consistent error tracking and documentation. Each error code includes a
+     * unique identifier, i18n message key, and default message.
+     *
+     * <p>These codes are used by {@link stirling.software.SPDF.exception.GlobalExceptionHandler} to
+     * provide consistent RFC 7807 Problem Details responses.
+     */
+    @Getter
+    public enum ErrorCode {
+        // PDF-related errors
+        PDF_CORRUPTED(
+                "E001",
+                "error.pdfCorrupted",
+                "PDF file appears to be corrupted or damaged. Please try using the 'Repair PDF' feature first to fix the file before proceeding with this operation."),
+        PDF_MULTIPLE_CORRUPTED(
+                "E002",
+                "error.multiplePdfCorrupted",
+                "One or more PDF files appear to be corrupted or damaged. Please try using the 'Repair PDF' feature on each file first before attempting to merge them."),
+        PDF_ENCRYPTION(
+                "E003",
+                "error.pdfEncryption",
+                "The PDF appears to have corrupted encryption data. This can happen when the PDF was created with incompatible encryption methods. Please try using the 'Repair PDF' feature first, or contact the document creator for a new copy."),
+        PDF_PASSWORD(
+                "E004",
+                "error.pdfPassword",
+                "The PDF Document is passworded and either the password was not provided or was incorrect"),
+        PDF_NO_PAGES("E005", "error.pdfNoPages", "PDF file contains no pages"),
+        PDF_NOT_PDF("E006", "error.notPdfFile", "File must be in PDF format"),
+
+        // CBR/CBZ errors
+        CBR_INVALID_FORMAT(
+                "E010",
+                "error.cbrInvalidFormat",
+                "Invalid or corrupted CBR/RAR archive. The file may be corrupted, use an unsupported RAR format (RAR5+), encrypted, or may not be a valid RAR archive."),
+        CBR_NO_IMAGES(
+                "E012",
+                "error.cbrNoImages",
+                "No valid images found in the CBR file. The archive may be empty, or all images may be corrupted or in unsupported formats."),
+        CBR_NOT_CBR("E014", "error.notCbrFile", "File must be a CBR or RAR archive"),
+        CBZ_INVALID_FORMAT(
+                "E015",
+                "error.cbzInvalidFormat",
+                "Invalid or corrupted CBZ/ZIP archive. The file may be empty, corrupted, or may not be a valid ZIP archive."),
+        CBZ_NO_IMAGES(
+                "E016",
+                "error.cbzNoImages",
+                "No valid images found in the CBZ file. The archive may be empty, or all images may be corrupted or in unsupported formats."),
+        CBZ_NOT_CBZ("E018", "error.notCbzFile", "File must be a CBZ or ZIP archive"),
+
+        // EML errors
+        EML_EMPTY("E020", "error.emlEmpty", "EML file is empty or null"),
+        EML_INVALID_FORMAT("E021", "error.emlInvalidFormat", "Invalid EML file format"),
+
+        // File processing errors
+        FILE_NOT_FOUND("E030", "error.fileNotFound", "File not found with ID: {0}"),
+        FILE_PROCESSING(
+                "E031",
+                "error.fileProcessing",
+                "An error occurred while processing the file during {0} operation: {1}"),
+        FILE_NULL_OR_EMPTY("E032", "error.fileNullOrEmpty", "File cannot be null or empty"),
+        FILE_NO_NAME("E033", "error.fileNoName", "File must have a name"),
+        IMAGE_READ_ERROR("E034", "error.imageReadError", "Unable to read image from file: {0}"),
+
+        // OCR errors
+        OCR_LANGUAGE_REQUIRED(
+                "E040", "error.ocrLanguageRequired", "OCR language options are not specified"),
+        OCR_INVALID_LANGUAGES(
+                "E041",
+                "error.ocrInvalidLanguages",
+                "Invalid OCR languages format: none of the selected languages are valid"),
+        OCR_TOOLS_UNAVAILABLE("E042", "error.ocrToolsUnavailable", "OCR tools are not installed"),
+        OCR_INVALID_RENDER_TYPE(
+                "E043",
+                "error.ocrInvalidRenderType",
+                "Invalid OCR render type. Must be 'hocr' or 'sandwich'"),
+        OCR_PROCESSING_FAILED(
+                "E044", "error.ocrProcessingFailed", "OCRmyPDF failed with return code: {0}"),
+
+        // Compression errors
+        COMPRESSION_OPTIONS(
+                "E050",
+                "error.compressionOptions",
+                "Compression options are not specified (expected output size and optimize level)"),
+        GHOSTSCRIPT_COMPRESSION(
+                "E051", "error.ghostscriptCompression", "Ghostscript compression command failed"),
+        QPDF_COMPRESSION("E052", "error.qpdfCompression", "QPDF command failed"),
+        PROCESSING_INTERRUPTED(
+                "E053", "error.processingInterrupted", "{0} processing was interrupted"),
+        GHOSTSCRIPT_PAGE_DRAWING(
+                "E054", "error.ghostscriptPageDrawing", "Ghostscript could not render {0}. {1}"),
+
+        // Conversion errors
+        PDFA_CONVERSION_FAILED("E060", "error.pdfaConversionFailed", "PDF/A conversion failed"),
+        HTML_FILE_REQUIRED("E061", "error.htmlFileRequired", "File must be in HTML or ZIP format"),
+        PYTHON_REQUIRED_WEBP(
+                "E062", "error.pythonRequiredWebp", "Python is required for WebP conversion"),
+
+        // Validation errors
+        INVALID_ARGUMENT("E070", "error.invalidArgument", "Invalid argument: {0}"),
+        NULL_ARGUMENT("E071", "error.nullArgument", "{0} must not be null"),
+        INVALID_PAGE_SIZE("E072", "error.invalidPageSize", "Invalid page size format: {0}"),
+        INVALID_COMPARATOR(
+                "E073",
+                "error.invalidComparator",
+                "Invalid comparator format: only 'greater', 'equal', and 'less' are supported"),
+
+        // System errors
+        MD5_ALGORITHM("E080", "error.md5Algorithm", "MD5 algorithm not available"),
+        OUT_OF_MEMORY_DPI(
+                "E081",
+                "error.outOfMemoryDpi",
+                "Out of memory or image-too-large error while rendering PDF page {0} at {1} DPI. This can occur when the resulting image exceeds Java's array/memory limits (e.g., NegativeArraySizeException). Please use a lower DPI value (recommended: 150 or less) or process the document in smaller chunks.");
+
+        private final String code;
+        private final String messageKey;
+        private final String defaultMessage;
+
+        ErrorCode(String code, String messageKey, String defaultMessage) {
+            this.code = code;
+            this.messageKey = messageKey;
+            this.defaultMessage = defaultMessage;
+        }
     }
 
     public static IOException createGhostscriptConversionException(String outputType) {
@@ -1252,125 +1148,38 @@ public class ExceptionUtils {
                 MessageFormat.format("Error during {0}: {1}", operation, e.getMessage()), e);
     }
 
-    /**
-     * Error codes for consistent error tracking and documentation. Each error code includes a
-     * unique identifier, i18n message key, and default message.
-     *
-     * <p>These codes are used by {@link stirling.software.SPDF.exception.GlobalExceptionHandler} to
-     * provide consistent RFC 7807 Problem Details responses.
-     */
-    @Getter
-    public enum ErrorCode {
-        // PDF-related errors
-        PDF_CORRUPTED(
-                "E001",
-                "error.pdfCorrupted",
-                "PDF file appears to be corrupted or damaged. Please try using the 'Repair PDF' feature first to fix the file before proceeding with this operation."),
-        PDF_MULTIPLE_CORRUPTED(
-                "E002",
-                "error.multiplePdfCorrupted",
-                "One or more PDF files appear to be corrupted or damaged. Please try using the 'Repair PDF' feature on each file first before attempting to merge them."),
-        PDF_ENCRYPTION(
-                "E003",
-                "error.pdfEncryption",
-                "The PDF appears to have corrupted encryption data. This can happen when the PDF was created with incompatible encryption methods. Please try using the 'Repair PDF' feature first, or contact the document creator for a new copy."),
-        PDF_PASSWORD(
-                "E004",
-                "error.pdfPassword",
-                "The PDF Document is passworded and either the password was not provided or was incorrect"),
-        PDF_NO_PAGES("E005", "error.pdfNoPages", "PDF file contains no pages"),
-        PDF_NOT_PDF("E006", "error.notPdfFile", "File must be in PDF format"),
+    private static final class GhostscriptErrorInfo {
+        private final ErrorCode errorCode;
+        private final Integer pageNumber;
+        private final String diagnostic;
+        private final boolean critical;
 
-        // CBR/CBZ errors
-        CBR_INVALID_FORMAT(
-                "E010",
-                "error.cbrInvalidFormat",
-                "Invalid or corrupted CBR/RAR archive. The file may be corrupted, use an unsupported RAR format (RAR5+), encrypted, or may not be a valid RAR archive."),
-        CBR_NO_IMAGES(
-                "E012",
-                "error.cbrNoImages",
-                "No valid images found in the CBR file. The archive may be empty, or all images may be corrupted or in unsupported formats."),
-        CBR_NOT_CBR("E014", "error.notCbrFile", "File must be a CBR or RAR archive"),
-        CBZ_INVALID_FORMAT(
-                "E015",
-                "error.cbzInvalidFormat",
-                "Invalid or corrupted CBZ/ZIP archive. The file may be empty, corrupted, or may not be a valid ZIP archive."),
-        CBZ_NO_IMAGES(
-                "E016",
-                "error.cbzNoImages",
-                "No valid images found in the CBZ file. The archive may be empty, or all images may be corrupted or in unsupported formats."),
-        CBZ_NOT_CBZ("E018", "error.notCbzFile", "File must be a CBZ or ZIP archive"),
+        private GhostscriptErrorInfo(
+                ErrorCode errorCode, Integer pageNumber, String diagnostic, boolean critical) {
+            this.errorCode = errorCode;
+            this.pageNumber = pageNumber;
+            this.diagnostic = diagnostic;
+            this.critical = critical;
+        }
 
-        // EML errors
-        EML_EMPTY("E020", "error.emlEmpty", "EML file is empty or null"),
-        EML_INVALID_FORMAT("E021", "error.emlInvalidFormat", "Invalid EML file format"),
+        private static GhostscriptErrorInfo unknown() {
+            return new GhostscriptErrorInfo(ErrorCode.GHOSTSCRIPT_COMPRESSION, null, null, false);
+        }
 
-        // File processing errors
-        FILE_NOT_FOUND("E030", "error.fileNotFound", "File not found with ID: {0}"),
-        FILE_PROCESSING(
-                "E031",
-                "error.fileProcessing",
-                "An error occurred while processing the file during {0} operation: {1}"),
-        FILE_NULL_OR_EMPTY("E032", "error.fileNullOrEmpty", "File cannot be null or empty"),
-        FILE_NO_NAME("E033", "error.fileNoName", "File must have a name"),
-        IMAGE_READ_ERROR("E034", "error.imageReadError", "Unable to read image from file: {0}"),
+        private ErrorCode errorCode() {
+            return errorCode;
+        }
 
-        // OCR errors
-        OCR_LANGUAGE_REQUIRED(
-                "E040", "error.ocrLanguageRequired", "OCR language options are not specified"),
-        OCR_INVALID_LANGUAGES(
-                "E041",
-                "error.ocrInvalidLanguages",
-                "Invalid OCR languages format: none of the selected languages are valid"),
-        OCR_TOOLS_UNAVAILABLE("E042", "error.ocrToolsUnavailable", "OCR tools are not installed"),
-        OCR_INVALID_RENDER_TYPE(
-                "E043",
-                "error.ocrInvalidRenderType",
-                "Invalid OCR render type. Must be 'hocr' or 'sandwich'"),
-        OCR_PROCESSING_FAILED(
-                "E044", "error.ocrProcessingFailed", "OCRmyPDF failed with return code: {0}"),
+        private Integer pageNumber() {
+            return pageNumber;
+        }
 
-        // Compression errors
-        COMPRESSION_OPTIONS(
-                "E050",
-                "error.compressionOptions",
-                "Compression options are not specified (expected output size and optimize level)"),
-        GHOSTSCRIPT_COMPRESSION(
-                "E051", "error.ghostscriptCompression", "Ghostscript compression command failed"),
-        QPDF_COMPRESSION("E052", "error.qpdfCompression", "QPDF command failed"),
-        PROCESSING_INTERRUPTED(
-                "E053", "error.processingInterrupted", "{0} processing was interrupted"),
+        private String diagnostic() {
+            return diagnostic;
+        }
 
-        // Conversion errors
-        PDFA_CONVERSION_FAILED("E060", "error.pdfaConversionFailed", "PDF/A conversion failed"),
-        HTML_FILE_REQUIRED("E061", "error.htmlFileRequired", "File must be in HTML or ZIP format"),
-        PYTHON_REQUIRED_WEBP(
-                "E062", "error.pythonRequiredWebp", "Python is required for WebP conversion"),
-
-        // Validation errors
-        INVALID_ARGUMENT("E070", "error.invalidArgument", "Invalid argument: {0}"),
-        NULL_ARGUMENT("E071", "error.nullArgument", "{0} must not be null"),
-        INVALID_PAGE_SIZE("E072", "error.invalidPageSize", "Invalid page size format: {0}"),
-        INVALID_COMPARATOR(
-                "E073",
-                "error.invalidComparator",
-                "Invalid comparator format: only 'greater', 'equal', and 'less' are supported"),
-
-        // System errors
-        MD5_ALGORITHM("E080", "error.md5Algorithm", "MD5 algorithm not available"),
-        OUT_OF_MEMORY_DPI(
-                "E081",
-                "error.outOfMemoryDpi",
-                "Out of memory or image-too-large error while rendering PDF page {0} at {1} DPI. This can occur when the resulting image exceeds Java's array/memory limits (e.g., NegativeArraySizeException). Please use a lower DPI value (recommended: 150 or less) or process the document in smaller chunks.");
-
-        private final String code;
-        private final String messageKey;
-        private final String defaultMessage;
-
-        ErrorCode(String code, String messageKey, String defaultMessage) {
-            this.code = code;
-            this.messageKey = messageKey;
-            this.defaultMessage = defaultMessage;
+        private boolean isCritical() {
+            return critical;
         }
     }
 
@@ -1496,6 +1305,13 @@ public class ExceptionUtils {
     /** Exception thrown when rendering PDF pages causes out-of-memory or array size errors. */
     public static class OutOfMemoryDpiException extends BaseAppException {
         public OutOfMemoryDpiException(String message, Throwable cause, String errorCode) {
+            super(message, cause, errorCode);
+        }
+    }
+
+    /** Exception thrown when Ghostscript fails to render or compress a file. */
+    public static class GhostscriptException extends BaseAppException {
+        public GhostscriptException(String message, Throwable cause, String errorCode) {
             super(message, cause, errorCode);
         }
     }

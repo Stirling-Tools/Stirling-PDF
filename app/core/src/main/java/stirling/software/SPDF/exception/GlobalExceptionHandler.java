@@ -146,6 +146,29 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Handle Ghostscript processing exceptions originating from external binaries.
+     *
+     * @param ex the GhostscriptException
+     * @param request the HTTP servlet request
+     * @return ProblemDetail with HTTP 422 UNPROCESSABLE_ENTITY
+     */
+    @ExceptionHandler(GhostscriptException.class)
+    public ResponseEntity<ProblemDetail> handleGhostscriptException(
+            GhostscriptException ex, HttpServletRequest request) {
+        log.warn(
+                "Ghostscript error at {}: {} ({})",
+                request.getRequestURI(),
+                ex.getMessage(),
+                ex.getErrorCode());
+
+        String title =
+                getLocalizedMessage(
+                        "error.ghostscriptCompression.title", "Ghostscript Processing Error");
+        return createProblemDetailResponse(
+                ex, HttpStatus.UNPROCESSABLE_ENTITY, "/errors/ghostscript", title, request);
+    }
+
+    /**
      * Handle PDF and DPI-related BaseAppException subtypes.
      *
      * <p>Related factory methods in {@link ExceptionUtils}:
