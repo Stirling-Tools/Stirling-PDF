@@ -8,7 +8,7 @@ import { useNavigationState, useNavigationActions } from '@app/contexts/Navigati
 import { isBaseWorkbench } from '@app/types/workbench';
 import { useViewer } from '@app/contexts/ViewerContext';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
-import styles from './Workbench.module.css';
+import styles from '@app/components/layout/Workbench.module.css';
 
 import TopControls from '@app/components/shared/TopControls';
 import FileEditor from '@app/components/fileEditor/FileEditor';
