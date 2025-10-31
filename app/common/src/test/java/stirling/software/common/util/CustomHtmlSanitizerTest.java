@@ -32,10 +32,6 @@ class CustomHtmlSanitizerTest {
 
     @BeforeEach
     void setUp() {
-        ssrfProtectionService = mock(SsrfProtectionService.class);
-        applicationProperties = mock(ApplicationProperties.class);
-        systemProperties = mock(ApplicationProperties.System.class);
-
         // Default behavior: allow all URLs and enable sanitization. Lenient stubs avoid
         // strict-stubbing failures when individual tests bypass certain branches.
         lenient().when(ssrfProtectionService.isUrlAllowed(anyString())).thenReturn(true);
