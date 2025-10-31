@@ -240,7 +240,6 @@ ignore = [
     'pipelineOptions.pipelineHeader',
     'pro',
     'redact.zoom',
-    'scannerEffect.quality.medium',
     'sponsor',
     'team.status',
     'text',
