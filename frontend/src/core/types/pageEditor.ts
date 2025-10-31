@@ -9,6 +9,7 @@ export interface PDFPage {
   selected: boolean;
   splitAfter?: boolean;
   isBlankPage?: boolean;
+  isPlaceholder?: boolean;
   originalFileId?: FileId;
 }
 

@@ -174,5 +174,3 @@ export default function OverlayPdfsSettings({ parameters, onParameterChange, dis
     </Stack>
   );
 }
-
-
