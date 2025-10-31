@@ -56,7 +56,7 @@ class JPATokenRepositoryImplTest {
             existing.setSeries("series123");
             existing.setUsername("user1");
             existing.setToken("oldToken");
-            existing.setLastUsed(new Date());
+            existing.setLastUsed(new Date().toInstant());
 
             when(persistentLoginRepository.findById("series123")).thenReturn(Optional.of(existing));
 
@@ -91,7 +91,7 @@ class JPATokenRepositoryImplTest {
             login.setSeries("series123");
             login.setUsername("user1");
             login.setToken("tokenXYZ");
-            login.setLastUsed(date);
+            login.setLastUsed(date.toInstant());
 
             when(persistentLoginRepository.findById("series123")).thenReturn(Optional.of(login));
 

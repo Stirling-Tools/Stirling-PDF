@@ -72,13 +72,13 @@ class ScannerEffectRequestTest {
         ScannerEffectRequest req = new ScannerEffectRequest();
 
         req.setQuality(ScannerEffectRequest.Quality.low);
-        assertEquals(30, req.getQualityValue());
+        assertEquals(30, req.getQuality());
 
         req.setQuality(ScannerEffectRequest.Quality.medium);
-        assertEquals(60, req.getQualityValue());
+        assertEquals(60, req.getQuality());
 
         req.setQuality(ScannerEffectRequest.Quality.high);
-        assertEquals(100, req.getQualityValue());
+        assertEquals(100, req.getQuality());
     }
 
     @Test

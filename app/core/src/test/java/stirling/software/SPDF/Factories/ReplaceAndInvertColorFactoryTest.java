@@ -20,7 +20,7 @@ class ReplaceAndInvertColorFactoryTest {
 
     @BeforeEach
     void setup() {
-        factory = new ReplaceAndInvertColorFactory();
+        factory = new ReplaceAndInvertColorFactory(null);
         file = mock(MultipartFile.class);
     }
 

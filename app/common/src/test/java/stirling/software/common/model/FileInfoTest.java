@@ -11,8 +11,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
-import stirling.software.common.model.FileInfo;
-
 public class FileInfoTest {
 
     @ParameterizedTest(name = "{index}: fileSize={0}")

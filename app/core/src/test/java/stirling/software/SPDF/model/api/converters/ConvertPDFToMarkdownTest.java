@@ -26,7 +26,7 @@ import stirling.software.common.util.PDFToFile;
 class ConvertPDFToMarkdownTest {
 
     private MockMvc mockMvc() {
-        return MockMvcBuilders.standaloneSetup(new ConvertPDFToMarkdown())
+        return MockMvcBuilders.standaloneSetup(new ConvertPDFToMarkdown(null))
                 .setControllerAdvice(new GlobalErrorHandler())
                 .build();
     }

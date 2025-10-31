@@ -397,55 +397,49 @@ public class PdfUtilsTest {
     @Test
     @DisplayName("containsTextInFile: pagesToCheck='all' finds text")
     void containsTextInFile_allPages_true() throws IOException {
-        PdfUtils util = new PdfUtils();
         try (PDDocument doc = createDocWithText("alpha", "beta")) {
-            assertTrue(util.containsTextInFile(doc, "beta", "all"));
+            assertTrue(PdfUtils.containsTextInFile(doc, "beta", "all"));
         }
     }
 
     @Test
     @DisplayName("containsTextInFile: single page '2' finds text")
     void containsTextInFile_singlePage_two_true() throws IOException {
-        PdfUtils util = new PdfUtils();
         try (PDDocument doc = createDocWithText("alpha", "beta")) {
-            assertTrue(util.containsTextInFile(doc, "beta", "2"));
+            assertTrue(PdfUtils.containsTextInFile(doc, "beta", "2"));
         }
     }
 
     @Test
     @DisplayName("containsTextInFile: range '1-1' finds text on page 1")
     void containsTextInFile_range_oneToOne_true() throws IOException {
-        PdfUtils util = new PdfUtils();
         try (PDDocument doc = createDocWithText("findme", "other")) {
-            assertTrue(util.containsTextInFile(doc, "findme", "1-1"));
+            assertTrue(PdfUtils.containsTextInFile(doc, "findme", "1-1"));
         }
     }
 
     @Test
     @DisplayName("containsTextInFile: list '1,2' finds text (whitespace robust)")
     void containsTextInFile_list_pages_true() throws IOException {
-        PdfUtils util = new PdfUtils();
         try (PDDocument doc = createDocWithText("foo", "bar")) {
-            assertTrue(util.containsTextInFile(doc, "bar", " 1 , 2 "));
+            assertTrue(PdfUtils.containsTextInFile(doc, "bar", " 1 , 2 "));
         }
     }
 
     @Test
     @DisplayName("containsTextInFile: text not present -> false")
     void containsTextInFile_textNotPresent_false() throws IOException {
-        PdfUtils util = new PdfUtils();
         try (PDDocument doc = createDocWithText("xxx", "yyy")) {
-            assertFalse(util.containsTextInFile(doc, "zzz", "all"));
+            assertFalse(PdfUtils.containsTextInFile(doc, "zzz", "all"));
         }
     }
 
     @Test
     @DisplayName("pageSize: different size returns false")
     void pageSize_shouldReturnFalse_whenSizeDoesNotMatch() throws IOException {
-        PdfUtils util = new PdfUtils();
         try (PDDocument doc = new PDDocument()) {
             doc.addPage(new PDPage(PDRectangle.A4));
-            assertFalse(util.pageSize(doc, "600x842"));
+            assertFalse(PdfUtils.pageSize(doc, "600x842"));
         }
     }
 
