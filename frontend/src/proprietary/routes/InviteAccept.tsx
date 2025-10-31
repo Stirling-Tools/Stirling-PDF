@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Stack, Text, Paper, Center, Loader, Button, TextInput, PasswordInput, Anchor } from '@mantine/core';
+import { Stack, Text, Paper, Center, Loader, TextInput, PasswordInput, Anchor } from '@mantine/core';
 import { useDocumentMeta } from '@app/hooks/useDocumentMeta';
 import AuthLayout from '@app/routes/authShared/AuthLayout';
 import LoginHeader from '@app/routes/login/LoginHeader';

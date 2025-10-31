@@ -5,7 +5,6 @@ import {
   Group,
   Stack,
   Select,
-  TextInput,
   Button,
   Pagination,
   Modal,
@@ -18,9 +17,7 @@ import { useTranslation } from 'react-i18next';
 import auditService, { AuditEvent, AuditFilters } from '@app/services/auditService';
 import { Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
 
-interface AuditEventsTableProps {}
-
-const AuditEventsTable: React.FC<AuditEventsTableProps> = () => {
+const AuditEventsTable: React.FC = () => {
   const { t } = useTranslation();
   const [events, setEvents] = useState<AuditEvent[]>([]);
   const [totalPages, setTotalPages] = useState(0);

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Paper, Stack, Text, Button, Divider } from '@mantine/core';
+import { Stack, Text, Button } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@app/auth/UseSession';
 import { useNavigate } from 'react-router-dom';

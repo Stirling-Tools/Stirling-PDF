@@ -5,10 +5,9 @@ import { EndpointStatistic } from '@app/services/usageAnalyticsService';
 
 interface UsageAnalyticsTableProps {
   data: EndpointStatistic[];
-  totalVisits: number;
 }
 
-const UsageAnalyticsTable: React.FC<UsageAnalyticsTableProps> = ({ data, totalVisits }) => {
+const UsageAnalyticsTable: React.FC<UsageAnalyticsTableProps> = ({ data }) => {
   const { t } = useTranslation();
 
   return (

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Paper, Stack, Switch, Text, Tooltip, NumberInput, SegmentedControl, Alert, Code, Group, Anchor, ActionIcon } from '@mantine/core';
+import { Paper, Stack, Switch, Text, Tooltip, NumberInput, SegmentedControl, Code, Group, Anchor, ActionIcon } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { usePreferences } from '@app/contexts/PreferencesContext';
 import { useAppConfig } from '@app/contexts/AppConfigContext';

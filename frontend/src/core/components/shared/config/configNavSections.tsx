@@ -40,8 +40,6 @@ export interface ConfigColors {
 }
 
 export const createConfigNavSections = (
-  Overview: React.ComponentType<{ onLogoutClick: () => void }>,
-  onLogoutClick: () => void,
   isAdmin: boolean = false,
   runningEE: boolean = false
 ): ConfigNavSection[] => {

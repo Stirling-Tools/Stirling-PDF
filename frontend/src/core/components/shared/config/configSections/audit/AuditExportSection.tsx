@@ -14,9 +14,7 @@ import auditService, { AuditFilters } from '@app/services/auditService';
 import LocalIcon from '@app/components/shared/LocalIcon';
 import { Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
 
-interface AuditExportSectionProps {}
-
-const AuditExportSection: React.FC<AuditExportSectionProps> = () => {
+const AuditExportSection: React.FC = () => {
   const { t } = useTranslation();
   const [exportFormat, setExportFormat] = useState<'csv' | 'json'>('csv');
   const [exporting, setExporting] = useState(false);

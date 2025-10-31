@@ -12,7 +12,6 @@ import {
   Loader,
   Group,
   Modal,
-  Paper,
   Select,
   CloseButton,
   Tooltip,

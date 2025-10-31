@@ -11,7 +11,6 @@ import {
   Group,
   Modal,
   Select,
-  Paper,
   CloseButton,
   Tooltip,
   Menu,

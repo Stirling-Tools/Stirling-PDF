@@ -68,10 +68,9 @@ const SimpleBarChart: React.FC<SimpleBarChartProps> = ({ data, maxValue }) => {
 
 interface UsageAnalyticsChartProps {
   data: { label: string; value: number }[];
-  totalVisits: number;
 }
 
-const UsageAnalyticsChart: React.FC<UsageAnalyticsChartProps> = ({ data, totalVisits }) => {
+const UsageAnalyticsChart: React.FC<UsageAnalyticsChartProps> = ({ data }) => {
   const { t } = useTranslation();
 
   return (

@@ -53,9 +53,7 @@ const SimpleBarChart: React.FC<SimpleBarChartProps> = ({ data, title, color = 'b
   );
 };
 
-interface AuditChartsSectionProps {}
-
-const AuditChartsSection: React.FC<AuditChartsSectionProps> = () => {
+const AuditChartsSection: React.FC = () => {
   const { t } = useTranslation();
   const [timePeriod, setTimePeriod] = useState<'day' | 'week' | 'month'>('week');
   const [chartsData, setChartsData] = useState<AuditChartsData | null>(null);
