@@ -217,7 +217,6 @@ public class GlobalExceptionHandler {
         String title;
 
         if (ex instanceof OutOfMemoryDpiException) {
-            // Using 422 instead of 507 for better frontend compatibility
             // 507 INSUFFICIENT_STORAGE is not commonly handled by frontends
             status = HttpStatus.UNPROCESSABLE_ENTITY;
             type = "/errors/out-of-memory-dpi";
@@ -895,8 +894,8 @@ public class GlobalExceptionHandler {
      * @param request the HTTP servlet request
      * @return a ProblemDetail with timestamp and path properties set
      */
-    private ProblemDetail createBaseProblemDetail(
-            HttpStatus status, String detail, HttpServletRequest request) {
+    private static ProblemDetail createBaseProblemDetail(
+        HttpStatus status, String detail, HttpServletRequest request) {
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(status, detail);
         problemDetail.setProperty("timestamp", Instant.now());
         problemDetail.setProperty("path", request.getRequestURI());
@@ -921,12 +920,12 @@ public class GlobalExceptionHandler {
      * @param request the HTTP servlet request
      * @return ResponseEntity with ProblemDetail including errorCode property
      */
-    private ResponseEntity<ProblemDetail> createProblemDetailResponse(
-            Object ex,
-            HttpStatus status,
-            String typeUri,
-            String title,
-            HttpServletRequest request) {
+    private static ResponseEntity<ProblemDetail> createProblemDetailResponse(
+        Object ex,
+        HttpStatus status,
+        String typeUri,
+        String title,
+        HttpServletRequest request) {
 
         String message;
         String errorCode;

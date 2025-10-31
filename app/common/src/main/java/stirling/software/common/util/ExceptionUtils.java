@@ -78,8 +78,12 @@ public class ExceptionUtils {
         List<String> hints = new java.util.ArrayList<>();
 
         int index = 1;
+        StringBuilder keyBuilder = new StringBuilder("error.").append(code).append(".hint.");
+        int baseLength = keyBuilder.length();
+
         while (true) {
-            String key = "error." + code + ".hint." + index;
+            keyBuilder.setLength(baseLength);
+            String key = keyBuilder.append(index).toString();
             try {
                 String hint = bundle.getString(key);
                 hints.add(hint);
@@ -741,7 +745,7 @@ public class ExceptionUtils {
 
     public static GhostscriptException detectGhostscriptCriticalError(String processOutput) {
         GhostscriptErrorInfo errorInfo = analyzeGhostscriptOutput(processOutput, null);
-        if (errorInfo.isCritical()) {
+        if (errorInfo.critical()) {
             return buildGhostscriptException(errorInfo, processOutput, null);
         }
         return null;
@@ -800,7 +804,10 @@ public class ExceptionUtils {
             return GhostscriptErrorInfo.unknown();
         }
 
-        String[] lines = combinedOutput.split("\\R");
+        String[] lines =
+                RegexPatternUtils.getInstance()
+                        .getLineSeparatorPattern()
+                        .split(combinedOutput);
         List<Integer> affectedPages = new ArrayList<>();
         Set<String> uniqueDiagnostics = new java.util.LinkedHashSet<>();
         boolean recognized = false;
@@ -883,8 +890,10 @@ public class ExceptionUtils {
         if (trimmed.isEmpty()) {
             return "";
         }
-        String withoutStars = trimmed.replaceFirst("^[*\\s]+", "");
-        return withoutStars;
+        return RegexPatternUtils.getInstance()
+                .getLeadingAsterisksWhitespacePattern()
+                .matcher(trimmed)
+                .replaceFirst("");
     }
 
     private static String deriveDefaultGhostscriptDiagnostic(String processOutput) {
@@ -1075,38 +1084,6 @@ public class ExceptionUtils {
     }
 
     /**
-     * Get ErrorCode enum by its code string.
-     *
-     * @param code the error code (e.g., "E001")
-     * @return the matching ErrorCode, or null if not found
-     */
-    public static ErrorCode getErrorCodeByCode(String code) {
-        if (code == null) return null;
-        for (ErrorCode errorCode : ErrorCode.values()) {
-            if (errorCode.getCode().equals(code)) {
-                return errorCode;
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Get ErrorCode enum by its message key.
-     *
-     * @param messageKey the i18n message key (e.g., "error.pdfCorrupted")
-     * @return the matching ErrorCode, or null if not found
-     */
-    public static ErrorCode getErrorCodeByMessageKey(String messageKey) {
-        if (messageKey == null) return null;
-        for (ErrorCode errorCode : ErrorCode.values()) {
-            if (errorCode.getMessageKey().equals(messageKey)) {
-                return errorCode;
-            }
-        }
-        return null;
-    }
-
-    /**
      * Wrap a generic exception with appropriate context for better error reporting. This method is
      * useful when catching exceptions in controllers and wanting to provide better context to
      * GlobalExceptionHandler.
@@ -1275,51 +1252,26 @@ public class ExceptionUtils {
         T render() throws IOException;
     }
 
-    private static final class GhostscriptErrorInfo {
-        private final ErrorCode errorCode;
-        private final Integer pageNumber;
-        private final String diagnostic;
-        private final boolean critical;
-        private final List<Integer> affectedPages;
-
-        private GhostscriptErrorInfo(
+    private record GhostscriptErrorInfo(ErrorCode errorCode, Integer pageNumber, String diagnostic,
+                                        boolean critical, List<Integer> affectedPages) {
+            private GhostscriptErrorInfo(
                 ErrorCode errorCode,
                 Integer pageNumber,
                 String diagnostic,
                 boolean critical,
                 List<Integer> affectedPages) {
-            this.errorCode = errorCode;
-            this.pageNumber = pageNumber;
-            this.diagnostic = diagnostic;
-            this.critical = critical;
-            this.affectedPages = affectedPages != null ? affectedPages : List.of();
-        }
+                this.errorCode = errorCode;
+                this.pageNumber = pageNumber;
+                this.diagnostic = diagnostic;
+                this.critical = critical;
+                this.affectedPages = affectedPages != null ? affectedPages : List.of();
+            }
 
-        private static GhostscriptErrorInfo unknown() {
-            return new GhostscriptErrorInfo(
+            private static GhostscriptErrorInfo unknown() {
+                return new GhostscriptErrorInfo(
                     ErrorCode.GHOSTSCRIPT_COMPRESSION, null, null, false, List.of());
+            }
         }
-
-        private ErrorCode errorCode() {
-            return errorCode;
-        }
-
-        private Integer pageNumber() {
-            return pageNumber;
-        }
-
-        private String diagnostic() {
-            return diagnostic;
-        }
-
-        private boolean isCritical() {
-            return critical;
-        }
-
-        private List<Integer> affectedPages() {
-            return affectedPages;
-        }
-    }
 
     /** Exception thrown when Ghostscript fails to render or compress a file. */
     public static class GhostscriptException extends BaseAppException {

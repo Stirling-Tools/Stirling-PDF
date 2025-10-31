@@ -518,6 +518,16 @@ public final class RegexPatternUtils {
         return getPattern("^[a-zA-Z0-9]{2,4}$", Pattern.CASE_INSENSITIVE);
     }
 
+    /** Pattern for splitting on line breaks (Unicode line separator) */
+    public Pattern getLineSeparatorPattern() {
+        return getPattern("\\R");
+    }
+
+    /** Pattern for removing leading asterisks and whitespace */
+    public Pattern getLeadingAsterisksWhitespacePattern() {
+        return getPattern("^[*\\s]+");
+    }
+
     private record PatternKey(String regex, int flags) {
         // Record automatically provides equals, hashCode, and toString
     }
