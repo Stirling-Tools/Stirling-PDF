@@ -135,18 +135,24 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     private static boolean isPublicAuthEndpoint(String requestURI, String contextPath) {
+        // Remove context path from URI to normalize path matching
+        String trimmedUri =
+                requestURI.startsWith(contextPath)
+                        ? requestURI.substring(contextPath.length())
+                        : requestURI;
+
         // Public auth endpoints that don't require JWT
         boolean isPublicAuthEndpoint =
-                requestURI.startsWith(contextPath + "/login")
-                        || requestURI.startsWith(contextPath + "/signup")
-                        || requestURI.startsWith(contextPath + "/auth/")
-                        || requestURI.startsWith(contextPath + "/oauth2")
-                        || requestURI.startsWith(contextPath + "/api/v1/auth/login")
-                        || requestURI.startsWith(contextPath + "/api/v1/auth/register")
-                        || requestURI.startsWith(contextPath + "/api/v1/auth/refresh")
-                        || requestURI.startsWith(
-                                contextPath + "/api/v1/proprietary/ui-data/account")
-                        || requestURI.startsWith(contextPath + "/api/v1/config");
+                trimmedUri.startsWith("/login")
+                        || trimmedUri.startsWith("/signup")
+                        || trimmedUri.startsWith("/auth/")
+                        || trimmedUri.startsWith("/oauth2")
+                        || trimmedUri.startsWith("/api/v1/auth/login")
+                        || trimmedUri.startsWith("/api/v1/auth/register")
+                        || trimmedUri.startsWith("/api/v1/auth/refresh")
+                        || trimmedUri.startsWith("/api/v1/auth/logout")
+                        || trimmedUri.startsWith("/api/v1/proprietary/ui-data/account")
+                        || trimmedUri.startsWith("/api/v1/config");
         return isPublicAuthEndpoint;
     }
 

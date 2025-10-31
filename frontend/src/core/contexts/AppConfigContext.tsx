@@ -1,10 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-
-// Helper to get JWT from localStorage for Authorization header
-function getAuthHeaders(): HeadersInit {
-  const token = localStorage.getItem('stirling_jwt');
-  return token ? { 'Authorization': `Bearer ${token}` } : {};
-}
+import apiClient from '@app/services/apiClient';
 
 export interface AppConfig {
   baseUrl?: string;
@@ -65,41 +60,27 @@ export const AppConfigProvider: React.FC<{ children: ReactNode }> = ({ children 
       return;
     }
 
-  // Don't fetch config if we're on the login page and don't have JWT
-  const isLoginPage = window.location.pathname.includes('/login');
-  const hasJwt = !!localStorage.getItem('stirling_jwt');
-
-    if (isLoginPage && !hasJwt) {
-      console.debug('[AppConfig] On login page without JWT - using default config');
-      setConfig({ enableLogin: true });
-      setLoading(false);
-      return;
-    }
-
     try {
       setLoading(true);
       setError(null);
 
-      const response = await fetch('/api/v1/config/app-config', {
-        headers: getAuthHeaders(),
-      });
+      // apiClient automatically adds JWT header if available via interceptors
+      const response = await apiClient.get<AppConfig>('/api/v1/config/app-config');
+      const data = response.data;
 
-      if (!response.ok) {
-        // On 401 (not authenticated), use default config with login enabled
-        if (response.status === 401) {
-          console.debug('[AppConfig] 401 error - using default config (login enabled)');
-          setConfig({ enableLogin: true });
-          setLoading(false);
-          return;
-        }
-        throw new Error(`Failed to fetch config: ${response.status} ${response.statusText}`);
-      }
-
-      const data: AppConfig = await response.json();
       console.debug('[AppConfig] Config fetched successfully:', data);
       setConfig(data);
       setFetchCount(prev => prev + 1);
-    } catch (err) {
+    } catch (err: any) {
+      // On 401 (not authenticated), use default config with login enabled
+      // This allows the app to work even without authentication
+      if (err.response?.status === 401) {
+        console.debug('[AppConfig] 401 error - using default config (login enabled)');
+        setConfig({ enableLogin: true });
+        setLoading(false);
+        return;
+      }
+
       const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
       setError(errorMessage);
       console.error('[AppConfig] Failed to fetch app config:', err);
