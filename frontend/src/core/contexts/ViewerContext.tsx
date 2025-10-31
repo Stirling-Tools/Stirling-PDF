@@ -1,4 +1,11 @@
-import React, { createContext, useContext, useState, ReactNode, useRef } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  ReactNode,
+  useRef,
+  useCallback,
+} from 'react';
 import { SpreadMode } from '@embedpdf/plugin-spread/react';
 import { useNavigation } from '@app/contexts/NavigationContext';
 
@@ -109,6 +116,20 @@ interface BridgeRef<TState = unknown, TApi = unknown> {
   api: TApi;
 }
 
+function useImmediateNotifier<Args extends unknown[]>() {
+  const callbackRef = useRef<((...args: Args) => void) | null>(null);
+
+  const register = useCallback((callback: (...args: Args) => void) => {
+    callbackRef.current = callback;
+  }, []);
+
+  const trigger = useCallback((...args: Args) => {
+    callbackRef.current?.(...args);
+  }, []);
+
+  return { register, trigger };
+}
+
 /**
  * ViewerContext provides a unified interface to EmbedPDF functionality.
  *
@@ -150,10 +171,12 @@ interface ViewerContextType {
   // Immediate update callbacks
   registerImmediateZoomUpdate: (callback: (percent: number) => void) => void;
   registerImmediateScrollUpdate: (callback: (currentPage: number, totalPages: number) => void) => void;
+  registerImmediateSpreadUpdate: (callback: (mode: SpreadMode, isDualPage: boolean) => void) => void;
 
   // Internal - for bridges to trigger immediate updates
   triggerImmediateScrollUpdate: (currentPage: number, totalPages: number) => void;
   triggerImmediateZoomUpdate: (zoomPercent: number) => void;
+  triggerImmediateSpreadUpdate: (mode: SpreadMode, isDualPage?: boolean) => void;
 
   // Action handlers - call EmbedPDF APIs directly
   scrollActions: {
@@ -241,11 +264,39 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     export: null as BridgeRef<ExportState, ExportAPIWrapper> | null,
   });
 
-  // Immediate zoom callback for responsive display updates
-  const immediateZoomUpdateCallback = useRef<((percent: number) => void) | null>(null);
+  const {
+    register: registerImmediateZoomUpdate,
+    trigger: triggerImmediateZoomInternal,
+  } = useImmediateNotifier<[number]>();
+  const {
+    register: registerImmediateScrollUpdate,
+    trigger: triggerImmediateScrollInternal,
+  } = useImmediateNotifier<[number, number]>();
+  const {
+    register: registerImmediateSpreadUpdate,
+    trigger: triggerImmediateSpreadInternal,
+  } = useImmediateNotifier<[SpreadMode, boolean]>();
 
-  // Immediate scroll callback for responsive display updates
-  const immediateScrollUpdateCallback = useRef<((currentPage: number, totalPages: number) => void) | null>(null);
+  const triggerImmediateZoomUpdate = useCallback(
+    (percent: number) => {
+      triggerImmediateZoomInternal(percent);
+    },
+    [triggerImmediateZoomInternal]
+  );
+
+  const triggerImmediateScrollUpdate = useCallback(
+    (currentPage: number, totalPages: number) => {
+      triggerImmediateScrollInternal(currentPage, totalPages);
+    },
+    [triggerImmediateScrollInternal]
+  );
+
+  const triggerImmediateSpreadUpdate = useCallback(
+    (mode: SpreadMode, isDualPage: boolean = mode !== SpreadMode.None) => {
+      triggerImmediateSpreadInternal(mode, isDualPage);
+    },
+    [triggerImmediateSpreadInternal]
+  );
 
   const registerBridge = (type: string, ref: BridgeRef) => {
     // Type-safe assignment - we know the bridges will provide correct types
@@ -372,24 +423,18 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     zoomIn: () => {
       const api = bridgeRefs.current.zoom?.api;
       if (api?.zoomIn) {
-        // Update display immediately if callback is registered
-        if (immediateZoomUpdateCallback.current) {
-          const currentState = getZoomState();
-          const newPercent = Math.min(Math.round(currentState.zoomPercent * 1.2), 300);
-          immediateZoomUpdateCallback.current(newPercent);
-        }
+        const currentState = getZoomState();
+        const newPercent = Math.min(Math.round(currentState.zoomPercent * 1.2), 300);
+        triggerImmediateZoomUpdate(newPercent);
         api.zoomIn();
       }
     },
     zoomOut: () => {
       const api = bridgeRefs.current.zoom?.api;
       if (api?.zoomOut) {
-        // Update display immediately if callback is registered
-        if (immediateZoomUpdateCallback.current) {
-          const currentState = getZoomState();
-          const newPercent = Math.max(Math.round(currentState.zoomPercent / 1.2), 20);
-          immediateZoomUpdateCallback.current(newPercent);
-        }
+        const currentState = getZoomState();
+        const newPercent = Math.max(Math.round(currentState.zoomPercent / 1.2), 20);
+        triggerImmediateZoomUpdate(newPercent);
         api.zoomOut();
       }
     },
@@ -550,26 +595,6 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     }
   };
 
-  const registerImmediateZoomUpdate = (callback: (percent: number) => void) => {
-    immediateZoomUpdateCallback.current = callback;
-  };
-
-  const registerImmediateScrollUpdate = (callback: (currentPage: number, totalPages: number) => void) => {
-    immediateScrollUpdateCallback.current = callback;
-  };
-
-  const triggerImmediateScrollUpdate = (currentPage: number, totalPages: number) => {
-    if (immediateScrollUpdateCallback.current) {
-      immediateScrollUpdateCallback.current(currentPage, totalPages);
-    }
-  };
-
-  const triggerImmediateZoomUpdate = (zoomPercent: number) => {
-    if (immediateZoomUpdateCallback.current) {
-      immediateZoomUpdateCallback.current(zoomPercent);
-    }
-  };
-
   const value: ViewerContextType = {
     // UI state
     isThumbnailSidebarVisible,
@@ -600,8 +625,10 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     // Immediate updates
     registerImmediateZoomUpdate,
     registerImmediateScrollUpdate,
+    registerImmediateSpreadUpdate,
     triggerImmediateScrollUpdate,
     triggerImmediateZoomUpdate,
+    triggerImmediateSpreadUpdate,
 
     // Actions
     scrollActions,
