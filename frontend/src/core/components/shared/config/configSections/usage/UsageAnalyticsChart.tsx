@@ -19,7 +19,7 @@ const SimpleBarChart: React.FC<SimpleBarChartProps> = ({ data, maxValue }) => {
       ) : (
         data.map((item, index) => (
           <div key={index}>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }} mb={4}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
               <Text
                 size="xs"
                 c="dimmed"

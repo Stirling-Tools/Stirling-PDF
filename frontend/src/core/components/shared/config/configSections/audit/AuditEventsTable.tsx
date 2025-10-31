@@ -131,7 +131,7 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = () => {
           <DateInput
             placeholder={t('audit.events.startDate', 'Start date')}
             value={filters.startDate ? new Date(filters.startDate) : null}
-            onChange={(value) =>
+            onChange={(value: Date | null) =>
               handleFilterChange('startDate', value ? value.toISOString() : undefined)
             }
             clearable
@@ -141,7 +141,7 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = () => {
           <DateInput
             placeholder={t('audit.events.endDate', 'End date')}
             value={filters.endDate ? new Date(filters.endDate) : null}
-            onChange={(value) =>
+            onChange={(value: Date | null) =>
               handleFilterChange('endDate', value ? value.toISOString() : undefined)
             }
             clearable
