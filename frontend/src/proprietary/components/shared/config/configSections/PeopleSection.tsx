@@ -465,7 +465,7 @@ export default function PeopleSection() {
           <Button
             leftSection={<LocalIcon icon="person-add" width="1rem" height="1rem" />}
             onClick={() => setInviteModalOpened(true)}
-            disabled={licenseInfo && licenseInfo.availableSlots === 0}
+            disabled={licenseInfo ? licenseInfo.availableSlots === 0 : false}
           >
             {t('workspace.people.addMembers')}
           </Button>

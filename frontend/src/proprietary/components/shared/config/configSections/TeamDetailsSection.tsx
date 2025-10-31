@@ -252,7 +252,7 @@ export default function TeamDetailsSection({ teamId, onBack }: TeamDetailsSectio
           <Button
             leftSection={<LocalIcon icon="person-add" width="1rem" height="1rem" />}
             onClick={() => setAddMemberModalOpened(true)}
-            disabled={team.name === 'Internal' || (licenseInfo && licenseInfo.availableSlots === 0)}
+            disabled={team.name === 'Internal' || (licenseInfo ? licenseInfo.availableSlots === 0 : false)}
           >
             {t('workspace.teams.addMember')}
           </Button>
