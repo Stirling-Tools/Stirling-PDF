@@ -14,20 +14,14 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
 import WarningIcon from '@mui/icons-material/Warning';
-import { ToolRegistry } from '@app/data/toolsTaxonomy';
-import { ToolId } from '@app/types/toolId';
+import { AutomateToolRegistry, AutomationTool, AutomateToolId } from '@app/types/automation';
 import { getAvailableToExtensions } from '@app/utils/convertUtils';
 interface ToolConfigurationModalProps {
   opened: boolean;
-  tool: {
-    id: string;
-    operation: string;
-    name: string;
-    parameters?: any;
-  };
+  tool: AutomationTool & { operation: AutomateToolId };
   onSave: (parameters: any) => void;
   onCancel: () => void;
-  toolRegistry: Partial<ToolRegistry>;
+  toolRegistry: AutomateToolRegistry;
 }
 
 export default function ToolConfigurationModal({ opened, tool, onSave, onCancel, toolRegistry }: ToolConfigurationModalProps) {
@@ -36,7 +30,7 @@ export default function ToolConfigurationModal({ opened, tool, onSave, onCancel,
   const [parameters, setParameters] = useState<any>({});
 
   // Get tool info from registry
-  const toolInfo = toolRegistry[tool.operation as ToolId];
+  const toolInfo = toolRegistry[tool.operation];
   const SettingsComponent = toolInfo?.automationSettings;
 
   // Initialize parameters from tool (which should contain defaults from registry)

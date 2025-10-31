@@ -4,60 +4,60 @@ import { SUBCATEGORY_ORDER, SubcategoryId, ToolCategoryId, ToolRegistryEntry } f
 import { useTranslation } from 'react-i18next';
 import { ToolId } from "@app/types/toolId";
 
-type SubcategoryIdMap = {
-  [subcategoryId in SubcategoryId]: Array<{ id: ToolId; tool: ToolRegistryEntry }>;
+type SubcategoryIdMap<T extends ToolId> = {
+  [subcategoryId in SubcategoryId]: Array<{ id: T; tool: ToolRegistryEntry }>;
 }
 
-type GroupedTools = {
-  [categoryId in ToolCategoryId]: SubcategoryIdMap;
+type GroupedTools<T extends ToolId> = {
+  [categoryId in ToolCategoryId]: SubcategoryIdMap<T>;
 };
 
-export interface SubcategoryGroup {
+export interface SubcategoryGroup<T extends ToolId = ToolId> {
   subcategoryId: SubcategoryId;
   tools: {
-    id: ToolId;
+    id: T;
     tool: ToolRegistryEntry;
   }[];
 };
 
 export type ToolSectionKey = 'quick' | 'all';
 
-export interface ToolSection {
+export interface ToolSection<T extends ToolId = ToolId> {
   key: ToolSectionKey;
   title: string;
-  subcategories: SubcategoryGroup[];
+  subcategories: SubcategoryGroup<T>[];
 };
 
-export function useToolSections(
-  filteredTools: Array<{ item: [ToolId, ToolRegistryEntry]; matchedText?: string }>,
+export function useToolSections<T extends ToolId = ToolId>(
+  filteredTools: Array<{ item: [T, ToolRegistryEntry]; matchedText?: string }>,
   searchQuery?: string
 ) {
   const { t } = useTranslation();
 
   const groupedTools = useMemo(() => {
     if (!filteredTools || !Array.isArray(filteredTools)) {
-      return {} as GroupedTools;
+      return {} as GroupedTools<T>;
     }
 
-    const grouped = {} as GroupedTools;
+    const grouped = {} as GroupedTools<T>;
     filteredTools.forEach(({ item: [id, tool] }) => {
       const categoryId = tool.categoryId;
       const subcategoryId = tool.subcategoryId;
-      if (!grouped[categoryId]) grouped[categoryId] = {} as SubcategoryIdMap;
+      if (!grouped[categoryId]) grouped[categoryId] = {} as SubcategoryIdMap<T>;
       if (!grouped[categoryId][subcategoryId]) grouped[categoryId][subcategoryId] = [];
       grouped[categoryId][subcategoryId].push({ id, tool });
     });
     return grouped;
   }, [filteredTools]);
 
-  const sections: ToolSection[] = useMemo(() => {
+  const sections: ToolSection<T>[] = useMemo(() => {
     const getOrderIndex = (id: SubcategoryId) => {
       const idx = SUBCATEGORY_ORDER.indexOf(id);
       return idx === -1 ? Number.MAX_SAFE_INTEGER : idx;
     };
 
-    const quick = {} as SubcategoryIdMap;
-    const all = {} as SubcategoryIdMap;
+    const quick = {} as SubcategoryIdMap<T>;
+    const all = {} as SubcategoryIdMap<T>;
 
     Object.entries(groupedTools).forEach(([c, subs]) => {
       const categoryId = c as ToolCategoryId;
@@ -82,7 +82,7 @@ export function useToolSections(
       }
     });
 
-    const sortSubs = (obj: SubcategoryIdMap) =>
+    const sortSubs = (obj: SubcategoryIdMap<T>) =>
       Object.entries(obj)
         .sort(([a], [b]) => {
           const aId = a as SubcategoryId;
@@ -92,9 +92,9 @@ export function useToolSections(
           if (ai !== bi) return ai - bi;
           return aId.localeCompare(bId);
         })
-        .map(([subcategoryId, tools]) => ({ subcategoryId, tools } as SubcategoryGroup));
+        .map(([subcategoryId, tools]) => ({ subcategoryId, tools } as SubcategoryGroup<T>));
 
-    const built: ToolSection[] = [
+    const built: ToolSection<T>[] = [
       { key: 'quick', title: t('toolPicker.quickAccess', 'QUICK ACCESS'), subcategories: sortSubs(quick) },
       { key: 'all', title: t('toolPicker.allTools', 'ALL TOOLS'), subcategories: sortSubs(all) }
     ];
@@ -102,20 +102,20 @@ export function useToolSections(
     return built.filter(section => section.subcategories.some(sc => sc.tools.length > 0));
   }, [groupedTools]);
 
-  const searchGroups: SubcategoryGroup[] = useMemo(() => {
+  const searchGroups: SubcategoryGroup<T>[] = useMemo(() => {
     if (!filteredTools || !Array.isArray(filteredTools)) {
       return [];
     }
 
-    const subMap = {} as SubcategoryIdMap;
-    const seen = new Set<ToolId>();
+    const subMap = {} as SubcategoryIdMap<T>;
+    const seen = new Set<T>();
     filteredTools.forEach(({ item: [id, tool] }) => {
-      const toolId = id as ToolId;
+      const toolId = id;
       if (seen.has(toolId)) return;
       seen.add(toolId);
       const sub = tool.subcategoryId;
       if (!subMap[sub]) subMap[sub] = [];
-      subMap[sub].push({ id: toolId as ToolId, tool });
+      subMap[sub].push({ id: toolId, tool });
     });
     const entries = Object.entries(subMap);
 
@@ -134,16 +134,14 @@ export function useToolSections(
           if (ai !== bi) return ai - bi;
           return (a as SubcategoryId).localeCompare(b as SubcategoryId);
         })
-        .map(([subcategoryId, tools]) => ({ subcategoryId, tools } as SubcategoryGroup));
+        .map(([subcategoryId, tools]) => ({ subcategoryId, tools } as SubcategoryGroup<T>));
     }
 
     // No search: alphabetical subcategory ordering
     return entries
       .sort(([a], [b]) => a.localeCompare(b))
-      .map(([subcategoryId, tools]) => ({ subcategoryId, tools } as SubcategoryGroup));
+      .map(([subcategoryId, tools]) => ({ subcategoryId, tools } as SubcategoryGroup<T>));
   }, [filteredTools, searchQuery]);
 
   return { sections, searchGroups };
 }
-
-

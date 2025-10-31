@@ -1,24 +1,25 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Stack, Text, ScrollArea } from '@mantine/core';
-import { ToolRegistryEntry, ToolRegistry, getToolSupportsAutomate } from '@app/data/toolsTaxonomy';
+import { AutomateToolId, AutomateToolRegistry, isAutomateToolId } from '@app/types/automation';
 import { useToolSections } from '@app/hooks/useToolSections';
 import { renderToolButtons } from '@app/components/tools/shared/renderToolButtons';
 import ToolSearch from '@app/components/tools/toolPicker/ToolSearch';
 import ToolButton from '@app/components/tools/toolPicker/ToolButton';
 import { ToolId } from '@app/types/toolId';
+import { Entry } from 'type-fest';
+
+type AutomateToolEntry = Entry<AutomateToolRegistry>;
 
 interface ToolSelectorProps {
-  onSelect: (toolKey: string) => void;
-  excludeTools?: string[];
-  toolRegistry: Partial<ToolRegistry>; // Pass registry as prop to break circular dependency
-  selectedValue?: string; // For showing current selection when editing existing tool
+  onSelect: (toolKey: AutomateToolId) => void;
+  toolRegistry: AutomateToolRegistry; // Pass registry as prop to break circular dependency
+  selectedValue?: AutomateToolId; // For showing current selection when editing existing tool
   placeholder?: string; // Custom placeholder text
 }
 
 export default function ToolSelector({
   onSelect,
-  excludeTools = [],
   toolRegistry,
   selectedValue,
   placeholder
@@ -29,45 +30,44 @@ export default function ToolSelector({
   const [shouldAutoFocus, setShouldAutoFocus] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Filter out excluded tools (like 'automate' itself) and tools that don't support automation
-  const baseFilteredTools = useMemo(() => {
-    return (Object.entries(toolRegistry) as [ToolId, ToolRegistryEntry][]).filter(([key, tool]) =>
-      !excludeTools.includes(key) && getToolSupportsAutomate(tool)
-    );
-  }, [toolRegistry, excludeTools]);
+  // Collect all automatable tools that exist in the registry
+  const registryEntries = useMemo(
+    () => Object.entries(toolRegistry) as AutomateToolEntry[],
+    [toolRegistry]
+  );
 
   // Apply search filter
   const filteredTools = useMemo(() => {
     if (!searchTerm.trim()) {
-      return baseFilteredTools;
+      return registryEntries;
     }
 
     const lowercaseSearch = searchTerm.toLowerCase();
-    return baseFilteredTools.filter(([key, tool]) => {
+    return registryEntries.filter(([key, tool]) => {
       return (
         tool.name.toLowerCase().includes(lowercaseSearch) ||
         tool.description?.toLowerCase().includes(lowercaseSearch) ||
         key.toLowerCase().includes(lowercaseSearch)
       );
     });
-  }, [baseFilteredTools, searchTerm]);
+  }, [registryEntries, searchTerm]);
 
   // Create filtered tool registry for ToolSearch
-  const filteredToolRegistry = useMemo(() => {
-    const registry: Partial<ToolRegistry> = {};
-    baseFilteredTools.forEach(([key, tool]) => {
-      registry[key as ToolId] = tool;
+  const filteredToolRegistry = useMemo<Partial<AutomateToolRegistry>>(() => {
+    const registry: Partial<AutomateToolRegistry> = {};
+    registryEntries.forEach(([key, tool]) => {
+      registry[key] = tool;
     });
     return registry;
-  }, [baseFilteredTools]);
+  }, [registryEntries]);
 
   // Transform filteredTools to the expected format for useToolSections
   const transformedFilteredTools = useMemo(() => {
-    return filteredTools.map(([id, tool]) => ({ item: [id as ToolId, tool] as [ToolId, ToolRegistryEntry] }));
+    return filteredTools.map((entry) => ({ item: entry }));
   }, [filteredTools]);
 
   // Use the same tool sections logic as the main ToolPicker
-  const { sections, searchGroups } = useToolSections(transformedFilteredTools as any /* FIX ME */);
+  const { sections, searchGroups } = useToolSections<AutomateToolId>(transformedFilteredTools, searchTerm);
 
   // Determine what to display: search results or organized sections
   const isSearching = searchTerm.trim().length > 0;
@@ -76,33 +76,26 @@ export default function ToolSelector({
       return searchGroups || [];
     }
 
-    if (!sections || sections.length === 0) {
-      // If no sections, create a simple group from filtered tools
-      if (baseFilteredTools.length > 0) {
-        return [{
-          name: 'All Tools',
-          subcategoryId: 'all' as any,
-          tools: baseFilteredTools.map(([key, tool]) => ({ id: key, tool }))
-        }];
-      }
-      return [];
-    }
-
     // Find the "all" section which contains all tools without duplicates
     const allSection = sections.find(s => s.key === 'all');
     return allSection?.subcategories || [];
-  }, [isSearching, searchGroups, sections, baseFilteredTools]);
+  }, [isSearching, searchGroups, sections]);
 
-  const handleToolSelect = useCallback((toolKey: string) => {
+  const handleToolSelect = useCallback((toolKey: ToolId) => {
+    if (!isAutomateToolId(toolKey)) {
+      return;
+    }
     onSelect(toolKey);
     setOpened(false);
     setSearchTerm(''); // Clear search to show the selected tool display
   }, [onSelect]);
 
-  const renderedTools = useMemo(() =>
-    displayGroups.map((subcategory) =>
-      renderToolButtons(t, subcategory as any, null, handleToolSelect, !isSearching, true)
-    ), [displayGroups, handleToolSelect, isSearching, t]
+  const renderedTools = useMemo(
+    () =>
+      displayGroups.map((subcategory) =>
+        renderToolButtons<AutomateToolId>(t, subcategory, selectedValue ?? null, handleToolSelect, !isSearching, true)
+      ),
+    [displayGroups, handleToolSelect, isSearching, selectedValue, t]
   );
 
   const handleSearchFocus = () => {
@@ -142,7 +135,7 @@ export default function ToolSelector({
   };
 
   // Get display value for selected tool
-  const selectedTool = selectedValue ? toolRegistry[selectedValue as ToolId] : undefined;
+  const selectedTool = selectedValue ? toolRegistry[selectedValue] : undefined;
 
   const getDisplayValue = () => {
     if (selectedTool) return selectedTool.name;
@@ -153,15 +146,15 @@ export default function ToolSelector({
     <div ref={containerRef} className='rounded-xl'>
       {/* Always show the target - either selected tool or search input */}
 
-        {selectedTool && !opened ? (
+        {selectedValue && selectedTool && !opened ? (
           // Show selected tool in AutomationEntry style when tool is selected and dropdown closed
           <div onClick={handleSearchFocus} style={{ cursor: 'pointer',
            borderRadius: "var(--mantine-radius-lg)" }}>
             <ToolButton
-              id={'tool' as ToolId}
+              id={selectedValue}
               tool={selectedTool}
               isSelected={false}
-              onSelect={()=>{}}
+              onSelect={() => {}}
               rounded={true}
               disableNavigation={true}
             />

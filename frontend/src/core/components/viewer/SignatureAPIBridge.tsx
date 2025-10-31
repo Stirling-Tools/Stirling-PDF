@@ -236,4 +236,6 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPI
   return null; // This is a bridge component with no UI
 });
 
+export type { SignatureAPI } from '@app/components/viewer/viewerTypes';
+
 SignatureAPIBridge.displayName = 'SignatureAPIBridge';

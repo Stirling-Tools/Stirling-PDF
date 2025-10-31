@@ -148,7 +148,6 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         subcategoryId: SubcategoryId.GENERAL,
         maxFiles: -1,
         synonyms: getSynonyms(t, "multiTool"),
-        supportsAutomate: false,
         automationSettings: null
       },
       merge: {
@@ -188,7 +187,6 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         operationConfig: signOperationConfig,
         automationSettings: SignSettings, // TODO:: not all settings shown, suggested next tools shown
         synonyms: getSynonyms(t, "sign"),
-        supportsAutomate: false, //TODO make support Sign
       },
 
       // Document Security
@@ -292,7 +290,6 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.VERIFICATION,
         synonyms: getSynonyms(t, "getPdfInfo"),
-        supportsAutomate: false,
         automationSettings: null
       },
       validateSignature: {
@@ -322,7 +319,6 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.DOCUMENT_REVIEW,
         synonyms: getSynonyms(t, "read"),
-        supportsAutomate: false,
         automationSettings: null
       },
       changeMetadata: {
@@ -711,7 +707,6 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.DEVELOPER_TOOLS,
         synonyms: getSynonyms(t, "showJS"),
-        supportsAutomate: false,
         automationSettings: null
       },
       devApi: {
@@ -723,7 +718,6 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         subcategoryId: SubcategoryId.DEVELOPER_TOOLS,
         link: "https://stirlingpdf.io/swagger-ui/5.21.0/index.html",
         synonyms: getSynonyms(t, "devApi"),
-        supportsAutomate: false,
         automationSettings: null
       },
       devFolderScanning: {
@@ -735,7 +729,6 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         subcategoryId: SubcategoryId.DEVELOPER_TOOLS,
         link: "https://docs.stirlingpdf.com/Advanced%20Configuration/Folder%20Scanning/",
         synonyms: getSynonyms(t, "devFolderScanning"),
-        supportsAutomate: false,
         automationSettings: null
       },
       devSsoGuide: {
@@ -747,7 +740,6 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         subcategoryId: SubcategoryId.DEVELOPER_TOOLS,
         link: "https://docs.stirlingpdf.com/Advanced%20Configuration/Single%20Sign-On%20Configuration",
         synonyms: getSynonyms(t, "devSsoGuide"),
-        supportsAutomate: false,
         automationSettings: null
       },
       devAirgapped: {
@@ -759,7 +751,6 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         subcategoryId: SubcategoryId.DEVELOPER_TOOLS,
         link: "https://docs.stirlingpdf.com/Pro/#activation",
         synonyms: getSynonyms(t, "devAirgapped"),
-        supportsAutomate: false,
         automationSettings: null
       },
 
@@ -772,7 +763,6 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         categoryId: ToolCategoryId.STANDARD_TOOLS /* TODO: Change to RECOMMENDED_TOOLS when component is implemented */,
         subcategoryId: SubcategoryId.GENERAL,
         synonyms: getSynonyms(t, "compare"),
-        supportsAutomate: false,
         automationSettings: null
       },
       compress: {
