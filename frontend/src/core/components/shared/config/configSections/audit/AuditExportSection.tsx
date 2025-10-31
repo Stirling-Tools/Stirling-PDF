@@ -144,8 +144,8 @@ const AuditExportSection: React.FC<AuditExportSectionProps> = () => {
               <DateInput
                 placeholder={t('audit.export.startDate', 'Start date')}
                 value={filters.startDate ? new Date(filters.startDate) : null}
-                onChange={(value: Date | null) =>
-                  handleFilterChange('startDate', value ? value.toISOString() : undefined)
+                onChange={(value: string | null) =>
+                  handleFilterChange('startDate', value ?? undefined)
                 }
                 clearable
                 style={{ flex: 1, minWidth: 200 }}
@@ -154,8 +154,8 @@ const AuditExportSection: React.FC<AuditExportSectionProps> = () => {
               <DateInput
                 placeholder={t('audit.export.endDate', 'End date')}
                 value={filters.endDate ? new Date(filters.endDate) : null}
-                onChange={(value: Date | null) =>
-                  handleFilterChange('endDate', value ? value.toISOString() : undefined)
+                onChange={(value: string | null) =>
+                  handleFilterChange('endDate', value ?? undefined)
                 }
                 clearable
                 style={{ flex: 1, minWidth: 200 }}
