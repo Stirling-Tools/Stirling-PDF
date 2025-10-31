@@ -1,5 +1,5 @@
 {
-  "extends": "./tsconfig.json",
+  "extends": "../../tsconfig.json",
   "compilerOptions": {
     "paths": {
       "@app/*": [
@@ -9,7 +9,7 @@
     }
   },
   "exclude": [
-    "src/proprietary",
+    "../proprietary",
     "node_modules"
   ]
 }

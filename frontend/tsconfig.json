@@ -35,8 +35,8 @@
         "src/proprietary/*",
         "src/core/*"
       ],
-      "@core/*": ["src/core/*"],
-      "@proprietary/*": ["src/proprietary/*"]
+      "@proprietary/*": ["src/proprietary/*"],
+      "@core/*": ["src/core/*"]
     },
     // "rootDirs": [],                                   /* Allow multiple folders to be treated as one when resolving modules. */
     // "typeRoots": [],                                  /* Specify multiple folders that act like './node_modules/@types'. */
