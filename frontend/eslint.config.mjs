@@ -27,6 +27,15 @@ export default defineConfig(
   tseslint.configs.recommended,
   {
     rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            ".*", // Disallow any relative imports (they should be '@app/x/y/z' or similar)
+            "src/*", // Disallow any absolute imports (they should be '@app/x/y/z' or similar)
+          ],
+        },
+      ],
       '@typescript-eslint/no-empty-object-type': [
         'error',
         {
