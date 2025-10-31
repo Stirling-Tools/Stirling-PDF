@@ -225,8 +225,8 @@ public class ConvertWebsiteToPdfTest {
         UrlToPdfRequest request = new UrlToPdfRequest();
         request.setUrlInput("https://example.com");
 
-        Path preCreatedTemp = java.nio.file.Files.createTempFile("test_output_", ".pdf");
-        Path htmlTemp = java.nio.file.Files.createTempFile("test_input_", ".html");
+        Path preCreatedTemp = Files.createTempFile("test_output_", ".pdf");
+        Path htmlTemp = Files.createTempFile("test_input_", ".html");
 
         try (MockedStatic<GeneralUtils> gu = Mockito.mockStatic(GeneralUtils.class);
                 MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class);
@@ -271,12 +271,12 @@ public class ConvertWebsiteToPdfTest {
             assertNotNull(resp, "Response should not be null");
             assertEquals(HttpStatus.OK, resp.getStatusCode());
             assertTrue(
-                    java.nio.file.Files.exists(preCreatedTemp),
+                    Files.exists(preCreatedTemp),
                     "Temp file should still exist despite delete IOException");
         } finally {
             try {
-                java.nio.file.Files.deleteIfExists(preCreatedTemp);
-                java.nio.file.Files.deleteIfExists(htmlTemp);
+                Files.deleteIfExists(preCreatedTemp);
+                Files.deleteIfExists(htmlTemp);
             } catch (IOException ignore) {
             }
         }
