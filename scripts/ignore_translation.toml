@@ -338,8 +338,8 @@ ignore = [
     'endpointStatistics.top10',
     'endpointStatistics.top20',
     'home.pipeline.title',
-    'lang.afr'
-    'lang.ben'
+    'lang.afr',
+    'lang.ben',
     'lang.bre',
     'lang.cat',
     'lang.ceb',
