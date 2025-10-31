@@ -2,6 +2,7 @@ package stirling.software.common.model;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.io.File;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -45,11 +46,15 @@ class ApplicationPropertiesLogicTest {
         String expectedLibre = Paths.get(expectedBase, "libreoffice").toString();
         assertEquals(expectedLibre, tfm.getLibreofficeDir());
 
-        tfm.setBaseTmpDir("/custom/base");
-        assertEquals("/custom/base", normalize.apply(tfm.getBaseTmpDir()));
+        tfm.setBaseTmpDir(File.separator + "custom" + File.separator + "base");
+        assertEquals(
+                File.separator + "custom" + File.separator + "base",
+                normalize.apply(tfm.getBaseTmpDir()));
 
-        tfm.setLibreofficeDir("/opt/libre");
-        assertEquals("/opt/libre", normalize.apply(tfm.getLibreofficeDir()));
+        tfm.setLibreofficeDir(File.separator + "opt" + File.separator + "libre");
+        assertEquals(
+                File.separator + "opt" + File.separator + "libre",
+                normalize.apply(tfm.getLibreofficeDir()));
     }
 
     @Test
@@ -232,7 +237,7 @@ class ApplicationPropertiesLogicTest {
         Collection<String> nullColl = null;
         Collection<String> empty = List.of();
 
-        assertFalse(oauth2.isValid(nullColl, "scopes"));
+        assertFalse(oauth2.isValid((Collection<String>) null, "scopes"));
         assertFalse(oauth2.isValid(empty, "scopes"));
     }
 
@@ -240,12 +245,13 @@ class ApplicationPropertiesLogicTest {
     void collection_isValid_true_when_non_empty_even_if_element_is_blank() {
         ApplicationProperties.Security.OAUTH2 oauth2 = new ApplicationProperties.Security.OAUTH2();
 
-        // Aktuelles Verhalten: prüft NUR !isEmpty(), nicht Inhalt
+        // Current behavior: checks ONLY !isEmpty(), not the content
         Collection<String> oneBlank = new ArrayList<>();
         oneBlank.add("   ");
 
         assertTrue(
                 oauth2.isValid(oneBlank, "scopes"),
-                "Dokumentiert aktuelles Verhalten: nicht-leere Liste gilt als gültig, auch wenn Element leer/blank ist");
+                "Documents current behavior: non-empty list is considered valid, even if an element"
+                        + " is empty/blank");
     }
 }
