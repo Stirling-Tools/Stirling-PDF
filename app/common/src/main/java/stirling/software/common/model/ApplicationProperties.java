@@ -73,11 +73,11 @@ public class ApplicationProperties {
     public PropertySource<?> dynamicYamlPropertySource(ConfigurableEnvironment environment)
             throws IOException {
         String configPath = InstallationPathConfig.getSettingsPath();
-        log.debug("Attempting to load settings from: " + configPath);
+        log.debug("Attempting to load settings from: {}", configPath);
 
         File file = new File(configPath);
         if (!file.exists()) {
-            log.error("Warning: Settings file does not exist at: " + configPath);
+            log.error("Warning: Settings file does not exist at: {}", configPath);
         }
 
         Resource resource = new FileSystemResource(configPath);
@@ -90,7 +90,7 @@ public class ApplicationProperties {
                 new YamlPropertySourceFactory().createPropertySource(null, encodedResource);
         environment.getPropertySources().addFirst(propertySource);
 
-        log.debug("Loaded properties: " + propertySource.getSource());
+        log.debug("Loaded properties: {}", propertySource.getSource());
 
         return propertySource;
     }
@@ -303,11 +303,10 @@ public class ApplicationProperties {
 
         @Data
         public static class Jwt {
-            private boolean enableKeystore = true;
-            private boolean enableKeyRotation = false;
-            private boolean enableKeyCleanup = true;
+            private boolean enabled = true;
+            private boolean keyCleanup = true;
             private int keyRetentionDays = 7;
-            private boolean secureCookie;
+            private Boolean secureCookie;
         }
     }
 
@@ -321,6 +320,8 @@ public class ApplicationProperties {
         private String tessdataDir;
         private Boolean enableAlphaFunctionality;
         private Boolean enableAnalytics;
+        private Boolean enablePosthog;
+        private Boolean enableScarf;
         private Datasource datasource;
         private Boolean disableSanitize;
         private int maxDPI;
@@ -333,6 +334,18 @@ public class ApplicationProperties {
 
         public boolean isAnalyticsEnabled() {
             return this.getEnableAnalytics() != null && this.getEnableAnalytics();
+        }
+
+        public boolean isPosthogEnabled() {
+            // Treat null as enabled when analytics is enabled
+            return this.isAnalyticsEnabled()
+                    && (this.getEnablePosthog() == null || this.getEnablePosthog());
+        }
+
+        public boolean isScarfEnabled() {
+            // Treat null as enabled when analytics is enabled
+            return this.isAnalyticsEnabled()
+                    && (this.getEnableScarf() == null || this.getEnableScarf());
         }
     }
 
@@ -377,16 +390,19 @@ public class ApplicationProperties {
 
         @JsonIgnore
         public String getBaseTmpDir() {
-            return baseTmpDir != null && !baseTmpDir.isEmpty()
-                    ? baseTmpDir
-                    : java.lang.System.getProperty("java.io.tmpdir") + "/stirling-pdf";
+            if (baseTmpDir != null && !baseTmpDir.isEmpty()) {
+                return baseTmpDir;
+            }
+            String tmp = java.lang.System.getProperty("java.io.tmpdir");
+            return new File(tmp, "stirling-pdf").getPath();
         }
 
         @JsonIgnore
         public String getLibreofficeDir() {
-            return libreofficeDir != null && !libreofficeDir.isEmpty()
-                    ? libreofficeDir
-                    : getBaseTmpDir() + "/libreoffice";
+            if (libreofficeDir != null && !libreofficeDir.isEmpty()) {
+                return libreofficeDir;
+            }
+            return new File(getBaseTmpDir(), "libreoffice").getPath();
         }
     }
 
@@ -452,19 +468,17 @@ public class ApplicationProperties {
         private List<String> languages;
 
         public String getAppName() {
-            return appName != null && appName.trim().length() > 0 ? appName : null;
+            return appName != null && !appName.trim().isEmpty() ? appName : null;
         }
 
         public String getHomeDescription() {
-            return homeDescription != null && homeDescription.trim().length() > 0
+            return homeDescription != null && !homeDescription.trim().isEmpty()
                     ? homeDescription
                     : null;
         }
 
         public String getAppNameNavbar() {
-            return appNameNavbar != null && appNameNavbar.trim().length() > 0
-                    ? appNameNavbar
-                    : null;
+            return appNameNavbar != null && !appNameNavbar.trim().isEmpty() ? appNameNavbar : null;
         }
     }
 
@@ -581,6 +595,25 @@ public class ApplicationProperties {
         public static class EnterpriseFeatures {
             private PersistentMetrics persistentMetrics = new PersistentMetrics();
             private Audit audit = new Audit();
+            private DatabaseNotifications databaseNotifications = new DatabaseNotifications();
+
+            @Data
+            public static class DatabaseNotifications {
+                private Backup backups = new Backup();
+                private Imports imports = new Imports();
+
+                @Data
+                public static class Backup {
+                    private boolean successful = false;
+                    private boolean failed = false;
+                }
+
+                @Data
+                public static class Imports {
+                    private boolean successful = false;
+                    private boolean failed = false;
+                }
+            }
 
             @Data
             public static class Audit {
@@ -614,6 +647,7 @@ public class ApplicationProperties {
             private int tesseractSessionLimit;
             private int ghostscriptSessionLimit;
             private int ocrMyPdfSessionLimit;
+            private int ffmpegSessionLimit;
 
             public int getQpdfSessionLimit() {
                 return qpdfSessionLimit > 0 ? qpdfSessionLimit : 2;
@@ -654,6 +688,10 @@ public class ApplicationProperties {
             public int getOcrMyPdfSessionLimit() {
                 return ocrMyPdfSessionLimit > 0 ? ocrMyPdfSessionLimit : 2;
             }
+
+            public int getFfmpegSessionLimit() {
+                return ffmpegSessionLimit > 0 ? ffmpegSessionLimit : 2;
+            }
         }
 
         @Data
@@ -680,6 +718,7 @@ public class ApplicationProperties {
             private long qpdfTimeoutMinutes;
             private long ghostscriptTimeoutMinutes;
             private long ocrMyPdfTimeoutMinutes;
+            private long ffmpegTimeoutMinutes;
 
             public long getTesseractTimeoutMinutes() {
                 return tesseractTimeoutMinutes > 0 ? tesseractTimeoutMinutes : 30;
@@ -719,6 +758,10 @@ public class ApplicationProperties {
 
             public long getOcrMyPdfTimeoutMinutes() {
                 return ocrMyPdfTimeoutMinutes > 0 ? ocrMyPdfTimeoutMinutes : 30;
+            }
+
+            public long getFfmpegTimeoutMinutes() {
+                return ffmpegTimeoutMinutes > 0 ? ffmpegTimeoutMinutes : 30;
             }
         }
     }

@@ -72,7 +72,7 @@ public class ExtractImageScansController {
         List<String> images = new ArrayList<>();
 
         List<Path> tempImageFiles = new ArrayList<>();
-        Path tempInputFile = null;
+        Path tempInputFile;
         Path tempZipFile = null;
         List<Path> tempDirs = new ArrayList<>();
 
@@ -176,7 +176,7 @@ public class ExtractImageScansController {
             // Create zip file if multiple images
             if (processedImageBytes.size() > 1) {
                 String outputZipFilename =
-                        fileName.replaceFirst(REPLACEFIRST, "") + "_processed.zip";
+                        GeneralUtils.generateFilename(fileName, "_processed.zip");
                 tempZipFile = Files.createTempFile("output_", ".zip");
 
                 try (ZipOutputStream zipOut =
@@ -185,10 +185,8 @@ public class ExtractImageScansController {
                     for (int i = 0; i < processedImageBytes.size(); i++) {
                         ZipEntry entry =
                                 new ZipEntry(
-                                        fileName.replaceFirst(REPLACEFIRST, "")
-                                                + "_"
-                                                + (i + 1)
-                                                + ".png");
+                                        GeneralUtils.generateFilename(
+                                                fileName, "_processed_" + (i + 1) + ".png"));
                         zipOut.putNextEntry(entry);
                         zipOut.write(processedImageBytes.get(i));
                         zipOut.closeEntry();
@@ -203,7 +201,7 @@ public class ExtractImageScansController {
                 return WebResponseUtils.bytesToWebResponse(
                         zipBytes, outputZipFilename, MediaType.APPLICATION_OCTET_STREAM);
             }
-            if (processedImageBytes.size() == 0) {
+            if (processedImageBytes.isEmpty()) {
                 throw new IllegalArgumentException("No images detected");
             } else {
 
@@ -211,7 +209,7 @@ public class ExtractImageScansController {
                 byte[] imageBytes = processedImageBytes.get(0);
                 return WebResponseUtils.bytesToWebResponse(
                         imageBytes,
-                        fileName.replaceFirst(REPLACEFIRST, "") + ".png",
+                        GeneralUtils.generateFilename(fileName, ".png"),
                         MediaType.IMAGE_PNG);
             }
         } finally {
@@ -221,7 +219,7 @@ public class ExtractImageScansController {
                         try {
                             Files.deleteIfExists(path);
                         } catch (IOException e) {
-                            log.error("Failed to delete temporary image file: " + path, e);
+                            log.error("Failed to delete temporary image file: {}", path, e);
                         }
                     });
 
@@ -229,7 +227,7 @@ public class ExtractImageScansController {
                 try {
                     Files.deleteIfExists(tempZipFile);
                 } catch (IOException e) {
-                    log.error("Failed to delete temporary zip file: " + tempZipFile, e);
+                    log.error("Failed to delete temporary zip file: {}", tempZipFile, e);
                 }
             }
 
@@ -238,7 +236,7 @@ public class ExtractImageScansController {
                         try {
                             FileUtils.deleteDirectory(dir.toFile());
                         } catch (IOException e) {
-                            log.error("Failed to delete temporary directory: " + dir, e);
+                            log.error("Failed to delete temporary directory: {}", dir, e);
                         }
                     });
         }

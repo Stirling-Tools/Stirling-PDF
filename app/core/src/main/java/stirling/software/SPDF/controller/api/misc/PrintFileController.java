@@ -68,7 +68,7 @@ public class PrintFileController {
                                             new IllegalArgumentException(
                                                     "No matching printer found"));
 
-            log.info("Selected Printer: " + selectedService.getName());
+            log.info("Selected Printer: {}", selectedService.getName());
 
             if (MediaType.APPLICATION_PDF_VALUE.equals(contentType)) {
                 PDDocument document = Loader.loadPDF(file.getBytes());

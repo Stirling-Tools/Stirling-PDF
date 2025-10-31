@@ -1,8 +1,6 @@
 package stirling.software.common.service;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.lang.management.MemoryMXBean;
 import java.lang.management.OperatingSystemMXBean;
@@ -33,11 +31,11 @@ class ResourceMonitorTest {
     @Mock private MemoryMXBean memoryMXBean;
 
     @Spy
-    private AtomicReference<ResourceStatus> currentStatus =
+    private final AtomicReference<ResourceStatus> currentStatus =
             new AtomicReference<>(ResourceStatus.OK);
 
     @Spy
-    private AtomicReference<ResourceMetrics> latestMetrics =
+    private final AtomicReference<ResourceMetrics> latestMetrics =
             new AtomicReference<>(new ResourceMetrics());
 
     @BeforeEach
