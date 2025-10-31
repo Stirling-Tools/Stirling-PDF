@@ -16,6 +16,7 @@ import { OnboardingProvider } from "@app/contexts/OnboardingContext";
 import { TourOrchestrationProvider } from "@app/contexts/TourOrchestrationContext";
 import ErrorBoundary from "@app/components/shared/ErrorBoundary";
 import { useScarfTracking } from "@app/hooks/useScarfTracking";
+import { useBackendInitializer } from '@app/hooks/useBackendInitializer';
 
 // Component to initialize scarf tracking (must be inside AppConfigProvider)
 function ScarfTrackingInitializer() {
@@ -28,6 +29,9 @@ function ScarfTrackingInitializer() {
  * Contains all providers needed for the core
  */
 export function AppProviders({ children }: { children: ReactNode }) {
+  // Initialize backend on app startup
+  useBackendInitializer();
+
   return (
     <PreferencesProvider>
       <RainbowThemeProvider>
