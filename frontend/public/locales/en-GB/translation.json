@@ -4513,12 +4513,15 @@
       "inviteLink": {
         "description": "Generate a secure link that allows the user to set their own password",
         "email": "Email Address",
+        "emailPlaceholder": "user@example.com (optional)",
+        "emailDescription": "Optional - leave blank for a general invite link that can be used by anyone",
         "emailRequired": "Email address is required",
         "emailOptional": "Optional - leave blank for a general invite link",
         "emailRequiredForSend": "Email address is required to send email notification",
         "expiryHours": "Expiry Hours",
         "expiryDescription": "How many hours until the link expires",
         "sendEmail": "Send invite link via email",
+        "sendEmailDescription": "If enabled, the invite link will be sent to the specified email address",
         "smtpRequired": "SMTP not configured",
         "generate": "Generate Link",
         "generated": "Invite Link Generated",
@@ -4527,11 +4530,13 @@
         "successWithEmail": "Invite link generated and sent via email",
         "emailFailed": "Invite link generated, but email failed",
         "emailFailedDetails": "Error: {0}. Please share the invite link manually.",
-        "error": "Failed to generate invite link"
+        "error": "Failed to generate invite link",
+        "submit": "Generate Invite Link"
       },
       "inviteMode": {
         "username": "Username",
         "email": "Email",
+        "link": "Link",
         "emailDisabled": "Email invites require SMTP configuration and mail.enableInvites=true in settings"
       },
       "license": {
