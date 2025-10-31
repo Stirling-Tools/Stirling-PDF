@@ -12,6 +12,7 @@ import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-d
 import styles from '@app/components/pageEditor/PageEditor.module.css';
 import { useFileContext } from '@app/contexts/FileContext';
 import { FileId } from '@app/types/file';
+import { PrivateContent } from '@app/components/shared/PrivateContent';
 
 interface FileItem {
   id: FileId;
@@ -316,29 +317,30 @@ const FileThumbnail = ({
           }}
         >
           {file.thumbnail && (
-            <img
-              className="ph-no-capture"
-              src={file.thumbnail}
-              alt={file.name}
-              draggable={false}
-              onError={(e) => {
-                // Hide broken image if blob URL was revoked
-                const img = e.target as HTMLImageElement;
-                img.style.display = 'none';
+            <PrivateContent>
+              <img
+                src={file.thumbnail}
+                alt={file.name}
+                draggable={false}
+                onError={(e) => {
+                  // Hide broken image if blob URL was revoked
+                  const img = e.target as HTMLImageElement;
+                  img.style.display = 'none';
+                }}
+              style={{
+                maxWidth: '80%',
+                maxHeight: '80%',
+                objectFit: 'contain',
+                borderRadius: 0,
+                background: '#ffffff',
+                border: '1px solid var(--border-default)',
+                display: 'block',
+                marginLeft: 'auto',
+                marginRight: 'auto',
+                alignSelf: 'start'
               }}
-            style={{
-              maxWidth: '80%',
-              maxHeight: '80%',
-              objectFit: 'contain',
-              borderRadius: 0,
-              background: '#ffffff',
-              border: '1px solid var(--border-default)',
-              display: 'block',
-              marginLeft: 'auto',
-              marginRight: 'auto',
-              alignSelf: 'start'
-            }}
-          />
+            />
+            </PrivateContent>
           )}
         </div>
 

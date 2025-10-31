@@ -14,6 +14,7 @@ import { useThumbnailGeneration } from '@app/hooks/useThumbnailGeneration';
 import { useFilesModalContext } from '@app/contexts/FilesModalContext';
 import styles from '@app/components/pageEditor/PageEditor.module.css';
 import HoverActionMenu, { HoverAction } from '@app/components/shared/HoverActionMenu';
+import { PrivateContent } from '@app/components/shared/PrivateContent';
 
 
 interface PageThumbnailProps {
@@ -442,21 +443,22 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
               }}></div>
             </div>
           ) : thumbnailUrl ? (
-            <img
-              className="ph-no-capture"
-              src={thumbnailUrl}
-              alt={`Page ${page.pageNumber}`}
-              draggable={false}
-              data-original-rotation={page.rotation}
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'contain',
-                borderRadius: 2,
-                transform: `rotate(${page.rotation}deg)`,
-                transition: 'transform 0.3s ease-in-out'
-              }}
-            />
+            <PrivateContent>
+              <img
+                src={thumbnailUrl}
+                alt={`Page ${page.pageNumber}`}
+                draggable={false}
+                data-original-rotation={page.rotation}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'contain',
+                  borderRadius: 2,
+                  transform: `rotate(${page.rotation}deg)`,
+                  transition: 'transform 0.3s ease-in-out'
+                }}
+              />
+            </PrivateContent>
           ) : (
             <div style={{ textAlign: 'center' }}>
               <Text size="lg" c="dimmed">📄</Text>

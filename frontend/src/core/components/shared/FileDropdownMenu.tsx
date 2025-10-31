@@ -3,6 +3,7 @@ import { Menu, Loader, Group, Text } from '@mantine/core';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import FitText from '@app/components/shared/FitText';
+import { PrivateContent } from '@app/components/shared/PrivateContent';
 
 interface FileDropdownMenuProps {
   displayName: string;
@@ -31,7 +32,9 @@ export const FileDropdownMenu: React.FC<FileDropdownMenuProps> = ({
           ) : (
             <VisibilityIcon fontSize="small" />
           )}
-          <FitText text={displayName} fontSize={14} minimumFontScale={0.6} className="ph-no-capture" />
+          <PrivateContent>
+            <FitText text={displayName} fontSize={14} minimumFontScale={0.6} />
+          </PrivateContent>
           <KeyboardArrowDownIcon fontSize="small" />
         </div>
       </Menu.Target>
@@ -61,7 +64,9 @@ export const FileDropdownMenu: React.FC<FileDropdownMenuProps> = ({
             >
               <Group gap="xs" style={{ width: '100%', justifyContent: 'space-between' }}>
                 <div style={{ flex: 1, textAlign: 'left', minWidth: 0 }}>
-                  <FitText text={itemName} fontSize={14} minimumFontScale={0.7} className="ph-no-capture" />
+                  <PrivateContent>
+                    <FitText text={itemName} fontSize={14} minimumFontScale={0.7} />
+                  </PrivateContent>
                 </div>
                 {file.versionNumber && file.versionNumber > 1 && (
                   <Text size="xs" c="dimmed">
