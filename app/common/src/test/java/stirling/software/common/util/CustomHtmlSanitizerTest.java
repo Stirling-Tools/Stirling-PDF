@@ -11,19 +11,22 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.SsrfProtectionService;
 
+@ExtendWith(MockitoExtension.class)
 class CustomHtmlSanitizerTest {
 
-    // Changed: Promote mocks to fields so we can re-stub behavior per test where necessary.
-    private SsrfProtectionService ssrfProtectionService;
-    private ApplicationProperties applicationProperties;
-    private ApplicationProperties.System systemProperties;
+    @Mock private SsrfProtectionService ssrfProtectionService;
+    @Mock private ApplicationProperties applicationProperties;
+    @Mock private ApplicationProperties.System systemProperties;
 
     private CustomHtmlSanitizer customHtmlSanitizer;
 
@@ -33,10 +36,11 @@ class CustomHtmlSanitizerTest {
         applicationProperties = mock(ApplicationProperties.class);
         systemProperties = mock(ApplicationProperties.System.class);
 
-        // Default behavior: allow all URLs and enable sanitization
-        when(ssrfProtectionService.isUrlAllowed(anyString())).thenReturn(true);
-        when(applicationProperties.getSystem()).thenReturn(systemProperties);
-        when(systemProperties.getDisableSanitize()).thenReturn(false);
+        // Default behavior: allow all URLs and enable sanitization. Lenient stubs avoid
+        // strict-stubbing failures when individual tests bypass certain branches.
+        lenient().when(ssrfProtectionService.isUrlAllowed(anyString())).thenReturn(true);
+        lenient().when(applicationProperties.getSystem()).thenReturn(systemProperties);
+        lenient().when(systemProperties.getDisableSanitize()).thenReturn(false);
 
         customHtmlSanitizer = new CustomHtmlSanitizer(ssrfProtectionService, applicationProperties);
     }
@@ -191,7 +195,10 @@ class CustomHtmlSanitizerTest {
 
         // Changed: Explicitly tell SSRF service to reject data: URLs so the custom AttributePolicy
         // drops the src attribute. Without this, a permissive SSRF mock might allow data: URLs.
-        when(ssrfProtectionService.isUrlAllowed(argThat(v -> v != null && v.startsWith("data:"))))
+        lenient()
+                .when(
+                        ssrfProtectionService.isUrlAllowed(
+                                argThat(v -> v != null && v.startsWith("data:"))))
                 .thenReturn(false);
 
         // Act
@@ -374,7 +381,7 @@ class CustomHtmlSanitizerTest {
         when(systemProperties.getDisableSanitize()).thenReturn(true);
 
         // Also ensure SSRF would block it if sanitization were enabled (to prove bypass)
-        when(ssrfProtectionService.isUrlAllowed(anyString())).thenReturn(false);
+        lenient().when(ssrfProtectionService.isUrlAllowed(anyString())).thenReturn(false);
 
         // Act
         String result = customHtmlSanitizer.sanitize(malicious);
@@ -391,7 +398,9 @@ class CustomHtmlSanitizerTest {
         String html = "<img src=\"http://internal/admin\" alt=\"x\">";
 
         // Reject this URL
-        when(ssrfProtectionService.isUrlAllowed("http://internal/admin")).thenReturn(false);
+        lenient()
+                .when(ssrfProtectionService.isUrlAllowed("http://internal/admin"))
+                .thenReturn(false);
 
         // Act
         String sanitized = customHtmlSanitizer.sanitize(html);
@@ -411,7 +420,9 @@ class CustomHtmlSanitizerTest {
         String html = "<img src=\"   https://example.com/image.jpg   \" alt=\"pic\" title=\"t\">";
 
         // Explicit allow (clarity)
-        when(ssrfProtectionService.isUrlAllowed("https://example.com/image.jpg")).thenReturn(true);
+        lenient()
+                .when(ssrfProtectionService.isUrlAllowed("https://example.com/image.jpg"))
+                .thenReturn(true);
 
         // Act
         String sanitized = customHtmlSanitizer.sanitize(html);

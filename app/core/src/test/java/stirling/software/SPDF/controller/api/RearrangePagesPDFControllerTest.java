@@ -12,11 +12,10 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import stirling.software.common.service.CustomPDFDocumentFactory;
 
-@ExtendWith({SpringExtension.class, MockitoExtension.class})
+@ExtendWith({MockitoExtension.class})
 class RearrangePagesPDFControllerTest {
 
     @Mock private CustomPDFDocumentFactory mockPdfDocumentFactory;

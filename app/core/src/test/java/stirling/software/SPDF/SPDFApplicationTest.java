@@ -1,5 +1,6 @@
 package stirling.software.SPDF;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
@@ -65,8 +66,7 @@ public class SPDFApplicationTest {
     public void testGetActiveProfileWithArgs() {
         String[] args = {"--spring.profiles.active=security"};
         String[] profiles = SPDFApplication.getActiveProfile(args);
-        assertEquals(1, profiles.length);
-        assertEquals("security", profiles[0]);
+        assertArrayEquals(new String[] {"security"}, profiles);
     }
 
     @Test
@@ -74,8 +74,7 @@ public class SPDFApplicationTest {
     public void testGetActiveProfileWithoutArgsAdditionalEnabled() {
         String[] args = {};
         String[] profiles = SPDFApplication.getActiveProfile(args);
-        assertEquals(1, profiles.length);
-        assertEquals("default", profiles[0]);
+        assertArrayEquals(new String[] {"default"}, profiles);
     }
 
     @Test
@@ -83,7 +82,6 @@ public class SPDFApplicationTest {
     public void testGetActiveProfileWithoutArgsAdditionalDisabled() {
         String[] args = {};
         String[] profiles = SPDFApplication.getActiveProfile(args);
-        assertEquals(1, profiles.length);
-        assertEquals("security", profiles[0]);
+        assertArrayEquals(new String[] {"security"}, profiles);
     }
 }
