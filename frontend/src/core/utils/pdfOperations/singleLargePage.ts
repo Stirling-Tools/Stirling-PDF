@@ -1,6 +1,6 @@
 import { PDFDocument } from 'pdf-lib';
-import type { SingleLargePageParameters } from '../../hooks/tools/singleLargePage/useSingleLargePageParameters';
-import { createFileFromApiResponse } from '../fileResponseUtils';
+import type { SingleLargePageParameters } from '@app/hooks/tools/singleLargePage/useSingleLargePageParameters';
+import { createFileFromApiResponse } from '@app/utils/fileResponseUtils';
 
 const PDF_MIME_TYPE = 'application/pdf';
 

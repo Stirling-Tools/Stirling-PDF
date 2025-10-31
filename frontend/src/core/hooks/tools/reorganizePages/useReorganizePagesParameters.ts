@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import { ToggleableProcessingParameters } from '../../../types/parameters';
+import { ToggleableProcessingParameters } from '@app/types/parameters';
 
 export interface ReorganizePagesParameters extends ToggleableProcessingParameters {
   customMode: string; // empty string means custom order using pageNumbers

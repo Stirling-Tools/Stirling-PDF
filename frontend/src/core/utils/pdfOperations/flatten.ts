@@ -1,6 +1,6 @@
 import { PDFDocument } from 'pdf-lib';
-import type { FlattenParameters } from '../../hooks/tools/flatten/useFlattenParameters';
-import { createFileFromApiResponse } from '../fileResponseUtils';
+import type { FlattenParameters } from '@app/hooks/tools/flatten/useFlattenParameters';
+import { createFileFromApiResponse } from '@app/utils/fileResponseUtils';
 
 const PDF_MIME_TYPE = 'application/pdf';
 

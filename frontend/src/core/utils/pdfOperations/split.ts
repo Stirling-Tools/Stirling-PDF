@@ -1,8 +1,8 @@
 import { PDFDocument } from 'pdf-lib';
-import type { SplitParameters } from '../../hooks/tools/split/useSplitParameters';
-import { resolvePageNumbers, validatePageNumbers } from '../pageSelection';
-import { createFileFromApiResponse } from '../fileResponseUtils';
-import { SPLIT_METHODS } from '../../constants/splitConstants';
+import type { SplitParameters } from '@app/hooks/tools/split/useSplitParameters';
+import { resolvePageNumbers, validatePageNumbers } from '@app/utils/pageSelection';
+import { createFileFromApiResponse } from '@app/utils/fileResponseUtils';
+import { SPLIT_METHODS } from '@app/constants/splitConstants';
 
 const PDF_MIME_TYPE = 'application/pdf';
 

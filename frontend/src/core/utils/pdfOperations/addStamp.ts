@@ -1,8 +1,8 @@
 import { degrees, PDFDocument, PDFPage, rgb } from 'pdf-lib';
-import type { AddStampParameters } from '../../components/tools/addStamp/useAddStampParameters';
-import { createFileFromApiResponse } from '../fileResponseUtils';
-import { resolvePageNumbers } from '../pageSelection';
-import { loadFontForAlphabet } from './fontCache';
+import type { AddStampParameters } from '@app/components/tools/addStamp/useAddStampParameters';
+import { createFileFromApiResponse } from '@app/utils/fileResponseUtils';
+import { resolvePageNumbers } from '@app/utils/pageSelection';
+import { loadFontForAlphabet } from '@app/utils/pdfOperations/fontCache';
 
 const PDF_MIME_TYPE = 'application/pdf';
 

@@ -1,7 +1,7 @@
 import { PDFDocument, degrees } from 'pdf-lib';
-import { createFileFromApiResponse } from '../fileResponseUtils';
-import type { RotateParameters } from '../../hooks/tools/rotate/useRotateParameters';
-import { normalizeAngle } from '../../hooks/tools/rotate/useRotateParameters';
+import { createFileFromApiResponse } from '@app/utils/fileResponseUtils';
+import type { RotateParameters } from '@app/hooks/tools/rotate/useRotateParameters';
+import { normalizeAngle } from '@app/hooks/tools/rotate/useRotateParameters';
 
 const PDF_MIME_TYPE = 'application/pdf';
 

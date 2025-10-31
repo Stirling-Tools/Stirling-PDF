@@ -1,6 +1,6 @@
 import { PDFDocument } from 'pdf-lib';
-import type { AdjustPageScaleParameters, PageSize } from '../../hooks/tools/adjustPageScale/useAdjustPageScaleParameters';
-import { createFileFromApiResponse } from '../fileResponseUtils';
+import type { AdjustPageScaleParameters, PageSize } from '@app/hooks/tools/adjustPageScale/useAdjustPageScaleParameters';
+import { createFileFromApiResponse } from '@app/utils/fileResponseUtils';
 
 const PDF_MIME_TYPE = 'application/pdf';
 

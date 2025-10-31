@@ -1,6 +1,6 @@
 import { PDFDocument } from 'pdf-lib';
-import type { CropParameters } from '../../hooks/tools/crop/useCropParameters';
-import { createFileFromApiResponse } from '../fileResponseUtils';
+import type { CropParameters } from '@app/hooks/tools/crop/useCropParameters';
+import { createFileFromApiResponse } from '@app/utils/fileResponseUtils';
 
 const PDF_MIME_TYPE = 'application/pdf';
 

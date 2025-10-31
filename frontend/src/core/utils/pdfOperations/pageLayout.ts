@@ -1,6 +1,6 @@
 import { PDFDocument, rgb } from 'pdf-lib';
-import type { PageLayoutParameters } from '../../hooks/tools/pageLayout/usePageLayoutParameters';
-import { createFileFromApiResponse } from '../fileResponseUtils';
+import type { PageLayoutParameters } from '@app/hooks/tools/pageLayout/usePageLayoutParameters';
+import { createFileFromApiResponse } from '@app/utils/fileResponseUtils';
 
 const PDF_MIME_TYPE = 'application/pdf';
 const A4_WIDTH = 595.28;

@@ -1,6 +1,6 @@
 import { PDFDocument } from 'pdf-lib';
-import type { MergeParameters } from '../../hooks/tools/merge/useMergeParameters';
-import { createFileFromApiResponse } from '../fileResponseUtils';
+import type { MergeParameters } from '@app/hooks/tools/merge/useMergeParameters';
+import { createFileFromApiResponse } from '@app/utils/fileResponseUtils';
 
 const PDF_MIME_TYPE = 'application/pdf';
 

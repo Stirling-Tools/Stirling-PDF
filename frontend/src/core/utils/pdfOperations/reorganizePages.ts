@@ -1,7 +1,7 @@
 import { PDFDocument } from 'pdf-lib';
-import type { ReorganizePagesParameters } from '../../hooks/tools/reorganizePages/useReorganizePagesParameters';
-import { createFileFromApiResponse } from '../fileResponseUtils';
-import { resolvePageOrderSequence } from '../pageSelection';
+import type { ReorganizePagesParameters } from '@app/hooks/tools/reorganizePages/useReorganizePagesParameters';
+import { createFileFromApiResponse } from '@app/utils/fileResponseUtils';
+import { resolvePageOrderSequence } from '@app/utils/pageSelection';
 
 const PDF_MIME_TYPE = 'application/pdf';
 

@@ -1,6 +1,6 @@
 import { Stack, Text, SegmentedControl } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import { ProcessingMode } from '../../types/parameters';
+import { ProcessingMode } from '@app/types/parameters';
 
 export interface ProcessingModeToggleProps {
   value: ProcessingMode;

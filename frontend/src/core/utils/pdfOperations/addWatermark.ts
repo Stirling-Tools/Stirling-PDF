@@ -1,7 +1,7 @@
 import { degrees, PDFDocument, rgb } from 'pdf-lib';
-import type { AddWatermarkParameters } from '../../hooks/tools/addWatermark/useAddWatermarkParameters';
-import { createFileFromApiResponse } from '../fileResponseUtils';
-import { loadFontForAlphabet } from './fontCache';
+import type { AddWatermarkParameters } from '@app/hooks/tools/addWatermark/useAddWatermarkParameters';
+import { createFileFromApiResponse } from '@app/utils/fileResponseUtils';
+import { loadFontForAlphabet } from '@app/utils/pdfOperations/fontCache';
 
 const PDF_MIME_TYPE = 'application/pdf';
 

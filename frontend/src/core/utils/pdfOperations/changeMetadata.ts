@@ -1,6 +1,6 @@
 import { PDFDocument, PDFName, PDFString, PDFDict } from 'pdf-lib';
-import type { ChangeMetadataParameters } from '../../hooks/tools/changeMetadata/useChangeMetadataParameters';
-import { createFileFromApiResponse } from '../fileResponseUtils';
+import type { ChangeMetadataParameters } from '@app/hooks/tools/changeMetadata/useChangeMetadataParameters';
+import { createFileFromApiResponse } from '@app/utils/fileResponseUtils';
 
 const PDF_MIME_TYPE = 'application/pdf';
 

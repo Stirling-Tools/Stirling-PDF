@@ -1,7 +1,7 @@
 import { PDFDocument } from 'pdf-lib';
-import type { RemovePagesParameters } from '../../hooks/tools/removePages/useRemovePagesParameters';
-import { createFileFromApiResponse } from '../fileResponseUtils';
-import { resolvePageNumbers } from '../pageSelection';
+import type { RemovePagesParameters } from '@app/hooks/tools/removePages/useRemovePagesParameters';
+import { createFileFromApiResponse } from '@app/utils/fileResponseUtils';
+import { resolvePageNumbers } from '@app/utils/pageSelection';
 
 const PDF_MIME_TYPE = 'application/pdf';
 

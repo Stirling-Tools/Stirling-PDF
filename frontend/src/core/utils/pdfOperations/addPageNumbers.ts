@@ -1,7 +1,7 @@
 import { PDFDocument, StandardFonts } from 'pdf-lib';
-import type { AddPageNumbersParameters } from '../../components/tools/addPageNumbers/useAddPageNumbersParameters';
-import { resolvePageNumbers } from '../pageSelection';
-import { createFileFromApiResponse } from '../fileResponseUtils';
+import type { AddPageNumbersParameters } from '@app/components/tools/addPageNumbers/useAddPageNumbersParameters';
+import { resolvePageNumbers } from '@app/utils/pageSelection';
+import { createFileFromApiResponse } from '@app/utils/fileResponseUtils';
 
 const PDF_MIME_TYPE = 'application/pdf';
 
