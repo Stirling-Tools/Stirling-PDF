@@ -130,54 +130,54 @@
 
                 <!-- Advanced Options -->
                 <div class="mb-3">
-                  <button type="button" class="btn btn-link" data-bs-toggle="collapse" data-bs-target="#advancedOptions">
+                  <button type="button" class="btn btn-link" data-bs-toggle="collapse" data-bs-target="#advancedOptions" th:text="#{watermark.advanced.title}">
                     Advanced Options
                   </button>
                   <div id="advancedOptions" class="collapse">
                     <!-- Watermark Count -->
                     <div class="mb-3">
-                      <label for="count">Number of Watermarks</label>
+                      <label for="count" th:text="#{watermark.advanced.count.label}">Number of Watermarks</label>
                       <input type="number" id="count" name="count" class="form-control" value="30" min="1" max="1000">
-                      <small class="form-text text-muted">Number of watermark instances per page (1-1000)</small>
+                      <small class="form-text text-muted" th:text="#{watermark.advanced.count.help}">Number of watermark instances per page (1-1000)</small>
                     </div>
 
                     <!-- Positioning Mode -->
                     <div class="mb-3">
                       <div class="form-check">
                         <input type="checkbox" id="randomPosition" name="randomPosition" checked>
-                        <label for="randomPosition">Random Positioning</label>
+                        <label for="randomPosition" th:text="#{watermark.advanced.position.label}">Random Positioning</label>
                       </div>
-                      <small class="form-text text-muted">Enable random placement instead of grid layout</small>
+                      <small class="form-text text-muted" th:text="#{watermark.advanced.position.help}">Enable random placement instead of grid layout</small>
                     </div>
 
                     <div id="marginGroup" class="mb-3">
-                      <label for="margin">Margin from Edges (points)</label>
+                      <label for="margin" th:text="#{watermark.advanced.margin.label}">Margin from Edges (points)</label>
                       <input type="number" id="margin" name="margin" class="form-control" value="10" min="0" max="500" step="0.1">
-                      <small class="form-text text-muted">Minimum distance from page edges (0-500)</small>
+                      <small class="form-text text-muted" th:text="#{watermark.advanced.margin.help}">Minimum distance from page edges (0-500)</small>
                     </div>
 
                     <div id="boundsGroup" class="mb-3">
-                      <label for="bounds">Bounding Box (optional)</label>
+                      <label for="bounds" th:text="#{watermark.advanced.bounds.label}">Bounding Box (optional)</label>
                       <input type="text" id="bounds" name="bounds" class="form-control" placeholder="x,y,width,height">
-                      <small class="form-text text-muted">Constrain placement to specific area (format: x,y,width,height)</small>
+                      <small class="form-text text-muted" th:text="#{watermark.advanced.bounds.help}">Constrain placement to specific area (format: x,y,width,height)</small>
                     </div>
 
                     <!-- Rotation Controls -->
                     <div class="mb-3">
-                      <label>Rotation Mode</label>
+                      <label th:text="#{watermark.advanced.rotation.mode.label}">Rotation Mode</label>
                       <select class="form-control" id="rotationMode" onchange="toggleRotationMode()">
-                        <option value="fixed">Fixed Angle</option>
-                        <option value="range">Random Range</option>
+                        <option value="fixed" th:text="#{watermark.advanced.rotation.mode.fixed}">Fixed Angle</option>
+                        <option value="range" th:text="#{watermark.advanced.rotation.mode.range}">Random Range</option>
                       </select>
                     </div>
 
                     <div id="rotationRangeGroup" class="mb-3" style="display: none;">
-                      <label for="rotationMin">Rotation Min (degrees)</label>
+                      <label for="rotationMin" th:text="#{watermark.advanced.rotation.min.label}">Rotation Min (degrees)</label>
                       <input type="number" id="rotationMin" name="rotationMin" class="form-control" value="0" min="-360" max="360" step="0.1">
-                      <label for="rotationMax">Rotation Max (degrees)</label>
+                      <label for="rotationMax" th:text="#{watermark.advanced.rotation.max.label}">Rotation Max (degrees)</label>
                       <input type="number" id="rotationMax" name="rotationMax" class="form-control" value="45" min="-360" max="360" step="0.1">
-                      <small class="form-text text-muted">Random angle between min and max</small>
-                      <div id="rotationRangeError" class="invalid-feedback" style="display: none;">
+                      <small class="form-text text-muted" th:text="#{watermark.advanced.rotation.range.help}">Random angle between min and max</small>
+                      <div id="rotationRangeError" class="invalid-feedback" style="display: none;" th:text="#{watermark.advanced.rotation.range.error}">
                         Minimum must be less than or equal to maximum
                       </div>
                     </div>
@@ -186,47 +186,47 @@
                     <div class="mb-3">
                       <div class="form-check">
                         <input type="checkbox" id="randomMirroring" name="randomMirroring" onchange="toggleMirroringProbability()">
-                        <label for="randomMirroring">Random Mirroring</label>
-                        <small class="form-text text-muted">For images only</small>
+                        <label for="randomMirroring" th:text="#{watermark.advanced.mirroring.label}">Random Mirroring</label>
+                        <small class="form-text text-muted" th:text="#{watermark.advanced.mirroring.help}">For images only</small>
                       </div>
                     </div>
 
                     <div id="mirroringProbabilityGroup" class="mb-3" style="display: none;">
-                      <label for="mirroringProbability">Mirroring Probability</label>
+                      <label for="mirroringProbability" th:text="#{watermark.advanced.mirroring.probability.label}">Mirroring Probability</label>
                       <input type="number" id="mirroringProbability" name="mirroringProbability" class="form-control" value="0.5" min="0" max="1" step="0.1">
-                      <small class="form-text text-muted">Probability of mirroring (0.0-1.0)</small>
+                      <small class="form-text text-muted" th:text="#{watermark.advanced.mirroring.probability.help}">Probability of mirroring (0.0-1.0)</small>
                     </div>
 
                     <!-- Font Controls (for text watermarks) -->
                     <div id="fontGroup" class="mb-3">
                       <div class="form-check">
                         <input type="checkbox" id="randomFont" name="randomFont" onchange="toggleFontMode()">
-                        <label for="randomFont">Random Font</label>
+                        <label for="randomFont" th:text="#{watermark.advanced.font.random.label}">Random Font</label>
                       </div>
-                      <small class="form-text text-muted">Enable random font selection for text watermarks</small>
+                      <small class="form-text text-muted" th:text="#{watermark.advanced.font.random.help}">Enable random font selection for text watermarks</small>
                     </div>
 
                     <div id="fontNameGroup" class="mb-3">
-                      <label for="fontName">Font Name</label>
+                      <label for="fontName" th:text="#{watermark.advanced.font.name.label}">Font Name</label>
                       <input type="text" id="fontName" name="fontName" class="form-control" placeholder="e.g., Helvetica, Times-Roman">
-                      <small class="form-text text-muted">Leave empty for default font</small>
+                      <small class="form-text text-muted" th:text="#{watermark.advanced.font.name.help}">Leave empty for default font</small>
                     </div>
 
                     <div class="mb-3">
-                      <label>Font Size Mode</label>
+                      <label th:text="#{watermark.advanced.font.size.mode.label}">Font Size Mode</label>
                       <select class="form-control" id="fontSizeMode" onchange="toggleFontSizeMode()">
-                        <option value="fixed">Fixed Size</option>
-                        <option value="range">Random Range</option>
+                        <option value="fixed" th:text="#{watermark.advanced.font.size.mode.fixed}">Fixed Size</option>
+                        <option value="range" th:text="#{watermark.advanced.font.size.mode.range}">Random Range</option>
                       </select>
                     </div>
 
                     <div id="fontSizeRangeGroup" class="mb-3" style="display: none;">
-                      <label for="fontSizeMin">Font Size Min</label>
+                      <label for="fontSizeMin" th:text="#{watermark.advanced.font.size.min.label}">Font Size Min</label>
                       <input type="number" id="fontSizeMin" name="fontSizeMin" class="form-control" value="10" min="1" max="500" step="0.1">
-                      <label for="fontSizeMax">Font Size Max</label>
+                      <label for="fontSizeMax" th:text="#{watermark.advanced.font.size.max.label}">Font Size Max</label>
                       <input type="number" id="fontSizeMax" name="fontSizeMax" class="form-control" value="100" min="1" max="500" step="0.1">
-                      <small class="form-text text-muted">Random size between min and max</small>
-                      <div id="fontSizeRangeError" class="invalid-feedback" style="display: none;">
+                      <small class="form-text text-muted" th:text="#{watermark.advanced.font.size.range.help}">Random size between min and max</small>
+                      <div id="fontSizeRangeError" class="invalid-feedback" style="display: none;" th:text="#{watermark.advanced.font.size.range.error}">
                         Minimum must be less than or equal to maximum
                       </div>
                     </div>
@@ -235,48 +235,48 @@
                     <div class="mb-3">
                       <div class="form-check">
                         <input type="checkbox" id="randomColor" name="randomColor" onchange="toggleColorMode()">
-                        <label for="randomColor">Random Color</label>
+                        <label for="randomColor" th:text="#{watermark.advanced.color.random.label}">Random Color</label>
                       </div>
                     </div>
 
                     <!-- Per-Letter Variation Controls (for text watermarks) -->
                     <div id="perLetterGroup" class="mb-3">
-                      <label>Per-Letter Variations</label>
+                      <label th:text="#{watermark.advanced.perLetter.title}">Per-Letter Variations</label>
                       
                       <!-- Per-Letter Font -->
                       <div class="form-check">
                         <input type="checkbox" id="perLetterFont" name="perLetterFont" onchange="togglePerLetterFontConfig()">
-                        <label for="perLetterFont">Vary Font per Letter</label>
+                        <label for="perLetterFont" th:text="#{watermark.advanced.perLetter.font.label}">Vary Font per Letter</label>
                       </div>
                       <div id="perLetterFontConfig" class="mb-2 ms-4" style="display: none;">
-                        <label for="perLetterFontCount">Number of Fonts</label>
+                        <label for="perLetterFontCount" th:text="#{watermark.advanced.perLetter.font.count.label}">Number of Fonts</label>
                         <input type="number" id="perLetterFontCount" name="perLetterFontCount" class="form-control" value="2" min="1" max="20">
-                        <small class="form-text text-muted">Number of fonts to randomly select from (1-20, default: 2)</small>
+                        <small class="form-text text-muted" th:text="#{watermark.advanced.perLetter.font.count.help}">Number of fonts to randomly select from (1-20, default: 2)</small>
                       </div>
                       
                       <!-- Per-Letter Color -->
                       <div class="form-check">
                         <input type="checkbox" id="perLetterColor" name="perLetterColor" onchange="togglePerLetterColorConfig()">
-                        <label for="perLetterColor">Vary Color per Letter</label>
+                        <label for="perLetterColor" th:text="#{watermark.advanced.perLetter.color.label}">Vary Color per Letter</label>
                       </div>
                       <div id="perLetterColorConfig" class="mb-2 ms-4" style="display: none;">
-                        <label for="perLetterColorCount">Number of Colors</label>
+                        <label for="perLetterColorCount" th:text="#{watermark.advanced.perLetter.color.count.label}">Number of Colors</label>
                         <input type="number" id="perLetterColorCount" name="perLetterColorCount" class="form-control" value="4" min="1" max="12">
-                        <small class="form-text text-muted">Number of colors to randomly select from (1-12, default: 4)</small>
+                        <small class="form-text text-muted" th:text="#{watermark.advanced.perLetter.color.count.help}">Number of colors to randomly select from (1-12, default: 4)</small>
                       </div>
                       
                       <!-- Per-Letter Size -->
                       <div class="form-check">
                         <input type="checkbox" id="perLetterSize" name="perLetterSize" onchange="togglePerLetterSizeConfig()">
-                        <label for="perLetterSize">Vary Size per Letter</label>
+                        <label for="perLetterSize" th:text="#{watermark.advanced.perLetter.size.label}">Vary Size per Letter</label>
                       </div>
                       <div id="perLetterSizeConfig" class="mb-2 ms-4" style="display: none;">
-                        <label for="perLetterSizeMin">Size Min</label>
+                        <label for="perLetterSizeMin" th:text="#{watermark.advanced.perLetter.size.min.label}">Size Min</label>
                         <input type="number" id="perLetterSizeMin" name="perLetterSizeMin" class="form-control" value="10" min="1" max="500" step="0.1">
-                        <label for="perLetterSizeMax">Size Max</label>
+                        <label for="perLetterSizeMax" th:text="#{watermark.advanced.perLetter.size.max.label}">Size Max</label>
                         <input type="number" id="perLetterSizeMax" name="perLetterSizeMax" class="form-control" value="100" min="1" max="500" step="0.1">
-                        <small class="form-text text-muted">Font size range (1-500, default: 10-100)</small>
-                        <div id="perLetterSizeError" class="invalid-feedback" style="display: none;">
+                        <small class="form-text text-muted" th:text="#{watermark.advanced.perLetter.size.help}">Font size range (1-500, default: 10-100)</small>
+                        <div id="perLetterSizeError" class="invalid-feedback" style="display: none;" th:text="#{watermark.advanced.perLetter.size.error}">
                           Minimum must be less than or equal to maximum
                         </div>
                       </div>
@@ -284,51 +284,51 @@
                       <!-- Per-Letter Orientation -->
                       <div class="form-check">
                         <input type="checkbox" id="perLetterOrientation" name="perLetterOrientation" onchange="togglePerLetterOrientationConfig()">
-                        <label for="perLetterOrientation">Vary Orientation per Letter</label>
+                        <label for="perLetterOrientation" th:text="#{watermark.advanced.perLetter.orientation.label}">Vary Orientation per Letter</label>
                       </div>
                       <div id="perLetterOrientationConfig" class="mb-2 ms-4" style="display: none;">
-                        <label for="perLetterOrientationMin">Angle Min (degrees)</label>
+                        <label for="perLetterOrientationMin" th:text="#{watermark.advanced.perLetter.orientation.min.label}">Angle Min (degrees)</label>
                         <input type="number" id="perLetterOrientationMin" name="perLetterOrientationMin" class="form-control" value="0" min="-360" max="360" step="1">
-                        <label for="perLetterOrientationMax">Angle Max (degrees)</label>
+                        <label for="perLetterOrientationMax" th:text="#{watermark.advanced.perLetter.orientation.max.label}">Angle Max (degrees)</label>
                         <input type="number" id="perLetterOrientationMax" name="perLetterOrientationMax" class="form-control" value="360" min="-360" max="360" step="1">
-                        <small class="form-text text-muted">Rotation angle range (-360 to 360, default: 0-360)</small>
-                        <div id="perLetterOrientationError" class="invalid-feedback" style="display: none;">
+                        <small class="form-text text-muted" th:text="#{watermark.advanced.perLetter.orientation.help}">Rotation angle range (-360 to 360, default: 0-360)</small>
+                        <div id="perLetterOrientationError" class="invalid-feedback" style="display: none;" th:text="#{watermark.advanced.perLetter.orientation.error}">
                           Minimum must be less than or equal to maximum
                         </div>
                       </div>
                       
-                      <small class="form-text text-muted">Apply variations at the letter level for dynamic appearance</small>
+                      <small class="form-text text-muted" th:text="#{watermark.advanced.perLetter.help}">Apply variations at the letter level for dynamic appearance</small>
                     </div>
 
                     <!-- Shading Controls (for text watermarks) -->
                     <div id="shadingGroup" class="mb-3">
                       <div class="form-check">
                         <input id="shadingRandom" name="shadingRandom" type="checkbox" onchange="toggleShadingMode()">
-                        <label for="shadingRandom">Random Shading</label>
+                        <label for="shadingRandom" th:text="#{watermark.advanced.shading.random.label}">Random Shading</label>
                       </div>
                     </div>
                     
 
                     <div id="shadingFixedGroup" class="mb-3">
-                      <label for="shading">Shading Style</label>
+                      <label for="shading" th:text="#{watermark.advanced.shading.label}">Shading Style</label>
                       <select class="form-control" id="shading" name="shading">
-                        <option value="none">None</option>
-                        <option value="light">Light</option>
-                        <option value="dark">Dark</option>
+                        <option value="none" th:text="#{watermark.advanced.shading.none}">None</option>
+                        <option value="light" th:text="#{watermark.advanced.shading.light}">Light</option>
+                        <option value="dark" th:text="#{watermark.advanced.shading.dark}">Dark</option>
                       </select>
                     </div>
 
                     <!-- Image Scale Control (for image watermarks) -->
                     <div id="imageScaleGroup" class="mb-3" style="display: none;">
-                      <label for="imageScale">Image Scale Factor</label>
+                      <label for="imageScale" th:text="#{watermark.advanced.image.scale.label}">Image Scale Factor</label>
                       <input type="number" id="imageScale" name="imageScale" class="form-control" value="1.0" min="0.1" max="10" step="0.1">
-                      <small class="form-text text-muted">Scale factor (1.0 = original size, 0.1-10.0)</small>
+                      <small class="form-text text-muted" th:text="#{watermark.advanced.image.scale.help}">Scale factor (1.0 = original size, 0.1-10.0)</small>
                     </div>
 
                     <div class="mb-3">
-                      <label for="seed">Random Seed (optional)</label>
+                      <label for="seed" th:text="#{watermark.advanced.seed.label}">Random Seed (optional)</label>
                       <input type="number" id="seed" name="seed" class="form-control" placeholder="Leave empty for random">
-                      <small class="form-text text-muted">For deterministic randomness (testing)</small>
+                      <small class="form-text text-muted" th:text="#{watermark.advanced.seed.help}">For deterministic randomness (testing)</small>
                     </div>
                   </div>
                 </div>
