@@ -387,7 +387,9 @@ public class GlobalExceptionHandler {
         problemDetail.setProperty(
                 "actionRequired", "Correct the invalid fields and resend the request.");
 
-        return ResponseEntity.badRequest().body(problemDetail);
+        return ResponseEntity.badRequest()
+                .contentType(org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON)
+                .body(problemDetail);
     }
 
     /**
@@ -434,7 +436,9 @@ public class GlobalExceptionHandler {
                 "actionRequired",
                 String.format("Add the required '%s' parameter and retry.", ex.getParameterName()));
 
-        return ResponseEntity.badRequest().body(problemDetail);
+        return ResponseEntity.badRequest()
+                .contentType(org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON)
+                .body(problemDetail);
     }
 
     /**
@@ -479,7 +483,9 @@ public class GlobalExceptionHandler {
                 "actionRequired",
                 String.format("Attach the '%s' file part and retry.", ex.getRequestPartName()));
 
-        return ResponseEntity.badRequest().body(problemDetail);
+        return ResponseEntity.badRequest()
+                .contentType(org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON)
+                .body(problemDetail);
     }
 
     /**
@@ -532,7 +538,9 @@ public class GlobalExceptionHandler {
         problemDetail.setProperty(
                 "actionRequired", "Reduce the file size to be within the upload limit.");
 
-        return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(problemDetail);
+        return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE)
+                .contentType(org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON)
+                .body(problemDetail);
     }
 
     /**
@@ -581,7 +589,9 @@ public class GlobalExceptionHandler {
                         "If using a tool like curl or Postman, update the method accordingly."));
         problemDetail.setProperty("actionRequired", "Use one of the supported HTTP methods.");
 
-        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(problemDetail);
+        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED)
+                .contentType(org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON)
+                .body(problemDetail);
     }
 
     /**
@@ -630,7 +640,9 @@ public class GlobalExceptionHandler {
         problemDetail.setProperty(
                 "actionRequired", "Change the Content-Type to a supported value.");
 
-        return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE).body(problemDetail);
+        return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
+                .contentType(org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON)
+                .body(problemDetail);
     }
 
     /**
@@ -677,7 +689,9 @@ public class GlobalExceptionHandler {
                         "Remove trailing commas and ensure proper quoting in JSON."));
         problemDetail.setProperty("actionRequired", "Fix the request body format and retry.");
 
-        return ResponseEntity.badRequest().body(problemDetail);
+        return ResponseEntity.badRequest()
+                .contentType(org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON)
+                .body(problemDetail);
     }
 
     /**
@@ -720,7 +734,9 @@ public class GlobalExceptionHandler {
                         "Ensure there are no typos in the endpoint path."));
         problemDetail.setProperty("actionRequired", "Use a valid endpoint URL and method.");
 
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(problemDetail);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .contentType(org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON)
+                .body(problemDetail);
     }
 
     // ===========================================================================================
@@ -757,7 +773,9 @@ public class GlobalExceptionHandler {
                         "Ensure required parameters are present."));
         problemDetail.setProperty("actionRequired", "Correct the invalid argument and retry.");
 
-        return ResponseEntity.badRequest().body(problemDetail);
+        return ResponseEntity.badRequest()
+                .contentType(org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON)
+                .body(problemDetail);
     }
 
     /**
@@ -811,7 +829,9 @@ public class GlobalExceptionHandler {
                         "Retry the operation in case of transient I/O issues."));
         problemDetail.setProperty("actionRequired", "Verify the file and try the request again.");
 
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(problemDetail);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .contentType(org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON)
+                .body(problemDetail);
     }
 
     /**
@@ -859,7 +879,9 @@ public class GlobalExceptionHandler {
             problemDetail.setProperty("exceptionType", ex.getClass().getName());
         }
 
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(problemDetail);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .contentType(org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON)
+                .body(problemDetail);
     }
 
     /**
@@ -934,7 +956,9 @@ public class GlobalExceptionHandler {
             problemDetail.setProperty("actionRequired", actionRequired);
         }
 
-        return ResponseEntity.status(status).body(problemDetail);
+        return ResponseEntity.status(status)
+                .contentType(org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON)
+                .body(problemDetail);
     }
 
     /**
