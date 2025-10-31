@@ -7,13 +7,11 @@ import TeamsSection from '@proprietary/components/shared/config/configSections/T
  * Proprietary extension of createConfigNavSections that adds workspace sections
  */
 export const createConfigNavSections = (
-  Overview: React.ComponentType<{ onLogoutClick: () => void }>,
-  onLogoutClick: () => void,
   isAdmin: boolean = false,
   runningEE: boolean = false
 ): ConfigNavSection[] => {
   // Get the core sections
-  const sections = createCoreConfigNavSections(Overview, onLogoutClick, isAdmin, runningEE);
+  const sections = createCoreConfigNavSections(isAdmin, runningEE);
 
   // Add Workspace section after Preferences (index 1)
   const workspaceSection: ConfigNavSection = {

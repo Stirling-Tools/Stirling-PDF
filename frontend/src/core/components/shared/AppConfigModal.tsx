@@ -3,7 +3,6 @@ import { Modal, Text, ActionIcon, Tooltip } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
 import { useNavigate, useLocation } from 'react-router-dom';
 import LocalIcon from '@app/components/shared/LocalIcon';
-import Overview from '@app/components/shared/config/configSections/Overview';
 import { createConfigNavSections } from '@app/components/shared/config/configNavSections';
 import { NavKey } from '@app/components/shared/config/types';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
@@ -70,12 +69,6 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
     contentBg: 'var(--modal-content-bg)',
     headerBorder: 'var(--modal-header-border)',
   }), []);
-
-  // Placeholder logout handler (not needed in open-source but keeps SaaS compatibility)
-  const handleLogout = () => {
-    // In SaaS this would sign out, in open-source it does nothing
-    console.log('Logout placeholder for SaaS compatibility');
-  };
 
   // Get isAdmin and runningEE from app config
   const isAdmin = config?.isAdmin ?? false;
