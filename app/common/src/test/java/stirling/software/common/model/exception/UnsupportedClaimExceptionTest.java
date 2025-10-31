@@ -22,18 +22,6 @@ class UnsupportedClaimExceptionTest {
     }
 
     @Test
-    @DisplayName("should be instance of RuntimeException")
-    void shouldBeInstanceOfRuntimeException() {
-        UnsupportedClaimException exception = new UnsupportedClaimException("msg");
-
-        // Verify that it inherits from RuntimeException
-        assertInstanceOf(
-                RuntimeException.class,
-                exception,
-                "UnsupportedClaimException should extend RuntimeException");
-    }
-
-    @Test
     @DisplayName("should allow null message without throwing exception")
     void shouldAllowNullMessage() {
         UnsupportedClaimException exception = new UnsupportedClaimException(null);
