@@ -8,11 +8,13 @@ import java.util.Map;
 
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -44,8 +46,7 @@ public class HomeWebController {
     public String licensesForm(Model model) {
         model.addAttribute("currentPage", "licenses");
         Resource resource = new ClassPathResource("static/3rdPartyLicenses.json");
-        try {
-            InputStream is = resource.getInputStream();
+        try (InputStream is = resource.getInputStream()) {
             String json = new String(is.readAllBytes(), StandardCharsets.UTF_8);
             ObjectMapper mapper = new ObjectMapper();
             Map<String, List<Dependency>> data = mapper.readValue(json, new TypeReference<>() {});
@@ -54,6 +55,42 @@ public class HomeWebController {
             log.error("exception", e);
         }
         return "licenses";
+    }
+
+    @GetMapping("/impressum")
+    @Hidden
+    public String impressum() {
+        String impressum = applicationProperties.getLegal().getImpressum();
+        return internalPage(impressum, "impressum");
+    }
+
+    @GetMapping("/cookiePolicy")
+    @Hidden
+    public String cookiePolicy() {
+        String cookiePolicy = applicationProperties.getLegal().getCookiePolicy();
+        return internalPage(cookiePolicy, "cookiePolicy");
+    }
+
+    @GetMapping("/privacyPolicy")
+    @Hidden
+    public String privacyPolicy() {
+        String privacyPolicy = applicationProperties.getLegal().getPrivacyPolicy();
+        return internalPage(privacyPolicy, "privacyPolicy");
+    }
+
+    @GetMapping("/termsAndConditions")
+    @Hidden
+    public String termsAndConditions() {
+        String termsAndConditions = applicationProperties.getLegal().getTermsAndConditions();
+        return internalPage(termsAndConditions, "termsAndConditions");
+    }
+
+    @GetMapping("/accessibilityStatement")
+    @Hidden
+    public String accessibilityStatement() {
+        String accessibilityStatement =
+                applicationProperties.getLegal().getAccessibilityStatement();
+        return internalPage(accessibilityStatement, "accessibilityStatement");
     }
 
     @GetMapping("/releases")
@@ -90,5 +127,12 @@ public class HomeWebController {
         } else {
             return "User-agent: Googlebot\nDisallow: /\n\nUser-agent: *\nDisallow: /";
         }
+    }
+
+    private String internalPage(String configured, String view) {
+        if (configured != null && (("/" + view).equals(configured) || view.equals(configured))) {
+            return view;
+        }
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND);
     }
 }
