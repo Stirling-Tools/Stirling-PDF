@@ -77,7 +77,7 @@ This section has moved here: [https://facebook.github.io/create-react-app/docs/t
 ## Tauri
 In order to run Tauri, you first have to build the Java backend for Tauri to use.
 
-**Bash:**
+**macOS/Linux:**
 
 From the root of the repo, run:
 
@@ -92,8 +92,24 @@ From the root of the repo, run:
 
 ```batch
 gradlew clean build
-scripts/build-tauri-jlink.bat
+scripts\build-tauri-jlink.bat
 ```
+
+### Testing the Bundled Runtime
+
+Before building the full Tauri app, you can test the bundled runtime:
+
+**macOS/Linux:**
+```bash
+./frontend/src-tauri/runtime/launch-stirling.sh
+```
+
+**Windows:**
+```cmd
+frontend\src-tauri\runtime\launch-stirling.bat
+```
+
+This will start Stirling-PDF using the bundled JRE, accessible at http://localhost:8080
 
 ### Dev
 To run Tauri in development. Use the command in the `frontend` folder:

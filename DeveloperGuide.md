@@ -104,12 +104,8 @@ Stirling 2.0 uses client-side file storage:
 The existing Thymeleaf templates remain in the codebase during development as reference material but will be completely removed for the 2.0 release.
 
 ### Tauri Desktop App Development
-Stirling-PDF can be packaged as a cross-platform desktop application using Tauri with PDF file association support and bundled JRE:
-
-**Quick Start:**
-1. **Development/Testing**: `npm run tauri-dev "path/to/test.pdf"`
-2. **Building**: See [DesktopApplicationDevelopmentGuide.md](DesktopApplicationDevelopmentGuide.md) for complete build instructions
-3. **Features**: File associations, self-contained JRE, cross-platform support
+Stirling-PDF can be packaged as a cross-platform desktop application using Tauri with PDF file association support and bundled JRE.
+See [the frontend README](frontend/README.md#tauri) for build instructions.
 
 ## 5. Project Structure
 
@@ -414,23 +410,23 @@ For Stirling 2.0, new features are built as React components instead of Thymelea
    // frontend/src/tools/NewTool.tsx
    import { useState } from 'react';
    import { Button, FileInput, Container } from '@mantine/core';
-   
+
    interface NewToolProps {
      params: Record<string, any>;
      updateParams: (updates: Record<string, any>) => void;
    }
-   
+
    export default function NewTool({ params, updateParams }: NewToolProps) {
      const [files, setFiles] = useState<File[]>([]);
-     
+
      const handleProcess = async () => {
        // Process files using API or client-side logic
      };
-     
+
      return (
        <Container>
-         <FileInput 
-           multiple 
+         <FileInput
+           multiple
            accept="application/pdf"
            onChange={setFiles}
          />
