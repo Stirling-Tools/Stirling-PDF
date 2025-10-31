@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.util.Collections;
+import java.util.Set;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,6 +18,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validation;
+import jakarta.validation.Validator;
+import jakarta.validation.ValidatorFactory;
+
 import stirling.software.SPDF.model.api.security.AddWatermarkRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 
@@ -29,12 +35,11 @@ class WatermarkValidationTest {
     @InjectMocks private WatermarkController watermarkController;
 
     private AddWatermarkRequest request;
-    private MockMultipartFile mockPdfFile;
 
     @BeforeEach
     void setUp() throws Exception {
         request = new AddWatermarkRequest();
-        mockPdfFile =
+        MockMultipartFile mockPdfFile =
                 new MockMultipartFile(
                         "fileInput", "test.pdf", "application/pdf", "test content".getBytes());
         request.setFileInput(mockPdfFile);
@@ -626,86 +631,431 @@ class WatermarkValidationTest {
     @DisplayName("Annotation-based Validation Tests")
     class AnnotationBasedValidationTests {
 
+        private Validator validator;
+
+        @BeforeEach
+        void setUpValidator() {
+            ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
+            validator = factory.getValidator();
+        }
+
         @Test
-        @DisplayName("Should enforce count minimum of 1")
+        @DisplayName("Should reject count below minimum of 1")
         void testCountMinimum() {
-            // Note: This tests the @Min annotation on count field
-            // The actual validation happens at the framework level
+            // Arrange
             request.setCount(0);
-            // Framework validation would reject this before reaching controller
+
+            // Act
+            Set<ConstraintViolation<AddWatermarkRequest>> violations = validator.validate(request);
+
+            // Assert
+            assertFalse(violations.isEmpty(), "Should have validation errors");
+            assertTrue(
+                    violations.stream()
+                            .anyMatch(v -> v.getPropertyPath().toString().equals("count")),
+                    "Should have violation on 'count' field");
         }
 
         @Test
-        @DisplayName("Should enforce count maximum of 1000")
+        @DisplayName("Should accept valid count value")
+        void testCountValid() {
+            // Arrange
+            request.setCount(5);
+
+            // Act
+            Set<ConstraintViolation<AddWatermarkRequest>> violations = validator.validate(request);
+
+            // Assert
+            assertTrue(
+                    violations.stream()
+                            .noneMatch(v -> v.getPropertyPath().toString().equals("count")),
+                    "Should have no violations on 'count' field");
+        }
+
+        @Test
+        @DisplayName("Should reject count above maximum of 1000")
         void testCountMaximum() {
-            // Note: This tests the @Max annotation on count field
+            // Arrange
             request.setCount(1001);
-            // Framework validation would reject this before reaching controller
+
+            // Act
+            Set<ConstraintViolation<AddWatermarkRequest>> violations = validator.validate(request);
+
+            // Assert
+            assertFalse(violations.isEmpty(), "Should have validation errors");
+            assertTrue(
+                    violations.stream()
+                            .anyMatch(v -> v.getPropertyPath().toString().equals("count")),
+                    "Should have violation on 'count' field");
         }
 
         @Test
-        @DisplayName("Should enforce rotation min/max bounds of -360 to 360")
-        void testRotationBounds() {
-            // Note: This tests the @DecimalMin/@DecimalMax annotations
+        @DisplayName("Should reject rotationMin below -360")
+        void testRotationMinBelowBound() {
+            // Arrange
             request.setRotationMin(-361f);
+
+            // Act
+            Set<ConstraintViolation<AddWatermarkRequest>> violations = validator.validate(request);
+
+            // Assert
+            assertFalse(violations.isEmpty(), "Should have validation errors");
+            assertTrue(
+                    violations.stream()
+                            .anyMatch(v -> v.getPropertyPath().toString().equals("rotationMin")),
+                    "Should have violation on 'rotationMin' field");
+        }
+
+        @Test
+        @DisplayName("Should reject rotationMax above 360")
+        void testRotationMaxAboveBound() {
+            // Arrange
             request.setRotationMax(361f);
-            // Framework validation would reject this before reaching controller
+
+            // Act
+            Set<ConstraintViolation<AddWatermarkRequest>> violations = validator.validate(request);
+
+            // Assert
+            assertFalse(violations.isEmpty(), "Should have validation errors");
+            assertTrue(
+                    violations.stream()
+                            .anyMatch(v -> v.getPropertyPath().toString().equals("rotationMax")),
+                    "Should have violation on 'rotationMax' field");
         }
 
         @Test
-        @DisplayName("Should enforce font size bounds of 1.0 to 500.0")
-        void testFontSizeBounds() {
-            // Note: This tests the @DecimalMin/@DecimalMax annotations
+        @DisplayName("Should accept valid rotation values")
+        void testRotationValid() {
+            // Arrange
+            request.setRotationMin(-180f);
+            request.setRotationMax(180f);
+
+            // Act
+            Set<ConstraintViolation<AddWatermarkRequest>> violations = validator.validate(request);
+
+            // Assert
+            assertTrue(
+                    violations.stream()
+                            .noneMatch(
+                                    v ->
+                                            v.getPropertyPath().toString().equals("rotationMin")
+                                                    || v.getPropertyPath()
+                                                            .toString()
+                                                            .equals("rotationMax")),
+                    "Should have no violations on rotation fields");
+        }
+
+        @Test
+        @DisplayName("Should reject fontSizeMin below 1.0")
+        void testFontSizeMinBelowBound() {
+            // Arrange
             request.setFontSizeMin(0.5f);
+
+            // Act
+            Set<ConstraintViolation<AddWatermarkRequest>> violations = validator.validate(request);
+
+            // Assert
+            assertFalse(violations.isEmpty(), "Should have validation errors");
+            assertTrue(
+                    violations.stream()
+                            .anyMatch(v -> v.getPropertyPath().toString().equals("fontSizeMin")),
+                    "Should have violation on 'fontSizeMin' field");
+        }
+
+        @Test
+        @DisplayName("Should reject fontSizeMax above 500.0")
+        void testFontSizeMaxAboveBound() {
+            // Arrange
             request.setFontSizeMax(501f);
-            // Framework validation would reject this before reaching controller
+
+            // Act
+            Set<ConstraintViolation<AddWatermarkRequest>> violations = validator.validate(request);
+
+            // Assert
+            assertFalse(violations.isEmpty(), "Should have validation errors");
+            assertTrue(
+                    violations.stream()
+                            .anyMatch(v -> v.getPropertyPath().toString().equals("fontSizeMax")),
+                    "Should have violation on 'fontSizeMax' field");
         }
 
         @Test
-        @DisplayName("Should enforce per-letter font count bounds of 1 to 20")
-        void testPerLetterFontCountBounds() {
-            // Note: This tests the @Min/@Max annotations
+        @DisplayName("Should accept valid font size values")
+        void testFontSizeValid() {
+            // Arrange
+            request.setFontSizeMin(10f);
+            request.setFontSizeMax(100f);
+
+            // Act
+            Set<ConstraintViolation<AddWatermarkRequest>> violations = validator.validate(request);
+
+            // Assert
+            assertTrue(
+                    violations.stream()
+                            .noneMatch(
+                                    v ->
+                                            v.getPropertyPath().toString().equals("fontSizeMin")
+                                                    || v.getPropertyPath()
+                                                            .toString()
+                                                            .equals("fontSizeMax")),
+                    "Should have no violations on font size fields");
+        }
+
+        @Test
+        @DisplayName("Should reject perLetterFontCount below 1")
+        void testPerLetterFontCountMinimum() {
+            // Arrange
             request.setPerLetterFontCount(0);
+
+            // Act
+            Set<ConstraintViolation<AddWatermarkRequest>> violations = validator.validate(request);
+
+            // Assert
+            assertFalse(violations.isEmpty(), "Should have validation errors");
+            assertTrue(
+                    violations.stream()
+                            .anyMatch(
+                                    v ->
+                                            v.getPropertyPath()
+                                                    .toString()
+                                                    .equals("perLetterFontCount")),
+                    "Should have violation on 'perLetterFontCount' field");
+        }
+
+        @Test
+        @DisplayName("Should reject perLetterFontCount above 20")
+        void testPerLetterFontCountMaximum() {
+            // Arrange
             request.setPerLetterFontCount(21);
-            // Framework validation would reject this before reaching controller
+
+            // Act
+            Set<ConstraintViolation<AddWatermarkRequest>> violations = validator.validate(request);
+
+            // Assert
+            assertFalse(violations.isEmpty(), "Should have validation errors");
+            assertTrue(
+                    violations.stream()
+                            .anyMatch(
+                                    v ->
+                                            v.getPropertyPath()
+                                                    .toString()
+                                                    .equals("perLetterFontCount")),
+                    "Should have violation on 'perLetterFontCount' field");
         }
 
         @Test
-        @DisplayName("Should enforce per-letter color count bounds of 1 to 20")
-        void testPerLetterColorCountBounds() {
-            // Note: This tests the @Min/@Max annotations
+        @DisplayName("Should accept valid perLetterFontCount value")
+        void testPerLetterFontCountValid() {
+            // Arrange
+            request.setPerLetterFontCount(5);
+
+            // Act
+            Set<ConstraintViolation<AddWatermarkRequest>> violations = validator.validate(request);
+
+            // Assert
+            assertTrue(
+                    violations.stream()
+                            .noneMatch(
+                                    v ->
+                                            v.getPropertyPath()
+                                                    .toString()
+                                                    .equals("perLetterFontCount")),
+                    "Should have no violations on 'perLetterFontCount' field");
+        }
+
+        @Test
+        @DisplayName("Should reject perLetterColorCount below 1")
+        void testPerLetterColorCountMinimum() {
+            // Arrange
             request.setPerLetterColorCount(0);
+
+            // Act
+            Set<ConstraintViolation<AddWatermarkRequest>> violations = validator.validate(request);
+
+            // Assert
+            assertFalse(violations.isEmpty(), "Should have validation errors");
+            assertTrue(
+                    violations.stream()
+                            .anyMatch(
+                                    v ->
+                                            v.getPropertyPath()
+                                                    .toString()
+                                                    .equals("perLetterColorCount")),
+                    "Should have violation on 'perLetterColorCount' field");
+        }
+
+        @Test
+        @DisplayName("Should reject perLetterColorCount above 20")
+        void testPerLetterColorCountMaximum() {
+            // Arrange
             request.setPerLetterColorCount(21);
-            // Framework validation would reject this before reaching controller
+
+            // Act
+            Set<ConstraintViolation<AddWatermarkRequest>> violations = validator.validate(request);
+
+            // Assert
+            assertFalse(violations.isEmpty(), "Should have validation errors");
+            assertTrue(
+                    violations.stream()
+                            .anyMatch(
+                                    v ->
+                                            v.getPropertyPath()
+                                                    .toString()
+                                                    .equals("perLetterColorCount")),
+                    "Should have violation on 'perLetterColorCount' field");
         }
 
         @Test
-        @DisplayName("Should enforce margin bounds of 0.0 to 500.0")
-        void testMarginBounds() {
-            // Note: This tests the @DecimalMin/@DecimalMax annotations
+        @DisplayName("Should accept valid perLetterColorCount value")
+        void testPerLetterColorCountValid() {
+            // Arrange
+            request.setPerLetterColorCount(4);
+
+            // Act
+            Set<ConstraintViolation<AddWatermarkRequest>> violations = validator.validate(request);
+
+            // Assert
+            assertTrue(
+                    violations.stream()
+                            .noneMatch(
+                                    v ->
+                                            v.getPropertyPath()
+                                                    .toString()
+                                                    .equals("perLetterColorCount")),
+                    "Should have no violations on 'perLetterColorCount' field");
+        }
+
+        @Test
+        @DisplayName("Should reject margin below 0.0")
+        void testMarginBelowBound() {
+            // Arrange
             request.setMargin(-1f);
+
+            // Act
+            Set<ConstraintViolation<AddWatermarkRequest>> violations = validator.validate(request);
+
+            // Assert
+            assertFalse(violations.isEmpty(), "Should have validation errors");
+            assertTrue(
+                    violations.stream()
+                            .anyMatch(v -> v.getPropertyPath().toString().equals("margin")),
+                    "Should have violation on 'margin' field");
+        }
+
+        @Test
+        @DisplayName("Should reject margin above 500.0")
+        void testMarginAboveBound() {
+            // Arrange
             request.setMargin(501f);
-            // Framework validation would reject this before reaching controller
+
+            // Act
+            Set<ConstraintViolation<AddWatermarkRequest>> violations = validator.validate(request);
+
+            // Assert
+            assertFalse(violations.isEmpty(), "Should have validation errors");
+            assertTrue(
+                    violations.stream()
+                            .anyMatch(v -> v.getPropertyPath().toString().equals("margin")),
+                    "Should have violation on 'margin' field");
         }
 
         @Test
-        @DisplayName("Should enforce image scale bounds of 0.1 to 10.0")
-        void testImageScaleBounds() {
-            // Note: This tests the @DecimalMin/@DecimalMax annotations
+        @DisplayName("Should accept valid margin value")
+        void testMarginValid() {
+            // Arrange
+            request.setMargin(10f);
+
+            // Act
+            Set<ConstraintViolation<AddWatermarkRequest>> violations = validator.validate(request);
+
+            // Assert
+            assertTrue(
+                    violations.stream()
+                            .noneMatch(v -> v.getPropertyPath().toString().equals("margin")),
+                    "Should have no violations on 'margin' field");
+        }
+
+        @Test
+        @DisplayName("Should reject imageScale below 0.1")
+        void testImageScaleBelowBound() {
+            // Arrange
             request.setImageScale(0.05f);
-            request.setImageScale(11f);
-            // Framework validation would reject this before reaching controller
+
+            // Act
+            Set<ConstraintViolation<AddWatermarkRequest>> violations = validator.validate(request);
+
+            // Assert
+            assertFalse(violations.isEmpty(), "Should have validation errors");
+            assertTrue(
+                    violations.stream()
+                            .anyMatch(v -> v.getPropertyPath().toString().equals("imageScale")),
+                    "Should have violation on 'imageScale' field");
         }
 
         @Test
-        @DisplayName("Should validate bounds format pattern")
-        void testBoundsFormatPattern() {
-            // Note: This tests the @Pattern annotation on bounds field
-            request.setBounds("invalid");
-            // Framework validation would reject this before reaching controller
+        @DisplayName("Should reject imageScale above 10.0")
+        void testImageScaleAboveBound() {
+            // Arrange
+            request.setImageScale(11f);
 
-            request.setBounds("100,100,200,200"); // Valid format
-            // Framework validation would accept this
+            // Act
+            Set<ConstraintViolation<AddWatermarkRequest>> violations = validator.validate(request);
+
+            // Assert
+            assertFalse(violations.isEmpty(), "Should have validation errors");
+            assertTrue(
+                    violations.stream()
+                            .anyMatch(v -> v.getPropertyPath().toString().equals("imageScale")),
+                    "Should have violation on 'imageScale' field");
+        }
+
+        @Test
+        @DisplayName("Should accept valid imageScale value")
+        void testImageScaleValid() {
+            // Arrange
+            request.setImageScale(1.5f);
+
+            // Act
+            Set<ConstraintViolation<AddWatermarkRequest>> violations = validator.validate(request);
+
+            // Assert
+            assertTrue(
+                    violations.stream()
+                            .noneMatch(v -> v.getPropertyPath().toString().equals("imageScale")),
+                    "Should have no violations on 'imageScale' field");
+        }
+
+        @Test
+        @DisplayName("Should reject invalid bounds format")
+        void testBoundsInvalidFormat() {
+            // Arrange
+            request.setBounds("invalid");
+
+            // Act
+            Set<ConstraintViolation<AddWatermarkRequest>> violations = validator.validate(request);
+
+            // Assert
+            assertFalse(violations.isEmpty(), "Should have validation errors");
+            assertTrue(
+                    violations.stream()
+                            .anyMatch(v -> v.getPropertyPath().toString().equals("bounds")),
+                    "Should have violation on 'bounds' field");
+        }
+
+        @Test
+        @DisplayName("Should accept valid bounds format")
+        void testBoundsValidFormat() {
+            // Arrange
+            request.setBounds("100,100,200,200");
+
+            // Act
+            Set<ConstraintViolation<AddWatermarkRequest>> violations = validator.validate(request);
+
+            // Assert
+            assertTrue(
+                    violations.stream()
+                            .noneMatch(v -> v.getPropertyPath().toString().equals("bounds")),
+                    "Should have no violations on 'bounds' field");
         }
     }
 }

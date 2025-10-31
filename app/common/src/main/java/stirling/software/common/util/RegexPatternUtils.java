@@ -14,7 +14,8 @@ public final class RegexPatternUtils {
 
     private static final String WHITESPACE_REGEX = "\\s++";
     private static final String EXTENSION_REGEX = "\\.(?:[^.]*+)?$";
-    private static final Pattern COLOR_PATTERN = Pattern.compile("^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{8})$");
+    private static final Pattern COLOR_PATTERN =
+            Pattern.compile("^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{8})$");
 
     private RegexPatternUtils() {
         super();
