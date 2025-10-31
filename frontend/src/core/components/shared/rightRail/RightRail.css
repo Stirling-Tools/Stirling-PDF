@@ -88,23 +88,6 @@
   flex: 1;
 }
 
-.right-rail-health-indicator {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-}
-
-.right-rail-health-indicator:focus-visible {
-  outline: 2px solid var(--mantine-color-blue-5, #339af0);
-  outline-offset: 2px;
-}
-
-.right-rail-health-indicator:active {
-  transform: scale(0.9);
-}
-
 /* Animated grow-down slot for buttons (mirrors current-tool-slot behavior) */
 .right-rail-slot {
   overflow: hidden;

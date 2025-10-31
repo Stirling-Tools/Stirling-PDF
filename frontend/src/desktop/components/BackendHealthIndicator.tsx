@@ -55,7 +55,7 @@ export const BackendHealthIndicator: React.FC<BackendHealthIndicatorProps> = ({
     >
       <Box
         component="span"
-        className={className}
+        className={className ? `${className}` : undefined}
         role="status"
         aria-live="polite"
         aria-label={label}
@@ -72,6 +72,7 @@ export const BackendHealthIndicator: React.FC<BackendHealthIndicatorProps> = ({
             : '0 0 0 2px rgba(0, 0, 0, 0.08)',
           cursor: 'pointer',
           display: 'inline-block',
+          outline: 'none',
         }}
       />
     </Tooltip>
