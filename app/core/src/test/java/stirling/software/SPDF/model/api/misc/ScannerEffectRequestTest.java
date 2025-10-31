@@ -93,7 +93,7 @@ class ScannerEffectRequestTest {
     @DisplayName("advancedEnabled default is false and can be toggled")
     void advancedEnabled_flag_roundtrip() {
         ScannerEffectRequest req = new ScannerEffectRequest();
-        // Erwartung: default false (falls das Modell das so definiert)
+
         assertFalse(req.isAdvancedEnabled(), "advancedEnabled should default to false");
         req.setAdvancedEnabled(true);
         assertTrue(req.isAdvancedEnabled());
@@ -105,7 +105,7 @@ class ScannerEffectRequestTest {
     @DisplayName("Colorspace roundtrip")
     void colorspace_roundtrip() {
         ScannerEffectRequest req = new ScannerEffectRequest();
-        // Erwartung: Colorspace enum enthält mindestens 'color'
+
         req.setColorspace(ScannerEffectRequest.Colorspace.color);
         assertEquals(ScannerEffectRequest.Colorspace.color, req.getColorspace());
     }
@@ -147,5 +147,27 @@ class ScannerEffectRequestTest {
         assertEquals(1.08f, req.getBrightness(), 0.0001f);
         assertEquals(1.15f, req.getContrast(), 0.0001f);
         assertEquals(75, req.getResolution());
+    }
+
+    @Test
+    @DisplayName("getRotationValue() maps enum values to expected degrees")
+    void rotationValue_mapping() {
+        ScannerEffectRequest req = new ScannerEffectRequest();
+
+        // none -> 0
+        req.setRotation(ScannerEffectRequest.Rotation.none);
+        assertEquals(0, req.getRotationValue(), "Rotation 'none' should map to 0°");
+
+        // slight -> 2
+        req.setRotation(ScannerEffectRequest.Rotation.slight);
+        assertEquals(2, req.getRotationValue(), "Rotation 'slight' should map to 2°");
+
+        // moderate -> 5
+        req.setRotation(ScannerEffectRequest.Rotation.moderate);
+        assertEquals(5, req.getRotationValue(), "Rotation 'moderate' should map to 5°");
+
+        // severe -> 8
+        req.setRotation(ScannerEffectRequest.Rotation.severe);
+        assertEquals(8, req.getRotationValue(), "Rotation 'severe' should map to 8°");
     }
 }
