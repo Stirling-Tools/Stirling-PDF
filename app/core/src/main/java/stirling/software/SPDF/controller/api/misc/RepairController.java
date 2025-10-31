@@ -21,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
@@ -116,7 +117,9 @@ public class RepairController {
                         repairSuccess = true;
                     }
                 } else {
-                    throw new IOException("PDF repair failed with available tools");
+                    throw ExceptionUtils.createFileProcessingException(
+                            "PDF repair",
+                            new IOException("PDF repair failed with available tools"));
                 }
             }
 

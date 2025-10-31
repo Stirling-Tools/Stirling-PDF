@@ -73,7 +73,7 @@ public class PdfToCbzUtilsTest {
                         () -> {
                             PdfToCbzUtils.convertPdfToCbz(nonPdfFile, 300, pdfDocumentFactory);
                         });
-        Assertions.assertEquals("File must be a PDF", exception.getMessage());
+        Assertions.assertEquals("File must be in PDF format", exception.getMessage());
     }
 
     @Test

@@ -16,7 +16,7 @@
     <!-- Stack trace section -->
     <div id="trace" th:if="${trace}" style="max-height: 0; overflow: hidden;">
       <div>
-        <pre id="traceContent" th:text="${trace}"></pre>
+        <pre id="traceContent" style="white-space: pre-wrap; word-break: break-word; overflow: auto; max-height: 60vh; padding: 0.5rem; border-radius: 0.25rem; background: rgba(0,0,0,0.05);" th:text="${trace}"></pre>
       </div>
       <!-- Buttons to submit a ticket on GitHub and join Discord server -->
       <a href="https://github.com/Stirling-Tools/Stirling-PDF/issues" id="github-button" target="_blank" th:text="#{error.github}"></a>
@@ -29,7 +29,7 @@
     function toggletrace() {
       var traceDiv = document.getElementById("trace");
       if (!traceVisible) {
-        traceDiv.style.maxHeight = "500px";
+        traceDiv.style.maxHeight = "60vh";
         traceVisible = true;
       } else {
         traceDiv.style.maxHeight = "0px";

@@ -289,7 +289,7 @@ public class PipelineProcessor {
             newFilename = removeTrailingNaming(extractFilename(response));
         }
         // Check if the response body is a zip file
-        if (isZip(response.getBody(), newFilename)) {
+        if (isZip(response.getBody())) {
             // Unzip the file and add all the files to the new output files
             newOutputFiles.addAll(unzip(response.getBody()));
         } else {
@@ -379,23 +379,12 @@ public class PipelineProcessor {
         return outputFiles;
     }
 
-    private boolean isZip(byte[] data, String filename) {
+    private boolean isZip(byte[] data) {
         if (data == null || data.length < 4) {
             return false;
         }
-        if (filename != null) {
-            String lower = filename.toLowerCase();
-            if (lower.endsWith(".cbz")) {
-                // Treat CBZ as non-zip for our unzipping purposes
-                return false;
-            }
-        }
         // Check the first four bytes of the data against the standard zip magic number
         return data[0] == 0x50 && data[1] == 0x4B && data[2] == 0x03 && data[3] == 0x04;
-    }
-
-    private boolean isZip(byte[] data) {
-        return isZip(data, null);
     }
 
     private List<Resource> unzip(byte[] data) throws IOException {
@@ -421,7 +410,7 @@ public class PipelineProcessor {
                             }
                         };
                 // If the unzipped file is a zip file, unzip it
-                if (isZip(baos.toByteArray(), filename)) {
+                if (isZip(baos.toByteArray())) {
                     log.info("File {} is a zip file. Unzipping...", filename);
                     unzippedFiles.addAll(unzip(baos.toByteArray()));
                 } else {
