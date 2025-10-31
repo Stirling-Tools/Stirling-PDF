@@ -71,6 +71,11 @@ public class ProcessExecutor {
                                                 .getProcessExecutor()
                                                 .getSessionLimit()
                                                 .getInstallAppSessionLimit();
+                                case FFMPEG ->
+                                        applicationProperties
+                                                .getProcessExecutor()
+                                                .getSessionLimit()
+                                                .getFfmpegSessionLimit();
                                 case TESSERACT ->
                                         applicationProperties
                                                 .getProcessExecutor()
@@ -125,6 +130,11 @@ public class ProcessExecutor {
                                                 .getProcessExecutor()
                                                 .getTimeoutMinutes()
                                                 .getInstallAppTimeoutMinutes();
+                                case FFMPEG ->
+                                        applicationProperties
+                                                .getProcessExecutor()
+                                                .getTimeoutMinutes()
+                                                .getFfmpegTimeoutMinutes();
                                 case TESSERACT ->
                                         applicationProperties
                                                 .getProcessExecutor()
@@ -302,7 +312,8 @@ public class ProcessExecutor {
         TESSERACT,
         QPDF,
         GHOSTSCRIPT,
-        OCR_MY_PDF
+        OCR_MY_PDF,
+        FFMPEG
     }
 
     @Setter
