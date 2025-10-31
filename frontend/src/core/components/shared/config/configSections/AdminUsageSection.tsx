@@ -192,8 +192,8 @@ const AdminUsageSection: React.FC = () => {
       </Card>
 
       {/* Chart and Table */}
-      <UsageAnalyticsChart data={chartData} totalVisits={data.totalVisits} />
-      <UsageAnalyticsTable data={data.endpoints} totalVisits={data.totalVisits} />
+      <UsageAnalyticsChart data={chartData} />
+      <UsageAnalyticsTable data={data.endpoints} />
     </Stack>
   );
 };

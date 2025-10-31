@@ -86,8 +86,6 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
   // Left navigation structure and icons
   const configNavSections = useMemo(() =>
     createConfigNavSections(
-      Overview,
-      handleLogout,
       isAdmin,
       runningEE
     ),
