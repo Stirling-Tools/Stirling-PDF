@@ -21,6 +21,7 @@ export default defineConfig(
       'dist',
       'node_modules',
       'public',
+      'src-tauri',
     ],
   },
   eslint.configs.recommended,
