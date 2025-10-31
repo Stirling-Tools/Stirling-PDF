@@ -56,6 +56,7 @@ RUN printf '%s\n' \
     openssl \
     openssl-dev \
     openjdk21-jre \
+    ffmpeg \
     # Doc conversion
     gcompat \
     libc6-compat \

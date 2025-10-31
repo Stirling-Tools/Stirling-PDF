@@ -70,6 +70,7 @@ public class ExternalAppDepConfig {
         tmp.put("tesseract", List.of("tesseract"));
         tmp.put("rar", List.of("rar"));
         tmp.put(calibrePath, List.of("Calibre"));
+        tmp.put("ffmpeg", List.of("FFmpeg"));
         this.commandToGroupMapping = Collections.unmodifiableMap(tmp);
     }
 
