@@ -199,6 +199,10 @@ public class PdfUtils {
                             final int pageIndex = i;
                             BufferedImage image;
                             try {
+                                // Validate dimensions before rendering
+                                ExceptionUtils.validateRenderingDimensions(
+                                        document.getPage(pageIndex), pageIndex + 1, DPI);
+
                                 image =
                                         ExceptionUtils.handleOomRendering(
                                                 pageIndex + 1,
@@ -253,6 +257,10 @@ public class PdfUtils {
                         if (dimension == null) {
                             // Render the image to get the dimensions
                             try {
+                                // Validate dimensions before rendering
+                                ExceptionUtils.validateRenderingDimensions(
+                                        page, pageIndex + 1, DPI);
+
                                 pdfSizeImage =
                                         ExceptionUtils.handleOomRendering(
                                                 pageIndex + 1,
@@ -304,6 +312,10 @@ public class PdfUtils {
                             pageImage = pdfSizeImage;
                         } else {
                             try {
+                                // Validate dimensions before rendering
+                                ExceptionUtils.validateRenderingDimensions(
+                                        document.getPage(pageIndex), pageIndex + 1, DPI);
+
                                 pageImage =
                                         ExceptionUtils.handleOomRendering(
                                                 pageIndex + 1,
@@ -347,6 +359,10 @@ public class PdfUtils {
                         final int pageIndex = i;
                         BufferedImage image;
                         try {
+                            // Validate dimensions before rendering
+                            ExceptionUtils.validateRenderingDimensions(
+                                    document.getPage(pageIndex), pageIndex + 1, DPI);
+
                             image =
                                     ExceptionUtils.handleOomRendering(
                                             pageIndex + 1,

@@ -94,6 +94,10 @@ public class FlattenController {
                 final int pageIndex = i;
                 BufferedImage image = null;
                 try {
+                    // Validate dimensions BEFORE rendering to prevent OOM
+                    ExceptionUtils.validateRenderingDimensions(
+                            document.getPage(pageIndex), pageIndex + 1, renderDpi);
+
                     // Wrap entire rendering operation to catch OutOfMemoryError from any depth
                     image =
                             ExceptionUtils.handleOomRendering(

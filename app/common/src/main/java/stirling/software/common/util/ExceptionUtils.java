@@ -9,6 +9,9 @@ import java.util.ResourceBundle;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
+
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -207,6 +210,103 @@ public class ExceptionUtils {
             throw new IllegalArgumentException(name + " cannot be null");
         }
         return obj;
+    }
+
+    /**
+     * Validates that rendering a PDF page at the given DPI will not exceed safe memory limits. This
+     * should be called BEFORE attempting to render to prevent OOM/NegativeArraySizeException.
+     *
+     * <p>The validation checks if the resulting image dimensions would exceed:
+     *
+     * <ul>
+     *   <li>Java's maximum array size (Integer.MAX_VALUE)
+     *   <li>Practical memory limits (considering bytes per pixel)
+     * </ul>
+     *
+     * <p><strong>Usage Example:</strong>
+     *
+     * <pre>{@code
+     * PDPage page = document.getPage(pageIndex);
+     * ExceptionUtils.validateRenderingDimensions(page, pageIndex + 1, dpi);
+     * // Only render if validation passes
+     * BufferedImage image = renderer.renderImageWithDPI(pageIndex, dpi);
+     * }</pre>
+     *
+     * @param page the PDF page to validate
+     * @param pageNumber the page number (1-based, for error messages)
+     * @param dpi the DPI value to use for rendering
+     * @throws OutOfMemoryDpiException if the dimensions would be too large
+     */
+    public static void validateRenderingDimensions(PDPage page, int pageNumber, int dpi)
+            throws OutOfMemoryDpiException {
+        if (page == null) {
+            return; // Nothing to validate
+        }
+
+        PDRectangle mediaBox = page.getMediaBox();
+        if (mediaBox == null) {
+            return; // Cannot validate without dimensions
+        }
+
+        // Get page dimensions in points (1 point = 1/72 inch)
+        float widthInPoints = mediaBox.getWidth();
+        float heightInPoints = mediaBox.getHeight();
+
+        // Convert to pixels at the given DPI
+        // Formula: pixels = (points / 72) * dpi
+        long widthInPixels = Math.round((widthInPoints / 72.0) * dpi);
+        long heightInPixels = Math.round((heightInPoints / 72.0) * dpi);
+
+        // Check if dimensions exceed Integer.MAX_VALUE
+        if (widthInPixels > Integer.MAX_VALUE || heightInPixels > Integer.MAX_VALUE) {
+            log.warn(
+                    "Page {} dimensions too large: {}x{} pixels at {} DPI",
+                    pageNumber,
+                    widthInPixels,
+                    heightInPixels,
+                    dpi);
+            throw createOutOfMemoryDpiException(
+                    pageNumber,
+                    dpi,
+                    new IllegalArgumentException(
+                            "Dimension exceeds Integer.MAX_VALUE: "
+                                    + widthInPixels
+                                    + "x"
+                                    + heightInPixels));
+        }
+
+        // Check if total pixel count would exceed safe limits
+        // RGB images use 4 bytes per pixel (ARGB), but be conservative
+        long totalPixels = widthInPixels * heightInPixels;
+        long estimatedBytes = totalPixels * 4; // 4 bytes per pixel for ARGB
+
+        // Java array max size is Integer.MAX_VALUE elements
+        // For byte array: Integer.MAX_VALUE bytes
+        // For int array (image pixels): Integer.MAX_VALUE ints = Integer.MAX_VALUE * 4 bytes
+        if (totalPixels > Integer.MAX_VALUE) {
+            log.warn(
+                    "Page {} pixel count too large: {} pixels ({} MB) at {} DPI",
+                    pageNumber,
+                    totalPixels,
+                    estimatedBytes / (1024 * 1024),
+                    dpi);
+            throw createOutOfMemoryDpiException(
+                    pageNumber,
+                    dpi,
+                    new IllegalArgumentException(
+                            "Total pixel count exceeds safe limit: " + totalPixels));
+        }
+
+        // Additional safety check: warn about very large images (> 1GB estimated)
+        if (estimatedBytes > 1024L * 1024 * 1024) {
+            log.warn(
+                    "Page {} will create a very large image: {}x{} pixels (~{} MB) at {} DPI. This may cause memory issues.",
+                    pageNumber,
+                    widthInPixels,
+                    heightInPixels,
+                    estimatedBytes / (1024 * 1024),
+                    dpi);
+        }
     }
 
     /**
