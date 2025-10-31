@@ -108,14 +108,14 @@ public class ExtractImageScansController {
                         if (properties != null && properties.getSystem() != null) {
                             renderDpi = properties.getSystem().getMaxDPI();
                         }
+                        final int dpi = renderDpi;
+                        final int pageIndex = i;
 
-                        try {
-                            image = pdfRenderer.renderImageWithDPI(i, renderDpi);
-                        } catch (OutOfMemoryError e) {
-                            throw ExceptionUtils.createOutOfMemoryDpiException(i + 1, renderDpi, e);
-                        } catch (NegativeArraySizeException e) {
-                            throw ExceptionUtils.createOutOfMemoryDpiException(i + 1, renderDpi, e);
-                        }
+                        image =
+                                ExceptionUtils.handleOomRendering(
+                                        pageIndex + 1,
+                                        dpi,
+                                        () -> pdfRenderer.renderImageWithDPI(pageIndex, dpi));
                         ImageIO.write(image, "png", tempFile.toFile());
 
                         // Add temp file path to images list

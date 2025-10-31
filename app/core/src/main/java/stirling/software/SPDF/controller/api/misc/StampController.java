@@ -42,6 +42,7 @@ import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.model.api.misc.AddStampRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.common.util.TempFile;
@@ -86,7 +87,8 @@ public class StampController {
         MultipartFile pdfFile = request.getFileInput();
         String pdfFileName = pdfFile.getOriginalFilename();
         if (pdfFileName.contains("..") || pdfFileName.startsWith("/")) {
-            throw new IllegalArgumentException("Invalid PDF file path");
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.invalid.filepath", "Invalid PDF file path: " + pdfFileName);
         }
 
         String stampType = request.getStampType();
@@ -94,7 +96,8 @@ public class StampController {
         MultipartFile stampImage = request.getStampImage();
         if ("image".equalsIgnoreCase(stampType)) {
             if (stampImage == null) {
-                throw new IllegalArgumentException(
+                throw ExceptionUtils.createIllegalArgumentException(
+                        "error.stamp.image.required",
                         "Stamp image file must be provided when stamp type is 'image'");
             }
             String stampImageName = stampImage.getOriginalFilename();

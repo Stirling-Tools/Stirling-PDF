@@ -1,7 +1,6 @@
 package stirling.software.common.service;
 
 import java.io.IOException;
-import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -64,8 +63,9 @@ public class JobExecutorService {
      * @param async Whether to run the job asynchronously
      * @param work The work to be done
      * @return The response
+     * @throws Exception if the job execution fails
      */
-    public ResponseEntity<?> runJobGeneric(boolean async, Supplier<Object> work) {
+    public ResponseEntity<?> runJobGeneric(boolean async, Supplier<Object> work) throws Exception {
         return runJobGeneric(async, work, -1);
     }
 
@@ -76,9 +76,10 @@ public class JobExecutorService {
      * @param work The work to be done
      * @param customTimeoutMs Custom timeout in milliseconds, or -1 to use the default
      * @return The response
+     * @throws Exception if the job execution fails
      */
     public ResponseEntity<?> runJobGeneric(
-            boolean async, Supplier<Object> work, long customTimeoutMs) {
+            boolean async, Supplier<Object> work, long customTimeoutMs) throws Exception {
         return runJobGeneric(async, work, customTimeoutMs, false, 50);
     }
 
@@ -91,13 +92,15 @@ public class JobExecutorService {
      * @param queueable Whether this job can be queued when system resources are limited
      * @param resourceWeight The resource weight of this job (1-100)
      * @return The response
+     * @throws Exception if the job execution fails
      */
     public ResponseEntity<?> runJobGeneric(
             boolean async,
             Supplier<Object> work,
             long customTimeoutMs,
             boolean queueable,
-            int resourceWeight) {
+            int resourceWeight)
+            throws Exception {
         String jobId = UUID.randomUUID().toString();
 
         // Store the job ID in the request for potential use by other components
@@ -191,29 +194,18 @@ public class JobExecutorService {
 
             return ResponseEntity.ok().body(new JobResponse<>(true, jobId, null));
         } else {
-            try {
-                log.debug("Running sync job with timeout {} ms", timeoutToUse);
+            log.debug("Running sync job with timeout {} ms", timeoutToUse);
 
-                // Execute with timeout
-                Object result = executeWithTimeout(() -> work.get(), timeoutToUse);
+            // Execute with timeout
+            Object result = executeWithTimeout(() -> work.get(), timeoutToUse);
 
-                // If the result is already a ResponseEntity, return it directly
-                if (result instanceof ResponseEntity) {
-                    return (ResponseEntity<?>) result;
-                }
-
-                // Process different result types
-                return handleResultForSyncJob(result);
-            } catch (TimeoutException te) {
-                log.error("Synchronous job timed out after {} ms", timeoutToUse);
-                return ResponseEntity.internalServerError()
-                        .body(Map.of("error", "Job timed out after " + timeoutToUse + " ms"));
-            } catch (Exception e) {
-                log.error("Error executing synchronous job: {}", e.getMessage(), e);
-                // Construct a JSON error response
-                return ResponseEntity.internalServerError()
-                        .body(Map.of("error", "Job failed: " + e.getMessage()));
+            // If the result is already a ResponseEntity, return it directly
+            if (result instanceof ResponseEntity) {
+                return (ResponseEntity<?>) result;
             }
+
+            // Process different result types
+            return handleResultForSyncJob(result);
         }
     }
 

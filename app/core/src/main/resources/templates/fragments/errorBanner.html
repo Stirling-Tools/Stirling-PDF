@@ -3,7 +3,7 @@
   <br th:if="${message}">
   <div id="errorContainer" th:if="${message}" class="alert alert-danger alert-dismissible alert-container fade show" role="alert">
     <div class="alert-header d-flex">
-      <span class="alert-heading" th:text="'Error:  ' + ${status} + '  ' + ${error}"></span>
+      <span class="alert-heading" th:text="${error} ?: 'Error'"></span>
       <button type="button" class="btn btn-danger" th:if="${trace}" onclick="toggletrace()" th:text="#{error.showStack}"></button>
       <button type="button" class="btn btn-secondary" th:if="${trace}" onclick="copytrace()" th:text="#{error.copyStack}"></button>
       <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" onclick="dismissError()">
@@ -12,11 +12,12 @@
         </span>
       </button>
     </div>
-    <p th:text="${message} + ' for path: ' + ${path}"></p>
+    <p class="error-message mb-2" style="white-space: pre-wrap;" th:if="${message}" th:text="${message}"></p>
+    <p class="error-path small text-muted mb-0" th:if="${path}" th:text="'Path: ' + ${path}"></p>
     <!-- Stack trace section -->
     <div id="trace" th:if="${trace}" style="max-height: 0; overflow: hidden;">
       <div>
-        <pre id="traceContent" th:text="${trace}"></pre>
+        <pre id="traceContent" style="white-space: pre-wrap; word-break: break-word; overflow: auto; max-height: 60vh; padding: 0.5rem; border-radius: 0.25rem; background: rgba(0,0,0,0.05);" th:text="${trace}"></pre>
       </div>
       <!-- Buttons to submit a ticket on GitHub and join Discord server -->
       <a href="https://github.com/Stirling-Tools/Stirling-PDF/issues" id="github-button" target="_blank" th:text="#{error.github}"></a>
@@ -29,7 +30,7 @@
     function toggletrace() {
       var traceDiv = document.getElementById("trace");
       if (!traceVisible) {
-        traceDiv.style.maxHeight = "500px";
+        traceDiv.style.maxHeight = "60vh";
         traceVisible = true;
       } else {
         traceDiv.style.maxHeight = "0px";
@@ -70,6 +71,188 @@
       } else {
         errorContainer.style.height = "auto";
       }
+    }
+
+    try {
+      normalizeServerRenderedProblemDetail();
+    } catch (err) {
+      console.error('Failed to normalize server-rendered error banner', err);
+    }
+
+    function normalizeServerRenderedProblemDetail() {
+      var container = document.getElementById('errorContainer');
+      if (!container || container.style.display === 'none') {
+        return;
+      }
+
+      var messageEl = container.querySelector('.error-message');
+      if (!messageEl) {
+        return;
+      }
+
+      var rawMessage = messageEl.textContent || '';
+      var traceEl = document.getElementById('traceContent');
+      var parseResult = extractProblemDetail(rawMessage);
+
+      if (!parseResult && traceEl) {
+        parseResult = extractProblemDetail(traceEl.textContent || '');
+      }
+
+      if (!parseResult) {
+        messageEl.textContent = rawMessage.trim();
+        return;
+      }
+
+      var problem = parseResult.json;
+      var heading = container.querySelector('.alert-heading');
+      var formattedMessage = buildUserFriendlyProblemMessage(problem, parseResult.prefix);
+      messageEl.textContent = formattedMessage;
+
+      if (heading && problem.title) {
+        heading.textContent = problem.title;
+      }
+
+      if (traceEl) {
+        traceEl.textContent = JSON.stringify(orderProblemDetail(problem), null, 2);
+      }
+
+      // Ensure trace toggle buttons appear when JSON is available
+      var toggleButton = container.querySelector('.btn.btn-danger');
+      var copyButton = container.querySelector('.btn.btn-secondary');
+      if (traceEl && traceEl.textContent.trim().length > 0) {
+        if (toggleButton) {
+          toggleButton.style.display = '';
+        }
+        if (copyButton) {
+          copyButton.style.display = '';
+        }
+      }
+    }
+
+    function extractProblemDetail(text) {
+      if (!text) {
+        return null;
+      }
+
+      var trimmed = text.trim();
+      if (!trimmed) {
+        return null;
+      }
+
+      var braceStart = trimmed.indexOf('{');
+      var braceEnd = trimmed.lastIndexOf('}');
+
+      if (braceStart !== -1 && braceEnd !== -1 && braceEnd > braceStart) {
+        var jsonCandidate = trimmed.substring(braceStart, braceEnd + 1);
+        var parsedCandidate = tryParseJson(jsonCandidate);
+        if (parsedCandidate) {
+          var prefix = trimmed.substring(0, braceStart).trim();
+          return { json: parsedCandidate, prefix: prefix };
+        }
+      }
+
+      var parsed = tryParseJson(trimmed);
+      if (parsed) {
+        return { json: parsed, prefix: '' };
+      }
+
+      return null;
+    }
+
+    function tryParseJson(candidate) {
+      if (!candidate) {
+        return null;
+      }
+      try {
+        return JSON.parse(candidate);
+      } catch (err) {
+        return null;
+      }
+    }
+
+    function buildUserFriendlyProblemMessage(problem, prefix) {
+      var lines = [];
+      var title = (problem && (problem.title || problem.error)) || '';
+      var detail = (problem && (problem.detail || problem.message)) || '';
+      var primaryLine = '';
+
+      if (title && detail) {
+        primaryLine = title + ': ' + detail;
+      } else if (title || detail) {
+        primaryLine = title || detail;
+      }
+
+      if (primaryLine) {
+        if (lines.length > 0) {
+          lines.push('');
+        }
+        lines.push(primaryLine);
+      }
+
+      if (problem && problem.errorCode) {
+        lines.push('');
+        lines.push('Error Code: ' + problem.errorCode);
+      }
+
+      var detailAlreadyIncluded = detail && primaryLine && primaryLine.indexOf(detail) !== -1;
+      if (detail && !detailAlreadyIncluded) {
+        lines.push('');
+        lines.push(detail);
+      }
+
+      if (problem && Array.isArray(problem.hints) && problem.hints.length > 0) {
+        lines.push('');
+        lines.push('How to fix:');
+        for (var i = 0; i < problem.hints.length; i++) {
+          lines.push('  ' + (i + 1) + '. ' + problem.hints[i]);
+        }
+      }
+
+      if (problem && problem.actionRequired) {
+        lines.push('');
+        lines.push(problem.actionRequired);
+      }
+
+      if (problem && problem.supportId) {
+        lines.push('');
+        lines.push('Support ID: ' + problem.supportId);
+      }
+
+      return lines
+        .filter(function (line, index, arr) {
+          if (line !== '') {
+            return true;
+          }
+          if (index === 0 || index === arr.length - 1) {
+            return false;
+          }
+          return arr[index - 1] !== '';
+        })
+        .join('\n');
+    }
+
+    function orderProblemDetail(problem) {
+      if (!problem || typeof problem !== 'object') {
+        return problem;
+      }
+
+      var preferredOrder = ['errorCode', 'title', 'status', 'type', 'detail', 'instance', 'path', 'timestamp', 'hints', 'actionRequired'];
+      var ordered = {};
+
+      for (var i = 0; i < preferredOrder.length; i++) {
+        var key = preferredOrder[i];
+        if (Object.prototype.hasOwnProperty.call(problem, key)) {
+          ordered[key] = problem[key];
+        }
+      }
+
+      Object.keys(problem).forEach(function (key) {
+        if (!Object.prototype.hasOwnProperty.call(ordered, key)) {
+          ordered[key] = problem[key];
+        }
+      });
+
+      return ordered;
     }
   </script>
 </th:block>
