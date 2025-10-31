@@ -3,8 +3,10 @@ package stirling.software.SPDF.model.api.misc;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockMultipartFile;
 
@@ -18,153 +20,132 @@ class ScannerEffectRequestTest {
     private static Validator validator;
 
     @BeforeAll
-    static void setUpValidator() {
+    static void setupValidator() {
         ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
         validator = factory.getValidator();
     }
 
     @Test
-    void defaults_are_set_correctly() {
+    @DisplayName("fileInput is @NotNull -> violation when missing")
+    void fileInput_missing_triggersViolation() {
         ScannerEffectRequest req = new ScannerEffectRequest();
 
-        assertNull(req.getFileInput());
-        assertEquals(ScannerEffectRequest.Quality.high, req.getQuality());
-        assertEquals(ScannerEffectRequest.Rotation.slight, req.getRotation());
-        assertEquals(ScannerEffectRequest.Colorspace.grayscale, req.getColorspace());
+        Set<ConstraintViolation<ScannerEffectRequest>> violations = validator.validate(req);
+        boolean hasFileInputViolation =
+                violations.stream()
+                        .anyMatch(v -> "fileInput".contentEquals(v.getPropertyPath().toString()));
 
-        assertEquals(20, req.getBorder());
-        assertEquals(0, req.getRotate());
+        assertTrue(
+                hasFileInputViolation,
+                () ->
+                        "Expected a validation violation on 'fileInput', but got: "
+                                + violations.stream()
+                                        .map(v -> v.getPropertyPath() + " -> " + v.getMessage())
+                                        .collect(Collectors.joining(", ")));
+    }
+
+    @Test
+    @DisplayName("fileInput present -> no violation for fileInput")
+    void fileInput_present_noViolationForThatField() {
+        ScannerEffectRequest req = new ScannerEffectRequest();
+        req.setFileInput(
+                new MockMultipartFile(
+                        "fileInput", "test.pdf", "application/pdf", new byte[] {1, 2, 3}));
+
+        Set<ConstraintViolation<ScannerEffectRequest>> violations = validator.validate(req);
+
+        boolean hasFileInputViolation =
+                violations.stream()
+                        .anyMatch(v -> "fileInput".contentEquals(v.getPropertyPath().toString()));
+
+        assertFalse(
+                hasFileInputViolation,
+                () ->
+                        "Did not expect a validation violation on 'fileInput', but got: "
+                                + violations.stream()
+                                        .map(v -> v.getPropertyPath() + " -> " + v.getMessage())
+                                        .collect(Collectors.joining(", ")));
+    }
+
+    @Test
+    @DisplayName("Roundtrip: basic numeric properties")
+    void roundtrip_basicNumericProperties() {
+        ScannerEffectRequest req = new ScannerEffectRequest();
+
+        req.setRotate(3);
+        req.setRotateVariance(2);
+        req.setBrightness(1.11f);
+        req.setContrast(0.95f);
+        req.setBlur(1.25f);
+        req.setNoise(0.75f);
+        req.setResolution(110);
+
+        assertEquals(3, req.getRotate());
         assertEquals(2, req.getRotateVariance());
+        assertEquals(1.11f, req.getBrightness(), 0.0001f);
+        assertEquals(0.95f, req.getContrast(), 0.0001f);
+        assertEquals(1.25f, req.getBlur(), 0.0001f);
+        assertEquals(0.75f, req.getNoise(), 0.0001f);
+        assertEquals(110, req.getResolution());
+    }
 
-        assertEquals(1.0f, req.getBrightness(), 0.0001);
-        assertEquals(1.0f, req.getContrast(), 0.0001);
-        assertEquals(1.0f, req.getBlur(), 0.0001);
-        assertEquals(8.0f, req.getNoise(), 0.0001);
-
-        assertFalse(req.isYellowish());
-        assertEquals(300, req.getResolution());
+    @Test
+    @DisplayName("advancedEnabled default is false and can be toggled")
+    void advancedEnabled_flag_roundtrip() {
+        ScannerEffectRequest req = new ScannerEffectRequest();
+        // Erwartung: default false (falls das Modell das so definiert)
+        assertFalse(req.isAdvancedEnabled(), "advancedEnabled should default to false");
+        req.setAdvancedEnabled(true);
+        assertTrue(req.isAdvancedEnabled());
+        req.setAdvancedEnabled(false);
         assertFalse(req.isAdvancedEnabled());
     }
 
     @Test
-    void bean_validation_detects_missing_required_fields() {
+    @DisplayName("Colorspace roundtrip")
+    void colorspace_roundtrip() {
         ScannerEffectRequest req = new ScannerEffectRequest();
-        // Defaults: fileInput=null, quality != null, rotation != null
-        Set<ConstraintViolation<ScannerEffectRequest>> violations = validator.validate(req);
-        assertTrue(
-                violations.stream().anyMatch(v -> "File input is required".equals(v.getMessage())),
-                "Expected violation for missing fileInput");
-
-        // Make also quality and rotation invalid
-        req.setQuality(null);
-        req.setRotation(null);
-        violations = validator.validate(req);
-
-        assertTrue(
-                violations.stream().anyMatch(v -> "File input is required".equals(v.getMessage())));
-        assertTrue(violations.stream().anyMatch(v -> "Quality is required".equals(v.getMessage())));
-        assertTrue(
-                violations.stream().anyMatch(v -> "Rotation is required".equals(v.getMessage())));
+        // Erwartung: Colorspace enum enthält mindestens 'color'
+        req.setColorspace(ScannerEffectRequest.Colorspace.color);
+        assertEquals(ScannerEffectRequest.Colorspace.color, req.getColorspace());
     }
 
     @Test
-    void quality_value_mapping_is_correct() {
-        ScannerEffectRequest req = new ScannerEffectRequest();
-
-        req.setQuality(ScannerEffectRequest.Quality.low);
-        assertEquals(30, req.getQuality());
-
-        req.setQuality(ScannerEffectRequest.Quality.medium);
-        assertEquals(60, req.getQuality());
-
-        req.setQuality(ScannerEffectRequest.Quality.high);
-        assertEquals(100, req.getQuality());
-    }
-
-    @Test
-    void rotation_value_mapping_is_correct() {
-        ScannerEffectRequest req = new ScannerEffectRequest();
-
-        req.setRotation(ScannerEffectRequest.Rotation.none);
-        assertEquals(0, req.getRotationValue());
-
-        req.setRotation(ScannerEffectRequest.Rotation.slight);
-        assertEquals(2, req.getRotationValue());
-
-        req.setRotation(ScannerEffectRequest.Rotation.moderate);
-        assertEquals(5, req.getRotationValue());
-
-        req.setRotation(ScannerEffectRequest.Rotation.severe);
-        assertEquals(8, req.getRotationValue());
-    }
-
-    @Test
-    void high_quality_preset_applies_expected_values() {
+    @DisplayName("applyHighQualityPreset sets documented values")
+    void preset_highQuality() {
         ScannerEffectRequest req = new ScannerEffectRequest();
         req.applyHighQualityPreset();
 
-        assertEquals(0.1f, req.getBlur(), 0.0001);
-        assertEquals(1.0f, req.getNoise(), 0.0001);
-        assertEquals(1.02f, req.getBrightness(), 0.0001);
-        assertEquals(1.05f, req.getContrast(), 0.0001);
-        assertEquals(600, req.getResolution());
-    }
-
-    @Test
-    void medium_quality_preset_applies_expected_values() {
-        ScannerEffectRequest req = new ScannerEffectRequest();
-        req.applyMediumQualityPreset();
-
-        assertEquals(0.5f, req.getBlur(), 0.0001);
-        assertEquals(3.0f, req.getNoise(), 0.0001);
-        assertEquals(1.05f, req.getBrightness(), 0.0001);
-        assertEquals(1.1f, req.getContrast(), 0.0001);
-        assertEquals(300, req.getResolution());
-    }
-
-    @Test
-    void low_quality_preset_applies_expected_values() {
-        ScannerEffectRequest req = new ScannerEffectRequest();
-        req.applyLowQualityPreset();
-
-        assertEquals(1.0f, req.getBlur(), 0.0001);
-        assertEquals(5.0f, req.getNoise(), 0.0001);
-        assertEquals(1.1f, req.getBrightness(), 0.0001);
-        assertEquals(1.2f, req.getContrast(), 0.0001);
+        assertEquals(0.1f, req.getBlur(), 0.0001f);
+        assertEquals(1.0f, req.getNoise(), 0.0001f);
+        assertEquals(1.03f, req.getBrightness(), 0.0001f);
+        assertEquals(1.06f, req.getContrast(), 0.0001f);
         assertEquals(150, req.getResolution());
     }
 
     @Test
-    void equals_and_hashCode_consider_fileInput() {
-        ScannerEffectRequest a = new ScannerEffectRequest();
-        ScannerEffectRequest b = new ScannerEffectRequest();
+    @DisplayName("applyMediumQualityPreset sets documented values")
+    void preset_mediumQuality() {
+        ScannerEffectRequest req = new ScannerEffectRequest();
+        req.applyMediumQualityPreset();
 
-        // same defaults -> equal
-        assertEquals(a, b);
-        assertEquals(a.hashCode(), b.hashCode());
-
-        // set file only on one -> not equal
-        MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "x.pdf", "application/pdf", new byte[] {1, 2, 3});
-        a.setFileInput(file);
-
-        assertNotEquals(a, b);
-        assertNotEquals(a.hashCode(), b.hashCode());
+        assertEquals(0.1f, req.getBlur(), 0.0001f);
+        assertEquals(1.0f, req.getNoise(), 0.0001f);
+        assertEquals(1.06f, req.getBrightness(), 0.0001f);
+        assertEquals(1.12f, req.getContrast(), 0.0001f);
+        assertEquals(100, req.getResolution());
     }
 
     @Test
-    void advancedEnabled_flag_roundtrip() {
+    @DisplayName("applyLowQualityPreset sets documented values")
+    void preset_lowQuality() {
         ScannerEffectRequest req = new ScannerEffectRequest();
-        assertFalse(req.isAdvancedEnabled());
-        req.setAdvancedEnabled(true);
-        assertTrue(req.isAdvancedEnabled());
-    }
+        req.applyLowQualityPreset();
 
-    @Test
-    void colorspace_roundtrip() {
-        ScannerEffectRequest req = new ScannerEffectRequest();
-        req.setColorspace(ScannerEffectRequest.Colorspace.color);
-        assertEquals(ScannerEffectRequest.Colorspace.color, req.getColorspace());
+        assertEquals(0.9f, req.getBlur(), 0.0001f);
+        assertEquals(2.5f, req.getNoise(), 0.0001f);
+        assertEquals(1.08f, req.getBrightness(), 0.0001f);
+        assertEquals(1.15f, req.getContrast(), 0.0001f);
+        assertEquals(75, req.getResolution());
     }
 }

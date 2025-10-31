@@ -1,6 +1,7 @@
 package stirling.software.proprietary.security.database.repository;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 import java.util.Date;
@@ -41,7 +42,7 @@ class JPATokenRepositoryImplTest {
             assertEquals("series123", saved.getSeries());
             assertEquals("user1", saved.getUsername());
             assertEquals("tokenABC", saved.getToken());
-            assertEquals(date, saved.getLastUsed());
+            assertEquals(date.toInstant(), saved.getLastUsed());
         }
     }
 
@@ -64,7 +65,7 @@ class JPATokenRepositoryImplTest {
             tokenRepository.updateToken("series123", "newToken", newDate);
 
             assertEquals("newToken", existing.getToken());
-            assertEquals(newDate, existing.getLastUsed());
+            assertEquals(newDate.toInstant(), existing.getLastUsed());
             verify(persistentLoginRepository).save(existing);
         }
 
