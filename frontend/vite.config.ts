@@ -15,6 +15,7 @@ export default defineConfig({
     }),
   ],
   server: {
+    host: true, // Listen on all addresses (0.0.0.0) - allows access from any domain/IP
     proxy: {
       '/api': {
         target: 'http://localhost:8080',

@@ -1,29 +1,98 @@
 import React, { useState, useEffect } from 'react';
-import { Paper, Stack, Switch, Text, Tooltip, NumberInput, SegmentedControl } from '@mantine/core';
+import { Paper, Stack, Switch, Text, Tooltip, NumberInput, SegmentedControl, Code, Group, Anchor, ActionIcon } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { usePreferences } from '@app/contexts/PreferencesContext';
+import { useAppConfig } from '@app/contexts/AppConfigContext';
 import type { ToolPanelMode } from '@app/constants/toolPanel';
+import LocalIcon from '@app/components/shared/LocalIcon';
 
 const DEFAULT_AUTO_UNZIP_FILE_LIMIT = 4;
+const BANNER_DISMISSED_KEY = 'stirlingpdf_features_banner_dismissed';
 
-const GeneralSection: React.FC = () => {
+interface GeneralSectionProps {
+  hideTitle?: boolean;
+}
+
+const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false }) => {
   const { t } = useTranslation();
   const { preferences, updatePreference } = usePreferences();
+  const { config } = useAppConfig();
   const [fileLimitInput, setFileLimitInput] = useState<number | string>(preferences.autoUnzipFileLimit);
+  const [bannerDismissed, setBannerDismissed] = useState(() => {
+    // Check localStorage on mount
+    return localStorage.getItem(BANNER_DISMISSED_KEY) === 'true';
+  });
 
   // Sync local state with preference changes
   useEffect(() => {
     setFileLimitInput(preferences.autoUnzipFileLimit);
   }, [preferences.autoUnzipFileLimit]);
 
+  // Check if login is disabled
+  const loginDisabled = !config?.enableLogin;
+
+  const handleDismissBanner = () => {
+    setBannerDismissed(true);
+    localStorage.setItem(BANNER_DISMISSED_KEY, 'true');
+  };
+
   return (
     <Stack gap="lg">
-      <div>
-        <Text fw={600} size="lg">{t('settings.general.title', 'General')}</Text>
-        <Text size="sm" c="dimmed">
-          {t('settings.general.description', 'Configure general application preferences.')}
-        </Text>
-      </div>
+      {!hideTitle && (
+        <div>
+          <Text fw={600} size="lg">{t('settings.general.title', 'General')}</Text>
+          <Text size="sm" c="dimmed">
+            {t('settings.general.description', 'Configure general application preferences.')}
+          </Text>
+        </div>
+      )}
+
+      {loginDisabled && !bannerDismissed && (
+        <Paper withBorder p="md" radius="md" style={{ background: 'var(--mantine-color-blue-0)', position: 'relative' }}>
+          <ActionIcon
+            variant="subtle"
+            color="gray"
+            size="sm"
+            style={{ position: 'absolute', top: '0.5rem', right: '0.5rem' }}
+            onClick={handleDismissBanner}
+            aria-label={t('settings.general.enableFeatures.dismiss', 'Dismiss')}
+          >
+            <LocalIcon icon="close-rounded" width="1rem" height="1rem" />
+          </ActionIcon>
+          <Stack gap="sm">
+            <Group gap="xs">
+              <LocalIcon icon="admin-panel-settings-rounded" width="1.2rem" height="1.2rem" style={{ color: 'var(--mantine-color-blue-6)' }} />
+              <Text fw={600} size="sm" style={{ color: 'var(--mantine-color-blue-9)' }}>
+                {t('settings.general.enableFeatures.title', 'For System Administrators')}
+              </Text>
+            </Group>
+            <Text size="sm" c="dimmed">
+              {t('settings.general.enableFeatures.intro', 'Enable user authentication, team management, and workspace features for your organization.')}
+            </Text>
+            <Group gap="xs" wrap="wrap">
+              <Text size="sm" c="dimmed">
+                {t('settings.general.enableFeatures.action', 'Configure')}
+              </Text>
+              <Code>SECURITY_ENABLELOGIN=true</Code>
+              <Text size="sm" c="dimmed">
+                {t('settings.general.enableFeatures.and', 'and')}
+              </Text>
+              <Code>DISABLE_ADDITIONAL_FEATURES=false</Code>
+            </Group>
+            <Text size="xs" c="dimmed" fs="italic">
+              {t('settings.general.enableFeatures.benefit', 'Enables user roles, team collaboration, admin controls, and enterprise features.')}
+            </Text>
+            <Anchor
+              href="https://docs.stirlingpdf.com/Advanced%20Configuration/System%20and%20Security"
+              target="_blank"
+              size="sm"
+              style={{ color: 'var(--mantine-color-blue-6)' }}
+            >
+              {t('settings.general.enableFeatures.learnMore', 'Learn more in documentation')} →
+            </Anchor>
+          </Stack>
+        </Paper>
+      )}
 
       <Paper withBorder p="md" radius="md">
         <Stack gap="md">

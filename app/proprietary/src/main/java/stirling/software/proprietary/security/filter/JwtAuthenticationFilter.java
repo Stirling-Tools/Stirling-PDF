@@ -84,11 +84,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 boolean isPublicAuthEndpoint =
                         requestURI.startsWith(contextPath + "/login")
                                 || requestURI.startsWith(contextPath + "/signup")
+                                || requestURI.startsWith(contextPath + "/invite")
                                 || requestURI.startsWith(contextPath + "/auth/")
                                 || requestURI.startsWith(contextPath + "/oauth2")
                                 || requestURI.startsWith(contextPath + "/api/v1/auth/login")
                                 || requestURI.startsWith(contextPath + "/api/v1/auth/register")
-                                || requestURI.startsWith(contextPath + "/api/v1/auth/refresh");
+                                || requestURI.startsWith(contextPath + "/api/v1/auth/refresh")
+                                || requestURI.startsWith(contextPath + "/api/v1/invite/validate")
+                                || requestURI.startsWith(contextPath + "/api/v1/invite/accept");
 
                 if (!isPublicAuthEndpoint) {
                     // For API requests, return 401 JSON

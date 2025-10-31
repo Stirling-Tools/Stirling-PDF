@@ -227,6 +227,7 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
             contextPath + "/login",
             contextPath + "/signup",
             contextPath + "/register",
+            contextPath + "/invite",
             contextPath + "/error",
             contextPath + "/images/",
             contextPath + "/public/",
@@ -240,6 +241,8 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
             contextPath + "/api/v1/auth/register",
             contextPath + "/api/v1/auth/refresh",
             contextPath + "/api/v1/auth/me",
+            contextPath + "/api/v1/invite/validate",
+            contextPath + "/api/v1/invite/accept",
             contextPath + "/site.webmanifest"
         };
 

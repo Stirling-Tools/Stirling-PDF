@@ -1,5 +1,4 @@
 export type NavKey =
-  | 'overview'
   | 'preferences'
   | 'notifications'
   | 'connections'
@@ -23,6 +22,9 @@ export type NavKey =
   | 'adminLegal'
   | 'adminPremium'
   | 'adminFeatures'
+  | 'adminPlan'
+  | 'adminAudit'
+  | 'adminUsage'
   | 'adminEndpoints';
 
 
