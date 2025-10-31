@@ -1,0 +1,276 @@
+# Keys and paths to ignore for locale synchronization checks.
+# The structure mirrors scripts/ignore_translation.toml and is consumed by
+# .github/scripts/sync_translations.py.
+
+[az_AZ]
+ignore = [
+    'language.direction',
+]
+
+[bg_BG]
+ignore = [
+    'language.direction',
+]
+
+[bo_CN]
+ignore = [
+    'language.direction',
+]
+
+[ca_CA]
+ignore = [
+    'adminUserSettings.admin',
+    'language.direction',
+    'watermark.type.1',
+]
+
+[cs_CZ]
+ignore = [
+    'language.direction',
+    'text',
+]
+
+[da_DK]
+ignore = [
+    'language.direction',
+]
+
+[de_DE]
+ignore = [
+    'AddStampRequest.alphabet',
+    'AddStampRequest.position',
+    'alphabet',
+    'certSign.name',
+    'endpointStatistics.top10',
+    'endpointStatistics.top20',
+    'fileChooser.dragAndDrop',
+    'language.direction',
+    'legal.impressum',
+    'licenses.version',
+    'pipeline.title',
+    'pipelineOptions.pipelineHeader',
+    'pro',
+    'sponsor',
+    'text',
+    'validateSignature.cert.version',
+    'watermark.type.1',
+]
+
+[el_GR]
+ignore = [
+    'language.direction',
+]
+
+[es_ES]
+ignore = [
+    'language.direction',
+    'no',
+    'showJS.tags',
+]
+
+[eu_ES]
+ignore = [
+    'language.direction',
+]
+
+[fa_IR]
+ignore = [
+]
+
+[fr_FR]
+ignore = [
+    'AddStampRequest.alphabet',
+    'AddStampRequest.position',
+    'AddStampRequest.rotation',
+    'adminUserSettings.actions',
+    'alphabet',
+    'compare.document.1',
+    'compare.document.2',
+    'language.direction',
+    'licenses.license',
+    'licenses.module',
+    'licenses.nav',
+    'licenses.version',
+    'pipeline.title',
+    'watermark.type.2',
+]
+
+[ga_IE]
+ignore = [
+    'language.direction',
+]
+
+[hi_IN]
+ignore = [
+    'language.direction',
+]
+
+[hr_HR]
+ignore = [
+    'language.direction',
+    'showJS.tags',
+]
+
+[hu_HU]
+ignore = [
+    'endpointStatistics.top10',
+    'endpointStatistics.top20',
+    'language.direction',
+    'pipeline.title',
+    'pipelineOptions.pipelineHeader',
+    'pro',
+    'showJS.tags',
+]
+
+[id_ID]
+ignore = [
+    'language.direction',
+]
+
+[it_IT]
+ignore = [
+    'language.direction',
+    'no',
+    'password',
+    'pipeline.title',
+    'pipelineOptions.pipelineHeader',
+    'showJS.tags',
+    'sponsor',
+]
+
+[ja_JP]
+ignore = [
+    'language.direction',
+]
+
+[ko_KR]
+ignore = [
+    'language.direction',
+]
+
+[ml_IN]
+ignore = [
+    'language.direction',
+]
+
+[ml_ML]
+ignore = [
+    'language.direction',
+]
+
+[nl_NL]
+ignore = [
+    'compare.document.1',
+    'compare.document.2',
+    'language.direction',
+    'navbar.allTools',
+    'sponsor',
+]
+
+[no_NB]
+ignore = [
+    'adminUserSettings.admin',
+    'info',
+    'language.direction',
+    'oops',
+    'sponsor',
+]
+
+[pl_PL]
+ignore = [
+    'language.direction',
+]
+
+[pt_BR]
+ignore = [
+    'language.direction',
+    'pipelineOptions.pipelineHeader',
+]
+
+[pt_PT]
+ignore = [
+    'language.direction',
+]
+
+[ro_RO]
+ignore = [
+    'language.direction',
+]
+
+[ru_RU]
+ignore = [
+    'language.direction',
+]
+
+[sk_SK]
+ignore = [
+    'adminUserSettings.admin',
+    'info',
+    'language.direction',
+    'navbar.sections.security',
+    'text',
+    'watermark.type.1',
+]
+
+[sl_SI]
+ignore = [
+    'language.direction',
+]
+
+[sr_LATN_RS]
+ignore = [
+    'endpointStatistics.top',
+    'endpointStatistics.top10',
+    'endpointStatistics.top20',
+    'font',
+    'info',
+    'language.direction',
+    'pro',
+    'showJS.tags',
+]
+
+[sv_SE]
+ignore = [
+    'language.direction',
+]
+
+[th_TH]
+ignore = [
+    'language.direction',
+    'pipelineOptions.pipelineHeader',
+    'showJS.tags',
+]
+
+[tr_TR]
+ignore = [
+    'language.direction',
+]
+
+[uk_UA]
+ignore = [
+    'language.direction',
+]
+
+[vi_VN]
+ignore = [
+    'language.direction',
+    'pipelineOptions.pipelineHeader',
+    'showJS.tags',
+]
+
+[zh_BO]
+ignore = [
+    'language.direction',
+]
+
+[zh_CN]
+ignore = [
+    'language.direction',
+]
+
+[zh_TW]
+ignore = [
+    'language.direction',
+    'poweredBy',
+    'showJS.tags',
+]

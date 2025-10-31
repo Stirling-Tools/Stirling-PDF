@@ -54,7 +54,7 @@ jobs:
 
       - name: Sync translation JSON files
         run: |
-          python .github/scripts/check_language_json.py --reference-file "frontend/public/locales/en-GB/translation.json" --branch V2
+          python .github/scripts/sync_translations.py --reference-file "frontend/public/locales/en-GB/translation.json" --branch V2
 
       - name: Commit translation files
         run: |
