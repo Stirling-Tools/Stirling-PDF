@@ -228,6 +228,8 @@ export default function TeamsSection() {
       <Table
         horizontalSpacing="md"
         verticalSpacing="sm"
+        withRowBorders
+        highlightOnHover
         style={{
           '--table-border-color': 'var(--mantine-color-gray-3)',
         } as React.CSSProperties}
@@ -256,17 +258,8 @@ export default function TeamsSection() {
               teams.map((team) => (
                 <Table.Tr
                   key={team.id}
-                  style={{
-                    cursor: 'pointer',
-                    borderBottom: '1px solid var(--mantine-color-gray-3)',
-                  }}
+                  style={{ cursor: 'pointer' }}
                   onClick={() => setViewingTeamId(team.id)}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = 'var(--mantine-color-gray-0)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = 'transparent';
-                  }}
                 >
                   <Table.Td>
                     <Group gap="xs">

@@ -476,6 +476,7 @@ export default function PeopleSection() {
       <Table
         horizontalSpacing="md"
         verticalSpacing="sm"
+        withRowBorders
         style={{
           '--table-border-color': 'var(--mantine-color-gray-3)',
         } as React.CSSProperties}
@@ -505,12 +506,7 @@ export default function PeopleSection() {
             </Table.Tr>
           ) : (
             filteredUsers.map((user) => (
-              <Table.Tr
-                key={user.id}
-                style={{
-                  borderBottom: '1px solid var(--mantine-color-gray-3)',
-                }}
-              >
+              <Table.Tr key={user.id}>
                 <Table.Td>
                   <Group gap="xs" wrap="nowrap">
                     <Tooltip

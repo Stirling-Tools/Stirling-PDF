@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Text, Group, Stack, SegmentedControl, Loader, Alert } from '@mantine/core';
+import { Card, Text, Group, Stack, SegmentedControl, Loader, Alert, Box, SimpleGrid } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import auditService, { AuditChartsData } from '@app/services/auditService';
 
@@ -17,9 +17,9 @@ const SimpleBarChart: React.FC<SimpleBarChartProps> = ({ data, title, color = 'b
       <Text size="sm" fw={600}>
         {title}
       </Text>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+      <Stack gap="sm">
         {data.map((item, index) => (
-          <div key={index}>
+          <Box key={index}>
             <Group justify="space-between" mb={4}>
               <Text size="xs" c="dimmed" maw={200} style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 {item.label}
@@ -28,16 +28,16 @@ const SimpleBarChart: React.FC<SimpleBarChartProps> = ({ data, title, color = 'b
                 {item.value}
               </Text>
             </Group>
-            <div
+            <Box
               style={{
                 width: '100%',
-                height: 8,
+                height: '0.5rem',
                 backgroundColor: 'var(--mantine-color-gray-2)',
-                borderRadius: 4,
+                borderRadius: 'var(--mantine-radius-sm)',
                 overflow: 'hidden',
               }}
             >
-              <div
+              <Box
                 style={{
                   width: `${(item.value / maxValue) * 100}%`,
                   height: '100%',
@@ -45,10 +45,10 @@ const SimpleBarChart: React.FC<SimpleBarChartProps> = ({ data, title, color = 'b
                   transition: 'width 0.3s ease',
                 }}
               />
-            </div>
-          </div>
+            </Box>
+          </Box>
         ))}
-      </div>
+      </Stack>
     </Stack>
   );
 };
@@ -82,9 +82,9 @@ const AuditChartsSection: React.FC<AuditChartsSectionProps> = () => {
   if (loading) {
     return (
       <Card padding="lg" radius="md" withBorder>
-        <div style={{ display: 'flex', justifyContent: 'center' }}>
+        <Group justify="center">
           <Loader size="lg" my="xl" />
-        </div>
+        </Group>
       </Card>
     );
   }
@@ -134,13 +134,7 @@ const AuditChartsSection: React.FC<AuditChartsSectionProps> = () => {
           />
         </Group>
 
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: '1.5rem',
-          }}
-        >
+        <SimpleGrid cols={3} spacing="xl">
           <SimpleBarChart
             data={eventsByTypeData}
             title={t('audit.charts.byType', 'Events by Type')}
@@ -156,7 +150,7 @@ const AuditChartsSection: React.FC<AuditChartsSectionProps> = () => {
             title={t('audit.charts.overTime', 'Events Over Time')}
             color="purple"
           />
-        </div>
+        </SimpleGrid>
       </Stack>
     </Card>
   );

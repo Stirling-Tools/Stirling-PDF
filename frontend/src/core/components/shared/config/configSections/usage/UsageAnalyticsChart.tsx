@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, Text, Stack } from '@mantine/core';
+import { Card, Text, Stack, Group, Box } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 
 interface SimpleBarChartProps {
@@ -11,20 +11,20 @@ const SimpleBarChart: React.FC<SimpleBarChartProps> = ({ data, maxValue }) => {
   const { t } = useTranslation();
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+    <Stack gap="sm">
       {data.length === 0 ? (
         <Text c="dimmed" ta="center" py="xl">
           {t('usage.noData', 'No data available')}
         </Text>
       ) : (
         data.map((item, index) => (
-          <div key={index}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+          <Box key={index}>
+            <Group justify="space-between" mb={4}>
               <Text
                 size="xs"
                 c="dimmed"
+                maw="60%"
                 style={{
-                  maxWidth: '60%',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
                   whiteSpace: 'nowrap',
@@ -32,25 +32,25 @@ const SimpleBarChart: React.FC<SimpleBarChartProps> = ({ data, maxValue }) => {
               >
                 {item.label}
               </Text>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Group gap="xs">
                 <Text size="xs" fw={600}>
                   {item.value}
                 </Text>
                 <Text size="xs" c="dimmed">
                   ({((item.value / maxValue) * 100).toFixed(1)}%)
                 </Text>
-              </div>
-            </div>
-            <div
+              </Group>
+            </Group>
+            <Box
               style={{
                 width: '100%',
-                height: 8,
+                height: '0.5rem',
                 backgroundColor: 'var(--mantine-color-gray-2)',
-                borderRadius: 4,
+                borderRadius: 'var(--mantine-radius-sm)',
                 overflow: 'hidden',
               }}
             >
-              <div
+              <Box
                 style={{
                   width: `${(item.value / maxValue) * 100}%`,
                   height: '100%',
@@ -58,11 +58,11 @@ const SimpleBarChart: React.FC<SimpleBarChartProps> = ({ data, maxValue }) => {
                   transition: 'width 0.3s ease',
                 }}
               />
-            </div>
-          </div>
+            </Box>
+          </Box>
         ))
       )}
-    </div>
+    </Stack>
   );
 };
 

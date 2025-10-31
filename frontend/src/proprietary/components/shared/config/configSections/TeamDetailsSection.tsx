@@ -15,6 +15,8 @@ import {
   CloseButton,
   Tooltip,
   Menu,
+  Avatar,
+  Box,
 } from '@mantine/core';
 import LocalIcon from '@app/components/shared/LocalIcon';
 import { alert } from '@app/components/toast';
@@ -261,6 +263,7 @@ export default function TeamDetailsSection({ teamId, onBack }: TeamDetailsSectio
       <Table
         horizontalSpacing="md"
         verticalSpacing="sm"
+        withRowBorders
         style={{
           '--table-border-color': 'var(--mantine-color-gray-3)',
         } as React.CSSProperties}
@@ -291,45 +294,33 @@ export default function TeamDetailsSection({ teamId, onBack }: TeamDetailsSectio
                   (Date.now() - userLastRequest[user.username]) < 5 * 60 * 1000; // Active within last 5 minutes
 
                 return (
-                  <Table.Tr
-                    key={user.id}
-                    style={{
-                      borderBottom: '1px solid var(--mantine-color-gray-3)',
-                    }}
-                  >
+                  <Table.Tr key={user.id}>
                     <Table.Td>
                       <Group gap="xs" wrap="nowrap">
-                        <div
-                          style={{
-                            width: 32,
-                            height: 32,
-                            borderRadius: '50%',
-                            backgroundColor: user.enabled
-                              ? 'var(--mantine-color-blue-1)'
-                              : 'var(--mantine-color-gray-2)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontWeight: 600,
-                            fontSize: '0.875rem',
-                            color: user.enabled
-                              ? 'var(--mantine-color-blue-7)'
-                              : 'var(--mantine-color-gray-6)',
-                            flexShrink: 0,
-                            border: isActive ? '2px solid var(--mantine-color-green-6)' : 'none',
-                            opacity: user.enabled ? 1 : 0.5,
-                          }}
-                          title={
+                        <Tooltip
+                          label={
                             !user.enabled
                               ? t('workspace.people.disabled', 'Disabled')
                               : isActive
                                 ? t('workspace.people.activeSession', 'Active session')
                                 : t('workspace.people.active', 'Active')
                           }
+                          zIndex={Z_INDEX_OVER_CONFIG_MODAL}
                         >
-                          {user.username.charAt(0).toUpperCase()}
-                        </div>
-                        <div style={{ minWidth: 0, flex: 1 }}>
+                          <Avatar
+                            size={32}
+                            color={user.enabled ? 'blue' : 'gray'}
+                            styles={{
+                              root: {
+                                border: isActive ? '2px solid var(--mantine-color-green-6)' : 'none',
+                                opacity: user.enabled ? 1 : 0.5,
+                              }
+                            }}
+                          >
+                            {user.username.charAt(0).toUpperCase()}
+                          </Avatar>
+                        </Tooltip>
+                        <Box style={{ minWidth: 0, flex: 1 }}>
                           <Tooltip label={user.username} disabled={user.username.length <= 20} zIndex={Z_INDEX_OVER_CONFIG_MODAL}>
                             <Text
                               size="sm"
@@ -351,7 +342,7 @@ export default function TeamDetailsSection({ teamId, onBack }: TeamDetailsSectio
                               {user.email}
                             </Text>
                           )}
-                        </div>
+                        </Box>
                       </Group>
                     </Table.Td>
                     <Table.Td w={100}>
