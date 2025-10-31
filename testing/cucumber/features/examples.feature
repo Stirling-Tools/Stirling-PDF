@@ -24,7 +24,7 @@ Feature: API Validation
             | parameter | value         |
             | password  | wrongPassword |
         When I send the API request to the endpoint "/api/v1/security/remove-password"
-        Then the response status code should be 422
+        Then the response status code should be 400
 
     @positive @info
     Scenario: Get info

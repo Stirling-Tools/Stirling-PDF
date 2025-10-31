@@ -21,8 +21,8 @@ import lombok.extern.slf4j.Slf4j;
  * Utility class for handling exceptions with internationalized error messages. Provides consistent
  * error handling and user-friendly messages across the application.
  *
- * <p>This class works in harmony with {@code GlobalExceptionHandler} to provide a complete
- * exception handling solution:
+ * <p>This class works in with {@code GlobalExceptionHandler} to provide a complete exception
+ * handling solution:
  *
  * <h2>Integration Pattern:</h2>
  *
