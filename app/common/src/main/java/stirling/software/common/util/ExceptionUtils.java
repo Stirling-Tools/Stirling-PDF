@@ -64,9 +64,6 @@ public class ExceptionUtils {
             Pattern.compile("Page\\s+(\\d+)", Pattern.CASE_INSENSITIVE);
     private static volatile ResourceBundle messages;
 
-    // No static initialization block needed - hints and actions are now loaded from properties
-    // files
-
     /**
      * Load hints for a given error code from the resource bundle. Looks for keys like:
      * error.E001.hint.1, error.E001.hint.2, etc.
@@ -88,7 +85,6 @@ public class ExceptionUtils {
                 hints.add(hint);
                 index++;
             } catch (MissingResourceException e) {
-                // No more hints for this code
                 break;
             }
         }
@@ -114,19 +110,6 @@ public class ExceptionUtils {
         } catch (MissingResourceException e) {
             return null;
         }
-    }
-
-    // Old static initialization code removed - replaced with dynamic loading from properties
-    @Deprecated
-    @SuppressWarnings("unused")
-    private static void legacyStaticInitialization() {
-        // This method is deprecated and no longer used
-        // All hints and actions are now loaded dynamically from messages.properties
-        // See getHintsForErrorCode() and getActionRequiredForErrorCode() methods
-        /*
-        // All error hints and actions are now loaded from messages.properties
-        // See getHintsForErrorCode() and getActionRequiredForErrorCode() methods
-        */
     }
 
     /**
