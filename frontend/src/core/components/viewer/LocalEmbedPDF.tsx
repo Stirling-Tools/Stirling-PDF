@@ -185,7 +185,7 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
 
   // Wrap your UI with the <EmbedPDF> provider
   return (
-    <PrivateContent as="div">
+    <PrivateContent>
       <div
         style={{
           height: '100%',
