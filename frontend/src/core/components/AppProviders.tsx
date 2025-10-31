@@ -28,7 +28,6 @@ function ScarfTrackingInitializer() {
  * Contains all providers needed for the core
  */
 export function AppProviders({ children }: { children: ReactNode }) {
-
   return (
     <PreferencesProvider>
       <RainbowThemeProvider>

@@ -227,7 +227,6 @@ export default function RightRail() {
         <div className="right-rail-spacer" />
 
         <RightRailFooterExtensions className="right-rail-footer" />
-
       </div>
     </div>
   );
