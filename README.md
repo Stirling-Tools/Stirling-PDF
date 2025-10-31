@@ -68,6 +68,13 @@ All documentation available at [https://docs.stirlingpdf.com/](https://docs.stir
 - **PDF to CBR**: Convert to comic book rar archive
 - **PDF to Vector Image**: Convert PDF to vector image (EPS, PS, PCL, XPS) format
 
+#### Forms
+- **Fill PDF Forms**: Fill out interactive PDF forms
+- **Extract PDF Forms**: Extract form data from PDF
+- **Batch Fill PDF Forms**: Fill forms via JSON
+- **Delete Form Fields**: Remove form fields from PDF
+- **Modify Form Fields**: Modify form fields in PDF
+
 #### Sign & Security
 - **Sign**: Add digital signatures
 - **Remove Password**: Remove PDF security
