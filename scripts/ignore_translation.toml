@@ -318,10 +318,10 @@ ignore = [
 
 [fr_FR]
 ignore = [
-    'addPageNumbers.selectText.3',
     'AddStampRequest.alphabet',
     'AddStampRequest.position',
     'AddStampRequest.rotation',
+    'addPageNumbers.selectText.3',
     'adminUserSettings.actions',
     'alphabet',
     'audit.dashboard.modal.id',

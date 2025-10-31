@@ -297,15 +297,14 @@ public class ExceptionUtils {
 
         String message;
         if (context != null && !context.isEmpty()) {
-            // Use error.pdfCorruptedDuring key if available in properties, otherwise fallback to
-            // constructed message
             String contextKey = "error.pdfCorruptedDuring";
             String defaultMsg =
                     MessageFormat.format(
                             "Error {0}: {1}", context, getMessage(ErrorCode.PDF_CORRUPTED));
             message = getMessage(contextKey, defaultMsg, context);
         } else {
-            message = getMessage(ErrorCode.PDF_CORRUPTED);
+            message =
+                    "PDF file appears to be corrupted or damaged. Please try using the 'Repair PDF' feature first to fix the file before proceeding with this operation.";
         }
 
         return new PdfCorruptedException(message, cause, ErrorCode.PDF_CORRUPTED.getCode());
@@ -386,9 +385,10 @@ public class ExceptionUtils {
      *
      * @return CbrFormatException with user-friendly message
      */
-    public static CbrFormatException createCbrCorruptedImagesException() {
-        String message = getMessage(ErrorCode.CBR_NO_IMAGES);
-        return new CbrFormatException(message, ErrorCode.CBR_NO_IMAGES.getCode());
+    public static IOException createPdfEncryptionException(Exception cause) {
+        String message =
+                "The PDF appears to have corrupted encryption data. This can happen when the PDF was created with incompatible encryption methods. Please try using the 'Repair PDF' feature first, or contact the document creator for a new copy.";
+        return new IOException(message, cause);
     }
 
     /**
@@ -469,9 +469,10 @@ public class ExceptionUtils {
      *
      * @return EmlFormatException with user-friendly message
      */
-    public static EmlFormatException createEmlInvalidFormatException() {
-        String message = getMessage(ErrorCode.EML_INVALID_FORMAT);
-        return new EmlFormatException(message, ErrorCode.EML_INVALID_FORMAT.getCode());
+    public static IOException createPdfPasswordException(Exception cause) {
+        String message =
+                "The PDF Document is passworded and either the password was not provided or was incorrect";
+        return new IOException(message, cause);
     }
 
     /**
@@ -615,8 +616,8 @@ public class ExceptionUtils {
 
     /** Create system requirement exceptions. */
     public static IOException createPythonRequiredForWebpException() {
-        String message = getMessage(ErrorCode.PYTHON_REQUIRED_WEBP);
-        return new IOException(message);
+        return createIOException(
+                "error.toolRequired", "{0} is required for {1}", null, "Python", "WebP conversion");
     }
 
     /** Create compression-related exceptions. */
@@ -1309,10 +1310,27 @@ public class ExceptionUtils {
         }
     }
 
-    /** Exception thrown when Ghostscript fails to render or compress a file. */
-    public static class GhostscriptException extends BaseAppException {
-        public GhostscriptException(String message, Throwable cause, String errorCode) {
-            super(message, cause, errorCode);
-        }
+    /**
+     * Create a RuntimeException for memory/image size errors when rendering PDF images with DPI.
+     * Handles OutOfMemoryError and related conditions (e.g., NegativeArraySizeException) that
+     * result from images exceeding Java's array/memory limits.
+     *
+     * @param dpi the DPI value used
+     * @param cause the original error/exception (e.g., OutOfMemoryError,
+     *     NegativeArraySizeException)
+     * @return RuntimeException with user-friendly message
+     */
+    public static RuntimeException createOutOfMemoryDpiException(int dpi, Throwable cause) {
+        String message =
+                MessageFormat.format(
+                        "Out of memory or image-too-large error while rendering PDF at {0} DPI. "
+                                + "This can occur when the resulting image exceeds Java's array/memory limits (e.g., NegativeArraySizeException). "
+                                + "Please use a lower DPI value (recommended: 150 or less) or process the document in smaller chunks.",
+                        dpi);
+        return new RuntimeException(message, cause);
+    }
+
+    public static RuntimeException createOutOfMemoryDpiException(int dpi, OutOfMemoryError cause) {
+        return createOutOfMemoryDpiException(dpi, (Throwable) cause);
     }
 }
