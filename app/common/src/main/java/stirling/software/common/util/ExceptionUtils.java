@@ -1255,7 +1255,7 @@ public class ExceptionUtils {
                 "FFmpeg must be installed to convert PDFs to video. Install FFmpeg and ensure it is available on the system PATH."),
 
         // Validation errors
-        INVALID_ARGUMENT("E070", "error.invalidArgument", "Invalid argument: {0}"),
+        INVALID_ARGUMENT("E070", "error.invalidArgument", "Invalid argument ''{0}'': {1}"),
         NULL_ARGUMENT("E071", "error.nullArgument", "{0} must not be null"),
         INVALID_PAGE_SIZE("E072", "error.invalidPageSize", "Invalid page size format: {0}"),
         INVALID_COMPARATOR(
