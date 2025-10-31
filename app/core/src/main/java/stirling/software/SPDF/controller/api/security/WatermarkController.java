@@ -508,9 +508,47 @@ public class WatermarkController {
                 // Standard rendering without per-letter variations
                 contentStream.setFont(wmFont, wmFontSize);
                 contentStream.setNonStrokingColor(wmColor);
+
+                // Calculate actual watermark dimensions for center-point rotation
+                float actualMaxLineWidth = 0;
+                for (String textLine : textLines) {
+                    float lineWidth = wmFont.getStringWidth(textLine) * wmFontSize / 1000;
+                    if (lineWidth > actualMaxLineWidth) {
+                        actualMaxLineWidth = lineWidth;
+                    }
+                }
+                float actualWatermarkWidth = actualMaxLineWidth;
+                float actualWatermarkHeight = wmFontSize * textLines.length;
+
+                // Calculate center point of the watermark
+                float centerX = x + actualWatermarkWidth / 2;
+                float centerY = y + actualWatermarkHeight / 2;
+
+                // Apply rotation around center point
+                // To rotate around center, we need to:
+                // 1. Calculate offset from center to bottom-left corner
+                // 2. Rotate that offset
+                // 3. Add rotated offset to center to get final position
+                double rotationRad = Math.toRadians(wmRotation);
+                double cos = Math.cos(rotationRad);
+                double sin = Math.sin(rotationRad);
+
+                // Offset from center to bottom-left corner (where text starts)
+                float offsetX = -actualWatermarkWidth / 2;
+                float offsetY = -actualWatermarkHeight / 2;
+
+                // Apply rotation to the offset
+                float rotatedOffsetX = (float) (offsetX * cos - offsetY * sin);
+                float rotatedOffsetY = (float) (offsetX * sin + offsetY * cos);
+
+                // Final position where text should start
+                float finalX = centerX + rotatedOffsetX;
+                float finalY = centerY + rotatedOffsetY;
+
                 contentStream.beginText();
                 contentStream.setTextMatrix(
-                        Matrix.getRotateInstance((float) Math.toRadians(wmRotation), x, y));
+                        Matrix.getRotateInstance(
+                                (float) Math.toRadians(wmRotation), finalX, finalY));
 
                 for (String textLine : textLines) {
                     contentStream.showText(textLine);
@@ -544,11 +582,16 @@ public class WatermarkController {
             WatermarkRandomizer randomizer)
             throws IOException {
 
-        float currentX = startX;
-        float currentY = startY;
+        // Convert base rotation to radians for trigonometric calculations
+        double baseRotationRad = Math.toRadians(baseRotation);
+        double cosBase = Math.cos(baseRotationRad);
+        double sinBase = Math.sin(baseRotationRad);
+
+        float currentLineOffset = 0; // Vertical offset for each line
 
         for (String line : textLines) {
-            currentX = startX;
+            float currentCharOffset = 0; // Horizontal offset along the baseline for current line
+
             for (int i = 0; i < line.length(); i++) {
                 char c = line.charAt(i);
                 String charStr = String.valueOf(c);
@@ -564,11 +607,13 @@ public class WatermarkController {
                                 ? randomizer.generateRandomColorFromPalette(perLetterColorCount)
                                 : baseColor;
 
-                float letterRotation =
+                // Calculate per-letter rotation: base rotation + additional per-letter variation
+                float additionalRotation =
                         perLetterOrientation
                                 ? randomizer.generatePerLetterRotationInRange(
                                         perLetterOrientationMin, perLetterOrientationMax)
-                                : baseRotation;
+                                : 0f;
+                float letterRotation = baseRotation + additionalRotation;
 
                 // Determine per-letter font
                 PDFont letterFont = baseFont;
@@ -584,23 +629,60 @@ public class WatermarkController {
                     }
                 }
 
+                // Calculate letter dimensions for center-point rotation
+                float charWidth = letterFont.getStringWidth(charStr) * letterSize / 1000;
+                float charHeight = letterSize; // Approximate height as font size
+
+                // Calculate the position of this letter along the rotated baseline
+                // Transform from local coordinates (along baseline) to page coordinates
+                float localX = currentCharOffset;
+                float localY = -currentLineOffset; // Negative because text lines go downward
+
+                // Apply rotation transformation to position the letter on the rotated baseline
+                float transformedX = (float) (startX + localX * cosBase - localY * sinBase);
+                float transformedY = (float) (startY + localX * sinBase + localY * cosBase);
+
+                // Calculate letter's center point on the rotated baseline
+                float letterCenterX = transformedX + charWidth / 2;
+                float letterCenterY = transformedY + charHeight / 2;
+
+                // Apply rotation around letter center
+                // Calculate offset from center to bottom-left corner
+                double letterRotationRad = Math.toRadians(letterRotation);
+                double cosLetter = Math.cos(letterRotationRad);
+                double sinLetter = Math.sin(letterRotationRad);
+
+                float offsetX = -charWidth / 2;
+                float offsetY = -charHeight / 2;
+
+                // Rotate the offset
+                float rotatedOffsetX = (float) (offsetX * cosLetter - offsetY * sinLetter);
+                float rotatedOffsetY = (float) (offsetX * sinLetter + offsetY * cosLetter);
+
+                // Final position where letter should be rendered
+                float finalLetterX = letterCenterX + rotatedOffsetX;
+                float finalLetterY = letterCenterY + rotatedOffsetY;
+
                 // Set font and color
                 contentStream.setFont(letterFont, letterSize);
                 contentStream.setNonStrokingColor(letterColor);
 
-                // Render the character
+                // Render the character at the transformed position with combined rotation
                 contentStream.beginText();
                 contentStream.setTextMatrix(
                         Matrix.getRotateInstance(
-                                (float) Math.toRadians(letterRotation), currentX, currentY));
+                                (float) Math.toRadians(letterRotation),
+                                finalLetterX,
+                                finalLetterY));
                 contentStream.showText(charStr);
                 contentStream.endText();
 
-                // Advance position
-                float charWidth = letterFont.getStringWidth(charStr) * letterSize / 1000;
-                currentX += charWidth;
+                // Advance position along the baseline for the next character
+                currentCharOffset += charWidth;
             }
-            currentY -= baseFontSize;
+
+            // Move to next line (advance vertically in local coordinates)
+            currentLineOffset += baseFontSize;
         }
     }
 
