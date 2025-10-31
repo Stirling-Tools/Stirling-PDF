@@ -1314,8 +1314,8 @@ public class ExceptionUtils {
     }
 
     /** Base exception with error code support for IO-related errors. */
-    @Getter
     public abstract static class BaseAppException extends IOException implements ErrorCodeProvider {
+        @Getter(onMethod_ = {@Override})
         private final String errorCode;
 
         protected BaseAppException(String message, Throwable cause, String errorCode) {
@@ -1325,9 +1325,9 @@ public class ExceptionUtils {
     }
 
     /** Base exception with error code support for illegal argument errors. */
-    @Getter
     public abstract static class BaseValidationException extends IllegalArgumentException
             implements ErrorCodeProvider {
+        @Getter(onMethod_ = {@Override})
         private final String errorCode;
 
         protected BaseValidationException(String message, String errorCode) {
