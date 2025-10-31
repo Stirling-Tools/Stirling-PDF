@@ -61,7 +61,7 @@ public class RotationControllerTest {
     }
 
     @Test
-    public void testRotatePDFInvalidAngle() throws IOException {
+    public void testRotatePDFInvalidAngle() {
         // Create a mock file
         MockMultipartFile mockFile =
                 new MockMultipartFile(

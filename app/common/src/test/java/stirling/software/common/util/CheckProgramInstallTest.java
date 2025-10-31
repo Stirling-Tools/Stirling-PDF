@@ -26,6 +26,7 @@ class CheckProgramInstallTest {
 
     private MockedStatic<ProcessExecutor> mockProcessExecutor;
     private ProcessExecutor mockExecutor;
+    private ProcessExecutor mockFfmpegExecutor;
 
     @BeforeEach
     void setUp() throws Exception {
@@ -34,10 +35,14 @@ class CheckProgramInstallTest {
 
         // Set up mock for ProcessExecutor
         mockExecutor = Mockito.mock(ProcessExecutor.class);
+        mockFfmpegExecutor = Mockito.mock(ProcessExecutor.class);
         mockProcessExecutor = mockStatic(ProcessExecutor.class);
         mockProcessExecutor
                 .when(() -> ProcessExecutor.getInstance(ProcessExecutor.Processes.PYTHON_OPENCV))
                 .thenReturn(mockExecutor);
+        mockProcessExecutor
+                .when(() -> ProcessExecutor.getInstance(ProcessExecutor.Processes.FFMPEG))
+                .thenReturn(mockFfmpegExecutor);
     }
 
     @AfterEach
@@ -49,7 +54,7 @@ class CheckProgramInstallTest {
     }
 
     /** Reset static fields in the CheckProgramInstall class using reflection */
-    private void resetStaticFields() throws Exception {
+    private static void resetStaticFields() throws Exception {
         Field pythonAvailableCheckedField =
                 CheckProgramInstall.class.getDeclaredField("pythonAvailableChecked");
         pythonAvailableCheckedField.setAccessible(true);
@@ -59,6 +64,15 @@ class CheckProgramInstallTest {
                 CheckProgramInstall.class.getDeclaredField("availablePythonCommand");
         availablePythonCommandField.setAccessible(true);
         availablePythonCommandField.set(null, null);
+
+        Field ffmpegAvailableCheckedField =
+                CheckProgramInstall.class.getDeclaredField("ffmpegAvailableChecked");
+        ffmpegAvailableCheckedField.setAccessible(true);
+        ffmpegAvailableCheckedField.set(null, false);
+
+        Field ffmpegAvailableField = CheckProgramInstall.class.getDeclaredField("ffmpegAvailable");
+        ffmpegAvailableField.setAccessible(true);
+        ffmpegAvailableField.set(null, false);
     }
 
     @Test
@@ -108,8 +122,7 @@ class CheckProgramInstallTest {
     }
 
     @Test
-    void testGetAvailablePythonCommand_WhenPythonReturnsNonZeroExitCode()
-            throws IOException, InterruptedException, Exception {
+    void testGetAvailablePythonCommand_WhenPythonReturnsNonZeroExitCode() throws Exception {
         // Arrange
         // Reset the static fields again to ensure clean state
         resetStaticFields();
@@ -204,5 +217,46 @@ class CheckProgramInstallTest {
 
         // Verify getAvailablePythonCommand was called internally
         verify(mockExecutor).runCommandWithOutputHandling(Arrays.asList("python3", "--version"));
+    }
+
+    @Test
+    void testIsFfmpegAvailable_WhenInstalled() throws Exception {
+        resetStaticFields();
+        ProcessExecutorResult result = Mockito.mock(ProcessExecutorResult.class);
+        when(mockFfmpegExecutor.runCommandWithOutputHandling(Arrays.asList("ffmpeg", "-version")))
+                .thenReturn(result);
+
+        assertTrue(CheckProgramInstall.isFfmpegAvailable());
+        verify(mockFfmpegExecutor)
+                .runCommandWithOutputHandling(Arrays.asList("ffmpeg", "-version"));
+    }
+
+    @Test
+    void testIsFfmpegAvailable_WhenNotInstalled() throws Exception {
+        resetStaticFields();
+        when(mockFfmpegExecutor.runCommandWithOutputHandling(Arrays.asList("ffmpeg", "-version")))
+                .thenThrow(new IOException("Command not found"));
+
+        assertFalse(CheckProgramInstall.isFfmpegAvailable());
+        verify(mockFfmpegExecutor)
+                .runCommandWithOutputHandling(Arrays.asList("ffmpeg", "-version"));
+    }
+
+    @Test
+    void testIsFfmpegAvailable_CachesResult() throws Exception {
+        resetStaticFields();
+        ProcessExecutorResult result = Mockito.mock(ProcessExecutorResult.class);
+        when(mockFfmpegExecutor.runCommandWithOutputHandling(Arrays.asList("ffmpeg", "-version")))
+                .thenReturn(result);
+
+        assertTrue(CheckProgramInstall.isFfmpegAvailable());
+
+        when(mockFfmpegExecutor.runCommandWithOutputHandling(Arrays.asList("ffmpeg", "-version")))
+                .thenThrow(new IOException("Command not found"));
+
+        assertTrue(CheckProgramInstall.isFfmpegAvailable());
+
+        verify(mockFfmpegExecutor, times(1))
+                .runCommandWithOutputHandling(Arrays.asList("ffmpeg", "-version"));
     }
 }
