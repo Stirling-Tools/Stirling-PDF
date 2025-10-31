@@ -209,7 +209,7 @@ export function ZoomAPIBridge() {
   ]);
 
   useEffect(() => {
-    if (!zoom || typeof zoom.onZoomChange !== 'function') {
+    if (!zoom) {
       return;
     }
 
@@ -222,9 +222,7 @@ export function ZoomAPIBridge() {
     });
 
     return () => {
-      if (typeof unsubscribe === 'function') {
-        unsubscribe();
-      }
+      unsubscribe();
     };
   }, [zoom, triggerImmediateZoomUpdate]);
 

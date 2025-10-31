@@ -167,7 +167,7 @@ export function useFitWidthResize({
         return;
       }
 
-      if (typeof timeoutId === 'number') {
+      if (timeoutId !== undefined) {
         window.clearTimeout(timeoutId);
       }
 
@@ -179,7 +179,7 @@ export function useFitWidthResize({
 
     window.addEventListener('resize', handleResize);
     return () => {
-      if (typeof timeoutId === 'number') {
+      if (timeoutId !== undefined) {
         window.clearTimeout(timeoutId);
       }
       window.removeEventListener('resize', handleResize);

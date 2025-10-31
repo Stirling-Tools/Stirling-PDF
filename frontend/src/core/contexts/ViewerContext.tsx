@@ -6,115 +6,35 @@ import React, {
   useRef,
   useCallback,
 } from 'react';
-import { SpreadMode } from '@embedpdf/plugin-spread/react';
 import { useNavigation } from '@app/contexts/NavigationContext';
-
-// Bridge API interfaces - these match what the bridges provide
-interface ScrollAPIWrapper {
-  scrollToPage: (params: { pageNumber: number }) => void;
-  scrollToPreviousPage: () => void;
-  scrollToNextPage: () => void;
-}
-
-interface ZoomAPIWrapper {
-  zoomIn: () => void;
-  zoomOut: () => void;
-  toggleMarqueeZoom: () => void;
-  requestZoom: (level: number) => void;
-}
-
-interface PanAPIWrapper {
-  enable: () => void;
-  disable: () => void;
-  toggle: () => void;
-}
-
-interface SelectionAPIWrapper {
-  copyToClipboard: () => void;
-  getSelectedText: () => string | any;
-  getFormattedSelection: () => any;
-}
-
-interface SpreadAPIWrapper {
-  setSpreadMode: (mode: SpreadMode) => void;
-  getSpreadMode: () => SpreadMode | null;
-  toggleSpreadMode: () => void;
-}
-
-interface RotationAPIWrapper {
-  rotateForward: () => void;
-  rotateBackward: () => void;
-  setRotation: (rotation: number) => void;
-  getRotation: () => number;
-}
-
-interface SearchAPIWrapper {
-  search: (query: string) => Promise<any>;
-  clear: () => void;
-  next: () => void;
-  previous: () => void;
-}
-
-interface ThumbnailAPIWrapper {
-  renderThumb: (pageIndex: number, scale: number) => { toPromise: () => Promise<Blob> };
-}
-
-interface ExportAPIWrapper {
-  download: () => void;
-  saveAsCopy: () => { toPromise: () => Promise<ArrayBuffer> };
-}
-
-
-// State interfaces - represent the shape of data from each bridge
-interface ScrollState {
-  currentPage: number;
-  totalPages: number;
-}
-
-interface ZoomState {
-  currentZoom: number;
-  zoomPercent: number;
-}
-
-interface PanState {
-  isPanning: boolean;
-}
-
-interface SelectionState {
-  hasSelection: boolean;
-}
-
-interface SpreadState {
-  spreadMode: SpreadMode;
-  isDualPage: boolean;
-}
-
-interface RotationState {
-  rotation: number;
-}
-
-interface SearchResult {
-  pageIndex: number;
-  rects: Array<{
-    origin: { x: number; y: number };
-    size: { width: number; height: number };
-  }>;
-}
-
-interface SearchState {
-  results: SearchResult[] | null;
-  activeIndex: number;
-}
-
-interface ExportState {
-  canExport: boolean;
-}
-
-// Bridge registration interface - bridges register with state and API
-interface BridgeRef<TState = unknown, TApi = unknown> {
-  state: TState;
-  api: TApi;
-}
+import {
+  BridgeRef,
+  BridgeApiMap,
+  BridgeStateMap,
+  BridgeKey,
+  ViewerBridgeRegistry,
+  createBridgeRegistry,
+  registerBridge as setBridgeRef,
+  ScrollAPIWrapper,
+  ScrollState,
+  ZoomAPIWrapper,
+  ZoomState,
+  PanAPIWrapper,
+  PanState,
+  SelectionAPIWrapper,
+  SelectionState,
+  SpreadAPIWrapper,
+  SpreadState,
+  RotationAPIWrapper,
+  RotationState,
+  SearchAPIWrapper,
+  SearchState,
+  SearchResult,
+  ThumbnailAPIWrapper,
+  ExportAPIWrapper,
+  ExportState,
+} from '@core/contexts/viewer/viewerBridges';
+import { SpreadMode } from '@embedpdf/plugin-spread/react';
 
 function useImmediateNotifier<Args extends unknown[]>() {
   const callbackRef = useRef<((...args: Args) => void) | null>(null);
@@ -232,7 +152,7 @@ interface ViewerContextType {
   };
 
   // Bridge registration - internal use by bridges  
-  registerBridge: (type: string, ref: BridgeRef) => void;
+  registerBridge: (type: BridgeKey, ref: BridgeRef) => void;
 }
 
 export const ViewerContext = createContext<ViewerContextType | null>(null);
@@ -252,17 +172,7 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
   useNavigation();
 
   // Bridge registry - bridges register their state and APIs here
-  const bridgeRefs = useRef({
-    scroll: null as BridgeRef<ScrollState, ScrollAPIWrapper> | null,
-    zoom: null as BridgeRef<ZoomState, ZoomAPIWrapper> | null,
-    pan: null as BridgeRef<PanState, PanAPIWrapper> | null,
-    selection: null as BridgeRef<SelectionState, SelectionAPIWrapper> | null,
-    search: null as BridgeRef<SearchState, SearchAPIWrapper> | null,
-    spread: null as BridgeRef<SpreadState, SpreadAPIWrapper> | null,
-    rotation: null as BridgeRef<RotationState, RotationAPIWrapper> | null,
-    thumbnail: null as BridgeRef<unknown, ThumbnailAPIWrapper> | null,
-    export: null as BridgeRef<ExportState, ExportAPIWrapper> | null,
-  });
+  const bridgeRefs = useRef<ViewerBridgeRegistry>(createBridgeRegistry());
 
   const {
     register: registerImmediateZoomUpdate,
@@ -298,38 +208,15 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     [triggerImmediateSpreadInternal]
   );
 
-  const registerBridge = (type: string, ref: BridgeRef) => {
-    // Type-safe assignment - we know the bridges will provide correct types
-    switch (type) {
-      case 'scroll':
-        bridgeRefs.current.scroll = ref as BridgeRef<ScrollState, ScrollAPIWrapper>;
-        break;
-      case 'zoom':
-        bridgeRefs.current.zoom = ref as BridgeRef<ZoomState, ZoomAPIWrapper>;
-        break;
-      case 'pan':
-        bridgeRefs.current.pan = ref as BridgeRef<PanState, PanAPIWrapper>;
-        break;
-      case 'selection':
-        bridgeRefs.current.selection = ref as BridgeRef<SelectionState, SelectionAPIWrapper>;
-        break;
-      case 'search':
-        bridgeRefs.current.search = ref as BridgeRef<SearchState, SearchAPIWrapper>;
-        break;
-      case 'spread':
-        bridgeRefs.current.spread = ref as BridgeRef<SpreadState, SpreadAPIWrapper>;
-        break;
-      case 'rotation':
-        bridgeRefs.current.rotation = ref as BridgeRef<RotationState, RotationAPIWrapper>;
-        break;
-      case 'thumbnail':
-        bridgeRefs.current.thumbnail = ref as BridgeRef<unknown, ThumbnailAPIWrapper>;
-        break;
-      case 'export':
-        bridgeRefs.current.export = ref as BridgeRef<ExportState, ExportAPIWrapper>;
-        break;
-    }
-  };
+  const registerBridge = useCallback(
+    <K extends BridgeKey>(
+      type: K,
+      ref: BridgeRef<BridgeStateMap[K], BridgeApiMap[K]>
+    ) => {
+      setBridgeRef(bridgeRefs.current, type, ref);
+    },
+    []
+  );
 
   const toggleThumbnailSidebar = () => {
     setIsThumbnailSidebarVisible(prev => !prev);
