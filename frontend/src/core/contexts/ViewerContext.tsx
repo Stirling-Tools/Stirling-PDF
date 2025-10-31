@@ -7,6 +7,7 @@ import React, {
   useCallback,
 } from 'react';
 import { useNavigation } from '@app/contexts/NavigationContext';
+import { createViewerActions } from '@core/contexts/viewer/viewerActions';
 import {
   BridgeRef,
   BridgeApiMap,
@@ -99,57 +100,14 @@ interface ViewerContextType {
   triggerImmediateSpreadUpdate: (mode: SpreadMode, isDualPage?: boolean) => void;
 
   // Action handlers - call EmbedPDF APIs directly
-  scrollActions: {
-    scrollToPage: (page: number) => void;
-    scrollToFirstPage: () => void;
-    scrollToPreviousPage: () => void;
-    scrollToNextPage: () => void;
-    scrollToLastPage: () => void;
-  };
-
-  zoomActions: {
-    zoomIn: () => void;
-    zoomOut: () => void;
-    toggleMarqueeZoom: () => void;
-    requestZoom: (level: number) => void;
-  };
-
-  panActions: {
-    enablePan: () => void;
-    disablePan: () => void;
-    togglePan: () => void;
-  };
-
-  selectionActions: {
-    copyToClipboard: () => void;
-    getSelectedText: () => string;
-    getFormattedSelection: () => unknown;
-  };
-
-  spreadActions: {
-    setSpreadMode: (mode: SpreadMode) => void;
-    getSpreadMode: () => SpreadMode | null;
-    toggleSpreadMode: () => void;
-  };
-
-  rotationActions: {
-    rotateForward: () => void;
-    rotateBackward: () => void;
-    setRotation: (rotation: number) => void;
-    getRotation: () => number;
-  };
-
-  searchActions: {
-    search: (query: string) => Promise<void>;
-    next: () => void;
-    previous: () => void;
-    clear: () => void;
-  };
-
-  exportActions: {
-    download: () => void;
-    saveAsCopy: () => Promise<ArrayBuffer | null>;
-  };
+  scrollActions: ScrollActions;
+  zoomActions: ZoomActions;
+  panActions: PanActions;
+  selectionActions: SelectionActions;
+  spreadActions: SpreadActions;
+  rotationActions: RotationActions;
+  searchActions: SearchActions;
+  exportActions: ExportActions;
 
   // Bridge registration - internal use by bridges  
   registerBridge: (type: BridgeKey, ref: BridgeRef) => void;
@@ -272,215 +230,21 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
   };
 
   // Action handlers - call APIs directly
-  const scrollActions = {
-    scrollToPage: (page: number) => {
-      const api = bridgeRefs.current.scroll?.api;
-      if (api?.scrollToPage) {
-        api.scrollToPage({ pageNumber: page });
-      }
-    },
-    scrollToFirstPage: () => {
-      const api = bridgeRefs.current.scroll?.api;
-      if (api?.scrollToPage) {
-        api.scrollToPage({ pageNumber: 1 });
-      }
-    },
-    scrollToPreviousPage: () => {
-      const api = bridgeRefs.current.scroll?.api;
-      if (api?.scrollToPreviousPage) {
-        api.scrollToPreviousPage();
-      }
-    },
-    scrollToNextPage: () => {
-      const api = bridgeRefs.current.scroll?.api;
-      if (api?.scrollToNextPage) {
-        api.scrollToNextPage();
-      }
-    },
-    scrollToLastPage: () => {
-      const scrollState = getScrollState();
-      const api = bridgeRefs.current.scroll?.api;
-      if (api?.scrollToPage && scrollState.totalPages > 0) {
-        api.scrollToPage({ pageNumber: scrollState.totalPages });
-      }
-    }
-  };
-
-  const zoomActions = {
-    zoomIn: () => {
-      const api = bridgeRefs.current.zoom?.api;
-      if (api?.zoomIn) {
-        const currentState = getZoomState();
-        const newPercent = Math.min(Math.round(currentState.zoomPercent * 1.2), 300);
-        triggerImmediateZoomUpdate(newPercent);
-        api.zoomIn();
-      }
-    },
-    zoomOut: () => {
-      const api = bridgeRefs.current.zoom?.api;
-      if (api?.zoomOut) {
-        const currentState = getZoomState();
-        const newPercent = Math.max(Math.round(currentState.zoomPercent / 1.2), 20);
-        triggerImmediateZoomUpdate(newPercent);
-        api.zoomOut();
-      }
-    },
-    toggleMarqueeZoom: () => {
-      const api = bridgeRefs.current.zoom?.api;
-      if (api?.toggleMarqueeZoom) {
-        api.toggleMarqueeZoom();
-      }
-    },
-    requestZoom: (level: number) => {
-      const api = bridgeRefs.current.zoom?.api;
-      if (api?.requestZoom) {
-        api.requestZoom(level);
-      }
-    }
-  };
-
-  const panActions = {
-    enablePan: () => {
-      const api = bridgeRefs.current.pan?.api;
-      if (api?.enable) {
-        api.enable();
-      }
-    },
-    disablePan: () => {
-      const api = bridgeRefs.current.pan?.api;
-      if (api?.disable) {
-        api.disable();
-      }
-    },
-    togglePan: () => {
-      const api = bridgeRefs.current.pan?.api;
-      if (api?.toggle) {
-        api.toggle();
-      }
-    }
-  };
-
-  const selectionActions = {
-    copyToClipboard: () => {
-      const api = bridgeRefs.current.selection?.api;
-      if (api?.copyToClipboard) {
-        api.copyToClipboard();
-      }
-    },
-    getSelectedText: () => {
-      const api = bridgeRefs.current.selection?.api;
-      if (api?.getSelectedText) {
-        return api.getSelectedText();
-      }
-      return '';
-    },
-    getFormattedSelection: () => {
-      const api = bridgeRefs.current.selection?.api;
-      if (api?.getFormattedSelection) {
-        return api.getFormattedSelection();
-      }
-      return null;
-    }
-  };
-
-  const spreadActions = {
-    setSpreadMode: (mode: SpreadMode) => {
-      const api = bridgeRefs.current.spread?.api;
-      if (api?.setSpreadMode) {
-        api.setSpreadMode(mode);
-      }
-    },
-    getSpreadMode: () => {
-      const api = bridgeRefs.current.spread?.api;
-      if (api?.getSpreadMode) {
-        return api.getSpreadMode();
-      }
-      return null;
-    },
-    toggleSpreadMode: () => {
-      const api = bridgeRefs.current.spread?.api;
-      if (api?.toggleSpreadMode) {
-        api.toggleSpreadMode();
-      }
-    }
-  };
-
-  const rotationActions = {
-    rotateForward: () => {
-      const api = bridgeRefs.current.rotation?.api;
-      if (api?.rotateForward) {
-        api.rotateForward();
-      }
-    },
-    rotateBackward: () => {
-      const api = bridgeRefs.current.rotation?.api;
-      if (api?.rotateBackward) {
-        api.rotateBackward();
-      }
-    },
-    setRotation: (rotation: number) => {
-      const api = bridgeRefs.current.rotation?.api;
-      if (api?.setRotation) {
-        api.setRotation(rotation);
-      }
-    },
-    getRotation: () => {
-      const api = bridgeRefs.current.rotation?.api;
-      if (api?.getRotation) {
-        return api.getRotation();
-      }
-      return 0;
-    }
-  };
-
-  const searchActions = {
-    search: async (query: string) => {
-      const api = bridgeRefs.current.search?.api;
-      if (api?.search) {
-        return api.search(query);
-      }
-    },
-    next: () => {
-      const api = bridgeRefs.current.search?.api;
-      if (api?.next) {
-        api.next();
-      }
-    },
-    previous: () => {
-      const api = bridgeRefs.current.search?.api;
-      if (api?.previous) {
-        api.previous();
-      }
-    },
-    clear: () => {
-      const api = bridgeRefs.current.search?.api;
-      if (api?.clear) {
-        api.clear();
-      }
-    }
-  };
-
-  const exportActions = {
-    download: () => {
-      const api = bridgeRefs.current.export?.api;
-      if (api?.download) {
-        api.download();
-      }
-    },
-    saveAsCopy: async () => {
-      const api = bridgeRefs.current.export?.api;
-      if (api?.saveAsCopy) {
-        try {
-          const result = api.saveAsCopy();
-          return await result.toPromise();
-        } catch (error) {
-          console.error('Failed to save PDF copy:', error);
-          return null;
-        }
-      }
-      return null;
-    }
-  };
+  const {
+    scrollActions,
+    zoomActions,
+    panActions,
+    selectionActions,
+    spreadActions,
+    rotationActions,
+    searchActions,
+    exportActions,
+  } = createViewerActions({
+    registry: bridgeRefs,
+    getScrollState,
+    getZoomState,
+    triggerImmediateZoomUpdate,
+  });
 
   const value: ViewerContextType = {
     // UI state
