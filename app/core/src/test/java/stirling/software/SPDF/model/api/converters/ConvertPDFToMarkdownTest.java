@@ -35,7 +35,9 @@ class ConvertPDFToMarkdownTest {
     static class GlobalErrorHandler {
         @ExceptionHandler(Exception.class)
         ResponseEntity<byte[]> handle(Exception ex) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new byte[0]);
+            String message = ex.getMessage();
+            byte[] body = message != null ? message.getBytes(StandardCharsets.UTF_8) : new byte[0];
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body);
         }
     }
 

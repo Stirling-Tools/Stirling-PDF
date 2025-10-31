@@ -14,17 +14,21 @@ class BackupNotFoundExceptionTest {
     }
 
     @Test
-    void isRuntimeException() {
-        BackupNotFoundException ex = new BackupNotFoundException("x");
-        assertTrue(ex instanceof RuntimeException, "Should extend RuntimeException");
+    void extendsRuntimeExceptionDirectly() {
+        assertEquals(
+                RuntimeException.class,
+                BackupNotFoundException.class.getSuperclass(),
+                "BackupNotFoundException should extend RuntimeException directly");
     }
 
     @Test
     void canBeThrownAndCaught() {
-        try {
-            throw new BackupNotFoundException("missing backup");
-        } catch (BackupNotFoundException ex) {
-            assertEquals("missing backup", ex.getMessage());
-        }
+        BackupNotFoundException ex =
+                assertThrows(
+                        BackupNotFoundException.class,
+                        () -> {
+                            throw new BackupNotFoundException("missing backup");
+                        });
+        assertEquals("missing backup", ex.getMessage());
     }
 }

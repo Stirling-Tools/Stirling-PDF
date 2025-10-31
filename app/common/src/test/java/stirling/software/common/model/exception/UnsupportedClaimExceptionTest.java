@@ -27,8 +27,9 @@ class UnsupportedClaimExceptionTest {
         UnsupportedClaimException exception = new UnsupportedClaimException("msg");
 
         // Verify that it inherits from RuntimeException
-        assertTrue(
-                exception instanceof RuntimeException,
+        assertInstanceOf(
+                RuntimeException.class,
+                exception,
                 "UnsupportedClaimException should extend RuntimeException");
     }
 

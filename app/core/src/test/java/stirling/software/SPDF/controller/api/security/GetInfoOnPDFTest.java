@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.GregorianCalendar;
 
 import org.apache.pdfbox.Loader;
@@ -57,9 +58,10 @@ class GetInfoOnPDFTest {
     /** Helper method to load a PDF file from test resources */
     private MockMultipartFile loadPdfFromResources(String filename) throws IOException {
         String[] possiblePaths = {
-            "app/common/src/test/resources/" + filename,
-            "testing/cucumber/exampleFiles/" + filename,
-            "app/core/src/test/resources/" + filename
+            Path.of("src", "test", "resources", filename).toString(),
+            Path.of("..", "common", "src", "test", "resources", filename).toString(),
+            Path.of("..", "core", "src", "test", "resources", filename).toString(),
+            Path.of("..", "..", "testing", "cucumber", "exampleFiles", filename).toString()
         };
 
         for (String path : possiblePaths) {
