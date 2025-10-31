@@ -301,6 +301,11 @@ public final class RegexPatternUtils {
         return getPattern("\\+");
     }
 
+    /** Pattern for splitting on pipe delimiter (used for hint lists in i18n messages) */
+    public Pattern getPipeDelimiterPattern() {
+        return getPattern("\\|");
+    }
+
     /** Pattern for username validation */
     public Pattern getUsernameValidationPattern() {
         return getPattern("^[a-zA-Z0-9](?!.*[-@._+]{2,})[a-zA-Z0-9@._+-]{1,48}[a-zA-Z0-9]$");

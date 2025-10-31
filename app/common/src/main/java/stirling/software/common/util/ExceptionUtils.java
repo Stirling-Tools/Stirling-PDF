@@ -707,11 +707,6 @@ public class ExceptionUtils {
         return new FfmpegRequiredException(message, ErrorCode.FFMPEG_REQUIRED.getCode());
     }
 
-    public static FfmpegRequiredException createFfmpegRequiredException(Throwable cause) {
-        String message = getMessage(ErrorCode.FFMPEG_REQUIRED);
-        return new FfmpegRequiredException(message, cause, ErrorCode.FFMPEG_REQUIRED.getCode());
-    }
-
     public static IOException createPythonRequiredForWebpException() {
         return createIOException(
                 "error.toolRequired", "{0} is required for {1}", null, "Python", "WebP conversion");
@@ -805,9 +800,7 @@ public class ExceptionUtils {
         }
 
         String[] lines =
-                RegexPatternUtils.getInstance()
-                        .getLineSeparatorPattern()
-                        .split(combinedOutput);
+                RegexPatternUtils.getInstance().getLineSeparatorPattern().split(combinedOutput);
         List<Integer> affectedPages = new ArrayList<>();
         Set<String> uniqueDiagnostics = new java.util.LinkedHashSet<>();
         boolean recognized = false;
@@ -850,7 +843,7 @@ public class ExceptionUtils {
         if (recognized) {
             // Build a clean diagnostic message without duplicates
             String diagnostic = String.join(". ", uniqueDiagnostics);
-            if (!diagnostic.isEmpty() && !diagnostic.endsWith(".")) {
+            if (!diagnostic.isEmpty() && diagnostic.charAt(diagnostic.length() - 1) != '.') {
                 diagnostic += ".";
             }
 
@@ -1252,26 +1245,30 @@ public class ExceptionUtils {
         T render() throws IOException;
     }
 
-    private record GhostscriptErrorInfo(ErrorCode errorCode, Integer pageNumber, String diagnostic,
-                                        boolean critical, List<Integer> affectedPages) {
-            private GhostscriptErrorInfo(
-                ErrorCode errorCode,
-                Integer pageNumber,
-                String diagnostic,
-                boolean critical,
-                List<Integer> affectedPages) {
-                this.errorCode = errorCode;
-                this.pageNumber = pageNumber;
-                this.diagnostic = diagnostic;
-                this.critical = critical;
-                this.affectedPages = affectedPages != null ? affectedPages : List.of();
-            }
+    /**
+     * Common interface for exceptions that provide error codes.
+     *
+     * <p>This interface enables polymorphic handling of different exception types (BaseAppException
+     * and BaseValidationException) without using instanceof checks.
+     *
+     * @see BaseAppException
+     * @see BaseValidationException
+     */
+    public interface ErrorCodeProvider {
+        /**
+         * Get the error message.
+         *
+         * @return the error message
+         */
+        String getMessage();
 
-            private static GhostscriptErrorInfo unknown() {
-                return new GhostscriptErrorInfo(
-                    ErrorCode.GHOSTSCRIPT_COMPRESSION, null, null, false, List.of());
-            }
-        }
+        /**
+         * Get the error code.
+         *
+         * @return the error code (e.g., "E001")
+         */
+        String getErrorCode();
+    }
 
     /** Exception thrown when Ghostscript fails to render or compress a file. */
     public static class GhostscriptException extends BaseAppException {
@@ -1291,9 +1288,34 @@ public class ExceptionUtils {
         }
     }
 
+    private record GhostscriptErrorInfo(
+            ErrorCode errorCode,
+            Integer pageNumber,
+            String diagnostic,
+            boolean critical,
+            List<Integer> affectedPages) {
+        private GhostscriptErrorInfo(
+                ErrorCode errorCode,
+                Integer pageNumber,
+                String diagnostic,
+                boolean critical,
+                List<Integer> affectedPages) {
+            this.errorCode = errorCode;
+            this.pageNumber = pageNumber;
+            this.diagnostic = diagnostic;
+            this.critical = critical;
+            this.affectedPages = affectedPages != null ? affectedPages : List.of();
+        }
+
+        private static GhostscriptErrorInfo unknown() {
+            return new GhostscriptErrorInfo(
+                    ErrorCode.GHOSTSCRIPT_COMPRESSION, null, null, false, List.of());
+        }
+    }
+
     /** Base exception with error code support for IO-related errors. */
     @Getter
-    public abstract static class BaseAppException extends IOException {
+    public abstract static class BaseAppException extends IOException implements ErrorCodeProvider {
         private final String errorCode;
 
         protected BaseAppException(String message, Throwable cause, String errorCode) {
@@ -1304,7 +1326,8 @@ public class ExceptionUtils {
 
     /** Base exception with error code support for illegal argument errors. */
     @Getter
-    public abstract static class BaseValidationException extends IllegalArgumentException {
+    public abstract static class BaseValidationException extends IllegalArgumentException
+            implements ErrorCodeProvider {
         private final String errorCode;
 
         protected BaseValidationException(String message, String errorCode) {
