@@ -3,8 +3,10 @@ import { useTranslation } from 'react-i18next';
 import { ToolType, useToolOperation, ToolOperationConfig } from '@app/hooks/tools/shared/useToolOperation';
 import { createStandardErrorHandler } from '@app/utils/toolErrorHandler';
 import { SplitParameters, defaultParameters } from '@app/hooks/tools/split/useSplitParameters';
-import { SPLIT_METHODS } from '@app/constants/splitConstants';
+import { SPLIT_METHODS, type SplitMethod } from '@app/constants/splitConstants';
 import { useToolResources } from '@app/hooks/tools/shared/useToolResources';
+import { splitPdfClientSide } from '@app/utils/pdfOperations/split';
+import { validatePageNumbers } from '@app/utils/pageSelection';
 
 // Static functions that can be used by both the hook and automation executor
 export const buildSplitFormData = (parameters: SplitParameters, file: File): FormData => {
@@ -74,7 +76,43 @@ export const splitOperationConfig = {
   operationType: 'split',
   endpoint: getSplitEndpoint,
   defaultParameters,
-} as const;
+  frontendProcessing: {
+    process: splitPdfClientSide,
+    shouldUseFrontend: (params: SplitParameters) => {
+      if (params.processingMode !== 'frontend') return false;
+
+      // Check if method supports browser processing
+      const browserMethods = [
+        SPLIT_METHODS.BY_PAGES,
+        SPLIT_METHODS.BY_PAGE_COUNT,
+        SPLIT_METHODS.BY_DOC_COUNT,
+        SPLIT_METHODS.BY_SIZE
+      ] as SplitMethod[];
+      if (!params.method || !browserMethods.includes(params.method)) return false;
+
+      // Method-specific validation
+      switch (params.method) {
+        case SPLIT_METHODS.BY_PAGES: {
+          const token = params.pages?.trim();
+          if (!token) return true; // Empty means split all pages
+          if (token.toLowerCase().includes('n')) return false; // "n-2" syntax not supported
+          return validatePageNumbers(token);
+        }
+
+        case SPLIT_METHODS.BY_PAGE_COUNT:
+        case SPLIT_METHODS.BY_DOC_COUNT:
+        case SPLIT_METHODS.BY_SIZE: {
+          const value = parseInt(params.splitValue, 10);
+          return !isNaN(value) && value > 0;
+        }
+
+        default:
+          return false;
+      }
+    },
+    statusMessage: 'Splitting PDF in browser...'
+  }
+} as const satisfies ToolOperationConfig<SplitParameters>;
 
 export const useSplitOperation = () => {
   const { t } = useTranslation();

@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { ToolType, useToolOperation, ToolOperationConfig } from '@app/hooks/tools/shared/useToolOperation';
 import { createStandardErrorHandler } from '@app/utils/toolErrorHandler';
 import { RemovePagesParameters, defaultParameters } from '@app/hooks/tools/removePages/useRemovePagesParameters';
+import { removePagesClientSide } from '@app/utils/pdfOperations/removePages';
 // import { useToolResources } from '@app/hooks/tools/shared/useToolResources';
 
 export const buildRemovePagesFormData = (parameters: RemovePagesParameters, file: File): FormData => {
@@ -18,6 +19,21 @@ export const removePagesOperationConfig = {
   operationType: 'removePages',
   endpoint: '/api/v1/general/remove-pages',
   defaultParameters,
+  frontendProcessing: {
+    process: removePagesClientSide,
+    shouldUseFrontend: (params: RemovePagesParameters) => {
+      const raw = params.pageNumbers?.trim();
+      if (!raw) return false;
+      const parts = raw.replace(/\s+/g, '').split(',').filter(Boolean);
+      return parts.every((part) => {
+        const token = part.toLowerCase();
+        if (token === 'all') return true;
+        if (token.includes('n')) return false;
+        return /^\d+$/.test(token) || /^\d+-\d+$/.test(token) || /^\d+-$/.test(token);
+      });
+    },
+    statusMessage: 'Removing pages in browser...'
+  }
 } as const satisfies ToolOperationConfig<RemovePagesParameters>;
 
 export const useRemovePagesOperation = () => {

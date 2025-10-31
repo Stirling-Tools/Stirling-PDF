@@ -2,6 +2,7 @@ import { Stack, TextInput } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { RemovePagesParameters } from "@app/hooks/tools/removePages/useRemovePagesParameters";
 import { validatePageNumbers } from "@app/utils/pageSelection";
+import ProcessingModeToggle from "@app/components/shared/ProcessingModeToggle";
 
 interface RemovePagesSettingsProps {
   parameters: RemovePagesParameters;
@@ -16,7 +17,6 @@ const RemovePagesSettings = ({ parameters, onParameterChange, disabled = false }
     // Allow user to type naturally - don't normalize input in real-time
     onParameterChange('pageNumbers', value);
   };
-  console.log('Current pageNumbers input:', parameters.pageNumbers, disabled);
 
   // Check if current input is valid
   const isValid = validatePageNumbers(parameters.pageNumbers || '');
@@ -24,6 +24,11 @@ const RemovePagesSettings = ({ parameters, onParameterChange, disabled = false }
 
   return (
     <Stack gap="md">
+      <ProcessingModeToggle
+        value={parameters.processingMode}
+        onChange={(mode) => onParameterChange('processingMode', mode)}
+        disabled={disabled}
+      />
       <TextInput
         label={t('removePages.pageNumbers.label', 'Pages to Remove')}
         value={parameters.pageNumbers || ''}

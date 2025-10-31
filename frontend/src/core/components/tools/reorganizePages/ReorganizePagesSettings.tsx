@@ -2,6 +2,7 @@ import { Divider, Select, Stack, TextInput } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { ReorganizePagesParameters } from '@app/hooks/tools/reorganizePages/useReorganizePagesParameters';
 import { getReorganizePagesModeData } from '@app/components/tools/reorganizePages/constants';
+import ProcessingModeToggle from "@app/components/shared/ProcessingModeToggle";
 
 export default function ReorganizePagesSettings({
   parameters,
@@ -22,6 +23,12 @@ export default function ReorganizePagesSettings({
   const selectedMode = modeData.find(mode => mode.value === parameters.customMode) || modeData[0];
   return (
     <Stack gap="sm">
+      <ProcessingModeToggle
+        value={parameters.processingMode}
+        onChange={(mode) => onParameterChange('processingMode', mode)}
+        disabled={disabled}
+      />
+
       <Select
         label={t('pdfOrganiser.mode._value', 'Organization mode')}
         data={modeData}

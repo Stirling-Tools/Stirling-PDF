@@ -1,6 +1,8 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { Stack, Text } from '@mantine/core';
 import { SingleLargePageParameters } from '@app/hooks/tools/singleLargePage/useSingleLargePageParameters';
+import ProcessingModeToggle from "@app/components/shared/ProcessingModeToggle";
 
 interface SingleLargePageSettingsProps {
   parameters: SingleLargePageParameters;
@@ -8,15 +10,21 @@ interface SingleLargePageSettingsProps {
   disabled?: boolean;
 }
 
-const SingleLargePageSettings: React.FC<SingleLargePageSettingsProps> = (_) => {
+const SingleLargePageSettings: React.FC<SingleLargePageSettingsProps> = ({ parameters, onParameterChange, disabled = false }) => {
   const { t } = useTranslation();
 
   return (
-    <div className="single-large-page-settings">
-      <p className="text-muted">
+    <Stack gap="sm">
+      <ProcessingModeToggle
+        value={parameters.processingMode}
+        onChange={(mode) => onParameterChange('processingMode', mode)}
+        disabled={disabled}
+      />
+
+      <Text size="sm" c="dimmed">
         {t('pdfToSinglePage.description', 'This tool will merge all pages of your PDF into one large single page. The width will remain the same as the original pages, but the height will be the sum of all page heights.')}
-      </p>
-    </div>
+      </Text>
+    </Stack>
   );
 };
 

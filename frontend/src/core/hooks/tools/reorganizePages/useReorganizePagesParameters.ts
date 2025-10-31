@@ -1,6 +1,8 @@
 import { useState } from 'react';
 
-export interface ReorganizePagesParameters {
+import { ToggleableProcessingParameters } from '@app/types/parameters';
+
+export interface ReorganizePagesParameters extends ToggleableProcessingParameters {
   customMode: string; // empty string means custom order using pageNumbers
   pageNumbers: string; // e.g. "1,3,2,4-6"
 }
@@ -8,6 +10,7 @@ export interface ReorganizePagesParameters {
 export const defaultReorganizePagesParameters: ReorganizePagesParameters = {
   customMode: '',
   pageNumbers: '',
+  processingMode: 'backend',
 };
 
 export const useReorganizePagesParameters = () => {

@@ -1,7 +1,8 @@
 import { useTranslation } from 'react-i18next';
-import { useToolOperation, ToolType } from '@app/hooks/tools/shared/useToolOperation';
+import { useToolOperation, ToolType, ToolOperationConfig } from '@app/hooks/tools/shared/useToolOperation';
 import { createStandardErrorHandler } from '@app/utils/toolErrorHandler';
 import { AdjustPageScaleParameters, defaultParameters } from '@app/hooks/tools/adjustPageScale/useAdjustPageScaleParameters';
+import { adjustPageScaleClientSide } from '@app/utils/pdfOperations/adjustPageScale';
 
 export const buildAdjustPageScaleFormData = (parameters: AdjustPageScaleParameters, file: File): FormData => {
   const formData = new FormData();
@@ -17,7 +18,12 @@ export const adjustPageScaleOperationConfig = {
   operationType: 'scalePages',
   endpoint: '/api/v1/general/scale-pages',
   defaultParameters,
-} as const;
+  frontendProcessing: {
+    process: adjustPageScaleClientSide,
+    shouldUseFrontend: (params: AdjustPageScaleParameters) => params.processingMode === 'frontend',
+    statusMessage: 'Scaling pages in browser...'
+  }
+} as const satisfies ToolOperationConfig<AdjustPageScaleParameters>;
 
 export const useAdjustPageScaleOperation = () => {
   const { t } = useTranslation();

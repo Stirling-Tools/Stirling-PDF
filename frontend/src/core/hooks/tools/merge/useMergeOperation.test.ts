@@ -47,11 +47,14 @@ describe('useMergeOperation', () => {
     cancelOperation: vi.fn(),
     undoOperation: function (): Promise<void> {
       throw new Error('Function not implemented.');
-    }
+    },
+    supportsFrontendProcessing: false,
+    evaluateShouldUseFrontend: vi.fn(),
   };
 
   beforeEach(() => {
     vi.clearAllMocks();
+    (mockToolOperationReturn.evaluateShouldUseFrontend as any).mockReturnValue(false);
     mockUseToolOperation.mockReturnValue(mockToolOperationReturn);
   });
 
@@ -65,7 +68,8 @@ describe('useMergeOperation', () => {
     ];
     const parameters: MergeParameters = {
       removeDigitalSignature: true,
-      generateTableOfContents: false
+      generateTableOfContents: false,
+      processingMode: 'backend'
     };
 
     const formData = config.buildFormData(parameters, mockFiles);
@@ -102,7 +106,8 @@ describe('useMergeOperation', () => {
     // Test case 1: All options disabled
     const params1: MergeParameters = {
       removeDigitalSignature: false,
-      generateTableOfContents: false
+      generateTableOfContents: false,
+      processingMode: 'backend'
     };
     const formData1 = config.buildFormData(params1, mockFiles);
     expect(formData1.get('removeCertSign')).toBe('false');
@@ -111,7 +116,8 @@ describe('useMergeOperation', () => {
     // Test case 2: All options enabled
     const params2: MergeParameters = {
       removeDigitalSignature: true,
-      generateTableOfContents: true
+      generateTableOfContents: true,
+      processingMode: 'backend'
     };
     const formData2 = config.buildFormData(params2, mockFiles);
     expect(formData2.get('removeCertSign')).toBe('true');

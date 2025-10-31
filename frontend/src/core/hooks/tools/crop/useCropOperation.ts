@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { useToolOperation, ToolType } from '@app/hooks/tools/shared/useToolOperation';
 import { createStandardErrorHandler } from '@app/utils/toolErrorHandler';
 import { CropParameters, defaultParameters } from '@app/hooks/tools/crop/useCropParameters';
+import { cropPdfClientSide } from '@app/utils/pdfOperations/crop';
 
 // Static configuration that can be used by both the hook and automation executor
 export const buildCropFormData = (parameters: CropParameters, file: File): FormData => {
@@ -25,6 +26,11 @@ export const cropOperationConfig = {
   operationType: 'crop',
   endpoint: '/api/v1/general/crop',
   defaultParameters,
+  frontendProcessing: {
+    process: cropPdfClientSide,
+    shouldUseFrontend: () => true,
+    statusMessage: 'Cropping PDF in browser...'
+  }
 } as const;
 
 export const useCropOperation = () => {

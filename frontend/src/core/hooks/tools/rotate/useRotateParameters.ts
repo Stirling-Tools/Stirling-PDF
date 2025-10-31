@@ -1,4 +1,4 @@
-import { BaseParameters } from '@app/types/parameters';
+import { BaseParameters, ToggleableProcessingParameters } from '@app/types/parameters';
 import { useBaseParameters, BaseParametersHook } from '@app/hooks/tools/shared/useBaseParameters';
 import { useMemo, useCallback } from 'react';
 
@@ -7,12 +7,13 @@ export const normalizeAngle = (angle: number): number => {
   return ((angle % 360) + 360) % 360;
 };
 
-export interface RotateParameters extends BaseParameters {
+export interface RotateParameters extends BaseParameters, ToggleableProcessingParameters {
   angle: number; // Current rotation angle (0, 90, 180, 270)
 }
 
 export const defaultParameters: RotateParameters = {
   angle: 0,
+  processingMode: 'backend',
 };
 
 export type RotateParametersHook = BaseParametersHook<RotateParameters> & {
@@ -25,7 +26,7 @@ export type RotateParametersHook = BaseParametersHook<RotateParameters> & {
 export const useRotateParameters = (): RotateParametersHook => {
   const baseHook = useBaseParameters({
     defaultParameters,
-    endpointName: 'rotate-pdf',
+    endpointName: (params) => params.processingMode === 'frontend' ? '' : 'rotate-pdf',
     validateFn: (params) => {
       // Angle must be a multiple of 90
       return params.angle % 90 === 0;

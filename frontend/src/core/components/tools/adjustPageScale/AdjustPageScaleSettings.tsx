@@ -1,6 +1,7 @@
 import { Stack, NumberInput, Select } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { AdjustPageScaleParameters, PageSize } from "@app/hooks/tools/adjustPageScale/useAdjustPageScaleParameters";
+import ProcessingModeToggle from "@app/components/shared/ProcessingModeToggle";
 
 interface AdjustPageScaleSettingsProps {
   parameters: AdjustPageScaleParameters;
@@ -26,6 +27,12 @@ const AdjustPageScaleSettings = ({ parameters, onParameterChange, disabled = fal
 
   return (
     <Stack gap="md">
+      <ProcessingModeToggle
+        value={parameters.processingMode}
+        onChange={(mode) => onParameterChange('processingMode', mode)}
+        disabled={disabled}
+      />
+
       <NumberInput
         label={t('adjustPageScale.scaleFactor.label', 'Scale Factor')}
         value={parameters.scaleFactor}

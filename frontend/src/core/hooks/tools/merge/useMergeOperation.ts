@@ -1,7 +1,8 @@
 import { useTranslation } from 'react-i18next';
 import { useToolOperation, ToolOperationConfig, ToolType } from '@app/hooks/tools/shared/useToolOperation';
 import { createStandardErrorHandler } from '@app/utils/toolErrorHandler';
-import { MergeParameters } from '@app/hooks/tools/merge/useMergeParameters';
+import { MergeParameters, defaultParameters } from '@app/hooks/tools/merge/useMergeParameters';
+import { mergePdfClientSide } from '@app/utils/pdfOperations/merge';
 
 const buildFormData = (parameters: MergeParameters, files: File[]): FormData => {
   const formData = new FormData();
@@ -26,6 +27,18 @@ export const mergeOperationConfig: ToolOperationConfig<MergeParameters> = {
   operationType: 'merge',
   endpoint: '/api/v1/general/merge-pdfs',
   filePrefix: 'merged_',
+  defaultParameters,
+  frontendProcessing: {
+    process: mergePdfClientSide,
+    shouldUseFrontend: (params: MergeParameters) => {
+      if (params.processingMode !== 'frontend') return false;
+      // Browser processing doesn't support these advanced features
+      if (params.removeDigitalSignature) return false;
+      if (params.generateTableOfContents) return false;
+      return true;
+    },
+    statusMessage: 'Merging PDFs in browser...'
+  }
 };
 
 export const useMergeOperation = () => {

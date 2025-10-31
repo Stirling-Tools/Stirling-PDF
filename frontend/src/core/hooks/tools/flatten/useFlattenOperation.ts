@@ -1,7 +1,8 @@
 import { useTranslation } from 'react-i18next';
-import { ToolType, useToolOperation } from '@app/hooks/tools/shared/useToolOperation';
+import { ToolType, useToolOperation, ToolOperationConfig } from '@app/hooks/tools/shared/useToolOperation';
 import { createStandardErrorHandler } from '@app/utils/toolErrorHandler';
 import { FlattenParameters, defaultParameters } from '@app/hooks/tools/flatten/useFlattenParameters';
+import { flattenPdfClientSide } from '@app/utils/pdfOperations/flatten';
 
 // Static function that can be used by both the hook and automation executor
 export const buildFlattenFormData = (parameters: FlattenParameters, file: File): FormData => {
@@ -17,9 +18,14 @@ export const flattenOperationConfig = {
   buildFormData: buildFlattenFormData,
   operationType: 'flatten',
   endpoint: '/api/v1/misc/flatten',
-  multiFileEndpoint: false,
   defaultParameters,
-} as const;
+  frontendProcessing: {
+    process: flattenPdfClientSide,
+    shouldUseFrontend: (params: FlattenParameters) =>
+      params.processingMode === 'frontend' && params.flattenOnlyForms,
+    statusMessage: 'Flattening PDF forms in browser...'
+  }
+} as const satisfies ToolOperationConfig<FlattenParameters>;
 
 export const useFlattenOperation = () => {
   const { t } = useTranslation();
