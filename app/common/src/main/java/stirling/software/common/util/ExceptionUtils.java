@@ -380,15 +380,13 @@ public class ExceptionUtils {
     }
 
     /**
-     * Create a CbrFormatException for CBR files where all images are corrupted. Note: This now uses
-     * CBR_NO_IMAGES as corrupted images are covered by that error.
+     * Create a CbrFormatException for CBR files where images are corrupted beyond recovery.
      *
      * @return CbrFormatException with user-friendly message
      */
-    public static IOException createPdfEncryptionException(Exception cause) {
-        String message =
-                "The PDF appears to have corrupted encryption data. This can happen when the PDF was created with incompatible encryption methods. Please try using the 'Repair PDF' feature first, or contact the document creator for a new copy.";
-        return new IOException(message, cause);
+    public static CbrFormatException createCbrCorruptedImagesException() {
+        String message = getMessage(ErrorCode.CBR_NO_IMAGES);
+        return new CbrFormatException(message, ErrorCode.CBR_NO_IMAGES.getCode());
     }
 
     /**
@@ -465,14 +463,13 @@ public class ExceptionUtils {
     }
 
     /**
-     * Create an EmlFormatException for invalid EML file format.
+     * Create an EmlFormatException for invalid EML structure.
      *
      * @return EmlFormatException with user-friendly message
      */
-    public static IOException createPdfPasswordException(Exception cause) {
-        String message =
-                "The PDF Document is passworded and either the password was not provided or was incorrect";
-        return new IOException(message, cause);
+    public static EmlFormatException createEmlInvalidFormatException() {
+        String message = getMessage(ErrorCode.EML_INVALID_FORMAT);
+        return new EmlFormatException(message, ErrorCode.EML_INVALID_FORMAT.getCode());
     }
 
     /**
@@ -615,6 +612,16 @@ public class ExceptionUtils {
     }
 
     /** Create system requirement exceptions. */
+    public static FfmpegRequiredException createFfmpegRequiredException() {
+        String message = getMessage(ErrorCode.FFMPEG_REQUIRED);
+        return new FfmpegRequiredException(message, ErrorCode.FFMPEG_REQUIRED.getCode());
+    }
+
+    public static FfmpegRequiredException createFfmpegRequiredException(Throwable cause) {
+        String message = getMessage(ErrorCode.FFMPEG_REQUIRED);
+        return new FfmpegRequiredException(message, cause, ErrorCode.FFMPEG_REQUIRED.getCode());
+    }
+
     public static IOException createPythonRequiredForWebpException() {
         return createIOException(
                 "error.toolRequired", "{0} is required for {1}", null, "Python", "WebP conversion");
@@ -1121,6 +1128,10 @@ public class ExceptionUtils {
         HTML_FILE_REQUIRED("E061", "error.htmlFileRequired", "File must be in HTML or ZIP format"),
         PYTHON_REQUIRED_WEBP(
                 "E062", "error.pythonRequiredWebp", "Python is required for WebP conversion"),
+        FFMPEG_REQUIRED(
+                "E063",
+                "error.ffmpegRequired",
+                "FFmpeg must be installed to convert PDFs to video. Install FFmpeg and ensure it is available on the system PATH."),
 
         // Validation errors
         INVALID_ARGUMENT("E070", "error.invalidArgument", "Invalid argument: {0}"),
@@ -1192,6 +1203,24 @@ public class ExceptionUtils {
 
         private boolean isCritical() {
             return critical;
+        }
+    }
+
+    /** Exception thrown when Ghostscript fails to render or compress a file. */
+    public static class GhostscriptException extends BaseAppException {
+        public GhostscriptException(String message, Throwable cause, String errorCode) {
+            super(message, cause, errorCode);
+        }
+    }
+
+    /** Exception thrown when FFmpeg is not available on the host system. */
+    public static class FfmpegRequiredException extends BaseAppException {
+        public FfmpegRequiredException(String message, String errorCode) {
+            super(message, null, errorCode);
+        }
+
+        public FfmpegRequiredException(String message, Throwable cause, String errorCode) {
+            super(message, cause, errorCode);
         }
     }
 
@@ -1308,29 +1337,5 @@ public class ExceptionUtils {
         public OutOfMemoryDpiException(String message, Throwable cause, String errorCode) {
             super(message, cause, errorCode);
         }
-    }
-
-    /**
-     * Create a RuntimeException for memory/image size errors when rendering PDF images with DPI.
-     * Handles OutOfMemoryError and related conditions (e.g., NegativeArraySizeException) that
-     * result from images exceeding Java's array/memory limits.
-     *
-     * @param dpi the DPI value used
-     * @param cause the original error/exception (e.g., OutOfMemoryError,
-     *     NegativeArraySizeException)
-     * @return RuntimeException with user-friendly message
-     */
-    public static RuntimeException createOutOfMemoryDpiException(int dpi, Throwable cause) {
-        String message =
-                MessageFormat.format(
-                        "Out of memory or image-too-large error while rendering PDF at {0} DPI. "
-                                + "This can occur when the resulting image exceeds Java's array/memory limits (e.g., NegativeArraySizeException). "
-                                + "Please use a lower DPI value (recommended: 150 or less) or process the document in smaller chunks.",
-                        dpi);
-        return new RuntimeException(message, cause);
-    }
-
-    public static RuntimeException createOutOfMemoryDpiException(int dpi, OutOfMemoryError cause) {
-        return createOutOfMemoryDpiException(dpi, (Throwable) cause);
     }
 }

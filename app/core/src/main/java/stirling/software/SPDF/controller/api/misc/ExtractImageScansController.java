@@ -202,7 +202,8 @@ public class ExtractImageScansController {
                         zipBytes, outputZipFilename, MediaType.APPLICATION_OCTET_STREAM);
             }
             if (processedImageBytes.isEmpty()) {
-                throw new IllegalArgumentException("No images detected");
+                throw ExceptionUtils.createIllegalArgumentException(
+                        "error.noContent", "No {0} detected", "images");
             } else {
 
                 // Return the processed image as a response

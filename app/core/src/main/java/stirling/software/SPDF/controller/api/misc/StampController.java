@@ -104,7 +104,11 @@ public class StampController {
             if (stampImageName == null
                     || stampImageName.contains("..")
                     || stampImageName.startsWith("/")) {
-                throw new IllegalArgumentException("Invalid stamp image file path");
+                throw ExceptionUtils.createIllegalArgumentException(
+                        "error.invalidFormat",
+                        "Invalid {0} format: {1}",
+                        "stamp image file path",
+                        stampImageName);
             }
         }
         String alphabet = request.getAlphabet();

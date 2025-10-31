@@ -669,7 +669,11 @@ public class CompressController {
         String expectedOutputSizeString = request.getExpectedOutputSize();
         Boolean convertToGrayscale = request.getGrayscale();
         if (expectedOutputSizeString == null && optimizeLevel == null) {
-            throw new Exception("Both expected output size and optimize level are not specified");
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.argumentRequired",
+                    "At least one of {0} or {1} must be specified",
+                    "expected output size",
+                    "optimize level");
         }
 
         Long expectedOutputSize = 0L;

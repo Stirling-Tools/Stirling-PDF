@@ -1,6 +1,7 @@
 package stirling.software.common.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -63,7 +64,7 @@ class JobExecutorServiceTest {
     }
 
     @Test
-    void shouldRunSyncJobSuccessfully() {
+    void shouldRunSyncJobSuccessfully() throws Exception {
         // Given
         Supplier<Object> work = () -> "test-result";
 
@@ -79,7 +80,7 @@ class JobExecutorServiceTest {
     }
 
     @Test
-    void shouldRunAsyncJobSuccessfully() {
+    void shouldRunAsyncJobSuccessfully() throws Exception {
         // Given
         Supplier<Object> work = () -> "test-result";
 

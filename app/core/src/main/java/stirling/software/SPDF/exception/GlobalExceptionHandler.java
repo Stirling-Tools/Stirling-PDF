@@ -169,6 +169,27 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Handle FFmpeg dependency missing errors when media conversion endpoints are invoked.
+     *
+     * @param ex the FfmpegRequiredException
+     * @param request the HTTP servlet request
+     * @return ProblemDetail with HTTP 503 SERVICE_UNAVAILABLE
+     */
+    @ExceptionHandler(FfmpegRequiredException.class)
+    public ResponseEntity<ProblemDetail> handleFfmpegRequired(
+            FfmpegRequiredException ex, HttpServletRequest request) {
+        log.warn(
+                "FFmpeg unavailable at {}: {} ({})",
+                request.getRequestURI(),
+                ex.getMessage(),
+                ex.getErrorCode());
+
+        String title = getLocalizedMessage("error.ffmpegRequired.title", "FFmpeg Required");
+        return createProblemDetailResponse(
+                ex, HttpStatus.SERVICE_UNAVAILABLE, "/errors/ffmpeg-required", title, request);
+    }
+
+    /**
      * Handle PDF and DPI-related BaseAppException subtypes.
      *
      * <p>Related factory methods in {@link ExceptionUtils}:
