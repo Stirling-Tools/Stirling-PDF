@@ -1,5 +1,6 @@
 package stirling.software.proprietary.security.filter;
 
+import static stirling.software.common.util.RequestUriUtils.isPublicAuthEndpoint;
 import static stirling.software.common.util.RequestUriUtils.isStaticResource;
 import static stirling.software.proprietary.security.model.AuthenticationType.OAUTH2;
 import static stirling.software.proprietary.security.model.AuthenticationType.SAML2;
@@ -132,28 +133,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
-    }
-
-    private static boolean isPublicAuthEndpoint(String requestURI, String contextPath) {
-        // Remove context path from URI to normalize path matching
-        String trimmedUri =
-                requestURI.startsWith(contextPath)
-                        ? requestURI.substring(contextPath.length())
-                        : requestURI;
-
-        // Public auth endpoints that don't require JWT
-        boolean isPublicAuthEndpoint =
-                trimmedUri.startsWith("/login")
-                        || trimmedUri.startsWith("/signup")
-                        || trimmedUri.startsWith("/auth/")
-                        || trimmedUri.startsWith("/oauth2")
-                        || trimmedUri.startsWith("/api/v1/auth/login")
-                        || trimmedUri.startsWith("/api/v1/auth/register")
-                        || trimmedUri.startsWith("/api/v1/auth/refresh")
-                        || trimmedUri.startsWith("/api/v1/auth/logout")
-                        || trimmedUri.startsWith("/api/v1/proprietary/ui-data/account")
-                        || trimmedUri.startsWith("/api/v1/config");
-        return isPublicAuthEndpoint;
     }
 
     private boolean apiKeyExists(HttpServletRequest request, HttpServletResponse response)

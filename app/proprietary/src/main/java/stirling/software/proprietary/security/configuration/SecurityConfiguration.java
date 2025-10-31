@@ -37,6 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.configuration.AppConfig;
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.util.RequestUriUtils;
 import stirling.software.proprietary.security.CustomAuthenticationFailureHandler;
 import stirling.software.proprietary.security.CustomAuthenticationSuccessHandler;
 import stirling.software.proprietary.security.CustomLogoutSuccessHandler;
@@ -128,8 +129,6 @@ public class SecurityConfiguration {
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration cfg = new CorsConfiguration();
-
         // Read CORS allowed origins from settings
         if (applicationProperties.getSystem() != null
                 && applicationProperties.getSystem().getCorsAllowedOrigins() != null
@@ -137,10 +136,15 @@ public class SecurityConfiguration {
 
             List<String> allowedOrigins = applicationProperties.getSystem().getCorsAllowedOrigins();
 
-            cfg.setAllowedOrigins(allowedOrigins);
-            log.info("CORS configured with allowed origins from settings.yml: {}", allowedOrigins);
+            CorsConfiguration cfg = new CorsConfiguration();
 
-            // Set allowed methods explicitly
+            // Use setAllowedOriginPatterns for better wildcard and port support
+            cfg.setAllowedOriginPatterns(allowedOrigins);
+            log.debug(
+                    "CORS configured with allowed origin patterns from settings.yml: {}",
+                    allowedOrigins);
+
+            // Set allowed methods explicitly (including OPTIONS for preflight)
             cfg.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
 
             // Set allowed headers explicitly
@@ -163,22 +167,29 @@ public class SecurityConfiguration {
 
             // Set max age for preflight cache
             cfg.setMaxAge(3600L);
+
+            UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+            source.registerCorsConfiguration("/**", cfg);
+            return source;
         } else {
-            // No CORS origins configured - CORS is disabled (secure by default)
-            // In production, frontend and backend are served from same origin (no CORS needed)
+            // No CORS origins configured - return null to disable CORS processing entirely
+            // This avoids empty CORS policy that unexpectedly rejects preflights
             log.info(
                     "CORS is disabled - no allowed origins configured in settings.yml (system.corsAllowedOrigins)");
+            return null;
         }
-
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", cfg);
-        return source;
     }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        // Enable CORS with custom configuration
-        http.cors(cors -> cors.configurationSource(corsConfigurationSource()));
+        // Enable CORS only if we have configured origins
+        CorsConfigurationSource corsSource = corsConfigurationSource();
+        if (corsSource != null) {
+            http.cors(cors -> cors.configurationSource(corsSource));
+        } else {
+            // Explicitly disable CORS when no origins are configured
+            http.cors(cors -> cors.disable());
+        }
 
         if (securityProperties.getCsrfDisabled() || !loginEnabledValue) {
             http.csrf(CsrfConfigurer::disable);
@@ -296,46 +307,11 @@ public class SecurityConfiguration {
                                                 String uri = req.getRequestURI();
                                                 String contextPath = req.getContextPath();
 
-                                                // Remove the context path from the URI
-                                                String trimmedUri =
-                                                        uri.startsWith(contextPath)
-                                                                ? uri.substring(
-                                                                        contextPath.length())
-                                                                : uri;
-                                                return trimmedUri.startsWith("/login")
-                                                        || trimmedUri.startsWith("/oauth")
-                                                        || trimmedUri.startsWith("/oauth2")
-                                                        || trimmedUri.startsWith("/saml2")
-                                                        || trimmedUri.endsWith(".svg")
-                                                        || trimmedUri.startsWith("/register")
-                                                        || trimmedUri.startsWith("/signup")
-                                                        || trimmedUri.startsWith("/auth/callback")
-                                                        || trimmedUri.startsWith("/error")
-                                                        || trimmedUri.startsWith("/images/")
-                                                        || trimmedUri.startsWith("/public/")
-                                                        || trimmedUri.startsWith("/css/")
-                                                        || trimmedUri.startsWith("/fonts/")
-                                                        || trimmedUri.startsWith("/js/")
-                                                        || trimmedUri.startsWith("/pdfjs/")
-                                                        || trimmedUri.startsWith("/pdfjs-legacy/")
-                                                        || trimmedUri.startsWith("/favicon")
-                                                        || trimmedUri.startsWith(
-                                                                "/api/v1/info/status")
-                                                        || trimmedUri.startsWith("/api/v1/config")
-                                                        || trimmedUri.startsWith(
-                                                                "/api/v1/auth/register")
-                                                        || trimmedUri.startsWith(
-                                                                "/api/v1/user/register")
-                                                        || trimmedUri.startsWith(
-                                                                "/api/v1/auth/login")
-                                                        || trimmedUri.startsWith(
-                                                                "/api/v1/auth/refresh")
-                                                        || trimmedUri.startsWith(
-                                                                "/api/v1/auth/logout")
-                                                        || trimmedUri.startsWith(
-                                                                "/api/v1/proprietary/ui-data/account")
-                                                        || trimmedUri.startsWith("/v1/api-docs")
-                                                        || uri.contains("/v1/api-docs");
+                                                // Check if it's a public auth endpoint or static
+                                                // resource
+                                                return RequestUriUtils.isStaticResource(
+                                                    contextPath, uri) || RequestUriUtils.isPublicAuthEndpoint(
+                                                                uri, contextPath);
                                             })
                                     .permitAll()
                                     .anyRequest()

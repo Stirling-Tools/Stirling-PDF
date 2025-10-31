@@ -1,5 +1,7 @@
 package stirling.software.proprietary.security.filter;
 
+import static stirling.software.common.util.RequestUriUtils.isPublicAuthEndpoint;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;

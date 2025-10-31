@@ -49,4 +49,37 @@ public class RequestUriUtils {
                 || requestURI.startsWith("/fonts")
                 || requestURI.startsWith("/pdfjs"));
     }
+
+    /**
+     * Checks if the request URI is a public authentication endpoint that doesn't require
+     * authentication. This includes login, signup, OAuth callbacks, and public config endpoints.
+     *
+     * @param requestURI The full request URI
+     * @param contextPath The servlet context path
+     * @return true if the endpoint is public and doesn't require authentication
+     */
+    public static boolean isPublicAuthEndpoint(String requestURI, String contextPath) {
+        // Remove context path from URI to normalize path matching
+        String trimmedUri =
+                requestURI.startsWith(contextPath)
+                        ? requestURI.substring(contextPath.length())
+                        : requestURI;
+
+        // Public auth endpoints that don't require authentication
+        return trimmedUri.startsWith("/login")
+                || trimmedUri.startsWith("/signup")
+                || trimmedUri.startsWith("/register")
+                || trimmedUri.startsWith("/auth/")
+                || trimmedUri.startsWith("/oauth2")
+                || trimmedUri.startsWith("/saml2")
+                || trimmedUri.startsWith("/api/v1/auth/login")
+                || trimmedUri.startsWith("/api/v1/auth/register")
+                || trimmedUri.startsWith("/api/v1/auth/refresh")
+                || trimmedUri.startsWith("/api/v1/auth/logout")
+                || trimmedUri.startsWith("/api/v1/user/register")
+                || trimmedUri.startsWith("/api/v1/proprietary/ui-data/account")
+                || trimmedUri.startsWith("/api/v1/config")
+                || trimmedUri.startsWith("/v1/api-docs")
+                || trimmedUri.contains("/v1/api-docs");
+    }
 }
