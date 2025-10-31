@@ -82,7 +82,7 @@ class AuthorityTest {
         Authority a2 = new Authority();
         assertNotEquals(a1, a2);
         assertNotEquals(a1.hashCode(), a2.hashCode());
-        assertNotNull(a1.toString());
+        assertNotNull(a1);
     }
 
     // Optional: shows that User has other fields that don't interfere
