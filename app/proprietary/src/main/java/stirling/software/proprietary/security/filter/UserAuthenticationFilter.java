@@ -105,10 +105,16 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
             }
         }
 
-        // If we still don't have any authentication, deny the request
+        // If we still don't have any authentication, check if it's a public endpoint. If not, deny the request
         if (authentication == null || !authentication.isAuthenticated()) {
             String method = request.getMethod();
             String contextPath = request.getContextPath();
+
+            // Allow public auth endpoints to pass through without authentication
+            if (isPublicAuthEndpoint(requestURI, contextPath)) {
+                filterChain.doFilter(request, response);
+                return;
+            }
 
             if ("GET".equalsIgnoreCase(method) && !requestURI.startsWith(contextPath + "/login")) {
                 response.sendRedirect(contextPath + "/login"); // redirect to the login page
@@ -198,6 +204,23 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private static boolean isPublicAuthEndpoint(String requestURI, String contextPath) {
+        // Remove context path from URI to normalize path matching
+        String trimmedUri =
+                requestURI.startsWith(contextPath)
+                        ? requestURI.substring(contextPath.length())
+                        : requestURI;
+
+        // Public auth endpoints that don't require authentication
+        return trimmedUri.startsWith("/login")
+                || trimmedUri.startsWith("/auth/")
+                || trimmedUri.startsWith("/oauth2")
+                || trimmedUri.startsWith("/saml2")
+                || trimmedUri.startsWith("/api/v1/auth/login")
+                || trimmedUri.startsWith("/api/v1/auth/refresh")
+                || trimmedUri.startsWith("/api/v1/auth/logout");
     }
 
     private enum UserLoginType {

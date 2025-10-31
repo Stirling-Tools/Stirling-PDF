@@ -71,6 +71,7 @@ public class SecurityConfiguration {
     private final boolean loginEnabledValue;
     private final boolean runningProOrHigher;
 
+    private final ApplicationProperties applicationProperties;
     private final ApplicationProperties.Security securityProperties;
     private final AppConfig appConfig;
     private final UserAuthenticationFilter userAuthenticationFilter;
@@ -90,6 +91,7 @@ public class SecurityConfiguration {
             @Qualifier("loginEnabled") boolean loginEnabledValue,
             @Qualifier("runningProOrHigher") boolean runningProOrHigher,
             AppConfig appConfig,
+            ApplicationProperties applicationProperties,
             ApplicationProperties.Security securityProperties,
             UserAuthenticationFilter userAuthenticationFilter,
             JwtServiceInterface jwtService,
@@ -106,6 +108,7 @@ public class SecurityConfiguration {
         this.loginEnabledValue = loginEnabledValue;
         this.runningProOrHigher = runningProOrHigher;
         this.appConfig = appConfig;
+        this.applicationProperties = applicationProperties;
         this.securityProperties = securityProperties;
         this.userAuthenticationFilter = userAuthenticationFilter;
         this.jwtService = jwtService;
@@ -127,52 +130,45 @@ public class SecurityConfiguration {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration cfg = new CorsConfiguration();
 
-        // Set allowed origin patterns
-        if (appConfig.v2Enabled()) {
-            // Development mode - allow common development ports
-            cfg.setAllowedOriginPatterns(
+        // Read CORS allowed origins from settings
+        if (applicationProperties.getSystem() != null
+                && applicationProperties.getSystem().getCorsAllowedOrigins() != null
+                && !applicationProperties.getSystem().getCorsAllowedOrigins().isEmpty()) {
+
+            List<String> allowedOrigins = applicationProperties.getSystem().getCorsAllowedOrigins();
+
+            cfg.setAllowedOrigins(allowedOrigins);
+            log.info("CORS configured with allowed origins from settings.yml: {}", allowedOrigins);
+
+            // Set allowed methods explicitly
+            cfg.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+
+            // Set allowed headers explicitly
+            cfg.setAllowedHeaders(
                     List.of(
-                            "http://localhost:3000", // Common React dev server
-                            "http://localhost:5173", // Vite default port
-                            "http://localhost:5174", // Vite alternate port
-                            "http://localhost:8080", // Backend port
-                            "http://localhost:*", // Any localhost port
-                            "https://localhost:*" // HTTPS localhost
-                            ));
-            log.info("CORS configured for development mode (v2 enabled)");
+                            "Authorization",
+                            "Content-Type",
+                            "X-Requested-With",
+                            "Accept",
+                            "Origin",
+                            "X-API-KEY",
+                            "X-CSRF-TOKEN"));
+
+            // Set exposed headers (headers that the browser can access)
+            cfg.setExposedHeaders(
+                    List.of("WWW-Authenticate", "X-Total-Count", "X-Page-Number", "X-Page-Size"));
+
+            // Allow credentials (cookies, authorization headers)
+            cfg.setAllowCredentials(true);
+
+            // Set max age for preflight cache
+            cfg.setMaxAge(3600L);
         } else {
-            // Production mode - be more restrictive
-            // You should configure production domains here
-            cfg.setAllowedOriginPatterns(
-                    List.of(
-                            "http://localhost:*", // Still allow localhost for local deployments
-                            "https://localhost:*"));
-            log.info("CORS configured for production mode");
+            // No CORS origins configured - CORS is disabled (secure by default)
+            // In production, frontend and backend are served from same origin (no CORS needed)
+            log.info(
+                    "CORS is disabled - no allowed origins configured in settings.yml (system.corsAllowedOrigins)");
         }
-
-        // Set allowed methods explicitly
-        cfg.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-
-        // Set allowed headers explicitly
-        cfg.setAllowedHeaders(
-                List.of(
-                        "Authorization",
-                        "Content-Type",
-                        "X-Requested-With",
-                        "Accept",
-                        "Origin",
-                        "X-API-KEY",
-                        "X-CSRF-TOKEN"));
-
-        // Set exposed headers (headers that the browser can access)
-        cfg.setExposedHeaders(
-                List.of("WWW-Authenticate", "X-Total-Count", "X-Page-Number", "X-Page-Size"));
-
-        // Allow credentials (cookies, authorization headers)
-        cfg.setAllowCredentials(true);
-
-        // Set max age for preflight cache
-        cfg.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", cfg);
@@ -181,7 +177,7 @@ public class SecurityConfiguration {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        // Enable CORS with our custom configuration
+        // Enable CORS with custom configuration
         http.cors(cors -> cors.configurationSource(corsConfigurationSource()));
 
         if (securityProperties.getCsrfDisabled() || !loginEnabledValue) {
@@ -194,11 +190,8 @@ public class SecurityConfiguration {
             http.addFilterBefore(
                             userAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                     .addFilterBefore(
-                            rateLimitingFilter(), UsernamePasswordAuthenticationFilter.class);
-
-            if (v2Enabled) {
-                http.addFilterBefore(jwtAuthenticationFilter(), UserAuthenticationFilter.class);
-            }
+                            rateLimitingFilter(), UsernamePasswordAuthenticationFilter.class)
+                    .addFilterBefore(jwtAuthenticationFilter(), UserAuthenticationFilter.class);
 
             if (!securityProperties.getCsrfDisabled()) {
                 CookieCsrfTokenRepository cookieRepo =
@@ -337,6 +330,8 @@ public class SecurityConfiguration {
                                                                 "/api/v1/auth/login")
                                                         || trimmedUri.startsWith(
                                                                 "/api/v1/auth/refresh")
+                                                        || trimmedUri.startsWith(
+                                                                "/api/v1/auth/logout")
                                                         || trimmedUri.startsWith(
                                                                 "/api/v1/proprietary/ui-data/account")
                                                         || trimmedUri.startsWith("/v1/api-docs")

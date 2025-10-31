@@ -186,6 +186,6 @@ public class CustomOAuth2AuthenticationSuccessHandler
             origin.append(":").append(serverPort);
         }
 
-        return origin.toString() + "/auth/callback#access_token=" + jwt;
+        return origin + "/auth/callback#access_token=" + jwt;
     }
 }
