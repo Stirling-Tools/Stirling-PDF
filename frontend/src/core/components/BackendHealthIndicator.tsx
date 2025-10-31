@@ -1,5 +1,4 @@
 import React from 'react';
-import '../index.css';
 import { useBackendHealth } from '@app/hooks/useBackendHealth';
 
 interface BackendHealthIndicatorProps {

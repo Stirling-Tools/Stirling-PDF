@@ -224,7 +224,7 @@ class SpringAuthClient {
    * Send password reset email
    * Not used in OSS version, but included for completeness
    */
-  async resetPasswordForEmail(email: string): Promise<{ data: {}; error: AuthError | null }> {
+  async resetPasswordForEmail(email: string): Promise<{ data: object; error: AuthError | null }> {
     try {
       await apiClient.post('/api/v1/auth/reset-password', {
         email,
