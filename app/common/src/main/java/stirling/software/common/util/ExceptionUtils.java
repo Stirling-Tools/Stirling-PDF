@@ -2,10 +2,12 @@ package stirling.software.common.util;
 
 import java.io.IOException;
 import java.text.MessageFormat;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -207,7 +209,8 @@ public class ExceptionUtils {
      */
     private static <T> T requireNonNull(T obj, String name) {
         if (obj == null) {
-            throw new IllegalArgumentException(name + " cannot be null");
+            String message = getMessage("error.nullArgument", "{0} must not be null", name);
+            throw new IllegalArgumentException(message);
         }
         return obj;
     }
@@ -763,10 +766,22 @@ public class ExceptionUtils {
 
     private static GhostscriptException buildGhostscriptException(
             GhostscriptErrorInfo errorInfo, String processOutput, Exception cause) {
-        String targetDescription =
-                errorInfo.pageNumber() != null
-                        ? "page " + errorInfo.pageNumber()
-                        : "the input file";
+        String targetDescription;
+        if (errorInfo.affectedPages() != null && !errorInfo.affectedPages().isEmpty()) {
+            if (errorInfo.affectedPages().size() == 1) {
+                targetDescription = "page " + errorInfo.affectedPages().get(0);
+            } else {
+                targetDescription =
+                        "pages "
+                                + String.join(
+                                        ", ",
+                                        errorInfo.affectedPages().stream()
+                                                .map(String::valueOf)
+                                                .toArray(String[]::new));
+            }
+        } else {
+            targetDescription = "the input file";
+        }
 
         String diagnostic =
                 errorInfo.diagnostic() != null
@@ -803,9 +818,10 @@ public class ExceptionUtils {
         }
 
         String[] lines = combinedOutput.split("\\R");
-        Integer pageNumber = null;
-        StringBuilder diagnosticBuilder = new StringBuilder();
+        List<Integer> affectedPages = new ArrayList<>();
+        Set<String> uniqueDiagnostics = new java.util.LinkedHashSet<>();
         boolean recognized = false;
+        Integer currentPage = null;
 
         for (String rawLine : lines) {
             String line = rawLine == null ? "" : rawLine.trim();
@@ -813,14 +829,13 @@ public class ExceptionUtils {
                 continue;
             }
 
-            if (pageNumber == null) {
-                Matcher pageMatcher = GS_PAGE_PATTERN.matcher(line);
-                if (pageMatcher.find()) {
-                    try {
-                        pageNumber = Integer.parseInt(pageMatcher.group(1));
-                    } catch (NumberFormatException ignore) {
-                        // Ignore invalid page numbers and continue parsing
-                    }
+            // Check for page number markers
+            Matcher pageMatcher = GS_PAGE_PATTERN.matcher(line);
+            if (pageMatcher.find()) {
+                try {
+                    currentPage = Integer.parseInt(pageMatcher.group(1));
+                } catch (NumberFormatException ignore) {
+                    // Ignore invalid page numbers and continue parsing
                 }
             }
 
@@ -829,45 +844,52 @@ public class ExceptionUtils {
                     || lowerLine.contains("could not draw this page")
                     || lowerLine.contains("eps files may not contain multiple pages")) {
                 recognized = true;
+
+                // Record the page number if we found an error
+                if (currentPage != null && !affectedPages.contains(currentPage)) {
+                    affectedPages.add(currentPage);
+                }
+
                 String normalized = normalizeGhostscriptLine(line);
-                if (!normalized.isEmpty()) {
-                    if (diagnosticBuilder.length() > 0) {
-                        diagnosticBuilder.append(' ');
-                    }
-                    diagnosticBuilder.append(normalized);
+                if (!normalized.isEmpty() && !normalized.startsWith("GPL Ghostscript")) {
+                    uniqueDiagnostics.add(normalized);
                 }
             }
         }
 
         if (recognized) {
-            String diagnostic =
-                    diagnosticBuilder.length() > 0 ? diagnosticBuilder.toString() : null;
+            // Build a clean diagnostic message without duplicates
+            String diagnostic = String.join(". ", uniqueDiagnostics);
+            if (!diagnostic.isEmpty() && !diagnostic.endsWith(".")) {
+                diagnostic += ".";
+            }
+
+            // Use the first page number, or null if none found
+            Integer pageNumber = affectedPages.isEmpty() ? null : affectedPages.get(0);
+
             return new GhostscriptErrorInfo(
-                    ErrorCode.GHOSTSCRIPT_PAGE_DRAWING, pageNumber, diagnostic, true);
+                    ErrorCode.GHOSTSCRIPT_PAGE_DRAWING,
+                    pageNumber,
+                    diagnostic,
+                    true,
+                    affectedPages);
         }
 
         // Fallback: capture the first non-empty informative line for context
-        if (diagnosticBuilder.length() == 0) {
-            for (String rawLine : lines) {
-                String line = rawLine == null ? "" : rawLine.trim();
-                if (line.isEmpty()) {
-                    continue;
-                }
-                if (line.startsWith("GPL Ghostscript")) {
-                    continue;
-                }
-                String normalized = normalizeGhostscriptLine(line);
-                if (!normalized.isEmpty()) {
-                    diagnosticBuilder.append(normalized);
-                    break;
-                }
+        for (String rawLine : lines) {
+            String line = rawLine == null ? "" : rawLine.trim();
+            if (line.isEmpty() || line.startsWith("GPL Ghostscript")) {
+                continue;
+            }
+            String normalized = normalizeGhostscriptLine(line);
+            if (!normalized.isEmpty()) {
+                return new GhostscriptErrorInfo(
+                        ErrorCode.GHOSTSCRIPT_COMPRESSION, null, normalized, false, List.of());
             }
         }
 
-        String fallbackDiagnostic =
-                diagnosticBuilder.length() > 0 ? diagnosticBuilder.toString() : null;
         return new GhostscriptErrorInfo(
-                ErrorCode.GHOSTSCRIPT_COMPRESSION, pageNumber, fallbackDiagnostic, false);
+                ErrorCode.GHOSTSCRIPT_COMPRESSION, null, null, false, List.of());
     }
 
     private static String normalizeGhostscriptLine(String line) {
@@ -883,10 +905,9 @@ public class ExceptionUtils {
     }
 
     private static String deriveDefaultGhostscriptDiagnostic(String processOutput) {
-        if (processOutput == null || processOutput.isBlank()) {
-            return "The source file contains content Ghostscript cannot render.";
-        }
-        return "The source file contains content Ghostscript cannot render.";
+        return getMessage(
+                "error.ghostscriptDefaultDiagnostic",
+                "The source file contains content Ghostscript cannot render.");
     }
 
     public static IOException createGhostscriptConversionException(String outputType) {
@@ -1276,17 +1297,24 @@ public class ExceptionUtils {
         private final Integer pageNumber;
         private final String diagnostic;
         private final boolean critical;
+        private final List<Integer> affectedPages;
 
         private GhostscriptErrorInfo(
-                ErrorCode errorCode, Integer pageNumber, String diagnostic, boolean critical) {
+                ErrorCode errorCode,
+                Integer pageNumber,
+                String diagnostic,
+                boolean critical,
+                List<Integer> affectedPages) {
             this.errorCode = errorCode;
             this.pageNumber = pageNumber;
             this.diagnostic = diagnostic;
             this.critical = critical;
+            this.affectedPages = affectedPages != null ? affectedPages : List.of();
         }
 
         private static GhostscriptErrorInfo unknown() {
-            return new GhostscriptErrorInfo(ErrorCode.GHOSTSCRIPT_COMPRESSION, null, null, false);
+            return new GhostscriptErrorInfo(
+                    ErrorCode.GHOSTSCRIPT_COMPRESSION, null, null, false, List.of());
         }
 
         private ErrorCode errorCode() {
@@ -1303,6 +1331,10 @@ public class ExceptionUtils {
 
         private boolean isCritical() {
             return critical;
+        }
+
+        private List<Integer> affectedPages() {
+            return affectedPages;
         }
     }
 
