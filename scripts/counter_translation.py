@@ -49,6 +49,7 @@ import argparse
 import glob
 import os
 import re
+import sys
 from typing import Iterable
 
 import tomlkit
@@ -286,7 +287,7 @@ def compare_files(
                 except ValueError as e:
                     print(f"Error processing line {line_num} in {file_path}: {e}")
                     print(f"{line_default}|{line_file}")
-                    exit(1)
+                    sys.exit(1)
                 except IndexError:
                     # Handle mismatched line counts
                     fails += 1
@@ -374,7 +375,7 @@ def main() -> None:
 
         if not os.path.exists(lang_file):
             print(f"ERROR: Could not find language file: {lang_file}")
-            exit(2)
+            sys.exit(2)
 
         results = compare_files(
             reference_file,
@@ -397,7 +398,7 @@ def main() -> None:
 
         # Fallback (should not happen)
         print("ERROR: Language not found in results.")
-        exit(3)
+        sys.exit(3)
 
     # Default behavior (no --lang): process all and update README
     messages_file_paths = glob.glob(
