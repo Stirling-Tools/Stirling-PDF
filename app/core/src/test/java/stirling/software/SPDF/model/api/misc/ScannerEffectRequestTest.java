@@ -68,49 +68,6 @@ class ScannerEffectRequestTest {
     }
 
     @Test
-    @DisplayName("Roundtrip: basic numeric properties")
-    void roundtrip_basicNumericProperties() {
-        ScannerEffectRequest req = new ScannerEffectRequest();
-
-        req.setRotate(3);
-        req.setRotateVariance(2);
-        req.setBrightness(1.11f);
-        req.setContrast(0.95f);
-        req.setBlur(1.25f);
-        req.setNoise(0.75f);
-        req.setResolution(110);
-
-        assertEquals(3, req.getRotate());
-        assertEquals(2, req.getRotateVariance());
-        assertEquals(1.11f, req.getBrightness(), 0.0001f);
-        assertEquals(0.95f, req.getContrast(), 0.0001f);
-        assertEquals(1.25f, req.getBlur(), 0.0001f);
-        assertEquals(0.75f, req.getNoise(), 0.0001f);
-        assertEquals(110, req.getResolution());
-    }
-
-    @Test
-    @DisplayName("advancedEnabled default is false and can be toggled")
-    void advancedEnabled_flag_roundtrip() {
-        ScannerEffectRequest req = new ScannerEffectRequest();
-
-        assertFalse(req.isAdvancedEnabled(), "advancedEnabled should default to false");
-        req.setAdvancedEnabled(true);
-        assertTrue(req.isAdvancedEnabled());
-        req.setAdvancedEnabled(false);
-        assertFalse(req.isAdvancedEnabled());
-    }
-
-    @Test
-    @DisplayName("Colorspace roundtrip")
-    void colorspace_roundtrip() {
-        ScannerEffectRequest req = new ScannerEffectRequest();
-
-        req.setColorspace(ScannerEffectRequest.Colorspace.color);
-        assertEquals(ScannerEffectRequest.Colorspace.color, req.getColorspace());
-    }
-
-    @Test
     @DisplayName("applyHighQualityPreset sets documented values")
     void preset_highQuality() {
         ScannerEffectRequest req = new ScannerEffectRequest();

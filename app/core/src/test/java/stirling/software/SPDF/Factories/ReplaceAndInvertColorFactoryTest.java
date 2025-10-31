@@ -9,6 +9,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import stirling.software.common.model.api.misc.HighContrastColorCombination;
 import stirling.software.common.model.api.misc.ReplaceAndInvert;
+import stirling.software.common.util.misc.ColorSpaceConversionStrategy;
 import stirling.software.common.util.misc.CustomColorReplaceStrategy;
 import stirling.software.common.util.misc.InvertFullColorStrategy;
 import stirling.software.common.util.misc.ReplaceAndInvertColorStrategy;
@@ -63,6 +64,19 @@ class ReplaceAndInvertColorFactoryTest {
         assertTrue(
                 strategy instanceof InvertFullColorStrategy,
                 "Expected InvertFullColorStrategy for FULL_INVERSION");
+    }
+
+    @Test
+    void whenColorSpaceConversion_thenReturnsColorSpaceConversionStrategy() {
+        ReplaceAndInvert option = ReplaceAndInvert.COLOR_SPACE_CONVERSION;
+
+        ReplaceAndInvertColorStrategy strategy =
+                factory.replaceAndInvert(file, option, null, null, null);
+
+        assertNotNull(strategy);
+        assertTrue(
+                strategy instanceof ColorSpaceConversionStrategy,
+                "Expected ColorSpaceConversionStrategy for COLOR_SPACE_CONVERSION");
     }
 
     @Test
