@@ -1,11 +1,13 @@
 package stirling.software.SPDF.controller.api.security;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.GregorianCalendar;
+import java.util.List;
 
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.*;
@@ -56,22 +58,52 @@ class GetInfoOnPDFTest {
 
     /** Helper method to load a PDF file from test resources */
     private MockMultipartFile loadPdfFromResources(String filename) throws IOException {
-        String[] possiblePaths = {
-            "app/common/src/test/resources/" + filename,
-            "testing/cucumber/exampleFiles/" + filename,
-            "app/core/src/test/resources/" + filename
-        };
+        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+        if (classLoader == null) {
+            classLoader = getClass().getClassLoader();
+        }
 
-        for (String path : possiblePaths) {
-            File file = new File(path);
-            if (file.exists()) {
-                byte[] content = Files.readAllBytes(file.toPath());
+        if (classLoader != null) {
+            try (InputStream resourceStream = classLoader.getResourceAsStream(filename)) {
+                if (resourceStream != null) {
+                    byte[] content = resourceStream.readAllBytes();
+                    return new MockMultipartFile(
+                            "file", filename, MediaType.APPLICATION_PDF_VALUE, content);
+                }
+            }
+        }
+
+        Path projectRoot = locateProjectRoot(Path.of("").toAbsolutePath());
+        List<Path> searchDirectories =
+                List.of(
+                        projectRoot.resolve(
+                                Path.of("app", "core", "src", "test", "resources").toString()),
+                        projectRoot.resolve(
+                                Path.of("app", "common", "src", "test", "resources").toString()),
+                        projectRoot.resolve(
+                                Path.of("testing", "cucumber", "exampleFiles").toString()));
+
+        for (Path directory : searchDirectories) {
+            Path filePath = directory.resolve(filename);
+            if (Files.exists(filePath)) {
+                byte[] content = Files.readAllBytes(filePath);
                 return new MockMultipartFile(
                         "file", filename, MediaType.APPLICATION_PDF_VALUE, content);
             }
         }
 
         throw new IOException("PDF file not found: " + filename);
+    }
+
+    private Path locateProjectRoot(Path start) {
+        Path current = start;
+        while (current != null) {
+            if (Files.exists(current.resolve("settings.gradle"))) {
+                return current;
+            }
+            current = current.getParent();
+        }
+        return start;
     }
 
     /** Helper method to create a simple PDF document with text */
