@@ -29,7 +29,6 @@ FROM alpine:3.22.1@sha256:4bcff63911fcb4448bd4fdacec207030997caf25e9bea4045fa6c8
 COPY scripts /scripts
 COPY app/core/src/main/resources/static/fonts/*.ttf /usr/share/fonts/opentype/noto/
 
-
 ARG VERSION_TAG
 
 LABEL org.opencontainers.image.title="Stirling-PDF Backend"
@@ -114,11 +113,13 @@ RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/a
     # User permissions
     addgroup -S stirlingpdfgroup && adduser -S stirlingpdfuser -G stirlingpdfgroup && \
     chown -R stirlingpdfuser:stirlingpdfgroup $HOME /scripts /pipeline /usr/share/fonts/opentype/noto /configs /customFiles /pipeline /tmp/stirling-pdf
-    
 
-COPY --from=build /app/app/core/build/libs/*.jar app.jar
+# first /app directory is for the build stage, second is for the final image
+COPY --from=build --chown=stirlingpdfuser:stirlingpdfgroup /app/app/core/build/libs/*.jar /app.jar
+COPY --from=build --chown=stirlingpdfuser:stirlingpdfgroup /app/build/libs/restart-helper.jar /restart-helper.jar
 
-RUN chown stirlingpdfuser:stirlingpdfgroup /app.jar
+RUN chown stirlingpdfuser:stirlingpdfgroup /app.jar /restart-helper.jar
+
 EXPOSE 8080/tcp
 
 # Set user and run command

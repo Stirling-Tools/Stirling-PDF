@@ -10,6 +10,7 @@ import java.util.Map;
 import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
 import org.springframework.security.web.savedrequest.SavedRequest;
@@ -72,12 +73,6 @@ public class CustomOAuth2AuthenticationSuccessHandler
                 throw new LockedException(
                         "Your account has been locked due to too many failed login attempts.");
             }
-            if (jwtService.isJwtEnabled()) {
-                String jwt =
-                        jwtService.generateToken(
-                                authentication, Map.of("authType", AuthenticationType.OAUTH2));
-                jwtService.addToken(response, jwt);
-            }
             if (userService.isUserDisabled(username)) {
                 getRedirectStrategy()
                         .sendRedirect(request, response, "/logout?userIsDisabled=true");
@@ -98,14 +93,95 @@ public class CustomOAuth2AuthenticationSuccessHandler
                     response.sendRedirect(contextPath + "/logout?oAuth2AdminBlockedUser=true");
                     return;
                 }
-                if (principal instanceof OAuth2User) {
+                if (principal instanceof OAuth2User oAuth2User) {
+                    // Extract SSO provider information from OAuth2User
+                    String ssoProviderId = oAuth2User.getAttribute("sub"); // OIDC ID
+                    // Extract provider from authentication - need to get it from the token/request
+                    // For now, we'll extract it in a more generic way
+                    String ssoProvider = extractProviderFromAuthentication(authentication);
+
                     userService.processSSOPostLogin(
-                            username, oauth2Properties.getAutoCreateUser(), OAUTH2);
+                            username,
+                            ssoProviderId,
+                            ssoProvider,
+                            oauth2Properties.getAutoCreateUser(),
+                            OAUTH2);
                 }
-                response.sendRedirect(contextPath + "/");
+
+                // Generate JWT if v2 is enabled
+                if (jwtService.isJwtEnabled()) {
+                    String jwt =
+                            jwtService.generateToken(
+                                    authentication, Map.of("authType", AuthenticationType.OAUTH2));
+
+                    // Build context-aware redirect URL based on the original request
+                    String redirectUrl = buildContextAwareRedirectUrl(request, contextPath, jwt);
+
+                    response.sendRedirect(redirectUrl);
+                } else {
+                    // v1: redirect directly to home
+                    response.sendRedirect(contextPath + "/");
+                }
             } catch (IllegalArgumentException | SQLException | UnsupportedProviderException e) {
                 response.sendRedirect(contextPath + "/logout?invalidUsername=true");
             }
         }
+    }
+
+    /**
+     * Extracts the OAuth2 provider registration ID from the authentication object.
+     *
+     * @param authentication The authentication object
+     * @return The provider registration ID (e.g., "google", "github"), or null if not available
+     */
+    private String extractProviderFromAuthentication(Authentication authentication) {
+        if (authentication instanceof OAuth2AuthenticationToken oauth2Token) {
+            return oauth2Token.getAuthorizedClientRegistrationId();
+        }
+        return null;
+    }
+
+    /**
+     * Builds a context-aware redirect URL based on the request's origin
+     *
+     * @param request The HTTP request
+     * @param contextPath The application context path
+     * @param jwt The JWT token to include
+     * @return The appropriate redirect URL
+     */
+    private String buildContextAwareRedirectUrl(
+            HttpServletRequest request, String contextPath, String jwt) {
+        // Try to get the origin from the Referer header first
+        String referer = request.getHeader("Referer");
+        if (referer != null && !referer.isEmpty()) {
+            try {
+                java.net.URL refererUrl = new java.net.URL(referer);
+                String origin = refererUrl.getProtocol() + "://" + refererUrl.getHost();
+                if (refererUrl.getPort() != -1
+                        && refererUrl.getPort() != 80
+                        && refererUrl.getPort() != 443) {
+                    origin += ":" + refererUrl.getPort();
+                }
+                return origin + "/auth/callback#access_token=" + jwt;
+            } catch (java.net.MalformedURLException e) {
+                // Fall back to other methods if referer is malformed
+            }
+        }
+
+        // Fall back to building from request host/port
+        String scheme = request.getScheme();
+        String serverName = request.getServerName();
+        int serverPort = request.getServerPort();
+
+        StringBuilder origin = new StringBuilder();
+        origin.append(scheme).append("://").append(serverName);
+
+        // Only add port if it's not the default port for the scheme
+        if ((!"http".equals(scheme) || serverPort != 80)
+                && (!"https".equals(scheme) || serverPort != 443)) {
+            origin.append(":").append(serverPort);
+        }
+
+        return origin.toString() + "/auth/callback#access_token=" + jwt;
     }
 }

@@ -46,7 +46,6 @@ export const REGULAR_TOOL_IDS = [
   'validateSignature',
   'replaceColor',
   'showJS',
-  'pdfJsonEditor',
   'bookletImposition',
 ] as const;
 
