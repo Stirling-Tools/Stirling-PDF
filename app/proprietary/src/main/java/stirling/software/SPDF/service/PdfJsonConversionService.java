@@ -2595,7 +2595,6 @@ public class PdfJsonConversionService {
             PDPageContentStream contentStream, PdfJsonTextColor color, boolean nonStroking)
             throws IOException {
         if (color == null || color.getComponents() == null) {
-            log.trace("[ColorApply] Skipping null color for nonStroking={}", nonStroking);
             return;
         }
         float[] components = new float[color.getComponents().size()];
@@ -2603,11 +2602,6 @@ public class PdfJsonConversionService {
             components[i] = color.getComponents().get(i);
         }
         String space = color.getColorSpace();
-        log.trace(
-                "[ColorApply] Requested color space={} components={} nonStroking={}",
-                space,
-                Arrays.toString(components),
-                nonStroking);
         if (space == null) {
             // Infer color space from component count
             PDColorSpace colorSpace;
@@ -3082,43 +3076,6 @@ public class PdfJsonConversionService {
             return loadFallbackPdfFont(document);
         }
 
-        // IMPORTANT: Dictionary restoration is disabled because deserialized dictionaries
-        // don't properly include the font stream references (FontFile/FontFile2/FontFile3).
-        // This results in fonts that structurally exist but can't encode glyphs, causing
-        // fallback to NotoSans. Instead, we ALWAYS use program bytes for reliable encoding.
-        // The cosDictionary field is preserved in the JSON for potential future use, but
-        // for now we rely on direct font program loading.
-        if (false && fontModel.getCosDictionary() != null) {
-            // Dictionary restoration code kept for reference but disabled
-            COSBase restored = deserializeCosValue(fontModel.getCosDictionary(), document);
-            if (restored instanceof COSDictionary cosDictionary) {
-                try {
-                    PDFont font = PDFontFactory.createFont(cosDictionary);
-                    if (font != null && font.isEmbedded()) {
-                        // Verify font can actually encode a basic character
-                        try {
-                            font.encode("A");
-                            applyAdditionalFontMetadata(document, font, fontModel);
-                            log.debug(
-                                    "Successfully restored embedded font {} from dictionary",
-                                    fontModel.getId());
-                            return font;
-                        } catch (IOException | IllegalArgumentException encodingEx) {
-                            log.warn(
-                                    "Font {} restored from dictionary but failed encoding test: {}; falling back to program bytes",
-                                    fontModel.getId(),
-                                    encodingEx.getMessage());
-                        }
-                    }
-                } catch (IOException ex) {
-                    log.warn(
-                            "Failed to restore font {} from stored dictionary: {}; falling back to program bytes",
-                            fontModel.getId(),
-                            ex.getMessage());
-                }
-            }
-        }
-
         String originalFormat =
                 fontModel.getProgramFormat() != null
                         ? fontModel.getProgramFormat().toLowerCase(Locale.ROOT)
@@ -3260,6 +3217,34 @@ public class PdfJsonConversionService {
                         format,
                         originalFormat,
                         ex.getMessage());
+            }
+        }
+
+        // As a last resort, rebuild the original font dictionary which still references the
+        // embedded program streams captured during extraction. This handles subset fonts whose
+        // raw program bytes cannot be reloaded directly (e.g., missing Unicode cmap tables).
+        if (fontModel.getCosDictionary() != null) {
+            COSBase restored = deserializeCosValue(fontModel.getCosDictionary(), document);
+            if (restored instanceof COSDictionary cosDictionary) {
+                try {
+                    PDFont font = PDFontFactory.createFont(cosDictionary);
+                    if (font != null && font.isEmbedded()) {
+                        applyAdditionalFontMetadata(document, font, fontModel);
+                        log.debug(
+                                "Successfully restored embedded font {} from original dictionary",
+                                fontModel.getId());
+                        return font;
+                    }
+                    log.debug(
+                            "Restored font {} from dictionary but font was {}embedded; continuing",
+                            fontModel.getId(),
+                            font != null && font.isEmbedded() ? "" : "not ");
+                } catch (IOException ex) {
+                    log.debug(
+                            "Failed to restore font {} from stored dictionary: {}",
+                            fontModel.getId(),
+                            ex.getMessage());
+                }
             }
         }
 
@@ -3888,15 +3873,6 @@ public class PdfJsonConversionService {
                     element.setStrokeColor(toTextColor(graphicsState.getStrokingColor()));
                 }
                 element.setZOrder(1_000_000 + pageElements.size());
-                if (log.isTraceEnabled()) {
-                    log.trace(
-                            "[TextCapture] text='{}' font={} size={} fill={} stroke={}",
-                            sanitizeForLog(element.getText()),
-                            fontId,
-                            element.getFontSizeInPt(),
-                            describeColor(element.getFillColor()),
-                            describeColor(element.getStrokeColor()));
-                }
                 pageElements.add(element);
             }
         }
@@ -3953,10 +3929,6 @@ public class PdfJsonConversionService {
             }
             float[] components = color.getComponents();
             String colorSpaceName = colorSpace.getName();
-            log.trace(
-                    "[ColorCapture] Raw color space={} components={}",
-                    colorSpaceName,
-                    Arrays.toString(components));
             float[] effective = components;
             try {
                 float[] rgb = colorSpace.toRGB(components);
@@ -3974,7 +3946,6 @@ public class PdfJsonConversionService {
             for (float component : effective) {
                 values.add(component);
             }
-            log.trace("[ColorCapture] Stored color space={} components={}", colorSpaceName, values);
             return PdfJsonTextColor.builder().colorSpace(colorSpaceName).components(values).build();
         }
 
