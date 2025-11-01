@@ -733,15 +733,11 @@ export const restoreGlyphElements = (
       rebuiltElements.push(...group.originalElements.map(cloneTextElement));
     });
 
-    const textDirty = groups.some((group) => group.text !== group.originalText);
-    const imageDirty = areImageListsDifferent(images, baselineImages);
-    const nextStreams = textDirty || imageDirty ? [] : page.contentStreams ?? [];
-
     return {
       ...page,
       textElements: rebuiltElements,
       imageElements: images.map(cloneImageElement),
-      contentStreams: nextStreams,
+      contentStreams: page.contentStreams ?? [],
     };
   });
 

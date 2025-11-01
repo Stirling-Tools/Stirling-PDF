@@ -401,17 +401,29 @@ public class PdfJsonConversionService {
                 boolean rewriteSucceeded = true;
 
                 if (hasText) {
-                    if (preflightResult.usesFallback()) {
-                        rewriteSucceeded = false;
-                    } else if (!preservedStreams.isEmpty()) {
-                        log.info("Attempting token rewrite for page {}", pageNumberValue);
-                        rewriteSucceeded = rewriteTextOperators(document, page, elements);
-                        if (!rewriteSucceeded) {
+                    if (!preservedStreams.isEmpty()) {
+                        if (preflightResult.usesFallback()) {
                             log.info(
-                                    "Token rewrite failed for page {}, regenerating text stream",
+                                    "Fallback fonts required for page {}; clearing original text tokens",
                                     pageNumberValue);
+                            rewriteSucceeded =
+                                    rewriteTextOperators(document, page, elements, true);
+                            if (!rewriteSucceeded) {
+                                log.info(
+                                        "Failed to clear original text tokens on page {}; forcing regeneration",
+                                        pageNumberValue);
+                            }
                         } else {
-                            log.info("Token rewrite succeeded for page {}", pageNumberValue);
+                            log.info("Attempting token rewrite for page {}", pageNumberValue);
+                            rewriteSucceeded =
+                                    rewriteTextOperators(document, page, elements, false);
+                            if (!rewriteSucceeded) {
+                                log.info(
+                                        "Token rewrite failed for page {}, regenerating text stream",
+                                        pageNumberValue);
+                            } else {
+                                log.info("Token rewrite succeeded for page {}", pageNumberValue);
+                            }
                         }
                     } else {
                         rewriteSucceeded = false;
@@ -419,7 +431,7 @@ public class PdfJsonConversionService {
                 }
 
                 boolean shouldRegenerate = preservedStreams.isEmpty();
-                if (hasText && !rewriteSucceeded) {
+                if (hasText && (!rewriteSucceeded || preflightResult.usesFallback())) {
                     shouldRegenerate = true;
                 }
                 if (hasImages && preservedStreams.isEmpty()) {
@@ -433,6 +445,17 @@ public class PdfJsonConversionService {
 
                 if (shouldRegenerate) {
                     log.info("Regenerating page content for page {}", pageNumberValue);
+                    AppendMode appendMode = AppendMode.OVERWRITE;
+                    if (!preservedStreams.isEmpty()) {
+                        PDStream vectorStream =
+                                extractVectorGraphics(document, preservedStreams, imageElements);
+                        if (vectorStream != null) {
+                            page.setContents(Collections.singletonList(vectorStream));
+                            appendMode = AppendMode.APPEND;
+                        } else {
+                            page.setContents(new ArrayList<>());
+                        }
+                    }
                     regeneratePageContent(
                             document,
                             page,
@@ -440,7 +463,8 @@ public class PdfJsonConversionService {
                             imageElements,
                             fontMap,
                             fontModels,
-                            pageNumberValue);
+                            pageNumberValue,
+                            appendMode);
                     log.info("Page content regeneration complete for page {}", pageNumberValue);
                 }
 
@@ -2141,6 +2165,116 @@ public class PdfJsonConversionService {
         }
     }
 
+    private PDStream extractVectorGraphics(
+            PDDocument document,
+            List<PDStream> preservedStreams,
+            List<PdfJsonImageElement> imageElements)
+            throws IOException {
+        if (preservedStreams == null || preservedStreams.isEmpty()) {
+            return null;
+        }
+
+        Set<String> imageObjectNames = new HashSet<>();
+        if (imageElements != null) {
+            for (PdfJsonImageElement element : imageElements) {
+                if (element == null) {
+                    continue;
+                }
+                String objectName = element.getObjectName();
+                if (objectName != null && !objectName.isBlank()) {
+                    imageObjectNames.add(objectName);
+                }
+            }
+        }
+
+        List<Object> filteredTokens = new ArrayList<>();
+        for (PDStream stream : preservedStreams) {
+            if (stream == null) {
+                continue;
+            }
+            try {
+                PDFStreamParser parser = new PDFStreamParser(stream.toByteArray());
+                List<Object> tokens = parser.parse();
+                collectVectorTokens(tokens, filteredTokens, imageObjectNames);
+            } catch (IOException ex) {
+                log.debug(
+                        "Failed to parse preserved content stream for vector extraction: {}",
+                        ex.getMessage());
+            }
+        }
+
+        if (filteredTokens.isEmpty()) {
+            return null;
+        }
+
+        PDStream vectorStream = new PDStream(document);
+        try (OutputStream outputStream = vectorStream.createOutputStream(COSName.FLATE_DECODE)) {
+            new ContentStreamWriter(outputStream).writeTokens(filteredTokens);
+        }
+        return vectorStream;
+    }
+
+    private void collectVectorTokens(
+            List<Object> sourceTokens,
+            List<Object> targetTokens,
+            Set<String> imageObjectNames) {
+        if (sourceTokens == null || sourceTokens.isEmpty()) {
+            return;
+        }
+
+        boolean insideText = false;
+        boolean insideInlineImage = false;
+
+        for (Object token : sourceTokens) {
+            if (token instanceof Operator operator) {
+                String name = operator.getName();
+                if (OperatorName.BEGIN_TEXT.equals(name)) {
+                    insideText = true;
+                    continue;
+                }
+                if (OperatorName.END_TEXT.equals(name)) {
+                    insideText = false;
+                    continue;
+                }
+                if (OperatorName.BEGIN_INLINE_IMAGE.equals(name)
+                        || OperatorName.BEGIN_INLINE_IMAGE_DATA.equals(name)) {
+                    if (!insideText) {
+                        targetTokens.add(operator);
+                    }
+                    insideInlineImage = true;
+                    continue;
+                }
+                if (OperatorName.END_INLINE_IMAGE.equals(name)) {
+                    if (!insideText) {
+                        targetTokens.add(operator);
+                    }
+                    insideInlineImage = false;
+                    continue;
+                }
+                if (insideText && !insideInlineImage) {
+                    continue;
+                }
+                if (OperatorName.DRAW_OBJECT.equals(name)
+                        && imageObjectNames != null
+                        && !imageObjectNames.isEmpty()
+                        && !targetTokens.isEmpty()) {
+                    Object previous = targetTokens.get(targetTokens.size() - 1);
+                    if (previous instanceof COSName cosName
+                            && imageObjectNames.contains(cosName.getName())) {
+                        targetTokens.remove(targetTokens.size() - 1);
+                        continue;
+                    }
+                }
+                targetTokens.add(operator);
+            } else {
+                if (insideText && !insideInlineImage) {
+                    continue;
+                }
+                targetTokens.add(token);
+            }
+        }
+    }
+
     private void regeneratePageContent(
             PDDocument document,
             PDPage page,
@@ -2148,13 +2282,15 @@ public class PdfJsonConversionService {
             List<PdfJsonImageElement> imageElements,
             Map<String, PDFont> fontMap,
             List<PdfJsonFont> fontModels,
-            int pageNumber)
+            int pageNumber,
+            AppendMode appendMode)
             throws IOException {
         List<DrawableElement> drawables = mergeDrawables(textElements, imageElements);
         Map<String, PDImageXObject> imageCache = new HashMap<>();
 
+        AppendMode mode = appendMode != null ? appendMode : AppendMode.OVERWRITE;
         try (PDPageContentStream contentStream =
-                new PDPageContentStream(document, page, AppendMode.OVERWRITE, true, true)) {
+                new PDPageContentStream(document, page, mode, true, true)) {
             boolean textOpen = false;
             for (DrawableElement drawable : drawables) {
                 switch (drawable.type()) {
@@ -2618,7 +2754,10 @@ public class PdfJsonConversionService {
     }
 
     private boolean rewriteTextOperators(
-            PDDocument document, PDPage page, List<PdfJsonTextElement> elements) {
+            PDDocument document,
+            PDPage page,
+            List<PdfJsonTextElement> elements,
+            boolean removeOnly) {
         if (elements == null || elements.isEmpty()) {
             return true;
         }
@@ -2663,7 +2802,8 @@ public class PdfJsonConversionService {
                             return false;
                         }
                         log.trace("Rewriting Tj operator using font {}", currentFontName);
-                        if (!rewriteShowText(cosString, currentFont, currentFontName, cursor)) {
+                        if (!rewriteShowText(
+                                cosString, currentFont, currentFontName, cursor, removeOnly)) {
                             log.debug("Failed to rewrite Tj operator; aborting rewrite");
                             return false;
                         }
@@ -2674,7 +2814,8 @@ public class PdfJsonConversionService {
                             return false;
                         }
                         log.trace("Rewriting TJ operator using font {}", currentFontName);
-                        if (!rewriteShowTextArray(array, currentFont, currentFontName, cursor)) {
+                        if (!rewriteShowTextArray(
+                                array, currentFont, currentFontName, cursor, removeOnly)) {
                             log.debug("Failed to rewrite TJ operator; aborting rewrite");
                             return false;
                         }
@@ -2703,7 +2844,11 @@ public class PdfJsonConversionService {
     }
 
     private boolean rewriteShowText(
-            COSString cosString, PDFont font, String expectedFontName, TextElementCursor cursor)
+            COSString cosString,
+            PDFont font,
+            String expectedFontName,
+            TextElementCursor cursor,
+            boolean removeOnly)
             throws IOException {
         if (font == null) {
             return false;
@@ -2712,6 +2857,10 @@ public class PdfJsonConversionService {
         List<PdfJsonTextElement> consumed = cursor.consume(expectedFontName, glyphCount);
         if (consumed == null) {
             return false;
+        }
+        if (removeOnly) {
+            cosString.setValue(new byte[0]);
+            return true;
         }
         String replacement = mergeText(consumed);
         try {
@@ -2725,7 +2874,11 @@ public class PdfJsonConversionService {
     }
 
     private boolean rewriteShowTextArray(
-            COSArray array, PDFont font, String expectedFontName, TextElementCursor cursor)
+            COSArray array,
+            PDFont font,
+            String expectedFontName,
+            TextElementCursor cursor,
+            boolean removeOnly)
             throws IOException {
         if (font == null) {
             return false;
@@ -2737,6 +2890,10 @@ public class PdfJsonConversionService {
                 List<PdfJsonTextElement> consumed = cursor.consume(expectedFontName, glyphCount);
                 if (consumed == null) {
                     return false;
+                }
+                if (removeOnly) {
+                    array.set(i, new COSString(new byte[0]));
+                    continue;
                 }
                 String replacement = mergeText(consumed);
                 try {
