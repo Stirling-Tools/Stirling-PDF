@@ -2,6 +2,7 @@ package stirling.software.common.model;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.io.File;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 
@@ -14,9 +15,8 @@ import org.junit.jupiter.params.provider.CsvSource;
 public class FileInfoTest {
 
     // Use fixed deterministic timestamps for all tests
-    private static final LocalDateTime TEST_MOD_DATE = LocalDateTime.of(2024, 6, 15, 10, 30, 45);
-    private static final LocalDateTime TEST_CREATION_DATE =
-            LocalDateTime.of(2024, 6, 14, 10, 30, 45);
+    static final LocalDateTime TEST_MOD_DATE = LocalDateTime.of(2024, 6, 15, 10, 30, 45);
+    static final LocalDateTime TEST_CREATION_DATE = LocalDateTime.of(2024, 6, 14, 10, 30, 45);
 
     @ParameterizedTest(name = "{index}: fileSize={0}")
     @CsvSource({
@@ -64,40 +64,40 @@ public class FileInfoTest {
                     "Converted Path should match input string");
         }
     }
+}
+
+@Nested
+@DisplayName("Date formatting")
+class DateFormattingTests {
+    @Test
+    @DisplayName("Should format modificationDate as 'yyyy-MM-dd HH:mm:ss'")
+    void shouldFormatModificationDate() {
+        LocalDateTime mod = LocalDateTime.of(2025, 8, 10, 15, 30, 45);
+        FileInfo fi =
+                new FileInfo(
+                        "example.txt",
+                        "/path/to/example.txt",
+                        mod,
+                        1,
+                        LocalDateTime.of(2024, 1, 1, 0, 0, 0));
+
+        assertEquals("2025-08-10 15:30:45", fi.getFormattedModificationDate());
     }
 
-    @Nested
-    @DisplayName("Date formatting")
-    class DateFormattingTests {
-        @Test
-        @DisplayName("Should format modificationDate as 'yyyy-MM-dd HH:mm:ss'")
-        void shouldFormatModificationDate() {
-            LocalDateTime mod = LocalDateTime.of(2025, 8, 10, 15, 30, 45);
-            FileInfo fi =
-                    new FileInfo(
-                            "example.txt",
-                            "/path/to/example.txt",
-                            mod,
-                            1,
-                            LocalDateTime.of(2024, 1, 1, 0, 0, 0));
+    @Test
+    @DisplayName("Should format creationDate as 'yyyy-MM-dd HH:mm:ss'")
+    void shouldFormatCreationDate() {
+        LocalDateTime created = LocalDateTime.of(2024, 12, 31, 23, 59, 59);
+        FileInfo fi =
+                new FileInfo(
+                        "example.txt",
+                        "/path/to/example.txt",
+                        LocalDateTime.of(2025, 1, 1, 0, 0, 0),
+                        1,
+                        created);
 
-            assertEquals("2025-08-10 15:30:45", fi.getFormattedModificationDate());
-        }
-
-        @Test
-        @DisplayName("Should format creationDate as 'yyyy-MM-dd HH:mm:ss'")
-        void shouldFormatCreationDate() {
-            LocalDateTime created = LocalDateTime.of(2024, 12, 31, 23, 59, 59);
-            FileInfo fi =
-                    new FileInfo(
-                            "example.txt",
-                            "/path/to/example.txt",
-                            LocalDateTime.of(2025, 1, 1, 0, 0, 0),
-                            1,
-                            created);
-
-            assertEquals("2024-12-31 23:59:59", fi.getFormattedCreationDate());
-        }
+        assertEquals("2024-12-31 23:59:59", fi.getFormattedCreationDate());
+    }
 
     @Test
     void testGettersAndSetters() {
@@ -105,28 +105,27 @@ public class FileInfoTest {
                 new FileInfo(
                         "doc.pdf",
                         File.separator + "docs" + File.separator + "doc.pdf",
-                        TEST_MOD_DATE,
+                        FileInfoTest.TEST_MOD_DATE,
                         2048,
-                        TEST_CREATION_DATE);
+                        FileInfoTest.TEST_CREATION_DATE);
         // Test getters
         assertEquals("doc.pdf", fileInfo.getFileName());
         assertEquals(File.separator + "docs" + File.separator + "doc.pdf", fileInfo.getFilePath());
-        assertEquals(TEST_MOD_DATE, fileInfo.getModificationDate());
+        assertEquals(FileInfoTest.TEST_MOD_DATE, fileInfo.getModificationDate());
         assertEquals(2048, fileInfo.getFileSize());
-        assertEquals(TEST_CREATION_DATE, fileInfo.getCreationDate());
+        assertEquals(FileInfoTest.TEST_CREATION_DATE, fileInfo.getCreationDate());
 
         // Test setters
         fileInfo.setFileName("new.pdf");
         fileInfo.setFilePath(File.separator + "new" + File.separator + "new.pdf");
-        fileInfo.setModificationDate(TEST_MOD_DATE.plusDays(1));
+        fileInfo.setModificationDate(FileInfoTest.TEST_MOD_DATE.plusDays(1));
         fileInfo.setFileSize(4096);
-        fileInfo.setCreationDate(TEST_CREATION_DATE.minusDays(2));
+        fileInfo.setCreationDate(FileInfoTest.TEST_CREATION_DATE.minusDays(2));
 
         assertEquals("new.pdf", fileInfo.getFileName());
         assertEquals(File.separator + "new" + File.separator + "new.pdf", fileInfo.getFilePath());
-        assertEquals(TEST_MOD_DATE.plusDays(1), fileInfo.getModificationDate());
+        assertEquals(FileInfoTest.TEST_MOD_DATE.plusDays(1), fileInfo.getModificationDate());
         assertEquals(4096, fileInfo.getFileSize());
-        assertEquals(TEST_CREATION_DATE.minusDays(2), fileInfo.getCreationDate());
-    }
+        assertEquals(FileInfoTest.TEST_CREATION_DATE.minusDays(2), fileInfo.getCreationDate());
     }
 }
