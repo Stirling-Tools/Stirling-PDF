@@ -315,6 +315,301 @@ class WatermarkRandomizerTest {
     }
 
     @Nested
+    @DisplayName("Collision Detection Tests")
+    class CollisionDetectionTests {
+
+        @Test
+        @DisplayName("Should generate deterministic positions with seed and collision detection")
+        void testGenerateRandomPositionsWithSeed() {
+            WatermarkRandomizer randomizer1 = new WatermarkRandomizer(TEST_SEED);
+            WatermarkRandomizer randomizer2 = new WatermarkRandomizer(TEST_SEED);
+
+            List<float[]> positions1 =
+                    randomizer1.generateRandomPositions(800f, 600f, 100f, 50f, 50, 30, 5);
+            List<float[]> positions2 =
+                    randomizer2.generateRandomPositions(800f, 600f, 100f, 50f, 50, 30, 5);
+
+            assertEquals(
+                    positions1.size(),
+                    positions2.size(),
+                    "Same seed should produce same number of positions");
+            for (int i = 0; i < positions1.size(); i++) {
+                assertArrayEquals(
+                        positions1.get(i),
+                        positions2.get(i),
+                        "Same seed should produce same positions");
+            }
+        }
+
+        @Test
+        @DisplayName("Should maintain minimum spacing between watermarks")
+        void testGenerateRandomPositionsMaintainsSpacing() {
+            WatermarkRandomizer randomizer = new WatermarkRandomizer(TEST_SEED);
+            float pageWidth = 1000f;
+            float pageHeight = 800f;
+            float watermarkWidth = 100f;
+            float watermarkHeight = 80f;
+            int widthSpacer = 50;
+            int heightSpacer = 40;
+            int count = 10;
+
+            List<float[]> positions =
+                    randomizer.generateRandomPositions(
+                            pageWidth,
+                            pageHeight,
+                            watermarkWidth,
+                            watermarkHeight,
+                            widthSpacer,
+                            heightSpacer,
+                            count);
+
+            assertEquals(count, positions.size(), "Should generate requested count of positions");
+
+            // Verify all positions are within bounds
+            for (float[] pos : positions) {
+                assertTrue(pos[0] >= 0, "X position should be non-negative");
+                assertTrue(pos[1] >= 0, "Y position should be non-negative");
+                assertTrue(
+                        pos[0] <= pageWidth - watermarkWidth,
+                        "X position should not exceed page width minus watermark width");
+                assertTrue(
+                        pos[1] <= pageHeight - watermarkHeight,
+                        "Y position should not exceed page height minus watermark height");
+            }
+
+            // Verify spacing between positions
+            for (int i = 0; i < positions.size(); i++) {
+                for (int j = i + 1; j < positions.size(); j++) {
+                    float[] pos1 = positions.get(i);
+                    float[] pos2 = positions.get(j);
+                    float dx = Math.abs(pos1[0] - pos2[0]);
+                    float dy = Math.abs(pos1[1] - pos2[1]);
+
+                    // If positions overlap in both dimensions, they violate spacing
+                    boolean overlapsX = dx < (watermarkWidth + widthSpacer);
+                    boolean overlapsY = dy < (watermarkHeight + heightSpacer);
+
+                    // At least one dimension should have sufficient spacing
+                    assertFalse(
+                            overlapsX && overlapsY,
+                            String.format(
+                                    "Positions %d and %d violate spacing constraints: dx=%.2f (min=%.2f), dy=%.2f (min=%.2f)",
+                                    i,
+                                    j,
+                                    dx,
+                                    watermarkWidth + widthSpacer,
+                                    dy,
+                                    watermarkHeight + heightSpacer));
+                }
+            }
+        }
+
+        @Test
+        @DisplayName("Should allow any placement with zero spacers")
+        void testGenerateRandomPositionsWithZeroSpacers() {
+            WatermarkRandomizer randomizer = new WatermarkRandomizer(TEST_SEED);
+            float pageWidth = 800f;
+            float pageHeight = 600f;
+            float watermarkWidth = 100f;
+            float watermarkHeight = 80f;
+            int count = 15;
+
+            List<float[]> positions =
+                    randomizer.generateRandomPositions(
+                            pageWidth, pageHeight, watermarkWidth, watermarkHeight, 0, 0, count);
+
+            assertEquals(count, positions.size(), "Should generate requested count of positions");
+
+            // Verify all positions are within bounds
+            for (float[] pos : positions) {
+                assertTrue(pos[0] >= 0, "X position should be non-negative");
+                assertTrue(pos[1] >= 0, "Y position should be non-negative");
+                assertTrue(
+                        pos[0] <= pageWidth - watermarkWidth,
+                        "X position should not exceed page width minus watermark width");
+                assertTrue(
+                        pos[1] <= pageHeight - watermarkHeight,
+                        "Y position should not exceed page height minus watermark height");
+            }
+        }
+
+        @Test
+        @DisplayName("Should handle high density placement gracefully")
+        void testGenerateRandomPositionsHighDensity() {
+            WatermarkRandomizer randomizer = new WatermarkRandomizer(TEST_SEED);
+            float pageWidth = 500f;
+            float pageHeight = 400f;
+            float watermarkWidth = 80f;
+            float watermarkHeight = 60f;
+            int widthSpacer = 40;
+            int heightSpacer = 30;
+            int count = 50; // Request more than can fit with spacing
+
+            List<float[]> positions =
+                    randomizer.generateRandomPositions(
+                            pageWidth,
+                            pageHeight,
+                            watermarkWidth,
+                            watermarkHeight,
+                            widthSpacer,
+                            heightSpacer,
+                            count);
+
+            assertEquals(
+                    count,
+                    positions.size(),
+                    "Should still generate requested count even if spacing cannot be maintained");
+
+            // Verify all positions are within bounds
+            for (float[] pos : positions) {
+                assertTrue(pos[0] >= 0, "X position should be non-negative");
+                assertTrue(pos[1] >= 0, "Y position should be non-negative");
+                assertTrue(
+                        pos[0] <= pageWidth - watermarkWidth,
+                        "X position should not exceed page width minus watermark width");
+                assertTrue(
+                        pos[1] <= pageHeight - watermarkHeight,
+                        "Y position should not exceed page height minus watermark height");
+            }
+        }
+
+        @Test
+        @DisplayName("Should handle large spacers that exceed page space")
+        void testGenerateRandomPositionsLargeSpacers() {
+            WatermarkRandomizer randomizer = new WatermarkRandomizer(TEST_SEED);
+            float pageWidth = 400f;
+            float pageHeight = 300f;
+            float watermarkWidth = 100f;
+            float watermarkHeight = 80f;
+            int widthSpacer = 500; // Exceeds page width
+            int heightSpacer = 400; // Exceeds page height
+            int count = 5;
+
+            List<float[]> positions =
+                    randomizer.generateRandomPositions(
+                            pageWidth,
+                            pageHeight,
+                            watermarkWidth,
+                            watermarkHeight,
+                            widthSpacer,
+                            heightSpacer,
+                            count);
+
+            assertEquals(count, positions.size(), "Should generate requested count of positions");
+
+            // Verify all positions are within bounds
+            for (float[] pos : positions) {
+                assertTrue(pos[0] >= 0, "X position should be non-negative");
+                assertTrue(pos[1] >= 0, "Y position should be non-negative");
+                assertTrue(
+                        pos[0] <= pageWidth - watermarkWidth,
+                        "X position should not exceed page width minus watermark width");
+                assertTrue(
+                        pos[1] <= pageHeight - watermarkHeight,
+                        "Y position should not exceed page height minus watermark height");
+            }
+        }
+
+        @Test
+        @DisplayName("Should handle single watermark request")
+        void testGenerateRandomPositionsSingleWatermark() {
+            WatermarkRandomizer randomizer = new WatermarkRandomizer(TEST_SEED);
+            float pageWidth = 800f;
+            float pageHeight = 600f;
+            float watermarkWidth = 100f;
+            float watermarkHeight = 80f;
+            int widthSpacer = 50;
+            int heightSpacer = 40;
+
+            List<float[]> positions =
+                    randomizer.generateRandomPositions(
+                            pageWidth,
+                            pageHeight,
+                            watermarkWidth,
+                            watermarkHeight,
+                            widthSpacer,
+                            heightSpacer,
+                            1);
+
+            assertEquals(1, positions.size(), "Should generate exactly one position");
+
+            float[] pos = positions.get(0);
+            assertTrue(pos[0] >= 0, "X position should be non-negative");
+            assertTrue(pos[1] >= 0, "Y position should be non-negative");
+            assertTrue(
+                    pos[0] <= pageWidth - watermarkWidth,
+                    "X position should not exceed page width minus watermark width");
+            assertTrue(
+                    pos[1] <= pageHeight - watermarkHeight,
+                    "Y position should not exceed page height minus watermark height");
+        }
+
+        @Test
+        @DisplayName("Should respect maximum attempts limit")
+        void testGenerateRandomPositionsMaxAttempts() {
+            WatermarkRandomizer randomizer = new WatermarkRandomizer(TEST_SEED);
+            float pageWidth = 200f;
+            float pageHeight = 150f;
+            float watermarkWidth = 100f;
+            float watermarkHeight = 75f;
+            int widthSpacer = 50;
+            int heightSpacer = 40;
+            int count = 20; // Request more than can possibly fit
+
+            // This should complete without hanging due to max attempts limit
+            List<float[]> positions =
+                    randomizer.generateRandomPositions(
+                            pageWidth,
+                            pageHeight,
+                            watermarkWidth,
+                            watermarkHeight,
+                            widthSpacer,
+                            heightSpacer,
+                            count);
+
+            assertEquals(
+                    count,
+                    positions.size(),
+                    "Should generate requested count even if spacing cannot be maintained");
+        }
+
+        @Test
+        @DisplayName("Should handle negative spacers as zero")
+        void testGenerateRandomPositionsNegativeSpacers() {
+            WatermarkRandomizer randomizer = new WatermarkRandomizer(TEST_SEED);
+            float pageWidth = 800f;
+            float pageHeight = 600f;
+            float watermarkWidth = 100f;
+            float watermarkHeight = 80f;
+            int count = 10;
+
+            List<float[]> positions =
+                    randomizer.generateRandomPositions(
+                            pageWidth,
+                            pageHeight,
+                            watermarkWidth,
+                            watermarkHeight,
+                            -10,
+                            -20,
+                            count);
+
+            assertEquals(count, positions.size(), "Should generate requested count of positions");
+
+            // Verify all positions are within bounds
+            for (float[] pos : positions) {
+                assertTrue(pos[0] >= 0, "X position should be non-negative");
+                assertTrue(pos[1] >= 0, "Y position should be non-negative");
+                assertTrue(
+                        pos[0] <= pageWidth - watermarkWidth,
+                        "X position should not exceed page width minus watermark width");
+                assertTrue(
+                        pos[1] <= pageHeight - watermarkHeight,
+                        "Y position should not exceed page height minus watermark height");
+            }
+        }
+    }
+
+    @Nested
     @DisplayName("Rotation Randomization Tests")
     class RotationRandomizationTests {
 

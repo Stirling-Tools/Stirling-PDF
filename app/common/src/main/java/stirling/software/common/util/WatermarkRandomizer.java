@@ -46,6 +46,82 @@ public class WatermarkRandomizer {
     }
 
     /**
+     * Generates multiple random positions with collision detection to ensure minimum spacing.
+     *
+     * <p>This method uses collision detection to ensure that each watermark maintains minimum
+     * separation from all previously placed watermarks. If a valid position cannot be found after
+     * multiple attempts, the method will still return the requested count but some positions may
+     * not satisfy spacing constraints.
+     *
+     * @param pageWidth Width of the page
+     * @param pageHeight Height of the page
+     * @param watermarkWidth Width of the watermark
+     * @param watermarkHeight Height of the watermark
+     * @param widthSpacer Horizontal spacing between watermarks (minimum separation)
+     * @param heightSpacer Vertical spacing between watermarks (minimum separation)
+     * @param count Number of positions to generate
+     * @return List of [x, y] coordinate arrays
+     */
+    public List<float[]> generateRandomPositions(
+            float pageWidth,
+            float pageHeight,
+            float watermarkWidth,
+            float watermarkHeight,
+            int widthSpacer,
+            int heightSpacer,
+            int count) {
+
+        List<float[]> positions = new ArrayList<>();
+        float maxX = Math.max(0, pageWidth - watermarkWidth);
+        float maxY = Math.max(0, pageHeight - watermarkHeight);
+
+        // Prevent infinite loops with a maximum attempts limit
+        int maxAttempts = count * 10;
+        int attempts = 0;
+
+        while (positions.size() < count && attempts < maxAttempts) {
+            // Generate a random position
+            float x = random.nextFloat() * maxX;
+            float y = random.nextFloat() * maxY;
+
+            // Check if position maintains minimum spacing from existing positions
+            boolean validPosition = true;
+
+            if (widthSpacer > 0 || heightSpacer > 0) {
+                for (float[] existing : positions) {
+                    float dx = Math.abs(x - existing[0]);
+                    float dy = Math.abs(y - existing[1]);
+
+                    // Check if the new position overlaps or violates spacing constraints
+                    // Two watermarks violate spacing if their bounding boxes (including spacers)
+                    // overlap
+                    if (dx < (watermarkWidth + widthSpacer)
+                            && dy < (watermarkHeight + heightSpacer)) {
+                        validPosition = false;
+                        break;
+                    }
+                }
+            }
+
+            if (validPosition) {
+                positions.add(new float[] {x, y});
+            }
+
+            attempts++;
+        }
+
+        // If we couldn't generate enough positions with spacing constraints,
+        // fill remaining positions without spacing constraints to meet the requested count
+        while (positions.size() < count) {
+            float x = random.nextFloat() * maxX;
+            float y = random.nextFloat() * maxY;
+            positions.add(new float[] {x, y});
+        }
+
+        return positions;
+    }
+
+    /**
      * Generates a list of fixed grid positions based on spacers.
      *
      * @param pageWidth Width of the page

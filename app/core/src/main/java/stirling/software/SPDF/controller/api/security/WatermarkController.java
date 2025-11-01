@@ -400,14 +400,16 @@ public class WatermarkController {
         float watermarkHeight = fontSize * textLines.length;
 
         if (randomPosition) {
-            // Generate random positions
-            positions = new java.util.ArrayList<>();
-            for (int i = 0; i < count; i++) {
-                float[] pos =
-                        randomizer.generateRandomPosition(
-                                pageWidth, pageHeight, watermarkWidth, watermarkHeight);
-                positions.add(pos);
-            }
+            // Generate random positions with collision detection
+            positions =
+                    randomizer.generateRandomPositions(
+                            pageWidth,
+                            pageHeight,
+                            watermarkWidth,
+                            watermarkHeight,
+                            widthSpacer,
+                            heightSpacer,
+                            count);
         } else {
             // Generate grid positions (backward compatible)
             positions =
@@ -736,14 +738,16 @@ public class WatermarkController {
         // Determine positions based on a randomPosition flag
         java.util.List<float[]> positions;
         if (randomPosition) {
-            // Generate random positions
-            positions = new java.util.ArrayList<>();
-            for (int i = 0; i < count; i++) {
-                float[] pos =
-                        randomizer.generateRandomPosition(
-                                pageWidth, pageHeight, desiredPhysicalWidth, desiredPhysicalHeight);
-                positions.add(pos);
-            }
+            // Generate random positions with collision detection
+            positions =
+                    randomizer.generateRandomPositions(
+                            pageWidth,
+                            pageHeight,
+                            desiredPhysicalWidth,
+                            desiredPhysicalHeight,
+                            widthSpacer,
+                            heightSpacer,
+                            count);
         } else {
             // Generate grid positions (backward compatible)
             positions =
