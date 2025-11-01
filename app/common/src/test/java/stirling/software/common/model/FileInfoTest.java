@@ -13,6 +13,8 @@ import org.junit.jupiter.params.provider.CsvSource;
 
 public class FileInfoTest {
 
+    private static final LocalDateTime FIXED_NOW = LocalDateTime.of(2025, 11, 1, 12, 0, 0);
+
     @ParameterizedTest(name = "{index}: fileSize={0}")
     @CsvSource({
         "0, '0 Bytes'",
@@ -28,9 +30,9 @@ public class FileInfoTest {
                 new FileInfo(
                         "example.txt",
                         "/path/to/example.txt",
-                        LocalDateTime.now(),
+                        FIXED_NOW,
                         fileSize,
-                        LocalDateTime.now().minusDays(1));
+                        FIXED_NOW.minusDays(1));
 
         assertEquals(expectedFormattedSize, fileInfo.getFormattedFileSize());
     }
@@ -45,9 +47,9 @@ public class FileInfoTest {
                     new FileInfo(
                             "example.txt",
                             "/path/to/example.txt",
-                            LocalDateTime.now(),
+                            FIXED_NOW,
                             123,
-                            LocalDateTime.now().minusDays(1));
+                            FIXED_NOW.minusDays(1));
 
             Path path = fi.getFilePathAsPath();
 
@@ -103,7 +105,7 @@ public class FileInfoTest {
                             "/path/to/example.txt",
                             null, // modificationDate null
                             1,
-                            LocalDateTime.now());
+                            FIXED_NOW);
 
             assertThrows(
                     NullPointerException.class,
@@ -120,7 +122,7 @@ public class FileInfoTest {
                     new FileInfo(
                             "example.txt",
                             "/path/to/example.txt",
-                            LocalDateTime.now(),
+                            FIXED_NOW,
                             1,
                             null); // creationDate null
 
@@ -142,9 +144,9 @@ public class FileInfoTest {
                     new FileInfo(
                             "example.txt",
                             "/path/to/example.txt",
-                            LocalDateTime.now(),
+                            FIXED_NOW,
                             1536, // 1.5 KB
-                            LocalDateTime.now().minusDays(1));
+                            FIXED_NOW.minusDays(1));
 
             assertEquals("1.50 KB", fi.getFormattedFileSize());
         }
@@ -158,9 +160,9 @@ public class FileInfoTest {
                     new FileInfo(
                             "example.txt",
                             "/path/to/example.txt",
-                            LocalDateTime.now(),
+                            FIXED_NOW,
                             twoTB,
-                            LocalDateTime.now().minusDays(1));
+                            FIXED_NOW.minusDays(1));
 
             // 2 TB equals 2048.00 GB with current implementation
             assertEquals(
