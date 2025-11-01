@@ -1,6 +1,10 @@
 package stirling.software.common.service;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -8,7 +12,6 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
@@ -61,7 +64,7 @@ class JobExecutorServiceTest {
     }
 
     @Test
-    void shouldRunSyncJobSuccessfully() {
+    void shouldRunSyncJobSuccessfully() throws Exception {
         // Given
         Supplier<Object> work = () -> "test-result";
 
@@ -77,7 +80,7 @@ class JobExecutorServiceTest {
     }
 
     @Test
-    void shouldRunAsyncJobSuccessfully() {
+    void shouldRunAsyncJobSuccessfully() throws Exception {
         // Given
         Supplier<Object> work = () -> "test-result";
 
@@ -103,20 +106,16 @@ class JobExecutorServiceTest {
                     throw new RuntimeException("Test error");
                 };
 
-        // When
-        ResponseEntity<?> response = jobExecutorService.runJobGeneric(false, work);
-
-        // Then
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
-
-        @SuppressWarnings("unchecked")
-        Map<String, String> errorMap = (Map<String, String>) response.getBody();
-        assertNotNull(errorMap);
-        assertEquals("Job failed: Test error", errorMap.get("error"));
+        // When/Then - Exception should propagate to GlobalExceptionHandler
+        RuntimeException thrown =
+                assertThrows(
+                        RuntimeException.class,
+                        () -> jobExecutorService.runJobGeneric(false, work));
+        assertEquals("Test error", thrown.getMessage());
     }
 
     @Test
-    void shouldQueueJobWhenResourcesLimited() {
+    void shouldQueueJobWhenResourcesLimited() throws Exception {
         // Given
         Supplier<Object> work = () -> "test-result";
         CompletableFuture<ResponseEntity<?>> future = new CompletableFuture<>();

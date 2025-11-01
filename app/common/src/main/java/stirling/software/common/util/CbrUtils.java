@@ -58,31 +58,30 @@ public class CbrUtils {
                     log.warn(
                             "Failed to open CBR/RAR archive due to corrupt header: {}",
                             e.getMessage());
-                    throw ExceptionUtils.createIllegalArgumentException(
-                            "error.invalidFormat",
+                    throw ExceptionUtils.createCbrInvalidFormatException(
                             "Invalid or corrupted CBR/RAR archive. "
-                                    + "The file may be corrupted, use an unsupported RAR format (RAR5+), "
-                                    + "or may not be a valid RAR archive. "
-                                    + "Please ensure the file is a valid RAR archive.");
+                                    + "RAR 5 format is NOT supported - only RAR 4 and earlier versions are compatible. "
+                                    + "The file may be corrupted, encrypted, or not a valid RAR archive. "
+                                    + "Note: PDF to CBR conversion creates RAR 5 files which cannot be read by CBR to PDF.");
                 } catch (RarException e) {
                     log.warn("Failed to open CBR/RAR archive: {}", e.getMessage());
-                    String errorMessage;
                     String exMessage = e.getMessage() != null ? e.getMessage() : "";
 
                     if (exMessage.contains("encrypted")) {
-                        errorMessage = "Encrypted CBR/RAR archives are not supported.";
+                        throw ExceptionUtils.createCbrEncryptedException();
                     } else if (exMessage.isEmpty()) {
-                        errorMessage =
+                        throw ExceptionUtils.createCbrInvalidFormatException(
                                 "Invalid CBR/RAR archive. "
-                                        + "The file may be encrypted, corrupted, or use an unsupported format.";
+                                        + "RAR 5 format is NOT supported - only RAR 4 and earlier are compatible. "
+                                        + "The file may be encrypted, corrupted, or use an unsupported format. "
+                                        + "Note: PDF to CBR creates RAR 5 files which cannot be read.");
                     } else {
-                        errorMessage =
+                        throw ExceptionUtils.createCbrInvalidFormatException(
                                 "Invalid CBR/RAR archive: "
                                         + exMessage
-                                        + ". The file may be encrypted, corrupted, or use an unsupported format.";
+                                        + ". RAR 5 format is NOT supported - only RAR 4 and earlier are compatible. "
+                                        + "Note: PDF to CBR creates RAR 5 files which cannot be read.");
                     }
-                    throw ExceptionUtils.createIllegalArgumentException(
-                            "error.invalidFormat", errorMessage);
                 } catch (IOException e) {
                     log.warn("IO error reading CBR/RAR archive: {}", e.getMessage());
                     throw ExceptionUtils.createFileProcessingException("CBR extraction", e);
@@ -119,9 +118,7 @@ public class CbrUtils {
                         Comparator.comparing(ImageEntryData::name, new NaturalOrderComparator()));
 
                 if (imageEntries.isEmpty()) {
-                    throw ExceptionUtils.createIllegalArgumentException(
-                            "error.fileProcessing",
-                            "No valid images found in the CBR file. The archive may be empty or contain no supported image formats.");
+                    throw ExceptionUtils.createCbrNoImagesException();
                 }
 
                 for (ImageEntryData imageEntry : imageEntries) {
@@ -144,9 +141,7 @@ public class CbrUtils {
                 }
 
                 if (document.getNumberOfPages() == 0) {
-                    throw ExceptionUtils.createIllegalArgumentException(
-                            "error.fileProcessing",
-                            "No images could be processed from the CBR file. All images may be corrupted or in unsupported formats.");
+                    throw ExceptionUtils.createCbrCorruptedImagesException();
                 }
 
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -170,17 +165,17 @@ public class CbrUtils {
 
     private void validateCbrFile(MultipartFile file) {
         if (file == null || file.isEmpty()) {
-            throw new IllegalArgumentException("File cannot be null or empty");
+            throw ExceptionUtils.createFileNullOrEmptyException();
         }
 
         String filename = file.getOriginalFilename();
         if (filename == null) {
-            throw new IllegalArgumentException("File must have a name");
+            throw ExceptionUtils.createFileNoNameException();
         }
 
         String extension = FilenameUtils.getExtension(filename).toLowerCase();
         if (!"cbr".equals(extension) && !"rar".equals(extension)) {
-            throw new IllegalArgumentException("File must be a CBR or RAR archive");
+            throw ExceptionUtils.createNotCbrFileException();
         }
     }
 

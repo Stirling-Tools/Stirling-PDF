@@ -185,7 +185,19 @@ public class ConvertPdfToVideoController {
                         "error.invalidFormat", "Invalid {0} format: {1}", "PDF", "no pages");
             }
             for (int pageIndex = 0; pageIndex < pageCount; pageIndex++) {
-                BufferedImage image = renderer.renderImageWithDPI(pageIndex, dpi, ImageType.RGB);
+                final int currentPageIndex = pageIndex;
+
+                // Validate dimensions BEFORE attempting to render to prevent OOM
+                ExceptionUtils.validateRenderingDimensions(
+                        document.getPage(currentPageIndex), currentPageIndex + 1, dpi);
+
+                BufferedImage image =
+                        ExceptionUtils.handleOomRendering(
+                                currentPageIndex + 1,
+                                dpi,
+                                () ->
+                                        renderer.renderImageWithDPI(
+                                                currentPageIndex, dpi, ImageType.RGB));
                 if (isWatermarkEnabled) {
                     applyWatermark(image, opacity, watermarkText);
                 }

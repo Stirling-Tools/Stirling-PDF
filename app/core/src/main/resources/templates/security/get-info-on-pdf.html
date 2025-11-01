@@ -189,9 +189,16 @@
                   fetchWithCsrf('api/v1/security/get-info-on-pdf', {
                     method: 'POST',
                     body: formData
-                  }).then(response => {
+                  }).then(async response => {
                     if (!response.ok) {
-                      throw new Error(`HTTP error! status: ${response.status}`);
+                      // Try to extract error message from response
+                      try {
+                        const errorText = await response.text();
+                        const errorMsg = errorText || response.statusText || 'Request failed';
+                        throw new Error(`HTTP ${response.status}: ${errorMsg}`);
+                      } catch (e) {
+                        throw new Error(`HTTP ${response.status} - ${response.statusText || 'Request failed'}`);
+                      }
                     }
                     return response.json();
                   }).then(data => {

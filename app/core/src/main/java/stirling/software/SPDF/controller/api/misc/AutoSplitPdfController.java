@@ -141,14 +141,14 @@ public class AutoSplitPdfController {
                 if (properties != null && properties.getSystem() != null) {
                     renderDpi = properties.getSystem().getMaxDPI();
                 }
+                final int dpi = renderDpi;
+                final int pageNum = page;
 
-                try {
-                    bim = pdfRenderer.renderImageWithDPI(page, renderDpi);
-                } catch (OutOfMemoryError e) {
-                    throw ExceptionUtils.createOutOfMemoryDpiException(page + 1, renderDpi, e);
-                } catch (NegativeArraySizeException e) {
-                    throw ExceptionUtils.createOutOfMemoryDpiException(page + 1, renderDpi, e);
-                }
+                bim =
+                        ExceptionUtils.handleOomRendering(
+                                pageNum + 1,
+                                dpi,
+                                () -> pdfRenderer.renderImageWithDPI(pageNum, dpi));
                 String result = decodeQRCode(bim);
 
                 boolean isValidQrCode = VALID_QR_CONTENTS.contains(result);

@@ -37,7 +37,7 @@ public class AutoJobAspect {
 
     @Around("@annotation(autoJobPostMapping)")
     public Object wrapWithJobExecution(
-            ProceedingJoinPoint joinPoint, AutoJobPostMapping autoJobPostMapping) {
+            ProceedingJoinPoint joinPoint, AutoJobPostMapping autoJobPostMapping) throws Exception {
         // This aspect will run before any audit aspects due to @Order(0)
         // Extract parameters from the request and annotation
         boolean async = Boolean.parseBoolean(request.getParameter("async"));
@@ -109,7 +109,8 @@ public class AutoJobAspect {
             int maxRetries,
             boolean trackProgress,
             boolean queueable,
-            int resourceWeight) {
+            int resourceWeight)
+            throws Exception {
 
         // Keep jobId reference for progress tracking in TaskManager
         AtomicReference<String> jobIdRef = new AtomicReference<>();

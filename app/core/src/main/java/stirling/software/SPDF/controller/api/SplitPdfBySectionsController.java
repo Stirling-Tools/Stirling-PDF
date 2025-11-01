@@ -33,6 +33,7 @@ import lombok.RequiredArgsConstructor;
 import stirling.software.SPDF.model.SplitTypes;
 import stirling.software.SPDF.model.api.SplitPdfBySectionsRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.PDFService;
 import stirling.software.common.util.TempFile;
@@ -126,7 +127,11 @@ public class SplitPdfBySectionsController {
         switch (splitMode) {
             case CUSTOM:
                 if (pageNumbers == null || pageNumbers.isBlank()) {
-                    throw new IllegalArgumentException("Custom mode requires page numbers input.");
+                    throw ExceptionUtils.createIllegalArgumentException(
+                            "error.argumentRequired",
+                            "{0} is required for {1} mode",
+                            "page numbers",
+                            "custom");
                 }
                 String[] pageOrderArr = pageNumbers.split(",");
                 List<Integer> pageListToSplit =
@@ -159,7 +164,8 @@ public class SplitPdfBySectionsController {
                 break;
 
             default:
-                throw new IllegalArgumentException("Unsupported split mode: " + splitMode);
+                throw ExceptionUtils.createIllegalArgumentException(
+                        "error.invalidFormat", "Invalid {0} format: {1}", "split mode", splitMode);
         }
 
         return pagesToSplit;

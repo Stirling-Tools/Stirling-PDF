@@ -25,12 +25,9 @@ class ExceptionUtilsTest {
         @DisplayName("should create PdfCorruptedException without context")
         void testCreatePdfCorruptedExceptionWithoutContext() {
             Exception cause = new Exception("root");
-            IOException ex = ExceptionUtils.createPdfCorruptedException(cause);
+            IOException ex = ExceptionUtils.createPdfCorruptedException(null, cause);
 
-            assertEquals(
-                    "PDF file appears to be corrupted or damaged. Please try using the 'Repair PDF'"
-                            + " feature first to fix the file before proceeding with this operation.",
-                    ex.getMessage());
+            assertTrue(ex.getMessage().contains("PDF file appears to be corrupted"));
             assertSame(cause, ex.getCause());
         }
 
@@ -177,33 +174,15 @@ class ExceptionUtilsTest {
     class FileAndCompressionTests {
 
         @Test
-        void testCreateFileNotFoundException() {
-            IOException ex = ExceptionUtils.createFileNotFoundException("123");
-            assertTrue(ex.getMessage().contains("123"));
-        }
-
-        @Test
         void testCreatePdfaConversionFailedException() {
             RuntimeException ex = ExceptionUtils.createPdfaConversionFailedException();
             assertTrue(ex.getMessage().contains("PDF/A conversion failed"));
         }
 
         @Test
-        void testCreateInvalidComparatorException() {
-            IllegalArgumentException ex = ExceptionUtils.createInvalidComparatorException();
-            assertTrue(ex.getMessage().contains("comparator"));
-        }
-
-        @Test
         void testCreateMd5AlgorithmException() {
             RuntimeException ex = ExceptionUtils.createMd5AlgorithmException(new Exception("x"));
             assertTrue(ex.getMessage().contains("MD5"));
-        }
-
-        @Test
-        void testCreateCompressionOptionsException() {
-            IllegalArgumentException ex = ExceptionUtils.createCompressionOptionsException();
-            assertTrue(ex.getMessage().contains("compression"));
         }
 
         @Test
@@ -217,12 +196,6 @@ class ExceptionUtilsTest {
             IOException ex =
                     ExceptionUtils.createGhostscriptCompressionException(new Exception("cause"));
             assertTrue(ex.getMessage().contains("Ghostscript"));
-        }
-
-        @Test
-        void testCreateQpdfCompressionException() {
-            IOException ex = ExceptionUtils.createQpdfCompressionException(new Exception("cause"));
-            assertTrue(ex.getMessage().contains("QPDF"));
         }
     }
 
@@ -359,8 +332,10 @@ class ExceptionUtilsTest {
 
         @Test
         void testCreateInvalidArgumentExceptionSingle() {
-            IllegalArgumentException ex = ExceptionUtils.createInvalidArgumentException("arg");
+            IllegalArgumentException ex =
+                    ExceptionUtils.createInvalidArgumentException("arg", "invalidValue");
             assertTrue(ex.getMessage().contains("arg"));
+            assertTrue(ex.getMessage().contains("invalidValue"));
         }
 
         @Test

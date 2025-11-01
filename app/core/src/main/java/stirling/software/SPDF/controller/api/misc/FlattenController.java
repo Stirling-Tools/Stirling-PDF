@@ -82,24 +82,31 @@ public class FlattenController {
                             : defaultRenderDpi;
 
             Integer requestedDpi = request.getRenderDpi();
-            int renderDpi = maxDpi;
+            int renderDpiTemp = maxDpi;
             if (requestedDpi != null) {
-                renderDpi = Math.min(requestedDpi, maxDpi);
-                renderDpi = Math.max(renderDpi, 72);
+                renderDpiTemp = Math.min(requestedDpi, maxDpi);
+                renderDpiTemp = Math.max(renderDpiTemp, 72);
             }
+            final int renderDpi = renderDpiTemp;
 
             int numPages = document.getNumberOfPages();
             for (int i = 0; i < numPages; i++) {
+                final int pageIndex = i;
+                BufferedImage image = null;
                 try {
-                    BufferedImage image;
+                    // Validate dimensions BEFORE rendering to prevent OOM
+                    ExceptionUtils.validateRenderingDimensions(
+                            document.getPage(pageIndex), pageIndex + 1, renderDpi);
 
-                    try {
-                        image = pdfRenderer.renderImageWithDPI(i, renderDpi, ImageType.RGB);
-                    } catch (OutOfMemoryError e) {
-                        throw ExceptionUtils.createOutOfMemoryDpiException(i + 1, renderDpi, e);
-                    } catch (NegativeArraySizeException e) {
-                        throw ExceptionUtils.createOutOfMemoryDpiException(i + 1, renderDpi, e);
-                    }
+                    // Wrap entire rendering operation to catch OutOfMemoryError from any depth
+                    image =
+                            ExceptionUtils.handleOomRendering(
+                                    pageIndex + 1,
+                                    renderDpi,
+                                    () ->
+                                            pdfRenderer.renderImageWithDPI(
+                                                    pageIndex, renderDpi, ImageType.RGB));
+
                     PDPage page = new PDPage();
                     page.setMediaBox(document.getPage(i).getMediaBox());
                     newDocument.addPage(page);
@@ -111,8 +118,22 @@ public class FlattenController {
 
                         contentStream.drawImage(pdImage, 0, 0, pageWidth, pageHeight);
                     }
+                } catch (ExceptionUtils.OutOfMemoryDpiException e) {
+                    // Re-throw OutOfMemoryDpiException to be handled by GlobalExceptionHandler
+                    newDocument.close();
+                    document.close();
+                    throw e;
                 } catch (IOException e) {
-                    log.error("exception", e);
+                    log.error("IOException during page processing: ", e);
+                    // Continue processing other pages
+                } catch (OutOfMemoryError e) {
+                    // Catch any OutOfMemoryError that escaped the inner try block
+                    newDocument.close();
+                    document.close();
+                    throw ExceptionUtils.createOutOfMemoryDpiException(i + 1, renderDpi, e);
+                } finally {
+                    // Help GC by clearing the image reference
+                    image = null;
                 }
             }
             return WebResponseUtils.pdfDocToWebResponse(

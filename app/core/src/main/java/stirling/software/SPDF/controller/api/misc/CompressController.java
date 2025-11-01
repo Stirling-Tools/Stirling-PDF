@@ -5,7 +5,6 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InterruptedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -104,7 +103,6 @@ public class CompressController {
         long totalCompressedBytes = 0;
     }
 
-    // Replace all instances of original images with their compressed versions
     private static void replaceImages(
             PDDocument doc,
             Map<ImageIdentity, List<ImageReference>> uniqueImages,
@@ -115,11 +113,9 @@ public class CompressController {
             ImageIdentity imageIdentity = entry.getKey();
             List<ImageReference> references = entry.getValue();
 
-            // Skip if no compressed version exists
             PDImageXObject compressedImage = compressedVersions.get(imageIdentity);
             if (compressedImage == null) continue;
 
-            // Replace ALL instances with the compressed version
             for (ImageReference ref : references) {
                 replaceImageReference(doc, ref, compressedImage);
             }
@@ -305,19 +301,15 @@ public class CompressController {
         return compressedVersions;
     }
 
-    // Enhanced hash function to identify identical images with more data
     private static String generateImageHash(PDImageXObject image) {
         try {
-            // Create a stream for the raw stream data
             try (InputStream stream = image.getCOSObject().createRawInputStream()) {
-                // Read more data for better hash accuracy (16KB instead of 8KB)
                 byte[] buffer = new byte[16384];
                 int bytesRead = stream.read(buffer);
                 if (bytesRead > 0) {
                     byte[] dataToHash =
                             bytesRead == buffer.length ? buffer : Arrays.copyOf(buffer, bytesRead);
 
-                    // Also include image dimensions and color space in the hash
                     String enhancedData =
                             new String(dataToHash, StandardCharsets.UTF_8)
                                     + "_"
@@ -339,65 +331,8 @@ public class CompressController {
         }
     }
 
-    public TempFile compressImagesInPDF(
-            Path pdfFile, double scaleFactor, float jpegQuality, boolean convertToGrayscale)
-            throws Exception {
-        TempFile newCompressedPDF = tempFileManager.createManagedTempFile(".pdf");
-        long originalFileSize = Files.size(pdfFile);
-        log.info(
-                "Starting image compression with scale factor: {}, JPEG quality: {}, grayscale: {}"
-                        + " on file size: {}",
-                scaleFactor,
-                jpegQuality,
-                convertToGrayscale,
-                GeneralUtils.formatBytes(originalFileSize));
-
-        try (PDDocument doc = pdfDocumentFactory.load(pdfFile)) {
-            // Find all unique images in the document
-            Map<ImageIdentity, List<ImageReference>> uniqueImages = findImages(doc);
-
-            // Get statistics
-            CompressionStats stats = new CompressionStats();
-            stats.uniqueImagesCount = uniqueImages.size();
-            calculateImageStats(uniqueImages, stats);
-
-            // Create compressed versions of unique images
-            Map<ImageIdentity, PDImageXObject> compressedVersions =
-                    createCompressedImages(
-                            doc, uniqueImages, scaleFactor, jpegQuality, convertToGrayscale, stats);
-
-            // Replace all instances with compressed versions
-            replaceImages(doc, uniqueImages, compressedVersions);
-
-            // Log compression statistics
-            logCompressionStats(stats, originalFileSize);
-
-            // Free memory before saving
-            compressedVersions.clear();
-            uniqueImages.clear();
-
-            log.info("Saving compressed PDF to {}", newCompressedPDF.getPath());
-            doc.save(newCompressedPDF.getAbsolutePath());
-
-            // Log overall file size reduction
-            long compressedFileSize = Files.size(newCompressedPDF.getPath());
-            double overallReduction = 100.0 - ((compressedFileSize * 100.0) / originalFileSize);
-            log.info(
-                    "Overall PDF compression: {} → {} (reduced by {}%)",
-                    GeneralUtils.formatBytes(originalFileSize),
-                    GeneralUtils.formatBytes(compressedFileSize),
-                    String.format("%.1f", overallReduction));
-            return newCompressedPDF;
-        } catch (Exception e) {
-            newCompressedPDF.close();
-            throw e;
-        }
-    }
-
-    // Hash function to identify identical masks
     private static String generateMaskHash(PDImageXObject image) {
         try {
-            // Try to get mask data from either getMask() or getSoftMask()
             PDImageXObject mask = image.getMask();
             if (mask == null) {
                 mask = image.getSoftMask();
@@ -405,7 +340,6 @@ public class CompressController {
 
             if (mask != null) {
                 try (InputStream stream = mask.getCOSObject().createRawInputStream()) {
-                    // Read up to first 4KB of mask data for the hash
                     byte[] buffer = new byte[4096];
                     int bytesRead = stream.read(buffer);
                     if (bytesRead > 0) {
@@ -746,6 +680,522 @@ public class CompressController {
         }
     }
 
+    // Scale factors for different optimization levels (lower => smaller)
+    private static double getScaleFactorForLevel(int optimizeLevel) {
+        return switch (optimizeLevel) {
+            case 1 -> 0.98; // negligible resizing
+            case 2 -> 0.95;
+            case 3 -> 0.88;
+            case 4 -> 0.78;
+            case 5 -> 0.68;
+            case 6 -> 0.58;
+            case 7 -> 0.48;
+            case 8 -> 0.38;
+            case 9 -> 0.28;
+            default -> 1.0;
+        };
+    }
+
+    // JPEG quality for different optimization levels (lower => smaller)
+    private static float getJpegQualityForLevel(int optimizeLevel) {
+        return switch (optimizeLevel) {
+            case 1 -> 0.92f; // very light
+            case 2 -> 0.88f;
+            case 3 -> 0.85f;
+            case 4 -> 0.80f;
+            case 5 -> 0.72f;
+            case 6 -> 0.65f;
+            case 7 -> 0.55f;
+            case 8 -> 0.45f;
+            case 9 -> 0.35f; // aggressive
+            default -> 0.75f;
+        };
+    }
+
+    // Pick optimization level based on target size
+    private static int determineOptimizeLevel(double sizeReductionRatio) {
+        if (sizeReductionRatio > 0.9) return 1;
+        if (sizeReductionRatio > 0.8) return 2;
+        if (sizeReductionRatio > 0.7) return 3;
+        if (sizeReductionRatio > 0.6) return 4;
+        if (sizeReductionRatio > 0.3) return 5;
+        if (sizeReductionRatio > 0.2) return 6;
+        if (sizeReductionRatio > 0.15) return 7;
+        if (sizeReductionRatio > 0.1) return 8;
+        return 9;
+    }
+
+    // Increment optimization level if we need more compression
+    private static int incrementOptimizeLevel(int currentLevel, long currentSize, long targetSize) {
+        double currentRatio = currentSize / (double) targetSize;
+        log.info("Current compression ratio: {}", String.format("%.2f", currentRatio));
+
+        if (currentRatio > 2.0) {
+            return Math.min(9, currentLevel + 3);
+        } else if (currentRatio > 1.5) {
+            return Math.min(9, currentLevel + 2);
+        }
+        return Math.min(9, currentLevel + 1);
+    }
+
+    public TempFile compressImagesInPDF(
+            Path pdfFile, double scaleFactor, float jpegQuality, boolean convertToGrayscale)
+            throws Exception {
+        TempFile newCompressedPDF = tempFileManager.createManagedTempFile(".pdf");
+        long originalFileSize = Files.size(pdfFile);
+        log.info(
+                "Starting image compression with scale factor: {}, JPEG quality: {}, grayscale: {}"
+                        + " on file size: {}",
+                scaleFactor,
+                jpegQuality,
+                convertToGrayscale,
+                GeneralUtils.formatBytes(originalFileSize));
+
+        try (PDDocument doc = pdfDocumentFactory.load(pdfFile)) {
+            Map<ImageIdentity, List<ImageReference>> uniqueImages = findImages(doc);
+
+            CompressionStats stats = new CompressionStats();
+            stats.uniqueImagesCount = uniqueImages.size();
+            calculateImageStats(uniqueImages, stats);
+
+            Map<ImageIdentity, PDImageXObject> compressedVersions =
+                    createCompressedImages(
+                            doc, uniqueImages, scaleFactor, jpegQuality, convertToGrayscale, stats);
+
+            replaceImages(doc, uniqueImages, compressedVersions);
+
+            logCompressionStats(stats, originalFileSize);
+
+            compressedVersions.clear();
+            uniqueImages.clear();
+
+            log.info("Saving compressed PDF to {}", newCompressedPDF.getPath());
+            doc.save(newCompressedPDF.getAbsolutePath());
+
+            long compressedFileSize = Files.size(newCompressedPDF.getPath());
+            double overallReduction = 100.0 - ((compressedFileSize * 100.0) / originalFileSize);
+            log.info(
+                    "Overall PDF compression: {} → {} (reduced by {}%)",
+                    GeneralUtils.formatBytes(originalFileSize),
+                    GeneralUtils.formatBytes(compressedFileSize),
+                    String.format("%.1f", overallReduction));
+            return newCompressedPDF;
+        } catch (IOException e) {
+            newCompressedPDF.close();
+            throw ExceptionUtils.handlePdfException(e, "image compression");
+        } catch (Exception e) {
+            newCompressedPDF.close();
+            throw ExceptionUtils.wrapException(e, "image compression");
+        }
+    }
+
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/compress-pdf")
+    @Operation(
+            summary = "Optimize PDF file",
+            description =
+                    "This endpoint accepts a PDF file and optimizes it based on the provided"
+                            + " parameters. Input:PDF Output:PDF Type:SISO")
+    public ResponseEntity<byte[]> optimizePdf(@ModelAttribute OptimizePdfRequest request)
+            throws Exception {
+        MultipartFile inputFile = request.getFileInput();
+
+        // Validate input file
+        if (inputFile == null || inputFile.isEmpty()) {
+            throw ExceptionUtils.createFileNullOrEmptyException();
+        }
+
+        Integer optimizeLevel = request.getOptimizeLevel();
+        String expectedOutputSizeString = request.getExpectedOutputSize();
+        Boolean convertToGrayscale = request.getGrayscale();
+        if (expectedOutputSizeString == null && optimizeLevel == null) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    ExceptionUtils.ErrorCode.COMPRESSION_OPTIONS);
+        }
+
+        Long expectedOutputSize = 0L;
+        boolean autoMode = false;
+        if (expectedOutputSizeString != null && expectedOutputSizeString.length() > 1) {
+            expectedOutputSize = GeneralUtils.convertSizeToBytes(expectedOutputSizeString);
+            autoMode = true;
+        }
+
+        List<TempFile> tempFiles = new ArrayList<>();
+
+        // Create initial input file
+        TempFile originalTempFile = tempFileManager.createManagedTempFile(".pdf");
+        tempFiles.add(originalTempFile);
+        Path originalFile = originalTempFile.getPath();
+        inputFile.transferTo(originalTempFile.getFile());
+        long inputFileSize = Files.size(originalFile);
+
+        TempFile currentTempFile = tempFileManager.createManagedTempFile(".pdf");
+        tempFiles.add(currentTempFile);
+        Path currentFile = currentTempFile.getPath();
+        Files.copy(originalFile, currentFile, StandardCopyOption.REPLACE_EXISTING);
+
+        try {
+            if (autoMode) {
+                double sizeReductionRatio = expectedOutputSize / (double) inputFileSize;
+                optimizeLevel = determineOptimizeLevel(sizeReductionRatio);
+            }
+
+            boolean sizeMet = false;
+            boolean imageCompressionApplied = false;
+
+            while (!sizeMet && optimizeLevel <= 9) {
+                // Apply external compression first
+                boolean ghostscriptSuccess = false;
+
+                if (isGhostscriptEnabled() && optimizeLevel >= 6) {
+                    try {
+                        applyGhostscriptCompression(request, optimizeLevel, currentFile);
+                        log.info("Ghostscript compression applied successfully");
+                        ghostscriptSuccess = true;
+                    } catch (ExceptionUtils.GhostscriptException e) {
+                        // Critical Ghostscript errors should be propagated
+                        log.error("Ghostscript encountered a critical error: {}", e.getMessage());
+                        throw e;
+                    } catch (IOException e) {
+                        log.warn(
+                                "Ghostscript compression failed, continuing with other methods: {}",
+                                e.getMessage());
+                    }
+                }
+
+                // Always apply QPDF when enabled to recompress/optimize structure
+                if (isQpdfEnabled()) {
+                    try {
+                        applyQpdfCompression(request, optimizeLevel, currentFile);
+                        log.info("QPDF compression applied successfully");
+                    } catch (IOException e) {
+                        log.warn("QPDF compression failed: {}", e.getMessage());
+                    }
+                } else if (!ghostscriptSuccess) {
+                    log.info(
+                            "No external compression tools available, using image compression"
+                                    + " only");
+                }
+
+                // Skip image compression if Ghostscript succeeded
+                if (ghostscriptSuccess) {
+                    imageCompressionApplied = true;
+                }
+
+                // Apply image compression for levels 4+ only if Ghostscript didn't run
+                if ((optimizeLevel >= 4 || Boolean.TRUE.equals(convertToGrayscale))
+                        && !imageCompressionApplied) {
+                    // Use different scale factors based on level
+                    double scaleFactor = getScaleFactorForLevel(optimizeLevel);
+                    // Use JPEG quality settings based on optimization level
+                    float jpegQuality = getJpegQualityForLevel(optimizeLevel);
+
+                    log.info(
+                            "Applying image compression with scale factor: {} and JPEG quality: {}",
+                            scaleFactor,
+                            jpegQuality);
+                    TempFile compressedImageFile =
+                            compressImagesInPDF(
+                                    currentFile,
+                                    scaleFactor,
+                                    jpegQuality,
+                                    Boolean.TRUE.equals(convertToGrayscale));
+
+                    tempFiles.add(compressedImageFile);
+                    currentFile = compressedImageFile.getPath();
+                    imageCompressionApplied = true;
+                }
+
+                // Check if target size reached or not in auto mode
+                long outputFileSize = Files.size(currentFile);
+                if (outputFileSize <= expectedOutputSize || !autoMode) {
+                    sizeMet = true;
+                } else {
+                    int newOptimizeLevel =
+                            incrementOptimizeLevel(
+                                    optimizeLevel, outputFileSize, expectedOutputSize);
+
+                    // Check if we can't increase the level further
+                    if (newOptimizeLevel == optimizeLevel) {
+                        log.info("Maximum optimization level reached without meeting target size.");
+                        sizeMet = true;
+                    } else {
+                        // Reset flags for next iteration with higher optimization level
+                        imageCompressionApplied = false;
+                        optimizeLevel = newOptimizeLevel;
+                    }
+                }
+            }
+
+            // Use original if optimized file is somehow larger or currentFile is invalid
+            if (!Files.exists(currentFile)) {
+                log.warn("Optimized file missing or invalid. Using the original file instead.");
+                currentFile = originalFile;
+            }
+            long finalFileSize = Files.size(currentFile);
+            if (finalFileSize >= inputFileSize) {
+                log.warn(
+                        "Optimized file is larger than the original. Using the original file"
+                                + " instead.");
+                currentFile = originalFile;
+            }
+
+            String outputFilename =
+                    GeneralUtils.generateFilename(
+                            inputFile.getOriginalFilename(), "_Optimized.pdf");
+
+            try {
+                return WebResponseUtils.pdfDocToWebResponse(
+                        pdfDocumentFactory.load(currentFile.toFile()), outputFilename);
+            } catch (IOException e) {
+                throw ExceptionUtils.handlePdfException(e, "PDF optimization");
+            }
+
+        } finally {
+            // Clean up all temporary files
+            for (TempFile tempFile : tempFiles) {
+                try {
+                    tempFile.close();
+                } catch (Exception e) {
+                    log.warn("Failed to delete temporary file: {}", tempFile, e);
+                }
+            }
+        }
+    }
+
+    // Run Ghostscript compression
+    private void applyGhostscriptCompression(
+            OptimizePdfRequest request, int optimizeLevel, Path currentFile) throws IOException {
+
+        long preGsSize = Files.size(currentFile);
+        log.info("Pre-Ghostscript file size: {}", GeneralUtils.formatBytes(preGsSize));
+
+        try (TempFile gsOutputFile = tempFileManager.createManagedTempFile(".pdf")) {
+            Path gsOutputPath = gsOutputFile.getPath();
+
+            // Build Ghostscript command based on optimization level
+            List<String> command = new ArrayList<>();
+            command.add("gs");
+            command.add("-sDEVICE=pdfwrite");
+            command.add("-dCompatibilityLevel=1.5");
+            command.add("-dNOPAUSE");
+            command.add("-dQUIET");
+            command.add("-dBATCH");
+
+            // General compression enhancements
+            command.add("-dDetectDuplicateImages=true");
+            command.add("-dDownsampleColorImages=true");
+            command.add("-dCompressFonts=true");
+            command.add("-dSubsetFonts=true");
+
+            // Map optimization levels to Ghostscript settings
+            switch (optimizeLevel) {
+                case 1:
+                    command.add("-dPDFSETTINGS=/prepress");
+                    break;
+                case 2:
+                    command.add("-dPDFSETTINGS=/printer");
+                    break;
+                case 3:
+                    command.add("-dPDFSETTINGS=/ebook");
+                    break;
+                case 4:
+                case 5:
+                    command.add("-dPDFSETTINGS=/screen");
+                    break;
+                case 6:
+                case 7:
+                    command.add("-dPDFSETTINGS=/screen");
+                    command.add("-dColorImageResolution=150");
+                    command.add("-dGrayImageResolution=150");
+                    command.add("-dMonoImageResolution=300");
+                    break;
+                case 8:
+                case 9:
+                    command.add("-dPDFSETTINGS=/screen");
+                    // Use stronger downsampling at the highest level
+                    if (optimizeLevel == 9) {
+                        command.add("-dColorImageResolution=72");
+                        command.add("-dGrayImageResolution=72");
+                        command.add("-dMonoImageResolution=150");
+                    } else {
+                        command.add("-dColorImageResolution=100");
+                        command.add("-dGrayImageResolution=100");
+                        command.add("-dMonoImageResolution=200");
+                    }
+                    break;
+                case 10:
+                    command.add("-dPDFSETTINGS=/screen");
+                    command.add("-dColorImageResolution=72");
+                    command.add("-dGrayImageResolution=72");
+                    command.add("-dMonoImageResolution=150");
+                    break;
+                default:
+                    command.add("-dPDFSETTINGS=/screen");
+                    break;
+            }
+
+            // If grayscale conversion requested, enforce grayscale color processing in Ghostscript
+            boolean grayscaleRequested = Boolean.TRUE.equals(request.getGrayscale());
+            if (grayscaleRequested) {
+                command.add("-dColorConversionStrategy=/Gray");
+                command.add("-dProcessColorModel=/DeviceGray");
+            }
+
+            // Optional conversion: CMYK -> RGB for color output only (avoid conflict with
+            // grayscale)
+            if (optimizeLevel >= 7 && !grayscaleRequested) {
+                command.add("-dConvertCMYKImagesToRGB=true");
+            }
+
+            command.add("-sOutputFile=" + gsOutputPath.toString());
+            command.add(currentFile.toString());
+
+            ProcessExecutorResult returnCode;
+            try {
+                returnCode =
+                        ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT)
+                                .runCommandWithOutputHandling(command);
+
+                // Check for critical errors in the output before checking return code
+                String gsOutput = returnCode.getMessages();
+                ExceptionUtils.GhostscriptException criticalError =
+                        ExceptionUtils.detectGhostscriptCriticalError(gsOutput);
+                if (criticalError != null) {
+                    log.error(
+                            "Ghostscript critical error detected: {}", criticalError.getMessage());
+                    throw criticalError;
+                }
+
+                if (returnCode.getRc() == 0) {
+                    // Update current file to the Ghostscript output
+                    Files.copy(gsOutputPath, currentFile, StandardCopyOption.REPLACE_EXISTING);
+
+                    long postGsSize = Files.size(currentFile);
+                    double gsReduction = 100.0 - ((postGsSize * 100.0) / preGsSize);
+                    log.info(
+                            "Post-Ghostscript file size: {} (reduced by {}%)",
+                            GeneralUtils.formatBytes(postGsSize),
+                            String.format("%.1f", gsReduction));
+                } else {
+                    log.warn(
+                            "Ghostscript compression failed with return code: {}",
+                            returnCode.getRc());
+                    throw ExceptionUtils.createGhostscriptCompressionException(gsOutput);
+                }
+
+            } catch (InterruptedException e) {
+                throw ExceptionUtils.createProcessingInterruptedException("Ghostscript", e);
+            } catch (ExceptionUtils.GhostscriptException e) {
+                // Re-throw Ghostscript-specific exceptions
+                throw e;
+            } catch (Exception e) {
+                log.warn("Ghostscript compression failed, will fallback to other methods", e);
+                throw ExceptionUtils.createGhostscriptCompressionException(e);
+            }
+        }
+    }
+
+    // Run QPDF compression
+    private void applyQpdfCompression(
+            OptimizePdfRequest request, int optimizeLevel, Path currentFile) throws IOException {
+
+        long preQpdfSize = Files.size(currentFile);
+        log.info("Pre-QPDF file size: {}", GeneralUtils.formatBytes(preQpdfSize));
+
+        // Map optimization levels to QPDF compression levels
+        int qpdfCompressionLevel =
+                switch (optimizeLevel) {
+                    case 1 -> 3; // faster, lighter
+                    case 2 -> 5;
+                    case 3, 4, 5 -> 7;
+                    default -> 9; // 6-9 use max
+                };
+
+        try (TempFile qpdfOutputFile = tempFileManager.createManagedTempFile(".pdf")) {
+            Path qpdfOutputPath = qpdfOutputFile.getPath();
+
+            // Build QPDF command
+            List<String> command = new ArrayList<>();
+            command.add("qpdf");
+            if (Boolean.TRUE.equals(request.getNormalize())) {
+                command.add("--normalize-content=y");
+            }
+            if (Boolean.TRUE.equals(request.getLinearize())) {
+                command.add("--linearize");
+            }
+            // Decode/encode settings for maximal recompression
+            command.add("--decode-level=generalized");
+            command.add("--recompress-flate");
+            command.add("--compression-level=" + qpdfCompressionLevel);
+            command.add("--compress-streams=y");
+            command.add("--stream-data=compress");
+            // Preserve unreferenced only at lower levels for safety; skip at highest levels for
+            // size
+            if (optimizeLevel <= 3) {
+                command.add("--preserve-unreferenced");
+            }
+            // Optional image optimization in qpdf (no resampling; lossy JPEG when beneficial)
+            // Enable qpdf image optimization at medium/high levels
+            if (optimizeLevel >= 5) {
+                command.add("--optimize-images");
+                // Map optimize level to JPEG quality (lower number => smaller size)
+                Integer jpegQuality =
+                        switch (optimizeLevel) {
+                            case 5 -> 78;
+                            case 6 -> 68;
+                            case 7 -> 58;
+                            case 8 -> 46;
+                            default -> 34; // 9+
+                        };
+                command.add("--jpeg-quality=" + jpegQuality);
+            }
+            command.add("--object-streams=generate");
+            command.add(currentFile.toString());
+            command.add(qpdfOutputPath.toString());
+
+            ProcessExecutorResult returnCode = null;
+            try {
+                // On high levels, prefer zopfli if platform supports env wrapper
+                if (optimizeLevel >= 8) {
+                    String os = System.getProperty("os.name").toLowerCase(Locale.ROOT);
+                    if (!os.contains("win")) {
+                        // Prepend env QPDF_ZOPFLI=silent for Unix-like systems
+                        List<String> zopfliCommand = new ArrayList<>();
+                        zopfliCommand.add("env");
+                        zopfliCommand.add("QPDF_ZOPFLI=silent");
+                        zopfliCommand.addAll(command);
+                        command = zopfliCommand;
+                    }
+                }
+                returnCode =
+                        ProcessExecutor.getInstance(ProcessExecutor.Processes.QPDF)
+                                .runCommandWithOutputHandling(command, null);
+
+                // Update current file to the QPDF output
+                Files.copy(qpdfOutputPath, currentFile, StandardCopyOption.REPLACE_EXISTING);
+
+                long postQpdfSize = Files.size(currentFile);
+                double qpdfReduction = 100.0 - ((postQpdfSize * 100.0) / preQpdfSize);
+                log.info(
+                        "Post-QPDF file size: {} (reduced by {}%)",
+                        GeneralUtils.formatBytes(postQpdfSize),
+                        String.format("%.1f", qpdfReduction));
+
+            } catch (IOException e) {
+                if (returnCode != null && returnCode.getRc() != 3) {
+                    throw ExceptionUtils.createIOException(
+                            ExceptionUtils.ErrorCode.QPDF_COMPRESSION.getMessageKey(),
+                            ExceptionUtils.ErrorCode.QPDF_COMPRESSION.getDefaultMessage(),
+                            e);
+                }
+                // If QPDF fails, keep using the current file
+                log.warn("QPDF compression failed, continuing with current file", e);
+            } catch (InterruptedException e) {
+                throw ExceptionUtils.createProcessingInterruptedException("QPDF", e);
+            }
+        }
+    }
+
     private static class ImageIdentity {
         private final String pixelHash; // Hash of pixel data
         private final String colorSpace; // e.g., "DeviceRGB", "DeviceCMYK"
@@ -860,452 +1310,6 @@ public class CompressController {
                     hasMask ? "masked" : "nomask",
                     decodeParams.substring(0, Math.min(4, decodeParams.length())),
                     metadataHash.substring(0, Math.min(4, metadataHash.length())));
-        }
-    }
-
-    // Scale factors for different optimization levels (lower => smaller)
-    private static double getScaleFactorForLevel(int optimizeLevel) {
-        return switch (optimizeLevel) {
-            case 1 -> 0.98; // negligible resizing
-            case 2 -> 0.95;
-            case 3 -> 0.88;
-            case 4 -> 0.78;
-            case 5 -> 0.68;
-            case 6 -> 0.58;
-            case 7 -> 0.48;
-            case 8 -> 0.38;
-            case 9 -> 0.28;
-            default -> 1.0;
-        };
-    }
-
-    // JPEG quality for different optimization levels (lower => smaller)
-    private static float getJpegQualityForLevel(int optimizeLevel) {
-        return switch (optimizeLevel) {
-            case 1 -> 0.92f; // very light
-            case 2 -> 0.88f;
-            case 3 -> 0.85f;
-            case 4 -> 0.80f;
-            case 5 -> 0.72f;
-            case 6 -> 0.65f;
-            case 7 -> 0.55f;
-            case 8 -> 0.45f;
-            case 9 -> 0.35f; // aggressive
-            default -> 0.75f;
-        };
-    }
-
-    // Pick optimization level based on target size
-    private static int determineOptimizeLevel(double sizeReductionRatio) {
-        if (sizeReductionRatio > 0.9) return 1;
-        if (sizeReductionRatio > 0.8) return 2;
-        if (sizeReductionRatio > 0.7) return 3;
-        if (sizeReductionRatio > 0.6) return 4;
-        if (sizeReductionRatio > 0.3) return 5;
-        if (sizeReductionRatio > 0.2) return 6;
-        if (sizeReductionRatio > 0.15) return 7;
-        if (sizeReductionRatio > 0.1) return 8;
-        return 9;
-    }
-
-    // Increment optimization level if we need more compression
-    private static int incrementOptimizeLevel(int currentLevel, long currentSize, long targetSize) {
-        double currentRatio = currentSize / (double) targetSize;
-        log.info("Current compression ratio: {}", String.format("%.2f", currentRatio));
-
-        if (currentRatio > 2.0) {
-            return Math.min(9, currentLevel + 3);
-        } else if (currentRatio > 1.5) {
-            return Math.min(9, currentLevel + 2);
-        }
-        return Math.min(9, currentLevel + 1);
-    }
-
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/compress-pdf")
-    @Operation(
-            summary = "Optimize PDF file",
-            description =
-                    "This endpoint accepts a PDF file and optimizes it based on the provided"
-                            + " parameters. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> optimizePdf(@ModelAttribute OptimizePdfRequest request)
-            throws Exception {
-        MultipartFile inputFile = request.getFileInput();
-        Integer optimizeLevel = request.getOptimizeLevel();
-        String expectedOutputSizeString = request.getExpectedOutputSize();
-        Boolean convertToGrayscale = request.getGrayscale();
-        if (expectedOutputSizeString == null && optimizeLevel == null) {
-            throw new Exception("Both expected output size and optimize level are not specified");
-        }
-
-        Long expectedOutputSize = 0L;
-        boolean autoMode = false;
-        if (expectedOutputSizeString != null && expectedOutputSizeString.length() > 1) {
-            expectedOutputSize = GeneralUtils.convertSizeToBytes(expectedOutputSizeString);
-            autoMode = true;
-        }
-
-        List<TempFile> tempFiles = new ArrayList<>();
-
-        // Create initial input file
-        TempFile originalTempFile = tempFileManager.createManagedTempFile(".pdf");
-        tempFiles.add(originalTempFile);
-        Path originalFile = originalTempFile.getPath();
-        inputFile.transferTo(originalTempFile.getFile());
-        long inputFileSize = Files.size(originalFile);
-
-        TempFile currentTempFile = tempFileManager.createManagedTempFile(".pdf");
-        tempFiles.add(currentTempFile);
-        Path currentFile = currentTempFile.getPath();
-        Files.copy(originalFile, currentFile, StandardCopyOption.REPLACE_EXISTING);
-
-        try {
-            if (autoMode) {
-                double sizeReductionRatio = expectedOutputSize / (double) inputFileSize;
-                optimizeLevel = determineOptimizeLevel(sizeReductionRatio);
-            }
-
-            boolean sizeMet = false;
-            boolean imageCompressionApplied = false;
-            boolean externalCompressionApplied = false;
-
-            while (!sizeMet && optimizeLevel <= 9) {
-                // Apply external compression first
-                boolean ghostscriptSuccess = false;
-
-                if (isGhostscriptEnabled() && optimizeLevel >= 6) {
-                    try {
-                        applyGhostscriptCompression(request, optimizeLevel, currentFile);
-                        log.info("Ghostscript compression applied successfully");
-                        ghostscriptSuccess = true;
-                    } catch (IOException e) {
-                        log.warn("Ghostscript compression failed, continuing with other methods");
-                    }
-                }
-
-                // Always apply QPDF when enabled to recompress/optimize structure
-                if (isQpdfEnabled()) {
-                    try {
-                        applyQpdfCompression(request, optimizeLevel, currentFile);
-                        log.info("QPDF compression applied successfully");
-                    } catch (IOException e) {
-                        log.warn("QPDF compression failed");
-                    }
-                } else if (!ghostscriptSuccess) {
-                    log.info(
-                            "No external compression tools available, using image compression"
-                                    + " only");
-                }
-
-                externalCompressionApplied = true;
-
-                // Skip image compression if Ghostscript succeeded
-                if (ghostscriptSuccess) {
-                    imageCompressionApplied = true;
-                }
-
-                // Apply image compression for levels 4+ only if Ghostscript didn't run
-                if ((optimizeLevel >= 4 || Boolean.TRUE.equals(convertToGrayscale))
-                        && !imageCompressionApplied) {
-                    // Use different scale factors based on level
-                    double scaleFactor = getScaleFactorForLevel(optimizeLevel);
-                    // Use JPEG quality settings based on optimization level
-                    float jpegQuality = getJpegQualityForLevel(optimizeLevel);
-
-                    log.info(
-                            "Applying image compression with scale factor: {} and JPEG quality: {}",
-                            scaleFactor,
-                            jpegQuality);
-                    TempFile compressedImageFile =
-                            compressImagesInPDF(
-                                    currentFile,
-                                    scaleFactor,
-                                    jpegQuality,
-                                    Boolean.TRUE.equals(convertToGrayscale));
-
-                    tempFiles.add(compressedImageFile);
-                    currentFile = compressedImageFile.getPath();
-                    imageCompressionApplied = true;
-                }
-
-                // Check if target size reached or not in auto mode
-                long outputFileSize = Files.size(currentFile);
-                if (outputFileSize <= expectedOutputSize || !autoMode) {
-                    sizeMet = true;
-                } else {
-                    int newOptimizeLevel =
-                            incrementOptimizeLevel(
-                                    optimizeLevel, outputFileSize, expectedOutputSize);
-
-                    // Check if we can't increase the level further
-                    if (newOptimizeLevel == optimizeLevel) {
-                        log.info("Maximum optimization level reached without meeting target size.");
-                        sizeMet = true;
-                    } else {
-                        // Reset flags for next iteration with higher optimization level
-                        imageCompressionApplied = false;
-                        externalCompressionApplied = false;
-                        optimizeLevel = newOptimizeLevel;
-                    }
-                }
-            }
-
-            // Use original if optimized file is somehow larger or currentFile is invalid
-            if (!Files.exists(currentFile)) {
-                log.warn("Optimized file missing or invalid. Using the original file instead.");
-                currentFile = originalFile;
-            }
-            long finalFileSize = Files.size(currentFile);
-            if (finalFileSize >= inputFileSize) {
-                log.warn(
-                        "Optimized file is larger than the original. Using the original file"
-                                + " instead.");
-                currentFile = originalFile;
-            }
-
-            String outputFilename =
-                    GeneralUtils.generateFilename(
-                            inputFile.getOriginalFilename(), "_Optimized.pdf");
-
-            return WebResponseUtils.pdfDocToWebResponse(
-                    pdfDocumentFactory.load(currentFile.toFile()), outputFilename);
-
-        } finally {
-            // Clean up all temporary files
-            for (TempFile tempFile : tempFiles) {
-                try {
-                    tempFile.close();
-                } catch (Exception e) {
-                    log.warn("Failed to delete temporary file: {}", tempFile, e);
-                }
-            }
-        }
-    }
-
-    // Run Ghostscript compression
-    private void applyGhostscriptCompression(
-            OptimizePdfRequest request, int optimizeLevel, Path currentFile) throws IOException {
-
-        long preGsSize = Files.size(currentFile);
-        log.info("Pre-Ghostscript file size: {}", GeneralUtils.formatBytes(preGsSize));
-
-        try (TempFile gsOutputFile = tempFileManager.createManagedTempFile(".pdf")) {
-            Path gsOutputPath = gsOutputFile.getPath();
-
-            // Build Ghostscript command based on optimization level
-            List<String> command = new ArrayList<>();
-            command.add("gs");
-            command.add("-sDEVICE=pdfwrite");
-            command.add("-dCompatibilityLevel=1.5");
-            command.add("-dNOPAUSE");
-            command.add("-dQUIET");
-            command.add("-dBATCH");
-
-            // General compression enhancements
-            command.add("-dDetectDuplicateImages=true");
-            command.add("-dDownsampleColorImages=true");
-            command.add("-dCompressFonts=true");
-            command.add("-dSubsetFonts=true");
-
-            // Map optimization levels to Ghostscript settings
-            switch (optimizeLevel) {
-                case 1:
-                    command.add("-dPDFSETTINGS=/prepress");
-                    break;
-                case 2:
-                    command.add("-dPDFSETTINGS=/printer");
-                    break;
-                case 3:
-                    command.add("-dPDFSETTINGS=/ebook");
-                    break;
-                case 4:
-                case 5:
-                    command.add("-dPDFSETTINGS=/screen");
-                    break;
-                case 6:
-                case 7:
-                    command.add("-dPDFSETTINGS=/screen");
-                    command.add("-dColorImageResolution=150");
-                    command.add("-dGrayImageResolution=150");
-                    command.add("-dMonoImageResolution=300");
-                    break;
-                case 8:
-                case 9:
-                    command.add("-dPDFSETTINGS=/screen");
-                    // Use stronger downsampling at the highest level
-                    if (optimizeLevel == 9) {
-                        command.add("-dColorImageResolution=72");
-                        command.add("-dGrayImageResolution=72");
-                        command.add("-dMonoImageResolution=150");
-                    } else {
-                        command.add("-dColorImageResolution=100");
-                        command.add("-dGrayImageResolution=100");
-                        command.add("-dMonoImageResolution=200");
-                    }
-                    break;
-                case 10:
-                    command.add("-dPDFSETTINGS=/screen");
-                    command.add("-dColorImageResolution=72");
-                    command.add("-dGrayImageResolution=72");
-                    command.add("-dMonoImageResolution=150");
-                    break;
-                default:
-                    command.add("-dPDFSETTINGS=/screen");
-                    break;
-            }
-
-            // If grayscale conversion requested, enforce grayscale color processing in Ghostscript
-            boolean grayscaleRequested = Boolean.TRUE.equals(request.getGrayscale());
-            if (grayscaleRequested) {
-                command.add("-dColorConversionStrategy=/Gray");
-                command.add("-dProcessColorModel=/DeviceGray");
-            }
-
-            // Optional conversion: CMYK -> RGB for color output only (avoid conflict with
-            // grayscale)
-            if (optimizeLevel >= 7 && !grayscaleRequested) {
-                command.add("-dConvertCMYKImagesToRGB=true");
-            }
-
-            command.add("-sOutputFile=" + gsOutputPath.toString());
-            command.add(currentFile.toString());
-
-            ProcessExecutorResult returnCode;
-            try {
-                returnCode =
-                        ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT)
-                                .runCommandWithOutputHandling(command);
-
-                if (returnCode.getRc() == 0) {
-                    // Update current file to the Ghostscript output
-                    Files.copy(gsOutputPath, currentFile, StandardCopyOption.REPLACE_EXISTING);
-
-                    long postGsSize = Files.size(currentFile);
-                    double gsReduction = 100.0 - ((postGsSize * 100.0) / preGsSize);
-                    log.info(
-                            "Post-Ghostscript file size: {} (reduced by {}%)",
-                            GeneralUtils.formatBytes(postGsSize),
-                            String.format("%.1f", gsReduction));
-                } else {
-                    log.warn(
-                            "Ghostscript compression failed with return code: {}",
-                            returnCode.getRc());
-                    throw new IOException("Ghostscript compression failed");
-                }
-
-                // replace the existing catch with these two catches
-            } catch (InterruptedException e) {
-                // restore interrupted status and propagate as an IOException
-                Thread.currentThread().interrupt();
-                InterruptedIOException ie =
-                        new InterruptedIOException("Ghostscript command interrupted");
-                ie.initCause(e);
-                throw ie;
-            } catch (Exception e) {
-                log.warn("Ghostscript compression failed, will fallback to other methods", e);
-                throw new IOException("Ghostscript compression failed", e);
-            }
-        }
-    }
-
-    // Run QPDF compression
-    private void applyQpdfCompression(
-            OptimizePdfRequest request, int optimizeLevel, Path currentFile) throws IOException {
-
-        long preQpdfSize = Files.size(currentFile);
-        log.info("Pre-QPDF file size: {}", GeneralUtils.formatBytes(preQpdfSize));
-
-        // Map optimization levels to QPDF compression levels
-        int qpdfCompressionLevel =
-                switch (optimizeLevel) {
-                    case 1 -> 3; // faster, lighter
-                    case 2 -> 5;
-                    case 3, 4, 5 -> 7;
-                    default -> 9; // 6-9 use max
-                };
-
-        try (TempFile qpdfOutputFile = tempFileManager.createManagedTempFile(".pdf")) {
-            Path qpdfOutputPath = qpdfOutputFile.getPath();
-
-            // Build QPDF command
-            List<String> command = new ArrayList<>();
-            command.add("qpdf");
-            if (Boolean.TRUE.equals(request.getNormalize())) {
-                command.add("--normalize-content=y");
-            }
-            if (Boolean.TRUE.equals(request.getLinearize())) {
-                command.add("--linearize");
-            }
-            // Decode/encode settings for maximal recompression
-            command.add("--decode-level=generalized");
-            command.add("--recompress-flate");
-            command.add("--compression-level=" + qpdfCompressionLevel);
-            command.add("--compress-streams=y");
-            command.add("--stream-data=compress");
-            // Preserve unreferenced only at lower levels for safety; skip at highest levels for
-            // size
-            if (optimizeLevel <= 3) {
-                command.add("--preserve-unreferenced");
-            }
-            // Optional image optimization in qpdf (no resampling; lossy JPEG when beneficial)
-            // Enable qpdf image optimization at medium/high levels
-            if (optimizeLevel >= 5) {
-                command.add("--optimize-images");
-                // Map optimize level to JPEG quality (lower number => smaller size)
-                Integer jpegQuality =
-                        switch (optimizeLevel) {
-                            case 5 -> 78;
-                            case 6 -> 68;
-                            case 7 -> 58;
-                            case 8 -> 46;
-                            default -> 34; // 9+
-                        };
-                command.add("--jpeg-quality=" + jpegQuality);
-            }
-            command.add("--object-streams=generate");
-            command.add(currentFile.toString());
-            command.add(qpdfOutputPath.toString());
-
-            ProcessExecutorResult returnCode = null;
-            try {
-                // On high levels, prefer zopfli if platform supports env wrapper
-                if (optimizeLevel >= 8) {
-                    String os = System.getProperty("os.name").toLowerCase(Locale.ROOT);
-                    if (!os.contains("win")) {
-                        // Prepend env QPDF_ZOPFLI=silent for Unix-like systems
-                        List<String> zopfliCommand = new ArrayList<>();
-                        zopfliCommand.add("env");
-                        zopfliCommand.add("QPDF_ZOPFLI=silent");
-                        zopfliCommand.addAll(command);
-                        command = zopfliCommand;
-                    }
-                }
-                returnCode =
-                        ProcessExecutor.getInstance(ProcessExecutor.Processes.QPDF)
-                                .runCommandWithOutputHandling(command, null);
-
-                // Update current file to the QPDF output
-                Files.copy(qpdfOutputPath, currentFile, StandardCopyOption.REPLACE_EXISTING);
-
-                long postQpdfSize = Files.size(currentFile);
-                double qpdfReduction = 100.0 - ((postQpdfSize * 100.0) / preQpdfSize);
-                log.info(
-                        "Post-QPDF file size: {} (reduced by {}%)",
-                        GeneralUtils.formatBytes(postQpdfSize),
-                        String.format("%.1f", qpdfReduction));
-
-            } catch (IOException e) {
-                if (returnCode != null && returnCode.getRc() != 3) {
-                    throw new IOException("QPDF command failed", e);
-                }
-                // If QPDF fails, keep using the current file
-                log.warn("QPDF compression failed, continuing with current file", e);
-            } catch (InterruptedException e) {
-                // restore interrupted status and propagate as an IOException
-                Thread.currentThread().interrupt();
-                InterruptedIOException ie = new InterruptedIOException("QPDF command interrupted");
-                ie.initCause(e);
-                throw ie;
-            }
         }
     }
 }
