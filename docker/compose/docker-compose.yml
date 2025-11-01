@@ -5,10 +5,6 @@ services:
       dockerfile: docker/backend/Dockerfile
     container_name: stirling-pdf-backend
     restart: on-failure:5
-    deploy:
-      resources:
-        limits:
-          memory: 4G
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8080/api/v1/info/status | grep -q 'UP'"]
       interval: 5s
@@ -33,6 +29,12 @@ services:
       METRICS_ENABLED: "true"
       SYSTEM_GOOGLEVISIBILITY: "true"
       SHOW_SURVEY: "true"
+      STIRLING_PDF_JSON_FONT_NORMALIZATION_ENABLED: "false"
+      STIRLING_PDF_JSON_CFF_CONVERTER_ENABLED: "true"
+      STIRLING_PDF_JSON_CFF_CONVERTER_METHOD: python
+      STIRLING_PDF_JSON_CFF_CONVERTER_PYTHON_COMMAND: /opt/venv/bin/python3
+      STIRLING_PDF_JSON_CFF_CONVERTER_PYTHON_SCRIPT: /scripts/convert_cff_to_ttf.py
+      LOGGING_LEVEL_stirling.software.SPDF.service.PdfJsonConversionService: TRACE
     networks:
       - stirling-network
 

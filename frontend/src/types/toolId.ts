@@ -1,12 +1,6 @@
-import {
-  PROPRIETARY_REGULAR_TOOL_IDS,
-  PROPRIETARY_SUPER_TOOL_IDS,
-  PROPRIETARY_LINK_TOOL_IDS,
-} from '@app/types/proprietaryToolId';
-
 export type ToolKind = 'regular' | 'super' | 'link';
 
-export const CORE_REGULAR_TOOL_IDS = [
+export const REGULAR_TOOL_IDS = [
   'certSign',
   'sign',
   'addPassword',
@@ -55,35 +49,20 @@ export const CORE_REGULAR_TOOL_IDS = [
   'bookletImposition',
 ] as const;
 
-export const CORE_SUPER_TOOL_IDS = [
+export const SUPER_TOOL_IDS = [
   'multiTool',
   'read',
   'automate',
 ] as const;
 
-export const CORE_LINK_TOOL_IDS = [
+const LINK_TOOL_IDS = [
   'devApi',
   'devFolderScanning',
   'devSsoGuide',
   'devAirgapped',
 ] as const;
 
-export const REGULAR_TOOL_IDS = [
-  ...CORE_REGULAR_TOOL_IDS,
-  ...PROPRIETARY_REGULAR_TOOL_IDS,
-] as const;
-
-export const SUPER_TOOL_IDS = [
-  ...CORE_SUPER_TOOL_IDS,
-  ...PROPRIETARY_SUPER_TOOL_IDS,
-] as const;
-
-export const LINK_TOOL_IDS = [
-  ...CORE_LINK_TOOL_IDS,
-  ...PROPRIETARY_LINK_TOOL_IDS,
-] as const;
-
-export const TOOL_IDS = [
+const TOOL_IDS = [
   ...REGULAR_TOOL_IDS,
   ...SUPER_TOOL_IDS,
   ...LINK_TOOL_IDS,

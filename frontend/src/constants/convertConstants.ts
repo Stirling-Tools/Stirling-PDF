@@ -81,10 +81,10 @@ export const FROM_FORMAT_OPTIONS = [
   { value: 'html', label: 'HTML', group: 'Web' },
   { value: 'zip', label: 'ZIP', group: 'Web' },
   { value: 'md', label: 'MD', group: 'Text' },
-  { value: 'json', label: 'JSON', group: 'Data' },
   { value: 'txt', label: 'TXT', group: 'Text' },
   { value: 'rtf', label: 'RTF', group: 'Text' },
   { value: 'eml', label: 'EML', group: 'Email' },
+  { value: 'json', label: 'JSON', group: 'Data' },
 ];
 
 export const TO_FORMAT_OPTIONS = [
@@ -113,7 +113,7 @@ export const TO_FORMAT_OPTIONS = [
 export const CONVERSION_MATRIX: Record<string, string[]> = {
   'any': ['pdf'], // Mixed files always convert to PDF
   'image': ['pdf'], // Multiple images always convert to PDF
-  'pdf': ['png', 'jpg', 'gif', 'tiff', 'bmp', 'webp', 'docx', 'odt', 'pptx', 'odp', 'csv', 'txt', 'rtf', 'md', 'html', 'xml', 'pdfa'],
+  'pdf': ['png', 'jpg', 'gif', 'tiff', 'bmp', 'webp', 'docx', 'odt', 'pptx', 'odp', 'csv', 'txt', 'rtf', 'md', 'html', 'xml', 'pdfa', 'json'],
   'docx': ['pdf'], 'doc': ['pdf'], 'odt': ['pdf'],
   'xlsx': ['pdf'], 'xls': ['pdf'], 'ods': ['pdf'],
   'pptx': ['pdf'], 'ppt': ['pdf'], 'odp': ['pdf'],
@@ -121,9 +121,9 @@ export const CONVERSION_MATRIX: Record<string, string[]> = {
   'html': ['pdf'],
   'zip': ['pdf'],
   'md': ['pdf'],
-  'json': ['pdf'],
   'txt': ['pdf'], 'rtf': ['pdf'],
-  'eml': ['pdf']
+  'eml': ['pdf'],
+  'json': ['pdf']
 };
 
 // Map extensions to endpoint keys
