@@ -17,13 +17,18 @@ import org.apache.commons.io.IOUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.PDResources;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.common.PDStream;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
+import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceStream;
 import org.apache.pdfbox.util.Matrix;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;
@@ -264,26 +269,52 @@ public class WatermarkController {
         // Load the input PDF
         PDDocument document = pdfDocumentFactory.load(pdfFile);
 
-        // Create a page in the document
+        // Create a PDFormXObject to cache watermarks (Solution 5: PDFormXObject caching)
+        PDFormXObject watermarkForm = null;
+
+        // Iterate through pages
         for (PDPage page : document.getPages()) {
 
-            // Get the page's content stream
+            // Create the watermark form on the first page
+            if (watermarkForm == null) {
+                // Create form XObject with the same dimensions as the page
+                // Following the pattern from CertSignController
+                PDRectangle pageBox = page.getMediaBox();
+                PDStream stream = new PDStream(document);
+                watermarkForm = new PDFormXObject(stream);
+                watermarkForm.setResources(new PDResources());
+                watermarkForm.setFormType(1);
+                watermarkForm.setBBox(new PDRectangle(pageBox.getWidth(), pageBox.getHeight()));
+
+                // Create appearance stream for the form
+                PDAppearanceStream appearanceStream =
+                        new PDAppearanceStream(watermarkForm.getCOSObject());
+
+                // Create a content stream for the appearance
+                PDPageContentStream formStream =
+                        new PDPageContentStream(document, appearanceStream);
+
+                // Set transparency in the form
+                PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
+                graphicsState.setNonStrokingAlphaConstant(request.getOpacity());
+                formStream.setGraphicsStateParameters(graphicsState);
+
+                // Render watermarks into the form
+                if ("text".equalsIgnoreCase(watermarkType)) {
+                    addTextWatermark(formStream, document, page, request, randomizer);
+                } else if ("image".equalsIgnoreCase(watermarkType)) {
+                    addImageWatermark(formStream, document, page, request, randomizer);
+                }
+
+                // Close the form stream
+                formStream.close();
+            }
+
+            // Draw the cached form on the current page
             PDPageContentStream contentStream =
                     new PDPageContentStream(
                             document, page, PDPageContentStream.AppendMode.APPEND, true, true);
-
-            // Set transparency
-            PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
-            graphicsState.setNonStrokingAlphaConstant(request.getOpacity());
-            contentStream.setGraphicsStateParameters(graphicsState);
-
-            if ("text".equalsIgnoreCase(watermarkType)) {
-                addTextWatermark(contentStream, document, page, request, randomizer);
-            } else if ("image".equalsIgnoreCase(watermarkType)) {
-                addImageWatermark(contentStream, document, page, request, randomizer);
-            }
-
-            // Close the content stream
+            contentStream.drawForm(watermarkForm);
             contentStream.close();
         }
 
