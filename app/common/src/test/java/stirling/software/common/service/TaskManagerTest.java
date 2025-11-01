@@ -214,10 +214,9 @@ class TaskManagerTest {
     }
 
     @Test
-    void testCleanupOldJobs() throws Exception {
+    void testCleanupOldJobs() {
         // Capture test time at the beginning for deterministic calculations
         final LocalDateTime testTime = LocalDateTime.now();
-
         // Arrange
         // 1. Create a recent completed job
         String recentJobId = "recent-job";
@@ -256,6 +255,7 @@ class TaskManagerTest {
         taskManager.createTask(activeJobId);
 
         // Verify all jobs are in the map
+        assertNotNull(jobResultsMap);
         assertTrue(jobResultsMap.containsKey(recentJobId));
         assertTrue(jobResultsMap.containsKey(oldJobId));
         assertTrue(jobResultsMap.containsKey(activeJobId));
@@ -271,7 +271,7 @@ class TaskManagerTest {
     }
 
     @Test
-    void testShutdown() throws Exception {
+    void testShutdown() {
         // This mainly tests that the shutdown method doesn't throw exceptions
         taskManager.shutdown();
 

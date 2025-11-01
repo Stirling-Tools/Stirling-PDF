@@ -1,10 +1,12 @@
 package stirling.software.common.model;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
-import java.io.File;
+import java.nio.file.Path;
 import java.time.LocalDateTime;
 
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -30,12 +32,7 @@ public class FileInfoTest {
         FileInfo fileInfo =
                 new FileInfo(
                         "example.txt",
-                        File.separator
-                                + "path"
-                                + File.separator
-                                + "to"
-                                + File.separator
-                                + "example.txt",
+                        "/path/to/example.txt",
                         TEST_MOD_DATE,
                         fileSize,
                         TEST_CREATION_DATE);
@@ -43,45 +40,64 @@ public class FileInfoTest {
         assertEquals(expectedFormattedSize, fileInfo.getFormattedFileSize());
     }
 
-    @Test
-    void testGetFilePathAsPath() {
-        FileInfo fileInfo =
-                new FileInfo(
-                        "test.pdf",
-                        File.separator + "tmp" + File.separator + "test.pdf",
-                        TEST_MOD_DATE,
-                        1234,
-                        TEST_CREATION_DATE);
-        assertEquals(
-                File.separator + "tmp" + File.separator + "test.pdf",
-                fileInfo.getFilePathAsPath().toString());
+    @Nested
+    @DisplayName("getFilePathAsPath")
+    class GetFilePathAsPathTests {
+        @Test
+        @DisplayName("Should convert filePath string into a Path instance")
+        void shouldConvertStringToPath() {
+            FileInfo fi =
+                    new FileInfo(
+                            "example.txt",
+                            File.separator + "tmp" + File.separator + "test.pdf",
+                            TEST_MOD_DATE,
+                            1234,
+                            TEST_CREATION_DATE);
+
+            Path path = fi.getFilePathAsPath();
+
+            // Basic sanity checks
+            assertNotNull(path, "Path should not be null");
+            assertEquals(
+                    Path.of(File.separator + "tmp" + File.separator + "test.pdf"),
+                    path,
+                    "Converted Path should match input string");
+        }
+    }
     }
 
-    @Test
-    void testGetFormattedModificationDate() {
-        LocalDateTime modDate = LocalDateTime.of(2024, 6, 1, 15, 30, 45);
-        FileInfo fileInfo =
-                new FileInfo(
-                        "file.txt",
-                        File.separator + "file.txt",
-                        modDate,
-                        100,
-                        LocalDateTime.of(2024, 5, 31, 10, 0, 0));
-        assertEquals("2024-06-01 15:30:45", fileInfo.getFormattedModificationDate());
-    }
+    @Nested
+    @DisplayName("Date formatting")
+    class DateFormattingTests {
+        @Test
+        @DisplayName("Should format modificationDate as 'yyyy-MM-dd HH:mm:ss'")
+        void shouldFormatModificationDate() {
+            LocalDateTime mod = LocalDateTime.of(2025, 8, 10, 15, 30, 45);
+            FileInfo fi =
+                    new FileInfo(
+                            "example.txt",
+                            "/path/to/example.txt",
+                            mod,
+                            1,
+                            LocalDateTime.of(2024, 1, 1, 0, 0, 0));
 
-    @Test
-    void testGetFormattedCreationDate() {
-        LocalDateTime creationDate = LocalDateTime.of(2023, 12, 25, 8, 15, 0);
-        FileInfo fileInfo =
-                new FileInfo(
-                        "holiday.txt",
-                        File.separator + "holiday.txt",
-                        LocalDateTime.of(2024, 1, 1, 0, 0, 0),
-                        500,
-                        creationDate);
-        assertEquals("2023-12-25 08:15:00", fileInfo.getFormattedCreationDate());
-    }
+            assertEquals("2025-08-10 15:30:45", fi.getFormattedModificationDate());
+        }
+
+        @Test
+        @DisplayName("Should format creationDate as 'yyyy-MM-dd HH:mm:ss'")
+        void shouldFormatCreationDate() {
+            LocalDateTime created = LocalDateTime.of(2024, 12, 31, 23, 59, 59);
+            FileInfo fi =
+                    new FileInfo(
+                            "example.txt",
+                            "/path/to/example.txt",
+                            LocalDateTime.of(2025, 1, 1, 0, 0, 0),
+                            1,
+                            created);
+
+            assertEquals("2024-12-31 23:59:59", fi.getFormattedCreationDate());
+        }
 
     @Test
     void testGettersAndSetters() {
@@ -111,5 +127,6 @@ public class FileInfoTest {
         assertEquals(TEST_MOD_DATE.plusDays(1), fileInfo.getModificationDate());
         assertEquals(4096, fileInfo.getFileSize());
         assertEquals(TEST_CREATION_DATE.minusDays(2), fileInfo.getCreationDate());
+    }
     }
 }

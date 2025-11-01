@@ -30,7 +30,6 @@ ext {
     openSamlVersion = "4.3.2"
     commonmarkVersion = "0.27.0"
     googleJavaFormatVersion = "1.28.0"
-    junitPlatformVersion = "1.12.2"
     tempJrePath = null
 }
 
@@ -134,7 +133,7 @@ subprojects {
 
         testImplementation 'org.springframework.boot:spring-boot-starter-test'
         testRuntimeOnly 'org.mockito:mockito-inline:5.2.0'
-        testRuntimeOnly "org.junit.platform:junit-platform-launcher:$junitPlatformVersion"
+        testRuntimeOnly "org.junit.platform:junit-platform-launcher"
 
         testImplementation platform("com.squareup.okhttp3:okhttp-bom:5.2.1")
         testImplementation "com.squareup.okhttp3:mockwebserver"
@@ -559,7 +558,7 @@ dependencies {
     }
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testRuntimeOnly "org.junit.platform:junit-platform-launcher:$junitPlatformVersion"
+    testRuntimeOnly "org.junit.platform:junit-platform-launcher"
 
     testImplementation platform("com.squareup.okhttp3:okhttp-bom:5.2.1")
     testImplementation "com.squareup.okhttp3:mockwebserver"
