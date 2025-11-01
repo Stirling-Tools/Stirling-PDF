@@ -59,12 +59,24 @@
     </div>
     <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
   </div>
-  <script type="module" th:src="@{'/pdfjs-legacy/pdf.mjs'}"></script>
+  <script type="module">
+    import * as pdfjsLib from './pdfjs-legacy/pdf.mjs';
+    pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsPath + 'pdf.worker.mjs';
+    window.pdfjsLib = pdfjsLib;
+  </script>
   <script>
     const angleInput = document.getElementById("angleInput");
     const fileInput = document.getElementById("fileInput-input");
     const previewContainer = document.getElementById("previewContainer");
-    // const preview = document.getElementById("pdf-preview");
+
+    // PDF.js setup (with CMap options to fix font loading warning)
+    const PDFJS_DEFAULT_OPTIONS = {
+      cMapUrl: pdfjsPath + 'cmaps/',
+      cMapPacked: true,
+      standardFontDataUrl: pdfjsPath + 'standard_fonts/',
+      disableWorker: true  // Avoids Legacy CMap errors
+    };
+
     fileInput.addEventListener("change", async function () {
       console.log("loading pdf");
 
@@ -74,9 +86,9 @@
       if (existingPreview) {
         existingPreview.remove();
       }
-      var url = URL.createObjectURL(fileInput.files[0])
-      pdfjsLib.GlobalWorkerOptions.workerSrc = './pdfjs-legacy/pdf.worker.mjs'
-      const pdf = await pdfjsLib.getDocument(url).promise;
+
+      const url = URL.createObjectURL(fileInput.files[0]);
+      const pdf = await window.pdfjsLib.getDocument({ ...PDFJS_DEFAULT_OPTIONS, url }).promise;
       const page = await pdf.getPage(1);
 
       const canvas = document.createElement("canvas");
@@ -91,7 +103,7 @@
       }
 
       // render the page onto the canvas
-      var renderContext = {
+      const renderContext = {
         canvasContext: canvas.getContext("2d"),
         viewport: page.getViewport({ scale: 1 })
       };

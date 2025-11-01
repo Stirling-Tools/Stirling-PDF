@@ -8,6 +8,12 @@ import { AddFilesCommand } from './commands/add-page.js';
 import { DecryptFile } from '../DecryptFiles.js';
 import { CommandSequence } from './commands/commands-sequence.js';
 
+const PDFJS_DEFAULT_OPTIONS = {
+  cMapUrl: pdfjsPath + 'cmaps/',
+  cMapPacked: true,
+  standardFontDataUrl: pdfjsPath + 'standard_fonts/',
+};
+
 const isSvgFile = (file) => {
   if (!file) return false;
   const type = (file.type || '').toLowerCase();
@@ -479,8 +485,11 @@ class PdfContainer {
   }
 
   async toRenderer(objectUrl) {
-    pdfjsLib.GlobalWorkerOptions.workerSrc = './pdfjs-legacy/pdf.worker.mjs';
-    const pdf = await pdfjsLib.getDocument(objectUrl).promise;
+    pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsPath + 'pdf.worker.mjs';
+    const pdf = await pdfjsLib.getDocument({
+      url: objectUrl,
+      ...PDFJS_DEFAULT_OPTIONS,
+    }).promise;
     return {
       document: pdf,
       pageCount: pdf.numPages,

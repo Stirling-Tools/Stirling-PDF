@@ -1,3 +1,9 @@
+const PDFJS_DEFAULT_OPTIONS = {
+  cMapUrl: pdfjsPath + 'cmaps/',
+  cMapPacked: true,
+  standardFontDataUrl: pdfjsPath + 'standard_fonts/',
+};
+
 var canvas = document.getElementById('contrast-pdf-canvas');
 var context = canvas.getContext('2d');
 var originalImageData = null;
@@ -9,8 +15,11 @@ async function renderPDFAndSaveOriginalImageData(file) {
   var fileReader = new FileReader();
   fileReader.onload = async function () {
     var data = new Uint8Array(this.result);
-    pdfjsLib.GlobalWorkerOptions.workerSrc = './pdfjs-legacy/pdf.worker.mjs';
-    pdf = await pdfjsLib.getDocument({data: data}).promise;
+    pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsPath + 'pdf.worker.mjs';
+    pdf = await pdfjsLib.getDocument({
+      ...PDFJS_DEFAULT_OPTIONS,
+      data: data,
+    }).promise;
 
     // Get the number of pages in the PDF
     var numPages = pdf.numPages;

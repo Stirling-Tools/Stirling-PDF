@@ -1,3 +1,9 @@
+const PDFJS_DEFAULT_OPTIONS = {
+  cMapUrl: pdfjsPath + 'cmaps/',
+  cMapPacked: true,
+  standardFontDataUrl: pdfjsPath + 'standard_fonts/',
+};
+
 const deleteAllCheckbox = document.querySelector('#deleteAll');
 let inputs = document.querySelectorAll('input');
 const customMetadataDiv = document.getElementById('customMetadata');
@@ -43,8 +49,13 @@ fileInput.addEventListener('change', async function () {
         customMetadataFormContainer.removeChild(customMetadataFormContainer.firstChild);
       }
       var url = URL.createObjectURL(file);
-      pdfjsLib.GlobalWorkerOptions.workerSrc = './pdfjs-legacy/pdf.worker.mjs';
-      const pdf = await pdfjsLib.getDocument(url).promise;
+      pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsPath + 'pdf.worker.mjs';
+      const pdf = await pdfjsLib
+        .getDocument({
+          ...PDFJS_DEFAULT_OPTIONS,
+          url: url,
+        })
+        .promise;
       const pdfMetadata = await pdf.getMetadata();
       lastPDFFile = pdfMetadata?.info;
       console.log(pdfMetadata);
