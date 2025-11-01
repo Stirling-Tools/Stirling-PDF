@@ -30,6 +30,8 @@ export interface PdfJsonFont {
   programFormat?: string | null;
   webProgram?: string | null;
   webProgramFormat?: string | null;
+  pdfProgram?: string | null;
+  pdfProgramFormat?: string | null;
   toUnicode?: string | null;
   standard14Name?: string | null;
   fontDescriptorFlags?: number | null;
@@ -140,6 +142,7 @@ export interface TextGroup {
   rotation?: number | null;
   anchor?: { x: number; y: number } | null;
   baselineLength?: number | null;
+  baseline?: number | null;
   elements: PdfJsonTextElement[];
   originalElements: PdfJsonTextElement[];
   text: string;

@@ -419,6 +419,17 @@ const computeBaselineLength = (
   metrics?: FontMetricsMap,
 ): number => elements.reduce((acc, current) => acc + getWidth(current, metrics), 0);
 
+const computeAverageBaseline = (elements: PdfJsonTextElement[]): number | null => {
+  if (elements.length === 0) {
+    return null;
+  }
+  let sum = 0;
+  elements.forEach((element) => {
+    sum += getBaseline(element);
+  });
+  return sum / elements.length;
+};
+
 const createGroup = (
   pageIndex: number,
   idSuffix: number,
@@ -432,6 +443,7 @@ const createGroup = (
   const rotation = computeGroupRotation(elements);
   const anchor = rotation !== null ? getAnchorPoint(firstElement) : null;
   const baselineLength = computeBaselineLength(elements, metrics);
+  const baseline = computeAverageBaseline(elements);
 
   return {
     id: `${pageIndex}-${idSuffix}`,
@@ -444,6 +456,7 @@ const createGroup = (
     rotation,
     anchor,
     baselineLength,
+    baseline,
     elements: clones,
     originalElements: originalClones,
     text: buildGroupText(elements, metrics),
@@ -587,42 +600,52 @@ export const createMergedElement = (group: TextGroup): PdfJsonTextElement => {
   return merged;
 };
 
-const distributeTextAcrossElements = (text: string | undefined, elements: PdfJsonTextElement[]): void => {
+const distributeTextAcrossElements = (text: string | undefined, elements: PdfJsonTextElement[]): boolean => {
   if (elements.length === 0) {
-    return;
+    return true;
   }
 
   const targetChars = Array.from(text ?? '');
-  let cursor = 0;
-
-  elements.forEach((element, index) => {
-    const originalText = element.text ?? '';
-    let sliceLength = Array.from(originalText).length;
-    if (sliceLength <= 0) {
-      sliceLength = 1;
-    }
-
-    if (index === elements.length - 1) {
-      element.text = targetChars.slice(cursor).join('');
-      cursor = targetChars.length;
-      return;
-    }
-
-    const slice = targetChars.slice(cursor, cursor + sliceLength).join('');
-    element.text = slice;
-    cursor = Math.min(cursor + sliceLength, targetChars.length);
-  });
-
-  if (cursor < targetChars.length) {
-    const last = elements[elements.length - 1];
-    last.text = (last.text ?? '') + targetChars.slice(cursor).join('');
+  if (targetChars.length === 0) {
+    elements.forEach((element) => {
+      element.text = '';
+    });
+    return true;
   }
+
+  const capacities = elements.map((element) => {
+    const originalText = element.text ?? '';
+    const graphemeCount = Array.from(originalText).length;
+    return graphemeCount > 0 ? graphemeCount : 1;
+  });
+  const totalCapacity = capacities.reduce((sum, value) => sum + value, 0);
+  if (targetChars.length > totalCapacity) {
+    return false;
+  }
+
+  let cursor = 0;
+  elements.forEach((element, index) => {
+    const remaining = targetChars.length - cursor;
+    let sliceLength = 0;
+    if (remaining > 0) {
+      if (index === elements.length - 1) {
+        sliceLength = remaining;
+      } else {
+        sliceLength = Math.min(capacities[index], remaining);
+      }
+    }
+
+    element.text = sliceLength > 0 ? targetChars.slice(cursor, cursor + sliceLength).join('') : '';
+    cursor += sliceLength;
+  });
 
   elements.forEach((element) => {
     if (element.text == null) {
       element.text = '';
     }
   });
+
+  return true;
 };
 
 export const buildUpdatedDocument = (
@@ -685,11 +708,29 @@ export const restoreGlyphElements = (
     const rebuiltElements: PdfJsonTextElement[] = [];
 
     groups.forEach((group) => {
-      const originals = group.originalElements.map(cloneTextElement);
       if (group.text !== group.originalText) {
-        distributeTextAcrossElements(group.text, originals);
+        const originalGlyphCount = group.originalElements.reduce(
+          (sum, element) => sum + countGraphemes(element.text ?? ''),
+          0,
+        );
+        const targetGlyphCount = countGraphemes(group.text);
+
+        if (targetGlyphCount !== originalGlyphCount) {
+          rebuiltElements.push(createMergedElement(group));
+          return;
+        }
+
+        const originals = group.originalElements.map(cloneTextElement);
+        const distributed = distributeTextAcrossElements(group.text, originals);
+        if (distributed) {
+          rebuiltElements.push(...originals);
+        } else {
+          rebuiltElements.push(createMergedElement(group));
+        }
+        return;
       }
-      rebuiltElements.push(...originals);
+
+      rebuiltElements.push(...group.originalElements.map(cloneTextElement));
     });
 
     const textDirty = groups.some((group) => group.text !== group.originalText);

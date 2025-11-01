@@ -16,6 +16,7 @@ import java.nio.file.Path;
 import java.time.Instant;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.Calendar;
 import java.util.Collections;
@@ -536,6 +537,8 @@ public class PdfJsonConversionService {
                 .programFormat(programData != null ? programData.getFormat() : null)
                 .webProgram(programData != null ? programData.getWebBase64() : null)
                 .webProgramFormat(programData != null ? programData.getWebFormat() : null)
+                .pdfProgram(programData != null ? programData.getPdfBase64() : null)
+                .pdfProgramFormat(programData != null ? programData.getPdfFormat() : null)
                 .toUnicode(toUnicode)
                 .standard14Name(standard14Name)
                 .fontDescriptorFlags(flags)
@@ -832,7 +835,8 @@ public class PdfJsonConversionService {
         } else if ("fontforge".equalsIgnoreCase(cffConverterMethod)) {
             return convertCffUsingFontForge(fontBytes);
         } else {
-            log.warn("Unknown CFF converter method: {}, falling back to Python", cffConverterMethod);
+            log.warn(
+                    "Unknown CFF converter method: {}, falling back to Python", cffConverterMethod);
             return convertCffUsingPython(fontBytes, toUnicode);
         }
     }
@@ -848,7 +852,8 @@ public class PdfJsonConversionService {
 
         try (TempFile inputFile = new TempFile(tempFileManager, ".cff");
                 TempFile outputFile = new TempFile(tempFileManager, ".otf");
-                TempFile toUnicodeFile = toUnicode != null ? new TempFile(tempFileManager, ".tounicode") : null) {
+                TempFile toUnicodeFile =
+                        toUnicode != null ? new TempFile(tempFileManager, ".tounicode") : null) {
             Files.write(inputFile.getPath(), fontBytes);
 
             // Write ToUnicode CMap data if available
@@ -926,7 +931,10 @@ public class PdfJsonConversionService {
             } else {
                 String outputStr = output.toString().trim();
                 if (!outputStr.isEmpty()) {
-                    log.warn("Python CFF→OTF wrapping failed with exit code {}: {}", exitCode, outputStr);
+                    log.warn(
+                            "Python CFF→OTF wrapping failed with exit code {}: {}",
+                            exitCode,
+                            outputStr);
                 } else {
                     log.warn("Python CFF→OTF wrapping failed with exit code {}", exitCode);
                 }
@@ -957,7 +965,7 @@ public class PdfJsonConversionService {
             command.add("-c");
             command.add(
                     "Open($1); "
-                            + "ScaleToEm(1000); "  // Force 1000 units per em (standard for Type1)
+                            + "ScaleToEm(1000); " // Force 1000 units per em (standard for Type1)
                             + "SelectWorthOutputting(); "
                             + "SetFontOrder(2); "
                             + "Reencode(\"unicode\"); "
@@ -998,7 +1006,8 @@ public class PdfJsonConversionService {
             if (!finished) {
                 process.destroyForcibly();
                 reader.interrupt();
-                log.warn("FontForge conversion timed out after 30 seconds - font may be too complex or causing FontForge to hang");
+                log.warn(
+                        "FontForge conversion timed out after 30 seconds - font may be too complex or causing FontForge to hang");
                 return null;
             }
 
@@ -1023,9 +1032,7 @@ public class PdfJsonConversionService {
                             // Additional validation: check unitsPerEm in head table
                             String validationError = validateFontTables(convertedBytes);
                             if (validationError != null) {
-                                log.warn(
-                                        "FontForge produced invalid font: {}",
-                                        validationError);
+                                log.warn("FontForge produced invalid font: {}", validationError);
                                 return null;
                             }
 
@@ -1063,6 +1070,7 @@ public class PdfJsonConversionService {
 
     /**
      * Validates critical OpenType/TrueType font tables to ensure browser compatibility.
+     *
      * @return Error message if invalid, null if valid
      */
     private String validateFontTables(byte[] fontBytes) {
@@ -1081,22 +1089,25 @@ public class PdfJsonConversionService {
             int offset = 12; // Skip sfnt header
             for (int i = 0; i < numTables && offset + 16 <= fontBytes.length; i++) {
                 String tag = new String(fontBytes, offset, 4, StandardCharsets.US_ASCII);
-                int tableOffset = ((fontBytes[offset + 8] & 0xFF) << 24)
-                        | ((fontBytes[offset + 9] & 0xFF) << 16)
-                        | ((fontBytes[offset + 10] & 0xFF) << 8)
-                        | (fontBytes[offset + 11] & 0xFF);
-                int tableLength = ((fontBytes[offset + 12] & 0xFF) << 24)
-                        | ((fontBytes[offset + 13] & 0xFF) << 16)
-                        | ((fontBytes[offset + 14] & 0xFF) << 8)
-                        | (fontBytes[offset + 15] & 0xFF);
+                int tableOffset =
+                        ((fontBytes[offset + 8] & 0xFF) << 24)
+                                | ((fontBytes[offset + 9] & 0xFF) << 16)
+                                | ((fontBytes[offset + 10] & 0xFF) << 8)
+                                | (fontBytes[offset + 11] & 0xFF);
+                int tableLength =
+                        ((fontBytes[offset + 12] & 0xFF) << 24)
+                                | ((fontBytes[offset + 13] & 0xFF) << 16)
+                                | ((fontBytes[offset + 14] & 0xFF) << 8)
+                                | (fontBytes[offset + 15] & 0xFF);
 
                 if ("head".equals(tag)) {
                     if (tableOffset + 18 > fontBytes.length) {
                         return "head table truncated";
                     }
                     // Check unitsPerEm at offset 18 in head table
-                    int unitsPerEm = ((fontBytes[tableOffset + 18] & 0xFF) << 8)
-                            | (fontBytes[tableOffset + 19] & 0xFF);
+                    int unitsPerEm =
+                            ((fontBytes[tableOffset + 18] & 0xFF) << 8)
+                                    | (fontBytes[tableOffset + 19] & 0xFF);
                     if (unitsPerEm < 16 || unitsPerEm > 16384) {
                         return "Invalid unitsPerEm: " + unitsPerEm + " (must be 16-16384)";
                     }
@@ -1111,8 +1122,11 @@ public class PdfJsonConversionService {
     }
 
     private String buildUnicodeMapping(PDFont font, String toUnicodeBase64) throws IOException {
-        log.debug("buildUnicodeMapping called for font: {}, hasToUnicode: {}, isCID: {}",
-            font.getName(), toUnicodeBase64 != null, font instanceof PDType0Font);
+        log.debug(
+                "buildUnicodeMapping called for font: {}, hasToUnicode: {}, isCID: {}",
+                font.getName(),
+                toUnicodeBase64 != null,
+                font instanceof PDType0Font);
 
         if (toUnicodeBase64 == null || toUnicodeBase64.isBlank()) {
             log.debug("No ToUnicode data for font: {}", font.getName());
@@ -1135,7 +1149,8 @@ public class PdfJsonConversionService {
             String toUnicodeStr = new String(toUnicodeBytes, StandardCharsets.UTF_8);
 
             // Parse ToUnicode CMap for bfchar and bfrange
-            java.util.regex.Pattern bfcharPattern = java.util.regex.Pattern.compile("<([0-9A-Fa-f]+)>\\s*<([0-9A-Fa-f]+)>");
+            java.util.regex.Pattern bfcharPattern =
+                    java.util.regex.Pattern.compile("<([0-9A-Fa-f]+)>\\s*<([0-9A-Fa-f]+)>");
             java.util.regex.Matcher matcher = bfcharPattern.matcher(toUnicodeStr);
             while (matcher.find()) {
                 int charCode = Integer.parseInt(matcher.group(1), 16);
@@ -1162,22 +1177,33 @@ public class PdfJsonConversionService {
                         json.append(",");
                     }
                     first = false;
-                    json.append(String.format("{\"code\":%d,\"cid\":%d,\"gid\":%d,\"unicode\":%d}",
-                        charCode, cid, gid, unicode));
+                    json.append(
+                            String.format(
+                                    "{\"code\":%d,\"cid\":%d,\"gid\":%d,\"unicode\":%d}",
+                                    charCode, cid, gid, unicode));
                 } catch (Exception e) {
                     // Skip entries that fail to map
-                    log.debug("Failed to map charCode {} in font {}: {}", charCode, font.getName(), e.getMessage());
+                    log.debug(
+                            "Failed to map charCode {} in font {}: {}",
+                            charCode,
+                            font.getName(),
+                            e.getMessage());
                 }
             }
 
             json.append("]}");
             String jsonStr = json.toString();
-            log.debug("Built Unicode mapping for CID font {} with {} entries",
-                font.getName(), charCodeToUnicode.size());
+            log.debug(
+                    "Built Unicode mapping for CID font {} with {} entries",
+                    font.getName(),
+                    charCodeToUnicode.size());
             return Base64.getEncoder().encodeToString(jsonStr.getBytes(StandardCharsets.UTF_8));
 
         } catch (Exception e) {
-            log.warn("Failed to build Unicode mapping for font {}: {}", font.getName(), e.getMessage());
+            log.warn(
+                    "Failed to build Unicode mapping for font {}: {}",
+                    font.getName(),
+                    e.getMessage());
             return toUnicodeBase64; // Fall back to raw ToUnicode
         }
     }
@@ -1214,7 +1240,8 @@ public class PdfJsonConversionService {
         PDStream fontFile3 = descriptor.getFontFile3();
         if (fontFile3 != null) {
             String subtype = fontFile3.getCOSObject().getNameAsString(COSName.SUBTYPE);
-            return readFontProgram(fontFile3, subtype != null ? subtype : "fontfile3", false, toUnicode);
+            return readFontProgram(
+                    fontFile3, subtype != null ? subtype : "fontfile3", false, toUnicode);
         }
 
         PDStream fontFile2 = descriptor.getFontFile2();
@@ -1231,7 +1258,8 @@ public class PdfJsonConversionService {
     }
 
     private FontProgramData readFontProgram(
-            PDStream stream, String formatHint, boolean detectTrueType, String toUnicode) throws IOException {
+            PDStream stream, String formatHint, boolean detectTrueType, String toUnicode)
+            throws IOException {
         try (InputStream inputStream = stream.createInputStream();
                 ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
             inputStream.transferTo(baos);
@@ -1242,20 +1270,70 @@ public class PdfJsonConversionService {
             }
             String webBase64 = null;
             String webFormat = null;
+            String pdfBase64 = null;
+            String pdfFormat = null;
             if (format != null && isCffFormat(format)) {
-                log.debug("Detected CFF font format: {}, wrapping as OpenType-CFF for web preview", format);
+                log.debug(
+                        "Detected CFF font format: {}, wrapping as OpenType-CFF for web preview",
+                        format);
                 byte[] converted = convertCffProgramToTrueType(data, toUnicode);
                 if (converted != null && converted.length > 0) {
+                    String detectedFormat = detectFontFlavor(converted);
                     webBase64 = Base64.getEncoder().encodeToString(converted);
-                    webFormat = "otf";
-                    log.debug("CFF→OTF wrapping successful: {} bytes → {} bytes", data.length, converted.length);
+                    webFormat = detectedFormat;
+                    if ("ttf".equals(detectedFormat)) {
+                        pdfBase64 = webBase64;
+                        pdfFormat = detectedFormat;
+                    }
+                    log.debug(
+                            "Primary CFF conversion successful: {} bytes → {} bytes (format: {})",
+                            data.length,
+                            converted.length,
+                            detectedFormat);
                 } else {
                     log.debug("CFF→OTF wrapping returned null or empty result");
                 }
+
+                if (pdfBase64 == null && cffConversionEnabled) {
+                    byte[] ttfConverted = convertCffUsingFontForge(data);
+                    if (ttfConverted != null && ttfConverted.length > 0) {
+                        String detectedFormat = detectFontFlavor(ttfConverted);
+                        if (detectedFormat != null) {
+                            pdfBase64 = Base64.getEncoder().encodeToString(ttfConverted);
+                            pdfFormat = detectedFormat;
+                            log.debug(
+                                    "FontForge conversion produced {} bytes (format: {})",
+                                    ttfConverted.length,
+                                    detectedFormat);
+                            if (webBase64 == null) {
+                                webBase64 = pdfBase64;
+                                webFormat = detectedFormat;
+                            }
+                        }
+                    }
+                }
             }
             String base64 = Base64.getEncoder().encodeToString(data);
-            return new FontProgramData(base64, format, webBase64, webFormat);
+            return new FontProgramData(base64, format, webBase64, webFormat, pdfBase64, pdfFormat);
         }
+    }
+
+    private String detectFontFlavor(byte[] fontBytes) {
+        if (fontBytes == null || fontBytes.length < 4) {
+            return null;
+        }
+        int magic =
+                ((fontBytes[0] & 0xFF) << 24)
+                        | ((fontBytes[1] & 0xFF) << 16)
+                        | ((fontBytes[2] & 0xFF) << 8)
+                        | (fontBytes[3] & 0xFF);
+        if (magic == 0x4F54544F) { // 'OTTO'
+            return "otf";
+        }
+        if (magic == 0x00010000 || magic == 0x74727565) { // 1.0 or 'true'
+            return "ttf";
+        }
+        return null;
     }
 
     private String detectTrueTypeFormat(byte[] data) {
@@ -2344,6 +2422,7 @@ public class PdfJsonConversionService {
             PDPageContentStream contentStream, PdfJsonTextColor color, boolean nonStroking)
             throws IOException {
         if (color == null || color.getComponents() == null) {
+            log.trace("[ColorApply] Skipping null color for nonStroking={}", nonStroking);
             return;
         }
         float[] components = new float[color.getComponents().size()];
@@ -2351,6 +2430,11 @@ public class PdfJsonConversionService {
             components[i] = color.getComponents().get(i);
         }
         String space = color.getColorSpace();
+        log.trace(
+                "[ColorApply] Requested color space={} components={} nonStroking={}",
+                space,
+                Arrays.toString(components),
+                nonStroking);
         if (space == null) {
             // Infer color space from component count
             PDColorSpace colorSpace;
@@ -2404,7 +2488,7 @@ public class PdfJsonConversionService {
                 }
                 break;
             default:
-                log.debug("Skipping unsupported color space {}", space);
+                log.debug("[ColorApply] Skipping unsupported color space {}", space);
         }
     }
 
@@ -2424,12 +2508,22 @@ public class PdfJsonConversionService {
         private final String format;
         private final String webBase64;
         private final String webFormat;
+        private final String pdfBase64;
+        private final String pdfFormat;
 
-        private FontProgramData(String base64, String format, String webBase64, String webFormat) {
+        private FontProgramData(
+                String base64,
+                String format,
+                String webBase64,
+                String webFormat,
+                String pdfBase64,
+                String pdfFormat) {
             this.base64 = base64;
             this.format = format;
             this.webBase64 = webBase64;
             this.webFormat = webFormat;
+            this.pdfBase64 = pdfBase64;
+            this.pdfFormat = pdfFormat;
         }
 
         private String getBase64() {
@@ -2446,6 +2540,14 @@ public class PdfJsonConversionService {
 
         private String getWebFormat() {
             return webFormat;
+        }
+
+        private String getPdfBase64() {
+            return pdfBase64;
+        }
+
+        private String getPdfFormat() {
+            return pdfFormat;
         }
     }
 
@@ -2803,7 +2905,9 @@ public class PdfJsonConversionService {
                         try {
                             font.encode("A");
                             applyAdditionalFontMetadata(document, font, fontModel);
-                            log.debug("Successfully restored embedded font {} from dictionary", fontModel.getId());
+                            log.debug(
+                                    "Successfully restored embedded font {} from dictionary",
+                                    fontModel.getId());
                             return font;
                         } catch (IOException | IllegalArgumentException encodingEx) {
                             log.warn(
@@ -2821,72 +2925,156 @@ public class PdfJsonConversionService {
             }
         }
 
-        byte[] fontBytes = null;
-        String format = null;
-
-        // For CFF/Type1C fonts, prefer the webProgram (converted TrueType) because:
-        // 1. PDFBox's PDType0Font.load() expects TrueType/OpenType format
-        // 2. Raw CFF program bytes lack the descriptor context needed for reconstruction
-        // 3. FontForge-converted TrueType is reliable for both web preview and PDF export
         String originalFormat =
                 fontModel.getProgramFormat() != null
                         ? fontModel.getProgramFormat().toLowerCase(Locale.ROOT)
                         : null;
-        // For JSON→PDF conversion, always use original font bytes
-        // (PDFBox doesn't support OpenType-CFF; webProgram is only for frontend web preview)
+
         String program = fontModel.getProgram();
-        if (program != null && !program.isBlank()) {
-            fontBytes = Base64.getDecoder().decode(program);
-            format = originalFormat;
-            log.debug("Using original font program for {} (format: {})", fontModel.getId(), originalFormat);
-        } else if (fontModel.getWebProgram() != null && !fontModel.getWebProgram().isBlank()) {
-            // Fallback to webProgram if original program is unavailable
-            fontBytes = Base64.getDecoder().decode(fontModel.getWebProgram());
-            format =
-                    fontModel.getWebProgramFormat() != null
-                            ? fontModel.getWebProgramFormat().toLowerCase(Locale.ROOT)
-                            : null;
-            log.debug("Using web-optimized font program for {} (original program unavailable)", fontModel.getId());
+        String webProgram = fontModel.getWebProgram();
+        String pdfProgram = fontModel.getPdfProgram();
+        String webFormat =
+                fontModel.getWebProgramFormat() != null
+                        ? fontModel.getWebProgramFormat().toLowerCase(Locale.ROOT)
+                        : null;
+        String pdfFormat =
+                fontModel.getPdfProgramFormat() != null
+                        ? fontModel.getPdfProgramFormat().toLowerCase(Locale.ROOT)
+                        : null;
+
+        record FontByteSource(byte[] bytes, String format, String originLabel) {}
+
+        List<FontByteSource> candidates = new ArrayList<>();
+        List<FontByteSource> deferredWebCandidates = new ArrayList<>();
+
+        boolean hasPdfProgram = pdfProgram != null && !pdfProgram.isBlank();
+        boolean hasWebProgram = webProgram != null && !webProgram.isBlank();
+
+        if (hasPdfProgram) {
+            try {
+                byte[] bytes = Base64.getDecoder().decode(pdfProgram);
+                if (bytes.length > 0) {
+                    candidates.add(new FontByteSource(bytes, pdfFormat, "pdfProgram"));
+                }
+            } catch (IllegalArgumentException ex) {
+                log.warn(
+                        "Failed to decode pdfProgram for {}: {}",
+                        fontModel.getId(),
+                        ex.getMessage());
+            }
         }
 
-        if (fontBytes != null && fontBytes.length > 0) {
+        if (hasWebProgram) {
+            try {
+                byte[] bytes = Base64.getDecoder().decode(webProgram);
+                if (bytes.length > 0) {
+                    // Prefer the converted blob when the original program is CFF/Type1C, because
+                    // PDFBox expects TrueType/OpenType data during reconstruction.
+                    boolean preferWeb =
+                            originalFormat == null
+                                    || isCffFormat(originalFormat)
+                                    || "cidfonttype0c".equals(originalFormat);
+                    FontByteSource source = new FontByteSource(bytes, webFormat, "webProgram");
+                    if (preferWeb) {
+                        candidates.add(source);
+                    } else {
+                        // Keep the converted blob as a secondary option in case loading the
+                        // original program fails: some PDFs mix Type1 metadata with actual CFF
+                        // payloads that PDFBox cannot parse.
+                        deferredWebCandidates.add(source);
+                    }
+                }
+            } catch (IllegalArgumentException ex) {
+                log.warn(
+                        "Failed to decode webProgram for {}: {}",
+                        fontModel.getId(),
+                        ex.getMessage());
+            }
+        }
+
+        if (program != null && !program.isBlank()) {
+            try {
+                byte[] bytes = Base64.getDecoder().decode(program);
+                if (bytes.length > 0) {
+                    // Original bytes should still be attempted. When we already preferred the
+                    // converted blob, these will be appended as fallback.
+                    candidates.add(new FontByteSource(bytes, originalFormat, "program"));
+                }
+            } catch (IllegalArgumentException ex) {
+                log.warn(
+                        "Failed to decode font program for {}: {}",
+                        fontModel.getId(),
+                        ex.getMessage());
+            }
+        }
+
+        // If no candidates were added (e.g. both payloads missing/invalid) attempt to fall back to
+        // the converted program when it exists but we skipped it earlier.
+        if (candidates.isEmpty() && hasWebProgram) {
+            try {
+                byte[] bytes = Base64.getDecoder().decode(webProgram);
+                if (bytes.length > 0) {
+                    candidates.add(new FontByteSource(bytes, webFormat, "webProgram"));
+                }
+            } catch (IllegalArgumentException ignored) {
+                // Already logged above when decoding failed the first time.
+            }
+        }
+
+        candidates.addAll(deferredWebCandidates);
+
+        for (FontByteSource source : candidates) {
+            byte[] fontBytes = source.bytes();
+            String format = source.format();
+            String originLabel = source.originLabel();
+
+            if (fontBytes == null || fontBytes.length == 0) {
+                continue;
+            }
+
             try {
                 if (isType1Format(format)) {
                     try (InputStream stream = new ByteArrayInputStream(fontBytes)) {
                         PDFont font = new PDType1Font(document, stream);
                         applyAdditionalFontMetadata(document, font, fontModel);
                         log.debug(
-                                "Successfully loaded Type1 font {} from program bytes (format: {}, originalFormat: {})",
+                                "Successfully loaded Type1 font {} from {} bytes (format: {}, originalFormat: {})",
                                 fontModel.getId(),
+                                originLabel,
                                 format,
                                 originalFormat);
                         return font;
                     }
                 }
+
                 try (InputStream stream = new ByteArrayInputStream(fontBytes)) {
                     PDFont font = PDType0Font.load(document, stream, true);
                     applyAdditionalFontMetadata(document, font, fontModel);
                     log.debug(
-                            "Successfully loaded Type0 font {} from program bytes (format: {}, originalFormat: {})",
+                            "Successfully loaded Type0 font {} from {} bytes (format: {}, originalFormat: {})",
                             fontModel.getId(),
+                            originLabel,
                             format,
                             originalFormat);
                     return font;
                 }
             } catch (IOException ex) {
                 log.warn(
-                        "Unable to load embedded font program for {} (format: {}, originalFormat: {}): {}; falling back to Standard 14 or default",
+                        "Unable to load embedded font program for {} from {} (format: {}, originalFormat: {}): {}",
                         fontModel.getId(),
+                        originLabel,
                         format,
                         originalFormat,
                         ex.getMessage());
             }
-        } else {
-            log.warn(
-                    "Font {} has no program bytes available (originalFormat: {})",
-                    fontModel.getId(),
-                    originalFormat);
         }
+
+        log.warn(
+                "Font {} has no usable program bytes (originalFormat: {}, hasWebProgram: {}, hasPdfProgram: {})",
+                fontModel.getId(),
+                originalFormat,
+                hasWebProgram,
+                hasPdfProgram);
 
         String standardName = fontModel.getStandard14Name();
         if (standardName != null) {
@@ -3506,6 +3694,15 @@ public class PdfJsonConversionService {
                     element.setStrokeColor(toTextColor(graphicsState.getStrokingColor()));
                 }
                 element.setZOrder(1_000_000 + pageElements.size());
+                if (log.isTraceEnabled()) {
+                    log.trace(
+                            "[TextCapture] text='{}' font={} size={} fill={} stroke={}",
+                            sanitizeForLog(element.getText()),
+                            fontId,
+                            element.getFontSizeInPt(),
+                            describeColor(element.getFillColor()),
+                            describeColor(element.getStrokeColor()));
+                }
                 pageElements.add(element);
             }
         }
@@ -3557,17 +3754,48 @@ public class PdfJsonConversionService {
             }
             PDColorSpace colorSpace = color.getColorSpace();
             if (colorSpace == null) {
+                log.debug("[ColorCapture] No color space for PDColor {}", color);
                 return null;
             }
             float[] components = color.getComponents();
-            List<Float> values = new ArrayList<>(components.length);
-            for (float component : components) {
+            String colorSpaceName = colorSpace.getName();
+            log.trace(
+                    "[ColorCapture] Raw color space={} components={}",
+                    colorSpaceName,
+                    Arrays.toString(components));
+            float[] effective = components;
+            try {
+                float[] rgb = colorSpace.toRGB(components);
+                if (rgb != null && rgb.length >= 3) {
+                    effective = rgb;
+                    colorSpaceName = COSName.DEVICERGB.getName();
+                }
+            } catch (IOException ex) {
+                log.debug(
+                        "[ColorCapture] Failed to convert color space {} to RGB: {}",
+                        colorSpaceName,
+                        ex.getMessage());
+            }
+            List<Float> values = new ArrayList<>(effective.length);
+            for (float component : effective) {
                 values.add(component);
             }
-            return PdfJsonTextColor.builder()
-                    .colorSpace(colorSpace.getName())
-                    .components(values)
-                    .build();
+            log.trace("[ColorCapture] Stored color space={} components={}", colorSpaceName, values);
+            return PdfJsonTextColor.builder().colorSpace(colorSpaceName).components(values).build();
+        }
+
+        private String sanitizeForLog(String value) {
+            if (value == null) {
+                return "null";
+            }
+            return value.replace("\n", "\\n").replace("\r", "\\r");
+        }
+
+        private String describeColor(PdfJsonTextColor color) {
+            if (color == null || color.getComponents() == null) {
+                return "null";
+            }
+            return color.getColorSpace() + "=" + color.getComponents();
         }
     }
 

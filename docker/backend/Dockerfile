@@ -28,8 +28,7 @@ FROM alpine:3.22.1@sha256:4bcff63911fcb4448bd4fdacec207030997caf25e9bea4045fa6c8
 # Copy necessary files
 COPY scripts /scripts
 COPY app/core/src/main/resources/static/fonts/*.ttf /usr/share/fonts/opentype/noto/
-# first /app directory is for the build stage, second is for the final image
-COPY --from=build /app/app/core/build/libs/*.jar app.jar
+
 
 ARG VERSION_TAG
 
@@ -114,9 +113,12 @@ RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/a
     chmod +x /scripts/init.sh && \
     # User permissions
     addgroup -S stirlingpdfgroup && adduser -S stirlingpdfuser -G stirlingpdfgroup && \
-    chown -R stirlingpdfuser:stirlingpdfgroup $HOME /scripts /pipeline /usr/share/fonts/opentype/noto /configs /customFiles /pipeline /tmp/stirling-pdf && \
-    chown stirlingpdfuser:stirlingpdfgroup /app.jar
+    chown -R stirlingpdfuser:stirlingpdfgroup $HOME /scripts /pipeline /usr/share/fonts/opentype/noto /configs /customFiles /pipeline /tmp/stirling-pdf
+    
 
+COPY --from=build /app/app/core/build/libs/*.jar app.jar
+
+RUN chown stirlingpdfuser:stirlingpdfgroup /app.jar
 EXPOSE 8080/tcp
 
 # Set user and run command

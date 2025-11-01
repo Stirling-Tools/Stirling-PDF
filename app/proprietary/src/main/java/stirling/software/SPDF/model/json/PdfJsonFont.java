@@ -50,6 +50,12 @@ public class PdfJsonFont {
     /** Format hint for the webProgram payload. */
     private String webProgramFormat;
 
+    /** PDF-friendly font program (e.g. converted TrueType) encoded as Base64. */
+    private String pdfProgram;
+
+    /** Format hint for the pdfProgram payload. */
+    private String pdfProgramFormat;
+
     /** ToUnicode stream encoded as Base64 when present. */
     private String toUnicode;
 

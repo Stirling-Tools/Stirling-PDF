@@ -170,6 +170,33 @@ const toCssBounds = (
   };
 };
 
+const normalizePageNumber = (pageIndex: number | null | undefined): number | null => {
+  if (pageIndex === null || pageIndex === undefined || Number.isNaN(pageIndex)) {
+    return null;
+  }
+  return pageIndex + 1;
+};
+
+const buildFontLookupKeys = (
+  fontId: string,
+  font: PdfJsonFont | null | undefined,
+  pageIndex: number | null | undefined,
+): string[] => {
+  const keys: string[] = [];
+  const pageNumber = normalizePageNumber(pageIndex);
+  if (pageNumber !== null) {
+    keys.push(`${pageNumber}:${fontId}`);
+  }
+  if (font?.uid) {
+    keys.push(font.uid);
+  }
+  if (font?.pageNumber !== null && font?.pageNumber !== undefined && font?.id) {
+    keys.push(`${font.pageNumber}:${font.id}`);
+  }
+  keys.push(fontId);
+  return Array.from(new Set(keys.filter((value) => value && value.length > 0)));
+};
+
 const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
   const { t } = useTranslation();
   const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
@@ -203,22 +230,45 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
     onGeneratePdf,
   } = data;
 
-  const getFontFamily = (fontId: string | null | undefined): string => {
+  const resolveFont = (fontId: string | null | undefined, pageIndex: number | null | undefined): PdfJsonFont | null => {
     if (!fontId || !pdfDocument?.fonts) {
-      return 'sans-serif';
+      return null;
     }
-    const loadedFamily = fontFamilies.get(fontId);
-    if (loadedFamily) {
-      return `'${loadedFamily}', sans-serif`;
+    const fonts = pdfDocument.fonts;
+    const pageNumber = normalizePageNumber(pageIndex);
+    if (pageNumber !== null) {
+      const pageMatch = fonts.find((font) => font?.id === fontId && font?.pageNumber === pageNumber);
+      if (pageMatch) {
+        return pageMatch;
+      }
+      const uidKey = `${pageNumber}:${fontId}`;
+      const uidMatch = fonts.find((font) => font?.uid === uidKey);
+      if (uidMatch) {
+        return uidMatch;
+      }
     }
-    const font = pdfDocument.fonts.find((f) => f.id === fontId);
-    if (!font) {
+    const directUid = fonts.find((font) => font?.uid === fontId);
+    if (directUid) {
+      return directUid;
+    }
+    return fonts.find((font) => font?.id === fontId) ?? null;
+  };
+
+  const getFontFamily = (fontId: string | null | undefined, pageIndex: number | null | undefined): string => {
+    if (!fontId) {
       return 'sans-serif';
     }
 
-    // Map PDF fonts to web-safe fonts based on name
-    // Note: Embedded font data from PDFs often lacks tables required for web rendering (OS/2 table)
-    const fontName = font.standard14Name || font.baseName || '';
+    const font = resolveFont(fontId, pageIndex);
+    const lookupKeys = buildFontLookupKeys(fontId, font ?? undefined, pageIndex);
+    for (const key of lookupKeys) {
+      const loadedFamily = fontFamilies.get(key);
+      if (loadedFamily) {
+        return `'${loadedFamily}', sans-serif`;
+      }
+    }
+
+    const fontName = font?.standard14Name || font?.baseName || '';
     const lowerName = fontName.toLowerCase();
 
     if (lowerName.includes('times')) {
@@ -237,27 +287,89 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
     return 'Arial, Helvetica, sans-serif';
   };
 
-  const getLineHeightPx = (fontId: string | null | undefined, fontSizePx: number): number => {
+  const getFontMetricsFor = (
+    fontId: string | null | undefined,
+    pageIndex: number | null | undefined,
+  ): { unitsPerEm: number; ascent: number; descent: number } | undefined => {
+    if (!fontId) {
+      return undefined;
+    }
+    const font = resolveFont(fontId, pageIndex);
+    const lookupKeys = buildFontLookupKeys(fontId, font ?? undefined, pageIndex);
+    for (const key of lookupKeys) {
+      const metrics = fontMetrics.get(key);
+      if (metrics) {
+        return metrics;
+      }
+    }
+    return undefined;
+  };
+
+  const getLineHeightPx = (
+    fontId: string | null | undefined,
+    pageIndex: number | null | undefined,
+    fontSizePx: number,
+  ): number => {
     if (fontSizePx <= 0) {
       return fontSizePx;
     }
-    const metrics = fontId ? fontMetrics.get(fontId) : undefined;
+    const metrics = getFontMetricsFor(fontId, pageIndex);
     if (!metrics || metrics.unitsPerEm <= 0) {
       return fontSizePx * 1.2;
     }
-    const totalUnits = metrics.ascent - metrics.descent;
+    const unitsPerEm = metrics.unitsPerEm > 0 ? metrics.unitsPerEm : 1000;
+    const ascentUnits = metrics.ascent ?? unitsPerEm;
+    const descentUnits = Math.abs(metrics.descent ?? -(unitsPerEm * 0.2));
+    const totalUnits = Math.max(unitsPerEm, ascentUnits + descentUnits);
     if (totalUnits <= 0) {
       return fontSizePx * 1.2;
     }
-    const lineHeight = (totalUnits / metrics.unitsPerEm) * fontSizePx;
+    const lineHeight = (totalUnits / unitsPerEm) * fontSizePx;
     return Math.max(lineHeight, fontSizePx * 1.05);
   };
 
-  const getFontWeight = (fontId: string | null | undefined): number | 'normal' | 'bold' => {
-    if (!fontId || !pdfDocument?.fonts) {
+  const getFontGeometry = (
+    fontId: string | null | undefined,
+    pageIndex: number | null | undefined,
+  ): {
+    unitsPerEm: number;
+    ascentUnits: number;
+    descentUnits: number;
+    totalUnits: number;
+    ascentRatio: number;
+    descentRatio: number;
+  } | undefined => {
+    const metrics = getFontMetricsFor(fontId, pageIndex);
+    if (!metrics) {
+      return undefined;
+    }
+    const unitsPerEm = metrics.unitsPerEm > 0 ? metrics.unitsPerEm : 1000;
+    const rawAscent = metrics.ascent ?? unitsPerEm;
+    const rawDescent = metrics.descent ?? -(unitsPerEm * 0.2);
+    const ascentUnits = Number.isFinite(rawAscent) ? rawAscent : unitsPerEm;
+    const descentUnits = Number.isFinite(rawDescent) ? Math.abs(rawDescent) : unitsPerEm * 0.2;
+    const totalUnits = Math.max(unitsPerEm, ascentUnits + descentUnits);
+    if (totalUnits <= 0 || !Number.isFinite(totalUnits)) {
+      return undefined;
+    }
+    return {
+      unitsPerEm,
+      ascentUnits,
+      descentUnits,
+      totalUnits,
+      ascentRatio: ascentUnits / totalUnits,
+      descentRatio: descentUnits / totalUnits,
+    };
+  };
+
+  const getFontWeight = (
+    fontId: string | null | undefined,
+    pageIndex: number | null | undefined,
+  ): number | 'normal' | 'bold' => {
+    if (!fontId) {
       return 'normal';
     }
-    const font = pdfDocument.fonts.find((f) => f.id === fontId);
+    const font = resolveFont(fontId, pageIndex);
     if (!font || !font.fontDescriptorFlags) {
       return 'normal';
     }
@@ -291,7 +403,14 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
       const unitsPerEm = font.unitsPerEm && font.unitsPerEm > 0 ? font.unitsPerEm : 1000;
       const ascent = font.ascent ?? unitsPerEm;
       const descent = font.descent ?? -(unitsPerEm * 0.2);
-      metrics.set(font.id, { unitsPerEm, ascent, descent });
+      const metric = { unitsPerEm, ascent, descent };
+      metrics.set(font.id, metric);
+      if (font.uid) {
+        metrics.set(font.uid, metric);
+      }
+      if (font.pageNumber !== null && font.pageNumber !== undefined) {
+        metrics.set(`${font.pageNumber}:${font.id}`, metric);
+      }
     });
     return metrics;
   }, [pdfDocument?.fonts]);
@@ -313,18 +432,45 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
       }
 
       const next = new Map<string, string>();
+      const pickFontSource = (
+        font: PdfJsonFont
+      ): { data: string; format?: string | null; source: 'pdfProgram' | 'webProgram' | 'program' } | null => {
+        if (font.pdfProgram && font.pdfProgram.length > 0) {
+          return { data: font.pdfProgram, format: font.pdfProgramFormat, source: 'pdfProgram' };
+        }
+        if (font.webProgram && font.webProgram.length > 0) {
+          return { data: font.webProgram, format: font.webProgramFormat, source: 'webProgram' };
+        }
+        if (font.program && font.program.length > 0) {
+          return { data: font.program, format: font.programFormat, source: 'program' };
+        }
+        return null;
+      };
+
+      const registerLoadedFontKeys = (font: PdfJsonFont, familyName: string) => {
+        if (font.id) {
+          next.set(font.id, familyName);
+        }
+        if (font.uid) {
+          next.set(font.uid, familyName);
+        }
+        if (font.pageNumber !== null && font.pageNumber !== undefined && font.id) {
+          next.set(`${font.pageNumber}:${font.id}`, familyName);
+        }
+      };
+
       for (const font of fonts) {
-        if (!font?.id) {
+        if (!font || !font.id) {
           continue;
         }
-        const programSource = font.webProgram && font.webProgram.length > 0 ? font.webProgram : font.program;
-        if (!programSource) {
+        const selection = pickFontSource(font);
+        if (!selection) {
           continue;
         }
         try {
-          const formatSource = font.webProgram && font.webProgram.length > 0 ? font.webProgramFormat : font.programFormat;
+          const formatSource = selection.format;
           const format = normalizeFontFormat(formatSource);
-          const data = decodeBase64ToUint8Array(programSource);
+          const data = decodeBase64ToUint8Array(selection.data);
           const blob = new Blob([data as BlobPart], { type: getFontMimeType(format) });
           const url = URL.createObjectURL(blob);
           const formatHint = getFontFormatHint(format);
@@ -332,12 +478,13 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
           const source = formatHint ? `url(${url}) format('${formatHint}')` : `url(${url})`;
           const fontFace = new FontFace(familyName, source);
 
-          console.debug(`[FontLoader] Loading font ${font.id} (${font.baseName}):`, {
+          console.debug(`[FontLoader] Loading font ${font.id} (${font.baseName}) using ${selection.source}:`, {
             formatSource,
             format,
             formatHint,
             familyName,
             dataLength: data.length,
+            hasPdfProgram: !!font.pdfProgram,
             hasWebProgram: !!font.webProgram,
             hasProgram: !!font.program
           });
@@ -350,12 +497,13 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
           }
           document.fonts.add(fontFace);
           active.push({ fontFace, url });
-          next.set(font.id, familyName);
+          registerLoadedFontKeys(font, familyName);
           console.debug(`[FontLoader] Successfully loaded font ${font.id}`);
         } catch (error) {
-          console.warn(`[FontLoader] Failed to load font ${font.id} (${font.baseName}):`, {
+          console.warn(`[FontLoader] Failed to load font ${font.id} (${font.baseName}) using ${selection.source}:`, {
             error: error instanceof Error ? error.message : String(error),
-            formatSource: font.webProgram && font.webProgram.length > 0 ? font.webProgramFormat : font.programFormat,
+            formatSource: selection.format,
+            hasPdfProgram: !!font.pdfProgram,
             hasWebProgram: !!font.webProgram,
             hasProgram: !!font.program
           });
@@ -796,12 +944,19 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
                       const isEditing = editingGroupId === group.id;
                       const baseFontSize = group.fontMatrixSize ?? group.fontSize ?? 12;
                       const fontSizePx = Math.max(baseFontSize * scale, 6);
-                      const fontFamily = getFontFamily(group.fontId);
-                      const lineHeightPx = getLineHeightPx(group.fontId, fontSizePx);
-                      const lineHeightRatio = fontSizePx > 0 ? Math.max(lineHeightPx / fontSizePx, 1.05) : 1.2;
+                      const fontFamily = getFontFamily(group.fontId, group.pageIndex);
+                      let lineHeightPx = getLineHeightPx(group.fontId, group.pageIndex, fontSizePx);
+                      let lineHeightRatio = fontSizePx > 0 ? Math.max(lineHeightPx / fontSizePx, 1.05) : 1.2;
                       const rotation = group.rotation ?? 0;
                       const hasRotation = Math.abs(rotation) > 0.5;
                       const baselineLength = group.baselineLength ?? Math.max(group.bounds.right - group.bounds.left, 0);
+                      const geometry = getFontGeometry(group.fontId, group.pageIndex);
+                      const ascentPx = geometry ? Math.max(fontSizePx * geometry.ascentRatio, fontSizePx * 0.7) : fontSizePx * 0.82;
+                      const descentPx = geometry ? Math.max(fontSizePx * geometry.descentRatio, fontSizePx * 0.2) : fontSizePx * 0.22;
+                      lineHeightPx = Math.max(lineHeightPx, ascentPx + descentPx);
+                      if (fontSizePx > 0) {
+                        lineHeightRatio = Math.max(lineHeightRatio, lineHeightPx / fontSizePx);
+                      }
 
                       let containerLeft = bounds.left;
                       let containerTop = bounds.top;
@@ -814,17 +969,27 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
                         const anchorX = group.anchor?.x ?? group.bounds.left;
                         const anchorY = group.anchor?.y ?? group.bounds.bottom;
                         containerLeft = anchorX * scale;
-                        containerTop = Math.max(pageHeight - anchorY, 0) * scale;
+                        const anchorTop = Math.max(pageHeight - anchorY, 0) * scale;
                         containerWidth = Math.max(baselineLength * scale, MIN_BOX_SIZE);
                         containerHeight = Math.max(lineHeightPx, fontSizePx * lineHeightRatio);
                         transformOrigin = 'left bottom';
                         // Negate rotation because Y-axis is flipped from PDF to web coordinates
                         transform = `rotate(${-rotation}deg)`;
+                        // Align the baseline (PDF anchor) with the bottom edge used as the
+                        // transform origin. Without this adjustment rotated text appears shifted
+                        // downward by roughly one line height.
+                        containerTop = anchorTop - containerHeight;
+                      }
+
+                      if (!hasRotation && group.baseline !== null && group.baseline !== undefined && geometry) {
+                        const cssBaselineTop = (pageHeight - group.baseline) * scale;
+                        containerTop = Math.max(cssBaselineTop - ascentPx, 0);
+                        containerHeight = Math.max(containerHeight, ascentPx + descentPx);
                       }
 
                       // Extract styling from group
                       const textColor = group.color || '#111827';
-                      const fontWeight = group.fontWeight || getFontWeight(group.fontId);
+                      const fontWeight = group.fontWeight || getFontWeight(group.fontId, group.pageIndex);
 
                       const containerStyle: React.CSSProperties = {
                         position: 'absolute',
