@@ -306,8 +306,8 @@ jobs:
                 - /stirling/V2-PR-${{ needs.check-pr.outputs.pr_number }}/config:/configs:rw
                 - /stirling/V2-PR-${{ needs.check-pr.outputs.pr_number }}/logs:/logs:rw
               environment:
-                DISABLE_ADDITIONAL_FEATURES: "true"
-                SECURITY_ENABLELOGIN: "false"
+                DISABLE_ADDITIONAL_FEATURES: "false"
+                SECURITY_ENABLELOGIN: "true"
                 SYSTEM_DEFAULTLOCALE: en-GB
                 UI_APPNAME: "Stirling-PDF V2 PR#${{ needs.check-pr.outputs.pr_number }}"
                 UI_HOMEDESCRIPTION: "V2 PR#${{ needs.check-pr.outputs.pr_number }} - Frontend/Backend Split Architecture"
