@@ -11,6 +11,22 @@ import java.util.Random;
  */
 public class WatermarkRandomizer {
 
+    public static final Color[] PALETTE =
+            new Color[] {
+                Color.BLACK,
+                Color.DARK_GRAY,
+                Color.GRAY,
+                Color.LIGHT_GRAY,
+                Color.RED,
+                Color.BLUE,
+                Color.GREEN,
+                Color.ORANGE,
+                Color.MAGENTA,
+                Color.CYAN,
+                Color.PINK,
+                Color.YELLOW
+            };
+
     private final Random random;
 
     /**
@@ -255,22 +271,7 @@ public class WatermarkRandomizer {
      */
     public Color generateRandomColor(boolean usePalette) {
         if (usePalette) {
-            // Predefined palette of common colors
-            Color[] palette = {
-                Color.BLACK,
-                Color.DARK_GRAY,
-                Color.GRAY,
-                Color.LIGHT_GRAY,
-                Color.RED,
-                Color.BLUE,
-                Color.GREEN,
-                Color.ORANGE,
-                Color.MAGENTA,
-                Color.CYAN,
-                Color.PINK,
-                Color.YELLOW
-            };
-            return palette[random.nextInt(palette.length)];
+            return PALETTE[random.nextInt(PALETTE.length)];
         } else {
             // Generate random RGB color
             return new Color(random.nextInt(256), random.nextInt(256), random.nextInt(256));
@@ -307,27 +308,11 @@ public class WatermarkRandomizer {
      * @return Random Color object from the limited palette
      */
     public Color generateRandomColorFromPalette(int colorCount) {
-        // Predefined palette of common colors
-        Color[] fullPalette = {
-            Color.BLACK,
-            Color.DARK_GRAY,
-            Color.GRAY,
-            Color.LIGHT_GRAY,
-            Color.RED,
-            Color.BLUE,
-            Color.GREEN,
-            Color.ORANGE,
-            Color.MAGENTA,
-            Color.CYAN,
-            Color.PINK,
-            Color.YELLOW
-        };
-
         // Limit to requested count
-        int actualCount = Math.min(colorCount, fullPalette.length);
+        int actualCount = Math.min(colorCount, PALETTE.length);
         actualCount = Math.max(1, actualCount); // At least 1
 
-        return fullPalette[random.nextInt(actualCount)];
+        return PALETTE[random.nextInt(actualCount)];
     }
 
     /**
