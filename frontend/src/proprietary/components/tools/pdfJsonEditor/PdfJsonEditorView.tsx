@@ -22,6 +22,7 @@ import FileDownloadIcon from '@mui/icons-material/FileDownloadOutlined';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdfOutlined';
 import AutorenewIcon from '@mui/icons-material/Autorenew';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import UploadIcon from '@mui/icons-material/Upload';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
@@ -727,6 +728,37 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
           )}
         </Stack>
       </Card>
+
+      <Alert
+        icon={<InfoOutlinedIcon fontSize="small" />}
+        color="yellow"
+        radius="md"
+        variant="light"
+      >
+        <Stack gap={4}>
+          <Text fw={600}>
+            {t('pdfJsonEditor.disclaimer.heading', 'Preview limitations')}
+          </Text>
+          <Text size="sm">
+            {t(
+              'pdfJsonEditor.disclaimer.textFocus',
+              'This workspace focuses on editing text and repositioning embedded images. Complex page artwork, form widgets, and layered graphics are preserved for export but are not fully editable here.'
+            )}
+          </Text>
+          <Text size="sm">
+            {t(
+              'pdfJsonEditor.disclaimer.previewVariance',
+              'Some visuals (such as table borders, shapes, or annotation appearances) may not display exactly in the preview. The exported PDF keeps the original drawing commands whenever possible.'
+            )}
+          </Text>
+          <Text size="sm">
+            {t(
+              'pdfJsonEditor.disclaimer.alpha',
+              'This alpha viewer is still evolving—certain fonts, colours, transparency effects, and layout details may shift slightly. Please double-check the generated PDF before sharing.'
+            )}
+          </Text>
+        </Stack>
+      </Alert>
 
       {errorMessage && (
         <Alert icon={<WarningAmberIcon fontSize="small" />} color="red" radius="md">
