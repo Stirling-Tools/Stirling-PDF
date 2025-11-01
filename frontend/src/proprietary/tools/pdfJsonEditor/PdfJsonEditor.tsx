@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import DescriptionIcon from '@mui/icons-material/DescriptionOutlined';
 
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
+import { useFileSelection } from '@app/contexts/FileContext';
 import { useNavigationActions, useNavigationState } from '@app/contexts/NavigationContext';
 import { BaseToolProps, ToolComponent } from '@app/types/tool';
 import { CONVERSION_ENDPOINTS } from '@app/constants/convertConstants';
@@ -36,6 +37,17 @@ const sanitizeBaseName = (name?: string | null): string => {
   return name.replace(/\.[^.]+$/u, '');
 };
 
+const getAutoLoadKey = (file: File): string => {
+  const withId = file as File & { fileId?: string; quickKey?: string };
+  if (withId.fileId && typeof withId.fileId === 'string') {
+    return withId.fileId;
+  }
+  if (withId.quickKey && typeof withId.quickKey === 'string') {
+    return withId.quickKey;
+  }
+  return `${file.name}|${file.size}|${file.lastModified}`;
+};
+
 const PdfJsonEditor = ({ onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
   const {
@@ -58,6 +70,9 @@ const PdfJsonEditor = ({ onComplete, onError }: BaseToolProps) => {
   const [isConverting, setIsConverting] = useState(false);
 
   const originalImagesRef = useRef<PdfJsonImageElement[][]>([]);
+  const autoLoadKeyRef = useRef<string | null>(null);
+  const loadRequestIdRef = useRef(0);
+  const latestPdfRequestIdRef = useRef<number | null>(null);
 
   const dirtyPages = useMemo(
     () => getDirtyPages(groupsByPage, imagesByPage, originalImagesRef.current),
@@ -66,6 +81,7 @@ const PdfJsonEditor = ({ onComplete, onError }: BaseToolProps) => {
   const hasChanges = useMemo(() => dirtyPages.some(Boolean), [dirtyPages]);
   const hasDocument = loadedDocument !== null;
   const viewLabel = useMemo(() => t('pdfJsonEditor.viewLabel', 'PDF Editor'), [t]);
+  const { selectedFiles } = useFileSelection();
 
   const resetToDocument = useCallback((document: PdfJsonDocument | null) => {
     if (!document) {
@@ -90,15 +106,20 @@ const PdfJsonEditor = ({ onComplete, onError }: BaseToolProps) => {
         return;
       }
 
+      const requestId = loadRequestIdRef.current + 1;
+      loadRequestIdRef.current = requestId;
+
+      const fileKey = getAutoLoadKey(file);
       const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
 
       try {
         let parsed: PdfJsonDocument;
 
+        setErrorMessage(null);
+
         if (isPdf) {
-          // Convert PDF to JSON first
+          latestPdfRequestIdRef.current = requestId;
           setIsConverting(true);
-          setErrorMessage(null);
 
           const formData = new FormData();
           formData.append('fileInput', file);
@@ -110,21 +131,28 @@ const PdfJsonEditor = ({ onComplete, onError }: BaseToolProps) => {
           const jsonText = await response.data.text();
           parsed = JSON.parse(jsonText) as PdfJsonDocument;
         } else {
-          // Load JSON directly
           const content = await file.text();
           parsed = JSON.parse(content) as PdfJsonDocument;
+        }
+
+        if (loadRequestIdRef.current !== requestId) {
+          return;
         }
 
         setLoadedDocument(parsed);
         resetToDocument(parsed);
         setFileName(file.name);
         setErrorMessage(null);
+        autoLoadKeyRef.current = fileKey;
       } catch (error) {
         console.error('Failed to load file', error);
+
+        if (loadRequestIdRef.current !== requestId) {
+          return;
+        }
+
         setLoadedDocument(null);
-        setGroupsByPage([]);
-        setImagesByPage([]);
-        originalImagesRef.current = [];
+        resetToDocument(null);
 
         if (isPdf) {
           setErrorMessage(
@@ -139,7 +167,9 @@ const PdfJsonEditor = ({ onComplete, onError }: BaseToolProps) => {
           );
         }
       } finally {
-        setIsConverting(false);
+        if (isPdf && latestPdfRequestIdRef.current === requestId) {
+          setIsConverting(false);
+        }
       }
     },
     [resetToDocument, t]
@@ -366,6 +396,30 @@ const PdfJsonEditor = ({ onComplete, onError }: BaseToolProps) => {
 
   const latestViewDataRef = useRef<PdfJsonEditorViewData>(viewData);
   latestViewDataRef.current = viewData;
+
+  useEffect(() => {
+    if (selectedFiles.length === 0) {
+      autoLoadKeyRef.current = null;
+      return;
+    }
+
+    if (navigationState.selectedTool !== 'pdfJsonEditor') {
+      return;
+    }
+
+    const file = selectedFiles[0];
+    if (!file) {
+      return;
+    }
+
+    const fileKey = getAutoLoadKey(file);
+    if (autoLoadKeyRef.current === fileKey) {
+      return;
+    }
+
+    autoLoadKeyRef.current = fileKey;
+    void handleLoadFile(file);
+  }, [selectedFiles, navigationState.selectedTool, handleLoadFile]);
 
   useEffect(() => {
     registerCustomWorkbenchView({

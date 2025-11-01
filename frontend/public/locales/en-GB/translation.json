@@ -4628,6 +4628,5 @@
     "passwordMustBeDifferent": "New password must be different from current password",
     "passwordChangedSuccess": "Password changed successfully! Please log in again.",
     "passwordChangeFailed": "Failed to change password. Please check your current password."
->>>>>>> refs/remotes/origin/V2
   }
 }

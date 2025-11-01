@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -2002,17 +2003,27 @@ public class PdfJsonConversionService {
         if (stream == null) {
             return null;
         }
-        return serializeStream(stream.getCOSObject());
+        return serializeStream(
+                stream.getCOSObject(), Collections.newSetFromMap(new IdentityHashMap<>()));
     }
 
     private PdfJsonStream serializeStream(COSStream cosStream) throws IOException {
         if (cosStream == null) {
             return null;
         }
+        return serializeStream(
+                cosStream, Collections.newSetFromMap(new IdentityHashMap<>()));
+    }
+
+    private PdfJsonStream serializeStream(COSStream cosStream, Set<COSBase> visited)
+            throws IOException {
+        if (cosStream == null) {
+            return null;
+        }
         Map<String, PdfJsonCosValue> dictionary = new LinkedHashMap<>();
         for (COSName key : cosStream.keySet()) {
             COSBase value = cosStream.getDictionaryObject(key);
-            PdfJsonCosValue serialized = serializeCosValue(value);
+            PdfJsonCosValue serialized = serializeCosValue(value, visited);
             if (serialized != null) {
                 dictionary.put(key.getName(), serialized);
             }
@@ -2032,6 +2043,11 @@ public class PdfJsonConversionService {
     }
 
     private PdfJsonCosValue serializeCosValue(COSBase base) throws IOException {
+        return serializeCosValue(
+                base, Collections.newSetFromMap(new IdentityHashMap<>()));
+    }
+
+    private PdfJsonCosValue serializeCosValue(COSBase base, Set<COSBase> visited) throws IOException {
         if (base == null) {
             return null;
         }
@@ -2041,55 +2057,76 @@ public class PdfJsonConversionService {
                 return null;
             }
         }
-        PdfJsonCosValue.PdfJsonCosValueBuilder builder = PdfJsonCosValue.builder();
-        if (base instanceof COSNull) {
-            builder.type(PdfJsonCosValue.Type.NULL);
-            return builder.build();
-        }
-        if (base instanceof COSBoolean booleanValue) {
-            builder.type(PdfJsonCosValue.Type.BOOLEAN).value(booleanValue.getValue());
-            return builder.build();
-        }
-        if (base instanceof COSInteger integer) {
-            builder.type(PdfJsonCosValue.Type.INTEGER).value(integer.longValue());
-            return builder.build();
-        }
-        if (base instanceof COSFloat floatValue) {
-            builder.type(PdfJsonCosValue.Type.FLOAT).value(floatValue.floatValue());
-            return builder.build();
-        }
-        if (base instanceof COSName name) {
-            builder.type(PdfJsonCosValue.Type.NAME).value(name.getName());
-            return builder.build();
-        }
-        if (base instanceof COSString cosString) {
-            builder.type(PdfJsonCosValue.Type.STRING)
-                    .value(Base64.getEncoder().encodeToString(cosString.getBytes()));
-            return builder.build();
-        }
-        if (base instanceof COSArray array) {
-            List<PdfJsonCosValue> items = new ArrayList<>(array.size());
-            for (COSBase item : array) {
-                PdfJsonCosValue serialized = serializeCosValue(item);
-                items.add(serialized);
+
+        boolean complex =
+                base instanceof COSDictionary
+                        || base instanceof COSArray
+                        || base instanceof COSStream;
+        if (complex) {
+            if (!visited.add(base)) {
+                return PdfJsonCosValue.builder()
+                        .type(PdfJsonCosValue.Type.NAME)
+                        .value("__circular__")
+                        .build();
             }
-            builder.type(PdfJsonCosValue.Type.ARRAY).items(items);
-            return builder.build();
         }
-        if (base instanceof COSStream stream) {
-            builder.type(PdfJsonCosValue.Type.STREAM).stream(serializeStream(stream));
-            return builder.build();
-        }
-        if (base instanceof COSDictionary dictionary) {
-            Map<String, PdfJsonCosValue> entries = new LinkedHashMap<>();
-            for (COSName key : dictionary.keySet()) {
-                PdfJsonCosValue serialized = serializeCosValue(dictionary.getDictionaryObject(key));
-                entries.put(key.getName(), serialized);
+
+        try {
+            PdfJsonCosValue.PdfJsonCosValueBuilder builder = PdfJsonCosValue.builder();
+            if (base instanceof COSNull) {
+                builder.type(PdfJsonCosValue.Type.NULL);
+                return builder.build();
             }
-            builder.type(PdfJsonCosValue.Type.DICTIONARY).entries(entries);
-            return builder.build();
+            if (base instanceof COSBoolean booleanValue) {
+                builder.type(PdfJsonCosValue.Type.BOOLEAN).value(booleanValue.getValue());
+                return builder.build();
+            }
+            if (base instanceof COSInteger integer) {
+                builder.type(PdfJsonCosValue.Type.INTEGER).value(integer.longValue());
+                return builder.build();
+            }
+            if (base instanceof COSFloat floatValue) {
+                builder.type(PdfJsonCosValue.Type.FLOAT).value(floatValue.floatValue());
+                return builder.build();
+            }
+            if (base instanceof COSName name) {
+                builder.type(PdfJsonCosValue.Type.NAME).value(name.getName());
+                return builder.build();
+            }
+            if (base instanceof COSString cosString) {
+                builder.type(PdfJsonCosValue.Type.STRING)
+                        .value(Base64.getEncoder().encodeToString(cosString.getBytes()));
+                return builder.build();
+            }
+            if (base instanceof COSArray array) {
+                List<PdfJsonCosValue> items = new ArrayList<>(array.size());
+                for (COSBase item : array) {
+                    PdfJsonCosValue serialized = serializeCosValue(item, visited);
+                    items.add(serialized);
+                }
+                builder.type(PdfJsonCosValue.Type.ARRAY).items(items);
+                return builder.build();
+            }
+            if (base instanceof COSStream stream) {
+                builder.type(PdfJsonCosValue.Type.STREAM).stream(serializeStream(stream, visited));
+                return builder.build();
+            }
+            if (base instanceof COSDictionary dictionary) {
+                Map<String, PdfJsonCosValue> entries = new LinkedHashMap<>();
+                for (COSName key : dictionary.keySet()) {
+                    PdfJsonCosValue serialized =
+                            serializeCosValue(dictionary.getDictionaryObject(key), visited);
+                    entries.put(key.getName(), serialized);
+                }
+                builder.type(PdfJsonCosValue.Type.DICTIONARY).entries(entries);
+                return builder.build();
+            }
+            return null;
+        } finally {
+            if (complex) {
+                visited.remove(base);
+            }
         }
-        return null;
     }
 
     private COSBase deserializeCosValue(PdfJsonCosValue value, PDDocument document)
