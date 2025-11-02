@@ -1,6 +1,7 @@
 package stirling.software.common.util;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Arrays;
 import java.util.List;
@@ -22,7 +23,7 @@ public class PropertyConfigsTest {
         boolean result = PropertyConfigs.getBooleanValue(keys, defaultValue);
 
         // Verify the result
-        assertEquals(true, result);
+        assertTrue(result);
     }
 
     @Test
@@ -51,7 +52,7 @@ public class PropertyConfigsTest {
         boolean result = PropertyConfigs.getBooleanValue(key, defaultValue);
 
         // Verify the result
-        assertEquals(true, result);
+        assertTrue(result);
     }
 
     @Test

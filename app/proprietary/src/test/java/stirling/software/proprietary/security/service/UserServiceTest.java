@@ -133,10 +133,9 @@ class UserServiceTest {
         AuthenticationType authType = AuthenticationType.WEB;
 
         // When & Then
-        IllegalArgumentException exception =
-                assertThrows(
-                        IllegalArgumentException.class,
-                        () -> userService.saveUser(invalidUsername, authType));
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> userService.saveUser(invalidUsername, authType));
 
         verify(userRepository, never()).save(any(User.class));
         verify(databaseService, never()).exportDatabase();
@@ -208,10 +207,9 @@ class UserServiceTest {
         AuthenticationType authType = AuthenticationType.WEB;
 
         // When & Then
-        IllegalArgumentException exception =
-                assertThrows(
-                        IllegalArgumentException.class,
-                        () -> userService.saveUser(reservedUsername, authType));
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> userService.saveUser(reservedUsername, authType));
 
         verify(userRepository, never()).save(any(User.class));
         verify(databaseService, never()).exportDatabase();
@@ -224,10 +222,9 @@ class UserServiceTest {
         AuthenticationType authType = AuthenticationType.WEB;
 
         // When & Then
-        IllegalArgumentException exception =
-                assertThrows(
-                        IllegalArgumentException.class,
-                        () -> userService.saveUser(anonymousUsername, authType));
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> userService.saveUser(anonymousUsername, authType));
 
         verify(userRepository, never()).save(any(User.class));
         verify(databaseService, never()).exportDatabase();

@@ -85,6 +85,13 @@ premium:
       enabled: true # Enable audit logging
       level: 2 # Audit logging level: 0=OFF, 1=BASIC, 2=STANDARD, 3=VERBOSE
       retentionDays: 90 # Number of days to retain audit logs
+    databaseNotifications:
+      backups:
+        successful: false # set to 'true' to enable email notifications for successful database backups
+        failed: false # set to 'true' to enable email notifications for failed database backups
+      imports:
+        successful: false # set to 'true' to enable email notifications for successful database imports
+        failed: false # set to 'true' to enable email notifications for failed database imports
 
 mail:
   enabled: false # set to 'true' to enable sending emails
