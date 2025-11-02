@@ -256,10 +256,11 @@ public class StampController {
 
         int pageCount = document.getNumberOfPages();
 
-        String processedStampText = stampText
-            .replace("@date", currentDate)
-            .replace("@time", currentTime)
-            .replace("@page_count", String.valueOf(pageCount));
+        String processedStampText =
+                stampText
+                        .replace("@date", currentDate)
+                        .replace("@time", currentTime)
+                        .replace("@page_count", String.valueOf(pageCount));
 
         // Split the stampText into multiple lines
         String[] lines =
