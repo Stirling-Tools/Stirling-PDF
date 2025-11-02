@@ -36,21 +36,21 @@ public class GeneralUtils {
     /**
      * Maximum number of resolved DNS addresses allowed for a host before it is considered unsafe.
      */
-    private final int MAX_DNS_ADDRESSES = 20;
+    private static final int MAX_DNS_ADDRESSES = 20;
 
-    private final Set<String> DEFAULT_VALID_SCRIPTS =
+    private static final Set<String> DEFAULT_VALID_SCRIPTS =
             Set.of("png_to_webp.py", "split_photos.py");
-    private final Set<String> DEFAULT_VALID_PIPELINE =
+    private static final Set<String> DEFAULT_VALID_PIPELINE =
             Set.of(
                     "OCR images.json",
                     "Prepare-pdfs-for-email.json",
                     "split-rotate-auto-rename.json");
 
-    private final String DEFAULT_WEBUI_CONFIGS_DIR = "defaultWebUIConfigs";
-    private final String PYTHON_SCRIPTS_DIR = "python";
-    private final RegexPatternUtils patternCache = RegexPatternUtils.getInstance();
+    private static final String DEFAULT_WEBUI_CONFIGS_DIR = "defaultWebUIConfigs";
+    private static final String PYTHON_SCRIPTS_DIR = "python";
+    private static final RegexPatternUtils patternCache = RegexPatternUtils.getInstance();
     // Valid size units used for convertSizeToBytes validation and parsing
-    private final Set<String> VALID_SIZE_UNITS = Set.of("B", "KB", "MB", "GB", "TB");
+    private static final Set<String> VALID_SIZE_UNITS = Set.of("B", "KB", "MB", "GB", "TB");
 
     /*
      * Converts a MultipartFile to a regular File with improved performance and security.

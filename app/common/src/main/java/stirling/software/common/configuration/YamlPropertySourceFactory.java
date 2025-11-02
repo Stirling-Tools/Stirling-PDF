@@ -16,15 +16,14 @@ public class YamlPropertySourceFactory implements PropertySourceFactory {
         factory.setResources(encodedResource.getResource());
         Properties properties = factory.getObject();
 
-        if (properties == null) {
-            throw new IllegalStateException(
-                    "Failed to load properties from resource: "
-                            + encodedResource.getResource().getFilename());
-        }
-
         String filename = encodedResource.getResource().getFilename();
         if (filename == null) {
             filename = "unknown-yaml-source";
+        }
+
+        if (properties == null) {
+            throw new IllegalStateException(
+                    "Failed to load properties from resource: " + filename);
         }
 
         return new PropertiesPropertySource(filename, properties);
