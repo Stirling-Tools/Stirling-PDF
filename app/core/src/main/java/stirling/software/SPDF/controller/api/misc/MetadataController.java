@@ -1,8 +1,6 @@
 package stirling.software.SPDF.controller.api.misc;
 
 import java.io.IOException;
-import java.time.ZonedDateTime;
-import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -20,6 +18,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
@@ -39,6 +38,9 @@ import stirling.software.common.util.WebResponseUtils;
 @RequiredArgsConstructor
 public class MetadataController {
 
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final int MAX_LOG_LENGTH = 200;
+
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
     private static String checkUndefined(String entry) {
@@ -56,11 +58,18 @@ public class MetadataController {
 
         if (allRequestParamsString != null && !allRequestParamsString.trim().isEmpty()) {
             try {
-                ObjectMapper mapper = new ObjectMapper();
                 TypeReference<Map<String, String>> typeRef = new TypeReference<>() {};
-                paramsMap = mapper.readValue(allRequestParamsString, typeRef);
+                paramsMap = OBJECT_MAPPER.readValue(allRequestParamsString, typeRef);
             } catch (Exception e) {
-                log.warn("Failed to parse allRequestParams JSON string: {}", e.getMessage());
+                String truncatedInput =
+                        allRequestParamsString.length() > MAX_LOG_LENGTH
+                                ? allRequestParamsString.substring(0, MAX_LOG_LENGTH) + "..."
+                                : allRequestParamsString;
+                log.warn(
+                        "Failed to parse allRequestParams JSON string. Expected format: {{\"key\": \"value\"}}. "
+                                + "Received: '{}'. Error: {}",
+                        truncatedInput,
+                        e.getMessage());
                 paramsMap = new HashMap<>();
             }
         }
@@ -77,7 +86,17 @@ public class MetadataController {
                             + " Output:PDF Type:SISO")
     public ResponseEntity<byte[]> metadata(
             @ModelAttribute MetadataRequest request,
-            @RequestParam(required = false) String allRequestParams)
+            @Parameter(
+                            description =
+                                    "Optional JSON string containing custom metadata as key-value pairs. "
+                                            + "Format: {\"customKey1\": \"value1\", \"customKey2\": \"value2\"}. "
+                                            + "Standard metadata fields (Author, Creator, etc.) should be provided "
+                                            + "as separate form parameters. Custom keys starting with 'customKey' "
+                                            + "will be paired with corresponding 'customValue' entries.",
+                            example =
+                                    "{\"Department\": \"Engineering\", \"Project\": \"PDF Tools\"}")
+                    @RequestParam(required = false)
+                    String allRequestParams)
             throws IOException {
 
         // Extract PDF file from the request object
@@ -167,16 +186,12 @@ public class MetadataController {
                 }
             }
         }
-        // Set creation date using utility method
-        ZonedDateTime creationDateZdt = PdfMetadataService.parseToZonedDateTime(creationDate);
-        Calendar creationDateCal = PdfMetadataService.toCalendar(creationDateZdt);
-        info.setCreationDate(creationDateCal);
-
-        // Set modification date using utility method
-        ZonedDateTime modificationDateZdt =
-                PdfMetadataService.parseToZonedDateTime(modificationDate);
-        Calendar modificationDateCal = PdfMetadataService.toCalendar(modificationDateZdt);
-        info.setModificationDate(modificationDateCal);
+        info.setCreationDate(
+                PdfMetadataService.toCalendar(
+                        PdfMetadataService.parseToZonedDateTime(creationDate)));
+        info.setModificationDate(
+                PdfMetadataService.toCalendar(
+                        PdfMetadataService.parseToZonedDateTime(modificationDate)));
         info.setCreator(creator);
         info.setKeywords(keywords);
         info.setAuthor(author);
