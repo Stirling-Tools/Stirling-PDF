@@ -88,14 +88,14 @@ public class AuditCleanupService {
 
     /** Finds a batch of IDs to delete. */
     @Transactional(readOnly = true)
-    private List<Long> findBatchOfIdsToDelete(Instant cutoffDate) {
+    protected List<Long> findBatchOfIdsToDelete(Instant cutoffDate) {
         PageRequest pageRequest = PageRequest.of(0, BATCH_SIZE, Sort.by("id"));
         return auditRepository.findIdsForBatchDeletion(cutoffDate, pageRequest);
     }
 
     /** Deletes a batch of events by ID. Each batch is in its own transaction. */
     @Transactional
-    private int deleteBatch(List<Long> batchIds) {
+    protected int deleteBatch(List<Long> batchIds) {
         if (batchIds.isEmpty()) {
             return 0;
         }

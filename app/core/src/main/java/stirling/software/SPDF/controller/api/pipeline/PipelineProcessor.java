@@ -292,12 +292,18 @@ public class PipelineProcessor {
             newFilename = removeTrailingNaming(extractFilename(response));
         }
         // Check if the response body is a zip file
-        if (isZip(response.getBody(), newFilename)) {
+        byte[] responseBody = response.getBody();
+        if (responseBody == null) {
+            throw new IllegalStateException(
+                    "Pipeline operation returned null response body for operation: " + operation);
+        }
+
+        if (isZip(responseBody, newFilename)) {
             // Unzip the file and add all the files to the new output files
-            newOutputFiles.addAll(unzip(response.getBody()));
+            newOutputFiles.addAll(unzip(responseBody));
         } else {
             Resource outputResource =
-                    new ByteArrayResource(response.getBody()) {
+                    new ByteArrayResource(responseBody) {
 
                         @Override
                         public String getFilename() {

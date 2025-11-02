@@ -75,7 +75,7 @@ public class PrintFileController {
                 job.setPageable(new PDFPageable(document));
                 job.print();
                 document.close();
-            } else if (contentType.startsWith("image/")) {
+            } else if (contentType != null && contentType.startsWith("image/")) {
                 BufferedImage image = ImageIO.read(file.getInputStream());
                 PrinterJob job = PrinterJob.getPrinterJob();
                 job.setPrintService(selectedService);

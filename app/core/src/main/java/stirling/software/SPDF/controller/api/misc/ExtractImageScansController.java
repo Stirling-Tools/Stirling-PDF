@@ -67,8 +67,16 @@ public class ExtractImageScansController {
         MultipartFile inputFile = request.getFileInput();
 
         String fileName = inputFile.getOriginalFilename();
-        String extension = fileName.substring(fileName.lastIndexOf('.') + 1);
+        if (fileName == null || fileName.isEmpty()) {
+            throw new IllegalArgumentException("Input file must have a valid filename");
+        }
 
+        int lastDotIndex = fileName.lastIndexOf('.');
+        if (lastDotIndex == -1) {
+            throw new IllegalArgumentException("Input file must have an extension: " + fileName);
+        }
+
+        String extension = fileName.substring(lastDotIndex + 1);
         List<String> images = new ArrayList<>();
 
         List<Path> tempImageFiles = new ArrayList<>();

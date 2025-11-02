@@ -104,7 +104,7 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
     }
 
     @Transactional
-    private JwtVerificationKey generateAndStoreKeypair() {
+    protected JwtVerificationKey generateAndStoreKeypair() {
         JwtVerificationKey verifyingKey = null;
 
         try {
@@ -209,6 +209,8 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
             keyPairGenerator.initialize(2048);
         } catch (NoSuchAlgorithmException e) {
             log.error("Failed to initialize RSA key pair generator", e);
+            throw new IllegalStateException(
+                    "RSA algorithm not available - cannot generate key pair", e);
         }
 
         return keyPairGenerator.generateKeyPair();

@@ -587,6 +587,11 @@ public class ConvertPDFToPDFA {
     private void addICCProfileIfNotPresent(PDDocument document) throws Exception {
         if (document.getDocumentCatalog().getOutputIntents().isEmpty()) {
             try (InputStream colorProfile = getClass().getResourceAsStream("/icc/sRGB2014.icc")) {
+                if (colorProfile == null) {
+                    throw new IllegalStateException(
+                            "ICC profile resource not found: /icc/sRGB2014.icc");
+                }
+
                 PDOutputIntent outputIntent = new PDOutputIntent(document, colorProfile);
                 outputIntent.setInfo("sRGB IEC61966-2.1");
                 outputIntent.setOutputCondition("sRGB IEC61966-2.1");

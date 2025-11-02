@@ -131,6 +131,10 @@ public class ConvertImgPDFController {
             } else if ("webp".equalsIgnoreCase(imageFormat)
                     && CheckProgramInstall.isPythonAvailable()) {
                 // Write the output stream to a temp file
+                if (result == null) {
+                    throw new IllegalStateException("Conversion result is null, cannot proceed");
+                }
+
                 tempFile = Files.createTempFile("temp_png", ".png");
                 try (FileOutputStream fos = new FileOutputStream(tempFile.toFile())) {
                     fos.write(result);
@@ -203,6 +207,11 @@ public class ConvertImgPDFController {
                 Files.deleteIfExists(tempFile);
                 FileUtils.deleteDirectory(tempOutputDir.toFile());
                 result = bodyBytes;
+            }
+
+            if (result == null) {
+                throw new IllegalStateException(
+                        "Image conversion failed - no result data available");
             }
 
             if (singleImage) {

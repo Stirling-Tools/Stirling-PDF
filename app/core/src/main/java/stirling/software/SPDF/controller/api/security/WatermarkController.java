@@ -127,15 +127,17 @@ public class WatermarkController {
                         alphabet,
                         customColor);
             } else if ("image".equalsIgnoreCase(watermarkType)) {
-                addImageWatermark(
-                        contentStream,
-                        watermarkImage,
-                        document,
-                        page,
-                        rotation,
-                        widthSpacer,
-                        heightSpacer,
-                        fontSize);
+                if (watermarkImage != null) {
+                    addImageWatermark(
+                            contentStream,
+                            watermarkImage,
+                            document,
+                            page,
+                            rotation,
+                            widthSpacer,
+                            heightSpacer,
+                            fontSize);
+                }
             }
 
             // Close the content stream

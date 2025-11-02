@@ -83,7 +83,7 @@ public class StampController {
             throws IOException, Exception {
         MultipartFile pdfFile = request.getFileInput();
         String pdfFileName = pdfFile.getOriginalFilename();
-        if (pdfFileName.contains("..") || pdfFileName.startsWith("/")) {
+        if (pdfFileName != null && (pdfFileName.contains("..") || pdfFileName.startsWith("/"))) {
             throw new IllegalArgumentException("Invalid PDF file path");
         }
 

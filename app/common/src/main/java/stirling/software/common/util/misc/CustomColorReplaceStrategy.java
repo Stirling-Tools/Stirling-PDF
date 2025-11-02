@@ -55,8 +55,10 @@ public class CustomColorReplaceStrategy extends ReplaceAndInvertColorStrategy {
             String[] colors =
                     HighContrastColorReplaceDecider.getColors(
                             replaceAndInvert, highContrastColorCombination);
-            this.textColor = colors[0];
-            this.backgroundColor = colors[1];
+            if (colors != null && colors.length >= 2) {
+                this.textColor = colors[0];
+                this.backgroundColor = colors[1];
+            }
         }
 
         // Create a temporary file, with the original filename from the multipart file

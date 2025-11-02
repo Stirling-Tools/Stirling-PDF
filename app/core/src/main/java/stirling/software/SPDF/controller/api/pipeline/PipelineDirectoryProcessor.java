@@ -354,8 +354,19 @@ public class PipelineDirectoryProcessor {
 
     private String createOutputFileName(Resource resource, PipelineConfig config) {
         String resourceName = resource.getFilename();
-        String baseName = resourceName.substring(0, resourceName.lastIndexOf('.'));
-        String extension = resourceName.substring(resourceName.lastIndexOf('.') + 1);
+        if (resourceName == null) {
+            throw new IllegalArgumentException("Resource filename cannot be null");
+        }
+
+        int lastDotIndex = resourceName.lastIndexOf('.');
+        if (lastDotIndex == -1) {
+            throw new IllegalArgumentException(
+                    "Resource filename must have an extension: " + resourceName);
+        }
+
+        String baseName = resourceName.substring(0, lastDotIndex);
+        String extension = resourceName.substring(lastDotIndex + 1);
+
         return config.getOutputPattern()
                         .replace("{filename}", baseName)
                         .replace("{pipelineName}", config.getName())

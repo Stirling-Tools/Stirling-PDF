@@ -477,7 +477,8 @@ public class EndpointConfiguration {
             disableGroup("enterprise");
         }
 
-        if (!applicationProperties.getSystem().getEnableUrlToPDF()) {
+        if (applicationProperties != null
+                && !applicationProperties.getSystem().getEnableUrlToPDF()) {
             disableEndpoint("url-to-pdf");
         }
     }
