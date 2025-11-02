@@ -292,16 +292,6 @@ public class WatermarkRandomizer {
     }
 
     /**
-     * Generates a random rotation for per-letter orientation within a safe range.
-     *
-     * @param maxRotation Maximum rotation angle in degrees (applied as +/- range)
-     * @return Random rotation angle in degrees
-     */
-    public float generatePerLetterRotation(float maxRotation) {
-        return -maxRotation + random.nextFloat() * (2 * maxRotation);
-    }
-
-    /**
      * Generates a random color from a limited palette.
      *
      * @param colorCount Number of colors to select from (1-12 from predefined palette)

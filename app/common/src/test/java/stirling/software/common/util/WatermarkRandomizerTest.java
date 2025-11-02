@@ -653,20 +653,6 @@ class WatermarkRandomizerTest {
         }
 
         @Test
-        @DisplayName("Should generate per-letter rotation within symmetric range")
-        void testGeneratePerLetterRotation() {
-            WatermarkRandomizer randomizer = new WatermarkRandomizer(TEST_SEED);
-            float maxRotation = 30f;
-
-            for (int i = 0; i < 20; i++) {
-                float rotation = randomizer.generatePerLetterRotation(maxRotation);
-                assertTrue(
-                        rotation >= -maxRotation && rotation <= maxRotation,
-                        "Per-letter rotation should be within +/- maxRotation");
-            }
-        }
-
-        @Test
         @DisplayName("Should generate per-letter rotation in specified range")
         void testGeneratePerLetterRotationInRange() {
             WatermarkRandomizer randomizer = new WatermarkRandomizer(TEST_SEED);
