@@ -233,7 +233,7 @@ public class JobQueue implements SmartLifecycle {
         private final long timeoutMs;
         private final Instant queuedAt;
         private CompletableFuture<ResponseEntity<?>> future;
-        private volatile boolean cancelled;
+        private volatile boolean cancelled = false;
     }
 
     /** Updates the capacity of the job queue based on available system resources. */

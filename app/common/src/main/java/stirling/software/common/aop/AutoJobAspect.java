@@ -237,8 +237,8 @@ public class AutoJobAspect {
         }
 
         // Process all arguments in-place
-        for (Object arg : originalArgs) {
-            if (arg instanceof PDFFile pdfFile) {
+        for (int i = 0; i < originalArgs.length; i++) {
+            if (originalArgs[i] instanceof PDFFile pdfFile) {
                 // Case 1: fileId is provided but no fileInput
                 if (pdfFile.getFileInput() == null && pdfFile.getFileId() != null) {
                     try {

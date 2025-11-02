@@ -194,8 +194,7 @@ public class StampController {
             String colorString) // Y override
             throws IOException {
         String resourceDir;
-        new PDType1Font(Standard14Fonts.FontName.HELVETICA);
-        PDFont font;
+        PDFont font = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
         resourceDir =
                 switch (alphabet) {
                     case "arabic" -> "static/fonts/NotoSansArabic-Regular.ttf";
