@@ -54,7 +54,7 @@ public class AutoRenameController {
         PDDocument document = pdfDocumentFactory.load(file);
         PDFTextStripper reader =
                 new PDFTextStripper() {
-                    List<LineInfo> lineInfos = new ArrayList<>();
+                    final List<LineInfo> lineInfos = new ArrayList<>();
                     StringBuilder lineBuilder = new StringBuilder();
                     float lastY = -1;
                     float maxFontSizeInLine = 0.0f;
@@ -122,8 +122,8 @@ public class AutoRenameController {
                     }
 
                     class LineInfo {
-                        String text;
-                        float fontSize;
+                        final String text;
+                        final float fontSize;
 
                         LineInfo(String text, float fontSize) {
                             this.text = text;

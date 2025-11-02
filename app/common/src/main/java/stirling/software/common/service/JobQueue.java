@@ -31,16 +31,16 @@ public class JobQueue implements SmartLifecycle {
     private final ResourceMonitor resourceMonitor;
 
     @Value("${stirling.job.queue.base-capacity:10}")
-    private int baseQueueCapacity = 10;
+    private final int baseQueueCapacity = 10;
 
     @Value("${stirling.job.queue.min-capacity:2}")
-    private int minQueueCapacity = 2;
+    private final int minQueueCapacity = 2;
 
     @Value("${stirling.job.queue.check-interval-ms:1000}")
-    private long queueCheckIntervalMs = 1000;
+    private final long queueCheckIntervalMs = 1000;
 
     @Value("${stirling.job.queue.max-wait-time-ms:600000}")
-    private long maxWaitTimeMs = 600000; // 10 minutes
+    private final long maxWaitTimeMs = 600000; // 10 minutes
 
     private volatile BlockingQueue<QueuedJob> jobQueue;
     private final Map<String, QueuedJob> jobMap = new ConcurrentHashMap<>();

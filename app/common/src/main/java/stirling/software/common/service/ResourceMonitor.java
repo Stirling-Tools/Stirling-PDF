@@ -28,19 +28,19 @@ import lombok.extern.slf4j.Slf4j;
 public class ResourceMonitor {
 
     @Value("${stirling.resource.memory.critical-threshold:0.9}")
-    private double memoryCriticalThreshold = 0.9; // 90% usage is critical
+    private final double memoryCriticalThreshold = 0.9; // 90% usage is critical
 
     @Value("${stirling.resource.memory.high-threshold:0.75}")
-    private double memoryHighThreshold = 0.75; // 75% usage is high
+    private final double memoryHighThreshold = 0.75; // 75% usage is high
 
     @Value("${stirling.resource.cpu.critical-threshold:0.9}")
-    private double cpuCriticalThreshold = 0.9; // 90% usage is critical
+    private final double cpuCriticalThreshold = 0.9; // 90% usage is critical
 
     @Value("${stirling.resource.cpu.high-threshold:0.75}")
-    private double cpuHighThreshold = 0.75; // 75% usage is high
+    private final double cpuHighThreshold = 0.75; // 75% usage is high
 
     @Value("${stirling.resource.monitor.interval-ms:60000}")
-    private long monitorIntervalMs = 60000; // 60 seconds
+    private final long monitorIntervalMs = 60000; // 60 seconds
 
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     private final MemoryMXBean memoryMXBean = ManagementFactory.getMemoryMXBean();

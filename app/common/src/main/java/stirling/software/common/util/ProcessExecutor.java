@@ -25,10 +25,10 @@ import stirling.software.common.model.ApplicationProperties;
 public class ProcessExecutor {
 
     private static final Map<Processes, ProcessExecutor> instances = new ConcurrentHashMap<>();
-    private static ApplicationProperties applicationProperties = new ApplicationProperties();
+    private static final ApplicationProperties applicationProperties = new ApplicationProperties();
     private final Semaphore semaphore;
     private final boolean liveUpdates;
-    private long timeoutDuration;
+    private final long timeoutDuration;
 
     private ProcessExecutor(int semaphoreLimit, boolean liveUpdates, long timeout) {
         this.semaphore = new Semaphore(semaphoreLimit);

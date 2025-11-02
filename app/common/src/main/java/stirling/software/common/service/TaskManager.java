@@ -36,7 +36,7 @@ public class TaskManager {
     private final Map<String, JobResult> jobResults = new ConcurrentHashMap<>();
 
     @Value("${stirling.jobResultExpiryMinutes:30}")
-    private int jobResultExpiryMinutes = 30;
+    private final int jobResultExpiryMinutes = 30;
 
     private final FileStorage fileStorage;
     private final ScheduledExecutorService cleanupExecutor =

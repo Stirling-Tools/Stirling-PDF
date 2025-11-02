@@ -657,7 +657,7 @@ public class KeygenLicenseVerifier {
                             "Max machines reached. Deregistering oldest machine to make room for the new machine.");
 
                     // Find the oldest machine based on creation timestamp
-                    if (machines.size() > 0) {
+                    if (!machines.isEmpty()) {
                         // Find the machine with the oldest creation date
                         String oldestMachineId = null;
                         java.time.Instant oldestTime = null;

@@ -255,7 +255,7 @@ public class PipelineProcessor {
             outputFiles = newOutputFiles;
         }
         if (hasErrors) {
-            log.error("Errors occurred during processing. Log: {}", logStream.toString());
+            log.error("Errors occurred during processing. Log: {}", logStream);
         }
         result.setHasErrors(hasErrors);
         result.setFiltersApplied(filtersApplied);
@@ -277,7 +277,7 @@ public class PipelineProcessor {
         return restTemplate.exchange(url, HttpMethod.POST, entity, byte[].class);
     }
 
-    private List<Resource> processOutputFiles(
+    private void processOutputFiles(
             String operation, ResponseEntity<byte[]> response, List<Resource> newOutputFiles)
             throws IOException {
         // Define filename
@@ -306,7 +306,6 @@ public class PipelineProcessor {
                     };
             newOutputFiles.add(outputResource);
         }
-        return newOutputFiles;
     }
 
     public String extractFilename(ResponseEntity<byte[]> response) {

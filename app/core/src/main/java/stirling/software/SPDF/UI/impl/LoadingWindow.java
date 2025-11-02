@@ -26,10 +26,10 @@ public class LoadingWindow extends JDialog {
     private final JProgressBar progressBar;
     private final JLabel statusLabel;
     private final JPanel mainPanel;
-    private long startTime;
+    private final long startTime;
 
     private Timer stuckTimer;
-    private long stuckThreshold = 4000;
+    private final long stuckThreshold = 4000;
     private long timeAt90Percent = -1;
     private volatile Process explorerProcess;
     private static final boolean IS_WINDOWS =

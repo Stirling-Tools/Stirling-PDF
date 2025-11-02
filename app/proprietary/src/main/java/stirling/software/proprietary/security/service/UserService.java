@@ -122,7 +122,7 @@ public class UserService implements UserServiceInterface {
         User user =
                 findByUsernameIgnoreCase(username)
                         .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-        if (user.getApiKey() == null || user.getApiKey().length() == 0) {
+        if (user.getApiKey() == null || user.getApiKey().isEmpty()) {
             user = addApiKeyToUser(username);
         }
         return user.getApiKey();
@@ -138,11 +138,8 @@ public class UserService implements UserServiceInterface {
 
     public Optional<User> loadUserByApiKey(String apiKey) {
         Optional<User> user = userRepository.findByApiKey(apiKey);
-        if (user.isPresent()) {
-            return user;
-        }
+        return user;
         // or throw an exception
-        return Optional.empty();
     }
 
     public boolean validateApiKeyForUser(String username, String apiKey) {
@@ -163,10 +160,10 @@ public class UserService implements UserServiceInterface {
         throw new UsernameNotFoundException("User not found");
     }
 
-    public User saveUser(
+    public void saveUser(
             String username, AuthenticationType authenticationType, Long teamId, String role)
             throws IllegalArgumentException, SQLException, UnsupportedProviderException {
-        return saveUserCore(
+        saveUserCore(
                 username, // username
                 null, // password
                 authenticationType, // authenticationType
@@ -222,10 +219,10 @@ public class UserService implements UserServiceInterface {
                 );
     }
 
-    public User saveUser(
+    public void saveUser(
             String username, String password, Long teamId, String role, boolean firstLogin)
             throws IllegalArgumentException, SQLException, UnsupportedProviderException {
-        return saveUserCore(
+        saveUserCore(
                 username, // username
                 password, // password
                 AuthenticationType.WEB, // authenticationType

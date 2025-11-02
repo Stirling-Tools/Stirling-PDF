@@ -32,7 +32,7 @@ public class CustomColorReplaceStrategy extends ReplaceAndInvertColorStrategy {
 
     private String textColor;
     private String backgroundColor;
-    private HighContrastColorCombination highContrastColorCombination;
+    private final HighContrastColorCombination highContrastColorCombination;
 
     public CustomColorReplaceStrategy(
             MultipartFile file,

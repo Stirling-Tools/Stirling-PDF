@@ -97,7 +97,6 @@ public class ConvertImgPDFController {
                 (pageNumbers != null && !pageNumbers.trim().isEmpty())
                         ? pageNumbers.split(",")
                         : new String[] {"all"};
-        ;
         try {
             // Load the input PDF
             byte[] newPdfBytes = rearrangePdfPages(file, pageOrderArr);
@@ -177,7 +176,7 @@ public class ConvertImgPDFController {
                 }
 
                 if (webpFiles.isEmpty()) {
-                    log.error("No WebP files were created in: {}", tempOutputDir.toString());
+                    log.error("No WebP files were created in: {}", tempOutputDir);
                     throw new IOException(
                             "No WebP files were created. " + resultProcess.getMessages());
                 }

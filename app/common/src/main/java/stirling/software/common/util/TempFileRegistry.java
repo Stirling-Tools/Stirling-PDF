@@ -26,20 +26,12 @@ public class TempFileRegistry {
 
     private final ConcurrentMap<Path, Instant> registeredFiles = new ConcurrentHashMap<>();
 
-    /**
-     * -- GETTER -- Get all registered third-party temporary files.
-     *
-     * @return Set of third-party file paths
-     */
+    /** -- GETTER -- Get all registered third-party temporary files. */
     @Getter
     private final Set<Path> thirdPartyTempFiles =
             Collections.newSetFromMap(new ConcurrentHashMap<>());
 
-    /**
-     * -- GETTER -- Get all registered temporary directories.
-     *
-     * @return Set of temporary directory paths
-     */
+    /** -- GETTER -- Get all registered temporary directories. */
     @Getter
     private final Set<Path> tempDirectories = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
@@ -61,14 +53,12 @@ public class TempFileRegistry {
      * Register a temporary path with the registry.
      *
      * @param path The temporary path to track
-     * @return The same path for method chaining
      */
-    public Path register(Path path) {
+    public void register(Path path) {
         if (path != null) {
             registeredFiles.put(path, Instant.now());
-            log.debug("Registered temp path: {}", path.toString());
+            log.debug("Registered temp path: {}", path);
         }
-        return path;
     }
 
     /**
@@ -80,7 +70,7 @@ public class TempFileRegistry {
     public Path registerDirectory(Path directory) {
         if (directory != null && Files.isDirectory(directory)) {
             tempDirectories.add(directory);
-            log.debug("Registered temp directory: {}", directory.toString());
+            log.debug("Registered temp directory: {}", directory);
         }
         return directory;
     }
@@ -121,7 +111,7 @@ public class TempFileRegistry {
         if (path != null) {
             registeredFiles.remove(path);
             thirdPartyTempFiles.remove(path);
-            log.debug("Unregistered temp path: {}", path.toString());
+            log.debug("Unregistered temp path: {}", path);
         }
     }
 

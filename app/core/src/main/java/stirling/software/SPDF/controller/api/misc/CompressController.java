@@ -161,7 +161,7 @@ public class CompressController {
         return uniqueImages;
     }
 
-    private static ImageReference addDirectImage(
+    private static void addDirectImage(
             int pageNum,
             COSName name,
             PDImageXObject image,
@@ -173,8 +173,6 @@ public class CompressController {
 
         ImageIdentity identity = new ImageIdentity(image);
         uniqueImages.computeIfAbsent(identity, k -> new ArrayList<>()).add(ref);
-
-        return ref;
     }
 
     // Look for images inside form XObjects

@@ -99,7 +99,7 @@ public class ConvertWebsiteToPDF {
         }
 
         if (location != null) {
-            log.info("Redirecting to: {}", location.toString());
+            log.info("Redirecting to: {}", location);
             return ResponseEntity.status(status).location(location).build();
         }
 

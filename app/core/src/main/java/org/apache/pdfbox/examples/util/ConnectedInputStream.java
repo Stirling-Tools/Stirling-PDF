@@ -26,8 +26,8 @@ import java.net.HttpURLConnection;
  * @author Tilman Hausherr
  */
 public class ConnectedInputStream extends InputStream {
-    HttpURLConnection con;
-    InputStream is;
+    final HttpURLConnection con;
+    final InputStream is;
 
     public ConnectedInputStream(HttpURLConnection con, InputStream is) {
         this.con = con;

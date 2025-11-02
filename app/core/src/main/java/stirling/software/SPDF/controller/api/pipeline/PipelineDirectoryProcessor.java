@@ -234,9 +234,7 @@ public class PipelineDirectoryProcessor {
                             .map(Path::toFile)
                             .toArray(File[]::new);
             log.info(
-                    "Collected {} files for processing for {}",
-                    files.length,
-                    dir.toAbsolutePath().toString());
+                    "Collected {} files for processing for {}", files.length, dir.toAbsolutePath());
             return files;
         }
     }

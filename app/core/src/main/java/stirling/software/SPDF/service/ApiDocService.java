@@ -35,7 +35,7 @@ public class ApiDocService {
 
     private final ServletContext servletContext;
     private final UserServiceInterface userService;
-    Map<String, List<String>> outputToFileTypes = new HashMap<>();
+    final Map<String, List<String>> outputToFileTypes = new HashMap<>();
     JsonNode apiDocsJsonRootNode;
 
     public ApiDocService(

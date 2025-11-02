@@ -28,7 +28,7 @@ import stirling.software.proprietary.security.service.UserService;
 public class InitialSecuritySetup {
 
     @Value("${v2:false}")
-    private boolean v2Enabled = false;
+    private final boolean v2Enabled = false;
 
     private final UserService userService;
     private final TeamService teamService;

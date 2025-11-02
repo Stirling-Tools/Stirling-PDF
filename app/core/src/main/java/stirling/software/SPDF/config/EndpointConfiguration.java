@@ -20,10 +20,10 @@ public class EndpointConfiguration {
 
     private static final String REMOVE_BLANKS = "remove-blanks";
     private final ApplicationProperties applicationProperties;
-    @Getter private Map<String, Boolean> endpointStatuses = new ConcurrentHashMap<>();
-    private Map<String, Set<String>> endpointGroups = new ConcurrentHashMap<>();
-    private Set<String> disabledGroups = new HashSet<>();
-    private Map<String, Set<String>> endpointAlternatives = new ConcurrentHashMap<>();
+    @Getter private final Map<String, Boolean> endpointStatuses = new ConcurrentHashMap<>();
+    private final Map<String, Set<String>> endpointGroups = new ConcurrentHashMap<>();
+    private final Set<String> disabledGroups = new HashSet<>();
+    private final Map<String, Set<String>> endpointAlternatives = new ConcurrentHashMap<>();
     private final boolean runningProOrHigher;
 
     public EndpointConfiguration(

@@ -271,7 +271,7 @@ public class ExternalAppDepConfig {
                 new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))) {
             String line;
             while ((line = br.readLine()) != null) {
-                if (sb.length() > 0) sb.append('\n');
+                if (!sb.isEmpty()) sb.append('\n');
                 sb.append(line);
             }
         }

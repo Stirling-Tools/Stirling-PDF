@@ -36,7 +36,7 @@ public class GeneralUtils {
     /**
      * Maximum number of resolved DNS addresses allowed for a host before it is considered unsafe.
      */
-    private static final int MAX_DNS_ADDRESSES = 20;
+    private final int MAX_DNS_ADDRESSES = 20;
 
     private final Set<String> DEFAULT_VALID_SCRIPTS = Set.of("png_to_webp.py", "split_photos.py");
     private final Set<String> DEFAULT_VALID_PIPELINE =
@@ -898,7 +898,7 @@ public class GeneralUtils {
             }
 
             // If no MAC address found, use hostname as fallback
-            if (sb.length() == 0) {
+            if (sb.isEmpty()) {
                 String hostname = InetAddress.getLocalHost().getHostName();
                 sb.append(hostname != null ? hostname : "unknown-host");
                 log.warn("No MAC address found, using hostname for fingerprint generation");

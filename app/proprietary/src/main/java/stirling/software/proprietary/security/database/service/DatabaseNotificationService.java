@@ -21,7 +21,7 @@ public class DatabaseNotificationService implements DatabaseNotificationServiceI
     private final Optional<EmailService> emailService;
     private final ApplicationProperties props;
     private final boolean runningEE;
-    private DatabaseNotifications notifications;
+    private final DatabaseNotifications notifications;
 
     DatabaseNotificationService(
             Optional<EmailService> emailService,

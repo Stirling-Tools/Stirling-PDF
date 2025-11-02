@@ -85,16 +85,15 @@ public class SPDFApplication {
 
         // External config files
         Path settingsPath = Paths.get(InstallationPathConfig.getSettingsPath());
-        log.info("Settings file: {}", settingsPath.toString());
+        log.info("Settings file: {}", settingsPath);
         if (Files.exists(settingsPath)) {
-            propertyFiles.put(
-                    "spring.config.additional-location", "file:" + settingsPath.toString());
+            propertyFiles.put("spring.config.additional-location", "file:" + settingsPath);
         } else {
-            log.warn("External configuration file '{}' does not exist.", settingsPath.toString());
+            log.warn("External configuration file '{}' does not exist.", settingsPath);
         }
 
         Path customSettingsPath = Paths.get(InstallationPathConfig.getCustomSettingsPath());
-        log.info("Custom settings file: {}", customSettingsPath.toString());
+        log.info("Custom settings file: {}", customSettingsPath);
         if (Files.exists(customSettingsPath)) {
             String existingLocation =
                     propertyFiles.getOrDefault("spring.config.additional-location", "");
@@ -103,11 +102,9 @@ public class SPDFApplication {
             }
             propertyFiles.put(
                     "spring.config.additional-location",
-                    existingLocation + "file:" + customSettingsPath.toString());
+                    existingLocation + "file:" + customSettingsPath);
         } else {
-            log.warn(
-                    "Custom configuration file '{}' does not exist.",
-                    customSettingsPath.toString());
+            log.warn("Custom configuration file '{}' does not exist.", customSettingsPath);
         }
         Properties finalProps = new Properties();
 

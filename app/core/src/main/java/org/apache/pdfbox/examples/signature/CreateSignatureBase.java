@@ -56,9 +56,6 @@ public abstract class CreateSignatureBase implements SignatureInterface {
      * If set to {@code false}, internal signing will be performed.
      *
      * <p>Default: {@code false}
-     *
-     * @param externalSigning {@code true} if external signing should be performed; {@code false}
-     *     for internal signing
      */
     @Setter @Getter private boolean externalSigning;
 
@@ -127,8 +124,6 @@ public abstract class CreateSignatureBase implements SignatureInterface {
      * want to create the hash and the signature separately (e.g. to transfer only the hash to an
      * external application), read <a href="https://stackoverflow.com/questions/41767351">this
      * answer</a> or <a href="https://stackoverflow.com/questions/56867465">this answer</a>.
-     *
-     * @throws IOException
      */
     @Override
     public byte[] sign(InputStream content) throws IOException {

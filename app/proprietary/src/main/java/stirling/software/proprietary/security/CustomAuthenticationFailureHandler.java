@@ -27,9 +27,9 @@ import stirling.software.proprietary.security.service.UserService;
 @Slf4j
 public class CustomAuthenticationFailureHandler extends SimpleUrlAuthenticationFailureHandler {
 
-    private LoginAttemptService loginAttemptService;
+    private final LoginAttemptService loginAttemptService;
 
-    private UserService userService;
+    private final UserService userService;
 
     public CustomAuthenticationFailureHandler(
             final LoginAttemptService loginAttemptService, UserService userService) {

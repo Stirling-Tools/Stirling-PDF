@@ -286,10 +286,7 @@ public class YamlHelper {
         }
         Composer composer = new Composer(loadSettings, getParserImpl());
         Optional<Node> rootNodeOpt = composer.getSingleNode();
-        if (rootNodeOpt.isPresent()) {
-            return rootNodeOpt.get();
-        }
-        return null;
+        return rootNodeOpt.orElse(null);
     }
 
     /**
@@ -331,11 +328,11 @@ public class YamlHelper {
         return new StreamReader(loadSettings, yamlContent);
     }
 
-    public MappingNode save(Path saveFilePath) throws IOException {
+    public void save(Path saveFilePath) throws IOException {
         if (!saveFilePath.equals(originalFilePath)) {
             Files.writeString(saveFilePath, convertNodeToYaml(getUpdatedRootNode()));
         }
-        return (MappingNode) getUpdatedRootNode();
+        getUpdatedRootNode();
     }
 
     public void saveOverride(Path saveFilePath) throws IOException {

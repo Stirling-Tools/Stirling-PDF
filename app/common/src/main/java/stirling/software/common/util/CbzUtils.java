@@ -154,7 +154,7 @@ public class CbzUtils {
         return "cbz".equals(extension) || "zip".equals(extension);
     }
 
-    public static boolean isComicBookFile(MultipartFile file) {
+    public boolean isComicBookFile(MultipartFile file) {
         String filename = file.getOriginalFilename();
         if (filename == null) {
             return false;

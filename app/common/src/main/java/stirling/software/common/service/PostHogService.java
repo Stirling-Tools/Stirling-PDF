@@ -35,7 +35,7 @@ public class PostHogService {
     private final ApplicationProperties applicationProperties;
     private final UserServiceInterface userService;
     private final Environment env;
-    private boolean configDirMounted;
+    private final boolean configDirMounted;
 
     public PostHogService(
             PostHog postHog,

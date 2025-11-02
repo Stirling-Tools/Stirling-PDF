@@ -30,7 +30,6 @@ public interface JwtServiceInterface {
      * Validate a JWT token
      *
      * @param token the JWT token to validate
-     * @return true if token is valid, false otherwise
      */
     void validateToken(String token);
 
