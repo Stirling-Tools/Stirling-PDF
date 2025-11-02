@@ -7,6 +7,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import javax.imageio.ImageIO;
@@ -245,6 +248,17 @@ public class StampController {
                     calculatePositionY(
                             pageSize, position, calculateTextCapHeight(font, fontSize), margin);
         }
+
+        String currentDate = LocalDate.now().toString();
+        String currentTime = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"));
+
+        int pageCount = document.getNumberOfPages();
+
+        String processedStampText = stampText
+            .replace("@date", currentDate)
+            .replace("@time", currentTime)
+            .replace("@page_count", String.valueOf(pageCount));
+
         // Split the stampText into multiple lines
         String[] lines =
                 RegexPatternUtils.getInstance().getEscapedNewlinePattern().split(stampText);
