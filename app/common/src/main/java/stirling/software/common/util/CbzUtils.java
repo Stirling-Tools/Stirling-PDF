@@ -32,14 +32,6 @@ public class CbzUtils {
     public byte[] convertCbzToPdf(
             MultipartFile cbzFile,
             CustomPDFDocumentFactory pdfDocumentFactory,
-            TempFileManager tempFileManager)
-            throws IOException {
-        return convertCbzToPdf(cbzFile, pdfDocumentFactory, tempFileManager, false);
-    }
-
-    public byte[] convertCbzToPdf(
-            MultipartFile cbzFile,
-            CustomPDFDocumentFactory pdfDocumentFactory,
             TempFileManager tempFileManager,
             boolean optimizeForEbook)
             throws IOException {

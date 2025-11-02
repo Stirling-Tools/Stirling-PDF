@@ -62,7 +62,7 @@ public class EmlParser {
     }
 
     public EmailContent extractEmailContent(
-        byte[] emlBytes, EmlToPdfRequest request, CustomHtmlSanitizer customHtmlSanitizer)
+            byte[] emlBytes, EmlToPdfRequest request, CustomHtmlSanitizer customHtmlSanitizer)
             throws IOException {
         EmlProcessingUtils.validateEmlInput(emlBytes);
 
@@ -74,7 +74,7 @@ public class EmlParser {
     }
 
     private EmailContent extractEmailContentBasic(
-        byte[] emlBytes, CustomHtmlSanitizer customHtmlSanitizer) {
+            byte[] emlBytes, CustomHtmlSanitizer customHtmlSanitizer) {
         String emlContent = new String(emlBytes, StandardCharsets.UTF_8);
         EmailContent content = new EmailContent();
 
@@ -103,7 +103,7 @@ public class EmlParser {
     }
 
     private EmailContent extractEmailContentAdvanced(
-        byte[] emlBytes, EmlToPdfRequest request, CustomHtmlSanitizer customHtmlSanitizer) {
+            byte[] emlBytes, EmlToPdfRequest request, CustomHtmlSanitizer customHtmlSanitizer) {
         try {
             Class<?> sessionClass = Class.forName("jakarta.mail.Session");
             Class<?> mimeMessageClass = Class.forName("jakarta.mail.internet.MimeMessage");
@@ -126,7 +126,7 @@ public class EmlParser {
     }
 
     private EmailContent extractFromMimeMessage(
-        Object message, EmlToPdfRequest request, CustomHtmlSanitizer customHtmlSanitizer) {
+            Object message, EmlToPdfRequest request, CustomHtmlSanitizer customHtmlSanitizer) {
         EmailContent content = new EmailContent();
 
         try {
@@ -172,8 +172,7 @@ public class EmlParser {
         return content;
     }
 
-    private void extractRecipients(
-        Object message, Class<?> messageClass, EmailContent content) {
+    private void extractRecipients(Object message, Class<?> messageClass, EmailContent content) {
         try {
             Method getRecipients =
                     messageClass.getMethod(
@@ -221,11 +220,11 @@ public class EmlParser {
     }
 
     private void processMessageContent(
-        Object message,
-        Object messageContent,
-        EmailContent content,
-        EmlToPdfRequest request,
-        CustomHtmlSanitizer customHtmlSanitizer) {
+            Object message,
+            Object messageContent,
+            EmailContent content,
+            EmlToPdfRequest request,
+            CustomHtmlSanitizer customHtmlSanitizer) {
         try {
             if (messageContent instanceof String stringContent) {
                 Method getContentType = message.getClass().getMethod("getContentType");
@@ -248,11 +247,11 @@ public class EmlParser {
     }
 
     private void processMultipart(
-        Object multipart,
-        EmailContent content,
-        EmlToPdfRequest request,
-        CustomHtmlSanitizer customHtmlSanitizer,
-        int depth) {
+            Object multipart,
+            EmailContent content,
+            EmlToPdfRequest request,
+            CustomHtmlSanitizer customHtmlSanitizer,
+            int depth) {
 
         final int MAX_MULTIPART_DEPTH = 10;
         if (depth > MAX_MULTIPART_DEPTH) {
@@ -278,11 +277,11 @@ public class EmlParser {
     }
 
     private void processPart(
-        Object part,
-        EmailContent content,
-        EmlToPdfRequest request,
-        CustomHtmlSanitizer customHtmlSanitizer,
-        int depth) {
+            Object part,
+            EmailContent content,
+            EmlToPdfRequest request,
+            CustomHtmlSanitizer customHtmlSanitizer,
+            int depth) {
         try {
             Class<?> partClass = part.getClass();
 
@@ -338,13 +337,13 @@ public class EmlParser {
     }
 
     private void processAttachment(
-        Object part,
-        EmailContent content,
-        EmlToPdfRequest request,
-        Method getHeader,
-        Method getContent,
-        String filename,
-        String contentType) {
+            Object part,
+            EmailContent content,
+            EmlToPdfRequest request,
+            Method getHeader,
+            Method getContent,
+            String filename,
+            String contentType) {
 
         content.setAttachmentCount(content.getAttachmentCount() + 1);
 
@@ -381,7 +380,7 @@ public class EmlParser {
     }
 
     private void extractAttachmentData(
-        Object part, EmailAttachment attachment, Method getContent, EmlToPdfRequest request) {
+            Object part, EmailAttachment attachment, Method getContent, EmlToPdfRequest request) {
         try {
             Object attachmentContent = getContent.invoke(part);
             byte[] attachmentData = null;

@@ -57,9 +57,9 @@ public class PdfAttachmentHandler {
     private final float ANNOTATION_Y_OFFSET = 10f;
 
     public byte[] attachFilesToPdf(
-        byte[] pdfBytes,
-        List<EmlParser.EmailAttachment> attachments,
-        CustomPDFDocumentFactory pdfDocumentFactory)
+            byte[] pdfBytes,
+            List<EmlParser.EmailAttachment> attachments,
+            CustomPDFDocumentFactory pdfDocumentFactory)
             throws IOException {
 
         if (attachments == null || attachments.isEmpty()) {
@@ -180,8 +180,7 @@ public class PdfAttachmentHandler {
         return uniqueName;
     }
 
-    private @NotNull PDRectangle calculateAnnotationRectangle(
-        PDPage page, float x, float y) {
+    private @NotNull PDRectangle calculateAnnotationRectangle(PDPage page, float x, float y) {
         PDRectangle cropBox = page.getCropBox();
 
         // ISO 32000-1:2008 Section 8.3: PDF coordinate system transforms
@@ -242,8 +241,7 @@ public class PdfAttachmentHandler {
         return rect;
     }
 
-    public String processInlineImages(
-        String htmlContent, EmlParser.EmailContent emailContent) {
+    public String processInlineImages(String htmlContent, EmlParser.EmailContent emailContent) {
         if (htmlContent == null || emailContent == null) return htmlContent;
 
         Map<String, EmlParser.EmailAttachment> contentIdMap = new HashMap<>();
@@ -310,9 +308,9 @@ public class PdfAttachmentHandler {
     }
 
     private Map<Integer, String> addAttachmentsToDocumentWithMapping(
-        PDDocument document,
-        List<MultipartFile> attachments,
-        List<EmlParser.EmailAttachment> originalAttachments)
+            PDDocument document,
+            List<MultipartFile> attachments,
+            List<EmlParser.EmailAttachment> originalAttachments)
             throws IOException {
 
         PDDocumentCatalog catalog = document.getDocumentCatalog();
@@ -387,9 +385,9 @@ public class PdfAttachmentHandler {
     }
 
     private void addAttachmentAnnotationsToDocumentWithMapping(
-        PDDocument document,
-        List<EmlParser.EmailAttachment> attachments,
-        Map<Integer, String> indexToFilenameMap)
+            PDDocument document,
+            List<EmlParser.EmailAttachment> attachments,
+            Map<Integer, String> indexToFilenameMap)
             throws IOException {
 
         if (document.getNumberOfPages() == 0 || attachments == null || attachments.isEmpty()) {
@@ -435,7 +433,7 @@ public class PdfAttachmentHandler {
     }
 
     private EmlParser.EmailAttachment findAttachmentByFilename(
-        List<EmlParser.EmailAttachment> attachments, String targetFilename) {
+            List<EmlParser.EmailAttachment> attachments, String targetFilename) {
         if (targetFilename == null || targetFilename.trim().isEmpty()) {
             return null;
         }
@@ -467,7 +465,7 @@ public class PdfAttachmentHandler {
     }
 
     private String findEmbeddedFilenameForAttachment(
-        EmlParser.EmailAttachment attachment, Map<Integer, String> indexToFilenameMap) {
+            EmlParser.EmailAttachment attachment, Map<Integer, String> indexToFilenameMap) {
 
         String attachmentFilename = attachment.getFilename();
         if (attachmentFilename == null) {
@@ -488,13 +486,13 @@ public class PdfAttachmentHandler {
     }
 
     private void addAttachmentAnnotationToPageWithMapping(
-        PDDocument document,
-        PDPage page,
-        EmlParser.EmailAttachment attachment,
-        String embeddedFilename,
-        float x,
-        float y,
-        int attachmentIndex)
+            PDDocument document,
+            PDPage page,
+            EmlParser.EmailAttachment attachment,
+            String embeddedFilename,
+            float x,
+            float y,
+            int attachmentIndex)
             throws IOException {
 
         PDAnnotationFileAttachment fileAnnotation = new PDAnnotationFileAttachment();

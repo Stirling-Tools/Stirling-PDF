@@ -32,14 +32,6 @@ public class CbrUtils {
     public byte[] convertCbrToPdf(
             MultipartFile cbrFile,
             CustomPDFDocumentFactory pdfDocumentFactory,
-            TempFileManager tempFileManager)
-            throws IOException {
-        return convertCbrToPdf(cbrFile, pdfDocumentFactory, tempFileManager, false);
-    }
-
-    public byte[] convertCbrToPdf(
-            MultipartFile cbrFile,
-            CustomPDFDocumentFactory pdfDocumentFactory,
             TempFileManager tempFileManager,
             boolean optimizeForEbook)
             throws IOException {

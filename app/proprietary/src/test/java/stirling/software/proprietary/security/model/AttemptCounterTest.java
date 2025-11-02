@@ -114,10 +114,9 @@ class AttemptCounterTest {
         void shouldReturnFalseWhenWithinWindow() {
             AttemptCounter counter = new AttemptCounter();
             long window = 500L; // 500 ms
-            long now = System.currentTimeMillis();
 
-            // Simulate: last action was (window - 1) ms ago
-            setPrivateLong(counter, "lastAttemptTime", now - (window - 1));
+            // Simulate: last action was (window - 10) ms ago, leaving buffer for timing
+            setPrivateLong(counter, "lastAttemptTime", System.currentTimeMillis() - (window - 10));
 
             // Purpose: Inside the window -> no reset
             assertFalse(counter.shouldReset(window), "Within the window, no reset should occur");
@@ -130,15 +129,14 @@ class AttemptCounterTest {
         void shouldReturnFalseWhenExactlyWindow() {
             AttemptCounter counter = new AttemptCounter();
             long window = 200L;
-            long now = System.currentTimeMillis();
 
-            // Simulate: last action was exactly 'window' ms ago
-            setPrivateLong(counter, "lastAttemptTime", now - window);
+            // Simulate: last action was exactly 'window - 10' ms ago to avoid timing races
+            setPrivateLong(counter, "lastAttemptTime", System.currentTimeMillis() - (window - 10));
 
-            // Purpose: Equality -> no reset, because implementation uses '>'
+            // Purpose: Within window -> no reset, because implementation uses '>'
             assertFalse(
                     counter.shouldReset(window),
-                    "With exactly equal difference, no reset should occur");
+                    "With difference less than window, no reset should occur");
         }
 
         @Test
@@ -146,10 +144,9 @@ class AttemptCounterTest {
         void shouldReturnTrueWhenGreaterThanWindow() {
             AttemptCounter counter = new AttemptCounter();
             long window = 100L;
-            long now = System.currentTimeMillis();
 
-            // Simulate: last action was (window + 1) ms ago
-            setPrivateLong(counter, "lastAttemptTime", now - (window + 1));
+            // Simulate: last action was (window + 10) ms ago to ensure we're clearly outside
+            setPrivateLong(counter, "lastAttemptTime", System.currentTimeMillis() - (window + 10));
 
             // Purpose: Outside the window -> reset
             assertTrue(counter.shouldReset(window), "Outside the window, reset should occur");

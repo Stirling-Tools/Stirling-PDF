@@ -22,8 +22,7 @@ public class YamlPropertySourceFactory implements PropertySourceFactory {
         }
 
         if (properties == null) {
-            throw new IllegalStateException(
-                    "Failed to load properties from resource: " + filename);
+            throw new IllegalStateException("Failed to load properties from resource: " + filename);
         }
 
         return new PropertiesPropertySource(filename, properties);
