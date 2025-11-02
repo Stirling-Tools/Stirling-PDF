@@ -273,6 +273,12 @@ class TaskManagerTest {
         // This mainly tests that the shutdown method doesn't throw exceptions
         taskManager.shutdown();
 
+        @SuppressWarnings("unchecked")
+        Map<String, JobResult> jobResultsMap =
+                (Map<String, JobResult>) ReflectionTestUtils.getField(taskManager, "jobResults");
+        assertNotNull(jobResultsMap);
+        assertTrue(jobResultsMap.isEmpty());
+
         // Verify the executor service is shutdown
         // This is difficult to test directly, but we can verify it doesn't throw exceptions
     }

@@ -683,12 +683,12 @@ public class ConvertPDFToPDFA {
                             COSDictionary groupDict =
                                     (COSDictionary) pageDict.getDictionaryObject(COSName.GROUP);
 
-                            if (groupDict != null) {
-                                if (COSName.TRANSPARENCY
-                                        .getName()
-                                        .equalsIgnoreCase(groupDict.getNameAsString(COSName.S))) {
-                                    pageDict.removeItem(COSName.GROUP);
-                                }
+                            if (groupDict != null
+                                    && COSName.TRANSPARENCY
+                                            .getName()
+                                            .equalsIgnoreCase(
+                                                    groupDict.getNameAsString(COSName.S))) {
+                                pageDict.removeItem(COSName.GROUP);
                             }
                         }
                     }

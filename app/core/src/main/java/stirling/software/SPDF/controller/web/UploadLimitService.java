@@ -30,7 +30,7 @@ public class UploadLimitService {
         // Find last two chars as unit if length >= 3
         if (upper.length() < 3) return 0L;
         String unit = upper.substring(upper.length() - 2);
-        if (!unit.equals("KB") && !unit.equals("MB") && !unit.equals("GB")) {
+        if (!"KB".equals(unit) && !"MB".equals(unit) && !"GB".equals(unit)) {
             return 0L;
         }
         String numPart = upper.substring(0, upper.length() - 2);

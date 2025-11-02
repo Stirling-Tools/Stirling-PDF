@@ -38,7 +38,8 @@ public class GeneralUtils {
      */
     private static final int MAX_DNS_ADDRESSES = 20;
 
-    private static final Set<String> DEFAULT_VALID_SCRIPTS = Set.of("png_to_webp.py", "split_photos.py");
+    private static final Set<String> DEFAULT_VALID_SCRIPTS =
+            Set.of("png_to_webp.py", "split_photos.py");
     private static final Set<String> DEFAULT_VALID_PIPELINE =
             Set.of(
                     "OCR images.json",

@@ -59,7 +59,6 @@ public class DatabaseConfig {
      * @throws UnsupportedProviderException if the type of database selected is not supported
      */
     @Bean
-    @Qualifier("dataSource")
     @Primary
     public DataSource dataSource() throws UnsupportedProviderException {
         DataSourceBuilder<?> dataSourceBuilder = DataSourceBuilder.create();

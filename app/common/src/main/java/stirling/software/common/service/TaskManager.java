@@ -340,8 +340,8 @@ public class TaskManager {
     /** Check if a file is a ZIP file based on content type and filename */
     private boolean isZipFile(String contentType, String fileName) {
         if (contentType != null
-                && (contentType.equals("application/zip")
-                        || contentType.equals("application/x-zip-compressed"))) {
+                && ("application/zip".equals(contentType)
+                        || "application/x-zip-compressed".equals(contentType))) {
             return true;
         }
 

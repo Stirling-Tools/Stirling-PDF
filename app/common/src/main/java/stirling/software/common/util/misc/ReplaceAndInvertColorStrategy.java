@@ -17,7 +17,7 @@ public abstract class ReplaceAndInvertColorStrategy extends PDFFile {
 
     protected ReplaceAndInvert replaceAndInvert;
 
-    public ReplaceAndInvertColorStrategy(MultipartFile file, ReplaceAndInvert replaceAndInvert) {
+    protected ReplaceAndInvertColorStrategy(MultipartFile file, ReplaceAndInvert replaceAndInvert) {
         setFileInput(file);
         this.replaceAndInvert = replaceAndInvert;
     }
