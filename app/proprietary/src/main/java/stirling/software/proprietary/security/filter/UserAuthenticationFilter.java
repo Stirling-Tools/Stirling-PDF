@@ -207,7 +207,7 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
         UNKNOWN("Unknown"),
         SAML2USER("Saml2User");
 
-        private String method;
+        private final String method;
 
         UserLoginType(String method) {
             this.method = method;

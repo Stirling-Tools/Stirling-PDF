@@ -132,7 +132,7 @@ public class ApplicationProperties {
             OAUTH2("oauth2"),
             SAML2("saml2");
 
-            private String method;
+            private final String method;
 
             LoginMethods(String method) {
                 this.method = method;

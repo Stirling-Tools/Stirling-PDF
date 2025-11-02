@@ -6,7 +6,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.GregorianCalendar;
+import java.util.Calendar;
 import java.util.List;
 
 import org.apache.pdfbox.Loader;
@@ -135,7 +135,8 @@ class GetInfoOnPDFTest {
         info.setCreator("Test Creator");
         info.setProducer("Test Producer");
 
-        GregorianCalendar cal = GregorianCalendar.from(FIXED_NOW);
+        Calendar cal = Calendar.getInstance();
+        cal.setTimeInMillis(FIXED_NOW.toInstant().toEpochMilli());
         info.setCreationDate(cal);
         info.setModificationDate(cal);
 

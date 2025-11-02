@@ -22,14 +22,13 @@ class MetricsAggregatorServiceTest {
 
     private SimpleMeterRegistry meterRegistry;
     private PostHogService postHogService;
-    private EndpointInspector endpointInspector;
     private MetricsAggregatorService metricsAggregatorService;
 
     @BeforeEach
     void setUp() {
         meterRegistry = new SimpleMeterRegistry();
         postHogService = mock(PostHogService.class);
-        endpointInspector = mock(EndpointInspector.class);
+        EndpointInspector endpointInspector = mock(EndpointInspector.class);
         when(endpointInspector.getValidGetEndpoints()).thenReturn(Set.of("/getEndpoint"));
         when(endpointInspector.isValidGetEndpoint("/getEndpoint")).thenReturn(true);
         metricsAggregatorService =

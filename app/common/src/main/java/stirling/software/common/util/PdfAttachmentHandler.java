@@ -13,8 +13,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Base64;
-import java.util.Date;
-import java.util.GregorianCalendar;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -286,11 +285,6 @@ public class PdfAttachmentHandler {
         return result.toString();
     }
 
-    public static String formatEmailDate(Date date) {
-        if (date == null) return "";
-        return formatEmailDate(ZonedDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault()));
-    }
-
     public static String formatEmailDate(ZonedDateTime dateTime) {
         if (dateTime == null) return "";
 
@@ -383,7 +377,8 @@ public class PdfAttachmentHandler {
             PDEmbeddedFile embeddedFile = new PDEmbeddedFile(document, attachment.getInputStream());
             embeddedFile.setSize((int) attachment.getSize());
 
-            GregorianCalendar currentTime = new GregorianCalendar();
+            Calendar currentTime = Calendar.getInstance();
+            currentTime.setTimeInMillis(System.currentTimeMillis());
             embeddedFile.setCreationDate(currentTime);
             embeddedFile.setModDate(currentTime);
 

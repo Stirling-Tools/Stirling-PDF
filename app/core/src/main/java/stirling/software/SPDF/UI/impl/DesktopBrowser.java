@@ -57,8 +57,6 @@ public class DesktopBrowser implements WebBrowser {
     private static JFrame frame;
     private static LoadingWindow loadingWindow;
     private static volatile boolean browserInitialized = false;
-    private static TrayIcon trayIcon;
-    private static SystemTray systemTray;
 
     public DesktopBrowser() {
         SwingUtilities.invokeLater(
@@ -338,7 +336,7 @@ public class DesktopBrowser implements WebBrowser {
         }
 
         try {
-            systemTray = SystemTray.getSystemTray();
+            SystemTray systemTray = SystemTray.getSystemTray();
 
             // Create popup menu
             PopupMenu popup = new PopupMenu();
@@ -364,7 +362,7 @@ public class DesktopBrowser implements WebBrowser {
             popup.add(exitItem);
 
             // Create tray icon
-            trayIcon = new TrayIcon(icon, "Stirling-PDF", popup);
+            TrayIcon trayIcon = new TrayIcon(icon, "Stirling-PDF", popup);
             trayIcon.setImageAutoSize(true);
 
             // Add double-click behavior

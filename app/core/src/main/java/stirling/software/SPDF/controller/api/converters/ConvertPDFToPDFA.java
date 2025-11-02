@@ -7,13 +7,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.Instant;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collections;
-import java.util.GregorianCalendar;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -564,24 +561,12 @@ public class ConvertPDFToPDFA {
             adobePdfSchema.setKeywords(keywords);
         }
 
-        // Set creation and modification dates using java.time and convert to GregorianCalendar
-        Instant nowInstant = Instant.now();
-        ZonedDateTime nowZdt = ZonedDateTime.ofInstant(nowInstant, ZoneId.of("UTC"));
-        GregorianCalendar nowCal = GregorianCalendar.from(nowZdt);
+        // Set creation and modification dates using Calendar
+        Calendar nowCal = Calendar.getInstance();
+        nowCal.setTimeInMillis(System.currentTimeMillis());
 
-        java.util.Calendar originalCreationDate = docInfo.getCreationDate();
-        GregorianCalendar creationCal;
-        if (originalCreationDate == null) {
-            creationCal = nowCal;
-        } else if (originalCreationDate instanceof GregorianCalendar) {
-            creationCal = (GregorianCalendar) originalCreationDate;
-        } else {
-            // convert other Calendar implementations to GregorianCalendar preserving instant
-            creationCal =
-                    GregorianCalendar.from(
-                            ZonedDateTime.ofInstant(
-                                    originalCreationDate.toInstant(), ZoneId.of("UTC")));
-        }
+        Calendar originalCreationDate = docInfo.getCreationDate();
+        Calendar creationCal = (originalCreationDate != null) ? originalCreationDate : nowCal;
 
         docInfo.setCreationDate(creationCal);
         xmpBasicSchema.setCreateDate(creationCal);

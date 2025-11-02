@@ -3,7 +3,6 @@ package stirling.software.proprietary.security.session;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -66,7 +65,7 @@ public class SessionPersistentRegistry implements SessionRegistry {
                             new SessionInformation(
                                     sessionEntity.getPrincipalName(),
                                     sessionEntity.getSessionId(),
-                                    Date.from(sessionEntity.getLastRequest())));
+                                    java.util.Date.from(sessionEntity.getLastRequest())));
                 }
             }
         }
@@ -131,7 +130,7 @@ public class SessionPersistentRegistry implements SessionRegistry {
             return new SessionInformation(
                     sessionEntity.getPrincipalName(),
                     sessionEntity.getSessionId(),
-                    Date.from(sessionEntity.getLastRequest()));
+                    java.util.Date.from(sessionEntity.getLastRequest()));
         }
         return null;
     }
@@ -168,7 +167,7 @@ public class SessionPersistentRegistry implements SessionRegistry {
 
     // Update session details by principal name
     public void updateSessionByPrincipalName(
-            String principalName, boolean expired, Date lastRequest) {
+            String principalName, boolean expired, java.util.Date lastRequest) {
         sessionRepository.saveByPrincipalName(expired, lastRequest.toInstant(), principalName);
     }
 

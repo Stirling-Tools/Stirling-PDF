@@ -39,7 +39,6 @@ public class ExternalAppDepConfig {
             System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("windows");
 
     private final String weasyprintPath;
-    private final String unoconvPath;
 
     /**
      * Map of command(binary) -> affected groups (e.g. "gs" -> ["Ghostscript"]). Immutable to avoid
@@ -55,7 +54,7 @@ public class ExternalAppDepConfig {
             EndpointConfiguration endpointConfiguration, RuntimePathConfig runtimePathConfig) {
         this.endpointConfiguration = endpointConfiguration;
         this.weasyprintPath = runtimePathConfig.getWeasyPrintPath();
-        this.unoconvPath = runtimePathConfig.getUnoConvertPath();
+        String unoconvPath = runtimePathConfig.getUnoConvertPath();
 
         Map<String, List<String>> tmp = new HashMap<>();
         tmp.put("gs", List.of("Ghostscript"));

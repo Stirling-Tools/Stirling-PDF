@@ -9,7 +9,6 @@ import java.nio.charset.StandardCharsets;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 import java.util.regex.Pattern;
@@ -147,10 +146,16 @@ public class EmlParser {
             extractRecipients(message, messageClass, content);
 
             Method getSentDate = messageClass.getMethod("getSentDate");
-            Date legacyDate = (Date) getSentDate.invoke(message);
-            if (legacyDate != null) {
-                content.setDate(
-                        ZonedDateTime.ofInstant(legacyDate.toInstant(), ZoneId.systemDefault()));
+            Object sentDateObj = getSentDate.invoke(message);
+            if (sentDateObj != null) {
+                // Convert java.util.Date to ZonedDateTime using reflection
+                try {
+                    Method toInstant = sentDateObj.getClass().getMethod("toInstant");
+                    java.time.Instant instant = (java.time.Instant) toInstant.invoke(sentDateObj);
+                    content.setDate(ZonedDateTime.ofInstant(instant, ZoneId.systemDefault()));
+                } catch (Exception e) {
+                    // Fallback: ignore date if conversion fails
+                }
             }
 
             Method getContent = messageClass.getMethod("getContent");
