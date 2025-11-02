@@ -1,11 +1,6 @@
 package stirling.software.common.util;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -765,7 +760,7 @@ class EmlToPdfTest {
     }
 
     // Helper methods
-    private String getTimestamp() {
+    private static String getTimestamp() {
         java.time.ZonedDateTime fixedDateTime =
                 java.time.ZonedDateTime.of(2023, 1, 1, 12, 0, 0, 0, java.time.ZoneId.of("GMT"));
         return java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME.format(fixedDateTime);
@@ -1039,13 +1034,13 @@ class EmlToPdfTest {
     }
 
     // Creates a basic EmlToPdfRequest with default settings
-    private EmlToPdfRequest createBasicRequest() {
+    private static EmlToPdfRequest createBasicRequest() {
         EmlToPdfRequest request = new EmlToPdfRequest();
         request.setIncludeAttachments(false);
         return request;
     }
 
-    private EmlToPdfRequest createRequestWithAttachments() {
+    private static EmlToPdfRequest createRequestWithAttachments() {
         EmlToPdfRequest request = new EmlToPdfRequest();
         request.setIncludeAttachments(true);
         request.setMaxAttachmentSizeMB(10);

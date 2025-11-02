@@ -1,11 +1,11 @@
 package stirling.software.common.util;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 
@@ -47,10 +47,21 @@ class PDFToFileTest {
 
     @Mock private ProcessExecutor mockProcessExecutor;
     @Mock private ProcessExecutorResult mockExecutorResult;
+    @Mock private TempFileManager mockTempFileManager;
 
     @BeforeEach
-    void setUp() {
-        pdfToFile = new PDFToFile();
+    void setUp() throws IOException {
+        // Mock the TempFileManager to return real temp files
+        lenient()
+                .when(mockTempFileManager.createTempFile(anyString()))
+                .thenAnswer(
+                        invocation ->
+                                Files.createTempFile("test", invocation.getArgument(0)).toFile());
+        lenient()
+                .when(mockTempFileManager.createTempDirectory())
+                .thenAnswer(invocation -> Files.createTempDirectory("test"));
+
+        pdfToFile = new PDFToFile(mockTempFileManager);
     }
 
     @Test
@@ -316,12 +327,10 @@ class PDFToFileTest {
                 boolean foundImage = false;
 
                 while ((entry = zipStream.getNextEntry()) != null) {
-                    if ("test.html".equals(entry.getName())) {
-                        foundMainHtml = true;
-                    } else if ("test_ind.html".equals(entry.getName())) {
-                        foundIndexHtml = true;
-                    } else if ("test_img.png".equals(entry.getName())) {
-                        foundImage = true;
+                    switch (entry.getName()) {
+                        case "test.html" -> foundMainHtml = true;
+                        case "test_ind.html" -> foundIndexHtml = true;
+                        case "test_img.png" -> foundImage = true;
                     }
                     zipStream.closeEntry();
                 }
@@ -369,6 +378,7 @@ class PDFToFileTest {
                                 }
 
                                 // Create output file
+                                assertNotNull(outDir);
                                 Files.write(
                                         Path.of(outDir, "document.docx"),
                                         "Fake DOCX content".getBytes());
@@ -429,6 +439,7 @@ class PDFToFileTest {
 
                                 // Create multiple output files (simulating a presentation with
                                 // multiple files)
+                                assertNotNull(outDir);
                                 Files.write(
                                         Path.of(outDir, "document.odp"),
                                         "Fake ODP content".getBytes());
@@ -517,6 +528,7 @@ class PDFToFileTest {
                                 }
 
                                 // Create text output file
+                                assertNotNull(outDir);
                                 Files.write(
                                         Path.of(outDir, "document.txt"),
                                         "Extracted text content".getBytes());
@@ -574,6 +586,7 @@ class PDFToFileTest {
                                 }
 
                                 // Create output file - uses default name
+                                assertNotNull(outDir);
                                 Files.write(
                                         Path.of(outDir, "output.docx"),
                                         "Fake DOCX content".getBytes());

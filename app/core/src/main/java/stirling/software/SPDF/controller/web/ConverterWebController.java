@@ -1,13 +1,16 @@
 package stirling.software.SPDF.controller.web;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
 
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.util.ApplicationContextProvider;
 import stirling.software.common.util.CheckProgramInstall;
@@ -21,6 +24,38 @@ public class ConverterWebController {
     public String convertImgToPdfForm(Model model) {
         model.addAttribute("currentPage", "img-to-pdf");
         return "convert/img-to-pdf";
+    }
+
+    @GetMapping("/cbz-to-pdf")
+    @Hidden
+    public String convertCbzToPdfForm(Model model) {
+        model.addAttribute("currentPage", "cbz-to-pdf");
+        return "convert/cbz-to-pdf";
+    }
+
+    @GetMapping("/pdf-to-cbz")
+    @Hidden
+    public String convertPdfToCbzForm(Model model) {
+        model.addAttribute("currentPage", "pdf-to-cbz");
+        return "convert/pdf-to-cbz";
+    }
+
+    @GetMapping("/cbr-to-pdf")
+    @Hidden
+    public String convertCbrToPdfForm(Model model) {
+        model.addAttribute("currentPage", "cbr-to-pdf");
+        return "convert/cbr-to-pdf";
+    }
+
+    @GetMapping("/pdf-to-cbr")
+    @Hidden
+    public String convertPdfToCbrForm(Model model) {
+        if (!ApplicationContextProvider.getBean(EndpointConfiguration.class)
+                .isEndpointEnabled("pdf-to-cbr")) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+        model.addAttribute("currentPage", "pdf-to-cbr");
+        return "convert/pdf-to-cbr";
     }
 
     @GetMapping("/html-to-pdf")
@@ -131,10 +166,38 @@ public class ConverterWebController {
         return "convert/pdf-to-pdfa";
     }
 
+    @GetMapping("/pdf-to-vector")
+    @Hidden
+    public String pdfToVectorForm(Model model) {
+        model.addAttribute("currentPage", "pdf-to-vector");
+        return "convert/pdf-to-vector";
+    }
+
+    @GetMapping("/vector-to-pdf")
+    @Hidden
+    public String vectorToPdfForm(Model model) {
+        model.addAttribute("currentPage", "vector-to-pdf");
+        return "convert/vector-to-pdf";
+    }
+
     @GetMapping("/eml-to-pdf")
     @Hidden
     public String convertEmlToPdfForm(Model model) {
         model.addAttribute("currentPage", "eml-to-pdf");
         return "convert/eml-to-pdf";
+    }
+
+    @GetMapping("/pdf-to-video")
+    @Hidden
+    public String pdfToVideo(Model model) {
+        ApplicationProperties properties =
+                ApplicationContextProvider.getBean(ApplicationProperties.class);
+        if (properties != null && properties.getSystem() != null) {
+            model.addAttribute("maxDPI", properties.getSystem().getMaxDPI());
+        } else {
+            model.addAttribute("maxDPI", 500);
+        }
+        model.addAttribute("currentPage", "pdf-to-video");
+        return "convert/pdf-to-video";
     }
 }

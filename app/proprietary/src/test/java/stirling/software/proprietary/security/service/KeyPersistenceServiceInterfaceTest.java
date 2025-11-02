@@ -1,14 +1,10 @@
 package stirling.software.proprietary.security.service;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.KeyPair;
@@ -21,8 +17,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -58,23 +52,7 @@ class KeyPersistenceServiceInterfaceTest {
 
         lenient().when(applicationProperties.getSecurity()).thenReturn(security);
         lenient().when(security.getJwt()).thenReturn(jwtConfig);
-        lenient().when(jwtConfig.isEnableKeystore()).thenReturn(true); // Default value
-    }
-
-    @ParameterizedTest
-    @ValueSource(booleans = {true, false})
-    void testKeystoreEnabled(boolean keystoreEnabled) {
-        when(jwtConfig.isEnableKeystore()).thenReturn(keystoreEnabled);
-
-        try (MockedStatic<InstallationPathConfig> mockedStatic =
-                mockStatic(InstallationPathConfig.class)) {
-            mockedStatic
-                    .when(InstallationPathConfig::getPrivateKeyPath)
-                    .thenReturn(tempDir.toString());
-            keyPersistenceService = new KeyPersistenceService(applicationProperties, cacheManager);
-
-            assertEquals(keystoreEnabled, keyPersistenceService.isKeystoreEnabled());
-        }
+        lenient().when(jwtConfig.isEnabled()).thenReturn(true);
     }
 
     @Test
@@ -103,7 +81,7 @@ class KeyPersistenceServiceInterfaceTest {
         String privateKeyBase64 =
                 Base64.getEncoder().encodeToString(testKeyPair.getPrivate().getEncoded());
 
-        JwtVerificationKey existingKey = new JwtVerificationKey(keyId, publicKeyBase64);
+        new JwtVerificationKey(keyId, publicKeyBase64);
 
         Path keyFile = tempDir.resolve(keyId + ".key");
         Files.writeString(keyFile, privateKeyBase64);
@@ -148,6 +126,7 @@ class KeyPersistenceServiceInterfaceTest {
                     .getDeclaredField("verifyingKeyCache")
                     .setAccessible(true);
             var cache = cacheManager.getCache("verifyingKeys");
+            assertNotNull(cache);
             cache.put(keyId, signingKey);
 
             Optional<KeyPair> result = keyPersistenceService.getKeyPair(keyId);
@@ -177,7 +156,7 @@ class KeyPersistenceServiceInterfaceTest {
 
     @Test
     void testGetKeyPairWhenKeystoreDisabled() {
-        when(jwtConfig.isEnableKeystore()).thenReturn(false);
+        when(jwtConfig.isEnabled()).thenReturn(false);
 
         try (MockedStatic<InstallationPathConfig> mockedStatic =
                 mockStatic(InstallationPathConfig.class)) {
@@ -193,7 +172,7 @@ class KeyPersistenceServiceInterfaceTest {
     }
 
     @Test
-    void testInitializeKeystoreCreatesDirectory() throws IOException {
+    void testInitializeKeystoreCreatesDirectory() {
         try (MockedStatic<InstallationPathConfig> mockedStatic =
                 mockStatic(InstallationPathConfig.class)) {
             mockedStatic
@@ -208,12 +187,12 @@ class KeyPersistenceServiceInterfaceTest {
     }
 
     @Test
-    void testLoadExistingKeypairWithMissingPrivateKeyFile() throws Exception {
+    void testLoadExistingKeypairWithMissingPrivateKeyFile() {
         String keyId = "test-key-missing-file";
         String publicKeyBase64 =
                 Base64.getEncoder().encodeToString(testKeyPair.getPublic().getEncoded());
 
-        JwtVerificationKey existingKey = new JwtVerificationKey(keyId, publicKeyBase64);
+        new JwtVerificationKey(keyId, publicKeyBase64);
 
         try (MockedStatic<InstallationPathConfig> mockedStatic =
                 mockStatic(InstallationPathConfig.class)) {

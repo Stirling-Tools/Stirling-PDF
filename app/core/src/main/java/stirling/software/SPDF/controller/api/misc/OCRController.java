@@ -1,10 +1,14 @@
 package stirling.software.SPDF.controller.api.misc;
 
 import java.awt.image.BufferedImage;
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -34,13 +38,8 @@ import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.SPDF.model.api.misc.ProcessPdfWithOcrRequest;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
-import stirling.software.common.util.ExceptionUtils;
-import stirling.software.common.util.ProcessExecutor;
+import stirling.software.common.util.*;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
-import stirling.software.common.util.TempDirectory;
-import stirling.software.common.util.TempFile;
-import stirling.software.common.util.TempFileManager;
-import stirling.software.common.util.WebResponseUtils;
 
 @RestController
 @RequestMapping("/api/v1/misc")
@@ -117,100 +116,82 @@ public class OCRController {
 
         // Use try-with-resources for proper temp file management
         try (TempFile tempInputFile = new TempFile(tempFileManager, ".pdf");
-                TempFile tempOutputFile = new TempFile(tempFileManager, ".pdf")) {
+                TempFile tempOutputFile = new TempFile(tempFileManager, ".pdf");
+                TempFile sidecarTextFile = sidecar ? new TempFile(tempFileManager, ".txt") : null) {
 
             inputFile.transferTo(tempInputFile.getFile());
 
-            TempFile sidecarTextFile = null;
+            // Use OCRmyPDF if available (no fallback - error if it fails)
+            if (isOcrMyPdfEnabled()) {
+                processWithOcrMyPdf(
+                        selectedLanguages,
+                        sidecar,
+                        deskew,
+                        clean,
+                        cleanFinal,
+                        ocrType,
+                        ocrRenderType,
+                        removeImagesAfter,
+                        tempInputFile.getPath(),
+                        tempOutputFile.getPath(),
+                        sidecarTextFile != null ? sidecarTextFile.getPath() : null);
+                log.info("OCRmyPDF processing completed successfully");
+            }
+            // Use Tesseract only if OCRmyPDF is not available
+            else if (isTesseractEnabled()) {
+                processWithTesseract(
+                        selectedLanguages,
+                        ocrType,
+                        tempInputFile.getPath(),
+                        tempOutputFile.getPath());
+                log.info("Tesseract processing completed successfully");
+            } else {
+                throw ExceptionUtils.createOcrToolsUnavailableException();
+            }
 
-            try {
-                // Use OCRmyPDF if available (no fallback - error if it fails)
-                if (isOcrMyPdfEnabled()) {
-                    if (sidecar != null && sidecar) {
-                        sidecarTextFile = new TempFile(tempFileManager, ".txt");
-                    }
+            // Read the processed PDF file
+            byte[] pdfBytes = Files.readAllBytes(tempOutputFile.getPath());
 
-                    processWithOcrMyPdf(
-                            selectedLanguages,
-                            sidecar,
-                            deskew,
-                            clean,
-                            cleanFinal,
-                            ocrType,
-                            ocrRenderType,
-                            removeImagesAfter,
-                            tempInputFile.getPath(),
-                            tempOutputFile.getPath(),
-                            sidecarTextFile != null ? sidecarTextFile.getPath() : null);
-                    log.info("OCRmyPDF processing completed successfully");
+            // Return the OCR processed PDF as a response
+            String outputFilename =
+                    GeneralUtils.removeExtension(
+                                    Filenames.toSimpleFileName(inputFile.getOriginalFilename()))
+                            + "_OCR.pdf";
+
+            if (sidecar && sidecarTextFile != null) {
+                // Create a zip file containing both the PDF and the text file
+                String outputZipFilename =
+                        GeneralUtils.removeExtension(
+                                        Filenames.toSimpleFileName(inputFile.getOriginalFilename()))
+                                + "_OCR.zip";
+
+                try (TempFile tempZipFile = new TempFile(tempFileManager, ".zip");
+                        ZipOutputStream zipOut =
+                                new ZipOutputStream(Files.newOutputStream(tempZipFile.getPath()))) {
+
+                    // Add PDF file to the zip
+                    ZipEntry pdfEntry = new ZipEntry(outputFilename);
+                    zipOut.putNextEntry(pdfEntry);
+                    zipOut.write(pdfBytes);
+                    zipOut.closeEntry();
+
+                    // Add text file to the zip
+                    ZipEntry txtEntry = new ZipEntry(outputFilename.replace(".pdf", ".txt"));
+                    zipOut.putNextEntry(txtEntry);
+                    Files.copy(sidecarTextFile.getPath(), zipOut);
+                    zipOut.closeEntry();
+
+                    zipOut.finish();
+
+                    byte[] zipBytes = Files.readAllBytes(tempZipFile.getPath());
+
+                    // Return the zip file containing both the PDF and the text file
+                    return WebResponseUtils.bytesToWebResponse(
+                            zipBytes, outputZipFilename, MediaType.APPLICATION_OCTET_STREAM);
                 }
-                // Use Tesseract only if OCRmyPDF is not available
-                else if (isTesseractEnabled()) {
-                    processWithTesseract(
-                            selectedLanguages,
-                            ocrType,
-                            tempInputFile.getPath(),
-                            tempOutputFile.getPath());
-                    log.info("Tesseract processing completed successfully");
-                } else {
-                    throw ExceptionUtils.createOcrToolsUnavailableException();
-                }
-
-                // Read the processed PDF file
-                byte[] pdfBytes = Files.readAllBytes(tempOutputFile.getPath());
-
+            } else {
                 // Return the OCR processed PDF as a response
-                String outputFilename =
-                        Filenames.toSimpleFileName(inputFile.getOriginalFilename())
-                                        .replaceFirst("[.][^.]+$", "")
-                                + "_OCR.pdf";
-
-                if (sidecar != null && sidecar && sidecarTextFile != null) {
-                    // Create a zip file containing both the PDF and the text file
-                    String outputZipFilename =
-                            Filenames.toSimpleFileName(inputFile.getOriginalFilename())
-                                            .replaceFirst("[.][^.]+$", "")
-                                    + "_OCR.zip";
-
-                    try (TempFile tempZipFile = new TempFile(tempFileManager, ".zip");
-                            ZipOutputStream zipOut =
-                                    new ZipOutputStream(
-                                            Files.newOutputStream(tempZipFile.getPath()))) {
-
-                        // Add PDF file to the zip
-                        ZipEntry pdfEntry = new ZipEntry(outputFilename);
-                        zipOut.putNextEntry(pdfEntry);
-                        zipOut.write(pdfBytes);
-                        zipOut.closeEntry();
-
-                        // Add text file to the zip
-                        ZipEntry txtEntry = new ZipEntry(outputFilename.replace(".pdf", ".txt"));
-                        zipOut.putNextEntry(txtEntry);
-                        Files.copy(sidecarTextFile.getPath(), zipOut);
-                        zipOut.closeEntry();
-
-                        zipOut.finish();
-
-                        byte[] zipBytes = Files.readAllBytes(tempZipFile.getPath());
-
-                        // Return the zip file containing both the PDF and the text file
-                        return WebResponseUtils.bytesToWebResponse(
-                                zipBytes, outputZipFilename, MediaType.APPLICATION_OCTET_STREAM);
-                    }
-                } else {
-                    // Return the OCR processed PDF as a response
-                    return WebResponseUtils.bytesToWebResponse(pdfBytes, outputFilename);
-                }
-
-            } finally {
-                // Clean up sidecar temp file if created
-                if (sidecarTextFile != null) {
-                    try {
-                        sidecarTextFile.close();
-                    } catch (Exception e) {
-                        log.warn("Failed to close sidecar temp file", e);
-                    }
-                }
+                return WebResponseUtils.bytesToWebResponse(pdfBytes, outputFilename);
             }
         }
     }
@@ -257,7 +238,7 @@ public class OCRController {
         if (cleanFinal != null && cleanFinal) {
             command.add("--clean-final");
         }
-        if (ocrType != null && !"".equals(ocrType)) {
+        if (ocrType != null && !ocrType.isEmpty()) {
             if ("skip-text".equals(ocrType)) {
                 command.add("--skip-text");
             } else if ("force-ocr".equals(ocrType)) {
@@ -338,7 +319,7 @@ public class OCRController {
 
                 for (int pageNum = 0; pageNum < pageCount; pageNum++) {
                     PDPage page = document.getPage(pageNum);
-                    boolean hasText = false;
+                    boolean hasText;
 
                     // Check for existing text
                     try (PDDocument tempDoc = new PDDocument()) {
@@ -359,7 +340,24 @@ public class OCRController {
 
                     if (shouldOcr) {
                         // Convert page to image
-                        BufferedImage image = pdfRenderer.renderImageWithDPI(pageNum, 300);
+                        BufferedImage image;
+
+                        // Use global maximum DPI setting, fallback to 300 if not set
+                        int renderDpi = 300; // Default fallback
+                        if (applicationProperties != null
+                                && applicationProperties.getSystem() != null) {
+                            renderDpi = applicationProperties.getSystem().getMaxDPI();
+                        }
+
+                        try {
+                            image = pdfRenderer.renderImageWithDPI(pageNum, renderDpi);
+                        } catch (OutOfMemoryError e) {
+                            throw ExceptionUtils.createOutOfMemoryDpiException(
+                                    pageNum + 1, renderDpi, e);
+                        } catch (NegativeArraySizeException e) {
+                            throw ExceptionUtils.createOutOfMemoryDpiException(
+                                    pageNum + 1, renderDpi, e);
+                        }
                         File imagePath =
                                 new File(tempImagesDir, String.format("page_%d.png", pageNum));
                         ImageIO.write(image, "png", imagePath);

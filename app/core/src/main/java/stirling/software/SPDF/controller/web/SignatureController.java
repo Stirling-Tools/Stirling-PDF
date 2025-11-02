@@ -1,10 +1,12 @@
 package stirling.software.SPDF.controller.web;
 
 import java.io.IOException;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.MediaTypeFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -41,9 +43,14 @@ public class SignatureController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
         byte[] imageBytes = signatureService.getSignatureBytes(username, fileName);
-        return ResponseEntity.ok()
-                .contentType( // Adjust based on file type
-                        MediaType.IMAGE_JPEG)
-                .body(imageBytes);
+
+        Optional<MediaType> mediaType = MediaTypeFactory.getMediaType(fileName);
+        if (mediaType.isPresent() && mediaType.get().toString().startsWith("image/")) {
+            return ResponseEntity.ok()
+                    .contentType( // Adjust based on file type
+                            mediaType.get())
+                    .body(imageBytes);
+        }
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
 }
