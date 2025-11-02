@@ -493,8 +493,8 @@ public class UserService implements UserServiceInterface {
         List<String> notAllowedUserList = new ArrayList<>();
         notAllowedUserList.add("ALL_USERS".toLowerCase());
         notAllowedUserList.add("anonymoususer");
-        boolean notAllowedUser = notAllowedUserList.contains(username.toLowerCase());
-        return (isValidSimpleUsername || isValidEmail) && !notAllowedUser;
+        boolean allowedUser = !notAllowedUserList.contains(username.toLowerCase());
+        return (isValidSimpleUsername || isValidEmail) && allowedUser;
     }
 
     private String getInvalidUsernameMessage() {

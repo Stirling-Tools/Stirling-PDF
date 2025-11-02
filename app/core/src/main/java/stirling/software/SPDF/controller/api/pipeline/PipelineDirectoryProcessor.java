@@ -259,7 +259,7 @@ public class PipelineDirectoryProcessor {
                     if (attempt < maxRetries) {
                         log.info("File move failed (attempt {}), retrying...", attempt);
                         try {
-                            Thread.sleep(retryDelayMs * (int) Math.pow(2, attempt - 1));
+                            Thread.sleep(retryDelayMs * (1L << (attempt - 1)));
                         } catch (InterruptedException e1) {
                             log.error("prepareFilesForProcessing failure", e);
                         }

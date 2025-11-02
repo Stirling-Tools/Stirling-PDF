@@ -263,11 +263,11 @@ public class ApplicationProperties {
                 this.scopes.addAll(scopesList);
             }
 
-            protected boolean isValid(String value, String name) {
+            protected boolean isValid(String value) {
                 return value != null && !value.trim().isEmpty();
             }
 
-            protected boolean isValid(Collection<String> value, String name) {
+            protected boolean isValid(Collection<String> value) {
                 return value != null && !value.isEmpty();
             }
 

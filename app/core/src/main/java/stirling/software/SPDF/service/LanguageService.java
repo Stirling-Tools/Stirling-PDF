@@ -28,7 +28,7 @@ public class LanguageService {
 
     public Set<String> getSupportedLanguages() {
         try {
-            Resource[] resources = getResourcesFromPattern("classpath*:messages_*.properties");
+            Resource[] resources = getResourcesFromPattern();
 
             return Arrays.stream(resources)
                     .map(Resource::getFilename)
@@ -55,7 +55,7 @@ public class LanguageService {
     }
 
     // Protected method to allow overriding in tests
-    protected Resource[] getResourcesFromPattern(String pattern) throws IOException {
-        return resourcePatternResolver.getResources(pattern);
+    protected Resource[] getResourcesFromPattern() throws IOException {
+        return resourcePatternResolver.getResources("classpath*:messages_*.properties");
     }
 }

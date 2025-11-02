@@ -269,11 +269,8 @@ public class ResourceMonitor {
         }
 
         // Medium weight jobs run immediately if resources are OK
-        if (resourceWeight < 60 && status == ResourceStatus.OK) {
-            return false;
-        }
+        return resourceWeight >= 60 || status != ResourceStatus.OK;
 
         // Heavy jobs (weight >= 60) and any job during WARNING/CRITICAL should be queued
-        return true;
     }
 }

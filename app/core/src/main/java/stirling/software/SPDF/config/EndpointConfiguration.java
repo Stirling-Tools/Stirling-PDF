@@ -60,7 +60,7 @@ public class EndpointConfiguration {
             return false;
         }
 
-        // Rule 2: Functional-group override - check if endpoint belongs to any disabled functional
+        // Rule 2: Functional group check - disabled functional groups override tool groups for a
         // group
         for (Map.Entry<String, Set<String>> entry : endpointGroups.entrySet()) {
             String group = entry.getKey();

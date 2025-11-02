@@ -345,11 +345,7 @@ public class TaskManager {
             return true;
         }
 
-        if (fileName != null && fileName.toLowerCase().endsWith(".zip")) {
-            return true;
-        }
-
-        return false;
+        return fileName != null && fileName.toLowerCase().endsWith(".zip");
     }
 
     /** Extract a ZIP file into individual files and store them */

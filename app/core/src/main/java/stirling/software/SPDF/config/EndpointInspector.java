@@ -133,11 +133,7 @@ public class EndpointInspector implements ApplicationListener<ContextRefreshedEv
             return true;
         }
 
-        if (matchesPathSegments(uri)) {
-            return true;
-        }
-
-        return false;
+        return matchesPathSegments(uri);
     }
 
     private boolean matchesWildcardOrPathVariable(String uri) {

@@ -222,12 +222,12 @@ class ApplicationPropertiesLogicTest {
     void string_isValid_handles_null_empty_blank_and_trimmed() {
         ApplicationProperties.Security.OAUTH2 oauth2 = new ApplicationProperties.Security.OAUTH2();
 
-        assertFalse(oauth2.isValid((String) null, "issuer"));
-        assertFalse(oauth2.isValid("", "issuer"));
-        assertFalse(oauth2.isValid("   ", "issuer"));
+        assertFalse(oauth2.isValid((String) null));
+        assertFalse(oauth2.isValid(""));
+        assertFalse(oauth2.isValid("   "));
 
-        assertTrue(oauth2.isValid("x", "issuer"));
-        assertTrue(oauth2.isValid("  x  ", "issuer")); // trimmt intern
+        assertTrue(oauth2.isValid("x"));
+        assertTrue(oauth2.isValid("  x  ")); // trimmt intern
     }
 
     @Test
@@ -237,8 +237,8 @@ class ApplicationPropertiesLogicTest {
         Collection<String> nullColl = null;
         Collection<String> empty = List.of();
 
-        assertFalse(oauth2.isValid((Collection<String>) null, "scopes"));
-        assertFalse(oauth2.isValid(empty, "scopes"));
+        assertFalse(oauth2.isValid((Collection<String>) null));
+        assertFalse(oauth2.isValid(empty));
     }
 
     @Test
@@ -250,7 +250,7 @@ class ApplicationPropertiesLogicTest {
         oneBlank.add("   ");
 
         assertTrue(
-                oauth2.isValid(oneBlank, "scopes"),
+                oauth2.isValid(oneBlank),
                 "Documents current behavior: non-empty list is considered valid, even if an element"
                         + " is empty/blank");
     }

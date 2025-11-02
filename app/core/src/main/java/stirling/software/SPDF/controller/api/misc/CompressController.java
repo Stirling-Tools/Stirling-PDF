@@ -15,7 +15,6 @@ import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.List;
 import java.util.Map.Entry;
-import java.util.Objects;
 
 import javax.imageio.IIOImage;
 import javax.imageio.ImageIO;
