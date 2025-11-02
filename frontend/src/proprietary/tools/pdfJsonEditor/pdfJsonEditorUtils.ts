@@ -689,6 +689,7 @@ export const restoreGlyphElements = (
   groupsByPage: TextGroup[][],
   imagesByPage: PdfJsonImageElement[][],
   originalImagesByPage: PdfJsonImageElement[][],
+  forceMergedGroups: boolean = false,
 ): PdfJsonDocument => {
   const updated = deepCloneDocument(source);
   const pages = updated.pages ?? [];
@@ -709,6 +710,10 @@ export const restoreGlyphElements = (
 
     groups.forEach((group) => {
       if (group.text !== group.originalText) {
+        if (forceMergedGroups) {
+          rebuiltElements.push(createMergedElement(group));
+          return;
+        }
         const originalGlyphCount = group.originalElements.reduce(
           (sum, element) => sum + countGraphemes(element.text ?? ''),
           0,

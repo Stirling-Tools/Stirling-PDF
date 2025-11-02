@@ -4412,8 +4412,11 @@
     "viewLabel": "PDF Editor",
     "title": "PDF Editor",
     "badges": {
-      "unsaved": "Edited",
+      "unsaved": "Unsaved changes",
       "modified": "Edited"
+    },
+    "controls": {
+      "title": "Document Controls"
     },
     "actions": {
       "load": "Load File",
@@ -4439,9 +4442,14 @@
       "pdfConversion": "Unable to convert the edited JSON back into a PDF."
     },
     "options": {
+      "title": "Viewing options",
       "autoScaleText": {
         "title": "Auto-scale text to fit boxes",
         "description": "Automatically scales text horizontally to fit within its original bounding box when font rendering differs from PDF."
+      },
+      "forceSingleElement": {
+        "title": "Lock edited text to a single PDF element",
+        "description": "When enabled, the editor exports each edited text box as one PDF text element to avoid overlapping glyphs or mixed fonts."
       }
     },
     "disclaimer": {

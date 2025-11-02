@@ -228,6 +228,7 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
     isConverting,
     conversionProgress,
     hasChanges,
+    forceSingleTextElement,
     onLoadJson,
     onSelectPage,
     onGroupEdit,
@@ -236,6 +237,7 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
     onReset,
     onDownloadJson,
     onGeneratePdf,
+    onForceSingleTextElementChange,
   } = data;
 
   const resolveFont = (fontId: string | null | undefined, pageIndex: number | null | undefined): PdfJsonFont | null => {
@@ -402,6 +404,56 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
   const pageGroups = groupsByPage[selectedPage] ?? [];
   const pageImages = imagesByPage[selectedPage] ?? [];
 
+  const extractPreferredFontId = useCallback((target?: TextGroup | null) => {
+    if (!target) {
+      return undefined;
+    }
+    if (target.fontId) {
+      return target.fontId;
+    }
+    for (const element of target.originalElements ?? []) {
+      if (element.fontId) {
+        return element.fontId;
+      }
+    }
+    for (const element of target.elements ?? []) {
+      if (element.fontId) {
+        return element.fontId;
+      }
+    }
+    return undefined;
+  }, []);
+
+  const resolveFontIdForIndex = useCallback(
+    (index: number): string | null | undefined => {
+      if (index < 0 || index >= pageGroups.length) {
+        return undefined;
+      }
+      const direct = extractPreferredFontId(pageGroups[index]);
+      if (direct) {
+        return direct;
+      }
+      for (let offset = 1; offset < pageGroups.length; offset += 1) {
+        const prevIndex = index - offset;
+        if (prevIndex >= 0) {
+          const candidate = extractPreferredFontId(pageGroups[prevIndex]);
+          if (candidate) {
+            return candidate;
+          }
+        }
+        const nextIndex = index + offset;
+        if (nextIndex < pageGroups.length) {
+          const candidate = extractPreferredFontId(pageGroups[nextIndex]);
+          if (candidate) {
+            return candidate;
+          }
+        }
+      }
+      return undefined;
+    },
+    [extractPreferredFontId, pageGroups],
+  );
+
   const fontMetrics = useMemo(() => {
     const metrics = new Map<string, { unitsPerEm: number; ascent: number; descent: number }>();
     pdfDocument?.fonts?.forEach((font) => {
@@ -545,11 +597,15 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
   }, [pdfDocument?.fonts]);
   const visibleGroups = useMemo(
     () =>
-      pageGroups.filter((group) => {
-        const hasContent = ((group.text ?? '').trim().length > 0) || ((group.originalText ?? '').trim().length > 0);
-        return hasContent || editingGroupId === group.id;
-      }),
-    [editingGroupId, pageGroups]
+      pageGroups
+        .map((group, index) => ({ group, pageGroupIndex: index }))
+        .filter(({ group }) => {
+          const hasContent =
+            ((group.text ?? '').trim().length > 0) ||
+            ((group.originalText ?? '').trim().length > 0);
+          return hasContent || editingGroupId === group.id;
+        }),
+    [editingGroupId, pageGroups],
   );
 
   const orderedImages = useMemo(
@@ -590,7 +646,7 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
     const measureTextScales = () => {
       const newScales = new Map<string, number>();
 
-      visibleGroups.forEach((group) => {
+      visibleGroups.forEach(({ group }) => {
         // Skip groups that are being edited
         if (editingGroupId === group.id) {
           return;
@@ -644,7 +700,10 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
     if (!editor) {
       return;
     }
-    const offset = caretOffsetsRef.current.get(editingGroupId) ?? editor.innerText.length;
+    const offset = caretOffsetsRef.current.get(editingGroupId);
+    if (offset === undefined) {
+      return;
+    }
     setCaretOffset(editor, offset);
   }, [editingGroupId, groupsByPage, imagesByPage]);
 
@@ -654,14 +713,8 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
     }
     const editor = document.querySelector<HTMLElement>(`[data-editor-group="${editingGroupId}"]`);
     if (editor) {
-      editor.focus();
-      const selection = window.getSelection();
-      if (selection) {
-        selection.removeAllRanges();
-        const range = document.createRange();
-        range.selectNodeContents(editor);
-        range.collapse(false);
-        selection.addRange(range);
+      if (document.activeElement !== editor) {
+        editor.focus();
       }
     }
   }, [editingGroupId]);
@@ -744,8 +797,25 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
   );
 
   return (
-    <Stack gap="xl" className="h-full" style={{ padding: '1.5rem', overflow: 'auto' }}>
-      <Card withBorder radius="md" shadow="xs" padding="lg">
+    <Stack
+      gap="xl"
+      className="h-full"
+      style={{
+        padding: '1.5rem',
+        overflow: 'hidden',
+        display: 'grid',
+        gridTemplateColumns: 'minmax(0, 1fr) 320px',
+        alignItems: 'start',
+        gap: '1.5rem',
+      }}
+    >
+      <Card
+        withBorder
+        radius="md"
+        shadow="xs"
+        padding="lg"
+        style={{ gridColumn: '2 / 3', gridRow: 1, position: 'sticky', top: '1.5rem', zIndex: 2 }}
+      >
         <Stack gap="sm">
           <Group justify="space-between" align="center">
             <Group gap="xs" align="center">
@@ -753,13 +823,14 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
               <Title order={3}>{t('pdfJsonEditor.title', 'PDF JSON Editor')}</Title>
               {hasChanges && <Badge color="yellow" size="sm">{t('pdfJsonEditor.badges.unsaved', 'Edited')}</Badge>}
             </Group>
-            <Group gap="sm">
+            <Stack gap="sm">
               <FileButton onChange={onLoadJson} accept="application/pdf,application/json,.pdf,.json">
                 {(props) => (
                   <Button
                     variant="light"
                     leftSection={<UploadIcon fontSize="small" />}
                     loading={isConverting}
+                    fullWidth
                     {...props}
                   >
                     {t('pdfJsonEditor.actions.load', 'Load File')}
@@ -771,6 +842,7 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
                 leftSection={<AutorenewIcon fontSize="small" />}
                 onClick={onReset}
                 disabled={!hasDocument || isConverting}
+                fullWidth
               >
                 {t('pdfJsonEditor.actions.reset', 'Reset Changes')}
               </Button>
@@ -779,6 +851,7 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
                 leftSection={<FileDownloadIcon fontSize="small" />}
                 onClick={onDownloadJson}
                 disabled={!hasDocument || isConverting}
+                fullWidth
               >
                 {t('pdfJsonEditor.actions.downloadJson', 'Download JSON')}
               </Button>
@@ -787,10 +860,11 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
                 onClick={onGeneratePdf}
                 loading={isGeneratingPdf}
                 disabled={!hasDocument || !hasChanges || isConverting}
+                fullWidth
               >
                 {t('pdfJsonEditor.actions.generatePdf', 'Generate PDF')}
               </Button>
-            </Group>
+            </Stack>
           </Group>
 
           {fileName && (
@@ -819,6 +893,25 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
               onChange={(event) => setAutoScaleText(event.currentTarget.checked)}
             />
           </Group>
+
+          <Group justify="space-between" align="center">
+            <div>
+              <Text fw={500} size="sm">
+                {t('pdfJsonEditor.options.forceSingleElement.title', 'Lock edited text to a single PDF element')}
+              </Text>
+              <Text size="xs" c="dimmed" mt={4}>
+                {t(
+                  'pdfJsonEditor.options.forceSingleElement.description',
+                  'When enabled, the editor exports each edited text box as one PDF text element to avoid overlapping glyphs or mixed fonts.'
+                )}
+              </Text>
+            </div>
+            <Switch
+              size="md"
+              checked={forceSingleTextElement}
+              onChange={(event) => onForceSingleTextElementChange(event.currentTarget.checked)}
+            />
+          </Group>
         </Stack>
       </Card>
 
@@ -827,6 +920,7 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
         color="yellow"
         radius="md"
         variant="light"
+        style={{ gridColumn: '2 / 3' }}
       >
         <Stack gap={4}>
           <Text fw={600}>
@@ -853,14 +947,82 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
         </Stack>
       </Alert>
 
+      {hasDocument && (
+        <Card
+          withBorder
+          radius="md"
+          padding="md"
+          shadow="xs"
+          style={{ gridColumn: '2 / 3' }}
+        >
+          <Stack gap="xs">
+            <Group justify="space-between" align="center">
+              <Text fw={500}>{t('pdfJsonEditor.groupList', 'Detected Text Groups')}</Text>
+              <ActionIcon
+                variant="subtle"
+                onClick={() => setTextGroupsExpanded(!textGroupsExpanded)}
+                aria-label={textGroupsExpanded ? 'Collapse' : 'Expand'}
+              >
+                {textGroupsExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+              </ActionIcon>
+            </Group>
+            <Collapse in={textGroupsExpanded}>
+              <ScrollArea h={240} offsetScrollbars>
+                <Stack gap="sm">
+                  {visibleGroups.map(({ group }) => {
+                    const changed = group.text !== group.originalText;
+                    return (
+                      <Card
+                        key={`list-${group.id}`}
+                        padding="sm"
+                        radius="md"
+                        withBorder
+                        shadow={changed ? 'sm' : 'none'}
+                        onMouseEnter={() => setActiveGroupId(group.id)}
+                        onMouseLeave={() => setActiveGroupId((current) => (current === group.id ? null : current))}
+                        style={{ cursor: 'pointer' }}
+                        onClick={() => {
+                          setActiveGroupId(group.id);
+                          setEditingGroupId(group.id);
+                        }}
+                      >
+                        <Stack gap={4}>
+                          <Group gap="xs">
+                            {changed && <Badge color="yellow" size="xs">{t('pdfJsonEditor.badges.modified', 'Edited')}</Badge>}
+                            {group.fontId && <Badge size="xs" variant="outline">{group.fontId}</Badge>}
+                            {group.fontSize && (
+                              <Badge size="xs" variant="light">
+                                {t('pdfJsonEditor.fontSizeValue', '{{size}}pt', { size: group.fontSize.toFixed(1) })}
+                              </Badge>
+                            )}
+                          </Group>
+                          <Text size="sm" c="dimmed" lineClamp={2}>
+                            {group.text || t('pdfJsonEditor.emptyGroup', '[Empty Group]')}
+                          </Text>
+                        </Stack>
+                      </Card>
+                    );
+                  })}
+                </Stack>
+              </ScrollArea>
+            </Collapse>
+          </Stack>
+        </Card>
+      )}
+
       {errorMessage && (
-        <Alert icon={<WarningAmberIcon fontSize="small" />} color="red" radius="md">
+        <Alert
+          icon={<WarningAmberIcon fontSize="small" />}
+          color="red"
+          radius="md"
+          style={{ gridColumn: '2 / 3' }}
+        >
           {errorMessage}
         </Alert>
       )}
 
       {!hasDocument && !isConverting && (
-        <Card withBorder radius="md" padding="xl">
+        <Card withBorder radius="md" padding="xl" style={{ gridColumn: '1 / 2', gridRow: 1 }}>
           <Stack align="center" gap="md">
             <DescriptionIcon sx={{ fontSize: 48 }} />
             <Text size="lg" fw={600}>
@@ -874,7 +1036,7 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
       )}
 
       {isConverting && (
-        <Card withBorder radius="md" padding="xl">
+        <Card withBorder radius="md" padding="xl" style={{ gridColumn: '1 / 2', gridRow: 1 }}>
           <Stack gap="md">
             <Group justify="space-between" align="flex-start">
               <div style={{ flex: 1 }}>
@@ -899,22 +1061,13 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
               </div>
               <AutorenewIcon sx={{ fontSize: 36 }} className="animate-spin" />
             </Group>
-            <Progress
-              value={conversionProgress?.percent || 0}
-              size="lg"
-              radius="md"
-              animated
-              striped
-            />
-            <Text size="sm" c="dimmed" ta="right">
-              {conversionProgress?.percent || 0}% complete
-            </Text>
+            <Progress value={conversionProgress?.percent || 0} size="lg" radius="md" />
           </Stack>
         </Card>
       )}
 
       {hasDocument && (
-        <Stack gap="lg" className="flex-1" style={{ minHeight: 0 }}>
+        <Stack gap="lg" className="flex-1" style={{ gridColumn: '1 / 2', gridRow: 1, minHeight: 0 }}>
           <Group justify="space-between" align="center">
             <Group gap="sm">
               <Text fw={500}>
@@ -1091,20 +1244,21 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
                       </Stack>
                     </Group>
                   ) : (
-                    visibleGroups.map((group) => {
+                    visibleGroups.map(({ group, pageGroupIndex }) => {
                       const bounds = toCssBounds(currentPage, pageHeight, scale, group.bounds);
                       const changed = group.text !== group.originalText;
                       const isActive = activeGroupId === group.id || editingGroupId === group.id;
                       const isEditing = editingGroupId === group.id;
                       const baseFontSize = group.fontMatrixSize ?? group.fontSize ?? 12;
                       const fontSizePx = Math.max(baseFontSize * scale, 6);
-                      const fontFamily = getFontFamily(group.fontId, group.pageIndex);
-                      let lineHeightPx = getLineHeightPx(group.fontId, group.pageIndex, fontSizePx);
+                      const effectiveFontId = resolveFontIdForIndex(pageGroupIndex) ?? group.fontId;
+                      const fontFamily = getFontFamily(effectiveFontId, group.pageIndex);
+                      let lineHeightPx = getLineHeightPx(effectiveFontId, group.pageIndex, fontSizePx);
                       let lineHeightRatio = fontSizePx > 0 ? Math.max(lineHeightPx / fontSizePx, 1.05) : 1.2;
                       const rotation = group.rotation ?? 0;
                       const hasRotation = Math.abs(rotation) > 0.5;
                       const baselineLength = group.baselineLength ?? Math.max(group.bounds.right - group.bounds.left, 0);
-                      const geometry = getFontGeometry(group.fontId, group.pageIndex);
+                      const geometry = getFontGeometry(effectiveFontId, group.pageIndex);
                       const ascentPx = geometry ? Math.max(fontSizePx * geometry.ascentRatio, fontSizePx * 0.7) : fontSizePx * 0.82;
                       const descentPx = geometry ? Math.max(fontSizePx * geometry.descentRatio, fontSizePx * 0.2) : fontSizePx * 0.22;
                       lineHeightPx = Math.max(lineHeightPx, ascentPx + descentPx);
@@ -1143,7 +1297,7 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
 
                       // Extract styling from group
                       const textColor = group.color || '#111827';
-                      const fontWeight = group.fontWeight || getFontWeight(group.fontId, group.pageIndex);
+                      const fontWeight = group.fontWeight || getFontWeight(effectiveFontId, group.pageIndex);
 
                       const containerStyle: React.CSSProperties = {
                         position: 'absolute',
@@ -1179,6 +1333,22 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
                                 contentEditable
                                 suppressContentEditableWarning
                                 data-editor-group={group.id}
+                                onFocus={(event) => {
+                                  const primaryFont = fontFamily.split(',')[0]?.replace(/['"]/g, '').trim();
+                                  if (primaryFont && typeof document !== 'undefined') {
+                                    try {
+                                      if (document.queryCommandSupported?.('styleWithCSS')) {
+                                        document.execCommand('styleWithCSS', false, true);
+                                      }
+                                      if (document.queryCommandSupported?.('fontName')) {
+                                        document.execCommand('fontName', false, primaryFont);
+                                      }
+                                    } catch {
+                                      // ignore execCommand failures; inline style already enforces font
+                                    }
+                                  }
+                                  event.currentTarget.style.fontFamily = fontFamily;
+                                }}
                                 onBlur={(event) => {
                                   const value = event.currentTarget.innerText.replace(/\u00A0/g, ' ');
                                   caretOffsetsRef.current.delete(group.id);
@@ -1280,65 +1450,6 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
             </ScrollArea>
           </Card>
 
-          <Card padding="md" withBorder radius="md">
-            <Stack gap="xs">
-              <Group justify="space-between" align="center">
-                <Text fw={500}>{t('pdfJsonEditor.groupList', 'Detected Text Groups')}</Text>
-                <ActionIcon
-                  variant="subtle"
-                  onClick={() => setTextGroupsExpanded(!textGroupsExpanded)}
-                  aria-label={textGroupsExpanded ? 'Collapse' : 'Expand'}
-                >
-                  {textGroupsExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                </ActionIcon>
-              </Group>
-              <Collapse in={textGroupsExpanded}>
-                <Stack gap="xs">
-                  <Divider />
-                  <ScrollArea h={180} offsetScrollbars>
-                    <Stack gap="sm">
-                      {visibleGroups.map((group) => {
-                        const changed = group.text !== group.originalText;
-                        return (
-                          <Card
-                            key={`list-${group.id}`}
-                            padding="sm"
-                            radius="md"
-                            withBorder
-                            shadow={changed ? 'sm' : 'none'}
-                            onMouseEnter={() => setActiveGroupId(group.id)}
-                            onMouseLeave={() => setActiveGroupId((current) => (current === group.id ? null : current))}
-                            style={{ cursor: 'pointer' }}
-                            onClick={() => {
-                              setActiveGroupId(group.id);
-                              setEditingGroupId(group.id);
-                            }}
-                          >
-                            <Stack gap={4}>
-                              <Group gap="xs">
-                                {changed && <Badge color="yellow" size="xs">{t('pdfJsonEditor.badges.modified', 'Edited')}</Badge>}
-                                {group.fontId && (
-                                  <Badge size="xs" variant="outline">{group.fontId}</Badge>
-                                )}
-                                {group.fontSize && (
-                                  <Badge size="xs" variant="light">
-                                    {t('pdfJsonEditor.fontSizeValue', '{{size}}pt', { size: group.fontSize.toFixed(1) })}
-                                  </Badge>
-                                )}
-                              </Group>
-                              <Text size="sm" c="dimmed" lineClamp={2}>
-                                {group.text || t('pdfJsonEditor.emptyGroup', '[Empty Group]')}
-                              </Text>
-                            </Stack>
-                          </Card>
-                        );
-                      })}
-                    </Stack>
-                  </ScrollArea>
-                </Stack>
-              </Collapse>
-            </Stack>
-          </Card>
         </Stack>
       )}
     </Stack>

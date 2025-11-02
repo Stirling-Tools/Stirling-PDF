@@ -74,6 +74,7 @@ const PdfJsonEditor = ({ onComplete, onError }: BaseToolProps) => {
     stage: string;
     message: string;
   } | null>(null);
+  const [forceSingleTextElement, setForceSingleTextElement] = useState(false);
 
   // Lazy loading state
   const [isLazyMode, setIsLazyMode] = useState(false);
@@ -615,13 +616,14 @@ const PdfJsonEditor = ({ onComplete, onError }: BaseToolProps) => {
       groupsByPage,
       imagesByPageRef.current,
       originalImagesRef.current,
+      forceSingleTextElement,
     );
     const baseName = sanitizeBaseName(fileName || loadedDocument.metadata?.title || undefined);
     return {
       document: updatedDocument,
       filename: `${baseName}.json`,
     };
-  }, [fileName, groupsByPage, loadedDocument]);
+  }, [fileName, forceSingleTextElement, groupsByPage, loadedDocument]);
 
   const handleDownloadJson = useCallback(() => {
     const payload = buildPayload();
@@ -817,6 +819,7 @@ const PdfJsonEditor = ({ onComplete, onError }: BaseToolProps) => {
     isConverting,
     conversionProgress,
     hasChanges,
+    forceSingleTextElement,
     onLoadJson: handleLoadFile,
     onSelectPage: handleSelectPage,
     onGroupEdit: handleGroupTextChange,
@@ -825,6 +828,7 @@ const PdfJsonEditor = ({ onComplete, onError }: BaseToolProps) => {
     onReset: handleResetEdits,
     onDownloadJson: handleDownloadJson,
     onGeneratePdf: handleGeneratePdf,
+    onForceSingleTextElementChange: setForceSingleTextElement,
   }), [
     handleImageTransform,
     imagesByPage,
@@ -846,6 +850,7 @@ const PdfJsonEditor = ({ onComplete, onError }: BaseToolProps) => {
     conversionProgress,
     loadedDocument,
     selectedPage,
+    forceSingleTextElement,
   ]);
 
   const latestViewDataRef = useRef<PdfJsonEditorViewData>(viewData);

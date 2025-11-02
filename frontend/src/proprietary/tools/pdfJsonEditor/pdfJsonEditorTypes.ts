@@ -191,6 +191,7 @@ export interface PdfJsonEditorViewData {
   isConverting: boolean;
   conversionProgress: ConversionProgress | null;
   hasChanges: boolean;
+  forceSingleTextElement: boolean;
   onLoadJson: (file: File | null) => Promise<void> | void;
   onSelectPage: (pageIndex: number) => void;
   onGroupEdit: (pageIndex: number, groupId: string, value: string) => void;
@@ -209,4 +210,5 @@ export interface PdfJsonEditorViewData {
   onReset: () => void;
   onDownloadJson: () => void;
   onGeneratePdf: () => void;
+  onForceSingleTextElementChange: (value: boolean) => void;
 }
