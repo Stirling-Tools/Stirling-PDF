@@ -245,7 +245,7 @@ public class CertSignController {
         }
     }
 
-    class CreateSignature extends CreateSignatureBase {
+    static class CreateSignature extends CreateSignatureBase {
         File logoFile;
 
         public CreateSignature(KeyStore keystore, char[] pin)

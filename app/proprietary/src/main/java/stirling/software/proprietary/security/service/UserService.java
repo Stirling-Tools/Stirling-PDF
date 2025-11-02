@@ -137,8 +137,7 @@ public class UserService implements UserServiceInterface {
     }
 
     public Optional<User> loadUserByApiKey(String apiKey) {
-        Optional<User> user = userRepository.findByApiKey(apiKey);
-        return user;
+        return userRepository.findByApiKey(apiKey);
         // or throw an exception
     }
 

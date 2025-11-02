@@ -22,10 +22,10 @@ import lombok.experimental.UtilityClass;
 public class ChecksumUtils {
 
     /** Shared buffer size for streaming I/O. */
-    private static final int BUFFER_SIZE = 8192;
+    private final int BUFFER_SIZE = 8192;
 
     /** Mask to extract the lower 32 bits of a long value (unsigned int). */
-    private static final long UNSIGNED_32_BIT_MASK = 0xFFFFFFFFL;
+    private final long UNSIGNED_32_BIT_MASK = 0xFFFFFFFFL;
 
     /**
      * Computes a checksum for the given file using the chosen algorithm and returns a lowercase hex

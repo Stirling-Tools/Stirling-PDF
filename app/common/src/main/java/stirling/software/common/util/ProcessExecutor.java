@@ -317,7 +317,7 @@ public class ProcessExecutor {
 
     @Setter
     @Getter
-    public class ProcessExecutorResult {
+    public static class ProcessExecutorResult {
         int rc;
         String messages;
 

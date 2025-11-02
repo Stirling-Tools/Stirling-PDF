@@ -121,7 +121,7 @@ public class AutoRenameController {
                                         : null);
                     }
 
-                    class LineInfo {
+                    static class LineInfo {
                         final String text;
                         final float fontSize;
 
