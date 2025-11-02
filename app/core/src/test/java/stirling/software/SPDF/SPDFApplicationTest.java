@@ -4,6 +4,7 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
@@ -66,7 +67,7 @@ public class SPDFApplicationTest {
     public void testGetActiveProfileWithArgs() {
         String[] args = {"--spring.profiles.active=security"};
         String[] profiles = SPDFApplication.getActiveProfile(args);
-        assertArrayEquals(new String[] {"security"}, profiles);
+        Assertions.assertArrayEquals(new String[] {"security"}, profiles);
     }
 
     @Test
@@ -74,7 +75,7 @@ public class SPDFApplicationTest {
     public void testGetActiveProfileWithoutArgsAdditionalEnabled() {
         String[] args = {};
         String[] profiles = SPDFApplication.getActiveProfile(args);
-        assertArrayEquals(new String[] {"default"}, profiles);
+        Assertions.assertArrayEquals(new String[] {"default"}, profiles);
     }
 
     @Test
@@ -82,6 +83,6 @@ public class SPDFApplicationTest {
     public void testGetActiveProfileWithoutArgsAdditionalDisabled() {
         String[] args = {};
         String[] profiles = SPDFApplication.getActiveProfile(args);
-        assertArrayEquals(new String[] {"security"}, profiles);
+        Assertions.assertArrayEquals(new String[] {"security"}, profiles);
     }
 }
