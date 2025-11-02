@@ -2,7 +2,7 @@ import { Group, Loader, Stack, Text } from '@mantine/core';
 import { useMemo, useRef, useState } from 'react';
 import type { PagePreview } from '@app/types/compare';
 import type { TokenBoundingBox, CompareDocumentPaneProps } from '@app/types/compare';
-import CompareNavigationDropdown from './CompareNavigationDropdown';
+import CompareNavigationDropdown from '@app/components/tools/compare/CompareNavigationDropdown';
 import { useIsMobile } from '@app/hooks/useIsMobile';
 
 const toRgba = (hexColor: string, alpha: number): string => {
