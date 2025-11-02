@@ -205,7 +205,8 @@ public class SPDFApplication {
         }
 
         // 2. Detect if SecurityConfiguration is present on classpath
-        if (isClassPresent("stirling.software.proprietary.security.configuration.SecurityConfiguration")) {
+        if (isClassPresent(
+                "stirling.software.proprietary.security.configuration.SecurityConfiguration")) {
             log.info("Additional features in jar");
             return new String[] {"security"};
         } else {
