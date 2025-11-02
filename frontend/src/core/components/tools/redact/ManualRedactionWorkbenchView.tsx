@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { createPluginRegistration } from '@embedpdf/core';
 import { EmbedPDF } from '@embedpdf/core/react';
 import { usePdfiumEngine } from '@embedpdf/engines/react';
@@ -18,12 +19,11 @@ import { ExportPluginPackage } from '@embedpdf/plugin-export/react';
 import { HistoryPluginPackage } from '@embedpdf/plugin-history/react';
 import { RedactionPluginPackage, RedactionLayer, useRedaction } from '@embedpdf/plugin-redaction/react';
 import type { SelectionMenuProps } from '@embedpdf/plugin-redaction/react';
-import { Stack, Group, Text, Button, Alert, Loader } from '@mantine/core';
+import { Stack, Group, Text, Button, Loader, Alert } from '@mantine/core';
+import Warning from '@app/components/shared/Warning';
 import { useTranslation } from 'react-i18next';
 import CropFreeRoundedIcon from '@mui/icons-material/CropFreeRounded';
 import TextFieldsRoundedIcon from '@mui/icons-material/TextFieldsRounded';
-import UndoRoundedIcon from '@mui/icons-material/UndoRounded';
-import RedoRoundedIcon from '@mui/icons-material/RedoRounded';
 import ToolLoadingFallback from '@app/components/tools/ToolLoadingFallback';
 import { alert } from '@app/components/toast';
 import { useRightRailButtons, type RightRailButtonWithAction } from '@app/hooks/useRightRailButtons';
@@ -88,11 +88,12 @@ const ManualRedactionWorkbenchView = ({ data }: ManualRedactionWorkbenchViewProp
   const historyApiRef = useRef<Record<string, any> | null>(null);
   const [isReady, setIsReady] = useState(false);
   const [isApplying, setIsApplying] = useState(false);
-  const [canUndo, setCanUndo] = useState(false);
-  const [canRedo, setCanRedo] = useState(false);
+  // Removed undo/redo controls; plugin state still manages pending internally
   const [activeType, setActiveType] = useState<string | null>(null);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [objectUrl, setObjectUrl] = useState<string | null>(null);
+  const desiredModeRef = useRef<'area' | 'text' | null>(null);
+  const correctingModeRef = useRef(false);
   const selectedFile = data?.file ?? null;
   const redactionPluginPackage = RedactionPluginPackage;
   const RedactionLayerComponent = RedactionLayer;
@@ -214,11 +215,26 @@ const ManualRedactionWorkbenchView = ({ data }: ManualRedactionWorkbenchViewProp
         try {
           const api = redactionApiRef.current;
           api?.onStateChange?.((state: any) => {
-            // heuristics: if there are any pending or previous operations, enable undo
-            const pending = Number(state?.pendingCount ?? 0);
-            setCanUndo(pending > 0 || Boolean(state?.canUndo));
-            setCanRedo(Boolean(state?.canRedo));
             setActiveType(state?.activeType ?? null);
+
+            // Prevent unexpected plugin mode flips (e.g., switching to text after area drag)
+            const desired = desiredModeRef.current;
+            const isAreaDesired = desired === 'area';
+            const isTextDesired = desired === 'text';
+            const isAreaActive = state?.activeType === 'marqueeRedact' || state?.activeType === 'area';
+            const isTextActive = state?.activeType === 'redactSelection' || state?.activeType === 'text';
+            if (!correctingModeRef.current) {
+              if (isAreaDesired && !isAreaActive) {
+                correctingModeRef.current = true;
+                // best-effort attempts to re-activate area mode
+                enableAreaRedaction();
+                setTimeout(() => { correctingModeRef.current = false; }, 0);
+              } else if (isTextDesired && !isTextActive) {
+                correctingModeRef.current = true;
+                enableTextRedaction();
+                setTimeout(() => { correctingModeRef.current = false; }, 0);
+              }
+            }
           });
         } catch {}
       });
@@ -279,6 +295,7 @@ const ManualRedactionWorkbenchView = ({ data }: ManualRedactionWorkbenchViewProp
     const api = redactionApiRef.current;
     // Ensure selection plugin is not intercepting as text selection
     try { selectionApiRef.current?.setMode?.('none'); } catch {}
+    desiredModeRef.current = 'area';
     // Prefer official capability
     if (api?.toggleMarqueeRedact) {
       try { api.toggleMarqueeRedact(); setActiveType('marqueeRedact'); return; } catch {}
@@ -300,6 +317,7 @@ const ManualRedactionWorkbenchView = ({ data }: ManualRedactionWorkbenchViewProp
     const api = redactionApiRef.current;
     // Ensure selection plugin is in text mode when redacting text
     try { selectionApiRef.current?.setMode?.('text'); } catch {}
+    desiredModeRef.current = 'text';
     if (api?.toggleRedactSelection) {
       try { api.toggleRedactSelection(); setActiveType('redactSelection'); return; } catch {}
     }
@@ -314,46 +332,7 @@ const ManualRedactionWorkbenchView = ({ data }: ManualRedactionWorkbenchViewProp
     console.warn('[manual-redaction] No compatible text redaction activation method found');
   }, [hasRedactionSupport, invokeRedactionMethod]);
 
-  const handleUndo = useCallback(() => {
-    if (!hasRedactionSupport) return;
-    // Prefer redaction-aware undo
-    if (invokeRedactionMethod(['undo', 'stepBack', 'undoLast'])) {
-      return;
-    }
-    // Fallback: remove the most recent pending mark if available
-    try {
-      const state = (redactionApiRef.current?.getState?.() as any) || {};
-      const pendingMap = state.pending || {};
-      const pages = Object.keys(pendingMap).map(n => parseInt(n, 10)).sort((a,b) => b-a);
-      for (const page of pages) {
-        const items = pendingMap[page];
-        const last = Array.isArray(items) ? items[items.length - 1] : null;
-        if (last) {
-          redactionApiRef.current?.removePending?.(page, last.id);
-          return;
-        }
-      }
-    } catch {}
-    const historyApi = historyApiRef.current;
-    if (historyApi && typeof historyApi.undo === 'function') {
-      historyApi.undo();
-      return;
-    }
-    console.warn('[manual-redaction] Undo not available');
-  }, [hasRedactionSupport, invokeRedactionMethod]);
-
-  const handleRedo = useCallback(() => {
-    if (!hasRedactionSupport) return;
-    if (invokeRedactionMethod(['redo', 'stepForward', 'redoLast'])) {
-      return;
-    }
-    const historyApi = historyApiRef.current;
-    if (historyApi && typeof historyApi.redo === 'function') {
-      historyApi.redo();
-      return;
-    }
-    console.warn('[manual-redaction] Redo not available');
-  }, [hasRedactionSupport, invokeRedactionMethod]);
+  // Undo/Redo removed from UI; users can remove individual marks via the inline menu
 
   const exportRedactedBlob = useCallback(async (): Promise<Blob | null> => {
     if (!hasRedactionSupport) {
@@ -494,27 +473,7 @@ const ManualRedactionWorkbenchView = ({ data }: ManualRedactionWorkbenchViewProp
       className: activeType === 'redactSelection' ? 'right-rail-icon--active' : undefined,
       onClick: enableTextRedaction,
     },
-    {
-      id: 'manual-redaction-undo',
-      icon: <UndoRoundedIcon fontSize="small" />,
-      tooltip: t('redact.manual.buttons.undo', 'Undo last change'),
-      ariaLabel: t('redact.manual.buttons.undo', 'Undo last change'),
-      section: 'top',
-      order: 2,
-      disabled: !isReady || !hasRedactionSupport || !canUndo,
-      onClick: handleUndo,
-    },
-    {
-      id: 'manual-redaction-redo',
-      icon: <RedoRoundedIcon fontSize="small" />,
-      tooltip: t('redact.manual.buttons.redo', 'Redo change'),
-      ariaLabel: t('redact.manual.buttons.redo', 'Redo change'),
-      section: 'top',
-      order: 3,
-      disabled: !isReady || !hasRedactionSupport || !canRedo,
-      onClick: handleRedo,
-    },
-  ]), [enableAreaRedaction, enableTextRedaction, handleUndo, handleRedo, hasRedactionSupport, isReady, t, canUndo, canRedo]);
+  ]), [enableAreaRedaction, enableTextRedaction, hasRedactionSupport, isReady, t, activeType]);
 
   useRightRailButtons(rightRailButtons);
 
@@ -564,7 +523,7 @@ const ManualRedactionWorkbenchView = ({ data }: ManualRedactionWorkbenchViewProp
           </Button>
           <Button
             variant="filled"
-            color="dark"
+            color="blue"
             onClick={handleApplyAndSave}
             disabled={!isReady || isApplying}
             leftSection={isApplying ? <Loader size="xs" color="white" /> : undefined}
@@ -576,16 +535,18 @@ const ManualRedactionWorkbenchView = ({ data }: ManualRedactionWorkbenchViewProp
         </Group>
       </Group>
 
+      <Warning text={t('redact.manual.irreversible', 'Redaction is an irreversible process. Once committed, the original content is removed and cannot be restored from the document.')} />
+
       <div
         style={{
           flex: 1,
           minHeight: 0,
           minWidth: 0,
           position: 'relative',
-          borderRadius: '0.5rem',
+          borderRadius: 0,
           overflow: 'hidden',
-          boxShadow: 'var(--shadow-md)',
-          backgroundColor: 'var(--bg-elevated)',
+          boxShadow: 'none',
+          backgroundColor: 'transparent',
         }}
       >
         <EmbedPDF
@@ -618,6 +579,7 @@ const ManualRedactionWorkbenchView = ({ data }: ManualRedactionWorkbenchViewProp
                           width,
                           height,
                           position: 'relative',
+                          overflow: 'visible',
                           userSelect: 'none',
                           WebkitUserSelect: 'none',
                           MozUserSelect: 'none',
@@ -626,6 +588,9 @@ const ManualRedactionWorkbenchView = ({ data }: ManualRedactionWorkbenchViewProp
                           backgroundColor: 'white',
                           cursor: activeType === 'marqueeRedact' ? 'crosshair' : activeType === 'redactSelection' ? 'text' : 'auto',
                         }}
+                        draggable={false}
+                        onDragStart={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                        onDrop={(e) => { e.preventDefault(); e.stopPropagation(); }}
                       >
                         <TilingLayer pageIndex={pageIndex} scale={scale} />
                         <SelectionLayer pageIndex={pageIndex} scale={scale} />
@@ -653,19 +618,60 @@ const ManualRedactionWorkbenchView = ({ data }: ManualRedactionWorkbenchViewProp
 export default ManualRedactionWorkbenchView;
 
 // Inline redaction menu displayed beneath selection/rectangle
-function InlineRedactionMenu({ item, selected, menuWrapperProps }: SelectionMenuProps) {
+function InlineRedactionMenu(
+  { item, selected, menuWrapperProps, rect }: SelectionMenuProps & { rect?: any }
+) {
   const { provides } = useRedaction();
-  if (!selected) return null;
-  return (
-    <div {...menuWrapperProps} style={{ ...menuWrapperProps?.style, pointerEvents: 'auto' }}>
-      <Group gap="xs" p={4} style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)', borderRadius: 8, boxShadow: 'var(--shadow-sm)' }}>
-        <Button size="xs" color="red" onClick={() => provides?.commitPending?.(item.page, item.id)}>
+  const isVisible = Boolean(selected);
+
+  // Measure wrapper to portal the menu to the document body so clicks aren't intercepted
+  const wrapperRef = useRef<HTMLDivElement | null>(null);
+  const [screenRect, setScreenRect] = useState<{ left: number; top: number; height: number } | null>(null);
+  const mergeRef = useCallback((node: any) => {
+    wrapperRef.current = node;
+    try {
+      const r = (menuWrapperProps as any)?.ref;
+      if (typeof r === 'function') r(node);
+      else if (r && typeof r === 'object') (r as any).current = node;
+    } catch {}
+  }, [menuWrapperProps]);
+
+  useEffect(() => {
+    const el = wrapperRef.current;
+    if (!el) return;
+    const rectEl = el.getBoundingClientRect();
+    setScreenRect({ left: rectEl.left, top: rectEl.top, height: rectEl.height || ((rect as any)?.size?.height ?? 0) });
+  }, [item?.id, item?.page, isVisible]);
+
+  const panel = (
+    <div
+      onPointerDownCapture={(e) => { e.preventDefault(); e.stopPropagation(); (e as any).nativeEvent?.stopImmediatePropagation?.(); }}
+      onMouseDownCapture={(e) => { e.preventDefault(); e.stopPropagation(); (e as any).nativeEvent?.stopImmediatePropagation?.(); }}
+      style={{
+        position: 'fixed',
+        left: (screenRect?.left ?? 0),
+        top: (screenRect?.top ?? 0) + (screenRect?.height ?? 0) + 8,
+        pointerEvents: 'auto',
+        zIndex: 2147483647,
+      }}
+    >
+      <Group gap="xs" p={6} style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)', borderRadius: 8, boxShadow: 'var(--shadow-sm)', cursor: 'default' }}>
+        <Button size="xs" color="red" onClick={(e) => { e.stopPropagation(); (e as any).nativeEvent?.stopImmediatePropagation?.(); (provides?.commitAllPending?.() ?? provides?.commitPending?.(item.page, item.id)); }}>
           Apply
         </Button>
-        <Button size="xs" variant="default" onClick={() => provides?.removePending?.(item.page, item.id)}>
+        <Button size="xs" variant="default" onClick={(e) => { e.stopPropagation(); (e as any).nativeEvent?.stopImmediatePropagation?.(); provides?.removePending?.(item.page, item.id); }}>
           Cancel
         </Button>
       </Group>
     </div>
+  );
+
+  const { ref: _ignoredRef, ...restWrapper } = (menuWrapperProps as any) || {};
+
+  return (
+    <>
+      <div ref={mergeRef} {...restWrapper} />
+      {isVisible && screenRect ? createPortal(panel, document.body) : null}
+    </>
   );
 }

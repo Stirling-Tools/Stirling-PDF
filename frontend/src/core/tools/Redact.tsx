@@ -215,7 +215,7 @@ const Redact = (props: BaseToolProps) => {
             )}
             <Button
               variant="filled"
-              color="dark"
+              color="blue"
               disabled={!manualHasSingleFile || manualTooManyFiles}
               onClick={handleOpenManualEditor}
             >

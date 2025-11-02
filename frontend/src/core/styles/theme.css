@@ -81,6 +81,10 @@
   --color-yellow-800: #854d0e;
   --color-yellow-900: #713f12;
 
+  /* Warning component custom variables */
+  --warning-yellow-bg: #fefce8;   /* requested: fefce8 */
+  --warning-yellow-border: #fef9c2; /* requested: fef9c2 */
+
   --color-red-50: #fef2f2;
   --color-red-100: #fee2e2;
   --color-red-200: #fecaca;
@@ -366,6 +370,10 @@
   --color-yellow-700: #fde047;
   --color-yellow-800: #fef08a;
   --color-yellow-900: #fef9c3;
+
+  /* Warning component variables (dark mode - keep readable) */
+  --warning-yellow-bg: #3b2a10;
+  --warning-yellow-border: #4a3514;
 
   /* Dark theme semantic colors */
   --bg-surface: #2A2F36;
