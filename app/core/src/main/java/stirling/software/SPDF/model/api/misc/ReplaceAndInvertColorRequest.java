@@ -17,7 +17,12 @@ public class ReplaceAndInvertColorRequest extends PDFFile {
             description = "Replace and Invert color options of a pdf.",
             requiredMode = Schema.RequiredMode.REQUIRED,
             defaultValue = "HIGH_CONTRAST_COLOR",
-            allowableValues = {"HIGH_CONTRAST_COLOR", "CUSTOM_COLOR", "FULL_INVERSION"})
+            allowableValues = {
+                "HIGH_CONTRAST_COLOR",
+                "CUSTOM_COLOR",
+                "FULL_INVERSION",
+                "COLOR_SPACE_CONVERSION"
+            })
     private ReplaceAndInvert replaceAndInvertOption;
 
     @Schema(

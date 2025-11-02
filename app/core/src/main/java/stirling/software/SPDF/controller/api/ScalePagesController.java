@@ -20,7 +20,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -29,6 +28,7 @@ import lombok.RequiredArgsConstructor;
 import stirling.software.SPDF.model.api.general.ScalePagesRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
+import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.WebResponseUtils;
 
 @RestController
@@ -99,19 +99,25 @@ public class ScalePagesController {
 
         return WebResponseUtils.bytesToWebResponse(
                 baos.toByteArray(),
-                Filenames.toSimpleFileName(file.getOriginalFilename()).replaceFirst("[.][^.]+$", "")
-                        + "_scaled.pdf");
+                GeneralUtils.generateFilename(file.getOriginalFilename(), "_scaled.pdf"));
     }
 
     private PDRectangle getTargetSize(String targetPDRectangle, PDDocument sourceDocument) {
         if ("KEEP".equals(targetPDRectangle)) {
             if (sourceDocument.getNumberOfPages() == 0) {
-                return null;
+                // Do not return null here; throw a clear exception so callers don't get a nullable
+                // PDRectangle.
+                throw ExceptionUtils.createInvalidPageSizeException("KEEP");
             }
 
             // use the first page to determine the target page size
             PDPage sourcePage = sourceDocument.getPage(0);
             PDRectangle sourceSize = sourcePage.getMediaBox();
+
+            if (sourceSize == null) {
+                // If media box is unexpectedly null, treat it as invalid
+                throw ExceptionUtils.createInvalidPageSizeException("KEEP");
+            }
 
             return sourceSize;
         }

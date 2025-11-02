@@ -1,8 +1,6 @@
 package stirling.software.common.service;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
 import java.io.File;
@@ -221,9 +219,9 @@ public class TempFileCleanupServiceTest {
                             });
 
             // Act - set containerMode to false for this test
-            invokeCleanupDirectoryStreaming(systemTempDir, false, 0, 3600000);
-            invokeCleanupDirectoryStreaming(customTempDir, false, 0, 3600000);
-            invokeCleanupDirectoryStreaming(libreOfficeTempDir, false, 0, 3600000);
+            invokeCleanupDirectoryStreaming(systemTempDir, false, 3600000);
+            invokeCleanupDirectoryStreaming(customTempDir, false, 3600000);
+            invokeCleanupDirectoryStreaming(libreOfficeTempDir, false, 3600000);
 
             // Assert - Only old temp files and empty files should be deleted
             assertTrue(deletedFiles.contains(oldTempFile), "Old temp file should be deleted");
@@ -308,7 +306,7 @@ public class TempFileCleanupServiceTest {
                             });
 
             // Act - set containerMode to true and maxAgeMillis to 0 for container startup cleanup
-            invokeCleanupDirectoryStreaming(systemTempDir, true, 0, 0);
+            invokeCleanupDirectoryStreaming(systemTempDir, true, 0);
 
             // Assert - In container mode, both our temp files and system temp files should be
             // deleted
@@ -381,7 +379,7 @@ public class TempFileCleanupServiceTest {
                             });
 
             // Act
-            invokeCleanupDirectoryStreaming(systemTempDir, false, 0, 3600000);
+            invokeCleanupDirectoryStreaming(systemTempDir, false, 3600000);
 
             // Assert
             assertTrue(
@@ -464,7 +462,7 @@ public class TempFileCleanupServiceTest {
                             });
 
             // Act
-            invokeCleanupDirectoryStreaming(systemTempDir, false, 0, 3600000);
+            invokeCleanupDirectoryStreaming(systemTempDir, false, 3600000);
 
             // Debug - print what was deleted
             System.out.println("Deleted files: " + deletedFiles);
@@ -481,8 +479,7 @@ public class TempFileCleanupServiceTest {
 
     /** Helper method to invoke the private cleanupDirectoryStreaming method using reflection */
     private void invokeCleanupDirectoryStreaming(
-            Path directory, boolean containerMode, int depth, long maxAgeMillis)
-            throws IOException {
+            Path directory, boolean containerMode, long maxAgeMillis) {
         try {
             // Create a consumer that tracks deleted files
             AtomicInteger deleteCount = new AtomicInteger(0);
@@ -505,7 +502,7 @@ public class TempFileCleanupServiceTest {
                     cleanupService,
                     directory,
                     containerMode,
-                    depth,
+                    0,
                     maxAgeMillis,
                     false,
                     deleteCallback);
