@@ -33,7 +33,7 @@
 /* Close button */
 .tooltip-pin-button {
   position: absolute;
-  top: -0.5rem;
+  top: 0.5rem;
   right: 0.5rem;
   font-size: 0.875rem;
   background: var(--bg-raised);
