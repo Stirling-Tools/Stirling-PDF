@@ -94,6 +94,7 @@ public class ProcessExecutor {
                                                 .getProcessExecutor()
                                                 .getSessionLimit()
                                                 .getOcrMyPdfSessionLimit();
+                                case CFF_CONVERTER -> 1;
                             };
 
                     long timeoutMinutes =
@@ -148,6 +149,7 @@ public class ProcessExecutor {
                                                 .getProcessExecutor()
                                                 .getTimeoutMinutes()
                                                 .getOcrMyPdfTimeoutMinutes();
+                                case CFF_CONVERTER -> 5L;
                             };
                     return new ProcessExecutor(semaphoreLimit, liveUpdates, timeoutMinutes);
                 });
@@ -300,7 +302,8 @@ public class ProcessExecutor {
         TESSERACT,
         QPDF,
         GHOSTSCRIPT,
-        OCR_MY_PDF
+        OCR_MY_PDF,
+        CFF_CONVERTER
     }
 
     public class ProcessExecutorResult {

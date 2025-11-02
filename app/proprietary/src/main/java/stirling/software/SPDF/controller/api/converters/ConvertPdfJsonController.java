@@ -1,16 +1,26 @@
 package stirling.software.SPDF.controller.api.converters;
 
+import java.util.Optional;
+
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.swagger.StandardPdfResponse;
+import stirling.software.SPDF.model.json.PdfJsonDocument;
+import stirling.software.SPDF.model.json.PdfJsonMetadata;
 import stirling.software.SPDF.service.PdfJsonConversionService;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
@@ -19,6 +29,7 @@ import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.WebResponseUtils;
 
+@Slf4j
 @ConvertApi
 @RequiredArgsConstructor
 public class ConvertPdfJsonController {
@@ -70,5 +81,82 @@ public class ConvertPdfJsonController {
                         : "document";
         String docName = baseName.endsWith(".pdf") ? baseName : baseName + ".pdf";
         return WebResponseUtils.bytesToWebResponse(pdfBytes, docName);
+    }
+
+    @PostMapping(consumes = "multipart/form-data", value = "/pdf/json/metadata")
+    @Operation(
+            summary = "Extract PDF metadata for lazy loading",
+            description =
+                    "Extracts document metadata, fonts, and page dimensions. Caches the document for"
+                            + " subsequent page requests. Input:PDF Output:JSON Type:SISO")
+    public ResponseEntity<byte[]> extractPdfMetadata(
+            @ModelAttribute PDFFile request, @RequestParam(required = true) String jobId)
+            throws Exception {
+        MultipartFile inputFile = request.getFileInput();
+        if (inputFile == null) {
+            throw ExceptionUtils.createNullArgumentException("fileInput");
+        }
+
+        byte[] jsonBytes = pdfJsonConversionService.extractDocumentMetadata(inputFile, jobId);
+        String originalName = inputFile.getOriginalFilename();
+        String baseName =
+                (originalName != null && !originalName.isBlank())
+                        ? Filenames.toSimpleFileName(originalName).replaceFirst("[.][^.]+$", "")
+                        : "document";
+        String docName = baseName + "_metadata.json";
+        return WebResponseUtils.bytesToWebResponse(jsonBytes, docName, MediaType.APPLICATION_JSON);
+    }
+
+    @PostMapping(value = "/pdf/json/partial/{jobId}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @StandardPdfResponse
+    @Operation(
+            summary = "Apply incremental edits to a cached PDF",
+            description =
+                    "Applies edits for the specified pages of a cached PDF and returns an updated PDF."
+                            + " Requires the PDF to have been previously cached via the PDF to JSON endpoint.")
+    public ResponseEntity<byte[]> exportPartialPdf(
+            @PathVariable String jobId,
+            @RequestBody PdfJsonDocument document,
+            @RequestParam(value = "filename", required = false) String filename)
+            throws Exception {
+        if (document == null) {
+            throw ExceptionUtils.createNullArgumentException("document");
+        }
+
+        byte[] pdfBytes = pdfJsonConversionService.exportUpdatedPages(jobId, document);
+
+        String baseName =
+                (filename != null && !filename.isBlank())
+                        ? Filenames.toSimpleFileName(filename).replaceFirst("[.][^.]+$", "")
+                        : Optional.ofNullable(document.getMetadata())
+                                .map(PdfJsonMetadata::getTitle)
+                                .filter(title -> title != null && !title.isBlank())
+                                .orElse("document");
+        String docName = baseName.endsWith(".pdf") ? baseName : baseName + ".pdf";
+        return WebResponseUtils.bytesToWebResponse(pdfBytes, docName);
+    }
+
+    @GetMapping(value = "/pdf/json/page/{jobId}/{pageNumber}")
+    @Operation(
+            summary = "Extract single page from cached PDF",
+            description =
+                    "Retrieves a single page's content from a previously cached PDF document."
+                            + " Requires prior call to /pdf/json/metadata. Output:JSON")
+    public ResponseEntity<byte[]> extractSinglePage(
+            @PathVariable String jobId, @PathVariable int pageNumber) throws Exception {
+        byte[] jsonBytes = pdfJsonConversionService.extractSinglePage(jobId, pageNumber);
+        String docName = "page_" + pageNumber + ".json";
+        return WebResponseUtils.bytesToWebResponse(jsonBytes, docName, MediaType.APPLICATION_JSON);
+    }
+
+    @PostMapping(value = "/pdf/json/clear-cache/{jobId}")
+    @Operation(
+            summary = "Clear cached PDF document",
+            description =
+                    "Manually clears a cached PDF document to free up server resources."
+                            + " Called automatically after 30 minutes.")
+    public ResponseEntity<Void> clearCache(@PathVariable String jobId) {
+        pdfJsonConversionService.clearCachedDocument(jobId);
+        return ResponseEntity.ok().build();
     }
 }

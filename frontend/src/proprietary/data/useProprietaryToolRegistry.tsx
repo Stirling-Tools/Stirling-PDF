@@ -27,8 +27,8 @@ export function useProprietaryToolRegistry(): ProprietaryToolRegistry {
         "home.pdfJsonEditor.desc",
         "Review and edit Stirling PDF JSON exports with grouped text editing and PDF regeneration"
       ),
-      categoryId: ToolCategoryId.ADVANCED_TOOLS,
-      subcategoryId: SubcategoryId.DEVELOPER_TOOLS,
+      categoryId: ToolCategoryId.RECOMMENDED_TOOLS,
+      subcategoryId: SubcategoryId.GENERAL,
       workbench: "custom:pdfJsonEditor",
       endpoints: ["json-pdf"],
       synonyms: getSynonyms(t, "pdfJsonEditor"),

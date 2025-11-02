@@ -11,8 +11,10 @@ import {
   FileButton,
   Group,
   Pagination,
+  Progress,
   ScrollArea,
   Stack,
+  Switch,
   Text,
   Title,
 } from '@mantine/core';
@@ -32,6 +34,7 @@ import {
   PdfJsonEditorViewData,
   PdfJsonFont,
   PdfJsonPage,
+  ConversionProgress,
 } from '@app/tools/pdfJsonEditor/pdfJsonEditorTypes';
 import { getImageBounds, pageDimensions } from '@app/tools/pdfJsonEditor/pdfJsonEditorUtils';
 
@@ -205,6 +208,9 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
   const [activeImageId, setActiveImageId] = useState<string | null>(null);
   const [fontFamilies, setFontFamilies] = useState<Map<string, string>>(new Map());
   const [textGroupsExpanded, setTextGroupsExpanded] = useState(false);
+  const [autoScaleText, setAutoScaleText] = useState(true);
+  const [textScales, setTextScales] = useState<Map<string, number>>(new Map());
+  const measurementKeyRef = useRef<string>('');
   const containerRef = useRef<HTMLDivElement | null>(null);
   const editorRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const caretOffsetsRef = useRef<Map<string, number>>(new Map());
@@ -220,6 +226,7 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
     errorMessage,
     isGeneratingPdf,
     isConverting,
+    conversionProgress,
     hasChanges,
     onLoadJson,
     onSelectPage,
@@ -562,7 +569,72 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
     setActiveGroupId(null);
     setEditingGroupId(null);
     setActiveImageId(null);
+    setTextScales(new Map());
+    measurementKeyRef.current = '';
   }, [selectedPage]);
+
+  // Measure text widths once per page/configuration and apply static scaling
+  useLayoutEffect(() => {
+    if (!autoScaleText || visibleGroups.length === 0) {
+      return;
+    }
+
+    // Create a stable key for this measurement configuration
+    const currentKey = `${selectedPage}-${fontFamilies.size}-${autoScaleText}`;
+
+    // Skip if we've already measured for this configuration
+    if (measurementKeyRef.current === currentKey) {
+      return;
+    }
+
+    const measureTextScales = () => {
+      const newScales = new Map<string, number>();
+
+      visibleGroups.forEach((group) => {
+        // Skip groups that are being edited
+        if (editingGroupId === group.id) {
+          return;
+        }
+
+        const element = document.querySelector<HTMLElement>(`[data-text-group="${group.id}"]`);
+        if (!element) {
+          return;
+        }
+
+        const textSpan = element.querySelector<HTMLSpanElement>('span[data-text-content]');
+        if (!textSpan) {
+          return;
+        }
+
+        // Temporarily remove any existing transform to get natural width
+        const originalTransform = textSpan.style.transform;
+        textSpan.style.transform = 'none';
+
+        const bounds = toCssBounds(currentPage, pageHeight, scale, group.bounds);
+        const containerWidth = bounds.width;
+        const textWidth = textSpan.getBoundingClientRect().width;
+
+        // Restore original transform
+        textSpan.style.transform = originalTransform;
+
+        // Only scale if text overflows by more than 2%
+        if (textWidth > 0 && textWidth > containerWidth * 1.02) {
+          const scaleX = Math.max(containerWidth / textWidth, 0.5); // Min 50% scale
+          newScales.set(group.id, scaleX);
+        } else {
+          newScales.set(group.id, 1);
+        }
+      });
+
+      // Mark this configuration as measured
+      measurementKeyRef.current = currentKey;
+      setTextScales(newScales);
+    };
+
+    // Delay measurement to ensure fonts and layout are ready
+    const timer = setTimeout(measureTextScales, 150);
+    return () => clearTimeout(timer);
+  }, [autoScaleText, visibleGroups, editingGroupId, currentPage, pageHeight, scale, fontFamilies.size, selectedPage]);
 
   useLayoutEffect(() => {
     if (!editingGroupId) {
@@ -726,6 +798,27 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
               {t('pdfJsonEditor.currentFile', 'Current file: {{name}}', { name: fileName })}
             </Text>
           )}
+
+          <Divider my="sm" />
+
+          <Group justify="space-between" align="center">
+            <div>
+              <Text fw={500} size="sm">
+                {t('pdfJsonEditor.options.autoScaleText.title', 'Auto-scale text to fit boxes')}
+              </Text>
+              <Text size="xs" c="dimmed" mt={4}>
+                {t(
+                  'pdfJsonEditor.options.autoScaleText.description',
+                  'Automatically scales text horizontally to fit within its original bounding box when font rendering differs from PDF.'
+                )}
+              </Text>
+            </div>
+            <Switch
+              size="md"
+              checked={autoScaleText}
+              onChange={(event) => setAutoScaleText(event.currentTarget.checked)}
+            />
+          </Group>
         </Stack>
       </Card>
 
@@ -782,10 +875,39 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
 
       {isConverting && (
         <Card withBorder radius="md" padding="xl">
-          <Stack align="center" gap="md">
-            <AutorenewIcon sx={{ fontSize: 48 }} className="animate-spin" />
-            <Text size="lg" fw={600}>
-              {t('pdfJsonEditor.converting', 'Converting PDF to editable format...')}
+          <Stack gap="md">
+            <Group justify="space-between" align="flex-start">
+              <div style={{ flex: 1 }}>
+                <Text size="lg" fw={600} mb="xs">
+                  {conversionProgress
+                    ? conversionProgress.message
+                    : t('pdfJsonEditor.converting', 'Converting PDF to editable format...')}
+                </Text>
+                {conversionProgress && (
+                  <Group gap="xs">
+                    <Text size="sm" c="dimmed" tt="capitalize">
+                      {t(`pdfJsonEditor.stages.${conversionProgress.stage}`, conversionProgress.stage)}
+                    </Text>
+                    {conversionProgress.current !== undefined &&
+                      conversionProgress.total !== undefined && (
+                        <Text size="sm" c="dimmed">
+                          • Page {conversionProgress.current} of {conversionProgress.total}
+                        </Text>
+                      )}
+                  </Group>
+                )}
+              </div>
+              <AutorenewIcon sx={{ fontSize: 36 }} className="animate-spin" />
+            </Group>
+            <Progress
+              value={conversionProgress?.percent || 0}
+              size="lg"
+              radius="md"
+              animated
+              striped
+            />
+            <Text size="sm" c="dimmed" ta="right">
+              {conversionProgress?.percent || 0}% complete
             </Text>
           </Stack>
         </Card>
@@ -1105,6 +1227,9 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
                         );
                       }
 
+                      const textScale = textScales.get(group.id) ?? 1;
+                      const shouldScale = autoScaleText && textScale < 0.98;
+
                       return (
                         <Box key={group.id} style={containerStyle}>
                           {renderGroupContainer(
@@ -1112,6 +1237,7 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
                             isActive,
                             changed,
                             <div
+                              data-text-group={group.id}
                               style={{
                                 width: '100%',
                                 minHeight: '100%',
@@ -1127,7 +1253,17 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
                                 overflow: 'visible',
                               }}
                             >
-                              <span style={{ pointerEvents: 'none' }}>{group.text || '\u00A0'}</span>
+                              <span
+                                data-text-content
+                                style={{
+                                  pointerEvents: 'none',
+                                  display: 'inline-block',
+                                  transform: shouldScale ? `scaleX(${textScale})` : undefined,
+                                  transformOrigin: 'left center',
+                                }}
+                              >
+                                {group.text || '\u00A0'}
+                              </span>
                             </div>,
                             () => {
                               setEditingGroupId(group.id);

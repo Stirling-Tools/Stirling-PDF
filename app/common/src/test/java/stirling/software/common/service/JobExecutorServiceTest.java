@@ -79,6 +79,23 @@ class JobExecutorServiceTest {
     }
 
     @Test
+    void shouldExposeJobIdInJobContextDuringSyncExecution() throws Exception {
+        // Given
+        Supplier<Object> work = stirling.software.common.util.JobContext::getJobId;
+
+        // When
+        ResponseEntity<?> response = jobExecutorService.runJobGeneric(false, work);
+
+        // Then
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+
+        var requestJobIdCaptor = ArgumentCaptor.forClass(String.class);
+        verify(request).setAttribute(eq("jobId"), requestJobIdCaptor.capture());
+        assertEquals(requestJobIdCaptor.getValue(), response.getBody());
+    }
+
+    @Test
     void shouldRunAsyncJobSuccessfully() throws Exception {
         // Given
         Supplier<Object> work = () -> "test-result";

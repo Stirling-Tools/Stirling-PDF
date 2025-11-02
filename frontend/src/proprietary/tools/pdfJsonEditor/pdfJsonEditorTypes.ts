@@ -122,6 +122,23 @@ export interface PdfJsonDocument {
   xmpMetadata?: string | null;
   fonts?: PdfJsonFont[] | null;
   pages?: PdfJsonPage[] | null;
+  lazyImages?: boolean | null;
+}
+
+export interface PdfJsonPageDimension {
+  pageNumber?: number | null;
+  width?: number | null;
+  height?: number | null;
+  rotation?: number | null;
+}
+
+export interface PdfJsonDocumentMetadata {
+  metadata?: PdfJsonMetadata | null;
+  xmpMetadata?: string | null;
+  fonts?: PdfJsonFont[] | null;
+  pageDimensions?: PdfJsonPageDimension[] | null;
+  formFields?: unknown[] | null;
+  lazyImages?: boolean | null;
 }
 
 export interface BoundingBox {
@@ -153,6 +170,14 @@ export interface TextGroup {
 export const DEFAULT_PAGE_WIDTH = 612;
 export const DEFAULT_PAGE_HEIGHT = 792;
 
+export interface ConversionProgress {
+  percent: number;
+  stage: string;
+  message: string;
+  current?: number;
+  total?: number;
+}
+
 export interface PdfJsonEditorViewData {
   document: PdfJsonDocument | null;
   groupsByPage: TextGroup[][];
@@ -164,6 +189,7 @@ export interface PdfJsonEditorViewData {
   errorMessage: string | null;
   isGeneratingPdf: boolean;
   isConverting: boolean;
+  conversionProgress: ConversionProgress | null;
   hasChanges: boolean;
   onLoadJson: (file: File | null) => Promise<void> | void;
   onSelectPage: (pageIndex: number) => void;

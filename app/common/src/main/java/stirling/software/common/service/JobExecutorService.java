@@ -148,17 +148,31 @@ public class JobExecutorService {
             taskManager.createTask(jobId);
 
             // Create a specialized wrapper that updates the TaskManager
+            final String capturedJobIdForQueue = jobId;
             Supplier<Object> wrappedWork =
                     () -> {
                         try {
+                            // Set jobId in ThreadLocal context for the queued job
+                            stirling.software.common.util.JobContext.setJobId(
+                                    capturedJobIdForQueue);
+                            log.debug(
+                                    "Set jobId {} in JobContext for queued job execution",
+                                    capturedJobIdForQueue);
+
                             Object result = work.get();
-                            processJobResult(jobId, result);
+                            processJobResult(capturedJobIdForQueue, result);
                             return result;
                         } catch (Exception e) {
                             log.error(
-                                    "Error executing queued job {}: {}", jobId, e.getMessage(), e);
-                            taskManager.setError(jobId, e.getMessage());
+                                    "Error executing queued job {}: {}",
+                                    capturedJobIdForQueue,
+                                    e.getMessage(),
+                                    e);
+                            taskManager.setError(capturedJobIdForQueue, e.getMessage());
                             throw e;
+                        } finally {
+                            // Clean up ThreadLocal to avoid memory leaks
+                            stirling.software.common.util.JobContext.clear();
                         }
                     };
 
@@ -170,21 +184,36 @@ public class JobExecutorService {
             return ResponseEntity.ok().body(new JobResponse<>(true, jobId, null));
         } else if (async) {
             taskManager.createTask(jobId);
+
+            // Capture the jobId for the async thread
+            final String capturedJobId = jobId;
+
             executor.execute(
                     () -> {
                         try {
                             log.debug(
-                                    "Running async job {} with timeout {} ms", jobId, timeoutToUse);
+                                    "Running async job {} with timeout {} ms",
+                                    capturedJobId,
+                                    timeoutToUse);
+
+                            // Set jobId in ThreadLocal context for the async thread
+                            stirling.software.common.util.JobContext.setJobId(capturedJobId);
+                            log.debug(
+                                    "Set jobId {} in JobContext for async execution",
+                                    capturedJobId);
 
                             // Execute with timeout
                             Object result = executeWithTimeout(() -> work.get(), timeoutToUse);
-                            processJobResult(jobId, result);
+                            processJobResult(capturedJobId, result);
                         } catch (TimeoutException te) {
                             log.error("Job {} timed out after {} ms", jobId, timeoutToUse);
                             taskManager.setError(jobId, "Job timed out");
                         } catch (Exception e) {
                             log.error("Error executing job {}: {}", jobId, e.getMessage(), e);
                             taskManager.setError(jobId, e.getMessage());
+                        } finally {
+                            // Clean up ThreadLocal to avoid memory leaks
+                            stirling.software.common.util.JobContext.clear();
                         }
                     });
 
@@ -192,6 +221,10 @@ public class JobExecutorService {
         } else {
             try {
                 log.debug("Running sync job with timeout {} ms", timeoutToUse);
+
+                // Make jobId available to downstream components on the worker thread
+                stirling.software.common.util.JobContext.setJobId(jobId);
+                log.debug("Set jobId {} in JobContext for sync execution", jobId);
 
                 // Execute with timeout
                 Object result = executeWithTimeout(() -> work.get(), timeoutToUse);
@@ -212,6 +245,8 @@ public class JobExecutorService {
                 // Construct a JSON error response
                 return ResponseEntity.internalServerError()
                         .body(Map.of("error", "Job failed: " + e.getMessage()));
+            } finally {
+                stirling.software.common.util.JobContext.clear();
             }
         }
     }
@@ -456,8 +491,23 @@ public class JobExecutorService {
             throws TimeoutException, Exception {
         // Use the same executor as other async jobs for consistency
         // This ensures all operations run on the same thread pool
+        String currentJobId = stirling.software.common.util.JobContext.getJobId();
+
         java.util.concurrent.CompletableFuture<T> future =
-                java.util.concurrent.CompletableFuture.supplyAsync(supplier, executor);
+                java.util.concurrent.CompletableFuture.supplyAsync(
+                        () -> {
+                            if (currentJobId != null) {
+                                stirling.software.common.util.JobContext.setJobId(currentJobId);
+                            }
+                            try {
+                                return supplier.get();
+                            } finally {
+                                if (currentJobId != null) {
+                                    stirling.software.common.util.JobContext.clear();
+                                }
+                            }
+                        },
+                        executor);
 
         try {
             return future.get(timeoutMs, TimeUnit.MILLISECONDS);
