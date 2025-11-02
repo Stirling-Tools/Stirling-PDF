@@ -18,8 +18,6 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDType0Font;
-import org.apache.pdfbox.pdmodel.font.PDType1Font;
-import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
@@ -194,7 +192,7 @@ public class StampController {
             String colorString) // Y override
             throws IOException {
         String resourceDir;
-        PDFont font = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
+        PDFont font;
         resourceDir =
                 switch (alphabet) {
                     case "arabic" -> "static/fonts/NotoSansArabic-Regular.ttf";

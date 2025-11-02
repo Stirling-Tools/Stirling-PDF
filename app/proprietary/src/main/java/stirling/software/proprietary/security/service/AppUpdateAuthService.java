@@ -39,6 +39,6 @@ class AppUpdateAuthService implements ShowAdminInterface {
         if (user.isPresent() && showUpdateOnlyAdmin) {
             return "ROLE_ADMIN".equals(user.get().getRolesAsString());
         }
-        return true;
+        return showUpdate;
     }
 }
