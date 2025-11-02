@@ -170,14 +170,14 @@ public class CertSignController {
                     "certificate type");
         }
 
-        KeyStore ks = null;
+        KeyStore ks;
 
         switch (certType) {
             case "PEM":
                 ks = KeyStore.getInstance("JKS");
                 ks.load(null);
                 PrivateKey privateKey = getPrivateKeyFromPEM(privateKeyFile.getBytes(), password);
-                Certificate cert = (Certificate) getCertificateFromPEM(certFile.getBytes());
+                Certificate cert = getCertificateFromPEM(certFile.getBytes());
                 ks.setKeyEntry(
                         "alias", privateKey, password.toCharArray(), new Certificate[] {cert});
                 break;

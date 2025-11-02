@@ -152,8 +152,8 @@ public class CropController {
 
             return WebResponseUtils.bytesToWebResponse(
                     pdfContent,
-                    request.getFileInput().getOriginalFilename().replaceFirst("[.][^.]+$", "")
-                            + "_cropped.pdf");
+                    GeneralUtils.generateFilename(
+                            request.getFileInput().getOriginalFilename(), "_cropped.pdf"));
 
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();

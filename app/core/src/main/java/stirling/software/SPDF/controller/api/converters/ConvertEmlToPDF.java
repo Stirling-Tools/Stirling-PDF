@@ -125,15 +125,6 @@ public class ConvertEmlToPDF {
                 log.error("EML to PDF conversion was interrupted for {}", originalFilename, e);
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                         .body("Conversion was interrupted".getBytes(StandardCharsets.UTF_8));
-            } catch (IllegalArgumentException e) {
-                String errorMessage = buildErrorMessage(e, originalFilename);
-                log.error(
-                        "EML to PDF conversion failed for {}: {}",
-                        originalFilename,
-                        errorMessage,
-                        e);
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                        .body(errorMessage.getBytes(StandardCharsets.UTF_8));
             } catch (RuntimeException e) {
                 String errorMessage = buildErrorMessage(e, originalFilename);
                 log.error(

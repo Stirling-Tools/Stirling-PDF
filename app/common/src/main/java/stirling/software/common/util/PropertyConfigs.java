@@ -9,7 +9,7 @@ public class PropertyConfigs {
             String value = System.getProperty(key);
             if (value == null) value = System.getenv(key);
 
-            if (value != null) return Boolean.valueOf(value);
+            if (value != null) return Boolean.parseBoolean(value);
         }
         return defaultValue;
     }
@@ -27,7 +27,7 @@ public class PropertyConfigs {
     public static boolean getBooleanValue(String key, boolean defaultValue) {
         String value = System.getProperty(key);
         if (value == null) value = System.getenv(key);
-        return (value != null) ? Boolean.valueOf(value) : defaultValue;
+        return (value != null) ? Boolean.parseBoolean(value) : defaultValue;
     }
 
     public static String getStringValue(String key, String defaultValue) {

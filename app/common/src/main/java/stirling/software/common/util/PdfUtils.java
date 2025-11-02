@@ -182,8 +182,7 @@ public class PdfUtils {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
             if (singleImage) {
-                if ("tiff".equals(imageType.toLowerCase())
-                        || "tif".equals(imageType.toLowerCase())) {
+                if ("tiff".equalsIgnoreCase(imageType) || "tif".equalsIgnoreCase(imageType)) {
                     // Write the images to the output stream as a TIFF with multiple frames
                     ImageWriter writer = ImageIO.getImageWritersByFormatName("tiff").next();
                     ImageWriteParam param = writer.getDefaultWriteParam();
@@ -482,7 +481,7 @@ public class PdfUtils {
                             ImageProcessingUtils.convertColorType(image, colorType);
                     // Use JPEGFactory if it's JPEG since JPEG is lossy
                     PDImageXObject pdImage =
-                            (contentType != null && MediaType.IMAGE_JPEG_VALUE.equals(contentType))
+                            (MediaType.IMAGE_JPEG_VALUE.equals(contentType))
                                     ? JPEGFactory.createFromImage(doc, convertedImage)
                                     : LosslessFactory.createFromImage(doc, convertedImage);
                     addImageToDocument(doc, pdImage, fitOption, autoRotate);
@@ -523,7 +522,7 @@ public class PdfUtils {
                 float imageAspectRatio = (float) image.getWidth() / (float) image.getHeight();
                 float pageAspectRatio = pageWidth / pageHeight;
 
-                float scaleFactor = 1.0f;
+                float scaleFactor;
                 if (imageAspectRatio > pageAspectRatio) {
                     scaleFactor = pageWidth / image.getWidth();
                 } else {
@@ -568,7 +567,7 @@ public class PdfUtils {
                 // Draw the image onto the page at the specified x and y coordinates
                 contentStream.drawImage(image, x, y);
                 log.info("Image successfully overlayed onto PDF");
-                if (!everyPage && i == 0) {
+                if (!everyPage) {
                     break;
                 }
             } catch (IOException e) {

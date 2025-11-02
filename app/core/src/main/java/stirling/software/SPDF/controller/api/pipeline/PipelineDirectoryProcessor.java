@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystemException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -39,6 +38,7 @@ import stirling.software.SPDF.service.ApiDocService;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.service.PostHogService;
 import stirling.software.common.util.FileMonitor;
+import stirling.software.common.util.RegexPatternUtils;
 
 @Service
 @Slf4j
@@ -140,7 +140,7 @@ public class PipelineDirectoryProcessor {
     }
 
     private PipelineConfig readAndParseJson(Path jsonFile) throws IOException {
-        String jsonString = new String(Files.readAllBytes(jsonFile), StandardCharsets.UTF_8);
+        String jsonString = Files.readString(jsonFile);
         log.debug("Reading JSON file: {}", jsonFile);
         return objectMapper.readValue(jsonString, PipelineConfig.class);
     }
@@ -201,7 +201,7 @@ public class PipelineDirectoryProcessor {
                                         String extension =
                                                 filename.contains(".")
                                                         ? filename.substring(
-                                                                        filename.lastIndexOf(".")
+                                                                        filename.lastIndexOf('.')
                                                                                 + 1)
                                                                 .toLowerCase()
                                                         : "";
@@ -358,29 +358,29 @@ public class PipelineDirectoryProcessor {
         String resourceName = resource.getFilename();
         String baseName = resourceName.substring(0, resourceName.lastIndexOf('.'));
         String extension = resourceName.substring(resourceName.lastIndexOf('.') + 1);
-        String outputFileName =
-                config.getOutputPattern()
-                                .replace("{filename}", baseName)
-                                .replace("{pipelineName}", config.getName())
-                                .replace(
-                                        "{date}",
-                                        LocalDate.now()
-                                                .format(DateTimeFormatter.ofPattern("yyyyMMdd")))
-                                .replace(
-                                        "{time}",
-                                        LocalTime.now()
-                                                .format(DateTimeFormatter.ofPattern("HHmmss")))
-                        + "."
-                        + extension;
-        return outputFileName;
+        return config.getOutputPattern()
+                        .replace("{filename}", baseName)
+                        .replace("{pipelineName}", config.getName())
+                        .replace(
+                                "{date}",
+                                LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")))
+                        .replace(
+                                "{time}",
+                                LocalTime.now().format(DateTimeFormatter.ofPattern("HHmmss")))
+                + "."
+                + extension;
     }
 
     private Path determineOutputPath(PipelineConfig config, Path dir) {
         String outputDir =
                 config.getOutputDir()
                         .replace("{outputFolder}", finishedFoldersDir)
-                        .replace("{folderName}", dir.toString())
-                        .replaceAll("\\\\?watchedFolders", "");
+                        .replace("{folderName}", dir.toString());
+        outputDir =
+                RegexPatternUtils.getInstance()
+                        .getPattern("\\\\?watchedFolders")
+                        .matcher(outputDir)
+                        .replaceAll("");
         return Paths.get(outputDir).isAbsolute() ? Paths.get(outputDir) : Paths.get(".", outputDir);
     }
 

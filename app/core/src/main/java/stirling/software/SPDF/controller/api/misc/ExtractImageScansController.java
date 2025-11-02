@@ -67,7 +67,7 @@ public class ExtractImageScansController {
         MultipartFile inputFile = request.getFileInput();
 
         String fileName = inputFile.getOriginalFilename();
-        String extension = fileName.substring(fileName.lastIndexOf(".") + 1);
+        String extension = fileName.substring(fileName.lastIndexOf('.') + 1);
 
         List<String> images = new ArrayList<>();
 
@@ -133,7 +133,7 @@ public class ExtractImageScansController {
             List<byte[]> processedImageBytes = new ArrayList<>();
 
             // Process each image
-            for (int i = 0; i < images.size(); i++) {
+            for (String image : images) {
 
                 Path tempDir = Files.createTempDirectory("openCV_output");
                 tempDirs.add(tempDir);
@@ -142,7 +142,7 @@ public class ExtractImageScansController {
                                 Arrays.asList(
                                         pythonVersion,
                                         splitPhotosScript.toAbsolutePath().toString(),
-                                        images.get(i),
+                                        image,
                                         tempDir.toString(),
                                         "--angle_threshold",
                                         String.valueOf(request.getAngleThreshold()),

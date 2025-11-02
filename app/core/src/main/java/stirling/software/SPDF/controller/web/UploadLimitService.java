@@ -20,7 +20,7 @@ public class UploadLimitService {
                 applicationProperties.getSystem().getFileUploadLimit() != null
                         ? applicationProperties.getSystem().getFileUploadLimit()
                         : "";
-        if (raw == null || raw.isEmpty()) {
+        if (raw.isEmpty()) {
             return 0L;
         }
         String s = raw.trim();

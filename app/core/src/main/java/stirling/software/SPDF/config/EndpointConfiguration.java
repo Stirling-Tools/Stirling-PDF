@@ -62,8 +62,9 @@ public class EndpointConfiguration {
 
         // Rule 2: Functional-group override - check if endpoint belongs to any disabled functional
         // group
-        for (String group : endpointGroups.keySet()) {
-            if (disabledGroups.contains(group) && endpointGroups.get(group).contains(endpoint)) {
+        for (Map.Entry<String, Set<String>> entry : endpointGroups.entrySet()) {
+            String group = entry.getKey();
+            if (disabledGroups.contains(group) && entry.getValue().contains(endpoint)) {
                 // Skip tool groups (qpdf, OCRmyPDF, Ghostscript, LibreOffice, etc.)
                 if (!isToolGroup(group)) {
                     log.debug(
@@ -90,10 +91,11 @@ public class EndpointConfiguration {
 
         // Rule 4: Single-dependency check - if no alternatives defined, check if endpoint belongs
         // to any disabled tool groups
-        for (String group : endpointGroups.keySet()) {
+        for (Map.Entry<String, Set<String>> entry : endpointGroups.entrySet()) {
+            String group = entry.getKey();
             if (isToolGroup(group)
                     && disabledGroups.contains(group)
-                    && endpointGroups.get(group).contains(endpoint)) {
+                    && entry.getValue().contains(endpoint)) {
                 log.debug(
                         "isEndpointEnabled('{}') -> false (single tool group '{}' disabled, no alternatives)",
                         original,
@@ -514,8 +516,9 @@ public class EndpointConfiguration {
         }
 
         // Check if endpoint belongs to any disabled functional group
-        for (String group : endpointGroups.keySet()) {
-            if (disabledGroups.contains(group) && endpointGroups.get(group).contains(endpoint)) {
+        for (Map.Entry<String, Set<String>> entry : endpointGroups.entrySet()) {
+            String group = entry.getKey();
+            if (disabledGroups.contains(group) && entry.getValue().contains(endpoint)) {
                 if (!isToolGroup(group)) {
                     return false;
                 }

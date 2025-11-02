@@ -60,22 +60,16 @@ public class TeamWebController {
 
         String messageType = request.getParameter("messageType");
         if (messageType != null) {
-            if ("teamCreated".equals(messageType)) {
-                model.addAttribute("addMessage", "teamCreated");
-            } else if ("teamExists".equals(messageType)) {
-                model.addAttribute("errorMessage", "teamExists");
-            } else if ("teamNotFound".equals(messageType)) {
-                model.addAttribute("errorMessage", "teamNotFound");
-            } else if ("teamNameExists".equals(messageType)) {
-                model.addAttribute("errorMessage", "teamNameExists");
-            } else if ("internalTeamNotAccessible".equals(messageType)) {
-                model.addAttribute("errorMessage", "team.internalTeamNotAccessible");
-            } else if ("teamRenamed".equals(messageType)) {
-                model.addAttribute("changeMessage", "teamRenamed");
-            } else if ("teamHasUsers".equals(messageType)) {
-                model.addAttribute("errorMessage", "teamHasUsers");
-            } else if ("teamDeleted".equals(messageType)) {
-                model.addAttribute("deleteMessage", "teamDeleted");
+            switch (messageType) {
+                case "teamCreated" -> model.addAttribute("addMessage", "teamCreated");
+                case "teamExists" -> model.addAttribute("errorMessage", "teamExists");
+                case "teamNotFound" -> model.addAttribute("errorMessage", "teamNotFound");
+                case "teamNameExists" -> model.addAttribute("errorMessage", "teamNameExists");
+                case "internalTeamNotAccessible" ->
+                        model.addAttribute("errorMessage", "team.internalTeamNotAccessible");
+                case "teamRenamed" -> model.addAttribute("changeMessage", "teamRenamed");
+                case "teamHasUsers" -> model.addAttribute("errorMessage", "teamHasUsers");
+                case "teamDeleted" -> model.addAttribute("deleteMessage", "teamDeleted");
             }
         }
 

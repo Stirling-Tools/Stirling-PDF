@@ -31,11 +31,12 @@ class ReplaceAndInvertColorFactoryTest {
         HighContrastColorCombination combo = null; // not used for CUSTOM_COLOR
 
         ReplaceAndInvertColorStrategy strategy =
-                factory.replaceAndInvert(file, option, combo, "#FFFFFF", "#000000");
+                factory.replaceAndInvert(file, option, null, "#FFFFFF", "#000000");
 
         assertNotNull(strategy);
-        assertTrue(
-                strategy instanceof CustomColorReplaceStrategy,
+        assertInstanceOf(
+                CustomColorReplaceStrategy.class,
+                strategy,
                 "Expected CustomColorReplaceStrategy for CUSTOM_COLOR");
     }
 
@@ -45,11 +46,12 @@ class ReplaceAndInvertColorFactoryTest {
         HighContrastColorCombination combo = null;
 
         ReplaceAndInvertColorStrategy strategy =
-                factory.replaceAndInvert(file, option, combo, "#FFFFFF", "#000000");
+                factory.replaceAndInvert(file, option, null, "#FFFFFF", "#000000");
 
         assertNotNull(strategy);
-        assertTrue(
-                strategy instanceof CustomColorReplaceStrategy,
+        assertInstanceOf(
+                CustomColorReplaceStrategy.class,
+                strategy,
                 "Expected CustomColorReplaceStrategy for HIGH_CONTRAST_COLOR");
     }
 
@@ -61,8 +63,9 @@ class ReplaceAndInvertColorFactoryTest {
                 factory.replaceAndInvert(file, option, null, null, null);
 
         assertNotNull(strategy);
-        assertTrue(
-                strategy instanceof InvertFullColorStrategy,
+        assertInstanceOf(
+                InvertFullColorStrategy.class,
+                strategy,
                 "Expected InvertFullColorStrategy for FULL_INVERSION");
     }
 
@@ -74,8 +77,9 @@ class ReplaceAndInvertColorFactoryTest {
                 factory.replaceAndInvert(file, option, null, null, null);
 
         assertNotNull(strategy);
-        assertTrue(
-                strategy instanceof ColorSpaceConversionStrategy,
+        assertInstanceOf(
+                ColorSpaceConversionStrategy.class,
+                strategy,
                 "Expected ColorSpaceConversionStrategy for COLOR_SPACE_CONVERSION");
     }
 

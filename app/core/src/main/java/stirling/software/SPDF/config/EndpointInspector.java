@@ -49,7 +49,7 @@ public class EndpointInspector implements ApplicationListener<ContextRefreshedEv
                     RequestMappingInfo mappingInfo = handlerEntry.getKey();
                     HandlerMethod handlerMethod = handlerEntry.getValue();
 
-                    boolean isGetHandler = false;
+                    boolean isGetHandler;
                     try {
                         Set<RequestMethod> methods = mappingInfo.getMethodsCondition().getMethods();
                         isGetHandler = methods.isEmpty() || methods.contains(RequestMethod.GET);
@@ -104,7 +104,7 @@ public class EndpointInspector implements ApplicationListener<ContextRefreshedEv
             String infoString = mappingInfo.toString();
             if (infoString.contains("{")) {
                 String patternsSection =
-                        infoString.substring(infoString.indexOf("{") + 1, infoString.indexOf("}"));
+                        infoString.substring(infoString.indexOf('{') + 1, infoString.indexOf('}'));
 
                 for (String pattern : patternsSection.split(",")) {
                     pattern = pattern.trim();

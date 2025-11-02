@@ -126,7 +126,7 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
         }
 
         // Check if the authenticated user is disabled and invalidate their session if so
-        if (authentication != null && authentication.isAuthenticated()) {
+        if (authentication.isAuthenticated()) {
 
             UserLoginType loginMethod = UserLoginType.UNKNOWN;
 

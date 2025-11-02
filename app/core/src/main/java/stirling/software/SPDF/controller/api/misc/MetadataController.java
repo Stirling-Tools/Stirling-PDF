@@ -81,7 +81,7 @@ public class MetadataController {
         // Extract additional custom parameters
         Map<String, String> allRequestParams = request.getAllRequestParams();
         if (allRequestParams == null) {
-            allRequestParams = new java.util.HashMap<String, String>();
+            allRequestParams = new java.util.HashMap<>();
         }
         // Load the PDF file into a PDDocument
         PDDocument document = pdfDocumentFactory.load(pdfFile, true);

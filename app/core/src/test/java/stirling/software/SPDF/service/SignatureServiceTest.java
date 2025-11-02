@@ -21,7 +21,7 @@ class SignatureServiceTest {
 
     @TempDir Path tempDir;
     private SignatureService signatureService;
-    private final String TEST_USER = "testUser";
+    private static final String TEST_USER = "testUser";
 
     @BeforeEach
     void setUp() throws IOException {

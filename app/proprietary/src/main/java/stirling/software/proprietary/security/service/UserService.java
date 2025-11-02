@@ -142,7 +142,7 @@ public class UserService implements UserServiceInterface {
             return user;
         }
         // or throw an exception
-        return null;
+        return Optional.empty();
     }
 
     public boolean validateApiKeyForUser(String username, String apiKey) {
@@ -550,14 +550,14 @@ public class UserService implements UserServiceInterface {
 
         if (principal instanceof UserDetails detailsUser) {
             return detailsUser.getUsername();
-        } else if (principal instanceof User domainUser) {
-            return domainUser.getUsername();
-        } else if (principal instanceof OAuth2User oAuth2User) {
-            return oAuth2User.getAttribute(oAuth2.getUseAsUsername());
-        } else if (principal instanceof CustomSaml2AuthenticatedPrincipal saml2User) {
-            return saml2User.name();
-        } else if (principal instanceof String stringUser) {
-            return stringUser;
+        } else {
+            if (principal instanceof OAuth2User oAuth2User) {
+                return oAuth2User.getAttribute(oAuth2.getUseAsUsername());
+            } else if (principal instanceof CustomSaml2AuthenticatedPrincipal saml2User) {
+                return saml2User.name();
+            } else if (principal instanceof String stringUser) {
+                return stringUser;
+            }
         }
         return null;
     }

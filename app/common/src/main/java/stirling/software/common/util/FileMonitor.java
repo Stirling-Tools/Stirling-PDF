@@ -33,7 +33,7 @@ public class FileMonitor {
     private Set<Path> stagingFiles;
 
     /**
-     * @param rootDirectory the root directory to monitor
+     * @param runtimePathConfig the root directory to monitor
      * @param pathFilter the filter to apply to the paths, return true if the path should be
      *     monitored, false otherwise
      */

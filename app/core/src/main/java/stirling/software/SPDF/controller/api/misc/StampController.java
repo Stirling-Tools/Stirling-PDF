@@ -194,7 +194,8 @@ public class StampController {
             String colorString) // Y override
             throws IOException {
         String resourceDir;
-        PDFont font = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
+        new PDType1Font(Standard14Fonts.FontName.HELVETICA);
+        PDFont font;
         resourceDir =
                 switch (alphabet) {
                     case "arabic" -> "static/fonts/NotoSansArabic-Regular.ttf";
@@ -207,7 +208,7 @@ public class StampController {
                 };
 
         ClassPathResource classPathResource = new ClassPathResource(resourceDir);
-        String fileExtension = resourceDir.substring(resourceDir.lastIndexOf("."));
+        String fileExtension = resourceDir.substring(resourceDir.lastIndexOf('.'));
 
         // Use TempFile with try-with-resources for automatic cleanup
         try (TempFile tempFileWrapper = new TempFile(tempFileManager, fileExtension)) {
@@ -287,10 +288,9 @@ public class StampController {
         float aspectRatio = (float) image.getWidth() / (float) image.getHeight();
 
         // Desired physical height (in PDF points)
-        float desiredPhysicalHeight = fontSize;
 
         // Desired physical width based on the aspect ratio
-        float desiredPhysicalWidth = desiredPhysicalHeight * aspectRatio;
+        float desiredPhysicalWidth = fontSize * aspectRatio;
 
         // Convert the BufferedImage to PDImageXObject
         PDImageXObject xobject = LosslessFactory.createFromImage(document, image);
@@ -310,7 +310,7 @@ public class StampController {
         contentStream.saveGraphicsState();
         contentStream.transform(Matrix.getTranslateInstance(x, y));
         contentStream.transform(Matrix.getRotateInstance(Math.toRadians(rotation), 0, 0));
-        contentStream.drawImage(xobject, 0, 0, desiredPhysicalWidth, desiredPhysicalHeight);
+        contentStream.drawImage(xobject, 0, 0, desiredPhysicalWidth, fontSize);
         contentStream.restoreGraphicsState();
     }
 
@@ -326,28 +326,26 @@ public class StampController {
         float actualWidth =
                 (text != null) ? calculateTextWidth(text, font, fontSize) : contentWidth;
         return switch (position % 3) {
-            case 1: // Left
-                yield pageSize.getLowerLeftX() + margin;
-            case 2: // Center
-                yield (pageSize.getWidth() - actualWidth) / 2;
-            case 0: // Right
-                yield pageSize.getUpperRightX() - actualWidth - margin;
-            default:
-                yield 0;
+            case 1 -> // Left
+                    pageSize.getLowerLeftX() + margin;
+            case 2 -> // Center
+                    (pageSize.getWidth() - actualWidth) / 2;
+            case 0 -> // Right
+                    pageSize.getUpperRightX() - actualWidth - margin;
+            default -> 0;
         };
     }
 
     private float calculatePositionY(
             PDRectangle pageSize, int position, float height, float margin) {
         return switch ((position - 1) / 3) {
-            case 0: // Top
-                yield pageSize.getUpperRightY() - height - margin;
-            case 1: // Middle
-                yield (pageSize.getHeight() - height) / 2;
-            case 2: // Bottom
-                yield pageSize.getLowerLeftY() + margin;
-            default:
-                yield 0;
+            case 0 -> // Top
+                    pageSize.getUpperRightY() - height - margin;
+            case 1 -> // Middle
+                    (pageSize.getHeight() - height) / 2;
+            case 2 -> // Bottom
+                    pageSize.getLowerLeftY() + margin;
+            default -> 0;
         };
     }
 

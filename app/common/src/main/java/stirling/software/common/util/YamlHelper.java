@@ -122,7 +122,7 @@ public class YamlHelper {
 
             if (keys.size() == 1) {
                 Tag tag = valueNode.getTag();
-                Node newValueNode = null;
+                Node newValueNode;
 
                 if (isAnyInteger(newValue)) {
                     newValueNode =
@@ -156,9 +156,7 @@ public class YamlHelper {
                     }
                     newValueNode = new SequenceNode(Tag.SEQ, sequenceNodes, FlowStyle.FLOW);
                 } else if (tag == Tag.NULL) {
-                    if ("true".equals(newValue)
-                            || "false".equals(newValue)
-                            || newValue instanceof Boolean) {
+                    if (newValue instanceof Boolean) {
                         tag = Tag.BOOL;
                     }
                     newValueNode = new ScalarNode(tag, String.valueOf(newValue), ScalarStyle.PLAIN);
@@ -179,7 +177,7 @@ public class YamlHelper {
             mappingNode.getValue().clear();
             mappingNode.getValue().addAll(updatedTuples);
         }
-        setNewNode(node);
+        updatedRootNode = node;
 
         return updated;
     }
@@ -247,8 +245,6 @@ public class YamlHelper {
      * Collects all keys from the YAML node recursively.
      *
      * @param node The current YAML node.
-     * @param currentPath The accumulated path of keys.
-     * @param allKeys The set storing all collected keys.
      */
     private Set<String> getAllKeys(Node node) {
         Set<String> allKeys = new LinkedHashSet<>();

@@ -125,21 +125,13 @@ public class PdfVectorExportController {
             String outputName =
                     GeneralUtils.generateFilename(originalName, "_converted." + outputFormat);
 
-            MediaType mediaType;
-            switch (outputFormat.toLowerCase(Locale.ROOT)) {
-                case "eps":
-                case "ps":
-                    mediaType = MediaType.parseMediaType("application/postscript");
-                    break;
-                case "pcl":
-                    mediaType = MediaType.parseMediaType("application/vnd.hp-PCL");
-                    break;
-                case "xps":
-                    mediaType = MediaType.parseMediaType("application/vnd.ms-xpsdocument");
-                    break;
-                default:
-                    mediaType = MediaType.APPLICATION_OCTET_STREAM;
-            }
+            MediaType mediaType =
+                    switch (outputFormat.toLowerCase(Locale.ROOT)) {
+                        case "eps", "ps" -> MediaType.parseMediaType("application/postscript");
+                        case "pcl" -> MediaType.parseMediaType("application/vnd.hp-PCL");
+                        case "xps" -> MediaType.parseMediaType("application/vnd.ms-xpsdocument");
+                        default -> MediaType.APPLICATION_OCTET_STREAM;
+                    };
 
             return WebResponseUtils.bytesToWebResponse(vectorBytes, outputName, mediaType);
         }
@@ -155,24 +147,18 @@ public class PdfVectorExportController {
         command.add("gs");
 
         // Set device based on output format
-        String device;
-        switch (outputFormat.toLowerCase(Locale.ROOT)) {
-            case "eps":
-                device = "eps2write";
-                break;
-            case "ps":
-                device = "ps2write";
-                break;
-            case "pcl":
-                device = "pxlcolor"; // PCL XL color
-                break;
-            case "xps":
-                device = "xpswrite";
-                break;
-            default:
-                throw ExceptionUtils.createIllegalArgumentException(
-                        "error.invalidFormat", "Unsupported output format: {0}", outputFormat);
-        }
+        String device =
+                switch (outputFormat.toLowerCase(Locale.ROOT)) {
+                    case "eps" -> "eps2write";
+                    case "ps" -> "ps2write";
+                    case "pcl" -> "pxlcolor"; // PCL XL color
+                    case "xps" -> "xpswrite";
+                    default ->
+                            throw ExceptionUtils.createIllegalArgumentException(
+                                    "error.invalidFormat",
+                                    "Unsupported output format: {0}",
+                                    outputFormat);
+                };
 
         command.add("-sDEVICE=" + device);
         command.add("-dNOPAUSE");

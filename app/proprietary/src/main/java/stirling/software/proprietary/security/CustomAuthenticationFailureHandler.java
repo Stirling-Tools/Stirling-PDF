@@ -68,7 +68,7 @@ public class CustomAuthenticationFailureHandler extends SimpleUrlAuthenticationF
                     username,
                     loginAttemptService.getRemainingAttempts(username));
             loginAttemptService.loginFailed(username);
-            if (loginAttemptService.isBlocked(username) || exception instanceof LockedException) {
+            if (loginAttemptService.isBlocked(username)) {
                 getRedirectStrategy().sendRedirect(request, response, "/login?error=locked");
                 return;
             }

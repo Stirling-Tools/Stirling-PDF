@@ -1,7 +1,5 @@
 package stirling.software.proprietary.security.config;
 
-import static stirling.software.common.util.ProviderUtils.validateProvider;
-
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
@@ -36,6 +34,7 @@ import stirling.software.common.model.enumeration.Role;
 import stirling.software.common.model.oauth2.GitHubProvider;
 import stirling.software.common.model.oauth2.GoogleProvider;
 import stirling.software.common.model.oauth2.KeycloakProvider;
+import stirling.software.common.util.ProviderUtils;
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.Authority;
@@ -98,21 +97,21 @@ public class AccountWebController {
                 if (client != null) {
                     GoogleProvider google = client.getGoogle();
 
-                    if (validateProvider(google)) {
+                    if (ProviderUtils.validateProvider(google)) {
                         providerList.put(
                                 OAUTH_2_AUTHORIZATION + google.getName(), google.getClientName());
                     }
 
                     GitHubProvider github = client.getGithub();
 
-                    if (validateProvider(github)) {
+                    if (ProviderUtils.validateProvider(github)) {
                         providerList.put(
                                 OAUTH_2_AUTHORIZATION + github.getName(), github.getClientName());
                     }
 
                     KeycloakProvider keycloak = client.getKeycloak();
 
-                    if (validateProvider(keycloak)) {
+                    if (ProviderUtils.validateProvider(keycloak)) {
                         providerList.put(
                                 OAUTH_2_AUTHORIZATION + keycloak.getName(),
                                 keycloak.getClientName());
@@ -248,7 +247,7 @@ public class AccountWebController {
                 // Determine the user's session status and last request time
                 int maxInactiveInterval = sessionPersistentRegistry.getMaxInactiveInterval();
                 boolean hasActiveSession = false;
-                Instant lastRequest = null;
+                Instant lastRequest;
                 Optional<SessionEntity> latestSession =
                         sessionPersistentRegistry.findLatestSession(user.getUsername());
                 if (latestSession.isPresent()) {

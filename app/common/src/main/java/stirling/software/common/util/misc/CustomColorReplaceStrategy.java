@@ -91,7 +91,7 @@ public class CustomColorReplaceStrategy extends ReplaceAndInvertColorStrategy {
                         contentStream.beginText();
                         contentStream.newLineAtOffset(
                                 text.getX(), page.getMediaBox().getHeight() - text.getY());
-                        PDFont font = null;
+                        PDFont font;
                         String unicodeText = text.getUnicode();
                         try {
                             font = PDFontFactory.createFont(text.getFont().getCOSObject());
@@ -151,8 +151,7 @@ public class CustomColorReplaceStrategy extends ReplaceAndInvertColorStrategy {
             // Prepare the modified PDF for download
             ByteArrayInputStream inputStream =
                     new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
-            InputStreamResource resource = new InputStreamResource(inputStream);
-            return resource;
+            return new InputStreamResource(inputStream);
         }
     }
 

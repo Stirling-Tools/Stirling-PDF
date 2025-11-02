@@ -47,7 +47,7 @@ class PdfVectorExportControllerTest {
         when(tempFileManager.createTempFile(any()))
                 .thenAnswer(
                         invocation -> {
-                            String suffix = invocation.<String>getArgument(0);
+                            String suffix = invocation.getArgument(0);
                             Path path =
                                     Files.createTempFile(
                                             "vector_test", suffix == null ? "" : suffix);

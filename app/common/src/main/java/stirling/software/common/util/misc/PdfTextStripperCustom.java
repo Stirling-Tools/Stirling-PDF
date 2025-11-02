@@ -29,8 +29,6 @@ public class PdfTextStripperCustom extends PDFTextStripperByArea {
                         page.getMediaBox().getHeight()));
         extractRegions(page);
 
-        List<List<TextPosition>> textPositions = getCharactersByArticle();
-
-        return textPositions;
+        return getCharactersByArticle();
     }
 }

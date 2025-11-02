@@ -49,9 +49,7 @@ public class EditTableOfContentsController {
     @ResponseBody
     public List<Map<String, Object>> extractBookmarks(@RequestParam("file") MultipartFile file)
             throws Exception {
-        PDDocument document = null;
-        try {
-            document = pdfDocumentFactory.load(file);
+        try (PDDocument document = pdfDocumentFactory.load(file)) {
             PDDocumentOutline outline = document.getDocumentCatalog().getDocumentOutline();
 
             if (outline == null) {
@@ -60,10 +58,6 @@ public class EditTableOfContentsController {
             }
 
             return extractBookmarkItems(document, outline);
-        } finally {
-            if (document != null) {
-                document.close();
-            }
         }
     }
 
@@ -157,15 +151,12 @@ public class EditTableOfContentsController {
     public ResponseEntity<byte[]> editTableOfContents(
             @ModelAttribute EditTableOfContentsRequest request) throws Exception {
         MultipartFile file = request.getFileInput();
-        PDDocument document = null;
 
-        try {
-            document = pdfDocumentFactory.load(file);
+        try (PDDocument document = pdfDocumentFactory.load(file)) {
 
             // Parse the bookmark data from JSON
             List<BookmarkItem> bookmarks =
-                    objectMapper.readValue(
-                            request.getBookmarkData(), new TypeReference<List<BookmarkItem>>() {});
+                    objectMapper.readValue(request.getBookmarkData(), new TypeReference<>() {});
 
             // Create a new document outline
             PDDocumentOutline outline = new PDDocumentOutline();
@@ -182,11 +173,6 @@ public class EditTableOfContentsController {
                     baos.toByteArray(),
                     GeneralUtils.generateFilename(file.getOriginalFilename(), "_with_toc.pdf"),
                     MediaType.APPLICATION_PDF);
-
-        } finally {
-            if (document != null) {
-                document.close();
-            }
         }
     }
 

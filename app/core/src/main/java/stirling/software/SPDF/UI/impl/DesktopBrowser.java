@@ -8,8 +8,6 @@ import java.awt.MenuItem;
 import java.awt.PopupMenu;
 import java.awt.SystemTray;
 import java.awt.TrayIcon;
-import java.awt.event.WindowEvent;
-import java.awt.event.WindowStateListener;
 import java.io.File;
 import java.io.InputStream;
 import java.util.Objects;
@@ -381,11 +379,9 @@ public class DesktopBrowser implements WebBrowser {
 
             // Modify frame behavior to minimize to tray
             frame.addWindowStateListener(
-                    new WindowStateListener() {
-                        public void windowStateChanged(WindowEvent e) {
-                            if (e.getNewState() == Frame.ICONIFIED) {
-                                frame.setVisible(false);
-                            }
+                    e -> {
+                        if (e.getNewState() == Frame.ICONIFIED) {
+                            frame.setVisible(false);
                         }
                     });
 

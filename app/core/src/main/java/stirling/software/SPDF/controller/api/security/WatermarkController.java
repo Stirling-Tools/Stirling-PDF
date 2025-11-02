@@ -74,7 +74,7 @@ public class WatermarkController {
                             + " watermark type (text or image), rotation, opacity, width spacer, and"
                             + " height spacer. Input:PDF Output:PDF Type:SISO")
     public ResponseEntity<byte[]> addWatermark(@ModelAttribute AddWatermarkRequest request)
-            throws IOException, Exception {
+            throws Exception {
         MultipartFile pdfFile = request.getFileInput();
         String pdfFileName = pdfFile.getOriginalFilename();
         if (pdfFileName != null && (pdfFileName.contains("..") || pdfFileName.startsWith("/"))) {
@@ -168,8 +168,9 @@ public class WatermarkController {
             String alphabet,
             String colorString)
             throws IOException {
-        String resourceDir = "";
-        PDFont font = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
+        String resourceDir;
+        new PDType1Font(Standard14Fonts.FontName.HELVETICA);
+        PDFont font;
         resourceDir =
                 switch (alphabet) {
                     case "arabic" -> "static/fonts/NotoSansArabic-Regular.ttf";
@@ -181,7 +182,7 @@ public class WatermarkController {
                 };
 
         ClassPathResource classPathResource = new ClassPathResource(resourceDir);
-        String fileExtension = resourceDir.substring(resourceDir.lastIndexOf("."));
+        String fileExtension = resourceDir.substring(resourceDir.lastIndexOf('.'));
         File tempFile = Files.createTempFile("NotoSansFont", fileExtension).toFile();
         try (InputStream is = classPathResource.getInputStream();
                 FileOutputStream os = new FileOutputStream(tempFile)) {
@@ -209,8 +210,8 @@ public class WatermarkController {
                 RegexPatternUtils.getInstance().getEscapedNewlinePattern().split(watermarkText);
         float maxLineWidth = 0;
 
-        for (int i = 0; i < textLines.length; ++i) {
-            maxLineWidth = Math.max(maxLineWidth, font.getStringWidth(textLines[i]));
+        for (String line : textLines) {
+            maxLineWidth = Math.max(maxLineWidth, font.getStringWidth(line));
         }
 
         // Set size and location of text watermark
@@ -245,8 +246,8 @@ public class WatermarkController {
                                 j * newWatermarkWidth,
                                 i * newWatermarkHeight));
 
-                for (int k = 0; k < textLines.length; ++k) {
-                    contentStream.showText(textLines[k]);
+                for (String textLine : textLines) {
+                    contentStream.showText(textLine);
                     contentStream.newLineAtOffset(0, -fontSize);
                 }
 
@@ -273,10 +274,9 @@ public class WatermarkController {
         float aspectRatio = (float) image.getWidth() / (float) image.getHeight();
 
         // Desired physical height (in PDF points)
-        float desiredPhysicalHeight = fontSize;
 
         // Desired physical width based on the aspect ratio
-        float desiredPhysicalWidth = desiredPhysicalHeight * aspectRatio;
+        float desiredPhysicalWidth = fontSize * aspectRatio;
 
         // Convert the BufferedImage to PDImageXObject
         PDImageXObject xobject = LosslessFactory.createFromImage(document, image);
@@ -284,15 +284,14 @@ public class WatermarkController {
         // Calculate the number of rows and columns for watermarks
         float pageWidth = page.getMediaBox().getWidth();
         float pageHeight = page.getMediaBox().getHeight();
-        int watermarkRows =
-                (int) ((pageHeight + heightSpacer) / (desiredPhysicalHeight + heightSpacer));
+        int watermarkRows = (int) ((pageHeight + heightSpacer) / (fontSize + heightSpacer));
         int watermarkCols =
                 (int) ((pageWidth + widthSpacer) / (desiredPhysicalWidth + widthSpacer));
 
         for (int i = 0; i < watermarkRows; i++) {
             for (int j = 0; j < watermarkCols; j++) {
                 float x = j * (desiredPhysicalWidth + widthSpacer);
-                float y = i * (desiredPhysicalHeight + heightSpacer);
+                float y = i * (fontSize + heightSpacer);
 
                 // Save the graphics state
                 contentStream.saveGraphicsState();
@@ -300,14 +299,13 @@ public class WatermarkController {
                 // Create rotation matrix and rotate
                 contentStream.transform(
                         Matrix.getTranslateInstance(
-                                x + desiredPhysicalWidth / 2, y + desiredPhysicalHeight / 2));
+                                x + desiredPhysicalWidth / 2, y + fontSize / 2));
                 contentStream.transform(Matrix.getRotateInstance(Math.toRadians(rotation), 0, 0));
                 contentStream.transform(
-                        Matrix.getTranslateInstance(
-                                -desiredPhysicalWidth / 2, -desiredPhysicalHeight / 2));
+                        Matrix.getTranslateInstance(-desiredPhysicalWidth / 2, -fontSize / 2));
 
                 // Draw the image and restore the graphics state
-                contentStream.drawImage(xobject, 0, 0, desiredPhysicalWidth, desiredPhysicalHeight);
+                contentStream.drawImage(xobject, 0, 0, desiredPhysicalWidth, fontSize);
                 contentStream.restoreGraphicsState();
             }
         }

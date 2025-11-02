@@ -77,8 +77,6 @@ class PDFWithPageNumsTest {
 
         assertThrows(
                 IllegalArgumentException.class,
-                () -> {
-                    pdfWithPageNums.getPageNumbersList(mockDocument, true);
-                });
+                () -> pdfWithPageNums.getPageNumbersList(mockDocument, true));
     }
 }

@@ -87,7 +87,7 @@ public class OCRController {
             throws IOException, InterruptedException {
         MultipartFile inputFile = request.getFileInput();
         List<String> selectedLanguages = request.getLanguages();
-        Boolean sidecar = request.isSidecar();
+        boolean sidecar = request.isSidecar();
         Boolean deskew = request.isDeskew();
         Boolean clean = request.isClean();
         Boolean cleanFinal = request.isCleanFinal();
@@ -158,7 +158,7 @@ public class OCRController {
                                     Filenames.toSimpleFileName(inputFile.getOriginalFilename()))
                             + "_OCR.pdf";
 
-            if (sidecar && sidecarTextFile != null) {
+            if (sidecar) {
                 // Create a zip file containing both the PDF and the text file
                 String outputZipFilename =
                         GeneralUtils.removeExtension(
@@ -331,7 +331,6 @@ public class OCRController {
                     boolean shouldOcr =
                             switch (ocrType) {
                                 case "skip-text" -> !hasText;
-                                case "force-ocr" -> true;
                                 default -> true;
                             };
 

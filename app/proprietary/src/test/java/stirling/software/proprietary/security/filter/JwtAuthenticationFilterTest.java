@@ -128,7 +128,7 @@ class JwtAuthenticationFilterTest {
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         assertNotNull(authentication);
-        assertTrue(authentication instanceof UsernamePasswordAuthenticationToken);
+        assertInstanceOf(UsernamePasswordAuthenticationToken.class, authentication);
         assertEquals(userDetails, authentication.getPrincipal());
         verify(filterChain).doFilter(request, response);
     }
@@ -208,7 +208,7 @@ class JwtAuthenticationFilterTest {
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         assertNotNull(authentication);
-        assertTrue(authentication instanceof ApiKeyAuthenticationToken);
+        assertInstanceOf(ApiKeyAuthenticationToken.class, authentication);
         verify(filterChain).doFilter(request, response);
         verify(jwtService, never()).extractToken(any(HttpServletRequest.class));
     }

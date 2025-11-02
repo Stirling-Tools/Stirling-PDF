@@ -245,9 +245,7 @@ public class RearrangePagesPDFController {
             String[] pageOrderArr = pageOrder != null ? pageOrder.split(",") : new String[0];
             int totalPages = document.getNumberOfPages();
             List<Integer> newPageOrder;
-            if (sortType != null
-                    && !sortType.isEmpty()
-                    && !"custom".equals(sortType.toLowerCase())) {
+            if (sortType != null && !sortType.isEmpty() && !"custom".equalsIgnoreCase(sortType)) {
                 newPageOrder = processSortTypes(sortType, totalPages, pageOrder);
             } else {
                 newPageOrder = GeneralUtils.parsePageList(pageOrderArr, totalPages, false);
@@ -256,8 +254,8 @@ public class RearrangePagesPDFController {
             log.info("totalPages = {}", totalPages);
             // Create a new list to hold the pages in the new order
             List<PDPage> newPages = new ArrayList<>();
-            for (int i = 0; i < newPageOrder.size(); i++) {
-                newPages.add(document.getPage(newPageOrder.get(i)));
+            for (Integer integer : newPageOrder) {
+                newPages.add(document.getPage(integer));
             }
 
             // Create a new document based on the original one

@@ -56,17 +56,15 @@ public class JobQueue implements SmartLifecycle {
 
     @Getter private int currentQueueSize = 0;
 
-    /** Represents a job waiting in the queue. */
-    @Data
-    @AllArgsConstructor
-    private static class QueuedJob {
-        private final String jobId;
-        private final int resourceWeight;
-        private final Supplier<Object> work;
-        private final long timeoutMs;
-        private final Instant queuedAt;
-        private CompletableFuture<ResponseEntity<?>> future;
-        private volatile boolean cancelled = false;
+    /**
+     * Gets the current capacity of the job queue.
+     *
+     * @return The current capacity
+     */
+    public int getQueueCapacity() {
+        synchronized (queueLock) {
+            return jobQueue.remainingCapacity() + jobQueue.size();
+        }
     }
 
     public JobQueue(ResourceMonitor resourceMonitor) {
@@ -225,16 +223,17 @@ public class JobQueue implements SmartLifecycle {
         }
     }
 
-    /**
-     * Gets the current capacity of the job queue.
-     *
-     * @return The current capacity
-     */
-    public int getQueueCapacity() {
-        synchronized (queueLock) {
-            return ((LinkedBlockingQueue<QueuedJob>) jobQueue).remainingCapacity()
-                    + jobQueue.size();
-        }
+    /** Represents a job waiting in the queue. */
+    @Data
+    @AllArgsConstructor
+    private static class QueuedJob {
+        private final String jobId;
+        private final int resourceWeight;
+        private final Supplier<Object> work;
+        private final long timeoutMs;
+        private final Instant queuedAt;
+        private CompletableFuture<ResponseEntity<?>> future;
+        private volatile boolean cancelled;
     }
 
     /** Updates the capacity of the job queue based on available system resources. */

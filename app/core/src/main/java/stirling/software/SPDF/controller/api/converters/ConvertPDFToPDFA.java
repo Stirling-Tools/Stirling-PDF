@@ -124,7 +124,7 @@ public class ConvertPDFToPDFA {
                 pdfaPart = 1;
                 preProcessedFile = preProcessHighlights(tempInputFile.toFile());
             }
-            Set<String> missingFonts = new HashSet<>();
+            Set<String> missingFonts;
             boolean needImgs;
             try (PDDocument doc = Loader.loadPDF(preProcessedFile)) {
                 missingFonts = findUnembeddedFontNames(doc);
@@ -298,9 +298,7 @@ public class ConvertPDFToPDFA {
                             continue;
                         }
                     }
-                    if (newFont != null) {
-                        baseRes.put(fontKey, newFont);
-                    }
+                    baseRes.put(fontKey, newFont);
                 }
             }
         }

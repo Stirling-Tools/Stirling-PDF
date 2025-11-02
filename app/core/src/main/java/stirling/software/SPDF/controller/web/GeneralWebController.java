@@ -74,8 +74,7 @@ public class GeneralWebController {
                 }
                 for (String config : pipelineConfigs) {
                     Map<String, Object> jsonContent =
-                            new ObjectMapper()
-                                    .readValue(config, new TypeReference<Map<String, Object>>() {});
+                            new ObjectMapper().readValue(config, new TypeReference<>() {});
                     String name = (String) jsonContent.get("name");
                     if (name == null || name.isEmpty()) {
                         String filename =

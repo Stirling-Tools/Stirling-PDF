@@ -99,13 +99,7 @@ public class MergeController {
                                 return name == null ? "" : name;
                             },
                             String.CASE_INSENSITIVE_ORDER);
-            case "byDateModified" ->
-                    (file1, file2) -> {
-                        long t1 = getPdfDateTimeSafe(file1);
-                        long t2 = getPdfDateTimeSafe(file2);
-                        return Long.compare(t2, t1);
-                    };
-            case "byDateCreated" ->
+            case "byDateModified", "byDateCreated" ->
                     (file1, file2) -> {
                         long t1 = getPdfDateTimeSafe(file1);
                         long t2 = getPdfDateTimeSafe(file2);
@@ -137,8 +131,7 @@ public class MergeController {
                             return 0;
                         }
                     };
-            case "orderProvided" -> (file1, file2) -> 0; // Default is the order provided
-            default -> (file1, file2) -> 0; // Default is the order provided
+            default -> (file1, file2) -> 0; // No sorting for unknown sort types
         };
     }
 
@@ -240,7 +233,7 @@ public class MergeController {
             @RequestParam(value = "fileOrder", required = false) String fileOrder)
             throws IOException {
         List<File> filesToDelete = new ArrayList<>(); // List of temporary files to delete
-        TempFile outputTempFile = null;
+        TempFile outputTempFile;
 
         boolean removeCertSign = Boolean.TRUE.equals(request.getRemoveCertSign());
         boolean generateToc = request.isGenerateToc();

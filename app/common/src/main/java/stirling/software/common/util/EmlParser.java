@@ -567,7 +567,7 @@ public class EmlParser {
         // Handle filename*= (RFC 2231 encoded filename)
         if (disposition.toLowerCase().contains("filename*=")) {
             int filenameStarStart = disposition.toLowerCase().indexOf("filename*=") + 10;
-            int filenameStarEnd = disposition.indexOf(";", filenameStarStart);
+            int filenameStarEnd = disposition.indexOf(';', filenameStarStart);
             if (filenameStarEnd == -1) filenameStarEnd = disposition.length();
             String extendedFilename =
                     disposition.substring(filenameStarStart, filenameStarEnd).trim();
@@ -587,7 +587,7 @@ public class EmlParser {
 
         // Handle regular filename=
         int filenameStart = disposition.toLowerCase().indexOf("filename=") + 9;
-        int filenameEnd = disposition.indexOf(";", filenameStart);
+        int filenameEnd = disposition.indexOf(';', filenameStart);
         if (filenameEnd == -1) filenameEnd = disposition.length();
         String filename = disposition.substring(filenameStart, filenameEnd).trim();
         filename =

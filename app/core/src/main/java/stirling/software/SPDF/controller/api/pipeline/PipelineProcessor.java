@@ -7,6 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -59,7 +60,7 @@ public class PipelineProcessor {
 
     public static String removeTrailingNaming(String filename) {
         // Splitting filename into name and extension
-        int dotIndex = filename.lastIndexOf(".");
+        int dotIndex = filename.lastIndexOf('.');
         if (dotIndex == -1) {
             // No extension found
             return filename;
@@ -67,7 +68,7 @@ public class PipelineProcessor {
         String name = filename.substring(0, dotIndex);
         String extension = filename.substring(dotIndex);
         // Finding the last underscore
-        int underscoreIndex = name.lastIndexOf("_");
+        int underscoreIndex = name.lastIndexOf('_');
         if (underscoreIndex == -1) {
             // No underscore found
             return filename;
@@ -147,7 +148,8 @@ public class PipelineProcessor {
                                 continue;
                             }
                             if (!HttpStatus.OK.equals(response.getStatusCode())) {
-                                logPrintStream.println("Error: " + response.getBody());
+                                logPrintStream.println(
+                                        "Error: " + Arrays.toString(response.getBody()));
                                 hasErrors = true;
                                 continue;
                             }
@@ -159,7 +161,7 @@ public class PipelineProcessor {
                         String providedExtension = "no extension";
                         if (filename != null && filename.contains(".")) {
                             providedExtension =
-                                    filename.substring(filename.lastIndexOf(".")).toLowerCase();
+                                    filename.substring(filename.lastIndexOf('.')).toLowerCase();
                         }
 
                         logPrintStream.println(
@@ -215,7 +217,8 @@ public class PipelineProcessor {
                     } else {
                         // Log error if the response status is not OK
                         logPrintStream.println(
-                                "Error in multi-input operation: " + response.getBody());
+                                "Error in multi-input operation: "
+                                        + Arrays.toString(response.getBody()));
                         hasErrors = true;
                     }
                 } else {
@@ -227,7 +230,7 @@ public class PipelineProcessor {
                                                 String filename = file.getFilename();
                                                 if (filename != null && filename.contains(".")) {
                                                     return filename.substring(
-                                                                    filename.lastIndexOf("."))
+                                                                    filename.lastIndexOf('.'))
                                                             .toLowerCase();
                                                 }
                                                 return "no extension";

@@ -1,5 +1,6 @@
 package stirling.software.proprietary.security.model;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -29,7 +30,7 @@ import stirling.software.proprietary.model.Team;
 @ToString(onlyExplicitlyIncluded = true)
 public class User implements UserDetails, Serializable {
 
-    private static final long serialVersionUID = 1L;
+    @Serial private static final long serialVersionUID = 1L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -4,7 +4,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -294,8 +293,7 @@ public class TaskManager {
 
     /** Clean up old completed job results */
     public void cleanupOldJobs() {
-        LocalDateTime expiryThreshold =
-                LocalDateTime.now().minus(jobResultExpiryMinutes, ChronoUnit.MINUTES);
+        LocalDateTime expiryThreshold = LocalDateTime.now().minusMinutes(jobResultExpiryMinutes);
         int removedCount = 0;
 
         try {

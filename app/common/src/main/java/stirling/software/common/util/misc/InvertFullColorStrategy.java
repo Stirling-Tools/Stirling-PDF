@@ -106,8 +106,7 @@ public class InvertFullColorStrategy extends ReplaceAndInvertColorStrategy {
             // Prepare the modified PDF for download
             ByteArrayInputStream inputStream =
                     new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
-            InputStreamResource resource = new InputStreamResource(inputStream);
-            return resource;
+            return new InputStreamResource(inputStream);
         } finally {
             if (file != null && file.exists()) {
                 Files.delete(file.toPath());

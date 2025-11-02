@@ -92,7 +92,7 @@ public class ConvertImgPDFController {
         Path tempFile = null;
         Path tempOutputDir = null;
         Path tempPdfPath = null;
-        byte[] result = null;
+        byte[] result;
         String[] pageOrderArr =
                 (pageNumbers != null && !pageNumbers.trim().isEmpty())
                         ? pageNumbers.split(",")
@@ -182,7 +182,7 @@ public class ConvertImgPDFController {
                             "No WebP files were created. " + resultProcess.getMessages());
                 }
 
-                byte[] bodyBytes = new byte[0];
+                byte[] bodyBytes;
 
                 if (webpFiles.size() == 1) {
                     // Return the single WebP file directly
@@ -202,7 +202,7 @@ public class ConvertImgPDFController {
                 }
                 // Clean up the temporary files
                 Files.deleteIfExists(tempFile);
-                if (tempOutputDir != null) FileUtils.deleteDirectory(tempOutputDir.toFile());
+                FileUtils.deleteDirectory(tempOutputDir.toFile());
                 result = bodyBytes;
             }
 
@@ -421,7 +421,7 @@ public class ConvertImgPDFController {
     /**
      * Rearranges the pages of the given PDF document based on the specified page order.
      *
-     * @param pdfBytes The byte array of the original PDF file.
+     * @param pdfFile The byte array of the original PDF file.
      * @param pageOrderArr An array of page numbers indicating the new order.
      * @return A byte array of the rearranged PDF.
      * @throws IOException If an error occurs while processing the PDF.

@@ -102,7 +102,7 @@ public class UserController {
         }
         // The username MUST be unique when renaming
         Optional<User> userOpt = userService.findByUsername(principal.getName());
-        if (userOpt == null || userOpt.isEmpty()) {
+        if (userOpt.isEmpty()) {
             return new RedirectView("/account?messageType=userNotFound", true);
         }
         User user = userOpt.get();
@@ -295,7 +295,7 @@ public class UserController {
             Authentication authentication)
             throws SQLException, UnsupportedProviderException {
         Optional<User> userOpt = userService.findByUsernameIgnoreCase(username);
-        if (!userOpt.isPresent()) {
+        if (userOpt.isEmpty()) {
             return new RedirectView("/adminSettings?messageType=userNotFound", true);
         }
         if (!userService.usernameExistsIgnoreCase(username)) {

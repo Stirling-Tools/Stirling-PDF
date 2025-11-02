@@ -996,8 +996,6 @@ public class CompressController {
                                     + " only");
                 }
 
-                externalCompressionApplied = true;
-
                 // Skip image compression if Ghostscript succeeded
                 if (ghostscriptSuccess) {
                     imageCompressionApplied = true;
@@ -1043,7 +1041,6 @@ public class CompressController {
                     } else {
                         // Reset flags for next iteration with higher optimization level
                         imageCompressionApplied = false;
-                        externalCompressionApplied = false;
                         optimizeLevel = newOptimizeLevel;
                     }
                 }
@@ -1116,10 +1113,6 @@ public class CompressController {
                     break;
                 case 3:
                     command.add("-dPDFSETTINGS=/ebook");
-                    break;
-                case 4:
-                case 5:
-                    command.add("-dPDFSETTINGS=/screen");
                     break;
                 case 6:
                 case 7:

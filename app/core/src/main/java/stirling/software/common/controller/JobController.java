@@ -147,8 +147,7 @@ public class JobController {
         // Verify that this job belongs to the current user
         // We can use the current request's session to validate ownership
         Object sessionJobIds = request.getSession().getAttribute("userJobIds");
-        if (sessionJobIds == null
-                || !(sessionJobIds instanceof java.util.Set)
+        if (!(sessionJobIds instanceof java.util.Set)
                 || !((java.util.Set<?>) sessionJobIds).contains(jobId)) {
             // Either no jobs in session or jobId doesn't match user's jobs
             log.warn("Unauthorized attempt to cancel job: {}", jobId);

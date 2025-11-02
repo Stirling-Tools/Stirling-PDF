@@ -235,7 +235,7 @@ public class MetricsController {
                             }
 
                             // Filter for specific endpoint if provided
-                            return !endpoint.isPresent() || endpoint.get().equals(uri);
+                            return endpoint.isEmpty() || endpoint.get().equals(uri);
                         })
                 .mapToDouble(Counter::count)
                 .sum();
@@ -314,7 +314,7 @@ public class MetricsController {
                                 log.debug("Skipping invalid GET endpoint: {}", uri);
                                 return false;
                             }
-                            return !endpoint.isPresent() || endpoint.get().equals(uri);
+                            return endpoint.isEmpty() || endpoint.get().equals(uri);
                         })
                 .forEach(
                         counter -> {

@@ -173,7 +173,7 @@ public class ProcessExecutor {
     public ProcessExecutorResult runCommandWithOutputHandling(
             List<String> command, File workingDirectory) throws IOException, InterruptedException {
         String messages = "";
-        int exitCode = 1;
+        int exitCode;
         semaphore.acquire();
         try {
 
@@ -255,8 +255,7 @@ public class ProcessExecutor {
             errorReaderThread.join();
             outputReaderThread.join();
 
-            boolean isQpdf =
-                    command != null && !command.isEmpty() && command.get(0).contains("qpdf");
+            boolean isQpdf = !command.isEmpty() && command.get(0).contains("qpdf");
 
             if (!outputLines.isEmpty()) {
                 String outputMessage = String.join("\n", outputLines);

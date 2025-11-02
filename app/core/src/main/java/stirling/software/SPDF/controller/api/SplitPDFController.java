@@ -108,9 +108,7 @@ public class SplitPDFController {
                     new ZipOutputStream(Files.newOutputStream(outputTempFile.getPath()))) {
                 int splitDocumentsSize = splitDocumentsBoas.size();
                 for (int i = 0; i < splitDocumentsSize; i++) {
-                    StringBuilder sb = new StringBuilder(baseFilename.length() + 10);
-                    sb.append(baseFilename).append('_').append(i + 1).append(".pdf");
-                    String fileName = sb.toString();
+                    String fileName = baseFilename + '_' + (i + 1) + ".pdf";
 
                     ByteArrayOutputStream baos = splitDocumentsBoas.get(i);
                     byte[] pdf = baos.toByteArray();

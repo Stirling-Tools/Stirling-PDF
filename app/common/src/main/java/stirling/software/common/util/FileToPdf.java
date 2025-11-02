@@ -44,9 +44,7 @@ public class FileToPdf {
                             sanitizeHtmlContent(
                                     new String(fileBytes, StandardCharsets.UTF_8),
                                     customHtmlSanitizer);
-                    Files.write(
-                            tempInputFile.getPath(),
-                            sanitizedHtml.getBytes(StandardCharsets.UTF_8));
+                    Files.writeString(tempInputFile.getPath(), sanitizedHtml);
                 } else if (fileName.toLowerCase().endsWith(".zip")) {
                     Files.write(tempInputFile.getPath(), fileBytes);
                     sanitizeHtmlFilesInZip(
@@ -108,8 +106,7 @@ public class FileToPdf {
                                     new String(zipIn.readAllBytes(), StandardCharsets.UTF_8);
                             String sanitizedContent =
                                     sanitizeHtmlContent(content, customHtmlSanitizer);
-                            Files.write(
-                                    filePath, sanitizedContent.getBytes(StandardCharsets.UTF_8));
+                            Files.writeString(filePath, sanitizedContent);
                         } else {
                             Files.copy(zipIn, filePath);
                         }
@@ -148,7 +145,7 @@ public class FileToPdf {
     private static void deleteDirectory(Path dir) throws IOException {
         Files.walkFileTree(
                 dir,
-                new SimpleFileVisitor<Path>() {
+                new SimpleFileVisitor<>() {
                     @Override
                     public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
                             throws IOException {

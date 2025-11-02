@@ -64,7 +64,7 @@ public class ConvertOfficeController {
 
         // Check for valid file extension
         String extension = FilenameUtils.getExtension(originalFilename);
-        if (extension == null || !isValidFileExtension(extension)) {
+        if (!isValidFileExtension(extension)) {
             throw new IllegalArgumentException("Invalid file extension");
         }
         String extensionLower = extension.toLowerCase();
