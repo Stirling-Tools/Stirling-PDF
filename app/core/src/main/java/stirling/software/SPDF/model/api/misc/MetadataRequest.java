@@ -1,7 +1,5 @@
 package stirling.software.SPDF.model.api.misc;
 
-import java.util.Map;
-
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import lombok.Data;
@@ -75,10 +73,4 @@ public class MetadataRequest extends PDFFile {
             allowableValues = {"True", "False", "Unknown"},
             requiredMode = Schema.RequiredMode.NOT_REQUIRED)
     private String trapped;
-
-    @Schema(
-            description =
-                    "Map list of key and value of custom parameters. Note these must start with"
-                            + " customKey and customValue if they are non-standard")
-    private Map<String, String> allRequestParams;
 }
