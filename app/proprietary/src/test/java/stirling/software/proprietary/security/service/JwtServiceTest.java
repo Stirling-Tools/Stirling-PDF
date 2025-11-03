@@ -1,12 +1,6 @@
 package stirling.software.proprietary.security.service;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.contains;
 import static org.mockito.Mockito.eq;
@@ -138,9 +132,7 @@ class JwtServiceTest {
 
         assertThrows(
                 AuthenticationFailureException.class,
-                () -> {
-                    jwtService.validateToken("invalid-token");
-                });
+                () -> jwtService.validateToken("invalid-token"));
     }
 
     @Test
@@ -152,9 +144,7 @@ class JwtServiceTest {
         AuthenticationFailureException exception =
                 assertThrows(
                         AuthenticationFailureException.class,
-                        () -> {
-                            jwtService.validateToken("malformed.token");
-                        });
+                        () -> jwtService.validateToken("malformed.token"));
 
         assertTrue(exception.getMessage().contains("Invalid"));
     }
@@ -167,10 +157,7 @@ class JwtServiceTest {
 
         AuthenticationFailureException exception =
                 assertThrows(
-                        AuthenticationFailureException.class,
-                        () -> {
-                            jwtService.validateToken("");
-                        });
+                        AuthenticationFailureException.class, () -> jwtService.validateToken(""));
 
         assertTrue(
                 exception.getMessage().contains("Claims are empty")
@@ -296,7 +283,7 @@ class JwtServiceTest {
     }
 
     @Test
-    void testGenerateTokenWithKeyId() throws Exception {
+    void testGenerateTokenWithKeyId() {
         String username = "testuser";
         Map<String, Object> claims = new HashMap<>();
 
