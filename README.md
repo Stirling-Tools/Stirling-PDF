@@ -56,7 +56,7 @@ All documentation available at [https://docs.stirlingpdf.com/](https://docs.stir
 - **Vector Image to PDF**: Convert vector images (PS, EPS, EPSF) to PDF format
 
 #### Convert from PDF
-- **PDF to Word**: Convert to documet (docx, doc, odt) format
+- **PDF to Word**: Convert to document (docx, doc, odt) format
 - **PDF to Image**: Extract PDF pages as images
 - **PDF to RTF (Text)**: Convert to Rich Text Format
 - **PDF to Presentation**: Convert to presentation (pptx, ppt, odp) format
