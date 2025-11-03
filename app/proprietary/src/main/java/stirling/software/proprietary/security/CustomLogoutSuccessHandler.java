@@ -72,13 +72,14 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
                             authentication.getClass().getSimpleName());
                     getRedirectStrategy().sendRedirect(request, response, LOGOUT_PATH);
                 }
-            } else if (jwtService != null) {
-                String token = jwtService.extractToken(request);
-                if (token != null && !token.isBlank()) {
-                    jwtService.clearToken(response);
-                    getRedirectStrategy().sendRedirect(request, response, LOGOUT_PATH);
-                }
             } else {
+                if (jwtService != null) {
+                    String token = jwtService.extractToken(request);
+                    if (token != null && !token.isBlank()) {
+                        getRedirectStrategy().sendRedirect(request, response, LOGOUT_PATH);
+                        return;
+                    }
+                }
                 // Redirect to login page after logout
                 String path = checkForErrors(request);
                 getRedirectStrategy().sendRedirect(request, response, path);
@@ -119,8 +120,12 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
             // Set service provider keys for the SamlClient
             samlClient.setSPKeys(certificate, privateKey);
 
-            // Redirect to identity provider for logout. todo: add relay state
-            samlClient.redirectToIdentityProvider(response, null, nameIdValue);
+            // Build relay state to return user to login page after IdP logout
+            String relayState =
+                    UrlUtils.getOrigin(request) + request.getContextPath() + LOGOUT_PATH;
+
+            // Redirect to identity provider for logout with relay state
+            samlClient.redirectToIdentityProvider(response, relayState, nameIdValue);
         } catch (Exception e) {
             log.error(
                     "Error retrieving logout URL from Provider {} for user {}",

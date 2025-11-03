@@ -1,6 +1,8 @@
 package stirling.software.proprietary.security;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 
@@ -38,7 +40,6 @@ class CustomLogoutSuccessHandlerTest {
 
         when(response.isCommitted()).thenReturn(false);
         when(jwtService.extractToken(request)).thenReturn(token);
-        doNothing().when(jwtService).clearToken(response);
         when(request.getContextPath()).thenReturn("");
         when(response.encodeRedirectURL(logoutPath)).thenReturn(logoutPath);
 
@@ -56,14 +57,12 @@ class CustomLogoutSuccessHandlerTest {
 
         when(response.isCommitted()).thenReturn(false);
         when(jwtService.extractToken(request)).thenReturn(token);
-        doNothing().when(jwtService).clearToken(response);
         when(request.getContextPath()).thenReturn("");
         when(response.encodeRedirectURL(logoutPath)).thenReturn(logoutPath);
 
         customLogoutSuccessHandler.onLogoutSuccess(request, response, null);
 
         verify(response).sendRedirect(logoutPath);
-        verify(jwtService).clearToken(response);
     }
 
     @Test

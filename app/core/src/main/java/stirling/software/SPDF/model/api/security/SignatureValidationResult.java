@@ -6,17 +6,32 @@ import lombok.Data;
 
 @Data
 public class SignatureValidationResult {
+    // Cryptographic signature validation
     private boolean valid;
+
+    // Certificate chain validation
+    private boolean chainValid;
+    private boolean trustValid;
+    private String chainValidationError;
+    private int certPathLength;
+
+    // Time validation
+    private boolean notExpired;
+
+    // Revocation validation
+    private boolean revocationChecked; // true if PKIX revocation was enabled
+    private String revocationStatus; // "not-checked" | "good" | "revoked" | "soft-fail" | "unknown"
+
+    private String validationTimeSource; // "current", "signing-time", or "timestamp"
+
+    // Signature metadata
     private String signerName;
     private String signatureDate;
     private String reason;
     private String location;
     private String errorMessage;
-    private boolean chainValid;
-    private boolean trustValid;
-    private boolean notExpired;
-    private boolean notRevoked;
 
+    // Certificate details
     private String issuerDN; // Certificate issuer's Distinguished Name
     private String subjectDN; // Certificate subject's Distinguished Name
     private String serialNumber; // Certificate serial number

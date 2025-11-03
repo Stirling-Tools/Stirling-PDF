@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "@app/*": [
+        "src/proprietary/*",
+        "src/core/*"
+      ],
+      "@proprietary/*": ["src/proprietary/*"],
+      "@core/*": ["src/core/*"]
+    }
+  }
+}

@@ -22,6 +22,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findByApiKey(String apiKey);
 
+    Optional<User> findBySsoProviderAndSsoProviderId(String ssoProvider, String ssoProviderId);
+
     List<User> findByAuthenticationTypeIgnoreCase(String authenticationType);
 
     @Query("SELECT u FROM User u WHERE u.team IS NULL")

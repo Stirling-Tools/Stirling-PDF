@@ -73,4 +73,90 @@ public class EmailService {
         // Sends the email via the configured mail sender
         mailSender.send(message);
     }
+
+    /**
+     * Sends a plain text/HTML email without attachments asynchronously.
+     *
+     * @param to The recipient email address
+     * @param subject The email subject
+     * @param body The email body (can contain HTML)
+     * @param isHtml Whether the body contains HTML content
+     * @throws MessagingException If there is an issue with creating or sending the email.
+     */
+    @Async
+    public void sendPlainEmail(String to, String subject, String body, boolean isHtml)
+            throws MessagingException {
+        // Validate recipient email address
+        if (to == null || to.trim().isEmpty()) {
+            throw new MessagingException("Invalid recipient email address");
+        }
+
+        ApplicationProperties.Mail mailProperties = applicationProperties.getMail();
+
+        // Creates a MimeMessage to represent the email
+        MimeMessage message = mailSender.createMimeMessage();
+
+        // Helper class to set up the message content
+        MimeMessageHelper helper = new MimeMessageHelper(message, false);
+
+        // Sets the recipient, subject, body, and sender email
+        helper.addTo(to);
+        helper.setSubject(subject);
+        helper.setText(body, isHtml);
+        helper.setFrom(mailProperties.getFrom());
+
+        // Sends the email via the configured mail sender
+        mailSender.send(message);
+    }
+
+    /**
+     * Sends an invitation email to a new user with their credentials.
+     *
+     * @param to The recipient email address
+     * @param username The username for the new account
+     * @param temporaryPassword The temporary password
+     * @throws MessagingException If there is an issue with creating or sending the email.
+     */
+    @Async
+    public void sendInviteEmail(String to, String username, String temporaryPassword)
+            throws MessagingException {
+        String subject = "Welcome to Stirling PDF";
+
+        String body =
+                """
+                <html><body style="margin: 0; padding: 0;">
+                <div style="font-family: Arial, sans-serif; background-color: #f8f9fa; padding: 20px;">
+                  <div style="max-width: 600px; margin: auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; border: 1px solid #e0e0e0;">
+                    <!-- Logo -->
+                    <div style="text-align: center; padding: 20px; background-color: #222;">
+                      <img src="https://raw.githubusercontent.com/Stirling-Tools/Stirling-PDF/main/docs/stirling-transparent.svg" alt="Stirling PDF" style="max-height: 60px;">
+                    </div>
+                    <!-- Content -->
+                    <div style="padding: 30px; color: #333;">
+                      <h2 style="color: #222; margin-top: 0;">Welcome to Stirling PDF!</h2>
+                      <p>Hi there,</p>
+                      <p>You have been invited to join the workspace. Below are your login credentials:</p>
+                      <!-- Credentials Box -->
+                      <div style="background-color: #f8f9fa; border-left: 4px solid #007bff; padding: 15px; margin: 20px 0; border-radius: 4px;">
+                        <p style="margin: 0 0 10px 0;"><strong>Username:</strong> %s</p>
+                        <p style="margin: 0;"><strong>Temporary Password:</strong> %s</p>
+                      </div>
+                      <div style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 4px;">
+                        <p style="margin: 0; color: #856404;"><strong>⚠️ Important:</strong> You will be required to change your password upon first login for security reasons.</p>
+                      </div>
+                      <p>Please keep these credentials secure and do not share them with anyone.</p>
+                      <p style="margin-bottom: 0;">— The Stirling PDF Team</p>
+                    </div>
+                    <!-- Footer -->
+                    <div style="text-align: center; padding: 15px; font-size: 12px; color: #777; background-color: #f0f0f0;">
+                      &copy; 2025 Stirling PDF. All rights reserved.
+                    </div>
+                  </div>
+                </div>
+                </body></html>
+                """
+                        .formatted(username, temporaryPassword);
+
+        sendPlainEmail(to, subject, body, true);
+    }
 }

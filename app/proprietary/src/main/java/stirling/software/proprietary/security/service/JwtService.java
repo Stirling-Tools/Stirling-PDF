@@ -14,14 +14,11 @@ import java.util.function.Function;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
-import io.github.pixee.security.Newlines;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
@@ -29,9 +26,7 @@ import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.security.SignatureException;
 
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -43,12 +38,8 @@ import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrin
 @Service
 public class JwtService implements JwtServiceInterface {
 
-    private static final String JWT_COOKIE_NAME = "stirling_jwt";
-    private static final String ISSUER = "Stirling PDF";
+    private static final String ISSUER = "https://stirling.com";
     private static final long EXPIRATION = 3600000;
-
-    @Value("${stirling.security.jwt.secureCookie:true}")
-    private boolean secureCookie;
 
     private final KeyPersistenceServiceInterface keyPersistenceService;
     private final boolean v2Enabled;
@@ -59,6 +50,7 @@ public class JwtService implements JwtServiceInterface {
             KeyPersistenceServiceInterface keyPersistenceService) {
         this.v2Enabled = v2Enabled;
         this.keyPersistenceService = keyPersistenceService;
+        log.info("JwtService initialized");
     }
 
     @Override
@@ -260,45 +252,16 @@ public class JwtService implements JwtServiceInterface {
 
     @Override
     public String extractToken(HttpServletRequest request) {
-        Cookie[] cookies = request.getCookies();
-
-        if (cookies != null) {
-            for (Cookie cookie : cookies) {
-                if (JWT_COOKIE_NAME.equals(cookie.getName())) {
-                    return cookie.getValue();
-                }
-            }
+        // Extract from Authorization header Bearer token
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7); // Remove "Bearer " prefix
+            log.debug("JWT token extracted from Authorization header");
+            return token;
         }
 
+        log.debug("No JWT token found in Authorization header");
         return null;
-    }
-
-    @Override
-    public void addToken(HttpServletResponse response, String token) {
-        ResponseCookie cookie =
-                ResponseCookie.from(JWT_COOKIE_NAME, Newlines.stripAll(token))
-                        .httpOnly(true)
-                        .secure(secureCookie)
-                        .sameSite("Strict")
-                        .maxAge(EXPIRATION / 1000)
-                        .path("/")
-                        .build();
-
-        response.addHeader("Set-Cookie", cookie.toString());
-    }
-
-    @Override
-    public void clearToken(HttpServletResponse response) {
-        ResponseCookie cookie =
-                ResponseCookie.from(JWT_COOKIE_NAME, "")
-                        .httpOnly(true)
-                        .secure(secureCookie)
-                        .sameSite("None")
-                        .maxAge(0)
-                        .path("/")
-                        .build();
-
-        response.addHeader("Set-Cookie", cookie.toString());
     }
 
     @Override

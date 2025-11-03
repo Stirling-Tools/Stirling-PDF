@@ -1,0 +1,63 @@
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+/* CSS Variables */
+:root {
+  --footer-height: 2rem;
+}
+
+/* Footer link styling - make buttons and links look identical */
+.footer-link {
+  color: var(--mantine-color-gray-6);
+  text-decoration: none;
+  transition: color 0.2s ease;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+  padding: 0;
+}
+
+.footer-link:hover {
+  color: var(--mantine-color-blue-8);
+  text-decoration: underline;
+}
+
+.stirling-link {
+  color: var(--mantine-color-blue-6);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.stirling-link:hover {
+  color: var(--mantine-color-blue-8);
+  text-decoration: underline;
+}
+
+/* Viewer file tabs */
+.viewer-file-tab {
+  justify-content: flex-start;
+}
+
+.viewer-file-tab[data-active] {
+  background-color: rgba(147, 197, 253, 0.5);
+}

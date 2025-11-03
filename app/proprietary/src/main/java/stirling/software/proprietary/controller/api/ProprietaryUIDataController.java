@@ -53,7 +53,6 @@ import stirling.software.proprietary.security.session.SessionPersistentRegistry;
 
 @Slf4j
 @ProprietaryUiDataApi
-@EnterpriseEndpoint
 public class ProprietaryUIDataController {
 
     private final ApplicationProperties applicationProperties;
@@ -89,6 +88,7 @@ public class ProprietaryUIDataController {
 
     @GetMapping("/audit-dashboard")
     @PreAuthorize("hasRole('ADMIN')")
+    @EnterpriseEndpoint
     @Operation(summary = "Get audit dashboard data")
     public ResponseEntity<AuditDashboardData> getAuditDashboardData() {
         AuditDashboardData data = new AuditDashboardData();
