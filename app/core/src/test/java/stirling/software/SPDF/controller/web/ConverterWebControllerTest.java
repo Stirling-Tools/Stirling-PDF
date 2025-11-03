@@ -25,11 +25,6 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.util.ApplicationContextProvider;
 import stirling.software.common.util.CheckProgramInstall;
 
-/**
- * Updated ConverterWebControllerTest
- *
- * <p>Fix: Using standalone MockMvc to avoid ApplicationContext load failures
- */
 @ExtendWith(MockitoExtension.class)
 class ConverterWebControllerTest {
 
