@@ -740,7 +740,7 @@ class PdfContainer {
         this.showButton(selectIcon, true);
       }
     } else {
-      console.log("Page Select off. Hidding buttons");
+      console.log("Page Select off. Hiding buttons");
       this.showButton(selectIcon, false);
       this.showButton(deselectIcon, false);
     }

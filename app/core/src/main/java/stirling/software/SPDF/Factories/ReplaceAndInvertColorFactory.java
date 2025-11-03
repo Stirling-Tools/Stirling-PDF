@@ -26,6 +26,10 @@ public class ReplaceAndInvertColorFactory {
             String backGroundColor,
             String textColor) {
 
+        if (replaceAndInvertOption == null) {
+            return null;
+        }
+
         return switch (replaceAndInvertOption) {
             case CUSTOM_COLOR, HIGH_CONTRAST_COLOR ->
                     new CustomColorReplaceStrategy(

@@ -213,7 +213,6 @@ public class ConvertWebsiteToPdfTest {
             assertNotNull(outPathStr);
 
             // Temp file must be deleted in finally
-            Path outPath = Path.of(outPathStr);
             assertFalse(
                     Files.exists(Path.of(htmlPathStr)),
                     "Temp HTML file should be deleted after the call");
@@ -226,8 +225,8 @@ public class ConvertWebsiteToPdfTest {
         UrlToPdfRequest request = new UrlToPdfRequest();
         request.setUrlInput("https://example.com");
 
-        Path preCreatedTemp = java.nio.file.Files.createTempFile("test_output_", ".pdf");
-        Path htmlTemp = java.nio.file.Files.createTempFile("test_input_", ".html");
+        Path preCreatedTemp = Files.createTempFile("test_output_", ".pdf");
+        Path htmlTemp = Files.createTempFile("test_input_", ".html");
 
         try (MockedStatic<GeneralUtils> gu = Mockito.mockStatic(GeneralUtils.class);
                 MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class);
@@ -272,15 +271,33 @@ public class ConvertWebsiteToPdfTest {
             assertNotNull(resp, "Response should not be null");
             assertEquals(HttpStatus.OK, resp.getStatusCode());
             assertTrue(
-                    java.nio.file.Files.exists(preCreatedTemp),
+                    Files.exists(preCreatedTemp),
                     "Temp file should still exist despite delete IOException");
         } finally {
             try {
-                java.nio.file.Files.deleteIfExists(preCreatedTemp);
-                java.nio.file.Files.deleteIfExists(htmlTemp);
+                Files.deleteIfExists(preCreatedTemp);
+                Files.deleteIfExists(htmlTemp);
             } catch (IOException ignore) {
             }
         }
+    }
+
+    private static MockedStatic<HttpClient> mockHttpClientReturning(String body) throws Exception {
+        MockedStatic<HttpClient> httpClientStatic = Mockito.mockStatic(HttpClient.class);
+        HttpClient.Builder builder = Mockito.mock(HttpClient.Builder.class);
+        HttpClient client = Mockito.mock(HttpClient.class);
+        HttpResponse<String> response = Mockito.mock();
+
+        httpClientStatic.when(HttpClient::newBuilder).thenReturn(builder);
+        when(builder.followRedirects(HttpClient.Redirect.NORMAL)).thenReturn(builder);
+        when(builder.connectTimeout(any(Duration.class))).thenReturn(builder);
+        when(builder.build()).thenReturn(client);
+
+        Mockito.doReturn(response).when(client).send(any(HttpRequest.class), any());
+        when(response.statusCode()).thenReturn(200);
+        when(response.body()).thenReturn(body);
+
+        return httpClientStatic;
     }
 
     @Test
@@ -291,7 +308,7 @@ public class ConvertWebsiteToPdfTest {
         try (MockedStatic<GeneralUtils> gu = Mockito.mockStatic(GeneralUtils.class);
                 MockedStatic<HttpClient> httpClient =
                         mockHttpClientReturning(
-                                "<link rel=\"attachment\" href=\"file:///etc/passwd\">"); ) {
+                                "<link rel=\"attachment\" href=\"file:///etc/passwd\">")) {
 
             gu.when(() -> GeneralUtils.isValidURL("https://example.com")).thenReturn(true);
             gu.when(() -> GeneralUtils.isURLReachable("https://example.com")).thenReturn(true);
@@ -305,24 +322,5 @@ public class ConvertWebsiteToPdfTest {
                     location.getQuery() != null
                             && location.getQuery().contains("error=error.disallowedUrlContent"));
         }
-    }
-
-    private MockedStatic<HttpClient> mockHttpClientReturning(String body) throws Exception {
-        MockedStatic<HttpClient> httpClientStatic = Mockito.mockStatic(HttpClient.class);
-        HttpClient.Builder builder = Mockito.mock(HttpClient.Builder.class);
-        HttpClient client = Mockito.mock(HttpClient.class);
-        HttpResponse<String> response = Mockito.mock(HttpResponse.class);
-
-        httpClientStatic.when(HttpClient::newBuilder).thenReturn(builder);
-        when(builder.followRedirects(HttpClient.Redirect.NORMAL)).thenReturn(builder);
-        when(builder.connectTimeout(any(Duration.class))).thenReturn(builder);
-        when(builder.build()).thenReturn(client);
-
-        when(client.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
-                .thenReturn(response);
-        when(response.statusCode()).thenReturn(200);
-        when(response.body()).thenReturn(body);
-
-        return httpClientStatic;
     }
 }
