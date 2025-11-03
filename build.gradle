@@ -15,6 +15,7 @@ import com.github.jk1.license.render.*
 
 ext {
     springBootVersion = "3.5.6"
+    springAiVersion = "1.0.1"
     pdfboxVersion = "3.0.5"
     imageioVersion = "3.12.0"
     lombokVersion = "1.18.42"
@@ -53,6 +54,7 @@ springBoot {
 repositories {
     mavenCentral()
     maven { url = 'https://build.shibboleth.net/maven/releases' }
+    maven { url = 'https://repo.spring.io/release' }
 }
 
 allprojects {
@@ -93,6 +95,7 @@ subprojects {
 
     repositories {
         mavenCentral()
+        maven { url = 'https://repo.spring.io/release' }
     }
 
     configurations.configureEach {
@@ -107,6 +110,7 @@ subprojects {
     dependencyManagement {
         imports {
             mavenBom "org.springframework.boot:spring-boot-dependencies:$springBootVersion"
+            mavenBom "org.springframework.ai:spring-ai-bom:$springAiVersion"
         }
     }
 

@@ -590,6 +590,7 @@ public class ApplicationProperties {
             private boolean ssoAutoLogin;
             private boolean database;
             private CustomMetadata customMetadata = new CustomMetadata();
+            private Chatbot chatbot = new Chatbot();
 
             @Data
             public static class CustomMetadata {
@@ -606,6 +607,50 @@ public class ApplicationProperties {
                     return producer == null || producer.trim().isEmpty()
                             ? "Stirling-PDF"
                             : producer;
+                }
+            }
+
+            @Data
+            public static class Chatbot {
+                private boolean enabled;
+                private boolean alphaWarning = true;
+                private Cache cache = new Cache();
+                private Models models = new Models();
+                private Rag rag = new Rag();
+                private Ocr ocr = new Ocr();
+                private Audit audit = new Audit();
+                private long maxPromptCharacters = 4000;
+                private double minConfidenceNano = 0.65;
+
+                @Data
+                public static class Cache {
+                    private long ttlMinutes = 720;
+                    private long maxEntries = 200;
+                    private long maxDocumentCharacters = 200000;
+                }
+
+                @Data
+                public static class Models {
+                    private String primary = "gpt-5-nano";
+                    private String fallback = "gpt-5-mini";
+                    private String embedding = "text-embedding-3-small";
+                }
+
+                @Data
+                public static class Rag {
+                    private int chunkSizeTokens = 512;
+                    private int chunkOverlapTokens = 128;
+                    private int topK = 8;
+                }
+
+                @Data
+                public static class Ocr {
+                    private boolean enabledByDefault;
+                }
+
+                @Data
+                public static class Audit {
+                    private boolean enabled = true;
                 }
             }
         }

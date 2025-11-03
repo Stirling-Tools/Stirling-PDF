@@ -91,6 +91,27 @@ premium:
       author: username
       creator: Stirling-PDF
       producer: Stirling-PDF
+    chatbot:
+      enabled: false # Master toggle for Stirling PDF chatbot feature
+      alphaWarning: true # Display alpha-state warning before any processing
+      cache:
+        ttlMinutes: 720 # Cache entry lifetime (12h)
+        maxEntries: 200 # Maximum number of cached documents per node
+        maxDocumentCharacters: 200000 # Reject uploads exceeding this character count
+      models:
+        primary: gpt-5-nano # Default lightweight model
+        fallback: gpt-5-mini # Escalation model for complex prompts
+        embedding: text-embedding-3-small # Embedding model for vector store usage
+      rag:
+        chunkSizeTokens: 512 # Token window used when chunking text
+        chunkOverlapTokens: 128 # Overlap between successive chunks
+        topK: 8 # Number of chunks to retrieve per query
+      ocr:
+        enabledByDefault: false # Whether OCR pre-processing is opted-in automatically
+      audit:
+        enabled: true # Emit audit records for chatbot activity
+      maxPromptCharacters: 4000 # Server-side guardrail for incoming prompts
+      minConfidenceNano: 0.65 # Minimum nano confidence to avoid escalation
   enterpriseFeatures:
     audit:
       enabled: true # Enable audit logging

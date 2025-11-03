@@ -41,6 +41,8 @@ dependencies {
     api 'org.springframework:spring-webmvc'
     api 'org.springframework.session:spring-session-core'
     api "org.springframework.security:spring-security-core:$springSecuritySamlVersion"
+    api "org.springframework.security:spring-security-web:$springSecuritySamlVersion"
+    api "org.springframework.security:spring-security-config:$springSecuritySamlVersion"
     api "org.springframework.security:spring-security-saml2-service-provider:$springSecuritySamlVersion"
     api 'org.springframework.boot:spring-boot-starter-jetty'
     api 'org.springframework.boot:spring-boot-starter-security'
@@ -50,12 +52,14 @@ dependencies {
     api 'org.springframework.boot:spring-boot-starter-cache'
     api 'com.github.ben-manes.caffeine:caffeine'
     api 'io.swagger.core.v3:swagger-core-jakarta:2.2.38'
+    implementation 'org.springframework.ai:spring-ai-spring-boot-starter:1.0.1'
+    implementation 'org.springframework.ai:spring-ai-openai-spring-boot-starter:1.0.1'
     implementation 'com.bucket4j:bucket4j_jdk17-core:8.15.0'
 
     // https://mvnrepository.com/artifact/com.bucket4j/bucket4j_jdk17
     implementation 'org.bouncycastle:bcprov-jdk18on:1.82'
 
-    implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity5:3.1.3.RELEASE'
+    // implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity5:3.1.3.RELEASE' // Removed - UI moved to React frontend
     api 'io.micrometer:micrometer-registry-prometheus'
     implementation 'com.unboundid.product.scim2:scim2-sdk-client:4.0.0'
 
