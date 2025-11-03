@@ -39,7 +39,6 @@ import stirling.software.proprietary.security.CustomLogoutSuccessHandler;
 import stirling.software.proprietary.security.JwtAuthenticationEntryPoint;
 import stirling.software.proprietary.security.database.repository.JPATokenRepositoryImpl;
 import stirling.software.proprietary.security.database.repository.PersistentLoginRepository;
-import stirling.software.proprietary.security.filter.FirstLoginFilter;
 import stirling.software.proprietary.security.filter.IPRateLimitingFilter;
 import stirling.software.proprietary.security.filter.JwtAuthenticationFilter;
 import stirling.software.proprietary.security.filter.UserAuthenticationFilter;
@@ -74,7 +73,6 @@ public class SecurityConfiguration {
     private final JwtServiceInterface jwtService;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     private final LoginAttemptService loginAttemptService;
-    private final FirstLoginFilter firstLoginFilter;
     private final SessionPersistentRegistry sessionRegistry;
     private final PersistentLoginRepository persistentLoginRepository;
     private final GrantedAuthoritiesMapper oAuth2userAuthoritiesMapper;
@@ -93,7 +91,6 @@ public class SecurityConfiguration {
             JwtServiceInterface jwtService,
             JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint,
             LoginAttemptService loginAttemptService,
-            FirstLoginFilter firstLoginFilter,
             SessionPersistentRegistry sessionRegistry,
             @Autowired(required = false) GrantedAuthoritiesMapper oAuth2userAuthoritiesMapper,
             @Autowired(required = false)
@@ -110,7 +107,6 @@ public class SecurityConfiguration {
         this.jwtService = jwtService;
         this.jwtAuthenticationEntryPoint = jwtAuthenticationEntryPoint;
         this.loginAttemptService = loginAttemptService;
-        this.firstLoginFilter = firstLoginFilter;
         this.sessionRegistry = sessionRegistry;
         this.persistentLoginRepository = persistentLoginRepository;
         this.oAuth2userAuthoritiesMapper = oAuth2userAuthoritiesMapper;
@@ -132,19 +128,14 @@ public class SecurityConfiguration {
         if (loginEnabledValue) {
             boolean v2Enabled = appConfig.v2Enabled();
 
-            if (v2Enabled) {
-                http.addFilterBefore(
-                                jwtAuthenticationFilter(),
-                                UsernamePasswordAuthenticationFilter.class)
-                        .exceptionHandling(
-                                exceptionHandling ->
-                                        exceptionHandling.authenticationEntryPoint(
-                                                jwtAuthenticationEntryPoint));
-            }
             http.addFilterBefore(
                             userAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-                    .addFilterAfter(rateLimitingFilter(), UserAuthenticationFilter.class)
-                    .addFilterAfter(firstLoginFilter, UsernamePasswordAuthenticationFilter.class);
+                    .addFilterBefore(
+                            rateLimitingFilter(), UsernamePasswordAuthenticationFilter.class);
+
+            if (v2Enabled) {
+                http.addFilterBefore(jwtAuthenticationFilter(), UserAuthenticationFilter.class);
+            }
 
             if (!securityProperties.getCsrfDisabled()) {
                 CookieCsrfTokenRepository cookieRepo =
@@ -156,6 +147,13 @@ public class SecurityConfiguration {
                         csrf ->
                                 csrf.ignoringRequestMatchers(
                                                 request -> {
+                                                    String uri = request.getRequestURI();
+
+                                                    // Ignore CSRF for auth endpoints
+                                                    if (uri.startsWith("/api/v1/auth/")) {
+                                                        return true;
+                                                    }
+
                                                     String apiKey = request.getHeader("X-API-KEY");
                                                     // If there's no API key, don't ignore CSRF
                                                     // (return false)
@@ -238,9 +236,12 @@ public class SecurityConfiguration {
                                                                 : uri;
                                                 return trimmedUri.startsWith("/login")
                                                         || trimmedUri.startsWith("/oauth")
+                                                        || trimmedUri.startsWith("/oauth2")
                                                         || trimmedUri.startsWith("/saml2")
                                                         || trimmedUri.endsWith(".svg")
                                                         || trimmedUri.startsWith("/register")
+                                                        || trimmedUri.startsWith("/signup")
+                                                        || trimmedUri.startsWith("/auth/callback")
                                                         || trimmedUri.startsWith("/error")
                                                         || trimmedUri.startsWith("/images/")
                                                         || trimmedUri.startsWith("/public/")
@@ -252,6 +253,16 @@ public class SecurityConfiguration {
                                                         || trimmedUri.startsWith("/favicon")
                                                         || trimmedUri.startsWith(
                                                                 "/api/v1/info/status")
+                                                        || trimmedUri.startsWith("/api/v1/config")
+                                                        || trimmedUri.startsWith(
+                                                                "/api/v1/auth/register")
+                                                        || trimmedUri.startsWith(
+                                                                "/api/v1/user/register")
+                                                        || trimmedUri.startsWith(
+                                                                "/api/v1/auth/login")
+                                                        || trimmedUri.startsWith(
+                                                                "/api/v1/auth/refresh")
+                                                        || trimmedUri.startsWith("/api/v1/auth/me")
                                                         || trimmedUri.startsWith("/v1/api-docs")
                                                         || uri.contains("/v1/api-docs");
                                             })
@@ -277,33 +288,40 @@ public class SecurityConfiguration {
             // Handle OAUTH2 Logins
             if (securityProperties.isOauth2Active()) {
                 http.oauth2Login(
-                        oauth2 ->
-                                oauth2.loginPage("/oauth2")
-                                        /*
-                                        This Custom handler is used to check if the OAUTH2 user trying to log in, already exists in the database.
-                                        If user exists, login proceeds as usual. If user does not exist, then it is auto-created but only if 'OAUTH2AutoCreateUser'
-                                        is set as true, else login fails with an error message advising the same.
-                                         */
-                                        .successHandler(
-                                                new CustomOAuth2AuthenticationSuccessHandler(
-                                                        loginAttemptService,
-                                                        securityProperties.getOauth2(),
-                                                        userService,
-                                                        jwtService))
-                                        .failureHandler(
-                                                new CustomOAuth2AuthenticationFailureHandler())
-                                        // Add existing Authorities from the database
-                                        .userInfoEndpoint(
-                                                userInfoEndpoint ->
-                                                        userInfoEndpoint
-                                                                .oidcUserService(
-                                                                        new CustomOAuth2UserService(
-                                                                                securityProperties,
-                                                                                userService,
-                                                                                loginAttemptService))
-                                                                .userAuthoritiesMapper(
-                                                                        oAuth2userAuthoritiesMapper))
-                                        .permitAll());
+                        oauth2 -> {
+                            // v1: Use /oauth2 as login page for Thymeleaf templates
+                            if (!v2Enabled) {
+                                oauth2.loginPage("/oauth2");
+                            }
+
+                            // v2: Don't set loginPage, let default OAuth2 flow handle it
+                            oauth2
+                                    /*
+                                       This Custom handler is used to check if the OAUTH2 user trying to log in, already exists in the database.
+                                       If user exists, login proceeds as usual. If user does not exist, then it is auto-created but only if 'OAUTH2AutoCreateUser'
+                                       is set as true, else login fails with an error message advising the same.
+                                    */
+                                    .successHandler(
+                                            new CustomOAuth2AuthenticationSuccessHandler(
+                                                    loginAttemptService,
+                                                    securityProperties.getOauth2(),
+                                                    userService,
+                                                    jwtService))
+                                    .failureHandler(new CustomOAuth2AuthenticationFailureHandler())
+                                    // Add existing Authorities from the database
+                                    .userInfoEndpoint(
+                                            userInfoEndpoint ->
+                                                    userInfoEndpoint
+                                                            .oidcUserService(
+                                                                    new CustomOAuth2UserService(
+                                                                            securityProperties
+                                                                                    .getOauth2(),
+                                                                            userService,
+                                                                            loginAttemptService))
+                                                            .userAuthoritiesMapper(
+                                                                    oAuth2userAuthoritiesMapper))
+                                    .permitAll();
+                        });
             }
             // Handle SAML
             if (securityProperties.isSaml2Active() && runningProOrHigher) {

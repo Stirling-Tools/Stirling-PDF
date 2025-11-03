@@ -236,6 +236,10 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
             contextPath + "/pdfjs/",
             contextPath + "/pdfjs-legacy/",
             contextPath + "/api/v1/info/status",
+            contextPath + "/api/v1/auth/login",
+            contextPath + "/api/v1/auth/register",
+            contextPath + "/api/v1/auth/refresh",
+            contextPath + "/api/v1/auth/me",
             contextPath + "/site.webmanifest"
         };
 

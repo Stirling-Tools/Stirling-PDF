@@ -15,6 +15,7 @@ import stirling.software.common.annotations.api.ConfigApi;
 import stirling.software.common.configuration.AppConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.ServerCertificateServiceInterface;
+import stirling.software.common.service.UserServiceInterface;
 
 @ConfigApi
 @Hidden
@@ -24,17 +25,21 @@ public class ConfigController {
     private final ApplicationContext applicationContext;
     private final EndpointConfiguration endpointConfiguration;
     private final ServerCertificateServiceInterface serverCertificateService;
+    private final UserServiceInterface userService;
 
     public ConfigController(
             ApplicationProperties applicationProperties,
             ApplicationContext applicationContext,
             EndpointConfiguration endpointConfiguration,
             @org.springframework.beans.factory.annotation.Autowired(required = false)
-                    ServerCertificateServiceInterface serverCertificateService) {
+                    ServerCertificateServiceInterface serverCertificateService,
+            @org.springframework.beans.factory.annotation.Autowired(required = false)
+                    UserServiceInterface userService) {
         this.applicationProperties = applicationProperties;
         this.applicationContext = applicationContext;
         this.endpointConfiguration = endpointConfiguration;
         this.serverCertificateService = serverCertificateService;
+        this.userService = userService;
     }
 
     @GetMapping("/app-config")
@@ -51,13 +56,25 @@ public class ConfigController {
             configData.put("serverPort", appConfig.getServerPort());
 
             // Extract values from ApplicationProperties
-            configData.put("appName", applicationProperties.getUi().getAppName());
             configData.put("appNameNavbar", applicationProperties.getUi().getAppNameNavbar());
-            configData.put("homeDescription", applicationProperties.getUi().getHomeDescription());
             configData.put("languages", applicationProperties.getUi().getLanguages());
 
             // Security settings
             configData.put("enableLogin", applicationProperties.getSecurity().getEnableLogin());
+
+            // Mail settings
+            configData.put("enableEmailInvites", applicationProperties.getMail().isEnableInvites());
+
+            // Check if user is admin using UserServiceInterface
+            boolean isAdmin = false;
+            if (userService != null) {
+                try {
+                    isAdmin = userService.isCurrentUserAdmin();
+                } catch (Exception e) {
+                    // If there's an error, isAdmin remains false
+                }
+            }
+            configData.put("isAdmin", isAdmin);
 
             // System settings
             configData.put(
@@ -65,6 +82,8 @@ public class ConfigController {
                     applicationProperties.getSystem().getEnableAlphaFunctionality());
             configData.put(
                     "enableAnalytics", applicationProperties.getSystem().getEnableAnalytics());
+            configData.put("enablePosthog", applicationProperties.getSystem().getEnablePosthog());
+            configData.put("enableScarf", applicationProperties.getSystem().getEnableScarf());
 
             // Premium/Enterprise settings
             configData.put("premiumEnabled", applicationProperties.getPremium().isEnabled());

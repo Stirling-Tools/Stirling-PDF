@@ -1,0 +1,58 @@
+# Example Docker Compose for Unified Stirling-PDF Container
+# MODE=BACKEND: Backend API only (no frontend)
+
+services:
+  stirling-pdf-backend-only:
+    container_name: Stirling-PDF-Backend-Only
+    build:
+      context: ../..
+      dockerfile: docker/Dockerfile.unified
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./stirling/data:/usr/share/tessdata:rw
+      - ./stirling/config:/configs:rw
+      - ./stirling/logs:/logs:rw
+      - ./stirling/customFiles:/customFiles:rw
+      - ./stirling/pipeline:/pipeline:rw
+    environment:
+      # MODE parameter: BACKEND only
+      MODE: BACKEND
+
+      # Standard Stirling-PDF configuration
+      DISABLE_ADDITIONAL_FEATURES: "false"
+      DOCKER_ENABLE_SECURITY: "false"
+      PUID: 1000
+      PGID: 1000
+      UMASK: "022"
+
+      # Application settings
+      SYSTEM_DEFAULTLOCALE: en-US
+      UI_APPNAME: Stirling-PDF
+      SYSTEM_MAXFILESIZE: "100"
+      METRICS_ENABLED: "true"
+
+      # Optional: Add OCR languages (comma-separated)
+      # TESSERACT_LANGS: "deu,fra,spa"
+
+      # Optional: Java memory settings
+      # JAVA_CUSTOM_OPTS: "-Xmx4g"
+
+    restart: unless-stopped
+
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/api/v1/info/status || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+        reservations:
+          memory: 2G
+
+# Access the API at: http://localhost:8080/api
+# Swagger UI at: http://localhost:8080/swagger-ui/index.html
