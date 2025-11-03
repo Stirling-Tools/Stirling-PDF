@@ -53,7 +53,7 @@ export const TextInputWithFont: React.FC<TextInputWithFontProps> = ({
   return (
     <Stack gap="sm">
       <TextInput
-        label={label || t('sign.text.name', 'Signer Name')}
+        label={label || t('sign.text.name', 'Signer name')}
         placeholder={placeholder || t('sign.text.placeholder', 'Enter your full name')}
         value={text}
         onChange={(e) => onTextChange(e.target.value)}
@@ -63,7 +63,7 @@ export const TextInputWithFont: React.FC<TextInputWithFontProps> = ({
 
       {/* Font Selection */}
       <Select
-        label="Font"
+        label={t('sign.text.fontLabel', 'Font')}
         value={fontFamily}
         onChange={(value) => onFontFamilyChange(value || 'Helvetica')}
         data={fontOptions}
@@ -88,8 +88,8 @@ export const TextInputWithFont: React.FC<TextInputWithFontProps> = ({
         >
           <Combobox.Target>
             <TextInput
-              label="Font Size"
-              placeholder="Type or select font size (8-200)"
+              label={t('sign.text.fontSizeLabel', 'Font size')}
+              placeholder={t('sign.text.fontSizePlaceholder', 'Type or select font size (8-200)')}
               value={fontSizeInput}
               onChange={(event) => {
                 const value = event.currentTarget.value;
@@ -135,12 +135,12 @@ export const TextInputWithFont: React.FC<TextInputWithFontProps> = ({
         {onTextColorChange && (
           <Box>
             <TextInput
-              label="Text Color"
+              label={t('sign.text.colorLabel', 'Text colour')}
               value={textColor}
               readOnly
               disabled={disabled}
               onClick={() => !disabled && setIsColorPickerOpen(true)}
-              style={{ cursor: disabled ? 'default' : 'pointer' }}
+              style={{ cursor: disabled ? 'default' : 'pointer', width: '100%' }}
               rightSection={
                 <Box
                   style={{

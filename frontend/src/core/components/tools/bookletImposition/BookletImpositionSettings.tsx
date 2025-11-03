@@ -67,8 +67,8 @@ const BookletImpositionSettings = ({ parameters, onParameterChange, disabled = f
 
             <Text size="xs" c="blue" fs="italic">
               {parameters.duplexPass === 'FIRST'
-                ? t('bookletImposition.duplexPass.firstInstructions', 'Prints front sides → stack face-down → run again with 2nd Pass')
-                : t('bookletImposition.duplexPass.secondInstructions', 'Load printed stack face-down → prints back sides')
+                ? t('bookletImposition.duplexPass.firstInstructions', 'Prints front sides -> stack face-down -> run again with 2nd Pass')
+                : t('bookletImposition.duplexPass.secondInstructions', 'Load printed stack face-down -> prints back sides')
               }
             </Text>
           </Stack>
@@ -84,7 +84,7 @@ const BookletImpositionSettings = ({ parameters, onParameterChange, disabled = f
           onClick={() => setAdvancedOpen(!advancedOpen)}
           disabled={disabled}
         >
-          {t('bookletImposition.advanced.toggle', 'Advanced Options')} {advancedOpen ? '▲' : '▼'}
+          {t('bookletImposition.advanced.toggle', 'Advanced Options')} {advancedOpen ? '^' : 'v'}
         </Button>
 
         <Collapse in={advancedOpen}>

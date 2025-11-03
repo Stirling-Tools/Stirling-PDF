@@ -9,7 +9,7 @@ export interface SignaturePosition {
 }
 
 export interface SignParameters {
-  signatureType: 'image' | 'text' | 'draw' | 'canvas';
+  signatureType: 'image' | 'text' | 'canvas';
   signatureData?: string; // Base64 encoded image or text content
   signaturePosition?: SignaturePosition;
   reason?: string;

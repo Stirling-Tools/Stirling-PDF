@@ -115,6 +115,29 @@ const Sign = (props: BaseToolProps) => {
         // Deactivate signature placement mode after everything completes
         handleDeactivateSignature();
 
+        const hasSignatureReady = (() => {
+          const params = base.params.parameters;
+          switch (params.signatureType) {
+            case 'canvas':
+            case 'image':
+              return Boolean(params.signatureData);
+            case 'text':
+              return Boolean(params.signerName && params.signerName.trim() !== '');
+            default:
+              return false;
+          }
+        })();
+
+        if (hasSignatureReady) {
+          if (typeof window !== 'undefined') {
+            window.setTimeout(() => {
+              handleActivateSignaturePlacement();
+            }, 150);
+          } else {
+            handleActivateSignaturePlacement();
+          }
+        }
+
         // File has been consumed - viewer should reload automatically via key prop
       } else {
         console.error('Signature flattening failed');
@@ -122,7 +145,7 @@ const Sign = (props: BaseToolProps) => {
     } catch (error) {
       console.error('Error saving signed document:', error);
     }
-  }, [exportActions, base.selectedFiles, selectors, consumeFiles, signatureApiRef, getImageData, setWorkbench, activateDrawMode, setSignaturesApplied, getScrollState, handleDeactivateSignature, setHasUnsavedChanges, unregisterUnsavedChangesChecker, activeFileIndex, setActiveFileIndex]);
+  }, [exportActions, base.selectedFiles, base.params.parameters, selectors, consumeFiles, signatureApiRef, getImageData, setWorkbench, activateDrawMode, setSignaturesApplied, getScrollState, handleDeactivateSignature, handleActivateSignaturePlacement, setHasUnsavedChanges, unregisterUnsavedChangesChecker, activeFileIndex, setActiveFileIndex]);
 
   const getSteps = () => {
     const steps = [];
