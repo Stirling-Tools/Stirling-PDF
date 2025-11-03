@@ -77,10 +77,6 @@ public class MergeController {
                 stirling.software.common.util.RegexPatternUtils.getInstance()
                         .getNewlineSplitPattern()
                         .split(fileOrder);
-        log.info(
-                "Desired file order from frontend (count={}): {}",
-                desired.length,
-                Arrays.toString(desired));
 
         List<MultipartFile> remaining = new ArrayList<>(Arrays.asList(files));
         List<MultipartFile> ordered = new ArrayList<>(files.length);
@@ -95,6 +91,7 @@ public class MergeController {
             if (idx >= 0) {
                 ordered.add(remaining.remove(idx));
             } else {
+                log.debug("Filename from order list not found in uploaded files: {}", name);
             }
         }
 
