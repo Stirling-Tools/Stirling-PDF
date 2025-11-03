@@ -38,6 +38,7 @@
   "language": {
     "direction": "ltr"
   },
+  "cancel": "Cancel",
   "addPageNumbers": {
     "fontSize": "Font Size",
     "fontName": "Font Name",
@@ -2117,6 +2118,12 @@
     "tags": "differentiate,contrast,changes,analysis",
     "title": "Compare",
     "header": "Compare PDFs",
+    "clearSelected": "Clear selected",
+    "clear": {
+      "confirmTitle": "Clear selected PDFs?",
+      "confirmBody": "This will close the current comparison and take you back to Active Files.",
+      "confirm": "Clear and return"
+    },
     "review": {
       "title": "Comparison Result",
       "actionsHint": "Review the comparison, switch document roles, or export the summary.",
@@ -2153,6 +2160,8 @@
       "pageLabel": "Page"
     },
     "rendering": {
+      "pageNotReadyTitle": "Page not rendered yet",
+      "pageNotReadyBody": "Some pages are still rendering. Navigation will snap once they are ready.",
       "rendering": "rendering",
       "inProgress": "One or both of these PDFs are very large, scrolling won't be smooth until the rendering is complete",
       "pagesRendered": "pages rendered",
@@ -2173,7 +2182,9 @@
       "zoomIn": "Zoom in",
       "resetView": "Reset view",
       "unlinkScrollPan": "Unlink scroll and pan",
-      "linkScrollPan": "Link scroll and pan"
+      "linkScrollPan": "Link scroll and pan",
+      "unlinkScroll": "Unlink scroll",
+      "linkScroll": "Link scroll"
     },
     "toasts": {
       "unlinkedTitle": "Independent scroll & pan enabled",
