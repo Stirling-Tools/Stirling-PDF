@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import type React from 'react';
 import { useTranslation } from 'react-i18next';
 import LocalIcon from '@app/components/shared/LocalIcon';
 import { alert } from '@app/components/toast';
@@ -17,6 +18,7 @@ export interface UseCompareRightRailButtonsOptions {
   comparisonZoom: number;
   setBaseZoom: (value: number) => void;
   setComparisonZoom: (value: number) => void;
+  setPanToTopLeft: (pane: Pane) => void;
   centerPanForZoom: (pane: Pane, zoom: number) => void;
   clampPanForZoom: (pane: Pane, zoom: number) => void;
   clearScrollLinkDelta: () => void;
@@ -24,6 +26,8 @@ export interface UseCompareRightRailButtonsOptions {
   isScrollLinked: boolean;
   setIsScrollLinked: (value: boolean) => void;
   zoomLimits: { min: number; max: number; step: number };
+  baseScrollRef?: React.RefObject<HTMLDivElement | null>;
+  comparisonScrollRef?: React.RefObject<HTMLDivElement | null>;
 }
 
 export const useCompareRightRailButtons = ({
@@ -35,6 +39,7 @@ export const useCompareRightRailButtons = ({
   comparisonZoom,
   setBaseZoom,
   setComparisonZoom,
+  setPanToTopLeft,
   centerPanForZoom,
   clampPanForZoom,
   clearScrollLinkDelta,
@@ -42,6 +47,8 @@ export const useCompareRightRailButtons = ({
   isScrollLinked,
   setIsScrollLinked,
   zoomLimits,
+  baseScrollRef,
+  comparisonScrollRef,
 }: UseCompareRightRailButtonsOptions): RightRailButtonWithAction[] => {
   const { t } = useTranslation();
   const isMobile = useIsMobile();
@@ -111,9 +118,16 @@ export const useCompareRightRailButtons = ({
       onClick: () => {
         setBaseZoom(1);
         setComparisonZoom(1);
-        centerPanForZoom('base', 1);
-        centerPanForZoom('comparison', 1);
+    setPanToTopLeft('base');
+    setPanToTopLeft('comparison');
         clearScrollLinkDelta();
+        // Reset scrollTop for both panes to realign view
+        if (baseScrollRef?.current) {
+          baseScrollRef.current.scrollTop = 0;
+        }
+        if (comparisonScrollRef?.current) {
+          comparisonScrollRef.current.scrollTop = 0;
+        }
       },
     },
     {
@@ -163,6 +177,7 @@ export const useCompareRightRailButtons = ({
     setComparisonZoom,
     centerPanForZoom,
     clampPanForZoom,
+  setPanToTopLeft,
     clearScrollLinkDelta,
     captureScrollLinkDelta,
     isScrollLinked,

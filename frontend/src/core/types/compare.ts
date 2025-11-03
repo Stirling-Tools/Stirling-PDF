@@ -143,9 +143,6 @@ export interface CompareDocumentPaneProps {
   scrollRef: React.RefObject<HTMLDivElement | null>;
   peerScrollRef: React.RefObject<HTMLDivElement | null>;
   handleScrollSync: (source: HTMLDivElement | null, target: HTMLDivElement | null) => void;
-  beginPan: (pane: 'base' | 'comparison', event: React.MouseEvent<HTMLDivElement>) => void;
-  continuePan: (event: React.MouseEvent<HTMLDivElement>) => void;
-  endPan: () => void;
   handleWheelZoom: (pane: 'base' | 'comparison', event: React.WheelEvent<HTMLDivElement>) => void;
   handleWheelOverscroll: (pane: 'base' | 'comparison', event: React.WheelEvent<HTMLDivElement>) => void;
   onTouchStart: (pane: 'base' | 'comparison', event: React.TouchEvent<HTMLDivElement>) => void;
@@ -153,7 +150,6 @@ export interface CompareDocumentPaneProps {
   onTouchEnd: (event: React.TouchEvent<HTMLDivElement>) => void;
   isPanMode: boolean;
   zoom: number;
-  pan?: { x: number; y: number };
   title: string;
   dropdownPlaceholder?: React.ReactNode;
   changes: Array<{ value: string; label: string; pageNumber?: number }>;
@@ -261,6 +257,7 @@ export interface UseComparePanZoomReturn {
   setComparisonZoom: (value: number) => void;
   basePan: PanState;
   comparisonPan: PanState;
+  setPanToTopLeft: (pane: ComparePane) => void;
   centerPanForZoom: (pane: ComparePane, zoom: number) => void;
   clampPanForZoom: (pane: ComparePane, zoom: number) => void;
   handleScrollSync: (source: HTMLDivElement | null, target: HTMLDivElement | null) => void;

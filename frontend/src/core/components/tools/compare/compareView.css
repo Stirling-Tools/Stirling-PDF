@@ -44,6 +44,7 @@
   flex: 1;
   min-height: 0;
   overflow: auto;
+  overscroll-behavior: contain;
 }
 
 .compare-pane__content {
@@ -99,8 +100,8 @@
 
 /* Dropdown badge-like style - only style the dropdowns, not titles */
 .compare-changes-select {
-  background: rgba(255, 59, 48, 0.15) !important;
-  color: #b91c1c !important;
+  background: var(--spdf-compare-removed-badge-bg) !important;
+  color: var(--spdf-compare-removed-badge-fg) !important;
   border: none !important;
   border-radius: 8px !important;
   font-weight: 500 !important;
@@ -126,8 +127,8 @@
 }
 
 .compare-changes-select--comparison {
-  background: rgba(52, 199, 89, 0.18) !important;
-  color: #1b5e20 !important;
+  background: var(--spdf-compare-added-badge-bg) !important;
+  color: var(--spdf-compare-added-badge-fg) !important;
   border: none !important;
   border-radius: 8px !important;
   font-weight: 500 !important;
@@ -227,11 +228,11 @@
 }
 
 .compare-changes-select .mantine-Combobox-option:hover {
-  background-color: rgba(255, 59, 48, 0.1) !important;
+  background-color: var(--spdf-compare-removed-badge-bg) !important;
 }
 
 .compare-changes-select--comparison .mantine-Combobox-option:hover {
-  background-color: rgba(52, 199, 89, 0.15) !important;
+  background-color: var(--spdf-compare-added-badge-bg) !important;
 }
 
 /* Style the search input */
@@ -374,6 +375,7 @@
   max-width: 100%;
   background-color: #fff; /* ensure stable white backing during load */
   border: 1px solid var(--border-subtle);
+  will-change: transform;
 }
 
 .compare-diff-page__image {
@@ -470,10 +472,10 @@
   padding: 0.05rem 0.15rem;
 }
 .compare-inline--removed {
-  background-color: rgba(255, 59, 48, 0.25);
+  background-color: var(--spdf-compare-inline-removed-bg);
 }
 .compare-inline--added {
-  background-color: rgba(52, 199, 89, 0.25);
+  background-color: var(--spdf-compare-inline-added-bg);
 }
 
 .compare-pane-header {

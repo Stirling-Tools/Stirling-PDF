@@ -1,3 +1,19 @@
+:root {
+  /* Compare highlight colors (same in light/dark) */
+  --spdf-compare-removed-bg: rgba(255, 107, 107, 0.45); /* #ff6b6b @ 0.45 */
+  --spdf-compare-added-bg: rgba(81, 207, 102, 0.35);  /* #51cf66 @ 0.35 */
+
+  /* Badge colors for dropdowns */
+  --spdf-compare-removed-badge-bg: rgba(255, 59, 48, 0.15);
+  --spdf-compare-removed-badge-fg: #b91c1c;
+  --spdf-compare-added-badge-bg: rgba(52, 199, 89, 0.18);
+  --spdf-compare-added-badge-fg: #1b5e20;
+
+  /* Inline highlights in summary */
+  --spdf-compare-inline-removed-bg: rgba(255, 59, 48, 0.25);
+  --spdf-compare-inline-added-bg: rgba(52, 199, 89, 0.25);
+}
+
 /* CSS variables for Tailwind + Mantine integration */
 
 :root {

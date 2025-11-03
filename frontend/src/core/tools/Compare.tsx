@@ -500,10 +500,10 @@ const Compare = (props: BaseToolProps) => {
                     variant="filled"
                     onClick={() => {
                       setClearConfirmOpen(false);
-                      try { base.operation.cancelOperation(); } catch {}
-                      try { base.operation.resetResults(); } catch {}
+                      try { base.operation.cancelOperation(); } catch {console.error('Failed to cancel operation');}
+                      try { base.operation.resetResults(); } catch {console.error('Failed to reset results');}
                       base.params.setParameters(prev => ({ ...prev, baseFileId: null, comparisonFileId: null }));
-                      try { fileActions.clearSelections(); } catch {}
+                      try { fileActions.clearSelections(); } catch {console.error('Failed to clear selections');}
                       clearCustomWorkbenchViewData(CUSTOM_VIEW_ID);
                       navigationActions.setWorkbench(getDefaultWorkbench());
                     }}

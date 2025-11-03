@@ -3,12 +3,18 @@ import { Loader, Stack } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { useIsMobile } from '@app/hooks/useIsMobile';
 import {
+  mapChangesForDropdown,
+  getFileFromSelection,
+  getStubFromSelection,
+  computeShowProgressBanner,
+  computeProgressPct,
+  computeCountsText,
+  computeMaxSharedPages,
+} from '@app/components/tools/compare/compare';
+import {
   CompareResultData,
   CompareWorkbenchData,
-  CompareChangeOption,
 } from '@app/types/compare';
-import type { FileId } from '@app/types/file';
-import type { StirlingFile } from '@app/types/fileContext';
 import { useFileContext } from '@app/contexts/file/fileHooks';
 import { useRightRailButtons } from '@app/hooks/useRightRailButtons';
 import CompareDocumentPane from '@app/components/tools/compare/CompareDocumentPane';
@@ -25,26 +31,7 @@ interface CompareWorkbenchViewProps {
   data: CompareWorkbenchData | null;
 }
 
-const getFileFromSelection = (
-  explicit: StirlingFile | null | undefined,
-  fileId: FileId | null,
-  selectors: ReturnType<typeof useFileContext>['selectors'],
-) => {
-  if (explicit) return explicit;
-  if (!fileId) return null;
-  return selectors.getFile(fileId) ?? null;
-};
-
-const getStubFromSelection = (
-  fileId: FileId | null,
-  selectors: ReturnType<typeof useFileContext>['selectors'],
-) => {
-  if (!fileId) return null;
-  return selectors.getStirlingFileStub(fileId) ?? null;
-};
-
-const mapChangesForDropdown = (changes: CompareChangeOption[]) =>
-  changes.map(({ value, label, pageNumber }) => ({ value, label, pageNumber }));
+// helpers moved to compare.ts
 
 const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
   const { t } = useTranslation();
@@ -58,8 +45,8 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
 
   const baseFile = getFileFromSelection(data?.baseLocalFile, baseFileId, selectors);
   const comparisonFile = getFileFromSelection(data?.comparisonLocalFile, comparisonFileId, selectors);
-  const baseStub = getStubFromSelection(baseFileId, selectors);
-  const comparisonStub = getStubFromSelection(comparisonFileId, selectors);
+  const baseStub = getStubFromSelection(baseFileId, selectors) as any;
+  const comparisonStub = getStubFromSelection(comparisonFileId, selectors) as any;
 
   const processedAt = result?.totals.processedAt ?? null;
 
@@ -81,9 +68,6 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
     baseScrollRef,
     comparisonScrollRef,
     handleScrollSync,
-    beginPan,
-    continuePan,
-    endPan,
     handleWheelZoom,
     handleWheelOverscroll,
     onTouchStart,
@@ -92,11 +76,10 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
     isPanMode,
     setIsPanMode,
     baseZoom,
-    setBaseZoom,
+    setBaseZoom,  
     comparisonZoom,
     setComparisonZoom,
-    basePan,
-    comparisonPan,
+    setPanToTopLeft,
     centerPanForZoom,
     clampPanForZoom,
     clearScrollLinkDelta,
@@ -149,6 +132,7 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
     comparisonZoom,
     setBaseZoom,
     setComparisonZoom,
+    setPanToTopLeft,
     centerPanForZoom,
     clampPanForZoom,
     clearScrollLinkDelta,
@@ -156,6 +140,8 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
     isScrollLinked,
     setIsScrollLinked,
     zoomLimits,
+    baseScrollRef,
+    comparisonScrollRef,
   });
 
   useRightRailButtons(rightRailButtons);
@@ -163,17 +149,11 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
   // Rendering progress toast for very large PDFs
   const LARGE_PAGE_THRESHOLD = 400; // show banner when one or both exceed threshold
   const totalsKnown = (baseTotal ?? 0) > 0 && (compTotal ?? 0) > 0;
-  const showProgressBanner = useMemo(() => {
-    if (!totalsKnown) return false; // avoid premature 100% before totals are known
-    const totals = [baseTotal!, compTotal!];
-    return Math.max(...totals) >= LARGE_PAGE_THRESHOLD && (baseLoading || comparisonLoading);
-  }, [totalsKnown, baseTotal, compTotal, baseLoading, comparisonLoading]);
+  const showProgressBanner = useMemo(() => (
+    computeShowProgressBanner(totalsKnown, baseTotal, compTotal, baseLoading, comparisonLoading, LARGE_PAGE_THRESHOLD)
+  ), [totalsKnown, baseTotal, compTotal, baseLoading, comparisonLoading]);
 
-  const totalCombined = totalsKnown ? (baseTotal! + compTotal!) : 0;
-  const renderedCombined = baseRendered + compRendered;
-  const progressPct = totalsKnown && totalCombined > 0
-    ? Math.min(100, Math.round((renderedCombined / totalCombined) * 100))
-    : 0;
+  const progressPct = computeProgressPct(totalsKnown, baseTotal, compTotal, baseRendered, compRendered);
 
   const progressToastIdRef = useRef<string | null>(null);
   const completionTimerRef = useRef<number | null>(null);
@@ -208,7 +188,14 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
       return;
     }
 
-    const countsText = `${baseRendered}/${baseTotal || basePages.length} • ${compRendered}/${compTotal || comparisonPages.length}`;
+    const countsText = computeCountsText(
+      baseRendered,
+      baseTotal,
+      basePages.length,
+      compRendered,
+      compTotal,
+      comparisonPages.length,
+    );
     if (!allDone) {
       // Create toast if missing
       if (!progressToastIdRef.current) {
@@ -266,13 +253,9 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
   }, [showProgressBanner, allDone, progressPct, baseRendered, compRendered, baseTotal, compTotal, basePages.length, comparisonPages.length, t]);
 
   // Shared page navigation state/input
-  const maxSharedPages = useMemo(() => {
-    const baseMax = baseTotal || basePages.length || 0;
-    const compMax = compTotal || comparisonPages.length || 0;
-    const minKnown = Math.min(baseMax || Infinity, compMax || Infinity);
-    if (!Number.isFinite(minKnown)) return 0;
-    return Math.max(0, minKnown);
-  }, [baseTotal, compTotal, basePages.length, comparisonPages.length]);
+  const maxSharedPages = useMemo(() => (
+    computeMaxSharedPages(baseTotal, compTotal, basePages.length, comparisonPages.length)
+  ), [baseTotal, compTotal, basePages.length, comparisonPages.length]);
 
   const [pageInputValue, setPageInputValue] = useState<string>('1');
   const typingTimerRef = useRef<number | null>(null);
@@ -343,14 +326,6 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
     }, 300);
   }, [maxSharedPages, scrollBothToPage]);
 
-  const handleVisiblePageChange = useCallback((pane: 'base' | 'comparison', page: number) => {
-    // Reflect scroll position in the input, but do not trigger navigation
-    if (isTypingRef.current) return; // ignore during typing debounce window
-    if (page <= 0) return;
-    const display = String(Math.min(maxSharedPages || page, page));
-    setPageInputValue(display);
-  }, [maxSharedPages]);
-
   return (
     <Stack className="compare-workbench">
 
@@ -364,9 +339,6 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
               scrollRef={baseScrollRef}
               peerScrollRef={comparisonScrollRef}
               handleScrollSync={handleScrollSync}
-              beginPan={beginPan}
-              continuePan={continuePan}
-              endPan={endPan}
               handleWheelZoom={handleWheelZoom}
               handleWheelOverscroll={handleWheelOverscroll}
               onTouchStart={onTouchStart}
@@ -374,10 +346,9 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
               onTouchEnd={onTouchEnd}
               isPanMode={isPanMode}
               zoom={baseZoom}
-            pan={basePan}
               title={baseTitle}
               dropdownPlaceholder={baseDropdownPlaceholder}
-            changes={mapChangesForDropdown(baseWordChanges)}
+              changes={mapChangesForDropdown(baseWordChanges)}
               onNavigateChange={(value, pageNumber) => handleChangeNavigation(value, 'base', pageNumber)}
               isLoading={isOperationLoading || baseLoading}
               processingMessage={processingMessage}
@@ -392,7 +363,6 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
             pageInputValue={pageInputValue}
             onPageInputChange={handleTypingChange}
             maxSharedPages={maxSharedPages}
-            onVisiblePageChange={handleVisiblePageChange}
             />
             <CompareDocumentPane
               pane="comparison"
@@ -400,9 +370,6 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
               scrollRef={comparisonScrollRef}
               peerScrollRef={baseScrollRef}
               handleScrollSync={handleScrollSync}
-              beginPan={beginPan}
-              continuePan={continuePan}
-              endPan={endPan}
               handleWheelZoom={handleWheelZoom}
               handleWheelOverscroll={handleWheelOverscroll}
               onTouchStart={onTouchStart}
@@ -410,7 +377,6 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
               onTouchEnd={onTouchEnd}
               isPanMode={isPanMode}
               zoom={comparisonZoom}
-            pan={comparisonPan}
               title={comparisonTitle}
               dropdownPlaceholder={comparisonDropdownPlaceholder}
             changes={mapChangesForDropdown(comparisonWordChanges)}
@@ -428,7 +394,6 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
             pageInputValue={pageInputValue}
             onPageInputChange={handleTypingChange}
             maxSharedPages={maxSharedPages}
-            onVisiblePageChange={handleVisiblePageChange}
             />
           </div>
         </Stack>

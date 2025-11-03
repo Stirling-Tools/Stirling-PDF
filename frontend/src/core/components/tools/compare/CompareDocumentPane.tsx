@@ -1,56 +1,12 @@
 import { Group, Loader, Stack, Text } from '@mantine/core';
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState, useEffect } from 'react';
 import type { PagePreview } from '@app/types/compare';
 import type { TokenBoundingBox, CompareDocumentPaneProps } from '@app/types/compare';
+import { mergeConnectedRects, normalizeRotation, groupWordRects, computePageLayoutMetrics } from '@app/components/tools/compare/compare';
 import CompareNavigationDropdown from '@app/components/tools/compare/CompareNavigationDropdown';
 import { useIsMobile } from '@app/hooks/useIsMobile';
 
-const toRgba = (hexColor: string, alpha: number): string => {
-  const hex = hexColor.replace('#', '');
-  if (hex.length !== 6) {
-    return hexColor;
-  }
-  const r = parseInt(hex.slice(0, 2), 16);
-  const g = parseInt(hex.slice(2, 4), 16);
-  const b = parseInt(hex.slice(4, 6), 16);
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-};
-
-// Merge overlapping or touching rects into larger non-overlapping blocks.
-// This is more robust across rotations (vertical "lines" etc.) and prevents dark spots.
-const mergeConnectedRects = (rects: TokenBoundingBox[]): TokenBoundingBox[] => {
-  if (rects.length === 0) return rects;
-  const EPS = 0.004; // small tolerance in normalized page coords
-  const sorted = rects.slice().sort((a, b) => (a.top !== b.top ? a.top - b.top : a.left - b.left));
-  const merged: TokenBoundingBox[] = [];
-  const overlapsOrTouches = (a: TokenBoundingBox, b: TokenBoundingBox) => {
-    const aR = a.left + a.width;
-    const aB = a.top + a.height;
-    const bR = b.left + b.width;
-    const bB = b.top + b.height;
-    // Overlap or touch within EPS gap
-    return !(b.left > aR + EPS || bR < a.left - EPS || b.top > aB + EPS || bB < a.top - EPS);
-  };
-  for (const r of sorted) {
-    let mergedIntoExisting = false;
-    for (let i = 0; i < merged.length; i += 1) {
-      const m = merged[i];
-      if (overlapsOrTouches(m, r)) {
-        const left = Math.min(m.left, r.left);
-        const top = Math.min(m.top, r.top);
-        const right = Math.max(m.left + m.width, r.left + r.width);
-        const bottom = Math.max(m.top + m.height, r.top + r.height);
-        merged[i] = { left, top, width: Math.max(0, right - left), height: Math.max(0, bottom - top) };
-        mergedIntoExisting = true;
-        break;
-      }
-    }
-    if (!mergedIntoExisting) {
-      merged.push({ ...r });
-    }
-  }
-  return merged;
-};
+// utilities moved to compare.ts
 
 const CompareDocumentPane = ({
   pane,
@@ -58,9 +14,6 @@ const CompareDocumentPane = ({
   scrollRef,
   peerScrollRef,
   handleScrollSync,
-  beginPan,
-  continuePan,
-  endPan,
   handleWheelZoom,
   handleWheelOverscroll,
   onTouchStart,
@@ -68,7 +21,6 @@ const CompareDocumentPane = ({
   onTouchEnd,
   isPanMode,
   zoom,
-  pan,
   title,
   dropdownPlaceholder,
   changes,
@@ -77,15 +29,11 @@ const CompareDocumentPane = ({
   processingMessage,
   pages,
   pairedPages,
-  getRowHeightPx,
   wordHighlightMap,
   metaIndexToGroupId,
   documentLabel,
   pageLabel,
   altLabel,
-  pageInputValue,
-  onPageInputChange,
-  maxSharedPages,
   onVisiblePageChange,
 }: CompareDocumentPaneProps) => {
   const isMobileViewport = useIsMobile();
@@ -97,8 +45,7 @@ const CompareDocumentPane = ({
     return map;
   }, [pairedPages]);
 
-  const HIGHLIGHT_COLOR = pane === 'base' ? '#ff6b6b' : '#51cf66'; // red for base (removals), green for comparison (additions)
-  const HIGHLIGHT_OPACITY = pane === 'base' ? 0.45 : 0.35;
+  const HIGHLIGHT_BG_VAR = pane === 'base' ? 'var(--spdf-compare-removed-bg)' : 'var(--spdf-compare-added-bg)';
   const OFFSET_PIXELS = pane === 'base' ? 4 : 2;
   const cursorStyle = isPanMode && zoom > 1 ? 'grab' : 'auto';
   const pagePanRef = useRef<Map<number, { x: number; y: number }>>(new Map());
@@ -108,6 +55,24 @@ const CompareDocumentPane = ({
   const imageLoadedRef = useRef<Map<number, boolean>>(new Map());
   const [, forceRerender] = useState(0);
   const visiblePageRafRef = useRef<number | null>(null);
+  const lastReportedVisiblePageRef = useRef<number | null>(null);
+  const pageNodesRef = useRef<HTMLElement[] | null>(null);
+  const groupedRectsByPage = useMemo(() => {
+    const out = new Map<number, Map<string, TokenBoundingBox[]>>();
+    for (const p of pages) {
+      const rects = wordHighlightMap.get(p.pageNumber) ?? [];
+      out.set(p.pageNumber, groupWordRects(rects, metaIndexToGroupId, pane));
+    }
+    return out;
+  }, [pages, wordHighlightMap, metaIndexToGroupId, pane]);
+
+  // When zoom returns to 1 (reset), clear per-page pan state so content is centered again
+  useEffect(() => {
+    if (zoom <= 1) {
+      pagePanRef.current.clear();
+      forceRerender(v => v + 1);
+    }
+  }, [zoom]);
 
   return (
     <div className="compare-pane">
@@ -135,14 +100,19 @@ const CompareDocumentPane = ({
         onScroll={(event) => {
           handleScrollSync(event.currentTarget, peerScrollRef.current);
           // Notify parent about the currently visible page (throttled via rAF)
-          if (visiblePageRafRef.current != null) cancelAnimationFrame(visiblePageRafRef.current);
+          if (visiblePageRafRef.current != null) return;
+          if (!onVisiblePageChange || pages.length === 0) return;
           visiblePageRafRef.current = requestAnimationFrame(() => {
             const container = scrollRef.current;
             if (!container) return;
             const mid = container.scrollTop + container.clientHeight * 0.5;
             let bestPage = pages[0]?.pageNumber ?? 1;
             let bestDist = Number.POSITIVE_INFINITY;
-            const nodes = Array.from(container.querySelectorAll('.compare-diff-page')) as HTMLElement[];
+            let nodes = pageNodesRef.current;
+            if (!nodes || nodes.length !== pages.length) {
+              nodes = Array.from(container.querySelectorAll('.compare-diff-page')) as HTMLElement[];
+              pageNodesRef.current = nodes;
+            }
             for (const el of nodes) {
               const top = el.offsetTop;
               const height = el.clientHeight || 1;
@@ -155,9 +125,11 @@ const CompareDocumentPane = ({
                 if (!Number.isNaN(pn)) bestPage = pn;
               }
             }
-            if (typeof onVisiblePageChange === 'function') {
+            if (typeof onVisiblePageChange === 'function' && bestPage !== lastReportedVisiblePageRef.current) {
+              lastReportedVisiblePageRef.current = bestPage;
               onVisiblePageChange(pane, bestPage);
             }
+            visiblePageRafRef.current = null;
           });
         }}
         onMouseDown={undefined}
@@ -181,45 +153,21 @@ const CompareDocumentPane = ({
 
           {pages.map((page) => {
             const peerPage = pairedPageMap.get(page.pageNumber);
-            const targetHeight = peerPage ? Math.max(page.height, peerPage.height) : page.height;
-            const fit = targetHeight / page.height;
-            const rowHeightPx = getRowHeightPx(page.pageNumber);
-            const highlightOffset = OFFSET_PIXELS / page.height;
-            const rotationNorm = ((page.rotation ?? 0) % 360 + 360) % 360;
-            const isPortrait = rotationNorm === 0 || rotationNorm === 180;
-            const isLandscape = rotationNorm === 90 || rotationNorm === 270;
-            const isStackedPortrait = layout === 'stacked' && isPortrait;
-            const isStackedLandscape = layout === 'stacked' && isLandscape;
             const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 1200;
-            const containerW = scrollRef.current?.clientWidth ?? viewportWidth;
-            const stackedWidth = isMobileViewport
-              ? Math.max(320, Math.round(containerW))
-              : Math.max(320, Math.round(viewportWidth * 0.5));
-            const stackedHeight = Math.round(stackedWidth * 1.4142);
+            const metrics = computePageLayoutMetrics({
+              page,
+              peerPage: peerPage ?? null,
+              layout,
+              isMobileViewport,
+              scrollRefWidth: scrollRef.current?.clientWidth ?? null,
+              viewportWidth,
+              zoom,
+              offsetPixels: OFFSET_PIXELS,
+            });
 
-            const wordRects = wordHighlightMap.get(page.pageNumber) ?? [];
-            const groupedRects = new Map<string, TokenBoundingBox[]>();
-            for (const { rect, metaIndex } of wordRects) {
-              const id = metaIndexToGroupId.get(metaIndex) ?? `${pane}-token-${metaIndex}`;
-              const current = groupedRects.get(id) ?? [];
-              current.push(rect);
-              groupedRects.set(id, current);
-            }
-            const preloadMarginPx = Math.max(rowHeightPx * 5, 1200); // render several pages ahead to hide loading flashes
+            const { highlightOffset, baseWidth, baseHeight, containerWidth, containerHeight, innerScale } = metrics;
 
-            const baseWidth = isStackedPortrait
-              ? stackedWidth
-              : Math.round(page.width * fit);
-            const baseHeight = isStackedPortrait
-              ? stackedHeight
-              : Math.round(targetHeight);
-            const desiredWidth = Math.max(1, Math.round(baseWidth * Math.max(0.1, zoom)));
-            const desiredHeight = Math.max(1, Math.round(baseHeight * Math.max(0.1, zoom)));
-            const containerMaxW = scrollRef.current?.clientWidth ?? (typeof window !== 'undefined' ? window.innerWidth : desiredWidth);
-            const containerWidth = Math.min(desiredWidth, Math.max(120, containerMaxW));
-            const containerHeight = Math.round(baseHeight * (containerWidth / baseWidth));
-            const innerScale = Math.max(1, desiredWidth / containerWidth);
-            const currentPan = pagePanRef.current.get(page.pageNumber) || { x: 0, y: 0 };
+            const groupedRects = groupedRectsByPage.get(page.pageNumber) ?? new Map();
 
             return (
               <>
@@ -280,7 +228,7 @@ const CompareDocumentPane = ({
                     <div
                       className={`compare-diff-page__inner compare-diff-page__inner--${pane}`}
                       style={{
-                        transform: `scale(${innerScale}) translate(${-((pagePanRef.current.get(page.pageNumber)?.x || 0) / innerScale)}px, ${-((pagePanRef.current.get(page.pageNumber)?.y || 0) / innerScale)}px)`,
+                        transform: `scale(${innerScale}) translate3d(${-((pagePanRef.current.get(page.pageNumber)?.x || 0) / innerScale)}px, ${-((pagePanRef.current.get(page.pageNumber)?.y || 0) / innerScale)}px, 0)`,
                         transformOrigin: 'top left'
                       }}
                     >
@@ -289,6 +237,7 @@ const CompareDocumentPane = ({
                         src={page.url ?? ''}
                         alt={altLabel}
                         loading="lazy"
+                        decoding="async"
                         className="compare-diff-page__image"
                         onLoad={() => {
                           if (!imageLoadedRef.current.get(page.pageNumber)) {
@@ -305,7 +254,7 @@ const CompareDocumentPane = ({
                       )}
                       {[...groupedRects.entries()].flatMap(([id, rects]) =>
                         mergeConnectedRects(rects).map((rect, index) => {
-                          const rotation = ((page.rotation ?? 0) % 360 + 360) % 360;
+                          const rotation = normalizeRotation(page.rotation);
                           const verticalOffset = rotation === 180 ? -highlightOffset : highlightOffset;
                           return (
                             <span
@@ -317,7 +266,7 @@ const CompareDocumentPane = ({
                                 top: `${(rect.top + verticalOffset) * 100}%`,
                                 width: `${rect.width * 100}%`,
                                 height: `${rect.height * 100}%`,
-                                backgroundColor: toRgba(HIGHLIGHT_COLOR, HIGHLIGHT_OPACITY),
+                                backgroundColor: HIGHLIGHT_BG_VAR,
                               }}
                             />
                           );

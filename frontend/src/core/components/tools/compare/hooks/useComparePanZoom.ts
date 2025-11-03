@@ -87,6 +87,10 @@ export const useComparePanZoom = ({
     [basePages, comparisonPages]
   );
 
+  // rAF-coalesced follower scroll writes
+  const syncRafRef = useRef<{ base: number | null; comparison: number | null }>({ base: null, comparison: null });
+  const desiredTopRef = useRef<{ base: number | null; comparison: number | null }>({ base: null, comparison: null });
+
   const canonicalLayout = useMemo(() => {
     const baseMap = new Map<number, PagePreview>();
     const compMap = new Map<number, PagePreview>();
@@ -312,6 +316,14 @@ export const useComparePanZoom = ({
     [getPanBounds]
   );
 
+  const setPanToTopLeft = useCallback((pane: Pane) => {
+    if (pane === 'base') {
+      setBasePan({ x: 0, y: 0 });
+    } else {
+      setComparisonPan({ x: 0, y: 0 });
+    }
+  }, []);
+
   const clampPanForZoom = useCallback(
     (pane: Pane, zoomValue: number) => {
       const bounds = getPanBounds(pane, zoomValue);
@@ -367,11 +379,24 @@ export const useComparePanZoom = ({
         return;
       }
 
-      isSyncingRef.current = true;
-      target.scrollTop = desiredTop;
-      requestAnimationFrame(() => {
-        isSyncingRef.current = false;
-      });
+      const targetIsBase = target === baseScrollRef.current;
+      const key = targetIsBase ? 'base' : 'comparison';
+
+      desiredTopRef.current[key] = desiredTop;
+      if (syncRafRef.current[key] == null) {
+        syncRafRef.current[key] = requestAnimationFrame(() => {
+          const el = targetIsBase ? baseScrollRef.current : comparisonScrollRef.current;
+          const top = desiredTopRef.current[key] ?? 0;
+          if (el) {
+            isSyncingRef.current = true;
+            el.scrollTop = top;
+          }
+          syncRafRef.current[key] = null;
+          requestAnimationFrame(() => {
+            isSyncingRef.current = false;
+          });
+        });
+      }
     },
     [isScrollLinked, mapScrollTopBetweenPanes]
   );
@@ -394,6 +419,8 @@ export const useComparePanZoom = ({
       // Heuristic: clear the flag shortly after scroll events settle
       let timeout: number | null = null;
       const onScroll = () => {
+        // Ignore programmatic scrolls to avoid feedback loops and unnecessary syncing work
+        if (isSyncingRef.current) return;
         onStart();
         if (timeout != null) window.clearTimeout(timeout);
         timeout = window.setTimeout(onEnd, 120);
@@ -872,6 +899,7 @@ export const useComparePanZoom = ({
     setComparisonZoom,
     basePan,
     comparisonPan,
+    setPanToTopLeft,
     centerPanForZoom,
     clampPanForZoom,
     handleScrollSync,
