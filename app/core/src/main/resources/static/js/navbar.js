@@ -110,7 +110,7 @@ function tooltipSetup() {
     element.addEventListener("mousemove", (event) => updateTooltipPosition(event, tooltipText));
     element.addEventListener("mouseleave", hideTooltip);
 
-    // in case UI moves and mouseleave is not triggered, tooltip is readded when mouse is moved over the element
+    // in case UI moves and mouseleave is not triggered, the tooltip is re-added when the mouse is moved over the element
     element.addEventListener("click", hideTooltip);
   });
 };
