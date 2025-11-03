@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from "react-i18next";
-import { Stack, Button, Text, Alert, SegmentedControl, Divider, ActionIcon, Tooltip } from '@mantine/core';
+import { Stack, Button, Text, Alert, SegmentedControl, Divider, ActionIcon, Tooltip, Group, Box } from '@mantine/core';
 import { SignParameters } from "@app/hooks/tools/sign/useSignParameters";
 import { SuggestedToolsSection } from "@app/components/tools/shared/SuggestedToolsSection";
 import { useSignature } from "@app/contexts/SignatureContext";
@@ -582,16 +582,20 @@ const SignSettings = ({
           {t('sign.step.placeDesc', 'Position the signature on your PDF')}
         </Text>
 
-        <DrawingControls
-          onUndo={onUndo}
-          onRedo={onRedo}
-          canUndo={historyAvailability.canUndo}
-          canRedo={historyAvailability.canRedo}
-          hasSignatureData={hasAnySignature}
-          disabled={disabled}
-          showPlaceButton={false}
-          additionalControls={placementToggleControl}
-        />
+        <Group gap="xs" wrap="nowrap" align="center">
+          <DrawingControls
+            onUndo={onUndo}
+            onRedo={onRedo}
+            canUndo={historyAvailability.canUndo}
+            canRedo={historyAvailability.canRedo}
+            hasSignatureData={hasAnySignature}
+            disabled={disabled}
+            showPlaceButton={false}
+          />
+          <Box style={{ marginLeft: 'auto' }}>
+            {placementToggleControl}
+          </Box>
+        </Group>
 
         <Alert color={placementAlert.color} title={placementAlert.title}>
           <Text size="sm">
