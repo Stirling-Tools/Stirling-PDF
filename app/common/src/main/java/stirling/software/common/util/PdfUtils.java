@@ -182,7 +182,8 @@ public class PdfUtils {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
             if (singleImage) {
-                if ("tiff".equalsIgnoreCase(imageType) || "tif".equalsIgnoreCase(imageType)) {
+                if ("tiff".equals(imageType.toLowerCase())
+                        || "tif".equals(imageType.toLowerCase())) {
                     // Write the images to the output stream as a TIFF with multiple frames
                     ImageWriter writer = ImageIO.getImageWritersByFormatName("tiff").next();
                     ImageWriteParam param = writer.getDefaultWriteParam();
@@ -566,7 +567,7 @@ public class PdfUtils {
                 PDImageXObject image = PDImageXObject.createFromByteArray(document, imageBytes, "");
                 // Draw the image onto the page at the specified x and y coordinates
                 contentStream.drawImage(image, x, y);
-                log.info("Image successfully overlayed onto PDF");
+                log.info("Image successfully overlaid onto PDF");
                 if (!everyPage) {
                     break;
                 }
