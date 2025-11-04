@@ -59,11 +59,7 @@ public class CbrUtils {
                     log.warn(
                             "Failed to open CBR/RAR archive due to corrupt header: {}",
                             e.getMessage());
-                    throw ExceptionUtils.createIllegalArgumentException(
-                            "error.invalidFormat",
-                            "Invalid or corrupted CBR/RAR archive. The file may be corrupted, use"
-                                    + " an unsupported RAR format (RAR5+), or may not be a valid RAR"
-                                    + " archive. Please ensure the file is a valid RAR archive.");
+                    throw ExceptionUtils.createCbrInvalidFormatException(null);
                 } catch (RarException e) {
                     log.warn("Failed to open CBR/RAR archive: {}", e.getMessage());
                     String exMessage = e.getMessage() != null ? e.getMessage() : "";
