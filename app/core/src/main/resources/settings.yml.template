@@ -171,6 +171,8 @@ system:
     cleanupIntervalMinutes: 30 # How often to run cleanup (in minutes)
     startupCleanup: true # Clean up old temp files on startup
     cleanupSystemTemp: false # Whether to clean broader system temp directory
+  databaseBackup:
+    cron: '0 0 0 * * ?' # Cron expression for automatic database backups "0 0 0 * * ?" daily at midnight
 
 ui:
   appNameNavbar: '' # name displayed on the navigation bar

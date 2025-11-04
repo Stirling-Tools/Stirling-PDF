@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import jakarta.annotation.PostConstruct;
@@ -27,6 +28,9 @@ import stirling.software.proprietary.service.UserLicenseSettingsService;
 @RequiredArgsConstructor
 public class InitialSecuritySetup {
 
+    @Value("${v2:false}")
+    private boolean v2Enabled = false;
+
     private final UserService userService;
     private final TeamService teamService;
     private final ApplicationProperties applicationProperties;
@@ -45,6 +49,7 @@ public class InitialSecuritySetup {
                 }
             }
 
+            configureJWTSettings();
             assignUsersToDefaultTeamIfMissing();
             initializeInternalApiUser();
             initializeUserLicenseSettings();
@@ -57,6 +62,21 @@ public class InitialSecuritySetup {
     private void initializeUserLicenseSettings() {
         licenseSettingsService.initializeGrandfatheredCount();
         licenseSettingsService.updateLicenseMaxUsers();
+      
+    }
+    private void configureJWTSettings() {
+        ApplicationProperties.Security.Jwt jwtProperties =
+                applicationProperties.getSecurity().getJwt();
+
+        boolean jwtEnabled = jwtProperties.isEnableKeystore();
+        if (!v2Enabled || !jwtEnabled) {
+            log.debug(
+                    "V2 enabled: {}, JWT enabled: {} - disabling all JWT features",
+                    v2Enabled,
+                    jwtEnabled);
+
+            jwtProperties.setEnableKeyCleanup(false);
+        }
     }
 
     private void assignUsersToDefaultTeamIfMissing() {

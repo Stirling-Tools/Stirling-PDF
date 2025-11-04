@@ -12,11 +12,11 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.util.Matrix;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
 
-import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 
 import lombok.RequiredArgsConstructor;
@@ -27,6 +27,7 @@ import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
+import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.WebResponseUtils;
 
 @GeneralApi
@@ -35,7 +36,7 @@ public class ScalePagesController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @AutoJobPostMapping(value = "/scale-pages", consumes = "multipart/form-data")
+    @AutoJobPostMapping(value = "/scale-pages", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @StandardPdfResponse
     @Operation(
             summary = "Change the size of a PDF page/document",
@@ -96,19 +97,25 @@ public class ScalePagesController {
 
         return WebResponseUtils.bytesToWebResponse(
                 baos.toByteArray(),
-                Filenames.toSimpleFileName(file.getOriginalFilename()).replaceFirst("[.][^.]+$", "")
-                        + "_scaled.pdf");
+                GeneralUtils.generateFilename(file.getOriginalFilename(), "_scaled.pdf"));
     }
 
     private PDRectangle getTargetSize(String targetPDRectangle, PDDocument sourceDocument) {
         if ("KEEP".equals(targetPDRectangle)) {
             if (sourceDocument.getNumberOfPages() == 0) {
-                return null;
+                // Do not return null here; throw a clear exception so callers don't get a nullable
+                // PDRectangle.
+                throw ExceptionUtils.createInvalidPageSizeException("KEEP");
             }
 
             // use the first page to determine the target page size
             PDPage sourcePage = sourceDocument.getPage(0);
             PDRectangle sourceSize = sourcePage.getMediaBox();
+
+            if (sourceSize == null) {
+                // If media box is unexpectedly null, treat it as invalid
+                throw ExceptionUtils.createInvalidPageSizeException("KEEP");
+            }
 
             return sourceSize;
         }

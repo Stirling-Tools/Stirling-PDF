@@ -220,19 +220,19 @@ public class ProprietaryUIDataController {
 
                 if (latestSession.isPresent()) {
                     SessionEntity sessionEntity = latestSession.get();
-                    Date lastAccessedTime = sessionEntity.getLastRequest();
+                    Instant lastAccessedTime =
+                            Optional.ofNullable(sessionEntity.getLastRequest())
+                                    .orElse(Instant.EPOCH);
                     Instant now = Instant.now();
                     Instant expirationTime =
-                            lastAccessedTime
-                                    .toInstant()
-                                    .plus(maxInactiveInterval, ChronoUnit.SECONDS);
+                            lastAccessedTime.plus(maxInactiveInterval, ChronoUnit.SECONDS);
 
                     if (now.isAfter(expirationTime)) {
                         sessionPersistentRegistry.expireSession(sessionEntity.getSessionId());
                     } else {
                         hasActiveSession = !sessionEntity.isExpired();
                     }
-                    lastRequest = sessionEntity.getLastRequest();
+                    lastRequest = Date.from(lastAccessedTime);
                 } else {
                     lastRequest = new Date(0);
                 }

@@ -29,6 +29,9 @@ import stirling.software.common.annotations.api.UserApi;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.enumeration.Role;
 import stirling.software.common.model.exception.UnsupportedProviderException;
+import stirling.software.proprietary.audit.AuditEventType;
+import stirling.software.proprietary.audit.AuditLevel;
+import stirling.software.proprietary.audit.Audited;
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.AuthenticationType;
@@ -138,6 +141,7 @@ public class UserController {
 
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/change-username")
+    @Audited(type = AuditEventType.USER_PROFILE_UPDATE, level = AuditLevel.BASIC)
     public ResponseEntity<?> changeUsername(
             Principal principal,
             @RequestParam(name = "currentPasswordChangeUsername") String currentPassword,
@@ -197,6 +201,7 @@ public class UserController {
 
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/change-password-on-login")
+    @Audited(type = AuditEventType.USER_PROFILE_UPDATE, level = AuditLevel.BASIC)
     public ResponseEntity<?> changePasswordOnLogin(
             Principal principal,
             @RequestParam(name = "currentPassword") String currentPassword,
@@ -232,6 +237,7 @@ public class UserController {
 
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/change-password")
+    @Audited(type = AuditEventType.USER_PROFILE_UPDATE, level = AuditLevel.BASIC)
     public ResponseEntity<?> changePassword(
             Principal principal,
             @RequestParam(name = "currentPassword") String currentPassword,

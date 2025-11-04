@@ -135,21 +135,21 @@ public class DatabaseConfig {
             ApplicationProperties.Driver driver =
                     ApplicationProperties.Driver.valueOf(driverName.toUpperCase());
 
-            switch (driver) {
+            return switch (driver) {
                 case H2 -> {
                     log.debug("H2 driver selected");
-                    return DatabaseDriver.H2.getDriverClassName();
+                    yield DatabaseDriver.H2.getDriverClassName();
                 }
                 case POSTGRESQL -> {
                     log.debug("Postgres driver selected");
-                    return DatabaseDriver.POSTGRESQL.getDriverClassName();
+                    yield DatabaseDriver.POSTGRESQL.getDriverClassName();
                 }
                 default -> {
                     log.warn("{} driver selected", driverName);
                     throw new UnsupportedProviderException(
                             driverName + " is not currently supported");
                 }
-            }
+            };
         } catch (IllegalArgumentException e) {
             log.warn("Unknown driver: {}", driverName);
             throw new UnsupportedProviderException(driverName + " is not currently supported");

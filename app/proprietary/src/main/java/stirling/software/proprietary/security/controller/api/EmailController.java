@@ -2,6 +2,7 @@ package stirling.software.proprietary.security.controller.api;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.MailSendException;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -38,7 +39,7 @@ public class EmailController {
      *     attachment.
      * @return ResponseEntity with success or error message.
      */
-    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/send-email")
+    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/send-email")
     @Operation(
             summary = "Send an email with an attachment",
             description =
