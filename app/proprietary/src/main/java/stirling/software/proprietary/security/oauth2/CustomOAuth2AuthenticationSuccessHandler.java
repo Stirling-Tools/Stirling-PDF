@@ -156,17 +156,23 @@ public class CustomOAuth2AuthenticationSuccessHandler
     private String buildContextAwareRedirectUrl(
             HttpServletRequest request, String contextPath, String jwt) {
         // Try to get the origin from the Referer header first
+        // BUT skip if it's from an OAuth provider domain
         String referer = request.getHeader("Referer");
         if (referer != null && !referer.isEmpty()) {
             try {
                 java.net.URL refererUrl = new java.net.URL(referer);
-                String origin = refererUrl.getProtocol() + "://" + refererUrl.getHost();
-                if (refererUrl.getPort() != -1
-                        && refererUrl.getPort() != 80
-                        && refererUrl.getPort() != 443) {
-                    origin += ":" + refererUrl.getPort();
+                String refererHost = refererUrl.getHost().toLowerCase();
+
+                // Skip known OAuth provider domains
+                if (!isOAuthProviderDomain(refererHost)) {
+                    String origin = refererUrl.getProtocol() + "://" + refererUrl.getHost();
+                    if (refererUrl.getPort() != -1
+                            && refererUrl.getPort() != 80
+                            && refererUrl.getPort() != 443) {
+                        origin += ":" + refererUrl.getPort();
+                    }
+                    return origin + "/auth/callback#access_token=" + jwt;
                 }
-                return origin + "/auth/callback#access_token=" + jwt;
             } catch (java.net.MalformedURLException e) {
                 // Fall back to other methods if referer is malformed
             }
@@ -187,5 +193,21 @@ public class CustomOAuth2AuthenticationSuccessHandler
         }
 
         return origin.toString() + "/auth/callback#access_token=" + jwt;
+    }
+
+    /**
+     * Checks if the given hostname belongs to a known OAuth provider.
+     *
+     * @param hostname The hostname to check
+     * @return true if it's an OAuth provider domain, false otherwise
+     */
+    private boolean isOAuthProviderDomain(String hostname) {
+        return hostname.contains("google.com")
+                || hostname.contains("googleapis.com")
+                || hostname.contains("github.com")
+                || hostname.contains("microsoft.com")
+                || hostname.contains("microsoftonline.com")
+                || hostname.contains("linkedin.com")
+                || hostname.contains("apple.com");
     }
 }
