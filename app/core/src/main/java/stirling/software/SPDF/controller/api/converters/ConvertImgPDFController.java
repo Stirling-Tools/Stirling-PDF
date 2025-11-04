@@ -128,6 +128,7 @@ public class ConvertImgPDFController {
                 && CheckProgramInstall.isPythonAvailable()) {
             TempFile tempFile = new TempFile(tempFileManager, ".png");
             TempDirectory tempOutputDir = new TempDirectory(tempFileManager);
+            TempFile tempPdfPath = null;
             try (tempFile;
                     tempOutputDir) {
                 try (FileOutputStream fos = new FileOutputStream(tempFile.getFile())) {
@@ -151,19 +152,22 @@ public class ConvertImgPDFController {
                     command.add(tempOutputDir.getAbsolutePath());
                     command.add("--single");
                 } else {
-                    TempFile tempPdfPath = new TempFile(tempFileManager, ".pdf");
-                    try (tempPdfPath) {
-                        file.transferTo(tempPdfPath.getFile());
-                        // Run the Python script to convert PDF to WebP
-                        command.add(tempPdfPath.getAbsolutePath());
-                        command.add(tempOutputDir.getAbsolutePath());
-                    }
+                    tempPdfPath = new TempFile(tempFileManager, ".pdf");
+                    file.transferTo(tempPdfPath.getFile());
+                    // Run the Python script to convert PDF to WebP
+                    command.add(tempPdfPath.getAbsolutePath());
+                    command.add(tempOutputDir.getAbsolutePath());
                 }
                 command.add("--dpi");
                 command.add(String.valueOf(dpi));
                 ProcessExecutorResult resultProcess =
                         ProcessExecutor.getInstance(ProcessExecutor.Processes.PYTHON_OPENCV)
                                 .runCommandWithOutputHandling(command);
+
+                // Clean up temp PDF file if it was created
+                if (tempPdfPath != null) {
+                    tempPdfPath.close();
+                }
 
                 // Find all WebP files in the output directory
                 List<Path> webpFiles;
@@ -197,6 +201,15 @@ public class ConvertImgPDFController {
                     bodyBytes = zipOutputStream.toByteArray();
                 }
                 result = bodyBytes;
+            } catch (Exception e) {
+                // Clean up temp PDF file in case of exception
+                if (tempPdfPath != null) {
+                    try {
+                        tempPdfPath.close();
+                    } catch (Exception ignored) {
+                    }
+                }
+                throw e;
             }
         }
 
