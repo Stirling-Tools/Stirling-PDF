@@ -5,7 +5,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.ai.embedding.EmbeddingClient;
+import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.ai.embedding.EmbeddingResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -24,7 +24,7 @@ import stirling.software.proprietary.service.chatbot.exception.ChatbotException;
 public class ChatbotRetrievalService {
 
     private final ChatbotCacheService cacheService;
-    private final EmbeddingClient embeddingClient;
+    private final EmbeddingModel embeddingModel;
 
     public List<ChatbotTextChunk> retrieveTopK(
             String sessionId, String query, ChatbotSettings settings) {
@@ -54,10 +54,17 @@ public class ChatbotRetrievalService {
     }
 
     private List<Double> computeQueryEmbedding(String query) {
-        EmbeddingResponse response = embeddingClient.embedForResponse(List.of(query));
-        return Optional.ofNullable(response.getData().stream().findFirst().orElse(null))
-                .map(org.springframework.ai.embedding.Embedding::getEmbedding)
-                .orElseThrow(() -> new ChatbotException("Failed to compute query embedding"));
+        EmbeddingResponse response = embeddingModel.embedForResponse(List.of(query));
+        float[] embeddingArray =
+                Optional.ofNullable(response.getResults().stream().findFirst().orElse(null))
+                        .map(org.springframework.ai.embedding.Embedding::getOutput)
+                        .orElseThrow(
+                                () -> new ChatbotException("Failed to compute query embedding"));
+        List<Double> embedding = new ArrayList<>(embeddingArray.length);
+        for (float value : embeddingArray) {
+            embedding.add((double) value);
+        }
+        return embedding;
     }
 
     private double cosineSimilarity(List<Double> v1, List<Double> v2) {

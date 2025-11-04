@@ -146,9 +146,9 @@ public class ChatbotConversationService {
         if (modelSwitchVerified.compareAndSet(false, true)) {
             ChatbotSettings settings = featureProperties.current();
             OpenAiChatOptions primary =
-                    OpenAiChatOptions.builder().withModel(settings.models().primary()).build();
+                    OpenAiChatOptions.builder().model(settings.models().primary()).build();
             OpenAiChatOptions fallback =
-                    OpenAiChatOptions.builder().withModel(settings.models().fallback()).build();
+                    OpenAiChatOptions.builder().model(settings.models().fallback()).build();
             log.info(
                     "Verified runtime model override support ({} -> {})",
                     primary.getModel(),
@@ -185,7 +185,7 @@ public class ChatbotConversationService {
                 Optional.ofNullable(response)
                         .map(ChatResponse::getResults)
                         .filter(results -> !results.isEmpty())
-                        .map(results -> results.get(0).getOutput().getContent())
+                        .map(results -> results.get(0).getOutput().getText())
                         .orElse("");
         return parseModelResponse(content);
     }
@@ -227,7 +227,7 @@ public class ChatbotConversationService {
                         + question;
 
         OpenAiChatOptions options =
-                OpenAiChatOptions.builder().withModel(model).withTemperature(0.2).build();
+                OpenAiChatOptions.builder().model(model).temperature(0.2).build();
 
         return new Prompt(
                 List.of(new SystemMessage(systemPrompt), new UserMessage(userPrompt)), options);

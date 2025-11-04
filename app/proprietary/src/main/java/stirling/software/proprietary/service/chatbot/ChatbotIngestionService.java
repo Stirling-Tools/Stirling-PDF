@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import org.springframework.ai.embedding.EmbeddingClient;
+import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.ai.embedding.EmbeddingResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -29,7 +29,7 @@ public class ChatbotIngestionService {
     private final ChatbotCacheService cacheService;
     private final ChatbotSessionRegistry sessionRegistry;
     private final ChatbotFeatureProperties featureProperties;
-    private final EmbeddingClient embeddingClient;
+    private final EmbeddingModel embeddingModel;
 
     public ChatbotSession ingest(ChatbotSessionCreateRequest request) {
         ChatbotSettings settings = featureProperties.current();
@@ -122,19 +122,24 @@ public class ChatbotIngestionService {
         if (chunkTexts.isEmpty()) {
             throw new ChatbotException("Unable to split document text into retrievable chunks");
         }
-        EmbeddingResponse response = embeddingClient.embedForResponse(chunkTexts);
-        if (response.getData().size() != chunkTexts.size()) {
+        EmbeddingResponse response = embeddingModel.embedForResponse(chunkTexts);
+        if (response.getResults().size() != chunkTexts.size()) {
             throw new ChatbotException("Mismatch between chunks and embedding results");
         }
         List<ChatbotTextChunk> chunks = new ArrayList<>();
         for (int i = 0; i < chunkTexts.size(); i++) {
             String chunkId = sessionId + ":" + i + ":" + UUID.randomUUID();
+            float[] embeddingArray = response.getResults().get(i).getOutput();
+            List<Double> embedding = new ArrayList<>(embeddingArray.length);
+            for (float value : embeddingArray) {
+                embedding.add((double) value);
+            }
             chunks.add(
                     ChatbotTextChunk.builder()
                             .id(chunkId)
                             .order(i)
                             .text(chunkTexts.get(i))
-                            .embedding(response.getData().get(i).getEmbedding())
+                            .embedding(embedding)
                             .build());
         }
         log.debug(
