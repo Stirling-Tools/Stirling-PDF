@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -67,7 +68,7 @@ public class ConvertOfficeController {
         if (!isValidFileExtension(extension)) {
             throw new IllegalArgumentException("Invalid file extension");
         }
-        String extensionLower = extension.toLowerCase();
+        String extensionLower = extension.toLowerCase(Locale.ROOT);
 
         String baseName = FilenameUtils.getBaseName(originalFilename);
         if (baseName == null || baseName.isBlank()) {
@@ -141,7 +142,7 @@ public class ConvertOfficeController {
                                             p ->
                                                     p.getFileName()
                                                             .toString()
-                                                            .toLowerCase()
+                                                            .toLowerCase(Locale.ROOT)
                                                             .endsWith(".pdf"))
                                     .findFirst()
                                     .orElse(null);

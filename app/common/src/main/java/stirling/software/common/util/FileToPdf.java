@@ -12,6 +12,7 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -37,15 +38,17 @@ public class FileToPdf {
             try (TempFile tempInputFile =
                     new TempFile(
                             tempFileManager,
-                            fileName.toLowerCase().endsWith(".html") ? ".html" : ".zip")) {
+                            fileName.toLowerCase(Locale.ROOT).endsWith(".html")
+                                    ? ".html"
+                                    : ".zip")) {
 
-                if (fileName.toLowerCase().endsWith(".html")) {
+                if (fileName.toLowerCase(Locale.ROOT).endsWith(".html")) {
                     String sanitizedHtml =
                             sanitizeHtmlContent(
                                     new String(fileBytes, StandardCharsets.UTF_8),
                                     customHtmlSanitizer);
                     Files.writeString(tempInputFile.getPath(), sanitizedHtml);
-                } else if (fileName.toLowerCase().endsWith(".zip")) {
+                } else if (fileName.toLowerCase(Locale.ROOT).endsWith(".zip")) {
                     Files.write(tempInputFile.getPath(), fileBytes);
                     sanitizeHtmlFilesInZip(
                             tempInputFile.getPath(), tempFileManager, customHtmlSanitizer);
@@ -100,8 +103,8 @@ public class FileToPdf {
                             tempUnzippedDir.getPath().resolve(sanitizeZipFilename(entry.getName()));
                     if (!entry.isDirectory()) {
                         Files.createDirectories(filePath.getParent());
-                        if (entry.getName().toLowerCase().endsWith(".html")
-                                || entry.getName().toLowerCase().endsWith(".htm")) {
+                        if (entry.getName().toLowerCase(Locale.ROOT).endsWith(".html")
+                                || entry.getName().toLowerCase(Locale.ROOT).endsWith(".htm")) {
                             String content =
                                     new String(zipIn.readAllBytes(), StandardCharsets.UTF_8);
                             String sanitizedContent =

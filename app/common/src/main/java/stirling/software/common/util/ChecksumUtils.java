@@ -173,7 +173,7 @@ public class ChecksumUtils {
         for (Map.Entry<String, Checksum> entry : checksums.entrySet()) {
             // Keep value as long and mask to ensure unsigned hex formatting.
             long unsigned32 = entry.getValue().getValue() & UNSIGNED_32_BIT_MASK;
-            results.put(entry.getKey(), String.format("%08x", unsigned32));
+            results.put(entry.getKey(), String.format(Locale.ROOT, "%08x", unsigned32));
         }
         return results;
     }
@@ -251,7 +251,7 @@ public class ChecksumUtils {
         }
         // Keep as long and mask to ensure correct unsigned representation.
         long unsigned32 = checksum.getValue() & UNSIGNED_32_BIT_MASK;
-        return String.format("%08x", unsigned32);
+        return String.format(Locale.ROOT, "%08x", unsigned32);
     }
 
     /**
@@ -286,7 +286,7 @@ public class ChecksumUtils {
     private String toHex(byte[] hash) {
         StringBuilder sb = new StringBuilder(hash.length * 2);
         for (byte b : hash) {
-            sb.append(String.format("%02x", b));
+            sb.append(String.format(Locale.ROOT, "%02x", b));
         }
         return sb.toString();
     }

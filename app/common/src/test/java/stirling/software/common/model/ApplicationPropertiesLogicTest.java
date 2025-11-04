@@ -7,6 +7,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 import java.util.function.Function;
 
 import org.junit.jupiter.api.Test;
@@ -114,7 +115,7 @@ class ApplicationPropertiesLogicTest {
 
         UnsupportedProviderException ex =
                 assertThrows(UnsupportedProviderException.class, () -> client.get("unknown"));
-        assertTrue(ex.getMessage().toLowerCase().contains("not supported"));
+        assertTrue(ex.getMessage().toLowerCase(Locale.ROOT).contains("not supported"));
     }
 
     @Test

@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -112,7 +113,7 @@ public class ConvertImgPDFController {
                 PdfUtils.convertFromPdf(
                         pdfDocumentFactory,
                         newPdfBytes,
-                        "webp".equalsIgnoreCase(imageFormat) ? "png" : imageFormat.toUpperCase(),
+                        "webp".equalsIgnoreCase(imageFormat) ? "png" : imageFormat.toUpperCase(Locale.ROOT),
                         colorTypeResult,
                         singleImage,
                         dpi,

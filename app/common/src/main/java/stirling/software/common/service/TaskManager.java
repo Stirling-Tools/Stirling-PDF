@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
@@ -100,14 +101,16 @@ public class TaskManager {
                 if (!extractedFiles.isEmpty()) {
                     jobResult.completeWithFiles(extractedFiles);
                     log.debug(
-                            "Set multiple file results for job ID: {} with {} files extracted from ZIP",
+                            "Set multiple file results for job ID: {} with {} files extracted from"
+                                    + " ZIP",
                             jobId,
                             extractedFiles.size());
                     return;
                 }
             } catch (Exception e) {
                 log.warn(
-                        "Failed to extract ZIP file for job {}: {}. Falling back to single file result.",
+                        "Failed to extract ZIP file for job {}: {}. Falling back to single file"
+                                + " result.",
                         jobId,
                         e.getMessage());
             }
@@ -345,6 +348,10 @@ public class TaskManager {
             return true;
         }
 
+        if (fileName != null && fileName.toLowerCase(Locale.ROOT).endsWith(".zip")) {
+            return true;
+        }
+
         return fileName != null && fileName.toLowerCase().endsWith(".zip");
     }
 
@@ -408,7 +415,7 @@ public class TaskManager {
             return MediaType.APPLICATION_OCTET_STREAM_VALUE;
         }
 
-        String lowerName = fileName.toLowerCase();
+        String lowerName = fileName.toLowerCase(Locale.ROOT);
         if (lowerName.endsWith(".pdf")) {
             return MediaType.APPLICATION_PDF_VALUE;
         } else if (lowerName.endsWith(".txt")) {

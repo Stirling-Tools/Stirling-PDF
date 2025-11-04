@@ -11,6 +11,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Locale;
 
 import javax.imageio.ImageIO;
 
@@ -115,7 +116,7 @@ public class StampController {
 
         String customColor = request.getCustomColor();
         float marginFactor =
-                switch (request.getCustomMargin().toLowerCase()) {
+                switch (request.getCustomMargin().toLowerCase(Locale.ROOT)) {
                     case "small" -> 0.02f;
                     case "medium" -> 0.035f;
                     case "large" -> 0.05f;

@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Locale;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
@@ -111,7 +112,6 @@ public class CbzUtils {
                         return GeneralUtils.optimizePdfWithGhostscript(pdfBytes);
                     } catch (IOException e) {
                         log.warn("Ghostscript optimization failed, returning unoptimized PDF", e);
-                        return pdfBytes;
                     }
                 }
 
@@ -130,7 +130,7 @@ public class CbzUtils {
             throw new IllegalArgumentException("File must have a name");
         }
 
-        String extension = FilenameUtils.getExtension(filename).toLowerCase();
+        String extension = FilenameUtils.getExtension(filename).toLowerCase(Locale.ROOT);
         if (!"cbz".equals(extension) && !"zip".equals(extension)) {
             throw new IllegalArgumentException("File must be a CBZ or ZIP archive");
         }
@@ -142,7 +142,7 @@ public class CbzUtils {
             return false;
         }
 
-        String extension = FilenameUtils.getExtension(filename).toLowerCase();
+        String extension = FilenameUtils.getExtension(filename).toLowerCase(Locale.ROOT);
         return "cbz".equals(extension) || "zip".equals(extension);
     }
 
@@ -152,7 +152,7 @@ public class CbzUtils {
             return false;
         }
 
-        String extension = FilenameUtils.getExtension(filename).toLowerCase();
+        String extension = FilenameUtils.getExtension(filename).toLowerCase(Locale.ROOT);
         return "cbz".equals(extension)
                 || "zip".equals(extension)
                 || "cbr".equals(extension)

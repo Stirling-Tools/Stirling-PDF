@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 
@@ -173,7 +174,7 @@ public class SPDFApplication {
             boolean browserOpen = "true".equalsIgnoreCase(browserOpenEnv);
             if (browserOpen) {
                 try {
-                    String os = System.getProperty("os.name").toLowerCase();
+                    String os = System.getProperty("os.name").toLowerCase(Locale.ROOT);
                     Runtime rt = Runtime.getRuntime();
 
                     if (os.contains("win")) {
