@@ -3,6 +3,7 @@ package stirling.software.proprietary.security.model;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -84,7 +85,7 @@ public class User implements UserDetails, Serializable {
     }
 
     public void setAuthenticationType(AuthenticationType authenticationType) {
-        this.authenticationType = authenticationType.toString().toLowerCase();
+        this.authenticationType = authenticationType.toString().toLowerCase(Locale.ROOT);
     }
 
     public void addAuthorities(Set<Authority> authorities) {

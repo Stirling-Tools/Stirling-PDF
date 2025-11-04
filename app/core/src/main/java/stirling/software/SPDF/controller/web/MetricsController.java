@@ -361,7 +361,7 @@ public class MetricsController {
         long hours = duration.toHoursPart();
         long minutes = duration.toMinutesPart();
         long seconds = duration.toSecondsPart();
-        return String.format("%dd %dh %dm %ds", days, hours, minutes, seconds);
+        return String.format(Locale.ROOT, "%dd %dh %dm %ds", days, hours, minutes, seconds);
     }
 
     @Setter
