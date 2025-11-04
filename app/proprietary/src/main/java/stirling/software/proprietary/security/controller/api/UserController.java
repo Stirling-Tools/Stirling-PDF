@@ -3,6 +3,7 @@ package stirling.software.proprietary.security.controller.api;
 import java.io.IOException;
 import java.security.Principal;
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -15,13 +16,9 @@ import org.springframework.security.core.session.SessionInformation;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.servlet.view.RedirectView;
-
-import io.swagger.v3.oas.annotations.tags.Tag;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -30,6 +27,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.annotations.api.UserApi;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.enumeration.Role;
 import stirling.software.common.model.exception.UnsupportedProviderException;
@@ -47,9 +45,7 @@ import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.service.UserService;
 import stirling.software.proprietary.security.session.SessionPersistentRegistry;
 
-@Controller
-@Tag(name = "User", description = "User APIs")
-@RequestMapping("/api/v1/user")
+@UserApi
 @Slf4j
 @RequiredArgsConstructor
 public class UserController {
@@ -63,24 +59,83 @@ public class UserController {
 
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/register")
-    public String register(@ModelAttribute UsernameAndPass requestModel, Model model)
+    public ResponseEntity<?> register(@RequestBody UsernameAndPass usernameAndPass)
             throws SQLException, UnsupportedProviderException {
-        if (userService.usernameExistsIgnoreCase(requestModel.getUsername())) {
-            model.addAttribute("error", "Username already exists");
-            return "register";
-        }
         try {
+            log.debug("Registration attempt for user: {}", usernameAndPass.getUsername());
+
+            if (userService.usernameExistsIgnoreCase(usernameAndPass.getUsername())) {
+                log.warn(
+                        "Registration failed: username already exists: {}",
+                        usernameAndPass.getUsername());
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(Map.of("error", "User already exists"));
+            }
+
+            if (!userService.isUsernameValid(usernameAndPass.getUsername())) {
+                log.warn(
+                        "Registration failed: invalid username format: {}",
+                        usernameAndPass.getUsername());
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(Map.of("error", "Invalid username format"));
+            }
+
+            if (usernameAndPass.getPassword() == null
+                    || usernameAndPass.getPassword().length() < 6) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(Map.of("error", "Password must be at least 6 characters"));
+            }
+
             Team team = teamRepository.findByName(TeamService.DEFAULT_TEAM_NAME).orElse(null);
-            userService.saveUser(
-                    requestModel.getUsername(),
-                    requestModel.getPassword(),
-                    team,
-                    Role.USER.getRoleId(),
-                    false);
+            User user =
+                    userService.saveUser(
+                            usernameAndPass.getUsername(),
+                            usernameAndPass.getPassword(),
+                            team,
+                            Role.USER.getRoleId(),
+                            false);
+
+            log.info("User registered successfully: {}", usernameAndPass.getUsername());
+
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(
+                            Map.of(
+                                    "user",
+                                    buildUserResponse(user),
+                                    "message",
+                                    "Account created successfully. Please log in."));
+
         } catch (IllegalArgumentException e) {
-            return "redirect:/login?messageType=invalidUsername";
+            log.error("Registration validation error: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            log.error("Registration error for user: {}", usernameAndPass.getUsername(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Registration failed: " + e.getMessage()));
         }
-        return "redirect:/login?registered=true";
+    }
+
+    /**
+     * Helper method to build user response object
+     *
+     * @param user User entity
+     * @return Map containing user information
+     */
+    private Map<String, Object> buildUserResponse(User user) {
+        Map<String, Object> userMap = new HashMap<>();
+        userMap.put("id", user.getId());
+        userMap.put("email", user.getUsername()); // Use username as email
+        userMap.put("username", user.getUsername());
+        userMap.put("role", user.getRolesAsString());
+        userMap.put("enabled", user.isEnabled());
+
+        // Add metadata for OAuth compatibility
+        Map<String, Object> appMetadata = new HashMap<>();
+        appMetadata.put("provider", user.getAuthenticationType()); // Default to email provider
+        userMap.put("app_metadata", appMetadata);
+
+        return userMap;
     }
 
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")

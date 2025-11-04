@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document>
+    <title>Test Document</title>
+    <content>
+        <section id="1">
+            <heading>Introduction</heading>
+            <paragraph>This is a test XML document for conversion testing.</paragraph>
+        </section>
+        <section id="2">
+            <heading>Data</heading>
+            <data>
+                <item name="test1" value="value1"/>
+                <item name="test2" value="value2"/>
+                <item name="test3" value="value3"/>
+            </data>
+        </section>
+    </content>
+</document>

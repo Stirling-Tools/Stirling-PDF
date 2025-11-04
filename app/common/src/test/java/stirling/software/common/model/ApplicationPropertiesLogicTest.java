@@ -119,22 +119,6 @@ class ApplicationPropertiesLogicTest {
     }
 
     @Test
-    void premium_google_drive_getters_return_empty_string_on_null_or_blank() {
-        Premium.ProFeatures.GoogleDrive gd = new Premium.ProFeatures.GoogleDrive();
-
-        assertEquals("", gd.getClientId());
-        assertEquals("", gd.getApiKey());
-        assertEquals("", gd.getAppId());
-
-        gd.setClientId(" id ");
-        gd.setApiKey(" key ");
-        gd.setAppId(" app ");
-        assertEquals(" id ", gd.getClientId());
-        assertEquals(" key ", gd.getApiKey());
-        assertEquals(" app ", gd.getAppId());
-    }
-
-    @Test
     void ui_getters_return_null_for_blank() {
         ApplicationProperties.Ui ui = new ApplicationProperties.Ui();
         ui.setAppName("   ");
