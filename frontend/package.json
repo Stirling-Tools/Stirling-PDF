@@ -53,6 +53,7 @@
     "react-router-dom": "^7.9.1",
     "signature_pad": "^5.0.4",
     "tailwindcss": "^4.1.13",
+    "type-fest": "^5.1.0",
     "web-vitals": "^5.1.0"
   },
   "scripts": {

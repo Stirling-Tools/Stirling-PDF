@@ -1,6 +1,5 @@
 import axios from 'axios';
-import { ToolRegistry } from '@app/data/toolsTaxonomy';
-import { ToolId } from '@app/types/toolId';
+import { AutomateToolRegistry, AutomateToolId, AutomationConfig } from '@app/types/automation';
 import { AUTOMATION_CONSTANTS } from '@app/constants/automation';
 import { AutomationFileProcessor } from '@app/utils/automationFileProcessor';
 import { ToolType } from '@app/hooks/tools/shared/useToolOperation';
@@ -132,10 +131,10 @@ const executeMultiFileOperation = async (
  * Execute a tool operation directly without using React hooks
  */
 export const executeToolOperation = async (
-  operationName: string,
+  operationName: AutomateToolId,
   parameters: any,
   files: File[],
-  toolRegistry: ToolRegistry
+  toolRegistry: AutomateToolRegistry
 ): Promise<File[]> => {
   return executeToolOperationWithPrefix(operationName, parameters, files, toolRegistry, AUTOMATION_CONSTANTS.FILE_PREFIX);
 };
@@ -144,13 +143,13 @@ export const executeToolOperation = async (
  * Execute a tool operation with custom prefix
  */
 export const executeToolOperationWithPrefix = async (
-  operationName: string,
+  operationName: AutomateToolId,
   parameters: any,
   files: File[],
-  toolRegistry: ToolRegistry,
+  toolRegistry: AutomateToolRegistry,
   filePrefix: string = AUTOMATION_CONSTANTS.FILE_PREFIX
 ): Promise<File[]> => {
-  const config = toolRegistry[operationName as ToolId]?.operationConfig;
+  const config = toolRegistry[operationName]?.operationConfig;
   if (!config) {
     throw new Error(`Tool operation not supported: ${operationName}`);
   }
@@ -179,10 +178,10 @@ export const executeToolOperationWithPrefix = async (
  * Execute an entire automation sequence
  */
 export const executeAutomationSequence = async (
-  automation: any,
+  automation: AutomationConfig,
   initialFiles: File[],
-  toolRegistry: ToolRegistry,
-  onStepStart?: (stepIndex: number, operationName: string) => void,
+  toolRegistry: AutomateToolRegistry,
+  onStepStart?: (stepIndex: number, operationName: AutomateToolId) => void,
   onStepComplete?: (stepIndex: number, resultFiles: File[]) => void,
   onStepError?: (stepIndex: number, error: string) => void
 ): Promise<File[]> => {

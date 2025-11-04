@@ -1,12 +1,11 @@
 import { ToolType, useToolOperation } from '@app/hooks/tools/shared/useToolOperation';
 import { useCallback } from 'react';
+import { AutomateParameters, AutomateToolId } from '@app/types/automation';
+import { useAutomateToolRegistry } from '@app/hooks/tools/automate/useAutomateToolRegistry';
 import { executeAutomationSequence } from '@app/utils/automationExecutor';
-import { useToolRegistry } from '@app/contexts/ToolRegistryContext';
-import { AutomateParameters } from '@app/types/automation';
 
 export function useAutomateOperation() {
-  const { allTools } = useToolRegistry();
-  const toolRegistry = allTools;
+  const toolRegistry = useAutomateToolRegistry();
 
   const customProcessor = useCallback(async (params: AutomateParameters, files: File[]) => {
     console.log('🚀 Starting automation execution via customProcessor', { params, files });
@@ -20,7 +19,7 @@ export function useAutomateOperation() {
       params.automationConfig!,
       files,
       toolRegistry,
-      (stepIndex: number, operationName: string) => {
+      (stepIndex: number, operationName: AutomateToolId) => {
         console.log(`Step ${stepIndex + 1} started: ${operationName}`);
         params.onStepStart?.(stepIndex, operationName);
       },

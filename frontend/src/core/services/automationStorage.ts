@@ -2,17 +2,11 @@
  * Service for managing automation configurations in IndexedDB
  */
 
-export interface AutomationConfig {
-  id: string;
-  name: string;
-  description?: string;
-  operations: Array<{
-    operation: string;
-    parameters: any;
-  }>;
-  createdAt: string;
-  updatedAt: string;
-}
+import type { AutomationConfig as DomainAutomationConfig } from '@app/types/automation';
+
+export type AutomationConfig = DomainAutomationConfig;
+
+type AutomationPayload = Omit<AutomationConfig, 'id' | 'createdAt' | 'updatedAt'>;
 
 class AutomationStorage {
   private dbName = 'StirlingPDF_Automations';
@@ -35,7 +29,7 @@ class AutomationStorage {
 
       request.onupgradeneeded = (event) => {
         const db = (event.target as IDBOpenDBRequest).result;
-        
+
         if (!db.objectStoreNames.contains(this.storeName)) {
           const store = db.createObjectStore(this.storeName, { keyPath: 'id' });
           store.createIndex('name', 'name', { unique: false });
@@ -49,18 +43,18 @@ class AutomationStorage {
     if (!this.db) {
       await this.init();
     }
-    
+
     if (!this.db) {
       throw new Error('Database not initialized');
     }
-    
+
     return this.db;
   }
 
-  async saveAutomation(automation: Omit<AutomationConfig, 'id' | 'createdAt' | 'updatedAt'>): Promise<AutomationConfig> {
+  async saveAutomation(automation: AutomationPayload): Promise<AutomationConfig> {
     const db = await this.ensureDB();
     const timestamp = new Date().toISOString();
-    
+
     const automationWithMeta: AutomationConfig = {
       id: `automation-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       ...automation,
@@ -85,7 +79,7 @@ class AutomationStorage {
 
   async updateAutomation(automation: AutomationConfig): Promise<AutomationConfig> {
     const db = await this.ensureDB();
-    
+
     const updatedAutomation: AutomationConfig = {
       ...automation,
       updatedAt: new Date().toISOString()
@@ -165,13 +159,13 @@ class AutomationStorage {
 
   async searchAutomations(query: string): Promise<AutomationConfig[]> {
     const automations = await this.getAllAutomations();
-    
+
     if (!query.trim()) {
       return automations;
     }
 
     const lowerQuery = query.toLowerCase();
-    return automations.filter(automation => 
+    return automations.filter(automation =>
       automation.name.toLowerCase().includes(lowerQuery) ||
       (automation.description && automation.description.toLowerCase().includes(lowerQuery)) ||
       automation.operations.some(op => op.operation.toLowerCase().includes(lowerQuery))
