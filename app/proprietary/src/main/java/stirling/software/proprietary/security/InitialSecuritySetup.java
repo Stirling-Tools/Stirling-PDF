@@ -62,8 +62,8 @@ public class InitialSecuritySetup {
     private void initializeUserLicenseSettings() {
         licenseSettingsService.initializeGrandfatheredCount();
         licenseSettingsService.updateLicenseMaxUsers();
-      
     }
+
     private void configureJWTSettings() {
         ApplicationProperties.Security.Jwt jwtProperties =
                 applicationProperties.getSecurity().getJwt();
