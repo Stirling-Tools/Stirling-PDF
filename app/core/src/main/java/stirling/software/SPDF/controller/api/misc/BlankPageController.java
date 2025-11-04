@@ -5,6 +5,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -68,7 +69,11 @@ public class BlankPageController {
         }
 
         double whitePixelPercentage = (whitePixels / (double) totalPixels) * 100;
-        log.info(String.format("Page has white pixel percent of %.2f%%", whitePixelPercentage));
+        log.info(
+                String.format(
+                        Locale.ROOT,
+                        "Page has white pixel percent of %.2f%%",
+                        whitePixelPercentage));
 
         return whitePixelPercentage >= whitePercent;
     }

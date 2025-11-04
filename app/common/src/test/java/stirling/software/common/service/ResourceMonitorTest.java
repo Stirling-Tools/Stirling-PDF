@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.lang.management.MemoryMXBean;
 import java.lang.management.OperatingSystemMXBean;
 import java.time.Instant;
+import java.util.Locale;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -116,8 +117,11 @@ class ResourceMonitorTest {
                 shouldQueue,
                 result,
                 String.format(
+                        Locale.ROOT,
                         "For weight %d and status %s, shouldQueue should be %s",
-                        weight, status, shouldQueue));
+                        weight,
+                        status,
+                        shouldQueue));
     }
 
     @Test

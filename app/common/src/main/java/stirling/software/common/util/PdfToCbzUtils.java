@@ -3,6 +3,7 @@ package stirling.software.common.util;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.Locale;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -46,7 +47,7 @@ public class PdfToCbzUtils {
             throw ExceptionUtils.createFileNoNameException();
         }
 
-        String extension = FilenameUtils.getExtension(filename).toLowerCase();
+        String extension = FilenameUtils.getExtension(filename).toLowerCase(Locale.ROOT);
         if (!"pdf".equals(extension)) {
             throw ExceptionUtils.createPdfFileRequiredException();
         }
@@ -71,7 +72,8 @@ public class PdfToCbzUtils {
                                             pdfRenderer.renderImageWithDPI(
                                                     currentPage, dpi, ImageType.RGB));
 
-                    String imageFilename = String.format("page_%03d.png", currentPage + 1);
+                    String imageFilename =
+                            String.format(Locale.ROOT, "page_%03d.png", currentPage + 1);
                     ZipEntry zipEntry = new ZipEntry(imageFilename);
                     zipOut.putNextEntry(zipEntry);
 
@@ -99,7 +101,7 @@ public class PdfToCbzUtils {
             return false;
         }
 
-        String extension = FilenameUtils.getExtension(filename).toLowerCase();
+        String extension = FilenameUtils.getExtension(filename).toLowerCase(Locale.ROOT);
         return "pdf".equals(extension);
     }
 }

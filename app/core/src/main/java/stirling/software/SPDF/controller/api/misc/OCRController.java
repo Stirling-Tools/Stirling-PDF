@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -336,7 +337,9 @@ public class OCRController {
                             };
 
                     File pageOutputPath =
-                            new File(tempOutputDir, String.format("page_%d.pdf", pageNum));
+                            new File(
+                                    tempOutputDir,
+                                    String.format(Locale.ROOT, "page_%d.pdf", pageNum));
 
                     if (shouldOcr) {
                         // Convert page to image
@@ -357,7 +360,9 @@ public class OCRController {
                                         dpi,
                                         () -> pdfRenderer.renderImageWithDPI(currentPageNum, dpi));
                         File imagePath =
-                                new File(tempImagesDir, String.format("page_%d.png", pageNum));
+                                new File(
+                                        tempImagesDir,
+                                        String.format(Locale.ROOT, "page_%d.png", pageNum));
                         ImageIO.write(image, "png", imagePath);
 
                         // Build OCR command
@@ -365,7 +370,9 @@ public class OCRController {
                         command.add("tesseract");
                         command.add(imagePath.toString());
                         command.add(
-                                new File(tempOutputDir, String.format("page_%d", pageNum))
+                                new File(
+                                                tempOutputDir,
+                                                String.format(Locale.ROOT, "page_%d", pageNum))
                                         .toString());
                         command.add("-l");
                         command.add(String.join("+", selectedLanguages));

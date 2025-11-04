@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 
 import javax.imageio.ImageIO;
 
@@ -51,7 +52,7 @@ public class PdfToCbrUtils {
             throw ExceptionUtils.createFileNoNameException();
         }
 
-        String extension = FilenameUtils.getExtension(filename).toLowerCase();
+        String extension = FilenameUtils.getExtension(filename).toLowerCase(Locale.ROOT);
         if (!"pdf".equals(extension)) {
             throw ExceptionUtils.createPdfFileRequiredException();
         }
@@ -76,7 +77,8 @@ public class PdfToCbrUtils {
                                             pdfRenderer.renderImageWithDPI(
                                                     currentPage, dpi, ImageType.RGB));
 
-                    String imageFilename = String.format("page_%03d.png", currentPage + 1);
+                    String imageFilename =
+                            String.format(Locale.ROOT, "page_%03d.png", currentPage + 1);
                     Path imagePath = tempDir.resolve(imageFilename);
 
                     ImageIO.write(image, "PNG", imagePath.toFile());
@@ -178,7 +180,7 @@ public class PdfToCbrUtils {
             return false;
         }
 
-        String extension = FilenameUtils.getExtension(filename).toLowerCase();
+        String extension = FilenameUtils.getExtension(filename).toLowerCase(Locale.ROOT);
         return "pdf".equals(extension);
     }
 }

@@ -289,7 +289,7 @@ public class CompressController {
                         imageIdentity,
                         GeneralUtils.formatBytes(originalSize),
                         GeneralUtils.formatBytes(compressedSize),
-                        String.format("%.1f", reductionPercentage));
+                        String.format(Locale.ROOT, "%.1f", reductionPercentage));
             } else {
                 log.info(
                         "Image identity {}: Not suitable for compression, skipping", imageIdentity);
@@ -331,6 +331,60 @@ public class CompressController {
         }
     }
 
+    public TempFile compressImagesInPDF(
+            Path pdfFile, double scaleFactor, float jpegQuality, boolean convertToGrayscale)
+            throws Exception {
+        TempFile newCompressedPDF = tempFileManager.createManagedTempFile(".pdf");
+        long originalFileSize = Files.size(pdfFile);
+        log.info(
+                "Starting image compression with scale factor: {}, JPEG quality: {}, grayscale: {}"
+                        + " on file size: {}",
+                scaleFactor,
+                jpegQuality,
+                convertToGrayscale,
+                GeneralUtils.formatBytes(originalFileSize));
+
+        try (PDDocument doc = pdfDocumentFactory.load(pdfFile)) {
+            // Find all unique images in the document
+            Map<ImageIdentity, List<ImageReference>> uniqueImages = findImages(doc);
+
+            // Get statistics
+            CompressionStats stats = new CompressionStats();
+            stats.uniqueImagesCount = uniqueImages.size();
+            calculateImageStats(uniqueImages, stats);
+
+            // Create compressed versions of unique images
+            Map<ImageIdentity, PDImageXObject> compressedVersions =
+                    createCompressedImages(
+                            doc, uniqueImages, scaleFactor, jpegQuality, convertToGrayscale, stats);
+
+            // Replace all instances with compressed versions
+            replaceImages(doc, uniqueImages, compressedVersions);
+
+            // Log compression statistics
+            logCompressionStats(stats, originalFileSize);
+
+            // Free memory before saving
+            compressedVersions.clear();
+            uniqueImages.clear();
+
+            log.info("Saving compressed PDF to {}", newCompressedPDF.getPath());
+            doc.save(newCompressedPDF.getAbsolutePath());
+
+            // Log overall file size reduction
+            long compressedFileSize = Files.size(newCompressedPDF.getPath());
+            double overallReduction = 100.0 - ((compressedFileSize * 100.0) / originalFileSize);
+            log.info(
+                    "Overall PDF compression: {} → {} (reduced by {}%)",
+                    GeneralUtils.formatBytes(originalFileSize),
+                    GeneralUtils.formatBytes(compressedFileSize),
+                    String.format(Locale.ROOT, "%.1f", overallReduction));
+            return newCompressedPDF;
+        } catch (Exception e) {
+            newCompressedPDF.close();
+            throw e;
+        }
+    }
     private static String generateMaskHash(PDImageXObject image) {
         try {
             PDImageXObject mask = image.getMask();
@@ -415,7 +469,7 @@ public class CompressController {
     private static String bytesToHexString(byte[] bytes) {
         StringBuilder sb = new StringBuilder();
         for (byte b : bytes) {
-            sb.append(String.format("%02x", b));
+            sb.append(String.format(Locale.ROOT, "%02x", b));
         }
         return sb.toString();
     }
@@ -472,7 +526,7 @@ public class CompressController {
                 "Total original image size: {}, compressed: {} (reduced by {}%)",
                 GeneralUtils.formatBytes(stats.totalOriginalBytes),
                 GeneralUtils.formatBytes(stats.totalCompressedBytes),
-                String.format("%.1f", overallImageReduction));
+                String.format(Locale.ROOT, "%.1f", overallImageReduction));
     }
 
     private static BufferedImage convertToGrayscale(BufferedImage image) {
@@ -680,6 +734,123 @@ public class CompressController {
         }
     }
 
+    private static class ImageIdentity {
+        private final String pixelHash; // Hash of pixel data
+        private final String colorSpace; // e.g., "DeviceRGB", "DeviceCMYK"
+        private final int bitsPerComponent;
+        private final boolean hasMask; // Has transparency
+        private final String maskHash; // Hash of mask data if present
+        private final int width; // Image width in pixels
+        private final int height; // Image height in pixels
+        private final String filter; // Image filter/compression type
+        private final String colorProfile; // Color profile information
+        private final long streamLength; // Original stream length
+        private final String imageType; // Image type (JPEG, PNG, etc.)
+        private final String decodeParams; // Decode parameters hash
+        private final String metadataHash; // Hash of image metadata
+
+        public ImageIdentity(PDImageXObject image) throws IOException {
+            this.pixelHash = generateImageHash(image);
+            this.colorSpace = image.getColorSpace().getName();
+            this.bitsPerComponent = image.getBitsPerComponent();
+            this.hasMask = image.getMask() != null || image.getSoftMask() != null;
+            this.maskHash = hasMask ? generateMaskHash(image) : null;
+            this.width = image.getWidth();
+            this.height = image.getHeight();
+            this.filter = getImageFilter(image);
+            this.colorProfile = getColorProfileInfo(image);
+            this.streamLength = image.getCOSObject().getLength();
+            this.imageType = getImageType(image);
+            this.decodeParams = generateDecodeParamsHash(image);
+            this.metadataHash = this.generateMetadataHash(image);
+        }
+
+        // Generate hash of image metadata
+        private String generateMetadataHash(PDImageXObject image) {
+            try {
+                StringBuilder metadata = new StringBuilder();
+
+                // Add image dimensions
+                metadata.append(image.getWidth()).append("x").append(image.getHeight());
+
+                // Add color space info
+                metadata.append("_").append(image.getColorSpace().getName());
+
+                // Add bits per component
+                metadata.append("_").append(image.getBitsPerComponent());
+
+                // Add stream length
+                metadata.append("_").append(image.getCOSObject().getLength());
+
+                // Add mask information
+                if (image.getMask() != null) {
+                    metadata.append("_mask");
+                }
+                if (image.getSoftMask() != null) {
+                    metadata.append("_softmask");
+                }
+
+                return bytesToHexString(generateMD5(metadata.toString().getBytes()));
+            } catch (Exception e) {
+                return "fallback-meta-" + System.identityHashCode(image);
+            }
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof ImageIdentity that)) return false;
+            return bitsPerComponent == that.bitsPerComponent
+                    && hasMask == that.hasMask
+                    && width == that.width
+                    && height == that.height
+                    && streamLength == that.streamLength
+                    && Objects.equals(pixelHash, that.pixelHash)
+                    && Objects.equals(colorSpace, that.colorSpace)
+                    && Objects.equals(maskHash, that.maskHash)
+                    && Objects.equals(filter, that.filter)
+                    && Objects.equals(colorProfile, that.colorProfile)
+                    && Objects.equals(imageType, that.imageType)
+                    && Objects.equals(decodeParams, that.decodeParams)
+                    && Objects.equals(metadataHash, that.metadataHash);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(
+                    pixelHash,
+                    colorSpace,
+                    bitsPerComponent,
+                    hasMask,
+                    maskHash,
+                    width,
+                    height,
+                    filter,
+                    colorProfile,
+                    streamLength,
+                    imageType,
+                    decodeParams,
+                    metadataHash);
+        }
+
+        @Override
+        public String toString() {
+            return String.format(
+                    Locale.ROOT,
+                    "%s_%s_%d_%dx%d_%s_%s_%d_%s_%s_%s",
+                    pixelHash.substring(0, Math.min(8, pixelHash.length())),
+                    colorSpace,
+                    bitsPerComponent,
+                    width,
+                    height,
+                    filter,
+                    imageType,
+                    streamLength,
+                    hasMask ? "masked" : "nomask",
+                    decodeParams.substring(0, Math.min(4, decodeParams.length())),
+                    metadataHash.substring(0, Math.min(4, metadataHash.length())));
+        }
+    }
     // Scale factors for different optimization levels (lower => smaller)
     private static double getScaleFactorForLevel(int optimizeLevel) {
         return switch (optimizeLevel) {
@@ -728,7 +899,7 @@ public class CompressController {
     // Increment optimization level if we need more compression
     private static int incrementOptimizeLevel(int currentLevel, long currentSize, long targetSize) {
         double currentRatio = currentSize / (double) targetSize;
-        log.info("Current compression ratio: {}", String.format("%.2f", currentRatio));
+        log.info("Current compression ratio: {}", String.format(Locale.ROOT, "%.2f", currentRatio));
 
         if (currentRatio > 2.0) {
             return Math.min(9, currentLevel + 3);
@@ -1075,7 +1246,7 @@ public class CompressController {
                     log.info(
                             "Post-Ghostscript file size: {} (reduced by {}%)",
                             GeneralUtils.formatBytes(postGsSize),
-                            String.format("%.1f", gsReduction));
+                            String.format(Locale.ROOT, "%.1f", gsReduction));
                 } else {
                     log.warn(
                             "Ghostscript compression failed with return code: {}",
@@ -1179,7 +1350,7 @@ public class CompressController {
                 log.info(
                         "Post-QPDF file size: {} (reduced by {}%)",
                         GeneralUtils.formatBytes(postQpdfSize),
-                        String.format("%.1f", qpdfReduction));
+                        String.format(Locale.ROOT, "%.1f", qpdfReduction));
 
             } catch (IOException e) {
                 if (returnCode != null && returnCode.getRc() != 3) {

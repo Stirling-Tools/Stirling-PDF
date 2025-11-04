@@ -3,6 +3,7 @@ package stirling.software.SPDF.pdf;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -204,12 +205,14 @@ public class TextFinder extends PDFTextStripper {
             TextPosition pos = i < pageTextPositions.size() ? pageTextPositions.get(i) : null;
             debug.append(
                     String.format(
+                            Locale.ROOT,
                             "  [%d] '%c' (0x%02X) -> %s\n",
                             i,
                             c,
                             (int) c,
                             pos != null
-                                    ? String.format("(%.1f,%.1f)", pos.getX(), pos.getY())
+                                    ? String.format(
+                                            Locale.ROOT, "(%.1f,%.1f)", pos.getX(), pos.getY())
                                     : "null"));
         }
 
