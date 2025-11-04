@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Locale;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -49,13 +50,16 @@ class TextFinderTest {
                 expectedCount,
                 foundTexts.size(),
                 String.format(
-                        "Expected %d matches for search term '%s'", expectedCount, searchTerm));
+                        Locale.ROOT,
+                        "Expected %d matches for search term '%s'",
+                        expectedCount,
+                        searchTerm));
 
         if (expectedTexts != null) {
             for (String expectedText : expectedTexts) {
                 assertTrue(
                         foundTexts.stream().anyMatch(text -> text.getText().equals(expectedText)),
-                        String.format("Expected to find text: '%s'", expectedText));
+                        String.format(Locale.ROOT, "Expected to find text: '%s'", expectedText));
             }
         }
 
@@ -271,7 +275,10 @@ class TextFinderTest {
             // Each pattern should find at least one match in our test content
             assertFalse(
                     foundTexts.isEmpty(),
-                    String.format("Pattern '%s' should find at least one match", regexPattern));
+                    String.format(
+                            Locale.ROOT,
+                            "Pattern '%s' should find at least one match",
+                            regexPattern));
         }
 
         @Test
