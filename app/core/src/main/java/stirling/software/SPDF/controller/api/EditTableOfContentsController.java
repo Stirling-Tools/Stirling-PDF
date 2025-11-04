@@ -13,6 +13,7 @@ import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDOutlin
 import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDOutlineNode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -23,7 +24,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.swagger.v3.oas.annotations.Operation;
 
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.swagger.JsonDataResponse;
@@ -32,6 +35,7 @@ import stirling.software.SPDF.model.api.EditTableOfContentsRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.WebResponseUtils;
 
 @GeneralApi
@@ -42,7 +46,9 @@ public class EditTableOfContentsController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final ObjectMapper objectMapper;
 
-    @AutoJobPostMapping(value = "/extract-bookmarks", consumes = "multipart/form-data")
+    @AutoJobPostMapping(
+            value = "/extract-bookmarks",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @JsonDataResponse
     @Operation(
             summary = "Extract PDF Bookmarks",
@@ -151,7 +157,9 @@ public class EditTableOfContentsController {
         return bookmark;
     }
 
-    @AutoJobPostMapping(value = "/edit-table-of-contents", consumes = "multipart/form-data")
+    @AutoJobPostMapping(
+            value = "/edit-table-of-contents",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @StandardPdfResponse
     @Operation(
             summary = "Edit Table of Contents",
@@ -180,9 +188,10 @@ public class EditTableOfContentsController {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             document.save(baos);
 
-            String filename = file.getOriginalFilename().replaceFirst("[.][^.]+$", "");
             return WebResponseUtils.bytesToWebResponse(
-                    baos.toByteArray(), filename + "_with_toc.pdf", MediaType.APPLICATION_PDF);
+                    baos.toByteArray(),
+                    GeneralUtils.generateFilename(file.getOriginalFilename(), "_with_toc.pdf"),
+                    MediaType.APPLICATION_PDF);
 
         } finally {
             if (document != null) {
@@ -234,33 +243,11 @@ public class EditTableOfContentsController {
     }
 
     // Inner class to represent bookmarks in JSON
+    @Setter
+    @Getter
     public static class BookmarkItem {
         private String title;
         private int pageNumber;
         private List<BookmarkItem> children = new ArrayList<>();
-
-        public String getTitle() {
-            return title;
-        }
-
-        public void setTitle(String title) {
-            this.title = title;
-        }
-
-        public int getPageNumber() {
-            return pageNumber;
-        }
-
-        public void setPageNumber(int pageNumber) {
-            this.pageNumber = pageNumber;
-        }
-
-        public List<BookmarkItem> getChildren() {
-            return children;
-        }
-
-        public void setChildren(List<BookmarkItem> children) {
-            this.children = children;
-        }
     }
 }

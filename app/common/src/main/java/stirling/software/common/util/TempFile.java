@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -14,15 +15,11 @@ import lombok.extern.slf4j.Slf4j;
 public class TempFile implements AutoCloseable {
 
     private final TempFileManager manager;
-    private final File file;
+    @Getter private final File file;
 
     public TempFile(TempFileManager manager, String suffix) throws IOException {
         this.manager = manager;
         this.file = manager.createTempFile(suffix);
-    }
-
-    public File getFile() {
-        return file;
     }
 
     public Path getPath() {
