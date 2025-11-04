@@ -410,12 +410,12 @@ public class GetInfoOnPDF {
         float widthInCm = widthInInches * 2.54f;
         float heightInCm = heightInInches * 2.54f;
 
-        dimensionInfo.put("Width (px)", String.format("%.2f", width));
-        dimensionInfo.put("Height (px)", String.format("%.2f", height));
-        dimensionInfo.put("Width (in)", String.format("%.2f", widthInInches));
-        dimensionInfo.put("Height (in)", String.format("%.2f", heightInInches));
-        dimensionInfo.put("Width (cm)", String.format("%.2f", widthInCm));
-        dimensionInfo.put("Height (cm)", String.format("%.2f", heightInCm));
+        dimensionInfo.put("Width (px)", String.format(Locale.ROOT, "%.2f", width));
+        dimensionInfo.put("Height (px)", String.format(Locale.ROOT, "%.2f", height));
+        dimensionInfo.put("Width (in)", String.format(Locale.ROOT, "%.2f", widthInInches));
+        dimensionInfo.put("Height (in)", String.format(Locale.ROOT, "%.2f", heightInInches));
+        dimensionInfo.put("Width (cm)", String.format(Locale.ROOT, "%.2f", widthInCm));
+        dimensionInfo.put("Height (cm)", String.format(Locale.ROOT, "%.2f", heightInCm));
     }
 
     private static ArrayNode exploreStructureTree(List<Object> nodes) {
