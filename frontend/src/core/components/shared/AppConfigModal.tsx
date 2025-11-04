@@ -160,6 +160,7 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
                           opacity: isDisabled ? 0.5 : 1,
                           cursor: isDisabled ? 'not-allowed' : 'pointer',
                         }}
+                        data-tour={`admin-${item.key}-nav`}
                       >
                         <LocalIcon icon={item.icon} width={iconSize} height={iconSize} style={{ color }} />
                         {!isMobile && (
@@ -191,7 +192,7 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
         </div>
 
         {/* Right content */}
-        <div className="modal-content">
+        <div className="modal-content" data-tour="settings-content-area">
           <div className="modal-content-scroll">
             {/* Sticky header with section title and small close button */}
             <div

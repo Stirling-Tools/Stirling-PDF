@@ -3509,7 +3509,13 @@
     "account": "Account",
     "config": "Config",
     "adminSettings": "Admin Settings",
-    "allTools": "All Tools"
+    "allTools": "All Tools",
+    "helpMenu": {
+      "toolsTour": "Tools Tour",
+      "toolsTourDesc": "Learn what the tools can do",
+      "adminTour": "Admin Tour",
+      "adminTourDesc": "Explore admin settings & features"
+    }
   },
   "admin": {
     "error": "Error",
@@ -4423,6 +4429,17 @@
     "finish": "Finish",
     "startTour": "Start Tour",
     "startTourDescription": "Take a guided tour of Stirling PDF's key features"
+  },
+  "adminOnboarding": {
+    "welcome": "Welcome to the <strong>Admin Tour</strong>! Let's explore the powerful enterprise features and settings available to system administrators.",
+    "configButton": "Click the <strong>Config</strong> button to access all system settings and administrative controls.",
+    "settingsOverview": "This is the <strong>Settings Panel</strong>. Admin settings are organised by category for easy navigation.",
+    "teamsAndUsers": "Manage <strong>Teams</strong> and individual users here. You can invite new users via email, shareable links, or create custom accounts for them yourself.",
+    "systemCustomization": "We have extensive ways to customise the UI: <strong>System Settings</strong> let you change the app name and languages, <strong>Features</strong> allows server certificate management, and <strong>Endpoints</strong> lets you enable or disable specific tools for your users.",
+    "databaseSection": "For advanced production environments, we have settings to allow <strong>external database hookups</strong> so you can integrate with your existing infrastructure.",
+    "connectionsSection": "The <strong>Connections</strong> section supports various login methods including custom SSO and SAML providers like Google and GitHub, plus email integrations for notifications and communications.",
+    "adminTools": "Finally, we have advanced administration tools like <strong>Auditing</strong> to track system activity and <strong>Usage Analytics</strong> to monitor how your users interact with the platform.",
+    "wrapUp": "That's the admin tour! You've seen the enterprise features that make Stirling PDF a powerful, customisable solution for organisations. Access this tour anytime from the <strong>Help</strong> menu."
   },
   "workspace": {
     "title": "Workspace",

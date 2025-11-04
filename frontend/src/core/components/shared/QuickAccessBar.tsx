@@ -1,5 +1,5 @@
 import React, { useState, useRef, forwardRef, useEffect } from "react";
-import { ActionIcon, Stack, Divider } from "@mantine/core";
+import { ActionIcon, Stack, Divider, Menu } from "@mantine/core";
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation } from 'react-router-dom';
 import LocalIcon from '@app/components/shared/LocalIcon';
@@ -172,17 +172,6 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
 
   const bottomButtons: ButtonConfig[] = [
     {
-      id: 'help',
-      name: t("quickAccess.help", "Help"),
-      icon: <LocalIcon icon="help-rounded" width="1.5rem" height="1.5rem" />,
-      isRound: true,
-      size: 'lg',
-      type: 'action',
-      onClick: () => {
-        startTour();
-      },
-    },
-    {
       id: 'config',
       name: config?.enableLogin ? t("quickAccess.account", "Account") : t("quickAccess.config", "Config"),
       icon: config?.enableLogin ? <LocalIcon icon="person-rounded" width="1.25rem" height="1.25rem" /> : <LocalIcon icon="settings-rounded" width="1.25rem" height="1.25rem" />,
@@ -258,6 +247,58 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
 
           {/* Bottom section */}
           <Stack gap="lg" align="center">
+            {/* Help button with menu */}
+            <div
+              className="flex flex-col items-center gap-1"
+              data-tour="help-button"
+            >
+              <Menu position="right" offset={10}>
+                <Menu.Target>
+                  <ActionIcon
+                    size="lg"
+                    variant="subtle"
+                    aria-label={t("quickAccess.help", "Help")}
+                    data-testid="help-button"
+                  >
+                    <span className="iconContainer">
+                      <LocalIcon icon="help-rounded" width="1.5rem" height="1.5rem" />
+                    </span>
+                  </ActionIcon>
+                </Menu.Target>
+                <Menu.Dropdown>
+                  <Menu.Item
+                    leftSection={<LocalIcon icon="view-carousel-rounded" width="1.25rem" height="1.25rem" />}
+                    onClick={() => startTour('tools')}
+                  >
+                    <div>
+                      <div style={{ fontWeight: 500 }}>
+                        {t("quickAccess.helpMenu.toolsTour", "Tools Tour")}
+                      </div>
+                      <div style={{ fontSize: '0.875rem', opacity: 0.7 }}>
+                        {t("quickAccess.helpMenu.toolsTourDesc", "Learn what the tools can do")}
+                      </div>
+                    </div>
+                  </Menu.Item>
+                  <Menu.Item
+                    leftSection={<LocalIcon icon="admin-panel-settings-rounded" width="1.25rem" height="1.25rem" />}
+                    onClick={() => startTour('admin')}
+                  >
+                    <div>
+                      <div style={{ fontWeight: 500 }}>
+                        {t("quickAccess.helpMenu.adminTour", "Admin Tour")}
+                      </div>
+                      <div style={{ fontSize: '0.875rem', opacity: 0.7 }}>
+                        {t("quickAccess.helpMenu.adminTourDesc", "Explore admin settings & features")}
+                      </div>
+                    </div>
+                  </Menu.Item>
+                </Menu.Dropdown>
+              </Menu>
+              <span className="button-text inactive">
+                {t("quickAccess.help", "Help")}
+              </span>
+            </div>
+
             {bottomButtons.map((config, index) => (
               <React.Fragment key={config.id}>
                 {renderNavButton(config, index)}
