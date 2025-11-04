@@ -5,6 +5,7 @@ import java.io.IOException;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
@@ -34,7 +35,9 @@ public class FilterController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/filter-contains-text")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/filter-contains-text")
     @FilterResponse
     @Operation(
             summary = "Checks if a PDF contains set text, returns true if does",
@@ -45,15 +48,19 @@ public class FilterController {
         String text = request.getText();
         String pageNumber = request.getPageNumbers();
 
-        PDDocument pdfDocument = pdfDocumentFactory.load(inputFile);
-        if (PdfUtils.hasText(pdfDocument, pageNumber, text))
-            return WebResponseUtils.pdfDocToWebResponse(
-                    pdfDocument, Filenames.toSimpleFileName(inputFile.getOriginalFilename()));
+        try (PDDocument pdfDocument = pdfDocumentFactory.load(inputFile)) {
+            if (PdfUtils.hasText(pdfDocument, pageNumber, text)) {
+                return WebResponseUtils.pdfDocToWebResponse(
+                        pdfDocument, Filenames.toSimpleFileName(inputFile.getOriginalFilename()));
+            }
+        }
         return null;
     }
 
     // TODO
-    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/filter-contains-image")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/filter-contains-image")
     @FilterResponse
     @Operation(
             summary = "Checks if a PDF contains an image",
@@ -70,7 +77,9 @@ public class FilterController {
         return null;
     }
 
-    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/filter-page-count")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/filter-page-count")
     @FilterResponse
     @Operation(
             summary = "Checks if a PDF is greater, less or equal to a setPageCount",
@@ -83,28 +92,22 @@ public class FilterController {
         // Load the PDF
         PDDocument document = pdfDocumentFactory.load(inputFile);
         int actualPageCount = document.getNumberOfPages();
-
-        boolean valid = false;
         // Perform the comparison
-        switch (comparator) {
-            case "Greater":
-                valid = actualPageCount > pageCount;
-                break;
-            case "Equal":
-                valid = actualPageCount == pageCount;
-                break;
-            case "Less":
-                valid = actualPageCount < pageCount;
-                break;
-            default:
-                throw ExceptionUtils.createInvalidArgumentException("comparator", comparator);
-        }
+        boolean valid =
+                switch (comparator) {
+                    case "Greater" -> actualPageCount > pageCount;
+                    case "Equal" -> actualPageCount == pageCount;
+                    case "Less" -> actualPageCount < pageCount;
+                    default ->
+                            throw ExceptionUtils.createInvalidArgumentException(
+                                    "comparator", comparator);
+                };
 
         if (valid) return WebResponseUtils.multiPartFileToWebResponse(inputFile);
         return null;
     }
 
-    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/filter-page-size")
+    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/filter-page-size")
     @FilterResponse
     @Operation(
             summary = "Checks if a PDF is of a certain size",
@@ -128,27 +131,22 @@ public class FilterController {
         PDRectangle standardSize = PdfUtils.textToPageSize(standardPageSize);
         float standardArea = standardSize.getWidth() * standardSize.getHeight();
 
-        boolean valid = false;
         // Perform the comparison
-        switch (comparator) {
-            case "Greater":
-                valid = actualArea > standardArea;
-                break;
-            case "Equal":
-                valid = actualArea == standardArea;
-                break;
-            case "Less":
-                valid = actualArea < standardArea;
-                break;
-            default:
-                throw ExceptionUtils.createInvalidArgumentException("comparator", comparator);
-        }
+        boolean valid =
+                switch (comparator) {
+                    case "Greater" -> actualArea > standardArea;
+                    case "Equal" -> actualArea == standardArea;
+                    case "Less" -> actualArea < standardArea;
+                    default ->
+                            throw ExceptionUtils.createInvalidArgumentException(
+                                    "comparator", comparator);
+                };
 
         if (valid) return WebResponseUtils.multiPartFileToWebResponse(inputFile);
         return null;
     }
 
-    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/filter-file-size")
+    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/filter-file-size")
     @FilterResponse
     @Operation(
             summary = "Checks if a PDF is a set file size",
@@ -162,27 +160,24 @@ public class FilterController {
         // Get the file size
         long actualFileSize = inputFile.getSize();
 
-        boolean valid = false;
         // Perform the comparison
-        switch (comparator) {
-            case "Greater":
-                valid = actualFileSize > fileSize;
-                break;
-            case "Equal":
-                valid = actualFileSize == fileSize;
-                break;
-            case "Less":
-                valid = actualFileSize < fileSize;
-                break;
-            default:
-                throw ExceptionUtils.createInvalidArgumentException("comparator", comparator);
-        }
+        boolean valid =
+                switch (comparator) {
+                    case "Greater" -> actualFileSize > fileSize;
+                    case "Equal" -> actualFileSize == fileSize;
+                    case "Less" -> actualFileSize < fileSize;
+                    default ->
+                            throw ExceptionUtils.createInvalidArgumentException(
+                                    "comparator", comparator);
+                };
 
         if (valid) return WebResponseUtils.multiPartFileToWebResponse(inputFile);
         return null;
     }
 
-    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/filter-page-rotation")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/filter-page-rotation")
     @FilterResponse
     @Operation(
             summary = "Checks if a PDF is of a certain rotation",
@@ -199,21 +194,17 @@ public class FilterController {
         // Get the rotation of the first page
         PDPage firstPage = document.getPage(0);
         int actualRotation = firstPage.getRotation();
-        boolean valid = false;
+
         // Perform the comparison
-        switch (comparator) {
-            case "Greater":
-                valid = actualRotation > rotation;
-                break;
-            case "Equal":
-                valid = actualRotation == rotation;
-                break;
-            case "Less":
-                valid = actualRotation < rotation;
-                break;
-            default:
-                throw ExceptionUtils.createInvalidArgumentException("comparator", comparator);
-        }
+        boolean valid =
+                switch (comparator) {
+                    case "Greater" -> actualRotation > rotation;
+                    case "Equal" -> actualRotation == rotation;
+                    case "Less" -> actualRotation < rotation;
+                    default ->
+                            throw ExceptionUtils.createInvalidArgumentException(
+                                    "comparator", comparator);
+                };
 
         if (valid) return WebResponseUtils.multiPartFileToWebResponse(inputFile);
         return null;

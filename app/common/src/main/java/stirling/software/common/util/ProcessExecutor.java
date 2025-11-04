@@ -15,6 +15,8 @@ import java.util.concurrent.TimeUnit;
 
 import io.github.pixee.security.BoundedLineReader;
 
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
@@ -165,7 +167,7 @@ public class ProcessExecutor {
         semaphore.acquire();
         try {
 
-            log.info("Running command: " + String.join(" ", command));
+            log.info("Running command: {}", String.join(" ", command));
             ProcessBuilder processBuilder = new ProcessBuilder(command);
 
             // Use the working directory if it's set
@@ -250,7 +252,7 @@ public class ProcessExecutor {
                 String outputMessage = String.join("\n", outputLines);
                 messages += outputMessage;
                 if (!liveUpdates) {
-                    log.info("Command output:\n" + outputMessage);
+                    log.info("Command output:\n{}", outputMessage);
                 }
             }
 
@@ -258,7 +260,7 @@ public class ProcessExecutor {
                 String errorMessage = String.join("\n", errorLines);
                 messages += errorMessage;
                 if (!liveUpdates) {
-                    log.warn("Command error output:\n" + errorMessage);
+                    log.warn("Command error output:\n{}", errorMessage);
                 }
                 if (exitCode != 0) {
                     if (isQpdf && exitCode == 3) {
@@ -303,28 +305,14 @@ public class ProcessExecutor {
         OCR_MY_PDF
     }
 
+    @Setter
+    @Getter
     public class ProcessExecutorResult {
         int rc;
         String messages;
 
         public ProcessExecutorResult(int rc, String messages) {
             this.rc = rc;
-            this.messages = messages;
-        }
-
-        public int getRc() {
-            return rc;
-        }
-
-        public void setRc(int rc) {
-            this.rc = rc;
-        }
-
-        public String getMessages() {
-            return messages;
-        }
-
-        public void setMessages(String messages) {
             this.messages = messages;
         }
     }

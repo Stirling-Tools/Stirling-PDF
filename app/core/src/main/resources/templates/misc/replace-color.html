@@ -30,6 +30,7 @@
                                     <option value="HIGH_CONTRAST_COLOR" th:text="#{replace-color.selectText.2}" ></option>
                                     <option value="CUSTOM_COLOR" th:text="#{replace-color.selectText.3}"></option>
                                     <option value="FULL_INVERSION" th:text="#{replace-color.selectText.4}" selected></option>
+                                    <option th:text="#{replace-color.selectText.12}" value="COLOR_SPACE_CONVERSION"></option>
                                 </select>
                             </div>
                         </div>
@@ -56,6 +57,18 @@
                                 <input type="color" name="backGroundColor" id="bg-color" class="form-control">
                             </div>
                         </div>
+                        
+                        <div class="card mb-3" id="color-space-info" style="display: none">
+                            <div class="card-body">
+                                <h4 th:text="#{replace-color.selectText.13}"></h4>
+                                <p th:text="#{replace-color.selectText.14}"></p>
+                                <ul>
+                                    <li th:text="#{replace-color.selectText.15}"></li>
+                                    <li th:text="#{replace-color.selectText.16}"></li>
+                                    <li th:text="#{replace-color.selectText.17}"></li>
+                                </ul>
+                            </div>
+                        </div>
 
                         <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{replace-color.submit}"></button>
                     </form>
@@ -74,12 +87,15 @@
             $('#high-contrast-options').hide();
             $('#custom-color-1').hide();
             $('#custom-color-2').hide();
+            $('#color-space-info').hide();
 
             if (selectedOption === "HIGH_CONTRAST_COLOR") {
                 $('#high-contrast-options').show();
             } else if (selectedOption === "CUSTOM_COLOR") {
                 $('#custom-color-1').show();
                 $('#custom-color-2').show();
+            } else if (selectedOption === "COLOR_SPACE_CONVERSION") {
+                $('#color-space-info').show();
             }
         });
     });

@@ -29,7 +29,6 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import stirling.software.common.aop.AutoJobAspect;
 import stirling.software.common.model.api.PDFFile;
-import stirling.software.common.service.FileOrUploadService;
 import stirling.software.common.service.FileStorage;
 import stirling.software.common.service.JobExecutorService;
 import stirling.software.common.service.JobQueue;
@@ -44,8 +43,6 @@ class AutoJobPostMappingIntegrationTest {
 
     @Mock private HttpServletRequest request;
 
-    @Mock private FileOrUploadService fileOrUploadService;
-
     @Mock private FileStorage fileStorage;
 
     @Mock private ResourceMonitor resourceMonitor;
@@ -54,8 +51,7 @@ class AutoJobPostMappingIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        autoJobAspect =
-                new AutoJobAspect(jobExecutorService, request, fileOrUploadService, fileStorage);
+        autoJobAspect = new AutoJobAspect(jobExecutorService, request, fileStorage);
     }
 
     @Mock private ProceedingJoinPoint joinPoint;

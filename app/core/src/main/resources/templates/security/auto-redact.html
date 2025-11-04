@@ -61,13 +61,13 @@
                   }
                 }
               </script>
-              <div class="mb-3 form-check">
-                <input type="checkbox" id="useRegex" name="useRegex">
+              <div class="form-check mb-3">
+                <input id="useRegex" name="useRegex" type="checkbox">
                 <label for="useRegex" th:text="#{autoRedact.useRegexLabel}"></label>
               </div>
 
-              <div class="mb-3 form-check">
-                <input type="checkbox" id="wholeWordSearch" name="wholeWordSearch">
+              <div class="form-check mb-3">
+                <input id="wholeWordSearch" name="wholeWordSearch" type="checkbox">
                 <label for="wholeWordSearch" th:text="#{autoRedact.wholeWordSearchLabel}"></label>
               </div>
 
@@ -77,8 +77,8 @@
                   value="0.1">
               </div>
 
-              <div class="mb-3 form-check">
-                <input type="checkbox" id="convertPDFToImage" name="convertPDFToImage" checked>
+              <div class="form-check mb-3">
+                <input checked id="convertPDFToImage" name="convertPDFToImage" type="checkbox">
                 <label for="convertPDFToImage" th:text="#{autoRedact.convertPDFToImageLabel}"></label>
               </div>
 

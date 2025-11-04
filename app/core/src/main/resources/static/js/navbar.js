@@ -75,39 +75,46 @@ function setupDropdowns() {
   });
 }
 
-window.tooltipSetup = () => {
-  const tooltipElements = document.querySelectorAll('[title]');
+function tooltipSetup() {
+  // initialize global tooltip element or get reference
+  let customTooltip = document.getElementById("customTooltip");
+  if (!customTooltip) {
+    customTooltip = document.createElement("div");
+    customTooltip.id = "customTooltip";
+    customTooltip.className = "btn-tooltip";
+    document.body.appendChild(customTooltip);
+  }
+
+  function updateTooltipPosition(event, text) {
+    if (window.innerWidth >= 1200) {
+      customTooltip.textContent = text;
+      customTooltip.style.display = "block";
+      customTooltip.style.left = `${event.pageX + 10}px`;
+      customTooltip.style.top = `${event.pageY + 10}px`;
+    }
+  }
+
+  function hideTooltip() {
+    customTooltip.style.display = "none";
+  }
+
+  // find uninitialized tooltips and set up event listeners
+  const tooltipElements = document.querySelectorAll("[title]");
 
   tooltipElements.forEach((element) => {
-    const tooltipText = element.getAttribute('title');
-    element.removeAttribute('title');
-    element.setAttribute('data-title', tooltipText);
-    const customTooltip = document.createElement('div');
-    customTooltip.className = 'btn-tooltip';
-    customTooltip.textContent = tooltipText;
+    const tooltipText = element.getAttribute("title");
+    element.removeAttribute("title");
+    element.setAttribute("data-title", tooltipText);  // no UI effect, just for reference
 
-    document.body.appendChild(customTooltip);
+    element.addEventListener("mouseenter", (event) => updateTooltipPosition(event, tooltipText));
+    element.addEventListener("mousemove", (event) => updateTooltipPosition(event, tooltipText));
+    element.addEventListener("mouseleave", hideTooltip);
 
-    element.addEventListener('mouseenter', (event) => {
-      if (window.innerWidth >= 1200) {
-        customTooltip.style.display = 'block';
-        customTooltip.style.left = `${event.pageX + 10}px`;
-        customTooltip.style.top = `${event.pageY + 10}px`;
-      }
-    });
-
-    element.addEventListener('mousemove', (event) => {
-      if (window.innerWidth >= 1200) {
-        customTooltip.style.left = `${event.pageX + 10}px`;
-        customTooltip.style.top = `${event.pageY + 10}px`;
-      }
-    });
-
-    element.addEventListener('mouseleave', () => {
-      customTooltip.style.display = 'none';
-    });
+    // in case UI moves and mouseleave is not triggered, tooltip is readded when mouse is moved over the element
+    element.addEventListener("click", hideTooltip);
   });
 };
+window.tooltipSetup = tooltipSetup;
 
 // Override the bootstrap dropdown styles for mobile
 function fixNavbarDropdownStyles() {

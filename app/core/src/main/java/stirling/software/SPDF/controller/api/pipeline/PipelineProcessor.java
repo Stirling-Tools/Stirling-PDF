@@ -7,7 +7,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -106,7 +105,7 @@ public class PipelineProcessor {
             Map<String, Object> parameters = pipelineOperation.getParameters();
             List<String> inputFileTypes = apiDocService.getExtensionTypes(false, operation);
             if (inputFileTypes == null) {
-                inputFileTypes = new ArrayList<String>(Arrays.asList("ALL"));
+                inputFileTypes = new ArrayList<>(List.of("ALL"));
             }
 
             if (!apiDocService.isValidOperation(operation, parameters)) {
@@ -340,7 +339,7 @@ public class PipelineProcessor {
             }
             Path path = Paths.get(file.getAbsolutePath());
             // debug statement
-            log.info("Reading file: " + path);
+            log.info("Reading file: {}", path);
             if (Files.exists(path)) {
                 Resource fileResource =
                         new ByteArrayResource(Files.readAllBytes(path)) {
@@ -352,7 +351,7 @@ public class PipelineProcessor {
                         };
                 outputFiles.add(fileResource);
             } else {
-                log.info("File not found: " + path);
+                log.info("File not found: {}", path);
             }
         }
         log.info("Files successfully loaded. Starting processing...");

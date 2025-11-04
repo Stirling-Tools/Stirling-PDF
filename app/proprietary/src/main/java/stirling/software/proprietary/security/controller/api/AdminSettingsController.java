@@ -27,6 +27,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.util.HtmlUtils;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -43,6 +44,7 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.util.AppArgsCapture;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.JarPathUtil;
+import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.proprietary.security.model.api.admin.SettingValueResponse;
 import stirling.software.proprietary.security.model.api.admin.UpdateSettingValueRequest;
 import stirling.software.proprietary.security.model.api.admin.UpdateSettingsRequest;
@@ -88,7 +90,8 @@ public class AdminSettingsController {
     @Operation(
             summary = "Get all application settings",
             description =
-                    "Retrieve all current application settings. Use includePending=true to include settings that will take effect after restart. Admin access required.")
+                    "Retrieve all current application settings. Use includePending=true to include"
+                            + " settings that will take effect after restart. Admin access required.")
     @ApiResponses(
             value = {
                 @ApiResponse(responseCode = "200", description = "Settings retrieved successfully"),
@@ -102,7 +105,9 @@ public class AdminSettingsController {
         log.debug("Admin requested all application settings (includePending={})", includePending);
 
         // Convert ApplicationProperties to Map
-        Map<String, Object> settings = objectMapper.convertValue(applicationProperties, Map.class);
+        Map<String, Object> settings =
+                objectMapper.convertValue(
+                        applicationProperties, new TypeReference<Map<String, Object>>() {});
 
         if (includePending && !pendingChanges.isEmpty()) {
             // Merge pending changes into the settings map
@@ -119,7 +124,8 @@ public class AdminSettingsController {
     @Operation(
             summary = "Get pending settings changes",
             description =
-                    "Retrieve settings that have been modified but not yet applied (require restart). Admin access required.")
+                    "Retrieve settings that have been modified but not yet applied (require"
+                            + " restart). Admin access required.")
     @ApiResponses(
             value = {
                 @ApiResponse(
@@ -144,7 +150,8 @@ public class AdminSettingsController {
     @Operation(
             summary = "Update application settings (delta updates)",
             description =
-                    "Update specific application settings using dot notation keys. Only sends changed values. Changes take effect on restart. Admin access required.")
+                    "Update specific application settings using dot notation keys. Only sends"
+                            + " changed values. Changes take effect on restart. Admin access required.")
     @ApiResponses(
             value = {
                 @ApiResponse(responseCode = "200", description = "Settings updated successfully"),
@@ -185,7 +192,8 @@ public class AdminSettingsController {
 
             return ResponseEntity.ok(
                     String.format(
-                            "Successfully updated %d setting(s). Changes will take effect on application restart.",
+                            "Successfully updated %d setting(s). Changes will take effect on"
+                                    + " application restart.",
                             updatedCount));
 
         } catch (IOException e) {
@@ -314,7 +322,8 @@ public class AdminSettingsController {
             String escapedSectionName = HtmlUtils.htmlEscape(sectionName);
             return ResponseEntity.ok(
                     String.format(
-                            "Successfully updated %d setting(s) in section '%s'. Changes will take effect on application restart.",
+                            "Successfully updated %d setting(s) in section '%s'. Changes will take"
+                                    + " effect on application restart.",
                             updatedCount, escapedSectionName));
 
         } catch (IOException e) {
@@ -334,7 +343,8 @@ public class AdminSettingsController {
     @Operation(
             summary = "Get specific setting value",
             description =
-                    "Retrieve value for a specific setting key using dot notation. Admin access required.")
+                    "Retrieve value for a specific setting key using dot notation. Admin access"
+                            + " required.")
     @ApiResponses(
             value = {
                 @ApiResponse(
@@ -374,7 +384,8 @@ public class AdminSettingsController {
     @Operation(
             summary = "Update specific setting value",
             description =
-                    "Update value for a specific setting key using dot notation. Admin access required.")
+                    "Update value for a specific setting key using dot notation. Admin access"
+                            + " required.")
     @ApiResponses(
             value = {
                 @ApiResponse(responseCode = "200", description = "Setting updated successfully"),
@@ -402,7 +413,8 @@ public class AdminSettingsController {
             String escapedKey = HtmlUtils.htmlEscape(key);
             return ResponseEntity.ok(
                     String.format(
-                            "Successfully updated setting '%s'. Changes will take effect on application restart.",
+                            "Successfully updated setting '%s'. Changes will take effect on"
+                                    + " application restart.",
                             escapedKey));
 
         } catch (IOException e) {
@@ -553,7 +565,8 @@ public class AdminSettingsController {
                     "legal");
 
     // Pattern to validate safe property paths - only alphanumeric, dots, and underscores
-    private static final Pattern SAFE_KEY_PATTERN = Pattern.compile("^[a-zA-Z0-9._]+$");
+    private static final Pattern SAFE_KEY_PATTERN =
+            RegexPatternUtils.getInstance().getPattern("^[a-zA-Z0-9._]+$");
     private static final int MAX_NESTING_DEPTH = 10;
 
     // Security: Generic error messages to prevent information disclosure
@@ -653,7 +666,6 @@ public class AdminSettingsController {
      * Recursively mask sensitive fields in settings map. Sensitive fields are replaced with a
      * status indicator showing if they're configured.
      */
-    @SuppressWarnings("unchecked")
     private Map<String, Object> maskSensitiveFields(Map<String, Object> settings) {
         return maskSensitiveFieldsWithPath(settings, "");
     }

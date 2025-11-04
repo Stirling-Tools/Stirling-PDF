@@ -21,27 +21,27 @@
                   <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
                 </div>
                 <div class="form-check ms-3">
-                  <input type="checkbox" id="removeJavaScript" name="removeJavaScript" checked>
+                  <input checked id="removeJavaScript" name="removeJavaScript" type="checkbox">
                   <label for="removeJavaScript" th:text="#{sanitizePDF.selectText.1}"></label>
                 </div>
                 <div class="form-check ms-3">
-                  <input type="checkbox" id="removeEmbeddedFiles" name="removeEmbeddedFiles" checked>
+                  <input checked id="removeEmbeddedFiles" name="removeEmbeddedFiles" type="checkbox">
                   <label for="removeEmbeddedFiles" th:text="#{sanitizePDF.selectText.2}"></label>
                 </div>
                 <div class="form-check ms-3">
-                  <input type="checkbox" id="removeXMPMetadata" name="removeXMPMetadata">
+                  <input id="removeXMPMetadata" name="removeXMPMetadata" type="checkbox">
                   <label for="removeXMPMetadata" th:text="#{sanitizePDF.selectText.3}"></label>
                 </div>
                 <div class="form-check ms-3">
-                  <input type="checkbox" id="removeMetadata" name="removeMetadata">
+                  <input id="removeMetadata" name="removeMetadata" type="checkbox">
                   <label for="removeMetadata" th:text="#{sanitizePDF.selectText.6}"></label>
                 </div>
                 <div class="form-check ms-3">
-                  <input type="checkbox" id="removeLinks" name="removeLinks">
+                  <input id="removeLinks" name="removeLinks" type="checkbox">
                   <label for="removeLinks" th:text="#{sanitizePDF.selectText.4}"></label>
                 </div>
                 <div class="form-check ms-3">
-                  <input type="checkbox" id="removeFonts" name="removeFonts">
+                  <input id="removeFonts" name="removeFonts" type="checkbox">
                   <label for="removeFonts" th:text="#{sanitizePDF.selectText.5}"></label>
                 </div>
                 <br>

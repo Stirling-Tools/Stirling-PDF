@@ -20,9 +20,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.ArgumentMatchers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 
@@ -55,7 +57,10 @@ class EditTableOfContentsControllerTest {
     void setUp() {
         mockFile =
                 new MockMultipartFile(
-                        "file", "test.pdf", "application/pdf", "PDF content".getBytes());
+                        "file",
+                        "test.pdf",
+                        MediaType.APPLICATION_PDF_VALUE,
+                        "PDF content".getBytes());
         mockDocument = mock(PDDocument.class);
         mockCatalog = mock(PDDocumentCatalog.class);
         mockPages = mock(PDPageTree.class);
@@ -202,7 +207,9 @@ class EditTableOfContentsControllerTest {
         bookmarks.add(bookmark);
 
         when(pdfDocumentFactory.load(mockFile)).thenReturn(mockDocument);
-        when(objectMapper.readValue(eq(request.getBookmarkData()), any(TypeReference.class)))
+        when(objectMapper.readValue(
+                        eq(request.getBookmarkData()),
+                        ArgumentMatchers.<TypeReference<List<BookmarkItem>>>any()))
                 .thenReturn(bookmarks);
         when(mockDocument.getDocumentCatalog()).thenReturn(mockCatalog);
         when(mockDocument.getNumberOfPages()).thenReturn(5);
@@ -242,7 +249,8 @@ class EditTableOfContentsControllerTest {
         request.setFileInput(mockFile);
 
         String bookmarkJson =
-                "[{\"title\":\"Chapter 1\",\"pageNumber\":1,\"children\":[{\"title\":\"Section 1.1\",\"pageNumber\":2,\"children\":[]}]}]";
+                "[{\"title\":\"Chapter 1\",\"pageNumber\":1,\"children\":[{\"title\":\"Section"
+                        + " 1.1\",\"pageNumber\":2,\"children\":[]}]}]";
         request.setBookmarkData(bookmarkJson);
 
         List<BookmarkItem> bookmarks = new ArrayList<>();
@@ -261,7 +269,9 @@ class EditTableOfContentsControllerTest {
         bookmarks.add(parentBookmark);
 
         when(pdfDocumentFactory.load(mockFile)).thenReturn(mockDocument);
-        when(objectMapper.readValue(eq(bookmarkJson), any(TypeReference.class)))
+        when(objectMapper.readValue(
+                        eq(bookmarkJson),
+                        ArgumentMatchers.<TypeReference<List<BookmarkItem>>>any()))
                 .thenReturn(bookmarks);
         when(mockDocument.getDocumentCatalog()).thenReturn(mockCatalog);
         when(mockDocument.getNumberOfPages()).thenReturn(5);
@@ -292,7 +302,8 @@ class EditTableOfContentsControllerTest {
         EditTableOfContentsRequest request = new EditTableOfContentsRequest();
         request.setFileInput(mockFile);
         request.setBookmarkData(
-                "[{\"title\":\"Chapter 1\",\"pageNumber\":-5,\"children\":[]},{\"title\":\"Chapter 2\",\"pageNumber\":100,\"children\":[]}]");
+                "[{\"title\":\"Chapter 1\",\"pageNumber\":-5,\"children\":[]},{\"title\":\"Chapter"
+                        + " 2\",\"pageNumber\":100,\"children\":[]}]");
 
         List<BookmarkItem> bookmarks = new ArrayList<>();
 
@@ -310,7 +321,9 @@ class EditTableOfContentsControllerTest {
         bookmarks.add(bookmark2);
 
         when(pdfDocumentFactory.load(mockFile)).thenReturn(mockDocument);
-        when(objectMapper.readValue(eq(request.getBookmarkData()), any(TypeReference.class)))
+        when(objectMapper.readValue(
+                        eq(request.getBookmarkData()),
+                        ArgumentMatchers.<TypeReference<List<BookmarkItem>>>any()))
                 .thenReturn(bookmarks);
         when(mockDocument.getDocumentCatalog()).thenReturn(mockCatalog);
         when(mockDocument.getNumberOfPages()).thenReturn(5);

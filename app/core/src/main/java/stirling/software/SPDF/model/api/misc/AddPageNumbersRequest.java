@@ -33,6 +33,13 @@ public class AddPageNumbersRequest extends PDFWithPageNums {
     private String fontType;
 
     @Schema(
+            description = "Hex colour for page numbers (e.g. #FF0000)",
+            example = "#000000",
+            defaultValue = "#000000",
+            requiredMode = RequiredMode.NOT_REQUIRED)
+    private String fontColor;
+
+    @Schema(
             description =
                     "Position: 1-9 representing positions on the page (1=top-left, 2=top-center,"
                             + " 3=top-right, 4=middle-left, 5=middle-center, 6=middle-right,"

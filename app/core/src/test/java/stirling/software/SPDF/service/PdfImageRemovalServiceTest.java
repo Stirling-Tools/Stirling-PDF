@@ -1,17 +1,10 @@
 package stirling.software.SPDF.service;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -42,7 +35,7 @@ class PdfImageRemovalServiceTest {
 
         // Configure page tree to iterate over our single page
         when(document.getPages()).thenReturn(pageTree);
-        Iterator<PDPage> pageIterator = Arrays.asList(page).iterator();
+        Iterator<PDPage> pageIterator = Collections.singletonList(page).iterator();
         when(pageTree.iterator()).thenReturn(pageIterator);
 
         // Set up page resources
@@ -80,7 +73,7 @@ class PdfImageRemovalServiceTest {
 
         // Configure page tree to iterate over our single page
         when(document.getPages()).thenReturn(pageTree);
-        Iterator<PDPage> pageIterator = Arrays.asList(page).iterator();
+        Iterator<PDPage> pageIterator = Collections.singletonList(page).iterator();
         when(pageTree.iterator()).thenReturn(pageIterator);
 
         // Set up page resources
@@ -118,12 +111,12 @@ class PdfImageRemovalServiceTest {
 
         // Set up image XObjects for page 1
         COSName img1 = COSName.getPDFName("Im1");
-        when(resources1.getXObjectNames()).thenReturn(Arrays.asList(img1));
+        when(resources1.getXObjectNames()).thenReturn(Collections.singletonList(img1));
         when(resources1.isImageXObject(img1)).thenReturn(true);
 
         // Set up image XObjects for page 2
         COSName img2 = COSName.getPDFName("Im2");
-        when(resources2.getXObjectNames()).thenReturn(Arrays.asList(img2));
+        when(resources2.getXObjectNames()).thenReturn(Collections.singletonList(img2));
         when(resources2.isImageXObject(img2)).thenReturn(true);
 
         // Execute the method

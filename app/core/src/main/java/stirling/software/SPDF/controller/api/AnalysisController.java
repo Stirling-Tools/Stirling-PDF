@@ -11,6 +11,7 @@ import org.apache.pdfbox.pdmodel.PDPageTree;
 import org.apache.pdfbox.pdmodel.encryption.PDEncryption;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -29,7 +30,7 @@ public class AnalysisController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @AutoJobPostMapping(value = "/page-count", consumes = "multipart/form-data")
+    @AutoJobPostMapping(value = "/page-count", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @JsonDataResponse
     @Operation(
             summary = "Get PDF page count",
@@ -40,7 +41,7 @@ public class AnalysisController {
         }
     }
 
-    @AutoJobPostMapping(value = "/basic-info", consumes = "multipart/form-data")
+    @AutoJobPostMapping(value = "/basic-info", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @JsonDataResponse
     @Operation(
             summary = "Get basic PDF information",
@@ -55,7 +56,9 @@ public class AnalysisController {
         }
     }
 
-    @AutoJobPostMapping(value = "/document-properties", consumes = "multipart/form-data")
+    @AutoJobPostMapping(
+            value = "/document-properties",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @JsonDataResponse
     @Operation(
             summary = "Get PDF document properties",
@@ -79,7 +82,7 @@ public class AnalysisController {
         }
     }
 
-    @AutoJobPostMapping(value = "/page-dimensions", consumes = "multipart/form-data")
+    @AutoJobPostMapping(value = "/page-dimensions", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @JsonDataResponse
     @Operation(
             summary = "Get page dimensions for all pages",
@@ -100,7 +103,7 @@ public class AnalysisController {
         }
     }
 
-    @AutoJobPostMapping(value = "/form-fields", consumes = "multipart/form-data")
+    @AutoJobPostMapping(value = "/form-fields", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @JsonDataResponse
     @Operation(
             summary = "Get form field information",
@@ -124,7 +127,7 @@ public class AnalysisController {
         }
     }
 
-    @AutoJobPostMapping(value = "/annotation-info", consumes = "multipart/form-data")
+    @AutoJobPostMapping(value = "/annotation-info", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @JsonDataResponse
     @Operation(
             summary = "Get annotation information",
@@ -149,7 +152,7 @@ public class AnalysisController {
         }
     }
 
-    @AutoJobPostMapping(value = "/font-info", consumes = "multipart/form-data")
+    @AutoJobPostMapping(value = "/font-info", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @JsonDataResponse
     @Operation(
             summary = "Get font information",
@@ -172,7 +175,7 @@ public class AnalysisController {
         }
     }
 
-    @AutoJobPostMapping(value = "/security-info", consumes = "multipart/form-data")
+    @AutoJobPostMapping(value = "/security-info", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @JsonDataResponse
     @Operation(
             summary = "Get security information",

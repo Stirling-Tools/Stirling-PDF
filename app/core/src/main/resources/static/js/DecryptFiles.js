@@ -128,11 +128,15 @@ export class DecryptFile {
                  (error.message && error.message.includes('Invalid PDF structure'))) {
         // Handle corrupted PDF files
         console.error('Corrupted PDF detected:', error);
-        this.showErrorBanner(
-          `${window.stirlingPDF.pdfCorruptedMessage.replace('{0}', file.name)}`,
-          error.stack || '',
-          `${window.stirlingPDF.tryRepairMessage}`
-        );
+        if (window.stirlingPDF.currentPage !== 'repair') {
+          this.showErrorBanner(
+            `${window.stirlingPDF.pdfCorruptedMessage.replace('{0}', file.name)}`,
+            error.stack || '',
+            `${window.stirlingPDF.tryRepairMessage}`
+          );
+        } else {
+          console.log('Suppressing corrupted PDF warning banner on repair page');
+        }
         throw new Error('PDF file is corrupted.');
       }
 

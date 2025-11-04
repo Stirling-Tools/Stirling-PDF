@@ -1,6 +1,7 @@
 package stirling.software.proprietary.security.session;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -67,7 +68,7 @@ public class SessionPersistentRegistry implements SessionRegistry {
                             new SessionInformation(
                                     sessionEntity.getPrincipalName(),
                                     sessionEntity.getSessionId(),
-                                    sessionEntity.getLastRequest()));
+                                    Date.from(sessionEntity.getLastRequest())));
                 }
             }
         }
@@ -101,7 +102,7 @@ public class SessionPersistentRegistry implements SessionRegistry {
             SessionEntity sessionEntity = new SessionEntity();
             sessionEntity.setSessionId(sessionId);
             sessionEntity.setPrincipalName(principalName);
-            sessionEntity.setLastRequest(new Date()); // Set lastRequest to the current date
+            sessionEntity.setLastRequest(Instant.now()); // Set lastRequest to the current date
             sessionEntity.setExpired(false);
             sessionRepository.save(sessionEntity);
         }
@@ -119,7 +120,7 @@ public class SessionPersistentRegistry implements SessionRegistry {
         Optional<SessionEntity> sessionEntityOpt = sessionRepository.findById(sessionId);
         if (sessionEntityOpt.isPresent()) {
             SessionEntity sessionEntity = sessionEntityOpt.get();
-            sessionEntity.setLastRequest(new Date()); // Update lastRequest to the current date
+            sessionEntity.setLastRequest(Instant.now()); // Update lastRequest to the current date
             sessionRepository.save(sessionEntity);
         }
     }
@@ -132,7 +133,7 @@ public class SessionPersistentRegistry implements SessionRegistry {
             return new SessionInformation(
                     sessionEntity.getPrincipalName(),
                     sessionEntity.getSessionId(),
-                    sessionEntity.getLastRequest());
+                    Date.from(sessionEntity.getLastRequest()));
         }
         return null;
     }
@@ -170,7 +171,7 @@ public class SessionPersistentRegistry implements SessionRegistry {
     // Update session details by principal name
     public void updateSessionByPrincipalName(
             String principalName, boolean expired, Date lastRequest) {
-        sessionRepository.saveByPrincipalName(expired, lastRequest, principalName);
+        sessionRepository.saveByPrincipalName(expired, lastRequest.toInstant(), principalName);
     }
 
     // Find the latest session for a given principal name

@@ -25,18 +25,22 @@ import com.vladsch.flexmark.util.data.MutableDataSet;
 
 import io.github.pixee.security.Filenames;
 
-import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 
 @Slf4j
-@NoArgsConstructor
 public class PDFToFile {
+
+    private final TempFileManager tempFileManager;
+
+    public PDFToFile(TempFileManager tempFileManager) {
+        this.tempFileManager = tempFileManager;
+    }
 
     public ResponseEntity<byte[]> processPdfToMarkdown(MultipartFile inputFile)
             throws IOException, InterruptedException {
-        if (!"application/pdf".equals(inputFile.getContentType())) {
+        if (!MediaType.APPLICATION_PDF_VALUE.equals(inputFile.getContentType())) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
 
@@ -71,15 +75,12 @@ public class PDFToFile {
             pdfBaseName = originalPdfFileName.substring(0, originalPdfFileName.lastIndexOf('.'));
         }
 
-        Path tempInputFile = null;
-        Path tempOutputDir = null;
         byte[] fileBytes;
-        String fileName = "temp.file";
+        String fileName;
 
-        try {
-            tempInputFile = Files.createTempFile("input_", ".pdf");
-            inputFile.transferTo(tempInputFile);
-            tempOutputDir = Files.createTempDirectory("output_");
+        try (TempFile tempInputFile = new TempFile(tempFileManager, ".pdf");
+                TempDirectory tempOutputDir = new TempDirectory(tempFileManager)) {
+            inputFile.transferTo(tempInputFile.getFile());
 
             List<String> command =
                     new ArrayList<>(
@@ -88,14 +89,16 @@ public class PDFToFile {
                                     "-s",
                                     "-noframes",
                                     "-c",
-                                    tempInputFile.toString(),
+                                    tempInputFile.getAbsolutePath(),
                                     pdfBaseName));
 
             ProcessExecutorResult returnCode =
                     ProcessExecutor.getInstance(ProcessExecutor.Processes.PDFTOHTML)
-                            .runCommandWithOutputHandling(command, tempOutputDir.toFile());
+                            .runCommandWithOutputHandling(
+                                    command, tempOutputDir.getPath().toFile());
             // Process HTML files to Markdown
-            File[] outputFiles = Objects.requireNonNull(tempOutputDir.toFile().listFiles());
+            File[] outputFiles =
+                    Objects.requireNonNull(tempOutputDir.getPath().toFile().listFiles());
             List<File> markdownFiles = new ArrayList<>();
 
             // Convert HTML files to Markdown
@@ -105,7 +108,7 @@ public class PDFToFile {
                     String markdown = htmlToMarkdownConverter.convert(html);
 
                     String mdFileName = outputFile.getName().replace(".html", ".md");
-                    File mdFile = new File(tempOutputDir.toFile(), mdFileName);
+                    File mdFile = new File(tempOutputDir.getPath().toFile(), mdFileName);
                     Files.writeString(mdFile.toPath(), markdown);
                     markdownFiles.add(mdFile);
                 }
@@ -142,10 +145,6 @@ public class PDFToFile {
 
                 fileBytes = byteArrayOutputStream.toByteArray();
             }
-
-        } finally {
-            if (tempInputFile != null) Files.deleteIfExists(tempInputFile);
-            if (tempOutputDir != null) FileUtils.deleteDirectory(tempOutputDir.toFile());
         }
         return WebResponseUtils.bytesToWebResponse(
                 fileBytes, fileName, MediaType.APPLICATION_OCTET_STREAM);
@@ -153,7 +152,7 @@ public class PDFToFile {
 
     public ResponseEntity<byte[]> processPdfToHtml(MultipartFile inputFile)
             throws IOException, InterruptedException {
-        if (!"application/pdf".equals(inputFile.getContentType())) {
+        if (!MediaType.APPLICATION_PDF_VALUE.equals(inputFile.getContentType())) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
 
@@ -164,18 +163,17 @@ public class PDFToFile {
             pdfBaseName = originalPdfFileName.substring(0, originalPdfFileName.lastIndexOf('.'));
         }
 
-        Path tempInputFile = null;
-        Path tempOutputDir = null;
         byte[] fileBytes;
-        String fileName = "temp.file";
+        String fileName;
 
-        try {
+        try (TempFile inputFileTemp = new TempFile(tempFileManager, ".pdf");
+                TempDirectory outputDirTemp = new TempDirectory(tempFileManager)) {
+
+            Path tempInputFile = inputFileTemp.getPath();
+            Path tempOutputDir = outputDirTemp.getPath();
+
             // Save the uploaded file to a temporary location
-            tempInputFile = Files.createTempFile("input_", ".pdf");
             inputFile.transferTo(tempInputFile);
-
-            // Prepare the output directory
-            tempOutputDir = Files.createTempDirectory("output_");
 
             // Run the pdftohtml command with complex output
             List<String> command =
@@ -208,11 +206,6 @@ public class PDFToFile {
                 log.error("Exception writing zip", e);
             }
             fileBytes = byteArrayOutputStream.toByteArray();
-
-        } finally {
-            // Clean up the temporary files
-            if (tempInputFile != null) Files.deleteIfExists(tempInputFile);
-            if (tempOutputDir != null) FileUtils.deleteDirectory(tempOutputDir.toFile());
         }
 
         return WebResponseUtils.bytesToWebResponse(
@@ -223,14 +216,14 @@ public class PDFToFile {
             MultipartFile inputFile, String outputFormat, String libreOfficeFilter)
             throws IOException, InterruptedException {
 
-        if (!"application/pdf".equals(inputFile.getContentType())) {
+        if (!MediaType.APPLICATION_PDF_VALUE.equals(inputFile.getContentType())) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
 
         // Get the original PDF file name without the extension
         String originalPdfFileName = Filenames.toSimpleFileName(inputFile.getOriginalFilename());
 
-        if (originalPdfFileName == null || "".equals(originalPdfFileName.trim())) {
+        if (originalPdfFileName == null || originalPdfFileName.trim().isEmpty()) {
             originalPdfFileName = "output.pdf";
         }
         // Assume file is pdf if no extension
@@ -245,18 +238,17 @@ public class PDFToFile {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
 
-        Path tempInputFile = null;
-        Path tempOutputDir = null;
         byte[] fileBytes;
-        String fileName = "temp.file";
+        String fileName;
 
-        try {
+        try (TempFile inputFileTemp = new TempFile(tempFileManager, ".pdf");
+                TempDirectory outputDirTemp = new TempDirectory(tempFileManager)) {
+
+            Path tempInputFile = inputFileTemp.getPath();
+            Path tempOutputDir = outputDirTemp.getPath();
+
             // Save the uploaded file to a temporary location
-            tempInputFile = Files.createTempFile("input_", ".pdf");
             inputFile.transferTo(tempInputFile);
-
-            // Prepare the output directory
-            tempOutputDir = Files.createTempDirectory("output_");
 
             // Run the LibreOffice command
             List<String> command =
@@ -308,11 +300,6 @@ public class PDFToFile {
 
                 fileBytes = byteArrayOutputStream.toByteArray();
             }
-
-        } finally {
-            // Clean up the temporary files
-            Files.deleteIfExists(tempInputFile);
-            if (tempOutputDir != null) FileUtils.deleteDirectory(tempOutputDir.toFile());
         }
         return WebResponseUtils.bytesToWebResponse(
                 fileBytes, fileName, MediaType.APPLICATION_OCTET_STREAM);

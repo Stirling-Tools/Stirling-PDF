@@ -167,6 +167,10 @@
     {
       "moduleName": ".*",
       "moduleLicense": "The W3C License"
+    },
+    {
+      "moduleName": ".*",
+      "moduleLicense": "UnRar License"
     }
   ]
 }

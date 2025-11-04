@@ -31,6 +31,7 @@ import stirling.software.SPDF.model.api.HandleDataRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.PipelineApi;
 import stirling.software.common.service.PostHogService;
+import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.WebResponseUtils;
 
 @PipelineApi
@@ -73,7 +74,7 @@ public class PipelineController {
 
         try {
             List<Resource> inputFiles = processor.generateInputFiles(files);
-            if (inputFiles == null || inputFiles.size() == 0) {
+            if (inputFiles == null || inputFiles.isEmpty()) {
                 return null;
             }
             PipelineResult result = processor.runPipelineAgainstFiles(inputFiles, config);
@@ -103,9 +104,8 @@ public class PipelineController {
                 // Check if the filename already exists, and modify it if necessary
                 if (filenameCount.containsKey(originalFilename)) {
                     int count = filenameCount.get(originalFilename);
-                    String baseName = originalFilename.replaceAll("\\.[^.]*$", "");
-                    String extension = originalFilename.replaceAll("^.*\\.", "");
-                    filename = baseName + "(" + count + ")." + extension;
+                    assert originalFilename != null;
+                    filename = GeneralUtils.generateFilename(originalFilename, "(" + count + ")");
                     filenameCount.put(originalFilename, count + 1);
                 } else {
                     filenameCount.put(originalFilename, 1);

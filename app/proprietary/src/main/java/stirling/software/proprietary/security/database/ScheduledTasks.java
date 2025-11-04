@@ -18,7 +18,7 @@ public class ScheduledTasks {
 
     private final DatabaseServiceInterface databaseService;
 
-    @Scheduled(cron = "0 0 0 * * ?")
+    @Scheduled(cron = "#{applicationProperties.system.databaseBackup.cron}")
     public void performBackup() throws SQLException, UnsupportedProviderException {
         databaseService.exportDatabase();
     }

@@ -23,7 +23,7 @@ public class JPATokenRepositoryImpl implements PersistentTokenRepository {
         newToken.setSeries(token.getSeries());
         newToken.setUsername(token.getUsername());
         newToken.setToken(token.getTokenValue());
-        newToken.setLastUsed(token.getDate());
+        newToken.setLastUsed(token.getDate().toInstant());
         persistentLoginRepository.save(newToken);
     }
 
@@ -33,7 +33,7 @@ public class JPATokenRepositoryImpl implements PersistentTokenRepository {
         PersistentLogin existingToken = persistentLoginRepository.findById(series).orElse(null);
         if (existingToken != null) {
             existingToken.setToken(tokenValue);
-            existingToken.setLastUsed(lastUsed);
+            existingToken.setLastUsed(lastUsed.toInstant());
             persistentLoginRepository.save(existingToken);
         }
     }
@@ -43,7 +43,10 @@ public class JPATokenRepositoryImpl implements PersistentTokenRepository {
         PersistentLogin token = persistentLoginRepository.findById(seriesId).orElse(null);
         if (token != null) {
             return new PersistentRememberMeToken(
-                    token.getUsername(), token.getSeries(), token.getToken(), token.getLastUsed());
+                    token.getUsername(),
+                    token.getSeries(),
+                    token.getToken(),
+                    Date.from(token.getLastUsed()));
         }
         return null;
     }

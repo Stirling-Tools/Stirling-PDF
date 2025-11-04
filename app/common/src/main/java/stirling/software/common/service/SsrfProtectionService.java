@@ -1,5 +1,7 @@
 package stirling.software.common.service;
 
+import java.net.Inet4Address;
+import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.URI;
 import java.net.UnknownHostException;
@@ -11,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.util.RegexPatternUtils;
 
 @Service
 @RequiredArgsConstructor
@@ -20,8 +23,9 @@ public class SsrfProtectionService {
     private final ApplicationProperties applicationProperties;
 
     private static final Pattern DATA_URL_PATTERN =
-            Pattern.compile("^data:.*", Pattern.CASE_INSENSITIVE);
-    private static final Pattern FRAGMENT_PATTERN = Pattern.compile("^#.*");
+            RegexPatternUtils.getInstance().getPattern("^data:.*", Pattern.CASE_INSENSITIVE);
+    private static final Pattern FRAGMENT_PATTERN =
+            RegexPatternUtils.getInstance().getPattern("^#.*");
 
     public enum SsrfProtectionLevel {
         OFF, // No SSRF protection - allows all URLs
@@ -51,21 +55,17 @@ public class SsrfProtectionService {
 
         SsrfProtectionLevel level = parseProtectionLevel(config.getLevel());
 
-        switch (level) {
-            case OFF:
-                return true;
-            case MAX:
-                return isMaxSecurityAllowed(trimmedUrl, config);
-            case MEDIUM:
-                return isMediumSecurityAllowed(trimmedUrl, config);
-            default:
-                return false;
-        }
+        return switch (level) {
+            case OFF -> true;
+            case MAX -> isMaxSecurityAllowed(trimmedUrl, config);
+            case MEDIUM -> isMediumSecurityAllowed(trimmedUrl, config);
+            default -> false;
+        };
     }
 
-    private SsrfProtectionLevel parseProtectionLevel(String level) {
+    private SsrfProtectionLevel parseProtectionLevel(SsrfProtectionLevel level) {
         try {
-            return SsrfProtectionLevel.valueOf(level.toUpperCase());
+            return SsrfProtectionLevel.valueOf(level.name());
         } catch (IllegalArgumentException e) {
             log.warn("Invalid SSRF protection level '{}', defaulting to MEDIUM", level);
             return SsrfProtectionLevel.MEDIUM;
@@ -172,15 +172,62 @@ public class SsrfProtectionService {
     }
 
     private boolean isPrivateAddress(InetAddress address) {
-        return address.isSiteLocalAddress()
-                || address.isAnyLocalAddress()
-                || isPrivateIPv4Range(address.getHostAddress());
+        if (address.isAnyLocalAddress() || address.isLoopbackAddress()) {
+            return true;
+        }
+
+        if (address instanceof Inet4Address) {
+            return isPrivateIPv4Range(address.getHostAddress());
+        }
+
+        if (address instanceof Inet6Address addr6) {
+            if (addr6.isLinkLocalAddress() || addr6.isSiteLocalAddress()) {
+                return true;
+            }
+
+            byte[] bytes = addr6.getAddress();
+            if (isIpv4MappedAddress(bytes)) {
+                String ipv4 =
+                        (bytes[12] & 0xff)
+                                + "."
+                                + (bytes[13] & 0xff)
+                                + "."
+                                + (bytes[14] & 0xff)
+                                + "."
+                                + (bytes[15] & 0xff);
+                return isPrivateIPv4Range(ipv4);
+            }
+
+            int firstByte = bytes[0] & 0xff;
+            // Check for IPv6 unique local addresses (fc00::/7)
+            if ((firstByte & 0xfe) == 0xfc) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private boolean isIpv4MappedAddress(byte[] addr) {
+        if (addr.length != 16) {
+            return false;
+        }
+        for (int i = 0; i < 10; i++) {
+            if (addr[i] != 0) {
+                return false;
+            }
+        }
+        // For IPv4-mapped IPv6 addresses, bytes 10 and 11 must be 0xff (i.e., address is
+        // ::ffff:w.x.y.z)
+        return addr[10] == (byte) 0xff && addr[11] == (byte) 0xff;
     }
 
     private boolean isPrivateIPv4Range(String ip) {
+        // Includes RFC1918, loopback, link-local, and unspecified addresses
         return ip.startsWith("10.")
                 || ip.startsWith("192.168.")
                 || (ip.startsWith("172.") && isInRange172(ip))
+                || ip.startsWith("169.254.")
                 || ip.startsWith("127.")
                 || "0.0.0.0".equals(ip);
     }
@@ -192,17 +239,31 @@ public class SsrfProtectionService {
                 int secondOctet = Integer.parseInt(parts[1]);
                 return secondOctet >= 16 && secondOctet <= 31;
             } catch (NumberFormatException e) {
-                return false;
             }
         }
         return false;
     }
 
     private boolean isCloudMetadataAddress(String ip) {
+        String normalizedIp = normalizeIpv4MappedAddress(ip);
         // Cloud metadata endpoints for AWS, GCP, Azure, Oracle Cloud, and IBM Cloud
-        return ip.startsWith("169.254.169.254") // AWS/GCP/Azure
-                || ip.startsWith("fd00:ec2::254") // AWS IPv6
-                || ip.startsWith("169.254.169.253") // Oracle Cloud
-                || ip.startsWith("169.254.169.250"); // IBM Cloud
+        return normalizedIp.startsWith("169.254.169.254") // AWS/GCP/Azure
+                || normalizedIp.startsWith("fd00:ec2::254") // AWS IPv6
+                || normalizedIp.startsWith("169.254.169.253") // Oracle Cloud
+                || normalizedIp.startsWith("169.254.169.250"); // IBM Cloud
+    }
+
+    private String normalizeIpv4MappedAddress(String ip) {
+        if (ip == null) {
+            return "";
+        }
+        if (ip.startsWith("::ffff:")) {
+            return ip.substring(7);
+        }
+        int lastColon = ip.lastIndexOf(':');
+        if (lastColon >= 0 && ip.indexOf('.') > lastColon) {
+            return ip.substring(lastColon + 1);
+        }
+        return ip;
     }
 }

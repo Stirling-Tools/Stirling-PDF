@@ -2,9 +2,11 @@ package stirling.software.common.model;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Function;
 
 import org.junit.jupiter.api.Test;
 
@@ -31,22 +33,23 @@ class ApplicationPropertiesLogicTest {
 
     @Test
     void tempFileManagement_defaults_and_overrides() {
+        Function<String, String> normalize = s -> Paths.get(s).normalize().toString();
         ApplicationProperties.TempFileManagement tfm =
                 new ApplicationProperties.TempFileManagement();
 
         String expectedBase =
-                java.lang.System.getProperty("java.io.tmpdir").replaceAll("/+$", "")
-                        + "/stirling-pdf";
+                Paths.get(java.lang.System.getProperty("java.io.tmpdir"), "stirling-pdf")
+                        .toString();
         assertEquals(expectedBase, tfm.getBaseTmpDir());
 
-        String expectedLibre = expectedBase + "/libreoffice";
+        String expectedLibre = Paths.get(expectedBase, "libreoffice").toString();
         assertEquals(expectedLibre, tfm.getLibreofficeDir());
 
         tfm.setBaseTmpDir("/custom/base");
-        assertEquals("/custom/base", tfm.getBaseTmpDir());
+        assertEquals(normalize.apply("/custom/base"), normalize.apply(tfm.getBaseTmpDir()));
 
         tfm.setLibreofficeDir("/opt/libre");
-        assertEquals("/opt/libre", tfm.getLibreofficeDir());
+        assertEquals(normalize.apply("/opt/libre"), normalize.apply(tfm.getLibreofficeDir()));
     }
 
     @Test
@@ -155,7 +158,7 @@ class ApplicationPropertiesLogicTest {
         assertEquals(30, t.getOcrMyPdfTimeoutMinutes());
     }
 
-    @Deprecated
+    @Deprecated(since = "0.45.0")
     @Test
     void enterprise_metadata_defaults() {
         ApplicationProperties.EnterpriseEdition ee = new ApplicationProperties.EnterpriseEdition();

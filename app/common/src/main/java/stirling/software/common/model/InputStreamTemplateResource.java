@@ -4,14 +4,12 @@ package stirling.software.common.model;
  * This class will be removed when frontend migration to React is complete
 
 
-public class InputStreamTemplateResource implements ITemplateResource {
-    private InputStream inputStream;
-    private String characterEncoding;
 
-    public InputStreamTemplateResource(InputStream inputStream, String characterEncoding) {
-        this.inputStream = inputStream;
-        this.characterEncoding = characterEncoding;
-    }
+@RequiredArgsConstructor
+@Getter
+public class InputStreamTemplateResource implements ITemplateResource {
+    private final InputStream inputStream;
+    private final String characterEncoding;
 
     @Override
     public Reader reader() throws IOException {

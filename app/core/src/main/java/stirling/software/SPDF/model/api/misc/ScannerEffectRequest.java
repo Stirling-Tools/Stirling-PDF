@@ -79,10 +79,6 @@ public class ScannerEffectRequest {
     @Schema(description = "Whether advanced settings are enabled", example = "false")
     private boolean advancedEnabled = false;
 
-    public boolean isAdvancedEnabled() {
-        return advancedEnabled;
-    }
-
     public int getQualityValue() {
         return switch (quality) {
             case low -> 30;
@@ -105,7 +101,7 @@ public class ScannerEffectRequest {
         this.noise = 1.0f;
         this.brightness = 1.02f;
         this.contrast = 1.05f;
-        this.resolution = 600;
+        this.resolution = 300;
     }
 
     public void applyMediumQualityPreset() {

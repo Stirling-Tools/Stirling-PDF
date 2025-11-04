@@ -1,12 +1,12 @@
 package stirling.software.common.service;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static stirling.software.common.service.SpyPDFDocumentFactory.*;
 
 import java.io.*;
 import java.nio.file.*;
-import java.nio.file.Files;
 import java.util.Arrays;
 
 import org.apache.pdfbox.Loader;
@@ -18,9 +18,11 @@ import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 
 import stirling.software.common.model.api.PDFFile;
+import stirling.software.common.service.SpyPDFDocumentFactory.StrategyType;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -73,7 +75,7 @@ class CustomPDFDocumentFactoryTest {
     void testStrategy_MultipartFile(int sizeMB, StrategyType expected) throws IOException {
         byte[] inflated = inflatePdf(basePdfBytes, sizeMB);
         MockMultipartFile multipart =
-                new MockMultipartFile("file", "doc.pdf", "application/pdf", inflated);
+                new MockMultipartFile("file", "doc.pdf", MediaType.APPLICATION_PDF_VALUE, inflated);
         try (PDDocument doc = factory.load(multipart)) {
             Assertions.assertEquals(expected, factory.lastStrategyUsed);
         }
@@ -84,7 +86,7 @@ class CustomPDFDocumentFactoryTest {
     void testStrategy_PDFFile(int sizeMB, StrategyType expected) throws IOException {
         byte[] inflated = inflatePdf(basePdfBytes, sizeMB);
         MockMultipartFile multipart =
-                new MockMultipartFile("file", "doc.pdf", "application/pdf", inflated);
+                new MockMultipartFile("file", "doc.pdf", MediaType.APPLICATION_PDF_VALUE, inflated);
         PDFFile pdfFile = new PDFFile();
         pdfFile.setFileInput(multipart);
         try (PDDocument doc = factory.load(pdfFile)) {

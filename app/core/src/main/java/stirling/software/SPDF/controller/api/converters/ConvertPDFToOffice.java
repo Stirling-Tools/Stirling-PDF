@@ -9,7 +9,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
 
-import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 
 import lombok.RequiredArgsConstructor;
@@ -25,7 +24,9 @@ import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.PDFToFile;
+import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @ConvertApi
@@ -33,8 +34,9 @@ import stirling.software.common.util.WebResponseUtils;
 public class ConvertPDFToOffice {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final TempFileManager tempFileManager;
 
-    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/pdf/presentation")
+    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/presentation")
     @PowerPointConversionResponse
     @Operation(
             summary = "Convert PDF to Presentation format",
@@ -46,11 +48,11 @@ public class ConvertPDFToOffice {
             throws IOException, InterruptedException {
         MultipartFile inputFile = request.getFileInput();
         String outputFormat = request.getOutputFormat();
-        PDFToFile pdfToFile = new PDFToFile();
+        PDFToFile pdfToFile = new PDFToFile(tempFileManager);
         return pdfToFile.processPdfToOfficeFormat(inputFile, outputFormat, "impress_pdf_import");
     }
 
-    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/pdf/text")
+    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/text")
     @TextPlainConversionResponse
     @Operation(
             summary = "Convert PDF to Text or RTF format",
@@ -68,18 +70,16 @@ public class ConvertPDFToOffice {
                 String text = stripper.getText(document);
                 return WebResponseUtils.bytesToWebResponse(
                         text.getBytes(),
-                        Filenames.toSimpleFileName(inputFile.getOriginalFilename())
-                                        .replaceFirst("[.][^.]+$", "")
-                                + ".txt",
+                        GeneralUtils.generateFilename(inputFile.getOriginalFilename(), ".txt"),
                         MediaType.TEXT_PLAIN);
             }
         } else {
-            PDFToFile pdfToFile = new PDFToFile();
+            PDFToFile pdfToFile = new PDFToFile(tempFileManager);
             return pdfToFile.processPdfToOfficeFormat(inputFile, outputFormat, "writer_pdf_import");
         }
     }
 
-    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/pdf/word")
+    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/word")
     @WordConversionResponse
     @Operation(
             summary = "Convert PDF to Word document",
@@ -90,11 +90,11 @@ public class ConvertPDFToOffice {
             throws IOException, InterruptedException {
         MultipartFile inputFile = request.getFileInput();
         String outputFormat = request.getOutputFormat();
-        PDFToFile pdfToFile = new PDFToFile();
+        PDFToFile pdfToFile = new PDFToFile(tempFileManager);
         return pdfToFile.processPdfToOfficeFormat(inputFile, outputFormat, "writer_pdf_import");
     }
 
-    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/pdf/xml")
+    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/xml")
     @XmlConversionResponse
     @Operation(
             summary = "Convert PDF to XML",
@@ -104,7 +104,7 @@ public class ConvertPDFToOffice {
     public ResponseEntity<byte[]> processPdfToXML(@ModelAttribute PDFFile file) throws Exception {
         MultipartFile inputFile = file.getFileInput();
 
-        PDFToFile pdfToFile = new PDFToFile();
+        PDFToFile pdfToFile = new PDFToFile(tempFileManager);
         return pdfToFile.processPdfToOfficeFormat(inputFile, "xml", "writer_pdf_import");
     }
 }

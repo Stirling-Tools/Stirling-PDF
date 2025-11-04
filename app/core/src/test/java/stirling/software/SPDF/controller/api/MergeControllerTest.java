@@ -1,12 +1,14 @@
 package stirling.software.SPDF.controller.api;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.*;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -21,6 +23,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -47,13 +50,22 @@ class MergeControllerTest {
     void setUp() {
         mockFile1 =
                 new MockMultipartFile(
-                        "file1", "document1.pdf", "application/pdf", "PDF content 1".getBytes());
+                        "file1",
+                        "document1.pdf",
+                        MediaType.APPLICATION_PDF_VALUE,
+                        "PDF content 1".getBytes());
         mockFile2 =
                 new MockMultipartFile(
-                        "file2", "document2.pdf", "application/pdf", "PDF content 2".getBytes());
+                        "file2",
+                        "document2.pdf",
+                        MediaType.APPLICATION_PDF_VALUE,
+                        "PDF content 2".getBytes());
         mockFile3 =
                 new MockMultipartFile(
-                        "file3", "chapter3.pdf", "application/pdf", "PDF content 3".getBytes());
+                        "file3",
+                        "chapter3.pdf",
+                        MediaType.APPLICATION_PDF_VALUE,
+                        "PDF content 3".getBytes());
 
         mockDocument = mock(PDDocument.class);
         mockMergedDocument = mock(PDDocument.class);
@@ -200,7 +212,10 @@ class MergeControllerTest {
         // Given
         MockMultipartFile fileWithoutExtension =
                 new MockMultipartFile(
-                        "file", "document_no_ext", "application/pdf", "PDF content".getBytes());
+                        "file",
+                        "document_no_ext",
+                        MediaType.APPLICATION_PDF_VALUE,
+                        "PDF content".getBytes());
         MultipartFile[] files = {fileWithoutExtension};
 
         when(mockMergedDocument.getDocumentCatalog()).thenReturn(mockCatalog);
@@ -266,8 +281,8 @@ class MergeControllerTest {
         when(pdfDocumentFactory.createNewDocument()).thenReturn(mockMergedDocument);
         when(doc1.getPages()).thenReturn(pages1);
         when(doc2.getPages()).thenReturn(pages2);
-        when(pages1.iterator()).thenReturn(Arrays.asList(page1).iterator());
-        when(pages2.iterator()).thenReturn(Arrays.asList(page2).iterator());
+        when(pages1.iterator()).thenReturn(Collections.singletonList(page1).iterator());
+        when(pages2.iterator()).thenReturn(Collections.singletonList(page2).iterator());
 
         // When
         PDDocument result = mergeController.mergeDocuments(documents);
@@ -282,7 +297,7 @@ class MergeControllerTest {
     @Test
     void testMergeDocuments_EmptyList_ReturnsEmptyDocument() throws IOException {
         // Given
-        List<PDDocument> documents = Arrays.asList();
+        List<PDDocument> documents = List.of();
 
         when(pdfDocumentFactory.createNewDocument()).thenReturn(mockMergedDocument);
 

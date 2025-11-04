@@ -19,7 +19,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.model.api.PDFFile;
-import stirling.software.common.service.FileOrUploadService;
 import stirling.software.common.service.FileStorage;
 import stirling.software.common.service.JobExecutorService;
 
@@ -34,7 +33,6 @@ public class AutoJobAspect {
 
     private final JobExecutorService jobExecutorService;
     private final HttpServletRequest request;
-    private final FileOrUploadService fileOrUploadService;
     private final FileStorage fileStorage;
 
     @Around("@annotation(autoJobPostMapping)")
@@ -53,7 +51,8 @@ public class AutoJobAspect {
         boolean trackProgress = autoJobPostMapping.trackProgress();
 
         log.debug(
-                "AutoJobPostMapping execution with async={}, timeout={}, retryCount={}, trackProgress={}",
+                "AutoJobPostMapping execution with async={}, timeout={}, retryCount={},"
+                        + " trackProgress={}",
                 async,
                 timeout > 0 ? timeout : "default",
                 retryCount,
@@ -148,7 +147,8 @@ public class AutoJobAspect {
                         } catch (Throwable ex) {
                             lastException = ex;
                             log.error(
-                                    "AutoJobAspect caught exception during job execution (attempt {}/{}): {}",
+                                    "AutoJobAspect caught exception during job execution (attempt"
+                                            + " {}/{}): {}",
                                     currentAttempt,
                                     maxRetries,
                                     ex.getMessage(),

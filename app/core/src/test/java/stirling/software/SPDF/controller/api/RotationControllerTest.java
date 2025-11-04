@@ -17,6 +17,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 
@@ -34,7 +35,8 @@ public class RotationControllerTest {
     public void testRotatePDF() throws IOException {
         // Create a mock file
         MockMultipartFile mockFile =
-                new MockMultipartFile("file", "test.pdf", "application/pdf", new byte[] {1, 2, 3});
+                new MockMultipartFile(
+                        "file", "test.pdf", MediaType.APPLICATION_PDF_VALUE, new byte[] {1, 2, 3});
         RotatePDFRequest request = new RotatePDFRequest();
         request.setFileInput(mockFile);
         request.setAngle(90);
@@ -62,7 +64,8 @@ public class RotationControllerTest {
     public void testRotatePDFInvalidAngle() throws IOException {
         // Create a mock file
         MockMultipartFile mockFile =
-                new MockMultipartFile("file", "test.pdf", "application/pdf", new byte[] {1, 2, 3});
+                new MockMultipartFile(
+                        "file", "test.pdf", MediaType.APPLICATION_PDF_VALUE, new byte[] {1, 2, 3});
         RotatePDFRequest request = new RotatePDFRequest();
         request.setFileInput(mockFile);
         request.setAngle(45); // Invalid angle

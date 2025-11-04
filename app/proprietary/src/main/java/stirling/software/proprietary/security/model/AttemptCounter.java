@@ -1,5 +1,8 @@
 package stirling.software.proprietary.security.model;
 
+import lombok.Getter;
+
+@Getter
 public class AttemptCounter {
     private int attemptCount;
     private long lastAttemptTime;
@@ -12,14 +15,6 @@ public class AttemptCounter {
     public void increment() {
         this.attemptCount++;
         this.lastAttemptTime = System.currentTimeMillis();
-    }
-
-    public int getAttemptCount() {
-        return attemptCount;
-    }
-
-    public long getLastAttemptTime() {
-        return lastAttemptTime;
     }
 
     public boolean shouldReset(long attemptIncrementTime) {

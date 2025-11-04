@@ -4,7 +4,6 @@ import org.owasp.html.AttributePolicy;
 import org.owasp.html.HtmlPolicyBuilder;
 import org.owasp.html.PolicyFactory;
 import org.owasp.html.Sanitizers;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import stirling.software.common.model.ApplicationProperties;
@@ -16,7 +15,6 @@ public class CustomHtmlSanitizer {
     private final SsrfProtectionService ssrfProtectionService;
     private final ApplicationProperties applicationProperties;
 
-    @Autowired
     public CustomHtmlSanitizer(
             SsrfProtectionService ssrfProtectionService,
             ApplicationProperties applicationProperties) {
@@ -28,7 +26,7 @@ public class CustomHtmlSanitizer {
             new AttributePolicy() {
                 @Override
                 public String apply(String elementName, String attributeName, String value) {
-                    if (value == null || value.trim().isEmpty()) {
+                    if (value.trim().isEmpty()) {
                         return null;
                     }
 

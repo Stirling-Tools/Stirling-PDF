@@ -6,8 +6,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
@@ -18,11 +16,12 @@ import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class EndpointInspector implements ApplicationListener<ContextRefreshedEvent> {
-    private static final Logger logger = LoggerFactory.getLogger(EndpointInspector.class);
 
     private final ApplicationContext applicationContext;
     private final Set<String> validGetEndpoints = new HashSet<>();
@@ -71,13 +70,13 @@ public class EndpointInspector implements ApplicationListener<ContextRefreshedEv
             }
 
             if (validGetEndpoints.isEmpty()) {
-                logger.warn("No endpoints discovered. Adding common endpoints as fallback.");
+                log.warn("No endpoints discovered. Adding common endpoints as fallback.");
                 validGetEndpoints.add("/");
                 validGetEndpoints.add("/api/**");
                 validGetEndpoints.add("/**");
             }
         } catch (Exception e) {
-            logger.error("Error discovering endpoints", e);
+            log.error("Error discovering endpoints", e);
         }
     }
 
@@ -203,10 +202,10 @@ public class EndpointInspector implements ApplicationListener<ContextRefreshedEv
     private void logAllEndpoints() {
         Set<String> sortedEndpoints = new TreeSet<>(validGetEndpoints);
 
-        logger.info("=== BEGIN: All discovered GET endpoints ===");
+        log.info("=== BEGIN: All discovered GET endpoints ===");
         for (String endpoint : sortedEndpoints) {
-            logger.info("Endpoint: {}", endpoint);
+            log.info("Endpoint: {}", endpoint);
         }
-        logger.info("=== END: All discovered GET endpoints ===");
+        log.info("=== END: All discovered GET endpoints ===");
     }
 }

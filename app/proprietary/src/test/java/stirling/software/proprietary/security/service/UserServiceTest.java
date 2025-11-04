@@ -189,7 +189,7 @@ class UserServiceTest {
     void testSaveUser_WithValidEmail_Success() throws Exception {
         // Given
         String emailUsername = "test@example.com";
-        AuthenticationType authType = AuthenticationType.SSO;
+        AuthenticationType authType = AuthenticationType.OAUTH2;
 
         when(teamRepository.findByName("Default")).thenReturn(Optional.of(mockTeam));
         when(userRepository.save(any(User.class))).thenReturn(mockUser);
