@@ -123,20 +123,18 @@ class AttemptCounterTest {
         }
 
         @Test
-        @DisplayName(
-                "returns FALSE when time difference is exactly equal to window (implementation uses"
-                        + " '>')")
-        void shouldReturnFalseWhenExactlyWindow() {
+        @DisplayName("returns TRUE when time difference is exactly equal to window")
+        void shouldReturnTrueWhenExactlyWindow() {
             AttemptCounter counter = new AttemptCounter();
             long window = 200L;
 
             // Simulate: last action was exactly 'window - 10' ms ago to avoid timing races
             setPrivateLong(counter, "lastAttemptTime", System.currentTimeMillis() - (window - 10));
 
-            // Purpose: Within window -> no reset, because implementation uses '>'
-            assertFalse(
+            // Purpose: Within window -> reset should occur because the window has fully elapsed
+            assertTrue(
                     counter.shouldReset(window),
-                    "With difference less than window, no reset should occur");
+                    "With difference less than window, the reset window has elapsed");
         }
 
         @Test
