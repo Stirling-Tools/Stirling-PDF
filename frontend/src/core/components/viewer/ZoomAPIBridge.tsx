@@ -11,7 +11,7 @@ import {
   useFitWidthResize,
   ZoomViewport,
 } from '@core/utils/viewerZoom';
-import { getFirstPageAspectRatioFromStub } from '@core/utils/pageMetadata';
+import { getFirstPageAspectRatioFromStub } from '@app/utils/pageMetadata';
 
 export function ZoomAPIBridge() {
   const { provides: zoom, state: zoomState } = useZoom();
