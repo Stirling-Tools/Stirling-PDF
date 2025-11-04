@@ -4,6 +4,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 
@@ -17,6 +18,7 @@ import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.WebResponseUtils;
 
 /**
@@ -43,7 +45,7 @@ public class PdfImageRemovalController {
      *     content type and filename.
      * @throws IOException If an error occurs while processing the PDF file.
      */
-    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/remove-image-pdf")
+    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/remove-image-pdf")
     @StandardPdfResponse
     @Operation(
             summary = "Remove images from file to reduce the file size.",
@@ -66,8 +68,8 @@ public class PdfImageRemovalController {
 
         // Generate a new filename for the modified PDF
         String mergedFileName =
-                file.getFileInput().getOriginalFilename().replaceFirst("[.][^.]+$", "")
-                        + "_removed_images.pdf";
+                GeneralUtils.generateFilename(
+                        file.getFileInput().getOriginalFilename(), "_images_removed.pdf");
 
         // Convert the byte array to a web response and return it
         return WebResponseUtils.bytesToWebResponse(outputStream.toByteArray(), mergedFileName);

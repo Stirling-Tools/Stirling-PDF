@@ -58,13 +58,13 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.WebDataBinder;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import io.github.pixee.security.Filenames;
 import io.micrometer.common.util.StringUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -77,6 +77,7 @@ import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.ServerCertificateServiceInterface;
 import stirling.software.common.util.ExceptionUtils;
+import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.WebResponseUtils;
 
 @RestController
@@ -130,7 +131,7 @@ public class CertSignController {
             signature.setName(name);
             signature.setLocation(location);
             signature.setReason(reason);
-            signature.setSignDate(Calendar.getInstance());
+            signature.setSignDate(Calendar.getInstance()); // PDFBox requires Calendar
             if (Boolean.TRUE.equals(showSignature)) {
                 SignatureOptions signatureOptions = new SignatureOptions();
                 signatureOptions.setVisualSignature(
@@ -198,6 +199,7 @@ public class CertSignController {
                         "alias", privateKey, password.toCharArray(), new Certificate[] {cert});
                 break;
             case "PKCS12":
+            case "PFX":
                 ks = KeyStore.getInstance("PKCS12");
                 ks.load(p12File.getInputStream(), password.toCharArray());
                 break;
@@ -243,10 +245,10 @@ public class CertSignController {
                 location,
                 reason,
                 showLogo);
-        return WebResponseUtils.baosToWebResponse(
-                baos,
-                Filenames.toSimpleFileName(pdf.getOriginalFilename()).replaceFirst("[.][^.]+$", "")
-                        + "_signed.pdf");
+        // Return the signed PDF
+        return WebResponseUtils.bytesToWebResponse(
+                baos.toByteArray(),
+                GeneralUtils.generateFilename(pdf.getOriginalFilename(), "_signed.pdf"));
     }
 
     private PrivateKey getPrivateKeyFromPEM(byte[] pemBytes, String password)
