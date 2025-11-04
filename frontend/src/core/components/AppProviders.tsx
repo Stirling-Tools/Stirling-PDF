@@ -15,6 +15,7 @@ import { SignatureProvider } from "@app/contexts/SignatureContext";
 import { OnboardingProvider } from "@app/contexts/OnboardingContext";
 import { TourOrchestrationProvider } from "@app/contexts/TourOrchestrationContext";
 import { AdminTourOrchestrationProvider } from "@app/contexts/AdminTourOrchestrationContext";
+import { ChatbotProvider } from "@app/contexts/ChatbotContext";
 import { PageEditorProvider } from "@app/contexts/PageEditorContext";
 import { BannerProvider } from "@app/contexts/BannerContext";
 import ErrorBoundary from "@app/components/shared/ErrorBoundary";
@@ -98,7 +99,9 @@ export function AppProviders({ children, appConfigRetryOptions, appConfigProvide
                                       <RightRailProvider>
                                         <TourOrchestrationProvider>
                                           <AdminTourOrchestrationProvider>
-                                            {children}
+                                            <ChatbotProvider>
+                                              {children}
+                                            </ChatbotProvider>
                                           </AdminTourOrchestrationProvider>
                                         </TourOrchestrationProvider>
                                       </RightRailProvider>

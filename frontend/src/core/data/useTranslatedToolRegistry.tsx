@@ -5,6 +5,7 @@ import SplitPdfPanel from "@app/tools/Split";
 import CompressPdfPanel from "@app/tools/Compress";
 import OCRPanel from "@app/tools/OCR";
 import ConvertPanel from "@app/tools/Convert";
+import ChatbotAssistant from "@app/tools/ChatbotAssistant";
 import Sanitize from "@app/tools/Sanitize";
 import AddPassword from "@app/tools/AddPassword";
 import ChangePermissions from "@app/tools/ChangePermissions";
@@ -162,6 +163,18 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         synonyms: getSynonyms(t, "multiTool"),
         supportsAutomate: false,
         automationSettings: null
+      },
+      chatbot: {
+        icon: <LocalIcon icon="smart-toy-rounded" width="1.5rem" height="1.5rem" />,
+        name: t('chatbot.toolTitleMenu', 'Chatbot (Alpha)'),
+        component: ChatbotAssistant,
+        description: t('chatbot.toolMenuDescription', 'Chat with Stirling Bot about the contents of your PDF.'),
+        categoryId: ToolCategoryId.RECOMMENDED_TOOLS,
+        subcategoryId: SubcategoryId.AUTOMATION,
+        maxFiles: 1,
+        automationSettings: null,
+        supportsAutomate: false,
+        synonyms: getSynonyms(t, 'chatbot'),
       },
       merge: {
         icon: <LocalIcon icon="library-add-rounded" width="1.5rem" height="1.5rem" />,

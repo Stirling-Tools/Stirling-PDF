@@ -23,6 +23,7 @@ import LocalIcon from "@app/components/shared/LocalIcon";
 import { useFilesModalContext } from "@app/contexts/FilesModalContext";
 import AppConfigModal from "@app/components/shared/AppConfigModal";
 import AdminAnalyticsChoiceModal from "@app/components/shared/AdminAnalyticsChoiceModal";
+import ChatbotDrawer from "@app/components/chatbot/ChatbotDrawer";
 
 import "@app/pages/HomePage.css";
 
@@ -297,6 +298,7 @@ export default function HomePage() {
           <FileManager selectedTool={selectedTool as any /* FIX ME */} />
         </Group>
       )}
+      <ChatbotDrawer />
     </div>
   );
 }
