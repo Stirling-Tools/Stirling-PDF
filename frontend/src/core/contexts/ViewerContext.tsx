@@ -57,6 +57,31 @@ interface ExportAPIWrapper {
   saveAsCopy: () => { toPromise: () => Promise<ArrayBuffer> };
 }
 
+interface RedactionAPIWrapper {
+  // Common redaction API surface (union of likely method names)
+  toggleMarqueeRedact?: () => void;
+  toggleRedactSelection?: () => void;
+  activateAreaRedaction?: (mode?: any) => void;
+  activateTextRedaction?: (mode?: any) => void;
+  startAreaRedaction?: (mode?: any) => void;
+  startTextRedaction?: (mode?: any) => void;
+  enableAreaRedaction?: (mode?: any) => void;
+  enableTextRedaction?: (mode?: any) => void;
+  setRedactionMode?: (mode: any) => void;
+  setMode?: (mode: any) => void;
+  applyRedactions?: () => any;
+  applyPendingRedactions?: () => any;
+  apply?: () => any;
+  commit?: () => any;
+  finalizeRedactions?: () => any;
+  performRedactions?: () => any;
+  exportRedactedDocument?: (opts?: any) => any;
+  getRedactedDocument?: () => any;
+  getBlob?: () => any;
+  onStateChange?: (cb: (state: any) => void) => void;
+  offStateChange?: (cb: (state: any) => void) => void;
+}
+
 
 // State interfaces - represent the shape of data from each bridge
 interface ScrollState {
@@ -101,6 +126,11 @@ interface SearchState {
 
 interface ExportState {
   canExport: boolean;
+}
+
+interface RedactionState {
+  activeType: string | null;
+  hasPending: boolean;
 }
 
 // Bridge registration interface - bridges register with state and API
@@ -208,6 +238,20 @@ interface ViewerContextType {
     saveAsCopy: () => Promise<ArrayBuffer | null>;
   };
 
+  // Redaction
+  getRedactionState: () => RedactionState;
+  getRedactionDesiredMode: () => 'area' | 'text' | null;
+  redactionActions: {
+    activateArea: () => void;
+    activateText: () => void;
+    clearMode: () => void;
+    applyRedactions: () => Promise<boolean>;
+    exportRedactedBlob: () => Promise<Blob | null>;
+  };
+  // Immediate redaction mode update subscription (for left panel UI)
+  registerImmediateRedactionModeUpdate: (callback: (mode: 'area' | 'text' | null) => void) => void;
+  triggerImmediateRedactionModeUpdate: (mode: 'area' | 'text' | null) => void;
+
   // Bridge registration - internal use by bridges  
   registerBridge: (type: string, ref: BridgeRef) => void;
 }
@@ -239,7 +283,20 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     rotation: null as BridgeRef<RotationState, RotationAPIWrapper> | null,
     thumbnail: null as BridgeRef<unknown, ThumbnailAPIWrapper> | null,
     export: null as BridgeRef<ExportState, ExportAPIWrapper> | null,
+    redaction: null as BridgeRef<RedactionState, RedactionAPIWrapper> | null,
   });
+
+  // Desired redaction mode persists across state changes to keep tool active after inline apply
+  const desiredRedactionModeRef = useRef<'area' | 'text' | null>(null);
+  const immediateRedactionModeCallbacksRef = useRef<Set<(mode: 'area' | 'text' | null) => void>>(new Set());
+
+  const notifyImmediateRedactionMode = (mode: 'area' | 'text' | null) => {
+    try {
+      immediateRedactionModeCallbacksRef.current.forEach(cb => {
+        try { cb(mode); } catch {}
+      });
+    } catch {}
+  };
 
   // Immediate zoom callback for responsive display updates
   const immediateZoomUpdateCallback = useRef<((percent: number) => void) | null>(null);
@@ -276,6 +333,9 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
         break;
       case 'export':
         bridgeRefs.current.export = ref as BridgeRef<ExportState, ExportAPIWrapper>;
+        break;
+      case 'redaction':
+        bridgeRefs.current.redaction = ref as BridgeRef<RedactionState, RedactionAPIWrapper>;
         break;
     }
   };
@@ -332,6 +392,12 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
   const getExportState = (): ExportState => {
     return bridgeRefs.current.export?.state || { canExport: false };
   };
+
+  const getRedactionState = (): RedactionState => {
+    return bridgeRefs.current.redaction?.state || { activeType: null, hasPending: false };
+  };
+
+  const getRedactionDesiredMode = () => desiredRedactionModeRef.current;
 
   // Action handlers - call APIs directly
   const scrollActions = {
@@ -550,6 +616,137 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     }
   };
 
+  // Helpers to robustly call redaction API methods across versions
+  const callFirst = (api: any, names: string[], args: any[] = []) => {
+    for (const name of names) {
+      const fn = api?.[name];
+      if (typeof fn === 'function') {
+        try { return fn.apply(api, args); } catch { /* noop */ }
+      }
+    }
+    return undefined;
+  };
+
+  const redactionActions = {
+    activateArea: () => {
+      const api = bridgeRefs.current.redaction?.api as any;
+      if (!api) return;
+      desiredRedactionModeRef.current = 'area';
+      notifyImmediateRedactionMode('area');
+      // Exclusivity: turn off draw and pan when redaction is active
+      try { setIsAnnotationModeState(false); } catch {}
+      try { (bridgeRefs.current.pan?.api as any)?.disable?.(); } catch {}
+      // Ensure selection isn't intercepting text drags
+      try { (bridgeRefs.current.selection?.api as any)?.setMode?.('none'); } catch {}
+      // Prefer non-toggle methods first to avoid accidentally clearing mode
+      const areaModes = ['area', 'box', 'rectangle', 'shape'];
+      for (const mode of areaModes) {
+        if (callFirst(api, ['activateAreaRedaction','startAreaRedaction','enableAreaRedaction','activateMode'], [mode])) return;
+        if (callFirst(api, ['setRedactionMode','setMode'], [mode])) return;
+        if (callFirst(api, ['setRedactionMode','setMode'], [{ mode }])) return;
+        if (callFirst(api, ['setMode'], [{ type: mode }])) return;
+        if (callFirst(api, ['setMode'], [mode.toUpperCase?.() ?? mode])) return;
+      }
+      // Fallback to toggle only if non-toggle methods don't work
+      if (api.toggleMarqueeRedact) { try { api.toggleMarqueeRedact(); return; } catch {} }
+    },
+    activateText: () => {
+      const api = bridgeRefs.current.redaction?.api as any;
+      if (!api) return;
+      desiredRedactionModeRef.current = 'text';
+      notifyImmediateRedactionMode('text');
+      // Exclusivity: turn off draw and pan when redaction is active
+      try { setIsAnnotationModeState(false); } catch {}
+      try { (bridgeRefs.current.pan?.api as any)?.disable?.(); } catch {}
+      // Ensure selection plugin is in text mode
+      try { (bridgeRefs.current.selection?.api as any)?.setMode?.('text'); } catch {}
+      // Prefer non-toggle methods first to avoid accidentally clearing mode
+      const textModes = ['text','search','pattern'];
+      for (const mode of textModes) {
+        if (callFirst(api, ['activateTextRedaction','startTextRedaction','enableTextRedaction','activateMode'], [mode])) return;
+        if (callFirst(api, ['setRedactionMode','setMode'], [mode])) return;
+        if (callFirst(api, ['setRedactionMode','setMode'], [{ mode }])) return;
+        if (callFirst(api, ['setMode'], [{ type: mode }])) return;
+        if (callFirst(api, ['setMode'], [mode.toUpperCase?.() ?? mode])) return;
+      }
+      // Fallback to toggle only if non-toggle methods don't work
+      if (api.toggleRedactSelection) { try { api.toggleRedactSelection(); return; } catch {} }
+    },
+    clearMode: () => {
+      const api = bridgeRefs.current.redaction?.api as any;
+      if (!api) return;
+      desiredRedactionModeRef.current = null;
+      notifyImmediateRedactionMode(null);
+      // Best effort: set selection mode to none or deactivate redaction
+      try { (bridgeRefs.current.selection?.api as any)?.setMode?.('none'); } catch {}
+      try { api.setMode?.('none'); } catch {}
+    },
+    applyRedactions: async () => {
+      const api = bridgeRefs.current.redaction?.api as any;
+      if (!api) return false;
+      const names = ['applyRedactions','applyPendingRedactions','apply','commit','finalizeRedactions','performRedactions'];
+      for (const name of names) {
+        const fn = api?.[name];
+        if (typeof fn === 'function') {
+          try { const r = fn.call(api); if (r?.then) await r; return true; } catch { /* try next */ }
+        }
+      }
+      return false;
+    },
+    exportRedactedBlob: async () => {
+      const api = bridgeRefs.current.redaction?.api as any;
+      const exportApi = bridgeRefs.current.export?.api as any;
+      const toBlob = async (value: any): Promise<Blob | null> => {
+        if (!value) return null;
+        if (value instanceof Blob) return value;
+        if (value instanceof ArrayBuffer) return new Blob([value], { type: 'application/pdf' });
+        if (value instanceof Uint8Array) {
+          const copy = new Uint8Array(value.byteLength);
+          copy.set(value);
+          return new Blob([copy.buffer], { type: 'application/pdf' });
+        }
+        if (value.data instanceof ArrayBuffer) return new Blob([value.data], { type: 'application/pdf' });
+        if (value.blob instanceof Blob) return value.blob;
+        if (typeof value.toBlob === 'function') return value.toBlob();
+        if (typeof value.toPromise === 'function') {
+          const res = await value.toPromise();
+          if (res instanceof ArrayBuffer) return new Blob([res], { type: 'application/pdf' });
+        }
+        if (typeof value.arrayBuffer === 'function') {
+          const buf = await value.arrayBuffer();
+          return new Blob([buf], { type: 'application/pdf' });
+        }
+        return null;
+      };
+
+      const attempts: Array<[any, string, any[]]> = [
+        [api, 'exportRedactedDocument', [{ type: 'blob' }]],
+        [api, 'exportRedactedDocument', []],
+        [api, 'getRedactedDocument', []],
+        [api, 'getBlob', []],
+        [exportApi, 'exportDocument', [{ type: 'blob' }]],
+        [exportApi, 'exportDocument', []],
+      ];
+      for (const [target, method, args] of attempts) {
+        const fn = target?.[method];
+        if (typeof fn === 'function') {
+          try {
+            const r = fn.apply(target, args);
+            const blob = await toBlob(r);
+            if (blob) return blob;
+          } catch { /* try next */ }
+        }
+      }
+      // Fallback
+      try {
+        const handle = exportApi?.saveAsCopy?.();
+        const blob = await toBlob(handle);
+        if (blob) return blob;
+      } catch {}
+      return null;
+    }
+  };
+
   const registerImmediateZoomUpdate = (callback: (percent: number) => void) => {
     immediateZoomUpdateCallback.current = callback;
   };
@@ -612,6 +809,13 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     rotationActions,
     searchActions,
     exportActions,
+
+    // Redaction
+    getRedactionState,
+    getRedactionDesiredMode,
+    redactionActions,
+    registerImmediateRedactionModeUpdate: (callback) => { immediateRedactionModeCallbacksRef.current.add(callback); },
+    triggerImmediateRedactionModeUpdate: (mode) => { notifyImmediateRedactionMode(mode); },
 
     // Bridge registration
     registerBridge,

@@ -136,6 +136,8 @@ export default function ViewerAnnotationControls({ currentView, disabled = false
             radius="md"
             className="right-rail-icon"
             onClick={() => {
+              // Clear any active redaction mode when entering draw
+              try { (viewerContext as any)?.redactionActions?.clearMode?.(); } catch {}
               viewerContext?.toggleAnnotationMode();
               // Activate ink drawing tool when entering annotation mode
               if (signatureApiRef?.current && currentView === 'viewer') {
@@ -162,41 +164,35 @@ export default function ViewerAnnotationControls({ currentView, disabled = false
           radius="md"
           className="right-rail-icon"
           onClick={async () => {
-            if (viewerContext?.exportActions?.saveAsCopy && currentView === 'viewer') {
+            if (currentView === 'viewer') {
               try {
-                const pdfArrayBuffer = await viewerContext.exportActions.saveAsCopy();
-                if (pdfArrayBuffer) {
-                  // Create new File object with flattened annotations
-                  const blob = new Blob([pdfArrayBuffer], { type: 'application/pdf' });
-
-                  // Get the original file name or use a default
+                let newFile: File | null = null;
+                const redactionPending = viewerContext?.getRedactionState?.().hasPending || false;
+                if (redactionPending) {
+                  await (viewerContext as any)?.redactionActions?.applyRedactions?.();
+                  const blob = await (viewerContext as any)?.redactionActions?.exportRedactedBlob?.();
+                  if (!blob) return;
                   const originalFileName = activeFiles.length > 0 ? activeFiles[0].name : 'document.pdf';
-                  const newFile = new File([blob], originalFileName, { type: 'application/pdf' });
+                  newFile = new File([blob], originalFileName, { type: 'application/pdf' });
+                } else if (viewerContext?.exportActions?.saveAsCopy) {
+                  const pdfArrayBuffer = await viewerContext.exportActions.saveAsCopy();
+                  if (!pdfArrayBuffer) return;
+                  const blob = new Blob([pdfArrayBuffer], { type: 'application/pdf' });
+                  const originalFileName = activeFiles.length > 0 ? activeFiles[0].name : 'document.pdf';
+                  newFile = new File([blob], originalFileName, { type: 'application/pdf' });
+                }
 
-                  // Replace the current file in context with the saved version (exact same logic as Sign tool)
-                  if (activeFiles.length > 0) {
-                    // Generate thumbnail and metadata for the saved file
-                    const thumbnailResult = await generateThumbnailWithMetadata(newFile);
-                    const processedFileMetadata = createProcessedFile(thumbnailResult.pageCount, thumbnailResult.thumbnail);
-
-                    // Get current file info
-                    const currentFileIds = state.files.ids;
-                    if (currentFileIds.length > 0) {
-                      const currentFileId = currentFileIds[0];
-                      const currentRecord = selectors.getStirlingFileStub(currentFileId);
-
-                      if (!currentRecord) {
-                        console.error('No file record found for:', currentFileId);
-                        return;
-                      }
-
-                      // Create output stub and file (exact same as Sign tool)
-                      const outputStub = createNewStirlingFileStub(newFile, undefined, thumbnailResult.thumbnail, processedFileMetadata);
-                      const outputStirlingFile = createStirlingFile(newFile, outputStub.id);
-
-                      // Replace the original file with the saved version
-                      await fileActions.consumeFiles([currentFileId], [outputStirlingFile], [outputStub]);
-                    }
+                if (newFile) {
+                  const thumbnailResult = await generateThumbnailWithMetadata(newFile);
+                  const processedFileMetadata = createProcessedFile(thumbnailResult.pageCount, thumbnailResult.thumbnail);
+                  const currentFileIds = state.files.ids;
+                  if (currentFileIds.length > 0) {
+                    const currentFileId = currentFileIds[0];
+                    const currentRecord = selectors.getStirlingFileStub(currentFileId);
+                    if (!currentRecord) return;
+                    const outputStub = createNewStirlingFileStub(newFile, undefined, thumbnailResult.thumbnail, processedFileMetadata);
+                    const outputStirlingFile = createStirlingFile(newFile, outputStub.id);
+                    await fileActions.consumeFiles([currentFileId], [outputStirlingFile], [outputStub]);
                   }
                 }
               } catch (error) {

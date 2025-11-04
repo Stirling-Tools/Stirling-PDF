@@ -8,6 +8,8 @@ import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import LastPageIcon from '@mui/icons-material/LastPage';
 import DescriptionIcon from '@mui/icons-material/Description';
 import ViewWeekIcon from '@mui/icons-material/ViewWeek';
+import RotateLeftIcon from '@mui/icons-material/RotateLeft';
+import RotateRightIcon from '@mui/icons-material/RotateRight';
 
 interface PdfViewerToolbarProps {
   // Page navigation props (placeholders for now)
@@ -32,7 +34,7 @@ export function PdfViewerToolbar({
   currentZoom: _currentZoom = 100,
 }: PdfViewerToolbarProps) {
   const { t } = useTranslation();
-  const { getScrollState, getZoomState, scrollActions, zoomActions, registerImmediateZoomUpdate, registerImmediateScrollUpdate } = useViewer();
+  const { getScrollState, getZoomState, scrollActions, zoomActions, rotationActions, registerImmediateZoomUpdate, registerImmediateScrollUpdate } = useViewer();
 
   const scrollState = getScrollState();
   const zoomState = getZoomState();
@@ -198,6 +200,32 @@ export function PdfViewerToolbar({
         >
           {dualPage ? <DescriptionIcon fontSize="small" /> : <ViewWeekIcon fontSize="small" />}
         </Button>
+
+        {/* Rotate Controls */}
+        <Group gap={4} align="center" style={{ marginLeft: 8 }}>
+          <Button
+            variant="subtle"
+            color="blue"
+            size="md"
+            radius="xl"
+            onClick={() => rotationActions.rotateBackward()}
+            style={{ minWidth: '2.5rem' }}
+            title={t('viewer.rotateLeft', 'Rotate Left')}
+          >
+            <RotateLeftIcon fontSize="small" />
+          </Button>
+          <Button
+            variant="subtle"
+            color="blue"
+            size="md"
+            radius="xl"
+            onClick={() => rotationActions.rotateForward()}
+            style={{ minWidth: '2.5rem' }}
+            title={t('viewer.rotateRight', 'Rotate Right')}
+          >
+            <RotateRightIcon fontSize="small" />
+          </Button>
+        </Group>
 
         {/* Zoom Controls */}
         <Group gap={4} align="center" style={{ marginLeft: 16 }}>

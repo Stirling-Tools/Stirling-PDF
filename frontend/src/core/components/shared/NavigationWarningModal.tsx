@@ -8,9 +8,10 @@ import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 interface NavigationWarningModalProps {
   onApplyAndContinue?: () => Promise<void>;
   onExportAndContinue?: () => Promise<void>;
+  message?: string;
 }
 
-const NavigationWarningModal = ({ onApplyAndContinue, onExportAndContinue }: NavigationWarningModalProps) => {
+const NavigationWarningModal = ({ onApplyAndContinue, onExportAndContinue, message }: NavigationWarningModalProps) => {
   const { t } = useTranslation();
   const { showNavigationWarning, hasUnsavedChanges, cancelNavigation, confirmNavigation, setHasUnsavedChanges } =
     useNavigationGuard();
@@ -58,7 +59,7 @@ const NavigationWarningModal = ({ onApplyAndContinue, onExportAndContinue }: Nav
       <Stack>
         <Stack  ta="center"  p="md">
         <Text size="md" fw="300">
-          {t("unsavedChanges", "You have unsaved changes to your PDF.")}
+          {message || t("unsavedChanges", "You have unsaved changes to your PDF.")}
         </Text>
         <Text size="lg" fw="500" >
           {t("areYouSure", "Are you sure you want to leave?")}

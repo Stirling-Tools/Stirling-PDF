@@ -9,6 +9,7 @@ import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import { WorkbenchType, isValidWorkbench } from '@app/types/workbench';
 import type { CustomWorkbenchViewInstance } from '@app/contexts/ToolWorkflowContext';
 import { FileDropdownMenu } from '@app/components/shared/FileDropdownMenu';
+import { useNavigationGuard } from '@app/contexts/NavigationContext';
 
 
 const viewOptionStyle: React.CSSProperties = {
@@ -142,6 +143,7 @@ const TopControls = ({
 }: TopControlsProps) => {
   const { isRainbowMode } = useRainbowThemeContext();
   const [switchingTo, setSwitchingTo] = useState<WorkbenchType | null>(null);
+  const { requestNavigation } = useNavigationGuard();
 
   const handleViewChange = useCallback((view: string) => {
     if (!isValidWorkbench(view)) {
@@ -157,7 +159,7 @@ const TopControls = ({
     requestAnimationFrame(() => {
       // Give the spinner one more frame to show
       requestAnimationFrame(() => {
-        setCurrentView(workbench);
+        requestNavigation(() => setCurrentView(workbench));
 
         // Clear the loading state after view change completes
         setTimeout(() => setSwitchingTo(null), 300);
@@ -165,12 +167,16 @@ const TopControls = ({
     });
   }, [setCurrentView]);
 
+  const guardedFileSelect = useCallback((index: number) => {
+    requestNavigation(() => onFileSelect?.(index));
+  }, [onFileSelect, requestNavigation]);
+
   return (
     <div className="absolute left-0 w-full top-0 z-[100] pointer-events-none">
       <div className="flex justify-center mt-[0.5rem]">
         <SegmentedControl
           data-tour="view-switcher"
-          data={createViewOptions(currentView, switchingTo, activeFiles, currentFileIndex, onFileSelect, customViews)}
+          data={createViewOptions(currentView, switchingTo, activeFiles, currentFileIndex, guardedFileSelect, customViews)}
           value={currentView}
           onChange={handleViewChange}
           color="blue"

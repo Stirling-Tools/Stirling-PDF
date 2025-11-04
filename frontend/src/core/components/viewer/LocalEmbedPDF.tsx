@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { createPluginRegistration } from '@embedpdf/core';
 import { EmbedPDF } from '@embedpdf/core/react';
 import { usePdfiumEngine } from '@embedpdf/engines/react';
@@ -22,6 +23,8 @@ import { ExportPluginPackage } from '@embedpdf/plugin-export/react';
 // Import annotation plugins
 import { HistoryPluginPackage } from '@embedpdf/plugin-history/react';
 import { AnnotationLayer, AnnotationPluginPackage } from '@embedpdf/plugin-annotation/react';
+import { RedactionLayer, RedactionPluginPackage, useRedaction } from '@embedpdf/plugin-redaction/react';
+import type { SelectionMenuProps } from '@embedpdf/plugin-redaction/react';
 import { PdfAnnotationSubtype } from '@embedpdf/models';
 import { CustomSearchLayer } from '@app/components/viewer/CustomSearchLayer';
 import { ZoomAPIBridge } from '@app/components/viewer/ZoomAPIBridge';
@@ -38,17 +41,19 @@ import { SignatureAPIBridge } from '@app/components/viewer/SignatureAPIBridge';
 import { HistoryAPIBridge } from '@app/components/viewer/HistoryAPIBridge';
 import type { SignatureAPI, HistoryAPI } from '@app/components/viewer/viewerTypes';
 import { ExportAPIBridge } from '@app/components/viewer/ExportAPIBridge';
+import { RedactionAPIBridge } from '@app/components/viewer/RedactionAPIBridge';
 
 interface LocalEmbedPDFProps {
   file?: File | Blob;
   url?: string | null;
   enableAnnotations?: boolean;
+  enableRedaction?: boolean;
   onSignatureAdded?: (annotation: any) => void;
   signatureApiRef?: React.RefObject<SignatureAPI>;
   historyApiRef?: React.RefObject<HistoryAPI>;
 }
 
-export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatureAdded, signatureApiRef, historyApiRef }: LocalEmbedPDFProps) {
+export function LocalEmbedPDF({ file, url, enableAnnotations = false, enableRedaction = false, onSignatureAdded, signatureApiRef, historyApiRef }: LocalEmbedPDFProps) {
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [, setAnnotations] = useState<Array<{id: string, pageIndex: number, rect: any}>>([]);
 
@@ -71,7 +76,7 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
     const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
     const viewportGap = rootFontSize * 3.5;
 
-    return [
+    const base = [
       createPluginRegistration(LoaderPluginPackage, {
         loadingOptions: {
           type: 'url',
@@ -95,17 +100,15 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
 
       // Register selection plugin (depends on InteractionManager)
       createPluginRegistration(SelectionPluginPackage),
-
-      // Register history plugin for undo/redo (recommended for annotations)
       ...(enableAnnotations ? [createPluginRegistration(HistoryPluginPackage)] : []),
-
-      // Register annotation plugin (depends on InteractionManager, Selection, History)
       ...(enableAnnotations ? [createPluginRegistration(AnnotationPluginPackage, {
         annotationAuthor: 'Digital Signature',
         autoCommit: true,
         deactivateToolAfterCreate: false,
         selectAfterCreate: true,
       })] : []),
+      // Always register redaction plugin so hooks are available immediately
+      createPluginRegistration(RedactionPluginPackage, { autoPreview: true }),
 
       // Register pan plugin (depends on Viewport, InteractionManager)
       createPluginRegistration(PanPluginPackage, {
@@ -145,7 +148,9 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
         defaultFileName: 'document.pdf',
       }),
     ];
-  }, [pdfUrl]);
+
+    return base;
+  }, [pdfUrl, enableAnnotations, enableRedaction]);
 
   // Initialize the engine with the React hook
   const { engine, isLoading, error } = usePdfiumEngine();
@@ -273,6 +278,7 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
         {enableAnnotations && <SignatureAPIBridge ref={signatureApiRef} />}
         {enableAnnotations && <HistoryAPIBridge ref={historyApiRef} />}
         <ExportAPIBridge />
+        {enableRedaction && <RedactionAPIBridge />}
         <GlobalPointerProvider>
           <Viewport
             style={{
@@ -316,7 +322,8 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
                       {/* Search highlight layer */}
                       <CustomSearchLayer pageIndex={pageIndex} scale={scale} />
 
-                      {/* Selection layer for text interaction */}
+                      {/* Selection layer for text interaction */
+                      }
                       <SelectionLayer pageIndex={pageIndex} scale={scale} />
                       {/* Annotation layer for signatures (only when enabled) */}
                       {enableAnnotations && (
@@ -327,6 +334,14 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
                           pageHeight={height}
                           rotation={rotation}
                           selectionOutlineColor="#007ACC"
+                        />
+                      )}
+                      {enableRedaction && (
+                        <RedactionLayer
+                          pageIndex={pageIndex}
+                          scale={scale}
+                          rotation={rotation}
+                          selectionMenu={(props: SelectionMenuProps) => <InlineRedactionMenu {...props} />}
                         />
                       )}
                     </div>
@@ -341,3 +356,138 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
     </div>
   );
 }
+
+// Inline redaction menu displayed beneath selection/rectangle
+function InlineRedactionMenu(
+  { item, selected, menuWrapperProps, rect }: SelectionMenuProps & { rect?: any }
+) {
+  const { provides, state } = useRedaction() as any;
+  const [lastAdded, setLastAdded] = useState<{ page: number; id: string } | null>(null);
+  const isVisible = Boolean(selected || (lastAdded && lastAdded.page === item?.page && lastAdded.id === item?.id));
+
+  // Try to auto-select or at least show the menu for the most recently created pending item
+  useEffect(() => {
+    if (!provides) return;
+    let off: any;
+    try {
+      off = provides.onRedactionEvent?.((evt: any) => {
+        const type = evt?.type || evt?.event || evt?.name;
+        if (type && String(type).toLowerCase().includes('add')) {
+          const page = evt?.page ?? evt?.item?.page;
+          const id = evt?.id ?? evt?.item?.id;
+          if (page != null && id != null) {
+            setLastAdded({ page, id });
+            // Clear after a short period so the menu doesn't linger forever
+            setTimeout(() => setLastAdded(null), 2000);
+          }
+        }
+      });
+    } catch {}
+    return () => { try { off?.(); } catch {} };
+  }, [provides]);
+
+  // Measure wrapper to portal the menu to the document body so clicks aren't intercepted
+  const wrapperRef = useRef<HTMLDivElement | null>(null);
+  const [screenRect, setScreenRect] = useState<{ left: number; top: number; height: number } | null>(null);
+  const mergeRef = useCallback((node: any) => {
+    wrapperRef.current = node;
+    try {
+      const r = (menuWrapperProps as any)?.ref;
+      if (typeof r === 'function') r(node);
+      else if (r && typeof r === 'object') (r as any).current = node;
+    } catch {}
+  }, [menuWrapperProps]);
+
+  useEffect(() => {
+    const el = wrapperRef.current;
+    if (!el) return;
+    const rectEl = el.getBoundingClientRect();
+    setScreenRect({ left: rectEl.left, top: rectEl.top, height: rectEl.height || ((rect as any)?.size?.height ?? 0) });
+  }, [item?.id, item?.page, isVisible]);
+
+  // Keep the inline menu positioned with the selection while scrolling/resizing
+  useEffect(() => {
+    if (!isVisible) return;
+    const el = wrapperRef.current;
+    if (!el) return;
+
+    const update = () => {
+      try {
+        const r = el.getBoundingClientRect();
+        setScreenRect({ left: r.left, top: r.top, height: r.height || ((rect as any)?.size?.height ?? 0) });
+      } catch {}
+    };
+
+    const getScrollableAncestors = (node: HTMLElement | null) => {
+      const list: (HTMLElement | Window)[] = [];
+      let current: HTMLElement | null = node;
+      while (current && current !== document.body && current !== document.documentElement) {
+        const style = getComputedStyle(current);
+        const overflowY = style.overflowY;
+        const overflow = style.overflow;
+        const isScrollable = /(auto|scroll|overlay)/.test(overflowY) || /(auto|scroll|overlay)/.test(overflow);
+        if (isScrollable) list.push(current);
+        current = current.parentElement as any;
+      }
+      list.push(window);
+      return list;
+    };
+
+    const owners = getScrollableAncestors(el);
+    owners.forEach(owner => {
+      (owner as any).addEventListener?.('scroll', update, { passive: true });
+    });
+    window.addEventListener('resize', update, { passive: true });
+
+    // Observe size/position changes of the wrapper itself
+    let resizeObserver: ResizeObserver | undefined;
+    if (typeof ResizeObserver !== 'undefined') {
+      resizeObserver = new ResizeObserver(() => update());
+      resizeObserver.observe(el);
+    }
+
+    // Initial sync
+    update();
+
+    return () => {
+      owners.forEach(owner => {
+        (owner as any).removeEventListener?.('scroll', update);
+      });
+      window.removeEventListener('resize', update);
+      try { resizeObserver?.disconnect(); } catch {}
+    };
+  }, [isVisible, item?.id, item?.page, rect]);
+
+  const panel = (
+    <div
+      onPointerDownCapture={(e) => { e.preventDefault(); e.stopPropagation(); (e as any).nativeEvent?.stopImmediatePropagation?.(); }}
+      onMouseDownCapture={(e) => { e.preventDefault(); e.stopPropagation(); (e as any).nativeEvent?.stopImmediatePropagation?.(); }}
+      style={{
+        position: 'fixed',
+        left: (screenRect?.left ?? 0),
+        top: (screenRect?.top ?? 0) + (screenRect?.height ?? 0) + 8,
+        pointerEvents: 'auto',
+        zIndex: 2147483647,
+      }}
+    >
+      <div style={{ display: 'flex', gap: 8, padding: 6, background: 'var(--bg-surface)', border: '1px solid var(--border-default)', borderRadius: 8, boxShadow: 'var(--shadow-sm)', cursor: 'default' }}>
+        <button style={{ padding: '4px 8px', background: '#e03131', color: 'white', borderRadius: 6, border: 'none' }} onClick={(e) => { e.stopPropagation(); (e as any).nativeEvent?.stopImmediatePropagation?.(); (provides?.commitAllPending?.() ?? provides?.commitPending?.(item.page, item.id)); }}>
+          Apply
+        </button>
+        <button style={{ padding: '4px 8px', background: 'var(--bg-surface)', color: 'var(--text-default)', borderRadius: 6, border: '1px solid var(--border-default)' }} onClick={(e) => { e.stopPropagation(); (e as any).nativeEvent?.stopImmediatePropagation?.(); provides?.removePending?.(item.page, item.id); }}>
+          Cancel
+        </button>
+      </div>
+    </div>
+  );
+
+  const { ref: _ignoredRef, ...restWrapper } = (menuWrapperProps as any) || {};
+
+  return (
+    <>
+      <div ref={mergeRef} {...restWrapper} />
+      {isVisible && screenRect ? createPortal(panel, document.body) : null}
+    </>
+  );
+}
+

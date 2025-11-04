@@ -43,7 +43,7 @@ const ButtonSelector = <T extends string | number>({
           <Button
             key={option.value}
             variant={value === option.value ? 'filled' : 'outline'}
-            color={value === option.value ? 'var(--color-primary-500)' : 'var(--text-muted)'}
+            color={value === option.value ? 'blue' : undefined}
             onClick={() => onChange(option.value)}
             disabled={disabled || option.disabled}
             className={buttonClassName}

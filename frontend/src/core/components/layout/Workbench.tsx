@@ -163,7 +163,7 @@ export default function Workbench() {
     >
       {/* Top Controls */}
       {activeFiles.length > 0 && (
-        <TopControls
+          <TopControls
           currentView={currentView}
           setCurrentView={setCurrentView}
           customViews={customWorkbenchViews}
@@ -172,7 +172,10 @@ export default function Workbench() {
             return { fileId: f.fileId, name: f.name, versionNumber: stub?.versionNumber };
           })}
           currentFileIndex={activeFileIndex}
-          onFileSelect={setActiveFileIndex}
+          onFileSelect={(index) => {
+            // Guard against unsaved changes when switching PDFs inside viewer
+            navActions.requestNavigation(() => setActiveFileIndex(index));
+          }}
         />
       )}
 

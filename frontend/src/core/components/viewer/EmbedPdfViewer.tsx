@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Box, Center, Text, ActionIcon } from '@mantine/core';
 import CloseIcon from '@mui/icons-material/Close';
-
 import { useFileState, useFileActions } from "@app/contexts/FileContext";
 import { useFileWithUrl } from "@app/hooks/useFileWithUrl";
 import { useViewer } from "@app/contexts/ViewerContext";
@@ -35,7 +34,7 @@ const EmbedPdfViewerContent = ({
   const viewerRef = React.useRef<HTMLDivElement>(null);
   const [isViewerHovered, setIsViewerHovered] = React.useState(false);
 
-  const { isThumbnailSidebarVisible, toggleThumbnailSidebar, zoomActions, spreadActions, panActions: _panActions, rotationActions: _rotationActions, getScrollState, getZoomState, getSpreadState, getRotationState, isAnnotationMode, isAnnotationsVisible, exportActions } = useViewer();
+  const { isThumbnailSidebarVisible, toggleThumbnailSidebar, zoomActions, spreadActions, panActions: _panActions, rotationActions: _rotationActions, getScrollState, getZoomState, getSpreadState, getRotationState, isAnnotationMode, isAnnotationsVisible, exportActions, getRedactionState, redactionActions } = useViewer();
 
   // Register viewer right-rail buttons
   useViewerRightRailButtons();
@@ -69,6 +68,7 @@ const EmbedPdfViewerContent = ({
   // Check if we're in signature mode OR viewer annotation mode
   const { selectedTool } = useNavigationState();
   const isSignatureMode = selectedTool === 'sign';
+  const isRedactionTool = selectedTool === 'redact';
 
   // Enable annotations when: in sign mode, OR annotation mode is active, OR we want to show existing annotations
   const shouldEnableAnnotations = isSignatureMode || isAnnotationMode || isAnnotationsVisible;
@@ -192,11 +192,14 @@ const EmbedPdfViewerContent = ({
     const checkForChanges = () => {
       // Check for annotation changes via history
       const hasAnnotationChanges = historyApiRef.current?.canUndo() || false;
+      // Check for pending redactions via redaction bridge state
+      const redactionPending = getRedactionState()?.hasPending || false;
 
       console.log('[Viewer] Checking for unsaved changes:', {
-        hasAnnotationChanges
+        hasAnnotationChanges,
+        redactionPending
       });
-      return hasAnnotationChanges;
+      return hasAnnotationChanges || redactionPending;
     };
 
     console.log('[Viewer] Registering unsaved changes checker');
@@ -213,20 +216,25 @@ const EmbedPdfViewerContent = ({
     if (!currentFile || activeFileIds.length === 0) return;
 
     try {
-      console.log('[Viewer] Applying changes - exporting PDF with annotations');
+      console.log('[Viewer] Applying changes - exporting PDF');
 
-      // Step 1: Export PDF with annotations using EmbedPDF
-      const arrayBuffer = await exportActions.saveAsCopy();
-      if (!arrayBuffer) {
-        throw new Error('Failed to export PDF');
+      let file: File | null = null;
+      // If redaction pending, export redacted copy
+      const redactionPending = getRedactionState()?.hasPending || false;
+      if (redactionPending) {
+        await redactionActions.applyRedactions();
+        const redactedBlob = await redactionActions.exportRedactedBlob();
+        if (!redactedBlob) throw new Error('Failed to export redacted PDF');
+        const filename = currentFile.name || 'document.pdf';
+        file = new File([redactedBlob], filename, { type: 'application/pdf' });
+      } else {
+        // Otherwise export annotations copy
+        const arrayBuffer = await exportActions.saveAsCopy();
+        if (!arrayBuffer) throw new Error('Failed to export PDF');
+        const blob = new Blob([arrayBuffer], { type: 'application/pdf' });
+        const filename = currentFile.name || 'document.pdf';
+        file = new File([blob], filename, { type: 'application/pdf' });
       }
-
-      console.log('[Viewer] Exported PDF size:', arrayBuffer.byteLength);
-
-      // Step 2: Convert ArrayBuffer to File
-      const blob = new Blob([arrayBuffer], { type: 'application/pdf' });
-      const filename = currentFile.name || 'document.pdf';
-      const file = new File([blob], filename, { type: 'application/pdf' });
 
       // Step 3: Create StirlingFiles and stubs for version history
       const parentStub = selectors.getStirlingFileStub(activeFileIds[0]);
@@ -290,6 +298,7 @@ const EmbedPdfViewerContent = ({
               file={effectiveFile.file}
               url={effectiveFile.url}
               enableAnnotations={shouldEnableAnnotations}
+              enableRedaction={isRedactionTool}
               signatureApiRef={signatureApiRef as React.RefObject<any>}
               historyApiRef={historyApiRef as React.RefObject<any>}
               onSignatureAdded={() => {
@@ -345,6 +354,7 @@ const EmbedPdfViewerContent = ({
       {/* Navigation Warning Modal */}
       {!previewFile && (
         <NavigationWarningModal
+          message={"You have unsaved changes (redactions and/or annotations)."}
           onApplyAndContinue={async () => {
             await applyChanges();
           }}

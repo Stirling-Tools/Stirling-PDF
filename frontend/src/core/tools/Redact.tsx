@@ -1,7 +1,6 @@
 import { useTranslation } from "react-i18next";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Alert, Button, Stack, Text } from "@mantine/core";
-import VisibilityOffRoundedIcon from "@mui/icons-material/VisibilityOffRounded";
 import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
 import type { MiddleStepConfig } from "@app/components/tools/shared/createToolFlow";
 import RedactModeSelector from "@app/components/tools/redact/RedactModeSelector";
@@ -12,28 +11,19 @@ import { BaseToolProps, ToolComponent } from "@app/types/tool";
 import { useRedactModeTips, useRedactWordsTips, useRedactAdvancedTips } from "@app/components/tooltips/useRedactTips";
 import RedactAdvancedSettings from "@app/components/tools/redact/RedactAdvancedSettings";
 import WordsToRedactInput from "@app/components/tools/redact/WordsToRedactInput";
-import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
+import { useViewer } from "@app/contexts/ViewerContext";
 import { useNavigationActions, useNavigationState } from "@app/contexts/NavigationContext";
-import ManualRedactionWorkbenchView from "@app/components/tools/redact/ManualRedactionWorkbenchView";
-import type { ManualRedactionWorkbenchData } from "@app/types/redact";
+import ButtonSelector from "@app/components/shared/ButtonSelector";
 import { useFileContext } from "@app/contexts/file/fileHooks";
 import type { StirlingFile } from "@app/types/fileContext";
-
-const MANUAL_VIEW_ID = "manualRedactionWorkbench";
-const MANUAL_WORKBENCH_ID = "custom:manualRedactionWorkbench" as const;
+import { createStirlingFilesAndStubs } from "@app/services/fileStubHelpers";
 
 const Redact = (props: BaseToolProps) => {
   const { t } = useTranslation();
-  const {
-    registerCustomWorkbenchView,
-    unregisterCustomWorkbenchView,
-    setCustomWorkbenchViewData,
-    clearCustomWorkbenchViewData,
-  } = useToolWorkflow();
-  const { actions: navigationActions } = useNavigationActions();
   const navigationState = useNavigationState();
-  const { actions: fileActions } = useFileContext();
-  const manualWorkbenchIcon = useMemo(() => <VisibilityOffRoundedIcon fontSize="small" />, []);
+  const { actions: navActions } = useNavigationActions();
+  const { actions: fileActions, selectors } = useFileContext();
+  const { redactionActions, getRedactionDesiredMode, registerImmediateRedactionModeUpdate } = useViewer();
 
   // State for managing step collapse status
   const [methodCollapsed, setMethodCollapsed] = useState(false);
@@ -47,81 +37,30 @@ const Redact = (props: BaseToolProps) => {
     props
   );
 
-  const createManualWorkbenchData = useCallback((file: StirlingFile): ManualRedactionWorkbenchData => ({
-    fileId: file.fileId,
-    file,
-    fileName: file.name,
-    onExport: async (exportedFile: File) => {
-      await fileActions.addFiles([exportedFile], { selectFiles: true });
-    },
-    onExit: () => {
-      clearCustomWorkbenchViewData(MANUAL_VIEW_ID);
-      navigationActions.setWorkbench('fileEditor');
-    },
-  }), [clearCustomWorkbenchViewData, fileActions, navigationActions]);
-
-  const handleOpenManualEditor = useCallback(() => {
-    if (base.selectedFiles.length !== 1) {
-      return;
-    }
+  // Manual apply/export using the viewer
+  const handleApplyAndSave = useCallback(async () => {
+    if (base.selectedFiles.length !== 1) return;
     const [selected] = base.selectedFiles as [StirlingFile];
-    const workbenchData = createManualWorkbenchData(selected);
-    setCustomWorkbenchViewData(MANUAL_VIEW_ID, workbenchData);
-    navigationActions.setWorkbench(MANUAL_WORKBENCH_ID);
-  }, [base.selectedFiles, createManualWorkbenchData, navigationActions, setCustomWorkbenchViewData]);
-
-  useEffect(() => {
-    registerCustomWorkbenchView({
-      id: MANUAL_VIEW_ID,
-      workbenchId: MANUAL_WORKBENCH_ID,
-      label: t('redact.manual.workbenchLabel', 'Manual redaction'),
-      icon: manualWorkbenchIcon,
-      component: ManualRedactionWorkbenchView,
-    });
-
-    return () => {
-      clearCustomWorkbenchViewData(MANUAL_VIEW_ID);
-      unregisterCustomWorkbenchView(MANUAL_VIEW_ID);
-    };
-  }, [
-    clearCustomWorkbenchViewData,
-    manualWorkbenchIcon,
-    registerCustomWorkbenchView,
-    t,
-    unregisterCustomWorkbenchView,
-  ]);
-
-  useEffect(() => {
-    if (base.params.parameters.mode !== 'manual') {
-      clearCustomWorkbenchViewData(MANUAL_VIEW_ID);
-      if (navigationState.workbench === MANUAL_WORKBENCH_ID) {
-        navigationActions.setWorkbench('fileEditor');
-      }
-    }
-  }, [
-    base.params.parameters.mode,
-    clearCustomWorkbenchViewData,
-    navigationActions,
-    navigationState.workbench,
-  ]);
-
-  useEffect(() => {
-    if (
-      navigationState.workbench !== MANUAL_WORKBENCH_ID ||
-      base.params.parameters.mode !== 'manual' ||
-      base.selectedFiles.length !== 1
-    ) {
-      return;
-    }
-    const [selected] = base.selectedFiles as [StirlingFile];
-    setCustomWorkbenchViewData(MANUAL_VIEW_ID, createManualWorkbenchData(selected));
-  }, [
-    base.params.parameters.mode,
-    base.selectedFiles,
-    createManualWorkbenchData,
-    navigationState.workbench,
-    setCustomWorkbenchViewData,
-  ]);
+    // Apply pending redactions in viewer
+    await redactionActions.applyRedactions();
+    const blob = await redactionActions.exportRedactedBlob();
+    if (!blob) return;
+    const outputName = (() => {
+      const name = selected.name || 'document.pdf';
+      const lower = name.toLowerCase();
+      if (lower.includes('redacted')) return name;
+      const i = name.lastIndexOf('.');
+      if (i === -1) return `${name}_redacted.pdf`;
+      const baseName = name.slice(0, i);
+      const ext = name.slice(i);
+      return `${baseName}_redacted${ext}`;
+    })();
+    const exportedFile = new File([blob], outputName, { type: 'application/pdf' });
+    const parentStub = selectors.getStirlingFileStub(selected.fileId);
+    if (!parentStub) return;
+    const { stirlingFiles, stubs } = await createStirlingFilesAndStubs([exportedFile], parentStub, 'redact');
+    await fileActions.consumeFiles([selected.fileId], stirlingFiles, stubs);
+  }, [base.selectedFiles, redactionActions, selectors, fileActions]);
 
   // Tooltips for each step
   const modeTips = useRedactModeTips();
@@ -129,6 +68,56 @@ const Redact = (props: BaseToolProps) => {
   const advancedTips = useRedactAdvancedTips();
 
   const isManualMode = base.params.parameters.mode === 'manual';
+  const isRedactToolActive = navigationState.selectedTool === 'redact';
+  // Drive button highlight from user's desired mode so it stays blue even when plugin temporarily clears it
+  const [activeMode, setActiveMode] = useState<'text' | 'area' | null>(getRedactionDesiredMode?.() ?? null);
+  useEffect(() => {
+    registerImmediateRedactionModeUpdate((mode) => setActiveMode(mode));
+  }, [registerImmediateRedactionModeUpdate]);
+
+  // Track first-time initialization for manual mode
+  const manualInitRef = useRef(false);
+
+  // When switching to Manual the first time, jump to viewer and default to Area selection
+  useEffect(() => {
+    if (!isManualMode) {
+      manualInitRef.current = false;
+      return;
+    }
+
+    if (!manualInitRef.current) {
+      manualInitRef.current = true;
+      // Navigate to viewer first
+      if (navigationState.workbench !== 'viewer') {
+        navActions.setWorkbench('viewer');
+      }
+      // Then activate area mode after a short delay to ensure plugin is ready
+      setTimeout(() => {
+        navActions.setSelectedTool('redact');
+        redactionActions.activateArea();
+        setActiveMode('area');
+      }, 100);
+    }
+  }, [isManualMode, navigationState.workbench, navActions, redactionActions]);
+
+  // Ensure one mode is always active when manual redaction is enabled
+  useEffect(() => {
+    if (!isManualMode || navigationState.workbench !== 'viewer') return;
+    // If no mode is active and manual redaction is enabled, default to area
+    if (!activeMode) {
+      setActiveMode('area');
+      redactionActions.activateArea();
+    }
+  }, [isManualMode, activeMode, navigationState.workbench, redactionActions]);
+
+  // If user triggers redaction mode from viewer (desiredMode present) while tool is open,
+  // automatically switch panel to Manual so the manual controls are visible.
+  useEffect(() => {
+    const desired = getRedactionDesiredMode?.() ?? null;
+    if (navigationState.selectedTool === 'redact' && desired && base.params.parameters.mode !== 'manual') {
+      base.params.updateParameter('mode', 'manual' as any);
+    }
+  }, [navigationState.selectedTool, getRedactionDesiredMode, base.params, base.params.parameters.mode]);
 
   const isExecuteDisabled = () => {
     if (isManualMode) {
@@ -188,41 +177,54 @@ const Redact = (props: BaseToolProps) => {
         },
       );
     } else if (isManualMode) {
-      const manualHasFile = base.selectedFiles.length > 0;
-      const manualHasSingleFile = base.selectedFiles.length === 1;
-      const manualTooManyFiles = base.selectedFiles.length > 1;
-      const selectedName = manualHasSingleFile ? base.selectedFiles[0].name : null;
 
-      steps.push({
-        title: t("redact.manual.stepTitle", "Manual redaction editor"),
+  steps.push({
+        title: t("redact.manual.stepTitle", "Manual redaction"),
         isCollapsed: false,
         content: (
           <Stack gap="sm">
-            <Text size="sm">
-              {manualHasSingleFile
-                ? t("redact.manual.stepDescriptionSelected", "Launch the editor to mark redactions on {{file}}.", { file: selectedName })
-                : t("redact.manual.stepDescription", "Open the embedded redaction editor to draw boxes or search for sensitive text.")}
-            </Text>
-            {manualTooManyFiles && (
-              <Alert color="red" variant="light">
-                {t("redact.manual.multipleNotSupported", "Manual redaction works on one PDF at a time. Deselect extra files to continue.")}
+            {/* View mode guard - only after initial manual init */}
+            {navigationState.workbench !== 'viewer' && manualInitRef.current && (
+              <Alert color="yellow" variant="light">
+                <Stack gap={6}>
+                  <Text size="sm">{t('redact.manual.viewerRequired', 'You must return to the viewer to use manual redaction.')}</Text>
+                  <Button size="xs" variant="filled" color="blue" onClick={() => navActions.setWorkbench('viewer')}>
+                    {t('redact.manual.goToViewer', 'Go to viewer')}
+                  </Button>
+                </Stack>
               </Alert>
             )}
-            {!manualHasFile && (
-              <Alert color="blue" variant="light">
-                {t("redact.manual.noFileSelectedInfo", "Select a PDF from the file sidebar to begin manual redaction.")}
-              </Alert>
-            )}
-            <Button
-              variant="filled"
-              color="blue"
-              disabled={!manualHasSingleFile || manualTooManyFiles}
-              onClick={handleOpenManualEditor}
-            >
-              {t("redact.manual.openEditorCta", "Open redaction editor")}
-            </Button>
+
+            {/* Allow multiple files; viewer dropdown lets users switch between them */}
+
+            {/* Label and mode toggles */}
+            <Text size="sm" fw={500}>{t('redact.manual.applyBy', 'Apply redaction by')}</Text>
+            <ButtonSelector
+              value={activeMode || undefined}
+              onChange={(mode: 'text' | 'area') => {
+                // Prevent deselection - always keep one mode active
+                // If clicking the same button, do nothing (don't clear)
+                if (activeMode === mode) return;
+                
+                // Immediately set and persist requested mode
+                setActiveMode(mode);
+                navActions.setSelectedTool('redact');
+                if (mode === 'text') {
+                  redactionActions.activateText();
+                } else if (mode === 'area') {
+                  redactionActions.activateArea();
+                }
+              }}
+              disabled={navigationState.workbench !== 'viewer'}
+              options={[
+                { value: 'text', label: t('redact.manual.buttons.text', 'Text Selection') },
+                { value: 'area', label: t('redact.manual.buttons.area', 'Area Selection') },
+              ]}
+            />
+
+            {/* Save button is now consolidated in right rail. */}
           </Stack>
-        ),
+        )
       });
     }
 
@@ -233,7 +235,8 @@ const Redact = (props: BaseToolProps) => {
     files: {
       selectedFiles: base.selectedFiles,
       isCollapsed: base.hasResults,
-      minFiles: isManualMode ? 1 : undefined,
+      // Allow multiple files for manual redaction (viewer dropdown handles switching)
+      minFiles: undefined,
     },
     steps: buildSteps(),
     executeButton: isManualMode ? undefined : {
