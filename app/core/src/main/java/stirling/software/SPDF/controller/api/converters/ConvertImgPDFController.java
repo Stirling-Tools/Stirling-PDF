@@ -147,16 +147,16 @@ public class ConvertImgPDFController {
 
                 if (singleImage) {
                     // Run the Python script to convert PNG to WebP
-                    command.add(tempFile.toString());
-                    command.add(tempOutputDir.toString());
+                    command.add(tempFile.getAbsolutePath());
+                    command.add(tempOutputDir.getAbsolutePath());
                     command.add("--single");
                 } else {
                     TempFile tempPdfPath = new TempFile(tempFileManager, ".pdf");
                     try (tempPdfPath) {
                         file.transferTo(tempPdfPath.getFile());
                         // Run the Python script to convert PDF to WebP
-                        command.add(tempPdfPath.toString());
-                        command.add(tempOutputDir.toString());
+                        command.add(tempPdfPath.getAbsolutePath());
+                        command.add(tempOutputDir.getAbsolutePath());
                     }
                 }
                 command.add("--dpi");

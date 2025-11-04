@@ -127,7 +127,7 @@ public class ExtractImageScansController {
                         ImageIO.write(image, "png", tempFile.toFile());
 
                         // Add temp file path to images list
-                        images.add(tempFile.toString());
+                        images.add(tempFile.toAbsolutePath().toString());
                         tempImageFiles.add(tempFile);
                     }
                 }
@@ -135,7 +135,7 @@ public class ExtractImageScansController {
                 tempInputFile = Files.createTempFile("input_", "." + extension);
                 inputFile.transferTo(tempInputFile);
                 // Add input file path to images list
-                images.add(tempInputFile.toString());
+                images.add(tempInputFile.toAbsolutePath().toString());
             }
 
             List<byte[]> processedImageBytes = new ArrayList<>();
@@ -151,7 +151,7 @@ public class ExtractImageScansController {
                                         pythonVersion,
                                         splitPhotosScript.toAbsolutePath().toString(),
                                         image,
-                                        tempDir.toString(),
+                                        tempDir.toAbsolutePath().toString(),
                                         "--angle_threshold",
                                         String.valueOf(request.getAngleThreshold()),
                                         "--tolerance",
