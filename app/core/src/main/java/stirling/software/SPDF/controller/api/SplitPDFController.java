@@ -54,15 +54,10 @@ public class SplitPDFController {
     public ResponseEntity<byte[]> splitPdf(@ModelAttribute PDFWithPageNums request)
             throws IOException {
 
-        PDDocument document = null;
         List<ByteArrayOutputStream> splitDocumentsBoas = new ArrayList<>();
-        TempFile outputTempFile = null;
 
-        try {
-            outputTempFile = new TempFile(tempFileManager, ".zip");
-
-            MultipartFile file = request.getFileInput();
-            document = pdfDocumentFactory.load(file);
+        try (TempFile outputTempFile = new TempFile(tempFileManager, ".zip");
+             PDDocument document = pdfDocumentFactory.load(request.getFileInput())) {
 
             int totalPages = document.getNumberOfPages();
             List<Integer> pageNumbers = request.getPageNumbersList(document, false);
@@ -100,9 +95,7 @@ public class SplitPDFController {
                 }
             }
 
-            document.close();
-
-            String baseFilename = GeneralUtils.removeExtension(file.getOriginalFilename());
+            String baseFilename = GeneralUtils.removeExtension(request.getFileInput().getOriginalFilename());
 
             try (ZipOutputStream zipOut =
                     new ZipOutputStream(Files.newOutputStream(outputTempFile.getPath()))) {
@@ -128,27 +121,17 @@ public class SplitPDFController {
             byte[] data = Files.readAllBytes(outputTempFile.getPath());
 
             String zipFilename =
-                    GeneralUtils.generateFilename(file.getOriginalFilename(), "_split.zip");
+                    GeneralUtils.generateFilename(request.getFileInput().getOriginalFilename(), "_split.zip");
             return WebResponseUtils.bytesToWebResponse(
                     data, zipFilename, MediaType.APPLICATION_OCTET_STREAM);
 
         } finally {
             try {
-                // Close the main document
-                if (document != null) {
-                    document.close();
-                }
-
                 // Close all ByteArrayOutputStreams
                 for (ByteArrayOutputStream baos : splitDocumentsBoas) {
                     if (baos != null) {
                         baos.close();
                     }
-                }
-
-                // Close the output temporary file
-                if (outputTempFile != null) {
-                    outputTempFile.close();
                 }
             } catch (Exception e) {
                 log.error("Error while cleaning up resources", e);

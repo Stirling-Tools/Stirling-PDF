@@ -71,7 +71,7 @@ public abstract class CreateSignatureBase implements SignatureInterface {
      * @throws CertificateException if the certificate is not valid as signing time
      * @throws IOException if no certificate could be found
      */
-    public CreateSignatureBase(KeyStore keystore, char[] pin)
+    protected CreateSignatureBase(KeyStore keystore, char[] pin)
             throws KeyStoreException,
                     UnrecoverableKeyException,
                     NoSuchAlgorithmException,
@@ -90,11 +90,9 @@ public abstract class CreateSignatureBase implements SignatureInterface {
             if (certChain != null) {
                 certificateChain = certChain;
                 cert = certChain[0];
-                if (cert instanceof X509Certificate) {
+                if (cert instanceof X509Certificate x509Certificate) {
                     // avoid expired certificate
-                    ((X509Certificate) cert).checkValidity();
-
-                    //// SigUtils.checkCertificateUsage((X509Certificate) cert);
+                    x509Certificate.checkValidity();
                 }
             }
         }

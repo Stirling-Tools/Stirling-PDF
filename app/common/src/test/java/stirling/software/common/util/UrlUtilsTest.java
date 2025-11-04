@@ -127,15 +127,11 @@ class UrlUtilsTest {
     @Test
     void testIsPortAvailable() {
         // We'll use a real server socket for this test
-        ServerSocket socket = null;
         int port = 12345; // Choose a port unlikely to be in use
 
-        try {
+        try (ServerSocket socket = new ServerSocket(port)) {
             // First check the port is available
             boolean initialAvailability = UrlUtils.isPortAvailable(port);
-
-            // Then occupy the port
-            socket = new ServerSocket(port);
 
             // Now check the port is no longer available
             boolean afterSocketCreation = UrlUtils.isPortAvailable(port);
@@ -151,27 +147,15 @@ class UrlUtilsTest {
             assertFalse(
                     UrlUtils.isPortAvailable(port),
                     "Port should not be available if exception is thrown");
-        } finally {
-            if (socket != null && !socket.isClosed()) {
-                try {
-                    socket.close();
-                } catch (IOException e) {
-                    // Ignore cleanup exceptions
-                }
-            }
         }
     }
 
     @Test
     void testFindAvailablePort() {
         // We'll create a socket on a port and ensure findAvailablePort returns a different port
-        ServerSocket socket = null;
         int startPort = 12346; // Choose a port unlikely to be in use
 
-        try {
-            // Occupy the start port
-            socket = new ServerSocket(startPort);
-
+        try (ServerSocket socket = new ServerSocket(startPort)) {
             // Find an available port
             String availablePort = UrlUtils.findAvailablePort(startPort);
 
@@ -186,7 +170,6 @@ class UrlUtilsTest {
 
             // Close our test socket before checking the found port
             socket.close();
-            socket = null;
 
             // The port should now be available
             assertTrue(
@@ -195,14 +178,6 @@ class UrlUtilsTest {
 
         } catch (IOException e) {
             // If we can't create the socket, skip this assertion
-        } finally {
-            if (socket != null && !socket.isClosed()) {
-                try {
-                    socket.close();
-                } catch (IOException e) {
-                    // Ignore cleanup exceptions
-                }
-            }
         }
     }
 
@@ -227,19 +202,16 @@ class UrlUtilsTest {
     @Test
     void testFindAvailablePortWithSequentialUsedPorts() {
         // This test checks that findAvailablePort correctly skips multiple occupied ports
-        ServerSocket socket1 = null;
-        ServerSocket socket2 = null;
         int startPort = 34567; // Another unlikely-to-be-used port
 
-        try {
-            // First verify the port is available
-            if (!UrlUtils.isPortAvailable(startPort)) {
-                return;
-            }
+        // First verify the port is available
+        if (!UrlUtils.isPortAvailable(startPort)) {
+            return;
+        }
 
-            // Occupy two sequential ports
-            socket1 = new ServerSocket(startPort);
-            socket2 = new ServerSocket(startPort + 1);
+        // Occupy two sequential ports
+        try (ServerSocket socket1 = new ServerSocket(startPort);
+             ServerSocket socket2 = new ServerSocket(startPort + 1)) {
 
             // Find an available port starting from our occupied range
             String availablePort = UrlUtils.findAvailablePort(startPort);
@@ -254,17 +226,8 @@ class UrlUtilsTest {
             try (ServerSocket testSocket = new ServerSocket(foundPort)) {
                 assertTrue(testSocket.isBound(), "The found port should be bindable");
             }
-
         } catch (IOException e) {
             // Skip test if we encounter IO exceptions
-        } finally {
-            // Clean up resources
-            try {
-                if (socket1 != null && !socket1.isClosed()) socket1.close();
-                if (socket2 != null && !socket2.isClosed()) socket2.close();
-            } catch (IOException e) {
-                // Ignore cleanup exceptions
-            }
         }
     }
 
