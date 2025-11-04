@@ -1,7 +1,6 @@
 package stirling.software.common.service;
 
 import java.io.IOException;
-import java.util.Map;
 import java.util.Locale;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;

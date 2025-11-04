@@ -385,6 +385,7 @@ public class CompressController {
             throw e;
         }
     }
+
     private static String generateMaskHash(PDImageXObject image) {
         try {
             PDImageXObject mask = image.getMask();
@@ -851,6 +852,7 @@ public class CompressController {
                     metadataHash.substring(0, Math.min(4, metadataHash.length())));
         }
     }
+
     // Scale factors for different optimization levels (lower => smaller)
     private static double getScaleFactorForLevel(int optimizeLevel) {
         return switch (optimizeLevel) {
@@ -907,57 +909,6 @@ public class CompressController {
             return Math.min(9, currentLevel + 2);
         }
         return Math.min(9, currentLevel + 1);
-    }
-
-    public TempFile compressImagesInPDF(
-            Path pdfFile, double scaleFactor, float jpegQuality, boolean convertToGrayscale)
-            throws Exception {
-        TempFile newCompressedPDF = tempFileManager.createManagedTempFile(".pdf");
-        long originalFileSize = Files.size(pdfFile);
-        log.info(
-                "Starting image compression with scale factor: {}, JPEG quality: {}, grayscale: {}"
-                        + " on file size: {}",
-                scaleFactor,
-                jpegQuality,
-                convertToGrayscale,
-                GeneralUtils.formatBytes(originalFileSize));
-
-        try (PDDocument doc = pdfDocumentFactory.load(pdfFile)) {
-            Map<ImageIdentity, List<ImageReference>> uniqueImages = findImages(doc);
-
-            CompressionStats stats = new CompressionStats();
-            stats.uniqueImagesCount = uniqueImages.size();
-            calculateImageStats(uniqueImages, stats);
-
-            Map<ImageIdentity, PDImageXObject> compressedVersions =
-                    createCompressedImages(
-                            doc, uniqueImages, scaleFactor, jpegQuality, convertToGrayscale, stats);
-
-            replaceImages(doc, uniqueImages, compressedVersions);
-
-            logCompressionStats(stats, originalFileSize);
-
-            compressedVersions.clear();
-            uniqueImages.clear();
-
-            log.info("Saving compressed PDF to {}", newCompressedPDF.getPath());
-            doc.save(newCompressedPDF.getAbsolutePath());
-
-            long compressedFileSize = Files.size(newCompressedPDF.getPath());
-            double overallReduction = 100.0 - ((compressedFileSize * 100.0) / originalFileSize);
-            log.info(
-                    "Overall PDF compression: {} → {} (reduced by {}%)",
-                    GeneralUtils.formatBytes(originalFileSize),
-                    GeneralUtils.formatBytes(compressedFileSize),
-                    String.format("%.1f", overallReduction));
-            return newCompressedPDF;
-        } catch (IOException e) {
-            newCompressedPDF.close();
-            throw ExceptionUtils.handlePdfException(e, "image compression");
-        } catch (Exception e) {
-            newCompressedPDF.close();
-            throw ExceptionUtils.wrapException(e, "image compression");
-        }
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/compress-pdf")
@@ -1364,123 +1315,6 @@ public class CompressController {
             } catch (InterruptedException e) {
                 throw ExceptionUtils.createProcessingInterruptedException("QPDF", e);
             }
-        }
-    }
-
-    private static class ImageIdentity {
-        private final String pixelHash; // Hash of pixel data
-        private final String colorSpace; // e.g., "DeviceRGB", "DeviceCMYK"
-        private final int bitsPerComponent;
-        private final boolean hasMask; // Has transparency
-        private final String maskHash; // Hash of mask data if present
-        private final int width; // Image width in pixels
-        private final int height; // Image height in pixels
-        private final String filter; // Image filter/compression type
-        private final String colorProfile; // Color profile information
-        private final long streamLength; // Original stream length
-        private final String imageType; // Image type (JPEG, PNG, etc.)
-        private final String decodeParams; // Decode parameters hash
-        private final String metadataHash; // Hash of image metadata
-
-        public ImageIdentity(PDImageXObject image) throws IOException {
-            this.pixelHash = generateImageHash(image);
-            this.colorSpace = image.getColorSpace().getName();
-            this.bitsPerComponent = image.getBitsPerComponent();
-            this.hasMask = image.getMask() != null || image.getSoftMask() != null;
-            this.maskHash = hasMask ? generateMaskHash(image) : null;
-            this.width = image.getWidth();
-            this.height = image.getHeight();
-            this.filter = getImageFilter(image);
-            this.colorProfile = getColorProfileInfo(image);
-            this.streamLength = image.getCOSObject().getLength();
-            this.imageType = getImageType(image);
-            this.decodeParams = generateDecodeParamsHash(image);
-            this.metadataHash = this.generateMetadataHash(image);
-        }
-
-        // Generate hash of image metadata
-        private String generateMetadataHash(PDImageXObject image) {
-            try {
-                StringBuilder metadata = new StringBuilder();
-
-                // Add image dimensions
-                metadata.append(image.getWidth()).append("x").append(image.getHeight());
-
-                // Add color space info
-                metadata.append("_").append(image.getColorSpace().getName());
-
-                // Add bits per component
-                metadata.append("_").append(image.getBitsPerComponent());
-
-                // Add stream length
-                metadata.append("_").append(image.getCOSObject().getLength());
-
-                // Add mask information
-                if (image.getMask() != null) {
-                    metadata.append("_mask");
-                }
-                if (image.getSoftMask() != null) {
-                    metadata.append("_softmask");
-                }
-
-                return bytesToHexString(generateMD5(metadata.toString().getBytes()));
-            } catch (Exception e) {
-                return "fallback-meta-" + System.identityHashCode(image);
-            }
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof ImageIdentity that)) return false;
-            return bitsPerComponent == that.bitsPerComponent
-                    && hasMask == that.hasMask
-                    && width == that.width
-                    && height == that.height
-                    && streamLength == that.streamLength
-                    && Objects.equals(pixelHash, that.pixelHash)
-                    && Objects.equals(colorSpace, that.colorSpace)
-                    && Objects.equals(maskHash, that.maskHash)
-                    && Objects.equals(filter, that.filter)
-                    && Objects.equals(colorProfile, that.colorProfile)
-                    && Objects.equals(imageType, that.imageType)
-                    && Objects.equals(decodeParams, that.decodeParams)
-                    && Objects.equals(metadataHash, that.metadataHash);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(
-                    pixelHash,
-                    colorSpace,
-                    bitsPerComponent,
-                    hasMask,
-                    maskHash,
-                    width,
-                    height,
-                    filter,
-                    colorProfile,
-                    streamLength,
-                    imageType,
-                    decodeParams,
-                    metadataHash);
-        }
-
-        @Override
-        public String toString() {
-            return String.format(
-                    "%s_%s_%d_%dx%d_%s_%s_%d_%s_%s_%s",
-                    pixelHash.substring(0, Math.min(8, pixelHash.length())),
-                    colorSpace,
-                    bitsPerComponent,
-                    width,
-                    height,
-                    filter,
-                    imageType,
-                    streamLength,
-                    hasMask ? "masked" : "nomask",
-                    decodeParams.substring(0, Math.min(4, decodeParams.length())),
-                    metadataHash.substring(0, Math.min(4, metadataHash.length())));
         }
     }
 }
