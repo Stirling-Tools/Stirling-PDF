@@ -14,7 +14,6 @@ import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.rendering.ImageType;
@@ -54,6 +53,7 @@ import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.common.util.TempDirectory;
 import stirling.software.common.util.TempFile;
+import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @RestController
@@ -112,9 +112,7 @@ public class ConvertImgPDFController {
                 PdfUtils.convertFromPdf(
                         pdfDocumentFactory,
                         newPdfBytes,
-                        "webp".equalsIgnoreCase(imageFormat)
-                                ? "png"
-                                : imageFormat.toUpperCase(),
+                        "webp".equalsIgnoreCase(imageFormat) ? "png" : imageFormat.toUpperCase(),
                         colorTypeResult,
                         singleImage,
                         dpi,
@@ -130,7 +128,8 @@ public class ConvertImgPDFController {
                 && CheckProgramInstall.isPythonAvailable()) {
             TempFile tempFile = new TempFile(tempFileManager, ".png");
             TempDirectory tempOutputDir = new TempDirectory(tempFileManager);
-            try (tempFile; tempOutputDir) {
+            try (tempFile;
+                    tempOutputDir) {
                 try (FileOutputStream fos = new FileOutputStream(tempFile.getFile())) {
                     fos.write(result);
                     fos.flush();
@@ -202,8 +201,7 @@ public class ConvertImgPDFController {
         }
 
         if (result == null) {
-            throw new IllegalStateException(
-                    "Image conversion failed - no result data available");
+            throw new IllegalStateException("Image conversion failed - no result data available");
         }
 
         if (singleImage) {
@@ -412,9 +410,10 @@ public class ConvertImgPDFController {
     private byte[] rearrangePdfPages(MultipartFile pdfFile, String[] pageOrderArr)
             throws IOException {
         try (PDDocument document = pdfDocumentFactory.load(pdfFile);
-             ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+                ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
             int totalPages = document.getNumberOfPages();
-            List<Integer> newPageOrder = GeneralUtils.parsePageList(pageOrderArr, totalPages, false);
+            List<Integer> newPageOrder =
+                    GeneralUtils.parsePageList(pageOrderArr, totalPages, false);
 
             // Create a new list to hold the pages in the new order
             List<PDPage> newPages = new ArrayList<>();

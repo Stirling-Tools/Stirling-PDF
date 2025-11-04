@@ -129,15 +129,17 @@ class UrlUtilsTest {
         // We'll use a real server socket for this test
         int port = 12345; // Choose a port unlikely to be in use
 
-        try (ServerSocket socket = new ServerSocket(port)) {
-            // First check the port is available
-            boolean initialAvailability = UrlUtils.isPortAvailable(port);
+        // First check the port is available
+        boolean initialAvailability = UrlUtils.isPortAvailable(port);
 
+        // Assert that the port is available initially
+        assertTrue(initialAvailability, "Port should be available initially");
+
+        try (ServerSocket socket = new ServerSocket(port)) {
             // Now check the port is no longer available
             boolean afterSocketCreation = UrlUtils.isPortAvailable(port);
 
             // Assert
-            assertTrue(initialAvailability, "Port should be available initially");
             assertFalse(
                     afterSocketCreation, "Port should not be available after socket is created");
 
@@ -211,7 +213,7 @@ class UrlUtilsTest {
 
         // Occupy two sequential ports
         try (ServerSocket socket1 = new ServerSocket(startPort);
-             ServerSocket socket2 = new ServerSocket(startPort + 1)) {
+                ServerSocket socket2 = new ServerSocket(startPort + 1)) {
 
             // Find an available port starting from our occupied range
             String availablePort = UrlUtils.findAvailablePort(startPort);

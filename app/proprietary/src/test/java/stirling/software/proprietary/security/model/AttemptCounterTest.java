@@ -128,13 +128,15 @@ class AttemptCounterTest {
             AttemptCounter counter = new AttemptCounter();
             long window = 200L;
 
-            // Simulate: last action was exactly 'window - 10' ms ago to avoid timing races
-            setPrivateLong(counter, "lastAttemptTime", System.currentTimeMillis() - (window - 10));
+            // Simulate: last action was exactly 'window' ms ago (or slightly more to avoid timing
+            // races)
+            setPrivateLong(counter, "lastAttemptTime", System.currentTimeMillis() - (window + 10));
 
-            // Purpose: Within window -> reset should occur because the window has fully elapsed
+            // Purpose: At or past the window threshold -> reset should occur because the window has
+            // fully elapsed
             assertTrue(
                     counter.shouldReset(window),
-                    "With difference less than window, the reset window has elapsed");
+                    "With difference equal to or greater than window, the reset window has elapsed");
         }
 
         @Test

@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -57,7 +56,7 @@ public class SplitPDFController {
         List<ByteArrayOutputStream> splitDocumentsBoas = new ArrayList<>();
 
         try (TempFile outputTempFile = new TempFile(tempFileManager, ".zip");
-             PDDocument document = pdfDocumentFactory.load(request.getFileInput())) {
+                PDDocument document = pdfDocumentFactory.load(request.getFileInput())) {
 
             int totalPages = document.getNumberOfPages();
             List<Integer> pageNumbers = request.getPageNumbersList(document, false);
@@ -95,7 +94,8 @@ public class SplitPDFController {
                 }
             }
 
-            String baseFilename = GeneralUtils.removeExtension(request.getFileInput().getOriginalFilename());
+            String baseFilename =
+                    GeneralUtils.removeExtension(request.getFileInput().getOriginalFilename());
 
             try (ZipOutputStream zipOut =
                     new ZipOutputStream(Files.newOutputStream(outputTempFile.getPath()))) {
@@ -121,7 +121,8 @@ public class SplitPDFController {
             byte[] data = Files.readAllBytes(outputTempFile.getPath());
 
             String zipFilename =
-                    GeneralUtils.generateFilename(request.getFileInput().getOriginalFilename(), "_split.zip");
+                    GeneralUtils.generateFilename(
+                            request.getFileInput().getOriginalFilename(), "_split.zip");
             return WebResponseUtils.bytesToWebResponse(
                     data, zipFilename, MediaType.APPLICATION_OCTET_STREAM);
 

@@ -124,7 +124,7 @@ public class AutoSplitPdfController {
         List<PDDocument> splitDocuments = new ArrayList<>();
 
         try (TempFile outputTempFile = new TempFile(tempFileManager, ".zip");
-             PDDocument document = pdfDocumentFactory.load(file.getInputStream())) {
+                PDDocument document = pdfDocumentFactory.load(file.getInputStream())) {
             PDFRenderer pdfRenderer = new PDFRenderer(document);
             pdfRenderer.setSubsamplingAllowed(true);
 
