@@ -67,7 +67,6 @@ public class RequestUriUtils {
 
         // Public auth endpoints that don't require authentication
         return trimmedUri.startsWith("/login")
-                || trimmedUri.startsWith("/register")
                 || trimmedUri.startsWith("/auth/")
                 || trimmedUri.startsWith("/oauth2")
                 || trimmedUri.startsWith("/saml2")
@@ -76,8 +75,6 @@ public class RequestUriUtils {
                 || trimmedUri.startsWith("/api/v1/auth/login")
                 || trimmedUri.startsWith("/api/v1/auth/refresh")
                 || trimmedUri.startsWith("/api/v1/auth/logout")
-                || trimmedUri.startsWith("/api/v1/proprietary/ui-data/account")
-                || trimmedUri.startsWith("/api/v1/config")
                 || trimmedUri.startsWith("/v1/api-docs")
                 || trimmedUri.contains("/v1/api-docs");
     }

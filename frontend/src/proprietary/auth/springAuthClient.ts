@@ -1,3 +1,5 @@
+import { BASE_PATH } from '@app/constants/app';
+
 /**
  * Spring Auth Client
  *
@@ -6,6 +8,37 @@
  * - JWT validation handled server-side
  * - No email confirmation flow (auto-confirmed on registration)
  */
+
+const OAUTH_REDIRECT_COOKIE = 'stirling_redirect_path';
+const OAUTH_REDIRECT_COOKIE_MAX_AGE = 60 * 5; // 5 minutes
+const DEFAULT_REDIRECT_PATH = `${BASE_PATH || ''}/auth/callback`;
+
+function normalizeRedirectPath(target?: string): string {
+  if (!target || typeof target !== 'string') {
+    return DEFAULT_REDIRECT_PATH;
+  }
+
+  try {
+    const parsed = new URL(target, window.location.origin);
+    const path = parsed.pathname || '/';
+    const query = parsed.search || '';
+    return `${path}${query}`;
+  } catch {
+    const trimmed = target.trim();
+    if (!trimmed) {
+      return DEFAULT_REDIRECT_PATH;
+    }
+    return trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
+  }
+}
+
+function persistRedirectPath(path: string): void {
+  try {
+    document.cookie = `${OAUTH_REDIRECT_COOKIE}=${encodeURIComponent(path)}; path=/; max-age=${OAUTH_REDIRECT_COOKIE_MAX_AGE}; SameSite=Lax`;
+  } catch (error) {
+    console.warn('[SpringAuth] Failed to persist OAuth redirect path', error);
+  }
+}
 
 // Auth types
 export interface User {
@@ -247,6 +280,9 @@ class SpringAuthClient {
     options?: { redirectTo?: string; queryParams?: Record<string, any> };
   }): Promise<{ error: AuthError | null }> {
     try {
+      const redirectPath = normalizeRedirectPath(params.options?.redirectTo);
+      persistRedirectPath(redirectPath);
+
       // Redirect to Spring OAuth2 endpoint (Vite will proxy to backend)
       const redirectUrl = `/oauth2/authorization/${params.provider}`;
       console.log('[SpringAuth] Redirecting to OAuth:', redirectUrl);
