@@ -160,7 +160,13 @@ public class SecurityConfiguration {
 
             // Set exposed headers (headers that the browser can access)
             cfg.setExposedHeaders(
-                    List.of("WWW-Authenticate", "X-Total-Count", "X-Page-Number", "X-Page-Size"));
+                    List.of(
+                            "WWW-Authenticate",
+                            "X-Total-Count",
+                            "X-Page-Number",
+                            "X-Page-Size",
+                            "Content-Disposition",
+                            "Content-Type"));
 
             // Allow credentials (cookies, authorization headers)
             cfg.setAllowCredentials(true);
@@ -181,7 +187,11 @@ public class SecurityConfiguration {
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(
+            HttpSecurity http,
+            @Lazy IPRateLimitingFilter rateLimitingFilter,
+            @Lazy JwtAuthenticationFilter jwtAuthenticationFilter)
+            throws Exception {
         // Enable CORS only if we have configured origins
         CorsConfigurationSource corsSource = corsConfigurationSource();
         if (corsSource != null) {
@@ -200,9 +210,8 @@ public class SecurityConfiguration {
 
             http.addFilterBefore(
                             userAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-                    .addFilterBefore(
-                            rateLimitingFilter(), UsernamePasswordAuthenticationFilter.class)
-                    .addFilterBefore(jwtAuthenticationFilter(), UserAuthenticationFilter.class);
+                    .addFilterBefore(rateLimitingFilter, UsernamePasswordAuthenticationFilter.class)
+                    .addFilterBefore(jwtAuthenticationFilter, UserAuthenticationFilter.class);
 
             if (!securityProperties.getCsrfDisabled()) {
                 CookieCsrfTokenRepository cookieRepo =
@@ -310,7 +319,8 @@ public class SecurityConfiguration {
                                                 // Check if it's a public auth endpoint or static
                                                 // resource
                                                 return RequestUriUtils.isStaticResource(
-                                                    contextPath, uri) || RequestUriUtils.isPublicAuthEndpoint(
+                                                                contextPath, uri)
+                                                        || RequestUriUtils.isPublicAuthEndpoint(
                                                                 uri, contextPath);
                                             })
                                     .permitAll()

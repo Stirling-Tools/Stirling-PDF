@@ -250,7 +250,6 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
         String contextPath = request.getContextPath();
         String[] permitAllPatterns = {
             contextPath + "/login",
-            contextPath + "/signup",
             contextPath + "/register",
             contextPath + "/error",
             contextPath + "/images/",
@@ -262,7 +261,6 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
             contextPath + "/pdfjs-legacy/",
             contextPath + "/api/v1/info/status",
             contextPath + "/api/v1/auth/login",
-            contextPath + "/api/v1/auth/register",
             contextPath + "/api/v1/auth/refresh",
             contextPath + "/api/v1/auth/me",
             contextPath + "/site.webmanifest"

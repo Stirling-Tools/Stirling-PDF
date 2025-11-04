@@ -252,11 +252,4 @@ public class AuthController {
 
         return userMap;
     }
-
-    // ===========================
-    // Request/Response DTOs
-    // ===========================
-
-    /** Login request DTO */
-    public record LoginRequest(String email, String password) {}
 }
