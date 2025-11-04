@@ -10,7 +10,7 @@ import {
   measureRenderedPageRect,
   useFitWidthResize,
   ZoomViewport,
-} from '@core/utils/viewerZoom';
+} from '@app/utils/viewerZoom';
 import { getFirstPageAspectRatioFromStub } from '@app/utils/pageMetadata';
 
 export function ZoomAPIBridge() {

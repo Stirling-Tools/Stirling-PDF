@@ -7,7 +7,17 @@ import React, {
   useCallback,
 } from 'react';
 import { useNavigation } from '@app/contexts/NavigationContext';
-import { createViewerActions } from '@core/contexts/viewer/viewerActions';
+import {
+  createViewerActions,
+  ScrollActions,
+  ZoomActions,
+  PanActions,
+  SelectionActions,
+  SpreadActions,
+  RotationActions,
+  SearchActions,
+  ExportActions,
+} from '@app/contexts/viewer/viewerActions';
 import {
   BridgeRef,
   BridgeApiMap,
@@ -24,7 +34,8 @@ import {
   RotationState,
   SearchState,
   ExportState,
-} from '@core/contexts/viewer/viewerBridges';
+  ThumbnailAPIWrapper,
+} from '@app/contexts/viewer/viewerBridges';
 import { SpreadMode } from '@embedpdf/plugin-spread/react';
 
 function useImmediateNotifier<Args extends unknown[]>() {
