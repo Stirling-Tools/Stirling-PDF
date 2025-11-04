@@ -175,6 +175,13 @@ function updateFiles() {
     }
   }
   document.getElementById("fileInput-input").files = dataTransfer.files;
+
+  // Also populate hidden fileOrder to preserve visible order
+  const order = Array.from(liElements)
+    .map((li) => li.querySelector(".filename").innerText)
+    .join("\n");
+  const orderInput = document.getElementById("fileOrder");
+  if (orderInput) orderInput.value = order;
 }
 
 document.querySelector("#resetFileInputBtn").addEventListener("click", ()=>{

@@ -55,7 +55,7 @@
                   <hr>
                   <div id="languages">
                     <div class="form-check" th:each="language, iterStat : ${languages}">
-                      <input type="checkbox" th:name="languages" th:value="${language}" required th:id="${'language-' + language}" onchange="handleLangSelection()" />
+                      <input onchange="handleLangSelection()" required th:id="${'language-' + language}" th:name="languages" th:value="${language}" type="checkbox" />
                       <label th:for="${'language-' + language}" th:text="${language}"></label>
                     </div>
                   </div>
@@ -82,24 +82,24 @@
                 <div class="mb-3" th:if="${@endpointConfiguration.isGroupEnabled('OCRmyPDF')}">
                   <label class="form-label">OCR Options</label>
                   <div class="form-check">
-                    <input type="checkbox" class="form-check-input" id="sidecar" name="sidecar" value="true">
-                    <label class="form-check-label" for="sidecar">Include OCR text in sidecar text file</label>
+                    <input id="sidecar" name="sidecar" type="checkbox" value="true">
+                    <label for="sidecar">Include OCR text in sidecar text file</label>
                   </div>
                   <div class="form-check">
-                    <input type="checkbox" class="form-check-input" id="deskew" name="deskew" value="true">
-                    <label class="form-check-label" for="deskew">Deskew input file</label>
+                    <input id="deskew" name="deskew" type="checkbox" value="true">
+                    <label for="deskew">Deskew input file</label>
                   </div>
                   <div class="form-check">
-                    <input type="checkbox" class="form-check-input" id="clean" name="clean" value="true">
-                    <label class="form-check-label" for="clean">Clean input file</label>
+                    <input id="clean" name="clean" type="checkbox" value="true">
+                    <label for="clean">Clean input file</label>
                   </div>
                   <div class="form-check">
-                    <input type="checkbox" class="form-check-input" id="cleanFinal" name="cleanFinal" value="true">
-                    <label class="form-check-label" for="cleanFinal">Clean final output</label>
+                    <input id="cleanFinal" name="cleanFinal" type="checkbox" value="true">
+                    <label for="cleanFinal">Clean final output</label>
                   </div>
                   <div class="form-check">
-                    <input type="checkbox" class="form-check-input" id="removeImagesAfter" name="removeImagesAfter" value="true">
-                    <label class="form-check-label" for="removeImagesAfter">Remove images from output PDF</label>
+                    <input id="removeImagesAfter" name="removeImagesAfter" type="checkbox" value="true">
+                    <label for="removeImagesAfter">Remove images from output PDF</label>
                   </div>
                 </div>
                 <br>

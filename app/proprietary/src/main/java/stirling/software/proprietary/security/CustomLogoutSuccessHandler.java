@@ -27,6 +27,7 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.ApplicationProperties.Security.OAUTH2;
 import stirling.software.common.model.ApplicationProperties.Security.SAML2;
 import stirling.software.common.model.oauth2.KeycloakProvider;
+import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.common.util.UrlUtils;
 import stirling.software.proprietary.audit.AuditEventType;
 import stirling.software.proprietary.audit.AuditLevel;
@@ -71,9 +72,14 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
                             authentication.getClass().getSimpleName());
                     getRedirectStrategy().sendRedirect(request, response, LOGOUT_PATH);
                 }
-            } else if (!jwtService.extractToken(request).isBlank()) {
-                getRedirectStrategy().sendRedirect(request, response, LOGOUT_PATH);
             } else {
+                if (jwtService != null) {
+                    String token = jwtService.extractToken(request);
+                    if (token != null && !token.isBlank()) {
+                        getRedirectStrategy().sendRedirect(request, response, LOGOUT_PATH);
+                        return;
+                    }
+                }
                 // Redirect to login page after logout
                 String path = checkForErrors(request);
                 getRedirectStrategy().sendRedirect(request, response, path);
@@ -168,7 +174,8 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
                     log.info("Redirecting to Keycloak logout URL: {}", logoutUrl);
                 } else {
                     log.info(
-                            "No redirect URL for {} available. Redirecting to default logout URL: {}",
+                            "No redirect URL for {} available. Redirecting to default logout URL:"
+                                    + " {}",
                             registrationId,
                             logoutUrl);
                 }
@@ -249,6 +256,9 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
      * @return a sanitised <code>String</code>
      */
     private String sanitizeInput(String input) {
-        return input.replaceAll("[^a-zA-Z0-9 ]", "");
+        return RegexPatternUtils.getInstance()
+                .getInputSanitizePattern()
+                .matcher(input)
+                .replaceAll("");
     }
 }

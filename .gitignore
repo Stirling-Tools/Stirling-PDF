@@ -204,6 +204,9 @@ id_ed25519.pub
 # node_modules
 node_modules/
 
+# weasyPrint
+**/LOCAL_APPDATA_FONTCONFIG_CACHE/**
+
 # Translation temp files
 *_compact.json
 *compact*.json

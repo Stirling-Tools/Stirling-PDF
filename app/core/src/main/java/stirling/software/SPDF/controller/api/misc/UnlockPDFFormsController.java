@@ -10,6 +10,7 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.common.PDStream;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.pdmodel.interactive.form.PDField;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 
@@ -23,6 +24,8 @@ import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.common.util.WebResponseUtils;
 
 @MiscApi
@@ -34,7 +37,7 @@ public class UnlockPDFFormsController {
         this.pdfDocumentFactory = pdfDocumentFactory;
     }
 
-    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/unlock-pdf-forms")
+    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/unlock-pdf-forms")
     @StandardPdfResponse
     @Operation(
             summary = "Remove read-only property from form fields",
@@ -63,13 +66,15 @@ public class UnlockPDFFormsController {
                 COSBase xfaBase = acroForm.getCOSObject().getDictionaryObject(COSName.XFA);
                 if (xfaBase != null) {
                     try {
+                        var accessReadOnlyPattern =
+                                RegexPatternUtils.getInstance().getAccessReadOnlyPattern();
                         if (xfaBase instanceof COSStream xfaStream) {
                             InputStream is = xfaStream.createInputStream();
                             ByteArrayOutputStream baos = new ByteArrayOutputStream();
                             is.transferTo(baos);
                             String xml = baos.toString(StandardCharsets.UTF_8);
 
-                            xml = xml.replaceAll("access\\s*=\\s*\"readOnly\"", "access=\"open\"");
+                            xml = accessReadOnlyPattern.matcher(xml).replaceAll("access=\"open\"");
 
                             PDStream newStream =
                                     new PDStream(
@@ -89,9 +94,9 @@ public class UnlockPDFFormsController {
                                     String xml = baos.toString(StandardCharsets.UTF_8);
 
                                     xml =
-                                            xml.replaceAll(
-                                                    "access\\s*=\\s*\"readOnly\"",
-                                                    "access=\"open\"");
+                                            accessReadOnlyPattern
+                                                    .matcher(xml)
+                                                    .replaceAll("access=\"open\"");
 
                                     PDStream newStream =
                                             new PDStream(
@@ -108,8 +113,8 @@ public class UnlockPDFFormsController {
                 }
             }
             String mergedFileName =
-                    file.getFileInput().getOriginalFilename().replaceFirst("[.][^.]+$", "")
-                            + "_unlocked_forms.pdf";
+                    GeneralUtils.generateFilename(
+                            file.getFileInput().getOriginalFilename(), "_unlocked_forms.pdf");
             return WebResponseUtils.pdfDocToWebResponse(
                     document, Filenames.toSimpleFileName(mergedFileName));
         } catch (Exception e) {
