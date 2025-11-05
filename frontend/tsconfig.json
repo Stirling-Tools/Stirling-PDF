@@ -32,11 +32,13 @@
     "baseUrl": "./",                                  /* Specify the base directory to resolve non-relative module names. */
     "paths": {                                       /* Specify a set of entries that re-map imports to additional lookup locations. */
       "@app/*": [
+        "src/desktop/*",
         "src/proprietary/*",
         "src/core/*"
       ],
-      "@core/*": ["src/core/*"],
-      "@proprietary/*": ["src/proprietary/*"]
+      "@desktop/*": ["src/desktop/*"],
+      "@proprietary/*": ["src/proprietary/*"],
+      "@core/*": ["src/core/*"]
     },
     // "rootDirs": [],                                   /* Allow multiple folders to be treated as one when resolving modules. */
     // "typeRoots": [],                                  /* Specify multiple folders that act like './node_modules/@types'. */

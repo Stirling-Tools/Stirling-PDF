@@ -72,3 +72,59 @@ This section has moved here: [https://facebook.github.io/create-react-app/docs/d
 ### `npm run build` fails to minify
 
 This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+
+
+## Tauri
+In order to run Tauri, you first have to build the Java backend for Tauri to use.
+
+**macOS/Linux:**
+
+From the root of the repo, run:
+
+```bash
+./gradlew clean build
+./scripts/build-tauri-jlink.sh
+```
+
+**Windows**
+
+From the root of the repo, run:
+
+```batch
+gradlew clean build
+scripts\build-tauri-jlink.bat
+```
+
+### Testing the Bundled Runtime
+
+Before building the full Tauri app, you can test the bundled runtime:
+
+**macOS/Linux:**
+```bash
+./frontend/src-tauri/runtime/launch-stirling.sh
+```
+
+**Windows:**
+```cmd
+frontend\src-tauri\runtime\launch-stirling.bat
+```
+
+This will start Stirling-PDF using the bundled JRE, accessible at http://localhost:8080
+
+### Dev
+To run Tauri in development. Use the command in the `frontend` folder:
+
+```bash
+npm run tauri-dev
+```
+
+This will run the gradle runboot command and the tauri dev command concurrently, starting the app once both are stable.
+
+### Build
+To build a deployment of the Tauri app. Use this command in the `frontend` folder:
+
+```bash
+npm run tauri-build
+```
+
+This will bundle the backend and frontend into one executable for each target. Targets can be set within the `tauri.conf.json` file.

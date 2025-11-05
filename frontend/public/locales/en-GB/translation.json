@@ -4592,5 +4592,10 @@
     "passwordMustBeDifferent": "New password must be different from current password",
     "passwordChangedSuccess": "Password changed successfully! Please log in again.",
     "passwordChangeFailed": "Failed to change password. Please check your current password."
+  },
+  "backendHealth": {
+    "checking": "Checking backend status...",
+    "online": "Backend Online",
+    "offline": "Backend Offline"
   }
 }

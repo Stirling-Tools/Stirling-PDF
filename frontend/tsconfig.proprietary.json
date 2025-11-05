@@ -8,5 +8,9 @@
       ],
       "@core/*": ["src/core/*"]
     }
-  }
+  },
+  "exclude": [
+    "src/desktop",
+    "node_modules"
+  ]
 }
