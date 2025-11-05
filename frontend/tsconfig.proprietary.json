@@ -6,8 +6,11 @@
         "src/proprietary/*",
         "src/core/*"
       ],
-      "@proprietary/*": ["src/proprietary/*"],
       "@core/*": ["src/core/*"]
     }
-  }
+  },
+  "exclude": [
+    "src/desktop",
+    "node_modules"
+  ]
 }

@@ -1,7 +1,7 @@
 import React from 'react';
 import { createConfigNavSections as createCoreConfigNavSections, ConfigNavSection } from '@core/components/shared/config/configNavSections';
-import PeopleSection from '@proprietary/components/shared/config/configSections/PeopleSection';
-import TeamsSection from '@proprietary/components/shared/config/configSections/TeamsSection';
+import PeopleSection from '@app/components/shared/config/configSections/PeopleSection';
+import TeamsSection from '@app/components/shared/config/configSections/TeamsSection';
 
 /**
  * Proprietary extension of createConfigNavSections that adds workspace sections
