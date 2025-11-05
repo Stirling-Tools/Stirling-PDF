@@ -34,7 +34,13 @@ const ignorePatterns = [
   "public/**/*",
   "./public/**/*",
   "**/public/**",
-  "**/public/**/*"
+  "**/public/**/*",
+  "src-tauri/**",
+  "./src-tauri/**",
+  "src-tauri/**/*",
+  "./src-tauri/**/*",
+  "**/src-tauri/**",
+  "**/src-tauri/**/*"
 ];
 const jsGlobs = ['{src,frontend/src}/**/*.{js,jsx}'];
 const srcGlobs = ['{src,frontend/src}/**/*.{ts,tsx}'];

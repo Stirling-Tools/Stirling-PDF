@@ -8,6 +8,7 @@ import java.lang.reflect.Method;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -24,7 +25,10 @@ class CustomColorReplaceStrategyTest {
         // Create a mock file
         mockFile =
                 new MockMultipartFile(
-                        "file", "test.pdf", "application/pdf", "test pdf content".getBytes());
+                        "file",
+                        "test.pdf",
+                        MediaType.APPLICATION_PDF_VALUE,
+                        "test pdf content".getBytes());
 
         // Initialize strategy with custom colors
         strategy =

@@ -73,6 +73,10 @@
                   <option value="blackwhite" th:text="#{pdfToImage.blackwhite}"></option>
                 </select>
               </div>
+              <div class="form-check mb-3">
+                <input id="includeAnnotations" name="includeAnnotations" type="checkbox">
+                <label for="includeAnnotations" th:text="#{pdfToImage.includeAnnotations}"></label>
+              </div>
               <div class="mb-3">
                 <label for="dpi">DPI:</label>
                 <input type="number" name="dpi" class="form-control" id="dpi" min="1" step="1" value="300" required>
