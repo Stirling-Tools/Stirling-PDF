@@ -279,7 +279,7 @@ const PdfJsonEditor = ({ onComplete, onError }: BaseToolProps) => {
 
           console.log('Sending conversion request with async=true');
           const response = await apiClient.post(
-            `${CONVERSION_ENDPOINTS['pdf-json']}?async=true`,
+            `${CONVERSION_ENDPOINTS['pdf-json']}?async=true&lightweight=true`,
             formData,
             {
               responseType: 'json',
@@ -632,7 +632,7 @@ const PdfJsonEditor = ({ onComplete, onError }: BaseToolProps) => {
     }
 
     const { document, filename } = payload;
-    const serialized = JSON.stringify(document, null, 2);
+    const serialized = JSON.stringify(document);
     downloadTextAsFile(serialized, filename, 'application/json');
 
     if (onComplete) {
@@ -760,7 +760,7 @@ const PdfJsonEditor = ({ onComplete, onError }: BaseToolProps) => {
       }
 
       const { document, filename } = payload;
-      const serialized = JSON.stringify(document, null, 2);
+      const serialized = JSON.stringify(document);
       const jsonFile = new File([serialized], filename, { type: 'application/json' });
 
       const formData = new FormData();

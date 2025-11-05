@@ -18,6 +18,7 @@ import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -141,6 +142,10 @@ public class PdfJsonConversionService {
 
     private volatile boolean ghostscriptAvailable;
 
+    private static final float FLOAT_EPSILON = 0.0001f;
+    private static final float ORIENTATION_TOLERANCE = 0.0005f;
+    private static final float BASELINE_TOLERANCE = 0.5f;
+
     @PostConstruct
     private void initializeToolAvailability() {
         initializeGhostscriptAvailability();
@@ -185,11 +190,23 @@ public class PdfJsonConversionService {
     }
 
     public byte[] convertPdfToJson(MultipartFile file) throws IOException {
-        return convertPdfToJson(file, null);
+        return convertPdfToJson(file, null, false);
+    }
+
+    public byte[] convertPdfToJson(MultipartFile file, boolean lightweight) throws IOException {
+        return convertPdfToJson(file, null, lightweight);
     }
 
     public byte[] convertPdfToJson(
             MultipartFile file, Consumer<PdfJsonConversionProgress> progressCallback)
+            throws IOException {
+        return convertPdfToJson(file, progressCallback, false);
+    }
+
+    public byte[] convertPdfToJson(
+            MultipartFile file,
+            Consumer<PdfJsonConversionProgress> progressCallback,
+            boolean lightweight)
             throws IOException {
         if (file == null) {
             throw ExceptionUtils.createNullArgumentException("fileInput");
@@ -341,7 +358,7 @@ public class PdfJsonConversionService {
                 pdfJson.setMetadata(extractMetadata(document));
                 pdfJson.setXmpMetadata(extractXmpMetadata(document));
                 pdfJson.setLazyImages(useLazyImages);
-                List<PdfJsonFont> serializedFonts = new ArrayList<>(fonts.values());
+                List<PdfJsonFont> serializedFonts = cloneFontList(fonts.values());
                 serializedFonts.sort(
                         Comparator.comparing(
                                 PdfJsonFont::getUid,
@@ -385,6 +402,10 @@ public class PdfJsonConversionService {
                     scheduleDocumentCleanup(jobId);
                 }
 
+                if (lightweight) {
+                    applyLightweightTransformations(pdfJson);
+                }
+
                 progress.accept(
                         PdfJsonConversionProgress.of(95, "serializing", "Generating JSON output"));
 
@@ -394,8 +415,7 @@ public class PdfJsonConversionService {
                         pdfJson.getPages().size(),
                         useLazyImages);
 
-                byte[] result =
-                        objectMapper.writerWithDefaultPrettyPrinter().writeValueAsBytes(pdfJson);
+                byte[] result = objectMapper.writeValueAsBytes(pdfJson);
                 progress.accept(PdfJsonConversionProgress.complete());
                 return result;
             }
@@ -666,6 +686,78 @@ public class PdfJsonConversionService {
     private String buildFontKey(Integer pageNumber, String fontId) {
         int page = pageNumber != null ? pageNumber : -1;
         return buildFontKey(page, fontId);
+    }
+
+    private List<PdfJsonFont> cloneFontList(Collection<PdfJsonFont> source) {
+        List<PdfJsonFont> clones = new ArrayList<>();
+        if (source == null) {
+            return clones;
+        }
+        for (PdfJsonFont font : source) {
+            PdfJsonFont copy = cloneFont(font);
+            if (copy != null) {
+                clones.add(copy);
+            }
+        }
+        return clones;
+    }
+
+    private PdfJsonFont cloneFont(PdfJsonFont font) {
+        if (font == null) {
+            return null;
+        }
+        return PdfJsonFont.builder()
+                .id(font.getId())
+                .pageNumber(font.getPageNumber())
+                .uid(font.getUid())
+                .baseName(font.getBaseName())
+                .subtype(font.getSubtype())
+                .encoding(font.getEncoding())
+                .cidSystemInfo(font.getCidSystemInfo())
+                .embedded(font.getEmbedded())
+                .program(font.getProgram())
+                .programFormat(font.getProgramFormat())
+                .webProgram(font.getWebProgram())
+                .webProgramFormat(font.getWebProgramFormat())
+                .pdfProgram(font.getPdfProgram())
+                .pdfProgramFormat(font.getPdfProgramFormat())
+                .toUnicode(font.getToUnicode())
+                .standard14Name(font.getStandard14Name())
+                .fontDescriptorFlags(font.getFontDescriptorFlags())
+                .ascent(font.getAscent())
+                .descent(font.getDescent())
+                .capHeight(font.getCapHeight())
+                .xHeight(font.getXHeight())
+                .italicAngle(font.getItalicAngle())
+                .unitsPerEm(font.getUnitsPerEm())
+                .cosDictionary(font.getCosDictionary())
+                .build();
+    }
+
+    private void applyLightweightTransformations(PdfJsonDocument document) {
+        if (document == null) {
+            return;
+        }
+        List<PdfJsonFont> fonts = document.getFonts();
+        if (fonts == null) {
+            return;
+        }
+        for (PdfJsonFont font : fonts) {
+            if (font == null) {
+                continue;
+            }
+            boolean hasUsableProgram =
+                    hasPayload(font.getPdfProgram())
+                            || hasPayload(font.getWebProgram())
+                            || hasPayload(font.getProgram());
+            if (hasUsableProgram) {
+                font.setCosDictionary(null);
+            }
+        }
+    }
+
+    private boolean hasPayload(String value) {
+        return value != null && !value.isBlank();
     }
 
     private PdfJsonFont buildFontModel(
@@ -3301,6 +3393,7 @@ public class PdfJsonConversionService {
 
         private int currentPage = 1;
         private Map<PDFont, String> currentFontResources = Collections.emptyMap();
+        private int currentZOrderCounter;
 
         TextCollectingStripper(
                 PDDocument document,
@@ -3320,6 +3413,7 @@ public class PdfJsonConversionService {
             currentPage = getCurrentPageNo();
             currentFontResources =
                     pageFontResources.getOrDefault(currentPage, Collections.emptyMap());
+            currentZOrderCounter = 0;
         }
 
         @Override
@@ -3331,41 +3425,288 @@ public class PdfJsonConversionService {
             List<PdfJsonTextElement> pageElements =
                     textByPage.computeIfAbsent(currentPage, key -> new ArrayList<>());
 
+            TextRunAccumulator accumulator = null;
             for (TextPosition position : textPositions) {
                 PDFont font = position.getFont();
                 String fontId = registerFont(font);
-                PdfJsonTextElement element = new PdfJsonTextElement();
-                element.setText(position.getUnicode());
-                element.setFontId(fontId);
-                element.setFontSize(position.getFontSizeInPt());
-                element.setFontSizeInPt(position.getFontSizeInPt());
-                element.setX(position.getXDirAdj());
-                element.setY(position.getYDirAdj());
-                element.setWidth(position.getWidthDirAdj());
-                element.setHeight(position.getHeightDir());
-                element.setTextMatrix(extractMatrix(position));
-                element.setFontMatrixSize(computeFontMatrixSize(element.getTextMatrix()));
-                element.setSpaceWidth(position.getWidthOfSpace());
-                PDGraphicsState graphicsState = getGraphicsState();
-                if (graphicsState != null) {
-                    PDTextState textState = graphicsState.getTextState();
-                    if (textState != null) {
-                        element.setCharacterSpacing(textState.getCharacterSpacing());
-                        element.setWordSpacing(textState.getWordSpacing());
-                        element.setHorizontalScaling(textState.getHorizontalScaling());
-                        element.setLeading(textState.getLeading());
-                        element.setRise(textState.getRise());
-                        if (textState.getRenderingMode() != null) {
-                            element.setRenderingMode(textState.getRenderingMode().intValue());
-                        }
-                    }
-                    element.setFillColor(toTextColor(graphicsState.getNonStrokingColor()));
-                    element.setStrokeColor(toTextColor(graphicsState.getStrokingColor()));
+                PdfJsonTextElement element = createTextElement(position, fontId);
+
+                if (accumulator == null) {
+                    accumulator = new TextRunAccumulator(element, position);
+                } else if (!accumulator.canAppend(element, position)) {
+                    PdfJsonTextElement built = accumulator.build();
+                    built.setZOrder(1_000_000 + currentZOrderCounter++);
+                    pageElements.add(built);
+                    accumulator = new TextRunAccumulator(element, position);
+                } else {
+                    accumulator.append(element, position);
                 }
-                element.setZOrder(1_000_000 + pageElements.size());
-                pageElements.add(element);
+            }
+
+            if (accumulator != null) {
+                PdfJsonTextElement built = accumulator.build();
+                built.setZOrder(1_000_000 + currentZOrderCounter++);
+                pageElements.add(built);
             }
         }
+
+        private PdfJsonTextElement createTextElement(TextPosition position, String fontId)
+                throws IOException {
+            PdfJsonTextElement element = new PdfJsonTextElement();
+            element.setText(position.getUnicode());
+            element.setFontId(fontId);
+            element.setFontSize(position.getFontSizeInPt());
+            element.setX(position.getXDirAdj());
+            element.setY(position.getYDirAdj());
+            element.setWidth(position.getWidthDirAdj());
+            element.setHeight(position.getHeightDir());
+            element.setTextMatrix(extractMatrix(position));
+            element.setFontMatrixSize(computeFontMatrixSize(element.getTextMatrix()));
+            element.setSpaceWidth(position.getWidthOfSpace());
+
+            PDGraphicsState graphicsState = getGraphicsState();
+            if (graphicsState != null) {
+                PDTextState textState = graphicsState.getTextState();
+                if (textState != null) {
+                    element.setCharacterSpacing(textState.getCharacterSpacing());
+                    element.setWordSpacing(textState.getWordSpacing());
+                    element.setHorizontalScaling(textState.getHorizontalScaling());
+                    element.setLeading(textState.getLeading());
+                    element.setRise(textState.getRise());
+                    if (textState.getRenderingMode() != null) {
+                        element.setRenderingMode(textState.getRenderingMode().intValue());
+                    }
+                }
+                element.setFillColor(toTextColor(graphicsState.getNonStrokingColor()));
+                element.setStrokeColor(toTextColor(graphicsState.getStrokingColor()));
+            }
+            return element;
+        }
+
+        private void compactTextElement(PdfJsonTextElement element) {
+            if (element == null) {
+                return;
+            }
+
+            List<Float> matrix = element.getTextMatrix();
+            if (matrix != null) {
+                if (matrix.isEmpty()) {
+                    element.setTextMatrix(null);
+                } else if (matrix.size() == 6) {
+                    element.setX(null);
+                    element.setY(null);
+                }
+            }
+
+            if (isZero(element.getCharacterSpacing())) {
+                element.setCharacterSpacing(null);
+            }
+            if (isZero(element.getWordSpacing())) {
+                element.setWordSpacing(null);
+            }
+            if (isZero(element.getLeading())) {
+                element.setLeading(null);
+            }
+            if (isZero(element.getRise())) {
+                element.setRise(null);
+            }
+            if (element.getHorizontalScaling() != null
+                    && Math.abs(element.getHorizontalScaling() - 100f) < FLOAT_EPSILON) {
+                element.setHorizontalScaling(null);
+            }
+            if (element.getRenderingMode() != null && element.getRenderingMode() == 0) {
+                element.setRenderingMode(null);
+            }
+            if (isDefaultBlack(element.getFillColor())) {
+                element.setFillColor(null);
+            }
+            if (isDefaultBlack(element.getStrokeColor())) {
+                element.setStrokeColor(null);
+            }
+        }
+
+        private boolean isZero(Float value) {
+            return value != null && Math.abs(value) < FLOAT_EPSILON;
+        }
+
+        private boolean isDefaultBlack(PdfJsonTextColor color) {
+            if (color == null || color.getComponents() == null) {
+                return true;
+            }
+            List<Float> components = color.getComponents();
+            if (components.isEmpty()) {
+                return true;
+            }
+            String space = color.getColorSpace();
+            if (space == null || "DeviceRGB".equals(space)) {
+                if (components.size() < 3) {
+                    return false;
+                }
+                return Math.abs(components.get(0)) < FLOAT_EPSILON
+                        && Math.abs(components.get(1)) < FLOAT_EPSILON
+                        && Math.abs(components.get(2)) < FLOAT_EPSILON;
+            }
+            if ("DeviceGray".equals(space)) {
+                return Math.abs(components.get(0)) < FLOAT_EPSILON;
+            }
+            return false;
+        }
+
+        private Float baselineFrom(PdfJsonTextElement element) {
+            List<Float> matrix = element.getTextMatrix();
+            if (matrix != null && matrix.size() >= 6) {
+                return matrix.get(5);
+            }
+            return element.getY();
+        }
+
+        private TextStyleKey buildStyleKey(PdfJsonTextElement element) {
+            return new TextStyleKey(
+                    element.getFontId(),
+                    element.getFontSize(),
+                    element.getFontMatrixSize(),
+                    element.getCharacterSpacing(),
+                    element.getWordSpacing(),
+                    element.getHorizontalScaling(),
+                    element.getLeading(),
+                    element.getRise(),
+                    element.getFillColor(),
+                    element.getStrokeColor(),
+                    element.getRenderingMode(),
+                    element.getSpaceWidth());
+        }
+
+        private class TextRunAccumulator {
+            private final PdfJsonTextElement baseElement;
+            private final TextStyleKey styleKey;
+            private final float orientationA;
+            private final float orientationB;
+            private final float orientationC;
+            private final float orientationD;
+            private final Float baseline;
+            private final List<Float> baseMatrix;
+            private final float startXCoord;
+            private final float startYCoord;
+            private final StringBuilder textBuilder = new StringBuilder();
+            private float totalWidth;
+            private float maxHeight;
+            private float endXCoord;
+
+            TextRunAccumulator(PdfJsonTextElement element, TextPosition position) {
+                this.baseElement = element;
+                this.styleKey = buildStyleKey(element);
+                this.baseMatrix =
+                        element.getTextMatrix() != null
+                                ? new ArrayList<>(element.getTextMatrix())
+                                : null;
+                if (baseMatrix != null && baseMatrix.size() >= 6) {
+                    orientationA = baseMatrix.get(0);
+                    orientationB = baseMatrix.get(1);
+                    orientationC = baseMatrix.get(2);
+                    orientationD = baseMatrix.get(3);
+                    startXCoord = baseMatrix.get(4);
+                    startYCoord = baseMatrix.get(5);
+                } else {
+                    orientationA = 1f;
+                    orientationB = 0f;
+                    orientationC = 0f;
+                    orientationD = 1f;
+                    startXCoord = element.getX() != null ? element.getX() : 0f;
+                    startYCoord = element.getY() != null ? element.getY() : 0f;
+                }
+                this.baseline = baselineFrom(element);
+                this.totalWidth = element.getWidth() != null ? element.getWidth() : 0f;
+                this.maxHeight = element.getHeight() != null ? element.getHeight() : 0f;
+                this.endXCoord = position.getXDirAdj() + position.getWidthDirAdj();
+                this.textBuilder.append(element.getText());
+            }
+
+            boolean canAppend(PdfJsonTextElement element, TextPosition position) {
+                if (!styleKey.equals(buildStyleKey(element))) {
+                    return false;
+                }
+                List<Float> matrix = element.getTextMatrix();
+                float a = 1f;
+                float b = 0f;
+                float c = 0f;
+                float d = 1f;
+                if (matrix != null && matrix.size() >= 4) {
+                    a = matrix.get(0);
+                    b = matrix.get(1);
+                    c = matrix.get(2);
+                    d = matrix.get(3);
+                }
+                if (Math.abs(a - orientationA) > ORIENTATION_TOLERANCE
+                        || Math.abs(b - orientationB) > ORIENTATION_TOLERANCE
+                        || Math.abs(c - orientationC) > ORIENTATION_TOLERANCE
+                        || Math.abs(d - orientationD) > ORIENTATION_TOLERANCE) {
+                    return false;
+                }
+
+                Float otherBaseline = baselineFrom(element);
+                if (baseline != null && otherBaseline != null) {
+                    if (Math.abs(otherBaseline - baseline) > BASELINE_TOLERANCE) {
+                        return false;
+                    }
+                } else if (baseline != null || otherBaseline != null) {
+                    return false;
+                }
+
+                return true;
+            }
+
+            void append(PdfJsonTextElement element, TextPosition position) {
+                textBuilder.append(element.getText());
+                float width =
+                        element.getWidth() != null ? element.getWidth() : position.getWidthDirAdj();
+                totalWidth += width;
+                float height =
+                        element.getHeight() != null ? element.getHeight() : position.getHeightDir();
+                if (height > maxHeight) {
+                    maxHeight = height;
+                }
+                endXCoord = position.getXDirAdj() + position.getWidthDirAdj();
+            }
+
+            PdfJsonTextElement build() {
+                PdfJsonTextElement result = baseElement;
+                result.setText(textBuilder.toString());
+                float widthCandidate = endXCoord - startXCoord;
+                if (widthCandidate > totalWidth) {
+                    totalWidth = widthCandidate;
+                }
+                result.setWidth(totalWidth);
+                result.setHeight(maxHeight);
+                if (baseMatrix != null && baseMatrix.size() == 6) {
+                    List<Float> matrix = new ArrayList<>(baseMatrix);
+                    matrix.set(0, orientationA);
+                    matrix.set(1, orientationB);
+                    matrix.set(2, orientationC);
+                    matrix.set(3, orientationD);
+                    matrix.set(4, startXCoord);
+                    matrix.set(5, startYCoord);
+                    result.setTextMatrix(matrix);
+                    result.setX(null);
+                    result.setY(null);
+                }
+                compactTextElement(result);
+                return result;
+            }
+        }
+
+        private record TextStyleKey(
+                String fontId,
+                Float fontSize,
+                Float fontMatrixSize,
+                Float characterSpacing,
+                Float wordSpacing,
+                Float horizontalScaling,
+                Float leading,
+                Float rise,
+                PdfJsonTextColor fillColor,
+                PdfJsonTextColor strokeColor,
+                Integer renderingMode,
+                Float spaceWidth) {}
 
         private List<Float> extractMatrix(TextPosition position) {
             float[] values = new float[6];

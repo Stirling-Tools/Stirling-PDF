@@ -1,6 +1,5 @@
 package stirling.software.SPDF.model.json;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -33,7 +32,7 @@ public class PdfJsonTextElement {
     private Float y;
     private Float width;
     private Float height;
-    @Builder.Default private List<Float> textMatrix = new ArrayList<>();
+    private List<Float> textMatrix;
     private PdfJsonTextColor fillColor;
     private PdfJsonTextColor strokeColor;
     private Integer renderingMode;
