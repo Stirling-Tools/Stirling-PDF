@@ -1418,6 +1418,23 @@
     },
     "submit": "Remove Pages"
   },
+  "extractPages": {
+    "title": "Extract Pages",
+    "pageNumbers": {
+      "label": "Pages to Extract",
+      "placeholder": "e.g., 1,3,5-8 or odd & 1-10"
+    },
+    "settings": {
+      "title": "Settings"
+    },
+    "error": {
+      "failed": "Failed to extract pages"
+    },
+    "results": {
+      "title": "Pages Extracted"
+    },
+    "submit": "Extract Pages"
+  },
   "pageSelection": {
     "tooltip": {
       "header": {
