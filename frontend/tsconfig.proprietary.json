@@ -6,7 +6,6 @@
         "src/proprietary/*",
         "src/core/*"
       ],
-      "@proprietary/*": ["src/proprietary/*"],
       "@core/*": ["src/core/*"]
     }
   },
