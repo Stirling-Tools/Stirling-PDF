@@ -7,16 +7,14 @@
   filter: drop-shadow(0 0 10px var(--mantine-primary-color-filled));
 }
 
-/* Add glowing border to content area during admin tour */
-[data-tour="settings-content-area"].tour-content-glow,
+/* Add glowing border to navigation items during admin tour */
 .modal-nav-item.tour-nav-glow {
   position: relative;
   box-shadow:
-    0 0 0 3px var(--mantine-primary-color-filled),
-    0 0 20px var(--mantine-primary-color-filled),
-    inset 0 0 20px rgba(59, 130, 246, 0.1);
+    0 0 0 2px var(--mantine-primary-color-filled),
+    0 0 15px var(--mantine-primary-color-filled),
+    inset 0 0 15px rgba(59, 130, 246, 0.1);
   border-radius: 8px;
-  animation: pulse-glow 2s ease-in-out infinite;
 }
 
 @keyframes pulse-glow {
