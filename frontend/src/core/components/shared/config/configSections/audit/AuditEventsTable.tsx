@@ -4,18 +4,19 @@ import {
   Text,
   Group,
   Stack,
-  Select,
   Button,
   Pagination,
   Modal,
   Code,
   Loader,
   Alert,
+  Table,
 } from '@mantine/core';
-import { DateInput } from '@mantine/dates';
 import { useTranslation } from 'react-i18next';
-import auditService, { AuditEvent, AuditFilters } from '@app/services/auditService';
+import auditService, { AuditEvent } from '@app/services/auditService';
 import { Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
+import { useAuditFilters } from '@app/hooks/useAuditFilters';
+import AuditFiltersForm from '@app/components/shared/config/configSections/audit/AuditFiltersForm';
 
 const AuditEventsTable: React.FC = () => {
   const { t } = useTranslation();
@@ -25,35 +26,12 @@ const AuditEventsTable: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<AuditEvent | null>(null);
-  const [eventTypes, setEventTypes] = useState<string[]>([]);
-  const [users, setUsers] = useState<string[]>([]);
 
-  // Filters
-  const [filters, setFilters] = useState<AuditFilters>({
-    eventType: undefined,
-    username: undefined,
-    startDate: undefined,
-    endDate: undefined,
+  // Use shared filters hook
+  const { filters, eventTypes, users, handleFilterChange, handleClearFilters } = useAuditFilters({
     page: 0,
     pageSize: 20,
   });
-
-  useEffect(() => {
-    const fetchMetadata = async () => {
-      try {
-        const [types, usersList] = await Promise.all([
-          auditService.getEventTypes(),
-          auditService.getUsers(),
-        ]);
-        setEventTypes(types);
-        setUsers(usersList);
-      } catch (err) {
-        console.error('Failed to fetch metadata:', err);
-      }
-    };
-
-    fetchMetadata();
-  }, []);
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -76,20 +54,14 @@ const AuditEventsTable: React.FC = () => {
     fetchEvents();
   }, [filters, currentPage]);
 
-  const handleFilterChange = (key: keyof AuditFilters, value: any) => {
-    setFilters((prev) => ({ ...prev, [key]: value }));
+  // Wrap filter handlers to reset pagination
+  const handleFilterChangeWithReset = (key: keyof typeof filters, value: any) => {
+    handleFilterChange(key, value);
     setCurrentPage(1);
   };
 
-  const handleClearFilters = () => {
-    setFilters({
-      eventType: undefined,
-      username: undefined,
-      startDate: undefined,
-      endDate: undefined,
-      page: 0,
-      pageSize: 20,
-    });
+  const handleClearFiltersWithReset = () => {
+    handleClearFilters();
     setCurrentPage(1);
   };
 
@@ -105,50 +77,13 @@ const AuditEventsTable: React.FC = () => {
         </Text>
 
         {/* Filters */}
-        <Group>
-          <Select
-            placeholder={t('audit.events.filterByType', 'Filter by type')}
-            data={eventTypes.map((type) => ({ value: type, label: type }))}
-            value={filters.eventType}
-            onChange={(value) => handleFilterChange('eventType', value || undefined)}
-            clearable
-            style={{ flex: 1, minWidth: 200 }}
-            comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_OVER_CONFIG_MODAL }}
-          />
-          <Select
-            placeholder={t('audit.events.filterByUser', 'Filter by user')}
-            data={users.map((user) => ({ value: user, label: user }))}
-            value={filters.username}
-            onChange={(value) => handleFilterChange('username', value || undefined)}
-            clearable
-            searchable
-            style={{ flex: 1, minWidth: 200 }}
-            comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_OVER_CONFIG_MODAL }}
-          />
-          <DateInput
-            placeholder={t('audit.events.startDate', 'Start date')}
-            value={filters.startDate ? new Date(filters.startDate) : null}
-            onChange={(value: string | null) =>
-              handleFilterChange('startDate', value ?? undefined)
-            }
-            clearable
-            style={{ flex: 1, minWidth: 150 }}
-            popoverProps={{ withinPortal: true, zIndex: Z_INDEX_OVER_CONFIG_MODAL }}
-          />
-          <DateInput
-            placeholder={t('audit.events.endDate', 'End date')}
-            value={filters.endDate ? new Date(filters.endDate) : null}
-            onChange={(value: string | null) =>
-              handleFilterChange('endDate', value ?? undefined)
-            }
-            clearable
-            style={{ flex: 1, minWidth: 150 }}
-            popoverProps={{ withinPortal: true, zIndex: Z_INDEX_OVER_CONFIG_MODAL }}
-          />
-          <Button variant="outline" onClick={handleClearFilters}>
-            {t('audit.events.clearFilters', 'Clear')}
-          </Button>
-        </Group>
+        <AuditFiltersForm
+          filters={filters}
+          eventTypes={eventTypes}
+          users={users}
+          onFilterChange={handleFilterChangeWithReset}
+          onClearFilters={handleClearFiltersWithReset}
+        />
 
         {/* Table */}
         {loading ? (
@@ -161,81 +96,72 @@ const AuditEventsTable: React.FC = () => {
           </Alert>
         ) : (
           <>
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead>
-                  <tr
-                    style={{
-                      borderBottom: '2px solid var(--mantine-color-gray-3)',
-                    }}
-                  >
-                    <th style={{ textAlign: 'left' }}>
-                      {t('audit.events.timestamp', 'Timestamp')}
-                    </th>
-                    <th style={{ textAlign: 'left' }}>
-                      {t('audit.events.type', 'Type')}
-                    </th>
-                    <th style={{ textAlign: 'left' }}>
-                      {t('audit.events.user', 'User')}
-                    </th>
-                    <th style={{ textAlign: 'left' }}>
-                      {t('audit.events.ipAddress', 'IP Address')}
-                    </th>
-                    <th style={{ textAlign: 'center' }}>
-                      {t('audit.events.actions', 'Actions')}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {events.length === 0 ? (
-                    <tr>
-                      <td colSpan={5} style={{ textAlign: 'center', padding: '2rem' }}>
-                        <Text c="dimmed">{t('audit.events.noEvents', 'No events found')}</Text>
-                      </td>
-                    </tr>
-                  ) : (
-                    events.map((event) => (
-                      <tr
-                        key={event.id}
-                        style={{
-                          borderBottom: '1px solid var(--mantine-color-gray-2)',
-                          cursor: 'pointer',
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor =
-                            'var(--mantine-color-gray-0)';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = 'transparent';
-                        }}
-                      >
-                        <td>
-                          <Text size="sm">{formatDate(event.timestamp)}</Text>
-                        </td>
-                        <td>
-                          <Text size="sm">{event.eventType}</Text>
-                        </td>
-                        <td>
-                          <Text size="sm">{event.username}</Text>
-                        </td>
-                        <td>
-                          <Text size="sm">{event.ipAddress}</Text>
-                        </td>
-                        <td style={{ textAlign: 'center' }}>
-                          <Button
-                            variant="subtle"
-                            size="xs"
-                            onClick={() => setSelectedEvent(event)}
-                          >
-                            {t('audit.events.viewDetails', 'View Details')}
-                          </Button>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
+            <Table
+              horizontalSpacing="md"
+              verticalSpacing="sm"
+              withRowBorders
+              highlightOnHover
+              style={{
+                '--table-border-color': 'var(--mantine-color-gray-3)',
+              } as React.CSSProperties}
+            >
+              <Table.Thead>
+                <Table.Tr style={{ backgroundColor: 'var(--mantine-color-gray-0)' }}>
+                  <Table.Th style={{ fontWeight: 600, color: 'var(--mantine-color-gray-7)' }} fz="sm">
+                    {t('audit.events.timestamp', 'Timestamp')}
+                  </Table.Th>
+                  <Table.Th style={{ fontWeight: 600, color: 'var(--mantine-color-gray-7)' }} fz="sm">
+                    {t('audit.events.type', 'Type')}
+                  </Table.Th>
+                  <Table.Th style={{ fontWeight: 600, color: 'var(--mantine-color-gray-7)' }} fz="sm">
+                    {t('audit.events.user', 'User')}
+                  </Table.Th>
+                  <Table.Th style={{ fontWeight: 600, color: 'var(--mantine-color-gray-7)' }} fz="sm">
+                    {t('audit.events.ipAddress', 'IP Address')}
+                  </Table.Th>
+                  <Table.Th style={{ fontWeight: 600, color: 'var(--mantine-color-gray-7)' }} fz="sm" ta="center">
+                    {t('audit.events.actions', 'Actions')}
+                  </Table.Th>
+                </Table.Tr>
+              </Table.Thead>
+              <Table.Tbody>
+                {events.length === 0 ? (
+                  <Table.Tr>
+                    <Table.Td colSpan={5}>
+                      <Text ta="center" c="dimmed" py="xl">
+                        {t('audit.events.noEvents', 'No events found')}
+                      </Text>
+                    </Table.Td>
+                  </Table.Tr>
+                ) : (
+                  events.map((event) => (
+                    <Table.Tr key={event.id}>
+                      <Table.Td>
+                        <Text size="sm">{formatDate(event.timestamp)}</Text>
+                      </Table.Td>
+                      <Table.Td>
+                        <Text size="sm">{event.eventType}</Text>
+                      </Table.Td>
+                      <Table.Td>
+                        <Text size="sm">{event.username}</Text>
+                      </Table.Td>
+                      <Table.Td>
+                        <Text size="sm">{event.ipAddress}</Text>
+                      </Table.Td>
+                      <Table.Td ta="center">
+                        <Button
+                          variant="subtle"
+                          size="xs"
+                          onClick={() => setSelectedEvent(event)}
+                        >
+                          {t('audit.events.viewDetails', 'View Details')}
+                        </Button>
+                      </Table.Td>
+                    </Table.Tr>
+                  ))
+                )}
+              </Table.Tbody>
+            </Table>
 
             {/* Pagination */}
             {totalPages > 1 && (

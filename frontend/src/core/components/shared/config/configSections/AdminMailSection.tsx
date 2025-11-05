@@ -20,6 +20,13 @@ interface MailSettingsData {
   frontendUrl?: string;
 }
 
+interface ApiResponseWithPending<T> {
+  _pending?: Partial<T>;
+}
+
+type MailApiResponse = MailSettingsData & ApiResponseWithPending<MailSettingsData>;
+type SystemApiResponse = { frontendUrl?: string } & ApiResponseWithPending<{ frontendUrl?: string }>;
+
 export default function AdminMailSection() {
   const { t } = useTranslation();
   const { restartModalOpened, showRestartModal, closeRestartModal, restartServer } = useRestartServer();
@@ -36,20 +43,20 @@ export default function AdminMailSection() {
     sectionName: 'mail',
     fetchTransformer: async () => {
       const [mailResponse, systemResponse] = await Promise.all([
-        apiClient.get('/api/v1/admin/settings/section/mail'),
-        apiClient.get('/api/v1/admin/settings/section/system')
+        apiClient.get<MailApiResponse>('/api/v1/admin/settings/section/mail'),
+        apiClient.get<SystemApiResponse>('/api/v1/admin/settings/section/system')
       ]);
 
       const mail = mailResponse.data || {};
       const system = systemResponse.data || {};
 
-      const result: any = {
+      const result: MailSettingsData & ApiResponseWithPending<MailSettingsData> = {
         ...mail,
         frontendUrl: system.frontendUrl || ''
       };
 
       // Merge pending blocks from both endpoints
-      const pendingBlock: any = {};
+      const pendingBlock: Partial<MailSettingsData> = {};
       if (mail._pending) {
         Object.assign(pendingBlock, mail._pending);
       }

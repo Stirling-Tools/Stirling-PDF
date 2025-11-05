@@ -4,7 +4,7 @@ import { useMediaQuery } from '@mantine/hooks';
 import { useNavigate, useLocation } from 'react-router-dom';
 import LocalIcon from '@app/components/shared/LocalIcon';
 import { createConfigNavSections } from '@app/components/shared/config/configNavSections';
-import { NavKey } from '@app/components/shared/config/types';
+import { NavKey, VALID_NAV_KEYS } from '@app/components/shared/config/types';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
 import '@app/components/shared/AppConfigModal.css';
 import { Z_INDEX_OVER_FULLSCREEN_SURFACE, Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
@@ -25,14 +25,8 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
   const getSectionFromPath = (pathname: string): NavKey | null => {
     const match = pathname.match(/\/settings\/([^/]+)/);
     if (match && match[1]) {
-      const validSections: NavKey[] = [
-        'people', 'teams', 'general', 'hotkeys',
-        'adminGeneral', 'adminSecurity', 'adminConnections', 'adminLegal',
-        'adminPrivacy', 'adminDatabase', 'adminPremium', 'adminFeatures',
-        'adminPlan', 'adminAudit', 'adminUsage', 'adminEndpoints', 'adminAdvanced'
-      ];
       const section = match[1] as NavKey;
-      return validSections.includes(section) ? section : null;
+      return VALID_NAV_KEYS.includes(section as any) ? section : null;
     }
     return null;
   };

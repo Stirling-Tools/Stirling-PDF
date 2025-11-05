@@ -13,27 +13,29 @@ export const createConfigNavSections = (
   // Get the core sections
   const sections = createCoreConfigNavSections(isAdmin, runningEE);
 
-  // Add Workspace section after Preferences (index 1)
-  const workspaceSection: ConfigNavSection = {
-    title: 'Workspace',
-    items: [
-      {
-        key: 'people',
-        label: 'People',
-        icon: 'group-rounded',
-        component: <PeopleSection />
-      },
-      {
-        key: 'teams',
-        label: 'Teams',
-        icon: 'groups-rounded',
-        component: <TeamsSection />
-      },
-    ],
-  };
+  // Add Workspace section if user is admin
+  if (isAdmin) {
+    const workspaceSection: ConfigNavSection = {
+      title: 'Workspace',
+      items: [
+        {
+          key: 'people',
+          label: 'People',
+          icon: 'group-rounded',
+          component: <PeopleSection />
+        },
+        {
+          key: 'teams',
+          label: 'Teams',
+          icon: 'groups-rounded',
+          component: <TeamsSection />
+        },
+      ],
+    };
 
-  // Insert workspace section after Preferences (at index 1)
-  sections.splice(1, 0, workspaceSection);
+    // Insert workspace section after Preferences (at index 1)
+    sections.splice(1, 0, workspaceSection);
+  }
 
   return sections;
 };
