@@ -58,14 +58,11 @@ public class ChecksumUtils {
      * @throws IOException if reading from the stream fails
      */
     public static String checksum(InputStream is, String algorithm) throws IOException {
-        switch (algorithm.toUpperCase(Locale.ROOT)) {
-            case "CRC32":
-                return checksumChecksum(is, new CRC32());
-            case "ADLER32":
-                return checksumChecksum(is, new Adler32());
-            default:
-                return toHex(checksumBytes(is, algorithm));
-        }
+        return switch (algorithm.toUpperCase(Locale.ROOT)) {
+            case "CRC32" -> checksumChecksum(is, new CRC32());
+            case "ADLER32" -> checksumChecksum(is, new Adler32());
+            default -> toHex(checksumBytes(is, algorithm));
+        };
     }
 
     /**
@@ -98,14 +95,13 @@ public class ChecksumUtils {
      * @throws IOException if reading from the stream fails
      */
     public static String checksumBase64(InputStream is, String algorithm) throws IOException {
-        switch (algorithm.toUpperCase(Locale.ROOT)) {
-            case "CRC32":
-                return Base64.getEncoder().encodeToString(checksumChecksumBytes(is, new CRC32()));
-            case "ADLER32":
-                return Base64.getEncoder().encodeToString(checksumChecksumBytes(is, new Adler32()));
-            default:
-                return Base64.getEncoder().encodeToString(checksumBytes(is, algorithm));
-        }
+        return switch (algorithm.toUpperCase(Locale.ROOT)) {
+            case "CRC32" ->
+                    Base64.getEncoder().encodeToString(checksumChecksumBytes(is, new CRC32()));
+            case "ADLER32" ->
+                    Base64.getEncoder().encodeToString(checksumChecksumBytes(is, new Adler32()));
+            default -> Base64.getEncoder().encodeToString(checksumBytes(is, algorithm));
+        };
     }
 
     /**
@@ -179,7 +175,7 @@ public class ChecksumUtils {
         for (Map.Entry<String, Checksum> entry : checksums.entrySet()) {
             // Keep value as long and mask to ensure unsigned hex formatting.
             long unsigned32 = entry.getValue().getValue() & UNSIGNED_32_BIT_MASK;
-            results.put(entry.getKey(), String.format("%08x", unsigned32));
+            results.put(entry.getKey(), String.format(Locale.ROOT, "%08x", unsigned32));
         }
         return results;
     }
@@ -258,7 +254,7 @@ public class ChecksumUtils {
         }
         // Keep as long and mask to ensure correct unsigned representation.
         long unsigned32 = checksum.getValue() & UNSIGNED_32_BIT_MASK;
-        return String.format("%08x", unsigned32);
+        return String.format(Locale.ROOT, "%08x", unsigned32);
     }
 
     /**
@@ -294,7 +290,7 @@ public class ChecksumUtils {
     private static String toHex(byte[] hash) {
         StringBuilder sb = new StringBuilder(hash.length * 2);
         for (byte b : hash) {
-            sb.append(String.format("%02x", b));
+            sb.append(String.format(Locale.ROOT, "%02x", b));
         }
         return sb.toString();
     }
