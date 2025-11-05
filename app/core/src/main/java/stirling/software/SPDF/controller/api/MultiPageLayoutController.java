@@ -50,6 +50,10 @@ public class MultiPageLayoutController {
             @ModelAttribute MergeMultiplePagesRequest request) throws IOException {
 
         String mode = request.getMode();
+        if (mode == null || mode.trim().isEmpty()) {
+            mode = "DEFAULT";
+        }
+
         int rows = 0;
         int cols = 0;
         int pagesPerSheet = 0;
@@ -82,11 +86,24 @@ public class MultiPageLayoutController {
                 }
                 pagesPerSheet = cols * rows;
                 break;
+            default:
+                throw new IllegalArgumentException(
+                        "Mode must be CUSTOM or DEFAULT. Null value rolls back to DEFAULT");
         }
 
         MultipartFile file = request.getFileInput();
         String orientation = request.getOrientation();
+        if (orientation == null || orientation.trim().isEmpty()) {
+            orientation = "PORTRAIT";
+        }
+        if (!"PORTRAIT".equals(orientation) && !"LANDSCAPE".equals(orientation)) {
+            throw new IllegalArgumentException("Orientation must be PORTRAIT or LANDSCAPE");
+        }
         String pageOrder = request.getPageOrder();
+        if (pageOrder == null || pageOrder.trim().isEmpty()) {
+            pageOrder = "LR_TD";
+        }
+
         boolean addBorder = Boolean.TRUE.equals(request.getAddBorder());
 
         PDDocument sourceDocument = pdfDocumentFactory.load(file);
@@ -96,7 +113,6 @@ public class MultiPageLayoutController {
         // Create a new A4 landscape rectangle that we use when orientation is landscape
         PDRectangle a4Landscape =
                 new PDRectangle(PDRectangle.A4.getHeight(), PDRectangle.A4.getWidth());
-
         PDPage newPage =
                 "PORTRAIT".equals(orientation)
                         ? new PDPage(PDRectangle.A4)
@@ -166,6 +182,9 @@ public class MultiPageLayoutController {
                     colIndex = cols - 1 - (adjustedPageIndex / rows);
                     rowIndex = adjustedPageIndex % rows;
                     break;
+                default:
+                    throw new IllegalArgumentException(
+                            "Page order must be one of the following supported options: LR_TD, RL_TD, TD_LR, or TD_RL.");
             }
 
             float x = colIndex * cellWidth + (cellWidth - rect.getWidth() * scale) / 2;
