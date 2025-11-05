@@ -7,6 +7,7 @@ import java.util.Optional;
 
 import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.ai.embedding.EmbeddingResponse;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -21,6 +22,7 @@ import stirling.software.proprietary.service.chatbot.exception.ChatbotException;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@ConditionalOnProperty(value = "premium.proFeatures.chatbot.enabled", havingValue = "true")
 public class ChatbotRetrievalService {
 
     private final ChatbotCacheService cacheService;

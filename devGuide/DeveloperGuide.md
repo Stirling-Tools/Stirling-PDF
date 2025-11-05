@@ -587,3 +587,8 @@ In your Thymeleaf templates, use the `#{key}` syntax to reference the new transl
 ```
 
 Remember, never hard-code text in your templates or Java code. Always use translation keys to ensure proper localization.
+
+### Chatbot Feature Configuration
+
+- The chatbot backend is disabled unless `premium.proFeatures.chatbot.enabled` is true in `configs/settings.yml`.
+- Provide an OpenAI-compatible key through `premium.proFeatures.chatbot.models.apiKey` (preferred) or the `SPRING_AI_OPENAI_API_KEY` environment variable. Without a key the app still boots, but the chatbot beans are not created.

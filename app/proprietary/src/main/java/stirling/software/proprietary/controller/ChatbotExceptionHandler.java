@@ -3,6 +3,7 @@ package stirling.software.proprietary.controller;
 import java.time.Instant;
 import java.util.Map;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -15,6 +16,7 @@ import stirling.software.proprietary.service.chatbot.exception.NoTextDetectedExc
 
 @RestControllerAdvice(assignableTypes = ChatbotController.class)
 @Slf4j
+@ConditionalOnProperty(value = "premium.proFeatures.chatbot.enabled", havingValue = "true")
 public class ChatbotExceptionHandler {
 
     @ExceptionHandler(NoTextDetectedException.class)

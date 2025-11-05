@@ -9,6 +9,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 import com.github.benmanes.caffeine.cache.Cache;
@@ -25,6 +26,7 @@ import stirling.software.proprietary.model.chatbot.ChatbotTextChunk;
 import stirling.software.proprietary.service.chatbot.exception.ChatbotException;
 
 @Service
+@ConditionalOnProperty(value = "premium.proFeatures.chatbot.enabled", havingValue = "true")
 @Slf4j
 public class ChatbotCacheService {
 

@@ -8,6 +8,7 @@ import java.util.UUID;
 
 import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.ai.embedding.EmbeddingResponse;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -22,6 +23,7 @@ import stirling.software.proprietary.service.chatbot.exception.ChatbotException;
 import stirling.software.proprietary.service.chatbot.exception.NoTextDetectedException;
 
 @Service
+@ConditionalOnProperty(value = "premium.proFeatures.chatbot.enabled", havingValue = "true")
 @Slf4j
 @RequiredArgsConstructor
 public class ChatbotIngestionService {

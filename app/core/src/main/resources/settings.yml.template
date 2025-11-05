@@ -102,6 +102,7 @@ premium:
         primary: gpt-5-nano # Default lightweight model
         fallback: gpt-5-mini # Escalation model for complex prompts
         embedding: text-embedding-3-small # Embedding model for vector store usage
+        apiKey: '' # Provide your OpenAI-compatible API key (or use SPRING_AI_OPENAI_API_KEY env var)
       rag:
         chunkSizeTokens: 512 # Token window used when chunking text
         chunkOverlapTokens: 128 # Overlap between successive chunks

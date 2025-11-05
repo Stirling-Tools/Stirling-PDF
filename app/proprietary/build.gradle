@@ -52,7 +52,7 @@ dependencies {
     api 'org.springframework.boot:spring-boot-starter-cache'
     api 'com.github.ben-manes.caffeine:caffeine'
     api 'io.swagger.core.v3:swagger-core-jakarta:2.2.38'
-    implementation 'org.springframework.ai:spring-ai-openai-spring-boot-starter:1.0.0-M6'
+    implementation 'org.springframework.ai:spring-ai-openai'
     implementation 'com.bucket4j:bucket4j_jdk17-core:8.15.0'
 
     // https://mvnrepository.com/artifact/com.bucket4j/bucket4j_jdk17
