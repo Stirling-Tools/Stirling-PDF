@@ -49,7 +49,6 @@
     "globals": "^16.4.0",
     "i18next": "^25.5.2",
     "i18next-browser-languagedetector": "^8.2.0",
-    "i18next-http-backend": "^3.0.2",
     "jszip": "^3.10.1",
     "license-report": "^6.8.0",
     "pdf-lib": "^1.17.1",
@@ -61,6 +60,7 @@
     "react-rnd": "^10.5.2",
     "react-router-dom": "^7.9.1",
     "signature_pad": "^5.0.4",
+    "smol-toml": "^1.4.2",
     "tailwindcss": "^4.1.13",
     "web-vitals": "^5.1.0"
   },

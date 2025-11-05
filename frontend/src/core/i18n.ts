@@ -1,7 +1,7 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
-import Backend from 'i18next-http-backend';
+import TomlBackend from '@app/i18n/tomlBackend';
 
 // Define supported languages (based on your existing translations)
 export const supportedLanguages = {
@@ -51,7 +51,7 @@ export const supportedLanguages = {
 export const rtlLanguages = ['ar-AR', 'fa-IR'];
 
 i18n
-  .use(Backend)
+  .use(TomlBackend)
   .use(LanguageDetector)
   .use(initReactI18next)
   .init({
@@ -73,7 +73,7 @@ i18n
         const lng = lngs[0];
         const basePath = import.meta.env.BASE_URL || '/';
         const cleanBasePath = basePath.endsWith('/') ? basePath.slice(0, -1) : basePath;
-        return `${cleanBasePath}/locales/${lng}/${namespaces[0]}.json`;
+        return `${cleanBasePath}/locales/${lng}/${namespaces[0]}.toml`;
       },
     },
 
