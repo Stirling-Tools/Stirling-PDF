@@ -13,6 +13,7 @@ import { Tooltip } from '@app/components/shared/Tooltip';
 import { ViewerContext } from '@app/contexts/ViewerContext';
 import { useSignature } from '@app/contexts/SignatureContext';
 import LocalIcon from '@app/components/shared/LocalIcon';
+import { RightRailFooterExtensions } from '@app/components/rightRail/RightRailFooterExtensions';
 
 import { useSidebarContext } from '@app/contexts/SidebarContext';
 import { RightRailButtonConfig, RightRailRenderContext, RightRailSection } from '@app/types/rightRail';
@@ -224,6 +225,8 @@ export default function RightRail() {
         </div>
 
         <div className="right-rail-spacer" />
+
+        <RightRailFooterExtensions className="right-rail-footer" />
       </div>
     </div>
   );

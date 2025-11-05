@@ -4863,6 +4863,10 @@
       "visits": "Visits",
       "percentage": "Percentage",
       "noData": "No data available"
-    }
+    },
+  "backendHealth": {
+    "checking": "Checking backend status...",
+    "online": "Backend Online",
+    "offline": "Backend Offline"
   }
 }
