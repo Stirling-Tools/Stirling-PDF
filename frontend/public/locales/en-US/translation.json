@@ -902,6 +902,9 @@
     "settings": {
       "title": "Settings"
     },
+    "tooltip": {
+      "description": "Extracts the selected pages into a new PDF, preserving order."
+    },
     "error": {
       "failed": "Failed to extract pages"
     },
@@ -975,6 +978,7 @@
     }
   },
   "bulkSelection": {
+    "syntaxError": "There is a syntax issue. See Page Selection tips for help.",
     "header": { "title": "Page Selection Guide" },
     "syntax": {
       "title": "Syntax Basics",

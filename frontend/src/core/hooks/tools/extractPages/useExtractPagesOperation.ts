@@ -12,7 +12,7 @@ async function resolveSelectionToCsv(expression: string, file: File): Promise<st
   const arrayBuffer = await file.arrayBuffer();
   const pdf = await pdfWorkerManager.createDocument(arrayBuffer, { disableAutoFetch: true, disableStream: true });
   try {
-    const maxPages = (pdf as any).numPages as number;
+    const maxPages = pdf.numPages;
     const pages = parseSelection(expression || '', maxPages);
     return pages.join(',');
   } finally {

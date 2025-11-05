@@ -5,9 +5,11 @@ import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
 import { useExtractPagesParameters } from "@app/hooks/tools/extractPages/useExtractPagesParameters";
 import { useExtractPagesOperation } from "@app/hooks/tools/extractPages/useExtractPagesOperation";
 import ExtractPagesSettings from "@app/components/tools/extractPages/ExtractPagesSettings";
+import useExtractPagesTips from "@app/components/tooltips/useExtractPagesTips";
 
 const ExtractPages = (props: BaseToolProps) => {
   const { t } = useTranslation();
+  const tooltipContent = useExtractPagesTips();
 
   const base = useBaseTool(
     'extract-pages',
@@ -35,6 +37,7 @@ const ExtractPages = (props: BaseToolProps) => {
         isCollapsed: base.settingsCollapsed,
         onCollapsedClick: base.settingsCollapsed ? base.handleSettingsReset : undefined,
         content: settingsContent,
+        tooltip: tooltipContent,
       },
     ],
     executeButton: {

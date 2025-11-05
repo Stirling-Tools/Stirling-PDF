@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Text } from '@mantine/core';
 import classes from '@app/components/pageEditor/bulkSelectionPanel/BulkSelectionPanel.module.css';
 import { parseSelectionWithDiagnostics } from '@app/utils/bulkselection/parseSelection';
@@ -15,6 +16,7 @@ const FALLBACK_MAX_PAGES = 100000; // large upper bound for syntax validation wi
 
 const PageSelectionSyntaxHint = ({ input, maxPages, variant = 'panel' }: PageSelectionSyntaxHintProps) => {
   const [syntaxError, setSyntaxError] = useState<string | null>(null);
+  const { t } = useTranslation();
 
   useEffect(() => {
     const text = (input || '').trim();
@@ -25,9 +27,9 @@ const PageSelectionSyntaxHint = ({ input, maxPages, variant = 'panel' }: PageSel
 
     try {
       const { warning } = parseSelectionWithDiagnostics(text, maxPages && maxPages > 0 ? maxPages : FALLBACK_MAX_PAGES);
-      setSyntaxError(warning ? 'There is a syntax issue. See Page Selection tips for help.' : null);
+      setSyntaxError(warning ? t('bulkSelection.syntaxError', 'There is a syntax issue. See Page Selection tips for help.') : null);
     } catch {
-      setSyntaxError('There is a syntax issue. See Page Selection tips for help.');
+      setSyntaxError(t('bulkSelection.syntaxError', 'There is a syntax issue. See Page Selection tips for help.'));
     }
   }, [input, maxPages]);
 

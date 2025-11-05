@@ -79,6 +79,7 @@ import { overlayPdfsOperationConfig } from "@app/hooks/tools/overlayPdfs/useOver
 import { adjustPageScaleOperationConfig } from "@app/hooks/tools/adjustPageScale/useAdjustPageScaleOperation";
 import { scannerImageSplitOperationConfig } from "@app/hooks/tools/scannerImageSplit/useScannerImageSplitOperation";
 import { addPageNumbersOperationConfig } from "@app/components/tools/addPageNumbers/useAddPageNumbersOperation";
+import { extractPagesOperationConfig } from "@app/hooks/tools/extractPages/useExtractPagesOperation";
 import CompressSettings from "@app/components/tools/compress/CompressSettings";
 import AddPasswordSettings from "@app/components/tools/addPassword/AddPasswordSettings";
 import RemovePasswordSettings from "@app/components/tools/removePassword/RemovePasswordSettings";
@@ -108,7 +109,6 @@ import ExtractImages from "@app/tools/ExtractImages";
 import ExtractPages from "@app/tools/ExtractPages";
 import ExtractImagesSettings from "@app/components/tools/extractImages/ExtractImagesSettings";
 import ExtractPagesSettings from "@app/components/tools/extractPages/ExtractPagesSettings";
-import { extractPagesOperationConfig } from "@app/hooks/tools/extractPages/useExtractPagesOperation";
 import ReplaceColorSettings from "@app/components/tools/replaceColor/ReplaceColorSettings";
 import AddStampAutomationSettings from "@app/components/tools/addStamp/AddStampAutomationSettings";
 import CertSignAutomationSettings from "@app/components/tools/certSign/CertSignAutomationSettings";
