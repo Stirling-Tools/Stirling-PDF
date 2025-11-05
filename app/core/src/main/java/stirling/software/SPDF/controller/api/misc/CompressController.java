@@ -293,7 +293,7 @@ public class CompressController {
                         imageIdentity,
                         GeneralUtils.formatBytes(originalSize),
                         GeneralUtils.formatBytes(compressedSize),
-                        String.format("%.1f", reductionPercentage));
+                        String.format(Locale.ROOT, "%.1f", reductionPercentage));
             } else {
                 log.info(
                         "Image identity {}: Not suitable for compression, skipping", imageIdentity);
@@ -386,7 +386,7 @@ public class CompressController {
                     "Overall PDF compression: {} → {} (reduced by {}%)",
                     GeneralUtils.formatBytes(originalFileSize),
                     GeneralUtils.formatBytes(compressedFileSize),
-                    String.format("%.1f", overallReduction));
+                    String.format(Locale.ROOT, "%.1f", overallReduction));
             return newCompressedPDF;
         } catch (Exception e) {
             newCompressedPDF.close();
@@ -481,7 +481,7 @@ public class CompressController {
     private static String bytesToHexString(byte[] bytes) {
         StringBuilder sb = new StringBuilder();
         for (byte b : bytes) {
-            sb.append(String.format("%02x", b));
+            sb.append(String.format(Locale.ROOT, "%02x", b));
         }
         return sb.toString();
     }
@@ -538,7 +538,7 @@ public class CompressController {
                 "Total original image size: {}, compressed: {} (reduced by {}%)",
                 GeneralUtils.formatBytes(stats.totalOriginalBytes),
                 GeneralUtils.formatBytes(stats.totalCompressedBytes),
-                String.format("%.1f", overallImageReduction));
+                String.format(Locale.ROOT, "%.1f", overallImageReduction));
     }
 
     private static BufferedImage convertToGrayscale(BufferedImage image) {
@@ -848,6 +848,7 @@ public class CompressController {
         @Override
         public String toString() {
             return String.format(
+                    Locale.ROOT,
                     "%s_%s_%d_%dx%d_%s_%s_%d_%s_%s_%s",
                     pixelHash.substring(0, Math.min(8, pixelHash.length())),
                     colorSpace,
@@ -911,7 +912,7 @@ public class CompressController {
     // Increment optimization level if we need more compression
     private static int incrementOptimizeLevel(int currentLevel, long currentSize, long targetSize) {
         double currentRatio = currentSize / (double) targetSize;
-        log.info("Current compression ratio: {}", String.format("%.2f", currentRatio));
+        log.info("Current compression ratio: {}", String.format(Locale.ROOT, "%.2f", currentRatio));
 
         if (currentRatio > 2.0) {
             return Math.min(9, currentLevel + 3);
@@ -1184,7 +1185,7 @@ public class CompressController {
                     log.info(
                             "Post-Ghostscript file size: {} (reduced by {}%)",
                             GeneralUtils.formatBytes(postGsSize),
-                            String.format("%.1f", gsReduction));
+                            String.format(Locale.ROOT, "%.1f", gsReduction));
                 } else {
                     log.warn(
                             "Ghostscript compression failed with return code: {}",
@@ -1291,7 +1292,7 @@ public class CompressController {
                 log.info(
                         "Post-QPDF file size: {} (reduced by {}%)",
                         GeneralUtils.formatBytes(postQpdfSize),
-                        String.format("%.1f", qpdfReduction));
+                        String.format(Locale.ROOT, "%.1f", qpdfReduction));
 
             } catch (IOException e) {
                 if (returnCode != null && returnCode.getRc() != 3) {

@@ -1,5 +1,6 @@
 package stirling.software.proprietary.security.service;
 
+import java.util.Locale;
 import java.util.Optional;
 
 import org.springframework.security.authentication.LockedException;
@@ -44,7 +45,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OidcUserReques
             OidcUser user = delegate.loadUser(userRequest);
             OAUTH2 oauth2 = securityProperties.getOauth2();
             UsernameAttribute usernameAttribute =
-                    UsernameAttribute.valueOf(oauth2.getUseAsUsername().toUpperCase());
+                    UsernameAttribute.valueOf(oauth2.getUseAsUsername().toUpperCase(Locale.ROOT));
             String usernameAttributeKey = usernameAttribute.getName();
 
             // todo: save user by OIDC ID instead of username
