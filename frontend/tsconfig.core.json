@@ -4,8 +4,7 @@
     "paths": {
       "@app/*": [
         "src/core/*"
-      ],
-      "@core/*": ["src/core/*"]
+      ]
     }
   },
   "exclude": [
