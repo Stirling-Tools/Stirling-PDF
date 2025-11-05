@@ -88,7 +88,7 @@ public class MultiPageLayoutController {
                 break;
             default:
                 throw new IllegalArgumentException(
-                        "Mode must be CUSTOM or DEFAULT. Null value rolls back to DEFAULT");
+                        "Mode must be CUSTOM or DEFAULT");
         }
 
         MultipartFile file = request.getFileInput();
