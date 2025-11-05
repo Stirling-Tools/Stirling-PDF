@@ -54,9 +54,9 @@ public class MultiPageLayoutController {
             mode = "DEFAULT";
         }
 
-        int rows = 0;
-        int cols = 0;
-        int pagesPerSheet = 0;
+        int rows;
+        int cols;
+        int pagesPerSheet;
         switch (mode) {
             case "DEFAULT":
                 pagesPerSheet = request.getPagesPerSheet();
