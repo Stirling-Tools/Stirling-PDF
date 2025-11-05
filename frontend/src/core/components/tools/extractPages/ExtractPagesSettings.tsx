@@ -1,6 +1,7 @@
 import { Stack, TextInput } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { ExtractPagesParameters } from "@app/hooks/tools/extractPages/useExtractPagesParameters";
+import PageSelectionSyntaxHint from "@app/components/shared/PageSelectionSyntaxHint";
 
 interface ExtractPagesSettingsProps {
   parameters: ExtractPagesParameters;
@@ -25,6 +26,7 @@ const ExtractPagesSettings = ({ parameters, onParameterChange, disabled = false 
         disabled={disabled}
         required
       />
+      <PageSelectionSyntaxHint input={parameters.pageNumbers || ''} variant="compact" />
     </Stack>
   );
 };
