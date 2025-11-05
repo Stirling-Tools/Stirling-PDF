@@ -2,6 +2,7 @@ package stirling.software.common.util;
 
 import java.io.IOException;
 import java.text.MessageFormat;
+import java.util.Locale;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -34,11 +35,13 @@ public class ExceptionUtils {
         if (context != null && !context.isEmpty()) {
             message =
                     String.format(
+                            Locale.ROOT,
                             "Error %s: PDF file appears to be corrupted or damaged. Please try using the 'Repair PDF' feature first to fix the file before proceeding with this operation.",
                             context);
         } else {
             message =
-                    "PDF file appears to be corrupted or damaged. Please try using the 'Repair PDF' feature first to fix the file before proceeding with this operation.";
+                    "PDF file appears to be corrupted or damaged. Please try using the 'Repair PDF'"
+                            + " feature first to fix the file before proceeding with this operation.";
         }
         return new IOException(message, cause);
     }
@@ -51,7 +54,8 @@ public class ExceptionUtils {
      */
     public static IOException createMultiplePdfCorruptedException(Exception cause) {
         String message =
-                "One or more PDF files appear to be corrupted or damaged. Please try using the 'Repair PDF' feature on each file first before attempting to merge them.";
+                "One or more PDF files appear to be corrupted or damaged. Please try using the"
+                        + " 'Repair PDF' feature on each file first before attempting to merge them.";
         return new IOException(message, cause);
     }
 
@@ -63,7 +67,10 @@ public class ExceptionUtils {
      */
     public static IOException createPdfEncryptionException(Exception cause) {
         String message =
-                "The PDF appears to have corrupted encryption data. This can happen when the PDF was created with incompatible encryption methods. Please try using the 'Repair PDF' feature first, or contact the document creator for a new copy.";
+                "The PDF appears to have corrupted encryption data. This can happen when the PDF"
+                        + " was created with incompatible encryption methods. Please try using the"
+                        + " 'Repair PDF' feature first, or contact the document creator for a new"
+                        + " copy.";
         return new IOException(message, cause);
     }
 
@@ -75,7 +82,8 @@ public class ExceptionUtils {
      */
     public static IOException createPdfPasswordException(Exception cause) {
         String message =
-                "The PDF Document is passworded and either the password was not provided or was incorrect";
+                "The PDF Document is passworded and either the password was not provided or was"
+                        + " incorrect";
         return new IOException(message, cause);
     }
 
@@ -89,8 +97,10 @@ public class ExceptionUtils {
     public static IOException createFileProcessingException(String operation, Exception cause) {
         String message =
                 String.format(
+                        Locale.ROOT,
                         "An error occurred while processing the file during %s operation: %s",
-                        operation, cause.getMessage());
+                        operation,
+                        cause.getMessage());
         return new IOException(message, cause);
     }
 
@@ -180,6 +190,15 @@ public class ExceptionUtils {
                 "error.toolRequired", "{0} is required for {1}", null, "Python", "WebP conversion");
     }
 
+    public static IOException createFfmpegRequiredException() {
+        return createIOException(
+                "error.toolRequired",
+                "{0} is required for {1}",
+                null,
+                "FFmpeg",
+                "PDF to Video Slideshow conversion");
+    }
+
     /** Create file operation exceptions. */
     public static IOException createFileNotFoundException(String fileId) {
         return createIOException("error.fileNotFound", "File not found with ID: {0}", null, fileId);
@@ -223,6 +242,11 @@ public class ExceptionUtils {
 
     public static IOException createQpdfCompressionException(Exception cause) {
         return createIOException("error.commandFailed", "{0} command failed", cause, "QPDF");
+    }
+
+    public static IOException createGhostscriptConversionException(String outputType) {
+        return createIOException(
+                "error.commandFailed", "{0} command failed", null, "Ghostscript " + outputType);
     }
 
     /**
@@ -340,9 +364,11 @@ public class ExceptionUtils {
             int pageNumber, int dpi, Throwable cause) {
         String message =
                 MessageFormat.format(
-                        "Out of memory or image-too-large error while rendering PDF page {0} at {1} DPI. "
-                                + "This can occur when the resulting image exceeds Java's array/memory limits (e.g., NegativeArraySizeException). "
-                                + "Please use a lower DPI value (recommended: 150 or less) or process the document in smaller chunks.",
+                        "Out of memory or image-too-large error while rendering PDF page {0} at {1}"
+                                + " DPI. This can occur when the resulting image exceeds Java's"
+                                + " array/memory limits (e.g., NegativeArraySizeException). Please use"
+                                + " a lower DPI value (recommended: 150 or less) or process the"
+                                + " document in smaller chunks.",
                         pageNumber, dpi);
         return new RuntimeException(message, cause);
     }
@@ -373,9 +399,11 @@ public class ExceptionUtils {
     public static RuntimeException createOutOfMemoryDpiException(int dpi, Throwable cause) {
         String message =
                 MessageFormat.format(
-                        "Out of memory or image-too-large error while rendering PDF at {0} DPI. "
-                                + "This can occur when the resulting image exceeds Java's array/memory limits (e.g., NegativeArraySizeException). "
-                                + "Please use a lower DPI value (recommended: 150 or less) or process the document in smaller chunks.",
+                        "Out of memory or image-too-large error while rendering PDF at {0} DPI."
+                                + " This can occur when the resulting image exceeds Java's array/memory"
+                                + " limits (e.g., NegativeArraySizeException). Please use a lower DPI"
+                                + " value (recommended: 150 or less) or process the document in smaller"
+                                + " chunks.",
                         dpi);
         return new RuntimeException(message, cause);
     }

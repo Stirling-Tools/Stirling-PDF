@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -204,7 +205,7 @@ public class RearrangePagesPDFController {
 
     private List<Integer> processSortTypes(String sortTypes, int totalPages, String pageOrder) {
         try {
-            SortTypes mode = SortTypes.valueOf(sortTypes.toUpperCase());
+            SortTypes mode = SortTypes.valueOf(sortTypes.toUpperCase(Locale.ROOT));
             return switch (mode) {
                 case REVERSE_ORDER -> reverseOrder(totalPages);
                 case DUPLEX_SORT -> duplexSort(totalPages);
@@ -247,7 +248,7 @@ public class RearrangePagesPDFController {
             List<Integer> newPageOrder;
             if (sortType != null
                     && !sortType.isEmpty()
-                    && !"custom".equals(sortType.toLowerCase())) {
+                    && !"custom".equals(sortType.toLowerCase(Locale.ROOT))) {
                 newPageOrder = processSortTypes(sortType, totalPages, pageOrder);
             } else {
                 newPageOrder = GeneralUtils.parsePageList(pageOrderArr, totalPages, false);
@@ -260,18 +261,17 @@ public class RearrangePagesPDFController {
                 newPages.add(document.getPage(newPageOrder.get(i)));
             }
 
-            // Remove all the pages from the original document
-            for (int i = document.getNumberOfPages() - 1; i >= 0; i--) {
-                document.removePage(i);
-            }
+            // Create a new document based on the original one
+            PDDocument rearrangedDocument =
+                    pdfDocumentFactory.createNewDocumentBasedOnOldDocument(document);
 
             // Add the pages in the new order
             for (PDPage page : newPages) {
-                document.addPage(page);
+                rearrangedDocument.addPage(page);
             }
 
             return WebResponseUtils.pdfDocToWebResponse(
-                    document,
+                    rearrangedDocument,
                     GeneralUtils.generateFilename(
                             pdfFile.getOriginalFilename(), "_rearranged.pdf"));
         } catch (IOException e) {

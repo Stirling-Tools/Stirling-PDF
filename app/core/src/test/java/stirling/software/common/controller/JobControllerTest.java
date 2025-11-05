@@ -1,10 +1,10 @@
 package stirling.software.common.controller;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 import java.util.Map;
+import java.util.Objects;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -81,7 +81,7 @@ class JobControllerTest {
 
         @SuppressWarnings("unchecked")
         Map<String, Object> responseBody = (Map<String, Object>) response.getBody();
-        assertEquals(mockResult, responseBody.get("jobResult"));
+        assertEquals(mockResult, Objects.requireNonNull(responseBody).get("jobResult"));
 
         @SuppressWarnings("unchecked")
         Map<String, Object> queueInfo = (Map<String, Object>) responseBody.get("queueInfo");
@@ -146,7 +146,8 @@ class JobControllerTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(contentType, response.getHeaders().getFirst("Content-Type"));
         assertTrue(
-                response.getHeaders().getFirst("Content-Disposition").contains(originalFileName));
+                Objects.requireNonNull(response.getHeaders().getFirst("Content-Disposition"))
+                        .contains(originalFileName));
         assertEquals(fileContent, response.getBody());
     }
 
@@ -167,7 +168,7 @@ class JobControllerTest {
 
         // Assert
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertTrue(response.getBody().toString().contains(errorMessage));
+        assertTrue(Objects.requireNonNull(response.getBody()).toString().contains(errorMessage));
     }
 
     @Test
@@ -186,7 +187,7 @@ class JobControllerTest {
 
         // Assert
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertTrue(response.getBody().toString().contains("not complete"));
+        assertTrue(Objects.requireNonNull(response.getBody()).toString().contains("not complete"));
     }
 
     @Test
@@ -222,7 +223,10 @@ class JobControllerTest {
 
         // Assert
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
-        assertTrue(response.getBody().toString().contains("Error retrieving file"));
+        assertTrue(
+                Objects.requireNonNull(response.getBody())
+                        .toString()
+                        .contains("Error retrieving file"));
     }
 
     /*
@@ -286,7 +290,8 @@ class JobControllerTest {
 
         @SuppressWarnings("unchecked")
         Map<String, Object> responseBody = (Map<String, Object>) response.getBody();
-        assertEquals("Job cancelled successfully", responseBody.get("message"));
+        assertEquals(
+                "Job cancelled successfully", Objects.requireNonNull(responseBody).get("message"));
         assertTrue((Boolean) responseBody.get("wasQueued"));
         assertEquals(2, responseBody.get("queuePosition"));
 
@@ -318,7 +323,8 @@ class JobControllerTest {
 
         @SuppressWarnings("unchecked")
         Map<String, Object> responseBody = (Map<String, Object>) response.getBody();
-        assertEquals("Job cancelled successfully", responseBody.get("message"));
+        assertEquals(
+                "Job cancelled successfully", Objects.requireNonNull(responseBody).get("message"));
         assertFalse((Boolean) responseBody.get("wasQueued"));
         assertEquals("n/a", responseBody.get("queuePosition"));
 
@@ -370,7 +376,9 @@ class JobControllerTest {
 
         @SuppressWarnings("unchecked")
         Map<String, Object> responseBody = (Map<String, Object>) response.getBody();
-        assertEquals("Cannot cancel job that is already complete", responseBody.get("message"));
+        assertEquals(
+                "Cannot cancel job that is already complete",
+                Objects.requireNonNull(responseBody).get("message"));
     }
 
     @Test
@@ -392,7 +400,9 @@ class JobControllerTest {
 
         @SuppressWarnings("unchecked")
         Map<String, Object> responseBody = (Map<String, Object>) response.getBody();
-        assertEquals("You are not authorized to cancel this job", responseBody.get("message"));
+        assertEquals(
+                "You are not authorized to cancel this job",
+                Objects.requireNonNull(responseBody).get("message"));
 
         // Verify no cancellation attempts were made
         verify(jobQueue, never()).isJobQueued(anyString());

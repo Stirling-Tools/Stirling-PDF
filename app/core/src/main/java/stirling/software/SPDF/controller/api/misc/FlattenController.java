@@ -62,23 +62,36 @@ public class FlattenController {
             return WebResponseUtils.pdfDocToWebResponse(
                     document, Filenames.toSimpleFileName(file.getOriginalFilename()));
         } else {
-            // flatten whole page aka convert each page to image and readd it (making text
+            // flatten whole page aka convert each page to image and re-add it (making text
             // unselectable)
             PDFRenderer pdfRenderer = new PDFRenderer(document);
             PDDocument newDocument =
                     pdfDocumentFactory.createNewDocumentBasedOnOldDocument(document);
+
+            int defaultRenderDpi = 100; // Default fallback
+            ApplicationProperties properties =
+                    ApplicationContextProvider.getBean(ApplicationProperties.class);
+            Integer configuredMaxDpi = null;
+            if (properties != null && properties.getSystem() != null) {
+                configuredMaxDpi = properties.getSystem().getMaxDPI();
+            }
+
+            int maxDpi =
+                    (configuredMaxDpi != null && configuredMaxDpi > 0)
+                            ? configuredMaxDpi
+                            : defaultRenderDpi;
+
+            Integer requestedDpi = request.getRenderDpi();
+            int renderDpi = maxDpi;
+            if (requestedDpi != null) {
+                renderDpi = Math.min(requestedDpi, maxDpi);
+                renderDpi = Math.max(renderDpi, 72);
+            }
+
             int numPages = document.getNumberOfPages();
             for (int i = 0; i < numPages; i++) {
                 try {
                     BufferedImage image;
-
-                    // Use global maximum DPI setting, fallback to 300 if not set
-                    int renderDpi = 300; // Default fallback
-                    ApplicationProperties properties =
-                            ApplicationContextProvider.getBean(ApplicationProperties.class);
-                    if (properties != null && properties.getSystem() != null) {
-                        renderDpi = properties.getSystem().getMaxDPI();
-                    }
 
                     try {
                         image = pdfRenderer.renderImageWithDPI(i, renderDpi, ImageType.RGB);

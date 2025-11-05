@@ -1,7 +1,6 @@
 package stirling.software.common.service;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static stirling.software.common.service.SpyPDFDocumentFactory.*;
 
@@ -22,7 +21,6 @@ import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 
 import stirling.software.common.model.api.PDFFile;
-import stirling.software.common.service.SpyPDFDocumentFactory.StrategyType;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -43,58 +41,7 @@ class CustomPDFDocumentFactoryTest {
         }
     }
 
-    @ParameterizedTest
-    @CsvSource({"5,MEMORY_ONLY", "20,MIXED", "60,TEMP_FILE"})
-    void testStrategy_FileInput(int sizeMB, StrategyType expected) throws IOException {
-        File file = writeTempFile(inflatePdf(basePdfBytes, sizeMB));
-        try (PDDocument doc = factory.load(file)) {
-            Assertions.assertEquals(expected, factory.lastStrategyUsed);
-        }
-    }
-
-    @ParameterizedTest
-    @CsvSource({"5,MEMORY_ONLY", "20,MIXED", "60,TEMP_FILE"})
-    void testStrategy_ByteArray(int sizeMB, StrategyType expected) throws IOException {
-        byte[] inflated = inflatePdf(basePdfBytes, sizeMB);
-        try (PDDocument doc = factory.load(inflated)) {
-            Assertions.assertEquals(expected, factory.lastStrategyUsed);
-        }
-    }
-
-    @ParameterizedTest
-    @CsvSource({"5,MEMORY_ONLY", "20,MIXED", "60,TEMP_FILE"})
-    void testStrategy_InputStream(int sizeMB, StrategyType expected) throws IOException {
-        byte[] inflated = inflatePdf(basePdfBytes, sizeMB);
-        try (PDDocument doc = factory.load(new ByteArrayInputStream(inflated))) {
-            Assertions.assertEquals(expected, factory.lastStrategyUsed);
-        }
-    }
-
-    @ParameterizedTest
-    @CsvSource({"5,MEMORY_ONLY", "20,MIXED", "60,TEMP_FILE"})
-    void testStrategy_MultipartFile(int sizeMB, StrategyType expected) throws IOException {
-        byte[] inflated = inflatePdf(basePdfBytes, sizeMB);
-        MockMultipartFile multipart =
-                new MockMultipartFile("file", "doc.pdf", MediaType.APPLICATION_PDF_VALUE, inflated);
-        try (PDDocument doc = factory.load(multipart)) {
-            Assertions.assertEquals(expected, factory.lastStrategyUsed);
-        }
-    }
-
-    @ParameterizedTest
-    @CsvSource({"5,MEMORY_ONLY", "20,MIXED", "60,TEMP_FILE"})
-    void testStrategy_PDFFile(int sizeMB, StrategyType expected) throws IOException {
-        byte[] inflated = inflatePdf(basePdfBytes, sizeMB);
-        MockMultipartFile multipart =
-                new MockMultipartFile("file", "doc.pdf", MediaType.APPLICATION_PDF_VALUE, inflated);
-        PDFFile pdfFile = new PDFFile();
-        pdfFile.setFileInput(multipart);
-        try (PDDocument doc = factory.load(pdfFile)) {
-            Assertions.assertEquals(expected, factory.lastStrategyUsed);
-        }
-    }
-
-    private byte[] inflatePdf(byte[] input, int sizeInMB) throws IOException {
+    private static byte[] inflatePdf(byte[] input, int sizeInMB) throws IOException {
         try (PDDocument doc = Loader.loadPDF(input)) {
             byte[] largeData = new byte[sizeInMB * 1024 * 1024];
             Arrays.fill(largeData, (byte) 'A');
@@ -111,6 +58,46 @@ class CustomPDFDocumentFactoryTest {
             doc.save(out);
             return out.toByteArray();
         }
+    }
+
+    private static File writeTempFile(byte[] content) throws IOException {
+        File file = Files.createTempFile("pdf-test-", ".pdf").toFile();
+        Files.write(file.toPath(), content);
+        return file;
+    }
+
+    @ParameterizedTest
+    @CsvSource({"5,MEMORY_ONLY", "20,MIXED", "60,TEMP_FILE"})
+    void testStrategy_FileInput(int sizeMB, StrategyType expected) throws IOException {
+        File file = writeTempFile(inflatePdf(basePdfBytes, sizeMB));
+        factory.load(file);
+        Assertions.assertEquals(expected, factory.lastStrategyUsed);
+    }
+
+    @ParameterizedTest
+    @CsvSource({"5,MEMORY_ONLY", "20,MIXED", "60,TEMP_FILE"})
+    void testStrategy_ByteArray(int sizeMB, StrategyType expected) throws IOException {
+        byte[] inflated = inflatePdf(basePdfBytes, sizeMB);
+        factory.load(inflated);
+        Assertions.assertEquals(expected, factory.lastStrategyUsed);
+    }
+
+    @ParameterizedTest
+    @CsvSource({"5,MEMORY_ONLY", "20,MIXED", "60,TEMP_FILE"})
+    void testStrategy_InputStream(int sizeMB, StrategyType expected) throws IOException {
+        byte[] inflated = inflatePdf(basePdfBytes, sizeMB);
+        factory.load(new ByteArrayInputStream(inflated));
+        Assertions.assertEquals(expected, factory.lastStrategyUsed);
+    }
+
+    @ParameterizedTest
+    @CsvSource({"5,MEMORY_ONLY", "20,MIXED", "60,TEMP_FILE"})
+    void testStrategy_MultipartFile(int sizeMB, StrategyType expected) throws IOException {
+        byte[] inflated = inflatePdf(basePdfBytes, sizeMB);
+        MockMultipartFile multipart =
+                new MockMultipartFile("file", "doc.pdf", MediaType.APPLICATION_PDF_VALUE, inflated);
+        factory.load(multipart);
+        Assertions.assertEquals(expected, factory.lastStrategyUsed);
     }
 
     @Test
@@ -130,7 +117,7 @@ class CustomPDFDocumentFactoryTest {
         }
     }
 
-    // neeed to add password pdf
+    // need to add password pdf
     //    @Test
     //    void testLoadPasswordProtectedPdfFromInputStream() throws IOException {
     //        try (InputStream is = getClass().getResourceAsStream("/protected.pdf")) {
@@ -212,10 +199,16 @@ class CustomPDFDocumentFactoryTest {
         assertTrue(newBytes.length > 0);
     }
 
-    private File writeTempFile(byte[] content) throws IOException {
-        File file = Files.createTempFile("pdf-test-", ".pdf").toFile();
-        Files.write(file.toPath(), content);
-        return file;
+    @ParameterizedTest
+    @CsvSource({"5,MEMORY_ONLY", "20,MIXED", "60,TEMP_FILE"})
+    void testStrategy_PDFFile(int sizeMB, StrategyType expected) throws IOException {
+        byte[] inflated = inflatePdf(basePdfBytes, sizeMB);
+        MockMultipartFile multipart =
+                new MockMultipartFile("file", "doc.pdf", MediaType.APPLICATION_PDF_VALUE, inflated);
+        PDFFile pdfFile = new PDFFile();
+        pdfFile.setFileInput(multipart);
+        factory.load(pdfFile);
+        Assertions.assertEquals(expected, factory.lastStrategyUsed);
     }
 
     @BeforeEach

@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -286,7 +287,7 @@ public class ApplicationProperties {
                 private KeycloakProvider keycloak = new KeycloakProvider();
 
                 public Provider get(String registrationId) throws UnsupportedProviderException {
-                    return switch (registrationId.toLowerCase()) {
+                    return switch (registrationId.toLowerCase(Locale.ROOT)) {
                         case "google" -> getGoogle();
                         case "github" -> getGithub();
                         case "keycloak" -> getKeycloak();
@@ -595,6 +596,25 @@ public class ApplicationProperties {
         public static class EnterpriseFeatures {
             private PersistentMetrics persistentMetrics = new PersistentMetrics();
             private Audit audit = new Audit();
+            private DatabaseNotifications databaseNotifications = new DatabaseNotifications();
+
+            @Data
+            public static class DatabaseNotifications {
+                private Backup backups = new Backup();
+                private Imports imports = new Imports();
+
+                @Data
+                public static class Backup {
+                    private boolean successful = false;
+                    private boolean failed = false;
+                }
+
+                @Data
+                public static class Imports {
+                    private boolean successful = false;
+                    private boolean failed = false;
+                }
+            }
 
             @Data
             public static class Audit {
@@ -628,6 +648,7 @@ public class ApplicationProperties {
             private int tesseractSessionLimit;
             private int ghostscriptSessionLimit;
             private int ocrMyPdfSessionLimit;
+            private int ffmpegSessionLimit;
 
             public int getQpdfSessionLimit() {
                 return qpdfSessionLimit > 0 ? qpdfSessionLimit : 2;
@@ -668,6 +689,10 @@ public class ApplicationProperties {
             public int getOcrMyPdfSessionLimit() {
                 return ocrMyPdfSessionLimit > 0 ? ocrMyPdfSessionLimit : 2;
             }
+
+            public int getFfmpegSessionLimit() {
+                return ffmpegSessionLimit > 0 ? ffmpegSessionLimit : 2;
+            }
         }
 
         @Data
@@ -694,6 +719,7 @@ public class ApplicationProperties {
             private long qpdfTimeoutMinutes;
             private long ghostscriptTimeoutMinutes;
             private long ocrMyPdfTimeoutMinutes;
+            private long ffmpegTimeoutMinutes;
 
             public long getTesseractTimeoutMinutes() {
                 return tesseractTimeoutMinutes > 0 ? tesseractTimeoutMinutes : 30;
@@ -733,6 +759,10 @@ public class ApplicationProperties {
 
             public long getOcrMyPdfTimeoutMinutes() {
                 return ocrMyPdfTimeoutMinutes > 0 ? ocrMyPdfTimeoutMinutes : 30;
+            }
+
+            public long getFfmpegTimeoutMinutes() {
+                return ffmpegTimeoutMinutes > 0 ? ffmpegTimeoutMinutes : 30;
             }
         }
     }

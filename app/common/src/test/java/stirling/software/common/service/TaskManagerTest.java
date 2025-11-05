@@ -5,7 +5,6 @@ import static org.mockito.Mockito.*;
 
 import java.time.LocalDateTime;
 import java.util.Map;
-import java.util.UUID;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,7 +41,7 @@ class TaskManagerTest {
     @Test
     void testCreateTask() {
         // Act
-        String jobId = UUID.randomUUID().toString();
+        String jobId = "test-job-1";
         taskManager.createTask(jobId);
 
         // Assert
@@ -56,7 +55,7 @@ class TaskManagerTest {
     @Test
     void testSetResult() {
         // Arrange
-        String jobId = UUID.randomUUID().toString();
+        String jobId = "test-job-2";
         taskManager.createTask(jobId);
         Object resultObject = "Test result";
 
@@ -74,7 +73,7 @@ class TaskManagerTest {
     @Test
     void testSetFileResult() throws Exception {
         // Arrange
-        String jobId = UUID.randomUUID().toString();
+        String jobId = "test-job-3";
         taskManager.createTask(jobId);
         String fileId = "file-id";
         String originalFileName = "test.pdf";
@@ -108,7 +107,7 @@ class TaskManagerTest {
     @Test
     void testSetError() {
         // Arrange
-        String jobId = UUID.randomUUID().toString();
+        String jobId = "test-job-4";
         taskManager.createTask(jobId);
         String errorMessage = "Test error";
 
@@ -126,7 +125,7 @@ class TaskManagerTest {
     @Test
     void testSetComplete_WithExistingResult() {
         // Arrange
-        String jobId = UUID.randomUUID().toString();
+        String jobId = "test-job-5";
         taskManager.createTask(jobId);
         Object resultObject = "Test result";
         taskManager.setResult(jobId, resultObject);
@@ -144,7 +143,7 @@ class TaskManagerTest {
     @Test
     void testSetComplete_WithoutExistingResult() {
         // Arrange
-        String jobId = UUID.randomUUID().toString();
+        String jobId = "test-job-6";
         taskManager.createTask(jobId);
 
         // Act
@@ -160,7 +159,7 @@ class TaskManagerTest {
     @Test
     void testIsComplete() {
         // Arrange
-        String jobId = UUID.randomUUID().toString();
+        String jobId = "test-job-7";
         taskManager.createTask(jobId);
 
         // Assert - not complete initially
@@ -215,7 +214,9 @@ class TaskManagerTest {
     }
 
     @Test
-    void testCleanupOldJobs() throws Exception {
+    void testCleanupOldJobs() {
+        // Capture test time at the beginning for deterministic calculations
+        final LocalDateTime testTime = LocalDateTime.now();
         // Arrange
         // 1. Create a recent completed job
         String recentJobId = "recent-job";
@@ -227,8 +228,9 @@ class TaskManagerTest {
         taskManager.createTask(oldJobId);
         JobResult oldJob = taskManager.getJobResult(oldJobId);
 
-        // Manually set the completion time to be older than the expiry
-        LocalDateTime oldTime = LocalDateTime.now().minusHours(1);
+        // Manually set the completion time to be older than the expiry (relative to test start
+        // time)
+        LocalDateTime oldTime = testTime.minusHours(1);
         ReflectionTestUtils.setField(oldJob, "completedAt", oldTime);
         ReflectionTestUtils.setField(oldJob, "complete", true);
 
@@ -253,6 +255,7 @@ class TaskManagerTest {
         taskManager.createTask(activeJobId);
 
         // Verify all jobs are in the map
+        assertNotNull(jobResultsMap);
         assertTrue(jobResultsMap.containsKey(recentJobId));
         assertTrue(jobResultsMap.containsKey(oldJobId));
         assertTrue(jobResultsMap.containsKey(activeJobId));
@@ -268,7 +271,7 @@ class TaskManagerTest {
     }
 
     @Test
-    void testShutdown() throws Exception {
+    void testShutdown() {
         // This mainly tests that the shutdown method doesn't throw exceptions
         taskManager.shutdown();
 
@@ -279,7 +282,7 @@ class TaskManagerTest {
     @Test
     void testAddNote() {
         // Arrange
-        String jobId = UUID.randomUUID().toString();
+        String jobId = "test-job-8";
         taskManager.createTask(jobId);
         String note = "Test note";
 
