@@ -76,7 +76,7 @@ const AuditEventsTable: React.FC = () => {
     fetchEvents();
   }, [filters, currentPage]);
 
-  const handleFilterChange = (key: keyof AuditFilters, value: any) => {
+  const handleFilterChange = <K extends keyof AuditFilters>(key: K, value: AuditFilters[K]) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
     setCurrentPage(1);
   };
