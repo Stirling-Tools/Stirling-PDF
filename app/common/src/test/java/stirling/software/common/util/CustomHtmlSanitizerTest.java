@@ -36,7 +36,7 @@ class CustomHtmlSanitizerTest {
         // strict-stubbing failures when individual tests bypass certain branches.
         lenient().when(ssrfProtectionService.isUrlAllowed(anyString())).thenReturn(true);
         lenient().when(applicationProperties.getSystem()).thenReturn(systemProperties);
-        lenient().when(systemProperties.getDisableSanitize()).thenReturn(false);
+        lenient().when(systemProperties.isDisableSanitize()).thenReturn(false);
 
         customHtmlSanitizer = new CustomHtmlSanitizer(ssrfProtectionService, applicationProperties);
     }
