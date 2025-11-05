@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
 import { ActionIcon, Popover } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { useViewer } from '@app/contexts/ViewerContext';
@@ -7,18 +7,57 @@ import LocalIcon from '@app/components/shared/LocalIcon';
 import { Tooltip } from '@app/components/shared/Tooltip';
 import { SearchInterface } from '@app/components/viewer/SearchInterface';
 import ViewerAnnotationControls from '@app/components/shared/rightRail/ViewerAnnotationControls';
+import { useNavigationActions, useNavigationState } from '@app/contexts/NavigationContext';
+import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
 
 export function useViewerRightRailButtons() {
   const { t } = useTranslation();
   const viewer = useViewer();
-  const [isPanning, setIsPanning] = useState<boolean>(() => viewer.getPanState()?.isPanning ?? false);
+  const { actions: navActions } = useNavigationActions();
+  const { handleToolSelect } = useToolWorkflow();
+  const { workbench, selectedTool } = useNavigationState();
 
-  // Lift i18n labels out of memo for clarity
-  const searchLabel = t('rightRail.search', 'Search PDF');
-  const panLabel = t('rightRail.panMode', 'Pan Mode');
-  const rotateLeftLabel = t('rightRail.rotateLeft', 'Rotate Left');
-  const rotateRightLabel = t('rightRail.rotateRight', 'Rotate Right');
-  const sidebarLabel = t('rightRail.toggleSidebar', 'Toggle Sidebar');
+  // Extract stable references to viewer methods to avoid re-renders from context changes
+  const getToolModeRef = useRef(viewer.getToolMode);
+  const registerToolModeListenerRef = useRef(viewer.registerToolModeListener);
+  const unregisterToolModeListenerRef = useRef(viewer.unregisterToolModeListener);
+  const setAnnotationModeRef = useRef(viewer.setAnnotationMode);
+  const redactionActionsRef = useRef(viewer.redactionActions);
+  const panActionsRef = useRef(viewer.panActions);
+  const rotationActionsRef = useRef(viewer.rotationActions);
+  const toggleThumbnailSidebarRef = useRef(viewer.toggleThumbnailSidebar);
+  const triggerToolModeUpdateRef = useRef(viewer.triggerToolModeUpdate);
+  
+  // Update refs when viewer context changes (but don't cause re-renders)
+  useEffect(() => {
+    getToolModeRef.current = viewer.getToolMode;
+    registerToolModeListenerRef.current = viewer.registerToolModeListener;
+    unregisterToolModeListenerRef.current = viewer.unregisterToolModeListener;
+    setAnnotationModeRef.current = viewer.setAnnotationMode;
+    redactionActionsRef.current = viewer.redactionActions;
+    panActionsRef.current = viewer.panActions;
+    rotationActionsRef.current = viewer.rotationActions;
+    toggleThumbnailSidebarRef.current = viewer.toggleThumbnailSidebar;
+    triggerToolModeUpdateRef.current = viewer.triggerToolModeUpdate;
+  }, [viewer]);
+
+  // Single source of truth for active tool mode (none | pan | redact | draw)
+  const [activeMode, setActiveMode] = useState<'none' | 'pan' | 'redact' | 'draw'>(() => getToolModeRef.current());
+  useEffect(() => {
+    registerToolModeListenerRef.current((mode) => setActiveMode(mode));
+    return () => unregisterToolModeListenerRef.current();
+  }, []); // Empty deps - refs are stable
+
+  // Memoize i18n labels to prevent re-renders
+  const searchLabel = useMemo(() => t('rightRail.search', 'Search PDF'), [t]);
+  const panLabel = useMemo(() => t('rightRail.panMode', 'Pan Mode'), [t]);
+  const rotateLeftLabel = useMemo(() => t('rightRail.rotateLeft', 'Rotate Left'), [t]);
+  const rotateRightLabel = useMemo(() => t('rightRail.rotateRight', 'Rotate Right'), [t]);
+  const sidebarLabel = useMemo(() => t('rightRail.toggleSidebar', 'Toggle Sidebar'), [t]);
+  const redactLabel = useMemo(() => t('rightRail.redact', 'Redact'), [t]);
+
+  const isPanning = activeMode === 'pan';
+  const isRedacting = activeMode === 'redact';
 
   const viewerButtons = useMemo<RightRailButtonWithAction[]>(() => {
     return [
@@ -67,8 +106,24 @@ export function useViewerRightRailButtons() {
               radius="md"
               className="right-rail-icon"
               onClick={() => {
-                viewer.panActions.togglePan();
-                setIsPanning(prev => !prev);
+                // Entering pan should disable draw and redaction; leaving pan just toggles off
+                if (!isPanning) {
+                  try { setAnnotationModeRef.current(false); } catch {}
+                  try { redactionActionsRef.current.deactivate(); } catch {}
+                  const enable = () => {
+                    try { panActionsRef.current.enablePan(); } catch {}
+                    try { triggerToolModeUpdateRef.current(); } catch {}
+                  };
+                  if (typeof window !== 'undefined' && 'requestAnimationFrame' in window) {
+                    requestAnimationFrame(() => setTimeout(enable, 0));
+                  } else {
+                    setTimeout(enable, 0);
+                  }
+                } else {
+                  try { panActionsRef.current.disablePan(); } catch {}
+                  try { triggerToolModeUpdateRef.current(); } catch {}
+                }
+                // activeMode will update via listener
               }}
               disabled={disabled}
             >
@@ -85,7 +140,7 @@ export function useViewerRightRailButtons() {
         section: 'top' as const,
         order: 30,
         onClick: () => {
-          viewer.rotationActions.rotateBackward();
+          rotationActionsRef.current.rotateBackward();
         }
       },
       {
@@ -96,7 +151,7 @@ export function useViewerRightRailButtons() {
         section: 'top' as const,
         order: 40,
         onClick: () => {
-          viewer.rotationActions.rotateForward();
+          rotationActionsRef.current.rotateForward();
         }
       },
       {
@@ -107,8 +162,55 @@ export function useViewerRightRailButtons() {
         section: 'top' as const,
         order: 50,
         onClick: () => {
-          viewer.toggleThumbnailSidebar();
+          toggleThumbnailSidebarRef.current();
         }
+      },
+      {
+        id: 'viewer-redaction',
+        tooltip: redactLabel,
+        ariaLabel: redactLabel,
+        section: 'top' as const,
+        order: 55,
+        render: ({ disabled }) => (
+          <Tooltip content={redactLabel} position="left" offset={12} arrow portalTarget={document.body}>
+            <ActionIcon
+              variant={isRedacting ? 'filled' : 'subtle'}
+              color={isRedacting ? 'blue' : undefined}
+              radius="md"
+              className="right-rail-icon"
+              onClick={() => {
+                // Ensure the left sidebar opens the Redact tool in viewer with manual mode
+                sessionStorage.setItem('redaction:init', 'manual');
+                // Navigate to viewer with the redact tool if we're not already there
+                if (workbench !== 'viewer' || selectedTool !== 'redact') {
+                  handleToolSelect('redact' as any);
+                }
+                // Disable draw and pan when activating redaction
+                try { setAnnotationModeRef.current(false); } catch {}
+                try { panActionsRef.current.disablePan(); } catch {}
+                // Activate last used manual mode inside viewer.
+                // Defer to next frame to allow annotation plugin to fully release interaction.
+                const last = (sessionStorage.getItem('redaction:lastManualType') as 'redactSelection' | 'marqueeRedact' | null) || 'redactSelection';
+                const activate = () => {
+                  if (last === 'marqueeRedact') {
+                    redactionActionsRef.current.activateArea();
+                  } else {
+                    redactionActionsRef.current.activateText();
+                  }
+                  try { triggerToolModeUpdateRef.current(); } catch {}
+                };
+                if (typeof window !== 'undefined' && 'requestAnimationFrame' in window) {
+                  requestAnimationFrame(() => setTimeout(activate, 0));
+                } else {
+                  setTimeout(activate, 0);
+                }
+              }}
+              disabled={disabled}
+            >
+              <LocalIcon icon="visibility-off-rounded" width="1.5rem" height="1.5rem" />
+            </ActionIcon>
+          </Tooltip>
+        )
       },
       {
         id: 'viewer-annotation-controls',
@@ -119,7 +221,7 @@ export function useViewerRightRailButtons() {
         )
       }
     ];
-  }, [t, viewer, isPanning, searchLabel, panLabel, rotateLeftLabel, rotateRightLabel, sidebarLabel]);
+  }, [activeMode, searchLabel, panLabel, rotateLeftLabel, rotateRightLabel, sidebarLabel, redactLabel, handleToolSelect, workbench, selectedTool, isPanning, isRedacting]);
 
   useRightRailButtons(viewerButtons);
 }

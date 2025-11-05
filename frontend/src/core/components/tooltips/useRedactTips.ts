@@ -1,10 +1,11 @@
 import { useTranslation } from 'react-i18next';
+import { useMemo } from 'react';
 import { TooltipContent } from '@app/types/tips';
 
 export const useRedactModeTips = (): TooltipContent => {
   const { t } = useTranslation();
 
-  return {
+  return useMemo(() => ({
     header: {
       title: t("redact.tooltip.mode.header.title", "Redaction Method")
     },
@@ -18,13 +19,13 @@ export const useRedactModeTips = (): TooltipContent => {
         description: t("redact.tooltip.mode.manual.text", "Click and drag to manually select specific areas to redact. Gives you precise control over what gets redacted. (Coming soon)")
       }
     ]
-  };
+  }), [t]);
 };
 
 export const useRedactWordsTips = (): TooltipContent => {
   const { t } = useTranslation();
 
-  return {
+  return useMemo(() => ({
     header: {
       title: t("redact.tooltip.words.header.title", "Words to Redact")
     },
@@ -43,13 +44,13 @@ export const useRedactWordsTips = (): TooltipContent => {
         description: t("redact.tooltip.words.examples.text", "Typical words to redact include: bank details, email addresses, or specific names.")
       }
     ]
-  };
+  }), [t]);
 };
 
 export const useRedactAdvancedTips = (): TooltipContent => {
   const { t } = useTranslation();
 
-  return {
+  return useMemo(() => ({
     header: {
       title: t("redact.tooltip.advanced.header.title", "Advanced Redaction Settings")
     },
@@ -75,5 +76,25 @@ export const useRedactAdvancedTips = (): TooltipContent => {
         description: t("redact.tooltip.advanced.convert.text", "Converts the PDF to an image-based PDF after redaction. This ensures text behind redaction boxes is completely removed and unrecoverable.")
       }
     ]
-  };
+  }), [t]);
+};
+
+export const useRedactManualTips = (): TooltipContent => {
+  const { t } = useTranslation();
+
+  return useMemo(() => ({
+    header: {
+      title: t("redact.tooltip.manual.header.title", "Manual Redaction")
+    },
+    tips: [
+      {
+        title: t("redact.tooltip.manual.selectionByText.title", "Redact by Text"),
+        description: t("redact.tooltip.manual.selectionByText.text", "Select and redact specific text in the document. Click and drag to select text, then apply the redaction to permanently remove it."),
+      },
+      {
+        title: t("redact.tooltip.manual.selectionByArea.title", "Redact by Area"),
+        description: t("redact.tooltip.manual.selectionByArea.text", "Draw a box to redact any area of the document, regardless of content. Click and drag to create a redaction box that covers the area you want to remove."),
+      }
+    ]
+  }), [t]);
 };

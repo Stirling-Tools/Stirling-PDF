@@ -7,7 +7,7 @@ import { useViewer } from '@app/contexts/ViewerContext';
  */
 export function PanAPIBridge() {
   const { provides: pan, isPanning } = usePan();
-  const { registerBridge } = useViewer();
+  const { registerBridge, triggerToolModeUpdate } = useViewer();
   
   // Store state locally
   const [_localState, setLocalState] = useState({
@@ -38,8 +38,10 @@ export function PanAPIBridge() {
           makePanDefault: () => pan.makePanDefault(),
         }
       });
+      // Notify listeners whenever pan state changes
+      triggerToolModeUpdate();
     }
-  }, [pan, isPanning]);
+  }, [pan, isPanning, triggerToolModeUpdate, registerBridge]);
 
   return null;
 }

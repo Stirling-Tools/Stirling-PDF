@@ -17,8 +17,9 @@ export const buildRedactFormData = (parameters: RedactParameters, file: File): F
     formData.append("customPadding", parameters.customPadding.toString());
     formData.append("convertPDFToImage", parameters.convertPDFToImage.toString());
   } else {
-    // Manual mode parameters would go here when implemented
-    throw new Error('Manual redaction not yet implemented');
+    // Manual mode is handled interactively in the viewer via EmbedPDF redaction plugin.
+    // The sidebar tool never posts a request in manual mode, so return minimal form data.
+    formData.append('mode', 'manual');
   }
 
   return formData;
@@ -33,8 +34,8 @@ export const redactOperationConfig = {
     if (parameters.mode === 'automatic') {
       return '/api/v1/security/auto-redact';
     } else {
-      // Manual redaction endpoint would go here when implemented
-      throw new Error('Manual redaction not yet implemented');
+      // Manual mode does not call backend; return a placeholder that will not be invoked.
+      return '/noop/manual-redaction';
     }
   },
   defaultParameters,

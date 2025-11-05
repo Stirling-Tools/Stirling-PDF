@@ -64,7 +64,7 @@ export default function ViewerAnnotationControls({ currentView, disabled = false
           disabled={disabled || currentView !== 'viewer' || viewerContext?.isAnnotationMode || isPlacementMode}
         >
           <LocalIcon
-            icon={viewerContext?.isAnnotationsVisible ? "visibility" : "visibility-off-rounded"}
+            icon={viewerContext?.isAnnotationsVisible ? "layers-rounded" : "layers-clear-rounded"}
             width="1.5rem"
             height="1.5rem"
           />
@@ -136,6 +136,10 @@ export default function ViewerAnnotationControls({ currentView, disabled = false
             radius="md"
             className="right-rail-icon"
             onClick={() => {
+              // Disable redaction tool while entering draw mode
+              try { viewerContext?.redactionActions.commitAllPending?.(); } catch {}
+              try { viewerContext?.redactionActions.deactivate?.(); } catch {}
+              try { viewerContext?.panActions.disablePan?.(); } catch {}
               viewerContext?.toggleAnnotationMode();
               // Activate ink drawing tool when entering annotation mode
               if (signatureApiRef?.current && currentView === 'viewer') {
@@ -146,6 +150,10 @@ export default function ViewerAnnotationControls({ currentView, disabled = false
                   console.log('Signature API not ready:', error);
                 }
               }
+              // Notify after state settles so right rail updates reliably
+              setTimeout(() => {
+                try { viewerContext?.triggerToolModeUpdate?.(); } catch {}
+              }, 0);
             }}
             disabled={disabled}
             aria-label={typeof t === 'function' ? t('rightRail.draw', 'Draw') : 'Draw'}
@@ -164,6 +172,8 @@ export default function ViewerAnnotationControls({ currentView, disabled = false
           onClick={async () => {
             if (viewerContext?.exportActions?.saveAsCopy && currentView === 'viewer') {
               try {
+                // Commit any pending redactions before exporting
+                try { await viewerContext.redactionActions.commitAllPending(); } catch {}
                 const pdfArrayBuffer = await viewerContext.exportActions.saveAsCopy();
                 if (pdfArrayBuffer) {
                   // Create new File object with flattened annotations
@@ -196,6 +206,8 @@ export default function ViewerAnnotationControls({ currentView, disabled = false
 
                       // Replace the original file with the saved version
                       await fileActions.consumeFiles([currentFileId], [outputStirlingFile], [outputStub]);
+                      // Clear redaction dirty flag after save
+                      sessionStorage.removeItem('redaction:dirty');
                     }
                   }
                 }

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createPluginRegistration } from '@embedpdf/core';
 import { EmbedPDF } from '@embedpdf/core/react';
 import { usePdfiumEngine } from '@embedpdf/engines/react';
@@ -11,6 +11,7 @@ import { RenderPluginPackage } from '@embedpdf/plugin-render/react';
 import { ZoomPluginPackage } from '@embedpdf/plugin-zoom/react';
 import { InteractionManagerPluginPackage, PagePointerProvider, GlobalPointerProvider } from '@embedpdf/plugin-interaction-manager/react';
 import { SelectionLayer, SelectionPluginPackage } from '@embedpdf/plugin-selection/react';
+import { RedactionLayer, RedactionPluginPackage } from '@embedpdf/plugin-redaction/react';
 import { TilingLayer, TilingPluginPackage } from '@embedpdf/plugin-tiling/react';
 import { PanPluginPackage } from '@embedpdf/plugin-pan/react';
 import { SpreadPluginPackage, SpreadMode } from '@embedpdf/plugin-spread/react';
@@ -38,6 +39,9 @@ import { SignatureAPIBridge } from '@app/components/viewer/SignatureAPIBridge';
 import { HistoryAPIBridge } from '@app/components/viewer/HistoryAPIBridge';
 import type { SignatureAPI, HistoryAPI } from '@app/components/viewer/viewerTypes';
 import { ExportAPIBridge } from '@app/components/viewer/ExportAPIBridge';
+import { RedactionAPIBridge } from './RedactionAPIBridge';
+import RedactionSelectionMenu from '@app/components/viewer/RedactionSelectionMenu';
+import HoverToSelectPending from '@app/components/viewer/HoverToSelectPending';
 
 interface LocalEmbedPDFProps {
   file?: File | Blob;
@@ -51,6 +55,7 @@ interface LocalEmbedPDFProps {
 export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatureAdded, signatureApiRef, historyApiRef }: LocalEmbedPDFProps) {
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [, setAnnotations] = useState<Array<{id: string, pageIndex: number, rect: any}>>([]);
+  const pageElRef = useRef<Record<number, HTMLDivElement | null>>({});
 
   // Convert File to URL if needed
   useEffect(() => {
@@ -95,6 +100,11 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
 
       // Register selection plugin (depends on InteractionManager)
       createPluginRegistration(SelectionPluginPackage),
+
+      // Register redaction plugin (depends on InteractionManager and Selection)
+      createPluginRegistration(RedactionPluginPackage, {
+        drawBlackBoxes: true,
+      }),
 
       // Register history plugin for undo/redo (recommended for annotations)
       ...(enableAnnotations ? [createPluginRegistration(HistoryPluginPackage)] : []),
@@ -273,6 +283,7 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
         {enableAnnotations && <SignatureAPIBridge ref={signatureApiRef} />}
         {enableAnnotations && <HistoryAPIBridge ref={historyApiRef} />}
         <ExportAPIBridge />
+        <RedactionAPIBridge />
         <GlobalPointerProvider>
           <Viewport
             style={{
@@ -290,9 +301,9 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
             }}
           >
           <Scroller
-            renderPage={({ document, width, height, pageIndex, scale, rotation }) => {
+            renderPage={({ width, height, pageIndex, scale, rotation }) => {
               return (
-                <Rotate key={document?.id} pageSize={{ width, height }}>
+                <Rotate key={`page-${pageIndex}`} pageSize={{ width, height }}>
                   <PagePointerProvider pageIndex={pageIndex} pageWidth={width} pageHeight={height} scale={scale} rotation={rotation}>
                     <div
                       style={{
@@ -309,6 +320,7 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
                       onDragStart={(e) => e.preventDefault()}
                       onDrop={(e) => e.preventDefault()}
                       onDragOver={(e) => e.preventDefault()}
+                      ref={(node) => { pageElRef.current[pageIndex] = node; }}
                     >
                       {/* High-resolution tile layer */}
                       <TilingLayer pageIndex={pageIndex} scale={scale} />
@@ -318,6 +330,18 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
 
                       {/* Selection layer for text interaction */}
                       <SelectionLayer pageIndex={pageIndex} scale={scale} />
+                      {/* Redaction layer handles pending marks and UI */}
+                      <RedactionLayer
+                        pageIndex={pageIndex}
+                        scale={scale}
+                        rotation={rotation}
+                        selectionMenu={(props) => <RedactionSelectionMenu {...props} />}
+                      />
+                      <HoverToSelectPending
+                        pageIndex={pageIndex}
+                        scale={scale}
+                        getPageEl={() => pageElRef.current[pageIndex] ?? null}                      
+                      />
                       {/* Annotation layer for signatures (only when enabled) */}
                       {enableAnnotations && (
                         <AnnotationLayer

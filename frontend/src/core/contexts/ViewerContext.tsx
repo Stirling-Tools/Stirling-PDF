@@ -57,6 +57,19 @@ interface ExportAPIWrapper {
   saveAsCopy: () => { toPromise: () => Promise<ArrayBuffer> };
 }
 
+// Redaction bridge wrappers
+interface RedactionAPIWrapper {
+  toggleRedactSelection: () => void;
+  toggleMarqueeRedact: () => void;
+  clearPending: () => void;
+  commitAllPending: () => { toPromise: () => Promise<void> } | Promise<void> | void;
+}
+
+interface RedactionState {
+  isRedacting: boolean;
+  activeType: 'redactSelection' | 'marqueeRedact' | null;
+  pendingCount: number;
+}
 
 // State interfaces - represent the shape of data from each bridge
 interface ScrollState {
@@ -103,6 +116,8 @@ interface ExportState {
   canExport: boolean;
 }
 
+type ToolMode = 'none' | 'pan' | 'redact' | 'draw';
+
 // Bridge registration interface - bridges register with state and API
 interface BridgeRef<TState = unknown, TApi = unknown> {
   state: TState;
@@ -146,6 +161,8 @@ interface ViewerContextType {
   getSearchState: () => SearchState;
   getThumbnailAPI: () => ThumbnailAPIWrapper | null;
   getExportState: () => ExportState;
+  getToolMode: () => ToolMode;
+  getRedactionState: () => RedactionState;
 
   // Immediate update callbacks
   registerImmediateZoomUpdate: (callback: (percent: number) => void) => void;
@@ -208,6 +225,20 @@ interface ViewerContextType {
     saveAsCopy: () => Promise<ArrayBuffer | null>;
   };
 
+  redactionActions: {
+    activateText: () => void;
+    activateArea: () => void;
+    deactivate: () => void;
+    commitAllPending: () => Promise<void>;
+    clearPending: () => void;
+    isActive: () => boolean;
+  };
+
+  // Live updates for right-rail highlighting
+  registerToolModeListener: (callback: (mode: ToolMode) => void) => void;
+  unregisterToolModeListener: () => void;
+  triggerToolModeUpdate: () => void;
+
   // Bridge registration - internal use by bridges  
   registerBridge: (type: string, ref: BridgeRef) => void;
 }
@@ -239,7 +270,10 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     rotation: null as BridgeRef<RotationState, RotationAPIWrapper> | null,
     thumbnail: null as BridgeRef<unknown, ThumbnailAPIWrapper> | null,
     export: null as BridgeRef<ExportState, ExportAPIWrapper> | null,
+    redaction: null as BridgeRef<RedactionState, RedactionAPIWrapper> | null,
   });
+
+  const toolModeListenerRef = useRef<((mode: ToolMode) => void) | null>(null);
 
   // Immediate zoom callback for responsive display updates
   const immediateZoomUpdateCallback = useRef<((percent: number) => void) | null>(null);
@@ -277,6 +311,9 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
       case 'export':
         bridgeRefs.current.export = ref as BridgeRef<ExportState, ExportAPIWrapper>;
         break;
+      case 'redaction':
+        bridgeRefs.current.redaction = ref as BridgeRef<RedactionState, RedactionAPIWrapper>;
+        break;
     }
   };
 
@@ -290,10 +327,14 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
 
   const setAnnotationMode = (enabled: boolean) => {
     setIsAnnotationModeState(enabled);
+    // Notify listeners when draw mode changes
+    triggerToolModeUpdate();
   };
 
   const toggleAnnotationMode = () => {
     setIsAnnotationModeState(prev => !prev);
+    // Notify listeners when draw mode changes
+    setTimeout(() => triggerToolModeUpdate(), 0);
   };
 
   // State getters - read from bridge refs
@@ -331,6 +372,25 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
 
   const getExportState = (): ExportState => {
     return bridgeRefs.current.export?.state || { canExport: false };
+  };
+
+  const getToolMode = (): ToolMode => {
+    if (isAnnotationMode) return 'draw';
+    const redactionActive = bridgeRefs.current.redaction?.state?.isRedacting;
+    if (redactionActive) return 'redact';
+    const panActive = bridgeRefs.current.pan?.state?.isPanning;
+    if (panActive) return 'pan';
+    return 'none';
+  };
+
+  const getRedactionState = (): RedactionState => {
+    return (
+      bridgeRefs.current.redaction?.state || {
+        isRedacting: false,
+        activeType: null,
+        pendingCount: 0,
+      }
+    );
   };
 
   // Action handlers - call APIs directly
@@ -550,6 +610,66 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     }
   };
 
+  // Track redaction dirty state (any commit or pending marks)
+  const redactionActions = {
+    activateText: () => {
+      const api = bridgeRefs.current.redaction?.api;
+      const state = bridgeRefs.current.redaction?.state;
+      if (!api) return;
+      if (state?.activeType === 'redactSelection') return; // already active
+      // If other mode active, turn it off first
+      if (state?.activeType === 'marqueeRedact' && api.toggleMarqueeRedact) api.toggleMarqueeRedact();
+      if (api.toggleRedactSelection) api.toggleRedactSelection();
+    },
+    activateArea: () => {
+      const api = bridgeRefs.current.redaction?.api;
+      const state = bridgeRefs.current.redaction?.state;
+      if (!api) return;
+      if (state?.activeType === 'marqueeRedact') return; // already active
+      if (state?.activeType === 'redactSelection' && api.toggleRedactSelection) api.toggleRedactSelection();
+      if (api.toggleMarqueeRedact) api.toggleMarqueeRedact();
+    },
+    deactivate: () => {
+      const state = bridgeRefs.current.redaction?.state;
+      const api = bridgeRefs.current.redaction?.api;
+      if (!state || !api) return;
+      // If text is active, toggling text will deactivate; same for area
+      if (state.activeType === 'redactSelection' && api.toggleRedactSelection) {
+        api.toggleRedactSelection();
+      } else if (state.activeType === 'marqueeRedact' && api.toggleMarqueeRedact) {
+        api.toggleMarqueeRedact();
+      }
+    },
+    commitAllPending: async () => {
+      const api = bridgeRefs.current.redaction?.api;
+      if (!api?.commitAllPending) return;
+      const result = api.commitAllPending();
+      if (result && typeof (result as any).toPromise === 'function') {
+        await (result as any).toPromise();
+      }
+    },
+    clearPending: () => {
+      const api = bridgeRefs.current.redaction?.api;
+      if (api?.clearPending) api.clearPending();
+    },
+    isActive: () => {
+      return Boolean(bridgeRefs.current.redaction?.state?.isRedacting);
+    },
+  };
+
+  const registerToolModeListener = (callback: (mode: ToolMode) => void) => {
+    toolModeListenerRef.current = callback;
+  };
+
+  const unregisterToolModeListener = () => {
+    toolModeListenerRef.current = null;
+  };
+
+  const triggerToolModeUpdate = () => {
+    const cb = toolModeListenerRef.current;
+    if (cb) cb(getToolMode());
+  };
+
   const registerImmediateZoomUpdate = (callback: (percent: number) => void) => {
     immediateZoomUpdateCallback.current = callback;
   };
@@ -596,6 +716,8 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     getSearchState,
     getThumbnailAPI,
     getExportState,
+    getToolMode,
+    getRedactionState,
 
     // Immediate updates
     registerImmediateZoomUpdate,
@@ -612,6 +734,10 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     rotationActions,
     searchActions,
     exportActions,
+    redactionActions,
+    registerToolModeListener,
+    unregisterToolModeListener,
+    triggerToolModeUpdate,
 
     // Bridge registration
     registerBridge,

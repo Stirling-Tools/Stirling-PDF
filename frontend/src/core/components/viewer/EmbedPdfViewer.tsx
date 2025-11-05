@@ -35,7 +35,7 @@ const EmbedPdfViewerContent = ({
   const viewerRef = React.useRef<HTMLDivElement>(null);
   const [isViewerHovered, setIsViewerHovered] = React.useState(false);
 
-  const { isThumbnailSidebarVisible, toggleThumbnailSidebar, zoomActions, spreadActions, panActions: _panActions, rotationActions: _rotationActions, getScrollState, getZoomState, getSpreadState, getRotationState, isAnnotationMode, isAnnotationsVisible, exportActions } = useViewer();
+  const { isThumbnailSidebarVisible, toggleThumbnailSidebar, zoomActions, spreadActions, panActions: _panActions, rotationActions: _rotationActions, getScrollState, getZoomState, getSpreadState, getRotationState, isAnnotationMode, isAnnotationsVisible, exportActions, getRedactionState, redactionActions } = useViewer();
 
   // Register viewer right-rail buttons
   useViewerRightRailButtons();
@@ -184,6 +184,17 @@ const EmbedPdfViewerContent = ({
   }, [isViewerHovered]);
 
   // Register checker for unsaved changes (annotations only for now)
+  // Use refs for stable references to avoid re-registration
+  const registerUnsavedChangesCheckerRef = useRef(registerUnsavedChangesChecker);
+  const unregisterUnsavedChangesCheckerRef = useRef(unregisterUnsavedChangesChecker);
+  const getRedactionStateRef = useRef(getRedactionState);
+  
+  useEffect(() => {
+    registerUnsavedChangesCheckerRef.current = registerUnsavedChangesChecker;
+    unregisterUnsavedChangesCheckerRef.current = unregisterUnsavedChangesChecker;
+    getRedactionStateRef.current = getRedactionState;
+  }, [registerUnsavedChangesChecker, unregisterUnsavedChangesChecker, getRedactionState]);
+
   useEffect(() => {
     if (previewFile) {
       return;
@@ -192,21 +203,25 @@ const EmbedPdfViewerContent = ({
     const checkForChanges = () => {
       // Check for annotation changes via history
       const hasAnnotationChanges = historyApiRef.current?.canUndo() || false;
+      // Check for redaction changes: any pending marks
+      const redactionState = getRedactionStateRef.current();
+      const hasRedactionChanges = redactionState.pendingCount > 0 || sessionStorage.getItem('redaction:dirty') === 'true';
 
       console.log('[Viewer] Checking for unsaved changes:', {
-        hasAnnotationChanges
+        hasAnnotationChanges,
+        hasRedactionChanges
       });
-      return hasAnnotationChanges;
+      return hasAnnotationChanges || hasRedactionChanges;
     };
 
     console.log('[Viewer] Registering unsaved changes checker');
-    registerUnsavedChangesChecker(checkForChanges);
+    registerUnsavedChangesCheckerRef.current(checkForChanges);
 
     return () => {
       console.log('[Viewer] Unregistering unsaved changes checker');
-      unregisterUnsavedChangesChecker();
+      unregisterUnsavedChangesCheckerRef.current();
     };
-  }, [historyApiRef, previewFile, registerUnsavedChangesChecker, unregisterUnsavedChangesChecker]);
+  }, [previewFile, historyApiRef]); // Removed function dependencies - use refs instead
 
   // Apply changes - save annotations to new file version
   const applyChanges = useCallback(async () => {
@@ -214,6 +229,9 @@ const EmbedPdfViewerContent = ({
 
     try {
       console.log('[Viewer] Applying changes - exporting PDF with annotations');
+
+      // Commit any pending redactions before exporting
+      try { await redactionActions.commitAllPending(); } catch (e) { /* ignore */ }
 
       // Step 1: Export PDF with annotations using EmbedPDF
       const arrayBuffer = await exportActions.saveAsCopy();
@@ -238,6 +256,7 @@ const EmbedPdfViewerContent = ({
       await actions.consumeFiles(activeFileIds, stirlingFiles, stubs);
 
       setHasUnsavedChanges(false);
+      sessionStorage.removeItem('redaction:dirty');
     } catch (error) {
       console.error('Apply changes failed:', error);
     }
@@ -298,6 +317,17 @@ const EmbedPdfViewerContent = ({
               }}
             />
           </Box>
+          {/* Overlay root for redaction menus - rendered above all PDF pages */}
+          <div
+            id="pdf-overlay-root"
+            style={{
+              position: 'absolute',
+              inset: 0,
+              pointerEvents: 'none',
+              zIndex: 2147483647,
+              overflow: 'visible'
+            }}
+          />
         </>
       )}
 
