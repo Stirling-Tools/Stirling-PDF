@@ -87,8 +87,7 @@ public class MultiPageLayoutController {
                 pagesPerSheet = cols * rows;
                 break;
             default:
-                throw new IllegalArgumentException(
-                        "Mode must be CUSTOM or DEFAULT");
+                throw new IllegalArgumentException("Mode must be CUSTOM or DEFAULT");
         }
 
         MultipartFile file = request.getFileInput();
@@ -159,8 +158,8 @@ public class MultiPageLayoutController {
             int adjustedPageIndex =
                     i % pagesPerSheet; // Close the current content stream and create a new
             // page and content stream
-            int rowIndex = 0;
-            int colIndex = 0;
+            int rowIndex;
+            int colIndex;
 
             switch (pageOrder) {
                 case "LR_TD": // Left→Right, then Top→Down
@@ -215,7 +214,7 @@ public class MultiPageLayoutController {
 
         // If any source page is rotated, skip form copying/transformation entirely
         boolean hasRotation = FormUtils.hasAnyRotatedPage(sourceDocument);
-        if (hasRotation) {
+        if (hasRotation || "LANDSCAPE".equals(orientation)) {
             log.info("Source document has rotated pages; skipping form field copying.");
         } else {
             try {
