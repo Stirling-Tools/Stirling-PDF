@@ -2,9 +2,7 @@ package stirling.software.proprietary.service.chatbot;
 
 import java.util.Optional;
 
-import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.ApplicationProperties.Premium;
@@ -15,23 +13,13 @@ import stirling.software.common.model.ApplicationProperties.Premium.ProFeatures.
 public class ChatbotFeatureProperties {
 
     private final ApplicationProperties applicationProperties;
-    private final Environment environment;
 
-    public ChatbotFeatureProperties(
-            ApplicationProperties applicationProperties, Environment environment) {
+    public ChatbotFeatureProperties(ApplicationProperties applicationProperties) {
         this.applicationProperties = applicationProperties;
-        this.environment = environment;
     }
 
     public ChatbotSettings current() {
         Chatbot chatbot = resolveChatbot();
-        String configuredKey = Optional.ofNullable(chatbot.getModels().getApiKey()).orElse("");
-        String fallbackKey = environment.getProperty("spring.ai.openai.api-key", "");
-        String apiKey =
-                StringUtils.hasText(configuredKey)
-                        ? configuredKey
-                        : (StringUtils.hasText(fallbackKey) ? fallbackKey : "");
-
         return new ChatbotSettings(
                 chatbot.isEnabled(),
                 chatbot.isAlphaWarning(),
@@ -40,8 +28,7 @@ public class ChatbotFeatureProperties {
                 new ChatbotSettings.ModelSettings(
                         chatbot.getModels().getPrimary(),
                         chatbot.getModels().getFallback(),
-                        chatbot.getModels().getEmbedding(),
-                        apiKey),
+                        chatbot.getModels().getEmbedding()),
                 new ChatbotSettings.RagSettings(
                         chatbot.getRag().getChunkSizeTokens(),
                         chatbot.getRag().getChunkOverlapTokens(),
@@ -77,8 +64,7 @@ public class ChatbotFeatureProperties {
             OcrSettings ocr,
             AuditSettings audit) {
 
-        public record ModelSettings(
-                String primary, String fallback, String embedding, String apiKey) {}
+        public record ModelSettings(String primary, String fallback, String embedding) {}
 
         public record RagSettings(int chunkSizeTokens, int chunkOverlapTokens, int topK) {}
 

@@ -634,7 +634,6 @@ public class ApplicationProperties {
                     private String primary = "gpt-5-nano";
                     private String fallback = "gpt-5-mini";
                     private String embedding = "text-embedding-3-small";
-                    private String apiKey;
                 }
 
                 @Data

@@ -3,6 +3,7 @@ package stirling.software.proprietary.controller;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -34,6 +35,7 @@ import stirling.software.proprietary.service.chatbot.exception.ChatbotException;
 @RequiredArgsConstructor
 @Slf4j
 @ConditionalOnProperty(value = "premium.proFeatures.chatbot.enabled", havingValue = "true")
+@ConditionalOnBean(ChatbotService.class)
 public class ChatbotController {
 
     private final ChatbotService chatbotService;

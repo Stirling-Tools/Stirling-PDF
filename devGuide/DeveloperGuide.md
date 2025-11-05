@@ -591,4 +591,4 @@ Remember, never hard-code text in your templates or Java code. Always use transl
 ### Chatbot Feature Configuration
 
 - The chatbot backend is disabled unless `premium.proFeatures.chatbot.enabled` is true in `configs/settings.yml`.
-- Provide an OpenAI-compatible key through `premium.proFeatures.chatbot.models.apiKey` (preferred) or the `SPRING_AI_OPENAI_API_KEY` environment variable. Without a key the app still boots, but the chatbot beans are not created.
+- Provide an OpenAI-compatible key via `SPRING_AI_OPENAI_API_KEY` (or `spring.ai.openai.api-key`) and set `spring.ai.openai.enabled=true` when you want chatbot beans to load. Leaving this property disabled allows the rest of Stirling-PDF to run without AI credentials.

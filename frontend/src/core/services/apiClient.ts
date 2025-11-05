@@ -8,6 +8,8 @@ const apiClient = axios.create({
   baseURL: getApiBaseUrl(),
   responseType: 'json',
   withCredentials: true,
+  xsrfCookieName: 'XSRF-TOKEN',
+  xsrfHeaderName: 'X-XSRF-TOKEN',
 });
 
 // Setup interceptors (core does nothing, proprietary adds JWT auth)

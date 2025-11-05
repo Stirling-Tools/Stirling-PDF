@@ -3,6 +3,7 @@ package stirling.software.proprietary.controller;
 import java.time.Instant;
 import java.util.Map;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,12 +12,14 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.proprietary.service.chatbot.ChatbotService;
 import stirling.software.proprietary.service.chatbot.exception.ChatbotException;
 import stirling.software.proprietary.service.chatbot.exception.NoTextDetectedException;
 
 @RestControllerAdvice(assignableTypes = ChatbotController.class)
 @Slf4j
 @ConditionalOnProperty(value = "premium.proFeatures.chatbot.enabled", havingValue = "true")
+@ConditionalOnBean(ChatbotService.class)
 public class ChatbotExceptionHandler {
 
     @ExceptionHandler(NoTextDetectedException.class)
