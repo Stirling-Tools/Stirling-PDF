@@ -6,7 +6,6 @@ import static org.mockito.Mockito.*;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -83,7 +82,7 @@ class FileStorageTest {
     void testRetrieveFile() throws IOException {
         // Arrange
         byte[] fileContent = "Test PDF content".getBytes();
-        String fileId = UUID.randomUUID().toString();
+        String fileId = "test-file-1";
         Path filePath = tempDir.resolve(fileId);
         Files.write(filePath, fileContent);
 
@@ -103,7 +102,7 @@ class FileStorageTest {
     void testRetrieveBytes() throws IOException {
         // Arrange
         byte[] fileContent = "Test PDF content".getBytes();
-        String fileId = UUID.randomUUID().toString();
+        String fileId = "test-file-2";
         Path filePath = tempDir.resolve(fileId);
         Files.write(filePath, fileContent);
 
@@ -136,7 +135,7 @@ class FileStorageTest {
     void testDeleteFile() throws IOException {
         // Arrange
         byte[] fileContent = "Test PDF content".getBytes();
-        String fileId = UUID.randomUUID().toString();
+        String fileId = "test-file-3";
         Path filePath = tempDir.resolve(fileId);
         Files.write(filePath, fileContent);
 
@@ -164,7 +163,7 @@ class FileStorageTest {
     void testFileExists() throws IOException {
         // Arrange
         byte[] fileContent = "Test PDF content".getBytes();
-        String fileId = UUID.randomUUID().toString();
+        String fileId = "test-file-4";
         Path filePath = tempDir.resolve(fileId);
         Files.write(filePath, fileContent);
 
