@@ -1,6 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import classes from '@app/components/pageEditor/bulkSelectionPanel/BulkSelectionPanel.module.css';
-import { parseSelectionWithDiagnostics } from '@app/utils/bulkselection/parseSelection';
 import PageSelectionInput from '@app/components/pageEditor/bulkSelectionPanel/PageSelectionInput';
 import SelectedPagesDisplay from '@app/components/pageEditor/bulkSelectionPanel/SelectedPagesDisplay';
 import PageSelectionSyntaxHint from '@app/components/shared/PageSelectionSyntaxHint';
@@ -21,25 +20,8 @@ const BulkSelectionPanel = ({
   displayDocument,
   onUpdatePagesFromCSV,
 }: BulkSelectionPanelProps) => {
-  const [syntaxError, setSyntaxError] = useState<string | null>(null);
   const [advancedOpened, setAdvancedOpened] = useState<boolean>(false);
   const maxPages = displayDocument?.pages?.length ?? 0;
-
-
-  // Validate input syntax and show lightweight feedback
-  useEffect(() => {
-    const text = (csvInput || '').trim();
-    if (!text) {
-      setSyntaxError(null);
-      return;
-    }
-    try {
-      const { warning } = parseSelectionWithDiagnostics(text, maxPages);
-      setSyntaxError(warning ? 'There is a syntax issue. See Page Selection tips for help.' : null);
-    } catch {
-      setSyntaxError('There is a syntax issue. See Page Selection tips for help.');
-    }
-  }, [csvInput, maxPages]);
 
   const handleClear = () => {
     setCsvInput('');
