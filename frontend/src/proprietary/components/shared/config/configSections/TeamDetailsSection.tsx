@@ -11,10 +11,11 @@ import {
   Group,
   Modal,
   Select,
-  Paper,
   CloseButton,
   Tooltip,
   Menu,
+  Avatar,
+  Box,
 } from '@mantine/core';
 import LocalIcon from '@app/components/shared/LocalIcon';
 import { alert } from '@app/components/toast';
@@ -42,6 +43,11 @@ export default function TeamDetailsSection({ teamId, onBack }: TeamDetailsSectio
   const [selectedTeamId, setSelectedTeamId] = useState<string>('');
   const [processing, setProcessing] = useState(false);
 
+  // License information
+  const [licenseInfo, setLicenseInfo] = useState<{
+    availableSlots: number;
+  } | null>(null);
+
   useEffect(() => {
     fetchTeamDetails();
     fetchAllTeams();
@@ -50,12 +56,20 @@ export default function TeamDetailsSection({ teamId, onBack }: TeamDetailsSectio
   const fetchTeamDetails = async () => {
     try {
       setLoading(true);
-      const data = await teamService.getTeamDetails(teamId);
+      const [data, adminData] = await Promise.all([
+        teamService.getTeamDetails(teamId),
+        userManagementService.getUsers(),
+      ]);
       console.log('[TeamDetailsSection] Raw data:', data);
       setTeam(data.team);
       setTeamUsers(Array.isArray(data.teamUsers) ? data.teamUsers : []);
       setAvailableUsers(Array.isArray(data.availableUsers) ? data.availableUsers : []);
       setUserLastRequest(data.userLastRequest || {});
+
+      // Store license information
+      setLicenseInfo({
+        availableSlots: adminData.availableSlots,
+      });
     } catch (error) {
       console.error('Failed to fetch team details:', error);
       alert({ alertType: 'error', title: 'Failed to load team details' });
@@ -227,65 +241,120 @@ export default function TeamDetailsSection({ teamId, onBack }: TeamDetailsSectio
 
       {/* Add Member Button */}
       <Group justify="flex-end">
-        <Button
-          leftSection={<LocalIcon icon="person-add" width="1rem" height="1rem" />}
-          onClick={() => setAddMemberModalOpened(true)}
-          disabled={team.name === 'Internal'}
+        <Tooltip
+          label={t('workspace.people.license.noSlotsAvailable', 'No user slots available')}
+          disabled={!licenseInfo || licenseInfo.availableSlots > 0}
+          position="bottom"
+          withArrow
+          zIndex={Z_INDEX_OVER_CONFIG_MODAL}
         >
-          {t('workspace.teams.addMember')}
-        </Button>
+          <Button
+            leftSection={<LocalIcon icon="person-add" width="1rem" height="1rem" />}
+            onClick={() => setAddMemberModalOpened(true)}
+            disabled={team.name === 'Internal' || (licenseInfo ? licenseInfo.availableSlots === 0 : false)}
+          >
+            {t('workspace.teams.addMember')}
+          </Button>
+        </Tooltip>
       </Group>
 
       {/* Members Table */}
-      <Paper withBorder p="md">
-        <Table striped highlightOnHover>
-          <Table.Thead>
-            <Table.Tr>
-              <Table.Th>{t('workspace.people.user')}</Table.Th>
-              <Table.Th>{t('workspace.people.role')}</Table.Th>
-              <Table.Th>{t('workspace.people.status')}</Table.Th>
-              <Table.Th style={{ width: 50 }}></Table.Th>
-            </Table.Tr>
-          </Table.Thead>
+      <Table
+        horizontalSpacing="md"
+        verticalSpacing="sm"
+        withRowBorders
+        style={{
+          '--table-border-color': 'var(--mantine-color-gray-3)',
+        } as React.CSSProperties}
+      >
+        <Table.Thead>
+          <Table.Tr style={{ backgroundColor: 'var(--mantine-color-gray-0)' }}>
+            <Table.Th style={{ fontWeight: 600, color: 'var(--mantine-color-gray-7)' }} fz="sm">
+              {t('workspace.people.user')}
+            </Table.Th>
+            <Table.Th style={{ fontWeight: 600, color: 'var(--mantine-color-gray-7)' }} fz="sm" w={100}>
+              {t('workspace.people.role')}
+            </Table.Th>
+            <Table.Th w={50}></Table.Th>
+          </Table.Tr>
+        </Table.Thead>
           <Table.Tbody>
             {teamUsers.length === 0 ? (
               <Table.Tr>
-                <Table.Td colSpan={4}>
+                <Table.Td colSpan={3}>
                   <Text ta="center" c="dimmed" py="xl">
                     {t('workspace.teams.noMembers', 'No members in this team')}
                   </Text>
                 </Table.Td>
               </Table.Tr>
             ) : (
-              teamUsers.map((user) => (
-                <Table.Tr key={user.id}>
-                  <Table.Td>
-                    <div>
-                      <Text size="sm" fw={500}>
-                        {user.username}
-                      </Text>
-                      {user.email && (
-                        <Text size="xs" c="dimmed">
-                          {user.email}
-                        </Text>
-                      )}
-                    </div>
-                  </Table.Td>
-                  <Table.Td>
-                    <Badge
-                      color={(user.rolesAsString || '').includes('ROLE_ADMIN') ? 'blue' : 'gray'}
-                      variant="light"
-                    >
-                      {(user.rolesAsString || '').includes('ROLE_ADMIN')
-                        ? t('workspace.people.admin')
-                        : t('workspace.people.member')}
-                    </Badge>
-                  </Table.Td>
-                  <Table.Td>
-                    <Badge color={user.enabled ? 'green' : 'red'} variant="light">
-                      {user.enabled ? t('workspace.people.active') : t('workspace.people.disabled')}
-                    </Badge>
-                  </Table.Td>
+              teamUsers.map((user) => {
+                const isActive = userLastRequest[user.username] &&
+                  (Date.now() - userLastRequest[user.username]) < 5 * 60 * 1000; // Active within last 5 minutes
+
+                return (
+                  <Table.Tr key={user.id}>
+                    <Table.Td>
+                      <Group gap="xs" wrap="nowrap">
+                        <Tooltip
+                          label={
+                            !user.enabled
+                              ? t('workspace.people.disabled', 'Disabled')
+                              : isActive
+                                ? t('workspace.people.activeSession', 'Active session')
+                                : t('workspace.people.active', 'Active')
+                          }
+                          zIndex={Z_INDEX_OVER_CONFIG_MODAL}
+                        >
+                          <Avatar
+                            size={32}
+                            color={user.enabled ? 'blue' : 'gray'}
+                            styles={{
+                              root: {
+                                border: isActive ? '2px solid var(--mantine-color-green-6)' : 'none',
+                                opacity: user.enabled ? 1 : 0.5,
+                              }
+                            }}
+                          >
+                            {user.username.charAt(0).toUpperCase()}
+                          </Avatar>
+                        </Tooltip>
+                        <Box style={{ minWidth: 0, flex: 1 }}>
+                          <Tooltip label={user.username} disabled={user.username.length <= 20} zIndex={Z_INDEX_OVER_CONFIG_MODAL}>
+                            <Text
+                              size="sm"
+                              fw={500}
+                              maw={200}
+                              style={{
+                                lineHeight: 1.3,
+                                opacity: user.enabled ? 1 : 0.6,
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                              }}
+                            >
+                              {user.username}
+                            </Text>
+                          </Tooltip>
+                          {user.email && (
+                            <Text size="xs" c="dimmed" truncate style={{ lineHeight: 1.3 }}>
+                              {user.email}
+                            </Text>
+                          )}
+                        </Box>
+                      </Group>
+                    </Table.Td>
+                    <Table.Td w={100}>
+                      <Badge
+                        size="sm"
+                        color={(user.rolesAsString || '').includes('ROLE_ADMIN') ? 'blue' : 'gray'}
+                        variant="light"
+                      >
+                        {(user.rolesAsString || '').includes('ROLE_ADMIN')
+                          ? t('workspace.people.admin')
+                          : t('workspace.people.member')}
+                      </Badge>
+                    </Table.Td>
                   <Table.Td>
                     <Group gap="xs" wrap="nowrap">
                       {/* Info icon with tooltip */}
@@ -352,11 +421,11 @@ export default function TeamDetailsSection({ teamId, onBack }: TeamDetailsSectio
                     </Group>
                   </Table.Td>
                 </Table.Tr>
-              ))
+                );
+              })
             )}
           </Table.Tbody>
-        </Table>
-      </Paper>
+      </Table>
 
       {/* Add Member Modal */}
       <Modal
@@ -374,8 +443,8 @@ export default function TeamDetailsSection({ teamId, onBack }: TeamDetailsSectio
             size="lg"
             style={{
               position: 'absolute',
-              top: '-8px',
-              right: '-8px',
+              top: -8,
+              right: -8,
               zIndex: 1,
             }}
           />
@@ -433,8 +502,8 @@ export default function TeamDetailsSection({ teamId, onBack }: TeamDetailsSectio
             size="lg"
             style={{
               position: 'absolute',
-              top: '-8px',
-              right: '-8px',
+              top: -8,
+              right: -8,
               zIndex: 1,
             }}
           />

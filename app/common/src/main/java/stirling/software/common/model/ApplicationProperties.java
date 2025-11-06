@@ -368,6 +368,10 @@ public class ApplicationProperties {
         private TempFileManagement tempFileManagement = new TempFileManagement();
         private DatabaseBackup databaseBackup = new DatabaseBackup();
         private List<String> corsAllowedOrigins = new ArrayList<>();
+        private String
+                frontendUrl; // Base URL for frontend (used for invite links, etc.). If not set,
+
+        // falls back to backend URL.
 
         public boolean isAnalyticsEnabled() {
             return this.getEnableAnalytics() != null && this.getEnableAnalytics();
@@ -556,6 +560,7 @@ public class ApplicationProperties {
     public static class Mail {
         private boolean enabled;
         private boolean enableInvites = false;
+        private int inviteLinkExpiryHours = 72; // Default: 72 hours (3 days)
         private String host;
         private int port;
         private String username;

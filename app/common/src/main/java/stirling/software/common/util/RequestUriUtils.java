@@ -76,6 +76,8 @@ public class RequestUriUtils {
                 || trimmedUri.startsWith("/api/v1/auth/refresh")
                 || trimmedUri.startsWith("/api/v1/auth/logout")
                 || trimmedUri.startsWith("/v1/api-docs")
+                || trimmedUri.startsWith("/api/v1/invite/validate")
+                || trimmedUri.startsWith("/api/v1/invite/accept")
                 || trimmedUri.contains("/v1/api-docs");
     }
 }

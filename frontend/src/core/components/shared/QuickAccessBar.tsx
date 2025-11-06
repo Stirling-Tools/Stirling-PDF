@@ -1,6 +1,7 @@
 import React, { useState, useRef, forwardRef, useEffect } from "react";
 import { ActionIcon, Stack, Divider } from "@mantine/core";
 import { useTranslation } from 'react-i18next';
+import { useNavigate, useLocation } from 'react-router-dom';
 import LocalIcon from '@app/components/shared/LocalIcon';
 import { useRainbowThemeContext } from "@app/components/shared/RainbowThemeProvider";
 import { useIsOverflowing } from '@app/hooks/useIsOverflowing';
@@ -23,6 +24,8 @@ import {
 
 const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const location = useLocation();
   const { isRainbowMode } = useRainbowThemeContext();
   const { openFilesModal, isFilesModalOpen } = useFilesModalContext();
   const { handleReaderToggle, handleToolSelect, selectedToolKey, leftPanelView, toolRegistry, readerMode, resetTool } = useToolWorkflow();
@@ -33,6 +36,12 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
   const [activeButton, setActiveButton] = useState<string>('tools');
   const scrollableRef = useRef<HTMLDivElement>(null);
   const isOverflow = useIsOverflowing(scrollableRef);
+
+  // Open modal if URL is at /settings/*
+  useEffect(() => {
+    const isSettings = location.pathname.startsWith('/settings');
+    setConfigModalOpen(isSettings);
+  }, [location.pathname]);
 
   useEffect(() => {
     const next = getActiveNavButton(selectedToolKey, readerMode);
@@ -180,6 +189,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
       size: 'lg',
       type: 'modal',
       onClick: () => {
+        navigate('/settings/overview');
         setConfigModalOpen(true);
       }
     }

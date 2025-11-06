@@ -21,6 +21,7 @@ import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.service.DatabaseServiceInterface;
 import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.service.UserService;
+import stirling.software.proprietary.service.UserLicenseSettingsService;
 
 @Slf4j
 @Component
@@ -34,6 +35,7 @@ public class InitialSecuritySetup {
     private final TeamService teamService;
     private final ApplicationProperties applicationProperties;
     private final DatabaseServiceInterface databaseService;
+    private final UserLicenseSettingsService licenseSettingsService;
 
     @PostConstruct
     public void init() {
@@ -50,10 +52,16 @@ public class InitialSecuritySetup {
             configureJWTSettings();
             assignUsersToDefaultTeamIfMissing();
             initializeInternalApiUser();
+            initializeUserLicenseSettings();
         } catch (IllegalArgumentException | SQLException | UnsupportedProviderException e) {
             log.error("Failed to initialize security setup.", e);
             System.exit(1);
         }
+    }
+
+    private void initializeUserLicenseSettings() {
+        licenseSettingsService.initializeGrandfatheredCount();
+        licenseSettingsService.updateLicenseMaxUsers();
     }
 
     private void configureJWTSettings() {

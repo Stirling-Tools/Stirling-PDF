@@ -43,26 +43,45 @@ public class JarPathUtil {
     }
 
     /**
-     * Gets the path to the restart-helper.jar file Expected to be in the same directory as the main
-     * JAR
+     * Gets the path to the restart-helper.jar file. Checks multiple possible locations: 1. Same
+     * directory as the main JAR (production deployment) 2. ./build/libs/restart-helper.jar
+     * (development build) 3. app/common/build/libs/restart-helper.jar (multi-module build)
      *
      * @return Path to restart-helper.jar, or null if not found
      */
     public static Path restartHelperJar() {
         Path appJar = currentJar();
-        if (appJar == null) {
-            return null;
+
+        // Define possible locations to check (in order of preference)
+        Path[] possibleLocations = new Path[4];
+
+        // Location 1: Same directory as main JAR (production)
+        if (appJar != null) {
+            possibleLocations[0] = appJar.getParent().resolve("restart-helper.jar");
         }
 
-        Path helperJar = appJar.getParent().resolve("restart-helper.jar");
+        // Location 2: ./build/libs/ (development build)
+        possibleLocations[1] = Paths.get("build", "libs", "restart-helper.jar").toAbsolutePath();
 
-        if (Files.isRegularFile(helperJar)) {
-            log.debug("Restart helper JAR located at: {}", helperJar);
-            return helperJar;
-        } else {
-            log.warn("Restart helper JAR not found at: {}", helperJar);
-            return null;
+        // Location 3: app/common/build/libs/ (multi-module build)
+        possibleLocations[2] =
+                Paths.get("app", "common", "build", "libs", "restart-helper.jar").toAbsolutePath();
+
+        // Location 4: Current working directory
+        possibleLocations[3] = Paths.get("restart-helper.jar").toAbsolutePath();
+
+        // Check each location
+        for (Path location : possibleLocations) {
+            if (location != null && Files.isRegularFile(location)) {
+                log.info("Restart helper JAR found at: {}", location);
+                return location;
+            } else if (location != null) {
+                log.debug("Restart helper JAR not found at: {}", location);
+            }
         }
+
+        log.warn("Restart helper JAR not found in any expected location");
+        return null;
     }
 
     /**
