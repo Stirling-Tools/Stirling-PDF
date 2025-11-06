@@ -9,6 +9,7 @@ import java.awt.print.PrinterJob;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Locale;
 
 import javax.imageio.ImageIO;
 import javax.print.PrintService;
@@ -57,11 +58,14 @@ public class PrintFileController {
         try {
             // Find matching printer
             PrintService[] services = PrintServiceLookup.lookupPrintServices(null, null);
+            String normalizedPrinterName = printerName.toLowerCase(Locale.ROOT);
             PrintService selectedService =
                     Arrays.stream(services)
                             .filter(
                                     service ->
-                                            service.getName().toLowerCase().contains(printerName))
+                                            service.getName()
+                                                    .toLowerCase(Locale.ROOT)
+                                                    .contains(normalizedPrinterName))
                             .findFirst()
                             .orElseThrow(
                                     () ->

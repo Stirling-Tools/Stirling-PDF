@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -186,6 +187,7 @@ public class AdminSettingsController {
 
             return ResponseEntity.ok(
                     String.format(
+                            Locale.ROOT,
                             "Successfully updated %d setting(s). Changes will take effect on"
                                     + " application restart.",
                             updatedCount));
@@ -298,9 +300,11 @@ public class AdminSettingsController {
             String escapedSectionName = HtmlUtils.htmlEscape(sectionName);
             return ResponseEntity.ok(
                     String.format(
+                            Locale.ROOT,
                             "Successfully updated %d setting(s) in section '%s'. Changes will take"
                                     + " effect on application restart.",
-                            updatedCount, escapedSectionName));
+                            updatedCount,
+                            escapedSectionName));
 
         } catch (IOException e) {
             log.error("Failed to save section settings to file: {}", e.getMessage(), e);
@@ -389,6 +393,7 @@ public class AdminSettingsController {
             String escapedKey = HtmlUtils.htmlEscape(key);
             return ResponseEntity.ok(
                     String.format(
+                            Locale.ROOT,
                             "Successfully updated setting '%s'. Changes will take effect on"
                                     + " application restart.",
                             escapedKey));
@@ -411,7 +416,7 @@ public class AdminSettingsController {
             return null;
         }
 
-        return switch (sectionName.toLowerCase()) {
+        return switch (sectionName.toLowerCase(Locale.ROOT)) {
             case "security" -> applicationProperties.getSecurity();
             case "system" -> applicationProperties.getSystem();
             case "ui" -> applicationProperties.getUi();
@@ -474,7 +479,7 @@ public class AdminSettingsController {
         }
 
         // Ensure first part is a valid section name
-        if (parts.length > 0 && !VALID_SECTION_NAMES.contains(parts[0].toLowerCase())) {
+        if (parts.length > 0 && !VALID_SECTION_NAMES.contains(parts[0].toLowerCase(Locale.ROOT))) {
             return false;
         }
 
@@ -579,8 +584,8 @@ public class AdminSettingsController {
 
     /** Check if a field name indicates sensitive data with full path context */
     private boolean isSensitiveFieldWithPath(String fieldName, String fullPath) {
-        String lowerField = fieldName.toLowerCase();
-        String lowerPath = fullPath.toLowerCase();
+        String lowerField = fieldName.toLowerCase(Locale.ROOT);
+        String lowerPath = fullPath.toLowerCase(Locale.ROOT);
 
         // Don't mask premium.key specifically
         if ("key".equals(lowerField) && "premium.key".equals(lowerPath)) {

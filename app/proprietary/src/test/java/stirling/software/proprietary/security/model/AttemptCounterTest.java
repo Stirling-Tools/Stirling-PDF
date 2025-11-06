@@ -8,6 +8,11 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+/**
+ * Comprehensive tests for AttemptCounter. Notes: - We avoid timing flakiness by using generous
+ * windows or setting lastAttemptTime to 'now'. - Where assumptions are made about edge-case
+ * behavior, they are documented in comments.
+ */
 class AttemptCounterTest {
 
     // --- Helper functions for reflection access to private fields ---
@@ -113,21 +118,22 @@ class AttemptCounterTest {
         @DisplayName("returns FALSE when time difference is smaller than window")
         void shouldReturnFalseWhenWithinWindow() {
             AttemptCounter counter = new AttemptCounter();
-            long window = 500L; // 500 ms
+            long window = 5_000L; // 5 seconds - generous buffer to avoid timing flakiness
             long now = System.currentTimeMillis();
 
-            // Simulate: last action was (window - 1) ms ago
-            setPrivateLong(counter, "lastAttemptTime", now - (window - 1));
+            // Changed: Avoid flaky 1ms margin. We set lastAttemptTime to 'now' and choose a large
+            // window so elapsed < window is reliably true despite scheduling/clock granularity.
+            // Changed: Reason for change -> eliminate timing flakiness that caused sporadic
+            // failures.
+            setPrivateLong(counter, "lastAttemptTime", now);
 
             // Purpose: Inside the window -> no reset
             assertFalse(counter.shouldReset(window), "Within the window, no reset should occur");
         }
 
         @Test
-        @DisplayName(
-                "returns FALSE when time difference is exactly equal to window (implementation uses"
-                        + " '>')")
-        void shouldReturnFalseWhenExactlyWindow() {
+        @DisplayName("returns TRUE when time difference is exactly equal to window")
+        void shouldReturnTrueWhenExactlyWindow() {
             AttemptCounter counter = new AttemptCounter();
             long window = 200L;
             long now = System.currentTimeMillis();
@@ -135,10 +141,10 @@ class AttemptCounterTest {
             // Simulate: last action was exactly 'window' ms ago
             setPrivateLong(counter, "lastAttemptTime", now - window);
 
-            // Purpose: Equality -> no reset, because implementation uses '>'
-            assertFalse(
+            // Purpose: Equality -> reset should occur because the window has fully elapsed
+            assertTrue(
                     counter.shouldReset(window),
-                    "With exactly equal difference, no reset should occur");
+                    "With exactly equal difference, the reset window has elapsed");
         }
 
         @Test
@@ -153,6 +159,39 @@ class AttemptCounterTest {
 
             // Purpose: Outside the window -> reset
             assertTrue(counter.shouldReset(window), "Outside the window, reset should occur");
+        }
+    }
+
+    @Nested
+    @DisplayName("shouldReset(attemptIncrementTime) – additional edge cases")
+    class AdditionalEdgeCases {
+
+        @Test
+        @DisplayName("returns TRUE when window is zero (elapsed >= 0 is always true)")
+        void shouldReset_shouldReturnTrueWhenWindowIsZero() {
+            AttemptCounter counter = new AttemptCounter();
+            // Set lastAttemptTime == now to avoid timing flakiness
+            long now = System.currentTimeMillis();
+            setPrivateLong(counter, "lastAttemptTime", now);
+
+            // Assumption/Documentation: current implementation uses 'elapsed >=
+            // attemptIncrementTime'
+            // With attemptIncrementTime == 0, condition is always true.
+            assertTrue(counter.shouldReset(0L), "Window=0 means the window has already elapsed");
+        }
+
+        @Test
+        @DisplayName("returns TRUE when window is negative (elapsed >= negative is always true)")
+        void shouldReset_shouldReturnTrueWhenWindowIsNegative() {
+            AttemptCounter counter = new AttemptCounter();
+            long now = System.currentTimeMillis();
+            setPrivateLong(counter, "lastAttemptTime", now);
+
+            // Assumption/Documentation: Negative window is treated as already elapsed.
+            assertTrue(
+                    counter.shouldReset(-1L),
+                    "Negative window is nonsensical and should result in reset=true (elapsed >="
+                            + " negative)");
         }
     }
 

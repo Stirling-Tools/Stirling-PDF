@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.zip.ZipEntry;
@@ -121,7 +122,9 @@ public class PipelineProcessor {
                     boolean hasInputFileType = false;
                     for (String extension : inputFileTypes) {
                         if ("ALL".equals(extension)
-                                || file.getFilename().toLowerCase().endsWith(extension)) {
+                                || file.getFilename()
+                                        .toLowerCase(Locale.ROOT)
+                                        .endsWith(extension)) {
                             hasInputFileType = true;
                             MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
                             body.add("fileInput", file);
@@ -159,7 +162,8 @@ public class PipelineProcessor {
                         String providedExtension = "no extension";
                         if (filename != null && filename.contains(".")) {
                             providedExtension =
-                                    filename.substring(filename.lastIndexOf(".")).toLowerCase();
+                                    filename.substring(filename.lastIndexOf("."))
+                                            .toLowerCase(Locale.ROOT);
                         }
 
                         logPrintStream.println(
@@ -187,7 +191,10 @@ public class PipelineProcessor {
                                             file ->
                                                     finalinputFileTypes.stream()
                                                             .anyMatch(
-                                                                    file.getFilename().toLowerCase()
+                                                                    file.getFilename()
+                                                                                    .toLowerCase(
+                                                                                            Locale
+                                                                                                    .ROOT)
                                                                             ::endsWith))
                                     .toList();
                 }
@@ -228,7 +235,7 @@ public class PipelineProcessor {
                                                 if (filename != null && filename.contains(".")) {
                                                     return filename.substring(
                                                                     filename.lastIndexOf("."))
-                                                            .toLowerCase();
+                                                            .toLowerCase(Locale.ROOT);
                                                 }
                                                 return "no extension";
                                             })
