@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { TextInput, Switch, Button, Stack, Paper, Text, Loader, Group, Alert } from '@mantine/core';
+import { TextInput, Switch, Button, Stack, Paper, Text, Loader, Group, Alert, List } from '@mantine/core';
 import { alert } from '@app/components/toast';
 import LocalIcon from '@app/components/shared/LocalIcon';
 import RestartConfirmationModal from '@app/components/shared/config/RestartConfirmationModal';
@@ -73,12 +73,12 @@ export default function AdminPremiumSection() {
         <Text size="sm">
           {t('admin.settings.premium.movedFeatures.message', 'Premium and Enterprise features are now organized in their respective sections:')}
         </Text>
-        <ul style={{ marginTop: '8px', marginBottom: 0, paddingLeft: '20px' }}>
-          <li><Text size="sm" component="span"><strong>SSO Auto Login</strong> (PRO) - Connections</Text></li>
-          <li><Text size="sm" component="span"><strong>Custom Metadata</strong> (PRO) - General</Text></li>
-          <li><Text size="sm" component="span"><strong>Audit Logging</strong> (ENTERPRISE) - Security</Text></li>
-          <li><Text size="sm" component="span"><strong>Database Configuration</strong> (ENTERPRISE) - Database</Text></li>
-        </ul>
+        <List mt="xs" size="sm">
+          <List.Item><Text size="sm" component="span"><strong>SSO Auto Login</strong> (PRO) - Connections</Text></List.Item>
+          <List.Item><Text size="sm" component="span"><strong>Custom Metadata</strong> (PRO) - General</Text></List.Item>
+          <List.Item><Text size="sm" component="span"><strong>Audit Logging</strong> (ENTERPRISE) - Security</Text></List.Item>
+          <List.Item><Text size="sm" component="span"><strong>Database Configuration</strong> (ENTERPRISE) - Database</Text></List.Item>
+        </List>
       </Alert>
 
       {/* License Configuration */}
