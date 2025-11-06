@@ -219,9 +219,11 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
     document: pdfDocument,
     groupsByPage,
     imagesByPage,
+    pagePreviews,
     selectedPage,
     dirtyPages,
     hasDocument,
+    hasVectorPreview,
     fileName,
     errorMessage,
     isGeneratingPdf,
@@ -229,6 +231,7 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
     conversionProgress,
     hasChanges,
     forceSingleTextElement,
+    requestPagePreview,
     onLoadJson,
     onSelectPage,
     onGroupEdit,
@@ -403,6 +406,7 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
   const currentPage = pages[selectedPage] ?? null;
   const pageGroups = groupsByPage[selectedPage] ?? [];
   const pageImages = imagesByPage[selectedPage] ?? [];
+  const pagePreview = pagePreviews.get(selectedPage);
 
   const extractPreferredFontId = useCallback((target?: TextGroup | null) => {
     if (!target) {
@@ -615,11 +619,20 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
       ),
     [pageImages],
   );
-
   const { width: pageWidth, height: pageHeight } = pageDimensions(currentPage);
   const scale = useMemo(() => Math.min(MAX_RENDER_WIDTH / pageWidth, 1.5), [pageWidth]);
   const scaledWidth = pageWidth * scale;
   const scaledHeight = pageHeight * scale;
+
+  useEffect(() => {
+    if (!hasDocument || !hasVectorPreview) {
+      return;
+    }
+    requestPagePreview(selectedPage, scale);
+    if (selectedPage + 1 < pages.length) {
+      requestPagePreview(selectedPage + 1, scale);
+    }
+  }, [hasDocument, hasVectorPreview, selectedPage, scale, pages.length, requestPagePreview]);
 
   useEffect(() => {
     setActiveGroupId(null);
@@ -1123,7 +1136,23 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
                     }}
                     ref={containerRef}
                   >
-                  {orderedImages.map((image, imageIndex) => {
+                    {pagePreview && (
+                      <img
+                        src={pagePreview}
+                        alt={t('pdfJsonEditor.pagePreviewAlt', 'Page preview')}
+                        style={{
+                          position: 'absolute',
+                          inset: 0,
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'contain',
+                          pointerEvents: 'none',
+                          userSelect: 'none',
+                          zIndex: 0,
+                        }}
+                      />
+                    )}
+                    {orderedImages.map((image, imageIndex) => {
                     if (!image?.imageData) {
                       return null;
                     }

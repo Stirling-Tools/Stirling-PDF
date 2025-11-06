@@ -10,6 +10,8 @@ import { CONVERSION_ENDPOINTS } from '@app/constants/convertConstants';
 import apiClient from '@app/services/apiClient';
 import { downloadBlob, downloadTextAsFile } from '@app/utils/downloadUtils';
 import { getFilenameFromHeaders } from '@app/utils/fileResponseUtils';
+import { pdfWorkerManager } from '@core/services/pdfWorkerManager';
+import { Util } from 'pdfjs-dist/legacy/build/pdf.mjs';
 import {
   PdfJsonDocument,
   PdfJsonImageElement,
@@ -27,6 +29,7 @@ import {
   valueOr,
 } from './pdfJsonEditorUtils';
 import PdfJsonEditorView from '@app/components/tools/pdfJsonEditor/PdfJsonEditorView';
+import type { PDFDocumentProxy } from 'pdfjs-dist';
 
 const VIEW_ID = 'pdfJsonEditorView';
 const WORKBENCH_ID = 'custom:pdfJsonEditor' as const;
@@ -75,6 +78,8 @@ const PdfJsonEditor = ({ onComplete, onError }: BaseToolProps) => {
     message: string;
   } | null>(null);
   const [forceSingleTextElement, setForceSingleTextElement] = useState(false);
+  const [hasVectorPreview, setHasVectorPreview] = useState(false);
+  const [pagePreviews, setPagePreviews] = useState<Map<number, string>>(new Map());
 
   // Lazy loading state
   const [isLazyMode, setIsLazyMode] = useState(false);
@@ -90,6 +95,11 @@ const PdfJsonEditor = ({ onComplete, onError }: BaseToolProps) => {
   const loadedDocumentRef = useRef<PdfJsonDocument | null>(null);
   const loadedImagePagesRef = useRef<Set<number>>(new Set());
   const loadingImagePagesRef = useRef<Set<number>>(new Set());
+  const pdfDocumentRef = useRef<PDFDocumentProxy | null>(null);
+  const previewRequestIdRef = useRef(0);
+  const previewRenderingRef = useRef<Set<number>>(new Set());
+  const pagePreviewsRef = useRef<Map<number, string>>(pagePreviews);
+  const previewScaleRef = useRef<Map<number, number>>(new Map());
 
   // Keep ref in sync with state for access in async callbacks
   useEffect(() => {
@@ -103,6 +113,19 @@ const PdfJsonEditor = ({ onComplete, onError }: BaseToolProps) => {
   useEffect(() => {
     loadingImagePagesRef.current = new Set(loadingImagePages);
   }, [loadingImagePages]);
+
+  useEffect(() => {
+    pagePreviewsRef.current = pagePreviews;
+  }, [pagePreviews]);
+
+  useEffect(() => {
+    return () => {
+      if (pdfDocumentRef.current) {
+        pdfWorkerManager.destroyDocument(pdfDocumentRef.current);
+        pdfDocumentRef.current = null;
+      }
+    };
+  }, []);
 
   const dirtyPages = useMemo(
     () => getDirtyPages(groupsByPage, imagesByPage, originalImagesRef.current),
@@ -146,6 +169,50 @@ const PdfJsonEditor = ({ onComplete, onError }: BaseToolProps) => {
     loadingImagePagesRef.current = new Set();
     setSelectedPage(0);
   }, []);
+
+  const clearPdfPreview = useCallback(() => {
+    previewRequestIdRef.current += 1;
+    previewRenderingRef.current.clear();
+    previewScaleRef.current.clear();
+    const empty = new Map<number, string>();
+    pagePreviewsRef.current = empty;
+    setPagePreviews(empty);
+    if (pdfDocumentRef.current) {
+      pdfWorkerManager.destroyDocument(pdfDocumentRef.current);
+      pdfDocumentRef.current = null;
+    }
+    setHasVectorPreview(false);
+  }, []);
+
+  const initializePdfPreview = useCallback(
+    async (file: File) => {
+      const requestId = ++previewRequestIdRef.current;
+      try {
+        const buffer = await file.arrayBuffer();
+        const pdfDocument = await pdfWorkerManager.createDocument(buffer);
+        if (previewRequestIdRef.current !== requestId) {
+          pdfWorkerManager.destroyDocument(pdfDocument);
+          return;
+        }
+        if (pdfDocumentRef.current) {
+          pdfWorkerManager.destroyDocument(pdfDocumentRef.current);
+        }
+        pdfDocumentRef.current = pdfDocument;
+        previewRenderingRef.current.clear();
+        previewScaleRef.current.clear();
+        const empty = new Map<number, string>();
+        pagePreviewsRef.current = empty;
+        setPagePreviews(empty);
+        setHasVectorPreview(true);
+      } catch (error) {
+        if (previewRequestIdRef.current === requestId) {
+          console.warn('[PdfJsonEditor] Failed to initialise PDF preview:', error);
+          clearPdfPreview();
+        }
+      }
+    },
+    [clearPdfPreview],
+  );
 
   // Load images for a page in lazy mode
   const loadImagesForPage = useCallback(
@@ -439,6 +506,12 @@ const PdfJsonEditor = ({ onComplete, onError }: BaseToolProps) => {
           }`,
         );
 
+        if (isPdf) {
+          initializePdfPreview(file);
+        } else {
+          clearPdfPreview();
+        }
+
         setLoadedDocument(parsed);
         resetToDocument(parsed);
         setIsLazyMode(shouldUseLazyMode);
@@ -460,6 +533,7 @@ const PdfJsonEditor = ({ onComplete, onError }: BaseToolProps) => {
 
         setLoadedDocument(null);
         resetToDocument(null);
+        clearPdfPreview();
 
         if (isPdf) {
           const errorMsg =
@@ -806,13 +880,99 @@ const PdfJsonEditor = ({ onComplete, onError }: BaseToolProps) => {
     t,
   ]);
 
+  const requestPagePreview = useCallback(
+    async (pageIndex: number, scale: number) => {
+      if (!hasVectorPreview || !pdfDocumentRef.current) {
+        return;
+      }
+      const currentToken = previewRequestIdRef.current;
+      const recordedScale = previewScaleRef.current.get(pageIndex);
+      if (
+        pagePreviewsRef.current.has(pageIndex) &&
+        recordedScale !== undefined &&
+        Math.abs(recordedScale - scale) < 0.05
+      ) {
+        return;
+      }
+      if (previewRenderingRef.current.has(pageIndex)) {
+        return;
+      }
+      previewRenderingRef.current.add(pageIndex);
+      try {
+        const page = await pdfDocumentRef.current.getPage(pageIndex + 1);
+        const viewport = page.getViewport({ scale: Math.max(scale, 0.5) });
+        const canvas = document.createElement('canvas');
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        const context = canvas.getContext('2d');
+        if (!context) {
+          page.cleanup();
+          return;
+        }
+        await page.render({ canvasContext: context, viewport }).promise;
+
+        try {
+          const textContent = await page.getTextContent();
+          const maskMarginX = Math.max(0.45 * scale, 0.45);
+          const maskMarginY = Math.max(0.85 * scale, 0.85);
+          context.save();
+          context.globalCompositeOperation = 'destination-out';
+          context.fillStyle = '#000000';
+          for (const item of textContent.items) {
+            const transform = Util.transform(viewport.transform, item.transform);
+            const a = transform[0];
+            const b = transform[1];
+            const c = transform[2];
+            const d = transform[3];
+            const e = transform[4];
+            const f = transform[5];
+            const angle = Math.atan2(b, a);
+
+            const width = (item.width || 0) * viewport.scale + maskMarginX * 2;
+            const fontHeight = Math.hypot(c, d);
+            const rawHeight = item.height ? item.height * viewport.scale : fontHeight;
+            const height = Math.max(rawHeight + maskMarginY * 2, fontHeight + maskMarginY * 2);
+            const baselineOffset = height - maskMarginY;
+
+            context.save();
+            context.translate(e, f);
+            context.rotate(angle);
+            context.fillRect(-maskMarginX, -baselineOffset, width, height);
+            context.restore();
+          }
+          context.restore();
+        } catch (textError) {
+          console.warn('[PdfJsonEditor] Failed to strip text from preview', textError);
+        }
+        const dataUrl = canvas.toDataURL('image/png');
+        page.cleanup();
+        if (previewRequestIdRef.current !== currentToken) {
+          return;
+        }
+        previewScaleRef.current.set(pageIndex, scale);
+        setPagePreviews((prev) => {
+          const next = new Map(prev);
+          next.set(pageIndex, dataUrl);
+          return next;
+        });
+      } catch (error) {
+        console.warn('[PdfJsonEditor] Failed to render page preview', error);
+      } finally {
+        previewRenderingRef.current.delete(pageIndex);
+      }
+    },
+    [hasVectorPreview],
+  );
+
   const viewData = useMemo<PdfJsonEditorViewData>(() => ({
     document: loadedDocument,
     groupsByPage,
     imagesByPage,
+    pagePreviews,
     selectedPage,
     dirtyPages,
     hasDocument,
+    hasVectorPreview,
     fileName,
     errorMessage,
     isGeneratingPdf,
@@ -820,6 +980,7 @@ const PdfJsonEditor = ({ onComplete, onError }: BaseToolProps) => {
     conversionProgress,
     hasChanges,
     forceSingleTextElement,
+    requestPagePreview,
     onLoadJson: handleLoadFile,
     onSelectPage: handleSelectPage,
     onGroupEdit: handleGroupTextChange,
@@ -832,6 +993,7 @@ const PdfJsonEditor = ({ onComplete, onError }: BaseToolProps) => {
   }), [
     handleImageTransform,
     imagesByPage,
+    pagePreviews,
     dirtyPages,
     errorMessage,
     fileName,
@@ -845,12 +1007,14 @@ const PdfJsonEditor = ({ onComplete, onError }: BaseToolProps) => {
     handleSelectPage,
     hasChanges,
     hasDocument,
+    hasVectorPreview,
     isGeneratingPdf,
     isConverting,
     conversionProgress,
     loadedDocument,
     selectedPage,
     forceSingleTextElement,
+    requestPagePreview,
   ]);
 
   const latestViewDataRef = useRef<PdfJsonEditorViewData>(viewData);

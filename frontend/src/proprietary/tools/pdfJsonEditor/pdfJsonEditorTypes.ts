@@ -182,9 +182,11 @@ export interface PdfJsonEditorViewData {
   document: PdfJsonDocument | null;
   groupsByPage: TextGroup[][];
   imagesByPage: PdfJsonImageElement[][];
+  pagePreviews: Map<number, string>;
   selectedPage: number;
   dirtyPages: boolean[];
   hasDocument: boolean;
+  hasVectorPreview: boolean;
   fileName: string;
   errorMessage: string | null;
   isGeneratingPdf: boolean;
@@ -192,6 +194,7 @@ export interface PdfJsonEditorViewData {
   conversionProgress: ConversionProgress | null;
   hasChanges: boolean;
   forceSingleTextElement: boolean;
+  requestPagePreview: (pageIndex: number, scale: number) => void;
   onLoadJson: (file: File | null) => Promise<void> | void;
   onSelectPage: (pageIndex: number) => void;
   onGroupEdit: (pageIndex: number, groupId: string, value: string) => void;

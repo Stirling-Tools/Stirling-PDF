@@ -6,11 +6,6 @@
   - Extend conversion logic so fallback kicks in only when conversion fails, and track which elements rely on the synthetic font to avoid mixing source glyphs (`PdfJsonConversionService.java:998-1090`, `1840-2012`).
   - Update the viewer/renderer to surface conversion errors and block editing when no faithful font can be produced.
 
-- **Vector Artwork Preview**
-  - Reuse `contentStreams` already emitted by the backend to render vector paths alongside text/images in the React workspace (`frontend/src/proprietary/components/tools/pdfJsonEditor/PdfJsonEditorView.tsx:1048-1285`).
-  - Either render via Canvas/SVG on the client or call back to a server-rendered bitmap for the background. Keep edited text/images layered on top.
-  - Maintain export fidelity by writing any untouched vector stream back during PDF regeneration (`PdfJsonConversionService.java:1714-1799`, `520-612`).
-
 - **Lazy Fetch Endpoints**
   - Provide separate endpoints to fetch:
     1. Raw COS dictionaries/font programs when the user opens advanced panels.
