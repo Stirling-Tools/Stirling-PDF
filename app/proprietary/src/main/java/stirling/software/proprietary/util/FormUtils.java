@@ -907,25 +907,25 @@ public class FormUtils {
             int typeIndex,
             List<String> options) {
         String alternate = cleanLabel(field.getAlternateFieldName());
-        if (looksGeneric(alternate)) {
+        if (alternate != null && !looksGeneric(alternate)) {
             return alternate;
         }
 
         String tooltipLabel = cleanLabel(tooltip);
-        if (looksGeneric(tooltipLabel)) {
+        if (tooltipLabel != null && !looksGeneric(tooltipLabel)) {
             return tooltipLabel;
         }
 
         // Only check options for choice-type fields (combobox, listbox, radio)
         if (CHOICE_FIELD_TYPES.contains(type) && options != null && !options.isEmpty()) {
             String optionCandidate = cleanLabel(options.get(0));
-            if (looksGeneric(optionCandidate)) {
+            if (optionCandidate != null && !looksGeneric(optionCandidate)) {
                 return optionCandidate;
             }
         }
 
         String humanized = cleanLabel(humanizeName(name));
-        if (looksGeneric(humanized)) {
+        if (humanized != null && !looksGeneric(humanized)) {
             return humanized;
         }
 

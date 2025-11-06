@@ -93,6 +93,10 @@ public class FormCopyUtils {
             int rowIndex = adjustedPageIndex / cols;
             int colIndex = adjustedPageIndex % cols;
 
+            if (rowIndex >= rows) {
+                continue;
+            }
+
             if (destinationPageIndex >= newDocument.getNumberOfPages()) {
                 continue;
             }
@@ -324,11 +328,12 @@ public class FormCopyUtils {
         try {
             for (PDField field : acroForm.getFieldTree()) {
                 List<PDAnnotationWidget> widgets = field.getWidgets();
-                if (widgets != null) {
-                    for (PDAnnotationWidget w : widgets) {
-                        if (w != null) {
-                            map.put(w, field);
-                        }
+                if (widgets == null) {
+                    continue;
+                }
+                for (PDAnnotationWidget widget : widgets) {
+                    if (widget != null) {
+                        map.put(widget, field);
                     }
                 }
             }
