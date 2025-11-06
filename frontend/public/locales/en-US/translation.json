@@ -352,11 +352,6 @@
     "refreshPage": "Refresh Page"
   },
   "home": {
-    "compare": {
-      "tags": "difference,changes,review",
-      "title": "Compare",
-      "desc": "Compare two PDF documents and highlight differences"
-    },
     "desc": "Your locally hosted one-stop-shop for all your PDF needs.",
     "searchBar": "Search for features...",
     "viewPdf": {
@@ -1407,6 +1402,16 @@
       "text": {
         "message": "One or both of the selected PDFs have no text content. Please choose PDFs with text for comparison."
       }
+    },
+    "too": {
+      "dissimilar": {
+        "message": "These documents appear highly dissimilar. Comparison was stopped to save time."
+      }
+    },
+    "earlyDissimilarity": {
+      "title": "These PDFs look highly different",
+      "body": "We're seeing very few similarities so far. You can stop the comparison if these aren't related documents.",
+      "stopButton": "Stop comparison"
     }
   },
   "certSign": {
