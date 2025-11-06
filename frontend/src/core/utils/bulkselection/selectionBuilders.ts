@@ -1,4 +1,4 @@
-// Pure helper utilities for the BulkSelectionPanel UI
+// Pure helper utilities for building and manipulating bulk page selection expressions
 
 export type LogicalOperator = 'and' | 'or' | 'not' | 'even' | 'odd';
 
@@ -33,7 +33,7 @@ export function insertOperatorSmart(currentInput: string, op: LogicalOperator): 
     }
     return `${text} or ${op} `;
   }
-  
+
   if (text.length === 0) return `${op} `;
 
   // Extract up to the last two operator tokens (words or symbols) from the end
