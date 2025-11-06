@@ -43,6 +43,9 @@ export interface ZipExtractionProgress {
 export class ZipFileService {
   private readonly maxFileSize = 100 * 1024 * 1024; // 100MB per file
   private readonly maxTotalSize = 500 * 1024 * 1024; // 500MB total extraction limit
+  
+  // Warn user when extracting ZIP with more than this many files
+  public static readonly ZIP_WARNING_THRESHOLD = 20;
 
   // ZIP file validation constants
   private static readonly VALID_ZIP_TYPES = [
@@ -402,11 +405,29 @@ export class ZipFileService {
   }
 
   /**
+   * Count the number of files in a ZIP archive (excluding directories)
+   * @param zipBlob - The ZIP file to count files in
+   * @returns Number of files in the ZIP
+   */
+  async countFilesInZip(zipBlob: Blob | File): Promise<number> {
+    try {
+      const zip = new JSZip();
+      const zipContents = await zip.loadAsync(zipBlob);
+      
+      // Count non-directory entries
+      return Object.values(zipContents.files).filter(entry => !entry.dir).length;
+    } catch (error) {
+      console.error('Error counting files in ZIP:', error);
+      return 0;
+    }
+  }
+
+  /**
    * Extract files from ZIP with HTML detection and preference checking
-   * This is the unified method that handles the common pattern of:
    * 1. Check for HTML files → keep zipped if present
    * 2. Check user preferences → respect autoUnzipFileLimit
-   * 3. Extract files if appropriate
+   * 3. Show warning for large ZIPs (>20 files) if callback provided
+   * 4. Extract files if appropriate
    *
    * @param zipBlob - The ZIP blob to process
    * @param options - Extraction options
@@ -418,6 +439,7 @@ export class ZipFileService {
       autoUnzip: boolean;
       autoUnzipFileLimit: number;
       skipAutoUnzip?: boolean;
+      confirmLargeExtraction?: (fileCount: number, fileName: string) => Promise<boolean>;
     }
   ): Promise<File[]> {
     try {
@@ -442,6 +464,16 @@ export class ZipFileService {
 
       if (!shouldExtract) {
         return [zipFile];
+      }
+
+      // Count files and warn user if ZIP is large
+      const fileCount = await this.countFilesInZip(zipBlob);
+      
+      if (fileCount > ZipFileService.ZIP_WARNING_THRESHOLD && options.confirmLargeExtraction) {
+        const userConfirmed = await options.confirmLargeExtraction(fileCount, zipFile.name);
+        if (!userConfirmed) {
+          return [zipFile]; // User cancelled, keep ZIP as-is
+        }
       }
 
       // Extract all files

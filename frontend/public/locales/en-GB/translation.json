@@ -35,6 +35,12 @@
   "discardChanges": "Discard & Leave",
   "applyAndContinue": "Save & Leave",
   "exportAndContinue": "Export & Continue",
+  "zipWarning": {
+    "title": "Large ZIP File",
+    "message": "This ZIP contains {{count}} files. Extract anyway?",
+    "cancel": "Cancel",
+    "confirm": "Extract"
+  },
   "language": {
     "direction": "ltr"
   },
