@@ -410,26 +410,6 @@ export class ZipFileService {
       return { shouldExtract: false, fileCount: 0 };
     }
   }
-
-  /**
-   * Count the number of files in a ZIP archive (excluding directories)
-   * @deprecated Use shouldUnzip() which returns both decision and count
-   * @param zipBlob - The ZIP file to count files in
-   * @returns Number of files in the ZIP
-   */
-  async countFilesInZip(zipBlob: Blob | File): Promise<number> {
-    try {
-      const zip = new JSZip();
-      const zipContents = await zip.loadAsync(zipBlob);
-
-      // Count non-directory entries
-      return Object.values(zipContents.files).filter(entry => !entry.dir).length;
-    } catch (error) {
-      console.error('Error counting files in ZIP:', error);
-      return 0;
-    }
-  }
-
   /**
    * Extract files from ZIP with HTML detection and preference checking
    * 1. Check for HTML files → keep zipped if present
