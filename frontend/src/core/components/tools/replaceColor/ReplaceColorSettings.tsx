@@ -23,6 +23,10 @@ const ReplaceColorSettings = ({ parameters, onParameterChange, disabled = false 
     {
       value: 'CUSTOM_COLOR',
       label: t('replaceColor.options.custom', 'Custom')
+    },
+    {
+      value: 'COLOR_SPACE_CONVERSION',
+      label: t('replaceColor.options.cmyk', 'Convert to CMYK')
     }
   ];
 

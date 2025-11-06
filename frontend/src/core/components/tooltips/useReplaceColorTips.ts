@@ -34,6 +34,10 @@ export const useReplaceColorTips = (): TooltipContent => {
           t("replaceColor.tooltip.custom.bullet1", "Text colour - Choose the colour for text elements"),
           t("replaceColor.tooltip.custom.bullet2", "Background colour - Set the background colour for the document")
         ]
+      },
+      {
+        title: t("replaceColor.tooltip.cmyk.title", "Convert to CMYK"),
+        description: t("replaceColor.tooltip.cmyk.text", "Convert the PDF from RGB colour space to CMYK colour space, optimized for professional printing. This process converts colours to the Cyan, Magenta, Yellow, Black model used by printers.")
       }
     ]
   };
