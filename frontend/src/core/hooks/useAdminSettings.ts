@@ -71,14 +71,14 @@ export function useAdminSettings<T = any>(
       // Store raw settings (includes _pending if present)
       setRawSettings(rawData);
 
-      // Extract active settings (without _pending) for delta comparison
-      const { _pending, ...activeOnly } = rawData;
-      setOriginalSettings(activeOnly as T);
-      console.log(`[useAdminSettings:${sectionName}] Original active settings:`, JSON.stringify(activeOnly, null, 2));
-
       // Merge pending changes into settings for display
       const mergedSettings = mergePendingSettings(rawData);
       console.log(`[useAdminSettings:${sectionName}] Merged settings:`, JSON.stringify(mergedSettings, null, 2));
+
+      // Store merged settings as original for delta comparison
+      // This ensures we compare against what the user SAW (with pending), not raw active values
+      setOriginalSettings(mergedSettings as T);
+      console.log(`[useAdminSettings:${sectionName}] Original settings (for comparison):`, JSON.stringify(mergedSettings, null, 2));
 
       setSettings(mergedSettings as T);
     } catch (error) {
@@ -106,15 +106,46 @@ export function useAdminSettings<T = any>(
         // Use custom save logic for complex sections
         const { sectionData, deltaSettings } = saveTransformer(settings);
 
-        // Save section data (with delta applied)
-        const sectionDelta = computeDelta(originalSettings, sectionData);
+        // Get original sectionData using same transformer for fair comparison
+        const { sectionData: originalSectionData } = saveTransformer(originalSettings);
+
+        // Save section data (with delta applied) - compare transformed vs transformed
+        const sectionDelta = computeDelta(originalSectionData, sectionData);
         if (Object.keys(sectionDelta).length > 0) {
           await apiClient.put(`/api/v1/admin/settings/section/${sectionName}`, sectionDelta);
         }
 
-        // Save delta settings if provided
+        // Save delta settings if provided (filter to only changed values)
         if (deltaSettings && Object.keys(deltaSettings).length > 0) {
-          await apiClient.put('/api/v1/admin/settings', { settings: deltaSettings });
+          // Build deltaSettings from original using same transformer to get correct structure
+          const { deltaSettings: originalDeltaSettings } = saveTransformer(originalSettings);
+
+          console.log(`[useAdminSettings:${sectionName}] Comparing deltaSettings:`, {
+            original: originalDeltaSettings,
+            current: deltaSettings
+          });
+
+          // Compare current vs original deltaSettings (both have same backend paths)
+          const changedDeltaSettings: Record<string, any> = {};
+          for (const [key, value] of Object.entries(deltaSettings)) {
+            const originalValue = originalDeltaSettings?.[key];
+
+            // Only include if value actually changed
+            if (JSON.stringify(value) !== JSON.stringify(originalValue)) {
+              changedDeltaSettings[key] = value;
+              console.log(`[useAdminSettings:${sectionName}] Delta field changed: ${key}`, {
+                original: originalValue,
+                new: value
+              });
+            }
+          }
+
+          if (Object.keys(changedDeltaSettings).length > 0) {
+            console.log(`[useAdminSettings:${sectionName}] Sending delta settings:`, changedDeltaSettings);
+            await apiClient.put('/api/v1/admin/settings', { settings: changedDeltaSettings });
+          } else {
+            console.log(`[useAdminSettings:${sectionName}] No delta settings changed, skipping`);
+          }
         }
       } else {
         // Simple single-endpoint save with delta
