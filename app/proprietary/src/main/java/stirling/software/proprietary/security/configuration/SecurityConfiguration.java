@@ -315,7 +315,6 @@ public class SecurityConfiguration {
                                             req -> {
                                                 String uri = req.getRequestURI();
                                                 String contextPath = req.getContextPath();
-
                                                 // Check if it's a public auth endpoint or static
                                                 // resource
                                                 return RequestUriUtils.isStaticResource(
