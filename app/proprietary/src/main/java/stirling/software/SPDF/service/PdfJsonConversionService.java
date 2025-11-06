@@ -284,16 +284,13 @@ public class PdfJsonConversionService {
 
             progress.accept(PdfJsonConversionProgress.of(20, "parsing", "Parsing PDF structure"));
 
-            // First, check page count to decide on lazy loading
-            byte[] pdfBytes = Files.readAllBytes(workingPath);
-            int totalPages;
-            try (PDDocument tempDoc = pdfDocumentFactory.load(pdfBytes, true)) {
-                totalPages = tempDoc.getNumberOfPages();
-            }
+            byte[] cachedPdfBytes = null;
 
-            boolean useLazyImages = totalPages > 5 && jobId != null;
-
-            try (PDDocument document = pdfDocumentFactory.load(pdfBytes, true)) {
+            try (PDDocument document = pdfDocumentFactory.load(workingPath, true)) {
+                int totalPages = document.getNumberOfPages();
+                boolean useLazyImages = totalPages > 5 && jobId != null;
+                Map<COSBase, FontModelCacheEntry> fontCache = new IdentityHashMap<>();
+                Map<COSBase, EncodedImage> imageCache = new IdentityHashMap<>();
                 log.info(
                         "Converting PDF to JSON ({} pages) - {} mode",
                         totalPages,
@@ -307,7 +304,7 @@ public class PdfJsonConversionService {
                 int pageNumber = 1;
                 for (PDPage page : document.getPages()) {
                     Map<PDFont, String> resourceMap =
-                            collectFontsForPage(document, page, pageNumber, fonts);
+                            collectFontsForPage(document, page, pageNumber, fonts, fontCache);
                     pageFontResources.put(pageNumber, resourceMap);
                     log.debug(
                             "PDF→JSON: collected {} font resources on page {}",
@@ -329,7 +326,8 @@ public class PdfJsonConversionService {
                 progress.accept(
                         PdfJsonConversionProgress.of(50, "text", "Extracting text content"));
                 TextCollectingStripper stripper =
-                        new TextCollectingStripper(document, fonts, textByPage, pageFontResources);
+                        new TextCollectingStripper(
+                                document, fonts, textByPage, pageFontResources, fontCache);
                 stripper.setSortByPosition(true);
                 stripper.getText(document);
 
@@ -343,7 +341,7 @@ public class PdfJsonConversionService {
                     progress.accept(
                             PdfJsonConversionProgress.of(
                                     70, "images", "Extracting embedded images"));
-                    imagesByPage = collectImages(document, totalPages, progress);
+                    imagesByPage = collectImages(document, totalPages, progress, imageCache);
                 }
 
                 progress.accept(
@@ -390,12 +388,16 @@ public class PdfJsonConversionService {
                     }
                     docMetadata.setPageDimensions(pageDimensions);
 
+                    if (cachedPdfBytes == null) {
+                        cachedPdfBytes = Files.readAllBytes(workingPath);
+                    }
                     CachedPdfDocument cached =
-                            new CachedPdfDocument(pdfBytes, docMetadata, fonts, pageFontResources);
+                            new CachedPdfDocument(
+                                    cachedPdfBytes, docMetadata, fonts, pageFontResources);
                     documentCache.put(jobId, cached);
                     log.info(
                             "Cached PDF bytes ({} bytes, {} pages, {} fonts) for lazy images, jobId: {}",
-                            pdfBytes.length,
+                            cachedPdfBytes.length,
                             totalPages,
                             fonts.size(),
                             jobId);
@@ -595,12 +597,16 @@ public class PdfJsonConversionService {
     }
 
     private Map<PDFont, String> collectFontsForPage(
-            PDDocument document, PDPage page, int pageNumber, Map<String, PdfJsonFont> fonts)
+            PDDocument document,
+            PDPage page,
+            int pageNumber,
+            Map<String, PdfJsonFont> fonts,
+            Map<COSBase, FontModelCacheEntry> fontCache)
             throws IOException {
         Map<PDFont, String> mapping = new HashMap<>();
         Set<COSBase> visited = Collections.newSetFromMap(new IdentityHashMap<>());
         collectFontsFromResources(
-                document, page.getResources(), pageNumber, fonts, mapping, visited, "");
+                document, page.getResources(), pageNumber, fonts, mapping, visited, "", fontCache);
         log.debug(
                 "Page {} font scan complete (unique fonts discovered: {})",
                 pageNumber,
@@ -625,7 +631,8 @@ public class PdfJsonConversionService {
             Map<String, PdfJsonFont> fonts,
             Map<PDFont, String> mapping,
             Set<COSBase> visited,
-            String prefix)
+            String prefix,
+            Map<COSBase, FontModelCacheEntry> fontCache)
             throws IOException {
         if (resources == null) {
             log.debug(
@@ -650,7 +657,7 @@ public class PdfJsonConversionService {
             mapping.put(font, fontId);
             String key = buildFontKey(pageNumber, fontId);
             if (!fonts.containsKey(key)) {
-                fonts.put(key, buildFontModel(document, font, fontId, pageNumber));
+                fonts.put(key, buildFontModel(font, fontId, pageNumber, fontCache));
             }
         }
 
@@ -667,7 +674,8 @@ public class PdfJsonConversionService {
                             visited,
                             prefix.isEmpty()
                                     ? xobjectName.getName()
-                                    : prefix + "/" + xobjectName.getName());
+                                    : prefix + "/" + xobjectName.getName(),
+                            fontCache);
                 }
             } catch (Exception ex) {
                 log.debug(
@@ -761,47 +769,103 @@ public class PdfJsonConversionService {
     }
 
     private PdfJsonFont buildFontModel(
-            PDDocument document, PDFont font, String fontId, int pageNumber) throws IOException {
+            PDFont font, String fontId, int pageNumber, Map<COSBase, FontModelCacheEntry> fontCache)
+            throws IOException {
+        COSBase cosObject = font.getCOSObject();
+        FontModelCacheEntry cacheEntry = fontCache.get(cosObject);
+        if (cacheEntry == null) {
+            cacheEntry = createFontCacheEntry(font);
+            fontCache.put(cosObject, cacheEntry);
+        }
+        return toPdfJsonFont(cacheEntry, fontId, pageNumber);
+    }
+
+    private FontModelCacheEntry createFontCacheEntry(PDFont font) throws IOException {
         PDFontDescriptor descriptor = font.getFontDescriptor();
         String subtype = font.getCOSObject().getNameAsString(COSName.SUBTYPE);
         String encoding = resolveEncoding(font);
         PdfJsonFontCidSystemInfo cidInfo = extractCidSystemInfo(font.getCOSObject());
         boolean embedded = font.isEmbedded();
         String toUnicode = extractToUnicode(font.getCOSObject());
-        // Build complete CharCode→CID→GID→Unicode mapping for CID fonts
         String unicodeMapping = buildUnicodeMapping(font, toUnicode);
         FontProgramData programData = embedded ? extractFontProgram(font, unicodeMapping) : null;
         String standard14Name = resolveStandard14Name(font);
         Integer flags = descriptor != null ? descriptor.getFlags() : null;
+        Float ascent = descriptor != null ? descriptor.getAscent() : null;
+        Float descent = descriptor != null ? descriptor.getDescent() : null;
+        Float capHeight = descriptor != null ? descriptor.getCapHeight() : null;
+        Float xHeight = descriptor != null ? descriptor.getXHeight() : null;
+        Float italicAngle = descriptor != null ? descriptor.getItalicAngle() : null;
+        Integer unitsPerEm = extractUnitsPerEm(font);
         PdfJsonCosValue cosDictionary = cosMapper.serializeCosValue(font.getCOSObject());
 
+        return new FontModelCacheEntry(
+                font.getName(),
+                subtype,
+                encoding,
+                cidInfo,
+                Boolean.valueOf(embedded),
+                programData,
+                toUnicode,
+                standard14Name,
+                flags,
+                ascent,
+                descent,
+                capHeight,
+                xHeight,
+                italicAngle,
+                unitsPerEm,
+                cosDictionary);
+    }
+
+    private PdfJsonFont toPdfJsonFont(
+            FontModelCacheEntry cacheEntry, String fontId, int pageNumber) {
+        FontProgramData programData = cacheEntry.programData();
         return PdfJsonFont.builder()
                 .id(fontId)
                 .pageNumber(pageNumber)
                 .uid(buildFontKey(pageNumber, fontId))
-                .baseName(font.getName())
-                .subtype(subtype)
-                .encoding(encoding)
-                .cidSystemInfo(cidInfo)
-                .embedded(embedded)
+                .baseName(cacheEntry.baseName())
+                .subtype(cacheEntry.subtype())
+                .encoding(cacheEntry.encoding())
+                .cidSystemInfo(cacheEntry.cidSystemInfo())
+                .embedded(cacheEntry.embedded())
                 .program(programData != null ? programData.getBase64() : null)
                 .programFormat(programData != null ? programData.getFormat() : null)
                 .webProgram(programData != null ? programData.getWebBase64() : null)
                 .webProgramFormat(programData != null ? programData.getWebFormat() : null)
                 .pdfProgram(programData != null ? programData.getPdfBase64() : null)
                 .pdfProgramFormat(programData != null ? programData.getPdfFormat() : null)
-                .toUnicode(toUnicode)
-                .standard14Name(standard14Name)
-                .fontDescriptorFlags(flags)
-                .ascent(descriptor != null ? descriptor.getAscent() : null)
-                .descent(descriptor != null ? descriptor.getDescent() : null)
-                .capHeight(descriptor != null ? descriptor.getCapHeight() : null)
-                .xHeight(descriptor != null ? descriptor.getXHeight() : null)
-                .italicAngle(descriptor != null ? descriptor.getItalicAngle() : null)
-                .unitsPerEm(extractUnitsPerEm(font))
-                .cosDictionary(cosDictionary)
+                .toUnicode(cacheEntry.toUnicode())
+                .standard14Name(cacheEntry.standard14Name())
+                .fontDescriptorFlags(cacheEntry.fontDescriptorFlags())
+                .ascent(cacheEntry.ascent())
+                .descent(cacheEntry.descent())
+                .capHeight(cacheEntry.capHeight())
+                .xHeight(cacheEntry.xHeight())
+                .italicAngle(cacheEntry.italicAngle())
+                .unitsPerEm(cacheEntry.unitsPerEm())
+                .cosDictionary(cacheEntry.cosDictionary())
                 .build();
     }
+
+    private record FontModelCacheEntry(
+            String baseName,
+            String subtype,
+            String encoding,
+            PdfJsonFontCidSystemInfo cidSystemInfo,
+            Boolean embedded,
+            FontProgramData programData,
+            String toUnicode,
+            String standard14Name,
+            Integer fontDescriptorFlags,
+            Float ascent,
+            Float descent,
+            Float capHeight,
+            Float xHeight,
+            Float italicAngle,
+            Integer unitsPerEm,
+            PdfJsonCosValue cosDictionary) {}
 
     private PreflightResult preflightTextElements(
             PDDocument document,
@@ -1280,13 +1344,16 @@ public class PdfJsonConversionService {
     }
 
     private Map<Integer, List<PdfJsonImageElement>> collectImages(
-            PDDocument document, int totalPages, Consumer<PdfJsonConversionProgress> progress)
+            PDDocument document,
+            int totalPages,
+            Consumer<PdfJsonConversionProgress> progress,
+            Map<COSBase, EncodedImage> imageCache)
             throws IOException {
         Map<Integer, List<PdfJsonImageElement>> imagesByPage = new LinkedHashMap<>();
         int pageNumber = 1;
         for (PDPage page : document.getPages()) {
             ImageCollectingEngine engine =
-                    new ImageCollectingEngine(page, pageNumber, imagesByPage);
+                    new ImageCollectingEngine(page, pageNumber, imagesByPage, imageCache);
             engine.processPage(page);
 
             // Update progress for image extraction (70-80%)
@@ -3003,16 +3070,21 @@ public class PdfJsonConversionService {
 
         private final int pageNumber;
         private final Map<Integer, List<PdfJsonImageElement>> imagesByPage;
+        private final Map<COSBase, EncodedImage> imageCache;
 
         private COSName currentXObjectName;
         private int imageCounter = 0;
 
         protected ImageCollectingEngine(
-                PDPage page, int pageNumber, Map<Integer, List<PdfJsonImageElement>> imagesByPage)
+                PDPage page,
+                int pageNumber,
+                Map<Integer, List<PdfJsonImageElement>> imagesByPage,
+                Map<COSBase, EncodedImage> imageCache)
                 throws IOException {
             super(page);
             this.pageNumber = pageNumber;
             this.imagesByPage = imagesByPage;
+            this.imageCache = imageCache;
         }
 
         @Override
@@ -3022,7 +3094,7 @@ public class PdfJsonConversionService {
 
         @Override
         public void drawImage(PDImage pdImage) throws IOException {
-            EncodedImage encoded = encodeImage(pdImage);
+            EncodedImage encoded = getOrEncodeImage(pdImage);
             if (encoded == null) {
                 return;
             }
@@ -3129,6 +3201,30 @@ public class PdfJsonConversionService {
             }
             super.processOperator(operator, operands);
             currentXObjectName = null;
+        }
+
+        private EncodedImage getOrEncodeImage(PDImage pdImage) {
+            if (pdImage == null) {
+                return null;
+            }
+
+            if (pdImage instanceof PDImageXObject xObject) {
+                if (xObject.isStencil()) {
+                    return encodeImage(pdImage);
+                }
+                COSBase key = xObject.getCOSObject();
+                EncodedImage cached = imageCache.get(key);
+                if (cached != null) {
+                    return cached;
+                }
+                EncodedImage encoded = encodeImage(pdImage);
+                if (encoded != null) {
+                    imageCache.put(key, encoded);
+                }
+                return encoded;
+            }
+
+            return encodeImage(pdImage);
         }
 
         private Bounds computeBounds(Matrix ctm) {
@@ -3390,6 +3486,7 @@ public class PdfJsonConversionService {
         private final Map<String, PdfJsonFont> fonts;
         private final Map<Integer, List<PdfJsonTextElement>> textByPage;
         private final Map<Integer, Map<PDFont, String>> pageFontResources;
+        private final Map<COSBase, FontModelCacheEntry> fontCache;
 
         private int currentPage = 1;
         private Map<PDFont, String> currentFontResources = Collections.emptyMap();
@@ -3399,12 +3496,14 @@ public class PdfJsonConversionService {
                 PDDocument document,
                 Map<String, PdfJsonFont> fonts,
                 Map<Integer, List<PdfJsonTextElement>> textByPage,
-                Map<Integer, Map<PDFont, String>> pageFontResources)
+                Map<Integer, Map<PDFont, String>> pageFontResources,
+                Map<COSBase, FontModelCacheEntry> fontCache)
                 throws IOException {
             this.document = document;
             this.fonts = fonts;
             this.textByPage = textByPage;
             this.pageFontResources = pageFontResources;
+            this.fontCache = fontCache != null ? fontCache : new IdentityHashMap<>();
         }
 
         @Override
@@ -3744,7 +3843,7 @@ public class PdfJsonConversionService {
             }
             String key = buildFontKey(currentPage, fontId);
             if (!fonts.containsKey(key)) {
-                fonts.put(key, buildFontModel(document, font, fontId, currentPage));
+                fonts.put(key, buildFontModel(font, fontId, currentPage, fontCache));
             }
             return fontId;
         }
@@ -3963,10 +4062,11 @@ public class PdfJsonConversionService {
                     PdfJsonConversionProgress.of(30, "fonts", "Collecting font information"));
             Map<String, PdfJsonFont> fonts = new LinkedHashMap<>();
             Map<Integer, Map<PDFont, String>> pageFontResources = new HashMap<>();
+            Map<COSBase, FontModelCacheEntry> fontCache = new IdentityHashMap<>();
             int pageNumber = 1;
             for (PDPage page : document.getPages()) {
                 Map<PDFont, String> resourceMap =
-                        collectFontsForPage(document, page, pageNumber, fonts);
+                        collectFontsForPage(document, page, pageNumber, fonts, fontCache);
                 pageFontResources.put(pageNumber, resourceMap);
                 pageNumber++;
             }
@@ -4058,7 +4158,11 @@ public class PdfJsonConversionService {
             Map<Integer, List<PdfJsonTextElement>> textByPage = new LinkedHashMap<>();
             TextCollectingStripper stripper =
                     new TextCollectingStripper(
-                            document, cached.getFonts(), textByPage, cached.getPageFontResources());
+                            document,
+                            cached.getFonts(),
+                            textByPage,
+                            cached.getPageFontResources(),
+                            new IdentityHashMap<>());
             stripper.setStartPage(pageNumber);
             stripper.setEndPage(pageNumber);
             stripper.setSortByPosition(true);
@@ -4147,7 +4251,8 @@ public class PdfJsonConversionService {
             // Extract images on-demand
             Map<Integer, List<PdfJsonImageElement>> singlePageImages = new LinkedHashMap<>();
             ImageCollectingEngine engine =
-                    new ImageCollectingEngine(page, pageNumber, singlePageImages);
+                    new ImageCollectingEngine(
+                            page, pageNumber, singlePageImages, new IdentityHashMap<>());
             engine.processPage(page);
             List<PdfJsonImageElement> images = singlePageImages.getOrDefault(pageNumber, List.of());
             pageModel.setImageElements(images);

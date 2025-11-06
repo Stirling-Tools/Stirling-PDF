@@ -7,6 +7,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -66,10 +67,11 @@ public class PdfJsonImageService {
             PDDocument document, int totalPages, Consumer<PdfJsonConversionProgress> progress)
             throws IOException {
         Map<Integer, List<PdfJsonImageElement>> imagesByPage = new LinkedHashMap<>();
+        Map<COSBase, EncodedImage> imageCache = new IdentityHashMap<>();
         int pageNumber = 1;
         for (PDPage page : document.getPages()) {
             ImageCollectingEngine engine =
-                    new ImageCollectingEngine(page, pageNumber, imagesByPage);
+                    new ImageCollectingEngine(page, pageNumber, imagesByPage, imageCache);
             engine.processPage(page);
 
             // Update progress for image extraction (70-80%)
@@ -94,7 +96,8 @@ public class PdfJsonImageService {
     public List<PdfJsonImageElement> extractImagesForPage(
             PDDocument document, PDPage page, int pageNumber) throws IOException {
         Map<Integer, List<PdfJsonImageElement>> imagesByPage = new LinkedHashMap<>();
-        ImageCollectingEngine engine = new ImageCollectingEngine(page, pageNumber, imagesByPage);
+        ImageCollectingEngine engine =
+                new ImageCollectingEngine(page, pageNumber, imagesByPage, new IdentityHashMap<>());
         engine.processPage(page);
         return imagesByPage.getOrDefault(pageNumber, new ArrayList<>());
     }
@@ -291,16 +294,21 @@ public class PdfJsonImageService {
 
         private final int pageNumber;
         private final Map<Integer, List<PdfJsonImageElement>> imagesByPage;
+        private final Map<COSBase, EncodedImage> imageCache;
 
         private COSName currentXObjectName;
         private int imageCounter = 0;
 
         protected ImageCollectingEngine(
-                PDPage page, int pageNumber, Map<Integer, List<PdfJsonImageElement>> imagesByPage)
+                PDPage page,
+                int pageNumber,
+                Map<Integer, List<PdfJsonImageElement>> imagesByPage,
+                Map<COSBase, EncodedImage> imageCache)
                 throws IOException {
             super(page);
             this.pageNumber = pageNumber;
             this.imagesByPage = imagesByPage;
+            this.imageCache = imageCache;
         }
 
         @Override
@@ -310,7 +318,7 @@ public class PdfJsonImageService {
 
         @Override
         public void drawImage(PDImage pdImage) throws IOException {
-            EncodedImage encoded = encodeImage(pdImage);
+            EncodedImage encoded = getOrEncodeImage(pdImage);
             if (encoded == null) {
                 return;
             }
@@ -417,6 +425,28 @@ public class PdfJsonImageService {
             }
             super.processOperator(operator, operands);
             currentXObjectName = null;
+        }
+
+        private EncodedImage getOrEncodeImage(PDImage pdImage) {
+            if (pdImage == null) {
+                return null;
+            }
+            if (pdImage instanceof PDImageXObject xObject) {
+                if (xObject.isStencil()) {
+                    return encodeImage(pdImage);
+                }
+                COSBase key = xObject.getCOSObject();
+                EncodedImage cached = imageCache.get(key);
+                if (cached != null) {
+                    return cached;
+                }
+                EncodedImage encoded = encodeImage(pdImage);
+                if (encoded != null) {
+                    imageCache.put(key, encoded);
+                }
+                return encoded;
+            }
+            return encodeImage(pdImage);
         }
 
         private Bounds computeBounds(Matrix ctm) {
