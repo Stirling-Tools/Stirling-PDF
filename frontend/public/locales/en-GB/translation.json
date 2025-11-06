@@ -3000,7 +3000,8 @@
     "options": {
       "highContrast": "High contrast",
       "invertAll": "Invert all colours",
-      "custom": "Custom"
+      "custom": "Custom",
+      "cmyk": "Convert to CMYK"
     },
     "tooltip": {
       "header": {
@@ -3027,6 +3028,10 @@
         "text": "Define your own text and background colours using the colour pickers. Perfect for creating branded documents or specific accessibility requirements.",
         "bullet1": "Text colour - Choose the colour for text elements",
         "bullet2": "Background colour - Set the background colour for the document"
+      },
+      "cmyk": {
+        "title": "Convert to CMYK",
+        "text": "Convert the PDF from RGB colour space to CMYK colour space, optimized for professional printing. This process converts colours to the Cyan, Magenta, Yellow, Black model used by printers."
       }
     },
     "error": {
