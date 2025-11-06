@@ -1,6 +1,6 @@
 import type { TokenBoundingBox, WordHighlightEntry } from '@app/types/compare';
 import type { FileId } from '@app/types/file';
-import type { StirlingFile } from '@app/types/fileContext';
+import type { StirlingFile, StirlingFileStub } from '@app/types/fileContext';
 import type { PagePreview } from '@app/types/compare';
 
 /** Convert hex color (#rrggbb) to rgba() string with alpha; falls back to input if invalid. */
@@ -175,8 +175,8 @@ export const getFileFromSelection = (
 
 export const getStubFromSelection = (
   fileId: FileId | null,
-  selectors: { getStirlingFileStub: (id: FileId) => unknown }
-): unknown | null => {
+  selectors: { getStirlingFileStub: (id: FileId) => StirlingFileStub | undefined }
+): StirlingFileStub | null => {
   if (!fileId) return null;
   const stub = selectors.getStirlingFileStub(fileId);
   return stub ?? null;

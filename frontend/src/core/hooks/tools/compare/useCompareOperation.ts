@@ -36,7 +36,7 @@ export interface CompareOperationHook extends ToolOperationHook<CompareParameter
 
 export const useCompareOperation = (): CompareOperationHook => {
   const { t } = useTranslation();
-  const { selectors, actions: fileActions } = useFileContext();
+  const { selectors } = useFileContext();
   const workerRef = useRef<Worker | null>(null);
   const previousUrl = useRef<string | null>(null);
   const activeRunIdRef = useRef(0);
@@ -59,7 +59,7 @@ export const useCompareOperation = (): CompareOperationHook => {
   const ensureWorker = useCallback(() => {
     if (!workerRef.current) {
       workerRef.current = new Worker(
-        new URL('../../../../workers/compareWorker.ts', import.meta.url),
+        new URL('/@app/workers/compareWorker.ts', import.meta.url),
         { type: 'module' }
       );
     }
@@ -297,8 +297,12 @@ export const useCompareOperation = (): CompareOperationHook => {
             expandable: false,
             buttonText: t('compare.earlyDissimilarity.stopButton', 'Stop comparison'),
             buttonCallback: () => {
-              try { cancelOperation(); } catch {}
-              try { window.dispatchEvent(new CustomEvent('compare:clear-selected')); } catch {}
+              try { cancelOperation(); } catch {
+                console.error('Failed to cancel operation');
+              }
+              try { window.dispatchEvent(new CustomEvent('compare:clear-selected')); } catch {
+                console.error('Failed to dispatch clear selected event');
+              }
               if (dissimilarityToastIdRef.current) {
                 dismissToast(dissimilarityToastIdRef.current);
                 dissimilarityToastIdRef.current = null;

@@ -264,8 +264,7 @@ const chunkedDiff = (
         if (unchangedRatio < runtimeStop.minUnchangedRatio) {
           // Signal early termination for extreme dissimilarity
           const err = new Error('EARLY_STOP_TOO_DISSIMILAR');
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (err as any).__earlyStop = true;
+          (err as Error & { __earlyStop?: boolean }).__earlyStop = true;
           throw err;
         }
       }
@@ -423,10 +422,9 @@ self.onmessage = (event: MessageEvent<CompareWorkerRequest>) => {
       },
       { maxProcessedTokens: runtimeMaxProcessedTokens, minUnchangedRatio: runtimeMinUnchangedRatio }
     );
-  } catch (err) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const anyErr = err as any;
-    if (anyErr && (anyErr.__earlyStop || anyErr?.message === 'EARLY_STOP_TOO_DISSIMILAR')) {
+  } catch (err) { 
+    const error = err as Error & { __earlyStop?: boolean };
+    if (error && (error.__earlyStop || error.message === 'EARLY_STOP_TOO_DISSIMILAR')) {
       const response: CompareWorkerResponse = {
         type: 'error',
         message:

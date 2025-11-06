@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { pdfWorkerManager } from '@app/services/pdfWorkerManager';
+import type { PDFDocumentProxy } from 'pdfjs-dist/legacy/build/pdf.mjs';
 import { PagePreview } from '@app/types/compare';
 
 const DISPLAY_SCALE = 1;
@@ -36,11 +37,11 @@ export const useProgressivePagePreviews = ({
     loadingPages: new Set(),
   });
 
-  const pdfRef = useRef<any>(null);
+  const pdfRef = useRef<PDFDocumentProxy | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
   const renderPageBatch = useCallback(async (
-    pdf: any,
+    pdf: PDFDocumentProxy,
     pageNumbers: number[],
     signal: AbortSignal
   ): Promise<PagePreview[]> => {
@@ -114,7 +115,9 @@ export const useProgressivePagePreviews = ({
     }));
 
     try {
-      const previews = await renderPageBatch(pdfRef.current, pagesToLoad, signal);
+      const pdfDoc = pdfRef.current;
+      if (!pdfDoc) return;
+      const previews = await renderPageBatch(pdfDoc, pagesToLoad, signal);
       
       if (!signal.aborted) {
         setState(prev => {

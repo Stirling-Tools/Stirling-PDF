@@ -80,7 +80,7 @@ const Compare = (props: BaseToolProps) => {
       // Use a static label at registration time to avoid re-registering on i18n changes
       label: 'Compare view',
       icon: compareIcon,
-      component: CompareWorkbenchView as any,
+      component: CompareWorkbenchView,
     });
 
     return () => {

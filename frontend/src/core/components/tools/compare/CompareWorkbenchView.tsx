@@ -45,8 +45,8 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
 
   const baseFile = getFileFromSelection(data?.baseLocalFile, baseFileId, selectors);
   const comparisonFile = getFileFromSelection(data?.comparisonLocalFile, comparisonFileId, selectors);
-  const baseStub = getStubFromSelection(baseFileId, selectors) as any;
-  const comparisonStub = getStubFromSelection(comparisonFileId, selectors) as any;
+  const baseStub = getStubFromSelection(baseFileId, selectors);
+  const comparisonStub = getStubFromSelection(comparisonFileId, selectors);
 
   const processedAt = result?.totals.processedAt ?? null;
 

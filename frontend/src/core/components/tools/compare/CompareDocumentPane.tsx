@@ -165,7 +165,7 @@ const CompareDocumentPane = ({
               offsetPixels: OFFSET_PIXELS,
             });
 
-            const { highlightOffset, baseWidth, baseHeight, containerWidth, containerHeight, innerScale } = metrics;
+            const { highlightOffset, containerWidth, containerHeight, innerScale } = metrics;
 
             // Compute clamped pan for current zoom so content always touches edges when in bounds
             const storedPan = pagePanRef.current.get(page.pageNumber) || { x: 0, y: 0 };

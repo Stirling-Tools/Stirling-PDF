@@ -1,7 +1,5 @@
 // Shared text diff and normalization utilities for compare tool
 
-export const PARAGRAPH_SENTINEL = '\uE000¶';
-
 export const shouldConcatWithoutSpace = (word: string) => {
   return /^[.,!?;:)\]}]/.test(word) || word.startsWith("'") || word === "'s";
 };
@@ -11,17 +9,6 @@ export const appendWord = (existing: string, word: string) => {
   if (shouldConcatWithoutSpace(word)) return `${existing}${word}`;
   return `${existing} ${word}`;
 };
-
-export const normalizeToken = (s: string) =>
-  s
-    .normalize('NFKC')
-    .replace(/[\u00AD\u200B-\u200F\u202A-\u202E]/g, '') // soft hyphen + zero width controls
-    .replace(/[“”]/g, '"')
-    .replace(/[‘’]/g, "'")
-    .replace(/[–—]/g, '-')
-    .replace(/\s+/g, ' ')
-    .trim();
-
 export const tokenize = (text: string): string[] => text.split(/\s+/).filter(Boolean);
 
 type TokenType = 'unchanged' | 'removed' | 'added';

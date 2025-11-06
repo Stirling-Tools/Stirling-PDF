@@ -160,7 +160,7 @@ export const useComparePagePreviews = ({
       };
     }
 
-    const key = `${(file as any).name || 'file'}:${(file as any).size || 0}:${cacheKey ?? 'none'}`;
+    const key = `${file.name || 'file'}:${file.size || 0}:${cacheKey ?? 'none'}`;
     const refreshVersion = Symbol(key);
     latestVersionMap.set(key, refreshVersion);
     const entry = getOrCreateEntry(key);

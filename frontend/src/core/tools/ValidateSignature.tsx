@@ -47,7 +47,7 @@ const ValidateSignature = (props: BaseToolProps) => {
       workbenchId: REPORT_WORKBENCH_ID,
       label: t('validateSignature.report.shortTitle', 'Signature Report'),
       icon: reportIcon,
-      component: ValidateSignatureReportView as any,
+      component: ValidateSignatureReportView,
     });
 
     return () => {

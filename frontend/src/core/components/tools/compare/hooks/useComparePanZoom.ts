@@ -440,6 +440,63 @@ export const useComparePanZoom = ({
     return () => { cleanupBase(); cleanupComp(); };
   }, []);
 
+  // Helpers for clearer pan-edge overscroll behavior
+  const getVerticalOverflow = useCallback((rawY: number, maxY: number): number => {
+    if (rawY < 0) return rawY; // negative -> scroll up
+    if (rawY > maxY) return rawY - maxY; // positive -> scroll down
+    return 0;
+  }, []);
+
+  const normalizeApplyCandidate = useCallback((overflowY: number): number => {
+    const DEADZONE = 32; // pixels
+    if (overflowY < -DEADZONE) return overflowY + DEADZONE;
+    if (overflowY > DEADZONE) return overflowY - DEADZONE;
+    return 0;
+  }, []);
+
+  const applyIncrementalScroll = useCallback((container: HTMLDivElement, isBase: boolean, applyCandidate: number) => {
+    const STEP = 48; // pixels per incremental scroll
+    const key = isBase ? 'base' : 'comparison';
+    const deltaSinceLast = applyCandidate - edgeOverscrollRef.current[key];
+    const magnitude = Math.abs(deltaSinceLast);
+    if (magnitude < STEP) return;
+
+    const stepDelta = Math.sign(deltaSinceLast) * Math.floor(magnitude / STEP) * STEP;
+    edgeOverscrollRef.current[key] += stepDelta;
+
+    const prevTop = container.scrollTop;
+    const nextTop = Math.max(0, Math.min(container.scrollHeight - container.clientHeight, prevTop + stepDelta));
+    if (nextTop === prevTop) return;
+
+    container.scrollTop = nextTop;
+    if (isScrollLinked) {
+      const sourceIsBase = isBase;
+      const target = isBase ? comparisonScrollRef.current : baseScrollRef.current;
+      if (target) {
+        const targetVerticalRange = Math.max(1, target.scrollHeight - target.clientHeight);
+        const mappedTop = mapScrollTopBetweenPanes(nextTop, sourceIsBase);
+        const deltaPx = sourceIsBase
+          ? scrollLinkAnchorsRef.current.deltaPixelsBaseToComp
+          : scrollLinkAnchorsRef.current.deltaPixelsCompToBase;
+        const desiredTop = Math.max(0, Math.min(targetVerticalRange, mappedTop + deltaPx));
+        target.scrollTop = desiredTop;
+      }
+    }
+  }, [isScrollLinked, mapScrollTopBetweenPanes]);
+
+  const handlePanEdgeOverscroll = useCallback((rawY: number, boundsMaxY: number, isBase: boolean) => {
+    const container = isBase ? baseScrollRef.current : comparisonScrollRef.current;
+    if (!container) return;
+    const overflowY = getVerticalOverflow(rawY, boundsMaxY);
+    const applyCandidate = normalizeApplyCandidate(overflowY);
+    if (applyCandidate !== 0) {
+      applyIncrementalScroll(container, isBase, applyCandidate);
+    } else {
+      // Reset accumulator when back within deadzone
+      edgeOverscrollRef.current[isBase ? 'base' : 'comparison'] = 0;
+    }
+  }, [applyIncrementalScroll, getVerticalOverflow, normalizeApplyCandidate]);
+
   const beginPan = useCallback(
     (pane: Pane, event: ReactMouseEvent<HTMLDivElement>) => {
       if (!isPanMode) return;
@@ -489,47 +546,7 @@ export const useComparePanZoom = ({
       };
 
       // On vertical overscroll beyond pan bounds, scroll the page (with deadzone + incremental steps)
-      const container = isBase ? baseScrollRef.current : comparisonScrollRef.current;
-      if (container) {
-        const DEADZONE = 32; // pixels
-        const STEP = 48; // pixels per incremental scroll
-        let overflowY = 0;
-        if (rawY < 0) overflowY = rawY; // negative -> scroll up
-        else if (rawY > bounds.maxY) overflowY = rawY - bounds.maxY; // positive -> scroll down
-        let applyCandidate = 0;
-        if (overflowY < -DEADZONE) applyCandidate = overflowY + DEADZONE;
-        else if (overflowY > DEADZONE) applyCandidate = overflowY - DEADZONE;
-        if (applyCandidate !== 0) {
-          const key = isBase ? 'base' : 'comparison';
-          const deltaSinceLast = applyCandidate - edgeOverscrollRef.current[key];
-          const magnitude = Math.abs(deltaSinceLast);
-          if (magnitude >= STEP) {
-            const stepDelta = Math.sign(deltaSinceLast) * Math.floor(magnitude / STEP) * STEP;
-            edgeOverscrollRef.current[key] += stepDelta;
-            const prevTop = container.scrollTop;
-            const nextTop = Math.max(0, Math.min(container.scrollHeight - container.clientHeight, prevTop + stepDelta));
-            if (nextTop !== prevTop) {
-              container.scrollTop = nextTop;
-              if (isScrollLinked) {
-                const sourceIsBase = isBase;
-                const target = isBase ? comparisonScrollRef.current : baseScrollRef.current;
-                if (target) {
-                  const targetVerticalRange = Math.max(1, target.scrollHeight - target.clientHeight);
-                  const mappedTop = mapScrollTopBetweenPanes(nextTop, sourceIsBase);
-                  const deltaPx = sourceIsBase
-                    ? scrollLinkAnchorsRef.current.deltaPixelsBaseToComp
-                    : scrollLinkAnchorsRef.current.deltaPixelsCompToBase;
-                  const desiredTop = Math.max(0, Math.min(targetVerticalRange, mappedTop + deltaPx));
-                  target.scrollTop = desiredTop;
-                }
-              }
-            }
-          }
-        } else {
-          // Reset accumulator when back within deadzone
-          edgeOverscrollRef.current[isBase ? 'base' : 'comparison'] = 0;
-        }
-      }
+      handlePanEdgeOverscroll(rawY, bounds.maxY, isBase);
 
       if (isBase) {
         setBasePan(desired);
@@ -729,45 +746,7 @@ export const useComparePanZoom = ({
           y: Math.max(0, Math.min(bounds.maxY, rawY)),
         };
 
-        const container = isBase ? baseScrollRef.current : comparisonScrollRef.current;
-        if (container) {
-          const DEADZONE = 32;
-          const STEP = 48;
-          let overflowY = 0;
-          if (rawY < 0) overflowY = rawY; else if (rawY > bounds.maxY) overflowY = rawY - bounds.maxY;
-          let applyCandidate = 0;
-          if (overflowY < -DEADZONE) applyCandidate = overflowY + DEADZONE;
-          else if (overflowY > DEADZONE) applyCandidate = overflowY - DEADZONE;
-          if (applyCandidate !== 0) {
-            const key = isBase ? 'base' : 'comparison';
-            const deltaSinceLast = applyCandidate - edgeOverscrollRef.current[key];
-            const magnitude = Math.abs(deltaSinceLast);
-            if (magnitude >= STEP) {
-              const stepDelta = Math.sign(deltaSinceLast) * Math.floor(magnitude / STEP) * STEP;
-              edgeOverscrollRef.current[key] += stepDelta;
-              const prevTop = container.scrollTop;
-              const nextTop = Math.max(0, Math.min(container.scrollHeight - container.clientHeight, prevTop + stepDelta));
-              if (nextTop !== prevTop) {
-                container.scrollTop = nextTop;
-                if (isScrollLinked) {
-                  const sourceIsBase = isBase;
-                  const target = isBase ? comparisonScrollRef.current : baseScrollRef.current;
-                  if (target) {
-                    const targetVerticalRange = Math.max(1, target.scrollHeight - target.clientHeight);
-                    const mappedTop = mapScrollTopBetweenPanes(nextTop, sourceIsBase);
-                    const deltaPx = sourceIsBase
-                      ? scrollLinkAnchorsRef.current.deltaPixelsBaseToComp
-                      : scrollLinkAnchorsRef.current.deltaPixelsCompToBase;
-                    const desiredTop = Math.max(0, Math.min(targetVerticalRange, mappedTop + deltaPx));
-                    target.scrollTop = desiredTop;
-                  }
-                }
-              }
-            }
-          } else {
-            edgeOverscrollRef.current[isBase ? 'base' : 'comparison'] = 0;
-          }
-        }
+        handlePanEdgeOverscroll(rawY, bounds.maxY, isBase);
         if (isBase) {
           setBasePan(desired);
         } else {
