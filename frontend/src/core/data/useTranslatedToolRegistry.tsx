@@ -79,6 +79,7 @@ import { overlayPdfsOperationConfig } from "@app/hooks/tools/overlayPdfs/useOver
 import { adjustPageScaleOperationConfig } from "@app/hooks/tools/adjustPageScale/useAdjustPageScaleOperation";
 import { scannerImageSplitOperationConfig } from "@app/hooks/tools/scannerImageSplit/useScannerImageSplitOperation";
 import { addPageNumbersOperationConfig } from "@app/components/tools/addPageNumbers/useAddPageNumbersOperation";
+import { extractPagesOperationConfig } from "@app/hooks/tools/extractPages/useExtractPagesOperation";
 import CompressSettings from "@app/components/tools/compress/CompressSettings";
 import AddPasswordSettings from "@app/components/tools/addPassword/AddPasswordSettings";
 import RemovePasswordSettings from "@app/components/tools/removePassword/RemovePasswordSettings";
@@ -105,7 +106,9 @@ import AddPageNumbers from "@app/tools/AddPageNumbers";
 import RemoveAnnotations from "@app/tools/RemoveAnnotations";
 import PageLayoutSettings from "@app/components/tools/pageLayout/PageLayoutSettings";
 import ExtractImages from "@app/tools/ExtractImages";
+import ExtractPages from "@app/tools/ExtractPages";
 import ExtractImagesSettings from "@app/components/tools/extractImages/ExtractImagesSettings";
+import ExtractPagesSettings from "@app/components/tools/extractPages/ExtractPagesSettings";
 import ReplaceColorSettings from "@app/components/tools/replaceColor/ReplaceColorSettings";
 import AddStampAutomationSettings from "@app/components/tools/addStamp/AddStampAutomationSettings";
 import CertSignAutomationSettings from "@app/components/tools/certSign/CertSignAutomationSettings";
@@ -474,12 +477,14 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       extractPages: {
         icon: <LocalIcon icon="upload-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.extractPages.title", "Extract Pages"),
-        component: null,
+        component: ExtractPages,
         description: t("home.extractPages.desc", "Extract specific pages from a PDF document"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.EXTRACTION,
         synonyms: getSynonyms(t, "extractPages"),
-        automationSettings: null,
+        automationSettings: ExtractPagesSettings,
+        operationConfig: extractPagesOperationConfig,
+        endpoints: ["rearrange-pages"],
       },
       extractImages: {
         icon: <LocalIcon icon="photo-library-rounded" width="1.5rem" height="1.5rem" />,
