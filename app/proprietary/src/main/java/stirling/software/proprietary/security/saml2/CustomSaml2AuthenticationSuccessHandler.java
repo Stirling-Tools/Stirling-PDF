@@ -4,15 +4,21 @@ import static stirling.software.proprietary.security.model.AuthenticationType.SA
 import static stirling.software.proprietary.security.model.AuthenticationType.SSO;
 
 import java.io.IOException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.util.Map;
+import java.util.Optional;
 
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
 import org.springframework.security.web.savedrequest.SavedRequest;
 
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
@@ -35,6 +41,9 @@ import stirling.software.proprietary.security.service.UserService;
 @Slf4j
 public class CustomSaml2AuthenticationSuccessHandler
         extends SavedRequestAwareAuthenticationSuccessHandler {
+
+    private static final String SPA_REDIRECT_COOKIE = "stirling_redirect_path";
+    private static final String DEFAULT_CALLBACK_PATH = "/auth/callback";
 
     private LoginAttemptService loginAttemptService;
     private ApplicationProperties.Security.SAML2 saml2Properties;
@@ -148,7 +157,7 @@ public class CustomSaml2AuthenticationSuccessHandler
 
                         // Build context-aware redirect URL based on the original request
                         String redirectUrl =
-                                buildContextAwareRedirectUrl(request, contextPath, jwt);
+                                buildContextAwareRedirectUrl(request, response, contextPath, jwt);
 
                         response.sendRedirect(redirectUrl);
                     } else {
@@ -177,8 +186,81 @@ public class CustomSaml2AuthenticationSuccessHandler
      * @return The appropriate redirect URL
      */
     private String buildContextAwareRedirectUrl(
-            HttpServletRequest request, String contextPath, String jwt) {
-        // Try to get the origin from the Referer header first
+            HttpServletRequest request,
+            HttpServletResponse response,
+            String contextPath,
+            String jwt) {
+        String redirectPath = resolveRedirectPath(request, contextPath);
+        String origin =
+                resolveForwardedOrigin(request)
+                        .orElseGet(
+                                () ->
+                                        resolveOriginFromReferer(request)
+                                                .orElseGet(() -> buildOriginFromRequest(request)));
+        clearRedirectCookie(response);
+        return origin + redirectPath + "#access_token=" + jwt;
+    }
+
+    private String resolveRedirectPath(HttpServletRequest request, String contextPath) {
+        return extractRedirectPathFromCookie(request)
+                .filter(path -> path.startsWith("/"))
+                .orElseGet(() -> defaultCallbackPath(contextPath));
+    }
+
+    private Optional<String> extractRedirectPathFromCookie(HttpServletRequest request) {
+        Cookie[] cookies = request.getCookies();
+        if (cookies == null) {
+            return Optional.empty();
+        }
+        for (Cookie cookie : cookies) {
+            if (SPA_REDIRECT_COOKIE.equals(cookie.getName())) {
+                String value = URLDecoder.decode(cookie.getValue(), StandardCharsets.UTF_8).trim();
+                if (!value.isEmpty()) {
+                    return Optional.of(value);
+                }
+            }
+        }
+        return Optional.empty();
+    }
+
+    private String defaultCallbackPath(String contextPath) {
+        if (contextPath == null
+                || contextPath.isBlank()
+                || "/".equals(contextPath)
+                || "\\".equals(contextPath)) {
+            return DEFAULT_CALLBACK_PATH;
+        }
+        return contextPath + DEFAULT_CALLBACK_PATH;
+    }
+
+    private Optional<String> resolveForwardedOrigin(HttpServletRequest request) {
+        String forwardedHostHeader = request.getHeader("X-Forwarded-Host");
+        if (forwardedHostHeader == null || forwardedHostHeader.isBlank()) {
+            return Optional.empty();
+        }
+        String host = forwardedHostHeader.split(",")[0].trim();
+        if (host.isEmpty()) {
+            return Optional.empty();
+        }
+
+        String forwardedProtoHeader = request.getHeader("X-Forwarded-Proto");
+        String proto =
+                (forwardedProtoHeader == null || forwardedProtoHeader.isBlank())
+                        ? request.getScheme()
+                        : forwardedProtoHeader.split(",")[0].trim();
+
+        if (!host.contains(":")) {
+            String forwardedPort = request.getHeader("X-Forwarded-Port");
+            if (forwardedPort != null
+                    && !forwardedPort.isBlank()
+                    && !isDefaultPort(proto, forwardedPort.trim())) {
+                host = host + ":" + forwardedPort.trim();
+            }
+        }
+        return Optional.of(proto + "://" + host);
+    }
+
+    private Optional<String> resolveOriginFromReferer(HttpServletRequest request) {
         String referer = request.getHeader("Referer");
         if (referer != null && !referer.isEmpty()) {
             try {
@@ -189,14 +271,16 @@ public class CustomSaml2AuthenticationSuccessHandler
                         && refererUrl.getPort() != 443) {
                     origin += ":" + refererUrl.getPort();
                 }
-                return origin + "/auth/callback#access_token=" + jwt;
+                return Optional.of(origin);
             } catch (java.net.MalformedURLException e) {
                 log.debug(
                         "Malformed referer URL: {}, falling back to request-based origin", referer);
             }
         }
+        return Optional.empty();
+    }
 
-        // Fall back to building from request host/port
+    private String buildOriginFromRequest(HttpServletRequest request) {
         String scheme = request.getScheme();
         String serverName = request.getServerName();
         int serverPort = request.getServerPort();
@@ -204,12 +288,34 @@ public class CustomSaml2AuthenticationSuccessHandler
         StringBuilder origin = new StringBuilder();
         origin.append(scheme).append("://").append(serverName);
 
-        // Only add port if it's not the default port for the scheme
-        if ((!"http".equals(scheme) || serverPort != 80)
-                && (!"https".equals(scheme) || serverPort != 443)) {
+        if ((!"http".equalsIgnoreCase(scheme) || serverPort != 80)
+                && (!"https".equalsIgnoreCase(scheme) || serverPort != 443)) {
             origin.append(":").append(serverPort);
         }
 
-        return origin + "/auth/callback#access_token=" + jwt;
+        return origin.toString();
+    }
+
+    private boolean isDefaultPort(String scheme, String port) {
+        if (port == null) {
+            return true;
+        }
+        try {
+            int parsedPort = Integer.parseInt(port);
+            return ("http".equalsIgnoreCase(scheme) && parsedPort == 80)
+                    || ("https".equalsIgnoreCase(scheme) && parsedPort == 443);
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+
+    private void clearRedirectCookie(HttpServletResponse response) {
+        ResponseCookie cookie =
+                ResponseCookie.from(SPA_REDIRECT_COOKIE, "")
+                        .path("/")
+                        .sameSite("Lax")
+                        .maxAge(0)
+                        .build();
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
     }
 }
