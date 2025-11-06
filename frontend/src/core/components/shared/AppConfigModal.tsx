@@ -26,7 +26,7 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
     const match = pathname.match(/\/settings\/([^/]+)/);
     if (match && match[1]) {
       const section = match[1] as NavKey;
-      return VALID_NAV_KEYS.includes(section as any) ? section : null;
+      return VALID_NAV_KEYS.includes(section as NavKey) ? section : null;
     }
     return null;
   };
