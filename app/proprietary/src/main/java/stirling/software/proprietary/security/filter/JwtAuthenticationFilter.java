@@ -1,5 +1,6 @@
 package stirling.software.proprietary.security.filter;
 
+import static stirling.software.common.util.RequestUriUtils.isPublicAuthEndpoint;
 import static stirling.software.common.util.RequestUriUtils.isStaticResource;
 import static stirling.software.proprietary.security.model.AuthenticationType.OAUTH2;
 import static stirling.software.proprietary.security.model.AuthenticationType.SAML2;
@@ -80,17 +81,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 String requestURI = request.getRequestURI();
                 String contextPath = request.getContextPath();
 
-                // Public auth endpoints that don't require JWT
-                boolean isPublicAuthEndpoint =
-                        requestURI.startsWith(contextPath + "/login")
-                                || requestURI.startsWith(contextPath + "/signup")
-                                || requestURI.startsWith(contextPath + "/auth/")
-                                || requestURI.startsWith(contextPath + "/oauth2")
-                                || requestURI.startsWith(contextPath + "/api/v1/auth/login")
-                                || requestURI.startsWith(contextPath + "/api/v1/auth/register")
-                                || requestURI.startsWith(contextPath + "/api/v1/auth/refresh");
-
-                if (!isPublicAuthEndpoint) {
+                if (!isPublicAuthEndpoint(requestURI, contextPath)) {
                     // For API requests, return 401 JSON
                     String acceptHeader = request.getHeader("Accept");
                     if (requestURI.startsWith(contextPath + "/api/")

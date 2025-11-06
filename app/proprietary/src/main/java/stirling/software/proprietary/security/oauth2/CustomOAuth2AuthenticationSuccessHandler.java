@@ -4,9 +4,14 @@ import static stirling.software.proprietary.security.model.AuthenticationType.OA
 import static stirling.software.proprietary.security.model.AuthenticationType.SSO;
 
 import java.io.IOException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.util.Map;
+import java.util.Optional;
 
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -16,6 +21,7 @@ import org.springframework.security.web.authentication.SavedRequestAwareAuthenti
 import org.springframework.security.web.savedrequest.SavedRequest;
 
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
@@ -36,6 +42,9 @@ import stirling.software.proprietary.security.service.UserService;
 @RequiredArgsConstructor
 public class CustomOAuth2AuthenticationSuccessHandler
         extends SavedRequestAwareAuthenticationSuccessHandler {
+
+    private static final String SPA_REDIRECT_COOKIE = "stirling_redirect_path";
+    private static final String DEFAULT_CALLBACK_PATH = "/auth/callback";
 
     private final LoginAttemptService loginAttemptService;
     private final ApplicationProperties.Security.OAUTH2 oauth2Properties;
@@ -119,7 +128,8 @@ public class CustomOAuth2AuthenticationSuccessHandler
                                     authentication, Map.of("authType", AuthenticationType.OAUTH2));
 
                     // Build context-aware redirect URL based on the original request
-                    String redirectUrl = buildContextAwareRedirectUrl(request, contextPath, jwt);
+                    String redirectUrl =
+                            buildContextAwareRedirectUrl(request, response, contextPath, jwt);
 
                     response.sendRedirect(redirectUrl);
                 } else {
@@ -149,30 +159,110 @@ public class CustomOAuth2AuthenticationSuccessHandler
      * Builds a context-aware redirect URL based on the request's origin
      *
      * @param request The HTTP request
+     * @param response HTTP response (used to clear redirect cookies)
      * @param contextPath The application context path
      * @param jwt The JWT token to include
      * @return The appropriate redirect URL
      */
     private String buildContextAwareRedirectUrl(
-            HttpServletRequest request, String contextPath, String jwt) {
-        // Try to get the origin from the Referer header first
+            HttpServletRequest request,
+            HttpServletResponse response,
+            String contextPath,
+            String jwt) {
+        String redirectPath = resolveRedirectPath(request, contextPath);
+        String origin =
+                resolveForwardedOrigin(request)
+                        .orElseGet(
+                                () ->
+                                        resolveOriginFromReferer(request)
+                                                .orElseGet(() -> buildOriginFromRequest(request)));
+        clearRedirectCookie(response);
+        return origin + redirectPath + "#access_token=" + jwt;
+    }
+
+    private String resolveRedirectPath(HttpServletRequest request, String contextPath) {
+        return extractRedirectPathFromCookie(request)
+                .filter(path -> path.startsWith("/"))
+                .orElseGet(() -> defaultCallbackPath(contextPath));
+    }
+
+    private Optional<String> extractRedirectPathFromCookie(HttpServletRequest request) {
+        Cookie[] cookies = request.getCookies();
+        if (cookies == null) {
+            return Optional.empty();
+        }
+        for (Cookie cookie : cookies) {
+            if (SPA_REDIRECT_COOKIE.equals(cookie.getName())) {
+                String value = URLDecoder.decode(cookie.getValue(), StandardCharsets.UTF_8).trim();
+                if (!value.isEmpty()) {
+                    return Optional.of(value);
+                }
+            }
+        }
+        return Optional.empty();
+    }
+
+    private String defaultCallbackPath(String contextPath) {
+        if (contextPath == null
+                || contextPath.isBlank()
+                || "/".equals(contextPath)
+                || "\\".equals(contextPath)) {
+            return DEFAULT_CALLBACK_PATH;
+        }
+        return contextPath + DEFAULT_CALLBACK_PATH;
+    }
+
+    private Optional<String> resolveForwardedOrigin(HttpServletRequest request) {
+        String forwardedHostHeader = request.getHeader("X-Forwarded-Host");
+        if (forwardedHostHeader == null || forwardedHostHeader.isBlank()) {
+            return Optional.empty();
+        }
+        String host = forwardedHostHeader.split(",")[0].trim();
+        if (host.isEmpty()) {
+            return Optional.empty();
+        }
+
+        String forwardedProtoHeader = request.getHeader("X-Forwarded-Proto");
+        String proto =
+                (forwardedProtoHeader == null || forwardedProtoHeader.isBlank())
+                        ? request.getScheme()
+                        : forwardedProtoHeader.split(",")[0].trim();
+
+        if (!host.contains(":")) {
+            String forwardedPort = request.getHeader("X-Forwarded-Port");
+            if (forwardedPort != null
+                    && !forwardedPort.isBlank()
+                    && !isDefaultPort(proto, forwardedPort.trim())) {
+                host = host + ":" + forwardedPort.trim();
+            }
+        }
+        return Optional.of(proto + "://" + host);
+    }
+
+    private Optional<String> resolveOriginFromReferer(HttpServletRequest request) {
         String referer = request.getHeader("Referer");
         if (referer != null && !referer.isEmpty()) {
             try {
                 java.net.URL refererUrl = new java.net.URL(referer);
-                String origin = refererUrl.getProtocol() + "://" + refererUrl.getHost();
-                if (refererUrl.getPort() != -1
-                        && refererUrl.getPort() != 80
-                        && refererUrl.getPort() != 443) {
-                    origin += ":" + refererUrl.getPort();
+                String refererHost = refererUrl.getHost().toLowerCase();
+
+                if (!isOAuthProviderDomain(refererHost)) {
+                    String origin = refererUrl.getProtocol() + "://" + refererUrl.getHost();
+                    if (refererUrl.getPort() != -1
+                            && refererUrl.getPort() != 80
+                            && refererUrl.getPort() != 443) {
+                        origin += ":" + refererUrl.getPort();
+                    }
+                    return Optional.of(origin);
                 }
-                return origin + "/auth/callback#access_token=" + jwt;
             } catch (java.net.MalformedURLException e) {
-                // Fall back to other methods if referer is malformed
+                // ignore and fall back
             }
         }
+        return Optional.empty();
+    }
 
-        // Fall back to building from request host/port
+    private String buildOriginFromRequest(HttpServletRequest request) {
         String scheme = request.getScheme();
         String serverName = request.getServerName();
         int serverPort = request.getServerPort();
@@ -180,12 +270,50 @@ public class CustomOAuth2AuthenticationSuccessHandler
         StringBuilder origin = new StringBuilder();
         origin.append(scheme).append("://").append(serverName);
 
-        // Only add port if it's not the default port for the scheme
-        if ((!"http".equals(scheme) || serverPort != 80)
-                && (!"https".equals(scheme) || serverPort != 443)) {
+        if ((!"http".equalsIgnoreCase(scheme) || serverPort != 80)
+                && (!"https".equalsIgnoreCase(scheme) || serverPort != 443)) {
             origin.append(":").append(serverPort);
         }
 
-        return origin.toString() + "/auth/callback#access_token=" + jwt;
+        return origin.toString();
+    }
+
+    private boolean isDefaultPort(String scheme, String port) {
+        if (port == null) {
+            return true;
+        }
+        try {
+            int parsedPort = Integer.parseInt(port);
+            return ("http".equalsIgnoreCase(scheme) && parsedPort == 80)
+                    || ("https".equalsIgnoreCase(scheme) && parsedPort == 443);
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+
+    private void clearRedirectCookie(HttpServletResponse response) {
+        ResponseCookie cookie =
+                ResponseCookie.from(SPA_REDIRECT_COOKIE, "")
+                        .path("/")
+                        .sameSite("Lax")
+                        .maxAge(0)
+                        .build();
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+    }
+
+    /**
+     * Checks if the given hostname belongs to a known OAuth provider.
+     *
+     * @param hostname The hostname to check
+     * @return true if it's an OAuth provider domain, false otherwise
+     */
+    private boolean isOAuthProviderDomain(String hostname) {
+        return hostname.contains("google.com")
+                || hostname.contains("googleapis.com")
+                || hostname.contains("github.com")
+                || hostname.contains("microsoft.com")
+                || hostname.contains("microsoftonline.com")
+                || hostname.contains("linkedin.com")
+                || hostname.contains("apple.com");
     }
 }

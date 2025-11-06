@@ -36,6 +36,9 @@ export default function AuthCallback() {
         localStorage.setItem('stirling_jwt', token);
         console.log('[AuthCallback] JWT stored in localStorage');
 
+        // Dispatch custom event for other components to react to JWT availability
+        window.dispatchEvent(new CustomEvent('jwt-available'))
+
         // Refresh session to load user info into state
         await refreshSession();
 
