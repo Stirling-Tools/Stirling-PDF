@@ -44,7 +44,6 @@ export default defineConfig(
           allowInterfaces: 'with-single-extends',
         },
       ],
-      '@typescript-eslint/no-explicit-any': 'off', // Temporarily disabled until codebase conformant
       '@typescript-eslint/no-require-imports': 'off', // Temporarily disabled until codebase conformant
       '@typescript-eslint/no-unused-vars': [
         'error',
