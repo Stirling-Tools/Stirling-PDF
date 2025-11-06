@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { thumbnailGenerationService } from '@app/services/thumbnailGenerationService';
+import { thumbnailGenerationService, type ThumbnailResult } from '@app/services/thumbnailGenerationService';
 import { createQuickKey } from '@app/types/fileContext';
 import { FileId } from '@app/types/file';
 
@@ -124,7 +124,7 @@ export function useThumbnailGeneration() {
       batchSize?: number;
       parallelBatches?: number;
     } = {},
-    onProgress?: (progress: { completed: number; total: number; thumbnails: any[] }) => void
+    onProgress?: (progress: { completed: number; total: number; thumbnails: ThumbnailResult[] }) => void
   ) => {
     return thumbnailGenerationService.generateThumbnails(
       fileId,

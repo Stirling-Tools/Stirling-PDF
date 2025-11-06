@@ -16,11 +16,26 @@ import {
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import { useTranslation } from 'react-i18next';
 import { FileId } from '@app/types/file';
+import { createQuickKey } from '@app/types/fileContext';
+
+interface StoredFileRecord {
+  id?: FileId;
+  name: string;
+  size?: number;
+  type?: string;
+  lastModified?: number;
+  thumbnail?: string;
+  file?: File;
+  data?: ArrayBuffer | Blob | Uint8Array;
+  arrayBuffer?: () => Promise<ArrayBuffer>;
+}
+
+type StoredFileItem = File | StoredFileRecord;
 
 interface FilePickerModalProps {
   opened: boolean;
   onClose: () => void;
-  storedFiles: any[]; // Files from storage (various formats supported)
+  storedFiles: StoredFileItem[]; // Files from storage (various formats supported)
   onSelectFiles: (selectedFiles: File[]) => void;
 }
 
@@ -32,6 +47,48 @@ const FilePickerModal = ({
 }: FilePickerModalProps) => {
   const { t } = useTranslation();
   const [selectedFileIds, setSelectedFileIds] = useState<FileId[]>([]);
+
+  const toBlobPart = (data: ArrayBuffer | Blob | Uint8Array): BlobPart => {
+    if (data instanceof Blob) {
+      return data;
+    }
+    if (data instanceof Uint8Array) {
+      const cloned = new Uint8Array(data.byteLength);
+      cloned.set(data);
+      return cloned.buffer;
+    }
+    return data;
+  };
+
+  const resolveFileId = (item: StoredFileItem): FileId => {
+    if ('id' in item && item.id) {
+      return item.id;
+    }
+    if (item instanceof File) {
+      return createQuickKey(item) as FileId;
+    }
+    return `${item.name}-${item.lastModified ?? ''}` as FileId;
+  };
+
+  const resolveFileSize = (item: StoredFileItem): number => {
+    if (item instanceof File) {
+      return item.size;
+    }
+    if (typeof item.size === 'number') {
+      return item.size;
+    }
+    if (item.file) {
+      return item.file.size;
+    }
+    return 0;
+  };
+
+  const resolveThumbnail = (item: StoredFileItem): string | undefined => {
+    if (!item || item instanceof File) {
+      return undefined;
+    }
+    return item.thumbnail;
+  };
 
   // Reset selection when modal opens
   useEffect(() => {
@@ -49,7 +106,7 @@ const FilePickerModal = ({
   };
 
   const selectAll = () => {
-    setSelectedFileIds(storedFiles.map(f => f.id).filter(Boolean));
+    setSelectedFileIds(storedFiles.map(resolveFileId));
   };
 
   const selectNone = () => {
@@ -58,7 +115,7 @@ const FilePickerModal = ({
 
   const handleConfirm = async () => {
     const selectedFiles = storedFiles.filter(f =>
-      selectedFileIds.includes(f.id)
+      selectedFileIds.includes(resolveFileId(f))
     );
 
     // Convert stored files to File objects
@@ -70,13 +127,12 @@ const FilePickerModal = ({
             return fileItem;
           }
 
-          // If it has a file property, use that
-          if (fileItem.file && fileItem.file instanceof File) {
+          if ('file' in fileItem && fileItem.file instanceof File) {
             return fileItem.file;
           }
 
           // If it's from IndexedDB storage, reconstruct the File
-          if (fileItem.arrayBuffer && typeof fileItem.arrayBuffer === 'function') {
+          if (typeof fileItem.arrayBuffer === 'function') {
             const arrayBuffer = await fileItem.arrayBuffer();
             const blob = new Blob([arrayBuffer], { type: fileItem.type || 'application/pdf' });
             return new File([blob], fileItem.name, {
@@ -87,7 +143,8 @@ const FilePickerModal = ({
 
           // If it has data property, reconstruct the File
           if (fileItem.data) {
-            const blob = new Blob([fileItem.data], { type: fileItem.type || 'application/pdf' });
+            const blobSource = toBlobPart(fileItem.data);
+            const blob = new Blob([blobSource], { type: fileItem.type || 'application/pdf' });
             return new File([blob], fileItem.name, {
               type: fileItem.type || 'application/pdf',
               lastModified: fileItem.lastModified || Date.now()
@@ -156,8 +213,11 @@ const FilePickerModal = ({
             <ScrollArea.Autosize mah={400}>
               <SimpleGrid cols={2} spacing="md">
                 {storedFiles.map((file) => {
-                  const fileId = file.id;
+                  const fileId = resolveFileId(file);
                   const isSelected = selectedFileIds.includes(fileId);
+                  const thumbnail = resolveThumbnail(file);
+                  const fileSize = resolveFileSize(file);
+                  const displayName = file instanceof File ? file.name : file.name;
 
                   return (
                     <Box
@@ -197,9 +257,9 @@ const FilePickerModal = ({
                             flexShrink: 0
                           }}
                         >
-                          {file.thumbnail ? (
+                          {thumbnail ? (
                             <Image
-                              src={file.thumbnail}
+                              src={thumbnail}
                               alt="PDF thumbnail"
                               height={70}
                               width={50}
@@ -219,11 +279,11 @@ const FilePickerModal = ({
                         {/* File info */}
                         <Stack gap="xs" style={{ flex: 1, minWidth: 0 }}>
                           <Text size="sm" fw={500} lineClamp={2}>
-                            {file.name}
+                            {displayName}
                           </Text>
                           <Group gap="xs">
                             <Badge size="xs" variant="light" color="gray">
-                              {formatFileSize(file.size || (file.file?.size || 0))}
+                              {formatFileSize(fileSize)}
                             </Badge>
                           </Group>
                         </Stack>

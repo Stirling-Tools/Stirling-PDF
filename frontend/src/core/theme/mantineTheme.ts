@@ -1,4 +1,4 @@
-import { createTheme, MantineColorsTuple } from '@mantine/core';
+import { createTheme, MantineColorsTuple, Button, Textarea, TextInput, PasswordInput } from '@mantine/core';
 
 // Define color tuples using CSS variables
 const primary: MantineColorsTuple = [
@@ -104,17 +104,12 @@ export const mantineTheme = createTheme({
 
   // Component customizations
   components: {
-    Button: {
+    Button: Button.extend({
       styles: {
         root: {
           fontWeight: 'var(--font-weight-medium)',
           transition: 'all 0.2s ease',
-        },
-      },
-      variants: {
-        // Custom button variant for PDF tools
-        pdfTool: (_theme: any) => ({
-          root: {
+          '&[data-variant="pdfTool"]': {
             backgroundColor: 'var(--bg-surface)',
             border: '1px solid var(--border-default)',
             color: 'var(--text-primary)',
@@ -123,9 +118,9 @@ export const mantineTheme = createTheme({
               borderColor: 'var(--color-primary-500)',
             },
           },
-        }),
+        },
       },
-    } as any,
+    }),
 
     Paper: {
       styles: {
@@ -145,8 +140,8 @@ export const mantineTheme = createTheme({
         },
       },
     },
-    Textarea: {
-      styles: (_theme: any) => ({
+    Textarea: Textarea.extend({
+      styles: () => ({
         input: {
           backgroundColor: 'var(--bg-surface)',
           borderColor: 'var(--border-default)',
@@ -161,10 +156,10 @@ export const mantineTheme = createTheme({
           fontWeight: 'var(--font-weight-medium)',
         },
       }),
-    },
+    }),
 
-    TextInput: {
-      styles: (_theme: any) => ({
+    TextInput: TextInput.extend({
+      styles: () => ({
         input: {
           backgroundColor: 'var(--bg-surface)',
           borderColor: 'var(--border-default)',
@@ -179,10 +174,10 @@ export const mantineTheme = createTheme({
           fontWeight: 'var(--font-weight-medium)',
         },
       }),
-    },
+    }),
 
-     PasswordInput: {
-      styles: (_theme: any) => ({
+    PasswordInput: PasswordInput.extend({
+      styles: () => ({
         input: {
           backgroundColor: 'var(--bg-surface)',
           borderColor: 'var(--border-default)',
@@ -197,7 +192,7 @@ export const mantineTheme = createTheme({
           fontWeight: 'var(--font-weight-medium)',
         },
       }),
-    },
+    }),
 
     Select: {
       styles: {

@@ -112,14 +112,21 @@ export default function StampPreview({ parameters, onParameterChange, file, show
   // Keep center fixed when scaling via slider (or any fontSize changes)
   const prevDimsRef = useRef<{ fontSize: number; widthPx: number; heightPx: number; leftPx: number; bottomPx: number } | null>(null);
   useEffect(() => {
-    const itemStyle = style.item as any;
-    if (!itemStyle || containerSize.width <= 0 || containerSize.height <= 0) return;
+    if (containerSize.width <= 0 || containerSize.height <= 0) return;
 
-    const parse = (v: any) => parseFloat(String(v).replace('px', '')) || 0;
-    const leftPx = parse(itemStyle.left);
-    const bottomPx = parse(itemStyle.bottom);
-    const widthPx = parse(itemStyle.width);
-    const heightPx = parse(itemStyle.height);
+    const parsePx = (value: string | number | undefined): number => {
+      if (typeof value === 'number') return value;
+      if (typeof value === 'string') {
+        const parsed = parseFloat(value.replace('px', ''));
+        return Number.isFinite(parsed) ? parsed : 0;
+      }
+      return 0;
+    };
+
+    const leftPx = parsePx(style.item.left);
+    const bottomPx = parsePx(style.item.bottom);
+    const widthPx = parsePx(style.item.width);
+    const heightPx = parsePx(style.item.height);
 
     const prev = prevDimsRef.current;
     const hasOverrides = parameters.overrideX >= 0 && parameters.overrideY >= 0;
@@ -144,8 +151,8 @@ export default function StampPreview({ parameters, onParameterChange, file, show
       const scaleY = containerSize.height / heightPts;
       const newLeftPts = Math.max(0, Math.min(containerSize.width, newLeftPx)) / scaleX;
       const newBottomPts = Math.max(0, Math.min(containerSize.height, newBottomPx)) / scaleY;
-      onParameterChange('overrideX', newLeftPts as any);
-      onParameterChange('overrideY', newBottomPts as any);
+      onParameterChange('overrideX', newLeftPts);
+      onParameterChange('overrideY', newBottomPts);
     }
 
     prevDimsRef.current = { fontSize: parameters.fontSize, widthPx, heightPx, leftPx, bottomPx };
@@ -160,16 +167,26 @@ export default function StampPreview({ parameters, onParameterChange, file, show
     if (pageWidth <= 0 || pageHeight <= 0) return;
 
     // Recompute current x,y from style (so that we start from visual position)
-    const itemStyle = style.item as any;
-    const leftPx = parseFloat(String(itemStyle.left).replace('px', '')) || 0;
-    const bottomPx = parseFloat(String(itemStyle.bottom).replace('px', '')) || 0;
+    const parsePx = (value: string | number | undefined): number => {
+      if (typeof value === 'number') return value;
+      if (typeof value === 'string') {
+        const parsed = parseFloat(value.replace('px', ''));
+        return Number.isFinite(parsed) ? parsed : 0;
+      }
+      return 0;
+    };
+
+    const leftPx = parsePx(style.item.left);
+    const bottomPx = parsePx(style.item.bottom);
     const widthPts = pageSize?.widthPts ?? 595.28;
     const heightPts = pageSize?.heightPts ?? 841.89;
     const scaleX = containerSize.width / widthPts;
     const scaleY = containerSize.height / heightPts;
     if (parameters.overrideX < 0 || parameters.overrideY < 0) {
-      onParameterChange('overrideX', Math.max(0, Math.min(pageWidth, leftPx)) / scaleX as any);
-      onParameterChange('overrideY', Math.max(0, Math.min(pageHeight, bottomPx)) / scaleY as any);
+      const overrideX = Math.max(0, Math.min(pageWidth, leftPx)) / scaleX;
+      const overrideY = Math.max(0, Math.min(pageHeight, bottomPx)) / scaleY;
+      onParameterChange('overrideX', overrideX);
+      onParameterChange('overrideY', overrideY);
     }
   };
 
@@ -177,11 +194,21 @@ export default function StampPreview({ parameters, onParameterChange, file, show
     e.preventDefault();
     ensureOverrides();
 
-    const item = style.item as any;
-    const left = parseFloat(String(item.left).replace('px', '')) || 0;
-    const bottom = parseFloat(String(item.bottom).replace('px', '')) || 0;
-    const width = parseFloat(String(item.width).replace('px', '')) || parameters.fontSize;
-    const height = parseFloat(String(item.height).replace('px', '')) || parameters.fontSize;
+    const parsePx = (value: string | number | undefined, fallback: number): number => {
+      if (typeof value === 'number') return value;
+      if (typeof value === 'string') {
+        const parsed = parseFloat(value.replace('px', ''));
+        if (Number.isFinite(parsed)) {
+          return parsed;
+        }
+      }
+      return fallback;
+    };
+
+    const left = parsePx(style.item.left, 0);
+    const bottom = parsePx(style.item.bottom, 0);
+    const width = parsePx(style.item.width, parameters.fontSize);
+    const height = parsePx(style.item.height, parameters.fontSize);
 
     const rect = (e.currentTarget.parentElement as HTMLElement)?.getBoundingClientRect();
     const centerX = left + width / 2;
@@ -339,5 +366,3 @@ export default function StampPreview({ parameters, onParameterChange, file, show
     </div>
   );
 }
-
-

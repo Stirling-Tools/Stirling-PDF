@@ -26,19 +26,17 @@ const FitText: React.FC<FitTextProps> = ({
   as = 'span',
   softBreakChars = ['-','_','/'],
 }) => {
-  const ref = useRef<HTMLElement | null>(null);
+  const spanRef = useRef<HTMLSpanElement | null>(null);
+  const divRef = useRef<HTMLDivElement | null>(null);
+  const elementRef = (as === 'div' ? divRef : spanRef) as React.RefObject<HTMLElement | null>;
 
   // Hook runs after mount and on size/text changes; uses observers internally
-  useAdjustFontSizeToFit(ref as any, {
+  useAdjustFontSizeToFit(elementRef, {
     maxFontSizePx: fontSize,
     minFontScale: minimumFontScale,
     maxLines: lines,
     singleLine: lines === 1,
   });
-
-  // Memoize the HTML tag to render (span/div) from the `as` prop so
-  // React doesn't create a new component function on each render.
-  const ElementTag: any = useMemo(() => as, [as]);
 
   // For the / character, insert zero-width soft breaks to prefer wrapping at them
   const displayText = useMemo(() => {
@@ -55,25 +53,33 @@ const FitText: React.FC<FitTextProps> = ({
     whiteSpace: lines === 1 ? 'nowrap' : 'normal',
     overflow: 'visible',
     textOverflow: 'ellipsis',
-    display: lines > 1 ? ('-webkit-box' as any) : undefined,
-    WebkitBoxOrient: lines > 1 ? ('vertical' as any) : undefined,
-    WebkitLineClamp: lines > 1 ? (lines as any) : undefined,
-    lineClamp: lines > 1 ? (lines as any) : undefined,
+    display: lines > 1 ? '-webkit-box' as CSSProperties['display'] : undefined,
+    WebkitBoxOrient: lines > 1 ? 'vertical' as CSSProperties['WebkitBoxOrient'] : undefined,
+    WebkitLineClamp: lines > 1 ? lines : undefined,
+    lineClamp: lines > 1 ? lines : undefined,
     // Favor shrinking over breaking words; only break at natural spaces or softBreakChars
-    wordBreak: lines > 1 ? ('keep-all' as any) : ('normal' as any),
+    wordBreak: lines > 1 ? 'keep-all' : 'normal',
     overflowWrap: 'normal',
     hyphens: 'manual',
     // fontSize expects rem values (e.g., 1.2, 0.9) to scale with global font size
     fontSize: fontSize ? `${fontSize}rem` : undefined,
   };
 
+  const combinedStyle = { ...clampStyles, ...style };
+
+  if (as === 'div') {
+    return (
+      <div ref={divRef} className={className} style={combinedStyle}>
+        {displayText}
+      </div>
+    );
+  }
+
   return (
-    <ElementTag ref={ref} className={className} style={{ ...clampStyles, ...style }}>
+    <span ref={spanRef} className={className} style={combinedStyle}>
       {displayText}
-    </ElementTag>
+    </span>
   );
 };
 
 export default FitText;
-
-

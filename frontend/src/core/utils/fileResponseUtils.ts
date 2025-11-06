@@ -30,7 +30,7 @@ export const getFilenameFromHeaders = (contentDisposition: string = ''): string 
  * @param fallbackFilename - Filename to use if none provided in headers
  * @returns File object
  */
-type HeaderSource =
+export type HeaderSource =
   | Record<string, string | null | undefined>
   | Headers
   | Array<[string, string]>

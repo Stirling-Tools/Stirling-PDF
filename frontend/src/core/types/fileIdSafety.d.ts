@@ -7,15 +7,15 @@ import { FileId, StirlingFile } from '@app/types/fileContext';
 declare global {
   namespace FileIdSafety {
     // Mark functions that should never accept file.name as parameters
-    type SafeFileIdFunction<T extends (...args: any[]) => any> = T extends (...args: infer P) => infer _R
-      ? P extends readonly [string, ...any[]]
+    type SafeFileIdFunction<T extends (...args: unknown[]) => unknown> = T extends (...args: infer P) => infer _R
+      ? P extends readonly [string, ...unknown[]]
         ? never // Reject string parameters in first position for FileId functions
         : T
       : T;
 
     // Mark functions that should only accept StirlingFile, not regular File
-    type StirlingFileOnlyFunction<T extends (...args: any[]) => any> = T extends (...args: infer P) => infer _R
-      ? P extends readonly [File, ...any[]]
+    type StirlingFileOnlyFunction<T extends (...args: unknown[]) => unknown> = T extends (...args: infer P) => infer _R
+      ? P extends readonly [File, ...unknown[]]
         ? never // Reject File parameters in first position for StirlingFile functions
         : T
       : T;

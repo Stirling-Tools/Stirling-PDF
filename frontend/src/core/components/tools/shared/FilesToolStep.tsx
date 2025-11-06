@@ -2,6 +2,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import FileStatusIndicator from '@app/components/tools/shared/FileStatusIndicator';
 import { StirlingFile } from '@app/types/fileContext';
+import type { ToolStepProps } from '@app/components/tools/shared/ToolStep';
 
 export interface FilesToolStepProps {
   selectedFiles: StirlingFile[];
@@ -11,7 +12,11 @@ export interface FilesToolStepProps {
 }
 
 export function createFilesToolStep(
-  createStep: (title: string, props: any, children?: React.ReactNode) => React.ReactElement,
+  createStep: (
+    title: string,
+    props?: Omit<ToolStepProps, 'title' | '_stepNumber'>,
+    children?: React.ReactNode
+  ) => React.ReactElement,
   props: FilesToolStepProps
 ): React.ReactElement {
   const { t } = useTranslation();

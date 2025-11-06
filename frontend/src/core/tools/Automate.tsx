@@ -1,14 +1,14 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { useFileSelection } from "@app/contexts/FileContext";
 import { useNavigationActions } from "@app/contexts/NavigationContext";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 
-import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
-import { createFilesToolStep } from "@app/components/tools/shared/FilesToolStep";
+import { createToolFlow, type MiddleStepConfig } from "@app/components/tools/shared/createToolFlow";
 import AutomationSelection from "@app/components/tools/automate/AutomationSelection";
 import AutomationCreation from "@app/components/tools/automate/AutomationCreation";
 import AutomationRun from "@app/components/tools/automate/AutomationRun";
+import FileStatusIndicator from '@app/components/tools/shared/FileStatusIndicator';
 
 import { useAutomateOperation } from "@app/hooks/tools/automate/useAutomateOperation";
 import { BaseToolProps } from "@app/types/tool";
@@ -155,17 +155,29 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
     }
   };
 
-  const createStep = (title: string, props: any, content?: React.ReactNode) => ({
+  const createStep = (
+    title: string,
+    props: Omit<MiddleStepConfig, 'title' | 'content'> = {},
+    content?: ReactNode
+  ): MiddleStepConfig => ({
     title,
-    ...props,
-    content
+    isVisible: props.isVisible,
+    isCollapsed: props.isCollapsed,
+    onCollapsedClick: props.onCollapsedClick,
+    tooltip: props.tooltip,
+    content,
   });
 
-  // Always create files step to avoid conditional hook calls
-  const filesStep = createFilesToolStep(createStep, {
-    selectedFiles,
+  const filesStep: MiddleStepConfig = {
+    title: t("files.title", "Files"),
+    isVisible: currentStep === AUTOMATION_STEPS.RUN,
     isCollapsed: hasResults,
-  });
+    content: (
+      <FileStatusIndicator
+        selectedFiles={selectedFiles}
+      />
+    ),
+  };
 
   const automationSteps = [
     createStep(t('automate.selection.title', 'Automation Selection'), {
@@ -187,10 +199,7 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
     }, currentStep === AUTOMATION_STEPS.CREATION ? renderCurrentStep() : null),
 
     // Files step - only visible during run mode
-    {
-      ...filesStep,
-      isVisible: currentStep === AUTOMATION_STEPS.RUN
-    },
+    filesStep,
 
     // Run step
     createStep(t('automate.run.title', 'Run Automation'), {

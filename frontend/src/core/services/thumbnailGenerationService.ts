@@ -6,7 +6,7 @@ import { FileId } from '@app/types/file';
 import { pdfWorkerManager } from '@app/services/pdfWorkerManager';
 import type { PDFDocumentProxy, RenderParameters } from 'pdfjs-dist/types/src/display/api';
 
-interface ThumbnailResult {
+export interface ThumbnailResult {
   pageNumber: number;
   thumbnail: string;
   success: boolean;

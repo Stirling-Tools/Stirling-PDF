@@ -4,6 +4,7 @@ import { createToolSteps, ToolStepProvider } from '@app/components/tools/shared/
 import OperationButton from '@app/components/tools/shared/OperationButton';
 import { ToolOperationHook } from '@app/hooks/tools/shared/useToolOperation';
 import { ToolWorkflowTitle, ToolWorkflowTitleProps } from '@app/components/tools/shared/ToolWorkflowTitle';
+import type { TooltipTip } from '@app/types/tips';
 import { StirlingFile } from '@app/types/fileContext';
 
 export interface FilesStepConfig {
@@ -22,7 +23,7 @@ export interface MiddleStepConfig {
   content: React.ReactNode;
   tooltip?: {
     content?: React.ReactNode;
-    tips?: any[];
+    tips?: TooltipTip[];
     header?: {
       title: string;
       logo?: React.ReactNode;

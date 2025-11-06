@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import axios from 'axios';
 import { Modal, Stack, Text, PasswordInput, Button, Alert } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import LocalIcon from '@app/components/shared/LocalIcon';
@@ -69,10 +70,13 @@ export default function FirstLoginModal({ opened, onPasswordChanged, username }:
       setTimeout(() => {
         onPasswordChanged();
       }, 1500);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to change password:', err);
+      const message = axios.isAxiosError(err)
+        ? err.response?.data?.message || err.message
+        : null;
       setError(
-        err.response?.data?.message ||
+        message ||
         t('firstLogin.passwordChangeFailed', 'Failed to change password. Please check your current password.')
       );
     } finally {

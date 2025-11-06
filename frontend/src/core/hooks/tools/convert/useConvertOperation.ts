@@ -2,9 +2,10 @@ import { useCallback } from 'react';
 import apiClient from '@app/services/apiClient';
 import { useTranslation } from 'react-i18next';
 import { ConvertParameters, defaultParameters } from '@app/hooks/tools/convert/useConvertParameters';
-import { createFileFromApiResponse } from '@app/utils/fileResponseUtils';
+import { createFileFromApiResponse, type HeaderSource } from '@app/utils/fileResponseUtils';
 import { useToolOperation, ToolType } from '@app/hooks/tools/shared/useToolOperation';
 import { getEndpointUrl, isImageFormat, isWebFormat } from '@app/utils/convertUtils';
+import type { AxiosResponseHeaders } from 'axios';
 
 // Static function that can be used by both the hook and automation executor
 export const shouldProcessFilesSeparately = (
@@ -72,20 +73,27 @@ export const buildConvertFormData = (parameters: ConvertParameters, selectedFile
   return formData;
 };
 
+const normalizeHeaders = (headers: AxiosResponseHeaders | Record<string, unknown> | undefined): HeaderSource => {
+  if (!headers) {
+    return undefined;
+  }
+  if (typeof headers === 'object' && 'toJSON' in headers && typeof headers.toJSON === 'function') {
+    return headers.toJSON() as Record<string, string | null | undefined>;
+  }
+  return headers as Record<string, string | null | undefined>;
+};
+
 // Static function that can be used by both the hook and automation executor
 export const createFileFromResponse = (
-  responseData: any,
-  headers: any,
+  responseData: BlobPart,
+  headers: HeaderSource,
   originalFileName: string,
   targetExtension: string
 ): File => {
   const originalName = originalFileName.split('.')[0];
 
-  if (targetExtension == 'pdfa') {
-    targetExtension = 'pdf';
-  }
-
-  const fallbackFilename = `${originalName}.${targetExtension}`;
+  const normalizedExtension = targetExtension === 'pdfa' ? 'pdf' : targetExtension;
+  const fallbackFilename = `${originalName}.${normalizedExtension}`;
 
   return createFileFromApiResponse(responseData, headers, fallbackFilename);
 };
@@ -110,7 +118,12 @@ export const convertProcessor = async (
         const formData = buildConvertFormData(parameters, [file]);
         const response = await apiClient.post(endpoint, formData, { responseType: 'blob' });
 
-        const convertedFile = createFileFromResponse(response.data, response.headers, file.name, parameters.toExtension);
+        const convertedFile = createFileFromResponse(
+          response.data,
+          normalizeHeaders(response.headers),
+          file.name,
+          parameters.toExtension
+        );
 
         processedFiles.push(convertedFile);
       } catch (error) {
@@ -126,7 +139,12 @@ export const convertProcessor = async (
       ? selectedFiles[0].name
       : 'converted_files';
 
-    const convertedFile = createFileFromResponse(response.data, response.headers, baseFilename, parameters.toExtension);
+    const convertedFile = createFileFromResponse(
+      response.data,
+      normalizeHeaders(response.headers),
+      baseFilename,
+      parameters.toExtension
+    );
     processedFiles.push(convertedFile);
   }
 

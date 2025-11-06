@@ -166,7 +166,7 @@ export function useFileContext() {
     addFiles: actions.addFiles,
     consumeFiles: actions.consumeFiles,
     undoConsumeFiles: actions.undoConsumeFiles,
-    recordOperation: (_fileId: FileId, _operation: any) => {}, // Operation tracking not implemented
+    recordOperation: (_fileId: FileId, _operation: unknown) => {}, // Operation tracking not implemented
     markOperationApplied: (_fileId: FileId, _operationId: string) => {}, // Operation tracking not implemented
     markOperationFailed: (_fileId: FileId, _operationId: string, _error: string) => {}, // Operation tracking not implemented
     // File ID lookup
@@ -194,5 +194,4 @@ export function useFileContext() {
     selectors
   }), [state, selectors, actions]);
 }
-
 

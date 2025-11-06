@@ -5,14 +5,15 @@ import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import CheckIcon from "@mui/icons-material/Check";
 import { useFileSelection } from "@app/contexts/FileContext";
 import { useToolRegistry } from "@app/contexts/ToolRegistryContext";
-import { AutomationConfig, ExecutionStep } from "@app/types/automation";
+import { AutomationConfig, ExecutionStep, AutomateParameters } from "@app/types/automation";
 import { AUTOMATION_CONSTANTS, EXECUTION_STATUS } from "@app/constants/automation";
 import { useResourceCleanup } from "@app/utils/resourceManager";
+import type { ToolOperationHook } from '@app/hooks/tools/shared/useToolOperation';
 
 interface AutomationRunProps {
   automation: AutomationConfig;
   onComplete: () => void;
-  automateOperation?: any; // TODO: Type this properly when available
+  automateOperation: ToolOperationHook<AutomateParameters>;
 }
 
 export default function AutomationRun({ automation, onComplete, automateOperation }: AutomationRunProps) {
@@ -33,7 +34,7 @@ export default function AutomationRun({ automation, onComplete, automateOperatio
   // Initialize execution steps from automation
   useEffect(() => {
     if (automation?.operations) {
-      const steps = automation.operations.map((op: any, index: number) => {
+      const steps = automation.operations.map((op, index: number) => {
         const tool = toolRegistry[op.operation as keyof typeof toolRegistry];
         return {
           id: `${op.operation}-${index}`,
@@ -60,11 +61,6 @@ export default function AutomationRun({ automation, onComplete, automateOperatio
 
   const executeAutomation = async () => {
     if (!selectedFiles || selectedFiles.length === 0) {
-      return;
-    }
-
-    if (!automateOperation) {
-      console.error('No automateOperation provided');
       return;
     }
 
@@ -100,7 +96,7 @@ export default function AutomationRun({ automation, onComplete, automateOperatio
       // Mark all as completed and reset current step
       setCurrentStepIndex(-1);
       console.log(`✅ Automation completed successfully`);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Automation execution failed:", error);
       setCurrentStepIndex(-1);
     }
