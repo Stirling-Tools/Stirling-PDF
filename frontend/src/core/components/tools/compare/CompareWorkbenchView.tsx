@@ -101,9 +101,26 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
     getRowHeightPx,
   } = useCompareHighlights(result, basePages, comparisonPages);
 
+  const temporarilySuppressScrollLink = useCallback((fn: () => void, durationMs = 700) => {
+    const wasLinked = isScrollLinked;
+    if (wasLinked) setIsScrollLinked(false);
+    try {
+      fn();
+    } finally {
+      window.setTimeout(() => {
+        if (wasLinked) {
+          // recapture anchors to keep panes aligned when relinking
+          captureScrollLinkDelta();
+          setIsScrollLinked(true);
+        }
+      }, Math.max(200, durationMs));
+    }
+  }, [isScrollLinked, setIsScrollLinked, captureScrollLinkDelta]);
+
   const handleChangeNavigation = useCompareChangeNavigation(
     baseScrollRef,
-    comparisonScrollRef
+    comparisonScrollRef,
+    { temporarilySuppressScrollLink }
   );
 
   const processingMessage = t('compare.status.processing', 'Analyzing differences...');
