@@ -19,6 +19,8 @@ import {
   SegmentedControl,
   Tooltip,
   CloseButton,
+  Avatar,
+  Box,
 } from '@mantine/core';
 import LocalIcon from '@app/components/shared/LocalIcon';
 import { alert } from '@app/components/toast';
@@ -38,7 +40,18 @@ export default function PeopleSection() {
   const [editUserModalOpened, setEditUserModalOpened] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [processing, setProcessing] = useState(false);
-  const [inviteMode, setInviteMode] = useState<'email' | 'direct'>('direct');
+  const [inviteMode, setInviteMode] = useState<'email' | 'direct' | 'link'>('direct');
+  const [generatedInviteLink, setGeneratedInviteLink] = useState<string | null>(null);
+
+  // License information
+  const [licenseInfo, setLicenseInfo] = useState<{
+    maxAllowedUsers: number;
+    availableSlots: number;
+    grandfatheredUserCount: number;
+    licenseMaxUsers: number;
+    premiumEnabled: boolean;
+    totalUsers: number;
+  } | null>(null);
 
   // Form state for direct invite
   const [inviteForm, setInviteForm] = useState({
@@ -54,6 +67,15 @@ export default function PeopleSection() {
     emails: '',
     role: 'ROLE_USER',
     teamId: undefined as number | undefined,
+  });
+
+  // Form state for invite link
+  const [inviteLinkForm, setInviteLinkForm] = useState({
+    email: '',
+    role: 'ROLE_USER',
+    teamId: undefined as number | undefined,
+    expiryHours: 72,
+    sendEmail: false,
   });
 
   // Form state for edit user modal
@@ -89,6 +111,16 @@ export default function PeopleSection() {
 
       setUsers(enrichedUsers);
       setTeams(teamsData);
+
+      // Store license information
+      setLicenseInfo({
+        maxAllowedUsers: adminData.maxAllowedUsers,
+        availableSlots: adminData.availableSlots,
+        grandfatheredUserCount: adminData.grandfatheredUserCount,
+        licenseMaxUsers: adminData.licenseMaxUsers,
+        premiumEnabled: adminData.premiumEnabled,
+        totalUsers: adminData.totalUsers,
+      });
     } catch (error) {
       console.error('Failed to fetch people data:', error);
       alert({ alertType: 'error', title: 'Failed to load people data' });
@@ -189,6 +221,51 @@ export default function PeopleSection() {
     }
   };
 
+  const handleGenerateInviteLink = async () => {
+    try {
+      setProcessing(true);
+      const response = await userManagementService.generateInviteLink({
+        email: inviteLinkForm.email,
+        role: inviteLinkForm.role,
+        teamId: inviteLinkForm.teamId,
+        expiryHours: inviteLinkForm.expiryHours,
+        sendEmail: inviteLinkForm.sendEmail,
+      });
+
+      // Construct full frontend URL
+      const frontendUrl = `${window.location.origin}/invite/${response.token}`;
+      setGeneratedInviteLink(frontendUrl);
+
+      if (response.emailSent) {
+        alert({
+          alertType: 'success',
+          title: t('workspace.people.inviteLink.successWithEmail', 'Invite link generated and email sent!')
+        });
+      } else if (inviteLinkForm.sendEmail && response.emailError) {
+        // Email was requested but failed
+        alert({
+          alertType: 'warning',
+          title: t('workspace.people.inviteLink.emailFailed', 'Invite link generated, but email failed'),
+          body: t('workspace.people.inviteLink.emailFailedDetails', 'Error: {0}. Please share the invite link manually.').replace('{0}', response.emailError)
+        });
+      } else {
+        alert({
+          alertType: 'success',
+          title: t('workspace.people.inviteLink.success', 'Invite link generated successfully!')
+        });
+      }
+    } catch (error: any) {
+      console.error('Failed to generate invite link:', error);
+      const errorMessage = error.response?.data?.message ||
+                          error.response?.data?.error ||
+                          error.message ||
+                          t('workspace.people.inviteLink.error', 'Failed to generate invite link');
+      alert({ alertType: 'error', title: errorMessage });
+    } finally {
+      setProcessing(false);
+    }
+  };
+
   const handleUpdateUserRole = async () => {
     if (!selectedUser) return;
 
@@ -267,6 +344,18 @@ export default function PeopleSection() {
     });
   };
 
+  const closeInviteModal = () => {
+    setInviteModalOpened(false);
+    setGeneratedInviteLink(null);
+    setInviteLinkForm({
+      email: '',
+      role: 'ROLE_USER',
+      teamId: undefined,
+      expiryHours: 72,
+      sendEmail: false,
+    });
+  };
+
   const filteredUsers = users.filter((user) =>
     user.username.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -289,12 +378,12 @@ export default function PeopleSection() {
   const renderRoleOption = ({ option }: { option: any }) => (
     <Group gap="sm" wrap="nowrap">
       <LocalIcon icon={option.icon} width="1.25rem" height="1.25rem" style={{ flexShrink: 0 }} />
-      <div style={{ flex: 1 }}>
+      <Box style={{ flex: 1 }}>
         <Text size="sm" fw={500}>{option.label}</Text>
         <Text size="xs" c="dimmed" style={{ whiteSpace: 'normal', lineHeight: 1.4 }}>
           {option.description}
         </Text>
-      </div>
+      </Box>
     </Group>
   );
 
@@ -325,6 +414,39 @@ export default function PeopleSection() {
         </Text>
       </div>
 
+      {/* License Information - Compact */}
+      {licenseInfo && (
+        <Group gap="md" c="dimmed" style={{ fontSize: '0.875rem' }}>
+          <Text size="sm" span>
+            <Text component="span" fw={600} c="inherit">{licenseInfo.totalUsers}</Text>
+            <Text component="span" c="dimmed"> / </Text>
+            <Text component="span" fw={600} c="inherit">{licenseInfo.maxAllowedUsers}</Text>
+            <Text component="span" c="dimmed" ml={4}>{t('workspace.people.license.users', 'users')}</Text>
+          </Text>
+
+          {licenseInfo.availableSlots === 0 && (
+            <Badge color="red" variant="light" size="sm">
+              {t('workspace.people.license.noSlotsAvailable', 'No slots available')}
+            </Badge>
+          )}
+
+          {licenseInfo.grandfatheredUserCount > 0 && (
+            <Text size="sm" c="dimmed" span>
+              •
+              <Text component="span" ml={4}>
+                {t('workspace.people.license.grandfatheredShort', '{{count}} grandfathered', { count: licenseInfo.grandfatheredUserCount })}
+              </Text>
+            </Text>
+          )}
+
+          {licenseInfo.premiumEnabled && licenseInfo.licenseMaxUsers > 0 && (
+            <Badge color="blue" variant="light" size="sm">
+              +{licenseInfo.licenseMaxUsers} {t('workspace.people.license.fromLicense', 'from license')}
+            </Badge>
+          )}
+        </Group>
+      )}
+
       {/* Header Actions */}
       <Group justify="space-between">
         <TextInput
@@ -334,77 +456,138 @@ export default function PeopleSection() {
           onChange={(e) => setSearchQuery(e.currentTarget.value)}
           style={{ maxWidth: 300 }}
         />
-        <Button leftSection={<LocalIcon icon="person-add" width="1rem" height="1rem" />} onClick={() => setInviteModalOpened(true)}>
-          {t('workspace.people.addMembers')}
-        </Button>
+        <Tooltip
+          label={t('workspace.people.license.noSlotsAvailable', 'No user slots available')}
+          disabled={!licenseInfo || licenseInfo.availableSlots > 0}
+          position="bottom"
+          withArrow
+        >
+          <Button
+            leftSection={<LocalIcon icon="person-add" width="1rem" height="1rem" />}
+            onClick={() => setInviteModalOpened(true)}
+            disabled={licenseInfo ? licenseInfo.availableSlots === 0 : false}
+          >
+            {t('workspace.people.addMembers')}
+          </Button>
+        </Tooltip>
       </Group>
 
       {/* Members Table */}
-      <Paper withBorder p="md">
-        <Table striped highlightOnHover>
-          <Table.Thead>
+      <Table
+        horizontalSpacing="md"
+        verticalSpacing="sm"
+        withRowBorders
+        style={{
+          '--table-border-color': 'var(--mantine-color-gray-3)',
+        } as React.CSSProperties}
+      >
+        <Table.Thead>
+          <Table.Tr style={{ backgroundColor: 'var(--mantine-color-gray-0)' }}>
+            <Table.Th style={{ fontWeight: 600, color: 'var(--mantine-color-gray-7)' }} fz="sm">
+              {t('workspace.people.user')}
+            </Table.Th>
+            <Table.Th style={{ fontWeight: 600, color: 'var(--mantine-color-gray-7)' }} fz="sm" w={100}>
+              {t('workspace.people.role')}
+            </Table.Th>
+            <Table.Th style={{ fontWeight: 600, color: 'var(--mantine-color-gray-7)' }} fz="sm">
+              {t('workspace.people.team')}
+            </Table.Th>
+            <Table.Th w={50}></Table.Th>
+          </Table.Tr>
+        </Table.Thead>
+        <Table.Tbody>
+          {filteredUsers.length === 0 ? (
             <Table.Tr>
-              <Table.Th>{t('workspace.people.user')}</Table.Th>
-              <Table.Th>{t('workspace.people.role')}</Table.Th>
-              <Table.Th>{t('workspace.people.team')}</Table.Th>
-              <Table.Th>{t('workspace.people.status')}</Table.Th>
-              <Table.Th style={{ width: 50 }}></Table.Th>
+              <Table.Td colSpan={4}>
+                <Text ta="center" c="dimmed" py="xl">
+                  {t('workspace.people.noMembersFound')}
+                </Text>
+              </Table.Td>
             </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody>
-            {filteredUsers.length === 0 ? (
-              <Table.Tr>
-                <Table.Td colSpan={5}>
-                  <Text ta="center" c="dimmed" py="xl">
-                    {t('workspace.people.noMembersFound')}
-                  </Text>
-                </Table.Td>
-              </Table.Tr>
-            ) : (
-              filteredUsers.map((user) => (
-                <Table.Tr key={user.id}>
-                  <Table.Td>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      {user.isActive && (
-                        <div
+          ) : (
+            filteredUsers.map((user) => (
+              <Table.Tr key={user.id}>
+                <Table.Td>
+                  <Group gap="xs" wrap="nowrap">
+                    <Tooltip
+                      label={
+                        !user.enabled
+                          ? t('workspace.people.disabled', 'Disabled')
+                          : user.isActive
+                            ? t('workspace.people.activeSession', 'Active session')
+                            : t('workspace.people.active', 'Active')
+                      }
+                      zIndex={Z_INDEX_OVER_CONFIG_MODAL}
+                    >
+                      <Avatar
+                        size={32}
+                        color={user.enabled ? 'blue' : 'gray'}
+                        styles={{
+                          root: {
+                            border: user.isActive ? '2px solid var(--mantine-color-green-6)' : 'none',
+                            opacity: user.enabled ? 1 : 0.5,
+                          }
+                        }}
+                      >
+                        {user.username.charAt(0).toUpperCase()}
+                      </Avatar>
+                    </Tooltip>
+                    <Box style={{ minWidth: 0, flex: 1 }}>
+                      <Tooltip label={user.username} disabled={user.username.length <= 20} zIndex={Z_INDEX_OVER_CONFIG_MODAL}>
+                        <Text
+                          size="sm"
+                          fw={500}
+                          maw={200}
                           style={{
-                            width: '6px',
-                            height: '6px',
-                            borderRadius: '50%',
-                            backgroundColor: 'var(--mantine-color-green-6)',
-                            flexShrink: 0,
+                            lineHeight: 1.3,
+                            opacity: user.enabled ? 1 : 0.6,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
                           }}
-                          title={t('workspace.people.activeSession', 'Active session')}
-                        />
-                      )}
-                      <div>
-                        <Text size="sm" fw={500}>
+                        >
                           {user.username}
                         </Text>
-                        {user.email && (
-                          <Text size="xs" c="dimmed">
-                            {user.email}
-                          </Text>
-                        )}
-                      </div>
-                    </div>
-                  </Table.Td>
-                  <Table.Td>
-                    <Badge
-                      color={(user.rolesAsString || '').includes('ROLE_ADMIN') ? 'blue' : 'gray'}
-                      variant="light"
-                    >
-                      {(user.rolesAsString || '').includes('ROLE_ADMIN') ? t('workspace.people.admin') : t('workspace.people.member')}
-                    </Badge>
-                  </Table.Td>
-                  <Table.Td>
-                    <Text size="sm">{user.team?.name || '—'}</Text>
-                  </Table.Td>
-                  <Table.Td>
-                    <Badge color={user.enabled ? 'green' : 'red'} variant="light">
-                      {user.enabled ? t('workspace.people.active') : t('workspace.people.disabled')}
-                    </Badge>
-                  </Table.Td>
+                      </Tooltip>
+                      {user.email && (
+                        <Text size="xs" c="dimmed" truncate style={{ lineHeight: 1.3 }}>
+                          {user.email}
+                        </Text>
+                      )}
+                    </Box>
+                  </Group>
+                </Table.Td>
+                <Table.Td w={100}>
+                  <Badge
+                    size="sm"
+                    variant="light"
+                    color={(user.rolesAsString || '').includes('ROLE_ADMIN') ? 'blue' : 'gray'}
+                  >
+                    {(user.rolesAsString || '').includes('ROLE_ADMIN')
+                      ? t('workspace.people.admin', 'Admin')
+                      : t('workspace.people.member', 'Member')}
+                  </Badge>
+                </Table.Td>
+                <Table.Td>
+                  {user.team?.name ? (
+                    <Tooltip label={user.team.name} disabled={user.team.name.length <= 20} zIndex={Z_INDEX_OVER_CONFIG_MODAL}>
+                      <Text
+                        size="sm"
+                        c="dimmed"
+                        maw={150}
+                        style={{
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {user.team.name}
+                      </Text>
+                    </Tooltip>
+                  ) : (
+                    <Text size="sm" c="dimmed">—</Text>
+                  )}
+                </Table.Td>
                   <Table.Td>
                     <Group gap="xs" wrap="nowrap">
                       {/* Info icon with tooltip */}
@@ -456,28 +639,27 @@ export default function PeopleSection() {
                 </Table.Tr>
               ))
             )}
-          </Table.Tbody>
-        </Table>
-      </Paper>
+        </Table.Tbody>
+      </Table>
 
       {/* Add Member Modal */}
       <Modal
         opened={inviteModalOpened}
-        onClose={() => setInviteModalOpened(false)}
+        onClose={closeInviteModal}
         size="md"
         zIndex={Z_INDEX_OVER_CONFIG_MODAL}
         centered
         padding="xl"
         withCloseButton={false}
       >
-        <div style={{ position: 'relative' }}>
+        <Box pos="relative">
           <CloseButton
-            onClick={() => setInviteModalOpened(false)}
+            onClick={closeInviteModal}
             size="lg"
             style={{
               position: 'absolute',
-              top: '-8px',
-              right: '-8px',
+              top: -8,
+              right: -8,
               zIndex: 1
             }}
           />
@@ -495,6 +677,32 @@ export default function PeopleSection() {
               )}
             </Stack>
 
+            {/* License Warning/Info */}
+            {licenseInfo && (
+              <Paper withBorder p="sm" bg={licenseInfo.availableSlots === 0 ? 'var(--mantine-color-red-light)' : 'var(--mantine-color-blue-light)'}>
+                <Stack gap="xs">
+                  <Group gap="xs">
+                    <LocalIcon icon={licenseInfo.availableSlots > 0 ? 'info' : 'warning'} width="1rem" height="1rem" />
+                    <Text size="sm" fw={500}>
+                      {licenseInfo.availableSlots > 0
+                        ? t('workspace.people.license.slotsAvailable', {
+                            count: licenseInfo.availableSlots,
+                            defaultValue: `${licenseInfo.availableSlots} user slot(s) available`
+                          })
+                        : t('workspace.people.license.noSlotsAvailable', 'No user slots available')}
+                    </Text>
+                  </Group>
+                  <Text size="xs" c="dimmed">
+                    {t('workspace.people.license.currentUsage', {
+                      current: licenseInfo.totalUsers,
+                      max: licenseInfo.maxAllowedUsers,
+                      defaultValue: `Currently using ${licenseInfo.totalUsers} of ${licenseInfo.maxAllowedUsers} user licenses`
+                    })}
+                  </Text>
+                </Stack>
+              </Paper>
+            )}
+
             {/* Mode Toggle */}
             <Tooltip
               label={t('workspace.people.inviteMode.emailDisabled', 'Email invites require SMTP configuration and mail.enableInvites=true in settings')}
@@ -506,11 +714,18 @@ export default function PeopleSection() {
               <div>
                 <SegmentedControl
                   value={inviteMode}
-                  onChange={(value) => setInviteMode(value as 'email' | 'direct')}
+                  onChange={(value) => {
+                    setInviteMode(value as 'email' | 'direct' | 'link');
+                    setGeneratedInviteLink(null);
+                  }}
                   data={[
                     {
                       label: t('workspace.people.inviteMode.username', 'Username'),
                       value: 'direct',
+                    },
+                    {
+                      label: t('workspace.people.inviteMode.link', 'Link'),
+                      value: 'link',
                     },
                     {
                       label: t('workspace.people.inviteMode.email', 'Email'),
@@ -522,6 +737,90 @@ export default function PeopleSection() {
                 />
               </div>
             </Tooltip>
+
+            {/* Link Mode */}
+            {inviteMode === 'link' && (
+              <>
+                <TextInput
+                  label={t('workspace.people.inviteLink.email', 'Email (optional)')}
+                  placeholder={t('workspace.people.inviteLink.emailPlaceholder', 'user@example.com')}
+                  value={inviteLinkForm.email}
+                  onChange={(e) => setInviteLinkForm({ ...inviteLinkForm, email: e.currentTarget.value })}
+                  description={t('workspace.people.inviteLink.emailDescription', 'If provided, the link will be tied to this email address')}
+                />
+                <Select
+                  label={t('workspace.people.addMember.role')}
+                  data={roleOptions}
+                  value={inviteLinkForm.role}
+                  onChange={(value) => setInviteLinkForm({ ...inviteLinkForm, role: value || 'ROLE_USER' })}
+                  renderOption={renderRoleOption}
+                  comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_OVER_CONFIG_MODAL }}
+                />
+                <Select
+                  label={t('workspace.people.addMember.team')}
+                  placeholder={t('workspace.people.addMember.teamPlaceholder')}
+                  data={teamOptions}
+                  value={inviteLinkForm.teamId?.toString()}
+                  onChange={(value) => setInviteLinkForm({ ...inviteLinkForm, teamId: value ? parseInt(value) : undefined })}
+                  clearable
+                  comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_OVER_CONFIG_MODAL }}
+                />
+                <TextInput
+                  label={t('workspace.people.inviteLink.expiryHours', 'Link expires in (hours)')}
+                  type="number"
+                  value={inviteLinkForm.expiryHours}
+                  onChange={(e) => setInviteLinkForm({ ...inviteLinkForm, expiryHours: parseInt(e.currentTarget.value) || 72 })}
+                  min={1}
+                  max={720}
+                />
+                {inviteLinkForm.email && (
+                  <Checkbox
+                    label={t('workspace.people.inviteLink.sendEmail', 'Send invite link via email')}
+                    description={t('workspace.people.inviteLink.sendEmailDescription', 'Also send the link to the provided email address')}
+                    checked={inviteLinkForm.sendEmail}
+                    onChange={(e) => setInviteLinkForm({ ...inviteLinkForm, sendEmail: e.currentTarget.checked })}
+                  />
+                )}
+
+                {/* Display generated link */}
+                {generatedInviteLink && (
+                  <Paper withBorder p="md" bg="var(--mantine-color-green-light)">
+                    <Stack gap="sm">
+                      <Text size="sm" fw={500}>{t('workspace.people.inviteLink.generated', 'Invite Link Generated')}</Text>
+                      <Group gap="xs">
+                        <TextInput
+                          value={generatedInviteLink}
+                          readOnly
+                          style={{ flex: 1 }}
+                        />
+                        <Button
+                          variant="light"
+                          onClick={async () => {
+                            try {
+                              await navigator.clipboard.writeText(generatedInviteLink);
+                              alert({ alertType: 'success', title: t('workspace.people.inviteLink.copied', 'Link copied to clipboard!') });
+                            } catch {
+                              // Fallback for browsers without clipboard API
+                              const textArea = document.createElement('textarea');
+                              textArea.value = generatedInviteLink;
+                              textArea.style.position = 'fixed';
+                              textArea.style.opacity = '0';
+                              document.body.appendChild(textArea);
+                              textArea.select();
+                              document.execCommand('copy');
+                              document.body.removeChild(textArea);
+                              alert({ alertType: 'success', title: t('workspace.people.inviteLink.copied', 'Link copied to clipboard!') });
+                            }
+                          }}
+                        >
+                          <LocalIcon icon="content-copy" width="1rem" height="1rem" />
+                        </Button>
+                      </Group>
+                    </Stack>
+                  </Paper>
+                )}
+              </>
+            )}
 
             {/* Email Mode */}
             {inviteMode === 'email' && config?.enableEmailInvites && (
@@ -599,7 +898,7 @@ export default function PeopleSection() {
 
             {/* Action Button */}
             <Button
-              onClick={inviteMode === 'email' ? handleEmailInvite : handleInviteUser}
+              onClick={inviteMode === 'email' ? handleEmailInvite : inviteMode === 'link' ? handleGenerateInviteLink : handleInviteUser}
               loading={processing}
               fullWidth
               size="md"
@@ -607,10 +906,12 @@ export default function PeopleSection() {
             >
               {inviteMode === 'email'
                 ? t('workspace.people.emailInvite.submit', 'Send Invites')
-                : t('workspace.people.addMember.submit')}
+                : inviteMode === 'link'
+                  ? t('workspace.people.inviteLink.submit', 'Generate Link')
+                  : t('workspace.people.addMember.submit')}
             </Button>
           </Stack>
-        </div>
+        </Box>
       </Modal>
 
       {/* Edit User Modal */}
@@ -623,14 +924,14 @@ export default function PeopleSection() {
         padding="xl"
         withCloseButton={false}
       >
-        <div style={{ position: 'relative' }}>
+        <Box pos="relative">
           <CloseButton
             onClick={closeEditModal}
             size="lg"
             style={{
               position: 'absolute',
-              top: '-8px',
-              right: '-8px',
+              top: -8,
+              right: -8,
               zIndex: 1
             }}
           />
@@ -666,7 +967,7 @@ export default function PeopleSection() {
               {t('workspace.people.editMember.submit')}
             </Button>
           </Stack>
-        </div>
+        </Box>
       </Modal>
     </Stack>
   );

@@ -6,16 +6,26 @@ import RestartConfirmationModal from '@app/components/shared/config/RestartConfi
 import { useRestartServer } from '@app/components/shared/config/useRestartServer';
 import { useAdminSettings } from '@app/hooks/useAdminSettings';
 import PendingBadge from '@app/components/shared/config/PendingBadge';
+import apiClient from '@app/services/apiClient';
 
 interface MailSettingsData {
   enabled?: boolean;
   enableInvites?: boolean;
+  inviteLinkExpiryHours?: number;
   host?: string;
   port?: number;
   username?: string;
   password?: string;
   from?: string;
+  frontendUrl?: string;
 }
+
+interface ApiResponseWithPending<T> {
+  _pending?: Partial<T>;
+}
+
+type MailApiResponse = MailSettingsData & ApiResponseWithPending<MailSettingsData>;
+type SystemApiResponse = { frontendUrl?: string } & ApiResponseWithPending<{ frontendUrl?: string }>;
 
 export default function AdminMailSection() {
   const { t } = useTranslation();
@@ -31,6 +41,47 @@ export default function AdminMailSection() {
     isFieldPending,
   } = useAdminSettings<MailSettingsData>({
     sectionName: 'mail',
+    fetchTransformer: async () => {
+      const [mailResponse, systemResponse] = await Promise.all([
+        apiClient.get<MailApiResponse>('/api/v1/admin/settings/section/mail'),
+        apiClient.get<SystemApiResponse>('/api/v1/admin/settings/section/system')
+      ]);
+
+      const mail = mailResponse.data || {};
+      const system = systemResponse.data || {};
+
+      const result: MailSettingsData & ApiResponseWithPending<MailSettingsData> = {
+        ...mail,
+        frontendUrl: system.frontendUrl || ''
+      };
+
+      // Merge pending blocks from both endpoints
+      const pendingBlock: Partial<MailSettingsData> = {};
+      if (mail._pending) {
+        Object.assign(pendingBlock, mail._pending);
+      }
+      if (system._pending?.frontendUrl !== undefined) {
+        pendingBlock.frontendUrl = system._pending.frontendUrl;
+      }
+
+      if (Object.keys(pendingBlock).length > 0) {
+        result._pending = pendingBlock;
+      }
+
+      return result;
+    },
+    saveTransformer: (settings) => {
+      const { frontendUrl, ...mailSettings } = settings;
+
+      const deltaSettings: Record<string, any> = {
+        'system.frontendUrl': frontendUrl
+      };
+
+      return {
+        sectionData: mailSettings,
+        deltaSettings
+      };
+    }
   });
 
   useEffect(() => {
@@ -173,6 +224,21 @@ export default function AdminMailSection() {
               value={settings.from || ''}
               onChange={(e) => setSettings({ ...settings, from: e.target.value })}
               placeholder="noreply@example.com"
+            />
+          </div>
+
+          <div>
+            <TextInput
+              label={
+                <Group gap="xs">
+                  <span>{t('admin.settings.mail.frontendUrl', 'Frontend URL')}</span>
+                  <PendingBadge show={isFieldPending('frontendUrl')} />
+                </Group>
+              }
+              description={t('admin.settings.mail.frontendUrl.description', 'Base URL for frontend (e.g. https://pdf.example.com). Used for generating invite links in emails. Leave empty to use backend URL.')}
+              value={settings.frontendUrl || ''}
+              onChange={(e) => setSettings({ ...settings, frontendUrl: e.target.value })}
+              placeholder="https://pdf.example.com"
             />
           </div>
         </Stack>
