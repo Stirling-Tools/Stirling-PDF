@@ -167,6 +167,15 @@ const CompareDocumentPane = ({
 
             const { highlightOffset, baseWidth, baseHeight, containerWidth, containerHeight, innerScale } = metrics;
 
+            // Compute clamped pan for current zoom so content always touches edges when in bounds
+            const storedPan = pagePanRef.current.get(page.pageNumber) || { x: 0, y: 0 };
+            const contentWidth = Math.max(0, Math.round(containerWidth * innerScale));
+            const contentHeight = Math.max(0, Math.round(containerHeight * innerScale));
+            const maxPanX = Math.max(0, contentWidth - Math.round(containerWidth));
+            const maxPanY = Math.max(0, contentHeight - Math.round(containerHeight));
+            const clampedPanX = Math.max(0, Math.min(maxPanX, storedPan.x));
+            const clampedPanY = Math.max(0, Math.min(maxPanY, storedPan.y));
+
             const groupedRects = groupedRectsByPage.get(page.pageNumber) ?? new Map();
 
             return (
@@ -232,7 +241,7 @@ const CompareDocumentPane = ({
                     <div
                       className={`compare-diff-page__inner compare-diff-page__inner--${pane}`}
                       style={{
-                        transform: `scale(${innerScale}) translate3d(${-((pagePanRef.current.get(page.pageNumber)?.x || 0) / innerScale)}px, ${-((pagePanRef.current.get(page.pageNumber)?.y || 0) / innerScale)}px, 0)`,
+                        transform: `scale(${innerScale}) translate3d(${-((clampedPanX) / innerScale)}px, ${-((clampedPanY) / innerScale)}px, 0)`,
                         transformOrigin: 'top left'
                       }}
                     >
