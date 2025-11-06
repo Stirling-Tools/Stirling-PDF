@@ -17,15 +17,31 @@ import WarningIcon from '@mui/icons-material/Warning';
 import { ToolRegistry } from '@app/data/toolsTaxonomy';
 import { ToolId } from '@app/types/toolId';
 import { getAvailableToExtensions } from '@app/utils/convertUtils';
+import type { AutomationParameters } from '@app/types/automation';
+
+type BaseSettingsComponent = React.ComponentType<{
+  parameters: AutomationParameters;
+  onParameterChange: (key: string, value: unknown) => void;
+  disabled?: boolean;
+}>;
+
+type ConvertSettingsComponent = React.ComponentType<{
+  parameters: AutomationParameters;
+  onParameterChange: (key: string, value: unknown) => void;
+  getAvailableToExtensions: typeof getAvailableToExtensions;
+  selectedFiles: File[];
+  disabled?: boolean;
+}>;
+
 interface ToolConfigurationModalProps {
   opened: boolean;
   tool: {
     id: string;
     operation: string;
     name: string;
-    parameters?: any;
+    parameters?: AutomationParameters;
   };
-  onSave: (parameters: any) => void;
+  onSave: (parameters: AutomationParameters) => void;
   onCancel: () => void;
   toolRegistry: Partial<ToolRegistry>;
 }
@@ -33,11 +49,11 @@ interface ToolConfigurationModalProps {
 export default function ToolConfigurationModal({ opened, tool, onSave, onCancel, toolRegistry }: ToolConfigurationModalProps) {
   const { t } = useTranslation();
 
-  const [parameters, setParameters] = useState<any>({});
+  const [parameters, setParameters] = useState<AutomationParameters>({});
 
   // Get tool info from registry
   const toolInfo = toolRegistry[tool.operation as ToolId];
-  const SettingsComponent = toolInfo?.automationSettings;
+  const SettingsComponent = toolInfo?.automationSettings as BaseSettingsComponent | ConvertSettingsComponent | undefined;
 
   // Initialize parameters from tool (which should contain defaults from registry)
   useEffect(() => {
@@ -48,6 +64,13 @@ export default function ToolConfigurationModal({ opened, tool, onSave, onCancel,
       setParameters({});
     }
   }, [tool.parameters, tool.operation]);
+
+  const updateParameter = (key: string, value: unknown) => {
+    setParameters(prev => ({
+      ...prev,
+      [key]: value,
+    }));
+  };
 
   // Render the settings component
   const renderToolSettings = () => {
@@ -63,12 +86,11 @@ export default function ToolConfigurationModal({ opened, tool, onSave, onCancel,
 
     // Special handling for ConvertSettings which needs additional props
     if (tool.operation === 'convert') {
+      const ConvertComponent = SettingsComponent as ConvertSettingsComponent;
       return (
-        <SettingsComponent
+        <ConvertComponent
           parameters={parameters}
-          onParameterChange={(key: string, value: any) => {
-            setParameters((prev: any) => ({ ...prev, [key]: value }));
-          }}
+          onParameterChange={updateParameter}
           getAvailableToExtensions={getAvailableToExtensions}
           selectedFiles={[]}
           disabled={false}
@@ -76,12 +98,11 @@ export default function ToolConfigurationModal({ opened, tool, onSave, onCancel,
       );
     }
 
+    const GenericComponent = SettingsComponent as BaseSettingsComponent;
     return (
-      <SettingsComponent
+      <GenericComponent
         parameters={parameters}
-        onParameterChange={(key: string, value: any) => {
-          setParameters((prev: any) => ({ ...prev, [key]: value }));
-        }}
+        onParameterChange={updateParameter}
         disabled={false}
       />
     );

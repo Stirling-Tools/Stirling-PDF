@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react';
 import type { AddStampParameters } from '@app/components/tools/addStamp/useAddStampParameters';
 
 export type ContainerSize = { width: number; height: number };
@@ -48,8 +49,6 @@ export const getFirstSelectedPage = (input: string): number => {
   return 1;
 };
 
-export type StampPreviewStyle = { container: any; item: any };
-
 // Unified per-alphabet preview adjustments
 export type Alphabet = 'roman' | 'arabic' | 'japanese' | 'korean' | 'chinese' | 'thai';
 export type AlphabetTweaks = { scale: number; rowOffsetRem: [number, number, number]; lineHeight: number; capHeightRatio: number; defaultFontSize: number };
@@ -62,11 +61,19 @@ export const ALPHABET_PREVIEW_TWEAKS: Record<Alphabet, AlphabetTweaks> = {
   chinese: { scale: 1/1.2, rowOffsetRem: [0, 2, 2.8], lineHeight: 1, capHeightRatio: 0.72, defaultFontSize: 30 }, // temporary default font size so that it fits on the PDF
   thai: { scale: 1/1.2, rowOffsetRem: [-1, 0, .8], lineHeight: 1, capHeightRatio: 0.66, defaultFontSize: 80 },
 };
-export const getAlphabetPreviewScale = (alphabet: string): number => (ALPHABET_PREVIEW_TWEAKS as any)[alphabet]?.scale ?? 1.0;
+const getAlphabetTweaks = (alphabet: string): AlphabetTweaks | undefined =>
+  ALPHABET_PREVIEW_TWEAKS[alphabet as Alphabet];
 
-export const getDefaultFontSizeForAlphabet = (alphabet: string): number => {
-  return (ALPHABET_PREVIEW_TWEAKS as any)[alphabet]?.defaultFontSize ?? 80;
-};
+export const getAlphabetPreviewScale = (alphabet: string): number =>
+  getAlphabetTweaks(alphabet)?.scale ?? 1.0;
+
+export const getDefaultFontSizeForAlphabet = (alphabet: string): number =>
+  getAlphabetTweaks(alphabet)?.defaultFontSize ?? 80;
+
+export interface StampPreviewStyle {
+  container: CSSProperties;
+  item: CSSProperties;
+}
 
 export function computeStampPreviewStyle(
   parameters: AddStampParameters,
@@ -83,7 +90,7 @@ export function computeStampPreviewStyle(
   const heightPts = pageSize?.heightPts ?? 841.89; // A4 height at 72 DPI
   const scaleX = pageWidthPx / widthPts;
   const scaleY = pageHeightPx / heightPts;
-  if (pageWidthPx <= 0 || pageHeightPx <= 0) return { item: {}, container: {} } as any;
+  if (pageWidthPx <= 0 || pageHeightPx <= 0) return { item: {}, container: {} };
 
   const marginPts = (widthPts + heightPts) / 2 * (marginFactorMap[parameters.customMargin] ?? 0.035);
 
@@ -110,24 +117,15 @@ export function computeStampPreviewStyle(
       // Convert measured px width back to PDF points using horizontal scale
       widthPtsContent = measuredWidthPx / scaleX;
 
-      let adjustmentFactor = 1.0;
-      switch (parameters.alphabet) {
-        case 'roman':
-          adjustmentFactor = 0.90;
-          break;
-        case 'arabic':
-        case 'thai':
-          adjustmentFactor = 0.92;
-          break;
-        case 'japanese':
-        case 'korean':
-        case 'chinese':
-          adjustmentFactor = 0.88;
-          break;
-        default:
-          adjustmentFactor = 0.93;
-      }
-      widthPtsContent *= adjustmentFactor;
+      const adjustments: Partial<Record<AddStampParameters['alphabet'], number>> = {
+        roman: 0.90,
+        arabic: 0.92,
+        thai: 0.92,
+        japanese: 0.88,
+        korean: 0.88,
+        chinese: 0.88,
+      };
+      widthPtsContent *= adjustments[parameters.alphabet] ?? 0.93;
     }
   }
 
@@ -150,7 +148,7 @@ export function computeStampPreviewStyle(
     if (parameters.overrideX >= 0 && parameters.overrideY >= 0) return parameters.overrideY;
     // For text, backend positions using cap height, not full font size
     const heightForY = parameters.stampType === 'text'
-      ? heightPtsContent * ((ALPHABET_PREVIEW_TWEAKS as any)[parameters.alphabet]?.capHeightRatio ?? 0.70)
+      ? heightPtsContent * (getAlphabetTweaks(parameters.alphabet)?.capHeightRatio ?? 0.70)
       : heightPtsContent;
     switch (Math.floor((position - 1) / 3)) {
       case 0: // Top
@@ -172,12 +170,11 @@ export function computeStampPreviewStyle(
     try {
       const rootFontSizePx = parseFloat(getComputedStyle(document.documentElement).fontSize || '16') || 16;
       const rowIndex = Math.floor((position - 1) / 3); // 0 top, 1 middle, 2 bottom
-      const offsets = (ALPHABET_PREVIEW_TWEAKS as any)[parameters.alphabet]?.rowOffsetRem ?? [0, 0, 0];
+      const offsets = getAlphabetTweaks(parameters.alphabet)?.rowOffsetRem ?? [0, 0, 0];
       const offsetRem = offsets[rowIndex] ?? 0;
       yPx += offsetRem * rootFontSizePx;
-    } catch (e) {
-      // no-op
-      console.error(e);
+    } catch (error) {
+      console.error(error);
     }
   }
   const widthPx = widthPtsContent * scaleX;
@@ -226,7 +223,7 @@ export function computeStampPreviewStyle(
       display: 'flex',
       flexDirection: 'column',
       justifyContent: 'flex-start',
-      lineHeight: (ALPHABET_PREVIEW_TWEAKS as any)[parameters.alphabet]?.lineHeight ?? 1,
+      lineHeight: getAlphabetTweaks(parameters.alphabet)?.lineHeight ?? 1,
       alignItems,
       cursor: showQuickGrid ? 'default' : 'move',
       pointerEvents: showQuickGrid ? 'none' : 'auto',

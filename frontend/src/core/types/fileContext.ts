@@ -14,14 +14,15 @@ export interface ProcessedFilePage {
   pageNumber?: number;
   rotation?: number;
   splitBefore?: boolean;
-  [key: string]: any;
+  splitAfter?: boolean;
+  originalPageNumber?: number;
 }
 
 export interface ProcessedFileMetadata {
   pages: ProcessedFilePage[];
   totalPages?: number;
   lastProcessed?: number;
-  [key: string]: any;
+  thumbnailUrl?: string;
 }
 
 /**
@@ -81,8 +82,8 @@ export interface StirlingFile extends File {
 
 // Type guard to check if a File object has an embedded fileId
 export function isStirlingFile(file: File): file is StirlingFile {
-  return 'fileId' in file && typeof (file as any).fileId === 'string' &&
-         'quickKey' in file && typeof (file as any).quickKey === 'string';
+  const withIds = file as Partial<StirlingFile>;
+  return typeof withIds.fileId === 'string' && typeof withIds.quickKey === 'string';
 }
 
 // Create a StirlingFile from a regular File object
@@ -125,13 +126,16 @@ export function extractFiles(files: StirlingFile[]): File[] {
 }
 
 // Check if an object is a File or StirlingFile (replaces instanceof File checks)
-export function isFileObject(obj: any): obj is File | StirlingFile {
-  return obj &&
-         typeof obj.name === 'string' &&
-         typeof obj.size === 'number' &&
-         typeof obj.type === 'string' &&
-         typeof obj.lastModified === 'number' &&
-         typeof obj.arrayBuffer === 'function';
+export function isFileObject(obj: unknown): obj is File | StirlingFile {
+  if (!obj || typeof obj !== 'object') return false;
+  const candidate = obj as Partial<File>;
+  return (
+    typeof candidate.name === 'string' &&
+    typeof candidate.size === 'number' &&
+    typeof candidate.type === 'string' &&
+    typeof candidate.lastModified === 'number' &&
+    typeof candidate.arrayBuffer === 'function'
+  );
 }
 
 
