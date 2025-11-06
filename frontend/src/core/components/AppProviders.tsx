@@ -8,7 +8,7 @@ import { ToolWorkflowProvider } from "@app/contexts/ToolWorkflowContext";
 import { HotkeyProvider } from "@app/contexts/HotkeyContext";
 import { SidebarProvider } from "@app/contexts/SidebarContext";
 import { PreferencesProvider } from "@app/contexts/PreferencesContext";
-import { AppConfigProvider } from "@app/contexts/AppConfigContext";
+import { AppConfigProvider, AppConfigRetryOptions } from "@app/contexts/AppConfigContext";
 import { RightRailProvider } from "@app/contexts/RightRailContext";
 import { ViewerProvider } from "@app/contexts/ViewerContext";
 import { SignatureProvider } from "@app/contexts/SignatureContext";
@@ -23,17 +23,22 @@ function ScarfTrackingInitializer() {
   return null;
 }
 
+export interface AppProvidersProps {
+  children: ReactNode;
+  appConfigRetryOptions?: AppConfigRetryOptions;
+}
+
 /**
  * Core application providers
  * Contains all providers needed for the core
  */
-export function AppProviders({ children }: { children: ReactNode }) {
+export function AppProviders({ children, appConfigRetryOptions }: AppProvidersProps) {
   return (
     <PreferencesProvider>
       <RainbowThemeProvider>
         <ErrorBoundary>
           <OnboardingProvider>
-            <AppConfigProvider>
+            <AppConfigProvider retryOptions={appConfigRetryOptions}>
               <ScarfTrackingInitializer />
               <FileContextProvider enableUrlSync={true} enablePersistence={true}>
                 <ToolRegistryProvider>
