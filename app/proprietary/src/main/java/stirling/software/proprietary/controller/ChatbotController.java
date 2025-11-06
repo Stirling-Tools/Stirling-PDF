@@ -3,8 +3,6 @@ package stirling.software.proprietary.controller;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -31,11 +29,11 @@ import stirling.software.proprietary.service.chatbot.ChatbotSessionRegistry;
 import stirling.software.proprietary.service.chatbot.exception.ChatbotException;
 
 @RestController
-@RequestMapping("/api/internal/chatbot")
+@RequestMapping("/api/v1/internal/chatbot")
 @RequiredArgsConstructor
 @Slf4j
-@ConditionalOnProperty(value = "premium.proFeatures.chatbot.enabled", havingValue = "true")
-@ConditionalOnBean(ChatbotService.class)
+// @ConditionalOnProperty(value = "premium.proFeatures.chatbot.enabled", havingValue = "true")
+// @ConditionalOnBean(ChatbotService.class)
 public class ChatbotController {
 
     private final ChatbotService chatbotService;

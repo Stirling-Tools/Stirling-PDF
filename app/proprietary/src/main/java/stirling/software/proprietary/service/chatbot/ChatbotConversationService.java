@@ -1,5 +1,7 @@
 package stirling.software.proprietary.service.chatbot;
 
+import static stirling.software.proprietary.service.chatbot.ChatbotFeatureProperties.ChatbotSettings.ModelProvider.OLLAMA;
+
 import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -15,11 +17,8 @@ import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.ollama.OllamaChatModel;
-import org.springframework.ai.ollama.api.OllamaOptions;
 import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.ai.openai.OpenAiChatOptions;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -35,14 +34,11 @@ import stirling.software.proprietary.model.chatbot.ChatbotResponse;
 import stirling.software.proprietary.model.chatbot.ChatbotSession;
 import stirling.software.proprietary.model.chatbot.ChatbotTextChunk;
 import stirling.software.proprietary.service.chatbot.ChatbotFeatureProperties.ChatbotSettings;
-import stirling.software.proprietary.service.chatbot.ChatbotFeatureProperties.ChatbotSettings.ModelProvider;
 import stirling.software.proprietary.service.chatbot.exception.ChatbotException;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
-@ConditionalOnProperty(value = "premium.proFeatures.chatbot.enabled", havingValue = "true")
-@ConditionalOnBean(ChatModel.class)
 public class ChatbotConversationService {
 
     private final ChatModel chatModel;
@@ -159,7 +155,7 @@ public class ChatbotConversationService {
     }
 
     private void ensureModelSwitchCapability(ChatbotSettings settings) {
-        ModelProvider provider = settings.models().provider();
+        ChatbotSettings.ModelProvider provider = settings.models().provider();
         switch (provider) {
             case OPENAI -> {
                 if (!(chatModel instanceof OpenAiChatModel)) {
@@ -262,22 +258,15 @@ public class ChatbotConversationService {
                         + "Question: "
                         + question;
 
-        Object options = buildChatOptions(settings, model);
+        OpenAiChatOptions options = buildChatOptions(model);
 
         return new Prompt(
                 List.of(new SystemMessage(systemPrompt), new UserMessage(userPrompt)), options);
     }
 
-    private Object buildChatOptions(ChatbotSettings settings, String model) {
-        return switch (settings.models().provider()) {
-            case OPENAI ->
-                    OpenAiChatOptions.builder()
-                            .model(model)
-                            .temperature(0.2)
-                            .responseFormat("json_object")
-                            .build();
-            case OLLAMA -> OllamaOptions.builder().model(model).temperature(0.2).build();
-        };
+    private OpenAiChatOptions buildChatOptions(String model) {
+        // Note: Some models only support default temperature value of 1.0
+        return OpenAiChatOptions.builder().model(model).temperature(1.0).build();
     }
 
     private ModelReply parseModelResponse(String raw) {

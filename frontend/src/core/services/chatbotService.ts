@@ -40,12 +40,12 @@ export interface ChatbotMessageResponse {
 }
 
 export async function createChatbotSession(payload: ChatbotSessionPayload) {
-  const { data } = await apiClient.post<ChatbotSessionInfo>('/api/internal/chatbot/session', payload);
+  const { data } = await apiClient.post<ChatbotSessionInfo>('/api/v1/internal/chatbot/session', payload);
   return data;
 }
 
 export async function sendChatbotPrompt(payload: ChatbotQueryPayload) {
-  const { data } = await apiClient.post<ChatbotMessageResponse>('/api/internal/chatbot/query', payload);
+  const { data } = await apiClient.post<ChatbotMessageResponse>('/api/v1/internal/chatbot/query', payload);
   return data;
 }
 

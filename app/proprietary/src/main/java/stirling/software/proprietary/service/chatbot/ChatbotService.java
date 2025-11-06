@@ -3,8 +3,6 @@ package stirling.software.proprietary.service.chatbot;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
@@ -18,8 +16,6 @@ import stirling.software.proprietary.service.AuditService;
 import stirling.software.proprietary.service.chatbot.exception.ChatbotException;
 
 @Service
-@ConditionalOnProperty(value = "premium.proFeatures.chatbot.enabled", havingValue = "true")
-@ConditionalOnBean({ChatbotIngestionService.class, ChatbotConversationService.class})
 @Slf4j
 @RequiredArgsConstructor
 public class ChatbotService {
