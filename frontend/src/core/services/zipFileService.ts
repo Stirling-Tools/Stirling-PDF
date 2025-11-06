@@ -43,7 +43,7 @@ export interface ZipExtractionProgress {
 export class ZipFileService {
   private readonly maxFileSize = 100 * 1024 * 1024; // 100MB per file
   private readonly maxTotalSize = 500 * 1024 * 1024; // 500MB total extraction limit
-  
+
   // Warn user when extracting ZIP with more than this many files
   public static readonly ZIP_WARNING_THRESHOLD = 20;
 
@@ -421,7 +421,7 @@ export class ZipFileService {
     try {
       const zip = new JSZip();
       const zipContents = await zip.loadAsync(zipBlob);
-      
+
       // Count non-directory entries
       return Object.values(zipContents.files).filter(entry => !entry.dir).length;
     } catch (error) {
