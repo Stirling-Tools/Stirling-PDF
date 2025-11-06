@@ -21,42 +21,65 @@ const ZipWarningModal = ({ opened, onConfirm, onCancel, fileCount, zipFileName }
       onClose={onCancel}
       title={t("zipWarning.title", "Large ZIP File")}
       centered
-      size="sm"
-      closeOnClickOutside={false}
+      size="auto"
+      closeOnClickOutside={true}
       closeOnEscape={true}
     >
-      <Stack gap="md">
-        <Stack gap="xs" align="center">
-          <WarningAmberIcon style={{ fontSize: '48px', color: 'var(--mantine-color-orange-6)' }} />
-          <Text size="sm" fw={500} ta="center">
-            {zipFileName}
-          </Text>
-          <Text size="sm" c="dimmed" ta="center">
-            {t("zipWarning.message", {
-              count: fileCount,
-              defaultValue: "This ZIP contains {{count}} files. Extract anyway?"
-            })}
-          </Text>
-        </Stack>
+      <Stack ta="center" p="md" gap="sm">
+  <WarningAmberIcon style={{ fontSize: 36, display: 'block', margin: '0 auto 8px', color: 'var(--mantine-color-blue-6)' }} />
+        <Text size="md" fw={300}>
+          {zipFileName}
+        </Text>
+        <Text size="lg" fw={500}>
+          {t("zipWarning.message", {
+            count: fileCount,
+            defaultValue: "This ZIP contains {{count}} files. Extract anyway?"
+          })}
+        </Text>
+      </Stack>
 
-        <Group justify="center" gap="md">
-          <Button 
-            variant="light" 
-            color="gray" 
-            onClick={onCancel}
-            leftSection={<CancelIcon fontSize="small" />}
-          >
-            {t("zipWarning.cancel", "Cancel")}
-          </Button>
-          <Button 
-            variant="filled" 
-            color="orange"
-            onClick={onConfirm}
-            leftSection={<CheckCircleOutlineIcon fontSize="small" />}
-          >
-            {t("zipWarning.confirm", "Extract")}
-          </Button>
-        </Group>
+      {/* Desktop layout: centered buttons */}
+      <Group justify="center" gap="sm" visibleFrom="md">
+        <Button
+          variant="light"
+          color="var(--mantine-color-gray-8)"
+          onClick={onCancel}
+          leftSection={<CancelIcon fontSize="small" />}
+          w="10rem"
+        >
+          {t("zipWarning.cancel", "Cancel")}
+        </Button>
+        <Button
+          variant="filled"
+          color="var(--mantine-color-blue-9)"
+          onClick={onConfirm}
+          leftSection={<CheckCircleOutlineIcon fontSize="small" />}
+          w="10rem"
+        >
+          {t("zipWarning.confirm", "Extract")}
+        </Button>
+      </Group>
+
+      {/* Mobile layout: vertical stack */}
+      <Stack align="center" gap="sm" hiddenFrom="md">
+        <Button
+          variant="light"
+          color="var(--mantine-color-gray-8)"
+          onClick={onCancel}
+          leftSection={<CancelIcon fontSize="small" />}
+          w="10rem"
+        >
+          {t("zipWarning.cancel", "Cancel")}
+        </Button>
+        <Button
+          variant="filled"
+          color="var(--mantine-color-blue-9)"
+          onClick={onConfirm}
+          leftSection={<CheckCircleOutlineIcon fontSize="small" />}
+          w="10rem"
+        >
+          {t("zipWarning.confirm", "Extract")}
+        </Button>
       </Stack>
     </Modal>
   );
