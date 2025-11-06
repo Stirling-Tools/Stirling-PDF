@@ -1,7 +1,6 @@
 package stirling.software.proprietary.util;
 
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -127,11 +126,9 @@ public class FormCopyUtils {
         // Generate appearance streams and embed them authoritatively
         boolean appearancesGenerated = false;
         try {
-            // Use reflection to avoid compile-time dependency on PDFBox version
-            Method m = newAcroForm.getClass().getMethod("refreshAppearances");
-            m.invoke(newAcroForm);
+            newAcroForm.refreshAppearances();
             appearancesGenerated = true;
-        } catch (NoSuchMethodException nsme) {
+        } catch (NoSuchMethodError nsme) {
             log.warn(
                     "AcroForm.refreshAppearances() not available in this PDFBox version; "
                             + "leaving NeedAppearances=true for viewer-side rendering.");
