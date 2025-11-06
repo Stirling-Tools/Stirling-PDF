@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import CancelIcon from "@mui/icons-material/Cancel";
+import { CSSProperties } from "react";
 
 interface ZipWarningModalProps {
   opened: boolean;
@@ -11,6 +12,13 @@ interface ZipWarningModalProps {
   fileCount: number;
   zipFileName: string;
 }
+
+const WARNING_ICON_STYLE: CSSProperties = {
+  fontSize: 36,
+  display: 'block',
+  margin: '0 auto 8px',
+  color: 'var(--mantine-color-blue-6)'
+};
 
 const ZipWarningModal = ({ opened, onConfirm, onCancel, fileCount, zipFileName }: ZipWarningModalProps) => {
   const { t } = useTranslation();
@@ -26,7 +34,7 @@ const ZipWarningModal = ({ opened, onConfirm, onCancel, fileCount, zipFileName }
       closeOnEscape={true}
     >
       <Stack ta="center" p="md" gap="sm">
-  <WarningAmberIcon style={{ fontSize: 36, display: 'block', margin: '0 auto 8px', color: 'var(--mantine-color-blue-6)' }} />
+        <WarningAmberIcon style={WARNING_ICON_STYLE} />
         <Text size="md" fw={300}>
           {zipFileName}
         </Text>

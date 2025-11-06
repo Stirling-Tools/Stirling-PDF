@@ -364,31 +364,35 @@ export class ZipFileService {
 
   /**
    * Determine if a ZIP file should be extracted based on user preferences
+   * Returns both the extraction decision and file count to avoid redundant ZIP parsing
    *
    * @param zipBlob - The ZIP file to check
    * @param autoUnzip - User preference for auto-unzipping
    * @param autoUnzipFileLimit - Maximum number of files to auto-extract
    * @param skipAutoUnzip - Bypass preference check (for automation)
-   * @returns true if the ZIP should be extracted, false otherwise
+   * @returns Object with shouldExtract flag and fileCount
    */
   async shouldUnzip(
     zipBlob: Blob | File,
     autoUnzip: boolean,
     autoUnzipFileLimit: number,
     skipAutoUnzip: boolean = false
-  ): Promise<boolean> {
+  ): Promise<{ shouldExtract: boolean; fileCount: number }> {
     try {
-      // Automation always extracts
+      // Automation always extracts - but still need to count files for warning
       if (skipAutoUnzip) {
-        return true;
+        const zip = new JSZip();
+        const zipContents = await zip.loadAsync(zipBlob);
+        const fileCount = Object.values(zipContents.files).filter(entry => !entry.dir).length;
+        return { shouldExtract: true, fileCount };
       }
 
       // Check if auto-unzip is enabled
       if (!autoUnzip) {
-        return false;
+        return { shouldExtract: false, fileCount: 0 };
       }
 
-      // Load ZIP and count files
+      // Load ZIP and count files (single parse)
       const zip = new JSZip();
       const zipContents = await zip.loadAsync(zipBlob);
 
@@ -396,16 +400,20 @@ export class ZipFileService {
       const fileCount = Object.values(zipContents.files).filter(entry => !entry.dir).length;
 
       // Only extract if within limit
-      return fileCount <= autoUnzipFileLimit;
+      return {
+        shouldExtract: fileCount <= autoUnzipFileLimit,
+        fileCount
+      };
     } catch (error) {
       console.error('Error checking shouldUnzip:', error);
       // On error, default to not extracting (safer)
-      return false;
+      return { shouldExtract: false, fileCount: 0 };
     }
   }
 
   /**
    * Count the number of files in a ZIP archive (excluding directories)
+   * @deprecated Use shouldUnzip() which returns both decision and count
    * @param zipBlob - The ZIP file to count files in
    * @returns Number of files in the ZIP
    */
@@ -454,8 +462,8 @@ export class ZipFileService {
         return [zipFile];
       }
 
-      // Check if we should extract based on preferences
-      const shouldExtract = await this.shouldUnzip(
+      // Check if we should extract based on preferences (returns both decision and count)
+      const { shouldExtract, fileCount } = await this.shouldUnzip(
         zipBlob,
         options.autoUnzip,
         options.autoUnzipFileLimit,
@@ -466,9 +474,7 @@ export class ZipFileService {
         return [zipFile];
       }
 
-      // Count files and warn user if ZIP is large
-      const fileCount = await this.countFilesInZip(zipBlob);
-      
+      // Warn user if ZIP is large (fileCount already obtained from shouldUnzip)
       if (fileCount > ZipFileService.ZIP_WARNING_THRESHOLD && options.confirmLargeExtraction) {
         const userConfirmed = await options.confirmLargeExtraction(fileCount, zipFile.name);
         if (!userConfirmed) {
