@@ -10,7 +10,7 @@ import {
   everyNthExpression,
   rangeExpression,
   LogicalOperator,
-} from '@app/components/pageEditor/bulkSelectionPanel/BulkSelection';
+} from '@app/utils/bulkselection/selectionBuilders';
 import SelectPages from '@app/components/pageEditor/bulkSelectionPanel/SelectPages';
 import OperatorsSection from '@app/components/pageEditor/bulkSelectionPanel/OperatorsSection';
 
