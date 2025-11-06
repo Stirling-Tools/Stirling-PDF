@@ -1,4 +1,5 @@
 import apiClient from '@app/services/apiClient';
+import type { AxiosRequestConfig } from 'axios';
 
 export interface User {
   id: number;
@@ -29,8 +30,15 @@ export interface AdminSettingsData {
   disabledUsers: number;
   currentUsername?: string;
   roleDetails?: Record<string, string>;
-  teams?: any[];
+  teams?: TeamSummary[];
   maxPaidUsers?: number;
+}
+
+export interface TeamSummary {
+  id: number;
+  name: string;
+  memberCount?: number;
+  [key: string]: unknown;
 }
 
 export interface CreateUserRequest {
@@ -100,9 +108,10 @@ export const userManagementService = {
     if (data.forceChange !== undefined) {
       formData.append('forceChange', data.forceChange.toString());
     }
-    await apiClient.post('/api/v1/user/admin/saveUser', formData, {
-      suppressErrorToast: true, // Component will handle error display
-    } as any);
+    const config: AxiosRequestConfig & { suppressErrorToast?: boolean } = {
+      suppressErrorToast: true,
+    };
+    await apiClient.post('/api/v1/user/admin/saveUser', formData, config);
   },
 
   /**
@@ -115,9 +124,10 @@ export const userManagementService = {
     if (data.teamId) {
       formData.append('teamId', data.teamId.toString());
     }
-    await apiClient.post('/api/v1/user/admin/changeRole', formData, {
+    const config: AxiosRequestConfig & { suppressErrorToast?: boolean } = {
       suppressErrorToast: true,
-    } as any);
+    };
+    await apiClient.post('/api/v1/user/admin/changeRole', formData, config);
   },
 
   /**
@@ -126,18 +136,20 @@ export const userManagementService = {
   async toggleUserEnabled(username: string, enabled: boolean): Promise<void> {
     const formData = new FormData();
     formData.append('enabled', enabled.toString());
-    await apiClient.post(`/api/v1/user/admin/changeUserEnabled/${username}`, formData, {
+    const config: AxiosRequestConfig & { suppressErrorToast?: boolean } = {
       suppressErrorToast: true,
-    } as any);
+    };
+    await apiClient.post(`/api/v1/user/admin/changeUserEnabled/${username}`, formData, config);
   },
 
   /**
    * Delete a user (admin only)
    */
   async deleteUser(username: string): Promise<void> {
-    await apiClient.post(`/api/v1/user/admin/deleteUser/${username}`, null, {
+    const config: AxiosRequestConfig & { suppressErrorToast?: boolean } = {
       suppressErrorToast: true,
-    } as any);
+    };
+    await apiClient.post(`/api/v1/user/admin/deleteUser/${username}`, null, config);
   },
 
   /**
@@ -153,12 +165,14 @@ export const userManagementService = {
       formData.append('teamId', data.teamId.toString());
     }
 
+    const config: AxiosRequestConfig & { suppressErrorToast?: boolean } = {
+      suppressErrorToast: true,
+    };
+
     const response = await apiClient.post<InviteUsersResponse>(
       '/api/v1/user/admin/inviteUsers',
       formData,
-      {
-        suppressErrorToast: true, // Component will handle error display
-      } as any
+      config
     );
 
     return response.data;

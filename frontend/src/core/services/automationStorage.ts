@@ -2,13 +2,15 @@
  * Service for managing automation configurations in IndexedDB
  */
 
+import type { AutomationParameters } from '@app/types/automation';
+
 export interface AutomationConfig {
   id: string;
   name: string;
   description?: string;
   operations: Array<{
     operation: string;
-    parameters: any;
+    parameters: AutomationParameters;
   }>;
   createdAt: string;
   updatedAt: string;

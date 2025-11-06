@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useFileSelection } from "@app/contexts/FileContext";
-import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
+import { createToolFlow, type MiddleStepConfig } from "@app/components/tools/shared/createToolFlow";
 import { BaseToolProps, ToolComponent } from "@app/types/tool";
 import { useEndpointEnabled } from "@app/hooks/useEndpointConfig";
 import { useAddStampParameters } from "@app/components/tools/addStamp/useAddStampParameters";
@@ -39,8 +39,12 @@ const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
       if (operation.files && onComplete) {
         onComplete(operation.files);
       }
-    } catch (error: any) {
-      onError?.(error?.message || t("AddStampRequest.error.failed", "Add stamp operation failed"));
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : t("AddStampRequest.error.failed", "Add stamp operation failed");
+      onError?.(message);
     }
   };
 
@@ -67,7 +71,7 @@ const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   });
 
   const getSteps = () => {
-    const steps: any[] = [];
+    const steps: MiddleStepConfig[] = [];
 
     // Step 1: Stamp Setup
     steps.push({
@@ -184,5 +188,4 @@ const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
 AddStamp.tool = () => useAddStampOperation;
 
 export default AddStamp as ToolComponent;
-
 
