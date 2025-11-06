@@ -19,7 +19,7 @@ import {
 } from '@mantine/core';
 import LocalIcon from '@app/components/shared/LocalIcon';
 import { alert } from '@app/components/toast';
-import { teamService, Team } from '@proprietary/services/teamService';
+import { teamService, Team } from '@app/services/teamService';
 import { User, userManagementService } from '@app/services/userManagementService';
 import { Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
 

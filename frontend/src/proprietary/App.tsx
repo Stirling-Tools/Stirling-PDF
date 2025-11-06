@@ -6,7 +6,7 @@ import Landing from "@app/routes/Landing";
 import Login from "@app/routes/Login";
 import Signup from "@app/routes/Signup";
 import AuthCallback from "@app/routes/AuthCallback";
-import InviteAccept from "@proprietary/routes/InviteAccept";
+import InviteAccept from "@app/routes/InviteAccept";
 import OnboardingTour from "@app/components/onboarding/OnboardingTour";
 
 // Import global styles

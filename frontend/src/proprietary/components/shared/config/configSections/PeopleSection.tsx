@@ -25,7 +25,7 @@ import {
 import LocalIcon from '@app/components/shared/LocalIcon';
 import { alert } from '@app/components/toast';
 import { userManagementService, User } from '@app/services/userManagementService';
-import { teamService, Team } from '@proprietary/services/teamService';
+import { teamService, Team } from '@app/services/teamService';
 import { Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
 

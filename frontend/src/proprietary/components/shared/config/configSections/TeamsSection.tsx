@@ -18,10 +18,10 @@ import {
 } from '@mantine/core';
 import LocalIcon from '@app/components/shared/LocalIcon';
 import { alert } from '@app/components/toast';
-import { teamService, Team } from '@proprietary/services/teamService';
+import { teamService, Team } from '@app/services/teamService';
 import { userManagementService, User } from '@app/services/userManagementService';
 import { Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
-import TeamDetailsSection from '@proprietary/components/shared/config/configSections/TeamDetailsSection';
+import TeamDetailsSection from '@app/components/shared/config/configSections/TeamDetailsSection';
 
 export default function TeamsSection() {
   const { t } = useTranslation();
