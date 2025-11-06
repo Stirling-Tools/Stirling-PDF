@@ -115,10 +115,19 @@ export const useOCROperation = () => {
   const ocrConfig: ToolOperationConfig<OCRParameters> = {
     ...ocrOperationConfig,
     responseHandler,
-    getErrorMessage: (error) =>
-      error.message?.includes('OCR tools') && error.message?.includes('not installed')
-        ? 'OCR tools (OCRmyPDF or Tesseract) are not installed on the server. Use the standard or fat Docker image instead of ultra-lite, or install OCR tools manually.'
-        : createStandardErrorHandler(t('ocr.error.failed', 'OCR operation failed'))(error),
+    getErrorMessage: (error: unknown) => {
+      const message = error instanceof Error
+        ? error.message
+        : (typeof error === 'object' && error !== null && 'message' in error && typeof (error as { message?: unknown }).message === 'string'
+            ? (error as { message: string }).message
+            : undefined);
+
+      if (message && message.includes('OCR tools') && message.includes('not installed')) {
+        return 'OCR tools (OCRmyPDF or Tesseract) are not installed on the server. Use the standard or fat Docker image instead of ultra-lite, or install OCR tools manually.';
+      }
+
+      return createStandardErrorHandler(t('ocr.error.failed', 'OCR operation failed'))(error);
+    },
   };
 
   return useToolOperation(ocrConfig);

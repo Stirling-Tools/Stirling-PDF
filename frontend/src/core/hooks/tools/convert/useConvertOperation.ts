@@ -172,12 +172,21 @@ export const useConvertOperation = () => {
   return useToolOperation<ConvertParameters>({
     ...convertOperationConfig,
     customProcessor: customConvertProcessor, // Use instance-specific processor for translation support
-    getErrorMessage: (error) => {
-      if (error.response?.data && typeof error.response.data === 'string') {
-        return error.response.data;
+    getErrorMessage: (error: unknown) => {
+      const response = (typeof error === 'object' && error !== null && 'response' in error)
+        ? (error as { response?: { data?: unknown } }).response
+        : undefined;
+      if (typeof response?.data === 'string') {
+        return response.data;
       }
-      if (error.message) {
+      if (error instanceof Error && error.message) {
         return error.message;
+      }
+      if (typeof error === 'object' && error !== null && 'message' in error) {
+        const potentialMessage = (error as { message?: unknown }).message;
+        if (typeof potentialMessage === 'string') {
+          return potentialMessage;
+        }
       }
       return t("convert.errorConversion", "An error occurred while converting the file.");
     },
