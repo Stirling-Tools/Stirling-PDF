@@ -4,12 +4,12 @@
     "paths": {
       "@app/*": [
         "src/core/*"
-      ],
-      "@core/*": ["src/core/*"]
+      ]
     }
   },
   "exclude": [
     "src/proprietary",
+    "src/desktop",
     "node_modules"
   ]
 }

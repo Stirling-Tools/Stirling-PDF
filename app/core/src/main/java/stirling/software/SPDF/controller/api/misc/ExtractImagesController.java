@@ -29,7 +29,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
 
-import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 
 import lombok.RequiredArgsConstructor;
@@ -41,6 +40,7 @@ import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
+import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.ImageProcessingUtils;
 import stirling.software.common.util.WebResponseUtils;
 
@@ -51,7 +51,7 @@ public class ExtractImagesController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/extract-images")
+    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/extract-images")
     @MultiFileResponse
     @Operation(
             summary = "Extract images from a PDF file",
@@ -78,9 +78,7 @@ public class ExtractImagesController {
         // Set compression level
         zos.setLevel(Deflater.BEST_COMPRESSION);
 
-        String filename =
-                Filenames.toSimpleFileName(file.getOriginalFilename())
-                        .replaceFirst("[.][^.]+$", "");
+        String filename = GeneralUtils.removeExtension(file.getOriginalFilename());
         Set<byte[]> processedImages = new HashSet<>();
 
         if (useMultithreading) {

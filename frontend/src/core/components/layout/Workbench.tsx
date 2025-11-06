@@ -1,3 +1,4 @@
+import React from 'react';
 import { Box } from '@mantine/core';
 import { useRainbowThemeContext } from '@app/components/shared/RainbowThemeProvider';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
@@ -7,7 +8,7 @@ import { useNavigationState, useNavigationActions } from '@app/contexts/Navigati
 import { isBaseWorkbench } from '@app/types/workbench';
 import { useViewer } from '@app/contexts/ViewerContext';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
-import '@app/components/layout/Workbench.css';
+import styles from '@app/components/layout/Workbench.module.css';
 
 import TopControls from '@app/components/shared/TopControls';
 import FileEditor from '@app/components/fileEditor/FileEditor';
@@ -186,7 +187,7 @@ export default function Workbench() {
 
       {/* Main content area */}
       <Box
-        className="flex-1 min-h-0 relative z-10 workbench-scrollable "
+        className={`flex-1 min-h-0 relative z-10 ${styles.workbenchScrollable}`}
         style={{
           transition: 'opacity 0.15s ease-in-out',
           paddingTop: currentView === 'viewer' ? '0' : (activeFiles.length > 0 ? '3.5rem' : '0'),
@@ -196,7 +197,7 @@ export default function Workbench() {
       </Box>
 
       <Footer
-        analyticsEnabled={config?.enableAnalytics === true}
+        analyticsEnabled={config?.enableAnalytics ?? undefined}
         termsAndConditions={config?.termsAndConditions}
         privacyPolicy={config?.privacyPolicy}
         cookiePolicy={config?.cookiePolicy}

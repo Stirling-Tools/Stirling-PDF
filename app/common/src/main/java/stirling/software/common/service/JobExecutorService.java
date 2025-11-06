@@ -22,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.job.JobResponse;
 import stirling.software.common.util.ExecutorFactory;
+import stirling.software.common.util.RegexPatternUtils;
 
 /** Service for executing jobs asynchronously or synchronously */
 @Service
@@ -227,7 +228,8 @@ public class JobExecutorService {
             if (result instanceof byte[]) {
                 // Store byte array directly to disk to avoid double memory consumption
                 String fileId = fileStorage.storeBytes((byte[]) result, "result.pdf");
-                taskManager.setFileResult(jobId, fileId, "result.pdf", "application/pdf");
+                taskManager.setFileResult(
+                        jobId, fileId, "result.pdf", MediaType.APPLICATION_PDF_VALUE);
                 log.debug("Stored byte[] result with fileId: {}", fileId);
 
                 // Let the byte array get collected naturally in the next GC cycle
@@ -239,7 +241,7 @@ public class JobExecutorService {
                 if (body instanceof byte[]) {
                     // Extract filename from content-disposition header if available
                     String filename = "result.pdf";
-                    String contentType = "application/pdf";
+                    String contentType = MediaType.APPLICATION_PDF_VALUE;
 
                     if (response.getHeaders().getContentDisposition() != null) {
                         String disposition =
@@ -252,8 +254,10 @@ public class JobExecutorService {
                         }
                     }
 
-                    if (response.getHeaders().getContentType() != null) {
-                        contentType = response.getHeaders().getContentType().toString();
+                    MediaType mediaType = response.getHeaders().getContentType();
+
+                    if (mediaType != null) {
+                        contentType = mediaType.toString();
                     }
 
                     // Store byte array directly to disk
@@ -274,7 +278,7 @@ public class JobExecutorService {
                             if (fileId != null && !fileId.isEmpty()) {
                                 // Try to get filename and content type
                                 String filename = "result.pdf";
-                                String contentType = "application/pdf";
+                                String contentType = MediaType.APPLICATION_PDF_VALUE;
 
                                 try {
                                     java.lang.reflect.Method getOriginalFileName =
@@ -315,8 +319,7 @@ public class JobExecutorService {
                     // Store generic result
                     taskManager.setResult(jobId, body);
                 }
-            } else if (result instanceof MultipartFile) {
-                MultipartFile file = (MultipartFile) result;
+            } else if (result instanceof MultipartFile file) {
                 String fileId = fileStorage.storeFile(file);
                 taskManager.setFileResult(
                         jobId, fileId, file.getOriginalFilename(), file.getContentType());
@@ -333,7 +336,7 @@ public class JobExecutorService {
                         if (fileId != null && !fileId.isEmpty()) {
                             // Try to get filename and content type
                             String filename = "result.pdf";
-                            String contentType = "application/pdf";
+                            String contentType = MediaType.APPLICATION_PDF_VALUE;
 
                             try {
                                 java.lang.reflect.Method getOriginalFileName =
@@ -396,9 +399,8 @@ public class JobExecutorService {
                             HttpHeaders.CONTENT_DISPOSITION,
                             "form-data; name=\"attachment\"; filename=\"result.pdf\"")
                     .body(result);
-        } else if (result instanceof MultipartFile) {
+        } else if (result instanceof MultipartFile file) {
             // Return MultipartFile content
-            MultipartFile file = (MultipartFile) result;
             return ResponseEntity.ok()
                     .contentType(MediaType.parseMediaType(file.getContentType()))
                     .header(
@@ -425,8 +427,16 @@ public class JobExecutorService {
         }
 
         try {
-            String value = timeout.replaceAll("[^\\d.]", "");
-            String unit = timeout.replaceAll("[\\d.]", "");
+            String value =
+                    RegexPatternUtils.getInstance()
+                            .getNonDigitDotPattern()
+                            .matcher(timeout)
+                            .replaceAll("");
+            String unit =
+                    RegexPatternUtils.getInstance()
+                            .getDigitDotPattern()
+                            .matcher(timeout)
+                            .replaceAll("");
 
             double numericValue = Double.parseDouble(value);
 
