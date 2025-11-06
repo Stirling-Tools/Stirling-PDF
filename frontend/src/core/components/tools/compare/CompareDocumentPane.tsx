@@ -203,8 +203,12 @@ const CompareDocumentPane = ({
                       if (!dragRef.current.active || dragRef.current.page !== page.pageNumber) return;
                       const dx = e.clientX - dragRef.current.startX;
                       const dy = e.clientY - dragRef.current.startY;
-                      const maxX = Math.max(0, Math.round(baseWidth * innerScale - containerWidth));
-                      const maxY = Math.max(0, Math.round(baseHeight * innerScale - containerHeight));
+                      // Clamp panning based on the actual rendered content size.
+                      // The inner layer is width/height of the container, then scaled by innerScale.
+                      const contentWidth = Math.max(0, Math.round(containerWidth * innerScale));
+                      const contentHeight = Math.max(0, Math.round(containerHeight * innerScale));
+                      const maxX = Math.max(0, contentWidth - Math.round(containerWidth));
+                      const maxY = Math.max(0, contentHeight - Math.round(containerHeight));
                       const candX = dragRef.current.startPanX - dx;
                       const candY = dragRef.current.startPanY - dy;
                       const next = { x: Math.max(0, Math.min(maxX, candX)), y: Math.max(0, Math.min(maxY, candY)) };

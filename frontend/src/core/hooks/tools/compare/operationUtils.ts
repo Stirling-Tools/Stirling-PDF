@@ -259,9 +259,9 @@ export const createSummaryFile = (result: CompareResultData): File => {
 
 export const clamp = (value: number): number => Math.min(1, Math.max(0, value));
 
-export const getWorkerErrorCode = (value: unknown): 'EMPTY_TEXT' | 'TOO_LARGE' | undefined => {
+export const getWorkerErrorCode = (value: unknown): 'EMPTY_TEXT' | 'TOO_LARGE' | 'TOO_DISSIMILAR' | undefined => {
   if (typeof value === 'object' && value !== null && 'code' in value) {
-    const potentialCode = (value as { code?: 'EMPTY_TEXT' | 'TOO_LARGE' }).code;
+    const potentialCode = (value as { code?: 'EMPTY_TEXT' | 'TOO_LARGE' | 'TOO_DISSIMILAR' }).code;
     return potentialCode;
   }
   return undefined;

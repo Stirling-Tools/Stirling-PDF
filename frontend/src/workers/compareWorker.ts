@@ -12,6 +12,18 @@ const DEFAULT_SETTINGS = {
   batchSize: 5000,
   complexThreshold: 25000,
   maxWordThreshold: 60000,
+  // Early stop configuration
+  earlyStopEnabled: true,
+  // Jaccard thresholds for quick prefilter (unigram/bigram)
+  minJaccardUnigram: 0.005,
+  minJaccardBigram: 0.003,
+  // Only consider early stop when docs are reasonably large
+  minTokensForEarlyStop: 20000,
+  // Sampling cap for similarity estimation
+  sampleLimit: 50000,
+  // Runtime stop-loss during chunked diff
+  runtimeMaxProcessedTokens: 150000,
+  runtimeMinUnchangedRatio: 0.001,
 };
 
 const buildMatrix = (words1: string[], words2: string[]) => {
@@ -87,7 +99,8 @@ const chunkedDiff = (
   words1: string[],
   words2: string[],
   chunkSize: number,
-  emit: (tokens: CompareDiffToken[]) => void
+  emit: (tokens: CompareDiffToken[]) => void,
+  runtimeStop?: { maxProcessedTokens: number; minUnchangedRatio: number }
 ) => {
   if (words1.length === 0 && words2.length === 0) {
     return;
@@ -123,6 +136,12 @@ const chunkedDiff = (
   let index2 = 0;
   let buffer1: string[] = [];
   let buffer2: string[] = [];
+  let totalProcessedBase = 0;
+  let totalProcessedComp = 0;
+  let totalUnchanged = 0;
+
+  const countUnchanged = (segment: CompareDiffToken[]) =>
+    segment.reduce((acc, token) => acc + (token.type === 'unchanged' ? 1 : 0), 0);
 
   const flushRemainder = () => {
     if (buffer1.length === 0 && buffer2.length === 0) {
@@ -233,6 +252,24 @@ const chunkedDiff = (
 
     buffer1 = window1.slice(baseConsumed);
     buffer2 = window2.slice(comparisonConsumed);
+    // Update runtime counters and early stop if necessary
+    totalProcessedBase += baseConsumed;
+    totalProcessedComp += comparisonConsumed;
+    totalUnchanged += countUnchanged(commitTokens);
+
+    if (runtimeStop) {
+      const processedTotal = totalProcessedBase + totalProcessedComp;
+      if (processedTotal >= runtimeStop.maxProcessedTokens) {
+        const unchangedRatio = totalUnchanged / Math.max(1, processedTotal);
+        if (unchangedRatio < runtimeStop.minUnchangedRatio) {
+          // Signal early termination for extreme dissimilarity
+          const err = new Error('EARLY_STOP_TOO_DISSIMILAR');
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (err as any).__earlyStop = true;
+          throw err;
+        }
+      }
+    }
 
     if (reachedEnd) {
       flushRemainder();
@@ -264,6 +301,40 @@ const chunkedDiff = (
   flushRemainder();
 };
 
+// Fast similarity estimation using sampled unigrams and bigrams with Jaccard
+const buildSampledSet = (tokens: string[], sampleLimit: number, ngram: 1 | 2): Set<string> => {
+  const result = new Set<string>();
+  if (tokens.length === 0) return result;
+  const stride = Math.max(1, Math.ceil(tokens.length / sampleLimit));
+  if (ngram === 1) {
+    for (let i = 0; i < tokens.length; i += stride) {
+      const t = tokens[i];
+      if (t) result.add(t);
+    }
+    return result;
+  }
+  // ngram === 2
+  for (let i = 0; i + 1 < tokens.length; i += stride) {
+    const a = tokens[i];
+    const b = tokens[i + 1];
+    if (a && b) result.add(`${a}|${b}`);
+  }
+  return result;
+};
+
+const jaccard = (a: Set<string>, b: Set<string>): number => {
+  if (a.size === 0 && b.size === 0) return 1;
+  if (a.size === 0 || b.size === 0) return 0;
+  let intersection = 0;
+  const smaller = a.size <= b.size ? a : b;
+  const larger = a.size <= b.size ? b : a;
+  for (const v of smaller) {
+    if (larger.has(v)) intersection += 1;
+  }
+  const union = a.size + b.size - intersection;
+  return union > 0 ? intersection / union : 0;
+};
+
 self.onmessage = (event: MessageEvent<CompareWorkerRequest>) => {
   const { data } = event;
   if (!data || data.type !== 'compare') {
@@ -275,6 +346,13 @@ self.onmessage = (event: MessageEvent<CompareWorkerRequest>) => {
     batchSize = DEFAULT_SETTINGS.batchSize,
     complexThreshold = DEFAULT_SETTINGS.complexThreshold,
     maxWordThreshold = DEFAULT_SETTINGS.maxWordThreshold,
+    earlyStopEnabled = DEFAULT_SETTINGS.earlyStopEnabled,
+    minJaccardUnigram = DEFAULT_SETTINGS.minJaccardUnigram,
+    minJaccardBigram = DEFAULT_SETTINGS.minJaccardBigram,
+    minTokensForEarlyStop = DEFAULT_SETTINGS.minTokensForEarlyStop,
+    sampleLimit = DEFAULT_SETTINGS.sampleLimit,
+    runtimeMaxProcessedTokens = DEFAULT_SETTINGS.runtimeMaxProcessedTokens,
+    runtimeMinUnchangedRatio = DEFAULT_SETTINGS.runtimeMinUnchangedRatio,
   } = settings ?? {};
 
   if (!baseTokens || !comparisonTokens || baseTokens.length === 0 || comparisonTokens.length === 0) {
@@ -306,22 +384,61 @@ self.onmessage = (event: MessageEvent<CompareWorkerRequest>) => {
     self.postMessage(warningResponse);
   }
 
-  const start = performance.now();
-  chunkedDiff(
-    baseTokens,
-    comparisonTokens,
-    batchSize,
-    (tokens) => {
-      if (tokens.length === 0) {
-        return;
-      }
+  // Quick prefilter to avoid heavy diff on extremely dissimilar large docs
+  if (earlyStopEnabled && Math.min(baseTokens.length, comparisonTokens.length) >= minTokensForEarlyStop) {
+    const set1u = buildSampledSet(baseTokens, sampleLimit, 1);
+    const set2u = buildSampledSet(comparisonTokens, sampleLimit, 1);
+    const jUni = jaccard(set1u, set2u);
+    const set1b = buildSampledSet(baseTokens, sampleLimit, 2);
+    const set2b = buildSampledSet(comparisonTokens, sampleLimit, 2);
+    const jBi = jaccard(set1b, set2b);
+    if (jUni < minJaccardUnigram && jBi < minJaccardBigram) {
       const response: CompareWorkerResponse = {
-        type: 'chunk',
-        tokens,
+        type: 'error',
+        message:
+          warnings.tooDissimilarMessage ??
+          'These documents appear highly dissimilar. Comparison was stopped to save time.',
+        code: 'TOO_DISSIMILAR',
       };
       self.postMessage(response);
+      return;
     }
-  );
+  }
+
+  const start = performance.now();
+  try {
+    chunkedDiff(
+      baseTokens,
+      comparisonTokens,
+      batchSize,
+      (tokens) => {
+        if (tokens.length === 0) {
+          return;
+        }
+        const response: CompareWorkerResponse = {
+          type: 'chunk',
+          tokens,
+        };
+        self.postMessage(response);
+      },
+      { maxProcessedTokens: runtimeMaxProcessedTokens, minUnchangedRatio: runtimeMinUnchangedRatio }
+    );
+  } catch (err) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const anyErr = err as any;
+    if (anyErr && (anyErr.__earlyStop || anyErr?.message === 'EARLY_STOP_TOO_DISSIMILAR')) {
+      const response: CompareWorkerResponse = {
+        type: 'error',
+        message:
+          warnings.tooDissimilarMessage ??
+          'These documents appear highly dissimilar. Comparison was stopped to save time.',
+        code: 'TOO_DISSIMILAR',
+      };
+      self.postMessage(response);
+      return;
+    }
+    throw err;
+  }
   const durationMs = performance.now() - start;
 
   const response: CompareWorkerResponse = {

@@ -36,7 +36,7 @@ export interface CompareOperationHook extends ToolOperationHook<CompareParameter
 
 export const useCompareOperation = (): CompareOperationHook => {
   const { t } = useTranslation();
-  const { selectors } = useFileContext();
+  const { selectors, actions: fileActions } = useFileContext();
   const workerRef = useRef<Worker | null>(null);
   const previousUrl = useRef<string | null>(null);
   const activeRunIdRef = useRef(0);
@@ -53,6 +53,8 @@ export const useCompareOperation = (): CompareOperationHook => {
   const [result, setResult] = useState<CompareResultData | null>(null);
   const [warnings, setWarnings] = useState<string[]>([]);
   const longRunningToastIdRef = useRef<string | null>(null);
+  const dissimilarityToastIdRef = useRef<string | null>(null);
+  const dissimilarityToastShownRef = useRef<boolean>(false);
 
   const ensureWorker = useCallback(() => {
     if (!workerRef.current) {
@@ -139,7 +141,7 @@ export const useCompareOperation = (): CompareOperationHook => {
                 dismissToast(longRunningToastIdRef.current);
                 longRunningToastIdRef.current = null;
               }
-              const error: Error & { code?: 'EMPTY_TEXT' | 'TOO_LARGE' } = new Error(message.message);
+              const error: Error & { code?: 'EMPTY_TEXT' | 'TOO_LARGE' | 'TOO_DISSIMILAR' } = new Error(message.message);
               error.code = message.code;
               reject(error);
               break;
@@ -228,6 +230,10 @@ export const useCompareOperation = (): CompareOperationHook => {
           'compare.no.text.message',
           'One or both of the selected PDFs have no text content. Please choose PDFs with text for comparison.'
         ),
+        tooDissimilarMessage: t(
+          'compare.too.dissimilar.message',
+          'These documents appear highly dissimilar. Comparison was stopped to save time.'
+        ),
       };
 
       const operationStart = performance.now();
@@ -271,10 +277,57 @@ export const useCompareOperation = (): CompareOperationHook => {
           longRunningToastIdRef.current = toastId || null;
         }
 
+        // Heuristic: surface an early warning toast when we observe a very high ratio of differences
+        const EARLY_TOAST_MIN_TOKENS = 15000; // wait for some signal before warning
+        const EARLY_TOAST_DIFF_RATIO = 0.8;   // 80% added/removed vs unchanged
+        let observedAddedRemoved = 0;
+        let observedUnchanged = 0;
+
+        const handleEarlyDissimilarity = () => {
+          if (dissimilarityToastShownRef.current || dissimilarityToastIdRef.current) return;
+          const toastId = alert({
+            alertType: 'warning',
+            title: t('compare.earlyDissimilarity.title', 'These PDFs look highly different'),
+            body: t(
+              'compare.earlyDissimilarity.body',
+              "We're seeing very few similarities so far. You can stop the comparison if these aren't related documents."
+            ),
+            location: 'bottom-right' as ToastLocation,
+            isPersistentPopup: true,
+            expandable: false,
+            buttonText: t('compare.earlyDissimilarity.stopButton', 'Stop comparison'),
+            buttonCallback: () => {
+              try { cancelOperation(); } catch {}
+              try { window.dispatchEvent(new CustomEvent('compare:clear-selected')); } catch {}
+              if (dissimilarityToastIdRef.current) {
+                dismissToast(dissimilarityToastIdRef.current);
+                dissimilarityToastIdRef.current = null;
+              }
+            },
+          });
+          dissimilarityToastIdRef.current = toastId || null;
+          dissimilarityToastShownRef.current = true;
+        };
+
         const { tokens, stats, warnings: workerWarnings } = await runCompareWorker(
           baseFiltered.tokens,
           comparisonFiltered.tokens,
-          warningMessages
+          warningMessages,
+          (chunk) => {
+            // Incremental ratio tracking for early warning
+            for (const tok of chunk) {
+              if (tok.type === 'unchanged') observedUnchanged += 1;
+              else observedAddedRemoved += 1;
+            }
+            const seen = observedAddedRemoved + observedUnchanged;
+            if (
+              !dissimilarityToastShownRef.current &&
+              seen >= EARLY_TOAST_MIN_TOKENS &&
+              observedAddedRemoved / Math.max(1, seen) >= EARLY_TOAST_DIFF_RATIO
+            ) {
+              handleEarlyDissimilarity();
+            }
+          }
         );
 
         if (cancelledRef.current || activeRunIdRef.current !== runId) return;
@@ -409,6 +462,11 @@ export const useCompareOperation = (): CompareOperationHook => {
           dismissToast(longRunningToastIdRef.current);
           longRunningToastIdRef.current = null;
         }
+        if (dissimilarityToastIdRef.current) {
+          dismissToast(dissimilarityToastIdRef.current);
+          dissimilarityToastIdRef.current = null;
+        }
+        dissimilarityToastShownRef.current = false;
       }
     },
     [cleanupDownloadUrl, runCompareWorker, selectors, t]

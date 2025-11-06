@@ -53,6 +53,25 @@ const Compare = (props: BaseToolProps) => {
   const compareIcon = useMemo(() => <CompareRoundedIcon fontSize="small" />, []);
   const [swapConfirmOpen, setSwapConfirmOpen] = useState(false);
   const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
+  const performClearSelected = useCallback(() => {
+    try { base.operation.cancelOperation(); } catch { console.error('Failed to cancel operation'); }
+    try { base.operation.resetResults(); } catch { console.error('Failed to reset results'); }
+    base.params.setParameters(prev => ({ ...prev, baseFileId: null, comparisonFileId: null }));
+    try { fileActions.clearSelections(); } catch { console.error('Failed to clear selections'); }
+    clearCustomWorkbenchViewData(CUSTOM_VIEW_ID);
+    navigationActions.setWorkbench(getDefaultWorkbench());
+  }, [base.operation, base.params, clearCustomWorkbenchViewData, fileActions, navigationActions]);
+
+  useEffect(() => {
+    const handler = () => {
+      performClearSelected();
+    };
+    window.addEventListener('compare:clear-selected', handler as unknown as EventListener);
+    return () => {
+      window.removeEventListener('compare:clear-selected', handler as unknown as EventListener);
+    };
+  }, [performClearSelected]);
+
 
   useEffect(() => {
     registerCustomWorkbenchView({
@@ -500,12 +519,7 @@ const Compare = (props: BaseToolProps) => {
                     variant="filled"
                     onClick={() => {
                       setClearConfirmOpen(false);
-                      try { base.operation.cancelOperation(); } catch {console.error('Failed to cancel operation');}
-                      try { base.operation.resetResults(); } catch {console.error('Failed to reset results');}
-                      base.params.setParameters(prev => ({ ...prev, baseFileId: null, comparisonFileId: null }));
-                      try { fileActions.clearSelections(); } catch {console.error('Failed to clear selections');}
-                      clearCustomWorkbenchViewData(CUSTOM_VIEW_ID);
-                      navigationActions.setWorkbench(getDefaultWorkbench());
+                      performClearSelected();
                     }}
                   >
                     {t('compare.clear.confirm', 'Clear and return')}

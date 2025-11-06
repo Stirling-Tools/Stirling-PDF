@@ -98,6 +98,7 @@ export interface CompareWorkerWarnings {
   complexMessage?: string;
   tooLargeMessage?: string;
   emptyTextMessage?: string;
+  tooDissimilarMessage?: string;
 }
 
 export interface CompareWorkerRequest {
@@ -110,6 +111,14 @@ export interface CompareWorkerRequest {
       batchSize?: number;
       complexThreshold?: number;
       maxWordThreshold?: number;
+      // Early-stop and runtime controls (optional)
+      earlyStopEnabled?: boolean;
+      minJaccardUnigram?: number;
+      minJaccardBigram?: number;
+      minTokensForEarlyStop?: number;
+      sampleLimit?: number;
+      runtimeMaxProcessedTokens?: number;
+      runtimeMinUnchangedRatio?: number;
     };
   };
 }
@@ -134,7 +143,7 @@ export type CompareWorkerResponse =
   | {
       type: 'error';
       message: string;
-      code?: 'EMPTY_TEXT' | 'TOO_LARGE';
+      code?: 'EMPTY_TEXT' | 'TOO_LARGE' | 'TOO_DISSIMILAR';
     };
 
 export interface CompareDocumentPaneProps {

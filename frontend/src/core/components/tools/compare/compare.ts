@@ -107,9 +107,39 @@ export const computePageLayoutMetrics = (args: {
   const baseWidth = isStackedPortrait ? stackedWidth : Math.round(page.width * fit);
   const baseHeight = isStackedPortrait ? stackedHeight : Math.round(targetHeight);
   const containerMaxW = scrollRefWidth ?? viewportWidth;
-  const containerWidth = Math.min(baseWidth, Math.max(120, containerMaxW));
-  const containerHeight = Math.round(baseHeight * (containerWidth / baseWidth));
-  const innerScale = Math.max(1, zoom);
+
+  // Container-first zooming with a stable baseline:
+  // Treat zoom=1 as "fit to available width" for the page's base size so
+  // the initial render is fully visible and centered (no cropping), regardless
+  // of rotation or pane/container width. When zoom < 1, shrink the container;
+  // when zoom > 1, keep the container at fit width and scale inner content.
+  const MIN_CONTAINER_WIDTH = 120;
+  const minScaleByWidth = MIN_CONTAINER_WIDTH / Math.max(1, baseWidth);
+  const fitScaleByContainer = containerMaxW / Math.max(1, baseWidth);
+  // Effective baseline scale used at zoom=1 (ensures at least the min width)
+  const baselineContainerScale = Math.max(minScaleByWidth, fitScaleByContainer);
+  // Lower bound the zoom so interactions remain stable
+  const desiredZoom = Math.max(0.1, zoom);
+
+  let containerScale: number;
+  let innerScale: number;
+  if (desiredZoom >= 1) {
+    // At or above baseline: keep container at fit width and scale inner content
+    containerScale = baselineContainerScale;
+    innerScale = +Math.max(0.1, desiredZoom).toFixed(4);
+  } else {
+    // Below baseline: shrink container proportionally, do not upscale inner
+    const scaled = baselineContainerScale * desiredZoom;
+    // Never smaller than minimum readable width
+    containerScale = Math.max(minScaleByWidth, scaled);
+    innerScale = 1;
+  }
+
+  const containerWidth = Math.max(
+    MIN_CONTAINER_WIDTH,
+    Math.min(containerMaxW, Math.round(baseWidth * containerScale))
+  );
+  const containerHeight = Math.round(baseHeight * (containerWidth / Math.max(1, baseWidth)));
 
   return {
     targetHeight,
