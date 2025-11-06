@@ -191,8 +191,7 @@ public class FormUtils {
                         value = safeDefault(info.value());
                     }
                     break;
-                case FIELD_TYPE_BUTTON:
-                case FIELD_TYPE_SIGNATURE:
+                case FIELD_TYPE_BUTTON, FIELD_TYPE_SIGNATURE:
                     continue; // skip non-fillable
                 default:
                     value = safeDefault(info.value());
@@ -273,19 +272,6 @@ public class FormUtils {
 
         if (flatten) {
             flattenEntireDocument(document, acroForm);
-        }
-    }
-
-    private void flattenFormOnly(PDDocument document, PDAcroForm acroForm) throws IOException {
-        if (document == null || acroForm == null) {
-            return;
-        }
-
-        try {
-            acroForm.flatten();
-        } catch (Exception e) {
-            log.warn("Failed to flatten AcroForm: {}", e.getMessage(), e);
-            throw new IOException("Form flattening failed: " + e.getMessage(), e);
         }
     }
 
@@ -801,7 +787,7 @@ public class FormUtils {
                 } else if (normal.isStream()) {
                     COSName appearanceState = widget.getAppearanceState();
                     String state = appearanceState != null ? appearanceState.getName() : null;
-                    if (isSettableCheckBoxState(state) && state != null) {
+                    if (isSettableCheckBoxState(state)) {
                         states.add(state.trim());
                     }
                 }
@@ -1092,7 +1078,7 @@ public class FormUtils {
 
             try {
                 FormFieldTypeSupport handler = FormFieldTypeSupport.forTypeName(resolvedType);
-                if (handler == null || !handler.supportsDefinitionCreation()) {
+                if (handler == null || handler.doesNotsupportsDefinitionCreation()) {
                     handler = FormFieldTypeSupport.TEXT;
                 }
 
@@ -1428,7 +1414,7 @@ public class FormUtils {
             List<String> options)
             throws IOException {
 
-        if (!handler.supportsDefinitionCreation()) {
+        if (handler.doesNotsupportsDefinitionCreation()) {
             throw new IllegalArgumentException(
                     "Field type '" + handler.typeName() + "' cannot be created via definition");
         }

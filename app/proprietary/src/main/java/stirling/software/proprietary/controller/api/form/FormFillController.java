@@ -60,10 +60,10 @@ public class FormFillController {
         return withoutExtension + "_" + suffix;
     }
 
-    private static void requirePdf(MultipartFile file, String parameterName) {
+    private static void requirePdf(MultipartFile file) {
         if (file == null || file.isEmpty()) {
             throw ExceptionUtils.createIllegalArgumentException(
-                    "error.fileFormatRequired", "{0} must be in PDF format", parameterName);
+                    "error.fileFormatRequired", "{0} must be in PDF format", "file");
         }
     }
 
@@ -90,7 +90,7 @@ public class FormFillController {
                     MultipartFile file)
             throws IOException {
 
-        requirePdf(file, "file");
+        requirePdf(file);
         try (PDDocument document = pdfDocumentFactory.load(file, true)) {
             FormUtils.FormFieldExtraction extraction =
                     FormUtils.extractFieldsWithTemplate(document);
@@ -199,7 +199,7 @@ public class FormFillController {
 
     private ResponseEntity<byte[]> processSingleFile(
             MultipartFile file, String suffix, DocumentProcessor processor) throws IOException {
-        requirePdf(file, "file");
+        requirePdf(file);
 
         String baseName = buildBaseName(file, suffix);
         try (PDDocument document = pdfDocumentFactory.load(file)) {

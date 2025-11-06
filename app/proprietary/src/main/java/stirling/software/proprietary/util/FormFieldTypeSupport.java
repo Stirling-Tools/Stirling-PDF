@@ -48,8 +48,8 @@ public enum FormFieldTypeSupport {
         }
 
         @Override
-        boolean supportsDefinitionCreation() {
-            return true;
+        boolean doesNotsupportsDefinitionCreation() {
+            return false;
         }
 
         @Override
@@ -83,8 +83,8 @@ public enum FormFieldTypeSupport {
         }
 
         @Override
-        boolean supportsDefinitionCreation() {
-            return true;
+        boolean doesNotsupportsDefinitionCreation() {
+            return false;
         }
 
         @Override
@@ -108,7 +108,7 @@ public enum FormFieldTypeSupport {
             }
         }
 
-        private void ensureCheckBoxAppearance(PDCheckBox checkBox) {
+        private static void ensureCheckBoxAppearance(PDCheckBox checkBox) {
             try {
                 if (checkBox.getWidgets().isEmpty()) {
                     return;
@@ -178,8 +178,8 @@ public enum FormFieldTypeSupport {
         }
 
         @Override
-        boolean supportsDefinitionCreation() {
-            return true;
+        boolean doesNotsupportsDefinitionCreation() {
+            return false;
         }
 
         @Override
@@ -227,8 +227,8 @@ public enum FormFieldTypeSupport {
         }
 
         @Override
-        boolean supportsDefinitionCreation() {
-            return true;
+        boolean doesNotsupportsDefinitionCreation() {
+            return false;
         }
 
         @Override
@@ -354,8 +354,8 @@ public enum FormFieldTypeSupport {
         // default no-op
     }
 
-    boolean supportsDefinitionCreation() {
-        return false;
+    boolean doesNotsupportsDefinitionCreation() {
+        return true;
     }
 
     void applyNewFieldDefinition(
