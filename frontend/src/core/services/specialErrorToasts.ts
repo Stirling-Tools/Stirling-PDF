@@ -40,8 +40,10 @@ export function showSpecialErrorToast(rawError: string | undefined, options?: { 
       // Best-effort translation without hard dependency on i18n config
       let body = mapping.defaultMessage;
       try {
-        const anyGlobal: any = (globalThis as any);
-        const i18next = anyGlobal?.i18next;
+        const globalWithI18n = globalThis as typeof globalThis & {
+          i18next?: { t?: (key: string, options: { defaultValue: string }) => string };
+        };
+        const i18next = globalWithI18n?.i18next;
         if (i18next && typeof i18next.t === 'function') {
           body = i18next.t(mapping.i18nKey, { defaultValue: mapping.defaultMessage });
         }
@@ -53,5 +55,4 @@ export function showSpecialErrorToast(rawError: string | undefined, options?: { 
   }
   return false;
 }
-
 

@@ -131,7 +131,7 @@ export default function AdminGeneralSection() {
       }
 
       return {
-        sectionData: {},
+        sectionData: settings,
         deltaSettings
       };
     }

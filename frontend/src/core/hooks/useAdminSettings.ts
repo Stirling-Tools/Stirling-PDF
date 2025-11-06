@@ -1,8 +1,12 @@
 import { useState } from 'react';
 import apiClient from '@app/services/apiClient';
-import { mergePendingSettings, isFieldPending, hasPendingChanges } from '@app/utils/settingsPendingHelper';
+import { mergePendingSettings, isFieldPending, hasPendingChanges, SettingsWithPending } from '@app/utils/settingsPendingHelper';
 
-interface UseAdminSettingsOptions<T> {
+type SettingsRecord = Record<string, unknown>;
+type CombinedSettings<T extends object> = T & SettingsRecord;
+type PendingSettings<T extends object> = SettingsWithPending<CombinedSettings<T>> & CombinedSettings<T>;
+
+interface UseAdminSettingsOptions<T extends object> {
   sectionName: string;
   /**
    * Optional transformer to combine data from multiple endpoints.
@@ -14,14 +18,14 @@ interface UseAdminSettingsOptions<T> {
    * Returns an object with sectionData and optionally deltaSettings.
    */
   saveTransformer?: (settings: T) => {
-    sectionData: any;
-    deltaSettings?: Record<string, any>;
+    sectionData: T;
+    deltaSettings?: SettingsRecord;
   };
 }
 
-interface UseAdminSettingsReturn<T> {
+interface UseAdminSettingsReturn<T extends object> {
   settings: T;
-  rawSettings: any;
+  rawSettings: PendingSettings<T> | null;
   loading: boolean;
   saving: boolean;
   setSettings: (settings: T) => void;
@@ -39,14 +43,14 @@ interface UseAdminSettingsReturn<T> {
  * const { settings, setSettings, saveSettings, isFieldPending } = useAdminSettings({
  *   sectionName: 'legal'
  * });
- */
-export function useAdminSettings<T = any>(
+*/
+export function useAdminSettings<T extends object>(
   options: UseAdminSettingsOptions<T>
 ): UseAdminSettingsReturn<T> {
   const { sectionName, fetchTransformer, saveTransformer } = options;
 
   const [settings, setSettings] = useState<T>({} as T);
-  const [rawSettings, setRawSettings] = useState<any>(null);
+  const [rawSettings, setRawSettings] = useState<PendingSettings<T> | null>(null);
   const [originalSettings, setOriginalSettings] = useState<T>({} as T); // Track original active values
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -55,15 +59,15 @@ export function useAdminSettings<T = any>(
     try {
       setLoading(true);
 
-      let rawData: any;
+      let rawData: PendingSettings<T>;
 
       if (fetchTransformer) {
         // Use custom fetch logic for complex sections
-        rawData = await fetchTransformer();
+        rawData = (await fetchTransformer()) as PendingSettings<T>;
       } else {
         // Simple single-endpoint fetch
         const response = await apiClient.get(`/api/v1/admin/settings/section/${sectionName}`);
-        rawData = response.data || {};
+        rawData = (response.data || {}) as PendingSettings<T>;
       }
 
       console.log(`[useAdminSettings:${sectionName}] Raw response:`, JSON.stringify(rawData, null, 2));
@@ -77,7 +81,7 @@ export function useAdminSettings<T = any>(
       console.log(`[useAdminSettings:${sectionName}] Original active settings:`, JSON.stringify(activeOnly, null, 2));
 
       // Merge pending changes into settings for display
-      const mergedSettings = mergePendingSettings(rawData);
+      const mergedSettings = mergePendingSettings(rawData) as unknown as CombinedSettings<T>;
       console.log(`[useAdminSettings:${sectionName}] Merged settings:`, JSON.stringify(mergedSettings, null, 2));
 
       setSettings(mergedSettings as T);
@@ -94,7 +98,10 @@ export function useAdminSettings<T = any>(
       setSaving(true);
 
       // Compute delta: only include fields that changed from original
-      const delta = computeDelta(originalSettings, settings);
+      const delta = computeDelta(
+        originalSettings as SettingsRecord,
+        settings as SettingsRecord
+      );
       console.log(`[useAdminSettings:${sectionName}] Delta (changed fields):`, JSON.stringify(delta, null, 2));
 
       if (Object.keys(delta).length === 0) {
@@ -107,7 +114,10 @@ export function useAdminSettings<T = any>(
         const { sectionData, deltaSettings } = saveTransformer(settings);
 
         // Save section data (with delta applied)
-        const sectionDelta = computeDelta(originalSettings, sectionData);
+        const sectionDelta = computeDelta(
+          originalSettings as SettingsRecord,
+          sectionData as unknown as SettingsRecord
+        );
         if (Object.keys(sectionDelta).length > 0) {
           await apiClient.put(`/api/v1/admin/settings/section/${sectionName}`, sectionDelta);
         }
@@ -148,8 +158,8 @@ export function useAdminSettings<T = any>(
  * Compute delta between original and current settings.
  * Returns only fields that have changed.
  */
-function computeDelta(original: any, current: any): any {
-  const delta: any = {};
+function computeDelta(original: SettingsRecord, current: SettingsRecord): SettingsRecord {
+  const delta: SettingsRecord = {};
 
   for (const key in current) {
     if (!Object.prototype.hasOwnProperty.call(current, key)) continue;
@@ -182,7 +192,7 @@ function computeDelta(original: any, current: any): any {
 /**
  * Check if value is a plain object (not array, not null, not Date, etc.)
  */
-function isPlainObject(value: any): boolean {
+function isPlainObject(value: unknown): value is SettingsRecord {
   return (
     value !== null &&
     typeof value === 'object' &&

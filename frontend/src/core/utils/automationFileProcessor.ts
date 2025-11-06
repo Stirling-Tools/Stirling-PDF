@@ -18,6 +18,8 @@ export interface AutomationProcessingResult {
   errors: string[];
 }
 
+export type AutomationFormParameters = Record<string, unknown>;
+
 export class AutomationFileProcessor {
   /**
    * Check if a blob is a ZIP file by examining its header
@@ -121,11 +123,11 @@ export class AutomationFileProcessor {
         files: [resultFile],
         errors: []
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         success: false,
         files: [],
-        errors: [`Automation step failed: ${error.response?.data || error.message}`]
+        errors: [`Automation step failed: ${AutomationFileProcessor.formatError(error)}`]
       };
     }
   }
@@ -154,11 +156,11 @@ export class AutomationFileProcessor {
 
       // Multi-file responses are typically ZIP files
       return await this.extractAutomationZipFiles(response.data);
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         success: false,
         files: [],
-        errors: [`Automation step failed: ${error.response?.data || error.message}`]
+        errors: [`Automation step failed: ${AutomationFileProcessor.formatError(error)}`]
       };
     }
   }
@@ -167,7 +169,7 @@ export class AutomationFileProcessor {
    * Build form data for automation tool operations
    */
   static buildAutomationFormData(
-    parameters: Record<string, any>,
+    parameters: AutomationFormParameters,
     files: File | File[],
     fileFieldName: string = 'fileInput'
   ): FormData {
@@ -183,12 +185,51 @@ export class AutomationFileProcessor {
     // Add parameters
     Object.entries(parameters).forEach(([key, value]) => {
       if (Array.isArray(value)) {
-        value.forEach(item => formData.append(key, item));
+        value.forEach(item => {
+          if (item !== undefined && item !== null) {
+            formData.append(key, AutomationFileProcessor.normalizeFormValue(item));
+          }
+        });
       } else if (value !== undefined && value !== null) {
-        formData.append(key, value);
+        formData.append(key, AutomationFileProcessor.normalizeFormValue(value));
       }
     });
 
     return formData;
+  }
+
+  private static normalizeFormValue(value: unknown): string | Blob {
+    if (value instanceof Blob || value instanceof File) {
+      return value;
+    }
+    if (value === null || value === undefined) {
+      return '';
+    }
+    if (typeof value === 'object') {
+      try {
+        return JSON.stringify(value);
+      } catch {
+        return String(value);
+      }
+    }
+    return String(value);
+  }
+
+  private static formatError(error: unknown): string {
+    if (axios.isAxiosError(error)) {
+      const responseData = error.response?.data;
+      if (typeof responseData === 'string') return responseData;
+      if (responseData && typeof responseData === 'object' && 'message' in responseData) {
+        const message = (responseData as { message?: unknown }).message;
+        if (typeof message === 'string') {
+          return message;
+        }
+      }
+      return error.message;
+    }
+    if (error instanceof Error) {
+      return error.message;
+    }
+    return String(error);
   }
 }

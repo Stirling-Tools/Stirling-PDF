@@ -1,5 +1,6 @@
 // frontend/src/services/httpErrorHandler.ts
 import axios from 'axios';
+import type { AxiosError, AxiosRequestConfig } from 'axios';
 import { alert } from '@app/components/toast';
 import { broadcastErroredFiles, extractErrorFileIds, normalizeAxiosErrorData } from '@app/services/errorUtils';
 import { showSpecialErrorToast } from '@app/services/specialErrorToasts';
@@ -29,33 +30,59 @@ function titleForStatus(status?: number): string {
   return 'Request failed';
 }
 
-function extractAxiosErrorMessage(error: any): { title: string; body: string } {
-  if (axios.isAxiosError(error)) {
+type AxiosErrorData = {
+  message?: string;
+  errorFileIds?: string[];
+  [key: string]: unknown;
+};
+
+function isErrorWithMessage(error: unknown): error is { message: string } {
+  return typeof error === 'object' && error !== null && 'message' in error && typeof (error as { message?: unknown }).message === 'string';
+}
+
+function extractAxiosErrorMessage(error: unknown): { title: string; body: string } {
+  if (axios.isAxiosError<AxiosErrorData | string | undefined>(error)) {
     const status = error.response?.status;
-    const _statusText = error.response?.statusText || '';
-    let parsed: any = undefined;
     const raw = error.response?.data;
+    let parsed: AxiosErrorData | string | undefined;
+
     if (typeof raw === 'string') {
-      try { parsed = JSON.parse(raw); } catch { /* keep as string */ }
+      try {
+        parsed = JSON.parse(raw) as AxiosErrorData;
+      } catch {
+        parsed = raw;
+      }
     } else {
-      parsed = raw;
+      parsed = raw as AxiosErrorData | undefined;
     }
+
     const extractIds = (): string[] | undefined => {
-      if (Array.isArray(parsed?.errorFileIds)) return parsed.errorFileIds as string[];
-      const rawText = typeof raw === 'string' ? raw : '';
-      const uuidMatches = rawText.match(/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/g);
-      return uuidMatches && uuidMatches.length > 0 ? Array.from(new Set(uuidMatches)) : undefined;
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        const idsCandidate = (parsed as AxiosErrorData).errorFileIds;
+        if (Array.isArray(idsCandidate)) {
+          return idsCandidate.filter((id): id is string => typeof id === 'string');
+        }
+      }
+      if (typeof raw === 'string') {
+        const uuidMatches = raw.match(/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/g);
+        return uuidMatches && uuidMatches.length > 0 ? Array.from(new Set(uuidMatches)) : undefined;
+      }
+      return undefined;
     };
 
     const body = ((): string => {
-      const data = parsed;
-      if (!data) return typeof raw === 'string' ? raw : '';
+      if (!parsed) return typeof raw === 'string' ? raw : '';
+      if (typeof parsed === 'string') return parsed;
       const ids = extractIds();
       if (ids && ids.length > 0) return `Failed files: ${ids.join(', ')}`;
-      if (data?.message) return data.message as string;
-      if (typeof raw === 'string') return raw;
-      try { return JSON.stringify(data); } catch { return ''; }
+      if (parsed.message) return parsed.message;
+      try {
+        return JSON.stringify(parsed);
+      } catch {
+        return '';
+      }
     })();
+
     const ids = extractIds();
     const title = titleForStatus(status);
     if (ids && ids.length > 0) {
@@ -69,12 +96,16 @@ function extractAxiosErrorMessage(error: any): { title: string; body: string } {
     const bodyMsg = isUnhelpfulMessage(body) ? FRIENDLY_FALLBACK : body;
     return { title, body: bodyMsg };
   }
+
   try {
-    const msg = (error?.message || String(error)) as string;
-    return { title: 'Network error', body: isUnhelpfulMessage(msg) ? FRIENDLY_FALLBACK : msg };
-  } catch (e) {
-    // ignore extraction errors
-    console.debug('extractAxiosErrorMessage', e);
+    if (isErrorWithMessage(error)) {
+      const msg = error.message;
+      return { title: 'Network error', body: isUnhelpfulMessage(msg) ? FRIENDLY_FALLBACK : msg };
+    }
+    const fallbackMessage = String(error);
+    return { title: 'Network error', body: isUnhelpfulMessage(fallbackMessage) ? FRIENDLY_FALLBACK : fallbackMessage };
+  } catch (parseError) {
+    console.debug('extractAxiosErrorMessage', parseError);
     return { title: 'Network error', body: FRIENDLY_FALLBACK };
   }
 }
@@ -87,16 +118,35 @@ const SPECIAL_SUPPRESS_MS = 1500; // brief window to suppress generic duplicate 
  * Handles HTTP errors with toast notifications and file error broadcasting
  * Returns true if the error should be suppressed (deduplicated), false otherwise
  */
-export async function handleHttpError(error: any): Promise<boolean> {
+type ErrorWithConfig = {
+  config?: (AxiosRequestConfig & { suppressErrorToast?: boolean }) | null;
+  response?: {
+    status?: number;
+    data?: unknown;
+  };
+};
+
+function toAxiosError(error: unknown): AxiosError<unknown> | undefined {
+  return axios.isAxiosError(error) ? error : undefined;
+}
+
+export async function handleHttpError(error: unknown): Promise<boolean> {
+  const axiosError = toAxiosError(error);
+  const errorWithConfig = (axiosError ?? (typeof error === 'object' && error !== null ? (error as ErrorWithConfig) : undefined));
+
   // Check if this error should skip the global toast (component will handle it)
-  if (error?.config?.suppressErrorToast === true) {
+  const suppressToast =
+    !!errorWithConfig?.config &&
+    typeof errorWithConfig.config === 'object' &&
+    (errorWithConfig.config as { suppressErrorToast?: boolean }).suppressErrorToast === true;
+  if (suppressToast) {
     return false; // Don't show global toast, but continue rejection
   }
   // Compute title/body (friendly) from the error object
   const { title, body } = extractAxiosErrorMessage(error);
 
   // Normalize response data ONCE, reuse for both ID extraction and special-toast matching
-  const raw = (error?.response?.data) as any;
+  const raw = errorWithConfig?.response?.data;
   let normalized: unknown = raw;
   try { normalized = await normalizeAxiosErrorData(raw); } catch (e) { console.debug('normalizeAxiosErrorData', e); }
 
@@ -111,8 +161,11 @@ export async function handleHttpError(error: any): Promise<boolean> {
   }
 
   // 2) Generic-vs-special dedupe by endpoint
-  const url: string | undefined = error?.config?.url;
-  const status: number | undefined = error?.response?.status;
+  const url =
+    errorWithConfig?.config && typeof errorWithConfig.config === 'object'
+      ? (errorWithConfig.config as AxiosRequestConfig).url
+      : undefined;
+  const status: number | undefined = errorWithConfig?.response?.status;
   const now = Date.now();
   const isSpecial =
     status === 422 ||

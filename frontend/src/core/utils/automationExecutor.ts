@@ -1,31 +1,75 @@
 import axios from 'axios';
+import type { ToolOperationConfig, SingleFileToolOperationConfig, MultiFileToolOperationConfig } from '@app/hooks/tools/shared/useToolOperation';
 import { ToolRegistry } from '@app/data/toolsTaxonomy';
 import { ToolId } from '@app/types/toolId';
 import { AUTOMATION_CONSTANTS } from '@app/constants/automation';
-import { AutomationFileProcessor } from '@app/utils/automationFileProcessor';
+import { AutomationFileProcessor, type AutomationFormParameters } from '@app/utils/automationFileProcessor';
 import { ToolType } from '@app/hooks/tools/shared/useToolOperation';
 import { processResponse } from '@app/utils/toolResponseProcessor';
+import type { AutomationConfig, AutomationParameters } from '@app/types/automation';
+
+const getHeaderValue = (headers: unknown, key: string): string | undefined => {
+  if (!headers || typeof headers !== 'object') return undefined;
+  const value = (headers as Record<string, unknown>)[key];
+  if (typeof value === 'string') return value;
+  if (Array.isArray(value)) {
+    return value.find((entry): entry is string => typeof entry === 'string' && entry.length > 0);
+  }
+  if (value && typeof value === 'object' && 'toString' in value) {
+    const stringValue = String(value);
+    return stringValue.length > 0 ? stringValue : undefined;
+  }
+  return undefined;
+};
+
+const isPdfResponse = (headers: unknown): boolean => {
+  const contentType = getHeaderValue(headers, 'content-type');
+  return typeof contentType === 'string' && contentType.includes('application/pdf');
+};
+
+const formatErrorMessage = (error: unknown): string => {
+  if (axios.isAxiosError(error)) {
+    const responseData = error.response?.data;
+    if (typeof responseData === 'string') {
+      return responseData;
+    }
+    if (responseData && typeof responseData === 'object' && 'message' in responseData) {
+      const message = (responseData as { message?: unknown }).message;
+      if (typeof message === 'string') return message;
+    }
+    return error.message;
+  }
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return String(error);
+};
 
 /**
  * Process multi-file tool response (handles ZIP or single PDF responses)
  */
 const processMultiFileResponse = async (
   responseData: Blob,
-  responseHeaders: any,
+  responseHeaders: unknown,
   files: File[],
   filePrefix: string,
   preserveBackendFilename?: boolean
 ): Promise<File[]> => {
   // Multi-file responses are typically ZIP files, but may be single files (e.g. split with merge=true)
   if (responseData.type === 'application/pdf' ||
-      (responseHeaders && responseHeaders['content-type'] === 'application/pdf')) {
+      isPdfResponse(responseHeaders)) {
     // Single PDF response - use processResponse to respect preserveBackendFilename
+    const normalizedHeaders =
+      typeof responseHeaders === 'object' && responseHeaders !== null
+        ? (responseHeaders as Record<string, unknown>)
+        : undefined;
+
     const processedFiles = await processResponse(
       responseData,
       files,
       filePrefix,
       undefined,
-      preserveBackendFilename ? responseHeaders : undefined
+      preserveBackendFilename ? normalizedHeaders : undefined
     );
     return processedFiles;
   } else {
@@ -75,9 +119,9 @@ const executeApiRequest = async (
 /**
  * Execute single-file tool operation (processes files one at a time)
  */
-const executeSingleFileOperation = async (
-  config: any,
-  parameters: any,
+const executeSingleFileOperation = async <TParams extends AutomationFormParameters>(
+  config: SingleFileToolOperationConfig<TParams>,
+  parameters: TParams,
   files: File[],
   filePrefix: string
 ): Promise<File[]> => {
@@ -88,7 +132,7 @@ const executeSingleFileOperation = async (
       ? config.endpoint(parameters)
       : config.endpoint;
 
-    const formData = (config.buildFormData as (params: any, file: File) => FormData)(parameters, file);
+    const formData = config.buildFormData(parameters, file);
 
     const processedFiles = await executeApiRequest(
       endpoint,
@@ -106,9 +150,9 @@ const executeSingleFileOperation = async (
 /**
  * Execute multi-file tool operation (processes all files in one request)
  */
-const executeMultiFileOperation = async (
-  config: any,
-  parameters: any,
+const executeMultiFileOperation = async <TParams extends AutomationFormParameters>(
+  config: MultiFileToolOperationConfig<TParams>,
+  parameters: TParams,
   files: File[],
   filePrefix: string
 ): Promise<File[]> => {
@@ -116,7 +160,7 @@ const executeMultiFileOperation = async (
     ? config.endpoint(parameters)
     : config.endpoint;
 
-  const formData = (config.buildFormData as (params: any, files: File[]) => FormData)(parameters, files);
+  const formData = config.buildFormData(parameters, files);
 
   return await executeApiRequest(
     endpoint,
@@ -131,9 +175,12 @@ const executeMultiFileOperation = async (
 /**
  * Execute a tool operation directly without using React hooks
  */
+const toFormParameters = (parameters: AutomationParameters): AutomationFormParameters =>
+  parameters as AutomationFormParameters;
+
 export const executeToolOperation = async (
   operationName: string,
-  parameters: any,
+  parameters: AutomationParameters,
   files: File[],
   toolRegistry: ToolRegistry
 ): Promise<File[]> => {
@@ -145,12 +192,12 @@ export const executeToolOperation = async (
  */
 export const executeToolOperationWithPrefix = async (
   operationName: string,
-  parameters: any,
+  parameters: AutomationParameters,
   files: File[],
   toolRegistry: ToolRegistry,
   filePrefix: string = AUTOMATION_CONSTANTS.FILE_PREFIX
 ): Promise<File[]> => {
-  const config = toolRegistry[operationName as ToolId]?.operationConfig;
+  const config = toolRegistry[operationName as ToolId]?.operationConfig as ToolOperationConfig<AutomationFormParameters> | undefined;
   if (!config) {
     throw new Error(`Tool operation not supported: ${operationName}`);
   }
@@ -162,16 +209,18 @@ export const executeToolOperationWithPrefix = async (
       return resultFiles;
     }
 
+    const formParameters = toFormParameters(parameters);
+
     // Execute based on tool type
     if (config.toolType === ToolType.multiFile) {
-      return await executeMultiFileOperation(config, parameters, files, filePrefix);
+      return await executeMultiFileOperation(config, formParameters, files, filePrefix);
     } else {
-      return await executeSingleFileOperation(config, parameters, files, filePrefix);
+      return await executeSingleFileOperation(config, formParameters, files, filePrefix);
     }
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error(`❌ ${operationName} failed:`, error);
-    throw new Error(`${operationName} operation failed: ${error.response?.data || error.message}`);
+    throw new Error(`${operationName} operation failed: ${formatErrorMessage(error)}`);
   }
 };
 
@@ -179,7 +228,7 @@ export const executeToolOperationWithPrefix = async (
  * Execute an entire automation sequence
  */
 export const executeAutomationSequence = async (
-  automation: any,
+  automation: AutomationConfig,
   initialFiles: File[],
   toolRegistry: ToolRegistry,
   onStepStart?: (stepIndex: number, operationName: string) => void,
@@ -205,9 +254,11 @@ export const executeAutomationSequence = async (
     try {
       onStepStart?.(i, operation.operation);
 
+      const operationParameters: AutomationParameters = operation.parameters ?? {};
+
       const resultFiles = await executeToolOperationWithPrefix(
         operation.operation,
-        operation.parameters || {},
+        operationParameters,
         currentFiles,
         toolRegistry,
         i === automation.operations.length - 1 ? automationPrefix : '' // Only add prefix to final step
@@ -217,10 +268,11 @@ export const executeAutomationSequence = async (
       currentFiles = resultFiles;
       onStepComplete?.(i, resultFiles);
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(`❌ Step ${i + 1} failed:`, error);
-      onStepError?.(i, error.message);
-      throw error;
+      const message = formatErrorMessage(error);
+      onStepError?.(i, message);
+      throw error instanceof Error ? error : new Error(message);
     }
   }
 
