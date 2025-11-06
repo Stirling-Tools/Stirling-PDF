@@ -24,7 +24,6 @@ import {
 } from '@app/hooks/tools/compare/operationUtils';
 import { alert, dismissToast } from '@app/components/toast';
 import type { ToastLocation } from '@app/components/toast/types';
-
 const LONG_RUNNING_PAGE_THRESHOLD = 2000;
 
 export interface CompareOperationHook extends ToolOperationHook<CompareParameters> {
@@ -59,7 +58,7 @@ export const useCompareOperation = (): CompareOperationHook => {
   const ensureWorker = useCallback(() => {
     if (!workerRef.current) {
       workerRef.current = new Worker(
-        new URL('/@app/workers/compareWorker.ts', import.meta.url),
+        new URL('../../../workers/compareWorker.ts', import.meta.url),
         { type: 'module' }
       );
     }
