@@ -64,7 +64,9 @@ public class ChatbotCacheService {
             String documentId,
             String rawText,
             Map<String, String> metadata,
-            boolean ocrApplied) {
+            boolean ocrApplied,
+            boolean imageContentDetected,
+            long textCharacters) {
         Objects.requireNonNull(sessionId, "sessionId must not be null");
         Objects.requireNonNull(documentId, "documentId must not be null");
         Objects.requireNonNull(rawText, "rawText must not be null");
@@ -82,6 +84,8 @@ public class ChatbotCacheService {
                         .metadata(metadata)
                         .text(rawText)
                         .ocrApplied(ocrApplied)
+                        .imageContentDetected(imageContentDetected)
+                        .textCharacters(textCharacters)
                         .storedAt(Instant.now())
                         .build();
         documentCache.put(cacheKey, entry);

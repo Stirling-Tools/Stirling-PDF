@@ -39,7 +39,9 @@ public class ChatbotService {
                 session.getSessionId(),
                 Map.of(
                         "documentId", session.getDocumentId(),
-                        "ocrRequested", session.isOcrRequested()));
+                        "ocrRequested", session.isOcrRequested(),
+                        "imagesDetected", session.isImageContentDetected(),
+                        "textCharacters", session.getTextCharacters()));
         return session;
     }
 

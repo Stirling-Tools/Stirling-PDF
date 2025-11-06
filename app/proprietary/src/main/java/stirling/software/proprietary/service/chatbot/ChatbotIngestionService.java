@@ -2,6 +2,7 @@ package stirling.software.proprietary.service.chatbot;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -43,25 +44,38 @@ public class ChatbotIngestionService {
         if (!request.isWarningsAccepted() && settings.alphaWarning()) {
             throw new ChatbotException("Alpha warning must be accepted before use");
         }
-        if (!StringUtils.hasText(request.getText())) {
-            throw new NoTextDetectedException("No text detected in document payload");
+        boolean hasText = StringUtils.hasText(request.getText());
+        if (!hasText) {
+            throw new NoTextDetectedException(
+                    "No text detected in document payload. Images are currently unsupported – enable OCR to continue.");
         }
 
         String sessionId =
                 StringUtils.hasText(request.getSessionId())
                         ? request.getSessionId()
                         : ChatbotSession.randomSessionId();
-        Map<String, String> metadata =
-                request.getMetadata() == null ? Map.of() : Map.copyOf(request.getMetadata());
+        boolean imagesDetected = request.isImagesDetected();
+        long textCharacters = request.getText().length();
         boolean ocrApplied = request.isOcrRequested();
+        Map<String, String> metadata = new HashMap<>();
+        if (request.getMetadata() != null) {
+            metadata.putAll(request.getMetadata());
+        }
+        metadata.put("content.imagesDetected", Boolean.toString(imagesDetected));
+        metadata.put("content.characterCount", String.valueOf(textCharacters));
+        metadata.put(
+                "content.extractionSource", ocrApplied ? "ocr-text-layer" : "embedded-text-layer");
+        Map<String, String> immutableMetadata = Map.copyOf(metadata);
 
         String cacheKey =
                 cacheService.register(
                         sessionId,
                         request.getDocumentId(),
                         request.getText(),
-                        metadata,
-                        ocrApplied);
+                        immutableMetadata,
+                        ocrApplied,
+                        imagesDetected,
+                        textCharacters);
 
         List<String> chunkTexts =
                 chunkText(
@@ -76,8 +90,10 @@ public class ChatbotIngestionService {
                         .sessionId(sessionId)
                         .documentId(request.getDocumentId())
                         .userId(request.getUserId())
-                        .metadata(metadata)
+                        .metadata(immutableMetadata)
                         .ocrRequested(ocrApplied)
+                        .imageContentDetected(imagesDetected)
+                        .textCharacters(textCharacters)
                         .warningsAccepted(request.isWarningsAccepted())
                         .alphaWarningRequired(settings.alphaWarning())
                         .cacheKey(cacheKey)

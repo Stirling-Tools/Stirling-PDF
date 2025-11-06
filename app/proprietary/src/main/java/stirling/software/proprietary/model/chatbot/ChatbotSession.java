@@ -19,6 +19,8 @@ public class ChatbotSession {
     private boolean ocrRequested;
     private boolean warningsAccepted;
     private boolean alphaWarningRequired;
+    private boolean imageContentDetected;
+    private long textCharacters;
     private String cacheKey;
     private String vectorStoreId;
     private Instant createdAt;

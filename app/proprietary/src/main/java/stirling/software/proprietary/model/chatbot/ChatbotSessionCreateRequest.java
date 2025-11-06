@@ -20,4 +20,5 @@ public class ChatbotSessionCreateRequest {
     private Map<String, String> metadata;
     private boolean ocrRequested;
     private boolean warningsAccepted;
+    private boolean imagesDetected;
 }

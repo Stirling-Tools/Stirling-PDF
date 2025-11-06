@@ -40,7 +40,15 @@ class ChatbotCacheServiceTest {
         String longText = "a".repeat(51);
         assertThrows(
                 ChatbotException.class,
-                () -> cacheService.register("session", "doc", longText, Map.of(), false));
+                () ->
+                        cacheService.register(
+                                "session",
+                                "doc",
+                                longText,
+                                Map.of(),
+                                false,
+                                false,
+                                longText.length()));
     }
 
     @Test
@@ -48,10 +56,18 @@ class ChatbotCacheServiceTest {
         ChatbotCacheService cacheService = new ChatbotCacheService(properties);
         String cacheKey =
                 cacheService.register(
-                        "session1", "doc1", "hello world", Map.of("title", "Sample"), false);
+                        "session1",
+                        "doc1",
+                        "hello world",
+                        Map.of("title", "Sample"),
+                        false,
+                        false,
+                        "hello world".length());
         assertTrue(cacheService.resolveBySessionId("session1").isPresent());
         ChatbotDocumentCacheEntry entry = cacheService.resolveByCacheKey(cacheKey).orElseThrow();
         assertEquals("doc1", entry.getDocumentId());
         assertEquals("Sample", entry.getMetadata().get("title"));
+        assertEquals("hello world".length(), entry.getTextCharacters());
+        assertTrue(!entry.isImageContentDetected());
     }
 }

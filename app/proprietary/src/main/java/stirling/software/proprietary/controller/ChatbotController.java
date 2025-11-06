@@ -54,9 +54,11 @@ public class ChatbotController {
                         .documentId(session.getDocumentId())
                         .alphaWarning(settings.alphaWarning())
                         .ocrRequested(session.isOcrRequested())
+                        .imageContentDetected(session.isImageContentDetected())
+                        .textCharacters(session.getTextCharacters())
                         .maxCachedCharacters(cacheService.getMaxDocumentCharacters())
                         .createdAt(session.getCreatedAt())
-                        .warnings(defaultWarnings(settings))
+                        .warnings(sessionWarnings(settings, session))
                         .metadata(session.getMetadata())
                         .build();
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -81,9 +83,11 @@ public class ChatbotController {
                         .documentId(session.getDocumentId())
                         .alphaWarning(settings.alphaWarning())
                         .ocrRequested(session.isOcrRequested())
+                        .imageContentDetected(session.isImageContentDetected())
+                        .textCharacters(session.getTextCharacters())
                         .maxCachedCharacters(cacheService.getMaxDocumentCharacters())
                         .createdAt(session.getCreatedAt())
-                        .warnings(defaultWarnings(settings))
+                        .warnings(sessionWarnings(settings, session))
                         .metadata(session.getMetadata())
                         .build();
         return ResponseEntity.ok(response);
@@ -95,13 +99,19 @@ public class ChatbotController {
         return ResponseEntity.noContent().build();
     }
 
-    private List<String> defaultWarnings(ChatbotSettings settings) {
+    private List<String> sessionWarnings(ChatbotSettings settings, ChatbotSession session) {
         List<String> warnings = new ArrayList<>();
         if (settings.alphaWarning()) {
             warnings.add("Chatbot feature is in alpha and may change.");
         }
         warnings.add("Image-based content is not supported yet.");
+        if (session != null && session.isImageContentDetected()) {
+            warnings.add("Detected images will be ignored until image support ships.");
+        }
         warnings.add("Only extracted text is sent for analysis.");
+        if (session != null && session.isOcrRequested()) {
+            warnings.add("OCR was requested – extra processing charges may apply.");
+        }
         return warnings;
     }
 }

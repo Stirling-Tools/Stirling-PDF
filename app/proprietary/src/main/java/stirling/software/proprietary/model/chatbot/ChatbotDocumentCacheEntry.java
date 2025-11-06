@@ -23,6 +23,8 @@ public class ChatbotDocumentCacheEntry {
     private String text;
     private List<ChatbotTextChunk> chunks;
     private boolean ocrApplied;
+    private boolean imageContentDetected;
+    private long textCharacters;
     private String vectorStoreId;
     private Instant storedAt;
 

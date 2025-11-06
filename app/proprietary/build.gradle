@@ -53,6 +53,7 @@ dependencies {
     api 'com.github.ben-manes.caffeine:caffeine'
     api 'io.swagger.core.v3:swagger-core-jakarta:2.2.38'
     implementation 'org.springframework.ai:spring-ai-openai'
+    implementation 'org.springframework.ai:spring-ai-ollama'
     implementation 'com.bucket4j:bucket4j_jdk17-core:8.15.0'
 
     // https://mvnrepository.com/artifact/com.bucket4j/bucket4j_jdk17

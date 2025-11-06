@@ -20,7 +20,9 @@ public class ChatbotSessionResponse {
     private String documentId;
     private boolean alphaWarning;
     private boolean ocrRequested;
+    private boolean imageContentDetected;
     private long maxCachedCharacters;
+    private long textCharacters;
     private Instant createdAt;
     private List<String> warnings;
     private Map<String, String> metadata;

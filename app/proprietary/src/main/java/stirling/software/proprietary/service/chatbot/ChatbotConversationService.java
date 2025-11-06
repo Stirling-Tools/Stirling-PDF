@@ -14,6 +14,8 @@ import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.ai.ollama.OllamaChatModel;
+import org.springframework.ai.ollama.api.OllamaOptions;
 import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -33,6 +35,7 @@ import stirling.software.proprietary.model.chatbot.ChatbotResponse;
 import stirling.software.proprietary.model.chatbot.ChatbotSession;
 import stirling.software.proprietary.model.chatbot.ChatbotTextChunk;
 import stirling.software.proprietary.service.chatbot.ChatbotFeatureProperties.ChatbotSettings;
+import stirling.software.proprietary.service.chatbot.ChatbotFeatureProperties.ChatbotSettings.ModelProvider;
 import stirling.software.proprietary.service.chatbot.exception.ChatbotException;
 
 @Service
@@ -66,7 +69,7 @@ public class ChatbotConversationService {
                         .findById(request.getSessionId())
                         .orElseThrow(() -> new ChatbotException("Unknown chatbot session"));
 
-        ensureModelSwitchCapability();
+        ensureModelSwitchCapability(settings);
 
         ChatbotDocumentCacheEntry cacheEntry =
                 cacheService
@@ -81,6 +84,7 @@ public class ChatbotConversationService {
 
         ModelReply nanoReply =
                 invokeModel(
+                        settings,
                         settings.models().primary(),
                         request.getPrompt(),
                         session,
@@ -100,6 +104,7 @@ public class ChatbotConversationService {
             List<ChatbotTextChunk> expandedContext = ensureMinimumContext(context, cacheEntry);
             finalReply =
                     invokeModel(
+                            settings,
                             settings.models().fallback(),
                             request.getPrompt(),
                             session,
@@ -118,7 +123,7 @@ public class ChatbotConversationService {
                 .cacheHit(true)
                 .respondedAt(Instant.now())
                 .warnings(warnings)
-                .metadata(buildMetadata(finalReply, context.size(), escalated))
+                .metadata(buildMetadata(settings, session, finalReply, context.size(), escalated))
                 .build();
     }
 
@@ -126,6 +131,10 @@ public class ChatbotConversationService {
         List<String> warnings = new ArrayList<>();
         warnings.add("Chatbot is in alpha – behaviour may change.");
         warnings.add("Image content is not yet supported in answers.");
+        if (session.isImageContentDetected()) {
+            warnings.add(
+                    "Detected document images will be ignored until image support is available.");
+        }
         if (session.isOcrRequested()) {
             warnings.add("OCR costs may apply for this session.");
         }
@@ -133,30 +142,44 @@ public class ChatbotConversationService {
     }
 
     private Map<String, Object> buildMetadata(
-            ModelReply reply, int contextSize, boolean escalated) {
+            ChatbotSettings settings,
+            ChatbotSession session,
+            ModelReply reply,
+            int contextSize,
+            boolean escalated) {
         Map<String, Object> metadata = new HashMap<>();
         metadata.put("contextSize", contextSize);
         metadata.put("requiresEscalation", reply.requiresEscalation());
         metadata.put("escalated", escalated);
         metadata.put("rationale", reply.rationale());
+        metadata.put("modelProvider", settings.models().provider().name());
+        metadata.put("imageContentDetected", session.isImageContentDetected());
+        metadata.put("charactersCached", session.getTextCharacters());
         return metadata;
     }
 
-    private void ensureModelSwitchCapability() {
-        if (!(chatModel instanceof OpenAiChatModel)) {
-            throw new ChatbotException(
-                    "Chatbot requires OpenAI chat model to support runtime model switching");
+    private void ensureModelSwitchCapability(ChatbotSettings settings) {
+        ModelProvider provider = settings.models().provider();
+        switch (provider) {
+            case OPENAI -> {
+                if (!(chatModel instanceof OpenAiChatModel)) {
+                    throw new ChatbotException(
+                            "Chatbot requires an OpenAI chat model to support runtime model switching.");
+                }
+            }
+            case OLLAMA -> {
+                if (!(chatModel instanceof OllamaChatModel)) {
+                    throw new ChatbotException(
+                            "Chatbot is configured for Ollama but no Ollama chat model bean is available.");
+                }
+            }
         }
         if (modelSwitchVerified.compareAndSet(false, true)) {
-            ChatbotSettings settings = featureProperties.current();
-            OpenAiChatOptions primary =
-                    OpenAiChatOptions.builder().model(settings.models().primary()).build();
-            OpenAiChatOptions fallback =
-                    OpenAiChatOptions.builder().model(settings.models().fallback()).build();
             log.info(
-                    "Verified runtime model override support ({} -> {})",
-                    primary.getModel(),
-                    fallback.getModel());
+                    "Verified runtime model override support for provider {} ({} -> {})",
+                    provider,
+                    settings.models().primary(),
+                    settings.models().fallback());
         }
     }
 
@@ -178,12 +201,13 @@ public class ChatbotConversationService {
     }
 
     private ModelReply invokeModel(
+            ChatbotSettings settings,
             String model,
             String prompt,
             ChatbotSession session,
             List<ChatbotTextChunk> context,
             Map<String, String> metadata) {
-        Prompt requestPrompt = buildPrompt(model, prompt, session, context, metadata);
+        Prompt requestPrompt = buildPrompt(settings, model, prompt, session, context, metadata);
         ChatResponse response = chatModel.call(requestPrompt);
         String content =
                 Optional.ofNullable(response)
@@ -195,6 +219,7 @@ public class ChatbotConversationService {
     }
 
     private Prompt buildPrompt(
+            ChatbotSettings settings,
             String model,
             String question,
             ChatbotSession session,
@@ -215,26 +240,44 @@ public class ChatbotConversationService {
                         .reduce((left, right) -> left + ", " + right)
                         .orElse("none");
 
+        String imageDirective =
+                session.isImageContentDetected()
+                        ? "Images were detected in this PDF. You must explain that image analysis is not available."
+                        : "No images detected in this PDF.";
+
         String systemPrompt =
                 "You are Stirling PDF Bot. Use provided context strictly. "
                         + "Respond in compact JSON with fields answer (string), confidence (0..1), requiresEscalation (boolean), rationale (string). "
-                        + "Explain limitations when context insufficient.";
+                        + "Explain limitations when context insufficient. Always note that image analysis is not supported yet.";
 
         String userPrompt =
                 "Document metadata: "
                         + metadataSummary
                         + "\nOCR applied: "
                         + session.isOcrRequested()
+                        + "\n"
+                        + imageDirective
                         + "\nContext:\n"
                         + contextBuilder
                         + "Question: "
                         + question;
 
-        OpenAiChatOptions options =
-                OpenAiChatOptions.builder().model(model).temperature(0.2).build();
+        Object options = buildChatOptions(settings, model);
 
         return new Prompt(
                 List.of(new SystemMessage(systemPrompt), new UserMessage(userPrompt)), options);
+    }
+
+    private Object buildChatOptions(ChatbotSettings settings, String model) {
+        return switch (settings.models().provider()) {
+            case OPENAI ->
+                    OpenAiChatOptions.builder()
+                            .model(model)
+                            .temperature(0.2)
+                            .responseFormat("json_object")
+                            .build();
+            case OLLAMA -> OllamaOptions.builder().model(model).temperature(0.2).build();
+        };
     }
 
     private ModelReply parseModelResponse(String raw) {
