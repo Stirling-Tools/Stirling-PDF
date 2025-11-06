@@ -1079,7 +1079,11 @@
     "markdown": "Markdown",
     "textRtf": "Text/RTF",
     "grayscale": "Greyscale",
-    "errorConversion": "An error occurred while converting the file."
+  "errorConversion": "An error occurred while converting the file.",
+  "cbrOptions": "CBR to PDF Options",
+  "optimizeForEbook": "Optimize PDF for ebook readers (uses Ghostscript)",
+  "cbrOutputOptions": "PDF to CBR Options",
+  "cbrDpi": "DPI for image rendering"
   },
   "imageToPdf": {
     "tags": "conversion,img,jpg,picture,photo"

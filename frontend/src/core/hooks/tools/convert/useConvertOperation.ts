@@ -21,6 +21,8 @@ export const shouldProcessFilesSeparately = (
     (parameters.fromExtension === 'pdf' && parameters.toExtension === 'pdfa') ||
     // PDF to text-like formats should be one output per input
     (parameters.fromExtension === 'pdf' && ['txt', 'rtf', 'csv'].includes(parameters.toExtension)) ||
+  // PDF to CBR conversions (each PDF should generate its own archive)
+  (parameters.fromExtension === 'pdf' && parameters.toExtension === 'cbr') ||
     // Web files to PDF conversions (each web file should generate its own PDF)
     ((isWebFormat(parameters.fromExtension) || parameters.fromExtension === 'web') &&
      parameters.toExtension === 'pdf') ||
@@ -39,7 +41,7 @@ export const buildConvertFormData = (parameters: ConvertParameters, selectedFile
     formData.append("fileInput", file);
   });
 
-  const { fromExtension, toExtension, imageOptions, htmlOptions, emailOptions, pdfaOptions } = parameters;
+  const { fromExtension, toExtension, imageOptions, htmlOptions, emailOptions, pdfaOptions, cbrOptions, pdfToCbrOptions } = parameters;
 
   if (isImageFormat(toExtension)) {
     formData.append("imageFormat", toExtension);
@@ -67,6 +69,10 @@ export const buildConvertFormData = (parameters: ConvertParameters, selectedFile
     formData.append("outputFormat", pdfaOptions.outputFormat);
   } else if (fromExtension === 'pdf' && toExtension === 'csv') {
     formData.append("pageNumbers", "all");
+  } else if (fromExtension === 'cbr' && toExtension === 'pdf') {
+    formData.append("optimizeForEbook", cbrOptions.optimizeForEbook.toString());
+  } else if (fromExtension === 'pdf' && toExtension === 'cbr') {
+    formData.append("dpi", pdfToCbrOptions.dpi.toString());
   }
 
   return formData;

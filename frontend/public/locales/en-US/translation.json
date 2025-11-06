@@ -2021,6 +2021,10 @@
     "outputFormat": "Output Format",
     "pdfaNote": "PDF/A-1b is more compatible, PDF/A-2b supports more features.",
     "pdfaDigitalSignatureWarning": "The PDF contains a digital signature. This will be removed in the next step.",
+  "cbrOptions": "CBR to PDF Options",
+  "optimizeForEbook": "Optimize PDF for ebook readers (uses Ghostscript)",
+  "cbrOutputOptions": "PDF to CBR Options",
+  "cbrDpi": "DPI for image rendering",
     "sanitize": {
       "submit": "Sanitize PDF",
       "completed": "Sanitization completed successfully",

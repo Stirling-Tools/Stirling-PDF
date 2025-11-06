@@ -31,7 +31,9 @@ export const CONVERSION_ENDPOINTS = {
   'pdf-pdfa': '/api/v1/convert/pdf/pdfa',
   'html-pdf': '/api/v1/convert/html/pdf',
   'markdown-pdf': '/api/v1/convert/markdown/pdf',
-  'eml-pdf': '/api/v1/convert/eml/pdf'
+  'eml-pdf': '/api/v1/convert/eml/pdf',
+  'cbr-pdf': '/api/v1/convert/cbr/pdf',
+  'pdf-cbr': '/api/v1/convert/pdf/cbr'
 } as const;
 
 export const ENDPOINT_NAMES = {
@@ -48,7 +50,9 @@ export const ENDPOINT_NAMES = {
   'pdf-pdfa': 'pdf-to-pdfa',
   'html-pdf': 'html-to-pdf',
   'markdown-pdf': 'markdown-to-pdf',
-  'eml-pdf': 'eml-to-pdf'
+  'eml-pdf': 'eml-to-pdf',
+  'cbr-pdf': 'cbr-to-pdf',
+  'pdf-cbr': 'pdf-to-cbr'
 } as const;
 
 
@@ -80,6 +84,7 @@ export const FROM_FORMAT_OPTIONS = [
   { value: 'txt', label: 'TXT', group: 'Text' },
   { value: 'rtf', label: 'RTF', group: 'Text' },
   { value: 'eml', label: 'EML', group: 'Email' },
+  { value: 'cbr', label: 'CBR', group: 'Archive' },
 ];
 
 export const TO_FORMAT_OPTIONS = [
@@ -101,13 +106,14 @@ export const TO_FORMAT_OPTIONS = [
   { value: 'webp', label: 'WEBP', group: 'Image' },
   { value: 'html', label: 'HTML', group: 'Web' },
   { value: 'xml', label: 'XML', group: 'Web' },
+  { value: 'cbr', label: 'CBR', group: 'Archive' },
 ];
 
 // Conversion matrix - what each source format can convert to
 export const CONVERSION_MATRIX: Record<string, string[]> = {
   'any': ['pdf'], // Mixed files always convert to PDF
   'image': ['pdf'], // Multiple images always convert to PDF
-  'pdf': ['png', 'jpg', 'gif', 'tiff', 'bmp', 'webp', 'docx', 'odt', 'pptx', 'odp', 'csv', 'txt', 'rtf', 'md', 'html', 'xml', 'pdfa'],
+  'pdf': ['png', 'jpg', 'gif', 'tiff', 'bmp', 'webp', 'docx', 'odt', 'pptx', 'odp', 'csv', 'txt', 'rtf', 'md', 'html', 'xml', 'pdfa', 'cbr'],
   'docx': ['pdf'], 'doc': ['pdf'], 'odt': ['pdf'],
   'xlsx': ['pdf'], 'xls': ['pdf'], 'ods': ['pdf'],
   'pptx': ['pdf'], 'ppt': ['pdf'], 'odp': ['pdf'],
@@ -116,7 +122,8 @@ export const CONVERSION_MATRIX: Record<string, string[]> = {
   'zip': ['pdf'],
   'md': ['pdf'],
   'txt': ['pdf'], 'rtf': ['pdf'],
-  'eml': ['pdf']
+  'eml': ['pdf'],
+  'cbr': ['pdf']
 };
 
 // Map extensions to endpoint keys
@@ -130,7 +137,8 @@ export const EXTENSION_TO_ENDPOINT: Record<string, Record<string, string>> = {
     'csv': 'pdf-to-csv',
     'txt': 'pdf-to-text', 'rtf': 'pdf-to-text', 'md': 'pdf-to-markdown',
     'html': 'pdf-to-html', 'xml': 'pdf-to-xml',
-    'pdfa': 'pdf-to-pdfa'
+    'pdfa': 'pdf-to-pdfa',
+  'cbr': 'pdf-to-cbr'
   },
   'docx': { 'pdf': 'file-to-pdf' }, 'doc': { 'pdf': 'file-to-pdf' }, 'odt': { 'pdf': 'file-to-pdf' },
   'xlsx': { 'pdf': 'file-to-pdf' }, 'xls': { 'pdf': 'file-to-pdf' }, 'ods': { 'pdf': 'file-to-pdf' },
@@ -141,7 +149,8 @@ export const EXTENSION_TO_ENDPOINT: Record<string, Record<string, string>> = {
   'zip': { 'pdf': 'html-to-pdf' },
   'md': { 'pdf': 'markdown-to-pdf' },
   'txt': { 'pdf': 'file-to-pdf' }, 'rtf': { 'pdf': 'file-to-pdf' },
-  'eml': { 'pdf': 'eml-to-pdf' }
+  'eml': { 'pdf': 'eml-to-pdf' },
+  'cbr': { 'pdf': 'cbr-to-pdf' }
 };
 
 export type ColorType = typeof COLOR_TYPES[keyof typeof COLOR_TYPES];
