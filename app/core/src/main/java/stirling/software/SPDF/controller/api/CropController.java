@@ -22,6 +22,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.api.general.CropPdfForm;
 import stirling.software.common.annotations.AutoJobPostMapping;
@@ -37,6 +38,11 @@ import stirling.software.common.util.WebResponseUtils;
 public class CropController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final EndpointConfiguration endpointConfiguration;
+
+    private boolean isGhostscriptEnabled() {
+        return endpointConfiguration.isGroupEnabled("Ghostscript");
+    }
 
     @AutoJobPostMapping(value = "/crop", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @StandardPdfResponse
@@ -46,9 +52,13 @@ public class CropController {
                     "This operation takes an input PDF file and crops it according to the given"
                             + " coordinates. Input:PDF Output:PDF Type:SISO")
     public ResponseEntity<byte[]> cropPdf(@ModelAttribute CropPdfForm request) throws IOException {
-        if (request.isRemoveDataOutsideCrop()) {
+        if (request.isRemoveDataOutsideCrop() && isGhostscriptEnabled()) {
             return cropWithGhostscript(request);
         } else {
+            if (request.isRemoveDataOutsideCrop()) {
+                log.warn(
+                        "Ghostscript not available - 'removeDataOutsideCrop' option requires Ghostscript. Falling back to visual crop only.");
+            }
             return cropWithPDFBox(request);
         }
     }
