@@ -92,6 +92,13 @@ const FileEditorThumbnail = ({
     return (m?.[1] || '').toUpperCase();
   }, [file.name]);
 
+  const extLower = useMemo(() => {
+    const m = /\.([a-z0-9]+)$/i.exec(file.name ?? '');
+    return (m?.[1] || '').toLowerCase();
+  }, [file.name]);
+
+  const isCBZ = extLower === 'cbz';
+
   const pageLabel = useMemo(
     () =>
       pageCount > 0
@@ -197,14 +204,16 @@ const FileEditorThumbnail = ({
     {
       id: 'unzip',
       icon: <UnarchiveIcon style={{ fontSize: 20 }} />,
-      label: t('fileManager.unzip', 'Unzip'),
+      label: isCBZ ? t('fileManager.unzip.disabled', 'Unzip (not available for CBZ)') : t('fileManager.unzip', 'Unzip'),
       onClick: (e) => {
         e.stopPropagation();
+        if (isCBZ) return; // defensive - disabled UI should prevent this
         if (onUnzipFile) {
           onUnzipFile(file.id);
           alert({ alertType: 'success', title: `Unzipping ${file.name}`, expandable: false, durationMs: 2500 });
         }
       },
+      disabled: isCBZ,
       hidden: !isZipFile || !onUnzipFile,
     },
     {
