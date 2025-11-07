@@ -328,7 +328,7 @@ export default function AdminConnectionsSection() {
       <Paper withBorder p="md" radius="md">
         <Stack gap="md">
           <Group justify="space-between" align="center">
-            <Text fw={600} size="sm">{t('admin.settings.connections.ssoAutoLogin', 'SSO Auto Login')}</Text>
+            <Text fw={600} size="sm">{t('admin.settings.connections.ssoAutoLogin.label', 'SSO Auto Login')}</Text>
             <Badge color="yellow" size="sm">PRO</Badge>
           </Group>
 
