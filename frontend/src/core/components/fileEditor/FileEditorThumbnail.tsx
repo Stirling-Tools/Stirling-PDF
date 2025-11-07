@@ -204,17 +204,15 @@ const FileEditorThumbnail = ({
     {
       id: 'unzip',
       icon: <UnarchiveIcon style={{ fontSize: 20 }} />,
-      label: isCBZ ? t('fileManager.unzip.disabled', 'Unzip (not available for CBZ)') : t('fileManager.unzip', 'Unzip'),
+      label: t('fileManager.unzip', 'Unzip'),
       onClick: (e) => {
         e.stopPropagation();
-        if (isCBZ) return; // defensive - disabled UI should prevent this
         if (onUnzipFile) {
           onUnzipFile(file.id);
           alert({ alertType: 'success', title: `Unzipping ${file.name}`, expandable: false, durationMs: 2500 });
         }
       },
-      disabled: isCBZ,
-      hidden: !isZipFile || !onUnzipFile,
+      hidden: !isZipFile || !onUnzipFile || isCBZ,
     },
     {
       id: 'close',
