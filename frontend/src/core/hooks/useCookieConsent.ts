@@ -6,7 +6,7 @@ import { useAppConfig } from '@app/contexts/AppConfigContext';
 declare global {
   interface Window {
     CookieConsent?: {
-      run: (config: any) => void;
+      run: (config: Record<string, unknown>) => void;
       show: (show?: boolean) => void;
       acceptedCategory: (category: string) => boolean;
       acceptedService: (serviceName: string, category: string) => boolean;

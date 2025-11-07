@@ -1,3 +1,5 @@
+import type { PdfAnnotationObject } from '@embedpdf/models';
+
 export interface SignatureAPI {
   addImageSignature: (
     signatureData: string,
@@ -13,7 +15,7 @@ export interface SignatureAPI {
   deleteAnnotation: (annotationId: string, pageIndex: number) => void;
   updateDrawSettings: (color: string, size: number) => void;
   deactivateTools: () => void;
-  getPageAnnotations: (pageIndex: number) => Promise<any[]>;
+  getPageAnnotations: (pageIndex: number) => Promise<PdfAnnotationObject[]>;
 }
 
 export interface HistoryAPI {
@@ -21,4 +23,13 @@ export interface HistoryAPI {
   redo: () => void;
   canUndo: () => boolean;
   canRedo: () => boolean;
+}
+
+export interface AnnotationEvent {
+  type: 'create' | 'update' | 'delete' | 'loaded';
+  annotation?: PdfAnnotationObject;
+  pageIndex?: number;
+  committed?: boolean;
+  annotations?: PdfAnnotationObject[];
+  total?: number;
 }

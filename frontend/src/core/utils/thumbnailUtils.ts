@@ -1,4 +1,5 @@
 import { pdfWorkerManager } from '@app/services/pdfWorkerManager';
+import type { PDFDocumentProxy, RenderParameters } from 'pdfjs-dist/types/src/display/api';
 
 export interface ThumbnailWithMetadata {
   thumbnail: string; // Always returns a thumbnail (placeholder if needed)
@@ -256,7 +257,7 @@ function drawLargeLockIcon(ctx: CanvasRenderingContext2D, centerX: number, cente
 /**
  * Generate standard PDF thumbnail by rendering first page
  */
-async function generateStandardPDFThumbnail(pdf: any, scale: number): Promise<string> {
+async function generateStandardPDFThumbnail(pdf: PDFDocumentProxy, scale: number): Promise<string> {
   const page = await pdf.getPage(1);
   const viewport = page.getViewport({ scale });
   const canvas = document.createElement("canvas");
@@ -268,7 +269,12 @@ async function generateStandardPDFThumbnail(pdf: any, scale: number): Promise<st
     throw new Error('Could not get canvas context');
   }
 
-  await page.render({ canvasContext: context, viewport }).promise;
+  const renderConfig: RenderParameters = {
+    canvasContext: context,
+    viewport,
+    canvas,
+  };
+  await page.render(renderConfig).promise;
   return canvas.toDataURL();
 }
 

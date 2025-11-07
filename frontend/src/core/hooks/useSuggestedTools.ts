@@ -14,7 +14,7 @@ import TextFieldsIcon from '@mui/icons-material/TextFields';
 export interface SuggestedTool {
   id: ToolId;
   title: string;
-  icon: React.ComponentType<any>;
+  icon: React.ComponentType;
   href: string;
   onClick: (e: React.MouseEvent) => void;
 }

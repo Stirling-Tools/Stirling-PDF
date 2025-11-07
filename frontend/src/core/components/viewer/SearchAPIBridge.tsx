@@ -10,6 +10,11 @@ interface SearchResult {
   }>;
 }
 
+interface SearchResultState {
+  results?: SearchResult[];
+  activeResultIndex?: number;
+}
+
 /**
  * SearchAPIBridge manages search state and provides search functionality.
  * Listens for search result changes from EmbedPDF and maintains local state.
@@ -27,7 +32,7 @@ export function SearchAPIBridge() {
   useEffect(() => {
     if (!search) return;
 
-    const unsubscribe = search.onSearchResultStateChange?.((state: any) => {
+    const unsubscribe = search.onSearchResultStateChange?.((state: SearchResultState) => {
       const newState = {
         results: state?.results || null,
         activeIndex: (state?.activeResultIndex || 0) + 1 // Convert to 1-based index
@@ -53,7 +58,7 @@ export function SearchAPIBridge() {
         api: {
           search: async (query: string) => {
             search.startSearch();
-            return search.searchAllPages(query);
+            await search.searchAllPages(query).toPromise();
           },
           clear: () => {
             search.stopSearch();

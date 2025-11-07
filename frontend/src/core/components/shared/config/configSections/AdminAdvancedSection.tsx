@@ -4,11 +4,12 @@ import { NumberInput, Switch, Button, Stack, Paper, Text, Loader, Group, Accordi
 import { alert } from '@app/components/toast';
 import RestartConfirmationModal from '@app/components/shared/config/RestartConfirmationModal';
 import { useRestartServer } from '@app/components/shared/config/useRestartServer';
-import { useAdminSettings } from '@app/hooks/useAdminSettings';
+import { useAdminSettings, type SettingsRecord } from '@app/hooks/useAdminSettings';
 import PendingBadge from '@app/components/shared/config/PendingBadge';
 import apiClient from '@app/services/apiClient';
+import type { SettingsWithPending } from '@app/utils/settingsPendingHelper';
 
-interface AdvancedSettingsData {
+interface AdvancedSettingsData extends Record<string, unknown> {
   enableAlphaFunctionality?: boolean;
   maxDPI?: number;
   enableUrlToPDF?: boolean;
@@ -74,8 +75,9 @@ export default function AdminAdvancedSection() {
 
       const systemData = systemResponse.data || {};
       const processExecutorData = processExecutorResponse.data || {};
+      type AdvancedSettingsResponse = SettingsWithPending<AdvancedSettingsData> & AdvancedSettingsData;
 
-      const result: any = {
+      const result: AdvancedSettingsResponse = {
         enableAlphaFunctionality: systemData.enableAlphaFunctionality || false,
         maxDPI: systemData.maxDPI || 0,
         enableUrlToPDF: systemData.enableUrlToPDF || false,
@@ -95,7 +97,7 @@ export default function AdminAdvancedSection() {
       };
 
       // Merge pending blocks from both endpoints
-      const pendingBlock: any = {};
+      const pendingBlock: Partial<AdvancedSettingsData> = {};
       if (systemData._pending?.enableAlphaFunctionality !== undefined) {
         pendingBlock.enableAlphaFunctionality = systemData._pending.enableAlphaFunctionality;
       }
@@ -125,7 +127,7 @@ export default function AdminAdvancedSection() {
       return result;
     },
     saveTransformer: (settings) => {
-      const deltaSettings: Record<string, any> = {
+      const deltaSettings: SettingsRecord = {
         'system.enableAlphaFunctionality': settings.enableAlphaFunctionality,
         'system.maxDPI': settings.maxDPI,
         'system.enableUrlToPDF': settings.enableUrlToPDF,

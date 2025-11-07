@@ -4,7 +4,7 @@ import { useAppConfig } from "@app/contexts/AppConfigContext";
 
 interface CertificateTypeSettingsProps {
   parameters: CertSignParameters;
-  onParameterChange: (key: keyof CertSignParameters, value: any) => void;
+  onParameterChange: <K extends keyof CertSignParameters>(key: K, value: CertSignParameters[K]) => void;
   disabled?: boolean;
 }
 

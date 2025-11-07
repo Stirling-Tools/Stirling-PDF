@@ -571,7 +571,6 @@ export class InsertFilesCommand extends DOMCommand {
   private insertedPages: PDFPage[] = [];
   private originalDocument: PDFDocument | null = null;
   private fileDataMap = new Map<FileId, ArrayBuffer>(); // Store file data for thumbnail generation
-  private originalProcessedFile: any = null; // Store original ProcessedFile for undo
   private insertedFileMap = new Map<FileId, File>(); // Store inserted files for export
 
   constructor(

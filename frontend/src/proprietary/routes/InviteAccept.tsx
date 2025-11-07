@@ -8,6 +8,7 @@ import LoginHeader from '@app/routes/login/LoginHeader';
 import ErrorMessage from '@app/routes/login/ErrorMessage';
 import { BASE_PATH } from '@app/constants/app';
 import apiClient from '@app/services/apiClient';
+import type { AxiosRequestConfig } from 'axios';
 
 interface InviteData {
   email: string | null;
@@ -15,6 +16,28 @@ interface InviteData {
   expiresAt: string;
   emailRequired: boolean;
 }
+
+type SuppressibleRequestConfig = AxiosRequestConfig & { suppressErrorToast?: boolean };
+const suppressErrorConfig: SuppressibleRequestConfig = { suppressErrorToast: true };
+
+type ApiErrorResponse = {
+  response?: { data?: { error?: string; message?: string } };
+  message?: string;
+};
+
+const extractInviteError = (error: unknown, fallback: string): string => {
+  if (typeof error === 'object' && error !== null) {
+    const apiError = error as ApiErrorResponse;
+    return apiError.response?.data?.error
+      ?? apiError.response?.data?.message
+      ?? apiError.message
+      ?? fallback;
+  }
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return fallback;
+};
 
 export default function InviteAccept() {
   const { token } = useParams<{ token: string }>();
@@ -54,17 +77,11 @@ export default function InviteAccept() {
   const validateToken = async () => {
     try {
       setLoading(true);
-      const response = await apiClient.get<InviteData>(`/api/v1/invite/validate/${token}`, {
-        suppressErrorToast: true,
-      } as any);
+      const response = await apiClient.get<InviteData>(`/api/v1/invite/validate/${token}`, suppressErrorConfig);
       setInviteData(response.data);
       setError(null);
-    } catch (err: any) {
-      const errorMessage =
-        err.response?.data?.error ||
-        err.message ||
-        t('invite.validationError', 'Failed to validate invitation link');
-      setError(errorMessage);
+    } catch (err: unknown) {
+      setError(extractInviteError(err, t('invite.validationError', 'Failed to validate invitation link')));
     } finally {
       setLoading(false);
     }
@@ -106,18 +123,12 @@ export default function InviteAccept() {
       }
       formData.append('password', password);
 
-      await apiClient.post(`/api/v1/invite/accept/${token}`, formData, {
-        suppressErrorToast: true,
-      } as any);
+      await apiClient.post(`/api/v1/invite/accept/${token}`, formData, suppressErrorConfig);
 
       // Success - redirect to login
       navigate('/login?messageType=accountCreated');
-    } catch (err: any) {
-      const errorMessage =
-        err.response?.data?.error ||
-        err.message ||
-        t('invite.acceptError', 'Failed to create account');
-      setError(errorMessage);
+    } catch (err: unknown) {
+      setError(extractInviteError(err, t('invite.acceptError', 'Failed to create account')));
     } finally {
       setSubmitting(false);
     }

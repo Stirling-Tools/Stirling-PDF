@@ -13,7 +13,7 @@ import {
   Table,
 } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import auditService, { AuditEvent } from '@app/services/auditService';
+import auditService, { AuditEvent, type AuditFilters } from '@app/services/auditService';
 import { Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
 import { useAuditFilters } from '@app/hooks/useAuditFilters';
 import AuditFiltersForm from '@app/components/shared/config/configSections/audit/AuditFiltersForm';
@@ -55,7 +55,7 @@ const AuditEventsTable: React.FC = () => {
   }, [filters, currentPage]);
 
   // Wrap filter handlers to reset pagination
-  const handleFilterChangeWithReset = (key: keyof typeof filters, value: any) => {
+  const handleFilterChangeWithReset = <K extends keyof AuditFilters>(key: K, value: AuditFilters[K]) => {
     handleFilterChange(key, value);
     setCurrentPage(1);
   };

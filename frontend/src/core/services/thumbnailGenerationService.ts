@@ -4,9 +4,9 @@
 
 import { FileId } from '@app/types/file';
 import { pdfWorkerManager } from '@app/services/pdfWorkerManager';
-import { PDFDocumentProxy } from 'pdfjs-dist';
+import type { PDFDocumentProxy, RenderParameters } from 'pdfjs-dist/types/src/display/api';
 
-interface ThumbnailResult {
+export interface ThumbnailResult {
   pageNumber: number;
   thumbnail: string;
   success: boolean;
@@ -49,7 +49,7 @@ export class ThumbnailGenerationService {
   /**
    * Get or create a cached PDF document
    */
-  private async getCachedPDFDocument(fileId: FileId, pdfArrayBuffer: ArrayBuffer): Promise<any> {
+  private async getCachedPDFDocument(fileId: FileId, pdfArrayBuffer: ArrayBuffer): Promise<PDFDocumentProxy> {
     const cached = this.pdfDocumentCache.get(fileId);
     if (cached) {
       cached.lastUsed = Date.now();
@@ -176,7 +176,12 @@ export class ThumbnailGenerationService {
             throw new Error('Could not get canvas context');
           }
 
-          await page.render({ canvasContext: context, viewport }).promise;
+          const renderConfig: RenderParameters = {
+            canvasContext: context,
+            viewport,
+            canvas,
+          };
+          await page.render(renderConfig).promise;
           const thumbnail = canvas.toDataURL('image/jpeg', quality);
 
           allResults.push({ pageNumber, thumbnail, success: true });

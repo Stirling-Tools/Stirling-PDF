@@ -23,6 +23,8 @@ interface FullscreenToolListProps {
   onSelect: (id: ToolId) => void;
 }
 
+type RecommendedItem = { id: ToolId; tool: ToolRegistryEntry };
+
 const FullscreenToolList = ({
   filteredTools,
   searchQuery,
@@ -42,9 +44,9 @@ const FullscreenToolList = ({
   const favoriteToolItems = useFavoriteToolItems(favoriteTools, toolRegistry);
 
   const quickSection = useMemo(() => sections.find(section => section.key === 'quick'), [sections]);
-  const recommendedItems = useMemo(() => {
-    if (!quickSection) return [] as Array<{ id: string, tool: ToolRegistryEntry }>;
-    const items: Array<{ id: string, tool: ToolRegistryEntry }> = [];
+  const recommendedItems: RecommendedItem[] = useMemo(() => {
+    if (!quickSection) return [];
+    const items: RecommendedItem[] = [];
     quickSection.subcategories.forEach(sc => sc.tools.forEach(t => items.push(t)));
     return items;
   }, [quickSection]);
@@ -177,11 +179,11 @@ const FullscreenToolList = ({
               </header>
               {showDescriptions ? (
                 <div className="tool-panel__fullscreen-grid tool-panel__fullscreen-grid--detailed">
-                  {recommendedItems.map((item: any) => renderToolItem(item.id, item.tool))}
+                  {recommendedItems.map((item) => renderToolItem(item.id, item.tool))}
                 </div>
               ) : (
                 <div className="tool-panel__fullscreen-list">
-                  {recommendedItems.map((item: any) => renderToolItem(item.id, item.tool))}
+                  {recommendedItems.map((item) => renderToolItem(item.id, item.tool))}
                 </div>
               )}
             </section>
@@ -249,5 +251,4 @@ const FullscreenToolList = ({
 };
 
 export default FullscreenToolList;
-
 

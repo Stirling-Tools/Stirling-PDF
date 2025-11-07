@@ -3,6 +3,8 @@ import { generateThumbnailWithMetadata } from '@app/utils/thumbnailUtils';
 import { createProcessedFile, createChildStub } from '@app/contexts/file/fileActions';
 import { createStirlingFile, StirlingFile, FileId, StirlingFileStub } from '@app/types/fileContext';
 import type { SignatureAPI } from '@app/components/viewer/viewerTypes';
+import type React from 'react';
+import type { PdfAnnotationObject } from '@embedpdf/models';
 
 interface MinimalFileContextSelectors {
   getAllFileIds: () => FileId[];
@@ -28,12 +30,39 @@ export interface SignatureFlatteningResult {
   outputStub: StirlingFileStub;
 }
 
+type AnnotationRect = {
+  origin?: { x?: number; y?: number };
+  x?: number;
+  y?: number;
+  left?: number;
+  top?: number;
+  size?: { width?: number; height?: number };
+  width?: number;
+  height?: number;
+};
+
+type SessionAnnotation = PdfAnnotationObject & {
+  rect?: AnnotationRect;
+  bounds?: AnnotationRect;
+  rectangle?: AnnotationRect;
+  position?: AnnotationRect;
+  imageData?: string;
+  appearance?: string;
+  stampData?: string;
+  imageSrc?: string;
+  contents?: string;
+  data?: string;
+};
+
+const getAnnotationRect = (annotation: SessionAnnotation): AnnotationRect | undefined =>
+  annotation.rect ?? annotation.bounds ?? annotation.rectangle ?? annotation.position;
+
 export async function flattenSignatures(options: SignatureFlatteningOptions): Promise<SignatureFlatteningResult | null> {
   const { signatureApiRef, getImageData, exportActions, selectors, originalFile, getScrollState, activeFileIndex } = options;
 
   try {
     // Step 1: Extract all annotations from EmbedPDF before export
-    const allAnnotations: Array<{pageIndex: number, annotations: any[]}> = [];
+    const allAnnotations: Array<{ pageIndex: number; annotations: SessionAnnotation[] }> = [];
 
     if (signatureApiRef?.current) {
 
@@ -45,21 +74,30 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
       for (let pageIndex = 0; pageIndex < totalPages; pageIndex++) {
         try {
           const pageAnnotations = await signatureApiRef.current.getPageAnnotations(pageIndex);
-          if (pageAnnotations && pageAnnotations.length > 0) {
+          if (Array.isArray(pageAnnotations) && pageAnnotations.length > 0) {
             // Filter to only include annotations added in this session
-            const sessionAnnotations = pageAnnotations.filter(annotation => {
+            const sessionAnnotations = pageAnnotations.filter((annotation): annotation is SessionAnnotation => {
+              if (!annotation || typeof annotation !== 'object') {
+                return false;
+              }
+              const extendedAnnotation = annotation as SessionAnnotation;
               // Check if this annotation has stored image data (indicates it was added this session)
-              const hasStoredImageData = annotation.id && getImageData(annotation.id);
+              const storedImageData = extendedAnnotation.id ? getImageData(extendedAnnotation.id) : undefined;
 
               // Also check if it has image data directly in the annotation (new signatures)
-              const hasDirectImageData = annotation.imageData || annotation.appearance ||
-                                       annotation.stampData || annotation.imageSrc ||
-                                       annotation.contents || annotation.data;
+              const directImageData = [
+                extendedAnnotation.imageData,
+                extendedAnnotation.appearance,
+                extendedAnnotation.stampData,
+                extendedAnnotation.imageSrc,
+                extendedAnnotation.contents,
+                extendedAnnotation.data
+              ].find((value): value is string => typeof value === 'string');
 
-              const isSessionAnnotation = hasStoredImageData || (hasDirectImageData && typeof hasDirectImageData === 'string' && hasDirectImageData.startsWith('data:image'));
-
-
-              return isSessionAnnotation;
+              return Boolean(
+                storedImageData ||
+                (directImageData && directImageData.startsWith('data:image'))
+              );
             });
 
             if (sessionAnnotations.length > 0) {
@@ -78,7 +116,9 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
       for (const pageData of allAnnotations) {
         for (const annotation of pageData.annotations) {
           try {
-            await signatureApiRef.current.deleteAnnotation(annotation.id, pageData.pageIndex);
+            if (annotation.id) {
+              await signatureApiRef.current.deleteAnnotation(annotation.id, pageData.pageIndex);
+            }
           } catch (deleteError) {
             console.warn(`Failed to delete annotation ${annotation.id}:`, deleteError);
           }
@@ -165,7 +205,7 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
               for (const annotation of annotations) {
                 try {
 
-                  const rect = annotation.rect || annotation.bounds || annotation.rectangle || annotation.position;
+                  const rect = getAnnotationRect(annotation);
 
                   if (rect) {
                     // Extract original annotation position and size
@@ -180,8 +220,16 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
 
 
                     // Try to get annotation image data
-                    let imageDataUrl = annotation.imageData || annotation.appearance || annotation.stampData ||
-                                     annotation.imageSrc || annotation.contents || annotation.data;
+                    const inlineImageData = [
+                      annotation.imageData,
+                      annotation.appearance,
+                      annotation.stampData,
+                      annotation.imageSrc,
+                      annotation.contents,
+                      annotation.data
+                    ].find((value): value is string => typeof value === 'string');
+
+                    let imageDataUrl = inlineImageData;
 
                     // If no image data found directly, try to get it from storage
                     if (!imageDataUrl && annotation.id) {
@@ -191,7 +239,7 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
                       }
                     }
 
-                    if (imageDataUrl && typeof imageDataUrl === 'string' && imageDataUrl.startsWith('data:image')) {
+                    if (imageDataUrl && imageDataUrl.startsWith('data:image')) {
                       try {
 
                         // Convert data URL to bytes
@@ -219,46 +267,52 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
                       } catch (imageError) {
                         console.error('Failed to render image annotation:', imageError);
                       }
-                    } else if (annotation.content || annotation.text) {
-                      console.warn('Rendering text annotation instead');
-                      // Handle text annotations
-                      page.drawText(annotation.content || annotation.text, {
-                        x: pdfX,
-                        y: pdfY + height - 12, // Adjust for text baseline
-                        size: 12,
-                        color: rgb(0, 0, 0)
-                      });
-                    } else if (annotation.type === 14 || annotation.type === 15) {
-                      // Handle ink annotations (drawn signatures)
-                      page.drawRectangle({
-                        x: pdfX,
-                        y: pdfY,
-                        width: width,
-                        height: height,
-                        borderColor: rgb(0, 0, 0),
-                        borderWidth: 2,
-                        color: rgb(0.9, 0.9, 0.9), // Light gray background
-                        opacity: 0.8
-                      });
-
-                      page.drawText('Drawn Signature', {
-                        x: pdfX + 5,
-                        y: pdfY + height / 2,
-                        size: 10,
-                        color: rgb(0, 0, 0)
-                      });
                     } else {
-                      // Handle other annotation types
-                      page.drawRectangle({
-                        x: pdfX,
-                        y: pdfY,
-                        width: width,
-                        height: height,
-                        borderColor: rgb(1, 0, 0),
-                        borderWidth: 2,
-                        color: rgb(1, 1, 0), // Yellow background
-                        opacity: 0.5
-                      });
+                      const textContent = typeof annotation.contents === 'string'
+                        ? annotation.contents
+                        : (typeof annotation.data === 'string' ? annotation.data : undefined);
+
+                      if (textContent) {
+                        console.warn('Rendering text annotation instead');
+                        // Handle text annotations
+                        page.drawText(textContent, {
+                          x: pdfX,
+                          y: pdfY + height - 12, // Adjust for text baseline
+                          size: 12,
+                          color: rgb(0, 0, 0)
+                        });
+                      } else if (annotation.type === 14 || annotation.type === 15) {
+                        // Handle ink annotations (drawn signatures)
+                        page.drawRectangle({
+                          x: pdfX,
+                          y: pdfY,
+                          width: width,
+                          height: height,
+                          borderColor: rgb(0, 0, 0),
+                          borderWidth: 2,
+                          color: rgb(0.9, 0.9, 0.9), // Light gray background
+                          opacity: 0.8
+                        });
+
+                        page.drawText('Drawn Signature', {
+                          x: pdfX + 5,
+                          y: pdfY + height / 2,
+                          size: 10,
+                          color: rgb(0, 0, 0)
+                        });
+                      } else {
+                        // Handle other annotation types
+                        page.drawRectangle({
+                          x: pdfX,
+                          y: pdfY,
+                          width: width,
+                          height: height,
+                          borderColor: rgb(1, 0, 0),
+                          borderWidth: 2,
+                          color: rgb(1, 1, 0), // Yellow background
+                          opacity: 0.5
+                        });
+                      }
                     }
                   }
                 } catch (annotationError) {

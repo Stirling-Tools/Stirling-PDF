@@ -2,6 +2,7 @@ import JSZip, { JSZipObject } from 'jszip';
 import { StirlingFileStub, createStirlingFile } from '@app/types/fileContext';
 import { generateThumbnailForFile } from '@app/utils/thumbnailUtils';
 import { fileStorage } from '@app/services/fileStorage';
+import { toArrayBuffer } from '@app/utils/fileResponseUtils';
 
 // Undocumented interface in JSZip for JSZipObject._data
 interface CompressedObject {
@@ -13,7 +14,8 @@ interface CompressedObject {
 }
 
 const getData = (zipEntry: JSZipObject): CompressedObject | undefined => {
-  return (zipEntry as any)._data as CompressedObject;
+  const candidate = zipEntry as JSZipObject & { _data?: CompressedObject };
+  return candidate._data;
 };
 
 export interface ZipExtractionResult {
@@ -216,7 +218,7 @@ export class ZipFileService {
           const content = await zipEntry.async('uint8array');
 
           // Create File object
-          const extractedFile = new File([content as any], this.sanitizeFilename(filename), {
+          const extractedFile = new File([toArrayBuffer(content)], this.sanitizeFilename(filename), {
             type: 'application/pdf',
             lastModified: zipEntry.date?.getTime() || Date.now()
           });

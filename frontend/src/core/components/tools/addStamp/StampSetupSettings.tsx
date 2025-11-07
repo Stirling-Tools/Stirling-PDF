@@ -51,8 +51,8 @@ const StampSetupSettings = ({ parameters, onParameterChange, disabled = false }:
           <Select
             label={t('AddStampRequest.alphabet', 'Alphabet')}
             value={parameters.alphabet}
-            onChange={(v) => {
-              const nextAlphabet = (v as any) || 'roman';
+            onChange={(value) => {
+              const nextAlphabet = (value as AddStampParameters['alphabet'] | null) ?? 'roman';
               onParameterChange('alphabet', nextAlphabet);
               const nextDefault = getDefaultFontSizeForAlphabet(nextAlphabet);
               onParameterChange('fontSize', nextDefault);

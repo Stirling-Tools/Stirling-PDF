@@ -59,7 +59,7 @@ export function ThumbnailSidebar({ visible, onToggle: _onToggle, activeFileIndex
               ...prev,
               [pageIndex]: thumbUrl
             }));
-          }).catch((error: any) => {
+          }).catch((error: unknown) => {
             console.error('Failed to generate thumbnail for page', pageIndex + 1, error);
             setThumbnails(prev => ({
               ...prev,

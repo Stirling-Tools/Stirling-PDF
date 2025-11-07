@@ -26,7 +26,7 @@ const AddPageNumbersAppearanceSettings = ({
         <Select
           label={t('addPageNumbers.selectText.2', 'Margin')}
           value={parameters.customMargin}
-          onChange={(v) => onParameterChange('customMargin', (v as any) || 'medium')}
+          onChange={(value) => onParameterChange('customMargin', (value as AddPageNumbersParameters['customMargin'] | null) ?? 'medium')}
           data={[
             { value: 'small', label: t('sizes.small', 'Small') },
             { value: 'medium', label: t('sizes.medium', 'Medium') },
@@ -51,7 +51,7 @@ const AddPageNumbersAppearanceSettings = ({
         <Select
           label={t('addPageNumbers.fontName', 'Font Type')}
           value={parameters.fontType}
-          onChange={(v) => onParameterChange('fontType', (v as any) || 'Times')}
+          onChange={(value) => onParameterChange('fontType', (value as AddPageNumbersParameters['fontType'] | null) ?? 'Times')}
           data={[
             { value: 'Times', label: 'Times Roman' },
             { value: 'Helvetica', label: 'Helvetica' },

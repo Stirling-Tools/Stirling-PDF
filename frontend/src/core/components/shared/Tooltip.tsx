@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useMemo, useCallback, MutableRefObject } from 'react';
 import { createPortal } from 'react-dom';
 import LocalIcon from '@app/components/shared/LocalIcon';
 import { addEventListenerWithCleanup } from '@app/utils/genericUtils';
@@ -10,12 +10,24 @@ import { BASE_PATH } from '@app/constants/app';
 import styles from '@app/components/shared/tooltip/Tooltip.module.css';
 import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from '@app/styles/zIndex';
 
+interface TooltipTriggerProps {
+  ref?: React.Ref<HTMLElement>;
+  onPointerEnter?: (event: React.PointerEvent) => void;
+  onPointerLeave?: (event: React.PointerEvent) => void;
+  onMouseDown?: (event: React.MouseEvent) => void;
+  onMouseUp?: (event: React.MouseEvent) => void;
+  onClick?: (event: React.MouseEvent) => void;
+  onFocus?: (event: React.FocusEvent) => void;
+  onBlur?: (event: React.FocusEvent) => void;
+  [key: string]: unknown;
+}
+
 export interface TooltipProps {
   sidebarTooltip?: boolean;
   position?: 'right' | 'left' | 'top' | 'bottom';
   content?: React.ReactNode;
   tips?: TooltipTip[];
-  children: React.ReactElement;
+  children: React.ReactElement<TooltipTriggerProps>;
   offset?: number;
   maxWidth?: number | string;
   minWidth?: number | string;
@@ -76,6 +88,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
 
   const isControlled = controlledOpen !== undefined;
   const open = (isControlled ? !!controlledOpen : internalOpen) && !disabled;
+  const childProps = children.props;
 
   const setOpen = useCallback(
     (newOpen: boolean) => {
@@ -162,9 +175,9 @@ export const Tooltip: React.FC<TooltipProps> = ({
   const handlePointerEnter = useCallback(
     (e: React.PointerEvent) => {
       if (!isPinned && !disabled) openWithDelay();
-      (children.props as any)?.onPointerEnter?.(e);
+      childProps.onPointerEnter?.(e);
     },
-    [isPinned, openWithDelay, children.props, disabled]
+    [isPinned, openWithDelay, childProps, disabled]
   );
 
   const handlePointerLeave = useCallback(
@@ -173,38 +186,38 @@ export const Tooltip: React.FC<TooltipProps> = ({
 
       // Moving into the tooltip → keep open
       if (related && tooltipRef.current && tooltipRef.current.contains(related)) {
-        (children.props as any)?.onPointerLeave?.(e);
+        childProps.onPointerLeave?.(e);
         return;
       }
 
       // Ignore transient leave between mousedown and click
       if (clickPendingRef.current) {
-        (children.props as any)?.onPointerLeave?.(e);
+        childProps.onPointerLeave?.(e);
         return;
       }
 
       clearTimers();
       if (!isPinned) setOpen(false);
-      (children.props as any)?.onPointerLeave?.(e);
+      childProps.onPointerLeave?.(e);
     },
-    [clearTimers, isPinned, setOpen, children.props]
+    [clearTimers, isPinned, setOpen, childProps]
   );
 
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
       clickPendingRef.current = true;
-      (children.props as any)?.onMouseDown?.(e);
+      childProps.onMouseDown?.(e);
     },
-    [children.props]
+    [childProps]
   );
 
   const handleMouseUp = useCallback(
     (e: React.MouseEvent) => {
       // allow microtask turn so click can see this false
       queueMicrotask(() => (clickPendingRef.current = false));
-      (children.props as any)?.onMouseUp?.(e);
+      childProps.onMouseUp?.(e);
     },
-    [children.props]
+    [childProps]
   );
 
   const handleClick = useCallback(
@@ -219,31 +232,31 @@ export const Tooltip: React.FC<TooltipProps> = ({
         return;
       }
       clickPendingRef.current = false;
-      (children.props as any)?.onClick?.(e);
+      childProps.onClick?.(e);
     },
-    [clearTimers, pinOnClick, open, setOpen, children.props]
+    [clearTimers, pinOnClick, open, setOpen, childProps]
   );
 
   // Keyboard / focus accessibility
   const handleFocus = useCallback(
     (e: React.FocusEvent) => {
       if (!isPinned && !disabled && openOnFocus) openWithDelay();
-      (children.props as any)?.onFocus?.(e);
+      childProps.onFocus?.(e);
     },
-    [isPinned, openWithDelay, children.props, disabled, openOnFocus]
+    [isPinned, openWithDelay, childProps, disabled, openOnFocus]
   );
 
   const handleBlur = useCallback(
     (e: React.FocusEvent) => {
       const related = e.relatedTarget as Node | null;
       if (related && tooltipRef.current && tooltipRef.current.contains(related)) {
-        (children.props as any)?.onBlur?.(e);
+        childProps.onBlur?.(e);
         return;
       }
       if (!isPinned) setOpen(false);
-      (children.props as any)?.onBlur?.(e);
+      childProps.onBlur?.(e);
     },
-    [isPinned, setOpen, children.props]
+    [isPinned, setOpen, childProps]
   );
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
@@ -265,12 +278,14 @@ export const Tooltip: React.FC<TooltipProps> = ({
   );
 
   // Enhance child with handlers and ref
-  const childWithHandlers = React.cloneElement(children as any, {
+  const childWithHandlers = React.cloneElement(children, {
     ref: (node: HTMLElement | null) => {
       triggerRef.current = node || null;
-      const originalRef = (children as any).ref;
+      const originalRef = (children as React.ReactElement & { ref?: React.Ref<HTMLElement | null> }).ref;
       if (typeof originalRef === 'function') originalRef(node);
-      else if (originalRef && typeof originalRef === 'object') (originalRef as any).current = node;
+      else if (originalRef && typeof originalRef === 'object') {
+        (originalRef as MutableRefObject<HTMLElement | null>).current = node;
+      }
     },
     'aria-describedby': open ? tooltipIdRef.current : undefined,
     onPointerEnter: handlePointerEnter,

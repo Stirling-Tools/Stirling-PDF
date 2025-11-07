@@ -1,4 +1,5 @@
 import apiClient from '@app/services/apiClient';
+import type { AxiosRequestConfig } from 'axios';
 
 export interface Team {
   id: number;
@@ -16,7 +17,9 @@ export interface TeamMember {
     id: number;
     name: string;
   };
-  lastRequest?: Date | null;
+  lastRequest?: number | null;
+  rolesAsString?: string;
+  authenticationType?: string;
 }
 
 export interface TeamDetailsResponse {
@@ -24,6 +27,17 @@ export interface TeamDetailsResponse {
   members: TeamMember[];
   availableUsers: TeamMember[];
 }
+
+interface TeamDetailsData {
+  team: Team;
+  teamUsers: TeamMember[];
+  availableUsers: TeamMember[];
+  userLastRequest?: Record<string, number>;
+}
+
+const suppressErrorToastConfig: AxiosRequestConfig & { suppressErrorToast: boolean } = {
+  suppressErrorToast: true,
+};
 
 /**
  * Team Management Service
@@ -41,7 +55,7 @@ export const teamService = {
   /**
    * Get team details including members
    */
-  async getTeamDetails(teamId: number): Promise<any> {
+  async getTeamDetails(teamId: number): Promise<TeamDetailsData> {
     const response = await apiClient.get(`/api/v1/proprietary/ui-data/teams/${teamId}`);
     return response.data;
   },
@@ -52,9 +66,7 @@ export const teamService = {
   async createTeam(name: string): Promise<void> {
     const formData = new FormData();
     formData.append('name', name);
-    await apiClient.post('/api/v1/team/create', formData, {
-      suppressErrorToast: true,
-    } as any);
+    await apiClient.post('/api/v1/team/create', formData, suppressErrorToastConfig);
   },
 
   /**
@@ -64,9 +76,7 @@ export const teamService = {
     const formData = new FormData();
     formData.append('teamId', teamId.toString());
     formData.append('newName', newName);
-    await apiClient.post('/api/v1/team/rename', formData, {
-      suppressErrorToast: true,
-    } as any);
+    await apiClient.post('/api/v1/team/rename', formData, suppressErrorToastConfig);
   },
 
   /**
@@ -75,9 +85,7 @@ export const teamService = {
   async deleteTeam(teamId: number): Promise<void> {
     const formData = new FormData();
     formData.append('teamId', teamId.toString());
-    await apiClient.post('/api/v1/team/delete', formData, {
-      suppressErrorToast: true,
-    } as any);
+    await apiClient.post('/api/v1/team/delete', formData, suppressErrorToastConfig);
   },
 
   /**
@@ -87,9 +95,7 @@ export const teamService = {
     const formData = new FormData();
     formData.append('teamId', teamId.toString());
     formData.append('userId', userId.toString());
-    await apiClient.post('/api/v1/team/addUser', formData, {
-      suppressErrorToast: true,
-    } as any);
+    await apiClient.post('/api/v1/team/addUser', formData, suppressErrorToastConfig);
   },
 
   /**
@@ -100,8 +106,6 @@ export const teamService = {
     formData.append('username', username);
     formData.append('role', currentRole);
     formData.append('teamId', teamId.toString());
-    await apiClient.post('/api/v1/user/admin/changeRole', formData, {
-      suppressErrorToast: true,
-    } as any);
+    await apiClient.post('/api/v1/user/admin/changeRole', formData, suppressErrorToastConfig);
   },
 };

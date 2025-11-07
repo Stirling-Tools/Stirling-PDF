@@ -71,10 +71,13 @@ export const AppConfigProvider: React.FC<{ children: ReactNode }> = ({ children 
       console.debug('[AppConfig] Config fetched successfully:', data);
       setConfig(data);
       setFetchCount(prev => prev + 1);
-    } catch (err: any) {
+    } catch (err: unknown) {
       // On 401 (not authenticated), use default config with login enabled
       // This allows the app to work even without authentication
-      if (err.response?.status === 401) {
+      const responseStatus = typeof err === 'object' && err !== null && 'response' in err
+        ? (err as { response?: { status?: number } }).response?.status
+        : undefined;
+      if (responseStatus === 401) {
         console.debug('[AppConfig] 401 error - using default config (login enabled)');
         setConfig({ enableLogin: true });
         setLoading(false);

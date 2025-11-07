@@ -2,13 +2,14 @@ import React from 'react';
 import { Flex, Text, Divider } from '@mantine/core';
 import LocalIcon from '@app/components/shared/LocalIcon';
 import { Tooltip } from '@app/components/shared/Tooltip';
+import type { TooltipTip } from '@app/types/tips';
 
 export interface ToolWorkflowTitleProps {
   title: string;
   description?: string;
   tooltip?: {
     content?: React.ReactNode;
-    tips?: any[];
+    tips?: TooltipTip[];
     header?: {
       title: string;
       logo?: React.ReactNode;

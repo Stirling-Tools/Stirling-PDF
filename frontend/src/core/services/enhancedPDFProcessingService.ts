@@ -5,6 +5,7 @@ import { FileAnalyzer } from '@app/services/fileAnalyzer';
 import { ProcessingErrorHandler } from '@app/services/processingErrorHandler';
 import { pdfWorkerManager } from '@app/services/pdfWorkerManager';
 import { createQuickKey } from '@app/types/fileContext';
+import type { PDFPageProxy, RenderParameters } from 'pdfjs-dist/types/src/display/api';
 
 export class EnhancedPDFProcessingService {
   private static instance: EnhancedPDFProcessingService;
@@ -400,7 +401,7 @@ export class EnhancedPDFProcessingService {
   /**
    * Render a page thumbnail with specified quality
    */
-  private async renderPageThumbnail(page: any, quality: 'low' | 'medium' | 'high'): Promise<string> {
+  private async renderPageThumbnail(page: PDFPageProxy, quality: 'low' | 'medium' | 'high'): Promise<string> {
     const scales = { low: 0.2, medium: 0.5, high: 0.8 }; // Reduced low quality for page editor
     const scale = scales[quality];
 
@@ -414,7 +415,12 @@ export class EnhancedPDFProcessingService {
       throw new Error('Could not get canvas context');
     }
 
-    await page.render({ canvasContext: context, viewport }).promise;
+    const renderConfig: RenderParameters = {
+      canvasContext: context,
+      viewport,
+      canvas,
+    };
+    await page.render(renderConfig).promise;
     return canvas.toDataURL('image/jpeg', 0.8); // Use JPEG for better compression
   }
 

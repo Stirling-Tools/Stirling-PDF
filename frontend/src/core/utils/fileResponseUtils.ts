@@ -30,16 +30,58 @@ export const getFilenameFromHeaders = (contentDisposition: string = ''): string 
  * @param fallbackFilename - Filename to use if none provided in headers
  * @returns File object
  */
+export type HeaderSource =
+  | Record<string, string | null | undefined>
+  | Headers
+  | Array<[string, string]>
+  | undefined
+  | null;
+
+function getHeaderValue(headers: HeaderSource, key: string): string | undefined {
+  if (!headers) return undefined;
+  if (headers instanceof Headers) {
+    const value = headers.get(key);
+    return value === null ? undefined : value;
+  }
+  if (Array.isArray(headers)) {
+    const entry = headers.find(([headerKey]) => headerKey.toLowerCase() === key.toLowerCase());
+    return entry?.[1];
+  }
+  const value = headers[key];
+  return value === null || value === undefined ? undefined : value;
+}
+
 export const createFileFromApiResponse = (
-  responseData: any,
-  headers: any,
+  responseData: BlobPart,
+  headers: HeaderSource,
   fallbackFilename: string
 ): File => {
-  const contentType = headers?.['content-type'] || 'application/octet-stream';
-  const contentDisposition = headers?.['content-disposition'] || '';
+  const contentType = getHeaderValue(headers, 'content-type') || 'application/octet-stream';
+  const contentDisposition = getHeaderValue(headers, 'content-disposition') || '';
 
   const filename = getFilenameFromHeaders(contentDisposition) || fallbackFilename;
   const blob = new Blob([responseData], { type: contentType });
 
   return new File([blob], filename, { type: contentType });
 };
+
+export function toArrayBuffer(view: ArrayBufferView): ArrayBuffer {
+  const { buffer, byteOffset, byteLength } = view;
+
+  const start = byteOffset;
+  const end = byteOffset + byteLength;
+
+  if (typeof SharedArrayBuffer !== 'undefined' && buffer instanceof SharedArrayBuffer) {
+    const out = new ArrayBuffer(byteLength);
+    new Uint8Array(out).set(new Uint8Array(buffer, start, byteLength));
+    return out;
+  }
+
+  if (buffer instanceof ArrayBuffer && typeof buffer.slice === 'function') {
+    return buffer.slice(start, end);
+  }
+
+  const out = new ArrayBuffer(byteLength);
+  new Uint8Array(out).set(new Uint8Array(buffer, start, byteLength));
+  return out;
+}

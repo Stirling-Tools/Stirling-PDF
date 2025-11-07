@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import axios from 'axios';
 import apiClient from '@app/services/apiClient';
 
 // Retry configuration
@@ -10,6 +11,24 @@ const INITIAL_DELAY = 1000; // 1 second
  */
 function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+interface ErrorPayload {
+  message?: string;
+  error?: string;
+}
+
+function extractErrorMessage(error: unknown, fallback: string): string {
+  if (axios.isAxiosError<ErrorPayload>(error)) {
+    return error.response?.data?.message
+      || error.response?.data?.error
+      || error.message
+      || fallback;
+  }
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return fallback;
 }
 
 export interface AppConfig {
@@ -80,21 +99,22 @@ export const AppConfigProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         console.log('[AppConfig] Successfully fetched app config');
         setLoading(false);
         return; // Success - exit function
-      } catch (err: any) {
-        const status = err?.response?.status;
+      } catch (error: unknown) {
+        const status = axios.isAxiosError(error) ? error.response?.status : undefined;
 
         // Check if we should retry (network errors or 5xx errors)
         const shouldRetry = (!status || status >= 500) && attempt < MAX_RETRIES;
 
         if (shouldRetry) {
-          console.warn(`[AppConfig] Attempt ${attempt + 1} failed (status ${status || 'network error'}):`, err.message, '- will retry...');
+          const message = extractErrorMessage(error, 'Unknown error');
+          console.warn(`[AppConfig] Attempt ${attempt + 1} failed (status ${status || 'network error'}):`, message, '- will retry...');
           continue;
         }
 
         // Final attempt failed or non-retryable error (4xx)
-        const errorMessage = err?.response?.data?.message || err?.message || 'Unknown error occurred';
+        const errorMessage = extractErrorMessage(error, 'Unknown error occurred');
         setError(errorMessage);
-        console.error(`[AppConfig] Failed to fetch app config after ${attempt + 1} attempts:`, err);
+        console.error(`[AppConfig] Failed to fetch app config after ${attempt + 1} attempts:`, error);
         break;
       }
     }

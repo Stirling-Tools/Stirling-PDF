@@ -33,7 +33,7 @@ export function useAuditFilters(initialFilters: Partial<AuditFilters> = {}) {
     fetchMetadata();
   }, []);
 
-  const handleFilterChange = (key: keyof AuditFilters, value: any) => {
+  const handleFilterChange = <K extends keyof AuditFilters>(key: K, value: AuditFilters[K]) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
   };
 

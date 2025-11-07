@@ -13,7 +13,7 @@ const StarIcon = () => React.createElement(LocalIcon, { icon: 'star', width: '1.
 export function useSuggestedAutomations(): SuggestedAutomation[] {
   const { t } = useTranslation();
 
-  const suggestedAutomations = useMemo<SuggestedAutomation[]>(() => {
+const suggestedAutomations = useMemo<SuggestedAutomation[]>(() => {
     const now = new Date().toISOString();
     return [
       {
@@ -65,7 +65,8 @@ export function useSuggestedAutomations(): SuggestedAutomation[] {
         ],
         createdAt: now,
         updatedAt: now,
-        icon: SecurityIcon,
+        icon: 'SecurityIcon',
+        iconComponent: SecurityIcon,
       },
       {
         id: "email-preparation",
@@ -112,7 +113,8 @@ export function useSuggestedAutomations(): SuggestedAutomation[] {
         ],
         createdAt: now,
         updatedAt: now,
-        icon: CompressIcon,
+        icon: 'CompressIcon',
+        iconComponent: CompressIcon,
       },
       {
         id: "secure-workflow",
@@ -151,7 +153,8 @@ export function useSuggestedAutomations(): SuggestedAutomation[] {
         ],
         createdAt: now,
         updatedAt: now,
-        icon: SecurityIcon,
+        icon: 'SecurityIcon',
+        iconComponent: SecurityIcon,
       },
       {
         id: "process-images",
@@ -185,7 +188,8 @@ export function useSuggestedAutomations(): SuggestedAutomation[] {
         ],
         createdAt: now,
         updatedAt: now,
-        icon: StarIcon,
+        icon: 'StarIcon',
+        iconComponent: StarIcon,
       },
     ];
   }, [t]);

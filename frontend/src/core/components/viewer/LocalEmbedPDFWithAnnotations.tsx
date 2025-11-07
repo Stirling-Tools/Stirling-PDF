@@ -22,7 +22,8 @@ import { Rotation } from '@embedpdf/models';
 // Import annotation plugins
 import { HistoryPluginPackage } from '@embedpdf/plugin-history/react';
 import { AnnotationLayer, AnnotationPluginPackage } from '@embedpdf/plugin-annotation/react';
-import { PdfAnnotationSubtype } from '@embedpdf/models';
+import { PdfAnnotationSubtype, type PdfAnnotationObject } from '@embedpdf/models';
+import type { AnnotationEvent } from '@app/components/viewer/viewerTypes';
 
 import { CustomSearchLayer } from '@app/components/viewer/CustomSearchLayer';
 import { ZoomAPIBridge } from '@app/components/viewer/ZoomAPIBridge';
@@ -39,7 +40,7 @@ import { RotateAPIBridge } from '@app/components/viewer/RotateAPIBridge';
 interface LocalEmbedPDFWithAnnotationsProps {
   file?: File | Blob;
   url?: string | null;
-  onAnnotationChange?: (annotations: any[]) => void;
+  onAnnotationChange?: (annotations: PdfAnnotationObject[]) => void;
 }
 
 export function LocalEmbedPDFWithAnnotations({
@@ -223,10 +224,8 @@ export function LocalEmbedPDFWithAnnotations({
 
           // Listen for annotation events to notify parent
           if (onAnnotationChange) {
-            annotationApi.onAnnotationEvent((event: any) => {
-              if (event.committed) {
-                // Get all annotations and notify parent
-                // This is a simplified approach - in reality you'd need to get all annotations
+            annotationApi.onAnnotationEvent((event: AnnotationEvent) => {
+              if (event.committed && event.annotation) {
                 onAnnotationChange([event.annotation]);
               }
             });

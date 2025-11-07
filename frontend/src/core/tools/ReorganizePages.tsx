@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
+import { createToolFlow, type MiddleStepConfig } from "@app/components/tools/shared/createToolFlow";
 import { BaseToolProps, ToolComponent } from "@app/types/tool";
 import { useEndpointEnabled } from "@app/hooks/useEndpointConfig";
 import { useFileSelection } from "@app/contexts/FileContext";
@@ -29,8 +29,12 @@ const ReorganizePages = ({ onPreviewFile, onComplete, onError }: BaseToolProps) 
       if (operation.files && onComplete) {
         onComplete(operation.files);
       }
-    } catch (error: any) {
-      onError?.(error?.message || t("reorganizePages.error.failed", "Failed to reorganize pages"));
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : t("reorganizePages.error.failed", "Failed to reorganize pages");
+      onError?.(message);
     }
   };
 
@@ -55,7 +59,7 @@ const ReorganizePages = ({ onPreviewFile, onComplete, onError }: BaseToolProps) 
     }
   });
 
-  const steps = [
+  const steps: MiddleStepConfig[] = [
     {
       title: t("reorganizePages.settings.title", "Settings"),
       isCollapsed: accordion.getCollapsedState(Step.SETTINGS),
@@ -97,8 +101,8 @@ const ReorganizePages = ({ onPreviewFile, onComplete, onError }: BaseToolProps) 
   });
 };
 
-(ReorganizePages as any).tool = () => useReorganizePagesOperation;
+const ReorganizePagesTool = ReorganizePages as ToolComponent;
+ReorganizePagesTool.tool = () => useReorganizePagesOperation;
 
-export default ReorganizePages as ToolComponent;
-
+export default ReorganizePagesTool;
 

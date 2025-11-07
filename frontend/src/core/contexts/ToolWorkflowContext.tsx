@@ -31,11 +31,11 @@ export interface CustomWorkbenchViewRegistration {
   workbenchId: WorkbenchType;
   label: string;
   icon?: React.ReactNode;
-  component: React.ComponentType<{ data: any }>;
+  component: React.ComponentType<{ data: unknown }>;
 }
 
 export interface CustomWorkbenchViewInstance extends CustomWorkbenchViewRegistration {
-  data: any;
+  data: unknown;
 }
 
 interface ToolWorkflowContextValue extends ToolWorkflowState {
@@ -80,16 +80,17 @@ interface ToolWorkflowContextValue extends ToolWorkflowState {
   customWorkbenchViews: CustomWorkbenchViewInstance[];
   registerCustomWorkbenchView: (view: CustomWorkbenchViewRegistration) => void;
   unregisterCustomWorkbenchView: (id: string) => void;
-  setCustomWorkbenchViewData: (id: string, data: any) => void;
+  setCustomWorkbenchViewData: (id: string, data: unknown) => void;
   clearCustomWorkbenchViewData: (id: string) => void;
 }
 
 // Ensure a single context instance across HMR to avoid provider/consumer mismatches
 const __GLOBAL_CONTEXT_KEY__ = '__ToolWorkflowContext__';
-const existingContext = (globalThis as any)[__GLOBAL_CONTEXT_KEY__] as React.Context<ToolWorkflowContextValue | undefined> | undefined;
+const globalRegistry = globalThis as Record<string, unknown>;
+const existingContext = globalRegistry[__GLOBAL_CONTEXT_KEY__] as React.Context<ToolWorkflowContextValue | undefined> | undefined;
 const ToolWorkflowContext = existingContext ?? createContext<ToolWorkflowContextValue | undefined>(undefined);
 if (!existingContext) {
-  (globalThis as any)[__GLOBAL_CONTEXT_KEY__] = ToolWorkflowContext;
+  globalRegistry[__GLOBAL_CONTEXT_KEY__] = ToolWorkflowContext;
 }
 
 // Provider component
@@ -105,7 +106,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
   const [toolResetFunctions, setToolResetFunctions] = React.useState<Record<string, () => void>>({});
 
   const [customViewRegistry, setCustomViewRegistry] = React.useState<Record<string, CustomWorkbenchViewRegistration>>({});
-  const [customViewData, setCustomViewData] = React.useState<Record<string, any>>({});
+  const [customViewData, setCustomViewData] = React.useState<Record<string, unknown>>({});
 
   // Navigation actions and state are available since we're inside NavigationProvider
   const { actions } = useNavigationActions();
@@ -195,7 +196,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     }
   }, [actions, navigationState.workbench]);
 
-  const setCustomWorkbenchViewData = useCallback((id: string, data: any) => {
+  const setCustomWorkbenchViewData = useCallback((id: string, data: unknown) => {
     setCustomViewData(prev => ({ ...prev, [id]: data }));
   }, []);
 

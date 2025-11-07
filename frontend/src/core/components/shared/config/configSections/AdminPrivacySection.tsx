@@ -4,11 +4,12 @@ import { Switch, Button, Stack, Paper, Text, Loader, Group } from '@mantine/core
 import { alert } from '@app/components/toast';
 import RestartConfirmationModal from '@app/components/shared/config/RestartConfirmationModal';
 import { useRestartServer } from '@app/components/shared/config/useRestartServer';
-import { useAdminSettings } from '@app/hooks/useAdminSettings';
+import { useAdminSettings, type SettingsRecord } from '@app/hooks/useAdminSettings';
 import PendingBadge from '@app/components/shared/config/PendingBadge';
 import apiClient from '@app/services/apiClient';
+import type { SettingsWithPending } from '@app/utils/settingsPendingHelper';
 
-interface PrivacySettingsData {
+interface PrivacySettingsData extends Record<string, unknown> {
   enableAnalytics?: boolean;
   googleVisibility?: boolean;
   metricsEnabled?: boolean;
@@ -34,17 +35,18 @@ export default function AdminPrivacySection() {
         apiClient.get('/api/v1/admin/settings/section/system')
       ]);
 
-      const metrics = metricsResponse.data;
-      const system = systemResponse.data;
+      const metrics = metricsResponse.data || {};
+      const system = systemResponse.data || {};
+      type PrivacySettingsResponse = SettingsWithPending<PrivacySettingsData> & PrivacySettingsData;
 
-      const result: any = {
+      const result: PrivacySettingsResponse = {
         enableAnalytics: system.enableAnalytics || false,
         googleVisibility: system.googlevisibility || false,
         metricsEnabled: metrics.enabled || false
       };
 
       // Merge pending blocks from both endpoints
-      const pendingBlock: any = {};
+      const pendingBlock: Partial<PrivacySettingsData> = {};
       if (system._pending?.enableAnalytics !== undefined) {
         pendingBlock.enableAnalytics = system._pending.enableAnalytics;
       }
@@ -62,7 +64,7 @@ export default function AdminPrivacySection() {
       return result;
     },
     saveTransformer: (settings) => {
-      const deltaSettings = {
+      const deltaSettings: SettingsRecord = {
         'system.enableAnalytics': settings.enableAnalytics,
         'system.googlevisibility': settings.googleVisibility,
         'metrics.enabled': settings.metricsEnabled

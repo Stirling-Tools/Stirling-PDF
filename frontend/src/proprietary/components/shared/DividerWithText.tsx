@@ -12,7 +12,9 @@ interface TextDividerProps {
 export default function DividerWithText({ text, className = '', style, variant = 'default', respondsToDarkMode = true, opacity }: TextDividerProps) {
   const variantClass = variant === 'subcategory' ? 'subcategory' : '';
   const themeClass = respondsToDarkMode ? '' : 'force-light';
-  const styleWithOpacity = opacity !== undefined ? { ...(style || {}), ['--text-divider-opacity' as any]: opacity } : style;
+  const styleWithOpacity = opacity !== undefined
+    ? { ...(style || {}), '--text-divider-opacity': opacity }
+    : style;
 
   if (text) {
     return (

@@ -1,8 +1,19 @@
 import { useImperativeHandle, forwardRef, useEffect } from 'react';
 import { useAnnotationCapability } from '@embedpdf/plugin-annotation/react';
-import { PdfAnnotationSubtype, uuidV4 } from '@embedpdf/models';
+import { PdfAnnotationSubtype, uuidV4, type PdfAnnotationObject } from '@embedpdf/models';
 import { useSignature } from '@app/contexts/SignatureContext';
 import type { SignatureAPI } from '@app/components/viewer/viewerTypes';
+
+type StampAnnotationExtras = {
+  imageSrc?: string;
+  imageData?: string;
+  contents?: string;
+  data?: string;
+  appearance?: string;
+};
+
+type StampAnnotation = PdfAnnotationObject & StampAnnotationExtras;
+type SelectedAnnotation = { object?: PdfAnnotationObject };
 
 export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPIBridge(_, ref) {
   const { provides: annotationApi } = useAnnotationCapability();
@@ -16,21 +27,21 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPI
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Delete' || event.key === 'Backspace') {
-        const selectedAnnotation = annotationApi.getSelectedAnnotation?.();
+        const selectedAnnotation = annotationApi.getSelectedAnnotation?.() as SelectedAnnotation | null;
 
-        if (selectedAnnotation) {
-          const annotation = selectedAnnotation as any;
-          const pageIndex = annotation.object?.pageIndex || 0;
-          const id = annotation.object?.id;
+        if (selectedAnnotation?.object) {
+          const annotation = selectedAnnotation.object as StampAnnotation;
+          const pageIndex = annotation.pageIndex || 0;
+          const id = annotation.id;
 
           // For STAMP annotations, ensure image data is preserved before deletion
-          if (annotation.object?.type === 13 && id) {
+          if (annotation.type === 13 && id) {
             // Get current annotation data to ensure we have latest image data stored
             const pageAnnotationsTask = annotationApi.getPageAnnotations?.({ pageIndex });
             if (pageAnnotationsTask) {
-              pageAnnotationsTask.toPromise().then((pageAnnotations: any) => {
-                const currentAnn = pageAnnotations?.find((ann: any) => ann.id === id);
-                if (currentAnn && currentAnn.imageSrc) {
+              pageAnnotationsTask.toPromise().then((pageAnnotations: PdfAnnotationObject[]) => {
+                const currentAnn = pageAnnotations?.find((ann) => ann.id === id) as StampAnnotation | undefined;
+                if (currentAnn?.imageSrc) {
                   // Ensure the image data is stored in our persistent store
                   storeImageData(id, currentAnn.imageSrc);
                 }
@@ -39,8 +50,9 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPI
           }
 
           // Use EmbedPDF's native deletion which should integrate with history
-          if ((annotationApi as any).deleteSelected) {
-            (annotationApi as any).deleteSelected();
+          const deletableApi = annotationApi as typeof annotationApi & { deleteSelected?: () => void };
+          if (deletableApi.deleteSelected) {
+            deletableApi.deleteSelected();
           } else {
             // Fallback to direct deletion - less ideal for history
             if (id) {
@@ -194,13 +206,19 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPI
       // Before deleting, try to preserve image data for potential undo
       const pageAnnotationsTask = annotationApi.getPageAnnotations?.({ pageIndex });
       if (pageAnnotationsTask) {
-        pageAnnotationsTask.toPromise().then((pageAnnotations: any) => {
-          const annotation = pageAnnotations?.find((ann: any) => ann.id === annotationId);
-          if (annotation && annotation.type === 13 && annotation.imageSrc) {
-            // Store image data before deletion
-            storeImageData(annotationId, annotation.imageSrc);
-          }
-        }).catch(console.error);
+        pageAnnotationsTask
+          .toPromise()
+          .then((pageAnnotations: PdfAnnotationObject[]) => {
+            const annotation = pageAnnotations?.find((ann) => ann.id === annotationId) as StampAnnotation | undefined;
+            if (annotation && annotation.type === PdfAnnotationSubtype.STAMP) {
+              const stampAnnotation = annotation as StampAnnotation;
+              if (stampAnnotation.imageSrc) {
+                // Store image data before deletion
+                storeImageData(annotationId, stampAnnotation.imageSrc);
+              }
+            }
+          })
+          .catch(console.error);
       }
 
       // Delete specific annotation by ID
@@ -212,7 +230,7 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPI
       annotationApi.setActiveTool(null);
     },
 
-    getPageAnnotations: async (pageIndex: number): Promise<any[]> => {
+    getPageAnnotations: async (pageIndex: number): Promise<PdfAnnotationObject[]> => {
       if (!annotationApi || !annotationApi.getPageAnnotations) {
         console.warn('getPageAnnotations not available');
         return [];

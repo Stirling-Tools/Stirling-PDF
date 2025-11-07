@@ -8,6 +8,7 @@ import ResultsPreview from "@app/components/tools/shared/ResultsPreview";
 import { SuggestedToolsSection } from "@app/components/tools/shared/SuggestedToolsSection";
 import { ToolOperationHook } from "@app/hooks/tools/shared/useToolOperation";
 import { Tooltip } from "@app/components/shared/Tooltip";
+import type { ToolStepProps } from '@app/components/tools/shared/ToolStep';
 
 export interface ReviewToolStepProps<TParams = unknown> {
   isVisible: boolean;
@@ -104,7 +105,11 @@ function ReviewStepContent<TParams = unknown>({
 }
 
 export function createReviewToolStep<TParams = unknown>(
-  createStep: (title: string, props: any, children?: React.ReactNode) => React.ReactElement,
+  createStep: (
+    title: string,
+    props?: Omit<ToolStepProps, 'title' | '_stepNumber'>,
+    children?: React.ReactNode
+  ) => React.ReactElement,
   props: ReviewToolStepProps<TParams>
 ): React.ReactElement {
   const { t } = useTranslation();

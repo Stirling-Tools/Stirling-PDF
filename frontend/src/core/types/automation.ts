@@ -1,10 +1,14 @@
+import type { ComponentType } from 'react';
+
 /**
  * Types for automation functionality
  */
 
+export type AutomationParameters = Record<string, unknown>;
+
 export interface AutomationOperation {
   operation: string;
-  parameters: Record<string, any>;
+  parameters: AutomationParameters;
 }
 
 export interface AutomationConfig {
@@ -22,7 +26,7 @@ export interface AutomationTool {
   operation: string;
   name: string;
   configured: boolean;
-  parameters?: Record<string, any>;
+  parameters?: AutomationParameters;
 }
 
 export type AutomationStep = typeof import('@app/constants/automation').AUTOMATION_STEPS[keyof typeof import('@app/constants/automation').AUTOMATION_STEPS];
@@ -57,12 +61,6 @@ export enum AutomationMode {
   SUGGESTED = 'suggested'
 }
 
-export interface SuggestedAutomation {
-  id: string;
-  name: string;
-  description?: string;
-  operations: AutomationOperation[];
-  createdAt: string;
-  updatedAt: string;
-  icon: any; // MUI Icon component
+export interface SuggestedAutomation extends AutomationConfig {
+  iconComponent?: ComponentType;
 }

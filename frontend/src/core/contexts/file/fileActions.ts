@@ -479,7 +479,7 @@ export async function undoConsumeFiles(
   outputFileIds: FileId[],
   filesRef: React.MutableRefObject<Map<FileId, File>>,
   dispatch: React.Dispatch<FileContextAction>,
-  indexedDB?: { saveFile: (file: File, fileId: FileId, existingThumbnail?: string) => Promise<any>; deleteFile: (fileId: FileId) => Promise<void> } | null
+  indexedDB?: { saveFile: (file: File, fileId: FileId, existingThumbnail?: string) => Promise<StirlingFileStub>; deleteFile: (fileId: FileId) => Promise<void> } | null
 ): Promise<void> {
   if (DEBUG) console.log(`📄 undoConsumeFiles: Restoring ${inputStirlingFileStubs.length} input files, removing ${outputFileIds.length} output files`);
 

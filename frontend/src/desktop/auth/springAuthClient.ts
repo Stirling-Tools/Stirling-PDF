@@ -7,6 +7,7 @@
  * - No email confirmation flow (auto-confirmed on registration)
  */
 
+import axios from 'axios';
 import apiClient from '@app/services/apiClient';
 
 // Auth types
@@ -17,7 +18,7 @@ export interface User {
   role: string;
   enabled?: boolean;
   is_anonymous?: boolean;
-  app_metadata?: Record<string, any>;
+  app_metadata?: Record<string, unknown>;
 }
 
 export interface Session {
@@ -45,6 +46,35 @@ export type AuthChangeEvent =
   | 'USER_UPDATED';
 
 type AuthChangeCallback = (event: AuthChangeEvent, session: Session | null) => void;
+
+type OAuthQueryParams = Record<string, string | number | boolean | null | undefined>;
+
+interface ErrorResponsePayload {
+  message?: string;
+  error?: string;
+  [key: string]: unknown;
+}
+
+function extractAxiosErrorMessage(error: unknown, fallback: string): string {
+  if (axios.isAxiosError<ErrorResponsePayload>(error)) {
+    const data = error.response?.data;
+    if (data && typeof data === 'object') {
+      if (typeof data.message === 'string' && data.message) return data.message;
+      if (typeof data.error === 'string' && data.error) return data.error;
+    }
+    if (typeof error.message === 'string' && error.message) {
+      return error.message;
+    }
+  }
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return fallback;
+}
+
+function getAxiosStatus(error: unknown): number | undefined {
+  return axios.isAxiosError(error) ? error.response?.status : undefined;
+}
 
 class SpringAuthClient {
   private listeners: AuthChangeCallback[] = [];
@@ -105,21 +135,22 @@ class SpringAuthClient {
 
       console.debug('[SpringAuth] getSession: Session retrieved successfully');
       return { data: { session }, error: null };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('[SpringAuth] getSession error:', error);
 
-      // If 401/403, token is invalid - clear it
-      if (error?.response?.status === 401 || error?.response?.status === 403) {
-        localStorage.removeItem('stirling_jwt');
-        console.debug('[SpringAuth] getSession: Not authenticated');
-        return { data: { session: null }, error: null };
+      if (axios.isAxiosError(error)) {
+        const status = error.response?.status;
+        if (status === 401 || status === 403) {
+          localStorage.removeItem('stirling_jwt');
+          console.debug('[SpringAuth] getSession: Not authenticated');
+          return { data: { session: null }, error: null };
+        }
       }
 
-      // Clear potentially invalid token on other errors too
       localStorage.removeItem('stirling_jwt');
       return {
         data: { session: null },
-        error: { message: error?.response?.data?.message || error?.message || 'Unknown error' },
+        error: { message: extractAxiosErrorMessage(error, 'Unknown error') },
       };
     }
   }
@@ -157,9 +188,9 @@ class SpringAuthClient {
       this.notifyListeners('SIGNED_IN', session);
 
       return { user: data.user, session, error: null };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('[SpringAuth] signInWithPassword error:', error);
-      const errorMessage = error?.response?.data?.error || error?.message || 'Login failed';
+      const errorMessage = extractAxiosErrorMessage(error, 'Login failed');
       return {
         user: null,
         session: null,
@@ -189,9 +220,9 @@ class SpringAuthClient {
       // Note: Spring backend auto-confirms users (no email verification)
       // Return user but no session (user needs to login)
       return { user: data.user, session: null, error: null };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('[SpringAuth] signUp error:', error);
-      const errorMessage = error?.response?.data?.error || error?.message || 'Registration failed';
+      const errorMessage = extractAxiosErrorMessage(error, 'Registration failed');
       return {
         user: null,
         session: null,
@@ -206,7 +237,7 @@ class SpringAuthClient {
    */
   async signInWithOAuth(params: {
     provider: 'github' | 'google' | 'apple' | 'azure';
-    options?: { redirectTo?: string; queryParams?: Record<string, any> };
+    options?: { redirectTo?: string; queryParams?: OAuthQueryParams };
   }): Promise<{ error: AuthError | null }> {
     try {
       const redirectUrl = `/oauth2/authorization/${params.provider}`;
@@ -233,13 +264,11 @@ class SpringAuthClient {
       });
 
       return { data: {}, error: null };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('[SpringAuth] resetPasswordForEmail error:', error);
       return {
         data: {},
-        error: {
-          message: error?.response?.data?.error || error?.message || 'Password reset failed',
-        },
+        error: { message: extractAxiosErrorMessage(error, 'Password reset failed') },
       };
     }
   }
@@ -267,12 +296,10 @@ class SpringAuthClient {
       this.notifyListeners('SIGNED_OUT', null);
 
       return { error: null };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('[SpringAuth] signOut error:', error);
       return {
-        error: {
-          message: error?.response?.data?.error || error?.message || 'Logout failed',
-        },
+        error: { message: extractAxiosErrorMessage(error, 'Logout failed') },
       };
     }
   }
@@ -306,18 +333,19 @@ class SpringAuthClient {
       this.notifyListeners('TOKEN_REFRESHED', session);
 
       return { data: { session }, error: null };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('[SpringAuth] refreshSession error:', error);
       localStorage.removeItem('stirling_jwt');
 
       // Handle different error statuses
-      if (error?.response?.status === 401 || error?.response?.status === 403) {
+      const status = getAxiosStatus(error);
+      if (status === 401 || status === 403) {
         return { data: { session: null }, error: { message: 'Token refresh failed - please log in again' } };
       }
 
       return {
         data: { session: null },
-        error: { message: error?.response?.data?.message || error?.message || 'Token refresh failed' },
+        error: { message: extractAxiosErrorMessage(error, 'Token refresh failed') },
       };
     }
   }

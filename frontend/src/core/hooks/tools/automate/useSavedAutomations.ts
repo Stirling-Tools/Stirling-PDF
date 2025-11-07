@@ -46,7 +46,7 @@ export function useSavedAutomations() {
       const { automationStorage } = await import('@app/services/automationStorage');
 
       // Map suggested automation icons to MUI icon keys
-      const getIconKey = (_suggestedIcon: {id: string}): string => {
+      const getIconKey = (): string => {
         // Check the automation ID or name to determine the appropriate icon
         switch (suggestedAutomation.id) {
           case 'secure-pdf-ingestion':
@@ -65,7 +65,7 @@ export function useSavedAutomations() {
       const savedAutomation = {
         name: suggestedAutomation.name,
         description: suggestedAutomation.description,
-        icon: getIconKey(suggestedAutomation.icon),
+        icon: suggestedAutomation.icon ?? getIconKey(),
         operations: suggestedAutomation.operations
       };
 

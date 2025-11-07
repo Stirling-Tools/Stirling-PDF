@@ -6,6 +6,7 @@
  */
 
 import { GlobalWorkerOptions, getDocument, PDFDocumentProxy } from 'pdfjs-dist/legacy/build/pdf.mjs';
+import type { DocumentInitParameters } from 'pdfjs-dist/types/src/display/api';
 
 class PDFWorkerManager {
   private static instance: PDFWorkerManager;
@@ -57,32 +58,25 @@ class PDFWorkerManager {
     }
 
     // Normalize input data to PDF.js format
-    let pdfData: any;
+    let params: DocumentInitParameters;
     if (data instanceof ArrayBuffer || data instanceof Uint8Array) {
-      pdfData = { data };
+      params = { data };
     } else if (typeof data === 'string') {
-      pdfData = data; // URL string
+      params = { url: data };
     } else if (data && typeof data === 'object' && 'data' in data) {
-      pdfData = data; // Already in {data: ArrayBuffer} format
+      const buffer = (data as { data: ArrayBuffer }).data;
+      params = { data: buffer };
     } else {
-      pdfData = data; // Pass through as-is
+      params = (data as DocumentInitParameters) ?? {};
     }
 
-    const loadingTask = getDocument(
-      typeof pdfData === 'string' ? {
-        url: pdfData,
-        disableAutoFetch: options.disableAutoFetch ?? true,
-        disableStream: options.disableStream ?? true,
-        stopAtErrors: options.stopAtErrors ?? false,
-        verbosity: options.verbosity ?? 0
-      } : {
-        ...pdfData,
-        disableAutoFetch: options.disableAutoFetch ?? true,
-        disableStream: options.disableStream ?? true,
-        stopAtErrors: options.stopAtErrors ?? false,
-        verbosity: options.verbosity ?? 0
-      }
-    );
+    const loadingTask = getDocument({
+      ...params,
+      disableAutoFetch: options.disableAutoFetch ?? true,
+      disableStream: options.disableStream ?? true,
+      stopAtErrors: options.stopAtErrors ?? false,
+      verbosity: options.verbosity ?? 0
+    });
 
     try {
       const pdf = await loadingTask.promise;

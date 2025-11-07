@@ -72,7 +72,7 @@ export class FileAnalyzer {
       });
 
       const pageCount = pdf.numPages;
-      const isEncrypted = (pdf as any).isEncrypted;
+      const isEncrypted = Boolean((pdf as { isEncrypted?: boolean }).isEncrypted);
 
       // Clean up using worker manager
       pdfWorkerManager.destroyDocument(pdf);

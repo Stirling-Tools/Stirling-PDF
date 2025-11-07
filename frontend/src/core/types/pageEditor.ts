@@ -27,7 +27,7 @@ export interface PageOperation {
   pageIds: string[];
   timestamp: number;
   status: 'pending' | 'applied' | 'failed';
-  data?: any;
+  data?: unknown;
   metadata?: {
     rotation?: number;
     fromPosition?: number;

@@ -19,6 +19,29 @@ interface PickerOptions {
   mimeTypes?: string | null;
 }
 
+type GoogleTokenResponse = {
+  access_token?: string;
+  error?: string;
+};
+
+type GoogleTokenClient = {
+  callback: (response: GoogleTokenResponse) => void;
+  requestAccessToken: (options?: { prompt?: string }) => void;
+};
+
+type PickerResponseObject = google.picker.ResponseObject;
+
+interface PickerDocument {
+  name?: string;
+  mimeType?: string;
+  lastModified?: number;
+  [key: string]: unknown;
+}
+
+type DriveFileResponse = {
+  body: string;
+};
+
 // Expandable mime types for Google Picker
 const expandableMimeTypes: Record<string, string[]> = {
   'image/*': ['image/jpeg', 'image/png', 'image/svg+xml'],
@@ -51,7 +74,7 @@ function fileInputToGooglePickerMimeTypes(accept?: string): string | null {
 
 class GoogleDrivePickerService {
   private config: GoogleDriveConfig | null = null;
-  private tokenClient: any = null;
+  private tokenClient: GoogleTokenClient | null = null;
   private accessToken: string | null = null;
   private gapiLoaded = false;
   private gisLoaded = false;
@@ -112,7 +135,7 @@ class GoogleDrivePickerService {
       client_id: this.config.clientId,
       scope: SCOPES,
       callback: () => {}, // Will be overridden during picker creation
-    });
+    }) as GoogleTokenClient;
 
     this.gisLoaded = true;
   }
@@ -142,13 +165,14 @@ class GoogleDrivePickerService {
         return;
       }
 
-      this.tokenClient.callback = (response: any) => {
-        if (response.error !== undefined) {
+      this.tokenClient.callback = (response: GoogleTokenResponse) => {
+        if (typeof response.error === 'string') {
           reject(new Error(response.error));
           return;
         }
-        if(response.access_token == null){
-          reject(new Error("No acces token in response"));
+        if (!response.access_token) {
+          reject(new Error('No access token in response'));
+          return;
         }
 
         this.accessToken = response.access_token;
@@ -192,7 +216,9 @@ class GoogleDrivePickerService {
         .setOAuthToken(this.accessToken)
         .addView(view1)
         .addView(view2)
-        .setCallback((data: any) => this.pickerCallback(data, resolve, reject));
+        .setCallback((data: PickerResponseObject) => {
+          void this.pickerCallback(data, resolve, reject);
+        });
 
       if (options.multiple) {
         builder.enableFeature(window.google.picker.Feature.MULTISELECT_ENABLED);
@@ -207,30 +233,55 @@ class GoogleDrivePickerService {
    * Handle picker selection callback
    */
   private async pickerCallback(
-    data: any,
+    data: PickerResponseObject,
     resolve: (files: File[]) => void,
     reject: (error: Error) => void
   ): Promise<void> {
     if (data.action === window.google.picker.Action.PICKED) {
       try {
+        const documentKey = window.google.picker.Response.DOCUMENTS;
+        const responseData = data as unknown as Record<string, unknown>;
+        const documents = responseData[documentKey];
+        if (!Array.isArray(documents)) {
+          reject(new Error('Picker response missing documents'));
+          return;
+        }
+
         const files = await Promise.all(
-          data[window.google.picker.Response.DOCUMENTS].map(async (pickedFile: any) => {
-            const fileId = pickedFile[window.google.picker.Document.ID];
+          (documents as PickerDocument[]).map(async (pickedFile) => {
+            const record = pickedFile as PickerDocument;
+            const fileIdValue = record[window.google.picker.Document.ID];
+            if (typeof fileIdValue !== 'string') {
+              throw new Error('Invalid Google Drive file identifier');
+            }
+
             const res = await window.gapi.client.drive.files.get({
-              fileId: fileId,
+              fileId: fileIdValue,
               alt: 'media',
             });
+            const driveResponse = res as DriveFileResponse;
+            if (typeof driveResponse.body !== 'string') {
+              throw new Error('Unexpected Google Drive file response');
+            }
 
             // Convert response body to File object
-            const file = new File(
-              [new Uint8Array(res.body.length).map((_: any, i: number) => res.body.charCodeAt(i))],
-              pickedFile.name,
+            const buffer = new Uint8Array(driveResponse.body.length);
+            for (let i = 0; i < driveResponse.body.length; i += 1) {
+              buffer[i] = driveResponse.body.charCodeAt(i);
+            }
+
+            const nameValue = record.name;
+            const mimeTypeValue = record.mimeType;
+            const lastModifiedValue = record.lastModified;
+
+            return new File(
+              [buffer],
+              typeof nameValue === 'string' ? nameValue : 'drive-file',
               {
-                type: pickedFile.mimeType,
-                lastModified: pickedFile.lastModified,
+                type: typeof mimeTypeValue === 'string' ? mimeTypeValue : 'application/octet-stream',
+                lastModified: typeof lastModifiedValue === 'number' ? lastModifiedValue : Date.now(),
               }
             );
-            return file;
           })
         );
 

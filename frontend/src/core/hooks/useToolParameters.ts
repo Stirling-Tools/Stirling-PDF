@@ -4,14 +4,14 @@
 
 import { useCallback, useMemo } from 'react';
 
-type ToolParameterValues = Record<string, any>;
+type ToolParameterValues = Record<string, unknown>;
 
 /**
  * Register tool parameters and get current values
  */
 export function useToolParameters(
   _toolName: string,
-  _parameters: Record<string, any>
+  _parameters: Record<string, unknown>
 ): [ToolParameterValues, (updates: Partial<ToolParameterValues>) => void] {
 
   // Return empty values and noop updater
@@ -24,10 +24,10 @@ export function useToolParameters(
 /**
  * Hook for managing a single tool parameter
  */
-export function useToolParameter<T = any>(
+export function useToolParameter<T = unknown>(
   toolName: string,
   paramName: string,
-  definition: any
+  definition: unknown
 ): [T, (value: T) => void] {
   const [allParams, updateParams] = useToolParameters(toolName, { [paramName]: definition });
 

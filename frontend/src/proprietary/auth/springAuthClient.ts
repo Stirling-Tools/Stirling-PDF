@@ -49,7 +49,7 @@ export interface User {
   enabled?: boolean;
   is_anonymous?: boolean;
   isFirstLogin?: boolean;
-  app_metadata?: Record<string, any>;
+  app_metadata?: Record<string, unknown>;
 }
 
 export interface Session {
@@ -277,7 +277,7 @@ class SpringAuthClient {
    */
   async signInWithOAuth(params: {
     provider: 'github' | 'google' | 'apple' | 'azure';
-    options?: { redirectTo?: string; queryParams?: Record<string, any> };
+    options?: { redirectTo?: string; queryParams?: Record<string, unknown> };
   }): Promise<{ error: AuthError | null }> {
     try {
       const redirectPath = normalizeRedirectPath(params.options?.redirectTo);

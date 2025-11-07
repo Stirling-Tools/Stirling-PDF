@@ -16,7 +16,7 @@ import { ToolRegistry } from '@app/data/toolsTaxonomy';
 import ToolConfigurationModal from '@app/components/tools/automate/ToolConfigurationModal';
 import ToolList from '@app/components/tools/automate/ToolList';
 import IconSelector from '@app/components/tools/automate/IconSelector';
-import { AutomationConfig, AutomationMode, AutomationTool } from '@app/types/automation';
+import { AutomationConfig, AutomationMode, AutomationTool, AutomationParameters } from '@app/types/automation';
 import { useAutomationForm } from '@app/hooks/tools/automate/useAutomationForm';
 
 
@@ -56,7 +56,7 @@ export default function AutomationCreation({ mode, existingAutomation, onBack, o
     setConfigModalOpen(true);
   };
 
-  const handleToolConfigSave = (parameters: Record<string, any>) => {
+  const handleToolConfigSave = (parameters: AutomationParameters) => {
     if (configuraingToolIndex >= 0) {
       updateTool(configuraingToolIndex, {
         configured: true,

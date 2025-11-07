@@ -12,7 +12,6 @@ export const DrawingTool: React.FC<DrawingToolProps> = ({
   onDrawingChange,
   disabled = false
 }) => {
-  const [selectedColor] = useState('#000000');
   const [penSize, setPenSize] = useState(2);
   const [penSizeInput, setPenSizeInput] = useState('2');
 
@@ -28,18 +27,20 @@ export const DrawingTool: React.FC<DrawingToolProps> = ({
       onSignatureDataChange={onDrawingChange}
       disabled={disabled}
     >
-      <Stack gap="sm">
-        <DrawingCanvas
-          selectedColor={selectedColor}
-          penSize={penSize}
-          penSizeInput={penSizeInput}
-          onColorSwatchClick={() => {}} // Color picker handled by BaseAnnotationTool
-          onPenSizeChange={setPenSize}
-          onPenSizeInputChange={setPenSizeInput}
-          onSignatureDataChange={onDrawingChange || (() => {})}
-          disabled={disabled}
-        />
-      </Stack>
+      {({ selectedColor, onColorSwatchClick, onSignatureDataChange }) => (
+        <Stack gap="sm">
+          <DrawingCanvas
+            selectedColor={selectedColor}
+            penSize={penSize}
+            penSizeInput={penSizeInput}
+            onColorSwatchClick={onColorSwatchClick}
+            onPenSizeChange={setPenSize}
+            onPenSizeInputChange={setPenSizeInput}
+            onSignatureDataChange={onSignatureDataChange}
+            disabled={disabled}
+          />
+        </Stack>
+      )}
     </BaseAnnotationTool>
   );
 };

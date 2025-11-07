@@ -137,9 +137,12 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
 
       setEndpointStatus(fullStatus);
       globalFetchedSets.add(endpointsKey);
-    } catch (err: any) {
+    } catch (err: unknown) {
       // On 401 (auth error), use optimistic fallback instead of disabling
-      if (err.response?.status === 401) {
+      const responseStatus = typeof err === 'object' && err !== null && 'response' in err
+        ? (err as { response?: { status?: number } }).response?.status
+        : undefined;
+      if (responseStatus === 401) {
         console.warn('[useEndpointConfig] 401 error - using optimistic fallback');
         const optimisticStatus = endpoints.reduce((acc, endpoint) => {
           acc[endpoint] = true;

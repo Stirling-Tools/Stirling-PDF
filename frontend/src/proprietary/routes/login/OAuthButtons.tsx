@@ -1,8 +1,17 @@
 import { useTranslation } from 'react-i18next';
 import { BASE_PATH } from '@app/constants/app';
 
+type OAuthProviderId = 'google' | 'github' | 'apple' | 'azure';
+
+interface OAuthProviderConfig {
+  id: OAuthProviderId;
+  label: string;
+  file: string;
+  isDisabled: boolean;
+}
+
 // OAuth provider configuration
-const oauthProviders = [
+const oauthProviders: ReadonlyArray<OAuthProviderConfig> = [
   { id: 'google', label: 'Google', file: 'google.svg', isDisabled: false },
   { id: 'github', label: 'GitHub', file: 'github.svg', isDisabled: false },
   { id: 'apple', label: 'Apple', file: 'apple.svg', isDisabled: true },
@@ -10,7 +19,7 @@ const oauthProviders = [
 ];
 
 interface OAuthButtonsProps {
-  onProviderClick: (provider: 'github' | 'google' | 'apple' | 'azure') => void
+  onProviderClick: (provider: OAuthProviderId) => void
   isSubmitting: boolean
   layout?: 'vertical' | 'grid' | 'icons'
 }
@@ -27,7 +36,7 @@ export default function OAuthButtons({ onProviderClick, isSubmitting, layout = '
         {enabledProviders.map((p) => (
           <div key={p.id} title={`${t('login.signInWith', 'Sign in with')} ${p.label}`}>
             <button
-              onClick={() => onProviderClick(p.id as any)}
+              onClick={() => onProviderClick(p.id)}
               disabled={isSubmitting}
               className="oauth-button-icon"
               aria-label={`${t('login.signInWith', 'Sign in with')} ${p.label}`}
@@ -46,7 +55,7 @@ export default function OAuthButtons({ onProviderClick, isSubmitting, layout = '
         {enabledProviders.map((p) => (
           <div key={p.id} title={`${t('login.signInWith', 'Sign in with')} ${p.label}`}>
             <button
-              onClick={() => onProviderClick(p.id as any)}
+              onClick={() => onProviderClick(p.id)}
               disabled={isSubmitting}
               className="oauth-button-grid"
               aria-label={`${t('login.signInWith', 'Sign in with')} ${p.label}`}
@@ -64,7 +73,7 @@ export default function OAuthButtons({ onProviderClick, isSubmitting, layout = '
       {enabledProviders.map((p) => (
         <button
           key={p.id}
-          onClick={() => onProviderClick(p.id as any)}
+          onClick={() => onProviderClick(p.id)}
           disabled={isSubmitting}
           className="oauth-button-vertical"
           title={p.label}

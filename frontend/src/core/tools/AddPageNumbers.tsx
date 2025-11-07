@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useFileSelection } from "@app/contexts/FileContext";
-import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
+import { createToolFlow, type MiddleStepConfig } from "@app/components/tools/shared/createToolFlow";
 import { BaseToolProps, ToolComponent } from "@app/types/tool";
 import { useEndpointEnabled } from "@app/hooks/useEndpointConfig";
 import { useAddPageNumbersParameters } from "@app/components/tools/addPageNumbers/useAddPageNumbersParameters";
@@ -30,8 +30,12 @@ const AddPageNumbers = ({ onPreviewFile, onComplete, onError }: BaseToolProps) =
       if (operation.files && onComplete) {
         onComplete(operation.files);
       }
-    } catch (error: any) {
-      onError?.(error?.message || t("addPageNumbers.error.failed", "Add page numbers operation failed"));
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : t("addPageNumbers.error.failed", "Add page numbers operation failed");
+      onError?.(message);
     }
   };
 
@@ -58,7 +62,7 @@ const AddPageNumbers = ({ onPreviewFile, onComplete, onError }: BaseToolProps) =
   });
 
   const getSteps = () => {
-    const steps: any[] = [];
+    const steps: MiddleStepConfig[] = [];
 
     // Step 1: Position Selection & Pages/Starting Number
     steps.push({

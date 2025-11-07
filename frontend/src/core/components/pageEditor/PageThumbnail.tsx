@@ -15,6 +15,7 @@ import { useFilesModalContext } from '@app/contexts/FilesModalContext';
 import styles from '@app/components/pageEditor/PageEditor.module.css';
 import HoverActionMenu, { HoverAction } from '@app/components/shared/HoverActionMenu';
 
+type DragManagedElement = HTMLDivElement & { __dragCleanup?: () => void };
 
 interface PageThumbnailProps {
   page: PDFPage;
@@ -69,7 +70,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
   const [mouseStartPos, setMouseStartPos] = useState<{x: number, y: number} | null>(null);
   const [isHovered, setIsHovered] = useState(false);
   const isMobile = useMediaQuery('(max-width: 1024px)');
-  const dragElementRef = useRef<HTMLDivElement>(null);
+  const dragElementRef = useRef<DragManagedElement | null>(null);
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(page.thumbnail);
   const { getThumbnailFromCache, requestThumbnail } = useThumbnailGeneration();
   const { openFilesModal } = useFilesModalContext();
@@ -132,8 +133,9 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
 
   const pageElementRef = useCallback((element: HTMLDivElement | null) => {
     if (element) {
-      pageRefs.current.set(page.id, element);
-      dragElementRef.current = element;
+      const managedElement = element as DragManagedElement;
+      pageRefs.current.set(page.id, managedElement);
+      dragElementRef.current = managedElement;
 
       const dragCleanup = draggable({
         element,
@@ -176,14 +178,15 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
         onDrop: (_) => {}
       });
 
-      (element as any).__dragCleanup = () => {
+      managedElement.__dragCleanup = () => {
         dragCleanup();
         dropCleanup();
       };
     } else {
       pageRefs.current.delete(page.id);
-      if (dragElementRef.current && (dragElementRef.current as any).__dragCleanup) {
-        (dragElementRef.current as any).__dragCleanup();
+      const current = dragElementRef.current;
+      if (current?.__dragCleanup) {
+        current.__dragCleanup();
       }
     }
   }, [page.id, page.pageNumber, pageRefs, selectionMode, selectedPageIds, pdfDocument.pages, onReorderPages]);

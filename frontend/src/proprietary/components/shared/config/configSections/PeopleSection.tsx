@@ -21,6 +21,8 @@ import {
   CloseButton,
   Avatar,
   Box,
+  type ComboboxItem,
+  type ComboboxLikeRenderOptionInput,
 } from '@mantine/core';
 import LocalIcon from '@app/components/shared/LocalIcon';
 import { alert } from '@app/components/toast';
@@ -63,11 +65,11 @@ export default function PeopleSection() {
   });
 
   // Form state for email invite
-  const [emailInviteForm, setEmailInviteForm] = useState({
-    emails: '',
-    role: 'ROLE_USER',
-    teamId: undefined as number | undefined,
-  });
+const [emailInviteForm, setEmailInviteForm] = useState({
+  emails: '',
+  role: 'ROLE_USER',
+  teamId: undefined as number | undefined,
+});
 
   // Form state for invite link
   const [inviteLinkForm, setInviteLinkForm] = useState({
@@ -79,10 +81,34 @@ export default function PeopleSection() {
   });
 
   // Form state for edit user modal
-  const [editForm, setEditForm] = useState({
-    role: 'ROLE_USER',
-    teamId: undefined as number | undefined,
-  });
+const [editForm, setEditForm] = useState({
+  role: 'ROLE_USER',
+  teamId: undefined as number | undefined,
+});
+
+type ApiErrorResponse = {
+  response?: {
+    data?: {
+      message?: string;
+      error?: string;
+    };
+  };
+  message?: string;
+};
+
+const extractErrorMessage = (error: unknown, fallback: string): string => {
+  if (typeof error === 'object' && error !== null) {
+    const apiError = error as ApiErrorResponse;
+    return apiError.response?.data?.message
+      ?? apiError.response?.data?.error
+      ?? apiError.message
+      ?? fallback;
+  }
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return fallback;
+};
 
   useEffect(() => {
     fetchData();
@@ -155,12 +181,9 @@ export default function PeopleSection() {
         forceChange: false,
       });
       fetchData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to create user:', error);
-      const errorMessage = error.response?.data?.message ||
-                          error.response?.data?.error ||
-                          error.message ||
-                          t('workspace.people.addMember.error');
+      const errorMessage = extractErrorMessage(error, t('workspace.people.addMember.error'));
       alert({ alertType: 'error', title: errorMessage });
     } finally {
       setProcessing(false);
@@ -209,12 +232,9 @@ export default function PeopleSection() {
           body: response.errors || response.error
         });
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to invite users:', error);
-      const errorMessage = error.response?.data?.message ||
-                          error.response?.data?.error ||
-                          error.message ||
-                          t('workspace.people.emailInvite.error', 'Failed to send invites');
+      const errorMessage = extractErrorMessage(error, t('workspace.people.emailInvite.error', 'Failed to send invites'));
       alert({ alertType: 'error', title: errorMessage });
     } finally {
       setProcessing(false);
@@ -254,12 +274,9 @@ export default function PeopleSection() {
           title: t('workspace.people.inviteLink.success', 'Invite link generated successfully!')
         });
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to generate invite link:', error);
-      const errorMessage = error.response?.data?.message ||
-                          error.response?.data?.error ||
-                          error.message ||
-                          t('workspace.people.inviteLink.error', 'Failed to generate invite link');
+      const errorMessage = extractErrorMessage(error, t('workspace.people.inviteLink.error', 'Failed to generate invite link'));
       alert({ alertType: 'error', title: errorMessage });
     } finally {
       setProcessing(false);
@@ -279,12 +296,9 @@ export default function PeopleSection() {
       alert({ alertType: 'success', title: t('workspace.people.editMember.success') });
       closeEditModal();
       fetchData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to update user:', error);
-      const errorMessage = error.response?.data?.message ||
-                          error.response?.data?.error ||
-                          error.message ||
-                          t('workspace.people.editMember.error');
+      const errorMessage = extractErrorMessage(error, t('workspace.people.editMember.error'));
       alert({ alertType: 'error', title: errorMessage });
     } finally {
       setProcessing(false);
@@ -296,12 +310,9 @@ export default function PeopleSection() {
       await userManagementService.toggleUserEnabled(user.username, !user.enabled);
       alert({ alertType: 'success', title: t('workspace.people.toggleEnabled.success') });
       fetchData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to toggle user status:', error);
-      const errorMessage = error.response?.data?.message ||
-                          error.response?.data?.error ||
-                          error.message ||
-                          t('workspace.people.toggleEnabled.error');
+      const errorMessage = extractErrorMessage(error, t('workspace.people.toggleEnabled.error'));
       alert({ alertType: 'error', title: errorMessage });
     }
   };
@@ -316,12 +327,9 @@ export default function PeopleSection() {
       await userManagementService.deleteUser(user.username);
       alert({ alertType: 'success', title: t('workspace.people.deleteUserSuccess', 'User deleted successfully') });
       fetchData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to delete user:', error);
-      const errorMessage = error.response?.data?.message ||
-                          error.response?.data?.error ||
-                          error.message ||
-                          t('workspace.people.deleteUserError', 'Failed to delete user');
+      const errorMessage = extractErrorMessage(error, t('workspace.people.deleteUserError', 'Failed to delete user'));
       alert({ alertType: 'error', title: errorMessage });
     }
   };
@@ -360,7 +368,12 @@ export default function PeopleSection() {
     user.username.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const roleOptions = [
+  type RoleOptionItem = ComboboxItem & {
+    description: string;
+    icon: string;
+  };
+
+  const roleOptions: RoleOptionItem[] = [
     {
       value: 'ROLE_ADMIN',
       label: t('workspace.people.admin'),
@@ -375,17 +388,20 @@ export default function PeopleSection() {
     },
   ];
 
-  const renderRoleOption = ({ option }: { option: any }) => (
+  const renderRoleOption = ({ option }: ComboboxLikeRenderOptionInput<ComboboxItem>) => {
+    const roleOption = option as RoleOptionItem;
+    return (
     <Group gap="sm" wrap="nowrap">
-      <LocalIcon icon={option.icon} width="1.25rem" height="1.25rem" style={{ flexShrink: 0 }} />
+      <LocalIcon icon={roleOption.icon} width="1.25rem" height="1.25rem" style={{ flexShrink: 0 }} />
       <Box style={{ flex: 1 }}>
-        <Text size="sm" fw={500}>{option.label}</Text>
+        <Text size="sm" fw={500}>{roleOption.label}</Text>
         <Text size="xs" c="dimmed" style={{ whiteSpace: 'normal', lineHeight: 1.4 }}>
-          {option.description}
+          {roleOption.description}
         </Text>
       </Box>
     </Group>
-  );
+    );
+  };
 
   const teamOptions = teams.map((team) => ({
     value: team.id.toString(),

@@ -13,7 +13,7 @@ export interface AuditEvent {
   eventType: string;
   username: string;
   ipAddress: string;
-  details: Record<string, any>;
+  details: Record<string, unknown>;
 }
 
 export interface AuditEventsResponse {
@@ -44,12 +44,18 @@ export interface AuditFilters {
   pageSize?: number;
 }
 
+interface AuditStatusApiResponse {
+  auditEnabled: boolean;
+  auditLevel: string;
+  retentionDays: number;
+}
+
 const auditService = {
   /**
    * Get audit system status
    */
   async getSystemStatus(): Promise<AuditSystemStatus> {
-    const response = await apiClient.get<any>('/api/v1/proprietary/ui-data/audit-dashboard');
+    const response = await apiClient.get<AuditStatusApiResponse>('/api/v1/proprietary/ui-data/audit-dashboard');
     const data = response.data;
 
     // Map V1 response to expected format

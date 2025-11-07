@@ -1,22 +1,32 @@
-import { ToastOptions } from '@app/components/toast/types';
+import { ToastOptions, ToastApi } from '@app/components/toast/types';
 import { useToast, ToastProvider } from '@app/components/toast/ToastContext';
 import ToastRenderer from '@app/components/toast/ToastRenderer';
 
 export { useToast, ToastProvider, ToastRenderer };
 
-// Global imperative API via module singleton
-let _api: ReturnType<typeof createImperativeApi> | null = null;
+type ToastContextInstance = ReturnType<typeof useToast>;
 
-function createImperativeApi() {
-  const subscribers: Array<(fn: any) => void> = [];
-  let api: any = null;
+interface ImperativeApi {
+  provide(instance: ToastContextInstance): void;
+  get(): ToastContextInstance | null;
+  onReady(cb: (api: ToastContextInstance) => void): void;
+}
+
+// Global imperative API via module singleton
+let _api: ImperativeApi | null = null;
+
+function createImperativeApi(): ImperativeApi {
+  const subscribers: Array<(api: ToastContextInstance) => void> = [];
+  let api: ToastContextInstance | null = null;
   return {
-    provide(instance: any) {
+    provide(instance: ToastContextInstance) {
       api = instance;
-      subscribers.splice(0).forEach(cb => cb(api));
+      const queued = [...subscribers];
+      subscribers.length = 0;
+      queued.forEach(cb => cb(instance));
     },
-    get(): any | null { return api; },
-    onReady(cb: (api: any) => void) {
+    get(): ToastContextInstance | null { return api; },
+    onReady(cb: (readyApi: ToastContextInstance) => void) {
       if (api) cb(api); else subscribers.push(cb);
     }
   };
@@ -32,30 +42,33 @@ export function ToastPortalBinder() {
   return null;
 }
 
-export function alert(options: ToastOptions) {
-  if (_api?.get()) {
-    return _api.get()!.show(options);
+function getImperativeApi(): ToastApi | null {
+  return _api?.get() ?? null;
+}
+
+export function alert(options: ToastOptions): string {
+  const api = getImperativeApi();
+  if (api) {
+    return api.show(options);
   }
   // Queue until provider mounts
   let id = '';
-  _api?.onReady((api) => { id = api.show(options); });
+  _api?.onReady((readyApi) => { id = readyApi.show(options); });
   return id;
 }
 
-export function updateToast(id: string, options: Partial<ToastOptions>) {
-  _api?.get()?.update(id, options);
+export function updateToast(id: string, options: Partial<ToastOptions>): void {
+  getImperativeApi()?.update(id, options);
 }
 
-export function updateToastProgress(id: string, progress: number) {
-  _api?.get()?.updateProgress(id, progress);
+export function updateToastProgress(id: string, progress: number): void {
+  getImperativeApi()?.updateProgress(id, progress);
 }
 
-export function dismissToast(id: string) {
-  _api?.get()?.dismiss(id);
+export function dismissToast(id: string): void {
+  getImperativeApi()?.dismiss(id);
 }
 
-export function dismissAllToasts() {
-  _api?.get()?.dismissAll();
+export function dismissAllToasts(): void {
+  getImperativeApi()?.dismissAll();
 }
-
-

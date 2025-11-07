@@ -4,10 +4,25 @@
  * without needing to make API calls
  */
 
-// PDF.js types (simplified)
+import React from 'react';
+import type {
+  DocumentInitParameters,
+  PDFDocumentLoadingTask,
+  PDFDocumentProxy,
+  PDFPageProxy
+} from 'pdfjs-dist/types/src/display/api';
+
+type PdfMetadataResult = Awaited<ReturnType<PDFDocumentProxy['getMetadata']>>;
+type PdfMetadataInfo = PdfMetadataResult['info'];
+type PdfMetadata = PdfMetadataResult['metadata'];
+
+interface PdfjsLib {
+  getDocument: (src?: string | URL | Uint8Array | ArrayBuffer | DocumentInitParameters) => PDFDocumentLoadingTask;
+}
+
 declare global {
   interface Window {
-    pdfjsLib?: any;
+    pdfjsLib?: PdfjsLib;
   }
 }
 
@@ -39,17 +54,18 @@ const detectSignaturesInFile = async (file: File): Promise<SignatureDetectionRes
     const arrayBuffer = await file.arrayBuffer();
     
     // Load the PDF document
-    const pdf = await window.pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    const loadingTask = window.pdfjsLib.getDocument({ data: arrayBuffer });
+    const pdf = await loadingTask.promise;
     
     let totalSignatures = 0;
     
     // Check each page for signature annotations
     for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-      const page = await pdf.getPage(pageNum);
+      const page: PDFPageProxy = await pdf.getPage(pageNum);
       const annotations = await page.getAnnotations();
       
       // Count signature annotations (Type: /Sig)
-      const signatureAnnotations = annotations.filter((annotation: any) => 
+      const signatureAnnotations = annotations.filter(annotation =>
         annotation.subtype === 'Widget' && 
         annotation.fieldType === 'Sig'
       );
@@ -59,7 +75,20 @@ const detectSignaturesInFile = async (file: File): Promise<SignatureDetectionRes
     
     // Also check for document-level signatures in AcroForm
     const metadata = await pdf.getMetadata();
-    if (metadata?.info?.Signature || metadata?.metadata?.has('dc:signature')) {
+    const info: PdfMetadataInfo | undefined = metadata?.info;
+    const meta: PdfMetadata | undefined = metadata?.metadata;
+    const hasInfoSignature =
+      typeof info === 'object' &&
+      info !== null &&
+      'Signature' in info &&
+      Boolean((info as { Signature?: unknown }).Signature);
+    const hasMetadataSignature =
+      typeof meta === 'object' &&
+      meta !== null &&
+      'has' in meta &&
+      typeof (meta as { has: (key: string) => boolean }).has === 'function' &&
+      (meta as { has: (key: string) => boolean }).has('dc:signature');
+    if (hasInfoSignature || hasMetadataSignature) {
       totalSignatures = Math.max(totalSignatures, 1);
     }
     
@@ -135,6 +164,3 @@ export const useSignatureDetection = () => {
     reset: () => setDetectionResults([])
   };
 };
-
-// Import React for the hook
-import React from 'react';

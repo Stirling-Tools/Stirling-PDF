@@ -5,11 +5,11 @@ import { alert } from '@app/components/toast';
 import LocalIcon from '@app/components/shared/LocalIcon';
 import RestartConfirmationModal from '@app/components/shared/config/RestartConfirmationModal';
 import { useRestartServer } from '@app/components/shared/config/useRestartServer';
-import { useAdminSettings } from '@app/hooks/useAdminSettings';
+import { useAdminSettings, type SettingsRecord } from '@app/hooks/useAdminSettings';
 import PendingBadge from '@app/components/shared/config/PendingBadge';
 import apiClient from '@app/services/apiClient';
 
-interface SecuritySettingsData {
+interface SecuritySettingsData extends Record<string, unknown> {
   enableLogin?: boolean;
   csrfDisabled?: boolean;
   loginMethod?: string;
@@ -82,7 +82,7 @@ export default function AdminSecuritySection() {
         systemPending: JSON.parse(JSON.stringify(systemPending || {}))
       });
 
-      const combined: any = {
+      const combined = {
         ...securityActive
       };
 
@@ -97,7 +97,7 @@ export default function AdminSecuritySection() {
       }
 
       // Merge all _pending blocks
-      const mergedPending: any = {};
+      const mergedPending: Partial<SecuritySettingsData> = {};
       if (securityPending) {
         Object.assign(mergedPending, securityPending);
       }
@@ -117,7 +117,7 @@ export default function AdminSecuritySection() {
     saveTransformer: (settings) => {
       const { audit, html, ...securitySettings } = settings;
 
-      const deltaSettings: Record<string, any> = {
+      const deltaSettings: SettingsRecord = {
         // Security settings
         'security.enableLogin': securitySettings.enableLogin,
         'security.csrfDisabled': securitySettings.csrfDisabled,

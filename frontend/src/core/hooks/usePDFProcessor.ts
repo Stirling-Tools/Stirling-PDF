@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { PDFDocument, PDFPage } from '@app/types/pageEditor';
 import { pdfWorkerManager } from '@app/services/pdfWorkerManager';
 import { createQuickKey } from '@app/types/fileContext';
+import type { PDFDocumentProxy, RenderParameters } from 'pdfjs-dist/types/src/display/api';
 
 export function usePDFProcessor() {
   const [loading, setLoading] = useState(false);
@@ -27,7 +28,12 @@ export function usePDFProcessor() {
         throw new Error('Could not get canvas context');
       }
 
-      await page.render({ canvasContext: context, viewport, canvas }).promise;
+      const renderConfig: RenderParameters = {
+        canvasContext: context,
+        viewport,
+        canvas,
+      };
+      await page.render(renderConfig).promise;
       const thumbnail = canvas.toDataURL();
 
       // Clean up using worker manager
@@ -42,7 +48,7 @@ export function usePDFProcessor() {
 
   // Internal function to generate thumbnail from already-opened PDF
   const generateThumbnailFromPDF = useCallback(async (
-    pdf: any,
+    pdf: PDFDocumentProxy,
     pageNumber: number,
     scale: number = 0.5
   ): Promise<string> => {
@@ -58,7 +64,12 @@ export function usePDFProcessor() {
       throw new Error('Could not get canvas context');
     }
 
-    await page.render({ canvasContext: context, viewport }).promise;
+    const renderConfig: RenderParameters = {
+      canvasContext: context,
+      viewport,
+      canvas,
+    };
+    await page.render(renderConfig).promise;
     return canvas.toDataURL();
   }, []);
 

@@ -4,17 +4,23 @@ import { AdjustContrastParameters, defaultParameters } from '@app/hooks/tools/ad
 import { PDFDocument as PDFLibDocument } from 'pdf-lib';
 import { applyAdjustmentsToCanvas } from '@app/components/tools/adjustContrast/utils';
 import { pdfWorkerManager } from '@app/services/pdfWorkerManager';
-import { createFileFromApiResponse } from '@app/utils/fileResponseUtils';
+import { createFileFromApiResponse, toArrayBuffer } from '@app/utils/fileResponseUtils';
+import type { PDFDocumentProxy, PDFPageProxy, RenderParameters } from 'pdfjs-dist/types/src/display/api';
 
-async function renderPdfPageToCanvas(pdf: any, pageNumber: number, scale: number): Promise<HTMLCanvasElement> {
-  const page = await pdf.getPage(pageNumber);
+async function renderPdfPageToCanvas(pdf: PDFDocumentProxy, pageNumber: number, scale: number): Promise<HTMLCanvasElement> {
+  const page: PDFPageProxy = await pdf.getPage(pageNumber);
   const viewport = page.getViewport({ scale });
   const canvas = document.createElement('canvas');
   canvas.width = viewport.width;
   canvas.height = viewport.height;
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('Canvas 2D context unavailable');
-  await page.render({ canvasContext: ctx, viewport }).promise;
+  const renderConfig: RenderParameters = {
+    canvasContext: ctx,
+    viewport,
+    canvas,
+  };
+  await page.render(renderConfig).promise;
   return canvas;
 }
 
@@ -41,7 +47,11 @@ async function buildAdjustedPdfForFile(file: File, params: AdjustContrastParamet
     }
 
     const pdfBytes = await newDoc.save();
-    const out = createFileFromApiResponse(pdfBytes, { 'content-type': 'application/pdf' }, file.name);
+    const out = createFileFromApiResponse(
+      toArrayBuffer(pdfBytes),
+      { 'content-type': 'application/pdf' },
+      file.name
+    );
     pdfWorkerManager.destroyDocument(pdf);
     return out;
 }
@@ -91,4 +101,3 @@ export const useAdjustContrastOperation = () => {
     getErrorMessage: () => t('adjustContrast.error.failed', 'Failed to adjust colors/contrast')
   });
 };
-

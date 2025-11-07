@@ -1,8 +1,8 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Stack, Text, ScrollArea } from '@mantine/core';
-import { ToolRegistryEntry, ToolRegistry, getToolSupportsAutomate } from '@app/data/toolsTaxonomy';
-import { useToolSections } from '@app/hooks/useToolSections';
+import { ToolRegistryEntry, ToolRegistry, getToolSupportsAutomate, SubcategoryId } from '@app/data/toolsTaxonomy';
+import { useToolSections, type SubcategoryGroup } from '@app/hooks/useToolSections';
 import { renderToolButtons } from '@app/components/tools/shared/renderToolButtons';
 import ToolSearch from '@app/components/tools/toolPicker/ToolSearch';
 import ToolButton from '@app/components/tools/toolPicker/ToolButton';
@@ -67,11 +67,11 @@ export default function ToolSelector({
   }, [filteredTools]);
 
   // Use the same tool sections logic as the main ToolPicker
-  const { sections, searchGroups } = useToolSections(transformedFilteredTools as any /* FIX ME */);
+  const { sections, searchGroups } = useToolSections(transformedFilteredTools);
 
   // Determine what to display: search results or organized sections
   const isSearching = searchTerm.trim().length > 0;
-  const displayGroups = useMemo(() => {
+  const displayGroups = useMemo<SubcategoryGroup[]>(() => {
     if (isSearching) {
       return searchGroups || [];
     }
@@ -80,8 +80,7 @@ export default function ToolSelector({
       // If no sections, create a simple group from filtered tools
       if (baseFilteredTools.length > 0) {
         return [{
-          name: 'All Tools',
-          subcategoryId: 'all' as any,
+          subcategoryId: SubcategoryId.GENERAL,
           tools: baseFilteredTools.map(([key, tool]) => ({ id: key, tool }))
         }];
       }
@@ -101,7 +100,7 @@ export default function ToolSelector({
 
   const renderedTools = useMemo(() =>
     displayGroups.map((subcategory) =>
-      renderToolButtons(t, subcategory as any, null, handleToolSelect, !isSearching, true)
+      renderToolButtons(t, subcategory, null, handleToolSelect, !isSearching, true)
     ), [displayGroups, handleToolSelect, isSearching, t]
   );
 

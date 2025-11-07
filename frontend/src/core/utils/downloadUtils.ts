@@ -143,7 +143,7 @@ export function downloadTextAsFile(
  * @param data - Data to serialize and download
  * @param filename - Filename for the download
  */
-export function downloadJsonAsFile(data: any, filename: string): void {
+export function downloadJsonAsFile(data: unknown, filename: string): void {
   const content = JSON.stringify(data, null, 2);
   downloadTextAsFile(content, filename, 'application/json');
 }

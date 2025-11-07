@@ -1,4 +1,5 @@
 import React, { createContext, useContext, ReactNode } from 'react';
+import type { SignParameters } from '@app/hooks/tools/sign/useSignParameters';
 
 interface PDFAnnotationContextValue {
   // Drawing mode management
@@ -22,8 +23,8 @@ interface PDFAnnotationContextValue {
   isPlacementMode: boolean;
 
   // Signature configuration
-  signatureConfig: any | null;
-  setSignatureConfig: (config: any | null) => void;
+  signatureConfig: SignParameters | null;
+  setSignatureConfig: (config: SignParameters | null) => void;
 }
 
 const PDFAnnotationContext = createContext<PDFAnnotationContextValue | undefined>(undefined);
@@ -41,8 +42,8 @@ interface PDFAnnotationProviderProps {
   storeImageData: (id: string, data: string) => void;
   getImageData: (id: string) => string | undefined;
   isPlacementMode: boolean;
-  signatureConfig: any | null;
-  setSignatureConfig: (config: any | null) => void;
+  signatureConfig: SignParameters | null;
+  setSignatureConfig: (config: SignParameters | null) => void;
 }
 
 export const PDFAnnotationProvider: React.FC<PDFAnnotationProviderProps> = ({

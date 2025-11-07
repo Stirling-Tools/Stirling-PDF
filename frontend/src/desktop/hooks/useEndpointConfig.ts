@@ -1,8 +1,27 @@
 import { useMemo, useState, useEffect } from 'react';
+import axios from 'axios';
 import apiClient from '@app/services/apiClient';
 
 interface EndpointConfig {
   backendUrl: string;
+}
+
+interface ErrorPayload {
+  message?: string;
+  error?: string;
+}
+
+function extractErrorMessage(error: unknown, fallback: string): string {
+  if (axios.isAxiosError<ErrorPayload>(error)) {
+    return error.response?.data?.message
+      || error.response?.data?.error
+      || error.message
+      || fallback;
+  }
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return fallback;
 }
 
 /**
@@ -34,8 +53,8 @@ export function useEndpointEnabled(endpoint: string): {
       });
 
       setEnabled(response.data);
-    } catch (err: any) {
-      const message = err?.response?.data?.message || err?.message || 'Unknown error occurred';
+    } catch (error: unknown) {
+      const message = extractErrorMessage(error, 'Unknown error occurred');
       setError(message);
       setEnabled(null);
     } finally {
@@ -83,8 +102,8 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
       });
 
       setEndpointStatus(response.data);
-    } catch (err: any) {
-      const message = err?.response?.data?.message || err?.message || 'Unknown error occurred';
+    } catch (error: unknown) {
+      const message = extractErrorMessage(error, 'Unknown error occurred');
       setError(message);
 
       const fallbackStatus = endpoints.reduce((acc, endpointName) => {

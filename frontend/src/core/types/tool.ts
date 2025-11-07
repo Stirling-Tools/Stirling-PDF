@@ -21,13 +21,13 @@ export interface AutomationCapableTool {
    * Static method that returns the operation hook for this tool.
    * This enables automation to execute the tool programmatically.
    */
-  tool: () => () => ToolOperationHook<any>;
+  tool: () => () => ToolOperationHook<unknown>;
 
   /**
    * Static method that returns the default parameters for this tool.
    * This enables automation creation to initialize tools with proper defaults.
    */
-  getDefaultParameters: () => any;
+  getDefaultParameters: () => Record<string, unknown>;
 }
 
 /**
@@ -54,7 +54,7 @@ export interface ToolResult {
   files?: File[];
   error?: string;
   downloadUrl?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface ToolConfiguration {
@@ -77,4 +77,3 @@ export interface Tool {
 }
 
 export type ToolRegistry = Record<string, Tool>;
-

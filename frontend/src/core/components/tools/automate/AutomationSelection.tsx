@@ -76,7 +76,7 @@ export default function AutomationSelection({
               key={automation.id}
               title={automation.name}
               description={automation.description}
-              badgeIcon={automation.icon}
+              badgeIcon={automation.iconComponent}
               operations={automation.operations.map(op => op.operation)}
               onClick={() => onRun(automation)}
               showMenu={true}

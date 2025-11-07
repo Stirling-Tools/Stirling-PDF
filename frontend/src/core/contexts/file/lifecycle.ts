@@ -2,8 +2,9 @@
  * File lifecycle management - Resource cleanup and memory management
  */
 
+import type { Dispatch, MutableRefObject } from 'react';
 import { FileId } from '@app/types/file';
-import { FileContextAction, StirlingFileStub, ProcessedFilePage } from '@app/types/fileContext';
+import { FileContextAction, StirlingFileStub, ProcessedFilePage, FileContextState } from '@app/types/fileContext';
 
 const DEBUG = process.env.NODE_ENV === 'development';
 
@@ -16,8 +17,8 @@ export class FileLifecycleManager {
   private fileGenerations = new Map<string, number>(); // Generation tokens to prevent stale cleanup
 
   constructor(
-    private filesRef: React.MutableRefObject<Map<FileId, File>>,
-    private dispatch: React.Dispatch<FileContextAction>
+    private filesRef: MutableRefObject<Map<FileId, File>>,
+    private dispatch: Dispatch<FileContextAction>
   ) {}
 
   /**
@@ -34,7 +35,7 @@ export class FileLifecycleManager {
   /**
    * Clean up resources for a specific file (with stateRef access for complete cleanup)
    */
-  cleanupFile = (fileId: FileId, stateRef?: React.MutableRefObject<any>): void => {
+  cleanupFile = (fileId: FileId, stateRef?: MutableRefObject<FileContextState>): void => {
     // Use comprehensive cleanup (same as removeFiles)
     this.cleanupAllResourcesForFile(fileId, stateRef);
 
@@ -68,7 +69,7 @@ export class FileLifecycleManager {
   /**
    * Schedule delayed cleanup for a file with generation token to prevent stale cleanup
    */
-  scheduleCleanup = (fileId: FileId, delay: number = 30000, stateRef?: React.MutableRefObject<any>): void => {
+  scheduleCleanup = (fileId: FileId, delay: number = 30000, stateRef?: MutableRefObject<FileContextState>): void => {
     // Cancel existing timer
     const existingTimer = this.cleanupTimers.get(fileId);
     if (existingTimer) {
@@ -101,7 +102,7 @@ export class FileLifecycleManager {
   /**
    * Remove a file immediately with complete resource cleanup
    */
-  removeFiles = (fileIds: FileId[], stateRef?: React.MutableRefObject<any>): void => {
+  removeFiles = (fileIds: FileId[], stateRef?: MutableRefObject<FileContextState>): void => {
     fileIds.forEach(fileId => {
       // Clean up all resources for this file
       this.cleanupAllResourcesForFile(fileId, stateRef);
@@ -114,7 +115,7 @@ export class FileLifecycleManager {
   /**
    * Complete resource cleanup for a single file
    */
-  private cleanupAllResourcesForFile = (fileId: FileId, stateRef?: React.MutableRefObject<any>): void => {
+  private cleanupAllResourcesForFile = (fileId: FileId, stateRef?: MutableRefObject<FileContextState>): void => {
     // Remove from files ref
     this.filesRef.current.delete(fileId);
 
@@ -166,7 +167,7 @@ export class FileLifecycleManager {
   /**
    * Update file record with race condition guards
    */
-  updateStirlingFileStub = (fileId: FileId, updates: Partial<StirlingFileStub>, stateRef?: React.MutableRefObject<any>): void => {
+  updateStirlingFileStub = (fileId: FileId, updates: Partial<StirlingFileStub>, stateRef?: MutableRefObject<FileContextState>): void => {
     // Guard against updating removed files (race condition protection)
     if (!this.filesRef.current.has(fileId)) {
       if (DEBUG) console.warn(`🗂️ Attempted to update removed file (filesRef): ${fileId}`);

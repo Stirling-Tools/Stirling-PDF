@@ -52,7 +52,7 @@ const removeAnnotationsProcessor = async (_parameters: RemoveAnnotationsParamete
       try {
         const catalog = pdfDoc.context.lookup(pdfDoc.context.trailerInfo.Root);
         if (catalog && 'has' in catalog && 'delete' in catalog) {
-          const catalogDict = catalog as any;
+          const catalogDict = catalog as PDFDict;
           if (catalogDict.has(PDFName.of('AcroForm'))) {
             catalogDict.delete(PDFName.of('AcroForm'));
           }

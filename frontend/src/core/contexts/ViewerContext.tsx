@@ -24,8 +24,8 @@ interface PanAPIWrapper {
 
 interface SelectionAPIWrapper {
   copyToClipboard: () => void;
-  getSelectedText: () => string | any;
-  getFormattedSelection: () => any;
+  getSelectedText: () => string | null;
+  getFormattedSelection: () => string | null;
 }
 
 interface SpreadAPIWrapper {
@@ -42,7 +42,7 @@ interface RotationAPIWrapper {
 }
 
 interface SearchAPIWrapper {
-  search: (query: string) => Promise<any>;
+  search: (query: string) => Promise<void>;
   clear: () => void;
   next: () => void;
   previous: () => void;
@@ -179,8 +179,8 @@ interface ViewerContextType {
 
   selectionActions: {
     copyToClipboard: () => void;
-    getSelectedText: () => string;
-    getFormattedSelection: () => unknown;
+    getSelectedText: () => string | null;
+    getFormattedSelection: () => string | null;
   };
 
   spreadActions: {
@@ -435,17 +435,17 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
         api.copyToClipboard();
       }
     },
-    getSelectedText: () => {
+    getSelectedText: (): string | null => {
       const api = bridgeRefs.current.selection?.api;
       if (api?.getSelectedText) {
-        return api.getSelectedText();
+        return api.getSelectedText() ?? null;
       }
-      return '';
+      return null;
     },
-    getFormattedSelection: () => {
+    getFormattedSelection: (): string | null => {
       const api = bridgeRefs.current.selection?.api;
       if (api?.getFormattedSelection) {
-        return api.getFormattedSelection();
+        return api.getFormattedSelection() ?? null;
       }
       return null;
     }

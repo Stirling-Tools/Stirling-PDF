@@ -11,9 +11,11 @@
  * }
  */
 
-export interface SettingsWithPending<T = any> {
+type PlainObject = Record<string, unknown>;
+
+export interface SettingsWithPending<T extends PlainObject = PlainObject> {
   _pending?: Partial<T>;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 /**
@@ -23,15 +25,21 @@ export interface SettingsWithPending<T = any> {
  * @param settings Settings object from backend (may contain _pending block)
  * @returns Merged settings with pending values applied
  */
-export function mergePendingSettings<T extends SettingsWithPending>(settings: T): Omit<T, '_pending'> {
-  if (!settings || !settings._pending) {
+export function mergePendingSettings<T extends SettingsWithPending>(
+  settings: T | null | undefined
+): Omit<T, '_pending'> {
+  if (!settings) {
+    return {} as Omit<T, '_pending'>;
+  }
+
+  if (!settings._pending) {
     // No pending changes, return as-is (without _pending property)
-    const { _pending, ...rest } = settings || {};
+    const { _pending, ...rest } = settings;
     return rest as Omit<T, '_pending'>;
   }
 
   // Deep merge pending changes
-  const merged = deepMerge(settings, settings._pending);
+  const merged = deepMerge(settings, settings._pending as PlainObject | undefined);
 
   // Remove _pending from result
   const { _pending, ...result } = merged;
@@ -55,7 +63,7 @@ export function isFieldPending<T extends SettingsWithPending>(
   }
 
   // Navigate the pending object using dot notation
-  const value = getNestedValue(settings._pending, fieldPath);
+  const value = getNestedValue(settings._pending as PlainObject | undefined, fieldPath);
   const isPending = value !== undefined;
 
   if (isPending) {
@@ -87,12 +95,12 @@ export function hasPendingChanges<T extends SettingsWithPending>(
 export function getPendingValue<T extends SettingsWithPending>(
   settings: T | null | undefined,
   fieldPath: string
-): any {
+): unknown {
   if (!settings?._pending) {
     return undefined;
   }
 
-  return getNestedValue(settings._pending, fieldPath);
+  return getNestedValue(settings._pending as PlainObject | undefined, fieldPath);
 }
 
 /**
@@ -105,14 +113,14 @@ export function getPendingValue<T extends SettingsWithPending>(
 export function getCurrentValue<T extends SettingsWithPending>(
   settings: T | null | undefined,
   fieldPath: string
-): any {
+): unknown {
   if (!settings) {
     return undefined;
   }
 
   // Get from settings, ignoring _pending
   const { _pending, ...activeSettings } = settings;
-  return getNestedValue(activeSettings, fieldPath);
+  return getNestedValue(activeSettings as PlainObject | undefined, fieldPath);
 }
 
 // ========== Helper Functions ==========
@@ -120,11 +128,11 @@ export function getCurrentValue<T extends SettingsWithPending>(
 /**
  * Deep merge two objects. Second object takes priority.
  */
-function deepMerge(target: any, source: any): any {
-  if (!source) return target;
+function deepMerge(target: PlainObject | undefined, source: PlainObject | undefined): PlainObject {
+  if (!source) return target ?? {};
   if (!target) return source;
 
-  const result = { ...target };
+  const result: PlainObject = { ...target };
 
   for (const key in source) {
     if (Object.prototype.hasOwnProperty.call(source, key)) {
@@ -145,17 +153,20 @@ function deepMerge(target: any, source: any): any {
 /**
  * Get nested value using dot notation.
  */
-function getNestedValue(obj: any, path: string): any {
+function getNestedValue(obj: PlainObject | undefined, path: string): unknown {
   if (!obj || !path) return undefined;
 
   const parts = path.split('.');
-  let current = obj;
+  let current: unknown = obj;
 
   for (const part of parts) {
     if (current === null || current === undefined) {
       return undefined;
     }
-    current = current[part];
+    if (typeof current !== 'object' || !(part in current)) {
+      return undefined;
+    }
+    current = (current as PlainObject)[part];
   }
 
   return current;
@@ -164,7 +175,7 @@ function getNestedValue(obj: any, path: string): any {
 /**
  * Check if value is a plain object (not array, not null, not Date, etc.)
  */
-function isPlainObject(value: any): boolean {
+function isPlainObject(value: unknown): value is PlainObject {
   return (
     value !== null &&
     typeof value === 'object' &&
