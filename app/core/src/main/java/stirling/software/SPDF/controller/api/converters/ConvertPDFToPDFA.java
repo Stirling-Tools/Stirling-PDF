@@ -1,24 +1,32 @@
 package stirling.software.SPDF.controller.api.converters;
 
 import java.awt.Color;
+import java.awt.color.ColorSpace;
+import java.awt.color.ICC_Profile;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.GregorianCalendar;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.pdfbox.Loader;
@@ -26,6 +34,8 @@ import org.apache.pdfbox.cos.COSArray;
 import org.apache.pdfbox.cos.COSBase;
 import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSName;
+import org.apache.pdfbox.io.RandomAccessRead;
+import org.apache.pdfbox.io.RandomAccessReadBufferedFile;
 import org.apache.pdfbox.pdfwriter.compress.CompressParameters;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
@@ -47,6 +57,14 @@ import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationTextMarkup;
 import org.apache.pdfbox.pdmodel.interactive.viewerpreferences.PDViewerPreferences;
+import org.apache.pdfbox.preflight.Format;
+import org.apache.pdfbox.preflight.PreflightConfiguration;
+import org.apache.pdfbox.preflight.PreflightDocument;
+import org.apache.pdfbox.preflight.ValidationResult;
+import org.apache.pdfbox.preflight.ValidationResult.ValidationError;
+import org.apache.pdfbox.preflight.exception.SyntaxValidationException;
+import org.apache.pdfbox.preflight.exception.ValidationException;
+import org.apache.pdfbox.preflight.parser.PreflightParser;
 import org.apache.xmpbox.XMPMetadata;
 import org.apache.xmpbox.schema.AdobePDFSchema;
 import org.apache.xmpbox.schema.DublinCoreSchema;
@@ -80,11 +98,304 @@ import stirling.software.common.util.WebResponseUtils;
 @Tag(name = "Convert", description = "Convert APIs")
 public class ConvertPDFToPDFA {
 
+    private static final String ICC_RESOURCE_PATH = "/icc/sRGB2014.icc";
+    private static final int PDFA_COMPATIBILITY_POLICY = 1;
+
+    private static void validateAndWarnPdfA(byte[] pdfBytes, PdfaProfile profile, String method) {
+        Path tempPdfPath = null;
+        try {
+            tempPdfPath = Files.createTempFile("validate_", ".pdf");
+            Files.write(tempPdfPath, pdfBytes);
+            validatePdfaOutput(tempPdfPath, profile);
+            log.info("PDF/A validation passed for {} using {}", profile.displayName(), method);
+        } catch (IOException e) {
+            log.warn(
+                    "PDF/A validation warning for {} using {}: {}",
+                    profile.displayName(),
+                    method,
+                    e.getMessage());
+        } finally {
+            if (tempPdfPath != null) {
+                try {
+                    Files.deleteIfExists(tempPdfPath);
+                } catch (IOException e) {
+                    log.debug("Failed to delete temporary validation file", e);
+                }
+            }
+        }
+    }
+
+    private static void deleteQuietly(Path directory) {
+        if (directory == null) {
+            return;
+        }
+        try (Stream<Path> stream = Files.walk(directory)) {
+            stream.sorted(Comparator.reverseOrder())
+                    .forEach(
+                            path -> {
+                                try {
+                                    Files.deleteIfExists(path);
+                                } catch (IOException e) {
+                                    log.warn("Failed to delete temporary file: {}", path, e);
+                                }
+                            });
+        } catch (IOException e) {
+            log.warn("Failed to clean temporary directory: {}", directory, e);
+        }
+    }
+
+    private static List<String> buildGhostscriptCommand(
+            Path inputPdf,
+            Path outputPdf,
+            ColorProfiles colorProfiles,
+            Path workingDir,
+            PdfaProfile profile,
+            Path pdfaDefFile) {
+
+        List<String> command = new ArrayList<>();
+        command.add("gs");
+        command.add("--permit-file-read=" + workingDir.toAbsolutePath());
+        command.add("--permit-file-read=" + colorProfiles.rgb().toAbsolutePath());
+        command.add("--permit-file-read=" + colorProfiles.gray().toAbsolutePath());
+        command.add("--permit-file-read=" + inputPdf.toAbsolutePath());
+        command.add("--permit-file-read=" + pdfaDefFile.toAbsolutePath());
+        command.add("--permit-file-write=" + workingDir.toAbsolutePath());
+        command.add("-dPDFA=" + profile.part());
+        command.add("-dPDFACompatibilityPolicy=" + PDFA_COMPATIBILITY_POLICY);
+        command.add("-dCompatibilityLevel=" + profile.compatibilityLevel());
+        command.add("-sDEVICE=pdfwrite");
+        command.add("-sColorConversionStrategy=RGB");
+        command.add("-dProcessColorModel=/DeviceRGB");
+        command.add("-sOutputICCProfile=" + colorProfiles.rgb().toAbsolutePath());
+        command.add("-sDefaultRGBProfile=" + colorProfiles.rgb().toAbsolutePath());
+        command.add("-sDefaultGrayProfile=" + colorProfiles.gray().toAbsolutePath());
+        command.add("-dEmbedAllFonts=true");
+        command.add("-dSubsetFonts=true");
+        command.add("-dCompressFonts=true");
+        command.add("-dNOPAUSE");
+        command.add("-dBATCH");
+        command.add("-dNOOUTERSAVE");
+        command.add("-sOutputFile=" + outputPdf.toAbsolutePath());
+        command.add(pdfaDefFile.toAbsolutePath().toString());
+        command.add(inputPdf.toAbsolutePath().toString());
+
+        return command;
+    }
+
+    private static void validatePdfaOutput(Path pdfPath, PdfaProfile profile) throws IOException {
+        Optional<Format> format = profile.preflightFormat();
+        if (format.isEmpty()) {
+            log.debug("Skipping PDFBox preflight validation for {}", profile.displayName());
+            return;
+        }
+
+        try (RandomAccessRead rar = new RandomAccessReadBufferedFile(pdfPath.toFile())) {
+            PreflightParser parser = new PreflightParser(rar);
+
+            PreflightDocument document;
+            try {
+                document =
+                        (PreflightDocument)
+                                parser.parse(
+                                        format.get(),
+                                        PreflightConfiguration.createPdfA1BConfiguration());
+            } catch (SyntaxValidationException e) {
+                throw new IOException(buildPreflightErrorMessage(e.getResult(), profile), e);
+            } catch (ClassCastException e) {
+                throw new IOException(
+                        "PDF/A preflight did not produce a PreflightDocument for "
+                                + profile.displayName(),
+                        e);
+            }
+
+            if (document == null) {
+                throw new IOException(
+                        "PDF/A preflight returned no document for " + profile.displayName());
+            }
+
+            try (PreflightDocument closeableDocument = document) {
+                ValidationResult result = closeableDocument.validate();
+                if (result == null || !result.isValid()) {
+                    throw new IOException(buildPreflightErrorMessage(result, profile));
+                }
+            }
+        } catch (SyntaxValidationException e) {
+            throw new IOException(buildPreflightErrorMessage(e.getResult(), profile), e);
+        } catch (ValidationException e) {
+            throw new IOException(
+                    "PDF/A preflight validation failed for " + profile.displayName(), e);
+        }
+    }
+
+    private static String buildPreflightErrorMessage(ValidationResult result, PdfaProfile profile) {
+        String baseMessage = "PDF/A preflight validation failed for " + profile.displayName();
+        if (result == null) {
+            return baseMessage + ": no detailed validation result available";
+        }
+
+        List<ValidationError> errors = result.getErrorsList();
+        if (errors == null || errors.isEmpty()) {
+            return baseMessage + ": unknown validation error";
+        }
+
+        String summarizedErrors =
+                errors.stream()
+                        .limit(5)
+                        .map(
+                                error -> {
+                                    StringBuilder sb =
+                                            new StringBuilder(
+                                                    Optional.ofNullable(error.getErrorCode())
+                                                            .orElse("UNKNOWN"));
+                                    String details = error.getDetails();
+                                    if (details != null && !details.isBlank()) {
+                                        sb.append(": ").append(details.trim());
+                                    }
+                                    if (error.isWarning()) {
+                                        sb.append(" (warning)");
+                                    }
+                                    return sb.toString();
+                                })
+                        .collect(Collectors.joining("; "));
+
+        if (errors.size() > 5) {
+            summarizedErrors += " (" + (errors.size() - 5) + " more)";
+        }
+
+        return baseMessage + ": " + summarizedErrors;
+    }
+
+    private static void writeJavaIccProfile(ICC_Profile profile, Path target) throws IOException {
+        try (OutputStream out = Files.newOutputStream(target)) {
+            out.write(profile.getData());
+        }
+    }
+
+    private static Path createPdfaDefFile(
+            Path workingDir, ColorProfiles colorProfiles, PdfaProfile profile) throws IOException {
+        Path pdfaDefFile = workingDir.resolve("PDFA_def.ps");
+
+        String title = "Converted to " + profile.displayName();
+        String pdfaDefContent =
+                String.format(
+                        "%% This is a sample prefix file for creating a PDF/A document.\n"
+                                + "%% Feel free to modify entries marked with \"Customize\".\n\n"
+                                + "%% Define entries in the document Info dictionary.\n"
+                                + "[/Title (%s)\n"
+                                + " /DOCINFO pdfmark\n\n"
+                                + "%% Define an ICC profile.\n"
+                                + "[/_objdef {icc_PDFA} /type /stream /OBJ pdfmark\n"
+                                + "[{icc_PDFA} <<\n"
+                                + "  /N 3\n"
+                                + ">> /PUT pdfmark\n"
+                                + "[{icc_PDFA} (%s) (r) file /PUT pdfmark\n\n"
+                                + "%% Define the output intent dictionary.\n"
+                                + "[/_objdef {OutputIntent_PDFA} /type /dict /OBJ pdfmark\n"
+                                + "[{OutputIntent_PDFA} <<\n"
+                                + "  /Type /OutputIntent\n"
+                                + "  /S /GTS_PDFA1\n"
+                                + "  /DestOutputProfile {icc_PDFA}\n"
+                                + "  /OutputConditionIdentifier (sRGB IEC61966-2.1)\n"
+                                + "  /Info (sRGB IEC61966-2.1)\n"
+                                + "  /RegistryName (http://www.color.org)\n"
+                                + ">> /PUT pdfmark\n"
+                                + "[{Catalog} <</OutputIntents [ {OutputIntent_PDFA} ]>> /PUT pdfmark\n",
+                        title, colorProfiles.rgb().toAbsolutePath().toString().replace("\\", "/"));
+
+        Files.writeString(pdfaDefFile, pdfaDefContent);
+        return pdfaDefFile;
+    }
+
+    private static List<String> buildGhostscriptCommandX(
+            Path inputPdf,
+            Path outputPdf,
+            ColorProfiles colorProfiles,
+            Path workingDir,
+            PdfXProfile profile) {
+
+        List<String> command = new ArrayList<>();
+        command.add("gs");
+        command.add("--permit-file-read=" + workingDir.toAbsolutePath());
+        command.add("--permit-file-read=" + colorProfiles.rgb().toAbsolutePath());
+        command.add("--permit-file-read=" + colorProfiles.gray().toAbsolutePath());
+        command.add("--permit-file-read=" + inputPdf.toAbsolutePath());
+        command.add("--permit-file-write=" + workingDir.toAbsolutePath());
+        command.add("-dPDFX=" + profile.pdfxVersion());
+        command.add("-dCompatibilityLevel=" + profile.compatibilityLevel());
+        command.add("-sDEVICE=pdfwrite");
+        command.add("-sColorConversionStrategy=RGB");
+        command.add("-dProcessColorModel=/DeviceRGB");
+        command.add("-sOutputICCProfile=" + colorProfiles.rgb().toAbsolutePath());
+        command.add("-sDefaultRGBProfile=" + colorProfiles.rgb().toAbsolutePath());
+        command.add("-sDefaultGrayProfile=" + colorProfiles.gray().toAbsolutePath());
+        command.add("-dEmbedAllFonts=true");
+        command.add("-dSubsetFonts=true");
+        command.add("-dCompressFonts=true");
+        command.add("-dNOPAUSE");
+        command.add("-dBATCH");
+        command.add("-dNOOUTERSAVE");
+        command.add("-sOutputFile=" + outputPdf.toAbsolutePath());
+        command.add(inputPdf.toAbsolutePath().toString());
+
+        return command;
+    }
+
+    private static void embedMissingFonts(PDDocument loDoc, PDDocument baseDoc, Set<String> missingFonts)
+            throws IOException {
+        List<PDPage> loPages = new ArrayList<>();
+        loDoc.getPages().forEach(loPages::add);
+        List<PDPage> basePages = new ArrayList<>();
+        baseDoc.getPages().forEach(basePages::add);
+
+        for (int i = 0; i < loPages.size(); i++) {
+            PDResources loRes = loPages.get(i).getResources();
+            PDResources baseRes = basePages.get(i).getResources();
+
+            for (COSName fontKey : loRes.getFontNames()) {
+                PDFont loFont = loRes.getFont(fontKey);
+                if (loFont == null) continue;
+
+                String psName = loFont.getName();
+                if (!missingFonts.contains(psName)) continue;
+
+                PDFontDescriptor desc = loFont.getFontDescriptor();
+                if (desc == null) continue;
+
+                PDStream fontStream = null;
+                if (desc.getFontFile() != null) {
+                    fontStream = desc.getFontFile();
+                } else if (desc.getFontFile2() != null) {
+                    fontStream = desc.getFontFile2();
+                } else if (desc.getFontFile3() != null) {
+                    fontStream = desc.getFontFile3();
+                }
+                if (fontStream == null) continue;
+
+                try (InputStream in = fontStream.createInputStream()) {
+                    PDFont newFont;
+                    try {
+                        newFont = PDType0Font.load(baseDoc, in, false);
+                    } catch (IOException e1) {
+                        try {
+                            newFont = PDTrueTypeFont.load(baseDoc, in, null);
+                        } catch (IOException | IllegalArgumentException e2) {
+                            log.error("Could not embed font {}: {}", psName, e2.getMessage());
+                            continue;
+                        }
+                    }
+                    if (newFont != null) {
+                        baseRes.put(fontKey, newFont);
+                    }
+                }
+            }
+        }
+    }
+
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/pdfa")
     @Operation(
-            summary = "Convert a PDF to a PDF/A",
+            summary = "Convert a PDF to a PDF/A or PDF/X",
             description =
-                    "This endpoint converts a PDF file to a PDF/A file using LibreOffice. PDF/A is a format designed for long-term archiving of digital documents. Input:PDF Output:PDF Type:SISO")
+                    "This endpoint converts a PDF file to a PDF/A or PDF/X file using Ghostscript (preferred) or PDFBox/LibreOffice (fallback). PDF/A is a format designed for long-term archiving, while PDF/X is optimized for print production. Input:PDF Output:PDF Type:SISO")
     public ResponseEntity<byte[]> pdfToPdfA(@ModelAttribute PdfToPdfARequest request)
             throws Exception {
         MultipartFile inputFile = request.getFileInput();
@@ -96,6 +407,20 @@ public class ConvertPDFToPDFA {
             throw ExceptionUtils.createPdfFileRequiredException();
         }
 
+        // Determine if this is PDF/A or PDF/X conversion
+        boolean isPdfX = outputFormat != null && outputFormat.toLowerCase().startsWith("pdfx");
+
+        if (isPdfX) {
+            return handlePdfXConversion(inputFile, outputFormat);
+        } else {
+            return handlePdfAConversion(inputFile, outputFormat);
+        }
+    }
+
+    private ResponseEntity<byte[]> handlePdfAConversion(
+            MultipartFile inputFile, String outputFormat) throws Exception {
+        PdfaProfile profile = PdfaProfile.fromRequest(outputFormat);
+
         // Get the original filename without extension
         String originalFileName = Filenames.toSimpleFileName(inputFile.getOriginalFilename());
         if (originalFileName == null || originalFileName.trim().isEmpty()) {
@@ -106,31 +431,149 @@ public class ConvertPDFToPDFA {
                         ? originalFileName.substring(0, originalFileName.lastIndexOf('.'))
                         : originalFileName;
 
-        Path tempInputFile = null;
-        byte[] fileBytes;
-        Path loPdfPath = null; // Used for LibreOffice conversion output
-        File preProcessedFile = null;
-        int pdfaPart = 2;
+        Path workingDir = Files.createTempDirectory("pdfa_conversion_");
+        Path inputPath = workingDir.resolve("input.pdf");
+        inputFile.transferTo(inputPath);
 
         try {
-            // Save uploaded file to temp location
-            tempInputFile = Files.createTempFile("input_", ".pdf");
-            inputFile.transferTo(tempInputFile);
+            byte[] converted;
 
-            // Branch conversion based on desired output PDF/A format
-            if ("pdfa".equals(outputFormat)) {
+            // Try Ghostscript first (preferred method)
+            if (isGhostscriptAvailable()) {
+                log.info("Using Ghostscript for PDF/A conversion to {}", profile.displayName());
+                try {
+                    converted = convertWithGhostscript(inputPath, workingDir, profile);
+                    String outputFilename = baseFileName + profile.outputSuffix();
+
+                    validateAndWarnPdfA(converted, profile, "Ghostscript");
+
+                    return WebResponseUtils.bytesToWebResponse(
+                            converted, outputFilename, MediaType.APPLICATION_PDF);
+                } catch (Exception e) {
+                    log.warn(
+                            "Ghostscript conversion failed, falling back to PDFBox/LibreOffice method",
+                            e);
+                }
+            } else {
+                log.info("Ghostscript not available, using PDFBox/LibreOffice fallback method");
+            }
+
+            converted = convertWithPdfBoxMethod(inputPath, workingDir, profile);
+            String outputFilename = baseFileName + profile.outputSuffix();
+
+            // Validate with PDFBox preflight and warn if issues found
+            validateAndWarnPdfA(converted, profile, "PDFBox/LibreOffice");
+
+            return WebResponseUtils.bytesToWebResponse(
+                    converted, outputFilename, MediaType.APPLICATION_PDF);
+
+        } finally {
+            deleteQuietly(workingDir);
+        }
+    }
+
+    private ResponseEntity<byte[]> handlePdfXConversion(
+            MultipartFile inputFile, String outputFormat) throws Exception {
+        PdfXProfile profile = PdfXProfile.fromRequest(outputFormat);
+
+        String originalFileName = Filenames.toSimpleFileName(inputFile.getOriginalFilename());
+        if (originalFileName == null || originalFileName.trim().isEmpty()) {
+            originalFileName = "output.pdf";
+        }
+        String baseFileName =
+                originalFileName.contains(".")
+                        ? originalFileName.substring(0, originalFileName.lastIndexOf('.'))
+                        : originalFileName;
+
+        Path workingDir = Files.createTempDirectory("pdfx_conversion_");
+        Path inputPath = workingDir.resolve("input.pdf");
+        inputFile.transferTo(inputPath);
+
+        try {
+            // PDF/X conversion uses Ghostscript (no fallback currently)
+            if (!isGhostscriptAvailable()) {
+                log.error("Ghostscript is required for PDF/X conversion");
+                throw new IOException(
+                        "Ghostscript is required for PDF/X conversion but is not available on the system");
+            }
+
+            log.info("Using Ghostscript for PDF/X conversion to {}", profile.displayName());
+            byte[] converted = convertWithGhostscriptX(inputPath, workingDir, profile);
+            String outputFilename = baseFileName + profile.outputSuffix();
+
+            log.info("PDF/X conversion completed successfully to {}", profile.displayName());
+
+            return WebResponseUtils.bytesToWebResponse(
+                    converted, outputFilename, MediaType.APPLICATION_PDF);
+
+        } catch (IOException | InterruptedException e) {
+            log.error("PDF/X conversion failed", e);
+            throw ExceptionUtils.createPdfaConversionFailedException();
+        } finally {
+            deleteQuietly(workingDir);
+        }
+    }
+
+    private boolean isGhostscriptAvailable() {
+        try {
+            ProcessExecutorResult result =
+                    ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT)
+                            .runCommandWithOutputHandling(Arrays.asList("gs", "--version"));
+            return result.getRc() == 0;
+        } catch (Exception e) {
+            log.debug("Ghostscript availability check failed", e);
+            return false;
+        }
+    }
+
+    private byte[] convertWithGhostscript(Path inputPdf, Path workingDir, PdfaProfile profile)
+            throws IOException, InterruptedException {
+        Path outputPdf = workingDir.resolve("gs_output.pdf");
+        ColorProfiles colorProfiles = prepareColorProfiles(workingDir);
+        Path pdfaDefFile = createPdfaDefFile(workingDir, colorProfiles, profile);
+
+        List<String> command =
+                buildGhostscriptCommand(
+                        inputPdf, outputPdf, colorProfiles, workingDir, profile, pdfaDefFile);
+
+        ProcessExecutorResult result =
+                ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT)
+                        .runCommandWithOutputHandling(command);
+
+        if (result.getRc() != 0) {
+            throw new IOException("Ghostscript exited with code " + result.getRc());
+        }
+
+        if (!Files.exists(outputPdf)) {
+            throw new IOException("Ghostscript did not produce an output file");
+        }
+
+        return Files.readAllBytes(outputPdf);
+    }
+
+    private byte[] convertWithPdfBoxMethod(Path inputPath, Path workingDir, PdfaProfile profile)
+            throws Exception {
+        Path tempInputFile = null;
+        byte[] fileBytes;
+        Path loPdfPath = null;
+        File preProcessedFile = null;
+        int pdfaPart = profile.part();
+
+        try {
+            tempInputFile = inputPath;
+
+            if (pdfaPart == 2 || pdfaPart == 3) {
                 preProcessedFile = tempInputFile.toFile();
             } else {
-                pdfaPart = 1;
                 preProcessedFile = preProcessHighlights(tempInputFile.toFile());
             }
-            Set<String> missingFonts = new HashSet<>();
+
+            Set<String> missingFonts;
             boolean needImgs;
             try (PDDocument doc = Loader.loadPDF(preProcessedFile)) {
                 missingFonts = findUnembeddedFontNames(doc);
                 needImgs = (pdfaPart == 1) && hasTransparentImages(doc);
                 if (!missingFonts.isEmpty() || needImgs) {
-                    // Run LibreOffice conversion to get flattened images and embedded fonts
                     loPdfPath = runLibreOfficeConversion(preProcessedFile.toPath(), pdfaPart);
                 }
             }
@@ -138,22 +581,39 @@ public class ConvertPDFToPDFA {
                     convertToPdfA(
                             preProcessedFile.toPath(), loPdfPath, pdfaPart, missingFonts, needImgs);
 
-            String outputFilename = baseFileName + "_PDFA.pdf";
-
-            return WebResponseUtils.bytesToWebResponse(
-                    fileBytes, outputFilename, MediaType.APPLICATION_PDF);
+            return fileBytes;
 
         } finally {
-            // Clean up temporary files
-            if (tempInputFile != null) {
-                Files.deleteIfExists(tempInputFile);
-            }
             if (loPdfPath != null && loPdfPath.getParent() != null) {
                 FileUtils.deleteDirectory(loPdfPath.getParent().toFile());
             }
-            if (preProcessedFile != null) {
+            if (preProcessedFile != null && !preProcessedFile.equals(tempInputFile.toFile())) {
                 Files.deleteIfExists(preProcessedFile.toPath());
             }
+        }
+    }
+
+    private ColorProfiles prepareColorProfiles(Path workingDir) throws IOException {
+        Path rgbProfile = workingDir.resolve("sRGB.icc");
+        copyResourceIcc(rgbProfile);
+
+        Path grayProfile = workingDir.resolve("Gray.icc");
+        try {
+            writeJavaIccProfile(ICC_Profile.getInstance(ColorSpace.CS_GRAY), grayProfile);
+        } catch (IllegalArgumentException e) {
+            log.warn("Falling back to sRGB ICC profile for grayscale defaults", e);
+            Files.copy(rgbProfile, grayProfile, StandardCopyOption.REPLACE_EXISTING);
+        }
+
+        return new ColorProfiles(rgbProfile, grayProfile);
+    }
+
+    private void copyResourceIcc(Path target) throws IOException {
+        try (InputStream in = getClass().getResourceAsStream(ICC_RESOURCE_PATH)) {
+            if (in == null) {
+                throw new IOException("ICC profile resource not found: " + ICC_RESOURCE_PATH);
+            }
+            Files.copy(in, target, StandardCopyOption.REPLACE_EXISTING);
         }
     }
 
@@ -255,55 +715,27 @@ public class ConvertPDFToPDFA {
         return outputFiles[0].toPath();
     }
 
-    private void embedMissingFonts(PDDocument loDoc, PDDocument baseDoc, Set<String> missingFonts)
-            throws IOException {
-        List<PDPage> loPages = new ArrayList<>();
-        loDoc.getPages().forEach(loPages::add);
-        List<PDPage> basePages = new ArrayList<>();
-        baseDoc.getPages().forEach(basePages::add);
+    private byte[] convertWithGhostscriptX(Path inputPdf, Path workingDir, PdfXProfile profile)
+            throws IOException, InterruptedException {
+        Path outputPdf = workingDir.resolve("gs_output_pdfx.pdf");
+        ColorProfiles colorProfiles = prepareColorProfiles(workingDir);
 
-        for (int i = 0; i < loPages.size(); i++) {
-            PDResources loRes = loPages.get(i).getResources();
-            PDResources baseRes = basePages.get(i).getResources();
+        List<String> command =
+                buildGhostscriptCommandX(inputPdf, outputPdf, colorProfiles, workingDir, profile);
 
-            for (COSName fontKey : loRes.getFontNames()) {
-                PDFont loFont = loRes.getFont(fontKey);
-                if (loFont == null) continue;
+        ProcessExecutorResult result =
+                ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT)
+                        .runCommandWithOutputHandling(command);
 
-                String psName = loFont.getName();
-                if (!missingFonts.contains(psName)) continue;
-
-                PDFontDescriptor desc = loFont.getFontDescriptor();
-                if (desc == null) continue;
-
-                PDStream fontStream = null;
-                if (desc.getFontFile() != null) {
-                    fontStream = desc.getFontFile();
-                } else if (desc.getFontFile2() != null) {
-                    fontStream = desc.getFontFile2();
-                } else if (desc.getFontFile3() != null) {
-                    fontStream = desc.getFontFile3();
-                }
-                if (fontStream == null) continue;
-
-                try (InputStream in = fontStream.createInputStream()) {
-                    PDFont newFont;
-                    try {
-                        newFont = PDType0Font.load(baseDoc, in, false);
-                    } catch (IOException e1) {
-                        try {
-                            newFont = PDTrueTypeFont.load(baseDoc, in, null);
-                        } catch (IOException | IllegalArgumentException e2) {
-                            log.error("Could not embed font {}: {}", psName, e2.getMessage());
-                            continue;
-                        }
-                    }
-                    if (newFont != null) {
-                        baseRes.put(fontKey, newFont);
-                    }
-                }
-            }
+        if (result.getRc() != 0) {
+            throw new IOException("Ghostscript exited with code " + result.getRc());
         }
+
+        if (!Files.exists(outputPdf)) {
+            throw new IOException("Ghostscript did not produce an output file");
+        }
+
+        return Files.readAllBytes(outputPdf);
     }
 
     private Set<String> findUnembeddedFontNames(PDDocument doc) throws IOException {
@@ -712,4 +1144,132 @@ public class ConvertPDFToPDFA {
             return preProcessedFile;
         }
     }
+
+    /** Enum representing different PDF/A profiles */
+    private enum PdfaProfile {
+        PDF_A_1B(1, "PDF/A-1b", "_PDFA-1b.pdf", "1.4", Format.PDF_A1B, "pdfa-1"),
+        PDF_A_2B(2, "PDF/A-2b", "_PDFA-2b.pdf", "1.7", null, "pdfa", "pdfa-2", "pdfa-2b"),
+        PDF_A_3B(3, "PDF/A-3b", "_PDFA-3b.pdf", "1.7", null, "pdfa-3", "pdfa-3b");
+
+        private final int part;
+        private final String displayName;
+        private final String suffix;
+        private final String compatibilityLevel;
+        private final Format preflightFormat;
+        private final List<String> requestTokens;
+
+        PdfaProfile(
+                int part,
+                String displayName,
+                String suffix,
+                String compatibilityLevel,
+                Format preflightFormat,
+                String... requestTokens) {
+            this.part = part;
+            this.displayName = displayName;
+            this.suffix = suffix;
+            this.compatibilityLevel = compatibilityLevel;
+            this.preflightFormat = preflightFormat;
+            this.requestTokens = Arrays.asList(requestTokens);
+        }
+
+        static PdfaProfile fromRequest(String requestToken) {
+            if (requestToken == null) {
+                return PDF_A_2B;
+            }
+            String normalized = requestToken.trim().toLowerCase(Locale.ROOT);
+            Optional<PdfaProfile> match =
+                    Arrays.stream(values())
+                            .filter(
+                                    profile ->
+                                            profile.requestTokens.stream()
+                                                    .map(token -> token.toLowerCase(Locale.ROOT))
+                                                    .anyMatch(token -> token.equals(normalized)))
+                            .findFirst();
+
+            return match.orElse(PDF_A_2B);
+        }
+
+        int part() {
+            return part;
+        }
+
+        String displayName() {
+            return displayName;
+        }
+
+        String outputSuffix() {
+            return suffix;
+        }
+
+        String compatibilityLevel() {
+            return compatibilityLevel;
+        }
+
+        Optional<Format> preflightFormat() {
+            return Optional.ofNullable(preflightFormat);
+        }
+    }
+
+    private enum PdfXProfile {
+        PDF_X_1(1, "PDF/X-1", "_PDFX-1.pdf", "1.3", "2001", "pdfx-1", "pdfx"),
+        PDF_X_3(3, "PDF/X-3", "_PDFX-3.pdf", "1.3", "2003", "pdfx-3"),
+        PDF_X_4(4, "PDF/X-4", "_PDFX-4.pdf", "1.4", "2008", "pdfx-4");
+
+        private final String displayName;
+        private final String suffix;
+        private final String compatibilityLevel;
+        private final String pdfxVersion;
+        private final List<String> requestTokens;
+
+        PdfXProfile(
+                int version,
+                String displayName,
+                String suffix,
+                String compatibilityLevel,
+                String pdfxVersion,
+                String... requestTokens) {
+            this.displayName = displayName;
+            this.suffix = suffix;
+            this.compatibilityLevel = compatibilityLevel;
+            this.pdfxVersion = pdfxVersion;
+            this.requestTokens = Arrays.asList(requestTokens);
+        }
+
+        static PdfXProfile fromRequest(String requestToken) {
+            if (requestToken == null) {
+                return PDF_X_4;
+            }
+            String normalized = requestToken.trim().toLowerCase(Locale.ROOT);
+            Optional<PdfXProfile> match =
+                    Arrays.stream(values())
+                            .filter(
+                                    profile ->
+                                            profile.requestTokens.stream()
+                                                    .map(token -> token.toLowerCase(Locale.ROOT))
+                                                    .anyMatch(token -> token.equals(normalized)))
+                            .findFirst();
+
+            return match.orElse(PDF_X_4);
+        }
+
+        String displayName() {
+            return displayName;
+        }
+
+        String outputSuffix() {
+            return suffix;
+        }
+
+        String compatibilityLevel() {
+            return compatibilityLevel;
+        }
+
+        String pdfxVersion() {
+            return pdfxVersion;
+        }
+    }
+
+    /** Record to hold color profile paths */
+    private record ColorProfiles(Path rgb, Path gray) {}
 }
