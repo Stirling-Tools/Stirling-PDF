@@ -413,7 +413,6 @@ public class EndpointConfiguration {
         // Multi-tool endpoints - endpoints that can be handled by multiple tools
         addEndpointAlternative("repair", "qpdf");
         addEndpointAlternative("repair", "Ghostscript");
-        addEndpointAlternative("repair", "Java");
         addEndpointAlternative("compress-pdf", "qpdf");
         addEndpointAlternative("compress-pdf", "Ghostscript");
         addEndpointAlternative("compress-pdf", "Java");
