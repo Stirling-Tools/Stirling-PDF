@@ -16,10 +16,17 @@ import { OnboardingProvider } from "@app/contexts/OnboardingContext";
 import { TourOrchestrationProvider } from "@app/contexts/TourOrchestrationContext";
 import ErrorBoundary from "@app/components/shared/ErrorBoundary";
 import { useScarfTracking } from "@app/hooks/useScarfTracking";
+import { useAppInitialization } from "@app/hooks/useAppInitialization";
 
 // Component to initialize scarf tracking (must be inside AppConfigProvider)
 function ScarfTrackingInitializer() {
   useScarfTracking();
+  return null;
+}
+
+// Component to run app-level initialization (must be inside AppProviders for context access)
+function AppInitializer() {
+  useAppInitialization();
   return null;
 }
 
@@ -41,6 +48,7 @@ export function AppProviders({ children, appConfigRetryOptions }: AppProvidersPr
             <AppConfigProvider retryOptions={appConfigRetryOptions}>
               <ScarfTrackingInitializer />
               <FileContextProvider enableUrlSync={true} enablePersistence={true}>
+                <AppInitializer />
                 <ToolRegistryProvider>
                   <NavigationProvider>
                     <FilesModalProvider>
