@@ -403,8 +403,6 @@ public class EndpointConfiguration {
         /* Ghostscript */
         addEndpointToGroup("Ghostscript", "repair");
         addEndpointToGroup("Ghostscript", "compress-pdf");
-        addEndpointToGroup("Ghostscript", "crop");
-        addEndpointToGroup("Ghostscript", "replace-invert-pdf");
 
         /* tesseract */
         addEndpointToGroup("tesseract", "ocr-pdf");
@@ -415,6 +413,7 @@ public class EndpointConfiguration {
         // Multi-tool endpoints - endpoints that can be handled by multiple tools
         addEndpointAlternative("repair", "qpdf");
         addEndpointAlternative("repair", "Ghostscript");
+        addEndpointAlternative("repair", "Java");
         addEndpointAlternative("compress-pdf", "qpdf");
         addEndpointAlternative("compress-pdf", "Ghostscript");
         addEndpointAlternative("compress-pdf", "Java");
@@ -429,6 +428,10 @@ public class EndpointConfiguration {
         addEndpointAlternative("pdf-to-html", "LibreOffice");
         addEndpointAlternative("pdf-to-html", "Pdftohtml");
         addEndpointAlternative("pdf-to-markdown", "Pdftohtml");
+
+        // pdf-to-pdfa has Java implementation with LibreOffice for edge cases
+        addEndpointAlternative("pdf-to-pdfa", "LibreOffice");
+        addEndpointAlternative("pdf-to-pdfa", "Java");
 
         // markdown-to-pdf can use either Weasyprint or Java
         addEndpointAlternative("markdown-to-pdf", "Weasyprint");
