@@ -4,6 +4,7 @@ import { createProcessedFile, createChildStub } from '@app/contexts/file/fileAct
 import { createStirlingFile, StirlingFile, FileId, StirlingFileStub } from '@app/types/fileContext';
 import type { SignatureAPI } from '@app/components/viewer/viewerTypes';
 import type React from 'react';
+import type { PdfAnnotationObject } from '@embedpdf/models';
 
 interface MinimalFileContextSelectors {
   getAllFileIds: () => FileId[];
@@ -40,27 +41,21 @@ type AnnotationRect = {
   height?: number;
 };
 
-type SessionAnnotation = {
-  id?: string;
+type SessionAnnotation = PdfAnnotationObject & {
   rect?: AnnotationRect;
   bounds?: AnnotationRect;
   rectangle?: AnnotationRect;
   position?: AnnotationRect;
-  imageData?: unknown;
-  appearance?: unknown;
-  stampData?: unknown;
-  imageSrc?: unknown;
-  contents?: unknown;
-  data?: unknown;
-  type?: number;
-  [key: string]: unknown;
+  imageData?: string;
+  appearance?: string;
+  stampData?: string;
+  imageSrc?: string;
+  contents?: string;
+  data?: string;
 };
 
 const getAnnotationRect = (annotation: SessionAnnotation): AnnotationRect | undefined =>
   annotation.rect ?? annotation.bounds ?? annotation.rectangle ?? annotation.position;
-
-const isSessionAnnotationArray = (value: unknown): value is SessionAnnotation[] =>
-  Array.isArray(value);
 
 export async function flattenSignatures(options: SignatureFlatteningOptions): Promise<SignatureFlatteningResult | null> {
   const { signatureApiRef, getImageData, exportActions, selectors, originalFile, getScrollState, activeFileIndex } = options;
@@ -79,23 +74,24 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
       for (let pageIndex = 0; pageIndex < totalPages; pageIndex++) {
         try {
           const pageAnnotations = await signatureApiRef.current.getPageAnnotations(pageIndex);
-          if (isSessionAnnotationArray(pageAnnotations) && pageAnnotations.length > 0) {
+          if (Array.isArray(pageAnnotations) && pageAnnotations.length > 0) {
             // Filter to only include annotations added in this session
             const sessionAnnotations = pageAnnotations.filter((annotation): annotation is SessionAnnotation => {
               if (!annotation || typeof annotation !== 'object') {
                 return false;
               }
+              const extendedAnnotation = annotation as SessionAnnotation;
               // Check if this annotation has stored image data (indicates it was added this session)
-              const storedImageData = annotation.id ? getImageData(annotation.id) : undefined;
+              const storedImageData = extendedAnnotation.id ? getImageData(extendedAnnotation.id) : undefined;
 
               // Also check if it has image data directly in the annotation (new signatures)
               const directImageData = [
-                annotation.imageData,
-                annotation.appearance,
-                annotation.stampData,
-                annotation.imageSrc,
-                annotation.contents,
-                annotation.data
+                extendedAnnotation.imageData,
+                extendedAnnotation.appearance,
+                extendedAnnotation.stampData,
+                extendedAnnotation.imageSrc,
+                extendedAnnotation.contents,
+                extendedAnnotation.data
               ].find((value): value is string => typeof value === 'string');
 
               return Boolean(
@@ -272,9 +268,9 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
                         console.error('Failed to render image annotation:', imageError);
                       }
                     } else {
-                      const textContent = typeof annotation.content === 'string'
-                        ? annotation.content
-                        : (typeof annotation.text === 'string' ? annotation.text : undefined);
+                      const textContent = typeof annotation.contents === 'string'
+                        ? annotation.contents
+                        : (typeof annotation.data === 'string' ? annotation.data : undefined);
 
                       if (textContent) {
                         console.warn('Rendering text annotation instead');

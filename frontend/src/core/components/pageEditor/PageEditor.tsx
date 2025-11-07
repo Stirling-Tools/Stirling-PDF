@@ -21,13 +21,18 @@ import {
   SplitCommand,
   BulkRotateCommand,
   PageBreakCommand,
-  UndoManager
+  UndoManager,
+  DOMCommand
 } from '@app/components/pageEditor/commands/pageCommands';
 import { GRID_CONSTANTS } from '@app/components/pageEditor/constants';
 import { usePageDocument } from '@app/components/pageEditor/hooks/usePageDocument';
 import { usePageEditorState } from '@app/components/pageEditor/hooks/usePageEditorState';
 import { parseSelection } from "@app/utils/bulkselection/parseSelection";
 import { usePageEditorRightRailButtons } from "@app/components/pageEditor/pageEditorRightRailButtons";
+
+interface ExecutableCommand {
+  execute: () => void;
+}
 
 export interface PageEditorProps {
   onFunctionsReady?: (functions: PageEditorFunctions) => void;
@@ -98,7 +103,7 @@ const PageEditor = ({
   }, [updateUndoRedoState]);
 
   // Wrapper for executeCommand to track unsaved changes
-  const executeCommandWithTracking = useCallback((command: any) => {
+  const executeCommandWithTracking = useCallback((command: DOMCommand) => {
     undoManagerRef.current.executeCommand(command);
     setHasUnsavedChanges(true);
   }, [setHasUnsavedChanges]);
@@ -213,10 +218,8 @@ const PageEditor = ({
 }), [splitPositions, executeCommandWithTracking]);
 
   // Command executor for PageThumbnail
-  const executeCommand = useCallback((command: any) => {
-    if (command && typeof command.execute === 'function') {
-      command.execute();
-    }
+  const executeCommand = useCallback((command: ExecutableCommand | null | undefined) => {
+    command?.execute();
   }, []);
 
 
@@ -789,7 +792,7 @@ const PageEditor = ({
                 page={page}
                 index={index}
                 totalPages={displayDocument.pages.length}
-                originalFile={(page as any).originalFileId ? selectors.getFile((page as any).originalFileId) : undefined}
+                originalFile={page.originalFileId ? selectors.getFile(page.originalFileId) : undefined}
                 selectedPageIds={selectedPageIds}
                 selectionMode={selectionMode}
                 movingPage={movingPage}

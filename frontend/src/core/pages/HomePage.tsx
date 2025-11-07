@@ -268,7 +268,7 @@ export default function HomePage({ openedFile }: HomePageProps = {}) {
               <span className="mobile-bottom-button-label">{t('quickAccess.config', 'Config')}</span>
             </button>
           </div>
-          <FileManager selectedTool={selectedTool as any /* FIX ME */} />
+          <FileManager selectedTool={selectedTool} />
           <AppConfigModal
             opened={configModalOpen}
             onClose={() => setConfigModalOpen(false)}
@@ -285,7 +285,7 @@ export default function HomePage({ openedFile }: HomePageProps = {}) {
           <ToolPanel />
           <Workbench />
           <RightRail />
-          <FileManager selectedTool={selectedTool as any /* FIX ME */} />
+          <FileManager selectedTool={selectedTool} />
         </Group>
       )}
     </div>

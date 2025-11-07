@@ -39,19 +39,21 @@ export const TextTool: React.FC<TextToolProps> = ({
       onSignatureDataChange={handleSignatureDataChange}
       disabled={disabled}
     >
-      <Stack gap="sm">
-        <TextInputWithFont
-          text={text}
-          onTextChange={handleTextChange}
-          fontSize={fontSize}
-          onFontSizeChange={setFontSize}
-          fontFamily={fontFamily}
-          onFontFamilyChange={setFontFamily}
-          disabled={disabled}
-          label="Text Content"
-          placeholder="Enter text to place on the PDF"
-        />
-      </Stack>
+      {() => (
+        <Stack gap="sm">
+          <TextInputWithFont
+            text={text}
+            onTextChange={handleTextChange}
+            fontSize={fontSize}
+            onFontSizeChange={setFontSize}
+            fontFamily={fontFamily}
+            onFontFamilyChange={setFontFamily}
+            disabled={disabled}
+            label="Text Content"
+            placeholder="Enter text to place on the PDF"
+          />
+        </Stack>
+      )}
     </BaseAnnotationTool>
   );
 };

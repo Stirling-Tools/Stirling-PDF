@@ -4,7 +4,7 @@ import { Text, Stack, Group, ActionIcon } from "@mantine/core";
 import SettingsIcon from "@mui/icons-material/Settings";
 import CloseIcon from "@mui/icons-material/Close";
 import AddCircleOutline from "@mui/icons-material/AddCircleOutline";
-import { AutomationTool } from "@app/types/automation";
+import { AutomationTool, AutomationParameters } from "@app/types/automation";
 import { ToolRegistry } from "@app/data/toolsTaxonomy";
 import { ToolId } from "@app/types/toolId";
 import ToolSelector from "@app/components/tools/automate/ToolSelector";
@@ -18,7 +18,7 @@ interface ToolListProps {
   onToolConfigure: (index: number) => void;
   onToolAdd: () => void;
   getToolName: (operation: string) => string;
-  getToolDefaultParameters: (operation: string) => Record<string, any>;
+  getToolDefaultParameters: (operation: string) => AutomationParameters;
 }
 
 export default function ToolList({

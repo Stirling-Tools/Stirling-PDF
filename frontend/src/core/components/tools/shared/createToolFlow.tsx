@@ -42,7 +42,7 @@ export interface ExecuteButtonConfig {
 
 export interface ReviewStepConfig {
   isVisible: boolean;
-  operation: ToolOperationHook<any>;
+  operation: ToolOperationHook<unknown>;
   title: string;
   onFileClick?: (file: File) => void;
   onUndo: () => void;

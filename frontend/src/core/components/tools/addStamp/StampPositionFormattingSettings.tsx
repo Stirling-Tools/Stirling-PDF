@@ -37,8 +37,8 @@ const StampPositionFormattingSettings = ({ parameters, onParameterChange, disabl
                   onClick={() => {
                     onParameterChange('position', idx);
                     // Ensure we're using grid positioning, not custom overrides
-                    onParameterChange('overrideX', -1 as any);
-                    onParameterChange('overrideY', -1 as any);
+                    onParameterChange('overrideX', -1);
+                    onParameterChange('overrideY', -1);
                   }}
                   disabled={disabled}
                   styles={{
@@ -108,7 +108,7 @@ const StampPositionFormattingSettings = ({ parameters, onParameterChange, disabl
             />
             <Slider
               value={parameters.fontSize}
-              onChange={(v) => onParameterChange('fontSize', v as number)}
+              onChange={(value) => onParameterChange('fontSize', value)}
               min={1}
               max={400}
               step={1}
@@ -134,7 +134,7 @@ const StampPositionFormattingSettings = ({ parameters, onParameterChange, disabl
             />
             <Slider
               value={parameters.rotation}
-              onChange={(v) => onParameterChange('rotation', v as number)}
+              onChange={(value) => onParameterChange('rotation', value)}
               min={-180}
               max={180}
               step={1}
@@ -159,7 +159,7 @@ const StampPositionFormattingSettings = ({ parameters, onParameterChange, disabl
             />
             <Slider
               value={parameters.opacity}
-              onChange={(v) => onParameterChange('opacity', v as number)}
+              onChange={(value) => onParameterChange('opacity', value)}
               min={0}
               max={100}
               step={1}
@@ -184,7 +184,7 @@ const StampPositionFormattingSettings = ({ parameters, onParameterChange, disabl
         <Select
           label={t('AddStampRequest.margin', 'Margin')}
           value={parameters.customMargin}
-          onChange={(v) => onParameterChange('customMargin', (v as any) || 'medium')}
+          onChange={(value) => onParameterChange('customMargin', (value as AddStampParameters['customMargin'] | null) ?? 'medium')}
           data={[
             { value: 'small', label: t('margin.small', 'Small') },
             { value: 'medium', label: t('margin.medium', 'Medium') },

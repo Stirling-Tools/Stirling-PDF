@@ -4,7 +4,7 @@ import { Stack, Text, Loader, Group, Divider, Paper, Switch, Badge } from '@mant
 import { alert } from '@app/components/toast';
 import RestartConfirmationModal from '@app/components/shared/config/RestartConfirmationModal';
 import { useRestartServer } from '@app/components/shared/config/useRestartServer';
-import { useAdminSettings } from '@app/hooks/useAdminSettings';
+import { useAdminSettings, type SettingsRecord } from '@app/hooks/useAdminSettings';
 import PendingBadge from '@app/components/shared/config/PendingBadge';
 import ProviderCard from '@app/components/shared/config/configSections/ProviderCard';
 import {
@@ -12,8 +12,11 @@ import {
   Provider,
 } from '@app/components/shared/config/configSections/providerDefinitions';
 import apiClient from '@app/services/apiClient';
+import type { SettingsWithPending } from '@app/utils/settingsPendingHelper';
 
-interface ConnectionsSettingsData {
+type ProviderSettingsMap = Record<string, string | number | boolean | undefined>;
+
+interface ConnectionsSettingsData extends Record<string, unknown> {
   oauth2?: {
     enabled?: boolean;
     issuer?: string;
@@ -24,13 +27,9 @@ interface ConnectionsSettingsData {
     blockRegistration?: boolean;
     useAsUsername?: string;
     scopes?: string;
-    client?: {
-      [key: string]: any;
-    };
+    client?: Record<string, ProviderSettingsMap>;
   };
-  saml2?: {
-    [key: string]: any;
-  };
+  saml2?: ProviderSettingsMap;
   mail?: {
     enabled?: boolean;
     enableInvites?: boolean;
@@ -68,7 +67,9 @@ export default function AdminConnectionsSection() {
       const premiumResponse = await apiClient.get('/api/v1/admin/settings/section/premium');
       const premiumData = premiumResponse.data || {};
 
-      const result: any = {
+      type ConnectionsResponse = SettingsWithPending<ConnectionsSettingsData> & ConnectionsSettingsData;
+
+      const result: ConnectionsResponse = {
         oauth2: securityData.oauth2 || {},
         saml2: securityData.saml2 || {},
         mail: mailData || {},
@@ -76,7 +77,7 @@ export default function AdminConnectionsSection() {
       };
 
       // Merge pending blocks from all three endpoints
-      const pendingBlock: any = {};
+      const pendingBlock: Partial<ConnectionsSettingsData> = {};
       if (securityData._pending?.oauth2) {
         pendingBlock.oauth2 = securityData._pending.oauth2;
       }
@@ -128,7 +129,7 @@ export default function AdminConnectionsSection() {
     return !!(providerSettings?.clientId);
   };
 
-  const getProviderSettings = (provider: Provider): Record<string, any> => {
+  const getProviderSettings = (provider: Provider): ProviderSettingsMap => {
     if (provider.id === 'saml2') {
       return settings.saml2 || {};
     }
@@ -156,7 +157,7 @@ export default function AdminConnectionsSection() {
     return settings.oauth2?.client?.[provider.id] || {};
   };
 
-  const handleProviderSave = async (provider: Provider, providerSettings: Record<string, any>) => {
+  const handleProviderSave = async (provider: Provider, providerSettings: ProviderSettingsMap) => {
     try {
       if (provider.id === 'smtp') {
         // Mail settings use a different endpoint
@@ -175,7 +176,7 @@ export default function AdminConnectionsSection() {
         }
       } else {
         // OAuth2/SAML2 use delta settings
-        const deltaSettings: Record<string, any> = {};
+        const deltaSettings: SettingsRecord = {};
 
         if (provider.id === 'saml2') {
           // SAML2 settings
@@ -235,7 +236,7 @@ export default function AdminConnectionsSection() {
           throw new Error('Failed to disconnect');
         }
       } else {
-        const deltaSettings: Record<string, any> = {};
+        const deltaSettings: SettingsRecord = {};
 
         if (provider.id === 'saml2') {
           deltaSettings['security.saml2.enabled'] = false;

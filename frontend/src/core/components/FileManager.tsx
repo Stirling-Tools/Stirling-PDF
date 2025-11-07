@@ -4,7 +4,7 @@ import { Dropzone } from '@mantine/dropzone';
 import { StirlingFileStub } from '@app/types/fileContext';
 import { useFileManager } from '@app/hooks/useFileManager';
 import { useFilesModalContext } from '@app/contexts/FilesModalContext';
-import { Tool } from '@app/types/tool';
+import type { ToolRegistryEntry } from '@app/data/toolsTaxonomy';
 import MobileLayout from '@app/components/fileManager/MobileLayout';
 import DesktopLayout from '@app/components/fileManager/DesktopLayout';
 import DragOverlay from '@app/components/fileManager/DragOverlay';
@@ -14,7 +14,7 @@ import { isGoogleDriveConfigured } from '@app/services/googleDrivePickerService'
 import { loadScript } from '@app/utils/scriptLoader';
 
 interface FileManagerProps {
-  selectedTool?: Tool | null;
+  selectedTool?: ToolRegistryEntry | null;
 }
 
 const FileManager: React.FC<FileManagerProps> = ({ selectedTool }) => {

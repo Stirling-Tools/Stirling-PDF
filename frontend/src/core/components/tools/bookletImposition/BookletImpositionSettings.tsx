@@ -6,7 +6,7 @@ import ButtonSelector from "@app/components/shared/ButtonSelector";
 
 interface BookletImpositionSettingsProps {
   parameters: BookletImpositionParameters;
-  onParameterChange: (key: keyof BookletImpositionParameters, value: any) => void;
+  onParameterChange: <K extends keyof BookletImpositionParameters>(key: K, value: BookletImpositionParameters[K]) => void;
   disabled?: boolean;
 }
 
@@ -136,7 +136,7 @@ const BookletImpositionSettings = ({ parameters, onParameterChange, disabled = f
                 <NumberInput
                   label={t('bookletImposition.gutterSize.label', 'Gutter size (points)')}
                   value={parameters.gutterSize}
-                  onChange={(value) => onParameterChange('gutterSize', value || 12)}
+                  onChange={(value) => onParameterChange('gutterSize', typeof value === 'number' ? value : parameters.gutterSize)}
                   min={6}
                   max={72}
                   step={6}

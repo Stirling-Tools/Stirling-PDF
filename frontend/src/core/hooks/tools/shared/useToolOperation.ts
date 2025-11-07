@@ -16,6 +16,10 @@ import { ToolId } from '@app/types/toolId';
 // Re-export for backwards compatibility
 export type { ProcessingProgress, ResponseHandler };
 
+type BivariantHandler<TArgs extends unknown[], TResult> = {
+  bivarianceHack(...args: TArgs): TResult;
+}['bivarianceHack'];
+
 export enum ToolType {
   singleFile,
   multiFile,
@@ -62,10 +66,10 @@ export interface SingleFileToolOperationConfig<TParams> extends BaseToolOperatio
   toolType: ToolType.singleFile;
 
   /** Builds FormData for API request. */
-  buildFormData: ((params: TParams, file: File) => FormData);
+  buildFormData: BivariantHandler<[TParams, File], FormData>;
 
   /** API endpoint for the operation. Can be static string or function for dynamic routing. */
-  endpoint: string | ((params: TParams) => string);
+  endpoint: string | BivariantHandler<[TParams], string>;
 
   customProcessor?: undefined;
 }
@@ -78,10 +82,10 @@ export interface MultiFileToolOperationConfig<TParams> extends BaseToolOperation
   filePrefix: string;
 
   /** Builds FormData for API request. */
-  buildFormData: ((params: TParams, files: File[]) => FormData);
+  buildFormData: BivariantHandler<[TParams, File[]], FormData>;
 
   /** API endpoint for the operation. Can be static string or function for dynamic routing. */
-  endpoint: string | ((params: TParams) => string);
+  endpoint: string | BivariantHandler<[TParams], string>;
 
   customProcessor?: undefined;
 }
@@ -98,7 +102,7 @@ export interface CustomToolOperationConfig<TParams> extends BaseToolOperationCon
    * This tool handles all API calls, response processing, and file creation.
    * Use for tools with complex routing logic or non-standard processing requirements.
    */
-  customProcessor: (params: TParams, files: File[]) => Promise<File[]>;
+  customProcessor: BivariantHandler<[TParams, File[]], Promise<File[]>>;
 }
 
 export type ToolOperationConfig<TParams = void> = SingleFileToolOperationConfig<TParams> | MultiFileToolOperationConfig<TParams> | CustomToolOperationConfig<TParams>;
@@ -119,11 +123,11 @@ export interface ToolOperationHook<TParams = void> {
   progress: ProcessingProgress | null;
 
   // Actions
-  executeOperation: (params: TParams, selectedFiles: StirlingFile[]) => Promise<void>;
-  resetResults: () => void;
-  clearError: () => void;
-  cancelOperation: () => void;
-  undoOperation: () => Promise<void>;
+  executeOperation(params: TParams, selectedFiles: StirlingFile[]): Promise<void>;
+  resetResults(): void;
+  clearError(): void;
+  cancelOperation(): void;
+  undoOperation(): Promise<void>;
 }
 
 // Re-export for backwards compatibility

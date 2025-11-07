@@ -4,11 +4,12 @@ import { NumberInput, Switch, Button, Stack, Paper, Text, Loader, Group, TextInp
 import { alert } from '@app/components/toast';
 import RestartConfirmationModal from '@app/components/shared/config/RestartConfirmationModal';
 import { useRestartServer } from '@app/components/shared/config/useRestartServer';
-import { useAdminSettings } from '@app/hooks/useAdminSettings';
+import { useAdminSettings, type SettingsRecord } from '@app/hooks/useAdminSettings';
 import PendingBadge from '@app/components/shared/config/PendingBadge';
 import apiClient from '@app/services/apiClient';
+import type { SettingsWithPending } from '@app/utils/settingsPendingHelper';
 
-interface DatabaseSettingsData {
+interface DatabaseSettingsData extends Record<string, unknown> {
   enableCustomDatabase?: boolean;
   customDatabaseUrl?: string;
   username?: string;
@@ -50,7 +51,8 @@ export default function AdminDatabaseSection() {
       };
 
       // Map pending changes from system._pending.datasource to root level
-      const result: any = { ...datasource };
+      type DatabaseSettingsResponse = SettingsWithPending<DatabaseSettingsData> & DatabaseSettingsData;
+      const result: DatabaseSettingsResponse = { ...datasource };
       if (systemData._pending?.datasource) {
         result._pending = systemData._pending.datasource;
       }
@@ -59,7 +61,7 @@ export default function AdminDatabaseSection() {
     },
     saveTransformer: (settings) => {
       // Convert flat settings to dot-notation for delta endpoint
-      const deltaSettings: Record<string, any> = {
+      const deltaSettings: SettingsRecord = {
         'system.datasource.enableCustomDatabase': settings.enableCustomDatabase,
         'system.datasource.customDatabaseUrl': settings.customDatabaseUrl,
         'system.datasource.username': settings.username,

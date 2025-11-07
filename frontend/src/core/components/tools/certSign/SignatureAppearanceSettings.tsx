@@ -4,7 +4,7 @@ import { CertSignParameters } from "@app/hooks/tools/certSign/useCertSignParamet
 
 interface SignatureAppearanceSettingsProps {
   parameters: CertSignParameters;
-  onParameterChange: (key: keyof CertSignParameters, value: any) => void;
+  onParameterChange: <K extends keyof CertSignParameters>(key: K, value: CertSignParameters[K]) => void;
   disabled?: boolean;
 }
 
@@ -68,7 +68,7 @@ const SignatureAppearanceSettings = ({ parameters, onParameterChange, disabled =
           <NumberInput
             label={t('certSign.pageNumber', 'Page Number')}
             value={parameters.pageNumber}
-            onChange={(value) => onParameterChange('pageNumber', value || 1)}
+            onChange={(value) => onParameterChange('pageNumber', typeof value === 'number' ? value : parameters.pageNumber)}
             min={1}
             disabled={disabled}
           />

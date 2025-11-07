@@ -4,11 +4,13 @@ import { useTranslation } from 'react-i18next';
 import LocalIcon from '@app/components/shared/LocalIcon';
 import { Provider, ProviderField } from '@app/components/shared/config/configSections/providerDefinitions';
 
+type ProviderSettings = Record<string, string | number | boolean | undefined>;
+
 interface ProviderCardProps {
   provider: Provider;
   isConfigured: boolean;
-  settings?: Record<string, any>;
-  onSave?: (settings: Record<string, any>) => void;
+  settings?: ProviderSettings;
+  onSave?: (settings: ProviderSettings) => void;
   onDisconnect?: () => void;
 }
 
@@ -21,13 +23,13 @@ export default function ProviderCard({
 }: ProviderCardProps) {
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
-  const [localSettings, setLocalSettings] = useState<Record<string, any>>(settings);
+  const [localSettings, setLocalSettings] = useState<ProviderSettings>(settings);
 
   // Initialize local settings with defaults when opening an unconfigured provider
   const handleConnectToggle = () => {
     if (!isConfigured && !expanded) {
       // First time opening an unconfigured provider - initialize with defaults
-      const defaultSettings: Record<string, any> = {};
+      const defaultSettings: ProviderSettings = {};
       provider.fields.forEach((field) => {
         if (field.defaultValue !== undefined) {
           defaultSettings[field.key] = field.defaultValue;
@@ -38,7 +40,7 @@ export default function ProviderCard({
     setExpanded(!expanded);
   };
 
-  const handleFieldChange = (key: string, value: any) => {
+  const handleFieldChange = (key: string, value: string | number | boolean) => {
     setLocalSettings((prev) => ({ ...prev, [key]: value }));
   };
 
@@ -50,7 +52,7 @@ export default function ProviderCard({
   };
 
   const renderField = (field: ProviderField) => {
-    const value = localSettings[field.key] ?? field.defaultValue ?? '';
+    const value = localSettings[field.key] ?? field.defaultValue;
 
     switch (field.type) {
       case 'switch':
@@ -61,7 +63,7 @@ export default function ProviderCard({
               <Text size="xs" c="dimmed" mt={4}>{field.description}</Text>
             </div>
             <Switch
-              checked={value || false}
+              checked={typeof value === 'boolean' ? value : Boolean(value)}
               onChange={(e) => handleFieldChange(field.key, e.target.checked)}
             />
           </div>
@@ -74,8 +76,8 @@ export default function ProviderCard({
             label={field.label}
             description={field.description}
             placeholder={field.placeholder}
-            value={value}
-            onChange={(e) => handleFieldChange(field.key, e.target.value)}
+            value={typeof value === 'string' ? value : value !== undefined ? String(value) : ''}
+            onChange={(e) => handleFieldChange(field.key, e.currentTarget.value)}
           />
         );
 
@@ -86,8 +88,8 @@ export default function ProviderCard({
             label={field.label}
             description={field.description}
             placeholder={field.placeholder}
-            value={value}
-            onChange={(e) => handleFieldChange(field.key, e.target.value)}
+            value={typeof value === 'string' ? value : value !== undefined ? String(value) : ''}
+            onChange={(e) => handleFieldChange(field.key, e.currentTarget.value)}
           />
         );
 
@@ -98,8 +100,8 @@ export default function ProviderCard({
             label={field.label}
             description={field.description}
             placeholder={field.placeholder}
-            value={value}
-            onChange={(e) => handleFieldChange(field.key, e.target.value)}
+            value={typeof value === 'string' ? value : value !== undefined ? String(value) : ''}
+            onChange={(e) => handleFieldChange(field.key, e.currentTarget.value)}
           />
         );
     }

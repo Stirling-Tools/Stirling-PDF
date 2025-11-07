@@ -1,13 +1,25 @@
 export type ProviderType = 'oauth2' | 'saml2';
 
-export interface ProviderField {
+interface ProviderFieldBase {
   key: string;
-  type: 'text' | 'password' | 'switch' | 'textarea';
   label: string;
   description: string;
   placeholder?: string;
-  defaultValue?: any;
 }
+
+export type TextFieldType = 'text' | 'password' | 'textarea';
+
+export interface ProviderInputField extends ProviderFieldBase {
+  type: TextFieldType;
+  defaultValue?: string;
+}
+
+export interface ProviderSwitchField extends ProviderFieldBase {
+  type: 'switch';
+  defaultValue?: boolean;
+}
+
+export type ProviderField = ProviderInputField | ProviderSwitchField;
 
 export interface Provider {
   id: string;

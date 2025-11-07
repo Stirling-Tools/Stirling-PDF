@@ -18,8 +18,8 @@ import {
 } from '@mantine/core';
 import LocalIcon from '@app/components/shared/LocalIcon';
 import { alert } from '@app/components/toast';
-import { teamService, Team } from '@app/services/teamService';
-import { User, userManagementService } from '@app/services/userManagementService';
+import { teamService, Team, TeamMember } from '@app/services/teamService';
+import { userManagementService } from '@app/services/userManagementService';
 import { Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
 
 interface TeamDetailsSectionProps {
@@ -31,16 +31,40 @@ export default function TeamDetailsSection({ teamId, onBack }: TeamDetailsSectio
   const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [team, setTeam] = useState<Team | null>(null);
-  const [teamUsers, setTeamUsers] = useState<User[]>([]);
-  const [availableUsers, setAvailableUsers] = useState<User[]>([]);
+  const [teamUsers, setTeamUsers] = useState<TeamMember[]>([]);
+  const [availableUsers, setAvailableUsers] = useState<TeamMember[]>([]);
   const [allTeams, setAllTeams] = useState<Team[]>([]);
   const [userLastRequest, setUserLastRequest] = useState<Record<string, number>>({});
   const [addMemberModalOpened, setAddMemberModalOpened] = useState(false);
   const [changeTeamModalOpened, setChangeTeamModalOpened] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [selectedUser, setSelectedUser] = useState<TeamMember | null>(null);
   const [selectedUserId, setSelectedUserId] = useState<string>('');
   const [selectedTeamId, setSelectedTeamId] = useState<string>('');
   const [processing, setProcessing] = useState(false);
+
+type ApiErrorResponse = {
+  response?: {
+    data?: {
+      message?: string;
+      error?: string;
+    };
+  };
+  message?: string;
+};
+
+const extractErrorMessage = (error: unknown, fallback: string): string => {
+  if (typeof error === 'object' && error !== null) {
+    const apiError = error as ApiErrorResponse;
+    return apiError.response?.data?.message
+      ?? apiError.response?.data?.error
+      ?? apiError.message
+      ?? fallback;
+  }
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return fallback;
+};
 
   useEffect(() => {
     fetchTeamDetails();
@@ -87,19 +111,16 @@ export default function TeamDetailsSection({ teamId, onBack }: TeamDetailsSectio
       setAddMemberModalOpened(false);
       setSelectedUserId('');
       fetchTeamDetails();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to add member:', error);
-      const errorMessage = error.response?.data?.message ||
-                          error.response?.data?.error ||
-                          error.message ||
-                          t('workspace.teams.addMemberToTeam.error', 'Failed to add user to team');
+      const errorMessage = extractErrorMessage(error, t('workspace.teams.addMemberToTeam.error', 'Failed to add user to team'));
       alert({ alertType: 'error', title: errorMessage });
     } finally {
       setProcessing(false);
     }
   };
 
-  const handleRemoveMember = async (user: User) => {
+  const handleRemoveMember = async (user: TeamMember) => {
     if (!window.confirm(t('workspace.teams.confirmRemove', `Remove ${user.username} from this team?`))) {
       return;
     }
@@ -117,19 +138,16 @@ export default function TeamDetailsSection({ teamId, onBack }: TeamDetailsSectio
       await teamService.moveUserToTeam(user.username, user.rolesAsString || 'ROLE_USER', defaultTeam.id);
       alert({ alertType: 'success', title: t('workspace.teams.removeMemberSuccess', 'User removed from team') });
       fetchTeamDetails();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to remove member:', error);
-      const errorMessage = error.response?.data?.message ||
-                          error.response?.data?.error ||
-                          error.message ||
-                          t('workspace.teams.removeMemberError', 'Failed to remove user from team');
+      const errorMessage = extractErrorMessage(error, t('workspace.teams.removeMemberError', 'Failed to remove user from team'));
       alert({ alertType: 'error', title: errorMessage });
     } finally {
       setProcessing(false);
     }
   };
 
-  const handleDeleteUser = async (user: User) => {
+  const handleDeleteUser = async (user: TeamMember) => {
     const confirmMessage = t('workspace.people.confirmDelete', 'Are you sure you want to delete this user? This action cannot be undone.');
     if (!window.confirm(`${confirmMessage}\n\nUser: ${user.username}`)) {
       return;
@@ -140,19 +158,16 @@ export default function TeamDetailsSection({ teamId, onBack }: TeamDetailsSectio
       await userManagementService.deleteUser(user.username);
       alert({ alertType: 'success', title: t('workspace.people.deleteUserSuccess', 'User deleted successfully') });
       fetchTeamDetails();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to delete user:', error);
-      const errorMessage = error.response?.data?.message ||
-                          error.response?.data?.error ||
-                          error.message ||
-                          t('workspace.people.deleteUserError', 'Failed to delete user');
+      const errorMessage = extractErrorMessage(error, t('workspace.people.deleteUserError', 'Failed to delete user'));
       alert({ alertType: 'error', title: errorMessage });
     } finally {
       setProcessing(false);
     }
   };
 
-  const openChangeTeamModal = (user: User) => {
+  const openChangeTeamModal = (user: TeamMember) => {
     setSelectedUser(user);
     setSelectedTeamId(user.team?.id?.toString() || '');
     setChangeTeamModalOpened(true);
@@ -172,12 +187,9 @@ export default function TeamDetailsSection({ teamId, onBack }: TeamDetailsSectio
       setSelectedUser(null);
       setSelectedTeamId('');
       fetchTeamDetails();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to change team:', error);
-      const errorMessage = error.response?.data?.message ||
-                          error.response?.data?.error ||
-                          error.message ||
-                          t('workspace.teams.changeTeam.error', 'Failed to change team');
+      const errorMessage = extractErrorMessage(error, t('workspace.teams.changeTeam.error', 'Failed to change team'));
       alert({ alertType: 'error', title: errorMessage });
     } finally {
       setProcessing(false);

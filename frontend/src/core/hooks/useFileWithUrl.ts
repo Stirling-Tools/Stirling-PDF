@@ -18,13 +18,7 @@ export function useFileWithUrl(file: File | Blob | null): { file: File | Blob; u
     try {
       const url = URL.createObjectURL(file);
 
-      // Return object with cleanup function
-      const result = { file, url };
-
-      // Store cleanup function for later use
-      (result as any)._cleanup = () => URL.revokeObjectURL(url);
-
-      return result;
+      return { file, url };
     } catch (error) {
       console.error('useFileWithUrl: Failed to create object URL:', error, file);
       return null;

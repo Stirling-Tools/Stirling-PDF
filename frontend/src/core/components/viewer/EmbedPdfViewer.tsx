@@ -290,8 +290,8 @@ const EmbedPdfViewerContent = ({
               file={effectiveFile.file}
               url={effectiveFile.url}
               enableAnnotations={shouldEnableAnnotations}
-              signatureApiRef={signatureApiRef as React.RefObject<any>}
-              historyApiRef={historyApiRef as React.RefObject<any>}
+              signatureApiRef={signatureApiRef}
+              historyApiRef={historyApiRef}
               onSignatureAdded={() => {
                 // Handle signature added - for debugging, enable console logs as needed
                 // Future: Handle signature completion

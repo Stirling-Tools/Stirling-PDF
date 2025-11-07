@@ -24,7 +24,7 @@ function updatePosthogConsent(){
   if(typeof(posthog) == "undefined" || !posthog.__loaded) {
     return;
   }
-  const optIn = (window.CookieConsent as any)?.acceptedService?.('posthog', 'analytics') || false;
+  const optIn = window.CookieConsent?.acceptedService?.('posthog', 'analytics') ?? false;
   if (optIn) {
     posthog.opt_in_capturing();
   } else {

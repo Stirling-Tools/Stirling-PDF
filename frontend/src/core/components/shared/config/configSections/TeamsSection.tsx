@@ -37,8 +37,31 @@ export default function TeamsSection() {
 
   // Form states
   const [newTeamName, setNewTeamName] = useState('');
-  const [renameTeamName, setRenameTeamName] = useState('');
-  const [selectedUserId, setSelectedUserId] = useState<string>('');
+const [renameTeamName, setRenameTeamName] = useState('');
+const [selectedUserId, setSelectedUserId] = useState<string>('');
+type ApiErrorResponse = {
+  response?: {
+    data?: {
+      message?: string;
+      error?: string;
+    };
+  };
+  message?: string;
+};
+
+const extractErrorMessage = (error: unknown, fallback: string): string => {
+  if (typeof error === 'object' && error !== null) {
+    const apiError = error as ApiErrorResponse;
+    return apiError.response?.data?.message
+      ?? apiError.response?.data?.error
+      ?? apiError.message
+      ?? fallback;
+  }
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return fallback;
+};
 
   useEffect(() => {
     fetchTeams();
@@ -70,12 +93,9 @@ export default function TeamsSection() {
       setCreateModalOpened(false);
       setNewTeamName('');
       fetchTeams();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to create team:', error);
-      const errorMessage = error.response?.data?.message ||
-                          error.response?.data?.error ||
-                          error.message ||
-                          t('workspace.teams.createTeam.error');
+      const errorMessage = extractErrorMessage(error, t('workspace.teams.createTeam.error'));
       alert({ alertType: 'error', title: errorMessage });
     } finally {
       setProcessing(false);
@@ -96,12 +116,9 @@ export default function TeamsSection() {
       setSelectedTeam(null);
       setRenameTeamName('');
       fetchTeams();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to rename team:', error);
-      const errorMessage = error.response?.data?.message ||
-                          error.response?.data?.error ||
-                          error.message ||
-                          t('workspace.teams.renameTeam.error');
+      const errorMessage = extractErrorMessage(error, t('workspace.teams.renameTeam.error'));
       alert({ alertType: 'error', title: errorMessage });
     } finally {
       setProcessing(false);
@@ -122,12 +139,9 @@ export default function TeamsSection() {
       await teamService.deleteTeam(team.id);
       alert({ alertType: 'success', title: t('workspace.teams.deleteTeam.success') });
       fetchTeams();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to delete team:', error);
-      const errorMessage = error.response?.data?.message ||
-                          error.response?.data?.error ||
-                          error.message ||
-                          t('workspace.teams.deleteTeam.error');
+      const errorMessage = extractErrorMessage(error, t('workspace.teams.deleteTeam.error'));
       alert({ alertType: 'error', title: errorMessage });
     }
   };

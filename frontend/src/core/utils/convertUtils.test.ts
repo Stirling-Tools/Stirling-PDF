@@ -307,13 +307,13 @@ describe('convertUtils', () => {
     test('should handle null and undefined inputs gracefully', () => {
       // Note: TypeScript prevents these, but test runtime behavior for robustness
       // The current implementation handles these gracefully by returning falsy values
-      expect(getEndpointName(null as any, null as any)).toBe('');
-      expect(getEndpointUrl(undefined as any, undefined as any)).toBe('');
-      expect(isConversionSupported(null as any, null as any)).toBe(false);
+      expect(getEndpointName(null as unknown as string, null as unknown as string)).toBe('');
+      expect(getEndpointUrl(undefined as unknown as string, undefined as unknown as string)).toBe('');
+      expect(isConversionSupported(null as unknown as string, null as unknown as string)).toBe(false);
       
       // isImageFormat will throw because it calls toLowerCase() on null/undefined
-      expect(() => isImageFormat(null as any)).toThrow();
-      expect(() => isImageFormat(undefined as any)).toThrow();
+      expect(() => isImageFormat(null as unknown as string)).toThrow();
+      expect(() => isImageFormat(undefined as unknown as string)).toThrow();
     });
 
     test('should handle special characters in file extensions', () => {

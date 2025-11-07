@@ -5,11 +5,12 @@ import { alert } from '@app/components/toast';
 import LocalIcon from '@app/components/shared/LocalIcon';
 import RestartConfirmationModal from '@app/components/shared/config/RestartConfirmationModal';
 import { useRestartServer } from '@app/components/shared/config/useRestartServer';
-import { useAdminSettings } from '@app/hooks/useAdminSettings';
+import { useAdminSettings, type SettingsRecord } from '@app/hooks/useAdminSettings';
 import PendingBadge from '@app/components/shared/config/PendingBadge';
 import apiClient from '@app/services/apiClient';
+import type { SettingsWithPending } from '@app/utils/settingsPendingHelper';
 
-interface SecuritySettingsData {
+interface SecuritySettingsData extends Record<string, unknown> {
   enableLogin?: boolean;
   csrfDisabled?: boolean;
   loginMethod?: string;
@@ -71,7 +72,8 @@ export default function AdminSecuritySection() {
       const { _pending: premiumPending, ...premiumActive } = premiumData;
       const { _pending: systemPending, ...systemActive } = systemData;
 
-      const combined: any = {
+      type SecurityResponse = SettingsWithPending<SecuritySettingsData> & SecuritySettingsData;
+      const combined: SecurityResponse = {
         ...securityActive,
         audit: premiumActive.enterpriseFeatures?.audit || {
           enabled: false,
@@ -94,7 +96,7 @@ export default function AdminSecuritySection() {
       };
 
       // Merge all _pending blocks
-      const mergedPending: any = {};
+      const mergedPending: Partial<SecuritySettingsData> = {};
       if (securityPending) {
         Object.assign(mergedPending, securityPending);
       }
@@ -114,7 +116,7 @@ export default function AdminSecuritySection() {
     saveTransformer: (settings) => {
       const { audit, html, ...securitySettings } = settings;
 
-      const deltaSettings: Record<string, any> = {
+      const deltaSettings: SettingsRecord = {
         'premium.enterpriseFeatures.audit.enabled': audit?.enabled,
         'premium.enterpriseFeatures.audit.level': audit?.level,
         'premium.enterpriseFeatures.audit.retentionDays': audit?.retentionDays

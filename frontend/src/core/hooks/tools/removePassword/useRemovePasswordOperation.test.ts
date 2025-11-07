@@ -76,7 +76,7 @@ describe('useRemovePasswordOperation', () => {
     };
 
     const testFile = new File(['test content'], 'test.pdf', { type: 'application/pdf' });
-    const formData = buildFormData(testParameters, testFile as any);
+    const formData = buildFormData(testParameters, testFile);
 
     // Verify the form data contains the file
     expect(formData.get('fileInput')).toBe(testFile);

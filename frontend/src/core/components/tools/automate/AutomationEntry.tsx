@@ -16,7 +16,7 @@ interface AutomationEntryProps {
   /** Optional description for tooltip */
   description?: string;
   /** MUI Icon component for the badge */
-  badgeIcon?: React.ComponentType<any>;
+  badgeIcon?: React.ComponentType;
   /** Array of tool operation names in the workflow */
   operations: string[];
   /** Click handler */

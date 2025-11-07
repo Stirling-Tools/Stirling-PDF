@@ -3,11 +3,18 @@ import { Stack, Text, Code, Group, Badge, Alert, Loader } from '@mantine/core';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
 import { OverviewHeader } from '@app/components/shared/config/OverviewHeader';
 
+type ConfigDisplayValue = string | number | boolean | Record<string, unknown> | null | undefined;
+type ConfigSectionData = Record<string, ConfigDisplayValue>;
+
+const isConfigObject = (value: ConfigDisplayValue): value is Record<string, unknown> => {
+  return value !== null && typeof value === 'object';
+};
+
 const Overview: React.FC = () => {
   const { config, loading, error } = useAppConfig();
 
-  const renderConfigSection = (title: string, data: any) => {
-    if (!data || typeof data !== 'object') return null;
+  const renderConfigSection = (title: string, data: ConfigSectionData | null) => {
+    if (!data) return null;
 
     return (
       <Stack gap="xs" mb="md">
@@ -22,7 +29,7 @@ const Overview: React.FC = () => {
                 <Badge color={value ? 'green' : 'red'} size="sm">
                   {value ? 'true' : 'false'}
                 </Badge>
-              ) : typeof value === 'object' ? (
+              ) : isConfigObject(value) ? (
                 <Code block>{JSON.stringify(value, null, 2)}</Code>
               ) : (
                 String(value) || 'null'

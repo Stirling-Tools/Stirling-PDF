@@ -4,11 +4,12 @@ import { TextInput, NumberInput, Switch, Button, Stack, Paper, Text, Loader, Gro
 import { alert } from '@app/components/toast';
 import RestartConfirmationModal from '@app/components/shared/config/RestartConfirmationModal';
 import { useRestartServer } from '@app/components/shared/config/useRestartServer';
-import { useAdminSettings } from '@app/hooks/useAdminSettings';
+import { useAdminSettings, type SettingsRecord } from '@app/hooks/useAdminSettings';
 import PendingBadge from '@app/components/shared/config/PendingBadge';
 import apiClient from '@app/services/apiClient';
+import type { SettingsWithPending } from '@app/utils/settingsPendingHelper';
 
-interface FeaturesSettingsData {
+interface FeaturesSettingsData extends Record<string, unknown> {
   serverCertificate?: {
     enabled?: boolean;
     organizationName?: string;
@@ -35,7 +36,8 @@ export default function AdminFeaturesSection() {
       const systemResponse = await apiClient.get('/api/v1/admin/settings/section/system');
       const systemData = systemResponse.data || {};
 
-      const result: any = {
+      type FeaturesSettingsResponse = SettingsWithPending<FeaturesSettingsData> & FeaturesSettingsData;
+      const result: FeaturesSettingsResponse = {
         serverCertificate: systemData.serverCertificate || {
           enabled: true,
           organizationName: 'Stirling-PDF',
@@ -52,7 +54,7 @@ export default function AdminFeaturesSection() {
       return result;
     },
     saveTransformer: (settings) => {
-      const deltaSettings: Record<string, any> = {};
+      const deltaSettings: SettingsRecord = {};
 
       if (settings.serverCertificate) {
         deltaSettings['system.serverCertificate.enabled'] = settings.serverCertificate.enabled;

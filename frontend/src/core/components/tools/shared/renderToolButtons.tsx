@@ -2,7 +2,7 @@ import { Box } from '@mantine/core';
 import ToolButton from '@app/components/tools/toolPicker/ToolButton';
 import SubcategoryHeader from '@app/components/tools/shared/SubcategoryHeader';
 
-import { getSubcategoryLabel } from "@app/data/toolsTaxonomy";
+import { getSubcategoryLabel, type ToolRegistryEntry } from "@app/data/toolsTaxonomy";
 import { TFunction } from 'i18next';
 import { SubcategoryGroup } from '@app/hooks/useToolSections';
 import { ToolId } from "@app/types/toolId";
@@ -15,7 +15,7 @@ export const renderToolButtons = (
   onSelect: (id: ToolId) => void,
   showSubcategoryHeader: boolean = true,
   disableNavigation: boolean = false,
-  searchResults?: Array<{ item: [string, any]; matchedText?: string }>,
+  searchResults?: Array<{ item: [ToolId, ToolRegistryEntry]; matchedText?: string }>,
   hasStars: boolean = false
 ) => {
   // Create a map of matched text for quick lookup

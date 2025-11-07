@@ -52,9 +52,9 @@ export type ToolRegistryEntry = {
 	// Workbench type for navigation
 	workbench?: WorkbenchType;
 	// Operation configuration for automation
-	operationConfig?: ToolOperationConfig<any>;
+	operationConfig?: ToolOperationConfig<unknown>;
 	// Settings component for automation configuration
-	automationSettings: React.ComponentType<any> | null;
+	automationSettings: React.ComponentType<unknown> | null;
 	// Whether this tool supports automation (defaults to true)
 	supportsAutomate?: boolean;
 	// Synonyms for search (optional)

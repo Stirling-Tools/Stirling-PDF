@@ -4,11 +4,12 @@ import { TextInput, Switch, Button, Stack, Paper, Text, Loader, Group, MultiSele
 import { alert } from '@app/components/toast';
 import RestartConfirmationModal from '@app/components/shared/config/RestartConfirmationModal';
 import { useRestartServer } from '@app/components/shared/config/useRestartServer';
-import { useAdminSettings } from '@app/hooks/useAdminSettings';
+import { useAdminSettings, type SettingsRecord } from '@app/hooks/useAdminSettings';
 import PendingBadge from '@app/components/shared/config/PendingBadge';
 import apiClient from '@app/services/apiClient';
+import type { SettingsWithPending } from '@app/utils/settingsPendingHelper';
 
-interface GeneralSettingsData {
+interface GeneralSettingsData extends Record<string, unknown> {
   ui: {
     appNameNavbar?: string;
     languages?: string[];
@@ -62,8 +63,9 @@ export default function AdminGeneralSection() {
       const ui = uiResponse.data || {};
       const system = systemResponse.data || {};
       const premium = premiumResponse.data || {};
+      type GeneralSettingsResponse = SettingsWithPending<GeneralSettingsData> & GeneralSettingsData;
 
-      const result: any = {
+      const result: GeneralSettingsResponse = {
         ui,
         system,
         customPaths: system.customPaths || {
@@ -85,7 +87,7 @@ export default function AdminGeneralSection() {
       };
 
       // Merge pending blocks from all three endpoints
-      const pendingBlock: any = {};
+      const pendingBlock: Partial<GeneralSettingsData> = {};
       if (ui._pending) {
         pendingBlock.ui = ui._pending;
       }
@@ -106,7 +108,7 @@ export default function AdminGeneralSection() {
       return result;
     },
     saveTransformer: (settings) => {
-      const deltaSettings: Record<string, any> = {
+      const deltaSettings: SettingsRecord = {
         // UI settings
         'ui.appNameNavbar': settings.ui.appNameNavbar,
         'ui.languages': settings.ui.languages,

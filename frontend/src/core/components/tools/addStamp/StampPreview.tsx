@@ -249,8 +249,8 @@ export default function StampPreview({ parameters, onParameterChange, file, show
       const scaleY = containerSize.height / heightPts;
       const newLeftPts = newLeftPx / scaleX;
       const newBottomPts = newBottomPx / scaleY;
-      onParameterChange('overrideX', newLeftPts as any);
-      onParameterChange('overrideY', newBottomPts as any);
+      onParameterChange('overrideX', newLeftPts);
+      onParameterChange('overrideY', newBottomPts);
     }
 
     if (drag.type === 'resize') {
@@ -259,12 +259,12 @@ export default function StampPreview({ parameters, onParameterChange, file, show
       const scaleY = containerSize.height / heightPts;
       const newHeightPx = Math.max(1, drag.initHeight + (y - drag.startY));
       const newHeightPts = newHeightPx / scaleY;
-      onParameterChange('fontSize', newHeightPts as any);
+      onParameterChange('fontSize', newHeightPts);
     }
 
     if (drag.type === 'rotate') {
       const angle = Math.atan2(y - drag.centerY, x - drag.centerX) * (180 / Math.PI);
-      onParameterChange('rotation', angle as any);
+      onParameterChange('rotation', angle);
     }
   };
 
@@ -346,9 +346,9 @@ export default function StampPreview({ parameters, onParameterChange, file, show
                   className={`${styles.gridTile} ${selected || hoverTile === idx ? styles.gridTileSelected : ''} ${hoverTile === idx ? styles.gridTileHovered : ''}`}
                   onClick={() => {
                     // Clear overrides to use grid positioning and set position
-                    onParameterChange('overrideX', -1 as any);
-                    onParameterChange('overrideY', -1 as any);
-                    onParameterChange('position', idx as any);
+                    onParameterChange('overrideX', -1);
+                    onParameterChange('overrideY', -1);
+                    onParameterChange('position', idx);
                   }}
                   onMouseEnter={() => setHoverTile(idx)}
                   onMouseLeave={() => setHoverTile(null)}

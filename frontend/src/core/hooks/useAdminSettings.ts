@@ -2,7 +2,7 @@ import { useState } from 'react';
 import apiClient from '@app/services/apiClient';
 import { mergePendingSettings, isFieldPending, hasPendingChanges, SettingsWithPending } from '@app/utils/settingsPendingHelper';
 
-type SettingsRecord = Record<string, unknown>;
+export type SettingsRecord = Record<string, unknown>;
 type CombinedSettings<T extends object> = T & SettingsRecord;
 type PendingSettings<T extends object> = SettingsWithPending<CombinedSettings<T>> & CombinedSettings<T>;
 

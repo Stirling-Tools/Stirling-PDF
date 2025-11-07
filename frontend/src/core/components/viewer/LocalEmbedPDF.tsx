@@ -22,7 +22,7 @@ import { ExportPluginPackage } from '@embedpdf/plugin-export/react';
 // Import annotation plugins
 import { HistoryPluginPackage } from '@embedpdf/plugin-history/react';
 import { AnnotationLayer, AnnotationPluginPackage } from '@embedpdf/plugin-annotation/react';
-import { PdfAnnotationSubtype } from '@embedpdf/models';
+import { PdfAnnotationSubtype, type PdfAnnotationObject } from '@embedpdf/models';
 import { CustomSearchLayer } from '@app/components/viewer/CustomSearchLayer';
 import { ZoomAPIBridge } from '@app/components/viewer/ZoomAPIBridge';
 import ToolLoadingFallback from '@app/components/tools/ToolLoadingFallback';
@@ -36,21 +36,27 @@ import { ThumbnailAPIBridge } from '@app/components/viewer/ThumbnailAPIBridge';
 import { RotateAPIBridge } from '@app/components/viewer/RotateAPIBridge';
 import { SignatureAPIBridge } from '@app/components/viewer/SignatureAPIBridge';
 import { HistoryAPIBridge } from '@app/components/viewer/HistoryAPIBridge';
-import type { SignatureAPI, HistoryAPI } from '@app/components/viewer/viewerTypes';
+import type { SignatureAPI, HistoryAPI, AnnotationEvent } from '@app/components/viewer/viewerTypes';
 import { ExportAPIBridge } from '@app/components/viewer/ExportAPIBridge';
 
 interface LocalEmbedPDFProps {
   file?: File | Blob;
   url?: string | null;
   enableAnnotations?: boolean;
-  onSignatureAdded?: (annotation: any) => void;
-  signatureApiRef?: React.RefObject<SignatureAPI>;
-  historyApiRef?: React.RefObject<HistoryAPI>;
+  onSignatureAdded?: (annotation: PdfAnnotationObject) => void;
+  signatureApiRef?: React.RefObject<SignatureAPI | null>;
+  historyApiRef?: React.RefObject<HistoryAPI | null>;
 }
+
+type AnnotationRecord = {
+  id: string;
+  pageIndex: number;
+  rect: PdfAnnotationObject['rect'];
+};
 
 export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatureAdded, signatureApiRef, historyApiRef }: LocalEmbedPDFProps) {
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
-  const [, setAnnotations] = useState<Array<{id: string, pageIndex: number, rect: any}>>([]);
+  const [, setAnnotations] = useState<AnnotationRecord[]>([]);
 
   // Convert File to URL if needed
   useEffect(() => {
@@ -233,29 +239,34 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
           });
 
           // Listen for annotation events to track annotations and notify parent
-          annotationApi.onAnnotationEvent((event: any) => {
-            if (event.type === 'create' && event.committed) {
+          annotationApi.onAnnotationEvent((event: AnnotationEvent) => {
+            if (event.type === 'create' && event.committed && event.annotation) {
+              const annotation = event.annotation;
+              if (!annotation.id) {
+                return;
+              }
               // Add to annotations list
               setAnnotations(prev => [...prev, {
-                id: event.annotation.id,
-                pageIndex: event.pageIndex,
-                rect: event.annotation.rect
+                id: annotation.id,
+                pageIndex: event.pageIndex ?? 0,
+                rect: annotation.rect
               }]);
 
 
               // Notify parent if callback provided
               if (onSignatureAdded) {
-                onSignatureAdded(event.annotation);
+                onSignatureAdded(annotation);
               }
-            } else if (event.type === 'delete' && event.committed) {
+            } else if (event.type === 'delete' && event.committed && event.annotation?.id) {
               // Remove from annotations list
-              setAnnotations(prev => prev.filter(ann => ann.id !== event.annotation.id));
+              const annotationId = event.annotation.id;
+              setAnnotations(prev => prev.filter(ann => ann.id !== annotationId));
             } else if (event.type === 'loaded') {
               // Handle initial load of annotations
               const loadedAnnotations = event.annotations || [];
-              setAnnotations(loadedAnnotations.map((ann: any) => ({
-                id: ann.id,
-                pageIndex: ann.pageIndex || 0,
+              setAnnotations(loadedAnnotations.map((ann) => ({
+                id: ann.id ?? '',
+                pageIndex: ann.pageIndex ?? event.pageIndex ?? 0,
                 rect: ann.rect
               })));
             }
