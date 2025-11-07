@@ -50,12 +50,19 @@ export function isFieldPending<T extends SettingsWithPending>(
   fieldPath: string
 ): boolean {
   if (!settings?._pending) {
+    console.log(`[isFieldPending] No _pending block found for field: ${fieldPath}`);
     return false;
   }
 
   // Navigate the pending object using dot notation
   const value = getNestedValue(settings._pending, fieldPath);
-  return value !== undefined;
+  const isPending = value !== undefined;
+
+  if (isPending) {
+    console.log(`[isFieldPending] Field ${fieldPath} IS pending with value:`, value);
+  }
+
+  return isPending;
 }
 
 /**
