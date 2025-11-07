@@ -5,6 +5,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.common.model.api.misc.HighContrastColorCombination;
 import stirling.software.common.model.api.misc.ReplaceAndInvert;
 import stirling.software.common.util.TempFileManager;
@@ -18,6 +19,7 @@ import stirling.software.common.util.misc.ReplaceAndInvertColorStrategy;
 public class ReplaceAndInvertColorFactory {
 
     private final TempFileManager tempFileManager;
+    private final EndpointConfiguration endpointConfiguration;
 
     public ReplaceAndInvertColorStrategy replaceAndInvert(
             MultipartFile file,
@@ -25,6 +27,13 @@ public class ReplaceAndInvertColorFactory {
             HighContrastColorCombination highContrastColorCombination,
             String backGroundColor,
             String textColor) {
+
+        // Check Ghostscript availability for CMYK conversion
+        if (replaceAndInvertOption == ReplaceAndInvert.COLOR_SPACE_CONVERSION
+                && !endpointConfiguration.isGroupEnabled("Ghostscript")) {
+            throw new IllegalStateException(
+                    "CMYK color space conversion requires Ghostscript, which is not available on this system");
+        }
 
         return switch (replaceAndInvertOption) {
             case CUSTOM_COLOR, HIGH_CONTRAST_COLOR ->
