@@ -10,7 +10,7 @@ COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci
 
 COPY frontend .
-RUN npm run build
+RUN DISABLE_ADDITIONAL_FEATURES=false npm run build
 
 # Stage 2: Build Backend
 FROM gradle:8.14-jdk21 AS backend-build

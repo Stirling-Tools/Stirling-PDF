@@ -167,9 +167,9 @@ export default function AdminGeneralSection() {
   return (
     <Stack gap="lg">
       <div>
-        <Text fw={600} size="lg">{t('admin.settings.general.title', 'General')}</Text>
+        <Text fw={600} size="lg">{t('admin.settings.general.title', 'System Settings')}</Text>
         <Text size="sm" c="dimmed">
-          {t('admin.settings.general.description', 'Configure general application settings including branding and default behaviour.')}
+          {t('admin.settings.general.description', 'Configure system-wide application settings including branding and default behaviour.')}
         </Text>
       </div>
 
