@@ -1,15 +1,18 @@
 import React from 'react';
 import { Group, Select, Button } from '@mantine/core';
 import { DateInput } from '@mantine/dates';
+import type { DateValue } from '@mantine/dates';
 import { useTranslation } from 'react-i18next';
 import { AuditFilters } from '@app/services/auditService';
 import { Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
+
+type FilterChangeHandler = <K extends keyof AuditFilters>(key: K, value: AuditFilters[K]) => void;
 
 interface AuditFiltersFormProps {
   filters: AuditFilters;
   eventTypes: string[];
   users: string[];
-  onFilterChange: (key: keyof AuditFilters, value: any) => void;
+  onFilterChange: FilterChangeHandler;
   onClearFilters: () => void;
 }
 
@@ -49,8 +52,8 @@ const AuditFiltersForm: React.FC<AuditFiltersFormProps> = ({
       <DateInput
         placeholder={t('audit.events.startDate', 'Start date')}
         value={filters.startDate ? new Date(filters.startDate) : null}
-        onChange={(value: string | null) =>
-          onFilterChange('startDate', value ?? undefined)
+        onChange={(value: DateValue) =>
+          onFilterChange('startDate', value instanceof Date ? value.toISOString() : undefined)
         }
         clearable
         style={{ flex: 1, minWidth: 150 }}
@@ -59,8 +62,8 @@ const AuditFiltersForm: React.FC<AuditFiltersFormProps> = ({
       <DateInput
         placeholder={t('audit.events.endDate', 'End date')}
         value={filters.endDate ? new Date(filters.endDate) : null}
-        onChange={(value: string | null) =>
-          onFilterChange('endDate', value ?? undefined)
+        onChange={(value: DateValue) =>
+          onFilterChange('endDate', value instanceof Date ? value.toISOString() : undefined)
         }
         clearable
         style={{ flex: 1, minWidth: 150 }}

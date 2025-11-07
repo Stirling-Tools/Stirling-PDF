@@ -485,7 +485,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.EXTRACTION,
         synonyms: getSynonyms(t, "extractPages"),
-        automationSettings: ExtractPagesSettings,
+        automationSettings: toAutomationSettings(ExtractPagesSettings),
         operationConfig: extractPagesOperationConfig,
         endpoints: ["rearrange-pages"],
       },

@@ -8,7 +8,6 @@ import { useRestartServer } from '@app/components/shared/config/useRestartServer
 import { useAdminSettings, type SettingsRecord } from '@app/hooks/useAdminSettings';
 import PendingBadge from '@app/components/shared/config/PendingBadge';
 import apiClient from '@app/services/apiClient';
-import type { SettingsWithPending } from '@app/utils/settingsPendingHelper';
 
 interface SecuritySettingsData extends Record<string, unknown> {
   enableLogin?: boolean;
@@ -83,7 +82,7 @@ export default function AdminSecuritySection() {
         systemPending: JSON.parse(JSON.stringify(systemPending || {}))
       });
 
-      const combined: SecurityResponse = {
+      const combined = {
         ...securityActive
       };
 

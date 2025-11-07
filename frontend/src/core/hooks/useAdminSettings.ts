@@ -117,7 +117,7 @@ export function useAdminSettings<T extends object>(
         const { sectionData: originalSectionData } = saveTransformer(originalSettings);
 
         // Save section data (with delta applied) - compare transformed vs transformed
-        const sectionDelta = computeDelta(originalSectionData, sectionData);
+        const sectionDelta = computeDelta(originalSectionData as SettingsRecord, sectionData as SettingsRecord);
         if (Object.keys(sectionDelta).length > 0) {
           await apiClient.put(`/api/v1/admin/settings/section/${sectionName}`, sectionDelta);
         }
@@ -133,7 +133,7 @@ export function useAdminSettings<T extends object>(
           });
 
           // Compare current vs original deltaSettings (both have same backend paths)
-          const changedDeltaSettings: Record<string, any> = {};
+          const changedDeltaSettings: SettingsRecord = {};
           for (const [key, value] of Object.entries(deltaSettings)) {
             const originalValue = originalDeltaSettings?.[key];
 

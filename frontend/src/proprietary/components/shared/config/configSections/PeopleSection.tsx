@@ -274,12 +274,9 @@ const extractErrorMessage = (error: unknown, fallback: string): string => {
           title: t('workspace.people.inviteLink.success', 'Invite link generated successfully!')
         });
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to generate invite link:', error);
-      const errorMessage = error.response?.data?.message ||
-                          error.response?.data?.error ||
-                          error.message ||
-                          t('workspace.people.inviteLink.error', 'Failed to generate invite link');
+      const errorMessage = extractErrorMessage(error, t('workspace.people.inviteLink.error', 'Failed to generate invite link'));
       alert({ alertType: 'error', title: errorMessage });
     } finally {
       setProcessing(false);

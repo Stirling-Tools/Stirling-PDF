@@ -236,9 +236,7 @@ export const userManagementService = {
     const response = await apiClient.post<InviteLinkResponse>(
       '/api/v1/invite/generate',
       formData,
-      {
-        suppressErrorToast: true,
-      } as any
+      suppressErrorToastConfig()
     );
 
     return response.data;
@@ -256,9 +254,7 @@ export const userManagementService = {
    * Revoke an invite link (admin only)
    */
   async revokeInviteLink(inviteId: number): Promise<void> {
-    await apiClient.delete(`/api/v1/invite/revoke/${inviteId}`, {
-      suppressErrorToast: true,
-    } as any);
+    await apiClient.delete(`/api/v1/invite/revoke/${inviteId}`, suppressErrorToastConfig());
   },
 
   /**
@@ -269,3 +265,5 @@ export const userManagementService = {
     return response.data;
   },
 };
+type SuppressibleRequestConfig = AxiosRequestConfig & { suppressErrorToast?: boolean };
+const suppressErrorToastConfig = (): SuppressibleRequestConfig => ({ suppressErrorToast: true });

@@ -4,7 +4,7 @@ import { TextInput, NumberInput, Switch, Button, Stack, Paper, Text, Loader, Gro
 import { alert } from '@app/components/toast';
 import RestartConfirmationModal from '@app/components/shared/config/RestartConfirmationModal';
 import { useRestartServer } from '@app/components/shared/config/useRestartServer';
-import { useAdminSettings } from '@app/hooks/useAdminSettings';
+import { useAdminSettings, type SettingsRecord } from '@app/hooks/useAdminSettings';
 import PendingBadge from '@app/components/shared/config/PendingBadge';
 import apiClient from '@app/services/apiClient';
 
@@ -73,7 +73,7 @@ export default function AdminMailSection() {
     saveTransformer: (settings) => {
       const { frontendUrl, ...mailSettings } = settings;
 
-      const deltaSettings: Record<string, any> = {
+      const deltaSettings: SettingsRecord = {
         'system.frontendUrl': frontendUrl
       };
 

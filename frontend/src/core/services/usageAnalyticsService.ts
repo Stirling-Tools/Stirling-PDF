@@ -25,7 +25,7 @@ const usageAnalyticsService = {
     limit?: number,
     dataType: 'all' | 'api' | 'ui' = 'all'
   ): Promise<EndpointStatisticsResponse> {
-    const params: Record<string, any> = {};
+    const params: Record<string, string | number> = {};
 
     if (limit !== undefined) {
       params.limit = limit;
