@@ -201,7 +201,7 @@ export const useCompareChangeNavigation = (
         });
       };
 
-      let nodes = findNodes();
+      const nodes = findNodes();
       if (nodes.length > 0) {
         proceedWithNodes(nodes);
         return;
