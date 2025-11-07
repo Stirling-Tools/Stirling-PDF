@@ -62,10 +62,8 @@ import org.springframework.web.multipart.MultipartFile;
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.api.converters.PdfToPdfARequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
@@ -76,15 +74,8 @@ import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.common.util.WebResponseUtils;
 
 @ConvertApi
-@RequiredArgsConstructor
 @Slf4j
 public class ConvertPDFToPDFA {
-
-    private final EndpointConfiguration endpointConfiguration;
-
-    private boolean isLibreOfficeEnabled() {
-        return endpointConfiguration.isGroupEnabled("LibreOffice");
-    }
 
     @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/pdfa")
     @StandardPdfResponse
@@ -137,13 +128,8 @@ public class ConvertPDFToPDFA {
                 missingFonts = findUnembeddedFontNames(doc);
                 needImgs = (pdfaPart == 1) && hasTransparentImages(doc);
                 if (!missingFonts.isEmpty() || needImgs) {
-                    if (isLibreOfficeEnabled()) {
-                        // Run LibreOffice conversion to get flattened images and embedded fonts
-                        loPdfPath = runLibreOfficeConversion(preProcessedFile.toPath(), pdfaPart);
-                    } else {
-                        log.warn(
-                                "PDF has missing fonts or transparent images that would benefit from LibreOffice processing, but LibreOffice is not available. Continuing with basic PDF/A conversion.");
-                    }
+                    // Run LibreOffice conversion to get flattened images and embedded fonts
+                    loPdfPath = runLibreOfficeConversion(preProcessedFile.toPath(), pdfaPart);
                 }
             }
             fileBytes =

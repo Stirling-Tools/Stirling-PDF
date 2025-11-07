@@ -429,10 +429,6 @@ public class EndpointConfiguration {
         addEndpointAlternative("pdf-to-html", "Pdftohtml");
         addEndpointAlternative("pdf-to-markdown", "Pdftohtml");
 
-        // pdf-to-pdfa has Java implementation with LibreOffice for edge cases
-        addEndpointAlternative("pdf-to-pdfa", "LibreOffice");
-        addEndpointAlternative("pdf-to-pdfa", "Java");
-
         // markdown-to-pdf can use either Weasyprint or Java
         addEndpointAlternative("markdown-to-pdf", "Weasyprint");
         addEndpointAlternative("markdown-to-pdf", "Java");
