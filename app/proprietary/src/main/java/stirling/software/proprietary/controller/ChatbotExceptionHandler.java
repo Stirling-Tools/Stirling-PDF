@@ -3,6 +3,7 @@ package stirling.software.proprietary.controller;
 import java.time.Instant;
 import java.util.Map;
 
+import org.eclipse.jetty.client.HttpResponseException;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -35,6 +36,14 @@ public class ChatbotExceptionHandler {
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, Object>> handleIllegalArgument(IllegalArgumentException ex) {
         return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
+    @ExceptionHandler(HttpResponseException.class)
+    public ResponseEntity<Map<String, Object>> handleProvider(HttpResponseException ex) {
+        log.warn("Chatbot provider error", ex);
+        return buildResponse(
+                HttpStatus.BAD_GATEWAY,
+                "Chatbot provider rejected the request: " + ex.getMessage());
     }
 
     private ResponseEntity<Map<String, Object>> buildResponse(HttpStatus status, String message) {

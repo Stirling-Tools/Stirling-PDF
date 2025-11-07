@@ -204,7 +204,19 @@ public class ChatbotConversationService {
             List<ChatbotTextChunk> context,
             Map<String, String> metadata) {
         Prompt requestPrompt = buildPrompt(settings, model, prompt, session, context, metadata);
-        ChatResponse response = chatModel.call(requestPrompt);
+        ChatResponse response;
+        try {
+            response = chatModel.call(requestPrompt);
+        } catch (org.eclipse.jetty.client.HttpResponseException ex) {
+            throw new ChatbotException(
+                    "Chat model rejected the request: " + sanitizeRemoteMessage(ex.getMessage()),
+                    ex);
+        } catch (RuntimeException ex) {
+            throw new ChatbotException(
+                    "Failed to contact chat model provider: "
+                            + sanitizeRemoteMessage(ex.getMessage()),
+                    ex);
+        }
         String content =
                 Optional.ofNullable(response)
                         .map(ChatResponse::getResults)
@@ -298,4 +310,11 @@ public class ChatbotConversationService {
 
     private record ModelReply(
             String answer, double confidence, boolean requiresEscalation, String rationale) {}
+
+    private String sanitizeRemoteMessage(String message) {
+        if (!StringUtils.hasText(message)) {
+            return "unexpected provider error";
+        }
+        return message.replaceAll("(?i)api[-_ ]?key\\s*=[^\\s]+", "api-key=***");
+    }
 }

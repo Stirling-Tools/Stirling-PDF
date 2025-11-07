@@ -99,17 +99,16 @@ public class ChatbotController {
 
     private List<String> sessionWarnings(ChatbotSettings settings, ChatbotSession session) {
         List<String> warnings = new ArrayList<>();
-        if (settings.alphaWarning()) {
-            warnings.add("Chatbot feature is in alpha and may change.");
-        }
-        warnings.add("Image-based content is not supported yet.");
+
         if (session != null && session.isImageContentDetected()) {
-            warnings.add("Detected images will be ignored until image support ships.");
+            warnings.add("Images detected - Images are not currently supported.");
         }
+
         warnings.add("Only extracted text is sent for analysis.");
         if (session != null && session.isOcrRequested()) {
             warnings.add("OCR was requested – extra processing charges may apply.");
         }
+
         return warnings;
     }
 }

@@ -1,12 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import {
   ActionIcon,
-  Alert,
   Badge,
   Box,
   Button,
   Divider,
-  Drawer,
   Group,
   Modal,
   ScrollArea,
@@ -17,7 +15,7 @@ import {
   Textarea,
   Tooltip,
 } from '@mantine/core';
-import { useMediaQuery } from '@mantine/hooks';
+import { useMediaQuery, useViewportSize } from '@mantine/hooks';
 import { useTranslation } from 'react-i18next';
 import SmartToyRoundedIcon from '@mui/icons-material/SmartToyRounded';
 import WarningAmberRoundedIcon from '@mui/icons-material/WarningAmberRounded';
@@ -37,6 +35,7 @@ import {
 } from '@app/services/chatbotService';
 import { useToast } from '@app/components/toast';
 import type { StirlingFile } from '@app/types/fileContext';
+import { useSidebarContext } from '@app/contexts/SidebarContext';
 
 interface ChatMessage {
   id: string;
@@ -61,14 +60,15 @@ const MAX_PROMPT_CHARS = 4000;
 const ChatbotDrawer = () => {
   const { t } = useTranslation();
   const isMobile = useMediaQuery('(max-width: 768px)');
+  const { width: viewportWidth, height: viewportHeight } = useViewportSize();
   const { isOpen, closeChat, preferredFileId, setPreferredFileId } = useChatbot();
   const { selectors } = useFileState();
+  const { sidebarRefs } = useSidebarContext();
   const { show } = useToast();
   const files = selectors.getFiles();
   const [selectedFileId, setSelectedFileId] = useState<string | undefined>();
   const [alphaAccepted, setAlphaAccepted] = useState(false);
   const [runOcr, setRunOcr] = useState(false);
-  const [allowEscalation, setAllowEscalation] = useState(true);
   const [isStartingSession, setIsStartingSession] = useState(false);
   const [isSendingMessage, setIsSendingMessage] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string>('');
@@ -80,6 +80,7 @@ const ChatbotDrawer = () => {
   const [noTextModalOpen, setNoTextModalOpen] = useState(false);
   const [pendingOcrRetry, setPendingOcrRetry] = useState(false);
   const scrollViewportRef = useRef<HTMLDivElement>(null);
+  const [panelAnchor, setPanelAnchor] = useState<{ right: number; top: number } | null>(null);
 
   const selectedFile = useMemo<StirlingFile | undefined>(
     () => files.find((file) => file.fileId === selectedFileId),
@@ -128,6 +129,34 @@ const ChatbotDrawer = () => {
     }
   }, [sessionInfo, selectedFileId]);
 
+  useLayoutEffect(() => {
+    if (isMobile || !isOpen) {
+      setPanelAnchor(null);
+      return;
+    }
+    const panelEl = sidebarRefs.toolPanelRef.current;
+    if (!panelEl) {
+      setPanelAnchor(null);
+      return;
+    }
+    const updateAnchor = () => {
+      const rect = panelEl.getBoundingClientRect();
+      setPanelAnchor({
+        right: rect.right,
+        top: rect.top,
+      });
+    };
+    updateAnchor();
+    const observer = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(() => updateAnchor()) : null;
+    observer?.observe(panelEl);
+    const handleResize = () => updateAnchor();
+    window.addEventListener('resize', handleResize);
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [isMobile, isOpen, sidebarRefs.toolPanelRef]);
+
   const handleAlphaAccept = (checked: boolean) => {
     setAlphaAccepted(checked);
     if (typeof window !== 'undefined') {
@@ -152,7 +181,7 @@ const ChatbotDrawer = () => {
     if (!selectedFile) {
       show({
         alertType: 'warning',
-      title: t('chatbot.toasts.noFileTitle', 'No PDF selected'),
+        title: t('chatbot.toasts.noFileTitle', 'No PDF selected'),
         body: t('chatbot.toasts.noFileBody', 'Please choose a document before starting the chatbot.'),
       });
       return false;
@@ -264,7 +293,7 @@ const ChatbotDrawer = () => {
       const reply = await sendChatbotPrompt({
         sessionId: sessionInfo.sessionId,
         prompt: trimmedPrompt,
-        allowEscalation,
+        allowEscalation: true,
       });
       setWarnings(reply.warnings ?? []);
       const assistant = convertAssistantMessage(reply);
@@ -302,6 +331,22 @@ const ChatbotDrawer = () => {
   );
 
   const disablePromptInput = !sessionInfo || isStartingSession || isSendingMessage;
+  const canSend = !disablePromptInput && prompt.trim().length > 0;
+
+  const handlePromptKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (
+      event.key === 'Enter' &&
+      !event.shiftKey &&
+      !event.metaKey &&
+      !event.ctrlKey &&
+      !event.altKey
+    ) {
+      if (canSend) {
+        event.preventDefault();
+        handleSendMessage();
+      }
+    }
+  };
 
   const drawerTitle = (
     <Group gap="xs">
@@ -313,50 +358,148 @@ const ChatbotDrawer = () => {
 
   const assistantWarnings = warnings.filter(Boolean);
 
-  return (
-    <Drawer
-      opened={isOpen}
-      onClose={closeChat}
-      position="left"
-      overlayProps={{ opacity: 0.65, blur: 3 }}
-      size={isMobile ? '100%' : 420}
-      title={drawerTitle}
-      withinPortal
-      closeOnClickOutside={false}
-    >
-      <Stack gap="md" h="100%">
-        <Alert color="yellow" icon={<WarningAmberRoundedIcon fontSize="small" />}
-          title={t('chatbot.alphaTitle', 'Experimental feature')}
+  const safeViewportWidth =
+      viewportWidth || (typeof window !== 'undefined' ? window.innerWidth : 1280);
+  const safeViewportHeight =
+      viewportHeight || (typeof window !== 'undefined' ? window.innerHeight : 900);
+  const desktopLeft = !isMobile ? (panelAnchor ? panelAnchor.right + 16 : 280) : undefined;
+  const desktopBottom = !isMobile ? 24 : undefined;
+  const desktopWidth = !isMobile
+      ? Math.min(440, Math.max(320, safeViewportWidth - (desktopLeft ?? 24) - 240))
+      : undefined;
+  const desktopHeightPx = !isMobile
+      ? Math.max(520, Math.min(safeViewportHeight - 48, Math.round(safeViewportHeight * 0.85)))
+      : undefined;
+
+  const renderMessageBubble = (message: ChatMessage) => {
+    const isUser = message.role === 'user';
+    const bubbleColor = isUser ? '#1f7ae0' : '#f3f4f6';
+    const textColor = isUser ? '#fff' : '#1f1f1f';
+
+    return (
+      <Box
+        key={message.id + message.role + message.createdAt.getTime()}
+        style={{
+          display: 'flex',
+          justifyContent: isUser ? 'flex-end' : 'flex-start',
+        }}
+      >
+        <Box
+          p="sm"
+          maw="85%"
+          bg={bubbleColor}
+          style={{
+            borderRadius: 14,
+            borderTopRightRadius: isUser ? 4 : 14,
+            borderTopLeftRadius: isUser ? 14 : 4,
+            boxShadow: '0 2px 12px rgba(16,24,40,0.06)',
+          }}
         >
-          {t('chatbot.alphaDescription', 'This chatbot is in alpha. It currently ignores images and may produce inaccurate answers. Your PDF text stays local until you confirm you want to chat.')}
-        </Alert>
+          <Group justify="space-between" mb={4} gap="xs">
+            <Text size="xs" c={isUser ? 'rgba(255,255,255,0.8)' : 'dimmed'} tt="uppercase">
+              {isUser ? t('chatbot.userLabel', 'You') : t('chatbot.botLabel', 'Stirling Bot')}
+            </Text>
+            {!isUser && message.confidence !== undefined && (
+              <Badge
+                size="xs"
+                variant="light"
+                color={message.confidence >= 0.6 ? 'green' : 'yellow'}
+              >
+                {t('chatbot.confidence', 'Confidence: {{value}}%', {
+                  value: Math.round(message.confidence * 100),
+                })}
+              </Badge>
+            )}
+          </Group>
+          <Text size="sm" c={textColor} style={{ whiteSpace: 'pre-wrap' }}>
+            {message.content}
+          </Text>
+          {!isUser && message.modelUsed && (
+            <Text size="xs" c="dimmed" mt={4}>
+              {t('chatbot.modelTag', 'Model: {{name}}', { name: message.modelUsed })}
+            </Text>
+          )}
+        </Box>
+      </Box>
+    );
+  };
 
-        <Switch
-          checked={alphaAccepted}
-          label={t('chatbot.acceptAlphaLabel', 'I understand this feature is experimental and image content is not supported yet.')}
-          onChange={(event) => handleAlphaAccept(event.currentTarget.checked)}
-        />
+  return (
+    <>
+      <Modal
+        opened={isOpen}
+        onClose={closeChat}
+        withCloseButton
+        radius="lg"
+        overlayProps={{ opacity: 0.5, blur: 2 }}
+        fullScreen={isMobile}
+        centered={isMobile}
+        title={drawerTitle}
+        styles={{
+          content: {
+            width: isMobile ? '100%' : desktopWidth,
+            left: isMobile ? undefined : desktopLeft,
+            right: isMobile ? 0 : undefined,
+            margin: isMobile ? undefined : 0,
+            top: isMobile ? undefined : undefined,
+            bottom: isMobile ? 0 : desktopBottom,
+            position: isMobile ? undefined : 'fixed',
+            height: isMobile ? '100%' : desktopHeightPx ? `${desktopHeightPx}px` : '75vh',
+            overflow: 'hidden',
+          },
+          body: {
+            paddingTop: 'var(--mantine-spacing-md)',
+            paddingBottom: 'var(--mantine-spacing-md)',
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+          },
+        }}
+        transitionProps={{ transition: 'slide-left', duration: 200 }}
+      >
+        <Stack gap="sm" h="100%" style={{ minHeight: 0 }}>
+        <Box
+          p="sm"
+          style={{
+            border: '1px solid var(--border-subtle)',
+            borderRadius: 8,
+            backgroundColor: 'var(--bg-subtle)',
+            display: 'flex',
+            gap: '0.5rem',
+            alignItems: 'flex-start',
+          }}
+        >
+          <WarningAmberRoundedIcon fontSize="small" style={{ color: 'var(--text-warning)' }} />
+          <Box>
+            <Text fw={600}>{t('chatbot.alphaTitle', 'Experimental feature')}</Text>
+            <Text size="sm">
+              {t('chatbot.alphaDescription', 'This chatbot is in alpha. It currently ignores images and may produce inaccurate answers. Your PDF text stays local until you confirm you want to chat.')}
+            </Text>
+          </Box>
+        </Box>
 
-        <Select
-          label={t('chatbot.fileLabel', 'Document to query')}
-          placeholder={t('chatbot.filePlaceholder', 'Select an uploaded PDF')}
-          data={fileOptions}
-          value={selectedFileId}
-          onChange={(value) => setSelectedFileId(value || undefined)}
-          nothingFoundMessage={t('chatbot.noFiles', 'Upload a PDF from File Manager to start chatting.')}
-        />
-
-        <Group justify="space-between" align="center">
-          <Switch
-            checked={runOcr}
-            onChange={(event) => setRunOcr(event.currentTarget.checked)}
-            label={t('chatbot.ocrToggle', 'Run OCR before extracting text (uses more resources)')}
+        <Group align="flex-end" justify="space-between" gap="md" wrap="wrap">
+          <Select
+            label={t('chatbot.fileLabel', 'Document')}
+            placeholder={t('chatbot.filePlaceholder', 'Select an uploaded PDF')}
+            data={fileOptions}
+            value={selectedFileId}
+            onChange={(value) => setSelectedFileId(value || undefined)}
+            nothingFoundMessage={t('chatbot.noFiles', 'Upload a PDF from File Manager to start chatting.')}
+            style={{ flex: '1 1 200px' }}
           />
-          <Tooltip label={t('chatbot.ocrHint', 'Enable when your PDF is a scan or contains images.')}>
-            <ActionIcon variant="subtle" aria-label={t('chatbot.ocrHint', 'OCR hint')}>
-              <SmartToyRoundedIcon fontSize="small" />
-            </ActionIcon>
-          </Tooltip>
+          <Stack gap={4} style={{ minWidth: 160 }}>
+            <Switch
+              checked={alphaAccepted}
+              label={t('chatbot.acceptAlphaLabel', 'Alpha notice acknowledged')}
+              onChange={(event) => handleAlphaAccept(event.currentTarget.checked)}
+            />
+            <Switch
+              checked={runOcr}
+              onChange={(event) => setRunOcr(event.currentTarget.checked)}
+              label={t('chatbot.ocrToggle', 'Run OCR before extracting text')}
+            />
+          </Stack>
         </Group>
 
         <Button
@@ -373,7 +516,16 @@ const ChatbotDrawer = () => {
         </Button>
 
         {statusMessage && (
-          <Alert color="blue">{statusMessage}</Alert>
+          <Box
+            p="sm"
+            style={{
+              border: '1px solid var(--border-subtle)',
+              borderRadius: 8,
+              backgroundColor: 'var(--bg-muted)',
+            }}
+          >
+            <Text size="sm" c="blue">{statusMessage}</Text>
+          </Box>
         )}
 
         {sessionInfo && contextStats && (
@@ -388,70 +540,55 @@ const ChatbotDrawer = () => {
           </Box>
         )}
 
-        {assistantWarnings.length > 0 && (
-          <Alert color="yellow">
-            <Stack gap={4}>
-              {assistantWarnings.map((warning) => (
-                <Text key={warning} size="sm">{warning}</Text>
-              ))}
-            </Stack>
-          </Alert>
-        )}
-
         <Divider label={t('chatbot.conversationTitle', 'Conversation')} />
 
-        <ScrollArea viewportRef={scrollViewportRef} style={{ flex: 1 }}>
-          <Stack gap="sm" pr="sm">
-            {messages.length === 0 && (
-              <Text size="sm" c="dimmed">
-                {t('chatbot.emptyState', 'Ask a question about your PDF to start the conversation.')}
-              </Text>
-            )}
-            {messages.map((message) => (
-              <Box
-                key={message.id + message.role + message.createdAt.getTime()}
-                p="sm"
-                bg={message.role === 'user' ? 'var(--bg-toolbar)' : 'var(--bg-panel)'}
-                style={{ borderRadius: 8 }}
-              >
-                <Group justify="space-between" mb={4} wrap="nowrap">
-                  <Text size="xs" c="dimmed" tt="uppercase">
-                    {message.role === 'user'
-                      ? t('chatbot.userLabel', 'You')
-                      : t('chatbot.botLabel', 'Stirling Bot')}
-                  </Text>
-                  {message.role === 'assistant' && message.confidence !== undefined && (
-                    <Badge size="xs" variant="light" color={message.confidence >= 0.6 ? 'green' : 'yellow'}>
-                      {t('chatbot.confidence', 'Confidence: {{value}}%', {
-                        value: Math.round(message.confidence * 100),
-                      })}
-                    </Badge>
-                  )}
-                </Group>
-                <Text size="sm" style={{ whiteSpace: 'pre-wrap' }}>{message.content}</Text>
-                {message.role === 'assistant' && message.modelUsed && (
-                  <Text size="xs" c="dimmed" mt={4}>
-                    {t('chatbot.modelTag', 'Model: {{name}}', { name: message.modelUsed })}
-                  </Text>
-                )}
-              </Box>
-            ))}
-          </Stack>
-        </ScrollArea>
+        <Box style={{ flex: 1, minHeight: 0 }}>
+          <ScrollArea viewportRef={scrollViewportRef} style={{ height: '100%' }}>
+            <Stack gap="sm" pr="xs">
+              {assistantWarnings.length > 0 &&
+                assistantWarnings.map((warning) => (
+                  <Box
+                    key={warning}
+                    p="sm"
+                    bg="var(--bg-muted)"
+                    style={{ borderRadius: 12, border: '1px dashed var(--border-subtle)' }}
+                  >
+                    <Group gap="xs" align="flex-start">
+                      <WarningAmberRoundedIcon fontSize="small" style={{ color: 'var(--text-warning)' }} />
+                      <Text size="sm">{warning}</Text>
+                    </Group>
+                  </Box>
+                ))}
+              {messages.length === 0 && (
+                <Text size="sm" c="dimmed">
+                  {t('chatbot.emptyState', 'Ask a question about your PDF to start the conversation.')}
+                </Text>
+              )}
+              {messages.map(renderMessageBubble)}
+            </Stack>
+          </ScrollArea>
+        </Box>
 
-        <Stack gap="xs">
-          <Switch
-            checked={allowEscalation}
-            onChange={(event) => setAllowEscalation(event.currentTarget.checked)}
-            label={t('chatbot.escalationToggle', 'Allow upgrade to GPT5-Mini for complex prompts')}
-          />
+        <Stack
+          gap="xs"
+          style={{
+            flexShrink: 0,
+            border: '1px solid var(--border-subtle)',
+            borderRadius: 12,
+            padding: '0.75rem',
+            background: 'var(--bg-toolbar)',
+          }}
+        >
           <Textarea
             placeholder={t('chatbot.promptPlaceholder', 'Ask anything about this PDF…')}
-            minRows={3}
+            minRows={2}
+            autosize
+            maxRows={6}
             value={prompt}
             maxLength={MAX_PROMPT_CHARS}
             onChange={(event) => setPrompt(event.currentTarget.value)}
             disabled={disablePromptInput}
+            onKeyDown={handlePromptKeyDown}
           />
           <Group justify="space-between">
             <Text size="xs" c="dimmed">
@@ -464,13 +601,14 @@ const ChatbotDrawer = () => {
               rightSection={<SendRoundedIcon fontSize="small" />}
               onClick={handleSendMessage}
               loading={isSendingMessage}
-              disabled={disablePromptInput || prompt.trim().length === 0}
+              disabled={!canSend}
             >
               {t('chatbot.sendButton', 'Send')}
             </Button>
           </Group>
         </Stack>
       </Stack>
+      </Modal>
 
       <Modal
         opened={noTextModalOpen}
@@ -501,7 +639,7 @@ const ChatbotDrawer = () => {
           </Group>
         </Stack>
       </Modal>
-    </Drawer>
+    </>
   );
 };
 

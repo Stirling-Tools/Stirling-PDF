@@ -138,7 +138,20 @@ public class ChatbotIngestionService {
         if (chunkTexts.isEmpty()) {
             throw new ChatbotException("Unable to split document text into retrievable chunks");
         }
-        EmbeddingResponse response = embeddingModel.embedForResponse(chunkTexts);
+        EmbeddingResponse response;
+        try {
+            response = embeddingModel.embedForResponse(chunkTexts);
+        } catch (org.eclipse.jetty.client.HttpResponseException ex) {
+            throw new ChatbotException(
+                    "Embedding provider rejected the request: "
+                            + sanitizeRemoteMessage(ex.getMessage()),
+                    ex);
+        } catch (RuntimeException ex) {
+            throw new ChatbotException(
+                    "Failed to compute embeddings for chatbot ingestion: "
+                            + sanitizeRemoteMessage(ex.getMessage()),
+                    ex);
+        }
         if (response.getResults().size() != chunkTexts.size()) {
             throw new ChatbotException("Mismatch between chunks and embedding results");
         }
@@ -164,5 +177,12 @@ public class ChatbotIngestionService {
                 cacheKey,
                 chunks.size());
         return chunks;
+    }
+
+    private String sanitizeRemoteMessage(String message) {
+        if (!StringUtils.hasText(message)) {
+            return "unexpected provider error";
+        }
+        return message.replaceAll("(?i)api[-_ ]?key\\s*=[^\\s]+", "api-key=***");
     }
 }
