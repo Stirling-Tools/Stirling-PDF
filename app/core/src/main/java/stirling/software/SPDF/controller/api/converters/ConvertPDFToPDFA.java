@@ -537,6 +537,8 @@ public class ConvertPDFToPDFA {
 
             PDResources loRes = loPage.getResources();
             PDResources baseRes = basePage.getResources();
+            if (loRes == null || baseRes == null) continue;
+
             Set<COSName> toReplace = detectTransparentXObjects(basePage);
 
             for (COSName name : toReplace) {
@@ -1189,7 +1191,10 @@ public class ConvertPDFToPDFA {
             this.suffix = suffix;
             this.compatibilityLevel = compatibilityLevel;
             this.preflightFormat = preflightFormat;
-            this.requestTokens = Arrays.asList(requestTokens);
+            this.requestTokens =
+                    Arrays.stream(requestTokens)
+                            .map(token -> token.toLowerCase(Locale.ROOT))
+                            .toList();
         }
 
         static PdfaProfile fromRequest(String requestToken) {
@@ -1199,11 +1204,7 @@ public class ConvertPDFToPDFA {
             String normalized = requestToken.trim().toLowerCase(Locale.ROOT);
             Optional<PdfaProfile> match =
                     Arrays.stream(values())
-                            .filter(
-                                    profile ->
-                                            profile.requestTokens.stream()
-                                                    .map(token -> token.toLowerCase(Locale.ROOT))
-                                                    .anyMatch(token -> token.equals(normalized)))
+                            .filter(profile -> profile.requestTokens.contains(normalized))
                             .findFirst();
 
             return match.orElse(PDF_A_2B);
@@ -1251,7 +1252,10 @@ public class ConvertPDFToPDFA {
             this.suffix = suffix;
             this.compatibilityLevel = compatibilityLevel;
             this.pdfxVersion = pdfxVersion;
-            this.requestTokens = Arrays.asList(requestTokens);
+            this.requestTokens =
+                    Arrays.stream(requestTokens)
+                            .map(token -> token.toLowerCase(Locale.ROOT))
+                            .toList();
         }
 
         static PdfXProfile fromRequest(String requestToken) {
@@ -1261,11 +1265,7 @@ public class ConvertPDFToPDFA {
             String normalized = requestToken.trim().toLowerCase(Locale.ROOT);
             Optional<PdfXProfile> match =
                     Arrays.stream(values())
-                            .filter(
-                                    profile ->
-                                            profile.requestTokens.stream()
-                                                    .map(token -> token.toLowerCase(Locale.ROOT))
-                                                    .anyMatch(token -> token.equals(normalized)))
+                            .filter(profile -> profile.requestTokens.contains(normalized))
                             .findFirst();
 
             return match.orElse(PDF_X_4);
