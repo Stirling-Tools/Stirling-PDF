@@ -70,6 +70,7 @@ import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.converters.PdfToPdfARequest;
@@ -98,18 +99,21 @@ public class ConvertPDFToPDFA {
 
             try {
                 validatePdfaOutput(tempPdfPath, profile);
-                log.info("PDF/A validation passed for {} using {}", profile.displayName(), method);
+                log.info(
+                        "PDF/A validation passed for {} using {}",
+                        profile.getDisplayName(),
+                        method);
             } catch (IOException e) {
                 log.warn(
                         "PDF/A validation warning for {} using {}: {}",
-                        profile.displayName(),
+                        profile.getDisplayName(),
                         method,
                         e.getMessage());
             }
         } catch (IOException e) {
             log.warn(
                     "PDF/A validation warning for {} using {}: {}",
-                    profile.displayName(),
+                    profile.getDisplayName(),
                     method,
                     e.getMessage());
         } finally {
@@ -158,9 +162,9 @@ public class ConvertPDFToPDFA {
         command.add("--permit-file-read=" + inputPdf.toAbsolutePath());
         command.add("--permit-file-read=" + pdfaDefFile.toAbsolutePath());
         command.add("--permit-file-write=" + workingDir.toAbsolutePath());
-        command.add("-dPDFA=" + profile.part());
+        command.add("-dPDFA=" + profile.getPart());
         command.add("-dPDFACompatibilityPolicy=" + PDFA_COMPATIBILITY_POLICY);
-        command.add("-dCompatibilityLevel=" + profile.compatibilityLevel());
+        command.add("-dCompatibilityLevel=" + profile.getCompatibilityLevel());
         command.add("-sDEVICE=pdfwrite");
         command.add("-sColorConversionStrategy=RGB");
         command.add("-dProcessColorModel=/DeviceRGB");
@@ -183,7 +187,7 @@ public class ConvertPDFToPDFA {
     private static void validatePdfaOutput(Path pdfPath, PdfaProfile profile) throws IOException {
         Optional<Format> format = profile.preflightFormat();
         if (format.isEmpty()) {
-            log.debug("Skipping PDFBox preflight validation for {}", profile.displayName());
+            log.debug("Skipping PDFBox preflight validation for {}", profile.getDisplayName());
             return;
         }
 
@@ -202,13 +206,13 @@ public class ConvertPDFToPDFA {
             } catch (ClassCastException e) {
                 throw new IOException(
                         "PDF/A preflight did not produce a PreflightDocument for "
-                                + profile.displayName(),
+                                + profile.getDisplayName(),
                         e);
             }
 
             if (document == null) {
                 throw new IOException(
-                        "PDF/A preflight returned no document for " + profile.displayName());
+                        "PDF/A preflight returned no document for " + profile.getDisplayName());
             }
 
             try (PreflightDocument closeableDocument = document) {
@@ -221,12 +225,12 @@ public class ConvertPDFToPDFA {
             throw new IOException(buildPreflightErrorMessage(e.getResult(), profile), e);
         } catch (ValidationException e) {
             throw new IOException(
-                    "PDF/A preflight validation failed for " + profile.displayName(), e);
+                    "PDF/A preflight validation failed for " + profile.getDisplayName(), e);
         }
     }
 
     private static String buildPreflightErrorMessage(ValidationResult result, PdfaProfile profile) {
-        String baseMessage = "PDF/A preflight validation failed for " + profile.displayName();
+        String baseMessage = "PDF/A preflight validation failed for " + profile.getDisplayName();
         if (result == null) {
             return baseMessage + ": no detailed validation result available";
         }
@@ -273,7 +277,7 @@ public class ConvertPDFToPDFA {
             Path workingDir, ColorProfiles colorProfiles, PdfaProfile profile) throws IOException {
         Path pdfaDefFile = workingDir.resolve("PDFA_def.ps");
 
-        String title = "Converted to " + profile.displayName();
+        String title = "Converted to " + profile.getDisplayName();
         String rgbProfilePath = colorProfiles.rgb().toAbsolutePath().toString().replace("\\", "/");
         String pdfaDefContent =
                 String.format(
@@ -324,8 +328,8 @@ public class ConvertPDFToPDFA {
         command.add("--permit-file-read=" + colorProfiles.gray().toAbsolutePath());
         command.add("--permit-file-read=" + inputPdf.toAbsolutePath());
         command.add("--permit-file-write=" + workingDir.toAbsolutePath());
-        command.add("-dPDFX=" + profile.pdfxVersion());
-        command.add("-dCompatibilityLevel=" + profile.compatibilityLevel());
+        command.add("-dPDFX=" + profile.getPdfxVersion());
+        command.add("-dCompatibilityLevel=" + profile.getCompatibilityLevel());
         command.add("-sDEVICE=pdfwrite");
         command.add("-sColorConversionStrategy=RGB");
         command.add("-dProcessColorModel=/DeviceRGB");
@@ -470,11 +474,11 @@ public class ConvertPDFToPDFA {
                         "Ghostscript is required for PDF/X conversion but is not available on the system");
             }
 
-            log.info("Using Ghostscript for PDF/X conversion to {}", profile.displayName());
+            log.info("Using Ghostscript for PDF/X conversion to {}", profile.getDisplayName());
             byte[] converted = convertWithGhostscriptX(inputPath, workingDir, profile);
             String outputFilename = baseFileName + profile.outputSuffix();
 
-            log.info("PDF/X conversion completed successfully to {}", profile.displayName());
+            log.info("PDF/X conversion completed successfully to {}", profile.getDisplayName());
 
             return WebResponseUtils.bytesToWebResponse(
                     converted, outputFilename, MediaType.APPLICATION_PDF);
@@ -1063,7 +1067,7 @@ public class ConvertPDFToPDFA {
 
             // Try Ghostscript first (preferred method)
             if (isGhostscriptAvailable()) {
-                log.info("Using Ghostscript for PDF/A conversion to {}", profile.displayName());
+                log.info("Using Ghostscript for PDF/A conversion to {}", profile.getDisplayName());
                 try {
                     converted = convertWithGhostscript(inputPath, workingDir, profile);
                     String outputFilename = baseFileName + profile.outputSuffix();
@@ -1100,7 +1104,7 @@ public class ConvertPDFToPDFA {
         byte[] fileBytes;
         Path loPdfPath = null;
         File preProcessedFile = null;
-        int pdfaPart = profile.part();
+        int pdfaPart = profile.getPart();
 
         try {
             tempInputFile = inputPath;
@@ -1167,6 +1171,7 @@ public class ConvertPDFToPDFA {
         }
     }
 
+    @Getter
     private enum PdfaProfile {
         PDF_A_1B(1, "PDF/A-1b", "_PDFA-1b.pdf", "1.4", Format.PDF_A1B, "pdfa-1"),
         PDF_A_2B(2, "PDF/A-2b", "_PDFA-2b.pdf", "1.7", null, "pdfa", "pdfa-2", "pdfa-2b"),
@@ -1204,33 +1209,22 @@ public class ConvertPDFToPDFA {
             String normalized = requestToken.trim().toLowerCase(Locale.ROOT);
             Optional<PdfaProfile> match =
                     Arrays.stream(values())
-                            .filter(profile -> profile.requestTokens.contains(normalized))
+                            .filter(profile -> profile.getRequestTokens().contains(normalized))
                             .findFirst();
 
             return match.orElse(PDF_A_2B);
         }
 
-        int part() {
-            return part;
-        }
-
-        String displayName() {
-            return displayName;
-        }
-
         String outputSuffix() {
-            return suffix;
-        }
-
-        String compatibilityLevel() {
-            return compatibilityLevel;
+            return getSuffix();
         }
 
         Optional<Format> preflightFormat() {
-            return Optional.ofNullable(preflightFormat);
+            return Optional.ofNullable(getPreflightFormat());
         }
     }
 
+    @Getter
     private enum PdfXProfile {
         PDF_X_1("PDF/X-1", "_PDFX-1.pdf", "1.3", "2001", "pdfx-1", "pdfx"),
         PDF_X_3("PDF/X-3", "_PDFX-3.pdf", "1.3", "2003", "pdfx-3"),
@@ -1265,26 +1259,14 @@ public class ConvertPDFToPDFA {
             String normalized = requestToken.trim().toLowerCase(Locale.ROOT);
             Optional<PdfXProfile> match =
                     Arrays.stream(values())
-                            .filter(profile -> profile.requestTokens.contains(normalized))
+                            .filter(profile -> profile.getRequestTokens().contains(normalized))
                             .findFirst();
 
             return match.orElse(PDF_X_4);
         }
 
-        String displayName() {
-            return displayName;
-        }
-
         String outputSuffix() {
-            return suffix;
-        }
-
-        String compatibilityLevel() {
-            return compatibilityLevel;
-        }
-
-        String pdfxVersion() {
-            return pdfxVersion;
+            return getSuffix();
         }
     }
 
