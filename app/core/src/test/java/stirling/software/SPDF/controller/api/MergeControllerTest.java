@@ -1,6 +1,8 @@
 package stirling.software.SPDF.controller.api;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.*;
 
 import java.io.IOException;
@@ -13,7 +15,10 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageTree;
+import org.apache.pdfbox.pdmodel.interactive.documentnavigation.destination.PDDestination;
+import org.apache.pdfbox.pdmodel.interactive.documentnavigation.destination.PDPageDestination;
 import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDDocumentOutline;
+import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDOutlineItem;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -26,11 +31,13 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.TempFileManager;
 
 @ExtendWith(MockitoExtension.class)
 class MergeControllerTest {
 
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
+    @Mock private TempFileManager tempFileManager;
 
     @InjectMocks private MergeController mergeController;
 
@@ -41,6 +48,7 @@ class MergeControllerTest {
     private PDDocumentCatalog mockCatalog;
     private PDPage mockPage1;
     private PDPage mockPage2;
+    private Method addTableOfContentsMethod;
 
     @BeforeEach
     void setUp() {
@@ -63,12 +71,19 @@ class MergeControllerTest {
                         MediaType.APPLICATION_PDF_VALUE,
                         "PDF content 3".getBytes());
 
-        PDDocument mockDocument = mock(PDDocument.class);
         mockMergedDocument = mock(PDDocument.class);
         mockCatalog = mock(PDDocumentCatalog.class);
-        PDPageTree mockPages = mock(PDPageTree.class);
         mockPage1 = mock(PDPage.class);
         mockPage2 = mock(PDPage.class);
+
+        try {
+            addTableOfContentsMethod =
+                    MergeController.class.getDeclaredMethod(
+                            "addTableOfContents", PDDocument.class, MultipartFile[].class);
+            addTableOfContentsMethod.setAccessible(true);
+        } catch (NoSuchMethodException e) {
+            fail("Unable to access addTableOfContents method: " + e.getMessage());
+        }
     }
 
     @Test
@@ -97,19 +112,29 @@ class MergeControllerTest {
         when(doc3.getNumberOfPages()).thenReturn(2);
 
         // When
-        Method addTableOfContentsMethod =
-                MergeController.class.getDeclaredMethod(
-                        "addTableOfContents", PDDocument.class, MultipartFile[].class);
-        addTableOfContentsMethod.setAccessible(true);
-        addTableOfContentsMethod.invoke(mergeController, mockMergedDocument, files);
+        invokeAddTableOfContents(files);
 
         // Then
-        ArgumentCaptor<PDDocumentOutline> outlineCaptor =
-                ArgumentCaptor.forClass(PDDocumentOutline.class);
-        verify(mockCatalog).setDocumentOutline(outlineCaptor.capture());
+        PDDocumentOutline capturedOutline = captureOutline();
 
-        PDDocumentOutline capturedOutline = outlineCaptor.getValue();
-        assertNotNull(capturedOutline);
+        PDOutlineItem firstItem = capturedOutline.getFirstChild();
+        assertNotNull(firstItem);
+        assertEquals("document1", firstItem.getTitle());
+        PDDestination firstDestination = assertDoesNotThrow(firstItem::getDestination);
+        assertTrue(firstDestination instanceof PDPageDestination);
+
+        PDOutlineItem secondItem = firstItem.getNextSibling();
+        assertNotNull(secondItem);
+        assertEquals("document2", secondItem.getTitle());
+        PDDestination secondDestination = assertDoesNotThrow(secondItem::getDestination);
+        assertTrue(secondDestination instanceof PDPageDestination);
+
+        PDOutlineItem thirdItem = secondItem.getNextSibling();
+        assertNotNull(thirdItem);
+        assertEquals("chapter3", thirdItem.getTitle());
+        PDDestination thirdDestination = assertDoesNotThrow(thirdItem::getDestination);
+        assertTrue(thirdDestination instanceof PDPageDestination);
+        assertNull(thirdItem.getNextSibling());
 
         // Verify that documents were loaded for page count
         verify(pdfDocumentFactory).load(mockFile1);
@@ -136,14 +161,15 @@ class MergeControllerTest {
         when(doc1.getNumberOfPages()).thenReturn(3);
 
         // When
-        Method addTableOfContentsMethod =
-                MergeController.class.getDeclaredMethod(
-                        "addTableOfContents", PDDocument.class, MultipartFile[].class);
-        addTableOfContentsMethod.setAccessible(true);
-        addTableOfContentsMethod.invoke(mergeController, mockMergedDocument, files);
+        invokeAddTableOfContents(files);
 
         // Then
-        verify(mockCatalog).setDocumentOutline(any(PDDocumentOutline.class));
+        PDDocumentOutline outline = captureOutline();
+        PDOutlineItem firstItem = outline.getFirstChild();
+        assertNotNull(firstItem);
+        assertEquals("document1", firstItem.getTitle());
+        PDDestination destination = assertDoesNotThrow(firstItem::getDestination);
+        assertTrue(destination instanceof PDPageDestination);
         verify(pdfDocumentFactory).load(mockFile1);
         verify(doc1).close();
     }
@@ -155,15 +181,12 @@ class MergeControllerTest {
         when(mockMergedDocument.getDocumentCatalog()).thenReturn(mockCatalog);
 
         // When
-        Method addTableOfContentsMethod =
-                MergeController.class.getDeclaredMethod(
-                        "addTableOfContents", PDDocument.class, MultipartFile[].class);
-        addTableOfContentsMethod.setAccessible(true);
-        addTableOfContentsMethod.invoke(mergeController, mockMergedDocument, files);
+        invokeAddTableOfContents(files);
 
         // Then
         verify(mockMergedDocument).getDocumentCatalog();
-        verify(mockCatalog).setDocumentOutline(any(PDDocumentOutline.class));
+        PDDocumentOutline outline = captureOutline();
+        assertNull(outline.getFirstChild());
         verifyNoInteractions(pdfDocumentFactory);
     }
 
@@ -186,18 +209,21 @@ class MergeControllerTest {
         when(pdfDocumentFactory.load(mockFile2))
                 .thenThrow(new IOException("Failed to load document"));
 
-        // When
-        Method addTableOfContentsMethod =
-                MergeController.class.getDeclaredMethod(
-                        "addTableOfContents", PDDocument.class, MultipartFile[].class);
-        addTableOfContentsMethod.setAccessible(true);
-
         // Should not throw exception
-        assertDoesNotThrow(
-                () -> addTableOfContentsMethod.invoke(mergeController, mockMergedDocument, files));
+        assertDoesNotThrow(() -> invokeAddTableOfContents(files));
 
         // Then
-        verify(mockCatalog).setDocumentOutline(any(PDDocumentOutline.class));
+        PDDocumentOutline outline = captureOutline();
+        PDOutlineItem firstItem = outline.getFirstChild();
+        assertNotNull(firstItem);
+        assertEquals("document1", firstItem.getTitle());
+        PDDestination firstDestination = assertDoesNotThrow(firstItem::getDestination);
+        assertTrue(firstDestination instanceof PDPageDestination);
+        PDOutlineItem secondItem = firstItem.getNextSibling();
+        assertNotNull(secondItem);
+        assertEquals("document2", secondItem.getTitle());
+        PDDestination secondDestination = assertDoesNotThrow(secondItem::getDestination);
+        assertTrue(secondDestination instanceof PDPageDestination);
         verify(pdfDocumentFactory).load(mockFile1);
         verify(pdfDocumentFactory).load(mockFile2);
         verify(doc1).close();
@@ -223,14 +249,15 @@ class MergeControllerTest {
         when(doc.getNumberOfPages()).thenReturn(1);
 
         // When
-        Method addTableOfContentsMethod =
-                MergeController.class.getDeclaredMethod(
-                        "addTableOfContents", PDDocument.class, MultipartFile[].class);
-        addTableOfContentsMethod.setAccessible(true);
-        addTableOfContentsMethod.invoke(mergeController, mockMergedDocument, files);
+        invokeAddTableOfContents(files);
 
         // Then
-        verify(mockCatalog).setDocumentOutline(any(PDDocumentOutline.class));
+        PDDocumentOutline outline = captureOutline();
+        PDOutlineItem firstItem = outline.getFirstChild();
+        assertNotNull(firstItem);
+        assertEquals("document_no_ext", firstItem.getTitle());
+        PDDestination destination = assertDoesNotThrow(firstItem::getDestination);
+        assertTrue(destination instanceof PDPageDestination);
         verify(doc).close();
     }
 
@@ -246,20 +273,45 @@ class MergeControllerTest {
         when(pdfDocumentFactory.load(mockFile1)).thenReturn(doc1);
         when(doc1.getNumberOfPages()).thenReturn(3);
 
-        // When
-        Method addTableOfContentsMethod =
-                MergeController.class.getDeclaredMethod(
-                        "addTableOfContents", PDDocument.class, MultipartFile[].class);
-        addTableOfContentsMethod.setAccessible(true);
-
         // Should not throw exception
-        assertDoesNotThrow(
-                () -> addTableOfContentsMethod.invoke(mergeController, mockMergedDocument, files));
+        assertDoesNotThrow(() -> invokeAddTableOfContents(files));
 
         // Then
-        verify(mockCatalog).setDocumentOutline(any(PDDocumentOutline.class));
+        PDDocumentOutline outline = captureOutline();
+        PDOutlineItem firstItem = outline.getFirstChild();
+        assertNotNull(firstItem);
+        assertEquals("document1", firstItem.getTitle());
+        assertNull(assertDoesNotThrow(firstItem::getDestination));
         verify(mockMergedDocument, never()).getPage(anyInt());
         verify(doc1).close();
+    }
+
+    @Test
+    void testAddTableOfContents_WithNullFilename_UsesDefaultTitle() throws Exception {
+        // Given
+        MultipartFile fileWithNullName = mock(MultipartFile.class);
+        when(fileWithNullName.getOriginalFilename()).thenReturn(null);
+        MultipartFile[] files = {fileWithNullName};
+
+        when(mockMergedDocument.getDocumentCatalog()).thenReturn(mockCatalog);
+        when(mockMergedDocument.getNumberOfPages()).thenReturn(1);
+        when(mockMergedDocument.getPage(0)).thenReturn(mockPage1);
+
+        PDDocument doc = mock(PDDocument.class);
+        when(pdfDocumentFactory.load(fileWithNullName)).thenReturn(doc);
+        when(doc.getNumberOfPages()).thenReturn(1);
+
+        // When
+        invokeAddTableOfContents(files);
+
+        // Then
+        PDDocumentOutline outline = captureOutline();
+        PDOutlineItem firstItem = outline.getFirstChild();
+        assertNotNull(firstItem);
+        assertEquals("default", firstItem.getTitle());
+        PDDestination destination = assertDoesNotThrow(firstItem::getDestination);
+        assertTrue(destination instanceof PDPageDestination);
+        verify(doc).close();
     }
 
     @Test
@@ -304,5 +356,18 @@ class MergeControllerTest {
         assertNotNull(result);
         assertEquals(mockMergedDocument, result);
         verify(mockMergedDocument, never()).addPage(any(PDPage.class));
+    }
+
+    private void invokeAddTableOfContents(MultipartFile... files) throws Exception {
+        addTableOfContentsMethod.invoke(mergeController, mockMergedDocument, files);
+    }
+
+    private PDDocumentOutline captureOutline() {
+        ArgumentCaptor<PDDocumentOutline> outlineCaptor =
+                ArgumentCaptor.forClass(PDDocumentOutline.class);
+        verify(mockCatalog).setDocumentOutline(outlineCaptor.capture());
+        PDDocumentOutline capturedOutline = outlineCaptor.getValue();
+        assertNotNull(capturedOutline);
+        return capturedOutline;
     }
 }

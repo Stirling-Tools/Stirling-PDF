@@ -166,8 +166,23 @@ subprojects {
         dependsOn jacocoTestReport
         violationRules {
             rule {
+                // Bytecode-Anweisungen abgedeckt
                 limit {
-                    minimum = 0.0
+                    counter = 'INSTRUCTION'
+                    value = 'COVEREDRATIO'
+                    minimum = 0.14
+                }
+                // wie viele Quellcode-Zeilen abgedeckt
+                limit {
+                    counter = 'LINE'
+                    value = 'COVEREDRATIO'
+                    minimum = 0.16
+                }
+                // Verzweigungen (if/else, switch) abgedeckt; misst Logik-Abdeckung
+                limit {
+                    counter = 'BRANCH'
+                    value = 'COVEREDRATIO'
+                    minimum = 0.09
                 }
             }
         }
