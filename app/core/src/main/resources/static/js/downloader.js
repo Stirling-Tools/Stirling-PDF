@@ -80,6 +80,12 @@
         showGameBtn.style.display = 'none';
       }
 
+      // Log fileOrder for debugging
+      const fileOrderValue = formData.get('fileOrder');
+      if (fileOrderValue) {
+        console.log('FormData fileOrder:', fileOrderValue);
+      }
+
       // Remove empty file entries
       for (let [key, value] of formData.entries()) {
         if (value instanceof File && !value.name) {
