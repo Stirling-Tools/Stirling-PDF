@@ -184,6 +184,21 @@ public class ConvertPDFToPDFA {
         return command;
     }
 
+    private static PreflightDocument parsePreflightDocument(
+            PreflightParser parser, Format format, PdfaProfile profile) throws IOException {
+        try {
+            return (PreflightDocument)
+                    parser.parse(format, PreflightConfiguration.createPdfA1BConfiguration());
+        } catch (SyntaxValidationException e) {
+            throw new IOException(buildPreflightErrorMessage(e.getResult(), profile), e);
+        } catch (ClassCastException e) {
+            throw new IOException(
+                    "PDF/A preflight did not produce a PreflightDocument for "
+                            + profile.getDisplayName(),
+                    e);
+        }
+    }
+
     private static void validatePdfaOutput(Path pdfPath, PdfaProfile profile) throws IOException {
         Optional<Format> format = profile.preflightFormat();
         if (format.isEmpty()) {
@@ -194,22 +209,7 @@ public class ConvertPDFToPDFA {
         try (RandomAccessRead rar = new RandomAccessReadBufferedFile(pdfPath.toFile())) {
             PreflightParser parser = new PreflightParser(rar);
 
-            PreflightDocument document;
-            try {
-                document =
-                        (PreflightDocument)
-                                parser.parse(
-                                        format.get(),
-                                        PreflightConfiguration.createPdfA1BConfiguration());
-            } catch (SyntaxValidationException e) {
-                throw new IOException(buildPreflightErrorMessage(e.getResult(), profile), e);
-            } catch (ClassCastException e) {
-                throw new IOException(
-                        "PDF/A preflight did not produce a PreflightDocument for "
-                                + profile.getDisplayName(),
-                        e);
-            }
-
+            PreflightDocument document = parsePreflightDocument(parser, format.get(), profile);
             if (document == null) {
                 throw new IOException(
                         "PDF/A preflight returned no document for " + profile.getDisplayName());
@@ -928,8 +928,8 @@ public class ConvertPDFToPDFA {
         ZonedDateTime creationZdt = ZonedDateTime.ofInstant(creationInstant, ZoneId.of("UTC"));
 
         // Convert to GregorianCalendar for PDFBox API compatibility
-        GregorianCalendar creationCal = java.util.GregorianCalendar.from(creationZdt);
-        GregorianCalendar modificationCal = java.util.GregorianCalendar.from(nowZdt);
+        GregorianCalendar creationCal = GregorianCalendar.from(creationZdt);
+        GregorianCalendar modificationCal = GregorianCalendar.from(nowZdt);
 
         docInfo.setCreationDate(creationCal);
         xmpBasicSchema.setCreateDate(creationCal);
@@ -1152,12 +1152,10 @@ public class ConvertPDFToPDFA {
 
     private void addICCProfileIfNotPresent(PDDocument document) {
         if (document.getDocumentCatalog().getOutputIntents().isEmpty()) {
-            try (InputStream colorProfile = getClass().getResourceAsStream("/icc/sRGB2014.icc")) {
+            try (InputStream colorProfile = getClass().getResourceAsStream(ICC_RESOURCE_PATH)) {
                 if (colorProfile == null) {
                     throw ExceptionUtils.createIllegalArgumentException(
-                            "error.resourceNotFound",
-                            "Resource not found: {0}",
-                            "/icc/sRGB2014.icc");
+                            "error.resourceNotFound", "Resource not found: {0}", ICC_RESOURCE_PATH);
                 }
                 PDOutputIntent outputIntent = new PDOutputIntent(document, colorProfile);
                 outputIntent.setInfo("sRGB IEC61966-2.1");
