@@ -1,7 +1,8 @@
 import { useTranslation } from 'react-i18next';
-import { useToolOperation, ToolType } from '@app/hooks/tools/shared/useToolOperation';
+import { useToolOperation, ToolType, ToolOperationConfig } from '@app/hooks/tools/shared/useToolOperation';
 import { createStandardErrorHandler } from '@app/utils/toolErrorHandler';
 import { ChangeMetadataParameters, defaultParameters } from '@app/hooks/tools/changeMetadata/useChangeMetadataParameters';
+import { changeMetadataClientSide } from '@app/utils/pdfOperations/changeMetadata';
 
 // Helper function to format Date object to string
 const formatDateForBackend = (date: Date | null): string => {
@@ -58,7 +59,12 @@ export const changeMetadataOperationConfig = {
   operationType: 'changeMetadata',
   endpoint: '/api/v1/misc/update-metadata',
   defaultParameters,
-} as const;
+  frontendProcessing: {
+    process: changeMetadataClientSide,
+    shouldUseFrontend: (params: ChangeMetadataParameters) => params.processingMode === 'frontend',
+    statusMessage: 'Updating metadata in browser...'
+  }
+} as const satisfies ToolOperationConfig<ChangeMetadataParameters>;
 
 export const useChangeMetadataOperation = () => {
   const { t } = useTranslation();

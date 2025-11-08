@@ -1,42 +1,25 @@
-import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { useFileSelection } from "@app/contexts/FileContext";
 import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
 import { BaseToolProps, ToolComponent } from "@app/types/tool";
-import { useEndpointEnabled } from "@app/hooks/useEndpointConfig";
 import { useAddPageNumbersParameters } from "@app/components/tools/addPageNumbers/useAddPageNumbersParameters";
 import { useAddPageNumbersOperation } from "@app/components/tools/addPageNumbers/useAddPageNumbersOperation";
 import { useAccordionSteps } from "@app/hooks/tools/shared/useAccordionSteps";
 import AddPageNumbersPositionSettings from "@app/components/tools/addPageNumbers/AddPageNumbersPositionSettings";
 import AddPageNumbersAppearanceSettings from "@app/components/tools/addPageNumbers/AddPageNumbersAppearanceSettings";
+import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
 
-const AddPageNumbers = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
+const AddPageNumbers = (props: BaseToolProps) => {
   const { t } = useTranslation();
-  const { selectedFiles } = useFileSelection();
 
-  const params = useAddPageNumbersParameters();
-  const operation = useAddPageNumbersOperation();
+  const base = useBaseTool(
+    'addPageNumbers',
+    useAddPageNumbersParameters,
+    useAddPageNumbersOperation,
+    props
+  );
 
-  const { enabled: endpointEnabled, loading: endpointLoading } = useEndpointEnabled("add-page-numbers");
-
-  useEffect(() => {
-    operation.resetResults();
-    onPreviewFile?.(null);
-  }, [params.parameters]);
-
-  const handleExecute = async () => {
-    try {
-      await operation.executeOperation(params.parameters, selectedFiles);
-      if (operation.files && onComplete) {
-        onComplete(operation.files);
-      }
-    } catch (error: any) {
-      onError?.(error?.message || t("addPageNumbers.error.failed", "Add page numbers operation failed"));
-    }
-  };
-
-  const hasFiles = selectedFiles.length > 0;
-  const hasResults = operation.files.length > 0 || operation.downloadUrl !== null;
+  const hasFiles = base.hasFiles;
+  const hasResults = base.hasResults;
 
   enum AddPageNumbersStep {
     NONE = 'none',
@@ -48,13 +31,10 @@ const AddPageNumbers = ({ onPreviewFile, onComplete, onError }: BaseToolProps) =
     noneValue: AddPageNumbersStep.NONE,
     initialStep: AddPageNumbersStep.POSITION_AND_PAGES,
     stateConditions: {
-      hasFiles,
-      hasResults
+      hasFiles: base.hasFiles,
+      hasResults: base.hasResults
     },
-    afterResults: () => {
-      operation.resetResults();
-      onPreviewFile?.(null);
-    }
+    afterResults: base.handleSettingsReset
   });
 
   const getSteps = () => {
@@ -68,10 +48,10 @@ const AddPageNumbers = ({ onPreviewFile, onComplete, onError }: BaseToolProps) =
       isVisible: hasFiles || hasResults,
       content: (
         <AddPageNumbersPositionSettings
-          parameters={params.parameters}
-          onParameterChange={params.updateParameter}
-          disabled={endpointLoading}
-          file={selectedFiles[0] || null}
+          parameters={base.params.parameters}
+          onParameterChange={base.params.updateParameter}
+          disabled={base.endpointLoading}
+          file={base.selectedFiles[0] || null}
           showQuickGrid={true}
         />
       ),
@@ -85,9 +65,9 @@ const AddPageNumbers = ({ onPreviewFile, onComplete, onError }: BaseToolProps) =
       isVisible: hasFiles || hasResults,
       content: (
         <AddPageNumbersAppearanceSettings
-          parameters={params.parameters}
-          onParameterChange={params.updateParameter}
-          disabled={endpointLoading}
+          parameters={base.params.parameters}
+          onParameterChange={base.params.updateParameter}
+          disabled={base.endpointLoading}
         />
       ),
     });
@@ -97,7 +77,7 @@ const AddPageNumbers = ({ onPreviewFile, onComplete, onError }: BaseToolProps) =
 
   return createToolFlow({
     files: {
-      selectedFiles,
+      selectedFiles: base.selectedFiles,
       isCollapsed: hasResults,
     },
     steps: getSteps(),
@@ -105,18 +85,15 @@ const AddPageNumbers = ({ onPreviewFile, onComplete, onError }: BaseToolProps) =
       text: t('addPageNumbers.submit', 'Add Page Numbers'),
       isVisible: !hasResults,
       loadingText: t('loading'),
-      onClick: handleExecute,
-      disabled: !params.validateParameters() || !hasFiles || !endpointEnabled,
+      onClick: base.handleExecute,
+      disabled: !base.params.validateParameters() || !base.hasFiles || !base.endpointEnabled,
     },
     review: {
       isVisible: hasResults,
-      operation: operation,
+      operation: base.operation,
       title: t('addPageNumbers.results.title', 'Page Number Results'),
-      onFileClick: (file) => onPreviewFile?.(file),
-      onUndo: async () => {
-        await operation.undoOperation();
-        onPreviewFile?.(null);
-      },
+      onFileClick: base.handleThumbnailClick,
+      onUndo: base.handleUndo,
     },
   });
 };

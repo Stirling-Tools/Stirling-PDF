@@ -16,7 +16,11 @@ const ReorganizePages = ({ onPreviewFile, onComplete, onError }: BaseToolProps) 
   const params = useReorganizePagesParameters();
   const operation = useReorganizePagesOperation();
 
-  const { enabled: endpointEnabled, loading: endpointLoading } = useEndpointEnabled("rearrange-pages");
+  const { enabled: rawEndpointEnabled, loading: rawEndpointLoading } = useEndpointEnabled("rearrange-pages");
+
+  const usingFrontend = operation.evaluateShouldUseFrontend(params.parameters);
+  const endpointEnabled = usingFrontend ? true : (rawEndpointEnabled ?? false);
+  const endpointLoading = usingFrontend ? false : rawEndpointLoading;
 
   useEffect(() => {
     operation.resetResults();

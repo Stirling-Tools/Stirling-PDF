@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { Stack, Textarea, TextInput, Select, Button, Text, Divider } from "@mantine/core";
 import { AddStampParameters } from "@app/components/tools/addStamp/useAddStampParameters";
 import ButtonSelector from "@app/components/shared/ButtonSelector";
+import ProcessingModeToggle from "@app/components/shared/ProcessingModeToggle";
 import styles from "@app/components/tools/addStamp/StampPreview.module.css";
 import { getDefaultFontSizeForAlphabet } from "@app/components/tools/addStamp/StampPreviewUtils";
 
@@ -20,6 +21,11 @@ const StampSetupSettings = ({ parameters, onParameterChange, disabled = false }:
         label={t('pageSelectionPrompt', 'Page Selection (e.g. 1,3,2 or 4-8,2,10-12 or 2n-1)')}
         value={parameters.pageNumbers}
         onChange={(e) => onParameterChange('pageNumbers', e.currentTarget.value)}
+        disabled={disabled}
+      />
+      <ProcessingModeToggle
+        value={parameters.processingMode}
+        onChange={(mode) => onParameterChange('processingMode', mode)}
         disabled={disabled}
       />
       <Divider/>

@@ -185,7 +185,7 @@ describe('ChangePermissionsSettings', () => {
 
     const permissionKeys = Object.keys(defaultParameters) as Array<keyof ChangePermissionsParameters>;
     permissionKeys.forEach(permission => {
-      expect(mockT).toHaveBeenCalledWith(`changePermissions.permissions.${permission}.label`, permission);
+      expect(mockT).toHaveBeenCalledWith(`changePermissions.permissions.${permission}.label`, { defaultValue: permission });
     });
   });
 

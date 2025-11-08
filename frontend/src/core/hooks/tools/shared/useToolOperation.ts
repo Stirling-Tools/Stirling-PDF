@@ -12,6 +12,7 @@ import { ResponseHandler } from '@app/utils/toolResponseProcessor';
 import { createChildStub, generateProcessedFileMetadata } from '@app/contexts/file/fileActions';
 import { ToolOperation } from '@app/types/file';
 import { ToolId } from '@app/types/toolId';
+import { ProcessingMode } from '@app/types/parameters';
 
 // Re-export for backwards compatibility
 export type { ProcessingProgress, ResponseHandler };
@@ -55,6 +56,14 @@ interface BaseToolOperationConfig<TParams> {
 
   /** Default parameter values for automation */
   defaultParameters?: TParams;
+
+  frontendProcessing?: FrontendProcessingConfig<TParams>;
+}
+
+export interface FrontendProcessingConfig<TParams> {
+  process: (params: TParams, files: File[]) => Promise<File[]>;
+  shouldUseFrontend?: (params: TParams) => boolean;
+  statusMessage?: string;
 }
 
 export interface SingleFileToolOperationConfig<TParams> extends BaseToolOperationConfig<TParams> {
@@ -124,6 +133,9 @@ export interface ToolOperationHook<TParams = void> {
   clearError: () => void;
   cancelOperation: () => void;
   undoOperation: () => Promise<void>;
+
+  supportsFrontendProcessing: boolean;
+  evaluateShouldUseFrontend: (params: TParams) => boolean;
 }
 
 // Re-export for backwards compatibility
@@ -145,7 +157,7 @@ export const useToolOperation = <TParams>(
   config: ToolOperationConfig<TParams>
 ): ToolOperationHook<TParams> => {
   const { t } = useTranslation();
-  const { addFiles, consumeFiles, undoConsumeFiles, selectors } = useFileContext();
+  const { consumeFiles, undoConsumeFiles, selectors } = useFileContext();
 
   // Composed hooks
   const { state, actions } = useToolState();
@@ -159,6 +171,21 @@ export const useToolOperation = <TParams>(
     inputStirlingFileStubs: StirlingFileStub[];
     outputFileIds: FileId[];
   } | null>(null);
+
+  const supportsFrontendProcessing = Boolean(config.frontendProcessing);
+
+  const evaluateShouldUseFrontend = useCallback((params: TParams): boolean => {
+    if (!config.frontendProcessing) return false;
+    if (config.frontendProcessing.shouldUseFrontend) {
+      try {
+        return config.frontendProcessing.shouldUseFrontend(params);
+      } catch (_error) {
+        return false;
+      }
+    }
+    const mode = (params as Record<string, unknown> & { processingMode?: ProcessingMode }).processingMode;
+    return mode === 'frontend';
+  }, [config]);
 
   const executeOperation = useCallback(async (
     params: TParams,
@@ -208,85 +235,93 @@ export const useToolOperation = <TParams>(
 
       try {
       let processedFiles: File[];
-        let successSourceIds: string[] = [];
+      let successSourceIds: string[] = [];
 
       // Use original files directly (no PDF metadata injection - history stored in IndexedDB)
       const filesForAPI = extractFiles(validFiles);
 
-      switch (config.toolType) {
-        case ToolType.singleFile: {
-          // Individual file processing - separate API call per file
-          const apiCallsConfig: ApiCallsConfig<TParams> = {
-            endpoint: config.endpoint,
-            buildFormData: config.buildFormData,
-            filePrefix: config.filePrefix,
-            responseHandler: config.responseHandler,
-            preserveBackendFilename: config.preserveBackendFilename
-          };
-          console.debug('[useToolOperation] Multi-file start', { count: filesForAPI.length });
-          const result = await processFiles(
-            params,
-            filesForAPI,
-            apiCallsConfig,
-            actions.setProgress,
-            actions.setStatus,
-            fileActions.markFileError as any
-          );
-          processedFiles = result.outputFiles;
-          successSourceIds = result.successSourceIds as any;
-          console.debug('[useToolOperation] Multi-file results', { outputFiles: processedFiles.length, successSources: result.successSourceIds.length });
-          break;
-        }
-        case ToolType.multiFile: {
-          // Multi-file processing - single API call with all files
-          actions.setStatus('Processing files...');
-          const formData = config.buildFormData(params, filesForAPI);
-          const endpoint = typeof config.endpoint === 'function' ? config.endpoint(params) : config.endpoint;
+      const shouldUseFrontend = evaluateShouldUseFrontend(params);
 
-          const response = await apiClient.post(endpoint, formData, { responseType: 'blob' });
+      if (shouldUseFrontend && config.frontendProcessing) {
+        actions.setStatus(config.frontendProcessing.statusMessage ?? 'Processing files in browser...');
+        processedFiles = await config.frontendProcessing.process(params, filesForAPI);
+        successSourceIds = validFiles.map(f => (f as any).fileId) as any;
+      } else {
+        switch (config.toolType) {
+          case ToolType.singleFile: {
+            // Individual file processing - separate API call per file
+            const apiCallsConfig: ApiCallsConfig<TParams> = {
+              endpoint: config.endpoint,
+              buildFormData: config.buildFormData,
+              filePrefix: config.filePrefix,
+              responseHandler: config.responseHandler,
+              preserveBackendFilename: config.preserveBackendFilename
+            };
+            console.debug('[useToolOperation] Multi-file start', { count: filesForAPI.length });
+            const result = await processFiles(
+              params,
+              filesForAPI,
+              apiCallsConfig,
+              actions.setProgress,
+              actions.setStatus,
+              fileActions.markFileError as any
+            );
+            processedFiles = result.outputFiles;
+            successSourceIds = result.successSourceIds as any;
+            console.debug('[useToolOperation] Multi-file results', { outputFiles: processedFiles.length, successSources: result.successSourceIds.length });
+            break;
+          }
+          case ToolType.multiFile: {
+            // Multi-file processing - single API call with all files
+            actions.setStatus('Processing files...');
+            const formData = config.buildFormData(params, filesForAPI);
+            const endpoint = typeof config.endpoint === 'function' ? config.endpoint(params) : config.endpoint;
 
-          // Multi-file responses are typically ZIP files that need extraction, but some may return single PDFs
-          if (config.responseHandler) {
-            // Use custom responseHandler for multi-file (handles ZIP extraction)
-            processedFiles = await config.responseHandler(response.data, filesForAPI);
-          } else if (response.data.type === 'application/pdf' ||
-                    (response.headers && response.headers['content-type'] === 'application/pdf')) {
-            // Single PDF response (e.g. split with merge option) - add prefix to first original filename
-            const filename = `${config.filePrefix}${filesForAPI[0]?.name || 'document.pdf'}`;
-            const singleFile = new File([response.data], filename, { type: 'application/pdf' });
-            processedFiles = [singleFile];
-          } else {
-            // Default: assume ZIP response for multi-file endpoints
-            // Note: extractZipFiles will check preferences.autoUnzip setting
-            processedFiles = await extractZipFiles(response.data);
-          }
-          // Assume all inputs succeeded together unless server provided an error earlier
-          successSourceIds = validFiles.map(f => (f as any).fileId) as any;
-          break;
-        }
+            const response = await apiClient.post(endpoint, formData, { responseType: 'blob' });
 
-        case ToolType.custom: {
-          actions.setStatus('Processing files...');
-          processedFiles = await config.customProcessor(params, filesForAPI);
-          // Try to map outputs back to inputs by filename (before extension)
-          const inputBaseNames = new Map<string, string>();
-          for (const f of validFiles) {
-            const base = (f.name || '').replace(/\.[^.]+$/, '').toLowerCase();
-            inputBaseNames.set(base, (f as any).fileId);
+            // Multi-file responses are typically ZIP files that need extraction, but some may return single PDFs
+            if (config.responseHandler) {
+              // Use custom responseHandler for multi-file (handles ZIP extraction)
+              processedFiles = await config.responseHandler(response.data, filesForAPI);
+            } else if (response.data.type === 'application/pdf' ||
+                      (response.headers && response.headers['content-type'] === 'application/pdf')) {
+              // Single PDF response (e.g. split with merge option) - add prefix to first original filename
+              const filename = `${config.filePrefix}${filesForAPI[0]?.name || 'document.pdf'}`;
+              const singleFile = new File([response.data], filename, { type: 'application/pdf' });
+              processedFiles = [singleFile];
+            } else {
+              // Default: assume ZIP response for multi-file endpoints
+              // Note: extractZipFiles will check preferences.autoUnzip setting
+              processedFiles = await extractZipFiles(response.data);
+            }
+            // Assume all inputs succeeded together unless server provided an error earlier
+            successSourceIds = validFiles.map(f => (f as any).fileId) as any;
+            break;
           }
-          const mappedSuccess: string[] = [];
-          for (const out of processedFiles) {
-            const base = (out.name || '').replace(/\.[^.]+$/, '').toLowerCase();
-            const id = inputBaseNames.get(base);
-            if (id) mappedSuccess.push(id);
+
+          case ToolType.custom: {
+            actions.setStatus('Processing files...');
+            processedFiles = await config.customProcessor(params, filesForAPI);
+            // Try to map outputs back to inputs by filename (before extension)
+            const inputBaseNames = new Map<string, string>();
+            for (const f of validFiles) {
+              const base = (f.name || '').replace(/\.[^.]+$/, '').toLowerCase();
+              inputBaseNames.set(base, (f as any).fileId);
+            }
+            const mappedSuccess: string[] = [];
+            for (const out of processedFiles) {
+              const base = (out.name || '').replace(/\.[^.]+$/, '').toLowerCase();
+              const id = inputBaseNames.get(base);
+              if (id) mappedSuccess.push(id);
+            }
+            // Fallback to naive alignment if names don't match
+            if (mappedSuccess.length === 0) {
+              successSourceIds = validFiles.slice(0, processedFiles.length).map(f => (f as any).fileId) as any;
+            } else {
+              successSourceIds = mappedSuccess as any;
+            }
+            break;
           }
-          // Fallback to naive alignment if names don't match
-          if (mappedSuccess.length === 0) {
-            successSourceIds = validFiles.slice(0, processedFiles.length).map(f => (f as any).fileId) as any;
-          } else {
-            successSourceIds = mappedSuccess as any;
-          }
-          break;
         }
       }
 
@@ -441,7 +476,7 @@ export const useToolOperation = <TParams>(
       actions.setLoading(false);
       actions.setProgress(null);
     }
-  }, [t, config, actions, addFiles, consumeFiles, processFiles, generateThumbnails, createDownloadInfo, cleanupBlobUrls, extractZipFiles]);
+  }, [t, config, actions, consumeFiles, processFiles, generateThumbnails, createDownloadInfo, cleanupBlobUrls, extractZipFiles, evaluateShouldUseFrontend]);
 
   const cancelOperation = useCallback(() => {
     cancelApiCalls();
@@ -530,6 +565,9 @@ export const useToolOperation = <TParams>(
     resetResults,
     clearError: actions.clearError,
     cancelOperation,
-    undoOperation
+    undoOperation,
+
+    supportsFrontendProcessing,
+    evaluateShouldUseFrontend
   };
 };

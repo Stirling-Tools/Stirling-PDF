@@ -1,7 +1,7 @@
-import { BaseParameters } from '@app/types/parameters';
+import { BaseParameters, ToggleableProcessingParameters} from '@app/types/parameters';
 import { useBaseParameters, type BaseParametersHook } from '@app/hooks/tools/shared/useBaseParameters';
 
-export interface AddPageNumbersParameters extends BaseParameters {
+export interface AddPageNumbersParameters extends BaseParameters, ToggleableProcessingParameters {
   customMargin: 'small' | 'medium' | 'large' | 'x-large';
   position: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
   fontSize: number;
@@ -19,6 +19,7 @@ export const defaultParameters: AddPageNumbersParameters = {
   startingNumber: 1,
   pagesToNumber: '',
   customText: '',
+  processingMode: 'backend',
 };
 
 export type AddPageNumbersParametersHook = BaseParametersHook<AddPageNumbersParameters>;
@@ -26,7 +27,7 @@ export type AddPageNumbersParametersHook = BaseParametersHook<AddPageNumbersPara
 export const useAddPageNumbersParameters = (): AddPageNumbersParametersHook => {
   return useBaseParameters<AddPageNumbersParameters>({
     defaultParameters,
-    endpointName: 'add-page-numbers',
+    endpointName: (params) => (params.processingMode === 'frontend' ? '' : 'add-page-numbers'),
     validateFn: (params): boolean => {
       return params.fontSize > 0 && params.startingNumber > 0;
     },

@@ -160,10 +160,10 @@ describe('SanitizeSettings', () => {
     );
 
     // Verify that translation keys are being called (just check that it was called, not specific order)
-    expect(mockT).toHaveBeenCalledWith('sanitize.options.title', expect.any(String));
-    expect(mockT).toHaveBeenCalledWith('sanitize.options.removeJavaScript', expect.any(String));
-    expect(mockT).toHaveBeenCalledWith('sanitize.options.removeEmbeddedFiles', expect.any(String));
-    expect(mockT).toHaveBeenCalledWith('sanitize.options.note', expect.any(String));
+    expect(mockT).toHaveBeenCalledWith('sanitize.options.title', 'Sanitization Options');
+    expect(mockT).toHaveBeenCalledWith('sanitize.options.removeJavaScript', { defaultValue: 'removeJavaScript' });
+    expect(mockT).toHaveBeenCalledWith('sanitize.options.removeEmbeddedFiles', { defaultValue: 'removeEmbeddedFiles' });
+    expect(mockT).toHaveBeenCalledWith('sanitize.options.note', 'Select the elements you want to remove from the PDF. At least one option must be selected.');
   });
 
   test('should not call onParameterChange when disabled', () => {

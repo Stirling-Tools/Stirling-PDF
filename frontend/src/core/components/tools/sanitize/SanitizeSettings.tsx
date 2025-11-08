@@ -13,8 +13,8 @@ const SanitizeSettings = ({ parameters, onParameterChange, disabled = false }: S
 
   const options = (Object.keys(defaultParameters) as Array<keyof SanitizeParameters>).map((key) => ({
     key: key,
-    label: t(`sanitize.options.${key}`, key),
-    description: t(`sanitize.options.${key}.desc`, `${key} from the PDF`),
+    label: t(`sanitize.options.${String(key)}`, { defaultValue: String(key) }),
+    description: t(`sanitize.options.${String(key)}.desc`, { defaultValue: `${String(key)} from the PDF` }),
     default: defaultParameters[key],
   }));
 
@@ -28,7 +28,7 @@ const SanitizeSettings = ({ parameters, onParameterChange, disabled = false }: S
         {options.map((option) => (
           <Checkbox
             key={option.key}
-            checked={parameters[option.key]}
+            checked={parameters[option.key] as boolean}
             onChange={(event) => onParameterChange(option.key, event.currentTarget.checked)}
             disabled={disabled}
             label={

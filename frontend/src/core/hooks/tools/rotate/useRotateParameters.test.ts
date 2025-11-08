@@ -8,6 +8,7 @@ describe('useRotateParameters', () => {
 
     expect(result.current.parameters).toEqual(defaultParameters);
     expect(result.current.parameters.angle).toBe(0);
+    expect(result.current.parameters.processingMode).toBe('backend');
     expect(result.current.hasRotation).toBe(false);
   });
 
@@ -135,6 +136,12 @@ describe('useRotateParameters', () => {
     const { result } = renderHook(() => useRotateParameters());
 
     expect(result.current.getEndpointName()).toBe('rotate-pdf');
+
+    act(() => {
+      result.current.updateParameter('processingMode', 'frontend');
+    });
+
+    expect(result.current.getEndpointName()).toBe('');
   });
 
   test('should detect rotation state correctly', () => {
