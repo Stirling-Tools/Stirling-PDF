@@ -172,8 +172,10 @@ public class ConvertPDFToPDFA {
         command.add("-sDefaultRGBProfile=" + colorProfiles.rgb().toAbsolutePath());
         command.add("-sDefaultGrayProfile=" + colorProfiles.gray().toAbsolutePath());
         command.add("-dEmbedAllFonts=true");
-        command.add("-dSubsetFonts=true");
+        command.add("-dSubsetFonts=false"); // Embed complete fonts to avoid incomplete glyphs
         command.add("-dCompressFonts=true");
+        command.add("-dNOSUBSTFONTS=false"); // Allow font substitution for problematic fonts
+        command.add("-dPDFSETTINGS=/prepress"); // High quality, preserves all content
         command.add("-dNOPAUSE");
         command.add("-dBATCH");
         command.add("-dNOOUTERSAVE");
@@ -337,8 +339,10 @@ public class ConvertPDFToPDFA {
         command.add("-sDefaultRGBProfile=" + colorProfiles.rgb().toAbsolutePath());
         command.add("-sDefaultGrayProfile=" + colorProfiles.gray().toAbsolutePath());
         command.add("-dEmbedAllFonts=true");
-        command.add("-dSubsetFonts=true");
+        command.add("-dSubsetFonts=false"); // Embed complete fonts to avoid incomplete glyphs
         command.add("-dCompressFonts=true");
+        command.add("-dNOSUBSTFONTS=false"); // Allow font substitution for problematic fonts
+        command.add("-dPDFSETTINGS=/prepress");
         command.add("-dNOPAUSE");
         command.add("-dBATCH");
         command.add("-dNOOUTERSAVE");
@@ -627,6 +631,260 @@ public class ConvertPDFToPDFA {
         }
     }
 
+    private static void fixType1FontCharSet(PDDocument document) throws IOException {
+        for (PDPage page : document.getPages()) {
+            PDResources resources = page.getResources();
+            if (resources == null) continue;
+
+            for (COSName fontName : resources.getFontNames()) {
+                try {
+                    PDFont font = resources.getFont(fontName);
+                    if (font == null) continue;
+
+                    String fontNameStr = font.getName();
+                    if (fontNameStr == null) continue;
+
+                    PDFontDescriptor descriptor = font.getFontDescriptor();
+                    if (descriptor == null) continue;
+
+                    // Check if this is a Type1 font
+                    if (fontNameStr.contains("Type1")
+                            || descriptor.getFontFile() != null
+                            || (descriptor.getFontFile2() == null
+                                    && descriptor.getFontFile3() == null)) {
+
+                        // Check if CharSet is missing or suspicious
+                        String existingCharSet =
+                                descriptor.getCOSObject().getString(COSName.CHAR_SET);
+                        if (existingCharSet == null || existingCharSet.trim().isEmpty()) {
+
+                            // Build a CharSet from commonly used glyphs
+                            // For Type1 fonts, include standard PDF glyphs
+                            String glyphSet = buildStandardType1GlyphSet();
+                            if (!glyphSet.isEmpty()) {
+                                descriptor.getCOSObject().setString(COSName.CHAR_SET, glyphSet);
+                                log.debug(
+                                        "Fixed CharSet for Type1 font {} with {} glyphs",
+                                        fontNameStr,
+                                        glyphSet.split(" ").length);
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    log.warn(
+                            "Error processing font descriptor for page resource: {}",
+                            e.getMessage());
+                }
+            }
+        }
+    }
+
+    private static String buildStandardType1GlyphSet() {
+        // Standard PDF glyph names for Type1 fonts
+        Set<String> glyphNames = new LinkedHashSet<>();
+
+        // Add common Type1 glyphs from standard encoding
+        String[] standardGlyphs = {
+            ".notdef",
+            ".null",
+            "nonmarkingreturn",
+            "space",
+            "exclam",
+            "quotedbl",
+            "numbersign",
+            "dollar",
+            "percent",
+            "ampersand",
+            "quoteright",
+            "parenleft",
+            "parenright",
+            "asterisk",
+            "plus",
+            "comma",
+            "hyphen",
+            "period",
+            "slash",
+            "zero",
+            "one",
+            "two",
+            "three",
+            "four",
+            "five",
+            "six",
+            "seven",
+            "eight",
+            "nine",
+            "colon",
+            "semicolon",
+            "less",
+            "equal",
+            "greater",
+            "question",
+            "at",
+            "A",
+            "B",
+            "C",
+            "D",
+            "E",
+            "F",
+            "G",
+            "H",
+            "I",
+            "J",
+            "K",
+            "L",
+            "M",
+            "N",
+            "O",
+            "P",
+            "Q",
+            "R",
+            "S",
+            "T",
+            "U",
+            "V",
+            "W",
+            "X",
+            "Y",
+            "Z",
+            "bracketleft",
+            "backslash",
+            "bracketright",
+            "asciicircum",
+            "underscore",
+            "quoteleft",
+            "a",
+            "b",
+            "c",
+            "d",
+            "e",
+            "f",
+            "g",
+            "h",
+            "i",
+            "j",
+            "k",
+            "l",
+            "m",
+            "n",
+            "o",
+            "p",
+            "q",
+            "r",
+            "s",
+            "t",
+            "u",
+            "v",
+            "w",
+            "x",
+            "y",
+            "z",
+            "braceleft",
+            "bar",
+            "braceright",
+            "asciitilde",
+            "exclamdown",
+            "cent",
+            "sterling",
+            "currency",
+            "yen",
+            "brokenbar",
+            "section",
+            "dieresis",
+            "copyright",
+            "ordfeminine",
+            "guillemotleft",
+            "logicalnot",
+            "uni00AD",
+            "registered",
+            "macron",
+            "degree",
+            "plusminus",
+            "twosuperior",
+            "threesuperior",
+            "acute",
+            "mu",
+            "paragraph",
+            "periodcentered",
+            "cedilla",
+            "onesuperior",
+            "ordmasculine",
+            "guillemotright",
+            "onequarter",
+            "onehalf",
+            "threequarters",
+            "questiondown",
+            "Agrave",
+            "Aacute",
+            "Acircumflex",
+            "Atilde",
+            "Adieresis",
+            "Aring",
+            "AE",
+            "Ccedilla",
+            "Egrave",
+            "Eacute",
+            "Ecircumflex",
+            "Edieresis",
+            "Igrave",
+            "Iacute",
+            "Icircumflex",
+            "Idieresis",
+            "Eth",
+            "Ntilde",
+            "Ograve",
+            "Oacute",
+            "Ocircumflex",
+            "Otilde",
+            "Odieresis",
+            "multiply",
+            "Oslash",
+            "Ugrave",
+            "Uacute",
+            "Ucircumflex",
+            "Udieresis",
+            "Yacute",
+            "Thorn",
+            "germandbls",
+            "agrave",
+            "aacute",
+            "acircumflex",
+            "atilde",
+            "adieresis",
+            "aring",
+            "ae",
+            "ccedilla",
+            "egrave",
+            "eacute",
+            "ecircumflex",
+            "edieresis",
+            "igrave",
+            "iacute",
+            "icircumflex",
+            "idieresis",
+            "eth",
+            "ntilde",
+            "ograve",
+            "oacute",
+            "ocircumflex",
+            "otilde",
+            "odieresis",
+            "divide",
+            "oslash",
+            "ugrave",
+            "uacute",
+            "ucircumflex",
+            "udieresis",
+            "yacute",
+            "thorn",
+            "ydieresis"
+        };
+
+        Collections.addAll(glyphNames, standardGlyphs);
+
+        return String.join(" ", glyphNames);
+    }
+
     private byte[] processWithPDFBox(PDDocument document, int pdfaPart) throws Exception {
 
         removeElementsForPdfA(document, pdfaPart);
@@ -634,6 +892,8 @@ public class ConvertPDFToPDFA {
         mergeAndAddXmpMetadata(document, pdfaPart);
 
         addICCProfileIfNotPresent(document);
+
+        fixType1FontCharSet(document);
 
         // Mark the document as PDF/A
         PDDocumentCatalog catalog = document.getDocumentCatalog();
@@ -1099,15 +1359,59 @@ public class ConvertPDFToPDFA {
         }
     }
 
+    private Path normalizePdfWithQpdf(Path inputPdf) {
+        try {
+            ProcessExecutorResult checkResult =
+                    ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT)
+                            .runCommandWithOutputHandling(Arrays.asList("qpdf", "--version"));
+
+            if (checkResult.getRc() != 0) {
+                log.debug("QPDF not available");
+                return null;
+            }
+
+            Path normalizedPdf =
+                    inputPdf.getParent().resolve("normalized_" + inputPdf.getFileName().toString());
+
+            List<String> command =
+                    Arrays.asList(
+                            "qpdf",
+                            "--normalize-content=y",
+                            "--object-streams=preserve",
+                            inputPdf.toAbsolutePath().toString(),
+                            normalizedPdf.toAbsolutePath().toString());
+
+            ProcessExecutorResult result =
+                    ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT)
+                            .runCommandWithOutputHandling(command);
+
+            if (result.getRc() == 0 && Files.exists(normalizedPdf)) {
+                log.info("PDF normalized with QPDF to fix font programs");
+                return normalizedPdf;
+            }
+            return null;
+
+        } catch (Exception e) {
+            log.debug("QPDF normalization error: {}", e.getMessage());
+            return null;
+        }
+    }
+
     private byte[] convertWithPdfBoxMethod(Path inputPath, PdfaProfile profile) throws Exception {
         Path tempInputFile = null;
         byte[] fileBytes;
         Path loPdfPath = null;
         File preProcessedFile = null;
         int pdfaPart = profile.getPart();
+        Path normalizedPath = null;
 
         try {
             tempInputFile = inputPath;
+
+            normalizedPath = normalizePdfWithQpdf(tempInputFile);
+            if (normalizedPath != null) {
+                tempInputFile = normalizedPath;
+            }
 
             if (pdfaPart == 2 || pdfaPart == 3) {
                 preProcessedFile = tempInputFile.toFile();
@@ -1136,6 +1440,9 @@ public class ConvertPDFToPDFA {
             }
             if (preProcessedFile != null && !preProcessedFile.equals(tempInputFile.toFile())) {
                 Files.deleteIfExists(preProcessedFile.toPath());
+            }
+            if (normalizedPath != null && !normalizedPath.equals(inputPath)) {
+                Files.deleteIfExists(normalizedPath);
             }
         }
     }
