@@ -1209,18 +1209,18 @@ public class ConvertPDFToPDFA {
             String normalized = requestToken.trim().toLowerCase(Locale.ROOT);
             Optional<PdfaProfile> match =
                     Arrays.stream(values())
-                            .filter(profile -> profile.getRequestTokens().contains(normalized))
+                            .filter(profile -> profile.requestTokens.contains(normalized))
                             .findFirst();
 
             return match.orElse(PDF_A_2B);
         }
 
         String outputSuffix() {
-            return getSuffix();
+            return suffix;
         }
 
         Optional<Format> preflightFormat() {
-            return Optional.ofNullable(getPreflightFormat());
+            return Optional.ofNullable(preflightFormat);
         }
     }
 
@@ -1259,14 +1259,14 @@ public class ConvertPDFToPDFA {
             String normalized = requestToken.trim().toLowerCase(Locale.ROOT);
             Optional<PdfXProfile> match =
                     Arrays.stream(values())
-                            .filter(profile -> profile.getRequestTokens().contains(normalized))
+                            .filter(profile -> profile.requestTokens.contains(normalized))
                             .findFirst();
 
             return match.orElse(PDF_X_4);
         }
 
         String outputSuffix() {
-            return getSuffix();
+            return suffix;
         }
     }
 
