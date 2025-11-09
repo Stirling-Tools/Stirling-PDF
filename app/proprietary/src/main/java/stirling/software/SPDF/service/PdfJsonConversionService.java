@@ -1672,6 +1672,93 @@ public class PdfJsonConversionService {
         }
     }
 
+    /**
+     * Fuzzy match a font name against Standard14 fonts as a last resort. Handles common variations
+     * like "TimesNewRoman" → "Times-Roman", "Arial" → "Helvetica", etc.
+     *
+     * @param baseName the font base name to match
+     * @return matched Standard14 font, or null if no reasonable match found
+     */
+    private Standard14Fonts.FontName fuzzyMatchStandard14(String baseName) {
+        if (baseName == null || baseName.isBlank()) {
+            return null;
+        }
+
+        // Normalize: lowercase, remove spaces/hyphens/underscores, strip prefix (ABCD+FontName)
+        String normalized = baseName.trim();
+        int plusIndex = normalized.indexOf('+');
+        if (plusIndex >= 0 && plusIndex < normalized.length() - 1) {
+            normalized = normalized.substring(plusIndex + 1);
+        }
+        normalized = normalized.toLowerCase(Locale.ROOT).replaceAll("[\\s\\-_]", "");
+
+        // Exact match after normalization
+        try {
+            Standard14Fonts.FontName exact = Standard14Fonts.getMappedFontName(baseName);
+            if (exact != null) {
+                return exact;
+            }
+        } catch (IllegalArgumentException ignored) {
+            // Not an exact match, continue with fuzzy matching
+        }
+
+        // Times family: Times, TimesRoman, TimesNewRoman, TNR
+        if (normalized.contains("times") || normalized.equals("tnr")) {
+            if (normalized.contains("bold") && normalized.contains("italic")) {
+                return Standard14Fonts.FontName.TIMES_BOLD_ITALIC;
+            }
+            if (normalized.contains("bold")) {
+                return Standard14Fonts.FontName.TIMES_BOLD;
+            }
+            if (normalized.contains("italic") || normalized.contains("oblique")) {
+                return Standard14Fonts.FontName.TIMES_ITALIC;
+            }
+            return Standard14Fonts.FontName.TIMES_ROMAN;
+        }
+
+        // Helvetica family: Helvetica, Arial, Swiss
+        if (normalized.contains("helvetica")
+                || normalized.contains("arial")
+                || normalized.contains("swiss")) {
+            if (normalized.contains("bold") && normalized.contains("oblique")) {
+                return Standard14Fonts.FontName.HELVETICA_BOLD_OBLIQUE;
+            }
+            if (normalized.contains("bold")) {
+                return Standard14Fonts.FontName.HELVETICA_BOLD;
+            }
+            if (normalized.contains("oblique") || normalized.contains("italic")) {
+                return Standard14Fonts.FontName.HELVETICA_OBLIQUE;
+            }
+            return Standard14Fonts.FontName.HELVETICA;
+        }
+
+        // Courier family: Courier, CourierNew, Mono, Monospace
+        if (normalized.contains("courier") || normalized.contains("mono")) {
+            if (normalized.contains("bold")
+                    && (normalized.contains("oblique") || normalized.contains("italic"))) {
+                return Standard14Fonts.FontName.COURIER_BOLD_OBLIQUE;
+            }
+            if (normalized.contains("bold")) {
+                return Standard14Fonts.FontName.COURIER_BOLD;
+            }
+            if (normalized.contains("oblique") || normalized.contains("italic")) {
+                return Standard14Fonts.FontName.COURIER_OBLIQUE;
+            }
+            return Standard14Fonts.FontName.COURIER;
+        }
+
+        // Symbol and ZapfDingbats (less common)
+        if (normalized.contains("symbol")) {
+            return Standard14Fonts.FontName.SYMBOL;
+        }
+        if (normalized.contains("zapf") || normalized.contains("dingbat")) {
+            return Standard14Fonts.FontName.ZAPF_DINGBATS;
+        }
+
+        // No reasonable match found
+        return null;
+    }
+
     private List<PdfJsonPage> extractPages(
             PDDocument document,
             Map<Integer, List<PdfJsonTextElement>> textByPage,
@@ -2408,15 +2495,18 @@ public class PdfJsonConversionService {
                                 runFontModel =
                                         resolveFontModel(runFontLookup, pageNumber, run.fontId());
                             }
-                            // Check if this is a normalized Type3 font (has Type3 metadata but is not PDType3Font)
-                            boolean isNormalizedType3 = !(run.font() instanceof PDType3Font)
-                                    && runFontModel != null
-                                    && runFontModel.getType3Glyphs() != null
-                                    && !runFontModel.getType3Glyphs().isEmpty();
+                            // Check if this is a normalized Type3 font (has Type3 metadata but is
+                            // not PDType3Font)
+                            boolean isNormalizedType3 =
+                                    !(run.font() instanceof PDType3Font)
+                                            && runFontModel != null
+                                            && runFontModel.getType3Glyphs() != null
+                                            && !runFontModel.getType3Glyphs().isEmpty();
 
                             if (isNormalizedType3) {
                                 // For normalized Type3 fonts, use original text directly
-                                // The font has proper Unicode mappings, so PDFBox can encode it correctly
+                                // The font has proper Unicode mappings, so PDFBox can encode it
+                                // correctly
                                 contentStream.showText(run.text());
                             } else {
                                 // For actual Type3 fonts and other fonts, encode manually
@@ -3149,9 +3239,10 @@ public class PdfJsonConversionService {
             PDFont font, PdfJsonFont fontModel, String text, List<Integer> rawCharCodes)
             throws IOException {
         boolean isType3Font = font instanceof PDType3Font;
-        boolean hasType3Metadata = fontModel != null
-                && fontModel.getType3Glyphs() != null
-                && !fontModel.getType3Glyphs().isEmpty();
+        boolean hasType3Metadata =
+                fontModel != null
+                        && fontModel.getType3Glyphs() != null
+                        && !fontModel.getType3Glyphs().isEmpty();
 
         // For normalized Type3 fonts (font is NOT Type3 but has Type3 metadata)
         if (!isType3Font && hasType3Metadata) {
@@ -3162,20 +3253,25 @@ public class PdfJsonConversionService {
                 // NOTE: Do NOT sanitize encoded bytes for normalized Type3 fonts
                 // Multi-byte encodings (UTF-16BE, CID fonts) have null bytes that are essential
                 // Removing them corrupts the byte boundaries and produces garbled text
-                log.info("[TYPE3] Encoded text '{}' for normalized font {}: encoded={} bytes",
+                log.info(
+                        "[TYPE3] Encoded text '{}' for normalized font {}: encoded={} bytes",
                         text.length() > 20 ? text.substring(0, 20) + "..." : text,
                         fontModel.getId(),
                         encoded != null ? encoded.length : 0);
                 if (encoded != null && encoded.length > 0) {
-                    log.info("[TYPE3] Successfully encoded text for normalized Type3 font {} using standard encoding",
+                    log.info(
+                            "[TYPE3] Successfully encoded text for normalized Type3 font {} using standard encoding",
                             fontModel.getId());
                     return encoded;
                 }
-                log.info("[TYPE3] Standard encoding produced empty result for normalized Type3 font {}, falling through to Type3 mapping",
+                log.info(
+                        "[TYPE3] Standard encoding produced empty result for normalized Type3 font {}, falling through to Type3 mapping",
                         fontModel.getId());
             } catch (IOException | IllegalArgumentException ex) {
-                log.info("[TYPE3] Standard encoding failed for normalized Type3 font {}: {}",
-                        fontModel.getId(), ex.getMessage());
+                log.info(
+                        "[TYPE3] Standard encoding failed for normalized Type3 font {}: {}",
+                        fontModel.getId(),
+                        ex.getMessage());
             }
             // If standard encoding failed, fall through to Type3 glyph mapping (for subset fonts)
             // or return null to trigger fallback font
@@ -3643,6 +3739,19 @@ public class PdfJsonConversionService {
             }
         }
 
+        // Last resort: Fuzzy match baseName against Standard14 fonts
+        Standard14Fonts.FontName fuzzyMatch = fuzzyMatchStandard14(fontModel.getBaseName());
+        if (fuzzyMatch != null) {
+            log.info(
+                    "Fuzzy-matched font {} (baseName: {}) to Standard14 font {}",
+                    fontModel.getId(),
+                    fontModel.getBaseName(),
+                    fuzzyMatch.getName());
+            PDFont font = new PDType1Font(fuzzyMatch);
+            applyAdditionalFontMetadata(document, font, fontModel);
+            return font;
+        }
+
         PDFont fallback = fallbackFontService.loadFallbackPdfFont(document);
         applyAdditionalFontMetadata(document, fallback, fontModel);
         return fallback;
@@ -3662,7 +3771,8 @@ public class PdfJsonConversionService {
         }
         for (FontByteSource source : candidates) {
             PDFont font =
-                    loadFontFromSource(document, fontModel, source, originalFormat, true, true, true);
+                    loadFontFromSource(
+                            document, fontModel, source, originalFormat, true, true, true);
             if (font != null) {
                 type3NormalizedFontCache.put(fontModel.getUid(), font);
                 log.info(
@@ -3682,7 +3792,8 @@ public class PdfJsonConversionService {
             throws IOException {
         for (FontByteSource source : candidates) {
             PDFont font =
-                    loadFontFromSource(document, fontModel, source, originalFormat, false, false, false);
+                    loadFontFromSource(
+                            document, fontModel, source, originalFormat, false, false, false);
             if (font != null) {
                 return font;
             }
@@ -3737,8 +3848,10 @@ public class PdfJsonConversionService {
                 // so all glyphs are available for editing
                 boolean willBeSubset = !originLabel.contains("type3-library");
                 if (!willBeSubset) {
-                    log.info("[TYPE3-RUNTIME] Loading library font {} WITHOUT subsetting (full glyph set) from {}",
-                            fontModel.getId(), originLabel);
+                    log.info(
+                            "[TYPE3-RUNTIME] Loading library font {} WITHOUT subsetting (full glyph set) from {}",
+                            fontModel.getId(),
+                            originLabel);
                 }
                 PDFont font = PDType0Font.load(document, stream, willBeSubset);
                 if (!skipMetadata) {

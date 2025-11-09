@@ -9,6 +9,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -35,6 +36,9 @@ public class JobExecutorService {
     private final JobQueue jobQueue;
     private final ExecutorService executor = ExecutorFactory.newVirtualOrCachedThreadExecutor();
     private final long effectiveTimeoutMs;
+
+    @Autowired(required = false)
+    private JobOwnershipService jobOwnershipService;
 
     public JobExecutorService(
             TaskManager taskManager,
@@ -97,11 +101,17 @@ public class JobExecutorService {
             long customTimeoutMs,
             boolean queueable,
             int resourceWeight) {
-        String jobId = UUID.randomUUID().toString();
+        // Generate base UUID
+        String baseJobId = UUID.randomUUID().toString();
 
-        // Store the job ID in the request for potential use by other components
+        // Scope job to authenticated user if security is enabled
+        String scopedJobKey = getScopedJobKey(baseJobId);
+
+        log.debug("Generated jobId: {} (base: {})", scopedJobKey, baseJobId);
+
+        // Store the scoped job ID in the request for potential use by other components
         if (request != null) {
-            request.setAttribute("jobId", jobId);
+            request.setAttribute("jobId", scopedJobKey);
 
             // Also track this job ID in the user's session for authorization purposes
             // This ensures users can only cancel their own jobs
@@ -115,10 +125,12 @@ public class JobExecutorService {
                     request.getSession().setAttribute("userJobIds", userJobIds);
                 }
 
-                userJobIds.add(jobId);
-                log.debug("Added job ID {} to user session", jobId);
+                userJobIds.add(scopedJobKey);
+                log.debug("Added scoped job ID {} to user session", scopedJobKey);
             }
         }
+
+        String jobId = scopedJobKey;
 
         // Determine which timeout to use
         long timeoutToUse = customTimeoutMs > 0 ? customTimeoutMs : effectiveTimeoutMs;
@@ -522,5 +534,19 @@ public class JobExecutorService {
             Thread.currentThread().interrupt();
             throw new Exception("Execution was interrupted", e);
         }
+    }
+
+    /**
+     * Get a scoped job key that includes user ownership when security is enabled.
+     *
+     * @param baseJobId the base job identifier
+     * @return scoped job key, or just baseJobId if no ownership service available
+     */
+    private String getScopedJobKey(String baseJobId) {
+        if (jobOwnershipService != null) {
+            return jobOwnershipService.createScopedJobKey(baseJobId);
+        }
+        // Security disabled, return unsecured job key
+        return baseJobId;
     }
 }

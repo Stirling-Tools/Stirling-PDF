@@ -1,7 +1,9 @@
 package stirling.software.SPDF.controller.api.converters;
 
 import java.util.Optional;
+import java.util.UUID;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,6 +28,7 @@ import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
 import stirling.software.common.model.api.GeneralFile;
 import stirling.software.common.model.api.PDFFile;
+import stirling.software.common.service.JobOwnershipService;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.WebResponseUtils;
 
@@ -35,6 +38,9 @@ import stirling.software.common.util.WebResponseUtils;
 public class ConvertPdfJsonController {
 
     private final PdfJsonConversionService pdfJsonConversionService;
+
+    @Autowired(required = false)
+    private JobOwnershipService jobOwnershipService;
 
     @AutoJobPostMapping(consumes = "multipart/form-data", value = "/pdf/json")
     @Operation(
@@ -90,23 +96,37 @@ public class ConvertPdfJsonController {
             summary = "Extract PDF metadata for lazy loading",
             description =
                     "Extracts document metadata, fonts, and page dimensions. Caches the document for"
-                            + " subsequent page requests. Input:PDF Output:JSON Type:SISO")
-    public ResponseEntity<byte[]> extractPdfMetadata(
-            @ModelAttribute PDFFile request, @RequestParam(required = true) String jobId)
+                            + " subsequent page requests. Returns a server-generated jobId scoped to the"
+                            + " authenticated user. Input:PDF Output:JSON Type:SISO")
+    public ResponseEntity<byte[]> extractPdfMetadata(@ModelAttribute PDFFile request)
             throws Exception {
         MultipartFile inputFile = request.getFileInput();
         if (inputFile == null) {
             throw ExceptionUtils.createNullArgumentException("fileInput");
         }
 
-        byte[] jsonBytes = pdfJsonConversionService.extractDocumentMetadata(inputFile, jobId);
+        // Generate server-side UUID for job
+        String baseJobId = UUID.randomUUID().toString();
+
+        // Scope job to authenticated user if security is enabled
+        String scopedJobKey = getScopedJobKey(baseJobId);
+
+        log.info("Extracting metadata for PDF, assigned jobId: {}", scopedJobKey);
+
+        byte[] jsonBytes =
+                pdfJsonConversionService.extractDocumentMetadata(inputFile, scopedJobKey);
         String originalName = inputFile.getOriginalFilename();
         String baseName =
                 (originalName != null && !originalName.isBlank())
                         ? Filenames.toSimpleFileName(originalName).replaceFirst("[.][^.]+$", "")
                         : "document";
         String docName = baseName + "_metadata.json";
-        return WebResponseUtils.bytesToWebResponse(jsonBytes, docName, MediaType.APPLICATION_JSON);
+
+        // Return jobId in response header for client
+        return ResponseEntity.ok()
+                .header("X-Job-Id", scopedJobKey)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(jsonBytes);
     }
 
     @PostMapping(value = "/pdf/json/partial/{jobId}", consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -115,7 +135,8 @@ public class ConvertPdfJsonController {
             summary = "Apply incremental edits to a cached PDF",
             description =
                     "Applies edits for the specified pages of a cached PDF and returns an updated PDF."
-                            + " Requires the PDF to have been previously cached via the PDF to JSON endpoint.")
+                            + " Requires the PDF to have been previously cached via the PDF to JSON endpoint."
+                            + " The jobId must be obtained from the metadata extraction endpoint.")
     public ResponseEntity<byte[]> exportPartialPdf(
             @PathVariable String jobId,
             @RequestBody PdfJsonDocument document,
@@ -124,6 +145,9 @@ public class ConvertPdfJsonController {
         if (document == null) {
             throw ExceptionUtils.createNullArgumentException("document");
         }
+
+        // Validate job ownership
+        validateJobAccess(jobId);
 
         byte[] pdfBytes = pdfJsonConversionService.exportUpdatedPages(jobId, document);
 
@@ -143,9 +167,14 @@ public class ConvertPdfJsonController {
             summary = "Extract single page from cached PDF",
             description =
                     "Retrieves a single page's content from a previously cached PDF document."
-                            + " Requires prior call to /pdf/json/metadata. Output:JSON")
+                            + " Requires prior call to /pdf/json/metadata. The jobId must belong to the"
+                            + " authenticated user. Output:JSON")
     public ResponseEntity<byte[]> extractSinglePage(
             @PathVariable String jobId, @PathVariable int pageNumber) throws Exception {
+
+        // Validate job ownership
+        validateJobAccess(jobId);
+
         byte[] jsonBytes = pdfJsonConversionService.extractSinglePage(jobId, pageNumber);
         String docName = "page_" + pageNumber + ".json";
         return WebResponseUtils.bytesToWebResponse(jsonBytes, docName, MediaType.APPLICATION_JSON);
@@ -156,9 +185,41 @@ public class ConvertPdfJsonController {
             summary = "Clear cached PDF document",
             description =
                     "Manually clears a cached PDF document to free up server resources."
-                            + " Called automatically after 30 minutes.")
+                            + " Called automatically after 30 minutes. The jobId must belong to the"
+                            + " authenticated user.")
     public ResponseEntity<Void> clearCache(@PathVariable String jobId) {
+
+        // Validate job ownership
+        validateJobAccess(jobId);
+
         pdfJsonConversionService.clearCachedDocument(jobId);
         return ResponseEntity.ok().build();
+    }
+
+    /**
+     * Get a scoped job key that includes user ownership when security is enabled.
+     *
+     * @param baseJobId the base job identifier
+     * @return scoped job key, or just baseJobId if no ownership service available
+     */
+    private String getScopedJobKey(String baseJobId) {
+        if (jobOwnershipService != null) {
+            return jobOwnershipService.createScopedJobKey(baseJobId);
+        }
+        // Security disabled, return unsecured job key
+        return baseJobId;
+    }
+
+    /**
+     * Validate that the current user has access to the given job.
+     *
+     * @param jobId the job identifier to validate
+     * @throws SecurityException if current user does not own the job
+     */
+    private void validateJobAccess(String jobId) {
+        if (jobOwnershipService != null) {
+            jobOwnershipService.validateJobAccess(jobId);
+        }
+        // If jobOwnershipService is null (security disabled), allow all access
     }
 }
