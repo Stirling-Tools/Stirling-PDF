@@ -41,14 +41,22 @@ public class FileMonitor {
             @Qualifier("directoryFilter") Predicate<Path> pathFilter,
             RuntimePathConfig runtimePathConfig)
             throws IOException {
-        this.newlyDiscoveredFiles = new HashSet<>();
-        this.path2KeyMapping = new HashMap<>();
-        this.stagingFiles = new HashSet<>();
-        this.pathFilter = pathFilter;
-        this.readyForProcessingFiles = ConcurrentHashMap.newKeySet();
-        this.watchService = FileSystems.getDefault().newWatchService();
+        Set<Path> createdNewlyDiscoveredFiles = new HashSet<>();
+        Map<Path, WatchKey> createdPath2KeyMapping = new HashMap<>();
+        Set<Path> createdStagingFiles = new HashSet<>();
+        ConcurrentHashMap.KeySetView<Path, Boolean> createdReadyForProcessingFiles =
+                ConcurrentHashMap.newKeySet();
+        WatchService createdWatchService = FileSystems.getDefault().newWatchService();
+        Path resolvedRootDir = Path.of(runtimePathConfig.getPipelineWatchedFoldersPath());
         log.info("Monitoring directory: {}", runtimePathConfig.getPipelineWatchedFoldersPath());
-        this.rootDir = Path.of(runtimePathConfig.getPipelineWatchedFoldersPath());
+
+        this.newlyDiscoveredFiles = createdNewlyDiscoveredFiles;
+        this.path2KeyMapping = createdPath2KeyMapping;
+        this.stagingFiles = createdStagingFiles;
+        this.pathFilter = pathFilter;
+        this.readyForProcessingFiles = createdReadyForProcessingFiles;
+        this.watchService = createdWatchService;
+        this.rootDir = resolvedRootDir;
     }
 
     private boolean shouldNotProcess(Path path) {

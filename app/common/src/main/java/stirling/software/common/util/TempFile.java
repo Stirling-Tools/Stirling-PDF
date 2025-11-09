@@ -18,8 +18,9 @@ public class TempFile implements AutoCloseable {
     @Getter private final File file;
 
     public TempFile(TempFileManager manager, String suffix) throws IOException {
+        File createdFile = manager.createTempFile(suffix);
         this.manager = manager;
-        this.file = manager.createTempFile(suffix);
+        this.file = createdFile;
     }
 
     public Path getPath() {

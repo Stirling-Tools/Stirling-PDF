@@ -16,8 +16,9 @@ public class TempDirectory implements AutoCloseable {
     private final Path directory;
 
     public TempDirectory(TempFileManager manager) throws IOException {
+        Path createdDirectory = manager.createTempDirectory();
         this.manager = manager;
-        this.directory = manager.createTempDirectory();
+        this.directory = createdDirectory;
     }
 
     public Path getPath() {

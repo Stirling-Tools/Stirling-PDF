@@ -64,7 +64,8 @@ public class YamlHelper {
 
     // Constructor that reads YAML from a file path
     public YamlHelper(Path originalFilePath) throws IOException {
-        this.yamlContent = Files.readString(originalFilePath);
+        String readContent = Files.readString(originalFilePath);
+        this.yamlContent = readContent;
         this.originalFilePath = originalFilePath;
     }
 
