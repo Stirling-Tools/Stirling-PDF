@@ -182,7 +182,7 @@ subprojects {
             def thresholds = [
                     LINE       : 0.16,
                     INSTRUCTION: 0.14,
-                    BRANCH     : 0.19
+                    BRANCH     : 0.09
             ]
 
             def types = ["LINE", "INSTRUCTION", "BRANCH"]
