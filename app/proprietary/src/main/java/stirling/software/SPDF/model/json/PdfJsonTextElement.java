@@ -37,4 +37,5 @@ public class PdfJsonTextElement {
     private PdfJsonTextColor strokeColor;
     private Integer renderingMode;
     private Boolean fallbackUsed;
+    private List<Integer> charCodes;
 }

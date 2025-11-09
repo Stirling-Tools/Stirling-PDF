@@ -1,5 +1,7 @@
 package stirling.software.SPDF.model.json;
 
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import lombok.AllArgsConstructor;
@@ -55,6 +57,12 @@ public class PdfJsonFont {
 
     /** Format hint for the pdfProgram payload. */
     private String pdfProgramFormat;
+
+    /** Glyph metadata for Type3 fonts to enable precise text rewrites. */
+    private List<PdfJsonFontType3Glyph> type3Glyphs;
+
+    /** Per-strategy synthesized font payloads for Type3 normalization. */
+    private List<PdfJsonFontConversionCandidate> conversionCandidates;
 
     /** ToUnicode stream encoded as Base64 when present. */
     private String toUnicode;

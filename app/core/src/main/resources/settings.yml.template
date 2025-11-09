@@ -183,6 +183,10 @@ stirling:
         python-command: /opt/venv/bin/python3 # Python interpreter path
         python-script: /scripts/convert_cff_to_ttf.py # Path to font wrapping script
         fontforge-command: fontforge # Override if FontForge is installed under a different name/path
+      type3:
+        library:
+          enabled: true # Match common Type3 fonts against the built-in library of converted programs
+          index: classpath:/type3/library/index.json # Override to point at a custom index.json (supports http:, file:, classpath:)
 
 ui:
   appNameNavbar: '' # name displayed on the navigation bar

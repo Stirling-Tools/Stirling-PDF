@@ -65,6 +65,7 @@ export interface PdfJsonTextElement {
   textMatrix?: number[] | null;
   fillColor?: PdfJsonTextColor | null;
   strokeColor?: PdfJsonTextColor | null;
+  charCodes?: number[] | null;
   fallbackUsed?: boolean | null;
 }
 

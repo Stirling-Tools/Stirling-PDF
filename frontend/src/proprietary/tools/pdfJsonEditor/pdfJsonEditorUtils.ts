@@ -70,6 +70,13 @@ export const cloneTextElement = (element: PdfJsonTextElement): PdfJsonTextElemen
   textMatrix: element.textMatrix ? [...element.textMatrix] : element.textMatrix ?? undefined,
 });
 
+const clearGlyphHints = (element: PdfJsonTextElement): void => {
+  if (!element) {
+    return;
+  }
+  element.charCodes = undefined;
+};
+
 export const cloneImageElement = (element: PdfJsonImageElement): PdfJsonImageElement => ({
   ...element,
   transform: element.transform ? [...element.transform] : element.transform ?? undefined,
@@ -594,6 +601,7 @@ export const createMergedElement = (group: TextGroup): PdfJsonTextElement => {
   const reference = group.originalElements[0];
   const merged = cloneTextElement(reference);
   merged.text = group.text;
+  clearGlyphHints(merged);
   if (reference.textMatrix && reference.textMatrix.length === 6) {
     merged.textMatrix = [...reference.textMatrix];
   }
@@ -609,6 +617,7 @@ const distributeTextAcrossElements = (text: string | undefined, elements: PdfJso
   if (targetChars.length === 0) {
     elements.forEach((element) => {
       element.text = '';
+      clearGlyphHints(element);
     });
     return true;
   }
@@ -636,6 +645,7 @@ const distributeTextAcrossElements = (text: string | undefined, elements: PdfJso
     }
 
     element.text = sliceLength > 0 ? targetChars.slice(cursor, cursor + sliceLength).join('') : '';
+    clearGlyphHints(element);
     cursor += sliceLength;
   });
 

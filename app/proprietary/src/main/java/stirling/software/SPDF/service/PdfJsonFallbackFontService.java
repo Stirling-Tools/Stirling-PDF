@@ -11,6 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDType0Font;
+import org.apache.pdfbox.pdmodel.font.PDType3Font;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
@@ -122,10 +123,19 @@ public class PdfJsonFallbackFontService {
         if (font == null || text == null || text.isEmpty()) {
             return false;
         }
+        if (font instanceof PDType3Font) {
+            return false;
+        }
         try {
             font.encode(text);
             return true;
-        } catch (IOException | IllegalArgumentException ex) {
+        } catch (IOException | IllegalArgumentException | UnsupportedOperationException ex) {
+            log.info(
+                    "[FONT-DEBUG] Font {} cannot encode text '{}' ({}): {}",
+                    font != null ? font.getName() : "null",
+                    text,
+                    font != null ? font.getClass().getSimpleName() : "null",
+                    ex.getMessage());
             return false;
         }
     }

@@ -1,0 +1,592 @@
+[
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "1867"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "1888"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "2029"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "2069"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "2089"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "2116"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSansMono",
+    "encoding": "2174"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSans-Oblique",
+    "encoding": "2192"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "2209"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "Cmsy10",
+    "encoding": "2228"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "STIXSizeThreeSym-Regular",
+    "encoding": "2233"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSansDisplay",
+    "encoding": "2239"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "4403"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "4438"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "4519"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "4685"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "4733"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "4782"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "4813"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "4834"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSansMono",
+    "encoding": "4878"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "4906"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "4929"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "4971"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "5001"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "5030"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "5052"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "5083"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "5116"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "5143"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "5175"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "5207"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "5243"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "Cmr10",
+    "encoding": "5263"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "Cmex10",
+    "encoding": "5270"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "Cmsy10",
+    "encoding": "5275"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "Cmmi10",
+    "encoding": "5280"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "5295"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSans-Oblique",
+    "encoding": "5313"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSansDisplay",
+    "encoding": "5319"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "5334"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "5370"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "5399"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "5427"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "5459"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "5486"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "5513"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "5554"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "5601"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "5647"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "5694"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "5732"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "5771"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "5803"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "5861"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "5904"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "5924"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "5951"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "6084"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "6445"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "7195"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "7409"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "7474"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "7708"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "7747"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "7885"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "9029"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "9617"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "10460"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "11445"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSans-Bold",
+    "encoding": "11486"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "11497"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "11543"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "12280"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "12301"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "12350"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "12372"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "12395"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "12416"
+  },
+  {
+    "source": "01_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "13324"
+  },
+  {
+    "source": "02_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "3214"
+  },
+  {
+    "source": "02_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "3251"
+  },
+  {
+    "source": "02_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "7190"
+  },
+  {
+    "source": "02_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "9937"
+  },
+  {
+    "source": "02_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "10792"
+  },
+  {
+    "source": "02_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "10852"
+  },
+  {
+    "source": "02_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "14712"
+  },
+  {
+    "source": "02_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "18396"
+  },
+  {
+    "source": "02_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "18719"
+  },
+  {
+    "source": "02_Matplotlib.pdf",
+    "fontName": "DejaVuSans-Bold",
+    "encoding": "18741"
+  },
+  {
+    "source": "02_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "18778"
+  },
+  {
+    "source": "02_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "18804"
+  },
+  {
+    "source": "02_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "20974"
+  },
+  {
+    "source": "02_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "20993"
+  },
+  {
+    "source": "02_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "21093"
+  },
+  {
+    "source": "02_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "21117"
+  },
+  {
+    "source": "02_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "21141"
+  },
+  {
+    "source": "02_Matplotlib.pdf",
+    "fontName": "DejaVuSans",
+    "encoding": "21174"
+  },
+  {
+    "source": "03_handout-beginner.pdf",
+    "fontName": "BMQQDV+DejaVuSans",
+    "encoding": "17"
+  },
+  {
+    "source": "03_handout-beginner.pdf",
+    "fontName": "EVICAO+DejaVuSans-Bold",
+    "encoding": "133"
+  },
+  {
+    "source": "03_handout-beginner.pdf",
+    "fontName": "BMQQDV+DejaVuSans",
+    "encoding": "152"
+  },
+  {
+    "source": "04_handout-intermediate.pdf",
+    "fontName": "BMQQDV+DejaVuSans",
+    "encoding": "13"
+  },
+  {
+    "source": "04_handout-intermediate.pdf",
+    "fontName": "BMQQDV+DejaVuSans",
+    "encoding": "85"
+  },
+  {
+    "source": "04_handout-intermediate.pdf",
+    "fontName": "BMQQDV+DejaVuSans",
+    "encoding": "104"
+  },
+  {
+    "source": "04_handout-intermediate.pdf",
+    "fontName": "BMQQDV+DejaVuSans",
+    "encoding": "121"
+  },
+  {
+    "source": "04_handout-intermediate.pdf",
+    "fontName": "BMQQDV+DejaVuSans",
+    "encoding": "135"
+  },
+  {
+    "source": "04_handout-intermediate.pdf",
+    "fontName": "BMQQDV+DejaVuSans",
+    "encoding": "159"
+  },
+  {
+    "source": "04_handout-intermediate.pdf",
+    "fontName": "BMQQDV+DejaVuSans",
+    "encoding": "179"
+  },
+  {
+    "source": "04_handout-intermediate.pdf",
+    "fontName": "BMQQDV+DejaVuSans",
+    "encoding": "198"
+  },
+  {
+    "source": "04_handout-intermediate.pdf",
+    "fontName": "NVMZUP+SourceCodePro-Regular",
+    "encoding": "208"
+  },
+  {
+    "source": "04_handout-intermediate.pdf",
+    "fontName": "BMQQDV+DejaVuSans",
+    "encoding": "231"
+  },
+  {
+    "source": "04_handout-intermediate.pdf",
+    "fontName": "NVMZUP+SourceCodePro-Regular",
+    "encoding": "241"
+  },
+  {
+    "source": "07_matplotlib.pdf",
+    "fontName": "SauceCodePowerline-Bold",
+    "encoding": "22"
+  },
+  {
+    "source": "07_matplotlib.pdf",
+    "fontName": "SauceCodePowerline-Regular",
+    "encoding": "47"
+  },
+  {
+    "source": "07_matplotlib.pdf",
+    "fontName": "SauceCodePowerline-Regular",
+    "encoding": "65"
+  },
+  {
+    "source": "07_matplotlib.pdf",
+    "fontName": "SauceCodePowerline-Bold",
+    "encoding": "110"
+  },
+  {
+    "source": "08_matplotlib.pdf",
+    "fontName": "F36",
+    "encoding": "12"
+  },
+  {
+    "source": "08_matplotlib.pdf",
+    "fontName": "F59",
+    "encoding": "42"
+  }
+]
