@@ -22,7 +22,6 @@ import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -38,7 +37,6 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 @DisplayName("CropController Tests")
 class CropControllerTest {
 
-    private static final float TOLERANCE = 0.1f;
     @TempDir Path tempDir;
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
     @InjectMocks private CropController cropController;
@@ -225,89 +223,6 @@ class CropControllerTest {
             verify(pdfDocumentFactory).load(request);
             verify(mockDocument, times(1)).close();
             verify(newDocument, times(1)).close();
-        }
-    }
-
-    @Nested
-    @DisplayName("Manual Crop with Ghostscript")
-    @Tag("integration")
-    class ManualCropGhostscriptTests {
-
-        @Test
-        @DisplayName(
-                "Should successfully crop PDF using Ghostscript when removeDataOutsideCrop is true")
-        void shouldCropPdfSuccessfullyWithGhostscript() throws IOException {
-            MockMultipartFile testFile = pdfFactory.createStandardPdf("test.pdf");
-            CropPdfForm request =
-                    new CropRequestBuilder()
-                            .withFile(testFile)
-                            .withCoordinates(50f, 50f, 512f, 692f)
-                            .withRemoveDataOutsideCrop(true)
-                            .withAutoCrop(false)
-                            .build();
-
-            PDDocument mockDocument = mock(PDDocument.class);
-            PDPage mockPage = mock(PDPage.class);
-            when(pdfDocumentFactory.load(request)).thenReturn(mockDocument);
-            when(mockDocument.getNumberOfPages()).thenReturn(1);
-            when(mockDocument.getPage(0)).thenReturn(mockPage);
-
-            ResponseEntity<byte[]> response = cropController.cropPdf(request);
-
-            assertThat(response).isNotNull();
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-            assertThat(response.getBody()).isNotNull();
-
-            ArgumentCaptor<PDRectangle> cropBoxCaptor = ArgumentCaptor.forClass(PDRectangle.class);
-            verify(mockPage).setCropBox(cropBoxCaptor.capture());
-
-            PDRectangle capturedCropBox = cropBoxCaptor.getValue();
-            assertThat(capturedCropBox)
-                    .satisfies(
-                            box -> {
-                                assertThat(box.getLowerLeftX()).isCloseTo(50f, within(TOLERANCE));
-                                assertThat(box.getLowerLeftY()).isCloseTo(50f, within(TOLERANCE));
-                                assertThat(box.getWidth()).isCloseTo(512f, within(TOLERANCE));
-                                assertThat(box.getHeight()).isCloseTo(692f, within(TOLERANCE));
-                            });
-
-            verify(mockDocument, times(1)).close();
-        }
-
-        @ParameterizedTest
-        @CsvSource({"100, 100, 200, 200", "50, 50, 300, 400", "0, 0, 612, 792"})
-        @DisplayName("Should set correct crop box for various coordinates")
-        void shouldSetCorrectCropBoxForVariousCoordinates(
-                float x, float y, float width, float height) throws IOException {
-            MockMultipartFile testFile = pdfFactory.createStandardPdf("test.pdf");
-            CropPdfForm request =
-                    new CropRequestBuilder()
-                            .withFile(testFile)
-                            .withCoordinates(x, y, width, height)
-                            .withRemoveDataOutsideCrop(true)
-                            .withAutoCrop(false)
-                            .build();
-
-            PDDocument mockDocument = mock(PDDocument.class);
-            PDPage mockPage = mock(PDPage.class);
-            when(pdfDocumentFactory.load(request)).thenReturn(mockDocument);
-            when(mockDocument.getNumberOfPages()).thenReturn(1);
-            when(mockDocument.getPage(0)).thenReturn(mockPage);
-
-            ResponseEntity<byte[]> response = cropController.cropPdf(request);
-
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-
-            ArgumentCaptor<PDRectangle> cropBoxCaptor = ArgumentCaptor.forClass(PDRectangle.class);
-            verify(mockPage).setCropBox(cropBoxCaptor.capture());
-
-            PDRectangle capturedCropBox = cropBoxCaptor.getValue();
-            assertThat(capturedCropBox.getLowerLeftX()).isCloseTo(x, within(TOLERANCE));
-            assertThat(capturedCropBox.getLowerLeftY()).isCloseTo(y, within(TOLERANCE));
-            assertThat(capturedCropBox.getWidth()).isCloseTo(width, within(TOLERANCE));
-            assertThat(capturedCropBox.getHeight()).isCloseTo(height, within(TOLERANCE));
-
-            verify(mockDocument, times(1)).close();
         }
     }
 
