@@ -179,27 +179,75 @@ subprojects {
                 [(type): [covered: covered, missed: missed]]
             }
 
-            def formatCoverage = { String type ->
+            def thresholds = [
+                    LINE       : 0.16,
+                    INSTRUCTION: 0.14,
+                    BRANCH     : 0.19
+            ]
+
+            def types = ["LINE", "INSTRUCTION", "BRANCH"]
+            def headers = ["Metric", "Coverage", "Covered/Total", "Status", "Target"]
+
+            def rows = types.collect { String type ->
                 def data = counters[type]
                 if (!data) {
-                    return "${type}: no data"
+                    return [type, "—", "—", "No data", ""]
                 }
 
                 def total = data.covered + data.missed
                 if (total == 0) {
-                    return "${type}: no executions"
+                    return [type, "—", "0/${total.toBigInteger()}", "No executions", ""]
                 }
 
                 def ratio = data.covered / total * 100
-                return String.format(Locale.ROOT, "%s COVERAGE: %.2f%% (%d/%d)", type,
-                        ratio,
+                def coverageText = String.format(Locale.ROOT, "%.2f%%", ratio)
+                def coveredText = String.format(Locale.ROOT, "%d/%d",
                         data.covered.toBigInteger(),
                         total.toBigInteger())
+
+                def threshold = thresholds[type]
+                def thresholdPercent = threshold != null ? threshold * 100 : null
+                def targetText = thresholdPercent != null ?
+                        String.format(Locale.ROOT, ">= %.2f%%", thresholdPercent) : ""
+                def passed = thresholdPercent != null ? ratio >= thresholdPercent : null
+                def statusText = passed == null ? "" : (passed ? "PASS" : "FAIL")
+
+                return [type, coverageText, coveredText, statusText, targetText]
             }
 
-            logger.lifecycle("\n==== JaCoCo Coverage Summary ====")
-            ["LINE", "INSTRUCTION", "BRANCH"].each { type ->
-                logger.lifecycle(formatCoverage(type))
+            def columnIndexes = (0..<headers.size())
+            def columnWidths = columnIndexes.collect { idx ->
+                Math.max(headers[idx].length(), rows.collect { row ->
+                    row[idx] != null ? row[idx].toString().length() : 0
+                }.max() ?: 0)
+            }
+
+            def formatRow = { List<String> values ->
+                columnIndexes.collect { idx ->
+                    def value = values[idx] ?: ""
+                    value.padRight(columnWidths[idx])
+                }.join(" | ")
+            }
+
+            def separator = columnIndexes.collect { idx ->
+                ''.padRight(columnWidths[idx], '-')
+            }.join("-+-")
+
+            logger.lifecycle("")
+            logger.lifecycle("==== JaCoCo Coverage Summary ====")
+            logger.lifecycle(formatRow(headers))
+            logger.lifecycle(separator)
+            rows.each { row ->
+                logger.lifecycle(formatRow(row))
+            }
+            logger.lifecycle(separator)
+
+            def htmlReport = reports.html.outputLocation.get().asFile
+            logger.lifecycle("Detailed HTML report available at: ${htmlReport}")
+            if (rows.any { it[3] == "FAIL" }) {
+                logger.lifecycle("Some coverage targets were missed. Please review the detailed report above.")
+            } else if (rows.any { it[3] == "PASS" }) {
+                logger.lifecycle("Great job! All tracked coverage metrics meet their targets.")
             }
             logger.lifecycle("=================================\n")
         }
