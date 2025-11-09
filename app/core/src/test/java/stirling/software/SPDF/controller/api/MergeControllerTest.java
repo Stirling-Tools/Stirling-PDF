@@ -57,7 +57,7 @@ class MergeControllerTest {
             throws Exception {
         Method m =
                 MergeController.class.getDeclaredMethod(
-                        "reorderedFilesByProvidedOrder", MultipartFile[].class, String.class);
+                        "reorderFilesByProvidedOrder", MultipartFile[].class, String.class);
         m.setAccessible(true);
         return (MultipartFile[]) m.invoke(null, files, order);
     }
@@ -287,6 +287,17 @@ class MergeControllerTest {
             Comparator<MultipartFile> comp = invokeGetSortComparator(controller, "byPDFTitle");
             assertEquals(0, comp.compare(t, ok));
         }
+
+        @Test
+        void byPDFTitleNullsTreatedEqual() throws Exception {
+            // both titles null → equal
+            MultipartFile n1 = mmf("n1.pdf"), n2 = mmf("n2.pdf");
+            when(pdfDocumentFactory.load(n1)).thenReturn(realDocWithInfo(null, null, null));
+            when(pdfDocumentFactory.load(n2)).thenReturn(realDocWithInfo(null, null, null));
+
+            Comparator<MultipartFile> comp = invokeGetSortComparator(controller, "byPDFTitle");
+            assertEquals(0, comp.compare(n1, n2));
+        }
     }
 
     @Nested
@@ -335,6 +346,28 @@ class MergeControllerTest {
             when(pdfDocumentFactory.load(f)).thenThrow(new IOException("boom"));
             assertEquals(0L, invokeGetPdfDateTimeSafe(controller, f));
         }
+
+        // basic.getCreateDate() != null
+        @Test
+        void usesXmpCreateDateWhenInfoEmpty() throws Exception {
+            MultipartFile f = mmf("xmpcreate.pdf");
+            PDDocument doc = new PDDocument();
+            doc.setDocumentInformation(new PDDocumentInformation());
+            XMPMetadata xmp = XMPMetadata.createXMPMetadata();
+            XMPBasicSchema bs = xmp.createAndAddXMPBasicSchema();
+            Calendar cal = Calendar.getInstance();
+            cal.setTimeInMillis(7_000L);
+            bs.setCreateDate(cal);
+            XmpSerializer ser = new XmpSerializer();
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ser.serialize(xmp, baos, true);
+            PDMetadata meta = new PDMetadata(doc);
+            meta.importXMPMetadata(baos.toByteArray());
+            doc.getDocumentCatalog().setMetadata(meta);
+
+            when(pdfDocumentFactory.load(f)).thenReturn(doc);
+            assertEquals(7_000L, invokeGetPdfDateTimeSafe(controller, f));
+        }
     }
 
     @Nested
@@ -369,6 +402,16 @@ class MergeControllerTest {
             PDOutlineItem first = outline.getFirstChild();
             assertEquals("doc1", first.getTitle());
             assertEquals("doc2", first.getNextSibling().getTitle());
+            merged.close();
+        }
+
+        @Test
+        void addTableOfContentsIOExceptionHandled() throws Exception {
+            PDDocument merged = createSimplePdf(1);
+            MultipartFile badFile = mmf("bad.pdf");
+            when(pdfDocumentFactory.load(badFile)).thenThrow(new IOException("boom"));
+            // should not throw
+            invokeAddTableOfContents(controller, merged, new MultipartFile[] {badFile});
             merged.close();
         }
     }
