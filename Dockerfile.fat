@@ -8,7 +8,7 @@ COPY gradle gradle/
 COPY app/core/build.gradle core/.
 COPY app/common/build.gradle common/.
 COPY app/proprietary/build.gradle proprietary/.
-RUN ./gradlew build -x spotlessApply -x spotlessCheck -x test -x sonarqube || return 0
+RUN ./gradlew build -x spotlessApply -x spotlessCheck -x test -x sonarqube -x jacocoTestReport || return 0
 
 # Set the working directory
 WORKDIR /app
@@ -19,7 +19,7 @@ COPY . .
 # Build the application with DISABLE_ADDITIONAL_FEATURES=false
 RUN DISABLE_ADDITIONAL_FEATURES=false \
     STIRLING_PDF_DESKTOP_UI=false \
-    ./gradlew clean build -x spotlessApply -x spotlessCheck -x test -x sonarqube
+    ./gradlew clean build -x spotlessApply -x spotlessCheck -x test -x sonarqube -x jacocoTestReport
 
 # Main stage
 FROM alpine:3.22.2@sha256:4b7ce07002c69e8f3d704a9c5d6fd3053be500b7f1c69fc0d80990c2ad8dd412

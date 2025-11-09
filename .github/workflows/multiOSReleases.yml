@@ -173,7 +173,7 @@ jobs:
 
       # Build installer
       - name: Build Installer
-        run: ./gradlew build jpackage -x test --info
+        run: ./gradlew build jpackage -x test -x jacocoTestReport --info
         env:
           DISABLE_ADDITIONAL_FEATURES: true
           STIRLING_PDF_DESKTOP_UI: true
