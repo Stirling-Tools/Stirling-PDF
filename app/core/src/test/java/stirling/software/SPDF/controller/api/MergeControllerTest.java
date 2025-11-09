@@ -28,13 +28,6 @@ import org.springframework.web.multipart.MultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.TempFileManager;
 
-/**
- * Full test suite for MergeController – everything compiles and runs.
- *
- * <p>What we fixed: - We now put real PDF bytes into temp files so PDFBox doesn’t choke on empty
- * files. - Unused mocks are marked lenient to avoid UnnecessaryStubbingException. -
- * TempFileManager.deleteTempFile returns boolean, so we stub a value instead of doNothing().
- */
 @ExtendWith(MockitoExtension.class)
 class MergeControllerTest {
 
