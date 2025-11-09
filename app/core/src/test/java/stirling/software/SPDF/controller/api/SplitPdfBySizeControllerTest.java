@@ -151,7 +151,18 @@ class SplitPdfBySizeControllerTest {
         List<Integer> expectedPageCounts =
                 Arrays.stream(expectedPageCountsCsv.split(","))
                         .map(String::trim)
-                        .map(Integer::parseInt)
+                        .map(
+                                s -> {
+                                    try {
+                                        return Integer.parseInt(s);
+                                    } catch (NumberFormatException e) {
+                                        throw new AssertionError(
+                                                "Invalid integer in expectedPageCountsCsv: '"
+                                                        + s
+                                                        + "'",
+                                                e);
+                                    }
+                                })
                         .collect(Collectors.toList());
 
         Assertions.assertEquals(expectedNames, entryNames);
