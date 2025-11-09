@@ -6,132 +6,204 @@ import java.io.File;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
 import org.junit.jupiter.api.Test;
 
 class InstallationPathConfigTest {
-
-    private static final String CLASS_NAME =
-            "stirling.software.common.configuration.InstallationPathConfig";
-
-    private String folder(String first, String... more) {
-        return Paths.get(first, more).toString() + File.separator;
-    }
-
-    private String file(String first, String... more) {
-        return Paths.get(first, more).toString();
-    }
-
     @Test
-    void desktopModeDisabledUsesWorkingDirectory() throws Exception {
-        Map<String, String> overrides = new HashMap<>();
-        overrides.put("STIRLING_PDF_DESKTOP_UI", "false");
+    void whenDesktopModeDisabled_pathsResolveRelativeToCurrentDirectory() throws Exception {
+        Map<String, String> properties = new HashMap<>();
+        properties.put("STIRLING_PDF_DESKTOP_UI", "false");
+        properties.put("STIRLING_PDF_APPDATA", null);
+        properties.put("os.name", "Linux");
+        properties.put("user.home", "/home/tester");
 
-        Map<String, String> paths = loadPaths(overrides);
+        withInstallationPathConfig(
+                properties,
+                clazz -> {
+                    String expectedBase = "." + File.separator;
+                    String expectedConfig = expectedBase + "configs" + File.separator;
+                    String expectedCustomFiles = expectedBase + "customFiles" + File.separator;
+                    String expectedBackupRoot = expectedConfig + "backup" + File.separator;
 
-        String base = folder(".");
-
-        assertEquals(base, paths.get("base"));
-        assertEquals(folder(base, "logs"), paths.get("log"));
-        assertEquals(file(base, "configs", "settings.yml"), paths.get("settings"));
-        assertEquals(folder(base, "customFiles", "signatures"), paths.get("signatures"));
-    }
-
-    @Test
-    void desktopModeEnabledOnLinuxUsesUserConfigDirectory() throws Exception {
-        Map<String, String> overrides = new HashMap<>();
-        overrides.put("STIRLING_PDF_DESKTOP_UI", "true");
-        overrides.put("os.name", "Linux");
-        overrides.put("user.home", "/home/tester");
-
-        Map<String, String> paths = loadPaths(overrides);
-
-        String base = folder("/home/tester", ".config", "Stirling-PDF");
-
-        assertEquals(base, paths.get("base"));
-        assertEquals(folder(base, "configs", "backup", "db"), paths.get("backup"));
-        assertEquals(folder(base, "configs", "backup", "keys"), paths.get("privateKey"));
-        assertEquals(folder(base, "customFiles", "templates"), paths.get("templates"));
-    }
-
-    @Test
-    void desktopModeEnabledOnWindowsUsesAppData() throws Exception {
-        Map<String, String> overrides = new HashMap<>();
-        overrides.put("STIRLING_PDF_DESKTOP_UI", "true");
-        overrides.put("os.name", "Windows 10");
-        // NEU: Kein setEnv() mehr! Jetzt per System-Property
-        overrides.put("STIRLING_PDF_APPDATA", "C:\\Users\\tester\\AppData\\Roaming");
-
-        Map<String, String> paths = loadPaths(overrides);
-
-        String base = folder("C:\\Users\\tester\\AppData\\Roaming", "Stirling-PDF");
-
-        assertEquals(base, paths.get("base"));
-        assertEquals(folder(base, "configs", "backup", "db"), paths.get("backup"));
-        assertEquals(folder(base, "configs", "backup", "keys"), paths.get("privateKey"));
-        assertEquals(folder(base, "customFiles", "templates"), paths.get("templates"));
-    }
-
-    @Test
-    void desktopModeEnabledOnMacUsesApplicationSupport() throws Exception {
-        Map<String, String> overrides = new HashMap<>();
-        overrides.put("STIRLING_PDF_DESKTOP_UI", "true");
-        overrides.put("os.name", "Mac OS X");
-        overrides.put("user.home", "/Users/tester");
-
-        Map<String, String> paths = loadPaths(overrides);
-
-        String base = folder("/Users/tester", "Library", "Application Support", "Stirling-PDF");
-
-        assertEquals(base, paths.get("base"));
-        assertEquals(folder(base, "configs", "backup", "db"), paths.get("backup"));
-        assertEquals(folder(base, "configs", "backup", "keys"), paths.get("privateKey"));
-        assertEquals(folder(base, "customFiles", "templates"), paths.get("templates"));
-    }
-
-    private Map<String, String> loadPaths(Map<String, String> propertyOverrides) throws Exception {
-        Properties originalProperties = new Properties();
-        originalProperties.putAll(System.getProperties());
-
-        propertyOverrides.forEach(
-                (key, value) -> {
-                    if (value == null) {
-                        System.clearProperty(key);
-                    } else {
-                        System.setProperty(key, value);
-                    }
+                    assertEquals(expectedBase, invokeStringMethod(clazz, "getPath"));
+                    assertEquals(
+                            expectedBase + "logs" + File.separator,
+                            invokeStringMethod(clazz, "getLogPath"));
+                    assertEquals(expectedConfig, invokeStringMethod(clazz, "getConfigPath"));
+                    assertEquals(
+                            expectedCustomFiles, invokeStringMethod(clazz, "getCustomFilesPath"));
+                    assertEquals(
+                            expectedBase + "clientWebUI" + File.separator,
+                            invokeStringMethod(clazz, "getClientWebUIPath"));
+                    assertEquals(
+                            expectedBase + "pipeline" + File.separator,
+                            invokeStringMethod(clazz, "getPipelinePath"));
+                    assertEquals(
+                            expectedConfig + "scripts" + File.separator,
+                            invokeStringMethod(clazz, "getScriptsPath"));
+                    assertEquals(
+                            expectedConfig + "settings.yml",
+                            invokeStringMethod(clazz, "getSettingsPath"));
+                    assertEquals(
+                            expectedConfig + "custom_settings.yml",
+                            invokeStringMethod(clazz, "getCustomSettingsPath"));
+                    assertEquals(
+                            expectedCustomFiles + "static" + File.separator,
+                            invokeStringMethod(clazz, "getStaticPath"));
+                    assertEquals(
+                            expectedCustomFiles + "templates" + File.separator,
+                            invokeStringMethod(clazz, "getTemplatesPath"));
+                    assertEquals(
+                            expectedCustomFiles + "signatures" + File.separator,
+                            invokeStringMethod(clazz, "getSignaturesPath"));
+                    assertEquals(
+                            expectedBackupRoot + "keys" + File.separator,
+                            invokeStringMethod(clazz, "getPrivateKeyPath"));
+                    assertEquals(
+                            expectedBackupRoot + "db" + File.separator,
+                            invokeStringMethod(clazz, "getBackupPath"));
+                    return null;
                 });
+    }
 
-        try (URLClassLoader loader = new URLClassLoader(getClassPathUrls(), null)) {
-            Class<?> configClass = Class.forName(CLASS_NAME, true, loader);
-            Map<String, String> results = new HashMap<>();
-            results.put("base", invokePathMethod(configClass, "getPath"));
-            results.put("log", invokePathMethod(configClass, "getLogPath"));
-            results.put("settings", invokePathMethod(configClass, "getSettingsPath"));
-            results.put("signatures", invokePathMethod(configClass, "getSignaturesPath"));
-            results.put("backup", invokePathMethod(configClass, "getBackupPath"));
-            results.put("privateKey", invokePathMethod(configClass, "getPrivateKeyPath"));
-            results.put("templates", invokePathMethod(configClass, "getTemplatesPath"));
-            return results;
+    @Test
+    void whenDesktopWindowsUsesAppDataProperty() throws Exception {
+        Map<String, String> properties = new HashMap<>();
+        properties.put("STIRLING_PDF_DESKTOP_UI", "true");
+        properties.put("STIRLING_PDF_APPDATA", "/data/AppData/Roaming");
+        properties.put("os.name", "Windows 11");
+        properties.put("user.home", "/home/tester");
+
+        withInstallationPathConfig(
+                properties,
+                clazz -> {
+                    String expectedBase =
+                            Paths.get("/data/AppData/Roaming", "Stirling-PDF").toString()
+                                    + File.separator;
+                    assertEquals(expectedBase, invokeStringMethod(clazz, "getPath"));
+                    return null;
+                });
+    }
+
+    @Test
+    void whenDesktopMacUsesLibraryApplicationSupport() throws Exception {
+        Map<String, String> properties = new HashMap<>();
+        properties.put("STIRLING_PDF_DESKTOP_UI", "true");
+        properties.put("STIRLING_PDF_APPDATA", null);
+        properties.put("os.name", "Mac OS X");
+        properties.put("user.home", "/Users/tester");
+
+        withInstallationPathConfig(
+                properties,
+                clazz -> {
+                    String expectedBase =
+                            Paths.get(
+                                                    "/Users/tester",
+                                                    "Library",
+                                                    "Application Support",
+                                                    "Stirling-PDF")
+                                            .toString()
+                                    + File.separator;
+                    assertEquals(expectedBase, invokeStringMethod(clazz, "getPath"));
+                    return null;
+                });
+    }
+
+    @Test
+    void whenDesktopLinuxUsesConfigDirectory() throws Exception {
+        Map<String, String> properties = new HashMap<>();
+        properties.put("STIRLING_PDF_DESKTOP_UI", "true");
+        properties.put("STIRLING_PDF_APPDATA", null);
+        properties.put("os.name", "Linux");
+        properties.put("user.home", "/home/linux-user");
+
+        withInstallationPathConfig(
+                properties,
+                clazz -> {
+                    String expectedBase =
+                            Paths.get("/home/linux-user", ".config", "Stirling-PDF").toString()
+                                    + File.separator;
+                    assertEquals(expectedBase, invokeStringMethod(clazz, "getPath"));
+                    return null;
+                });
+    }
+
+    @Test
+    void whenDesktopWindowsMissingAppDataFallsBackToCurrentDirectory() throws Exception {
+        Map<String, String> properties = new HashMap<>();
+        properties.put("STIRLING_PDF_DESKTOP_UI", "true");
+        properties.put("STIRLING_PDF_APPDATA", "");
+        properties.put("os.name", "Windows 10");
+        properties.put("user.home", "/home/tester");
+
+        withInstallationPathConfig(
+                properties,
+                clazz -> {
+                    String expectedBase = "." + File.separator;
+                    assertEquals(expectedBase, invokeStringMethod(clazz, "getPath"));
+                    return null;
+                });
+    }
+
+    private <T> T withInstallationPathConfig(
+            Map<String, String> properties, ClassCallback<T> callback) throws Exception {
+        Map<String, String> originalValues = new HashMap<>();
+        for (String key : properties.keySet()) {
+            originalValues.put(key, System.getProperty(key));
+        }
+        try {
+            for (Map.Entry<String, String> entry : properties.entrySet()) {
+                if (entry.getValue() == null) {
+                    System.clearProperty(entry.getKey());
+                } else {
+                    System.setProperty(entry.getKey(), entry.getValue());
+                }
+            }
+
+            URL[] urls = buildClassPathUrls();
+            try (URLClassLoader isolatedLoader = new URLClassLoader(urls, null)) {
+                Class<?> clazz =
+                        Class.forName(
+                                "stirling.software.common.configuration.InstallationPathConfig",
+                                true,
+                                isolatedLoader);
+                return callback.apply(clazz);
+            }
         } finally {
-            System.setProperties(originalProperties);
+            for (Map.Entry<String, String> entry : originalValues.entrySet()) {
+                if (entry.getValue() == null) {
+                    System.clearProperty(entry.getKey());
+                } else {
+                    System.setProperty(entry.getKey(), entry.getValue());
+                }
+            }
         }
     }
 
-    private String invokePathMethod(Class<?> configClass, String methodName) throws Exception {
-        return (String) configClass.getMethod(methodName).invoke(null);
-    }
-
-    private URL[] getClassPathUrls() throws Exception {
+    private static URL[] buildClassPathUrls() throws Exception {
         String classPath = System.getProperty("java.class.path", "");
         String[] entries = classPath.split(File.pathSeparator);
-        URL[] urls = new URL[entries.length];
-        for (int i = 0; i < entries.length; i++) {
-            urls[i] = Paths.get(entries[i]).toUri().toURL();
+        List<URL> urls = new ArrayList<>();
+        for (String entry : entries) {
+            if (entry == null || entry.isEmpty()) {
+                continue;
+            }
+            urls.add(new File(entry).toURI().toURL());
         }
-        return urls;
+        return urls.toArray(new URL[0]);
+    }
+
+    private static String invokeStringMethod(Class<?> clazz, String methodName) throws Exception {
+        return (String) clazz.getMethod(methodName).invoke(null);
+    }
+
+    @FunctionalInterface
+    private interface ClassCallback<T> {
+        T apply(Class<?> clazz) throws Exception;
     }
 }
