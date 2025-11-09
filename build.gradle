@@ -14,6 +14,7 @@ plugins {
 }
 
 import com.github.jk1.license.render.*
+import org.gradle.api.tasks.testing.Test
 import org.gradle.internal.os.OperatingSystem
 import org.panteleyev.jpackage.ImageType
 
@@ -71,6 +72,10 @@ allprojects {
     configurations.configureEach {
         exclude group: 'commons-logging', module: 'commons-logging'
         exclude group: "org.springframework.boot", module: "spring-boot-starter-tomcat"
+        // Exclude vulnerable BouncyCastle version used in tableau
+        exclude group: 'org.bouncycastle', module: 'bcpkix-jdk15on'
+        exclude group: 'org.bouncycastle', module: 'bcutil-jdk15on'
+        exclude group: 'org.bouncycastle', module: 'bcmail-jdk15on'
     }
 }
 
@@ -108,15 +113,6 @@ subprojects {
         mavenCentral()
     }
 
-    configurations.configureEach {
-        exclude group: 'commons-logging', module: 'commons-logging'
-        exclude group: 'org.springframework.boot', module: 'spring-boot-starter-tomcat'
-        // Exclude vulnerable BouncyCastle version used in tableau
-        exclude group: 'org.bouncycastle', module: 'bcpkix-jdk15on'
-        exclude group: 'org.bouncycastle', module: 'bcutil-jdk15on'
-        exclude group: 'org.bouncycastle', module: 'bcmail-jdk15on'
-    }
-
     dependencyManagement {
         imports {
             mavenBom "org.springframework.boot:spring-boot-dependencies:$springBootVersion"
@@ -146,17 +142,19 @@ subprojects {
         dependsOn "spotlessApply"
     }
 
-    compileJava {
-        options.compilerArgs << "-parameters"
+    tasks.named("compileJava", JavaCompile).configure {
+        options.compilerArgs.add("-parameters")
     }
 
-    test {
+    def jacocoReport = tasks.named("jacocoTestReport")
+
+    tasks.withType(Test).configureEach {
         useJUnitPlatform()
-        finalizedBy jacocoTestReport
+        finalizedBy(jacocoReport)
     }
 
-    jacocoTestReport {
-        dependsOn test
+    jacocoReport.configure {
+        dependsOn(tasks.named("test"))
         reports {
             xml.required.set(true)
             csv.required.set(false)
@@ -254,11 +252,11 @@ subprojects {
     }
 
     tasks.named("build") {
-        dependsOn jacocoTestReport
+        dependsOn jacocoReport
     }
 
     jacocoTestCoverageVerification {
-        dependsOn jacocoTestReport
+        dependsOn jacocoReport
         violationRules {
             rule {
                 enabled = true
