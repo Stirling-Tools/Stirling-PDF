@@ -322,6 +322,9 @@ public class CropController {
     private record CropBounds(float x, float y, float width, float height) {
 
         static CropBounds fromPixels(int[] pixelBounds, float scaleX, float scaleY) {
+            if (pixelBounds.length != 4) {
+                throw new IllegalArgumentException("pixelBounds array must contain exactly 4 elements: [x1, y1, x2, y2]");
+            }
             float x = pixelBounds[0] * scaleX;
             float y = pixelBounds[1] * scaleY;
             float width = (pixelBounds[2] - pixelBounds[0]) * scaleX;
