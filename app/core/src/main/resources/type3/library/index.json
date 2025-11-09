@@ -4,10 +4,7 @@
     "label": "DejaVu Sans",
     "aliases": [
       "DejaVuSans",
-      "BMQQDV+DejaVuSans",
-      "DejaVuSansDisplay",
-      "dejavusans",
-      "dejavusansdisplay"
+      "dejavusans"
     ],
     "program": {
       "resource": "type3/library/fonts/dejavu/DejaVuSans.ttf",
@@ -173,7 +170,6 @@
     "label": "DejaVu Sans Bold",
     "aliases": [
       "DejaVuSans-Bold",
-      "EVICAO+DejaVuSans-Bold",
       "dejavusans-bold"
     ],
     "program": {
@@ -250,6 +246,297 @@
     ]
   },
   {
+    "id": "dejavu-sans-boldoblique",
+    "label": "DejaVu Sans Bold Oblique",
+    "aliases": [
+      "DejaVuSans-BoldOblique",
+      "dejavusans-boldoblique"
+    ],
+    "program": {
+      "resource": "type3/library/fonts/dejavu/DejaVuSans-BoldOblique.ttf",
+      "format": "ttf"
+    },
+    "webProgram": {
+      "resource": "type3/library/fonts/dejavu/DejaVuSans-BoldOblique.ttf",
+      "format": "ttf"
+    },
+    "pdfProgram": {
+      "resource": "type3/library/fonts/dejavu/DejaVuSans-BoldOblique.ttf",
+      "format": "ttf"
+    },
+    "source": "DejaVu Fonts 2.37",
+    "signatures": [],
+    "glyphCoverage": []
+  },
+  {
+    "id": "dejavu-sans-condensed",
+    "label": "DejaVu Sans Condensed",
+    "aliases": [
+      "DejaVuSansCondensed",
+      "dejavusanscondensed"
+    ],
+    "program": {
+      "resource": "type3/library/fonts/dejavu/DejaVuSansCondensed.ttf",
+      "format": "ttf"
+    },
+    "webProgram": {
+      "resource": "type3/library/fonts/dejavu/DejaVuSansCondensed.ttf",
+      "format": "ttf"
+    },
+    "pdfProgram": {
+      "resource": "type3/library/fonts/dejavu/DejaVuSansCondensed.ttf",
+      "format": "ttf"
+    },
+    "source": "DejaVu Fonts 2.37",
+    "signatures": [],
+    "glyphCoverage": []
+  },
+  {
+    "id": "dejavu-sans-condensed-bold",
+    "label": "DejaVu Sans Condensed Bold",
+    "aliases": [
+      "DejaVuSansCondensed-Bold"
+    ],
+    "program": {
+      "resource": "type3/library/fonts/dejavu/DejaVuSansCondensed-Bold.ttf",
+      "format": "ttf"
+    },
+    "webProgram": {
+      "resource": "type3/library/fonts/dejavu/DejaVuSansCondensed-Bold.ttf",
+      "format": "ttf"
+    },
+    "pdfProgram": {
+      "resource": "type3/library/fonts/dejavu/DejaVuSansCondensed-Bold.ttf",
+      "format": "ttf"
+    },
+    "source": "DejaVu Fonts 2.37",
+    "signatures": [],
+    "glyphCoverage": []
+  },
+  {
+    "id": "dejavu-sans-condensed-oblique",
+    "label": "DejaVu Sans Condensed Oblique",
+    "aliases": [
+      "DejaVuSansCondensed-Oblique"
+    ],
+    "program": {
+      "resource": "type3/library/fonts/dejavu/DejaVuSansCondensed-Oblique.ttf",
+      "format": "ttf"
+    },
+    "webProgram": {
+      "resource": "type3/library/fonts/dejavu/DejaVuSansCondensed-Oblique.ttf",
+      "format": "ttf"
+    },
+    "pdfProgram": {
+      "resource": "type3/library/fonts/dejavu/DejaVuSansCondensed-Oblique.ttf",
+      "format": "ttf"
+    },
+    "source": "DejaVu Fonts 2.37",
+    "signatures": [],
+    "glyphCoverage": []
+  },
+  {
+    "id": "dejavu-sans-condensed-boldoblique",
+    "label": "DejaVu Sans Condensed Bold Oblique",
+    "aliases": [
+      "DejaVuSansCondensed-BoldOblique"
+    ],
+    "program": {
+      "resource": "type3/library/fonts/dejavu/DejaVuSansCondensed-BoldOblique.ttf",
+      "format": "ttf"
+    },
+    "webProgram": {
+      "resource": "type3/library/fonts/dejavu/DejaVuSansCondensed-BoldOblique.ttf",
+      "format": "ttf"
+    },
+    "pdfProgram": {
+      "resource": "type3/library/fonts/dejavu/DejaVuSansCondensed-BoldOblique.ttf",
+      "format": "ttf"
+    },
+    "source": "DejaVu Fonts 2.37",
+    "signatures": [],
+    "glyphCoverage": []
+  },
+  {
+    "id": "dejavu-serif-regular",
+    "label": "DejaVu Serif",
+    "aliases": [
+      "DejaVuSerif",
+      "dejavuserif"
+    ],
+    "program": {
+      "resource": "type3/library/fonts/dejavu/DejaVuSerif.ttf",
+      "format": "ttf"
+    },
+    "webProgram": {
+      "resource": "type3/library/fonts/dejavu/DejaVuSerif.ttf",
+      "format": "ttf"
+    },
+    "pdfProgram": {
+      "resource": "type3/library/fonts/dejavu/DejaVuSerif.ttf",
+      "format": "ttf"
+    },
+    "source": "DejaVu Fonts 2.37",
+    "signatures": [],
+    "glyphCoverage": []
+  },
+  {
+    "id": "dejavu-serif-bold",
+    "label": "DejaVu Serif Bold",
+    "aliases": [
+      "DejaVuSerif-Bold",
+      "dejavuserif-bold"
+    ],
+    "program": {
+      "resource": "type3/library/fonts/dejavu/DejaVuSerif-Bold.ttf",
+      "format": "ttf"
+    },
+    "webProgram": {
+      "resource": "type3/library/fonts/dejavu/DejaVuSerif-Bold.ttf",
+      "format": "ttf"
+    },
+    "pdfProgram": {
+      "resource": "type3/library/fonts/dejavu/DejaVuSerif-Bold.ttf",
+      "format": "ttf"
+    },
+    "source": "DejaVu Fonts 2.37",
+    "signatures": [],
+    "glyphCoverage": []
+  },
+  {
+    "id": "dejavu-serif-italic",
+    "label": "DejaVu Serif Italic",
+    "aliases": [
+      "DejaVuSerif-Italic",
+      "dejavuserif-italic"
+    ],
+    "program": {
+      "resource": "type3/library/fonts/dejavu/DejaVuSerif-Italic.ttf",
+      "format": "ttf"
+    },
+    "webProgram": {
+      "resource": "type3/library/fonts/dejavu/DejaVuSerif-Italic.ttf",
+      "format": "ttf"
+    },
+    "pdfProgram": {
+      "resource": "type3/library/fonts/dejavu/DejaVuSerif-Italic.ttf",
+      "format": "ttf"
+    },
+    "source": "DejaVu Fonts 2.37",
+    "signatures": [],
+    "glyphCoverage": []
+  },
+  {
+    "id": "dejavu-serif-bolditalic",
+    "label": "DejaVu Serif Bold Italic",
+    "aliases": [
+      "DejaVuSerif-BoldItalic"
+    ],
+    "program": {
+      "resource": "type3/library/fonts/dejavu/DejaVuSerif-BoldItalic.ttf",
+      "format": "ttf"
+    },
+    "webProgram": {
+      "resource": "type3/library/fonts/dejavu/DejaVuSerif-BoldItalic.ttf",
+      "format": "ttf"
+    },
+    "pdfProgram": {
+      "resource": "type3/library/fonts/dejavu/DejaVuSerif-BoldItalic.ttf",
+      "format": "ttf"
+    },
+    "source": "DejaVu Fonts 2.37",
+    "signatures": [],
+    "glyphCoverage": []
+  },
+  {
+    "id": "dejavu-serif-condensed",
+    "label": "DejaVu Serif Condensed",
+    "aliases": [
+      "DejaVuSerifCondensed"
+    ],
+    "program": {
+      "resource": "type3/library/fonts/dejavu/DejaVuSerifCondensed.ttf",
+      "format": "ttf"
+    },
+    "webProgram": {
+      "resource": "type3/library/fonts/dejavu/DejaVuSerifCondensed.ttf",
+      "format": "ttf"
+    },
+    "pdfProgram": {
+      "resource": "type3/library/fonts/dejavu/DejaVuSerifCondensed.ttf",
+      "format": "ttf"
+    },
+    "source": "DejaVu Fonts 2.37",
+    "signatures": [],
+    "glyphCoverage": []
+  },
+  {
+    "id": "dejavu-serif-condensed-bold",
+    "label": "DejaVu Serif Condensed Bold",
+    "aliases": [
+      "DejaVuSerifCondensed-Bold"
+    ],
+    "program": {
+      "resource": "type3/library/fonts/dejavu/DejaVuSerifCondensed-Bold.ttf",
+      "format": "ttf"
+    },
+    "webProgram": {
+      "resource": "type3/library/fonts/dejavu/DejaVuSerifCondensed-Bold.ttf",
+      "format": "ttf"
+    },
+    "pdfProgram": {
+      "resource": "type3/library/fonts/dejavu/DejaVuSerifCondensed-Bold.ttf",
+      "format": "ttf"
+    },
+    "source": "DejaVu Fonts 2.37",
+    "signatures": [],
+    "glyphCoverage": []
+  },
+  {
+    "id": "dejavu-serif-condensed-italic",
+    "label": "DejaVu Serif Condensed Italic",
+    "aliases": [
+      "DejaVuSerifCondensed-Italic"
+    ],
+    "program": {
+      "resource": "type3/library/fonts/dejavu/DejaVuSerifCondensed-Italic.ttf",
+      "format": "ttf"
+    },
+    "webProgram": {
+      "resource": "type3/library/fonts/dejavu/DejaVuSerifCondensed-Italic.ttf",
+      "format": "ttf"
+    },
+    "pdfProgram": {
+      "resource": "type3/library/fonts/dejavu/DejaVuSerifCondensed-Italic.ttf",
+      "format": "ttf"
+    },
+    "source": "DejaVu Fonts 2.37",
+    "signatures": [],
+    "glyphCoverage": []
+  },
+  {
+    "id": "dejavu-serif-condensed-bolditalic",
+    "label": "DejaVu Serif Condensed Bold Italic",
+    "aliases": [
+      "DejaVuSerifCondensed-BoldItalic"
+    ],
+    "program": {
+      "resource": "type3/library/fonts/dejavu/DejaVuSerifCondensed-BoldItalic.ttf",
+      "format": "ttf"
+    },
+    "webProgram": {
+      "resource": "type3/library/fonts/dejavu/DejaVuSerifCondensed-BoldItalic.ttf",
+      "format": "ttf"
+    },
+    "pdfProgram": {
+      "resource": "type3/library/fonts/dejavu/DejaVuSerifCondensed-BoldItalic.ttf",
+      "format": "ttf"
+    },
+    "source": "DejaVu Fonts 2.37",
+    "signatures": [],
+    "glyphCoverage": []
+  },
+  {
     "id": "dejavu-sans-mono",
     "label": "DejaVu Sans Mono",
     "aliases": [
@@ -306,14 +593,347 @@
     ]
   },
   {
+    "id": "dejavu-sans-mono-bold",
+    "label": "DejaVu Sans Mono Bold",
+    "aliases": [
+      "DejaVuSansMono-Bold"
+    ],
+    "program": {
+      "resource": "type3/library/fonts/dejavu/DejaVuSansMono-Bold.ttf",
+      "format": "ttf"
+    },
+    "webProgram": {
+      "resource": "type3/library/fonts/dejavu/DejaVuSansMono-Bold.ttf",
+      "format": "ttf"
+    },
+    "pdfProgram": {
+      "resource": "type3/library/fonts/dejavu/DejaVuSansMono-Bold.ttf",
+      "format": "ttf"
+    },
+    "source": "DejaVu Fonts 2.37",
+    "signatures": [],
+    "glyphCoverage": []
+  },
+  {
+    "id": "dejavu-sans-mono-oblique",
+    "label": "DejaVu Sans Mono Oblique",
+    "aliases": [
+      "DejaVuSansMono-Oblique"
+    ],
+    "program": {
+      "resource": "type3/library/fonts/dejavu/DejaVuSansMono-Oblique.ttf",
+      "format": "ttf"
+    },
+    "webProgram": {
+      "resource": "type3/library/fonts/dejavu/DejaVuSansMono-Oblique.ttf",
+      "format": "ttf"
+    },
+    "pdfProgram": {
+      "resource": "type3/library/fonts/dejavu/DejaVuSansMono-Oblique.ttf",
+      "format": "ttf"
+    },
+    "source": "DejaVu Fonts 2.37",
+    "signatures": [],
+    "glyphCoverage": []
+  },
+  {
+    "id": "dejavu-sans-mono-boldoblique",
+    "label": "DejaVu Sans Mono Bold Oblique",
+    "aliases": [
+      "DejaVuSansMono-BoldOblique"
+    ],
+    "program": {
+      "resource": "type3/library/fonts/dejavu/DejaVuSansMono-BoldOblique.ttf",
+      "format": "ttf"
+    },
+    "webProgram": {
+      "resource": "type3/library/fonts/dejavu/DejaVuSansMono-BoldOblique.ttf",
+      "format": "ttf"
+    },
+    "pdfProgram": {
+      "resource": "type3/library/fonts/dejavu/DejaVuSansMono-BoldOblique.ttf",
+      "format": "ttf"
+    },
+    "source": "DejaVu Fonts 2.37",
+    "signatures": [],
+    "glyphCoverage": []
+  },
+  {
+    "id": "liberation-sans-regular",
+    "label": "Liberation Sans",
+    "aliases": [
+      "LiberationSans",
+      "liberationsans"
+    ],
+    "program": {
+      "resource": "type3/library/fonts/liberation/LiberationSans-Regular.ttf",
+      "format": "ttf"
+    },
+    "webProgram": {
+      "resource": "type3/library/fonts/liberation/LiberationSans-Regular.ttf",
+      "format": "ttf"
+    },
+    "pdfProgram": {
+      "resource": "type3/library/fonts/liberation/LiberationSans-Regular.ttf",
+      "format": "ttf"
+    },
+    "source": "Liberation Fonts 2.1.5",
+    "signatures": [],
+    "glyphCoverage": []
+  },
+  {
+    "id": "liberation-sans-bold",
+    "label": "Liberation Sans Bold",
+    "aliases": [
+      "LiberationSans-Bold",
+      "liberationsans-bold"
+    ],
+    "program": {
+      "resource": "type3/library/fonts/liberation/LiberationSans-Bold.ttf",
+      "format": "ttf"
+    },
+    "webProgram": {
+      "resource": "type3/library/fonts/liberation/LiberationSans-Bold.ttf",
+      "format": "ttf"
+    },
+    "pdfProgram": {
+      "resource": "type3/library/fonts/liberation/LiberationSans-Bold.ttf",
+      "format": "ttf"
+    },
+    "source": "Liberation Fonts 2.1.5",
+    "signatures": [],
+    "glyphCoverage": []
+  },
+  {
+    "id": "liberation-sans-italic",
+    "label": "Liberation Sans Italic",
+    "aliases": [
+      "LiberationSans-Italic"
+    ],
+    "program": {
+      "resource": "type3/library/fonts/liberation/LiberationSans-Italic.ttf",
+      "format": "ttf"
+    },
+    "webProgram": {
+      "resource": "type3/library/fonts/liberation/LiberationSans-Italic.ttf",
+      "format": "ttf"
+    },
+    "pdfProgram": {
+      "resource": "type3/library/fonts/liberation/LiberationSans-Italic.ttf",
+      "format": "ttf"
+    },
+    "source": "Liberation Fonts 2.1.5",
+    "signatures": [],
+    "glyphCoverage": []
+  },
+  {
+    "id": "liberation-sans-bolditalic",
+    "label": "Liberation Sans Bold Italic",
+    "aliases": [
+      "LiberationSans-BoldItalic"
+    ],
+    "program": {
+      "resource": "type3/library/fonts/liberation/LiberationSans-BoldItalic.ttf",
+      "format": "ttf"
+    },
+    "webProgram": {
+      "resource": "type3/library/fonts/liberation/LiberationSans-BoldItalic.ttf",
+      "format": "ttf"
+    },
+    "pdfProgram": {
+      "resource": "type3/library/fonts/liberation/LiberationSans-BoldItalic.ttf",
+      "format": "ttf"
+    },
+    "source": "Liberation Fonts 2.1.5",
+    "signatures": [],
+    "glyphCoverage": []
+  },
+  {
+    "id": "liberation-serif-regular",
+    "label": "Liberation Serif",
+    "aliases": [
+      "LiberationSerif",
+      "liberationserif"
+    ],
+    "program": {
+      "resource": "type3/library/fonts/liberation/LiberationSerif-Regular.ttf",
+      "format": "ttf"
+    },
+    "webProgram": {
+      "resource": "type3/library/fonts/liberation/LiberationSerif-Regular.ttf",
+      "format": "ttf"
+    },
+    "pdfProgram": {
+      "resource": "type3/library/fonts/liberation/LiberationSerif-Regular.ttf",
+      "format": "ttf"
+    },
+    "source": "Liberation Fonts 2.1.5",
+    "signatures": [],
+    "glyphCoverage": []
+  },
+  {
+    "id": "liberation-serif-bold",
+    "label": "Liberation Serif Bold",
+    "aliases": [
+      "LiberationSerif-Bold",
+      "liberationserif-bold"
+    ],
+    "program": {
+      "resource": "type3/library/fonts/liberation/LiberationSerif-Bold.ttf",
+      "format": "ttf"
+    },
+    "webProgram": {
+      "resource": "type3/library/fonts/liberation/LiberationSerif-Bold.ttf",
+      "format": "ttf"
+    },
+    "pdfProgram": {
+      "resource": "type3/library/fonts/liberation/LiberationSerif-Bold.ttf",
+      "format": "ttf"
+    },
+    "source": "Liberation Fonts 2.1.5",
+    "signatures": [],
+    "glyphCoverage": []
+  },
+  {
+    "id": "liberation-serif-italic",
+    "label": "Liberation Serif Italic",
+    "aliases": [
+      "LiberationSerif-Italic"
+    ],
+    "program": {
+      "resource": "type3/library/fonts/liberation/LiberationSerif-Italic.ttf",
+      "format": "ttf"
+    },
+    "webProgram": {
+      "resource": "type3/library/fonts/liberation/LiberationSerif-Italic.ttf",
+      "format": "ttf"
+    },
+    "pdfProgram": {
+      "resource": "type3/library/fonts/liberation/LiberationSerif-Italic.ttf",
+      "format": "ttf"
+    },
+    "source": "Liberation Fonts 2.1.5",
+    "signatures": [],
+    "glyphCoverage": []
+  },
+  {
+    "id": "liberation-serif-bolditalic",
+    "label": "Liberation Serif Bold Italic",
+    "aliases": [
+      "LiberationSerif-BoldItalic"
+    ],
+    "program": {
+      "resource": "type3/library/fonts/liberation/LiberationSerif-BoldItalic.ttf",
+      "format": "ttf"
+    },
+    "webProgram": {
+      "resource": "type3/library/fonts/liberation/LiberationSerif-BoldItalic.ttf",
+      "format": "ttf"
+    },
+    "pdfProgram": {
+      "resource": "type3/library/fonts/liberation/LiberationSerif-BoldItalic.ttf",
+      "format": "ttf"
+    },
+    "source": "Liberation Fonts 2.1.5",
+    "signatures": [],
+    "glyphCoverage": []
+  },
+  {
+    "id": "liberation-mono-regular",
+    "label": "Liberation Mono",
+    "aliases": [
+      "LiberationMono",
+      "liberationmono"
+    ],
+    "program": {
+      "resource": "type3/library/fonts/liberation/LiberationMono-Regular.ttf",
+      "format": "ttf"
+    },
+    "webProgram": {
+      "resource": "type3/library/fonts/liberation/LiberationMono-Regular.ttf",
+      "format": "ttf"
+    },
+    "pdfProgram": {
+      "resource": "type3/library/fonts/liberation/LiberationMono-Regular.ttf",
+      "format": "ttf"
+    },
+    "source": "Liberation Fonts 2.1.5",
+    "signatures": [],
+    "glyphCoverage": []
+  },
+  {
+    "id": "liberation-mono-bold",
+    "label": "Liberation Mono Bold",
+    "aliases": [
+      "LiberationMono-Bold",
+      "liberationmono-bold"
+    ],
+    "program": {
+      "resource": "type3/library/fonts/liberation/LiberationMono-Bold.ttf",
+      "format": "ttf"
+    },
+    "webProgram": {
+      "resource": "type3/library/fonts/liberation/LiberationMono-Bold.ttf",
+      "format": "ttf"
+    },
+    "pdfProgram": {
+      "resource": "type3/library/fonts/liberation/LiberationMono-Bold.ttf",
+      "format": "ttf"
+    },
+    "source": "Liberation Fonts 2.1.5",
+    "signatures": [],
+    "glyphCoverage": []
+  },
+  {
+    "id": "liberation-mono-italic",
+    "label": "Liberation Mono Italic",
+    "aliases": [
+      "LiberationMono-Italic"
+    ],
+    "program": {
+      "resource": "type3/library/fonts/liberation/LiberationMono-Italic.ttf",
+      "format": "ttf"
+    },
+    "webProgram": {
+      "resource": "type3/library/fonts/liberation/LiberationMono-Italic.ttf",
+      "format": "ttf"
+    },
+    "pdfProgram": {
+      "resource": "type3/library/fonts/liberation/LiberationMono-Italic.ttf",
+      "format": "ttf"
+    },
+    "source": "Liberation Fonts 2.1.5",
+    "signatures": [],
+    "glyphCoverage": []
+  },
+  {
+    "id": "liberation-mono-bolditalic",
+    "label": "Liberation Mono Bold Italic",
+    "aliases": [
+      "LiberationMono-BoldItalic"
+    ],
+    "program": {
+      "resource": "type3/library/fonts/liberation/LiberationMono-BoldItalic.ttf",
+      "format": "ttf"
+    },
+    "webProgram": {
+      "resource": "type3/library/fonts/liberation/LiberationMono-BoldItalic.ttf",
+      "format": "ttf"
+    },
+    "pdfProgram": {
+      "resource": "type3/library/fonts/liberation/LiberationMono-BoldItalic.ttf",
+      "format": "ttf"
+    },
+    "source": "Liberation Fonts 2.1.5",
+    "signatures": [],
+    "glyphCoverage": []
+  },
+  {
     "id": "cmr10",
     "label": "Computer Modern Roman 10pt",
     "aliases": [
       "cmr10",
       "Cmr10"
-    ],
-    "signatures": [
-      "sha256:5b535a05c982fb8ff029dfbedd5e9d28c1c4379ebac259d207f65606a94e5b15"
     ],
     "program": {
       "resource": "type3/library/fonts/cm/cmr10.ttf",
@@ -327,12 +947,15 @@
       "resource": "type3/library/fonts/cm/cmr10.ttf",
       "format": "ttf"
     },
+    "source": "Computer Modern (LaTeX)",
+    "signatures": [
+      "sha256:5b535a05c982fb8ff029dfbedd5e9d28c1c4379ebac259d207f65606a94e5b15"
+    ],
     "glyphCoverage": [
       48,
       49,
       53
-    ],
-    "source": "type3/samples/01_Matplotlib.pdf"
+    ]
   },
   {
     "id": "cmmi10",
@@ -341,9 +964,6 @@
       "cmmi10",
       "Cmmi10"
     ],
-    "signatures": [
-      "sha256:6c72170517812e39f970746f53a2ae08dafbbe7374c20bcb4d5a60adc49cb77b"
-    ],
     "program": {
       "resource": "type3/library/fonts/cm/cmmi10.ttf",
       "format": "ttf"
@@ -356,11 +976,14 @@
       "resource": "type3/library/fonts/cm/cmmi10.ttf",
       "format": "ttf"
     },
+    "source": "Computer Modern (LaTeX)",
+    "signatures": [
+      "sha256:6c72170517812e39f970746f53a2ae08dafbbe7374c20bcb4d5a60adc49cb77b"
+    ],
     "glyphCoverage": [
       100,
       120
-    ],
-    "source": "type3/samples/01_Matplotlib.pdf"
+    ]
   },
   {
     "id": "cmsy10",
@@ -369,10 +992,6 @@
       "cmsy10",
       "Cmsy10"
     ],
-    "signatures": [
-      "sha256:1324cd8127143ef9023616b7911c570db3b1eb35758cdc9258ec16c0f4587775",
-      "sha256:2832e219b2db3bacf0d5a147d4b74ad5226fdf7562c395ef3fb12937633e037d"
-    ],
     "program": {
       "resource": "type3/library/fonts/cm/cmsy10.ttf",
       "format": "ttf"
@@ -385,21 +1004,91 @@
       "resource": "type3/library/fonts/cm/cmsy10.ttf",
       "format": "ttf"
     },
+    "source": "Computer Modern (LaTeX)",
+    "signatures": [
+      "sha256:1324cd8127143ef9023616b7911c570db3b1eb35758cdc9258ec16c0f4587775",
+      "sha256:2832e219b2db3bacf0d5a147d4b74ad5226fdf7562c395ef3fb12937633e037d"
+    ],
     "glyphCoverage": [
       48,
       8734
+    ]
+  },
+  {
+    "id": "cmbx10",
+    "label": "Computer Modern Bold Extended 10pt",
+    "aliases": [
+      "cmbx10",
+      "Cmbx10"
     ],
-    "source": "type3/samples/01_Matplotlib.pdf"
+    "program": {
+      "resource": "type3/library/fonts/cm/cmbx10.ttf",
+      "format": "ttf"
+    },
+    "webProgram": {
+      "resource": "type3/library/fonts/cm/cmbx10.ttf",
+      "format": "ttf"
+    },
+    "pdfProgram": {
+      "resource": "type3/library/fonts/cm/cmbx10.ttf",
+      "format": "ttf"
+    },
+    "source": "Computer Modern (LaTeX)",
+    "signatures": [],
+    "glyphCoverage": []
+  },
+  {
+    "id": "cmti10",
+    "label": "Computer Modern Text Italic 10pt",
+    "aliases": [
+      "cmti10",
+      "Cmti10"
+    ],
+    "program": {
+      "resource": "type3/library/fonts/cm/cmti10.ttf",
+      "format": "ttf"
+    },
+    "webProgram": {
+      "resource": "type3/library/fonts/cm/cmti10.ttf",
+      "format": "ttf"
+    },
+    "pdfProgram": {
+      "resource": "type3/library/fonts/cm/cmti10.ttf",
+      "format": "ttf"
+    },
+    "source": "Computer Modern (LaTeX)",
+    "signatures": [],
+    "glyphCoverage": []
+  },
+  {
+    "id": "cmtt10",
+    "label": "Computer Modern Typewriter 10pt",
+    "aliases": [
+      "cmtt10",
+      "Cmtt10"
+    ],
+    "program": {
+      "resource": "type3/library/fonts/cm/cmtt10.ttf",
+      "format": "ttf"
+    },
+    "webProgram": {
+      "resource": "type3/library/fonts/cm/cmtt10.ttf",
+      "format": "ttf"
+    },
+    "pdfProgram": {
+      "resource": "type3/library/fonts/cm/cmtt10.ttf",
+      "format": "ttf"
+    },
+    "source": "Computer Modern (LaTeX)",
+    "signatures": [],
+    "glyphCoverage": []
   },
   {
     "id": "stix-size-three",
     "label": "STIX Size Three Symbols",
     "aliases": [
-      "stixsizethreesym-regular",
-      "STIXSizeThreeSym-Regular"
-    ],
-    "signatures": [
-      "sha256:33d0ab9d9d72c1aed1edfc9b815dd6a2d618cbbe9084309c7f2de0f3df3073d7"
+      "STIXSizeThreeSym-Regular",
+      "stixsizethreesym-regular"
     ],
     "program": {
       "resource": "type3/library/fonts/stix/STIXSizeThreeSym-Regular.otf",
@@ -413,23 +1102,511 @@
       "resource": "type3/library/fonts/stix/STIXSizeThreeSym-Regular.otf",
       "format": "otf"
     },
+    "source": "STIX Fonts 2.0",
+    "signatures": [
+      "sha256:33d0ab9d9d72c1aed1edfc9b815dd6a2d618cbbe9084309c7f2de0f3df3073d7"
+    ],
     "glyphCoverage": [
       91,
       93
+    ]
+  },
+  {
+    "id": "stix-two-text-regular",
+    "label": "STIX Two Text",
+    "aliases": [
+      "STIXTwoText-Regular",
+      "stixtwotext"
     ],
-    "source": "type3/samples/01_Matplotlib.pdf"
+    "program": {
+      "resource": "type3/library/fonts/stix/STIXTwoText-Regular.otf",
+      "format": "otf"
+    },
+    "webProgram": {
+      "resource": "type3/library/fonts/stix/STIXTwoText-Regular.otf",
+      "format": "otf"
+    },
+    "pdfProgram": {
+      "resource": "type3/library/fonts/stix/STIXTwoText-Regular.otf",
+      "format": "otf"
+    },
+    "source": "STIX Fonts 2.0",
+    "signatures": [],
+    "glyphCoverage": []
+  },
+  {
+    "id": "stix-two-text-bold",
+    "label": "STIX Two Text Bold",
+    "aliases": [
+      "STIXTwoText-Bold",
+      "stixtwotext-bold"
+    ],
+    "program": {
+      "resource": "type3/library/fonts/stix/STIXTwoText-Bold.otf",
+      "format": "otf"
+    },
+    "webProgram": {
+      "resource": "type3/library/fonts/stix/STIXTwoText-Bold.otf",
+      "format": "otf"
+    },
+    "pdfProgram": {
+      "resource": "type3/library/fonts/stix/STIXTwoText-Bold.otf",
+      "format": "otf"
+    },
+    "source": "STIX Fonts 2.0",
+    "signatures": [],
+    "glyphCoverage": []
+  },
+  {
+    "id": "stix-two-text-italic",
+    "label": "STIX Two Text Italic",
+    "aliases": [
+      "STIXTwoText-Italic"
+    ],
+    "program": {
+      "resource": "type3/library/fonts/stix/STIXTwoText-Italic.otf",
+      "format": "otf"
+    },
+    "webProgram": {
+      "resource": "type3/library/fonts/stix/STIXTwoText-Italic.otf",
+      "format": "otf"
+    },
+    "pdfProgram": {
+      "resource": "type3/library/fonts/stix/STIXTwoText-Italic.otf",
+      "format": "otf"
+    },
+    "source": "STIX Fonts 2.0",
+    "signatures": [],
+    "glyphCoverage": []
+  },
+  {
+    "id": "stix-two-math",
+    "label": "STIX Two Math",
+    "aliases": [
+      "STIXTwoMath-Regular",
+      "stixtwomath"
+    ],
+    "program": {
+      "resource": "type3/library/fonts/stix/STIXTwoMath-Regular.otf",
+      "format": "otf"
+    },
+    "webProgram": {
+      "resource": "type3/library/fonts/stix/STIXTwoMath-Regular.otf",
+      "format": "otf"
+    },
+    "pdfProgram": {
+      "resource": "type3/library/fonts/stix/STIXTwoMath-Regular.otf",
+      "format": "otf"
+    },
+    "source": "STIX Fonts 2.0",
+    "signatures": [],
+    "glyphCoverage": []
+  },
+  {
+    "id": "noto-sans-thin",
+    "label": "Noto Sans Thin",
+    "aliases": [
+      "NotoSans-Thin"
+    ],
+    "program": {
+      "resource": "type3/library/fonts/noto/NotoSans-Thin.ttf",
+      "format": "ttf"
+    },
+    "webProgram": {
+      "resource": "type3/library/fonts/noto/NotoSans-Thin.ttf",
+      "format": "ttf"
+    },
+    "pdfProgram": {
+      "resource": "type3/library/fonts/noto/NotoSans-Thin.ttf",
+      "format": "ttf"
+    },
+    "source": "Noto Sans (Google Fonts)",
+    "signatures": [],
+    "glyphCoverage": []
+  },
+  {
+    "id": "noto-sans-extralight",
+    "label": "Noto Sans ExtraLight",
+    "aliases": [
+      "NotoSans-ExtraLight"
+    ],
+    "program": {
+      "resource": "type3/library/fonts/noto/NotoSans-ExtraLight.ttf",
+      "format": "ttf"
+    },
+    "webProgram": {
+      "resource": "type3/library/fonts/noto/NotoSans-ExtraLight.ttf",
+      "format": "ttf"
+    },
+    "pdfProgram": {
+      "resource": "type3/library/fonts/noto/NotoSans-ExtraLight.ttf",
+      "format": "ttf"
+    },
+    "source": "Noto Sans (Google Fonts)",
+    "signatures": [],
+    "glyphCoverage": []
+  },
+  {
+    "id": "noto-sans-light",
+    "label": "Noto Sans Light",
+    "aliases": [
+      "NotoSans-Light"
+    ],
+    "program": {
+      "resource": "type3/library/fonts/noto/NotoSans-Light.ttf",
+      "format": "ttf"
+    },
+    "webProgram": {
+      "resource": "type3/library/fonts/noto/NotoSans-Light.ttf",
+      "format": "ttf"
+    },
+    "pdfProgram": {
+      "resource": "type3/library/fonts/noto/NotoSans-Light.ttf",
+      "format": "ttf"
+    },
+    "source": "Noto Sans (Google Fonts)",
+    "signatures": [],
+    "glyphCoverage": []
+  },
+  {
+    "id": "noto-sans-regular",
+    "label": "Noto Sans",
+    "aliases": [
+      "NotoSans",
+      "NotoSans-Regular",
+      "notosans"
+    ],
+    "program": {
+      "resource": "type3/library/fonts/noto/NotoSans-Regular.ttf",
+      "format": "ttf"
+    },
+    "webProgram": {
+      "resource": "type3/library/fonts/noto/NotoSans-Regular.ttf",
+      "format": "ttf"
+    },
+    "pdfProgram": {
+      "resource": "type3/library/fonts/noto/NotoSans-Regular.ttf",
+      "format": "ttf"
+    },
+    "source": "Noto Sans (Google Fonts)",
+    "signatures": [],
+    "glyphCoverage": []
+  },
+  {
+    "id": "noto-sans-medium",
+    "label": "Noto Sans Medium",
+    "aliases": [
+      "NotoSans-Medium"
+    ],
+    "program": {
+      "resource": "type3/library/fonts/noto/NotoSans-Medium.ttf",
+      "format": "ttf"
+    },
+    "webProgram": {
+      "resource": "type3/library/fonts/noto/NotoSans-Medium.ttf",
+      "format": "ttf"
+    },
+    "pdfProgram": {
+      "resource": "type3/library/fonts/noto/NotoSans-Medium.ttf",
+      "format": "ttf"
+    },
+    "source": "Noto Sans (Google Fonts)",
+    "signatures": [],
+    "glyphCoverage": []
+  },
+  {
+    "id": "noto-sans-semibold",
+    "label": "Noto Sans SemiBold",
+    "aliases": [
+      "NotoSans-SemiBold"
+    ],
+    "program": {
+      "resource": "type3/library/fonts/noto/NotoSans-SemiBold.ttf",
+      "format": "ttf"
+    },
+    "webProgram": {
+      "resource": "type3/library/fonts/noto/NotoSans-SemiBold.ttf",
+      "format": "ttf"
+    },
+    "pdfProgram": {
+      "resource": "type3/library/fonts/noto/NotoSans-SemiBold.ttf",
+      "format": "ttf"
+    },
+    "source": "Noto Sans (Google Fonts)",
+    "signatures": [],
+    "glyphCoverage": []
+  },
+  {
+    "id": "noto-sans-bold",
+    "label": "Noto Sans Bold",
+    "aliases": [
+      "NotoSans-Bold",
+      "notosans-bold"
+    ],
+    "program": {
+      "resource": "type3/library/fonts/noto/NotoSans-Bold.ttf",
+      "format": "ttf"
+    },
+    "webProgram": {
+      "resource": "type3/library/fonts/noto/NotoSans-Bold.ttf",
+      "format": "ttf"
+    },
+    "pdfProgram": {
+      "resource": "type3/library/fonts/noto/NotoSans-Bold.ttf",
+      "format": "ttf"
+    },
+    "source": "Noto Sans (Google Fonts)",
+    "signatures": [],
+    "glyphCoverage": []
+  },
+  {
+    "id": "noto-sans-extrabold",
+    "label": "Noto Sans ExtraBold",
+    "aliases": [
+      "NotoSans-ExtraBold"
+    ],
+    "program": {
+      "resource": "type3/library/fonts/noto/NotoSans-ExtraBold.ttf",
+      "format": "ttf"
+    },
+    "webProgram": {
+      "resource": "type3/library/fonts/noto/NotoSans-ExtraBold.ttf",
+      "format": "ttf"
+    },
+    "pdfProgram": {
+      "resource": "type3/library/fonts/noto/NotoSans-ExtraBold.ttf",
+      "format": "ttf"
+    },
+    "source": "Noto Sans (Google Fonts)",
+    "signatures": [],
+    "glyphCoverage": []
+  },
+  {
+    "id": "noto-sans-black",
+    "label": "Noto Sans Black",
+    "aliases": [
+      "NotoSans-Black"
+    ],
+    "program": {
+      "resource": "type3/library/fonts/noto/NotoSans-Black.ttf",
+      "format": "ttf"
+    },
+    "webProgram": {
+      "resource": "type3/library/fonts/noto/NotoSans-Black.ttf",
+      "format": "ttf"
+    },
+    "pdfProgram": {
+      "resource": "type3/library/fonts/noto/NotoSans-Black.ttf",
+      "format": "ttf"
+    },
+    "source": "Noto Sans (Google Fonts)",
+    "signatures": [],
+    "glyphCoverage": []
+  },
+  {
+    "id": "noto-sans-thin-italic",
+    "label": "Noto Sans Thin Italic",
+    "aliases": [
+      "NotoSans-ThinItalic"
+    ],
+    "program": {
+      "resource": "type3/library/fonts/noto/NotoSans-ThinItalic.ttf",
+      "format": "ttf"
+    },
+    "webProgram": {
+      "resource": "type3/library/fonts/noto/NotoSans-ThinItalic.ttf",
+      "format": "ttf"
+    },
+    "pdfProgram": {
+      "resource": "type3/library/fonts/noto/NotoSans-ThinItalic.ttf",
+      "format": "ttf"
+    },
+    "source": "Noto Sans (Google Fonts)",
+    "signatures": [],
+    "glyphCoverage": []
+  },
+  {
+    "id": "noto-sans-extralight-italic",
+    "label": "Noto Sans ExtraLight Italic",
+    "aliases": [
+      "NotoSans-ExtraLightItalic"
+    ],
+    "program": {
+      "resource": "type3/library/fonts/noto/NotoSans-ExtraLightItalic.ttf",
+      "format": "ttf"
+    },
+    "webProgram": {
+      "resource": "type3/library/fonts/noto/NotoSans-ExtraLightItalic.ttf",
+      "format": "ttf"
+    },
+    "pdfProgram": {
+      "resource": "type3/library/fonts/noto/NotoSans-ExtraLightItalic.ttf",
+      "format": "ttf"
+    },
+    "source": "Noto Sans (Google Fonts)",
+    "signatures": [],
+    "glyphCoverage": []
+  },
+  {
+    "id": "noto-sans-light-italic",
+    "label": "Noto Sans Light Italic",
+    "aliases": [
+      "NotoSans-LightItalic"
+    ],
+    "program": {
+      "resource": "type3/library/fonts/noto/NotoSans-LightItalic.ttf",
+      "format": "ttf"
+    },
+    "webProgram": {
+      "resource": "type3/library/fonts/noto/NotoSans-LightItalic.ttf",
+      "format": "ttf"
+    },
+    "pdfProgram": {
+      "resource": "type3/library/fonts/noto/NotoSans-LightItalic.ttf",
+      "format": "ttf"
+    },
+    "source": "Noto Sans (Google Fonts)",
+    "signatures": [],
+    "glyphCoverage": []
+  },
+  {
+    "id": "noto-sans-italic",
+    "label": "Noto Sans Italic",
+    "aliases": [
+      "NotoSans-Italic"
+    ],
+    "program": {
+      "resource": "type3/library/fonts/noto/NotoSans-Italic.ttf",
+      "format": "ttf"
+    },
+    "webProgram": {
+      "resource": "type3/library/fonts/noto/NotoSans-Italic.ttf",
+      "format": "ttf"
+    },
+    "pdfProgram": {
+      "resource": "type3/library/fonts/noto/NotoSans-Italic.ttf",
+      "format": "ttf"
+    },
+    "source": "Noto Sans (Google Fonts)",
+    "signatures": [],
+    "glyphCoverage": []
+  },
+  {
+    "id": "noto-sans-medium-italic",
+    "label": "Noto Sans Medium Italic",
+    "aliases": [
+      "NotoSans-MediumItalic"
+    ],
+    "program": {
+      "resource": "type3/library/fonts/noto/NotoSans-MediumItalic.ttf",
+      "format": "ttf"
+    },
+    "webProgram": {
+      "resource": "type3/library/fonts/noto/NotoSans-MediumItalic.ttf",
+      "format": "ttf"
+    },
+    "pdfProgram": {
+      "resource": "type3/library/fonts/noto/NotoSans-MediumItalic.ttf",
+      "format": "ttf"
+    },
+    "source": "Noto Sans (Google Fonts)",
+    "signatures": [],
+    "glyphCoverage": []
+  },
+  {
+    "id": "noto-sans-semibold-italic",
+    "label": "Noto Sans SemiBold Italic",
+    "aliases": [
+      "NotoSans-SemiBoldItalic"
+    ],
+    "program": {
+      "resource": "type3/library/fonts/noto/NotoSans-SemiBoldItalic.ttf",
+      "format": "ttf"
+    },
+    "webProgram": {
+      "resource": "type3/library/fonts/noto/NotoSans-SemiBoldItalic.ttf",
+      "format": "ttf"
+    },
+    "pdfProgram": {
+      "resource": "type3/library/fonts/noto/NotoSans-SemiBoldItalic.ttf",
+      "format": "ttf"
+    },
+    "source": "Noto Sans (Google Fonts)",
+    "signatures": [],
+    "glyphCoverage": []
+  },
+  {
+    "id": "noto-sans-bold-italic",
+    "label": "Noto Sans Bold Italic",
+    "aliases": [
+      "NotoSans-BoldItalic"
+    ],
+    "program": {
+      "resource": "type3/library/fonts/noto/NotoSans-BoldItalic.ttf",
+      "format": "ttf"
+    },
+    "webProgram": {
+      "resource": "type3/library/fonts/noto/NotoSans-BoldItalic.ttf",
+      "format": "ttf"
+    },
+    "pdfProgram": {
+      "resource": "type3/library/fonts/noto/NotoSans-BoldItalic.ttf",
+      "format": "ttf"
+    },
+    "source": "Noto Sans (Google Fonts)",
+    "signatures": [],
+    "glyphCoverage": []
+  },
+  {
+    "id": "noto-sans-extrabold-italic",
+    "label": "Noto Sans ExtraBold Italic",
+    "aliases": [
+      "NotoSans-ExtraBoldItalic"
+    ],
+    "program": {
+      "resource": "type3/library/fonts/noto/NotoSans-ExtraBoldItalic.ttf",
+      "format": "ttf"
+    },
+    "webProgram": {
+      "resource": "type3/library/fonts/noto/NotoSans-ExtraBoldItalic.ttf",
+      "format": "ttf"
+    },
+    "pdfProgram": {
+      "resource": "type3/library/fonts/noto/NotoSans-ExtraBoldItalic.ttf",
+      "format": "ttf"
+    },
+    "source": "Noto Sans (Google Fonts)",
+    "signatures": [],
+    "glyphCoverage": []
+  },
+  {
+    "id": "noto-sans-black-italic",
+    "label": "Noto Sans Black Italic",
+    "aliases": [
+      "NotoSans-BlackItalic"
+    ],
+    "program": {
+      "resource": "type3/library/fonts/noto/NotoSans-BlackItalic.ttf",
+      "format": "ttf"
+    },
+    "webProgram": {
+      "resource": "type3/library/fonts/noto/NotoSans-BlackItalic.ttf",
+      "format": "ttf"
+    },
+    "pdfProgram": {
+      "resource": "type3/library/fonts/noto/NotoSans-BlackItalic.ttf",
+      "format": "ttf"
+    },
+    "source": "Noto Sans (Google Fonts)",
+    "signatures": [],
+    "glyphCoverage": []
   },
   {
     "id": "sourcecodepro-regular",
     "label": "Source Code Pro",
     "aliases": [
       "SourceCodePro-Regular",
-      "sourcecodepro-regular",
-      "NVMZUP+SourceCodePro-Regular"
-    ],
-    "signatures": [
-      "sha256:96ba693001b2ab224ad5b5a7464cecd4d33e68f30fb23f78a8473dbb031ce246",
-      "sha256:72fca14e9e44fc41b0cdb1c6a088f0b07f882f9f04c51a0145f43cf8b285c5b6"
+      "sourcecodepro-regular"
     ],
     "program": {
       "resource": "type3/library/fonts/scp/SauceCodeProNerdFont-Regular.ttf",
@@ -443,6 +1620,11 @@
       "resource": "type3/library/fonts/scp/SauceCodeProNerdFont-Regular.ttf",
       "format": "ttf"
     },
+    "source": "Sauce Code Pro Nerd Font",
+    "signatures": [
+      "sha256:96ba693001b2ab224ad5b5a7464cecd4d33e68f30fb23f78a8473dbb031ce246",
+      "sha256:72fca14e9e44fc41b0cdb1c6a088f0b07f882f9f04c51a0145f43cf8b285c5b6"
+    ],
     "glyphCoverage": [
       46,
       48,
@@ -456,7 +1638,6 @@
       56,
       57,
       67
-    ],
-    "source": "type3/samples/04_handout-intermediate.pdf"
+    ]
   }
 ]
