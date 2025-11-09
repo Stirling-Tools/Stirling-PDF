@@ -53,10 +53,18 @@ public class CropController {
         int width = image.getWidth();
         int height = image.getHeight();
 
+        // Early exit if image is too small
+        if (width < 1 || height < 1) {
+            return new int[] {0, 0, width - 1, height - 1};
+        }
+
+        // Sample every nth pixel for large images to reduce processing time
+        int step = (width > 2000 || height > 2000) ? 2 : 1;
+
         int top = 0;
         boolean found = false;
-        for (int y = 0; y < height && !found; y++) {
-            for (int x = 0; x < width; x++) {
+        for (int y = 0; y < height && !found; y += step) {
+            for (int x = 0; x < width; x += step) {
                 if (!isWhite(image.getRGB(x, y), WHITE_THRESHOLD)) {
                     top = y;
                     found = true;
@@ -67,8 +75,8 @@ public class CropController {
 
         int bottom = height - 1;
         found = false;
-        for (int y = height - 1; y >= 0 && !found; y--) {
-            for (int x = 0; x < width; x++) {
+        for (int y = height - 1; y >= 0 && !found; y -= step) {
+            for (int x = 0; x < width; x += step) {
                 if (!isWhite(image.getRGB(x, y), WHITE_THRESHOLD)) {
                     bottom = y;
                     found = true;
@@ -79,8 +87,8 @@ public class CropController {
 
         int left = 0;
         found = false;
-        for (int x = 0; x < width && !found; x++) {
-            for (int y = top; y <= bottom; y++) {
+        for (int x = 0; x < width && !found; x += step) {
+            for (int y = top; y <= bottom; y += step) {
                 if (!isWhite(image.getRGB(x, y), WHITE_THRESHOLD)) {
                     left = x;
                     found = true;
@@ -91,8 +99,8 @@ public class CropController {
 
         int right = width - 1;
         found = false;
-        for (int x = width - 1; x >= 0 && !found; x--) {
-            for (int y = top; y <= bottom; y++) {
+        for (int x = width - 1; x >= 0 && !found; x -= step) {
+            for (int y = top; y <= bottom; y += step) {
                 if (!isWhite(image.getRGB(x, y), WHITE_THRESHOLD)) {
                     right = x;
                     found = true;
@@ -141,109 +149,116 @@ public class CropController {
 
     private ResponseEntity<byte[]> cropWithAutomaticDetection(@ModelAttribute CropPdfForm request)
             throws IOException {
-        try (PDDocument sourceDocument = pdfDocumentFactory.load(request);
-                PDDocument newDocument =
-                        pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDocument)) {
+        try (PDDocument sourceDocument = pdfDocumentFactory.load(request)) {
 
-            PDFRenderer renderer = new PDFRenderer(sourceDocument);
-            LayerUtility layerUtility = new LayerUtility(newDocument);
+            try (PDDocument newDocument =
+                    pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDocument)) {
+                PDFRenderer renderer = new PDFRenderer(sourceDocument);
+                LayerUtility layerUtility = new LayerUtility(newDocument);
 
-            for (int i = 0; i < sourceDocument.getNumberOfPages(); i++) {
-                PDPage sourcePage = sourceDocument.getPage(i);
-                PDRectangle mediaBox = sourcePage.getMediaBox();
+                for (int i = 0; i < sourceDocument.getNumberOfPages(); i++) {
+                    PDPage sourcePage = sourceDocument.getPage(i);
+                    PDRectangle mediaBox = sourcePage.getMediaBox();
 
-                BufferedImage image = renderer.renderImageWithDPI(i, DEFAULT_RENDER_DPI);
-                int[] bounds = detectContentBounds(image);
+                    BufferedImage image = renderer.renderImageWithDPI(i, DEFAULT_RENDER_DPI);
+                    int[] bounds = detectContentBounds(image);
 
-                float scaleX = mediaBox.getWidth() / image.getWidth();
-                float scaleY = mediaBox.getHeight() / image.getHeight();
+                    float scaleX = mediaBox.getWidth() / image.getWidth();
+                    float scaleY = mediaBox.getHeight() / image.getHeight();
 
-                CropBounds cropBounds = CropBounds.fromPixels(bounds, scaleX, scaleY);
+                    CropBounds cropBounds = CropBounds.fromPixels(bounds, scaleX, scaleY);
 
-                PDPage newPage = new PDPage(mediaBox);
-                newDocument.addPage(newPage);
-                try (PDPageContentStream contentStream =
-                        new PDPageContentStream(
-                                newDocument, newPage, AppendMode.OVERWRITE, true, true)) {
-                    PDFormXObject formXObject = layerUtility.importPageAsForm(sourceDocument, i);
-                    contentStream.saveGraphicsState();
-                    contentStream.addRect(
-                            cropBounds.x, cropBounds.y, cropBounds.width, cropBounds.height);
-                    contentStream.clip();
-                    contentStream.drawForm(formXObject);
-                    contentStream.restoreGraphicsState();
+                    PDPage newPage = new PDPage(mediaBox);
+                    newDocument.addPage(newPage);
+                    try (PDPageContentStream contentStream =
+                            new PDPageContentStream(
+                                    newDocument, newPage, AppendMode.OVERWRITE, true, true)) {
+                        PDFormXObject formXObject =
+                                layerUtility.importPageAsForm(sourceDocument, i);
+                        contentStream.saveGraphicsState();
+                        contentStream.addRect(
+                                cropBounds.x, cropBounds.y, cropBounds.width, cropBounds.height);
+                        contentStream.clip();
+                        contentStream.drawForm(formXObject);
+                        contentStream.restoreGraphicsState();
+                    }
+
+                    newPage.setMediaBox(
+                            new PDRectangle(
+                                    cropBounds.x,
+                                    cropBounds.y,
+                                    cropBounds.width,
+                                    cropBounds.height));
                 }
 
-                newPage.setMediaBox(
-                        new PDRectangle(
-                                cropBounds.x, cropBounds.y, cropBounds.width, cropBounds.height));
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                newDocument.save(baos);
+                byte[] pdfContent = baos.toByteArray();
+
+                return WebResponseUtils.bytesToWebResponse(
+                        pdfContent,
+                        GeneralUtils.generateFilename(
+                                request.getFileInput().getOriginalFilename(), "_cropped.pdf"));
             }
-
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            newDocument.save(baos);
-
-            byte[] pdfContent = baos.toByteArray();
-            return WebResponseUtils.bytesToWebResponse(
-                    pdfContent,
-                    GeneralUtils.generateFilename(
-                            request.getFileInput().getOriginalFilename(), "_cropped.pdf"));
         }
     }
 
     private ResponseEntity<byte[]> cropWithPDFBox(@ModelAttribute CropPdfForm request)
             throws IOException {
-        try (PDDocument sourceDocument = pdfDocumentFactory.load(request);
-                PDDocument newDocument =
-                        pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDocument)) {
+        try (PDDocument sourceDocument = pdfDocumentFactory.load(request)) {
 
-            int totalPages = sourceDocument.getNumberOfPages();
-            LayerUtility layerUtility = new LayerUtility(newDocument);
+            try (PDDocument newDocument =
+                    pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDocument)) {
+                int totalPages = sourceDocument.getNumberOfPages();
+                LayerUtility layerUtility = new LayerUtility(newDocument);
 
-            for (int i = 0; i < totalPages; i++) {
-                PDPage sourcePage = sourceDocument.getPage(i);
+                for (int i = 0; i < totalPages; i++) {
+                    PDPage sourcePage = sourceDocument.getPage(i);
 
-                // Create a new page with the size of the source page
-                PDPage newPage = new PDPage(sourcePage.getMediaBox());
-                newDocument.addPage(newPage);
-                try (PDPageContentStream contentStream =
-                        new PDPageContentStream(
-                                newDocument, newPage, AppendMode.OVERWRITE, true, true)) {
-                    // Import the source page as a form XObject
-                    PDFormXObject formXObject = layerUtility.importPageAsForm(sourceDocument, i);
+                    // Create a new page with the size of the source page
+                    PDPage newPage = new PDPage(sourcePage.getMediaBox());
+                    newDocument.addPage(newPage);
+                    try (PDPageContentStream contentStream =
+                            new PDPageContentStream(
+                                    newDocument, newPage, AppendMode.OVERWRITE, true, true)) {
+                        // Import the source page as a form XObject
+                        PDFormXObject formXObject =
+                                layerUtility.importPageAsForm(sourceDocument, i);
 
-                    contentStream.saveGraphicsState();
+                        contentStream.saveGraphicsState();
 
-                    // Define the crop area
-                    contentStream.addRect(
-                            request.getX(),
-                            request.getY(),
-                            request.getWidth(),
-                            request.getHeight());
-                    contentStream.clip();
-
-                    // Draw the entire formXObject
-                    contentStream.drawForm(formXObject);
-
-                    contentStream.restoreGraphicsState();
-                }
-
-                // Now, set the new page's media box to the cropped size
-                newPage.setMediaBox(
-                        new PDRectangle(
+                        // Define the crop area
+                        contentStream.addRect(
                                 request.getX(),
                                 request.getY(),
                                 request.getWidth(),
-                                request.getHeight()));
+                                request.getHeight());
+                        contentStream.clip();
+
+                        // Draw the entire formXObject
+                        contentStream.drawForm(formXObject);
+
+                        contentStream.restoreGraphicsState();
+                    }
+
+                    // Now, set the new page's media box to the cropped size
+                    newPage.setMediaBox(
+                            new PDRectangle(
+                                    request.getX(),
+                                    request.getY(),
+                                    request.getWidth(),
+                                    request.getHeight()));
+                }
+
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                newDocument.save(baos);
+
+                byte[] pdfContent = baos.toByteArray();
+                return WebResponseUtils.bytesToWebResponse(
+                        pdfContent,
+                        GeneralUtils.generateFilename(
+                                request.getFileInput().getOriginalFilename(), "_cropped.pdf"));
             }
-
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            newDocument.save(baos);
-
-            byte[] pdfContent = baos.toByteArray();
-            return WebResponseUtils.bytesToWebResponse(
-                    pdfContent,
-                    GeneralUtils.generateFilename(
-                            request.getFileInput().getOriginalFilename(), "_cropped.pdf"));
         }
     }
 
@@ -304,18 +319,7 @@ public class CropController {
         }
     }
 
-    private static class CropBounds {
-        final float x;
-        final float y;
-        final float width;
-        final float height;
-
-        private CropBounds(float x, float y, float width, float height) {
-            this.x = x;
-            this.y = y;
-            this.width = width;
-            this.height = height;
-        }
+    private record CropBounds(float x, float y, float width, float height) {
 
         static CropBounds fromPixels(int[] pixelBounds, float scaleX, float scaleY) {
             float x = pixelBounds[0] * scaleX;

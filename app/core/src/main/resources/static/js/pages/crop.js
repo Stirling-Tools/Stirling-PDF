@@ -75,7 +75,7 @@ fileInput.addEventListener('file-input-change', async (e) => {
   const {allFiles} = e.detail;
   if (allFiles && allFiles.length > 0) {
     canvasesContainer.style.display = 'block'; // set for visual purposes
-    
+
     // Wait for the layout to be updated before rendering
     setTimeout(() => {
       let file = allFiles[0];
