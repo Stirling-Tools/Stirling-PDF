@@ -19,6 +19,8 @@ import org.panteleyev.jpackage.ImageType
 
 import java.nio.file.Files
 import java.time.Year
+import java.util.Locale
+import groovy.xml.XmlSlurper
 
 ext {
     springBootVersion = "3.5.7"
@@ -160,12 +162,55 @@ subprojects {
             csv.required.set(false)
             html.required.set(true)
         }
+        doLast {
+            def xmlReport = reports.xml.outputLocation.get().asFile
+            if (!xmlReport.exists()) {
+                logger.lifecycle("Jacoco coverage report not found at ${xmlReport}")
+                return
+            }
+
+            def xmlContent = xmlReport.getText("UTF-8")
+            xmlContent = xmlContent.replaceFirst('(?s)<!DOCTYPE.*?>', '')
+            def report = new XmlSlurper(false, false).parseText(xmlContent)
+            def counters = report.counter.collectEntries { counter ->
+                def type = counter.@type.text()
+                def covered = counter.@covered.text() as BigDecimal
+                def missed = counter.@missed.text() as BigDecimal
+                [(type): [covered: covered, missed: missed]]
+            }
+
+            def formatCoverage = { String type ->
+                def data = counters[type]
+                if (!data) {
+                    return "${type}: no data"
+                }
+
+                def total = data.covered + data.missed
+                if (total == 0) {
+                    return "${type}: no executions"
+                }
+
+                def ratio = data.covered / total * 100
+                return String.format(Locale.ROOT, "%s COVERAGE: %.2f%% (%d/%d)", type,
+                        ratio,
+                        data.covered.toBigInteger(),
+                        total.toBigInteger())
+            }
+
+            logger.lifecycle("\n==== JaCoCo Coverage Summary ====")
+            ["LINE", "INSTRUCTION", "BRANCH"].each { type ->
+                logger.lifecycle(formatCoverage(type))
+            }
+            logger.lifecycle("=================================\n")
+        }
     }
 
     jacocoTestCoverageVerification {
         dependsOn jacocoTestReport
         violationRules {
             rule {
+                enabled = true
+                element = 'BUNDLE'
                 // Bytecode-Anweisungen abgedeckt
                 limit {
                     counter = 'INSTRUCTION'
