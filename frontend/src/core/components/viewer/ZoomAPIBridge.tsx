@@ -15,13 +15,13 @@ import { getFirstPageAspectRatioFromStub } from '@app/utils/pageMetadata';
 
 export function ZoomAPIBridge() {
   const { provides: zoom, state: zoomState } = useZoom();
-  const { state: spreadState } = useSpread();
+  const { spreadMode } = useSpread();
   const { registerBridge, triggerImmediateZoomUpdate } = useViewer();
   const { selectors } = useFileState();
 
   const hasSetInitialZoom = useRef(false);
-  const lastSpreadMode = useRef(spreadState?.spreadMode);
-  const lastFileId = useRef<string | undefined>();
+  const lastSpreadMode = useRef(spreadMode ?? SpreadMode.None);
+  const lastFileId = useRef<string | undefined>(undefined);
   const lastAppliedZoom = useRef<number | null>(null);
   const [autoZoomTick, setAutoZoomTick] = useState(0);
 
@@ -56,7 +56,7 @@ export function ZoomAPIBridge() {
   }, [firstFileId, scheduleAutoZoom]);
 
   useEffect(() => {
-    const currentSpreadMode = spreadState?.spreadMode ?? SpreadMode.None;
+    const currentSpreadMode = spreadMode ?? SpreadMode.None;
     if (currentSpreadMode !== lastSpreadMode.current) {
       lastSpreadMode.current = currentSpreadMode;
 
@@ -71,12 +71,7 @@ export function ZoomAPIBridge() {
         scheduleAutoZoom();
       }
     }
-  }, [
-    spreadState?.spreadMode,
-    zoomState?.zoomLevel,
-    scheduleAutoZoom,
-    requestFitWidth,
-  ]);
+  }, [spreadMode, zoomState?.zoomLevel, scheduleAutoZoom, requestFitWidth]);
 
   const getViewportSnapshot = useCallback((): ZoomViewport | null => {
     if (!zoomState || typeof zoomState !== 'object') {
@@ -138,8 +133,8 @@ export function ZoomAPIBridge() {
     let cancelled = false;
 
     const applyAutoZoom = async () => {
-      const spreadMode = spreadState?.spreadMode ?? SpreadMode.None;
-      const pagesPerSpread = spreadMode !== SpreadMode.None ? 2 : 1;
+      const currentSpreadMode = spreadMode ?? SpreadMode.None;
+      const pagesPerSpread = currentSpreadMode !== SpreadMode.None ? 2 : 1;
       const metadataAspectRatio = getFirstPageAspectRatioFromStub(firstFileStub);
 
       const viewport = getViewportSnapshot();
@@ -204,7 +199,7 @@ export function ZoomAPIBridge() {
     requestFitWidth,
     getViewportSnapshot,
     autoZoomTick,
-    spreadState?.spreadMode,
+    spreadMode,
     triggerImmediateZoomUpdate,
   ]);
 
@@ -249,6 +244,3 @@ export function ZoomAPIBridge() {
 
   return null;
 }
-
-
-

@@ -152,7 +152,7 @@ export function registerBridge<K extends BridgeKey>(
   type: K,
   ref: BridgeRef<BridgeStateMap[K], BridgeApiMap[K]>
 ): void {
-  registry[type] = ref;
+  registry[type] = ref as ViewerBridgeRegistry[K];
 }
 
 export function getBridgeState<K extends BridgeKey>(

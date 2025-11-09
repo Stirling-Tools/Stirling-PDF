@@ -111,7 +111,10 @@ interface ViewerContextType {
   exportActions: ExportActions;
 
   // Bridge registration - internal use by bridges  
-  registerBridge: (type: BridgeKey, ref: BridgeRef) => void;
+  registerBridge: <K extends BridgeKey>(
+    type: K,
+    ref: BridgeRef<BridgeStateMap[K], BridgeApiMap[K]>
+  ) => void;
 }
 
 export const ViewerContext = createContext<ViewerContextType | null>(null);
