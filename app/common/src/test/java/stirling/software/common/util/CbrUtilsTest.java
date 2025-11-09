@@ -1,81 +1,88 @@
 package stirling.software.common.util;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.web.multipart.MultipartFile;
-
-import stirling.software.common.service.CustomPDFDocumentFactory;
 
 class CbrUtilsTest {
 
-    private CustomPDFDocumentFactory pdfDocumentFactory;
-    private TempFileManager tempFileManager;
-
-    @BeforeEach
-    void setUp() {
-        pdfDocumentFactory = Mockito.mock(CustomPDFDocumentFactory.class);
-        tempFileManager = Mockito.mock(TempFileManager.class);
-    }
-
     @Test
-    void convertCbrToPdf_nullFile_throwsIllegalArgumentException() {
-        IllegalArgumentException exception =
-                assertThrows(
-                        IllegalArgumentException.class,
-                        () -> CbrUtils.convertCbrToPdf(null, pdfDocumentFactory, tempFileManager));
-
-        assertEquals("File cannot be null or empty", exception.getMessage());
-    }
-
-    @Test
-    void convertCbrToPdf_emptyFile_throwsIllegalArgumentException() {
-        MockMultipartFile emptyFile =
+    void testIsCbrFile_ValidCbrFile() {
+        MockMultipartFile cbrFile =
                 new MockMultipartFile(
-                        "file", "empty.cbr", "application/x-rar-compressed", new byte[0]);
+                        "file",
+                        "test.cbr",
+                        "application/x-rar-compressed",
+                        "test content".getBytes());
 
-        IllegalArgumentException exception =
-                assertThrows(
-                        IllegalArgumentException.class,
-                        () ->
-                                CbrUtils.convertCbrToPdf(
-                                        emptyFile, pdfDocumentFactory, tempFileManager));
-
-        assertEquals("File cannot be null or empty", exception.getMessage());
+        assertTrue(CbrUtils.isCbrFile(cbrFile));
     }
 
     @Test
-    void convertCbrToPdf_noFileName_throwsIllegalArgumentException() {
-        MultipartFile fileWithoutName = Mockito.mock(MultipartFile.class);
-        Mockito.when(fileWithoutName.isEmpty()).thenReturn(false);
-        Mockito.when(fileWithoutName.getOriginalFilename()).thenReturn(null);
+    void testIsCbrFile_ValidRarFile() {
+        MockMultipartFile rarFile =
+                new MockMultipartFile(
+                        "file",
+                        "test.rar",
+                        "application/x-rar-compressed",
+                        "test content".getBytes());
 
-        IllegalArgumentException exception =
-                assertThrows(
-                        IllegalArgumentException.class,
-                        () ->
-                                CbrUtils.convertCbrToPdf(
-                                        fileWithoutName, pdfDocumentFactory, tempFileManager));
-
-        assertEquals("File must have a name", exception.getMessage());
+        assertTrue(CbrUtils.isCbrFile(rarFile));
     }
 
     @Test
-    void convertCbrToPdf_invalidExtension_throwsIllegalArgumentException() {
-        MockMultipartFile invalidExtensionFile =
-                new MockMultipartFile("file", "test.txt", "text/plain", new byte[] {1, 2, 3});
+    void testIsCbrFile_InvalidFile() {
+        MockMultipartFile textFile =
+                new MockMultipartFile("file", "test.txt", "text/plain", "test content".getBytes());
 
-        IllegalArgumentException exception =
-                assertThrows(
-                        IllegalArgumentException.class,
-                        () ->
-                                CbrUtils.convertCbrToPdf(
-                                        invalidExtensionFile, pdfDocumentFactory, tempFileManager));
+        assertFalse(CbrUtils.isCbrFile(textFile));
+    }
 
-        assertEquals("File must be a CBR or RAR archive", exception.getMessage());
+    @Test
+    void testIsCbrFile_NoFilename() {
+        MockMultipartFile noNameFile =
+                new MockMultipartFile(
+                        "file", null, "application/x-rar-compressed", "test content".getBytes());
+
+        assertFalse(CbrUtils.isCbrFile(noNameFile));
+    }
+
+    @Test
+    void testIsCbrFile_PdfFile() {
+        MockMultipartFile pdfFile =
+                new MockMultipartFile(
+                        "file", "document.pdf", "application/pdf", "pdf content".getBytes());
+
+        assertFalse(CbrUtils.isCbrFile(pdfFile));
+    }
+
+    @Test
+    void testIsCbrFile_JpegFile() {
+        MockMultipartFile jpegFile =
+                new MockMultipartFile("file", "image.jpg", "image/jpeg", "jpeg content".getBytes());
+
+        assertFalse(CbrUtils.isCbrFile(jpegFile));
+    }
+
+    @Test
+    void testIsCbrFile_ZipFile() {
+        MockMultipartFile zipFile =
+                new MockMultipartFile(
+                        "file", "archive.zip", "application/zip", "zip content".getBytes());
+
+        assertFalse(CbrUtils.isCbrFile(zipFile));
+    }
+
+    @Test
+    void testIsCbrFile_MixedCaseExtension() {
+        MockMultipartFile cbrFile =
+                new MockMultipartFile(
+                        "file",
+                        "test.CBR",
+                        "application/x-rar-compressed",
+                        "test content".getBytes());
+
+        assertTrue(CbrUtils.isCbrFile(cbrFile));
     }
 }
