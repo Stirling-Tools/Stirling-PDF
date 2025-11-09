@@ -253,6 +253,10 @@ subprojects {
         }
     }
 
+    tasks.named("build") {
+        dependsOn jacocoTestReport
+    }
+
     jacocoTestCoverageVerification {
         dependsOn jacocoTestReport
         violationRules {
