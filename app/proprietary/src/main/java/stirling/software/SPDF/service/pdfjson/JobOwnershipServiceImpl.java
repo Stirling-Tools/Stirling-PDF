@@ -2,12 +2,13 @@ package stirling.software.SPDF.service.pdfjson;
 
 import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.common.service.UserServiceInterface;
 
 /**
  * Service to manage job ownership and access control for PDF JSON operations. When security is
@@ -20,23 +21,28 @@ import lombok.extern.slf4j.Slf4j;
 public class JobOwnershipServiceImpl
         implements stirling.software.common.service.JobOwnershipService {
 
+    @Autowired(required = false)
+    private UserServiceInterface userService;
+
     /**
      * Get the current authenticated user's identifier. Returns empty if no user is authenticated.
      *
      * @return Optional containing user identifier, or empty if not authenticated
      */
     public Optional<String> getCurrentUserId() {
+        if (userService == null) {
+            log.debug("UserService not available");
+            return Optional.empty();
+        }
+
         try {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            if (authentication != null
-                    && authentication.isAuthenticated()
-                    && !"anonymousUser".equals(authentication.getPrincipal())) {
-                String username = authentication.getName();
+            String username = userService.getCurrentUsername();
+            if (username != null && !username.isEmpty() && !"anonymousUser".equals(username)) {
                 log.debug("Current authenticated user: {}", username);
                 return Optional.of(username);
             }
         } catch (Exception e) {
-            log.warn("Failed to get current user from security context: {}", e.getMessage());
+            log.warn("Failed to get current username from UserService: {}", e.getMessage());
         }
         return Optional.empty();
     }
