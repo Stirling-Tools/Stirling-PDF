@@ -21,6 +21,7 @@ import {
   getNavButtonStyle,
   getActiveNavButton,
 } from '@app/components/shared/quickAccessBar/QuickAccessBar';
+import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from '@app/styles/zIndex';
 
 const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
   const { t } = useTranslation();
@@ -279,7 +280,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
                 // If admin, show menu with both options
                 return (
                   <div key={buttonConfig.id} data-tour="help-button">
-                    <Menu position="right" offset={10}>
+                    <Menu position="right" offset={10} zIndex={Z_INDEX_OVER_FULLSCREEN_SURFACE}>
                       <Menu.Target>
                         <div>{renderNavButton(buttonConfig, index)}</div>
                       </Menu.Target>
