@@ -178,9 +178,8 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
       isRound: true,
       size: 'lg',
       type: 'action',
-      onClick: (e) => {
-        // Prevent default - menu will handle the click
-        e?.preventDefault?.();
+      onClick: () => {
+        // This will be overridden by the wrapper logic
       },
     },
     {
