@@ -122,7 +122,7 @@ export default function AdminMailSection() {
         <Stack gap="md">
           <Group justify="space-between" align="flex-start" wrap="nowrap">
             <div>
-              <Text fw={500} size="sm">{t('admin.settings.mail.enabled', 'Enable Mail')}</Text>
+              <Text fw={500} size="sm">{t('admin.settings.mail.enabled.label', 'Enable Mail')}</Text>
               <Text size="xs" c="dimmed" mt={4}>
                 {t('admin.settings.mail.enabled.description', 'Enable email notifications and SMTP functionality')}
               </Text>
@@ -138,7 +138,7 @@ export default function AdminMailSection() {
 
           <Group justify="space-between" align="flex-start" wrap="nowrap">
             <div>
-              <Text fw={500} size="sm">{t('admin.settings.mail.enableInvites', 'Enable Email Invites')}</Text>
+              <Text fw={500} size="sm">{t('admin.settings.mail.enableInvites.label', 'Enable Email Invites')}</Text>
               <Text size="xs" c="dimmed" mt={4}>
                 {t('admin.settings.mail.enableInvites.description', 'Allow admins to invite users via email with auto-generated passwords')}
               </Text>
@@ -157,7 +157,7 @@ export default function AdminMailSection() {
             <TextInput
               label={
                 <Group gap="xs">
-                  <span>{t('admin.settings.mail.host', 'SMTP Host')}</span>
+                  <span>{t('admin.settings.mail.host.label', 'SMTP Host')}</span>
                   <PendingBadge show={isFieldPending('host')} />
                 </Group>
               }
@@ -172,7 +172,7 @@ export default function AdminMailSection() {
             <NumberInput
               label={
                 <Group gap="xs">
-                  <span>{t('admin.settings.mail.port', 'SMTP Port')}</span>
+                  <span>{t('admin.settings.mail.port.label', 'SMTP Port')}</span>
                   <PendingBadge show={isFieldPending('port')} />
                 </Group>
               }
@@ -188,7 +188,7 @@ export default function AdminMailSection() {
             <TextInput
               label={
                 <Group gap="xs">
-                  <span>{t('admin.settings.mail.username', 'SMTP Username')}</span>
+                  <span>{t('admin.settings.mail.username.label', 'SMTP Username')}</span>
                   <PendingBadge show={isFieldPending('username')} />
                 </Group>
               }
@@ -202,7 +202,7 @@ export default function AdminMailSection() {
             <PasswordInput
               label={
                 <Group gap="xs">
-                  <span>{t('admin.settings.mail.password', 'SMTP Password')}</span>
+                  <span>{t('admin.settings.mail.password.label', 'SMTP Password')}</span>
                   <PendingBadge show={isFieldPending('password')} />
                 </Group>
               }
@@ -216,7 +216,7 @@ export default function AdminMailSection() {
             <TextInput
               label={
                 <Group gap="xs">
-                  <span>{t('admin.settings.mail.from', 'From Address')}</span>
+                  <span>{t('admin.settings.mail.from.label', 'From Address')}</span>
                   <PendingBadge show={isFieldPending('from')} />
                 </Group>
               }
@@ -231,7 +231,7 @@ export default function AdminMailSection() {
             <TextInput
               label={
                 <Group gap="xs">
-                  <span>{t('admin.settings.mail.frontendUrl', 'Frontend URL')}</span>
+                  <span>{t('admin.settings.mail.frontendUrl.label', 'Frontend URL')}</span>
                   <PendingBadge show={isFieldPending('frontendUrl')} />
                 </Group>
               }

@@ -161,8 +161,8 @@ describe('SanitizeSettings', () => {
 
     // Verify that translation keys are being called (just check that it was called, not specific order)
     expect(mockT).toHaveBeenCalledWith('sanitize.options.title', expect.any(String));
-    expect(mockT).toHaveBeenCalledWith('sanitize.options.removeJavaScript', expect.any(String));
-    expect(mockT).toHaveBeenCalledWith('sanitize.options.removeEmbeddedFiles', expect.any(String));
+    expect(mockT).toHaveBeenCalledWith('sanitize.options.removeJavaScript.label', expect.any(String));
+    expect(mockT).toHaveBeenCalledWith('sanitize.options.removeEmbeddedFiles.label', expect.any(String));
     expect(mockT).toHaveBeenCalledWith('sanitize.options.note', expect.any(String));
   });
 
