@@ -128,6 +128,7 @@ system:
   disableSanitize: false # set to true to disable Sanitize HTML; (can lead to injections in HTML)
   maxDPI: 500 # Maximum allowed DPI for PDF to image conversion
   corsAllowedOrigins: [] # List of allowed origins for CORS (e.g. ['http://localhost:5173', 'https://app.example.com']). Leave empty to disable CORS.
+  frontendUrl: '' # Base URL for frontend (e.g. 'https://pdf.example.com'). Used for generating invite links in emails. If empty, falls back to backend URL.
   serverCertificate:
     enabled: true # Enable server-side certificate for "Sign with Stirling-PDF" option
     organizationName: Stirling-PDF # Organization name for generated certificates
@@ -170,6 +171,8 @@ system:
     cleanupIntervalMinutes: 30 # How often to run cleanup (in minutes)
     startupCleanup: true # Clean up old temp files on startup
     cleanupSystemTemp: false # Whether to clean broader system temp directory
+  databaseBackup:
+    cron: '0 0 0 * * ?' # Cron expression for automatic database backups "0 0 0 * * ?" daily at midnight
 
 stirling:
   pdf:

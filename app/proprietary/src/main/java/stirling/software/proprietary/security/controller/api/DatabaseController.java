@@ -39,7 +39,7 @@ public class DatabaseController {
     @Operation(
             summary = "Import a database backup file",
             description = "Uploads and imports a database backup SQL file.")
-    @PostMapping(consumes = "multipart/form-data", value = "import-database")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "import-database")
     public ResponseEntity<?> importDatabase(
             @Parameter(description = "SQL file to import", required = true)
                     @RequestParam("fileInput")

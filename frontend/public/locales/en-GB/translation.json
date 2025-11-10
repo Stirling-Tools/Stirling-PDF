@@ -298,6 +298,20 @@
     "general": {
       "title": "General",
       "description": "Configure general application preferences.",
+      "account": "Account",
+      "accountDescription": "Manage your account settings",
+      "user": "User",
+      "signedInAs": "Signed in as",
+      "logout": "Log out",
+      "enableFeatures": {
+        "title": "For System Administrators",
+        "intro": "Enable user authentication, team management, and workspace features for your organization.",
+        "action": "Configure",
+        "and": "and",
+        "benefit": "Enables user roles, team collaboration, admin controls, and enterprise features.",
+        "learnMore": "Learn more in documentation",
+        "dismiss": "Dismiss"
+      },
       "autoUnzip": "Auto-unzip API responses",
       "autoUnzipDescription": "Automatically extract files from ZIP responses",
       "autoUnzipTooltip": "Automatically extract ZIP files returned from API operations. Disable to keep ZIP files intact. This does not affect automation workflows.",
@@ -399,8 +413,10 @@
     "top20": "Top 20",
     "all": "All",
     "refresh": "Refresh",
-    "includeHomepage": "Include Homepage ('/')",
-    "includeLoginPage": "Include Login Page ('/login')",
+    "dataTypeLabel": "Data Type:",
+    "dataTypeAll": "All",
+    "dataTypeApi": "API",
+    "dataTypeUi": "UI",
     "totalEndpoints": "Total Endpoints",
     "totalVisits": "Total Visits",
     "showing": "Showing",
@@ -1423,6 +1439,26 @@
     },
     "submit": "Remove Pages"
   },
+  "extractPages": {
+    "title": "Extract Pages",
+    "pageNumbers": {
+      "label": "Pages to Extract",
+      "placeholder": "e.g., 1,3,5-8 or odd & 1-10"
+    },
+    "settings": {
+      "title": "Settings"
+    },
+    "tooltip": {
+      "description": "Extracts the selected pages into a new PDF, preserving order."
+    },
+    "error": {
+      "failed": "Failed to extract pages"
+    },
+    "results": {
+      "title": "Pages Extracted"
+    },
+    "submit": "Extract Pages"
+  },
   "pageSelection": {
     "tooltip": {
       "header": {
@@ -1499,6 +1535,7 @@
     }
   },
   "bulkSelection": {
+    "syntaxError": "There is a syntax issue. See Page Selection tips for help.",
     "header": {
       "title": "Page Selection Guide"
     },
@@ -2980,7 +3017,8 @@
     "options": {
       "highContrast": "High contrast",
       "invertAll": "Invert all colours",
-      "custom": "Custom"
+      "custom": "Custom",
+      "cmyk": "Convert to CMYK"
     },
     "tooltip": {
       "header": {
@@ -3007,6 +3045,10 @@
         "text": "Define your own text and background colours using the colour pickers. Perfect for creating branded documents or specific accessibility requirements.",
         "bullet1": "Text colour - Choose the colour for text elements",
         "bullet2": "Background colour - Set the background colour for the document"
+      },
+      "cmyk": {
+        "title": "Convert to CMYK",
+        "text": "Convert the PDF from RGB colour space to CMYK colour space, optimized for professional printing. This process converts colours to the Cyan, Magenta, Yellow, Black model used by printers."
       }
     },
     "error": {
@@ -3066,7 +3108,10 @@
     "magicLinkSent": "Magic link sent to {{email}}! Check your email and click the link to sign in.",
     "passwordResetSent": "Password reset link sent to {{email}}! Check your email and follow the instructions.",
     "failedToSignIn": "Failed to sign in with {{provider}}: {{message}}",
-    "unexpectedError": "Unexpected error: {{message}}"
+    "unexpectedError": "Unexpected error: {{message}}",
+    "accountCreatedSuccess": "Account created successfully! You can now sign in.",
+    "passwordChangedSuccess": "Password changed successfully! Please sign in with your new password.",
+    "credentialsUpdated": "Your credentials have been updated. Please sign in again."
   },
   "signup": {
     "title": "Create an account",
@@ -3526,8 +3571,8 @@
       "restartingMessage": "The server is restarting. Please wait a moment...",
       "restartError": "Failed to restart server. Please restart manually.",
       "general": {
-        "title": "General",
-        "description": "Configure general application settings including branding and default behaviour.",
+        "title": "System Settings",
+        "description": "Configure system-wide application settings including branding and default behaviour.",
         "ui": "User Interface",
         "system": "System",
         "appName": "Application Name",
@@ -3712,7 +3757,7 @@
         "enableAnalytics": "Enable Analytics",
         "enableAnalytics.description": "Collect anonymous usage analytics to help improve the application",
         "metricsEnabled": "Enable Metrics",
-        "metricsEnabled.description": "Enable collection of performance and usage metrics",
+        "metricsEnabled.description": "Enable collection of performance and usage metrics. Provides API endpoint for admins to access metrics data",
         "searchEngine": "Search Engine Visibility",
         "googleVisibility": "Google Visibility",
         "googleVisibility.description": "Allow search engines to index this application"
@@ -3787,7 +3832,9 @@
         "from": "From Address",
         "from.description": "The email address to use as the sender",
         "enableInvites": "Enable Email Invites",
-        "enableInvites.description": "Allow admins to invite users via email with auto-generated passwords"
+        "enableInvites.description": "Allow admins to invite users via email with auto-generated passwords",
+        "frontendUrl": "Frontend URL",
+        "frontendUrl.description": "Base URL for frontend (e.g. https://pdf.example.com). Used for generating invite links in emails. Leave empty to use backend URL."
       },
       "legal": {
         "title": "Legal Documents",
@@ -4557,10 +4604,47 @@
       "directInvite": {
         "tab": "Direct Create"
       },
+      "inviteLinkTab": {
+        "tab": "Invite Link"
+      },
+      "inviteLink": {
+        "description": "Generate a secure link that allows the user to set their own password",
+        "email": "Email Address",
+        "emailPlaceholder": "user@example.com (optional)",
+        "emailDescription": "Optional - leave blank for a general invite link that can be used by anyone",
+        "emailRequired": "Email address is required",
+        "emailOptional": "Optional - leave blank for a general invite link",
+        "emailRequiredForSend": "Email address is required to send email notification",
+        "expiryHours": "Expiry Hours",
+        "expiryDescription": "How many hours until the link expires",
+        "sendEmail": "Send invite link via email",
+        "sendEmailDescription": "If enabled, the invite link will be sent to the specified email address",
+        "smtpRequired": "SMTP not configured",
+        "generate": "Generate Link",
+        "generated": "Invite Link Generated",
+        "copied": "Link copied to clipboard",
+        "success": "Invite link generated successfully",
+        "successWithEmail": "Invite link generated and sent via email",
+        "emailFailed": "Invite link generated, but email failed",
+        "emailFailedDetails": "Error: {0}. Please share the invite link manually.",
+        "error": "Failed to generate invite link",
+        "submit": "Generate Invite Link"
+      },
       "inviteMode": {
         "username": "Username",
         "email": "Email",
+        "link": "Link",
         "emailDisabled": "Email invites require SMTP configuration and mail.enableInvites=true in settings"
+      },
+      "license": {
+        "users": "users",
+        "availableSlots": "Available Slots",
+        "grandfathered": "Grandfathered",
+        "grandfatheredShort": "{{count}} grandfathered",
+        "fromLicense": "from license",
+        "slotsAvailable": "{{count}} user slot(s) available",
+        "noSlotsAvailable": "No slots available",
+        "currentUsage": "Currently using {{current}} of {{max}} user licences"
       }
     },
     "teams": {
@@ -4644,6 +4728,89 @@
       }
     }
   },
+  "plan": {
+    "currency": "Currency",
+    "popular": "Popular",
+    "current": "Current Plan",
+    "upgrade": "Upgrade",
+    "contact": "Contact Us",
+    "customPricing": "Custom",
+    "showComparison": "Compare All Features",
+    "hideComparison": "Hide Feature Comparison",
+    "featureComparison": "Feature Comparison",
+    "activePlan": {
+      "title": "Active Plan",
+      "subtitle": "Your current subscription details"
+    },
+    "availablePlans": {
+      "title": "Available Plans",
+      "subtitle": "Choose the plan that fits your needs"
+    },
+    "static": {
+      "title": "Billing Information",
+      "message": "Online billing is not currently configured. To upgrade your plan or manage subscriptions, please contact us directly.",
+      "contactSales": "Contact Sales",
+      "contactToUpgrade": "Contact us to upgrade or customize your plan",
+      "maxUsers": "Max Users",
+      "upTo": "Up to"
+    },
+    "period": {
+      "month": "month"
+    },
+    "free": {
+      "name": "Free",
+      "highlight1": "Limited Tool Usage Per week",
+      "highlight2": "Access to all tools",
+      "highlight3": "Community support"
+    },
+    "pro": {
+      "name": "Pro",
+      "highlight1": "Unlimited Tool Usage",
+      "highlight2": "Advanced PDF tools",
+      "highlight3": "No watermarks"
+    },
+    "enterprise": {
+      "name": "Enterprise",
+      "highlight1": "Custom pricing",
+      "highlight2": "Dedicated support",
+      "highlight3": "Latest features"
+    },
+    "feature": {
+      "title": "Feature",
+      "pdfTools": "Basic PDF Tools",
+      "fileSize": "File Size Limit",
+      "automation": "Automate tool workflows",
+      "api": "API Access",
+      "priority": "Priority Support",
+      "customPricing": "Custom Pricing"
+    }
+  },
+  "subscription": {
+    "status": {
+      "active": "Active",
+      "pastDue": "Past Due",
+      "canceled": "Canceled",
+      "incomplete": "Incomplete",
+      "trialing": "Trial",
+      "none": "No Subscription"
+    },
+    "renewsOn": "Renews on {{date}}",
+    "cancelsOn": "Cancels on {{date}}"
+  },
+  "billing": {
+    "manageBilling": "Manage Billing",
+    "portal": {
+      "error": "Failed to open billing portal"
+    }
+  },
+  "payment": {
+    "preparing": "Preparing your checkout...",
+    "upgradeTitle": "Upgrade to {{planName}}",
+    "success": "Payment Successful!",
+    "successMessage": "Your subscription has been activated successfully. You will receive a confirmation email shortly.",
+    "autoClose": "This window will close automatically...",
+    "error": "Payment Error"
+  },
   "firstLogin": {
     "title": "First Time Login",
     "welcomeTitle": "Welcome!",
@@ -4663,5 +4830,141 @@
     "passwordMustBeDifferent": "New password must be different from current password",
     "passwordChangedSuccess": "Password changed successfully! Please log in again.",
     "passwordChangeFailed": "Failed to change password. Please check your current password."
+  },
+  "invite": {
+    "welcome": "Welcome to Stirling PDF",
+    "invalidToken": "Invalid invitation link",
+    "validationError": "Failed to validate invitation link",
+    "passwordRequired": "Password is required",
+    "passwordTooShort": "Password must be at least 6 characters",
+    "passwordMismatch": "Passwords do not match",
+    "acceptError": "Failed to create account",
+    "validating": "Validating invitation...",
+    "invalidInvitation": "Invalid Invitation",
+    "goToLogin": "Go to Login",
+    "welcomeTitle": "You've been invited!",
+    "welcomeSubtitle": "Complete your account setup to get started",
+    "accountFor": "Creating account for",
+    "linkExpires": "Link expires",
+    "email": "Email address",
+    "emailPlaceholder": "Enter your email address",
+    "emailRequired": "Email address is required",
+    "invalidEmail": "Invalid email address",
+    "choosePassword": "Choose a password",
+    "passwordPlaceholder": "Enter your password",
+    "confirmPassword": "Confirm password",
+    "confirmPasswordPlaceholder": "Re-enter your password",
+    "createAccount": "Create Account",
+    "creating": "Creating Account...",
+    "alreadyHaveAccount": "Already have an account?",
+    "signIn": "Sign in"
+  },
+  "audit": {
+    "error": {
+      "title": "Error loading audit system"
+    },
+    "notAvailable": "Audit system not available",
+    "notAvailableMessage": "The audit system is not configured or not available.",
+    "disabled": "Audit logging is disabled",
+    "disabledMessage": "Enable audit logging in your application configuration to track system events.",
+    "systemStatus": {
+      "title": "System Status",
+      "status": "Audit Logging",
+      "enabled": "Enabled",
+      "disabled": "Disabled",
+      "level": "Audit Level",
+      "retention": "Retention Period",
+      "days": "days",
+      "totalEvents": "Total Events"
+    },
+    "tabs": {
+      "dashboard": "Dashboard",
+      "events": "Audit Events",
+      "export": "Export"
+    },
+    "charts": {
+      "title": "Audit Dashboard",
+      "error": "Error loading charts",
+      "day": "Day",
+      "week": "Week",
+      "month": "Month",
+      "byType": "Events by Type",
+      "byUser": "Events by User",
+      "overTime": "Events Over Time"
+    },
+    "events": {
+      "title": "Audit Events",
+      "filterByType": "Filter by type",
+      "filterByUser": "Filter by user",
+      "startDate": "Start date",
+      "endDate": "End date",
+      "clearFilters": "Clear",
+      "error": "Error loading events",
+      "noEvents": "No events found",
+      "timestamp": "Timestamp",
+      "type": "Type",
+      "user": "User",
+      "ipAddress": "IP Address",
+      "actions": "Actions",
+      "viewDetails": "View Details",
+      "eventDetails": "Event Details",
+      "details": "Details"
+    },
+    "export": {
+      "title": "Export Audit Data",
+      "description": "Export audit events to CSV or JSON format. Use filters to limit the exported data.",
+      "format": "Export Format",
+      "filters": "Filters (Optional)",
+      "filterByType": "Filter by type",
+      "filterByUser": "Filter by user",
+      "startDate": "Start date",
+      "endDate": "End date",
+      "clearFilters": "Clear",
+      "exportButton": "Export Data",
+      "error": "Failed to export data"
+    }
+  },
+  "usage": {
+    "noData": "No data available",
+    "error": "Error loading usage statistics",
+    "noDataMessage": "No usage statistics are currently available.",
+    "controls": {
+      "top10": "Top 10",
+      "top20": "Top 20",
+      "all": "All",
+      "refresh": "Refresh",
+      "dataTypeLabel": "Data Type:",
+      "dataType": {
+        "all": "All",
+        "api": "API",
+        "ui": "UI"
+      }
+    },
+    "showing": {
+      "top10": "Top 10",
+      "top20": "Top 20",
+      "all": "All"
+    },
+    "stats": {
+      "totalEndpoints": "Total Endpoints",
+      "totalVisits": "Total Visits",
+      "showing": "Showing",
+      "selectedVisits": "Selected Visits"
+    },
+    "chart": {
+      "title": "Endpoint Usage Chart"
+    },
+    "table": {
+      "title": "Detailed Statistics",
+      "endpoint": "Endpoint",
+      "visits": "Visits",
+      "percentage": "Percentage",
+      "noData": "No data available"
+    }
+  },
+  "backendHealth": {
+    "checking": "Checking backend status...",
+    "online": "Backend Online",
+    "offline": "Backend Offline"
   }
 }

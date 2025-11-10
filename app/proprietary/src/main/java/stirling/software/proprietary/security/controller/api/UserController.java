@@ -29,6 +29,9 @@ import stirling.software.common.annotations.api.UserApi;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.enumeration.Role;
 import stirling.software.common.model.exception.UnsupportedProviderException;
+import stirling.software.proprietary.audit.AuditEventType;
+import stirling.software.proprietary.audit.AuditLevel;
+import stirling.software.proprietary.audit.Audited;
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.AuthenticationType;
@@ -40,6 +43,7 @@ import stirling.software.proprietary.security.service.EmailService;
 import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.service.UserService;
 import stirling.software.proprietary.security.session.SessionPersistentRegistry;
+import stirling.software.proprietary.service.UserLicenseSettingsService;
 
 @UserApi
 @Slf4j
@@ -53,6 +57,7 @@ public class UserController {
     private final TeamRepository teamRepository;
     private final UserRepository userRepository;
     private final Optional<EmailService> emailService;
+    private final UserLicenseSettingsService licenseSettingsService;
 
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/register")
@@ -77,10 +82,9 @@ public class UserController {
                         .body(Map.of("error", "Invalid username format"));
             }
 
-            if (usernameAndPass.getPassword() == null
-                    || usernameAndPass.getPassword().length() < 6) {
+            if (usernameAndPass.getPassword() == null || usernameAndPass.getPassword().isEmpty()) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(Map.of("error", "Password must be at least 6 characters"));
+                        .body(Map.of("error", "Password is required"));
             }
 
             Team team = teamRepository.findByName(TeamService.DEFAULT_TEAM_NAME).orElse(null);
@@ -137,6 +141,7 @@ public class UserController {
 
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/change-username")
+    @Audited(type = AuditEventType.USER_PROFILE_UPDATE, level = AuditLevel.BASIC)
     public ResponseEntity<?> changeUsername(
             Principal principal,
             @RequestParam(name = "currentPasswordChangeUsername") String currentPassword,
@@ -196,6 +201,7 @@ public class UserController {
 
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/change-password-on-login")
+    @Audited(type = AuditEventType.USER_PROFILE_UPDATE, level = AuditLevel.BASIC)
     public ResponseEntity<?> changePasswordOnLogin(
             Principal principal,
             @RequestParam(name = "currentPassword") String currentPassword,
@@ -231,6 +237,7 @@ public class UserController {
 
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/change-password")
+    @Audited(type = AuditEventType.USER_PROFILE_UPDATE, level = AuditLevel.BASIC)
     public ResponseEntity<?> changePassword(
             Principal principal,
             @RequestParam(name = "currentPassword") String currentPassword,
@@ -310,11 +317,17 @@ public class UserController {
                                     "error",
                                     "Invalid username format. Username must be 3-50 characters."));
         }
-        if (applicationProperties.getPremium().isEnabled()
-                && applicationProperties.getPremium().getMaxUsers()
-                        <= userService.getTotalUsersCount()) {
+        if (licenseSettingsService.wouldExceedLimit(1)) {
+            long availableSlots = licenseSettingsService.getAvailableUserSlots();
+            int maxAllowed = licenseSettingsService.calculateMaxAllowedUsers();
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", "Maximum number of users reached for your license."));
+                    .body(
+                            Map.of(
+                                    "error",
+                                    "Maximum number of users reached. Allowed: "
+                                            + maxAllowed
+                                            + ", Available slots: "
+                                            + availableSlots));
         }
         Optional<User> userOpt = userService.findByUsernameIgnoreCase(username);
         if (userOpt.isPresent()) {
@@ -407,20 +420,19 @@ public class UserController {
         }
 
         // Check license limits
-        if (applicationProperties.getPremium().isEnabled()) {
-            long currentUserCount = userService.getTotalUsersCount();
-            int maxUsers = applicationProperties.getPremium().getMaxUsers();
-            long availableSlots = maxUsers - currentUserCount;
-            if (availableSlots < emailArray.length) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(
-                                Map.of(
-                                        "error",
-                                        "Not enough user slots available. Available: "
-                                                + availableSlots
-                                                + ", Requested: "
-                                                + emailArray.length));
-            }
+        if (licenseSettingsService.wouldExceedLimit(emailArray.length)) {
+            long availableSlots = licenseSettingsService.getAvailableUserSlots();
+            int maxAllowed = licenseSettingsService.calculateMaxAllowedUsers();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(
+                            Map.of(
+                                    "error",
+                                    "Not enough user slots available. Allowed: "
+                                            + maxAllowed
+                                            + ", Available: "
+                                            + availableSlots
+                                            + ", Requested: "
+                                            + emailArray.length));
         }
 
         // Validate role
