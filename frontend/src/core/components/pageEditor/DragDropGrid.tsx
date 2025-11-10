@@ -1,13 +1,13 @@
 import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react';
 import { Box } from '@mantine/core';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { GRID_CONSTANTS } from './constants';
-import styles from './DragDropGrid.module.css';
+import { GRID_CONSTANTS } from '@app/components/pageEditor/constants';
+import styles from '@app/components/pageEditor/DragDropGrid.module.css';
 import {
   Z_INDEX_SELECTION_BOX,
   Z_INDEX_DROP_INDICATOR,
   Z_INDEX_DRAG_BADGE,
-} from '../../styles/zIndex';
+} from '@app/styles/zIndex';
 import {
   DndContext,
   DragEndEvent,
@@ -55,7 +55,7 @@ function resolveDropHint(
   }
 
   const items: ItemRect[] = Array.from(itemRefs.current.entries())
-    .filter(([itemId, element]): element is HTMLDivElement => !!element && itemId !== activeId)
+    .filter((entry): entry is [string, HTMLDivElement] => !!entry[1] && entry[0] !== activeId)
     .map(([itemId, element]) => ({
       id: itemId,
       rect: element.getBoundingClientRect(),

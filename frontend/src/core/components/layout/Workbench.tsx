@@ -156,13 +156,11 @@ export default function Workbench() {
   return (
     <PageEditorProvider>
       <Box
-   className={`flex-1 h-full min-w-80 relative flex flex-col z-10 ${styles.workbenchScrollable}`}
-    data-tour="workbench"
-    style={{
-      backgroundColor: isRainbowMode ? undefined : 'var(--bg-background)',
-      transition: 'opacity 0.15s ease-in-out',
-      paddingTop: currentView === 'viewer' ? '0' : (activeFiles.length > 0 ? '3.5rem' : '0'),
-    }}
+        className={`flex-1 h-full min-w-80 relative flex flex-col z-10 ${styles.workbenchScrollable}`}
+        data-tour="workbench"
+        style={{
+          backgroundColor: isRainbowMode ? undefined : 'var(--bg-background)',
+        }}
       >
         {/* Top Controls */}
         {activeFiles.length > 0 && (
@@ -187,7 +185,7 @@ export default function Workbench() {
           className="flex-1 min-h-0 relative z-10 workbench-scrollable "
           style={{
             transition: 'opacity 0.15s ease-in-out',
-            paddingTop: 0,
+            paddingTop: currentView === 'viewer' ? '0' : (activeFiles.length > 0 ? '2rem' : '0'),
           }}
         >
           {renderMainContent()}
@@ -202,5 +200,6 @@ export default function Workbench() {
           accessibilityStatement={config?.accessibilityStatement}
         />
       </Box>
+    </PageEditorProvider>
   );
 }

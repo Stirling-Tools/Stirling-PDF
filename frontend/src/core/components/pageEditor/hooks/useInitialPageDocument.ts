@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { usePageDocument } from './usePageDocument';
+import { usePageDocument } from '@app/components/pageEditor/hooks/usePageDocument';
 import { PDFDocument } from '@app/types/pageEditor';
 
 /**

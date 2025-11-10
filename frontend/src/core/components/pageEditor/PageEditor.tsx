@@ -9,11 +9,11 @@ import { pdfExportService } from "@app/services/pdfExportService";
 import { documentManipulationService } from "@app/services/documentManipulationService";
 import { exportProcessedDocumentsToFiles } from "@app/services/pdfExportHelpers";
 // Thumbnail generation is now handled by individual PageThumbnail components
-import './PageEditor.module.css';
-import PageThumbnail from './PageThumbnail';
-import DragDropGrid from './DragDropGrid';
-import SkeletonLoader from '../shared/SkeletonLoader';
-import NavigationWarningModal from '../shared/NavigationWarningModal';
+import '@app/components/pageEditor/PageEditor.module.css';
+import PageThumbnail from '@app/components/pageEditor/PageThumbnail';
+import DragDropGrid from '@app/components/pageEditor/DragDropGrid';
+import SkeletonLoader from '@app/components/shared/SkeletonLoader';
+import NavigationWarningModal from '@app/components/shared/NavigationWarningModal';
 import { FileId } from "@app/types/file";
 
 import {
@@ -23,11 +23,11 @@ import {
   BulkRotateCommand,
   PageBreakCommand,
   UndoManager
-} from './commands/pageCommands';
-import { GRID_CONSTANTS } from './constants';
-import { useInitialPageDocument } from './hooks/useInitialPageDocument';
-import { usePageDocument } from './hooks/usePageDocument';
-import { usePageEditorState } from './hooks/usePageEditorState';
+} from '@app/components/pageEditor/commands/pageCommands';
+import { GRID_CONSTANTS } from '@app/components/pageEditor/constants';
+import { useInitialPageDocument } from '@app/components/pageEditor/hooks/useInitialPageDocument';
+import { usePageDocument } from '@app/components/pageEditor/hooks/usePageDocument';
+import { usePageEditorState } from '@app/components/pageEditor/hooks/usePageEditorState';
 import { parseSelection } from "@app/utils/bulkselection/parseSelection";
 import { usePageEditorRightRailButtons } from "@app/components/pageEditor/pageEditorRightRailButtons";
 import { useFileColorMap } from "@app/components/pageEditor/hooks/useFileColorMap";
@@ -345,27 +345,6 @@ const PageEditor = ({
     setHasUnsavedChanges(true);
   }, [setHasUnsavedChanges]);
 
-  // Watch for container size changes to update split line positions
-  useEffect(() => {
-    const container = gridContainerRef.current;
-    if (!container) return;
-
-    const resizeObserver = new ResizeObserver((entries) => {
-      const entry = entries[0];
-      if (entry) {
-        setContainerDimensions({
-          width: entry.contentRect.width,
-          height: entry.contentRect.height
-        });
-      }
-    });
-
-    resizeObserver.observe(container);
-
-    return () => {
-      resizeObserver.disconnect();
-    };
-  }, []);
 
   // Interface functions for parent component
   const displayDocument = editedDocument || initialDocument;

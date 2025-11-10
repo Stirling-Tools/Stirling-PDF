@@ -54,16 +54,17 @@ export function useWheelZoom({
 
     let accumulator = 0;
 
-    const handleWheel = (event: WheelEvent) => {
-      const hasModifier = event.ctrlKey || event.metaKey;
+    const handleWheel = (event: Event) => {
+      const wheelEvent = event as WheelEvent;
+      const hasModifier = wheelEvent.ctrlKey || wheelEvent.metaKey;
       if (requireModifierKey && !hasModifier) {
         return;
       }
 
-      event.preventDefault();
-      event.stopPropagation();
+      wheelEvent.preventDefault();
+      wheelEvent.stopPropagation();
 
-      accumulator += event.deltaY;
+      accumulator += wheelEvent.deltaY;
 
       if (accumulator <= -threshold) {
         onZoomIn();

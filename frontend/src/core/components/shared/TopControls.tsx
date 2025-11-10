@@ -58,7 +58,6 @@ const createViewOptions = (
         ) : (
           <VisibilityIcon fontSize="medium" />
         )}
-        <PrivateContent>{displayName}</PrivateContent>
       </div>
     ),
     value: "viewer",

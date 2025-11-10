@@ -1,5 +1,5 @@
 import { FileId } from '@app/types/file';
-import { PDFDocument, PDFPage, PageBreakSettings, PageSize, PageOrientation } from '@app/types/pageEditor';
+import { PDFDocument, PDFPage, PageBreakSettings } from '@app/types/pageEditor';
 
 // V1-style DOM-first command system (replaces the old React state commands)
 export abstract class DOMCommand {
