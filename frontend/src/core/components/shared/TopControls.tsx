@@ -11,7 +11,6 @@ import { PageEditorFileDropdown } from '@app/components/shared/PageEditorFileDro
 import type { CustomWorkbenchViewInstance } from '@app/contexts/ToolWorkflowContext';
 import { FileDropdownMenu } from '@app/components/shared/FileDropdownMenu';
 import { usePageEditorDropdownState, PageEditorDropdownState } from '@app/components/pageEditor/hooks/usePageEditorDropdownState';
-import { PrivateContent } from '@app/components/shared/PrivateContent';
 
 
 const viewOptionStyle: React.CSSProperties = {

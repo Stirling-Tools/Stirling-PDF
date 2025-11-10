@@ -8,6 +8,7 @@ import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-d
 import FitText from '@app/components/shared/FitText';
 import { getFileColorWithOpacity } from '@app/components/pageEditor/fileColors';
 import { useFilesModalContext } from '@app/contexts/FilesModalContext';
+import { PrivateContent } from '@app/components/shared/PrivateContent';
 
 import { FileId } from '@app/types/file';
 
@@ -222,10 +223,12 @@ const FileMenuItem: React.FC<FileMenuItemProps> = ({
             size="sm"
           />
           <div style={{ flex: 1, textAlign: 'left', minWidth: 0 }}>
-            <FitText className="ph-no-capture" text={itemName} fontSize={14} minimumFontScale={0.7} />
+            <PrivateContent>
+              <FitText text={itemName} fontSize={14} minimumFontScale={0.7} />
+            </PrivateContent>
           </div>
           {file.versionNumber && file.versionNumber > 1 && (
-            <Text size="xs" c="dimmed" className="ph-no-capture">
+            <Text size="xs" c="dimmed">
               v{file.versionNumber}
             </Text>
           )}
