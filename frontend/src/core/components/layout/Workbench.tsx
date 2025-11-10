@@ -182,10 +182,12 @@ export default function Workbench() {
 
         {/* Main content area */}
         <Box
-          className="flex-1 min-h-0 relative z-10 workbench-scrollable "
+          className="flex-1 min-h-0 relative z-10 workbench-scrollable"
           style={{
             transition: 'opacity 0.15s ease-in-out',
-            paddingTop: currentView === 'viewer' ? '0' : (activeFiles.length > 0 ? '2rem' : '0'),
+            overflow: 'hidden',
+            display: 'flex',
+            flexDirection: 'column',
           }}
         >
           {renderMainContent()}

@@ -8,6 +8,7 @@ import {
   Z_INDEX_DROP_INDICATOR,
   Z_INDEX_DRAG_BADGE,
 } from '@app/styles/zIndex';
+import { LocalIcon } from '@app/components/shared/LocalIcon';
 import {
   DndContext,
   DragEndEvent,
@@ -767,9 +768,14 @@ const DragDropGrid = <T extends DragDropItem>({
                 style={{
                   width: `calc(20rem * ${zoomLevel})`,
                   height: `calc(20rem * ${zoomLevel})`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '2rem',
+                  color: 'var(--mantine-color-dimmed)',
                 }}
               >
-                ??
+                <LocalIcon icon="description" width="3rem" height="3rem" />
               </div>
             )}
           </div>
