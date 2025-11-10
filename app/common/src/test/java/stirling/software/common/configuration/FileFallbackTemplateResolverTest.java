@@ -81,8 +81,6 @@ class FileFallbackTemplateResolverTest {
         assertNull(resource);
     }
 
-    // IOEXCEPTION HANDLING
-
     private void assertTemplateContent(ITemplateResource resource, String expectedContent)
             throws IOException {
         try (Reader reader = resource.reader();

@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.nio.charset.StandardCharsets;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -56,7 +57,7 @@ class EmailControllerTest {
 
         var request =
                 multipart("/api/v1/general/send-email")
-                        .file("fileInput", "dummy-content".getBytes())
+                        .file("fileInput", "dummy-content".getBytes(StandardCharsets.UTF_8))
                         .param("subject", "Test Email")
                         .param("body", "This is a test email.");
 

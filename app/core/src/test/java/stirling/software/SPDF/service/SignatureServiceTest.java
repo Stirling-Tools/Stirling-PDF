@@ -5,6 +5,7 @@ import static org.mockito.Mockito.mockStatic;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -36,9 +37,10 @@ class SignatureServiceTest {
         // Create test signature files
         Files.write(
                 personalSignatureFolder.resolve("personal.png"),
-                "personal signature content".getBytes());
+                "personal signature content".getBytes(StandardCharsets.UTF_8));
         Files.write(
-                sharedSignatureFolder.resolve("shared.jpg"), "shared signature content".getBytes());
+                sharedSignatureFolder.resolve("shared.jpg"),
+                "shared signature content".getBytes(StandardCharsets.UTF_8));
 
         // Use try-with-resources for mockStatic
         try (MockedStatic<InstallationPathConfig> mockedConfig =

@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -48,19 +49,19 @@ class AttachmentControllerTest {
                         "fileInput",
                         "test.pdf",
                         MediaType.APPLICATION_PDF_VALUE,
-                        "PDF content".getBytes());
+                        "PDF content".getBytes(StandardCharsets.UTF_8));
         attachment1 =
                 new MockMultipartFile(
                         "attachment1",
                         "file1.txt",
                         MediaType.TEXT_PLAIN_VALUE,
-                        "File 1 content".getBytes());
+                        "File 1 content".getBytes(StandardCharsets.UTF_8));
         attachment2 =
                 new MockMultipartFile(
                         "attachment2",
                         "file2.jpg",
                         MediaType.IMAGE_JPEG_VALUE,
-                        "Image content".getBytes());
+                        "Image content".getBytes(StandardCharsets.UTF_8));
         request = new AddAttachmentRequest();
         mockDocument = mock(PDDocument.class);
         modifiedMockDocument = mock(PDDocument.class);
@@ -72,7 +73,7 @@ class AttachmentControllerTest {
         request.setAttachments(attachments);
         request.setFileInput(pdfFile);
         ResponseEntity<byte[]> expectedResponse =
-                ResponseEntity.ok("modified PDF content".getBytes());
+                ResponseEntity.ok("modified PDF content".getBytes(StandardCharsets.UTF_8));
 
         when(pdfDocumentFactory.load(pdfFile, false)).thenReturn(mockDocument);
         when(pdfAttachmentService.addAttachment(mockDocument, attachments))
@@ -104,7 +105,7 @@ class AttachmentControllerTest {
         request.setAttachments(attachments);
         request.setFileInput(pdfFile);
         ResponseEntity<byte[]> expectedResponse =
-                ResponseEntity.ok("modified PDF content".getBytes());
+                ResponseEntity.ok("modified PDF content".getBytes(StandardCharsets.UTF_8));
 
         when(pdfDocumentFactory.load(pdfFile, false)).thenReturn(mockDocument);
         when(pdfAttachmentService.addAttachment(mockDocument, attachments))

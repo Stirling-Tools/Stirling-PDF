@@ -61,7 +61,11 @@ class PdfToCbrUtilsTest {
     @Test
     void convertPdfToCbr_nonPdfExtensionThrowsException() {
         MockMultipartFile nonPdfFile =
-                new MockMultipartFile("file", "document.txt", "text/plain", "content".getBytes());
+                new MockMultipartFile(
+                        "file",
+                        "document.txt",
+                        "text/plain",
+                        "content".getBytes(StandardCharsets.UTF_8));
 
         assertThrows(
                 IllegalArgumentException.class,
@@ -71,7 +75,11 @@ class PdfToCbrUtilsTest {
     @Test
     void convertPdfToCbr_pdfWithNoPagesThrowsException() throws IOException {
         MockMultipartFile pdfFile =
-                new MockMultipartFile("file", "test.pdf", "application/pdf", "data".getBytes());
+                new MockMultipartFile(
+                        "file",
+                        "test.pdf",
+                        "application/pdf",
+                        "data".getBytes(StandardCharsets.UTF_8));
 
         PDDocument emptyDocument = new PDDocument();
         when(pdfDocumentFactory.load(pdfFile)).thenReturn(emptyDocument);
@@ -90,7 +98,11 @@ class PdfToCbrUtilsTest {
     @Test
     void convertPdfToCbr_successfulConversionReturnsBytes() throws Exception {
         MockMultipartFile pdfFile =
-                new MockMultipartFile("file", "test.pdf", "application/pdf", "data".getBytes());
+                new MockMultipartFile(
+                        "file",
+                        "test.pdf",
+                        "application/pdf",
+                        "data".getBytes(StandardCharsets.UTF_8));
 
         PDDocument document = new PDDocument();
         document.addPage(new PDPage());
@@ -127,7 +139,11 @@ class PdfToCbrUtilsTest {
     @Test
     void convertPdfToCbr_rarCommandFailureThrowsIOException() throws Exception {
         MockMultipartFile pdfFile =
-                new MockMultipartFile("file", "test.pdf", "application/pdf", "data".getBytes());
+                new MockMultipartFile(
+                        "file",
+                        "test.pdf",
+                        "application/pdf",
+                        "data".getBytes(StandardCharsets.UTF_8));
 
         PDDocument document = new PDDocument();
         document.addPage(new PDPage());

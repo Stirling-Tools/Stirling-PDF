@@ -3,6 +3,8 @@ package stirling.software.common.util;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.nio.charset.StandardCharsets;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockMultipartFile;
 
@@ -12,7 +14,10 @@ class CbzUtilsTest {
     void testIsCbzFile_ValidCbzFile() {
         MockMultipartFile cbzFile =
                 new MockMultipartFile(
-                        "file", "test.cbz", "application/zip", "test content".getBytes());
+                        "file",
+                        "test.cbz",
+                        "application/zip",
+                        "test content".getBytes(StandardCharsets.UTF_8));
 
         assertTrue(CbzUtils.isCbzFile(cbzFile));
     }
@@ -21,7 +26,10 @@ class CbzUtilsTest {
     void testIsCbzFile_ValidZipFile() {
         MockMultipartFile zipFile =
                 new MockMultipartFile(
-                        "file", "test.zip", "application/zip", "test content".getBytes());
+                        "file",
+                        "test.zip",
+                        "application/zip",
+                        "test content".getBytes(StandardCharsets.UTF_8));
 
         assertTrue(CbzUtils.isCbzFile(zipFile));
     }
@@ -29,7 +37,11 @@ class CbzUtilsTest {
     @Test
     void testIsCbzFile_InvalidFile() {
         MockMultipartFile textFile =
-                new MockMultipartFile("file", "test.txt", "text/plain", "test content".getBytes());
+                new MockMultipartFile(
+                        "file",
+                        "test.txt",
+                        "text/plain",
+                        "test content".getBytes(StandardCharsets.UTF_8));
 
         assertFalse(CbzUtils.isCbzFile(textFile));
     }
@@ -37,7 +49,11 @@ class CbzUtilsTest {
     @Test
     void testIsCbzFile_NoFilename() {
         MockMultipartFile noNameFile =
-                new MockMultipartFile("file", null, "application/zip", "test content".getBytes());
+                new MockMultipartFile(
+                        "file",
+                        null,
+                        "application/zip",
+                        "test content".getBytes(StandardCharsets.UTF_8));
 
         assertFalse(CbzUtils.isCbzFile(noNameFile));
     }
@@ -46,7 +62,10 @@ class CbzUtilsTest {
     void testIsCbzFile_PdfFile() {
         MockMultipartFile pdfFile =
                 new MockMultipartFile(
-                        "file", "document.pdf", "application/pdf", "pdf content".getBytes());
+                        "file",
+                        "document.pdf",
+                        "application/pdf",
+                        "pdf content".getBytes(StandardCharsets.UTF_8));
 
         assertFalse(CbzUtils.isCbzFile(pdfFile));
     }
@@ -54,7 +73,11 @@ class CbzUtilsTest {
     @Test
     void testIsCbzFile_JpegFile() {
         MockMultipartFile jpegFile =
-                new MockMultipartFile("file", "image.jpg", "image/jpeg", "jpeg content".getBytes());
+                new MockMultipartFile(
+                        "file",
+                        "image.jpg",
+                        "image/jpeg",
+                        "jpeg content".getBytes(StandardCharsets.UTF_8));
 
         assertFalse(CbzUtils.isCbzFile(jpegFile));
     }
@@ -66,7 +89,7 @@ class CbzUtilsTest {
                         "file",
                         "archive.rar",
                         "application/x-rar-compressed",
-                        "rar content".getBytes());
+                        "rar content".getBytes(StandardCharsets.UTF_8));
 
         assertFalse(CbzUtils.isCbzFile(rarFile));
     }
@@ -75,7 +98,10 @@ class CbzUtilsTest {
     void testIsCbzFile_MixedCaseExtension() {
         MockMultipartFile cbzFile =
                 new MockMultipartFile(
-                        "file", "test.CBZ", "application/zip", "test content".getBytes());
+                        "file",
+                        "test.CBZ",
+                        "application/zip",
+                        "test content".getBytes(StandardCharsets.UTF_8));
 
         assertTrue(CbzUtils.isCbzFile(cbzFile));
     }
