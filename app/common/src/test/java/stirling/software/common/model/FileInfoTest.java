@@ -14,6 +14,8 @@ import org.junit.jupiter.params.provider.CsvSource;
 public class FileInfoTest {
 
     private static final LocalDateTime FIXED_NOW = LocalDateTime.of(2025, 11, 1, 12, 0, 0);
+    private static final Path RELATIVE_PATH = Path.of("path", "to", "example.txt");
+    private static final String RELATIVE_PATH_STRING = RELATIVE_PATH.toString();
 
     @ParameterizedTest(name = "{index}: fileSize={0}")
     @CsvSource({
@@ -29,7 +31,7 @@ public class FileInfoTest {
         FileInfo fileInfo =
                 new FileInfo(
                         "example.txt",
-                        "/path/to/example.txt",
+                        RELATIVE_PATH_STRING,
                         FIXED_NOW,
                         fileSize,
                         FIXED_NOW.minusDays(1));
@@ -46,7 +48,7 @@ public class FileInfoTest {
             FileInfo fi =
                     new FileInfo(
                             "example.txt",
-                            "/path/to/example.txt",
+                            RELATIVE_PATH_STRING,
                             FIXED_NOW,
                             123,
                             FIXED_NOW.minusDays(1));
@@ -55,10 +57,7 @@ public class FileInfoTest {
 
             // Basic sanity checks
             assertNotNull(path, "Path should not be null");
-            assertEquals(
-                    Path.of("/path/to/example.txt"),
-                    path,
-                    "Converted Path should match input string");
+            assertEquals(RELATIVE_PATH, path, "Converted Path should match input string");
         }
     }
 
@@ -72,7 +71,7 @@ public class FileInfoTest {
             FileInfo fi =
                     new FileInfo(
                             "example.txt",
-                            "/path/to/example.txt",
+                            RELATIVE_PATH_STRING,
                             mod,
                             1,
                             LocalDateTime.of(2024, 1, 1, 0, 0, 0));
@@ -87,7 +86,7 @@ public class FileInfoTest {
             FileInfo fi =
                     new FileInfo(
                             "example.txt",
-                            "/path/to/example.txt",
+                            RELATIVE_PATH_STRING,
                             LocalDateTime.of(2025, 1, 1, 0, 0, 0),
                             1,
                             created);
@@ -102,7 +101,7 @@ public class FileInfoTest {
             FileInfo fi =
                     new FileInfo(
                             "example.txt",
-                            "/path/to/example.txt",
+                            RELATIVE_PATH_STRING,
                             null, // modificationDate null
                             1,
                             FIXED_NOW);
@@ -121,7 +120,7 @@ public class FileInfoTest {
             FileInfo fi =
                     new FileInfo(
                             "example.txt",
-                            "/path/to/example.txt",
+                            RELATIVE_PATH_STRING,
                             FIXED_NOW,
                             1,
                             null); // creationDate null
@@ -143,7 +142,7 @@ public class FileInfoTest {
             FileInfo fi =
                     new FileInfo(
                             "example.txt",
-                            "/path/to/example.txt",
+                            RELATIVE_PATH_STRING,
                             FIXED_NOW,
                             1536, // 1.5 KB
                             FIXED_NOW.minusDays(1));
@@ -159,7 +158,7 @@ public class FileInfoTest {
             FileInfo fi =
                     new FileInfo(
                             "example.txt",
-                            "/path/to/example.txt",
+                            RELATIVE_PATH_STRING,
                             FIXED_NOW,
                             twoTB,
                             FIXED_NOW.minusDays(1));
