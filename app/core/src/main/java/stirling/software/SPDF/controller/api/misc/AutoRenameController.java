@@ -8,6 +8,7 @@ import java.util.List;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.pdfbox.text.TextPosition;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
@@ -22,6 +23,7 @@ import stirling.software.SPDF.model.api.misc.ExtractHeaderRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.common.util.WebResponseUtils;
 
 @MiscApi
@@ -34,7 +36,7 @@ public class AutoRenameController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/auto-rename")
+    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/auto-rename")
     @Operation(
             summary = "Extract header from PDF file",
             description =
@@ -71,7 +73,7 @@ public class AutoRenameController {
                     }
 
                     private void processLine() {
-                        if (lineBuilder.length() > 0 && lineCount < LINE_LIMIT) {
+                        if (!lineBuilder.isEmpty() && lineCount < LINE_LIMIT) {
                             lineInfos.add(new LineInfo(lineBuilder.toString(), maxFontSizeInLine));
                         }
                     }
@@ -89,14 +91,14 @@ public class AutoRenameController {
                         // Merge lines with same font size
                         List<LineInfo> mergedLineInfos = new ArrayList<>();
                         for (int i = 0; i < lineInfos.size(); i++) {
-                            String mergedText = lineInfos.get(i).text;
+                            StringBuilder mergedText = new StringBuilder(lineInfos.get(i).text);
                             float fontSize = lineInfos.get(i).fontSize;
                             while (i + 1 < lineInfos.size()
                                     && lineInfos.get(i + 1).fontSize == fontSize) {
-                                mergedText += " " + lineInfos.get(i + 1).text;
+                                mergedText.append(" ").append(lineInfos.get(i + 1).text);
                                 i++;
                             }
-                            mergedLineInfos.add(new LineInfo(mergedText, fontSize));
+                            mergedLineInfos.add(new LineInfo(mergedText.toString(), fontSize));
                         }
 
                         // Sort lines by font size in descending order and get the first one
@@ -130,7 +132,12 @@ public class AutoRenameController {
 
         // Sanitize the header string by removing characters not allowed in a filename.
         if (header != null && header.length() < 255) {
-            header = header.replaceAll("[/\\\\?%*:|\"<>]", "").trim();
+            header =
+                    RegexPatternUtils.getInstance()
+                            .getSafeFilenamePattern()
+                            .matcher(header)
+                            .replaceAll("")
+                            .trim();
             return WebResponseUtils.pdfDocToWebResponse(document, header + ".pdf");
         } else {
             log.info("File has no good title to be found");

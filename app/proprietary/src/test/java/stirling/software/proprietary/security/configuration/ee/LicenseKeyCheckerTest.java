@@ -17,11 +17,13 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.proprietary.service.UserLicenseSettingsService;
 
 @ExtendWith(MockitoExtension.class)
 class LicenseKeyCheckerTest {
 
     @Mock private KeygenLicenseVerifier verifier;
+    @Mock private UserLicenseSettingsService userLicenseSettingsService;
 
     @Test
     void premiumDisabled_skipsVerification() {
@@ -29,7 +31,9 @@ class LicenseKeyCheckerTest {
         props.getPremium().setEnabled(false);
         props.getPremium().setKey("dummy");
 
-        LicenseKeyChecker checker = new LicenseKeyChecker(verifier, props);
+        LicenseKeyChecker checker =
+                new LicenseKeyChecker(verifier, props, userLicenseSettingsService);
+        checker.init();
 
         assertEquals(License.NORMAL, checker.getPremiumLicenseEnabledResult());
         verifyNoInteractions(verifier);
@@ -42,7 +46,9 @@ class LicenseKeyCheckerTest {
         props.getPremium().setKey("abc");
         when(verifier.verifyLicense("abc")).thenReturn(License.PRO);
 
-        LicenseKeyChecker checker = new LicenseKeyChecker(verifier, props);
+        LicenseKeyChecker checker =
+                new LicenseKeyChecker(verifier, props, userLicenseSettingsService);
+        checker.init();
 
         assertEquals(License.PRO, checker.getPremiumLicenseEnabledResult());
         verify(verifier).verifyLicense("abc");
@@ -58,7 +64,9 @@ class LicenseKeyCheckerTest {
         props.getPremium().setKey("file:" + file.toString());
         when(verifier.verifyLicense("filekey")).thenReturn(License.ENTERPRISE);
 
-        LicenseKeyChecker checker = new LicenseKeyChecker(verifier, props);
+        LicenseKeyChecker checker =
+                new LicenseKeyChecker(verifier, props, userLicenseSettingsService);
+        checker.init();
 
         assertEquals(License.ENTERPRISE, checker.getPremiumLicenseEnabledResult());
         verify(verifier).verifyLicense("filekey");
@@ -71,7 +79,9 @@ class LicenseKeyCheckerTest {
         props.getPremium().setEnabled(true);
         props.getPremium().setKey("file:" + file.toString());
 
-        LicenseKeyChecker checker = new LicenseKeyChecker(verifier, props);
+        LicenseKeyChecker checker =
+                new LicenseKeyChecker(verifier, props, userLicenseSettingsService);
+        checker.init();
 
         assertEquals(License.NORMAL, checker.getPremiumLicenseEnabledResult());
         verifyNoInteractions(verifier);
