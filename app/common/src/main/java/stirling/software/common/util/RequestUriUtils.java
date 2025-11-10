@@ -1,12 +1,15 @@
 package stirling.software.common.util;
 
+import lombok.experimental.UtilityClass;
+
+@UtilityClass
 public class RequestUriUtils {
 
-    public static boolean isStaticResource(String requestURI) {
+    public boolean isStaticResource(String requestURI) {
         return isStaticResource("", requestURI);
     }
 
-    public static boolean isStaticResource(String contextPath, String requestURI) {
+    public boolean isStaticResource(String contextPath, String requestURI) {
         return requestURI.startsWith(contextPath + "/css/")
                 || requestURI.startsWith(contextPath + "/fonts/")
                 || requestURI.startsWith(contextPath + "/js/")
@@ -26,11 +29,11 @@ public class RequestUriUtils {
                 || requestURI.startsWith(contextPath + "/api/v1/info/status");
     }
 
-    public static boolean isTrackableResource(String requestURI) {
+    public boolean isTrackableResource(String requestURI) {
         return isTrackableResource("", requestURI);
     }
 
-    public static boolean isTrackableResource(String contextPath, String requestURI) {
+    public boolean isTrackableResource(String contextPath, String requestURI) {
         return !(requestURI.startsWith("/js")
                 || requestURI.startsWith("/v1/api-docs")
                 || requestURI.endsWith("robots.txt")
