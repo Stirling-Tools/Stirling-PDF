@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.junit.jupiter.api.Test;
@@ -19,7 +20,7 @@ public class WebResponseUtilsTest {
     public void testBoasToWebResponse() {
         try {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            baos.write("Sample PDF content".getBytes());
+            baos.write("Sample PDF content".getBytes(StandardCharsets.UTF_8));
             String docName = "sample.pdf";
 
             ResponseEntity<byte[]> responseEntity =
@@ -44,7 +45,7 @@ public class WebResponseUtilsTest {
     @Test
     public void testMultiPartFileToWebResponse() {
         try {
-            byte[] fileContent = "Sample file content".getBytes();
+            byte[] fileContent = "Sample file content".getBytes(StandardCharsets.UTF_8);
             MockMultipartFile file =
                     new MockMultipartFile(
                             "file", "sample.txt", MediaType.TEXT_PLAIN_VALUE, fileContent);
@@ -69,7 +70,7 @@ public class WebResponseUtilsTest {
     @Test
     public void testBytesToWebResponse() {
         try {
-            byte[] bytes = "Sample bytes".getBytes();
+            byte[] bytes = "Sample bytes".getBytes(StandardCharsets.UTF_8);
             String docName = "sample.txt";
             MediaType mediaType = MediaType.TEXT_PLAIN;
 
