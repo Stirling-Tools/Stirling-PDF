@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { detectFileExtension, getFileSize } from '@app/utils/fileUtils';
 import { StirlingFileStub } from '@app/types/fileContext';
 import ToolChain from '@app/components/shared/ToolChain';
+import { PrivateContent } from '@app/components/shared/PrivateContent';
 
 interface FileInfoCardProps {
   currentFile: StirlingFileStub | null;
@@ -26,7 +27,9 @@ const FileInfoCard: React.FC<FileInfoCardProps> = ({
       <ScrollArea style={{ flex: 1 }} p="md">
         <Stack gap="sm">
           <Group justify="space-between" py="xs">
-            <Text className='ph-no-capture' size="sm" c="dimmed">{t('fileManager.fileName', 'Name')}</Text>
+            <Text size="sm" c="dimmed">
+              <PrivateContent>{t('fileManager.fileName', 'Name')}</PrivateContent>
+            </Text>
             <Text size="sm" fw={500} style={{ maxWidth: '60%', textAlign: 'right' }} truncate>
               {currentFile ? currentFile.name : ''}
             </Text>

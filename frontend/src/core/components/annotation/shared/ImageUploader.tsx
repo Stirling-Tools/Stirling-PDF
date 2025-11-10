@@ -1,6 +1,7 @@
 import React from 'react';
 import { FileInput, Text, Stack } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
+import { PrivateContent } from '@app/components/shared/PrivateContent';
 
 interface ImageUploaderProps {
   onImageChange: (file: File | null) => void;
@@ -40,13 +41,15 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
 
   return (
     <Stack gap="sm">
-      <FileInput
-        label={label || t('sign.image.label', 'Upload signature image')}
-        placeholder={placeholder || t('sign.image.placeholder', 'Select image file')}
-        accept="image/*"
-        onChange={handleImageChange}
-        disabled={disabled}
-      />
+      <PrivateContent>
+        <FileInput
+          label={label || t('sign.image.label', 'Upload signature image')}
+          placeholder={placeholder || t('sign.image.placeholder', 'Select image file')}
+          accept="image/*"
+          onChange={handleImageChange}
+          disabled={disabled}
+        />
+      </PrivateContent>
       <Text size="sm" c="dimmed">
         {hint || t('sign.image.hint', 'Upload an image of your signature')}
       </Text>

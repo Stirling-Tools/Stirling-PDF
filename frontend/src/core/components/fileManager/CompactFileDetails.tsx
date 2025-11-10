@@ -6,6 +6,7 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { useTranslation } from 'react-i18next';
 import { getFileSize } from '@app/utils/fileUtils';
 import { StirlingFileStub } from '@app/types/fileContext';
+import { PrivateContent } from '@app/components/shared/PrivateContent';
 
 interface CompactFileDetailsProps {
   currentFile: StirlingFileStub | null;
@@ -41,18 +42,19 @@ const CompactFileDetails: React.FC<CompactFileDetailsProps> = ({
         {/* Small preview */}
         <Box style={{ width: '7.5rem', height: '9.375rem', flexShrink: 0, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           {currentFile && thumbnail ? (
-            <img
-              className='ph-no-capture'
-              src={thumbnail}
-              alt={currentFile.name}
-              style={{
-                maxWidth: '100%',
-                maxHeight: '100%',
-                objectFit: 'contain',
-                borderRadius: '0.25rem',
-                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'
-              }}
-            />
+            <PrivateContent>
+              <img
+                src={thumbnail}
+                alt={currentFile.name}
+                style={{
+                  maxWidth: '100%',
+                  maxHeight: '100%',
+                  objectFit: 'contain',
+                  borderRadius: '0.25rem',
+                  boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'
+                }}
+              />
+            </PrivateContent>
           ) : currentFile ? (
             <Center style={{
               width: '100%',
@@ -67,8 +69,8 @@ const CompactFileDetails: React.FC<CompactFileDetailsProps> = ({
 
         {/* File info */}
         <Box style={{ flex: 1, minWidth: 0 }}>
-          <Text className='ph-no-capture' size="sm" fw={500} truncate>
-            {currentFile ? currentFile.name : 'No file selected'}
+          <Text size="sm" fw={500} truncate>
+            <PrivateContent>{currentFile ? currentFile.name : 'No file selected'}</PrivateContent>
           </Text>
           <Text size="xs" c="dimmed">
             {currentFile ? getFileSize(currentFile) : ''}

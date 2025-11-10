@@ -9,6 +9,7 @@ import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import { WorkbenchType, isValidWorkbench } from '@app/types/workbench';
 import type { CustomWorkbenchViewInstance } from '@app/contexts/ToolWorkflowContext';
 import { FileDropdownMenu } from '@app/components/shared/FileDropdownMenu';
+import { PrivateContent } from '@app/components/shared/PrivateContent';
 
 
 const viewOptionStyle: React.CSSProperties = {
@@ -54,7 +55,7 @@ const createViewOptions = (
         ) : (
           <VisibilityIcon fontSize="small" />
         )}
-        <span className="ph-no-capture">{displayName}</span>
+        <PrivateContent>{displayName}</PrivateContent>
       </div>
     ),
     value: "viewer",

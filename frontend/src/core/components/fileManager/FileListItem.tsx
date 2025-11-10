@@ -13,6 +13,7 @@ import { useFileManagerContext } from '@app/contexts/FileManagerContext';
 import { zipFileService } from '@app/services/zipFileService';
 import ToolChain from '@app/components/shared/ToolChain';
 import { Z_INDEX_OVER_FILE_MANAGER_MODAL } from '@app/styles/zIndex';
+import { PrivateContent } from '@app/components/shared/PrivateContent';
 
 interface FileListItemProps {
   file: StirlingFileStub;
@@ -99,7 +100,9 @@ const FileListItem: React.FC<FileListItemProps> = ({
 
           <Box style={{ flex: 1, minWidth: 0 }}>
             <Group gap="xs" align="center">
-              <Text size="sm" fw={500} className='ph-no-capture' truncate style={{ flex: 1 }}>{file.name}</Text>
+              <Text size="sm" fw={500} truncate style={{ flex: 1 }}>
+                <PrivateContent>{file.name}</PrivateContent>
+              </Text>
               <Badge size="xs" variant="light" color={"blue"}>
                 v{currentVersion}
               </Badge>
