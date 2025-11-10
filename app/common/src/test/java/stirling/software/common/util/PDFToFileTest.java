@@ -338,7 +338,7 @@ class PDFToFileTest {
                         case "test.html" -> foundMainHtml = true;
                         case "test_ind.html" -> foundIndexHtml = true;
                         case "test_img.png" -> foundImage = true;
-                        default -> assertTrue(false, "Unexpected file in ZIP: " + entry.getName());
+                        default -> fail("Unexpected file in ZIP: " + entry.getName());
                     }
                     zipStream.closeEntry();
                 }
