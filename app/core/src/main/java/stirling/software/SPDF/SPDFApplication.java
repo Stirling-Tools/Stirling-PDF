@@ -46,14 +46,11 @@ public class SPDFApplication {
     private final Environment env;
     private final ApplicationProperties applicationProperties;
 
-    // private final WebBrowser webBrowser; // Removed - desktop UI eliminated
-
     public SPDFApplication(
             AppConfig appConfig, Environment env, ApplicationProperties applicationProperties) {
         this.appConfig = appConfig;
         this.env = env;
         this.applicationProperties = applicationProperties;
-        // this.webBrowser = webBrowser; // Removed - desktop UI eliminated
     }
 
     public static void main(String[] args) throws IOException, InterruptedException {
@@ -147,6 +144,13 @@ public class SPDFApplication {
         serverPortStatic = serverPort;
         String url = baseUrl + ":" + getStaticPort() + contextPath;
 
+        // Log Tauri mode information
+        if (Boolean.parseBoolean(System.getProperty("STIRLING_PDF_TAURI_MODE", "false"))) {
+            String parentPid = System.getenv("TAURI_PARENT_PID");
+            log.info(
+                    "Running in Tauri mode. Parent process PID: {}",
+                    parentPid != null ? parentPid : "not set");
+        }
         // Desktop UI initialization removed - webBrowser dependency eliminated
         // Keep backwards compatibility for STIRLING_PDF_DESKTOP_UI system property
         if (Boolean.parseBoolean(System.getProperty("STIRLING_PDF_DESKTOP_UI", "false"))) {

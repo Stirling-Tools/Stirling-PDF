@@ -25,7 +25,6 @@ import "@app/pages/HomePage.css";
 
 type MobileView = "tools" | "workbench";
 
-
 export default function HomePage() {
   const { t } = useTranslation();
   const {

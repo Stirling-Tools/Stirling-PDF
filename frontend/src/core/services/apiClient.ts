@@ -1,10 +1,11 @@
 import axios from 'axios';
 import { handleHttpError } from '@app/services/httpErrorHandler';
 import { setupApiInterceptors } from '@app/services/apiClientSetup';
+import { getApiBaseUrl } from '@app/services/apiClientConfig';
 
 // Create axios instance with default config
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || '/',
+  baseURL: getApiBaseUrl(),
   responseType: 'json',
 });
 

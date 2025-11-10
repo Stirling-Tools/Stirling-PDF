@@ -165,9 +165,9 @@ export default function AdminGeneralSection() {
   return (
     <Stack gap="lg">
       <div>
-        <Text fw={600} size="lg">{t('admin.settings.general.title', 'General')}</Text>
+        <Text fw={600} size="lg">{t('admin.settings.general.title', 'System Settings')}</Text>
         <Text size="sm" c="dimmed">
-          {t('admin.settings.general.description', 'Configure general application settings including branding and default behaviour.')}
+          {t('admin.settings.general.description', 'Configure system-wide application settings including branding and default behaviour.')}
         </Text>
       </div>
 
@@ -180,7 +180,7 @@ export default function AdminGeneralSection() {
             <TextInput
               label={
                 <Group gap="xs">
-                  <span>{t('admin.settings.general.appNameNavbar', 'Navbar Brand')}</span>
+                  <span>{t('admin.settings.general.appNameNavbar.label', 'Navbar Brand')}</span>
                   <PendingBadge show={isFieldPending('ui.appNameNavbar')} />
                 </Group>
               }
@@ -195,7 +195,7 @@ export default function AdminGeneralSection() {
             <MultiSelect
               label={
                 <Group gap="xs">
-                  <span>{t('admin.settings.general.languages', 'Available Languages')}</span>
+                  <span>{t('admin.settings.general.languages.label', 'Available Languages')}</span>
                   <PendingBadge show={isFieldPending('ui.languages')} />
                 </Group>
               }
@@ -225,7 +225,7 @@ export default function AdminGeneralSection() {
             <TextInput
               label={
                 <Group gap="xs">
-                  <span>{t('admin.settings.general.defaultLocale', 'Default Locale')}</span>
+                  <span>{t('admin.settings.general.defaultLocale.label', 'Default Locale')}</span>
                   <PendingBadge show={isFieldPending('system.defaultLocale')} />
                 </Group>
               }
@@ -240,7 +240,7 @@ export default function AdminGeneralSection() {
             <TextInput
               label={
                 <Group gap="xs">
-                  <span>{t('admin.settings.general.fileUploadLimit', 'File Upload Limit')}</span>
+                  <span>{t('admin.settings.general.fileUploadLimit.label', 'File Upload Limit')}</span>
                   <PendingBadge show={isFieldPending('system.fileUploadLimit')} />
                 </Group>
               }
@@ -253,7 +253,7 @@ export default function AdminGeneralSection() {
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
-              <Text fw={500} size="sm">{t('admin.settings.general.showUpdate', 'Show Update Notifications')}</Text>
+              <Text fw={500} size="sm">{t('admin.settings.general.showUpdate.label', 'Show Update Notifications')}</Text>
               <Text size="xs" c="dimmed" mt={4}>
                 {t('admin.settings.general.showUpdate.description', 'Display notifications when a new version is available')}
               </Text>
@@ -269,7 +269,7 @@ export default function AdminGeneralSection() {
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
-              <Text fw={500} size="sm">{t('admin.settings.general.showUpdateOnlyAdmin', 'Show Updates to Admins Only')}</Text>
+              <Text fw={500} size="sm">{t('admin.settings.general.showUpdateOnlyAdmin.label', 'Show Updates to Admins Only')}</Text>
               <Text size="xs" c="dimmed" mt={4}>
                 {t('admin.settings.general.showUpdateOnlyAdmin.description', 'Restrict update notifications to admin users only')}
               </Text>
@@ -285,7 +285,7 @@ export default function AdminGeneralSection() {
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
-              <Text fw={500} size="sm">{t('admin.settings.general.customHTMLFiles', 'Custom HTML Files')}</Text>
+              <Text fw={500} size="sm">{t('admin.settings.general.customHTMLFiles.label', 'Custom HTML Files')}</Text>
               <Text size="xs" c="dimmed" mt={4}>
                 {t('admin.settings.general.customHTMLFiles.description', 'Allow serving custom HTML files from the customFiles directory')}
               </Text>
@@ -305,13 +305,13 @@ export default function AdminGeneralSection() {
       <Paper withBorder p="md" radius="md">
         <Stack gap="md">
           <Group justify="space-between" align="center">
-            <Text fw={600} size="sm">{t('admin.settings.general.customMetadata', 'Custom Metadata')}</Text>
+            <Text fw={600} size="sm">{t('admin.settings.general.customMetadata.label', 'Custom Metadata')}</Text>
             <Badge color="yellow" size="sm">PRO</Badge>
           </Group>
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
-              <Text fw={500} size="sm">{t('admin.settings.general.customMetadata.autoUpdate', 'Auto Update Metadata')}</Text>
+              <Text fw={500} size="sm">{t('admin.settings.general.customMetadata.autoUpdate.label', 'Auto Update Metadata')}</Text>
               <Text size="xs" c="dimmed" mt={4}>
                 {t('admin.settings.general.customMetadata.autoUpdate.description', 'Automatically update PDF metadata on all processed documents')}
               </Text>
@@ -335,7 +335,7 @@ export default function AdminGeneralSection() {
             <TextInput
               label={
                 <Group gap="xs">
-                  <span>{t('admin.settings.general.customMetadata.author', 'Default Author')}</span>
+                  <span>{t('admin.settings.general.customMetadata.author.label', 'Default Author')}</span>
                   <PendingBadge show={isFieldPending('customMetadata.author')} />
                 </Group>
               }
@@ -356,7 +356,7 @@ export default function AdminGeneralSection() {
             <TextInput
               label={
                 <Group gap="xs">
-                  <span>{t('admin.settings.general.customMetadata.creator', 'Default Creator')}</span>
+                  <span>{t('admin.settings.general.customMetadata.creator.label', 'Default Creator')}</span>
                   <PendingBadge show={isFieldPending('customMetadata.creator')} />
                 </Group>
               }
@@ -377,7 +377,7 @@ export default function AdminGeneralSection() {
             <TextInput
               label={
                 <Group gap="xs">
-                  <span>{t('admin.settings.general.customMetadata.producer', 'Default Producer')}</span>
+                  <span>{t('admin.settings.general.customMetadata.producer.label', 'Default Producer')}</span>
                   <PendingBadge show={isFieldPending('customMetadata.producer')} />
                 </Group>
               }
@@ -400,19 +400,19 @@ export default function AdminGeneralSection() {
       <Paper withBorder p="md" radius="md">
         <Stack gap="md">
           <div>
-            <Text fw={600} size="sm" mb="xs">{t('admin.settings.general.customPaths', 'Custom Paths')}</Text>
+            <Text fw={600} size="sm" mb="xs">{t('admin.settings.general.customPaths.label', 'Custom Paths')}</Text>
             <Text size="xs" c="dimmed">
               {t('admin.settings.general.customPaths.description', 'Configure custom file system paths for pipeline processing and external tools')}
             </Text>
           </div>
 
-          <Text fw={500} size="sm" mt="xs">{t('admin.settings.general.customPaths.pipeline', 'Pipeline Directories')}</Text>
+          <Text fw={500} size="sm" mt="xs">{t('admin.settings.general.customPaths.pipeline.label', 'Pipeline Directories')}</Text>
 
           <div>
             <TextInput
               label={
                 <Group gap="xs">
-                  <span>{t('admin.settings.general.customPaths.pipeline.watchedFoldersDir', 'Watched Folders Directory')}</span>
+                  <span>{t('admin.settings.general.customPaths.pipeline.watchedFoldersDir.label', 'Watched Folders Directory')}</span>
                   <PendingBadge show={isFieldPending('customPaths.pipeline.watchedFoldersDir')} />
                 </Group>
               }
@@ -436,7 +436,7 @@ export default function AdminGeneralSection() {
             <TextInput
               label={
                 <Group gap="xs">
-                  <span>{t('admin.settings.general.customPaths.pipeline.finishedFoldersDir', 'Finished Folders Directory')}</span>
+                  <span>{t('admin.settings.general.customPaths.pipeline.finishedFoldersDir.label', 'Finished Folders Directory')}</span>
                   <PendingBadge show={isFieldPending('customPaths.pipeline.finishedFoldersDir')} />
                 </Group>
               }
@@ -456,13 +456,13 @@ export default function AdminGeneralSection() {
             />
           </div>
 
-          <Text fw={500} size="sm" mt="md">{t('admin.settings.general.customPaths.operations', 'External Tool Paths')}</Text>
+          <Text fw={500} size="sm" mt="md">{t('admin.settings.general.customPaths.operations.label', 'External Tool Paths')}</Text>
 
           <div>
             <TextInput
               label={
                 <Group gap="xs">
-                  <span>{t('admin.settings.general.customPaths.operations.weasyprint', 'WeasyPrint Executable')}</span>
+                  <span>{t('admin.settings.general.customPaths.operations.weasyprint.label', 'WeasyPrint Executable')}</span>
                   <PendingBadge show={isFieldPending('customPaths.operations.weasyprint')} />
                 </Group>
               }
@@ -486,7 +486,7 @@ export default function AdminGeneralSection() {
             <TextInput
               label={
                 <Group gap="xs">
-                  <span>{t('admin.settings.general.customPaths.operations.unoconvert', 'Unoconvert Executable')}</span>
+                  <span>{t('admin.settings.general.customPaths.operations.unoconvert.label', 'Unoconvert Executable')}</span>
                   <PendingBadge show={isFieldPending('customPaths.operations.unoconvert')} />
                 </Group>
               }

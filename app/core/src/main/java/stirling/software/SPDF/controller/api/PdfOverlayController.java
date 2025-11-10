@@ -17,7 +17,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
 
-import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 
 import lombok.RequiredArgsConstructor;
@@ -36,7 +35,7 @@ public class PdfOverlayController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @AutoJobPostMapping(value = "/overlay-pdfs", consumes = "multipart/form-data")
+    @AutoJobPostMapping(value = "/overlay-pdfs", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @StandardPdfResponse
     @Operation(
             summary = "Overlay PDF files in various modes",
@@ -82,9 +81,8 @@ public class PdfOverlayController {
                 overlay.overlay(overlayGuide).save(outputStream);
                 byte[] data = outputStream.toByteArray();
                 String outputFilename =
-                        Filenames.toSimpleFileName(baseFile.getOriginalFilename())
-                                        .replaceFirst("[.][^.]+$", "")
-                                + "_overlayed.pdf"; // Remove file extension and append .pdf
+                        GeneralUtils.generateFilename(
+                                baseFile.getOriginalFilename(), "_overlayed.pdf");
 
                 return WebResponseUtils.bytesToWebResponse(
                         data, outputFilename, MediaType.APPLICATION_PDF);

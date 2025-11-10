@@ -36,14 +36,12 @@ const EmbedPdfViewerContent = ({
   const viewerRef = React.useRef<HTMLDivElement>(null);
   const [isViewerHovered, setIsViewerHovered] = React.useState(false);
 
-  const { isThumbnailSidebarVisible, toggleThumbnailSidebar, zoomActions, spreadActions, panActions: _panActions, rotationActions: _rotationActions, getScrollState, getZoomState, getSpreadState, getRotationState, isAnnotationMode, isAnnotationsVisible, exportActions } = useViewer();
+  const { isThumbnailSidebarVisible, toggleThumbnailSidebar, zoomActions, panActions: _panActions, rotationActions: _rotationActions, getScrollState, getRotationState, isAnnotationMode, isAnnotationsVisible, exportActions } = useViewer();
 
   // Register viewer right-rail buttons
   useViewerRightRailButtons();
 
   const scrollState = getScrollState();
-  const zoomState = getZoomState();
-  const spreadState = getSpreadState();
   const rotationState = getRotationState();
 
   // Track initial rotation to detect changes
@@ -293,15 +291,6 @@ const EmbedPdfViewerContent = ({
             <PdfViewerToolbar
               currentPage={scrollState.currentPage}
               totalPages={scrollState.totalPages}
-              onPageChange={(page) => {
-                // Page navigation handled by scrollActions
-                console.log('Navigate to page:', page);
-              }}
-              dualPage={spreadState.isDualPage}
-              onDualPageToggle={() => {
-                spreadActions.toggleSpreadMode();
-              }}
-              currentZoom={zoomState.zoomPercent}
             />
           </div>
         </div>

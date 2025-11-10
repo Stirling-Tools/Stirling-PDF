@@ -23,6 +23,7 @@ const IGNORED_KEYS = new Set<string>([
 
 type FoundKey = {
   key: string;
+  fallback: string;
   file: string;
   line: number;
   column: number;
@@ -86,22 +87,27 @@ const extractKeys = (file: string): FoundKey[] => {
 
   const found: FoundKey[] = [];
 
-  const record = (node: ts.Node, key: string) => {
+  const record = (node: ts.Node, key: string, fallback: string = "") => {
     const { line, character } = sourceFile.getLineAndCharacterOfPosition(node.getStart());
-    found.push({ key, file, line: line + 1, column: character + 1 });
+    found.push({ key, fallback, file, line: line + 1, column: character + 1 });
   };
 
   const visit = (node: ts.Node) => {
     if (ts.isCallExpression(node)) {
       const callee = node.expression;
-      const arg = node.arguments.at(0);
+      const arg0 = node.arguments.at(0);
+      const arg1 = node.arguments.at(1);
 
       const isT =
         (ts.isIdentifier(callee) && callee.text === 't') ||
         (ts.isPropertyAccessExpression(callee) && callee.name.text === 't');
 
-      if (isT && arg && (ts.isStringLiteral(arg) || ts.isNoSubstitutionTemplateLiteral(arg))) {
-        record(arg, arg.text);
+      if (isT && arg0 && (ts.isStringLiteral(arg0) || ts.isNoSubstitutionTemplateLiteral(arg0))) {
+        let arg1Text: string = "";
+        if (arg1 && (ts.isStringLiteral(arg1) || ts.isNoSubstitutionTemplateLiteral(arg1))) {
+          arg1Text = arg1.text;
+        }
+        record(arg0, arg0.text, arg1Text);
       }
     }
 
@@ -154,12 +160,13 @@ describe('Missing translation coverage', () => {
 
     const missingKeys = usedKeys.filter(({ key }) => !availableKeys.has(key));
 
-    const annotations = missingKeys.map(({ key, file, line, column }) => {
+    const annotations = missingKeys.map(({ key, fallback, file, line, column }) => {
       const workspaceRelativeRaw = path.relative(REPO_ROOT, file);
       const workspaceRelativeFile = workspaceRelativeRaw.replace(/\\/g, '/');
 
       return {
         key,
+        fallback,
         file: workspaceRelativeFile,
         line,
         column,
@@ -167,12 +174,20 @@ describe('Missing translation coverage', () => {
     });
 
     // Output errors in GitHub Annotations format so they appear tagged in the code in CI
-    for (const { key, file, line, column } of annotations) {
+    for (const { key, fallback, file, line, column } of annotations) {
       process.stderr.write(
-        `::error file=${file},line=${line},col=${column}::Missing en-GB translation for ${key}\n`,
+        `::error file=${file},line=${line},col=${column}::Missing en-GB translation for ${key} (${fallback})\n`,
       );
     }
 
-    expect(missingKeys).toEqual([]);
+    const neatened = annotations.map(({ key, fallback, file, line, column }) => {
+      return {
+        key,
+        fallback,
+        location: `${file}:${line}:${column}`,
+      }
+    });
+
+    expect(neatened).toEqual([]);
   });
 });

@@ -30,6 +30,7 @@ import stirling.software.SPDF.pdf.FlexibleCSVWriter;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.GeneralUtils;
 
 import technology.tabula.ObjectExtractor;
 import technology.tabula.Page;
@@ -43,7 +44,7 @@ public class ExtractCSVController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @AutoJobPostMapping(value = "/pdf/csv", consumes = "multipart/form-data")
+    @AutoJobPostMapping(value = "/pdf/csv", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @CsvConversionResponse
     @Operation(
             summary = "Extracts a CSV document from a PDF",
@@ -125,7 +126,7 @@ public class ExtractCSVController {
     }
 
     private String getBaseName(String filename) {
-        return filename.replaceFirst("[.][^.]+$", "");
+        return GeneralUtils.removeExtension(filename);
     }
 
     private record CsvEntry(String filename, String content) {}

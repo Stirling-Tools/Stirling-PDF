@@ -252,6 +252,25 @@
   color: var(--text-brand-accent);
 }
 
+/* Compact error container for inline tool settings */
+.errorCompact {
+  background-color: var(--bg-raised);
+  border: 0.0625rem solid var(--border-default);
+  border-radius: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  margin-top: 0.5rem;
+  max-width: 100%;
+}
+
+/* Two-line clamp for compact error text */
+.errorTextClamp {
+  color: var(--text-brand-accent);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 /* Dark-mode adjustments */
 :global([data-mantine-color-scheme='dark']) .selectedList {
   background-color: var(--bg-raised);
