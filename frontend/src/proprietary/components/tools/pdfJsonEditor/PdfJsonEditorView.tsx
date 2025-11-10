@@ -706,6 +706,8 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
   }, [autoScaleText, visibleGroups, editingGroupId, currentPage, pageHeight, scale, fontFamilies.size, selectedPage]);
 
   useLayoutEffect(() => {
+    // Only restore caret position during re-renders while already editing
+    // Don't interfere with initial click-to-position behavior
     if (!editingGroupId) {
       return;
     }
@@ -714,7 +716,8 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
       return;
     }
     const offset = caretOffsetsRef.current.get(editingGroupId);
-    if (offset === undefined) {
+    // Only restore if we have a saved offset (meaning user was already typing)
+    if (offset === undefined || offset === 0) {
       return;
     }
     setCaretOffset(editor, offset);
@@ -1378,6 +1381,10 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
                                   }
                                   event.currentTarget.style.fontFamily = fontFamily;
                                 }}
+                                onClick={(event) => {
+                                  // Allow click position to determine cursor placement
+                                  event.stopPropagation();
+                                }}
                                 onBlur={(event) => {
                                   const value = event.currentTarget.innerText.replace(/\u00A0/g, ' ');
                                   caretOffsetsRef.current.delete(group.id);
@@ -1414,7 +1421,7 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
                                   outline: 'none',
                                   border: 'none',
                                   display: 'block',
-                                  whiteSpace: 'nowrap',
+                                  whiteSpace: 'pre',
                                   cursor: 'text',
                                   overflow: 'visible',
                                 }}
@@ -1441,7 +1448,7 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
                                 width: '100%',
                                 minHeight: '100%',
                                 padding: 0,
-                                whiteSpace: 'nowrap',
+                                whiteSpace: 'pre',
                                 fontSize: `${fontSizePx}px`,
                                 fontFamily,
                                 fontWeight,
@@ -1464,9 +1471,28 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
                                 {group.text || '\u00A0'}
                               </span>
                             </div>,
-                            () => {
+                            (event: React.MouseEvent) => {
                               setEditingGroupId(group.id);
                               setActiveGroupId(group.id);
+                              // Store click position for later cursor placement
+                              const editor = document.querySelector<HTMLElement>(`[data-editor-group="${group.id}"]`);
+                              if (editor) {
+                                const rect = editor.getBoundingClientRect();
+                                const clickX = event.clientX - rect.left;
+                                const clickY = event.clientY - rect.top;
+
+                                // Use setTimeout to allow the editor to render first
+                                setTimeout(() => {
+                                  const range = document.caretRangeFromPoint(event.clientX, event.clientY);
+                                  if (range) {
+                                    const selection = window.getSelection();
+                                    if (selection) {
+                                      selection.removeAllRanges();
+                                      selection.addRange(range);
+                                    }
+                                  }
+                                }, 0);
+                              }
                             },
                           )}
                         </Box>
