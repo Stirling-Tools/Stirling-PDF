@@ -1,12 +1,28 @@
 import { useMemo, useState, useEffect, useCallback, useRef } from 'react';
+import { isAxiosError } from 'axios';
 import apiClient from '@app/services/apiClient';
 import { tauriBackendService } from '@app/services/tauriBackendService';
+import { isBackendNotReadyError } from '@app/constants/backendErrors';
 
 interface EndpointConfig {
   backendUrl: string;
 }
 
 const RETRY_DELAY_MS = 2500;
+
+function getErrorMessage(err: unknown): string {
+  if (isAxiosError(err)) {
+    const data = err.response?.data as { message?: string } | undefined;
+    if (typeof data?.message === 'string') {
+      return data.message;
+    }
+    return err.message || 'Unknown error occurred';
+  }
+  if (err instanceof Error) {
+    return err.message;
+  }
+  return 'Unknown error occurred';
+}
 
 /**
  * Desktop-specific endpoint checker that hits the backend directly via axios.
@@ -57,9 +73,9 @@ export function useEndpointEnabled(endpoint: string): {
 
       if (!isMountedRef.current) return;
       setEnabled(response.data);
-    } catch (err: any) {
-      const message = err?.response?.data?.message || err?.message || 'Unknown error occurred';
-      const isBackendStarting = err?.code === 'BACKEND_NOT_READY';
+    } catch (err: unknown) {
+      const isBackendStarting = isBackendNotReadyError(err);
+      const message = getErrorMessage(err);
       if (!isMountedRef.current) return;
       setError(isBackendStarting ? 'Backend starting up...' : message);
       setEnabled(true);
@@ -161,9 +177,9 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
 
       if (!isMountedRef.current) return;
       setEndpointStatus(response.data);
-    } catch (err: any) {
-      const message = err?.response?.data?.message || err?.message || 'Unknown error occurred';
-      const isBackendStarting = err?.code === 'BACKEND_NOT_READY';
+    } catch (err: unknown) {
+      const isBackendStarting = isBackendNotReadyError(err);
+      const message = getErrorMessage(err);
       if (!isMountedRef.current) return;
       setError(isBackendStarting ? 'Backend starting up...' : message);
 

@@ -2,6 +2,7 @@ import { AxiosInstance } from 'axios';
 import { alert } from '@app/components/toast';
 import { setupApiInterceptors as coreSetup } from '@core/services/apiClientSetup';
 import { tauriBackendService } from '@app/services/tauriBackendService';
+import { createBackendNotReadyError } from '@app/constants/backendErrors';
 
 const BACKEND_TOAST_COOLDOWN_MS = 4000;
 let lastBackendToast = 0;
@@ -36,9 +37,7 @@ export function setupApiInterceptors(client: AxiosInstance): void {
         }
       }
 
-      const error = new Error('Backend is not ready yet');
-      (error as any).code = 'BACKEND_NOT_READY';
-      return Promise.reject(error);
+      return Promise.reject(createBackendNotReadyError());
     }
   );
 }
