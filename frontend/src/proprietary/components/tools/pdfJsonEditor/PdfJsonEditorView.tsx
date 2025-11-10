@@ -28,6 +28,7 @@ import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import UploadIcon from '@mui/icons-material/Upload';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import CloseIcon from '@mui/icons-material/Close';
 import { Rnd } from 'react-rnd';
 
 import {
@@ -235,6 +236,7 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
     onLoadJson,
     onSelectPage,
     onGroupEdit,
+    onGroupDelete,
     onImageTransform,
     onImageReset,
     onReset,
@@ -749,6 +751,7 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
 
   const renderGroupContainer = (
     groupId: string,
+    pageIndex: number,
     isActive: boolean,
     isChanged: boolean,
     content: React.ReactNode,
@@ -757,8 +760,10 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
     <Box
       component="div"
       style={{
-        width: '100%',
-        height: '100%',
+        width: 'calc(100% + 4px)',
+        height: 'calc(100% + 6px)',
+        marginLeft: '-2px',
+        marginTop: '-3px',
         outline: isActive
           ? '2px solid var(--mantine-color-blue-5)'
           : isChanged
@@ -773,7 +778,8 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
         display: 'flex',
         alignItems: 'flex-start',
         justifyContent: 'flex-start',
-        padding: 0,
+        padding: '3px 2px 3px 2px',
+        position: 'relative',
       }}
       onClick={(event) => {
         event.stopPropagation();
@@ -787,6 +793,29 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
       }}
     >
       {content}
+      {isActive && editingGroupId !== groupId && (
+        <ActionIcon
+          size="xs"
+          variant="filled"
+          color="red"
+          radius="xl"
+          style={{
+            position: 'absolute',
+            top: -8,
+            right: -8,
+            zIndex: 10,
+            cursor: 'pointer',
+          }}
+          onClick={(event) => {
+            event.stopPropagation();
+            onGroupDelete(pageIndex, groupId);
+            setActiveGroupId(null);
+            setEditingGroupId(null);
+          }}
+        >
+          <CloseIcon style={{ fontSize: 12 }} />
+        </ActionIcon>
+      )}
     </Box>
   );
 
@@ -1352,6 +1381,7 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
                           <Box key={group.id} style={containerStyle}>
                             {renderGroupContainer(
                               group.id,
+                              group.pageIndex,
                               true,
                               changed,
                               <div
@@ -1440,6 +1470,7 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
                         <Box key={group.id} style={containerStyle}>
                           {renderGroupContainer(
                             group.id,
+                            group.pageIndex,
                             isActive,
                             changed,
                             <div

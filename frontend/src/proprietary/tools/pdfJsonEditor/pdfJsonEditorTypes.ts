@@ -199,6 +199,7 @@ export interface PdfJsonEditorViewData {
   onLoadJson: (file: File | null) => Promise<void> | void;
   onSelectPage: (pageIndex: number) => void;
   onGroupEdit: (pageIndex: number, groupId: string, value: string) => void;
+  onGroupDelete: (pageIndex: number, groupId: string) => void;
   onImageTransform: (
     pageIndex: number,
     imageId: string,

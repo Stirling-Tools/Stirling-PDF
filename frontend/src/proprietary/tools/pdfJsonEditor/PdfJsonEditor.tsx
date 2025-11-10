@@ -576,6 +576,16 @@ const PdfJsonEditor = ({ onComplete, onError }: BaseToolProps) => {
     );
   }, []);
 
+  const handleGroupDelete = useCallback((pageIndex: number, groupId: string) => {
+    setGroupsByPage((previous) =>
+      previous.map((groups, idx) =>
+        idx !== pageIndex
+          ? groups
+          : groups.map((group) => (group.id === groupId ? { ...group, text: '' } : group))
+      )
+    );
+  }, []);
+
   const handleImageTransform = useCallback(
     (
       pageIndex: number,
@@ -913,8 +923,9 @@ const PdfJsonEditor = ({ onComplete, onError }: BaseToolProps) => {
 
         try {
           const textContent = await page.getTextContent();
-          const maskMarginX = Math.max(0.45 * scale, 0.45);
-          const maskMarginY = Math.max(0.85 * scale, 0.85);
+          const maskMarginX = 0;
+          const maskMarginTop = 0;
+          const maskMarginBottom = Math.max(3 * scale, 3);
           context.save();
           context.globalCompositeOperation = 'destination-out';
           context.fillStyle = '#000000';
@@ -931,8 +942,8 @@ const PdfJsonEditor = ({ onComplete, onError }: BaseToolProps) => {
             const width = (item.width || 0) * viewport.scale + maskMarginX * 2;
             const fontHeight = Math.hypot(c, d);
             const rawHeight = item.height ? item.height * viewport.scale : fontHeight;
-            const height = Math.max(rawHeight + maskMarginY * 2, fontHeight + maskMarginY * 2);
-            const baselineOffset = height - maskMarginY;
+            const height = Math.max(rawHeight + maskMarginTop + maskMarginBottom, fontHeight + maskMarginTop + maskMarginBottom);
+            const baselineOffset = height - maskMarginBottom;
 
             context.save();
             context.translate(e, f);
@@ -984,6 +995,7 @@ const PdfJsonEditor = ({ onComplete, onError }: BaseToolProps) => {
     onLoadJson: handleLoadFile,
     onSelectPage: handleSelectPage,
     onGroupEdit: handleGroupTextChange,
+    onGroupDelete: handleGroupDelete,
     onImageTransform: handleImageTransform,
     onImageReset: handleImageReset,
     onReset: handleResetEdits,
@@ -1001,6 +1013,7 @@ const PdfJsonEditor = ({ onComplete, onError }: BaseToolProps) => {
     handleDownloadJson,
     handleGeneratePdf,
     handleGroupTextChange,
+    handleGroupDelete,
     handleImageReset,
     handleLoadFile,
     handleResetEdits,
