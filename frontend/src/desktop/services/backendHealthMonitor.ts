@@ -1,0 +1,110 @@
+import { tauriBackendService, BackendStatus } from '@app/services/tauriBackendService';
+
+export interface BackendHealthSnapshot {
+  status: BackendStatus;
+  message?: string;
+  lastChecked?: number;
+  isChecking: boolean;
+  error: string | null;
+}
+
+type Listener = (state: BackendHealthSnapshot) => void;
+
+class BackendHealthMonitor {
+  private listeners = new Set<Listener>();
+  private intervalId: ReturnType<typeof setInterval> | null = null;
+  private readonly intervalMs: number;
+  private state: BackendHealthSnapshot = {
+    status: tauriBackendService.getBackendStatus(),
+    isChecking: false,
+    error: null,
+  };
+
+  constructor(pollingInterval = 5000) {
+    this.intervalMs = pollingInterval;
+
+    // Reflect status updates from the backend service immediately
+    tauriBackendService.subscribeToStatus((status) => {
+      this.updateState({
+        status,
+        error: status === 'healthy' ? null : this.state.error,
+      });
+    });
+  }
+
+  private updateState(partial: Partial<BackendHealthSnapshot>) {
+    this.state = { ...this.state, ...partial };
+    this.listeners.forEach((listener) => listener(this.state));
+  }
+
+  private ensurePolling() {
+    if (this.intervalId !== null) {
+      return;
+    }
+    void this.pollOnce();
+    this.intervalId = setInterval(() => {
+      void this.pollOnce();
+    }, this.intervalMs);
+  }
+
+  private stopPolling() {
+    if (this.intervalId) {
+      clearInterval(this.intervalId);
+      this.intervalId = null;
+    }
+  }
+
+  private async pollOnce(): Promise<boolean> {
+    this.updateState({
+      isChecking: true,
+      lastChecked: Date.now(),
+      error: this.state.error ?? 'Backend offline',
+    });
+
+    try {
+      const healthy = await tauriBackendService.checkBackendHealth();
+      this.updateState({
+        status: healthy ? 'healthy' : 'unhealthy',
+        isChecking: false,
+        message: healthy ? 'Backend is healthy' : 'Backend is unavailable',
+        error: healthy ? null : 'Backend offline',
+        lastChecked: Date.now(),
+      });
+      return healthy;
+    } catch (error) {
+      console.error('[BackendHealthMonitor] Health check failed:', error);
+      this.updateState({
+        status: 'unhealthy',
+        isChecking: false,
+        message: 'Backend is unavailable',
+        error: 'Backend offline',
+        lastChecked: Date.now(),
+      });
+      return false;
+    }
+  }
+
+  subscribe(listener: Listener): () => void {
+    this.listeners.add(listener);
+    listener(this.state);
+    if (this.listeners.size === 1) {
+      this.ensurePolling();
+    }
+    return () => {
+      this.listeners.delete(listener);
+      if (this.listeners.size === 0) {
+        this.stopPolling();
+      }
+    };
+  }
+
+  getSnapshot(): BackendHealthSnapshot {
+    return this.state;
+  }
+
+  async checkNow(): Promise<boolean> {
+    return this.pollOnce();
+  }
+}
+
+export const backendHealthMonitor = new BackendHealthMonitor();

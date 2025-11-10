@@ -9,7 +9,7 @@ export interface DesktopBackendReadiness {
 }
 
 export function useBackendReadiness(): DesktopBackendReadiness {
-  const { status, error } = useBackendHealth(3000);
+  const { status, error } = useBackendHealth();
   const { t } = useTranslation();
 
   const readiness = useMemo<DesktopBackendReadiness>(() => {
