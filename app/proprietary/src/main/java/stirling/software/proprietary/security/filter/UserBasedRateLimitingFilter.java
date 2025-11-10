@@ -25,6 +25,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import stirling.software.common.model.enumeration.Role;
+import stirling.software.common.util.RegexPatternUtils;
 
 @Component
 public class UserBasedRateLimitingFilter extends OncePerRequestFilter {
@@ -143,6 +144,6 @@ public class UserBasedRateLimitingFilter extends OncePerRequestFilter {
     }
 
     private static String stripNewlines(final String s) {
-        return s.replaceAll("[\n\r]", "");
+        return RegexPatternUtils.getInstance().getNewlineCharsPattern().matcher(s).replaceAll("");
     }
 }

@@ -4,6 +4,7 @@ import { AddPageNumbersParameters } from '@app/components/tools/addPageNumbers/u
 import { pdfWorkerManager } from '@app/services/pdfWorkerManager';
 import { useThumbnailGeneration } from '@app/hooks/useThumbnailGeneration';
 import styles from '@app/components/tools/addPageNumbers/PageNumberPreview.module.css';
+import { PrivateContent } from '@app/components/shared/PrivateContent';
 
 // Simple utilities for page numbers (adapted from stamp)
 const A4_ASPECT_RATIO = 0.707;
@@ -197,12 +198,14 @@ export default function PageNumberPreview({ parameters, onParameterChange, file,
         style={containerStyle}
       >
         {pageThumbnail && (
-          <img
-            src={pageThumbnail}
-            alt="page preview"
-            className={`${styles.pageThumbnail} ph-no-capture`}
-            draggable={false}
-          />
+          <PrivateContent>
+            <img
+              src={pageThumbnail}
+              alt="page preview"
+              className={styles.pageThumbnail}
+              draggable={false}
+            />
+          </PrivateContent>
         )}
 
         {/* Quick position overlay grid - EXACT copy from stamp */}

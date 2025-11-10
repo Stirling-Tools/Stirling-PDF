@@ -2,13 +2,14 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { createPluginRegistration } from '@embedpdf/core';
 import { EmbedPDF } from '@embedpdf/core/react';
 import { usePdfiumEngine } from '@embedpdf/engines/react';
+import { PrivateContent } from '@app/components/shared/PrivateContent';
 
 // Import the essential plugins
 import { Viewport, ViewportPluginPackage } from '@embedpdf/plugin-viewport/react';
 import { Scroller, ScrollPluginPackage, ScrollStrategy } from '@embedpdf/plugin-scroll/react';
 import { LoaderPluginPackage } from '@embedpdf/plugin-loader/react';
 import { RenderPluginPackage } from '@embedpdf/plugin-render/react';
-import { ZoomPluginPackage } from '@embedpdf/plugin-zoom/react';
+import { ZoomPluginPackage, ZoomMode } from '@embedpdf/plugin-zoom/react';
 import { InteractionManagerPluginPackage, PagePointerProvider, GlobalPointerProvider } from '@embedpdf/plugin-interaction-manager/react';
 import { SelectionLayer, SelectionPluginPackage } from '@embedpdf/plugin-selection/react';
 import { TilingLayer, TilingPluginPackage } from '@embedpdf/plugin-tiling/react';
@@ -114,9 +115,9 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
 
       // Register zoom plugin with configuration
       createPluginRegistration(ZoomPluginPackage, {
-        defaultZoomLevel: 1.4, // Start at 140% zoom for better readability
+        defaultZoomLevel: ZoomMode.FitWidth, // Start with FitWidth, will be adjusted in ZoomAPIBridge
         minZoom: 0.2,
-        maxZoom: 3.0,
+        maxZoom: 5.0,
       }),
 
       // Register tiling plugin (depends on Render, Scroll, Viewport)
@@ -184,18 +185,17 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
 
   // Wrap your UI with the <EmbedPDF> provider
   return (
-    <div
-      className='ph-no-capture'
-
-      style={{
-        height: '100%',
-        width: '100%',
-        position: 'relative',
-        overflow: 'hidden',
-        flex: 1,
-        minHeight: 0,
-        minWidth: 0,
-    }}>
+    <PrivateContent>
+      <div
+        style={{
+          height: '100%',
+          width: '100%',
+          position: 'relative',
+          overflow: 'hidden',
+          flex: 1,
+          minHeight: 0,
+          minWidth: 0,
+      }}>
       <EmbedPDF
         engine={engine}
         plugins={plugins}
@@ -287,6 +287,8 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
               minHeight: 0,
               minWidth: 0,
               contain: 'strict',
+              display: 'flex',
+              justifyContent: 'center',
             }}
           >
           <Scroller
@@ -295,6 +297,9 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
                 <Rotate key={document?.id} pageSize={{ width, height }}>
                   <PagePointerProvider pageIndex={pageIndex} pageWidth={width} pageHeight={height} scale={scale} rotation={rotation}>
                     <div
+                      data-page-index={pageIndex}
+                      data-page-width={width}
+                      data-page-height={height}
                       style={{
                         width,
                         height,
@@ -338,6 +343,7 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
           </Viewport>
         </GlobalPointerProvider>
       </EmbedPDF>
-    </div>
+      </div>
+    </PrivateContent>
   );
 }

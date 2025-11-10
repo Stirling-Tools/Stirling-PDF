@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import React from 'react';
 import { Box } from '@mantine/core';
 import { useRainbowThemeContext } from '@app/components/shared/RainbowThemeProvider';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
@@ -9,7 +10,7 @@ import { useViewer } from '@app/contexts/ViewerContext';
 import { PageEditorProvider } from '@app/contexts/PageEditorContext';
 import { isBaseWorkbench } from '@app/types/workbench';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
-import '@app/components/layout/Workbench.css';
+import styles from '@app/components/layout/Workbench.module.css';
 
 import TopControls from '@app/components/shared/TopControls';
 import FileEditor from '@app/components/fileEditor/FileEditor';
@@ -155,13 +156,13 @@ export default function Workbench() {
   return (
     <PageEditorProvider>
       <Box
-        className="flex-1 h-full min-w-80 relative flex flex-col"
-        data-tour="workbench"
-        style={
-          isRainbowMode
-            ? {}
-            : { backgroundColor: 'var(--bg-background)' }
-        }
+   className={`flex-1 h-full min-w-80 relative flex flex-col z-10 ${styles.workbenchScrollable}`}
+    data-tour="workbench"
+    style={{
+      backgroundColor: isRainbowMode ? undefined : 'var(--bg-background)',
+      transition: 'opacity 0.15s ease-in-out',
+      paddingTop: currentView === 'viewer' ? '0' : (activeFiles.length > 0 ? '3.5rem' : '0'),
+    }}
       >
         {/* Top Controls */}
         {activeFiles.length > 0 && (
@@ -193,7 +194,7 @@ export default function Workbench() {
         </Box>
 
         <Footer
-          analyticsEnabled={config?.enableAnalytics === true}
+          analyticsEnabled={config?.enableAnalytics === undefined}
           termsAndConditions={config?.termsAndConditions}
           privacyPolicy={config?.privacyPolicy}
           cookiePolicy={config?.cookiePolicy}
@@ -201,6 +202,5 @@ export default function Workbench() {
           accessibilityStatement={config?.accessibilityStatement}
         />
       </Box>
-    </PageEditorProvider>
   );
 }

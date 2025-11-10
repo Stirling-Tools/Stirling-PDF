@@ -1,5 +1,17 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useRequestHeaders } from '@app/hooks/useRequestHeaders';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import apiClient from '@app/services/apiClient';
+
+/**
+ * Sleep utility for delays
+ */
+function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+export interface AppConfigRetryOptions {
+  maxRetries?: number;
+  initialDelay?: number;
+}
 
 export interface AppConfig {
   baseUrl?: string;
@@ -36,52 +48,114 @@ interface AppConfigContextValue {
   refetch: () => Promise<void>;
 }
 
-// Create context
-const AppConfigContext = createContext<AppConfigContextValue | undefined>(undefined);
+const AppConfigContext = createContext<AppConfigContextValue | undefined>({
+  config: null,
+  loading: true,
+  error: null,
+  refetch: async () => {},
+});
 
 /**
  * Provider component that fetches and provides app configuration
  * Should be placed at the top level of the app, before any components that need config
  */
-export const AppConfigProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const AppConfigProvider: React.FC<{
+  children: ReactNode;
+  retryOptions?: AppConfigRetryOptions;
+}> = ({ children, retryOptions }) => {
   const [config, setConfig] = useState<AppConfig | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const headers = useRequestHeaders();
+  const [fetchCount, setFetchCount] = useState(0);
 
-  const fetchConfig = async () => {
-    try {
-      setLoading(true);
-      setError(null);
+  const maxRetries = retryOptions?.maxRetries ?? 0;
+  const initialDelay = retryOptions?.initialDelay ?? 1000;
 
-      const response = await fetch('/api/v1/config/app-config', {
-        headers,
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch config: ${response.status} ${response.statusText}`);
-      }
-
-      const data: AppConfig = await response.json();
-      setConfig(data);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
-      setError(errorMessage);
-      console.error('[AppConfig] Failed to fetch app config:', err);
-    } finally {
-      setLoading(false);
+  const fetchConfig = async (force = false) => {
+    // Prevent duplicate fetches unless forced
+    if (!force && fetchCount > 0) {
+      console.debug('[AppConfig] Already fetched, skipping');
+      return;
     }
+
+    setLoading(true);
+    setError(null);
+
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        if (attempt > 0) {
+          const delay = initialDelay * Math.pow(2, attempt - 1);
+          console.log(`[AppConfig] Retry attempt ${attempt}/${maxRetries} after ${delay}ms delay...`);
+          await sleep(delay);
+        } else {
+          console.log('[AppConfig] Fetching app config...');
+        }
+
+        // apiClient automatically adds JWT header if available via interceptors
+        const response = await apiClient.get<AppConfig>('/api/v1/config/app-config');
+        const data = response.data;
+
+        console.debug('[AppConfig] Config fetched successfully:', data);
+        setConfig(data);
+        setFetchCount(prev => prev + 1);
+        setLoading(false);
+        return; // Success - exit function
+      } catch (err: any) {
+        const status = err?.response?.status;
+
+        // On 401 (not authenticated), use default config with login enabled
+        // This allows the app to work even without authentication
+        if (status === 401) {
+          console.debug('[AppConfig] 401 error - using default config (login enabled)');
+          setConfig({ enableLogin: true });
+          setLoading(false);
+          return;
+        }
+
+        // Check if we should retry (network errors or 5xx errors)
+        const shouldRetry = (!status || status >= 500) && attempt < maxRetries;
+
+        if (shouldRetry) {
+          console.warn(`[AppConfig] Attempt ${attempt + 1} failed (status ${status || 'network error'}):`, err.message, '- will retry...');
+          continue;
+        }
+
+        // Final attempt failed or non-retryable error (4xx)
+        const errorMessage = err?.response?.data?.message || err?.message || 'Unknown error occurred';
+        setError(errorMessage);
+        console.error(`[AppConfig] Failed to fetch app config after ${attempt + 1} attempts:`, err);
+        // On error, assume login is enabled (safe default)
+        setConfig({ enableLogin: true });
+        break;
+      }
+    }
+
+    setLoading(false);
   };
 
   useEffect(() => {
+    // Always try to fetch config to check if login is disabled
+    // The endpoint should be public and return proper JSON
     fetchConfig();
+  }, []);
+
+  // Listen for JWT availability (triggered on login/signup)
+  useEffect(() => {
+    const handleJwtAvailable = () => {
+      console.debug('[AppConfig] JWT available event - refetching config');
+      // Force refetch with JWT
+      fetchConfig(true);
+    };
+
+    window.addEventListener('jwt-available', handleJwtAvailable);
+    return () => window.removeEventListener('jwt-available', handleJwtAvailable);
   }, []);
 
   const value: AppConfigContextValue = {
     config,
     loading,
     error,
-    refetch: fetchConfig,
+    refetch: () => fetchConfig(true),
   };
 
   return (
@@ -104,4 +178,3 @@ export function useAppConfig(): AppConfigContextValue {
 
   return context;
 }
-

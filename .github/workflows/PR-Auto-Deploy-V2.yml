@@ -87,7 +87,7 @@ jobs:
               fi
             fi
           else
-            auth_users=("Frooodle" "sf298" "Ludy87" "LaserKaspar" "sbplat" "reecebrowne" "DarioGii" "ConnorYoh" "EthanHealy01" "jbrunton96")
+            auth_users=("Frooodle" "sf298" "Ludy87" "LaserKaspar" "sbplat" "reecebrowne" "DarioGii" "ConnorYoh" "EthanHealy01" "jbrunton96" "balazs-szucs")
             is_auth=false; for u in "${auth_users[@]}"; do [ "$u" = "$PR_AUTHOR" ] && is_auth=true && break; done
             if [ "$PR_BASE" = "V2" ] && [ "$is_auth" = true ]; then
               should=true

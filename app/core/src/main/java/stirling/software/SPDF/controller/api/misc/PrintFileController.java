@@ -18,6 +18,7 @@ import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.printing.PDFPageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
@@ -32,7 +33,7 @@ import stirling.software.common.annotations.api.MiscApi;
 public class PrintFileController {
 
     // TODO
-    // @AutoJobPostMapping(value = "/print-file", consumes = "multipart/form-data")
+    // @AutoJobPostMapping(value = "/print-file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     // @Operation(
     //        summary = "Prints PDF/Image file to a set printer",
     //        description =
@@ -62,9 +63,9 @@ public class PrintFileController {
                                             new IllegalArgumentException(
                                                     "No matching printer found"));
 
-            log.info("Selected Printer: " + selectedService.getName());
+            log.info("Selected Printer: {}", selectedService.getName());
 
-            if ("application/pdf".equals(contentType)) {
+            if (MediaType.APPLICATION_PDF_VALUE.equals(contentType)) {
                 PDDocument document = Loader.loadPDF(file.getBytes());
                 PrinterJob job = PrinterJob.getPrinterJob();
                 job.setPrintService(selectedService);
