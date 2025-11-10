@@ -21,6 +21,7 @@ import { FileId } from '@app/types/file';
 import { formatFileSize } from '@app/utils/fileUtils';
 import ToolChain from '@app/components/shared/ToolChain';
 import HoverActionMenu, { HoverAction } from '@app/components/shared/HoverActionMenu';
+import { PrivateContent } from '@app/components/shared/PrivateContent';
 
 
 
@@ -328,8 +329,8 @@ const FileEditorThumbnail = ({
         marginTop: '0.5rem',
         marginBottom: '0.5rem',
       }}>
-        <Text  size="lg" fw={700} className={`${styles.title}  ph-no-capture `}  lineClamp={2}>
-          {file.name}
+        <Text  size="lg" fw={700} className={styles.title}  lineClamp={2}>
+          <PrivateContent>{file.name}</PrivateContent>
         </Text>
         <Text
           size="sm"
@@ -353,20 +354,20 @@ const FileEditorThumbnail = ({
       >
         <div className={styles.previewPaper}>
           {file.thumbnailUrl && (
-            <img
-              className="ph-no-capture"
-              src={file.thumbnailUrl}
-              alt={file.name}
-              draggable={false}
-              loading="lazy"
-              decoding="async"
-              onError={(e) => {
-                const img = e.currentTarget;
-                img.style.display = 'none';
-                img.parentElement?.setAttribute('data-thumb-missing', 'true');
-              }}
-              style={{
-                maxWidth: '80%',
+            <PrivateContent>
+              <img
+                src={file.thumbnailUrl}
+                alt={file.name}
+                draggable={false}
+                loading="lazy"
+                decoding="async"
+                onError={(e) => {
+                  const img = e.currentTarget;
+                  img.style.display = 'none';
+                  img.parentElement?.setAttribute('data-thumb-missing', 'true');
+                }}
+                style={{
+                  maxWidth: '80%',
                 maxHeight: '80%',
                 objectFit: 'contain',
                 borderRadius: 0,
@@ -378,6 +379,7 @@ const FileEditorThumbnail = ({
                 alignSelf: 'start'
               }}
             />
+            </PrivateContent>
           )}
         </div>
 
