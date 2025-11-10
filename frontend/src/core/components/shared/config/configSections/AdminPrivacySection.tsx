@@ -116,7 +116,7 @@ export default function AdminPrivacySection() {
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
-              <Text fw={500} size="sm">{t('admin.settings.privacy.enableAnalytics', 'Enable Analytics')}</Text>
+              <Text fw={500} size="sm">{t('admin.settings.privacy.enableAnalytics.label', 'Enable Analytics')}</Text>
               <Text size="xs" c="dimmed" mt={4}>
                 {t('admin.settings.privacy.enableAnalytics.description', 'Collect anonymous usage analytics to help improve the application')}
               </Text>
@@ -132,7 +132,7 @@ export default function AdminPrivacySection() {
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
-              <Text fw={500} size="sm">{t('admin.settings.privacy.metricsEnabled', 'Enable Metrics')}</Text>
+              <Text fw={500} size="sm">{t('admin.settings.privacy.metricsEnabled.label', 'Enable Metrics')}</Text>
               <Text size="xs" c="dimmed" mt={4}>
                 {t('admin.settings.privacy.metricsEnabled.description', 'Enable collection of performance and usage metrics')}
               </Text>
@@ -155,7 +155,7 @@ export default function AdminPrivacySection() {
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
-              <Text fw={500} size="sm">{t('admin.settings.privacy.googleVisibility', 'Google Visibility')}</Text>
+              <Text fw={500} size="sm">{t('admin.settings.privacy.googleVisibility.label', 'Google Visibility')}</Text>
               <Text size="xs" c="dimmed" mt={4}>
                 {t('admin.settings.privacy.googleVisibility.description', 'Allow search engines to index this application')}
               </Text>

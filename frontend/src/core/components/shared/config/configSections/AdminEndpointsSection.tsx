@@ -117,7 +117,7 @@ export default function AdminEndpointsSection() {
             <MultiSelect
               label={
                 <Group gap="xs">
-                  <span>{t('admin.settings.endpoints.toRemove', 'Disabled Endpoints')}</span>
+                  <span>{t('admin.settings.endpoints.toRemove.label', 'Disabled Endpoints')}</span>
                   <PendingBadge show={isFieldPending('toRemove')} />
                 </Group>
               }
@@ -136,7 +136,7 @@ export default function AdminEndpointsSection() {
             <MultiSelect
               label={
                 <Group gap="xs">
-                  <span>{t('admin.settings.endpoints.groupsToRemove', 'Disabled Endpoint Groups')}</span>
+                  <span>{t('admin.settings.endpoints.groupsToRemove.label', 'Disabled Endpoint Groups')}</span>
                   <PendingBadge show={isFieldPending('groupsToRemove')} />
                 </Group>
               }

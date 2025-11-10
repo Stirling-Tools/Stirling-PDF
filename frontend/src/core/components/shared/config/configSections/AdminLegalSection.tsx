@@ -87,7 +87,7 @@ export default function AdminLegalSection() {
             <TextInput
               label={
                 <Group gap="xs">
-                  <span>{t('admin.settings.legal.termsAndConditions', 'Terms and Conditions')}</span>
+                  <span>{t('admin.settings.legal.termsAndConditions.label', 'Terms and Conditions')}</span>
                   <PendingBadge show={isFieldPending('termsAndConditions')} />
                 </Group>
               }
@@ -102,7 +102,7 @@ export default function AdminLegalSection() {
             <TextInput
               label={
                 <Group gap="xs">
-                  <span>{t('admin.settings.legal.privacyPolicy', 'Privacy Policy')}</span>
+                  <span>{t('admin.settings.legal.privacyPolicy.label', 'Privacy Policy')}</span>
                   <PendingBadge show={isFieldPending('privacyPolicy')} />
                 </Group>
               }
@@ -117,7 +117,7 @@ export default function AdminLegalSection() {
             <TextInput
               label={
                 <Group gap="xs">
-                  <span>{t('admin.settings.legal.accessibilityStatement', 'Accessibility Statement')}</span>
+                  <span>{t('admin.settings.legal.accessibilityStatement.label', 'Accessibility Statement')}</span>
                   <PendingBadge show={isFieldPending('accessibilityStatement')} />
                 </Group>
               }
@@ -132,7 +132,7 @@ export default function AdminLegalSection() {
             <TextInput
               label={
                 <Group gap="xs">
-                  <span>{t('admin.settings.legal.cookiePolicy', 'Cookie Policy')}</span>
+                  <span>{t('admin.settings.legal.cookiePolicy.label', 'Cookie Policy')}</span>
                   <PendingBadge show={isFieldPending('cookiePolicy')} />
                 </Group>
               }
@@ -147,7 +147,7 @@ export default function AdminLegalSection() {
             <TextInput
               label={
                 <Group gap="xs">
-                  <span>{t('admin.settings.legal.impressum', 'Impressum')}</span>
+                  <span>{t('admin.settings.legal.impressum.label', 'Impressum')}</span>
                   <PendingBadge show={isFieldPending('impressum')} />
                 </Group>
               }

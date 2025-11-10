@@ -20,7 +20,7 @@ const FlattenSettings = ({ parameters, onParameterChange, disabled = false }: Fl
           disabled={disabled}
           label={
             <div>
-              <Text size="sm">{t('flatten.options.flattenOnlyForms', 'Flatten only forms')}</Text>
+              <Text size="sm">{t('flatten.options.flattenOnlyForms.label', 'Flatten only forms')}</Text>
               <Text size="xs" c="dimmed">
                 {t('flatten.options.flattenOnlyForms.desc', 'Only flatten form fields, leaving other interactive elements intact')}
               </Text>

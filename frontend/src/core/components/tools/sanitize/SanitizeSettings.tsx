@@ -12,8 +12,8 @@ const SanitizeSettings = ({ parameters, onParameterChange, disabled = false }: S
   const { t } = useTranslation();
 
   const options = (Object.keys(defaultParameters) as Array<keyof SanitizeParameters>).map((key) => ({
-    key: key,
-    label: t(`sanitize.options.${key}`, key),
+    key,
+    label: t(`sanitize.options.${key}.label`, key),
     description: t(`sanitize.options.${key}.desc`, `${key} from the PDF`),
     default: defaultParameters[key],
   }));

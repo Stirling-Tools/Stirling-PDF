@@ -93,8 +93,8 @@ describe('MergeSettings', () => {
     );
 
     // Verify that translation keys are being called
-    expect(mockT).toHaveBeenCalledWith('merge.removeDigitalSignature', 'Remove digital signature in the merged file?');
-    expect(mockT).toHaveBeenCalledWith('merge.generateTableOfContents', 'Generate table of contents in the merged file?');
+    expect(mockT).toHaveBeenCalledWith('merge.removeDigitalSignature.label', 'Remove digital signature in the merged file?');
+    expect(mockT).toHaveBeenCalledWith('merge.generateTableOfContents.label', 'Generate table of contents in the merged file?');
   });
   
 });

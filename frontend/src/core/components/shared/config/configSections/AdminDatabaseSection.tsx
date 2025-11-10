@@ -123,7 +123,7 @@ export default function AdminDatabaseSection() {
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
-              <Text fw={500} size="sm">{t('admin.settings.database.enableCustom', 'Enable Custom Database')}</Text>
+              <Text fw={500} size="sm">{t('admin.settings.database.enableCustom.label', 'Enable Custom Database')}</Text>
               <Text size="xs" c="dimmed" mt={4}>
                 {t('admin.settings.database.enableCustom.description', 'Use your own custom database configuration instead of the default embedded database')}
               </Text>
@@ -143,7 +143,7 @@ export default function AdminDatabaseSection() {
                 <TextInput
                   label={
                     <Group gap="xs">
-                      <span>{t('admin.settings.database.customUrl', 'Custom Database URL')}</span>
+                      <span>{t('admin.settings.database.customUrl.label', 'Custom Database URL')}</span>
                       <PendingBadge show={isFieldPending('customDatabaseUrl')} />
                     </Group>
                   }
@@ -158,7 +158,7 @@ export default function AdminDatabaseSection() {
                 <Select
                   label={
                     <Group gap="xs">
-                      <span>{t('admin.settings.database.type', 'Database Type')}</span>
+                      <span>{t('admin.settings.database.type.label', 'Database Type')}</span>
                       <PendingBadge show={isFieldPending('type')} />
                     </Group>
                   }
@@ -178,7 +178,7 @@ export default function AdminDatabaseSection() {
                 <TextInput
                   label={
                     <Group gap="xs">
-                      <span>{t('admin.settings.database.hostName', 'Host Name')}</span>
+                      <span>{t('admin.settings.database.hostName.label', 'Host Name')}</span>
                       <PendingBadge show={isFieldPending('hostName')} />
                     </Group>
                   }
@@ -193,7 +193,7 @@ export default function AdminDatabaseSection() {
                 <NumberInput
                   label={
                     <Group gap="xs">
-                      <span>{t('admin.settings.database.port', 'Port')}</span>
+                      <span>{t('admin.settings.database.port.label', 'Port')}</span>
                       <PendingBadge show={isFieldPending('port')} />
                     </Group>
                   }
@@ -209,7 +209,7 @@ export default function AdminDatabaseSection() {
                 <TextInput
                   label={
                     <Group gap="xs">
-                      <span>{t('admin.settings.database.name', 'Database Name')}</span>
+                      <span>{t('admin.settings.database.name.label', 'Database Name')}</span>
                       <PendingBadge show={isFieldPending('name')} />
                     </Group>
                   }
@@ -224,7 +224,7 @@ export default function AdminDatabaseSection() {
                 <TextInput
                   label={
                     <Group gap="xs">
-                      <span>{t('admin.settings.database.username', 'Username')}</span>
+                      <span>{t('admin.settings.database.username.label', 'Username')}</span>
                       <PendingBadge show={isFieldPending('username')} />
                     </Group>
                   }
@@ -239,7 +239,7 @@ export default function AdminDatabaseSection() {
                 <PasswordInput
                   label={
                     <Group gap="xs">
-                      <span>{t('admin.settings.database.password', 'Password')}</span>
+                      <span>{t('admin.settings.database.password.label', 'Password')}</span>
                       <PendingBadge show={isFieldPending('password')} />
                     </Group>
                   }

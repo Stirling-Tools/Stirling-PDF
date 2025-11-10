@@ -197,7 +197,7 @@ export default function AdminSecuritySection() {
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
-              <Text fw={500} size="sm">{t('admin.settings.security.enableLogin', 'Enable Login')}</Text>
+              <Text fw={500} size="sm">{t('admin.settings.security.enableLogin.label', 'Enable Login')}</Text>
               <Text size="xs" c="dimmed" mt={4}>
                 {t('admin.settings.security.enableLogin.description', 'Require users to log in before accessing the application')}
               </Text>
@@ -213,7 +213,7 @@ export default function AdminSecuritySection() {
 
           <div>
             <Select
-              label={t('admin.settings.security.loginMethod', 'Login Method')}
+              label={t('admin.settings.security.loginMethod.label', 'Login Method')}
               description={t('admin.settings.security.loginMethod.description', 'The authentication method to use for user login')}
               value={settings.loginMethod || 'all'}
               onChange={(value) => setSettings({ ...settings, loginMethod: value || 'all' })}
@@ -236,7 +236,7 @@ export default function AdminSecuritySection() {
             <NumberInput
               label={
                 <Group gap="xs">
-                  <span>{t('admin.settings.security.loginAttemptCount', 'Login Attempt Limit')}</span>
+                  <span>{t('admin.settings.security.loginAttemptCount.label', 'Login Attempt Limit')}</span>
                   <PendingBadge show={isFieldPending('loginAttemptCount')} />
                 </Group>
               }
@@ -252,7 +252,7 @@ export default function AdminSecuritySection() {
             <NumberInput
               label={
                 <Group gap="xs">
-                  <span>{t('admin.settings.security.loginResetTimeMinutes', 'Login Reset Time (minutes)')}</span>
+                  <span>{t('admin.settings.security.loginResetTimeMinutes.label', 'Login Reset Time (minutes)')}</span>
                   <PendingBadge show={isFieldPending('loginResetTimeMinutes')} />
                 </Group>
               }
@@ -266,7 +266,7 @@ export default function AdminSecuritySection() {
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
-              <Text fw={500} size="sm">{t('admin.settings.security.csrfDisabled', 'Disable CSRF Protection')}</Text>
+              <Text fw={500} size="sm">{t('admin.settings.security.csrfDisabled.label', 'Disable CSRF Protection')}</Text>
               <Text size="xs" c="dimmed" mt={4}>
                 {t('admin.settings.security.csrfDisabled.description', 'Disable Cross-Site Request Forgery protection (not recommended)')}
               </Text>
@@ -297,11 +297,11 @@ export default function AdminSecuritySection() {
       {/* JWT Settings */}
       <Paper withBorder p="md" radius="md">
         <Stack gap="md">
-          <Text fw={600} size="sm" mb="xs">{t('admin.settings.security.jwt', 'JWT Configuration')}</Text>
+          <Text fw={600} size="sm" mb="xs">{t('admin.settings.security.jwt.label', 'JWT Configuration')}</Text>
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
-              <Text fw={500} size="sm">{t('admin.settings.security.jwt.persistence', 'Enable Key Persistence')}</Text>
+              <Text fw={500} size="sm">{t('admin.settings.security.jwt.persistence.label', 'Enable Key Persistence')}</Text>
               <Text size="xs" c="dimmed" mt={4}>
                 {t('admin.settings.security.jwt.persistence.description', 'Store JWT keys persistently (required for multi-instance deployments)')}
               </Text>
@@ -317,7 +317,7 @@ export default function AdminSecuritySection() {
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
-              <Text fw={500} size="sm">{t('admin.settings.security.jwt.enableKeyRotation', 'Enable Key Rotation')}</Text>
+              <Text fw={500} size="sm">{t('admin.settings.security.jwt.enableKeyRotation.label', 'Enable Key Rotation')}</Text>
               <Text size="xs" c="dimmed" mt={4}>
                 {t('admin.settings.security.jwt.enableKeyRotation.description', 'Automatically rotate JWT signing keys for improved security')}
               </Text>
@@ -333,7 +333,7 @@ export default function AdminSecuritySection() {
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
-              <Text fw={500} size="sm">{t('admin.settings.security.jwt.enableKeyCleanup', 'Enable Key Cleanup')}</Text>
+              <Text fw={500} size="sm">{t('admin.settings.security.jwt.enableKeyCleanup.label', 'Enable Key Cleanup')}</Text>
               <Text size="xs" c="dimmed" mt={4}>
                 {t('admin.settings.security.jwt.enableKeyCleanup.description', 'Automatically remove old JWT keys after retention period')}
               </Text>
@@ -351,7 +351,7 @@ export default function AdminSecuritySection() {
             <NumberInput
               label={
                 <Group gap="xs">
-                  <span>{t('admin.settings.security.jwt.keyRetentionDays', 'Key Retention Days')}</span>
+                  <span>{t('admin.settings.security.jwt.keyRetentionDays.label', 'Key Retention Days')}</span>
                   <PendingBadge show={isFieldPending('jwt.keyRetentionDays')} />
                 </Group>
               }
@@ -365,7 +365,7 @@ export default function AdminSecuritySection() {
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
-              <Text fw={500} size="sm">{t('admin.settings.security.jwt.secureCookie', 'Secure Cookie')}</Text>
+              <Text fw={500} size="sm">{t('admin.settings.security.jwt.secureCookie.label', 'Secure Cookie')}</Text>
               <Text size="xs" c="dimmed" mt={4}>
                 {t('admin.settings.security.jwt.secureCookie.description', 'Require HTTPS for JWT cookies (recommended for production)')}
               </Text>
@@ -385,13 +385,13 @@ export default function AdminSecuritySection() {
       <Paper withBorder p="md" radius="md">
         <Stack gap="md">
           <Group justify="space-between" align="center">
-            <Text fw={600} size="sm">{t('admin.settings.security.audit', 'Audit Logging')}</Text>
+            <Text fw={600} size="sm">{t('admin.settings.security.audit.label', 'Audit Logging')}</Text>
             <Badge color="grape" size="sm">ENTERPRISE</Badge>
           </Group>
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
-              <Text fw={500} size="sm">{t('admin.settings.security.audit.enabled', 'Enable Audit Logging')}</Text>
+              <Text fw={500} size="sm">{t('admin.settings.security.audit.enabled.label', 'Enable Audit Logging')}</Text>
               <Text size="xs" c="dimmed" mt={4}>
                 {t('admin.settings.security.audit.enabled.description', 'Track user actions and system events for compliance and security monitoring')}
               </Text>
@@ -409,7 +409,7 @@ export default function AdminSecuritySection() {
             <NumberInput
               label={
                 <Group gap="xs">
-                  <span>{t('admin.settings.security.audit.level', 'Audit Level')}</span>
+                  <span>{t('admin.settings.security.audit.level.label', 'Audit Level')}</span>
                   <PendingBadge show={isFieldPending('audit.level')} />
                 </Group>
               }
@@ -425,7 +425,7 @@ export default function AdminSecuritySection() {
             <NumberInput
               label={
                 <Group gap="xs">
-                  <span>{t('admin.settings.security.audit.retentionDays', 'Audit Retention (days)')}</span>
+                  <span>{t('admin.settings.security.audit.retentionDays.label', 'Audit Retention (days)')}</span>
                   <PendingBadge show={isFieldPending('audit.retentionDays')} />
                 </Group>
               }
@@ -443,7 +443,7 @@ export default function AdminSecuritySection() {
       <Paper withBorder p="md" radius="md">
         <Stack gap="md">
           <div>
-            <Text fw={600} size="sm" mb="xs">{t('admin.settings.security.htmlUrlSecurity', 'HTML URL Security')}</Text>
+            <Text fw={600} size="sm" mb="xs">{t('admin.settings.security.htmlUrlSecurity.label', 'HTML URL Security')}</Text>
             <Text size="xs" c="dimmed">
               {t('admin.settings.security.htmlUrlSecurity.description', 'Configure URL access restrictions for HTML processing to prevent SSRF attacks')}
             </Text>
@@ -451,7 +451,7 @@ export default function AdminSecuritySection() {
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
-              <Text fw={500} size="sm">{t('admin.settings.security.htmlUrlSecurity.enabled', 'Enable URL Security')}</Text>
+              <Text fw={500} size="sm">{t('admin.settings.security.htmlUrlSecurity.enabled.label', 'Enable URL Security')}</Text>
               <Text size="xs" c="dimmed" mt={4}>
                 {t('admin.settings.security.htmlUrlSecurity.enabled.description', 'Enable URL security restrictions for HTML to PDF conversions')}
               </Text>
@@ -475,7 +475,7 @@ export default function AdminSecuritySection() {
             <Select
               label={
                 <Group gap="xs">
-                  <span>{t('admin.settings.security.htmlUrlSecurity.level', 'Security Level')}</span>
+                  <span>{t('admin.settings.security.htmlUrlSecurity.level.label', 'Security Level')}</span>
                   <PendingBadge show={isFieldPending('html.urlSecurity.level')} />
                 </Group>
               }
@@ -507,7 +507,7 @@ export default function AdminSecuritySection() {
                     <Textarea
                       label={
                         <Group gap="xs">
-                          <span>{t('admin.settings.security.htmlUrlSecurity.allowedDomains', 'Allowed Domains (Whitelist)')}</span>
+                          <span>{t('admin.settings.security.htmlUrlSecurity.allowedDomains.label', 'Allowed Domains (Whitelist)')}</span>
                           <PendingBadge show={isFieldPending('html.urlSecurity.allowedDomains')} />
                         </Group>
                       }
@@ -534,7 +534,7 @@ export default function AdminSecuritySection() {
                     <Textarea
                       label={
                         <Group gap="xs">
-                          <span>{t('admin.settings.security.htmlUrlSecurity.blockedDomains', 'Blocked Domains (Blacklist)')}</span>
+                          <span>{t('admin.settings.security.htmlUrlSecurity.blockedDomains.label', 'Blocked Domains (Blacklist)')}</span>
                           <PendingBadge show={isFieldPending('html.urlSecurity.blockedDomains')} />
                         </Group>
                       }
@@ -561,7 +561,7 @@ export default function AdminSecuritySection() {
                     <Textarea
                       label={
                         <Group gap="xs">
-                          <span>{t('admin.settings.security.htmlUrlSecurity.internalTlds', 'Internal TLDs')}</span>
+                          <span>{t('admin.settings.security.htmlUrlSecurity.internalTlds.label', 'Internal TLDs')}</span>
                           <PendingBadge show={isFieldPending('html.urlSecurity.internalTlds')} />
                         </Group>
                       }
@@ -588,7 +588,7 @@ export default function AdminSecuritySection() {
 
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <div>
-                      <Text fw={500} size="sm">{t('admin.settings.security.htmlUrlSecurity.blockPrivateNetworks', 'Block Private Networks')}</Text>
+                      <Text fw={500} size="sm">{t('admin.settings.security.htmlUrlSecurity.blockPrivateNetworks.label', 'Block Private Networks')}</Text>
                       <Text size="xs" c="dimmed" mt={4}>
                         {t('admin.settings.security.htmlUrlSecurity.blockPrivateNetworks.description', 'Block RFC 1918 private networks (10.x.x.x, 192.168.x.x, 172.16-31.x.x)')}
                       </Text>
@@ -610,7 +610,7 @@ export default function AdminSecuritySection() {
 
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <div>
-                      <Text fw={500} size="sm">{t('admin.settings.security.htmlUrlSecurity.blockLocalhost', 'Block Localhost')}</Text>
+                      <Text fw={500} size="sm">{t('admin.settings.security.htmlUrlSecurity.blockLocalhost.label', 'Block Localhost')}</Text>
                       <Text size="xs" c="dimmed" mt={4}>
                         {t('admin.settings.security.htmlUrlSecurity.blockLocalhost.description', 'Block localhost and loopback addresses (127.x.x.x, ::1)')}
                       </Text>
@@ -632,7 +632,7 @@ export default function AdminSecuritySection() {
 
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <div>
-                      <Text fw={500} size="sm">{t('admin.settings.security.htmlUrlSecurity.blockLinkLocal', 'Block Link-Local Addresses')}</Text>
+                      <Text fw={500} size="sm">{t('admin.settings.security.htmlUrlSecurity.blockLinkLocal.label', 'Block Link-Local Addresses')}</Text>
                       <Text size="xs" c="dimmed" mt={4}>
                         {t('admin.settings.security.htmlUrlSecurity.blockLinkLocal.description', 'Block link-local addresses (169.254.x.x, fe80::/10)')}
                       </Text>
@@ -654,7 +654,7 @@ export default function AdminSecuritySection() {
 
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <div>
-                      <Text fw={500} size="sm">{t('admin.settings.security.htmlUrlSecurity.blockCloudMetadata', 'Block Cloud Metadata Endpoints')}</Text>
+                      <Text fw={500} size="sm">{t('admin.settings.security.htmlUrlSecurity.blockCloudMetadata.label', 'Block Cloud Metadata Endpoints')}</Text>
                       <Text size="xs" c="dimmed" mt={4}>
                         {t('admin.settings.security.htmlUrlSecurity.blockCloudMetadata.description', 'Block cloud provider metadata endpoints (169.254.169.254)')}
                       </Text>
