@@ -12,4 +12,16 @@ declare module 'assets/material-symbols-icons.json' {
   export default value;
 }
 
+declare module 'axios' {
+  export interface AxiosRequestConfig<_D = any> {
+    suppressErrorToast?: boolean;
+    skipBackendReadyCheck?: boolean;
+  }
+
+  export interface InternalAxiosRequestConfig<_D = any> {
+    suppressErrorToast?: boolean;
+    skipBackendReadyCheck?: boolean;
+  }
+}
+
 export {};

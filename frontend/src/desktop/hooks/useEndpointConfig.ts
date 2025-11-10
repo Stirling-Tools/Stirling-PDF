@@ -17,7 +17,7 @@ export function useEndpointEnabled(endpoint: string): {
   error: string | null;
   refetch: () => Promise<void>;
 } {
-  const [enabled, setEnabled] = useState<boolean | null>(null);
+  const [enabled, setEnabled] = useState<boolean | null>(() => (endpoint ? true : null));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const isMountedRef = useRef(true);
@@ -48,7 +48,6 @@ export function useEndpointEnabled(endpoint: string): {
     }
 
     try {
-      setLoading(true);
       setError(null);
 
       const response = await apiClient.get<boolean>('/api/v1/config/endpoint-enabled', {
@@ -63,7 +62,7 @@ export function useEndpointEnabled(endpoint: string): {
       const isBackendStarting = err?.code === 'BACKEND_NOT_READY';
       if (!isMountedRef.current) return;
       setError(isBackendStarting ? 'Backend starting up...' : message);
-      setEnabled(null);
+      setEnabled(true);
 
       if (!retryTimeoutRef.current) {
         retryTimeoutRef.current = setTimeout(() => {
@@ -114,7 +113,13 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
   error: string | null;
   refetch: () => Promise<void>;
 } {
-  const [endpointStatus, setEndpointStatus] = useState<Record<string, boolean>>({});
+  const [endpointStatus, setEndpointStatus] = useState<Record<string, boolean>>(() => {
+    if (!endpoints || endpoints.length === 0) return {};
+    return endpoints.reduce((acc, endpointName) => {
+      acc[endpointName] = true;
+      return acc;
+    }, {} as Record<string, boolean>);
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const isMountedRef = useRef(true);
@@ -145,7 +150,6 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
     }
 
     try {
-      setLoading(true);
       setError(null);
 
       const endpointsParam = endpoints.join(',');
@@ -164,7 +168,7 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
       setError(isBackendStarting ? 'Backend starting up...' : message);
 
       const fallbackStatus = endpoints.reduce((acc, endpointName) => {
-        acc[endpointName] = false;
+        acc[endpointName] = true;
         return acc;
       }, {} as Record<string, boolean>);
       setEndpointStatus(fallbackStatus);
