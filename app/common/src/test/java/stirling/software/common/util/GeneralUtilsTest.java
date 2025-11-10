@@ -355,7 +355,7 @@ public class GeneralUtilsTest {
                                 "file..double",
                                 result,
                                 "Double dot case should remove last extension");
-                default -> assertTrue(true, "Unhandled edge case: " + edgeCase);
+                default -> fail("Unhandled edge case: " + edgeCase);
             }
         }
     }
