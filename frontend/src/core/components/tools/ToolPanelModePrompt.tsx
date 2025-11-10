@@ -14,7 +14,8 @@ const ToolPanelModePrompt = () => {
   const { preferences, updatePreference } = usePreferences();
   const { startTour, startAfterToolModeSelection, setStartAfterToolModeSelection, setShowWelcomeModal } = useOnboarding();
   const [opened, setOpened] = useState(false);
-  const isAdmin = true; // TODO: revert to !!config?.isAdmin
+  const { config } = useAppConfig();
+  const isAdmin = !!config?.isAdmin;
 
   // Only show after the new 3-slide onboarding has been completed
   const shouldShowPrompt = !preferences.toolPanelModePromptSeen && preferences.hasSeenIntroOnboarding;
@@ -36,10 +37,9 @@ const ToolPanelModePrompt = () => {
       setShowWelcomeModal(false);
       setStartAfterToolModeSelection(false);
       if (isAdmin) {
-        // TODO: Change to admin tour once available
-        startTour();
+        startTour('admin');
       } else {
-        startTour();
+        startTour('tools');
       }
     }
   };

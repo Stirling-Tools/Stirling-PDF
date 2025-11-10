@@ -20,8 +20,7 @@ export default function InitialOnboardingModal({ opened, onClose }: InitialOnboa
   const [step, setStep] = React.useState(0);
   const totalSteps = 3;
   const { config } = useAppConfig();
-  // NOTE: For testing, this is forced to true. Revert to config?.isAdmin for production.
-  const isAdmin = true; // TODO: revert to !!config?.isAdmin
+  const isAdmin = !!config?.isAdmin;
 
   React.useEffect(() => {
     if (!opened) setStep(0);
@@ -212,10 +211,9 @@ export default function InitialOnboardingModal({ opened, onClose }: InitialOnboa
             // Otherwise, start immediately (if not completed previously)
             if (!preferences.hasCompletedOnboarding) {
               if (isAdmin) {
-                // TODO: Change to admin tour once available
-                startTour();
+                startTour('admin');
               } else {
-                startTour();
+                startTour('tools');
               }
             }
           }}
