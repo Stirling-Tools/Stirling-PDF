@@ -95,32 +95,6 @@ public class GeneralUtils {
     }
 
     /*
-     * Gets the configured temporary directory, creating it if necessary.
-     *
-     * @return Path to the temporary directory
-     * @throws IOException if directory creation fails
-     */
-    private Path getTempDirectory() throws IOException {
-        String customTempDir = System.getenv("STIRLING_TEMPFILES_DIRECTORY");
-        if (customTempDir == null || customTempDir.isEmpty()) {
-            customTempDir = System.getProperty("stirling.tempfiles.directory");
-        }
-
-        Path tempDir;
-        if (customTempDir != null && !customTempDir.isEmpty()) {
-            tempDir = Path.of(customTempDir);
-        } else {
-            tempDir = Path.of(System.getProperty("java.io.tmpdir"), "stirling-pdf");
-        }
-
-        if (!Files.exists(tempDir)) {
-            Files.createDirectories(tempDir);
-        }
-
-        return tempDir;
-    }
-
-    /*
      * Remove file extension
      *
      * <p>Uses fast string operations for common cases (valid extensions) and falls back to
