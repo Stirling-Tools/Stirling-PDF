@@ -23,15 +23,19 @@
   - Update `buildFontMap` to resolve aliases when recreating PDFBox fonts, and adjust the front end to load programs via the canonical UID.
   - Optional: expose a lazy endpoint for the original COS dictionary if the canonical record strips it, so export still reconstructs untouched fonts.
 
-- **Font Weight Matching for Fallback Fonts**
-  - Font family matching is now implemented (Arial→LiberationSans, Times→LiberationSerif, Courier→LiberationMono).
-  - However, fallback fonts still use Regular weight for all missing glyphs, regardless of the original font weight (e.g., bold text falls back to regular weight).
-  - TODO: Parse weight from font names (e.g., `Arimo_700wght`, `Arial-Bold`, `TimesNewRoman,SemiBold`) and map to corresponding Liberation font variants:
-    - Regular/Normal → LiberationSans-Regular, LiberationSerif-Regular, LiberationMono-Regular
-    - Bold/700 → LiberationSans-Bold, LiberationSerif-Bold, LiberationMono-Bold
-    - Italic/Oblique → LiberationSans-Italic, LiberationSerif-Italic, LiberationMono-Italic
-    - BoldItalic → LiberationSans-BoldItalic, LiberationSerif-BoldItalic, LiberationMono-BoldItalic
-  - Add all Liberation font variants to `BUILT_IN_FALLBACK_FONTS` map with appropriate IDs (e.g., `fallback-liberation-sans-bold`).
-  - Update `resolveFallbackFontId(String originalFontName, int codePoint)` in `PdfJsonFallbackFontService.java` to detect weight/style and return the matching variant ID.
-  - Benefits: Better visual consistency when editing text in bold/italic fonts, as missing characters will match the original weight.
-  - Implementation reference: `app/proprietary/src/main/java/stirling/software/SPDF/service/PdfJsonFallbackFontService.java:186-213`
+- **Font Weight Matching for Fallback Fonts** ✓ COMPLETED (January 2025)
+  - Font family matching is now implemented:
+    - Liberation fonts (metric-compatible with Microsoft core): Arial/Helvetica→LiberationSans, Times→LiberationSerif, Courier→LiberationMono
+    - DejaVu fonts (widely used open source): DejaVu→DejaVuSans, DejaVuSerif, DejaVuMono
+    - Noto fonts (Google universal font): Noto→NotoSans
+  - Font weight/style matching is now implemented for multiple font families:
+    - Liberation Sans/Serif/Mono: Regular, Bold, Italic, BoldItalic (full support)
+    - Noto Sans: Regular, Bold, Italic, BoldItalic (full support)
+    - DejaVu Sans/Serif/Mono: Regular, Bold, Italic/Oblique, BoldItalic/BoldOblique (full support)
+  - All font variants registered in `BUILT_IN_FALLBACK_FONTS` map (`PdfJsonFallbackFontService.java:63-267`)
+  - Weight/style detection implemented in `resolveFallbackFontId()`:
+    - `detectBold()`: Detects "bold", "heavy", "black", or numeric weights 600-900 (e.g., "700wght")
+    - `detectItalic()`: Detects "italic" or "oblique"
+    - `applyWeightStyle()`: Applies appropriate suffix (handles both "italic" and "oblique" naming)
+  - All fonts consolidated from Type3 library into main fonts directory for unified fallback support
+  - Benefits: Comprehensive visual consistency when editing text in bold/italic fonts across many font families

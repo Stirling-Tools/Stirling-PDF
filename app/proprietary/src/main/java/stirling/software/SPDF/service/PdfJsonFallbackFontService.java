@@ -49,7 +49,16 @@ public class PdfJsonFallbackFontService {
                     Map.entry("tinos", "fallback-liberation-serif"),
                     Map.entry("courier", "fallback-liberation-mono"),
                     Map.entry("couriernew", "fallback-liberation-mono"),
-                    Map.entry("cousine", "fallback-liberation-mono"));
+                    Map.entry("cousine", "fallback-liberation-mono"),
+                    // DejaVu fonts - widely used open source fonts
+                    Map.entry("dejavu", "fallback-dejavu-sans"),
+                    Map.entry("dejavusans", "fallback-dejavu-sans"),
+                    Map.entry("dejavuserif", "fallback-dejavu-serif"),
+                    Map.entry("dejavumono", "fallback-dejavu-mono"),
+                    Map.entry("dejavusansmono", "fallback-dejavu-mono"),
+                    // Noto Sans - Google's universal font (use as last resort generic fallback)
+                    Map.entry("noto", "fallback-noto-sans"),
+                    Map.entry("notosans", "fallback-noto-sans"));
 
     private static final Map<String, FallbackFontSpec> BUILT_IN_FALLBACK_FONTS =
             Map.ofEntries(
@@ -85,40 +94,172 @@ public class PdfJsonFallbackFontService {
                     Map.entry(
                             "fallback-liberation-sans",
                             new FallbackFontSpec(
-                                    "classpath:/static/pdfjs-legacy/standard_fonts/LiberationSans-Regular.ttf",
+                                    "classpath:/static/fonts/LiberationSans-Regular.ttf",
                                     "LiberationSans-Regular",
                                     "ttf")),
                     Map.entry(
                             "fallback-liberation-sans-bold",
                             new FallbackFontSpec(
-                                    "classpath:/static/pdfjs-legacy/standard_fonts/LiberationSans-Bold.ttf",
+                                    "classpath:/static/fonts/LiberationSans-Bold.ttf",
                                     "LiberationSans-Bold",
                                     "ttf")),
                     Map.entry(
                             "fallback-liberation-sans-italic",
                             new FallbackFontSpec(
-                                    "classpath:/static/pdfjs-legacy/standard_fonts/LiberationSans-Italic.ttf",
+                                    "classpath:/static/fonts/LiberationSans-Italic.ttf",
                                     "LiberationSans-Italic",
                                     "ttf")),
                     Map.entry(
                             "fallback-liberation-sans-bolditalic",
                             new FallbackFontSpec(
-                                    "classpath:/static/pdfjs-legacy/standard_fonts/LiberationSans-BoldItalic.ttf",
+                                    "classpath:/static/fonts/LiberationSans-BoldItalic.ttf",
                                     "LiberationSans-BoldItalic",
                                     "ttf")),
                     // Liberation Serif family
                     Map.entry(
                             "fallback-liberation-serif",
                             new FallbackFontSpec(
-                                    "classpath:/static/pdfjs-legacy/standard_fonts/LiberationSerif-Regular.ttf",
+                                    "classpath:/static/fonts/LiberationSerif-Regular.ttf",
                                     "LiberationSerif-Regular",
+                                    "ttf")),
+                    Map.entry(
+                            "fallback-liberation-serif-bold",
+                            new FallbackFontSpec(
+                                    "classpath:/static/fonts/LiberationSerif-Bold.ttf",
+                                    "LiberationSerif-Bold",
+                                    "ttf")),
+                    Map.entry(
+                            "fallback-liberation-serif-italic",
+                            new FallbackFontSpec(
+                                    "classpath:/static/fonts/LiberationSerif-Italic.ttf",
+                                    "LiberationSerif-Italic",
+                                    "ttf")),
+                    Map.entry(
+                            "fallback-liberation-serif-bolditalic",
+                            new FallbackFontSpec(
+                                    "classpath:/static/fonts/LiberationSerif-BoldItalic.ttf",
+                                    "LiberationSerif-BoldItalic",
                                     "ttf")),
                     // Liberation Mono family
                     Map.entry(
                             "fallback-liberation-mono",
                             new FallbackFontSpec(
-                                    "classpath:/static/pdfjs-legacy/standard_fonts/LiberationMono-Regular.ttf",
+                                    "classpath:/static/fonts/LiberationMono-Regular.ttf",
                                     "LiberationMono-Regular",
+                                    "ttf")),
+                    Map.entry(
+                            "fallback-liberation-mono-bold",
+                            new FallbackFontSpec(
+                                    "classpath:/static/fonts/LiberationMono-Bold.ttf",
+                                    "LiberationMono-Bold",
+                                    "ttf")),
+                    Map.entry(
+                            "fallback-liberation-mono-italic",
+                            new FallbackFontSpec(
+                                    "classpath:/static/fonts/LiberationMono-Italic.ttf",
+                                    "LiberationMono-Italic",
+                                    "ttf")),
+                    Map.entry(
+                            "fallback-liberation-mono-bolditalic",
+                            new FallbackFontSpec(
+                                    "classpath:/static/fonts/LiberationMono-BoldItalic.ttf",
+                                    "LiberationMono-BoldItalic",
+                                    "ttf")),
+                    // Noto Sans family (enhanced with weight variants)
+                    Map.entry(
+                            FALLBACK_FONT_ID,
+                            new FallbackFontSpec(
+                                    DEFAULT_FALLBACK_FONT_LOCATION, "NotoSans-Regular", "ttf")),
+                    Map.entry(
+                            "fallback-noto-sans-bold",
+                            new FallbackFontSpec(
+                                    "classpath:/static/fonts/NotoSans-Bold.ttf",
+                                    "NotoSans-Bold",
+                                    "ttf")),
+                    Map.entry(
+                            "fallback-noto-sans-italic",
+                            new FallbackFontSpec(
+                                    "classpath:/static/fonts/NotoSans-Italic.ttf",
+                                    "NotoSans-Italic",
+                                    "ttf")),
+                    Map.entry(
+                            "fallback-noto-sans-bolditalic",
+                            new FallbackFontSpec(
+                                    "classpath:/static/fonts/NotoSans-BoldItalic.ttf",
+                                    "NotoSans-BoldItalic",
+                                    "ttf")),
+                    // DejaVu Sans family
+                    Map.entry(
+                            "fallback-dejavu-sans",
+                            new FallbackFontSpec(
+                                    "classpath:/static/fonts/DejaVuSans.ttf", "DejaVuSans", "ttf")),
+                    Map.entry(
+                            "fallback-dejavu-sans-bold",
+                            new FallbackFontSpec(
+                                    "classpath:/static/fonts/DejaVuSans-Bold.ttf",
+                                    "DejaVuSans-Bold",
+                                    "ttf")),
+                    Map.entry(
+                            "fallback-dejavu-sans-oblique",
+                            new FallbackFontSpec(
+                                    "classpath:/static/fonts/DejaVuSans-Oblique.ttf",
+                                    "DejaVuSans-Oblique",
+                                    "ttf")),
+                    Map.entry(
+                            "fallback-dejavu-sans-boldoblique",
+                            new FallbackFontSpec(
+                                    "classpath:/static/fonts/DejaVuSans-BoldOblique.ttf",
+                                    "DejaVuSans-BoldOblique",
+                                    "ttf")),
+                    // DejaVu Serif family
+                    Map.entry(
+                            "fallback-dejavu-serif",
+                            new FallbackFontSpec(
+                                    "classpath:/static/fonts/DejaVuSerif.ttf",
+                                    "DejaVuSerif",
+                                    "ttf")),
+                    Map.entry(
+                            "fallback-dejavu-serif-bold",
+                            new FallbackFontSpec(
+                                    "classpath:/static/fonts/DejaVuSerif-Bold.ttf",
+                                    "DejaVuSerif-Bold",
+                                    "ttf")),
+                    Map.entry(
+                            "fallback-dejavu-serif-italic",
+                            new FallbackFontSpec(
+                                    "classpath:/static/fonts/DejaVuSerif-Italic.ttf",
+                                    "DejaVuSerif-Italic",
+                                    "ttf")),
+                    Map.entry(
+                            "fallback-dejavu-serif-bolditalic",
+                            new FallbackFontSpec(
+                                    "classpath:/static/fonts/DejaVuSerif-BoldItalic.ttf",
+                                    "DejaVuSerif-BoldItalic",
+                                    "ttf")),
+                    // DejaVu Mono family
+                    Map.entry(
+                            "fallback-dejavu-mono",
+                            new FallbackFontSpec(
+                                    "classpath:/static/fonts/DejaVuSansMono.ttf",
+                                    "DejaVuSansMono",
+                                    "ttf")),
+                    Map.entry(
+                            "fallback-dejavu-mono-bold",
+                            new FallbackFontSpec(
+                                    "classpath:/static/fonts/DejaVuSansMono-Bold.ttf",
+                                    "DejaVuSansMono-Bold",
+                                    "ttf")),
+                    Map.entry(
+                            "fallback-dejavu-mono-oblique",
+                            new FallbackFontSpec(
+                                    "classpath:/static/fonts/DejaVuSansMono-Oblique.ttf",
+                                    "DejaVuSansMono-Oblique",
+                                    "ttf")),
+                    Map.entry(
+                            "fallback-dejavu-mono-boldoblique",
+                            new FallbackFontSpec(
+                                    "classpath:/static/fonts/DejaVuSansMono-BoldOblique.ttf",
+                                    "DejaVuSansMono-BoldOblique",
                                     "ttf")));
 
     private final ResourceLoader resourceLoader;
@@ -198,7 +339,7 @@ public class PdfJsonFallbackFontService {
 
     /**
      * Resolve fallback font ID based on the original font name and code point. Attempts to match
-     * font family for visual consistency.
+     * font family and weight/style for visual consistency.
      *
      * @param originalFontName the name of the original font (may be null)
      * @param codePoint the Unicode code point that needs to be rendered
@@ -223,18 +364,110 @@ public class PdfJsonFallbackFontService {
 
             String aliasedFontId = FONT_NAME_ALIASES.get(baseName);
             if (aliasedFontId != null) {
+                // Detect weight and style from the normalized font name
+                boolean isBold = detectBold(normalized);
+                boolean isItalic = detectItalic(normalized);
+
+                // Apply weight/style suffix to fallback font ID
+                String styledFontId = applyWeightStyle(aliasedFontId, isBold, isItalic);
+
                 log.debug(
-                        "Matched font '{}' (normalized: '{}', base: '{}') to fallback '{}'",
+                        "Matched font '{}' (normalized: '{}', base: '{}', bold: {}, italic: {}) to fallback '{}'",
                         originalFontName,
                         normalized,
                         baseName,
-                        aliasedFontId);
-                return aliasedFontId;
+                        isBold,
+                        isItalic,
+                        styledFontId);
+                return styledFontId;
             }
         }
 
         // Fall back to Unicode-based selection
         return resolveFallbackFontId(codePoint);
+    }
+
+    /**
+     * Detect if font name indicates bold weight.
+     *
+     * @param normalizedFontName lowercase font name without subset prefix or spaces
+     * @return true if bold weight is detected
+     */
+    private boolean detectBold(String normalizedFontName) {
+        // Check for explicit bold indicators
+        if (normalizedFontName.contains("bold")
+                || normalizedFontName.contains("heavy")
+                || normalizedFontName.contains("black")) {
+            return true;
+        }
+
+        // Check for numeric weight indicators (600-900 = bold)
+        // Handles: "Arimo_700wght", "Arial-700", "Font-w700"
+        if (normalizedFontName.matches(".*[_-]?[6-9]00(wght)?.*")) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Detect if font name indicates italic/oblique style.
+     *
+     * @param normalizedFontName lowercase font name without subset prefix or spaces
+     * @return true if italic style is detected
+     */
+    private boolean detectItalic(String normalizedFontName) {
+        return normalizedFontName.contains("italic") || normalizedFontName.contains("oblique");
+    }
+
+    /**
+     * Apply weight/style suffix to fallback font ID.
+     *
+     * <p>Weight/style variants are only applied to font families where we have the actual font
+     * files available. Currently supported: - Liberation Sans: Regular, Bold, Italic, BoldItalic
+     * (full support) - Liberation Serif: Regular, Bold, Italic, BoldItalic (full support) -
+     * Liberation Mono: Regular, Bold, Italic, BoldItalic (full support) - Noto Sans: Regular, Bold,
+     * Italic, BoldItalic (full support) - DejaVu Sans: Regular, Bold, Oblique, BoldOblique (full
+     * support) - DejaVu Serif: Regular, Bold, Italic, BoldItalic (full support) - DejaVu Mono:
+     * Regular, Bold, Oblique, BoldOblique (full support)
+     *
+     * <p>To add weight/style support for additional font families: 1. Download the font files
+     * (Bold, Italic, BoldItalic) to: app/core/src/main/resources/static/fonts/ 2. Register the
+     * variants in BUILT_IN_FALLBACK_FONTS map (see lines 63-267) 3. Update the check below to
+     * include the font family prefix
+     *
+     * @param baseFontId base fallback font ID (e.g., "fallback-liberation-sans")
+     * @param isBold true if bold weight needed
+     * @param isItalic true if italic style needed
+     * @return styled font ID (e.g., "fallback-liberation-sans-bold"), or base ID if variants not
+     *     available
+     */
+    private String applyWeightStyle(String baseFontId, boolean isBold, boolean isItalic) {
+        // Only apply weight/style to font families where we have the font files available
+        // Supported: Liberation (Sans/Serif/Mono), Noto Sans, DejaVu (Sans/Serif/Mono)
+        boolean isSupported =
+                baseFontId.startsWith("fallback-liberation-")
+                        || baseFontId.equals("fallback-noto-sans")
+                        || baseFontId.startsWith("fallback-dejavu-");
+
+        if (!isSupported) {
+            return baseFontId;
+        }
+
+        // DejaVu Sans and Mono use "oblique" instead of "italic"
+        boolean useOblique =
+                baseFontId.equals("fallback-dejavu-sans")
+                        || baseFontId.equals("fallback-dejavu-mono");
+
+        if (isBold && isItalic) {
+            return baseFontId + (useOblique ? "-boldoblique" : "-bolditalic");
+        } else if (isBold) {
+            return baseFontId + "-bold";
+        } else if (isItalic) {
+            return baseFontId + (useOblique ? "-oblique" : "-italic");
+        }
+
+        return baseFontId;
     }
 
     /**
