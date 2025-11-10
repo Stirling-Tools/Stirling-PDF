@@ -20,21 +20,13 @@ import { useFilesModalContext } from "@app/contexts/FilesModalContext";
 import AppConfigModal from "@app/components/shared/AppConfigModal";
 import ToolPanelModePrompt from "@app/components/tools/ToolPanelModePrompt";
 import AdminAnalyticsChoiceModal from "@app/components/shared/AdminAnalyticsChoiceModal";
-import { useHomePageExtensions } from "@app/pages/useHomePageExtensions";
 
 import "@app/pages/HomePage.css";
 
 type MobileView = "tools" | "workbench";
 
-interface HomePageProps {
-  openedFile?: File | null;
-}
-
-export default function HomePage({ openedFile }: HomePageProps = {}) {
+export default function HomePage() {
   const { t } = useTranslation();
-
-  // Extension hook for desktop-specific behavior (e.g., file opening)
-  useHomePageExtensions(openedFile);
   const {
     sidebarRefs,
   } = useSidebarContext();

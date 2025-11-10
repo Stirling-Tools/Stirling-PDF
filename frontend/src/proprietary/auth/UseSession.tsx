@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
 import { springAuth } from '@app/auth/springAuthClient';
-import type { Session, User, AuthError } from '@app/auth/springAuthClient';
+import type { Session, User, AuthError, AuthChangeEvent } from '@app/auth/springAuthClient';
 
 /**
  * Auth Context Type
@@ -128,7 +128,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Subscribe to auth state changes
     const { data: { subscription } } = springAuth.onAuthStateChange(
-      async (event, newSession) => {
+      async (event: AuthChangeEvent, newSession: Session | null) => {
         if (!mounted) return;
 
         console.debug('[Auth] Auth state change:', {

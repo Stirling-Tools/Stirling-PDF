@@ -3,6 +3,7 @@ import { Box, Text, Loader, Stack, Center, Flex } from '@mantine/core';
 import FilePreview from '@app/components/shared/FilePreview';
 import FileMetadata from '@app/components/tools/shared/FileMetadata';
 import NavigationControls from '@app/components/tools/shared/NavigationControls';
+import { PrivateContent } from '@app/components/shared/PrivateContent';
 
 export interface ReviewFile {
   file: File;
@@ -62,7 +63,6 @@ const ResultsPreview = ({
       {/* File name at the top */}
       <Box mb="sm" style={{ minHeight: '3rem', display: 'flex', alignItems: 'flex-start' }}>
         <Text
-          className='ph-no-capture'
           size="sm"
           fw={500}
           style={{
@@ -71,7 +71,7 @@ const ResultsPreview = ({
           }}
           title={currentFile.file.name}
         >
-          {currentFile.file.name}
+          <PrivateContent>{currentFile.file.name}</PrivateContent>
         </Text>
       </Box>
 
