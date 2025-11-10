@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import apiClient from '@app/services/apiClient';
 
 /**
@@ -41,6 +41,8 @@ export interface AppConfig {
   error?: string;
 }
 
+export type AppConfigBootstrapMode = 'blocking' | 'non-blocking';
+
 interface AppConfigContextValue {
   config: AppConfig | null;
   loading: boolean;
@@ -59,26 +61,42 @@ const AppConfigContext = createContext<AppConfigContextValue | undefined>({
  * Provider component that fetches and provides app configuration
  * Should be placed at the top level of the app, before any components that need config
  */
-export const AppConfigProvider: React.FC<{
+export interface AppConfigProviderProps {
   children: ReactNode;
   retryOptions?: AppConfigRetryOptions;
-}> = ({ children, retryOptions }) => {
-  const [config, setConfig] = useState<AppConfig | null>(null);
-  const [loading, setLoading] = useState(true);
+  initialConfig?: AppConfig | null;
+  bootstrapMode?: AppConfigBootstrapMode;
+  autoFetch?: boolean;
+}
+
+export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
+  children,
+  retryOptions,
+  initialConfig = null,
+  bootstrapMode = 'blocking',
+  autoFetch = true,
+}) => {
+  const usesNonBlockingBootstrap = bootstrapMode === 'non-blocking';
+  const [config, setConfig] = useState<AppConfig | null>(initialConfig);
   const [error, setError] = useState<string | null>(null);
   const [fetchCount, setFetchCount] = useState(0);
+  const [hasResolvedConfig, setHasResolvedConfig] = useState(Boolean(initialConfig) && usesNonBlockingBootstrap);
+  const [loading, setLoading] = useState(!hasResolvedConfig);
 
   const maxRetries = retryOptions?.maxRetries ?? 0;
   const initialDelay = retryOptions?.initialDelay ?? 1000;
 
-  const fetchConfig = async (force = false) => {
+  const fetchConfig = useCallback(async (force = false) => {
     // Prevent duplicate fetches unless forced
     if (!force && fetchCount > 0) {
       console.debug('[AppConfig] Already fetched, skipping');
       return;
     }
 
-    setLoading(true);
+    const shouldBlockUI = !hasResolvedConfig || !usesNonBlockingBootstrap;
+    if (shouldBlockUI) {
+      setLoading(true);
+    }
     setError(null);
 
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
@@ -92,12 +110,13 @@ export const AppConfigProvider: React.FC<{
         }
 
         // apiClient automatically adds JWT header if available via interceptors
-        const response = await apiClient.get<AppConfig>('/api/v1/config/app-config');
+        const response = await apiClient.get<AppConfig>('/api/v1/config/app-config', usesNonBlockingBootstrap ? { suppressErrorToast: true } : undefined);
         const data = response.data;
 
         console.debug('[AppConfig] Config fetched successfully:', data);
         setConfig(data);
         setFetchCount(prev => prev + 1);
+        setHasResolvedConfig(true);
         setLoading(false);
         return; // Success - exit function
       } catch (err: any) {
@@ -108,6 +127,7 @@ export const AppConfigProvider: React.FC<{
         if (status === 401) {
           console.debug('[AppConfig] 401 error - using default config (login enabled)');
           setConfig({ enableLogin: true });
+          setHasResolvedConfig(true);
           setLoading(false);
           return;
         }
@@ -126,30 +146,33 @@ export const AppConfigProvider: React.FC<{
         console.error(`[AppConfig] Failed to fetch app config after ${attempt + 1} attempts:`, err);
         // On error, assume login is enabled (safe default)
         setConfig({ enableLogin: true });
+        setHasResolvedConfig(true);
         break;
       }
     }
 
     setLoading(false);
-  };
+  }, [fetchCount, hasResolvedConfig, usesNonBlockingBootstrap, maxRetries, initialDelay]);
 
   useEffect(() => {
     // Always try to fetch config to check if login is disabled
     // The endpoint should be public and return proper JSON
-    fetchConfig();
-  }, []);
+    if (autoFetch) {
+      void fetchConfig();
+    }
+  }, [autoFetch, fetchConfig]);
 
   // Listen for JWT availability (triggered on login/signup)
   useEffect(() => {
     const handleJwtAvailable = () => {
       console.debug('[AppConfig] JWT available event - refetching config');
       // Force refetch with JWT
-      fetchConfig(true);
+      void fetchConfig(true);
     };
 
     window.addEventListener('jwt-available', handleJwtAvailable);
     return () => window.removeEventListener('jwt-available', handleJwtAvailable);
-  }, []);
+  }, [fetchConfig]);
 
   const value: AppConfigContextValue = {
     config,

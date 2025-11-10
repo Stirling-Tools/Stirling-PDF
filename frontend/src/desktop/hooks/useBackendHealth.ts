@@ -1,7 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { tauriBackendService } from '@app/services/tauriBackendService';
-
-export type BackendStatus = 'starting' | 'healthy' | 'unhealthy' | 'stopped';
+import { tauriBackendService, BackendStatus } from '@app/services/tauriBackendService';
 
 interface BackendHealthState {
   status: BackendStatus;
@@ -16,7 +14,7 @@ interface BackendHealthState {
  */
 export function useBackendHealth(pollingInterval = 5000) {
   const [health, setHealth] = useState<BackendHealthState>({
-    status: tauriBackendService.isBackendRunning() ? 'healthy' : 'stopped',
+    status: tauriBackendService.getBackendStatus(),
     isChecking: false,
     error: null,
   });
@@ -61,7 +59,7 @@ export function useBackendHealth(pollingInterval = 5000) {
     const initialize = async () => {
       setHealth((current) => ({
         ...current,
-        status: tauriBackendService.isBackendRunning() ? 'starting' : 'stopped',
+        status: tauriBackendService.getBackendStatus(),
         isChecking: true,
         error: 'Backend starting up...',
       }));

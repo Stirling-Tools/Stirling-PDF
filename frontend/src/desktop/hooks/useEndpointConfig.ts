@@ -1,9 +1,12 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useCallback, useRef } from 'react';
 import apiClient from '@app/services/apiClient';
+import { tauriBackendService } from '@app/services/tauriBackendService';
 
 interface EndpointConfig {
   backendUrl: string;
 }
+
+const RETRY_DELAY_MS = 2500;
 
 /**
  * Desktop-specific endpoint checker that hits the backend directly via axios.
@@ -15,11 +18,30 @@ export function useEndpointEnabled(endpoint: string): {
   refetch: () => Promise<void>;
 } {
   const [enabled, setEnabled] = useState<boolean | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const isMountedRef = useRef(true);
+  const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const fetchEndpointStatus = async () => {
+  const clearRetryTimeout = useCallback(() => {
+    if (retryTimeoutRef.current) {
+      clearTimeout(retryTimeoutRef.current);
+      retryTimeoutRef.current = null;
+    }
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+      clearRetryTimeout();
+    };
+  }, [clearRetryTimeout]);
+
+  const fetchEndpointStatus = useCallback(async () => {
+    clearRetryTimeout();
+
     if (!endpoint) {
+      if (!isMountedRef.current) return;
       setEnabled(null);
       setLoading(false);
       return;
@@ -31,21 +53,52 @@ export function useEndpointEnabled(endpoint: string): {
 
       const response = await apiClient.get<boolean>('/api/v1/config/endpoint-enabled', {
         params: { endpoint },
+        suppressErrorToast: true,
       });
 
+      if (!isMountedRef.current) return;
       setEnabled(response.data);
     } catch (err: any) {
       const message = err?.response?.data?.message || err?.message || 'Unknown error occurred';
-      setError(message);
+      const isBackendStarting = err?.code === 'BACKEND_NOT_READY';
+      if (!isMountedRef.current) return;
+      setError(isBackendStarting ? 'Backend starting up...' : message);
       setEnabled(null);
+
+      if (!retryTimeoutRef.current) {
+        retryTimeoutRef.current = setTimeout(() => {
+          retryTimeoutRef.current = null;
+          void fetchEndpointStatus();
+        }, RETRY_DELAY_MS);
+      }
     } finally {
-      setLoading(false);
+      if (isMountedRef.current) {
+        setLoading(false);
+      }
     }
-  };
+  }, [endpoint, clearRetryTimeout]);
 
   useEffect(() => {
-    fetchEndpointStatus();
-  }, [endpoint]);
+    if (!endpoint) {
+      setEnabled(null);
+      setLoading(false);
+      return;
+    }
+
+    if (tauriBackendService.isBackendHealthy()) {
+      void fetchEndpointStatus();
+    }
+
+    const unsubscribe = tauriBackendService.subscribeToStatus((status) => {
+      if (status === 'healthy') {
+        void fetchEndpointStatus();
+      }
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [endpoint, fetchEndpointStatus]);
 
   return {
     enabled,
@@ -62,11 +115,30 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
   refetch: () => Promise<void>;
 } {
   const [endpointStatus, setEndpointStatus] = useState<Record<string, boolean>>({});
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const isMountedRef = useRef(true);
+  const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const fetchAllEndpointStatuses = async () => {
+  const clearRetryTimeout = useCallback(() => {
+    if (retryTimeoutRef.current) {
+      clearTimeout(retryTimeoutRef.current);
+      retryTimeoutRef.current = null;
+    }
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+      clearRetryTimeout();
+    };
+  }, [clearRetryTimeout]);
+
+  const fetchAllEndpointStatuses = useCallback(async () => {
+    clearRetryTimeout();
+
     if (!endpoints || endpoints.length === 0) {
+      if (!isMountedRef.current) return;
       setEndpointStatus({});
       setLoading(false);
       return;
@@ -80,26 +152,57 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
 
       const response = await apiClient.get<Record<string, boolean>>('/api/v1/config/endpoints-enabled', {
         params: { endpoints: endpointsParam },
+        suppressErrorToast: true,
       });
 
+      if (!isMountedRef.current) return;
       setEndpointStatus(response.data);
     } catch (err: any) {
       const message = err?.response?.data?.message || err?.message || 'Unknown error occurred';
-      setError(message);
+      const isBackendStarting = err?.code === 'BACKEND_NOT_READY';
+      if (!isMountedRef.current) return;
+      setError(isBackendStarting ? 'Backend starting up...' : message);
 
       const fallbackStatus = endpoints.reduce((acc, endpointName) => {
         acc[endpointName] = false;
         return acc;
       }, {} as Record<string, boolean>);
       setEndpointStatus(fallbackStatus);
+
+      if (!retryTimeoutRef.current) {
+        retryTimeoutRef.current = setTimeout(() => {
+          retryTimeoutRef.current = null;
+          void fetchAllEndpointStatuses();
+        }, RETRY_DELAY_MS);
+      }
     } finally {
-      setLoading(false);
+      if (isMountedRef.current) {
+        setLoading(false);
+      }
     }
-  };
+  }, [endpoints, clearRetryTimeout]);
 
   useEffect(() => {
-    fetchAllEndpointStatuses();
-  }, [endpoints.join(',')]);
+    if (!endpoints || endpoints.length === 0) {
+      setEndpointStatus({});
+      setLoading(false);
+      return;
+    }
+
+    if (tauriBackendService.isBackendHealthy()) {
+      void fetchAllEndpointStatuses();
+    }
+
+    const unsubscribe = tauriBackendService.subscribeToStatus((status) => {
+      if (status === 'healthy') {
+        void fetchAllEndpointStatuses();
+      }
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [endpoints, fetchAllEndpointStatuses]);
 
   return {
     endpointStatus,
