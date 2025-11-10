@@ -3,16 +3,21 @@ import { Badge, Button, Card, Group, Modal, Stack, Text } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
 import { usePreferences } from '@app/contexts/PreferencesContext';
+import { useOnboarding } from '@app/contexts/OnboardingContext';
 import '@app/components/tools/ToolPanelModePrompt.css';
 import type { ToolPanelMode } from '@app/constants/toolPanel';
+import { useAppConfig } from '@app/contexts/AppConfigContext';
 
 const ToolPanelModePrompt = () => {
   const { t } = useTranslation();
   const { toolPanelMode, setToolPanelMode } = useToolWorkflow();
   const { preferences, updatePreference } = usePreferences();
+  const { startTour, startAfterToolModeSelection, setStartAfterToolModeSelection, setShowWelcomeModal } = useOnboarding();
   const [opened, setOpened] = useState(false);
+  const isAdmin = true; // TODO: revert to !!config?.isAdmin
 
-  const shouldShowPrompt = !preferences.toolPanelModePromptSeen;
+  // Only show after the new 3-slide onboarding has been completed
+  const shouldShowPrompt = !preferences.toolPanelModePromptSeen && preferences.hasSeenIntroOnboarding;
 
   useEffect(() => {
     if (shouldShowPrompt) {
@@ -25,6 +30,18 @@ const ToolPanelModePrompt = () => {
     updatePreference('defaultToolPanelMode', mode);
     updatePreference('toolPanelModePromptSeen', true);
     setOpened(false);
+
+    // If the user requested the tour after completing this prompt, start it now
+    if (startAfterToolModeSelection && !preferences.hasCompletedOnboarding) {
+      setShowWelcomeModal(false);
+      setStartAfterToolModeSelection(false);
+      if (isAdmin) {
+        // TODO: Change to admin tour once available
+        startTour();
+      } else {
+        startTour();
+      }
+    }
   };
 
   const handleDismiss = () => {

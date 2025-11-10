@@ -12,6 +12,8 @@ interface OnboardingContextValue {
   resetTour: () => void;
   showWelcomeModal: boolean;
   setShowWelcomeModal: (show: boolean) => void;
+  startAfterToolModeSelection: boolean;
+  setStartAfterToolModeSelection: (value: boolean) => void;
 }
 
 const OnboardingContext = createContext<OnboardingContextValue | undefined>(undefined);
@@ -21,6 +23,7 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [isOpen, setIsOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+  const [startAfterToolModeSelection, setStartAfterToolModeSelection] = useState(false);
   const shouldShow = useShouldShowWelcomeModal();
 
   // Auto-show welcome modal for first-time users
@@ -62,6 +65,8 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         resetTour,
         showWelcomeModal,
         setShowWelcomeModal,
+        startAfterToolModeSelection,
+        setStartAfterToolModeSelection,
       }}
     >
       {children}

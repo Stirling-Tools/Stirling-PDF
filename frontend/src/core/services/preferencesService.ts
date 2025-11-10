@@ -9,6 +9,7 @@ export interface UserPreferences {
   toolPanelModePromptSeen: boolean;
   showLegacyToolDescriptions: boolean;
   hasCompletedOnboarding: boolean;
+  hasSeenIntroOnboarding: boolean;
 }
 
 export const DEFAULT_PREFERENCES: UserPreferences = {
@@ -19,6 +20,7 @@ export const DEFAULT_PREFERENCES: UserPreferences = {
   toolPanelModePromptSeen: false,
   showLegacyToolDescriptions: false,
   hasCompletedOnboarding: false,
+  hasSeenIntroOnboarding: false,
 };
 
 const STORAGE_KEY = 'stirlingpdf_preferences';

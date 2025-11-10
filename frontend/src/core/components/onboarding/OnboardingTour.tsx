@@ -8,6 +8,10 @@ import { useTourOrchestration } from '@app/contexts/TourOrchestrationContext';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import CheckIcon from '@mui/icons-material/Check';
 import TourWelcomeModal from '@app/components/onboarding/TourWelcomeModal';
+import InitialOnboardingModal from '@app/components/onboarding/InitialOnboardingModal';
+import { usePreferences } from '@app/contexts/PreferencesContext';
+import { useAppConfig } from '@app/contexts/AppConfigContext';
+import { useAuth } from '@app/auth/UseSession';
 import '@app/components/onboarding/OnboardingTour.css';
 
 // Enum case order defines order steps will appear
@@ -54,6 +58,17 @@ function TourContent() {
 
 export default function OnboardingTour() {
   const { t } = useTranslation();
+  const { preferences, updatePreference } = usePreferences();
+  const { config } = useAppConfig();
+  // useAuth is provided in proprietary/desktop builds; in environments without Auth, this will be no-op
+  let session: any = null;
+  try {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    session = useAuth()?.session ?? null;
+  } catch {
+    // Auth provider not available in this build; treat as always authenticated
+    session = {} as any;
+  }
   const { completeTour, showWelcomeModal, setShowWelcomeModal, startTour } = useOnboarding();
   const { openFilesModal, closeFilesModal } = useFilesModalContext();
   const {
@@ -226,8 +241,20 @@ export default function OnboardingTour() {
     completeTour();
   };
 
+  const loginEnabled = !!config?.enableLogin;
+  const isAuthenticated = !!session;
+  const shouldShowIntro = !preferences.hasSeenIntroOnboarding && (!loginEnabled || isAuthenticated);
+
   return (
     <>
+      <InitialOnboardingModal
+        opened={shouldShowIntro}
+        onClose={() => {
+          if (!preferences.hasSeenIntroOnboarding) {
+            updatePreference('hasSeenIntroOnboarding', true);
+          }
+        }}
+      />
       <TourWelcomeModal
         opened={showWelcomeModal}
         onStartTour={() => {
