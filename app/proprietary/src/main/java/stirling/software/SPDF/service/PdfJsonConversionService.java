@@ -309,6 +309,13 @@ public class PdfJsonConversionService {
 
             byte[] cachedPdfBytes = null;
 
+            // Pre-read file bytes before loading PDDocument, since loading may delete the file
+            // (small files get loaded into memory and original is deleted)
+            // This is needed for lazy image caching where we need the bytes later
+            if (Files.size(workingPath) <= CustomPDFDocumentFactory.SMALL_FILE_THRESHOLD) {
+                cachedPdfBytes = Files.readAllBytes(workingPath);
+            }
+
             try (PDDocument document = pdfDocumentFactory.load(workingPath, true)) {
                 int totalPages = document.getNumberOfPages();
                 // Only use lazy images for real async jobs where client can access the cache
