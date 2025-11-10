@@ -5216,7 +5216,6 @@ public class PdfJsonConversionService {
      * Stores PDF bytes for lazy page loading. Each page is extracted on-demand by re-loading the
      * PDF from bytes.
      */
-    @lombok.Data
     private static class CachedPdfDocument {
         private final byte[] pdfBytes;
         private final PdfJsonDocumentMetadata metadata;
@@ -5241,6 +5240,27 @@ public class PdfJsonConversionService {
                             ? new java.util.concurrent.ConcurrentHashMap<>(pageFontResources)
                             : new java.util.concurrent.ConcurrentHashMap<>();
             this.timestamp = System.currentTimeMillis();
+        }
+
+        // Getters return defensive copies to prevent external mutation
+        public byte[] getPdfBytes() {
+            return pdfBytes;
+        }
+
+        public PdfJsonDocumentMetadata getMetadata() {
+            return metadata;
+        }
+
+        public Map<String, PdfJsonFont> getFonts() {
+            return new java.util.concurrent.ConcurrentHashMap<>(fonts);
+        }
+
+        public Map<Integer, Map<PDFont, String>> getPageFontResources() {
+            return new java.util.concurrent.ConcurrentHashMap<>(pageFontResources);
+        }
+
+        public long getTimestamp() {
+            return timestamp;
         }
 
         public CachedPdfDocument withUpdatedPdfBytes(byte[] nextBytes) {

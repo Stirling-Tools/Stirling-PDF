@@ -39,3 +39,18 @@
     - `applyWeightStyle()`: Applies appropriate suffix (handles both "italic" and "oblique" naming)
   - All fonts consolidated from Type3 library into main fonts directory for unified fallback support
   - Benefits: Comprehensive visual consistency when editing text in bold/italic fonts across many font families
+
+- **Font Text Color Support**
+  - Add support for reading and preserving text color information from PDF content streams
+  - Enable color editing in the editor UI
+  - Ensure proper round-trip conversion maintains color fidelity
+
+- **Space Character Handling**
+  - Improve handling of space characters as proper text elements
+  - Ensure spaces are correctly preserved during text extraction and reconstruction
+  - Fix any issues with space positioning and width calculations
+
+- **Textbox Selection Enhancement**
+  - Improve textbox selection behavior in the editor
+  - Enhance user experience for selecting and manipulating text boxes
+  - Address any selection precision or interaction issues
