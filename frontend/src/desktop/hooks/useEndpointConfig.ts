@@ -67,7 +67,7 @@ export function useEndpointEnabled(endpoint: string): {
       if (!retryTimeoutRef.current) {
         retryTimeoutRef.current = setTimeout(() => {
           retryTimeoutRef.current = null;
-          void fetchEndpointStatus();
+          fetchEndpointStatus();
         }, RETRY_DELAY_MS);
       }
     } finally {
@@ -85,12 +85,12 @@ export function useEndpointEnabled(endpoint: string): {
     }
 
     if (tauriBackendService.isBackendHealthy()) {
-      void fetchEndpointStatus();
+      fetchEndpointStatus();
     }
 
     const unsubscribe = tauriBackendService.subscribeToStatus((status) => {
       if (status === 'healthy') {
-        void fetchEndpointStatus();
+        fetchEndpointStatus();
       }
     });
 
@@ -176,7 +176,7 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
       if (!retryTimeoutRef.current) {
         retryTimeoutRef.current = setTimeout(() => {
           retryTimeoutRef.current = null;
-          void fetchAllEndpointStatuses();
+          fetchAllEndpointStatuses();
         }, RETRY_DELAY_MS);
       }
     } finally {
@@ -194,12 +194,12 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
     }
 
     if (tauriBackendService.isBackendHealthy()) {
-      void fetchAllEndpointStatuses();
+      fetchAllEndpointStatuses();
     }
 
     const unsubscribe = tauriBackendService.subscribeToStatus((status) => {
       if (status === 'healthy') {
-        void fetchAllEndpointStatuses();
+        fetchAllEndpointStatuses();
       }
     });
 

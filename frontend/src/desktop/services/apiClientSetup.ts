@@ -17,7 +17,7 @@ export function setupApiInterceptors(client: AxiosInstance): void {
 
   client.interceptors.request.use(
     (config) => {
-      const skipCheck = (config as any)?.skipBackendReadyCheck === true;
+      const skipCheck = config?.skipBackendReadyCheck === true;
       if (skipCheck || tauriBackendService.isBackendHealthy()) {
         return config;
       }

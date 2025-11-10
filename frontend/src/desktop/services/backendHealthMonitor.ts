@@ -1,23 +1,17 @@
-import { tauriBackendService, BackendStatus } from '@app/services/tauriBackendService';
+import { tauriBackendService } from '@app/services/tauriBackendService';
+import type { BackendHealthState } from '@app/types/backendHealth';
 
-export interface BackendHealthSnapshot {
-  status: BackendStatus;
-  message?: string;
-  lastChecked?: number;
-  isChecking: boolean;
-  error: string | null;
-}
-
-type Listener = (state: BackendHealthSnapshot) => void;
+type Listener = (state: BackendHealthState) => void;
 
 class BackendHealthMonitor {
   private listeners = new Set<Listener>();
   private intervalId: ReturnType<typeof setInterval> | null = null;
   private readonly intervalMs: number;
-  private state: BackendHealthSnapshot = {
+  private state: BackendHealthState = {
     status: tauriBackendService.getBackendStatus(),
     isChecking: false,
     error: null,
+    isHealthy: tauriBackendService.getBackendStatus() === 'healthy',
   };
 
   constructor(pollingInterval = 5000) {
@@ -32,8 +26,14 @@ class BackendHealthMonitor {
     });
   }
 
-  private updateState(partial: Partial<BackendHealthSnapshot>) {
-    this.state = { ...this.state, ...partial };
+  private updateState(partial: Partial<BackendHealthState>) {
+    const nextStatus = partial.status ?? this.state.status;
+    this.state = {
+      ...this.state,
+      ...partial,
+      status: nextStatus,
+      isHealthy: nextStatus === 'healthy',
+    };
     this.listeners.forEach((listener) => listener(this.state));
   }
 
@@ -98,7 +98,7 @@ class BackendHealthMonitor {
     };
   }
 
-  getSnapshot(): BackendHealthSnapshot {
+  getSnapshot(): BackendHealthState {
     return this.state;
   }
 

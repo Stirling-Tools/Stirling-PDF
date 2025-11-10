@@ -158,7 +158,7 @@ export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
     // Always try to fetch config to check if login is disabled
     // The endpoint should be public and return proper JSON
     if (autoFetch) {
-      void fetchConfig();
+      fetchConfig();
     }
   }, [autoFetch, fetchConfig]);
 
@@ -167,7 +167,7 @@ export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
     const handleJwtAvailable = () => {
       console.debug('[AppConfig] JWT available event - refetching config');
       // Force refetch with JWT
-      void fetchConfig(true);
+      fetchConfig(true);
     };
 
     window.addEventListener('jwt-available', handleJwtAvailable);

@@ -1,12 +1,13 @@
 import { useEffect, useState, useCallback } from 'react';
-import { backendHealthMonitor, BackendHealthSnapshot } from '@app/services/backendHealthMonitor';
+import { backendHealthMonitor } from '@app/services/backendHealthMonitor';
+import type { BackendHealthState } from '@app/types/backendHealth';
 
 /**
  * Hook to read the shared backend health monitor state.
  * All consumers subscribe to a single poller managed by backendHealthMonitor.
  */
 export function useBackendHealth() {
-  const [health, setHealth] = useState<BackendHealthSnapshot>(() => backendHealthMonitor.getSnapshot());
+  const [health, setHealth] = useState<BackendHealthState>(() => backendHealthMonitor.getSnapshot());
 
   useEffect(() => {
     return backendHealthMonitor.subscribe(setHealth);
@@ -18,7 +19,6 @@ export function useBackendHealth() {
 
   return {
     ...health,
-    isHealthy: health.status === 'healthy',
     checkHealth,
   };
 }

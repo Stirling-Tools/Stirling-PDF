@@ -14,7 +14,7 @@ export function DesktopConfigSync() {
 
   useEffect(() => {
     if (status === 'healthy' && previousStatus.current !== 'healthy') {
-      void refetch();
+      refetch();
     }
     previousStatus.current = status;
   }, [status, refetch]);
