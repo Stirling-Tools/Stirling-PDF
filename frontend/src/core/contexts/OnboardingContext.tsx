@@ -2,14 +2,17 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { usePreferences } from '@app/contexts/PreferencesContext';
 import { useShouldShowWelcomeModal } from '@app/hooks/useShouldShowWelcomeModal';
 
+export type TourType = 'tools' | 'admin';
+
 interface OnboardingContextValue {
   isOpen: boolean;
   currentStep: number;
+  tourType: TourType;
   setCurrentStep: (step: number) => void;
-  startTour: () => void;
+  startTour: (type?: TourType) => void;
   closeTour: () => void;
   completeTour: () => void;
-  resetTour: () => void;
+  resetTour: (type?: TourType) => void;
   showWelcomeModal: boolean;
   setShowWelcomeModal: (show: boolean) => void;
   startAfterToolModeSelection: boolean;
@@ -22,6 +25,7 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const { updatePreference } = usePreferences();
   const [isOpen, setIsOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
+  const [tourType, setTourType] = useState<TourType>('tools');
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [startAfterToolModeSelection, setStartAfterToolModeSelection] = useState(false);
   const shouldShow = useShouldShowWelcomeModal();
@@ -33,7 +37,8 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     }
   }, [shouldShow]);
 
-  const startTour = useCallback(() => {
+  const startTour = useCallback((type: TourType = 'tools') => {
+    setTourType(type);
     setCurrentStep(0);
     setIsOpen(true);
   }, []);
@@ -47,8 +52,9 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     updatePreference('hasCompletedOnboarding', true);
   }, [updatePreference]);
 
-  const resetTour = useCallback(() => {
+  const resetTour = useCallback((type: TourType = 'tools') => {
     updatePreference('hasCompletedOnboarding', false);
+    setTourType(type);
     setCurrentStep(0);
     setIsOpen(true);
   }, [updatePreference]);
@@ -58,6 +64,7 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       value={{
         isOpen,
         currentStep,
+        tourType,
         setCurrentStep,
         startTour,
         closeTour,
