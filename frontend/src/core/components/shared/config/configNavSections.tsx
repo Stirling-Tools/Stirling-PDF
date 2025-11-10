@@ -9,11 +9,11 @@ import AdminPrivacySection from '@app/components/shared/config/configSections/Ad
 import AdminDatabaseSection from '@app/components/shared/config/configSections/AdminDatabaseSection';
 import AdminAdvancedSection from '@app/components/shared/config/configSections/AdminAdvancedSection';
 import AdminLegalSection from '@app/components/shared/config/configSections/AdminLegalSection';
-import AdminPremiumSection from '@app/components/shared/config/configSections/AdminPremiumSection';
 import AdminFeaturesSection from '@app/components/shared/config/configSections/AdminFeaturesSection';
 import AdminEndpointsSection from '@app/components/shared/config/configSections/AdminEndpointsSection';
 import AdminAuditSection from '@app/components/shared/config/configSections/AdminAuditSection';
 import AdminUsageSection from '@app/components/shared/config/configSections/AdminUsageSection';
+import AdminPlanSection from '@app/components/shared/config/configSections/AdminPlanSection';
 
 export interface ConfigNavItem {
   key: NavKey;
@@ -126,10 +126,10 @@ export const createConfigNavSections = (
       title: 'Licensing & Analytics',
       items: [
         {
-          key: 'adminPremium',
-          label: 'Premium',
-          icon: 'star-rounded',
-          component: <AdminPremiumSection />
+          key: 'adminPlan',
+          label: 'Plan',
+          icon: 'receipt-long-rounded',
+          component: <AdminPlanSection />
         },
         {
           key: 'adminAudit',

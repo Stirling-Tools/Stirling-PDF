@@ -299,6 +299,16 @@ public class AdminSettingsController {
                                         + String.join(", ", VALID_SECTION_NAMES));
             }
 
+            // Auto-enable premium features if license key is provided
+            if ("premium".equalsIgnoreCase(sectionName) && sectionData.containsKey("key")) {
+                Object keyValue = sectionData.get("key");
+                if (keyValue != null && !keyValue.toString().trim().isEmpty()) {
+                    // Automatically set enabled to true when a key is provided
+                    sectionData.put("enabled", true);
+                    log.info("Auto-enabling premium features because license key was provided");
+                }
+            }
+
             int updatedCount = 0;
             for (Map.Entry<String, Object> entry : sectionData.entrySet()) {
                 String propertyKey = entry.getKey();
