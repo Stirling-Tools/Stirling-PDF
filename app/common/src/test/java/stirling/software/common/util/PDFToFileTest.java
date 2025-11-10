@@ -11,6 +11,7 @@ import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -72,7 +73,7 @@ class PDFToFileTest {
                         "file",
                         "test.txt",
                         MediaType.TEXT_PLAIN_VALUE,
-                        "This is not a PDF".getBytes());
+                        "This is not a PDF".getBytes(StandardCharsets.UTF_8));
 
         // Execute
         ResponseEntity<byte[]> response = pdfToFile.processPdfToMarkdown(nonPdfFile);
@@ -89,7 +90,7 @@ class PDFToFileTest {
                         "file",
                         "test.txt",
                         MediaType.TEXT_PLAIN_VALUE,
-                        "This is not a PDF".getBytes());
+                        "This is not a PDF".getBytes(StandardCharsets.UTF_8));
 
         // Execute
         ResponseEntity<byte[]> response = pdfToFile.processPdfToHtml(nonPdfFile);
@@ -107,7 +108,7 @@ class PDFToFileTest {
                         "file",
                         "test.txt",
                         MediaType.TEXT_PLAIN_VALUE,
-                        "This is not a PDF".getBytes());
+                        "This is not a PDF".getBytes(StandardCharsets.UTF_8));
 
         // Execute
         ResponseEntity<byte[]> response =
@@ -126,7 +127,7 @@ class PDFToFileTest {
                         "file",
                         "test.pdf",
                         MediaType.APPLICATION_PDF_VALUE,
-                        "Fake PDF content".getBytes());
+                        "Fake PDF content".getBytes(StandardCharsets.UTF_8));
 
         // Execute with invalid format
         ResponseEntity<byte[]> response =
@@ -147,13 +148,14 @@ class PDFToFileTest {
                             "file",
                             "test.pdf",
                             MediaType.APPLICATION_PDF_VALUE,
-                            "Fake PDF content".getBytes());
+                            "Fake PDF content".getBytes(StandardCharsets.UTF_8));
 
             // Create a mock HTML output file
             Path htmlOutputFile = tempDir.resolve("test.html");
             Files.write(
                     htmlOutputFile,
-                    "<html><body><h1>Test</h1><p>This is a test.</p></body></html>".getBytes());
+                    "<html><body><h1>Test</h1><p>This is a test.</p></body></html>"
+                            .getBytes(StandardCharsets.UTF_8));
 
             // Setup ProcessExecutor mock
             mockedStaticProcessExecutor
@@ -196,7 +198,7 @@ class PDFToFileTest {
                             "file",
                             "multipage.pdf",
                             MediaType.APPLICATION_PDF_VALUE,
-                            "Fake PDF content".getBytes());
+                            "Fake PDF content".getBytes(StandardCharsets.UTF_8));
 
             // Setup ProcessExecutor mock
             mockedStaticProcessExecutor
@@ -212,16 +214,19 @@ class PDFToFileTest {
                                 // Create multiple HTML files and an image
                                 Files.write(
                                         Path.of(outputDir.getPath(), "multipage.html"),
-                                        "<html><body><h1>Cover</h1></body></html>".getBytes());
+                                        "<html><body><h1>Cover</h1></body></html>"
+                                                .getBytes(StandardCharsets.UTF_8));
                                 Files.write(
                                         Path.of(outputDir.getPath(), "multipage-1.html"),
-                                        "<html><body><h1>Page 1</h1></body></html>".getBytes());
+                                        "<html><body><h1>Page 1</h1></body></html>"
+                                                .getBytes(StandardCharsets.UTF_8));
                                 Files.write(
                                         Path.of(outputDir.getPath(), "multipage-2.html"),
-                                        "<html><body><h1>Page 2</h1></body></html>".getBytes());
+                                        "<html><body><h1>Page 2</h1></body></html>"
+                                                .getBytes(StandardCharsets.UTF_8));
                                 Files.write(
                                         Path.of(outputDir.getPath(), "image1.png"),
-                                        "Fake image data".getBytes());
+                                        "Fake image data".getBytes(StandardCharsets.UTF_8));
 
                                 return mockExecutorResult;
                             });
@@ -275,7 +280,7 @@ class PDFToFileTest {
                             "file",
                             "test.pdf",
                             MediaType.APPLICATION_PDF_VALUE,
-                            "Fake PDF content".getBytes());
+                            "Fake PDF content".getBytes(StandardCharsets.UTF_8));
 
             // Setup ProcessExecutor mock
             mockedStaticProcessExecutor
@@ -291,13 +296,15 @@ class PDFToFileTest {
                                 // Create HTML files and assets
                                 Files.write(
                                         Path.of(outputDir.getPath(), "test.html"),
-                                        "<html><frameset></frameset></html>".getBytes());
+                                        "<html><frameset></frameset></html>"
+                                                .getBytes(StandardCharsets.UTF_8));
                                 Files.write(
                                         Path.of(outputDir.getPath(), "test_ind.html"),
-                                        "<html><body>Index</body></html>".getBytes());
+                                        "<html><body>Index</body></html>"
+                                                .getBytes(StandardCharsets.UTF_8));
                                 Files.write(
                                         Path.of(outputDir.getPath(), "test_img.png"),
-                                        "Fake image data".getBytes());
+                                        "Fake image data".getBytes(StandardCharsets.UTF_8));
 
                                 return mockExecutorResult;
                             });
@@ -331,6 +338,7 @@ class PDFToFileTest {
                         case "test.html" -> foundMainHtml = true;
                         case "test_ind.html" -> foundIndexHtml = true;
                         case "test_img.png" -> foundImage = true;
+                        default -> fail("Unexpected file in ZIP: " + entry.getName());
                     }
                     zipStream.closeEntry();
                 }
@@ -353,7 +361,7 @@ class PDFToFileTest {
                             "file",
                             "document.pdf",
                             MediaType.APPLICATION_PDF_VALUE,
-                            "Fake PDF content".getBytes());
+                            "Fake PDF content".getBytes(StandardCharsets.UTF_8));
 
             // Setup ProcessExecutor mock
             mockedStaticProcessExecutor
@@ -381,7 +389,7 @@ class PDFToFileTest {
                                 assertNotNull(outDir);
                                 Files.write(
                                         Path.of(outDir, "document.docx"),
-                                        "Fake DOCX content".getBytes());
+                                        "Fake DOCX content".getBytes(StandardCharsets.UTF_8));
 
                                 return mockExecutorResult;
                             });
@@ -416,7 +424,7 @@ class PDFToFileTest {
                             "file",
                             "document.pdf",
                             MediaType.APPLICATION_PDF_VALUE,
-                            "Fake PDF content".getBytes());
+                            "Fake PDF content".getBytes(StandardCharsets.UTF_8));
 
             // Setup ProcessExecutor mock
             mockedStaticProcessExecutor
@@ -442,13 +450,13 @@ class PDFToFileTest {
                                 assertNotNull(outDir);
                                 Files.write(
                                         Path.of(outDir, "document.odp"),
-                                        "Fake ODP content".getBytes());
+                                        "Fake ODP content".getBytes(StandardCharsets.UTF_8));
                                 Files.write(
                                         Path.of(outDir, "document_media1.png"),
-                                        "Image 1 content".getBytes());
+                                        "Image 1 content".getBytes(StandardCharsets.UTF_8));
                                 Files.write(
                                         Path.of(outDir, "document_media2.png"),
-                                        "Image 2 content".getBytes());
+                                        "Image 2 content".getBytes(StandardCharsets.UTF_8));
 
                                 return mockExecutorResult;
                             });
@@ -503,7 +511,7 @@ class PDFToFileTest {
                             "file",
                             "document.pdf",
                             MediaType.APPLICATION_PDF_VALUE,
-                            "Fake PDF content".getBytes());
+                            "Fake PDF content".getBytes(StandardCharsets.UTF_8));
 
             // Setup ProcessExecutor mock
             mockedStaticProcessExecutor
@@ -531,7 +539,7 @@ class PDFToFileTest {
                                 assertNotNull(outDir);
                                 Files.write(
                                         Path.of(outDir, "document.txt"),
-                                        "Extracted text content".getBytes());
+                                        "Extracted text content".getBytes(StandardCharsets.UTF_8));
 
                                 return mockExecutorResult;
                             });
@@ -565,7 +573,7 @@ class PDFToFileTest {
                             "file",
                             "",
                             MediaType.APPLICATION_PDF_VALUE,
-                            "Fake PDF content".getBytes());
+                            "Fake PDF content".getBytes(StandardCharsets.UTF_8));
 
             // Setup ProcessExecutor mock
             mockedStaticProcessExecutor
@@ -589,7 +597,7 @@ class PDFToFileTest {
                                 assertNotNull(outDir);
                                 Files.write(
                                         Path.of(outDir, "output.docx"),
-                                        "Fake DOCX content".getBytes());
+                                        "Fake DOCX content".getBytes(StandardCharsets.UTF_8));
 
                                 return mockExecutorResult;
                             });

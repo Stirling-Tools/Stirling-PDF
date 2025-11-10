@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.nio.charset.StandardCharsets;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,7 +28,7 @@ class CustomColorReplaceStrategyTest {
                         "file",
                         "test.pdf",
                         MediaType.APPLICATION_PDF_VALUE,
-                        "test pdf content".getBytes());
+                        "test pdf content".getBytes(StandardCharsets.UTF_8));
 
         // Initialize strategy with custom colors
         strategy =
