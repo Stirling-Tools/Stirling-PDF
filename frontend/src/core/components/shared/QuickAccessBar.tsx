@@ -1,5 +1,5 @@
 import React, { useState, useRef, forwardRef, useEffect } from "react";
-import { ActionIcon, Stack, Divider } from "@mantine/core";
+import { ActionIcon, Stack, Divider, Menu } from "@mantine/core";
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation } from 'react-router-dom';
 import LocalIcon from '@app/components/shared/LocalIcon';
@@ -178,8 +178,9 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
       isRound: true,
       size: 'lg',
       type: 'action',
-      onClick: () => {
-        startTour();
+      onClick: (e) => {
+        // Prevent default - menu will handle the click
+        e?.preventDefault?.();
       },
     },
     {
@@ -258,11 +259,70 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
 
           {/* Bottom section */}
           <Stack gap="lg" align="center">
-            {bottomButtons.map((config, index) => (
-              <React.Fragment key={config.id}>
-                {renderNavButton(config, index)}
-              </React.Fragment>
-            ))}
+            {bottomButtons.map((buttonConfig, index) => {
+              // Handle help button with menu or direct action
+              if (buttonConfig.id === 'help') {
+                const isAdmin = config?.isAdmin === true;
+
+                // If not admin, just show button that starts tools tour directly
+                if (!isAdmin) {
+                  return (
+                    <div
+                      key={buttonConfig.id}
+                      data-tour="help-button"
+                      onClick={() => startTour('tools')}
+                    >
+                      {renderNavButton(buttonConfig, index)}
+                    </div>
+                  );
+                }
+
+                // If admin, show menu with both options
+                return (
+                  <div key={buttonConfig.id} data-tour="help-button">
+                    <Menu position="right" offset={10}>
+                      <Menu.Target>
+                        <div>{renderNavButton(buttonConfig, index)}</div>
+                      </Menu.Target>
+                      <Menu.Dropdown>
+                        <Menu.Item
+                          leftSection={<LocalIcon icon="view-carousel-rounded" width="1.25rem" height="1.25rem" />}
+                          onClick={() => startTour('tools')}
+                        >
+                          <div>
+                            <div style={{ fontWeight: 500 }}>
+                              {t("quickAccess.helpMenu.toolsTour", "Tools Tour")}
+                            </div>
+                            <div style={{ fontSize: '0.875rem', opacity: 0.7 }}>
+                              {t("quickAccess.helpMenu.toolsTourDesc", "Learn what the tools can do")}
+                            </div>
+                          </div>
+                        </Menu.Item>
+                        <Menu.Item
+                          leftSection={<LocalIcon icon="admin-panel-settings-rounded" width="1.25rem" height="1.25rem" />}
+                          onClick={() => startTour('admin')}
+                        >
+                          <div>
+                            <div style={{ fontWeight: 500 }}>
+                              {t("quickAccess.helpMenu.adminTour", "Admin Tour")}
+                            </div>
+                            <div style={{ fontSize: '0.875rem', opacity: 0.7 }}>
+                              {t("quickAccess.helpMenu.adminTourDesc", "Explore admin settings & features")}
+                            </div>
+                          </div>
+                        </Menu.Item>
+                      </Menu.Dropdown>
+                    </Menu>
+                  </div>
+                );
+              }
+
+              return (
+                <React.Fragment key={buttonConfig.id}>
+                  {renderNavButton(buttonConfig, index)}
+                </React.Fragment>
+              );
+            })}
           </Stack>
         </div>
       </div>
