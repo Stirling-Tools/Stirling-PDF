@@ -58,14 +58,21 @@ const addFilesMutex = new SimpleMutex();
 /**
  * Helper to create ProcessedFile metadata structure
  */
-export function createProcessedFile(pageCount: number, thumbnail?: string, pageRotations?: number[]) {
+export function createProcessedFile(
+  pageCount: number,
+  thumbnail?: string,
+  pageRotations?: number[],
+  pageDimensions?: Array<{ width: number; height: number }>
+) {
   return {
     totalPages: pageCount,
     pages: Array.from({ length: pageCount }, (_, index) => ({
       pageNumber: index + 1,
       thumbnail: index === 0 ? thumbnail : undefined, // Only first page gets thumbnail initially
       rotation: pageRotations?.[index] ?? 0,
-      splitBefore: false
+      splitBefore: false,
+      width: pageDimensions?.[index]?.width,
+      height: pageDimensions?.[index]?.height
     })),
     thumbnailUrl: thumbnail,
     lastProcessed: Date.now()
@@ -92,7 +99,8 @@ export async function generateProcessedFileMetadata(file: File): Promise<Process
     const processedFile = createProcessedFile(
       unrotatedResult.pageCount,
       unrotatedResult.thumbnail, // Page thumbnails (unrotated)
-      unrotatedResult.pageRotations
+      unrotatedResult.pageRotations,
+      unrotatedResult.pageDimensions
     );
 
     // Use rotated thumbnail for file manager

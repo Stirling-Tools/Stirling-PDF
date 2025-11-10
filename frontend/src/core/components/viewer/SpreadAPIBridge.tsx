@@ -7,33 +7,36 @@ import { useViewer } from '@app/contexts/ViewerContext';
  */
 export function SpreadAPIBridge() {
   const { provides: spread, spreadMode } = useSpread();
-  const { registerBridge } = useViewer();
+  const { registerBridge, triggerImmediateSpreadUpdate } = useViewer();
 
   useEffect(() => {
-    if (spread) {
-      const newState = {
-        spreadMode, 
-        isDualPage: spreadMode !== SpreadMode.None
-      };
-
-      // Register this bridge with ViewerContext
-      registerBridge('spread', {
-        state: newState,
-        api: {
-          setSpreadMode: (mode: SpreadMode) => {
-            spread.setSpreadMode(mode);
-          },
-          getSpreadMode: () => spread.getSpreadMode(),
-          toggleSpreadMode: () => {
-            // Toggle between None and Odd (most common dual-page mode)
-            const newMode = spreadMode === SpreadMode.None ? SpreadMode.Odd : SpreadMode.None;
-            spread.setSpreadMode(newMode);
-          },
-          SpreadMode: SpreadMode, // Export enum for reference
-        }
-      });
+    if (!spread) {
+      return;
     }
-  }, [spread, spreadMode]);
+
+    const newState = {
+      spreadMode,
+      isDualPage: spreadMode !== SpreadMode.None,
+    };
+
+    registerBridge('spread', {
+      state: newState,
+      api: {
+        setSpreadMode: (mode: SpreadMode) => {
+          spread.setSpreadMode(mode);
+        },
+        getSpreadMode: () => spread.getSpreadMode(),
+        toggleSpreadMode: () => {
+          const current = spread.getSpreadMode();
+          const nextMode = current === SpreadMode.None ? SpreadMode.Odd : SpreadMode.None;
+          spread.setSpreadMode(nextMode);
+        },
+        SpreadMode,
+      },
+    });
+
+    triggerImmediateSpreadUpdate(spreadMode);
+  }, [spread, spreadMode, registerBridge, triggerImmediateSpreadUpdate]);
 
   return null;
 }

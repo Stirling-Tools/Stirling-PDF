@@ -14,30 +14,32 @@ interface PdfViewerToolbarProps {
   currentPage?: number;
   totalPages?: number;
   onPageChange?: (page: number) => void;
-
-  // Dual page toggle (placeholder for now)
-  dualPage?: boolean;
-  onDualPageToggle?: () => void;
-
-  // Zoom controls (connected via ViewerContext)
-  currentZoom?: number;
 }
 
 export function PdfViewerToolbar({
   currentPage = 1,
   totalPages: _totalPages = 1,
   onPageChange,
-  dualPage = false,
-  onDualPageToggle,
-  currentZoom: _currentZoom = 100,
 }: PdfViewerToolbarProps) {
   const { t } = useTranslation();
-  const { getScrollState, getZoomState, scrollActions, zoomActions, registerImmediateZoomUpdate, registerImmediateScrollUpdate } = useViewer();
+  const {
+    getScrollState,
+    getZoomState,
+    getSpreadState,
+    scrollActions,
+    zoomActions,
+    spreadActions,
+    registerImmediateZoomUpdate,
+    registerImmediateScrollUpdate,
+    registerImmediateSpreadUpdate,
+  } = useViewer();
 
   const scrollState = getScrollState();
   const zoomState = getZoomState();
+  const spreadState = getSpreadState();
   const [pageInput, setPageInput] = useState(scrollState.currentPage || currentPage);
   const [displayZoomPercent, setDisplayZoomPercent] = useState(zoomState.zoomPercent || 140);
+  const [isDualPageActive, setIsDualPageActive] = useState(spreadState.isDualPage);
 
   // Register for immediate scroll updates and sync with actual scroll state
   useEffect(() => {
@@ -53,6 +55,13 @@ export function PdfViewerToolbar({
     setDisplayZoomPercent(zoomState.zoomPercent || 140);
   }, [zoomState.zoomPercent, registerImmediateZoomUpdate]);
 
+  useEffect(() => {
+    registerImmediateSpreadUpdate((_mode, isDual) => {
+      setIsDualPageActive(isDual);
+    });
+    setIsDualPageActive(spreadState.isDualPage);
+  }, [registerImmediateSpreadUpdate, spreadState.isDualPage]);
+
   const handleZoomOut = () => {
     zoomActions.zoomOut();
   };
@@ -67,6 +76,10 @@ export function PdfViewerToolbar({
       onPageChange(page);
     }
     setPageInput(page);
+  };
+
+  const handleDualPageToggle = () => {
+    spreadActions.toggleSpreadMode();
   };
 
   const handleFirstPage = () => {
@@ -188,15 +201,19 @@ export function PdfViewerToolbar({
 
         {/* Dual Page Toggle */}
         <Button
-          variant={dualPage ? "filled" : "light"}
+          variant={isDualPageActive ? "filled" : "light"}
           color="blue"
           size="md"
           radius="xl"
-          onClick={onDualPageToggle}
+          onClick={handleDualPageToggle}
           style={{ minWidth: '2.5rem' }}
-          title={dualPage ? t("viewer.singlePageView", "Single Page View") : t("viewer.dualPageView", "Dual Page View")}
+          title={
+            isDualPageActive
+              ? t("viewer.singlePageView", "Single Page View")
+              : t("viewer.dualPageView", "Dual Page View")
+          }
         >
-          {dualPage ? <DescriptionIcon fontSize="small" /> : <ViewWeekIcon fontSize="small" />}
+          {isDualPageActive ? <DescriptionIcon fontSize="small" /> : <ViewWeekIcon fontSize="small" />}
         </Button>
 
         {/* Zoom Controls */}

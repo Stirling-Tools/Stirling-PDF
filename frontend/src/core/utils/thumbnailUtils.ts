@@ -4,6 +4,7 @@ export interface ThumbnailWithMetadata {
   thumbnail: string; // Always returns a thumbnail (placeholder if needed)
   pageCount: number;
   pageRotations?: number[]; // Rotation for each page (0, 90, 180, 270)
+  pageDimensions?: Array<{ width: number; height: number }>;
 }
 
 interface ColorScheme {
@@ -402,12 +403,18 @@ export async function generateThumbnailWithMetadata(file: File, applyRotation: b
 
     const pageCount = pdf.numPages;
     const page = await pdf.getPage(1);
+    const pageDimensions: Array<{ width: number; height: number }> = [];
 
     // If applyRotation is false, render without rotation (for CSS-based rotation)
     // If applyRotation is true, let PDF.js apply rotation (for static display)
     const viewport = applyRotation
       ? page.getViewport({ scale })
       : page.getViewport({ scale, rotation: 0 });
+    const baseViewport = page.getViewport({ scale: 1, rotation: 0 });
+    pageDimensions[0] = {
+      width: baseViewport.width,
+      height: baseViewport.height
+    };
 
     const canvas = document.createElement("canvas");
     canvas.width = viewport.width;
@@ -428,10 +435,17 @@ export async function generateThumbnailWithMetadata(file: File, applyRotation: b
       const p = await pdf.getPage(i);
       const rotation = p.rotate || 0;
       pageRotations.push(rotation);
+      if (!pageDimensions[i - 1]) {
+        const pageViewport = p.getViewport({ scale: 1, rotation: 0 });
+        pageDimensions[i - 1] = {
+          width: pageViewport.width,
+          height: pageViewport.height
+        };
+      }
     }
 
     pdfWorkerManager.destroyDocument(pdf);
-    return { thumbnail, pageCount, pageRotations };
+    return { thumbnail, pageCount, pageRotations, pageDimensions };
 
   } catch (error) {
     if (error instanceof Error && error.name === "PasswordException") {
