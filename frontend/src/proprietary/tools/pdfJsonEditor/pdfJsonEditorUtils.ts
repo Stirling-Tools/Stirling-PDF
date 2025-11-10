@@ -24,6 +24,54 @@ type FontMetrics = {
 
 type FontMetricsMap = Map<string, FontMetrics>;
 
+const sanitizeParagraphText = (text: string | undefined | null): string => {
+  if (!text) {
+    return '';
+  }
+  return text.replace(/\r?\n/g, '');
+};
+
+const splitParagraphIntoLines = (text: string | undefined | null): string[] => {
+  if (text === null || text === undefined) {
+    return [''];
+  }
+  return text.replace(/\r/g, '').split('\n');
+};
+
+const extractElementBaseline = (element: PdfJsonTextElement): number | null => {
+  if (!element) {
+    return null;
+  }
+  if (element.textMatrix && element.textMatrix.length >= 6) {
+    const baseline = element.textMatrix[5];
+    return typeof baseline === 'number' ? baseline : null;
+  }
+  if (typeof element.y === 'number') {
+    return element.y;
+  }
+  return null;
+};
+
+const shiftElementsBy = (elements: PdfJsonTextElement[], delta: number): PdfJsonTextElement[] => {
+  if (delta === 0) {
+    return elements.map(cloneTextElement);
+  }
+  return elements.map((element) => {
+    const clone = cloneTextElement(element);
+    if (clone.textMatrix && clone.textMatrix.length >= 6) {
+      const matrix = [...clone.textMatrix];
+      matrix[5] = (matrix[5] ?? 0) + delta;
+      clone.textMatrix = matrix;
+    }
+    if (typeof clone.y === 'number') {
+      clone.y += delta;
+    } else if (clone.y === null || clone.y === undefined) {
+      clone.y = delta;
+    }
+    return clone;
+  });
+};
+
 const countGraphemes = (text: string): number => {
   if (!text) {
     return 0;
@@ -472,6 +520,123 @@ const createGroup = (
   };
 };
 
+const groupLinesIntoParagraphs = (
+  lineGroups: TextGroup[],
+  metrics?: FontMetricsMap,
+): TextGroup[] => {
+  if (lineGroups.length === 0) {
+    return [];
+  }
+
+  const paragraphs: TextGroup[][] = [];
+  let currentParagraph: TextGroup[] = [lineGroups[0]];
+
+  for (let i = 1; i < lineGroups.length; i++) {
+    const prevLine = lineGroups[i - 1];
+    const currentLine = lineGroups[i];
+
+    // Calculate line spacing
+    const prevBaseline = prevLine.baseline ?? 0;
+    const currentBaseline = currentLine.baseline ?? 0;
+    const lineSpacing = Math.abs(prevBaseline - currentBaseline);
+
+    // Calculate average font size
+    const prevFontSize = prevLine.fontSize ?? 12;
+    const currentFontSize = currentLine.fontSize ?? 12;
+    const avgFontSize = (prevFontSize + currentFontSize) / 2;
+
+    // Check horizontal alignment (left edge)
+    const prevLeft = prevLine.bounds.left;
+    const currentLeft = currentLine.bounds.left;
+    const leftAlignmentTolerance = avgFontSize * 0.3;
+    const isLeftAligned = Math.abs(prevLeft - currentLeft) <= leftAlignmentTolerance;
+
+    // Check if fonts match
+    const sameFont = prevLine.fontId === currentLine.fontId;
+
+    // Check for consistent spacing rather than expected spacing
+    // Line spacing in PDFs can range from 1.0x to 3.0x font size
+    // We just want to ensure spacing is consistent between consecutive lines
+    // and not excessively large (which would indicate a paragraph break)
+    const maxReasonableSpacing = avgFontSize * 3.0; // Max ~3x font size for normal line spacing
+    const hasReasonableSpacing = lineSpacing <= maxReasonableSpacing;
+
+    // Merge into paragraph if:
+    // 1. Left aligned
+    // 2. Same font
+    // 3. Reasonable line spacing (not a large gap indicating paragraph break)
+    const shouldMerge = isLeftAligned && sameFont && hasReasonableSpacing;
+
+    if (shouldMerge) {
+      currentParagraph.push(currentLine);
+    } else {
+      paragraphs.push(currentParagraph);
+      currentParagraph = [currentLine];
+    }
+  }
+
+  // Don't forget the last paragraph
+  if (currentParagraph.length > 0) {
+    paragraphs.push(currentParagraph);
+  }
+
+  // Merge line groups into single paragraph groups
+  return paragraphs.map((lines, paragraphIndex) => {
+    if (lines.length === 1) {
+      return lines[0];
+    }
+
+    // Combine all elements from all lines
+    const allElements = lines.flatMap(line => line.originalElements);
+    const pageIndex = lines[0].pageIndex;
+    const lineElementCounts = lines.map((line) => line.originalElements.length);
+
+    // Create merged group with newlines between lines
+    const paragraphText = lines.map(line => line.text).join('\n');
+    const mergedBounds = mergeBounds(lines.map(line => line.bounds));
+    const spacingValues: number[] = [];
+    for (let i = 1; i < lines.length; i++) {
+      const prevBaseline = lines[i - 1].baseline ?? lines[i - 1].bounds.bottom;
+      const currentBaseline = lines[i].baseline ?? lines[i].bounds.bottom;
+      const spacing = Math.abs(prevBaseline - currentBaseline);
+      if (spacing > 0) {
+        spacingValues.push(spacing);
+      }
+    }
+    const averageSpacing =
+      spacingValues.length > 0
+        ? spacingValues.reduce((sum, value) => sum + value, 0) / spacingValues.length
+        : null;
+
+    const firstElement = allElements[0];
+    const rotation = computeGroupRotation(allElements);
+    const anchor = rotation !== null ? getAnchorPoint(firstElement) : null;
+    const baselineLength = computeBaselineLength(allElements, metrics);
+    const baseline = computeAverageBaseline(allElements);
+
+    return {
+      id: lines[0].id, // Keep the first line's ID
+      pageIndex,
+      fontId: firstElement?.fontId,
+      fontSize: firstElement?.fontSize,
+      fontMatrixSize: firstElement?.fontMatrixSize,
+      lineSpacing: averageSpacing,
+      lineElementCounts: lines.length > 1 ? lineElementCounts : null,
+      color: firstElement ? extractColor(firstElement) : null,
+      fontWeight: null,
+      rotation,
+      anchor,
+      baselineLength,
+      baseline,
+      elements: allElements.map(cloneTextElement),
+      originalElements: allElements.map(cloneTextElement),
+      text: paragraphText,
+      originalText: paragraphText,
+      bounds: mergedBounds,
+    };
+  });
+};
+
 export const groupPageTextElements = (
   page: PdfJsonPage | null | undefined,
   pageIndex: number,
@@ -508,7 +673,7 @@ export const groupPageTextElements = (
   });
 
   let groupCounter = 0;
-  const groups: TextGroup[] = [];
+  const lineGroups: TextGroup[] = [];
 
   lines.forEach((line) => {
     let currentBucket: PdfJsonTextElement[] = [];
@@ -527,6 +692,19 @@ export const groupPageTextElements = (
       const sameFont = previous.fontId === element.fontId;
       let shouldSplit = gap > splitThreshold * (sameFont ? 1.4 : 1.0);
 
+      if (shouldSplit) {
+        const prevBaseline = getBaseline(previous);
+        const currentBaseline = getBaseline(element);
+        const baselineDelta = Math.abs(prevBaseline - currentBaseline);
+        const prevEndX = getX(previous) + getWidth(previous, metrics);
+        const prevEndY = prevBaseline;
+        const diagonalGap = Math.hypot(Math.max(0, getX(element) - prevEndX), baselineDelta);
+        const diagonalThreshold = Math.max(avgFontSize * 0.8, splitThreshold);
+        if (diagonalGap <= diagonalThreshold) {
+          shouldSplit = false;
+        }
+      }
+
       const previousRotation = extractElementRotation(previous);
       const currentRotation = extractElementRotation(element);
       if (
@@ -539,7 +717,7 @@ export const groupPageTextElements = (
       }
 
       if (shouldSplit) {
-        groups.push(createGroup(pageIndex, groupCounter, currentBucket, metrics));
+        lineGroups.push(createGroup(pageIndex, groupCounter, currentBucket, metrics));
         groupCounter += 1;
         currentBucket = [element];
       } else {
@@ -548,15 +726,17 @@ export const groupPageTextElements = (
     });
 
     if (currentBucket.length > 0) {
-      groups.push(createGroup(pageIndex, groupCounter, currentBucket, metrics));
+      lineGroups.push(createGroup(pageIndex, groupCounter, currentBucket, metrics));
       groupCounter += 1;
     }
   });
 
-  return groups;
+  return groupLinesIntoParagraphs(lineGroups, metrics);
 };
 
-export const groupDocumentText = (document: PdfJsonDocument | null | undefined): TextGroup[][] => {
+export const groupDocumentText = (
+  document: PdfJsonDocument | null | undefined,
+): TextGroup[][] => {
   const pages = document?.pages ?? [];
   const metrics = buildFontMetrics(document);
   return pages.map((page, index) => groupPageTextElements(page, index, metrics));
@@ -600,7 +780,7 @@ export const pageDimensions = (page: PdfJsonPage | null | undefined): { width: n
 export const createMergedElement = (group: TextGroup): PdfJsonTextElement => {
   const reference = group.originalElements[0];
   const merged = cloneTextElement(reference);
-  merged.text = group.text;
+  merged.text = sanitizeParagraphText(group.text);
   clearGlyphHints(merged);
   if (reference.textMatrix && reference.textMatrix.length === 6) {
     merged.textMatrix = [...reference.textMatrix];
@@ -613,7 +793,8 @@ const distributeTextAcrossElements = (text: string | undefined, elements: PdfJso
     return true;
   }
 
-  const targetChars = Array.from(text ?? '');
+  const normalizedText = sanitizeParagraphText(text);
+  const targetChars = Array.from(normalizedText);
   if (targetChars.length === 0) {
     elements.forEach((element) => {
       element.text = '';
@@ -627,10 +808,6 @@ const distributeTextAcrossElements = (text: string | undefined, elements: PdfJso
     const graphemeCount = Array.from(originalText).length;
     return graphemeCount > 0 ? graphemeCount : 1;
   });
-  const totalCapacity = capacities.reduce((sum, value) => sum + value, 0);
-  if (targetChars.length > totalCapacity) {
-    return false;
-  }
 
   let cursor = 0;
   elements.forEach((element, index) => {
@@ -640,7 +817,9 @@ const distributeTextAcrossElements = (text: string | undefined, elements: PdfJso
       if (index === elements.length - 1) {
         sliceLength = remaining;
       } else {
-        sliceLength = Math.min(capacities[index], remaining);
+        const capacity = Math.max(capacities[index], 1);
+        const minRemainingForRest = Math.max(elements.length - index - 1, 0);
+        sliceLength = Math.min(capacity, Math.max(remaining - minRemainingForRest, 1));
       }
     }
 
@@ -656,6 +835,118 @@ const distributeTextAcrossElements = (text: string | undefined, elements: PdfJso
   });
 
   return true;
+};
+
+const sliceElementsByLineCounts = (group: TextGroup): PdfJsonTextElement[][] => {
+  const counts = group.lineElementCounts;
+  if (!counts || counts.length === 0) {
+    if (!group.originalElements.length) {
+      return [];
+    }
+    return [group.originalElements];
+  }
+
+  const result: PdfJsonTextElement[][] = [];
+  let cursor = 0;
+  counts.forEach((count) => {
+    if (count <= 0) {
+      return;
+    }
+    const slice = group.originalElements.slice(cursor, cursor + count);
+    if (slice.length > 0) {
+      result.push(slice);
+    }
+    cursor += count;
+  });
+  return result;
+};
+
+const rebuildParagraphLineElements = (group: TextGroup): PdfJsonTextElement[] | null => {
+  if (!group.text || !group.text.includes('\n')) {
+    return null;
+  }
+
+  const lineTexts = splitParagraphIntoLines(group.text);
+  if (lineTexts.length === 0) {
+    return [];
+  }
+
+  const lineElementGroups = sliceElementsByLineCounts(group);
+  if (!lineElementGroups.length) {
+    return null;
+  }
+
+  const lineBaselines = lineElementGroups.map((elements) => {
+    for (const element of elements) {
+      const baseline = extractElementBaseline(element);
+      if (baseline !== null) {
+        return baseline;
+      }
+    }
+    return group.baseline ?? null;
+  });
+
+  const spacingFromBaselines = (() => {
+    for (let i = 1; i < lineBaselines.length; i += 1) {
+      const prev = lineBaselines[i - 1];
+      const current = lineBaselines[i];
+      if (prev !== null && current !== null) {
+        const diff = Math.abs(prev - current);
+        if (diff > 0) {
+          return diff;
+        }
+      }
+    }
+    return null;
+  })();
+
+  const spacing =
+    (group.lineSpacing && group.lineSpacing > 0
+      ? group.lineSpacing
+      : spacingFromBaselines) ??
+    Math.max(group.fontMatrixSize ?? group.fontSize ?? 12, 6) * 1.2;
+
+  let direction = -1;
+  for (let i = 1; i < lineBaselines.length; i += 1) {
+    const prev = lineBaselines[i - 1];
+    const current = lineBaselines[i];
+    if (prev !== null && current !== null && Math.abs(prev - current) > 0.05) {
+      direction = current < prev ? -1 : 1;
+      break;
+    }
+  }
+
+  const templateCount = lineElementGroups.length;
+  const lastTemplateIndex = Math.max(templateCount - 1, 0);
+  const rebuilt: PdfJsonTextElement[] = [];
+
+  for (let index = 0; index < lineTexts.length; index += 1) {
+    const templateIndex = Math.min(index, lastTemplateIndex);
+    const templateElements = lineElementGroups[templateIndex];
+    if (!templateElements || templateElements.length === 0) {
+      return null;
+    }
+
+    const shiftSteps = index - templateIndex;
+    const delta = shiftSteps * spacing * direction;
+    const clones = shiftElementsBy(templateElements, delta);
+    const normalizedLine = sanitizeParagraphText(lineTexts[index]);
+    const distributed = distributeTextAcrossElements(normalizedLine, clones);
+
+    if (!distributed) {
+      const primary = clones[0];
+      primary.text = normalizedLine;
+      clearGlyphHints(primary);
+      for (let i = 1; i < clones.length; i += 1) {
+        clones[i].text = '';
+        clearGlyphHints(clones[i]);
+      }
+    }
+
+    rebuilt.push(...clones);
+  }
+
+  return rebuilt;
 };
 
 export const buildUpdatedDocument = (
@@ -724,11 +1015,17 @@ export const restoreGlyphElements = (
           rebuiltElements.push(createMergedElement(group));
           return;
         }
+        const paragraphElements = rebuildParagraphLineElements(group);
+        if (paragraphElements && paragraphElements.length > 0) {
+          rebuiltElements.push(...paragraphElements);
+          return;
+        }
         const originalGlyphCount = group.originalElements.reduce(
           (sum, element) => sum + countGraphemes(element.text ?? ''),
           0,
         );
-        const targetGlyphCount = countGraphemes(group.text);
+        const normalizedText = sanitizeParagraphText(group.text);
+        const targetGlyphCount = countGraphemes(normalizedText);
 
         if (targetGlyphCount !== originalGlyphCount) {
           rebuiltElements.push(createMergedElement(group));
@@ -736,7 +1033,7 @@ export const restoreGlyphElements = (
         }
 
         const originals = group.originalElements.map(cloneTextElement);
-        const distributed = distributeTextAcrossElements(group.text, originals);
+        const distributed = distributeTextAcrossElements(normalizedText, originals);
         if (distributed) {
           rebuiltElements.push(...originals);
         } else {

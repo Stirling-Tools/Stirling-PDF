@@ -245,6 +245,26 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
     onForceSingleTextElementChange,
   } = data;
 
+  const syncEditorValue = useCallback(
+    (element: HTMLElement, pageIndex: number, groupId: string) => {
+      const value = element.innerText.replace(/\u00A0/g, ' ');
+      const offset = getCaretOffset(element);
+      caretOffsetsRef.current.set(groupId, offset);
+      onGroupEdit(pageIndex, groupId, value);
+      requestAnimationFrame(() => {
+        if (editingGroupId !== groupId) {
+          return;
+        }
+        const editor = editorRefs.current.get(groupId);
+        if (editor) {
+          const savedOffset = caretOffsetsRef.current.get(groupId) ?? editor.innerText.length;
+          setCaretOffset(editor, savedOffset);
+        }
+      });
+    },
+    [editingGroupId, onGroupEdit],
+  );
+
   const resolveFont = (fontId: string | null | undefined, pageIndex: number | null | undefined): PdfJsonFont | null => {
     if (!fontId || !pdfDocument?.fonts) {
       return null;
@@ -646,7 +666,14 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
 
   // Measure text widths once per page/configuration and apply static scaling
   useLayoutEffect(() => {
-    if (!autoScaleText || visibleGroups.length === 0) {
+    if (!autoScaleText) {
+      // Clear all scales when auto-scale is disabled
+      setTextScales(new Map());
+      measurementKeyRef.current = '';
+      return;
+    }
+
+    if (visibleGroups.length === 0) {
       return;
     }
 
@@ -664,6 +691,13 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
       visibleGroups.forEach(({ group }) => {
         // Skip groups that are being edited
         if (editingGroupId === group.id) {
+          return;
+        }
+
+        // Skip multi-line paragraphs - auto-scaling doesn't work well with wrapped text
+        const lineCount = (group.text || '').split('\n').length;
+        if (lineCount > 1) {
+          newScales.set(group.id, 1);
           return;
         }
 
@@ -705,7 +739,16 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
     // Delay measurement to ensure fonts and layout are ready
     const timer = setTimeout(measureTextScales, 150);
     return () => clearTimeout(timer);
-  }, [autoScaleText, visibleGroups, editingGroupId, currentPage, pageHeight, scale, fontFamilies.size, selectedPage]);
+  }, [
+    autoScaleText,
+    visibleGroups,
+    editingGroupId,
+    currentPage,
+    pageHeight,
+    scale,
+    fontFamilies.size,
+    selectedPage,
+  ]);
 
   useLayoutEffect(() => {
     // Only restore caret position during re-renders while already editing
@@ -792,7 +835,7 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
       }}
     >
       {content}
-      {activeGroupId === groupId && editingGroupId !== groupId && (
+      {activeGroupId === groupId && (
         <ActionIcon
           size="xs"
           variant="filled"
@@ -956,6 +999,7 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
               onChange={(event) => onForceSingleTextElementChange(event.currentTarget.checked)}
             />
           </Group>
+
         </Stack>
       </Card>
 
@@ -1325,11 +1369,24 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
                       if (fontSizePx > 0) {
                         lineHeightRatio = Math.max(lineHeightRatio, lineHeightPx / fontSizePx);
                       }
+                      const detectedSpacingPx =
+                        group.lineSpacing && group.lineSpacing > 0 ? group.lineSpacing * scale : undefined;
+                      if (detectedSpacingPx && detectedSpacingPx > 0) {
+                        lineHeightPx = Math.max(lineHeightPx, detectedSpacingPx);
+                        if (fontSizePx > 0) {
+                          lineHeightRatio = Math.max(lineHeightRatio, detectedSpacingPx / fontSizePx);
+                        }
+                      }
+                      const lineCount = Math.max(group.text.split('\n').length, 1);
+                      const paragraphHeightPx =
+                        lineCount > 1
+                          ? lineHeightPx + (lineCount - 1) * (detectedSpacingPx ?? lineHeightPx)
+                          : lineHeightPx;
 
                       let containerLeft = bounds.left;
                       let containerTop = bounds.top;
                       let containerWidth = Math.max(bounds.width, fontSizePx);
-                      let containerHeight = Math.max(bounds.height, lineHeightPx);
+                      let containerHeight = Math.max(bounds.height, paragraphHeightPx);
                       let transform: string | undefined;
                       let transformOrigin: React.CSSProperties['transformOrigin'];
 
@@ -1349,7 +1406,13 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
                         containerTop = anchorTop - containerHeight;
                       }
 
-                      if (!hasRotation && group.baseline !== null && group.baseline !== undefined && geometry) {
+                      if (
+                        lineCount === 1 &&
+                        !hasRotation &&
+                        group.baseline !== null &&
+                        group.baseline !== undefined &&
+                        geometry
+                      ) {
                         const cssBaselineTop = (pageHeight - group.baseline) * scale;
                         containerTop = Math.max(cssBaselineTop - ascentPx, 0);
                         containerHeight = Math.max(containerHeight, ascentPx + descentPx);
@@ -1364,7 +1427,8 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
                         left: `${containerLeft}px`,
                         top: `${containerTop}px`,
                         width: `${containerWidth}px`,
-                        height: `${containerHeight}px`,
+                        height: isEditing ? 'auto' : `${containerHeight}px`,
+                        minHeight: `${containerHeight}px`,
                         display: 'flex',
                         alignItems: 'flex-start',
                         justifyContent: 'flex-start',
@@ -1423,23 +1487,12 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
                                   setEditingGroupId(null);
                                 }}
                                 onInput={(event) => {
-                                  const value = event.currentTarget.innerText.replace(/\u00A0/g, ' ');
-                                  const offset = getCaretOffset(event.currentTarget);
-                                  caretOffsetsRef.current.set(group.id, offset);
-                                  onGroupEdit(group.pageIndex, group.id, value);
-                                  requestAnimationFrame(() => {
-                                    if (editingGroupId !== group.id) {
-                                      return;
-                                    }
-                                    const editor = editorRefs.current.get(group.id);
-                                    if (editor) {
-                                      setCaretOffset(editor, caretOffsetsRef.current.get(group.id) ?? editor.innerText.length);
-                                    }
-                                  });
+                                  syncEditorValue(event.currentTarget, group.pageIndex, group.id);
                                 }}
                                 style={{
                                   width: '100%',
-                                  height: '100%',
+                                  minHeight: '100%',
+                                  height: 'auto',
                                   padding: 0,
                                   backgroundColor: 'rgba(255,255,255,0.95)',
                                   color: textColor,
@@ -1486,7 +1539,7 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
                                 color: textColor,
                                 display: 'block',
                                 cursor: 'text',
-                                overflow: 'visible',
+                                overflow: 'hidden',
                               }}
                             >
                               <span
@@ -1496,6 +1549,7 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
                                   display: 'inline-block',
                                   transform: shouldScale ? `scaleX(${textScale})` : undefined,
                                   transformOrigin: 'left center',
+                                  whiteSpace: 'pre',
                                 }}
                               >
                                 {group.text || '\u00A0'}
@@ -1503,57 +1557,43 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
                             </div>,
                             undefined,
                             (event: React.MouseEvent) => {
-                              // Double-click to edit
-                              if (event.detail === 2) {
-                                // Capture click position BEFORE switching to edit mode
-                                const clickX = event.clientX;
-                                const clickY = event.clientY;
+                              const clickX = event.clientX;
+                              const clickY = event.clientY;
 
-                                setEditingGroupId(group.id);
-                                setActiveGroupId(group.id);
+                              setActiveGroupId(group.id);
+                              setEditingGroupId(group.id);
+                              caretOffsetsRef.current.delete(group.id);
 
-                                // Clear any stored offset to prevent interference
-                                caretOffsetsRef.current.delete(group.id);
+                              requestAnimationFrame(() => {
+                                const editor = document.querySelector<HTMLElement>(`[data-editor-group="${group.id}"]`);
+                                if (!editor) return;
+                                editor.focus();
 
-                                // Wait for editor to render, then position cursor at click location
-                                requestAnimationFrame(() => {
-                                  const editor = document.querySelector<HTMLElement>(`[data-editor-group="${group.id}"]`);
-                                  if (!editor) return;
-
-                                  // Focus the editor first
-                                  editor.focus();
-
-                                  // Use caretRangeFromPoint to position cursor at click coordinates
-                                  setTimeout(() => {
-                                    if (document.caretRangeFromPoint) {
-                                      const range = document.caretRangeFromPoint(clickX, clickY);
-                                      if (range) {
-                                        const selection = window.getSelection();
-                                        if (selection) {
-                                          selection.removeAllRanges();
-                                          selection.addRange(range);
-                                        }
-                                      }
-                                    } else if ((document as any).caretPositionFromPoint) {
-                                      // Firefox fallback
-                                      const pos = (document as any).caretPositionFromPoint(clickX, clickY);
-                                      if (pos) {
-                                        const range = document.createRange();
-                                        range.setStart(pos.offsetNode, pos.offset);
-                                        range.collapse(true);
-                                        const selection = window.getSelection();
-                                        if (selection) {
-                                          selection.removeAllRanges();
-                                          selection.addRange(range);
-                                        }
+                                setTimeout(() => {
+                                  if (document.caretRangeFromPoint) {
+                                    const range = document.caretRangeFromPoint(clickX, clickY);
+                                    if (range) {
+                                      const selection = window.getSelection();
+                                      if (selection) {
+                                        selection.removeAllRanges();
+                                        selection.addRange(range);
                                       }
                                     }
-                                  }, 10);
-                                });
-                              } else {
-                                // Single click just selects
-                                setActiveGroupId(group.id);
-                              }
+                                  } else if ((document as any).caretPositionFromPoint) {
+                                    const pos = (document as any).caretPositionFromPoint(clickX, clickY);
+                                    if (pos) {
+                                      const range = document.createRange();
+                                      range.setStart(pos.offsetNode, pos.offset);
+                                      range.collapse(true);
+                                      const selection = window.getSelection();
+                                      if (selection) {
+                                        selection.removeAllRanges();
+                                        selection.addRange(range);
+                                      }
+                                    }
+                                  }
+                                }, 10);
+                              });
                             },
                           )}
                         </Box>

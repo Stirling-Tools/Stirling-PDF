@@ -155,6 +155,8 @@ export interface TextGroup {
   fontId?: string | null;
   fontSize?: number | null;
   fontMatrixSize?: number | null;
+  lineSpacing?: number | null;
+  lineElementCounts?: number[] | null;
   color?: string | null;
   fontWeight?: number | 'normal' | 'bold' | null;
   rotation?: number | null;

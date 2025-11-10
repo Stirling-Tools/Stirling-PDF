@@ -4498,7 +4498,16 @@
       "forceSingleElement": {
         "title": "Lock edited text to a single PDF element",
         "description": "When enabled, the editor exports each edited text box as one PDF text element to avoid overlapping glyphs or mixed fonts."
+      },
+      "textGroupingMode": {
+        "title": "Text grouping mode",
+        "description": "Paragraph mode merges aligned lines into one textbox; single-line mode keeps every PDF line separate. Auto picks the best option per page."
       }
+    },
+    "grouping": {
+      "auto": "Auto",
+      "paragraph": "Paragraph",
+      "single": "Single Line"
     },
     "disclaimer": {
       "heading": "Preview limitations",

@@ -1028,6 +1028,7 @@ const PdfJsonEditor = ({ onComplete, onError }: BaseToolProps) => {
     selectedPage,
     forceSingleTextElement,
     requestPagePreview,
+    setForceSingleTextElement,
   ]);
 
   const latestViewDataRef = useRef<PdfJsonEditorViewData>(viewData);

@@ -36,7 +36,7 @@ function persistRedirectPath(path: string): void {
   try {
     document.cookie = `${OAUTH_REDIRECT_COOKIE}=${encodeURIComponent(path)}; path=/; max-age=${OAUTH_REDIRECT_COOKIE_MAX_AGE}; SameSite=Lax`;
   } catch (error) {
-    console.warn('[SpringAuth] Failed to persist OAuth redirect path', error);
+    // console.warn('[SpringAuth] Failed to persist OAuth redirect path', error);
   }
 }
 
@@ -113,21 +113,21 @@ class SpringAuthClient {
       const token = localStorage.getItem('stirling_jwt');
 
       if (!token) {
-        console.debug('[SpringAuth] getSession: No JWT in localStorage');
+        // console.debug('[SpringAuth] getSession: No JWT in localStorage');
         return { data: { session: null }, error: null };
       }
 
       // Verify with backend
-      console.debug('[SpringAuth] getSession: Verifying JWT with /api/v1/auth/me');
+      // console.debug('[SpringAuth] getSession: Verifying JWT with /api/v1/auth/me');
       const response = await fetch('/api/v1/auth/me', {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
       });
 
-      console.debug('[SpringAuth] /me response status:', response.status);
+      // console.debug('[SpringAuth] /me response status:', response.status);
       const contentType = response.headers.get('content-type');
-      console.debug('[SpringAuth] /me content-type:', contentType);
+      // console.debug('[SpringAuth] /me content-type:', contentType);
 
       if (!response.ok) {
         // Log the error response for debugging
@@ -140,7 +140,7 @@ class SpringAuthClient {
 
         // Token invalid or expired - clear it
         localStorage.removeItem('stirling_jwt');
-        console.warn('[SpringAuth] getSession: Cleared invalid JWT from localStorage');
+        // console.warn('[SpringAuth] getSession: Cleared invalid JWT from localStorage');
         return { data: { session: null }, error: { message: `Auth failed: ${response.status}` } };
       }
 
@@ -155,7 +155,7 @@ class SpringAuthClient {
       }
 
       const data = await response.json();
-      console.debug('[SpringAuth] /me response data:', data);
+      // console.debug('[SpringAuth] /me response data:', data);
 
       // Create session object
       const session: Session = {
@@ -165,7 +165,7 @@ class SpringAuthClient {
         expires_at: Date.now() + 3600 * 1000,
       };
 
-      console.debug('[SpringAuth] getSession: Session retrieved successfully');
+      // console.debug('[SpringAuth] getSession: Session retrieved successfully');
       return { data: { session }, error: null };
     } catch (error) {
       console.error('[SpringAuth] getSession error:', error);
@@ -206,7 +206,7 @@ class SpringAuthClient {
 
       // Store JWT in localStorage
       localStorage.setItem('stirling_jwt', token);
-      console.log('[SpringAuth] JWT stored in localStorage');
+      // console.log('[SpringAuth] JWT stored in localStorage');
 
       // Dispatch custom event for other components to react to JWT availability
       window.dispatchEvent(new CustomEvent('jwt-available'));
@@ -285,7 +285,7 @@ class SpringAuthClient {
 
       // Redirect to Spring OAuth2 endpoint (Vite will proxy to backend)
       const redirectUrl = `/oauth2/authorization/${params.provider}`;
-      console.log('[SpringAuth] Redirecting to OAuth:', redirectUrl);
+      // console.log('[SpringAuth] Redirecting to OAuth:', redirectUrl);
       // Use window.location.assign for full page navigation
       window.location.assign(redirectUrl);
       return { error: null };
@@ -303,7 +303,7 @@ class SpringAuthClient {
     try {
       // Clear JWT from localStorage immediately
       localStorage.removeItem('stirling_jwt');
-      console.log('[SpringAuth] JWT removed from localStorage');
+      // console.log('[SpringAuth] JWT removed from localStorage');
 
       const csrfToken = this.getCsrfToken();
       const headers: HeadersInit = {};
@@ -446,7 +446,7 @@ class SpringAuthClient {
 
           // Refresh if token expires soon
           if (timeUntilExpiry > 0 && timeUntilExpiry < this.TOKEN_REFRESH_THRESHOLD) {
-            console.log('[SpringAuth] Proactively refreshing token');
+            // console.log('[SpringAuth] Proactively refreshing token');
             await this.refreshSession();
           }
         }
