@@ -14,6 +14,7 @@ import { ViewerProvider } from "@app/contexts/ViewerContext";
 import { SignatureProvider } from "@app/contexts/SignatureContext";
 import { OnboardingProvider } from "@app/contexts/OnboardingContext";
 import { TourOrchestrationProvider } from "@app/contexts/TourOrchestrationContext";
+import { AdminTourOrchestrationProvider } from "@app/contexts/AdminTourOrchestrationContext";
 import ErrorBoundary from "@app/components/shared/ErrorBoundary";
 import { useScarfTracking } from "@app/hooks/useScarfTracking";
 import { useAppInitialization } from "@app/hooks/useAppInitialization";
@@ -59,7 +60,9 @@ export function AppProviders({ children, appConfigRetryOptions }: AppProvidersPr
                               <SignatureProvider>
                                 <RightRailProvider>
                                   <TourOrchestrationProvider>
-                                    {children}
+                                    <AdminTourOrchestrationProvider>
+                                      {children}
+                                    </AdminTourOrchestrationProvider>
                                   </TourOrchestrationProvider>
                                 </RightRailProvider>
                               </SignatureProvider>
