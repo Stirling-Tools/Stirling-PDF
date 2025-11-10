@@ -311,13 +311,17 @@ public class PdfJsonConversionService {
 
             try (PDDocument document = pdfDocumentFactory.load(workingPath, true)) {
                 int totalPages = document.getNumberOfPages();
-                boolean useLazyImages = totalPages > 5 && jobId != null;
+                // Only use lazy images for real async jobs where client can access the cache
+                // Synchronous calls with synthetic jobId should do full extraction
+                boolean useLazyImages = totalPages > 5 && isRealJobId;
                 Map<COSBase, FontModelCacheEntry> fontCache = new IdentityHashMap<>();
                 Map<COSBase, EncodedImage> imageCache = new IdentityHashMap<>();
                 log.debug(
-                        "Converting PDF to JSON ({} pages) - {} mode",
+                        "Converting PDF to JSON ({} pages) - {} mode (jobId: {}, isRealJobId: {})",
                         totalPages,
-                        useLazyImages ? "lazy image" : "standard");
+                        useLazyImages ? "lazy image" : "standard",
+                        jobId,
+                        isRealJobId);
                 Map<String, PdfJsonFont> fonts = new LinkedHashMap<>();
                 Map<Integer, List<PdfJsonTextElement>> textByPage = new LinkedHashMap<>();
                 Map<Integer, Map<PDFont, String>> pageFontResources = new HashMap<>();
@@ -327,7 +331,8 @@ public class PdfJsonConversionService {
                 int pageNumber = 1;
                 for (PDPage page : document.getPages()) {
                     Map<PDFont, String> resourceMap =
-                            collectFontsForPage(document, page, pageNumber, fonts, fontCache, jobId);
+                            collectFontsForPage(
+                                    document, page, pageNumber, fonts, fontCache, jobId);
                     pageFontResources.put(pageNumber, resourceMap);
                     log.debug(
                             "PDF→JSON: collected {} font resources on page {}",
@@ -444,8 +449,9 @@ public class PdfJsonConversionService {
                 byte[] result = objectMapper.writeValueAsBytes(pdfJson);
                 progress.accept(PdfJsonConversionProgress.complete());
 
-                // If document wasn't cached, clear Type3 cache entries immediately
-                // (jobId is always set now, either from request context or synthetic)
+                // Clear Type3 cache entries immediately for non-cached conversions
+                // Cached conversions (useLazyImages=true) are cleaned when cache expires
+                // Synchronous conversions always clear immediately since they don't use lazy mode
                 if (!useLazyImages) {
                     clearType3CacheEntriesForJob(jobId);
                 }
@@ -718,7 +724,8 @@ public class PdfJsonConversionService {
             mapping.put(font, fontId);
             String key = buildFontKey(jobId, pageNumber, fontId);
             if (!fonts.containsKey(key)) {
-                fonts.put(key, buildFontModel(document, font, fontId, pageNumber, fontCache, jobId));
+                fonts.put(
+                        key, buildFontModel(document, font, fontId, pageNumber, fontCache, jobId));
             }
         }
 
@@ -873,15 +880,13 @@ public class PdfJsonConversionService {
                             || hasPayload(font.getWebProgram())
                             || hasPayload(font.getProgram());
 
-            // Keep cosDictionary for TrueType and Type0 fonts even with usable program
-            // Subsetted fonts need the ToUnicode CMap from the original dictionary
+            // Only clear cosDictionary for Type3 fonts (which have inline content streams)
+            // All other font types may need ToUnicode CMap or encoding from the dictionary
+            // Conservative approach: better to keep extra data than lose encoding info
             String subtype = font.getSubtype();
-            boolean needsCosDictionary =
-                    subtype != null
-                            && (subtype.equalsIgnoreCase("TrueType")
-                                    || subtype.equalsIgnoreCase("Type0"));
+            boolean isType3 = subtype != null && subtype.equalsIgnoreCase("Type3");
 
-            if (hasUsableProgram && !needsCosDictionary) {
+            if (hasUsableProgram && isType3) {
                 font.setCosDictionary(null);
             }
         }
@@ -1380,9 +1385,20 @@ public class PdfJsonConversionService {
         String key = buildFontKey(null, -1, effectiveId);
         PDFont font = fontMap.get(key);
         if (font != null) {
+            log.debug(
+                    "[FALLBACK-DEBUG] Reusing cached fallback font {} (key: {})", effectiveId, key);
             return font;
         }
+        log.info(
+                "[FALLBACK-DEBUG] Loading fallback font {} (key: {}) via fallbackFontService",
+                effectiveId,
+                key);
         PDFont loaded = fallbackFontService.loadFallbackPdfFont(document, effectiveId);
+        log.info(
+                "[FALLBACK-DEBUG] Loaded fallback font {} - PDFont class: {}, name: {}",
+                effectiveId,
+                loaded.getClass().getSimpleName(),
+                loaded.getName());
         fontMap.put(key, loaded);
         if (fontModels != null
                 && fontModels.stream().noneMatch(f -> effectiveId.equals(f.getId()))) {
@@ -2561,10 +2577,16 @@ public class PdfJsonConversionService {
                                             && runFontModel.getType3Glyphs() != null
                                             && !runFontModel.getType3Glyphs().isEmpty();
 
-                            if (isNormalizedType3) {
-                                // For normalized Type3 fonts, use original text directly
-                                // The font has proper Unicode mappings, so PDFBox can encode it
-                                // correctly
+                            // For fonts with proper Unicode mappings, let PDFBox handle encoding
+                            // This includes: normalized Type3 fonts, PDType0Font (composite fonts)
+                            boolean useDirectText =
+                                    isNormalizedType3
+                                            || run.font()
+                                                    instanceof
+                                                    org.apache.pdfbox.pdmodel.font.PDType0Font;
+
+                            if (useDirectText) {
+                                // Pass text directly - PDFBox handles encoding internally
                                 contentStream.showText(run.text());
                             } else {
                                 // For actual Type3 fonts and other fonts, encode manually
@@ -2582,6 +2604,14 @@ public class PdfJsonConversionService {
                                     }
                                 } else {
                                     try {
+                                        log.debug(
+                                                "[ENCODE-DEBUG] Encoding text '{}' with font {} (fontId={}, runFontModel={})",
+                                                run.text(),
+                                                run.font().getName(),
+                                                run.fontId(),
+                                                runFontModel != null
+                                                        ? runFontModel.getId()
+                                                        : "null");
                                         encoded =
                                                 encodeTextWithFont(
                                                         run.font(),
@@ -2590,9 +2620,13 @@ public class PdfJsonConversionService {
                                                         run.charCodes());
                                     } catch (IOException ex) {
                                         log.warn(
-                                                "Failed to encode text '{}' with font {} on page {}: {}",
+                                                "Failed to encode text '{}' with font {} (fontId={}, runFontModel={}) on page {}: {}",
                                                 run.text(),
                                                 run.font().getName(),
+                                                run.fontId(),
+                                                runFontModel != null
+                                                        ? runFontModel.getId()
+                                                        : "null",
                                                 pageNumber,
                                                 ex.getMessage());
                                         continue;
@@ -2725,7 +2759,11 @@ public class PdfJsonConversionService {
             }
             if (targetFont == null || !fallbackFontService.canEncode(targetFont, glyph)) {
                 fallbackApplied = true;
-                String fallbackId = fallbackFontService.resolveFallbackFontId(codePoint);
+                // Try to match fallback font to original font family for visual consistency
+                String originalFontName =
+                        baseFontModel != null ? baseFontModel.getBaseName() : null;
+                String fallbackId =
+                        fallbackFontService.resolveFallbackFontId(originalFontName, codePoint);
                 targetFont = ensureFallbackFont(document, fontMap, fontModels, fallbackId);
                 targetFontId = fallbackId != null ? fallbackId : FALLBACK_FONT_ID;
                 if (targetFont == null || !fallbackFontService.canEncode(targetFont, glyph)) {
@@ -3335,7 +3373,8 @@ public class PdfJsonConversionService {
             // or return null to trigger fallback font
         } else if (!isType3Font || fontModel == null) {
             // For non-Type3 fonts without Type3 metadata, use standard encoding
-            return sanitizeEncoded(font.encode(text));
+            byte[] encoded = font.encode(text);
+            return sanitizeEncoded(encoded);
         }
 
         // Type3 glyph mapping logic (for actual Type3 fonts AND normalized Type3 fonts)
@@ -3750,18 +3789,41 @@ public class PdfJsonConversionService {
             }
             // Fall through to Standard14 fallback below if nothing else succeeded.
         } else {
+            // For TrueType and Type0 fonts, prioritize cosDictionary restoration
+            // These fonts often use ToUnicode CMap which is preserved in the dictionary
+            String subtype = fontModel.getSubtype();
+            boolean preferDictionary =
+                    subtype != null
+                            && (subtype.equalsIgnoreCase("TrueType")
+                                    || subtype.equalsIgnoreCase("Type0"));
+
+            if (preferDictionary) {
+                PDFont restored = restoreFontFromDictionary(document, fontModel);
+                if (restored != null) {
+                    log.debug(
+                            "Font {} restored from cosDictionary (preferred for subsetted {})",
+                            fontModel.getId(),
+                            subtype);
+                    return restored;
+                }
+                // If dictionary restoration fails, fall back to font program bytes
+                log.debug(
+                        "Font {} cosDictionary restoration failed, trying font program bytes",
+                        fontModel.getId());
+            }
+
             PDFont loaded =
                     loadFirstAvailableFont(document, fontModel, orderedCandidates, originalFormat);
             if (loaded != null) {
                 return loaded;
             }
-        }
 
-        // Try to restore from COS dictionary if font programs failed
-        if (!isType3Font) {
-            PDFont restored = restoreFontFromDictionary(document, fontModel);
-            if (restored != null) {
-                return restored;
+            // Try to restore from COS dictionary if font programs failed and we haven't tried yet
+            if (!preferDictionary) {
+                PDFont restored = restoreFontFromDictionary(document, fontModel);
+                if (restored != null) {
+                    return restored;
+                }
             }
         }
 
@@ -3972,34 +4034,74 @@ public class PdfJsonConversionService {
             log.debug("[FONT-RESTORE] Font {} has no cosDictionary", fontModel.getId());
             return null;
         }
-        COSBase restored = cosMapper.deserializeCosValue(fontModel.getCosDictionary(), document);
+
+        // Deserialize the cosDictionary - cosMapper handles validation internally
+        COSBase restored;
+        try {
+            restored = cosMapper.deserializeCosValue(fontModel.getCosDictionary(), document);
+        } catch (Exception ex) {
+            log.warn(
+                    "[FONT-RESTORE] Font {} cosDictionary deserialization failed: {}",
+                    fontModel.getId(),
+                    ex.getMessage());
+            return null;
+        }
+
         if (!(restored instanceof COSDictionary cosDictionary)) {
-            log.debug(
+            log.warn(
                     "[FONT-RESTORE] Font {} cosDictionary deserialized to {} instead of COSDictionary",
                     fontModel.getId(),
                     restored != null ? restored.getClass().getSimpleName() : "null");
             return null;
         }
+
+        // Validate that dictionary contains required font keys
+        if (!cosDictionary.containsKey(org.apache.pdfbox.cos.COSName.TYPE)
+                || !cosDictionary.containsKey(org.apache.pdfbox.cos.COSName.SUBTYPE)) {
+            log.warn(
+                    "[FONT-RESTORE] Font {} cosDictionary missing required Type or Subtype keys",
+                    fontModel.getId());
+            return null;
+        }
+
         try {
             PDFont font = PDFontFactory.createFont(cosDictionary);
-            if (font != null && font.isEmbedded()) {
-                applyAdditionalFontMetadata(document, font, fontModel);
-                log.info(
-                        "[FONT-RESTORE] Successfully restored embedded font {} from original dictionary",
+            if (font == null) {
+                log.warn(
+                        "[FONT-RESTORE] Font {} PDFontFactory returned null for valid dictionary",
                         fontModel.getId());
-                return font;
+                return null;
             }
-            log.warn(
-                    "[FONT-RESTORE] Restored font {} from dictionary but font was {}embedded; rejecting",
+
+            if (!font.isEmbedded()) {
+                log.warn(
+                        "[FONT-RESTORE] Font {} restored from dictionary but is not embedded; rejecting to avoid system font substitution",
+                        fontModel.getId());
+                return null;
+            }
+
+            applyAdditionalFontMetadata(document, font, fontModel);
+            log.info(
+                    "[FONT-RESTORE] Successfully restored embedded font {} (subtype={}) from original dictionary",
                     fontModel.getId(),
-                    font != null && font.isEmbedded() ? "" : "not ");
+                    font.getSubType());
+            return font;
+
         } catch (IOException ex) {
             log.warn(
-                    "[FONT-RESTORE] Failed to restore font {} from stored dictionary: {}",
+                    "[FONT-RESTORE] Failed to restore font {} from dictionary ({}): {}",
                     fontModel.getId(),
+                    fontModel.getSubtype(),
                     ex.getMessage());
+            return null;
+        } catch (Exception ex) {
+            log.error(
+                    "[FONT-RESTORE] Unexpected error restoring font {} from dictionary: {}",
+                    fontModel.getId(),
+                    ex.getMessage(),
+                    ex);
+            return null;
         }
-        return null;
     }
 
     private boolean isType1Format(String format) {
@@ -4948,7 +5050,8 @@ public class PdfJsonConversionService {
             }
             String key = buildFontKey(jobId, currentPage, fontId);
             if (!fonts.containsKey(key)) {
-                fonts.put(key, buildFontModel(document, font, fontId, currentPage, fontCache, jobId));
+                fonts.put(
+                        key, buildFontModel(document, font, fontId, currentPage, fontCache, jobId));
             }
             return fontId;
         }
@@ -5514,8 +5617,8 @@ public class PdfJsonConversionService {
     }
 
     /**
-     * Clear job-specific entries from Type3 font caches. Font UIDs include jobId prefix, so we
-     * can identify and remove them.
+     * Clear job-specific entries from Type3 font caches. Font UIDs include jobId prefix, so we can
+     * identify and remove them.
      */
     private void clearType3CacheEntriesForJob(String jobId) {
         if (jobId == null || jobId.isEmpty()) {

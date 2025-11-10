@@ -36,6 +36,21 @@ public class PdfJsonFallbackFontService {
     public static final String FALLBACK_FONT_AR_ID = "fallback-noto-arabic";
     public static final String FALLBACK_FONT_TH_ID = "fallback-noto-thai";
 
+    // Font name aliases map PDF font names to available fallback fonts
+    // This provides better visual consistency when editing PDFs
+    private static final Map<String, String> FONT_NAME_ALIASES =
+            Map.ofEntries(
+                    // Liberation fonts are metric-compatible with Microsoft core fonts
+                    Map.entry("arial", "fallback-liberation-sans"),
+                    Map.entry("helvetica", "fallback-liberation-sans"),
+                    Map.entry("arimo", "fallback-liberation-sans"),
+                    Map.entry("times", "fallback-liberation-serif"),
+                    Map.entry("timesnewroman", "fallback-liberation-serif"),
+                    Map.entry("tinos", "fallback-liberation-serif"),
+                    Map.entry("courier", "fallback-liberation-mono"),
+                    Map.entry("couriernew", "fallback-liberation-mono"),
+                    Map.entry("cousine", "fallback-liberation-mono"));
+
     private static final Map<String, FallbackFontSpec> BUILT_IN_FALLBACK_FONTS =
             Map.ofEntries(
                     Map.entry(
@@ -65,6 +80,45 @@ public class PdfJsonFallbackFontService {
                             new FallbackFontSpec(
                                     "classpath:/static/fonts/NotoSansThai-Regular.ttf",
                                     "NotoSansThai-Regular",
+                                    "ttf")),
+                    // Liberation Sans family
+                    Map.entry(
+                            "fallback-liberation-sans",
+                            new FallbackFontSpec(
+                                    "classpath:/static/pdfjs-legacy/standard_fonts/LiberationSans-Regular.ttf",
+                                    "LiberationSans-Regular",
+                                    "ttf")),
+                    Map.entry(
+                            "fallback-liberation-sans-bold",
+                            new FallbackFontSpec(
+                                    "classpath:/static/pdfjs-legacy/standard_fonts/LiberationSans-Bold.ttf",
+                                    "LiberationSans-Bold",
+                                    "ttf")),
+                    Map.entry(
+                            "fallback-liberation-sans-italic",
+                            new FallbackFontSpec(
+                                    "classpath:/static/pdfjs-legacy/standard_fonts/LiberationSans-Italic.ttf",
+                                    "LiberationSans-Italic",
+                                    "ttf")),
+                    Map.entry(
+                            "fallback-liberation-sans-bolditalic",
+                            new FallbackFontSpec(
+                                    "classpath:/static/pdfjs-legacy/standard_fonts/LiberationSans-BoldItalic.ttf",
+                                    "LiberationSans-BoldItalic",
+                                    "ttf")),
+                    // Liberation Serif family
+                    Map.entry(
+                            "fallback-liberation-serif",
+                            new FallbackFontSpec(
+                                    "classpath:/static/pdfjs-legacy/standard_fonts/LiberationSerif-Regular.ttf",
+                                    "LiberationSerif-Regular",
+                                    "ttf")),
+                    // Liberation Mono family
+                    Map.entry(
+                            "fallback-liberation-mono",
+                            new FallbackFontSpec(
+                                    "classpath:/static/pdfjs-legacy/standard_fonts/LiberationMono-Regular.ttf",
+                                    "LiberationMono-Regular",
                                     "ttf")));
 
     private final ResourceLoader resourceLoader;
@@ -107,7 +161,9 @@ public class PdfJsonFallbackFontService {
         }
         byte[] bytes = loadFallbackFontBytes(fallbackId, spec);
         try (InputStream stream = new ByteArrayInputStream(bytes)) {
-            return PDType0Font.load(document, stream, true);
+            // Load with embedSubset=false to ensure full glyph coverage
+            // Fallback fonts need all glyphs available for substituting missing characters
+            return PDType0Font.load(document, stream, false);
         }
     }
 
@@ -140,6 +196,53 @@ public class PdfJsonFallbackFontService {
         }
     }
 
+    /**
+     * Resolve fallback font ID based on the original font name and code point. Attempts to match
+     * font family for visual consistency.
+     *
+     * @param originalFontName the name of the original font (may be null)
+     * @param codePoint the Unicode code point that needs to be rendered
+     * @return fallback font ID
+     */
+    public String resolveFallbackFontId(String originalFontName, int codePoint) {
+        // First try to match based on original font name for visual consistency
+        if (originalFontName != null && !originalFontName.isEmpty()) {
+            // Normalize font name: remove subset prefix (e.g. "PXAAAC+"), convert to lowercase,
+            // remove spaces
+            String normalized =
+                    originalFontName
+                            .replaceAll("^[A-Z]{6}\\+", "") // Remove subset prefix
+                            .toLowerCase()
+                            .replaceAll("\\s+", ""); // Remove spaces (e.g. "Times New Roman" ->
+            // "timesnewroman")
+
+            // Extract base name without weight/style suffixes
+            // Split on common delimiters: hyphen, underscore, comma, plus
+            // Handles: "Arimo_700wght" -> "arimo", "Arial-Bold" -> "arial", "Arial,Bold" -> "arial"
+            String baseName = normalized.split("[-_,+]")[0];
+
+            String aliasedFontId = FONT_NAME_ALIASES.get(baseName);
+            if (aliasedFontId != null) {
+                log.debug(
+                        "Matched font '{}' (normalized: '{}', base: '{}') to fallback '{}'",
+                        originalFontName,
+                        normalized,
+                        baseName,
+                        aliasedFontId);
+                return aliasedFontId;
+            }
+        }
+
+        // Fall back to Unicode-based selection
+        return resolveFallbackFontId(codePoint);
+    }
+
+    /**
+     * Resolve fallback font ID based on Unicode code point properties.
+     *
+     * @param codePoint the Unicode code point
+     * @return fallback font ID
+     */
     public String resolveFallbackFontId(int codePoint) {
         Character.UnicodeBlock block = Character.UnicodeBlock.of(codePoint);
         if (block == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS

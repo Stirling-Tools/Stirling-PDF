@@ -13,11 +13,25 @@
   - Reuse the existing job cache (`documentCache`) to serve these on demand and clean up after timeouts (`PdfJsonConversionService.java:3608-3687`).
 
 - **Editor UX Safeguards**
-  - Respect `fallbackFontService` indicators; mark groups using fallback glyphs so the UI can warn about possible appearance shifts (`frontend/src/proprietary/components/tools/pdfJsonEditor/PdfJsonEditorView.tsx:1260-1287`).
+  - Mark groups using fallback glyphs so the UI can warn about possible appearance shifts. Font family matching is now implemented (Liberation fonts), but weight matching is still TODO, so bold/italic text using fallbacks may appear lighter than original.
   - Surface when Type3 conversion was downgraded (e.g., rasterized glyphs) and limit editing to operations that keep the PDF stable.
+  - Reference: `frontend/src/proprietary/components/tools/pdfJsonEditor/PdfJsonEditorView.tsx:1260-1287`
 
 - **Canonical Font Sharing**
   - Emit fonts once per unique embedded program. Add a `canonicalFonts` array containing the full payload (program, ToUnicode, metadata) and a compact `fontAliases` mapping `{pageNumber, fontId, canonicalUid}` so text elements can still reference per-page IDs.
-  - Store COS dictionaries only on canonical entries; aliases should keep light fields (e.g., size adjustments) if they differ.
+  - Note: COS dictionaries are currently preserved for TrueType/Type0 fonts (needed for ToUnicode CMap). The canonical approach should maintain this preservation while deduplicating font programs.
   - Update `buildFontMap` to resolve aliases when recreating PDFBox fonts, and adjust the front end to load programs via the canonical UID.
   - Optional: expose a lazy endpoint for the original COS dictionary if the canonical record strips it, so export still reconstructs untouched fonts.
+
+- **Font Weight Matching for Fallback Fonts**
+  - Font family matching is now implemented (Arial→LiberationSans, Times→LiberationSerif, Courier→LiberationMono).
+  - However, fallback fonts still use Regular weight for all missing glyphs, regardless of the original font weight (e.g., bold text falls back to regular weight).
+  - TODO: Parse weight from font names (e.g., `Arimo_700wght`, `Arial-Bold`, `TimesNewRoman,SemiBold`) and map to corresponding Liberation font variants:
+    - Regular/Normal → LiberationSans-Regular, LiberationSerif-Regular, LiberationMono-Regular
+    - Bold/700 → LiberationSans-Bold, LiberationSerif-Bold, LiberationMono-Bold
+    - Italic/Oblique → LiberationSans-Italic, LiberationSerif-Italic, LiberationMono-Italic
+    - BoldItalic → LiberationSans-BoldItalic, LiberationSerif-BoldItalic, LiberationMono-BoldItalic
+  - Add all Liberation font variants to `BUILT_IN_FALLBACK_FONTS` map with appropriate IDs (e.g., `fallback-liberation-sans-bold`).
+  - Update `resolveFallbackFontId(String originalFontName, int codePoint)` in `PdfJsonFallbackFontService.java` to detect weight/style and return the matching variant ID.
+  - Benefits: Better visual consistency when editing text in bold/italic fonts, as missing characters will match the original weight.
+  - Implementation reference: `app/proprietary/src/main/java/stirling/software/SPDF/service/PdfJsonFallbackFontService.java:186-213`
