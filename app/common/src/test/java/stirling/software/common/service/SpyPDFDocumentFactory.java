@@ -9,10 +9,14 @@ class SpyPDFDocumentFactory extends CustomPDFDocumentFactory {
         TEMP_FILE
     }
 
-    public StrategyType lastStrategyUsed;
+    private StrategyType lastStrategyUsed;
 
     public SpyPDFDocumentFactory(PdfMetadataService service) {
         super(service);
+    }
+
+    public StrategyType getLastStrategyUsed() {
+        return lastStrategyUsed;
     }
 
     @Override
