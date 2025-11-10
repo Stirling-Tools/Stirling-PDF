@@ -1,5 +1,13 @@
 import { FileId } from '@app/types/file';
 
+export type PageSize = 'A4' | 'Letter' | 'Legal' | 'A3' | 'A5';
+export type PageOrientation = 'portrait' | 'landscape';
+
+export interface PageBreakSettings {
+  size: PageSize;
+  orientation: PageOrientation;
+}
+
 export interface PDFPage {
   id: string;
   pageNumber: number;
@@ -11,6 +19,7 @@ export interface PDFPage {
   isBlankPage?: boolean;
   isPlaceholder?: boolean;
   originalFileId?: FileId;
+  pageBreakSettings?: PageBreakSettings;
 }
 
 export interface PDFDocument {

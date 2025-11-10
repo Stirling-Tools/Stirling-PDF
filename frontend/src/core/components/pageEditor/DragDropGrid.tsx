@@ -225,7 +225,7 @@ const DraggableItem = <T extends DragDropItem>({ item, index, itemRefs, boxSelec
   });
 
   // Notify parent when hover state changes
-  React.useEffect(() => {
+  useEffect(() => {
     if (isOver) {
       onUpdateDropTarget(item.id);
     } else {

@@ -1,5 +1,5 @@
 import { FileId } from '@app/types/file';
-import { PDFDocument, PDFPage } from '@app/types/pageEditor';
+import { PDFDocument, PDFPage, PageBreakSettings, PageSize, PageOrientation } from '@app/types/pageEditor';
 
 // V1-style DOM-first command system (replaces the old React state commands)
 export abstract class DOMCommand {
@@ -420,13 +420,7 @@ export class SplitAllCommand extends DOMCommand {
   }
 }
 
-export type PageSize = 'A4' | 'Letter' | 'Legal' | 'A3' | 'A5';
-export type PageOrientation = 'portrait' | 'landscape';
-
-export interface PageBreakSettings {
-  size: PageSize;
-  orientation: PageOrientation;
-}
+// PageBreakSettings, PageSize, and PageOrientation are now imported from pageEditor.ts
 
 export class PageBreakCommand extends DOMCommand {
   private insertedPages: PDFPage[] = [];

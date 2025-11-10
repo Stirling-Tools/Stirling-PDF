@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, ReactNode, useMemo } from 'react';
+import React, { createContext, useContext, useState, useCallback, ReactNode, useMemo, useRef, useEffect } from 'react';
 import { FileId } from '@app/types/file';
 import { useFileActions, useFileState } from '@app/contexts/FileContext';
 import { PDFPage } from '@app/types/pageEditor';
@@ -149,16 +149,16 @@ export function PageEditorProvider({ children }: PageEditorProviderProps) {
   const { state } = useFileState();
 
   // Keep a ref to always read latest state in stable callbacks
-  const stateRef = React.useRef(state);
-  React.useEffect(() => {
+  const stateRef = useRef(state);
+  useEffect(() => {
     stateRef.current = state;
   }, [state]);
 
   // Track the previous FileContext order to detect actual changes
-  const prevFileContextIdsRef = React.useRef<FileId[]>([]);
+  const prevFileContextIdsRef = useRef<FileId[]>([]);
 
   // Initialize fileOrder from FileContext when files change (add/remove only)
-  React.useEffect(() => {
+  useEffect(() => {
     const currentFileIds = state.files.ids;
     const prevFileIds = prevFileContextIdsRef.current;
 
