@@ -756,6 +756,7 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
     isChanged: boolean,
     content: React.ReactNode,
     onActivate?: (event: React.MouseEvent) => void,
+    onClick?: (event: React.MouseEvent) => void,
   ) => (
     <Box
       component="div"
@@ -783,17 +784,15 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
       }}
       onClick={(event) => {
         event.stopPropagation();
-        onActivate?.(event);
-      }}
-      onMouseEnter={() => setActiveGroupId(groupId)}
-      onMouseLeave={() => {
-        if (editingGroupId !== groupId) {
-          setActiveGroupId((current) => (current === groupId ? null : current));
+        if (onClick) {
+          onClick(event);
+        } else {
+          onActivate?.(event);
         }
       }}
     >
       {content}
-      {isActive && editingGroupId !== groupId && (
+      {activeGroupId === groupId && editingGroupId !== groupId && (
         <ActionIcon
           size="xs"
           variant="filled"
@@ -1502,52 +1501,59 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
                                 {group.text || '\u00A0'}
                               </span>
                             </div>,
+                            undefined,
                             (event: React.MouseEvent) => {
-                              // Capture click position BEFORE switching to edit mode
-                              const clickX = event.clientX;
-                              const clickY = event.clientY;
+                              // Double-click to edit
+                              if (event.detail === 2) {
+                                // Capture click position BEFORE switching to edit mode
+                                const clickX = event.clientX;
+                                const clickY = event.clientY;
 
-                              setEditingGroupId(group.id);
-                              setActiveGroupId(group.id);
+                                setEditingGroupId(group.id);
+                                setActiveGroupId(group.id);
 
-                              // Clear any stored offset to prevent interference
-                              caretOffsetsRef.current.delete(group.id);
+                                // Clear any stored offset to prevent interference
+                                caretOffsetsRef.current.delete(group.id);
 
-                              // Wait for editor to render, then position cursor at click location
-                              requestAnimationFrame(() => {
-                                const editor = document.querySelector<HTMLElement>(`[data-editor-group="${group.id}"]`);
-                                if (!editor) return;
+                                // Wait for editor to render, then position cursor at click location
+                                requestAnimationFrame(() => {
+                                  const editor = document.querySelector<HTMLElement>(`[data-editor-group="${group.id}"]`);
+                                  if (!editor) return;
 
-                                // Focus the editor first
-                                editor.focus();
+                                  // Focus the editor first
+                                  editor.focus();
 
-                                // Use caretRangeFromPoint to position cursor at click coordinates
-                                setTimeout(() => {
-                                  if (document.caretRangeFromPoint) {
-                                    const range = document.caretRangeFromPoint(clickX, clickY);
-                                    if (range) {
-                                      const selection = window.getSelection();
-                                      if (selection) {
-                                        selection.removeAllRanges();
-                                        selection.addRange(range);
+                                  // Use caretRangeFromPoint to position cursor at click coordinates
+                                  setTimeout(() => {
+                                    if (document.caretRangeFromPoint) {
+                                      const range = document.caretRangeFromPoint(clickX, clickY);
+                                      if (range) {
+                                        const selection = window.getSelection();
+                                        if (selection) {
+                                          selection.removeAllRanges();
+                                          selection.addRange(range);
+                                        }
+                                      }
+                                    } else if ((document as any).caretPositionFromPoint) {
+                                      // Firefox fallback
+                                      const pos = (document as any).caretPositionFromPoint(clickX, clickY);
+                                      if (pos) {
+                                        const range = document.createRange();
+                                        range.setStart(pos.offsetNode, pos.offset);
+                                        range.collapse(true);
+                                        const selection = window.getSelection();
+                                        if (selection) {
+                                          selection.removeAllRanges();
+                                          selection.addRange(range);
+                                        }
                                       }
                                     }
-                                  } else if ((document as any).caretPositionFromPoint) {
-                                    // Firefox fallback
-                                    const pos = (document as any).caretPositionFromPoint(clickX, clickY);
-                                    if (pos) {
-                                      const range = document.createRange();
-                                      range.setStart(pos.offsetNode, pos.offset);
-                                      range.collapse(true);
-                                      const selection = window.getSelection();
-                                      if (selection) {
-                                        selection.removeAllRanges();
-                                        selection.addRange(range);
-                                      }
-                                    }
-                                  }
-                                }, 10);
-                              });
+                                  }, 10);
+                                });
+                              } else {
+                                // Single click just selects
+                                setActiveGroupId(group.id);
+                              }
                             },
                           )}
                         </Box>
