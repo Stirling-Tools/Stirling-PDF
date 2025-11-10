@@ -1098,7 +1098,7 @@ const PageEditor = ({
 
                 const currentRect = currentEl.getBoundingClientRect();
                 const nextPage = displayedPages[position + 1];
-                let lineLeft = currentRect.right;
+                let lineLeft;
 
                 if (nextPage) {
                   const nextEl = refsMap.get(nextPage.id);
