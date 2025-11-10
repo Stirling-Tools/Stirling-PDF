@@ -205,7 +205,7 @@ export default function AdminAdvancedSection() {
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
-              <Text fw={500} size="sm">{t('admin.settings.advanced.enableAlphaFunctionality', 'Enable Alpha Features')}</Text>
+              <Text fw={500} size="sm">{t('admin.settings.advanced.enableAlphaFunctionality.label', 'Enable Alpha Features')}</Text>
               <Text size="xs" c="dimmed" mt={4}>
                 {t('admin.settings.advanced.enableAlphaFunctionality.description', 'Enable experimental and alpha-stage features (may be unstable)')}
               </Text>
@@ -221,7 +221,7 @@ export default function AdminAdvancedSection() {
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
-              <Text fw={500} size="sm">{t('admin.settings.advanced.enableUrlToPDF', 'Enable URL to PDF')}</Text>
+              <Text fw={500} size="sm">{t('admin.settings.advanced.enableUrlToPDF.label', 'Enable URL to PDF')}</Text>
               <Text size="xs" c="dimmed" mt={4}>
                 {t('admin.settings.advanced.enableUrlToPDF.description', 'Allow conversion of web pages to PDF documents (internal use only)')}
               </Text>
@@ -237,7 +237,7 @@ export default function AdminAdvancedSection() {
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
-              <Text fw={500} size="sm">{t('admin.settings.advanced.disableSanitize', 'Disable HTML Sanitization')}</Text>
+              <Text fw={500} size="sm">{t('admin.settings.advanced.disableSanitize.label', 'Disable HTML Sanitization')}</Text>
               <Text size="xs" c="dimmed" mt={4}>
                 {t('admin.settings.advanced.disableSanitize.description', 'Disable HTML sanitization (WARNING: Security risk - can lead to XSS injections)')}
               </Text>
@@ -262,7 +262,7 @@ export default function AdminAdvancedSection() {
             <NumberInput
               label={
                 <Group gap="xs">
-                  <span>{t('admin.settings.advanced.maxDPI', 'Maximum DPI')}</span>
+                  <span>{t('admin.settings.advanced.maxDPI.label', 'Maximum DPI')}</span>
                   <PendingBadge show={isFieldPending('maxDPI')} />
                 </Group>
               }
@@ -278,7 +278,7 @@ export default function AdminAdvancedSection() {
             <TextInput
               label={
                 <Group gap="xs">
-                  <span>{t('admin.settings.advanced.tessdataDir', 'Tessdata Directory')}</span>
+                  <span>{t('admin.settings.advanced.tessdataDir.label', 'Tessdata Directory')}</span>
                   <PendingBadge show={isFieldPending('tessdataDir')} />
                 </Group>
               }
@@ -295,7 +295,7 @@ export default function AdminAdvancedSection() {
       <Paper withBorder p="md" radius="md">
         <Stack gap="md">
           <div>
-            <Text fw={600} size="sm" mb="xs">{t('admin.settings.advanced.tempFileManagement', 'Temp File Management')}</Text>
+            <Text fw={600} size="sm" mb="xs">{t('admin.settings.advanced.tempFileManagement.label', 'Temp File Management')}</Text>
             <Text size="xs" c="dimmed">
               {t('admin.settings.advanced.tempFileManagement.description', 'Configure temporary file storage and cleanup behavior')}
             </Text>
@@ -303,7 +303,7 @@ export default function AdminAdvancedSection() {
 
           <div>
             <TextInput
-              label={t('admin.settings.advanced.tempFileManagement.baseTmpDir', 'Base Temp Directory')}
+              label={t('admin.settings.advanced.tempFileManagement.baseTmpDir.label', 'Base Temp Directory')}
               description={t('admin.settings.advanced.tempFileManagement.baseTmpDir.description', 'Base directory for temporary files (leave empty for default: java.io.tmpdir/stirling-pdf)')}
               value={settings.tempFileManagement?.baseTmpDir || ''}
               onChange={(e) => setSettings({
@@ -316,7 +316,7 @@ export default function AdminAdvancedSection() {
 
           <div>
             <TextInput
-              label={t('admin.settings.advanced.tempFileManagement.libreofficeDir', 'LibreOffice Temp Directory')}
+              label={t('admin.settings.advanced.tempFileManagement.libreofficeDir.label', 'LibreOffice Temp Directory')}
               description={t('admin.settings.advanced.tempFileManagement.libreofficeDir.description', 'Directory for LibreOffice temp files (leave empty for default: baseTmpDir/libreoffice)')}
               value={settings.tempFileManagement?.libreofficeDir || ''}
               onChange={(e) => setSettings({
@@ -329,7 +329,7 @@ export default function AdminAdvancedSection() {
 
           <div>
             <TextInput
-              label={t('admin.settings.advanced.tempFileManagement.systemTempDir', 'System Temp Directory')}
+              label={t('admin.settings.advanced.tempFileManagement.systemTempDir.label', 'System Temp Directory')}
               description={t('admin.settings.advanced.tempFileManagement.systemTempDir.description', 'System temp directory to clean (only used if cleanupSystemTemp is enabled)')}
               value={settings.tempFileManagement?.systemTempDir || ''}
               onChange={(e) => setSettings({
@@ -342,7 +342,7 @@ export default function AdminAdvancedSection() {
 
           <div>
             <TextInput
-              label={t('admin.settings.advanced.tempFileManagement.prefix', 'Temp File Prefix')}
+              label={t('admin.settings.advanced.tempFileManagement.prefix.label', 'Temp File Prefix')}
               description={t('admin.settings.advanced.tempFileManagement.prefix.description', 'Prefix for temp file names')}
               value={settings.tempFileManagement?.prefix || 'stirling-pdf-'}
               onChange={(e) => setSettings({
@@ -355,7 +355,7 @@ export default function AdminAdvancedSection() {
 
           <div>
             <NumberInput
-              label={t('admin.settings.advanced.tempFileManagement.maxAgeHours', 'Max Age (hours)')}
+              label={t('admin.settings.advanced.tempFileManagement.maxAgeHours.label', 'Max Age (hours)')}
               description={t('admin.settings.advanced.tempFileManagement.maxAgeHours.description', 'Maximum age in hours before temp files are cleaned up')}
               value={settings.tempFileManagement?.maxAgeHours ?? 24}
               onChange={(value) => setSettings({
@@ -369,7 +369,7 @@ export default function AdminAdvancedSection() {
 
           <div>
             <NumberInput
-              label={t('admin.settings.advanced.tempFileManagement.cleanupIntervalMinutes', 'Cleanup Interval (minutes)')}
+              label={t('admin.settings.advanced.tempFileManagement.cleanupIntervalMinutes.label', 'Cleanup Interval (minutes)')}
               description={t('admin.settings.advanced.tempFileManagement.cleanupIntervalMinutes.description', 'How often to run cleanup (in minutes)')}
               value={settings.tempFileManagement?.cleanupIntervalMinutes ?? 30}
               onChange={(value) => setSettings({
@@ -383,7 +383,7 @@ export default function AdminAdvancedSection() {
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
-              <Text fw={500} size="sm">{t('admin.settings.advanced.tempFileManagement.startupCleanup', 'Startup Cleanup')}</Text>
+              <Text fw={500} size="sm">{t('admin.settings.advanced.tempFileManagement.startupCleanup.label', 'Startup Cleanup')}</Text>
               <Text size="xs" c="dimmed" mt={4}>
                 {t('admin.settings.advanced.tempFileManagement.startupCleanup.description', 'Clean up old temp files on application startup')}
               </Text>
@@ -402,7 +402,7 @@ export default function AdminAdvancedSection() {
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
-              <Text fw={500} size="sm">{t('admin.settings.advanced.tempFileManagement.cleanupSystemTemp', 'Cleanup System Temp')}</Text>
+              <Text fw={500} size="sm">{t('admin.settings.advanced.tempFileManagement.cleanupSystemTemp.label', 'Cleanup System Temp')}</Text>
               <Text size="xs" c="dimmed" mt={4}>
                 {t('admin.settings.advanced.tempFileManagement.cleanupSystemTemp.description', 'Whether to clean broader system temp directory (use with caution)')}
               </Text>
@@ -424,7 +424,7 @@ export default function AdminAdvancedSection() {
       {/* Process Executor Limits */}
       <Paper withBorder p="md" radius="md">
         <Stack gap="md">
-          <Text fw={600} size="sm">{t('admin.settings.advanced.processExecutor', 'Process Executor Limits')}</Text>
+          <Text fw={600} size="sm">{t('admin.settings.advanced.processExecutor.label', 'Process Executor Limits')}</Text>
           <Text size="xs" c="dimmed">
             {t('admin.settings.advanced.processExecutor.description', 'Configure session limits and timeouts for each process executor')}
           </Text>
@@ -436,7 +436,7 @@ export default function AdminAdvancedSection() {
               <Accordion.Panel>
                 <Stack gap="sm">
                   <NumberInput
-                    label={t('admin.settings.advanced.processExecutor.sessionLimit', 'Session Limit')}
+                    label={t('admin.settings.advanced.processExecutor.sessionLimit.label', 'Session Limit')}
                     description={t('admin.settings.advanced.processExecutor.sessionLimit.description', 'Maximum concurrent instances')}
                     value={settings.processExecutor?.sessionLimit?.libreOfficeSessionLimit ?? 1}
                     onChange={(value) => setSettings({
@@ -450,7 +450,7 @@ export default function AdminAdvancedSection() {
                     max={100}
                   />
                   <NumberInput
-                    label={t('admin.settings.advanced.processExecutor.timeout', 'Timeout (minutes)')}
+                    label={t('admin.settings.advanced.processExecutor.timeout.label', 'Timeout (minutes)')}
                     description={t('admin.settings.advanced.processExecutor.timeout.description', 'Maximum execution time')}
                     value={settings.processExecutor?.timeoutMinutes?.libreOfficetimeoutMinutes ?? 30}
                     onChange={(value) => setSettings({
@@ -473,7 +473,7 @@ export default function AdminAdvancedSection() {
               <Accordion.Panel>
                 <Stack gap="sm">
                   <NumberInput
-                    label={t('admin.settings.advanced.processExecutor.sessionLimit', 'Session Limit')}
+                    label={t('admin.settings.advanced.processExecutor.sessionLimit.label', 'Session Limit')}
                     description={t('admin.settings.advanced.processExecutor.sessionLimit.description', 'Maximum concurrent instances')}
                     value={settings.processExecutor?.sessionLimit?.pdfToHtmlSessionLimit ?? 1}
                     onChange={(value) => setSettings({
@@ -487,7 +487,7 @@ export default function AdminAdvancedSection() {
                     max={100}
                   />
                   <NumberInput
-                    label={t('admin.settings.advanced.processExecutor.timeout', 'Timeout (minutes)')}
+                    label={t('admin.settings.advanced.processExecutor.timeout.label', 'Timeout (minutes)')}
                     description={t('admin.settings.advanced.processExecutor.timeout.description', 'Maximum execution time')}
                     value={settings.processExecutor?.timeoutMinutes?.pdfToHtmltimeoutMinutes ?? 20}
                     onChange={(value) => setSettings({
@@ -510,7 +510,7 @@ export default function AdminAdvancedSection() {
               <Accordion.Panel>
                 <Stack gap="sm">
                   <NumberInput
-                    label={t('admin.settings.advanced.processExecutor.sessionLimit', 'Session Limit')}
+                    label={t('admin.settings.advanced.processExecutor.sessionLimit.label', 'Session Limit')}
                     description={t('admin.settings.advanced.processExecutor.sessionLimit.description', 'Maximum concurrent instances')}
                     value={settings.processExecutor?.sessionLimit?.qpdfSessionLimit ?? 4}
                     onChange={(value) => setSettings({
@@ -524,7 +524,7 @@ export default function AdminAdvancedSection() {
                     max={100}
                   />
                   <NumberInput
-                    label={t('admin.settings.advanced.processExecutor.timeout', 'Timeout (minutes)')}
+                    label={t('admin.settings.advanced.processExecutor.timeout.label', 'Timeout (minutes)')}
                     description={t('admin.settings.advanced.processExecutor.timeout.description', 'Maximum execution time')}
                     value={settings.processExecutor?.timeoutMinutes?.qpdfTimeoutMinutes ?? 30}
                     onChange={(value) => setSettings({
@@ -547,7 +547,7 @@ export default function AdminAdvancedSection() {
               <Accordion.Panel>
                 <Stack gap="sm">
                   <NumberInput
-                    label={t('admin.settings.advanced.processExecutor.sessionLimit', 'Session Limit')}
+                    label={t('admin.settings.advanced.processExecutor.sessionLimit.label', 'Session Limit')}
                     description={t('admin.settings.advanced.processExecutor.sessionLimit.description', 'Maximum concurrent instances')}
                     value={settings.processExecutor?.sessionLimit?.tesseractSessionLimit ?? 1}
                     onChange={(value) => setSettings({
@@ -561,7 +561,7 @@ export default function AdminAdvancedSection() {
                     max={100}
                   />
                   <NumberInput
-                    label={t('admin.settings.advanced.processExecutor.timeout', 'Timeout (minutes)')}
+                    label={t('admin.settings.advanced.processExecutor.timeout.label', 'Timeout (minutes)')}
                     description={t('admin.settings.advanced.processExecutor.timeout.description', 'Maximum execution time')}
                     value={settings.processExecutor?.timeoutMinutes?.tesseractTimeoutMinutes ?? 30}
                     onChange={(value) => setSettings({
@@ -584,7 +584,7 @@ export default function AdminAdvancedSection() {
               <Accordion.Panel>
                 <Stack gap="sm">
                   <NumberInput
-                    label={t('admin.settings.advanced.processExecutor.sessionLimit', 'Session Limit')}
+                    label={t('admin.settings.advanced.processExecutor.sessionLimit.label', 'Session Limit')}
                     description={t('admin.settings.advanced.processExecutor.sessionLimit.description', 'Maximum concurrent instances')}
                     value={settings.processExecutor?.sessionLimit?.pythonOpenCvSessionLimit ?? 8}
                     onChange={(value) => setSettings({
@@ -598,7 +598,7 @@ export default function AdminAdvancedSection() {
                     max={100}
                   />
                   <NumberInput
-                    label={t('admin.settings.advanced.processExecutor.timeout', 'Timeout (minutes)')}
+                    label={t('admin.settings.advanced.processExecutor.timeout.label', 'Timeout (minutes)')}
                     description={t('admin.settings.advanced.processExecutor.timeout.description', 'Maximum execution time')}
                     value={settings.processExecutor?.timeoutMinutes?.pythonOpenCvtimeoutMinutes ?? 30}
                     onChange={(value) => setSettings({
@@ -621,7 +621,7 @@ export default function AdminAdvancedSection() {
               <Accordion.Panel>
                 <Stack gap="sm">
                   <NumberInput
-                    label={t('admin.settings.advanced.processExecutor.sessionLimit', 'Session Limit')}
+                    label={t('admin.settings.advanced.processExecutor.sessionLimit.label', 'Session Limit')}
                     description={t('admin.settings.advanced.processExecutor.sessionLimit.description', 'Maximum concurrent instances')}
                     value={settings.processExecutor?.sessionLimit?.weasyPrintSessionLimit ?? 16}
                     onChange={(value) => setSettings({
@@ -635,7 +635,7 @@ export default function AdminAdvancedSection() {
                     max={100}
                   />
                   <NumberInput
-                    label={t('admin.settings.advanced.processExecutor.timeout', 'Timeout (minutes)')}
+                    label={t('admin.settings.advanced.processExecutor.timeout.label', 'Timeout (minutes)')}
                     description={t('admin.settings.advanced.processExecutor.timeout.description', 'Maximum execution time')}
                     value={settings.processExecutor?.timeoutMinutes?.weasyPrinttimeoutMinutes ?? 30}
                     onChange={(value) => setSettings({
@@ -658,7 +658,7 @@ export default function AdminAdvancedSection() {
               <Accordion.Panel>
                 <Stack gap="sm">
                   <NumberInput
-                    label={t('admin.settings.advanced.processExecutor.sessionLimit', 'Session Limit')}
+                    label={t('admin.settings.advanced.processExecutor.sessionLimit.label', 'Session Limit')}
                     description={t('admin.settings.advanced.processExecutor.sessionLimit.description', 'Maximum concurrent instances')}
                     value={settings.processExecutor?.sessionLimit?.installAppSessionLimit ?? 1}
                     onChange={(value) => setSettings({
@@ -672,7 +672,7 @@ export default function AdminAdvancedSection() {
                     max={100}
                   />
                   <NumberInput
-                    label={t('admin.settings.advanced.processExecutor.timeout', 'Timeout (minutes)')}
+                    label={t('admin.settings.advanced.processExecutor.timeout.label', 'Timeout (minutes)')}
                     description={t('admin.settings.advanced.processExecutor.timeout.description', 'Maximum execution time')}
                     value={settings.processExecutor?.timeoutMinutes?.installApptimeoutMinutes ?? 60}
                     onChange={(value) => setSettings({
@@ -695,7 +695,7 @@ export default function AdminAdvancedSection() {
               <Accordion.Panel>
                 <Stack gap="sm">
                   <NumberInput
-                    label={t('admin.settings.advanced.processExecutor.sessionLimit', 'Session Limit')}
+                    label={t('admin.settings.advanced.processExecutor.sessionLimit.label', 'Session Limit')}
                     description={t('admin.settings.advanced.processExecutor.sessionLimit.description', 'Maximum concurrent instances')}
                     value={settings.processExecutor?.sessionLimit?.calibreSessionLimit ?? 1}
                     onChange={(value) => setSettings({
@@ -709,7 +709,7 @@ export default function AdminAdvancedSection() {
                     max={100}
                   />
                   <NumberInput
-                    label={t('admin.settings.advanced.processExecutor.timeout', 'Timeout (minutes)')}
+                    label={t('admin.settings.advanced.processExecutor.timeout.label', 'Timeout (minutes)')}
                     description={t('admin.settings.advanced.processExecutor.timeout.description', 'Maximum execution time')}
                     value={settings.processExecutor?.timeoutMinutes?.calibretimeoutMinutes ?? 30}
                     onChange={(value) => setSettings({
@@ -732,7 +732,7 @@ export default function AdminAdvancedSection() {
               <Accordion.Panel>
                 <Stack gap="sm">
                   <NumberInput
-                    label={t('admin.settings.advanced.processExecutor.sessionLimit', 'Session Limit')}
+                    label={t('admin.settings.advanced.processExecutor.sessionLimit.label', 'Session Limit')}
                     description={t('admin.settings.advanced.processExecutor.sessionLimit.description', 'Maximum concurrent instances')}
                     value={settings.processExecutor?.sessionLimit?.ghostscriptSessionLimit ?? 8}
                     onChange={(value) => setSettings({
@@ -746,7 +746,7 @@ export default function AdminAdvancedSection() {
                     max={100}
                   />
                   <NumberInput
-                    label={t('admin.settings.advanced.processExecutor.timeout', 'Timeout (minutes)')}
+                    label={t('admin.settings.advanced.processExecutor.timeout.label', 'Timeout (minutes)')}
                     description={t('admin.settings.advanced.processExecutor.timeout.description', 'Maximum execution time')}
                     value={settings.processExecutor?.timeoutMinutes?.ghostscriptTimeoutMinutes ?? 30}
                     onChange={(value) => setSettings({
@@ -769,7 +769,7 @@ export default function AdminAdvancedSection() {
               <Accordion.Panel>
                 <Stack gap="sm">
                   <NumberInput
-                    label={t('admin.settings.advanced.processExecutor.sessionLimit', 'Session Limit')}
+                    label={t('admin.settings.advanced.processExecutor.sessionLimit.label', 'Session Limit')}
                     description={t('admin.settings.advanced.processExecutor.sessionLimit.description', 'Maximum concurrent instances')}
                     value={settings.processExecutor?.sessionLimit?.ocrMyPdfSessionLimit ?? 2}
                     onChange={(value) => setSettings({
@@ -783,7 +783,7 @@ export default function AdminAdvancedSection() {
                     max={100}
                   />
                   <NumberInput
-                    label={t('admin.settings.advanced.processExecutor.timeout', 'Timeout (minutes)')}
+                    label={t('admin.settings.advanced.processExecutor.timeout.label', 'Timeout (minutes)')}
                     description={t('admin.settings.advanced.processExecutor.timeout.description', 'Maximum execution time')}
                     value={settings.processExecutor?.timeoutMinutes?.ocrMyPdfTimeoutMinutes ?? 30}
                     onChange={(value) => setSettings({

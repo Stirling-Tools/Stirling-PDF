@@ -90,7 +90,7 @@ export default function AdminPremiumSection() {
             <TextInput
               label={
                 <Group gap="xs">
-                  <span>{t('admin.settings.premium.key', 'License Key')}</span>
+                  <span>{t('admin.settings.premium.key.label', 'License Key')}</span>
                   <PendingBadge show={isFieldPending('key')} />
                 </Group>
               }
@@ -103,7 +103,7 @@ export default function AdminPremiumSection() {
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
-              <Text fw={500} size="sm">{t('admin.settings.premium.enabled', 'Enable Premium Features')}</Text>
+              <Text fw={500} size="sm">{t('admin.settings.premium.enabled.label', 'Enable Premium Features')}</Text>
               <Text size="xs" c="dimmed" mt={4}>
                 {t('admin.settings.premium.enabled.description', 'Enable license key checks for pro/enterprise features')}
               </Text>
