@@ -107,7 +107,8 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
             }
         }
 
-        // If we still don't have any authentication, check if it's a public endpoint. If not, deny the request
+        // If we still don't have any authentication, check if it's a public endpoint. If not, deny
+        // the request
         if (authentication == null || !authentication.isAuthenticated()) {
             String method = request.getMethod();
             String contextPath = request.getContextPath();

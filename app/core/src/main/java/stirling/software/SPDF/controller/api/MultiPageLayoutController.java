@@ -26,7 +26,6 @@ import stirling.software.SPDF.model.api.general.MergeMultiplePagesRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.service.CustomPDFDocumentFactory;
-import stirling.software.common.util.FormUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.WebResponseUtils;
 
@@ -136,26 +135,6 @@ public class MultiPageLayoutController {
         }
 
         contentStream.close();
-
-        // If any source page is rotated, skip form copying/transformation entirely
-        boolean hasRotation = FormUtils.hasAnyRotatedPage(sourceDocument);
-        if (hasRotation) {
-            log.info("Source document has rotated pages; skipping form field copying.");
-        } else {
-            try {
-                FormUtils.copyAndTransformFormFields(
-                        sourceDocument,
-                        newDocument,
-                        totalPages,
-                        pagesPerSheet,
-                        cols,
-                        rows,
-                        cellWidth,
-                        cellHeight);
-            } catch (Exception e) {
-                log.warn("Failed to copy and transform form fields: {}", e.getMessage(), e);
-            }
-        }
 
         sourceDocument.close();
 
