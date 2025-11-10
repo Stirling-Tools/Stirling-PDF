@@ -1472,27 +1472,51 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
                               </span>
                             </div>,
                             (event: React.MouseEvent) => {
+                              // Capture click position BEFORE switching to edit mode
+                              const clickX = event.clientX;
+                              const clickY = event.clientY;
+
                               setEditingGroupId(group.id);
                               setActiveGroupId(group.id);
-                              // Store click position for later cursor placement
-                              const editor = document.querySelector<HTMLElement>(`[data-editor-group="${group.id}"]`);
-                              if (editor) {
-                                const rect = editor.getBoundingClientRect();
-                                const clickX = event.clientX - rect.left;
-                                const clickY = event.clientY - rect.top;
 
-                                // Use setTimeout to allow the editor to render first
+                              // Clear any stored offset to prevent interference
+                              caretOffsetsRef.current.delete(group.id);
+
+                              // Wait for editor to render, then position cursor at click location
+                              requestAnimationFrame(() => {
+                                const editor = document.querySelector<HTMLElement>(`[data-editor-group="${group.id}"]`);
+                                if (!editor) return;
+
+                                // Focus the editor first
+                                editor.focus();
+
+                                // Use caretRangeFromPoint to position cursor at click coordinates
                                 setTimeout(() => {
-                                  const range = document.caretRangeFromPoint(event.clientX, event.clientY);
-                                  if (range) {
-                                    const selection = window.getSelection();
-                                    if (selection) {
-                                      selection.removeAllRanges();
-                                      selection.addRange(range);
+                                  if (document.caretRangeFromPoint) {
+                                    const range = document.caretRangeFromPoint(clickX, clickY);
+                                    if (range) {
+                                      const selection = window.getSelection();
+                                      if (selection) {
+                                        selection.removeAllRanges();
+                                        selection.addRange(range);
+                                      }
+                                    }
+                                  } else if ((document as any).caretPositionFromPoint) {
+                                    // Firefox fallback
+                                    const pos = (document as any).caretPositionFromPoint(clickX, clickY);
+                                    if (pos) {
+                                      const range = document.createRange();
+                                      range.setStart(pos.offsetNode, pos.offset);
+                                      range.collapse(true);
+                                      const selection = window.getSelection();
+                                      if (selection) {
+                                        selection.removeAllRanges();
+                                        selection.addRange(range);
+                                      }
                                     }
                                   }
-                                }, 0);
-                              }
+                                }, 10);
+                              });
                             },
                           )}
                         </Box>
