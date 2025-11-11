@@ -478,7 +478,7 @@ public class EndpointConfiguration {
         }
 
         if (applicationProperties != null
-                && !applicationProperties.getSystem().getEnableUrlToPDF()) {
+                && !applicationProperties.getSystem().isEnableUrlToPDF()) {
             disableEndpoint("url-to-pdf");
         }
     }
