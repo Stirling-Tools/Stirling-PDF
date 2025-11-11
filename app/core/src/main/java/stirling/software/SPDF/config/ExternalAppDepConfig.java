@@ -39,6 +39,8 @@ public class ExternalAppDepConfig {
             System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("windows");
 
     private final String weasyprintPath;
+    private final String unoconvPath;
+    private final String calibrePath;
 
     /**
      * Map of command(binary) -> affected groups (e.g. "gs" -> ["Ghostscript"]). Immutable to avoid
@@ -55,6 +57,7 @@ public class ExternalAppDepConfig {
         this.endpointConfiguration = endpointConfiguration;
         this.weasyprintPath = runtimePathConfig.getWeasyPrintPath();
         String unoconvPath = runtimePathConfig.getUnoConvertPath();
+        this.calibrePath = runtimePathConfig.getCalibrePath();
 
         Map<String, List<String>> tmp = new HashMap<>();
         tmp.put("gs", List.of("Ghostscript"));
@@ -66,6 +69,7 @@ public class ExternalAppDepConfig {
         tmp.put("qpdf", List.of("qpdf"));
         tmp.put("tesseract", List.of("tesseract"));
         tmp.put("rar", List.of("rar"));
+        tmp.put(calibrePath, List.of("Calibre"));
         tmp.put("ffmpeg", List.of("FFmpeg"));
         this.commandToGroupMapping = Collections.unmodifiableMap(tmp);
     }

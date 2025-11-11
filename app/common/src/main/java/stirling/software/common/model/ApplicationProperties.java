@@ -369,6 +369,7 @@ public class ApplicationProperties {
         public static class Operations {
             private String weasyprint;
             private String unoconvert;
+            private String calibre;
         }
     }
 
