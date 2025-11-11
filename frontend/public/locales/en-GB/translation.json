@@ -1002,7 +1002,8 @@
         "title": "Choose Your Split Method"
       }
     },
-    "selectMethod": "Select a split method"
+    "selectMethod": "Select a split method",
+    "resultsTitle": "Split Results"
   },
   "rotate": {
     "title": "Rotate PDF",
@@ -3491,7 +3492,8 @@
     "toggleAnnotations": "Toggle Annotations Visibility",
     "annotationMode": "Toggle Annotation Mode",
     "draw": "Draw",
-    "save": "Save"
+    "save": "Save",
+    "saveChanges": "Save Changes"
   },
   "search": {
     "title": "Search PDF",
