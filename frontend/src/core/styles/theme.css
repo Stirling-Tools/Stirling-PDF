@@ -284,6 +284,12 @@
   --pdf-light-report-container-bg: 249 250 251;
   --pdf-light-simulated-page-bg: 255 255 255;
   --pdf-light-simulated-page-text: 15 23 42;
+
+  /* Code token colors (light mode) */
+  --code-kw-color: #1d4ed8;   /* blue-700 */
+  --code-str-color: #16a34a;  /* green-600 */
+  --code-num-color: #4338ca;  /* indigo-700 */
+  --code-com-color: #6b7280;  /* gray-500 */
 }
 
 [data-mantine-color-scheme="dark"] {
@@ -500,6 +506,12 @@
   --modal-nav-item-active-bg: rgba(10, 139, 255, 0.15);
   --modal-content-bg: #2A2F36;
   --modal-header-border: rgba(255, 255, 255, 0.08);
+
+  /* Code token colors (dark mode - Cursor-like) */
+  --code-kw-color: #C792EA;   /* purple */
+  --code-str-color: #C3E88D;  /* green */
+  --code-num-color: #F78C6C;  /* orange */
+  --code-com-color: #697098;  /* muted gray-blue */
 }
 
 /* Dropzone drop state styling */

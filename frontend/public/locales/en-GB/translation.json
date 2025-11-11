@@ -98,6 +98,8 @@
   "unpin": "Unpin File (replace after tool run)",
   "undoOperationTooltip": "Click to undo the last operation and restore the original files",
   "undo": "Undo",
+  "back": "Back",
+  "nothingToUndo": "Nothing to undo",
   "moreOptions": "More Options",
   "editYourNewFiles": "Edit your new file(s)",
   "close": "Close",
@@ -2658,7 +2660,14 @@
     "title": "Show Javascript",
     "header": "Show Javascript",
     "downloadJS": "Download Javascript",
-    "submit": "Show"
+    "submit": "Show",
+    "results": "Result",
+    "processing": "Extracting JavaScript...",
+    "done": "JavaScript extracted",
+    "singleFileWarning": "This tool only supports one file at a time. Please select a single file.",
+    "view": {
+      "title": "Extracted JavaScript"
+    }
   },
   "redact": {
     "tags": "Redact,Hide,black out,black,marker,hidden,auto redact,manual redact",
@@ -4492,6 +4501,12 @@
     }
   },
   "common": {
+    "previous": "Previous",
+    "next": "Next",
+    "collapse": "Collapse",
+    "expand": "Expand",
+    "collapsed": "collapsed",
+    "lines": "lines",
     "copy": "Copy",
     "copied": "Copied!",
     "refresh": "Refresh",
