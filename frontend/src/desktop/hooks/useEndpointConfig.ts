@@ -1,8 +1,28 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useCallback, useRef } from 'react';
+import { isAxiosError } from 'axios';
+import { useTranslation } from 'react-i18next';
 import apiClient from '@app/services/apiClient';
+import { tauriBackendService } from '@app/services/tauriBackendService';
+import { isBackendNotReadyError } from '@app/constants/backendErrors';
 
 interface EndpointConfig {
   backendUrl: string;
+}
+
+const RETRY_DELAY_MS = 2500;
+
+function getErrorMessage(err: unknown): string {
+  if (isAxiosError(err)) {
+    const data = err.response?.data as { message?: string } | undefined;
+    if (typeof data?.message === 'string') {
+      return data.message;
+    }
+    return err.message || 'Unknown error occurred';
+  }
+  if (err instanceof Error) {
+    return err.message;
+  }
+  return 'Unknown error occurred';
 }
 
 /**
@@ -14,38 +34,88 @@ export function useEndpointEnabled(endpoint: string): {
   error: string | null;
   refetch: () => Promise<void>;
 } {
-  const [enabled, setEnabled] = useState<boolean | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { t } = useTranslation();
+  const [enabled, setEnabled] = useState<boolean | null>(() => (endpoint ? true : null));
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const isMountedRef = useRef(true);
+  const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const fetchEndpointStatus = async () => {
+  const clearRetryTimeout = useCallback(() => {
+    if (retryTimeoutRef.current) {
+      clearTimeout(retryTimeoutRef.current);
+      retryTimeoutRef.current = null;
+    }
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+      clearRetryTimeout();
+    };
+  }, [clearRetryTimeout]);
+
+  const fetchEndpointStatus = useCallback(async () => {
+    clearRetryTimeout();
+
     if (!endpoint) {
+      if (!isMountedRef.current) return;
       setEnabled(null);
       setLoading(false);
       return;
     }
 
     try {
-      setLoading(true);
       setError(null);
 
       const response = await apiClient.get<boolean>('/api/v1/config/endpoint-enabled', {
         params: { endpoint },
+        suppressErrorToast: true,
       });
 
+      if (!isMountedRef.current) return;
       setEnabled(response.data);
-    } catch (err: any) {
-      const message = err?.response?.data?.message || err?.message || 'Unknown error occurred';
-      setError(message);
-      setEnabled(null);
+    } catch (err: unknown) {
+      const isBackendStarting = isBackendNotReadyError(err);
+      const message = getErrorMessage(err);
+      if (!isMountedRef.current) return;
+      setError(isBackendStarting ? t('backendHealth.starting', 'Backend starting up...') : message);
+      setEnabled(true);
+
+      if (!retryTimeoutRef.current) {
+        retryTimeoutRef.current = setTimeout(() => {
+          retryTimeoutRef.current = null;
+          fetchEndpointStatus();
+        }, RETRY_DELAY_MS);
+      }
     } finally {
-      setLoading(false);
+      if (isMountedRef.current) {
+        setLoading(false);
+      }
     }
-  };
+  }, [endpoint, clearRetryTimeout]);
 
   useEffect(() => {
-    fetchEndpointStatus();
-  }, [endpoint]);
+    if (!endpoint) {
+      setEnabled(null);
+      setLoading(false);
+      return;
+    }
+
+    if (tauriBackendService.isBackendHealthy()) {
+      fetchEndpointStatus();
+    }
+
+    const unsubscribe = tauriBackendService.subscribeToStatus((status) => {
+      if (status === 'healthy') {
+        fetchEndpointStatus();
+      }
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [endpoint, fetchEndpointStatus]);
 
   return {
     enabled,
@@ -61,45 +131,101 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
   error: string | null;
   refetch: () => Promise<void>;
 } {
-  const [endpointStatus, setEndpointStatus] = useState<Record<string, boolean>>({});
-  const [loading, setLoading] = useState(true);
+  const { t } = useTranslation();
+  const [endpointStatus, setEndpointStatus] = useState<Record<string, boolean>>(() => {
+    if (!endpoints || endpoints.length === 0) return {};
+    return endpoints.reduce((acc, endpointName) => {
+      acc[endpointName] = true;
+      return acc;
+    }, {} as Record<string, boolean>);
+  });
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const isMountedRef = useRef(true);
+  const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const fetchAllEndpointStatuses = async () => {
+  const clearRetryTimeout = useCallback(() => {
+    if (retryTimeoutRef.current) {
+      clearTimeout(retryTimeoutRef.current);
+      retryTimeoutRef.current = null;
+    }
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+      clearRetryTimeout();
+    };
+  }, [clearRetryTimeout]);
+
+  const fetchAllEndpointStatuses = useCallback(async () => {
+    clearRetryTimeout();
+
     if (!endpoints || endpoints.length === 0) {
+      if (!isMountedRef.current) return;
       setEndpointStatus({});
       setLoading(false);
       return;
     }
 
     try {
-      setLoading(true);
       setError(null);
 
       const endpointsParam = endpoints.join(',');
 
       const response = await apiClient.get<Record<string, boolean>>('/api/v1/config/endpoints-enabled', {
         params: { endpoints: endpointsParam },
+        suppressErrorToast: true,
       });
 
+      if (!isMountedRef.current) return;
       setEndpointStatus(response.data);
-    } catch (err: any) {
-      const message = err?.response?.data?.message || err?.message || 'Unknown error occurred';
-      setError(message);
+    } catch (err: unknown) {
+      const isBackendStarting = isBackendNotReadyError(err);
+      const message = getErrorMessage(err);
+      if (!isMountedRef.current) return;
+      setError(isBackendStarting ? t('backendHealth.starting', 'Backend starting up...') : message);
 
       const fallbackStatus = endpoints.reduce((acc, endpointName) => {
-        acc[endpointName] = false;
+        acc[endpointName] = true;
         return acc;
       }, {} as Record<string, boolean>);
       setEndpointStatus(fallbackStatus);
+
+      if (!retryTimeoutRef.current) {
+        retryTimeoutRef.current = setTimeout(() => {
+          retryTimeoutRef.current = null;
+          fetchAllEndpointStatuses();
+        }, RETRY_DELAY_MS);
+      }
     } finally {
-      setLoading(false);
+      if (isMountedRef.current) {
+        setLoading(false);
+      }
     }
-  };
+  }, [endpoints, clearRetryTimeout]);
 
   useEffect(() => {
-    fetchAllEndpointStatuses();
-  }, [endpoints.join(',')]);
+    if (!endpoints || endpoints.length === 0) {
+      setEndpointStatus({});
+      setLoading(false);
+      return;
+    }
+
+    if (tauriBackendService.isBackendHealthy()) {
+      fetchAllEndpointStatuses();
+    }
+
+    const unsubscribe = tauriBackendService.subscribeToStatus((status) => {
+      if (status === 'healthy') {
+        fetchAllEndpointStatuses();
+      }
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [endpoints, fetchAllEndpointStatuses]);
 
   return {
     endpointStatus,

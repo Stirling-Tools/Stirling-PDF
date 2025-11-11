@@ -1,5 +1,7 @@
 import { ReactNode } from "react";
 import { AppProviders as ProprietaryAppProviders } from "@proprietary/components/AppProviders";
+import { DesktopConfigSync } from '@app/components/DesktopConfigSync';
+import { DESKTOP_DEFAULT_APP_CONFIG } from '@app/config/defaultAppConfig';
 
 /**
  * Desktop application providers
@@ -13,7 +15,13 @@ export function AppProviders({ children }: { children: ReactNode }) {
         maxRetries: 5,
         initialDelay: 1000, // 1 second, with exponential backoff
       }}
+      appConfigProviderProps={{
+        initialConfig: DESKTOP_DEFAULT_APP_CONFIG,
+        bootstrapMode: 'non-blocking',
+        autoFetch: false,
+      }}
     >
+      <DesktopConfigSync />
       {children}
     </ProprietaryAppProviders>
   );

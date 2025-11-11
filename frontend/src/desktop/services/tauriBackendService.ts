@@ -1,8 +1,14 @@
 import { invoke } from '@tauri-apps/api/core';
 
+export type BackendStatus = 'stopped' | 'starting' | 'healthy' | 'unhealthy';
+
 export class TauriBackendService {
   private static instance: TauriBackendService;
   private backendStarted = false;
+  private backendStatus: BackendStatus = 'stopped';
+  private healthMonitor: Promise<void> | null = null;
+  private startPromise: Promise<void> | null = null;
+  private statusListeners = new Set<(status: BackendStatus) => void>();
 
   static getInstance(): TauriBackendService {
     if (!TauriBackendService.instance) {
@@ -15,32 +21,84 @@ export class TauriBackendService {
     return this.backendStarted;
   }
 
+  getBackendStatus(): BackendStatus {
+    return this.backendStatus;
+  }
+
+  isBackendHealthy(): boolean {
+    return this.backendStatus === 'healthy';
+  }
+
+  subscribeToStatus(listener: (status: BackendStatus) => void): () => void {
+    this.statusListeners.add(listener);
+    return () => {
+      this.statusListeners.delete(listener);
+    };
+  }
+
+  private setStatus(status: BackendStatus) {
+    if (this.backendStatus === status) {
+      return;
+    }
+    this.backendStatus = status;
+    this.statusListeners.forEach(listener => listener(status));
+  }
+
   async startBackend(backendUrl?: string): Promise<void> {
     if (this.backendStarted) {
       return;
     }
 
-    try {
-      const result = await invoke('start_backend', { backendUrl });
-      console.log('Backend started:', result);
-      this.backendStarted = true;
-      
-      // Wait for backend to be healthy
-      await this.waitForHealthy();
-    } catch (error) {
-      console.error('Failed to start backend:', error);
-      throw error;
+    if (this.startPromise) {
+      return this.startPromise;
     }
+
+    this.setStatus('starting');
+
+    this.startPromise = invoke('start_backend', { backendUrl })
+      .then((result) => {
+        console.log('Backend started:', result);
+        this.backendStarted = true;
+        this.setStatus('starting');
+        this.beginHealthMonitoring();
+      })
+      .catch((error) => {
+        this.setStatus('unhealthy');
+        console.error('Failed to start backend:', error);
+        throw error;
+      })
+      .finally(() => {
+        this.startPromise = null;
+      });
+
+    return this.startPromise;
+  }
+
+  private beginHealthMonitoring() {
+    if (this.healthMonitor) {
+      return;
+    }
+    this.healthMonitor = this.waitForHealthy()
+      .catch((error) => {
+        console.error('Backend failed to become healthy:', error);
+      })
+      .finally(() => {
+        this.healthMonitor = null;
+      });
   }
 
   async checkBackendHealth(): Promise<boolean> {
     if (!this.backendStarted) {
+      this.setStatus('stopped');
       return false;
     }
     try {
-      return await invoke('check_backend_health');
+      const isHealthy = await invoke<boolean>('check_backend_health');
+      this.setStatus(isHealthy ? 'healthy' : 'unhealthy');
+      return isHealthy;
     } catch (error) {
       console.error('Health check failed:', error);
+      this.setStatus('unhealthy');
       return false;
     }
   }
@@ -54,6 +112,7 @@ export class TauriBackendService {
       }
       await new Promise(resolve => setTimeout(resolve, 1000));
     }
+    this.setStatus('unhealthy');
     throw new Error('Backend failed to become healthy after 60 seconds');
   }
 }

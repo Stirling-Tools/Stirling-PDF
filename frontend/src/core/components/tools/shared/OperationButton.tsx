@@ -1,5 +1,7 @@
 import { Button } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
+import { Tooltip } from '@app/components/shared/Tooltip';
+import { useBackendHealth } from '@app/hooks/useBackendHealth';
 
 export interface OperationButtonProps {
   onClick?: () => void;
@@ -31,8 +33,14 @@ const OperationButton = ({
   'data-tour': dataTour
 }: OperationButtonProps) => {
   const { t } = useTranslation();
+  const { isHealthy, message: backendMessage } = useBackendHealth();
+  const blockedByBackend = !isHealthy;
+  const combinedDisabled = disabled || blockedByBackend;
+  const tooltipLabel = blockedByBackend
+    ? (backendMessage ?? t('backendHealth.checking', 'Checking backend status...'))
+    : null;
 
-  return (
+  const button = (
     <Button
       type={type}
       onClick={onClick}
@@ -41,7 +49,7 @@ const OperationButton = ({
       ml='md'
       mt={mt}
       loading={isLoading}
-      disabled={disabled}
+      disabled={combinedDisabled}
       variant={variant}
       color={color}
       data-testid={dataTestId}
@@ -54,6 +62,16 @@ const OperationButton = ({
       }
     </Button>
   );
+
+  if (tooltipLabel) {
+    return (
+      <Tooltip content={tooltipLabel} position="top" arrow>
+        {button}
+      </Tooltip>
+    );
+  }
+
+  return button;
 };
 
 export default OperationButton;
