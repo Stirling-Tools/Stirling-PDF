@@ -1,22 +1,22 @@
 import { invoke, isTauri } from '@tauri-apps/api/core';
 
 export interface FileOpenService {
-  getOpenedFile(): Promise<string | null>;
+  getOpenedFiles(): Promise<string[]>;
   readFileAsArrayBuffer(filePath: string): Promise<{ fileName: string; arrayBuffer: ArrayBuffer } | null>;
-  clearOpenedFile(): Promise<void>;
+  clearOpenedFiles(): Promise<void>;
   onFileOpened(callback: (filePath: string) => void): () => void; // Returns unlisten function
 }
 
 class TauriFileOpenService implements FileOpenService {
-  async getOpenedFile(): Promise<string | null> {
+  async getOpenedFiles(): Promise<string[]> {
     try {
-      console.log('🔍 Calling invoke(get_opened_file)...');
-      const result = await invoke<string | null>('get_opened_file');
-      console.log('🔍 invoke(get_opened_file) returned:', result);
+      console.log('🔍 Calling invoke(get_opened_files)...');
+      const result = await invoke<string[]>('get_opened_files');
+      console.log('🔍 invoke(get_opened_files) returned:', result);
       return result;
     } catch (error) {
-      console.error('❌ Failed to get opened file:', error);
-      return null;
+      console.error('❌ Failed to get opened files:', error);
+      return [];
     }
   }
 
@@ -37,13 +37,13 @@ class TauriFileOpenService implements FileOpenService {
     }
   }
 
-  async clearOpenedFile(): Promise<void> {
+  async clearOpenedFiles(): Promise<void> {
     try {
-      console.log('🔍 Calling invoke(clear_opened_file)...');
-      await invoke('clear_opened_file');
-      console.log('✅ Successfully cleared opened file');
+      console.log('🔍 Calling invoke(clear_opened_files)...');
+      await invoke('clear_opened_files');
+      console.log('✅ Successfully cleared opened files');
     } catch (error) {
-      console.error('❌ Failed to clear opened file:', error);
+      console.error('❌ Failed to clear opened files:', error);
     }
   }
 
@@ -110,9 +110,9 @@ class TauriFileOpenService implements FileOpenService {
 }
 
 class WebFileOpenService implements FileOpenService {
-  async getOpenedFile(): Promise<string | null> {
+  async getOpenedFiles(): Promise<string[]> {
     // In web mode, there's no file association support
-    return null;
+    return [];
   }
 
   async readFileAsArrayBuffer(_filePath: string): Promise<{ fileName: string; arrayBuffer: ArrayBuffer } | null> {
@@ -120,7 +120,7 @@ class WebFileOpenService implements FileOpenService {
     return null;
   }
 
-  async clearOpenedFile(): Promise<void> {
+  async clearOpenedFiles(): Promise<void> {
     // In web mode, no file clearing needed
   }
 

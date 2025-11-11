@@ -3,7 +3,7 @@ use tauri::{RunEvent, WindowEvent, Emitter, Manager};
 mod utils;
 mod commands;
 
-use commands::{start_backend, check_backend_health, get_opened_file, clear_opened_file, cleanup_backend};
+use commands::{start_backend, check_backend_health, get_opened_files, clear_opened_files, cleanup_backend};
 #[cfg(target_os = "macos")]
 use commands::set_opened_file;
 use utils::{add_log, get_tauri_logs};
@@ -38,7 +38,7 @@ pub fn run() {
       add_log("🔍 DEBUG: Setup completed".to_string());
       Ok(())
     })
-    .invoke_handler(tauri::generate_handler![start_backend, check_backend_health, get_opened_file, clear_opened_file, get_tauri_logs])
+    .invoke_handler(tauri::generate_handler![start_backend, check_backend_health, get_opened_files, clear_opened_files, get_tauri_logs])
     .build(tauri::generate_context!())
     .expect("error while building tauri application")
     .run(|app_handle, event| {

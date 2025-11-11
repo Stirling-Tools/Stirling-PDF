@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useBackendInitializer } from '@app/hooks/useBackendInitializer';
 import { useOpenedFile } from '@app/hooks/useOpenedFile';
 import { fileOpenService } from '@app/services/fileOpenService';
@@ -17,31 +17,78 @@ export function useAppInitialization(): void {
   // Get file management actions
   const { addFiles } = useFileManagement();
 
-  // Handle file opened with app (Tauri mode)
-  const { openedFilePath, loading: openedFileLoading } = useOpenedFile();
+  // Handle files opened with app (Tauri mode)
+  const { openedFilePaths, loading: openedFileLoading } = useOpenedFile();
 
-  // Load opened file and add directly to FileContext
+  // Track if we've already loaded the initial files to prevent duplicate loads
+  const initialFilesLoadedRef = useRef(false);
+
+  // Load opened files and add directly to FileContext
   useEffect(() => {
-    if (openedFilePath && !openedFileLoading) {
-      const loadOpenedFile = async () => {
-        try {
-          const fileData = await fileOpenService.readFileAsArrayBuffer(openedFilePath);
-          if (fileData) {
-            // Create a File object from the ArrayBuffer
-            const file = new File([fileData.arrayBuffer], fileData.fileName, {
-              type: 'application/pdf'
-            });
+    if (openedFilePaths.length > 0 && !openedFileLoading && !initialFilesLoadedRef.current) {
+      initialFilesLoadedRef.current = true;
 
-            // Add directly to FileContext
-            await addFiles([file]);
-            console.log('[Desktop] Opened file added to FileContext:', fileData.fileName);
+      const loadOpenedFiles = async () => {
+        try {
+          const filesArray: File[] = [];
+
+          // Load all files in parallel
+          await Promise.all(
+            openedFilePaths.map(async (filePath) => {
+              try {
+                const fileData = await fileOpenService.readFileAsArrayBuffer(filePath);
+                if (fileData) {
+                  const file = new File([fileData.arrayBuffer], fileData.fileName, {
+                    type: 'application/pdf'
+                  });
+                  filesArray.push(file);
+                  console.log('[Desktop] Loaded file:', fileData.fileName);
+                }
+              } catch (error) {
+                console.error('[Desktop] Failed to load file:', filePath, error);
+              }
+            })
+          );
+
+          if (filesArray.length > 0) {
+            // Add all files to FileContext at once
+            await addFiles(filesArray);
+            console.log(`[Desktop] ${filesArray.length} opened file(s) added to FileContext`);
           }
         } catch (error) {
-          console.error('[Desktop] Failed to load opened file:', error);
+          console.error('[Desktop] Failed to load opened files:', error);
         }
       };
 
-      loadOpenedFile();
+      loadOpenedFiles();
     }
-  }, [openedFilePath, openedFileLoading, addFiles]);
+  }, [openedFilePaths, openedFileLoading, addFiles]);
+
+  // Listen for runtime file-opened events (from second instances on Windows/Linux)
+  useEffect(() => {
+    const handleRuntimeFileOpen = async (filePath: string) => {
+      try {
+        console.log('[Desktop] Runtime file-opened event received:', filePath);
+        const fileData = await fileOpenService.readFileAsArrayBuffer(filePath);
+        if (fileData) {
+          // Create a File object from the ArrayBuffer
+          const file = new File([fileData.arrayBuffer], fileData.fileName, {
+            type: 'application/pdf'
+          });
+
+          // Add directly to FileContext
+          await addFiles([file]);
+          console.log('[Desktop] Runtime opened file added to FileContext:', fileData.fileName);
+        }
+      } catch (error) {
+        console.error('[Desktop] Failed to load runtime opened file:', error);
+      }
+    };
+
+    // Set up event listener and get cleanup function
+    const unlisten = fileOpenService.onFileOpened(handleRuntimeFileOpen);
+
+    // Clean up listener on unmount
+    return unlisten;
+  }, [addFiles]);
 }
