@@ -1,9 +1,13 @@
-use tauri::{RunEvent, WindowEvent, Emitter};
+use tauri::{RunEvent, WindowEvent};
+#[cfg(target_os = "macos")]
+use tauri::Emitter;
 
 mod utils;
 mod commands;
 
-use commands::{start_backend, check_backend_health, get_opened_file, clear_opened_file, cleanup_backend, set_opened_file};
+use commands::{start_backend, check_backend_health, get_opened_file, clear_opened_file, cleanup_backend};
+#[cfg(target_os = "macos")]
+use commands::set_opened_file;
 use utils::{add_log, get_tauri_logs};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
