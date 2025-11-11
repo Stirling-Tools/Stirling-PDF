@@ -61,11 +61,9 @@ public class InitialSetup {
     public void initEnableCSRFSecurity() throws IOException {
         if (GeneralUtils.isVersionHigher(
                 "0.46.0", applicationProperties.getAutomaticallyGenerated().getAppVersion())) {
-            Boolean csrf = applicationProperties.getSecurity().getCsrfDisabled();
+            boolean csrf = applicationProperties.getSecurity().isCsrfDisabled();
             if (!csrf) {
-                GeneralUtils.saveKeyToSettings("security.csrfDisabled", false);
                 GeneralUtils.saveKeyToSettings("system.enableAnalytics", true);
-                applicationProperties.getSecurity().setCsrfDisabled(false);
             }
         }
     }
