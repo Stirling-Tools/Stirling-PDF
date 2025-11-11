@@ -10,6 +10,11 @@ openapi: &openapi
   - app/(common|core|proprietary)/build.gradle
   - app/(common|core|proprietary)/src/main/java/**
 
+docker: &docker
+  - Dockerfile
+  - Dockerfile.fat
+  - Dockerfile.ultra-lite
+
 project: &project
   - app/(common|core|proprietary)/src/(main|test)/java/**
   - app/(common|core|proprietary)/build.gradle
@@ -19,9 +24,7 @@ project: &project
   - libs/**
   - 'testing/**/!(requirements*.txt|requirements*.in)*'
   - build.gradle
-  - Dockerfile
-  - Dockerfile.fat
-  - Dockerfile.ultra-lite
+  - *docker
   - gradle.properties
   - gradlew
   - gradlew.bat

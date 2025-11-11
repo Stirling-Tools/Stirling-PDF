@@ -33,6 +33,7 @@ jobs:
       app: ${{ steps.changes.outputs.app }}
       project: ${{ steps.changes.outputs.project }}
       openapi: ${{ steps.changes.outputs.openapi }}
+      docker: ${{ steps.changes.outputs.docker }}
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
@@ -265,8 +266,8 @@ jobs:
           ./testing/test.sh
 
   test-build-docker-images:
-    if: github.event_name == 'pull_request' && needs.files-changed.outputs.project == 'true'
-    needs: [files-changed, build, check-generateOpenApiDocs, check-licence]
+    if: (github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch') && needs.files-changed.outputs.docker == 'true'
+    needs: [files-changed, build]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
