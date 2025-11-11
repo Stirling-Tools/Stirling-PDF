@@ -1362,7 +1362,7 @@ public class ConvertPDFToPDFA {
     private Path normalizePdfWithQpdf(Path inputPdf) {
         try {
             ProcessExecutorResult checkResult =
-                    ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT)
+                    ProcessExecutor.getInstance(ProcessExecutor.Processes.QPDF)
                             .runCommandWithOutputHandling(Arrays.asList("qpdf", "--version"));
 
             if (checkResult.getRc() != 0) {
