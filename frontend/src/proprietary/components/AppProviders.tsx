@@ -1,10 +1,12 @@
-import { ReactNode } from "react";
-import { AppProviders as CoreAppProviders } from "@core/components/AppProviders";
+import { AppProviders as CoreAppProviders, AppProvidersProps } from "@core/components/AppProviders";
 import { AuthProvider } from "@app/auth/UseSession";
 
-export function AppProviders({ children }: { children: ReactNode }) {
+export function AppProviders({ children, appConfigRetryOptions, appConfigProviderProps }: AppProvidersProps) {
   return (
-    <CoreAppProviders>
+    <CoreAppProviders
+      appConfigRetryOptions={appConfigRetryOptions}
+      appConfigProviderProps={appConfigProviderProps}
+    >
       <AuthProvider>
         {children}
       </AuthProvider>

@@ -19,14 +19,14 @@ const MergeSettings: React.FC<MergeSettingsProps> = ({
   return (
     <Stack gap="md">
       <Checkbox
-        label={t('merge.removeDigitalSignature', 'Remove digital signature in the merged file?')}
+        label={t('merge.removeDigitalSignature.label', 'Remove digital signature in the merged file?')}
         checked={parameters.removeDigitalSignature}
         onChange={(event) => onParameterChange('removeDigitalSignature', event.currentTarget.checked)}
         disabled={disabled}
       />
 
       <Checkbox
-        label={t('merge.generateTableOfContents', 'Generate table of contents in the merged file?')}
+        label={t('merge.generateTableOfContents.label', 'Generate table of contents in the merged file?')}
         checked={parameters.generateTableOfContents}
         onChange={(event) => onParameterChange('generateTableOfContents', event.currentTarget.checked)}
         disabled={disabled}

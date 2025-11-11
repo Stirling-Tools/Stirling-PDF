@@ -14,6 +14,8 @@ export interface ProcessedFilePage {
   pageNumber?: number;
   rotation?: number;
   splitBefore?: boolean;
+  width?: number;
+  height?: number;
   [key: string]: any;
 }
 

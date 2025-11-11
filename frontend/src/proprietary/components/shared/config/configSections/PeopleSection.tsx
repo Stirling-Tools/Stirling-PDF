@@ -668,7 +668,7 @@ export default function PeopleSection() {
             <Stack gap="md" align="center">
               <LocalIcon icon="person-add" width="3rem" height="3rem" style={{ color: 'var(--mantine-color-gray-6)' }} />
               <Text size="xl" fw={600} ta="center">
-                {t('workspace.people.inviteMembers', 'Invite Members')}
+                {t('workspace.people.inviteMembers.label', 'Invite Members')}
               </Text>
               {inviteMode === 'email' && (
                 <Text size="sm" c="dimmed" ta="center" px="md">
