@@ -6,16 +6,26 @@ import RestartConfirmationModal from '@app/components/shared/config/RestartConfi
 import { useRestartServer } from '@app/components/shared/config/useRestartServer';
 import { useAdminSettings } from '@app/hooks/useAdminSettings';
 import PendingBadge from '@app/components/shared/config/PendingBadge';
+import apiClient from '@app/services/apiClient';
 
 interface MailSettingsData {
   enabled?: boolean;
   enableInvites?: boolean;
+  inviteLinkExpiryHours?: number;
   host?: string;
   port?: number;
   username?: string;
   password?: string;
   from?: string;
+  frontendUrl?: string;
 }
+
+interface ApiResponseWithPending<T> {
+  _pending?: Partial<T>;
+}
+
+type MailApiResponse = MailSettingsData & ApiResponseWithPending<MailSettingsData>;
+type SystemApiResponse = { frontendUrl?: string } & ApiResponseWithPending<{ frontendUrl?: string }>;
 
 export default function AdminMailSection() {
   const { t } = useTranslation();
@@ -31,6 +41,47 @@ export default function AdminMailSection() {
     isFieldPending,
   } = useAdminSettings<MailSettingsData>({
     sectionName: 'mail',
+    fetchTransformer: async () => {
+      const [mailResponse, systemResponse] = await Promise.all([
+        apiClient.get<MailApiResponse>('/api/v1/admin/settings/section/mail'),
+        apiClient.get<SystemApiResponse>('/api/v1/admin/settings/section/system')
+      ]);
+
+      const mail = mailResponse.data || {};
+      const system = systemResponse.data || {};
+
+      const result: MailSettingsData & ApiResponseWithPending<MailSettingsData> = {
+        ...mail,
+        frontendUrl: system.frontendUrl || ''
+      };
+
+      // Merge pending blocks from both endpoints
+      const pendingBlock: Partial<MailSettingsData> = {};
+      if (mail._pending) {
+        Object.assign(pendingBlock, mail._pending);
+      }
+      if (system._pending?.frontendUrl !== undefined) {
+        pendingBlock.frontendUrl = system._pending.frontendUrl;
+      }
+
+      if (Object.keys(pendingBlock).length > 0) {
+        result._pending = pendingBlock;
+      }
+
+      return result;
+    },
+    saveTransformer: (settings) => {
+      const { frontendUrl, ...mailSettings } = settings;
+
+      const deltaSettings: Record<string, any> = {
+        'system.frontendUrl': frontendUrl
+      };
+
+      return {
+        sectionData: mailSettings,
+        deltaSettings
+      };
+    }
   });
 
   useEffect(() => {
@@ -71,7 +122,7 @@ export default function AdminMailSection() {
         <Stack gap="md">
           <Group justify="space-between" align="flex-start" wrap="nowrap">
             <div>
-              <Text fw={500} size="sm">{t('admin.settings.mail.enabled', 'Enable Mail')}</Text>
+              <Text fw={500} size="sm">{t('admin.settings.mail.enabled.label', 'Enable Mail')}</Text>
               <Text size="xs" c="dimmed" mt={4}>
                 {t('admin.settings.mail.enabled.description', 'Enable email notifications and SMTP functionality')}
               </Text>
@@ -87,7 +138,7 @@ export default function AdminMailSection() {
 
           <Group justify="space-between" align="flex-start" wrap="nowrap">
             <div>
-              <Text fw={500} size="sm">{t('admin.settings.mail.enableInvites', 'Enable Email Invites')}</Text>
+              <Text fw={500} size="sm">{t('admin.settings.mail.enableInvites.label', 'Enable Email Invites')}</Text>
               <Text size="xs" c="dimmed" mt={4}>
                 {t('admin.settings.mail.enableInvites.description', 'Allow admins to invite users via email with auto-generated passwords')}
               </Text>
@@ -106,7 +157,7 @@ export default function AdminMailSection() {
             <TextInput
               label={
                 <Group gap="xs">
-                  <span>{t('admin.settings.mail.host', 'SMTP Host')}</span>
+                  <span>{t('admin.settings.mail.host.label', 'SMTP Host')}</span>
                   <PendingBadge show={isFieldPending('host')} />
                 </Group>
               }
@@ -121,7 +172,7 @@ export default function AdminMailSection() {
             <NumberInput
               label={
                 <Group gap="xs">
-                  <span>{t('admin.settings.mail.port', 'SMTP Port')}</span>
+                  <span>{t('admin.settings.mail.port.label', 'SMTP Port')}</span>
                   <PendingBadge show={isFieldPending('port')} />
                 </Group>
               }
@@ -137,7 +188,7 @@ export default function AdminMailSection() {
             <TextInput
               label={
                 <Group gap="xs">
-                  <span>{t('admin.settings.mail.username', 'SMTP Username')}</span>
+                  <span>{t('admin.settings.mail.username.label', 'SMTP Username')}</span>
                   <PendingBadge show={isFieldPending('username')} />
                 </Group>
               }
@@ -151,7 +202,7 @@ export default function AdminMailSection() {
             <PasswordInput
               label={
                 <Group gap="xs">
-                  <span>{t('admin.settings.mail.password', 'SMTP Password')}</span>
+                  <span>{t('admin.settings.mail.password.label', 'SMTP Password')}</span>
                   <PendingBadge show={isFieldPending('password')} />
                 </Group>
               }
@@ -165,7 +216,7 @@ export default function AdminMailSection() {
             <TextInput
               label={
                 <Group gap="xs">
-                  <span>{t('admin.settings.mail.from', 'From Address')}</span>
+                  <span>{t('admin.settings.mail.from.label', 'From Address')}</span>
                   <PendingBadge show={isFieldPending('from')} />
                 </Group>
               }
@@ -173,6 +224,21 @@ export default function AdminMailSection() {
               value={settings.from || ''}
               onChange={(e) => setSettings({ ...settings, from: e.target.value })}
               placeholder="noreply@example.com"
+            />
+          </div>
+
+          <div>
+            <TextInput
+              label={
+                <Group gap="xs">
+                  <span>{t('admin.settings.mail.frontendUrl.label', 'Frontend URL')}</span>
+                  <PendingBadge show={isFieldPending('frontendUrl')} />
+                </Group>
+              }
+              description={t('admin.settings.mail.frontendUrl.description', 'Base URL for frontend (e.g. https://pdf.example.com). Used for generating invite links in emails. Leave empty to use backend URL.')}
+              value={settings.frontendUrl || ''}
+              onChange={(e) => setSettings({ ...settings, frontendUrl: e.target.value })}
+              placeholder="https://pdf.example.com"
             />
           </div>
         </Stack>

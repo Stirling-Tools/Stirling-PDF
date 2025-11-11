@@ -295,6 +295,12 @@ public class EndpointConfiguration {
         addEndpointToGroup("Other", "replace-and-invert-color-pdf");
         addEndpointToGroup("Other", "multi-tool");
 
+        // Adding form-related endpoints to "Other" group
+        addEndpointToGroup("Other", "fields");
+        addEndpointToGroup("Other", "modify-fields");
+        addEndpointToGroup("Other", "delete-fields");
+        addEndpointToGroup("Other", "fill");
+
         // Adding endpoints to "Advance" group
         addEndpointToGroup("Advance", "adjust-contrast");
         addEndpointToGroup("Advance", "compress-pdf");
@@ -406,8 +412,6 @@ public class EndpointConfiguration {
         /* Ghostscript */
         addEndpointToGroup("Ghostscript", "repair");
         addEndpointToGroup("Ghostscript", "compress-pdf");
-        addEndpointToGroup("Ghostscript", "crop");
-        addEndpointToGroup("Ghostscript", "replace-invert-pdf");
 
         /* tesseract */
         addEndpointToGroup("tesseract", "ocr-pdf");

@@ -6,6 +6,7 @@ import Landing from "@app/routes/Landing";
 import Login from "@app/routes/Login";
 import Signup from "@app/routes/Signup";
 import AuthCallback from "@app/routes/AuthCallback";
+import InviteAccept from "@app/routes/InviteAccept";
 import OnboardingTour from "@app/components/onboarding/OnboardingTour";
 
 // Import global styles
@@ -26,6 +27,7 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/auth/callback" element={<AuthCallback />} />
+          <Route path="/invite/:token" element={<InviteAccept />} />
 
           {/* Main app routes - Landing handles auth logic */}
           <Route path="/*" element={<Landing />} />

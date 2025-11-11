@@ -1,7 +1,7 @@
 import { Button, Text, Group, Divider } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import classes from '@app/components/pageEditor/bulkSelectionPanel/BulkSelectionPanel.module.css';
-import { LogicalOperator } from '@app/components/pageEditor/bulkSelectionPanel/BulkSelection';
+import { LogicalOperator } from '@app/utils/bulkselection/selectionBuilders';
 
 interface OperatorsSectionProps {
   csvInput: string;
