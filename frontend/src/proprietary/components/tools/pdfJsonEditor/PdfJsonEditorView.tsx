@@ -147,6 +147,48 @@ const setCaretOffset = (element: HTMLElement, offset: number): void => {
   selection.addRange(range);
 };
 
+const extractTextWithSoftBreaks = (element: HTMLElement): { text: string; insertedBreaks: boolean } => {
+  const normalized = element.innerText.replace(/\u00A0/g, ' ');
+  if (!element.isConnected) {
+    return { text: normalized, insertedBreaks: false };
+  }
+
+  const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null);
+  const range = document.createRange();
+  let result = '';
+  let previousTop: number | null = null;
+  let insertedBreaks = false;
+
+  while (walker.nextNode()) {
+    const node = walker.currentNode as Text;
+    const nodeText = node.textContent ?? '';
+    for (let index = 0; index < nodeText.length; index += 1) {
+      const char = nodeText[index];
+      range.setStart(node, index);
+      range.setEnd(node, index + 1);
+      const rect = range.getClientRects()[0];
+
+      if (previousTop !== null && rect && Math.abs(rect.top - previousTop) > 0.5 && result[result.length - 1] !== '\n') {
+        result += '\n';
+        insertedBreaks = true;
+      }
+
+      result += char;
+      if (rect) {
+        previousTop = rect.top;
+      }
+      if (char === '\n') {
+        previousTop = null;
+      }
+    }
+  }
+
+  return {
+    text: result.replace(/\u00A0/g, ' '),
+    insertedBreaks,
+  };
+};
+
 interface PdfJsonEditorViewProps {
   data: PdfJsonEditorViewData;
 }
@@ -313,26 +355,6 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
     onForceSingleTextElementChange,
     onGroupingModeChange,
   } = data;
-
-  const syncEditorValue = useCallback(
-    (element: HTMLElement, pageIndex: number, groupId: string) => {
-      const value = element.innerText.replace(/\u00A0/g, ' ');
-      const offset = getCaretOffset(element);
-      caretOffsetsRef.current.set(groupId, offset);
-      onGroupEdit(pageIndex, groupId, value);
-      requestAnimationFrame(() => {
-        if (editingGroupId !== groupId) {
-          return;
-        }
-        const editor = editorRefs.current.get(groupId);
-        if (editor) {
-          const savedOffset = caretOffsetsRef.current.get(groupId) ?? editor.innerText.length;
-          setCaretOffset(editor, savedOffset);
-        }
-      });
-    },
-    [editingGroupId, onGroupEdit],
-  );
 
   const resolveFont = (fontId: string | null | undefined, pageIndex: number | null | undefined): PdfJsonFont | null => {
     if (!fontId || !pdfDocument?.fonts) {
@@ -501,6 +523,39 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
 
   // Detect if current page contains paragraph-heavy content
   const isParagraphPage = useMemo(() => analyzePageContentType(pageGroups), [pageGroups]);
+  const isParagraphLayout =
+    externalGroupingMode === 'paragraph' || (externalGroupingMode === 'auto' && isParagraphPage);
+  const paragraphWhiteSpace = isParagraphLayout ? 'pre-wrap' : 'pre';
+  const paragraphWordBreak = isParagraphLayout ? 'break-word' : 'normal';
+  const paragraphOverflowWrap = isParagraphLayout ? 'break-word' : 'normal';
+
+  const syncEditorValue = useCallback(
+    (
+      element: HTMLElement,
+      pageIndex: number,
+      groupId: string,
+      options?: { skipCaretRestore?: boolean },
+    ) => {
+      const { text: value } = extractTextWithSoftBreaks(element);
+      const offset = getCaretOffset(element);
+      caretOffsetsRef.current.set(groupId, offset);
+      onGroupEdit(pageIndex, groupId, value);
+      if (options?.skipCaretRestore) {
+        return;
+      }
+      requestAnimationFrame(() => {
+        if (editingGroupId !== groupId) {
+          return;
+        }
+        const editor = editorRefs.current.get(groupId);
+        if (editor) {
+          const savedOffset = caretOffsetsRef.current.get(groupId) ?? editor.innerText.length;
+          setCaretOffset(editor, savedOffset);
+        }
+      });
+    },
+    [editingGroupId, onGroupEdit],
+  );
 
   const extractPreferredFontId = useCallback((target?: TextGroup | null) => {
     if (!target) {
@@ -1565,11 +1620,12 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
                                   event.stopPropagation();
                                 }}
                                 onBlur={(event) => {
-                                  const value = event.currentTarget.innerText.replace(/\u00A0/g, ' ');
+                                  syncEditorValue(event.currentTarget, group.pageIndex, group.id, {
+                                    skipCaretRestore: true,
+                                  });
                                   caretOffsetsRef.current.delete(group.id);
                                   editorRefs.current.delete(group.id);
                                   setActiveGroupId(null);
-                                  onGroupEdit(group.pageIndex, group.id, value);
                                   setEditingGroupId(null);
                                 }}
                                 onInput={(event) => {
@@ -1589,7 +1645,9 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
                                   outline: 'none',
                                   border: 'none',
                                   display: 'block',
-                                  whiteSpace: 'pre',
+                                  whiteSpace: paragraphWhiteSpace,
+                                  wordBreak: paragraphWordBreak,
+                                  overflowWrap: paragraphOverflowWrap,
                                   cursor: 'text',
                                   overflow: 'visible',
                                 }}
@@ -1617,7 +1675,9 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
                                 width: '100%',
                                 minHeight: '100%',
                                 padding: 0,
-                                whiteSpace: 'pre',
+                                whiteSpace: paragraphWhiteSpace,
+                                wordBreak: paragraphWordBreak,
+                                overflowWrap: paragraphOverflowWrap,
                                 fontSize: `${fontSizePx}px`,
                                 fontFamily,
                                 fontWeight,
@@ -1635,7 +1695,7 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
                                   display: 'inline-block',
                                   transform: shouldScale ? `scaleX(${textScale})` : 'none',
                                   transformOrigin: 'left center',
-                                  whiteSpace: 'pre',
+                                  whiteSpace: paragraphWhiteSpace,
                                 }}
                               >
                                 {group.text || '\u00A0'}
