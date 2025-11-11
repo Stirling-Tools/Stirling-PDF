@@ -742,4 +742,31 @@ public class UserController {
             return errorMessage;
         }
     }
+
+    @PostMapping("/complete-initial-setup")
+    public ResponseEntity<?> completeInitialSetup() {
+        try {
+            String username = userService.getCurrentUsername();
+            if (username == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body("User not authenticated");
+            }
+
+            Optional<User> userOpt = userService.findByUsernameIgnoreCase(username);
+            if (userOpt.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
+            }
+
+            User user = userOpt.get();
+            user.setHasCompletedInitialSetup(true);
+            userRepository.save(user);
+
+            log.info("User {} completed initial setup", username);
+            return ResponseEntity.ok().body(Map.of("success", true));
+        } catch (Exception e) {
+            log.error("Error completing initial setup", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Failed to complete initial setup");
+        }
+    }
 }

@@ -56,6 +56,9 @@ public class User implements UserDetails, Serializable {
     @Column(name = "isFirstLogin")
     private Boolean isFirstLogin = false;
 
+    @Column(name = "hasCompletedInitialSetup")
+    private Boolean hasCompletedInitialSetup = false;
+
     @Column(name = "roleName")
     private String roleName;
 
@@ -101,6 +104,14 @@ public class User implements UserDetails, Serializable {
 
     public void setFirstLogin(boolean isFirstLogin) {
         this.isFirstLogin = isFirstLogin;
+    }
+
+    public boolean hasCompletedInitialSetup() {
+        return hasCompletedInitialSetup != null && hasCompletedInitialSetup;
+    }
+
+    public void setHasCompletedInitialSetup(boolean hasCompletedInitialSetup) {
+        this.hasCompletedInitialSetup = hasCompletedInitialSetup;
     }
 
     public void setAuthenticationType(AuthenticationType authenticationType) {
