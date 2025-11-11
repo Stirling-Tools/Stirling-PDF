@@ -73,14 +73,6 @@ public class SecurityWebController {
     }
 
     @Deprecated
-    @Hidden
-    // @GetMapping("/verify-pdf")
-    public String verifyPdfForm(Model model) {
-        model.addAttribute("currentPage", "verify-pdf");
-        return "security/verify-pdf";
-    }
-
-    @Deprecated
     // @GetMapping("/remove-cert-sign")
     @Hidden
     public String certUnSignForm(Model model) {
