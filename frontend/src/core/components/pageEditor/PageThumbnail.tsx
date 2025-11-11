@@ -53,7 +53,7 @@ interface PageThumbnailProps {
 
 const PageThumbnail: React.FC<PageThumbnailProps> = ({
   page,
-  index,
+  index: _index,
   totalPages,
   originalFile,
   fileColorIndex,
