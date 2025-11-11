@@ -10,6 +10,4 @@ public interface UserServiceInterface {
     boolean isCurrentUserAdmin();
 
     boolean isCurrentUserFirstLogin();
-
-    boolean hasUsers();
 }
