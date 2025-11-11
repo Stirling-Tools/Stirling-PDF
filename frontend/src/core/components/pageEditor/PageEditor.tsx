@@ -230,6 +230,7 @@ const PageEditor = ({
     setHasUnsavedChanges,
     exportLoading,
     setExportLoading,
+    setSplitPositions,
   });
 
   // Derived values for right rail and usePageEditorRightRailButtons (must be after displayDocument)

@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { Dispatch, SetStateAction, useCallback } from "react";
 
 import type {
   useFileActions,
@@ -23,6 +23,7 @@ interface UsePageEditorExportParams {
   setHasUnsavedChanges: (dirty: boolean) => void;
   exportLoading: boolean;
   setExportLoading: (loading: boolean) => void;
+  setSplitPositions: Dispatch<SetStateAction<Set<number>>>;
 }
 
 export const usePageEditorExport = ({
@@ -35,6 +36,7 @@ export const usePageEditorExport = ({
   setHasUnsavedChanges,
   exportLoading,
   setExportLoading,
+  setSplitPositions,
 }: UsePageEditorExportParams) => {
   const getSourceFiles = useCallback((): Map<FileId, File> | null => {
     const sourceFiles = new Map<FileId, File>();
@@ -107,6 +109,7 @@ export const usePageEditorExport = ({
 
       pdfExportService.downloadFile(result.blob, result.filename);
       setHasUnsavedChanges(false);
+      setSplitPositions(new Set());
       setExportLoading(false);
     } catch (error) {
       console.error("Export failed:", error);
@@ -160,6 +163,7 @@ export const usePageEditorExport = ({
       }
 
       setHasUnsavedChanges(false);
+      setSplitPositions(new Set());
       setExportLoading(false);
     } catch (error) {
       console.error("Export failed:", error);
@@ -202,6 +206,7 @@ export const usePageEditorExport = ({
       }
 
       setHasUnsavedChanges(false);
+      setSplitPositions(new Set());
       setExportLoading(false);
     } catch (error) {
       console.error("Apply changes failed:", error);
