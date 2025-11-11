@@ -22,6 +22,8 @@ class BackendHealthMonitor {
       this.updateState({
         status,
         error: status === 'healthy' ? null : this.state.error,
+        message: status === 'healthy' ? 'Backend is healthy' : this.state.message,
+        isChecking: status === 'healthy' ? false : this.state.isChecking,
       });
     });
   }
@@ -63,13 +65,23 @@ class BackendHealthMonitor {
 
     try {
       const healthy = await tauriBackendService.checkBackendHealth();
-      this.updateState({
-        status: healthy ? 'healthy' : 'unhealthy',
-        isChecking: false,
-        message: healthy ? 'Backend is healthy' : 'Backend is unavailable',
-        error: healthy ? null : 'Backend offline',
-        lastChecked: Date.now(),
-      });
+      if (healthy) {
+        this.updateState({
+          status: 'healthy',
+          isChecking: false,
+          message: 'Backend is healthy',
+          error: null,
+          lastChecked: Date.now(),
+        });
+      } else {
+        this.updateState({
+          status: 'unhealthy',
+          isChecking: false,
+          message: 'Backend is unavailable',
+          error: 'Backend offline',
+          lastChecked: Date.now(),
+        });
+      }
       return healthy;
     } catch (error) {
       console.error('[BackendHealthMonitor] Health check failed:', error);

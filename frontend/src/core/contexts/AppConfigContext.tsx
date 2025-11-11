@@ -144,8 +144,8 @@ export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
         const errorMessage = err?.response?.data?.message || err?.message || 'Unknown error occurred';
         setError(errorMessage);
         console.error(`[AppConfig] Failed to fetch app config after ${attempt + 1} attempts:`, err);
-        // On error, assume login is enabled (safe default)
-        setConfig({ enableLogin: true });
+        // Preserve existing config (initial default or previous fetch). If nothing is set, assume login enabled.
+        setConfig((current) => current ?? { enableLogin: true });
         setHasResolvedConfig(true);
         break;
       }
