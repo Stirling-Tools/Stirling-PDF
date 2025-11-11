@@ -106,7 +106,7 @@ export default function AdminFeaturesSection() {
       <Paper withBorder p="md" radius="md">
         <Stack gap="md">
           <Group justify="space-between" align="center">
-            <Text fw={600} size="sm">{t('admin.settings.features.serverCertificate', 'Server Certificate')}</Text>
+            <Text fw={600} size="sm">{t('admin.settings.features.serverCertificate.label', 'Server Certificate')}</Text>
             <Badge color="blue" size="sm">PRO</Badge>
           </Group>
 
@@ -116,7 +116,7 @@ export default function AdminFeaturesSection() {
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
-              <Text fw={500} size="sm">{t('admin.settings.features.serverCertificate.enabled', 'Enable Server Certificate')}</Text>
+              <Text fw={500} size="sm">{t('admin.settings.features.serverCertificate.enabled.label', 'Enable Server Certificate')}</Text>
               <Text size="xs" c="dimmed" mt={4}>
                 {t('admin.settings.features.serverCertificate.enabled.description', 'Enable server-side certificate for "Sign with Stirling-PDF" option')}
               </Text>
@@ -137,7 +137,7 @@ export default function AdminFeaturesSection() {
             <TextInput
               label={
                 <Group gap="xs">
-                  <span>{t('admin.settings.features.serverCertificate.organizationName', 'Organization Name')}</span>
+                  <span>{t('admin.settings.features.serverCertificate.organizationName.label', 'Organization Name')}</span>
                   <PendingBadge show={isFieldPending('serverCertificate.organizationName')} />
                 </Group>
               }
@@ -155,7 +155,7 @@ export default function AdminFeaturesSection() {
             <NumberInput
               label={
                 <Group gap="xs">
-                  <span>{t('admin.settings.features.serverCertificate.validity', 'Certificate Validity (days)')}</span>
+                  <span>{t('admin.settings.features.serverCertificate.validity.label', 'Certificate Validity (days)')}</span>
                   <PendingBadge show={isFieldPending('serverCertificate.validity')} />
                 </Group>
               }
@@ -172,7 +172,7 @@ export default function AdminFeaturesSection() {
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
-              <Text fw={500} size="sm">{t('admin.settings.features.serverCertificate.regenerateOnStartup', 'Regenerate on Startup')}</Text>
+              <Text fw={500} size="sm">{t('admin.settings.features.serverCertificate.regenerateOnStartup.label', 'Regenerate on Startup')}</Text>
               <Text size="xs" c="dimmed" mt={4}>
                 {t('admin.settings.features.serverCertificate.regenerateOnStartup.description', 'Generate new certificate on each application startup')}
               </Text>
