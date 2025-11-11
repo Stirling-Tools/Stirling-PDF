@@ -19,7 +19,7 @@ pub fn run() {
 
       // Scan args for PDF files (skip first arg which is the executable)
       for arg in args.iter().skip(1) {
-        if arg.ends_with(".pdf") && std::path::Path::new(arg).exists() {
+        if std::path::Path::new(arg).exists() {
           add_log(format!("📂 Forwarding file to existing instance: {}", arg));
 
           // Emit event to frontend (reusing the same event name for consistency)
