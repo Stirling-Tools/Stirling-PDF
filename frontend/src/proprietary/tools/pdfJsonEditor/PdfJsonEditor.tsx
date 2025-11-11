@@ -101,6 +101,7 @@ const PdfJsonEditor = ({ onComplete, onError }: BaseToolProps) => {
   const previewRenderingRef = useRef<Set<number>>(new Set());
   const pagePreviewsRef = useRef<Map<number, string>>(pagePreviews);
   const previewScaleRef = useRef<Map<number, number>>(new Map());
+  const cachedJobIdRef = useRef<string | null>(null);
 
   // Keep ref in sync with state for access in async callbacks
   useEffect(() => {
@@ -118,6 +119,7 @@ const PdfJsonEditor = ({ onComplete, onError }: BaseToolProps) => {
   useEffect(() => {
     pagePreviewsRef.current = pagePreviews;
   }, [pagePreviews]);
+
 
   useEffect(() => {
     return () => {
@@ -184,6 +186,24 @@ const PdfJsonEditor = ({ onComplete, onError }: BaseToolProps) => {
     }
     setHasVectorPreview(false);
   }, []);
+
+  const clearCachedJob = useCallback((jobId: string | null) => {
+    if (!jobId) {
+      return;
+    }
+    console.log(`[PdfJsonEditor] Cleaning up cached document for jobId: ${jobId}`);
+    apiClient.post(`/api/v1/convert/pdf/json/clear-cache/${jobId}`).catch((error) => {
+      console.warn('[PdfJsonEditor] Failed to clear cache:', error);
+    });
+  }, []);
+
+  useEffect(() => {
+    const previousJobId = cachedJobIdRef.current;
+    if (previousJobId && previousJobId !== cachedJobId) {
+      clearCachedJob(previousJobId);
+    }
+    cachedJobIdRef.current = cachedJobId;
+  }, [cachedJobId, clearCachedJob]);
 
   const initializePdfPreview = useCallback(
     async (file: File) => {
@@ -976,12 +996,13 @@ const PdfJsonEditor = ({ onComplete, onError }: BaseToolProps) => {
     [hasVectorPreview],
   );
 
-  // Re-group text when grouping mode changes
+  // Re-group text when grouping mode changes without forcing a full reload
   useEffect(() => {
-    if (loadedDocument) {
-      resetToDocument(loadedDocument, groupingMode);
+    const currentDocument = loadedDocumentRef.current;
+    if (currentDocument) {
+      resetToDocument(currentDocument, groupingMode);
     }
-  }, [groupingMode, loadedDocument, resetToDocument]);
+  }, [groupingMode, resetToDocument]);
 
   const viewData = useMemo<PdfJsonEditorViewData>(() => ({
     document: loadedDocument,
@@ -1089,19 +1110,13 @@ const PdfJsonEditor = ({ onComplete, onError }: BaseToolProps) => {
 
     return () => {
       // Clear backend cache if we were using lazy loading
-      if (cachedJobId) {
-        console.log(`[PdfJsonEditor] Cleaning up cached document for jobId: ${cachedJobId}`);
-        apiClient.post(`/api/v1/convert/pdf/json/clear-cache/${cachedJobId}`).catch((error) => {
-          console.warn('[PdfJsonEditor] Failed to clear cache:', error);
-        });
-      }
-
+      clearCachedJob(cachedJobIdRef.current);
       clearCustomWorkbenchViewData(VIEW_ID);
       unregisterCustomWorkbenchView(VIEW_ID);
       setLeftPanelView('toolPicker');
     };
   }, [
-    cachedJobId,
+    clearCachedJob,
     clearCustomWorkbenchViewData,
     registerCustomWorkbenchView,
     setCustomWorkbenchViewData,

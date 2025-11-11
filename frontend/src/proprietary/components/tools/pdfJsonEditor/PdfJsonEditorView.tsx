@@ -268,27 +268,6 @@ const analyzePageContentType = (groups: TextGroup[]): boolean => {
     avgWordsPerGroup > 12 ||
     longTextRatio > 0.4;
 
-  // Log detailed statistics
-  console.group(`📊 Page Content Analysis`);
-  console.log('📄 Overall Statistics:');
-  console.log(`  Total text groups: ${totalGroups}`);
-  console.log(`  Total words: ${totalWords}`);
-  console.log(`  Average words per group: ${avgWordsPerGroup.toFixed(2)}`);
-  console.log(`  Multi-line groups: ${multiLineGroups}`);
-  console.log(`  Long text groups (≥5 words or ≥30 chars): ${longTextGroups}`);
-  console.log(`  Long text ratio: ${(longTextRatio * 100).toFixed(1)}%`);
-  console.log('');
-  console.log('🔍 Detection Criteria:');
-  console.log(`  ✓ Multi-line groups ≥ 2 AND avg words > 8? ${multiLineGroups >= 2 && avgWordsPerGroup > 8 ? '✅ YES' : '❌ NO'} (multi-line: ${multiLineGroups}, avg: ${avgWordsPerGroup.toFixed(2)})`);
-  console.log(`  ✓ Avg words/group > 12? ${avgWordsPerGroup > 12 ? '✅ YES' : '❌ NO'} (current: ${avgWordsPerGroup.toFixed(2)})`);
-  console.log(`  ✓ Long text ratio > 40%? ${longTextRatio > 0.4 ? '✅ YES' : '❌ NO'} (current: ${(longTextRatio * 100).toFixed(1)}%)`);
-  console.log('');
-  console.log(`📋 Result: ${isParagraphPage ? '📝 PARAGRAPH PAGE' : '📄 SPARSE PAGE'}`);
-  console.log('');
-  console.log('📦 Individual Groups:');
-  console.table(groupDetails);
-  console.groupEnd();
-
   return isParagraphPage;
 };
 
