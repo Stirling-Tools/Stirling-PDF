@@ -31,6 +31,7 @@ function AppInitializer() {
   return null;
 }
 
+// Avoid requirement to have props which are required in app providers anyway
 type AppConfigProviderOverrides = Omit<AppConfigProviderProps, 'children' | 'retryOptions'>;
 
 export interface AppProvidersProps {

@@ -76,11 +76,11 @@ export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
   bootstrapMode = 'blocking',
   autoFetch = true,
 }) => {
-  const usesNonBlockingBootstrap = bootstrapMode === 'non-blocking';
+  const isBlockingMode = bootstrapMode === 'blocking';
   const [config, setConfig] = useState<AppConfig | null>(initialConfig);
   const [error, setError] = useState<string | null>(null);
   const [fetchCount, setFetchCount] = useState(0);
-  const [hasResolvedConfig, setHasResolvedConfig] = useState(Boolean(initialConfig) && usesNonBlockingBootstrap);
+  const [hasResolvedConfig, setHasResolvedConfig] = useState(Boolean(initialConfig) && !isBlockingMode);
   const [loading, setLoading] = useState(!hasResolvedConfig);
 
   const maxRetries = retryOptions?.maxRetries ?? 0;
@@ -93,7 +93,7 @@ export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
       return;
     }
 
-    const shouldBlockUI = !hasResolvedConfig || !usesNonBlockingBootstrap;
+    const shouldBlockUI = !hasResolvedConfig || isBlockingMode;
     if (shouldBlockUI) {
       setLoading(true);
     }
@@ -110,7 +110,7 @@ export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
         }
 
         // apiClient automatically adds JWT header if available via interceptors
-        const response = await apiClient.get<AppConfig>('/api/v1/config/app-config', usesNonBlockingBootstrap ? { suppressErrorToast: true } : undefined);
+        const response = await apiClient.get<AppConfig>('/api/v1/config/app-config', !isBlockingMode ? { suppressErrorToast: true } : undefined);
         const data = response.data;
 
         console.debug('[AppConfig] Config fetched successfully:', data);
@@ -152,7 +152,7 @@ export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
     }
 
     setLoading(false);
-  }, [fetchCount, hasResolvedConfig, usesNonBlockingBootstrap, maxRetries, initialDelay]);
+  }, [fetchCount, hasResolvedConfig, isBlockingMode, maxRetries, initialDelay]);
 
   useEffect(() => {
     // Always try to fetch config to check if login is disabled
