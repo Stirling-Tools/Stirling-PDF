@@ -140,7 +140,7 @@ const PageEditor = ({
   const initialDocument = useInitialPageDocument();
   const { document: mergedPdfDocument } = usePageDocument();
 
-  const { editedDocument, setEditedDocument, displayDocument } = useEditedDocumentState({
+  const { editedDocument, setEditedDocument, displayDocument, getEditedDocument } = useEditedDocumentState({
     initialDocument,
     mergedPdfDocument,
     reorderedPages,
@@ -204,7 +204,7 @@ const PageEditor = ({
     closePdf,
   } = usePageEditorCommands({
     displayDocument,
-    editedDocument,
+    getEditedDocument,
     setEditedDocument,
     splitPositions,
     setSplitPositions,

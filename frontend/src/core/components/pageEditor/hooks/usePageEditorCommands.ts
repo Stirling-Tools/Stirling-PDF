@@ -20,7 +20,7 @@ type FileSelectors = ReturnType<typeof useFileState>["selectors"];
 
 interface UsePageEditorCommandsParams {
   displayDocument: PDFDocument | null;
-  editedDocument: PDFDocument | null;
+  getEditedDocument: () => PDFDocument | null;
   setEditedDocument: React.Dispatch<React.SetStateAction<PDFDocument | null>>;
   splitPositions: Set<number>;
   setSplitPositions: React.Dispatch<React.SetStateAction<Set<number>>>;
@@ -38,7 +38,7 @@ interface UsePageEditorCommandsParams {
 
 export const usePageEditorCommands = ({
   displayDocument,
-  editedDocument,
+  getEditedDocument,
   setEditedDocument,
   splitPositions,
   setSplitPositions,
@@ -81,11 +81,12 @@ export const usePageEditorCommands = ({
   const createDeleteCommand = useCallback(
     (pageIds: string[]) => ({
       execute: () => {
-        if (!displayDocument) return;
+        const currentDocument = getEditedDocument();
+        if (!currentDocument) return;
 
         const pagesToDelete = pageIds
           .map((pageId) => {
-            const page = displayDocument.pages.find((p) => p.id === pageId);
+            const page = currentDocument.pages.find((p) => p.id === pageId);
             return page?.pageNumber || 0;
           })
           .filter((num) => num > 0);
@@ -93,11 +94,11 @@ export const usePageEditorCommands = ({
         if (pagesToDelete.length > 0) {
           const deleteCommand = new DeletePagesCommand(
             pagesToDelete,
-            () => displayDocument,
+            getEditedDocument,
             setEditedDocument,
             (pageNumbers: number[]) => {
-              const pageIds = getPageIdsFromNumbers(pageNumbers);
-              setSelectedPageIds(pageIds);
+              const updatedIds = getPageIdsFromNumbers(pageNumbers);
+              setSelectedPageIds(updatedIds);
             },
             () => splitPositions,
             setSplitPositions,
@@ -110,8 +111,8 @@ export const usePageEditorCommands = ({
     }),
     [
       closePdf,
-      displayDocument,
       executeCommandWithTracking,
+      getEditedDocument,
       getPageIdsFromNumbers,
       getPageNumbersFromIds,
       selectedPageIds,
@@ -159,7 +160,7 @@ export const usePageEditorCommands = ({
 
     const deleteCommand = new DeletePagesCommand(
       selectedPageNumbers,
-      () => displayDocument,
+      getEditedDocument,
       setEditedDocument,
       (pageNumbers: number[]) => {
         const pageIds = getPageIdsFromNumbers(pageNumbers);
@@ -175,6 +176,7 @@ export const usePageEditorCommands = ({
     closePdf,
     displayDocument,
     executeCommandWithTracking,
+    getEditedDocument,
     getPageIdsFromNumbers,
     getPageNumbersFromIds,
     selectedPageIds,
@@ -190,7 +192,7 @@ export const usePageEditorCommands = ({
 
       const deleteCommand = new DeletePagesCommand(
         [pageNumber],
-        () => displayDocument,
+        getEditedDocument,
         setEditedDocument,
         (pageNumbers: number[]) => {
           const pageIds = getPageIdsFromNumbers(pageNumbers);
@@ -205,7 +207,7 @@ export const usePageEditorCommands = ({
     },
     [
       closePdf,
-      displayDocument,
+      getEditedDocument,
       executeCommandWithTracking,
       getPageIdsFromNumbers,
       getPageNumbersFromIds,
@@ -274,13 +276,14 @@ export const usePageEditorCommands = ({
 
     const pageBreakCommand = new PageBreakCommand(
       selectedPageNumbers,
-      () => displayDocument,
+      getEditedDocument,
       setEditedDocument
     );
     executeCommandWithTracking(pageBreakCommand);
   }, [
     displayDocument,
     executeCommandWithTracking,
+    getEditedDocument,
     getPageNumbersFromIds,
     selectedPageIds,
     setEditedDocument,
@@ -294,10 +297,11 @@ export const usePageEditorCommands = ({
       insertAfterPage: number,
       isFromStorage?: boolean
     ) => {
-      if (!editedDocument || files.length === 0) return;
+      const workingDocument = getEditedDocument();
+      if (!workingDocument || files.length === 0) return;
 
       try {
-        const targetPage = editedDocument.pages.find(
+        const targetPage = workingDocument.pages.find(
           (p) => p.pageNumber === insertAfterPage
         );
         if (!targetPage) return;
@@ -342,12 +346,12 @@ export const usePageEditorCommands = ({
         }
 
         if (newPages.length > 0) {
-          const targetIndex = editedDocument.pages.findIndex(
+          const targetIndex = workingDocument.pages.findIndex(
             (p) => p.id === targetPage.id
           );
 
           if (targetIndex >= 0) {
-            const updatedPages = [...editedDocument.pages];
+            const updatedPages = [...workingDocument.pages];
             updatedPages.splice(targetIndex + 1, 0, ...newPages);
 
             updatedPages.forEach((page, index) => {
@@ -355,7 +359,7 @@ export const usePageEditorCommands = ({
             });
 
             setEditedDocument({
-              ...editedDocument,
+              ...workingDocument,
               pages: updatedPages,
             });
 
@@ -367,7 +371,7 @@ export const usePageEditorCommands = ({
       }
     },
     [
-      editedDocument,
+      getEditedDocument,
       actions,
       selectors,
       updateFileOrderFromPages,
@@ -391,7 +395,7 @@ export const usePageEditorCommands = ({
         sourcePageNumber,
         targetIndex,
         selectedPages,
-        () => displayDocument,
+        getEditedDocument,
         setEditedDocument,
         (newPages) => updateFileOrderFromPages(newPages)
       );
@@ -399,6 +403,7 @@ export const usePageEditorCommands = ({
     },
     [
       displayDocument,
+      getEditedDocument,
       executeCommandWithTracking,
       getPageNumbersFromIds,
       setEditedDocument,

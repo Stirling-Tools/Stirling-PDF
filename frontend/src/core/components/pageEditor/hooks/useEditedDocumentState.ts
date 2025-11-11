@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { FileId } from "@app/types/file";
 import { PDFDocument, PDFPage } from "@app/types/pageEditor";
@@ -21,6 +21,7 @@ export const useEditedDocumentState = ({
   updateCurrentPages,
 }: UseEditedDocumentStateParams) => {
   const [editedDocument, setEditedDocument] = useState<PDFDocument | null>(null);
+  const editedDocumentRef = useRef<PDFDocument | null>(null);
   const pagePositionCacheRef = useRef<Map<string, number>>(new Map());
   const pageNeighborCacheRef = useRef<Map<string, string | null>>(new Map());
 
@@ -45,6 +46,11 @@ export const useEditedDocumentState = ({
     clearReorderedPages();
   }, [reorderedPages, editedDocument, clearReorderedPages]);
 
+  // Keep ref synced so effects can read latest without re-running
+  useEffect(() => {
+    editedDocumentRef.current = editedDocument;
+  }, [editedDocument]);
+
   // Cache page positions to help future insertions preserve intent
   useEffect(() => {
     if (!editedDocument) return;
@@ -67,12 +73,13 @@ export const useEditedDocumentState = ({
 
   // Keep editedDocument in sync with out-of-band insert/remove events (e.g. uploads finishing)
   useEffect(() => {
-    if (!mergedPdfDocument || !editedDocument) return;
+    const currentEditedDocument = editedDocumentRef.current;
+    if (!mergedPdfDocument || !currentEditedDocument) return;
 
     const sourcePages = mergedPdfDocument.pages;
     const sourceIds = new Set(sourcePages.map((p) => p.id));
 
-    const prevIds = new Set(editedDocument.pages.map((p) => p.id));
+    const prevIds = new Set(currentEditedDocument.pages.map((p) => p.id));
     const newPages: PDFPage[] = [];
     for (const page of sourcePages) {
       if (!prevIds.has(page.id)) {
@@ -81,9 +88,14 @@ export const useEditedDocumentState = ({
     }
 
     const hasAdditions = newPages.length > 0;
+    const isEphemeralPage = (page: PDFPage) => {
+      // Blank pages and placeholders are editor-local pages that don't exist in the source document.
+      return Boolean(page.isBlankPage || page.isPlaceholder);
+    };
+
     let hasRemovals = false;
-    for (const page of editedDocument.pages) {
-      if (!sourceIds.has(page.id)) {
+    for (const page of currentEditedDocument.pages) {
+      if (!sourceIds.has(page.id) && !isEphemeralPage(page)) {
         hasRemovals = true;
         break;
       }
@@ -105,7 +117,7 @@ export const useEditedDocumentState = ({
       const nextInsertIndexByFile = new Map(placeholderPositions);
 
       if (hasRemovals) {
-        pages = pages.filter((page) => sourceIds.has(page.id));
+        pages = pages.filter((page) => sourceIds.has(page.id) || isEphemeralPage(page));
       }
 
       if (hasAdditions) {
@@ -164,9 +176,14 @@ export const useEditedDocumentState = ({
       pages = pages.map((page, index) => ({ ...page, pageNumber: index + 1 }));
       return { ...prev, pages };
     });
-  }, [mergedPdfDocument, editedDocument, fileOrderKey, mergedDocSignature]);
+  }, [mergedPdfDocument, fileOrderKey, mergedDocSignature]);
 
   const displayDocument = editedDocument || initialDocument;
+
+  const getEditedDocument = useCallback(
+    () => editedDocumentRef.current,
+    []
+  );
 
   useEffect(() => {
     updateCurrentPages(displayDocument?.pages ?? null);
@@ -176,6 +193,7 @@ export const useEditedDocumentState = ({
     editedDocument,
     setEditedDocument,
     displayDocument,
+    getEditedDocument,
   };
 };
 

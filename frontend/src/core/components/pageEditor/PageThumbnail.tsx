@@ -80,6 +80,8 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
   zoomLevel = 1.0,
   justMoved = false,
 }: PageThumbnailProps) => {
+  const pageIndex = page.pageNumber - 1;
+
   const [isMouseDown, setIsMouseDown] = useState(false);
   const [mouseStartPos, setMouseStartPos] = useState<{x: number, y: number} | null>(null);
   const [isHovered, setIsHovered] = useState(false);
@@ -193,13 +195,13 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
     e.stopPropagation();
 
     // Create a command to toggle split at this position
-    const command = createSplitCommand(index);
+    const command = createSplitCommand(pageIndex);
     onExecuteCommand(command);
 
-    const hasSplit = splitPositions.has(index);
+    const hasSplit = splitPositions.has(pageIndex);
     const action = hasSplit ? 'removed' : 'added';
-    onSetStatus(`Split marker ${action} after position ${index + 1}`);
-  }, [index, splitPositions, onExecuteCommand, onSetStatus, createSplitCommand]);
+    onSetStatus(`Split marker ${action} after position ${pageIndex + 1}`);
+  }, [pageIndex, splitPositions, onExecuteCommand, onSetStatus, createSplitCommand]);
 
   const handleInsertFileAfter = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
@@ -282,14 +284,14 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
       label: 'Move Left',
       onClick: (e) => {
         e.stopPropagation();
-        if (index > 0 && !movingPage && !isAnimating) {
+        if (pageIndex > 0 && !movingPage && !isAnimating) {
           onSetMovingPage(page.pageNumber);
-          onReorderPages(page.pageNumber, index - 1);
+          onReorderPages(page.pageNumber, pageIndex - 1);
           setTimeout(() => onSetMovingPage(null), 650);
           onSetStatus(`Moved page ${page.pageNumber} left`);
         }
       },
-      disabled: index === 0
+      disabled: pageIndex === 0
     },
     {
       id: 'move-right',
@@ -297,14 +299,17 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
       label: 'Move Right',
       onClick: (e) => {
         e.stopPropagation();
-        if (index < totalPages - 1 && !movingPage && !isAnimating) {
+        if (pageIndex < totalPages - 1 && !movingPage && !isAnimating) {
           onSetMovingPage(page.pageNumber);
-          onReorderPages(page.pageNumber, index + 1);
+          // ReorderPagesCommand expects target index relative to the original array.
+          // When moving toward the right (higher index), provide desiredIndex + 1
+          // so the command's internal adjustment (targetIndex - 1) lands correctly.
+          onReorderPages(page.pageNumber, pageIndex + 2);
           setTimeout(() => onSetMovingPage(null), 650);
           onSetStatus(`Moved page ${page.pageNumber} right`);
         }
       },
-      disabled: index === totalPages - 1
+      disabled: pageIndex === totalPages - 1
     },
     {
       id: 'rotate-left',
@@ -330,7 +335,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
       icon: <ContentCutIcon style={{ fontSize: 20 }} />,
       label: 'Split After',
       onClick: handleSplit,
-      hidden: index >= totalPages - 1,
+      hidden: pageIndex >= totalPages - 1,
     },
     {
       id: 'insert',
@@ -338,7 +343,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
       label: 'Insert File After',
       onClick: handleInsertFileAfter,
     }
-  ], [index, totalPages, movingPage, isAnimating, page.pageNumber, handleRotateLeft, handleRotateRight, handleDelete, handleSplit, handleInsertFileAfter, onReorderPages, onSetMovingPage, onSetStatus]);
+  ], [pageIndex, totalPages, movingPage, isAnimating, page.pageNumber, handleRotateLeft, handleRotateRight, handleDelete, handleSplit, handleInsertFileAfter, onReorderPages, onSetMovingPage, onSetStatus]);
 
   return (
     <div
@@ -444,6 +449,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
           ) : thumbnailUrl ? (
             <PrivateContent>
               <img
+                className="ph-no-capture"
                 src={thumbnailUrl}
                 alt={`Page ${page.pageNumber}`}
                 draggable={false}
