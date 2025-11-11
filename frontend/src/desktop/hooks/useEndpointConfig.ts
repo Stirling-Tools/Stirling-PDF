@@ -131,6 +131,7 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
   error: string | null;
   refetch: () => Promise<void>;
 } {
+  const { t } = useTranslation();
   const [endpointStatus, setEndpointStatus] = useState<Record<string, boolean>>(() => {
     if (!endpoints || endpoints.length === 0) return {};
     return endpoints.reduce((acc, endpointName) => {
@@ -249,4 +250,3 @@ export function useEndpointConfig(): EndpointConfig {
 
   return { backendUrl };
 }
-  const { t } = useTranslation();

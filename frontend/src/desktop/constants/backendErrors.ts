@@ -1,3 +1,5 @@
+import i18n from '@app/i18n';
+
 export const BACKEND_NOT_READY_CODE = 'BACKEND_NOT_READY' as const;
 
 export interface BackendNotReadyError extends Error {
@@ -5,7 +7,7 @@ export interface BackendNotReadyError extends Error {
 }
 
 export function createBackendNotReadyError(): BackendNotReadyError {
-  return Object.assign(new Error('Backend is not ready yet'), {
+  return Object.assign(new Error(i18n.t('backendHealth.starting', 'Backend starting up...')), {
     code: BACKEND_NOT_READY_CODE,
   });
 }

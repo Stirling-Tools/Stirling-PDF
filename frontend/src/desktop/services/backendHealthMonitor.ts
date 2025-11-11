@@ -1,3 +1,4 @@
+import i18n from '@app/i18n';
 import { tauriBackendService } from '@app/services/tauriBackendService';
 import type { BackendHealthState } from '@app/types/backendHealth';
 
@@ -22,7 +23,9 @@ class BackendHealthMonitor {
       this.updateState({
         status,
         error: status === 'healthy' ? null : this.state.error,
-        message: status === 'healthy' ? 'Backend is healthy' : this.state.message,
+        message: status === 'healthy'
+          ? i18n.t('backendHealth.online', 'Backend Online')
+          : this.state.message ?? i18n.t('backendHealth.offline', 'Backend Offline'),
         isChecking: status === 'healthy' ? false : this.state.isChecking,
       });
     });
@@ -69,7 +72,7 @@ class BackendHealthMonitor {
         this.updateState({
           status: 'healthy',
           isChecking: false,
-          message: 'Backend is healthy',
+          message: i18n.t('backendHealth.online', 'Backend Online'),
           error: null,
           lastChecked: Date.now(),
         });
@@ -77,8 +80,8 @@ class BackendHealthMonitor {
         this.updateState({
           status: 'unhealthy',
           isChecking: false,
-          message: 'Backend is unavailable',
-          error: 'Backend offline',
+          message: i18n.t('backendHealth.offline', 'Backend Offline'),
+          error: i18n.t('backendHealth.offline', 'Backend Offline'),
           lastChecked: Date.now(),
         });
       }
