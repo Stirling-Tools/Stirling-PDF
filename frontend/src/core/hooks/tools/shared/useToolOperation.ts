@@ -12,6 +12,7 @@ import { ResponseHandler } from '@app/utils/toolResponseProcessor';
 import { createChildStub, generateProcessedFileMetadata } from '@app/contexts/file/fileActions';
 import { ToolOperation } from '@app/types/file';
 import { ToolId } from '@app/types/toolId';
+import { ensureBackendReady } from '@app/services/backendReadinessGuard';
 
 // Re-export for backwards compatibility
 export type { ProcessingProgress, ResponseHandler };
@@ -184,6 +185,12 @@ export const useToolOperation = <TParams>(
     const validFiles = selectedFiles.filter(file => (file as any)?.size > 0);
     if (validFiles.length === 0) {
       actions.setError(t('noValidFiles', 'No valid files to process'));
+      return;
+    }
+
+    const backendReady = await ensureBackendReady();
+    if (!backendReady) {
+      actions.setError(t('backendHealth.offline', 'Embedded backend is offline. Please try again shortly.'));
       return;
     }
 
