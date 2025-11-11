@@ -67,15 +67,9 @@ class TauriFileOpenService implements FileOpenService {
             return;
           }
 
-          // Listen for macOS native file open events
-          const unlistenMacOS = await listen('macos://open-file', (event) => {
-            console.log('📂 macOS native file open event:', event.payload);
-            callback(event.payload as string);
-          });
-
-          // Listen for fallback file open events
-          const unlistenFallback = await listen('file-opened', (event) => {
-            console.log('📂 Fallback file open event:', event.payload);
+          // Listen for unified file open events (all platforms)
+          const unlisten = await listen('file-opened', (event) => {
+            console.log('📂 File open event received:', event.payload);
             callback(event.payload as string);
           });
 
@@ -83,8 +77,7 @@ class TauriFileOpenService implements FileOpenService {
           if (!isCleanedUp) {
             cleanup = () => {
               try {
-                unlistenMacOS();
-                unlistenFallback();
+                unlisten();
                 console.log('✅ File event listeners cleaned up');
               } catch (error) {
                 console.error('❌ Error during file event cleanup:', error);
@@ -93,8 +86,7 @@ class TauriFileOpenService implements FileOpenService {
           } else {
             // Clean up immediately if cleanup was called during setup
             try {
-              unlistenMacOS();
-              unlistenFallback();
+              unlisten();
             } catch (error) {
               console.error('❌ Error during immediate cleanup:', error);
             }

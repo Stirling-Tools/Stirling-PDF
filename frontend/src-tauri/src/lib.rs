@@ -1,6 +1,4 @@
-use tauri::{RunEvent, WindowEvent};
-#[cfg(target_os = "macos")]
-use tauri::Emitter;
+use tauri::{RunEvent, WindowEvent, Emitter, Manager};
 
 mod utils;
 mod commands;
@@ -15,6 +13,26 @@ pub fn run() {
   tauri::Builder::default()
     .plugin(tauri_plugin_shell::init())
     .plugin(tauri_plugin_fs::init())
+    .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
+      // This callback runs when a second instance tries to start
+      add_log(format!("📂 Second instance detected with args: {:?}", args));
+
+      // Scan args for PDF files (skip first arg which is the executable)
+      for arg in args.iter().skip(1) {
+        if arg.ends_with(".pdf") && std::path::Path::new(arg).exists() {
+          add_log(format!("📂 Forwarding file to existing instance: {}", arg));
+
+          // Emit event to frontend (reusing the same event name for consistency)
+          let _ = app.emit("file-opened", arg.clone());
+
+          // Bring the existing window to front
+          if let Some(window) = app.get_webview_window("main") {
+            let _ = window.set_focus();
+            let _ = window.unminimize();
+          }
+        }
+      }
+    }))
     .setup(|_app| {
       add_log("🚀 Tauri app setup started".to_string());
       add_log("🔍 DEBUG: Setup completed".to_string());
@@ -46,7 +64,8 @@ pub fn run() {
               if file_path.ends_with(".pdf") {
                 add_log(format!("📂 Processing opened PDF: {}", file_path));
                 set_opened_file(file_path.to_string());
-                let _ = app_handle.emit("macos://open-file", file_path.to_string());
+                // Use unified event name for consistency across platforms
+                let _ = app_handle.emit("file-opened", file_path.to_string());
               }
             }
           }
