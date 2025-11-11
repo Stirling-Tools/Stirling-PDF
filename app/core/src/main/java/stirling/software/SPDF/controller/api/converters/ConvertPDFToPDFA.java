@@ -1382,7 +1382,7 @@ public class ConvertPDFToPDFA {
                             normalizedPdf.toAbsolutePath().toString());
 
             ProcessExecutorResult result =
-                    ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT)
+                    ProcessExecutor.getInstance(ProcessExecutor.Processes.QPDF)
                             .runCommandWithOutputHandling(command);
 
             if (result.getRc() == 0 && Files.exists(normalizedPdf)) {
