@@ -8,4 +8,8 @@ public interface UserServiceInterface {
     long getTotalUsersCount();
 
     boolean isCurrentUserAdmin();
+
+    boolean isCurrentUserFirstLogin();
+
+    boolean hasUsers();
 }
