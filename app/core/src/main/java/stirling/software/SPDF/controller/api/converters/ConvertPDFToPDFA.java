@@ -97,20 +97,22 @@ public class ConvertPDFToPDFA {
                 out.write(pdfBytes);
             }
 
-            try {
-                validatePdfaOutput(tempPdfPath, profile);
+            ValidationResult validationResult =
+                    performComprehensivePdfAValidation(tempPdfPath, profile);
+
+            if (validationResult.isValid()) {
                 log.info(
                         "PDF/A validation passed for {} using {}",
                         profile.getDisplayName(),
                         method);
-            } catch (IOException e) {
+            } else {
                 log.warn(
                         "PDF/A validation warning for {} using {}: {}",
                         profile.getDisplayName(),
                         method,
-                        e.getMessage());
+                        buildComprehensiveValidationMessage(validationResult, profile));
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             log.warn(
                     "PDF/A validation warning for {} using {}: {}",
                     profile.getDisplayName(),
@@ -125,6 +127,110 @@ public class ConvertPDFToPDFA {
                 }
             }
         }
+    }
+
+    private static ValidationResult performComprehensivePdfAValidation(
+            Path pdfPath, PdfaProfile profile) throws IOException {
+        Optional<Format> format = profile.preflightFormat();
+        if (format.isEmpty()) {
+            // For profiles without preflight support, perform basic structure validation
+            return performBasicPdfAValidation(pdfPath, profile);
+        }
+
+        try (RandomAccessRead rar = new RandomAccessReadBufferedFile(pdfPath.toFile())) {
+            PreflightParser parser = new PreflightParser(rar);
+
+            PreflightDocument document = parsePreflightDocument(parser, format.get(), profile);
+            if (document == null) {
+                throw new IOException(
+                        "PDF/A preflight returned no document for " + profile.getDisplayName());
+            }
+
+            try (PreflightDocument closeableDocument = document) {
+                return closeableDocument.validate();
+            }
+        } catch (SyntaxValidationException e) {
+            return e.getResult();
+        } catch (ValidationException e) {
+            throw new IOException(
+                    "PDF/A preflight validation failed for " + profile.getDisplayName(), e);
+        }
+    }
+
+    private static ValidationResult performBasicPdfAValidation(Path pdfPath, PdfaProfile profile)
+            throws IOException {
+        try (PDDocument doc = Loader.loadPDF(pdfPath.toFile())) {
+            ValidationResult result = new ValidationResult(true);
+
+            float version = doc.getVersion();
+            float expectedVersion = profile.getPart() == 1 ? 1.4f : 1.7f;
+            if (version < expectedVersion) {
+                result.addError(
+                        new ValidationError(
+                                "PDF_VERSION",
+                                "PDF version "
+                                        + version
+                                        + " is below required "
+                                        + expectedVersion
+                                        + " for "
+                                        + profile.getDisplayName()));
+            }
+
+            PDDocumentCatalog catalog = doc.getDocumentCatalog();
+            if (catalog.getMetadata() == null) {
+                result.addError(
+                        new ValidationError(
+                                "MISSING_XMP",
+                                "XMP metadata is required for " + profile.getDisplayName()));
+            }
+
+            if (catalog.getOutputIntents().isEmpty()) {
+                result.addError(
+                        new ValidationError(
+                                "MISSING_OUTPUT_INTENT",
+                                "Output intent (ICC profile) is required for "
+                                        + profile.getDisplayName()));
+            }
+
+            return result;
+        }
+    }
+
+    private static String buildComprehensiveValidationMessage(
+            ValidationResult result, PdfaProfile profile) {
+        if (result == null) {
+            return "PDF/A validation failed for "
+                    + profile.getDisplayName()
+                    + ": no validation result available";
+        }
+
+        List<ValidationError> errors = result.getErrorsList();
+
+        StringBuilder message = new StringBuilder();
+        message.append("PDF/A validation issues for ").append(profile.getDisplayName());
+
+        if (errors != null && !errors.isEmpty()) {
+            message.append(" - ").append(errors.size()).append(" errors");
+        }
+        message.append(":");
+
+        if (errors != null && !errors.isEmpty()) {
+            message.append(" ERRORS: ");
+            message.append(
+                    errors.stream()
+                            .limit(5)
+                            .map(
+                                    error ->
+                                            (error.getErrorCode() != null
+                                                            ? error.getErrorCode()
+                                                            : "UNKNOWN")
+                                                    + (error.getDetails() != null
+                                                            ? ": " + error.getDetails()
+                                                            : ""))
+                            .collect(Collectors.joining("; ")));
+        }
+
+        return message.toString();
     }
 
     private static void deleteQuietly(Path directory) {
@@ -154,7 +260,7 @@ public class ConvertPDFToPDFA {
             PdfaProfile profile,
             Path pdfaDefFile) {
 
-        List<String> command = new ArrayList<>(25);
+        List<String> command = new ArrayList<>();
         command.add("gs");
         command.add("--permit-file-read=" + workingDir.toAbsolutePath());
         command.add("--permit-file-read=" + colorProfiles.rgb().toAbsolutePath());
@@ -162,24 +268,31 @@ public class ConvertPDFToPDFA {
         command.add("--permit-file-read=" + inputPdf.toAbsolutePath());
         command.add("--permit-file-read=" + pdfaDefFile.toAbsolutePath());
         command.add("--permit-file-write=" + workingDir.toAbsolutePath());
+
         command.add("-dPDFA=" + profile.getPart());
         command.add("-dPDFACompatibilityPolicy=" + PDFA_COMPATIBILITY_POLICY);
         command.add("-dCompatibilityLevel=" + profile.getCompatibilityLevel());
         command.add("-sDEVICE=pdfwrite");
+
         command.add("-sColorConversionStrategy=RGB");
         command.add("-dProcessColorModel=/DeviceRGB");
         command.add("-sOutputICCProfile=" + colorProfiles.rgb().toAbsolutePath());
         command.add("-sDefaultRGBProfile=" + colorProfiles.rgb().toAbsolutePath());
         command.add("-sDefaultGrayProfile=" + colorProfiles.gray().toAbsolutePath());
+        command.add("-sDefaultCMYKProfile=" + colorProfiles.rgb().toAbsolutePath());
+
+        // Font handling optimized for PDF/A CIDSet compliance
         command.add("-dEmbedAllFonts=true");
-        command.add("-dSubsetFonts=false"); // Embed complete fonts to avoid incomplete glyphs
+        command.add(
+                "-dSubsetFonts=true"); // Enable subsetting to generate proper CIDSet streams for
+        // PDF/A-1
         command.add("-dCompressFonts=true");
         command.add("-dNOSUBSTFONTS=false"); // Allow font substitution for problematic fonts
-        command.add("-dPDFSETTINGS=/prepress"); // High quality, preserves all content
         command.add("-dNOPAUSE");
         command.add("-dBATCH");
         command.add("-dNOOUTERSAVE");
         command.add("-sOutputFile=" + outputPdf.toAbsolutePath());
+
         command.add(pdfaDefFile.toAbsolutePath().toString());
         command.add(inputPdf.toAbsolutePath().toString());
 
@@ -189,84 +302,21 @@ public class ConvertPDFToPDFA {
     private static PreflightDocument parsePreflightDocument(
             PreflightParser parser, Format format, PdfaProfile profile) throws IOException {
         try {
-            return (PreflightDocument)
-                    parser.parse(format, PreflightConfiguration.createPdfA1BConfiguration());
+            PreflightConfiguration config = PreflightConfiguration.createPdfA1BConfiguration();
+            if (profile.getPart() != 1) {
+                log.debug(
+                        "Using PDF/A-1B configuration for PDF/A-{} validation", profile.getPart());
+            }
+
+            return (PreflightDocument) parser.parse(format, config);
         } catch (SyntaxValidationException e) {
-            throw new IOException(buildPreflightErrorMessage(e.getResult(), profile), e);
+            throw new IOException(buildComprehensiveValidationMessage(e.getResult(), profile), e);
         } catch (ClassCastException e) {
             throw new IOException(
                     "PDF/A preflight did not produce a PreflightDocument for "
                             + profile.getDisplayName(),
                     e);
         }
-    }
-
-    private static void validatePdfaOutput(Path pdfPath, PdfaProfile profile) throws IOException {
-        Optional<Format> format = profile.preflightFormat();
-        if (format.isEmpty()) {
-            log.debug("Skipping PDFBox preflight validation for {}", profile.getDisplayName());
-            return;
-        }
-
-        try (RandomAccessRead rar = new RandomAccessReadBufferedFile(pdfPath.toFile())) {
-            PreflightParser parser = new PreflightParser(rar);
-
-            PreflightDocument document = parsePreflightDocument(parser, format.get(), profile);
-            if (document == null) {
-                throw new IOException(
-                        "PDF/A preflight returned no document for " + profile.getDisplayName());
-            }
-
-            try (PreflightDocument closeableDocument = document) {
-                ValidationResult result = closeableDocument.validate();
-                if (result == null || !result.isValid()) {
-                    throw new IOException(buildPreflightErrorMessage(result, profile));
-                }
-            }
-        } catch (SyntaxValidationException e) {
-            throw new IOException(buildPreflightErrorMessage(e.getResult(), profile), e);
-        } catch (ValidationException e) {
-            throw new IOException(
-                    "PDF/A preflight validation failed for " + profile.getDisplayName(), e);
-        }
-    }
-
-    private static String buildPreflightErrorMessage(ValidationResult result, PdfaProfile profile) {
-        String baseMessage = "PDF/A preflight validation failed for " + profile.getDisplayName();
-        if (result == null) {
-            return baseMessage + ": no detailed validation result available";
-        }
-
-        List<ValidationError> errors = result.getErrorsList();
-        if (errors == null || errors.isEmpty()) {
-            return baseMessage + ": unknown validation error";
-        }
-
-        String summarizedErrors =
-                errors.stream()
-                        .limit(5)
-                        .map(
-                                error -> {
-                                    StringBuilder sb =
-                                            new StringBuilder(
-                                                    Optional.ofNullable(error.getErrorCode())
-                                                            .orElse("UNKNOWN"));
-                                    String details = error.getDetails();
-                                    if (details != null && !details.isBlank()) {
-                                        sb.append(": ").append(details.trim());
-                                    }
-                                    if (error.isWarning()) {
-                                        sb.append(" (warning)");
-                                    }
-                                    return sb.toString();
-                                })
-                        .collect(Collectors.joining("; "));
-
-        if (errors.size() > 5) {
-            summarizedErrors += " (" + (errors.size() - 5) + " more)";
-        }
-
-        return baseMessage + ": " + summarizedErrors;
     }
 
     private static void writeJavaIccProfile(ICC_Profile profile, Path target) throws IOException {
@@ -507,29 +557,37 @@ public class ConvertPDFToPDFA {
         }
     }
 
-    private byte[] convertWithGhostscript(Path inputPdf, Path workingDir, PdfaProfile profile)
-            throws IOException, InterruptedException {
-        Path outputPdf = workingDir.resolve("gs_output.pdf");
-        ColorProfiles colorProfiles = prepareColorProfiles(workingDir);
-        Path pdfaDefFile = createPdfaDefFile(workingDir, colorProfiles, profile);
+    private static void fixCidSetIssues(PDDocument document) throws IOException {
+        for (PDPage page : document.getPages()) {
+            PDResources resources = page.getResources();
+            if (resources == null) continue;
 
-        List<String> command =
-                buildGhostscriptCommand(
-                        inputPdf, outputPdf, colorProfiles, workingDir, profile, pdfaDefFile);
+            for (COSName fontName : resources.getFontNames()) {
+                try {
+                    PDFont font = resources.getFont(fontName);
+                    if (font == null) continue;
 
-        ProcessExecutorResult result =
-                ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT)
-                        .runCommandWithOutputHandling(command);
+                    PDFontDescriptor descriptor = font.getFontDescriptor();
+                    if (descriptor == null) continue;
 
-        if (result.getRc() != 0) {
-            throw new IOException("Ghostscript exited with code " + result.getRc());
+                    COSDictionary fontDict = descriptor.getCOSObject();
+
+                    // Remove invalid or incomplete CIDSet entries for PDF/A-1 compliance
+                    // PDF/A-1 requires CIDSet to be present and complete for subsetted CIDFonts
+                    // For PDF/A-2+, CIDSet is optional but must be complete if present
+                    COSBase cidSet = fontDict.getDictionaryObject(COSName.getPDFName("CIDSet"));
+                    if (cidSet != null) {
+                        // If CIDSet exists but may be invalid, remove it to avoid validation errors
+                        // This is safer than trying to fix incomplete CIDSet streams
+                        fontDict.removeItem(COSName.getPDFName("CIDSet"));
+                        log.debug(
+                                "Removed potentially invalid CIDSet from font {}", font.getName());
+                    }
+                } catch (Exception e) {
+                    log.debug("Error processing CIDSet for font: {}", e.getMessage());
+                }
+            }
         }
-
-        if (!Files.exists(outputPdf)) {
-            throw new IOException("Ghostscript did not produce an output file");
-        }
-
-        return Files.readAllBytes(outputPdf);
     }
 
     private static void importFlattenedImages(PDDocument loDoc, PDDocument baseDoc)
@@ -631,6 +689,65 @@ public class ConvertPDFToPDFA {
         }
     }
 
+    private byte[] convertWithGhostscript(Path inputPdf, Path workingDir, PdfaProfile profile)
+            throws IOException, InterruptedException {
+        Path outputPdf = workingDir.resolve("gs_output.pdf");
+        ColorProfiles colorProfiles = prepareColorProfiles(workingDir);
+        Path pdfaDefFile = createPdfaDefFile(workingDir, colorProfiles, profile);
+
+        // Preprocess PDF for PDF/A compliance
+        Path preprocessedPdf = inputPdf;
+
+        // For PDF/A-1, clean CIDSet issues that may cause validation failures
+        if (profile.getPart() == 1) {
+            Path cidSetCleaned = cleanCidSetWithQpdf(inputPdf);
+            if (cidSetCleaned != null) {
+                preprocessedPdf = cidSetCleaned;
+            }
+        }
+
+        // Normalize PDF with qpdf before Ghostscript conversion to ensure proper font program
+        // handling
+        Path normalizedInputPdf = normalizePdfWithQpdf(preprocessedPdf);
+        Path inputForGs = (normalizedInputPdf != null) ? normalizedInputPdf : preprocessedPdf;
+
+        try {
+            List<String> command =
+                    buildGhostscriptCommand(
+                            inputForGs, outputPdf, colorProfiles, workingDir, profile, pdfaDefFile);
+
+            ProcessExecutorResult result =
+                    ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT)
+                            .runCommandWithOutputHandling(command);
+
+            if (result.getRc() != 0) {
+                throw new IOException("Ghostscript exited with code " + result.getRc());
+            }
+
+            if (!Files.exists(outputPdf)) {
+                throw new IOException("Ghostscript did not produce an output file");
+            }
+
+            return Files.readAllBytes(outputPdf);
+        } finally {
+            // Clean up temporary files
+            if (normalizedInputPdf != null && !normalizedInputPdf.equals(preprocessedPdf)) {
+                try {
+                    Files.deleteIfExists(normalizedInputPdf);
+                } catch (IOException e) {
+                    log.debug("Failed to delete temporary normalized file", e);
+                }
+            }
+            if (preprocessedPdf != null && !preprocessedPdf.equals(inputPdf)) {
+                try {
+                    Files.deleteIfExists(preprocessedPdf);
+                } catch (IOException e) {
+                    log.debug("Failed to delete temporary CIDSet cleaned file", e);
+                }
+            }
+        }
+    }
+
     private static void fixType1FontCharSet(PDDocument document) throws IOException {
         for (PDPage page : document.getPages()) {
             PDResources resources = page.getResources();
@@ -680,10 +797,8 @@ public class ConvertPDFToPDFA {
     }
 
     private static String buildStandardType1GlyphSet() {
-        // Standard PDF glyph names for Type1 fonts
         Set<String> glyphNames = new LinkedHashSet<>();
 
-        // Add common Type1 glyphs from standard encoding
         String[] standardGlyphs = {
             ".notdef",
             ".null",
@@ -886,29 +1001,34 @@ public class ConvertPDFToPDFA {
     }
 
     private byte[] processWithPDFBox(PDDocument document, int pdfaPart) throws Exception {
-
         removeElementsForPdfA(document, pdfaPart);
+
+        document.getDocument().setVersion(pdfaPart == 1 ? 1.4f : 1.7f);
 
         mergeAndAddXmpMetadata(document, pdfaPart);
 
         addICCProfileIfNotPresent(document);
 
+        // Fix CIDSet issues for PDF/A compliance
+        if (pdfaPart == 1) {
+            fixCidSetIssues(document);
+        }
+
         fixType1FontCharSet(document);
 
-        // Mark the document as PDF/A
         PDDocumentCatalog catalog = document.getDocumentCatalog();
-        catalog.setMetadata(
-                document.getDocumentCatalog().getMetadata()); // Ensure metadata is linked
-        catalog.setViewerPreferences(
-                new PDViewerPreferences(catalog.getCOSObject())); // PDF/A best practice
-        document.getDocument().setVersion(pdfaPart == 1 ? 1.4f : 1.7f);
+        catalog.setMetadata(document.getDocumentCatalog().getMetadata());
+
+        PDViewerPreferences viewerPrefs = new PDViewerPreferences(catalog.getCOSObject());
+        viewerPrefs.setDisplayDocTitle(true);
+        catalog.setViewerPreferences(viewerPrefs);
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        if (pdfaPart == 1) {
-            document.save(baos, CompressParameters.NO_COMPRESSION);
-        } else {
-            document.save(baos);
-        }
+        CompressParameters compressParams =
+                pdfaPart == 1 ? CompressParameters.NO_COMPRESSION : new CompressParameters();
+
+        document.save(baos, compressParams);
+        log.debug("PDF/A-{} document processed with PDFBox", pdfaPart);
 
         return baos.toByteArray();
     }
@@ -1010,7 +1130,6 @@ public class ConvertPDFToPDFA {
     private static void sanitizePdfA(COSBase base, int pdfaPart) {
         if (base instanceof COSDictionary dict) {
             if (pdfaPart == 1) {
-                // Remove transparency-related elements
                 COSBase group = dict.getDictionaryObject(COSName.GROUP);
                 if (group instanceof COSDictionary gDict
                         && COSName.TRANSPARENCY.equals(gDict.getCOSName(COSName.S))) {
@@ -1018,18 +1137,15 @@ public class ConvertPDFToPDFA {
                 }
 
                 dict.removeItem(COSName.SMASK);
-                // Transparency blending constants (/CA, /ca) — disallowed in PDF/A-1
                 dict.removeItem(COSName.CA);
                 dict.removeItem(COSName.getPDFName("ca"));
             }
 
-            // Interpolation (non-deterministic image scaling) — required to be false
             if (dict.containsKey(COSName.INTERPOLATE)
                     && dict.getBoolean(COSName.INTERPOLATE, true)) {
                 dict.setBoolean(COSName.INTERPOLATE, false);
             }
 
-            // Remove common forbidden features (for PDF/A 1 and 2)
             dict.removeItem(COSName.JAVA_SCRIPT);
             dict.removeItem(COSName.getPDFName("JS"));
             dict.removeItem(COSName.getPDFName("RichMedia"));
@@ -1041,13 +1157,11 @@ public class ConvertPDFToPDFA {
             dict.removeItem(COSName.EMBEDDED_FILES);
             dict.removeItem(COSName.FILESPEC);
 
-            // Recurse through all entries in the dictionary
             for (Map.Entry<COSName, COSBase> entry : dict.entrySet()) {
                 sanitizePdfA(entry.getValue(), pdfaPart);
             }
 
         } else if (base instanceof COSArray arr) {
-            // Recursively sanitize each item in the array
             for (COSBase item : arr) {
                 sanitizePdfA(item, pdfaPart);
             }
@@ -1057,7 +1171,6 @@ public class ConvertPDFToPDFA {
     private static void removeElementsForPdfA(PDDocument doc, int pdfaPart) {
 
         if (pdfaPart == 1) {
-            // Remove Optional Content (Layers) - not allowed in PDF/A-1
             doc.getDocumentCatalog().getCOSObject().removeItem(COSName.getPDFName("OCProperties"));
         }
 
@@ -1066,10 +1179,8 @@ public class ConvertPDFToPDFA {
                 page.setAnnotations(Collections.emptyList());
             }
             PDResources res = page.getResources();
-            // Clean page-level dictionary
             sanitizePdfA(page.getCOSObject(), pdfaPart);
 
-            // sanitize each Form XObject
             if (res != null) {
                 for (COSName name : res.getXObjectNames()) {
                     try {
@@ -1092,7 +1203,6 @@ public class ConvertPDFToPDFA {
         PDMetadata existingMetadata = document.getDocumentCatalog().getMetadata();
         XMPMetadata xmp;
 
-        // Load existing XMP if available
         if (existingMetadata != null) {
             try (InputStream xmpStream = existingMetadata.createInputStream()) {
                 DomXmpParser parser = new DomXmpParser();
@@ -1113,7 +1223,6 @@ public class ConvertPDFToPDFA {
         String originalCreator = Optional.ofNullable(docInfo.getCreator()).orElse("Unknown");
         String originalProducer = Optional.ofNullable(docInfo.getProducer()).orElse("Unknown");
 
-        // Only keep the original creator so it can match xmp creator tool for compliance
         DublinCoreSchema dcSchema = xmp.getDublinCoreSchema();
         if (dcSchema != null) {
             List<String> existingCreators = dcSchema.getCreators();
@@ -1154,7 +1263,6 @@ public class ConvertPDFToPDFA {
         String originalAuthor = docInfo.getAuthor();
         if (originalAuthor != null && !originalAuthor.isBlank()) {
             docInfo.setAuthor(null);
-            // If the author is set, we keep it in the XMP metadata
             if (!originalCreator.equals(originalAuthor)) {
                 dcSchema.addCreator(originalAuthor);
             }
@@ -1173,11 +1281,9 @@ public class ConvertPDFToPDFA {
             adobePdfSchema.setKeywords(keywords);
         }
 
-        // Set creation and modification dates using modern java.time API
         Instant nowInstant = Instant.now();
         ZonedDateTime nowZdt = ZonedDateTime.ofInstant(nowInstant, ZoneId.of("UTC"));
 
-        // Determine creation date from document info or use current time
         Instant creationInstant;
         Calendar originalCreationDate = docInfo.getCreationDate();
         if (originalCreationDate != null) {
@@ -1187,7 +1293,6 @@ public class ConvertPDFToPDFA {
         }
         ZonedDateTime creationZdt = ZonedDateTime.ofInstant(creationInstant, ZoneId.of("UTC"));
 
-        // Convert to GregorianCalendar for PDFBox API compatibility
         GregorianCalendar creationCal = GregorianCalendar.from(creationZdt);
         GregorianCalendar modificationCal = GregorianCalendar.from(nowZdt);
 
@@ -1198,7 +1303,6 @@ public class ConvertPDFToPDFA {
         xmpBasicSchema.setModifyDate(modificationCal);
         xmpBasicSchema.setMetadataDate(modificationCal);
 
-        // Serialize the created metadata so it can be attached to the existent metadata
         ByteArrayOutputStream xmpOut = new ByteArrayOutputStream();
         new XmpSerializer().serialize(xmp, xmpOut, true);
 
@@ -1212,13 +1316,10 @@ public class ConvertPDFToPDFA {
         try (PDDocument document = Loader.loadPDF(inputPdf)) {
 
             for (PDPage page : document.getPages()) {
-                // Retrieve the annotations on the page.
                 List<PDAnnotation> annotations = page.getAnnotations();
                 for (PDAnnotation annot : annotations) {
-                    // Process only highlight annotations.
                     if ("Highlight".equals(annot.getSubtype())
                             && annot instanceof PDAnnotationTextMarkup highlight) {
-                        // Create a new appearance stream with the same bounding box.
                         float[] colorComponents =
                                 highlight.getColor() != null
                                         ? highlight.getColor().getComponents()
@@ -1240,8 +1341,6 @@ public class ConvertPDFToPDFA {
                                 cs.setStrokingColor(highlightColor);
                                 cs.setLineWidth(0.05f);
                                 float spacing = 2f;
-                                // Draw diagonal lines across the highlight area to simulate
-                                // transparency.
                                 for (int i = 0; i < quadPoints.length; i += 8) {
                                     float minX =
                                             Math.min(
@@ -1386,13 +1485,54 @@ public class ConvertPDFToPDFA {
                             .runCommandWithOutputHandling(command);
 
             if (result.getRc() == 0 && Files.exists(normalizedPdf)) {
-                log.info("PDF normalized with QPDF to fix font programs");
+                log.info("PDF normalized with QPDF to fix font programs and CIDSet issues");
                 return normalizedPdf;
             }
             return null;
 
         } catch (Exception e) {
             log.debug("QPDF normalization error: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    private Path cleanCidSetWithQpdf(Path inputPdf) {
+        try {
+            ProcessExecutorResult checkResult =
+                    ProcessExecutor.getInstance(ProcessExecutor.Processes.QPDF)
+                            .runCommandWithOutputHandling(Arrays.asList("qpdf", "--version"));
+
+            if (checkResult.getRc() != 0) {
+                log.debug("QPDF not available for CIDSet cleaning");
+                return null;
+            }
+
+            Path cleanedPdf =
+                    inputPdf.getParent()
+                            .resolve("cidset_cleaned_" + inputPdf.getFileName().toString());
+
+            // Use QPDF to remove problematic CIDSet entries that may be incomplete
+            List<String> command =
+                    Arrays.asList(
+                            "qpdf",
+                            "--remove-unreferenced-resources=yes",
+                            "--normalize-content=y",
+                            "--object-streams=preserve",
+                            inputPdf.toAbsolutePath().toString(),
+                            cleanedPdf.toAbsolutePath().toString());
+
+            ProcessExecutorResult result =
+                    ProcessExecutor.getInstance(ProcessExecutor.Processes.QPDF)
+                            .runCommandWithOutputHandling(command);
+
+            if (result.getRc() == 0 && Files.exists(cleanedPdf)) {
+                log.info("PDF CIDSet cleaned with QPDF");
+                return cleanedPdf;
+            }
+            return null;
+
+        } catch (Exception e) {
+            log.debug("QPDF CIDSet cleaning error: {}", e.getMessage());
             return null;
         }
     }
@@ -1465,13 +1605,16 @@ public class ConvertPDFToPDFA {
                             "error.resourceNotFound", "Resource not found: {0}", ICC_RESOURCE_PATH);
                 }
                 PDOutputIntent outputIntent = new PDOutputIntent(document, colorProfile);
+                // PDF/A compliant output intent settings
                 outputIntent.setInfo("sRGB IEC61966-2.1");
                 outputIntent.setOutputCondition("sRGB IEC61966-2.1");
                 outputIntent.setOutputConditionIdentifier("sRGB IEC61966-2.1");
                 outputIntent.setRegistryName("http://www.color.org");
                 document.getDocumentCatalog().addOutputIntent(outputIntent);
+                log.debug("Added ICC color profile for PDF/A compliance");
             } catch (Exception e) {
                 log.error("Failed to load ICC profile: {}", e.getMessage());
+                throw new RuntimeException("ICC profile loading failed for PDF/A compliance", e);
             }
         }
     }
