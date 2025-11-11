@@ -7,7 +7,6 @@ import {
   Box,
   Button,
   Card,
-  Collapse,
   Divider,
   FileButton,
   Group,
@@ -28,8 +27,6 @@ import AutorenewIcon from '@mui/icons-material/Autorenew';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import UploadIcon from '@mui/icons-material/Upload';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import CloseIcon from '@mui/icons-material/Close';
 import { Rnd } from 'react-rnd';
 
@@ -279,7 +276,6 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
   const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
   const [activeImageId, setActiveImageId] = useState<string | null>(null);
   const [fontFamilies, setFontFamilies] = useState<Map<string, string>>(new Map());
-  const [textGroupsExpanded, setTextGroupsExpanded] = useState(false);
   const [autoScaleText, setAutoScaleText] = useState(true);
   const [textScales, setTextScales] = useState<Map<string, number>>(new Map());
   const measurementKeyRef = useRef<string>('');
@@ -718,7 +714,7 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
     [pageImages],
   );
   const { width: pageWidth, height: pageHeight } = pageDimensions(currentPage);
-  const scale = useMemo(() => Math.min(MAX_RENDER_WIDTH / pageWidth, 1.5), [pageWidth]);
+  const scale = useMemo(() => Math.min(MAX_RENDER_WIDTH / pageWidth, 2.5), [pageWidth]);
   const scaledWidth = pageWidth * scale;
   const scaledHeight = pageHeight * scale;
 
@@ -966,6 +962,7 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
       style={{
         padding: '1.5rem',
         overflow: 'hidden',
+        height: '100%',
         display: 'grid',
         gridTemplateColumns: 'minmax(0, 1fr) 320px',
         alignItems: 'start',
@@ -1171,69 +1168,6 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
         </ScrollArea>
       </Card>
 
-      {hasDocument && (
-        <Card
-          withBorder
-          radius="md"
-          padding="md"
-          shadow="xs"
-          style={{ gridColumn: '2 / 3' }}
-        >
-          <Stack gap="xs">
-            <Group justify="space-between" align="center">
-              <Text fw={500}>{t('pdfJsonEditor.groupList', 'Detected Text Groups')}</Text>
-              <ActionIcon
-                variant="subtle"
-                onClick={() => setTextGroupsExpanded(!textGroupsExpanded)}
-                aria-label={textGroupsExpanded ? 'Collapse' : 'Expand'}
-              >
-                {textGroupsExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-              </ActionIcon>
-            </Group>
-            <Collapse in={textGroupsExpanded}>
-              <ScrollArea h={240} offsetScrollbars>
-                <Stack gap="sm">
-                  {visibleGroups.map(({ group }) => {
-                    const changed = group.text !== group.originalText;
-                    return (
-                      <Card
-                        key={`list-${group.id}`}
-                        padding="sm"
-                        radius="md"
-                        withBorder
-                        shadow={changed ? 'sm' : 'none'}
-                        onMouseEnter={() => setActiveGroupId(group.id)}
-                        onMouseLeave={() => setActiveGroupId((current) => (current === group.id ? null : current))}
-                        style={{ cursor: 'pointer' }}
-                        onClick={() => {
-                          setActiveGroupId(group.id);
-                          setEditingGroupId(group.id);
-                        }}
-                      >
-                        <Stack gap={4}>
-                          <Group gap="xs">
-                            {changed && <Badge color="yellow" size="xs">{t('pdfJsonEditor.badges.modified', 'Edited')}</Badge>}
-                            {group.fontId && <Badge size="xs" variant="outline">{group.fontId}</Badge>}
-                            {group.fontSize && (
-                              <Badge size="xs" variant="light">
-                                {t('pdfJsonEditor.fontSizeValue', '{{size}}pt', { size: group.fontSize.toFixed(1) })}
-                              </Badge>
-                            )}
-                          </Group>
-                          <Text size="sm" c="dimmed" lineClamp={2}>
-                            {group.text || t('pdfJsonEditor.emptyGroup', '[Empty Group]')}
-                          </Text>
-                        </Stack>
-                      </Card>
-                    );
-                  })}
-                </Stack>
-              </ScrollArea>
-            </Collapse>
-          </Stack>
-        </Card>
-      )}
-
       {errorMessage && (
         <Alert
           icon={<WarningAmberIcon fontSize="small" />}
@@ -1291,7 +1225,17 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
       )}
 
       {hasDocument && (
-        <Stack gap="lg" className="flex-1" style={{ gridColumn: '1 / 2', gridRow: 1, minHeight: 0 }}>
+        <Stack
+          gap="lg"
+          className="flex-1"
+          style={{
+            gridColumn: '1 / 2',
+            gridRow: 1,
+            minHeight: 0,
+            height: 'calc(100vh - 3rem)',
+            overflow: 'hidden',
+          }}
+        >
           <Group justify="space-between" align="center">
             <Group gap="sm">
               <Text fw={500}>
@@ -1316,8 +1260,14 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
             )}
           </Group>
 
-          <Card withBorder padding="md" radius="md" shadow="xs" style={{ flex: 1, minHeight: 0 }}>
-            <ScrollArea h="100%" offsetScrollbars>
+          <Card
+            withBorder
+            padding="md"
+            radius="md"
+            shadow="xs"
+            style={{ flex: 1, minHeight: 0, height: '100%', overflow: 'hidden' }}
+          >
+            <ScrollArea style={{ height: '100%', maxHeight: '100%' }} offsetScrollbars>
               <Box
                 style={{
                   display: 'flex',
