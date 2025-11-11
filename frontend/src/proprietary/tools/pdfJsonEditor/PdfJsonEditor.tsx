@@ -78,6 +78,7 @@ const PdfJsonEditor = ({ onComplete, onError }: BaseToolProps) => {
     message: string;
   } | null>(null);
   const [forceSingleTextElement, setForceSingleTextElement] = useState(false);
+  const [groupingMode, setGroupingMode] = useState<'auto' | 'paragraph' | 'singleLine'>('auto');
   const [hasVectorPreview, setHasVectorPreview] = useState(false);
   const [pagePreviews, setPagePreviews] = useState<Map<number, string>>(new Map());
 
@@ -136,7 +137,7 @@ const PdfJsonEditor = ({ onComplete, onError }: BaseToolProps) => {
   const viewLabel = useMemo(() => t('pdfJsonEditor.viewLabel', 'PDF Editor'), [t]);
   const { selectedFiles } = useFileSelection();
 
-  const resetToDocument = useCallback((document: PdfJsonDocument | null) => {
+  const resetToDocument = useCallback((document: PdfJsonDocument | null, mode: 'auto' | 'paragraph' | 'singleLine') => {
     if (!document) {
       setGroupsByPage([]);
       setImagesByPage([]);
@@ -150,7 +151,7 @@ const PdfJsonEditor = ({ onComplete, onError }: BaseToolProps) => {
       return;
     }
     const cloned = deepCloneDocument(document);
-    const groups = groupDocumentText(cloned);
+    const groups = groupDocumentText(cloned, mode);
     const images = extractDocumentImages(cloned);
     const originalImages = images.map((page) => page.map(cloneImageElement));
     originalImagesRef.current = originalImages;
@@ -513,7 +514,7 @@ const PdfJsonEditor = ({ onComplete, onError }: BaseToolProps) => {
         }
 
         setLoadedDocument(parsed);
-        resetToDocument(parsed);
+        resetToDocument(parsed, groupingMode);
         setIsLazyMode(shouldUseLazyMode);
         setCachedJobId(shouldUseLazyMode ? pendingJobId : null);
         setFileName(file.name);
@@ -532,7 +533,7 @@ const PdfJsonEditor = ({ onComplete, onError }: BaseToolProps) => {
         }
 
         setLoadedDocument(null);
-        resetToDocument(null);
+        resetToDocument(null, groupingMode);
         clearPdfPreview();
 
         if (isPdf) {
@@ -555,7 +556,7 @@ const PdfJsonEditor = ({ onComplete, onError }: BaseToolProps) => {
         }
       }
     },
-    [resetToDocument, t],
+    [groupingMode, resetToDocument, t],
   );
 
   const handleSelectPage = useCallback((pageIndex: number) => {
@@ -686,9 +687,9 @@ const PdfJsonEditor = ({ onComplete, onError }: BaseToolProps) => {
     if (!loadedDocument) {
       return;
     }
-    resetToDocument(loadedDocument);
+    resetToDocument(loadedDocument, groupingMode);
     setErrorMessage(null);
-  }, [loadedDocument, resetToDocument]);
+  }, [groupingMode, loadedDocument, resetToDocument]);
 
   const buildPayload = useCallback(() => {
     if (!loadedDocument) {
@@ -975,6 +976,13 @@ const PdfJsonEditor = ({ onComplete, onError }: BaseToolProps) => {
     [hasVectorPreview],
   );
 
+  // Re-group text when grouping mode changes
+  useEffect(() => {
+    if (loadedDocument) {
+      resetToDocument(loadedDocument, groupingMode);
+    }
+  }, [groupingMode, loadedDocument, resetToDocument]);
+
   const viewData = useMemo<PdfJsonEditorViewData>(() => ({
     document: loadedDocument,
     groupsByPage,
@@ -991,6 +999,7 @@ const PdfJsonEditor = ({ onComplete, onError }: BaseToolProps) => {
     conversionProgress,
     hasChanges,
     forceSingleTextElement,
+    groupingMode,
     requestPagePreview,
     onLoadJson: handleLoadFile,
     onSelectPage: handleSelectPage,
@@ -1002,6 +1011,7 @@ const PdfJsonEditor = ({ onComplete, onError }: BaseToolProps) => {
     onDownloadJson: handleDownloadJson,
     onGeneratePdf: handleGeneratePdf,
     onForceSingleTextElementChange: setForceSingleTextElement,
+    onGroupingModeChange: setGroupingMode,
   }), [
     handleImageTransform,
     imagesByPage,
@@ -1027,6 +1037,7 @@ const PdfJsonEditor = ({ onComplete, onError }: BaseToolProps) => {
     loadedDocument,
     selectedPage,
     forceSingleTextElement,
+    groupingMode,
     requestPagePreview,
     setForceSingleTextElement,
   ]);

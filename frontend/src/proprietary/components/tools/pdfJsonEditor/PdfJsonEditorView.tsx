@@ -13,6 +13,7 @@ import {
   Pagination,
   Progress,
   ScrollArea,
+  SegmentedControl,
   Stack,
   Switch,
   Text,
@@ -202,6 +203,95 @@ const buildFontLookupKeys = (
   return Array.from(new Set(keys.filter((value) => value && value.length > 0)));
 };
 
+/**
+ * Analyzes text groups on a page to determine if it's paragraph-heavy or sparse.
+ * Returns true if the page appears to be document-like with substantial text content.
+ */
+const analyzePageContentType = (groups: TextGroup[]): boolean => {
+  if (groups.length === 0) return false;
+
+  let multiLineGroups = 0;
+  let totalWords = 0;
+  let longTextGroups = 0;
+  let totalGroups = 0;
+  const groupDetails: Array<{
+    id: string;
+    lines: number;
+    words: number;
+    chars: number;
+    text: string;
+  }> = [];
+
+  groups.forEach((group) => {
+    const text = (group.text || '').trim();
+    if (text.length === 0) return;
+
+    totalGroups++;
+    const lines = text.split('\n');
+    const lineCount = lines.length;
+    const wordCount = text.split(/\s+/).filter((w) => w.length > 0).length;
+
+    totalWords += wordCount;
+
+    // Count multi-line paragraphs
+    if (lineCount > 1) {
+      multiLineGroups++;
+    }
+
+    // Count text groups with substantial content (more than a few words)
+    if (wordCount >= 5 || text.length >= 30) {
+      longTextGroups++;
+    }
+
+    groupDetails.push({
+      id: group.id,
+      lines: lineCount,
+      words: wordCount,
+      chars: text.length,
+      text: text.substring(0, 50) + (text.length > 50 ? '...' : ''),
+    });
+  });
+
+  if (totalGroups === 0) return false;
+
+  // Heuristics for paragraph mode:
+  // 1. Has multiple substantial multi-line groups (2+) AND decent average words
+  // 2. Average words per group > 12 (strong indicator of document text)
+  // 3. More than 40% of groups have substantial text (typical of documents)
+  const avgWordsPerGroup = totalWords / totalGroups;
+  const longTextRatio = longTextGroups / totalGroups;
+
+  const isParagraphPage =
+    (multiLineGroups >= 2 && avgWordsPerGroup > 8) ||
+    avgWordsPerGroup > 12 ||
+    longTextRatio > 0.4;
+
+  // Log detailed statistics
+  console.group(`📊 Page Content Analysis`);
+  console.log('📄 Overall Statistics:');
+  console.log(`  Total text groups: ${totalGroups}`);
+  console.log(`  Total words: ${totalWords}`);
+  console.log(`  Average words per group: ${avgWordsPerGroup.toFixed(2)}`);
+  console.log(`  Multi-line groups: ${multiLineGroups}`);
+  console.log(`  Long text groups (≥5 words or ≥30 chars): ${longTextGroups}`);
+  console.log(`  Long text ratio: ${(longTextRatio * 100).toFixed(1)}%`);
+  console.log('');
+  console.log('🔍 Detection Criteria:');
+  console.log(`  ✓ Multi-line groups ≥ 2 AND avg words > 8? ${multiLineGroups >= 2 && avgWordsPerGroup > 8 ? '✅ YES' : '❌ NO'} (multi-line: ${multiLineGroups}, avg: ${avgWordsPerGroup.toFixed(2)})`);
+  console.log(`  ✓ Avg words/group > 12? ${avgWordsPerGroup > 12 ? '✅ YES' : '❌ NO'} (current: ${avgWordsPerGroup.toFixed(2)})`);
+  console.log(`  ✓ Long text ratio > 40%? ${longTextRatio > 0.4 ? '✅ YES' : '❌ NO'} (current: ${(longTextRatio * 100).toFixed(1)}%)`);
+  console.log('');
+  console.log(`📋 Result: ${isParagraphPage ? '📝 PARAGRAPH PAGE' : '📄 SPARSE PAGE'}`);
+  console.log('');
+  console.log('📦 Individual Groups:');
+  console.table(groupDetails);
+  console.groupEnd();
+
+  return isParagraphPage;
+};
+
+type GroupingMode = 'auto' | 'paragraph' | 'singleLine';
+
 const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
   const { t } = useTranslation();
   const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
@@ -232,6 +322,7 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
     conversionProgress,
     hasChanges,
     forceSingleTextElement,
+    groupingMode: externalGroupingMode,
     requestPagePreview,
     onLoadJson,
     onSelectPage,
@@ -243,6 +334,7 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
     onDownloadJson,
     onGeneratePdf,
     onForceSingleTextElementChange,
+    onGroupingModeChange,
   } = data;
 
   const syncEditorValue = useCallback(
@@ -429,6 +521,9 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
   const pageGroups = groupsByPage[selectedPage] ?? [];
   const pageImages = imagesByPage[selectedPage] ?? [];
   const pagePreview = pagePreviews.get(selectedPage);
+
+  // Detect if current page contains paragraph-heavy content
+  const isParagraphPage = useMemo(() => analyzePageContentType(pageGroups), [pageGroups]);
 
   const extractPreferredFontId = useCallback((target?: TextGroup | null) => {
     if (!target) {
@@ -980,6 +1075,50 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
               onChange={(event) => setAutoScaleText(event.currentTarget.checked)}
             />
           </Group>
+
+          <Stack gap="xs">
+            <Group gap={4} align="center">
+              <Text fw={500} size="sm">
+                {t('pdfJsonEditor.options.groupingMode.title', 'Text Grouping Mode')}
+              </Text>
+              {externalGroupingMode === 'auto' && isParagraphPage && (
+                <Badge size="xs" color="blue" variant="light">
+                  {t('pdfJsonEditor.pageType.paragraph', 'Paragraph page')}
+                </Badge>
+              )}
+              {externalGroupingMode === 'auto' && !isParagraphPage && hasDocument && (
+                <Badge size="xs" color="gray" variant="light">
+                  {t('pdfJsonEditor.pageType.sparse', 'Sparse text')}
+                </Badge>
+              )}
+            </Group>
+            <Text size="xs" c="dimmed">
+              {externalGroupingMode === 'auto'
+                ? t(
+                    'pdfJsonEditor.options.groupingMode.autoDescription',
+                    'Automatically detects page type and groups text appropriately.'
+                  )
+                : externalGroupingMode === 'paragraph'
+                  ? t(
+                      'pdfJsonEditor.options.groupingMode.paragraphDescription',
+                      'Groups aligned lines into multi-line paragraph text boxes.'
+                    )
+                  : t(
+                      'pdfJsonEditor.options.groupingMode.singleLineDescription',
+                      'Keeps each PDF text line as a separate text box.'
+                    )}
+            </Text>
+            <SegmentedControl
+              value={externalGroupingMode}
+              onChange={(value) => onGroupingModeChange(value as GroupingMode)}
+              data={[
+                { label: t('pdfJsonEditor.groupingMode.auto', 'Auto'), value: 'auto' },
+                { label: t('pdfJsonEditor.groupingMode.paragraph', 'Paragraph'), value: 'paragraph' },
+                { label: t('pdfJsonEditor.groupingMode.singleLine', 'Single Line'), value: 'singleLine' },
+              ]}
+              fullWidth
+            />
+          </Stack>
 
           <Group justify="space-between" align="center">
             <div>
@@ -1547,7 +1686,7 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
                                 style={{
                                   pointerEvents: 'none',
                                   display: 'inline-block',
-                                  transform: shouldScale ? `scaleX(${textScale})` : undefined,
+                                  transform: shouldScale ? `scaleX(${textScale})` : 'none',
                                   transformOrigin: 'left center',
                                   whiteSpace: 'pre',
                                 }}

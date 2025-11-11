@@ -641,6 +641,7 @@ export const groupPageTextElements = (
   page: PdfJsonPage | null | undefined,
   pageIndex: number,
   metrics?: FontMetricsMap,
+  groupingMode: 'auto' | 'paragraph' | 'singleLine' = 'auto',
 ): TextGroup[] => {
   if (!page?.textElements || page.textElements.length === 0) {
     return [];
@@ -731,15 +732,72 @@ export const groupPageTextElements = (
     }
   });
 
-  return groupLinesIntoParagraphs(lineGroups, metrics);
+  // Apply paragraph grouping based on mode
+  if (groupingMode === 'singleLine') {
+    // Single line mode: skip paragraph grouping
+    return lineGroups;
+  }
+
+  if (groupingMode === 'paragraph') {
+    // Paragraph mode: always apply grouping
+    return groupLinesIntoParagraphs(lineGroups, metrics);
+  }
+
+  // Auto mode: use heuristic to determine if we should group
+  // Analyze the page content to decide
+  let multiLineGroups = 0;
+  let totalWords = 0;
+  let longTextGroups = 0;
+  let totalGroups = 0;
+
+  lineGroups.forEach((group) => {
+    const text = (group.text || '').trim();
+    if (text.length === 0) return;
+
+    totalGroups++;
+    const lines = text.split('\n');
+    const lineCount = lines.length;
+    const wordCount = text.split(/\s+/).filter((w) => w.length > 0).length;
+
+    totalWords += wordCount;
+
+    if (lineCount > 1) {
+      multiLineGroups++;
+    }
+
+    if (wordCount >= 5 || text.length >= 30) {
+      longTextGroups++;
+    }
+  });
+
+  if (totalGroups === 0) {
+    return lineGroups;
+  }
+
+  const avgWordsPerGroup = totalWords / totalGroups;
+  const longTextRatio = longTextGroups / totalGroups;
+
+  const isParagraphPage =
+    (multiLineGroups >= 2 && avgWordsPerGroup > 8) ||
+    avgWordsPerGroup > 12 ||
+    longTextRatio > 0.4;
+
+  // Only apply paragraph grouping if it looks like a paragraph-heavy page
+  if (isParagraphPage) {
+    return groupLinesIntoParagraphs(lineGroups, metrics);
+  }
+
+  // For sparse pages, keep lines separate
+  return lineGroups;
 };
 
 export const groupDocumentText = (
   document: PdfJsonDocument | null | undefined,
+  groupingMode: 'auto' | 'paragraph' | 'singleLine' = 'auto',
 ): TextGroup[][] => {
   const pages = document?.pages ?? [];
   const metrics = buildFontMetrics(document);
-  return pages.map((page, index) => groupPageTextElements(page, index, metrics));
+  return pages.map((page, index) => groupPageTextElements(page, index, metrics, groupingMode));
 };
 
 export const extractPageImages = (

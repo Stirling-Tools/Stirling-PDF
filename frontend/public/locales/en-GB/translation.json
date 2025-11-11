@@ -4495,19 +4495,25 @@
         "title": "Auto-scale text to fit boxes",
         "description": "Automatically scales text horizontally to fit within its original bounding box when font rendering differs from PDF."
       },
+      "groupingMode": {
+        "title": "Text Grouping Mode",
+        "autoDescription": "Automatically detects page type and groups text appropriately.",
+        "paragraphDescription": "Groups aligned lines into multi-line paragraph text boxes.",
+        "singleLineDescription": "Keeps each PDF text line as a separate text box."
+      },
       "forceSingleElement": {
         "title": "Lock edited text to a single PDF element",
         "description": "When enabled, the editor exports each edited text box as one PDF text element to avoid overlapping glyphs or mixed fonts."
-      },
-      "textGroupingMode": {
-        "title": "Text grouping mode",
-        "description": "Paragraph mode merges aligned lines into one textbox; single-line mode keeps every PDF line separate. Auto picks the best option per page."
       }
     },
-    "grouping": {
+    "pageType": {
+      "paragraph": "Paragraph page",
+      "sparse": "Sparse text"
+    },
+    "groupingMode": {
       "auto": "Auto",
       "paragraph": "Paragraph",
-      "single": "Single Line"
+      "singleLine": "Single Line"
     },
     "disclaimer": {
       "heading": "Preview limitations",
@@ -4521,6 +4527,7 @@
       "loading": "Loading",
       "normalizing": "Normalizing",
       "parsing": "Parsing",
+      "processing": "Processing",
       "fonts": "Fonts",
       "text": "Text Extraction",
       "images": "Images",

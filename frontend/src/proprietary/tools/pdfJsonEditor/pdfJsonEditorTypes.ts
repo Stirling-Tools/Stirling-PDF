@@ -197,6 +197,7 @@ export interface PdfJsonEditorViewData {
   conversionProgress: ConversionProgress | null;
   hasChanges: boolean;
   forceSingleTextElement: boolean;
+  groupingMode: 'auto' | 'paragraph' | 'singleLine';
   requestPagePreview: (pageIndex: number, scale: number) => void;
   onLoadJson: (file: File | null) => Promise<void> | void;
   onSelectPage: (pageIndex: number) => void;
@@ -218,4 +219,5 @@ export interface PdfJsonEditorViewData {
   onDownloadJson: () => void;
   onGeneratePdf: () => void;
   onForceSingleTextElementChange: (value: boolean) => void;
+  onGroupingModeChange: (value: 'auto' | 'paragraph' | 'singleLine') => void;
 }
