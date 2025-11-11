@@ -179,7 +179,7 @@ function updateFiles() {
       console.warn("updateFiles: Could not find file:", fileNameFromList);
     }
   }
-  
+
   document.getElementById("fileInput-input").files = dataTransfer.files;
   console.log("updateFiles: Updated file input with", dataTransfer.files.length, "files");
 
