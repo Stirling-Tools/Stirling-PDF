@@ -6,9 +6,8 @@ app: &app
   - app/(common|core|proprietary)/src/main/java/**
 
 openapi: &openapi
-  - build.gradle
-  - app/(common|core|proprietary)/build.gradle
-  - app/(common|core|proprietary)/src/main/java/**
+  - *build
+  - *app
 
 docker: &docker
   - Dockerfile
@@ -17,13 +16,12 @@ docker: &docker
 
 project: &project
   - app/(common|core|proprietary)/src/(main|test)/java/**
-  - app/(common|core|proprietary)/build.gradle
+  - *build
   - 'app/(common|core|proprietary)/src/(main|test)/resources/**/!(messages_*.properties|*.md)*'
   - exampleYmlFiles/**
   - gradle/**
   - libs/**
   - 'testing/**/!(requirements*.txt|requirements*.in)*'
-  - build.gradle
   - *docker
   - gradle.properties
   - gradlew
