@@ -28,6 +28,8 @@ public class InitialSetup {
 
     private final ApplicationProperties applicationProperties;
 
+    private static boolean isNewServer = false;
+
     @PostConstruct
     public void init() throws IOException {
         initUUIDKey();
@@ -88,6 +90,13 @@ public class InitialSetup {
     }
 
     public void initSetAppVersion() throws IOException {
+        // Check if this is a new server before setting the version
+        String existingVersion = applicationProperties.getAutomaticallyGenerated().getAppVersion();
+        isNewServer =
+                existingVersion == null
+                        || existingVersion.isEmpty()
+                        || existingVersion.equals("0.0.0");
+
         String appVersion = "0.0.0";
         Resource resource = new ClassPathResource("version.properties");
         Properties props = new Properties();
@@ -98,5 +107,9 @@ public class InitialSetup {
         }
         GeneralUtils.saveKeyToSettings("AutomaticallyGenerated.appVersion", appVersion);
         applicationProperties.getAutomaticallyGenerated().setAppVersion(appVersion);
+    }
+
+    public static boolean isNewServer() {
+        return isNewServer;
     }
 }
