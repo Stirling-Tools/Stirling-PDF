@@ -23,7 +23,7 @@ COPY scripts/init-without-ocr.sh /scripts/init-without-ocr.sh
 COPY scripts/installFonts.sh /scripts/installFonts.sh
 COPY app/core/build/libs/*.jar app.jar
 
-# Set up necessary directories and permissions
+# JDK for app
 RUN printf '%s\n' \
       'https://dl-cdn.alpinelinux.org/alpine/edge/main' \
       'https://dl-cdn.alpinelinux.org/alpine/edge/community' \
