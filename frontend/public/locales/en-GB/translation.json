@@ -479,7 +479,14 @@
     "globalPopularity": "Global Popularity",
     "sortBy": "Sort by:",
     "mobile": {
-      "brandAlt": "Stirling PDF logo"
+      "brandAlt": "Stirling PDF logo",
+      "openFiles": "Open files",
+      "swipeHint": "Swipe left or right to switch views",
+      "tools": "Tools",
+      "toolsSlide": "Tool selection panel",
+      "viewSwitcher": "Switch workspace view",
+      "workbenchSlide": "Workspace panel",
+      "workspace": "Workspace"
     },
     "multiTool": {
       "tags": "multiple,tools",
@@ -771,16 +778,6 @@
       "title": "Automate",
       "desc": "Build multi-step workflows by chaining together PDF actions. Ideal for recurring tasks."
     },
-    "mobile": {
-      "brandAlt": "Stirling PDF logo",
-      "openFiles": "Open files",
-      "swipeHint": "Swipe left or right to switch views",
-      "tools": "Tools",
-      "toolsSlide": "Tool selection panel",
-      "viewSwitcher": "Switch workspace view",
-      "workbenchSlide": "Workspace panel",
-      "workspace": "Workspace"
-    },
     "overlay-pdfs": {
       "desc": "Overlay one PDF on top of another",
       "title": "Overlay PDFs"
@@ -823,15 +820,19 @@
   "merge": {
     "tags": "merge,Page operations,Back end,server side",
     "title": "Merge",
-    "removeDigitalSignature": "Remove digital signature in the merged file?",
-    "generateTableOfContents": "Generate table of contents in the merged file?",
-    "removeDigitalSignature.tooltip": {
-      "title": "Remove Digital Signature",
-      "description": "Digital signatures will be invalidated when merging files. Check this to remove them from the final merged PDF."
+    "removeDigitalSignature": {
+      "label": "Remove digital signature in the merged file?",
+      "tooltip": {
+        "title": "Remove Digital Signature",
+        "description": "Digital signatures will be invalidated when merging files. Check this to remove them from the final merged PDF."
+      }
     },
-    "generateTableOfContents.tooltip": {
-      "title": "Generate Table of Contents",
-      "description": "Automatically creates a clickable table of contents in the merged PDF based on the original file names and page numbers."
+    "generateTableOfContents": {
+      "label": "Generate table of contents in the merged file?",
+      "tooltip": {
+        "title": "Generate Table of Contents",
+        "description": "Automatically creates a clickable table of contents in the merged PDF based on the original file names and page numbers."
+      }
     },
     "submit": "Merge",
     "sortBy": {
@@ -2041,8 +2042,10 @@
     "options": {
       "stepTitle": "Flatten Options",
       "title": "Flatten Options",
-      "flattenOnlyForms": "Flatten only forms",
-      "flattenOnlyForms.desc": "Only flatten form fields, leaving other interactive elements intact",
+      "flattenOnlyForms": {
+        "label": "Flatten only forms",
+        "desc": "Only flatten form fields, leaving other interactive elements intact"
+      },
       "note": "Flattening removes interactive elements from the PDF, making them non-editable."
     },
     "results": {
@@ -3133,13 +3136,14 @@
     "passwordsDoNotMatch": "Passwords do not match",
     "passwordTooShort": "Password must be at least 6 characters long",
     "invalidEmail": "Please enter a valid email address",
+    "checkEmailConfirmation": "Check your email for a confirmation link to complete your registration.",
+    "accountCreatedSuccessfully": "Account created successfully! You can now sign in.",
+    "unexpectedError": "Unexpected error: {{message}}",
+    "useEmailInstead": "Use Email Instead",
     "nameRequired": "Name is required",
     "emailRequired": "Email is required",
     "passwordRequired": "Password is required",
-    "confirmPasswordRequired": "Confirm password is required",
-    "checkEmailConfirmation": "Check your email for a confirmation link to complete your registration.",
-    "accountCreatedSuccessfully": "Account created successfully! You can now sign in.",
-    "unexpectedError": "Unexpected error: {{message}}"
+    "confirmPasswordRequired": "Please confirm your password"
   },
   "pdfToSinglePage": {
     "title": "PDF To Single Page",
@@ -3541,7 +3545,13 @@
     "account": "Account",
     "config": "Config",
     "adminSettings": "Admin Settings",
-    "allTools": "All Tools"
+    "allTools": "All Tools",
+    "helpMenu": {
+      "toolsTour": "Tools Tour",
+      "toolsTourDesc": "Learn what the tools can do",
+      "adminTour": "Admin Tour",
+      "adminTourDesc": "Explore admin settings & features"
+    }
   },
   "admin": {
     "error": "Error",
@@ -3576,45 +3586,87 @@
         "description": "Configure system-wide application settings including branding and default behaviour.",
         "ui": "User Interface",
         "system": "System",
-        "appName": "Application Name",
-        "appName.description": "The name displayed in the browser tab and home page",
-        "appNameNavbar": "Navbar Brand",
-        "appNameNavbar.description": "The name displayed in the navigation bar",
-        "homeDescription": "Home Description",
-        "homeDescription.description": "The description text shown on the home page",
-        "defaultLocale": "Default Locale",
-        "defaultLocale.description": "The default language for new users (e.g., en_US, es_ES)",
-        "fileUploadLimit": "File Upload Limit",
-        "fileUploadLimit.description": "Maximum file upload size (e.g., 100MB, 1GB)",
-        "showUpdate": "Show Update Notifications",
-        "showUpdate.description": "Display notifications when a new version is available",
-        "showUpdateOnlyAdmin": "Show Updates to Admins Only",
-        "showUpdateOnlyAdmin.description": "Restrict update notifications to admin users only",
-        "customHTMLFiles": "Custom HTML Files",
-        "customHTMLFiles.description": "Allow serving custom HTML files from the customFiles directory",
-        "languages": "Available Languages",
-        "languages.description": "Languages that users can select from (leave empty to enable all languages)",
-        "customMetadata": "Custom Metadata",
-        "customMetadata.autoUpdate": "Auto Update Metadata",
-        "customMetadata.autoUpdate.description": "Automatically update PDF metadata on all processed documents",
-        "customMetadata.author": "Default Author",
-        "customMetadata.author.description": "Default author for PDF metadata (e.g., username)",
-        "customMetadata.creator": "Default Creator",
-        "customMetadata.creator.description": "Default creator for PDF metadata",
-        "customMetadata.producer": "Default Producer",
-        "customMetadata.producer.description": "Default producer for PDF metadata",
-        "customPaths": "Custom Paths",
-        "customPaths.description": "Configure custom file system paths for pipeline processing and external tools",
-        "customPaths.pipeline": "Pipeline Directories",
-        "customPaths.pipeline.watchedFoldersDir": "Watched Folders Directory",
-        "customPaths.pipeline.watchedFoldersDir.description": "Directory where pipeline monitors for incoming PDFs (leave empty for default: /pipeline/watchedFolders)",
-        "customPaths.pipeline.finishedFoldersDir": "Finished Folders Directory",
-        "customPaths.pipeline.finishedFoldersDir.description": "Directory where processed PDFs are outputted (leave empty for default: /pipeline/finishedFolders)",
-        "customPaths.operations": "External Tool Paths",
-        "customPaths.operations.weasyprint": "WeasyPrint Executable",
-        "customPaths.operations.weasyprint.description": "Path to WeasyPrint executable for HTML to PDF conversion (leave empty for default: /opt/venv/bin/weasyprint)",
-        "customPaths.operations.unoconvert": "Unoconvert Executable",
-        "customPaths.operations.unoconvert.description": "Path to LibreOffice unoconvert for document conversions (leave empty for default: /opt/venv/bin/unoconvert)"
+        "appName": {
+          "label": "Application Name",
+          "description": "The name displayed in the browser tab and home page"
+        },
+        "appNameNavbar": {
+          "label": "Navbar Brand",
+          "description": "The name displayed in the navigation bar"
+        },
+        "homeDescription": {
+          "label": "Home Description",
+          "description": "The description text shown on the home page"
+        },
+        "defaultLocale": {
+          "label": "Default Locale",
+          "description": "The default language for new users (e.g., en_US, es_ES)"
+        },
+        "fileUploadLimit": {
+          "label": "File Upload Limit",
+          "description": "Maximum file upload size (e.g., 100MB, 1GB)"
+        },
+        "showUpdate": {
+          "label": "Show Update Notifications",
+          "description": "Display notifications when a new version is available"
+        },
+        "showUpdateOnlyAdmin": {
+          "label": "Show Updates to Admins Only",
+          "description": "Restrict update notifications to admin users only"
+        },
+        "customHTMLFiles": {
+          "label": "Custom HTML Files",
+          "description": "Allow serving custom HTML files from the customFiles directory"
+        },
+        "languages": {
+          "label": "Available Languages",
+          "description": "Languages that users can select from (leave empty to enable all languages)"
+        },
+        "customMetadata": {
+          "label": "Custom Metadata",
+          "autoUpdate": {
+            "label": "Auto Update Metadata",
+            "description": "Automatically update PDF metadata on all processed documents"
+          },
+          "author": {
+            "label": "Default Author",
+            "description": "Default author for PDF metadata (e.g., username)"
+          },
+          "creator": {
+            "label": "Default Creator",
+            "description": "Default creator for PDF metadata"
+          },
+          "producer": {
+            "label": "Default Producer",
+            "description": "Default producer for PDF metadata"
+          }
+        },
+        "customPaths": {
+          "label": "Custom Paths",
+          "description": "Configure custom file system paths for pipeline processing and external tools",
+          "pipeline": {
+            "label": "Pipeline Directories",
+            "watchedFoldersDir": {
+              "label": "Watched Folders Directory",
+              "description": "Directory where pipeline monitors for incoming PDFs (leave empty for default: /pipeline/watchedFolders)"
+            },
+            "finishedFoldersDir": {
+              "label": "Finished Folders Directory",
+              "description": "Directory where processed PDFs are outputted (leave empty for default: /pipeline/finishedFolders)"
+            }
+          },
+          "operations": {
+            "label": "External Tool Paths",
+            "weasyprint": {
+              "label": "WeasyPrint Executable",
+              "description": "Path to WeasyPrint executable for HTML to PDF conversion (leave empty for default: /opt/venv/bin/weasyprint)"
+            },
+            "unoconvert": {
+              "label": "Unoconvert Executable",
+              "description": "Path to LibreOffice unoconvert for document conversions (leave empty for default: /opt/venv/bin/unoconvert)"
+            }
+          }
+        }
       },
       "security": {
         "title": "Security",
@@ -3624,68 +3676,124 @@
           "message": "OAuth2 and SAML2 authentication providers have been moved to the Connections menu for easier management."
         },
         "authentication": "Authentication",
-        "enableLogin": "Enable Login",
-        "enableLogin.description": "Require users to log in before accessing the application",
-        "loginMethod": "Login Method",
-        "loginMethod.description": "The authentication method to use for user login",
-        "loginMethod.all": "All Methods",
-        "loginMethod.normal": "Username/Password Only",
-        "loginMethod.oauth2": "OAuth2 Only",
-        "loginMethod.saml2": "SAML2 Only",
-        "loginAttemptCount": "Login Attempt Limit",
-        "loginAttemptCount.description": "Maximum number of failed login attempts before account lockout",
-        "loginResetTimeMinutes": "Login Reset Time (minutes)",
-        "loginResetTimeMinutes.description": "Time before failed login attempts are reset",
-        "csrfDisabled": "Disable CSRF Protection",
-        "csrfDisabled.description": "Disable Cross-Site Request Forgery protection (not recommended)",
-        "initialLogin": "Initial Login",
-        "initialLogin.username": "Initial Username",
-        "initialLogin.username.description": "The username for the initial admin account",
-        "initialLogin.password": "Initial Password",
-        "initialLogin.password.description": "The password for the initial admin account",
-        "jwt": "JWT Configuration",
-        "jwt.secureCookie": "Secure Cookie",
-        "jwt.secureCookie.description": "Require HTTPS for JWT cookies (recommended for production)",
-        "jwt.keyRetentionDays": "Key Retention Days",
-        "jwt.keyRetentionDays.description": "Number of days to retain old JWT keys for verification",
-        "jwt.persistence": "Enable Key Persistence",
-        "jwt.persistence.description": "Store JWT keys persistently to survive server restarts",
-        "jwt.enableKeyRotation": "Enable Key Rotation",
-        "jwt.enableKeyRotation.description": "Automatically rotate JWT signing keys periodically",
-        "jwt.enableKeyCleanup": "Enable Key Cleanup",
-        "jwt.enableKeyCleanup.description": "Automatically remove expired JWT keys",
-        "audit": "Audit Logging",
-        "audit.enabled": "Enable Audit Logging",
-        "audit.enabled.description": "Track user actions and system events for compliance and security monitoring",
-        "audit.level": "Audit Level",
-        "audit.level.description": "0=OFF, 1=BASIC, 2=STANDARD, 3=VERBOSE",
-        "audit.retentionDays": "Audit Retention (days)",
-        "audit.retentionDays.description": "Number of days to retain audit logs",
-        "htmlUrlSecurity": "HTML URL Security",
-        "htmlUrlSecurity.description": "Configure URL access restrictions for HTML processing to prevent SSRF attacks",
-        "htmlUrlSecurity.enabled": "Enable URL Security",
-        "htmlUrlSecurity.enabled.description": "Enable URL security restrictions for HTML to PDF conversions",
-        "htmlUrlSecurity.level": "Security Level",
-        "htmlUrlSecurity.level.description": "MAX: whitelist only, MEDIUM: block internal networks, OFF: no restrictions",
-        "htmlUrlSecurity.level.max": "Maximum (Whitelist Only)",
-        "htmlUrlSecurity.level.medium": "Medium (Block Internal)",
-        "htmlUrlSecurity.level.off": "Off (No Restrictions)",
-        "htmlUrlSecurity.advanced": "Advanced Settings",
-        "htmlUrlSecurity.allowedDomains": "Allowed Domains (Whitelist)",
-        "htmlUrlSecurity.allowedDomains.description": "One domain per line (e.g., cdn.example.com). Only these domains allowed when level is MAX",
-        "htmlUrlSecurity.blockedDomains": "Blocked Domains (Blacklist)",
-        "htmlUrlSecurity.blockedDomains.description": "One domain per line (e.g., malicious.com). Additional domains to block",
-        "htmlUrlSecurity.internalTlds": "Internal TLDs",
-        "htmlUrlSecurity.internalTlds.description": "One TLD per line (e.g., .local, .internal). Block domains with these TLD patterns",
-        "htmlUrlSecurity.networkBlocking": "Network Blocking",
-        "htmlUrlSecurity.blockPrivateNetworks": "Block Private Networks",
-        "htmlUrlSecurity.blockPrivateNetworks.description": "Block RFC 1918 private networks (10.x.x.x, 192.168.x.x, 172.16-31.x.x)",
-        "htmlUrlSecurity.blockLocalhost": "Block Localhost",
-        "htmlUrlSecurity.blockLocalhost.description": "Block localhost and loopback addresses (127.x.x.x, ::1)",
-        "htmlUrlSecurity.blockLinkLocal": "Block Link-Local Addresses",
-        "htmlUrlSecurity.blockLinkLocal.description": "Block link-local addresses (169.254.x.x, fe80::/10)",
-        "htmlUrlSecurity.blockCloudMetadata": "Block Cloud Metadata Endpoints",
-        "htmlUrlSecurity.blockCloudMetadata.description": "Block cloud provider metadata endpoints (169.254.169.254)"
+        "enableLogin": {
+          "label": "Enable Login",
+          "description": "Require users to log in before accessing the application"
+        },
+        "loginMethod": {
+          "label": "Login Method",
+          "description": "The authentication method to use for user login",
+          "all": "All Methods",
+          "normal": "Username/Password Only",
+          "oauth2": "OAuth2 Only",
+          "saml2": "SAML2 Only"
+        },
+        "loginAttemptCount": {
+          "label": "Login Attempt Limit",
+          "description": "Maximum number of failed login attempts before account lockout"
+        },
+        "loginResetTimeMinutes": {
+          "label": "Login Reset Time (minutes)",
+          "description": "Time before failed login attempts are reset"
+        },
+        "csrfDisabled": {
+          "label": "Disable CSRF Protection",
+          "description": "Disable Cross-Site Request Forgery protection (not recommended)"
+        },
+        "initialLogin": {
+          "label": "Initial Login",
+          "username": {
+            "label": "Initial Username",
+            "description": "The username for the initial admin account"
+          },
+          "password": {
+            "label": "Initial Password",
+            "description": "The password for the initial admin account"
+          }
+        },
+        "jwt": {
+          "label": "JWT Configuration",
+          "secureCookie": {
+            "label": "Secure Cookie",
+            "description": "Require HTTPS for JWT cookies (recommended for production)"
+          },
+          "keyRetentionDays": {
+            "label": "Key Retention Days",
+            "description": "Number of days to retain old JWT keys for verification"
+          },
+          "persistence": {
+            "label": "Enable Key Persistence",
+            "description": "Store JWT keys persistently to survive server restarts"
+          },
+          "enableKeyRotation": {
+            "label": "Enable Key Rotation",
+            "description": "Automatically rotate JWT signing keys periodically"
+          },
+          "enableKeyCleanup": {
+            "label": "Enable Key Cleanup",
+            "description": "Automatically remove expired JWT keys"
+          }
+        },
+        "audit": {
+          "label": "Audit Logging",
+          "enabled": {
+            "label": "Enable Audit Logging",
+            "description": "Track user actions and system events for compliance and security monitoring"
+          },
+          "level": {
+            "label": "Audit Level",
+            "description": "0=OFF, 1=BASIC, 2=STANDARD, 3=VERBOSE"
+          },
+          "retentionDays": {
+            "label": "Audit Retention (days)",
+            "description": "Number of days to retain audit logs"
+          }
+        },
+        "htmlUrlSecurity": {
+          "label": "HTML URL Security",
+          "description": "Configure URL access restrictions for HTML processing to prevent SSRF attacks",
+          "enabled": {
+            "label": "Enable URL Security",
+            "description": "Enable URL security restrictions for HTML to PDF conversions"
+          },
+          "level": {
+            "label": "Security Level",
+            "description": "MAX: whitelist only, MEDIUM: block internal networks, OFF: no restrictions",
+            "max": "Maximum (Whitelist Only)",
+            "medium": "Medium (Block Internal)",
+            "off": "Off (No Restrictions)"
+          },
+          "advanced": "Advanced Settings",
+          "allowedDomains": {
+            "label": "Allowed Domains (Whitelist)",
+            "description": "One domain per line (e.g., cdn.example.com). Only these domains allowed when level is MAX"
+          },
+          "blockedDomains": {
+            "label": "Blocked Domains (Blacklist)",
+            "description": "One domain per line (e.g., malicious.com). Additional domains to block"
+          },
+          "internalTlds": {
+            "label": "Internal TLDs",
+            "description": "One TLD per line (e.g., .local, .internal). Block domains with these TLD patterns"
+          },
+          "networkBlocking": "Network Blocking",
+          "blockPrivateNetworks": {
+            "label": "Block Private Networks",
+            "description": "Block RFC 1918 private networks (10.x.x.x, 192.168.x.x, 172.16-31.x.x)"
+          },
+          "blockLocalhost": {
+            "label": "Block Localhost",
+            "description": "Block localhost and loopback addresses (127.x.x.x, ::1)"
+          },
+          "blockLinkLocal": {
+            "label": "Block Link-Local Addresses",
+            "description": "Block link-local addresses (169.254.x.x, fe80::/10)"
+          },
+          "blockCloudMetadata": {
+            "label": "Block Cloud Metadata Endpoints",
+            "description": "Block cloud provider metadata endpoints (169.254.169.254)"
+          }
+        }
       },
       "connections": {
         "title": "Connections",
@@ -3696,146 +3804,254 @@
         "disconnect": "Disconnect",
         "disconnected": "Provider disconnected successfully",
         "disconnectError": "Failed to disconnect provider",
-        "ssoAutoLogin": "SSO Auto Login",
-        "ssoAutoLogin.enable": "Enable SSO Auto Login",
-        "ssoAutoLogin.description": "Automatically redirect to SSO login when authentication is required",
-        "oauth2": "OAuth2",
-        "oauth2.enabled": "Enable OAuth2",
-        "oauth2.enabled.description": "Allow users to authenticate using OAuth2 providers",
-        "oauth2.provider": "Provider",
-        "oauth2.provider.description": "The OAuth2 provider to use for authentication",
-        "oauth2.issuer": "Issuer URL",
-        "oauth2.issuer.description": "The OAuth2 provider issuer URL",
-        "oauth2.clientId": "Client ID",
-        "oauth2.clientId.description": "The OAuth2 client ID from your provider",
-        "oauth2.clientSecret": "Client Secret",
-        "oauth2.clientSecret.description": "The OAuth2 client secret from your provider",
-        "oauth2.useAsUsername": "Use as Username",
-        "oauth2.useAsUsername.description": "The OAuth2 claim to use as the username (e.g., email, sub)",
-        "oauth2.autoCreateUser": "Auto Create Users",
-        "oauth2.autoCreateUser.description": "Automatically create user accounts on first OAuth2 login",
-        "oauth2.blockRegistration": "Block Registration",
-        "oauth2.blockRegistration.description": "Prevent new user registration via OAuth2",
-        "oauth2.scopes": "OAuth2 Scopes",
-        "oauth2.scopes.description": "Comma-separated list of OAuth2 scopes to request (e.g., openid, profile, email)",
-        "saml2": "SAML2",
-        "saml2.enabled": "Enable SAML2",
-        "saml2.enabled.description": "Allow users to authenticate using SAML2 providers",
-        "saml2.provider": "Provider",
-        "saml2.provider.description": "The SAML2 provider name",
-        "saml2.registrationId": "Registration ID",
-        "saml2.registrationId.description": "The SAML2 registration identifier",
-        "saml2.autoCreateUser": "Auto Create Users",
-        "saml2.autoCreateUser.description": "Automatically create user accounts on first SAML2 login",
-        "saml2.blockRegistration": "Block Registration",
-        "saml2.blockRegistration.description": "Prevent new user registration via SAML2"
+        "ssoAutoLogin": {
+          "label": "SSO Auto Login",
+          "enable": "Enable SSO Auto Login",
+          "description": "Automatically redirect to SSO login when authentication is required"
+        },
+        "oauth2": {
+          "label": "OAuth2",
+          "enabled": {
+            "label": "Enable OAuth2",
+            "description": "Allow users to authenticate using OAuth2 providers"
+          },
+          "provider": {
+            "label": "Provider",
+            "description": "The OAuth2 provider to use for authentication"
+          },
+          "issuer": {
+            "label": "Issuer URL",
+            "description": "The OAuth2 provider issuer URL"
+          },
+          "clientId": {
+            "label": "Client ID",
+            "description": "The OAuth2 client ID from your provider"
+          },
+          "clientSecret": {
+            "label": "Client Secret",
+            "description": "The OAuth2 client secret from your provider"
+          },
+          "useAsUsername": {
+            "label": "Use as Username",
+            "description": "The OAuth2 claim to use as the username (e.g., email, sub)"
+          },
+          "autoCreateUser": {
+            "label": "Auto Create Users",
+            "description": "Automatically create user accounts on first OAuth2 login"
+          },
+          "blockRegistration": {
+            "label": "Block Registration",
+            "description": "Prevent new user registration via OAuth2"
+          },
+          "scopes": {
+            "label": "OAuth2 Scopes",
+            "description": "Comma-separated list of OAuth2 scopes to request (e.g., openid, profile, email)"
+          }
+        },
+        "saml2": {
+          "label": "SAML2",
+          "enabled": {
+            "label": "Enable SAML2",
+            "description": "Allow users to authenticate using SAML2 providers"
+          },
+          "provider": {
+            "label": "Provider",
+            "description": "The SAML2 provider name"
+          },
+          "registrationId": {
+            "label": "Registration ID",
+            "description": "The SAML2 registration identifier"
+          },
+          "autoCreateUser": {
+            "label": "Auto Create Users",
+            "description": "Automatically create user accounts on first SAML2 login"
+          },
+          "blockRegistration": {
+            "label": "Block Registration",
+            "description": "Prevent new user registration via SAML2"
+          }
+        }
       },
       "database": {
         "title": "Database",
         "description": "Configure custom database connection settings for enterprise deployments.",
         "configuration": "Database Configuration",
-        "enableCustom": "Enable Custom Database",
-        "enableCustom.description": "Use your own custom database configuration instead of the default embedded database",
-        "customUrl": "Custom Database URL",
-        "customUrl.description": "Full JDBC connection string (e.g., jdbc:postgresql://localhost:5432/postgres). If provided, individual connection settings below are not used.",
-        "type": "Database Type",
-        "type.description": "Type of database (not used if custom URL is provided)",
-        "hostName": "Host Name",
-        "hostName.description": "Database server hostname (not used if custom URL is provided)",
-        "port": "Port",
-        "port.description": "Database server port (not used if custom URL is provided)",
-        "name": "Database Name",
-        "name.description": "Name of the database (not used if custom URL is provided)",
-        "username": "Username",
-        "username.description": "Database authentication username",
-        "password": "Password",
-        "password.description": "Database authentication password"
+        "enableCustom": {
+          "label": "Enable Custom Database",
+          "description": "Use your own custom database configuration instead of the default embedded database"
+        },
+        "customUrl": {
+          "label": "Custom Database URL",
+          "description": "Full JDBC connection string (e.g., jdbc:postgresql://localhost:5432/postgres). If provided, individual connection settings below are not used."
+        },
+        "type": {
+          "label": "Database Type",
+          "description": "Type of database (not used if custom URL is provided)"
+        },
+        "hostName": {
+          "label": "Host Name",
+          "description": "Database server hostname (not used if custom URL is provided)"
+        },
+        "port": {
+          "label": "Port",
+          "description": "Database server port (not used if custom URL is provided)"
+        },
+        "name": {
+          "label": "Database Name",
+          "description": "Name of the database (not used if custom URL is provided)"
+        },
+        "username": {
+          "label": "Username",
+          "description": "Database authentication username"
+        },
+        "password": {
+          "label": "Password",
+          "description": "Database authentication password"
+        }
       },
       "privacy": {
         "title": "Privacy",
         "description": "Configure privacy and data collection settings.",
         "analytics": "Analytics & Tracking",
-        "enableAnalytics": "Enable Analytics",
-        "enableAnalytics.description": "Collect anonymous usage analytics to help improve the application",
-        "metricsEnabled": "Enable Metrics",
-        "metricsEnabled.description": "Enable collection of performance and usage metrics. Provides API endpoint for admins to access metrics data",
+        "enableAnalytics": {
+          "label": "Enable Analytics",
+          "description": "Collect anonymous usage analytics to help improve the application"
+        },
+        "metricsEnabled": {
+          "label": "Enable Metrics",
+          "description": "Enable collection of performance and usage metrics. Provides API endpoint for admins to access metrics data"
+        },
         "searchEngine": "Search Engine Visibility",
-        "googleVisibility": "Google Visibility",
-        "googleVisibility.description": "Allow search engines to index this application"
+        "googleVisibility": {
+          "label": "Google Visibility",
+          "description": "Allow search engines to index this application"
+        }
       },
       "advanced": {
         "title": "Advanced",
         "description": "Configure advanced features and experimental functionality.",
         "features": "Feature Flags",
         "processing": "Processing",
-        "endpoints": "Endpoints",
-        "endpoints.manage": "Manage API Endpoints",
-        "endpoints.description": "Endpoint management is configured via YAML. See documentation for details on enabling/disabling specific endpoints.",
-        "enableAlphaFunctionality": "Enable Alpha Features",
-        "enableAlphaFunctionality.description": "Enable experimental and alpha-stage features (may be unstable)",
-        "enableUrlToPDF": "Enable URL to PDF",
-        "enableUrlToPDF.description": "Allow conversion of web pages to PDF documents",
-        "maxDPI": "Maximum DPI",
-        "maxDPI.description": "Maximum DPI for image processing (0 = unlimited)",
-        "tessdataDir": "Tessdata Directory",
-        "tessdataDir.description": "Path to the tessdata directory for OCR language files",
-        "disableSanitize": "Disable HTML Sanitization",
-        "disableSanitize.description": "WARNING: Security risk - disabling HTML sanitization can lead to XSS vulnerabilities",
-        "tempFileManagement": "Temp File Management",
-        "tempFileManagement.description": "Configure temporary file storage and cleanup behavior",
-        "tempFileManagement.baseTmpDir": "Base Temp Directory",
-        "tempFileManagement.baseTmpDir.description": "Base directory for temporary files (leave empty for default: java.io.tmpdir/stirling-pdf)",
-        "tempFileManagement.libreofficeDir": "LibreOffice Temp Directory",
-        "tempFileManagement.libreofficeDir.description": "Directory for LibreOffice temp files (leave empty for default: baseTmpDir/libreoffice)",
-        "tempFileManagement.systemTempDir": "System Temp Directory",
-        "tempFileManagement.systemTempDir.description": "System temp directory to clean (only used if cleanupSystemTemp is enabled)",
-        "tempFileManagement.prefix": "Temp File Prefix",
-        "tempFileManagement.prefix.description": "Prefix for temp file names",
-        "tempFileManagement.maxAgeHours": "Max Age (hours)",
-        "tempFileManagement.maxAgeHours.description": "Maximum age in hours before temp files are cleaned up",
-        "tempFileManagement.cleanupIntervalMinutes": "Cleanup Interval (minutes)",
-        "tempFileManagement.cleanupIntervalMinutes.description": "How often to run cleanup (in minutes)",
-        "tempFileManagement.startupCleanup": "Startup Cleanup",
-        "tempFileManagement.startupCleanup.description": "Clean up old temp files on application startup",
-        "tempFileManagement.cleanupSystemTemp": "Cleanup System Temp",
-        "tempFileManagement.cleanupSystemTemp.description": "Whether to clean broader system temp directory (use with caution)",
-        "processExecutor": "Process Executor Limits",
-        "processExecutor.description": "Configure session limits and timeouts for each process executor",
-        "processExecutor.sessionLimit": "Session Limit",
-        "processExecutor.sessionLimit.description": "Maximum concurrent instances",
-        "processExecutor.timeout": "Timeout (minutes)",
-        "processExecutor.timeout.description": "Maximum execution time",
-        "processExecutor.libreOffice": "LibreOffice",
-        "processExecutor.pdfToHtml": "PDF to HTML",
-        "processExecutor.qpdf": "QPDF",
-        "processExecutor.tesseract": "Tesseract OCR",
-        "processExecutor.pythonOpenCv": "Python OpenCV",
-        "processExecutor.weasyPrint": "WeasyPrint",
-        "processExecutor.installApp": "Install App",
-        "processExecutor.calibre": "Calibre",
-        "processExecutor.ghostscript": "Ghostscript",
-        "processExecutor.ocrMyPdf": "OCRmyPDF"
+        "endpoints": {
+          "label": "Endpoints",
+          "manage": "Manage API Endpoints",
+          "description": "Endpoint management is configured via YAML. See documentation for details on enabling/disabling specific endpoints."
+        },
+        "enableAlphaFunctionality": {
+          "label": "Enable Alpha Features",
+          "description": "Enable experimental and alpha-stage features (may be unstable)"
+        },
+        "enableUrlToPDF": {
+          "label": "Enable URL to PDF",
+          "description": "Allow conversion of web pages to PDF documents"
+        },
+        "maxDPI": {
+          "label": "Maximum DPI",
+          "description": "Maximum DPI for image processing (0 = unlimited)"
+        },
+        "tessdataDir": {
+          "label": "Tessdata Directory",
+          "description": "Path to the tessdata directory for OCR language files"
+        },
+        "disableSanitize": {
+          "label": "Disable HTML Sanitization",
+          "description": "WARNING: Security risk - disabling HTML sanitization can lead to XSS vulnerabilities"
+        },
+        "tempFileManagement": {
+          "label": "Temp File Management",
+          "description": "Configure temporary file storage and cleanup behavior",
+          "baseTmpDir": {
+            "label": "Base Temp Directory",
+            "description": "Base directory for temporary files (leave empty for default: java.io.tmpdir/stirling-pdf)"
+          },
+          "libreofficeDir": {
+            "label": "LibreOffice Temp Directory",
+            "description": "Directory for LibreOffice temp files (leave empty for default: baseTmpDir/libreoffice)"
+          },
+          "systemTempDir": {
+            "label": "System Temp Directory",
+            "description": "System temp directory to clean (only used if cleanupSystemTemp is enabled)"
+          },
+          "prefix": {
+            "label": "Temp File Prefix",
+            "description": "Prefix for temp file names"
+          },
+          "maxAgeHours": {
+            "label": "Max Age (hours)",
+            "description": "Maximum age in hours before temp files are cleaned up"
+          },
+          "cleanupIntervalMinutes": {
+            "label": "Cleanup Interval (minutes)",
+            "description": "How often to run cleanup (in minutes)"
+          },
+          "startupCleanup": {
+            "label": "Startup Cleanup",
+            "description": "Clean up old temp files on application startup"
+          },
+          "cleanupSystemTemp": {
+            "label": "Cleanup System Temp",
+            "description": "Whether to clean broader system temp directory (use with caution)"
+          }
+        },
+        "processExecutor": {
+          "label": "Process Executor Limits",
+          "description": "Configure session limits and timeouts for each process executor",
+          "sessionLimit": {
+            "label": "Session Limit",
+            "description": "Maximum concurrent instances"
+          },
+          "timeout": {
+            "label": "Timeout (minutes)",
+            "description": "Maximum execution time"
+          },
+          "libreOffice": "LibreOffice",
+          "pdfToHtml": "PDF to HTML",
+          "qpdf": "QPDF",
+          "tesseract": "Tesseract OCR",
+          "pythonOpenCv": "Python OpenCV",
+          "weasyPrint": "WeasyPrint",
+          "installApp": "Install App",
+          "calibre": "Calibre",
+          "ghostscript": "Ghostscript",
+          "ocrMyPdf": "OCRmyPDF"
+        }
       },
       "mail": {
         "title": "Mail Server",
         "description": "Configure SMTP settings for sending email notifications.",
         "smtp": "SMTP Configuration",
-        "enabled": "Enable Mail",
-        "enabled.description": "Enable email notifications and SMTP functionality",
-        "host": "SMTP Host",
-        "host.description": "The hostname or IP address of your SMTP server",
-        "port": "SMTP Port",
-        "port.description": "The port number for SMTP connection (typically 25, 465, or 587)",
-        "username": "SMTP Username",
-        "username.description": "Username for SMTP authentication",
-        "password": "SMTP Password",
-        "password.description": "Password for SMTP authentication",
-        "from": "From Address",
-        "from.description": "The email address to use as the sender",
-        "enableInvites": "Enable Email Invites",
-        "enableInvites.description": "Allow admins to invite users via email with auto-generated passwords",
-        "frontendUrl": "Frontend URL",
-        "frontendUrl.description": "Base URL for frontend (e.g. https://pdf.example.com). Used for generating invite links in emails. Leave empty to use backend URL."
+        "enabled": {
+          "label": "Enable Mail",
+          "description": "Enable email notifications and SMTP functionality"
+        },
+        "host": {
+          "label": "SMTP Host",
+          "description": "The hostname or IP address of your SMTP server"
+        },
+        "port": {
+          "label": "SMTP Port",
+          "description": "The port number for SMTP connection (typically 25, 465, or 587)"
+        },
+        "username": {
+          "label": "SMTP Username",
+          "description": "Username for SMTP authentication"
+        },
+        "password": {
+          "label": "SMTP Password",
+          "description": "Password for SMTP authentication"
+        },
+        "from": {
+          "label": "From Address",
+          "description": "The email address to use as the sender"
+        },
+        "enableInvites": {
+          "label": "Enable Email Invites",
+          "description": "Allow admins to invite users via email with auto-generated passwords"
+        },
+        "frontendUrl": {
+          "label": "Frontend URL",
+          "description": "Base URL for frontend (e.g. https://pdf.example.com). Used for generating invite links in emails. Leave empty to use backend URL."
+        }
       },
       "legal": {
         "title": "Legal Documents",
@@ -3844,25 +4060,39 @@
           "title": "Legal Responsibility Warning",
           "message": "By customizing these legal documents, you assume full responsibility for ensuring compliance with all applicable laws and regulations, including but not limited to GDPR and other EU data protection requirements. Only modify these settings if: (1) you are operating a personal/private instance, (2) you are outside EU jurisdiction and understand your local legal obligations, or (3) you have obtained proper legal counsel and accept sole responsibility for all user data and legal compliance. Stirling-PDF and its developers assume no liability for your legal obligations."
         },
-        "termsAndConditions": "Terms and Conditions",
-        "termsAndConditions.description": "URL or filename to terms and conditions",
-        "privacyPolicy": "Privacy Policy",
-        "privacyPolicy.description": "URL or filename to privacy policy",
-        "accessibilityStatement": "Accessibility Statement",
-        "accessibilityStatement.description": "URL or filename to accessibility statement",
-        "cookiePolicy": "Cookie Policy",
-        "cookiePolicy.description": "URL or filename to cookie policy",
-        "impressum": "Impressum",
-        "impressum.description": "URL or filename to impressum (required in some jurisdictions)"
+        "termsAndConditions": {
+          "label": "Terms and Conditions",
+          "description": "URL or filename to terms and conditions"
+        },
+        "privacyPolicy": {
+          "label": "Privacy Policy",
+          "description": "URL or filename to privacy policy"
+        },
+        "accessibilityStatement": {
+          "label": "Accessibility Statement",
+          "description": "URL or filename to accessibility statement"
+        },
+        "cookiePolicy": {
+          "label": "Cookie Policy",
+          "description": "URL or filename to cookie policy"
+        },
+        "impressum": {
+          "label": "Impressum",
+          "description": "URL or filename to impressum (required in some jurisdictions)"
+        }
       },
       "premium": {
         "title": "Premium & Enterprise",
         "description": "Configure your premium or enterprise license key.",
         "license": "License Configuration",
-        "key": "License Key",
-        "key.description": "Enter your premium or enterprise license key",
-        "enabled": "Enable Premium Features",
-        "enabled.description": "Enable license key checks for pro/enterprise features",
+        "key": {
+          "label": "License Key",
+          "description": "Enter your premium or enterprise license key"
+        },
+        "enabled": {
+          "label": "Enable Premium Features",
+          "description": "Enable license key checks for pro/enterprise features"
+        },
         "movedFeatures": {
           "title": "Premium Features Distributed",
           "message": "Premium and Enterprise features are now organized in their respective sections:"
@@ -3871,25 +4101,39 @@
       "features": {
         "title": "Features",
         "description": "Configure optional features and functionality.",
-        "serverCertificate": "Server Certificate",
-        "serverCertificate.description": "Configure server-side certificate generation for \"Sign with Stirling-PDF\" functionality",
-        "serverCertificate.enabled": "Enable Server Certificate",
-        "serverCertificate.enabled.description": "Enable server-side certificate for \"Sign with Stirling-PDF\" option",
-        "serverCertificate.organizationName": "Organization Name",
-        "serverCertificate.organizationName.description": "Organization name for generated certificates",
-        "serverCertificate.validity": "Certificate Validity (days)",
-        "serverCertificate.validity.description": "Number of days the certificate will be valid",
-        "serverCertificate.regenerateOnStartup": "Regenerate on Startup",
-        "serverCertificate.regenerateOnStartup.description": "Generate new certificate on each application startup"
+        "serverCertificate": {
+          "label": "Server Certificate",
+          "description": "Configure server-side certificate generation for \"Sign with Stirling-PDF\" functionality",
+          "enabled": {
+            "label": "Enable Server Certificate",
+            "description": "Enable server-side certificate for \"Sign with Stirling-PDF\" option"
+          },
+          "organizationName": {
+            "label": "Organization Name",
+            "description": "Organization name for generated certificates"
+          },
+          "validity": {
+            "label": "Certificate Validity (days)",
+            "description": "Number of days the certificate will be valid"
+          },
+          "regenerateOnStartup": {
+            "label": "Regenerate on Startup",
+            "description": "Generate new certificate on each application startup"
+          }
+        }
       },
       "endpoints": {
         "title": "API Endpoints",
         "description": "Control which API endpoints and endpoint groups are available.",
         "management": "Endpoint Management",
-        "toRemove": "Disabled Endpoints",
-        "toRemove.description": "Select individual endpoints to disable",
-        "groupsToRemove": "Disabled Endpoint Groups",
-        "groupsToRemove.description": "Select endpoint groups to disable",
+        "toRemove": {
+          "label": "Disabled Endpoints",
+          "description": "Select individual endpoints to disable"
+        },
+        "groupsToRemove": {
+          "label": "Disabled Endpoint Groups",
+          "description": "Select endpoint groups to disable"
+        },
         "note": "Note: Disabling endpoints restricts API access but does not remove UI components. Restart required for changes to take effect."
       }
     }
@@ -4000,8 +4244,10 @@
     "desc": "Remove potentially harmful elements from PDF files.",
     "submit": "Sanitise PDF",
     "completed": "Sanitisation completed successfully",
-    "error.generic": "Sanitisation failed",
-    "error.failed": "An error occurred while sanitising the PDF.",
+    "error": {
+      "generic": "Sanitisation failed",
+      "failed": "An error occurred while sanitising the PDF."
+    },
     "filenamePrefix": "sanitised",
     "sanitizationResults": "Sanitisation Results",
     "steps": {
@@ -4015,18 +4261,30 @@
     "options": {
       "title": "Sanitisation Options",
       "note": "Select the elements you want to remove from the PDF. At least one option must be selected.",
-      "removeJavaScript": "Remove JavaScript",
-      "removeJavaScript.desc": "Remove JavaScript actions and scripts from the PDF",
-      "removeEmbeddedFiles": "Remove Embedded Files",
-      "removeEmbeddedFiles.desc": "Remove any files embedded within the PDF",
-      "removeXMPMetadata": "Remove XMP Metadata",
-      "removeXMPMetadata.desc": "Remove XMP metadata from the PDF",
-      "removeMetadata": "Remove Document Metadata",
-      "removeMetadata.desc": "Remove document information metadata (title, author, etc.)",
-      "removeLinks": "Remove Links",
-      "removeLinks.desc": "Remove external links and launch actions from the PDF",
-      "removeFonts": "Remove Fonts",
-      "removeFonts.desc": "Remove embedded fonts from the PDF"
+      "removeJavaScript": {
+        "label": "Remove JavaScript",
+        "desc": "Remove JavaScript actions and scripts from the PDF"
+      },
+      "removeEmbeddedFiles": {
+        "label": "Remove Embedded Files",
+        "desc": "Remove any files embedded within the PDF"
+      },
+      "removeXMPMetadata": {
+        "label": "Remove XMP Metadata",
+        "desc": "Remove XMP metadata from the PDF"
+      },
+      "removeMetadata": {
+        "label": "Remove Document Metadata",
+        "desc": "Remove document information metadata (title, author, etc.)"
+      },
+      "removeLinks": {
+        "label": "Remove Links",
+        "desc": "Remove external links and launch actions from the PDF"
+      },
+      "removeFonts": {
+        "label": "Remove Fonts",
+        "desc": "Remove embedded fonts from the PDF"
+      }
     }
   },
   "addPassword": {
@@ -4395,34 +4653,6 @@
   "undoStorageError": "Undo completed but some files could not be saved to storage",
   "undoSuccess": "Operation undone successfully",
   "unsupported": "Unsupported",
-  "signup": {
-    "title": "Create an account",
-    "subtitle": "Join Stirling PDF to get started",
-    "name": "Name",
-    "email": "Email",
-    "password": "Password",
-    "confirmPassword": "Confirm password",
-    "enterName": "Enter your name",
-    "enterEmail": "Enter your email",
-    "enterPassword": "Enter your password",
-    "confirmPasswordPlaceholder": "Confirm password",
-    "or": "or",
-    "creatingAccount": "Creating Account...",
-    "signUp": "Sign Up",
-    "alreadyHaveAccount": "Already have an account? Sign in",
-    "pleaseFillAllFields": "Please fill in all fields",
-    "passwordsDoNotMatch": "Passwords do not match",
-    "passwordTooShort": "Password must be at least 6 characters long",
-    "invalidEmail": "Please enter a valid email address",
-    "checkEmailConfirmation": "Check your email for a confirmation link to complete your registration.",
-    "accountCreatedSuccessfully": "Account created successfully! You can now sign in.",
-    "unexpectedError": "Unexpected error: {{message}}",
-    "useEmailInstead": "Use Email Instead",
-    "nameRequired": "Name is required",
-    "emailRequired": "Email is required",
-    "passwordRequired": "Password is required",
-    "confirmPasswordRequired": "Please confirm your password"
-  },
   "onboarding": {
     "welcomeModal": {
       "title": "Welcome to Stirling PDF!",
@@ -4456,6 +4686,17 @@
     "startTour": "Start Tour",
     "startTourDescription": "Take a guided tour of Stirling PDF's key features"
   },
+  "adminOnboarding": {
+    "welcome": "Welcome to the <strong>Admin Tour</strong>! Let's explore the powerful enterprise features and settings available to system administrators.",
+    "configButton": "Click the <strong>Config</strong> button to access all system settings and administrative controls.",
+    "settingsOverview": "This is the <strong>Settings Panel</strong>. Admin settings are organised by category for easy navigation.",
+    "teamsAndUsers": "Manage <strong>Teams</strong> and individual users here. You can invite new users via email, shareable links, or create custom accounts for them yourself.",
+    "systemCustomization": "We have extensive ways to customise the UI: <strong>System Settings</strong> let you change the app name and languages, <strong>Features</strong> allows server certificate management, and <strong>Endpoints</strong> lets you enable or disable specific tools for your users.",
+    "databaseSection": "For advanced production environments, we have settings to allow <strong>external database hookups</strong> so you can integrate with your existing infrastructure.",
+    "connectionsSection": "The <strong>Connections</strong> section supports various login methods including custom SSO and SAML providers like Google and GitHub, plus email integrations for notifications and communications.",
+    "adminTools": "Finally, we have advanced administration tools like <strong>Auditing</strong> to track system activity and <strong>Usage Analytics</strong> to monitor how your users interact with the platform.",
+    "wrapUp": "That's the admin tour! You've seen the enterprise features that make Stirling PDF a powerful, customisable solution for organisations. Access this tour anytime from the <strong>Help</strong> menu."
+  },
   "workspace": {
     "title": "Workspace",
     "people": {
@@ -4464,8 +4705,10 @@
       "loading": "Loading people...",
       "searchMembers": "Search members...",
       "addMembers": "Add Members",
-      "inviteMembers": "Invite Members",
-      "inviteMembers.subtitle": "Type or paste in emails below, separated by commas. Your workspace will be billed by members.",
+      "inviteMembers": {
+        "label": "Invite Members",
+        "subtitle": "Type or paste in emails below, separated by commas. Your workspace will be billed by members."
+      },
       "user": "User",
       "role": "Role",
       "team": "Team",
