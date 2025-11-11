@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect, useCallback, useRef } from 'react';
 import { isAxiosError } from 'axios';
+import { useTranslation } from 'react-i18next';
 import apiClient from '@app/services/apiClient';
 import { tauriBackendService } from '@app/services/tauriBackendService';
 import { isBackendNotReadyError } from '@app/constants/backendErrors';
@@ -33,6 +34,7 @@ export function useEndpointEnabled(endpoint: string): {
   error: string | null;
   refetch: () => Promise<void>;
 } {
+  const { t } = useTranslation();
   const [enabled, setEnabled] = useState<boolean | null>(() => (endpoint ? true : null));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -77,7 +79,7 @@ export function useEndpointEnabled(endpoint: string): {
       const isBackendStarting = isBackendNotReadyError(err);
       const message = getErrorMessage(err);
       if (!isMountedRef.current) return;
-      setError(isBackendStarting ? 'Backend starting up...' : message);
+      setError(isBackendStarting ? t('backendHealth.starting', 'Backend starting up...') : message);
       setEnabled(true);
 
       if (!retryTimeoutRef.current) {
@@ -181,7 +183,7 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
       const isBackendStarting = isBackendNotReadyError(err);
       const message = getErrorMessage(err);
       if (!isMountedRef.current) return;
-      setError(isBackendStarting ? 'Backend starting up...' : message);
+      setError(isBackendStarting ? t('backendHealth.starting', 'Backend starting up...') : message);
 
       const fallbackStatus = endpoints.reduce((acc, endpointName) => {
         acc[endpointName] = true;
@@ -247,3 +249,4 @@ export function useEndpointConfig(): EndpointConfig {
 
   return { backendUrl };
 }
+  const { t } = useTranslation();

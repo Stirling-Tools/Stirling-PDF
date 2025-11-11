@@ -3,6 +3,7 @@ import { alert } from '@app/components/toast';
 import { setupApiInterceptors as coreSetup } from '@core/services/apiClientSetup';
 import { tauriBackendService } from '@app/services/tauriBackendService';
 import { createBackendNotReadyError } from '@app/constants/backendErrors';
+import i18n from '@app/i18n';
 
 const BACKEND_TOAST_COOLDOWN_MS = 4000;
 let lastBackendToast = 0;
@@ -30,8 +31,8 @@ export function setupApiInterceptors(client: AxiosInstance): void {
           lastBackendToast = now;
           alert({
             alertType: 'error',
-            title: 'Backend still starting',
-            body: 'Please wait for the embedded backend to finish launching and try again.',
+            title: i18n.t('backendHealth.offline', 'Backend Offline'),
+            body: i18n.t('backendHealth.wait', 'Please wait for the backend to finish launching and try again.'),
             isPersistentPopup: false,
           });
         }
