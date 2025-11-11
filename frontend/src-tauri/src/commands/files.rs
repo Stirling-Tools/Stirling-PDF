@@ -5,6 +5,7 @@ use std::sync::Mutex;
 static OPENED_FILE: Mutex<Option<String>> = Mutex::new(None);
 
 // Set the opened file path (called by macOS file open events)
+#[cfg(target_os = "macos")]
 pub fn set_opened_file(file_path: String) {
     let mut opened_file = OPENED_FILE.lock().unwrap();
     *opened_file = Some(file_path.clone());
