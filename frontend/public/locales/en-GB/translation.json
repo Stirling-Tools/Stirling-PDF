@@ -4535,6 +4535,32 @@
       "metadata": "Metadata",
       "serializing": "Finalizing",
       "complete": "Complete"
+    },
+    "fontAnalysis": {
+      "currentPageFonts": "Fonts on this page",
+      "allFonts": "All fonts",
+      "perfectTitle": "All Fonts Available",
+      "perfectMessage": "All fonts are fully available. You can edit and add text without issues in exported PDFs.",
+      "warningTitle": "Font Limitations",
+      "warningMessage": "Some fonts have limitations. Existing text will export correctly, but adding new text may cause issues.",
+      "infoTitle": "Font Information",
+      "infoMessage": "Font reproduction information available.",
+      "summary": "Font Summary",
+      "font": "font",
+      "fonts": "fonts",
+      "perfect": "perfect",
+      "subset": "subset",
+      "fallback": "fallback",
+      "missing": "missing",
+      "fontDetails": "Font Details",
+      "details": "Font Details",
+      "embedded": "Embedded",
+      "type": "Type",
+      "encoding": "Encoding",
+      "webFormat": "Web Format",
+      "standard14": "Standard PDF Font",
+      "warnings": "Warnings",
+      "suggestions": "Notes"
     }
   },
   "workspace": {

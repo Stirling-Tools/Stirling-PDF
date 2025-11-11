@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
+  Accordion,
   ActionIcon,
   Alert,
   Badge,
@@ -39,6 +40,7 @@ import {
   ConversionProgress,
 } from '@app/tools/pdfJsonEditor/pdfJsonEditorTypes';
 import { getImageBounds, pageDimensions } from '@app/tools/pdfJsonEditor/pdfJsonEditorUtils';
+import FontStatusPanel from '@app/components/tools/pdfJsonEditor/FontStatusPanel';
 
 const MAX_RENDER_WIDTH = 820;
 const MIN_BOX_SIZE = 18;
@@ -995,17 +997,27 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
         withBorder
         radius="md"
         shadow="xs"
-        padding="lg"
-        style={{ gridColumn: '2 / 3', gridRow: 1, position: 'sticky', top: '1.5rem', zIndex: 2 }}
+        padding="md"
+        style={{
+          gridColumn: '2 / 3',
+          gridRow: 1,
+          maxHeight: 'calc(100vh - 3rem)',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden'
+        }}
       >
-        <Stack gap="sm">
-          <Group justify="space-between" align="center">
-            <Group gap="xs" align="center">
-              <DescriptionIcon fontSize="small" />
-              <Title order={3}>{t('pdfJsonEditor.title', 'PDF JSON Editor')}</Title>
-              {hasChanges && <Badge color="yellow" size="sm">{t('pdfJsonEditor.badges.unsaved', 'Edited')}</Badge>}
+        <ScrollArea style={{ flex: 1 }} offsetScrollbars>
+          <Stack gap="sm" pb="md">
+            <Group justify="space-between" align="center">
+              <Group gap="xs" align="center">
+                <DescriptionIcon fontSize="small" />
+                <Title order={3}>{t('pdfJsonEditor.title', 'PDF JSON Editor')}</Title>
+                {hasChanges && <Badge color="yellow" size="sm">{t('pdfJsonEditor.badges.unsaved', 'Edited')}</Badge>}
+              </Group>
             </Group>
-            <Stack gap="sm">
+
+            <Stack gap="xs">
               <FileButton onChange={onLoadJson} accept="application/pdf,application/json,.pdf,.json">
                 {(props) => (
                   <Button
@@ -1047,132 +1059,138 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
                 {t('pdfJsonEditor.actions.generatePdf', 'Generate PDF')}
               </Button>
             </Stack>
-          </Group>
 
-          {fileName && (
-            <Text size="sm" c="dimmed">
-              {t('pdfJsonEditor.currentFile', 'Current file: {{name}}', { name: fileName })}
-            </Text>
-          )}
-
-          <Divider my="sm" />
-
-          <Group justify="space-between" align="center">
-            <div>
-              <Text fw={500} size="sm">
-                {t('pdfJsonEditor.options.autoScaleText.title', 'Auto-scale text to fit boxes')}
+            {fileName && (
+              <Text size="sm" c="dimmed">
+                {t('pdfJsonEditor.currentFile', 'Current file: {{name}}', { name: fileName })}
               </Text>
-              <Text size="xs" c="dimmed" mt={4}>
-                {t(
-                  'pdfJsonEditor.options.autoScaleText.description',
-                  'Automatically scales text horizontally to fit within its original bounding box when font rendering differs from PDF.'
-                )}
-              </Text>
-            </div>
-            <Switch
-              size="md"
-              checked={autoScaleText}
-              onChange={(event) => setAutoScaleText(event.currentTarget.checked)}
-            />
-          </Group>
+            )}
 
-          <Stack gap="xs">
-            <Group gap={4} align="center">
-              <Text fw={500} size="sm">
-                {t('pdfJsonEditor.options.groupingMode.title', 'Text Grouping Mode')}
-              </Text>
-              {externalGroupingMode === 'auto' && isParagraphPage && (
-                <Badge size="xs" color="blue" variant="light">
-                  {t('pdfJsonEditor.pageType.paragraph', 'Paragraph page')}
-                </Badge>
-              )}
-              {externalGroupingMode === 'auto' && !isParagraphPage && hasDocument && (
-                <Badge size="xs" color="gray" variant="light">
-                  {t('pdfJsonEditor.pageType.sparse', 'Sparse text')}
-                </Badge>
-              )}
+            <Divider my="xs" />
+
+            <Group justify="space-between" align="center">
+              <div>
+                <Text fw={500} size="sm">
+                  {t('pdfJsonEditor.options.autoScaleText.title', 'Auto-scale text to fit boxes')}
+                </Text>
+                <Text size="xs" c="dimmed" mt={4}>
+                  {t(
+                    'pdfJsonEditor.options.autoScaleText.description',
+                    'Automatically scales text horizontally to fit within its original bounding box when font rendering differs from PDF.'
+                  )}
+                </Text>
+              </div>
+              <Switch
+                size="md"
+                checked={autoScaleText}
+                onChange={(event) => setAutoScaleText(event.currentTarget.checked)}
+              />
             </Group>
-            <Text size="xs" c="dimmed">
-              {externalGroupingMode === 'auto'
-                ? t(
-                    'pdfJsonEditor.options.groupingMode.autoDescription',
-                    'Automatically detects page type and groups text appropriately.'
-                  )
-                : externalGroupingMode === 'paragraph'
-                  ? t(
-                      'pdfJsonEditor.options.groupingMode.paragraphDescription',
-                      'Groups aligned lines into multi-line paragraph text boxes.'
-                    )
-                  : t(
-                      'pdfJsonEditor.options.groupingMode.singleLineDescription',
-                      'Keeps each PDF text line as a separate text box.'
-                    )}
-            </Text>
-            <SegmentedControl
-              value={externalGroupingMode}
-              onChange={(value) => onGroupingModeChange(value as GroupingMode)}
-              data={[
-                { label: t('pdfJsonEditor.groupingMode.auto', 'Auto'), value: 'auto' },
-                { label: t('pdfJsonEditor.groupingMode.paragraph', 'Paragraph'), value: 'paragraph' },
-                { label: t('pdfJsonEditor.groupingMode.singleLine', 'Single Line'), value: 'singleLine' },
-              ]}
-              fullWidth
-            />
-          </Stack>
 
-          <Group justify="space-between" align="center">
-            <div>
-              <Text fw={500} size="sm">
-                {t('pdfJsonEditor.options.forceSingleElement.title', 'Lock edited text to a single PDF element')}
-              </Text>
-              <Text size="xs" c="dimmed" mt={4}>
-                {t(
-                  'pdfJsonEditor.options.forceSingleElement.description',
-                  'When enabled, the editor exports each edited text box as one PDF text element to avoid overlapping glyphs or mixed fonts.'
+            <Stack gap="xs">
+              <Group gap={4} align="center">
+                <Text fw={500} size="sm">
+                  {t('pdfJsonEditor.options.groupingMode.title', 'Text Grouping Mode')}
+                </Text>
+                {externalGroupingMode === 'auto' && isParagraphPage && (
+                  <Badge size="xs" color="blue" variant="light">
+                    {t('pdfJsonEditor.pageType.paragraph', 'Paragraph page')}
+                  </Badge>
                 )}
+                {externalGroupingMode === 'auto' && !isParagraphPage && hasDocument && (
+                  <Badge size="xs" color="gray" variant="light">
+                    {t('pdfJsonEditor.pageType.sparse', 'Sparse text')}
+                  </Badge>
+                )}
+              </Group>
+              <Text size="xs" c="dimmed">
+                {externalGroupingMode === 'auto'
+                  ? t(
+                      'pdfJsonEditor.options.groupingMode.autoDescription',
+                      'Automatically detects page type and groups text appropriately.'
+                    )
+                  : externalGroupingMode === 'paragraph'
+                    ? t(
+                        'pdfJsonEditor.options.groupingMode.paragraphDescription',
+                        'Groups aligned lines into multi-line paragraph text boxes.'
+                      )
+                    : t(
+                        'pdfJsonEditor.options.groupingMode.singleLineDescription',
+                        'Keeps each PDF text line as a separate text box.'
+                      )}
               </Text>
-            </div>
-            <Switch
-              size="md"
-              checked={forceSingleTextElement}
-              onChange={(event) => onForceSingleTextElementChange(event.currentTarget.checked)}
-            />
-          </Group>
+              <SegmentedControl
+                value={externalGroupingMode}
+                onChange={(value) => onGroupingModeChange(value as GroupingMode)}
+                data={[
+                  { label: t('pdfJsonEditor.groupingMode.auto', 'Auto'), value: 'auto' },
+                  { label: t('pdfJsonEditor.groupingMode.paragraph', 'Paragraph'), value: 'paragraph' },
+                  { label: t('pdfJsonEditor.groupingMode.singleLine', 'Single Line'), value: 'singleLine' },
+                ]}
+                fullWidth
+              />
+            </Stack>
 
-        </Stack>
+            <Group justify="space-between" align="center">
+              <div>
+                <Text fw={500} size="sm">
+                  {t('pdfJsonEditor.options.forceSingleElement.title', 'Lock edited text to a single PDF element')}
+                </Text>
+                <Text size="xs" c="dimmed" mt={4}>
+                  {t(
+                    'pdfJsonEditor.options.forceSingleElement.description',
+                    'When enabled, the editor exports each edited text box as one PDF text element to avoid overlapping glyphs or mixed fonts.'
+                  )}
+                </Text>
+              </div>
+              <Switch
+                size="md"
+                checked={forceSingleTextElement}
+                onChange={(event) => onForceSingleTextElementChange(event.currentTarget.checked)}
+              />
+            </Group>
+
+            <Divider my="xs" />
+
+            <Accordion variant="contained">
+              <Accordion.Item value="disclaimer">
+                <Accordion.Control>
+                  <Group gap="xs" wrap="nowrap">
+                    <InfoOutlinedIcon fontSize="small" />
+                    <Text size="sm" fw={500}>
+                      {t('pdfJsonEditor.disclaimer.heading', 'Preview Limitations')}
+                    </Text>
+                  </Group>
+                </Accordion.Control>
+                <Accordion.Panel>
+                  <Stack gap={4}>
+                    <Text size="xs">
+                      {t(
+                        'pdfJsonEditor.disclaimer.textFocus',
+                        'This workspace focuses on editing text and repositioning embedded images. Complex page artwork, form widgets, and layered graphics are preserved for export but are not fully editable here.'
+                      )}
+                    </Text>
+                    <Text size="xs">
+                      {t(
+                        'pdfJsonEditor.disclaimer.previewVariance',
+                        'Some visuals (such as table borders, shapes, or annotation appearances) may not display exactly in the preview. The exported PDF keeps the original drawing commands whenever possible.'
+                      )}
+                    </Text>
+                    <Text size="xs">
+                      {t(
+                        'pdfJsonEditor.disclaimer.alpha',
+                        'This alpha viewer is still evolving—certain fonts, colours, transparency effects, and layout details may shift slightly. Please double-check the generated PDF before sharing.'
+                      )}
+                    </Text>
+                  </Stack>
+                </Accordion.Panel>
+              </Accordion.Item>
+            </Accordion>
+
+            {hasDocument && <FontStatusPanel document={pdfDocument} pageIndex={selectedPage} />}
+          </Stack>
+        </ScrollArea>
       </Card>
-
-      <Alert
-        icon={<InfoOutlinedIcon fontSize="small" />}
-        color="yellow"
-        radius="md"
-        variant="light"
-        style={{ gridColumn: '2 / 3' }}
-      >
-        <Stack gap={4}>
-          <Text fw={600}>
-            {t('pdfJsonEditor.disclaimer.heading', 'Preview limitations')}
-          </Text>
-          <Text size="sm">
-            {t(
-              'pdfJsonEditor.disclaimer.textFocus',
-              'This workspace focuses on editing text and repositioning embedded images. Complex page artwork, form widgets, and layered graphics are preserved for export but are not fully editable here.'
-            )}
-          </Text>
-          <Text size="sm">
-            {t(
-              'pdfJsonEditor.disclaimer.previewVariance',
-              'Some visuals (such as table borders, shapes, or annotation appearances) may not display exactly in the preview. The exported PDF keeps the original drawing commands whenever possible.'
-            )}
-          </Text>
-          <Text size="sm">
-            {t(
-              'pdfJsonEditor.disclaimer.alpha',
-              'This alpha viewer is still evolving—certain fonts, colours, transparency effects, and layout details may shift slightly. Please double-check the generated PDF before sharing.'
-            )}
-          </Text>
-        </Stack>
-      </Alert>
 
       {hasDocument && (
         <Card
