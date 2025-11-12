@@ -77,7 +77,7 @@ const PdfJsonEditor = ({ onComplete, onError }: BaseToolProps) => {
     stage: string;
     message: string;
   } | null>(null);
-  const [forceSingleTextElement, setForceSingleTextElement] = useState(false);
+  const [forceSingleTextElement, setForceSingleTextElement] = useState(true);
   const [groupingMode, setGroupingMode] = useState<'auto' | 'paragraph' | 'singleLine'>('auto');
   const [hasVectorPreview, setHasVectorPreview] = useState(false);
   const [pagePreviews, setPagePreviews] = useState<Map<number, string>>(new Map());

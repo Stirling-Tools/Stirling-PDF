@@ -1069,13 +1069,15 @@ export const restoreGlyphElements = (
 
     groups.forEach((group) => {
       if (group.text !== group.originalText) {
-        if (forceMergedGroups) {
-          rebuiltElements.push(createMergedElement(group));
-          return;
-        }
+        // Always try to rebuild paragraph lines if text has newlines
         const paragraphElements = rebuildParagraphLineElements(group);
         if (paragraphElements && paragraphElements.length > 0) {
           rebuiltElements.push(...paragraphElements);
+          return;
+        }
+        // If no newlines or rebuilding failed, check if we should force merge
+        if (forceMergedGroups) {
+          rebuiltElements.push(createMergedElement(group));
           return;
         }
         const originalGlyphCount = group.originalElements.reduce(
