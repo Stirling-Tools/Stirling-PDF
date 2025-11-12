@@ -93,6 +93,13 @@ const FileEditorThumbnail = ({
     return (m?.[1] || '').toUpperCase();
   }, [file.name]);
 
+  const extLower = useMemo(() => {
+    const m = /\.([a-z0-9]+)$/i.exec(file.name ?? '');
+    return (m?.[1] || '').toLowerCase();
+  }, [file.name]);
+
+  const isCBZ = extLower === 'cbz';
+
   const pageLabel = useMemo(
     () =>
       pageCount > 0
@@ -206,7 +213,7 @@ const FileEditorThumbnail = ({
           alert({ alertType: 'success', title: `Unzipping ${file.name}`, expandable: false, durationMs: 2500 });
         }
       },
-      hidden: !isZipFile || !onUnzipFile,
+      hidden: !isZipFile || !onUnzipFile || isCBZ,
     },
     {
       id: 'close',
