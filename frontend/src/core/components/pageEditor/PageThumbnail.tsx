@@ -1,5 +1,5 @@
 import React, { useCallback, useState, useEffect, useRef, useMemo } from 'react';
-import { Text, Checkbox } from '@mantine/core';
+import { Text, Checkbox, useMediaQuery } from '@mantine/core';
 import { useIsMobile } from '@app/hooks/useIsMobile';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
