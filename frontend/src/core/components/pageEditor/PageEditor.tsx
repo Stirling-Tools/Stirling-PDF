@@ -453,6 +453,7 @@ const PageEditor = ({
             items={displayedPages}
             onReorderPages={handleReorderPages}
             zoomLevel={zoomLevel}
+            selectedFileIds={selectedFileIds}
             getThumbnailData={(pageId) => {
               const page = displayDocument.pages.find(p => p.id === pageId);
               if (!page?.thumbnail) return null;
@@ -520,6 +521,3 @@ const PageEditor = ({
 };
 
 export default PageEditor;
-
-
-

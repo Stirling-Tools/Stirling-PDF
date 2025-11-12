@@ -16,7 +16,7 @@ export interface PageDocumentHook {
  */
 export function usePageDocument(): PageDocumentHook {
   const { state, selectors } = useFileState();
-  const { fileOrder } = usePageEditor();
+  const { fileOrder, currentPages } = usePageEditor();
 
   // Use PageEditorContext's fileOrder instead of FileContext's global order
   // This ensures the page editor respects its own workspace ordering
@@ -48,6 +48,10 @@ export function usePageDocument(): PageDocumentHook {
   const processedFileTotalPages = primaryStirlingFileStub?.processedFile?.totalPages;
 
   // Compute merged document with stable signature (prevents infinite loops)
+  const currentPagesSignature = useMemo(() => {
+    return currentPages ? currentPages.map(page => page.id).join(',') : '';
+  }, [currentPages]);
+
   const mergedPdfDocument = useMemo((): PDFDocument | null => {
     if (activeFileIds.length === 0) return null;
 
@@ -201,6 +205,22 @@ export function usePageDocument(): PageDocumentHook {
       pageNumber: index + 1,
     }));
 
+    const currentPagesSet = currentPages ? new Set(currentPages.map(page => page.id)) : null;
+    if (currentPagesSet && currentPagesSet.size === pages.length) {
+      const sameIds = pages.every(page => currentPagesSet.has(page.id));
+      if (sameIds) {
+        const mergedById = new Map(pages.map(page => [page.id, page]));
+        pages = currentPages.map((currentPage, index) => {
+          const source = mergedById.get(currentPage.id);
+          const mergedPage = source ? { ...source, ...currentPage } : currentPage;
+          return {
+            ...mergedPage,
+            pageNumber: index + 1,
+          };
+        });
+      }
+    }
+
     const mergedDoc: PDFDocument = {
       id: activeFileIds.join('-'),
       name,
@@ -210,7 +230,7 @@ export function usePageDocument(): PageDocumentHook {
     };
 
     return mergedDoc;
-  }, [activeFileIds, primaryFileId, primaryStirlingFileStub, processedFilePages, processedFileTotalPages, selectors, activeFilesSignature, selectedFileIdsKey, state.ui.selectedFileIds, allFileIds]);
+  }, [activeFileIds, primaryFileId, primaryStirlingFileStub, processedFilePages, processedFileTotalPages, selectors, activeFilesSignature, selectedFileIdsKey, state.ui.selectedFileIds, allFileIds, currentPagesSignature, currentPages]);
 
   // Large document detection for smart loading
   const isVeryLargeDocument = useMemo(() => {

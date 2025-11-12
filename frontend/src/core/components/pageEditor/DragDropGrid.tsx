@@ -26,6 +26,8 @@ interface DragDropItem {
   id: string;
   splitAfter?: boolean;
   isPlaceholder?: boolean;
+  originalFileId?: string;
+  pageNumber?: number;
 }
 
 interface DragDropGridProps<T extends DragDropItem> {
@@ -34,6 +36,7 @@ interface DragDropGridProps<T extends DragDropItem> {
   renderItem: (item: T, index: number, refs: React.MutableRefObject<Map<string, HTMLDivElement>>, boxSelectedIds: string[], clearBoxSelection: () => void, getBoxSelection: () => string[], activeId: string | null, activeDragIds: string[], justMoved: boolean, isOver: boolean, dragHandleProps?: any, zoomLevel?: number) => React.ReactNode;
   getThumbnailData?: (itemId: string) => { src: string; rotation: number } | null;
   zoomLevel?: number;
+  selectedFileIds?: string[];
 }
 
 type DropSide = 'left' | 'right' | null;
@@ -196,11 +199,14 @@ interface DraggableItemProps<T extends DragDropItem> {
 }
 
 const DraggableItem = <T extends DragDropItem>({ item, index, itemRefs, boxSelectedPageIds, clearBoxSelection, getBoxSelection, activeId, activeDragIds, justMoved, getThumbnailData, renderItem, onUpdateDropTarget, zoomLevel }: DraggableItemProps<T>) => {
+  const isPlaceholder = Boolean(item.isPlaceholder);
+  const pageNumber = (item as any).pageNumber ?? index + 1;
   const { attributes, listeners, setNodeRef: setDraggableRef } = useDraggable({
     id: item.id,
+    disabled: isPlaceholder,
     data: {
       index,
-      pageNumber: index + 1,
+      pageNumber,
       getThumbnail: () => {
         if (getThumbnailData) {
           const data = getThumbnailData(item.id);
@@ -252,6 +258,7 @@ const DragDropGrid = <T extends DragDropItem>({
   onReorderPages,
   getThumbnailData,
   zoomLevel = 1.0,
+  selectedFileIds,
 }: DragDropGridProps<T>) => {
   const itemRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const containerRef = useRef<HTMLDivElement>(null);
@@ -263,16 +270,37 @@ const DragDropGrid = <T extends DragDropItem>({
   const { filteredItems: visibleItems, filteredToOriginalIndex } = useMemo(() => {
     const filtered: T[] = [];
     const indexMap: number[] = [];
+    const selectedIds =
+      selectedFileIds && selectedFileIds.length > 0 ? new Set(selectedFileIds) : null;
 
     items.forEach((item, index) => {
-      if (!item.isPlaceholder) {
-        filtered.push(item);
-        indexMap.push(index);
+      const isPlaceholder = Boolean(item.isPlaceholder);
+      if (isPlaceholder) {
+        return;
       }
+
+      const belongsToVisibleFile =
+        !selectedIds || !item.originalFileId || selectedIds.has(item.originalFileId);
+
+      if (!belongsToVisibleFile) {
+        return;
+      }
+
+      filtered.push(item);
+      indexMap.push(index);
     });
 
     return { filteredItems: filtered, filteredToOriginalIndex: indexMap };
-  }, [items]);
+  }, [items, selectedFileIds]);
+
+  useEffect(() => {
+    const visibleIdSet = new Set(visibleItems.map(item => item.id));
+    itemRefs.current.forEach((_, pageId) => {
+      if (!visibleIdSet.has(pageId)) {
+        itemRefs.current.delete(pageId);
+      }
+    });
+  }, [visibleItems]);
 
   // Box selection state
   const [boxSelectStart, setBoxSelectStart] = useState<{ x: number; y: number } | null>(null);
@@ -396,7 +424,7 @@ const DragDropGrid = <T extends DragDropItem>({
   // Re-measure virtualizer when zoom or items per row changes
   useEffect(() => {
     rowVirtualizer.measure();
-  }, [zoomLevel, itemsPerRow]);
+  }, [zoomLevel, itemsPerRow, visibleItems.length]);
 
   // Cleanup highlight timeout on unmount
   useEffect(() => {
@@ -530,7 +558,6 @@ const DragDropGrid = <T extends DragDropItem>({
   // Handle drag end
   const handleDragEnd = useCallback((event: DragEndEvent) => {
     const { active, over } = event;
-
     const finalDropSide = dropSide;
     setActiveId(null);
     setDragPreview(null);
@@ -541,9 +568,10 @@ const DragDropGrid = <T extends DragDropItem>({
       return;
     }
 
-    // Get data from hooks
     const activeData = active.data.current;
-    if (!activeData) return;
+    if (!activeData) {
+      return;
+    }
 
     const sourcePageNumber = activeData.pageNumber;
 
@@ -557,7 +585,9 @@ const DragDropGrid = <T extends DragDropItem>({
       overData ? overData.index : null
     );
 
-    if (targetIndex === null) return;
+    if (targetIndex === null) {
+      return;
+    }
     if (targetIndex < 0) targetIndex = 0;
     if (targetIndex > items.length) targetIndex = items.length;
 
