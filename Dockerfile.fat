@@ -17,9 +17,9 @@ WORKDIR /app
 COPY . .
 
 # Build the application with DISABLE_ADDITIONAL_FEATURES=false
-RUN DISABLE_ADDITIONAL_FEATURES=false \
-    STIRLING_PDF_DESKTOP_UI=false \
-    ./gradlew clean build -x spotlessApply -x spotlessCheck -x test -x sonarqube
+ENV DISABLE_ADDITIONAL_FEATURES=false \
+    STIRLING_PDF_DESKTOP_UI=false
+RUN ./gradlew clean build -x spotlessApply -x spotlessCheck -x test -x sonarqube
 
 # Main stage
 FROM alpine:3.22.2@sha256:4b7ce07002c69e8f3d704a9c5d6fd3053be500b7f1c69fc0d80990c2ad8dd412
@@ -52,11 +52,14 @@ ENV DISABLE_ADDITIONAL_FEATURES=true \
     TEMP=/tmp/stirling-pdf \
     TMP=/tmp/stirling-pdf
 
-
 # JDK for app
-RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/apk/repositories && \
-    echo "@community https://dl-cdn.alpinelinux.org/alpine/edge/community" | tee -a /etc/apk/repositories && \
-    echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/testing" | tee -a /etc/apk/repositories && \
+RUN apk add --no-cache bash \
+    && ln -sf /bin/bash /bin/sh \
+    && printf '%s\n' \
+      'https://dl-cdn.alpinelinux.org/alpine/edge/main' \
+      'https://dl-cdn.alpinelinux.org/alpine/edge/community' \
+      'https://dl-cdn.alpinelinux.org/alpine/edge/testing' \
+      > /etc/apk/repositories && \
     apk upgrade --no-cache -a && \
     apk add --no-cache \
     ca-certificates \
@@ -79,18 +82,22 @@ RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/a
     # OCR MY PDF (unpaper for descew and other advanced featues)
     tesseract-ocr-data-eng \
     tesseract-ocr-data-chi_sim \
-	tesseract-ocr-data-deu \
-	tesseract-ocr-data-fra \
-	tesseract-ocr-data-por \
+    tesseract-ocr-data-deu \
+    tesseract-ocr-data-fra \
+    tesseract-ocr-data-por \
     unpaper \
     font-terminus font-dejavu font-noto font-noto-cjk font-awesome font-noto-extra font-liberation font-linux-libertine font-urw-base35 \
-    # CV
+    # CV / Python
     py3-opencv \
     python3 \
     ocrmypdf \
     py3-pip \
-    py3-pillow@testing \
-    py3-pdf2image@testing && \
+    py3-pillow \
+    py3-pdf2image \
+    # Calibre (musl-native) + QtWebEngine Runtime
+    calibre && \
+    # Calibre fixes
+    apk fix --no-cache calibre && \
     python3 -m venv /opt/venv && \
     /opt/venv/bin/pip install --no-cache-dir --upgrade pip setuptools && \
     /opt/venv/bin/pip install --no-cache-dir --upgrade unoserver weasyprint && \
@@ -106,7 +113,8 @@ RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/a
     # User permissions
     addgroup -S stirlingpdfgroup && adduser -S stirlingpdfuser -G stirlingpdfgroup && \
     chown -R stirlingpdfuser:stirlingpdfgroup $HOME /scripts /usr/share/fonts/opentype/noto /configs /customFiles /pipeline /tmp/stirling-pdf && \
-    chown stirlingpdfuser:stirlingpdfgroup /app.jar
+    chown stirlingpdfuser:stirlingpdfgroup /app.jar && \
+    ln -sf /bin/busybox /bin/sh
 
 EXPOSE 8080/tcp
 # Set user and run command
