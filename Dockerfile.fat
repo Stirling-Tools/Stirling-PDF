@@ -31,7 +31,8 @@ COPY --from=lscr.io/linuxserver/libreoffice:latest \
 COPY --from=lscr.io/linuxserver/libreoffice:latest \
     /usr/lib/libreoffice/share/ /usr/lib/libreoffice/share/
 
-RUN chmod 755 /usr/bin/soffice.bin && \
+RUN mkdir -p /etc/ld.so.conf.d && \
+    chmod 755 /usr/bin/soffice.bin && \
     ln -sf /usr/bin/soffice.bin /usr/lib/libreoffice/program/soffice && \
     echo "/usr/lib/libreoffice/program" > /etc/ld.so.conf.d/libreoffice.conf && \
     ldconfig
