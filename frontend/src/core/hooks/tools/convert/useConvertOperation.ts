@@ -39,7 +39,7 @@ export const buildConvertFormData = (parameters: ConvertParameters, selectedFile
     formData.append("fileInput", file);
   });
 
-  const { fromExtension, toExtension, imageOptions, htmlOptions, emailOptions, pdfaOptions } = parameters;
+  const { fromExtension, toExtension, imageOptions, htmlOptions, emailOptions, pdfaOptions, cbzOptions, cbzOutputOptions } = parameters;
 
   if (isImageFormat(toExtension)) {
     formData.append("imageFormat", toExtension);
@@ -67,6 +67,10 @@ export const buildConvertFormData = (parameters: ConvertParameters, selectedFile
     formData.append("outputFormat", pdfaOptions.outputFormat);
   } else if (fromExtension === 'pdf' && toExtension === 'csv') {
     formData.append("pageNumbers", "all");
+  } else if (fromExtension === 'cbz' && toExtension === 'pdf') {
+    formData.append("optimizeForEbook", (cbzOptions?.optimizeForEbook ?? false).toString());
+  } else if (fromExtension === 'pdf' && toExtension === 'cbz') {
+    formData.append("dpi", (cbzOutputOptions?.dpi ?? 150).toString());
   }
 
   return formData;

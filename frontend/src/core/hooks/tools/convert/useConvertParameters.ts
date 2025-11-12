@@ -36,6 +36,12 @@ export interface ConvertParameters extends BaseParameters {
   pdfaOptions: {
     outputFormat: string;
   };
+  cbzOptions: {
+    optimizeForEbook: boolean;
+  };
+  cbzOutputOptions: {
+    dpi: number;
+  };
   isSmartDetection: boolean;
   smartDetectionType: 'mixed' | 'images' | 'web' | 'none';
 }
@@ -68,6 +74,12 @@ export const defaultParameters: ConvertParameters = {
   },
   pdfaOptions: {
     outputFormat: 'pdfa-1',
+  },
+  cbzOptions: {
+    optimizeForEbook: false,
+  },
+  cbzOutputOptions: {
+    dpi: 150,
   },
   isSmartDetection: false,
   smartDetectionType: 'none',

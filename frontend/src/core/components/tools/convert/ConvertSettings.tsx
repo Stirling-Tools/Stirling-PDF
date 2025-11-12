@@ -13,6 +13,8 @@ import ConvertToImageSettings from "@app/components/tools/convert/ConvertToImage
 import ConvertFromImageSettings from "@app/components/tools/convert/ConvertFromImageSettings";
 import ConvertFromWebSettings from "@app/components/tools/convert/ConvertFromWebSettings";
 import ConvertFromEmailSettings from "@app/components/tools/convert/ConvertFromEmailSettings";
+import ConvertFromCbzSettings from "@app/components/tools/convert/ConvertFromCbzSettings";
+import ConvertToCbzSettings from "@app/components/tools/convert/ConvertToCbzSettings";
 import ConvertToPdfaSettings from "@app/components/tools/convert/ConvertToPdfaSettings";
 import { ConvertParameters } from "@app/hooks/tools/convert/useConvertParameters";
 import {
@@ -118,6 +120,12 @@ const ConvertSettings = ({
     onParameterChange('pdfaOptions', {
       outputFormat: 'pdfa-1',
     });
+    onParameterChange('cbzOptions', {
+      optimizeForEbook: false,
+    });
+    onParameterChange('cbzOutputOptions', {
+      dpi: 150,
+    });
     onParameterChange('isSmartDetection', false);
     onParameterChange('smartDetectionType', 'none');
   };
@@ -179,6 +187,12 @@ const ConvertSettings = ({
     });
     onParameterChange('pdfaOptions', {
       outputFormat: 'pdfa-1',
+    });
+    onParameterChange('cbzOptions', {
+      optimizeForEbook: false,
+    });
+    onParameterChange('cbzOutputOptions', {
+      dpi: 150,
     });
   };
 
@@ -286,6 +300,30 @@ const ConvertSettings = ({
         <>
           <Divider />
           <ConvertFromEmailSettings
+            parameters={parameters}
+            onParameterChange={onParameterChange}
+            disabled={disabled}
+          />
+        </>
+      )}
+
+      {/* CBZ to PDF options */}
+      {parameters.fromExtension === 'cbz' && parameters.toExtension === 'pdf' && (
+        <>
+          <Divider />
+          <ConvertFromCbzSettings
+            parameters={parameters}
+            onParameterChange={onParameterChange}
+            disabled={disabled}
+          />
+        </>
+      )}
+
+      {/* PDF to CBZ options */}
+      {parameters.fromExtension === 'pdf' && parameters.toExtension === 'cbz' && (
+        <>
+          <Divider />
+          <ConvertToCbzSettings
             parameters={parameters}
             onParameterChange={onParameterChange}
             disabled={disabled}
