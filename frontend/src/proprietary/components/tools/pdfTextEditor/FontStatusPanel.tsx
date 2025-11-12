@@ -255,8 +255,8 @@ const FontStatusPanel: React.FC<FontStatusPanelProps> = ({ document, pageIndex }
 
             {/* Font List */}
             <Stack gap={4} mt="xs">
-              {fonts.map((font) => (
-                <FontDetailItem key={font.fontId} analysis={font} />
+              {fonts.map((font, index) => (
+                <FontDetailItem key={`${font.fontId}-${index}`} analysis={font} />
               ))}
             </Stack>
           </Stack>

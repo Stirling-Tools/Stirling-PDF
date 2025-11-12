@@ -2647,8 +2647,18 @@ public class PdfJsonConversionService {
                                             pageNumber);
                                     continue;
                                 }
-                                contentStream.showText(
-                                        new String(encoded, StandardCharsets.ISO_8859_1));
+                                try {
+                                    contentStream.showText(
+                                            new String(encoded, StandardCharsets.ISO_8859_1));
+                                } catch (IllegalArgumentException ex) {
+                                    log.warn(
+                                            "Failed to render text '{}' with font {} on page {}: {}",
+                                            run.text(),
+                                            run.font().getName(),
+                                            pageNumber,
+                                            ex.getMessage());
+                                    continue;
+                                }
                             }
                         }
                     }
@@ -3380,8 +3390,18 @@ public class PdfJsonConversionService {
             // or return null to trigger fallback font
         } else if (!isType3Font || fontModel == null) {
             // For non-Type3 fonts without Type3 metadata, use standard encoding
-            byte[] encoded = font.encode(text);
-            return sanitizeEncoded(encoded);
+            try {
+                byte[] encoded = font.encode(text);
+                return sanitizeEncoded(encoded);
+            } catch (IllegalArgumentException ex) {
+                log.info(
+                        "[FONT-DEBUG] Font {} cannot encode text '{}': {}",
+                        font.getName(),
+                        text,
+                        ex.getMessage());
+                // Return null to trigger fallback font mechanism
+                return null;
+            }
         }
 
         // Type3 glyph mapping logic (for actual Type3 fonts AND normalized Type3 fonts)
