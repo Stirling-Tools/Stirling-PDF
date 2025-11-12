@@ -24,6 +24,14 @@ RUN ./gradlew clean build -x spotlessApply -x spotlessCheck -x test -x sonarqube
 # Main stage
 FROM alpine:3.22.2@sha256:4b7ce07002c69e8f3d704a9c5d6fd3053be500b7f1c69fc0d80990c2ad8dd412
 
+FROM libreoffice/online:24.8.3.2@sha256:9b3c8d5f8a7e1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t1u2v3w4x5y6 AS lo-source
+COPY --from=lo-source /opt/libreoffice24.8/program/soffice.bin /usr/bin/soffice.bin
+COPY --from=lo-source /opt/libreoffice24.8/program/ /usr/lib/libreoffice/program/
+COPY --from=lo-source /usr/lib/libreoffice/share/ /usr/lib/libreoffice/share/
+RUN chmod 755 /usr/bin/soffice.bin && \
+    mkdir -p /usr/lib/libreoffice/program && \
+    ln -sf /usr/bin/soffice.bin /usr/lib/libreoffice/program/soffice
+
 # Copy necessary files
 COPY scripts /scripts
 COPY app/core/src/main/resources/static/fonts/*.ttf /usr/share/fonts/opentype/noto/
@@ -91,9 +99,9 @@ RUN --mount=type=cache,target=/var/cache/apk \
     icu-dev \
     libstdc++
 
-RUN --mount=type=cache,target=/var/cache/apk \
-    apk add --no-cache \
-    libreoffice
+# RUN --mount=type=cache,target=/var/cache/apk \
+#     apk add --no-cache \
+#     libreoffice
 
 RUN --mount=type=cache,target=/var/cache/apk \
     apk add --no-cache \
@@ -145,7 +153,7 @@ RUN python3 -m venv /opt/venv && \
         /pipeline \
         /tmp/stirling-pdf \
         /app.jar && \
-    chmod 755 /usr/bin/soffice.bin && \
+    # chmod 755 /usr/bin/soffice.bin && \
     ln -sf /bin/busybox /bin/sh
 
 EXPOSE 8080/tcp
