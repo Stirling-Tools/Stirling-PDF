@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import CompareRoundedIcon from '@mui/icons-material/CompareRounded';
-import { Box, Group, Stack, Text, Button, Modal } from '@mantine/core';
+import { Box, Group, Stack, Text, Button, Modal, ActionIcon } from '@mantine/core';
 import SwapVertRoundedIcon from '@mui/icons-material/SwapVertRounded';
+import AddIcon from '@mui/icons-material/Add';
 import { createToolFlow } from '@app/components/tools/shared/createToolFlow';
 import { useBaseTool } from '@app/hooks/tools/shared/useBaseTool';
 import { BaseToolProps, ToolComponent } from '@app/types/tool';
@@ -24,6 +25,9 @@ import DocumentThumbnail from '@app/components/shared/filePreview/DocumentThumbn
 import type { CompareWorkbenchData } from '@app/types/compare';
 import FitText from '@app/components/shared/FitText';
 import { getDefaultWorkbench } from '@app/types/workbench';
+import { useFilesModalContext } from '@app/contexts/FilesModalContext';
+import { createQuickKey } from '@app/types/fileContext';
+import { useFileHandler } from '@app/hooks/useFileHandler';
 
 const CUSTOM_VIEW_ID = 'compareWorkbenchView';
 const CUSTOM_WORKBENCH_ID = 'custom:compareWorkbenchView' as const;
@@ -38,6 +42,8 @@ const Compare = (props: BaseToolProps) => {
     clearCustomWorkbenchViewData,
   } = useToolWorkflow();
   const { selectors, actions: fileActions } = useFileContext();
+  const { openFilesModal } = useFilesModalContext();
+  const { addFiles } = useFileHandler();
 
   const base = useBaseTool(
     'compare',
@@ -304,6 +310,52 @@ const Compare = (props: BaseToolProps) => {
     }
   }, [base.params, operation.result, params.baseFileId, params.comparisonFileId, runCompareWithIds]);
 
+  // Custom file handler that selects existing files instead of adding duplicates
+  const handleFileSelection = useCallback(async (files: File[]) => {
+    const allStubs = selectors.getStirlingFileStubs();
+    const existingFilesByQuickKey = new Map<string, FileId>();
+    
+    // Build a map of quickKey -> fileId for all existing files
+    allStubs.forEach(stub => {
+      if (stub.quickKey) {
+        existingFilesByQuickKey.set(stub.quickKey, stub.id);
+      }
+    });
+
+    const filesToAdd: File[] = [];
+    const existingFileIds: FileId[] = [];
+
+    // Check each file to see if it already exists
+    for (const file of files) {
+      const quickKey = createQuickKey(file);
+      const existingFileId = existingFilesByQuickKey.get(quickKey);
+      
+      if (existingFileId) {
+        // File exists, just select it
+        existingFileIds.push(existingFileId);
+      } else {
+        // File doesn't exist, add it
+        filesToAdd.push(file);
+      }
+    }
+
+    // Get currently selected files before adding new ones
+    const currentlySelected = selectors.getSelectedStirlingFileStubs().map(s => s.id);
+
+    // Add new files (they will be auto-selected by default)
+    if (filesToAdd.length > 0) {
+      await addFiles(filesToAdd, { selectFiles: true });
+    }
+
+    // If we found existing files, merge them with current selection
+    if (existingFileIds.length > 0) {
+      // After adding new files, get the updated selection and merge with existing file IDs
+      const updatedSelection = selectors.getSelectedStirlingFileStubs().map(s => s.id);
+      const allToSelect = [...new Set([...updatedSelection, ...existingFileIds])];
+      fileActions.setSelectedFiles(allToSelect);
+    }
+  }, [addFiles, fileActions, selectors]);
+
   const handleSwap = useCallback(() => {
     const baseId = params.baseFileId as FileId | null;
     const compId = params.comparisonFileId as FileId | null;
@@ -319,6 +371,11 @@ const Compare = (props: BaseToolProps) => {
     (role: 'base' | 'comparison') => {
       const fileId = role === 'base' ? params.baseFileId : params.comparisonFileId;
       const stub = fileId ? selectors.getStirlingFileStub(fileId) : undefined;
+      
+      // Show add button in base if no base file, or in comparison if base exists but no comparison
+      const shouldShowAddButton = 
+        (role === 'base' && !params.baseFileId) || 
+        (role === 'comparison' && params.baseFileId && !params.comparisonFileId);
 
       if (!stub) {
         return (
@@ -330,7 +387,12 @@ const Compare = (props: BaseToolProps) => {
                 padding: '0.75rem 1rem',
                 background: 'var(--bg-surface)',
                 width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                cursor: shouldShowAddButton ? 'pointer' : 'default',
               }}
+              onClick={shouldShowAddButton ? () => openFilesModal({ customHandler: handleFileSelection }) : undefined}
             >
               <Text size="sm" c="dimmed">
                 {t(
@@ -338,6 +400,20 @@ const Compare = (props: BaseToolProps) => {
                   role === 'base' ? 'Select the original PDF' : 'Select the edited PDF'
                 )}
               </Text>
+              {shouldShowAddButton && (
+                <ActionIcon
+                  variant="filled"
+                  color="blue"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openFilesModal({ customHandler: handleFileSelection });
+                  }}
+                  style={{ flexShrink: 0 }}
+                >
+                  <AddIcon fontSize="small" />
+                </ActionIcon>
+              )}
             </Box>
           </Stack>
         );
@@ -389,7 +465,7 @@ const Compare = (props: BaseToolProps) => {
         </Stack>
       );
     },
-    [params.baseFileId, params.comparisonFileId, selectors, t]
+    [params.baseFileId, params.comparisonFileId, selectors, t, openFilesModal, handleFileSelection]
   );
 
   const canExecute = Boolean(
@@ -552,3 +628,6 @@ CompareTool.tool = () => useCompareOperation;
 CompareTool.getDefaultParameters = () => ({ ...compareDefaultParameters });
 
 export default CompareTool;
+
+
+

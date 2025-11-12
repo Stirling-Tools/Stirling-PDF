@@ -779,7 +779,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         description: t("home.compare.desc", "Compare two PDF documents and highlight differences"),
         categoryId: ToolCategoryId.RECOMMENDED_TOOLS,
         subcategoryId: SubcategoryId.GENERAL,
-        maxFiles: 2,
+        maxFiles: -1,
         operationConfig: undefined,
         automationSettings: null,
         synonyms: getSynonyms(t, "compare"),

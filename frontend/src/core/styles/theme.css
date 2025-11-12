@@ -457,6 +457,10 @@
   --text-brand: var(--color-gray-800);
   --text-brand-accent: #EF4444;
 
+  /* Compare badge text colors (dark mode): lighter for readability */
+  --spdf-compare-removed-badge-fg: var(--color-red-500);
+  --spdf-compare-added-badge-fg: var(--color-green-500);
+
   /* container */
   --landing-paper-bg: #171A1F;
   --landing-inner-paper-bg: var(--bg-raised);
