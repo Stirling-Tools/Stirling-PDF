@@ -1,14 +1,11 @@
-import { useMemo } from 'react';
-import React from 'react';
 import { Box } from '@mantine/core';
 import { useRainbowThemeContext } from '@app/components/shared/RainbowThemeProvider';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
 import { useFileHandler } from '@app/hooks/useFileHandler';
 import { useFileState } from '@app/contexts/FileContext';
 import { useNavigationState, useNavigationActions } from '@app/contexts/NavigationContext';
-import { useViewer } from '@app/contexts/ViewerContext';
-import { PageEditorProvider } from '@app/contexts/PageEditorContext';
 import { isBaseWorkbench } from '@app/types/workbench';
+import { useViewer } from '@app/contexts/ViewerContext';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
 import styles from '@app/components/layout/Workbench.module.css';
 
@@ -27,13 +24,11 @@ export default function Workbench() {
   const { config } = useAppConfig();
 
   // Use context-based hooks to eliminate all prop drilling
-  const { state, selectors } = useFileState();
+  const { selectors } = useFileState();
   const { workbench: currentView } = useNavigationState();
   const { actions: navActions } = useNavigationActions();
   const setCurrentView = navActions.setWorkbench;
-
-  // Create stable reference for activeFiles based on file IDs
-  const activeFiles = useMemo(() => selectors.getFiles(), [state.files.ids]);
+  const activeFiles = selectors.getFiles();
   const {
     previewFile,
     pageEditorFunctions,
@@ -77,28 +72,31 @@ export default function Workbench() {
 
   const renderMainContent = () => {
     if (activeFiles.length === 0) {
-      return <LandingPage />;
+      return (
+        <LandingPage
+        />
+      );
     }
 
     switch (currentView) {
-      case 'fileEditor':
+      case "fileEditor":
         return (
           <FileEditor
             toolMode={!!selectedToolId}
-            supportedExtensions={selectedTool?.supportedFormats || ['pdf']}
+            supportedExtensions={selectedTool?.supportedFormats || ["pdf"]}
             {...(!selectedToolId && {
               onOpenPageEditor: () => {
-                setCurrentView('pageEditor');
+                setCurrentView("pageEditor");
               },
               onMergeFiles: (filesToMerge) => {
                 addFiles(filesToMerge);
-                setCurrentView('viewer');
-              },
+                setCurrentView("viewer");
+              }
             })}
           />
         );
 
-      case 'viewer':
+      case "viewer":
         return (
           <Viewer
             sidebarsVisible={sidebarsVisible}
@@ -110,10 +108,12 @@ export default function Workbench() {
           />
         );
 
-      case 'pageEditor':
+      case "pageEditor":
         return (
           <>
-            <PageEditor onFunctionsReady={setPageEditorFunctions} />
+            <PageEditor
+              onFunctionsReady={setPageEditorFunctions}
+            />
             {pageEditorFunctions && (
               <PageEditorControls
                 onClosePdf={pageEditorFunctions.closePdf}
@@ -141,9 +141,7 @@ export default function Workbench() {
 
       default:
         if (!isBaseWorkbench(currentView)) {
-          const customView = customWorkbenchViews.find(
-            (view) => view.workbenchId === currentView && view.data != null,
-          );
+          const customView = customWorkbenchViews.find((view) => view.workbenchId === currentView && view.data != null);
           if (customView) {
             const CustomComponent = customView.component;
             return <CustomComponent data={customView.data} />;
@@ -154,54 +152,52 @@ export default function Workbench() {
   };
 
   return (
-    <PageEditorProvider>
+    <Box
+      className="flex-1 h-full min-w-80 relative flex flex-col"
+      data-tour="workbench"
+      style={
+        isRainbowMode
+          ? {} // No background color in rainbow mode
+          : { backgroundColor: 'var(--bg-background)' }
+      }
+    >
+      {/* Top Controls */}
+      {activeFiles.length > 0 && (
+        <TopControls
+          currentView={currentView}
+          setCurrentView={setCurrentView}
+          customViews={customWorkbenchViews}
+          activeFiles={activeFiles.map(f => {
+            const stub = selectors.getStirlingFileStub(f.fileId);
+            return { fileId: f.fileId, name: f.name, versionNumber: stub?.versionNumber };
+          })}
+          currentFileIndex={activeFileIndex}
+          onFileSelect={setActiveFileIndex}
+        />
+      )}
+
+      {/* Dismiss All Errors Button */}
+      <DismissAllErrorsButton />
+
+      {/* Main content area */}
       <Box
-        className={`flex-1 h-full min-w-80 relative flex flex-col z-10 ${styles.workbenchScrollable}`}
-        data-tour="workbench"
+        className={`flex-1 min-h-0 relative z-10 ${currentView !== 'pageEditor' ? styles.workbenchScrollable : ''}`}
         style={{
-          backgroundColor: isRainbowMode ? undefined : 'var(--bg-background)',
+          transition: 'opacity 0.15s ease-in-out',
+          overflow: currentView === 'pageEditor' ? 'hidden' : undefined,
         }}
       >
-        {/* Top Controls */}
-        {activeFiles.length > 0 && (
-          <TopControls
-            currentView={currentView}
-            setCurrentView={setCurrentView}
-            customViews={customWorkbenchViews}
-            activeFiles={activeFiles.map((f) => {
-              const stub = selectors.getStirlingFileStub(f.fileId);
-              return { fileId: f.fileId, name: f.name, versionNumber: stub?.versionNumber };
-            })}
-            currentFileIndex={activeFileIndex}
-            onFileSelect={setActiveFileIndex}
-          />
-        )}
-
-        {/* Dismiss All Errors Button */}
-        <DismissAllErrorsButton />
-
-        {/* Main content area */}
-        <Box
-          className="flex-1 min-h-0 relative z-10 workbench-scrollable"
-          style={{
-            transition: 'opacity 0.15s ease-in-out',
-            overflow: 'hidden',
-            display: 'flex',
-            flexDirection: 'column',
-          }}
-        >
-          {renderMainContent()}
-        </Box>
-
-        <Footer
-          analyticsEnabled={config?.enableAnalytics === undefined}
-          termsAndConditions={config?.termsAndConditions}
-          privacyPolicy={config?.privacyPolicy}
-          cookiePolicy={config?.cookiePolicy}
-          impressum={config?.impressum}
-          accessibilityStatement={config?.accessibilityStatement}
-        />
+        {renderMainContent()}
       </Box>
-    </PageEditorProvider>
+
+      <Footer
+        analyticsEnabled={config?.enableAnalytics === true}
+        termsAndConditions={config?.termsAndConditions}
+        privacyPolicy={config?.privacyPolicy}
+        cookiePolicy={config?.cookiePolicy}
+        impressum={config?.impressum}
+        accessibilityStatement={config?.accessibilityStatement}
+      />
+    </Box>
   );
 }
