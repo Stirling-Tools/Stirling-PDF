@@ -1,13 +1,9 @@
-use tauri::{RunEvent, WindowEvent};
-#[cfg(target_os = "macos")]
-use tauri::Emitter;
+use tauri::{RunEvent, WindowEvent, Emitter, Manager};
 
 mod utils;
 mod commands;
 
-use commands::{start_backend, check_backend_health, get_opened_file, clear_opened_file, cleanup_backend};
-#[cfg(target_os = "macos")]
-use commands::set_opened_file;
+use commands::{start_backend, check_backend_health, get_opened_files, clear_opened_files, cleanup_backend, add_opened_file};
 use utils::{add_log, get_tauri_logs};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -15,12 +11,35 @@ pub fn run() {
   tauri::Builder::default()
     .plugin(tauri_plugin_shell::init())
     .plugin(tauri_plugin_fs::init())
+    .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
+      // This callback runs when a second instance tries to start
+      add_log(format!("📂 Second instance detected with args: {:?}", args));
+
+      // Scan args for PDF files (skip first arg which is the executable)
+      for arg in args.iter().skip(1) {
+        if std::path::Path::new(arg).exists() {
+          add_log(format!("📂 Forwarding file to existing instance: {}", arg));
+
+          // Store file for later retrieval (in case frontend isn't ready yet)
+          add_opened_file(arg.clone());
+
+          // Also emit event for immediate handling if frontend is ready
+          let _ = app.emit("file-opened", arg.clone());
+
+          // Bring the existing window to front
+          if let Some(window) = app.get_webview_window("main") {
+            let _ = window.set_focus();
+            let _ = window.unminimize();
+          }
+        }
+      }
+    }))
     .setup(|_app| {
       add_log("🚀 Tauri app setup started".to_string());
       add_log("🔍 DEBUG: Setup completed".to_string());
       Ok(())
     })
-    .invoke_handler(tauri::generate_handler![start_backend, check_backend_health, get_opened_file, clear_opened_file, get_tauri_logs])
+    .invoke_handler(tauri::generate_handler![start_backend, check_backend_health, get_opened_files, clear_opened_files, get_tauri_logs])
     .build(tauri::generate_context!())
     .expect("error while building tauri application")
     .run(|app_handle, event| {
@@ -45,8 +64,9 @@ pub fn run() {
               let file_path = url_str.strip_prefix("file://").unwrap_or(url_str);
               if file_path.ends_with(".pdf") {
                 add_log(format!("📂 Processing opened PDF: {}", file_path));
-                set_opened_file(file_path.to_string());
-                let _ = app_handle.emit("macos://open-file", file_path.to_string());
+                add_opened_file(file_path.to_string());
+                // Use unified event name for consistency across platforms
+                let _ = app_handle.emit("file-opened", file_path.to_string());
               }
             }
           }
