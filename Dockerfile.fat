@@ -25,14 +25,17 @@ RUN ./gradlew clean build -x spotlessApply -x spotlessCheck -x test -x sonarqube
 FROM alpine:3.22.2@sha256:4b7ce07002c69e8f3d704a9c5d6fd3053be500b7f1c69fc0d80990c2ad8dd412
 
 COPY --from=lscr.io/linuxserver/libreoffice:latest \
-    /usr/lib/libreoffice/program/soffice.bin /usr/bin/soffice.bin
+    /usr/bin/soffice /usr/bin/soffice.bin
 COPY --from=lscr.io/linuxserver/libreoffice:latest \
-    /usr/lib/libreoffice/program/ /usr/lib/libreoffice/program/
+    /app/libreoffice/program/ /usr/lib/libreoffice/program/
 COPY --from=lscr.io/linuxserver/libreoffice:latest \
     /usr/lib/libreoffice/share/ /usr/lib/libreoffice/share/
 
 RUN chmod 755 /usr/bin/soffice.bin && \
-    ln -sf /usr/bin/soffice.bin /usr/lib/libreoffice/program/soffice
+    ln -sf /usr/bin/soffice.bin /usr/lib/libreoffice/program/soffice && \
+    mkdir -p /usr/lib/libreoffice/program && \
+    echo "/usr/lib/libreoffice/program" > /etc/ld.so.conf.d/libreoffice.conf && \
+    ldconfig
 
 # Copy necessary files
 COPY scripts /scripts
