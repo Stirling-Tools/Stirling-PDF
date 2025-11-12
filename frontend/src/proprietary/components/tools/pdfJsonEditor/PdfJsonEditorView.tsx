@@ -10,6 +10,7 @@ import {
   Divider,
   FileButton,
   Group,
+  Modal,
   Pagination,
   Progress,
   ScrollArea,
@@ -320,6 +321,7 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
   const [fontFamilies, setFontFamilies] = useState<Map<string, string>>(new Map());
   const [autoScaleText, setAutoScaleText] = useState(true);
   const [textScales, setTextScales] = useState<Map<string, number>>(new Map());
+  const [pendingModeChange, setPendingModeChange] = useState<GroupingMode | null>(null);
   const measurementKeyRef = useRef<string>('');
   const containerRef = useRef<HTMLDivElement | null>(null);
   const editorRefs = useRef<Map<string, HTMLDivElement>>(new Map());
@@ -355,6 +357,27 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
     onForceSingleTextElementChange,
     onGroupingModeChange,
   } = data;
+
+  const handleModeChangeRequest = useCallback((newMode: GroupingMode) => {
+    if (hasChanges && newMode !== externalGroupingMode) {
+      // Show confirmation dialog
+      setPendingModeChange(newMode);
+    } else {
+      // No changes, switch immediately
+      onGroupingModeChange(newMode);
+    }
+  }, [hasChanges, externalGroupingMode, onGroupingModeChange]);
+
+  const handleConfirmModeChange = useCallback(() => {
+    if (pendingModeChange) {
+      onGroupingModeChange(pendingModeChange);
+      setPendingModeChange(null);
+    }
+  }, [pendingModeChange, onGroupingModeChange]);
+
+  const handleCancelModeChange = useCallback(() => {
+    setPendingModeChange(null);
+  }, []);
 
   const resolveFont = (fontId: string | null | undefined, pageIndex: number | null | undefined): PdfJsonFont | null => {
     if (!fontId || !pdfDocument?.fonts) {
@@ -1044,7 +1067,7 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
               <Group gap="xs" align="center">
                 <DescriptionIcon fontSize="small" />
                 <Title order={3}>{t('pdfJsonEditor.title', 'PDF JSON Editor')}</Title>
-                {hasChanges && <Badge color="yellow" size="sm">{t('pdfJsonEditor.badges.unsaved', 'Edited')}</Badge>}
+                {hasChanges && <Badge color="orange" variant="light" size="sm">{t('pdfJsonEditor.badges.unsaved', 'Edited')}</Badge>}
               </Group>
             </Group>
 
@@ -1152,7 +1175,7 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
               </Text>
               <SegmentedControl
                 value={externalGroupingMode}
-                onChange={(value) => onGroupingModeChange(value as GroupingMode)}
+                onChange={(value) => handleModeChangeRequest(value as GroupingMode)}
                 data={[
                   { label: t('pdfJsonEditor.groupingMode.auto', 'Auto'), value: 'auto' },
                   { label: t('pdfJsonEditor.groupingMode.paragraph', 'Paragraph'), value: 'paragraph' },
@@ -1754,6 +1777,31 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
 
         </Stack>
       )}
+
+      {/* Mode Change Confirmation Modal */}
+      <Modal
+        opened={pendingModeChange !== null}
+        onClose={handleCancelModeChange}
+        title={t('pdfJsonEditor.modeChange.title', 'Confirm Mode Change')}
+        centered
+      >
+        <Stack gap="md">
+          <Text>
+            {t(
+              'pdfJsonEditor.modeChange.warning',
+              'Changing the text grouping mode will reset all unsaved changes. Are you sure you want to continue?'
+            )}
+          </Text>
+          <Group justify="flex-end" gap="sm">
+            <Button variant="default" onClick={handleCancelModeChange}>
+              {t('pdfJsonEditor.modeChange.cancel', 'Cancel')}
+            </Button>
+            <Button color="red" onClick={handleConfirmModeChange}>
+              {t('pdfJsonEditor.modeChange.confirm', 'Reset and Change Mode')}
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
     </Stack>
   );
 };
