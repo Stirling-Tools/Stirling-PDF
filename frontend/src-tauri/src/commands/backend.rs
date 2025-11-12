@@ -234,6 +234,8 @@ fn monitor_backend_output(mut rx: tauri::async_runtime::Receiver<tauri_plugin_sh
             match event {
                 tauri_plugin_shell::process::CommandEvent::Stdout(output) => {
                     let output_str = String::from_utf8_lossy(&output);
+                    // Strip exactly one trailing newline to avoid double newlines
+                    let output_str = output_str.strip_suffix('\n').unwrap_or(&output_str);
                     add_log(format!("📤 Backend: {}", output_str));
                     
                     // Look for startup indicators
@@ -250,6 +252,8 @@ fn monitor_backend_output(mut rx: tauri::async_runtime::Receiver<tauri_plugin_sh
                 }
                 tauri_plugin_shell::process::CommandEvent::Stderr(output) => {
                     let output_str = String::from_utf8_lossy(&output);
+                    // Strip exactly one trailing newline to avoid double newlines
+                    let output_str = output_str.strip_suffix('\n').unwrap_or(&output_str);
                     add_log(format!("📥 Backend Error: {}", output_str));
                     
                     // Look for error indicators
