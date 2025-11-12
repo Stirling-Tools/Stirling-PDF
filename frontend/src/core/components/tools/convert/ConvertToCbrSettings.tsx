@@ -18,7 +18,7 @@ const ConvertToCbrSettings = ({
   return (
     <Stack gap="sm" data-testid="cbr-output-options-section">
       <Text size="sm" fw={500}>{t("convert.cbrOutputOptions", "PDF to CBR Options")}:</Text>
-      
+
       <NumberInput
         data-testid="cbr-dpi-input"
         label={t("convert.cbrDpi", "DPI for image rendering")}
@@ -29,7 +29,7 @@ const ConvertToCbrSettings = ({
         })}
         min={72}
         max={600}
-        step={1}
+        step={50}
         disabled={disabled}
       />
     </Stack>
