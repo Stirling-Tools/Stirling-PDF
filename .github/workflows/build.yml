@@ -310,28 +310,46 @@ jobs:
         id: repoowner
         run: echo "lowercase=$(echo ${{ github.repository_owner }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
 
-      - name: Generate test tag
+      - name: Generate safe test tag
         id: meta
         run: |
           SAFE_NAME=$(echo "${{ matrix.docker-rev }}" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9.-]/-/g')
           TAG="ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf-test:${SAFE_NAME}-${{ github.sha }}"
           echo "tags=$TAG" >> $GITHUB_OUTPUT
-          echo "Using tag: $TAG"
+          echo "Building and testing: $TAG"
 
-      - name: Build and load multi-arch image
+      - name: Build and load amd64 image
         uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
         with:
           builder: ${{ steps.buildx.outputs.name }}
           context: .
           file: ./${{ matrix.docker-rev }}
           push: false
-          load: true # lädt Images lokal
+          load: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
           tags: ${{ steps.meta.outputs.tags }}
-          platforms: linux/amd64,linux/arm64/v8
+          platforms: linux/amd64
           provenance: false
           sbom: false
+
+      - name: Build and load arm64 image
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
+        with:
+          builder: ${{ steps.buildx.outputs.name }}
+          context: .
+          file: ./${{ matrix.docker-rev }}
+          push: false
+          load: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          tags: ${{ steps.meta.outputs.tags }}
+          platforms: linux/arm64/v8
+          provenance: false
+          sbom: false
+
+      - name: Test Java works (amd64)
+        run: docker run --rm ${{ steps.meta.outputs.tags }} java -version
 
       - name: Test Java works (arm64)
         run: docker run --rm --platform linux/arm64 ${{ steps.meta.outputs.tags }} java -version
@@ -339,31 +357,39 @@ jobs:
       - name: Test app.jar exists (arm64)
         run: |
           docker run --rm --platform linux/arm64 ${{ steps.meta.outputs.tags }} \
-            sh -c "test -f /app.jar || (echo 'ERROR: app.jar missing in ${{ matrix.docker-rev }}!' && exit 1)"
+            sh -c "test -f /app.jar && echo 'app.jar OK' || (echo 'ERROR: app.jar missing!' && exit 1)"
 
-      - name: Extra tests for fat image only
+      - name: Deep arm64 tests (fat image only)
         if: matrix.docker-rev == 'Dockerfile.fat'
         run: |
-          TAG=${{ steps.meta.outputs.tags }}
-          echo "Running fat-specific tests on arm64..."
+          TAG="${{ steps.meta.outputs.tags }}"
+          echo "Running deep tests on arm64 for fat image..."
+
+          # LibreOffice binary linkage
           docker run --rm --platform linux/arm64 $TAG \
-            sh -c "ldd /usr/bin/soffice.bin > /dev/null && echo 'LibreOffice linked OK'"
+            sh -c "ldd /usr/bin/soffice.bin > /dev/null && echo 'LibreOffice binary linked OK'" || \
+            (echo "LibreOffice binary broken on arm64!" && exit 1)
+
+          # Python uno import
           docker run --rm --platform linux/arm64 $TAG \
-            sh -c "python3 -c 'import uno' && echo 'uno import OK'"
-          timeout 120 docker run --rm --platform linux/arm64 \
+            sh -c "python3 -c 'import uno; print(\"uno import OK\")'" || \
+            (echo "Python uno import failed on arm64!" && exit 1)
+
+          # Full startup
+          timeout 180 docker run --rm --platform linux/arm64 \
             -e DISABLE_ADDITIONAL_FEATURES=true \
             -e FAT_DOCKER=true \
             $TAG \
-            sh -c "java -jar /app.jar --version" || \
-            (echo "fat image startup failed on arm64!" && exit 1)
+            sh -c "java -jar /app.jar --version && echo 'Stirling-PDF fat started on arm64!'" || \
+            (echo "Startup failed on arm64!" && exit 1)
 
-      - name: Upload Reports
+      - name: Upload Docker build reports
         if: always()
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
           name: reports-docker-${{ matrix.docker-rev }}
           path: |
-            build/reports/tests/
+            build/reports/
             build/test-results/
             build/reports/problems/
           retention-days: 3
