@@ -3320,7 +3320,8 @@
     },
     "credit": "This service uses qpdf for PDF Compress/Optimisation.",
     "grayscale": {
-      "label": "Apply Grayscale for Compression"
+      "label": "Apply Grayscale for Compression",
+      "description": "Converts all images in the PDF to grayscale, which can significantly reduce file size while maintaining readability"
     },
     "tooltip": {
       "header": {
