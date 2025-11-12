@@ -31,6 +31,8 @@ import { addFiles, addStirlingFileStubs, consumeFiles, undoConsumeFiles, createF
 import { FileLifecycleManager } from '@app/contexts/file/lifecycle';
 import { FileStateContext, FileActionsContext } from '@app/contexts/file/contexts';
 import { IndexedDBProvider, useIndexedDB } from '@app/contexts/IndexedDBContext';
+import { useZipConfirmation } from '@app/hooks/useZipConfirmation';
+import ZipWarningModal from '@app/components/shared/ZipWarningModal';
 
 const DEBUG = process.env.NODE_ENV === 'development';
 
@@ -51,6 +53,9 @@ function FileContextInner({
   // Stable state reference for selectors
   const stateRef = useRef(state);
   stateRef.current = state;
+
+  // ZIP confirmation dialog
+  const { confirmationState, requestConfirmation, handleConfirm, handleCancel } = useZipConfirmation();
 
   // Create lifecycle manager
   const lifecycleManagerRef = useRef<FileLifecycleManager | null>(null);
@@ -86,7 +91,9 @@ function FileContextInner({
         ...options,
         // For direct file uploads: ALWAYS unzip (except HTML ZIPs)
         // skipAutoUnzip bypasses preference checks - HTML detection still applies
-        skipAutoUnzip: true
+        skipAutoUnzip: true,
+        // Provide confirmation callback for large ZIP files
+        confirmLargeExtraction: requestConfirmation
       },
       stateRef,
       filesRef,
@@ -101,7 +108,7 @@ function FileContextInner({
     }
 
     return stirlingFiles;
-  }, [enablePersistence]);
+  }, [enablePersistence, requestConfirmation]);
 
   const addStirlingFileStubsAction = useCallback(async (stirlingFileStubs: StirlingFileStub[], options?: { insertAfterPageId?: string; selectFiles?: boolean }): Promise<StirlingFile[]> => {
     // StirlingFileStubs preserve all metadata - perfect for FileManager use case!
@@ -237,6 +244,13 @@ function FileContextInner({
     <FileStateContext.Provider value={stateValue}>
       <FileActionsContext.Provider value={actionsValue}>
         {children}
+        <ZipWarningModal
+          opened={confirmationState.opened}
+          onConfirm={handleConfirm}
+          onCancel={handleCancel}
+          fileCount={confirmationState.fileCount}
+          zipFileName={confirmationState.fileName}
+        />
       </FileActionsContext.Provider>
     </FileStateContext.Provider>
   );

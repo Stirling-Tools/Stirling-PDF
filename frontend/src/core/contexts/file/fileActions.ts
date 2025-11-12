@@ -186,6 +186,7 @@ interface AddFileOptions {
   autoUnzip?: boolean;
   autoUnzipFileLimit?: number;
   skipAutoUnzip?: boolean; // When true: always unzip (except HTML). Used for file uploads. When false: respect autoUnzip/autoUnzipFileLimit preferences. Used for tool outputs.
+  confirmLargeExtraction?: (fileCount: number, fileName: string) => Promise<boolean>; // Optional callback to confirm extraction of large ZIP files
 }
 
 /**
@@ -219,6 +220,7 @@ export async function addFiles(
   const autoUnzip = options.autoUnzip ?? true; // Default to true
   const autoUnzipFileLimit = options.autoUnzipFileLimit ?? 4; // Default limit
   const skipAutoUnzip = options.skipAutoUnzip ?? false;
+  const confirmLargeExtraction = options.confirmLargeExtraction;
 
   for (const file of files) {
     // Check if file is a ZIP
@@ -238,7 +240,8 @@ export async function addFiles(
         const extractedFiles = await zipFileService.extractWithPreferences(file, {
           autoUnzip,
           autoUnzipFileLimit,
-          skipAutoUnzip
+          skipAutoUnzip,
+          confirmLargeExtraction
         });
 
         if (extractedFiles.length === 1 && extractedFiles[0] === file) {
