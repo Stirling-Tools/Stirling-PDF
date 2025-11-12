@@ -62,8 +62,8 @@ export function useViewerRightRailButtons() {
         render: ({ disabled }) => (
           <Tooltip content={panLabel} position="left" offset={12} arrow portalTarget={document.body}>
             <ActionIcon
-              variant={isPanning ? 'filled' : 'subtle'}
-              color={isPanning ? 'blue' : undefined}
+              variant={isPanning ? 'default' : 'subtle'}
+              color={undefined}
               radius="md"
               className="right-rail-icon"
               onClick={() => {
@@ -71,6 +71,7 @@ export function useViewerRightRailButtons() {
                 setIsPanning(prev => !prev);
               }}
               disabled={disabled}
+              style={isPanning ? { backgroundColor: 'var(--right-rail-pan-active-bg)' } : undefined}
             >
               <LocalIcon icon="pan-tool-rounded" width="1.5rem" height="1.5rem" />
             </ActionIcon>

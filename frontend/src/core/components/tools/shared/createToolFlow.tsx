@@ -86,7 +86,6 @@ export function createToolFlow(config: ToolFlowConfig) {
         {config.steps.map((stepConfig) =>
           steps.create(stepConfig.title, {
             isVisible: stepConfig.isVisible,
-            isCollapsed: stepConfig.isCollapsed,
             onCollapsedClick: stepConfig.onCollapsedClick,
             tooltip: stepConfig.tooltip
           }, stepConfig.content)

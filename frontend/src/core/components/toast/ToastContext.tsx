@@ -93,13 +93,10 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         progress,
       } as ToastInstance;
 
-      // Detect completion
+      // Detect completion but do not auto-flip to success.
+      // Callers (e.g., compare workbench) explicitly set alertType when done.
       if (typeof progress === 'number' && progress >= 100 && !t.justCompleted) {
-        // On completion: finalize type as success unless explicitly provided otherwise
-        next.justCompleted = false;
-        if (!updates.alertType) {
-          next.alertType = 'success';
-        }
+        next.justCompleted = true;
       }
 
       return next;

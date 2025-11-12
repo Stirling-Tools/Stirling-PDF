@@ -122,7 +122,10 @@ import AddPageNumbersAutomationSettings from "@app/components/tools/addPageNumbe
 import OverlayPdfsSettings from "@app/components/tools/overlayPdfs/OverlayPdfsSettings";
 import ValidateSignature from "@app/tools/ValidateSignature";
 import Automate from "@app/tools/Automate";
+import Compare from "@app/tools/Compare";
 import { CONVERT_SUPPORTED_FORMATS } from "@app/constants/convertSupportedFornats";
+
+
 
 export interface TranslatedToolCatalog {
   allTools: ToolRegistry;
@@ -772,13 +775,15 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       compare: {
         icon: <LocalIcon icon="compare-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.compare.title", "Compare"),
-        component: null,
+        component: Compare,
         description: t("home.compare.desc", "Compare two PDF documents and highlight differences"),
-        categoryId: ToolCategoryId.STANDARD_TOOLS /* TODO: Change to RECOMMENDED_TOOLS when component is implemented */,
+        categoryId: ToolCategoryId.RECOMMENDED_TOOLS,
         subcategoryId: SubcategoryId.GENERAL,
+        maxFiles: 2,
+        operationConfig: undefined,
+        automationSettings: null,
         synonyms: getSynonyms(t, "compare"),
-        supportsAutomate: false,
-        automationSettings: null
+        supportsAutomate: false
       },
       compress: {
         icon: <LocalIcon icon="zoom-in-map-rounded" width="1.5rem" height="1.5rem" />,

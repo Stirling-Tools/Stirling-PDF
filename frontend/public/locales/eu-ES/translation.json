@@ -2986,7 +2986,7 @@
     "title": "Overlay PDFs",
     "desc": "Overlay one PDF on top of another",
     "baseFile": {
-      "label": "Select Base PDF File"
+      "label": "Select Original PDF File"
     },
     "overlayFiles": {
       "label": "Select Overlay PDF Files",

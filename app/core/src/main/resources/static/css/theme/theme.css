@@ -7,6 +7,8 @@
   --md-sys-color-surface-3: color-mix(in srgb, var(--md-sys-color-primary) 13%, rgba(0, 0, 255, 0.11) 5%);
   --md-sys-color-surface-4: color-mix(in srgb, var(--md-sys-color-primary) 13%, rgba(0, 0, 255, 0.12) 5%);
   --md-sys-color-surface-5: color-mix(in srgb, var(--md-sys-color-primary) 13%, rgba(0, 0, 255, 0.14) 5%);
+  /* Clear button disabled text color (default/light) */
+  --spdf-clear-disabled-text: var(--md-sys-color-primary);
   /* Icon fill */
   --md-sys-icon-fill-0: 'FILL' 0, 'wght' 500;
   --md-sys-icon-fill-1: 'FILL' 1, 'wght' 500;
@@ -23,6 +25,12 @@
   --md-sys-elevation-3: 0px 5px 5px -3px rgb(var(--md-elevation-shadow-color), 0.2), 0px 8px 10px 1px rgb(var(--md-elevation-shadow-color), 0.14), 0px 3px 14px 2px rgb(var(--md-elevation-shadow-color), 0.12);
   --md-sys-elevation-4: 0px 5px 5px -3px rgb(var(--md-elevation-shadow-color) / 0.2), 0px 8px 10px 1px rgb(var(--md-elevation-shadow-color), 0.14), 0px 3px 14px 2px rgb(var(--md-elevation-shadow-color), 0.12);
   --md-sys-elevation-5: 0px 8px 10px -6px rgb(var(--md-elevation-shadow-color), 0.2), 0px 16px 24px 2px rgb(var(--md-elevation-shadow-color), 0.14), 0px 6px 30px 5px rgb(var(--md-elevation-shadow-color), 0.12);
+}
+
+/* Dark theme overrides */
+.dark-theme {
+  /* In dark mode, use a neutral grey for disabled Clear button text */
+  --spdf-clear-disabled-text: var(--mantine-color-gray-5, #9e9e9e);
 }
 
 .fill {

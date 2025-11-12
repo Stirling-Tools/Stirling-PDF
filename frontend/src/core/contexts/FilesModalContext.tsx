@@ -1,7 +1,9 @@
 import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
 import { useFileHandler } from '@app/hooks/useFileHandler';
 import { useFileActions } from '@app/contexts/FileContext';
+import { useFileContext } from '@app/contexts/file/fileHooks';
 import { StirlingFileStub } from '@app/types/fileContext';
+import type { FileId } from '@app/types/file';
 import { fileStorage } from '@app/services/fileStorage';
 
 interface FilesModalContextType {
@@ -19,6 +21,7 @@ const FilesModalContext = createContext<FilesModalContextType | null>(null);
 export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { addFiles } = useFileHandler();
   const { actions } = useFileActions();
+  const fileCtx = useFileContext();
   const [isFilesModalOpen, setIsFilesModalOpen] = useState(false);
   const [onModalClose, setOnModalClose] = useState<(() => void) | undefined>();
   const [insertAfterPage, setInsertAfterPage] = useState<number | undefined>();
@@ -37,16 +40,25 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     onModalClose?.();
   }, [onModalClose]);
 
-  const handleFileUpload = useCallback((files: File[]) => {
+  const handleFileUpload = useCallback(async (files: File[]) => {
     if (customHandler) {
       // Use custom handler for special cases (like page insertion)
       customHandler(files, insertAfterPage);
     } else {
-      // Use normal file handling
-      addFiles(files);
+      // 1) Add via standard flow (auto-selects new files)
+      await addFiles(files);
+      // 2) Merge all requested file IDs (covers already-present files too)
+      const ids = files
+        .map((f) => fileCtx.findFileId(f) as FileId | undefined)
+        .filter((id): id is FileId => Boolean(id));
+      if (ids.length > 0) {
+        const currentSelected = fileCtx.selectors.getSelectedStirlingFileStubs().map((s) => s.id);
+        const nextSelection = Array.from(new Set([...currentSelected, ...ids]));
+        actions.setSelectedFiles(nextSelection);
+      }
     }
     closeFilesModal();
-  }, [addFiles, closeFilesModal, insertAfterPage, customHandler]);
+  }, [addFiles, closeFilesModal, insertAfterPage, customHandler, actions, fileCtx]);
 
   const handleRecentFileSelect = useCallback(async (stirlingFileStubs: StirlingFileStub[]) => {
     if (customHandler) {
@@ -67,15 +79,22 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         console.error('Failed to load files for custom handler:', error);
       }
     } else {
-      // Normal case - use addStirlingFileStubs to preserve metadata
+      // Normal case - use addStirlingFileStubs to preserve metadata (auto-selects new)
       if (actions.addStirlingFileStubs) {
-        actions.addStirlingFileStubs(stirlingFileStubs, { selectFiles: true });
+        await actions.addStirlingFileStubs(stirlingFileStubs, { selectFiles: true });
+        // Merge all requested IDs into selection (covers files that already existed)
+        const requestedIds = stirlingFileStubs.map((s) => s.id);
+        if (requestedIds.length > 0) {
+          const currentSelected = fileCtx.selectors.getSelectedStirlingFileStubs().map((s) => s.id);
+          const nextSelection = Array.from(new Set([...currentSelected, ...requestedIds]));
+          actions.setSelectedFiles(nextSelection);
+        }
       } else {
         console.error('addStirlingFileStubs action not available');
       }
     }
     closeFilesModal();
-  }, [actions.addStirlingFileStubs, closeFilesModal, customHandler, insertAfterPage]);
+  }, [actions.addStirlingFileStubs, closeFilesModal, customHandler, insertAfterPage, actions, fileCtx]);
 
   const setModalCloseCallback = useCallback((callback: () => void) => {
     setOnModalClose(() => callback);

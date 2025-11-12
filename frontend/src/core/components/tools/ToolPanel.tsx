@@ -10,7 +10,7 @@ import { useSidebarContext } from "@app/contexts/SidebarContext";
 import rainbowStyles from '@app/styles/rainbow.module.css';
 import { ActionIcon, ScrollArea } from '@mantine/core';
 import { ToolId } from '@app/types/toolId';
-import { useMediaQuery } from '@mantine/hooks';
+import { useIsMobile } from '@app/hooks/useIsMobile';
 import DoubleArrowIcon from '@mui/icons-material/DoubleArrow';
 import { useTranslation } from 'react-i18next';
 import FullscreenToolSurface from '@app/components/tools/FullscreenToolSurface';
@@ -26,7 +26,7 @@ export default function ToolPanel() {
   const { isRainbowMode } = useRainbowThemeContext();
   const { sidebarRefs } = useSidebarContext();
   const { toolPanelRef, quickAccessRef, rightRailRef } = sidebarRefs;
-  const isMobile = useMediaQuery('(max-width: 1024px)');
+  const isMobile = useIsMobile();
 
   const {
     leftPanelView,

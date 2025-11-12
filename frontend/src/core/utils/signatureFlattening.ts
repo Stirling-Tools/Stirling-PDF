@@ -86,7 +86,7 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
       }
     }
 
-    // Step 3: Use EmbedPDF's saveAsCopy to get the base PDF (now without annotations)
+    // Step 3: Use EmbedPDF's saveAsCopy to get the original PDF (now without annotations)
     if (!exportActions) {
       console.error('No export actions available');
       return null;
