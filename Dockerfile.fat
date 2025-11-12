@@ -53,14 +53,16 @@ ENV DISABLE_ADDITIONAL_FEATURES=true \
     TMP=/tmp/stirling-pdf
 
 # JDK for app
-RUN apk add --no-cache bash \
-    && ln -sf /bin/bash /bin/sh \
-    && printf '%s\n' \
-      'https://dl-cdn.alpinelinux.org/alpine/edge/main' \
-      'https://dl-cdn.alpinelinux.org/alpine/edge/community' \
-      'https://dl-cdn.alpinelinux.org/alpine/edge/testing' \
-      > /etc/apk/repositories && \
-    apk upgrade --no-cache -a && \
+RUN printf '%s\n' \
+      'https://dl-3.alpinelinux.org/alpine/edge/main' \
+      'https://dl-3.alpinelinux.org/alpine/edge/community' \
+      'https://dl-3.alpinelinux.org/alpine/edge/testing' \
+      > /etc/apk/repositories
+
+RUN --mount=type=cache,target=/var/cache/apk \
+    apk upgrade --no-cache -a
+
+RUN --mount=type=cache,target=/var/cache/apk \
     apk add --no-cache \
     ca-certificates \
     tzdata \
@@ -71,20 +73,32 @@ RUN apk add --no-cache bash \
     su-exec \
     openssl \
     openssl-dev \
-    openjdk21-jre \
+    openjdk21-jre
+
+RUN --mount=type=cache,target=/var/cache/apk \
+    apk add --no-cache \
     ffmpeg \
     # Doc conversion
     gcompat \
-    libc6-compat \
+    libc6-compat
+
+RUN --mount=type=cache,target=/var/cache/apk \
+    apk add --no-cache \
     libreoffice \
     # pdftohtml
-    poppler-utils \
+    poppler-utils
+
+RUN --mount=type=cache,target=/var/cache/apk \
+    apk add --no-cache \
     # OCR MY PDF (unpaper for descew and other advanced featues)
     tesseract-ocr-data-eng \
     tesseract-ocr-data-chi_sim \
     tesseract-ocr-data-deu \
     tesseract-ocr-data-fra \
-    tesseract-ocr-data-por \
+    tesseract-ocr-data-por
+
+RUN --mount=type=cache,target=/var/cache/apk \
+    apk add --no-cache \
     unpaper \
     font-terminus font-dejavu font-noto font-noto-cjk font-awesome font-noto-extra font-liberation font-linux-libertine font-urw-base35 \
     # CV / Python
@@ -93,12 +107,15 @@ RUN apk add --no-cache bash \
     ocrmypdf \
     py3-pip \
     py3-pillow \
-    py3-pdf2image \
+    py3-pdf2image
+
+RUN --mount=type=cache,target=/var/cache/apk \
     # Calibre (musl-native) + QtWebEngine Runtime
-    calibre && \
+    apk add --no-cache calibre && \
     # Calibre fixes
-    apk fix --no-cache calibre && \
-    python3 -m venv /opt/venv && \
+    apk fix --no-cache calibre
+
+RUN python3 -m venv /opt/venv && \
     /opt/venv/bin/pip install --no-cache-dir --upgrade pip setuptools && \
     /opt/venv/bin/pip install --no-cache-dir --upgrade unoserver weasyprint && \
     ln -s /usr/lib/libreoffice/program/uno.py /opt/venv/lib/python3.12/site-packages/ && \
@@ -113,8 +130,7 @@ RUN apk add --no-cache bash \
     # User permissions
     addgroup -S stirlingpdfgroup && adduser -S stirlingpdfuser -G stirlingpdfgroup && \
     chown -R stirlingpdfuser:stirlingpdfgroup $HOME /scripts /usr/share/fonts/opentype/noto /configs /customFiles /pipeline /tmp/stirling-pdf && \
-    chown stirlingpdfuser:stirlingpdfgroup /app.jar && \
-    ln -sf /bin/busybox /bin/sh
+    chown stirlingpdfuser:stirlingpdfgroup /app.jar
 
 EXPOSE 8080/tcp
 # Set user and run command
