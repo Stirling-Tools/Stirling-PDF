@@ -27,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.general.MergeMultiplePagesRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.FormUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.WebResponseUtils;
@@ -49,6 +50,10 @@ public class MultiPageLayoutController {
     public ResponseEntity<byte[]> mergeMultiplePagesIntoOne(
             @ModelAttribute MergeMultiplePagesRequest request) throws IOException {
 
+        int MAX_PAGES = 10000;
+        int MAX_COLS = 300;
+        int MAX_ROWS = 300;
+
         String mode = request.getMode();
         if (mode == null || mode.trim().isEmpty()) {
             mode = "DEFAULT";
@@ -64,8 +69,11 @@ public class MultiPageLayoutController {
                         && pagesPerSheet != 3
                         && pagesPerSheet
                                 != (int) Math.sqrt(pagesPerSheet) * Math.sqrt(pagesPerSheet)) {
-                    throw new IllegalArgumentException(
-                            "pagesPerSheet must be 2, 3 or a perfect square");
+                    throw ExceptionUtils.createIllegalArgumentException(
+                            "error.invalidFormat",
+                            "Invalid {0} format: {1}",
+                            "pagesPerSheet",
+                            "only 2, 3, and perfect squares are supported");
                 }
 
                 cols =
@@ -81,13 +89,42 @@ public class MultiPageLayoutController {
                 rows = request.getRows();
                 cols = request.getCols();
                 if (rows <= 0 || cols <= 0) {
-                    throw new IllegalArgumentException(
-                            "rows and cols must be greater than 0 in CUSTOM mode");
+                    throw ExceptionUtils.createIllegalArgumentException(
+                            "error.invalidFormat",
+                            "Invalid {0} format: {1}",
+                            "rows and cols",
+                            "only strictly positive values are allowed");
                 }
                 pagesPerSheet = cols * rows;
                 break;
             default:
-                throw new IllegalArgumentException("Mode must be CUSTOM or DEFAULT");
+                throw ExceptionUtils.createIllegalArgumentException(
+                        "error.invalidFormat",
+                        "Invalid {0} format: {1}",
+                        "mode",
+                        "only 'DEFAULT' and 'CUSTOM' are supported");
+        }
+
+        if (pagesPerSheet > MAX_PAGES) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.invalidArgument",
+                    "Invalid {0} format: {1}",
+                    "pagesPerSheet",
+                    "must be less than " + MAX_PAGES);
+        }
+        if (cols > MAX_COLS) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.invalidArgument",
+                    "Invalid {0} format: {1}",
+                    "cols",
+                    "must be less than " + MAX_COLS);
+        }
+        if (rows > MAX_ROWS) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.invalidArgument",
+                    "Invalid {0} format: {1}",
+                    "rows",
+                    "must be less than " + MAX_ROWS);
         }
 
         MultipartFile file = request.getFileInput();
@@ -96,7 +133,11 @@ public class MultiPageLayoutController {
             orientation = "PORTRAIT";
         }
         if (!"PORTRAIT".equals(orientation) && !"LANDSCAPE".equals(orientation)) {
-            throw new IllegalArgumentException("Orientation must be PORTRAIT or LANDSCAPE");
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.invalidFormat",
+                    "Invalid {0} format: {1}",
+                    "orientation",
+                    "only 'PORTRAIT' and 'LANDSCAPE' are supported");
         }
         String pageOrder = request.getPageOrder();
         if (pageOrder == null || pageOrder.trim().isEmpty()) {
@@ -182,8 +223,11 @@ public class MultiPageLayoutController {
                     rowIndex = adjustedPageIndex % rows;
                     break;
                 default:
-                    throw new IllegalArgumentException(
-                            "Page order must be one of the following supported options: LR_TD, RL_TD, TD_LR, or TD_RL.");
+                    throw ExceptionUtils.createIllegalArgumentException(
+                            "error.invalidFormat",
+                            "Invalid {0} format: {1}",
+                            "pageOrder",
+                            "only 'LR_TD', 'RL_TD', 'TD_LR', and 'TD_RL' are supported");
             }
 
             float x = colIndex * cellWidth + (cellWidth - rect.getWidth() * scale) / 2;
