@@ -261,6 +261,8 @@ public class EndpointConfiguration {
         addEndpointToGroup("Convert", "pdf-to-csv");
         addEndpointToGroup("Convert", "pdf-to-markdown");
         addEndpointToGroup("Convert", "eml-to-pdf");
+        addEndpointToGroup("Convert", "pdf-to-json");
+        addEndpointToGroup("Convert", "json-to-pdf");
 
         // Adding endpoints to "Security" group
         addEndpointToGroup("Security", "add-password");
@@ -388,6 +390,8 @@ public class EndpointConfiguration {
         addEndpointToGroup("Java", "pdf-to-markdown");
         addEndpointToGroup("Java", "add-attachments");
         addEndpointToGroup("Java", "compress-pdf");
+        addEndpointToGroup("Java", "pdf-to-json");
+        addEndpointToGroup("Java", "json-to-pdf");
         addEndpointToGroup("rar", "pdf-to-cbr");
 
         // Javascript

@@ -6,7 +6,7 @@ import { useSidebarContext } from "@app/contexts/SidebarContext";
 import { useDocumentMeta } from "@app/hooks/useDocumentMeta";
 import { BASE_PATH } from "@app/constants/app";
 import { useBaseUrl } from "@app/hooks/useBaseUrl";
-import { useMediaQuery } from "@mantine/hooks";
+import { useIsMobile } from "@app/hooks/useIsMobile";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import AppsIcon from '@mui/icons-material/AppsRounded';
 
@@ -20,21 +20,13 @@ import { useFilesModalContext } from "@app/contexts/FilesModalContext";
 import AppConfigModal from "@app/components/shared/AppConfigModal";
 import ToolPanelModePrompt from "@app/components/tools/ToolPanelModePrompt";
 import AdminAnalyticsChoiceModal from "@app/components/shared/AdminAnalyticsChoiceModal";
-import { useHomePageExtensions } from "@app/pages/useHomePageExtensions";
 
 import "@app/pages/HomePage.css";
 
 type MobileView = "tools" | "workbench";
 
-interface HomePageProps {
-  openedFile?: File | null;
-}
-
-export default function HomePage({ openedFile }: HomePageProps = {}) {
+export default function HomePage() {
   const { t } = useTranslation();
-
-  // Extension hook for desktop-specific behavior (e.g., file opening)
-  useHomePageExtensions(openedFile);
   const {
     sidebarRefs,
   } = useSidebarContext();
@@ -53,7 +45,7 @@ export default function HomePage({ openedFile }: HomePageProps = {}) {
   const { openFilesModal } = useFilesModalContext();
   const { colorScheme } = useMantineColorScheme();
   const { config } = useAppConfig();
-  const isMobile = useMediaQuery("(max-width: 1024px)");
+  const isMobile = useIsMobile();
   const sliderRef = useRef<HTMLDivElement | null>(null);
   const [activeMobileView, setActiveMobileView] = useState<MobileView>("tools");
   const isProgrammaticScroll = useRef(false);

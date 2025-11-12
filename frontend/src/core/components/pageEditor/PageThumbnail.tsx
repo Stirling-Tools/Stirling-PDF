@@ -1,6 +1,6 @@
 import React, { useCallback, useState, useEffect, useRef, useMemo } from 'react';
 import { Text, Checkbox } from '@mantine/core';
-import { useMediaQuery } from '@mantine/hooks';
+import { useIsMobile } from '@app/hooks/useIsMobile';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import RotateLeftIcon from '@mui/icons-material/RotateLeft';
@@ -14,6 +14,7 @@ import { useThumbnailGeneration } from '@app/hooks/useThumbnailGeneration';
 import { useFilesModalContext } from '@app/contexts/FilesModalContext';
 import styles from '@app/components/pageEditor/PageEditor.module.css';
 import HoverActionMenu, { HoverAction } from '@app/components/shared/HoverActionMenu';
+import { PrivateContent } from '@app/components/shared/PrivateContent';
 
 
 interface PageThumbnailProps {
@@ -68,7 +69,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
   const [isMouseDown, setIsMouseDown] = useState(false);
   const [mouseStartPos, setMouseStartPos] = useState<{x: number, y: number} | null>(null);
   const [isHovered, setIsHovered] = useState(false);
-  const isMobile = useMediaQuery('(max-width: 1024px)');
+  const isMobile = useIsMobile();
   const dragElementRef = useRef<HTMLDivElement>(null);
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(page.thumbnail);
   const { getThumbnailFromCache, requestThumbnail } = useThumbnailGeneration();
@@ -442,21 +443,22 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
               }}></div>
             </div>
           ) : thumbnailUrl ? (
-            <img
-              className="ph-no-capture"
-              src={thumbnailUrl}
-              alt={`Page ${page.pageNumber}`}
-              draggable={false}
-              data-original-rotation={page.rotation}
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'contain',
-                borderRadius: 2,
-                transform: `rotate(${page.rotation}deg)`,
-                transition: 'transform 0.3s ease-in-out'
-              }}
-            />
+            <PrivateContent>
+              <img
+                src={thumbnailUrl}
+                alt={`Page ${page.pageNumber}`}
+                draggable={false}
+                data-original-rotation={page.rotation}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'contain',
+                  borderRadius: 2,
+                  transform: `rotate(${page.rotation}deg)`,
+                  transition: 'transform 0.3s ease-in-out'
+                }}
+              />
+            </PrivateContent>
           ) : (
             <div style={{ textAlign: 'center' }}>
               <Text size="lg" c="dimmed">📄</Text>

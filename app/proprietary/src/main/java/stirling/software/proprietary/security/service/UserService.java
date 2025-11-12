@@ -663,6 +663,21 @@ public class UserService implements UserServiceInterface {
         return false;
     }
 
+    public boolean isCurrentUserFirstLogin() {
+        try {
+            String username = getCurrentUsername();
+            if (username != null) {
+                Optional<User> userOpt = findByUsernameIgnoreCase(username);
+                if (userOpt.isPresent()) {
+                    return !userOpt.get().hasCompletedInitialSetup();
+                }
+            }
+        } catch (Exception e) {
+            log.debug("Error checking first login status", e);
+        }
+        return false;
+    }
+
     @Transactional
     public void syncCustomApiUser(String customApiKey) {
         if (customApiKey == null || customApiKey.trim().isBlank()) {
