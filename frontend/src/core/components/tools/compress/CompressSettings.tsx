@@ -127,14 +127,7 @@ const CompressSettings = ({ parameters, onParameterChange, disabled = false }: C
           checked={parameters.grayscale}
           onChange={(event) => onParameterChange('grayscale', event.currentTarget.checked)}
           disabled={disabled}
-          label={
-            <div>
-              <Text size="sm">{t("compress.grayscale.label", "Apply Grayscale for compression")}</Text>
-              <Text size="xs" c="dimmed">
-                {t("compress.grayscale.description", "Converts all images in the PDF to grayscale, which can significantly reduce file size while maintaining readability")}
-              </Text>
-            </div>
-          }
+          label={t("compress.grayscale.label", "Apply Grayscale for compression")}
         />
       </Stack>
     </Stack>
