@@ -1,5 +1,5 @@
 import { Group, Loader, Stack, Text } from '@mantine/core';
-import { useMemo, useRef, useState, useEffect } from 'react';
+import { useMemo, useRef, useEffect } from 'react';
 import type { PagePreview } from '@app/types/compare';
 import type { TokenBoundingBox, CompareDocumentPaneProps } from '@app/types/compare';
 import { mergeConnectedRects, normalizeRotation, groupWordRects, computePageLayoutMetrics } from '@app/components/tools/compare/compare';
