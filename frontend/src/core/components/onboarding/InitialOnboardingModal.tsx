@@ -7,6 +7,12 @@ import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from '@app/styles/zIndex';
 import OnboardingStepper from '@app/components/onboarding/OnboardingStepper';
 import { useOs } from '@app/hooks/useOs';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
+import WelcomeSlide from '@app/components/onboarding/slides/WelcomeSlide';
+import DesktopInstallSlide from '@app/components/onboarding/slides/DesktopInstallSlide';
+import PlanOverviewSlide from '@app/components/onboarding/slides/PlanOverviewSlide';
+import AnimatedSlideBackground from '@app/components/onboarding/slides/AnimatedSlideBackground';
+import { SlideConfig } from '@app/components/onboarding/slides/types';
+import styles from './InitialOnboardingModal.module.css';
 
 interface InitialOnboardingModalProps {
   opened: boolean;
@@ -54,39 +60,17 @@ export default function InitialOnboardingModal({ opened, onClose }: InitialOnboa
   const goNext = () => setStep((s) => Math.min(totalSteps - 1, s + 1));
   const goPrev = () => setStep((s) => Math.max(0, s - 1));
 
-  const titleByStep = [
-    'Welcome to Stirling',
-    os.label ? `Download for ${os.label}` : 'Download',
-    isAdmin ? 'Admin Overview' : 'Plan Overview',
-  ];
+  // Get slide content from the slide components
+  const slides = React.useMemo<SlideConfig[]>(
+    () => [
+      WelcomeSlide(),
+      DesktopInstallSlide({ osLabel: os.label, osUrl: os.url }),
+      PlanOverviewSlide({ isAdmin }),
+    ],
+    [isAdmin, os.label, os.url],
+  );
 
-  const bodyByStep: React.ReactNode[] = [
-    (
-      <span>
-        Stirling helps you read and edit PDFs privately. The app includes a simple <strong>Reader</strong> with basic editing tools and an advanced <strong>Editor</strong> with professional editing tools.
-      </span>
-    ),
-    (
-      <span>
-        Stirling works best as a desktop app. You can use it offline, access documents faster, and make edits locally on your computer.
-      </span>
-    ),
-    isAdmin ? (
-      <span>
-        As an admin, you can manage users, configure settings, and monitor server health. The first 5 people on your server get to use Stirling free of charge.
-      </span>
-    ) : (
-      <span>
-        For the next <strong>30 days</strong>, you’ll enjoy <strong>unlimited Pro access</strong> to the Reader and the Editor. Afterwards, you can continue with the Reader for free or upgrade to keep the Editor too.
-      </span>
-    ),
-  ];
-
-  const imageByStep = [
-    '/branding/onboarding1.svg',
-    '/branding/onboarding2.svg',
-    '/branding/onboarding3.svg',
-  ];
+  const currentSlide = slides[step];
 
   // Buttons per step
   const renderButtons = () => {
@@ -143,8 +127,9 @@ export default function InitialOnboardingModal({ opened, onClose }: InitialOnboa
           </Group>
           <Button
             onClick={() => {
-              if (os.url) {
-                window.open(os.url, '_blank', 'noopener');
+              const downloadUrl = currentSlide.downloadUrl;
+              if (downloadUrl) {
+                window.open(downloadUrl, '_blank', 'noopener');
               }
               goNext();
             }}
@@ -245,17 +230,25 @@ export default function InitialOnboardingModal({ opened, onClose }: InitialOnboa
       }}
     >
       <Stack gap={0} style={{ background: 'var(--bg-surface)' }}>
-        <div style={{ width: '100%', height: 220, overflow: 'hidden' }}>
-          <img
-            src={imageByStep[step]}
-            alt={titleByStep[step]}
-            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+        <div className={styles.heroWrapper}>
+          <AnimatedSlideBackground
+            gradientStops={currentSlide.background.gradientStops}
+            circles={currentSlide.background.circles}
+            isActive
+            slideKey={currentSlide.key}
           />
+          <div className={styles.heroLogo} key={`logo-${currentSlide.key}`}>
+            <div className={styles.heroLogoCircle}>
+              <img src="/branding/StirlingPDFLogoNoTextLight.svg" alt="Stirling logo" />
+            </div>
+          </div>
         </div>
 
         <div style={{ padding: 24 }}>
           <Stack gap={16}>
             <div
+              key={`title-${currentSlide.key}`}
+              className={styles.title}
               style={{
                 fontFamily: 'Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif',
                 fontWeight: 600,
@@ -263,7 +256,7 @@ export default function InitialOnboardingModal({ opened, onClose }: InitialOnboa
                 color: 'var(--onboarding-title)',
               }}
             >
-              {titleByStep[step]}
+              {currentSlide.title}
             </div>
 
             <div
@@ -275,8 +268,12 @@ export default function InitialOnboardingModal({ opened, onClose }: InitialOnboa
               }}
             >
               {/* strong tags should match the title color */}
-              <div style={{ color: 'inherit' }}>
-                {bodyByStep[step]}
+              <div
+                key={`body-${currentSlide.key}`}
+                className={styles.bodyCopy}
+                style={{ color: 'inherit' }}
+              >
+                {currentSlide.body}
               </div>
               <style>{`div strong{color: var(--onboarding-title); font-weight: 600;}`}</style>
             </div>
