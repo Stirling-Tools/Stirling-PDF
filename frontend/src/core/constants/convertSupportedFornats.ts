@@ -13,9 +13,7 @@ export const CONVERT_SUPPORTED_FORMATS = [
   // Email formats
   'eml',
   // Archive formats
-  'zip',
+  'zip', 'cbr',
   // Other
   'dbf', 'fods', 'vsd', 'vor', 'vor3', 'vor4', 'uop', 'pct', 'ps', 'pdf',
 ];
-
-
