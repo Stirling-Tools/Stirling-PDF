@@ -168,7 +168,8 @@ const TopControls = ({
 
   return (
     <div className="absolute left-0 w-full top-0 z-[100] pointer-events-none">
-      <div className="flex justify-center mt-[0.5rem]">
+      <div className="flex justify-center mt-[0.5rem]" style={{ pointerEvents: 'auto' }}>
+
         <SegmentedControl
           data-tour="view-switcher"
           data={createViewOptions(currentView, switchingTo, activeFiles, currentFileIndex, onFileSelect, customViews)}
