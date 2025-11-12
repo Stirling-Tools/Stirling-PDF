@@ -339,9 +339,6 @@ const Compare = (props: BaseToolProps) => {
       }
     }
 
-    // Get currently selected files before adding new ones
-    const currentlySelected = selectors.getSelectedStirlingFileStubs().map(s => s.id);
-
     // Add new files (they will be auto-selected by default)
     if (filesToAdd.length > 0) {
       await addFiles(filesToAdd, { selectFiles: true });
