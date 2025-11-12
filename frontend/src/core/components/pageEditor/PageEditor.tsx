@@ -161,7 +161,6 @@ const PageEditor = ({
     setCsvInput,
     totalPages,
     getPageNumbersFromIds,
-    getPageIdsFromNumbers,
     handleSelectAll,
     handleDeselectAll,
     handleSetSelectedPages,
