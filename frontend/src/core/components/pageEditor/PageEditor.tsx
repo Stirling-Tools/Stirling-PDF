@@ -211,7 +211,6 @@ const PageEditor = ({
     selectedPageIds,
     setSelectedPageIds,
     getPageNumbersFromIds,
-    getPageIdsFromNumbers,
     executeCommandWithTracking,
     updateFileOrderFromPages,
     actions,
