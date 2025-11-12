@@ -467,7 +467,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.PAGE_FORMATTING,
         synonyms: getSynonyms(t, "addAttachments"),
-        maxFiles: 1,
+        maxFiles: 3,
         endpoints: ["add-attachments"],
         operationConfig: addAttachmentsOperationConfig,
         automationSettings: AddAttachmentsSettings,

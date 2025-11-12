@@ -100,15 +100,6 @@ const ShowJS = (props: BaseToolProps) => {
 			isCollapsed: false,
 		},
 		steps: [],
-		preview: (
-			<>
-				{base.selectedFiles.length > 1 && (
-					<div style={{ color: 'var(--mantine-color-red-6)', padding: '8px 4px' }}>
-						{t('showJS.singleFileWarning', 'This tool only supports one file at a time. Please select a single file.')}
-					</div>
-				)}
-			</>
-		),
 		executeButton: {
 			text: hasResults ? t('back', 'Back') : t('showJS.submit', 'Extract JavaScript'),
 			loadingText: t('loading', 'Loading...'),
