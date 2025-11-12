@@ -267,7 +267,8 @@ jobs:
 
   test-build-docker-images:
     if: (github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch') && needs.files-changed.outputs.docker == 'true'
-    needs: [files-changed, build]
+    # needs: [files-changed, build] # tmp disable
+    needs: [files-changed]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
