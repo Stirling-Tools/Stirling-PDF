@@ -18,10 +18,10 @@ import { usePageEditorState } from '@app/components/pageEditor/hooks/usePageEdit
 import { usePageEditorRightRailButtons } from "@app/components/pageEditor/pageEditorRightRailButtons";
 import { useFileColorMap } from "@app/components/pageEditor/hooks/useFileColorMap";
 import { useWheelZoom } from "@app/hooks/useWheelZoom";
-import { useEditedDocumentState } from "@app/components/pageEditor/hooks/multitool/useEditedDocumentState";
+import { useEditedDocumentState } from "@app/components/pageEditor/hooks/useEditedDocumentState";
 import { useUndoManagerState } from "@app/components/pageEditor/hooks/useUndoManagerState";
 import { usePageSelectionManager } from "@app/components/pageEditor/hooks/usePageSelectionManager";
-import { usePageEditorCommands } from "@app/components/pageEditor/hooks/multitool/usePageEditorCommands";
+import { usePageEditorCommands } from "@app/components/pageEditor/hooks/useEditorCommands";
 import { usePageEditorExport } from "@app/components/pageEditor/hooks/usePageEditorExport";
 
 export interface PageEditorProps {
