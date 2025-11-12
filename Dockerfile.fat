@@ -84,13 +84,13 @@ RUN --mount=type=cache,target=/var/cache/apk \
     ffmpeg \
     # Doc conversion
     gcompat \
-    libc6-compat
+    libc6-compat \
+    unpaper \
+    poppler-utils
 
 RUN --mount=type=cache,target=/var/cache/apk \
     apk add --no-cache \
-    libreoffice \
-    # pdftohtml
-    poppler-utils
+    libreoffice
 
 RUN --mount=type=cache,target=/var/cache/apk \
     apk add --no-cache \
