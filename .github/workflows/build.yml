@@ -299,6 +299,10 @@ jobs:
           DISABLE_ADDITIONAL_FEATURES: true
           STIRLING_PDF_DESKTOP_UI: false
 
+      - name: Get version number
+        id: versionNumber
+        run: echo "versionNumber=$(./gradlew printVersion --quiet | tail -1)" >> $GITHUB_OUTPUT
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3.7.0
 
@@ -315,6 +319,7 @@ jobs:
           push: false
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          build-args: VERSION_TAG=${{ steps.versionNumber.outputs.versionNumber }}
           platforms: linux/amd64,linux/arm64/v8
           provenance: true
           sbom: true
