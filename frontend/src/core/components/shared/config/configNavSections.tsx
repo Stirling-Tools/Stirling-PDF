@@ -41,7 +41,8 @@ export interface ConfigColors {
 
 export const createConfigNavSections = (
   isAdmin: boolean = false,
-  runningEE: boolean = false
+  runningEE: boolean = false,
+  loginEnabled: boolean = true
 ): ConfigNavSection[] => {
   const sections: ConfigNavSection[] = [
     {
@@ -63,8 +64,9 @@ export const createConfigNavSections = (
     },
   ];
 
-  // Add Admin sections if user is admin
-  if (isAdmin) {
+  // Add Admin sections if user is admin OR if login is disabled (but mark as disabled)
+  if (isAdmin || !loginEnabled) {
+    const requiresLogin = !loginEnabled;
     // Configuration
     sections.push({
       title: 'Configuration',
@@ -73,31 +75,41 @@ export const createConfigNavSections = (
           key: 'adminGeneral',
           label: 'System Settings',
           icon: 'settings-rounded',
-          component: <AdminGeneralSection />
+          component: <AdminGeneralSection />,
+          disabled: requiresLogin,
+          disabledTooltip: requiresLogin ? 'Enable login mode first' : undefined
         },
         {
           key: 'adminFeatures',
           label: 'Features',
           icon: 'extension-rounded',
-          component: <AdminFeaturesSection />
+          component: <AdminFeaturesSection />,
+          disabled: requiresLogin,
+          disabledTooltip: requiresLogin ? 'Enable login mode first' : undefined
         },
         {
           key: 'adminEndpoints',
           label: 'Endpoints',
           icon: 'api-rounded',
-          component: <AdminEndpointsSection />
+          component: <AdminEndpointsSection />,
+          disabled: requiresLogin,
+          disabledTooltip: requiresLogin ? 'Enable login mode first' : undefined
         },
         {
           key: 'adminDatabase',
           label: 'Database',
           icon: 'storage-rounded',
-          component: <AdminDatabaseSection />
+          component: <AdminDatabaseSection />,
+          disabled: requiresLogin,
+          disabledTooltip: requiresLogin ? 'Enable login mode first' : undefined
         },
         {
           key: 'adminAdvanced',
           label: 'Advanced',
           icon: 'tune-rounded',
-          component: <AdminAdvancedSection />
+          component: <AdminAdvancedSection />,
+          disabled: requiresLogin,
+          disabledTooltip: requiresLogin ? 'Enable login mode first' : undefined
         },
       ],
     });
@@ -110,13 +122,17 @@ export const createConfigNavSections = (
           key: 'adminSecurity',
           label: 'Security',
           icon: 'shield-rounded',
-          component: <AdminSecuritySection />
+          component: <AdminSecuritySection />,
+          disabled: requiresLogin,
+          disabledTooltip: requiresLogin ? 'Enable login mode first' : undefined
         },
         {
           key: 'adminConnections',
           label: 'Connections',
           icon: 'link-rounded',
-          component: <AdminConnectionsSection />
+          component: <AdminConnectionsSection />,
+          disabled: requiresLogin,
+          disabledTooltip: requiresLogin ? 'Enable login mode first' : undefined
         },
       ],
     });
@@ -129,23 +145,25 @@ export const createConfigNavSections = (
           key: 'adminPremium',
           label: 'Premium',
           icon: 'star-rounded',
-          component: <AdminPremiumSection />
+          component: <AdminPremiumSection />,
+          disabled: requiresLogin,
+          disabledTooltip: requiresLogin ? 'Enable login mode first' : undefined
         },
         {
           key: 'adminAudit',
           label: 'Audit',
           icon: 'fact-check-rounded',
           component: <AdminAuditSection />,
-          disabled: !runningEE,
-          disabledTooltip: 'Requires Enterprise license'
+          disabled: !runningEE || requiresLogin,
+          disabledTooltip: requiresLogin ? 'Enable login mode first' : 'Requires Enterprise license'
         },
         {
           key: 'adminUsage',
           label: 'Usage Analytics',
           icon: 'analytics-rounded',
           component: <AdminUsageSection />,
-          disabled: !runningEE,
-          disabledTooltip: 'Requires Enterprise license'
+          disabled: !runningEE || requiresLogin,
+          disabledTooltip: requiresLogin ? 'Enable login mode first' : 'Requires Enterprise license'
         },
       ],
     });
@@ -158,13 +176,17 @@ export const createConfigNavSections = (
           key: 'adminLegal',
           label: 'Legal',
           icon: 'gavel-rounded',
-          component: <AdminLegalSection />
+          component: <AdminLegalSection />,
+          disabled: requiresLogin,
+          disabledTooltip: requiresLogin ? 'Enable login mode first' : undefined
         },
         {
           key: 'adminPrivacy',
           label: 'Privacy',
           icon: 'visibility-rounded',
-          component: <AdminPrivacySection />
+          component: <AdminPrivacySection />,
+          disabled: requiresLogin,
+          disabledTooltip: requiresLogin ? 'Enable login mode first' : undefined
         },
       ],
     });

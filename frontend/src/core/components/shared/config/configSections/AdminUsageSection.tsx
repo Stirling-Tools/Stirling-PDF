@@ -14,9 +14,12 @@ import usageAnalyticsService, { EndpointStatisticsResponse } from '@app/services
 import UsageAnalyticsChart from '@app/components/shared/config/configSections/usage/UsageAnalyticsChart';
 import UsageAnalyticsTable from '@app/components/shared/config/configSections/usage/UsageAnalyticsTable';
 import LocalIcon from '@app/components/shared/LocalIcon';
+import { useLoginRequired } from '@app/hooks/useLoginRequired';
+import LoginRequiredBanner from '@app/components/shared/config/LoginRequiredBanner';
 
 const AdminUsageSection: React.FC = () => {
   const { t } = useTranslation();
+  const { loginEnabled, validateLoginEnabled } = useLoginRequired();
   const [data, setData] = useState<EndpointStatisticsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -24,6 +27,10 @@ const AdminUsageSection: React.FC = () => {
   const [dataType, setDataType] = useState<'all' | 'api' | 'ui'>('all');
 
   const fetchData = async () => {
+    if (!validateLoginEnabled()) {
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
@@ -40,10 +47,55 @@ const AdminUsageSection: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchData();
-  }, [displayMode, dataType]);
+    if (loginEnabled) {
+      fetchData();
+    } else {
+      // Provide example usage analytics data when login is disabled
+      const totalVisits = 15847;
+      const allEndpoints = [
+        { endpoint: 'merge-pdfs', visits: 3245, percentage: (3245 / totalVisits) * 100 },
+        { endpoint: 'compress-pdf', visits: 2891, percentage: (2891 / totalVisits) * 100 },
+        { endpoint: 'pdf-to-img', visits: 2156, percentage: (2156 / totalVisits) * 100 },
+        { endpoint: 'split-pdf', visits: 1834, percentage: (1834 / totalVisits) * 100 },
+        { endpoint: 'rotate-pdf', visits: 1523, percentage: (1523 / totalVisits) * 100 },
+        { endpoint: 'ocr-pdf', visits: 1287, percentage: (1287 / totalVisits) * 100 },
+        { endpoint: 'add-watermark', visits: 945, percentage: (945 / totalVisits) * 100 },
+        { endpoint: 'extract-images', visits: 782, percentage: (782 / totalVisits) * 100 },
+        { endpoint: 'add-password', visits: 621, percentage: (621 / totalVisits) * 100 },
+        { endpoint: 'html-to-pdf', visits: 563, percentage: (563 / totalVisits) * 100 },
+        { endpoint: 'remove-password', visits: 487, percentage: (487 / totalVisits) * 100 },
+        { endpoint: 'pdf-to-pdfa', visits: 423, percentage: (423 / totalVisits) * 100 },
+        { endpoint: 'extract-pdf-metadata', visits: 356, percentage: (356 / totalVisits) * 100 },
+        { endpoint: 'add-page-numbers', visits: 298, percentage: (298 / totalVisits) * 100 },
+        { endpoint: 'crop', visits: 245, percentage: (245 / totalVisits) * 100 },
+        { endpoint: 'flatten', visits: 187, percentage: (187 / totalVisits) * 100 },
+        { endpoint: 'sanitize-pdf', visits: 134, percentage: (134 / totalVisits) * 100 },
+        { endpoint: 'auto-split-pdf', visits: 98, percentage: (98 / totalVisits) * 100 },
+        { endpoint: 'scale-pages', visits: 76, percentage: (76 / totalVisits) * 100 },
+        { endpoint: 'compare-pdfs', visits: 42, percentage: (42 / totalVisits) * 100 },
+      ];
+
+      // Filter based on display mode
+      let filteredEndpoints = allEndpoints;
+      if (displayMode === 'top10') {
+        filteredEndpoints = allEndpoints.slice(0, 10);
+      } else if (displayMode === 'top20') {
+        filteredEndpoints = allEndpoints.slice(0, 20);
+      }
+
+      setData({
+        totalVisits: totalVisits,
+        endpoints: filteredEndpoints,
+      });
+      setLoading(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [displayMode, dataType, loginEnabled]);
 
   const handleRefresh = () => {
+    if (!validateLoginEnabled()) {
+      return;
+    }
     fetchData();
   };
 
@@ -60,8 +112,11 @@ const AdminUsageSection: React.FC = () => {
     }
   };
 
+  // Override loading state when login is disabled
+  const actualLoading = loginEnabled ? loading : false;
+
   // Early returns for loading/error states
-  if (loading) {
+  if (actualLoading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', padding: '2rem' }}>
         <Loader size="lg" />
@@ -85,16 +140,18 @@ const AdminUsageSection: React.FC = () => {
     );
   }
 
-  const chartData = data.endpoints.map((e) => ({ label: e.endpoint, value: e.visits }));
+  const chartData = data?.endpoints?.map((e) => ({ label: e.endpoint, value: e.visits })) || [];
 
-  const displayedVisits = data.endpoints.reduce((sum, e) => sum + e.visits, 0);
+  const displayedVisits = data?.endpoints?.reduce((sum, e) => sum + e.visits, 0) || 0;
 
-  const displayedPercentage = data.totalVisits > 0
-    ? ((displayedVisits / data.totalVisits) * 100).toFixed(1)
+  const displayedPercentage = (data?.totalVisits || 0) > 0
+    ? ((displayedVisits / (data?.totalVisits || 1)) * 100).toFixed(1)
     : '0';
 
   return (
     <Stack gap="lg">
+      <LoginRequiredBanner show={!loginEnabled} />
+
       {/* Controls */}
       <Card padding="lg" radius="md" withBorder>
         <Stack gap="md">
@@ -103,6 +160,7 @@ const AdminUsageSection: React.FC = () => {
               <SegmentedControl
                 value={displayMode}
                 onChange={(value) => setDisplayMode(value as 'top10' | 'top20' | 'all')}
+                disabled={!loginEnabled}
                 data={[
                   {
                     value: 'top10',
@@ -123,6 +181,7 @@ const AdminUsageSection: React.FC = () => {
                 leftSection={<LocalIcon icon="refresh" width="1rem" height="1rem" />}
                 onClick={handleRefresh}
                 loading={loading}
+                disabled={!loginEnabled}
               >
                 {t('usage.controls.refresh', 'Refresh')}
               </Button>
@@ -136,6 +195,7 @@ const AdminUsageSection: React.FC = () => {
             <SegmentedControl
               value={dataType}
               onChange={(value) => setDataType(value as 'all' | 'api' | 'ui')}
+              disabled={!loginEnabled}
               data={[
                 {
                   value: 'all',

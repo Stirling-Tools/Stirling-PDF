@@ -64,19 +64,21 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
     headerBorder: 'var(--modal-header-border)',
   }), []);
 
-  // Get isAdmin and runningEE from app config
+  // Get isAdmin, runningEE, and enableLogin from app config
   const isAdmin = config?.isAdmin ?? false;
   const runningEE = config?.runningEE ?? false;
+  const loginEnabled = config?.enableLogin ?? true;
 
-  console.log('[AppConfigModal] Config:', { isAdmin, runningEE, fullConfig: config });
+  console.log('[AppConfigModal] Config:', { isAdmin, runningEE, loginEnabled, fullConfig: config });
 
   // Left navigation structure and icons
   const configNavSections = useMemo(() =>
     createConfigNavSections(
       isAdmin,
-      runningEE
+      runningEE,
+      loginEnabled
     ),
-    [isAdmin, runningEE]
+    [isAdmin, runningEE, loginEnabled]
   );
 
   const activeLabel = useMemo(() => {
@@ -143,16 +145,15 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
                       <div
                         key={item.key}
                         onClick={() => {
-                          if (!isDisabled) {
-                            setActive(item.key);
-                            navigate(`/settings/${item.key}`);
-                          }
+                          // Allow navigation even when disabled - the content inside will be disabled
+                          setActive(item.key);
+                          navigate(`/settings/${item.key}`);
                         }}
                         className={`modal-nav-item ${isMobile ? 'mobile' : ''}`}
                         style={{
                           background: isActive ? colors.navItemActiveBg : 'transparent',
-                          opacity: isDisabled ? 0.5 : 1,
-                          cursor: isDisabled ? 'not-allowed' : 'pointer',
+                          opacity: isDisabled ? 0.6 : 1,
+                          cursor: 'pointer',
                         }}
                       >
                         <LocalIcon icon={item.icon} width={iconSize} height={iconSize} style={{ color }} />

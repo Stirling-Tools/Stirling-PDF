@@ -8,10 +8,11 @@ import TeamsSection from '@app/components/shared/config/configSections/TeamsSect
  */
 export const createConfigNavSections = (
   isAdmin: boolean = false,
-  runningEE: boolean = false
+  runningEE: boolean = false,
+  loginEnabled: boolean = true
 ): ConfigNavSection[] => {
   // Get the core sections
-  const sections = createCoreConfigNavSections(isAdmin, runningEE);
+  const sections = createCoreConfigNavSections(isAdmin, runningEE, loginEnabled);
 
   // Add Workspace section if user is admin
   if (isAdmin) {

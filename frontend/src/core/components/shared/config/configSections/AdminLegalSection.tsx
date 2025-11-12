@@ -7,6 +7,8 @@ import RestartConfirmationModal from '@app/components/shared/config/RestartConfi
 import { useRestartServer } from '@app/components/shared/config/useRestartServer';
 import { useAdminSettings } from '@app/hooks/useAdminSettings';
 import PendingBadge from '@app/components/shared/config/PendingBadge';
+import { useLoginRequired } from '@app/hooks/useLoginRequired';
+import LoginRequiredBanner from '@app/components/shared/config/LoginRequiredBanner';
 
 interface LegalSettingsData {
   termsAndConditions?: string;
@@ -18,6 +20,7 @@ interface LegalSettingsData {
 
 export default function AdminLegalSection() {
   const { t } = useTranslation();
+  const { loginEnabled, validateLoginEnabled, getDisabledStyles } = useLoginRequired();
   const { restartModalOpened, showRestartModal, closeRestartModal, restartServer } = useRestartServer();
 
   const {
@@ -33,10 +36,15 @@ export default function AdminLegalSection() {
   });
 
   useEffect(() => {
-    fetchSettings();
-  }, []);
+    if (loginEnabled) {
+      fetchSettings();
+    }
+  }, [loginEnabled]);
 
   const handleSave = async () => {
+    if (!validateLoginEnabled()) {
+      return;
+    }
     try {
       await saveSettings();
       showRestartModal();
@@ -49,7 +57,9 @@ export default function AdminLegalSection() {
     }
   };
 
-  if (loading) {
+  const actualLoading = loginEnabled ? loading : false;
+
+  if (actualLoading) {
     return (
       <Stack align="center" justify="center" h={200}>
         <Loader size="lg" />
@@ -59,6 +69,7 @@ export default function AdminLegalSection() {
 
   return (
     <Stack gap="lg">
+      <LoginRequiredBanner show={!loginEnabled} />
       <div>
         <Text fw={600} size="lg">{t('admin.settings.legal.title', 'Legal Documents')}</Text>
         <Text size="sm" c="dimmed">
@@ -95,6 +106,7 @@ export default function AdminLegalSection() {
               value={settings.termsAndConditions || ''}
               onChange={(e) => setSettings({ ...settings, termsAndConditions: e.target.value })}
               placeholder="https://example.com/terms"
+              disabled={!loginEnabled}
             />
           </div>
 
@@ -110,6 +122,7 @@ export default function AdminLegalSection() {
               value={settings.privacyPolicy || ''}
               onChange={(e) => setSettings({ ...settings, privacyPolicy: e.target.value })}
               placeholder="https://example.com/privacy"
+              disabled={!loginEnabled}
             />
           </div>
 
@@ -125,6 +138,7 @@ export default function AdminLegalSection() {
               value={settings.accessibilityStatement || ''}
               onChange={(e) => setSettings({ ...settings, accessibilityStatement: e.target.value })}
               placeholder="https://example.com/accessibility"
+              disabled={!loginEnabled}
             />
           </div>
 
@@ -140,6 +154,7 @@ export default function AdminLegalSection() {
               value={settings.cookiePolicy || ''}
               onChange={(e) => setSettings({ ...settings, cookiePolicy: e.target.value })}
               placeholder="https://example.com/cookies"
+              disabled={!loginEnabled}
             />
           </div>
 
@@ -155,13 +170,14 @@ export default function AdminLegalSection() {
               value={settings.impressum || ''}
               onChange={(e) => setSettings({ ...settings, impressum: e.target.value })}
               placeholder="https://example.com/impressum"
+              disabled={!loginEnabled}
             />
           </div>
         </Stack>
       </Paper>
 
       <Group justify="flex-end">
-        <Button onClick={handleSave} loading={saving} size="sm">
+        <Button onClick={handleSave} loading={saving} size="sm" disabled={!loginEnabled}>
           {t('admin.settings.save', 'Save Changes')}
         </Button>
       </Group>
