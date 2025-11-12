@@ -113,7 +113,9 @@ public class ConvertImgPDFController {
                 PdfUtils.convertFromPdf(
                         pdfDocumentFactory,
                         newPdfBytes,
-                        "webp".equalsIgnoreCase(imageFormat) ? "png" : imageFormat.toUpperCase(Locale.ROOT),
+                        "webp".equalsIgnoreCase(imageFormat)
+                                ? "png"
+                                : imageFormat.toUpperCase(Locale.ROOT),
                         colorTypeResult,
                         singleImage,
                         dpi,

@@ -39,8 +39,6 @@ public class ExternalAppDepConfig {
             System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("windows");
 
     private final String weasyprintPath;
-    private final String unoconvPath;
-    private final String calibrePath;
 
     /**
      * Map of command(binary) -> affected groups (e.g. "gs" -> ["Ghostscript"]). Immutable to avoid
@@ -57,7 +55,7 @@ public class ExternalAppDepConfig {
         this.endpointConfiguration = endpointConfiguration;
         this.weasyprintPath = runtimePathConfig.getWeasyPrintPath();
         String unoconvPath = runtimePathConfig.getUnoConvertPath();
-        this.calibrePath = runtimePathConfig.getCalibrePath();
+        String calibrePath = runtimePathConfig.getCalibrePath();
 
         Map<String, List<String>> tmp = new HashMap<>();
         tmp.put("gs", List.of("Ghostscript"));
@@ -86,7 +84,7 @@ public class ExternalAppDepConfig {
                                                 checkDependencyAndDisableGroup(cmd);
                                                 return null;
                                             })
-                            .collect(Collectors.toList());
+                            .toList();
             invokeAllWithTimeout(tasks, DEFAULT_TIMEOUT.plusSeconds(3));
 
             // Python / OpenCV special handling
