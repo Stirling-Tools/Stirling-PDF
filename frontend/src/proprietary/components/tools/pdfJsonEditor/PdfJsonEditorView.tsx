@@ -1327,6 +1327,9 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
                   {t('pdfJsonEditor.badges.modified', 'Edited')}
                 </Badge>
               )}
+              <Badge color="blue" variant="dot" size="xs">
+                {t('pdfJsonEditor.badges.earlyAccess', 'Early Access')}
+              </Badge>
             </Group>
             {pages.length > 1 && (
               <Pagination
