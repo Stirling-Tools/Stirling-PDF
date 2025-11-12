@@ -10,7 +10,7 @@ interface UseFileItemDragDropParams {
 }
 
 interface UseFileItemDragDropReturn {
-  itemRef: React.RefObject<HTMLDivElement>;
+  itemRef: React.RefObject<HTMLDivElement | null>;
   isDragging: boolean;
   isDragOver: boolean;
   dropPosition: 'above' | 'below';

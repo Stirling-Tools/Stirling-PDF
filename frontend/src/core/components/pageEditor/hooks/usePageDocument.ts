@@ -206,7 +206,7 @@ export function usePageDocument(): PageDocumentHook {
     }));
 
     const currentPagesSet = currentPages ? new Set(currentPages.map(page => page.id)) : null;
-    if (currentPagesSet && currentPagesSet.size === pages.length) {
+    if (currentPagesSet && currentPages && currentPagesSet.size === pages.length) {
       const sameIds = pages.every(page => currentPagesSet.has(page.id));
       if (sameIds) {
         const mergedById = new Map(pages.map(page => [page.id, page]));
