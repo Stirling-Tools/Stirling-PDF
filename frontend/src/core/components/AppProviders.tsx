@@ -8,7 +8,7 @@ import { ToolWorkflowProvider } from "@app/contexts/ToolWorkflowContext";
 import { HotkeyProvider } from "@app/contexts/HotkeyContext";
 import { SidebarProvider } from "@app/contexts/SidebarContext";
 import { PreferencesProvider } from "@app/contexts/PreferencesContext";
-import { AppConfigProvider, AppConfigRetryOptions } from "@app/contexts/AppConfigContext";
+import { AppConfigProvider, AppConfigProviderProps, AppConfigRetryOptions } from "@app/contexts/AppConfigContext";
 import { RightRailProvider } from "@app/contexts/RightRailContext";
 import { ViewerProvider } from "@app/contexts/ViewerContext";
 import { SignatureProvider } from "@app/contexts/SignatureContext";
@@ -31,22 +31,29 @@ function AppInitializer() {
   return null;
 }
 
+// Avoid requirement to have props which are required in app providers anyway
+type AppConfigProviderOverrides = Omit<AppConfigProviderProps, 'children' | 'retryOptions'>;
+
 export interface AppProvidersProps {
   children: ReactNode;
   appConfigRetryOptions?: AppConfigRetryOptions;
+  appConfigProviderProps?: Partial<AppConfigProviderOverrides>;
 }
 
 /**
  * Core application providers
  * Contains all providers needed for the core
  */
-export function AppProviders({ children, appConfigRetryOptions }: AppProvidersProps) {
+export function AppProviders({ children, appConfigRetryOptions, appConfigProviderProps }: AppProvidersProps) {
   return (
     <PreferencesProvider>
       <RainbowThemeProvider>
         <ErrorBoundary>
           <OnboardingProvider>
-            <AppConfigProvider retryOptions={appConfigRetryOptions}>
+            <AppConfigProvider
+              retryOptions={appConfigRetryOptions}
+              {...appConfigProviderProps}
+            >
               <ScarfTrackingInitializer />
               <FileContextProvider enableUrlSync={true} enablePersistence={true}>
                 <AppInitializer />

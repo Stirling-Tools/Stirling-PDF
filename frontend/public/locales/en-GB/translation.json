@@ -5139,6 +5139,8 @@
   "backendHealth": {
     "checking": "Checking backend status...",
     "online": "Backend Online",
-    "offline": "Backend Offline"
+    "offline": "Backend Offline",
+    "starting": "Backend starting up...",
+    "wait": "Please wait for the backend to finish launching and try again."
   }
 }
