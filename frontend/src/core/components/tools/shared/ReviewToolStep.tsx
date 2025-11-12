@@ -14,7 +14,7 @@ export interface ReviewToolStepProps<TParams = unknown> {
   operation: ToolOperationHook<TParams>;
   title?: string;
   onFileClick?: (file: File) => void;
-  onUndo: () => void;
+  onUndo?: () => void;
   isCollapsed?: boolean;
   onCollapsedClick?: () => void;
 }
@@ -26,14 +26,14 @@ function ReviewStepContent<TParams = unknown>({
 }: {
   operation: ToolOperationHook<TParams>;
   onFileClick?: (file: File) => void;
-  onUndo: () => void;
+  onUndo?: () => void;
 }) {
   const { t } = useTranslation();
   const stepRef = useRef<HTMLDivElement>(null);
 
   const handleUndo = async () => {
     try {
-      onUndo();
+      onUndo?.();
     } catch (error) {
       // Error is already handled by useToolOperation, just reset loading state
       console.error("Undo operation failed:", error);
@@ -73,17 +73,19 @@ function ReviewStepContent<TParams = unknown>({
         />
       )}
 
-      <Tooltip content={t("undoOperationTooltip", "Click to undo the last operation and restore the original files")}>
-        <Button
-          leftSection={<UndoIcon />}
-          variant="outline"
-          color="var(--mantine-color-gray-6)"
-          onClick={handleUndo}
-          fullWidth
-        >
-          {t("undo", "Undo")}
-        </Button>
-      </Tooltip>
+      {onUndo && (
+        <Tooltip content={t("undoOperationTooltip", "Click to undo the last operation and restore the original files")}>
+          <Button
+            leftSection={<UndoIcon />}
+            variant="outline"
+            color="var(--mantine-color-gray-6)"
+            onClick={handleUndo}
+            fullWidth
+          >
+            {t("undo", "Undo")}
+          </Button>
+        </Tooltip>
+      )}
       {operation.downloadUrl && (
         <Button
           component="a"
@@ -104,7 +106,17 @@ function ReviewStepContent<TParams = unknown>({
 }
 
 export function createReviewToolStep<TParams = unknown>(
-  createStep: (title: string, props: any, children?: React.ReactNode) => React.ReactElement,
+  createStep: (
+    title: string,
+    props: {
+      isVisible?: boolean;
+      isCollapsed?: boolean;
+      onCollapsedClick?: () => void;
+      _excludeFromCount?: boolean;
+      _noPadding?: boolean;
+    },
+    children?: React.ReactNode
+  ) => React.ReactElement,
   props: ReviewToolStepProps<TParams>
 ): React.ReactElement {
   const { t } = useTranslation();

@@ -5,6 +5,7 @@ import OperationButton from '@app/components/tools/shared/OperationButton';
 import { ToolOperationHook } from '@app/hooks/tools/shared/useToolOperation';
 import { ToolWorkflowTitle, ToolWorkflowTitleProps } from '@app/components/tools/shared/ToolWorkflowTitle';
 import { StirlingFile } from '@app/types/fileContext';
+import type { TooltipTip } from '@app/types/tips';
 
 export interface FilesStepConfig {
   selectedFiles: StirlingFile[];
@@ -22,7 +23,7 @@ export interface MiddleStepConfig {
   content: React.ReactNode;
   tooltip?: {
     content?: React.ReactNode;
-    tips?: any[];
+    tips?: TooltipTip[];
     header?: {
       title: string;
       logo?: React.ReactNode;
@@ -39,25 +40,25 @@ export interface ExecuteButtonConfig {
   testId?: string;
 }
 
-export interface ReviewStepConfig {
+export interface ReviewStepConfig<TParams = unknown> {
   isVisible: boolean;
-  operation: ToolOperationHook<any>;
+  operation: ToolOperationHook<TParams>;
   title: string;
   onFileClick?: (file: File) => void;
-  onUndo: () => void;
+  onUndo?: () => void;
   testId?: string;
 }
 
 export interface TitleConfig extends ToolWorkflowTitleProps {}
 
-export interface ToolFlowConfig {
+export interface ToolFlowConfig<TParams = unknown> {
   title?: TitleConfig;
   files: FilesStepConfig;
   steps: MiddleStepConfig[];
   // Optional preview content rendered between steps and the execute button
   preview?: React.ReactNode;
   executeButton?: ExecuteButtonConfig;
-  review: ReviewStepConfig;
+  review: ReviewStepConfig<TParams>;
   forceStepNumbers?: boolean;
 }
 
@@ -65,7 +66,7 @@ export interface ToolFlowConfig {
  * Creates a flexible tool flow with configurable steps and state management left to the tool.
  * Reduces boilerplate while allowing tools to manage their own collapse/expansion logic.
  */
-export function createToolFlow(config: ToolFlowConfig) {
+export function createToolFlow<TParams = unknown>(config: ToolFlowConfig<TParams>) {
   const steps = createToolSteps();
 
   return (

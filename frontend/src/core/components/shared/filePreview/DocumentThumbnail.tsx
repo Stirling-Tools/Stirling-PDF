@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, Center, Image } from '@mantine/core';
-import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import { getFileTypeIcon } from '@app/components/shared/filePreview/getFileTypeIcon';
 import { StirlingFileStub } from '@app/types/fileContext';
 import { PrivateContent } from '@app/components/shared/PrivateContent';
 
@@ -53,12 +53,7 @@ const DocumentThumbnail: React.FC<DocumentThumbnailProps> = ({
     <Box style={containerStyle} onClick={onClick}>
       <Center style={{ width: '100%', height: '100%', backgroundColor: 'var(--mantine-color-gray-1)', borderRadius: '0.25rem' }}>
         <PrivateContent>
-          <PictureAsPdfIcon
-            style={{
-              fontSize: '2rem',
-              color: 'var(--mantine-color-gray-6)'
-            }}
-          />
+          {getFileTypeIcon(file)}
         </PrivateContent>
       </Center>
       {children}

@@ -121,6 +121,7 @@ import RemoveBlanksSettings from "@app/components/tools/removeBlanks/RemoveBlank
 import AddPageNumbersAutomationSettings from "@app/components/tools/addPageNumbers/AddPageNumbersAutomationSettings";
 import OverlayPdfsSettings from "@app/components/tools/overlayPdfs/OverlayPdfsSettings";
 import ValidateSignature from "@app/tools/ValidateSignature";
+import ShowJS from "@app/tools/ShowJS";
 import Automate from "@app/tools/Automate";
 import Compare from "@app/tools/Compare";
 import { CONVERT_SUPPORTED_FORMATS } from "@app/constants/convertSupportedFornats";
@@ -714,10 +715,12 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       showJS: {
         icon: <LocalIcon icon="javascript-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.showJS.title", "Show JavaScript"),
-        component: null,
+        component: ShowJS,
         description: t("home.showJS.desc", "Extract and display JavaScript code from PDF documents"),
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.DEVELOPER_TOOLS,
+        maxFiles: 1,
+        endpoints: ["show-javascript"],
         synonyms: getSynonyms(t, "showJS"),
         supportsAutomate: false,
         automationSettings: null
