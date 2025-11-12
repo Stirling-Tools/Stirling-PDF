@@ -50,7 +50,7 @@ public class MultiPageLayoutController {
     public ResponseEntity<byte[]> mergeMultiplePagesIntoOne(
             @ModelAttribute MergeMultiplePagesRequest request) throws IOException {
 
-        int MAX_PAGES = 10000;
+        int MAX_PAGES = 100000;
         int MAX_COLS = 300;
         int MAX_ROWS = 300;
 
