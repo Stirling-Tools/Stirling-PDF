@@ -14,6 +14,7 @@ import { FileId, StirlingFile } from '@app/types/fileContext';
 import { alert } from '@app/components/toast';
 import { downloadBlob } from '@app/utils/downloadUtils';
 import { useFileEditorRightRailButtons } from '@app/components/fileEditor/fileEditorRightRailButtons';
+import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
 
 
 interface FileEditorProps {
@@ -64,6 +65,9 @@ const FileEditor = ({
     alert({ alertType: 'error', title: 'Error', body: message, expandable: true });
   }, []);
   const [selectionMode, setSelectionMode] = useState(toolMode);
+
+  // Current tool (for enforcing maxFiles limits)
+  const { selectedTool } = useToolWorkflow();
 
   // Enable selection mode automatically in tool mode
   useEffect(() => {
@@ -156,24 +160,26 @@ const FileEditor = ({
       newSelection = currentSelectedIds.filter(id => id !== contextFileId);
     } else {
       // Add file to selection
-      // In tool mode, typically allow multiple files unless specified otherwise
-      const maxAllowed = toolMode ? 10 : Infinity; // Default max for tools
+      // Determine max files allowed from the active tool (negative or undefined means unlimited)
+      const rawMax = selectedTool?.maxFiles;
+      const maxAllowed = (!toolMode || rawMax == null || rawMax < 0) ? Infinity : rawMax;
 
       if (maxAllowed === 1) {
+        // Only one file allowed -> replace selection with the new file
         newSelection = [contextFileId];
       } else {
-        // Check if we've hit the selection limit
-        if (maxAllowed > 1 && currentSelectedIds.length >= maxAllowed) {
-          showStatus(`Maximum ${maxAllowed} files can be selected`, 'warning');
-          return;
+        // If at capacity, drop the oldest selected and append the new one
+        if (Number.isFinite(maxAllowed) && currentSelectedIds.length >= maxAllowed) {
+          newSelection = [...currentSelectedIds.slice(1), contextFileId];
+        } else {
+          newSelection = [...currentSelectedIds, contextFileId];
         }
-        newSelection = [...currentSelectedIds, contextFileId];
       }
     }
 
     // Update context (this automatically updates tool selection since they use the same action)
     setSelectedFiles(newSelection);
-  }, [setSelectedFiles, toolMode, _setStatus, activeStirlingFileStubs]);
+  }, [setSelectedFiles, toolMode, _setStatus, activeStirlingFileStubs, selectedTool?.maxFiles]);
 
 
   // File reordering handler for drag and drop
