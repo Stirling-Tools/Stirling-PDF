@@ -81,6 +81,7 @@ export default function Workbench() {
 
     switch (currentView) {
       case "fileEditor":
+
         return (
           <FileEditor
             toolMode={!!selectedToolId}
@@ -98,6 +99,7 @@ export default function Workbench() {
         );
 
       case "viewer":
+        
         return (
           <Viewer
             sidebarsVisible={sidebarsVisible}
@@ -110,6 +112,7 @@ export default function Workbench() {
         );
 
       case "pageEditor":
+        
         return (
           <>
             <PageEditor
@@ -143,6 +146,8 @@ export default function Workbench() {
       default:
         if (!isBaseWorkbench(currentView)) {
           const customView = customWorkbenchViews.find((view) => view.workbenchId === currentView && view.data != null);
+            
+          
           if (customView) {
             const CustomComponent = customView.component;
             return <CustomComponent data={customView.data} />;
@@ -154,7 +159,7 @@ export default function Workbench() {
 
   return (
     <Box
-      className="flex-1 h-full min-w-80 relative flex flex-col"
+      className="flex-1 h-full min-w-0 relative flex flex-col"
       data-tour="workbench"
       style={
         isRainbowMode
@@ -182,10 +187,11 @@ export default function Workbench() {
 
       {/* Main content area */}
       <Box
-        className={`flex-1 min-h-0 relative z-10 ${styles.workbenchScrollable}`}
+        className={`flex-1 min-h-0 relative z-10 ${currentView === 'viewer' || !isBaseWorkbench(currentView) ? '' : styles.workbenchScrollable}`}
         style={{
           transition: 'opacity 0.15s ease-in-out',
           paddingTop: currentView === 'viewer' ? '0' : (activeFiles.length > 0 ? '3.5rem' : '0'),
+          overflow: currentView === 'viewer' || !isBaseWorkbench(currentView) ? 'hidden' : undefined,
         }}
       >
         {renderMainContent()}
