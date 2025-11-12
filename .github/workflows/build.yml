@@ -330,7 +330,7 @@ jobs:
             ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf
             ${{ secrets.DOCKER_HUB_ORG_USERNAME }}/stirling-pdf
           tags: |
-            type=raw,value=alpha,enable=${{ github.ref == 'refs/heads/main' }}
+            type=raw,value=alpha,enable=true
 
       - name: Set up Docker Buildx
         id: buildx
@@ -355,7 +355,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
-          name: reports-docker-${{ matrix.docker-rev }}
+          name: reports-docker-${{ matrix.docker-rev.name }}
           path: |
             build/reports/tests/
             build/test-results/
