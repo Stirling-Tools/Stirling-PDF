@@ -14,31 +14,26 @@ pub fn add_opened_file(file_path: String) {
 // Command to get opened file paths (if app was launched with files)
 #[tauri::command]
 pub async fn get_opened_files() -> Result<Vec<String>, String> {
-    // First check if we have files from macOS file open events
-    {
-        let opened_files = OPENED_FILES.lock().unwrap();
-        if !opened_files.is_empty() {
-            add_log(format!("📂 Returning {} stored opened file(s)", opened_files.len()));
-            return Ok(opened_files.clone());
-        }
-    }
+    let mut all_files: Vec<String> = Vec::new();
 
-    // Fallback to command line arguments (Windows/Linux)
+    // Get files from command line arguments (Windows/Linux 'Open With Stirling' behaviour)
     let args: Vec<String> = std::env::args().collect();
-
-    // Look for PDF file arguments (skip the first arg which is the executable)
     let pdf_files: Vec<String> = args.iter()
         .skip(1)
-        .filter(|arg| arg.ends_with(".pdf") && std::path::Path::new(arg).exists())
+        .filter(|arg| std::path::Path::new(arg).exists())
         .cloned()
         .collect();
 
-    if !pdf_files.is_empty() {
-        add_log(format!("📂 {} PDF file(s) opened via command line", pdf_files.len()));
-        return Ok(pdf_files);
+    all_files.extend(pdf_files);
+
+    // Add any files sent via events or other instances (macOS 'Open With Stirling' behaviour, also Windows/Linux extra files)
+    {
+        let opened_files = OPENED_FILES.lock().unwrap();
+        all_files.extend(opened_files.clone());
     }
 
-    Ok(Vec::new())
+    add_log(format!("📂 Returning {} opened file(s)", all_files.len()));
+    Ok(all_files)
 }
 
 // Command to clear the opened files (after processing)
