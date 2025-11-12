@@ -3,13 +3,9 @@ import JavascriptIcon from '@mui/icons-material/Javascript';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 import type { StirlingFileStub } from '@app/types/fileContext';
+import { detectFileExtension } from '@app/utils/fileUtils';
 
 type FileLike = File | StirlingFileStub;
-
-function getExtension(name: string): string {
-	const lastDot = name.lastIndexOf('.');
-	return lastDot >= 0 ? name.slice(lastDot + 1).toLowerCase() : '';
-}
 
 /**
  * Returns an appropriate file type icon for the provided file.
@@ -19,7 +15,7 @@ function getExtension(name: string): string {
 export function getFileTypeIcon(file: FileLike, size: number | string = '2rem'): React.ReactElement {
 	const name = (file?.name ?? '').toLowerCase();
 	const mime = (file?.type ?? '').toLowerCase();
-	const ext = getExtension(name);
+	const ext = detectFileExtension(name);
 
 	// JavaScript
 	if (ext === 'js' || mime.includes('javascript')) {

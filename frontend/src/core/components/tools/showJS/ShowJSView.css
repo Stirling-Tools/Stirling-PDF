@@ -67,4 +67,57 @@
 	background: rgba(33, 150, 243, 0.4); /* active blue */
 }
 
+.showjs-root {
+	height: 100%;
+	margin-left: 1rem;
+	margin-right: 1rem;
+}
+
+.showjs-container {
+	position: relative;
+	height: 100%;
+	min-height: 360px;
+	border: 1px solid var(--mantine-color-gray-4);
+	border-radius: 8px;
+	overflow: hidden;
+	background: var(--right-rail-bg);
+}
+
+.showjs-toolbar {
+	position: sticky;
+	top: 8px;
+	right: 8px;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	z-index: 0;
+	padding: 8px;
+	background: transparent;
+	margin-bottom: 10px;
+	margin-left: 6px;
+	pointer-events: none;
+}
+
+.showjs-toolbar-controls {
+	pointer-events: auto;
+}
+
+.showjs-search-input {
+	width: 220px;
+}
+
+.showjs-outline-button {
+	background: transparent;
+	border: 1px solid currentColor;
+	color: var(--mantine-color-blue-5);
+}
+
+.showjs-scrollarea {
+	height: calc(100vh - 220px);
+}
+
+.showjs-inner {
+	padding: 40px 24px 24px 24px;
+}
+
 
