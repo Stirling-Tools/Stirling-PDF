@@ -1,14 +1,14 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React from 'react';
 import { Menu, Loader, Group, Text, Checkbox } from '@mantine/core';
 import { LocalIcon } from '@app/components/shared/LocalIcon';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import AddIcon from '@mui/icons-material/Add';
-import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import FitText from '@app/components/shared/FitText';
 import { getFileColorWithOpacity } from '@app/components/pageEditor/fileColors';
 import { useFilesModalContext } from '@app/contexts/FilesModalContext';
 import { PrivateContent } from '@app/components/shared/PrivateContent';
+import { useFileItemDragDrop } from '@app/components/shared/hooks/useFileItemDragDrop';
 
 import { FileId } from '@app/types/file';
 
@@ -35,117 +35,20 @@ const FileMenuItem: React.FC<FileMenuItemProps> = ({
   onToggleSelection,
   onReorder,
 }) => {
-  const [isDragging, setIsDragging] = useState(false);
-  const [isDragOver, setIsDragOver] = useState(false);
-  const [dropPosition, setDropPosition] = useState<'above' | 'below'>('below');
-  const itemRef = useRef<HTMLDivElement>(null);
-
-  // Keep latest values without re-registering DnD
-  const indexRef = useRef(index);
-  const fileIdRef = useRef(file.fileId);
-  const dropPositionRef = useRef<'above' | 'below'>('below');
-  useEffect(() => { indexRef.current = index; }, [index]);
-  useEffect(() => { fileIdRef.current = file.fileId; }, [file.fileId]);
-  useEffect(() => { dropPositionRef.current = dropPosition; }, [dropPosition]);
-
-  // NEW: keep latest onReorder without effect re-run
-  const onReorderRef = useRef(onReorder);
-  useEffect(() => { onReorderRef.current = onReorder; }, [onReorder]);
-
-  // Gesture guard for row click vs drag
-  const movedRef = useRef(false);
-  const startRef = useRef<{ x: number; y: number } | null>(null);
-
-  const onPointerDown = (e: React.PointerEvent) => {
-    startRef.current = { x: e.clientX, y: e.clientY };
-    movedRef.current = false;
-  };
-
-  const onPointerMove = (e: React.PointerEvent) => {
-    if (!startRef.current) return;
-    const dx = e.clientX - startRef.current.x;
-    const dy = e.clientY - startRef.current.y;
-    if (dx * dx + dy * dy > 25) movedRef.current = true; // ~5px threshold
-  };
-
-  const onPointerUp = () => {
-    startRef.current = null;
-  };
-
-  useEffect(() => {
-    const element = itemRef.current;
-    if (!element) return;
-
-    const dragCleanup = draggable({
-      element,
-      getInitialData: () => ({
-        type: 'file-item',
-        fileId: fileIdRef.current,
-        fromIndex: indexRef.current,
-      }),
-      onDragStart: () => setIsDragging((p) => (p ? p : true)),
-      onDrop: () => setIsDragging((p) => (p ? false : p)),
-      canDrag: () => true,
-    });
-
-    const dropCleanup = dropTargetForElements({
-      element,
-      getData: () => ({
-        type: 'file-item',
-        fileId: fileIdRef.current,
-        toIndex: indexRef.current,
-      }),
-      onDragEnter: () => setIsDragOver((p) => (p ? p : true)),
-      onDragLeave: () => {
-        setIsDragOver((p) => (p ? false : p));
-        setDropPosition('below');
-      },
-      onDrag: ({ source }) => {
-        // Determine drop position based on cursor location
-        const element = itemRef.current;
-        if (!element) return;
-
-        const rect = element.getBoundingClientRect();
-        const clientY = (source as any).element?.getBoundingClientRect().top || 0;
-        const midpoint = rect.top + rect.height / 2;
-
-        setDropPosition(clientY < midpoint ? 'below' : 'above');
-      },
-      onDrop: ({ source }) => {
-        setIsDragOver(false);
-        const dropPos = dropPositionRef.current;
-        setDropPosition('below');
-        const sourceData = source.data as any;
-        if (sourceData?.type === 'file-item') {
-          const fromIndex = sourceData.fromIndex as number;
-          let toIndex = indexRef.current;
-
-          // Adjust toIndex based on drop position
-          // If dropping below and dragging from above, or dropping above and dragging from below
-          if (dropPos === 'below' && fromIndex < toIndex) {
-            // Dragging down, drop after target - no adjustment needed
-          } else if (dropPos === 'above' && fromIndex > toIndex) {
-            // Dragging up, drop before target - no adjustment needed
-          } else if (dropPos === 'below' && fromIndex > toIndex) {
-            // Dragging up but want below target
-            toIndex = toIndex + 1;
-          } else if (dropPos === 'above' && fromIndex < toIndex) {
-            // Dragging down but want above target
-            toIndex = toIndex - 1;
-          }
-
-          if (fromIndex !== toIndex) {
-            onReorderRef.current(fromIndex, toIndex);
-          }
-        }
-      }
-    });
-
-    return () => {
-      try { dragCleanup(); } catch { /* cleanup */ }
-      try { dropCleanup(); } catch { /* cleanup */ }
-    };
-  }, []); // NOTE: no `onReorder` here
+  const {
+    itemRef,
+    isDragging,
+    isDragOver,
+    dropPosition,
+    movedRef,
+    onPointerDown,
+    onPointerMove,
+    onPointerUp,
+  } = useFileItemDragDrop({
+    fileId: file.fileId,
+    index,
+    onReorder,
+  });
 
   const itemName = file?.name || 'Untitled';
   const fileColorBorder = getFileColorWithOpacity(colorIndex, 1);
