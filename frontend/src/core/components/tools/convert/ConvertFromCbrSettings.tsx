@@ -16,7 +16,7 @@ const ConvertFromCbrSettings = ({
   const { t } = useTranslation();
 
   return (
-    <Stack gap="sm" data-testid="cbr-options-section">
+    <Stack gap="sm" data-testid="cbr-settings">
       <Text size="sm" fw={500}>{t("convert.cbrOptions", "CBR Options")}:</Text>
 
       <Checkbox
