@@ -59,6 +59,10 @@ RUN printf '%s\n' \
       'https://dl-3.alpinelinux.org/alpine/edge/testing' \
       > /etc/apk/repositories
 
+# Bash + repositories
+RUN apk add --no-cache bash && \
+    ln -sf /bin/bash /bin/sh
+
 RUN --mount=type=cache,target=/var/cache/apk \
     apk upgrade --no-cache -a
 
@@ -130,7 +134,8 @@ RUN python3 -m venv /opt/venv && \
     # User permissions
     addgroup -S stirlingpdfgroup && adduser -S stirlingpdfuser -G stirlingpdfgroup && \
     chown -R stirlingpdfuser:stirlingpdfgroup $HOME /scripts /usr/share/fonts/opentype/noto /configs /customFiles /pipeline /tmp/stirling-pdf && \
-    chown stirlingpdfuser:stirlingpdfgroup /app.jar
+    chown stirlingpdfuser:stirlingpdfgroup /app.jar && \
+    ln -sf /bin/busybox /bin/sh
 
 EXPOSE 8080/tcp
 # Set user and run command
