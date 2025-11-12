@@ -18,12 +18,9 @@
               </div>
               <form id="multiPdfForm" th:action="@{'/api/v1/general/multi-page-layout'}" method="post" enctype="multipart/form-data">
                 <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
-                <div class="mb-3">
-                  <label class="form-label" th:text="#{pageLayout.mode}"></label>
-                  <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="modeCustom" name="mode" value="CUSTOM">
-                    <label class="form-check-label" for="modeCustom" th:text="#{pageLayout.custom}">Custom</label>
-                  </div>
+                <div class="form-check mb-3">
+                  <input type="checkbox" id="modeCustom">
+                  <label for="modeCustom" th:text="#{pageLayout.custom}"></label>
                 </div>
                 <div id="defaultSection" class="mb-3" style="border:1px solid #eee; padding:1em; border-radius:8px; margin-bottom:1em;">
                   <label for="pagesPerSheet" th:text="#{pageLayout.pagesPerSheet}"></label>
@@ -76,8 +73,7 @@
               
               <script>
                 (function(){
-                  const form = document.getElementById('multiPdfForm');
-                  const modeCheckbox = form.querySelector('input[name="mode"]');
+                  const modeCheckbox = document.getElementById('modeCustom');
                   const defaultSection = document.getElementById('defaultSection');
                   const customSection  = document.getElementById('customSection');
                   const pagesPerSheet  = document.getElementById('pagesPerSheet');
