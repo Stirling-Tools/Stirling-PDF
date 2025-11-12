@@ -27,7 +27,6 @@ interface UsePageEditorCommandsParams {
   selectedPageIds: string[];
   setSelectedPageIds: (ids: string[]) => void;
   getPageNumbersFromIds: (pageIds: string[]) => number[];
-  getPageIdsFromNumbers: (pageNumbers: number[]) => string[];
   executeCommandWithTracking: (command: any) => void;
   updateFileOrderFromPages: (pages: PDFPage[]) => void;
   actions: FileActions;
@@ -45,7 +44,6 @@ export const usePageEditorCommands = ({
   selectedPageIds,
   setSelectedPageIds,
   getPageNumbersFromIds,
-  getPageIdsFromNumbers,
   executeCommandWithTracking,
   updateFileOrderFromPages,
   actions,
