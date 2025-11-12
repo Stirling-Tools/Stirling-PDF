@@ -10,6 +10,7 @@ interface ProviderCardProps {
   settings?: Record<string, any>;
   onSave?: (settings: Record<string, any>) => void;
   onDisconnect?: () => void;
+  disabled?: boolean;
 }
 
 export default function ProviderCard({
@@ -18,6 +19,7 @@ export default function ProviderCard({
   settings = {},
   onSave,
   onDisconnect,
+  disabled = false,
 }: ProviderCardProps) {
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
@@ -39,6 +41,7 @@ export default function ProviderCard({
   };
 
   const handleFieldChange = (key: string, value: any) => {
+    if (disabled) return; // Block changes when disabled
     setLocalSettings((prev) => ({ ...prev, [key]: value }));
   };
 
@@ -63,6 +66,7 @@ export default function ProviderCard({
             <Switch
               checked={value || false}
               onChange={(e) => handleFieldChange(field.key, e.target.checked)}
+              disabled={disabled}
             />
           </div>
         );
@@ -76,6 +80,7 @@ export default function ProviderCard({
             placeholder={field.placeholder}
             value={value}
             onChange={(e) => handleFieldChange(field.key, e.target.value)}
+            disabled={disabled}
           />
         );
 
@@ -88,6 +93,7 @@ export default function ProviderCard({
             placeholder={field.placeholder}
             value={value}
             onChange={(e) => handleFieldChange(field.key, e.target.value)}
+            disabled={disabled}
           />
         );
 
@@ -100,6 +106,7 @@ export default function ProviderCard({
             placeholder={field.placeholder}
             value={value}
             onChange={(e) => handleFieldChange(field.key, e.target.value)}
+            disabled={disabled}
           />
         );
     }
@@ -174,11 +181,12 @@ export default function ProviderCard({
                   color="red"
                   size="sm"
                   onClick={onDisconnect}
+                  disabled={disabled}
                 >
                   {t('admin.settings.connections.disconnect', 'Disconnect')}
                 </Button>
               )}
-              <Button size="sm" onClick={handleSave}>
+              <Button size="sm" onClick={handleSave} disabled={disabled}>
                 {t('admin.settings.save', 'Save Changes')}
               </Button>
             </Group>

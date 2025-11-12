@@ -18,7 +18,11 @@ import { Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
 import { useAuditFilters } from '@app/hooks/useAuditFilters';
 import AuditFiltersForm from '@app/components/shared/config/configSections/audit/AuditFiltersForm';
 
-const AuditEventsTable: React.FC = () => {
+interface AuditEventsTableProps {
+  loginEnabled?: boolean;
+}
+
+const AuditEventsTable: React.FC<AuditEventsTableProps> = ({ loginEnabled = true }) => {
   const { t } = useTranslation();
   const [events, setEvents] = useState<AuditEvent[]>([]);
   const [totalPages, setTotalPages] = useState(0);
@@ -51,8 +55,57 @@ const AuditEventsTable: React.FC = () => {
       }
     };
 
-    fetchEvents();
-  }, [filters, currentPage]);
+    if (loginEnabled) {
+      fetchEvents();
+    } else {
+      // Provide example audit events when login is disabled
+      const now = new Date();
+      setEvents([
+        {
+          id: '1',
+          timestamp: new Date(now.getTime() - 1000 * 60 * 15).toISOString(),
+          eventType: 'LOGIN',
+          username: 'admin',
+          ipAddress: '192.168.1.100',
+          details: 'User logged in successfully',
+        },
+        {
+          id: '2',
+          timestamp: new Date(now.getTime() - 1000 * 60 * 30).toISOString(),
+          eventType: 'FILE_UPLOAD',
+          username: 'user1',
+          ipAddress: '192.168.1.101',
+          details: 'Uploaded document.pdf',
+        },
+        {
+          id: '3',
+          timestamp: new Date(now.getTime() - 1000 * 60 * 45).toISOString(),
+          eventType: 'SETTINGS_CHANGE',
+          username: 'admin',
+          ipAddress: '192.168.1.100',
+          details: 'Modified system settings',
+        },
+        {
+          id: '4',
+          timestamp: new Date(now.getTime() - 1000 * 60 * 60).toISOString(),
+          eventType: 'FILE_DOWNLOAD',
+          username: 'user2',
+          ipAddress: '192.168.1.102',
+          details: 'Downloaded report.pdf',
+        },
+        {
+          id: '5',
+          timestamp: new Date(now.getTime() - 1000 * 60 * 90).toISOString(),
+          eventType: 'LOGOUT',
+          username: 'user1',
+          ipAddress: '192.168.1.101',
+          details: 'User logged out',
+        },
+      ]);
+      setTotalPages(1);
+      setLoading(false);
+    }
+  }, [filters, currentPage, loginEnabled]);
 
   // Wrap filter handlers to reset pagination
   const handleFilterChangeWithReset = (key: keyof typeof filters, value: any) => {
@@ -83,6 +136,7 @@ const AuditEventsTable: React.FC = () => {
           users={users}
           onFilterChange={handleFilterChangeWithReset}
           onClearFilters={handleClearFiltersWithReset}
+          disabled={!loginEnabled}
         />
 
         {/* Table */}
@@ -153,6 +207,7 @@ const AuditEventsTable: React.FC = () => {
                           variant="subtle"
                           size="xs"
                           onClick={() => setSelectedEvent(event)}
+                          disabled={!loginEnabled}
                         >
                           {t('audit.events.viewDetails', 'View Details')}
                         </Button>
