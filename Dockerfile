@@ -39,7 +39,9 @@ ENV DISABLE_ADDITIONAL_FEATURES=true \
     TMP=/tmp/stirling-pdf
 
 # JDK for app
-RUN printf '%s\n' \
+RUN apk add --no-cache bash \
+    && ln -sf /bin/bash /bin/sh \
+    && printf '%s\n' \
       'https://dl-cdn.alpinelinux.org/alpine/edge/main' \
       'https://dl-cdn.alpinelinux.org/alpine/edge/community' \
       'https://dl-cdn.alpinelinux.org/alpine/edge/testing' \
@@ -98,7 +100,8 @@ RUN printf '%s\n' \
     # User permissions
     addgroup -S stirlingpdfgroup && adduser -S stirlingpdfuser -G stirlingpdfgroup && \
     chown -R stirlingpdfuser:stirlingpdfgroup $HOME /scripts /usr/share/fonts/opentype/noto /configs /customFiles /pipeline /tmp/stirling-pdf && \
-    chown stirlingpdfuser:stirlingpdfgroup /app.jar
+    chown stirlingpdfuser:stirlingpdfgroup /app.jar && \
+    ln -sf /bin/busybox /bin/sh
 
 EXPOSE 8080/tcp
 
