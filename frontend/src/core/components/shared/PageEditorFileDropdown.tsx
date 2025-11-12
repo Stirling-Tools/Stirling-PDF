@@ -8,7 +8,7 @@ import FitText from '@app/components/shared/FitText';
 import { getFileColorWithOpacity } from '@app/components/pageEditor/fileColors';
 import { useFilesModalContext } from '@app/contexts/FilesModalContext';
 import { PrivateContent } from '@app/components/shared/PrivateContent';
-import { useFileItemDragDrop } from '@app/components/shared/hooks/useFileItemDragDrop';
+import { useFileItemDragDrop } from '@app/components/shared/pageEditor/useFileItemDragDrop';
 
 import { FileId } from '@app/types/file';
 
