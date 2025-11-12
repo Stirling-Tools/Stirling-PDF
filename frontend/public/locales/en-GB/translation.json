@@ -2203,7 +2203,7 @@
       "pageNotReadyTitle": "Page not rendered yet",
       "pageNotReadyBody": "Some pages are still rendering. Navigation will snap once they are ready.",
       "rendering": "rendering",
-      "inProgress": "One or both of these PDFs are very large, scrolling won't be smooth until the rendering is complete",
+      "inProgress": "At least one of these PDFs are very large, scrolling won't be smooth until the rendering is complete",
       "pagesRendered": "pages rendered",
       "complete": "Page rendering complete"
     },

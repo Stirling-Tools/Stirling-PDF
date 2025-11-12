@@ -53,7 +53,6 @@ const CompareDocumentPane = ({
 
   // Track which page images have finished loading to avoid flashing between states
   const imageLoadedRef = useRef<Map<number, boolean>>(new Map());
-  const [, forceRerender] = useState(0);
   const visiblePageRafRef = useRef<number | null>(null);
   const lastReportedVisiblePageRef = useRef<number | null>(null);
   const pageNodesRef = useRef<HTMLElement[] | null>(null);
@@ -70,7 +69,6 @@ const CompareDocumentPane = ({
   useEffect(() => {
     if (zoom <= 1) {
       pagePanRef.current.clear();
-      forceRerender(v => v + 1);
     }
   }, [zoom]);
 
@@ -222,7 +220,6 @@ const CompareDocumentPane = ({
                       const candY = dragRef.current.startPanY - dy;
                       const next = { x: Math.max(0, Math.min(maxX, candX)), y: Math.max(0, Math.min(maxY, candY)) };
                       pagePanRef.current.set(page.pageNumber, next);
-                      forceRerender(v => v + 1);
                       e.preventDefault();
                     }}
                     onMouseUp={(e) => {
@@ -255,7 +252,6 @@ const CompareDocumentPane = ({
                         onLoad={() => {
                           if (!imageLoadedRef.current.get(page.pageNumber)) {
                             imageLoadedRef.current.set(page.pageNumber, true);
-                            forceRerender(v => v + 1);
                           }
                         }}
                       />

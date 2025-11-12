@@ -218,7 +218,7 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
       if (!progressToastIdRef.current) {
         const id = alert({
           alertType: 'neutral',
-          title: t('compare.rendering.inProgress', "One or both of these PDFs are very large, scrolling won't be smooth until the rendering is complete"),
+          title: t('compare.rendering.inProgress', "At least one of these PDFs are very large, scrolling won't be smooth until the rendering is complete"),
           body: `${countsText} ${t('compare.rendering.pagesRendered', 'pages rendered')}`,
           location: 'bottom-right' as ToastLocation,
           isPersistentPopup: true,
@@ -229,7 +229,7 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
         progressToastIdRef.current = id;
       } else {
         updateToast(progressToastIdRef.current, {
-          title: t('compare.rendering.inProgress', "One or both of these PDFs are very large, scrolling won't be smooth until the rendering is complete"),
+          title: t('compare.rendering.inProgress', "At least one of these PDFs are very large, scrolling won't be smooth until the rendering is complete"),
           body: `${countsText} ${t('compare.rendering.pagesRendered', 'pages rendered')}`,
           location: 'bottom-right' as ToastLocation,
           isPersistentPopup: true,
