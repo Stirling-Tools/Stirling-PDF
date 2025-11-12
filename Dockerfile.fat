@@ -136,8 +136,16 @@ RUN python3 -m venv /opt/venv && \
     chmod +x /scripts/* && \
     # User permissions
     addgroup -S stirlingpdfgroup && adduser -S stirlingpdfuser -G stirlingpdfgroup && \
-    chown -R stirlingpdfuser:stirlingpdfgroup $HOME /scripts /usr/share/fonts/opentype/noto /configs /customFiles /pipeline /tmp/stirling-pdf && \
-    chown stirlingpdfuser:stirlingpdfgroup /app.jar && \
+    chown -R stirlingpdfuser:stirlingpdfgroup \
+        $HOME \
+        /scripts \
+        /usr/share/fonts/opentype/noto \
+        /configs \
+        /customFiles \
+        /pipeline \
+        /tmp/stirling-pdf \
+        /app.jar && \
+    chmod 755 /usr/bin/soffice.bin && \
     ln -sf /bin/busybox /bin/sh
 
 EXPOSE 8080/tcp
