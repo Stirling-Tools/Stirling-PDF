@@ -330,7 +330,7 @@ jobs:
             ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf
             ${{ secrets.DOCKER_HUB_ORG_USERNAME }}/stirling-pdf
           tags: |
-            ${{ matrix.docker-rev.additional_tags }}
+            type=raw,value=alpha,enable=${{ github.ref == 'refs/heads/main' }}
 
       - name: Set up Docker Buildx
         id: buildx
