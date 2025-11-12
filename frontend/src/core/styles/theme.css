@@ -302,6 +302,11 @@
   --pdf-light-simulated-page-bg: 255 255 255;
   --pdf-light-simulated-page-text: 15 23 42;
 
+  /* Code token colors (light mode) */
+  --code-kw-color: #1d4ed8;   /* blue-700 */
+  --code-str-color: #16a34a;  /* green-600 */
+  --code-num-color: #4338ca;  /* indigo-700 */
+  --code-com-color: #6b7280;  /* gray-500 */
   /* Compare tool specific colors - only for colors that don't have existing theme pairs */
   --compare-upload-dropzone-bg: rgba(241, 245, 249, 0.45);
   --compare-upload-dropzone-border: rgba(148, 163, 184, 0.6);
@@ -534,6 +539,11 @@
   --modal-content-bg: #2A2F36;
   --modal-header-border: rgba(255, 255, 255, 0.08);
 
+  /* Code token colors (dark mode - Cursor-like) */
+  --code-kw-color: #C792EA;   /* purple */
+  --code-str-color: #C3E88D;  /* green */
+  --code-num-color: #F78C6C;  /* orange */
+  --code-com-color: #697098;  /* muted gray-blue */
   /* Compare tool specific colors (dark mode) - only for colors that don't have existing theme pairs */
   --compare-upload-dropzone-bg: rgba(31, 35, 41, 0.45);
   --compare-upload-dropzone-border: rgba(75, 85, 99, 0.6);
