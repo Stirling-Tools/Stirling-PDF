@@ -164,7 +164,7 @@ jobs:
         run: ./gradlew :stirling-pdf:generateOpenApiDocs
         env:
           DISABLE_ADDITIONAL_FEATURES: true
-      
+
       - name: Upload OpenAPI Documentation
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
@@ -251,7 +251,7 @@ jobs:
         uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
         with:
           python-version: "3.12"
-          cache: 'pip' # caching pip dependencies
+          cache: "pip" # caching pip dependencies
           cache-dependency-path: ./testing/cucumber/requirements.txt
 
       - name: Pip requirements
@@ -272,17 +272,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        docker-rev: 
-          # - name: regular
-          #   file: ./Dockerfile
-          #   additional_tags: ""
-          # - name: ultra-lite
-          #   file: ./Dockerfile.ultra-lite
-          #   additional_tags: ""
-          - name: fat
-            file: ./Dockerfile.fat
-            additional_tags: |
-              type=raw,value=alpha,enable=${{ github.ref == 'refs/heads/main' }}
+        docker-rev: ["Dockerfile", "Dockerfile.ultra-lite", "Dockerfile.fat"]
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@95d9a5deda9de15063e7595e9719c11c38c90ae2 # v2.13.2
@@ -309,53 +299,61 @@ jobs:
           DISABLE_ADDITIONAL_FEATURES: true
           STIRLING_PDF_DESKTOP_UI: false
 
-      - name: Get version number
-        id: versionNumber
-        run: echo "versionNumber=$(./gradlew printVersion --quiet | tail -1)" >> $GITHUB_OUTPUT
-
       - name: Set up QEMU
         uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3.7.0
-
-      - name: Convert repository owner to lowercase
-        id: repoowner
-        run: echo "lowercase=$(echo ${{ github.repository_owner }} | awk '{print tolower($0)}')" >> $GITHUB_OUTPUT
-
-      - name: Generate tags (${{ matrix.docker-rev.name }})
-        id: meta
-        uses: docker/metadata-action@318604b99e75e41977312d83839a89be02ca4893 # v5.9.0
-        with:
-          images: |
-            ${{ secrets.DOCKER_HUB_USERNAME }}/s-pdf
-            ghcr.io/${{ steps.repoowner.outputs.lowercase }}/s-pdf
-            ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf
-            ${{ secrets.DOCKER_HUB_ORG_USERNAME }}/stirling-pdf
-          tags: |
-            type=raw,value=alpha,enable=true
 
       - name: Set up Docker Buildx
         id: buildx
         uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
 
-      - name: Build ${{ matrix.docker-rev.name }}
+      - name: Generate test tag
+        id: meta
+        run: echo "tags=ghcr.io/${{ github.repository_owner }}/stirling-pdf-test:${{ matrix.docker-rev }}-${{ github.sha }}" >> $GITHUB_OUTPUT
+
+      - name: Build and load multi-arch image
         uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
         with:
           builder: ${{ steps.buildx.outputs.name }}
           context: .
-          file: ${{ matrix.docker-rev.file }}
+          file: ./${{ matrix.docker-rev }}
           push: false
+          load: true # lädt Images lokal
           cache-from: type=gha
           cache-to: type=gha,mode=max
           tags: ${{ steps.meta.outputs.tags }}
-          build-args: VERSION_TAG=${{ steps.versionNumber.outputs.versionNumber }}
           platforms: linux/amd64,linux/arm64/v8
-          provenance: true
-          sbom: true
+          provenance: false
+          sbom: false
+
+      - name: Test Java works (arm64)
+        run: docker run --rm --platform linux/arm64 ${{ steps.meta.outputs.tags }} java -version
+
+      - name: Test app.jar exists (arm64)
+        run: |
+          docker run --rm --platform linux/arm64 ${{ steps.meta.outputs.tags }} \
+            sh -c "test -f /app.jar || (echo 'ERROR: app.jar missing in ${{ matrix.docker-rev }}!' && exit 1)"
+
+      - name: Extra tests for fat image only
+        if: matrix.docker-rev == 'Dockerfile.fat'
+        run: |
+          TAG=${{ steps.meta.outputs.tags }}
+          echo "Running fat-specific tests on arm64..."
+          docker run --rm --platform linux/arm64 $TAG \
+            sh -c "ldd /usr/bin/soffice.bin > /dev/null && echo 'LibreOffice linked OK'"
+          docker run --rm --platform linux/arm64 $TAG \
+            sh -c "python3 -c 'import uno' && echo 'uno import OK'"
+          timeout 120 docker run --rm --platform linux/arm64 \
+            -e DISABLE_ADDITIONAL_FEATURES=true \
+            -e FAT_DOCKER=true \
+            $TAG \
+            sh -c "java -jar /app.jar --version" || \
+            (echo "fat image startup failed on arm64!" && exit 1)
 
       - name: Upload Reports
         if: always()
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
-          name: reports-docker-${{ matrix.docker-rev.name }}
+          name: reports-docker-${{ matrix.docker-rev }}
           path: |
             build/reports/tests/
             build/test-results/
