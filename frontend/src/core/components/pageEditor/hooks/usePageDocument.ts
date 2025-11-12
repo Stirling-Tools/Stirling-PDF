@@ -37,7 +37,18 @@ export function usePageDocument(): PageDocumentHook {
     });
   }, [allFileIdsKey, activeFilesSignature, selectors]);
 
-  const primaryFileId = activeFileIds[0] ?? null;
+  const selectedActiveFileIds = useMemo(() => {
+    if (activeFileIds.length === 0) {
+      return [];
+    }
+    const selectedSet = new Set(state.ui.selectedFileIds);
+    if (selectedSet.size === 0) {
+      return [];
+    }
+    return activeFileIds.filter((id) => selectedSet.has(id));
+  }, [activeFileIds, selectedFileIdsKey]);
+
+  const primaryFileId = selectedActiveFileIds[0] ?? activeFileIds[0] ?? null;
 
   // UI state
   const globalProcessing = state.ui.isProcessing;
@@ -63,10 +74,14 @@ export function usePageDocument(): PageDocumentHook {
       return null;
     }
 
+    const namingFileIds = selectedActiveFileIds.length > 0 ? selectedActiveFileIds : activeFileIds;
+
     const name =
-      activeFileIds.length === 1
-        ? (primaryStirlingFileStub.name ?? 'document.pdf')
-        : activeFileIds
+      namingFileIds.length <= 1
+        ? (namingFileIds[0]
+            ? selectors.getStirlingFileStub(namingFileIds[0])?.name ?? 'document.pdf'
+            : 'document.pdf')
+        : namingFileIds
             .map(id => (selectors.getStirlingFileStub(id)?.name ?? 'file').replace(/\.pdf$/i, ''))
             .join(' + ');
 
@@ -230,7 +245,7 @@ export function usePageDocument(): PageDocumentHook {
     };
 
     return mergedDoc;
-  }, [activeFileIds, primaryFileId, primaryStirlingFileStub, processedFilePages, processedFileTotalPages, selectors, activeFilesSignature, selectedFileIdsKey, state.ui.selectedFileIds, allFileIds, currentPagesSignature, currentPages]);
+  }, [activeFileIds, selectedActiveFileIds, primaryFileId, primaryStirlingFileStub, processedFilePages, processedFileTotalPages, selectors, activeFilesSignature, selectedFileIdsKey, state.ui.selectedFileIds, allFileIds, currentPagesSignature, currentPages]);
 
   // Large document detection for smart loading
   const isVeryLargeDocument = useMemo(() => {

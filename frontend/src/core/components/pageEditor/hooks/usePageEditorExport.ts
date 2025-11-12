@@ -26,6 +26,36 @@ interface UsePageEditorExportParams {
   setSplitPositions: Dispatch<SetStateAction<Set<number>>>;
 }
 
+const removePlaceholderPages = (document: PDFDocument): PDFDocument => {
+  const filteredPages = document.pages.filter((page) => !page.isPlaceholder);
+  if (filteredPages.length === document.pages.length) {
+    return document;
+  }
+
+  const normalizedPages = filteredPages.map((page, index) => ({
+    ...page,
+    pageNumber: index + 1,
+  }));
+
+  return {
+    ...document,
+    pages: normalizedPages,
+    totalPages: normalizedPages.length,
+  };
+};
+
+const normalizeProcessedDocuments = (
+  processed: PDFDocument | PDFDocument[]
+): PDFDocument | PDFDocument[] => {
+  if (Array.isArray(processed)) {
+    const normalized = processed
+      .map(removePlaceholderPages)
+      .filter((doc) => doc.pages.length > 0);
+    return normalized;
+  }
+  return removePlaceholderPages(processed);
+};
+
 export const usePageEditorExport = ({
   displayDocument,
   selectedPageIds,
@@ -84,9 +114,16 @@ export const usePageEditorExport = ({
           splitPositions
         );
 
-      const documentWithDOMState = Array.isArray(processedDocuments)
-        ? processedDocuments[0]
-        : processedDocuments;
+      const normalizedDocuments = normalizeProcessedDocuments(processedDocuments);
+      const documentWithDOMState = Array.isArray(normalizedDocuments)
+        ? normalizedDocuments[0]
+        : normalizedDocuments;
+
+      if (!documentWithDOMState || documentWithDOMState.pages.length === 0) {
+        console.warn("Export skipped: no concrete pages available after filtering placeholders.");
+        setExportLoading(false);
+        return;
+      }
 
       const validSelectedPageIds = selectedPageIds.filter((pageId) =>
         documentWithDOMState.pages.some((page) => page.id === pageId)
@@ -137,10 +174,21 @@ export const usePageEditorExport = ({
           splitPositions
         );
 
+      const normalizedDocuments = normalizeProcessedDocuments(processedDocuments);
+
+      if (
+        (Array.isArray(normalizedDocuments) && normalizedDocuments.length === 0) ||
+        (!Array.isArray(normalizedDocuments) && normalizedDocuments.pages.length === 0)
+      ) {
+        console.warn("Export skipped: no concrete pages available after filtering placeholders.");
+        setExportLoading(false);
+        return;
+      }
+
       const sourceFiles = getSourceFiles();
       const exportFilename = getExportFilename();
       const files = await exportProcessedDocumentsToFiles(
-        processedDocuments,
+        normalizedDocuments,
         sourceFiles,
         exportFilename
       );
@@ -190,10 +238,21 @@ export const usePageEditorExport = ({
           splitPositions
         );
 
+      const normalizedDocuments = normalizeProcessedDocuments(processedDocuments);
+
+      if (
+        (Array.isArray(normalizedDocuments) && normalizedDocuments.length === 0) ||
+        (!Array.isArray(normalizedDocuments) && normalizedDocuments.pages.length === 0)
+      ) {
+        console.warn("Apply changes skipped: no concrete pages available after filtering placeholders.");
+        setExportLoading(false);
+        return;
+      }
+
       const sourceFiles = getSourceFiles();
       const exportFilename = getExportFilename();
       const files = await exportProcessedDocumentsToFiles(
-        processedDocuments,
+        normalizedDocuments,
         sourceFiles,
         exportFilename
       );

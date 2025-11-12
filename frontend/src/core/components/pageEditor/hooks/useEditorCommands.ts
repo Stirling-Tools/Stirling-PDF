@@ -96,10 +96,7 @@ export const usePageEditorCommands = ({
             pagesToDelete,
             getEditedDocument,
             setEditedDocument,
-            (pageNumbers: number[]) => {
-              const updatedIds = getPageIdsFromNumbers(pageNumbers);
-              setSelectedPageIds(updatedIds);
-            },
+            setSelectedPageIds,
             () => splitPositions,
             setSplitPositions,
             () => getPageNumbersFromIds(selectedPageIds),
@@ -113,7 +110,6 @@ export const usePageEditorCommands = ({
       closePdf,
       executeCommandWithTracking,
       getEditedDocument,
-      getPageIdsFromNumbers,
       getPageNumbersFromIds,
       selectedPageIds,
       setEditedDocument,
@@ -162,10 +158,7 @@ export const usePageEditorCommands = ({
       selectedPageNumbers,
       getEditedDocument,
       setEditedDocument,
-      (pageNumbers: number[]) => {
-        const pageIds = getPageIdsFromNumbers(pageNumbers);
-        setSelectedPageIds(pageIds);
-      },
+      setSelectedPageIds,
       () => splitPositions,
       setSplitPositions,
       () => selectedPageNumbers,
@@ -177,7 +170,6 @@ export const usePageEditorCommands = ({
     displayDocument,
     executeCommandWithTracking,
     getEditedDocument,
-    getPageIdsFromNumbers,
     getPageNumbersFromIds,
     selectedPageIds,
     setEditedDocument,
@@ -194,10 +186,7 @@ export const usePageEditorCommands = ({
         [pageNumber],
         getEditedDocument,
         setEditedDocument,
-        (pageNumbers: number[]) => {
-          const pageIds = getPageIdsFromNumbers(pageNumbers);
-          setSelectedPageIds(pageIds);
-        },
+        setSelectedPageIds,
         () => splitPositions,
         setSplitPositions,
         () => getPageNumbersFromIds(selectedPageIds),
@@ -209,7 +198,6 @@ export const usePageEditorCommands = ({
       closePdf,
       getEditedDocument,
       executeCommandWithTracking,
-      getPageIdsFromNumbers,
       getPageNumbersFromIds,
       selectedPageIds,
       setEditedDocument,

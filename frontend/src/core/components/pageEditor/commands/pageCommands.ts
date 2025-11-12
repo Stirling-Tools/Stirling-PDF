@@ -67,7 +67,7 @@ export class DeletePagesCommand extends DOMCommand {
     private pagesToDelete: number[],
     private getCurrentDocument: () => PDFDocument | null,
     private setDocument: (doc: PDFDocument) => void,
-    private setSelectedPages: (pages: number[]) => void,
+    private setSelectedPageIds: (pageIds: string[]) => void,
     private getSplitPositions: () => Set<number>,
     private setSplitPositions: (positions: Set<number>) => void,
     private getSelectedPages: () => number[],
@@ -99,6 +99,13 @@ export class DeletePagesCommand extends DOMCommand {
       this.hasExecuted = true;
     }
 
+    const selectedPageNumbersBefore = this.getSelectedPages();
+    const selectedIdSet = new Set(
+      selectedPageNumbersBefore
+        .map((pageNum) => currentDoc.pages.find((p) => p.pageNumber === pageNum)?.id)
+        .filter((id): id is string => Boolean(id))
+    );
+
     // Filter out deleted pages by ID (stable across undo/redo)
     const remainingPages = currentDoc.pages.filter(page =>
       !this.pageIdsToDelete.includes(page.id)
@@ -106,7 +113,7 @@ export class DeletePagesCommand extends DOMCommand {
 
     if (remainingPages.length === 0) {
       // If all pages would be deleted, clear selection/splits and close PDF
-      this.setSelectedPages([]);
+      this.setSelectedPageIds([]);
       this.setSplitPositions(new Set());
       this.onAllPagesDeleted?.();
       return;
@@ -135,7 +142,12 @@ export class DeletePagesCommand extends DOMCommand {
 
     // Apply changes
     this.setDocument(updatedDocument);
-    this.setSelectedPages([]);
+
+    const remainingSelectedPageIds = remainingPages
+      .filter((page) => selectedIdSet.has(page.id))
+      .map((page) => page.id);
+    this.setSelectedPageIds(remainingSelectedPageIds);
+
     this.setSplitPositions(newPositions);
   }
 
@@ -145,7 +157,12 @@ export class DeletePagesCommand extends DOMCommand {
     // Simply restore the complete original document state
     this.setDocument(this.originalDocument);
     this.setSplitPositions(this.originalSplitPositions);
-    this.setSelectedPages(this.originalSelectedPages);
+    const restoredIds = this.originalSelectedPages
+      .map((pageNum) =>
+        this.originalDocument!.pages.find((page) => page.pageNumber === pageNum)?.id || ""
+      )
+      .filter((id) => id !== "");
+    this.setSelectedPageIds(restoredIds);
   }
 
   get description(): string {
