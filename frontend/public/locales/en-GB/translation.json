@@ -1105,14 +1105,12 @@
     "markdown": "Markdown",
     "textRtf": "Text/RTF",
     "grayscale": "Greyscale",
-  "errorConversion": "An error occurred while converting the file.",
-  "cbrOptions": "CBR to PDF Options",
-  "optimizeForEbook": "Optimize PDF for ebook readers (uses Ghostscript)",
-  "cbrOutputOptions": "PDF to CBR Options",
-  "cbrDpi": "DPI for image rendering"
     "errorConversion": "An error occurred while converting the file.",
-    "cbzOptions": "CBZ to PDF Options",
+    "cbrOptions": "CBR to PDF Options",
     "optimizeForEbook": "Optimize PDF for ebook readers (uses Ghostscript)",
+    "cbrOutputOptions": "PDF to CBR Options",
+    "cbrDpi": "DPI for image rendering",
+    "cbzOptions": "CBZ to PDF Options",
     "cbzOutputOptions": "PDF to CBZ Options",
     "cbzDpi": "DPI for image rendering"
   },
