@@ -29,7 +29,7 @@ const ConvertToCbrSettings = ({
         })}
         min={72}
         max={600}
-        step={50}
+        step={1}
         disabled={disabled}
       />
     </Stack>

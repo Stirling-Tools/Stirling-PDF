@@ -66,6 +66,7 @@ export const FROM_FORMAT_OPTIONS = [
   { value: 'image', label: 'Images', group: 'Multiple Files' },
   { value: 'pdf', label: 'PDF', group: 'Document' },
   { value: 'cbz', label: 'CBZ', group: 'Archive' },
+  { value: 'cbr', label: 'CBR', group: 'Archive' },
   { value: 'docx', label: 'DOCX', group: 'Document' },
   { value: 'doc', label: 'DOC', group: 'Document' },
   { value: 'odt', label: 'ODT', group: 'Document' },
@@ -89,7 +90,6 @@ export const FROM_FORMAT_OPTIONS = [
   { value: 'txt', label: 'TXT', group: 'Text' },
   { value: 'rtf', label: 'RTF', group: 'Text' },
   { value: 'eml', label: 'EML', group: 'Email' },
-  { value: 'cbr', label: 'CBR', group: 'Archive' },
 ];
 
 export const TO_FORMAT_OPTIONS = [
@@ -98,6 +98,7 @@ export const TO_FORMAT_OPTIONS = [
   { value: 'docx', label: 'DOCX', group: 'Document' },
   { value: 'odt', label: 'ODT', group: 'Document' },
   { value: 'cbz', label: 'CBZ', group: 'Archive' },
+  { value: 'cbr', label: 'CBR', group: 'Archive' },
   { value: 'csv', label: 'CSV', group: 'Spreadsheet' },
   { value: 'pptx', label: 'PPTX', group: 'Presentation' },
   { value: 'odp', label: 'ODP', group: 'Presentation' },
@@ -112,14 +113,13 @@ export const TO_FORMAT_OPTIONS = [
   { value: 'webp', label: 'WEBP', group: 'Image' },
   { value: 'html', label: 'HTML', group: 'Web' },
   { value: 'xml', label: 'XML', group: 'Web' },
-  { value: 'cbr', label: 'CBR', group: 'Archive' },
 ];
 
 // Conversion matrix - what each source format can convert to
 export const CONVERSION_MATRIX: Record<string, string[]> = {
   'any': ['pdf'], // Mixed files always convert to PDF
   'image': ['pdf'], // Multiple images always convert to PDF
-  'pdf': ['png', 'jpg', 'gif', 'tiff', 'bmp', 'webp', 'docx', 'odt', 'pptx', 'odp', 'csv', 'txt', 'rtf', 'md', 'html', 'xml', 'pdfa', 'cbz'],
+  'pdf': ['png', 'jpg', 'gif', 'tiff', 'bmp', 'webp', 'docx', 'odt', 'pptx', 'odp', 'csv', 'txt', 'rtf', 'md', 'html', 'xml', 'pdfa', 'cbz', 'cbr'],
   'cbz': ['pdf'],
   'docx': ['pdf'], 'doc': ['pdf'], 'odt': ['pdf'],
   'xlsx': ['pdf'], 'xls': ['pdf'], 'ods': ['pdf'],
