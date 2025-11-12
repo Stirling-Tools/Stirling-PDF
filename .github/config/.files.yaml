@@ -13,6 +13,7 @@ docker: &docker
   - Dockerfile
   - Dockerfile.fat
   - Dockerfile.ultra-lite
+  - .github\workflows\build.yml
 
 project: &project
   - app/(common|core|proprietary)/src/(main|test)/java/**
