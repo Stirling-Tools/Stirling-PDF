@@ -1,4 +1,4 @@
-import { PdfJsonDocument, PdfJsonFont } from './pdfJsonEditorTypes';
+import { PdfJsonDocument, PdfJsonFont } from './pdfTextEditorTypes';
 
 export type FontStatus = 'perfect' | 'embedded-subset' | 'system-fallback' | 'missing' | 'unknown';
 

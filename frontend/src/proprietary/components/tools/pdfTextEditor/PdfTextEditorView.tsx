@@ -32,13 +32,13 @@ import CloseIcon from '@mui/icons-material/Close';
 import { Rnd } from 'react-rnd';
 
 import {
-  PdfJsonEditorViewData,
+  PdfTextEditorViewData,
   PdfJsonFont,
   PdfJsonPage,
   ConversionProgress,
-} from '@app/tools/pdfJsonEditor/pdfJsonEditorTypes';
-import { getImageBounds, pageDimensions } from '@app/tools/pdfJsonEditor/pdfJsonEditorUtils';
-import FontStatusPanel from '@app/components/tools/pdfJsonEditor/FontStatusPanel';
+} from '@app/tools/pdfTextEditor/pdfTextEditorTypes';
+import { getImageBounds, pageDimensions } from '@app/tools/pdfTextEditor/pdfTextEditorUtils';
+import FontStatusPanel from '@app/components/tools/pdfTextEditor/FontStatusPanel';
 
 const MAX_RENDER_WIDTH = 820;
 const MIN_BOX_SIZE = 18;
@@ -190,8 +190,8 @@ const extractTextWithSoftBreaks = (element: HTMLElement): { text: string; insert
   };
 };
 
-interface PdfJsonEditorViewProps {
-  data: PdfJsonEditorViewData;
+interface PdfTextEditorViewProps {
+  data: PdfTextEditorViewData;
 }
 
 const toCssBounds = (
@@ -313,7 +313,7 @@ const analyzePageContentType = (groups: TextGroup[]): boolean => {
 
 type GroupingMode = 'auto' | 'paragraph' | 'singleLine';
 
-const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
+const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
   const { t } = useTranslation();
   const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
   const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
@@ -1066,8 +1066,8 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
             <Group justify="space-between" align="center">
               <Group gap="xs" align="center">
                 <DescriptionIcon fontSize="small" />
-                <Title order={3}>{t('pdfJsonEditor.title', 'PDF JSON Editor')}</Title>
-                {hasChanges && <Badge color="orange" variant="light" size="sm">{t('pdfJsonEditor.badges.unsaved', 'Edited')}</Badge>}
+                <Title order={3}>{t('pdfTextEditor.title', 'PDF JSON Editor')}</Title>
+                {hasChanges && <Badge color="orange" variant="light" size="sm">{t('pdfTextEditor.badges.unsaved', 'Edited')}</Badge>}
               </Group>
             </Group>
 
@@ -1081,7 +1081,7 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
                     fullWidth
                     {...props}
                   >
-                    {t('pdfJsonEditor.actions.load', 'Load File')}
+                    {t('pdfTextEditor.actions.load', 'Load File')}
                   </Button>
                 )}
               </FileButton>
@@ -1092,7 +1092,7 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
                 disabled={!hasDocument || isConverting}
                 fullWidth
               >
-                {t('pdfJsonEditor.actions.reset', 'Reset Changes')}
+                {t('pdfTextEditor.actions.reset', 'Reset Changes')}
               </Button>
               <Button
                 variant="default"
@@ -1101,7 +1101,7 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
                 disabled={!hasDocument || isConverting}
                 fullWidth
               >
-                {t('pdfJsonEditor.actions.downloadJson', 'Download JSON')}
+                {t('pdfTextEditor.actions.downloadJson', 'Download JSON')}
               </Button>
               <Button
                 leftSection={<PictureAsPdfIcon fontSize="small" />}
@@ -1110,13 +1110,13 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
                 disabled={!hasDocument || !hasChanges || isConverting}
                 fullWidth
               >
-                {t('pdfJsonEditor.actions.generatePdf', 'Generate PDF')}
+                {t('pdfTextEditor.actions.generatePdf', 'Generate PDF')}
               </Button>
             </Stack>
 
             {fileName && (
               <Text size="sm" c="dimmed">
-                {t('pdfJsonEditor.currentFile', 'Current file: {{name}}', { name: fileName })}
+                {t('pdfTextEditor.currentFile', 'Current file: {{name}}', { name: fileName })}
               </Text>
             )}
 
@@ -1125,11 +1125,11 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
             <Group justify="space-between" align="center">
               <div>
                 <Text fw={500} size="sm">
-                  {t('pdfJsonEditor.options.autoScaleText.title', 'Auto-scale text to fit boxes')}
+                  {t('pdfTextEditor.options.autoScaleText.title', 'Auto-scale text to fit boxes')}
                 </Text>
                 <Text size="xs" c="dimmed" mt={4}>
                   {t(
-                    'pdfJsonEditor.options.autoScaleText.description',
+                    'pdfTextEditor.options.autoScaleText.description',
                     'Automatically scales text horizontally to fit within its original bounding box when font rendering differs from PDF.'
                   )}
                 </Text>
@@ -1144,32 +1144,32 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
             <Stack gap="xs">
               <Group gap={4} align="center">
                 <Text fw={500} size="sm">
-                  {t('pdfJsonEditor.options.groupingMode.title', 'Text Grouping Mode')}
+                  {t('pdfTextEditor.options.groupingMode.title', 'Text Grouping Mode')}
                 </Text>
                 {externalGroupingMode === 'auto' && isParagraphPage && (
                   <Badge size="xs" color="blue" variant="light">
-                    {t('pdfJsonEditor.pageType.paragraph', 'Paragraph page')}
+                    {t('pdfTextEditor.pageType.paragraph', 'Paragraph page')}
                   </Badge>
                 )}
                 {externalGroupingMode === 'auto' && !isParagraphPage && hasDocument && (
                   <Badge size="xs" color="gray" variant="light">
-                    {t('pdfJsonEditor.pageType.sparse', 'Sparse text')}
+                    {t('pdfTextEditor.pageType.sparse', 'Sparse text')}
                   </Badge>
                 )}
               </Group>
               <Text size="xs" c="dimmed">
                 {externalGroupingMode === 'auto'
                   ? t(
-                      'pdfJsonEditor.options.groupingMode.autoDescription',
+                      'pdfTextEditor.options.groupingMode.autoDescription',
                       'Automatically detects page type and groups text appropriately.'
                     )
                   : externalGroupingMode === 'paragraph'
                     ? t(
-                        'pdfJsonEditor.options.groupingMode.paragraphDescription',
+                        'pdfTextEditor.options.groupingMode.paragraphDescription',
                         'Groups aligned lines into multi-line paragraph text boxes.'
                       )
                     : t(
-                        'pdfJsonEditor.options.groupingMode.singleLineDescription',
+                        'pdfTextEditor.options.groupingMode.singleLineDescription',
                         'Keeps each PDF text line as a separate text box.'
                       )}
               </Text>
@@ -1177,9 +1177,9 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
                 value={externalGroupingMode}
                 onChange={(value) => handleModeChangeRequest(value as GroupingMode)}
                 data={[
-                  { label: t('pdfJsonEditor.groupingMode.auto', 'Auto'), value: 'auto' },
-                  { label: t('pdfJsonEditor.groupingMode.paragraph', 'Paragraph'), value: 'paragraph' },
-                  { label: t('pdfJsonEditor.groupingMode.singleLine', 'Single Line'), value: 'singleLine' },
+                  { label: t('pdfTextEditor.groupingMode.auto', 'Auto'), value: 'auto' },
+                  { label: t('pdfTextEditor.groupingMode.paragraph', 'Paragraph'), value: 'paragraph' },
+                  { label: t('pdfTextEditor.groupingMode.singleLine', 'Single Line'), value: 'singleLine' },
                 ]}
                 fullWidth
               />
@@ -1188,11 +1188,11 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
             <Group justify="space-between" align="center">
               <div>
                 <Text fw={500} size="sm">
-                  {t('pdfJsonEditor.options.forceSingleElement.title', 'Lock edited text to a single PDF element')}
+                  {t('pdfTextEditor.options.forceSingleElement.title', 'Lock edited text to a single PDF element')}
                 </Text>
                 <Text size="xs" c="dimmed" mt={4}>
                   {t(
-                    'pdfJsonEditor.options.forceSingleElement.description',
+                    'pdfTextEditor.options.forceSingleElement.description',
                     'When enabled, the editor exports each edited text box as one PDF text element to avoid overlapping glyphs or mixed fonts.'
                   )}
                 </Text>
@@ -1212,7 +1212,7 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
                   <Group gap="xs" wrap="nowrap">
                     <InfoOutlinedIcon fontSize="small" />
                     <Text size="sm" fw={500}>
-                      {t('pdfJsonEditor.disclaimer.heading', 'Preview Limitations')}
+                      {t('pdfTextEditor.disclaimer.heading', 'Preview Limitations')}
                     </Text>
                   </Group>
                 </Accordion.Control>
@@ -1220,19 +1220,19 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
                   <Stack gap={4}>
                     <Text size="xs">
                       {t(
-                        'pdfJsonEditor.disclaimer.textFocus',
+                        'pdfTextEditor.disclaimer.textFocus',
                         'This workspace focuses on editing text and repositioning embedded images. Complex page artwork, form widgets, and layered graphics are preserved for export but are not fully editable here.'
                       )}
                     </Text>
                     <Text size="xs">
                       {t(
-                        'pdfJsonEditor.disclaimer.previewVariance',
+                        'pdfTextEditor.disclaimer.previewVariance',
                         'Some visuals (such as table borders, shapes, or annotation appearances) may not display exactly in the preview. The exported PDF keeps the original drawing commands whenever possible.'
                       )}
                     </Text>
                     <Text size="xs">
                       {t(
-                        'pdfJsonEditor.disclaimer.alpha',
+                        'pdfTextEditor.disclaimer.alpha',
                         'This alpha viewer is still evolving—certain fonts, colours, transparency effects, and layout details may shift slightly. Please double-check the generated PDF before sharing.'
                       )}
                     </Text>
@@ -1262,10 +1262,10 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
           <Stack align="center" gap="md">
             <DescriptionIcon sx={{ fontSize: 48 }} />
             <Text size="lg" fw={600}>
-              {t('pdfJsonEditor.empty.title', 'No document loaded')}
+              {t('pdfTextEditor.empty.title', 'No document loaded')}
             </Text>
             <Text size="sm" c="dimmed" ta="center" maw={420}>
-              {t('pdfJsonEditor.empty.subtitle', 'Load a PDF or JSON file to begin editing text content.')}
+              {t('pdfTextEditor.empty.subtitle', 'Load a PDF or JSON file to begin editing text content.')}
             </Text>
           </Stack>
         </Card>
@@ -1279,12 +1279,12 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
                 <Text size="lg" fw={600} mb="xs">
                   {conversionProgress
                     ? conversionProgress.message
-                    : t('pdfJsonEditor.converting', 'Converting PDF to editable format...')}
+                    : t('pdfTextEditor.converting', 'Converting PDF to editable format...')}
                 </Text>
                 {conversionProgress && (
                   <Group gap="xs">
                     <Text size="sm" c="dimmed" tt="capitalize">
-                      {t(`pdfJsonEditor.stages.${conversionProgress.stage}`, conversionProgress.stage)}
+                      {t(`pdfTextEditor.stages.${conversionProgress.stage}`, conversionProgress.stage)}
                     </Text>
                     {conversionProgress.current !== undefined &&
                       conversionProgress.total !== undefined && (
@@ -1317,18 +1317,18 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
           <Group justify="space-between" align="center">
             <Group gap="sm">
               <Text fw={500}>
-                {t('pdfJsonEditor.pageSummary', 'Page {{number}} of {{total}}', {
+                {t('pdfTextEditor.pageSummary', 'Page {{number}} of {{total}}', {
                   number: selectedPage + 1,
                   total: pages.length,
                 })}
               </Text>
               {dirtyPages[selectedPage] && (
                 <Badge color="yellow" size="xs">
-                  {t('pdfJsonEditor.badges.modified', 'Edited')}
+                  {t('pdfTextEditor.badges.modified', 'Edited')}
                 </Badge>
               )}
               <Badge color="blue" variant="dot" size="xs">
-                {t('pdfJsonEditor.badges.earlyAccess', 'Early Access')}
+                {t('pdfTextEditor.badges.earlyAccess', 'Early Access')}
               </Badge>
             </Group>
             {pages.length > 1 && (
@@ -1381,7 +1381,7 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
                     {pagePreview && (
                       <img
                         src={pagePreview}
-                        alt={t('pdfJsonEditor.pagePreviewAlt', 'Page preview')}
+                        alt={t('pdfTextEditor.pagePreviewAlt', 'Page preview')}
                         style={{
                           position: 'absolute',
                           inset: 0,
@@ -1493,7 +1493,7 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
                         >
                           <img
                             src={src}
-                            alt={t('pdfJsonEditor.imageLabel', 'Placed image')}
+                            alt={t('pdfTextEditor.imageLabel', 'Placed image')}
                             style={{
                               width: '100%',
                               height: '100%',
@@ -1510,7 +1510,7 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
                     <Group justify="center" align="center" style={{ height: '100%' }}>
                       <Stack gap={4} align="center">
                         <Text size="sm" c="dimmed">
-                          {t('pdfJsonEditor.noTextOnPage', 'No editable text was detected on this page.')}
+                          {t('pdfTextEditor.noTextOnPage', 'No editable text was detected on this page.')}
                         </Text>
                       </Stack>
                     </Group>
@@ -1785,22 +1785,22 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
       <Modal
         opened={pendingModeChange !== null}
         onClose={handleCancelModeChange}
-        title={t('pdfJsonEditor.modeChange.title', 'Confirm Mode Change')}
+        title={t('pdfTextEditor.modeChange.title', 'Confirm Mode Change')}
         centered
       >
         <Stack gap="md">
           <Text>
             {t(
-              'pdfJsonEditor.modeChange.warning',
+              'pdfTextEditor.modeChange.warning',
               'Changing the text grouping mode will reset all unsaved changes. Are you sure you want to continue?'
             )}
           </Text>
           <Group justify="flex-end" gap="sm">
             <Button variant="default" onClick={handleCancelModeChange}>
-              {t('pdfJsonEditor.modeChange.cancel', 'Cancel')}
+              {t('pdfTextEditor.modeChange.cancel', 'Cancel')}
             </Button>
             <Button color="red" onClick={handleConfirmModeChange}>
-              {t('pdfJsonEditor.modeChange.confirm', 'Reset and Change Mode')}
+              {t('pdfTextEditor.modeChange.confirm', 'Reset and Change Mode')}
             </Button>
           </Group>
         </Stack>
@@ -1809,4 +1809,4 @@ const PdfJsonEditorView = ({ data }: PdfJsonEditorViewProps) => {
   );
 };
 
-export default PdfJsonEditorView;
+export default PdfTextEditorView;

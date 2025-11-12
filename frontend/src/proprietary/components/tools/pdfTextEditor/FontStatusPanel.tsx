@@ -21,14 +21,14 @@ import FontDownloadIcon from '@mui/icons-material/FontDownload';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 
-import { PdfJsonDocument } from '@app/tools/pdfJsonEditor/pdfJsonEditorTypes';
+import { PdfJsonDocument } from '@app/tools/pdfTextEditor/pdfTextEditorTypes';
 import {
   analyzeDocumentFonts,
   DocumentFontAnalysis,
   FontAnalysis,
   getFontStatusColor,
   getFontStatusDescription,
-} from '@app/tools/pdfJsonEditor/fontAnalysis';
+} from '@app/tools/pdfTextEditor/fontAnalysis';
 
 interface FontStatusPanelProps {
   document: PdfJsonDocument | null;
@@ -99,19 +99,19 @@ const FontDetailItem = ({ analysis }: { analysis: FontAnalysis }) => {
             {/* Font Details */}
             <Box>
               <Text size="xs" c="dimmed" mb={2}>
-                {t('pdfJsonEditor.fontAnalysis.details', 'Font Details')}:
+                {t('pdfTextEditor.fontAnalysis.details', 'Font Details')}:
               </Text>
               <Stack gap={2}>
                 <Group gap={4}>
                   <Text size="xs" c="dimmed">
-                    {t('pdfJsonEditor.fontAnalysis.embedded', 'Embedded')}:
+                    {t('pdfTextEditor.fontAnalysis.embedded', 'Embedded')}:
                   </Text>
                   <Code style={{ fontSize: '0.65rem', padding: '0 4px' }}>{analysis.embedded ? 'Yes' : 'No'}</Code>
                 </Group>
                 {analysis.subtype && (
                   <Group gap={4}>
                     <Text size="xs" c="dimmed">
-                      {t('pdfJsonEditor.fontAnalysis.type', 'Type')}:
+                      {t('pdfTextEditor.fontAnalysis.type', 'Type')}:
                     </Text>
                     <Code style={{ fontSize: '0.65rem', padding: '0 4px' }}>{analysis.subtype}</Code>
                   </Group>
@@ -119,7 +119,7 @@ const FontDetailItem = ({ analysis }: { analysis: FontAnalysis }) => {
                 {analysis.webFormat && (
                   <Group gap={4}>
                     <Text size="xs" c="dimmed">
-                      {t('pdfJsonEditor.fontAnalysis.webFormat', 'Web Format')}:
+                      {t('pdfTextEditor.fontAnalysis.webFormat', 'Web Format')}:
                     </Text>
                     <Code style={{ fontSize: '0.65rem', padding: '0 4px' }}>{analysis.webFormat}</Code>
                   </Group>
@@ -131,7 +131,7 @@ const FontDetailItem = ({ analysis }: { analysis: FontAnalysis }) => {
             {analysis.warnings.length > 0 && (
               <Box>
                 <Text size="xs" c="orange" fw={500}>
-                  {t('pdfJsonEditor.fontAnalysis.warnings', 'Warnings')}:
+                  {t('pdfTextEditor.fontAnalysis.warnings', 'Warnings')}:
                 </Text>
                 <List size="xs" spacing={2} withPadding>
                   {analysis.warnings.map((warning, index) => (
@@ -147,7 +147,7 @@ const FontDetailItem = ({ analysis }: { analysis: FontAnalysis }) => {
             {analysis.suggestions.length > 0 && (
               <Box>
                 <Text size="xs" c="blue" fw={500}>
-                  {t('pdfJsonEditor.fontAnalysis.suggestions', 'Notes')}:
+                  {t('pdfTextEditor.fontAnalysis.suggestions', 'Notes')}:
                 </Text>
                 <List size="xs" spacing={2} withPadding>
                   {analysis.suggestions.map((suggestion, index) => (
@@ -192,8 +192,8 @@ const FontStatusPanel: React.FC<FontStatusPanelProps> = ({ document, pageIndex }
   const statusColor = canReproducePerfectly ? 'green' : hasWarnings ? 'yellow' : 'blue';
 
   const pageLabel = pageIndex !== undefined
-    ? t('pdfJsonEditor.fontAnalysis.currentPageFonts', 'Fonts on this page')
-    : t('pdfJsonEditor.fontAnalysis.allFonts', 'All fonts');
+    ? t('pdfTextEditor.fontAnalysis.currentPageFonts', 'Fonts on this page')
+    : t('pdfTextEditor.fontAnalysis.allFonts', 'All fonts');
 
   return (
     <Accordion variant="contained" defaultValue={hasWarnings ? 'fonts' : undefined}>
@@ -215,16 +215,16 @@ const FontStatusPanel: React.FC<FontStatusPanelProps> = ({ document, pageIndex }
             <Text size="xs" c="dimmed">
               {canReproducePerfectly
                 ? t(
-                    'pdfJsonEditor.fontAnalysis.perfectMessage',
+                    'pdfTextEditor.fontAnalysis.perfectMessage',
                     'All fonts can be reproduced perfectly.'
                   )
                 : hasWarnings
                 ? t(
-                    'pdfJsonEditor.fontAnalysis.warningMessage',
+                    'pdfTextEditor.fontAnalysis.warningMessage',
                     'Some fonts may not render correctly.'
                   )
                 : t(
-                    'pdfJsonEditor.fontAnalysis.infoMessage',
+                    'pdfTextEditor.fontAnalysis.infoMessage',
                     'Font reproduction information available.'
                   )}
             </Text>
@@ -233,22 +233,22 @@ const FontStatusPanel: React.FC<FontStatusPanelProps> = ({ document, pageIndex }
             <Group gap={4} wrap="wrap">
               {summary.perfect > 0 && (
                 <Badge size="xs" color="green" variant="light" leftSection={<CheckCircleIcon sx={{ fontSize: 12 }} />}>
-                  {summary.perfect} {t('pdfJsonEditor.fontAnalysis.perfect', 'perfect')}
+                  {summary.perfect} {t('pdfTextEditor.fontAnalysis.perfect', 'perfect')}
                 </Badge>
               )}
               {summary.embeddedSubset > 0 && (
                 <Badge size="xs" color="blue" variant="light" leftSection={<InfoIcon sx={{ fontSize: 12 }} />}>
-                  {summary.embeddedSubset} {t('pdfJsonEditor.fontAnalysis.subset', 'subset')}
+                  {summary.embeddedSubset} {t('pdfTextEditor.fontAnalysis.subset', 'subset')}
                 </Badge>
               )}
               {summary.systemFallback > 0 && (
                 <Badge size="xs" color="yellow" variant="light" leftSection={<WarningIcon sx={{ fontSize: 12 }} />}>
-                  {summary.systemFallback} {t('pdfJsonEditor.fontAnalysis.fallback', 'fallback')}
+                  {summary.systemFallback} {t('pdfTextEditor.fontAnalysis.fallback', 'fallback')}
                 </Badge>
               )}
               {summary.missing > 0 && (
                 <Badge size="xs" color="red" variant="light" leftSection={<ErrorIcon sx={{ fontSize: 12 }} />}>
-                  {summary.missing} {t('pdfJsonEditor.fontAnalysis.missing', 'missing')}
+                  {summary.missing} {t('pdfTextEditor.fontAnalysis.missing', 'missing')}
                 </Badge>
               )}
             </Group>

@@ -1,4 +1,4 @@
-# PDF JSON Editor Backlog
+# PDF Text Editor Backlog
 
 - **Type3 Font Support (Text Additions)**
   - Parse Type3 charprocs to extract glyph outlines, build a synthetic TrueType/OpenType font (FontTools, Ghostscript `ps2ttf`, etc.), and store it in `webProgram` / `pdfProgram` for client use.
@@ -15,7 +15,7 @@
 - **Editor UX Safeguards**
   - Mark groups using fallback glyphs so the UI can warn about possible appearance shifts. Font family matching is now implemented (Liberation fonts), but weight matching is still TODO, so bold/italic text using fallbacks may appear lighter than original.
   - Surface when Type3 conversion was downgraded (e.g., rasterized glyphs) and limit editing to operations that keep the PDF stable.
-  - Reference: `frontend/src/proprietary/components/tools/pdfJsonEditor/PdfJsonEditorView.tsx:1260-1287`
+  - Reference: `frontend/src/proprietary/components/tools/pdfTextEditor/PdfTextEditorView.tsx:1260-1287`
 
 - **Canonical Font Sharing**
   - Emit fonts once per unique embedded program. Add a `canonicalFonts` array containing the full payload (program, ToUnicode, metadata) and a compact `fontAliases` mapping `{pageNumber, fontId, canonicalUid}` so text elements can still reference per-page IDs.

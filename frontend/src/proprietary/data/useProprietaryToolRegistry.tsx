@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { useTranslation } from "react-i18next";
 import { getSynonyms } from "@app/utils/toolSynonyms";
-import PdfJsonEditor from "@app/tools/pdfJsonEditor/PdfJsonEditor";
+import PdfTextEditor from "@app/tools/pdfTextEditor/PdfTextEditor";
 import {
   SubcategoryId,
   ToolCategoryId,
@@ -19,19 +19,19 @@ export function useProprietaryToolRegistry(): ProprietaryToolRegistry {
   const { t } = useTranslation();
 
   return useMemo<ProprietaryToolRegistry>(() => ({
-    pdfJsonEditor: {
+    pdfTextEditor: {
       icon: <LocalIcon icon="code-rounded" width="1.5rem" height="1.5rem" />,
-      name: t("home.pdfJsonEditor.title", "PDF JSON Editor"),
-      component: PdfJsonEditor,
+      name: t("home.pdfTextEditor.title", "PDF Text Editor"),
+      component: PdfTextEditor,
       description: t(
-        "home.pdfJsonEditor.desc",
+        "home.pdfTextEditor.desc",
         "Review and edit Stirling PDF JSON exports with grouped text editing and PDF regeneration"
       ),
       categoryId: ToolCategoryId.RECOMMENDED_TOOLS,
       subcategoryId: SubcategoryId.GENERAL,
-      workbench: "custom:pdfJsonEditor",
+      workbench: "custom:pdfTextEditor",
       endpoints: ["json-pdf"],
-      synonyms: getSynonyms(t, "pdfJsonEditor"),
+      synonyms: getSynonyms(t, "pdfTextEditor"),
       supportsAutomate: false,
       automationSettings: null,
     },

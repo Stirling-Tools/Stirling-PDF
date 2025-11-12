@@ -765,9 +765,9 @@
       "title": "Automate",
       "desc": "Build multi-step workflows by chaining together PDF actions. Ideal for recurring tasks."
     },
-    "pdfJsonEditor": {
+    "pdfTextEditor": {
       "tags": "edit,text,modify",
-      "title": "PDF Editor",
+      "title": "PDF Text Editor",
       "desc": "Edit text content in PDF documents"
     },
     "mobile": {
@@ -4455,8 +4455,8 @@
     "startTour": "Start Tour",
     "startTourDescription": "Take a guided tour of Stirling PDF's key features"
   },
-  "pdfJsonEditor": {
-    "viewLabel": "PDF Editor",
+  "pdfTextEditor": {
+    "viewLabel": "PDF Text Editor",
     "title": "PDF Editor",
     "badges": {
       "unsaved": "Unsaved changes",

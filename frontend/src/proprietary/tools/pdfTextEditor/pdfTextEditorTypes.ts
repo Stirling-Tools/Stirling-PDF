@@ -181,7 +181,7 @@ export interface ConversionProgress {
   total?: number;
 }
 
-export interface PdfJsonEditorViewData {
+export interface PdfTextEditorViewData {
   document: PdfJsonDocument | null;
   groupsByPage: TextGroup[][];
   imagesByPage: PdfJsonImageElement[][];

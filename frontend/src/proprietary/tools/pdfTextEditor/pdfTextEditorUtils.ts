@@ -7,7 +7,7 @@ import {
   TextGroup,
   DEFAULT_PAGE_HEIGHT,
   DEFAULT_PAGE_WIDTH,
-} from './pdfJsonEditorTypes';
+} from './pdfTextEditorTypes';
 
 const LINE_TOLERANCE = 2;
 const GAP_FACTOR = 0.6;
