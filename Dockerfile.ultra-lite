@@ -24,7 +24,9 @@ COPY scripts/installFonts.sh /scripts/installFonts.sh
 COPY app/core/build/libs/*.jar app.jar
 
 # Set up necessary directories and permissions
-RUN printf '%s\n' \
+RUN apk add --no-cache bash \
+    && ln -sf /bin/bash /bin/sh \
+    && printf '%s\n' \
       'https://dl-cdn.alpinelinux.org/alpine/edge/main' \
       'https://dl-cdn.alpinelinux.org/alpine/edge/community' \
       'https://dl-cdn.alpinelinux.org/alpine/edge/testing' \
@@ -44,7 +46,8 @@ RUN printf '%s\n' \
     chmod +x /scripts/*.sh && \
     addgroup -S stirlingpdfgroup && adduser -S stirlingpdfuser -G stirlingpdfgroup && \
     chown -R stirlingpdfuser:stirlingpdfgroup $HOME /scripts /pipeline /configs /customFiles /tmp/stirling-pdf && \
-    chown stirlingpdfuser:stirlingpdfgroup /app.jar
+    chown stirlingpdfuser:stirlingpdfgroup /app.jar && \
+    ln -sf /bin/busybox /bin/sh
 
 # Set environment variables
 ENV ENDPOINTS_GROUPS_TO_REMOVE=CLI
