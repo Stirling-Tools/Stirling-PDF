@@ -83,12 +83,17 @@ export const useToolResources = () => {
     return results;
   }, []);
 
-  const extractZipFiles = useCallback(async (zipBlob: Blob, skipAutoUnzip = false): Promise<File[]> => {
+  const extractZipFiles = useCallback(async (
+    zipBlob: Blob, 
+    skipAutoUnzip = false,
+    confirmLargeExtraction?: (fileCount: number, fileName: string) => Promise<boolean>
+  ): Promise<File[]> => {
     try {
       return await zipFileService.extractWithPreferences(zipBlob, {
         autoUnzip: preferences.autoUnzip,
         autoUnzipFileLimit: preferences.autoUnzipFileLimit,
-        skipAutoUnzip
+        skipAutoUnzip,
+        confirmLargeExtraction
       });
     } catch (error) {
       console.error('useToolResources.extractZipFiles - Error:', error);

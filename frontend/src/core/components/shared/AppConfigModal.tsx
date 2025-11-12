@@ -1,12 +1,12 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { Modal, Text, ActionIcon, Tooltip } from '@mantine/core';
-import { useMediaQuery } from '@mantine/hooks';
 import { useNavigate, useLocation } from 'react-router-dom';
 import LocalIcon from '@app/components/shared/LocalIcon';
 import { createConfigNavSections } from '@app/components/shared/config/configNavSections';
 import { NavKey, VALID_NAV_KEYS } from '@app/components/shared/config/types';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
 import '@app/components/shared/AppConfigModal.css';
+import { useIsMobile } from '@app/hooks/useIsMobile';
 import { Z_INDEX_OVER_FULLSCREEN_SURFACE, Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
 
 interface AppConfigModalProps {
@@ -15,10 +15,10 @@ interface AppConfigModalProps {
 }
 
 const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
+  const [active, setActive] = useState<NavKey>('general');
+  const isMobile = useIsMobile();
   const navigate = useNavigate();
   const location = useLocation();
-  const [active, setActive] = useState<NavKey>('general');
-  const isMobile = useMediaQuery("(max-width: 1024px)");
   const { config } = useAppConfig();
 
   // Extract section from URL path (e.g., /settings/people -> people)

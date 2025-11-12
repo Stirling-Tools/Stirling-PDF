@@ -183,6 +183,7 @@ const TopControls = ({
   return (
     <div className="absolute left-0 w-full top-0 z-[100] pointer-events-none">
       <div className="flex justify-center">
+
         <SegmentedControl
           data-tour="view-switcher"
           data={viewOptions}
