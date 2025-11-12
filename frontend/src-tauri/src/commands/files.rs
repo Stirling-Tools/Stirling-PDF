@@ -4,12 +4,11 @@ use std::sync::Mutex;
 // Store the opened file paths globally (supports multiple files)
 static OPENED_FILES: Mutex<Vec<String>> = Mutex::new(Vec::new());
 
-// Add an opened file path (called by macOS file open events)
-#[cfg(target_os = "macos")]
-pub fn set_opened_file(file_path: String) {
+// Add an opened file path
+pub fn add_opened_file(file_path: String) {
     let mut opened_files = OPENED_FILES.lock().unwrap();
     opened_files.push(file_path.clone());
-    add_log(format!("📂 File opened via file open event: {}", file_path));
+    add_log(format!("📂 File stored for later retrieval: {}", file_path));
 }
 
 // Command to get opened file paths (if app was launched with files)

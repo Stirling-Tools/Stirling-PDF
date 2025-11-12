@@ -3,9 +3,7 @@ use tauri::{RunEvent, WindowEvent, Emitter, Manager};
 mod utils;
 mod commands;
 
-use commands::{start_backend, check_backend_health, get_opened_files, clear_opened_files, cleanup_backend};
-#[cfg(target_os = "macos")]
-use commands::set_opened_file;
+use commands::{start_backend, check_backend_health, get_opened_files, clear_opened_files, cleanup_backend, add_opened_file};
 use utils::{add_log, get_tauri_logs};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -22,7 +20,10 @@ pub fn run() {
         if std::path::Path::new(arg).exists() {
           add_log(format!("📂 Forwarding file to existing instance: {}", arg));
 
-          // Emit event to frontend (reusing the same event name for consistency)
+          // Store file for later retrieval (in case frontend isn't ready yet)
+          add_opened_file(arg.clone());
+
+          // Also emit event for immediate handling if frontend is ready
           let _ = app.emit("file-opened", arg.clone());
 
           // Bring the existing window to front
@@ -63,7 +64,7 @@ pub fn run() {
               let file_path = url_str.strip_prefix("file://").unwrap_or(url_str);
               if file_path.ends_with(".pdf") {
                 add_log(format!("📂 Processing opened PDF: {}", file_path));
-                set_opened_file(file_path.to_string());
+                add_opened_file(file_path.to_string());
                 // Use unified event name for consistency across platforms
                 let _ = app_handle.emit("file-opened", file_path.to_string());
               }
