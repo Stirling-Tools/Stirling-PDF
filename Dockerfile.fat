@@ -86,7 +86,10 @@ RUN --mount=type=cache,target=/var/cache/apk \
     gcompat \
     libc6-compat \
     unpaper \
-    poppler-utils
+    poppler-utils \
+    icu-libs \
+    icu-dev \
+    libstdc++
 
 RUN --mount=type=cache,target=/var/cache/apk \
     apk add --no-cache \
