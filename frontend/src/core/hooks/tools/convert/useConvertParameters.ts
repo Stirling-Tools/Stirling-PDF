@@ -42,6 +42,12 @@ export interface ConvertParameters extends BaseParameters {
   pdfToCbrOptions: {
     dpi: number;
   };
+  cbzOptions: {
+    optimizeForEbook: boolean;
+  };
+  cbzOutputOptions: {
+    dpi: number;
+  };
   isSmartDetection: boolean;
   smartDetectionType: 'mixed' | 'images' | 'web' | 'none';
 }
@@ -79,6 +85,12 @@ export const defaultParameters: ConvertParameters = {
     optimizeForEbook: false,
   },
   pdfToCbrOptions: {
+    dpi: 150,
+  },
+  cbzOptions: {
+    optimizeForEbook: false,
+  },
+  cbzOutputOptions: {
     dpi: 150,
   },
   isSmartDetection: false,

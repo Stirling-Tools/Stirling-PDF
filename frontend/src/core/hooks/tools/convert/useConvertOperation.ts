@@ -41,7 +41,6 @@ export const buildConvertFormData = (parameters: ConvertParameters, selectedFile
     formData.append("fileInput", file);
   });
 
-  const { fromExtension, toExtension, imageOptions, htmlOptions, emailOptions, pdfaOptions, cbrOptions, pdfToCbrOptions } = parameters;
 
   if (isImageFormat(toExtension)) {
     formData.append("imageFormat", toExtension);
@@ -73,6 +72,10 @@ export const buildConvertFormData = (parameters: ConvertParameters, selectedFile
     formData.append("optimizeForEbook", cbrOptions.optimizeForEbook.toString());
   } else if (fromExtension === 'pdf' && toExtension === 'cbr') {
     formData.append("dpi", pdfToCbrOptions.dpi.toString());
+  } else if (fromExtension === 'cbz' && toExtension === 'pdf') {
+    formData.append("optimizeForEbook", (cbzOptions?.optimizeForEbook ?? false).toString());
+  } else if (fromExtension === 'pdf' && toExtension === 'cbz') {
+    formData.append("dpi", (cbzOutputOptions?.dpi ?? 150).toString());
   }
 
   return formData;

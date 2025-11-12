@@ -21,6 +21,8 @@ export const CONVERSION_ENDPOINTS = {
   'office-pdf': '/api/v1/convert/file/pdf',
   'pdf-image': '/api/v1/convert/pdf/img',
   'image-pdf': '/api/v1/convert/img/pdf',
+  'cbz-pdf': '/api/v1/convert/cbz/pdf',
+  'pdf-cbz': '/api/v1/convert/pdf/cbz',
   'pdf-office-word': '/api/v1/convert/pdf/word',
   'pdf-office-presentation': '/api/v1/convert/pdf/presentation',
   'pdf-office-text': '/api/v1/convert/pdf/text',
@@ -40,6 +42,8 @@ export const ENDPOINT_NAMES = {
   'office-pdf': 'file-to-pdf',
   'pdf-image': 'pdf-to-img',
   'image-pdf': 'img-to-pdf',
+  'cbz-pdf': 'cbz-to-pdf',
+  'pdf-cbz': 'pdf-to-cbz',
   'pdf-office-word': 'pdf-to-word',
   'pdf-office-presentation': 'pdf-to-presentation',
   'pdf-office-text': 'pdf-to-text',
@@ -61,6 +65,7 @@ export const FROM_FORMAT_OPTIONS = [
   { value: 'any', label: 'Any', group: 'Multiple Files' },
   { value: 'image', label: 'Images', group: 'Multiple Files' },
   { value: 'pdf', label: 'PDF', group: 'Document' },
+  { value: 'cbz', label: 'CBZ', group: 'Archive' },
   { value: 'docx', label: 'DOCX', group: 'Document' },
   { value: 'doc', label: 'DOC', group: 'Document' },
   { value: 'odt', label: 'ODT', group: 'Document' },
@@ -92,6 +97,7 @@ export const TO_FORMAT_OPTIONS = [
   { value: 'pdfa', label: 'PDF/A', group: 'Document' },
   { value: 'docx', label: 'DOCX', group: 'Document' },
   { value: 'odt', label: 'ODT', group: 'Document' },
+  { value: 'cbz', label: 'CBZ', group: 'Archive' },
   { value: 'csv', label: 'CSV', group: 'Spreadsheet' },
   { value: 'pptx', label: 'PPTX', group: 'Presentation' },
   { value: 'odp', label: 'ODP', group: 'Presentation' },
@@ -113,7 +119,8 @@ export const TO_FORMAT_OPTIONS = [
 export const CONVERSION_MATRIX: Record<string, string[]> = {
   'any': ['pdf'], // Mixed files always convert to PDF
   'image': ['pdf'], // Multiple images always convert to PDF
-  'pdf': ['png', 'jpg', 'gif', 'tiff', 'bmp', 'webp', 'docx', 'odt', 'pptx', 'odp', 'csv', 'txt', 'rtf', 'md', 'html', 'xml', 'pdfa', 'cbr'],
+  'pdf': ['png', 'jpg', 'gif', 'tiff', 'bmp', 'webp', 'docx', 'odt', 'pptx', 'odp', 'csv', 'txt', 'rtf', 'md', 'html', 'xml', 'pdfa', 'cbz'],
+  'cbz': ['pdf'],
   'docx': ['pdf'], 'doc': ['pdf'], 'odt': ['pdf'],
   'xlsx': ['pdf'], 'xls': ['pdf'], 'ods': ['pdf'],
   'pptx': ['pdf'], 'ppt': ['pdf'], 'odp': ['pdf'],
@@ -138,8 +145,10 @@ export const EXTENSION_TO_ENDPOINT: Record<string, Record<string, string>> = {
     'txt': 'pdf-to-text', 'rtf': 'pdf-to-text', 'md': 'pdf-to-markdown',
     'html': 'pdf-to-html', 'xml': 'pdf-to-xml',
     'pdfa': 'pdf-to-pdfa',
-  'cbr': 'pdf-to-cbr'
+    'cbr': 'pdf-to-cbr',
+    'cbz': 'pdf-to-cbz'
   },
+  'cbz': { 'pdf': 'cbz-to-pdf' },
   'docx': { 'pdf': 'file-to-pdf' }, 'doc': { 'pdf': 'file-to-pdf' }, 'odt': { 'pdf': 'file-to-pdf' },
   'xlsx': { 'pdf': 'file-to-pdf' }, 'xls': { 'pdf': 'file-to-pdf' }, 'ods': { 'pdf': 'file-to-pdf' },
   'pptx': { 'pdf': 'file-to-pdf' }, 'ppt': { 'pdf': 'file-to-pdf' }, 'odp': { 'pdf': 'file-to-pdf' },
