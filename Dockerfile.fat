@@ -27,13 +27,12 @@ FROM alpine:3.22.2@sha256:4b7ce07002c69e8f3d704a9c5d6fd3053be500b7f1c69fc0d80990
 COPY --from=lscr.io/linuxserver/libreoffice:latest \
     /usr/bin/soffice /usr/bin/soffice.bin
 COPY --from=lscr.io/linuxserver/libreoffice:latest \
-    /app/libreoffice/program/ /usr/lib/libreoffice/program/
+    /usr/lib/libreoffice/program/ /usr/lib/libreoffice/program/
 COPY --from=lscr.io/linuxserver/libreoffice:latest \
     /usr/lib/libreoffice/share/ /usr/lib/libreoffice/share/
 
 RUN chmod 755 /usr/bin/soffice.bin && \
     ln -sf /usr/bin/soffice.bin /usr/lib/libreoffice/program/soffice && \
-    mkdir -p /usr/lib/libreoffice/program && \
     echo "/usr/lib/libreoffice/program" > /etc/ld.so.conf.d/libreoffice.conf && \
     ldconfig
 
