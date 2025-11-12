@@ -35,6 +35,12 @@
   "discardChanges": "Discard & Leave",
   "applyAndContinue": "Save & Leave",
   "exportAndContinue": "Export & Continue",
+  "zipWarning": {
+    "title": "Large ZIP File",
+    "message": "This ZIP contains {{count}} files. Extract anyway?",
+    "cancel": "Cancel",
+    "confirm": "Extract"
+  },
   "language": {
     "direction": "ltr"
   },
@@ -1099,7 +1105,11 @@
     "markdown": "Markdown",
     "textRtf": "Text/RTF",
     "grayscale": "Greyscale",
-    "errorConversion": "An error occurred while converting the file."
+    "errorConversion": "An error occurred while converting the file.",
+    "cbzOptions": "CBZ to PDF Options",
+    "optimizeForEbook": "Optimize PDF for ebook readers (uses Ghostscript)",
+    "cbzOutputOptions": "PDF to CBZ Options",
+    "cbzDpi": "DPI for image rendering"
   },
   "imageToPdf": {
     "tags": "conversion,img,jpg,picture,photo"
