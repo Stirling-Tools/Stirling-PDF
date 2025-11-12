@@ -52,7 +52,6 @@ All documentation available at [https://docs.stirlingpdf.com/](https://docs.stir
 - **CBZ to PDF**: Convert comic book archives
 - **CBR to PDF**: Convert comic book rar archives
 - **Email to PDF**: Convert email files to PDF
-- **eBook to PDF**: Convert eBook formats (EPUB, MOBI, AZW3, FB2, TXT, DOCX) to PDF (using Calibre)
 - **Vector Image to PDF**: Convert vector images (PS, EPS, EPSF) to PDF format
 
 #### Convert from PDF

@@ -50,7 +50,7 @@ public class OpenApiConfig {
                                         .url("https://www.stirlingpdf.com")
                                         .email("contact@stirlingpdf.com"))
                         .description(DEFAULT_DESCRIPTION);
-        if (!applicationProperties.getSecurity().isEnableLogin()) {
+        if (!applicationProperties.getSecurity().getEnableLogin()) {
             return new OpenAPI().components(new Components()).info(info);
         } else {
             SecurityScheme apiKeyScheme =

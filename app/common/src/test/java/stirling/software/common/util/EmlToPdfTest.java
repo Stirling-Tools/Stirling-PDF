@@ -48,7 +48,7 @@ class EmlToPdfTest {
         when(mockSsrfProtectionService.isUrlAllowed(org.mockito.ArgumentMatchers.anyString()))
                 .thenReturn(true);
         when(mockApplicationProperties.getSystem()).thenReturn(mockSystem);
-        when(mockSystem.isDisableSanitize()).thenReturn(false);
+        when(mockSystem.getDisableSanitize()).thenReturn(false);
 
         customHtmlSanitizer =
                 new CustomHtmlSanitizer(mockSsrfProtectionService, mockApplicationProperties);

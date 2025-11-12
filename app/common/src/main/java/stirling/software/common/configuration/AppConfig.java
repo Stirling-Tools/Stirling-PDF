@@ -70,7 +70,7 @@ public class AppConfig {
 
     @Bean(name = "loginEnabled")
     public boolean loginEnabled() {
-        return applicationProperties.getSecurity().isEnableLogin();
+        return applicationProperties.getSecurity().getEnableLogin();
     }
 
     @Bean(name = "appName")
@@ -120,7 +120,9 @@ public class AppConfig {
 
     @Bean(name = "enableAlphaFunctionality")
     public boolean enableAlphaFunctionality() {
-        return applicationProperties.getSystem().isEnableAlphaFunctionality();
+        return applicationProperties.getSystem().getEnableAlphaFunctionality() != null
+                ? applicationProperties.getSystem().getEnableAlphaFunctionality()
+                : false;
     }
 
     @Bean(name = "rateLimit")

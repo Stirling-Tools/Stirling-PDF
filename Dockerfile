@@ -38,14 +38,11 @@ ENV DISABLE_ADDITIONAL_FEATURES=true \
     TEMP=/tmp/stirling-pdf \
     TMP=/tmp/stirling-pdf
 
+
 # JDK for app
-RUN apk add --no-cache bash \
-    && ln -sf /bin/bash /bin/sh \
-    && printf '%s\n' \
-      'https://dl-cdn.alpinelinux.org/alpine/edge/main' \
-      'https://dl-cdn.alpinelinux.org/alpine/edge/community' \
-      'https://dl-cdn.alpinelinux.org/alpine/edge/testing' \
-      > /etc/apk/repositories && \
+RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/apk/repositories && \
+    echo "@community https://dl-cdn.alpinelinux.org/alpine/edge/community" | tee -a /etc/apk/repositories && \
+    echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/testing" | tee -a /etc/apk/repositories && \
     apk upgrade --no-cache -a && \
     apk add --no-cache \
     ca-certificates \
@@ -68,23 +65,19 @@ RUN apk add --no-cache bash \
     # OCR MY PDF (unpaper for descew and other advanced features)
     tesseract-ocr-data-eng \
     tesseract-ocr-data-chi_sim \
-    tesseract-ocr-data-deu \
-    tesseract-ocr-data-fra \
-    tesseract-ocr-data-por \
+	tesseract-ocr-data-deu \
+	tesseract-ocr-data-fra \
+	tesseract-ocr-data-por \
     unpaper \
-    # CV / Python
+    # CV
     py3-opencv \
     python3 \
     ocrmypdf \
     py3-pip \
-    py3-pillow \
-    py3-pdf2image \
-    # Calibre
-    calibre \
+    py3-pillow@testing \
+    py3-pdf2image@testing \
     # URW Base 35 fonts for better PDF rendering
     font-urw-base35 && \
-    # Calibre fixes
-    apk fix --no-cache calibre && \
     python3 -m venv /opt/venv && \
     /opt/venv/bin/pip install --no-cache-dir --upgrade pip setuptools && \
     /opt/venv/bin/pip install --no-cache-dir --upgrade unoserver weasyprint && \
@@ -100,8 +93,7 @@ RUN apk add --no-cache bash \
     # User permissions
     addgroup -S stirlingpdfgroup && adduser -S stirlingpdfuser -G stirlingpdfgroup && \
     chown -R stirlingpdfuser:stirlingpdfgroup $HOME /scripts /usr/share/fonts/opentype/noto /configs /customFiles /pipeline /tmp/stirling-pdf && \
-    chown stirlingpdfuser:stirlingpdfgroup /app.jar && \
-    ln -sf /bin/busybox /bin/sh
+    chown stirlingpdfuser:stirlingpdfgroup /app.jar
 
 EXPOSE 8080/tcp
 

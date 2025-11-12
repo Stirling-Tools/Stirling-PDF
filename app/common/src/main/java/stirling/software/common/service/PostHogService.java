@@ -253,11 +253,11 @@ public class PostHogService {
         addIfNotEmpty(
                 properties,
                 "security_enableLogin",
-                applicationProperties.getSecurity().isEnableLogin());
+                applicationProperties.getSecurity().getEnableLogin());
         addIfNotEmpty(
                 properties,
                 "security_csrfDisabled",
-                applicationProperties.getSecurity().isCsrfDisabled());
+                applicationProperties.getSecurity().getCsrfDisabled());
         addIfNotEmpty(
                 properties,
                 "security_loginAttemptCount",
@@ -302,13 +302,13 @@ public class PostHogService {
         addIfNotEmpty(
                 properties,
                 "system_googlevisibility",
-                applicationProperties.getSystem().isGooglevisibility());
+                applicationProperties.getSystem().getGooglevisibility());
         addIfNotEmpty(
                 properties, "system_showUpdate", applicationProperties.getSystem().isShowUpdate());
         addIfNotEmpty(
                 properties,
                 "system_showUpdateOnlyAdmin",
-                applicationProperties.getSystem().isShowUpdateOnlyAdmin());
+                applicationProperties.getSystem().getShowUpdateOnlyAdmin());
         addIfNotEmpty(
                 properties,
                 "system_customHTMLFiles",
@@ -320,7 +320,7 @@ public class PostHogService {
         addIfNotEmpty(
                 properties,
                 "system_enableAlphaFunctionality",
-                applicationProperties.getSystem().isEnableAlphaFunctionality());
+                applicationProperties.getSystem().getEnableAlphaFunctionality());
         addIfNotEmpty(
                 properties,
                 "system_enableAnalytics",
@@ -337,7 +337,7 @@ public class PostHogService {
 
         // Capture Metrics properties
         addIfNotEmpty(
-                properties, "metrics_enabled", applicationProperties.getMetrics().isEnabled());
+                properties, "metrics_enabled", applicationProperties.getMetrics().getEnabled());
 
         // Capture EnterpriseEdition properties
         addIfNotEmpty(

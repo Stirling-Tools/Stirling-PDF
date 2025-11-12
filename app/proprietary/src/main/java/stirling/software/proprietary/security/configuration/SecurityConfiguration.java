@@ -125,7 +125,7 @@ public class SecurityConfiguration {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        if (securityProperties.isCsrfDisabled() || !loginEnabledValue) {
+        if (securityProperties.getCsrfDisabled() || !loginEnabledValue) {
             http.csrf(CsrfConfigurer::disable);
         }
 
@@ -146,7 +146,7 @@ public class SecurityConfiguration {
                     .addFilterAfter(rateLimitingFilter(), UserAuthenticationFilter.class)
                     .addFilterAfter(firstLoginFilter, UsernamePasswordAuthenticationFilter.class);
 
-            if (!securityProperties.isCsrfDisabled()) {
+            if (!securityProperties.getCsrfDisabled()) {
                 CookieCsrfTokenRepository cookieRepo =
                         CookieCsrfTokenRepository.withHttpOnlyFalse();
                 CsrfTokenRequestAttributeHandler requestHandler =

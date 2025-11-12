@@ -21,7 +21,6 @@ public class RuntimePathConfig {
     private final String basePath;
     private final String weasyPrintPath;
     private final String unoConvertPath;
-    private final String calibrePath;
 
     // Pipeline paths
     private final String pipelineWatchedFoldersPath;
@@ -58,7 +57,6 @@ public class RuntimePathConfig {
         // Initialize Operation paths
         String defaultWeasyPrintPath = isDocker ? "/opt/venv/bin/weasyprint" : "weasyprint";
         String defaultUnoConvertPath = isDocker ? "/opt/venv/bin/unoconvert" : "unoconvert";
-        String defaultCalibrePath = isDocker ? "/usr/bin/ebook-convert" : "ebook-convert";
 
         Operations operations = properties.getSystem().getCustomPaths().getOperations();
         this.weasyPrintPath =
@@ -69,9 +67,6 @@ public class RuntimePathConfig {
                 resolvePath(
                         defaultUnoConvertPath,
                         operations != null ? operations.getUnoconvert() : null);
-        this.calibrePath =
-                resolvePath(
-                        defaultCalibrePath, operations != null ? operations.getCalibre() : null);
     }
 
     private String resolvePath(String defaultPath, String customPath) {

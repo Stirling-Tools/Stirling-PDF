@@ -71,7 +71,7 @@ public class ConvertWebsiteToPDF {
         URI location = null;
         HttpStatus status = HttpStatus.SEE_OTHER;
 
-        if (!applicationProperties.getSystem().isEnableUrlToPDF()) {
+        if (!applicationProperties.getSystem().getEnableUrlToPDF()) {
             location =
                     uriComponentsBuilder
                             .queryParam("error", "error.endpointDisabled")
