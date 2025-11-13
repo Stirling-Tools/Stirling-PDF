@@ -503,6 +503,25 @@ const SignSettings = ({
     onActivateSignaturePlacement?.();
   };
 
+  // Handle Escape key to toggle pause/resume
+  useEffect(() => {
+    if (!isCurrentTypeReady) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        if (isPlacementMode) {
+          handlePausePlacement();
+        } else if (isPlacementManuallyPaused) {
+          handleResumePlacement();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isCurrentTypeReady, isPlacementMode, isPlacementManuallyPaused]);
+
   const placementToggleControl =
     onActivateSignaturePlacement || onDeactivateSignature
       ? isPlacementMode
