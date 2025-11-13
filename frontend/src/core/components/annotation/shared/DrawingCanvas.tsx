@@ -43,6 +43,7 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
   const modalCanvasRef = useRef<HTMLCanvasElement>(null);
   const padRef = useRef<SignaturePad | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [savedSignatureData, setSavedSignatureData] = useState<string | null>(null);
 
   const initPad = (canvas: HTMLCanvasElement) => {
     if (!padRef.current) {
@@ -58,6 +59,18 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
         minDistance: 5,
         velocityFilterWeight: 0.7,
       });
+
+      // Restore saved signature data if it exists
+      if (savedSignatureData) {
+        const img = new Image();
+        img.onload = () => {
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          }
+        };
+        img.src = savedSignatureData;
+      }
     }
   };
 
@@ -132,6 +145,8 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
       const canvas = modalCanvasRef.current;
       if (canvas) {
         const trimmedPng = trimCanvas(canvas);
+        const untrimmedPng = canvas.toDataURL('image/png');
+        setSavedSignatureData(untrimmedPng); // Save untrimmed for restoration
         onSignatureDataChange(trimmedPng);
         renderPreview(trimmedPng);
 
@@ -157,6 +172,7 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
         ctx.clearRect(0, 0, previewCanvasRef.current.width, previewCanvasRef.current.height);
       }
     }
+    setSavedSignatureData(null); // Clear saved signature
     onSignatureDataChange(null);
   };
 
@@ -266,7 +282,7 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
                 backgroundColor: 'white',
                 width: '100%',
                 maxWidth: '800px',
-                height: '400px',
+                height: '25rem',
                 cursor: 'crosshair',
               }}
             />

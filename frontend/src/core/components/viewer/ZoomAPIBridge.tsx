@@ -244,6 +244,3 @@ export function ZoomAPIBridge() {
 
   return null;
 }
-
-
-
