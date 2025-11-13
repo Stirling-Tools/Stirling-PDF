@@ -10,7 +10,7 @@ import {
   MAX_PREVIEW_HEIGHT_REM,
   MIN_SIGNATURE_DIMENSION_REM,
   OVERLAY_EDGE_PADDING_REM,
-} from '@app/components/tools/sign/signConstants';
+} from '@app/constants/signConstants';
 
 // Convert rem to pixels using browser's base font size (typically 16px)
 const remToPx = (rem: number) => rem * parseFloat(getComputedStyle(document.documentElement).fontSize);

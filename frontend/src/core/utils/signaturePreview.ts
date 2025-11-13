@@ -1,5 +1,5 @@
 import { SignParameters } from '@app/hooks/tools/sign/useSignParameters';
-import { HORIZONTAL_PADDING_RATIO, VERTICAL_PADDING_RATIO } from '@app/components/tools/sign/signConstants';
+import { HORIZONTAL_PADDING_RATIO, VERTICAL_PADDING_RATIO } from '@app/constants/signConstants';
 
 export interface SignaturePreview {
   dataUrl: string;

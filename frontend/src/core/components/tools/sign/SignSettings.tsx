@@ -5,7 +5,7 @@ import { SignParameters } from "@app/hooks/tools/sign/useSignParameters";
 import { SuggestedToolsSection } from "@app/components/tools/shared/SuggestedToolsSection";
 import { useSignature } from "@app/contexts/SignatureContext";
 import { useViewer } from "@app/contexts/ViewerContext";
-import { PLACEMENT_ACTIVATION_DELAY, FILE_SWITCH_ACTIVATION_DELAY } from './signConstants';
+import { PLACEMENT_ACTIVATION_DELAY, FILE_SWITCH_ACTIVATION_DELAY } from '@app/constants/signConstants';
 
 // Import the new reusable components
 import { DrawingCanvas } from "@app/components/annotation/shared/DrawingCanvas";
