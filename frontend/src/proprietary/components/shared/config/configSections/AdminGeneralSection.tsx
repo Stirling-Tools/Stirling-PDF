@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { TextInput, Switch, Button, Stack, Paper, Text, Loader, Group, MultiSelect, Badge } from '@mantine/core';
+import { TextInput, Switch, Button, Stack, Paper, Text, Loader, Group, MultiSelect, Badge, SegmentedControl } from '@mantine/core';
 import { alert } from '@app/components/toast';
 import RestartConfirmationModal from '@app/components/shared/config/RestartConfirmationModal';
 import { useRestartServer } from '@app/components/shared/config/useRestartServer';
@@ -14,6 +14,7 @@ interface GeneralSettingsData {
   ui: {
     appNameNavbar?: string;
     languages?: string[];
+    logoStyle?: 'modern' | 'classic';
   };
   system: {
     defaultLocale?: string;
@@ -113,6 +114,7 @@ export default function AdminGeneralSection() {
         // UI settings
         'ui.appNameNavbar': settings.ui?.appNameNavbar,
         'ui.languages': settings.ui?.languages,
+        'ui.logoStyle': settings.ui?.logoStyle,
         // System settings
         'system.defaultLocale': settings.system?.defaultLocale,
         'system.showUpdate': settings.system?.showUpdate,
@@ -205,6 +207,51 @@ export default function AdminGeneralSection() {
               value={settings.ui?.appNameNavbar || ''}
               onChange={(e) => setSettings({ ...settings, ui: { ...settings.ui, appNameNavbar: e.target.value } })}
               placeholder="Stirling PDF"
+              disabled={!loginEnabled}
+            />
+          </div>
+
+          <div>
+            <Text size="sm" fw={500} mb={4}>
+              <Group gap="xs">
+                <span>{t('admin.settings.general.logoStyle.label', 'Logo Style')}</span>
+                <PendingBadge show={isFieldPending('ui.logoStyle')} />
+              </Group>
+            </Text>
+            <Text size="xs" c="dimmed" mb="xs">
+              {t('admin.settings.general.logoStyle.description', 'Choose between the modern minimalist logo or the classic S icon')}
+            </Text>
+            <SegmentedControl
+              value={settings.ui?.logoStyle || 'classic'}
+              onChange={(value) => setSettings({ ...settings, ui: { ...settings.ui, logoStyle: value as 'modern' | 'classic' } })}
+              data={[
+                {
+                  value: 'classic',
+                  label: (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.25rem 0' }}>
+                      <img
+                        src="/branding/old/favicon.svg"
+                        alt="Classic logo"
+                        style={{ width: '24px', height: '24px' }}
+                      />
+                      <span>{t('admin.settings.general.logoStyle.classic', 'Classic')}</span>
+                    </div>
+                  )
+                },
+                {
+                  value: 'modern',
+                  label: (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.25rem 0' }}>
+                      <img
+                        src="/branding/StirlingPDFLogoNoTextLight.svg"
+                        alt="Modern logo"
+                        style={{ width: '24px', height: '24px' }}
+                      />
+                      <span>{t('admin.settings.general.logoStyle.modern', 'Modern')}</span>
+                    </div>
+                  )
+                },
+              ]}
               disabled={!loginEnabled}
             />
           </div>
