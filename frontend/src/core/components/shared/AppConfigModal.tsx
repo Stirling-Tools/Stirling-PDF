@@ -68,8 +68,6 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
   const isAdmin = config?.isAdmin ?? false;
   const runningEE = config?.runningEE ?? false;
 
-  console.log('[AppConfigModal] Config:', { isAdmin, runningEE, fullConfig: config });
-
   // Left navigation structure and icons
   const configNavSections = useMemo(() =>
     createConfigNavSections(
