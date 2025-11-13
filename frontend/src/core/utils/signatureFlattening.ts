@@ -168,7 +168,7 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
                   const rect = annotation.rect || annotation.bounds || annotation.rectangle || annotation.position;
 
                   if (rect) {
-                    // Extract original annotation position and size
+                    // Extract base annotation position and size
                     const originalX = rect.origin?.x || rect.x || rect.left || 0;
                     const originalY = rect.origin?.y || rect.y || rect.top || 0;
                     const width = rect.size?.width || rect.width || 100;
