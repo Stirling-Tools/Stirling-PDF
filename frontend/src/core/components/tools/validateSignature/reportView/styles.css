@@ -44,15 +44,15 @@
 .simulated-page {
   width: min(820px, 100%);
   min-height: 1040px;
-  background-color: rgb(var(--pdf-light-simulated-page-bg)) !important;
-  box-shadow: 0 12px 32px rgba(var(--pdf-light-simulated-page-text), 0.12) !important;
+  background-color: var(--bg-raised) !important;
+  box-shadow: 0 12px 32px var(--shadow-color) !important;
   border-radius: 12px !important;
   padding: 48px 56px !important;
   position: relative;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  color: rgb(var(--pdf-light-simulated-page-text)) !important;
+  color: var(--text-primary) !important;
 }
 
 /* Container for the interactive report view */
@@ -67,12 +67,12 @@
 
 /* Keep field blocks stable colors across themes */
 .field-value {
-  border: 1px solid rgb(var(--pdf-light-box-border)) !important;
-  background-color: rgb(var(--pdf-light-box-bg)) !important;
+  border: 1px solid var(--border-default) !important;
+  background-color: var(--bg-raised) !important;
 }
 
 .field-container {
-  color: rgb(var(--pdf-light-simulated-page-text)) !important;
+  color: var(--text-primary) !important;
 }
 
 /* Thumbnail preview styles */
