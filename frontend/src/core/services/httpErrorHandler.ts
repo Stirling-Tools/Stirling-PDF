@@ -92,6 +92,20 @@ export async function handleHttpError(error: any): Promise<boolean> {
   if (error?.config?.suppressErrorToast === true) {
     return false; // Don't show global toast, but continue rejection
   }
+
+  // Suppress "Authentication required" 401 errors on auth pages
+  const status: number | undefined = error?.response?.status;
+  if (status === 401) {
+    const pathname = window.location.pathname;
+    const isAuthPage = pathname.includes('/login') ||
+                      pathname.includes('/signup') ||
+                      pathname.includes('/auth/') ||
+                      pathname.includes('/invite/');
+    if (isAuthPage) {
+      console.debug('[httpErrorHandler] Suppressing 401 on auth page:', pathname);
+      return true; // Suppress toast
+    }
+  }
   // Compute title/body (friendly) from the error object
   const { title, body } = extractAxiosErrorMessage(error);
 
@@ -112,7 +126,6 @@ export async function handleHttpError(error: any): Promise<boolean> {
 
   // 2) Generic-vs-special dedupe by endpoint
   const url: string | undefined = error?.config?.url;
-  const status: number | undefined = error?.response?.status;
   const now = Date.now();
   const isSpecial =
     status === 422 ||
