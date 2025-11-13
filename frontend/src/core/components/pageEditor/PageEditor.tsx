@@ -348,8 +348,6 @@ const PageEditor = ({
     <Box
       ref={containerRef}
       pos="relative"
-      h='100%'
-      style={{ overflow: 'auto' }}
       data-scrolling-container="true"
       onMouseEnter={() => setIsContainerHovered(true)}
       onMouseLeave={() => setIsContainerHovered(false)}

@@ -186,10 +186,9 @@ export default function Workbench() {
 
       {/* Main content area */}
       <Box
-        className={`flex-1 min-h-0 relative z-10 ${currentView !== 'pageEditor' ? styles.workbenchScrollable : ''}`}
+        className={`flex-1 min-h-0 relative z-10 ${styles.workbenchScrollable}`}
         style={{
           transition: 'opacity 0.15s ease-in-out',
-          overflow: currentView === 'pageEditor' ? 'hidden' : undefined,
         }}
       >
         {renderMainContent()}
