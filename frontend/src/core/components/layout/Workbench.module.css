@@ -1,0 +1,21 @@
+.workbenchScrollable {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+.workbenchScrollable::-webkit-scrollbar {
+  width: 0.375rem;
+}
+
+.workbenchScrollable::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.workbenchScrollable::-webkit-scrollbar-thumb {
+  background-color: var(--mantine-color-gray-4);
+  border-radius: 0.1875rem;
+}
+
+.workbenchScrollable::-webkit-scrollbar-thumb:hover {
+  background-color: var(--mantine-color-gray-5);
+}

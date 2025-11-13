@@ -39,6 +39,8 @@ const ValidateSignature = (props: BaseToolProps) => {
   const hasResults = operation.results.length > 0;
   const showResultsStep = hasResults || base.operation.isLoading || !!base.operation.errorMessage;
 
+
+
   useEffect(() => {
     registerCustomWorkbenchView({
       id: REPORT_VIEW_ID,

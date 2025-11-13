@@ -14,6 +14,7 @@ import { FileId, StirlingFile } from '@app/types/fileContext';
 import { alert } from '@app/components/toast';
 import { downloadBlob } from '@app/utils/downloadUtils';
 import { useFileEditorRightRailButtons } from '@app/components/fileEditor/fileEditorRightRailButtons';
+import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
 
 
 interface FileEditorProps {
@@ -65,6 +66,15 @@ const FileEditor = ({
   }, []);
   const [selectionMode, setSelectionMode] = useState(toolMode);
 
+  // Current tool (for enforcing maxFiles limits)
+  const { selectedTool } = useToolWorkflow();
+
+  // Compute effective max allowed files based on the active tool and mode
+  const maxAllowed = useMemo<number>(() => {
+    const rawMax = selectedTool?.maxFiles;
+    return (!toolMode || rawMax == null || rawMax < 0) ? Infinity : rawMax;
+  }, [selectedTool?.maxFiles, toolMode]);
+
   // Enable selection mode automatically in tool mode
   useEffect(() => {
     if (toolMode) {
@@ -83,7 +93,10 @@ const FileEditor = ({
   const localSelectedIds = contextSelectedIds;
 
   const handleSelectAllFiles = useCallback(() => {
-    setSelectedFiles(state.files.ids);
+    // Respect maxAllowed: if limited, select the last N files
+    const allIds = state.files.ids;
+    const idsToSelect = Number.isFinite(maxAllowed) ? allIds.slice(-maxAllowed) : allIds;
+    setSelectedFiles(idsToSelect);
     try {
       clearAllFileErrors();
     } catch (error) {
@@ -91,7 +104,7 @@ const FileEditor = ({
         console.warn('Failed to clear file errors on select all:', error);
       }
     }
-  }, [state.files.ids, setSelectedFiles, clearAllFileErrors]);
+  }, [state.files.ids, setSelectedFiles, clearAllFileErrors, maxAllowed]);
 
   const handleDeselectAllFiles = useCallback(() => {
     setSelectedFiles([]);
@@ -131,6 +144,13 @@ const FileEditor = ({
         // - HTML ZIPs stay intact
         // - Non-ZIP files pass through unchanged
         await addFiles(uploadedFiles, { selectFiles: true });
+        // After auto-selection, enforce maxAllowed if needed
+        if (Number.isFinite(maxAllowed)) {
+          const nowSelectedIds = selectors.getSelectedStirlingFileStubs().map(r => r.id);
+          if (nowSelectedIds.length > maxAllowed) {
+            setSelectedFiles(nowSelectedIds.slice(-maxAllowed));
+          }
+        }
         showStatus(`Added ${uploadedFiles.length} file(s)`, 'success');
       }
     } catch (err) {
@@ -138,7 +158,7 @@ const FileEditor = ({
       showError(errorMessage);
       console.error('File processing error:', err);
     }
-  }, [addFiles, showStatus, showError]);
+  }, [addFiles, showStatus, showError, selectors, maxAllowed, setSelectedFiles]);
 
   const toggleFile = useCallback((fileId: FileId) => {
     const currentSelectedIds = contextSelectedIdsRef.current;
@@ -156,24 +176,33 @@ const FileEditor = ({
       newSelection = currentSelectedIds.filter(id => id !== contextFileId);
     } else {
       // Add file to selection
-      // In tool mode, typically allow multiple files unless specified otherwise
-      const maxAllowed = toolMode ? 10 : Infinity; // Default max for tools
+      // Determine max files allowed from the active tool (negative or undefined means unlimited)
+      const rawMax = selectedTool?.maxFiles;
+      const maxAllowed = (!toolMode || rawMax == null || rawMax < 0) ? Infinity : rawMax;
 
       if (maxAllowed === 1) {
+        // Only one file allowed -> replace selection with the new file
         newSelection = [contextFileId];
       } else {
-        // Check if we've hit the selection limit
-        if (maxAllowed > 1 && currentSelectedIds.length >= maxAllowed) {
-          showStatus(`Maximum ${maxAllowed} files can be selected`, 'warning');
-          return;
+        // If at capacity, drop the oldest selected and append the new one
+        if (Number.isFinite(maxAllowed) && currentSelectedIds.length >= maxAllowed) {
+          newSelection = [...currentSelectedIds.slice(1), contextFileId];
+        } else {
+          newSelection = [...currentSelectedIds, contextFileId];
         }
-        newSelection = [...currentSelectedIds, contextFileId];
       }
     }
 
     // Update context (this automatically updates tool selection since they use the same action)
     setSelectedFiles(newSelection);
-  }, [setSelectedFiles, toolMode, _setStatus, activeStirlingFileStubs]);
+  }, [setSelectedFiles, toolMode, _setStatus, activeStirlingFileStubs, selectedTool?.maxFiles]);
+
+  // Enforce maxAllowed when tool changes or when an external action sets too many selected files
+  useEffect(() => {
+    if (Number.isFinite(maxAllowed) && selectedFileIds.length > maxAllowed) {
+      setSelectedFiles(selectedFileIds.slice(-maxAllowed));
+    }
+  }, [maxAllowed, selectedFileIds, setSelectedFiles]);
 
 
   // File reordering handler for drag and drop

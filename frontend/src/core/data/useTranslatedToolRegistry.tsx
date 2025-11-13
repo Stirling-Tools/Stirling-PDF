@@ -79,6 +79,7 @@ import { overlayPdfsOperationConfig } from "@app/hooks/tools/overlayPdfs/useOver
 import { adjustPageScaleOperationConfig } from "@app/hooks/tools/adjustPageScale/useAdjustPageScaleOperation";
 import { scannerImageSplitOperationConfig } from "@app/hooks/tools/scannerImageSplit/useScannerImageSplitOperation";
 import { addPageNumbersOperationConfig } from "@app/components/tools/addPageNumbers/useAddPageNumbersOperation";
+import { extractPagesOperationConfig } from "@app/hooks/tools/extractPages/useExtractPagesOperation";
 import CompressSettings from "@app/components/tools/compress/CompressSettings";
 import AddPasswordSettings from "@app/components/tools/addPassword/AddPasswordSettings";
 import RemovePasswordSettings from "@app/components/tools/removePassword/RemovePasswordSettings";
@@ -105,7 +106,9 @@ import AddPageNumbers from "@app/tools/AddPageNumbers";
 import RemoveAnnotations from "@app/tools/RemoveAnnotations";
 import PageLayoutSettings from "@app/components/tools/pageLayout/PageLayoutSettings";
 import ExtractImages from "@app/tools/ExtractImages";
+import ExtractPages from "@app/tools/ExtractPages";
 import ExtractImagesSettings from "@app/components/tools/extractImages/ExtractImagesSettings";
+import ExtractPagesSettings from "@app/components/tools/extractPages/ExtractPagesSettings";
 import ReplaceColorSettings from "@app/components/tools/replaceColor/ReplaceColorSettings";
 import AddStampAutomationSettings from "@app/components/tools/addStamp/AddStampAutomationSettings";
 import CertSignAutomationSettings from "@app/components/tools/certSign/CertSignAutomationSettings";
@@ -118,8 +121,12 @@ import RemoveBlanksSettings from "@app/components/tools/removeBlanks/RemoveBlank
 import AddPageNumbersAutomationSettings from "@app/components/tools/addPageNumbers/AddPageNumbersAutomationSettings";
 import OverlayPdfsSettings from "@app/components/tools/overlayPdfs/OverlayPdfsSettings";
 import ValidateSignature from "@app/tools/ValidateSignature";
+import ShowJS from "@app/tools/ShowJS";
 import Automate from "@app/tools/Automate";
+import Compare from "@app/tools/Compare";
 import { CONVERT_SUPPORTED_FORMATS } from "@app/constants/convertSupportedFornats";
+
+
 
 export interface TranslatedToolCatalog {
   allTools: ToolRegistry;
@@ -474,12 +481,14 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       extractPages: {
         icon: <LocalIcon icon="upload-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.extractPages.title", "Extract Pages"),
-        component: null,
+        component: ExtractPages,
         description: t("home.extractPages.desc", "Extract specific pages from a PDF document"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.EXTRACTION,
         synonyms: getSynonyms(t, "extractPages"),
-        automationSettings: null,
+        automationSettings: ExtractPagesSettings,
+        operationConfig: extractPagesOperationConfig,
+        endpoints: ["rearrange-pages"],
       },
       extractImages: {
         icon: <LocalIcon icon="photo-library-rounded" width="1.5rem" height="1.5rem" />,
@@ -706,10 +715,12 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       showJS: {
         icon: <LocalIcon icon="javascript-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.showJS.title", "Show JavaScript"),
-        component: null,
+        component: ShowJS,
         description: t("home.showJS.desc", "Extract and display JavaScript code from PDF documents"),
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.DEVELOPER_TOOLS,
+        maxFiles: 1,
+        endpoints: ["show-javascript"],
         synonyms: getSynonyms(t, "showJS"),
         supportsAutomate: false,
         automationSettings: null
@@ -767,13 +778,15 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       compare: {
         icon: <LocalIcon icon="compare-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.compare.title", "Compare"),
-        component: null,
+        component: Compare,
         description: t("home.compare.desc", "Compare two PDF documents and highlight differences"),
-        categoryId: ToolCategoryId.STANDARD_TOOLS /* TODO: Change to RECOMMENDED_TOOLS when component is implemented */,
+        categoryId: ToolCategoryId.RECOMMENDED_TOOLS,
         subcategoryId: SubcategoryId.GENERAL,
+        maxFiles: 2,
+        operationConfig: undefined,
+        automationSettings: null,
         synonyms: getSynonyms(t, "compare"),
-        supportsAutomate: false,
-        automationSettings: null
+        supportsAutomate: false
       },
       compress: {
         icon: <LocalIcon icon="zoom-in-map-rounded" width="1.5rem" height="1.5rem" />,

@@ -39,6 +39,7 @@ import stirling.software.proprietary.audit.AuditLevel;
 import stirling.software.proprietary.config.AuditConfigurationProperties;
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.model.dto.TeamWithUserCountDTO;
+import stirling.software.proprietary.repository.PersistentAuditEventRepository;
 import stirling.software.proprietary.security.config.EnterpriseEndpoint;
 import stirling.software.proprietary.security.database.repository.SessionRepository;
 import stirling.software.proprietary.security.database.repository.UserRepository;
@@ -50,6 +51,7 @@ import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrin
 import stirling.software.proprietary.security.service.DatabaseService;
 import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.session.SessionPersistentRegistry;
+import stirling.software.proprietary.service.UserLicenseSettingsService;
 
 @Slf4j
 @ProprietaryUiDataApi
@@ -64,6 +66,8 @@ public class ProprietaryUIDataController {
     private final DatabaseService databaseService;
     private final boolean runningEE;
     private final ObjectMapper objectMapper;
+    private final UserLicenseSettingsService licenseSettingsService;
+    private final PersistentAuditEventRepository auditRepository;
 
     public ProprietaryUIDataController(
             ApplicationProperties applicationProperties,
@@ -74,7 +78,9 @@ public class ProprietaryUIDataController {
             SessionRepository sessionRepository,
             DatabaseService databaseService,
             ObjectMapper objectMapper,
-            @Qualifier("runningEE") boolean runningEE) {
+            @Qualifier("runningEE") boolean runningEE,
+            UserLicenseSettingsService licenseSettingsService,
+            PersistentAuditEventRepository auditRepository) {
         this.applicationProperties = applicationProperties;
         this.auditConfig = auditConfig;
         this.sessionPersistentRegistry = sessionPersistentRegistry;
@@ -84,6 +90,8 @@ public class ProprietaryUIDataController {
         this.databaseService = databaseService;
         this.objectMapper = objectMapper;
         this.runningEE = runningEE;
+        this.licenseSettingsService = licenseSettingsService;
+        this.auditRepository = auditRepository;
     }
 
     @GetMapping("/audit-dashboard")
@@ -212,19 +220,19 @@ public class ProprietaryUIDataController {
 
                 if (latestSession.isPresent()) {
                     SessionEntity sessionEntity = latestSession.get();
-                    Date lastAccessedTime = sessionEntity.getLastRequest();
+                    Instant lastAccessedTime =
+                            Optional.ofNullable(sessionEntity.getLastRequest())
+                                    .orElse(Instant.EPOCH);
                     Instant now = Instant.now();
                     Instant expirationTime =
-                            lastAccessedTime
-                                    .toInstant()
-                                    .plus(maxInactiveInterval, ChronoUnit.SECONDS);
+                            lastAccessedTime.plus(maxInactiveInterval, ChronoUnit.SECONDS);
 
                     if (now.isAfter(expirationTime)) {
                         sessionPersistentRegistry.expireSession(sessionEntity.getSessionId());
                     } else {
                         hasActiveSession = !sessionEntity.isExpired();
                     }
-                    lastRequest = sessionEntity.getLastRequest();
+                    lastRequest = Date.from(lastAccessedTime);
                 } else {
                     lastRequest = new Date(0);
                 }
@@ -262,6 +270,13 @@ public class ProprietaryUIDataController {
                         .filter(team -> !team.getName().equals(TeamService.INTERNAL_TEAM_NAME))
                         .toList();
 
+        // Calculate license limits
+        int maxAllowedUsers = licenseSettingsService.calculateMaxAllowedUsers();
+        long availableSlots = licenseSettingsService.getAvailableUserSlots();
+        int grandfatheredCount = licenseSettingsService.getDisplayGrandfatheredCount();
+        int licenseMaxUsers = licenseSettingsService.getSettings().getLicenseMaxUsers();
+        boolean premiumEnabled = applicationProperties.getPremium().isEnabled();
+
         AdminSettingsData data = new AdminSettingsData();
         data.setUsers(sortedUsers);
         data.setCurrentUsername(authentication.getName());
@@ -273,6 +288,11 @@ public class ProprietaryUIDataController {
         data.setDisabledUsers(disabledUsers);
         data.setTeams(allTeams);
         data.setMaxPaidUsers(applicationProperties.getPremium().getMaxUsers());
+        data.setMaxAllowedUsers(maxAllowedUsers);
+        data.setAvailableSlots(availableSlots);
+        data.setGrandfatheredUserCount(grandfatheredCount);
+        data.setLicenseMaxUsers(licenseMaxUsers);
+        data.setPremiumEnabled(premiumEnabled);
 
         return ResponseEntity.ok(data);
     }
@@ -445,6 +465,11 @@ public class ProprietaryUIDataController {
         private int disabledUsers;
         private List<Team> teams;
         private int maxPaidUsers;
+        private int maxAllowedUsers;
+        private long availableSlots;
+        private int grandfatheredUserCount;
+        private int licenseMaxUsers;
+        private boolean premiumEnabled;
     }
 
     @Data

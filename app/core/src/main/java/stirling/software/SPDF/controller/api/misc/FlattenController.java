@@ -11,6 +11,7 @@ import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.rendering.ImageType;
 import org.apache.pdfbox.rendering.PDFRenderer;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
@@ -25,7 +26,10 @@ import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.api.misc.FlattenRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.ApplicationContextProvider;
+import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.WebResponseUtils;
 
 @MiscApi
@@ -35,7 +39,7 @@ public class FlattenController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/flatten")
+    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/flatten")
     @StandardPdfResponse
     @Operation(
             summary = "Flatten PDF form fields or full page",
@@ -64,7 +68,23 @@ public class FlattenController {
             int numPages = document.getNumberOfPages();
             for (int i = 0; i < numPages; i++) {
                 try {
-                    BufferedImage image = pdfRenderer.renderImageWithDPI(i, 300, ImageType.RGB);
+                    BufferedImage image;
+
+                    // Use global maximum DPI setting, fallback to 300 if not set
+                    int renderDpi = 300; // Default fallback
+                    ApplicationProperties properties =
+                            ApplicationContextProvider.getBean(ApplicationProperties.class);
+                    if (properties != null && properties.getSystem() != null) {
+                        renderDpi = properties.getSystem().getMaxDPI();
+                    }
+
+                    try {
+                        image = pdfRenderer.renderImageWithDPI(i, renderDpi, ImageType.RGB);
+                    } catch (OutOfMemoryError e) {
+                        throw ExceptionUtils.createOutOfMemoryDpiException(i + 1, renderDpi, e);
+                    } catch (NegativeArraySizeException e) {
+                        throw ExceptionUtils.createOutOfMemoryDpiException(i + 1, renderDpi, e);
+                    }
                     PDPage page = new PDPage();
                     page.setMediaBox(document.getPage(i).getMediaBox());
                     newDocument.addPage(page);

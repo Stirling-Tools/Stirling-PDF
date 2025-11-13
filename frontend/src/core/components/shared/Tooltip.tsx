@@ -65,6 +65,10 @@ export const Tooltip: React.FC<TooltipProps> = ({
   const clickPendingRef = useRef(false);
   const tooltipIdRef = useRef(`tooltip-${Math.random().toString(36).slice(2)}`);
 
+  // Runtime guard: some browsers may surface non-Node EventTargets for relatedTarget/target
+  const isDomNode = (value: unknown): value is Node =>
+    typeof Node !== 'undefined' && value instanceof Node;
+
   const clearTimers = useCallback(() => {
     if (openTimeoutRef.current) {
       clearTimeout(openTimeoutRef.current);
@@ -108,9 +112,9 @@ export const Tooltip: React.FC<TooltipProps> = ({
     (e: MouseEvent) => {
       const tEl = tooltipRef.current;
       const trg = triggerRef.current;
-      const target = e.target as Node | null;
-      const insideTooltip = tEl && target && tEl.contains(target);
-      const insideTrigger = trg && target && trg.contains(target);
+      const target = e.target as unknown;
+      const insideTooltip = Boolean(tEl && isDomNode(target) && tEl.contains(target));
+      const insideTrigger = Boolean(trg && isDomNode(target) && trg.contains(target));
 
       // If pinned: only close when clicking outside BOTH tooltip & trigger
       if (isPinned) {
@@ -176,9 +180,10 @@ export const Tooltip: React.FC<TooltipProps> = ({
     (e: React.PointerEvent) => {
       const related = e.relatedTarget as Node | null;
 
-      // Moving into the tooltip -> keep open
-      if (related && tooltipRef.current && tooltipRef.current.contains(related)) {
-        (childPropsRef.current as any)?.onPointerLeave?.(e);
+      // Moving into the tooltip → keep open
+      if (isDomNode(related) && tooltipRef.current && tooltipRef.current.contains(related)) {
+
+        (children.props as any)?.onPointerLeave?.(e);
         return;
       }
 
@@ -241,8 +246,8 @@ export const Tooltip: React.FC<TooltipProps> = ({
   const handleBlur = useCallback(
     (e: React.FocusEvent) => {
       const related = e.relatedTarget as Node | null;
-      if (related && tooltipRef.current && tooltipRef.current.contains(related)) {
-        (childPropsRef.current as any)?.onBlur?.(e);
+      if (isDomNode(related) && tooltipRef.current && tooltipRef.current.contains(related)) {
+        (children.props as any)?.onBlur?.(e);
         return;
       }
       if (!isPinned) setOpen(false);
@@ -263,7 +268,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
   const handleTooltipPointerLeave = useCallback(
     (e: React.PointerEvent) => {
       const related = e.relatedTarget as Node | null;
-      if (related && triggerRef.current && triggerRef.current.contains(related)) return;
+      if (isDomNode(related) && triggerRef.current && triggerRef.current.contains(related)) return;
       if (!isPinned) setOpen(false);
     },
     [isPinned, setOpen]

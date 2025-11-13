@@ -1,5 +1,7 @@
 package stirling.software.proprietary.security.filter;
 
+import static stirling.software.common.util.RequestUriUtils.isPublicAuthEndpoint;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
@@ -105,10 +107,17 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
             }
         }
 
-        // If we still don't have any authentication, deny the request
+        // If we still don't have any authentication, check if it's a public endpoint. If not, deny
+        // the request
         if (authentication == null || !authentication.isAuthenticated()) {
             String method = request.getMethod();
             String contextPath = request.getContextPath();
+
+            // Allow public auth endpoints to pass through without authentication
+            if (isPublicAuthEndpoint(requestURI, contextPath)) {
+                filterChain.doFilter(request, response);
+                return;
+            }
 
             if ("GET".equalsIgnoreCase(method) && !requestURI.startsWith(contextPath + "/login")) {
                 response.sendRedirect(contextPath + "/login"); // redirect to the login page
@@ -128,7 +137,7 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
         // Check if the authenticated user is disabled and invalidate their session if so
         if (authentication != null && authentication.isAuthenticated()) {
 
-            LoginMethod loginMethod = LoginMethod.UNKNOWN;
+            UserLoginType loginMethod = UserLoginType.UNKNOWN;
 
             boolean blockRegistration = false;
 
@@ -137,20 +146,20 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
             String username = null;
             if (principal instanceof UserDetails detailsUser) {
                 username = detailsUser.getUsername();
-                loginMethod = LoginMethod.USERDETAILS;
+                loginMethod = UserLoginType.USERDETAILS;
             } else if (principal instanceof OAuth2User oAuth2User) {
                 username = oAuth2User.getName();
-                loginMethod = LoginMethod.OAUTH2USER;
+                loginMethod = UserLoginType.OAUTH2USER;
                 OAUTH2 oAuth = securityProp.getOauth2();
                 blockRegistration = oAuth != null && oAuth.getBlockRegistration();
             } else if (principal instanceof CustomSaml2AuthenticatedPrincipal saml2User) {
                 username = saml2User.name();
-                loginMethod = LoginMethod.SAML2USER;
+                loginMethod = UserLoginType.SAML2USER;
                 SAML2 saml2 = securityProp.getSaml2();
                 blockRegistration = saml2 != null && saml2.getBlockRegistration();
             } else if (principal instanceof String stringUser) {
                 username = stringUser;
-                loginMethod = LoginMethod.STRINGUSER;
+                loginMethod = UserLoginType.STRINGUSER;
             }
 
             // Retrieve all active sessions for the user
@@ -164,8 +173,8 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
                 boolean isUserDisabled = userService.isUserDisabled(username);
 
                 boolean notSsoLogin =
-                        !LoginMethod.OAUTH2USER.equals(loginMethod)
-                                && !LoginMethod.SAML2USER.equals(loginMethod);
+                        !UserLoginType.OAUTH2USER.equals(loginMethod)
+                                && !UserLoginType.SAML2USER.equals(loginMethod);
 
                 // Block user registration if not allowed by configuration
                 if (blockRegistration && !isUserExists) {
@@ -200,7 +209,24 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    private enum LoginMethod {
+    private static boolean isPublicAuthEndpoint(String requestURI, String contextPath) {
+        // Remove context path from URI to normalize path matching
+        String trimmedUri =
+                requestURI.startsWith(contextPath)
+                        ? requestURI.substring(contextPath.length())
+                        : requestURI;
+
+        // Public auth endpoints that don't require authentication
+        return trimmedUri.startsWith("/login")
+                || trimmedUri.startsWith("/auth/")
+                || trimmedUri.startsWith("/oauth2")
+                || trimmedUri.startsWith("/saml2")
+                || trimmedUri.startsWith("/api/v1/auth/login")
+                || trimmedUri.startsWith("/api/v1/auth/refresh")
+                || trimmedUri.startsWith("/api/v1/auth/logout");
+    }
+
+    private enum UserLoginType {
         USERDETAILS("UserDetails"),
         OAUTH2USER("OAuth2User"),
         STRINGUSER("StringUser"),
@@ -209,7 +235,7 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
 
         private String method;
 
-        LoginMethod(String method) {
+        UserLoginType(String method) {
             this.method = method;
         }
 
@@ -225,8 +251,8 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
         String contextPath = request.getContextPath();
         String[] permitAllPatterns = {
             contextPath + "/login",
-            contextPath + "/signup",
             contextPath + "/register",
+            contextPath + "/invite",
             contextPath + "/error",
             contextPath + "/images/",
             contextPath + "/public/",
@@ -237,9 +263,10 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
             contextPath + "/pdfjs-legacy/",
             contextPath + "/api/v1/info/status",
             contextPath + "/api/v1/auth/login",
-            contextPath + "/api/v1/auth/register",
             contextPath + "/api/v1/auth/refresh",
             contextPath + "/api/v1/auth/me",
+            contextPath + "/api/v1/invite/validate",
+            contextPath + "/api/v1/invite/accept",
             contextPath + "/site.webmanifest"
         };
 
