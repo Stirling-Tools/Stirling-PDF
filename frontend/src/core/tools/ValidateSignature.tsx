@@ -12,6 +12,7 @@ import ValidateSignatureReportView from '@app/components/tools/validateSignature
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
 import { useNavigationActions, useNavigationState } from '@app/contexts/NavigationContext';
 import type { SignatureValidationReportData } from '@app/types/validateSignature';
+import { useValidateSignatureTips } from '@app/components/tooltips/useValidateSignatureTips';
 
 const ValidateSignature = (props: BaseToolProps) => {
   const { t } = useTranslation();
@@ -38,6 +39,7 @@ const ValidateSignature = (props: BaseToolProps) => {
   const operation = base.operation as ValidateSignatureOperationHook;
   const hasResults = operation.results.length > 0;
   const showResultsStep = hasResults || base.operation.isLoading || !!base.operation.errorMessage;
+  const validateTips = useValidateSignatureTips();
 
 
 
@@ -115,6 +117,7 @@ const ValidateSignature = (props: BaseToolProps) => {
         title: t('validateSignature.settings.title', 'Validation Settings'),
         isCollapsed: base.settingsCollapsed,
         onCollapsedClick: base.settingsCollapsed ? base.handleSettingsReset : undefined,
+        tooltip: validateTips,
         content: (
           <ValidateSignatureSettings
             parameters={base.params.parameters}

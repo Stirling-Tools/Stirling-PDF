@@ -8,6 +8,7 @@ import { useAccordionSteps } from "@app/hooks/tools/shared/useAccordionSteps";
 import ReorganizePagesSettings from "@app/components/tools/reorganizePages/ReorganizePagesSettings";
 import { useReorganizePagesParameters } from "@app/hooks/tools/reorganizePages/useReorganizePagesParameters";
 import { useReorganizePagesOperation } from "@app/hooks/tools/reorganizePages/useReorganizePagesOperation";
+import { useReorganizePagesTips } from "@app/components/tooltips/useReorganizePagesTips";
 
 const ReorganizePages = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
@@ -15,6 +16,7 @@ const ReorganizePages = ({ onPreviewFile, onComplete, onError }: BaseToolProps) 
 
   const params = useReorganizePagesParameters();
   const operation = useReorganizePagesOperation();
+  const reorganizeTips = useReorganizePagesTips();
 
   const { enabled: endpointEnabled, loading: endpointLoading } = useEndpointEnabled("rearrange-pages");
 
@@ -61,6 +63,7 @@ const ReorganizePages = ({ onPreviewFile, onComplete, onError }: BaseToolProps) 
       isCollapsed: accordion.getCollapsedState(Step.SETTINGS),
       onCollapsedClick: () => accordion.handleStepToggle(Step.SETTINGS),
       isVisible: true,
+      tooltip: reorganizeTips,
       content: (
         <ReorganizePagesSettings
           parameters={params.parameters}

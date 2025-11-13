@@ -823,6 +823,11 @@
   "merge": {
     "tags": "merge,Page operations,Back end,server side",
     "title": "Merge",
+    "tooltip": {
+      "header": {
+        "title": "Merge Settings Overview"
+      }
+    },
     "removeDigitalSignature": {
       "label": "Remove digital signature in the merged file?",
       "tooltip": {
@@ -3118,7 +3123,24 @@
       "title": "Validation Settings"
     },
     "signatureDate": "Signature Date",
-    "totalSignatures": "Total Signatures"
+    "totalSignatures": "Total Signatures",
+    "tooltip": {
+      "header": {
+        "title": "Signature Validation Settings"
+      },
+      "overview": {
+        "title": "What is Signature Validation?",
+        "text": "Check if PDF signatures are valid, verify signer identity, and detect if documents have been modified since signing."
+      },
+      "certificates": {
+        "title": "Certificate Validation",
+        "text": "Signatures are validated using certificate chains. Upload a custom certificate if you need to validate against a specific trust source."
+      },
+      "results": {
+        "title": "Validation Results",
+        "text": "Get detailed reports showing signature status, signer information, signing time, and document integrity."
+      }
+    }
   },
   "replaceColor": {
     "tags": "Replace Colour,Page operations,Back end,server side",
@@ -4726,7 +4748,28 @@
     "settings": {
       "title": "Settings"
     },
-    "submit": "Reorganize Pages"
+    "submit": "Reorganize Pages",
+    "tooltip": {
+      "header": {
+        "title": "Page Reorganization Settings"
+      },
+      "description": {
+        "title": "How Page Reorganization Works",
+        "text": "Rearrange, duplicate, or remove pages from your PDF using flexible page selection and organization modes."
+      },
+      "modes": {
+        "title": "Organization Modes",
+        "text": "Choose how to reorganize your pages:",
+        "bullet1": "Custom Order: Specify exact page sequence",
+        "bullet2": "Duplicate Pages: Copy pages multiple times",
+        "bullet3": "Reverse Order: Flip page order completely",
+        "bullet4": "Remove Pages: Delete specific pages"
+      },
+      "pageSelection": {
+        "title": "Page Selection",
+        "text": "Use page numbers, ranges, or formulas to specify which pages to include in your reorganized PDF."
+      }
+    }
   },
   "replace-color": {
     "options": {
