@@ -32,9 +32,6 @@ pub fn run() {
           // Store file for later retrieval (in case frontend isn't ready yet)
           add_opened_file(arg.clone());
 
-          // Also emit event for immediate handling if frontend is ready
-          let _ = app.emit("file-opened", arg.clone());
-
           // Bring the existing window to front
           if let Some(window) = app.get_webview_window("main") {
             let _ = window.set_focus();
@@ -42,6 +39,9 @@ pub fn run() {
           }
         }
       }
+
+      // Emit a generic notification that files were added (frontend will re-read storage)
+      let _ = app.emit("files-changed", ());
     }))
     .setup(|_app| {
       add_log("🚀 Tauri app setup started".to_string());
@@ -75,6 +75,7 @@ pub fn run() {
         #[cfg(target_os = "macos")]
         RunEvent::Opened { urls } => {
           add_log(format!("📂 Tauri file opened event: {:?}", urls));
+          let mut added_files = false;
           for url in urls {
             let url_str = url.as_str();
             if url_str.starts_with("file://") {
@@ -82,10 +83,13 @@ pub fn run() {
               if file_path.ends_with(".pdf") {
                 add_log(format!("📂 Processing opened PDF: {}", file_path));
                 add_opened_file(file_path.to_string());
-                // Use unified event name for consistency across platforms
-                let _ = app_handle.emit("file-opened", file_path.to_string());
+                added_files = true;
               }
             }
+          }
+          // Emit a generic notification that files were added (frontend will re-read storage)
+          if added_files {
+            let _ = app_handle.emit("files-changed", ());
           }
         }
         _ => {
