@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { useBackendInitializer } from '@app/hooks/useBackendInitializer';
 import { useOpenedFile } from '@app/hooks/useOpenedFile';
 import { fileOpenService } from '@app/services/fileOpenService';
