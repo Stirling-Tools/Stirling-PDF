@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import '@app/routes/authShared/auth.css';
 import { useTranslation } from 'react-i18next';
+import { Checkbox } from '@mantine/core';
 import { SignupFieldErrors } from '@app/routes/signup/SignupFormValidation';
 
 interface SignupFormProps {
@@ -133,19 +134,20 @@ export default function SignupForm({
       {/* Terms - only show if showTerms is true */}
       {showTerms && (
         <div className="auth-terms">
-          <input
+          <Checkbox
             id="agree"
-            type="checkbox"
             checked={agree}
-            onChange={(e) => setAgree?.(e.target.checked)}
+            onChange={(e) => setAgree?.(e.currentTarget.checked)}
             className="auth-checkbox"
+            label={
+              <span className="auth-terms-label">
+                {t("legal.iAgreeToThe", 'I agree to all of the')}{' '}
+                <a href="https://www.stirlingpdf.com/terms" target="_blank" rel="noopener noreferrer">
+                  {t('legal.terms', 'Terms and Conditions')}
+                </a>
+              </span>
+            }
           />
-          <label htmlFor="agree" className="auth-terms-label">
-            {t("legal.iAgreeToThe", 'I agree to all of the')} {" "}
-            <a href="https://www.stirlingpdf.com/terms" target="_blank" rel="noopener noreferrer">
-              {t('legal.terms', 'Terms and Conditions')}
-            </a>
-          </label>
         </div>
       )}
 

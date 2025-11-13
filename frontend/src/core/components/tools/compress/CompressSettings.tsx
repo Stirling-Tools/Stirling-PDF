@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Stack, Text, NumberInput, Select, Divider } from "@mantine/core";
+import { Stack, Text, NumberInput, Select, Divider, Checkbox } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { CompressParameters } from "@app/hooks/tools/compress/useCompressParameters";
 import ButtonSelector from "@app/components/shared/ButtonSelector";
@@ -123,18 +123,12 @@ const CompressSettings = ({ parameters, onParameterChange, disabled = false }: C
 
       {/* Compression Options */}
       <Stack gap="sm">
-        <label
-          style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
-          title="Converts all images in the PDF to grayscale, which can significantly reduce file size while maintaining readability"
-        >
-          <input
-            type="checkbox"
-            checked={parameters.grayscale}
-            onChange={(e) => onParameterChange('grayscale', e.target.checked)}
-            disabled={disabled}
-          />
-          <Text size="sm">{t("compress.grayscale.label", "Apply Grayscale for compression")}</Text>
-        </label>
+        <Checkbox
+          checked={parameters.grayscale}
+          onChange={(event) => onParameterChange('grayscale', event.currentTarget.checked)}
+          disabled={disabled}
+          label={t("compress.grayscale.label", "Apply Grayscale for compression")}
+        />
       </Stack>
     </Stack>
   );
