@@ -1,7 +1,10 @@
 import React, { useState } from "react";
 import { Anchor, Group, Stack, Text, Paper, Skeleton } from "@mantine/core";
+// eslint-disable-next-line no-restricted-imports
 import ApiKeySection from "./apiKeys/ApiKeySection";
+// eslint-disable-next-line no-restricted-imports
 import RefreshModal from "./apiKeys/RefreshModal";
+// eslint-disable-next-line no-restricted-imports
 import useApiKey from "./apiKeys/hooks/useApiKey";
 import { useTranslation } from "react-i18next";
 import LocalIcon from "@app/components/shared/LocalIcon";
@@ -11,7 +14,7 @@ export default function ApiKeys() {
   const [showRefreshModal, setShowRefreshModal] = useState(false);
   const { t } = useTranslation();
 
-  const { apiKey, isLoading: apiKeyLoading, refresh, isRefreshing, error: apiKeyError, refetch, hasAttempted } = useApiKey();
+  const { apiKey, isLoading: apiKeyLoading, refresh, isRefreshing, error: apiKeyError, refetch } = useApiKey();
 
   const copy = async (text: string, tag: string) => {
     try {

@@ -4,7 +4,6 @@ import {
   Button,
   Group,
   Paper,
-  Text,
 } from "@mantine/core";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import FitText from "@app/components/shared/FitText";
