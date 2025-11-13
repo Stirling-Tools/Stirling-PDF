@@ -14,6 +14,7 @@ import { createStirlingFilesAndStubs } from '@app/services/fileStubHelpers';
 import NavigationWarningModal from '@app/components/shared/NavigationWarningModal';
 import { isStirlingFile } from '@app/types/fileContext';
 import { useViewerRightRailButtons } from '@app/components/viewer/useViewerRightRailButtons';
+import { useWheelZoom } from '@app/hooks/useWheelZoom';
 
 export interface EmbedPdfViewerProps {
   sidebarsVisible: boolean;
@@ -35,14 +36,12 @@ const EmbedPdfViewerContent = ({
   const viewerRef = React.useRef<HTMLDivElement>(null);
   const [isViewerHovered, setIsViewerHovered] = React.useState(false);
 
-  const { isThumbnailSidebarVisible, toggleThumbnailSidebar, zoomActions, spreadActions, panActions: _panActions, rotationActions: _rotationActions, getScrollState, getZoomState, getSpreadState, getRotationState, isAnnotationMode, isAnnotationsVisible, exportActions } = useViewer();
+  const { isThumbnailSidebarVisible, toggleThumbnailSidebar, zoomActions, panActions: _panActions, rotationActions: _rotationActions, getScrollState, getRotationState, isAnnotationMode, isAnnotationsVisible, exportActions } = useViewer();
 
   // Register viewer right-rail buttons
   useViewerRightRailButtons();
 
   const scrollState = getScrollState();
-  const zoomState = getZoomState();
-  const spreadState = getSpreadState();
   const rotationState = getRotationState();
 
   // Track initial rotation to detect changes
@@ -124,39 +123,11 @@ const EmbedPdfViewerContent = ({
     }
   }, [previewFile, fileWithUrl]);
 
-  // Handle scroll wheel zoom with accumulator for smooth trackpad pinch
-  useEffect(() => {
-    let accumulator = 0;
-
-    const handleWheel = (event: WheelEvent) => {
-      // Check if Ctrl (Windows/Linux) or Cmd (Mac) is pressed
-      if (event.ctrlKey || event.metaKey) {
-        event.preventDefault();
-        event.stopPropagation();
-
-        accumulator += event.deltaY;
-        const threshold = 10;
-
-        if (accumulator <= -threshold) {
-          // Accumulated scroll up - zoom in
-          zoomActions.zoomIn();
-          accumulator = 0;
-        } else if (accumulator >= threshold) {
-          // Accumulated scroll down - zoom out
-          zoomActions.zoomOut();
-          accumulator = 0;
-        }
-      }
-    };
-
-    const viewerElement = viewerRef.current;
-    if (viewerElement) {
-      viewerElement.addEventListener('wheel', handleWheel, { passive: false });
-      return () => {
-        viewerElement.removeEventListener('wheel', handleWheel);
-      };
-    }
-  }, [zoomActions]);
+  useWheelZoom({
+    ref: viewerRef,
+    onZoomIn: zoomActions.zoomIn,
+    onZoomOut: zoomActions.zoomOut,
+  });
 
   // Handle keyboard zoom shortcuts
   useEffect(() => {
@@ -320,15 +291,6 @@ const EmbedPdfViewerContent = ({
             <PdfViewerToolbar
               currentPage={scrollState.currentPage}
               totalPages={scrollState.totalPages}
-              onPageChange={(page) => {
-                // Page navigation handled by scrollActions
-                console.log('Navigate to page:', page);
-              }}
-              dualPage={spreadState.isDualPage}
-              onDualPageToggle={() => {
-                spreadActions.toggleSpreadMode();
-              }}
-              currentZoom={zoomState.zoomPercent}
             />
           </div>
         </div>

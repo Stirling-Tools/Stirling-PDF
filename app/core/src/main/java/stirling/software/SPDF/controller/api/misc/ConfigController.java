@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.Hidden;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.EndpointConfiguration;
+import stirling.software.SPDF.config.InitialSetup;
 import stirling.software.common.annotations.api.ConfigApi;
 import stirling.software.common.configuration.AppConfig;
 import stirling.software.common.model.ApplicationProperties;
@@ -86,6 +87,22 @@ public class ConfigController {
                 }
             }
             configData.put("isAdmin", isAdmin);
+
+            // Check if this is a new server (version was 0.0.0 before initialization)
+            configData.put("isNewServer", InitialSetup.isNewServer());
+
+            // Check if the current user is a first-time user
+            boolean isNewUser =
+                    false; // Default to false when security is disabled or user not found
+            if (userService != null) {
+                try {
+                    isNewUser = userService.isCurrentUserFirstLogin();
+                } catch (Exception e) {
+                    // If there's an error, assume not new user for safety
+                    isNewUser = false;
+                }
+            }
+            configData.put("isNewUser", isNewUser);
 
             // System settings
             configData.put(

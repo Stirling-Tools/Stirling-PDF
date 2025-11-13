@@ -22,7 +22,7 @@
   },
   "bundle": {
     "active": true,
-    "targets": ["deb", "rpm", "dmg", "msi"],
+    "targets": ["deb", "rpm", "dmg", "app", "msi"],
     "icon": [
       "icons/icon.png",
       "icons/icon.icns",
@@ -50,6 +50,12 @@
       "deb": {
         "desktopTemplate": "stirling-pdf.desktop"
       }
+    },
+    "macOS": {
+      "minimumSystemVersion": "10.15",
+      "signingIdentity": null,
+      "entitlements": null,
+      "providerShortName": null
     }
   },
   "plugins": {
