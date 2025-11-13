@@ -4,27 +4,6 @@ import { createProcessedFile, createChildStub } from '@app/contexts/file/fileAct
 import { createStirlingFile, StirlingFile, FileId, StirlingFileStub } from '@app/types/fileContext';
 import type { SignatureAPI } from '@app/components/viewer/viewerTypes';
 
-const extractDataUrl = (value: unknown, depth = 0): string | undefined => {
-  if (!value || depth > 6) return undefined;
-  if (typeof value === 'string') {
-    return value.startsWith('data:image') ? value : undefined;
-  }
-  if (Array.isArray(value)) {
-    for (const entry of value) {
-      const result = extractDataUrl(entry, depth + 1);
-      if (result) return result;
-    }
-    return undefined;
-  }
-  if (typeof value === 'object') {
-    for (const key of Object.keys(value as Record<string, unknown>)) {
-      const result = extractDataUrl((value as Record<string, unknown>)[key], depth + 1);
-      if (result) return result;
-    }
-  }
-  return undefined;
-};
-
 interface MinimalFileContextSelectors {
   getAllFileIds: () => FileId[];
   getStirlingFileStub: (id: FileId) => StirlingFileStub | undefined;
@@ -69,19 +48,18 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
           if (pageAnnotations && pageAnnotations.length > 0) {
             // Filter to only include annotations added in this session
             const sessionAnnotations = pageAnnotations.filter(annotation => {
+              // Check if this annotation has stored image data (indicates it was added this session)
               const hasStoredImageData = annotation.id && getImageData(annotation.id);
 
-              const directImageData =
-                extractDataUrl(annotation.imageData) ||
-                extractDataUrl(annotation.appearance) ||
-                extractDataUrl(annotation.stampData) ||
-                extractDataUrl(annotation.imageSrc) ||
-                extractDataUrl(annotation.contents) ||
-                extractDataUrl(annotation.data) ||
-                extractDataUrl(annotation.customData) ||
-                extractDataUrl(annotation.asset);
+              // Also check if it has image data directly in the annotation (new signatures)
+              const hasDirectImageData = annotation.imageData || annotation.appearance ||
+                                       annotation.stampData || annotation.imageSrc ||
+                                       annotation.contents || annotation.data;
 
-              return Boolean(hasStoredImageData || directImageData);
+              const isSessionAnnotation = hasStoredImageData || (hasDirectImageData && typeof hasDirectImageData === 'string' && hasDirectImageData.startsWith('data:image'));
+
+
+              return isSessionAnnotation;
             });
 
             if (sessionAnnotations.length > 0) {
@@ -108,7 +86,7 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
       }
     }
 
-    // Step 3: Use EmbedPDF's saveAsCopy to get the original PDF (now without annotations)
+    // Step 3: Use EmbedPDF's saveAsCopy to get the base PDF (now without annotations)
     if (!exportActions) {
       console.error('No export actions available');
       return null;
@@ -202,15 +180,8 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
 
 
                     // Try to get annotation image data
-                    let imageDataUrl =
-                      extractDataUrl(annotation.imageData) ||
-                      extractDataUrl(annotation.appearance) ||
-                      extractDataUrl(annotation.stampData) ||
-                      extractDataUrl(annotation.imageSrc) ||
-                      extractDataUrl(annotation.contents) ||
-                      extractDataUrl(annotation.data) ||
-                      extractDataUrl(annotation.customData) ||
-                      extractDataUrl(annotation.asset);
+                    let imageDataUrl = annotation.imageData || annotation.appearance || annotation.stampData ||
+                                     annotation.imageSrc || annotation.contents || annotation.data;
 
                     // If no image data found directly, try to get it from storage
                     if (!imageDataUrl && annotation.id) {
