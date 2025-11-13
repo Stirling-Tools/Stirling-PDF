@@ -8,12 +8,13 @@ import RotateRightIcon from '@mui/icons-material/RotateRight';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ContentCutIcon from '@mui/icons-material/ContentCut';
 import AddIcon from '@mui/icons-material/Add';
-import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { PDFPage, PDFDocument } from '@app/types/pageEditor';
 import { useThumbnailGeneration } from '@app/hooks/useThumbnailGeneration';
 import { useFilesModalContext } from '@app/contexts/FilesModalContext';
+import { getFileColorWithOpacity } from '@app/components/pageEditor/fileColors';
 import styles from '@app/components/pageEditor/PageEditor.module.css';
 import HoverActionMenu, { HoverAction } from '@app/components/shared/HoverActionMenu';
+import { StirlingFileStub } from '@app/types/fileContext';
 import { PrivateContent } from '@app/components/shared/PrivateContent';
 
 
@@ -22,11 +23,17 @@ interface PageThumbnailProps {
   index: number;
   totalPages: number;
   originalFile?: File;
+  fileColorIndex: number;
   selectedPageIds: string[];
   selectionMode: boolean;
   movingPage: number | null;
   isAnimating: boolean;
+  isBoxSelected?: boolean;
+  clearBoxSelection?: () => void;
+  activeDragIds: string[];
+  justMoved?: boolean;
   pageRefs: React.MutableRefObject<Map<string, HTMLDivElement>>;
+  dragHandleProps?: any;
   onReorderPages: (sourcePageNumber: number, targetIndex: number, selectedPageIds?: string[]) => void;
   onTogglePage: (pageId: string) => void;
   onAnimateReorder: () => void;
@@ -40,19 +47,25 @@ interface PageThumbnailProps {
   pdfDocument: PDFDocument;
   setPdfDocument: (doc: PDFDocument) => void;
   splitPositions: Set<number>;
-  onInsertFiles?: (files: File[], insertAfterPage: number) => void;
+  onInsertFiles?: (files: File[] | StirlingFileStub[], insertAfterPage: number, isFromStorage?: boolean) => void;
+  zoomLevel?: number;
 }
 
 const PageThumbnail: React.FC<PageThumbnailProps> = ({
   page,
-  index,
+  index: _index,
   totalPages,
   originalFile,
+  fileColorIndex,
   selectedPageIds,
   selectionMode,
   movingPage,
   isAnimating,
+  isBoxSelected = false,
+  clearBoxSelection,
+  activeDragIds,
   pageRefs,
+  dragHandleProps,
   onReorderPages,
   onTogglePage,
   onExecuteCommand,
@@ -64,16 +77,24 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
   pdfDocument,
   splitPositions,
   onInsertFiles,
+  zoomLevel = 1.0,
+  justMoved = false,
 }: PageThumbnailProps) => {
-  const [isDragging, setIsDragging] = useState(false);
+  const pageIndex = page.pageNumber - 1;
+
   const [isMouseDown, setIsMouseDown] = useState(false);
   const [mouseStartPos, setMouseStartPos] = useState<{x: number, y: number} | null>(null);
   const [isHovered, setIsHovered] = useState(false);
   const isMobile = useIsMobile();
-  const dragElementRef = useRef<HTMLDivElement>(null);
+  const lastClickTimeRef = useRef<number>(0);
+
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(page.thumbnail);
-  const { getThumbnailFromCache, requestThumbnail } = useThumbnailGeneration();
+  const elementRef = useRef<HTMLDivElement | null>(null);
+  const { getThumbnailFromCache, requestThumbnail} = useThumbnailGeneration();
   const { openFilesModal } = useFilesModalContext();
+
+  // Check if this page is currently being dragged
+  const isDragging = activeDragIds.includes(page.id);
 
   // Calculate document aspect ratio from first non-blank page
   const getDocumentAspectRatio = useCallback(() => {
@@ -131,63 +152,22 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
     };
   }, [page.id, page.thumbnail, originalFile, getThumbnailFromCache, requestThumbnail]);
 
-  const pageElementRef = useCallback((element: HTMLDivElement | null) => {
+  // Merge refs - combine our ref tracking with dnd-kit's ref
+  const mergedRef = useCallback((element: HTMLDivElement | null) => {
+    // Track in our refs map
+    elementRef.current = element;
     if (element) {
       pageRefs.current.set(page.id, element);
-      dragElementRef.current = element;
-
-      const dragCleanup = draggable({
-        element,
-        getInitialData: () => ({
-          pageNumber: page.pageNumber,
-          pageId: page.id,
-          selectedPageIds: [page.id]
-        }),
-        onDragStart: () => {
-          setIsDragging(true);
-        },
-        onDrop: ({ location }) => {
-          setIsDragging(false);
-
-          if (location.current.dropTargets.length === 0) {
-            return;
-          }
-
-          const dropTarget = location.current.dropTargets[0];
-          const targetData = dropTarget.data;
-
-          if (targetData.type === 'page') {
-            const targetPageNumber = targetData.pageNumber as number;
-            const targetIndex = pdfDocument.pages.findIndex(p => p.pageNumber === targetPageNumber);
-            if (targetIndex !== -1) {
-              onReorderPages(page.pageNumber, targetIndex, undefined);
-            }
-          }
-        }
-      });
-
-      element.style.cursor = 'grab';
-
-      const dropCleanup = dropTargetForElements({
-        element,
-        getData: () => ({
-          type: 'page',
-          pageNumber: page.pageNumber
-        }),
-        onDrop: (_) => {}
-      });
-
-      (element as any).__dragCleanup = () => {
-        dragCleanup();
-        dropCleanup();
-      };
     } else {
       pageRefs.current.delete(page.id);
-      if (dragElementRef.current && (dragElementRef.current as any).__dragCleanup) {
-        (dragElementRef.current as any).__dragCleanup();
-      }
     }
-  }, [page.id, page.pageNumber, pageRefs, selectionMode, selectedPageIds, pdfDocument.pages, onReorderPages]);
+
+    // Call dnd-kit's ref if provided
+    if (dragHandleProps?.ref) {
+      dragHandleProps.ref(element);
+    }
+  }, [page.id, pageRefs, dragHandleProps]);
+
 
   // DOM command handlers
   const handleRotateLeft = useCallback((e: React.MouseEvent) => {
@@ -216,13 +196,13 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
     e.stopPropagation();
 
     // Create a command to toggle split at this position
-    const command = createSplitCommand(index);
+    const command = createSplitCommand(pageIndex);
     onExecuteCommand(command);
 
-    const hasSplit = splitPositions.has(index);
+    const hasSplit = splitPositions.has(pageIndex);
     const action = hasSplit ? 'removed' : 'added';
-    onSetStatus(`Split marker ${action} after position ${index + 1}`);
-  }, [index, splitPositions, onExecuteCommand, onSetStatus, createSplitCommand]);
+    onSetStatus(`Split marker ${action} after position ${pageIndex + 1}`);
+  }, [pageIndex, splitPositions, onExecuteCommand, onSetStatus, createSplitCommand]);
 
   const handleInsertFileAfter = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
@@ -231,9 +211,9 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
       // Open file manager modal with custom handler for page insertion
       openFilesModal({
         insertAfterPage: page.pageNumber,
-        customHandler: (files: File[], insertAfterPage?: number) => {
+        customHandler: (files: File[] | StirlingFileStub[], insertAfterPage?: number, isFromStorage?: boolean) => {
           if (insertAfterPage !== undefined) {
-            onInsertFiles(files, insertAfterPage);
+            onInsertFiles(files, insertAfterPage, isFromStorage);
           }
         }
       });
@@ -263,20 +243,39 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
     const deltaY = Math.abs(e.clientY - mouseStartPos.y);
     const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
 
-    // If mouse moved less than 5 pixels, consider it a click (not a drag)
-    if (distance < 5 && !isDragging) {
-      onTogglePage(page.id);
+    // If mouse moved less than 2 pixels, consider it a click (not a drag)
+    if (distance < 2 && !isDragging) {
+      // Prevent rapid double-clicks from causing issues (debounce with 100ms threshold)
+      const now = Date.now();
+      if (now - lastClickTimeRef.current > 100) {
+        lastClickTimeRef.current = now;
+
+        // Clear box selection when clicking on a non-selected page
+        if (!isBoxSelected && clearBoxSelection) {
+          clearBoxSelection();
+        }
+
+        // Don't toggle page selection if it's box-selected (just keep the box selection)
+        if (!isBoxSelected) {
+          onTogglePage(page.id);
+        }
+      }
     }
 
     setIsMouseDown(false);
     setMouseStartPos(null);
-  }, [isMouseDown, mouseStartPos, isDragging, page.id, onTogglePage]);
+  }, [isMouseDown, mouseStartPos, isDragging, page.id, isBoxSelected, clearBoxSelection, onTogglePage]);
 
   const handleMouseLeave = useCallback(() => {
     setIsMouseDown(false);
     setMouseStartPos(null);
     setIsHovered(false);
   }, []);
+
+  const fileColorBorder = page.isBlankPage ? 'transparent' : getFileColorWithOpacity(fileColorIndex, 0.3);
+
+  // Spread dragHandleProps but use our merged ref
+  const { ref: _, ...restDragProps } = dragHandleProps || {};
 
   // Build hover menu actions
   const hoverActions = useMemo<HoverAction[]>(() => [
@@ -286,14 +285,14 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
       label: 'Move Left',
       onClick: (e) => {
         e.stopPropagation();
-        if (index > 0 && !movingPage && !isAnimating) {
+        if (pageIndex > 0 && !movingPage && !isAnimating) {
           onSetMovingPage(page.pageNumber);
-          onReorderPages(page.pageNumber, index - 1);
+          onReorderPages(page.pageNumber, pageIndex - 1);
           setTimeout(() => onSetMovingPage(null), 650);
           onSetStatus(`Moved page ${page.pageNumber} left`);
         }
       },
-      disabled: index === 0
+      disabled: pageIndex === 0
     },
     {
       id: 'move-right',
@@ -301,14 +300,17 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
       label: 'Move Right',
       onClick: (e) => {
         e.stopPropagation();
-        if (index < totalPages - 1 && !movingPage && !isAnimating) {
+        if (pageIndex < totalPages - 1 && !movingPage && !isAnimating) {
           onSetMovingPage(page.pageNumber);
-          onReorderPages(page.pageNumber, index + 1);
+          // ReorderPagesCommand expects target index relative to the original array.
+          // When moving toward the right (higher index), provide desiredIndex + 1
+          // so the command's internal adjustment (targetIndex - 1) lands correctly.
+          onReorderPages(page.pageNumber, pageIndex + 2);
           setTimeout(() => onSetMovingPage(null), 650);
           onSetStatus(`Moved page ${page.pageNumber} right`);
         }
       },
-      disabled: index === totalPages - 1
+      disabled: pageIndex === totalPages - 1
     },
     {
       id: 'rotate-left',
@@ -334,7 +336,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
       icon: <ContentCutIcon style={{ fontSize: 20 }} />,
       label: 'Split After',
       onClick: handleSplit,
-      hidden: index >= totalPages - 1,
+      hidden: pageIndex >= totalPages - 1,
     },
     {
       id: 'insert',
@@ -342,11 +344,12 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
       label: 'Insert File After',
       onClick: handleInsertFileAfter,
     }
-  ], [index, totalPages, movingPage, isAnimating, page.pageNumber, handleRotateLeft, handleRotateRight, handleDelete, handleSplit, handleInsertFileAfter, onReorderPages, onSetMovingPage, onSetStatus]);
+  ], [pageIndex, totalPages, movingPage, isAnimating, page.pageNumber, handleRotateLeft, handleRotateRight, handleDelete, handleSplit, handleInsertFileAfter, onReorderPages, onSetMovingPage, onSetStatus]);
 
   return (
     <div
-      ref={pageElementRef}
+      ref={mergedRef}
+      {...restDragProps}
       data-page-id={page.id}
       data-page-number={page.pageNumber}
       className={`
@@ -354,24 +357,25 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
         !rounded-lg
         ${selectionMode ? 'cursor-pointer' : 'cursor-grab'}
         select-none
-        w-[20rem]
-        h-[20rem]
         flex items-center justify-center
         flex-shrink-0
         shadow-sm
         hover:shadow-md
         transition-all
         relative
-        ${selectionMode
-          ? 'bg-white hover:bg-gray-50'
-          : 'bg-white hover:bg-gray-50'}
         ${isDragging ? 'opacity-50 scale-95' : ''}
         ${movingPage === page.pageNumber ? 'page-moving' : ''}
+        ${isBoxSelected ? 'ring-4 ring-blue-400 ring-offset-2' : ''}
       `}
       style={{
-        transition: isAnimating ? 'none' : 'transform 0.2s ease-in-out'
+        width: `calc(20rem * ${zoomLevel})`,
+        height: `calc(20rem * ${zoomLevel})`,
+        transition: isAnimating ? 'none' : 'transform 0.2s ease-in-out',
+        zIndex: isHovered ? 50 : 1,
+        ...(isBoxSelected && {
+          boxShadow: '0 0 0 4px rgba(59, 130, 246, 0.5)',
+        }),
       }}
-      draggable={false}
       onMouseDown={handleMouseDown}
       onMouseUp={handleMouseUp}
       onMouseEnter={() => setIsHovered(true)}
@@ -414,12 +418,13 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
 
       <div className="page-container w-[90%] h-[90%]" draggable={false}>
         <div
+          className={`${styles.pageSurface} ${justMoved ? styles.pageJustMoved : ''}`}
           style={{
             width: '100%',
             height: '100%',
             backgroundColor: 'var(--mantine-color-gray-1)',
             borderRadius: 6,
-            border: '1px solid var(--mantine-color-gray-3)',
+            boxShadow: page.isBlankPage ? 'none' : `0 0 ${4 + 4 * zoomLevel}px 3px ${fileColorBorder}`,
             padding: 4,
             display: 'flex',
             alignItems: 'center',
@@ -440,11 +445,12 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
                 backgroundColor: 'white',
                 border: '1px solid #e9ecef',
                 borderRadius: 2
-              }}></div>
+              }} />
             </div>
           ) : thumbnailUrl ? (
             <PrivateContent>
               <img
+                className="ph-no-capture"
                 src={thumbnailUrl}
                 alt={`Page ${page.pageNumber}`}
                 draggable={false}
@@ -476,7 +482,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
             position: 'absolute',
             top: 5,
             left: 5,
-            background: page.isBlankPage ? 'rgba(255, 165, 0, 0.8)' : 'rgba(162, 201, 255, 0.8)',
+            background: 'rgba(162, 201, 255, 0.8)',
             padding: '6px 8px',
             borderRadius: 8,
             zIndex: 2,

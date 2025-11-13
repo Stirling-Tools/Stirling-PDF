@@ -23,6 +23,7 @@
   flex-direction: column;
   gap: 1.5rem;
   padding: 1rem;
+  padding-top: 3rem;
   height: 100%;
   min-height: 0;
   /* Allow the custom workbench to shrink within flex parents (prevents pushing right rail off-screen) */
