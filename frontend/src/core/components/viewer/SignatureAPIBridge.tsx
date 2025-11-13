@@ -6,28 +6,42 @@ import type { SignatureAPI } from '@app/components/viewer/viewerTypes';
 import type { SignParameters } from '@app/hooks/tools/sign/useSignParameters';
 import { useViewer } from '@app/contexts/ViewerContext';
 
+// Minimum allowed width/height (in pixels) for a signature image or text stamp.
+// This prevents rendering issues and ensures signatures are always visible and usable.
 const MIN_SIGNATURE_DIMENSION = 12;
 
+// Use 2x oversampling to improve text rendering quality (anti-aliasing) when generating signature images.
+// This provides a good balance between visual fidelity and performance/memory usage.
 const TEXT_OVERSAMPLE_FACTOR = 2;
 
-const extractDataUrl = (value: unknown, depth = 0): string | undefined => {
+const extractDataUrl = (value: unknown, depth = 0, visited: Set<unknown> = new Set()): string | undefined => {
   if (!value || depth > 6) return undefined;
+
+  // Prevent circular references
+  if (typeof value === 'object' && visited.has(value)) {
+    return undefined;
+  }
+
   if (typeof value === 'string') {
     return value.startsWith('data:image') ? value : undefined;
   }
-  if (Array.isArray(value)) {
-    for (const entry of value) {
-      const result = extractDataUrl(entry, depth + 1);
-      if (result) return result;
-    }
-    return undefined;
-  }
+
   if (typeof value === 'object') {
-    for (const key of Object.keys(value as Record<string, unknown>)) {
-      const result = extractDataUrl((value as Record<string, unknown>)[key], depth + 1);
-      if (result) return result;
+    visited.add(value);
+
+    if (Array.isArray(value)) {
+      for (const entry of value) {
+        const result = extractDataUrl(entry, depth + 1, visited);
+        if (result) return result;
+      }
+    } else {
+      for (const key of Object.keys(value as Record<string, unknown>)) {
+        const result = extractDataUrl((value as Record<string, unknown>)[key], depth + 1, visited);
+        if (result) return result;
+      }
     }
   }
+
   return undefined;
 };
 

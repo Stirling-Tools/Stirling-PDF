@@ -1,10 +1,11 @@
-﻿import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from "react-i18next";
 import { Stack, Button, Text, Alert, SegmentedControl, Divider, ActionIcon, Tooltip, Group, Box } from '@mantine/core';
 import { SignParameters } from "@app/hooks/tools/sign/useSignParameters";
 import { SuggestedToolsSection } from "@app/components/tools/shared/SuggestedToolsSection";
 import { useSignature } from "@app/contexts/SignatureContext";
 import { useViewer } from "@app/contexts/ViewerContext";
+import { PLACEMENT_ACTIVATION_DELAY, FILE_SWITCH_ACTIVATION_DELAY } from './signConstants';
 
 // Import the new reusable components
 import { DrawingCanvas } from "@app/components/annotation/shared/DrawingCanvas";
@@ -174,12 +175,12 @@ const SignSettings = ({
       case 'image':
         return imageSignatureData ?? null;
       case 'text':
-        return [
-          (parameters.signerName ?? '').trim(),
-          parameters.fontSize ?? 16,
-          parameters.fontFamily ?? 'Helvetica',
-          parameters.textColor ?? '#000000',
-        ].join('|');
+        return JSON.stringify({
+          signerName: (parameters.signerName ?? '').trim(),
+          fontSize: parameters.fontSize ?? 16,
+          fontFamily: parameters.fontFamily ?? 'Helvetica',
+          textColor: parameters.textColor ?? '#000000',
+        });
       default:
         return null;
     }
@@ -355,7 +356,7 @@ const SignSettings = ({
     if (typeof window !== 'undefined') {
       const timer = window.setTimeout(() => {
         onActivateSignaturePlacement?.();
-      }, 60);
+      }, PLACEMENT_ACTIVATION_DELAY);
       return () => window.clearTimeout(timer);
     }
 
@@ -392,7 +393,7 @@ const SignSettings = ({
     };
 
     if (typeof window !== 'undefined') {
-      const timer = window.setTimeout(trigger, 60);
+      const timer = window.setTimeout(trigger, PLACEMENT_ACTIVATION_DELAY);
       return () => window.clearTimeout(timer);
     }
 
@@ -415,7 +416,7 @@ const SignSettings = ({
     if (typeof window !== 'undefined') {
       const timer = window.setTimeout(() => {
         onActivateSignaturePlacement?.();
-      }, 80);
+      }, FILE_SWITCH_ACTIVATION_DELAY);
       return () => window.clearTimeout(timer);
     }
 

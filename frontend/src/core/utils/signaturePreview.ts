@@ -1,4 +1,5 @@
 import { SignParameters } from '@app/hooks/tools/sign/useSignParameters';
+import { HORIZONTAL_PADDING_RATIO, VERTICAL_PADDING_RATIO } from '@app/components/tools/sign/signConstants';
 
 export interface SignaturePreview {
   dataUrl: string;
@@ -33,8 +34,8 @@ export const buildSignaturePreview = async (config: SignParameters | null): Prom
     const fontFamily = config.fontFamily ?? 'Helvetica';
     const textColor = config.textColor ?? '#000000';
 
-    const paddingX = Math.round(fontSize * 0.8);
-    const paddingY = Math.round(fontSize * 0.6);
+    const paddingX = Math.round(fontSize * HORIZONTAL_PADDING_RATIO);
+    const paddingY = Math.round(fontSize * VERTICAL_PADDING_RATIO);
 
     const measureCanvas = document.createElement('canvas');
     const measureCtx = measureCanvas.getContext('2d');

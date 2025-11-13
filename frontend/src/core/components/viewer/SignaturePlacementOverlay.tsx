@@ -3,6 +3,17 @@ import { Box } from '@mantine/core';
 import type { SignParameters } from '@app/hooks/tools/sign/useSignParameters';
 import { buildSignaturePreview, SignaturePreview } from '@app/utils/signaturePreview';
 import { useSignature } from '@app/contexts/SignatureContext';
+import {
+  MAX_PREVIEW_WIDTH_RATIO,
+  MAX_PREVIEW_HEIGHT_RATIO,
+  MAX_PREVIEW_WIDTH_REM,
+  MAX_PREVIEW_HEIGHT_REM,
+  MIN_SIGNATURE_DIMENSION_REM,
+  OVERLAY_EDGE_PADDING_REM,
+} from '@app/components/tools/sign/signConstants';
+
+// Convert rem to pixels using browser's base font size (typically 16px)
+const remToPx = (rem: number) => rem * parseFloat(getComputedStyle(document.documentElement).fontSize);
 
 interface SignaturePlacementOverlayProps {
   containerRef: React.RefObject<HTMLElement | null>;
@@ -78,8 +89,8 @@ export const SignaturePlacementOverlay: React.FC<SignaturePlacementOverlayProps>
     const containerWidth = container.clientWidth || 1;
     const containerHeight = container.clientHeight || 1;
 
-    const maxWidth = Math.min(containerWidth * 0.35, 240);
-    const maxHeight = Math.min(containerHeight * 0.35, 160);
+    const maxWidth = Math.min(containerWidth * MAX_PREVIEW_WIDTH_RATIO, remToPx(MAX_PREVIEW_WIDTH_REM));
+    const maxHeight = Math.min(containerHeight * MAX_PREVIEW_HEIGHT_RATIO, remToPx(MAX_PREVIEW_HEIGHT_REM));
 
     const scale = Math.min(
       1,
@@ -88,8 +99,8 @@ export const SignaturePlacementOverlay: React.FC<SignaturePlacementOverlayProps>
     );
 
     return {
-      width: Math.max(12, preview.width * scale),
-      height: Math.max(12, preview.height * scale),
+      width: Math.max(remToPx(MIN_SIGNATURE_DIMENSION_REM), preview.width * scale),
+      height: Math.max(remToPx(MIN_SIGNATURE_DIMENSION_REM), preview.height * scale),
     };
   }, [preview, containerRef]);
 
@@ -118,9 +129,10 @@ export const SignaturePlacementOverlay: React.FC<SignaturePlacementOverlayProps>
 
     const width = scaledSize.width;
     const height = scaledSize.height;
+    const edgePadding = remToPx(OVERLAY_EDGE_PADDING_REM);
 
-    const clampedLeft = Math.max(4, Math.min(cursor.x - width / 2, containerWidth - width - 4));
-    const clampedTop = Math.max(4, Math.min(cursor.y - height / 2, containerHeight - height - 4));
+    const clampedLeft = Math.max(edgePadding, Math.min(cursor.x - width / 2, containerWidth - width - edgePadding));
+    const clampedTop = Math.max(edgePadding, Math.min(cursor.y - height / 2, containerHeight - height - edgePadding));
 
     return {
       left: clampedLeft,
