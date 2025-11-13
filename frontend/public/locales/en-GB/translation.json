@@ -47,6 +47,11 @@
     "description": "You can change this later in your system settings.",
     "notNow": "Not Now",
     "setDefault": "Set Default",
+    "dismiss": "Dismiss",
+    "prompt": {
+      "title": "Set as Default PDF Editor",
+      "message": "Make Stirling PDF your default application for opening PDF files."
+    },
     "success": {
       "title": "Default App Set",
       "message": "Stirling PDF is now your default PDF editor"
@@ -351,7 +356,13 @@
       "mode": {
         "fullscreen": "Fullscreen",
         "sidebar": "Sidebar"
-      }
+      },
+      "defaultPdfEditor": "Default PDF editor",
+      "defaultPdfEditorActive": "Stirling PDF is your default PDF editor",
+      "defaultPdfEditorInactive": "Another application is set as default",
+      "defaultPdfEditorChecking": "Checking...",
+      "defaultPdfEditorSet": "Already Default",
+      "setAsDefault": "Set as Default"
     },
     "hotkeys": {
       "title": "Keyboard Shortcuts",
