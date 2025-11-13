@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html th:data-language="${#locale.toString()}"
+  th:dir="#{language.direction}"
+  th:lang="${#locale.language}"
+  xmlns:th="https://www.thymeleaf.org">
+
+  <head>
+    <th:block th:insert="~{fragments/common :: head(title=#{ebookToPDF.title}, header=#{ebookToPDF.header})}"></th:block>
+  </head>
+
+  <body>
+    <th:block th:insert="~{fragments/common :: game}"></th:block>
+    <div id="page-container">
+      <div id="content-wrap">
+        <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+        <br><br>
+        <div class="container">
+          <div class="row justify-content-center">
+            <div class="col-md-6 bg-card">
+              <div class="tool-header">
+                <span class="material-symbols-rounded tool-header-icon convertto">menu_book</span>
+                <span class="tool-header-text"
+                  th:text="#{ebookToPDF.header}"></span>
+              </div>
+              <p th:text="#{processTimeWarning}"></p>
+
+              <div class="alert alert-warning"
+                th:if="${!@endpointConfiguration.isGroupEnabled('Calibre')}">
+                <span th:text="#{ebookToPDF.calibreDisabled}">Calibre support is disabled.</span>
+              </div>
+
+              <form enctype="multipart/form-data"
+                id="ebookToPDFForm"
+                method="post"
+                th:action="@{'/api/v1/convert/ebook/pdf'}"
+                th:if="${@endpointConfiguration.isGroupEnabled('Calibre')}">
+                <div
+                  th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='.epub,.mobi,.azw3,.fb2,.txt,.docx', inputText=#{ebookToPDF.selectText})}">
+                </div>
+
+                <div class="form-check mb-2">
+                  <input class="form-check-input"
+                    id="embedAllFonts"
+                    name="embedAllFonts"
+                    type="checkbox"
+                    value="true">
+                  <label for="embedAllFonts"
+                    th:text="#{ebookToPDF.embedAllFonts}">
+                    Embed all fonts in PDF
+                  </label>
+                </div>
+
+                <div class="form-check mb-2">
+                  <input class="form-check-input"
+                    id="includeTableOfContents"
+                    name="includeTableOfContents"
+                    type="checkbox"
+                    value="true">
+                  <label
+                    for="includeTableOfContents"
+                    th:text="#{ebookToPDF.includeTableOfContents}">
+                    Add table of contents
+                  </label>
+                </div>
+
+                <div class="form-check mb-2">
+                  <input class="form-check-input"
+                    id="includePageNumbers"
+                    name="includePageNumbers"
+                    type="checkbox"
+                    value="true">
+                  <label
+                    for="includePageNumbers"
+                    th:text="#{ebookToPDF.includePageNumbers}">
+                    Add page numbers
+                  </label>
+                </div>
+
+                <div class="form-check mb-3"
+                  th:if="${@endpointConfiguration.isGroupEnabled('Ghostscript')}">
+                  <input class="form-check-input"
+                    id="optimizeForEbook"
+                    name="optimizeForEbook"
+                    type="checkbox"
+                    value="true">
+                  <label
+                    for="optimizeForEbook"
+                    th:text="#{ebookToPDF.optimizeForEbook}">
+                    Optimize PDF for ebook readers (uses Ghostscript)
+                  </label>
+                </div>
+
+                <button class="btn btn-primary"
+                  id="submitBtn"
+                  th:text="#{ebookToPDF.submit}"
+                  type="submit">Convert to
+                  PDF</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+      <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+    </div>
+  </body>
+
+</html>
