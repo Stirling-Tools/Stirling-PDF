@@ -279,6 +279,15 @@
   --modal-content-bg: #ffffff;
   --modal-header-border: rgba(0, 0, 0, 0.06);
 
+  /* API Keys section colors (light mode) */
+  --api-keys-card-bg: #ffffff;
+  --api-keys-card-border: #e0e0e0;
+  --api-keys-card-shadow: rgba(0, 0, 0, 0.06);
+  --api-keys-input-bg: #f8f8f8;
+  --api-keys-input-border: #e0e0e0;
+  --api-keys-button-bg: #f5f5f5;
+  --api-keys-button-color: #333333;
+
   /* PDF Report Colors (always light) */
   --pdf-light-header-bg: 239 246 255;
   --pdf-light-accent: 59 130 246;
@@ -539,6 +548,15 @@
   --modal-content-bg: #2A2F36;
   --modal-header-border: rgba(255, 255, 255, 0.08);
 
+  /* API Keys section colors (dark mode) */
+  --api-keys-card-bg: #2A2F36;
+  --api-keys-card-border: #3A4047;
+  --api-keys-card-shadow: none;
+  --api-keys-input-bg: #1F2329;
+  --api-keys-input-border: #3A4047;
+  --api-keys-button-bg: #3A4047;
+  --api-keys-button-color: #D0D6DC;
+  
   /* Code token colors (dark mode - Cursor-like) */
   --code-kw-color: #C792EA;   /* purple */
   --code-str-color: #C3E88D;  /* green */
