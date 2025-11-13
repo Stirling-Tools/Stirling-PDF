@@ -242,7 +242,6 @@ ignore = [
     'team.status',
     'text',
     'update.version',
-    'validateSignature.cert.bits',
     'validateSignature.cert.version',
     'validateSignature.status',
     'watermark.type.1',
