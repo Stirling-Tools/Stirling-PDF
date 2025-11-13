@@ -257,11 +257,31 @@ export const usePageEditorExport = ({
         exportFilename
       );
 
-      const newStirlingFiles = await actions.addFiles(files, {
+      // Add "_multitool" suffix to filenames
+      const renamedFiles = files.map(file => {
+        const nameParts = file.name.match(/^(.+?)(\.pdf)$/i);
+        if (nameParts) {
+          const baseName = nameParts[1];
+          const extension = nameParts[2];
+          const newName = `${baseName}_multitool${extension}`;
+          return new File([file], newName, { type: file.type });
+        }
+        return file;
+      });
+
+      // Store source file IDs before adding new files
+      const sourceFileIds = [...selectedFileIds];
+
+      const newStirlingFiles = await actions.addFiles(renamedFiles, {
         selectFiles: true,
       });
       if (newStirlingFiles.length > 0) {
         actions.setSelectedFiles(newStirlingFiles.map((file) => file.fileId));
+      }
+
+      // Remove source files from context
+      if (sourceFileIds.length > 0) {
+        await actions.removeFiles(sourceFileIds, true);
       }
 
       setHasUnsavedChanges(false);
@@ -277,6 +297,7 @@ export const usePageEditorExport = ({
     getSourceFiles,
     getExportFilename,
     actions,
+    selectedFileIds,
     setHasUnsavedChanges,
     setExportLoading,
   ]);
