@@ -7,7 +7,17 @@ import React, {
   useCallback,
 } from 'react';
 import { useNavigation } from '@app/contexts/NavigationContext';
-import { createViewerActions } from '@core/contexts/viewer/viewerActions';
+import {
+  createViewerActions,
+  ScrollActions,
+  ZoomActions,
+  PanActions,
+  SelectionActions,
+  SpreadActions,
+  RotationActions,
+  SearchActions,
+  ExportActions,
+} from '@app/contexts/viewer/viewerActions';
 import {
   BridgeRef,
   BridgeApiMap,
@@ -16,25 +26,16 @@ import {
   ViewerBridgeRegistry,
   createBridgeRegistry,
   registerBridge as setBridgeRef,
-  ScrollAPIWrapper,
   ScrollState,
-  ZoomAPIWrapper,
   ZoomState,
-  PanAPIWrapper,
   PanState,
-  SelectionAPIWrapper,
   SelectionState,
-  SpreadAPIWrapper,
   SpreadState,
-  RotationAPIWrapper,
   RotationState,
-  SearchAPIWrapper,
   SearchState,
-  SearchResult,
-  ThumbnailAPIWrapper,
-  ExportAPIWrapper,
   ExportState,
-} from '@core/contexts/viewer/viewerBridges';
+  ThumbnailAPIWrapper,
+} from '@app/contexts/viewer/viewerBridges';
 import { SpreadMode } from '@embedpdf/plugin-spread/react';
 
 function useImmediateNotifier<Args extends unknown[]>() {
@@ -110,7 +111,10 @@ interface ViewerContextType {
   exportActions: ExportActions;
 
   // Bridge registration - internal use by bridges  
-  registerBridge: (type: BridgeKey, ref: BridgeRef) => void;
+  registerBridge: <K extends BridgeKey>(
+    type: K,
+    ref: BridgeRef<BridgeStateMap[K], BridgeApiMap[K]>
+  ) => void;
 }
 
 export const ViewerContext = createContext<ViewerContextType | null>(null);

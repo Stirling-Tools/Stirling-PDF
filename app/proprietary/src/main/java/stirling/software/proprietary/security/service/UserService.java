@@ -31,6 +31,7 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.enumeration.Role;
 import stirling.software.common.model.exception.UnsupportedProviderException;
 import stirling.software.common.service.UserServiceInterface;
+import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.security.database.repository.AuthorityRepository;
 import stirling.software.proprietary.security.database.repository.UserRepository;
@@ -566,13 +567,18 @@ public class UserService implements UserServiceInterface {
         // Checks whether the simple username is formatted correctly
         // Regular expression for user name: Min. 3 characters, max. 50 characters
         boolean isValidSimpleUsername =
-                username.matches("^[a-zA-Z0-9](?!.*[-@._+]{2,})[a-zA-Z0-9@._+-]{1,48}[a-zA-Z0-9]$");
+                RegexPatternUtils.getInstance()
+                        .getUsernameValidationPattern()
+                        .matcher(username)
+                        .matches();
 
         // Checks whether the email address is formatted correctly
         // Regular expression for email addresses: Max. 320 characters, with RFC-like validation
         boolean isValidEmail =
-                username.matches(
-                        "^(?=.{1,320}$)(?=.{1,64}@)[A-Za-z0-9](?:[A-Za-z0-9_.+-]*[A-Za-z0-9])?@[^-][A-Za-z0-9-]+(?:\\\\.[A-Za-z0-9-]+)*(?:\\\\.[A-Za-z]{2,})$");
+                RegexPatternUtils.getInstance()
+                        .getEmailValidationPattern()
+                        .matcher(username)
+                        .matches();
 
         List<String> notAllowedUserList = new ArrayList<>();
         notAllowedUserList.add("ALL_USERS".toLowerCase());
@@ -653,6 +659,21 @@ public class UserService implements UserServiceInterface {
             }
         } catch (Exception e) {
             log.debug("Error checking admin status", e);
+        }
+        return false;
+    }
+
+    public boolean isCurrentUserFirstLogin() {
+        try {
+            String username = getCurrentUsername();
+            if (username != null) {
+                Optional<User> userOpt = findByUsernameIgnoreCase(username);
+                if (userOpt.isPresent()) {
+                    return !userOpt.get().hasCompletedInitialSetup();
+                }
+            }
+        } catch (Exception e) {
+            log.debug("Error checking first login status", e);
         }
         return false;
     }

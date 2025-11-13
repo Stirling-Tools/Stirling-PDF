@@ -10,6 +10,22 @@ select#font-select option {
   text-align: center;
 }
 
+.signature-color-picker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.5rem 0 0.75rem;
+}
+
+.signature-color-picker input[type="color"] {
+  width: 42px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--bs-border-color, #ced4da);
+  border-radius: 6px;
+  background: transparent;
+}
+
 #drawing-pad-canvas {
   background: rgba(125, 125, 125, 0.2);
   width: 100%;

@@ -17,7 +17,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
 
-import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 
 import lombok.AllArgsConstructor;
@@ -35,6 +34,7 @@ import stirling.software.common.model.PdfMetadata;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.PdfMetadataService;
 import stirling.software.common.util.ExceptionUtils;
+import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.WebResponseUtils;
 
 @GeneralApi
@@ -114,7 +114,9 @@ public class SplitPdfByChaptersController {
         return bookmarks;
     }
 
-    @AutoJobPostMapping(value = "/split-pdf-by-chapters", consumes = "multipart/form-data")
+    @AutoJobPostMapping(
+            value = "/split-pdf-by-chapters",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @MultiFileResponse
     @Operation(
             summary = "Split PDFs by Chapters",
@@ -186,9 +188,7 @@ public class SplitPdfByChaptersController {
             byte[] data = Files.readAllBytes(zipFile);
             Files.deleteIfExists(zipFile);
 
-            String filename =
-                    Filenames.toSimpleFileName(file.getOriginalFilename())
-                            .replaceFirst("[.][^.]+$", "");
+            String filename = GeneralUtils.generateFilename(file.getOriginalFilename(), "");
             sourceDocument.close();
             return WebResponseUtils.bytesToWebResponse(
                     data, filename + ".zip", MediaType.APPLICATION_OCTET_STREAM);

@@ -20,6 +20,7 @@ import { I18nextProvider } from 'react-i18next';
 import i18n from '@app/i18n/config';
 import { createTestStirlingFile } from '@app/tests/utils/testFileHelpers';
 import { StirlingFile } from '@app/types/fileContext';
+import { MantineProvider } from '@mantine/core';
 
 // Mock axios (for static methods like CancelToken, isCancel)
 vi.mock('axios', () => ({
@@ -88,13 +89,15 @@ const createPDFFile = (): StirlingFile => {
 
 // Test wrapper component
 const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <I18nextProvider i18n={i18n}>
-    <PreferencesProvider>
-      <FileContextProvider>
-        {children}
-      </FileContextProvider>
-    </PreferencesProvider>
-  </I18nextProvider>
+  <MantineProvider>
+    <I18nextProvider i18n={i18n}>
+      <PreferencesProvider>
+        <FileContextProvider>
+          {children}
+        </FileContextProvider>
+      </PreferencesProvider>
+    </I18nextProvider>
+  </MantineProvider>
 );
 
 describe('Convert Tool Integration Tests', () => {
@@ -148,6 +151,12 @@ describe('Convert Tool Integration Tests', () => {
         },
         pdfaOptions: {
           outputFormat: ''
+        },
+        cbzOptions: {
+          optimizeForEbook: false
+        },
+        cbzOutputOptions: {
+          dpi: 150
         }
       };
 
@@ -215,6 +224,12 @@ describe('Convert Tool Integration Tests', () => {
         },
         pdfaOptions: {
           outputFormat: ''
+        },
+        cbzOptions: {
+          optimizeForEbook: false
+        },
+        cbzOutputOptions: {
+          dpi: 150
         }
       };
 
@@ -260,6 +275,12 @@ describe('Convert Tool Integration Tests', () => {
         },
         pdfaOptions: {
           outputFormat: ''
+        },
+        cbzOptions: {
+          optimizeForEbook: false
+        },
+        cbzOutputOptions: {
+          dpi: 150
         }
       };
 
@@ -314,6 +335,12 @@ describe('Convert Tool Integration Tests', () => {
         },
         pdfaOptions: {
           outputFormat: ''
+        },
+        cbzOptions: {
+          optimizeForEbook: false
+        },
+        cbzOutputOptions: {
+          dpi: 150
         }
       };
 
@@ -372,6 +399,12 @@ describe('Convert Tool Integration Tests', () => {
         },
         pdfaOptions: {
           outputFormat: ''
+        },
+        cbzOptions: {
+          optimizeForEbook: false
+        },
+        cbzOutputOptions: {
+          dpi: 150
         }
       };
 
@@ -428,6 +461,12 @@ describe('Convert Tool Integration Tests', () => {
         },
         pdfaOptions: {
           outputFormat: ''
+        },
+        cbzOptions: {
+          optimizeForEbook: false
+        },
+        cbzOutputOptions: {
+          dpi: 150
         }
       };
 
@@ -480,6 +519,12 @@ describe('Convert Tool Integration Tests', () => {
         },
         pdfaOptions: {
           outputFormat: ''
+        },
+        cbzOptions: {
+          optimizeForEbook: false
+        },
+        cbzOutputOptions: {
+          dpi: 150
         }
       };
 
@@ -529,6 +574,12 @@ describe('Convert Tool Integration Tests', () => {
         },
         pdfaOptions: {
           outputFormat: ''
+        },
+        cbzOptions: {
+          optimizeForEbook: false
+        },
+        cbzOutputOptions: {
+          dpi: 150
         }
       };
 
@@ -580,6 +631,12 @@ describe('Convert Tool Integration Tests', () => {
         },
         pdfaOptions: {
           outputFormat: ''
+        },
+        cbzOptions: {
+          optimizeForEbook: false
+        },
+        cbzOutputOptions: {
+          dpi: 150
         }
       };
 
@@ -628,6 +685,12 @@ describe('Convert Tool Integration Tests', () => {
         },
         pdfaOptions: {
           outputFormat: ''
+        },
+        cbzOptions: {
+          optimizeForEbook: false
+        },
+        cbzOutputOptions: {
+          dpi: 150
         }
       };
 
@@ -682,6 +745,12 @@ describe('Convert Tool Integration Tests', () => {
         },
         pdfaOptions: {
           outputFormat: ''
+        },
+        cbzOptions: {
+          optimizeForEbook: false
+        },
+        cbzOutputOptions: {
+          dpi: 150
         }
       };
 
@@ -735,6 +804,12 @@ describe('Convert Tool Integration Tests', () => {
         },
         pdfaOptions: {
           outputFormat: ''
+        },
+        cbzOptions: {
+          optimizeForEbook: false
+        },
+        cbzOutputOptions: {
+          dpi: 150
         }
       };
 

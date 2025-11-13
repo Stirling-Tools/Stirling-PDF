@@ -41,6 +41,7 @@ import stirling.software.common.model.oauth2.GitHubProvider;
 import stirling.software.common.model.oauth2.GoogleProvider;
 import stirling.software.common.model.oauth2.KeycloakProvider;
 import stirling.software.common.model.oauth2.Provider;
+import stirling.software.common.service.SsrfProtectionService.SsrfProtectionLevel;
 import stirling.software.common.util.ValidationUtils;
 
 @Data
@@ -72,11 +73,11 @@ public class ApplicationProperties {
     public PropertySource<?> dynamicYamlPropertySource(ConfigurableEnvironment environment)
             throws IOException {
         String configPath = InstallationPathConfig.getSettingsPath();
-        log.debug("Attempting to load settings from: " + configPath);
+        log.debug("Attempting to load settings from: {}", configPath);
 
         File file = new File(configPath);
         if (!file.exists()) {
-            log.error("Warning: Settings file does not exist at: " + configPath);
+            log.error("Warning: Settings file does not exist at: {}", configPath);
         }
 
         Resource resource = new FileSystemResource(configPath);
@@ -89,7 +90,7 @@ public class ApplicationProperties {
                 new YamlPropertySourceFactory().createPropertySource(null, encodedResource);
         environment.getPropertySources().addFirst(propertySource);
 
-        log.debug("Loaded properties: " + propertySource.getSource());
+        log.debug("Loaded properties: {}", propertySource.getSource());
 
         return propertySource;
     }
@@ -365,7 +366,12 @@ public class ApplicationProperties {
         private CustomPaths customPaths = new CustomPaths();
         private String fileUploadLimit;
         private TempFileManagement tempFileManagement = new TempFileManagement();
+        private DatabaseBackup databaseBackup = new DatabaseBackup();
         private List<String> corsAllowedOrigins = new ArrayList<>();
+        private String
+                frontendUrl; // Base URL for frontend (used for invite links, etc.). If not set,
+
+        // falls back to backend URL.
 
         public boolean isAnalyticsEnabled() {
             return this.getEnableAnalytics() != null && this.getEnableAnalytics();
@@ -382,6 +388,11 @@ public class ApplicationProperties {
             return this.isAnalyticsEnabled()
                     && (this.getEnableScarf() == null || this.getEnableScarf());
         }
+    }
+
+    @Data
+    public static class DatabaseBackup {
+        private String cron = "0 0 0 * * ?"; // daily at midnight
     }
 
     @Data
@@ -420,17 +431,19 @@ public class ApplicationProperties {
 
         @JsonIgnore
         public String getBaseTmpDir() {
-            return baseTmpDir != null && !baseTmpDir.isEmpty()
-                    ? baseTmpDir
-                    : java.lang.System.getProperty("java.io.tmpdir").replaceAll("/+$", "")
-                            + "/stirling-pdf";
+            if (baseTmpDir != null && !baseTmpDir.isEmpty()) {
+                return baseTmpDir;
+            }
+            String tmp = java.lang.System.getProperty("java.io.tmpdir");
+            return new File(tmp, "stirling-pdf").getPath();
         }
 
         @JsonIgnore
         public String getLibreofficeDir() {
-            return libreofficeDir != null && !libreofficeDir.isEmpty()
-                    ? libreofficeDir
-                    : getBaseTmpDir() + "/libreoffice";
+            if (libreofficeDir != null && !libreofficeDir.isEmpty()) {
+                return libreofficeDir;
+            }
+            return new File(getBaseTmpDir(), "libreoffice").getPath();
         }
     }
 
@@ -441,7 +454,7 @@ public class ApplicationProperties {
         @Data
         public static class UrlSecurity {
             private boolean enabled = true;
-            private String level = "MEDIUM"; // MAX, MEDIUM, OFF
+            private SsrfProtectionLevel level = SsrfProtectionLevel.MEDIUM; // MAX, MEDIUM, OFF
             private List<String> allowedDomains = new ArrayList<>();
             private List<String> blockedDomains = new ArrayList<>();
             private List<String> internalTlds =
@@ -494,9 +507,7 @@ public class ApplicationProperties {
         private List<String> languages;
 
         public String getAppNameNavbar() {
-            return appNameNavbar != null && appNameNavbar.trim().length() > 0
-                    ? appNameNavbar
-                    : null;
+            return appNameNavbar != null && !appNameNavbar.trim().isEmpty() ? appNameNavbar : null;
         }
     }
 
@@ -549,6 +560,7 @@ public class ApplicationProperties {
     public static class Mail {
         private boolean enabled;
         private boolean enableInvites = false;
+        private int inviteLinkExpiryHours = 72; // Default: 72 hours (3 days)
         private String host;
         private int port;
         private String username;

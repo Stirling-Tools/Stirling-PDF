@@ -4,7 +4,7 @@ import {
   ViewerBridgeRegistry,
   ScrollState,
   ZoomState,
-} from '@core/contexts/viewer/viewerBridges';
+} from '@app/contexts/viewer/viewerBridges';
 
 export interface ScrollActions {
   scrollToPage: (page: number) => void;

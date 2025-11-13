@@ -17,6 +17,7 @@ export interface PanAPIWrapper {
   enable: () => void;
   disable: () => void;
   toggle: () => void;
+  makePanDefault: () => void;
 }
 
 export interface SelectionAPIWrapper {
@@ -29,6 +30,7 @@ export interface SpreadAPIWrapper {
   setSpreadMode: (mode: SpreadMode) => void;
   getSpreadMode: () => SpreadMode | null;
   toggleSpreadMode: () => void;
+  SpreadMode: typeof SpreadMode;
 }
 
 export interface RotationAPIWrapper {
@@ -43,6 +45,7 @@ export interface SearchAPIWrapper {
   clear: () => void;
   next: () => void;
   previous: () => void;
+  goToResult: (index: number) => void;
 }
 
 export interface ThumbnailAPIWrapper {
@@ -152,7 +155,7 @@ export function registerBridge<K extends BridgeKey>(
   type: K,
   ref: BridgeRef<BridgeStateMap[K], BridgeApiMap[K]>
 ): void {
-  registry[type] = ref;
+  registry[type] = ref as ViewerBridgeRegistry[K];
 }
 
 export function getBridgeState<K extends BridgeKey>(

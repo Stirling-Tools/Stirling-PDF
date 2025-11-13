@@ -1,5 +1,6 @@
 package stirling.software.proprietary.security.configuration;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,11 +29,15 @@ import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.savedrequest.NullRequestCache;
 import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.configuration.AppConfig;
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.util.RequestUriUtils;
 import stirling.software.proprietary.security.CustomAuthenticationFailureHandler;
 import stirling.software.proprietary.security.CustomAuthenticationSuccessHandler;
 import stirling.software.proprietary.security.CustomLogoutSuccessHandler;
@@ -67,6 +72,7 @@ public class SecurityConfiguration {
     private final boolean loginEnabledValue;
     private final boolean runningProOrHigher;
 
+    private final ApplicationProperties applicationProperties;
     private final ApplicationProperties.Security securityProperties;
     private final AppConfig appConfig;
     private final UserAuthenticationFilter userAuthenticationFilter;
@@ -86,6 +92,7 @@ public class SecurityConfiguration {
             @Qualifier("loginEnabled") boolean loginEnabledValue,
             @Qualifier("runningProOrHigher") boolean runningProOrHigher,
             AppConfig appConfig,
+            ApplicationProperties applicationProperties,
             ApplicationProperties.Security securityProperties,
             UserAuthenticationFilter userAuthenticationFilter,
             JwtServiceInterface jwtService,
@@ -102,6 +109,7 @@ public class SecurityConfiguration {
         this.loginEnabledValue = loginEnabledValue;
         this.runningProOrHigher = runningProOrHigher;
         this.appConfig = appConfig;
+        this.applicationProperties = applicationProperties;
         this.securityProperties = securityProperties;
         this.userAuthenticationFilter = userAuthenticationFilter;
         this.jwtService = jwtService;
@@ -120,7 +128,79 @@ public class SecurityConfiguration {
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public CorsConfigurationSource corsConfigurationSource() {
+        // Read CORS allowed origins from settings
+        if (applicationProperties.getSystem() != null
+                && applicationProperties.getSystem().getCorsAllowedOrigins() != null
+                && !applicationProperties.getSystem().getCorsAllowedOrigins().isEmpty()) {
+
+            List<String> allowedOrigins = applicationProperties.getSystem().getCorsAllowedOrigins();
+
+            CorsConfiguration cfg = new CorsConfiguration();
+
+            // Use setAllowedOriginPatterns for better wildcard and port support
+            cfg.setAllowedOriginPatterns(allowedOrigins);
+            log.debug(
+                    "CORS configured with allowed origin patterns from settings.yml: {}",
+                    allowedOrigins);
+
+            // Set allowed methods explicitly (including OPTIONS for preflight)
+            cfg.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+
+            // Set allowed headers explicitly
+            cfg.setAllowedHeaders(
+                    List.of(
+                            "Authorization",
+                            "Content-Type",
+                            "X-Requested-With",
+                            "Accept",
+                            "Origin",
+                            "X-API-KEY",
+                            "X-CSRF-TOKEN"));
+
+            // Set exposed headers (headers that the browser can access)
+            cfg.setExposedHeaders(
+                    List.of(
+                            "WWW-Authenticate",
+                            "X-Total-Count",
+                            "X-Page-Number",
+                            "X-Page-Size",
+                            "Content-Disposition",
+                            "Content-Type"));
+
+            // Allow credentials (cookies, authorization headers)
+            cfg.setAllowCredentials(true);
+
+            // Set max age for preflight cache
+            cfg.setMaxAge(3600L);
+
+            UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+            source.registerCorsConfiguration("/**", cfg);
+            return source;
+        } else {
+            // No CORS origins configured - return null to disable CORS processing entirely
+            // This avoids empty CORS policy that unexpectedly rejects preflights
+            log.info(
+                    "CORS is disabled - no allowed origins configured in settings.yml (system.corsAllowedOrigins)");
+            return null;
+        }
+    }
+
+    @Bean
+    public SecurityFilterChain filterChain(
+            HttpSecurity http,
+            @Lazy IPRateLimitingFilter rateLimitingFilter,
+            @Lazy JwtAuthenticationFilter jwtAuthenticationFilter)
+            throws Exception {
+        // Enable CORS only if we have configured origins
+        CorsConfigurationSource corsSource = corsConfigurationSource();
+        if (corsSource != null) {
+            http.cors(cors -> cors.configurationSource(corsSource));
+        } else {
+            // Explicitly disable CORS when no origins are configured
+            http.cors(cors -> cors.disable());
+        }
+
         if (securityProperties.getCsrfDisabled() || !loginEnabledValue) {
             http.csrf(CsrfConfigurer::disable);
         }
@@ -130,12 +210,8 @@ public class SecurityConfiguration {
 
             http.addFilterBefore(
                             userAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-                    .addFilterBefore(
-                            rateLimitingFilter(), UsernamePasswordAuthenticationFilter.class);
-
-            if (v2Enabled) {
-                http.addFilterBefore(jwtAuthenticationFilter(), UserAuthenticationFilter.class);
-            }
+                    .addFilterBefore(rateLimitingFilter, UsernamePasswordAuthenticationFilter.class)
+                    .addFilterBefore(jwtAuthenticationFilter, UserAuthenticationFilter.class);
 
             if (!securityProperties.getCsrfDisabled()) {
                 CookieCsrfTokenRepository cookieRepo =
@@ -195,6 +271,18 @@ public class SecurityConfiguration {
                     });
             http.authenticationProvider(daoAuthenticationProvider());
             http.requestCache(requestCache -> requestCache.requestCache(new NullRequestCache()));
+
+            // Configure exception handling for API endpoints
+            http.exceptionHandling(
+                    exceptions ->
+                            exceptions.defaultAuthenticationEntryPointFor(
+                                    jwtAuthenticationEntryPoint,
+                                    request -> {
+                                        String contextPath = request.getContextPath();
+                                        String requestURI = request.getRequestURI();
+                                        return requestURI.startsWith(contextPath + "/api/");
+                                    }));
+
             http.logout(
                     logout ->
                             logout.logoutRequestMatcher(
@@ -227,44 +315,12 @@ public class SecurityConfiguration {
                                             req -> {
                                                 String uri = req.getRequestURI();
                                                 String contextPath = req.getContextPath();
-
-                                                // Remove the context path from the URI
-                                                String trimmedUri =
-                                                        uri.startsWith(contextPath)
-                                                                ? uri.substring(
-                                                                        contextPath.length())
-                                                                : uri;
-                                                return trimmedUri.startsWith("/login")
-                                                        || trimmedUri.startsWith("/oauth")
-                                                        || trimmedUri.startsWith("/oauth2")
-                                                        || trimmedUri.startsWith("/saml2")
-                                                        || trimmedUri.endsWith(".svg")
-                                                        || trimmedUri.startsWith("/register")
-                                                        || trimmedUri.startsWith("/signup")
-                                                        || trimmedUri.startsWith("/auth/callback")
-                                                        || trimmedUri.startsWith("/error")
-                                                        || trimmedUri.startsWith("/images/")
-                                                        || trimmedUri.startsWith("/public/")
-                                                        || trimmedUri.startsWith("/css/")
-                                                        || trimmedUri.startsWith("/fonts/")
-                                                        || trimmedUri.startsWith("/js/")
-                                                        || trimmedUri.startsWith("/pdfjs/")
-                                                        || trimmedUri.startsWith("/pdfjs-legacy/")
-                                                        || trimmedUri.startsWith("/favicon")
-                                                        || trimmedUri.startsWith(
-                                                                "/api/v1/info/status")
-                                                        || trimmedUri.startsWith("/api/v1/config")
-                                                        || trimmedUri.startsWith(
-                                                                "/api/v1/auth/register")
-                                                        || trimmedUri.startsWith(
-                                                                "/api/v1/user/register")
-                                                        || trimmedUri.startsWith(
-                                                                "/api/v1/auth/login")
-                                                        || trimmedUri.startsWith(
-                                                                "/api/v1/auth/refresh")
-                                                        || trimmedUri.startsWith("/api/v1/auth/me")
-                                                        || trimmedUri.startsWith("/v1/api-docs")
-                                                        || uri.contains("/v1/api-docs");
+                                                // Check if it's a public auth endpoint or static
+                                                // resource
+                                                return RequestUriUtils.isStaticResource(
+                                                                contextPath, uri)
+                                                        || RequestUriUtils.isPublicAuthEndpoint(
+                                                                uri, contextPath);
                                             })
                                     .permitAll()
                                     .anyRequest()
@@ -333,8 +389,12 @@ public class SecurityConfiguration {
                         .saml2Login(
                                 saml2 -> {
                                     try {
-                                        saml2.loginPage("/saml2")
-                                                .relyingPartyRegistrationRepository(
+                                        // Only set login page for v1/Thymeleaf mode
+                                        if (!v2Enabled) {
+                                            saml2.loginPage("/saml2");
+                                        }
+
+                                        saml2.relyingPartyRegistrationRepository(
                                                         saml2RelyingPartyRegistrations)
                                                 .authenticationManager(
                                                         new ProviderManager(authenticationProvider))

@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useRef, useMemo } from 'react';
 import { Text, ActionIcon, CheckboxIndicator, Tooltip, Modal, Button, Group, Stack } from '@mantine/core';
-import { useMediaQuery } from '@mantine/hooks';
+import { useIsMobile } from '@app/hooks/useIsMobile';
 import { alert } from '@app/components/toast';
 import { useTranslation } from 'react-i18next';
 import DownloadOutlinedIcon from '@mui/icons-material/DownloadOutlined';
@@ -21,6 +21,7 @@ import { FileId } from '@app/types/file';
 import { formatFileSize } from '@app/utils/fileUtils';
 import ToolChain from '@app/components/shared/ToolChain';
 import HoverActionMenu, { HoverAction } from '@app/components/shared/HoverActionMenu';
+import { PrivateContent } from '@app/components/shared/PrivateContent';
 
 
 
@@ -63,7 +64,7 @@ const FileEditorThumbnail = ({
   const [isDragging, setIsDragging] = useState(false);
   const dragElementRef = useRef<HTMLDivElement | null>(null);
   const [showHoverMenu, setShowHoverMenu] = useState(false);
-  const isMobile = useMediaQuery('(max-width: 1024px)');
+  const isMobile = useIsMobile();
   const [showCloseModal, setShowCloseModal] = useState(false);
 
   // Resolve the actual File object for pin/unpin operations
@@ -91,6 +92,13 @@ const FileEditorThumbnail = ({
     const m = /\.([a-z0-9]+)$/i.exec(file.name ?? '');
     return (m?.[1] || '').toUpperCase();
   }, [file.name]);
+
+  const extLower = useMemo(() => {
+    const m = /\.([a-z0-9]+)$/i.exec(file.name ?? '');
+    return (m?.[1] || '').toLowerCase();
+  }, [file.name]);
+
+  const isCBZ = extLower === 'cbz';
 
   const pageLabel = useMemo(
     () =>
@@ -205,7 +213,7 @@ const FileEditorThumbnail = ({
           alert({ alertType: 'success', title: `Unzipping ${file.name}`, expandable: false, durationMs: 2500 });
         }
       },
-      hidden: !isZipFile || !onUnzipFile,
+      hidden: !isZipFile || !onUnzipFile || isCBZ,
     },
     {
       id: 'close',
@@ -328,8 +336,8 @@ const FileEditorThumbnail = ({
         marginTop: '0.5rem',
         marginBottom: '0.5rem',
       }}>
-        <Text  size="lg" fw={700} className={`${styles.title}  ph-no-capture `}  lineClamp={2}>
-          {file.name}
+        <Text  size="lg" fw={700} className={styles.title}  lineClamp={2}>
+          <PrivateContent>{file.name}</PrivateContent>
         </Text>
         <Text
           size="sm"
@@ -353,20 +361,20 @@ const FileEditorThumbnail = ({
       >
         <div className={styles.previewPaper}>
           {file.thumbnailUrl && (
-            <img
-              className="ph-no-capture"
-              src={file.thumbnailUrl}
-              alt={file.name}
-              draggable={false}
-              loading="lazy"
-              decoding="async"
-              onError={(e) => {
-                const img = e.currentTarget;
-                img.style.display = 'none';
-                img.parentElement?.setAttribute('data-thumb-missing', 'true');
-              }}
-              style={{
-                maxWidth: '80%',
+            <PrivateContent>
+              <img
+                src={file.thumbnailUrl}
+                alt={file.name}
+                draggable={false}
+                loading="lazy"
+                decoding="async"
+                onError={(e) => {
+                  const img = e.currentTarget;
+                  img.style.display = 'none';
+                  img.parentElement?.setAttribute('data-thumb-missing', 'true');
+                }}
+                style={{
+                  maxWidth: '80%',
                 maxHeight: '80%',
                 objectFit: 'contain',
                 borderRadius: 0,
@@ -378,6 +386,7 @@ const FileEditorThumbnail = ({
                 alignSelf: 'start'
               }}
             />
+            </PrivateContent>
           )}
         </div>
 
