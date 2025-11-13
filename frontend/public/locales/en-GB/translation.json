@@ -4678,6 +4678,12 @@
       }
     },
     "apiKeys": {
+      "intro": "Use your API key to programmatically access Stirling PDF's processing capabilities.",
+      "docsTitle": "API Documentation",
+      "docsDescription": "Learn more about integrating with Stirling PDF:",
+      "docsLink": "API Documentation",
+      "schemaLink": "API Schema Reference",
+      "usage": "Include this key in the X-API-KEY header with all API requests.",
       "description": "Your API key for accessing Stirling's suite of PDF tools. Copy it to your project or refresh to generate a new one.",
       "publicKeyAriaLabel": "Public API key",
       "copyKeyAriaLabel": "Copy API key",
