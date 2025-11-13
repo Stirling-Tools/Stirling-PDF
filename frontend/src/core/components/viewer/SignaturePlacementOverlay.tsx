@@ -5,7 +5,7 @@ import { buildSignaturePreview, SignaturePreview } from '@app/utils/signaturePre
 import { useSignature } from '@app/contexts/SignatureContext';
 
 interface SignaturePlacementOverlayProps {
-  containerRef: React.RefObject<HTMLElement>;
+  containerRef: React.RefObject<HTMLElement | null>;
   isActive: boolean;
   signatureConfig: SignParameters | null;
 }
