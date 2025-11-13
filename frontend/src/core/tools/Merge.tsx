@@ -29,7 +29,7 @@ const Merge = (props: BaseToolProps) => {
   const naturalCompare = useCallback((a: string, b: string): number => {
     const isDigit = (char: string) => char >= '0' && char <= '9';
 
-    const getChunk = (s: string, length: number, marker: number): string => {
+    const getChunk = (s: string, length: number, marker: number): { chunk: string; newMarker: number } => {
       let chunk = '';
       const c = s.charAt(marker);
       chunk += c;
@@ -46,7 +46,7 @@ const Merge = (props: BaseToolProps) => {
           marker++;
         }
       }
-      return chunk;
+      return { chunk, newMarker: marker };
     };
 
     const len1 = a.length;
@@ -55,11 +55,11 @@ const Merge = (props: BaseToolProps) => {
     let marker2 = 0;
 
     while (marker1 < len1 && marker2 < len2) {
-      const chunk1 = getChunk(a, len1, marker1);
-      marker1 += chunk1.length;
+      const { chunk: chunk1, newMarker: newMarker1 } = getChunk(a, len1, marker1);
+      marker1 = newMarker1;
 
-      const chunk2 = getChunk(b, len2, marker2);
-      marker2 += chunk2.length;
+      const { chunk: chunk2, newMarker: newMarker2 } = getChunk(b, len2, marker2);
+      marker2 = newMarker2;
 
       let result: number;
       if (isDigit(chunk1.charAt(0)) && isDigit(chunk2.charAt(0))) {
