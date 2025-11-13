@@ -849,6 +849,11 @@
     },
     "error": {
       "failed": "An error occurred while merging the PDFs."
+    },
+    "tooltip": {
+      "header": {
+        "title": "Merge Settings Overview"
+      }
     }
   },
   "split": {
